@@ -1451,15 +1451,22 @@ protected:
 
 #define NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(_class, _base, \
                                                                _base_if)      \
-  rv = _base::QueryInterface(aIID, aInstancePtr);                             \
-  if (NS_SUCCEEDED(rv))                                                       \
-    return rv;                                                                \
-                                                                              \
-  rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID, aInstancePtr);  \
-  if (NS_SUCCEEDED(rv))                                                       \
-    return rv;                                                                \
-                                                                              \
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(_base, _base_if)                 \
+  {                                                                           \
+    nsresult html_rv = _base::QueryInterface(aIID, aInstancePtr);             \
+    if (NS_SUCCEEDED(html_rv))                                                \
+      return html_rv;                                                         \
+                                                                              \
+    html_rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,          \
+                                aInstancePtr);                                \
+    if (NS_SUCCEEDED(html_rv))                                                \
+      return html_rv;                                                         \
+  }
+
+#define NS_HTML_CONTENT_INTERFACES(_base)                                     \
+  NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(_base, nsIDOMHTMLElement)
 
 #define NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(_class, _base)           \
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(_class, _base,       \

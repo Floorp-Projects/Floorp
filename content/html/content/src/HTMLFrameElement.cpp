@@ -32,6 +32,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLFrameElement, Element)
 
 // QueryInterface implementation for HTMLFrameElement
 NS_INTERFACE_TABLE_HEAD(HTMLFrameElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFrameElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLFrameElement, nsIDOMHTMLFrameElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLFrameElement,
                                                nsGenericHTMLFrameElement)

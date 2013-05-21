@@ -92,6 +92,8 @@ NS_IMPL_ADDREF_INHERITED(HTMLSharedObjectElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLSharedObjectElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
+  NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
+                                       nsIDOMHTMLAppletElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedObjectElement,
                                                   nsIDOMHTMLAppletElement)
     NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIRequestObserver)

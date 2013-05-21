@@ -33,6 +33,8 @@ NS_IMPL_RELEASE_INHERITED(HTMLSharedElement, Element)
 
 // QueryInterface implementation for HTMLSharedElement
 NS_INTERFACE_TABLE_HEAD(HTMLSharedElement)
+  NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
+                                       nsIDOMHTMLParamElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedElement,
                                                   nsIDOMHTMLParamElement)
   NS_OFFSET_AND_INTERFACE_TABLE_END

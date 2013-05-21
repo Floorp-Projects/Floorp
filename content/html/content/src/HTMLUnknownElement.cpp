@@ -36,6 +36,7 @@ HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 
 // QueryInterface implementation for HTMLUnknownElement
 NS_INTERFACE_TABLE_HEAD(HTMLUnknownElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLUnknownElement,
                                    nsIDOMHTMLUnknownElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLUnknownElement,

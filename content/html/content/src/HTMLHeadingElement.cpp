@@ -27,6 +27,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLHeadingElement, Element)
 
 // QueryInterface implementation for HTMLHeadingElement
 NS_INTERFACE_TABLE_HEAD(HTMLHeadingElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLHeadingElement,
                                    nsIDOMHTMLHeadingElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLHeadingElement,

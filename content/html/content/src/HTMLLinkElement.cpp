@@ -55,6 +55,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLLinkElement, Element)
 
 // QueryInterface implementation for HTMLLinkElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLLinkElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(HTMLLinkElement,
                                    nsIDOMHTMLLinkElement,
                                    nsIDOMLinkStyle,

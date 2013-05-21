@@ -53,6 +53,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLScriptElement, Element)
 
 // QueryInterface implementation for HTMLScriptElement
 NS_INTERFACE_TABLE_HEAD(HTMLScriptElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE4(HTMLScriptElement,
                                    nsIDOMHTMLScriptElement,
                                    nsIScriptLoaderObserver,

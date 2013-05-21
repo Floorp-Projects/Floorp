@@ -25,6 +25,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLDivElement, Element)
 
 // QueryInterface implementation for HTMLDivElement
 NS_INTERFACE_TABLE_HEAD(HTMLDivElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLDivElement, nsIDOMHTMLDivElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLDivElement,
                                                nsGenericHTMLElement)

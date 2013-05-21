@@ -30,6 +30,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLSourceElement, Element)
 
 // QueryInterface implementation for HTMLSourceElement
 NS_INTERFACE_TABLE_HEAD(HTMLSourceElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLSourceElement, nsIDOMHTMLSourceElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLSourceElement,
                                                nsGenericHTMLElement)

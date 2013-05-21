@@ -29,6 +29,8 @@ NS_IMPL_RELEASE_INHERITED(HTMLSharedListElement, Element)
 
 // QueryInterface implementation for nsHTMLSharedListElement
 NS_INTERFACE_TABLE_HEAD(HTMLSharedListElement)
+  NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
+                                       nsIDOMHTMLOListElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedListElement,
                                                   nsIDOMHTMLOListElement)
   NS_OFFSET_AND_INTERFACE_TABLE_END
