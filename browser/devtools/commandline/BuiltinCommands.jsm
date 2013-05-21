@@ -975,7 +975,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
     description: gcli.lookup("cookieListDesc"),
     manual: gcli.lookup("cookieListManual"),
     returnType: "cookies",
-    exec: function Command_cookieList(args, context) {
+    exec: function(args, context) {
       let host = context.environment.document.location.host;
       if (host == null || host == "") {
         throw new Error(gcli.lookup("cookieListOutNonePage"));
@@ -1018,7 +1018,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
         description: gcli.lookup("cookieRemoveKeyDesc"),
       }
     ],
-    exec: function Command_cookieRemove(args, context) {
+    exec: function(args, context) {
       let host = context.environment.document.location.host;
       let enm = cookieMgr.getCookiesFromHost(host);
 
@@ -1057,7 +1057,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
         params: [
           {
             name: "path",
-            type: "string",
+            type: { name: "string", allowBlank: true },
             defaultValue: "/",
             description: gcli.lookup("cookieSetPathDesc")
           },
@@ -1091,7 +1091,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
         ]
       }
     ],
-    exec: function Command_cookieSet(args, context) {
+    exec: function(args, context) {
       let host = context.environment.document.location.host;
       let time = Date.parse(args.expires) / 1000;
 
