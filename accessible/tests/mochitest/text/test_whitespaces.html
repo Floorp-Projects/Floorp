@@ -19,39 +19,9 @@
       //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
 
       ////////////////////////////////////////////////////////////////////////
-      // characterCount
-
-      testCharacterCount(["input", "div", "editable"], 22);
-      testCharacterCount(["textarea"], 23);
-
-      ////////////////////////////////////////////////////////////////////////
-      // getText
-
-      var IDs = ["input", "div", "editable", "textarea"];
-
-      testText(IDs, 0, 1, "B");
-      testText(IDs, 5, 6, " ");
-      testText(IDs, 9, 11, "  ");
-      testText(IDs, 16, 19, "   ");
-      testText(IDs, 0, 22, "Brave Sir  Robin   ran");
-
-      ////////////////////////////////////////////////////////////////////////
       // getTextAfterOffset
 
       var IDs = [ "input", "div", "editable", "textarea" ];
-
-      // BOUNDARY_CHAR
-      testCharAfterOffset(IDs, 0, "r", 1, 2);
-      testCharAfterOffset(IDs, 1, "a", 2, 3);
-      testCharAfterOffset(IDs, 4, " ", 5, 6);
-      testCharAfterOffset(IDs, 5, "S", 6, 7);
-      testCharAfterOffset(IDs, 8, " ", 9, 10);
-      testCharAfterOffset(IDs, 9, " ", 10, 11);
-      testCharAfterOffset(IDs, 10, "R", 11, 12);
-      testCharAfterOffset(IDs, 15, " ", 16, 17);
-      testCharAfterOffset(IDs, 16, " ", 17, 18);
-      testCharAfterOffset(IDs, 17, " ", 18, 19);
-      testCharAfterOffset(IDs, 18, "r", 19, 20);
 
       // BOUNDARY_WORD_START
       testTextAfterOffset(0, BOUNDARY_WORD_START, "Sir  ", 6, 11, IDs);
@@ -122,15 +92,6 @@
 
       var IDs = [ "input", "div", "editable", "textarea" ];
 
-      // BOUNDARY_CHAR
-      testCharBeforeOffset(IDs, 0, "", 0, 0);
-      testCharBeforeOffset(IDs, 1, "B", 0, 1);
-      testCharBeforeOffset(IDs, 6, " ", 5, 6);
-      testCharBeforeOffset(IDs, 10, " ", 9, 10);
-      testCharBeforeOffset(IDs, 11, " ", 10, 11);
-      testCharBeforeOffset(IDs, 17, " ", 16, 17);
-      testCharBeforeOffset(IDs, 19, " ", 18, 19);
-
       // BOUNDARY_WORD_START
       testTextBeforeOffset(0, BOUNDARY_WORD_START, "", 0, 0, IDs);
       testTextBeforeOffset(1, BOUNDARY_WORD_START, "", 0, 0, IDs);
@@ -168,38 +129,6 @@
 
       ////////////////////////////////////////////////////////////////////////
       // getTextAtOffset
-
-      // BOUNDARY_CHAR
-      testTextAtOffset(0, BOUNDARY_CHAR, "B", 0, 1,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(1, BOUNDARY_CHAR, "r", 1, 2,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(5, BOUNDARY_CHAR, " ", 5, 6,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(9, BOUNDARY_CHAR, " ", 9, 10,
-                        "input", kOk, kOk, kOk,
-                        "div", kOk, kOk, kOk,
-                        "editable", kOk, kOk, kOk,
-                        "textarea", kOk, kOk, kOk);
-      testTextAtOffset(10, BOUNDARY_CHAR, " ", 10, 11,
-                        "input", kOk, kOk, kOk,
-                        "div", kOk, kOk, kOk,
-                        "editable", kOk, kOk, kOk,
-                        "textarea", kOk, kOk, kOk);
-      testTextAtOffset(17, BOUNDARY_CHAR, " ", 17, 18,
-                        "input", kOk, kOk, kOk,
-                        "div", kOk, kOk, kOk,
-                        "editable", kOk, kOk, kOk,
-                        "textarea", kOk, kOk, kOk);
 
       // BOUNDARY_WORD_START
       testTextAtOffset(0, BOUNDARY_WORD_START, "Brave ", 0, 6,

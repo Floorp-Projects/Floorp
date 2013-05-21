@@ -310,6 +310,13 @@ public:
     virtual bool TestCharacterMap(uint32_t aCh);
     nsresult InitializeUVSMap();
     uint16_t GetUVSGlyph(uint32_t aCh, uint32_t aVS);
+
+    // All concrete gfxFontEntry subclasses (except gfxProxyFontEntry) need
+    // to override this, otherwise the font will never be used as it will
+    // be considered to support no characters.
+    // ReadCMAP() must *always* set the mCharacterMap pointer to a valid
+    // gfxCharacterMap, even if empty, as other code assumes this pointer
+    // can be safely dereferenced.
     virtual nsresult ReadCMAP();
 
     bool TryGetSVGData();

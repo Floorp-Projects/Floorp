@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   function runAllTests() {
     // these tests run asynchronously, and they will take 8000 ms
     var all_tests = [
-      doTest1, doTest1_e, doTest2, doTest3, doTest3_b, doTest3_c, doTest3_d,
+      doTest1, doTest1_e, doTest1_f, doTest2, doTest3, doTest3_b, doTest3_c, doTest3_d,
       doTest3_e, doTest3_f, doTest3_g, doTest3_h, doTest4, doTest4_b,
       doTest5, doTest5_b, doTest5_c, doTest5_e, doTest6, doTest7
     ];
@@ -92,7 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   var domBranch;
   var oldPrefVal;
 
-  var gEventSourceObj1 = null, gEventSourceObj1_e;
+  var gEventSourceObj1 = null, gEventSourceObj1_e, gEventSourceObj1_f;
   var gEventSourceObj2 = null;
   var gEventSourceObj3_a = null, gEventSourceObj3_b = null,
       gEventSourceObj3_c = null, gEventSourceObj3_d = null,
@@ -121,6 +121,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 //   c) the close method (we expect readyState == CLOSED)
 //   d) the close method (we expect no message events anymore)
 //   e) use the default for withCredentials when passing dictionary arguments that don't explicitly set it
+//   f) if a 204 HTTP response closes (interrupts) connections. See bug 869432.
 
   function doTest1(test_id) {
     gEventSourceObj1 = new EventSource("eventsource.resource");
@@ -179,6 +180,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
       ok(false, "Test 1.e failed");
     }
     setTestHasFinished(test_id);
+  }
+
+  function doTest1_f(test_id) {
+    var called_on_error = false;
+  
+    gEventSourceObj1_f = new EventSource("file_bug869432.eventsource");
+    gEventSourceObj1_f.onopen = function(e) {
+      ok(false, "Test 1.f failed: onopen was called");
+    };
+    gEventSourceObj1_f.onmessage = function(e) {
+      ok(false, "Test 1.f failed: onmessage was called");
+    };
+    gEventSourceObj1_f.onerror = function(e) {
+      if (called_on_error) {
+        ok(false, "Test 1.f failed: onerror was called twice");
+      }
+      called_on_error = true;
+      ok(gEventSourceObj1_f.readyState == 2, "Test 1.f failed: onerror was called with readyState = " + gEventSourceObj1_f.readyState);
+    };
+
+    setTimeout(function() {  // just to clean...
+      ok(called_on_error, "Test 1.f failed: onerror was not called");
+      setTestHasFinished(test_id);
+    }, parseInt(5000*stress_factor));
   }
 
 // in order to test (2)

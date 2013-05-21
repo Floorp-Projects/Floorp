@@ -44,7 +44,7 @@ class EventTarget;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, builtinclass, uuid(547ec16c-e41d-4df7-9fb6-ad6041f0687a)]
+[scriptable, builtinclass, uuid(02d54f52-a1f5-4ad2-b560-36f14012935e)]
 interface nsIDOMEvent : nsISupports
 {
   // PhaseType
@@ -230,16 +230,6 @@ interface nsIDOMEvent : nsISupports
    * contain anonymous content.
    */
   readonly attribute nsIDOMEventTarget  explicitOriginalTarget;
-
-  /**
-   * @deprecated Use nsIDOMEvent::stopPropagation.
-   */
-  void                      preventBubble();
-
-  /**
-   * @deprecated Use nsIDOMEvent::stopPropagation.
-   */
-  void                      preventCapture();
 
   /**
    * @deprecated Use nsIDOMEvent::defaultPrevented.

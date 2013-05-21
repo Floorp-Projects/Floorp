@@ -3294,7 +3294,7 @@ pkix_pl_Cert_GetTrusted(void *plContext,
 PKIX_Error *
 PKIX_PL_Cert_IsCertTrusted(
         PKIX_PL_Cert *cert,
-        PKIX_Boolean trustOnlyUserAnchors,
+        PKIX_PL_TrustAnchorMode trustAnchorMode,
         PKIX_Boolean *pTrusted,
         void *plContext)
 {
@@ -3315,8 +3315,10 @@ PKIX_PL_Cert_IsCertTrusted(
                 PKIX_ERROR(PKIX_CERTISCERTTRUSTEDFAILED);
         }
 
-        if (trustOnlyUserAnchors || cert->isUserTrustAnchor) {
-            /* discard our |trusted| value since we are using the anchors */
+        if (trustAnchorMode == PKIX_PL_TrustAnchorMode_Exclusive ||
+            (trustAnchorMode == PKIX_PL_TrustAnchorMode_Additive &&
+             cert->isUserTrustAnchor)) {
+            /* Use the trust anchor's |trusted| value */
             *pTrusted = cert->isUserTrustAnchor;
             goto cleanup;
         }

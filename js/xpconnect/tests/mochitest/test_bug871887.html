@@ -13,14 +13,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=871887
   /** Test for Bug 871887 **/
   SimpleTest.waitForExplicitFinish();
 
-  function checkpoint() {
+  // NB: onstart ends up getting invoked twice, for mysterious and potentially-
+  // IE6-related reasons.
+  function checkpoint(invocant) {
     ok(true, "onstart called");
+    is(invocant, $('llama'), "this-binding is correct");
     $('llama').loop = 1;
     $('llama').scrollDelay = 1;
     $('llama').scrollAmount = 500;
   }
 
-  function done() {
+  function done(invocant) {
+    is(invocant, $('llama'), "this-binding is correct");
     ok(true, "onfinish called");
     SimpleTest.finish();
   }
@@ -31,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=871887
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=871887">Mozilla Bug 871887</a>
 <p id="display"></p>
 <div id="content">
-<marquee id="llama" onstart="checkpoint();" onfinish="done();">Watch the Llama</marquee>
+<marquee id="llama" onstart="checkpoint(this);" onfinish="done(this);">Watch the Llama</marquee>
 </div>
 <pre id="test">
 </pre>

@@ -692,22 +692,6 @@ nsFrame::GetOffsets(int32_t &aStart, int32_t &aEnd) const
   return NS_OK;
 }
 
-static bool
-EqualImages(imgIRequest *aOldImage, imgIRequest *aNewImage)
-{
-  if (aOldImage == aNewImage)
-    return true;
-
-  if (!aOldImage || !aNewImage)
-    return false;
-
-  nsCOMPtr<nsIURI> oldURI, newURI;
-  aOldImage->GetURI(getter_AddRefs(oldURI));
-  aNewImage->GetURI(getter_AddRefs(newURI));
-  bool equal;
-  return NS_SUCCEEDED(oldURI->Equals(newURI, &equal)) && equal;
-}
-
 // Subclass hook for style post processing
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
@@ -730,7 +714,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, oldBG) {
       // If there is an image in oldBG that's not in newBG, drop it.
       if (i >= newBG->mImageCount ||
-          oldBG->mLayers[i].mImage != newBG->mLayers[i].mImage) {
+          !oldBG->mLayers[i].mImage.ImageDataEquals(newBG->mLayers[i].mImage)) {
         const nsStyleImage& oldImage = oldBG->mLayers[i].mImage;
         if (oldImage.GetType() != eStyleImageType_Image) {
           continue;
@@ -745,7 +729,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, newBG) {
     // If there is an image in newBG that's not in oldBG, add it.
     if (!oldBG || i >= oldBG->mImageCount ||
-        newBG->mLayers[i].mImage != oldBG->mLayers[i].mImage) {
+        !newBG->mLayers[i].mImage.ImageDataEquals(oldBG->mLayers[i].mImage)) {
       const nsStyleImage& newImage = newBG->mLayers[i].mImage;
       if (newImage.GetType() != eStyleImageType_Image) {
         continue;
@@ -809,7 +793,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   // is loaded) and paint.  We also don't really care about any callers
   // who try to paint borders with a different style context, because
   // they won't have the correct size for the border either.
-  if (!EqualImages(oldBorderImage, newBorderImage)) {
+  if (oldBorderImage != newBorderImage) {
     // stop and restart the image loading/notification
     if (oldBorderImage) {
       imageLoader->DisassociateRequestFromFrame(oldBorderImage, this);

@@ -60,7 +60,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsContentUtils.h"
 #include "nsDOMWindowUtils.h"
@@ -144,31 +143,9 @@
 #include "nsIDOMPermissionSettings.h"
 #include "nsIDOMApplicationRegistry.h"
 
-#ifdef MOZ_B2G_RIL
-#include "nsIWifi.h"
-#endif
-
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
 #include "nsIDOMBarProp.h"
-#include "nsIDOMDataContainerEvent.h"
-#include "nsIDOMKeyEvent.h"
-#include "nsIDOMCompositionEvent.h"
-#include "nsIDOMMouseEvent.h"
-#include "nsIDOMMouseScrollEvent.h"
-#include "nsIDOMWheelEvent.h"
-#include "nsIDOMDragEvent.h"
-#include "nsIDOMClipboardEvent.h"
-#include "nsIDOMCommandEvent.h"
-#include "nsIDOMBeforeUnloadEvent.h"
-#include "nsIDOMMutationEvent.h"
-#include "nsIDOMXULCommandEvent.h"
-#include "nsIDOMMessageEvent.h"
-#include "nsIDOMNotifyPaintEvent.h"
-#include "nsIDOMNotifyAudioAvailableEvent.h"
-#include "nsIDOMScrollAreaEvent.h"
-#include "nsIDOMTransitionEvent.h"
-#include "nsIDOMAnimationEvent.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMLinkStyle.h"
@@ -187,7 +164,7 @@
 #define MOZ_GENERATED_EVENTS_INCLUDES
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENTS_INCLUDES
-#include "nsIDOMDeviceMotionEvent.h"
+#include "nsIDOMDeviceMotionEvent.h" //nsIDOMDeviceAcceleration
 #include "nsIDOMXULCommandDispatcher.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMCRMFObject.h"
@@ -249,9 +226,6 @@
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
 
-// Simple gestures include
-#include "nsIDOMSimpleGestureEvent.h"
-
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
 #include "mozilla/dom/Element.h"
@@ -298,7 +272,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "TelephonyCall.h"
 #include "nsIDOMMozVoicemail.h"
 #include "nsIDOMIccManager.h"
-#include "StkCommandEvent.h"
 #include "nsIDOMMozCellBroadcast.h"
 #include "nsIDOMMozCellBroadcastEvent.h"
 #include "nsIDOMMobileConnection.h"
@@ -547,22 +520,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // Event
   NS_DEFINE_CLASSINFO_DATA(Event, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MutationEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(UIEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MouseEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MouseScrollEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WheelEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(DragEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(ClipboardEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CompositionEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface)             \
@@ -571,8 +528,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
 
-  NS_DEFINE_CLASSINFO_DATA(DeviceMotionEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DeviceAcceleration, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DeviceRotationRate, nsDOMGenericSH,
@@ -663,9 +618,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSSupportsRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(BeforeUnloadEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(TimeEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -714,11 +666,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
 
-  NS_DEFINE_CLASSINFO_DATA(XULCommandEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(CommandEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(OfflineResourceList, nsOfflineResourceListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
@@ -730,12 +677,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
                            WINDOW_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DataContainerEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(MessageEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(DeviceStorage, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -788,22 +729,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DataTransfer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(NotifyPaintEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(NotifyAudioAvailableEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(SimpleGestureEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(ScrollAreaEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(EventListenerInfo, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TransitionEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(AnimationEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager, nsEventTargetSH,
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS |
@@ -831,15 +757,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBIndex, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBVersionChangeEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(TouchList, nsDOMTouchListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TouchEvent, nsEventSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -860,8 +782,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MozVoicemail, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozIccManager, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MozStkCommandEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
@@ -927,11 +847,6 @@ NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
     return rv;                                                       \
   }
 
-NS_DEFINE_EVENT_CTOR(UIEvent)
-NS_DEFINE_EVENT_CTOR(MouseEvent)
-NS_DEFINE_EVENT_CTOR(WheelEvent)
-NS_DEFINE_EVENT_CTOR(ClipboardEvent)
-
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface) \
   NS_DEFINE_EVENT_CTOR(_event_interface)
@@ -954,14 +869,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Blob, nsDOMMultipartFile::NewBlob)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMMultipartFile::NewFile)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(WheelEvent)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(ClipboardEvent)
-#ifdef MOZ_B2G_RIL
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiStatusChangeEvent)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiConnectionInfoEvent)
-#endif
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface) \
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(_event_interface)
@@ -1506,10 +1413,6 @@ nsDOMClassInfo::RegisterExternalClasses()
 #define DOM_CLASSINFO_EVENT_MAP_ENTRIES                                       \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)                                      \
 
-#define DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES                                    \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMUIEvent)                                    \
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-
 #ifdef MOZ_B2G
 #define DOM_CLASSINFO_WINDOW_MAP_ENTRIES(_support_indexed_db)                  \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)                                        \
@@ -1679,11 +1582,6 @@ nsDOMClassInfo::Init()
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
 
-  DOM_CLASSINFO_MAP_BEGIN(DeviceMotionEvent, nsIDOMDeviceMotionEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceMotionEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(DeviceAcceleration, nsIDOMDeviceAcceleration)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceAcceleration)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
@@ -1691,48 +1589,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DeviceRotationRate, nsIDOMDeviceRotationRate)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceRotationRate)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MutationEvent, nsIDOMMutationEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMutationEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(UIEvent, nsIDOMUIEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CompositionEvent, nsIDOMCompositionEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCompositionEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MouseEvent, nsIDOMMouseEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MouseScrollEvent, nsIDOMMouseScrollEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseScrollEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(WheelEvent, nsIDOMWheelEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWheelEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DragEvent, nsIDOMDragEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDragEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(ClipboardEvent, nsIDOMClipboardEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMClipboardEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -1862,11 +1718,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSSupportsRule)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(BeforeUnloadEvent, nsIDOMBeforeUnloadEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBeforeUnloadEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   // The SVG document
 
   DOM_CLASSINFO_MAP_BEGIN(TimeEvent, nsIDOMTimeEvent)
@@ -1925,16 +1776,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(XULCommandEvent, nsIDOMXULCommandEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CommandEvent, nsIDOMCommandEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCommandEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(OfflineResourceList, nsIDOMOfflineResourceList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMOfflineResourceList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
@@ -1955,16 +1796,6 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_WEBSPEECH
     DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DataContainerEvent, nsIDOMDataContainerEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataContainerEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MessageEvent, nsIDOMMessageEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMessageEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DeviceStorage, nsIDOMDeviceStorage)
@@ -2042,39 +1873,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataTransfer)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(NotifyPaintEvent, nsIDOMNotifyPaintEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNotifyPaintEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(NotifyAudioAvailableEvent, nsIDOMNotifyAudioAvailableEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNotifyAudioAvailableEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SimpleGestureEvent, nsIDOMSimpleGestureEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSimpleGestureEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(ScrollAreaEvent, nsIDOMScrollAreaEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMScrollAreaEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(EventListenerInfo, nsIEventListenerInfo)
     DOM_CLASSINFO_MAP_ENTRY(nsIEventListenerInfo)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TransitionEvent, nsIDOMTransitionEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTransitionEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(AnimationEvent, nsIDOMAnimationEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAnimationEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsISupports)
@@ -2139,11 +1939,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBIndex)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(IDBVersionChangeEvent, nsIIDBVersionChangeEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBVersionChangeEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(IDBOpenDBRequest, nsIIDBOpenDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBOpenDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBRequest)
@@ -2153,12 +1948,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchList, nsIDOMTouchList,
                                         !nsDOMTouchEvent::PrefEnabled())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchList)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchEvent, nsIDOMTouchEvent,
-                                        !nsDOMTouchEvent::PrefEnabled())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchEvent)
-    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
@@ -2178,16 +1967,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_B2G_RIL
-  DOM_CLASSINFO_MAP_BEGIN(MozWifiStatusChangeEvent, nsIDOMMozWifiStatusChangeEvent)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozWifiStatusChangeEvent)
-     DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MozWifiConnectionInfoEvent, nsIDOMMozWifiConnectionInfoEvent)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozWifiConnectionInfoEvent)
-     DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(Telephony, nsIDOMTelephony)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTelephony)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
@@ -2206,11 +1985,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(MozIccManager, nsIDOMMozIccManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozIccManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MozStkCommandEvent, nsIDOMMozStkCommandEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozStkCommandEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #endif

@@ -5,41 +5,25 @@
 import os
 import cPickle
 from Configuration import Configuration
-from Codegen import CGBindingRoot
+from Codegen import CGBindingRoot, replaceFileIfChanged
 
-def generate_binding_header(config, outputprefix, srcprefix, webidlfile):
+def generate_binding_files(config, outputprefix, srcprefix, webidlfile):
     """
     |config| Is the configuration object.
     |outputprefix| is a prefix to use for the header guards and filename.
     """
 
-    filename = outputprefix + ".h"
-    depsname = ".deps/" + filename + ".pp"
+    depsname = ".deps/" + outputprefix + ".pp"
     root = CGBindingRoot(config, outputprefix, webidlfile)
-    with open(filename, 'wb') as f:
-        f.write(root.declare())
+    replaceFileIfChanged(outputprefix + ".h", root.declare())
+    replaceFileIfChanged(outputprefix + ".cpp", root.define())
+
     with open(depsname, 'wb') as f:
         # Sort so that our output is stable
-        f.write("\n".join(filename + ": " + os.path.join(srcprefix, x) for
-                          x in sorted(root.deps())))
-
-def generate_binding_cpp(config, outputprefix, srcprefix, webidlfile):
-    """
-    |config| Is the configuration object.
-    |outputprefix| is a prefix to use for the header guards and filename.
-    """
-
-    filename = outputprefix + ".cpp"
-    depsname = ".deps/" + filename + ".pp"
-    root = CGBindingRoot(config, outputprefix, webidlfile)
-    with open(filename, 'wb') as f:
-        f.write(root.define())
-    with open(depsname, 'wb') as f:
-        f.write("\n".join(filename + ": " + os.path.join(srcprefix, x) for
+        f.write("\n".join(outputprefix + ": " + os.path.join(srcprefix, x) for
                           x in sorted(root.deps())))
 
 def main():
-
     # Parse arguments.
     from optparse import OptionParser
     usagestring = "usage: %prog [header|cpp] configFile outputPrefix srcPrefix webIDLFile"
@@ -48,29 +32,34 @@ def main():
                  help="When an error happens, display the Python traceback.")
     (options, args) = o.parse_args()
 
-    if len(args) != 5 or (args[0] != "header" and args[0] != "cpp"):
-        o.error(usagestring)
-    buildTarget = args[0]
-    configFile = os.path.normpath(args[1])
-    outputPrefix = args[2]
-    srcPrefix = os.path.normpath(args[3])
-    webIDLFile = os.path.normpath(args[4])
+    configFile = os.path.normpath(args[0])
+    srcPrefix = os.path.normpath(args[1])
 
-    # Load the parsing results
+    # Load the configuration
     f = open('ParserResults.pkl', 'rb')
-    parserData = cPickle.load(f)
+    config = cPickle.load(f)
     f.close()
 
-    # Create the configuration data.
-    config = Configuration(configFile, parserData)
+    def readFile(f):
+        file = open(f, 'rb')
+        try:
+            contents = file.read()
+        finally:
+            file.close()
+        return contents
+    allWebIDLFiles = readFile(args[2]).split()
+    changedDeps = readFile(args[3]).split()
 
-    # Generate the prototype classes.
-    if buildTarget == "header":
-        generate_binding_header(config, outputPrefix, srcPrefix, webIDLFile);
-    elif buildTarget == "cpp":
-        generate_binding_cpp(config, outputPrefix, srcPrefix, webIDLFile);
+    if all(f.endswith("Binding") or f == "ParserResults.pkl" for f in changedDeps):
+        toRegenerate = filter(lambda f: f.endswith("Binding"), changedDeps)
+        toRegenerate = map(lambda f: f[:-len("Binding")] + ".webidl", toRegenerate)
     else:
-        assert False # not reached
+        toRegenerate = allWebIDLFiles
+
+    for webIDLFile in toRegenerate:
+        assert webIDLFile.endswith(".webidl")
+        outputPrefix = webIDLFile[:-len(".webidl")] + "Binding"
+        generate_binding_files(config, outputPrefix, srcPrefix, webIDLFile);
 
 if __name__ == '__main__':
     main()

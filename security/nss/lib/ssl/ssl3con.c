@@ -8444,23 +8444,36 @@ ssl3_SendCertificate(sslSocket *ss)
 static SECStatus
 ssl3_SendCertificateStatus(sslSocket *ss)
 {
-    SECStatus            rv;
-    int                  len 		= 0;
+    SECStatus rv;
+    int len = 0;
+    SECItemArray *statusToSend = NULL;
+    SSL3KEAType certIndex;
 
     SSL_TRC(3, ("%d: SSL3[%d]: send certificate status handshake",
 		SSL_GETPID(), ss->fd));
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
+    PORT_Assert( ss->sec.isServer);
 
     if (!ssl3_ExtensionNegotiated(ss, ssl_cert_status_xtn))
 	return SECSuccess;
 
-    if (!ss->certStatusArray || !ss->certStatusArray->len)
+    /* Use certStatus based on the cert being used. */
+    if ((ss->ssl3.hs.kea_def->kea == kea_ecdhe_rsa) ||
+	(ss->ssl3.hs.kea_def->kea == kea_dhe_rsa)) {
+	certIndex = kt_rsa;
+    } else {
+	certIndex = ss->ssl3.hs.kea_def->exchKeyType;
+    }
+    if (ss->certStatusArray[certIndex] && ss->certStatusArray[certIndex]->len) {
+	statusToSend = ss->certStatusArray[certIndex];
+    }
+    if (!statusToSend)
 	return SECSuccess;
 
     /* Use the array's first item only (single stapling) */
-    len = 1 + ss->certStatusArray->items[0].len + 3;
+    len = 1 + statusToSend->items[0].len + 3;
 
     rv = ssl3_AppendHandshakeHeader(ss, certificate_status, len);
     if (rv != SECSuccess) {
@@ -8471,8 +8484,8 @@ ssl3_SendCertificateStatus(sslSocket *ss)
 	return rv; 		/* err set by AppendHandshake. */
 
     rv = ssl3_AppendHandshakeVariable(ss,
-				      ss->certStatusArray->items[0].data,
-				      ss->certStatusArray->items[0].len,
+				      statusToSend->items[0].data,
+				      statusToSend->items[0].len,
 				      3);
     if (rv != SECSuccess)
 	return rv; 		/* err set by AppendHandshake. */

@@ -1488,6 +1488,32 @@ PKIX_PL_Cert_VerifySignature(
         PKIX_PL_PublicKey *pubKey,
         void *plContext);
 
+/* A set of flags to indicate how explicitly configured trust anchors should be
+ * handled by PKIX_PL_Cert_IsCertTrusted
+ */
+typedef enum PKIX_PL_TrustAnchorModeEnum {
+        /* Indicates trust anchors should be ignored; only the underlying
+         * platform's trust settings should be used.
+         */
+        PKIX_PL_TrustAnchorMode_Ignore,
+
+        /* Indicates that explicitly configured trust anchors may be considered
+         * trustworthy, if present.
+         * Note: If the underlying platform supports marking a certificate as
+         *       explicitly untrustworthy, explicitly configured trust anchors
+         *       MAY be ignored/rejected.
+         */
+        PKIX_PL_TrustAnchorMode_Additive,
+
+        /* Indicates that ONLY trust anchors should be considered as
+         * trustworthy.
+         * Note: If the underlying platform supports marking a certificate as
+         *       explicitly untrustworthy, explicitly configured trust anchors
+         *       MAY be ignored/rejected.
+         */
+        PKIX_PL_TrustAnchorMode_Exclusive,
+} PKIX_PL_TrustAnchorMode;
+
 /*
  * FUNCTION: PKIX_PL_Cert_IsCertTrusted
  * DESCRIPTION:
@@ -1509,8 +1535,9 @@ PKIX_PL_Cert_VerifySignature(
  *  "cert"
  *      Address of Cert whose trustworthiness is to be determined. Must be
  *      non-NULL.
- *  "trustOnlyUserAnchors"
- *      States that we can only trust explicitly defined user trust anchors.
+ *  "trustAnchorMode"
+ *      A PKIX_PL_TrustAnchorMode that indicates how explicitly defined user
+ *      trust anchors should be handled.
  *  "pTrusted"
  *      Address where the Boolean value will be stored. Must be non-NULL.
  *  "plContext"
@@ -1525,7 +1552,7 @@ PKIX_PL_Cert_VerifySignature(
 PKIX_Error *
 PKIX_PL_Cert_IsCertTrusted(
         PKIX_PL_Cert *cert,
-        PKIX_Boolean trustOnlyUserAnchors,
+        PKIX_PL_TrustAnchorMode trustAnchorMode,
         PKIX_Boolean *pTrusted,
         void *plContext);
 

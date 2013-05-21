@@ -1172,7 +1172,6 @@ public class GeckoAppShell
     /* On some devices, access to the clipboard service needs to happen
      * on a thread with a looper, so this function requires a looper is
      * present on the thread. */
-    @SuppressWarnings("deprecation")
     private static String getClipboardTextImpl() {
         Context context = GeckoApp.mAppContext;
         if (android.os.Build.VERSION.SDK_INT >= 11) {
@@ -1220,10 +1219,13 @@ public class GeckoAppShell
         }
     }
 
-    static void setClipboardText(final String text) {
+    static void setClipboardText(String copiedText) {
+        // Copy an empty string instead of null to avoid clipboard crashes.
+        // AndroidBridge::EmptyClipboard() passes null to clear the clipboard's current contents.
+        final String text = (copiedText != null) ? copiedText : "";
+
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
-            @SuppressWarnings("deprecation")
             public void run() {
                 Context context = GeckoApp.mAppContext;
                 if (android.os.Build.VERSION.SDK_INT >= 11) {

@@ -92,7 +92,7 @@ static enum ocspStaplingModeEnum {
 } ocspStaplingMode = osm_disabled;
 typedef enum ocspStaplingModeEnum ocspStaplingModeType;
 static char *ocspStaplingCA = NULL;
-CERTCertificate * certForStatusWeakReference = NULL;
+static SECItemArray *certStatus[kt_kea_size] = { NULL };
 
 const int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
@@ -1108,7 +1108,7 @@ makeCorruptedOCSPResponse(PLArenaPool *arena)
 
 SECItemArray *
 makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
-		       PRFileDesc *model_sock, CERTCertificate *cert)
+		       CERTCertificate *cert, secuPWData *pwdata)
 {
     SECItemArray *result = NULL;
     SECItem *ocspResponse = NULL;
@@ -1118,9 +1118,8 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
     CERTCertificate *ca;
     PRTime now = PR_Now();
     PRTime nextUpdate;
-    secuPWData *pwdata;
 
-    PORT_Assert(model_sock != NULL && cert != NULL);
+    PORT_Assert(cert != NULL);
 
     ca = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), ocspStaplingCA);
     if (!ca)
@@ -1164,8 +1163,6 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
     singleResponses[0] = sr;
     singleResponses[1] = NULL;
 
-    pwdata = SSL_RevealPinArg(model_sock);
-
     ocspResponse = CERT_CreateEncodedOCSPSuccessResponse(arena,
 			(osm == osm_badsig) ? NULL : ca,
 			ocspResponderID_byName, now, singleResponses,
@@ -1187,6 +1184,53 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
     cid = NULL;
 
     return result;
+}
+
+void
+setupCertStatus(PLArenaPool *arena, enum ocspStaplingModeEnum ocspStaplingMode,
+		CERTCertificate *cert, SSLKEAType kea, secuPWData *pwdata)
+{
+    if (ocspStaplingMode == osm_random) {
+	/* 6 different responses */
+	int r = rand() % 6;
+	switch (r) {
+	    case 0: ocspStaplingMode = osm_good; break;
+	    case 1: ocspStaplingMode = osm_revoked; break;
+	    case 2: ocspStaplingMode = osm_unknown; break;
+	    case 3: ocspStaplingMode = osm_badsig; break;
+	    case 4: ocspStaplingMode = osm_corrupted; break;
+	    case 5: ocspStaplingMode = osm_failure; break;
+	    default: PORT_Assert(0); break;
+	}
+    }
+    if (ocspStaplingMode != osm_disabled) {
+	SECItemArray *multiOcspResponses = NULL;
+	switch (ocspStaplingMode) {
+	    case osm_good:
+	    case osm_revoked:
+	    case osm_unknown:
+	    case osm_badsig:
+		multiOcspResponses =
+		    makeSignedOCSPResponse(arena, ocspStaplingMode, cert,
+					   pwdata);
+		break;
+	    case osm_corrupted:
+		multiOcspResponses = makeCorruptedOCSPResponse(arena);
+		break;
+	    case osm_failure:
+		multiOcspResponses = makeTryLaterOCSPResponse(arena);
+		break;
+	    case osm_ocsp:
+		errExit("stapling mode \"ocsp\" not implemented");
+		break;
+		break;
+	    default:
+		break;
+	}
+	if (multiOcspResponses) {
+	   certStatus[kea] = multiOcspResponses;
+	}
+   }
 }
 
 int
@@ -1216,8 +1260,7 @@ handle_connection(
     char               fileName[513];
     char               proto[128];
     PRDescIdentity     aboveLayer = PR_INVALID_IO_LAYER;
-    PLArenaPool *arena = NULL;
-    ocspStaplingModeType osm;
+    SSLKEAType  kea;
 
     pBuf   = buf;
     bufRem = sizeof buf;
@@ -1244,57 +1287,11 @@ handle_connection(
 	ssl_sock = tcp_sock;
     }
 
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena)
-	errExit("cannot allocate arena");
-
-    osm = ocspStaplingMode;
-    if (osm == osm_random) {
-	/* 6 different responses */
-	int r = rand() % 6;
-	switch (r) {
-	    case 0: osm = osm_good; break;
-	    case 1: osm = osm_revoked; break;
-	    case 2: osm = osm_unknown; break;
-	    case 3: osm = osm_badsig; break;
-	    case 4: osm = osm_corrupted; break;
-	    case 5: osm = osm_failure; break;
-	    default: PORT_Assert(0); break;
-	}
+    for (kea = kt_rsa; kea < kt_kea_size; kea++) {
+       if (certStatus[kea] != NULL) {
+           SSL_SetStapledOCSPResponses(ssl_sock, certStatus[kea], kea);
+       }
     }
-    if (osm != osm_disabled) {
-	SECItemArray *multiOcspResponses = NULL;
-	switch (osm) {
-	    case osm_good:
-	    case osm_revoked:
-	    case osm_unknown:
-	    case osm_badsig:
-		multiOcspResponses =
-		    makeSignedOCSPResponse(arena, osm, ssl_sock,
-					   certForStatusWeakReference);
-		break;
-	    case osm_corrupted:
-		multiOcspResponses = makeCorruptedOCSPResponse(arena);
-		break;
-	    case osm_failure:
-		multiOcspResponses = makeTryLaterOCSPResponse(arena);
-		break;
-	    case osm_ocsp:
-		errExit("stapling mode \"ocsp\" not implemented");
-		break;
-		break;
-	    default:
-		break;
-	}
-
-	if (multiOcspResponses) {
-	    SSL_SetStapledOCSPResponses(ssl_sock, multiOcspResponses,
-					PR_FALSE /* no ownership transfer */);
-	}
-    }
-
-    PORT_FreeArena(arena, PR_FALSE);
-    arena = NULL;
 
     if (loggingLayer) {
         /* find the layer where our new layer is to be pushed */
@@ -1910,9 +1907,6 @@ server_main(
 
     for (kea = kt_rsa; kea < kt_kea_size; kea++) {
 	if (cert[kea] != NULL) {
-	    if (!certForStatusWeakReference)
-		certForStatusWeakReference = cert[kea];
-
 	    secStatus = SSL_ConfigSecureServer(model_sock, 
 	    		cert[kea], privKey[kea], kea);
 	    if (secStatus != SECSuccess)
@@ -2172,6 +2166,7 @@ main(int argc, char **argv)
     PRUint32             i;
     secuPWData  pwdata = { PW_NONE, 0 };
     char                *expectedHostNameVal = NULL;
+    PLArenaPool         *certStatusArena = NULL;
 
     tmp = strrchr(argv[0], '/');
     tmp = tmp ? tmp + 1 : argv[0];
@@ -2569,6 +2564,10 @@ main(int argc, char **argv)
         }
     }
 
+    certStatusArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!certStatusArena)
+	errExit("cannot allocate certStatusArena");
+
     if (nickName) {
 	cert[kt_rsa] = PK11_FindCertFromNickname(nickName, &pwdata);
 	if (cert[kt_rsa] == NULL) {
@@ -2591,6 +2590,8 @@ main(int argc, char **argv)
 	    fprintf(stderr, "selfserv: %s can%s bypass\n", nickName,
 		    bypassOK ? "" : "not");
 	}
+	setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_rsa], kt_rsa,
+			&pwdata);
     }
 #ifdef NSS_ENABLE_ECC
     if (ecNickName) {
@@ -2615,7 +2616,9 @@ main(int argc, char **argv)
 	    }
 	    fprintf(stderr, "selfserv: %s can%s bypass\n", ecNickName,
 		    bypassOK ? "" : "not");
-       }
+	}
+	setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_ecdh], kt_ecdh,
+			&pwdata);
     }
 #endif /* NSS_ENABLE_ECC */
 
@@ -2697,6 +2700,9 @@ cleanup:
     if (hasSidCache) {
 	SSL_ShutdownServerSessionIDCache();
     }
+    if (certStatusArena) {
+	PORT_FreeArena(certStatusArena, PR_FALSE);
+    }
     if (NSS_Shutdown() != SECSuccess) {
 	SECU_PrintError(progName, "NSS_Shutdown");
         if (loggerThread) {
@@ -2709,4 +2715,3 @@ cleanup:
     printf("selfserv: normal termination\n");
     return 0;
 }
-

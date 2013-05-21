@@ -53,7 +53,6 @@ members = [
     # dom/interfaces/core
     'nsIDOMDOMStringList.*',
 
-    'nsIDOMDragEvent.*',
     'nsIDOMProgressEvent.lengthComputable',
     'nsIDOMProgressEvent.loaded',
     'nsIDOMProgressEvent.total',
@@ -110,7 +109,6 @@ members = [
     'nsIIDBRequest.*',
     'nsIIDBTransaction.*',
     'nsIIDBOpenDBRequest.*',
-    'nsIIDBVersionChangeEvent.*',
     'nsIIndexedDatabaseManager.*',
 
     # dom/file
@@ -150,8 +148,6 @@ customIncludes = [
     'nsPerformance.h',
     'mozilla/dom/EventTargetBinding.h',
     'mozilla/dom/EventBinding.h',
-    'mozilla/dom/MouseEventBinding.h',
-    'mozilla/dom/UIEventBinding.h',
     ]
 
 nsIDOMStorage_Clear_customMethodCallCode = """
@@ -195,6 +191,4 @@ newBindingProperties = {
     'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMEvent': 'mozilla::dom::EventBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMMouseEvent': 'mozilla::dom::MouseEventBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMUIEvent': 'mozilla::dom::UIEventBinding::sNativePropertyHooks.mNativeProperties.regular',
     }
