@@ -28,6 +28,10 @@ function go() {
   var walker = doc.createTreeWalker(doc.body);
   pass = pass && (walker.root === doc.body);
 
+  // Grab a reference to Object.prototype to make sure we test the machinery
+  // with respect to standard prototype remapping.
+  var objProto = ifr.contentWindow.Object.prototype;
+
   // First, do the document.domain operation. This shouldn't crash.
   document.domain = "example.org";
 
