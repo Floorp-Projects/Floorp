@@ -109,14 +109,6 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   nsresult rv = nsContentUtils::GetSecurityManager()->
     CheckFunctionAccess(cx, js::UncheckedUnwrap(aCallback), nullptr);
 
-  // Construct a termination func holder even if we're not planning to
-  // run any script.  We need this because we're going to call
-  // ScriptEvaluated even if we don't run the script...  See XXX
-  // comment above.
-  if (ctx) {
-    mTerminationFuncHolder.construct(static_cast<nsJSContext*>(ctx));
-  }
-
   if (NS_FAILED(rv)) {
     // Security check failed.  We're done here.
     return;
