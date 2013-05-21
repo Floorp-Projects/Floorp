@@ -23,7 +23,7 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testKeyboard.js</p>";
+const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testKeyboard2.js</p>";
 
 function test() {
   helpers.addTabWithToolbar(TEST_URI, function(options) {
@@ -35,24 +35,14 @@ function test() {
 
 'use strict';
 
-var javascript = require('gcli/types/javascript');
 // var helpers = require('gclitest/helpers');
 // var mockCommands = require('gclitest/mockCommands');
-var canon = require('gcli/canon');
-
-var tempWindow = undefined;
 
 exports.setup = function(options) {
   mockCommands.setup();
-
-  tempWindow = javascript.getGlobalObject();
-  javascript.setGlobalObject(options.window);
 };
 
 exports.shutdown = function(options) {
-  javascript.setGlobalObject(tempWindow);
-  tempWindow = undefined;
-
   mockCommands.shutdown();
 };
 
@@ -71,98 +61,6 @@ exports.testSimple = function(options) {
     {
       setup: 'tsg a<TAB>',
       check: { input: 'tsg aaa ', cursor: 8 }
-    }
-  ]);
-};
-
-exports.testComplete = function(options) {
-  return helpers.audit(options, [
-    {
-      setup: 'tsn e<DOWN><DOWN><DOWN><DOWN><DOWN><TAB>',
-      check: { input: 'tsn exte ' }
-    },
-    {
-      setup: 'tsn e<DOWN><DOWN><DOWN><DOWN><TAB>',
-      check: { input: 'tsn ext ' }
-    },
-    {
-      setup: 'tsn e<DOWN><DOWN><DOWN><TAB>',
-      check: { input: 'tsn extend ' }
-    },
-    {
-      setup: 'tsn e<DOWN><DOWN><TAB>',
-      check: { input: 'tsn exten ' }
-    },
-    {
-      setup: 'tsn e<DOWN><TAB>',
-      check: { input: 'tsn exte ' }
-    },
-    {
-      setup: 'tsn e<TAB>',
-      check: { input: 'tsn ext ' }
-    },
-    {
-      setup: 'tsn e<UP><TAB>',
-      check: { input: 'tsn extend ' }
-    },
-    {
-      setup: 'tsn e<UP><UP><TAB>',
-      check: { input: 'tsn exten ' }
-    },
-    {
-      setup: 'tsn e<UP><UP><UP><TAB>',
-      check: { input: 'tsn exte ' }
-    },
-    {
-      setup: 'tsn e<UP><UP><UP><UP><TAB>',
-      check: { input: 'tsn ext ' }
-    },
-    {
-      setup: 'tsn e<UP><UP><UP><UP><UP><TAB>',
-      check: { input: 'tsn extend ' }
-    },
-    {
-      setup: 'tsn e<UP><UP><UP><UP><UP><UP><TAB>',
-      check: { input: 'tsn exten ' }
-    },
-    {
-      setup: 'tsn e<UP><UP><UP><UP><UP><UP><UP><TAB>',
-      check: { input: 'tsn exte ' }
-    },
-    {
-      setup: 'tsn e<UP><UP><UP><UP><UP><UP><UP><UP><TAB>',
-      check: { input: 'tsn ext ' }
-    }
-  ]);
-};
-
-exports.testScript = function(options) {
-  return helpers.audit(options, [
-    {
-      skipIf: function commandJsMissing() {
-        return canon.getCommand('{') == null;
-      },
-      setup: '{ wind<TAB>',
-      check: { input: '{ window' }
-    },
-    {
-      skipIf: function commandJsMissing() {
-        return canon.getCommand('{') == null;
-      },
-      setup: '{ window.docum<TAB>',
-      check: { input: '{ window.document' }
-    }
-  ]);
-};
-
-exports.testJsdom = function(options) {
-  return helpers.audit(options, [
-    {
-      skipIf: function jsDomOrCommandJsMissing() {
-        return options.isJsdom || canon.getCommand('{') == null;
-      },
-      setup: '{ window.document.titl<TAB>',
-      check: { input: '{ window.document.title ' }
     }
   ]);
 };
