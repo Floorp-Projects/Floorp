@@ -81,11 +81,27 @@ let snapshotFormatters = {
 
     function localizedMsg(msgArray) {
       let nameOrMsg = msgArray.shift();
-      try {
-        return strings.formatStringFromName(nameOrMsg, msgArray,
-                                            msgArray.length);
+      if (msgArray.length) {
+        // formatStringFromName logs an NS_ASSERTION failure otherwise that says
+        // "use GetStringFromName".  Lame.
+        try {
+          return strings.formatStringFromName(nameOrMsg, msgArray,
+                                              msgArray.length);
+        }
+        catch (err) {
+          // Throws if nameOrMsg is not a name in the bundle.  This shouldn't
+          // actually happen though, since msgArray.length > 1 => nameOrMsg is a
+          // name in the bundle, not a message, and the remaining msgArray
+          // elements are parameters.
+          return nameOrMsg;
+        }
       }
-      catch (err) {}
+      try {
+        return strings.GetStringFromName(nameOrMsg);
+      }
+      catch (err) {
+        // Throws if nameOrMsg is not a name in the bundle.
+      }
       return nameOrMsg;
     }
 
