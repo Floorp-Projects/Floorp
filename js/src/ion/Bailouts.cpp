@@ -132,7 +132,7 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
 
     if (isFunctionFrame()) {
         Value thisv = iter.read();
-        argv()[-1] = thisv;
+        formals()[-1] = thisv;
 
         // The new |this| must have already been constructed prior to an Ion
         // constructor running.
@@ -145,7 +145,7 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
 
         for (uint32_t i = 0; i < fun()->nargs; i++) {
             Value arg = iter.read();
-            argv()[i] = arg;
+            formals()[i] = arg;
         }
     }
     exprStackSlots -= CountArgSlots(script(), maybeFun());
@@ -197,7 +197,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_INVOKE);
     int callerArgc = GET_ARGC(regs.pc);
     if (JSOp(*regs.pc) == JSOP_FUNAPPLY)
-        callerArgc = callerFrame->numActualArgs();
+        callerArgc = callerFrame->nactual();
     const Value &calleeVal = regs.sp[-callerArgc - 2];
 
     RootedFunction fun(cx, calleeVal.toObject().toFunction());
@@ -219,7 +219,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     JS_ASSERT(fp == regs.fp());
     JS_ASSERT(fp->prev() == callerFrame);
 
-    fp->argv()[-2].setObject(*fun);
+    fp->formals()[-2].setObject(*fun);
 
     return fp;
 }
@@ -285,7 +285,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 
     JSFunction *callee = it.maybeCallee();
     if (callee)
-        fp->argv()[-2].setObject(*callee);
+        fp->formals()[-2].setObject(*callee);
 
     if (it.isConstructing())
         fp->setConstructing();

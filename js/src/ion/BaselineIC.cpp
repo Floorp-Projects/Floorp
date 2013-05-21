@@ -778,7 +778,7 @@ PrepareOsrTempData(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     //
 
     // Copy formal args and thisv.
-    memcpy(stackFrameStart, frame->argv() - 1, (numFormalArgs + 1) * sizeof(Value));
+    memcpy(stackFrameStart, frame->formals() - 1, (numFormalArgs + 1) * sizeof(Value));
 
     // Initialize ScopeChain, Exec, and Flags fields in StackFrame struct.
     uint8_t *stackFrame = info->stackFrame;
