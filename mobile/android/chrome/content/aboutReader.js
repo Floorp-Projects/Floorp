@@ -671,7 +671,8 @@ AboutReader.prototype = {
         if (!aEvent.isTrusted)
           return;
 
-        updatePopupPosition();
+        // Wait for reflow before calculating the new position of the popup.
+        setTimeout(updatePopupPosition, 0);
       }, true);
 
       dropdownToggle.addEventListener("click", function(aEvent) {
