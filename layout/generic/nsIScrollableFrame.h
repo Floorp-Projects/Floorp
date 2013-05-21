@@ -81,11 +81,7 @@ public:
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
                                             nsRenderingContext* aRC) = 0;
-  /**
-   * Return the width for non-disappearing scrollbars.
-   */
-  virtual nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
-                                                   nsRenderingContext* aRC) = 0;
+
   /**
    * Get the area of the scrollport relative to the origin of this frame's
    * border-box.
