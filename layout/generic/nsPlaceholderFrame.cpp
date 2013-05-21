@@ -97,6 +97,33 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
+#ifdef DEBUG
+  // We should be getting reflowed before our out-of-flow.
+  // If this is our first reflow, and our out-of-flow has already received its
+  // first reflow (before us), complain.
+  if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+      !(mOutOfFlowFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+
+    // Unfortunately, this can currently happen when the placeholder is in a
+    // later continuation than its out-of-flow (as is the case in some unit
+    // tests). So for now, in that case, we'll warn instead of asserting.
+    bool isInContinuation = false;
+    nsIFrame* ancestor = this;
+    while ((ancestor = ancestor->GetParent())) {
+      if (ancestor->GetPrevContinuation()) {
+        isInContinuation = true;
+        break;
+      }
+    }
+
+    if (isInContinuation) {
+      NS_WARNING("Out-of-flow frame got reflowed before its placeholder");
+    } else {
+      NS_ERROR("Out-of-flow frame got reflowed before its placeholder");
+    }
+  }
+#endif
+
   DO_GLOBAL_REFLOW_COUNT("nsPlaceholderFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.width = 0;
