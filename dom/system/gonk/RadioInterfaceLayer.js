@@ -95,6 +95,8 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:RegisterMobileConnectionMsg",
   "RIL:SetCallForwardingOption",
   "RIL:GetCallForwardingOption",
+  "RIL:SetCallBarringOption",
+  "RIL:GetCallBarringOption",
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption"
 ];
@@ -552,6 +554,14 @@ RadioInterfaceLayer.prototype = {
         this.saveRequestTarget(msg);
         this.getCallForwardingOption(msg.json);
         break;
+      case "RIL:SetCallBarringOption":
+        this.saveRequestTarget(msg);
+        this.setCallBarringOption(msg.json);
+        break;
+      case "RIL:GetCallBarringOption":
+        this.saveRequestTarget(msg);
+        this.getCallBarringOption(msg.json);
+        break;
       case "RIL:SetCallWaitingOption":
         this.saveRequestTarget(msg);
         this.setCallWaitingOption(msg.json);
@@ -727,6 +737,12 @@ RadioInterfaceLayer.prototype = {
         break;
       case "setCallForward":
         this.handleSetCallForward(message);
+        break;
+      case "queryCallBarringStatus":
+        this.handleQueryCallBarringStatus(message);
+        break;
+      case "setCallBarring":
+        this.handleSetCallBarring(message);
         break;
       case "queryCallWaiting":
         this.handleQueryCallWaiting(message);
@@ -1886,6 +1902,16 @@ RadioInterfaceLayer.prototype = {
     this._sendRequestResults(messageType, message);
   },
 
+  handleQueryCallBarringStatus: function handleQueryCallBarringStatus(message) {
+    debug("handleQueryCallBarringStatus: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:GetCallBarringOption", message);
+  },
+
+  handleSetCallBarring: function handleSetCallBarring(message) {
+    debug("handleSetCallBarring: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:SetCallBarringOption", message);
+  },
+
   handleQueryCallWaiting: function handleQueryCallWaiting(message) {
     debug("handleQueryCallWaiting: " + JSON.stringify(message));
     this._sendRequestResults("RIL:GetCallWaitingOption", message);
@@ -2241,6 +2267,18 @@ RadioInterfaceLayer.prototype = {
     message.rilMessageType = "queryCallForwardStatus";
     message.serviceClass = RIL.ICC_SERVICE_CLASS_NONE;
     message.number = null;
+    this.worker.postMessage(message);
+  },
+
+  setCallBarringOption: function setCallBarringingOption(message) {
+    debug("setCallBarringOption: " + JSON.stringify(message));
+    message.rilMessageType = "setCallBarring";
+    this.worker.postMessage(message);
+  },
+
+  getCallBarringOption: function getCallBarringOption(message) {
+    debug("getCallBarringOption: " + JSON.stringify(message));
+    message.rilMessageType = "queryCallBarringStatus";
     this.worker.postMessage(message);
   },
 
