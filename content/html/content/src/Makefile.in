@@ -81,6 +81,7 @@ CPPSRCS		= \
 		HTMLTextAreaElement.cpp \
 		HTMLTimeElement.cpp \
 		HTMLTitleElement.cpp \
+		HTMLTrackElement.cpp \
 		HTMLVideoElement.cpp \
 		HTMLUnknownElement.cpp \
 		MediaError.cpp \
@@ -118,4 +119,6 @@ INCLUDES	+= \
 		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)
 
-DEFINES += -D_IMPL_NS_LAYOUT
+DEFINES		+= \
+		-D_IMPL_NS_LAYOUT \
+		$(NULL)

@@ -28,6 +28,8 @@
 #include "MediaMetadataManager.h"
 #include "AudioChannelAgent.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/TextTrack.h"
+#include "mozilla/dom/TextTrackList.h"
 #include "mozilla/ErrorResult.h"
 
 // Define to output information on decoding and painting framerate
@@ -509,6 +511,16 @@ public:
     SetHTMLAttr(nsGkAtoms::mozaudiochannel, aValue, aRv);
   }
 
+  TextTrackList* TextTracks() const;
+
+  already_AddRefed<TextTrack> AddTextTrack(TextTrackKind aKind,
+                                           const nsAString& aLabel,
+                                           const nsAString& aLanguage);
+
+  void AddTextTrack(TextTrack* aTextTrack) {
+    mTextTracks->AddTextTrack(aTextTrack);
+  }
+
 protected:
   class MediaLoadListener;
   class StreamListener;
@@ -629,11 +641,6 @@ protected:
    * created.
    */
   void AbortExistingLoads();
-
-  /**
-   * Create a URI for the given aURISpec string.
-   */
-  nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
 
   /**
    * Called when all potential resources are exhausted. Changes network
@@ -1103,6 +1110,9 @@ protected:
 
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
+
+  // List of our attached text track objects.
+  nsRefPtr<TextTrackList> mTextTracks;
 };
 
 } // namespace dom
