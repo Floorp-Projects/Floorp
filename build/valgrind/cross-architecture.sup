@@ -297,3 +297,11 @@
    fun:_ZN7mozilla3dom7workers13WorkerPrivate9DoRunLoopEP9JSContext
    ...
 }
+{
+   Bug 874658
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_Z31mozilla_sampler_register_threadPKc
+   ...
+}
