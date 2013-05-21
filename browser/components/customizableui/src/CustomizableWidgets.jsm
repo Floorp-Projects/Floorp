@@ -8,6 +8,25 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 this.EXPORTED_SYMBOLS = ["CustomizableWidgets"];
 
 Cu.import("resource:///modules/CustomizableUI.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+
+const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const kPrefCustomizationDebug = "browser.uiCustomization.debug";
+
+let gDebug = false;
+try {
+  gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
+} catch (e) {}
+
+function LOG(aMsg) {
+  if (gDebug) {
+    Services.console.logStringMessage("[CustomizableWidgets] " + aMsg);
+  }
+}
+function ERROR(aMsg) Cu.reportError("[CustomizableWidgets] " + aMsg);
 
 const CustomizableWidgets = [{
     id: "history-panelmenu",
