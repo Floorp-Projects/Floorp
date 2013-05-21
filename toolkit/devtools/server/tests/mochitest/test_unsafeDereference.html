@@ -28,6 +28,7 @@ window.onload = function () {
 
   iframe.onload = function () {
     var dbg = new Debugger;
+    dbg.uncaughtExceptionHook = testExceptionHook;
     var contentDO = dbg.addDebuggee(iframe.contentWindow);
     var xhrDesc = contentDO.getOwnPropertyDescriptor('xhr');
 

@@ -1004,15 +1004,15 @@ let RemoteDebugger = {
     if (!DebuggerServer.initialized) {
       // Ask for remote connections.
       DebuggerServer.init(this.prompt.bind(this));
-      DebuggerServer.addActors("chrome://global/content/devtools/dbg-browser-actors.js");
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
 #ifndef MOZ_WIDGET_GONK
-      DebuggerServer.addActors("chrome://global/content/devtools/dbg-webconsole-actors.js");
-      DebuggerServer.addActors("chrome://global/content/devtools/dbg-gcli-actors.js");
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
 #endif
       if ("nsIProfiler" in Ci) {
-        DebuggerServer.addActors("chrome://global/content/devtools/dbg-profiler-actors.js");
+        DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
       }
-      DebuggerServer.addActors("chrome://global/content/devtools/dbg-styleeditor-actors.js");
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
       DebuggerServer.addActors('chrome://browser/content/dbg-webapps-actors.js');
     }
