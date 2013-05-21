@@ -903,8 +903,6 @@ protected:
                                     JSContext *aJSCallerContext,
                                     nsIDOMWindow **aReturn);
 
-  static void CloseWindow(nsISupports* aWindow);
-
   // Timeout Functions
   // Language agnostic timeout function (all args passed).
   // |interval| is in milliseconds.
