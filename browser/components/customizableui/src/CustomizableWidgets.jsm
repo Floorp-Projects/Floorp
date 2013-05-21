@@ -33,7 +33,7 @@ const CustomizableWidgets = [{
     type: "view",
     viewId: "PanelUI-history",
     name: "History...",
-    description: "History repeats itself!",
+    description: "History",
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     icons: {
