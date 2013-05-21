@@ -87,6 +87,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLTextAreaElement, Element)
 
 // QueryInterface implementation for HTMLTextAreaElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(HTMLTextAreaElement,
                                    nsIDOMHTMLTextAreaElement,
                                    nsITextControlElement,

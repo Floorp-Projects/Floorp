@@ -43,6 +43,7 @@ NS_IMPL_ADDREF_INHERITED(HTMLVideoElement, HTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(HTMLVideoElement, HTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(HTMLVideoElement)
+  NS_HTML_CONTENT_INTERFACES(HTMLMediaElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLVideoElement, nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLVideoElement,
                                                HTMLMediaElement)

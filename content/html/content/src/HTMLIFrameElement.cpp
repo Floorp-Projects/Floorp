@@ -36,6 +36,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLIFrameElement, Element)
 
 // QueryInterface implementation for HTMLIFrameElement
 NS_INTERFACE_TABLE_HEAD(HTMLIFrameElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFrameElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLIFrameElement,
                                    nsIDOMHTMLIFrameElement,
                                    nsIDOMGetSVGDocument)

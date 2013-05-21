@@ -26,6 +26,7 @@ NS_IMPL_ADDREF_INHERITED(HTMLDataElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLDataElement, Element)
 
 NS_INTERFACE_TABLE_HEAD(HTMLDataElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE0(HTMLDataElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLDataElement,
                                                nsGenericHTMLElement)

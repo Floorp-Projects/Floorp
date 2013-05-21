@@ -34,6 +34,7 @@ NS_IMPL_ADDREF_INHERITED(HTMLAudioElement, HTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(HTMLAudioElement, HTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(HTMLAudioElement)
+  NS_HTML_CONTENT_INTERFACES(HTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE4(HTMLAudioElement, nsIDOMHTMLMediaElement,
                                  nsIDOMHTMLAudioElement, nsITimerCallback,
                                  nsIAudioChannelAgentCallback)
