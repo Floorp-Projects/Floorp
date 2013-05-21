@@ -1455,13 +1455,6 @@ protected:
 #define NS_HTML_CONTENT_INTERFACES(_base)                                     \
   NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(_base, nsIDOMHTMLElement)
 
-#define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
-  NS_ELEMENT_INTERFACE_MAP_END
-
-#define NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(_class)                \
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                              \
-  NS_HTML_CONTENT_INTERFACE_MAP_END
-
 #define NS_INTERFACE_MAP_ENTRY_IF_TAG(_interface, _tag)                       \
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(_interface,                              \
                                      mNodeInfo->Equals(nsGkAtoms::_tag))
