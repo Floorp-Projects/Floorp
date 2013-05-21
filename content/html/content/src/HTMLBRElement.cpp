@@ -34,6 +34,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLBRElement, Element)
 
 // QueryInterface implementation for HTMLBRElement
 NS_INTERFACE_TABLE_HEAD(HTMLBRElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLBRElement, nsIDOMHTMLBRElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLBRElement,
                                                nsGenericHTMLElement)

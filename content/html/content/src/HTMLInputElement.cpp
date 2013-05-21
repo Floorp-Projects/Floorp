@@ -730,6 +730,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLInputElement, Element)
 
 // QueryInterface implementation for HTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
   NS_HTML_CONTENT_INTERFACE_TABLE8(HTMLInputElement,
                                    nsIDOMHTMLInputElement,
                                    nsITextControlElement,

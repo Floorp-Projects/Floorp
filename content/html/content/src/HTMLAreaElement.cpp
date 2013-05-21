@@ -29,6 +29,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLAreaElement, Element)
 
 // QueryInterface implementation for HTMLAreaElement
 NS_INTERFACE_TABLE_HEAD(HTMLAreaElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE3(HTMLAreaElement,
                                    nsIDOMHTMLAreaElement,
                                    nsILink,

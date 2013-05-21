@@ -28,6 +28,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLModElement, Element)
 
 // QueryInterface implementation for HTMLModElement
 NS_INTERFACE_TABLE_HEAD(HTMLModElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLModElement,
                                    nsIDOMHTMLModElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLModElement,

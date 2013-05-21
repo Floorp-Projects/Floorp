@@ -29,6 +29,7 @@ NS_IMPL_ADDREF_INHERITED(HTMLTimeElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTimeElement, Element)
 
 NS_INTERFACE_TABLE_HEAD(HTMLTimeElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE0(HTMLTimeElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLTimeElement,
                                                nsGenericHTMLElement)

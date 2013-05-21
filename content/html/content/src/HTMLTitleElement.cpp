@@ -40,6 +40,7 @@ namespace dom {
 
 // QueryInterface implementation for HTMLTitleElement
 NS_INTERFACE_TABLE_HEAD(HTMLTitleElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLTitleElement,
                                    nsIDOMHTMLTitleElement,
                                    nsIMutationObserver)

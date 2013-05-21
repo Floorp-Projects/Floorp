@@ -82,6 +82,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLOptionElement, Element)
 
 // QueryInterface implementation for HTMLOptionElement
 NS_INTERFACE_TABLE_HEAD(HTMLOptionElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLOptionElement,
                                    nsIDOMHTMLOptionElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLOptionElement,
