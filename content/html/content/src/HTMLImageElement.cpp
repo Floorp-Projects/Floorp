@@ -91,8 +91,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLImageElement)
                                 nsIImageLoadingContent,
                                 imgIOnloadBlocker,
                                 imgINotificationObserver)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLImageElement,
-                                               nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

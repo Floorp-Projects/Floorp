@@ -62,8 +62,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLMenuElement)
   NS_INTERFACE_TABLE_INHERITED2(HTMLMenuElement,
                                 nsIDOMHTMLMenuElement,
                                 nsIHTMLMenu)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLMenuElement,
-                                               nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLMenuElement)
