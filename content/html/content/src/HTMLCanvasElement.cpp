@@ -165,7 +165,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement)
                                 nsIDOMHTMLCanvasElement,
                                 nsICanvasElementExternal)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
 
