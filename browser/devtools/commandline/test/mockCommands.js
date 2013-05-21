@@ -102,7 +102,7 @@ var tsrsrsr = {
   params: [
     { name: 'p1', type: 'string' },
     { name: 'p2', type: 'string' },
-    { name: 'p3', type: 'string' },
+    { name: 'p3', type: { name: 'string', allowBlank: true} },
   ],
   exec: createExec('tsrsrsr')
 };

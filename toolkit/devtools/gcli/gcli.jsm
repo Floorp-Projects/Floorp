@@ -232,8 +232,12 @@ exports.shutdown = function() {
  * The exception is that we ignore \b because replacing '\b' characters in
  * stringify() with their escaped version injects '\\b' all over the place and
  * the need to support \b seems low)
+ *
+ * @param typeSpec Options object, currently obeys only one parameter:
+ * - allowBlank: Allow a blank string to be counted as valid
  */
 function StringType(typeSpec) {
+  this._allowBlank = !!typeSpec.allowBlank;
 }
 
 StringType.prototype = Object.create(Type.prototype);
@@ -260,7 +264,7 @@ StringType.prototype.stringify = function(value, context) {
 };
 
 StringType.prototype.parse = function(arg, context) {
-  if (arg.text == null || arg.text === '') {
+  if (!this._allowBlank && (arg.text == null || arg.text === '')) {
     return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
 
@@ -11516,7 +11520,7 @@ Completer.prototype._getCompleterTemplateData = function() {
         // There's no prediction, but if this is a named argument that needs a
         // value (that is without any) then we need to show that one is needed
         // For example 'git commit --message ', clearly needs some more text
-        if (cArg.type === 'NamedArgument' && cArg.text === '') {
+        if (cArg.type === 'NamedArgument' && cArg.valueArg == null) {
           emptyParameters.push('<' + current.param.type.name + '>\u00a0');
         }
       }
