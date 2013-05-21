@@ -3325,3 +3325,37 @@ nsGenericHTMLElement::IsEventAttributeName(nsIAtom *aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML);
 }
+
+/**
+ * Construct a URI from a string, as an element.src attribute
+ * would be set to. Helper for the media elements.
+ */
+nsresult
+nsGenericHTMLElement::NewURIFromString(const nsAutoString& aURISpec,
+                                       nsIURI** aURI)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  *aURI = nullptr;
+
+  nsCOMPtr<nsIDocument> doc = OwnerDoc();
+
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI, aURISpec,
+                                                          doc, baseURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool equal;
+  if (aURISpec.IsEmpty() &&
+      doc->GetDocumentURI() &&
+      NS_SUCCEEDED(doc->GetDocumentURI()->Equals(*aURI, &equal)) &&
+      equal) {
+    // Assume an element can't point to a fragment of its embedding
+    // document. Fail here instead of returning the recursive URI
+    // and waiting for the subsequent load to fail.
+    NS_RELEASE(*aURI);
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  return NS_OK;
+}
