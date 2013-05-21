@@ -8,6 +8,7 @@
 </head>
 <body>
 <pre id="test">
+<script src="use_large_cache.js"></script>
 <script class="testbody" type="text/javascript">
 
 var manager = new MediaTestManager;
@@ -39,11 +40,8 @@ function startTest(test, token) {
   document.body.appendChild(v);
 }
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
-function beginTest() {
-  manager.runTests(gProgressTests, startTest);
-}
+manager.runTests(gProgressTests, startTest);
+
 </script>
 </pre>
 </body>

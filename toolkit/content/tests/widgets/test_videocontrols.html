@@ -14,6 +14,7 @@
 </div>
 
 <pre id="test">
+<script type="text/javascript" src="use_large_cache.js"></script>
 <script class="testbody" type="text/javascript">
 
 /*
@@ -237,19 +238,16 @@ function maybeStartTest() {
 var testnum = 1;
 var video = document.getElementById("video");
 
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
-function startTest() {
-  // Kick off test once video has loaded.
-  video.addEventListener("canplaythrough",  canplaythroughevent, false);
-  window.addEventListener("load",  loadevent, false);
+// Kick off test once video has loaded.
+video.addEventListener("canplaythrough",  canplaythroughevent, false);
+window.addEventListener("load",  loadevent, false);
 
-  // Other events expected by the test.
-  video.addEventListener("play",  runTest, false);
-  video.addEventListener("pause", runTest, false);
-  video.addEventListener("volumechange", runTest, false);
-  video.addEventListener("seeking", runTest, false);
-  video.addEventListener("seeked", runTest, false);
-}
+// Other events expected by the test.
+video.addEventListener("play",  runTest, false);
+video.addEventListener("pause", runTest, false);
+video.addEventListener("volumechange", runTest, false);
+video.addEventListener("seeking", runTest, false);
+video.addEventListener("seeked", runTest, false);
 
 SimpleTest.waitForExplicitFinish();
 

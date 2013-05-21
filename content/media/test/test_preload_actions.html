@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548523
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="use_large_cache.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=548523">Mozilla Bug 548523</a>
@@ -567,11 +568,8 @@ function startTest(test, token) {
 }
 
 var twiceTests = tests.concat(tests);
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
-function beginTest() {
-  manager.runTests(twiceTests, startTest);
-}
+manager.runTests(twiceTests, startTest);
+
 </script>
 </pre>
 </body>
