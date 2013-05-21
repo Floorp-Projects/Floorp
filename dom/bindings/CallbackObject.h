@@ -148,10 +148,6 @@ protected:
     // this needs to be a Maybe.
     Maybe<XPCAutoRequest> mAr;
 
-    // Can't construct a TerminationFuncHolder without an nsJSContext.  But we
-    // generally want its destructor to come after the destructor of mCxPusher.
-    Maybe<nsJSContext::TerminationFuncHolder> mTerminationFuncHolder;
-
     nsCxPusher mCxPusher;
 
     // Can't construct a JSAutoCompartment without a JSContext either.  Also,
