@@ -2125,8 +2125,6 @@ private:
 // XPCWrappedNativeProto hold the additional shared wrapper data
 // for XPCWrappedNative whose native objects expose nsIClassInfo.
 
-#define UNKNOWN_OFFSETS ((QITableEntry*)1)
-
 class XPCWrappedNativeProto
 {
 public:
@@ -2134,7 +2132,6 @@ public:
     GetNewOrUsed(XPCWrappedNativeScope* scope,
                  nsIClassInfo* classInfo,
                  const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
-                 QITableEntry* offsets = UNKNOWN_OFFSETS,
                  bool callPostCreatePrototype = true);
 
     XPCWrappedNativeScope*
@@ -2160,40 +2157,6 @@ public:
 
     uint32_t
     GetClassInfoFlags() const {return mClassInfoFlags;}
-
-    QITableEntry*
-    GetOffsets()
-    {
-        return InitedOffsets() ? mOffsets : nullptr;
-    }
-    QITableEntry*
-    GetOffsetsMasked()
-    {
-        return mOffsets;
-    }
-    void
-    CacheOffsets(nsISupports* identity)
-    {
-        static NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
-
-#ifdef DEBUG
-        if (InitedOffsets() && mOffsets) {
-            QITableEntry* offsets;
-            identity->QueryInterface(kThisPtrOffsetsSID, (void**)&offsets);
-            NS_ASSERTION(offsets == mOffsets,
-                         "We can't deal with objects that have the same "
-                         "classinfo but different offset tables.");
-        }
-#endif
-
-        if (!InitedOffsets()) {
-            if (mClassInfoFlags & nsIClassInfo::CONTENT_NODE) {
-                identity->QueryInterface(kThisPtrOffsetsSID, (void**)&mOffsets);
-            } else {
-                mOffsets = nullptr;
-            }
-        }
-    }
 
 #ifdef GET_IT
 #undef GET_IT
@@ -2270,8 +2233,7 @@ protected:
     XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
                           nsIClassInfo* ClassInfo,
                           uint32_t ClassInfoFlags,
-                          XPCNativeSet* Set,
-                          QITableEntry* offsets);
+                          XPCNativeSet* Set);
 
     JSBool Init(const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
                 bool callPostCreatePrototype);
@@ -2282,12 +2244,6 @@ private:
 #endif
 
 private:
-    bool
-    InitedOffsets()
-    {
-        return mOffsets != UNKNOWN_OFFSETS;
-    }
-
     XPCWrappedNativeScope*   mScope;
     JS::ObjectPtr            mJSProtoObject;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
@@ -2295,7 +2251,6 @@ private:
     XPCNativeSet*            mSet;
     void*                    mSecurityInfo;
     XPCNativeScriptableInfo* mScriptableInfo;
-    QITableEntry*            mOffsets;
 };
 
 class xpcObjectHelper;
@@ -2700,20 +2655,6 @@ public:
     JSObject *GetSameCompartmentSecurityWrapper(JSContext *cx);
 
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
-
-    QITableEntry* GetOffsets()
-    {
-        if (!HasProto() || !GetProto()->ClassIsDOMObject())
-            return nullptr;
-
-        XPCWrappedNativeProto* proto = GetProto();
-        QITableEntry* offsets = proto->GetOffsets();
-        if (!offsets) {
-            static NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
-            mIdentity->QueryInterface(kThisPtrOffsetsSID, (void**)&offsets);
-        }
-        return offsets;
-    }
 
     // Make ctor and dtor protected (rather than private) to placate nsCOMPtr.
 protected:
