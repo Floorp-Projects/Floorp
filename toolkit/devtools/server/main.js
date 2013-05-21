@@ -41,7 +41,7 @@ function dbg_assert(cond, e) {
   }
 }
 
-loadSubScript.call(this, "chrome://global/content/devtools/dbg-transport.js");
+loadSubScript.call(this, "resource://gre/modules/devtools/server/transport.js");
 
 // XPCOM constructors
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
@@ -114,7 +114,7 @@ var DebuggerServer = {
 
     this.xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     this.initTransport(aAllowConnectionCallback);
-    this.addActors("chrome://global/content/devtools/dbg-script-actors.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/script.js");
 
     this._initialized = true;
   },
@@ -177,13 +177,13 @@ var DebuggerServer = {
    * Install Firefox-specific actors.
    */
   addBrowserActors: function DS_addBrowserActors() {
-    this.addActors("chrome://global/content/devtools/dbg-browser-actors.js");
-    this.addActors("chrome://global/content/devtools/dbg-webconsole-actors.js");
-    this.addActors("chrome://global/content/devtools/dbg-gcli-actors.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
     if ("nsIProfiler" in Ci)
-      this.addActors("chrome://global/content/devtools/dbg-profiler-actors.js");
+      this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
 
-    this.addActors("chrome://global/content/devtools/dbg-styleeditor-actors.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
   },
 
   /**
