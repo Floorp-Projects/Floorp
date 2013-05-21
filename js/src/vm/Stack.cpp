@@ -221,7 +221,7 @@ StackFrame::copyRawFrameSlots(AutoValueVector *vec)
 {
     if (!vec->resize(numFormalArgs() + script()->nfixed))
         return false;
-    PodCopy(vec->begin(), formals(), numFormalArgs());
+    PodCopy(vec->begin(), argv(), numFormalArgs());
     PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed);
     return true;
 }

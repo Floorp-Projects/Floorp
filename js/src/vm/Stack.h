@@ -212,8 +212,7 @@ class AbstractFramePtr
     inline unsigned numActualArgs() const;
     inline unsigned numFormalArgs() const;
 
-    inline Value *formals() const;
-    inline Value *actuals() const;
+    inline Value *argv() const;
 
     inline bool hasArgsObj() const;
     inline ArgumentsObject &argsObj() const;
@@ -287,33 +286,29 @@ class StackFrame
         YIELDING           =       0x40,  /* Interpret dispatched JSOP_YIELD */
         FINISHED_IN_INTERP =       0x80,  /* set if frame finished in Interpret() */
 
-        /* Function arguments */
-        OVERFLOW_ARGS      =      0x100,  /* numActualArgs > numFormalArgs */
-        UNDERFLOW_ARGS     =      0x200,  /* numActualArgs < numFormalArgs */
-
         /* Function prologue state */
-        HAS_CALL_OBJ       =      0x400,  /* CallObject created for heavyweight fun */
-        HAS_ARGS_OBJ       =      0x800,  /* ArgumentsObject created for needsArgsObj script */
+        HAS_CALL_OBJ       =      0x100,  /* CallObject created for heavyweight fun */
+        HAS_ARGS_OBJ       =      0x200,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_HOOK_DATA      =     0x1000,  /* frame has hookData_ set */
-        HAS_RVAL           =     0x2000,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =     0x4000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =     0x8000,  /* frame has prevpc_ and prevInline_ set */
-        HAS_BLOCKCHAIN     =    0x10000,  /* frame has blockChain_ set */
+        HAS_HOOK_DATA      =      0x400,  /* frame has hookData_ set */
+        HAS_RVAL           =      0x800,  /* frame has rval_ set */
+        HAS_SCOPECHAIN     =     0x1000,  /* frame has scopeChain_ set */
+        HAS_PREVPC         =     0x2000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =     0x4000,  /* frame has blockChain_ set */
 
         /* Debugger state */
-        PREV_UP_TO_DATE    =    0x20000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE    =     0x8000,  /* see DebugScopes::updateLiveScopes */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME =  0x40000,  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME =  0x10000,  /* SPS was notified of enty */
 
         /* Ion frame state */
-        RUNNING_IN_ION     =    0x80000,  /* frame is running in Ion */
-        CALLING_INTO_ION   =   0x100000,  /* frame is calling into Ion */
+        RUNNING_IN_ION     =    0x20000,  /* frame is running in Ion */
+        CALLING_INTO_ION   =    0x40000,  /* frame is calling into Ion */
 
         /* Miscellaneous state. */
-        USE_NEW_TYPE       =   0x200000   /* Use new type for constructed |this| object. */
+        USE_NEW_TYPE       =    0x80000   /* Use new type for constructed |this| object. */
     };
 
   private:
@@ -356,9 +351,7 @@ class StackFrame
   public:
     Value *slots() const { return (Value *)(this + 1); }
     Value *base() const { return slots() + script()->nfixed; }
-    Value *formals() const { return (Value *)this - fun()->nargs; }
-    Value *actuals() const { return formals() - (flags_ & OVERFLOW_ARGS ? 2 + u.nactual : 0); }
-    unsigned nactual() const { return u.nactual; }
+    Value *argv() const { return (Value *)this - Max(numActualArgs(), numFormalArgs()); }
 
   private:
     friend class FrameRegs;
@@ -506,15 +499,8 @@ class StackFrame
      *
      * Only non-eval function frames have arguments. The arguments pushed by
      * the caller are the 'actual' arguments. The declared arguments of the
-     * callee are the 'formal' arguments. When the caller passes less or equal
-     * actual arguments, the actual and formal arguments are the same array
-     * (but with different extents). When the caller passes too many arguments,
-     * the formal subset of the actual arguments is copied onto the top of the
-     * stack. This allows the engine to maintain a jit-time constant offset of
-     * arguments from the frame pointer. Since the formal subset of the actual
-     * arguments is potentially on the stack twice, it is important for all
-     * reads/writes to refer to the same canonical memory location. This is
-     * abstracted by the unaliased{Formal,Actual} methods.
+     * callee are the 'formal' arguments. When the caller passes less actual
+     * arguments, missing formal arguments are padded with |undefined|.
      *
      * When a local/formal variable is "aliased" (accessed by nested closures,
      * dynamic scope operations, or 'arguments), the canonical location for
@@ -536,8 +522,8 @@ class StackFrame
 
     bool copyRawFrameSlots(AutoValueVector *v);
 
-    inline unsigned numFormalArgs() const;
-    inline unsigned numActualArgs() const;
+    unsigned numFormalArgs() const { JS_ASSERT(hasArgs()); return fun()->nargs; }
+    unsigned numActualArgs() const { JS_ASSERT(hasArgs()); return u.nactual; }
 
     inline Value &canonicalActualArg(unsigned i) const;
     template <class Op>
@@ -706,18 +692,18 @@ class StackFrame
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value *)this)[-1];
-        return formals()[-1];
+        return argv()[-1];
     }
 
     JSObject &constructorThis() const {
         JS_ASSERT(hasArgs());
-        return formals()[-1].toObject();
+        return argv()[-1].toObject();
     }
 
     Value &thisValue() const {
         if (flags_ & (EVAL | GLOBAL))
             return ((Value *)this)[-1];
-        return formals()[-1];
+        return argv()[-1];
     }
 
     /*
@@ -742,7 +728,7 @@ class StackFrame
     const Value &maybeCalleev() const {
         Value &calleev = flags_ & (EVAL | GLOBAL)
                          ? ((Value *)this)[-2]
-                         : formals()[-2];
+                         : argv()[-2];
         JS_ASSERT(calleev.isObjectOrNull());
         return calleev;
     }
@@ -751,11 +737,11 @@ class StackFrame
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value *)this)[-2];
-        return formals()[-2];
+        return argv()[-2];
     }
 
     CallReceiver callReceiver() const {
-        return CallReceiverFromArgv(formals());
+        return CallReceiverFromArgv(argv());
     }
 
     /*
@@ -850,7 +836,7 @@ class StackFrame
 
     Value *generatorArgsSnapshotBegin() const {
         JS_ASSERT(isGeneratorFrame());
-        return actuals() - 2;
+        return argv() - 2;
     }
 
     Value *generatorArgsSnapshotEnd() const {
@@ -945,10 +931,6 @@ class StackFrame
 
     void setPrevUpToDate() {
         flags_ |= PREV_UP_TO_DATE;
-    }
-
-    bool hasOverflowArgs() const {
-        return !!(flags_ & OVERFLOW_ARGS);
     }
 
     bool isYielding() {
