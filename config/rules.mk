@@ -626,8 +626,14 @@ endif
 # per traversal, hence the ifdef and the export. This rule needs to come before
 # other rules for the default target or else it may not run in time.
 ifndef MOZBUILD_BACKEND_CHECKED
-default::
-	$(MAKE) -C $(DEPTH) backend.RecursiveMakeBackend.built
+
+$(DEPTH)/backend.RecursiveMakeBackend.built:
+	@echo "Build configuration changed. Regenerating backend."
+	@cd $(DEPTH) && $(PYTHON) ./config.status
+
+include $(DEPTH)/backend.RecursiveMakeBackend.built.pp
+
+default:: $(DEPTH)/backend.RecursiveMakeBackend.built
 
 export MOZBUILD_BACKEND_CHECKED=1
 endif
