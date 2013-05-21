@@ -85,8 +85,8 @@ toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwth
 }
 
 #nav-bar[tabsontop=true],
-#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
-#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
+#nav-bar[tabsontop=true][collapsed=true] + toolbar,
+#nav-bar[tabsontop=true][collapsed=true] + #customToolbars + #PersonalToolbar {
   -moz-appearance: none;
   padding-top: 4px !important;
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
@@ -107,8 +107,8 @@ toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwth
 
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
 #nav-bar[tabsontop=true]:not(:-moz-lwtheme):-moz-window-inactive,
-#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme):-moz-window-inactive,
-#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+#nav-bar[tabsontop=true][collapsed=true] + toolbar:not(:-moz-lwtheme):-moz-window-inactive,
+#nav-bar[tabsontop=true][collapsed=true] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
 }
 
