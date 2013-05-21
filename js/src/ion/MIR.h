@@ -7174,37 +7174,6 @@ class MMonitorTypes : public MUnaryInstruction, public BoxInputsPolicy
     }
 };
 
-// Given a value being written to another object, update the generational store
-// buffer if the value is in the nursery and object is in the tenured heap.
-class MPostWriteBarrier
-  : public MBinaryInstruction,
-    public ObjectPolicy<0>
-{
-    MPostWriteBarrier(MDefinition *obj, MDefinition *value)
-      : MBinaryInstruction(obj, value)
-    {
-        setGuard();
-    }
-
-  public:
-    INSTRUCTION_HEADER(PostWriteBarrier)
-
-    static MPostWriteBarrier *New(MDefinition *obj, MDefinition *value) {
-        return new MPostWriteBarrier(obj, value);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-
-    MDefinition *object() const {
-        return getOperand(0);
-    }
-    MDefinition *value() const {
-        return getOperand(1);
-    }
-};
-
 class MNewSlots : public MNullaryInstruction
 {
     unsigned nslots_;

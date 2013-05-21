@@ -630,7 +630,7 @@ IonActivationIterator::more() const
     return !!activation_;
 }
 
-CalleeToken
+void
 MarkCalleeToken(JSTracer *trc, CalleeToken token)
 {
     switch (GetCalleeTokenTag(token)) {
@@ -638,13 +638,15 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
       {
         JSFunction *fun = CalleeTokenToFunction(token);
         MarkObjectRoot(trc, &fun, "ion-callee");
-        return CalleeToToken(fun);
+        JS_ASSERT(fun == CalleeTokenToFunction(token));
+        break;
       }
       case CalleeToken_Script:
       {
         JSScript *script = CalleeTokenToScript(token);
         MarkScriptRoot(trc, &script, "ion-entry");
-        return CalleeToToken(script);
+        JS_ASSERT(script == CalleeTokenToScript(token));
+        break;
       }
       default:
         JS_NOT_REACHED("unknown callee token type");
@@ -681,30 +683,12 @@ MarkActualArguments(JSTracer *trc, const IonFrameIterator &frame)
         gc::MarkValueRoot(trc, &argv[i], "ion-argv");
 }
 
-static inline void
-WriteAllocation(const IonFrameIterator &frame, const LAllocation *a, uintptr_t value)
-{
-    if (a->isGeneralReg()) {
-        Register reg = a->toGeneralReg()->reg();
-        frame.machineState().write(reg, value);
-        return;
-    }
-    if (a->isStackSlot()) {
-        uint32_t slot = a->toStackSlot()->slot();
-        *frame.jsFrame()->slotRef(slot) = value;
-        return;
-    }
-    uint32_t index = a->toArgument()->index();
-    uint8_t *argv = reinterpret_cast<uint8_t *>(frame.jsFrame()->argv());
-    *reinterpret_cast<uintptr_t *>(argv + index) = value;
-}
-
 static void
 MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
     IonJSFrameLayout *layout = (IonJSFrameLayout *)frame.fp();
 
-    layout->replaceCalleeToken(MarkCalleeToken(trc, layout->calleeToken()));
+    MarkCalleeToken(trc, layout->calleeToken());
 
     IonScript *ionScript = NULL;
     if (frame.checkInvalidation(&ionScript)) {
@@ -758,12 +742,7 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
         Value v = IMPL_TO_JSVAL(layout);
         gc::MarkValueRoot(trc, &v, "ion-torn-value");
-
-        if (v != IMPL_TO_JSVAL(layout)) {
-            // GC moved the value, replace the stored payload.
-            layout = JSVAL_TO_IMPL(v);
-            WriteAllocation(frame, &payload, layout.s.payload.uintptr);
-        }
+        JS_ASSERT(v == IMPL_TO_JSVAL(layout));
     }
 #endif
 }
