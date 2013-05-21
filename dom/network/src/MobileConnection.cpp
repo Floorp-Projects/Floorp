@@ -392,6 +392,32 @@ MobileConnection::SetCallForwardingOption(nsIDOMMozMobileCFInfo* aCFInfo,
 }
 
 NS_IMETHODIMP
+MobileConnection::GetCallBarringOption(const JS::Value& aOption,
+                                       nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCallBarringOption(GetOwner(), aOption, aRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::SetCallBarringOption(const JS::Value& aOption,
+                                       nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetCallBarringOption(GetOwner(), aOption, aRequest);
+}
+
+NS_IMETHODIMP
 MobileConnection::GetCallWaitingOption(nsIDOMDOMRequest** aRequest)
 {
   *aRequest = nullptr;
