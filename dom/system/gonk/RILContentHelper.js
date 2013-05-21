@@ -78,6 +78,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:DataError",
   "RIL:SetCallForwardingOption",
   "RIL:GetCallForwardingOption",
+  "RIL:SetCallBarringOption",
+  "RIL:GetCallBarringOption",
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption",
   "RIL:CellBroadcastReceived",
@@ -309,6 +311,19 @@ CellBroadcastEtwsInfo.prototype = {
   warningType: null,
   emergencyUserAlert: null,
   popup: null
+};
+
+function CallBarringOption(option) {
+  this.program = option.program;
+  this.enabled = option.enabled;
+  this.password = option.password;
+  this.serviceClass = option.serviceClass;
+}
+CallBarringOption.prototype = {
+  __exposedProps__ : {program: 'r',
+                      enabled: 'r',
+                      password: 'r',
+                      serviceClass: 'r'}
 };
 
 function RILContentHelper() {
@@ -778,6 +793,53 @@ RILContentHelper.prototype = {
     return request;
   },
 
+  getCallBarringOption: function getCallBarringOption(window, option) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    if (DEBUG) debug("getCallBarringOption: " + JSON.stringify(option));
+    if (!this._isValidCallBarringOption(option)) {
+      this.dispatchFireRequestError(requestId, "InvalidCallBarringOption");
+      return request;
+    }
+
+    cpmm.sendAsyncMessage("RIL:GetCallBarringOption", {
+      requestId: requestId,
+      program: option.program,
+      password: option.password,
+      serviceClass: option.serviceClass
+    });
+    return request;
+  },
+
+  setCallBarringOption: function setCallBarringOption(window, option) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    if (DEBUG) debug("setCallBarringOption: " + JSON.stringify(option));
+    if (!this._isValidCallBarringOption(option)) {
+      this.dispatchFireRequestError(requestId, "InvalidCallBarringOption");
+      return request;
+    }
+
+    cpmm.sendAsyncMessage("RIL:SetCallBarringOption", {
+      requestId: requestId,
+      program: option.program,
+      enabled: option.enabled,
+      password: option.password,
+      serviceClass: option.serviceClass
+    });
+    return request;
+  },
+
   getCallWaitingOption: function getCallWaitingOption(window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -1181,6 +1243,12 @@ RILContentHelper.prototype = {
       case "RIL:SetCallForwardingOption":
         this.handleSetCallForwardingOption(msg.json);
         break;
+      case "RIL:GetCallBarringOption":
+        this.handleGetCallBarringOption(msg.json);
+        break;
+      case "RIL:SetCallBarringOption":
+        this.handleSetCallBarringOption(msg.json);
+        break;
       case "RIL:GetCallWaitingOption":
         this.handleGetCallWaitingOption(msg.json);
         break;
@@ -1403,6 +1471,23 @@ RILContentHelper.prototype = {
     Services.DOMRequest.fireSuccess(request, null);
   },
 
+  handleGetCallBarringOption: function handleGetCallBarringOption(message) {
+    if (!message.success) {
+      this.fireRequestError(message.requestId, message.errorMsg);
+    } else {
+      let option = new CallBarringOption(message);
+      this.fireRequestSuccess(message.requestId, option);
+    }
+  },
+
+  handleSetCallBarringOption: function handleSetCallBarringOption(message) {
+    if (!message.success) {
+      this.fireRequestError(message.requestId, message.errorMsg);
+    } else {
+      this.fireRequestSuccess(message.requestId, null);
+    }
+  },
+
   handleGetCallWaitingOption: function handleGetCallWaitingOption(message) {
     let requestId = message.requestId;
     let request = this.takeRequest(requestId);
@@ -1490,7 +1575,7 @@ RILContentHelper.prototype = {
        default:
          return false;
      }
-  },
+   },
 
   /**
    * Helper for guarding us again invalid action values for call forwarding.
@@ -1505,6 +1590,31 @@ RILContentHelper.prototype = {
        default:
          return false;
      }
+   },
+
+  /**
+   * Helper for guarding us against invalid program values for call barring.
+   */
+  _isValidCallBarringProgram: function _isValidCallBarringProgram(program) {
+    switch (program) {
+      case Ci.nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING:
+      case Ci.nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL:
+      case Ci.nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME:
+      case Ci.nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_ALL_INCOMING:
+      case Ci.nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_INCOMING_ROAMING:
+        return true;
+      default:
+        return false;
+    }
+  },
+
+  /**
+   * Helper for guarding us against invalid option for call barring.
+   */
+  _isValidCallBarringOption: function _isValidCallBarringOption(option) {
+    return (option
+            && option.serviceClass != null
+            && this._isValidCallBarringProgram(option.program));
   }
 };
 

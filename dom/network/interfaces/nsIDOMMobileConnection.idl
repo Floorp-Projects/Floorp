@@ -10,10 +10,9 @@ interface nsIDOMMozMobileICCInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
-interface nsIDOMMozIccManager;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(0106c3fe-0064-40f8-b2e1-b8ad37b4c81e)]
+[scriptable, builtinclass, uuid(2566dcb8-c82f-4420-a807-0806bd01a3b4)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -25,6 +24,21 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   const long ICC_SERVICE_CLASS_PACKET = (1 << 6);
   const long ICC_SERVICE_CLASS_PAD = (1 << 7);
   const long ICC_SERVICE_CLASS_MAX = (1 << 7);
+
+  /**
+   * Call barring program.
+   *
+   * (0) all outgoing.
+   * (1) outgoing international.
+   * (2) outgoing international except to home country.
+   * (3) all incoming.
+   * (4) incoming when roaming outside the home country.
+   */
+  const long CALL_BARRING_PROGRAM_ALL_OUTGOING                       = 0;
+  const long CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL             = 1;
+  const long CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME = 2;
+  const long CALL_BARRING_PROGRAM_ALL_INCOMING                       = 3;
+  const long CALL_BARRING_PROGRAM_INCOMING_ROAMING                   = 4;
 
   /**
    * These two fields can be accessed by privileged applications with the
@@ -70,11 +84,6 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * Possible values: null (unknown), 'automatic', 'manual'
    */
   readonly attribute DOMString networkSelectionMode;
-
-  /**
-   * IccManager provides access to ICC related funcionality.
-   */
-  readonly attribute nsIDOMMozIccManager icc;
 
   /**
    * Search for available networks.
@@ -301,6 +310,39 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   nsIDOMDOMRequest getCallForwardingOption(in unsigned short reason);
 
   /**
+   * Configures call barring option.
+   *
+   * @param option
+   *        An object containing the call barring rule to set.
+   * @see MozCallBarringOption for the detail of info.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', 'InvalidCallBarringOption' or 'GenericFailure'
+   */
+  nsIDOMDOMRequest setCallBarringOption(in jsval option);
+
+  /**
+   * Queries current call barring status.
+   *
+   * @param info
+   *        An object containing the call barring rule to query. No need to
+   *        specify 'enabled' property.
+   * @see MozCallBarringOption for the detail of info.
+   *
+   * If successful, the request's onsuccess will be called, and the request's
+   * result will be an object of MozCallBarringOption with correct 'enabled'
+   * property indicating the status of this rule.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'InvalidCallBarringOption' or 'GenericFailure'.
+   */
+  nsIDOMDOMRequest getCallBarringOption(in jsval option);
+
+  /**
    * Configures call waiting options.
    *
    * @param enabled
@@ -388,7 +430,7 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
   readonly attribute DOMString state;
 
   /**
-   * Indicates whether the connection is ready. This may be different 
+   * Indicates whether the connection is ready. This may be different
    */
   readonly attribute bool connected;
 
@@ -590,7 +632,37 @@ interface nsIDOMMozMobileCFInfo : nsISupports
 
   /**
    * Service for which the call forward is set up. It should be one of the
-   * nsIDOMMozMobileConnectionInfo.ICC_SERVICE_CLASS_* values.
+   * nsIDOMMozMobileConnection.ICC_SERVICE_CLASS_* values.
    */
   readonly attribute unsigned short serviceClass;
+};
+
+
+dictionary MozCallBarringOption
+{
+  /**
+   * Indicates the program the call is being barred.
+   *
+   * It shall be one of the nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_*
+   * values.
+   */
+   unsigned short program;
+
+  /**
+   * Enable or disable the call barring program.
+   */
+  boolean enabled;
+
+  /**
+   * Barring password. Use "" if no password specified.
+   */
+  DOMString password;
+
+  /**
+   * Service for which the call barring is set up.
+   *
+   * It shall be one of the nsIDOMMozMobileConnection.ICC_SERVICE_CLASS_*
+   * values.
+   */
+  unsigned short serviceClass;
 };
