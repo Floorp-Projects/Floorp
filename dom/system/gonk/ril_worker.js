@@ -2412,6 +2412,37 @@ let RIL = {
   },
 
   /**
+   * Queries current call barring rules.
+   *
+   * @param program
+   *        One of nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_* constants.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_* constants.
+   */
+  queryCallBarringStatus: function queryCallBarringStatus(options) {
+    options.facility = CALL_BARRING_PROGRAM_TO_FACILITY[options.program];
+    options.password = ""; // For query no need to provide it.
+    this.queryICCFacilityLock(options);
+  },
+
+  /**
+   * Configures call barring rule.
+   *
+   * @param program
+   *        One of nsIDOMMozMobileConnection.CALL_BARRING_PROGRAM_* constants.
+   * @param enabled
+   *        Enable or disable the call barring.
+   * @param password
+   *        Barring password.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_* constants.
+   */
+  setCallBarring: function setCallBarring(options) {
+    options.facility = CALL_BARRING_PROGRAM_TO_FACILITY[options.program];
+    this.setICCFacilityLock(options);
+  },
+
+  /**
    * Handle STK CALL_SET_UP request.
    *
    * @param hasConfirmed
