@@ -97,6 +97,16 @@ var tsr = {
   exec: createExec('tsr')
 };
 
+var tsrsrsr = {
+  name: 'tsrsrsr',
+  params: [
+    { name: 'p1', type: 'string' },
+    { name: 'p2', type: 'string' },
+    { name: 'p3', type: { name: 'string', allowBlank: true} },
+  ],
+  exec: createExec('tsrsrsr')
+};
+
 var tso = {
   name: 'tso',
   params: [ { name: 'text', type: 'string', defaultValue: null } ],
@@ -395,6 +405,27 @@ var tslong = {
   exec: createExec('tslong')
 };
 
+var tsdate = {
+  name: 'tsdate',
+  description: 'long param tests to catch problems with the jsb command',
+  params: [
+    {
+      name: 'd1',
+      type: 'date',
+    },
+    {
+      name: 'd2',
+      type: {
+        name: 'date',
+        min: '1 jan 2000',
+        max: '28 feb 2000',
+        step: 2
+      }
+    },
+  ],
+  exec: createExec('tsdate')
+};
+
 var tsfail = {
   name: 'tsfail',
   description: 'test errors',
@@ -476,6 +507,7 @@ mockCommands.setup = function(opts) {
 
   mockCommands.commands.tsv = canon.addCommand(tsv);
   mockCommands.commands.tsr = canon.addCommand(tsr);
+  mockCommands.commands.tsrsrsr = canon.addCommand(tsrsrsr);
   mockCommands.commands.tso = canon.addCommand(tso);
   mockCommands.commands.tse = canon.addCommand(tse);
   mockCommands.commands.tsj = canon.addCommand(tsj);
@@ -499,12 +531,14 @@ mockCommands.setup = function(opts) {
   mockCommands.commands.tshidden = canon.addCommand(tshidden);
   mockCommands.commands.tscook = canon.addCommand(tscook);
   mockCommands.commands.tslong = canon.addCommand(tslong);
+  mockCommands.commands.tsdate = canon.addCommand(tsdate);
   mockCommands.commands.tsfail = canon.addCommand(tsfail);
 };
 
 mockCommands.shutdown = function(opts) {
   canon.removeCommand(tsv);
   canon.removeCommand(tsr);
+  canon.removeCommand(tsrsrsr);
   canon.removeCommand(tso);
   canon.removeCommand(tse);
   canon.removeCommand(tsj);
@@ -528,6 +562,7 @@ mockCommands.shutdown = function(opts) {
   canon.removeCommand(tshidden);
   canon.removeCommand(tscook);
   canon.removeCommand(tslong);
+  canon.removeCommand(tsdate);
   canon.removeCommand(tsfail);
 
   types.removeType(mockCommands.optionType);
