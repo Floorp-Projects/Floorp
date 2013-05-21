@@ -33,6 +33,7 @@ var setTimeout = Components.utils.import("resource://gre/modules/Timer.jsm", {})
 var clearTimeout = Components.utils.import("resource://gre/modules/Timer.jsm", {}).clearTimeout;
 var Node = Components.interfaces.nsIDOMNode;
 var HTMLElement = Components.interfaces.nsIDOMHTMLElement;
+var Event = Components.interfaces.nsIDOMEvent;
 
 /*
  * Copyright 2012, Mozilla Foundation and contributors
@@ -330,10 +331,10 @@ NumberType.prototype.stringify = function(value, context) {
   return '' + value;
 };
 
-NumberType.prototype.getMin = function() {
+NumberType.prototype.getMin = function(context) {
   if (this._min) {
     if (typeof this._min === 'function') {
-      return this._min();
+      return this._min(context);
     }
     if (typeof this._min === 'number') {
       return this._min;
@@ -342,10 +343,10 @@ NumberType.prototype.getMin = function() {
   return undefined;
 };
 
-NumberType.prototype.getMax = function() {
+NumberType.prototype.getMax = function(context) {
   if (this._max) {
     if (typeof this._max === 'function') {
-      return this._max();
+      return this._max(context);
     }
     if (typeof this._max === 'number') {
       return this._max;
@@ -377,13 +378,13 @@ NumberType.prototype.parse = function(arg, context) {
     return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
-  var max = this.getMax();
+  var max = this.getMax(context);
   if (max != null && value > max) {
     var message = l10n.lookupFormat('typesNumberMax', [ value, max ]);
     return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
-  var min = this.getMin();
+  var min = this.getMin(context);
   if (min != null && value < min) {
     var message = l10n.lookupFormat('typesNumberMin', [ value, min ]);
     return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
@@ -394,26 +395,26 @@ NumberType.prototype.parse = function(arg, context) {
 
 NumberType.prototype.decrement = function(value, context) {
   if (typeof value !== 'number' || isNaN(value)) {
-    return this.getMax() || 1;
+    return this.getMax(context) || 1;
   }
   var newValue = value - this._step;
   // Snap to the nearest incremental of the step
   newValue = Math.ceil(newValue / this._step) * this._step;
-  return this._boundsCheck(newValue);
+  return this._boundsCheck(newValue, context);
 };
 
 NumberType.prototype.increment = function(value, context) {
   if (typeof value !== 'number' || isNaN(value)) {
-    var min = this.getMin();
+    var min = this.getMin(context);
     return min != null ? min : 0;
   }
   var newValue = value + this._step;
   // Snap to the nearest incremental of the step
   newValue = Math.floor(newValue / this._step) * this._step;
-  if (this.getMax() == null) {
+  if (this.getMax(context) == null) {
     return newValue;
   }
-  return this._boundsCheck(newValue);
+  return this._boundsCheck(newValue, context);
 };
 
 /**
@@ -421,12 +422,12 @@ NumberType.prototype.increment = function(value, context) {
  * lower than the minimum, return the minimum. If it is bigger than the maximum
  * then return the maximum.
  */
-NumberType.prototype._boundsCheck = function(value) {
-  var min = this.getMin();
+NumberType.prototype._boundsCheck = function(value, context) {
+  var min = this.getMin(context);
   if (min != null && value < min) {
     return min;
   }
-  var max = this.getMax();
+  var max = this.getMax(context);
   if (max != null && value > max) {
     return max;
   }
@@ -476,7 +477,7 @@ BooleanType.prototype.stringify = function(value, context) {
   return '' + value;
 };
 
-BooleanType.prototype.getBlank = function() {
+BooleanType.prototype.getBlank = function(context) {
   return new Conversion(false, new BlankArgument(), Status.VALID, '',
                         Promise.resolve(this.lookup));
 };
@@ -624,7 +625,7 @@ ArrayType.prototype.parse = function(arg, context) {
   });
 };
 
-ArrayType.prototype.getBlank = function(values) {
+ArrayType.prototype.getBlank = function(context) {
   return new ArrayConversion([], new ArrayArgument());
 };
 
@@ -2015,7 +2016,7 @@ Type.prototype.decrement = function(value, context) {
  * 'undefined'.
  * 2 known examples of this are boolean -> false and array -> []
  */
-Type.prototype.getBlank = function() {
+Type.prototype.getBlank = function(context) {
   return new Conversion(undefined, new BlankArgument(), Status.INCOMPLETE, '');
 };
 
@@ -2825,7 +2826,7 @@ SelectionType.prototype.stringify = function(value, context) {
 
   try {
     var name = null;
-    var lookup = util.synchronize(this.getLookup());
+    var lookup = util.synchronize(this.getLookup(context));
     lookup.some(function(item) {
       if (item.value === value) {
         name = item.name;
@@ -2856,21 +2857,21 @@ SelectionType.prototype.clearCache = function() {
  * single function.
  * @return An array of objects with name and value properties.
  */
-SelectionType.prototype.getLookup = function() {
+SelectionType.prototype.getLookup = function(context) {
   if (this._cachedLookup != null) {
     return this._cachedLookup;
   }
 
   var reply;
   if (this.lookup == null) {
-    reply = resolve(this.data, this.neverForceAsync).then(dataToLookup);
+    reply = resolve(this.data, context, this.neverForceAsync).then(dataToLookup);
   }
   else {
     var lookup = (typeof this.lookup === 'function') ?
             this.lookup.bind(this) :
             this.lookup;
 
-    reply = resolve(lookup, this.neverForceAsync);
+    reply = resolve(lookup, context, this.neverForceAsync);
   }
 
   if (this.cacheable && !forceAsync) {
@@ -2888,7 +2889,7 @@ var forceAsync = false;
  * function which returns a promise of real data, etc. This takes a thing and
  * returns a promise of actual values.
  */
-function resolve(thing, neverForceAsync) {
+function resolve(thing, context, neverForceAsync) {
   if (forceAsync && !neverForceAsync) {
     var deferred = Promise.defer();
     setTimeout(function() {
@@ -2905,7 +2906,7 @@ function resolve(thing, neverForceAsync) {
 
   return Promise.resolve(thing).then(function(resolved) {
     if (typeof resolved === 'function') {
-      return resolve(resolved(), neverForceAsync);
+      return resolve(resolved(context), context, neverForceAsync);
     }
     return resolved;
   });
@@ -2931,8 +2932,8 @@ function dataToLookup(data) {
  * @param arg The initial input to match
  * @return A trimmed array of string:value pairs
  */
-SelectionType.prototype._findPredictions = function(arg) {
-  return Promise.resolve(this.getLookup()).then(function(lookup) {
+SelectionType.prototype._findPredictions = function(arg, context) {
+  return Promise.resolve(this.getLookup(context)).then(function(lookup) {
     var predictions = [];
     var i, option;
     var maxPredictions = Conversion.maxPredictions;
@@ -3023,7 +3024,7 @@ SelectionType.prototype._addToPredictions = function(predictions, option, arg) {
 };
 
 SelectionType.prototype.parse = function(arg, context) {
-  return this._findPredictions(arg).then(function(predictions) {
+  return this._findPredictions(arg, context).then(function(predictions) {
     if (predictions.length === 0) {
       var msg = l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]);
       return new Conversion(undefined, arg, Status.ERROR, msg,
@@ -3041,9 +3042,9 @@ SelectionType.prototype.parse = function(arg, context) {
   }.bind(this));
 };
 
-SelectionType.prototype.getBlank = function() {
+SelectionType.prototype.getBlank = function(context) {
   var predictFunc = function() {
-    return Promise.resolve(this.getLookup()).then(function(lookup) {
+    return Promise.resolve(this.getLookup(context)).then(function(lookup) {
       return lookup.filter(function(option) {
         return !option.value.hidden;
       }).slice(0, Conversion.maxPredictions - 1);
@@ -3062,7 +3063,7 @@ SelectionType.prototype.getBlank = function() {
  * Sorry.
  */
 SelectionType.prototype.decrement = function(value, context) {
-  var lookup = util.synchronize(this.getLookup());
+  var lookup = util.synchronize(this.getLookup(context));
   var index = this._findValue(lookup, value);
   if (index === -1) {
     index = 0;
@@ -3078,7 +3079,7 @@ SelectionType.prototype.decrement = function(value, context) {
  * See note on SelectionType.decrement()
  */
 SelectionType.prototype.increment = function(value, context) {
-  var lookup = util.synchronize(this.getLookup());
+  var lookup = util.synchronize(this.getLookup(context));
   var index = this._findValue(lookup, value);
   if (index === -1) {
     // For an increment operation when there is nothing to start from, we
@@ -3662,15 +3663,6 @@ Parameter.prototype.isKnownAs = function(name) {
     return true;
   }
   return false;
-};
-
-/**
- * Read the default value for this parameter either from the parameter itself
- * (if this function has been over-ridden) or from the type, or from calling
- * parseString on an empty string
- */
-Parameter.prototype.getBlank = function() {
-  return this.type.getBlank();
 };
 
 /**
@@ -4675,7 +4667,7 @@ function NodeListType(typeSpec) {
 
 NodeListType.prototype = Object.create(Type.prototype);
 
-NodeListType.prototype.getBlank = function() {
+NodeListType.prototype.getBlank = function(context) {
   return new Conversion(exports._empty, new BlankArgument(), Status.VALID);
 };
 
@@ -6436,7 +6428,8 @@ Requisition.prototype.setAssignment = function(assignment, arg, options) {
   }
 
   if (arg == null) {
-    setAssignmentInternal(assignment.param.type.getBlank());
+    var blank = assignment.param.type.getBlank(this.executionContext);
+    setAssignmentInternal(blank);
   }
   else if (typeof arg.getStatus === 'function') {
     setAssignmentInternal(arg);
@@ -8072,7 +8065,7 @@ StringField.prototype.setConversion = function(conversion) {
 StringField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = this.arg.beget({ text: this.element.value, prefixSpace: true });
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 StringField.claim = function(type, context) {
@@ -8127,7 +8120,7 @@ NumberField.prototype.setConversion = function(conversion) {
 
 NumberField.prototype.getConversion = function() {
   this.arg = this.arg.beget({ text: this.element.value, prefixSpace: true });
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 
@@ -8179,7 +8172,7 @@ BooleanField.prototype.getConversion = function() {
   else {
     arg = new Argument(' ' + this.element.checked);
   }
-  return this.type.parse(arg, this.requisition.context);
+  return this.type.parse(arg, this.requisition.executionContext);
 };
 
 
@@ -8557,7 +8550,7 @@ exports.getField = function(type, options) {
   var ctor;
   var highestClaim = -1;
   fieldCtors.forEach(function(fieldCtor) {
-    var claim = fieldCtor.claim(type, options.requisition.context);
+    var claim = fieldCtor.claim(type, options.requisition.executionContext);
     if (claim > highestClaim) {
       highestClaim = claim;
       ctor = fieldCtor;
@@ -8600,7 +8593,7 @@ BlankField.prototype.setConversion = function(conversion) {
 };
 
 BlankField.prototype.getConversion = function() {
-  return this.type.parse(new Argument(), this.requisition.context);
+  return this.type.parse(new Argument(), this.requisition.executionContext);
 };
 
 exports.addField(BlankField);
@@ -8736,7 +8729,7 @@ JavascriptField.prototype.setConversion = function(conversion) {
 };
 
 JavascriptField.prototype.itemClicked = function(ev) {
-  var parsed = this.type.parse(ev.arg, this.requisition.context);
+  var parsed = this.type.parse(ev.arg, this.requisition.executionContext);
   Promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
@@ -8754,7 +8747,7 @@ JavascriptField.prototype.onInputChange = function(ev) {
 JavascriptField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = new ScriptArgument(this.input.value, '{ ', ' }');
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 JavascriptField.DEFAULT_VALUE = '__JavascriptField.DEFAULT_VALUE';
@@ -9178,7 +9171,7 @@ SelectionTooltipField.prototype.setConversion = function(conversion) {
 };
 
 SelectionTooltipField.prototype.itemClicked = function(ev) {
-  var parsed = this.type.parse(ev.arg, this.requisition.context);
+  var parsed = this.type.parse(ev.arg, this.requisition.executionContext);
   Promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
@@ -9196,7 +9189,7 @@ SelectionTooltipField.prototype.onInputChange = function(ev) {
 SelectionTooltipField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = this.arg.beget({ text: this.input.value });
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 /**
@@ -11108,7 +11101,8 @@ Inputter.prototype.handleKeyUp = function(ev) {
     else {
       // See notes above for the UP key
       if (this.assignment.getStatus() === Status.VALID) {
-        this.requisition.decrement(this.assignment, this.requisition.context);
+        this.requisition.decrement(this.assignment,
+                                   this.requisition.executionContext);
         // See notes on focusManager.onInputChange in onKeyDown
         if (this.focusManager) {
           this.focusManager.onInputChange();
