@@ -351,7 +351,7 @@ let CustomizableUIInternal = {
       }
 
       return [ CustomizableUI.PROVIDER_API,
-               this.buildWidget(aDocument, null, widget) ];
+               this.buildWidget(aDocument, widget) ];
     }
 
     LOG("Searching for " + aWidgetId + " in toolbox.");
@@ -589,8 +589,7 @@ let CustomizableUIInternal = {
     return null;
   },
 
-  // Depending on aMenu here is a hack that should be fixed.
-  buildWidget: function(aDocument, aMenu, aWidget) {
+  buildWidget: function(aDocument, aWidget) {
     if (typeof aWidget == "string") {
       aWidget = gPalette.get(aWidget);
     }
@@ -615,12 +614,6 @@ let CustomizableUIInternal = {
       node.setAttribute("acceltext", aWidget.shortcut);
     }
     node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
-
-    if (aMenu) {
-      node.setAttribute("image", aWidget.icons["32"]);
-    } else {
-      node.setAttribute("image", aWidget.icons["16"]);
-    }
 
     let handler = this.handleWidgetClick.bind(this, aWidget, node);
     node.addEventListener("command", handler, false);
@@ -1513,7 +1506,6 @@ function WidgetGroupWrapper(aWidget) {
     let instance = aWidget.instances.get(aWindow.document);
     if (!instance) {
       instance = CustomizableUIInternal.buildWidget(aWindow.document,
-                                                    null,
                                                     aWidget);
     }
 
