@@ -3700,13 +3700,15 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #social-provider-button {
-  -moz-image-region: rect(0, 16px, 16px, 0);
   list-style-image: url(chrome://browser/skin/social/services-16.png);
 }
 
 @media (min-resolution: 2dppx) {
   #social-provider-button {
     list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
+  }
+  #social-provider-button > .toolbarbutton-icon {
+    width: 16px;
   }
 }
 
