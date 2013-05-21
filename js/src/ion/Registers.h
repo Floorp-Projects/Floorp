@@ -113,9 +113,6 @@ class MachineState
     double read(FloatRegister reg) const {
         return *fpregs_[reg.code()];
     }
-    void write(Register reg, uintptr_t value) const {
-        *regs_[reg.code()] = value;
-    }
 };
 
 } // namespace ion

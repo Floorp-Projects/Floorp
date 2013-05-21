@@ -29,15 +29,6 @@ NewObjectCache::staticAsserts()
     JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
 }
 
-inline void
-NewObjectCache::clearNurseryObjects(JSRuntime *rt)
-{
-    for (unsigned i = 0; i < mozilla::ArrayLength(entries); ++i) {
-        if (IsInsideNursery(rt, entries[i].key))
-            mozilla::PodZero(&entries[i]);
-    }
-}
-
 inline bool
 NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry)
 {

@@ -356,7 +356,6 @@ FinishAllOffThreadCompilations(IonCompartment *ion)
 /* static */ void
 IonRuntime::Mark(JSTracer *trc)
 {
-    JS_ASSERT(!trc->runtime->isHeapMinorCollecting());
     Zone *zone = trc->runtime->atomsCompartment->zone();
     for (gc::CellIterUnderGC i(zone, gc::FINALIZE_IONCODE); !i.done(); i.next()) {
         IonCode *code = i.get<IonCode>();

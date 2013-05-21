@@ -579,15 +579,6 @@ FilterArguments(JSContext *cx, JSString *str)
     return !StringHasPattern(chars, str->length(), arguments, mozilla::ArrayLength(arguments));
 }
 
-#ifdef JSGC_GENERATIONAL
-void
-PostWriteBarrier(JSRuntime *rt, JSObject *obj)
-{
-    JS_ASSERT(!IsInsideNursery(rt, obj));
-    rt->gcStoreBuffer.putWholeObject(obj);
-}
-#endif
-
 uint32_t
 GetIndexFromString(JSString *str)
 {
