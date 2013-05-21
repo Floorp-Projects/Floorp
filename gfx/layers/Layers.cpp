@@ -284,14 +284,21 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
       {
         float x = aFunctions[i].get_SkewX().x();
         arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_skewx, resultTail);
-        arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
+        arr->Item(1).SetFloatValue(x, eCSSUnit_Radian);
         break;
       }
       case TransformFunction::TSkewY:
       {
         float y = aFunctions[i].get_SkewY().y();
         arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_skewy, resultTail);
-        arr->Item(1).SetFloatValue(y, eCSSUnit_Number);
+        arr->Item(1).SetFloatValue(y, eCSSUnit_Radian);
+        break;
+      }
+      case TransformFunction::TSkew:
+      {
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_skew, resultTail);
+        arr->Item(1).SetFloatValue(aFunctions[i].get_Skew().x(), eCSSUnit_Radian);
+        arr->Item(2).SetFloatValue(aFunctions[i].get_Skew().y(), eCSSUnit_Radian);
         break;
       }
       case TransformFunction::TTransformMatrix:
