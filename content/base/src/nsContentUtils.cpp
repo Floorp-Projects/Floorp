@@ -1725,20 +1725,20 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::IsCallerXBL()
 {
-    JSScript *script;
     JSContext *cx = GetCurrentJSContext();
     if (!cx)
         return false;
 
-    // New Hotness.
     JSCompartment *c = js::GetContextCompartment(cx);
-    if (xpc::AllowXBLScope(c))
-        return xpc::IsXBLScope(c);
 
-    // XBL scopes are behind a pref, so check the XBL bit as well.
-    if (!JS_DescribeScriptedCaller(cx, &script, nullptr) || !script)
-        return false;
-    return JS_GetScriptUserBit(script);
+    // For remote XUL, we run XBL in the XUL scope. Given that we care about
+    // compat and not security for remote XUL, just always claim to be XBL.
+    if (!xpc::AllowXBLScope(c)) {
+      MOZ_ASSERT(nsContentUtils::AllowXULXBLForPrincipal(xpc::GetCompartmentPrincipal(c)));
+      return true;
+    }
+
+    return xpc::IsXBLScope(c);
 }
 
 
@@ -6027,17 +6027,6 @@ public:
   {
   }
 
-  NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root)
-  {
-  }
-  NS_IMETHOD_(void) NoteJSRoot(void* root)
-  {
-  }
-  NS_IMETHOD_(void) NoteNativeRoot(void* root,
-                                   nsCycleCollectionParticipant* helper)
-  {
-  }
-
   NS_IMETHOD_(void) NoteJSChild(void* child)
   {
     if (child == mWrapper) {
@@ -6053,10 +6042,6 @@ public:
   }
 
   NS_IMETHOD_(void) NoteNextEdgeName(const char* name)
-  {
-  }
-
-  NS_IMETHOD_(void) NoteWeakMapping(void* map, void* key, void* kdelegate, void* val)
   {
   }
 

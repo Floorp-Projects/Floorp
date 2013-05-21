@@ -1036,8 +1036,10 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava, CertStrictnessLevel strict)
     } else {
 	/* must truncate the escaped and quoted value */
 	char bigTmpBuf[TMPBUF_LEN * 3 + 3];
+	PORT_Assert(valueLen < sizeof tmpBuf);
 	rv = escapeAndQuote(bigTmpBuf, sizeof bigTmpBuf,
-			    (char *)avaValue->data, valueLen, &mode);
+			    (char *)avaValue->data,
+			    PR_MIN(avaValue->len, valueLen), &mode);
 
 	bigTmpBuf[valueLen--] = '\0'; /* hard stop here */
 	/* See if we're in the middle of a multi-byte UTF8 character */

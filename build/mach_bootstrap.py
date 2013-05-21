@@ -7,6 +7,21 @@ from __future__ import print_function, unicode_literals
 import os
 import platform
 import sys
+import time
+
+
+STATE_DIR_FIRST_RUN = '''
+mach and the build system store shared state in a common directory on the
+filesystem. The following directory will be created:
+
+  {userdir}
+
+If you would like to use a different directory, hit CTRL+c and set the
+MOZBUILD_STATE_PATH environment variable to the directory you would like to
+use and re-run mach. For this change to take effect forever, you'll likely
+want to export this environment variable from your shell's init scripts.
+'''.lstrip()
+
 
 # TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
 SEARCH_PATHS = [
@@ -97,6 +112,39 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         print('Python 2.7 or above (but not Python 3) is required to run mach.')
         print('You are running Python', platform.python_version())
         sys.exit(1)
+
+    # Global build system and mach state is stored in a central directory. By
+    # default, this is ~/.mozbuild. However, it can be defined via an
+    # environment variable. We detect first run (by lack of this directory
+    # existing) and notify the user that it will be created. The logic for
+    # creation is much simpler for the "advanced" environment variable use
+    # case. For default behavior, we educate users and give them an opportunity
+    # to react. We always exit after creating the directory because users don't
+    # like surprises.
+    state_user_dir = os.path.expanduser('~/.mozbuild')
+    state_env_dir = os.environ.get('MOZBUILD_STATE_PATH', None)
+    if state_env_dir:
+        if not os.path.exists(state_env_dir):
+            print('Creating global state directory from environment variable: %s'
+                % state_env_dir)
+            os.makedirs(state_env_dir, mode=0777)
+            print('Please re-run mach.')
+            sys.exit(1)
+    else:
+        if not os.path.exists(state_user_dir):
+            print(STATE_DIR_FIRST_RUN.format(userdir=state_user_dir))
+            try:
+                for i in range(20, -1, -1):
+                    time.sleep(1)
+                    sys.stdout.write('%d ' % i)
+                    sys.stdout.flush()
+            except KeyboardInterrupt:
+                sys.exit(1)
+
+            print('\nCreating default state directory: %s' % state_user_dir)
+            os.mkdir(state_user_dir)
+            print('Please re-run mach.')
+            sys.exit(1)
 
     try:
         import mach.main

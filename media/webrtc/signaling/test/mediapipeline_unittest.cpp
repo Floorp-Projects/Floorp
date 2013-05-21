@@ -8,6 +8,7 @@
 
 #include "sigslot.h"
 
+#include "logging.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nss.h"
@@ -15,7 +16,6 @@
 #include "sslproto.h"
 
 #include "dtlsidentity.h"
-#include "logging.h"
 #include "mozilla/RefPtr.h"
 #include "FakeMediaStreams.h"
 #include "FakeMediaStreamsImpl.h"

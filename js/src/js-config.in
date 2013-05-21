@@ -6,7 +6,6 @@
 
 prefix='@prefix@'
 mozilla_version='@MOZILLA_VERSION@'
-MODULE='@MODULE@'
 LIBRARY_NAME='@LIBRARY_NAME@'
 NSPR_CFLAGS='@NSPR_CFLAGS@'
 JS_CONFIG_LIBS='@JS_CONFIG_LIBS@'
@@ -110,7 +109,7 @@ if test "$echo_libdir" = "yes"; then
 fi
 
 if test "$echo_cflags" = "yes"; then
-    echo "-include $includedir/$MODULE/js/RequiredDefines.h -I$includedir/$MODULE $NSPR_CFLAGS"
+    echo "-include $includedir/$LIBRARY_NAME/js/RequiredDefines.h -I$includedir/$LIBRARY_NAME $NSPR_CFLAGS"
 fi
 
 if test "$echo_libs" = "yes"; then

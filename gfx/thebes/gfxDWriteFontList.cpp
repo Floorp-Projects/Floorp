@@ -410,6 +410,8 @@ gfxDWriteFontEntry::ReadCMAP()
         rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen,
                                     *charmap, mUVSOffset,
                                     unicodeFont, symbolFont);
+    } else {
+        rv = NS_ERROR_NOT_AVAILABLE;
     }
 
     mHasCmapTable = NS_SUCCEEDED(rv);

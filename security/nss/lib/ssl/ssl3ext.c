@@ -681,8 +681,21 @@ ssl3_ServerSendStatusRequestXtn(
 {
     PRInt32 extension_length;
     SECStatus rv;
+    int i;
+    PRBool haveStatus = PR_FALSE;
 
-    if (!ss->certStatusArray || !ss->certStatusArray->len)
+    for (i = kt_null; i < kt_kea_size; i++) {
+	/* TODO: This is a temporary workaround.
+	 *       The correct code needs to see if we have an OCSP response for
+	 *       the server certificate being used, rather than if we have any
+	 *       OCSP response. See also ssl3_SendCertificateStatus.
+	 */
+	if (ss->certStatusArray[i] && ss->certStatusArray[i]->len) {
+	    haveStatus = PR_TRUE;
+	    break;
+	}
+    }
+    if (!haveStatus)
 	return 0;
 
     extension_length = 2 + 2;

@@ -17,9 +17,6 @@ ac_add_options --enable-stdcxx-compat
 # by 2 MBs.
 STRIP_FLAGS="--strip-debug"
 
-# PGO
-mk_add_options PROFILE_GEN_SCRIPT='EXTRA_TEST_ARGS=10 $(MAKE) -C $(MOZ_OBJDIR) pgo-profile-run'
-
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
