@@ -161,9 +161,9 @@ NS_IMPL_RELEASE_INHERITED(HTMLCanvasElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLCanvasElement,
-                                   nsIDOMHTMLCanvasElement,
-                                   nsICanvasElementExternal)
+  NS_INTERFACE_TABLE_INHERITED2(HTMLCanvasElement,
+                                nsIDOMHTMLCanvasElement,
+                                nsICanvasElementExternal)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLCanvasElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

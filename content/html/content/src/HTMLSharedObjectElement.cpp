@@ -94,18 +94,16 @@ NS_IMPL_RELEASE_INHERITED(HTMLSharedObjectElement, Element)
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
   NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
                                        nsIDOMHTMLAppletElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedObjectElement,
-                                                  nsIDOMHTMLAppletElement)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIRequestObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIStreamListener)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIFrameLoaderOwner)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIObjectLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, imgINotificationObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIImageLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, imgIOnloadBlocker)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIInterfaceRequestor)
-    NS_INTERFACE_TABLE_ENTRY(HTMLSharedObjectElement, nsIChannelEventSink)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_INTERFACE_TABLE_INHERITED9(HTMLSharedObjectElement,
+                                nsIRequestObserver,
+                                nsIStreamListener,
+                                nsIFrameLoaderOwner,
+                                nsIObjectLoadingContent,
+                                imgINotificationObserver,
+                                nsIImageLoadingContent,
+                                imgIOnloadBlocker,
+                                nsIInterfaceRequestor,
+                                nsIChannelEventSink)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(HTMLSharedObjectElement,
                                                          nsGenericHTMLElement,
                                                          nsIDOMHTMLAppletElement)

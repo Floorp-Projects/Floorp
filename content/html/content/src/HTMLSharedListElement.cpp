@@ -31,9 +31,6 @@ NS_IMPL_RELEASE_INHERITED(HTMLSharedListElement, Element)
 NS_INTERFACE_TABLE_HEAD(HTMLSharedListElement)
   NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
                                        nsIDOMHTMLOListElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedListElement,
-                                                  nsIDOMHTMLOListElement)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(HTMLSharedListElement,
                                                          nsGenericHTMLElement,
                                                          nsIDOMHTMLOListElement)
