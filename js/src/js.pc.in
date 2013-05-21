@@ -8,4 +8,4 @@ Description: The Mozilla library for JavaScript
 Version: @MOZILLA_VERSION@
 Requires.private: @NSPR_PKGCONF_CHECK@
 Libs: -L${libdir} -l@LIBRARY_NAME@
-Cflags: -include ${includedir}/@MODULE@/js/RequiredDefines.h -I${includedir}/@MODULE@
+Cflags: -include ${includedir}/@LIBRARY_NAME@/js/RequiredDefines.h -I${includedir}/@LIBRARY_NAME@
