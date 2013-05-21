@@ -124,7 +124,7 @@ panelsubview toolbarbutton > .toolbarbutton-text,
   -moz-box-orient: vertical;
   min-width: 7em;
   max-width: 7em;
-  min-height: 6em;
+  height: 6em;
   max-height: 6em;
 }
 
