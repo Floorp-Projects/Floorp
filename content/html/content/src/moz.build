@@ -67,6 +67,7 @@ EXPORTS.mozilla.dom += [
     'HTMLTextAreaElement.h',
     'HTMLTimeElement.h',
     'HTMLTitleElement.h',
+    'HTMLTrackElement.h',
     'HTMLUnknownElement.h',
     'MediaError.h',
     'TimeRanges.h',

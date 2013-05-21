@@ -412,6 +412,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mStream);
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlayed);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextTracks);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
@@ -430,6 +431,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputStreams[i].mStream);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlayed);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextTracks);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLMediaElement)
@@ -1947,6 +1949,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
   RegisterFreezableElement();
   NotifyOwnerDocumentActivityChanged();
+
+  mTextTracks = new TextTrackList(OwnerDoc()->GetParentObject());
 }
 
 HTMLMediaElement::~HTMLMediaElement()
@@ -2678,38 +2682,6 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
     stream->ChangeExplicitBlockerCount(-1);
   }
   mSrcStream = nullptr;
-}
-
-nsresult HTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-
-  *aURI = nullptr;
-
-  nsCOMPtr<nsIDocument> doc = OwnerDoc();
-
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
-                                                          aURISpec,
-                                                          doc,
-                                                          baseURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool equal;
-  if (aURISpec.IsEmpty() &&
-      doc->GetDocumentURI() &&
-      NS_SUCCEEDED(doc->GetDocumentURI()->Equals(uri, &equal)) &&
-      equal) {
-    // It's not possible for a media resource to be embedded in the current
-    // document we extracted aURISpec from, so there's no point returning
-    // the current document URI just to let the caller attempt and fail to
-    // decode it.
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  uri.forget(aURI);
-  return NS_OK;
 }
 
 void HTMLMediaElement::ProcessMediaFragmentURI()
@@ -3568,6 +3540,14 @@ void HTMLMediaElement::FireTimeUpdate(bool aPeriodic)
     mFragmentStart = -1.0;
     mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
+
+  // Update visible text tracks.
+  // Here mTextTracks can be null if the cycle collector has unlinked
+  // us before our parent. In that case UnbindFromTree will call us
+  // when our parent is unlinked.
+  if (mTextTracks) {
+    mTextTracks->Update(time);
+  }
 }
 
 void HTMLMediaElement::GetCurrentSpec(nsCString& aString)
@@ -3769,6 +3749,21 @@ NS_IMETHODIMP HTMLMediaElement::CanPlayChanged(bool canPlay)
   UpdateChannelMuteState(canPlay);
   mPaused.SetCanPlay(canPlay);
   return NS_OK;
+}
+
+/* readonly attribute TextTrackList textTracks; */
+TextTrackList*
+HTMLMediaElement::TextTracks() const
+{
+  return mTextTracks;
+}
+
+already_AddRefed<TextTrack>
+HTMLMediaElement::AddTextTrack(TextTrackKind aKind,
+                               const nsAString& aLabel,
+                               const nsAString& aLanguage)
+{
+  return mTextTracks->AddTextTrack(aKind, aLabel, aLanguage);
 }
 
 } // namespace dom
