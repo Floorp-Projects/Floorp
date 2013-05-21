@@ -38,6 +38,8 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
 ifndef MOZ_PROFILE_USE
+# We need to explicitly put backend.RecursiveMakeBackend.built here
+# otherwise the rule in rules.mk doesn't run early enough.
 default alldep all:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
 	$(RM) -r $(DIST)/sdk
 	$(RM) -r $(DIST)/include
@@ -72,14 +74,6 @@ export::
 	$(RM) -r $(DIST)/sdk
 	$(MAKE) -C config export
 	$(MAKE) tier_nspr
-
-backend.RecursiveMakeBackend.built:
-	@echo "Updating build backend because of moz.build changes."
-	@$(PYTHON) ./config.status
-
-include backend.RecursiveMakeBackend.built.pp
-
-export MOZBUILD_BACKEND_CHECKED=1
 
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
