@@ -367,6 +367,7 @@ class ICEntry
     _(GetProp_CallNative)       \
     _(GetProp_CallListBaseNative)\
     _(GetProp_CallListBaseWithGenerationNative)\
+    _(GetProp_ListBaseShadowed) \
     _(GetProp_ArgumentsLength)  \
                                 \
     _(SetProp_Fallback)         \
@@ -732,6 +733,7 @@ class ICStub
           case GetProp_CallNative:
           case GetProp_CallListBaseNative:
           case GetProp_CallListBaseWithGenerationNative:
+          case GetProp_ListBaseShadowed:
           case SetProp_CallScripted:
           case SetProp_CallNative:
             return true;
@@ -4355,6 +4357,73 @@ class ICGetPropCallListBaseNativeCompiler : public ICStubCompiler {
                                         uint32_t pcOffset);
 
     ICStub *getStub(ICStubSpace *space);
+};
+
+class ICGetProp_ListBaseShadowed : public ICMonitoredStub
+{
+  friend class ICStubSpace;
+  protected:
+    HeapPtrShape shape_;
+    BaseProxyHandler *proxyHandler_;
+    HeapPtrPropertyName name_;
+    uint32_t pcOffset_;
+
+    ICGetProp_ListBaseShadowed(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+                               BaseProxyHandler *proxyHandler, HandlePropertyName name,
+                               uint32_t pcOffset);
+
+  public:
+    static inline ICGetProp_ListBaseShadowed *New(ICStubSpace *space, IonCode *code,
+                                                  ICStub *firstMonitorStub, HandleShape shape,
+                                                  BaseProxyHandler *proxyHandler,
+                                                  HandlePropertyName name, uint32_t pcOffset)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICGetProp_ListBaseShadowed>(code, firstMonitorStub, shape,
+                                                           proxyHandler, name, pcOffset);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    HeapPtrPropertyName &name() {
+        return name_;
+    }
+
+    static size_t offsetOfShape() {
+        return offsetof(ICGetProp_ListBaseShadowed, shape_);
+    }
+    static size_t offsetOfProxyHandler() {
+        return offsetof(ICGetProp_ListBaseShadowed, proxyHandler_);
+    }
+    static size_t offsetOfName() {
+        return offsetof(ICGetProp_ListBaseShadowed, name_);
+    }
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICGetProp_ListBaseShadowed, pcOffset_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        ICStub *firstMonitorStub_;
+        RootedObject obj_;
+        RootedPropertyName name_;
+        uint32_t pcOffset_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj, HandlePropertyName name,
+                 uint32_t pcOffset)
+          : ICStubCompiler(cx, ICStub::GetProp_CallNative),
+            firstMonitorStub_(firstMonitorStub),
+            obj_(cx, obj),
+            name_(cx, name),
+            pcOffset_(pcOffset)
+        {}
+
+        ICStub *getStub(ICStubSpace *space);
+    };
 };
 
 class ICGetProp_ArgumentsLength : public ICStub
