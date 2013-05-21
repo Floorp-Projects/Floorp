@@ -26,11 +26,10 @@ NS_IMPL_ADDREF_INHERITED(SVGStyleElement, SVGStyleElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGStyleElement, SVGStyleElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGStyleElement)
-  NS_NODE_INTERFACE_TABLE6(SVGStyleElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMLinkStyle, nsIStyleSheetLinkingElement,
-                           nsIMutationObserver)
-NS_INTERFACE_MAP_END_INHERITING(SVGStyleElementBase)
+  NS_INTERFACE_TABLE_INHERITED3(SVGStyleElement, nsIDOMLinkStyle,
+                                nsIStyleSheetLinkingElement,
+                                nsIMutationObserver)
+NS_INTERFACE_TABLE_TAIL_INHERITING(SVGStyleElementBase)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGStyleElement,
                                                   SVGStyleElementBase)
