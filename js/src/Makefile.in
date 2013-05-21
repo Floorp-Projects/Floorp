@@ -925,8 +925,15 @@ selfhosted_out_h_deps := \
   $(srcdir)/builtin/embedjs.py \
   $(NULL)
 
+SELFHOSTED_DEFINES += $(DEFINES) $(ACDEFINES)
+ifdef MOZ_DEBUG
+SELFHOSTED_DEFINES += $(MOZ_DEBUG_ENABLE_DEFS)
+else
+SELFHOSTED_DEFINES += $(MOZ_DEBUG_DISABLE_DEFS)
+endif
+
 selfhosted.out.h: $(selfhosted_out_h_deps)
-	$(PYTHON) $(srcdir)/builtin/embedjs.py $(DEFINES) $(ACDEFINES) \
+	$(PYTHON) $(srcdir)/builtin/embedjs.py $(SELFHOSTED_DEFINES) \
 	  -p '$(CPP)' -m $(srcdir)/js.msg -o $@ $(selfhosting_srcs)
 
 ###############################################
