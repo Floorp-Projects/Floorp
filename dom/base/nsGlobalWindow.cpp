@@ -9726,14 +9726,24 @@ nsGlobalWindow::GetParentInternal()
   return NULL;
 }
 
-// static
 void
-nsGlobalWindow::CloseBlockScriptTerminationFunc(nsISupports *aRef)
+nsGlobalWindow::UnblockScriptedClosing()
 {
-  nsGlobalWindow* pwin = static_cast<nsGlobalWindow*>
-                                    (static_cast<nsPIDOMWindow*>(aRef));
-  pwin->mBlockScriptedClosingFlag = false;
+  mBlockScriptedClosingFlag = false;
 }
+
+class AutoUnblockScriptClosing
+{
+private:
+  nsRefPtr<nsGlobalWindow> mWin;
+public:
+  AutoUnblockScriptClosing(nsGlobalWindow *aWin) : mWin(aWin) {};
+  ~AutoUnblockScriptClosing()
+  {
+    void (nsGlobalWindow::*run)() = &nsGlobalWindow::UnblockScriptedClosing;
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(mWin, run));
+  };
+};
 
 nsresult
 nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
@@ -9763,6 +9773,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                   "Can't pass JS args when called via the noscript methods");
   NS_PRECONDITION(!aJSCallerContext || !aCalledNoScript,
                   "Shouldn't have caller context when called noscript");
+
+  mozilla::Maybe<AutoUnblockScriptClosing> closeUnblocker;
 
   // Calls to window.open from script should navigate.
   MOZ_ASSERT(aCalledNoScript || aNavigate);
@@ -9825,8 +9837,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         // so that whatever popup blocker UI the app has will be visible.
         if (mContext == GetScriptContextFromJSContext(aJSCallerContext)) {
           mBlockScriptedClosingFlag = true;
-          mContext->SetTerminationFunction(CloseBlockScriptTerminationFunc,
-                                           this);
+          closeUnblocker.construct(this);
         }
       }
 
