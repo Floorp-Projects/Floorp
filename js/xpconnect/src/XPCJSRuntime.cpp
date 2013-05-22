@@ -2819,22 +2819,21 @@ bool InternStaticDictionaryJSVals(JSContext* aCx);
 JSBool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
+    // If we were the first cx ever created (like the SafeJSContext), the caller
+    // would have had no way to enter a request. Enter one now before doing the
+    // rest of the cx setup.
+    JSAutoRequest ar(cx);
+
     // if it is our first context then we need to generate our string ids
     if (JSID_IS_VOID(mStrIDs[0])) {
-        JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
-        {
-            // Scope the JSAutoRequest so it goes out of scope before calling
-            // mozilla::dom::binding::DefineStaticJSVals.
-            JSAutoRequest ar(cx);
-            RootedString str(cx);
-            for (unsigned i = 0; i < IDX_TOTAL_COUNT; i++) {
-                str = JS_InternString(cx, mStrings[i]);
-                if (!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i])) {
-                    mStrIDs[0] = JSID_VOID;
-                    return false;
-                }
-                mStrJSVals[i] = STRING_TO_JSVAL(str);
+        RootedString str(cx);
+        for (unsigned i = 0; i < IDX_TOTAL_COUNT; i++) {
+            str = JS_InternString(cx, mStrings[i]);
+            if (!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i])) {
+                mStrIDs[0] = JSID_VOID;
+                return false;
             }
+            mStrJSVals[i] = STRING_TO_JSVAL(str);
         }
 
         if (!mozilla::dom::DefineStaticJSVals(cx) ||
