@@ -66,6 +66,7 @@ chrome.jar:
   content/ContextCommands.js                   (content/ContextCommands.js)
   content/commandUtil.js                       (content/commandUtil.js)
   content/appbar.js                            (content/appbar.js)
+* content/aboutPanel.js                        (content/aboutPanel.js)
   content/shell.xul                            (content/jsshell/shell.xul)
   content/shell.html                           (content/jsshell/shell.html)
   content/browser.css                          (content/browser.css)

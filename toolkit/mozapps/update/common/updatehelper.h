@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 BOOL LaunchWinPostProcess(const WCHAR *installationDir,
-                          const WCHAR *updateInfoDir, 
+                          const WCHAR *updateInfoDir,
                           bool forceSync,
                           HANDLE userToken);
 BOOL StartServiceUpdate(LPCWSTR installDir);
@@ -24,10 +24,16 @@ BOOL IsUnpromptedElevation(BOOL &isUnpromptedElevation);
   L"SOFTWARE\\Mozilla\\MaintenanceService"
 
 // The test only fallback key, as its name implies, is only present on machines
-// that will use automated tests.  Since automated tests always run from a 
+// that will use automated tests.  Since automated tests always run from a
 // different directory for each test, the presence of this key bypasses the
 // "This is a valid installation directory" check.  This key also stores
 // the allowed name and issuer for cert checks so that the cert check
 // code can still be run unchanged.
 #define TEST_ONLY_FALLBACK_KEY_PATH \
   BASE_SERVICE_REG_KEY L"\\3932ecacee736d366d6436db0f55bce4"
+
+#ifdef MOZ_METRO
+  bool GetDefaultBrowserAppModelID(WCHAR* aIDBuffer, long aCharLength);
+  HRESULT LaunchDefaultMetroBrowser();
+#endif
+
