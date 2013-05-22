@@ -1928,7 +1928,8 @@ public:
 
     for (uint32_t i = 0; i < mDeviceAddresses.Length(); i++) {
       BluetoothValue v;
-      nsString objectPath = GetObjectPathFromAddress(sAdapterPath, mDeviceAddresses[i]);
+      nsString objectPath =
+        GetObjectPathFromAddress(sAdapterPath, mDeviceAddresses[i]);
 
       if (!GetPropertiesInternal(objectPath, DBUS_DEVICE_IFACE, v)) {
         errorStr.AssignLiteral("Getting properties failed!");
@@ -2541,8 +2542,8 @@ BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     opp->Connect(aDeviceAddress, aRunnable);
   } else {
-    BluetoothValue v;
-    DispatchBluetoothReply(aRunnable, v, NS_LITERAL_STRING("UnknownProfileError"));
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING("UnknownProfileError"));
   }
 }
 
