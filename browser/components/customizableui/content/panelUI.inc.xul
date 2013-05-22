@@ -63,13 +63,13 @@
     <panelsubview id="PanelUI-history" flex="1">
       <label value="&appMenuHistory.label;"/>
       <toolbarbutton id="appMenuClearRecentHistory"
-                     label="&appMenuHistory.clearRecentLabel;"
+                     label="&appMenuHistory.clearRecent.label;"
                      command="Tools:Sanitize"/>
       <toolbarbutton id="appMenuRestoreLastSession"
-                     label="&appMenuHistory.restoreSession;"
+                     label="&appMenuHistory.restoreSession.label;"
                      command="Browser:RestoreLastSession"/>
       <vbox id="PanelUI-historyItems"/>
-      <label value="&appMenuHistory.moreLabel;"
+      <label value="&appMenuHistory.showAll.label;"
              id="PanelUI-historyMore"
              class="text-link"
              onclick="PlacesCommandHook.showPlacesOrganizer('History'); PanelUI.hide();"/>
