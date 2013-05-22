@@ -2017,7 +2017,6 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt)
             AutoDestroyContext(JSContext *cx) : cx(cx) {}
             ~AutoDestroyContext() { JS_DestroyContext(cx); }
         } adc(cx);
-        JSAutoRequest ar(cx);
 
         if (!JS_SetDebugModeForAllCompartments(cx, gDesiredDebugMode))
             goto fail;
@@ -2478,7 +2477,6 @@ WriteScriptOrFunction(nsIObjectOutputStream *stream, JSContext *cx,
     uint32_t size;
     void* data;
     {
-        JSAutoRequest ar(cx);
         if (functionObj)
             data = JS_EncodeInterpretedFunction(cx, functionObj, &size);
         else
@@ -2537,7 +2535,6 @@ ReadScriptOrFunction(nsIObjectInputStream *stream, JSContext *cx,
         return rv;
 
     {
-        JSAutoRequest ar(cx);
         if (scriptp) {
             JSScript *script = JS_DecodeScript(cx, data, size, principal, originPrincipal);
             if (!script)

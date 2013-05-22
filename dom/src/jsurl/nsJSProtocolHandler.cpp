@@ -259,8 +259,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
     JS::Rooted<JS::Value> v (cx, JS::UndefinedValue());
     // Finally, we have everything needed to evaluate the expression.
-
-    JSAutoRequest ar(cx);
     if (useSandbox) {
         // We were asked to use a sandbox, or the channel owner isn't allowed
         // to execute in this context.  Evaluate the javascript URL in a

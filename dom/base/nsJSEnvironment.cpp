@@ -1267,7 +1267,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   // Scope the JSAutoCompartment so that it gets destroyed before we pop the
   // cx and potentially call JS_RestoreFrameChain.
-  XPCAutoRequest ar(mContext);
   {
     JSAutoCompartment ac(mContext, aScopeObject);
 
@@ -1339,7 +1338,6 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   if (!ok || JSVersion(aVersion) == JSVERSION_UNKNOWN)
     return NS_OK;
 
-  XPCAutoRequest ar(cx);
   JS::CompileOptions options(cx);
   JS::CompileOptions::SourcePolicy sp = aSaveSource ?
     JS::CompileOptions::SAVE_SOURCE :
@@ -1386,8 +1384,6 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject_,
   // called from JS calls back into JS via XPConnect.
   nsCxPusher pusher;
   pusher.Push(mContext);
-
-  XPCAutoRequest ar(mContext);
 
   // Scope the JSAutoCompartment so that it gets destroyed before we pop the
   // cx and potentially call JS_RestoreFrameChain.
@@ -1484,8 +1480,6 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget,
   xpc_UnmarkGrayObject(aScope);
   xpc_UnmarkGrayObject(aHandler);
   AutoPushJSContext cx(mContext);
-
-  XPCAutoRequest ar(mContext);
 
   // Get the jsobject associated with this target
   JS::Rooted<JSObject*> target(cx);
@@ -1646,7 +1640,6 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
 
   nsCxPusher pusher;
   pusher.Push(mContext);
-  XPCAutoRequest ar(mContext);
 
   Maybe<nsRootedJSValueArray> tempStorage;
 
@@ -2293,8 +2286,6 @@ nsJSContext::InitClasses(JS::Handle<JSObject*> aGlobalObj)
 {
   nsresult rv = InitializeExternalClasses();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(mContext);
 
   JSOptionChangedCallback(js_options_dot_str, this);
   AutoPushJSContext cx(mContext);

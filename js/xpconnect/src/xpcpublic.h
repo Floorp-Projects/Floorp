@@ -205,15 +205,6 @@ xpc_UnmarkGrayContext(JSContext *cx)
     return cx;
 }
 
-#ifdef __cplusplus
-class XPCAutoRequest : public JSAutoRequest {
-public:
-    XPCAutoRequest(JSContext *cx) : JSAutoRequest(cx) {
-        xpc_UnmarkGrayContext(cx);
-    }
-};
-#endif
-
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
 // This also unmarks the gray JSObject.
 extern void

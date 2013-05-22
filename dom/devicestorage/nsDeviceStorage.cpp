@@ -1426,8 +1426,6 @@ JS::Value StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString)
     return JSVAL_NULL;
   }
 
-  JSAutoRequest ar(cx);
-
   JS::Value result = JSVAL_NULL;
   if (!xpc::StringToJsval(cx, aString, &result)) {
     return JSVAL_NULL;

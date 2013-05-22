@@ -117,7 +117,6 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   JS::Rooted<JSObject*> global(cx, GetParentObject());
   NS_ASSERTION(global, "This should never be null!");
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
   AssertIsRooted();
 

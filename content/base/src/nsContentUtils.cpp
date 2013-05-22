@@ -6172,8 +6172,6 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
                        GetContext()->GetNativeContext());
   NS_ENSURE_TRUE(cx, true);
 
-  JSAutoRequest ar(cx);
-
   // The pattern has to match the entire value.
   aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
   aPattern.Append(NS_LITERAL_STRING(")$"));

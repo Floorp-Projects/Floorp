@@ -11,7 +11,6 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
                   JSObject** aResultArray)
 {
   MOZ_ASSERT(aCx);
-  JSAutoRequest ar(aCx);
 
   JS::Rooted<JSObject*> arrayObj(aCx,
     JS_NewArrayObject(aCx, aSourceArray.Length(), nullptr));
@@ -55,7 +54,6 @@ nsTArrayToJSArray<nsString>(JSContext* aCx,
                             JSObject** aResultArray)
 {
   MOZ_ASSERT(aCx);
-  JSAutoRequest ar(aCx);
 
   JS::Rooted<JSObject*> arrayObj(aCx,
     JS_NewArrayObject(aCx, aSourceArray.Length(), nullptr));

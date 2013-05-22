@@ -83,7 +83,6 @@ FileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
   JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
   NS_ASSERTION(global, "Failed to get global object!");
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
   rv = aFileHelper->GetSuccessResult(cx, result.address());

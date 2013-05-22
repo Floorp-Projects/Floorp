@@ -27,7 +27,6 @@ namespace {
     class MOZ_STACK_CLASS AutoContextPusher {
 
         nsCxPusher mStack;
-        JSAutoRequest mRequest;
         JSContext* const mContext;
         const uint32_t mSavedOptions;
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -36,8 +35,7 @@ namespace {
 
         AutoContextPusher(JSContext* cx
                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-            : mRequest(cx)
-            , mContext(cx)
+            : mContext(cx)
             , mSavedOptions(JS_SetOptions(cx, (JS_GetOptions(cx) |
                                                JSOPTION_DONT_REPORT_UNCAUGHT)))
         {
@@ -117,7 +115,6 @@ ObjectWrapperChild::ObjectWrapperChild(JSContext* cx, JSObject* obj)
     : mObj(obj)
 {
     AutoContextPusher acp(cx);
-    JSAutoRequest request(cx);
 #ifdef DEBUG
     bool added =
 #endif
@@ -130,7 +127,6 @@ ObjectWrapperChild::ActorDestroy(ActorDestroyReason why)
 {
     JSContext* cx = Manager()->GetContext();
     AutoContextPusher acp(cx);
-    JSAutoRequest request(cx);
     JS_RemoveObjectRoot(cx, &mObj);
 }
 

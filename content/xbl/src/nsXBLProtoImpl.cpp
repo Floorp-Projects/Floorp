@@ -88,7 +88,6 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
                                            holder->GetJSObject());
 
   AutoPushJSContext cx(context->GetNativeContext());
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, targetClassObject);
   AutoVersionChecker avc(cx);
 

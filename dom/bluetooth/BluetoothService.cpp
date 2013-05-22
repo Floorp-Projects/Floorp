@@ -758,7 +758,6 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
                "Shouldn't get here when an exception is pending!");
 
-  JSAutoRequest jsar(cx);
   JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!obj) {
     NS_WARNING("Failed to new JSObject for system message!");

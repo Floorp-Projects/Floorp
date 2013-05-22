@@ -175,9 +175,6 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
 {
   result.Truncate();
 
-  // Begin a new request
-  JSAutoRequest ar(cx);
-
   mozilla::Maybe<JSAutoCompartment> ac;
   if (value->isObject()) {
     ac.construct(cx, &value->toObject());
@@ -198,8 +195,6 @@ nsresult
 nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue,
                        nsJSONWriter* writer)
 {
-  JSAutoRequest ar(cx);
-
   // Backward compatibility:
   // nsIJSON does not allow to serialize anything other than objects
   if (!aValue.isObject()) {
@@ -390,8 +385,6 @@ nsJSON::DecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
 NS_IMETHODIMP
 nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
 {
-  JSAutoRequest ar(cx);
-
   if (!JS_ParseJSON(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
                     str.Length(), result)) {
     return NS_ERROR_UNEXPECTED;
@@ -408,8 +401,6 @@ nsJSON::DecodeInternal(JSContext* cx,
                        JS::Value* aRetval,
                        DecodingMode mode /* = STRICT */)
 {
-  JSAutoRequest ar(cx);
-
   // Consume the stream
   nsCOMPtr<nsIChannel> jsonChannel;
   if (!mURI) {
@@ -499,8 +490,6 @@ nsJSON::LegacyDecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
 NS_IMETHODIMP
 nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
 {
-  JSAutoRequest ar(cx);
-
   JS::RootedValue reviver(cx, JS::NullValue()), value(cx);
 
   JS::StableCharPtr chars(static_cast<const jschar*>(PromiseFlatString(str).get()),

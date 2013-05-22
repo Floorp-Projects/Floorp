@@ -7626,7 +7626,6 @@ class CGDictionary(CGThing):
                 Argument('const nsAString&', 'aJSON'),
             ], body=(
                 "AutoSafeJSContext cx;\n"
-                "JSAutoRequest ar(cx);\n"
                 "JS::Rooted<JS::Value> json(cx);\n"
                 "bool ok = ParseJSON(cx, aJSON, &json);\n"
                 "NS_ENSURE_TRUE(ok, false);\n"

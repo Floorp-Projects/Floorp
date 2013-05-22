@@ -112,18 +112,14 @@ nsEventListenerInfo::ToSource(nsAString& aResult)
   aResult.SetIsVoid(true);
 
   AutoSafeJSContext cx;
-  {
-    // Extra block to finish the auto request before calling pop
-    JSAutoRequest ar(cx);
-    mozilla::Maybe<JSAutoCompartment> ac;
-    JS::Rooted<JS::Value> v(cx, JSVAL_NULL);
-    if (GetJSVal(cx, ac, v.address())) {
-      JSString* str = JS_ValueToSource(cx, v);
-      if (str) {
-        nsDependentJSString depStr;
-        if (depStr.init(cx, str)) {
-          aResult.Assign(depStr);
-        }
+  mozilla::Maybe<JSAutoCompartment> ac;
+  JS::Rooted<JS::Value> v(cx, JSVAL_NULL);
+  if (GetJSVal(cx, ac, v.address())) {
+    JSString* str = JS_ValueToSource(cx, v);
+    if (str) {
+      nsDependentJSString depStr;
+      if (depStr.init(cx, str)) {
+        aResult.Assign(depStr);
       }
     }
   }
@@ -146,17 +142,13 @@ nsEventListenerInfo::GetDebugObject(nsISupports** aRetVal)
   NS_ENSURE_TRUE(isOn, NS_OK);
 
   AutoSafeJSContext cx;
-  {
-    // Extra block to finish the auto request before calling pop
-    JSAutoRequest ar(cx);
-    mozilla::Maybe<JSAutoCompartment> ac;
-    JS::Rooted<JS::Value> v(cx, JSVAL_NULL);
-    if (GetJSVal(cx, ac, v.address())) {
-      nsCOMPtr<jsdIValue> jsdValue;
-      rv = jsd->WrapValue(v, getter_AddRefs(jsdValue));
-      NS_ENSURE_SUCCESS(rv, rv);
-      jsdValue.forget(aRetVal);
-    }
+  mozilla::Maybe<JSAutoCompartment> ac;
+  JS::Rooted<JS::Value> v(cx, JSVAL_NULL);
+  if (GetJSVal(cx, ac, v.address())) {
+    nsCOMPtr<jsdIValue> jsdValue;
+    rv = jsd->WrapValue(v, getter_AddRefs(jsdValue));
+    NS_ENSURE_SUCCESS(rv, rv);
+    jsdValue.forget(aRetVal);
   }
 #endif
 
