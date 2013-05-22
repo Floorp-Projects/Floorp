@@ -501,16 +501,19 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                     currSrc.mFormatFlags)) {
 
                 nsIPrincipal *principal = nullptr;
-                nsresult rv = CheckFontLoad(&currSrc, &principal);
+                bool bypassCache;
+                nsresult rv = CheckFontLoad(&currSrc, &principal, &bypassCache);
 
                 if (NS_SUCCEEDED(rv) && principal != nullptr) {
-                    // see if we have an existing entry for this source
-                    gfxFontEntry *fe =
-                        UserFontCache::GetFont(currSrc.mURI, principal,
-                                               aProxyEntry);
-                    if (fe) {
-                        ReplaceFontEntry(aFamily, aProxyEntry, fe);
-                        return STATUS_LOADED;
+                    if (!bypassCache) {
+                        // see if we have an existing entry for this source
+                        gfxFontEntry *fe =
+                            UserFontCache::GetFont(currSrc.mURI, principal,
+                                                   aProxyEntry);
+                        if (fe) {
+                            ReplaceFontEntry(aFamily, aProxyEntry, fe);
+                            return STATUS_LOADED;
+                        }
                     }
 
                     // record the principal returned by CheckFontLoad,
@@ -529,9 +532,8 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                         // sync load font immediately
                         rv = SyncLoadFontData(aProxyEntry, &currSrc,
                                               buffer, bufferLength);
-                        if (NS_SUCCEEDED(rv) &&
-                            (fe = LoadFont(aFamily, aProxyEntry,
-                                           buffer, bufferLength))) {
+                        if (NS_SUCCEEDED(rv) && LoadFont(aFamily, aProxyEntry,
+                                                         buffer, bufferLength)) {
                             return STATUS_LOADED;
                         } else {
                             LogMessage(aFamily, aProxyEntry,

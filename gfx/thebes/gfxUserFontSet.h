@@ -203,9 +203,12 @@ public:
     // which does not directly track families in the font group's list.
     gfxFontFamily *FindFamilyFor(gfxFontEntry *aFontEntry) const;
 
-    // check whether the given source is allowed to be loaded
+    // check whether the given source is allowed to be loaded;
+    // returns the Principal (for use in the key when caching the loaded font),
+    // and whether the load should bypass the cache (force-reload).
     virtual nsresult CheckFontLoad(const gfxFontFaceSrc *aFontFaceSrc,
-                                   nsIPrincipal **aPrincipal) = 0;
+                                   nsIPrincipal **aPrincipal,
+                                   bool *aBypassCache) = 0;
 
     // initialize the process that loads external font data, which upon 
     // completion will call OnLoadComplete method
