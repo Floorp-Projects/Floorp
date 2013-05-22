@@ -1111,8 +1111,9 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
   runtimeSvc->GetRuntime(&rt);
   NS_ENSURE_TRUE(rt, false);
 
-  JSContext* cx = JS_NewContext(rt, 8192);
-  NS_ENSURE_TRUE(cx, false);
+  JSContext* cx_ = JS_NewContext(rt, 8192);
+  NS_ENSURE_TRUE(cx_, false);
+  AutoPushJSContext cx(cx_);
 
   mCx = cx;
 
