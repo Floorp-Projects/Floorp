@@ -3098,7 +3098,7 @@ nsObjectLoadingContent::TeardownProtoChain()
 
   // Use the safe JSContext here as we're not always able to find the
   // JSContext associated with the NPP any more.
-  JSContext *cx = nsContentUtils::GetSafeJSContext();
+  AutoSafeJSContext cx;
   JS::Rooted<JSObject*> obj(cx, thisContent->GetWrapper());
   NS_ENSURE_TRUE(obj, /* void */);
 
