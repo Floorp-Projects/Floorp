@@ -4114,10 +4114,6 @@ pref("stagefright.disabled", false);
 pref("network.tcp.sendbuffer", 131072);
 #endif
 
-// Asynchonous video compositing using the ImageBridge IPDL protocol.
-// requires off-main-thread compositing.
-pref("layers.async-video.enabled",false);
-
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);
 
@@ -4143,7 +4139,11 @@ pref("layers.max-active", -1);
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.use-deprecated-textures", false);
+// Asynchonous video compositing using the ImageBridge IPDL protocol.
+// requires off-main-thread compositing.
+pref("layers.async-video.enabled",true);
 #else
+pref("layers.async-video.enabled",false);
 #ifdef MOZ_WIDGET_GONK
 pref("layers.use-deprecated-textures", false);
 #else
