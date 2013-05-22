@@ -137,6 +137,14 @@ nsCxPusher::DoPush(JSContext* cx)
     MOZ_CRASH();
   }
 
+  // Enter a request for the duration that the cx is on the stack if non-null.
+  // NB: We call UnmarkGrayContext so that this can obsolete the need for the
+  // old XPCAutoRequest as well.
+  if (cx) {
+    mAutoRequest.construct(cx);
+    xpc_UnmarkGrayContext(cx);
+  }
+
   mPushedSomething = true;
 #ifdef DEBUG
   mPushedContext = cx;
@@ -164,6 +172,9 @@ nsCxPusher::Pop()
     return;
   }
   MOZ_ASSERT(nsXPConnect::GetXPConnect());
+
+  // Leave the request before popping.
+  mAutoRequest.destroyIfConstructed();
 
   // When we push a context, we may save the frame chain and pretend like we
   // haven't entered any compartment. This gets restored on Pop(), but we can
