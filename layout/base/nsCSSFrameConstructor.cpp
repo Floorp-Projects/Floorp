@@ -12026,7 +12026,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // running entirely on the compositor thread) is up-to-date, so that
   // if any style changes we cause trigger transitions, we have the
   // correct old style for starting the transition.
-  if (css::CommonAnimationManager::ThrottlingEnabled() &&
+  if (nsLayoutUtils::AreAsyncAnimationsEnabled() &&
       mPendingRestyles.Count() > 0) {
     ++mAnimationGeneration;
     presContext->TransitionManager()->UpdateAllThrottledStyles();

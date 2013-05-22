@@ -353,6 +353,12 @@ nsLayoutUtils::AreTransformAnimationsEnabled()
 }
 
 bool
+nsLayoutUtils::AreAsyncAnimationsEnabled()
+{
+  return AreOpacityAnimationsEnabled() || AreTransformAnimationsEnabled();
+}
+
+bool
 nsLayoutUtils::IsAnimationLoggingEnabled()
 {
   static bool sShouldLog;
