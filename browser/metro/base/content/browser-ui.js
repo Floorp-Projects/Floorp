@@ -154,11 +154,7 @@ var BrowserUI = {
         Util.dumpLn("Exception in delay load module:", ex.message);
       }
 
-#ifdef MOZ_UPDATER
-      // Check for updates in progress
-      let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
-      updatePrompt.checkForUpdates();
-#endif
+      BrowserUI._pullDesktopControlledPrefs();
 
       // check for left over crash reports and submit them if found.
       if (BrowserUI.startupCrashCheck()) {
@@ -248,6 +244,37 @@ var BrowserUI = {
     } catch (ex) {}
 
     return uri.spec;
+  },
+
+  /**
+    * Some prefs that have consequences in both Metro and Desktop such as
+    * app-update prefs, are automatically pulled from Desktop here.
+    */
+  _pullDesktopControlledPrefs: function() {
+    function pullDesktopControlledPrefType(prefType, prefFunc) {
+      try {
+        registry.create(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                      "Software\\Mozilla\\Firefox\\Metro\\Prefs\\" + prefType,
+                      Ci.nsIWindowsRegKey.ACCESS_ALL);
+        for (let i = 0; i < registry.valueCount; i++) {
+          let prefName = registry.getValueName(i);
+          let prefValue = registry.readStringValue(prefName);
+          if (prefType == Ci.nsIPrefBranch.PREF_BOOL) {
+            prefValue = prefValue == "true";
+          }
+          Services.prefs[prefFunc](prefName, prefValue);
+        }
+      } catch (ex) {
+        Util.dumpLn("Could not pull for prefType " + prefType + ": " + ex);
+      } finally {
+        registry.close();
+      }
+    }
+    let registry = Cc["@mozilla.org/windows-registry-key;1"].
+                   createInstance(Ci.nsIWindowsRegKey);
+    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_INT, "setIntPref");
+    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_BOOL, "setBoolPref");
+    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_STRING, "setCharPref");
   },
 
   /* Set the location to the current content */
@@ -1491,23 +1518,8 @@ var SyncPanelUI = {
 };
 
 var FlyoutPanelsUI = {
-  get _aboutVersionLabel() {
-    return document.getElementById('about-version-label');
-  },
-
-  _initAboutPanel: function() {
-    // Include the build ID if this is an "a#" (nightly or aurora) build
-    let version = Services.appinfo.version;
-    if (/a\d+$/.test(version)) {
-      let buildID = Services.appinfo.appBuildID;
-      let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) +
-                      "-" + buildID.slice(6,8);
-      this._aboutVersionLabel.textContent +=" (" + buildDate + ")";
-    }
-  },
-
   init: function() {
-    this._initAboutPanel();
+    AboutPanelUI.init();
     PreferencesPanelView.init();
     SyncPanelUI.init();
   },
