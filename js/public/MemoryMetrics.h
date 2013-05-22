@@ -91,7 +91,6 @@ struct TypeInferenceSizes
 // Data for tracking JIT-code memory usage.
 struct CodeSizes
 {
-    size_t jaeger;
     size_t ion;
     size_t asmJS;
     size_t baseline;
@@ -241,7 +240,6 @@ struct CompartmentStats
         shapesExtraTreeShapeKids(0),
         shapesCompartmentTables(0),
         scriptData(0),
-        jaegerData(0),
         baselineData(0),
         baselineStubsFallback(0),
         baselineStubsOptimized(0),
@@ -271,7 +269,6 @@ struct CompartmentStats
         shapesExtraTreeShapeKids(other.shapesExtraTreeShapeKids),
         shapesCompartmentTables(other.shapesCompartmentTables),
         scriptData(other.scriptData),
-        jaegerData(other.jaegerData),
         baselineData(other.baselineData),
         baselineStubsFallback(other.baselineStubsFallback),
         baselineStubsOptimized(other.baselineStubsOptimized),
@@ -306,7 +303,6 @@ struct CompartmentStats
     size_t shapesExtraTreeShapeKids;
     size_t shapesCompartmentTables;
     size_t scriptData;
-    size_t jaegerData;
     size_t baselineData;
     size_t baselineStubsFallback;
     size_t baselineStubsOptimized;
@@ -339,7 +335,6 @@ struct CompartmentStats
         ADD(shapesExtraTreeShapeKids);
         ADD(shapesCompartmentTables);
         ADD(scriptData);
-        ADD(jaegerData);
         ADD(baselineData);
         ADD(baselineStubsFallback);
         ADD(baselineStubsOptimized);

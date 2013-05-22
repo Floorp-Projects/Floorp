@@ -1872,11 +1872,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    cStats.scriptData,
                    "Memory allocated for various variable-length tables in JSScript.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("jaeger-data"),
-                   cStats.jaegerData,
-                   "Memory used by the JaegerMonkey JIT for compilation data: "
-                   "JITScripts, native maps, and inline cache structs.");
-
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/data"),
                    cStats.baselineData,
                    "Memory used by the Baseline JIT for compilation data: "
@@ -2019,10 +2014,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   nsIMemoryReporter::KIND_HEAP, rtStats.runtime.temporary,
                   "Memory held transiently in JSRuntime and used during "
                   "compilation.  It mostly holds parse nodes.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/jaeger"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.jaeger,
-                  "Memory used by the JaegerMonkey JIT to hold generated code.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/ion"),
                   nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.ion,

@@ -1151,9 +1151,6 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
         case 's':
             JS_ToggleOptions(cx, JSOPTION_STRICT);
             break;
-        case 'm':
-            JS_ToggleOptions(cx, JSOPTION_METHODJIT);
-            break;
         case 'I':
             JS_ToggleOptions(cx, JSOPTION_COMPILE_N_GO);
             JS_ToggleOptions(cx, JSOPTION_ION);
