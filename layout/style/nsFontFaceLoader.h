@@ -83,6 +83,8 @@ protected:
                                     uint8_t* &aBuffer,
                                     uint32_t &aBufferLength);
 
+  virtual bool GetPrivateBrowsing() MOZ_OVERRIDE;
+
   nsPresContext *mPresContext;  // weak reference
 
   // Set of all loaders pointing to us. These are not strong pointers,
