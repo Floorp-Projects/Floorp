@@ -2319,6 +2319,11 @@ RasterImage::StartDecoding()
   return RequestDecodeCore(SYNCHRONOUS_NOTIFY_AND_SOME_DECODE);
 }
 
+bool
+RasterImage::IsDecoded()
+{
+  return mDecoded || mError;
+}
 
 NS_IMETHODIMP
 RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
