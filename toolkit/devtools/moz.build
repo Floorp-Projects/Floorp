@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PARALLEL_DIRS += [
-    'debugger',
+    'server',
+    'client',
     'gcli',
     'sourcemap',
-    'webconsole',
-    'styleeditor'
+    'webconsole'
 ]

@@ -8,7 +8,7 @@ function run_test()
   addDebuggerToGlobal(this);
   let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Components.interfaces.mozIJSSubScriptLoader);
-  loader.loadSubScript("chrome://global/content/devtools/dbg-script-actors.js");
+  loader.loadSubScript("resource://gre/modules/devtools/server/actors/script.js");
 
   test_LSA_disconnect();
   test_LSA_grip();
