@@ -115,6 +115,7 @@ ObjectWrapperChild::CheckOperation(JSContext*,
 ObjectWrapperChild::ObjectWrapperChild(JSContext* cx, JSObject* obj)
     : mObj(obj)
 {
+    AutoContextPusher acp(cx);
     JSAutoRequest request(cx);
 #ifdef DEBUG
     bool added =
@@ -127,6 +128,7 @@ void
 ObjectWrapperChild::ActorDestroy(ActorDestroyReason why)
 {
     JSContext* cx = Manager()->GetContext();
+    AutoContextPusher acp(cx);
     JSAutoRequest request(cx);
     JS_RemoveObjectRoot(cx, &mObj);
 }
