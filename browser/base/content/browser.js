@@ -1278,6 +1278,15 @@ var gBrowserInit = {
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
     setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
     TelemetryTimestamps.add("delayedStartupFinished");
+
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+    gMetroPrefs.prefDomain.forEach(function(prefName) {
+      gMetroPrefs.pushDesktopControlledPrefToMetro(prefName);
+      Services.prefs.addObserver(prefName, gMetroPrefs, false);
+    }, this);
+#endif
+#endif
   },
 
   onUnload: function() {
@@ -1355,6 +1364,14 @@ var gBrowserInit = {
       } catch (ex) {
         Cu.reportError(ex);
       }
+
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+      gMetroPrefs.prefDomain.forEach(function(prefName) {
+        Services.prefs.removeObserver(prefName, gMetroPrefs);
+      });
+#endif
+#endif
 
       BrowserOffline.uninit();
       OfflineApps.uninit();
@@ -1512,6 +1529,7 @@ var gBrowserInit = {
     }
   },
 }
+
 
 /* Legacy global init functions */
 var BrowserStartup        = gBrowserInit.onLoad.bind(gBrowserInit);
@@ -4830,6 +4848,60 @@ function fireSidebarFocusedEvent() {
   event.initEvent("SidebarFocused", true, false);
   sidebar.contentWindow.dispatchEvent(event);
 }
+
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+/**
+ * Some prefs that have consequences in both Metro and Desktop such as
+ * app-update prefs, are automatically pushed from Desktop here for use
+ * in Metro.
+ */
+var gMetroPrefs = {
+  prefDomain: ["app.update.auto", "app.update.enabled",
+               "app.update.service.enabled"],
+  observe: function (aSubject, aTopic, aPrefName)
+  {
+    if (aTopic != "nsPref:changed")
+      return;
+
+    this.pushDesktopControlledPrefToMetro(aPrefName);
+  },
+
+  /**
+   * Writes the pref to HKCU in the registry and adds a pref-observer to keep
+   * the registry in sync with changes to the value.
+   */
+  pushDesktopControlledPrefToMetro: function(aPrefName) {
+    let registry = Cc["@mozilla.org/windows-registry-key;1"].
+                    createInstance(Ci.nsIWindowsRegKey);
+    try {
+      var prefType = Services.prefs.getPrefType(aPrefName);
+      let prefFunc;
+      if (prefType == Components.interfaces.nsIPrefBranch.PREF_INT)
+        prefFunc = "getIntPref";
+      else if (prefType == Components.interfaces.nsIPrefBranch.PREF_BOOL)
+        prefFunc = "getBoolPref";
+      else if (prefType == Components.interfaces.nsIPrefBranch.PREF_STRING)
+        prefFunc = "getCharPref";
+      else
+        throw "Unsupported pref type";
+
+      let prefValue = Services.prefs[prefFunc](aPrefName);
+      registry.create(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                    "Software\\Mozilla\\Firefox\\Metro\\Prefs\\" + prefType,
+                    Ci.nsIWindowsRegKey.ACCESS_WRITE);
+      // Always write as string, but the registry subfolder will determine
+      // how Metro interprets that string value.
+      registry.writeStringValue(aPrefName, prefValue);
+    } catch (ex) {
+      Components.utils.reportError("Couldn't push pref " + aPrefName + ": " + ex);
+    } finally {
+      registry.close();
+    }
+  }
+};
+#endif
+#endif
 
 var gHomeButton = {
   prefDomain: "browser.startup.homepage",
