@@ -26,7 +26,7 @@ function testTransferTotal(aCurrBytes, aMaxBytes, aTransfer)
 // Get the em-dash character because typing it directly here doesn't work :(
 let gDash = DownloadUtils.getDownloadStatus(0)[0].match(/remaining (.) 0 bytes/)[1];
 
-let gVals = [0, 100, 2345, 55555, 982341, 23194134, 1482, 58, 9921949201, 13498132];
+let gVals = [0, 100, 2345, 55555, 982341, 23194134, 1482, 58, 9921949201, 13498132, Infinity];
 
 function testStatus(aFunc, aCurr, aMore, aRate, aTest)
 {
@@ -167,6 +167,9 @@ function run_test()
   testStatus(statusFunc, 6, 6, 0, ["Unknown time remaining -- 1.4 of 2.9 KB (0 bytes/sec)", Infinity]);
   testStatus(statusFunc, 8, 5, 0, ["Unknown time remaining -- 9.2 of 9.3 GB (0 bytes/sec)", Infinity]);
 
+  // With rate equal to Infinity
+  testStatus(statusFunc, 0, 0, 10, ["Unknown time remaining -- 0 of 0 bytes (Really fast)", Infinity]);
+  testStatus(statusFunc, 1, 2, 10, ["A few seconds remaining -- 100 bytes of 2.4 KB (Really fast)", 0]);
 
   // Now test without rates, via getDownloadStatusNoRate.
   statusFunc = DownloadUtils.getDownloadStatusNoRate.bind(DownloadUtils);
