@@ -66,6 +66,12 @@ VARIABLES = {
         This variable contains a list of files to invoke the assembler on.
         """),
 
+    'CSRCS': (StrictOrderingOnAppendList, list, [],
+        """C code source files.
+
+        This variable contains a list of C source files to compile.
+        """),
+
     'DIRS': (list, list, [],
         """Child directories to descend into looking for build frontend files.
 

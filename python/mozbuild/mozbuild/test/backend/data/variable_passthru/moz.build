@@ -7,3 +7,5 @@ XPIDL_MODULE = 'module_name'
 XPIDL_FLAGS = ['-Idir1', '-Idir2', '-Idir3']
 
 ASFILES = ['bar.s', 'foo.asm']
+
+CSRCS += ['bar.c', 'foo.c']
