@@ -86,20 +86,6 @@ nsHostObjectProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
   return res->mPrincipal;
 }
 
-void
-nsHostObjectProtocolHandler::Traverse(const nsACString& aUri,
-                                      nsCycleCollectionTraversalCallback& aCallback)
-{
-  DataInfo* res;
-  gDataTable->Get(aUri, &res);
-  if (!res) {
-    return;
-  }
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "HostObjectProtocolHandler DataInfo.mObject");
-  aCallback.NoteXPCOMChild(res->mObject);
-}
-
 static DataInfo*
 GetDataInfo(const nsACString& aUri)
 {

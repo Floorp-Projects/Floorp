@@ -1773,10 +1773,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   if (tmp->mCSSLoader) {
     tmp->mCSSLoader->TraverseCachedSheets(cb);
   }
-
-  for (uint32_t i = 0; i < tmp->mHostObjectURIs.Length(); ++i) {
-    nsHostObjectProtocolHandler::Traverse(tmp->mHostObjectURIs[i], cb);
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
@@ -1879,10 +1875,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   if (tmp->mCSSLoader) {
     tmp->mCSSLoader->UnlinkCachedSheets();
-  }
-
-  for (uint32_t i = 0; i < tmp->mHostObjectURIs.Length(); ++i) {
-    nsHostObjectProtocolHandler::RemoveDataEntry(tmp->mHostObjectURIs[i]);
   }
 
   tmp->mInUnlinkOrDeletion = false;
