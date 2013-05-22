@@ -267,9 +267,9 @@ fails-if(Android) == 243519-9f.html 243519-9-ref.html
 == 244135-1.html 244135-1-ref.html
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
+== 246669-1.html 246669-1-ref.html
 skip-if(B2G) == 249141.xul 249141-ref.xul
 == 249982-1.html 249982-1-ref.html
-== 246669-1.html 246669-1-ref.html
 == 252920-1.html 252920-1-ref.html
 == 253701-1.html 253701-1-ref.html
 == 255820-1.html 255820-1-ref.html
@@ -521,8 +521,8 @@ asserts-if(gtk2Widget,1) == 355548-3.xml 355548-3-ref.xml # bug 456899
 == 355548-5.xml 355548-5-ref.xml
 fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 356775-1.html 356775-1-ref.html
-skip-if(B2G) == 359903-1.html 359903-1-ref.html
 == 359869-1.html 359869-1-ref.html
+skip-if(B2G) == 359903-1.html 359903-1-ref.html
 == 359903-2.html 359903-2-ref.html
 == 360065-1.html 360065-1-ref.html
 == 360746-1.html 360746-1-ref.html
@@ -559,8 +559,8 @@ fuzzy-if(OSX==10.8,45,2) == 363858-6a.html 363858-6-ref.html
 == 363874.html 363874-ref.html
 == 363874-max-width.html 363874-max-width-ref.html
 == 364066-1.html 364066-1-ref.html
-== 364318-1.xhtml 364318-1-ref.xhtml
 == 364079-1.html 364079-1-ref.html
+== 364318-1.xhtml 364318-1-ref.xhtml
 == 364861-1.html 364861-1-ref.html
 skip-if(B2G) == 364862-1.html 364862-1-ref.html
 skip-if(B2G) == 364968-1.xul 364968-1-ref.html
@@ -616,8 +616,8 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == 368651-1.html 368651-1-ref.html
 == 369361-1.html 369361-1-ref.html
 == 369361-2.html 369361-2-ref.html
-== 369975-1.html 369975-1.html
 == 369882.xul 369882-ref.xul
+== 369975-1.html 369975-1.html
 == 370353-1.html 370353-1-ref.html
 == 370422-1.html 370422-1-ref.html
 == 370525-1.html 370525-1-ref.html
@@ -645,25 +645,25 @@ fails-if(Android) == 371561-1.html 371561-1-ref.html
 == 371925-1a.html 371925-1-ref.html
 == 371925-1b.html 371925-1-ref.html
 skip-if(B2G) == 372037-1.html 372037-1-ref.html
+== 372062-1.html 372062-1-ref.html
 == 372063-1.html 372063-1-ref.html
 == 372323-1.xhtml 372323-1-ref.xhtml
 == 372553-1.html 372553-1-ref.html
 == 372632-1.html 372632-1-ref.html
+== 372768-1.html 372768-1-ref.html
 == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
 skip-if(B2G) fails-if(Android) == 373381-1.html 373381-1-ref.html
 skip-if(B2G) fails-if(Android) == 373381-2.html 373381-2-ref.html
 skip-if(B2G) fails-if(Android) random-if(d2d) == 373381-3.html 373381-3-ref.html
 skip-if(B2G) fails-if(Android) == 373381-4.html 373381-4-ref.html
-== 375508-1.html 375508-1-ref.html
-== 373433-1.html 373433-1-ref.html
-== 372062-1.html 372062-1-ref.html
-== 372768-1.html 372768-1-ref.html
 == 373383-1.html 373383-1-ref.html
+== 373433-1.html 373433-1-ref.html
 == 374038-1.xul 374038-1-ref.xul
-random-if(d2d) == 374719-1.xul 374719-1-ref.xul
 == 374038-2.xul 374038-2-ref.xul
+random-if(d2d) == 374719-1.xul 374719-1-ref.xul
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
+== 375508-1.html 375508-1-ref.html
 == 375716-1.html 375716-1-ref.html
 == 375827-1.html 375827-1-ref.html
 == 376375-1.html 376375-1-ref.html
@@ -923,11 +923,11 @@ random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for font
 == 408782-1b.html 408782-1-ref.html
 == 408782-2a.html 408782-2-ref.html
 == 408782-2b.html 408782-2-ref.html
+== 409084-1a.html 409084-1-ref.html
+== 409084-1b.html 409084-1-ref.html
 == 409089-1.html 409089-1-ref.html
 == 409089-2.html 409089-2-ref.html
 == 409089-3.html 409089-3-ref.html
-== 409084-1a.html 409084-1-ref.html
-== 409084-1b.html 409084-1-ref.html
 == 409659-1a.html 409659-1-ref.html
 != 409659-1b.html 409659-1-ref.html
 != 409659-1c.html 409659-1-ref.html
@@ -983,8 +983,8 @@ asserts(1) == 418574-1.html 418574-1-ref.html # bug 478135
 asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 418766-1a.html 418766-1-ref.html
 == 418766-1b.html 418766-1-ref.html
-== 419285-1.html 419285-1-ref.html
 == 419060.html 419060-ref.html
+== 419285-1.html 419285-1-ref.html
 == 419531-1.html 419531-1-ref.html
 == 420069-1.html 420069-1-ref.html
 == 420069-2.html 420069-2-ref.html
@@ -1127,12 +1127,11 @@ skip-if(B2G) == 430412-1.html 430412-1-ref.html
 == 431341-2.html 431341-2-ref.html
 == 431520-1.html 431520-1-ref.html
 == 431948-1.html 431948-1-ref.html
-== 438537-1.html 438537-1-ref.html
-== 440112.html 440112-ref.html
 == 433640-1.html 433640-1-ref.html
 fails-if(Android) == 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
+== 438537-1.html 438537-1-ref.html
 == 438981-1.xhtml about:blank
 == 438987-1.html 438987-1-ref.html
 == 438987-2a.html 438987-2-ref.html
@@ -1142,6 +1141,7 @@ fails-if(Android) == 433700.html 433700-ref.html
 == 439004-1.html 439004-1-ref.html
 == 439639-1.html 439639-1-ref.html
 == 439910.html 439910-ref.html
+== 440112.html 440112-ref.html
 == 440149-1.html 440149-1-ref.html
 == 441259-1.html 441259-1-ref.html
 fails == 441259-2.html 441259-2-ref.html # bug 441400
@@ -1165,6 +1165,7 @@ skip-if(B2G) fails-if(Android) == 446100-1c.html about:blank
 == 446100-1f.html about:blank
 skip-if(B2G) fails-if(Android) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
+skip-if(B2G) == 447749-1.html 447749-1-ref.html
 fuzzy(127,2) == 448193.html 448193-ref.html
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
 != 449149-1a.html about:blank
@@ -1237,8 +1238,8 @@ skip-if(B2G) == 463952-1.html 463952-1-ref.html
 == 467084-2.html 467084-2-ref.html
 == 467444-1.html 467444-1-ref.html
 == 467460-1.html 467460-1-ref.html
-== 468546-1.xhtml 468546-1-ref.xhtml
 == 468473-1.xul 468473-1-ref.xul
+== 468546-1.xhtml 468546-1-ref.xhtml
 == 471356-1.html 471356-1-ref.html
 == 471594-1.xhtml 471594-1-ref.html
 == 472020-1a.xul 472020-1-ref.xul
@@ -1253,7 +1254,6 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 474336-1.xul 474336-1-ref.xul
 skip-if(B2G) == 474417-1.html 474417-1-ref.html
 == 474472-1.html 474472-1-ref.html
-skip-if(B2G) == 447749-1.html 447749-1-ref.html
 == 475986-1a.html 475986-1-ref.html
 == 475986-1b.html 475986-1-ref.html
 == 475986-1c.html 475986-1-ref.html
@@ -1283,6 +1283,7 @@ skip-if(B2G) == 476063-4.xhtml 476063-4-ref.xhtml
 == 476598-1b.html 476598-1-ref2.html
 != 476598-1-ref.html about:blank
 == 476856-1.html 476856-1-ref.html
+random-if(d2d) == 478377-1.xul 478377-1-ref.xul
 == 478614-1.html 478614-1-ref.html
 == 478614-2.html 478614-1-ref.html
 == 478614-3.html 478614-3-ref.html
@@ -1290,7 +1291,6 @@ skip-if(B2G) == 476063-4.xhtml 476063-4-ref.xhtml
 == 478614-5.html 478614-5-ref.html
 == 478614-6.html 478614-6-ref.html
 == 478614-7.html 478614-7-ref.html
-random-if(d2d) == 478377-1.xul 478377-1-ref.xul
 skip-if(B2G) == 478811-1.html 478811-1-ref.html
 skip-if(B2G) == 478811-2.html 478811-2-ref.html # bug 839735
 skip-if(B2G) == 478811-3.html 478811-3-ref.html # bug 839735
@@ -1343,12 +1343,12 @@ random-if(winWidget) == 482659-1a.html 482659-1-ref.html
 fails-if(Android) == 488685-1.html 488685-1-ref.html
 == 488692-1.html 488692-1-ref.html
 == 489868-1.svg 489868-1-ref.svg
+== 490173-1.html 490173-1-ref.html
+== 490173-2.html 490173-2-ref.html
 == 490176-1.html 490176-1-ref.html
 == 490177-1.svg 490177-1-ref.svg
 == 490182-1a.html 490182-1-ref.html
 == 490182-1b.html 490182-1-ref.html
-== 490173-1.html 490173-1-ref.html
-== 490173-2.html 490173-2-ref.html
 == 491180-1.html 491180-1-ref.html
 == 491180-2.html 491180-2-ref.html
 == 491323-1.xul 491323-1-ref.xul
@@ -1377,18 +1377,18 @@ fails-if(Android) == 488685-1.html 488685-1-ref.html
 == 495385-3.html 495385-3-ref.html
 == 495385-4.html 495385-4-ref.html
 == 495385-5.html 495385-5-ref.html
-== 498228-1.xul 498228-1-ref.xul
 asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 496840-1.html 496840-1-ref.html
+== 498228-1.xul 498228-1-ref.xul
 == 501037.html 501037-ref.html
 == 501257-1a.html 501257-1-ref.html
 == 501257-1b.html 501257-1-ref.html
 == 501257-1.xhtml 501257-1-ref.xhtml
 == 501627-1.html 501627-1-ref.html
 == 502288-1.html 502288-1-ref.html
-== 502942-1.html 502942-1-ref.html
 skip-if(B2G) == 502447-1.html 502447-1-ref.html
 == 502795-1.html 502795-1-ref.html
+== 502942-1.html 502942-1-ref.html
 == 503364-1a.html 503364-1-ref.html
 == 503364-1b.html 503364-1-ref.html
 == 503399.html 503399-ref.html
@@ -1456,9 +1456,9 @@ skip-if(B2G) == 530686-1.html 530686-1-ref.html # bug 839735
 == 534808-2.html 534808-2-ref.html
 fails-if(OSX==10.7) == 534919-1.html 534919-1-ref.html # Bug 705044
 random == 536061.html 536061-ref.html # fixedpoint division in blur code makes this fail
+== 537471-1.html 537471-1-ref.html
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
-== 537471-1.html 537471-1-ref.html
 == 538909-1.html 538909-1-ref.html
 == 538935-1.html 538935-1-ref.html
 == 539226-1.html about:blank
@@ -1530,6 +1530,7 @@ skip-if(B2G) == 563584-8d.html 563584-8d-ref.html
 == 563584-10a.html 563584-10-ref.html
 == 563584-10b.html 563584-10-ref.html
 == 563584-11.html 563584-11-ref.html
+== 563884-1.html 563884-1-ref.html
 == 564002-1.html 564002-1-ref.html
 == 564054-1.html 564054-1-ref.html
 skip-if(B2G) fails-if(Android) random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
@@ -1595,7 +1596,6 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 599882-2.html 599882-2-ref.html
 == 600045-1.html 600045-1-ref.html
 skip-if(B2G) == 600803-1.html 600803-1-ref.html
-== 603423-1.html 603423-1-ref.html
 == 600974-1.html 600974-1-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
@@ -1603,15 +1603,16 @@ skip-if(B2G) == 600803-1.html 600803-1-ref.html
 fails-if(Android) == 602200-2.html 602200-2-ref.html
 == 602200-3.html 602200-3-ref.html
 fails-if(Android) == 602200-4.html 602200-4-ref.html
+== 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
 == 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
 == 607267-1.html 607267-1-ref.html
+== 608636-1.html 608636-1-ref.html
 == 608756-1a.html 608756-1-ref.html
 == 608756-1b.html 608756-1-ref.html
 == 608756-2.html 608756-2-ref.html
 == 609272-1.html 609272-1-ref.html
-== 608636-1.html 608636-1-ref.html
 needs-focus == 613433-1.html 613433-1-ref.html
 needs-focus == 613433-1.html 613433-2-ref.html
 needs-focus == 613433-1.html 613433-3-ref.html
@@ -1669,16 +1670,17 @@ fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android) == 654950-1.html 6
 == 655836-1.html 655836-1-ref.html
 != 656875.html about:blank
 == 658952.html 658952-ref.html
-fails-if(Android) == 664127-1.xul 664127-1-ref.xul
 == 660682-1.html 660682-1-ref.html
+fails-if(Android) == 664127-1.xul 664127-1-ref.xul
 skip-if(B2G) == 665597-1.html 665597-1-ref.html
 skip-if(B2G) == 665597-2.html 665597-2-ref.html
-!= 669015-1.xul 669015-1-notref.xul
 == 668319-1.xul about:blank
+!= 669015-1.xul 669015-1-notref.xul
 == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
 == 670467-2.html 670467-2-ref.html
 == 690164-1.html 690164-1-ref.html
+== 690643-1.html 690643-1-ref.html
 != 691087-1.html 691087-1-ref.html
 == 691571-1.html 691571-1-ref.html
 == 696307-1.html 696307-1-ref.html
@@ -1705,19 +1707,16 @@ skip-if(B2G) == 729143-1.html 729143-1-ref.html
 needs-focus == 731726-1.html 731726-1-ref.html
 == 735481-1.html 735481-1-ref.html
 == 745934-1.html 745934-1-ref.html
+== 748692-1a.html 748692-1-ref.html
+== 748692-1b.html 748692-1-ref.html
 skip-if(B2G) == 748803-1.html 748803-1-ref.html
 == 750551-1.html 750551-1-ref.html
 skip-if(B2G) == 751012-1a.html 751012-1-ref.html
 skip-if(B2G) == 751012-1b.html 751012-1-ref.html
-== 690643-1.html 690643-1-ref.html
-== 748692-1a.html 748692-1-ref.html
-== 748692-1b.html 748692-1-ref.html
 random-if(Android) == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
 fuzzy-if(true,1,19) fails-if(d2d) == 759036-1.html 759036-1-ref.html
 fuzzy-if(true,17,5859) == 759036-2.html 759036-2-ref.html
-== 776443-1.html 776443-1-ref.html
-== 776443-2.html 776443-2-ref.html
 == 776265-1a.html 776265-1-ref.html
 == 776265-1b.html 776265-1-ref.html
 == 776265-1c.html 776265-1-ref.html
@@ -1726,6 +1725,8 @@ fuzzy-if(true,17,5859) == 759036-2.html 759036-2-ref.html
 == 776265-2b.html 776265-2-ref.html
 == 776265-2c.html 776265-2-ref.html
 == 776265-2d.html 776265-2-ref.html
+== 776443-1.html 776443-1-ref.html
+== 776443-2.html 776443-2-ref.html
 == 787947-1.html 787947-1-ref.html
 == 796847-1.svg 796847-1-ref.svg
 fuzzy(40,850) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
@@ -1737,10 +1738,10 @@ fuzzy(40,850) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) te
 == 811301-1.html 811301-1-ref.html
 == 812824-1.html 812824-1-ref.html
 == 814677.html 814677-ref.html
-skip-if(B2G) == 815593-1.html 815593-1-ref.html
 skip-if(B2G) == 814952-1.html 814952-1-ref.html
-== 816458-1.html 816458-1-ref.html
+skip-if(B2G) == 815593-1.html 815593-1-ref.html
 == 816359-1.html 816359-1-ref.html
+== 816458-1.html 816458-1-ref.html
 == 816948-1.html 816948-1-ref.html
 == 817019-1.html about:blank
 skip-if(B2G) == 818276-1.html 818276-1-ref.html
@@ -1759,4 +1760,3 @@ test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html
 == 858803-1.html 858803-1-ref.html
 != 860370.html 860370-notref.html
 == 871338-1.html 871338-1-ref.html
-== 563884-1.html 563884-1-ref.html
