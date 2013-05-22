@@ -24,7 +24,7 @@ window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   var iframe = document.createElement("iframe");
-  iframe.src = "http://mochi.test:8888/chrome/toolkit/devtools/debugger/tests/mochitest/nonchrome_unsafeDereference.html";
+  iframe.src = "http://mochi.test:8888/chrome/toolkit/devtools/server/tests/mochitest/nonchrome_unsafeDereference.html";
 
   iframe.onload = function () {
     var dbg = new Debugger;
