@@ -204,6 +204,7 @@
     _(ArgumentsLength)              \
     _(GetArgument)                  \
     _(Rest)                         \
+    _(ParRest)                      \
     _(TypeOfV)                      \
     _(ToIdV)                        \
     _(Floor)                        \

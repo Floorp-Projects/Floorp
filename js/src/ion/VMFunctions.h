@@ -303,6 +303,7 @@ template <> struct OutParamToDataType<Value *> { static const DataType result = 
 template <> struct OutParamToDataType<int *> { static const DataType result = Type_Int32; };
 template <> struct OutParamToDataType<uint32_t *> { static const DataType result = Type_Int32; };
 template <> struct OutParamToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
+template <> struct OutParamToDataType<MutableHandleObject> { static const DataType result = Type_Handle; };
 
 template <class> struct MatchContext { };
 template <> struct MatchContext<JSContext *> {

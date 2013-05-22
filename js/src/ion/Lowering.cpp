@@ -2459,6 +2459,19 @@ LIRGenerator::visitRest(MRest *ins)
 }
 
 bool
+LIRGenerator::visitParRest(MParRest *ins)
+{
+    JS_ASSERT(ins->numActuals()->type() == MIRType_Int32);
+
+    LParRest *lir = new LParRest(useFixed(ins->parSlice(), CallTempReg0),
+                                 useFixed(ins->numActuals(), CallTempReg1),
+                                 tempFixed(CallTempReg2),
+                                 tempFixed(CallTempReg3),
+                                 tempFixed(CallTempReg4));
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitThrow(MThrow *ins)
 {
     MDefinition *value = ins->getOperand(0);
