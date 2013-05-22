@@ -7,6 +7,7 @@
 #include "nsIXPConnect.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsdbgapi.h"

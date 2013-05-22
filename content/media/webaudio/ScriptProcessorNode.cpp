@@ -12,6 +12,7 @@
 #include "AudioNodeStream.h"
 #include "AudioProcessingEvent.h"
 #include "WebAudioUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
 #include <deque>

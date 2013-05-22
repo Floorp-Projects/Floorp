@@ -18,6 +18,7 @@
 #include "nsIDOMMozMmsMessage.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsIXPConnect.h"
 #include "nsIPermissionManager.h"

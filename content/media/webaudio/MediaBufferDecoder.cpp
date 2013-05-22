@@ -21,6 +21,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
+#include "nsCxPusher.h"
 
 namespace mozilla {
 

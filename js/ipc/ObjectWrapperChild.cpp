@@ -16,6 +16,7 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 
 using namespace mozilla::jsipc;

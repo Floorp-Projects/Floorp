@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <math.h>
 
+#include "nsCxPusher.h"
 #include "DecoderTraits.h"
 #include "harfbuzz/hb.h"
 #include "imgICache.h"

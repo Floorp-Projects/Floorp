@@ -8,6 +8,7 @@
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIMobileMessageCallback.h"
 #include "DOMCursor.h"
+#include "nsCxPusher.h"
 #include "nsServiceManagerUtils.h"      // for do_GetService
 
 namespace mozilla {

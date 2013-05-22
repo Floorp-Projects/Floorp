@@ -8317,6 +8317,7 @@ class CGBindingRoot(CGThing):
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
                             + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
                             + (['nsContentUtils.h'] if requiresContentUtils else [])
+                            + (['nsCxPusher.h'] if requiresContentUtils else [])
                             + (['AccessCheck.h'] if hasChromeOnlyMembers else []),
                          curr,
                          config,

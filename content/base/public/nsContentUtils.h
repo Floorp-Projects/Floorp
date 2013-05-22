@@ -2375,6 +2375,4 @@ private:
   nsIMIMEHeaderParam*   mService;
 };
 
-#include "nsCxPusher.h"
-
 #endif /* nsContentUtils_h___ */

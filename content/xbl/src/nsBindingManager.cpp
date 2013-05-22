@@ -41,6 +41,7 @@
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
+#include "nsCxPusher.h"
 
 #include "nsThreadUtils.h"
 #include "mozilla/dom/NodeListBinding.h"

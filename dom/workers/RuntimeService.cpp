@@ -25,6 +25,7 @@
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsDOMJSUtils.h"
 #include <Navigator.h>
 #include "nsNetUtil.h"
