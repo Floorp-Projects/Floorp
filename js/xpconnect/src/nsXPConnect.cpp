@@ -1893,7 +1893,7 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
     // Push a null JSContext so that we don't see any script during
     // event processing.
     MOZ_ASSERT(NS_IsMainThread());
-    bool ok = xpc::danger::PushJSContext(nullptr);
+    bool ok = PushJSContext(nullptr);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     return NS_OK;
 }
@@ -1912,7 +1912,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
     nsJSContext::MaybePokeCC();
     nsDOMMutationObserver::HandleMutations();
 
-    xpc::danger::PopJSContext();
+    PopJSContext();
     return NS_OK;
 }
 
@@ -2076,9 +2076,8 @@ nsXPConnect::GetSafeJSContext()
 }
 
 namespace xpc {
-namespace danger {
 
-NS_EXPORT_(bool)
+bool
 PushJSContext(JSContext *aCx)
 {
     // JSD mumbo jumbo.
@@ -2106,7 +2105,7 @@ PushJSContext(JSContext *aCx)
     return XPCJSRuntime::Get()->GetJSContextStack()->Push(aCx);
 }
 
-NS_EXPORT_(void)
+void
 PopJSContext()
 {
     XPCJSRuntime::Get()->GetJSContextStack()->Pop();
@@ -2118,8 +2117,7 @@ IsJSContextOnStack(JSContext *aCx)
   return XPCJSRuntime::Get()->GetJSContextStack()->HasJSContext(aCx);
 }
 
-} /* namespace danger */
-} /* namespace xpc */
+} // namespace xpc
 
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
