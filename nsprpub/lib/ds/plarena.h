@@ -143,10 +143,10 @@ void __asan_unpoison_memory_region(void const volatile *addr, size_t size);
         if (_q > _a->limit) { \
             _p = (PRUword)PL_ArenaAllocate(pool, _nb); \
         } else { \
-            PL_MAKE_MEM_UNDEFINED((void *)_p, nb); \
             _a->avail = _q; \
         } \
         p = (void *)_p; \
+        PL_MAKE_MEM_UNDEFINED(p, nb); \
         PL_ArenaCountAllocation(pool, nb); \
     PR_END_MACRO
 
@@ -158,7 +158,7 @@ void __asan_unpoison_memory_region(void const volatile *addr, size_t size);
         PRUword _q = _p + _incr; \
         if (_p == (PRUword)(p) + PL_ARENA_ALIGN(pool, size) && \
             _q <= _a->limit) { \
-            PL_MAKE_MEM_UNDEFINED((void *)((PRUword)(p) + size), incr); \
+            PL_MAKE_MEM_UNDEFINED((unsigned char *)(p) + size, incr); \
             _a->avail = _q; \
             PL_ArenaCountInplaceGrowth(pool, size, incr); \
         } else { \
