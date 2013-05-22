@@ -1319,12 +1319,13 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
-  JS::Rooted<JSObject*> scopeObject(mContext, ::JS_GetGlobalObject(mContext));
+  AutoPushJSContext cx(mContext);
+  JS::Rooted<JSObject*> scopeObject(cx, ::JS_GetGlobalObject(cx));
   xpc_UnmarkGrayObject(scopeObject);
 
   bool ok = false;
 
-  nsresult rv = sSecurityManager->CanExecuteScripts(mContext, aPrincipal, &ok);
+  nsresult rv = sSecurityManager->CanExecuteScripts(cx, aPrincipal, &ok);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -1337,10 +1338,8 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   if (!ok || JSVersion(aVersion) == JSVERSION_UNKNOWN)
     return NS_OK;
 
-  XPCAutoRequest ar(mContext);
-
-
-  JS::CompileOptions options(mContext);
+  XPCAutoRequest ar(cx);
+  JS::CompileOptions options(cx);
   JS::CompileOptions::SourcePolicy sp = aSaveSource ?
     JS::CompileOptions::SAVE_SOURCE :
     JS::CompileOptions::LAZY_SOURCE;
@@ -1348,8 +1347,8 @@ nsJSContext::CompileScript(const PRUnichar* aText,
          .setFileAndLine(aURL, aLineNo)
          .setVersion(JSVersion(aVersion))
          .setSourcePolicy(sp);
-  JS::RootedObject rootedScope(mContext, scopeObject);
-  JSScript* script = JS::Compile(mContext,
+  JS::RootedObject rootedScope(cx, scopeObject);
+  JSScript* script = JS::Compile(cx,
                                  rootedScope,
                                  options,
                                  static_cast<const jschar*>(aText),
