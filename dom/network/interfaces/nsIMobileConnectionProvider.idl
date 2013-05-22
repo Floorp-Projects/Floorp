@@ -11,12 +11,11 @@ interface nsIDOMMozMobileCFInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
-[scriptable, uuid(d09099b0-a25a-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(529864f0-c2be-11e2-8b8b-0800200c9a66)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
   void notifyDataChanged();
-  void notifyCardStateChanged();
   void notifyIccInfoChanged();
   void notifyUssdReceived(in DOMString message,
                           in boolean sessionEnded);
@@ -33,7 +32,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(b9605230-a25a-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(66e7ac90-c2be-11e2-8b8b-0800200c9a66)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -44,7 +43,6 @@ interface nsIMobileConnectionProvider : nsISupports
   void registerMobileConnectionMsg(in nsIMobileConnectionListener listener);
   void unregisterMobileConnectionMsg(in nsIMobileConnectionListener listener);
 
-  readonly attribute DOMString cardState;
   readonly attribute long retryCount;
   readonly attribute nsIDOMMozMobileICCInfo iccInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
