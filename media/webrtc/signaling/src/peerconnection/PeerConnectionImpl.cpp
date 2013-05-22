@@ -486,6 +486,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 
   mHandle = hex;
 
+  // Invariant: we receive configuration one way or the other but not both (XOR)
+  MOZ_ASSERT(!aConfiguration != !aRTCConfiguration);
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
@@ -523,6 +525,16 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
     return NS_ERROR_FAILURE;
   }
 
+  IceConfiguration converted;
+  if (aRTCConfiguration) {
+    res = ConvertRTCConfiguration(*aRTCConfiguration, &converted, aCx);
+    if (NS_FAILED(res)) {
+      CSFLogError(logTag, "%s: Invalid RTCConfiguration", __FUNCTION__);
+      return res;
+    }
+    aConfiguration = &converted;
+  }
+
   mMedia = new PeerConnectionMedia(this);
 
   // Connect ICE slots.
@@ -531,15 +543,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mMedia->SignalIceFailed.connect(this, &PeerConnectionImpl::IceFailed);
 
   // Initialize the media object.
-  if (aRTCConfiguration) {
-    IceConfiguration ic;
-    res = ConvertRTCConfiguration(*aRTCConfiguration, &ic, aCx);
-    NS_ENSURE_SUCCESS(res, res);
-    res = mMedia->Init(ic.getStunServers(), ic.getTurnServers());
-  } else {
-    res = mMedia->Init(aConfiguration->getStunServers(),
-                       aConfiguration->getTurnServers());
-  }
+  res = mMedia->Init(aConfiguration->getStunServers(),
+                     aConfiguration->getTurnServers());
   if (NS_FAILED(res)) {
     CSFLogError(logTag, "%s: Couldn't initialize media object", __FUNCTION__);
     return res;
