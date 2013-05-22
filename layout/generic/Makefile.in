@@ -62,11 +62,9 @@ CPPSRCS		= \
 		nsVideoFrame.cpp \
 		$(NULL)
 
-ifdef MOZ_FLEXBOX
 CPPSRCS		+= \
 		nsFlexContainerFrame.cpp \
 		$(NULL)
-endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS		+= \

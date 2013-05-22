@@ -101,9 +101,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIXULDocument.h"
 #endif
-#ifdef MOZ_FLEXBOX
 #include "nsFlexContainerFrame.h"
-#endif
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -349,7 +347,6 @@ static int32_t FFWC_recursions=0;
 static int32_t FFWC_nextInFlows=0;
 #endif
 
-#ifdef MOZ_FLEXBOX
 // Returns true if aFrame is an anonymous flex item
 static inline bool
 IsAnonymousFlexItem(const nsIFrame* aFrame)
@@ -357,7 +354,6 @@ IsAnonymousFlexItem(const nsIFrame* aFrame)
   const nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
   return pseudoType == nsCSSAnonBoxes::anonymousFlexItem;
 }
-#endif // MOZ_FLEXBOX
 
 static inline nsIFrame*
 GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
@@ -4285,12 +4281,10 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     { NS_STYLE_DISPLAY_INLINE,
       FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
                        &nsCSSFrameConstructor::ConstructInline) },
-#ifdef MOZ_FLEXBOX
     { NS_STYLE_DISPLAY_FLEX,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
     { NS_STYLE_DISPLAY_INLINE_FLEX,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
-#endif // MOZ_FLEXBOX
     { NS_STYLE_DISPLAY_TABLE,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
     { NS_STYLE_DISPLAY_INLINE_TABLE,
@@ -9153,7 +9147,6 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     }
   }
 
-#ifdef MOZ_FLEXBOX
   // Might need to reconstruct things if the removed frame's nextSibling is an
   // anonymous flex item.  The removed frame might've been what divided two
   // runs of inline content into two anonymous flex items, which would now
@@ -9200,7 +9193,6 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                         true);
     return true;
   }
-#endif // MOZ_FLEXBOX
 
 #ifdef MOZ_XUL
   if (aFrame->GetType() == nsGkAtoms::popupSetFrame) {
@@ -9474,7 +9466,6 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   }
 };
 
-#ifdef MOZ_FLEXBOX
 void
 nsCSSFrameConstructor::CreateNeededAnonFlexItems(
   nsFrameConstructorState& aState,
@@ -9590,7 +9581,6 @@ nsCSSFrameConstructor::CreateNeededAnonFlexItems(
     iter.InsertItem(newItem);
   } while (!iter.IsDone());
 }
-#endif // MOZ_FLEXBOX
 
 /*
  * This function works as follows: we walk through the child list (aItems) and
@@ -9812,11 +9802,9 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
 
   CreateNeededTablePseudos(aState, aItems, aParentFrame);
 
-#ifdef MOZ_FLEXBOX
   if (aParentFrame->GetType() == nsGkAtoms::flexContainerFrame) {
     CreateNeededAnonFlexItems(aState, aItems, aParentFrame);
   }
-#endif // MOZ_FLEXBOX
 
 #ifdef DEBUG
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
@@ -11314,7 +11302,6 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
   nsIFrame* nextSibling = ::GetInsertNextSibling(aFrame, aPrevSibling);
 
-#ifdef MOZ_FLEXBOX
   // Situation #2 is a flex container frame into which we're inserting new
   // inline non-replaced children, adjacent to an existing anonymous flex item.
   if (aFrame->GetType() == nsGkAtoms::flexContainerFrame) {
@@ -11372,7 +11359,6 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // If we get here, then everything in |aItems| needs to be wrapped in
     // an anonymous flex item.  That's where it's already going - good!
   }
-#endif // MOZ_FLEXBOX
 
   // Situation #4 is a case when table pseudo-frames don't work out right
   ParentType parentType = GetParentType(aFrame);
@@ -12223,7 +12209,6 @@ Iterator::SkipItemsWantingParentType(ParentType aParentType)
   return false;
 }
 
-#ifdef MOZ_FLEXBOX
 bool
 nsCSSFrameConstructor::FrameConstructionItem::
   NeedsAnonFlexItem(const nsFrameConstructorState& aState)
@@ -12274,7 +12259,6 @@ Iterator::SkipItemsThatDontNeedAnonFlexItem(
   }
   return false;
 }
-#endif // MOZ_FLEXBOX
 
 inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
