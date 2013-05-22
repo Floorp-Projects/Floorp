@@ -541,6 +541,9 @@ bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);
 
 bool NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res);
 
+JSObject *InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject templateObj,
+                            HandleObject res);
+
 bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn);
 bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool *mustReturn);
 

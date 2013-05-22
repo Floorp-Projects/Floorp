@@ -7024,7 +7024,48 @@ class MGetArgument
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
-   }
+    }
+};
+
+class MRest
+  : public MUnaryInstruction,
+    public IntPolicy<0>
+{
+    unsigned numFormals_;
+    CompilerRootObject templateObject_;
+
+    MRest(MDefinition *numActuals, unsigned numFormals, JSObject *templateObject)
+      : MUnaryInstruction(numActuals),
+        numFormals_(numFormals),
+        templateObject_(templateObject)
+    {
+        setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(Rest);
+
+    static MRest *New(MDefinition *numActuals, unsigned numFormals, JSObject *templateObject) {
+        return new MRest(numActuals, numFormals, templateObject);
+    }
+
+    MDefinition *numActuals() const {
+        return getOperand(0);
+    }
+    unsigned numFormals() const {
+        return numFormals_;
+    }
+    JSObject *templateObject() const {
+        return templateObject_;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MParWriteGuard

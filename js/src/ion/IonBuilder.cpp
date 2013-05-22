@@ -1184,6 +1184,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_ARGUMENTS:
         return jsop_arguments();
 
+      case JSOP_REST:
+        return jsop_rest();
+
       case JSOP_NOTEARG:
         return jsop_notearg();
 
@@ -6862,6 +6865,62 @@ bool
 IonBuilder::jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDefinition *value)
 {
     return abort("NYI arguments[]=");
+}
+
+bool
+IonBuilder::jsop_rest()
+{
+    // We don't know anything about the callee.
+    if (inliningDepth_ == 0) {
+        // Get an empty template array.
+        JSObject *templateObject = getNewArrayTemplateObject(0);
+        if (!templateObject)
+            return false;
+
+        MArgumentsLength *numActuals = MArgumentsLength::New();
+        current->add(numActuals);
+
+        // Pass in the number of actual arguments, the number of formals (not
+        // including the rest parameter slot itself), and the template object.
+        MRest *rest = MRest::New(numActuals, info().nargs() - 1, templateObject);
+        current->add(rest);
+        current->push(rest);
+        return true;
+    }
+
+    // We know the exact number of arguments the callee pushed.
+    unsigned numActuals = inlinedArguments_.length();
+    unsigned numFormals = info().nargs() - 1;
+    unsigned numRest = numActuals - numFormals;
+    JSObject *templateObject = getNewArrayTemplateObject(numRest);
+
+    MNewArray *array = new MNewArray(numRest, templateObject, MNewArray::NewArray_Allocating);
+    current->add(array);
+
+    if (numFormals >= numActuals) {
+        current->push(array);
+        return true;
+    }
+
+    MElements *elements = MElements::New(array);
+    current->add(elements);
+
+    // Unroll the argument copy loop. We don't need to do any bounds or hole
+    // checking here.
+    MConstant *index;
+    for (unsigned i = numFormals; i < numActuals; i++) {
+        index = MConstant::New(Int32Value(i));
+        current->add(index);
+        MStoreElement *store = MStoreElement::New(elements, index, inlinedArguments_[i],
+                                                  /* needsHoleCheck = */ false);
+        current->add(store);
+    }
+
+    MSetInitializedLength *initLength = MSetInitializedLength::New(elements, index);
+    current->add(initLength);
+
+    current->push(array);
+    return true;
 }
 
 inline types::HeapTypeSet *

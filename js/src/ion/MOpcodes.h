@@ -153,6 +153,7 @@ namespace ion {
     _(StringLength)                                                         \
     _(ArgumentsLength)                                                      \
     _(GetArgument)                                                          \
+    _(Rest)                                                                 \
     _(Floor)                                                                \
     _(Round)                                                                \
     _(In)                                                                   \
