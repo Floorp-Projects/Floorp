@@ -43,7 +43,7 @@ function selectAndCheckById(id) {
 
   return toolbox.selectTool(id).then(function() {
     let tab = doc.getElementById("toolbox-tab-" + id);
-    is(tab.selected, true, "The " + id + " tab is selected");
+    is(tab.hasAttribute("selected"), true, "The " + id + " tab is selected");
   });
 }
 
