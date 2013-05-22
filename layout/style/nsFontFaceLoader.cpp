@@ -938,3 +938,20 @@ nsUserFontSet::SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
 
   return NS_OK;
 }
+
+bool
+nsUserFontSet::GetPrivateBrowsing()
+{
+  nsIPresShell *ps = mPresContext->PresShell();
+  if (!ps) {
+    return false;
+  }
+
+  nsCOMPtr<nsISupports> container = ps->GetDocument()->GetContainer();
+  if (!container) {
+    return false;
+  }
+
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+  return loadContext && loadContext->UsePrivateBrowsing();
+}
