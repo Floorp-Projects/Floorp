@@ -75,7 +75,8 @@ protected:
                               nsresult aStatus = NS_OK);
 
   virtual nsresult CheckFontLoad(const gfxFontFaceSrc *aFontFaceSrc,
-                                 nsIPrincipal **aPrincipal);
+                                 nsIPrincipal **aPrincipal,
+                                 bool *aBypassCache);
 
   virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
                                     const gfxFontFaceSrc *aFontFaceSrc,
