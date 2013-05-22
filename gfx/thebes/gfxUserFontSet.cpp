@@ -332,7 +332,7 @@ gfxUserFontSet::SanitizeOpenTypeData(gfxMixedFontFamily *aFamily,
 
 static void
 StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy,
-                  const nsAString& aOriginalName,
+                  bool aPrivate, const nsAString& aOriginalName,
                   nsTArray<uint8_t>* aMetadata, uint32_t aMetaOrigLen)
 {
     if (!aFontEntry->mUserFontData) {
@@ -347,6 +347,7 @@ StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy,
         userFontData->mURI = src.mURI;
         userFontData->mPrincipal = aProxy->mPrincipal;
     }
+    userFontData->mPrivate = aPrivate;
     userFontData->mFormat = src.mFormatFlags;
     userFontData->mRealName = aOriginalName;
     if (aMetadata) {
@@ -486,7 +487,10 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                      uint32_t(mGeneration)));
                 fe->mFeatureSettings.AppendElements(aProxyEntry->mFeatureSettings);
                 fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
-                StoreUserFontData(fe, aProxyEntry, nsString(), nullptr, 0);
+                // For src:local(), we don't care whether the request is from
+                // a private window as there's no issue of caching resources;
+                // local fonts are just available all the time.
+                StoreUserFontData(fe, aProxyEntry, false, nsString(), nullptr, 0);
                 ReplaceFontEntry(aFamily, aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
@@ -511,7 +515,8 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                         // see if we have an existing entry for this source
                         gfxFontEntry *fe =
                             UserFontCache::GetFont(currSrc.mURI, principal,
-                                                   aProxyEntry);
+                                                   aProxyEntry,
+                                                   GetPrivateBrowsing());
                         if (fe) {
                             ReplaceFontEntry(aFamily, aProxyEntry, fe);
                             return STATUS_LOADED;
@@ -658,8 +663,8 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
         // newly-created font entry
         fe->mFeatureSettings.AppendElements(aProxy->mFeatureSettings);
         fe->mLanguageOverride = aProxy->mLanguageOverride;
-        StoreUserFontData(fe, aProxy, originalFullName,
-                          &metadata, metaOrigLen);
+        StoreUserFontData(fe, aProxy, GetPrivateBrowsing(),
+                          originalFullName, &metadata, metaOrigLen);
 #ifdef PR_LOGGING
         if (LOG_ENABLED()) {
             nsAutoCString fontURI;
@@ -747,16 +752,30 @@ nsTHashtable<gfxUserFontSet::UserFontCache::Entry>*
 
 NS_IMPL_ISUPPORTS1(gfxUserFontSet::UserFontCache::Flusher, nsIObserver)
 
+PLDHashOperator
+gfxUserFontSet::UserFontCache::Entry::RemoveIfPrivate(Entry* aEntry,
+                                                      void* aUserData)
+{
+    return aEntry->mPrivate ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP
 gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
                                                 const char* aTopic,
                                                 const PRUnichar* aData)
 {
-    NS_ASSERTION(strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID),
-                 "unexpected topic");
-    if (sUserFonts) {
-        sUserFonts->Clear();
+    if (!sUserFonts) {
+        return NS_OK;
     }
+
+    if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID)) {
+        sUserFonts->Clear();
+    } else if (!strcmp(aTopic, "last-pb-context-exited")) {
+        sUserFonts->EnumerateEntries(Entry::RemoveIfPrivate, nullptr);
+    } else {
+        NS_NOTREACHED("unexpected topic");
+    }
+
     return NS_OK;
 }
 
@@ -769,6 +788,10 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
     }
 
     if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &equal)) || !equal) {
+        return false;
+    }
+
+    if (mPrivate != aKey->mPrivate) {
         return false;
     }
 
@@ -797,13 +820,16 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
         nsCOMPtr<nsIObserverService> obs =
             mozilla::services::GetObserverService();
         if (obs) {
-            obs->AddObserver(new Flusher, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID,
+            Flusher *flusher = new Flusher;
+            obs->AddObserver(flusher, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID,
                              false);
+            obs->AddObserver(flusher, "last-pb-context-exited", false);
         }
     }
 
     gfxUserFontData *data = aFontEntry->mUserFontData;
-    sUserFonts->PutEntry(Key(data->mURI, data->mPrincipal, aFontEntry));
+    sUserFonts->PutEntry(Key(data->mURI, data->mPrincipal, aFontEntry,
+                             data->mPrivate));
 }
 
 void
@@ -817,20 +843,23 @@ gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry *aFontEntry)
 
     gfxUserFontData *data = aFontEntry->mUserFontData;
     if (data) {
-        sUserFonts->RemoveEntry(Key(data->mURI, data->mPrincipal, aFontEntry));
+        sUserFonts->RemoveEntry(Key(data->mURI, data->mPrincipal, aFontEntry,
+                                    data->mPrivate));
     }
 }
 
 gfxFontEntry*
 gfxUserFontSet::UserFontCache::GetFont(nsIURI            *aSrcURI,
                                        nsIPrincipal      *aPrincipal,
-                                       gfxProxyFontEntry *aProxy)
+                                       gfxProxyFontEntry *aProxy,
+                                       bool               aPrivate)
 {
     if (!sUserFonts) {
         return nullptr;
     }
 
-    Entry* entry = sUserFonts->GetEntry(Key(aSrcURI, aPrincipal, aProxy));
+    Entry* entry = sUserFonts->GetEntry(Key(aSrcURI, aPrincipal, aProxy,
+                                            aPrivate));
     if (entry) {
         return entry->GetFontEntry();
     }
