@@ -144,6 +144,9 @@ const SNAPSHOT_SCHEMA = {
         windowLayerManagerType: {
           type: "string",
         },
+        windowLayerManagerRemote: {
+          type: "boolean",
+        },
         numAcceleratedWindowsMessage: {
           type: "array",
         },
