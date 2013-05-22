@@ -1555,7 +1555,6 @@ CSS_PROP_TABLEBORDER(
     kEmptyCellsKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-#ifdef MOZ_FLEXBOX
 CSS_PROP_POSITION(
     align-items,
     align_items,
@@ -1655,7 +1654,6 @@ CSS_PROP_POSITION(
     kJustifyContentKTable,
     offsetof(nsStylePosition, mJustifyContent),
     eStyleAnimType_EnumU8)
-#endif // MOZ_FLEXBOX
 CSS_PROP_DISPLAY(
     float,
     float,

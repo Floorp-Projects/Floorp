@@ -2,17 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
+let Ci = Components.interfaces;
+let Cu = Components.utils;
 
-Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-Cu.import('resource://gre/modules/accessibility/EventManager.jsm');
-Cu.import('resource://gre/modules/accessibility/TraversalRules.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
+  'resource://gre/modules/accessibility/Utils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Presentation',
+  'resource://gre/modules/accessibility/Presentation.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'TraversalRules',
+  'resource://gre/modules/accessibility/TraversalRules.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Utils',
+  'resource://gre/modules/accessibility/Utils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'EventManager',
+  'resource://gre/modules/accessibility/EventManager.jsm');
 
 Logger.debug('content-script.js');
+
+let eventManager = null;
 
 function virtualCursorControl(aMessage) {
   if (Logger.logLevel >= Logger.DEBUG)
@@ -52,14 +59,21 @@ function virtualCursorControl(aMessage) {
       }
       break;
     case 'moveToPoint':
-      moved = vc.moveToPoint(rule, details.x, details.y, true);
+      if (!this._ppcp) {
+        this._ppcp = Utils.getPixelsPerCSSPixel(content);
+      }
+      moved = vc.moveToPoint(rule,
+                             details.x * this._ppcp, details.y * this._ppcp,
+                             true);
       break;
     case 'whereIsIt':
       if (!forwardMessage(vc, aMessage)) {
         if (!vc.position && aMessage.json.move)
           vc.moveFirst(TraversalRules.Simple);
-        else
-          EventManager.presentVirtualCursorPosition(vc);
+        else {
+          sendAsyncMessage('AccessFu:Present', Presentation.pivotChanged(
+            vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE));
+        }
       }
 
       break;
@@ -88,10 +102,12 @@ function forwardMessage(aVirtualCursor, aMessage) {
       let mm = Utils.getMessageManager(acc.DOMNode);
       mm.addMessageListener(aMessage.name, virtualCursorControl);
       aMessage.json.origin = 'parent';
-      // XXX: OOP content's screen offset is 0,
-      // so we remove the real screen offset here.
-      aMessage.json.x -= content.mozInnerScreenX;
-      aMessage.json.y -= content.mozInnerScreenY;
+      if (Utils.isContentProcess) {
+        // XXX: OOP content's screen offset is 0,
+        // so we remove the real screen offset here.
+        aMessage.json.x -= content.mozInnerScreenX;
+        aMessage.json.y -= content.mozInnerScreenY;
+      }
       mm.sendAsyncMessage(aMessage.name, aMessage.json);
       return true;
     }
@@ -124,14 +140,14 @@ function activateCurrent(aMessage) {
       let node = aAccessible.DOMNode || aAccessible.parent.DOMNode;
 
       function dispatchMouseEvent(aEventType) {
-        let evt = content.document.createEvent("MouseEvents");
+        let evt = content.document.createEvent('MouseEvents');
         evt.initMouseEvent(aEventType, true, true, content,
                            x, y, 0, 0, 0, false, false, false, false, 0, null);
         node.dispatchEvent(evt);
       }
 
-      dispatchMouseEvent("mousedown");
-      dispatchMouseEvent("mouseup");
+      dispatchMouseEvent('mousedown');
+      dispatchMouseEvent('mouseup');
     }
   }
 
@@ -234,20 +250,10 @@ addMessageListener(
     addMessageListener('AccessFu:Activate', activateCurrent);
     addMessageListener('AccessFu:Scroll', scroll);
 
-    EventManager.start(
-      function sendMessage(aName, aDetails) {
-        sendAsyncMessage(aName, aDetails);
-      });
-
-    docShell.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIWebProgress).
-      addProgressListener(EventManager,
-                          (Ci.nsIWebProgress.NOTIFY_STATE_ALL |
-                           Ci.nsIWebProgress.NOTIFY_LOCATION));
-    addEventListener('scroll', EventManager, true);
-    addEventListener('resize', EventManager, true);
-    // XXX: Ideally this would be an a11y event. Bug #742280.
-    addEventListener('DOMActivate', EventManager, true);
+    if (!eventManager) {
+      eventManager = new EventManager(this);
+    }
+    eventManager.start();
   });
 
 addMessageListener(
@@ -259,15 +265,7 @@ addMessageListener(
     removeMessageListener('AccessFu:Activate', activateCurrent);
     removeMessageListener('AccessFu:Scroll', scroll);
 
-    EventManager.stop();
-
-    docShell.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIWebProgress).
-      removeProgressListener(EventManager);
-    removeEventListener('scroll', EventManager, true);
-    removeEventListener('resize', EventManager, true);
-    // XXX: Ideally this would be an a11y event. Bug #742280.
-    removeEventListener('DOMActivate', EventManager, true);
+    eventManager.stop();
   });
 
 sendAsyncMessage('AccessFu:Ready');

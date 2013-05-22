@@ -4983,10 +4983,11 @@ nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
 NS_IMETHODIMP
 nsLocationSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, jsid id, jsval *vp, bool *_retval)
+                          JSObject *obj, jsid aId, jsval *vp, bool *_retval)
 {
   // Shadowing protection. This will go away when nsLocation moves to the new
   // bindings.
+  JS::Rooted<jsid> id(cx, aId);
   if (wrapper->HasNativeMember(id)) {
     JS_ReportError(cx, "Permission denied to shadow native property");
     return NS_ERROR_FAILURE;

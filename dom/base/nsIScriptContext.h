@@ -27,11 +27,9 @@ class nsIScriptObjectPrincipal;
 class nsIDOMWindow;
 class nsIURI;
 
-typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
-
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x821c5be9, 0xbf9e, 0x4041, \
-  { 0x9f, 0xf2, 0x1f, 0xca, 0x39, 0xf7, 0x89, 0xf3 } }
+{ 0xef0c91ce, 0x14f6, 0x41c9, \
+  { 0xa5, 0x77, 0xa6, 0xeb, 0xdc, 0x6d, 0x44, 0x7b } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -179,11 +177,10 @@ public:
    * A GC may be done if "necessary."
    * This call is necessary if script evaluation is done
    * without using the EvaluateScript method.
-   * @param aTerminated If true then call termination function if it was 
-   *    previously set. Within DOM this will always be true, but outside 
-   *    callers (such as xpconnect) who may do script evaluations nested
-   *    inside DOM script evaluations can pass false to avoid premature
-   *    calls to the termination function.
+   * @param aTerminated If true then do script termination handling. Within DOM
+   *     this will always be true, but outside  callers (such as xpconnect) who
+   *     may do script evaluations nested inside inside DOM script evaluations
+   *     can pass false to avoid premature termination handling.
    * @return NS_OK if the method is successful
    */
   virtual void ScriptEvaluated(bool aTerminated) = 0;
@@ -195,19 +192,6 @@ public:
    */
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                JS::MutableHandle<JSScript*> aResult) = 0;
-
-  /**
-   * JS only - this function need not be implemented by languages other
-   * than JS (ie, this should be moved to a private interface!)
-   * Called to specify a function that should be called when the current
-   * script (if there is one) terminates. Generally used if breakdown
-   * of script state needs to happen, but should be deferred till
-   * the end of script evaluation.
-   *
-   * @throws NS_ERROR_OUT_OF_MEMORY if that happens
-   */
-  virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                      nsIDOMWindow* aRef) = 0;
 
   /**
    * Called to disable/enable script execution in this context.

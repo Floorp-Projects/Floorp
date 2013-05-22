@@ -647,6 +647,7 @@ dictionary Dict : ParentDict {
   object? anotherObj = null;
   TestCallback? someCallback = null;
   any someAny;
+  any anotherAny = null;
 
   unrestricted float  urFloat = 0;
   unrestricted float  urFloat2 = 1.1;

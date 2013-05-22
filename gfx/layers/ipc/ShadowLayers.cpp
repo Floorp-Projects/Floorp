@@ -358,12 +358,12 @@ ShadowLayerForwarder::UpdateTextureIncremental(CompositableClient* aCompositable
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
-  mTxn->AddPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
-                                           aTextureId,
-                                           aDescriptor,
-                                           aUpdatedRegion,
-                                           aBufferRect,
-                                           aBufferRotation));
+  mTxn->AddNoSwapPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
+                                                 aTextureId,
+                                                 aDescriptor,
+                                                 aUpdatedRegion,
+                                                 aBufferRect,
+                                                 aBufferRotation));
 }
 
 
@@ -528,6 +528,16 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
                                size,
                                stride,
                                rgbFormat);
+    return surf.forget();
+  }
+  case SurfaceDescriptor::TMemoryImage: {
+    const MemoryImage& image = aSurface.get_MemoryImage();
+    gfxASurface::gfxImageFormat format
+      = static_cast<gfxASurface::gfxImageFormat>(image.format());
+    surf = new gfxImageSurface((unsigned char *)image.data(),
+                               image.size(),
+                               image.stride(),
+                               format);
     return surf.forget();
   }
   default:
@@ -730,8 +740,8 @@ ShadowLayerForwarder::CreatedIncrementalBuffer(CompositableClient* aCompositable
                                                const TextureInfo& aTextureInfo,
                                                const nsIntRect& aBufferRect)
 {
-  mTxn->AddPaint(OpCreatedIncrementalTexture(nullptr, aCompositable->GetIPDLActor(),
-                                             aTextureInfo, aBufferRect));
+  mTxn->AddNoSwapPaint(OpCreatedIncrementalTexture(nullptr, aCompositable->GetIPDLActor(),
+                                                   aTextureInfo, aBufferRect));
 }
 
 void
