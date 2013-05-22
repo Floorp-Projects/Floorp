@@ -8077,7 +8077,7 @@ bool ElementAccessIsPacked(JSContext *cx, MDefinition *obj);
 bool ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj);
 MIRType DenseNativeElementType(JSContext *cx, MDefinition *obj);
 bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
-                                  types::StackTypeSet *observed);
+                                  types::StackTypeSet *observed, bool updateObserved = true);
 bool PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
                                   types::StackTypeSet *observed);
 bool PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name);

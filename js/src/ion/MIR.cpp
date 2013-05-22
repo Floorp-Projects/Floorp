@@ -62,7 +62,7 @@ EqualValues(bool useGVN, MDefinition *left, MDefinition *right)
 }
 
 static MConstant *
-EvaluateConstantOperands(MBinaryInstruction *ins)
+EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
 {
     MDefinition *left = ins->getOperand(0);
     MDefinition *right = ins->getOperand(1);
@@ -115,8 +115,11 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         return NULL;
     }
 
-    if (ins->type() != MIRTypeFromValue(ret))
+    if (ins->type() != MIRTypeFromValue(ret)) {
+        if (ptypeChange)
+            *ptypeChange = true;
         return NULL;
+    }
 
     return MConstant::New(ret);
 }
@@ -1278,6 +1281,15 @@ MBinaryArithInstruction::infer(BaselineInspector *inspector,
     if (overflowed)
         setResultType(MIRType_Double);
 
+    // If the operation will always overflow on its constant operands, use a
+    // double specialization so that it can be constant folded later.
+    if (isMul() || isDiv()) {
+        bool typeChange = false;
+        EvaluateConstantOperands(this, &typeChange);
+        if (typeChange)
+            setResultType(MIRType_Double);
+    }
+
     JS_ASSERT(lhs < MIRType_String || lhs == MIRType_Value);
     JS_ASSERT(rhs < MIRType_String || rhs == MIRType_Value);
 
@@ -2428,7 +2440,7 @@ ion::DenseNativeElementType(JSContext *cx, MDefinition *obj)
 
 bool
 ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
-                                  types::StackTypeSet *observed)
+                                  types::StackTypeSet *observed, bool updateObserved)
 {
     // If the object being read from has types for the property which haven't
     // been observed at this access site, the read could produce a new type and
@@ -2440,6 +2452,26 @@ ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, Prop
         return true;
 
     jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
+
+    // If this access has never executed, try to add types to the observed set
+    // according to any property which exists on the object or its prototype.
+    if (updateObserved && observed->empty() && observed->noConstraints() && !JSID_IS_VOID(id)) {
+        JSObject *obj = object->singleton ? object->singleton : object->proto;
+
+        while (obj) {
+            if (!obj->isNative())
+                break;
+
+            Value v;
+            if (HasDataProperty(cx, obj, id, &v)) {
+                if (v.isUndefined())
+                    break;
+                observed->addType(cx, types::GetValueType(cx, v));
+            }
+
+            obj = obj->getProto();
+        }
+    }
 
     types::HeapTypeSet *property = object->getProperty(cx, id, false);
     if (!property)
@@ -2484,6 +2516,7 @@ ion::PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName 
     if (!types || types->unknownObject())
         return true;
 
+    bool updateObserved = types->getObjectCount() == 1;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObject *object = types->getTypeObject(i);
         if (!object) {
@@ -2495,7 +2528,7 @@ ion::PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName 
                 return true;
         }
 
-        if (PropertyReadNeedsTypeBarrier(cx, object, name, observed))
+        if (PropertyReadNeedsTypeBarrier(cx, object, name, observed, updateObserved))
             return true;
     }
 
