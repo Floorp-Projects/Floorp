@@ -1560,6 +1560,22 @@ TypeSet::getTypeObject(unsigned i) const
     return (key && !(uintptr_t(key) & 1)) ? (TypeObject *) key : NULL;
 }
 
+inline TypeObject *
+TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i) const
+{
+    JS_ASSERT(cx->compartment->activeAnalysis);
+    TypeObject *type = getTypeObject(i);
+    if (!type) {
+        JSObject *singleton = getSingleObject(i);
+        if (!singleton)
+            return NULL;
+        type = singleton->getType(cx);
+        if (!type)
+            cx->compartment->types.setPendingNukeTypes(cx);
+    }
+    return type;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeCallsite
 /////////////////////////////////////////////////////////////////////
