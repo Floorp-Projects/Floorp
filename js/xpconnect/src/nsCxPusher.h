@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 
-#ifndef nsCxPusher_h___
-#define nsCxPusher_h___
+#ifndef nsCxPusher_h
+#define nsCxPusher_h
 
 #include "jsapi.h"
 #include "mozilla/Util.h"
@@ -111,4 +111,4 @@ public:
 
 } // namespace mozilla
 
-#endif /* nsCxPusher_h___ */
+#endif /* nsCxPusher_h */
