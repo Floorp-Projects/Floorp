@@ -187,7 +187,7 @@ LIRGeneratorX86Shared::visitAsmJSUMod(MAsmJSUMod *mod)
 {
     LAsmJSDivOrMod *lir = new LAsmJSDivOrMod(useFixed(mod->lhs(), eax),
                                              useRegister(mod->rhs()),
-                                             tempFixed(edx));
+                                             LDefinition::BogusTemp());
     return defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
 

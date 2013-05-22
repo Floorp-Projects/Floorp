@@ -7710,7 +7710,9 @@ class CGDictionary(CGThing):
         selfName = self.makeClassName(d)
         members = [ClassMember(self.makeMemberName(m[0].identifier.name),
                                self.getMemberType(m),
-                               visibility="public") for m in self.memberInfo]
+                               visibility="public",
+                               body=self.getMemberInitializer(m))
+                   for m in self.memberInfo]
         ctor = ClassConstructor([], bodyInHeader=True, visibility="public")
         methods = []
 
@@ -7930,6 +7932,25 @@ class CGDictionary(CGThing):
             trace = CGIfWrapper(trace, "%s.WasPassed()" % memberLoc)
 
         return trace.define()
+
+    def getMemberInitializer(self, memberInfo):
+        """
+        Get the right initializer for the member.  Most members don't need one,
+        but we need to pre-initialize 'any' and 'object' that have a default
+        value, so they're safe to trace at all times.
+        """
+        (member, _) = memberInfo
+        if not member.defaultValue:
+            # No default value means no need to set it up front, since it's
+            # inside an Optional and won't get traced until it's actually set
+            # up.
+            return None
+        type = member.type
+        if type.isAny():
+            return "JS::UndefinedValue()"
+        if type.isObject():
+            return "nullptr"
+        return None
 
     @staticmethod
     def makeIdName(name):

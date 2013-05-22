@@ -412,6 +412,15 @@ class TypedRegisterSet
         take(reg);
         return reg;
     }
+    T takeAnyExcluding(T preclude) {
+        if (!has(preclude))
+            return takeAny();
+
+        take(preclude);
+        T result = takeAny();
+        add(preclude);
+        return result;
+    }
     ValueOperand takeAnyValue() {
 #if defined(JS_NUNBOX32)
         T type = takeAny();

@@ -6896,16 +6896,18 @@ nsGlobalWindow::PostMessageMoz(const JS::Value& aMessage,
 class nsCloseEvent : public nsRunnable {
 
   nsRefPtr<nsGlobalWindow> mWindow;
+  bool mIndirect;
 
-  nsCloseEvent(nsGlobalWindow *aWindow)
+  nsCloseEvent(nsGlobalWindow *aWindow, bool aIndirect)
     : mWindow(aWindow)
+    , mIndirect(aIndirect)
   {}
 
 public:
 
   static nsresult
-  PostCloseEvent(nsGlobalWindow* aWindow) {
-    nsCOMPtr<nsIRunnable> ev = new nsCloseEvent(aWindow);
+  PostCloseEvent(nsGlobalWindow* aWindow, bool aIndirect) {
+    nsCOMPtr<nsIRunnable> ev = new nsCloseEvent(aWindow, aIndirect);
     nsresult rv = NS_DispatchToCurrentThread(ev);
     if (NS_SUCCEEDED(rv))
       aWindow->MaybeForgiveSpamCount();
@@ -6913,8 +6915,12 @@ public:
   }
 
   NS_IMETHOD Run() {
-    if (mWindow)
+    if (mWindow) {
+      if (mIndirect) {
+        return PostCloseEvent(mWindow, false);
+      }
       mWindow->ReallyCloseWindow();
+    }
     return NS_OK;
   }
 
@@ -7047,23 +7053,29 @@ nsGlobalWindow::FinalClose()
   // Flag that we were closed.
   mIsClosed = true;
 
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    nsIScriptContext *currentCX = nsJSUtils::GetDynamicScriptContext(cx);
-
-    if (currentCX && currentCX == GetContextInternal()) {
-      currentCX->SetTerminationFunction(CloseWindow, this);
-      mHavePendingClose = true;
-      return NS_OK;
-    }
-  }
-
-  // We may have plugins on the page that have issued this close from their
-  // event loop and because we currently destroy the plugin window with
-  // frames, we crash. So, if we are called from Javascript, post an event
-  // to really close the window.
-  if (nsContentUtils::IsCallerChrome() ||
-      NS_FAILED(nsCloseEvent::PostCloseEvent(this))) {
+  // This stuff is non-sensical but incredibly fragile. The reasons for the
+  // behavior here don't make sense today and may not have ever made sense,
+  // but various bits of frontend code break when you change them. If you need
+  // to fix up this behavior, feel free to. It's a righteous task, but involves
+  // wrestling with various download manager tests, frontend code, and possible
+  // broken addons. The chrome tests in toolkit/mozapps/downloads are a good
+  // testing ground.
+  //
+  // Here are some quirks that the test suite depends on:
+  //
+  // * When chrome code executes |win|.close(), that close happens immediately,
+  //   along with the accompanying "domwindowclosed" notification. But _only_ if
+  //   |win|'s JSContext is not at the top of the stack. If it is, the close
+  //   _must not_ happen immediately.
+  //
+  // * If |win|'s JSContext is at the top of the stack, we must complete _two_
+  //   round-trips to the event loop before the call to ReallyCloseWindow. This
+  //   allows setTimeout handlers that are set after FinalClose() is called to
+  //   run before the window is torn down.
+  bool indirect = nsContentUtils::GetCurrentJSContext() ==
+                  GetContextInternal()->GetNativeContext();
+  if ((!indirect && nsContentUtils::IsCallerChrome()) ||
+      NS_FAILED(nsCloseEvent::PostCloseEvent(this, indirect))) {
     ReallyCloseWindow();
   } else {
     mHavePendingClose = true;
@@ -9714,14 +9726,24 @@ nsGlobalWindow::GetParentInternal()
   return NULL;
 }
 
-// static
 void
-nsGlobalWindow::CloseBlockScriptTerminationFunc(nsISupports *aRef)
+nsGlobalWindow::UnblockScriptedClosing()
 {
-  nsGlobalWindow* pwin = static_cast<nsGlobalWindow*>
-                                    (static_cast<nsPIDOMWindow*>(aRef));
-  pwin->mBlockScriptedClosingFlag = false;
+  mBlockScriptedClosingFlag = false;
 }
+
+class AutoUnblockScriptClosing
+{
+private:
+  nsRefPtr<nsGlobalWindow> mWin;
+public:
+  AutoUnblockScriptClosing(nsGlobalWindow *aWin) : mWin(aWin) {};
+  ~AutoUnblockScriptClosing()
+  {
+    void (nsGlobalWindow::*run)() = &nsGlobalWindow::UnblockScriptedClosing;
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(mWin, run));
+  };
+};
 
 nsresult
 nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
@@ -9751,6 +9773,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                   "Can't pass JS args when called via the noscript methods");
   NS_PRECONDITION(!aJSCallerContext || !aCalledNoScript,
                   "Shouldn't have caller context when called noscript");
+
+  mozilla::Maybe<AutoUnblockScriptClosing> closeUnblocker;
 
   // Calls to window.open from script should navigate.
   MOZ_ASSERT(aCalledNoScript || aNavigate);
@@ -9813,8 +9837,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         // so that whatever popup blocker UI the app has will be visible.
         if (mContext == GetScriptContextFromJSContext(aJSCallerContext)) {
           mBlockScriptedClosingFlag = true;
-          mContext->SetTerminationFunction(CloseBlockScriptTerminationFunc,
-                                           this);
+          closeUnblocker.construct(this);
         }
       }
 
@@ -9916,22 +9939,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   }
 
   return rv;
-}
-
-// static
-void
-nsGlobalWindow::CloseWindow(nsISupports *aWindow)
-{
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
-
-  nsGlobalWindow* globalWin =
-    static_cast<nsGlobalWindow *>
-               (static_cast<nsPIDOMWindow*>(win));
-
-  // Need to post an event for closing, otherwise window and 
-  // presshell etc. may get destroyed while creating frames, bug 338897.
-  nsCloseEvent::PostCloseEvent(globalWin);
-  // else if OOM, better not to close. That might cause a crash.
 }
 
 //*****************************************************************************
