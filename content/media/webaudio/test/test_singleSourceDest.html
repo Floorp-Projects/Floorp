@@ -91,6 +91,10 @@ function createNode(context, buffer, destination) {
   is(source.channelCountMode, "max", "Correct channelCountMode for the source node");
   is(source.channelInterpretation, "speakers", "Correct channelCountInterpretation for the source node");
 
+  expectException(function() {
+    source.channelCount = 0;
+  }, DOMException.NOT_SUPPORTED_ERR);
+
   source.buffer = buffer;
   ok(source.buffer, "Source node should have a buffer now");
 
