@@ -508,7 +508,7 @@
 
       <hbox id="nav-bar-customizationtarget" class="customization-target" flex="0">
         <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
-                     context="backForwardMenu" removable="true"
+                     context="backForwardMenu" removable="false"
                      forwarddisabled="true"
                      title="&backForwardItem.title;">
           <toolbarbutton id="back-button" class="toolbarbutton-1"
@@ -531,7 +531,7 @@
         </toolbaritem>
 
         <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
-                     title="&locationItem.title;" class="chromeclass-location" removable="true">
+                     title="&locationItem.title;" class="chromeclass-location" removable="false">
           <textbox id="urlbar" flex="1"
                    placeholder="&urlbar.placeholder2;"
                    type="autocomplete"
