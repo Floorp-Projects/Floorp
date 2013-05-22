@@ -530,6 +530,16 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
                                rgbFormat);
     return surf.forget();
   }
+  case SurfaceDescriptor::TMemoryImage: {
+    const MemoryImage& image = aSurface.get_MemoryImage();
+    gfxASurface::gfxImageFormat format
+      = static_cast<gfxASurface::gfxImageFormat>(image.format());
+    surf = new gfxImageSurface((unsigned char *)image.data(),
+                               image.size(),
+                               image.stride(),
+                               format);
+    return surf.forget();
+  }
   default:
     NS_ERROR("unexpected SurfaceDescriptor type!");
     return nullptr;
