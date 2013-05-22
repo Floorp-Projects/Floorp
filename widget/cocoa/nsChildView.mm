@@ -2075,23 +2075,29 @@ nsChildView::MaybeDrawRoundedBottomCorners(GLManager* aManager, nsIntRect aRect)
 void
 nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
 {
-  NSWindow* win = [mView window];
-  if (!win || ![win isKindOfClass:[ToolbarWindow class]])
+  if (![mView window] || ![[mView window] isKindOfClass:[ToolbarWindow class]])
     return;
 
-  float unifiedToolbarHeight = 0;
-  nsIntRect topPixelStrip(0, 0, [win frame].size.width, 1);
+  ToolbarWindow* win = (ToolbarWindow*)[mView window];
+  bool drawsContentsIntoWindowFrame = [win drawsContentsIntoWindowFrame];
+  int32_t windowWidth = mBounds.width;
+  int32_t titlebarHeight = CocoaPointsToDevPixels([win titlebarHeight]);
+  int32_t underTitlebarPos = drawsContentsIntoWindowFrame ? titlebarHeight : 0;
+  int32_t unifiedToolbarBottom = 0;
 
   for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
     const ThemeGeometry& g = aThemeGeometries[i];
     if ((g.mWidgetType == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
          g.mWidgetType == NS_THEME_TOOLBAR) &&
-        g.mRect.Contains(topPixelStrip)) {
-      unifiedToolbarHeight = g.mRect.YMost();
+        g.mRect.X() <= 0 &&
+        g.mRect.XMost() >= windowWidth &&
+        g.mRect.Y() <= underTitlebarPos) {
+      unifiedToolbarBottom = g.mRect.YMost();
     }
   }
-  [(ToolbarWindow*)win
-    setUnifiedToolbarHeight:DevPixelsToCocoaPoints(unifiedToolbarHeight)];
+
+  CGFloat unifiedHeight = DevPixelsToCocoaPoints(titlebarHeight + unifiedToolbarBottom - underTitlebarPos);
+  [win setUnifiedToolbarHeight:unifiedHeight];
 }
 
 NS_IMETHODIMP
