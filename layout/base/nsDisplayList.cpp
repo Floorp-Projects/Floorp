@@ -1567,8 +1567,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
     mFrame->IsThemed(disp, &mThemeTransparency);
     // Perform necessary RegisterThemeGeometry
     if (disp->mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
-        disp->mAppearance == NS_THEME_TOOLBAR ||
-        disp->mAppearance == NS_THEME_WINDOW_TITLEBAR) {
+        disp->mAppearance == NS_THEME_TOOLBAR) {
       RegisterThemeGeometry(aBuilder, aFrame);
     } else if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
                disp->mAppearance == NS_THEME_WIN_GLASS) {

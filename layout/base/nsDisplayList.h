@@ -454,11 +454,11 @@ public:
    * Notifies the builder that a particular themed widget exists
    * at the given rectangle within the currently built display list.
    * For certain appearance values (currently only
-   * NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR, NS_THEME_TOOLBAR and
-   * NS_THEME_WINDOW_TITLEBAR) this gets called during every display list
-   * construction, for every themed widget of the right type within the
-   * display list, except for themed widgets which are transformed or have
-   * effects applied to them (e.g. CSS opacity or filters).
+   * NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR and NS_THEME_TOOLBAR) this gets
+   * called during every display list construction, for every themed widget of
+   * the right type within the display list, except for themed widgets which
+   * are transformed or have effects applied to them (e.g. CSS opacity or
+   * filters).
    *
    * @param aWidgetType the -moz-appearance value for the themed widget
    * @param aRect the device-pixel rect relative to the widget's displayRoot
