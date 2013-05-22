@@ -430,7 +430,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
     JSContext *iter = nullptr;
     while (JSContext *acx = JS_ContextIterator(GetJSRuntime(), &iter)) {
         MOZ_ASSERT(js::HasUnrootedGlobal(acx));
-        if (JSObject *global = JS_GetGlobalObject(acx))
+        if (JSObject *global = js::GetDefaultGlobalForContext(acx))
             JS_CallObjectTracer(trc, &global, "XPC global object");
     }
 
@@ -544,7 +544,7 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionNoteRootCallback &cb)
     while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
         // Add the context to the CC graph only if traversing it would
         // end up doing something.
-        JSObject* global = JS_GetGlobalObject(acx);
+        JSObject* global = js::GetDefaultGlobalForContext(acx);
         if (global && xpc_IsGrayGCThing(global)) {
             cb.NoteNativeRoot(acx, nsXPConnect::JSContextParticipant());
         }

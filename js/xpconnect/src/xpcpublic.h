@@ -194,7 +194,7 @@ inline JSContext *
 xpc_UnmarkGrayContext(JSContext *cx)
 {
     if (cx) {
-        JSObject *global = JS_GetGlobalObject(cx);
+        JSObject *global = js::GetDefaultGlobalForContext(cx);
         xpc_UnmarkGrayObject(global);
         if (global && JS_IsInRequest(JS_GetRuntime(cx))) {
             JSObject *scope = JS_GetGlobalForScopeChain(cx);

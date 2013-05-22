@@ -364,6 +364,12 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
     return &obj->global();
 }
 
+JS_FRIEND_API(JSObject *)
+js::GetDefaultGlobalForContext(JSContext *cx)
+{
+    return cx->maybeDefaultCompartmentObject();
+}
+
 JS_FRIEND_API(void)
 js::NotifyAnimationActivity(JSObject *obj)
 {

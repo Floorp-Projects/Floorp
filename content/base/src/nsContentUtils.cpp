@@ -1651,9 +1651,9 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   if (!cx) {
     return;
   }
-  if (JSObject* global = JS_GetGlobalObject(cx)) {
+  if (JSObject* global = js::GetDefaultGlobalForContext(cx)) {
     JS_CallObjectTracer(aTrc, &global, "safe context");
-    MOZ_ASSERT(global == JS_GetGlobalObject(cx));
+    MOZ_ASSERT(global == js::GetDefaultGlobalForContext(cx));
   }
 }
 
