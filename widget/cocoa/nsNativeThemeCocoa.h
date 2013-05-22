@@ -109,7 +109,7 @@ protected:
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
                      nsIFrame *aFrame);
   void DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                          float aUnifiedHeight, BOOL aIsMain);
+                          CGFloat aUnifiedHeight, BOOL aIsMain);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, nsIFrame *aFrame);
 
   // Scrollbars

@@ -1795,14 +1795,9 @@ ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* a
 
   ToolbarWindow* win = (ToolbarWindow*)aWindow;
   float unifiedToolbarHeight = [win unifiedToolbarHeight];
-  float titlebarHeight = [win titlebarHeight];
-  bool drawsContentsIntoWindowFrame = [win drawsContentsIntoWindowFrame];
-  float underTitlebarPos = drawsContentsIntoWindowFrame ? titlebarHeight : 0;
-
   return inBoxRect.origin.x == 0 &&
          inBoxRect.size.width >= [win frame].size.width &&
-         inBoxRect.origin.y <= underTitlebarPos &&
-         floor(inBoxRect.origin.y + inBoxRect.size.height) <= unifiedToolbarHeight;
+         CGRectGetMaxY(inBoxRect) <= unifiedToolbarHeight;
 }
 
 void
@@ -1876,7 +1871,7 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
 
 void
 nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                                       float aUnifiedHeight, BOOL aIsMain)
+                                       CGFloat aUnifiedHeight, BOOL aIsMain)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
