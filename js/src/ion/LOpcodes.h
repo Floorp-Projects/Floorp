@@ -203,6 +203,7 @@
     _(StringLength)                 \
     _(ArgumentsLength)              \
     _(GetArgument)                  \
+    _(Rest)                         \
     _(TypeOfV)                      \
     _(ToIdV)                        \
     _(Floor)                        \
