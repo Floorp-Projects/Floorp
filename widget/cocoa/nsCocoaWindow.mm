@@ -2947,19 +2947,19 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 }
 
 // Returns the unified height of titlebar + toolbar.
-- (float)unifiedToolbarHeight
+- (CGFloat)unifiedToolbarHeight
 {
   return mUnifiedToolbarHeight;
 }
 
-- (float)titlebarHeight
+- (CGFloat)titlebarHeight
 {
   NSRect frameRect = [self frame];
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
 // Stores the complete height of titlebar + toolbar.
-- (void)setUnifiedToolbarHeight:(float)aHeight
+- (void)setUnifiedToolbarHeight:(CGFloat)aHeight
 {
   if (aHeight == mUnifiedToolbarHeight)
     return;
@@ -3154,7 +3154,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 static void
 DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                   float aUnifiedToolbarHeight, BOOL aIsMain)
+                   CGFloat aUnifiedToolbarHeight, BOOL aIsMain)
 {
   if (aTitlebarRect.size.width * aTitlebarRect.size.height > CUIDRAW_MAX_AREA) {
     return;
@@ -3165,7 +3165,7 @@ DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
             @"kCUIWidgetWindowFrame", @"widget",
             @"regularwin", @"windowtype",
             (aIsMain ? @"normal" : @"inactive"), @"state",
-            [NSNumber numberWithInt:aUnifiedToolbarHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+            [NSNumber numberWithDouble:aUnifiedToolbarHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
             [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
             nil],
           nil);

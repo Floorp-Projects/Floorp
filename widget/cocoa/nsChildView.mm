@@ -2072,32 +2072,58 @@ nsChildView::MaybeDrawRoundedBottomCorners(GLManager* aManager, nsIntRect aRect)
                                      LOCAL_GL_ONE, LOCAL_GL_ONE);
 }
 
+static int32_t
+FindTitlebarBottom(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
+                   int32_t aWindowWidth)
+{
+  int32_t titlebarBottom = 0;
+  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
+    const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
+    if ((g.mWidgetType == NS_THEME_WINDOW_TITLEBAR) &&
+        g.mRect.X() <= 0 &&
+        g.mRect.XMost() >= aWindowWidth &&
+        g.mRect.Y() <= 0) {
+      titlebarBottom = std::max(titlebarBottom, g.mRect.YMost());
+    }
+  }
+  return titlebarBottom;
+}
+
+static int32_t
+FindUnifiedToolbarBottom(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
+                         int32_t aWindowWidth, int32_t aTitlebarBottom)
+{
+  int32_t unifiedToolbarBottom = aTitlebarBottom;
+  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
+    const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
+    if ((g.mWidgetType == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
+         g.mWidgetType == NS_THEME_TOOLBAR) &&
+        g.mRect.X() <= 0 &&
+        g.mRect.XMost() >= aWindowWidth &&
+        g.mRect.Y() <= aTitlebarBottom) {
+      unifiedToolbarBottom = std::max(unifiedToolbarBottom, g.mRect.YMost());
+    }
+  }
+  return unifiedToolbarBottom;
+}
+
 void
 nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
 {
   if (![mView window] || ![[mView window] isKindOfClass:[ToolbarWindow class]])
     return;
 
+  int32_t windowWidth = mBounds.width;
+  int32_t titlebarBottom = FindTitlebarBottom(aThemeGeometries, windowWidth);
+  int32_t unifiedToolbarBottom =
+    FindUnifiedToolbarBottom(aThemeGeometries, windowWidth, titlebarBottom);
+
   ToolbarWindow* win = (ToolbarWindow*)[mView window];
   bool drawsContentsIntoWindowFrame = [win drawsContentsIntoWindowFrame];
-  int32_t windowWidth = mBounds.width;
   int32_t titlebarHeight = CocoaPointsToDevPixels([win titlebarHeight]);
-  int32_t underTitlebarPos = drawsContentsIntoWindowFrame ? titlebarHeight : 0;
-  int32_t unifiedToolbarBottom = 0;
-
-  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
-    const ThemeGeometry& g = aThemeGeometries[i];
-    if ((g.mWidgetType == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
-         g.mWidgetType == NS_THEME_TOOLBAR) &&
-        g.mRect.X() <= 0 &&
-        g.mRect.XMost() >= windowWidth &&
-        g.mRect.Y() <= underTitlebarPos) {
-      unifiedToolbarBottom = g.mRect.YMost();
-    }
-  }
-
-  CGFloat unifiedHeight = DevPixelsToCocoaPoints(titlebarHeight + unifiedToolbarBottom - underTitlebarPos);
-  [win setUnifiedToolbarHeight:unifiedHeight];
+  int32_t contentOffset = drawsContentsIntoWindowFrame ? titlebarHeight : 0;
+  int32_t devUnifiedHeight = titlebarHeight + unifiedToolbarBottom - contentOffset;
+  [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
 }
 
 NS_IMETHODIMP
