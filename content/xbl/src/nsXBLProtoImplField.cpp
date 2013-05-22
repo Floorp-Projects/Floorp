@@ -411,8 +411,6 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   // compile the literal string
   nsCOMPtr<nsIScriptContext> context = aContext;
 
-  JSAutoRequest ar(cx);
-
   // First, enter the xbl scope, wrap the node, and use that as the scope for
   // the evaluation.
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, aBoundNode));

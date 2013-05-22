@@ -995,7 +995,6 @@ PCMapEntry *
 jsdScript::CreatePPLineMap()
 {
     JSContext  *cx  = JSD_GetDefaultJSContext (mCx);
-    JSAutoRequest ar(cx);
     JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
     if (!obj)
         return nullptr;
@@ -1240,7 +1239,6 @@ jsdScript::GetParameterNames(uint32_t* count, PRUnichar*** paramNames)
         return NS_OK;
     }
 
-    JSAutoRequest ar(cx);
     JSAutoCompartment ac(cx, JS_GetFunctionObject(fun));
 
     unsigned nargs;
@@ -1329,8 +1327,6 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
         return NS_ERROR_FAILURE;
     }
     JS::RootedFunction fun(cx, JSD_GetJSFunction (mCx, mScript));
-
-    JSAutoRequest ar(cx);
 
     JSString *jsstr;
     mozilla::Maybe<JSAutoCompartment> ac;
@@ -2040,7 +2036,6 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
     JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
 
     JS::RootedValue jv(cx);
-    JSAutoRequest ar(cx);
 
     estate = JS_SaveExceptionState (cx);
     JS_ClearPendingException (cx);
@@ -2353,8 +2348,6 @@ jsdValue::GetProperty (const nsACString &name, jsdIProperty **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
-
-    JSAutoRequest ar(cx);
 
     /* not rooting this */
     JSString *jstr_name = JS_NewStringCopyZ(cx, PromiseFlatCString(name).get());

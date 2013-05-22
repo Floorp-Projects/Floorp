@@ -853,7 +853,6 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
                                      aListenerStruct->mTypeAtom,
                                      &argCount, &argNames);
 
-    JSAutoRequest ar(cx);
     JSAutoCompartment ac(cx, context->GetNativeGlobal());
     JS::CompileOptions options(cx);
     options.setFileAndLine(url.get(), lineNo)

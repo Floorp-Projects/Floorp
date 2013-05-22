@@ -1385,9 +1385,6 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
         return NS_ERROR_UNEXPECTED;
 
     JS::Rooted<JSObject*> scope(jscontext, global->GetGlobalJSObject());
-
-    JSAutoRequest ar(jscontext);
-
     JS::Rooted<JS::Value> v(jscontext);
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
     rv = nsContentUtils::WrapNative(jscontext, scope, mRoot, mRoot, v.address(),

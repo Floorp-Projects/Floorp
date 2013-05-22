@@ -198,8 +198,6 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
             return rv;
     }
 
-    JSAutoRequest ar(cx);
-
     RootedObject targetObj(cx);
     mozJSComponentLoader* loader = mozJSComponentLoader::Get();
     rv = loader->FindTargetObject(cx, &targetObj);

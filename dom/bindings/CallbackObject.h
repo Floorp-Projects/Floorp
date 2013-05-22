@@ -145,10 +145,6 @@ protected:
     // is gone
     nsAutoMicroTask mMt;
 
-    // Can't construct an XPCAutoRequest until we have a JSContext, so
-    // this needs to be a Maybe.
-    Maybe<XPCAutoRequest> mAr;
-
     // We construct our JS::Rooted right after our JSAutoRequest; let's just
     // hope that the change in ordering wrt the mCxPusher constructor here is
     // ok.

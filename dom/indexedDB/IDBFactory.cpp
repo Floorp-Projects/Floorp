@@ -210,7 +210,6 @@ IDBFactory::Create(ContentParent* aContentParent,
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
   AutoSafeJSContext cx;
-  JSAutoRequest ar(cx);
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ASSERTION(xpc, "This should never be null!");
