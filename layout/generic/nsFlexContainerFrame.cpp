@@ -18,6 +18,7 @@
 #include <algorithm>
 
 using namespace mozilla::css;
+using namespace mozilla::layout;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo*
@@ -480,6 +481,29 @@ GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
     }
 
     // Otherwise, descend to its first child and repeat.
+
+    // SPECIAL CASE: if we're dealing with an anonymous table, then it might
+    // be wrapping something non-anonymous in its caption or col-group lists
+    // (instead of its principal child list), so we have to look there.
+    // (Note: For anonymous tables that have a non-anon cell *and* a non-anon
+    // column, we'll always return the column. This is fine; we're really just
+    // looking for a handle to *anything* with a meaningful content node inside
+    // the table, for use in DOM comparisons to things outside of the table.)
+    if (MOZ_UNLIKELY(aFrame->GetType() == nsGkAtoms::tableOuterFrame)) {
+      nsIFrame* captionDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetFirstChild(kCaptionList));
+      if (captionDescendant) {
+        return captionDescendant;
+      }
+    } else if (MOZ_UNLIKELY(aFrame->GetType() == nsGkAtoms::tableFrame)) {
+      nsIFrame* colgroupDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetFirstChild(kColGroupList));
+      if (colgroupDescendant) {
+        return colgroupDescendant;
+      }
+    }
+
+    // USUAL CASE: Descend to the first child in principal list.
     aFrame = aFrame->GetFirstPrincipalChild();
   }
   return aFrame;
