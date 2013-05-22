@@ -186,6 +186,7 @@ namespace ion {
     _(ParNewDenseArray)                                                     \
     _(ParBailout)                                                           \
     _(ParLambda)                                                            \
+    _(ParRest)                                                              \
     _(ParSlice)                                                             \
     _(ParWriteGuard)                                                        \
     _(ParDump)                                                              \
