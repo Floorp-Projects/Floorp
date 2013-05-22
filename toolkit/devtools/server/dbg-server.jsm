@@ -32,14 +32,12 @@ var loadSubScript =
   "  }\n" +
   "}";
 
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-
 // Load the debugging server in a sandbox with its own compartment.
 var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
                       .createInstance(Ci.nsIPrincipal);
 
 var gGlobal = Cu.Sandbox(systemPrincipal);
 Cu.evalInSandbox(loadSubScript, gGlobal, "1.8");
-gGlobal.loadSubScript("chrome://global/content/devtools/dbg-server.js");
+gGlobal.loadSubScript("resource://gre/modules/devtools/server/main.js");
 
 this.DebuggerServer = gGlobal.DebuggerServer;

@@ -36,8 +36,7 @@ function runTests() {
   yield waitForInput();
 
   // Check that we'll save the form data state correctly.
-  let state = JSON.parse(ss.getBrowserState());
-  let {formdata} = state.windows[0].tabs[1].entries[0];
+  let {entries: [{formdata}]} = JSON.parse(ss.getTabState(tab));
   is(formdata.id.chk, true, "chk's value is correct");
 
   // Clear dirty state of all windows again.
@@ -49,10 +48,14 @@ function runTests() {
   yield waitForInput();
 
   // Check that we'll save the form data state correctly.
-  let state = JSON.parse(ss.getBrowserState());
-  let {formdata} = state.windows[0].tabs[1].entries[0];
+  let {entries: [{formdata}]} = JSON.parse(ss.getTabState(tab));
   is(formdata.id.chk, true, "chk's value is correct");
   is(formdata.id.txt, "m", "txt's value is correct");
+
+  // Check that the form data cache works properly.
+  let {entries: [{formdata}]} = JSON.parse(ss.getTabState(tab));
+  is(formdata.id.chk, true, "chk's cached value is correct");
+  is(formdata.id.txt, "m", "txt's cached value is correct");
 
   // Clear dirty state of all windows again.
   yield forceWriteState();
@@ -68,8 +71,12 @@ function runTests() {
   yield waitForInput();
 
   // Check that we'll save the iframe's form data correctly.
-  let state = JSON.parse(ss.getBrowserState());
-  let {formdata} = state.windows[0].tabs[1].entries[0].children[0];
+  let {entries: [{children: [{formdata}]}]} = JSON.parse(ss.getTabState(tab));
+  is(formdata.id.chk, true, "iframe chk's value is correct");
+  is(formdata.id.txt, "m", "iframe txt's value is correct");
+
+  // Check that the form data cache works properly for subframes.
+  let {entries: [{children: [{formdata}]}]} = JSON.parse(ss.getTabState(tab));
   is(formdata.id.chk, true, "iframe chk's value is correct");
   is(formdata.id.txt, "m", "iframe txt's value is correct");
 
@@ -81,9 +88,8 @@ function runTests() {
   EventUtils.synthesizeKey("m", {});
   yield waitForInput();
 
-  // Check the we'll correctly save the content editable's state.
-  let state = JSON.parse(ss.getBrowserState());
-  let {innerHTML} = state.windows[0].tabs[1].entries[0].children[1];
+  // Check that we'll correctly save the content editable's state.
+  let {entries: [{children: [, {innerHTML}]}]} = JSON.parse(ss.getTabState(tab));
   is(innerHTML, "m", "content editable's value is correct");
 
   // Clean up after ourselves.

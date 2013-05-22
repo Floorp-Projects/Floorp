@@ -76,9 +76,7 @@ var SrcdirProvider = {
       globals: loaderGlobals
     });
 
-    return this._writeManifest(devtoolsDir).then((data) => {
-      this._writeManifest(toolkitDir);
-    }).then(null, Cu.reportError);
+    return this._writeManifest(devtoolsDir).then(null, Cu.reportError);
   },
 
   unload: function(reason) {

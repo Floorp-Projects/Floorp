@@ -40,7 +40,7 @@ function dumpn(str)
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://global/content/devtools/dbg-transport.js", this);
+loader.loadSubScript("resource://gre/modules/devtools/server/transport.js", this);
 
 /**
  * Add simple event notification to a prototype object. Any object that has
