@@ -1072,18 +1072,12 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
         return;
     JS_ASSERT(script->types);
 
-    /* Analyze the script regardless if -a was used. */
-    bool analyze = cx->hasOption(JSOPTION_METHODJIT_ALWAYS);
-
-    if (!ThisTypes(script)->hasType(type) || analyze) {
+    if (!ThisTypes(script)->hasType(type)) {
         AutoEnterAnalysis enter(cx);
 
         InferSpew(ISpewOps, "externalType: setThis #%u: %s",
                   script->id(), TypeString(type));
         ThisTypes(script)->addType(cx, type);
-
-        if (analyze)
-            script->ensureRanInference(cx);
     }
 }
 

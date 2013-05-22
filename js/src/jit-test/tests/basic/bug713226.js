@@ -3,7 +3,6 @@ gczeal(4);
 var optionNames = options().split(',');
   for (var i = 0; i < optionNames.length; i++)
     var optionName = optionNames[i];
-      options(optionName);
 evaluate("\
 function addDebug(g, id) {\
     var debuggerGlobal = newGlobal('new-compartment');\

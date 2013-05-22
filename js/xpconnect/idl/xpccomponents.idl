@@ -119,7 +119,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(623d354d-6eab-4cf6-8c08-2cde5869d439)]
+[scriptable, uuid(fdd32d38-9341-4067-9000-d781075a60c9)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -381,12 +381,6 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     attribute boolean werror;
-
-    [implicit_jscontext]
-    attribute boolean methodjit;
-
-    [implicit_jscontext]
-    attribute boolean methodjit_always;
 
     [implicit_jscontext]
     attribute boolean strict_mode;
