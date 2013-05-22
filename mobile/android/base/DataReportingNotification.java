@@ -57,7 +57,6 @@ public class DataReportingNotification {
                 fragmentArgs.putString("resource", "preferences_datareporting");
                 prefIntent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
             }
-            prefIntent.putExtra(ALERT_NAME_DATAREPORTING_NOTIFICATION, ALERT_NAME_DATAREPORTING_NOTIFICATION.hashCode());
 
             PendingIntent contentIntent = PendingIntent.getActivity(context, 0, prefIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -87,7 +86,7 @@ public class DataReportingNotification {
                                         .setContentIntent(contentIntent)
                                         .setStyle(new NotificationCompat.BigTextStyle()
                                                                         .bigText(notificationBigSummary))
-                                        .addAction(R.drawable.firefox_settings_alert, notificationAction, contentIntent)
+                                        .addAction(R.drawable.ic_menu_settings, notificationAction, contentIntent)
                                         .setTicker(tickerText)
                                         .build();
 
