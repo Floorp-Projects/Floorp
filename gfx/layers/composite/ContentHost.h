@@ -308,17 +308,25 @@ private:
   class TextureUpdateRequest : public Request
   {
   public:
-    TextureUpdateRequest(TextureIdentifier aTextureId,
+    TextureUpdateRequest(ISurfaceAllocator* aDeAllocator,
+                         TextureIdentifier aTextureId,
                          SurfaceDescriptor& aDescriptor,
                          const nsIntRegion& aUpdated,
                          const nsIntRect& aBufferRect,
                          const nsIntPoint& aBufferRotation)
-      : mTextureId(aTextureId)
+      : mDeAllocator(aDeAllocator)
+      , mTextureId(aTextureId)
       , mDescriptor(aDescriptor)
       , mUpdated(aUpdated)
       , mBufferRect(aBufferRect)
       , mBufferRotation(aBufferRotation)
     {}
+
+    ~TextureUpdateRequest()
+    {
+      //TODO: Recycle these?
+      mDeAllocator->DestroySharedSurface(&mDescriptor);
+    }
 
     virtual void Execute(ContentHostIncremental *aHost);
 
@@ -332,6 +340,7 @@ private:
 
     nsIntRect GetQuadrantRectangle(XSide aXSide, YSide aYSide) const;
 
+    ISurfaceAllocator* mDeAllocator;
     TextureIdentifier mTextureId;
     SurfaceDescriptor mDescriptor;
     nsIntRegion mUpdated;
