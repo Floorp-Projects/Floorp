@@ -155,7 +155,7 @@ DownloadLegacyTransfer.prototype = {
     // wait for it to be available.  This operation may cause the entire
     // download system to initialize before the object is created.
     Downloads.createDownload({
-      source: { uri: aSource },
+      source: { uri: aSource, isPrivate: aIsPrivate },
       target: { file: aTarget.QueryInterface(Ci.nsIFileURL).file },
       saver: { type: "legacy" },
     }).then(function DLT_I_onDownload(aDownload) {
@@ -171,8 +171,13 @@ DownloadLegacyTransfer.prototype = {
       this._deferDownload.resolve(aDownload);
 
       // Add the download to the list, allowing it to be seen and canceled.
-      return Downloads.getPublicDownloadList()
-                      .then(function (aList) aList.add(aDownload));
+      let list;
+      if (aIsPrivate) {
+        list = Downloads.getPrivateDownloadList();
+      } else {
+        list = Downloads.getPublicDownloadList();
+      }
+      return list.then(function (aList) aList.add(aDownload));
     }.bind(this)).then(null, Cu.reportError);
   },
 
