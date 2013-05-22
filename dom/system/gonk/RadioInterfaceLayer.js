@@ -979,8 +979,8 @@ RadioInterface.prototype = {
         break;
       case "cardstatechange":
         this.rilContext.cardState = message.cardState;
-        gMessageManager.sendMobileConnectionMessage("RIL:CardStateChanged",
-                                                    this.clientId, message);
+        gMessageManager.sendIccMessage("RIL:CardStateChanged",
+                                       this.clientId, message);
         break;
       case "sms-received":
         let ackOk = this.handleSmsReceived(message);
