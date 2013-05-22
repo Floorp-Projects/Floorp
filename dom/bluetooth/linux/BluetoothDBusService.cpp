@@ -1928,7 +1928,8 @@ public:
 
     for (uint32_t i = 0; i < mDeviceAddresses.Length(); i++) {
       BluetoothValue v;
-      nsString objectPath = GetObjectPathFromAddress(sAdapterPath, mDeviceAddresses[i]);
+      nsString objectPath =
+        GetObjectPathFromAddress(sAdapterPath, mDeviceAddresses[i]);
 
       if (!GetPropertiesInternal(objectPath, DBUS_DEVICE_IFACE, v)) {
         errorStr.AssignLiteral("Getting properties failed!");
@@ -2533,19 +2534,16 @@ BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
 
   if (aProfileId == BluetoothServiceClass::HANDSFREE) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    hfp->Connect(
-      GetObjectPathFromAddress(sAdapterPath, aDeviceAddress), true, aRunnable);
+    hfp->Connect(aDeviceAddress, true, aRunnable);
   } else if (aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    hfp->Connect(
-      GetObjectPathFromAddress(sAdapterPath, aDeviceAddress), false, aRunnable);
+    hfp->Connect(aDeviceAddress, false, aRunnable);
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
-    opp->Connect(
-      GetObjectPathFromAddress(sAdapterPath, aDeviceAddress), aRunnable);
+    opp->Connect(aDeviceAddress, aRunnable);
   } else {
-    BluetoothValue v;
-    DispatchBluetoothReply(aRunnable, v, NS_LITERAL_STRING("UnknownProfileError"));
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING("UnknownProfileError"));
   }
 }
 
@@ -2641,6 +2639,34 @@ private:
   int mChannel;
 };
 
+class OnUpdateSdpRecordsRunnable : public nsRunnable
+{
+public:
+  OnUpdateSdpRecordsRunnable(const nsAString& aObjectPath,
+                             BluetoothProfileManagerBase* aManager)
+    : mManager(aManager)
+  {
+    MOZ_ASSERT(!aObjectPath.IsEmpty());
+    MOZ_ASSERT(aManager);
+
+    mDeviceAddress = GetAddressFromObjectPath(aObjectPath);
+  }
+
+  nsresult
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mManager->OnUpdateSdpRecords(mDeviceAddress);
+
+    return NS_OK;
+  }
+
+private:
+  nsString mDeviceAddress;
+  BluetoothProfileManagerBase* mManager;
+};
+
 class OnGetServiceChannelRunnable : public nsRunnable
 {
 public:
@@ -2715,14 +2741,16 @@ private:
 };
 
 nsresult
-BluetoothDBusService::GetServiceChannel(const nsAString& aObjectPath,
+BluetoothDBusService::GetServiceChannel(const nsAString& aDeviceAddress,
                                         const nsAString& aServiceUuid,
                                         BluetoothProfileManagerBase* aManager)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBluetoothCommandThread);
 
-  nsRefPtr<nsRunnable> r(new GetServiceChannelRunnable(aObjectPath,
+  nsString objectPath(GetObjectPathFromAddress(sAdapterPath, aDeviceAddress));
+
+  nsRefPtr<nsRunnable> r(new GetServiceChannelRunnable(objectPath,
                                                        aServiceUuid,
                                                        aManager));
 
@@ -2731,6 +2759,43 @@ BluetoothDBusService::GetServiceChannel(const nsAString& aObjectPath,
   }
 
   return NS_OK;
+}
+
+static void
+DiscoverServicesCallback(DBusMessage* aMsg, void* aData)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsRefPtr<OnUpdateSdpRecordsRunnable> r(
+    static_cast<OnUpdateSdpRecordsRunnable*>(aData));
+  NS_DispatchToMainThread(r);
+}
+
+bool
+BluetoothDBusService::UpdateSdpRecords(const nsAString& aDeviceAddress,
+                                       BluetoothProfileManagerBase* aManager)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(mConnection);
+
+  nsString objectPath(GetObjectPathFromAddress(sAdapterPath, aDeviceAddress));
+
+  // I choose to use raw pointer here because this is going to be passed as an
+  // argument into dbus_func_args_async() at once.
+  OnUpdateSdpRecordsRunnable* callbackRunnable =
+    new OnUpdateSdpRecordsRunnable(objectPath, aManager);
+
+  return dbus_func_args_async(mConnection,
+                              -1,
+                              DiscoverServicesCallback,
+                              (void*)callbackRunnable,
+                              NS_ConvertUTF16toUTF8(objectPath).get(),
+                              DBUS_DEVICE_IFACE,
+                              "DiscoverServices",
+                              DBUS_TYPE_STRING, &EmptyCString(),
+                              DBUS_TYPE_INVALID);
 }
 
 nsresult
