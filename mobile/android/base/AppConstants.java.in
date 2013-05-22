@@ -87,6 +87,13 @@ public class AppConstants {
     false;
 #endif
 
+    public static final String TELEMETRY_PREF_NAME =
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+          "toolkit.telemetry.enabledPreRelease";
+#else
+          "toolkit.telemetry.enabled";
+#endif
+
     public static final boolean MOZ_TELEMETRY_REPORTING =
 #ifdef MOZ_TELEMETRY_REPORTING
     true;
