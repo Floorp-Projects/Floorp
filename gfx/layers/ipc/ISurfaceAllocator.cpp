@@ -13,7 +13,6 @@
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedRGBImage.h"
-#include "nsXULAppAPI.h"
 
 #ifdef DEBUG
 #include "prenv.h"
@@ -86,17 +85,6 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
     return true;
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    gfxImageFormat format = aContent == gfxASurface::CONTENT_COLOR_ALPHA ?
-                            gfxASurface::ImageFormatARGB32 :
-                            gfxASurface::ImageFormatRGB24;
-    int32_t stride = gfxASurface::FormatStrideForWidth(format, aSize.width);
-    uint8_t *data = new uint8_t[stride * aSize.height];
-
-    *aBuffer = MemoryImage((uintptr_t)data, aSize, stride, format);
-    return true;
-  }
-
   nsRefPtr<gfxSharedImageSurface> buffer;
   if (!AllocSharedImageSurface(aSize, aContent,
                                getter_AddRefs(buffer))) {
@@ -133,9 +121,6 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
       DeallocShmem(aSurface->get_RGBImage().data());
       break;
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
-      break;
-    case SurfaceDescriptor::TMemoryImage:
-      delete [] (unsigned char *)aSurface->get_MemoryImage().data();
       break;
     case SurfaceDescriptor::Tnull_t:
     case SurfaceDescriptor::T__None:
