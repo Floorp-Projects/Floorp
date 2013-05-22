@@ -426,6 +426,44 @@ GetBytecodeLength(jsbytecode *pc)
     return js_GetVariableBytecodeLength(pc);
 }
 
+static inline bool
+BytecodeIsPopped(jsbytecode *pc)
+{
+    jsbytecode *next = pc + GetBytecodeLength(pc);
+    return JSOp(*next) == JSOP_POP;
+}
+
+static inline bool
+BytecodeFlowsToBitop(jsbytecode *pc)
+{
+    // Look for simple bytecode for integer conversions like (x | 0) or (x & -1).
+    jsbytecode *next = pc + GetBytecodeLength(pc);
+    if (*next == JSOP_BITOR || *next == JSOP_BITAND)
+        return true;
+    if (*next == JSOP_INT8 && GET_INT8(next) == -1) {
+        next += GetBytecodeLength(next);
+        if (*next == JSOP_BITAND)
+            return true;
+        return false;
+    }
+    if (*next == JSOP_ONE) {
+        next += GetBytecodeLength(next);
+        if (*next == JSOP_NEG) {
+            next += GetBytecodeLength(next);
+            if (*next == JSOP_BITAND)
+                return true;
+        }
+        return false;
+    }
+    if (*next == JSOP_ZERO) {
+        next += GetBytecodeLength(next);
+        if (*next == JSOP_BITOR)
+            return true;
+        return false;
+    }
+    return false;
+}
+
 extern bool
 IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset);
 
