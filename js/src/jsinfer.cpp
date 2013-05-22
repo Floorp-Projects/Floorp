@@ -2437,12 +2437,10 @@ TypeZone::init(JSContext *cx)
         !cx->hasOption(JSOPTION_TYPE_INFERENCE) ||
         !cx->runtime->jitSupportsFloatingPoint)
     {
-        jaegerCompilationAllowed = true;
         return;
     }
 
     inferenceEnabled = true;
-    jaegerCompilationAllowed = cx->hasOption(JSOPTION_METHODJIT);
 }
 
 TypeObject *

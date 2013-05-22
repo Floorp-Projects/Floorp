@@ -121,7 +121,6 @@ static double gTimeoutInterval = -1.0;
 static volatile bool gTimedOut = false;
 static JS::Value gTimeoutFunc;
 
-static bool enableMethodJit = true;
 static bool enableTypeInference = true;
 static bool enableDisassemblyDumps = false;
 static bool enableIon = true;
@@ -600,8 +599,6 @@ static const struct JSOption {
     const char  *name;
     uint32_t    flag;
 } js_options[] = {
-    {"methodjit",       JSOPTION_METHODJIT},
-    {"methodjit_always",JSOPTION_METHODJIT_ALWAYS},
     {"strict",          JSOPTION_STRICT},
     {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
@@ -4775,8 +4772,6 @@ NewContext(JSRuntime *rt)
     JS_SetErrorReporter(cx, my_ErrorReporter);
     JS_SetVersion(cx, JSVERSION_LATEST);
     SetContextOptions(cx);
-    if (enableMethodJit)
-        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     if (enableTypeInference)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     if (enableIon)
@@ -4925,9 +4920,6 @@ static int
 ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 {
     RootedObject obj(cx, obj_);
-
-    if (op->getBoolOption('a'))
-        JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
 
     if (op->getBoolOption('c'))
         compileOnly = true;
@@ -5129,16 +5121,12 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     JSAutoRequest ar(cx);
 
     /*
-     * First check to see if type inference and JM are enabled. These flags
+     * First check to see if type inference is enabled. These flags
      * must be set on the compartment when it is constructed.
      */
     if (op->getBoolOption("no-ti")) {
         enableTypeInference = false;
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
-    }
-    if (op->getBoolOption("no-jm")) {
-        enableMethodJit = false;
-        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     }
 
     RootedObject glob(cx);
@@ -5248,8 +5236,8 @@ main(int argc, char **argv, char **envp)
     if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
-        || !op.addBoolOption('m', "jm", "Enable the JaegerMonkey method JIT (default)")
-        || !op.addBoolOption('\0', "no-jm", "Disable the JaegerMonkey method JIT")
+        || !op.addBoolOption('m', "jm", "No-op (still used by fuzzers)")
+        || !op.addBoolOption('\0', "no-jm", "No-op (still used by fuzzers)")
         || !op.addBoolOption('n', "ti", "Enable type inference (default)")
         || !op.addBoolOption('\0', "no-ti", "Disable type inference")
         || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
@@ -5257,8 +5245,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('W', "nowarnings", "Don't emit warnings")
         || !op.addBoolOption('s', "strict", "Check strictness")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
-        || !op.addBoolOption('a', "always-mjit",
-                             "Do not try to run in the interpreter before method jitting.")
+        || !op.addBoolOption('a', "always-mjit", "No-op (still used by fuzzers)")
         || !op.addBoolOption('D', "dump-bytecode", "Dump bytecode with exec count for all scripts")
         || !op.addBoolOption('b', "print-timing", "Print sub-ms runtime for each file that's run")
 #ifdef DEBUG
