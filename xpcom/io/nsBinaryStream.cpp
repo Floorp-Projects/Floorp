@@ -716,7 +716,6 @@ nsBinaryInputStream::ReadByteArray(uint32_t aLength, uint8_t* *_rval)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength, const JS::Value& aBuffer, JSContext* cx)
 {
-    JSAutoRequest ar(cx);
     if (!aBuffer.isObject()) {
         return NS_ERROR_FAILURE;
     }

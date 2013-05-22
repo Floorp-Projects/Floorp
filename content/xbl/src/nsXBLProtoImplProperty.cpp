@@ -213,7 +213,6 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     nsDependentString getter(mGetterText->GetText());
     if (!getter.IsEmpty()) {
       AutoPushJSContext cx(aContext->GetNativeContext());
-      JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), mGetterText->GetLineNumber())
@@ -261,7 +260,6 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     nsDependentString setter(mSetterText->GetText());
     if (!setter.IsEmpty()) {
       AutoPushJSContext cx(aContext->GetNativeContext());
-      JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), mSetterText->GetLineNumber())

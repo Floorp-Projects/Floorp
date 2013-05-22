@@ -16,8 +16,6 @@ NS_IMPL_ISUPPORTS1(xpcJSWeakReference, xpcIJSWeakReference)
 
 nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
 {
-    JSAutoRequest ar(cx);
-
     if (!object.isObject())
         return NS_OK;
 

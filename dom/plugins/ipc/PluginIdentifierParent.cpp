@@ -32,7 +32,6 @@ PluginIdentifierParent::RecvRetain()
 
   // The following is what nsNPAPIPlugin.cpp does. Gross, but the API doesn't
   // give you a NPP to play with.
-  JSAutoRequest ar(cx);
   JSString* str = JSID_TO_STRING(id);
   JSString* str2 = JS_InternJSString(cx, str);
   if (!str2) {

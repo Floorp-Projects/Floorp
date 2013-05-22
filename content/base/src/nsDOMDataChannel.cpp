@@ -361,7 +361,6 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
   AutoPushJSContext cx(sc->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
-  JSAutoRequest ar(cx);
   JS::Rooted<JS::Value> jsData(cx);
 
   if (aBinary) {

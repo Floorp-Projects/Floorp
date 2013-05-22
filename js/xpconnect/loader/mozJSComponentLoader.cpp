@@ -1138,7 +1138,6 @@ mozJSComponentLoader::UnloadModules()
 
         RootedObject global(mContext, mLoaderGlobal->GetJSObject());
         if (global) {
-            JSAutoRequest ar(mContext);
             JS_SetAllNonReservedSlotsToUndefined(mContext, global);
         } else {
             NS_WARNING("Going to leak!");
@@ -1170,7 +1169,6 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
                              uint8_t optionalArgc,
                              JS::Value* retval)
 {
-    JSAutoRequest ar(cx);
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
     RootedValue targetVal(cx, targetValArg);

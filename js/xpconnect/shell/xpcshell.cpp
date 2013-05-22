@@ -1897,7 +1897,6 @@ main(int argc, char **argv, char **envp)
 
         backstagePass->SetGlobalObject(glob);
 
-        JS_BeginRequest(cx);
         {
             JSAutoCompartment ac(cx, glob);
 
@@ -1932,8 +1931,7 @@ main(int argc, char **argv, char **envp)
             JS_DropPrincipals(rt, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);
             JS_GC(rt);
-        } //this scopes the JSAutoCrossCompartmentCall
-        JS_EndRequest(cx);
+        }
         pusher.Pop();
         JS_GC(rt);
         JS_DestroyContext(cx);

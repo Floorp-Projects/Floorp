@@ -1419,7 +1419,6 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
                                         const nsACString& aJSONData)
 {
     AutoSafeJSContext cx;
-    JSAutoRequest ar(cx);
     JS::Rooted<JS::Value> json(cx, JSVAL_NULL);
     StructuredCloneData cloneData;
     JSAutoStructuredCloneBuffer buffer;

@@ -1264,7 +1264,6 @@ _getstringidentifier(const NPUTF8* name)
   }
 
   AutoSafeJSContext cx;
-  JSAutoRequest ar(cx);
   return doGetIdentifier(cx, name);
 }
 
@@ -1277,7 +1276,6 @@ _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
   }
 
   AutoSafeJSContext cx;
-  JSAutoRequest ar(cx);
 
   for (int32_t i = 0; i < nameCount; ++i) {
     if (names[i]) {
@@ -1492,8 +1490,6 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);
   NS_ENSURE_TRUE(scx, false);
-
-  JSAutoRequest req(cx);
 
   JS::Rooted<JSObject*> obj(cx, nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj));
 

@@ -153,7 +153,6 @@ MobileMessageManager::Send(const JS::Value& aNumber_, const nsAString& aMessage,
   JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
   NS_ASSERTION(global, "Failed to get global object!");
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
   if (aNumber.isString()) {

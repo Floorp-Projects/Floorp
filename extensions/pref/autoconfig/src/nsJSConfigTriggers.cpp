@@ -52,7 +52,6 @@ nsresult CentralizedAdminPrefManagerInit()
 
     // Create a sandbox.
     AutoSafeJSContext cx;
-    JSAutoRequest ar(cx);
     nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
     rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(sandbox));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -72,7 +71,6 @@ nsresult CentralizedAdminPrefManagerFinish()
 {
     if (autoconfigSb) {
         AutoSafeJSContext cx;
-        JSAutoRequest ar(cx);
         JSAutoCompartment(cx, autoconfigSb);
         JS_RemoveObjectRoot(cx, &autoconfigSb);
         JS_MaybeGC(cx);
@@ -115,7 +113,6 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
     }
 
     AutoSafeJSContext cx;
-    JSAutoRequest ar(cx);
     JSAutoCompartment ac(cx, autoconfigSb);
 
     nsAutoCString script(js_buffer, length);

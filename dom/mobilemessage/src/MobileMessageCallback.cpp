@@ -59,7 +59,6 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage)
   JS::Rooted<JSObject*> global(cx, scriptContext->GetNativeGlobal());
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
   JS::Rooted<JS::Value> wrappedMessage(cx);
