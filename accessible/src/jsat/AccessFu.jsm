@@ -112,10 +112,12 @@ this.AccessFu = {
     TouchAdapter.start();
 
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
+    Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
     Utils.win.addEventListener('TabOpen', this);
+    Utils.win.addEventListener('TabClose', this);
     Utils.win.addEventListener('TabSelect', this);
 
     if (this.readyCallback) {
@@ -147,9 +149,11 @@ this.AccessFu = {
     TouchAdapter.stop();
 
     Utils.win.removeEventListener('TabOpen', this);
+    Utils.win.removeEventListener('TabClose', this);
     Utils.win.removeEventListener('TabSelect', this);
 
     Services.obs.removeObserver(this, 'remote-browser-frame-shown');
+    Services.obs.removeObserver(this, 'in-process-browser-or-app-frame-shown');
     Services.obs.removeObserver(this, 'Accessibility:NextObject');
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
     Services.obs.removeObserver(this, 'Accessibility:Focus');
@@ -280,6 +284,7 @@ this.AccessFu = {
         }
         break;
       case 'remote-browser-frame-shown':
+      case 'in-process-browser-or-app-frame-shown':
       {
         let mm = aSubject.QueryInterface(Ci.nsIFrameLoader).messageManager;
         this._handleMessageManager(mm);
@@ -308,6 +313,16 @@ this.AccessFu = {
       {
         let mm = Utils.getMessageManager(aEvent.target);
         this._handleMessageManager(mm);
+        break;
+      }
+      case 'TabClose':
+      {
+        let mm = Utils.getMessageManager(aEvent.target);
+        let mmIndex = this._processedMessageManagers.indexOf(mm);
+        if (mmIndex > -1) {
+          this._removeMessageListeners(mm);
+          this._processedMessageManagers.splice(mmIndex, 1);
+        }
         break;
       }
       case 'TabSelect':
@@ -464,9 +479,20 @@ var Output = {
                           aJsonBounds.right - aJsonBounds.left,
                           aJsonBounds.bottom - aJsonBounds.top);
     let vp = Utils.getViewport(Utils.win) || { zoom: 1.0, offsetY: 0 };
-    let browserOffset = aBrowser.getBoundingClientRect();
+    let root = Utils.win;
+    let offset = { left: -root.mozInnerScreenX, top: -root.mozInnerScreenY };
+    let scale = 1 / Utils.getPixelsPerCSSPixel(Utils.win);
 
-    return bounds.translate(browserOffset.left, browserOffset.top).
+    if (!aBrowser.contentWindow) {
+      // OOP browser, add offset of browser.
+      // The offset of the browser element in relation to its parent window.
+      let clientRect = aBrowser.getBoundingClientRect();
+      let win = aBrowser.ownerDocument.defaultView;
+      offset.left += clientRect.left + win.mozInnerScreenX;
+      offset.top += clientRect.top + win.mozInnerScreenY;
+    }
+
+    return bounds.scale(scale, scale).translate(offset.left, offset.top).
       scale(vp.zoom, vp.zoom).expandToIntegers();
   }
 };

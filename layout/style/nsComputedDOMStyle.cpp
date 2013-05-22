@@ -3165,7 +3165,6 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
   return valueList;
 }
 
-#ifdef MOZ_FLEXBOX
 CSSValue*
 nsComputedDOMStyle::DoGetAlignItems()
 {
@@ -3266,7 +3265,6 @@ nsComputedDOMStyle::DoGetJustifyContent()
                                    nsCSSProps::kJustifyContentKTable));
   return val;
 }
-#endif // MOZ_FLEXBOX
 
 CSSValue*
 nsComputedDOMStyle::DoGetFloatEdge()
@@ -4845,10 +4843,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
      * Implementations of CSS styles *
     \* ***************************** */
 
-#ifdef MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(align_items,                   AlignItems),
     COMPUTED_STYLE_MAP_ENTRY(align_self,                    AlignSelf),
-#endif // MOZ_FLEXBOX
     //// COMPUTED_STYLE_MAP_ENTRY(animation,                Animation),
     COMPUTED_STYLE_MAP_ENTRY(animation_delay,               AnimationDelay),
     COMPUTED_STYLE_MAP_ENTRY(animation_direction,           AnimationDirection),
@@ -4913,12 +4909,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(direction,                     Direction),
     COMPUTED_STYLE_MAP_ENTRY(display,                       Display),
     COMPUTED_STYLE_MAP_ENTRY(empty_cells,                   EmptyCells),
-#ifdef MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(flex_basis,                    FlexBasis),
     COMPUTED_STYLE_MAP_ENTRY(flex_direction,                FlexDirection),
     COMPUTED_STYLE_MAP_ENTRY(flex_grow,                     FlexGrow),
     COMPUTED_STYLE_MAP_ENTRY(flex_shrink,                   FlexShrink),
-#endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(float,                         Float),
     //// COMPUTED_STYLE_MAP_ENTRY(font,                     Font),
     COMPUTED_STYLE_MAP_ENTRY(font_family,                   FontFamily),
@@ -4938,9 +4932,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(font_weight,                   FontWeight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(height,                 Height),
     COMPUTED_STYLE_MAP_ENTRY(ime_mode,                      IMEMode),
-#ifdef MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(justify_content,               JustifyContent),
-#endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(left,                   Left),
     COMPUTED_STYLE_MAP_ENTRY(letter_spacing,                LetterSpacing),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(line_height,            LineHeight),
@@ -4962,9 +4954,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
     //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),
-#ifdef MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(order,                         Order),
-#endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(outline_color,                 OutlineColor),
     COMPUTED_STYLE_MAP_ENTRY(outline_offset,                OutlineOffset),
     COMPUTED_STYLE_MAP_ENTRY(outline_style,                 OutlineStyle),

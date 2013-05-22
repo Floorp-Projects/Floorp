@@ -625,7 +625,8 @@ EmitLoadSlot(MacroAssembler &masm, JSObject *holder, Shape *shape, Register hold
 
 static void
 GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
-                       PropertyName *name, Register object, Label *stubFailure)
+                       PropertyName *name, Register object, Label *stubFailure,
+                       bool skipExpandoCheck = false)
 {
     MOZ_ASSERT(IsCacheableListBase(obj));
 
@@ -638,6 +639,9 @@ GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
 
     // Check that object is a ListBase.
     masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, ImmWord(GetProxyHandler(obj)), stubFailure);
+
+    if (skipExpandoCheck)
+        return;
 
     // For the remaining code, we need to reserve some registers to load a value.
     // This is ugly, but unvaoidable.
@@ -1016,6 +1020,118 @@ GetPropertyIC::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSOb
 }
 
 bool
+GetPropertyIC::attachListBaseShadowed(JSContext *cx, IonScript *ion, JSObject *obj,
+                                      void *returnAddr)
+{
+    JS_ASSERT(!idempotent());
+    JS_ASSERT(IsCacheableListBase(obj));
+    JS_ASSERT(output().hasValue());
+
+    Label failures;
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    masm.setFramePushed(ion->frameSize());
+
+    // Guard on the shape of the object.
+    attacher.branchNextStubOrLabel(masm, Assembler::NotEqual,
+                                   Address(object(), JSObject::offsetOfShape()),
+                                   ImmGCPtr(obj->lastProperty()),
+                                   &failures);
+
+    // Make sure object is a ListBase proxy
+    GenerateListBaseChecks(cx, masm, obj, name(), object(), &failures,
+                           /*skipExpandoCheck=*/true);
+
+    // saveLive()
+    masm.PushRegsInMask(liveRegs_);
+
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
+
+    // Remaining registers should be free, but we need to use |object| still
+    // so leave it alone.
+    RegisterSet regSet(RegisterSet::All());
+    regSet.take(AnyRegister(object()));
+
+    // Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+    //            MutableHandleValue vp)
+    Register argJSContextReg = regSet.takeGeneral();
+    Register argProxyReg     = regSet.takeGeneral();
+    Register argIdReg        = regSet.takeGeneral();
+    Register argVpReg        = regSet.takeGeneral();
+
+    Register scratch         = regSet.takeGeneral();
+
+    // Push args on stack first so we can take pointers to make handles.
+    masm.Push(UndefinedValue());
+    masm.movePtr(StackPointer, argVpReg);
+
+    RootedId propId(cx, AtomToId(name()));
+    masm.Push(propId, scratch);
+    masm.movePtr(StackPointer, argIdReg);
+
+    // Pushing object and receiver.  Both are same, so Handle to one is equivalent to
+    // handle to other.
+    masm.Push(object());
+    masm.Push(object());
+    masm.movePtr(StackPointer, argProxyReg);
+
+    masm.loadJSContext(argJSContextReg);
+
+    if (!masm.buildOOLFakeExitFrame(returnAddr))
+        return false;
+    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY_GET);
+
+    // Make the call.
+    masm.setupUnalignedABICall(5, scratch);
+    masm.passABIArg(argJSContextReg);
+    masm.passABIArg(argProxyReg);
+    masm.passABIArg(argProxyReg);
+    masm.passABIArg(argIdReg);
+    masm.passABIArg(argVpReg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Proxy::get));
+
+    // Test for failure.
+    Label exception;
+    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+
+    // Load the outparam vp[0] into output register(s).
+    masm.loadValue(
+        Address(StackPointer, IonOOLProxyGetExitFrameLayout::offsetOfResult()),
+        JSReturnOperand);
+
+    Label success;
+    masm.jump(&success);
+
+    // Handle exception case.
+    masm.bind(&exception);
+    masm.handleException();
+
+    // Handle success case.
+    masm.bind(&success);
+    masm.storeCallResultValue(output());
+
+    // The next instruction is removing the footer of the exit frame, so there
+    // is no need for leaveFakeExitFrame.
+
+    // Move the StackPointer back to its original location, unwinding the exit frame.
+    masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
+    JS_ASSERT(masm.framePushed() == initialStack);
+
+    // restoreLive()
+    masm.PopRegsInMask(liveRegs_);
+
+    // Success.
+    attacher.jumpRejoin(masm);
+
+    // Failure.
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "list base shadowed get");
+}
+
+bool
 GetPropertyIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj,
                                 JSObject *holder, HandleShape shape,
                                 const SafepointIndex *safepointIndex, void *returnAddr)
@@ -1264,12 +1380,15 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
     RootedObject checkObj(cx, obj);
     if (IsCacheableListBase(obj)) {
         RootedId id(cx, NameToId(name));
-        ListBaseShadowsResult shadows =
-            GetListBaseShadowsCheck()(cx, obj, id);
+        ListBaseShadowsResult shadows = GetListBaseShadowsCheck()(cx, obj, id);
         if (shadows == ShadowCheckFailed)
             return false;
-        if (shadows == Shadows)
-            return true;
+        if (shadows == Shadows) {
+            if (cache.idempotent() || !cache.output().hasValue())
+                return true;
+            *isCacheable = true;
+            return cache.attachListBaseShadowed(cx, ion, obj, returnAddr);
+        }
         if (shadows == DoesntShadowUnique)
             // We reset the cache to clear out an existing IC for this object
             // (if there is one). The generation is a constant in the generated

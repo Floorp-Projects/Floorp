@@ -211,6 +211,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIteratorEnd(LIteratorEnd *lir);
     bool visitArgumentsLength(LArgumentsLength *lir);
     bool visitGetArgument(LGetArgument *lir);
+    bool emitRest(LInstruction *lir, Register array, Register numActuals,
+                  Register temp0, Register temp1, unsigned numFormals,
+                  JSObject *templateObject, const VMFunction &f);
+    bool visitRest(LRest *lir);
+    bool visitParRest(LParRest *lir);
     bool visitCallSetProperty(LCallSetProperty *ins);
     bool visitCallDeleteProperty(LCallDeleteProperty *lir);
     bool visitBitNotV(LBitNotV *lir);

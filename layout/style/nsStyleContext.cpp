@@ -362,7 +362,6 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
   //   # The computed 'display' of a flex item is determined
   //   # by applying the table in CSS 2.1 Chapter 9.7.
   // ...which converts inline-level elements to their block-level equivalents.
-#ifdef MOZ_FLEXBOX
   if (!aSkipFlexItemStyleFixup && mParent) {
     const nsStyleDisplay* parentDisp = mParent->StyleDisplay();
     if ((parentDisp->mDisplay == NS_STYLE_DISPLAY_FLEX ||
@@ -401,7 +400,6 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
       }
     }
   }
-#endif // MOZ_FLEXBOX
 
   // Computer User Interface style, to trigger loads of cursors
   StyleUserInterface();
