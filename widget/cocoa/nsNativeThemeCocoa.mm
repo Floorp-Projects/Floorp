@@ -1782,7 +1782,7 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   do {
     if (scrollbarFrame->GetType() == nsGkAtoms::scrollbarFrame) break;
   } while ((scrollbarFrame = scrollbarFrame->GetParent()));
-  
+
   // We return null if we can't find a parent scrollbar frame
   return scrollbarFrame;
 }
@@ -1790,16 +1790,18 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
 static bool
 ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* aWindow)
 {
-  if (![aWindow isKindOfClass:[ToolbarWindow class]] ||
-      [(ToolbarWindow*)aWindow drawsContentsIntoWindowFrame])
+  if (![aWindow isKindOfClass:[ToolbarWindow class]])
     return false;
 
-  float unifiedToolbarHeight = [(ToolbarWindow*)aWindow unifiedToolbarHeight];
-  CGAffineTransform ctm = CGContextGetUserSpaceToDeviceSpaceTransform(cgContext);
-  CGRect deviceRect = CGRectApplyAffineTransform(inBoxRect, ctm);
+  ToolbarWindow* win = (ToolbarWindow*)aWindow;
+  float unifiedToolbarHeight = [win unifiedToolbarHeight];
+  float titlebarHeight = [win titlebarHeight];
+  bool drawsContentsIntoWindowFrame = [win drawsContentsIntoWindowFrame];
+  float underTitlebarPos = drawsContentsIntoWindowFrame ? titlebarHeight : 0;
+
   return inBoxRect.origin.x == 0 &&
-         deviceRect.size.width >= [aWindow frame].size.width &&
-         inBoxRect.origin.y <= 0.0 &&
+         inBoxRect.size.width >= [win frame].size.width &&
+         inBoxRect.origin.y <= underTitlebarPos &&
          floor(inBoxRect.origin.y + inBoxRect.size.height) <= unifiedToolbarHeight;
 }
 
@@ -1809,15 +1811,14 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  float titlebarHeight = [(ToolbarWindow*)aWindow titlebarHeight];
-  float unifiedHeight = titlebarHeight + inBoxRect.size.height;
+  float unifiedHeight = [(ToolbarWindow*)aWindow unifiedToolbarHeight];
 
   BOOL isMain = [aWindow isMainWindow];
 
   CGContextSaveGState(cgContext);
   CGContextClipToRect(cgContext, inBoxRect);
 
-  CGRect drawRect = CGRectOffset(inBoxRect, 0, -titlebarHeight);
+  CGRect drawRect = CGRectOffset(inBoxRect, 0, inBoxRect.size.height - unifiedHeight);
   if (drawRect.size.width * drawRect.size.height <= CUIDRAW_MAX_AREA) {
     CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
             (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
@@ -1869,6 +1870,34 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
   }
 
   CGContextRestoreGState(cgContext);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
+                                       float aUnifiedHeight, BOOL aIsMain)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (aTitlebarRect.size.width * aTitlebarRect.size.height > CUIDRAW_MAX_AREA) {
+    return;
+  }
+
+  CGContextSaveGState(aContext);
+
+  CUIDraw([NSWindow coreUIRenderer], aTitlebarRect, aContext,
+          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+            @"kCUIWidgetWindowFrame", @"widget",
+            @"regularwin", @"windowtype",
+            (aIsMain ? @"normal" : @"inactive"), @"state",
+            [NSNumber numberWithInt:aUnifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+            [NSNumber numberWithBool:NO], @"kCUIWindowFrameDrawTitleSeparatorKey",
+            [NSNumber numberWithBool:YES], @"is.flipped",
+            nil],
+          nil);
+
+  CGContextRestoreGState(aContext);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2132,6 +2161,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       drawRect.origin.y += drawRect.size.height;
       drawRect.size.height = 1.0f;
       DrawNativeGreyColorInRect(cgContext, toolbarBottomBorderGrey, drawRect, isMain);
+    }
+      break;
+
+    case NS_THEME_WINDOW_TITLEBAR: {
+      NSWindow* win = NativeWindowForFrame(aFrame);
+      BOOL isMain = [win isMainWindow];
+      float unifiedToolbarHeight = [(ToolbarWindow*)win unifiedToolbarHeight];
+      DrawNativeTitlebar(cgContext, macRect, unifiedToolbarHeight, isMain);
     }
       break;
 
@@ -2961,6 +2998,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
+    case NS_THEME_WINDOW_TITLEBAR:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
