@@ -23,6 +23,7 @@
 #include "nsJSEnvironment.h"
 #include "nsThreadUtils.h"
 #include "nsDOMJSUtils.h"
+#include "nsContentUtils.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
@@ -1986,17 +1987,26 @@ nsXPConnect::UnregisterGCCallback(JSGCCallback func)
 void
 nsXPConnect::CheckForDebugMode(JSRuntime *rt)
 {
-    JSContext *cx = NULL;
-
     if (gDebugMode == gDesiredDebugMode) {
         return;
     }
 
     // This can happen if a Worker is running, but we don't have the ability to
     // debug workers right now, so just return.
-    if (!NS_IsMainThread()) {
-        return;
-    }
+    if (!NS_IsMainThread())
+        MOZ_CRASH();
+
+    // We really want to use an AutoSafeJSContext here. Unfortunately, that
+    // pushes, and this function is called during the pushing procedure, so
+    // doing that would result in infinite recursion.
+    //
+    // The only thing we need this cx for is the call to
+    // JS_SetDebugModeForAllCompartments, and the worst _that_ function seems
+    // to do is to report an error in one case. So it's probably ok to just use
+    // the SafeJSContext without pushing for now, especially since both JSD and
+    // cx pushing are not long for this earth.
+    JSContext *unpushedCx = XPCJSRuntime::Get()->GetJSContextStack()
+                                               ->GetSafeJSContext();
 
     JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
 
@@ -2007,20 +2017,8 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt)
         goto fail;
     }
 
-    if (!(cx = JS_NewContext(rt, 256))) {
+    if (!JS_SetDebugModeForAllCompartments(unpushedCx, gDesiredDebugMode))
         goto fail;
-    }
-
-    {
-        struct AutoDestroyContext {
-            JSContext *cx;
-            AutoDestroyContext(JSContext *cx) : cx(cx) {}
-            ~AutoDestroyContext() { JS_DestroyContext(cx); }
-        } adc(cx);
-
-        if (!JS_SetDebugModeForAllCompartments(cx, gDesiredDebugMode))
-            goto fail;
-    }
 
     if (gDesiredDebugMode) {
         rv = jsds->ActivateDebugger(rt);
