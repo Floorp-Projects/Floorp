@@ -61,7 +61,6 @@ public:
                   nsCSSProperty aProperty,
                   nsStyleContext* aStyleContext,
                   nsStyleAnimation::Value& aComputedValue);
-  static bool ThrottlingEnabled();
 protected:
   friend struct CommonElementAnimationData; // for ElementDataRemoved
 
