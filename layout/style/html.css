@@ -654,6 +654,10 @@ frameset {
   border: none ! important;
 }
 
+link { 
+  display: none;
+}
+
 frame {
   border-radius: 0 ! important;
 }
