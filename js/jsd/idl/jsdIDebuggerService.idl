@@ -380,7 +380,7 @@ interface jsdIDebuggerService : nsISupports
  * ignore. The debugger service itself will not modify properties of these
  * objects.
  */
-[scriptable, uuid(0c9189d9-4287-47a4-bca6-6ed65aaf737f)]
+[scriptable, uuid(9ae587cd-b78c-47f0-a612-4b3a211a6a71)]
 interface jsdIFilter : nsISupports
 {
     /**
@@ -403,17 +403,7 @@ interface jsdIFilter : nsISupports
      * FLAG_* values from above, OR'd together.
      */
     attribute unsigned long flags;
-    
-    /**
-     * An nsISupports version of the global object to be filtered. A null glob
-     * matches all hooks. This attribute must be QI'able to the
-     * (non-scriptable) nsIScriptGlobalObject interface.
-     *
-     * The jsdIService caches this value internally, so if it changes you must
-     * swap the filter with itself using jsdIService::swapFilters.
-     */
-    attribute nsISupports globalObject;
-    
+
     /**
      * String representing the url pattern to be filtered. Supports limited
      * glob matching, at the beginning and end of the pattern only. For example,
