@@ -1692,86 +1692,78 @@ class StringRegExpGuard
     RegExpShared &regExp() { return *re_; }
 };
 
-typedef bool (*DoMatchCallback)(JSContext *cx, RegExpStatics *res, size_t count, void *data);
-
-/*
- * BitOR-ing these flags allows the DoMatch caller to control when how the
- * RegExp engine is called and when callbacks are fired.
- */
-enum MatchControlFlags {
-   TEST_GLOBAL_BIT         = 0x1, /* use RegExp.test for global regexps */
-   TEST_SINGLE_BIT         = 0x2, /* use RegExp.test for non-global regexps */
-   CALLBACK_ON_SINGLE_BIT  = 0x4, /* fire callback on non-global match */
-
-   MATCH_ARGS    = TEST_GLOBAL_BIT,
-   MATCHALL_ARGS = CALLBACK_ON_SINGLE_BIT,
-   REPLACE_ARGS  = TEST_GLOBAL_BIT | TEST_SINGLE_BIT | CALLBACK_ON_SINGLE_BIT
-};
-
-/* Factor out looping and matching logic. */
 static bool
-DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
-        DoMatchCallback callback, void *data, MatchControlFlags flags, MutableHandleValue rval)
+DoMatchLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearStr,
+             RegExpShared &re, MutableHandleValue rval)
 {
-    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
-    if (!linearStr)
+    size_t charsLen = linearStr->length();
+    size_t i = 0;
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    RegExpRunStatus status = re.execute(cx, linearStr->getChars(cx), charsLen, &i, matches);
+    if (status == RegExpRunStatus_Error)
         return false;
 
-    size_t charsLen = linearStr->length();
+    /* Emulate ExecuteRegExpLegacy() behavior. */
+    if (status == RegExpRunStatus_Success_NotFound) {
+        rval.setNull();
+        return true;
+    }
 
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    res->updateFromMatchPairs(cx, linearStr, matches);
+    return CreateRegExpMatchResult(cx, linearStr, matches, rval);
+}
 
-    if (re.global()) {
-        bool isTest = bool(flags & TEST_GLOBAL_BIT);
-        for (size_t count = 0, i = 0; i <= charsLen; ++count) {
-            if (!JS_CHECK_OPERATION_LIMIT(cx))
-                return false;
+static bool
+BuildGlobalMatchArray(JSContext *cx, JSString *matchesInput, const MatchPair &pair, size_t count,
+                      MutableHandleObject array)
+{
+    JS_ASSERT(count <= JSID_INT_MAX);  /* by max string length */
+    JS_ASSERT(pair.check());
 
-            RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
-            if (status == RegExpRunStatus_Error)
-                return false;
+    if (!array)
+        array.set(NewDenseEmptyArray(cx));
+    if (!array)
+        return false;
 
-            if (status == RegExpRunStatus_Success_NotFound) {
-                rval.setNull();
-                break;
-            }
+    JSString *str = js_NewDependentString(cx, matchesInput, pair.start, pair.length());
+    if (!str)
+        return false;
 
-            res->updateFromMatchPairs(cx, linearStr, matches);
-            if (!isTest && !CreateRegExpMatchResult(cx, linearStr, matches, rval))
-                return false;
+    RootedValue v(cx);
+    v.setString(str);
+    return JSObject::defineElement(cx, array, count, v);
+}
 
-            if (!callback(cx, res, count, data))
-                return false;
-            if (!res->matched())
-                ++i;
-        }
-    } else {
-        bool isTest = bool(flags & TEST_SINGLE_BIT);
-        bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
-        size_t i = 0;
+static bool
+DoMatchGlobal(JSContext *cx, RegExpStatics *res, JSLinearString *linearPtr, RegExpShared &re,
+              MutableHandleObject array)
+{
+    size_t charsLen = linearPtr->length();
 
-        RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
+    size_t prevMatch = 0;
+    bool isMatchFound = false;
+    for (size_t count = 0, i = 0, curMatch = 0; i <= charsLen; ++count) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+
+        MatchPair match;
+        RegExpRunStatus status = re.executeMatchOnly(cx, linearPtr->chars(), charsLen, &i, match);
         if (status == RegExpRunStatus_Error)
             return false;
 
-        /* Emulate ExecuteRegExpLegacy() behavior. */
-        if (status == RegExpRunStatus_Success_NotFound) {
-            rval.setNull();
-            return true;
-        }
+        if (status == RegExpRunStatus_Success_NotFound)
+            break;
 
-        res->updateFromMatchPairs(cx, linearStr, matches);
-
-        if (isTest) {
-            rval.setBoolean(true);
-        } else {
-            if (!CreateRegExpMatchResult(cx, linearStr, matches, rval))
-                return false;
-        }
-
-        if (callbackOnSingle && !callback(cx, res, 0, data))
+        isMatchFound = true;
+        prevMatch = curMatch;
+        curMatch = i;
+        if (!BuildGlobalMatchArray(cx, linearPtr, match, count, array))
             return false;
+        if (match.isEmpty())
+            ++i;
     }
+    if (isMatchFound)
+        res->updateLazily(cx, linearPtr, &re, prevMatch);
     return true;
 }
 
@@ -1803,29 +1795,6 @@ BuildFlatMatchArray(JSContext *cx, HandleString textstr, const FlatMatch &fm, Ca
     return true;
 }
 
-typedef JSObject **MatchArgType;
-
-/*
- * DoMatch will only callback on global matches, hence this function builds
- * only the "array of matches" returned by match on global regexps.
- */
-static bool
-MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
-{
-    JS_ASSERT(count <= JSID_INT_MAX);  /* by max string length */
-
-    JSObject *&arrayobj = *static_cast<MatchArgType>(p);
-    if (!arrayobj) {
-        arrayobj = NewDenseEmptyArray(cx);
-        if (!arrayobj)
-            return false;
-    }
-
-    RootedObject obj(cx, arrayobj);
-    RootedValue v(cx);
-    return res->createLastMatch(cx, &v) && JSObject::defineElement(cx, obj, count, v);
-}
-
 JSBool
 js::str_match(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1848,17 +1817,22 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
-    RootedObject array(cx);
-    MatchArgType arg = array.address();
     RegExpStatics *res = cx->regExpStatics();
-    RootedValue rval(cx);
-    if (!DoMatch(cx, res, str, g.regExp(), MatchCallback, arg, MATCH_ARGS, &rval))
+    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    if (!linearStr)
         return false;
 
-    if (g.regExp().global())
+    if (g.regExp().global()) {
+        RootedObject array(cx);
+        if (!DoMatchGlobal(cx, res, linearStr, g.regExp(), &array))
+            return false;
         args.rval().setObjectOrNull(array);
-    else
+    } else {
+        RootedValue rval(cx);
+        if (!DoMatchLocal(cx, res, linearStr, g.regExp(), &rval))
+            return false;
         args.rval().set(rval);
+    }
     return true;
 }
 
@@ -1931,6 +1905,55 @@ struct ReplaceData
     FastInvokeGuard    fig;            /* used for lambda calls, also holds arguments */
     StringBuffer       sb;             /* buffer built during DoMatch */
 };
+
+static bool
+ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata);
+
+static bool
+DoMatchForReplaceLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearStr,
+                       RegExpShared &re, ReplaceData &rdata)
+{
+    size_t charsLen = linearStr->length();
+    size_t i = 0;
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
+    if (status == RegExpRunStatus_Error)
+        return false;
+
+    if (status == RegExpRunStatus_Success_NotFound)
+        return true;
+
+    res->updateFromMatchPairs(cx, linearStr, matches);
+    return ReplaceRegExp(cx, res, rdata);
+}
+
+static bool
+DoMatchForReplaceGlobal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearStr,
+                        RegExpShared &re, ReplaceData &rdata)
+{
+    size_t charsLen = linearStr->length();
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    for (size_t count = 0, i = 0; i <= charsLen; ++count) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+
+        RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
+        if (status == RegExpRunStatus_Error)
+            return false;
+
+        if (status == RegExpRunStatus_Success_NotFound)
+            break;
+
+        res->updateFromMatchPairs(cx, linearStr, matches);
+
+        if (!ReplaceRegExp(cx, res, rdata))
+            return false;
+        if (!res->matched())
+            ++i;
+    }
+
+    return true;
+}
 
 static bool
 InterpretDollar(RegExpStatics *res, const jschar *dp, const jschar *ep,
@@ -2152,9 +2175,8 @@ DoReplace(RegExpStatics *res, ReplaceData &rdata)
 }
 
 static bool
-ReplaceRegExpCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
+ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata)
 {
-    ReplaceData &rdata = *static_cast<ReplaceData *>(p);
 
     const MatchPair &match = res->getMatches()[0];
     JS_ASSERT(!match.isUndefined());
@@ -2524,9 +2546,17 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
         return str_replace_regexp_remove(cx, args, rdata.str, re);
     }
 
-    RootedValue tmp(cx);
-    if (!DoMatch(cx, res, rdata.str, re, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
+    Rooted<JSLinearString*> linearStr(cx, rdata.str->ensureLinear(cx));
+    if (!linearStr)
         return false;
+
+    if (re.global()) {
+        if (!DoMatchForReplaceGlobal(cx, res, linearStr, re, rdata))
+            return false;
+    } else {
+        if (!DoMatchForReplaceLocal(cx, res, linearStr, re, rdata))
+            return false;
+    }
 
     if (!rdata.calledBack) {
         /* Didn't match, so the string is unmodified. */
