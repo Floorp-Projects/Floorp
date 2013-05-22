@@ -139,7 +139,7 @@ static SECStatus
 ocsp_CertRevokedAfter(ocspRevokedInfo *revokedInfo, PRTime time);
 
 static CERTOCSPCertID *
-cert_DupOCSPCertID(CERTOCSPCertID *src);
+cert_DupOCSPCertID(const CERTOCSPCertID *src);
 
 #ifndef DEBUG
 #define OCSP_TRACE(msg)
@@ -782,7 +782,7 @@ ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache,
     OCSP_TRACE(("OCSP ocsp_CreateOrUpdateCacheEntry\n"));
   
     if (certIDWasConsumed)
-    *certIDWasConsumed = PR_FALSE;
+        *certIDWasConsumed = PR_FALSE;
   
     PR_EnterMonitor(OCSP_Global.monitor);
     PORT_Assert(OCSP_Global.maxCacheEntries >= 0);
@@ -822,7 +822,8 @@ ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache,
                 return rv;
             }
         } else {
-            OCSP_TRACE(("Not caching response because the response is not newer than the cache"));
+            OCSP_TRACE(("Not caching response because the response is not "
+                        "newer than the cache"));
         }
     } else {
         cacheItem->missingResponseError = PORT_GetError();
@@ -1778,7 +1779,7 @@ CERT_CreateOCSPCertID(CERTCertificate *cert, PRTime time)
 }
 
 static CERTOCSPCertID *
-cert_DupOCSPCertID(CERTOCSPCertID *src)
+cert_DupOCSPCertID(const CERTOCSPCertID *src)
 {
     CERTOCSPCertID *dest;
     PLArenaPool *arena = NULL;
@@ -1793,14 +1794,14 @@ cert_DupOCSPCertID(CERTOCSPCertID *src)
         goto loser;
 
     dest = PORT_ArenaZNew(arena, CERTOCSPCertID);
-      if (!dest)
+    if (!dest)
         goto loser;
 
 #define DUPHELP(element) \
-    if (src->element.data) {  \
-        if (SECITEM_CopyItem(arena, &dest->element, &src->element) \
-            != SECSuccess) \
-            goto loser;     \
+    if (src->element.data && \
+        SECITEM_CopyItem(arena, &dest->element, &src->element) \
+        != SECSuccess) { \
+        goto loser; \
     }
 
     DUPHELP(hashAlgorithm.algorithm)
