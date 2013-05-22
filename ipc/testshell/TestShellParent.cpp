@@ -92,7 +92,7 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
 
   JSAutoRequest ar(mCx);
 
-  JS::Rooted<JSObject*> global(mCx, JS_GetGlobalObject(mCx));
+  JS::Rooted<JSObject*> global(mCx, JS_GetGlobalForObject(mCx, mCallback.ToJSObject()));
   NS_ENSURE_TRUE(global, JS_FALSE);
 
   JSAutoCompartment ac(mCx, global);
