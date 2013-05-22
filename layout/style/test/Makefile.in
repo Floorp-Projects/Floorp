@@ -200,7 +200,6 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		viewport_units_iframe.html \
 		$(NULL)
 
-ifdef MOZ_FLEXBOX
 MOCHITEST_FILES +=	\
 		file_flexbox_align_self_auto.html \
 		test_flexbox_align_self_auto.html \
@@ -218,7 +217,6 @@ MOCHITEST_FILES +=	\
 		file_flexbox_order_table.html \
 		test_flexbox_order_table.html \
 		$(NULL)
-endif
 
 _VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \
