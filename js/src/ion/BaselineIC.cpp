@@ -7995,6 +7995,46 @@ ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+//
+// Rest_Fallback
+//
+
+static bool
+DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, ICRest_Fallback *stub,
+                      HandleTypeObject type, MutableHandleValue res)
+{
+    FallbackICSpew(cx, stub, "Rest");
+
+    unsigned numFormals = frame->numFormalArgs() - 1;
+    unsigned numActuals = frame->numActualArgs();
+    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
+
+    JSObject *obj = NewDenseCopiedArray(cx, numRest, frame->actuals() + numFormals, NULL);
+    if (!obj)
+        return false;
+    obj->setType(type);
+
+    res.setObject(*obj);
+    return true;
+}
+
+typedef bool(*DoCreateRestParameterFn)(JSContext *cx, BaselineFrame *, ICRest_Fallback *,
+                                       HandleTypeObject, MutableHandleValue);
+static const VMFunction DoCreateRestParameterInfo =
+    FunctionInfo<DoCreateRestParameterFn>(DoCreateRestParameter);
+
+bool
+ICRest_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(R0.scratchReg()); // type
+    masm.push(BaselineStubReg); // stub
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg()); // frame pointer
+
+    return tailCallVM(DoCreateRestParameterInfo, masm);
+}
+
 ICProfiler_PushFunction::ICProfiler_PushFunction(IonCode *stubCode, const char *str,
                                                  HandleScript script)
   : ICStub(ICStub::Profiler_PushFunction, stubCode),
