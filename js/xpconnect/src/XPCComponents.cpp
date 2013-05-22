@@ -596,6 +596,10 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
+
+    if (!JSID_IS_STRING(id))
+        return NS_OK;
+
     RootedString str(cx, JSID_TO_STRING(id));
     if (38 != JS_GetStringLength(str))
         return NS_OK;
