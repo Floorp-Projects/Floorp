@@ -179,15 +179,15 @@ typedef struct _nsCocoaWindowList {
 @interface ToolbarWindow : BaseWindow
 {
   TitlebarAndBackgroundColor *mColor;
-  CGFloat mUnifiedToolbarHeight;
+  float mUnifiedToolbarHeight;
   NSColor *mBackgroundColor;
   NSView *mTitlebarView; // strong
 }
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
-- (void)setUnifiedToolbarHeight:(CGFloat)aHeight;
-- (CGFloat)unifiedToolbarHeight;
-- (CGFloat)titlebarHeight;
+- (void)setUnifiedToolbarHeight:(float)aHeight;
+- (float)unifiedToolbarHeight;
+- (float)titlebarHeight;
 - (NSRect)titlebarRect;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect;
