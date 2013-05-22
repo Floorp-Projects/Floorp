@@ -1,0 +1,4 @@
+        <provider android:name="org.mozilla.gecko.background.healthreport.HealthReportProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.health"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.HEALTH_PROVIDER">
+        </provider>
