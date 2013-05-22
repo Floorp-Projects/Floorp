@@ -146,6 +146,10 @@ class TestRecursiveMakeBackend(BackendTester):
                 'CSRCS += bar.c',
                 'CSRCS += foo.c',
             ],
+            'SIMPLE_PROGRAMS': [
+                'SIMPLE_PROGRAMS += bar.x',
+                'SIMPLE_PROGRAMS += foo.x',
+            ],
             'XPIDL_FLAGS': [
                 'XPIDL_FLAGS += -Idir1',
                 'XPIDL_FLAGS += -Idir2',

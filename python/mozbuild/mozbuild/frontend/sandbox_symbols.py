@@ -95,6 +95,12 @@ VARIABLES = {
         likely go away.
         """),
 
+    'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
+        """Generate a list of binaries from source.
+
+        A list of sources, one per program, to compile & link with libs into standalone programs.
+        """),
+
     'TOOL_DIRS': (list, list, [],
         """Like DIRS but for tools.
 
