@@ -48,6 +48,8 @@ WMFReader::WMFReader(AbstractMediaDecoder* aDecoder)
     mVideoWidth(0),
     mVideoHeight(0),
     mVideoStride(0),
+    mAudioFrameSum(0),
+    mAudioFrameOffset(0),
     mHasAudio(false),
     mHasVideo(false),
     mCanSeek(false),
@@ -605,6 +607,31 @@ GetSampleDuration(IMFSample* aSample)
   return HNsToUsecs(duration);
 }
 
+HRESULT
+HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames)
+{
+  MOZ_ASSERT(aOutFrames);
+  const int64_t HNS_PER_S = USECS_PER_S * 10;
+  CheckedInt<int64_t> i = aHNs;
+  i *= aRate;
+  i /= HNS_PER_S;
+  NS_ENSURE_TRUE(i.isValid(), E_FAIL);
+  *aOutFrames = i.value();
+  return S_OK;
+}
+
+HRESULT
+FramesToUsecs(int64_t aSamples, uint32_t aRate, int64_t* aOutUsecs)
+{
+  MOZ_ASSERT(aOutUsecs);
+  CheckedInt<int64_t> i = aSamples;
+  i *= USECS_PER_S;
+  i /= aRate;
+  NS_ENSURE_TRUE(i.isValid(), E_FAIL);
+  *aOutUsecs = i.value();
+  return S_OK;
+}
+
 bool
 WMFReader::DecodeAudioData()
 {
@@ -660,11 +687,32 @@ WMFReader::DecodeAudioData()
   memcpy(pcmSamples.get(), data, currentLength);
   buffer->Unlock();
 
-  int64_t offset = mDecoder->GetResource()->Tell();
-  int64_t timestamp = HNsToUsecs(timestampHns);
-  int64_t duration = GetSampleDuration(sample);
+  // We calculate the timestamp and the duration based on the number of audio
+  // frames we've already played. We don't trust the timestamp stored on the
+  // IMFSample, as sometimes it's wrong, possibly due to buggy encoders?
 
-  mAudioQueue.Push(new AudioData(offset,
+  // If this sample block comes after a discontinuity (i.e. a gap or seek)
+  // reset the frame counters, and capture the timestamp. Future timestamps
+  // will be offset from this block's timestamp.
+  UINT32 discontinuity = false;
+  sample->GetUINT32(MFSampleExtension_Discontinuity, &discontinuity);
+  if (discontinuity) {
+    mAudioFrameSum = 0;
+    hr = HNsToFrames(timestampHns, mAudioRate, &mAudioFrameOffset);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  }
+
+  int64_t timestamp;
+  hr = FramesToUsecs(mAudioFrameOffset + mAudioFrameSum, mAudioRate, &timestamp);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  mAudioFrameSum += numFrames;
+
+  int64_t duration;
+  hr = FramesToUsecs(numFrames, mAudioRate, &duration);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  mAudioQueue.Push(new AudioData(mDecoder->GetResource()->Tell(),
                                  timestamp,
                                  duration,
                                  numFrames,
