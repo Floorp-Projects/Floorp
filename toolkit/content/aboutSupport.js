@@ -112,6 +112,8 @@ let snapshotFormatters = {
       data.numAcceleratedWindows + "/" + data.numTotalWindows;
     if (data.windowLayerManagerType)
       out.acceleratedWindows += " " + data.windowLayerManagerType;
+    if (data.windowLayerManagerRemote)
+      out.acceleratedWindows += " (OMTC)";
     if (data.numAcceleratedWindowsMessage)
       out.acceleratedWindows +=
         " " + localizedMsg(data.numAcceleratedWindowsMessage);
