@@ -91,13 +91,6 @@ private:
   uint32_t mVideoHeight;
   uint32_t mVideoStride;
 
-  // The offset, in audio frames, at which playback started since the
-  // last discontinuity.
-  int64_t mAudioFrameOffset;
-  // The number of audio frames that we've played since the last
-  // discontinuity.
-  int64_t mAudioFrameSum;
-
   bool mHasAudio;
   bool mHasVideo;
   bool mCanSeek;
