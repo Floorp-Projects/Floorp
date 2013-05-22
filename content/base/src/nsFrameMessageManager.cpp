@@ -11,6 +11,7 @@
 #include "ContentChild.h"
 #include "ContentParent.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsError.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"

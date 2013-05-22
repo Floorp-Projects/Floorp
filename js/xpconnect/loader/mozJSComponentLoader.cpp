@@ -58,6 +58,7 @@
 #include "xpcpublic.h"
 #include "nsIResProtocolHandler.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "WrapperFactory.h"
 
 #include "mozilla/scache/StartupCache.h"

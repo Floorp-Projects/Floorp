@@ -23,6 +23,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "nsContentUtils.h"
 #include "nsTArrayHelpers.h"
+#include "nsCxPusher.h"
 
 namespace mozilla {
 namespace dom {

@@ -39,6 +39,7 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>

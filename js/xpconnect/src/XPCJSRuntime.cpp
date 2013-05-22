@@ -23,6 +23,7 @@
 
 #include "nsLayoutStatics.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectorUtils.h"

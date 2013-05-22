@@ -20,6 +20,7 @@
 #include "TimeZoneSettingObserver.h"
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 #undef LOG
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Time Zone Setting" , ## args)

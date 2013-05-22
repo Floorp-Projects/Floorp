@@ -11,6 +11,7 @@
 #include "nsEventDispatcher.h"
 #include "nsDOMEvent.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsThreadUtils.h"
 #include "DOMCursor.h"
 

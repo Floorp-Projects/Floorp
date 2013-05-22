@@ -15,6 +15,7 @@
 #include "nsIURI.h"
 #include "nsXBLSerialize.h"
 #include "nsXBLPrototypeBinding.h"
+#include "nsCxPusher.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "xpcpublic.h"
 #include "WrapperFactory.h"

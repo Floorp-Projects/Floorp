@@ -35,6 +35,7 @@
 #include "nsIScriptRuntime.h"
 #include "nsCOMArray.h"
 #include "nsDOMClassInfo.h"
+#include "nsCxPusher.h"
 
 #include "nsGUIEvent.h"
 #include "nsAsyncDOMEvent.h"

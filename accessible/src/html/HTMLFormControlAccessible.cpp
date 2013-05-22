@@ -14,6 +14,7 @@
 #include "States.h"
 
 #include "nsContentList.h"
+#include "nsCxPusher.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMNSEditableElement.h"

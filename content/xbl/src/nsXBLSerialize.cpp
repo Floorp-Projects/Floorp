@@ -6,6 +6,7 @@
 #include "nsXBLSerialize.h"
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "jsdbgapi.h"
 
 using namespace mozilla;

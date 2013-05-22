@@ -10,6 +10,7 @@
 #include "nsXBLProtoImplProperty.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsReadableUtils.h"
 #include "nsIScriptContext.h"
 #include "nsJSUtils.h"

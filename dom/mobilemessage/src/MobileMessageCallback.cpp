@@ -5,6 +5,7 @@
 
 #include "MobileMessageCallback.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIDOMMozMmsMessage.h"
 #include "nsIScriptGlobalObject.h"
