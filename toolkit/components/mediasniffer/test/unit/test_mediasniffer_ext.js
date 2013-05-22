@@ -18,15 +18,23 @@ var httpserver = new HttpServer();
 var testRan = 0;
 
 // The tests files we want to test, and the type we should have after sniffing.
-// Those file are real webm and mkv files truncated to 512 bytes.
 const tests = [
+  // Real webm and mkv files truncated to 512 bytes.
   { path: "data/file.webm", expected: "video/webm" },
   { path: "data/file.mkv", expected: "application/octet-stream" },
+  // MP3 files with and without id3 headers truncated to 512 bytes.
+  // NB these have 208/209 byte frames, but mp3 can require up to
+  // 1445 bytes to detect with our method.
+  { path: "data/id3tags.mp3", expected: "audio/mpeg" },
+  { path: "data/notags.mp3", expected: "audio/mpeg" },
+  // Padding bit flipped in the first header: sniffing should fail.
+  { path: "data/notags-bad.mp3", expected: "application/octet-stream" },
 ];
 
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
   onStartRequest: function(request, context) {
+    do_print("Sniffing " + tests[testRan].path);
     do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
   },
 
