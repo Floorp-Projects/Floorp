@@ -2450,6 +2450,8 @@ function Tab(aURL, aParams) {
   this.originalURI = null;
   this.savedArticle = null;
   this.hasTouchListener = false;
+  this.browserWidth = 0;
+  this.browserHeight = 0;
 
   this.create(aURL, aParams);
 }
