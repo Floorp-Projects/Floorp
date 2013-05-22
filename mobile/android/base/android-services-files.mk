@@ -38,6 +38,7 @@ SYNC_JAVA_FILES := \
   background/db/CursorDumper.java \
   background/db/Tab.java \
   background/healthreport/Environment.java \
+  background/healthreport/EnvironmentBuilder.java \
   background/healthreport/HealthReportDatabases.java \
   background/healthreport/HealthReportDatabaseStorage.java \
   background/healthreport/HealthReportGenerator.java \
