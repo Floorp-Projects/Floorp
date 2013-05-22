@@ -388,7 +388,9 @@ class ICEntry
     _(InstanceOf_Fallback)      \
                                 \
     _(TypeOf_Fallback)          \
-    _(TypeOf_Typed)
+    _(TypeOf_Typed)             \
+                                \
+    _(Rest_Fallback)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -5476,6 +5478,38 @@ class ICTypeOf_Typed : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICTypeOf_Typed::New(space, getStubCode(), type_);
+        }
+    };
+};
+
+// Rest
+//      JSOP_REST
+class ICRest_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICRest_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::Rest_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICRest_Fallback *New(ICStubSpace *space, IonCode *code) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICRest_Fallback>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::Rest_Fallback)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICRest_Fallback::New(space, getStubCode());
         }
     };
 };
