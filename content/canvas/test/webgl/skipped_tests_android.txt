@@ -1,4 +1,5 @@
 conformance/glsl/functions/glsl-function-abs.html
+conformance/glsl/functions/glsl-function-atan-xy.html
 conformance/glsl/functions/glsl-function-ceil.html
 conformance/glsl/functions/glsl-function-clamp-float.html
 conformance/glsl/functions/glsl-function-clamp-gentype.html
@@ -28,5 +29,8 @@ conformance/glsl/functions/glsl-function-step-gentype.html
 conformance/more/conformance/quickCheckAPI-B2.html
 conformance/programs/gl-getshadersource.html
 conformance/reading/read-pixels-test.html
+conformance/renderbuffers/framebuffer-object-attachment.html
 conformance/textures/gl-teximage.html
 conformance/textures/tex-image-and-sub-image-2d-with-image.html
+conformance/textures/tex-image-with-format-and-type.html
+conformance/textures/texture-size.html
