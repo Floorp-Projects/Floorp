@@ -14,6 +14,7 @@ MOCHITEST_FILES = \
   test_add_put.js \
   test_add_twice_failure.js \
   test_advance.js \
+  test_autoIncrement.js \
   test_autoIncrement_indexes.js \
   test_clear.js \
   test_complex_keyPaths.js \
@@ -25,6 +26,7 @@ MOCHITEST_FILES = \
   test_cursor_update_updates_indexes.js \
   test_cursors.js \
   test_deleteDatabase.js \
+  test_deleteDatabase_interactions.js \
   test_event_source.js \
   test_getAll.js \
   test_global_data.js \
@@ -54,6 +56,7 @@ MOCHITEST_FILES = \
   test_overlapping_transactions.js \
   test_put_get_values.js \
   test_put_get_values_autoIncrement.js \
+  test_readonly_transactions.js \
   test_remove_index.js \
   test_remove_objectStore.js \
   test_request_readyState.js \
@@ -68,6 +71,8 @@ MOCHITEST_FILES = \
   test_transaction_lifetimes.js \
   test_transaction_lifetimes_nested.js \
   test_transaction_ordering.js \
+  test_unique_index_update.js \
+  test_writer_starvation.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

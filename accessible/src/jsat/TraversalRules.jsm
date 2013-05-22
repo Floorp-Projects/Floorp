@@ -31,9 +31,9 @@ BaseTraversalRule.prototype = {
     match: function BaseTraversalRule_match(aAccessible)
     {
       if (aAccessible.role == Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME) {
-        return (aAccessible.childCount) ?
-          Ci.nsIAccessibleTraversalRule.FILTER_IGNORE :
-          Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+        return (Utils.getMessageManager(aAccessible.DOMNode)) ?
+          Ci.nsIAccessibleTraversalRule.FILTER_MATCH :
+          Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
       }
 
       if (this._matchFunc)

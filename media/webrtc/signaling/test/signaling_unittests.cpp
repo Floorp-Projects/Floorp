@@ -146,13 +146,6 @@ public:
     ANSWER
   };
 
-  enum StateType {
-    kReadyState,
-    kIceState,
-    kSdpState,
-    kSipccState
-  };
-
   enum ResponseState {
     stateNoResponse,
     stateSuccess,
@@ -293,21 +286,21 @@ TestObserver::OnStateChange(uint32_t state_type)
 
   switch (state_type)
   {
-  case kReadyState:
+  case IPeerConnectionObserver::kReadyState:
     rv = pc->GetReadyState(&gotstate);
     NS_ENSURE_SUCCESS(rv, rv);
     cout << "Ready State: " << gotstate << endl;
     break;
-  case kIceState:
+  case IPeerConnectionObserver::kIceState:
     rv = pc->GetIceState(&gotstate);
     NS_ENSURE_SUCCESS(rv, rv);
     cout << "ICE State: " << gotstate << endl;
     break;
-  case kSdpState:
+  case IPeerConnectionObserver::kSdpState:
     cout << "SDP State: " << endl;
     // NS_ENSURE_SUCCESS(rv, rv);
     break;
-  case kSipccState:
+  case IPeerConnectionObserver::kSipccState:
     rv = pc->GetSipccState(&gotstate);
     NS_ENSURE_SUCCESS(rv, rv);
     cout << "SIPCC State: " << gotstate << endl;

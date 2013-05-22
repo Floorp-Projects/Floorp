@@ -148,6 +148,7 @@ _BROWSER_FILES = \
                  browser_tabview_snapping.js \
                  browser_tabview_startup_transitions.js \
                  browser_tabview_undo_group.js \
+                 browser_tabview_bug610242.js \
                  dummy_page.html \
                  head.js \
                  search1.html \

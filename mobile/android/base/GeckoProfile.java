@@ -17,8 +17,11 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -397,6 +400,20 @@ public final class GeckoProfile {
 
         parser.addSection(profileSection);
         parser.write();
+
+        // Write out profile creation time, mirroring the logic in nsToolkitProfileService.
+        try {
+            FileOutputStream stream = new FileOutputStream(profileDir.getAbsolutePath() + File.separator + "times.json");
+            OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
+            try {
+                writer.append("{\"created\": " + System.currentTimeMillis() + "}\n");
+            } finally {
+                writer.close();
+            }
+        } catch (Exception e) {
+            // Best-effort.
+            Log.w(LOGTAG, "Couldn't write times.json.", e);
+        }
 
         return profileDir;
     }

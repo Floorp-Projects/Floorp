@@ -2437,12 +2437,10 @@ TypeZone::init(JSContext *cx)
         !cx->hasOption(JSOPTION_TYPE_INFERENCE) ||
         !cx->runtime->jitSupportsFloatingPoint)
     {
-        jaegerCompilationAllowed = true;
         return;
     }
 
     inferenceEnabled = true;
-    jaegerCompilationAllowed = cx->hasOption(JSOPTION_METHODJIT);
 }
 
 TypeObject *
@@ -5406,8 +5404,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
     for (unsigned offset = 0; offset < script_->length; offset++) {
         if (!maybeCode(offset))
             continue;
-
-        jsbytecode *pc = script_->code + offset;
 
         unsigned defCount = GetDefCount(script_, offset);
         if (!defCount)

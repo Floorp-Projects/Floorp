@@ -19,11 +19,11 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptProcessorNode, AudioNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptProcessorNode)
   if (tmp->Context()) {
     tmp->Context()->UnregisterScriptProcessorNode(tmp);
   }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ScriptProcessorNode, AudioNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

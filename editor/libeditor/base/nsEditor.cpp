@@ -4977,12 +4977,11 @@ nsEditor::FinalizeSelection()
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE_VOID(presShell);
 
-  nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  if (caret) {
-    caret->SetIgnoreUserModify(true);
-  }
-
   selCon->SetCaretEnabled(false);
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE_VOID(fm);
+  fm->UpdateCaretForCaretBrowsingMode();
 
   if (!HasIndependentSelection()) {
     // If this editor doesn't have an independent selection, i.e., it must

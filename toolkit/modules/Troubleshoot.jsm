@@ -228,6 +228,7 @@ let dataProviders = {
                      getInterface(Ci.nsIDOMWindowUtils);
       try {
         data.windowLayerManagerType = winUtils.layerManagerType;
+        data.windowLayerManagerRemote = winUtils.layerManagerRemote;
       }
       catch (e) {
         continue;

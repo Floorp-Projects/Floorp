@@ -1000,6 +1000,7 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
         return script->varIsAliased(pn->pn_cookie.slot());
       case Definition::PLACEHOLDER:
       case Definition::NAMED_LAMBDA:
+      case Definition::MISSING:
         JS_NOT_REACHED("unexpected dn->kind");
     }
     return false;
@@ -1343,6 +1344,9 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case Definition::PLACEHOLDER:
         return true;
+
+      case Definition::MISSING:
+        JS_NOT_REACHED("missing");
     }
 
     /*
