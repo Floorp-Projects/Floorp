@@ -397,6 +397,10 @@ MobileConnection::GetCallBarringOption(const JS::Value& aOption,
 {
   *aRequest = nullptr;
 
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
@@ -409,6 +413,10 @@ MobileConnection::SetCallBarringOption(const JS::Value& aOption,
                                        nsIDOMDOMRequest** aRequest)
 {
   *aRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
 
   if (!mProvider) {
     return NS_ERROR_FAILURE;
