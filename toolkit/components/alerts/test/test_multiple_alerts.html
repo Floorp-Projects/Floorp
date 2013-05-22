@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for multiple alerts</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+const ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+             .getService(Ci.nsIWindowWatcher);
+
+function showSimpleAlert(alertService) {
+  try {
+    alertService.showAlertNotification(null, "title", "body");
+    ok(true, "Alert shown.");
+  } catch (ex) {
+    ok(false, "Failed to show alert.", ex);
+    SimpleTest.finish();
+  }
+}
+
+var firstAlertXPosition = 0;
+var firstAlertYPosition = 0;
+
+function showFirstAlert(alertService) {
+  // Set a timeout to finish the test in case we are on a platform
+  // that doesn't use XUL alert windows. This timeout is cleared
+  // when a XUL alert window does get created.
+  var timer = setTimeout(function() {
+    ok(true, "Platform does not use XUL alerts.");
+    ww.unregisterNotification(windowObserver);
+    SimpleTest.finish();
+  }, 2000);
+
+  var windowObserver = function(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened") {
+      return;
+    }
+
+    // Alerts are implemented using XUL, clear the timeout
+    // that finishes the test.
+    clearTimeout(timer);
+
+    ww.unregisterNotification(windowObserver);
+
+    var win = SpecialPowers.wrap(aSubject);
+    win.addEventListener("pageshow", function() {
+      win.removeEventListener("pageshow", arguments.callee, false);
+      firstAlertXPosition = win.screenX;
+      firstAlertYPosition = win.screenY;
+
+      // Wait for alert window to close then open a second alert.
+      win.addEventListener("pagehide", function() {
+        win.removeEventListener("pagehide", arguments.callee, false);
+        // Wait for alert to close before creating a new one.
+        showSecondAlert(alertService);
+      }, false);
+
+      alertService.closeAlert();
+    }, false);
+  };
+
+  ww.registerNotification(windowObserver);
+  showSimpleAlert(alertService);
+}
+
+function showSecondAlert(alertService) {
+  var windowObserver = function(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened") {
+      return;
+    }
+
+    ww.unregisterNotification(windowObserver);
+
+    var win = SpecialPowers.wrap(aSubject);
+    win.addEventListener("pageshow", function() {
+      win.removeEventListener("pageshow", arguments.callee, false);
+      is(win.screenX, firstAlertXPosition, "Second alert should be opened in the same position.");
+      is(win.screenY, firstAlertYPosition, "Second alert should be opened in the same position.");
+
+      // Wait for alert window to close then finish the test.
+      win.addEventListener("pagehide", function() {
+        win.removeEventListener("pagehide", arguments.callee, false);
+        // Wait for alert to close before finishing the test.
+        SimpleTest.finish();
+      }, false);
+
+      alertService.closeAlert();
+    }, false);
+  };
+
+  ww.registerNotification(windowObserver);
+  showSimpleAlert(alertService);
+}
+
+function runTest() {
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application.");
+    return;
+  }
+
+  ok(true, "Alerts service exists in this application.");
+
+  var alertService;
+  try {
+    alertService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    ok(true, "Alerts service is available.");
+  } catch (ex) {
+    todo(false, "Alerts service is not available.");
+    return;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  showFirstAlert(alertService);
+}
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

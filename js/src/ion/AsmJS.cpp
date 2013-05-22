@@ -843,7 +843,7 @@ TypedArrayStoreType(ArrayBufferView::ViewType viewType)
 /*****************************************************************************/
 
 typedef Vector<PropertyName*,1> LabelVector;
-typedef Vector<MBasicBlock*,16> CaseVector;
+typedef Vector<MBasicBlock*,8> BlockVector;
 
 // ModuleCompiler encapsulates the compilation of an entire asm.js module. Over
 // the course of an ModuleCompiler object's lifetime, many FunctionCompiler
@@ -1546,7 +1546,6 @@ class FunctionCompiler
     typedef HashMap<PropertyName*, Local> LocalMap;
 
   private:
-    typedef Vector<MBasicBlock*, 2> BlockVector;
     typedef HashMap<PropertyName*, BlockVector> LabeledBlockMap;
     typedef HashMap<ParseNode*, BlockVector> UnlabeledBlockMap;
     typedef Vector<ParseNode*, 4> NodeStack;
@@ -2019,42 +2018,48 @@ class FunctionCompiler
         return true;
     }
 
-    void joinIf(MBasicBlock *joinBlock)
+    bool appendThenBlock(BlockVector *thenBlocks) {
+        if (!curBlock_)
+            return true;
+        return thenBlocks->append(curBlock_);
+    }
+
+    void joinIf(const BlockVector &thenBlocks, MBasicBlock *joinBlock)
     {
         if (!joinBlock)
             return;
-        if (curBlock_) {
-            curBlock_->end(MGoto::New(joinBlock));
-            joinBlock->addPredecessor(curBlock_);
+        JS_ASSERT_IF(curBlock_, thenBlocks.back() == curBlock_);
+        for (size_t i = 0; i < thenBlocks.length(); i++) {
+            thenBlocks[i]->end(MGoto::New(joinBlock));
+            joinBlock->addPredecessor(thenBlocks[i]);
         }
         curBlock_ = joinBlock;
         mirGraph().moveBlockToEnd(curBlock_);
     }
 
-    MBasicBlock *switchToElse(MBasicBlock *elseBlock)
+    void switchToElse(MBasicBlock *elseBlock)
     {
         if (!elseBlock)
-            return NULL;
-        MBasicBlock *thenEnd = curBlock_;
+            return;
         curBlock_ = elseBlock;
         mirGraph().moveBlockToEnd(curBlock_);
-        return thenEnd;
     }
 
-    bool joinIfElse(MBasicBlock *thenEnd)
+    bool joinIfElse(const BlockVector &thenBlocks)
     {
-        if (!curBlock_ && !thenEnd)
+        if (!curBlock_ && thenBlocks.empty())
             return true;
-        MBasicBlock *pred = curBlock_ ? curBlock_ : thenEnd;
+        MBasicBlock *pred = curBlock_ ? curBlock_ : thenBlocks[0];
         MBasicBlock *join;
         if (!newBlock(pred, &join))
             return false;
         if (curBlock_)
             curBlock_->end(MGoto::New(join));
-        if (thenEnd)
-            thenEnd->end(MGoto::New(join));
-        if (curBlock_ && thenEnd)
-            join->addPredecessor(thenEnd);
+        for (size_t i = 0; i < thenBlocks.length(); i++) {
+            thenBlocks[i]->end(MGoto::New(join));
+            if (pred == curBlock_ || i > 0)
+                join->addPredecessor(thenBlocks[i]);
+        }
         curBlock_ = join;
         return true;
     }
@@ -2244,7 +2249,7 @@ class FunctionCompiler
         return true;
     }
 
-    bool startSwitchDefault(MBasicBlock *switchBlock, CaseVector *cases, MBasicBlock **defaultBlock)
+    bool startSwitchDefault(MBasicBlock *switchBlock, BlockVector *cases, MBasicBlock **defaultBlock)
     {
         if (!startSwitchCase(switchBlock, defaultBlock))
             return false;
@@ -2264,7 +2269,7 @@ class FunctionCompiler
         return true;
     }
 
-    bool joinSwitch(MBasicBlock *switchBlock, const CaseVector &cases, MBasicBlock *defaultBlock)
+    bool joinSwitch(MBasicBlock *switchBlock, const BlockVector &cases, MBasicBlock *defaultBlock)
     {
         ParseNode *pn = breakableStack_.popCopy();
         if (!switchBlock)
@@ -3751,8 +3756,12 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
     if (!CheckExpr(f, thenExpr, Use::NoCoercion, &thenDef, &thenType))
         return false;
 
+    BlockVector thenBlocks(f.cx());
+    if (!f.appendThenBlock(&thenBlocks))
+        return false;
+
     f.pushPhiInput(thenDef);
-    MBasicBlock *thenEnd = f.switchToElse(elseBlock);
+    f.switchToElse(elseBlock);
 
     MDefinition *elseDef;
     Type elseType;
@@ -3760,7 +3769,7 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
         return false;
 
     f.pushPhiInput(elseDef);
-    if (!f.joinIfElse(thenEnd))
+    if (!f.joinIfElse(thenBlocks))
         return false;
     *def = f.popPhiOutput();
 
@@ -4243,6 +4252,13 @@ CheckLabel(FunctionCompiler &f, ParseNode *labeledStmt, LabelVector *maybeLabels
 static bool
 CheckIf(FunctionCompiler &f, ParseNode *ifStmt)
 {
+    // Handle if/else-if chains using iteration instead of recursion. This
+    // avoids blowing the C stack quota for long if/else-if chains and also
+    // creates fewer MBasicBlocks at join points (by creating one join block
+    // for the entire if/else-if chain).
+    BlockVector thenBlocks(f.cx());
+
+  recurse:
     JS_ASSERT(ifStmt->isKind(PNK_IF));
     ParseNode *cond = TernaryKid1(ifStmt);
     ParseNode *thenStmt = TernaryKid2(ifStmt);
@@ -4263,13 +4279,23 @@ CheckIf(FunctionCompiler &f, ParseNode *ifStmt)
     if (!CheckStatement(f, thenStmt))
         return false;
 
+    if (!f.appendThenBlock(&thenBlocks))
+        return false;
+
     if (!elseStmt) {
-        f.joinIf(elseBlock);
+        f.joinIf(thenBlocks, elseBlock);
     } else {
-        MBasicBlock *thenEnd = f.switchToElse(elseBlock);
+        f.switchToElse(elseBlock);
+
+        if (elseStmt->isKind(PNK_IF)) {
+            ifStmt = elseStmt;
+            goto recurse;
+        }
+
         if (!CheckStatement(f, elseStmt))
             return false;
-        if (!f.joinIfElse(thenEnd))
+
+        if (!f.joinIfElse(thenBlocks))
             return false;
     }
 
@@ -4374,7 +4400,7 @@ CheckSwitch(FunctionCompiler &f, ParseNode *switchStmt)
     if (!CheckSwitchRange(f, stmt, &low, &high, &tableLength))
         return false;
 
-    CaseVector cases(f.cx());
+    BlockVector cases(f.cx());
     if (!cases.resize(tableLength))
         return false;
 

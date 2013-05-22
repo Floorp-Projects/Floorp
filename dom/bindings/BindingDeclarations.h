@@ -314,6 +314,65 @@ public:
   {}
 };
 
+// A specialization of Optional for JSObject* to make sure that when someone
+// calls Construct() on it we will pre-initialized the JSObject* to nullptr so
+// it can be traced safely.
+template<>
+class Optional<JSObject*> : public Optional_base<JSObject*, JSObject*>
+{
+public:
+  Optional() :
+    Optional_base<JSObject*, JSObject*>()
+  {}
+
+  explicit Optional(JSObject* aValue) :
+    Optional_base<JSObject*, JSObject*>(aValue)
+  {}
+
+  // Don't allow us to have an uninitialized JSObject*
+  void Construct()
+  {
+    // The Android compiler sucks and thinks we're trying to construct
+    // a JSObject* from an int if we don't cast here.  :(
+    Optional_base<JSObject*, JSObject*>::Construct(
+      static_cast<JSObject*>(nullptr));
+  }
+
+  template <class T1>
+  void Construct(const T1& t1)
+  {
+    Optional_base<JSObject*, JSObject*>::Construct(t1);
+  }
+};
+
+// A specialization of Optional for JS::Value to make sure that when someone
+// calls Construct() on it we will pre-initialized the JS::Value to
+// JS::UndefinedValue() so it can be traced safely.
+template<>
+class Optional<JS::Value> : public Optional_base<JS::Value, JS::Value>
+{
+public:
+  Optional() :
+    Optional_base<JS::Value, JS::Value>()
+  {}
+
+  explicit Optional(JS::Value aValue) :
+    Optional_base<JS::Value, JS::Value>(aValue)
+  {}
+
+  // Don't allow us to have an uninitialized JS::Value
+  void Construct()
+  {
+    Optional_base<JS::Value, JS::Value>::Construct(JS::UndefinedValue());
+  }
+
+  template <class T1>
+  void Construct(const T1& t1)
+  {
+    Optional_base<JS::Value, JS::Value>::Construct(t1);
+  }
+};
+
 // Specialization for strings.
 // XXXbz we can't pull in FakeDependentString here, because it depends on
 // internal strings.  So we just have to forward-declare it and reimplement its

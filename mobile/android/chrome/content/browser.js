@@ -4895,7 +4895,7 @@ var FormAssistant = {
           if (hasResults)
             return;
 
-          if (!this._showValidationMessage(currentElement))
+          if (this._showValidationMessage(currentElement))
             return;
 
           // If we're not showing autocomplete suggestions, hide the form assist popup
@@ -4944,8 +4944,8 @@ var FormAssistant = {
 
         // Supply a label and value, since they can differ for datalist suggestions
         suggestions.push({ label: value, value: value });
-        aCallback(suggestions);
       }
+      aCallback(suggestions);
     };
 
     this._formAutoCompleteService.autoCompleteSearchAsync(aElement.name || aElement.id,

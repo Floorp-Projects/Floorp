@@ -164,6 +164,10 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
 
   // WebIDL
+  static already_AddRefed<nsRange>
+  Constructor(const mozilla::dom::GlobalObject& global,
+              mozilla::ErrorResult& aRv);
+
   bool Collapsed() const
   {
     return mIsPositioned && mStartParent == mEndParent &&

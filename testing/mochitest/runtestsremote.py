@@ -602,6 +602,29 @@ def main():
             options.browserArgs.append("%s.tests.%s" % (options.remoteappname, test['name']))
             options.browserArgs.append("org.mozilla.roboexample.test/%s.FennecInstrumentationTestRunner" % options.remoteappname)
 
+            # If the test is for checking the import from bookmarks then make sure there is data to import
+            if test['name'] == "testImportFromAndroid":
+                
+                # Get the OS so we can run the insert in the apropriate database and following the correct table schema
+                osInfo = dm.getInfo("os")
+                devOS = " ".join(osInfo['os'])
+
+                if ("pandaboard" in devOS):
+                    delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
+                else:
+                    delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
+                if (options.dm_trans == "sut"):
+                    dm._runCmds([{"cmd": " ".join(delete)}])
+
+                # Insert the bookmarks
+                print "Insert bookmarks in the default android browser database"
+                for i in range(20):
+                   if ("pandaboard" in devOS):
+                       cmd = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db 'insert or replace into bookmarks(_id,title,url,folder,parent,position) values (" + str(30 + i) + ",\"Bookmark"+ str(i) + "\",\"http://www.bookmark" + str(i) + ".com\",0,1," + str(100 + i) + ");'"]
+                   else:
+                       cmd = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db 'insert into bookmarks(title,url,bookmark) values (\"Bookmark"+ str(i) + "\",\"http://www.bookmark" + str(i) + ".com\",1);'"]
+                   if (options.dm_trans == "sut"):
+                       dm._runCmds([{"cmd": " ".join(cmd)}])
             try:
                 dm.removeDir("/mnt/sdcard/Robotium-Screenshots")
                 dm.recordLogcat()
@@ -627,6 +650,15 @@ def main():
                     pass
                 retVal = 1
                 break
+            finally:
+                # Clean-up added bookmarks
+                if test['name'] == "testImportFromAndroid":
+                    if ("pandaboard" in devOS):
+                        cmd_del = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
+                    else:
+                        cmd_del = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
+                    if (options.dm_trans == "sut"):
+                        dm._runCmds([{"cmd": " ".join(cmd_del)}])
         if retVal is None:
             print "No tests run. Did you pass an invalid TEST_PATH?"
             retVal = 1

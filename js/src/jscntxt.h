@@ -338,6 +338,9 @@ class NewObjectCache
     NewObjectCache() { mozilla::PodZero(this); }
     void purge() { mozilla::PodZero(this); }
 
+    /* Remove any cached items keyed on moved objects. */
+    inline void clearNurseryObjects(JSRuntime *rt);
+
     /*
      * Get the entry index for the given lookup, return whether there was a hit
      * on an existing entry.

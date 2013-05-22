@@ -959,9 +959,6 @@ static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
 static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
 #endif
-static const char js_methodjit_content_str[]  = JS_OPTIONS_DOT_STR "methodjit.content";
-static const char js_methodjit_chrome_str[]   = JS_OPTIONS_DOT_STR "methodjit.chrome";
-static const char js_methodjit_always_str[]   = JS_OPTIONS_DOT_STR "methodjit_always";
 static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
 static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.content";
 static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
@@ -1004,13 +1001,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   nsCOMPtr<nsIDOMWindow> contentWindow(do_QueryInterface(global));
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
 
-  bool useMethodJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
-                                               js_methodjit_chrome_str :
-                                               js_methodjit_content_str);
   bool usePCCounts = Preferences::GetBool(chromeWindow || !contentWindow ?
                                             js_pccounts_chrome_str :
                                             js_pccounts_content_str);
-  bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   bool useBaselineJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
@@ -1024,10 +1017,8 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     bool safeMode = false;
     xr->GetInSafeMode(&safeMode);
     if (safeMode) {
-      useMethodJIT = false;
       usePCCounts = false;
       useTypeInference = false;
-      useMethodJITAlways = true;
       useHardening = false;
       useBaselineJIT = false;
       useIon = false;
@@ -1035,20 +1026,10 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     }
   }
 
-  if (useMethodJIT)
-    newDefaultJSOptions |= JSOPTION_METHODJIT;
-  else
-    newDefaultJSOptions &= ~JSOPTION_METHODJIT;
-
   if (usePCCounts)
     newDefaultJSOptions |= JSOPTION_PCCOUNT;
   else
     newDefaultJSOptions &= ~JSOPTION_PCCOUNT;
-
-  if (useMethodJITAlways)
-    newDefaultJSOptions |= JSOPTION_METHODJIT_ALWAYS;
-  else
-    newDefaultJSOptions &= ~JSOPTION_METHODJIT_ALWAYS;
 
   if (useTypeInference)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
@@ -1141,7 +1122,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
     ::JS_SetOperationCallback(mContext, DOMOperationCallback);
   }
   mIsInitialized = false;
-  mTerminations = nullptr;
   mScriptsEnabled = true;
   mOperationCallbackTime = 0;
   mModalStateTime = 0;
@@ -1155,11 +1135,6 @@ nsJSContext::~nsJSContext()
   if (mNext) {
     mNext->mPrev = mPrev;
   }
-
-  // We may still have pending termination functions if the context is destroyed
-  // before they could be executed. In this case, free the references to their
-  // parameters, but don't execute the functions (see bug 622326).
-  delete mTerminations;
 
   mGlobalObjectRef = nullptr;
 
@@ -1289,8 +1264,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(ok, NS_OK);
 
-  nsJSContext::TerminationFuncHolder holder(this);
-
   // Scope the JSAutoCompartment so that it gets destroyed before we pop the
   // cx and potentially call JS_RestoreFrameChain.
   XPCAutoRequest ar(mContext);
@@ -1414,7 +1387,6 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject_,
   nsCxPusher pusher;
   pusher.Push(mContext);
 
-  nsJSContext::TerminationFuncHolder holder(this);
   XPCAutoRequest ar(mContext);
 
   // Scope the JSAutoCompartment so that it gets destroyed before we pop the
@@ -2361,20 +2333,6 @@ nsJSContext::IsContextInitialized()
 void
 nsJSContext::ScriptEvaluated(bool aTerminated)
 {
-  if (aTerminated && mTerminations) {
-    // Make sure to null out mTerminations before doing anything that
-    // might cause new termination funcs to be added!
-    nsJSContext::TerminationFuncClosure* start = mTerminations;
-    mTerminations = nullptr;
-
-    for (nsJSContext::TerminationFuncClosure* cur = start;
-         cur;
-         cur = cur->mNext) {
-      (*(cur->mTerminationFunc))(cur->mTerminationFuncArg);
-    }
-    delete start;
-  }
-
   JS_MaybeGC(mContext);
 
   if (aTerminated) {
@@ -2382,17 +2340,6 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
     mModalStateTime = 0;
     mActive = true;
   }
-}
-
-void
-nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                    nsIDOMWindow* aRef)
-{
-  NS_PRECONDITION(GetExecutingScript(), "should be executing script");
-
-  nsJSContext::TerminationFuncClosure* newClosure =
-    new nsJSContext::TerminationFuncClosure(aFunc, aRef, mTerminations);
-  mTerminations = newClosure;
 }
 
 bool

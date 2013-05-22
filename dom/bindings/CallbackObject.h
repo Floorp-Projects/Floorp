@@ -148,9 +148,10 @@ protected:
     // this needs to be a Maybe.
     Maybe<XPCAutoRequest> mAr;
 
-    // Can't construct a TerminationFuncHolder without an nsJSContext.  But we
-    // generally want its destructor to come after the destructor of mCxPusher.
-    Maybe<nsJSContext::TerminationFuncHolder> mTerminationFuncHolder;
+    // We construct our JS::Rooted right after our JSAutoRequest; let's just
+    // hope that the change in ordering wrt the mCxPusher constructor here is
+    // ok.
+    Maybe<JS::Rooted<JSObject*> > mRootedCallable;
 
     nsCxPusher mCxPusher;
 

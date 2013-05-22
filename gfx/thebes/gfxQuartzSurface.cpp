@@ -125,6 +125,29 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
     }
 }
 
+gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
+                                   const gfxIntSize& aSize,
+                                   long stride,
+                                   gfxImageFormat format,
+                                   bool aForPrinting)
+    : mCGContext(nullptr), mSize(aSize.width, aSize.height), mForPrinting(aForPrinting)
+{
+    if (!CheckSurfaceSize(aSize))
+        MakeInvalid();
+
+    cairo_surface_t *surf = cairo_quartz_surface_create_for_data
+        (data, (cairo_format_t) format, aSize.width, aSize.height, stride);
+
+    mCGContext = cairo_quartz_surface_get_cg_context (surf);
+
+    CGContextRetain(mCGContext);
+
+    Init(surf);
+    if (mSurfaceValid) {
+      RecordMemoryUsed(mSize.height * stride + sizeof(gfxQuartzSurface));
+    }
+}
+
 already_AddRefed<gfxASurface>
 gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
                                        const gfxIntSize& aSize)

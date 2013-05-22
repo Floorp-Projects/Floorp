@@ -75,12 +75,15 @@ protected:
                               nsresult aStatus = NS_OK);
 
   virtual nsresult CheckFontLoad(const gfxFontFaceSrc *aFontFaceSrc,
-                                 nsIPrincipal **aPrincipal);
+                                 nsIPrincipal **aPrincipal,
+                                 bool *aBypassCache);
 
   virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
                                     const gfxFontFaceSrc *aFontFaceSrc,
                                     uint8_t* &aBuffer,
                                     uint32_t &aBufferLength);
+
+  virtual bool GetPrivateBrowsing() MOZ_OVERRIDE;
 
   nsPresContext *mPresContext;  // weak reference
 

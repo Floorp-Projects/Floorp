@@ -62,6 +62,7 @@ public:
     uint32_t          mSrcIndex;  // index in the rule's source list
     uint32_t          mFormat;    // format hint for the source used, if any
     uint32_t          mMetaOrigLen; // length needed to decompress metadata
+    bool              mPrivate;   // whether font belongs to a private window
 };
 
 // initially contains a set of proxy font entry objects, replaced with
@@ -203,9 +204,12 @@ public:
     // which does not directly track families in the font group's list.
     gfxFontFamily *FindFamilyFor(gfxFontEntry *aFontEntry) const;
 
-    // check whether the given source is allowed to be loaded
+    // check whether the given source is allowed to be loaded;
+    // returns the Principal (for use in the key when caching the loaded font),
+    // and whether the load should bypass the cache (force-reload).
     virtual nsresult CheckFontLoad(const gfxFontFaceSrc *aFontFaceSrc,
-                                   nsIPrincipal **aPrincipal) = 0;
+                                   nsIPrincipal **aPrincipal,
+                                   bool *aBypassCache) = 0;
 
     // initialize the process that loads external font data, which upon 
     // completion will call OnLoadComplete method
@@ -250,15 +254,30 @@ public:
         static void ForgetFont(gfxFontEntry *aFontEntry);
 
         // Return the gfxFontEntry corresponding to a given URI and principal,
-        // and the features of the given proxy, or nullptr if none is available
+        // and the features of the given proxy, or nullptr if none is available.
+        // The aPrivate flag is set for requests coming from private windows,
+        // so we can avoid leaking fonts cached in private windows mode out to
+        // normal windows.
         static gfxFontEntry* GetFont(nsIURI            *aSrcURI,
                                      nsIPrincipal      *aPrincipal,
-                                     gfxProxyFontEntry *aProxy);
+                                     gfxProxyFontEntry *aProxy,
+                                     bool               aPrivate);
 
         // Clear everything so that we don't leak URIs and Principals.
         static void Shutdown();
 
     private:
+        // Helper that we use to observe the empty-cache notification
+        // from nsICacheService.
+        class Flusher : public nsIObserver
+        {
+        public:
+            NS_DECL_ISUPPORTS
+            NS_DECL_NSIOBSERVER
+            Flusher() {}
+            virtual ~Flusher() {}
+        };
+
         // Key used to look up entries in the user-font cache.
         // Note that key comparison does *not* use the mFontEntry field
         // as a whole; it only compares specific fields within the entry
@@ -269,12 +288,14 @@ public:
             nsCOMPtr<nsIURI>        mURI;
             nsCOMPtr<nsIPrincipal>  mPrincipal;
             gfxFontEntry           *mFontEntry;
+            bool                    mPrivate;
 
             Key(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                gfxFontEntry* aFontEntry)
+                gfxFontEntry* aFontEntry, bool aPrivate)
                 : mURI(aURI),
                   mPrincipal(aPrincipal),
-                  mFontEntry(aFontEntry)
+                  mFontEntry(aFontEntry),
+                  mPrivate(aPrivate)
             { }
         };
 
@@ -286,13 +307,15 @@ public:
             Entry(KeyTypePointer aKey)
                 : mURI(aKey->mURI),
                   mPrincipal(aKey->mPrincipal),
-                  mFontEntry(aKey->mFontEntry)
+                  mFontEntry(aKey->mFontEntry),
+                  mPrivate(aKey->mPrivate)
             { }
 
             Entry(const Entry& aOther)
                 : mURI(aOther.mURI),
                   mPrincipal(aOther.mPrincipal),
-                  mFontEntry(aOther.mFontEntry)
+                  mFontEntry(aOther.mFontEntry),
+                  mPrivate(aOther.mPrivate)
             { }
 
             ~Entry() { }
@@ -304,7 +327,7 @@ public:
             static PLDHashNumber HashKey(const KeyTypePointer aKey) {
                 uint32_t principalHash;
                 aKey->mPrincipal->GetHashValue(&principalHash);
-                return mozilla::HashGeneric(principalHash,
+                return mozilla::HashGeneric(principalHash + int(aKey->mPrivate),
                                             nsURIHashKey::HashKey(aKey->mURI),
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
                                             mozilla::HashString(aKey->mFontEntry->mFamilyName),
@@ -317,6 +340,8 @@ public:
             enum { ALLOW_MEMMOVE = false };
 
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
+
+            static PLDHashOperator RemoveIfPrivate(Entry* aEntry, void* aUserData);
 
         private:
             static uint32_t
@@ -332,12 +357,18 @@ public:
             // The font entry MUST notify the cache when it is destroyed
             // (by calling Forget()).
             gfxFontEntry          *mFontEntry;
+
+            // Whether this font was loaded from a private window.
+            bool                   mPrivate;
         };
 
         static nsTHashtable<Entry> *sUserFonts;
     };
 
 protected:
+    // Return whether the font set is associated with a private-browsing tab.
+    virtual bool GetPrivateBrowsing() = 0;
+
     // for a given proxy font entry, attempt to load the next resource
     // in the src list
     LoadStatus LoadNext(gfxMixedFontFamily *aFamily,

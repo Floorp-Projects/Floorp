@@ -653,25 +653,26 @@ AboutReader.prototype = {
       dropdownPopup.appendChild(dropdownArrow);
 
       let updatePopupPosition = function() {
-          let popupWidth = dropdownPopup.offsetWidth + 30;
-          let arrowWidth = dropdownArrow.offsetWidth;
-          let toggleWidth = dropdownToggle.offsetWidth;
-          let toggleLeft = dropdownToggle.offsetLeft;
+        let popupWidth = dropdownPopup.offsetWidth + 30;
+        let arrowWidth = dropdownArrow.offsetWidth;
+        let toggleWidth = dropdownToggle.offsetWidth;
+        let toggleLeft = dropdownToggle.offsetLeft;
 
-          let popupShift = (toggleWidth - popupWidth) / 2;
-          let popupLeft = Math.max(0, Math.min(win.innerWidth - popupWidth, toggleLeft + popupShift));
-          dropdownPopup.style.left = popupLeft + "px";
+        let popupShift = (toggleWidth - popupWidth) / 2;
+        let popupLeft = Math.max(0, Math.min(win.innerWidth - popupWidth, toggleLeft + popupShift));
+        dropdownPopup.style.left = popupLeft + "px";
 
-          let arrowShift = (toggleWidth - arrowWidth) / 2;
-          let arrowLeft = toggleLeft - popupLeft + arrowShift;
-          dropdownArrow.style.left = arrowLeft + "px";
+        let arrowShift = (toggleWidth - arrowWidth) / 2;
+        let arrowLeft = toggleLeft - popupLeft + arrowShift;
+        dropdownArrow.style.left = arrowLeft + "px";
       };
 
       win.addEventListener("resize", function(aEvent) {
         if (!aEvent.isTrusted)
           return;
 
-        updatePopupPosition();
+        // Wait for reflow before calculating the new position of the popup.
+        setTimeout(updatePopupPosition, 0);
       }, true);
 
       dropdownToggle.addEventListener("click", function(aEvent) {

@@ -6220,7 +6220,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             bool spread = false, missingTrailingComma = false;
             unsigned index = 0;
             for (; ; index++) {
-                if (index == StackSpace::ARGS_LENGTH_MAX) {
+                if (index == JSObject::NELEMENTS_LIMIT) {
                     report(ParseError, false, null(), JSMSG_ARRAY_INIT_TOO_BIG);
                     return null();
                 }

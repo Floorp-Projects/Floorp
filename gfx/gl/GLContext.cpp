@@ -355,7 +355,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "Adreno (TM) 205",
                 "Adreno (TM) 320",
                 "PowerVR SGX 530",
-                "PowerVR SGX 540"
+                "PowerVR SGX 540",
+                "NVIDIA Tegra"
         };
 
         mRenderer = RendererOther;
@@ -534,7 +535,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mSymbols.fEGLImageTargetRenderbufferStorage = nullptr;
             }
         }
-       
+
         // Load developer symbols, don't fail if we can't find them.
         SymLoadStruct auxSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", nullptr } },
@@ -779,10 +780,10 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
     if (where || *extension == '\0')
         return false;
 
-    /* 
+    /*
      * It takes a bit of care to be fool-proof about parsing the
      * OpenGL extensions string. Don't be fooled by sub-strings,
-     * etc. 
+     * etc.
      */
     start = extensions;
     for (;;) {
@@ -1385,7 +1386,7 @@ GLContext::GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader
     gfxIntSize size;
     fGetTexLevelParameteriv(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_TEXTURE_WIDTH, &size.width);
     fGetTexLevelParameteriv(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_TEXTURE_HEIGHT, &size.height);
-    
+
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
     if (!surf || surf->CairoStatus()) {
         return NULL;
@@ -1400,7 +1401,7 @@ GLContext::GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader
     if (currentPackAlignment != 4) {
         fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
     }
-   
+
     if (aShader == RGBALayerProgramType || aShader == RGBXLayerProgramType) {
       SwapRAndBComponents(surf);
     }
@@ -1838,8 +1839,8 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
             if (srcSubRect.IsEmpty()) {
                 continue;
             }
-            // We now have the intersection of 
-            //     the current source tile 
+            // We now have the intersection of
+            //     the current source tile
             // and the desired source rectangle
             // and the destination tile
             // and the desired destination rectange
@@ -1922,7 +1923,7 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     fEnable(LOCAL_GL_BLEND);
 }
 
-static unsigned int 
+static unsigned int
 DataOffset(gfxImageSurface *aSurf, const nsIntPoint &aPoint)
 {
   unsigned int data = aPoint.y * aSurf->Stride();
@@ -1930,8 +1931,8 @@ DataOffset(gfxImageSurface *aSurf, const nsIntPoint &aPoint)
   return data;
 }
 
-ShaderProgramType 
-GLContext::UploadSurfaceToTexture(gfxASurface *aSurface, 
+ShaderProgramType
+GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
                                   const nsIntRegion& aDstRegion,
                                   GLuint& aTexture,
                                   bool aOverwrite,
@@ -1942,21 +1943,21 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
     bool textureInited = aOverwrite ? false : true;
     MakeCurrent();
     fActiveTexture(aTextureUnit);
-  
+
     if (!aTexture) {
         fGenTextures(1, &aTexture);
         fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                       LOCAL_GL_TEXTURE_MIN_FILTER, 
+        fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                       LOCAL_GL_TEXTURE_MIN_FILTER,
                        LOCAL_GL_LINEAR);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                       LOCAL_GL_TEXTURE_MAG_FILTER, 
+        fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                       LOCAL_GL_TEXTURE_MAG_FILTER,
                        LOCAL_GL_LINEAR);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                       LOCAL_GL_TEXTURE_WRAP_S, 
+        fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                       LOCAL_GL_TEXTURE_WRAP_S,
                        LOCAL_GL_CLAMP_TO_EDGE);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                       LOCAL_GL_TEXTURE_WRAP_T, 
+        fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                       LOCAL_GL_TEXTURE_WRAP_T,
                        LOCAL_GL_CLAMP_TO_EDGE);
         textureInited = false;
     } else {
@@ -1973,17 +1974,17 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
     nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
     unsigned char* data = NULL;
 
-    if (!imageSurface || 
+    if (!imageSurface ||
         (imageSurface->Format() != gfxASurface::ImageFormatARGB32 &&
          imageSurface->Format() != gfxASurface::ImageFormatRGB24 &&
          imageSurface->Format() != gfxASurface::ImageFormatRGB16_565 &&
          imageSurface->Format() != gfxASurface::ImageFormatA8)) {
         // We can't get suitable pixel data for the surface, make a copy
         nsIntRect bounds = aDstRegion.GetBounds();
-        imageSurface = 
-          new gfxImageSurface(gfxIntSize(bounds.width, bounds.height), 
+        imageSurface =
+          new gfxImageSurface(gfxIntSize(bounds.width, bounds.height),
                               gfxASurface::ImageFormatARGB32);
-  
+
         nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
 
         context->Translate(-gfxPoint(aSrcPoint.x, aSrcPoint.y));
@@ -2052,10 +2053,10 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
         // The inital data pointer is at the top left point of the region's
         // bounding rectangle. We need to find the offset of this rect
         // within the region and adjust the data pointer accordingly.
-        unsigned char *rectData = 
+        unsigned char *rectData =
             data + DataOffset(imageSurface, iterRect->TopLeft() - topLeft);
 
-        NS_ASSERTION(textureInited || (iterRect->x == 0 && iterRect->y == 0), 
+        NS_ASSERTION(textureInited || (iterRect->x == 0 && iterRect->y == 0),
                      "Must be uploading to the origin when we don't have an existing texture");
 
         if (textureInited && CanUploadSubTextures()) {
@@ -2545,7 +2546,7 @@ GLContext::UseBlitProgram()
     shaders[0] = fCreateShader(LOCAL_GL_VERTEX_SHADER);
     shaders[1] = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
 
-    const char *blitVSSrc = 
+    const char *blitVSSrc =
         "attribute vec2 aVertex;"
         "attribute vec2 aTexCoord;"
         "varying vec2 vTexCoord;"

@@ -99,6 +99,21 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_descriptor_storage.html \
 		test_descriptor_syntax_errors.html \
 		test_dont_use_document_colors.html \
+		file_flexbox_align_self_auto.html \
+		test_flexbox_align_self_auto.html \
+		file_flexbox_child_display_values.xhtml \
+		test_flexbox_child_display_values.html \
+		file_flexbox_flex_grow_and_shrink.html \
+		test_flexbox_flex_grow_and_shrink.html \
+		file_flexbox_flex_shorthand.html \
+		test_flexbox_flex_shorthand.html \
+		file_flexbox_layout.html \
+		test_flexbox_layout.html \
+		flexbox_layout_testcases.js \
+		file_flexbox_order.html \
+		test_flexbox_order.html \
+		file_flexbox_order_table.html \
+		test_flexbox_order_table.html \
 		test_font_face_parser.html \
 		test_font_family_parsing.html \
 		test_font_feature_values_parsing.html \
@@ -199,26 +214,6 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_bug795520.html \
 		viewport_units_iframe.html \
 		$(NULL)
-
-ifdef MOZ_FLEXBOX
-MOCHITEST_FILES +=	\
-		file_flexbox_align_self_auto.html \
-		test_flexbox_align_self_auto.html \
-		file_flexbox_child_display_values.xhtml \
-		test_flexbox_child_display_values.html \
-		file_flexbox_flex_grow_and_shrink.html \
-		test_flexbox_flex_grow_and_shrink.html \
-		file_flexbox_flex_shorthand.html \
-		test_flexbox_flex_shorthand.html \
-		file_flexbox_layout.html \
-		test_flexbox_layout.html \
-		flexbox_layout_testcases.js \
-		file_flexbox_order.html \
-		test_flexbox_order.html \
-		file_flexbox_order_table.html \
-		test_flexbox_order_table.html \
-		$(NULL)
-endif
 
 _VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \

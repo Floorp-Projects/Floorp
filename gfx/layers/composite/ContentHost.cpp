@@ -450,7 +450,8 @@ ContentHostIncremental::UpdateIncremental(TextureIdentifier aTextureId,
                                           const nsIntRect& aBufferRect,
                                           const nsIntPoint& aBufferRotation)
 {
-  mUpdateList.AppendElement(new TextureUpdateRequest(aTextureId,
+  mUpdateList.AppendElement(new TextureUpdateRequest(mDeAllocator,
+                                                     aTextureId,
                                                      aSurface,
                                                      aUpdated,
                                                      aBufferRect,
@@ -642,9 +643,6 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
   } else {
     aHost->mTextureHostOnWhite->Update(mDescriptor, &mUpdated, &offset);
   }
-
-  //TODO: Recycle these?
-  aHost->mDeAllocator->DestroySharedSurface(&mDescriptor);
 }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
