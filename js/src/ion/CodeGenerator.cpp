@@ -4859,6 +4859,56 @@ CodeGenerator::visitGetArgument(LGetArgument *lir)
     return true;
 }
 
+typedef JSObject *(*InitRestParameterFn)(JSContext *, uint32_t, Value *, HandleObject,
+                                         HandleObject);
+static const VMFunction InitRestParameterInfo =
+    FunctionInfo<InitRestParameterFn>(InitRestParameter);
+
+bool
+CodeGenerator::visitRest(LRest *lir)
+{
+    Register numActuals = ToRegister(lir->numActuals());
+    Register temp1 = ToRegister(lir->getTemp(0));
+    Register temp2 = ToRegister(lir->getTemp(1));
+    Register temp3 = ToRegister(lir->getTemp(2));
+
+    // Try to allocate the rest array inline.
+    Label failAlloc, joinAlloc;
+    JSObject *templateObject = lir->mir()->templateObject();
+    masm.newGCThing(temp3, templateObject, &failAlloc);
+    masm.initGCThing(temp3, templateObject);
+    masm.jump(&joinAlloc);
+    {
+        masm.bind(&failAlloc);
+        masm.movePtr(ImmWord((void *)NULL), temp3);
+    }
+    masm.bind(&joinAlloc);
+
+    // Compute actuals() + numFormals.
+    unsigned numFormals = lir->mir()->numFormals();
+    size_t actualsOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
+    masm.movePtr(StackPointer, temp2);
+    masm.addPtr(Imm32(sizeof(Value) * numFormals + actualsOffset), temp2);
+
+    // Compute numActuals - numFormals.
+    Label emptyLength, joinLength;
+    masm.movePtr(numActuals, temp1);
+    masm.branch32(Assembler::LessThanOrEqual, temp1, Imm32(numFormals), &emptyLength);
+    masm.sub32(Imm32(numFormals), temp1);
+    masm.jump(&joinLength);
+    {
+        masm.bind(&emptyLength);
+        masm.move32(Imm32(0), temp1);
+    }
+    masm.bind(&joinLength);
+
+    pushArg(temp3);
+    pushArg(ImmGCPtr(templateObject));
+    pushArg(temp2);
+    pushArg(temp1);
+    return callVM(InitRestParameterInfo, lir);
+}
+
 bool
 CodeGenerator::generateAsmJS()
 {

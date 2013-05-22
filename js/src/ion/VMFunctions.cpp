@@ -685,6 +685,34 @@ NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
     return true;
 }
 
+JSObject *
+InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject templateObj,
+                  HandleObject res)
+{
+    if (res) {
+        JS_ASSERT(res->isArray());
+        JS_ASSERT(!res->getDenseInitializedLength());
+        JS_ASSERT(res->type() == templateObj->type());
+
+        // Fast path: we managed to allocate the array inline; initialize the
+        // slots.
+        if (length) {
+            if (!res->ensureElements(cx, length))
+                return NULL;
+            res->setDenseInitializedLength(length);
+            res->initDenseElements(0, rest, length);
+            res->setArrayLengthInt32(length);
+        }
+        return res;
+    }
+
+    JSObject *obj = NewDenseCopiedArray(cx, length, rest, NULL);
+    if (!obj)
+        return NULL;
+    obj->setType(templateObj->type());
+    return obj;
+}
+
 bool
 HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn)
 {

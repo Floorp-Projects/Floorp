@@ -211,6 +211,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIteratorEnd(LIteratorEnd *lir);
     bool visitArgumentsLength(LArgumentsLength *lir);
     bool visitGetArgument(LGetArgument *lir);
+    bool visitRest(LRest *lir);
     bool visitCallSetProperty(LCallSetProperty *ins);
     bool visitCallDeleteProperty(LCallDeleteProperty *lir);
     bool visitBitNotV(LBitNotV *lir);
