@@ -2533,7 +2533,7 @@ jsdService::ActivateDebugger (JSRuntime *rt)
         return NS_ERROR_FAILURE;
 
     JSContext *cx   = JSD_GetDefaultJSContext (mCx);
-    JS::RootedObject glob(cx, JS_GetGlobalObject (cx));
+    JS::RootedObject glob(cx, JSD_GetDefaultGlobal (mCx));
 
     /* init xpconnect on the debugger's context in case xpconnect tries to
      * use it for stuff. */
