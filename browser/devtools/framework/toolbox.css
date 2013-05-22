@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.devtools-tab > .radio-check,
-.devtools-tab > .radio-check-box1,
-.devtools-tab > .radio-spacer-box {
-  display: none;
+.devtools-tab {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#control-item");
+  -moz-box-align: center;
 }
 
 #toolbox-controls > toolbarbutton > .toolbarbutton-text,
