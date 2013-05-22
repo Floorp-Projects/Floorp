@@ -27,6 +27,42 @@ add_task(function test_createDownload()
 });
 
 /**
+* Tests createDownload for private download.
+ */
+add_task(function test_createDownload_private()
+{
+  let download = yield Downloads.createDownload({
+    source: { uri: NetUtil.newURI("about:blank"),
+              isPrivate: true },
+    target: { file: getTempFile(TEST_TARGET_FILE_NAME) },
+    saver: { type: "copy" }
+  });
+  do_check_true(download.source.isPrivate);
+});
+
+/**
+ * Tests createDownload for normal (public) download.
+ */
+add_task(function test_createDownload_public()
+{
+  let uri = NetUtil.newURI("about:blank");
+  let tempFile = getTempFile(TEST_TARGET_FILE_NAME);
+  let download = yield Downloads.createDownload({
+    source: { uri: uri, isPrivate: false },
+    target: { file: tempFile },
+    saver: { type: "copy" }
+  });
+  do_check_false(download.source.isPrivate);
+
+  download = yield Downloads.createDownload({
+    source: { uri: uri },
+    target: { file: tempFile },
+    saver: { type: "copy" }
+  });
+  do_check_true(!download.source.isPrivate);
+});
+
+/**
  * Tests simpleDownload with nsIURI and nsIFile as arguments.
  */
 add_task(function test_simpleDownload_uri_file_arguments()
@@ -58,4 +94,30 @@ add_task(function test_getPublicDownloadList()
   let downloadListTwo = yield Downloads.getPublicDownloadList();
 
   do_check_eq(downloadListOne, downloadListTwo);
+});
+
+/**
+ * Tests that the getPrivateDownloadList function returns the same list when
+ * called multiple times.  More detailed tests are implemented separately for
+ * the DownloadList module.
+ */
+add_task(function test_getPrivateDownloadList()
+{
+  let downloadListOne = yield Downloads.getPrivateDownloadList();
+  let downloadListTwo = yield Downloads.getPrivateDownloadList();
+
+  do_check_eq(downloadListOne, downloadListTwo);
+});
+
+/**
+ * Tests that the getPublicDownloadList and getPrivateDownloadList function
+ * and returns the different list.  More detailed tests are implemented
+ * separately for the DownloadList module.
+ */
+add_task(function test_public_and_private_lists_differ()
+{
+  let publicDownloadList = yield Downloads.getPublicDownloadList();
+  let privateDownloadList = yield Downloads.getPrivateDownloadList();
+
+  do_check_neq(publicDownloadList, privateDownloadList);
 });
