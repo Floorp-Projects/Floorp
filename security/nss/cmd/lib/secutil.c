@@ -521,9 +521,9 @@ SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
 		body = PORT_Strchr(asc, '\r'); /* maybe this is a MAC file */
 	    if (body)
 		trailer = strstr(++body, "-----END");
-	    if (trailer != NULL)
+	    if (trailer != NULL) {
 		*trailer = '\0';
-	    if (!body || !trailer) {
+	    } else {
 		fprintf(stderr, "input has header but no trailer\n");
 		PORT_Free(filedata.data);
 		return SECFailure;
