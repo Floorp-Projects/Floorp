@@ -76,6 +76,9 @@
               <hbox id="noUpdatesFound" align="center">
                 <label>&update.noUpdatesFound;</label>
               </hbox>
+              <hbox id="otherInstanceHandlingUpdates" align="center">
+                <label>&update.otherInstanceHandlingUpdates;</label>
+              </hbox>
               <hbox id="manualUpdate" align="center">
                 <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
               </hbox>
