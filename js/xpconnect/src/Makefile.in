@@ -15,6 +15,7 @@ MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 CPPSRCS		= \
+		nsCxPusher.cpp \
 		nsScriptError.cpp \
 		nsXPConnect.cpp \
 		XPCCallContext.cpp \

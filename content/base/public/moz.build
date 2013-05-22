@@ -41,7 +41,6 @@ EXPORTS += [
     'nsContentPolicyUtils.h',
     'nsContentUtils.h',
     'nsCopySupport.h',
-    'nsCxPusher.h',
     'nsDOMFile.h',
     'nsDeprecatedOperationList.h',
     'nsDocElementCreatedNotificationRunner.h',
