@@ -689,6 +689,15 @@ gfxFontEntry::ReleaseGrFace(gr_face *aFace)
 }
 
 void
+gfxFontEntry::DisconnectSVG()
+{
+    if (mSVGInitialized && mSVGGlyphs) {
+        mSVGGlyphs = nullptr;
+        mSVGInitialized = false;
+    }
+}
+
+void
 gfxFontEntry::CheckForGraphiteTables()
 {
     AutoTable silfTable(this, TRUETYPE_TAG('S','i','l','f'));
@@ -1393,20 +1402,10 @@ gfxFontCache::MemoryReporter::CollectReports
     return NS_OK;
 }
 
-// Observer for the memory-pressure notification, to trigger
-// flushing of the shaped-word caches
-class MemoryPressureObserver MOZ_FINAL : public nsIObserver,
-                                         public nsSupportsWeakReference
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-};
-
-NS_IMPL_ISUPPORTS2(MemoryPressureObserver, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS1(gfxFontCache::Observer, nsIObserver)
 
 NS_IMETHODIMP
-MemoryPressureObserver::Observe(nsISupports *aSubject,
+gfxFontCache::Observer::Observe(nsISupports *aSubject,
                                 const char *aTopic,
                                 const PRUnichar *someData)
 {
@@ -1415,6 +1414,8 @@ MemoryPressureObserver::Observe(nsISupports *aSubject,
         if (fontCache) {
             fontCache->FlushShapedWordCaches();
         }
+    } else {
+        NS_NOTREACHED("unexpected notification topic");
     }
     return NS_OK;
 }
@@ -1455,7 +1456,7 @@ gfxFontCache::gfxFontCache()
 {
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     if (obs) {
-        obs->AddObserver(new MemoryPressureObserver, "memory-pressure", false);
+        obs->AddObserver(new Observer, "memory-pressure", false);
     }
 
     mWordCacheExpirationTimer = do_CreateInstance("@mozilla.org/timer;1");
