@@ -6,23 +6,24 @@
 
 #include "nsCxPusher.h"
 
-#include "nsContentUtils.h"
 #include "nsIScriptContext.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsJSUtils.h"
 #include "nsDOMJSUtils.h"
 #include "mozilla/Util.h"
-#include "xpcpublic.h"
+#include "xpcprivate.h"
 
 using mozilla::dom::EventTarget;
 using mozilla::DebugOnly;
 
+NS_EXPORT
 nsCxPusher::nsCxPusher()
     : mScriptIsRunning(false),
       mPushedSomething(false)
 {
 }
 
+NS_EXPORT
 nsCxPusher::~nsCxPusher()
 {
   Pop();
@@ -99,7 +100,7 @@ nsCxPusher::RePush(EventTarget *aCurrentTarget)
   return Push(aCurrentTarget);
 }
 
-void
+NS_EXPORT_(void)
 nsCxPusher::Push(JSContext *cx)
 {
   MOZ_ASSERT(!mPushedSomething, "No double pushing with nsCxPusher::Push()!");
@@ -116,7 +117,7 @@ nsCxPusher::Push(JSContext *cx)
 void
 nsCxPusher::DoPush(JSContext* cx)
 {
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
   if (!xpc) {
     // If someone tries to push a cx when we don't have the relevant state,
     // it's probably safest to just crash.
@@ -125,14 +126,14 @@ nsCxPusher::DoPush(JSContext* cx)
 
   // NB: The GetDynamicScriptContext is historical and might not be sane.
   if (cx && nsJSUtils::GetDynamicScriptContext(cx) &&
-      xpc::danger::IsJSContextOnStack(cx))
+      xpc::IsJSContextOnStack(cx))
   {
     // If the context is on the stack, that means that a script
     // is running at the moment in the context.
     mScriptIsRunning = true;
   }
 
-  if (!xpc::danger::PushJSContext(cx)) {
+  if (!xpc::PushJSContext(cx)) {
     MOZ_CRASH();
   }
 
@@ -150,10 +151,9 @@ nsCxPusher::PushNull()
   DoPush(nullptr);
 }
 
-void
+NS_EXPORT_(void)
 nsCxPusher::Pop()
 {
-  MOZ_ASSERT(nsContentUtils::XPConnect());
   if (!mPushedSomething) {
     mScx = nullptr;
     mPushedSomething = false;
@@ -163,6 +163,7 @@ nsCxPusher::Pop()
 
     return;
   }
+  MOZ_ASSERT(nsXPConnect::GetXPConnect());
 
   // When we push a context, we may save the frame chain and pretend like we
   // haven't entered any compartment. This gets restored on Pop(), but we can
@@ -172,8 +173,8 @@ nsCxPusher::Pop()
   MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
                                 js::GetEnterCompartmentDepth(mPushedContext));
   DebugOnly<JSContext*> stackTop;
-  MOZ_ASSERT(mPushedContext == nsContentUtils::GetCurrentJSContext());
-  xpc::danger::PopJSContext();
+  MOZ_ASSERT(mPushedContext == nsXPConnect::GetXPConnect()->GetCurrentJSContext());
+  xpc::PopJSContext();
 
   if (!mScriptIsRunning && mScx) {
     // No JS is running in the context, but executing the event handler might have
@@ -208,12 +209,13 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
+  nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
   if (!aSafe) {
-    mCx = nsContentUtils::GetCurrentJSContext();
+    mCx = xpc->GetCurrentJSContext();
   }
 
   if (!mCx) {
-    mCx = nsContentUtils::GetSafeJSContext();
+    mCx = xpc->GetSafeJSContext();
     mPusher.Push(mCx);
   }
 }
@@ -226,6 +228,13 @@ AutoJSContext::operator JSContext*()
 AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   : AutoJSContext(true MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
 {
+}
+
+AutoPushJSContext::AutoPushJSContext(JSContext *aCx) : mCx(aCx)
+{
+  if (mCx && mCx != nsXPConnect::GetXPConnect()->GetCurrentJSContext()) {
+    mPusher.Push(mCx);
+  }
 }
 
 } // namespace mozilla
