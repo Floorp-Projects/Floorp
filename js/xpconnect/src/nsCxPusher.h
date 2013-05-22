@@ -4,13 +4,23 @@
 #ifndef nsCxPusher_h___
 #define nsCxPusher_h___
 
-#include "nsContentUtils.h"
+#include "jsapi.h"
+#include "mozilla/Util.h"
+#include "nsCOMPtr.h"
+
+namespace mozilla {
+namespace dom {
+class EventTarget;
+}
+}
+
+class nsIScriptContext;
 
 class MOZ_STACK_CLASS nsCxPusher
 {
 public:
-  nsCxPusher();
-  ~nsCxPusher(); // Calls Pop();
+  NS_EXPORT nsCxPusher();
+  NS_EXPORT ~nsCxPusher(); // Calls Pop();
 
   // Returns false if something erroneous happened.
   bool Push(mozilla::dom::EventTarget *aCurrentTarget);
@@ -19,12 +29,12 @@ public:
   bool RePush(mozilla::dom::EventTarget *aCurrentTarget);
   // If a null JSContext is passed to Push(), that will cause no
   // push to happen and false to be returned.
-  void Push(JSContext *cx);
+  NS_EXPORT_(void) Push(JSContext *cx);
   // Explicitly push a null JSContext on the the stack
   void PushNull();
 
   // Pop() will be a no-op if Push() or PushNull() fail
-  void Pop();
+  NS_EXPORT_(void) Pop();
 
   nsIScriptContext* GetCurrentScriptContext() { return mScx; }
 private:
@@ -94,12 +104,7 @@ class MOZ_STACK_CLASS AutoPushJSContext {
   JSContext* mCx;
 
 public:
-  AutoPushJSContext(JSContext* aCx) : mCx(aCx)
-  {
-    if (mCx && mCx != nsContentUtils::GetCurrentJSContext()) {
-      mPusher.Push(mCx);
-    }
-  }
+  AutoPushJSContext(JSContext* aCx);
   operator JSContext*() { return mCx; }
 };
 

@@ -4250,7 +4250,13 @@ GetObjectScope(JSObject *obj)
 
 extern JSBool gDebugMode;
 extern JSBool gDesiredDebugMode;
-}
+
+// Internal use only.
+bool PushJSContext(JSContext *aCx);
+void PopJSContext();
+bool IsJSContextOnStack(JSContext *aCx);
+
+} // namespace xpc
 
 /***************************************************************************/
 // Inlines use the above - include last.
