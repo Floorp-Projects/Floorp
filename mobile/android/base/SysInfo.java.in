@@ -50,22 +50,32 @@ public final class SysInfo {
             return cpuCount;
         }
 
+        if (android.os.Build.VERSION.SDK_INT < 9) {
+            return readCPUCount();
+        }
+
+        // Avoid a strict mode warning... but only on devices that have StrictMode.
+        StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            return readCPUCount();
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
+        }
+    }
+
+    private static int readCPUCount() {
         class CpuFilter implements FileFilter {
             @Override
             public boolean accept(File pathname) {
                 return Pattern.matches("cpu[0-9]+", pathname.getName());
             }
         }
-
-        StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
         try {
             final File dir = new File("/sys/devices/system/cpu/");
             return cpuCount = dir.listFiles(new CpuFilter()).length;
         } catch (Exception e) {
             Log.w(LOG_TAG, "Assuming 1 CPU; got exception.", e);
             return cpuCount = 1;
-        } finally {
-            StrictMode.setThreadPolicy(savedPolicy);
         }
     }
 
