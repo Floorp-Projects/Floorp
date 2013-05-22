@@ -55,6 +55,7 @@ var tests = {
     if (navigator.platform.contains("Mac")) {
       info("Skipping checking the menubar on Mac OS");
       next();
+      return;
     }
 
     // Test that keyboard accessible menuitem doesn't exist when no ambient icons specified.
@@ -135,8 +136,10 @@ var tests = {
       is(statusIcon.getAttribute("aria-label"), "Test Ambient 1 \u2046");
 
       // The menu bar isn't as easy to instrument on Mac.
-      if (navigator.platform.contains("Mac"))
+      if (navigator.platform.contains("Mac")) {
         next();
+        return;
+      }
 
       // Test that keyboard accessible menuitem was added.
       let toolsPopup = document.getElementById("menu_ToolsPopup");
