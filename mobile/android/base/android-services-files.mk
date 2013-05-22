@@ -45,6 +45,7 @@ SYNC_JAVA_FILES := \
   background/healthreport/HealthReportProvider.java \
   background/healthreport/HealthReportStorage.java \
   background/healthreport/HealthReportUtils.java \
+  background/healthreport/ProfileInformationCache.java \
   sync/AlreadySyncingException.java \
   sync/CollectionKeys.java \
   sync/CommandProcessor.java \
