@@ -1819,7 +1819,7 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
     Label isTenured;
     masm.branchTestObject(Assembler::NotEqual, R0, &skipBarrier);
     masm.branchPtr(Assembler::Below, objReg, ImmWord(nursery.start()), &isTenured);
-    masm.branchPtr(Assembler::Below, objReg, ImmWord(nursery.end()), &skipBarrier);
+    masm.branchPtr(Assembler::Below, objReg, ImmWord(nursery.heapEnd()), &skipBarrier);
 
     masm.bind(&isTenured);
     masm.call(postBarrierSlot_);
