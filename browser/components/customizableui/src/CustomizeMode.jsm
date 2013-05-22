@@ -555,7 +555,18 @@ CustomizeMode.prototype = {
 
     // Do nothing if the target or origin are not customizable.
     if (!targetArea || !originArea) {
-      gCurrentDragOverItem = null;
+      return;
+    }
+
+    // Do nothing if thw widget is not allowed to be removed.
+    if (targetArea.id == kPaletteId &&
+       !CustomizableUI.isWidgetRemovable(draggedItemId)) {
+      return;
+    }
+
+    // Do nothing if the widget is not allowed to move to the target area.
+    if (targetArea.id != kPaletteId &&
+        !CustomizableUI.canWidgetMoveToArea(draggedItemId, targetArea.id)) {
       return;
     }
 
@@ -610,6 +621,10 @@ CustomizeMode.prototype = {
     // either the originArea was the palette, or a customizable area.
     if (targetArea.id == kPaletteId) {
       if (originArea.id !== kPaletteId) {
+        if (!CustomizableUI.isWidgetRemovable(draggedItemId)) {
+          return;
+        }
+
         let widget = this.unwrapToolbarItem(draggedWrapper);
         CustomizableUI.removeWidgetFromArea(draggedItemId);
         draggedWrapper = this.wrapToolbarItem(widget, "palette");
@@ -621,6 +636,10 @@ CustomizeMode.prototype = {
       } else {
         this.visiblePalette.insertBefore(draggedWrapper, targetNode);
       }
+      return;
+    }
+
+    if (!CustomizableUI.canWidgetMoveToArea(draggedItemId, targetArea.id)) {
       return;
     }
 
