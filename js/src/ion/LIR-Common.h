@@ -4106,6 +4106,52 @@ class LGetArgument : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
+// Create the rest parameter.
+class LRest : public LCallInstructionHelper<1, 1, 3>
+{
+  public:
+    LIR_HEADER(Rest)
+
+    LRest(const LAllocation &numActuals, const LDefinition &temp1, const LDefinition &temp2,
+          const LDefinition &temp3) {
+        setOperand(0, numActuals);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+    const LAllocation *numActuals() {
+        return getOperand(0);
+    }
+    MRest *mir() const {
+        return mir_->toRest();
+    }
+};
+
+class LParRest : public LCallInstructionHelper<1, 2, 3>
+{
+  public:
+    LIR_HEADER(ParRest);
+
+    LParRest(const LAllocation &parSlice, const LAllocation &numActuals,
+             const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3) {
+        setOperand(0, parSlice);
+        setOperand(1, numActuals);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+    const LAllocation *parSlice() {
+        return getOperand(0);
+    }
+    const LAllocation *numActuals() {
+        return getOperand(1);
+    }
+    MRest *mir() const {
+        return mir_->toRest();
+    }
+};
+
+
 class LParWriteGuard : public LCallInstructionHelper<0, 2, 1>
 {
   public:

@@ -71,11 +71,11 @@ let tests = [
 
   function timeout() {
     let deferred = imports.Promise.defer();
-    let url = testPageURL();
+    let url = testPageURL({ wait: 30000 });
     let file = fileForURL(url);
     ok(!file.exists(), "Thumbnail should not be cached already.");
     let numCalls = 0;
-    imports.BackgroundPageThumbs.capture(testPageURL(), {
+    imports.BackgroundPageThumbs.capture(url, {
       timeout: 0,
       onDone: function onDone(capturedURL) {
         is(capturedURL, url, "Captured URL should be URL passed to capture");

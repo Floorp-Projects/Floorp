@@ -1590,6 +1590,7 @@ public:
    */
   static bool AreOpacityAnimationsEnabled();
   static bool AreTransformAnimationsEnabled();
+  static bool AreAsyncAnimationsEnabled();
 
   /**
    * Checks if we should warn about animations that can't be async

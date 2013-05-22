@@ -1422,6 +1422,26 @@ MCompare::inputType()
     }
 }
 
+static inline bool
+MustBeUInt32(MDefinition *def, MDefinition **pwrapped)
+{
+    if (def->isUrsh()) {
+        *pwrapped = def->toUrsh()->getOperand(0);
+        MDefinition *rhs = def->toUrsh()->getOperand(1);
+        return rhs->isConstant()
+            && rhs->toConstant()->value().isInt32()
+            && rhs->toConstant()->value().toInt32() == 0;
+    }
+
+    if (def->isConstant()) {
+        *pwrapped = def;
+        return def->toConstant()->value().isInt32()
+            && def->toConstant()->value().toInt32() >= 0;
+    }
+
+    return false;
+}
+
 void
 MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
 {
@@ -1436,6 +1456,19 @@ MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
     bool looseEq = jsop() == JSOP_EQ || jsop() == JSOP_NE;
     bool strictEq = jsop() == JSOP_STRICTEQ || jsop() == JSOP_STRICTNE;
     bool relationalEq = !(looseEq || strictEq);
+
+    // Comparisons on unsigned integers may be treated as UInt32. Skip any (x >>> 0)
+    // operation coercing the operands to uint32. The type policy will make sure the
+    // now unwrapped operand is an int32.
+    MDefinition *newlhs, *newrhs;
+    if (MustBeUInt32(getOperand(0), &newlhs) && MustBeUInt32(getOperand(1), &newrhs)) {
+        if (newlhs != getOperand(0))
+            replaceOperand(0, newlhs);
+        if (newrhs != getOperand(1))
+            replaceOperand(1, newrhs);
+        compareType_ = Compare_UInt32;
+        return;
+    }
 
     // Integer to integer or boolean to boolean comparisons may be treated as Int32.
     if ((lhs == MIRType_Int32 && rhs == MIRType_Int32) ||
@@ -1963,9 +1996,11 @@ MCompare::evaluateConstantOperands(bool *result)
             *result = (lhsUint >= rhsUint);
             break;
           case JSOP_EQ:
+          case JSOP_STRICTEQ:
             *result = (lhsUint == rhsUint);
             break;
           case JSOP_NE:
+          case JSOP_STRICTNE:
             *result = (lhsUint != rhsUint);
             break;
           default:

@@ -118,14 +118,12 @@ typedef FrameMetrics::ViewID ViewID;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
-#ifdef MOZ_FLEXBOX
 // These are indices into kDisplayKTable.  They'll be initialized
 // the first time that FlexboxEnabledPrefChangeCallback() is invoked.
 static int32_t sIndexOfFlexInDisplayTable;
 static int32_t sIndexOfInlineFlexInDisplayTable;
 // This tracks whether those ^^ indices have been initialized
 static bool sAreFlexKeywordIndicesInitialized = false;
-#endif // MOZ_FLEXBOX
 
 typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
 static ContentMap* sContentMap = nullptr;
@@ -140,7 +138,6 @@ static ContentMap& GetContentMap() {
 // When the pref "layout.css.flexbox.enabled" changes, this function is invoked
 // to let us update kDisplayKTable, to selectively disable or restore the
 // entries for "flex" and "inline-flex" in that table.
-#ifdef MOZ_FLEXBOX
 static int
 FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 {
@@ -178,7 +175,6 @@ FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 
   return 0;
 }
-#endif // MOZ_FLEXBOX
 
 template <class AnimationsOrTransitions>
 static AnimationsOrTransitions*
@@ -354,6 +350,12 @@ nsLayoutUtils::AreTransformAnimationsEnabled()
 
   return sAreTransformAnimationsEnabled &&
     gfxPlatform::OffMainThreadCompositingEnabled();
+}
+
+bool
+nsLayoutUtils::AreAsyncAnimationsEnabled()
+{
+  return AreOpacityAnimationsEnabled() || AreTransformAnimationsEnabled();
 }
 
 bool
@@ -3066,7 +3068,6 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   bool isFlexItem = aFrame->IsFlexItem();
   bool isHorizontalFlexItem = false;
 
-#ifdef MOZ_FLEXBOX
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
     // property (e.g. "width") for sizing purposes, *unless* they have
@@ -3098,8 +3099,6 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       }
     }
   }
-#endif // MOZ_FLEXBOX
-
 
   // Handle intrinsic sizes and their interaction with
   // {min-,max-,}{width,height} according to the rules in
@@ -4958,11 +4957,9 @@ nsLayoutUtils::Initialize()
   Preferences::AddBoolVarCache(&sInvalidationDebuggingIsEnabled,
                                "nglayout.debug.invalidation");
 
-#ifdef MOZ_FLEXBOX
   Preferences::RegisterCallback(FlexboxEnabledPrefChangeCallback,
                                 FLEXBOX_ENABLED_PREF_NAME);
   FlexboxEnabledPrefChangeCallback(FLEXBOX_ENABLED_PREF_NAME, nullptr);
-#endif // MOZ_FLEXBOX
 }
 
 /* static */
@@ -4974,10 +4971,8 @@ nsLayoutUtils::Shutdown()
     sContentMap = nullptr;
   }
 
-#ifdef MOZ_FLEXBOX
   Preferences::UnregisterCallback(FlexboxEnabledPrefChangeCallback,
                                   FLEXBOX_ENABLED_PREF_NAME);
-#endif // MOZ_FLEXBOX
 }
 
 /* static */

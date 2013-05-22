@@ -4183,7 +4183,6 @@ ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
-MOZ_FLEXBOX=1
 MOZ_WEBAPP_RUNTIME=
 MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
@@ -6202,13 +6201,6 @@ done
 
 if test -n "$MOZ_USE_NATIVE_POPUP_WINDOWS"; then
   AC_DEFINE(MOZ_USE_NATIVE_POPUP_WINDOWS)
-fi
-
-dnl ========================================================
-dnl CSS3 Flexbox Support
-dnl ========================================================
-if test -n "$MOZ_FLEXBOX"; then
-  AC_DEFINE(MOZ_FLEXBOX)
 fi
 
 dnl ========================================================
@@ -8812,7 +8804,6 @@ AC_SUBST(MOZ_NATIVE_JPEG)
 AC_SUBST(MOZ_NATIVE_PNG)
 AC_SUBST(MOZ_NATIVE_BZ2)
 
-AC_SUBST(MOZ_FLEXBOX)
 AC_SUBST(MOZ_JPEG_CFLAGS)
 AC_SUBST(MOZ_JPEG_LIBS)
 AC_SUBST(MOZ_BZ2_CFLAGS)

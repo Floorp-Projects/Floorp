@@ -397,9 +397,8 @@ public class GeckoAppShell
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
     }
 
-    private static Location getLastKnownLocation() {
+    private static Location getLastKnownLocation(LocationManager lm) {
         Location lastKnownLocation = null;
-        LocationManager lm = getLocationManager();
         List<String> providers = lm.getAllProviders();
 
         for (String provider : providers) {
@@ -428,10 +427,13 @@ public class GeckoAppShell
         ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    LocationManager lm = getLocationManager();
+                    LocationManager lm = getLocationManager(GeckoApp.mAppContext);
+                    if (lm == null) {
+                        return;
+                    }
 
                     if (enable) {
-                        Location lastKnownLocation = getLastKnownLocation();
+                        Location lastKnownLocation = getLastKnownLocation(lm);
                         if (lastKnownLocation != null) {
                             GeckoApp.mAppContext.onLocationChanged(lastKnownLocation);
                         }
@@ -463,8 +465,17 @@ public class GeckoAppShell
             });
     }
 
-    private static LocationManager getLocationManager() {
-        return (LocationManager) GeckoApp.mAppContext.getSystemService(Context.LOCATION_SERVICE);
+    private static LocationManager getLocationManager(Context context) {
+        try {
+            return (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        } catch (NoSuchFieldError e) {
+            // Some Tegras throw exceptions about missing the CONTROL_LOCATION_UPDATES permission,
+            // which allows enabling/disabling location update notifications from the cell radio.
+            // CONTROL_LOCATION_UPDATES is not for use by normal applications, but we might be
+            // hitting this problem if the Tegras are confused about missing cell radios.
+            Log.e(LOGTAG, "LOCATION_SERVICE not found?!", e);
+            return null;
+        }
     }
 
     public static void enableLocationHighAccuracy(final boolean enable) {

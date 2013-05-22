@@ -2346,6 +2346,16 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   }
 #endif
 
+#ifdef DEBUG
+  {
+    uint32_t appId;
+    nsresult rv = NodePrincipal()->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+               "Document should never have UNKNOWN_APP_ID");
+  }
+#endif
+
   MOZ_ASSERT(GetReadyStateEnum() == nsIDocument::READYSTATE_UNINITIALIZED,
              "Bad readyState");
   SetReadyStateInternal(READYSTATE_LOADING);

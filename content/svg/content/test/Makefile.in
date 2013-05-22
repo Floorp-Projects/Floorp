@@ -92,6 +92,7 @@ MOCHITEST_FILES = \
 		test_viewport.html \
 		zoom-helper.svg \
 		test_zoom.xhtml \
+                test_bug872812.html \
 		$(NULL)
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))

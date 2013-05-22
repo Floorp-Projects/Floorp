@@ -38,8 +38,8 @@ function todo(condition, name, diag) {
   dump("TODO: ", diag);
 }
 
-function info(msg) {
-  do_print(msg);
+function info(name, message) {
+  do_print(name);
 }
 
 function run_test() {
@@ -191,6 +191,19 @@ function gc()
 {
   Components.utils.forceGC();
   Components.utils.forceCC();
+}
+
+function setTimeout(fun, timeout) {
+  let timer = Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+  var event = {
+    notify: function (timer) {
+      fun();
+    }
+  };
+  timer.initWithCallback(event, timeout,
+                         Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  return timer;
 }
 
 var SpecialPowers = {

@@ -227,6 +227,7 @@ nsSVGUseFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   SVGUseElement *use = static_cast<SVGUseElement*>(mContent);
 
   nsIContent* clone = use->CreateAnonymousContent();
+  nsSVGEffects::InvalidateRenderingObservers(this);
   if (!clone)
     return NS_ERROR_FAILURE;
   if (!aElements.AppendElement(clone))

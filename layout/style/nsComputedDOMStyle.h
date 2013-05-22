@@ -386,7 +386,6 @@ private:
   mozilla::dom::CSSValue* DoGetAnimationIterationCount();
   mozilla::dom::CSSValue* DoGetAnimationPlayState();
 
-#ifdef MOZ_FLEXBOX
   /* CSS Flexbox properties */
   mozilla::dom::CSSValue* DoGetAlignItems();
   mozilla::dom::CSSValue* DoGetAlignSelf();
@@ -396,7 +395,6 @@ private:
   mozilla::dom::CSSValue* DoGetFlexShrink();
   mozilla::dom::CSSValue* DoGetOrder();
   mozilla::dom::CSSValue* DoGetJustifyContent();
-#endif // MOZ_FLEXBOX
 
   /* SVG properties */
   mozilla::dom::CSSValue* DoGetFill();

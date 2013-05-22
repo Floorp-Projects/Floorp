@@ -553,10 +553,8 @@ protected:
   bool ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask);
   bool RequireWhitespace();
 
-#ifdef MOZ_FLEXBOX
   // For "flex" shorthand property, defined in CSS3 Flexbox
   bool ParseFlex();
-#endif
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
@@ -5560,7 +5558,6 @@ CSSParserImpl::ParseElement(nsCSSValue& aValue)
   return false;
 }
 
-#ifdef MOZ_FLEXBOX
 // flex: none | [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]
 bool
 CSSParserImpl::ParseFlex()
@@ -5677,7 +5674,6 @@ CSSParserImpl::ParseFlex()
 
   return true;
 }
-#endif
 
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
@@ -6505,10 +6501,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseCounterData(aPropID);
   case eCSSProperty_cursor:
     return ParseCursor();
-#ifdef MOZ_FLEXBOX
   case eCSSProperty_flex:
     return ParseFlex();
-#endif // MOZ_FLEXBOX
   case eCSSProperty_font:
     return ParseFont();
   case eCSSProperty_image_region:

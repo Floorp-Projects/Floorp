@@ -786,6 +786,7 @@ LayerManagerOGL::Render()
       // thread, and undoes all the care we take with layers txns being
       // sent atomically with rotation changes
       mWidget->GetClientBounds(rect);
+      rect.x = rect.y = 0;
     }
   }
   WorldTransformRect(rect);

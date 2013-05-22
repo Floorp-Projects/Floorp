@@ -1469,13 +1469,6 @@ struct TypeZone
     /* Whether type inference is enabled in this compartment. */
     bool                         inferenceEnabled;
 
-    /*
-     * JM compilation is allowed only if script analysis has been used to
-     * monitor the behavior of all scripts in this zone since its creation.
-     * OSR in JM requires this property.
-     */
-    bool jaegerCompilationAllowed;
-
     TypeZone(JS::Zone *zone);
     ~TypeZone();
     void init(JSContext *cx);

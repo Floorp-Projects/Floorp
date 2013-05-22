@@ -9,66 +9,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript;version=1.7">
-    function testSteps()
-    {
-      let request = indexedDB.open(window.location.pathname, 1);
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-
-      let event = yield;
-
-      let db = event.target.result;
-
-      for each (let autoIncrement in [false, true]) {
-        let objectStore =
-          db.createObjectStore(autoIncrement, { keyPath: "id",
-                                                autoIncrement: autoIncrement });
-        objectStore.createIndex("", "index", { unique: true });
-
-        for (let i = 0; i < 10; i++) {
-          objectStore.add({ id: i, index: i });
-        }
-      }
-
-      event = yield;
-      is(event.type, "success", "expect a success event");
-
-      for each (let autoIncrement in [false, true]) {
-        objectStore = db.transaction(autoIncrement, IDBTransaction.READ_WRITE)
-                        .objectStore(autoIncrement);
-
-        request = objectStore.put({ id: 5, index: 6 });
-        request.onsuccess = unexpectedSuccessHandler;
-        request.addEventListener("error", new ExpectError("ConstraintError", true));
-        event = yield;
-
-        event.preventDefault();
-
-        let keyRange = IDBKeyRange.only(5);
-
-        objectStore.index("").openCursor(keyRange).onsuccess = function(event) {
-          let cursor = event.target.result;
-          ok(cursor, "Must have a cursor here");
-
-          is(cursor.value.index, 5, "Still have the right index value");
-
-          cursor.value.index = 6;
-
-          request = cursor.update(cursor.value);
-          request.onsuccess = unexpectedSuccessHandler;
-          request.addEventListener("error", new ExpectError("ConstraintError", true));
-        };
-
-        yield;
-      }
-
-      finishTest();
-      yield;
-    }
-
-  </script>
+  <script type="text/javascript;version=1.7" src="unit/test_unique_index_update.js"></script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>

@@ -1945,26 +1945,21 @@ JS_StringToVersion(const char *string);
                                                    leaving that up to the
                                                    embedding. */
 
-#define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
+#define JSOPTION_BASELINE       JS_BIT(14)      /* Baseline compiler. */
 
-#define JSOPTION_BASELINE       JS_BIT(15)      /* Baseline compiler. */
+#define JSOPTION_PCCOUNT        JS_BIT(15)      /* Collect per-op execution counts */
 
-#define JSOPTION_METHODJIT_ALWAYS \
-                                JS_BIT(16)      /* Always whole-method JIT,
-                                                   don't tune at run-time. */
-#define JSOPTION_PCCOUNT        JS_BIT(17)      /* Collect per-op execution counts */
-
-#define JSOPTION_TYPE_INFERENCE JS_BIT(18)      /* Perform type inference. */
-#define JSOPTION_STRICT_MODE    JS_BIT(19)      /* Provides a way to force
+#define JSOPTION_TYPE_INFERENCE JS_BIT(16)      /* Perform type inference. */
+#define JSOPTION_STRICT_MODE    JS_BIT(17)      /* Provides a way to force
                                                    strict mode for all code
                                                    without requiring
                                                    "use strict" annotations. */
 
-#define JSOPTION_ION            JS_BIT(20)      /* IonMonkey */
+#define JSOPTION_ION            JS_BIT(18)      /* IonMonkey */
 
-#define JSOPTION_ASMJS          JS_BIT(21)      /* optimizingasm.js compiler */
+#define JSOPTION_ASMJS          JS_BIT(19)      /* optimizingasm.js compiler */
 
-#define JSOPTION_MASK           JS_BITMASK(22)
+#define JSOPTION_MASK           JS_BITMASK(20)
 
 extern JS_PUBLIC_API(uint32_t)
 JS_GetOptions(JSContext *cx);
