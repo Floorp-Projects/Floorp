@@ -36,7 +36,6 @@ interface AudioNode : EventTarget {
     readonly attribute unsigned long numberOfOutputs;
 
     // Channel up-mixing and down-mixing rules for all inputs.
-    [SetterThrows]
     attribute unsigned long channelCount;
     attribute ChannelCountMode channelCountMode;
     attribute ChannelInterpretation channelInterpretation;
