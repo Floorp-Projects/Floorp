@@ -76,6 +76,7 @@
 #include "nsAutoPtr.h"
 #include "nsBoxFrame.h"
 #include "nsBoxLayout.h"
+#include "nsFlexContainerFrame.h"
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIPrincipal.h"
@@ -101,7 +102,6 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIXULDocument.h"
 #endif
-#include "nsFlexContainerFrame.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif

@@ -27,6 +27,7 @@ CPPSRCS		= \
 		nsColumnSetFrame.cpp \
 		nsContainerFrame.cpp \
 		nsFirstLetterFrame.cpp \
+		nsFlexContainerFrame.cpp \
 		nsFloatManager.cpp \
 		nsFontInflationData.cpp \
 		nsFrame.cpp \
@@ -60,10 +61,6 @@ CPPSRCS		= \
 		nsTextRunTransformations.cpp \
 		nsViewportFrame.cpp \
 		nsVideoFrame.cpp \
-		$(NULL)
-
-CPPSRCS		+= \
-		nsFlexContainerFrame.cpp \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
