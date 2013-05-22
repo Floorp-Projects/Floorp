@@ -97,7 +97,6 @@ TextureClientShmem::SetDescriptor(const SurfaceDescriptor& aDescriptor)
 
   NS_ASSERTION(mDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc ||
                mDescriptor.type() == SurfaceDescriptor::TShmem ||
-               mDescriptor.type() == SurfaceDescriptor::TMemoryImage ||
                mDescriptor.type() == SurfaceDescriptor::TRGBImage,
                "Invalid surface descriptor");
 }

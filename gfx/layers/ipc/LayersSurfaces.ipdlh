@@ -83,13 +83,6 @@ struct RGBImage {
   uint64_t owner;
 };
 
-struct MemoryImage {
-  uintptr_t data;
-  gfxIntSize size;
-  uint32_t stride;
-  uint32_t format;
-};
-
 union SurfaceDescriptor {
   Shmem;
   SurfaceDescriptorD3D10;
@@ -99,7 +92,6 @@ union SurfaceDescriptor {
   RGBImage;
   SharedTextureDescriptor;
   SurfaceStreamDescriptor;
-  MemoryImage;
   null_t;
 };
 

@@ -32,22 +32,10 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
 ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
                                              const SurfaceDescriptor& aSurface)
 {
-  if (aSurface.type() == SurfaceDescriptor::TShmem) {
-    return gfxSharedQuartzSurface::Open(aSurface.get_Shmem());
-  } else if (aSurface.type() == SurfaceDescriptor::TMemoryImage) {
-    const MemoryImage& image = aSurface.get_MemoryImage();
-    gfxASurface::gfxImageFormat format
-      = static_cast<gfxASurface::gfxImageFormat>(image.format());
-
-    nsRefPtr<gfxASurface> surf =
-      new gfxQuartzSurface((unsigned char*)image.data(),
-                           image.size(),
-                           image.stride(),
-                           format);
-    return surf.forget();
-
+  if (SurfaceDescriptor::TShmem != aSurface.type()) {
+    return nullptr;
   }
-  return nullptr;
+  return gfxSharedQuartzSurface::Open(aSurface.get_Shmem());
 }
 
 /*static*/ bool
