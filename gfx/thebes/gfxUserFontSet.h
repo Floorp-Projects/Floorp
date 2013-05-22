@@ -262,6 +262,17 @@ public:
         static void Shutdown();
 
     private:
+        // Helper that we use to observe the empty-cache notification
+        // from nsICacheService.
+        class Flusher : public nsIObserver
+        {
+        public:
+            NS_DECL_ISUPPORTS
+            NS_DECL_NSIOBSERVER
+            Flusher() {}
+            virtual ~Flusher() {}
+        };
+
         // Key used to look up entries in the user-font cache.
         // Note that key comparison does *not* use the mFontEntry field
         // as a whole; it only compares specific fields within the entry

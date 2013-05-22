@@ -14,8 +14,10 @@
 #include "nsUnicharUtils.h"
 #include "prlong.h"
 #include "nsNetUtil.h"
+#include "nsICacheService.h"
 #include "nsIProtocolHandler.h"
 #include "nsIPrincipal.h"
+#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 
 #include "opentype-sanitiser.h"
@@ -743,6 +745,21 @@ gfxUserFontSet::FindFamilyFor(gfxFontEntry* aFontEntry) const
 nsTHashtable<gfxUserFontSet::UserFontCache::Entry>*
     gfxUserFontSet::UserFontCache::sUserFonts = nullptr;
 
+NS_IMPL_ISUPPORTS1(gfxUserFontSet::UserFontCache::Flusher, nsIObserver)
+
+NS_IMETHODIMP
+gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
+                                                const char* aTopic,
+                                                const PRUnichar* aData)
+{
+    NS_ASSERTION(strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID),
+                 "unexpected topic");
+    if (sUserFonts) {
+        sUserFonts->Clear();
+    }
+    return NS_OK;
+}
+
 bool
 gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 {
@@ -776,6 +793,13 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
     if (!sUserFonts) {
         sUserFonts = new nsTHashtable<Entry>;
         sUserFonts->Init();
+
+        nsCOMPtr<nsIObserverService> obs =
+            mozilla::services::GetObserverService();
+        if (obs) {
+            obs->AddObserver(new Flusher, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID,
+                             false);
+        }
     }
 
     gfxUserFontData *data = aFontEntry->mUserFontData;
