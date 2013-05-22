@@ -424,6 +424,10 @@ GetObjectParentMaybeScope(JSObject *obj);
 JS_FRIEND_API(JSObject *)
 GetGlobalForObjectCrossCompartment(JSObject *obj);
 
+// For legacy consumers only. This whole concept is going away soon.
+JS_FRIEND_API(JSObject *)
+GetDefaultGlobalForContext(JSContext *cx);
+
 JS_FRIEND_API(void)
 NotifyAnimationActivity(JSObject *obj);
 

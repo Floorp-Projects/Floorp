@@ -1320,7 +1320,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
   AutoPushJSContext cx(mContext);
-  JS::Rooted<JSObject*> scopeObject(cx, ::JS_GetGlobalObject(cx));
+  JS::Rooted<JSObject*> scopeObject(mContext, GetNativeGlobal());
   xpc_UnmarkGrayObject(scopeObject);
 
   bool ok = false;
@@ -1374,7 +1374,7 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject_,
   nsAutoMicroTask mt;
 
   if (!aScopeObject) {
-    aScopeObject = JS_GetGlobalObject(mContext);
+    aScopeObject = GetNativeGlobal();
   }
 
   xpc_UnmarkGrayScript(aScriptObject);
@@ -1544,8 +1544,7 @@ nsIScriptGlobalObject *
 nsJSContext::GetGlobalObject()
 {
   AutoJSContext cx;
-  JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalObject(mContext));
-
+  JS::Rooted<JSObject*> global(mContext, GetNativeGlobal());
   if (!global) {
     return nullptr;
   }
@@ -1597,7 +1596,7 @@ nsJSContext::GetGlobalObject()
 JSObject*
 nsJSContext::GetNativeGlobal()
 {
-    return JS_GetGlobalObject(mContext);
+    return js::GetDefaultGlobalForContext(mContext);
 }
 
 JSContext*
@@ -1939,8 +1938,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
       AutoFree iidGuard(iid); // Free iid upon destruction.
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-      JS::Rooted<JSObject*> global(cx,
-        xpc_UnmarkGrayObject(::JS_GetGlobalObject(cx)));
+      JS::Rooted<JSObject*> global(cx, xpc_UnmarkGrayObject(GetNativeGlobal()));
       JS::Rooted<JS::Value> v(cx);
       nsresult rv = nsContentUtils::WrapNative(cx, global,
                                                data, iid, v.address(),

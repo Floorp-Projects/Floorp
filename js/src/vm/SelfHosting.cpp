@@ -8,6 +8,7 @@
 #include "jscompartment.h"
 #include "jsinterp.h"
 #include "jsobj.h"
+#include "jsfriendapi.h"
 
 #include "builtin/Intl.h"
 #include "builtin/ParallelArray.h"
@@ -491,7 +492,7 @@ bool
 JSRuntime::initSelfHosting(JSContext *cx)
 {
     JS_ASSERT(!selfHostingGlobal_);
-    RootedObject savedGlobal(cx, JS_GetGlobalObject(cx));
+    RootedObject savedGlobal(cx, js::GetDefaultGlobalForContext(cx));
     if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
         return false;
     JS_SetGlobalObject(cx, selfHostingGlobal_);
