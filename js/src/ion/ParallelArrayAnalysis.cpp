@@ -238,7 +238,8 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(StringLength)
     UNSAFE_OP(ArgumentsLength)
     UNSAFE_OP(GetArgument)
-    SAFE_OP(Rest)
+    CUSTOM_OP(Rest)
+    SAFE_OP(ParRest)
     SAFE_OP(Floor)
     SAFE_OP(Round)
     UNSAFE_OP(InstanceOf)
@@ -609,6 +610,12 @@ ParallelArrayVisitor::visitNewArray(MNewArray *newInstruction)
 
     return replaceWithParNew(newInstruction,
                              newInstruction->templateObject());
+}
+
+bool
+ParallelArrayVisitor::visitRest(MRest *ins)
+{
+    return replace(ins, MParRest::New(parSlice(), ins));
 }
 
 bool

@@ -7027,17 +7027,34 @@ class MGetArgument
     }
 };
 
-class MRest
-  : public MUnaryInstruction,
-    public IntPolicy<0>
+class MRestCommon
 {
     unsigned numFormals_;
     CompilerRootObject templateObject_;
 
+  protected:
+    MRestCommon(unsigned numFormals, JSObject *templateObject)
+      : numFormals_(numFormals),
+        templateObject_(templateObject)
+   { }
+
+  public:
+    unsigned numFormals() const {
+        return numFormals_;
+    }
+    JSObject *templateObject() const {
+        return templateObject_;
+    }
+};
+
+class MRest
+  : public MUnaryInstruction,
+    public MRestCommon,
+    public IntPolicy<0>
+{
     MRest(MDefinition *numActuals, unsigned numFormals, JSObject *templateObject)
       : MUnaryInstruction(numActuals),
-        numFormals_(numFormals),
-        templateObject_(templateObject)
+        MRestCommon(numFormals, templateObject)
     {
         setResultType(MIRType_Object);
         setResultTypeSet(MakeSingletonTypeSet(templateObject));
@@ -7053,11 +7070,45 @@ class MRest
     MDefinition *numActuals() const {
         return getOperand(0);
     }
-    unsigned numFormals() const {
-        return numFormals_;
+
+    TypePolicy *typePolicy() {
+        return this;
     }
-    JSObject *templateObject() const {
-        return templateObject_;
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+class MParRest
+  : public MBinaryInstruction,
+    public MRestCommon,
+    public IntPolicy<1>
+{
+    MParRest(MDefinition *parSlice, MDefinition *numActuals, unsigned numFormals,
+             JSObject *templateObject)
+      : MBinaryInstruction(parSlice, numActuals),
+        MRestCommon(numFormals, templateObject)
+    {
+        setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(ParRest);
+
+    static MParRest *New(MDefinition *parSlice, MDefinition *numActuals, unsigned numFormals,
+                         JSObject *templateObject) {
+        return new MParRest(parSlice, numActuals, numFormals, templateObject);
+    }
+    static MParRest *New(MDefinition *parSlice, MRest *rest) {
+        return new MParRest(parSlice, rest->numActuals(), rest->numFormals(), rest->templateObject());
+    }
+
+    MDefinition *parSlice() const {
+        return getOperand(0);
+    }
+    MDefinition *numActuals() const {
+        return getOperand(1);
     }
 
     TypePolicy *typePolicy() {
