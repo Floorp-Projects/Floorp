@@ -1940,9 +1940,8 @@ JS_StringToVersion(const char *string);
                                                    will be passed to each call
                                                    to JS_ExecuteScript. */
 #define JSOPTION_UNROOTED_GLOBAL JS_BIT(13)     /* The GC will not root the
-                                                   contexts' global objects
-                                                   (see JS_GetGlobalObject),
-                                                   leaving that up to the
+                                                   contexts' default compartment
+                                                   object, leaving that up to the
                                                    embedding. */
 
 #define JSOPTION_BASELINE       JS_BIT(14)      /* Baseline compiler. */
@@ -2078,9 +2077,6 @@ typedef void (*JSIterateCompartmentCallback)(JSRuntime *rt, void *data, JSCompar
 extern JS_PUBLIC_API(void)
 JS_IterateCompartments(JSRuntime *rt, void *data,
                        JSIterateCompartmentCallback compartmentCallback);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_GetGlobalObject(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
 JS_SetGlobalObject(JSContext *cx, JSObject *obj);
