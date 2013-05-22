@@ -109,7 +109,6 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // don't signal a new transaction to ShadowLayerForwarder. Carry on adding
   // to the previous transaction.
   ScreenOrientation orientation;
-  nsIntRect clientBounds;
   if (TabChild* window = mWidget->GetOwningTabChild()) {
     orientation = window->GetOrientation();
   } else {
@@ -117,7 +116,9 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
     hal::GetCurrentScreenConfiguration(&currentConfig);
     orientation = currentConfig.orientation();
   }
+  nsIntRect clientBounds;
   mWidget->GetClientBounds(clientBounds);
+  clientBounds.x = clientBounds.y = 0;
   ShadowLayerForwarder::BeginTransaction(mTargetBounds, mTargetRotation, clientBounds, orientation);
 
   // If we're drawing on behalf of a context with async pan/zoom
