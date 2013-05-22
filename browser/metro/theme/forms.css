@@ -13,6 +13,12 @@
   background-color: @metro_orange@;
   bottom: 0;
   position: fixed;
+  transition: margin-bottom @metro_animation_duration@ @metro_animation_easing@;
+  margin-bottom: -@findbar_height@;
+}
+
+#content-navigator[showing] {
+  margin-bottom: 0;
 }
 
 #content-navigator[type="find"],
