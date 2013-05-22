@@ -19,6 +19,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif

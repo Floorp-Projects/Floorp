@@ -34,6 +34,7 @@
 #include "nsJSUtils.h"
 #include "DictionaryHelpers.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsXULAppAPI.h"
 #include "TabChild.h"
 #include "DeviceStorageRequestChild.h"

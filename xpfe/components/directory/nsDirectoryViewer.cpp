@@ -51,6 +51,7 @@
 #include "nsIDocument.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 using namespace mozilla;
 

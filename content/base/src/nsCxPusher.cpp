@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
+
+#include "nsContentUtils.h"
 #include "nsIScriptContext.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsJSUtils.h"

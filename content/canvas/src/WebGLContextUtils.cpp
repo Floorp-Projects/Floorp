@@ -13,6 +13,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIVariant.h"
+#include "nsCxPusher.h"
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMDataContainerEvent.h"

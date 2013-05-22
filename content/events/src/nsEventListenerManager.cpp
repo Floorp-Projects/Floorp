@@ -40,6 +40,7 @@
 #include "nsFocusManager.h"
 #include "nsIDOMElement.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsContentCID.h"
 #include "nsEventDispatcher.h"

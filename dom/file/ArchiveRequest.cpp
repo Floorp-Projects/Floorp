@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ArchiveRequestBinding.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsLayoutStatics.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMClassInfoID.h"

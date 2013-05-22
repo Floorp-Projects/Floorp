@@ -8,6 +8,7 @@
 #include "DateCacheCleaner.h"
 
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/StaticPtr.h"
 
 using namespace mozilla::hal;

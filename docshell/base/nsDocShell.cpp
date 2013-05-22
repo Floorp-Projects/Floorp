@@ -188,6 +188,7 @@
 #endif
 
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsSandboxFlags.h"

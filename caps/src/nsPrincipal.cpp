@@ -23,6 +23,7 @@
 #include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "jswrapper.h"
 
 #include "nsPrincipal.h"

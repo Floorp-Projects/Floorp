@@ -25,7 +25,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Util.h"
-#include "nsContentUtils.h" // nsCxPusher
+#include "nsCxPusher.h"
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"

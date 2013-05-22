@@ -28,6 +28,7 @@
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
 #include "nsCrossSiteListenerProxy.h"

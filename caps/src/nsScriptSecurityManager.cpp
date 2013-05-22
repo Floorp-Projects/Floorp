@@ -61,6 +61,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"

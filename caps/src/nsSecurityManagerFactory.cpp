@@ -27,6 +27,7 @@
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 

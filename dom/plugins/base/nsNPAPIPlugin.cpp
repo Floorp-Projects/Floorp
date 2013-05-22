@@ -38,6 +38,7 @@
 #include "nsIPrincipal.h"
 #include "nsWildCard.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 #include "nsIXPConnect.h"
 
