@@ -121,6 +121,11 @@ function appUpdater()
     return;
   }
 
+  if (this.aus.isOtherInstanceHandlingUpdates) {
+    this.selectPanel("otherInstanceHandlingUpdates");
+    return;
+  }
+
   if (this.isDownloading) {
     this.startDownload();
     return;
