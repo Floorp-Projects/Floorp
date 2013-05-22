@@ -2263,7 +2263,7 @@ static PRStatus pr_NetAddrToStringGNI(
         md_af = AF_INET6;
 #ifndef _PR_HAVE_SOCKADDR_LEN
         addrcopy = *addr;
-        addrcopy.raw.family = AF_INET6;
+        addrcopy.raw.family = md_af;
         addrp = &addrcopy;
 #endif
     }

@@ -65,6 +65,8 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
     PRThread *thread;
     PRThreadStack *stack;
 
+    PR_ASSERT(priority == PR_PRIORITY_NORMAL);
+
     _pr_terminationCVLock = PR_NewLock();
     _pr_activeLock = PR_NewLock();
 
