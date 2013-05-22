@@ -342,13 +342,7 @@ nsXBLDocGlobalObject::GetGlobalJSObject()
   if (!mScriptContext)
     return nullptr;
 
-  JSContext* cx = mScriptContext->GetNativeContext();
-  if (!cx)
-    return nullptr;
-
-  JSObject *ret = ::JS_GetGlobalObject(cx);
-  NS_ASSERTION(mJSObject == ret, "How did this magic switch happen?");
-  return ret;
+  return mScriptContext->GetNativeGlobal();
 }
 
 void

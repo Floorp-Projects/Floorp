@@ -151,7 +151,7 @@ public:
   {
     // Verify that we have a global so that this
     // does always return a null when GetGlobalObject() is null.
-    JSObject* global = JS_GetGlobalObject(mContext);
+    JSObject* global = GetNativeGlobal();
     return global ? mGlobalObjectRef.get() : nullptr;
   }
 protected:

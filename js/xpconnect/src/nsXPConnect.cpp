@@ -863,7 +863,7 @@ public:
         unsigned refCount = js::ContextHasOutstandingRequests(cx) ? 2 : 1;
 
         cb.DescribeRefCountedNode(refCount, "JSContext");
-        if (JSObject *global = JS_GetGlobalObject(cx)) {
+        if (JSObject *global = js::GetDefaultGlobalForContext(cx)) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
             cb.NoteJSChild(global);
         }
