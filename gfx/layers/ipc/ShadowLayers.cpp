@@ -358,12 +358,12 @@ ShadowLayerForwarder::UpdateTextureIncremental(CompositableClient* aCompositable
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
-  mTxn->AddPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
-                                           aTextureId,
-                                           aDescriptor,
-                                           aUpdatedRegion,
-                                           aBufferRect,
-                                           aBufferRotation));
+  mTxn->AddNoSwapPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
+                                                 aTextureId,
+                                                 aDescriptor,
+                                                 aUpdatedRegion,
+                                                 aBufferRect,
+                                                 aBufferRotation));
 }
 
 
@@ -730,8 +730,8 @@ ShadowLayerForwarder::CreatedIncrementalBuffer(CompositableClient* aCompositable
                                                const TextureInfo& aTextureInfo,
                                                const nsIntRect& aBufferRect)
 {
-  mTxn->AddPaint(OpCreatedIncrementalTexture(nullptr, aCompositable->GetIPDLActor(),
-                                             aTextureInfo, aBufferRect));
+  mTxn->AddNoSwapPaint(OpCreatedIncrementalTexture(nullptr, aCompositable->GetIPDLActor(),
+                                                   aTextureInfo, aBufferRect));
 }
 
 void
