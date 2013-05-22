@@ -57,7 +57,7 @@ native nsSize(nsSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(b56906e9-830c-45f4-b572-8c71e7619dad)]
+[scriptable, builtinclass, uuid(f9029a03-758c-4047-a1f3-4b2e51e47363)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -231,6 +231,14 @@ interface imgIContainer : nsISupports
    * This is equivalent to requestDecode() but it also decodes some of the image.
    */
   [noscript] void startDecoding();
+
+  /*
+   * Returns true if no more decoding can be performed on this image. Images
+   * with errors return true since they cannot be decoded any further. Note that
+   * because decoded images may be discarded, isDecoded() may return false even
+   * if it has returned true in the past.
+   */
+  [noscript, notxpcom, nostdcall] bool isDecoded();
 
   /**
     * Increments the lock count on the image. An image will not be discarded

@@ -762,6 +762,11 @@ VectorImage::StartDecoding()
   return NS_OK;
 }
 
+bool
+VectorImage::IsDecoded()
+{
+  return mIsFullyLoaded || mError;
+}
 
 //******************************************************************************
 /* void lockImage() */
