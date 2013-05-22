@@ -101,7 +101,10 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
         return NULL;
     if (options.filename && !ss->setFilename(cx, options.filename))
         return NULL;
-    ScriptSourceHolder ssh(ss);
+    
+    JS::RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    if (!sourceObject)
+        return NULL;
     SourceCompressionToken mysct(cx);
     SourceCompressionToken *sct = (extraSct) ? extraSct : &mysct;
     switch (options.sourcePolicy) {
@@ -132,7 +135,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
         evalCaller &&
         (evalCaller->function() || evalCaller->savedCallerFun);
     Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), savedCallerFun,
-                                                  options, staticLevel, ss, 0, length));
+                                                  options, staticLevel, sourceObject, 0, length));
     if (!script)
         return NULL;
 
@@ -323,7 +326,9 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
         return false;
     if (options.filename && !ss->setFilename(cx, options.filename))
         return false;
-    ScriptSourceHolder ssh(ss);
+    JS::RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    if (!sourceObject)
+        return false;
     SourceCompressionToken sct(cx);
     JS_ASSERT(options.sourcePolicy != CompileOptions::LAZY_SOURCE);
     if (options.sourcePolicy == CompileOptions::SAVE_SOURCE) {
@@ -359,7 +364,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     fn->pn_body = argsbody;
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
-                                                  /* staticLevel = */ 0, ss,
+                                                  /* staticLevel = */ 0, sourceObject,
                                                   /* sourceStart = */ 0, length));
     if (!script)
         return false;
