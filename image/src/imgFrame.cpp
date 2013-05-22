@@ -150,10 +150,8 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                         gfxASurface::gfxImageFormat aFormat, uint8_t aPaletteDepth /* = 0 */)
 {
   // assert for properties that should be verified by decoders, warn for properties related to bad content
-  if (!AllowedImageSize(aWidth, aHeight)) {
-    NS_WARNING("Should have legal image size");
+  if (!AllowedImageSize(aWidth, aHeight))
     return NS_ERROR_FAILURE;
-  }
 
   mOffset.MoveTo(aX, aY);
   mSize.SizeTo(aWidth, aHeight);
@@ -164,15 +162,12 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
   if (aPaletteDepth != 0) {
     // We're creating for a paletted image.
     if (aPaletteDepth > 8) {
-      NS_WARNING("Should have legal palette depth");
       NS_ERROR("This Depth is not supported");
       return NS_ERROR_FAILURE;
     }
 
     // Use the fallible allocator here
     mPalettedImageData = (uint8_t*)moz_malloc(PaletteDataLength() + GetImageDataLength());
-    if (!mPalettedImageData)
-      NS_WARNING("moz_malloc for paletted image data should succeed");
     NS_ENSURE_TRUE(mPalettedImageData, NS_ERROR_OUT_OF_MEMORY);
   } else {
     // For Windows, we must create the device surface first (if we're
@@ -200,10 +195,6 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
     if (!mImageSurface || mImageSurface->CairoStatus()) {
       mImageSurface = nullptr;
       // guess
-      if (!mImageSurface)
-        NS_WARNING("Allocation of gfxImageSurface should succeed");
-      if (!mImageSurface->CairoStatus())
-        NS_WARNING("gfxImageSurface should have good CairoStatus");
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
