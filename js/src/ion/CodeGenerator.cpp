@@ -1247,13 +1247,13 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
         Label tenured;
         Register objreg = ToRegister(lir->object());
         masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.start()), &tenured);
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.end()), ool->rejoin());
+        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.heapEnd()), ool->rejoin());
         masm.bind(&tenured);
     }
 
     Register valuereg = ToRegister(lir->value());
     masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.start()), ool->rejoin());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.end()), ool->entry());
+    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.heapEnd()), ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
@@ -1284,13 +1284,13 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
         Label tenured;
         Register objreg = ToRegister(lir->object());
         masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.start()), &tenured);
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.end()), ool->rejoin());
+        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.heapEnd()), ool->rejoin());
         masm.bind(&tenured);
     }
 
     Register valuereg = masm.extractObject(value, ToRegister(lir->temp()));
     masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.start()), ool->rejoin());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.end()), ool->entry());
+    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.heapEnd()), ool->entry());
 
     masm.bind(ool->rejoin());
 #endif
