@@ -9,7 +9,7 @@ interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMContact;
 
-[scriptable, builtinclass, uuid(b4e16bb0-a258-11e2-9e96-0800200c9a66)]
+[scriptable, builtinclass, uuid(d21b7070-c2bc-11e2-8b8b-0800200c9a66)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -274,6 +274,22 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * ICC.
    */
   [implicit_jscontext] attribute jsval onstksessionend;
+
+  // UICC Card State.
+
+  /**
+   * Indicates the state of the device's ICC card.
+   *
+   * Possible values: null, 'unknown', 'absent', 'pinRequired', 'pukRequired',
+   * 'networkLocked', 'corporateLocked', 'serviceProviderLocked', 'ready'.
+   */
+  readonly attribute DOMString cardState;
+
+  /**
+   * The 'cardstatechange' event is notified when the 'cardState' attribute
+   * changes value.
+   */
+  [implicit_jscontext] attribute jsval oncardstatechange;
 
   // UICC Card Lock interfaces.
 

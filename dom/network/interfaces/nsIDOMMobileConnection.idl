@@ -12,7 +12,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(c7fdf0f0-a740-11e2-9e96-0800200c9a66)]
+[scriptable, builtinclass, uuid(dc010230-c2bc-11e2-8b8b-0800200c9a66)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -46,14 +46,6 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    */
   readonly attribute DOMString lastKnownNetwork;
   readonly attribute DOMString lastKnownHomeNetwork;
-
-  /**
-   * Indicates the state of the device's ICC card.
-   *
-   * Possible values: null, 'unknown', 'absent', 'pinRequired', 'pukRequired',
-   * 'networkLocked', 'corporateLocked', 'serviceProviderLocked', 'ready'.
-   */
-  readonly attribute DOMString cardState;
 
   /**
    * Indicates the number of retries remaining when cardState equals 'pinRequired'
@@ -239,12 +231,6 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * or 'GenericFailure'.
    */
   nsIDOMDOMRequest getCallWaitingOption();
-
-  /**
-   * The 'cardstatechange' event is notified when the 'cardState' attribute
-   * changes value.
-   */
-  [implicit_jscontext] attribute jsval oncardstatechange;
 
    /**
    * The 'iccinfochange' event is notified whenever the icc info object

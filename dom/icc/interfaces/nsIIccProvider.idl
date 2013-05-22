@@ -8,19 +8,20 @@ interface nsIDOMWindow;
 interface nsIDOMDOMRequest;
 interface nsIDOMContact;
 
-[scriptable, uuid(dca08580-a25a-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(5902d9b0-c2be-11e2-8b8b-0800200c9a66)]
 interface nsIIccListener : nsISupports
 {
   void notifyStkCommand(in DOMString aMessage);
   void notifyStkSessionEnd();
   void notifyIccCardLockError(in DOMString lockType,
                               in unsigned long retryCount);
+  void notifyCardStateChanged();
 };
 
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(e60ec460-a25a-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(77487bf0-c2be-11e2-8b8b-0800200c9a66)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -30,6 +31,11 @@ interface nsIIccProvider : nsISupports
    */
   void registerIccMsg(in nsIIccListener listener);
   void unregisterIccMsg(in nsIIccListener listener);
+
+  /**
+   * Card State
+   */
+  readonly attribute DOMString cardState;
 
   /**
    * STK interfaces.
