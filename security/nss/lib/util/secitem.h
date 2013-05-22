@@ -36,6 +36,11 @@ extern SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
 				  unsigned int len);
 
 /*
+** This is a legacy function containing bugs. It doesn't update item->len,
+** and it has other issues as described in bug 298649 and bug 298938.
+** However, the function is  kept unchanged for consumers that might depend 
+** on the broken behaviour. New code should call SECITEM_ReallocItemV2.
+**
 ** Reallocate the data for the specified "item".  If "arena" is not NULL,
 ** then reallocate from there, otherwise reallocate from the heap.
 ** In the case where oldlen is 0, the data is allocated (not reallocated).
@@ -43,8 +48,20 @@ extern SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
 ** SECFailure is returned if it is not.  If the allocation succeeds,
 ** SECSuccess is returned.
 */
-extern SECStatus SECITEM_ReallocItem(PLArenaPool *arena, SECItem *item,
+extern SECStatus SECITEM_ReallocItem( /* deprecated function */
+				     PLArenaPool *arena, SECItem *item,
 				     unsigned int oldlen, unsigned int newlen);
+
+/*
+** Reallocate the data for the specified "item".  If "arena" is not NULL,
+** then reallocate from there, otherwise reallocate from the heap.
+** If item->data is NULL, the data is allocated (not reallocated).
+** In any case, "item" is expected to be a valid SECItem pointer;
+** SECFailure is returned if it is not, and the item will remain unchanged.
+** If the allocation succeeds, the item is updated and SECSuccess is returned.
+ */
+extern SECStatus SECITEM_ReallocItemV2(PLArenaPool *arena, SECItem *item,
+				       unsigned int newlen);
 
 /*
 ** Compare two items returning the difference between them.
@@ -91,7 +108,8 @@ PRIntn PR_CALLBACK SECITEM_HashCompare ( const void *k1, const void *k2);
 extern SECItemArray *SECITEM_AllocArray(PLArenaPool *arena,
                                         SECItemArray *array,
                                         unsigned int len);
-extern SECItemArray *SECITEM_DupArray(PLArenaPool *arena, const SECItemArray *from);
+extern SECItemArray *SECITEM_DupArray(PLArenaPool *arena,
+                                      const SECItemArray *from);
 extern void SECITEM_FreeArray(SECItemArray *array, PRBool freeit);
 extern void SECITEM_ZfreeArray(SECItemArray *array, PRBool freeit);
 
