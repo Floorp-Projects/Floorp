@@ -541,6 +541,11 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
                      length : std::min(aOffset + aDuration, length);
 
   if (offset >= endOffset) {
+    // The offset falls past the end of the buffer.  In this case, we need to
+    // stop the playback immediately if it's in progress.  No need to check
+    // mStartCalled here, since Stop() does that for us.
+    ErrorResult rv;
+    Stop(0.0, rv);
     return;
   }
 
