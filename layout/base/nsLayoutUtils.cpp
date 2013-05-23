@@ -322,41 +322,19 @@ nsLayoutUtils::Are3DTransformsEnabled()
 }
 
 bool
-nsLayoutUtils::AreOpacityAnimationsEnabled()
-{
-  static bool sAreOpacityAnimationsEnabled;
-  static bool sOpacityPrefCached = false;
-
-  if (!sOpacityPrefCached) {
-    sOpacityPrefCached = true;
-    Preferences::AddBoolVarCache(&sAreOpacityAnimationsEnabled,
-                                 "layers.offmainthreadcomposition.animate-opacity");
-  }
-
-  return sAreOpacityAnimationsEnabled &&
-    gfxPlatform::OffMainThreadCompositingEnabled();
-}
-
-bool
-nsLayoutUtils::AreTransformAnimationsEnabled()
-{
-  static bool sAreTransformAnimationsEnabled;
-  static bool sTransformPrefCached = false;
-
-  if (!sTransformPrefCached) {
-    sTransformPrefCached = true;
-    Preferences::AddBoolVarCache(&sAreTransformAnimationsEnabled,
-                                 "layers.offmainthreadcomposition.animate-transform");
-  }
-
-  return sAreTransformAnimationsEnabled &&
-    gfxPlatform::OffMainThreadCompositingEnabled();
-}
-
-bool
 nsLayoutUtils::AreAsyncAnimationsEnabled()
 {
-  return AreOpacityAnimationsEnabled() || AreTransformAnimationsEnabled();
+  static bool sAreAsyncAnimationsEnabled;
+  static bool sAsyncPrefCached = false;
+
+  if (!sAsyncPrefCached) {
+    sAsyncPrefCached = true;
+    Preferences::AddBoolVarCache(&sAreAsyncAnimationsEnabled,
+                                 "layers.offmainthreadcomposition.async-animations");
+  }
+
+  return sAreAsyncAnimationsEnabled &&
+    gfxPlatform::OffMainThreadCompositingEnabled();
 }
 
 bool
