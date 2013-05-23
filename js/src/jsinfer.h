@@ -1206,7 +1206,6 @@ class TypeScript
     static inline HeapTypeSet  *ReturnTypes(JSScript *script);
     static inline StackTypeSet *ThisTypes(JSScript *script);
     static inline StackTypeSet *ArgTypes(JSScript *script, unsigned i);
-    static inline StackTypeSet *LocalTypes(JSScript *script, unsigned i);
 
     /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
     static inline StackTypeSet *SlotTypes(JSScript *script, unsigned slot);
@@ -1251,9 +1250,6 @@ class TypeScript
     /* Add a type for a variable in a script. */
     static inline void SetThis(JSContext *cx, JSScript *script, Type type);
     static inline void SetThis(JSContext *cx, JSScript *script, const js::Value &value);
-    static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, Type type);
-    static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local,
-                                const js::Value &value);
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type);
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg,
                                    const js::Value &value);

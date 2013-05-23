@@ -788,7 +788,7 @@ UseNewTypeForClone(JSFunction *fun)
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
-    return script->nTypeSets + analyze::TotalSlots(script);
+    return script->nTypeSets + analyze::LocalSlot(script, 0);
 }
 
 /* static */ inline HeapTypeSet *
@@ -820,17 +820,9 @@ TypeScript::ArgTypes(JSScript *script, unsigned i)
 }
 
 /* static */ inline StackTypeSet *
-TypeScript::LocalTypes(JSScript *script, unsigned i)
-{
-    JS_ASSERT(i < script->nfixed);
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::LocalSlot(script, i);
-    return types->toStackTypeSet();
-}
-
-/* static */ inline StackTypeSet *
 TypeScript::SlotTypes(JSScript *script, unsigned slot)
 {
-    JS_ASSERT(slot < js::analyze::TotalSlots(script));
+    JS_ASSERT(slot < js::analyze::LocalSlot(script, 0));
     TypeSet *types = script->types->typeArray() + script->nTypeSets + slot;
     return types->toStackTypeSet();
 }
@@ -1088,31 +1080,6 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, const js::Value &value)
 {
     if (cx->typeInferenceEnabled())
         SetThis(cx, script, GetValueType(cx, value));
-}
-
-/* static */ inline void
-TypeScript::SetLocal(JSContext *cx, JSScript *script, unsigned local, Type type)
-{
-    if (!cx->typeInferenceEnabled())
-        return;
-    JS_ASSERT(script->types);
-
-    if (!LocalTypes(script, local)->hasType(type)) {
-        AutoEnterAnalysis enter(cx);
-
-        InferSpew(ISpewOps, "externalType: setLocal #%u %u: %s",
-                  script->id(), local, TypeString(type));
-        LocalTypes(script, local)->addType(cx, type);
-    }
-}
-
-/* static */ inline void
-TypeScript::SetLocal(JSContext *cx, JSScript *script, unsigned local, const js::Value &value)
-{
-    if (cx->typeInferenceEnabled()) {
-        Type type = GetValueType(cx, value);
-        SetLocal(cx, script, local, type);
-    }
 }
 
 /* static */ inline void
