@@ -688,13 +688,7 @@ this.PlacesUtils = {
       case this.TYPE_X_MOZ_PLACE:
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       case this.TYPE_X_MOZ_PLACE_CONTAINER:
-        var json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-        // Old profiles (pre-Firefox 4) may contain bookmarks.json files with
-        // trailing commas, which we once accepted but no longer do -- except
-        // when decoded using the legacy decoder.  This can be reverted to
-        // json.decode (better yet, to the ECMA-standard JSON.parse) when we no
-        // longer support upgrades from pre-Firefox 4 profiles.
-        nodes = json.legacyDecode("[" + blob + "]");
+        nodes = JSON.parse("[" + blob + "]");
         break;
       case this.TYPE_X_MOZ_URL:
         var parts = blob.split("\n");
