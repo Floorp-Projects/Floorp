@@ -63,7 +63,6 @@ browser.jar:
         content/browser/newtab/newTab.xul             (content/newtab/newTab.xul)
 *       content/browser/newtab/newTab.js              (content/newtab/newTab.js)
         content/browser/newtab/newTab.css             (content/newtab/newTab.css)
-        content/browser/newtab/preload.xhtml          (content/newtab/preload.xhtml)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
         content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
         content/browser/pageinfo/pageInfo.css         (content/pageinfo/pageInfo.css)
