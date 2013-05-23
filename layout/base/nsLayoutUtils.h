@@ -1586,10 +1586,8 @@ public:
   static bool Are3DTransformsEnabled();
 
   /**
-   * Checks if off-main-thread transform and opacity animations are enabled.
+   * Checks if off-main-thread animations are enabled.
    */
-  static bool AreOpacityAnimationsEnabled();
-  static bool AreTransformAnimationsEnabled();
   static bool AreAsyncAnimationsEnabled();
 
   /**
