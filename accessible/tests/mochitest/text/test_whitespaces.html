@@ -29,26 +29,10 @@
       testTextAfterOffset(6, BOUNDARY_WORD_START, "Robin   ", 11, 19, IDs);
       testTextAfterOffset(9, BOUNDARY_WORD_START, "Robin   ", 11, 19, IDs);
       testTextAfterOffset(10, BOUNDARY_WORD_START, "Robin   ", 11, 19, IDs);
-      testTextAfterOffset(11, BOUNDARY_WORD_START, "ran", 19, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kTodo, kOk, kTodo);
-      testTextAfterOffset(16, BOUNDARY_WORD_START, "ran", 19, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kTodo, kOk, kTodo);
-      testTextAfterOffset(18, BOUNDARY_WORD_START, "ran", 19, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kTodo, kOk, kTodo);
-      testTextAfterOffset(19, BOUNDARY_WORD_START, "", 22, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kOk, kTodo, kTodo);
+      testTextAfterOffset(11, BOUNDARY_WORD_START, "ran", 19, 22, IDs);
+      testTextAfterOffset(16, BOUNDARY_WORD_START, "ran", 19, 22, IDs);
+      testTextAfterOffset(18, BOUNDARY_WORD_START, "ran", 19, 22, IDs);
+      testTextAfterOffset(19, BOUNDARY_WORD_START, "", 22, 22, IDs);
 
       // BOUNDARY_WORD_END
       testTextAfterOffset(0, BOUNDARY_WORD_END, " Sir", 5, 9, IDs);
@@ -61,31 +45,11 @@
       testTextAfterOffset(11, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAfterOffset(15, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAfterOffset(16, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
-      testTextAfterOffset(17, BOUNDARY_WORD_END, "", 22, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kTodo, kOk, kTodo);
-      testTextAfterOffset(18, BOUNDARY_WORD_END, "", 22, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kTodo, kOk, kTodo);
-      testTextAfterOffset(19, BOUNDARY_WORD_END, "", 22, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kTodo, kOk, kTodo);
-      testTextAfterOffset(21, BOUNDARY_WORD_END, "", 22, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kTodo, kOk, kTodo);
-      testTextAfterOffset(22, BOUNDARY_WORD_END, "", 22, 22,
-                          "input", kOk, kOk, kOk,
-                          "div", kOk, kOk, kOk,
-                          "editable", kOk, kOk, kOk,
-                          "textarea", kOk, kTodo, kTodo);
+      testTextAfterOffset(17, BOUNDARY_WORD_END, "", 22, 22, IDs);
+      testTextAfterOffset(18, BOUNDARY_WORD_END, "", 22, 22, IDs);
+      testTextAfterOffset(19, BOUNDARY_WORD_END, "", 22, 22, IDs);
+      testTextAfterOffset(21, BOUNDARY_WORD_END, "", 22, 22, IDs);
+      testTextAfterOffset(22, BOUNDARY_WORD_END, "", 22, 22, IDs);
 
       ////////////////////////////////////////////////////////////////////////
       // getTextBeforeOffset
@@ -186,21 +150,9 @@
                        "div", kOk, kOk, kOk,
                        "editable", kOk, kOk, kOk,
                        "textarea", kOk, kOk, kOk);
-      testTextAtOffset(19, BOUNDARY_WORD_START, "ran", 19, 22,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kTodo, kOk, kTodo);
-      testTextAtOffset(21, BOUNDARY_WORD_START, "ran", 19, 22,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kTodo, kOk, kTodo);
-      testTextAtOffset(22, BOUNDARY_WORD_START, "ran", 19, 22,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kTodo, kOk, kTodo);
+      testTextAtOffset(19, BOUNDARY_WORD_START, "ran", 19, 22, IDs);
+      testTextAtOffset(21, BOUNDARY_WORD_START, "ran", 19, 22, IDs);
+      testTextAtOffset(22, BOUNDARY_WORD_START, "ran", 19, 22, IDs);
 
       // BOUNDARY_WORD_END
       testTextAtOffset(0, BOUNDARY_WORD_END, "Brave", 0, 5, IDs);
@@ -218,8 +170,7 @@
       testTextAtOffset(19, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAtOffset(20, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAtOffset(21, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
-      testTextAtOffset(22, BOUNDARY_WORD_END, "   ran", 16, 22, ["input", "div", "editable"]);
-      testTextAtOffset(22, BOUNDARY_WORD_END, "   ran\n", 16, 23, [ "textarea" ]);
+      testTextAtOffset(22, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
 
       SimpleTest.finish();
     }

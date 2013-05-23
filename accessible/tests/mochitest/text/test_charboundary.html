@@ -30,15 +30,11 @@
       testCharAtOffset(IDs, 0, "h", 0, 1);
       testCharAtOffset(IDs, 1, "e", 1, 2);
       testCharAtOffset(IDs, 14, "d", 14, 15);
-      testCharAtOffset([ "i1", "d1", "e1" ], 15, "", 15, 15);
-      testTextAfterOffset(15, BOUNDARY_CHAR, "", 15, 15,
-                          "t1", kOk, kTodo, kTodo);
+      testCharAtOffset(IDs, 15, "", 15, 15);
 
       testCharAfterOffset(IDs, 0, "e", 1, 2);
       testCharAfterOffset(IDs, 1, "l", 2, 3);
-      testCharAfterOffset([ "i1", "d1", "e1" ], 14, "", 15, 15);
-      testTextAfterOffset(14, BOUNDARY_CHAR, "", 15, 15,
-                          "t1", kTodo, kOk, kTodo);
+      testCharAfterOffset(IDs, 14, "", 15, 15);
 
       // 15 is out of range offset for get text after, keep todos until we
       // decide how to handle out of range values (ATK and IA2 seems to have
@@ -46,8 +42,7 @@
       testTextAfterOffset(15, BOUNDARY_CHAR, "", 15, 15,
                           "i1", kOk, kTodo, kTodo,
                           "d1", kOk, kTodo, kTodo,
-                          "e1", kOk, kTodo, kTodo);
-      testTextAfterOffset(15, BOUNDARY_CHAR, "", 15, 15,
+                          "e1", kOk, kTodo, kTodo,
                           "t1", kOk, kTodo, kTodo);
 
       //////////////////////////////////////////////////////////////////////////
