@@ -13,7 +13,12 @@
     list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons@2x.png);
   }
 
-  #PanelUI-popup .panel-combined-button {
+  #customization-palette toolbarbutton > .toolbarbutton-icon,
+  #PanelUI-mainView toolbarbutton > .toolbarbutton-icon {
+    width: 20px;
+  }
+
+  .panel-combined-button {
     list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons@2x.png);
   }
 
@@ -114,23 +119,23 @@
     -moz-image-region: rect(384px 128px 448px 64px);
   }
 
-  #PanelUI-popup #PanelUI-cut-btn {
+  #PanelUI-cut-btn {
     -moz-image-region: rect(0 32px 32px 0);
   }
 
-  #PanelUI-popup #PanelUI-copy-btn {
+  #PanelUI-copy-btn {
     -moz-image-region: rect(0 64px 32px 32px);
   }
 
-  #PanelUI-popup #PanelUI-paste-btn {
+  #PanelUI-paste-btn {
     -moz-image-region: rect(0 96px 32px 64px);
   }
 
-  #PanelUI-popup #PanelUI-zoomOut-btn {
+  #PanelUI-zoomOut-btn {
     -moz-image-region: rect(0 128px 32px 96px);
   }
 
-  #PanelUI-popup #PanelUI-zoomIn-btn {
+  #PanelUI-zoomIn-btn {
     -moz-image-region: rect(0 160px 32px 128px);
   }
 }
