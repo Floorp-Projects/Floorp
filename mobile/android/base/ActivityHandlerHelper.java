@@ -66,7 +66,7 @@ public class ActivityHandlerHelper {
         return mActivityResultHandlerMap.put(aHandler);
     }
 
-    private int addIntentActivitiesToList(Context context, Intent intent, ArrayList<PromptService.PromptListItem> items, ArrayList<Intent> aIntents) {
+    private int addIntentActivitiesToList(Context context, Intent intent, ArrayList<Prompt.PromptListItem> items, ArrayList<Intent> aIntents) {
         PackageManager pm = context.getPackageManager();
         List<ResolveInfo> lri = pm.queryIntentActivityOptions(GeckoApp.mAppContext.getComponentName(), null, intent, 0);
 
@@ -80,7 +80,7 @@ public class ActivityHandlerHelper {
                     ri.activityInfo.applicationInfo.packageName,
                     ri.activityInfo.name));
 
-            PromptService.PromptListItem item = new PromptService.PromptListItem(ri.loadLabel(pm).toString());
+            Prompt.PromptListItem item = new Prompt.PromptListItem(ri.loadLabel(pm).toString());
             item.icon = ri.loadIcon(pm);
             items.add(item);
             aIntents.add(rintent);
@@ -89,7 +89,7 @@ public class ActivityHandlerHelper {
         return lri.size();
     }
 
-    private int addFilePickingActivities(Context context, ArrayList<PromptService.PromptListItem> aItems, String aType, ArrayList<Intent> aIntents) {
+    private int addFilePickingActivities(Context context, ArrayList<Prompt.PromptListItem> aItems, String aType, ArrayList<Intent> aIntents) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType(aType);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -97,8 +97,8 @@ public class ActivityHandlerHelper {
         return addIntentActivitiesToList(context, intent, aItems, aIntents);
     }
 
-    private PromptService.PromptListItem[] getItemsAndIntentsForFilePicker(Context context, String aMimeType, ArrayList<Intent> aIntents) {
-        ArrayList<PromptService.PromptListItem> items = new ArrayList<PromptService.PromptListItem>();
+    private Prompt.PromptListItem[] getItemsAndIntentsForFilePicker(Context context, String aMimeType, ArrayList<Intent> aIntents) {
+        ArrayList<Prompt.PromptListItem> items = new ArrayList<Prompt.PromptListItem>();
 
         if (aMimeType.equals("audio/*")) {
             if (addFilePickingActivities(context, items, "audio/*", aIntents) <= 0) {
@@ -134,7 +134,7 @@ public class ActivityHandlerHelper {
             addFilePickingActivities(context, items, "*/*", aIntents);
         }
 
-        return items.toArray(new PromptService.PromptListItem[] {});
+        return items.toArray(new Prompt.PromptListItem[] {});
     }
 
     private String getFilePickerTitle(Context context, String aMimeType) {
@@ -151,7 +151,7 @@ public class ActivityHandlerHelper {
 
     private Intent getFilePickerIntent(Context context, String aMimeType) {
         ArrayList<Intent> intents = new ArrayList<Intent>();
-        final PromptService.PromptListItem[] items =
+        final Prompt.PromptListItem[] items =
             getItemsAndIntentsForFilePicker(context, aMimeType, intents);
 
         if (intents.size() == 0) {
@@ -170,11 +170,11 @@ public class ActivityHandlerHelper {
         // context menu UI using the PromptService.
         ThreadUtils.postToUiThread(new Runnable() {
             @Override public void run() {
-                ps.show(title, "", items, false);
+                ps.show(title, "", items, false, null);
             }
         });
 
-        String promptServiceResult = ps.getResponse();
+        String promptServiceResult = ps.getResponse(null);
         int itemId = -1;
         try {
             itemId = new JSONObject(promptServiceResult).getInt("button");
