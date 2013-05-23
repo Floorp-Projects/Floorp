@@ -9382,7 +9382,11 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
       if (firstChild) {
         anonNode = firstChild;
       }
-      offset = nsContentUtils::GetAdjustedOffsetInTextControl(ptFrame, offset);
+
+      if (textArea) {
+        offset = nsContentUtils::GetAdjustedOffsetInTextControl(ptFrame, offset);
+      }
+
       node = nonanon;
     } else {
       node = nullptr;
