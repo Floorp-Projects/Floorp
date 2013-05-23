@@ -41,13 +41,13 @@
       this.finalCheck = function moveToLastLineEnd_finalCheck()
       {
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
-                            "textarea", kTodo, kOk, kTodo);
+                            ["textarea"]);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
-                            "textarea", kTodo, kOk, kTodo);
+                            "textarea", kOk, kTodo, kTodo);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
-                         "textarea", kTodo, kTodo, kTodo);
+                         "textarea", kTodo, kTodo, kOk);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
                          "textarea", kTodo, kTodo, kTodo);
@@ -72,13 +72,13 @@
       this.finalCheck = function moveToLastLineStart_finalCheck()
       {
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
-                            "textarea", kTodo, kTodo, kTodo);
+                            "textarea", kTodo, kTodo, kOk);
 
         testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
                             "textarea", kTodo, kTodo, kOk);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
-                         "textarea", kTodo, kOk, kTodo);
+                         [ "textarea" ]);
 
         testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
                          "textarea", kTodo, kTodo, kTodo);
@@ -224,7 +224,7 @@
     var gQueue = null;
     function doTest()
     {
-      SimpleTest.expectAssertions(5);
+      SimpleTest.expectAssertions(7);
 
       gQueue = new eventQueue();
       gQueue.push(new moveToLastLineEnd());
