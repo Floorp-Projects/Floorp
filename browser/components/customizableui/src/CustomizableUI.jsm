@@ -790,7 +790,7 @@ let CustomizableUIInternal = {
       }
     }
 
-    return [i for (i of widgets)];
+    return [...widgets];
   },
 
   getPlacementOfWidget: function(aWidgetId) {
