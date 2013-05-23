@@ -38,14 +38,15 @@ var testData = [
   [ "date",     true ],
   [ "time",     true ],
   [ "range",    true ],
+  [ "color",    true ],
   // 'file' is treated separatly.
 ];
 
 var todoTypes = [
-  "datetime", "month", "week", "datetime-local", "color"
+  "datetime", "month", "week", "datetime-local"
 ];
 
-var nonTrivialSanitizing = [ 'number', 'date', 'time' ];
+var nonTrivialSanitizing = [ 'number', 'date', 'time', 'color' ];
 
 var length = testData.length;
 for (var i=0; i<length; ++i) {
@@ -60,9 +61,18 @@ for (var i=0; i<length; ++i) {
     if (testData[j][0] == 'range' || testData[i][0] == 'range') {
       if (testData[j][0] == 'date' || testData[j][0] == 'time') {
         expectedValue = '';
+      } else if (testData[j][0] == 'color') {
+        expectedValue = '#000000';
       } else {
         expectedValue = '50';
       }
+    } else if (testData[i][0] == 'color' || testData[j][0] == 'color') {
+        if (testData[j][0] == 'number' || testData[j][0] == 'date' ||
+            testData[j][0] == 'time') {
+          expectedValue = ''
+        } else {
+          expectedValue = '#000000';
+        }
     } else if (nonTrivialSanitizing.indexOf(testData[i][0]) != -1 &&
                nonTrivialSanitizing.indexOf(testData[j][0]) != -1) {
       expectedValue = '';
@@ -94,6 +104,9 @@ for (var data of testData) {
 
   if (data[0] == 'range') {
     is(e.value, '50', ".value should still return the same value after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  } else if (data[0] == 'color') {
+    is(e.value, '#000000', ".value should have been reset to the default color after " +
        "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
   } else if (data[1]) {
     is(e.value, '', ".value should have been reset to the empty string after " +

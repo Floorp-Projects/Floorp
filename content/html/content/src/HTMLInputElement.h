@@ -972,6 +972,14 @@ protected:
   bool ConvertNumberToString(Decimal aValue, nsAString& aResultString) const;
 
   /**
+   * Parse a color string of the form #XXXXXX where X should be hexa characters
+   * @param the string to be parsed.
+   * @return whether the string is a valid simple color.
+   * Note : this function does not consider the empty string as valid.
+   */
+  bool IsValidSimpleColor(const nsAString& aValue) const;
+
+  /**
    * Parse a date string of the form yyyy-mm-dd
    * @param the string to be parsed.
    * @return whether the string is a valid date.
@@ -1229,6 +1237,9 @@ private:
     NS_IMETHOD Run();
 
   protected:
+    nsresult InitFilePicker();
+    nsresult InitColorPicker();
+
     nsRefPtr<HTMLInputElement> mInput;
     PopupControlState mPopupControlState;
   };

@@ -171,6 +171,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_BUTTON_SUBMIT :
   case NS_FORM_INPUT_BUTTON :
   case NS_FORM_INPUT_CHECKBOX :
+  case NS_FORM_INPUT_COLOR :
   case NS_FORM_INPUT_EMAIL :
   case NS_FORM_INPUT_FILE :
   case NS_FORM_INPUT_HIDDEN :

@@ -155,7 +155,7 @@ function startTest() {
   
   is($_(12, "uname").value, "50", "type=range should not be considered a username");
   
-  is($_(13, "uname").value, "", "type=color should not be considered a username");
+  is($_(13, "uname").value, "#000000", "type=color should not be considered a username");
 
   pwmgr.removeLogin(login1);
   pwmgr.removeLogin(login2);
