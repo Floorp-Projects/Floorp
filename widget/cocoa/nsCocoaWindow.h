@@ -115,11 +115,6 @@ typedef struct _nsCocoaWindowList {
 - (void)setBottomCornerRounded:(BOOL)rounded;
 - (BOOL)bottomCornerRounded;
 
-// Present since at least OS X 10.5.  The OS calls this method on NSWindow
-// (and its subclasses) to find out which NSFrameView subclass to instantiate
-// to create its "frame view".
-+ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask;
-
 @end
 
 @interface PopupWindow : BaseWindow
