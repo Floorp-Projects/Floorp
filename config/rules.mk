@@ -425,6 +425,14 @@ define SUBMAKE # $(call SUBMAKE,target,directory)
 
 endef # The extra line is important here! don't delete it
 
+define TIER_DIR_SUBMAKE
+@echo "BUILDSTATUS TIERDIR_START $(2)"
+$(call SUBMAKE,$(1),$(2))
+@echo "BUILDSTATUS TIERDIR_FINISH $(2)"
+
+endef # Ths empty line is important.
+
+
 ifneq (,$(strip $(DIRS)))
 LOOP_OVER_DIRS = \
   $(foreach dir,$(DIRS),$(call SUBMAKE,$@,$(dir)))
@@ -660,6 +668,7 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 ifndef SUPPRESS_DEFAULT_RULES
 ifdef TIERS
 default all alldep::
+	@echo "BUILDSTATUS TIERS $(TIERS)"
 	$(foreach tier,$(TIERS),$(call SUBMAKE,tier_$(tier)))
 else
 
@@ -689,14 +698,34 @@ ECHO := true
 QUIET := -q
 endif
 
-MAKE_TIER_SUBMAKEFILES = +$(if $(tier_$*_dirs),$(MAKE) $(addsuffix /Makefile,$(tier_$*_dirs)))
+# This function is called and evaluated to produce the rule to build the
+# specified tier. Each tier begins by building the "static" directories.
+# The BUILDSTATUS echo commands are used to faciliate easier parsing
+# of build output. Build drivers are encouraged to filter these lines
+# from the user.
+define CREATE_TIER_RULE
+tier_$(1)::
+	@echo "BUILDSTATUS TIER_START $(1)"
+	@echo "BUILDSTATUS SUBTIERS static export libs tools"
+	@echo "BUILDSTATUS STATICDIRS $$($$@_staticdirs)"
+	@echo "BUILDSTATUS DIRS $$($$@_dirs)"
+	@echo "BUILDSTATUS SUBTIER_START $(1) static"
+	$$(foreach dir,$$($$@_staticdirs),$$(call TIER_DIR_SUBMAKE,,$$(dir)))
+	@echo "BUILDSTATUS SUBTIER_FINISH $(1) static"
+	@echo "BUILDSTATUS SUBTIER_START $(1) export"
+	$$(MAKE) export_$$@
+	@echo "BUILDSTATUS SUBTIER_FINISH $(1) export"
+	@echo "BUILDSTATUS SUBTIER_START $(1) libs"
+	$$(MAKE) libs_$$@
+	@echo "BUILDSTATUS SUBTIER_FINISH $(1) libs"
+	@echo "BUILDSTATUS SUBTIER_START $(1) tools"
+	$$(MAKE) tools_$$@
+	@echo "BUILDSTATUS SUBTIER_FINISH $(1) tools"
+	@echo "BUILDSTATUS TIER_FINISH $(1)"
 
-$(foreach tier,$(TIERS),tier_$(tier))::
-	@$(ECHO) "$@: $($@_staticdirs) $($@_dirs)"
-	$(foreach dir,$($@_staticdirs),$(call SUBMAKE,,$(dir)))
-	$(MAKE) export_$@
-	$(MAKE) libs_$@
-	$(MAKE) tools_$@
+endef
+
+$(foreach tier,$(TIERS),$(eval $(call CREATE_TIER_RULE,$(tier))))
 
 # Do everything from scratch
 everything::
