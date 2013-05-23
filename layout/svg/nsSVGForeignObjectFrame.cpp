@@ -104,8 +104,10 @@ nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
       nsSVGEffects::InvalidateRenderingObservers(this);
       nsSVGUtils::ScheduleReflowSVG(this);
     } else if (aAttribute == nsGkAtoms::transform) {
-      // Don't invalidate (the layers code does that).
-      SchedulePaint();
+      // We don't invalidate for transform changes (the layers code does that).
+      // Also note that SVGTransformableElement::GetAttributeChangeHint will
+      // return nsChangeHint_UpdateOverflow for "transform" attribute changes
+      // and cause DoApplyRenderingChangeToTree to make the SchedulePaint call.
       mCanvasTM = nullptr;
     } else if (aAttribute == nsGkAtoms::viewBox ||
                aAttribute == nsGkAtoms::preserveAspectRatio) {
