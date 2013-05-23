@@ -101,7 +101,7 @@ MutationBitForEventType(uint32_t aEventType)
 
 uint32_t nsEventListenerManager::sCreatedCount = 0;
 
-nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
+nsEventListenerManager::nsEventListenerManager(EventTarget* aTarget) :
   mMayHavePaintEventListener(false),
   mMayHaveMutationListeners(false),
   mMayHaveCapturingListeners(false),
