@@ -313,6 +313,7 @@ nsStyleUtil::SerializeFunctionalAlternates(
       NS_ASSERTION(!funcName.IsEmpty(), "unknown property value name");
 
       // function params
+      funcParams.Truncate();
       AppendEscapedCSSIdent(v.value, funcParams);
     } else {
       if (!funcParams.IsEmpty()) {
