@@ -222,7 +222,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
         return true;
 
     if (act == Wrapper::CALL)
-        return true;
+        return false;
 
     RootedId id(cx, idArg);
     RootedObject wrapper(cx, wrapperArg);
