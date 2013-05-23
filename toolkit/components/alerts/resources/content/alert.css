@@ -8,6 +8,10 @@
   animation-name: alert-animation;
 }
 
+.alertText {
+    white-space: pre-wrap;
+}
+
 @keyframes alert-animation {
   to {
     visibility: hidden;
