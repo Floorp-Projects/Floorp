@@ -41,6 +41,52 @@ function sendAsyncMsg(msg, data) {
   sendAsyncMessage('browser-element-api:call', data);
 }
 
+let CERTIFICATE_ERROR_PAGE_PREF = 'security.alternate_certificate_error_page';
+
+let NS_ERROR_MODULE_BASE_OFFSET = 0x45;
+let NS_ERROR_MODULE_SECURITY= 21;
+function NS_ERROR_GET_MODULE(err) {
+  return ((((err) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff) 
+}
+
+function NS_ERROR_GET_CODE(err) {
+  return ((err) & 0xffff);
+}
+
+let SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
+let SEC_ERROR_UNKNOWN_ISSUER = (SEC_ERROR_BASE + 13);
+let SEC_ERROR_CA_CERT_INVALID =   (SEC_ERROR_BASE + 36);
+let SEC_ERROR_UNTRUSTED_ISSUER = (SEC_ERROR_BASE + 20);
+let SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE = (SEC_ERROR_BASE + 30);
+let SEC_ERROR_UNTRUSTED_CERT = (SEC_ERROR_BASE + 21);
+let SEC_ERROR_INADEQUATE_KEY_USAGE = (SEC_ERROR_BASE + 90);
+let SEC_ERROR_EXPIRED_CERTIFICATE = (SEC_ERROR_BASE + 11);
+let SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED = (SEC_ERROR_BASE + 176);
+
+let SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
+let SSL_ERROR_BAD_CERT_DOMAIN = (SSL_ERROR_BASE + 12);
+
+function getErrorClass(errorCode) {
+  let NSPRCode = -1 * NS_ERROR_GET_CODE(errorCode);
+ 
+  switch (NSPRCode) {
+    case SEC_ERROR_UNKNOWN_ISSUER:
+    case SEC_ERROR_CA_CERT_INVALID:
+    case SEC_ERROR_UNTRUSTED_ISSUER:
+    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+    case SEC_ERROR_UNTRUSTED_CERT:
+    case SEC_ERROR_INADEQUATE_KEY_USAGE:
+    case SSL_ERROR_BAD_CERT_DOMAIN:
+    case SEC_ERROR_EXPIRED_CERTIFICATE:
+    case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+      return Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT;
+    default:
+      return Ci.nsINSSErrorsService.ERROR_CLASS_SSL_PROTOCOL;
+  }
+
+  return null;
+}
+
 /**
  * The BrowserElementChild implements one half of <iframe mozbrowser>.
  * (The other half is, unsurprisingly, BrowserElementParent.)
@@ -825,6 +871,24 @@ BrowserElementChild.prototype = {
         if (status == Cr.NS_OK ||
             status == Cr.NS_BINDING_ABORTED) {
           return;
+        }
+
+        if (NS_ERROR_GET_MODULE(status) == NS_ERROR_MODULE_SECURITY && 
+            getErrorClass(status) == Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
+
+          // XXX Is there a point firing the event if the error page is not
+          // certerror? If yes, maybe we should add a property to the
+          // event to to indicate whether there is a custom page. That would
+          // let the embedder have more control over the desired behavior.
+          var errorPage = null;
+          try {
+            errorPage = Services.prefs.getCharPref(CERTIFICATE_ERROR_PAGE_PREF);
+          } catch(e) {}
+
+          if (errorPage == 'certerror') {
+            sendAsyncMsg('error', { type: 'certerror' });
+            return;
+          }
         }
 
         // TODO See nsDocShell::DisplayLoadError for a list of all the error
