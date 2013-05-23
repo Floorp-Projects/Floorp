@@ -1035,7 +1035,7 @@ let CustomizableUIInternal = {
     }
 
     if (typeof aValue == "object" && aValue.constructor.name == "Set") {
-      return [i for (i of aValue)];
+      return [...aValue];
     }
 
     return aValue;
