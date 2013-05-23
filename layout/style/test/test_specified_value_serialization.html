@@ -41,5 +41,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=721136
   is(document.documentElement.style.MozTransform, arr[1],
     "incorrect serialization");
 });
+
+var elt = document.documentElement;
+
+elt.setAttribute("style",
+                 "transform: tRANslatEX(5px) TRanslATey(10px) translatez(2px) ROTATEX(30deg) rotateY(30deg) rotatez(5deg) SKEWx(10deg) skewy(10deg) scaleX(2) SCALEY(0.5) scalez(2)");
+is(elt.style.getPropertyValue("transform"),
+   "translateX(5px) translateY(10px) translateZ(2px) rotateX(30deg) rotateY(30deg) rotateZ(5deg) skewX(10deg) skewY(10deg) scaleX(2) scaleY(0.5) scaleZ(2)",
+   "expected case canonicalization of transform functions");
+
+elt.setAttribute("style",
+                 "font-variant-alternates: SWASH(fOo) stYLIStiC(Bar)");
+is(elt.style.getPropertyValue("font-variant-alternates"),
+   "swash(fOo) stylistic(Bar)",
+   "expected case canonicalization of transform functions");
+
+elt.setAttribute("style", ""); // leave the page in a useful state
+
 </script>
 </pre>
