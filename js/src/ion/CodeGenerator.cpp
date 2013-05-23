@@ -5233,6 +5233,10 @@ CodeGenerator::link()
     ionScript->setMethod(code);
     ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
 
+    // If SPS is enabled, mark IonScript as having been instrumented with SPS
+    if (sps_.enabled())
+        ionScript->setHasSPSInstrumentation();
+
     SetIonScript(script, executionMode, ionScript);
 
     if (!ionScript)
