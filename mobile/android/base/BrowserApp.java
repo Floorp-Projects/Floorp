@@ -351,8 +351,7 @@ abstract public class BrowserApp extends GeckoApp
 
         super.onCreate(savedInstanceState);
 
-        RelativeLayout actionBar = (RelativeLayout) getActionBarLayout();
-        mMainLayout.addView(actionBar, 2);
+        RelativeLayout actionBar = (RelativeLayout) findViewById(R.id.browser_toolbar);
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
@@ -817,13 +816,6 @@ abstract public class BrowserApp extends GeckoApp
         // the toolbar state above to make ensure animations happen
         // on the correct order.
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    public View getActionBarLayout() {
-        RelativeLayout actionBar = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.browser_toolbar, null);
-        actionBar.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
-                                                                  (int) getResources().getDimension(R.dimen.browser_toolbar_height)));
-        return actionBar;
     }
 
     @Override
