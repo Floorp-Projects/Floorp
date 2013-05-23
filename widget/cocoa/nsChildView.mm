@@ -140,6 +140,7 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
+- (BOOL)isUsingMainThreadOpenGL;
 - (BOOL)isUsingOpenGL;
 - (void)drawUsingOpenGL;
 - (void)drawUsingOpenGLCallback;
@@ -2461,11 +2462,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)setNeedsDisplayInRect:(NSRect)aRect
 {
-  if (![[self window] isVisible])
+  if (![self isUsingOpenGL]) {
+    [super setNeedsDisplayInRect:aRect];
     return;
+  }
 
-  if ([self isUsingOpenGL]) {
-    // Draw the frame outside of setNeedsDisplayInRect to prevent us from
+  if ([[self window] isVisible] && [self isUsingMainThreadOpenGL]) {
+    // Draw without calling drawRect. This prevent us from
     // needing to access the normal window buffer surface unnecessarily, so we
     // waste less time synchronizing the two surfaces. (These synchronizations
     // show up in a profiler as CGSDeviceLock / _CGSLockWindow /
@@ -2480,8 +2483,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
                  afterDelay:0
                     inModes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
     }
-  } else {
-    [super setNeedsDisplayInRect:aRect];
   }
 }
 
@@ -2805,17 +2806,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     painted = mGeckoChild->PaintWindow(region);
   }
 
-  // Force OpenGL to refresh the very first time we draw. This works around a
-  // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
-  LayerManager *layerManager = mGeckoChild->GetLayerManager(nullptr);
-  if (mUsingOMTCompositor && painted && !mDidForceRefreshOpenGL &&
-      layerManager->AsLayerManagerComposite()) {
-    if (!mDidForceRefreshOpenGL) {
-      [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
-      mDidForceRefreshOpenGL = YES;
-    }
-  }
-
   if (!painted && [self isOpaque]) {
     // Gecko refused to draw, but we've claimed to be opaque, so we have to
     // draw something--fill with white.
@@ -2843,12 +2833,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
 }
 
-- (BOOL)isUsingOpenGL
+- (BOOL)isUsingMainThreadOpenGL
 {
   if (!mGeckoChild || ![self window])
     return NO;
 
   return mGeckoChild->GetLayerManager(nullptr)->GetBackendType() == mozilla::layers::LAYERS_OPENGL;
+}
+
+- (BOOL)isUsingOpenGL
+{
+  if (!mGeckoChild || ![self window])
+    return NO;
+
+  return mGLContext || [self isUsingMainThreadOpenGL];
 }
 
 - (void)drawUsingOpenGL
@@ -2864,16 +2862,18 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->GetBounds(geckoBounds);
   nsIntRegion region(geckoBounds);
 
-  LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager(nullptr));
-  manager->SetClippingRegion(region);
-  NSOpenGLContext *glContext = (NSOpenGLContext *)manager->GetNSOpenGLContext();
+  if ([self isUsingMainThreadOpenGL]) {
+    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager(nullptr));
+    manager->SetClippingRegion(region);
+    NSOpenGLContext *glContext = (NSOpenGLContext *)manager->GetNSOpenGLContext();
 
-  if (!mGLContext) {
-    [self setGLContext:glContext];
+    if (!mGLContext) {
+      [self setGLContext:glContext];
+    }
+
+    [glContext setView:self];
+    [glContext update];
   }
-
-  [glContext setView:self];
-  [glContext update];
 
   mGeckoChild->PaintWindow(region);
 
