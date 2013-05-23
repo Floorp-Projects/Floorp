@@ -2707,6 +2707,15 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
 }
 
+- (NSArray*)titlebarControls
+{
+  // Return all subviews of the frameView which are not the content view.
+  NSView* frameView = [[self contentView] superview];
+  NSMutableArray* array = [[[frameView subviews] mutableCopy] autorelease];
+  [array removeObject:[self contentView]];
+  return array;
+}
+
 - (BOOL)respondsToSelector:(SEL)aSelector
 {
   // Claim the window doesn't respond to this so that the system
