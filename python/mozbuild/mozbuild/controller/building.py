@@ -36,6 +36,16 @@ class BuildMonitor(object):
         """
         self._warnings_path = warnings_path
 
+        self.tiers = []
+        self.subtiers = []
+        self.current_tier = None
+        self.current_subtier = None
+        self.current_tier_dirs = []
+        self.current_tier_static_dirs = []
+        self.current_subtier_dirs = []
+        self.current_tier_dir = None
+        self.current_tier_dir_index = 0
+
         self.warnings_database = WarningsDatabase()
         if os.path.exists(warnings_path):
             try:
@@ -71,7 +81,60 @@ class BuildMonitor(object):
         presented to the user.
         """
         if line.startswith('BUILDSTATUS'):
-            return BuildOutputResult(None, True, False)
+            args = line.split()[1:]
+
+            action = args.pop(0)
+            update_needed = True
+
+            if action == 'TIERS':
+                self.tiers = args
+                update_needed = False
+            elif action == 'SUBTIERS':
+                self.subtiers = args
+                update_needed = False
+            elif action == 'STATICDIRS':
+                self.current_tier_static_dirs = args
+                update_needed = False
+            elif action == 'DIRS':
+                self.current_tier_dirs = args
+                update_needed = False
+            elif action == 'TIER_START':
+                assert len(args) == 1
+                self.current_tier = args[0]
+                self.current_subtier = None
+                self.current_tier_dirs = []
+                self.current_tier_dir = None
+            elif action == 'TIER_FINISH':
+                assert len(args) == 1
+                assert args[0] == self.current_tier
+            elif action == 'SUBTIER_START':
+                assert len(args) == 2
+                tier, subtier = args
+                assert tier == self.current_tier
+                self.current_subtier = subtier
+                if subtier == 'static':
+                    self.current_subtier_dirs = self.current_tier_static_dirs
+                else:
+                    self.current_subtier_dirs = self.current_tier_dirs
+                self.current_tier_dir_index = 0
+            elif action == 'SUBTIER_FINISH':
+                assert len(args) == 2
+                tier, subtier = args
+                assert tier == self.current_tier
+                assert subtier == self.current_subtier
+            elif action == 'TIERDIR_START':
+                assert len(args) == 1
+                self.current_tier_dir = args[0]
+                self.current_tier_dir_index += 1
+            elif action == 'TIERDIR_FINISH':
+                assert len(args) == 1
+                assert self.current_tier_dir == args[0]
+            else:
+                raise Exception('Unknown build status: %s' % action)
+
+            return BuildOutputResult(None, update_needed, False)
+
+        warning = None
 
         try:
             warning = self._warnings_collector.process_line(line)
