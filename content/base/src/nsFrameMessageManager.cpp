@@ -1402,10 +1402,12 @@ nsFrameMessageManager*
 nsFrameMessageManager::NewProcessMessageManager(mozilla::dom::ContentParent* aProcess)
 {
   if (!nsFrameMessageManager::sParentProcessManager) {
-     nsCOMPtr<nsIMessageBroadcaster> dummy;
-     NS_NewParentProcessMessageManager(getter_AddRefs(dummy));
+     nsCOMPtr<nsIMessageBroadcaster> dummy =
+       do_GetService("@mozilla.org/parentprocessmessagemanager;1");
   }
 
+  MOZ_ASSERT(nsFrameMessageManager::sParentProcessManager,
+             "parent process manager not created");
   nsFrameMessageManager* mm;
   if (aProcess) {
     mm = new nsFrameMessageManager(aProcess,
