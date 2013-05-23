@@ -72,11 +72,15 @@
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
 #include "nsIScriptError.h"
+#include "nsIAppShell.h"
+#include "nsWidgetsCID.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 DOMCI_DATA(WindowUtils, nsDOMWindowUtils)
 
@@ -3305,3 +3309,34 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
   aTarget->DispatchEvent(aEvent, aRetVal);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::RunInStableState(nsIRunnable *runnable)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
+  if (!appShell) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return appShell->RunInStableState(runnable);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::RunBeforeNextEvent(nsIRunnable *runnable)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
+  if (!appShell) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return appShell->RunBeforeNextEvent(runnable);
+}
+
