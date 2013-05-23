@@ -443,8 +443,8 @@ struct BaselineStackBuilder
 //
 static bool
 InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
-                HandleFunction fun, HandleScript script, SnapshotIterator &iter,
-                bool invalidate, BaselineStackBuilder &builder,
+                HandleFunction fun, HandleScript script, IonScript *ionScript,
+                SnapshotIterator &iter, bool invalidate, BaselineStackBuilder &builder,
                 MutableHandleFunction nextCallee, jsbytecode **callPC)
 {
     uint32_t exprStackSlots = iter.slots() - (script->nfixed + CountArgSlots(script, fun));
@@ -503,7 +503,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // If SPS Profiler is enabled, mark the frame as having pushed an SPS entry.
     // This may be wrong for the last frame of ArgumentCheck bailout, but
     // that will be fixed later.
-    if (cx->runtime->spsProfiler.enabled()) {
+    if (cx->runtime->spsProfiler.enabled() && ionScript->hasSPSInstrumentation()) {
         IonSpew(IonSpew_BaselineBailouts, "      Setting SPS flag on frame!");
         flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
     }
@@ -1080,8 +1080,8 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
         IonSpew(IonSpew_BaselineBailouts, "    FrameNo %d", frameNo);
         jsbytecode *callPC = NULL;
         RootedFunction nextCallee(cx, NULL);
-        if (!InitFromBailout(cx, caller, callerPC, fun, scr, snapIter, invalidate, builder,
-                             &nextCallee, &callPC))
+        if (!InitFromBailout(cx, caller, callerPC, fun, scr, iter.ionScript(),
+                             snapIter, invalidate, builder, &nextCallee, &callPC))
         {
             return BAILOUT_RETURN_FATAL_ERROR;
         }
