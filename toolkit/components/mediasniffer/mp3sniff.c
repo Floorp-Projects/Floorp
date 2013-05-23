@@ -141,7 +141,6 @@ int mp3_sniff(const uint8_t *buf, long length)
       if (skip + 4 > avail) {
         return 0;
       }
-      dump_header(&header, out);
       p += skip;
       avail -= skip;
       /* Check for a second header at the expected offset. */
