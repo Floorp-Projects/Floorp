@@ -2135,7 +2135,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(region);
 
-        listener->PaintWindow(this, region, 0);
+        listener->PaintWindow(this, region);
         listener->DidPaintWindow();
 
         g_free(rects);
@@ -2199,11 +2199,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     {
       if (GetLayerManager()->GetBackendType() == LAYERS_BASIC) {
         AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
-        painted = listener->PaintWindow(this, region, 0);
+        painted = listener->PaintWindow(this, region);
       } else if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
         ClientLayerManager *manager = static_cast<ClientLayerManager*>(GetLayerManager());
         manager->SetShadowTarget(ctx);
-        painted = listener->PaintWindow(this, region, 0);
+        painted = listener->PaintWindow(this, region);
       }
     }
 

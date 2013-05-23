@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x37b67cb4, 0x140c, 0x4d46, \
-  { 0xa9, 0xf8, 0x28, 0xcc, 0x08, 0x3d, 0x1f, 0x54 } }
+{ 0xa7d1e8d4, 0xe2c1, 0x45cb, \
+  { 0xab, 0x72, 0xb3, 0xe9, 0xf9, 0xcc, 0xb2, 0xce } }
 
 /*
  * Window shadow styles
@@ -1657,13 +1657,6 @@ class nsIWidget : public nsISupports {
        NS_ENSURE_SUCCESS(rv, false);
        return !bounds.IsEmpty();
     }
-
-    /**
-     * This function is called by nsViewManager right before the retained layer 
-     * tree for this widget is about to be updated, and any required
-     * ThebesLayer painting occurs.
-     */
-    virtual void WillPaint() { }
 
     /**
      * Get the natural bounds of this widget.  This method is only

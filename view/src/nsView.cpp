@@ -32,7 +32,6 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mViewManager = aViewManager;
   mDirtyRegion = nullptr;
   mWidgetIsTopLevel = false;
-  mInAlternatePaint = false;
 }
 
 void nsView::DropMouseGrabbing()
@@ -998,19 +997,12 @@ nsView::WillPaintWindow(nsIWidget* aWidget)
 }
 
 bool
-nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags)
+nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion)
 {
   NS_ASSERTION(this == nsView::GetViewFor(aWidget), "wrong view for widget?");
 
-  mInAlternatePaint = aFlags & PAINT_IS_ALTERNATE;
   nsRefPtr<nsViewManager> vm = mViewManager;
-  bool result = vm->PaintWindow(aWidget, aRegion, aFlags);
-  // PaintWindow can destroy this via WillPaintWindow notification, so we have
-  // to re-get the view from the widget.
-  nsView* view = nsView::GetViewFor(aWidget);
-  if (view) {
-    view->mInAlternatePaint = false;
-  }
+  bool result = vm->PaintWindow(aWidget, aRegion);
   return result;
 }
 

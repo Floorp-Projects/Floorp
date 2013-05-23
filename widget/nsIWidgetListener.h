@@ -125,10 +125,7 @@ public:
    * This is called at a time when it is not OK to change the geometry of
    * this widget or of other widgets.
    */
-  enum {
-    PAINT_IS_ALTERNATE = 1 << 0 /* We are painting something other than the normal widget */
-  };
-  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags) { return false; }
+  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) { return false; }
 
   /**
    * Indicates that a paint occurred.
