@@ -67,8 +67,6 @@ chrome.jar:
   skin/images/identity-default-hdpi.png     (images/identity-default-hdpi.png)
   skin/images/identity-ssl-hdpi.png         (images/identity-ssl-hdpi.png)
   skin/images/identity-ev-hdpi.png          (images/identity-ev-hdpi.png)
-  skin/images/unlocked-hdpi.png             (images/unlocked-hdpi.png)
-  skin/images/locked-hdpi.png               (images/locked-hdpi.png)
   skin/images/search-glass-30.png           (images/search-glass-30.png)
   skin/images/play-hdpi.png                 (images/play-hdpi.png)
   skin/images/pause-hdpi.png                (images/pause-hdpi.png)
