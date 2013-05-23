@@ -186,6 +186,7 @@ class MochitestRunner(MozbuildObject):
         self.log_manager.disable_unstructured()
 
         if test_output.getvalue():
+            result = 1
             for line in test_output.getvalue().splitlines():
                 self.log(logging.INFO, 'unexpected', {'msg': line}, '{msg}')
 
