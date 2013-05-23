@@ -4,12 +4,9 @@
 
 from __future__ import print_function, unicode_literals
 
-import getpass
 import logging
 import operator
 import os
-import sys
-import time
 
 from mach.decorators import (
     CommandArgument,
@@ -57,38 +54,23 @@ class Build(MachCommandBase):
     @CommandArgument('-v', '--verbose', action='store_true',
         help='Verbose output for what commands the build is running.')
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0, verbose=False):
-        # This code is only meant to be temporary until the more robust tree
-        # building code in bug 780329 lands.
-        from mozbuild.compilation.warnings import WarningsCollector
-        from mozbuild.compilation.warnings import WarningsDatabase
+        from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
 
         warnings_path = self._get_state_filename('warnings.json')
-        warnings_database = WarningsDatabase()
-
-        if os.path.exists(warnings_path):
-            try:
-                warnings_database.load_from_file(warnings_path)
-            except ValueError:
-                os.remove(warnings_path)
-
-        warnings_collector = WarningsCollector(database=warnings_database,
-            objdir=self.topobjdir)
+        monitor = BuildMonitor(self.topobjdir, warnings_path)
 
         def on_line(line):
-            try:
-                warning = warnings_collector.process_line(line)
-                if warning:
-                    self.log(logging.INFO, 'compiler_warning', warning,
-                        'Warning: {flag} in {filename}: {message}')
-            except:
-                # This will get logged in the more robust implementation.
-                pass
+            warning, state_changed, relevant = monitor.on_line(line)
 
-            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+            if warning:
+                self.log(logging.INFO, 'compiler_warning', warning,
+                    'Warning: {flag} in {filename}: {message}')
 
-        finder_start_cpu = self._get_finder_cpu_usage()
-        time_start = time.time()
+            if relevant:
+                self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+
+        monitor.start()
 
         if what:
             top_make = os.path.join(self.topobjdir, 'Makefile')
@@ -141,17 +123,15 @@ class Build(MachCommandBase):
                 silent=not verbose)
 
             self.log(logging.WARNING, 'warning_summary',
-                {'count': len(warnings_collector.database)},
+                {'count': len(monitor.warnings_database)},
                 '{count} compiler warnings present.')
 
-        warnings_database.prune()
-        warnings_database.save_to_file(warnings_path)
+        monitor.finish()
+        high_finder, finder_percent = monitor.have_high_finder_usage()
+        if high_finder:
+            print(FINDER_SLOW_MESSAGE % finder_percent)
 
-        time_end = time.time()
-        time_elapsed = time_end - time_start
-        self._handle_finder_cpu_usage(time_elapsed, finder_start_cpu)
-
-        long_build = time_elapsed > 600
+        long_build = monitor.elapsed > 600
 
         if status:
             return status
@@ -175,61 +155,6 @@ class Build(MachCommandBase):
                     'https://developer.mozilla.org/docs/Developer_Guide/So_You_Just_Built_Firefox')
 
         return status
-
-    def _get_finder_cpu_usage(self):
-        """Obtain the CPU usage of the Finder app on OS X.
-
-        This is used to detect high CPU usage.
-        """
-        if not sys.platform.startswith('darwin'):
-            return None
-
-        try:
-            import psutil
-        except ImportError:
-            return None
-
-        for proc in psutil.process_iter():
-            if proc.name != 'Finder':
-                continue
-
-            if proc.username != getpass.getuser():
-                continue
-
-            # Try to isolate system finder as opposed to other "Finder"
-            # processes.
-            if not proc.exe.endswith('CoreServices/Finder.app/Contents/MacOS/Finder'):
-                continue
-
-            return proc.get_cpu_times()
-
-        return None
-
-    def _handle_finder_cpu_usage(self, elapsed, start):
-        if not start:
-            return
-
-        # We only measure if the measured range is sufficiently long.
-        if elapsed < 15:
-            return
-
-        end = self._get_finder_cpu_usage()
-        if not end:
-            return
-
-        start_total = start.user + start.system
-        end_total = end.user + end.system
-
-        cpu_seconds = end_total - start_total
-
-        # If Finder used more than 25% of 1 core during the build, report an
-        # error.
-        finder_percent = cpu_seconds / elapsed * 100
-        if finder_percent < 25:
-            return
-
-        print(FINDER_SLOW_MESSAGE % finder_percent)
-
 
     @Command('configure', category='build',
         description='Configure the tree (run configure and config.status).')
