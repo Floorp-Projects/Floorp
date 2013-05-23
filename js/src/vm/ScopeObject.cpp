@@ -1219,10 +1219,6 @@ class DebugScopeProxy : public BaseProxyHandler
                     if (action == GET)
                         vp.set(UndefinedValue());
                 }
-
-                if (action == SET)
-                    TypeScript::SetLocal(cx, script, i, vp);
-
             } else {
                 JS_ASSERT(bi->kind() == ARGUMENT);
                 unsigned i = bi.frameIndex();
