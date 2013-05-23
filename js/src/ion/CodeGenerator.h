@@ -336,6 +336,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     // Script counts created when compiling code with no associated JSScript.
     IonScriptCounts *unassociatedScriptCounts_;
+
+    PerfSpewer perfSpewer_;
 };
 
 } // namespace ion
