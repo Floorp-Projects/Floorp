@@ -66,9 +66,9 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     protected volatile State state = State.NOT_INITIALIZED;
 
     private volatile int env = -1;
-    private HealthReportDatabaseStorage storage;
+    private volatile HealthReportDatabaseStorage storage;
+    private final ProfileInformationCache profileCache;
     private ContentProviderClient client;
-    private ProfileInformationCache profileCache;
 
     /**
      * Persist the opaque identifier for the current Firefox Health Report environment.
@@ -278,9 +278,9 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     /**
      * Add provider-specific initialization in this method.
      */
-    private void initialize(final Context context,
-                            final String profilePath,
-                            final EventDispatcher dispatcher)
+    private synchronized void initialize(final Context context,
+                                         final String profilePath,
+                                         final EventDispatcher dispatcher)
         throws java.io.IOException {
 
         Log.d(LOG_TAG, "Initializing profile cache.");
@@ -288,6 +288,8 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         this.profileCache.beginInitialization();
 
         this.profileCache.setProfileCreationTime(getAndPersistProfileInitTime(context, profilePath));
+
+        final BrowserHealthRecorder self = this;
 
         PrefHandler handler = new PrefsHelper.PrefHandlerBase() {
             @Override
@@ -318,27 +320,40 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                 ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            storage.beginInitialization();
-                        } catch (Exception e) {
-                            Log.e(LOG_TAG, "Failed to init storage.", e);
-                            state = State.INITIALIZATION_FAILED;
-                            return;
-                        }
+                        synchronized (self) {
+                            if (state != State.INITIALIZING) {
+                                Log.w(LOG_TAG, "Unexpected state during init: " + state);
+                                return;
+                            }
 
-                        try {
-                            // Initialize each provider here.
+                            // Belt and braces.
+                            if (storage == null) {
+                                Log.w(LOG_TAG, "Storage is null during init; shutting down?");
+                                return;
+                            }
 
-                            Log.d(LOG_TAG, "Ensuring environment.");
-                            ensureEnvironment();
+                            try {
+                                storage.beginInitialization();
+                            } catch (Exception e) {
+                                Log.e(LOG_TAG, "Failed to init storage.", e);
+                                state = State.INITIALIZATION_FAILED;
+                                return;
+                            }
 
-                            Log.d(LOG_TAG, "Finishing init.");
-                            storage.finishInitialization();
-                            state = State.INITIALIZED;
-                        } catch (Exception e) {
-                            state = State.INITIALIZATION_FAILED;
-                            storage.abortInitialization();
-                            Log.e(LOG_TAG, "Initialization failed.", e);
+                            try {
+                                // Initialize each provider here.
+
+                                Log.d(LOG_TAG, "Ensuring environment.");
+                                ensureEnvironment();
+
+                                Log.d(LOG_TAG, "Finishing init.");
+                                storage.finishInitialization();
+                                state = State.INITIALIZED;
+                            } catch (Exception e) {
+                                state = State.INITIALIZATION_FAILED;
+                                storage.abortInitialization();
+                                Log.e(LOG_TAG, "Initialization failed.", e);
+                            }
                         }
                     }
                 });
