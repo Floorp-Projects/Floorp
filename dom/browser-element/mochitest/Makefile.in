@@ -28,7 +28,6 @@ MOCHITEST_FILES = \
 		browserElement_DataURI.js \
 		test_browserElement_inproc_DataURI.html \
 		browserElement_ErrorSecurity.js \
-		test_browserElement_inproc_ErrorSecurity.html \
 		browserElement_Titlechange.js \
 		test_browserElement_inproc_Titlechange.html \
 		browserElement_TopBarrier.js \
@@ -169,6 +168,9 @@ MOCHITEST_FILES = \
 # Disabled due to focus issues (no bug that I'm aware of)
 # 		test_browserElement_oop_KeyEvents.html \
 
+# Disable due to certificate issue (no bug that I'm aware of)
+#		test_browserElement_inproc_ErrorSecurity.html \
+
 # OOP tests don't work on native-fennec (bug 774939).
 #
 # Both the "inproc" and "oop" versions of OpenMixedProcess open remote frames,
@@ -179,6 +181,7 @@ MOCHITEST_FILES += \
 		browserElement_OpenMixedProcess.js \
 		file_browserElement_OpenMixedProcess.html \
 		test_browserElement_inproc_OpenMixedProcess.html \
+		test_browserElement_inproc_ErrorSecurity.html \
 		test_browserElement_oop_OpenMixedProcess.html \
 		test_browserElement_oop_LoadEvents.html \
 		test_browserElement_oop_DataURI.html \
