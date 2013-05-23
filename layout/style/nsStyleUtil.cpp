@@ -353,9 +353,7 @@ nsStyleUtil::ComputeFunctionalAlternates(const nsCSSValueList* aList,
     const nsCSSValue::Array *func = curr->mValue.GetArrayValue();
 
     // lookup propval
-    nsAutoString keywordStr;
-    func->Item(0).GetStringValue(keywordStr);
-    nsCSSKeyword key = nsCSSKeywords::LookupKeyword(keywordStr);
+    nsCSSKeyword key = func->Item(0).GetKeywordValue();
     NS_ASSERTION(key != eCSSKeyword_UNKNOWN, "unknown alternate property value");
 
     int32_t alternate;
