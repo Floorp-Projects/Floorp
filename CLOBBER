@@ -17,7 +17,6 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Refactored build system core dependencies in bug 874078.
+Bug 854517: Integrate valgrind into B2G builds
 
-Alternative to clobber is to run ./config.status from the objdir and to
-touch the CLOBBER file in the objdir.
+clobber needed due to changes in configure.in for js engine and gecko
