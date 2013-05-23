@@ -2731,91 +2731,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 @end
 
-@interface TitlebarMouseHandlingView : NSView<EventRedirection>
-{
-  ToolbarWindow* mWindow; // weak
-  BOOL mProcessingRightMouseDown;
-}
-
-- (id)initWithWindow:(ToolbarWindow*)aWindow;
-@end
-
-@implementation TitlebarMouseHandlingView
-
-- (id)initWithWindow:(ToolbarWindow*)aWindow
-{
-  if ((self = [super initWithFrame:[aWindow titlebarRect]])) {
-    mWindow = aWindow;
-    [self setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
-    [ChildView registerViewForDraggedTypes:self];
-    mProcessingRightMouseDown = NO;
-  }
-  return self;
-}
-
-- (NSView*)targetView
-{
-  return [mWindow mainChildView];
-}
-
-- (BOOL)mouseDownCanMoveWindow
-{
-  return [mWindow isMovableByWindowBackground];
-}
-
-// We redirect many types of events to the window's mainChildView simply by
-// passing the event object to the respective handler method. We don't need any
-// coordinate transformations because event coordinates are relative to the
-// window.
-// We only need to handle event types whose target NSView is determined by the
-// event's position. We don't need to handle key events and NSMouseMoved events
-// because those are only sent to the window's first responder. This view
-// doesn't override acceptsFirstResponder, so it will never receive those kinds
-// of events.
-
-- (void)mouseMoved:(NSEvent*)aEvent            { [[self targetView] mouseMoved:aEvent]; }
-- (void)mouseDown:(NSEvent*)aEvent             { [[self targetView] mouseDown:aEvent]; }
-- (void)mouseUp:(NSEvent*)aEvent               { [[self targetView] mouseUp:aEvent]; }
-- (void)mouseDragged:(NSEvent*)aEvent          { [[self targetView] mouseDragged:aEvent]; }
-- (void)rightMouseDown:(NSEvent*)aEvent
-{
-  // To avoid recursion...
-  if (mProcessingRightMouseDown)
-    return;
-  mProcessingRightMouseDown = YES;
-  [[self targetView] rightMouseDown:aEvent];
-  mProcessingRightMouseDown = NO;
-}
-- (void)rightMouseUp:(NSEvent*)aEvent          { [[self targetView] rightMouseUp:aEvent]; }
-- (void)rightMouseDragged:(NSEvent*)aEvent     { [[self targetView] rightMouseDragged:aEvent]; }
-- (void)otherMouseDown:(NSEvent*)aEvent        { [[self targetView] otherMouseDown:aEvent]; }
-- (void)otherMouseUp:(NSEvent*)aEvent          { [[self targetView] otherMouseUp:aEvent]; }
-- (void)otherMouseDragged:(NSEvent*)aEvent     { [[self targetView] otherMouseDragged:aEvent]; }
-- (void)scrollWheel:(NSEvent*)aEvent           { [[self targetView] scrollWheel:aEvent]; }
-- (void)swipeWithEvent:(NSEvent*)aEvent        { [[self targetView] swipeWithEvent:aEvent]; }
-- (void)beginGestureWithEvent:(NSEvent*)aEvent { [[self targetView] beginGestureWithEvent:aEvent]; }
-- (void)magnifyWithEvent:(NSEvent*)aEvent      { [[self targetView] magnifyWithEvent:aEvent]; }
-- (void)rotateWithEvent:(NSEvent*)aEvent       { [[self targetView] rotateWithEvent:aEvent]; }
-- (void)endGestureWithEvent:(NSEvent*)aEvent   { [[self targetView] endGestureWithEvent:aEvent]; }
-- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
-  { return [[self targetView] draggingEntered:sender]; }
-- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
-  { return [[self targetView] draggingUpdated:sender]; }
-- (void)draggingExited:(id <NSDraggingInfo>)sender
-  { [[self targetView] draggingExited:sender]; }
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
-  { return [[self targetView] performDragOperation:sender]; }
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
-  { [[self targetView] draggedImage:anImage endedAt:aPoint operation:operation]; }
-- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal
-  { return [[self targetView] draggingSourceOperationMaskForLocal:isLocal]; }
-- (NSArray *)namesOfPromisedFilesDroppedAtDestination:(NSURL*)dropDestination
-  { return [[self targetView] namesOfPromisedFilesDroppedAtDestination:dropDestination]; }
-- (NSMenu*)menuForEvent:(NSEvent*)aEvent
-  { return [[self targetView] menuForEvent:aEvent]; }
-
-@end
-
 // This class allows us to exercise control over the window's title bar. This
 // allows for a "unified toolbar" look, and for extending the content area into
 // the title bar. It works like this:
@@ -2852,11 +2767,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 // to the containing window - the other direction doesn't work. That's why the
 // toolbar height is cached in the ToolbarWindow but nsNativeThemeCocoa can simply
 // query the window for its titlebar height when drawing the toolbar.
-@interface ToolbarWindow(Private)
-- (void)installTitlebarMouseHandlingView;
-- (void)uninstallTitlebarMouseHandlingView;
-@end;
-
 @implementation ToolbarWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
@@ -3030,26 +2940,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     // content area, so that event would have wrong position information. So
     // we'll send a mouse move event with the correct new position.
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
-
-    if (aState) {
-      [self installTitlebarMouseHandlingView];
-    } else {
-      [self uninstallTitlebarMouseHandlingView];
-    }
   }
-}
-
-- (void)installTitlebarMouseHandlingView
-{
-  mTitlebarView = [[TitlebarMouseHandlingView alloc] initWithWindow:self];
-  [[[self contentView] superview] addSubview:mTitlebarView positioned:NSWindowBelow relativeTo:nil];
-}
-
-- (void)uninstallTitlebarMouseHandlingView
-{
-  [mTitlebarView removeFromSuperview];
-  [mTitlebarView release];
-  mTitlebarView = nil;
 }
 
 // Returning YES here makes the setShowsToolbarButton method work even though
