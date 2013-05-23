@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.background.healthreport;
 
+import java.util.HashMap;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -54,7 +56,6 @@ public class HealthReportGenerator {
    *
    * <code>days</code> is a map from date strings to <tt>{hash: {measurement: {_v: version, fields...}}}</tt>.
    */
-  @SuppressWarnings("unchecked")
   public JSONObject generateDocument(long since, long lastPingTime, Environment currentEnvironment) {
     Logger.debug(LOG_TAG, "Current environment hash: " + currentEnvironment.getHash());
 
@@ -62,15 +63,20 @@ public class HealthReportGenerator {
     SparseArray<Environment> envs = storage.getEnvironmentRecordsByID();
 
     JSONObject document = new JSONObject();
+
+    // Defeat "unchecked" warnings with JDK7. See Bug 875088.
+    @SuppressWarnings("unchecked")
+    HashMap<String, Object> doc = ((HashMap<String, Object>) document);
+
     if (lastPingTime >= HealthReportConstants.EARLIEST_LAST_PING) {
-      document.put("lastPingDate", HealthReportUtils.getDateString(lastPingTime));
+      doc.put("lastPingDate", HealthReportUtils.getDateString(lastPingTime));
     }
 
-    document.put("thisPingDate", HealthReportUtils.getDateString(now()));
-    document.put("version", PAYLOAD_VERSION);
+    doc.put("thisPingDate", HealthReportUtils.getDateString(now()));
+    doc.put("version", PAYLOAD_VERSION);
 
-    document.put("environments", getEnvironmentsJSON(currentEnvironment, envs));
-    document.put("data", getDataJSON(currentEnvironment, envs, since));
+    doc.put("environments", getEnvironmentsJSON(currentEnvironment, envs));
+    doc.put("data", getDataJSON(currentEnvironment, envs, since));
 
     return document;
   }
