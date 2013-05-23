@@ -1800,32 +1800,55 @@ ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* a
          CGRectGetMaxY(inBoxRect) <= unifiedToolbarHeight;
 }
 
+// By default, kCUIWidgetWindowFrame drawing draws rounded corners in the
+// upper corners. Depending on the context type, it fills the background in
+// the corners with black or leaves it transparent. Unfortunately, this corner
+// rounding interacts poorly with the window corner masking we apply during
+// titlebar drawing and results in small remnants of the corner background
+// appearing at the rounded edge.
+// So we draw square corners.
+static void
+DrawNativeTitlebarToolbarWithSquareCorners(CGContextRef aContext, const CGRect& aRect,
+                                           CGFloat aUnifiedHeight, BOOL aIsMain)
+{
+  // We extend the draw rect horizontally and clip away the rounded corners.
+  const CGFloat extendHorizontal = 10;
+  CGRect drawRect = CGRectInset(aRect, -extendHorizontal, 0);
+  if (drawRect.size.width * drawRect.size.height <= CUIDRAW_MAX_AREA) {
+    CGContextSaveGState(aContext);
+    CGContextClipToRect(aContext, aRect);
+
+    CUIDraw([NSWindow coreUIRenderer], drawRect, aContext,
+            (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+              @"kCUIWidgetWindowFrame", @"widget",
+              @"regularwin", @"windowtype",
+              (aIsMain ? @"normal" : @"inactive"), @"state",
+              [NSNumber numberWithDouble:aUnifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+              [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
+              [NSNumber numberWithBool:YES], @"is.flipped",
+              nil],
+            nil);
+
+    CGContextRestoreGState(aContext);
+  }
+}
+
 void
 nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                                        NSWindow* aWindow)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  float unifiedHeight = [(ToolbarWindow*)aWindow unifiedToolbarHeight];
-
-  BOOL isMain = [aWindow isMainWindow];
-
   CGContextSaveGState(cgContext);
   CGContextClipToRect(cgContext, inBoxRect);
 
-  CGRect drawRect = CGRectOffset(inBoxRect, 0, inBoxRect.size.height - unifiedHeight);
-  if (drawRect.size.width * drawRect.size.height <= CUIDRAW_MAX_AREA) {
-    CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
-            (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-              @"kCUIWidgetWindowFrame", @"widget",
-              @"regularwin", @"windowtype",
-              (isMain ? @"normal" : @"inactive"), @"state",
-              [NSNumber numberWithInt:unifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
-              [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
-              [NSNumber numberWithBool:YES], @"is.flipped",
-              nil],
-            nil);
-  }
+  CGFloat unifiedHeight = std::max([(ToolbarWindow*)aWindow unifiedToolbarHeight],
+                                   inBoxRect.size.height);
+  BOOL isMain = [aWindow isMainWindow];
+  CGFloat titlebarHeight = unifiedHeight - inBoxRect.size.height;
+  CGRect drawRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y - titlebarHeight,
+                               inBoxRect.size.width, inBoxRect.size.height + titlebarHeight);
+  DrawNativeTitlebarToolbarWithSquareCorners(cgContext, drawRect, unifiedHeight, isMain);
 
   CGContextRestoreGState(cgContext);
 
@@ -1873,28 +1896,8 @@ void
 nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
                                        CGFloat aUnifiedHeight, BOOL aIsMain)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (aTitlebarRect.size.width * aTitlebarRect.size.height > CUIDRAW_MAX_AREA) {
-    return;
-  }
-
-  CGContextSaveGState(aContext);
-
-  CUIDraw([NSWindow coreUIRenderer], aTitlebarRect, aContext,
-          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-            @"kCUIWidgetWindowFrame", @"widget",
-            @"regularwin", @"windowtype",
-            (aIsMain ? @"normal" : @"inactive"), @"state",
-            [NSNumber numberWithInt:aUnifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
-            [NSNumber numberWithBool:NO], @"kCUIWindowFrameDrawTitleSeparatorKey",
-            [NSNumber numberWithBool:YES], @"is.flipped",
-            nil],
-          nil);
-
-  CGContextRestoreGState(aContext);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  CGFloat unifiedHeight = std::max(aUnifiedHeight, aTitlebarRect.size.height);
+  DrawNativeTitlebarToolbarWithSquareCorners(aContext, aTitlebarRect, unifiedHeight, aIsMain);
 }
 
 static void
