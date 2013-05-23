@@ -751,6 +751,9 @@ pref("dom.experimental_forms", false);
 // Don't enable <input type=range> yet:
 pref("dom.experimental_forms_range", true);
 
+// Don't enable <input type=color> yet:
+pref("dom.forms.color", false);
+
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
 

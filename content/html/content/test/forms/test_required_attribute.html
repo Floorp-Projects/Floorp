@@ -367,8 +367,7 @@ for (type of typeBarredFromConstraintValidation) {
 }
 
 // Then, checks for the types which do not use the required attribute.
-// TODO: check 'color' when they will be implemented.
-var typeRequireNotApply = ['range'];
+var typeRequireNotApply = ['range', 'color'];
 for (type of typeRequireNotApply) {
   checkInputRequiredNotApply(type, false);
 }
