@@ -1135,68 +1135,18 @@ WebSocket::UpdateURI()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-WebSocket::RemoveEventListener(const nsAString& aType,
-                               nsIDOMEventListener* aListener,
-                               bool aUseCapture)
+void
+WebSocket::EventListenerAdded(nsIAtom* aType)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsresult rv = nsDOMEventTargetHelper::RemoveEventListener(aType,
-                                                            aListener,
-                                                            aUseCapture);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateMustKeepAlive();
-  }
-  return rv;
+  UpdateMustKeepAlive();
 }
 
 void
-WebSocket::RemoveEventListener(const nsAString& aType,
-                               nsIDOMEventListener* aListener,
-                               bool aUseCapture,
-                               ErrorResult& aRv)
+WebSocket::EventListenerRemoved(nsIAtom* aType)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsDOMEventTargetHelper::RemoveEventListener(aType, aListener,
-                                              aUseCapture, aRv);
-  if (!aRv.Failed()) {
-    UpdateMustKeepAlive();
-  }
+  UpdateMustKeepAlive();
 }
 
-NS_IMETHODIMP
-WebSocket::AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener *aListener,
-                            bool aUseCapture,
-                            bool aWantsUntrusted,
-                            uint8_t optional_argc)
-{
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsresult rv = nsDOMEventTargetHelper::AddEventListener(aType,
-                                                         aListener,
-                                                         aUseCapture,
-                                                         aWantsUntrusted,
-                                                         optional_argc);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateMustKeepAlive();
-  }
-  return rv;
-}
-
-void
-WebSocket::AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener* aListener,
-                            bool aUseCapture,
-                            const Nullable<bool>& aWantsUntrusted,
-                            ErrorResult& aRv)
-{
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsDOMEventTargetHelper::AddEventListener(aType, aListener, aUseCapture,
-                                           aWantsUntrusted, aRv);
-  if (!aRv.Failed()) {
-    UpdateMustKeepAlive();
-  }
-}
 //-----------------------------------------------------------------------------
 // WebSocket - methods
 //-----------------------------------------------------------------------------
