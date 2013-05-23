@@ -160,6 +160,8 @@ public class GeckoAccessibility {
             if (sVirtualCursorNode == null)
                 sVirtualCursorNode = AccessibilityNodeInfo.obtain(view, VIRTUAL_CURSOR_POSITION);
             sVirtualCursorNode.setEnabled(message.optBoolean("enabled", true));
+            sVirtualCursorNode.setClickable(message.optBoolean("clickable"));
+            sVirtualCursorNode.setCheckable(message.optBoolean("checkable"));
             sVirtualCursorNode.setChecked(message.optBoolean("checked"));
             sVirtualCursorNode.setPassword(message.optBoolean("password"));
 
