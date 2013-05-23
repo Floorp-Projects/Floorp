@@ -299,12 +299,6 @@ typedef NSInteger NSEventGestureAxis;
 
 - (void)updateWindowDraggableStateOnMouseMove:(NSEvent*)theEvent;
 
-- (void)maybeDrawInTitlebar;
-
-- (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext;
-
-- (void)drawTitlebar:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext;
-
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
                              type:(nsMouseEvent::exitType)aType;
@@ -504,7 +498,7 @@ public:
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);
 
   void WillPaintWindow();
-  bool PaintWindow(nsIntRegion aRegion, bool aIsAlternate);
+  bool PaintWindow(nsIntRegion aRegion);
 
 #ifdef ACCESSIBILITY
   already_AddRefed<mozilla::a11y::Accessible> GetDocumentAccessible();
@@ -539,10 +533,6 @@ public:
 
   NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
 
-  CGContextRef      GetCGContextForTitlebarDrawing(NSSize aSize);
-
-  virtual void      WillPaint() MOZ_OVERRIDE;
-
   mozilla::widget::TextInputHandler* GetTextInputHandler()
   {
     return mTextInputHandler;
@@ -564,8 +554,6 @@ public:
   NSRect            DevPixelsToCocoaPoints(const nsIntRect& aRect) {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aRect, BackingScaleFactor());
   }
-
-  void CompositeTitlebar(const gfxSize& aSize, CGContextRef aContext);
 
 protected:
 
@@ -622,9 +610,6 @@ protected:
   bool                  mFailedCornerMaskImage;
   nsRefPtr<mozilla::gl::TextureImage> mResizerImage;
   nsRefPtr<mozilla::gl::TextureImage> mCornerMaskImage;
-
-  nsRefPtr<gfxQuartzSurface> mTitlebarSurf;
-  gfxSize mTitlebarSize;
 
   // Cached value of [mView backingScaleFactor], to avoid sending two obj-c
   // messages (respondsToSelector, backingScaleFactor) every time we need to
