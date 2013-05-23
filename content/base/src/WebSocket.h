@@ -71,24 +71,9 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIREQUEST
 
-  // nsIDOMEventTarget
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener *aListener,
-                              bool aUseCapture,
-                              bool aWantsUntrusted,
-                              uint8_t optional_argc);
-  virtual void AddEventListener(const nsAString& aType,
-                                nsIDOMEventListener* aListener,
-                                bool aCapture,
-                                const Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv) MOZ_OVERRIDE;
-  NS_IMETHOD RemoveEventListener(const nsAString& aType,
-                                 nsIDOMEventListener* aListener,
-                                 bool aUseCapture);
-  virtual void RemoveEventListener(const nsAString& aType,
-                                   nsIDOMEventListener* aListener,
-                                   bool aUseCapture,
-                                   ErrorResult& aRv) MOZ_OVERRIDE;
+  // EventTarget
+  virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
+  virtual void EventListenerRemoved(nsIAtom* aType) MOZ_OVERRIDE;
 
   virtual void DisconnectFromOwner();
 
