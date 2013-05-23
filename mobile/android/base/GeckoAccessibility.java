@@ -305,6 +305,10 @@ public class GeckoAccessibility {
                                 default:
                                     break;
                                 }
+                            } else if (action == AccessibilityNodeInfo.ACTION_CLICK && virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                                GeckoAppShell.
+                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", null));
+                                return true;
                             }
                             return host.performAccessibilityAction(action, arguments);
                         }
