@@ -183,7 +183,7 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
         return true;
     }
     if (!Policy::check(cx, wrapper, id, act)) {
-        *bp = JS_IsExceptionPending(cx) ? false : Policy::deny(act);
+        *bp = JS_IsExceptionPending(cx) ? false : Policy::deny(act, id);
         return false;
     }
     *bp = true;
