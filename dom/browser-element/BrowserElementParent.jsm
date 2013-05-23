@@ -294,7 +294,7 @@ BrowserElementParent.prototype = {
     let evtName = detail.msg_name;
 
     debug('fireCtxMenuEventFromMsg: ' + evtName + ' ' + detail);
-    let evt = this._createEvent(evtName, detail);
+    let evt = this._createEvent(evtName, detail, /* cancellable */ true);
 
     if (detail.contextmenu) {
       var self = this;
@@ -302,10 +302,11 @@ BrowserElementParent.prototype = {
         self._sendAsyncMsg('fire-ctx-callback', {menuitem: id});
       });
     }
+
     // The embedder may have default actions on context menu events, so
     // we fire a context menu event even if the child didn't define a
     // custom context menu
-    this._frameElement.dispatchEvent(evt);
+    return !this._frameElement.dispatchEvent(evt);
   },
 
   /**
