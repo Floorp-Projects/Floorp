@@ -279,6 +279,10 @@ typedef NSInteger NSEventGestureAxis;
 
   // Whether this uses off-main-thread compositing.
   BOOL mUsingOMTCompositor;
+
+  // The mask image that's used when painting into the titlebar using basic
+  // CGContext painting (i.e. non-accelerated).
+  CGImageRef mTopLeftCornerMask;
 }
 
 // class initialization
@@ -315,6 +319,8 @@ typedef NSInteger NSEventGestureAxis;
 
 - (void)setGLContext:(NSOpenGLContext *)aGLContext;
 - (void)preRender:(NSOpenGLContext *)aGLContext;
+
+- (BOOL)isCoveringTitlebar;
 
 // Simple gestures support
 //
@@ -538,6 +544,8 @@ public:
     return mTextInputHandler;
   }
 
+  void              NotifyDirtyRegion(const nsIntRegion& aDirtyRegion);
+
   // unit conversion convenience functions
   int32_t           CocoaPointsToDevPixels(CGFloat aPts) {
     return nsCocoaUtils::CocoaPointsToDevPixels(aPts, BackingScaleFactor());
@@ -573,8 +581,20 @@ protected:
     return widget.forget();
   }
 
-  void MaybeDrawResizeIndicator(mozilla::layers::GLManager* aManager, nsIntRect aRect);
-  void MaybeDrawRoundedBottomCorners(mozilla::layers::GLManager* aManager, nsIntRect aRect);
+  // Overlay drawing functions for OpenGL drawing
+  void MaybeDrawResizeIndicator(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
+  void MaybeDrawRoundedCorners(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
+  void MaybeDrawTitlebar(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
+
+  // Redraw the contents of mTitlebarImageBuffer on the main thread, as
+  // determined by mDirtyTitlebarRegion.
+  void UpdateTitlebarImageBuffer();
+
+  // Upload the contents of mTitlebarImageBuffer to mTitlebarImage on the
+  // compositor thread, as determined by mUpdatedTitlebarRegion.
+  void UpdateTitlebarImage(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
+
+  nsIntRect RectContainingTitlebarControls();
 
   nsIWidget* GetWidgetForListenerEvents();
 
@@ -604,12 +624,25 @@ protected:
   nsIntRect mResizeIndicatorRect;
   bool mHasRoundedBottomCorners;
   int mDevPixelCornerRadius;
+  bool mIsCoveringTitlebar;
+  nsIntRect mTitlebarRect;
+
+  // The area of mTitlebarImageBuffer that needs to be redrawn during the next
+  // transaction. Accessed from any thread, protected by mEffectsLock.
+  nsIntRegion mUpdatedTitlebarRegion;
+
+  nsRefPtr<gfxQuartzSurface> mTitlebarImageBuffer;
 
   // Compositor thread only
   bool                  mFailedResizerImage;
   bool                  mFailedCornerMaskImage;
   nsRefPtr<mozilla::gl::TextureImage> mResizerImage;
   nsRefPtr<mozilla::gl::TextureImage> mCornerMaskImage;
+  nsRefPtr<mozilla::gl::TextureImage> mTitlebarImage;
+
+  // The area of mTitlebarImageBuffer that has changed and needs to be
+  // uploaded to to mTitlebarImage. Main thread only.
+  nsIntRegion           mDirtyTitlebarRegion;
 
   // Cached value of [mView backingScaleFactor], to avoid sending two obj-c
   // messages (respondsToSelector, backingScaleFactor) every time we need to
