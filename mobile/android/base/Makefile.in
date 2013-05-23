@@ -127,6 +127,7 @@ FENNEC_JAVA_FILES = \
   PrivateDataPreference.java \
   PrivateTab.java \
   ProfileMigrator.java \
+  Prompt.java \
   PromptService.java \
   Restarter.java \
   SearchEngine.java \

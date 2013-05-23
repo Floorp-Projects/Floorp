@@ -807,8 +807,7 @@ abstract public class GeckoApp
         }
     }
 
-    @Override
-    public String getResponse() {
+    public String getResponse(JSONObject origMessage) {
         String res = mCurrentResponse;
         mCurrentResponse = "";
         return res;
@@ -1585,7 +1584,7 @@ abstract public class GeckoApp
           SmsManager.getInstance().start();
         }
 
-        mPromptService = new PromptService();
+        mPromptService = new PromptService(this);
 
         mTextSelection = new TextSelection((TextSelectionHandle) findViewById(R.id.start_handle),
                                            (TextSelectionHandle) findViewById(R.id.middle_handle),
