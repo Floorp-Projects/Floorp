@@ -627,6 +627,16 @@ endif
 # other rules for the default target or else it may not run in time.
 ifndef MOZBUILD_BACKEND_CHECKED
 
+# Since Makefile is listed as a global dependency, this has the
+# unfortunate side-effect of invalidating all targets if it is executed.
+# So e.g. if you are in /dom/bindings and /foo/moz.build changes,
+# /dom/bindings will get invalidated. The upside is if the current
+# Makefile/backend.mk is updated as a result of backend regeneration, we
+# actually pick up the changes. This should reduce the amount of
+# required clobbers and is thus the lesser evil.
+Makefile: $(DEPTH)/backend.RecursiveMakeBackend.built
+	@$(TOUCH) $@
+
 $(DEPTH)/backend.RecursiveMakeBackend.built:
 	@echo "Build configuration changed. Regenerating backend."
 	@cd $(DEPTH) && $(PYTHON) ./config.status
