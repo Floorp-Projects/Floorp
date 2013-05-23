@@ -5,4 +5,4 @@ fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == input-file-size.html input-file-simpl
 fails-if(B2G) fuzzy-if(OSX==10.6,8,64) == input-file-background.html input-file-background-ref.xul
 fails-if(B2G) == input-file-style.html input-file-style-ref.xul
 != input-file-width-clip.html input-file-width-clip-ref.html
-== input-file-color-inherit.html input-file-color-inherit-ref.html
+fails-if(B2G) == input-file-color-inherit.html input-file-color-inherit-ref.html
