@@ -85,6 +85,8 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
 
+    private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
+
     public static BrowserToolbar mBrowserToolbar;
     private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
@@ -424,6 +426,10 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
+        if (savedInstanceState != null) {
+            mDynamicToolbarEnabled = savedInstanceState.getBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED);
+        }
+
         // Listen to the dynamic toolbar pref
         mPrefObserverId = PrefsHelper.getPref(PREF_CHROME_DYNAMICTOOLBAR, new PrefsHelper.PrefHandlerBase() {
             @Override
@@ -460,6 +466,7 @@ abstract public class BrowserApp extends GeckoApp
                 mLayerView.getLayerClient().setOnMetricsChangedListener(this);
             }
             setToolbarMargin(0);
+            mAboutHome.setTopPadding(mBrowserToolbar.getLayout().getHeight());
         } else {
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
@@ -734,19 +741,12 @@ abstract public class BrowserApp extends GeckoApp
             height = mBrowserToolbar.getLayout().getHeight();
         }
 
-        if (!isDynamicToolbarEnabled() || mAboutHome.getUserVisibleHint()) {
+        if (!isDynamicToolbarEnabled()) {
             // Use aVisibleHeight here so that when the dynamic toolbar is
             // enabled, the padding will animate with the toolbar becoming
             // visible.
-            if (isDynamicToolbarEnabled()) {
-                // When the dynamic toolbar is enabled, set the padding on the
-                // about:home widget directly - this is to avoid resizing the
-                // LayerView, which can cause visible artifacts.
-                mAboutHome.setTopPadding(height);
-            } else {
-                setToolbarMargin(height);
-                height = 0;
-            }
+            setToolbarMargin(height);
+            height = 0;
         } else {
             setToolbarMargin(0);
         }
@@ -1095,6 +1095,12 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.finishTabsAnimation(areTabsShown());
 
         mMainLayoutAnimator = null;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
     }
 
     /* Favicon methods */
