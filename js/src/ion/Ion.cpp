@@ -1477,8 +1477,13 @@ CheckFrame(AbstractFramePtr fp)
 }
 
 static bool
-CheckScript(JSScript *script, bool osr)
+CheckScript(JSContext *cx, JSScript *script, bool osr)
 {
+    if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx)) {
+        IonSpew(IonSpew_Abort, "OOM under ensureRanAnalysis");
+        return false;
+    }
+
     if (osr && script->needsArgsObj()) {
         // OSR-ing into functions with arguments objects is not supported.
         IonSpew(IonSpew_Abort, "OSR script has argsobj");
@@ -1539,7 +1544,7 @@ SequentialCompileContext::checkScriptSize(JSContext *cx, JSScript *script)
 bool
 CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
 {
-    if (!script->canIonCompile() || !CheckScript(script, osr))
+    if (!script->canIonCompile() || !CheckScript(cx, script, osr))
         return false;
 
     SequentialCompileContext compileContext;
@@ -1569,7 +1574,7 @@ Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osr
         return Method_CantCompile;
     }
 
-    if (!CheckScript(script, bool(osrPc))) {
+    if (!CheckScript(cx, script, bool(osrPc))) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename(), script->lineno);
         return Method_CantCompile;
     }

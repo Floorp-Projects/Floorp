@@ -557,20 +557,14 @@ void TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
  * Monitor a javascript call, either on entry to the interpreter or made
  * from within the interpreter.
  */
-inline bool
+inline void
 TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 {
     if (args.callee().isFunction()) {
         JSFunction *fun = args.callee().toFunction();
-        if (fun->isInterpreted()) {
-            if (!fun->nonLazyScript()->ensureHasTypes(cx))
-                return false;
-            if (cx->typeInferenceEnabled())
-                TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
-        }
+        if (fun->isInterpreted() && fun->nonLazyScript()->types && cx->typeInferenceEnabled())
+            TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
     }
-
-    return true;
 }
 
 inline bool
@@ -1062,9 +1056,8 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
 /* static */ inline void
 TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
 {
-    if (!cx->typeInferenceEnabled())
+    if (!cx->typeInferenceEnabled() || !script->types)
         return;
-    JS_ASSERT(script->types);
 
     if (!ThisTypes(script)->hasType(type)) {
         AutoEnterAnalysis enter(cx);
@@ -1085,9 +1078,8 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, const js::Value &value)
 /* static */ inline void
 TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type)
 {
-    if (!cx->typeInferenceEnabled())
+    if (!cx->typeInferenceEnabled() || !script->types)
         return;
-    JS_ASSERT(script->types);
 
     if (!ArgTypes(script, arg)->hasType(type)) {
         AutoEnterAnalysis enter(cx);
