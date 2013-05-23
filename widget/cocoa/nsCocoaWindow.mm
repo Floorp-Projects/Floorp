@@ -2474,15 +2474,16 @@ GetDPI(NSWindow* aWindow)
 @interface BaseWindow(Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
+- (void)updateContentViewSize;
 @end
 
 @implementation BaseWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
+  mDrawsIntoWindowFrame = NO;
   [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag];
   mState = nil;
-  mDrawsIntoWindowFrame = NO;
   mActiveTitlebarColor = nil;
   mInactiveTitlebarColor = nil;
   mScheduledShadowInvalidation = NO;
@@ -2539,6 +2540,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState
 {
   mDrawsIntoWindowFrame = aState;
+  [self updateContentViewSize];
 }
 
 - (BOOL)drawsContentsIntoWindowFrame
@@ -2645,6 +2647,64 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (void)cursorUpdated:(NSEvent*)aEvent
 {
   // Nothing to do here, but NSTrackingArea wants us to implement this method.
+}
+
+- (void)updateContentViewSize
+{
+  NSRect rect = [self contentRectForFrameRect:[self frame]];
+  [[self contentView] setFrameSize:rect.size];
+}
+
+// Override methods that translate between content rect and frame rect.
+- (NSRect)contentRectForFrameRect:(NSRect)aRect
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  return [super contentRectForFrameRect:aRect];
+}
+
+- (NSRect)contentRectForFrameRect:(NSRect)aRect styleMask:(NSUInteger)aMask
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  if ([super respondsToSelector:@selector(contentRectForFrameRect:styleMask:)]) {
+    return [super contentRectForFrameRect:aRect styleMask:aMask];
+  } else {
+    return [NSWindow contentRectForFrameRect:aRect styleMask:aMask];
+  }
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  return [super frameRectForContentRect:aRect];
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect styleMask:(NSUInteger)aMask
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  if ([super respondsToSelector:@selector(frameRectForContentRect:styleMask:)]) {
+    return [super frameRectForContentRect:aRect styleMask:aMask];
+  } else {
+    return [NSWindow frameRectForContentRect:aRect styleMask:aMask];
+  }
+}
+
+- (void)setContentView:(NSView*)aView
+{
+  [super setContentView:aView];
+
+  // Now move the contentView to the bottommost layer so that it's guaranteed
+  // to be under the window buttons.
+  NSView* frameView = [aView superview];
+  [aView removeFromSuperview];
+  [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
 }
 
 - (BOOL)respondsToSelector:(SEL)aSelector
@@ -2874,8 +2934,12 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
   mUnifiedToolbarHeight = aHeight;
 
-  // Update sheet positioning hint.
-  [self setContentBorderThickness:mUnifiedToolbarHeight - [self titlebarHeight] forEdge:NSMaxYEdge];
+  // Update sheet positioning hint
+  NSRect frameRect = [self frame];
+  NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:[self styleMask]];
+  CGFloat originalTitlebarHeight = NSMaxY(frameRect) - NSMaxY(originalContentRect);
+  CGFloat topMargin = mUnifiedToolbarHeight - originalTitlebarHeight;
+  [self setContentBorderThickness:topMargin forEdge:NSMaxYEdge];
 
   // Redraw the title bar. If we're inside painting, we'll do it right now,
   // otherwise we'll just invalidate it.
