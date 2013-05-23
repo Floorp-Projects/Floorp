@@ -2846,8 +2846,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   } else {
     [borderView setNeedsDisplayInRect:rect];
   }
-
-  [[self mainChildView] maybeDrawInTitlebar];
 }
 
 - (NSRect)titlebarRect
@@ -3076,17 +3074,8 @@ static void
 TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 {
   ToolbarWindow *window = (ToolbarWindow*)aInfo;
-  NSRect titlebarRect = [window titlebarRect];
-
-  if ([window drawsContentsIntoWindowFrame]) {
-    ChildView* view = [window mainChildView];
-    if (!view)
-      return;
-
-    CGContextTranslateCTM(aContext, 0.0f, [window frame].size.height - titlebarRect.size.height);
-
-    [view drawTitlebar:[window frame] inTitlebarContext:aContext];
-  } else {
+  if (![window drawsContentsIntoWindowFrame]) {
+    NSRect titlebarRect = [window titlebarRect];
     BOOL isMain = [window isMainWindow];
     NSColor *titlebarColor = [window titlebarColorForActiveWindow:isMain];
     if (!titlebarColor) {
