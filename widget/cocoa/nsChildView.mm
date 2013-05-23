@@ -1539,7 +1539,7 @@ bool nsChildView::PaintWindow(nsIntRegion aRegion)
   bool returnValue = false;
   bool oldDispatchPaint = mIsDispatchPaint;
   mIsDispatchPaint = true;
-  returnValue = listener->PaintWindow(widget, aRegion, 0);
+  returnValue = listener->PaintWindow(widget, aRegion);
 
   listener = widget->GetWidgetListener();
   if (listener) {
