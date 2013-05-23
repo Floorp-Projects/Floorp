@@ -272,15 +272,20 @@ toolbar[customizing="true"][hidden="true"] {
 
 %ifdef XP_MACOSX
 toolbar[type="menubar"] {
-  visibility: collapse;
+  min-height: 0 !important;
+  border: 0 !important;
 }
 %else
 toolbar[type="menubar"][autohide="true"] {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-menubar-autohide");
+  overflow: hidden;
 }
 
 toolbar[type="menubar"][autohide="true"][inactive="true"]:not([customizing="true"]) {
-  visibility: collapse;
+  min-height: 0 !important;
+  height: 0 !important;
+  -moz-appearance: none !important;
+  border-style: none !important;
 }
 %endif
 

@@ -26,15 +26,15 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
-#main-window[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"][inactive="true"]:not([customizing="true"]) {
-  visibility: hidden;
+/* We want a 4px gap between the TabsToolbar and the toolbar-menubar when the
+   toolbar-menu is displayed, and a 16px gap when it is not. 1px is taken care
+   of by the (light) outer shadow of the tab, the remaining 3/15 are these margins. */
+#toolbar-menubar:not([inactive]) {
+  margin-bottom: 3px;
 }
 
-#main-window[sizemode="normal"] #toolbar-menubar,
-/* We want a 4px gap between the TabsToolbar and the toolbar-menubar when the
-   toolbar-menu is displayed in either restored or maximized mode. */
-#main-window:not([sizemode="fullscreen"]) #toolbar-menubar:-moz-any(:not([autohide="true"]), :not([inactive="true"])) {
-  margin-bottom: 4px;
+#main-window[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] {
+  margin-bottom: 15px;
 }
 
 #toolbar-menubar:not([autohide="true"]) {
