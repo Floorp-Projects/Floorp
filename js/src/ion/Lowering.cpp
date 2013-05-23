@@ -2473,6 +2473,13 @@ LIRGenerator::visitGetArgument(MGetArgument *ins)
 }
 
 bool
+LIRGenerator::visitRunOncePrologue(MRunOncePrologue *ins)
+{
+    LRunOncePrologue *lir = new LRunOncePrologue;
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitRest(MRest *ins)
 {
     JS_ASSERT(ins->numActuals()->type() == MIRType_Int32);
