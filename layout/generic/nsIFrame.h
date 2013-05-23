@@ -2278,6 +2278,12 @@ public:
    * invalid areas in the layer tree and schedule a layer tree
    * composite operation to display the layer tree.
    *
+   * In general it is not necessary for frames to call this when they change.
+   * For example, changes that result in a reflow will have this called for
+   * them by PresContext::DoReflow when the reflow begins. Style changes that 
+   * do not trigger a reflow should have this called for them by
+   * DoApplyRenderingChangeToTree.
+   *
    * @param aFlags PAINT_COMPOSITE_ONLY : No changes have been made
    * that require a layer tree update, so only schedule a layer
    * tree composite.
