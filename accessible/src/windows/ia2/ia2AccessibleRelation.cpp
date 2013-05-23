@@ -109,6 +109,9 @@ ia2AccessibleRelation::get_relationType(BSTR *aRelationType)
     case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_NODE_CHILD_OF);
       break;
+    case nsIAccessibleRelation::RELATION_NODE_PARENT_OF:
+      *aRelationType = ::SysAllocString(IA2_RELATION_NODE_PARENT_OF);
+      break;
     case nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_PARENT_WINDOW_OF);
       break;
