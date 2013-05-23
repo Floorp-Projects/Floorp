@@ -108,6 +108,9 @@ MOCHITEST_CHROME_FILES = imgutils.js \
                 rillybad.jpg \
                 red.png \
                 lime100x100.svg \
+                test_synchronized_animation.html \
+                animated1.gif \
+                animated2.gif \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
