@@ -51,9 +51,8 @@ function test() {
 }
 
 function checkDataDates(data, start, end, sampleRate){
-  var offset = new Date().getTimezoneOffset() * 60 * 1000;
-  start = Math.floor((start.getTime() - offset) / sampleRate) * sampleRate + offset;
-  end = Math.floor((end.getTime() - offset) / sampleRate) * sampleRate + offset;
+  start = Math.floor(start.getTime() / sampleRate) * sampleRate;
+  end = Math.floor(end.getTime() / sampleRate) * sampleRate;
 
   var counter = 0;
   var date = start;
@@ -150,8 +149,7 @@ var steps = [
     // Get samplerate in millis
     var sampleRate = netStats.sampleRate * 1000;
     // Get date with samplerate's precision
-    var offset = new Date().getTimezoneOffset() * 60 * 1000;
-    var endDate = new Date(Math.floor((new Date().getTime() - offset) / sampleRate) * sampleRate + offset);
+    var endDate = new Date(Math.floor(new Date().getTime() / sampleRate) * sampleRate);
     var startDate = new Date(endDate.getTime() - (sampleRate * diff));
     // Calculate the number of samples that should be returned based on the
     // the samplerate and including final and initial samples.
@@ -181,8 +179,7 @@ var steps = [
     // Get samplerate in millis
     var sampleRate = netStats.sampleRate * 1000;
     // Get date with samplerate's precision
-    var offset = new Date().getTimezoneOffset() * 60 * 1000;
-    var endDate = new Date(Math.floor((new Date().getTime() - offset) / sampleRate) * sampleRate + offset);
+    var endDate = new Date(Math.floor(new Date().getTime() / sampleRate) * sampleRate);
     var startDate = new Date(endDate.getTime() - (sampleRate * diff));
     // Calculate the number of samples that should be returned based on the
     // the samplerate and including final and initial samples.
