@@ -148,29 +148,23 @@ SystemMessageManager.prototype = {
 
     cpmm.sendAsyncMessage("SystemMessageManager:Unregister",
                           { manifest: this._manifest,
-                            innerWindowID: this.innerWindowID
-                          });
+                            innerWindowID: this.innerWindowID });
   },
 
   receiveMessage: function sysMessMgr_receiveMessage(aMessage) {
     debug("receiveMessage " + aMessage.name + " for [" + aMessage.data.type + "] " +
-          "with manifest = " + aMessage.data.manifest + " (" + this._manifest + ") " +
-          "and uri = " + aMessage.data.uri + " (" + this._uri + ")");
+          "with manifest = " + this._manifest + " and uri = " + this._uri);
 
     let msg = aMessage.data;
-    if (msg.manifest != this._manifest || msg.uri != this._uri) {
-      return;
-    }
 
     if (aMessage.name == "SystemMessageManager:Message") {
       // Send an acknowledgement to parent to clean up the pending message,
       // so a re-launched app won't handle it again, which is redundant.
-      cpmm.sendAsyncMessage(
-        "SystemMessageManager:Message:Return:OK",
-        { type: msg.type,
-          manifest: msg.manifest,
-          uri: msg.uri,
-          msgID: msg.msgID });
+      cpmm.sendAsyncMessage("SystemMessageManager:Message:Return:OK",
+                            { type: msg.type,
+                              manifest: this._manifest,
+                              uri: this._uri,
+                              msgID: msg.msgID });
     }
 
     // Bail out if we have no handlers registered for this type.
@@ -239,8 +233,9 @@ SystemMessageManager.prototype = {
     if (!this._registerManifestReady) {
       cpmm.sendAsyncMessage("SystemMessageManager:Register",
                             { manifest: this._manifest,
-                              innerWindowID: this.innerWindowID
-                            });
+                              uri: this._uri,
+                              innerWindowID: this.innerWindowID });
+
       this._registerManifestReady = true;
     }
   },
