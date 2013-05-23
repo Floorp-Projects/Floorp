@@ -237,15 +237,13 @@ pref("ui.dragThresholdY", 25);
 #ifndef MOZ_WIDGET_GONK
 pref("dom.ipc.tabs.disabled", true);
 pref("layers.offmainthreadcomposition.enabled", false);
-pref("layers.offmainthreadcomposition.animate-opacity", false);
-pref("layers.offmainthreadcomposition.animate-transform", false);
+pref("layers.offmainthreadcomposition.async-animations", false);
 pref("layers.async-video.enabled", false);
 #else
 pref("dom.ipc.tabs.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.acceleration.disabled", false);
-pref("layers.offmainthreadcomposition.animate-opacity", true);
-pref("layers.offmainthreadcomposition.animate-transform", true);
+pref("layers.offmainthreadcomposition.async-animations", true);
 pref("layers.async-video.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
 #endif
