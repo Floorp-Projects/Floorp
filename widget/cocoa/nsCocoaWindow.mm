@@ -2485,54 +2485,7 @@ GetDPI(NSWindow* aWindow)
 - (void)cursorUpdated:(NSEvent*)aEvent;
 @end
 
-@interface NSView(FrameViewMethodSwizzling)
-- (void)FrameViewClass__drawTitleBar:(NSRect)aRect;
-@end
-
-@implementation NSView(FrameViewMethodSwizzling)
-
-- (void)FrameViewClass__drawTitleBar:(NSRect)aRect
-{
-  NSWindow* window = [self window];
-  if ([window isKindOfClass:[BaseWindow class]] &&
-      [(BaseWindow*)window drawsContentsIntoWindowFrame]) {
-    // Do not draw the title.
-    return;
-  }
-  [self FrameViewClass__drawTitleBar:aRect];
-}
-
-@end
-
-static NSMutableSet *gSwizzledFrameViewClasses = nil;
-
 @implementation BaseWindow
-
-// The frame of a window is implemented using undocumented NSView subclasses.
-// We disable window title drawing by overriding the _drawTitleBar: method on
-// these frame view classes. The class which is used for a window is
-// determined in the window's frameViewClassForStyleMask: method, so this is
-// where we make sure that we have swizzled the method on all encountered
-// classes.
-+ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask
-{
-  Class frameViewClass = [super frameViewClassForStyleMask:styleMask];
-
-  if (!gSwizzledFrameViewClasses) {
-    gSwizzledFrameViewClasses = [[NSMutableSet setWithCapacity:3] retain];
-    if (!gSwizzledFrameViewClasses) {
-      return frameViewClass;
-    }
-  }
-
-  if (![gSwizzledFrameViewClasses containsObject:frameViewClass]) {
-    nsToolkit::SwizzleMethods(frameViewClass, @selector(_drawTitleBar:),
-                              @selector(FrameViewClass__drawTitleBar:));
-    [gSwizzledFrameViewClasses addObject:frameViewClass];
-  }
-
-  return frameViewClass;
-}
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
