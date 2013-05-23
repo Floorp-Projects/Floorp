@@ -65,7 +65,7 @@ public class AboutHome extends Fragment {
         mLightweightTheme = ((GeckoApplication) getActivity().getApplication()).getLightweightTheme();
 
         if (savedInstanceState != null) {
-            mPaddingTop = savedInstanceState.getInt(STATE_TOP_PADDING, 0);
+            mTopPadding = savedInstanceState.getInt(STATE_TOP_PADDING, 0);
         }
     }
 
@@ -260,6 +260,6 @@ public class AboutHome extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_TOP_PADDING, mPaddingTop);
+        outState.putInt(STATE_TOP_PADDING, mTopPadding);
     }
 }
