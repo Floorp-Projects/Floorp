@@ -2801,8 +2801,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 @end
 
 // This class allows us to exercise control over the window's title bar. This
-// allows for a "unified toolbar" look, and for extending the content area into
-// the title bar. It works like this:
+// allows for a "unified toolbar" look without having to extend the content
+// area into the title bar. It works like this:
 // 1) We set the window's style to textured.
 // 2) Because of this, the background color applies to the entire window, including
 //     the titlebar area. For normal textured windows, the default pattern is a 
@@ -2814,10 +2814,11 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 // 4) Whenever the window's main state changes and when [window display] is called,
 //    Cocoa redraws the titlebar using the patternDraw callback function.
 //
-// This class also provides us with a pill button to show/hide the toolbar.
+// This class also provides us with a pill button to show/hide the toolbar up to 10.6.
 //
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
-// 1) In the style sheet we set the toolbar's -moz-appearance to -moz-mac-unified-toolbar.
+// 1) In the style sheet we set the toolbar's -moz-appearance to toolbar or
+//    -moz-mac-unified-toolbar.
 // 2) When the toolbar is visible and we paint the application chrome
 //    window, the array that Gecko passes nsChildView::UpdateThemeGeometries
 //    will contain an entry for the widget type NS_THEME_TOOLBAR or
@@ -2831,11 +2832,15 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 //
 // Whenever the unified gradient is drawn in the titlebar or the toolbar, both
 // titlebar height and toolbar height must be known in order to construct the
-// correct gradient (which is a linear gradient with the length
-// titlebarHeight + toolbarHeight - 1). But you can only get from the toolbar frame
+// correct gradient. But you can only get from the toolbar frame
 // to the containing window - the other direction doesn't work. That's why the
 // toolbar height is cached in the ToolbarWindow but nsNativeThemeCocoa can simply
 // query the window for its titlebar height when drawing the toolbar.
+//
+// Note that in drawsContentsIntoWindowFrame mode, titlebar drawing works in a
+// completely different way: In that mode, the window's mainChildView will
+// cover the titlebar completely and nothing that happens in the window
+// background will reach the screen.
 @implementation ToolbarWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
@@ -2956,39 +2961,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:needSyncRedraw];
 }
 
-// Extending the content area into the title bar works by redirection of both
-// drawing and mouse events.
-// The window's NSView hierarchy looks like this:
-//  - border view ([[window contentView] superview])
-//     - transparent title bar event redirection view
-//     - window controls (traffic light buttons)
-//     - content view ([window contentView], default NSView provided by the window)
-//        - our main Gecko ChildView ([window mainChildView]), which has an
-//          OpenGL context attached to it when accelerated
-//           - possibly more ChildViews for plugins
-//
-// When the window is in title bar extension mode, the mainChildView covers the
-// whole window but is only visible in the content area of the window, because
-// it's a subview of the window's contentView and thus clipped to its dimensions.
-// This clipping is a good thing because it avoids a few problems. For example,
-// if the mainChildView weren't clipped and thus visible in the titlebar, we'd
-// have have to do the rounded corner masking and the drawing of the highlight
-// line ourselves.
-// This would be especially hard in combination with OpenGL acceleration since
-// rounded corners would require making the OpenGL context transparent, which
-// would bring another set of challenges with it. Having the window controls
-// draw on top of an OpenGL context could be hard, too.
-//
-// So title bar drawing happens in the border view. The border view's drawRect
-// method is not under our control, but we can get it to call into our code
-// using some tricks, see the TitlebarAndBackgroundColor class below.
-// Specifically, we have it call the TitlebarDrawCallback function, which
-// draws the contents of mainChildView into the provided CGContext.
-// (Even if the ChildView uses OpenGL for rendering, drawing in the title bar
-// will happen non-accelerated in that CGContext.)
-//
-// Mouse event redirection happens via a TitlebarMouseHandlingView which we
-// install below.
+// Extending the content area into the title bar works by resizing the
+// mainChildView so that it covers the titlebar.
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState
 {
   BOOL stateChanged = ([self drawsContentsIntoWindowFrame] != aState);
@@ -3103,7 +3077,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 @end
 
 // Custom NSColor subclass where most of the work takes place for drawing in
-// the titlebar area.
+// the titlebar area. Not used in drawsContentsIntoWindowFrame mode.
 @implementation TitlebarAndBackgroundColor
 
 - (id)initWithWindow:(ToolbarWindow*)aWindow
