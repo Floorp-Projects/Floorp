@@ -2726,11 +2726,16 @@ RadioInterfaceLayer.prototype = {
     }
 
     let options = this._fragmentText(text, null, strict7BitEncoding);
-    let lastSegment = options.segments[options.segmentMaxSeq - 1];
-    let charsInLastSegment = lastSegment.encodedBodyLength;
-    if (options.dcs == RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET) {
-      // In UCS2 encoding, encodedBodyLength is in octets.
-      charsInLastSegment /= 2;
+    let charsInLastSegment;
+    if (options.segmentMaxSeq) {
+      let lastSegment = options.segments[options.segmentMaxSeq - 1];
+      charsInLastSegment = lastSegment.encodedBodyLength;
+      if (options.dcs == RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET) {
+        // In UCS2 encoding, encodedBodyLength is in octets.
+        charsInLastSegment /= 2;
+      }
+    } else {
+      charsInLastSegment = 0;
     }
 
     let result = gMobileMessageService.createSmsSegmentInfo(options.segmentMaxSeq,
