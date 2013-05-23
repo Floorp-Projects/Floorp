@@ -97,6 +97,8 @@ typedef struct _nsCocoaWindowList {
 
 - (ChildView*)mainChildView;
 
+- (NSArray*)titlebarControls;
+
 @end
 
 @interface NSWindow (Undocumented)
