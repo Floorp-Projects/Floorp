@@ -706,12 +706,22 @@ endif
 define CREATE_TIER_RULE
 tier_$(1)::
 	@echo "BUILDSTATUS TIER_START $(1)"
-	@echo "BUILDSTATUS SUBTIERS static export libs tools"
+	@printf "BUILDSTATUS SUBTIERS"
+ifneq (,$(tier_$(1)_staticdirs))
+	@printf " static"
+endif
+ifneq (,$(tier_$(1)_dirs))
+	@printf " export libs tools"
+endif
+	@printf "\n"
 	@echo "BUILDSTATUS STATICDIRS $$($$@_staticdirs)"
 	@echo "BUILDSTATUS DIRS $$($$@_dirs)"
+ifneq (,$(tier_$(1)_staticdirs))
 	@echo "BUILDSTATUS SUBTIER_START $(1) static"
 	$$(foreach dir,$$($$@_staticdirs),$$(call TIER_DIR_SUBMAKE,,$$(dir)))
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) static"
+endif
+ifneq (,$(tier_$(1)_dirs))
 	@echo "BUILDSTATUS SUBTIER_START $(1) export"
 	$$(MAKE) export_$$@
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) export"
@@ -722,7 +732,7 @@ tier_$(1)::
 	$$(MAKE) tools_$$@
 	@echo "BUILDSTATUS SUBTIER_FINISH $(1) tools"
 	@echo "BUILDSTATUS TIER_FINISH $(1)"
-
+endif
 endef
 
 $(foreach tier,$(TIERS),$(eval $(call CREATE_TIER_RULE,$(tier))))
