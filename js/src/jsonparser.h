@@ -21,7 +21,6 @@ class JSONParser : private AutoGCRooter
 {
   public:
     enum ErrorHandling { RaiseError, NoError };
-    enum ParsingMode { StrictJSON, LegacyJSON };
 
   private:
     /* Data members */
@@ -32,7 +31,6 @@ class JSONParser : private AutoGCRooter
 
     Value v;
 
-    const ParsingMode parsingMode;
     const ErrorHandling errorHandling;
 
     enum Token { String, Number, True, False, Null,
@@ -113,20 +111,13 @@ class JSONParser : private AutoGCRooter
   public:
     /* Public API */
 
-    /*
-     * Create a parser for the provided JSON data.  The parser will accept
-     * certain legacy, non-JSON syntax if decodingMode is LegacyJSON.
-     * Description of this syntax is deliberately omitted: new code should only
-     * use strict JSON parsing.
-     */
+    /* Create a parser for the provided JSON data. */
     JSONParser(JSContext *cx, JS::StableCharPtr data, size_t length,
-               ParsingMode parsingMode = StrictJSON,
                ErrorHandling errorHandling = RaiseError)
       : AutoGCRooter(cx, JSONPARSER),
         cx(cx),
         current(data),
         end((data + length).get(), data.get(), length),
-        parsingMode(parsingMode),
         errorHandling(errorHandling),
         stack(cx),
         freeElements(cx),

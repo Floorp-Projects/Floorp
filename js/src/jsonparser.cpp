@@ -465,19 +465,6 @@ JSONParser::advancePropertyName()
     if (*current == '"')
         return readString<PropertyName>();
 
-    if (parsingMode == LegacyJSON && *current == '}') {
-        /*
-         * Previous JSON parsing accepted trailing commas in non-empty object
-         * syntax, and some users depend on this.  (Specifically, Places data
-         * serialization in versions of Firefox before 4.0.  We can remove this
-         * mode when profile upgrades from 3.6 become unsupported.)  Permit
-         * such trailing commas only when legacy parsing is specifically
-         * requested.
-         */
-        current++;
-        return token(ObjectClose);
-    }
-
     error("expected double-quoted property name");
     return token(Error);
 }
@@ -659,13 +646,6 @@ JSONParser::parse(MutableHandleValue vp)
                 }
                 goto JSONValue;
             }
-            if (token == ObjectClose) {
-                JS_ASSERT(state == FinishObjectMember);
-                JS_ASSERT(parsingMode == LegacyJSON);
-                if (!finishObject(&value, stack.back().properties()))
-                    return false;
-                break;
-            }
             if (token == OOM)
                 return false;
             if (token != Error)
@@ -754,24 +734,6 @@ JSONParser::parse(MutableHandleValue vp)
               }
 
               case ArrayClose:
-                if (parsingMode == LegacyJSON &&
-                    !stack.empty() &&
-                    stack.back().state == FinishArrayElement) {
-                    /*
-                     * Previous JSON parsing accepted trailing commas in
-                     * non-empty array syntax, and some users depend on this.
-                     * (Specifically, Places data serialization in versions of
-                     * Firefox prior to 4.0.  We can remove this mode when
-                     * profile upgrades from 3.6 become unsupported.)  Permit
-                     * such trailing commas only when specifically
-                     * instructed to do so.
-                     */
-                    if (!finishArray(&value, stack.back().elements()))
-                        return false;
-                    break;
-                }
-                /* FALL THROUGH */
-
               case ObjectClose:
               case Colon:
               case Comma:
