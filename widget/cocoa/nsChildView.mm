@@ -5483,10 +5483,6 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
   NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(aEvent, window);
   NSView* view = [[[window contentView] superview] hitTest:windowEventLocation];
 
-  while([view conformsToProtocol:@protocol(EventRedirection)]) {
-    view = [(id<EventRedirection>)view targetView];
-  }
-
   if (![view isKindOfClass:[ChildView class]])
     return nil;
 
