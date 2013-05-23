@@ -237,13 +237,15 @@ SystemMessageInternal.prototype = {
         break;
       case "SystemMessageManager:Register":
       {
-        debug("Got Register from " + msg.manifest);
+        debug("Got Register from " + msg.uri + " @ " + msg.manifest);
         let targets, index;
         if (!(targets = this._listeners[msg.manifest])) {
           this._listeners[msg.manifest] = [{ target: aMessage.target,
+                                             uri: msg.uri,
                                              winCount: 1 }];
         } else if ((index = this._findTargetIndex(targets, aMessage.target)) === -1) {
           targets.push({ target: aMessage.target,
+                         uri: msg.uri,
                          winCount: 1 });
         } else {
           targets[index].winCount++;
@@ -301,7 +303,6 @@ SystemMessageInternal.prototype = {
         aMessage.target.sendAsyncMessage("SystemMessageManager:GetPendingMessages:Return",
                                          { type: msg.type,
                                            manifest: msg.manifest,
-                                           uri: msg.uri,
                                            msgQueue: pendingMessages });
         break;
       }
@@ -443,13 +444,17 @@ SystemMessageInternal.prototype = {
     let targets = this._listeners[aManifestURI];
     if (targets) {
       for (let index = 0; index < targets.length; ++index) {
-          let manager = targets[index].target;
-          manager.sendAsyncMessage("SystemMessageManager:Message",
-                                   { type: aType,
-                                     msg: aMessage,
-                                     manifest: aManifestURI,
-                                     uri: aPageURI,
-                                     msgID: aMessageID });
+        let target = targets[index];
+        // We only need to send the system message to the targets which match
+        // the manifest URL and page URL of the destination of system message.
+        if (target.uri != aPageURI) {
+          continue;
+        }
+        let manager = target.target;
+        manager.sendAsyncMessage("SystemMessageManager:Message",
+                                 { type: aType,
+                                   msg: aMessage,
+                                   msgID: aMessageID });
       }
     }
 
