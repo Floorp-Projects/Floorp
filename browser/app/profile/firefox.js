@@ -1249,3 +1249,6 @@ pref("media.webaudio.enabled", true);
 // If this turns true, Moz*Gesture events are not called stopPropagation()
 // before content.
 pref("dom.debug.propagate_gesture_events_through_content", false);
+
+// Enable CustomizableUI debug logging.
+pref("browser.uiCustomization.debug", true);
