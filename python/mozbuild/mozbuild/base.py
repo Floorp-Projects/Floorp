@@ -217,7 +217,7 @@ class MozbuildObject(ProcessExecutionMixin):
         """
         self._ensure_objdir_exists()
 
-        args = [self._make_path]
+        args = self._make_path
 
         if directory:
             args.extend(['-C', directory])
@@ -279,13 +279,13 @@ class MozbuildObject(ProcessExecutionMixin):
     def _make_path(self):
         if self._make is None:
             if self._is_windows():
-                self._make = os.path.join(self.topsrcdir, 'build', 'pymake',
-                    'make.py')
+                self._make = [sys.executable,
+                    os.path.join(self.topsrcdir, 'build', 'pymake', 'make.py')]
 
             else:
                 for test in ['gmake', 'make']:
                     try:
-                        self._make = which.which(test)
+                        self._make = [which.which(test)]
                         break
                     except which.WhichError:
                         continue
