@@ -935,7 +935,7 @@ void MetroWidget::Paint(const nsIntRegion& aInvalidRegion)
   if (!listener)
     return;
 
-  listener->PaintWindow(this, aInvalidRegion, 0);
+  listener->PaintWindow(this, aInvalidRegion);
 
   listener = GetPaintListener();
   if (!listener)
