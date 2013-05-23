@@ -1096,6 +1096,12 @@ nsComputedDOMStyle::DoGetTransform()
                                             bounds,
                                             float(nsDeviceContext::AppUnitsPerCSSPixel()));
 
+  return MatrixToCSSValue(matrix);
+}
+
+/* static */ CSSValue*
+nsComputedDOMStyle::MatrixToCSSValue(gfx3DMatrix& matrix)
+{
   bool is3D = !matrix.Is2D();
 
   nsAutoString resultString(NS_LITERAL_STRING("matrix"));
