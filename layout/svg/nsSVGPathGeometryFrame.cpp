@@ -106,14 +106,16 @@ nsSVGPathGeometryFrame::AttributeChanged(int32_t         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          int32_t         aModType)
 {
+  // We don't invalidate for transform changes (the layers code does that).
+  // Also note that SVGTransformableElement::GetAttributeChangeHint will
+  // return nsChangeHint_UpdateOverflow for "transform" attribute changes
+  // and cause DoApplyRenderingChangeToTree to make the SchedulePaint call.
+
   if (aNameSpaceID == kNameSpaceID_None &&
       (static_cast<nsSVGPathGeometryElement*>
                   (mContent)->AttributeDefinesGeometry(aAttribute))) {
     nsSVGEffects::InvalidateRenderingObservers(this);
     nsSVGUtils::ScheduleReflowSVG(this);
-  } else if (aAttribute == nsGkAtoms::transform) {
-    // Don't invalidate (the layers code does that).
-    SchedulePaint();
   }
   return NS_OK;
 }
