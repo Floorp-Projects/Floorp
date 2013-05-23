@@ -657,7 +657,7 @@ public class TopSitesView extends GridView {
 
                         final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Thumbnails.DATA));
                         Bitmap bitmap = null;
-                        if (b != null) {
+                        if (b != null && b.length > 0) {
                             bitmap = BitmapUtils.decodeByteArray(b);
                         }
                         c.close();
