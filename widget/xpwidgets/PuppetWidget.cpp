@@ -570,7 +570,7 @@ PuppetWidget::Paint()
 #endif
 
     if (mozilla::layers::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
-      mAttachedWidgetListener->PaintWindow(this, region, 0);
+      mAttachedWidgetListener->PaintWindow(this, region);
     } else if (mozilla::layers::LAYERS_CLIENT == mLayerManager->GetBackendType()) {
       // Do nothing, the compositor will handle drawing
       if (mTabChild) {
@@ -582,7 +582,7 @@ PuppetWidget::Paint()
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
                                               BUFFER_NONE);
-      mAttachedWidgetListener->PaintWindow(this, region, 0);
+      mAttachedWidgetListener->PaintWindow(this, region);
       if (mTabChild) {
         mTabChild->NotifyPainted();
       }
