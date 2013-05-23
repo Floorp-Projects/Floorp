@@ -1714,7 +1714,7 @@ DoMatchLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearSt
 }
 
 static bool
-BuildGlobalMatchArray(JSContext *cx, JSString *matchesInput, const MatchPair &pair, size_t count,
+BuildGlobalMatchArray(JSContext *cx, HandleString matchesInput, const MatchPair &pair, size_t count,
                       MutableHandleObject array)
 {
     JS_ASSERT(count <= JSID_INT_MAX);  /* by max string length */
@@ -1735,7 +1735,7 @@ BuildGlobalMatchArray(JSContext *cx, JSString *matchesInput, const MatchPair &pa
 }
 
 static bool
-DoMatchGlobal(JSContext *cx, RegExpStatics *res, JSLinearString *linearPtr, RegExpShared &re,
+DoMatchGlobal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearPtr, RegExpShared &re,
               MutableHandleObject array)
 {
     size_t charsLen = linearPtr->length();
