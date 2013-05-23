@@ -280,8 +280,9 @@ class MozbuildObject(ProcessExecutionMixin):
     def _make_path(self):
         if self._make is None:
             if self._is_windows():
-                self._make = [sys.executable,
-                    os.path.join(self.topsrcdir, 'build', 'pymake', 'make.py')]
+                make_py = os.path.join(self.topsrcdir, 'build', 'pymake',
+                    'make.py').replace(os.sep, '/')
+                self._make = [sys.executable, make_py]
 
             else:
                 for test in ['gmake', 'make']:
