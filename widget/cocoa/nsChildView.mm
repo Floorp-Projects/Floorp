@@ -138,7 +138,7 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 - (void)processPendingRedraws;
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext alternate:(BOOL)aIsAlternate;
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
 - (BOOL)isUsingOpenGL;
 - (void)drawUsingOpenGL;
@@ -692,40 +692,6 @@ nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-CGContextRef
-nsChildView::GetCGContextForTitlebarDrawing(NSSize aSize)
-{
-  gfxSize titlebarSize(aSize.width, aSize.height);
-  if (!mTitlebarSurf || mTitlebarSize != titlebarSize) {
-    mTitlebarSize = titlebarSize;
-    mTitlebarSurf = new gfxQuartzSurface(titlebarSize, gfxASurface::ImageFormatARGB32);
-  }
-  return mTitlebarSurf->GetCGContext();
-}
-
-void
-nsChildView::WillPaint()
-{
-  [(ChildView*)mView maybeDrawInTitlebar];
-}
-
-void
-nsChildView::CompositeTitlebar(const gfxSize& aSize, CGContextRef aContext)
-{
-  NS_ASSERTION(mTitlebarSurf, "Must have titlebar surface");
-  if (!mTitlebarSurf) {
-    return;
-  }
-
-  CGImageRef image = CGBitmapContextCreateImage(mTitlebarSurf->GetCGContext());
-
-  CGContextDrawImage(aContext, 
-                     CGRectMake(0, 0, mTitlebarSize.width, mTitlebarSize.height), 
-                     image);
-
-  CGImageRelease(image);
 }
 
 void nsChildView::ResetParent()
@@ -1555,7 +1521,7 @@ void nsChildView::WillPaintWindow()
   }
 }
 
-bool nsChildView::PaintWindow(nsIntRegion aRegion, bool aIsAlternate)
+bool nsChildView::PaintWindow(nsIntRegion aRegion)
 {
   nsCOMPtr<nsIWidget> widget = GetWidgetForListenerEvents();
 
@@ -1566,11 +1532,7 @@ bool nsChildView::PaintWindow(nsIntRegion aRegion, bool aIsAlternate)
   bool returnValue = false;
   bool oldDispatchPaint = mIsDispatchPaint;
   mIsDispatchPaint = true;
-  uint32_t flags = 0;
-  if (aIsAlternate) {
-    flags |= nsIWidgetListener::PAINT_IS_ALTERNATE; 
-  }
-  returnValue = listener->PaintWindow(widget, aRegion, flags);
+  returnValue = listener->PaintWindow(widget, aRegion, 0);
 
   listener = widget->GetWidgetListener();
   if (listener) {
@@ -2521,15 +2483,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   } else {
     [super setNeedsDisplayInRect:aRect];
   }
-
-  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
-    ToolbarWindow* window = (ToolbarWindow*)[self window];
-    if ([window drawsContentsIntoWindowFrame]) {
-      // Tell it to mark the rect in the titlebar as dirty.
-      NSView* borderView = [[window contentView] superview];
-      [window setTitlebarNeedsDisplayInRect:[self convertRect:aRect toView:borderView]];
-    }
-  }
 }
 
 - (NSString*)description
@@ -2734,56 +2687,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 }
 
-- (void)maybeDrawInTitlebar
-{
-  if (!mGeckoChild) {
-    return;
-  }
-  NSWindow* win = [self window];
-  if (!win || ![win isKindOfClass:[ToolbarWindow class]]) {
-    return;
-  }
-  ToolbarWindow* toolbarWin = (ToolbarWindow*)win;
-  if (![toolbarWin drawsContentsIntoWindowFrame]) {
-    return;
-  }
-
-  // Check the parts of the frame view occupied by the titlebar to see if all
-  // or part of it is "dirty" (needs to be redrawn).  This is effectively the
-  // top 22 pixels of the frame view, and is not the same thing as the
-  // "unified toolbar".  Our ChildView ('self') is the same size as the frame
-  // view and covers it.  Our ChildView has a flipped coordinate system, but
-  // the frame view doesn't.
-  NSRect titlebarRect = [toolbarWin titlebarRect];
-  NSView* frameView = [[toolbarWin contentView] superview];
-  NSRect dirtyRect = NSIntersectionRect([frameView _dirtyRect], titlebarRect);
-  // Flip dirtyRect's coordinate system.
-  dirtyRect.origin.y = [frameView bounds].size.height -
-    dirtyRect.origin.y - dirtyRect.size.height;
-  if (NSIsEmptyRect(dirtyRect)) {
-    return;
-  }
-
-  CGContextRef context = mGeckoChild->GetCGContextForTitlebarDrawing(titlebarRect.size);
-  CGContextSaveGState(context);
-  [self drawRect:dirtyRect inTitlebarContext:context];
-  CGContextRestoreGState(context);
-}
-
-- (void)drawTitlebar:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext
-{
-  if (mGeckoChild) {
-    gfxSize size(aRect.size.width, aRect.size.height);
-    mGeckoChild->CompositeTitlebar(size, aContext);
-  }
-}
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
 {
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  [self drawRect:aRect inContext:cgContext alternate:false];
+  [self drawRect:aRect inContext:cgContext];
 
   // If we're a transparent window and our contents have changed, we need
   // to make sure the shadow is updated to the new contents.
@@ -2792,18 +2701,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 }
 
-- (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext
-{
-  if (!mGeckoChild)
-    return;
-
-  // Title bar drawing only works if we really draw into aContext, which only
-  // the basic layer manager will do.
-  nsBaseWidget::AutoUseBasicLayerManager setupLayerManager(mGeckoChild);
-  [self drawRect:aRect inContext:aContext alternate:true];
-}
-
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext alternate:(BOOL)aIsAlternate
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
 {
   if (!mGeckoChild || !mGeckoChild->IsVisible())
     return;
@@ -2850,7 +2748,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   const NSRect *rects;
   NSInteger count, i;
   [[NSView focusView] getRectsBeingDrawn:&rects count:&count];
-  if (count < MAX_RECTS_IN_REGION && !aIsAlternate) {
+  if (count < MAX_RECTS_IN_REGION) {
     for (i = 0; i < count; ++i) {
       // Add the rect to the region.
       NSRect r = [self convertRect:rects[i] fromView:[NSView focusView]];
@@ -2897,14 +2795,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_BASIC) {
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BUFFER_NONE);
-    painted = mGeckoChild->PaintWindow(region, aIsAlternate);
+    painted = mGeckoChild->PaintWindow(region);
   } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
     // We only need this so that we actually get DidPaintWindow fired
     if (Compositor::GetBackend() == LAYERS_BASIC) {
       ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
       manager->SetShadowTarget(targetContext);
     }
-    painted = mGeckoChild->PaintWindow(region, aIsAlternate);
+    painted = mGeckoChild->PaintWindow(region);
   }
 
   // Force OpenGL to refresh the very first time we draw. This works around a
@@ -2977,7 +2875,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [glContext setView:self];
   [glContext update];
 
-  mGeckoChild->PaintWindow(region, false);
+  mGeckoChild->PaintWindow(region);
 
   // Force OpenGL to refresh the very first time we draw. This works around a
   // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
