@@ -75,6 +75,9 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
         return AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act);
     }
     static bool deny(js::Wrapper::Action act, JSHandleId id) {
+        // Silently fail for enumerate-like operations.
+        if (act == js::Wrapper::GET && id == JS::JSID_VOIDHANDLE)
+            return true;
         return false;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl)
