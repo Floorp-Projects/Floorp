@@ -19,14 +19,12 @@ public:
 
     static already_AddRefed<nsIdleServiceAndroid> GetInstance() 
     {
-        nsIdleServiceAndroid* idleService = 
-            static_cast<nsIdleServiceAndroid*>(nsIdleService::GetInstance().get());
+        nsRefPtr<nsIdleService> idleService = nsIdleService::GetInstance();
         if (!idleService) {
             idleService = new nsIdleServiceAndroid();
-            NS_ADDREF(idleService);
         }
         
-        return idleService;
+        return idleService.forget().downcast<nsIdleServiceAndroid>();
     }
 
 protected:

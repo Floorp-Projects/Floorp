@@ -527,11 +527,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
     LossyAppendUTF16toASCII(temp, typeToUse);
   }
 
-  nsMIMEInfoWin* mimeInfo = new nsMIMEInfoWin(typeToUse);
-  if (!mimeInfo)
-    return nullptr; // out of memory
-
-  NS_ADDREF(mimeInfo);
+  nsRefPtr<nsMIMEInfoWin> mimeInfo = new nsMIMEInfoWin(typeToUse);
 
   // don't append the '.'
   mimeInfo->AppendExtension(NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1)));
@@ -569,7 +565,6 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
     found = false;
 
   if (!found) {
-    NS_IF_RELEASE(mimeInfo); // we failed to really find an entry in the registry
     return nullptr;
   }
 
@@ -579,7 +574,6 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   
   if (NS_FAILED(GetDefaultAppInfo(appInfo, defaultDescription,
                                   getter_AddRefs(defaultApplication)))) {
-    NS_IF_RELEASE(mimeInfo);
     return nullptr;
   }
 
@@ -589,7 +583,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   // Grab the general description
   GetMIMEInfoFromRegistry(appInfo, mimeInfo);
 
-  return mimeInfo;
+  return mimeInfo.forget();
 }
 
 already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, bool *aFound)
@@ -619,10 +613,10 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     }
   }
   // If we found an extension for the type, do the lookup
-  nsMIMEInfoWin* mi = nullptr;
+  nsRefPtr<nsMIMEInfoWin> mi;
   if (!fileExtension.IsEmpty())
-    mi = GetByExtension(fileExtension, flatType.get()).get();
-  LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi));
+    mi = GetByExtension(fileExtension, flatType.get());
+  LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi.get()));
 
   bool hasDefault = false;
   if (mi) {
@@ -646,21 +640,18 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
       GetByExtension(NS_ConvertUTF8toUTF16(aFileExt), flatType.get());
     LOG(("Ext. lookup for '%s' found 0x%p\n", flatExt.get(), miByExt.get()));
     if (!miByExt && mi)
-      return mi;
+      return mi.forget();
     if (miByExt && !mi) {
-      miByExt.swap(mi);
-      return mi;
+      return miByExt.forget();
     }
     if (!miByExt && !mi) {
       *aFound = false;
       mi = new nsMIMEInfoWin(flatType);
-      if (mi) {
-        NS_ADDREF(mi);
-        if (!aFileExt.IsEmpty())
-          mi->AppendExtension(aFileExt);
+      if (!aFileExt.IsEmpty()) {
+        mi->AppendExtension(aFileExt);
       }
       
-      return mi;
+      return mi.forget();
     }
 
     // if we get here, mi has no default app. copy from extension lookup.
@@ -670,7 +661,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
 
     mi->SetDefaultDescription(desc);
   }
-  return mi;
+  return mi.forget();
 }
 
 NS_IMETHODIMP
