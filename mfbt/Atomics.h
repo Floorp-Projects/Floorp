@@ -214,6 +214,9 @@ struct IntrinsicMemoryOps : public IntrinsicBase<T, Order>
     static T exchange(typename Base::ValueType& ptr, T val) {
       return ptr.exchange(val, Base::OrderedOp::AtomicRMWOrder);
     }
+    static bool compareExchange(typename Base::ValueType& ptr, T oldVal, T newVal) {
+      return ptr.compare_exchange_strong(oldVal, newVal, Base::OrderedOp::AtomicRMWOrder);
+    }
 };
 
 template<typename T, MemoryOrdering Order>
@@ -377,6 +380,9 @@ struct IntrinsicMemoryOps
       Barrier<Order>::beforeStore();
       return __sync_lock_test_and_set(&ptr, val);
     }
+    static bool compareExchange(T& ptr, T oldVal, T newVal) {
+      return __sync_bool_compare_and_swap(&ptr, oldVal, newVal);
+    }
 };
 
 template<typename T>
@@ -463,6 +469,7 @@ long __cdecl _InterlockedOr(long volatile* dst, long value);
 long __cdecl _InterlockedXor(long volatile* dst, long value);
 long __cdecl _InterlockedAnd(long volatile* dst, long value);
 long __cdecl _InterlockedExchange(long volatile *dst, long value);
+long __cdecl _InterlockedCompareExchange(long volatile *dst, long newVal, long oldVal);
 }
 
 #  pragma intrinsic(_InterlockedExchangeAdd)
@@ -470,6 +477,7 @@ long __cdecl _InterlockedExchange(long volatile *dst, long value);
 #  pragma intrinsic(_InterlockedXor)
 #  pragma intrinsic(_InterlockedAnd)
 #  pragma intrinsic(_InterlockedExchange)
+#  pragma intrinsic(_InterlockedCompareExchange)
 
 namespace mozilla {
 namespace detail {
@@ -484,10 +492,8 @@ namespace detail {
 #  endif
 
 /*
- * This template should define seven functions and |Type|, the datatype upon
- * which the functions operate.  These five functions perform the obvious
- * operation on the value contained in |*ptr| combined with |val| and return
- * the value previously stored in |*ptr|
+ * The PrimitiveIntrinsics template should define |Type|, the datatype of size
+ * DataSize upon which we operate, and the following eight functions.
  *
  * static Type add(Type* ptr, Type val);
  * static Type sub(Type* ptr, Type val);
@@ -495,17 +501,33 @@ namespace detail {
  * static Type xor_(Type* ptr, Type val);
  * static Type and_(Type* ptr, Type val);
  *
- * This function atomically stores |val| into |*ptr| and must provide a
- * full memory fence after the store to prevent compiler and hardware
- * instruction reordering.  It should also act as a compiler barrier
- * to prevent reads and writes from moving to after the store.
+ *   These functions perform the obvious operation on the value contained in
+ *   |*ptr| combined with |val| and return the value previously stored in
+ *   |*ptr|.
  *
  * static void store(Type* ptr, Type val);
  *
- * This function atomically stores |val| into |*ptr| and returns the
- * previous contents of *ptr;
+ *   This function atomically stores |val| into |*ptr| and must provide a full
+ *   memory fence after the store to prevent compiler and hardware instruction
+ *   reordering.  It should also act as a compiler barrier to prevent reads and
+ *   writes from moving to after the store.
  *
  * static Type exchange(Type* ptr, Type val);
+ *
+ *   This function atomically stores |val| into |*ptr| and returns the previous
+ *   contents of *ptr;
+ *
+ * static bool compareExchange(Type* ptr, Type oldVal, Type newVal);
+ *
+ *   This function atomically performs the following operation:
+ *
+ *     if (*ptr == oldVal) {
+ *       *ptr = newVal;
+ *       return true;
+ *     } else {
+ *       return false;
+ *     }
+ *
  */
 template<size_t DataSize> struct PrimitiveIntrinsics;
 
@@ -539,6 +561,9 @@ struct PrimitiveIntrinsics<4>
     static Type exchange(Type* ptr, Type val) {
       return _InterlockedExchange(ptr, val);
     }
+    static bool compareExchange(Type* ptr, Type oldVal, Type newVal) {
+      return _InterlockedCompareExchange(ptr, newVal, oldVal) == oldVal;
+    }
 };
 
 #  if defined(_M_X64)
@@ -554,6 +579,9 @@ long long __cdecl _InterlockedAnd64(long long volatile* dst,
                                     long long value);
 long long __cdecl _InterlockedExchange64(long long volatile* dst,
                                          long long value);
+long long __cdecl _InterlockedCompareExchange64(long long volatile* dst,
+                                                long long newVal,
+                                                long long oldVal);
 }
 
 #    pragma intrinsic(_InterlockedExchangeAdd64)
@@ -561,6 +589,7 @@ long long __cdecl _InterlockedExchange64(long long volatile* dst,
 #    pragma intrinsic(_InterlockedXor64)
 #    pragma intrinsic(_InterlockedAnd64)
 #    pragma intrinsic(_InterlockedExchange64)
+#    pragma intrinsic(_InterlockedCompareExchange64)
 
 template <>
 struct PrimitiveIntrinsics<8>
@@ -590,6 +619,9 @@ struct PrimitiveIntrinsics<8>
     }
     static Type exchange(Type* ptr, Type val) {
       return _InterlockedExchange64(ptr, val);
+    }
+    static bool compareExchange(T* ptr, T oldVal, T newVal) {
+      return _InterlockedCompareExchange64(ptr, newVal, oldVal) == oldVal;
     }
 };
 
@@ -682,6 +714,11 @@ struct IntrinsicMemoryOps : public IntrinsicBase<T>
         Primitives::exchange(reinterpret_cast<PrimType*>(&ptr),
                              Cast::toPrimType(val));
       return Cast::fromPrimType(oldval);
+    }
+    static bool compareExchange(ValueType& ptr, ValueType oldVal, ValueType newVal) {
+      return Primitives::compareExchange(reinterpret_cast<PrimType*>(&ptr),
+                                         Cast::toPrimType(oldVal),
+                                         Cast::toPrimType(newVal));
     }
 };
 
@@ -791,6 +828,20 @@ class AtomicBase
      */
     T exchange(T aValue) {
       return Intrinsics::exchange(mValue, aValue);
+    }
+    /**
+     * Performs an atomic compare-and-swap operation and returns true if it
+     * succeeded. This is equivalent to atomically doing
+     *
+     *   if (mValue == aOldValue) {
+     *     mValue = aNewValue;
+     *     return true;
+     *   } else {
+     *     return false;
+     *   }
+     */
+    bool compareExchange(T aOldValue, T aNewValue) {
+      return Intrinsics::compareExchange(mValue, aOldValue, aNewValue);
     }
 
   private:
