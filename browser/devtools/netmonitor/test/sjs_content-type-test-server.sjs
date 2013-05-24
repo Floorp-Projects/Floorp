@@ -33,6 +33,14 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
+      case "html-long": {
+        let str = new Array(102400 /* 100 KB in bytes */).join(".");
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "text/html; charset=utf-8", false);
+        response.write("<p>" + str + "</p>");
+        response.finish();
+        break;
+      }
       case "css": {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.setHeader("Content-Type", "text/css; charset=utf-8", false);
