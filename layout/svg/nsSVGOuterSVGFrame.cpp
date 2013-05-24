@@ -765,7 +765,13 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(aBuilder, this);
+  // Per-spec, we always clip root-<svg> even when 'overflow' has its initial
+  // value of 'visible'. See also the "visual overflow" comments in Reflow.
+  DisplayListClipState::AutoSaveRestore autoSR(aBuilder);
+  if (mIsRootContent ||
+      StyleDisplay()->IsScrollableOverflow()) {
+    autoSR.ClipContainingBlockDescendantsToContentBox(aBuilder, this);
+  }
 
   if ((aBuilder->IsForEventDelivery() &&
        NS_SVGDisplayListHitTestingEnabled()) ||
