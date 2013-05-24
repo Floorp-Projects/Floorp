@@ -69,6 +69,8 @@ MOCHITEST_BROWSER_FILES =	\
 		file_bug234628-11-child.xhtml \
 		file_bug234628-11-child.xhtml^headers^ \
 		browser_search_notification.js \
+		browser_loadURI.js \
+		print_postdata.sjs \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

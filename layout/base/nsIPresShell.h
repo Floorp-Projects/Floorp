@@ -1229,6 +1229,8 @@ public:
    */
   bool GetIsFirstPaint() const { return mIsFirstPaint; }
 
+  uint32_t GetPresShellId() { return mPresShellId; }
+
   /**
    * Dispatch a mouse move event based on the most recent mouse position if
    * this PresShell is visible. This is used when the contents of the page
@@ -1526,6 +1528,8 @@ protected:
 
   bool                      mSuppressInterruptibleReflows : 1;
   bool                      mScrollPositionClampingScrollPortSizeSet : 1;
+
+  uint32_t                  mPresShellId;
 
   // List of subtrees rooted at style scope roots that need to be restyled.
   // When a change to a scoped style sheet is made, we add the style scope

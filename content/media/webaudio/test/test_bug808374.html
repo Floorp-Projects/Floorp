@@ -11,7 +11,7 @@
 
 SpecialPowers.setBoolPref("media.webaudio.enabled", true);
 var ctx = new AudioContext();
-ctx.createBuffer(0, 0, ctx.sampleRate);
+ctx.createBuffer(0, 1, ctx.sampleRate);
 ok(true, "The test should not crash during CC");
 SpecialPowers.clearUserPref("media.webaudio.enabled");
 
