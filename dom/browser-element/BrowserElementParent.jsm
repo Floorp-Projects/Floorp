@@ -119,7 +119,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
     "rollback-fullscreen": this._remoteFrameFullscreenReverted,
     "exit-fullscreen": this._exitFullscreen,
     "got-visible": this._gotDOMRequestResult,
-    "visibility-change": this._childVisibilityChange,
+    "visibilitychange": this._childVisibilityChange,
   }
 
   this._mm.addMessageListener('browser-element-api:call', function(aMsg) {
@@ -576,6 +576,8 @@ BrowserElementParent.prototype = {
   _childVisibilityChange: function(data) {
     debug("_childVisibilityChange(" + data.json.visible + ")");
     this._frameLoader.visible = data.json.visible;
+
+    this._fireEventFromMsg(data);
   },
 
   _exitFullscreen: function() {
