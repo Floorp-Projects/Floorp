@@ -216,6 +216,13 @@ skip-if(d2d) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
 == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
+== overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
+== overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03-ref.xhtml
+== overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03-ref.xhtml
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
