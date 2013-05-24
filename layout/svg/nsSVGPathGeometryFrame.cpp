@@ -120,6 +120,21 @@ nsSVGPathGeometryFrame::AttributeChanged(int32_t         aNameSpaceID,
   return NS_OK;
 }
 
+/* virtual */ void
+nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  nsSVGPathGeometryFrameBase::DidSetStyleContext(aOldStyleContext);
+
+  // XXX: we'd like to use the style_hint mechanism and the
+  // ContentStateChanged/AttributeChanged functions for style changes
+  // to get slightly finer granularity, but unfortunately the
+  // style_hints don't map very well onto svg. Here seems to be the
+  // best place to deal with style changes:
+
+  nsSVGEffects::InvalidateRenderingObservers(this);
+  nsSVGUtils::ScheduleReflowSVG(this);
+}
+
 nsIAtom *
 nsSVGPathGeometryFrame::GetType() const
 {
