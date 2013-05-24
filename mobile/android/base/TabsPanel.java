@@ -217,7 +217,7 @@ public class TabsPanel extends LinearLayout
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            if (!GeckoApp.mAppContext.hasTabsSideBar()) {
+            if (!GeckoAppShell.getGeckoInterface().hasTabsSideBar()) {
                 int heightSpec = MeasureSpec.makeMeasureSpec(getTabContainerHeight(TabsListContainer.this), MeasureSpec.EXACTLY);
                 super.onMeasure(widthMeasureSpec, heightSpec);
             } else {

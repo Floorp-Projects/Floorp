@@ -6,7 +6,7 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAccessibility;
-import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
@@ -450,7 +450,7 @@ public class LayerView extends FrameLayout {
     /** This function is invoked by Gecko (compositor thread) via JNI; be careful when modifying signature. */
     public static GLController registerCxxCompositor() {
         try {
-            LayerView layerView = GeckoApp.mAppContext.getLayerView();
+            LayerView layerView = GeckoAppShell.getLayerView();
             GLController controller = layerView.getGLController();
             controller.compositorCreated();
             return controller;
