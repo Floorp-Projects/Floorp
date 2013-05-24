@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window id='win'/>";
+const NEWTAB_URL = "about:newtab";
 const PREF_BRANCH = "browser.newtab.";
 
 // The interval between swapping in a preload docShell and kicking off the
@@ -118,24 +119,14 @@ let Initializer = {
 let Preferences = {
   _enabled: null,
   _branch: null,
-  _url: null,
 
   get enabled() {
     if (this._enabled === null) {
       this._enabled = this._branch.getBoolPref("preload") &&
-                      !this._branch.prefHasUserValue("url") &&
-                      this.url && this.url != "about:blank";
+                      !this._branch.prefHasUserValue("url");
     }
 
     return this._enabled;
-  },
-
-  get url() {
-    if (this._url === null) {
-      this._url = this._branch.getCharPref("url");
-    }
-
-    return this._url;
   },
 
   init: function Preferences_init() {
@@ -150,16 +141,14 @@ let Preferences = {
     }
   },
 
-  observe: function Preferences_observe(aSubject, aTopic, aData) {
-    let {url: prevURL, enabled: prevEnabled} = this;
-    this._url = this._enabled = null;
+  observe: function Preferences_observe() {
+    let prevEnabled = this._enabled;
+    this._enabled = null;
 
     if (prevEnabled && !this.enabled) {
       HiddenBrowsers.uninit();
     } else if (!prevEnabled && this.enabled) {
       HiddenBrowsers.init();
-    } else if (this._browser && prevURL != this.url) {
-      HiddenBrowsers.updateBrowserURLs(this.url);
     }
   },
 };
@@ -226,12 +215,6 @@ let HiddenBrowsers = {
     } else {
       this._updateTimer = clearTimer(this._updateTimer);
       this._updateTimer = createTimer(this, PRELOADER_UPDATE_DELAY_MS);
-    }
-  },
-
-  updateBrowserURLs: function (url) {
-    for (let [key, browser] of this._browsers) {
-      browser.update(url);
     }
   },
 
@@ -319,8 +302,8 @@ HiddenBrowser.prototype = {
   get isPreloaded() {
     return this._browser &&
            this._browser.contentDocument &&
-           this._browser.contentDocument.readyState == "complete" &&
-           this._browser.currentURI.spec == Preferences.url;
+           this._browser.contentDocument.readyState === "complete" &&
+           this._browser.currentURI.spec === NEWTAB_URL;
   },
 
   swapWithNewTab: function (aTab) {
@@ -357,7 +340,7 @@ HiddenBrowser.prototype = {
     this.resize(this._width, this._height);
 
     // Start pre-loading the new tab page.
-    this._browser.loadURI(Preferences.url);
+    this._browser.loadURI(NEWTAB_URL);
   },
 
   resize: function (width, height) {
@@ -368,10 +351,6 @@ HiddenBrowser.prototype = {
       this._width = width;
       this._height = height;
     }
-  },
-
-  update: function (aURL) {
-    this._browser.setAttribute("src", aURL);
   },
 
   destroy: function () {
