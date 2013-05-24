@@ -9,6 +9,7 @@ const FILTER_IGNORE = nsIAccessibleTraversalRule.FILTER_IGNORE;
 const FILTER_IGNORE_SUBTREE = nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
 
 const NS_ERROR_NOT_IN_TREE = 0x80780026;
+const NS_ERROR_INVALID_ARG = 0x80070057;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Traversal rules
@@ -261,18 +262,58 @@ function moveVCCoordInvoker(aDocAcc, aX, aY, aIgnoreNoMatch,
 }
 
 /**
+ * Change the pivot modalRoot
+ *
+ * @param aDocAcc         [in] document that manages the virtual cursor
+ * @param aModalRootAcc   [in] accessible of the modal root, or null
+ * @param aExpectedResult [in] error result expected. 0 if expecting success
+ */
+function setModalRootInvoker(aDocAcc, aModalRootAcc, aExpectedResult)
+{
+  this.invoke = function setModalRootInvoker_invoke()
+  {
+    var errorResult = 0;
+    try {
+      aDocAcc.virtualCursor.modalRoot = aModalRootAcc;
+    } catch (x) {
+      SimpleTest.ok(
+        x.result, "Unexpected exception when changing modal root: " + x);
+      errorResult = x.result;
+    }
+
+    SimpleTest.is(errorResult, aExpectedResult,
+                  "Did not get expected result when changing modalRoot");
+  };
+
+  this.getID = function setModalRootInvoker_getID()
+  {
+    return "Set modalRoot to " + prettyName(aModalRootAcc);
+  };
+
+  this.eventSeq = [];
+  this.unexpectedEventSeq = [
+    new invokerChecker(EVENT_VIRTUALCURSOR_CHANGED, aDocAcc)
+  ];
+}
+
+/**
  * Add invokers to a queue to test a rule and an expected sequence of element ids
  * or accessible names for that rule in the given document.
  *
- * @param aQueue    [in] event queue in which to push invoker sequence.
- * @param aDocAcc   [in] the managing document of the virtual cursor we are testing
- * @param aRule     [in] the traversal rule to use in the invokers
- * @param aSequence [in] a sequence of accessible names or element ids to expect with
- *                  the given rule in the given document
+ * @param aQueue     [in] event queue in which to push invoker sequence.
+ * @param aDocAcc    [in] the managing document of the virtual cursor we are
+ *                   testing
+ * @param aRule      [in] the traversal rule to use in the invokers
+ * @param aModalRoot [in] a modal root to use in this traversal sequence
+ * @param aSequence  [in] a sequence of accessible names or element ids to expect
+ *                   with the given rule in the given document
  */
-function queueTraversalSequence(aQueue, aDocAcc, aRule, aSequence)
+function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence)
 {
   aDocAcc.virtualCursor.position = null;
+
+  // Add modal root (if any)
+  aQueue.push(new setModalRootInvoker(aDocAcc, aModalRoot, 0));
 
   for (var i = 0; i < aSequence.length; i++) {
     var invoker =
@@ -302,6 +343,9 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aSequence)
 
   // No previous more matches for given rule, expect no virtual cursor changes.
   aQueue.push(new setVCPosInvoker(aDocAcc, "movePrevious", aRule, false));
+
+  // Remove modal root (if any).
+  aQueue.push(new setModalRootInvoker(aDocAcc, null, 0));
 }
 
 /**

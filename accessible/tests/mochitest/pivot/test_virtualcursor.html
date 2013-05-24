@@ -45,11 +45,11 @@
         closeBrowserWindow();
       }
 
-      queueTraversalSequence(gQueue, docAcc, HeadersTraversalRule,
+      queueTraversalSequence(gQueue, docAcc, HeadersTraversalRule, null,
                              ['heading-1-1', 'heading-2-1', 'heading-2-2']);
 
       queueTraversalSequence(
-        gQueue, docAcc, ObjectTraversalRule,
+        gQueue, docAcc, ObjectTraversalRule, null,
         ['Main Title', 'First Section Title', 'Lorem ipsum ',
          'dolor', ' sit amet. Integer vitae urna leo, id ',
          'semper', ' nulla. ', 'Second Section Title',
@@ -85,6 +85,15 @@
       // Attempting a coordinate outside any header, should move to null
       gQueue.push(new moveVCCoordInvoker(docAcc, x - 1, y - 1, false,
                                          HeadersTraversalRule, null));
+
+      queueTraversalSequence(
+        gQueue, docAcc, ObjectTraversalRule,
+        getAccessible(doc.getElementById('paragraph-1')),
+        ['Lorem ipsum ', 'dolor', ' sit amet. Integer vitae urna leo, id ',
+         'semper', ' nulla. ']);
+
+      gQueue.push(new setModalRootInvoker(docAcc, docAcc.parent,
+                                          NS_ERROR_INVALID_ARG));
 
       gQueue.invoke();
     }
