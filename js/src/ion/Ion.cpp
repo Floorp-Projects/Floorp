@@ -413,7 +413,6 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     compartment_(cx->compartment),
     prev_(cx->mainThread().ionActivation),
     entryfp_(fp),
-    bailout_(NULL),
     prevIonTop_(cx->mainThread().ionTop),
     prevIonJSContext_(cx->mainThread().ionJSContext),
     prevpc_(NULL)
@@ -427,7 +426,6 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
 IonActivation::~IonActivation()
 {
     JS_ASSERT(cx_->mainThread().ionActivation == this);
-    JS_ASSERT(!bailout_);
 
     if (entryfp_)
         entryfp_->clearRunningInIon();
@@ -1564,17 +1562,13 @@ Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osr
         bool constructing, CompileContext &compileContext)
 {
     JS_ASSERT(ion::IsEnabled(cx));
+    JS_ASSERT(ion::IsBaselineEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
 
     ExecutionMode executionMode = compileContext.executionMode();
 
-    if (executionMode == SequentialExecution &&
-        IsBaselineEnabled(cx) && !script->hasBaselineScript())
-    {
-        //IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d (has no baseline script)",
-        //        script->filename(), script->lineno);
+    if (executionMode == SequentialExecution && !script->hasBaselineScript())
         return Method_Skipped;
-    }
 
     if (cx->compartment->debugMode()) {
         IonSpew(IonSpew_Abort, "debugging");
@@ -1600,15 +1594,10 @@ Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osr
     }
 
     if (executionMode == SequentialExecution) {
-        if (IsBaselineEnabled(cx)) {
-            // If Baseline is enabled we use getUseCount instead of incUseCount to avoid
-            // bumping the use count twice.
-            if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
-                return Method_Skipped;
-        } else {
-            if (script->incUseCount() < js_IonOptions.usesBeforeCompileNoJaeger)
-                return Method_Skipped;
-        }
+        // Use getUseCount instead of incUseCount to avoid bumping the
+        // use count twice.
+        if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
+            return Method_Skipped;
     }
 
     AbortReason reason = IonCompile(cx, script, fp, osrPc, constructing, compileContext);
@@ -1714,6 +1703,15 @@ ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp, bool isConst
     if (!CheckFrame(fp)) {
         ForbidCompilation(cx, script);
         return Method_CantCompile;
+    }
+
+    // If --ion-eager is used, compile with Baseline first, so that we
+    // can directly enter IonMonkey.
+    if (js_IonOptions.eagerCompilation && !script->hasBaselineScript()) {
+        bool newType = isConstructing && fp.asStackFrame()->useNewType();
+        MethodStatus status = CanEnterBaselineJIT(cx, script, fp.asStackFrame(), newType);
+        if (status != Method_Compiled)
+            return status;
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
@@ -2003,12 +2001,6 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
               result.address());
     }
 
-    if (result.isMagic() && result.whyMagic() == JS_ION_BAILOUT) {
-        if (!EnsureHasScopeObjects(cx, cx->fp()))
-            return IonExec_Error;
-        return IonExec_Bailout;
-    }
-
     JS_ASSERT(fp == cx->fp());
     JS_ASSERT(!cx->runtime->hasIonReturnOverride());
 
@@ -2047,39 +2039,6 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     } else {
         TraceLog(TraceLogging::defaultLogger(),
                  TraceLogging::ION_CANNON_STOP,
-                 script);
-    }
-#endif
-
-    return status;
-}
-
-IonExecStatus
-ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
-{
-    RootedScript script(cx, fp->script());
-    IonScript *ion = script->ionScript();
-    IonCode *code = ion->method();
-    void *osrcode = code->raw() + ion->osrEntryOffset();
-
-    JS_ASSERT(ion->osrPc() == pc);
-
-#if JS_TRACE_LOGGING
-    TraceLog(TraceLogging::defaultLogger(),
-             TraceLogging::ION_SIDE_CANNON_START,
-             script);
-#endif
-
-    IonExecStatus status = EnterIon(cx, fp, osrcode);
-
-#if JS_TRACE_LOGGING
-    if (status == IonExec_Bailout) {
-        TraceLog(TraceLogging::defaultLogger(),
-                 TraceLogging::ION_SIDE_CANNON_BAIL,
-                 script);
-    } else {
-        TraceLog(TraceLogging::defaultLogger(),
-                 TraceLogging::ION_SIDE_CANNON_STOP,
                  script);
     }
 #endif

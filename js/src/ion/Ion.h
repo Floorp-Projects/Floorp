@@ -296,11 +296,7 @@ enum IonExecStatus
     IonExec_Error,
 
     // The method call succeeed and returned a value.
-    IonExec_Ok,
-
-    // A guard triggered in IonMonkey and we must resume execution in
-    // the interpreter.
-    IonExec_Bailout
+    IonExec_Ok
 };
 
 static inline bool
@@ -310,7 +306,6 @@ IsErrorStatus(IonExecStatus status)
 }
 
 IonExecStatus Cannon(JSContext *cx, StackFrame *fp);
-IonExecStatus SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 // Used to enter Ion from C++ natives like Array.map. Called from FastInvokeGuard.
 IonExecStatus FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args);
@@ -340,9 +335,12 @@ CodeGenerator *CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm = NUL
 void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(IonBuilder *builder);
 
-static inline bool IsEnabled(JSContext *cx)
+static inline bool
+IsEnabled(JSContext *cx)
 {
-    return cx->hasOption(JSOPTION_ION) && cx->typeInferenceEnabled();
+    return cx->hasOption(JSOPTION_ION) &&
+        cx->hasOption(JSOPTION_BASELINE) &&
+        cx->typeInferenceEnabled();
 }
 
 void ForbidCompilation(JSContext *cx, JSScript *script);
