@@ -3466,6 +3466,7 @@ nsXMLHttpRequest::MaybeDispatchProgressEvents(bool aFinalProgress)
       mResponseBody.Truncate();
       mResponseText.Truncate();
       mResultArrayBuffer = nullptr;
+      mArrayBufferBuilder.reset();
     }
   }
 
