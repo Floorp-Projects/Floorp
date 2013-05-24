@@ -1,0 +1,23 @@
+<script>
+var Context0= new AudioContext()
+var BufferSource0=Context0.createBufferSource();
+BufferSource0.start(0.01932738965842873,0.33345631847623736,0.3893404237460345);
+BufferSource0.buffer=function(){
+	var length=35887;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);
+	for (var i = 0; i < length; ++i) { bufferData[i] = Math.sin(i*(0.39765272522345185))};
+	return Buffer;
+}();
+
+BufferSource0.buffer=function(){
+	var length=15952;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);
+	for (var i = 0; i < length; ++i) { bufferData[i] = Math.sin(i*(85))};
+	return Buffer;
+}();
+
+BufferSource0.playbackRate.value=20.401213286832185;
+
+</script>

@@ -36,6 +36,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
 XPCOMUtils.defineLazyModuleGetter(this, "require",
                                   "resource://gre/modules/devtools/Require.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource:///modules/devtools/shared/event-emitter.js");
+
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Components.classes["@mozilla.org/preferences-service;1"]
           .getService(Components.interfaces.nsIPrefService);
@@ -214,6 +217,8 @@ this.DeveloperToolbar = function DeveloperToolbar(aChromeWindow, aToolbarElement
                              .getElementById("developer-toolbar-toolbox-button");
   this._errorCounterButton._defaultTooltipText =
     this._errorCounterButton.getAttribute("tooltiptext");
+
+  EventEmitter.decorate(this);
 
   try {
     CmdCommands.refreshAutoCommands(aChromeWindow);
@@ -675,6 +680,8 @@ function DT__updateErrorsCount(aChangedTabId)
     btn.removeAttribute("error-count");
     btn.setAttribute("tooltiptext", btn._defaultTooltipText);
   }
+
+  this.emit("errors-counter-updated");
 };
 
 /**
