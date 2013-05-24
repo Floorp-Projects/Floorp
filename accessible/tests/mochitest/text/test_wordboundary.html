@@ -16,7 +16,9 @@
     function doTest()
     {
       // "hello"
-      var ids = [ "i1", "d1", "e1" ];
+      // __h__e__l__l__o__
+      //  0  1  2  3  4  5
+      var ids = [ "i1", "d1", "e1", "t1" ];
       testTextBeforeOffset(ids, BOUNDARY_WORD_START,
                            [ [ 0, 5, "", 0, 0 ] ]);
       testTextBeforeOffset(ids, BOUNDARY_WORD_END,
@@ -33,7 +35,9 @@
                           [ [ 0, 5, "", 5, 5 ] ]);
 
       // "hello "
-      var ids = [ "i2", "d2", "e2" ];
+      // __h__e__l__l__o__ __
+      //  0  1  2  3  4  5  6
+      var ids = [ "i2", "d2", "e2", "t2" ];
       testTextBeforeOffset(ids, BOUNDARY_WORD_START,
                            [ [ 0, 6, "", 0, 0 ] ]);
       testTextBeforeOffset(ids, BOUNDARY_WORD_END,
@@ -63,7 +67,16 @@
                           ]);
 
       // "hello all"
-      ids = [ "i6", "d6", "e6" ];
+      // __h__e__l__l__o__ __a__l__l__
+      //  0  1  2  3  4  5  6  7  8  9
+      ids = [ "i6", "d6", "e6", "t6" ];
+      testTextBeforeOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 9, "hello ", 0, 6 ]]);
+      testTextBeforeOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 9, "hello", 0, 5 ] ]);
+
       testTextAtOffset(ids, BOUNDARY_WORD_START,
                        [ [ 0, 5, "hello ", 0, 6 ],
                          [ 6, 9, "all", 6, 9 ] ]);
@@ -71,8 +84,26 @@
                        [ [ 0, 4, "hello", 0, 5 ],
                          [ 5, 9, " all", 5, 9 ] ]);
 
+      testTextAfterOffset(ids, BOUNDARY_WORD_START,
+                          [ [ 0, 5, "all", 6, 9 ],
+                            [ 6, 9, "", 9, 9 ] ]);
+      testTextAfterOffset(ids, BOUNDARY_WORD_END,
+                          [ [ 0, 5, " all", 5, 9 ],
+                            [ 6, 9, "", 9, 9 ] ]);
+
       // "hello my friend"
-      ids = [ "i7", "d7", "e7" ];
+      // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+      ids = [ "i7", "d7", "e7", "t7" ];
+      testTextBeforeOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 8, "hello ", 0, 6 ],
+                             [ 9, 15, "my ", 6, 9 ] ]);
+      testTextBeforeOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 8, "hello", 0, 5 ],
+                             [ 9, 15, " my", 5, 8 ] ]);
+
       testTextAtOffset(ids, BOUNDARY_WORD_START,
                        [ [ 0, 5, "hello ", 0, 6 ],
                          [ 6, 8, "my ", 6, 9 ],
@@ -81,6 +112,115 @@
                        [ [ 0, 4, "hello", 0, 5 ],
                          [ 5, 7, " my", 5, 8 ],
                          [ 8, 15, " friend", 8, 15] ]);
+
+      testTextAfterOffset(ids, BOUNDARY_WORD_START,
+                          [ [ 0, 5, "my ", 6, 9 ],
+                            [ 6, 8, "friend", 9, 15 ],
+                            [ 9, 15, "", 15, 15 ] ]);
+      testTextAfterOffset(ids, BOUNDARY_WORD_END,
+                          [ [ 0, 5, " my", 5, 8 ],
+                            [ 6, 8, " friend", 8, 15 ],
+                            [ 9, 15, "", 15, 15 ] ]);
+
+      // "Brave Sir  Robin   ran"
+      // __B__r__a__v__e__ __S__i__r__ __ __R__o__b__i__n__ __ __ __r__a__n__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22
+      ids = [ "i8", "d8", "e8", "t8" ];
+      testTextBeforeOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 10, "Brave ", 0, 6 ],
+                             [ 11, 18, "Sir  ", 6, 11 ],
+                             [ 19, 22, "Robin   ", 11, 19 ] ]);
+      testTextBeforeOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 9, "Brave", 0, 5 ],
+                             [ 10, 16, " Sir", 5, 9 ],
+                             [ 17, 22, "  Robin", 9, 16 ] ]);
+
+      testTextAtOffset(ids, BOUNDARY_WORD_START,
+                       [ [ 0, 5, "Brave ", 0, 6 ],
+                         [ 6, 10, "Sir  ", 6, 11 ],
+                         [ 11, 18, "Robin   ", 11, 19 ],
+                         [ 19, 22, "ran", 19, 22 ] ]);
+      testTextAtOffset(ids, BOUNDARY_WORD_END,
+                       [ [ 0, 4, "Brave", 0, 5 ],
+                         [ 5, 8, " Sir", 5, 9 ],
+                         [ 9, 15, "  Robin", 9, 16 ],
+                         [ 16, 22, "   ran", 16, 22 ] ]);
+
+      testTextAfterOffset(ids, BOUNDARY_WORD_START,
+                          [ [ 0, 5, "Sir  ", 6, 11 ],
+                            [ 6, 10, "Robin   ", 11, 19 ],
+                            [ 11, 18, "ran", 19, 22 ],
+                            [ 19, 22, "", 22, 22 ] ]);
+      testTextAfterOffset(ids, BOUNDARY_WORD_END,
+                          [ [ 0, 5, " Sir", 5, 9 ],
+                            [ 6, 9, "  Robin", 9, 16 ],
+                            [ 10, 16, "   ran", 16, 22 ],
+                            [ 17, 22, "", 22, 22 ] ]);
+
+      // 'oneword
+      // '
+      // 'two words
+      // '
+      // __o__n__e__w__o__r__d__\n
+      //  0  1  2  3  4  5  6  7
+      // __\n
+      //  8
+      // __t__w__o__ __w__o__r__d__s__\n__
+      //  9 10 11 12 13 14 15 16 17 18  19
+
+      ids = ["ml_div1", "ml_divbr1", "ml_ediv1", "ml_edivbr1", "ml_t1"];
+      testTextBeforeOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 8, "", 0, 0 ],
+                             [ 9, 12, "oneword\n\n", 0, 9 ],
+                             [ 13, 19, "two ", 9, 13 ] ]);
+      testTextBeforeOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 7, "", 0, 0 ],
+                             [ 8, 12, "oneword", 0, 7,
+                               [ [ 8, "ml_divbr1", kTodo, kOk, kTodo ],
+                                 [ 8, "ml_edivbr1", kTodo, kOk, kTodo ],
+                                 [ 9, "ml_divbr1", kTodo, kOk, kTodo ],
+                                 [ 9, "ml_edivbr1", kTodo, kOk, kTodo ] ] ],
+                             [ 13, 18, "\n\ntwo", 7, 12 ],
+                             [ 19, 19, " words", 12, 18,
+                               [ [ 19, "ml_divbr1", kTodo, kTodo, kTodo, ],
+                                 [ 19, "ml_edivbr1", kTodo, kTodo, kTodo, ] ] ]
+                           ] );
+
+      testTextAtOffset(ids, BOUNDARY_WORD_START,
+                       [ [ 0, 8, "oneword\n\n", 0, 9,
+                           [ [ 7, "ml_divbr1", kTodo, kTodo, kTodo ],
+                             [ 7, "ml_edivbr1", kTodo, kTodo, kTodo ],
+                             [ 8, "ml_divbr1", kTodo, kTodo, kTodo ],
+                             [ 8, "ml_edivbr1", kTodo, kTodo, kTodo ] ] ],
+                         [ 9, 12, "two ", 9, 13 ],
+                         [ 13, 19, "words\n", 13, 19 ] ]);
+      testTextAtOffset(ids, BOUNDARY_WORD_END,
+                       [ [ 0, 6, "oneword", 0, 7 ],
+                         [ 7, 11, "\n\ntwo", 7, 12 ],
+                         [ 12, 17, " words", 12, 18 ],
+                         [ 18, 19, "\n", 18, 19,
+                           [ [ 18, "ml_divbr1", kTodo, kTodo, kOk ],
+                             [ 18, "ml_edivbr1", kTodo, kTodo, kOk ],
+                             [ 19, "ml_divbr1", kTodo, kTodo, kOk ],
+                             [ 19, "ml_edivbr1", kTodo, kTodo, kOk ] ] ] ]);
+
+      testTextAfterOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 8, "two ", 9, 13,
+                               [ [ 7, "ml_divbr1", kTodo, kTodo, kTodo ],
+                                 [ 7, "ml_edivbr1", kTodo, kTodo, kTodo ],
+                                 [ 8, "ml_divbr1", kTodo, kTodo, kTodo ],
+                                 [ 8, "ml_edivbr1", kTodo, kTodo, kTodo ] ] ],
+                             [ 9, 12, "words\n", 13, 19 ],
+                             [ 13, 19, "", 19, 19 ] ]);
+      testTextAfterOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 7, "\n\ntwo", 7, 12 ],
+                             [ 8, 12, " words", 12, 18 ],
+                             [ 13, 18, "\n", 18, 19,
+                               [ [ 18, "ml_divbr1", kTodo, kTodo, kOk ],
+                                 [ 18, "ml_edivbr1", kTodo, kTodo, kOk ] ] ],
+                             [ 19, 19, "", 19, 19 ] ]);
 
       SimpleTest.finish();
     }
@@ -99,18 +239,46 @@
   <input id="i1" value="hello"/>
   <div id="d1">hello</div>
   <div id="e1" contenteditable="true">hello</div>
+  <textarea id="t1">hello</textarea>
 
   <input id="i2" value="hello "/>
   <pre><div id="d2">hello </div></pre>
   <div id="e2" contenteditable="true">hello </div>
+  <textarea id="t2">hello </textarea>
 
   <input id="i6" value="hello all"/>
   <div id="d6">hello all</div>
   <div id="e6" contenteditable="true">hello all</div>
+  <textarea id="t6">hello all</textarea>
 
   <input id="i7" value="hello my friend"/>
   <div id="d7">hello my friend</div>
   <div id="e7" contenteditable="true">hello my friend</div>
+  <textarea id="t7">hello my friend</textarea>
+
+  <input id="i8" value="Brave Sir  Robin   ran"/>
+  <pre>
+    <div id="d8">Brave Sir  Robin   ran</div>
+    <div id="e8" contenteditable="true">Brave Sir  Robin   ran</div>
+  </pre>
+  <textarea id="t8" cols="300">Brave Sir  Robin   ran</textarea>
+
+  <pre>
+<div id="ml_div1">oneword
+
+two words
+</div>
+<div id="ml_divbr1">oneword<br/><br/>two words<br/></div>
+<div id="ml_ediv1" contenteditable="true">oneword
+
+two words
+</div>
+<div id="ml_edivbr1" contenteditable="true">oneword<br/><br/>two words<br/></div>
+<textarea id="ml_t1" cols="300">oneword
+
+two words
+</textarea>
+  </pre>
 
 </body>
 </html>
