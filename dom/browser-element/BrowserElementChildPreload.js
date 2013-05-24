@@ -769,7 +769,7 @@ BrowserElementChild.prototype = {
     var visible = this._forcedVisible && this._ownerVisible;
     if (docShell.isActive !== visible) {
       docShell.isActive = visible;
-      sendAsyncMsg('visibility-change', {visible: visible});
+      sendAsyncMsg('visibilitychange', {visible: visible});
     }
   },
 
