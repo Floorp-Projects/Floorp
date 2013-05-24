@@ -42,6 +42,7 @@ public:
     , mZoom(1, 1)
     , mDevPixelsPerCSSPixel(1)
     , mMayHaveTouchListeners(false)
+    , mPresShellId(-1)
   {}
 
   // Default copy ctor and operator= are fine
@@ -58,7 +59,8 @@ public:
            mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
            mResolution == aOther.mResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
-           mMayHaveTouchListeners == aOther.mMayHaveTouchListeners;
+           mMayHaveTouchListeners == aOther.mMayHaveTouchListeners &&
+           mPresShellId == aOther.mPresShellId;
   }
   bool operator!=(const FrameMetrics& aOther) const
   {
@@ -67,7 +69,10 @@ public:
 
   bool IsDefault() const
   {
-    return (FrameMetrics() == *this);
+    FrameMetrics def;
+
+    def.mPresShellId = mPresShellId;
+    return (def == *this);
   }
 
   bool IsRootScrollable() const
@@ -241,6 +246,8 @@ public:
 
   // Whether or not this frame may have touch listeners.
   bool mMayHaveTouchListeners;
+
+  uint32_t mPresShellId;
 };
 
 }
