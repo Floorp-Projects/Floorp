@@ -1053,8 +1053,8 @@ let SessionStoreInternal = {
     this._lastSessionState = null;
     let openWindows = {};
     this._forEachBrowserWindow(function(aWindow) {
-      Array.forEach(aWindow.gBrowser.tabs, aTab => {
-        RestoringTabsData.remove(aTab.linkedBrowser);
+      Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
+        delete aTab.linkedBrowser.__SS_data;
         delete aTab.linkedBrowser.__SS_formDataSaved;
         delete aTab.linkedBrowser.__SS_hostSchemeData;
         if (aTab.linkedBrowser.__SS_restoreState)
@@ -1245,7 +1245,7 @@ let SessionStoreInternal = {
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
-    RestoringTabsData.remove(aTab.linkedBrowser);
+    delete browser.__SS_data;
     delete browser.__SS_formDataSaved;
     delete browser.__SS_hostSchemeData;
 
@@ -1322,7 +1322,7 @@ let SessionStoreInternal = {
       return;
     }
 
-    RestoringTabsData.remove(aBrowser);
+    delete aBrowser.__SS_data;
     delete aBrowser.__SS_formDataSaved;
     this.saveStateDelayed(aWindow);
 
@@ -1643,13 +1643,10 @@ let SessionStoreInternal = {
     let data = {};
     if (aTab.__SS_extdata) {
       data = aTab.__SS_extdata;
-    } else {
-      let tabData = RestoringTabsData.get(aTab.linkedBrowser);
-      if (tabData && "extData" in tabData) {
-        // If the tab hasn't been fully restored yet,
-        // get the data from the to-be-restored data.
-        data = tabData.extData;
-      }
+    }
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      // If the tab hasn't been fully restored, get the data from the to-be-restored data
+      data = aTab.linkedBrowser.__SS_data.extData;
     }
     return data[aKey] || "";
   },
@@ -1660,14 +1657,13 @@ let SessionStoreInternal = {
     let saveTo;
     if (aTab.__SS_extdata) {
       saveTo = aTab.__SS_extdata;
-    } else {
-      let tabData = RestoringTabsData.get(aTab.linkedBrowser);
-      if (tabData && "extData" in tabData) {
-        saveTo = tabData.extData;
-      } else {
-        aTab.__SS_extdata = {};
-        saveTo = aTab.__SS_extdata;
-      }
+    }
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      saveTo = aTab.linkedBrowser.__SS_data.extData;
+    }
+    else {
+      aTab.__SS_extdata = {};
+      saveTo = aTab.__SS_extdata;
     }
     saveTo[aKey] = aStringValue;
     this.saveStateDelayed(aTab.ownerDocument.defaultView);
@@ -1675,16 +1671,14 @@ let SessionStoreInternal = {
 
   deleteTabValue: function ssi_deleteTabValue(aTab, aKey) {
     // We want to make sure that if data is accessed early, we attempt to delete
-    // that data from to-be-restored data as well. Otherwise we'll throw in
-    // cases where data can be set or read.
+    // that data from __SS_data as well. Otherwise we'll throw in cases where
+    // data can be set or read.
     let deleteFrom;
     if (aTab.__SS_extdata) {
       deleteFrom = aTab.__SS_extdata;
-    } else {
-      let tabData = RestoringTabsData.get(aTab.linkedBrowser);
-      if (tabData && "extData" in tabData) {
-        deleteFrom = tabData.extData;
-      }
+    }
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      deleteFrom = aTab.linkedBrowser.__SS_data.extData;
     }
 
     if (deleteFrom && deleteFrom[aKey])
@@ -1896,9 +1890,9 @@ let SessionStoreInternal = {
     if (!browser || !browser.currentURI)
       // can happen when calling this function right after .addTab()
       return tabData;
-    else if (RestoringTabsData.has(browser)) {
+    else if (browser.__SS_data) {
       // use the data to be restored when the tab hasn't been completely loaded
-      tabData = RestoringTabsData.get(browser);
+      tabData = browser.__SS_data;
       if (aTab.pinned)
         tabData.pinned = true;
       else
@@ -2177,7 +2171,7 @@ let SessionStoreInternal = {
   _updateTextAndScrollDataForTab:
     function ssi_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
     // we shouldn't update data for incompletely initialized tabs
-    if (RestoringTabsData.has(aBrowser))
+    if (aBrowser.__SS_data)
       return;
 
     var tabIndex = (aTabData.index || aTabData.entries.length) - 1;
@@ -2985,7 +2979,7 @@ let SessionStoreInternal = {
 
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
-      RestoringTabsData.set(browser, tabData);
+      browser.__SS_data = tabData;
       browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
       browser.setAttribute("pending", "true");
       tab.setAttribute("pending", "true");
@@ -3159,7 +3153,7 @@ let SessionStoreInternal = {
   restoreTab: function ssi_restoreTab(aTab) {
     let window = aTab.ownerDocument.defaultView;
     let browser = aTab.linkedBrowser;
-    let tabData = RestoringTabsData.get(browser);
+    let tabData = browser.__SS_data;
 
     // There are cases within where we haven't actually started a load. In that
     // that case we'll reset state changes we made and return false to the caller
@@ -4575,31 +4569,6 @@ let TabRestoreQueue = {
     } else {
       throw new Error("restore queue: visible tab not found");
     }
-  }
-};
-
-// A map storing tabData belonging to xul:browsers of tabs. This will hold data
-// while a tab is restoring (i.e. loading). Because we can't query or use the
-// incomplete state of a loading tab we'll use data stored in the map if browser
-// state is collected while a tab is still restoring or if it's closed before
-// having restored fully.
-let RestoringTabsData = {
-  _data: new WeakMap(),
-
-  has: function (browser) {
-    return this._data.has(browser);
-  },
-
-  get: function (browser) {
-    return this._data.get(browser);
-  },
-
-  set: function (browser, data) {
-    this._data.set(browser, data);
-  },
-
-  remove: function (browser) {
-    this._data.delete(browser);
   }
 };
 
