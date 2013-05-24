@@ -39,6 +39,8 @@ public:
                                nsIAtom*        aAttribute,
                                int32_t         aModType);
 
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+
   virtual nsIFrame* GetContentInsertionFrame() {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
