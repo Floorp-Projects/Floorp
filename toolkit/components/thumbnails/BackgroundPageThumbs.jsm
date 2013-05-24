@@ -38,6 +38,17 @@ const BackgroundPageThumbs = {
    *                 seconds).
    */
   capture: function (url, options={}) {
+    if (isPrivateBrowsingActive()) {
+      // There's only one, global private-browsing state shared by all private
+      // windows and the thumbnail browser.  Just as if you log into a site in
+      // one private window you're logged in in all private windows, you're also
+      // logged in in the thumbnail browser.  A crude way to avoid capturing
+      // sites in this situation is to refuse to capture at all when any private
+      // windows are open.  See bug 870179.
+      if (options.onDone)
+        Services.tm.mainThread.dispatch(options.onDone.bind(options, url), 0);
+      return;
+    }
     let cap = new Capture(url, this._onCaptureOrTimeout.bind(this), options);
     this._captureQueue = this._captureQueue || [];
     this._captureQueue.push(cap);
@@ -296,4 +307,15 @@ function canHostBrowser(win) {
   let permResult = Services.perms.testPermissionFromPrincipal(principal,
                                                               "allowXULXBL");
   return permResult == Ci.nsIPermissionManager.ALLOW_ACTION;
+}
+
+/**
+ * Returns true if there are any private windows.
+ */
+function isPrivateBrowsingActive() {
+  let wins = Services.ww.getWindowEnumerator();
+  while (wins.hasMoreElements())
+    if (PrivateBrowsingUtils.isWindowPrivate(wins.getNext()))
+      return true;
+  return false;
 }
