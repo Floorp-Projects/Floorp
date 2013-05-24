@@ -2440,6 +2440,7 @@ class JSToNativeConversionInfo():
           ${val} replaced by an expression for the JS::Value in question
           ${valPtr} is a pointer to the JS::Value in question
           ${valHandle} is a handle to the JS::Value in question
+          ${valMutableHandle} is a mutable handle to the JS::Value in question
           ${holderName} replaced by the holder's name, if any
           ${declName} replaced by the declaration's name
           ${haveValue} replaced by an expression that evaluates to a boolean
@@ -2770,6 +2771,7 @@ for (uint32_t i = 0; i < length; ++i) {
                         "val" : "temp",
                         "valPtr": "temp.address()",
                         "valHandle": "temp",
+                        "valMutableHandle": "&temp",
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
                         # interfaces, which use an internal holder for the
@@ -3717,6 +3719,9 @@ class CGArgumentConverter(CGThing):
         self.replacementVariables["valHandle"] = (
             "JS::Handle<JS::Value>::fromMarkedLocation(%s)" %
             self.replacementVariables["valPtr"])
+        self.replacementVariables["valMutableHandle"] = (
+            "JS::MutableHandle<JS::Value>::fromMarkedLocation(%s)" %
+            self.replacementVariables["valPtr"])
         if argument.defaultValue:
             self.replacementVariables["haveValue"] = string.Template(
                 "${index} < ${argc}").substitute(replacer)
@@ -3787,6 +3792,8 @@ class CGArgumentConverter(CGThing):
                         "valPtr": "&" + val,
                         "valHandle" : ("JS::Handle<JS::Value>::fromMarkedLocation(&%s)" %
                                        val),
+                        "valMutableHandle" : ("JS::MutableHandle<JS::Value>::fromMarkedLocation(&%s)" %
+                                              val),
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
                         # interfaces, which use an internal holder for the
@@ -4831,6 +4838,8 @@ class CGMethodCall(CGThing):
                         "val" : distinguishingArg,
                         "valHandle" : ("JS::Handle<JS::Value>::fromMarkedLocation(&%s)" %
                                        distinguishingArg),
+                        "valMutableHandle" : ("JS::MutableHandle<JS::Value>::fromMarkedLocation(&%s)" %
+                                       distinguishingArg),
                         "obj" : "obj"
                         })
                 caseBody.append(CGIndenter(testCode, indent));
@@ -5750,6 +5759,7 @@ return true;"""
             {
                 "val": "value",
                 "valHandle": "value",
+                "valMutableHandle": "JS::MutableHandle<JS::Value>::fromMarkedLocation(pvalue)",
                 "valPtr": "pvalue",
                 "declName": "SetAs" + name + "()",
                 "holderName": "m" + name + "Holder",
@@ -6587,6 +6597,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                 "val": "desc->value",
                 "valPtr": "&desc->value",
                 "valHandle" : "JS::Handle<JS::Value>::fromMarkedLocation(&desc->value)",
+                "valMutableHandle" : "JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)",
                 "obj": "obj"
             }
             self.cgRoot.prepend(instantiateJSToNativeConversion(info, templateValues))
@@ -7781,6 +7792,7 @@ class CGDictionary(CGThing):
         replacements = { "val": "temp",
                          "valPtr": "temp.address()",
                          "valHandle": "temp",
+                         "valMutableHandle": "&temp",
                          "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
                          # it's scoped down to the conversion so we can just use
@@ -9438,6 +9450,7 @@ class CallbackMember(CGNativeMember):
             "val": "rval",
             "valPtr": "rval.address()",
             "valHandle": "rval",
+            "valMutableHandle": "&rval",
             "holderName" : "rvalHolder",
             "declName" : "rvalDecl",
             # We actually want to pass in a null scope object here, because
