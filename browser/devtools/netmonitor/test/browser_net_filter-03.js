@@ -97,13 +97,13 @@ function test() {
       is(NetMonitorView.detailsPaneHidden, false,
         "The details pane should still be visible after filtering.");
 
-      is(RequestsMenu.allItems.length, aOrder.length,
+      is(RequestsMenu.orderedItems.length, aOrder.length,
         "There should be a specific amount of items in the requests menu.");
       is(RequestsMenu.visibleItems.length, aVisible,
         "There should be a specific amount of visbile items in the requests menu.");
 
       for (let i = 0; i < aOrder.length; i++) {
-        is(RequestsMenu.getItemAtIndex(i), RequestsMenu.allItems[i],
+        is(RequestsMenu.getItemAtIndex(i), RequestsMenu.orderedItems[i],
           "The requests menu items aren't ordered correctly. Misplaced item " + i + ".");
       }
 
