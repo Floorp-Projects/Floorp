@@ -176,7 +176,8 @@ public:
     NS_ERROR("Invalid SetInt32Parameter index");
   }
   virtual void SetTimelineParameter(uint32_t aIndex,
-                                    const dom::AudioParamTimeline& aValue)
+                                    const dom::AudioParamTimeline& aValue,
+                                    TrackRate aSampleRate)
   {
     NS_ERROR("Invalid SetTimelineParameter index");
   }

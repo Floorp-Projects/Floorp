@@ -102,7 +102,9 @@ public:
       NS_ERROR("Bad BiquadFilterNode Int32Parameter");
     }
   }
-  void SetTimelineParameter(uint32_t aIndex, const AudioParamTimeline& aValue) MOZ_OVERRIDE
+  void SetTimelineParameter(uint32_t aIndex,
+                            const AudioParamTimeline& aValue,
+                            TrackRate aSampleRate) MOZ_OVERRIDE
   {
     MOZ_ASSERT(mSource && mDestination);
     switch (aIndex) {
