@@ -51,7 +51,8 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
                            uint32_t aNumberOfChannels,
                            uint32_t aLength,
                            float aSampleRate)
-  : mDestination(new AudioDestinationNode(this, aIsOffline,
+  : mSampleRate(aIsOffline ? aSampleRate : IdealAudioRate())
+  , mDestination(new AudioDestinationNode(this, aIsOffline,
                                           aNumberOfChannels,
                                           aLength, aSampleRate))
   , mIsOffline(aIsOffline)

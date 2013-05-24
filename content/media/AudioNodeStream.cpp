@@ -15,7 +15,9 @@ namespace mozilla {
 
 /**
  * An AudioNodeStream produces a single audio track with ID
- * AUDIO_NODE_STREAM_TRACK_ID. This track has rate IdealAudioRate().
+ * AUDIO_NODE_STREAM_TRACK_ID. This track has rate AudioContext::sIdealAudioRate
+ * for regular audio contexts, and the rate requested by the web content
+ * for offline audio contexts.
  * Each chunk in the track is a single block of WEBAUDIO_BLOCK_SIZE samples.
  */
 static const int AUDIO_NODE_STREAM_TRACK_ID = 1;
@@ -237,11 +239,11 @@ AudioNodeStream::EnsureTrack()
     nsAutoPtr<MediaSegment> segment(new AudioSegment());
     for (uint32_t j = 0; j < mListeners.Length(); ++j) {
       MediaStreamListener* l = mListeners[j];
-      l->NotifyQueuedTrackChanges(Graph(), AUDIO_NODE_STREAM_TRACK_ID, IdealAudioRate(), 0,
+      l->NotifyQueuedTrackChanges(Graph(), AUDIO_NODE_STREAM_TRACK_ID, mSampleRate, 0,
                                   MediaStreamListener::TRACK_EVENT_CREATED,
                                   *segment);
     }
-    track = &mBuffer.AddTrack(AUDIO_NODE_STREAM_TRACK_ID, IdealAudioRate(), 0, segment.forget());
+    track = &mBuffer.AddTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate, 0, segment.forget());
   }
   return track;
 }
@@ -437,7 +439,7 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
     AudioSegment tmpSegment;
     tmpSegment.AppendAndConsumeChunk(&copyChunk);
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_NODE_STREAM_TRACK_ID,
-                                IdealAudioRate(), segment->GetDuration(), 0,
+                                mSampleRate, segment->GetDuration(), 0,
                                 tmpSegment);
   }
 }
@@ -463,7 +465,7 @@ AudioNodeStream::FinishOutput()
     MediaStreamListener* l = mListeners[j];
     AudioSegment emptySegment;
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_NODE_STREAM_TRACK_ID,
-                                IdealAudioRate(),
+                                mSampleRate,
                                 track->GetSegment()->GetDuration(),
                                 MediaStreamListener::TRACK_EVENT_ENDED, emptySegment);
   }
