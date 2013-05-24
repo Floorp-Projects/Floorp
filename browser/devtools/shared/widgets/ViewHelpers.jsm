@@ -55,7 +55,7 @@ this.ViewHelpers = {
    *         called preventDefault.
    */
   dispatchEvent: function(aTarget, aType, aDetail) {
-    if (!aTarget) {
+    if (!(aTarget instanceof Ci.nsIDOMNode)) {
       return true; // Event cancelled.
     }
     let document = aTarget.ownerDocument || aTarget;
@@ -880,14 +880,14 @@ MenuContainer.prototype = {
   set selectedItem(aItem) {
     // A falsy item is allowed to invalidate the current selection.
     let targetElement = aItem ? aItem._target : null;
+    let prevElement = this._container.selectedItem;
 
     // Prevent selecting the same item again, so return early.
-    if (this._container.selectedItem == targetElement) {
+    if (targetElement == prevElement) {
       return;
     }
-
     this._container.selectedItem = targetElement;
-    ViewHelpers.dispatchEvent(targetElement, "select", aItem);
+    ViewHelpers.dispatchEvent(targetElement || prevElement, "select", aItem);
   },
 
   /**
