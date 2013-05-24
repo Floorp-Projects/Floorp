@@ -579,6 +579,16 @@ RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult)
     if ((nsIAccessibleTraversalRule::PREFILTER_NOT_FOCUSABLE & mPreFilter) &&
         !(state & states::FOCUSABLE))
       return NS_OK;
+
+    if (nsIAccessibleTraversalRule::PREFILTER_ARIA_HIDDEN & mPreFilter) {
+      nsIContent* content = aAccessible->GetContent();
+      if (nsAccUtils::HasDefinedARIAToken(content, nsGkAtoms::aria_hidden) &&
+          !content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_hidden,
+                                nsGkAtoms::_false, eCaseMatters)) {
+        *aResult |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+        return NS_OK;
+      }
+    }
   }
 
   if (mAcceptRolesLength > 0) {
