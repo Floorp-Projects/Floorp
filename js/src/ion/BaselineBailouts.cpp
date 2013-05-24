@@ -565,12 +565,14 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
     blFrame->setScopeChain(scopeChain);
-    if (argsObj)
-        blFrame->initArgsObjUnchecked(*argsObj);
+
     // Do not need to initialize scratchValue or returnValue fields in BaselineFrame.
 
-    // No flags are set.
     blFrame->setFlags(flags);
+
+    // initArgsObjUnchecked modifies the frame's flags, so call it after setFlags.
+    if (argsObj)
+        blFrame->initArgsObjUnchecked(*argsObj);
 
     // Ion doesn't compile code with try/catch, so the block object will always be
     // null.
