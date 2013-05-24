@@ -9,7 +9,7 @@
 #include "gfxImageSurface.h"
 #include "Effects.h"
 #include "ipc/AutoOpenSurface.h"
-#include "ShmemYCbCrImage.h"
+#include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
 
@@ -460,30 +460,29 @@ TextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TYCbCrImage);
 
-  ShmemYCbCrImage shmemImage(aImage.get_YCbCrImage().data(),
-                             aImage.get_YCbCrImage().offset());
+  YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  gfxIntSize gfxCbCrSize = shmemImage.GetCbCrSize();
+  gfxIntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
 
-  gfxIntSize size = shmemImage.GetYSize();
+  gfxIntSize size = yuvDeserializer.GetYSize();
 
   D3D11_SUBRESOURCE_DATA initData;
-  initData.pSysMem = shmemImage.GetYData();
-  initData.SysMemPitch = shmemImage.GetYStride();
+  initData.pSysMem = yuvDeserializer.GetYData();
+  initData.SysMemPitch = yuvDeserializer.GetYStride();
 
   CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_R8_UNORM, size.width, size.height,
                               1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_IMMUTABLE);
 
   mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[0]));
 
-  initData.pSysMem = shmemImage.GetCbData();
-  initData.SysMemPitch = shmemImage.GetCbCrStride();
-  desc.Width = shmemImage.GetCbCrSize().width;
-  desc.Height = shmemImage.GetCbCrSize().height;
+  initData.pSysMem = yuvDeserializer.GetCbData();
+  initData.SysMemPitch = yuvDeserializer.GetCbCrStride();
+  desc.Width = yuvDeserializer.GetCbCrSize().width;
+  desc.Height = yuvDeserializer.GetCbCrSize().height;
 
   mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[1]));
 
-  initData.pSysMem = shmemImage.GetCrData();
+  initData.pSysMem = yuvDeserializer.GetCrData();
   mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[2]));
 
   mSize = IntSize(size.width, size.height);

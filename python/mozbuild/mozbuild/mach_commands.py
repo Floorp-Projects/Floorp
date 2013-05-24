@@ -4,18 +4,18 @@
 
 from __future__ import print_function, unicode_literals
 
-import getpass
 import logging
 import operator
 import os
 import sys
-import time
 
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
 )
+
+from mach.mixin.logging import LoggingMixin
 
 from mozbuild.base import MachCommandBase
 
@@ -43,6 +43,209 @@ Preferences.
 '''.strip()
 
 
+class TerminalLoggingHandler(logging.Handler):
+    """Custom logging handler that works with terminal window dressing.
+
+    This class should probably live elsewhere, like the mach core. Consider
+    this a proving ground for its usefulness.
+    """
+    def __init__(self):
+        logging.Handler.__init__(self)
+
+        self.fh = sys.stdout
+        self.footer = None
+
+    def flush(self):
+        self.acquire()
+
+        try:
+            self.fh.flush()
+        finally:
+            self.release()
+
+    def emit(self, record):
+        msg = self.format(record)
+
+        if self.footer:
+            self.footer.clear()
+
+        self.fh.write(msg)
+        self.fh.write('\n')
+
+        if self.footer:
+            self.footer.draw()
+
+        # If we don't flush, the footer may not get drawn.
+        self.flush()
+
+
+class BuildProgressFooter(object):
+    """Handles display of a build progress indicator in a terminal.
+
+    When mach builds inside a blessings-supported terminal, it will render
+    progress information collected from a BuildMonitor. This class converts the
+    state of BuildMonitor into terminal output.
+    """
+
+    def __init__(self, terminal, monitor):
+        # terminal is a blessings.Terminal.
+        self._t = terminal
+        self._fh = sys.stdout
+        self._monitor = monitor
+
+    def _clear_lines(self, n):
+        for i in range(n):
+            self._fh.write(self._t.move_x(0))
+            self._fh.write(self._t.clear_eol())
+            self._fh.write(self._t.move_up())
+
+        self._fh.write(self._t.move_down())
+        self._fh.write(self._t.move_x(0))
+
+    def clear(self):
+        """Removes the footer from the current terminal."""
+        self._clear_lines(1)
+
+    def draw(self):
+        """Draws this footer in the terminal."""
+        if not self._monitor.tiers:
+            return
+
+        # The drawn terminal looks something like:
+        # TIER: base nspr nss js platform app SUBTIER: static export libs tools DIRECTORIES: 06/09 (memory)
+
+        # This is a list of 2-tuples of (encoding function, input). None means
+        # no encoding. For a full reason on why we do things this way, read the
+        # big comment below.
+        parts = [('bold', 'TIER'), ':', ' ']
+
+        current_encountered = False
+        for tier in self._monitor.tiers:
+            if tier == self._monitor.current_tier:
+                parts.extend([('yellow', tier), ' '])
+                current_encountered = True
+            elif not current_encountered:
+                parts.extend([('green', tier), ' '])
+            else:
+                parts.extend([tier, ' '])
+
+        current_encountered = False
+        parts.extend([('bold', 'SUBTIER'), ':', ' '])
+        for subtier in self._monitor.subtiers:
+            if subtier == self._monitor.current_subtier:
+                parts.extend([('yellow', subtier), ' '])
+                current_encountered = True
+            elif not current_encountered:
+                parts.extend([('green', subtier), ' '])
+            else:
+                parts.extend([subtier, ' '])
+
+        if self._monitor.current_subtier_dirs and self._monitor.current_tier_dir:
+            parts.extend([
+                ('bold', 'DIRECTORIES'), ': ',
+                '%02d' % self._monitor.current_tier_dir_index,
+                '/',
+                '%02d' % len(self._monitor.current_subtier_dirs),
+                ' ',
+                '(', ('magenta', self._monitor.current_tier_dir), ')',
+            ])
+
+        # We don't want to write more characters than the current width of the
+        # terminal otherwise wrapping may result in weird behavior. We can't
+        # simply truncate the line at terminal width characters because a)
+        # non-viewable escape characters count towards the limit and b) we
+        # don't want to truncate in the middle of an escape sequence because
+        # subsequent output would inherit the escape sequence.
+        max_width = self._t.width
+        written = 0
+        write_pieces = []
+        for part in parts:
+            if isinstance(part, tuple):
+                func, arg = part
+
+                if written + len(arg) > max_width:
+                    write_pieces.append(arg[0:max_width - written])
+                    written += len(arg)
+                    break
+
+                encoded = getattr(self._t, func)(arg)
+
+                write_pieces.append(encoded)
+                written += len(arg)
+            else:
+                if written + len(part) > max_width:
+                    write_pieces.append(arg[0:max_width - written])
+                    written += len(part)
+                    break
+
+                write_pieces.append(part)
+                written += len(part)
+
+        self._fh.write(''.join(write_pieces))
+        self._fh.flush()
+
+
+class BuildOutputManager(LoggingMixin):
+    """Handles writing build output to a terminal, to logs, etc."""
+
+    def __init__(self, log_manager, monitor):
+        self.populate_logger()
+
+        self.monitor = monitor
+        self.footer = None
+
+        terminal = log_manager.terminal
+
+        # TODO convert terminal footer to config file setting.
+        if not terminal or os.environ.get('MACH_NO_TERMINAL_FOOTER', None):
+            return
+
+        self.t = terminal
+        self.footer = BuildProgressFooter(terminal, monitor)
+
+        handler = TerminalLoggingHandler()
+        handler.setFormatter(log_manager.terminal_formatter)
+        handler.footer = self.footer
+
+        old = log_manager.replace_terminal_handler(handler)
+        handler.level = old.level
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.footer:
+            self.footer.clear()
+
+    def write_line(self, line):
+        if self.footer:
+            self.footer.clear()
+
+        print(line)
+
+        if self.footer:
+            self.footer.draw()
+
+    def refresh(self):
+        if not self.footer:
+            return
+
+        self.footer.clear()
+        self.footer.draw()
+
+    def on_line(self, line):
+        warning, state_changed, relevant = self.monitor.on_line(line)
+
+        if warning:
+            self.log(logging.INFO, 'compiler_warning', warning,
+                'Warning: {flag} in {filename}: {message}')
+
+        if relevant:
+            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+        elif state_changed:
+            self.refresh()
+
+
 @CommandProvider
 class Build(MachCommandBase):
     """Interface to build the tree."""
@@ -57,101 +260,76 @@ class Build(MachCommandBase):
     @CommandArgument('-v', '--verbose', action='store_true',
         help='Verbose output for what commands the build is running.')
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0, verbose=False):
-        # This code is only meant to be temporary until the more robust tree
-        # building code in bug 780329 lands.
-        from mozbuild.compilation.warnings import WarningsCollector
-        from mozbuild.compilation.warnings import WarningsDatabase
+        from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
 
         warnings_path = self._get_state_filename('warnings.json')
-        warnings_database = WarningsDatabase()
+        monitor = BuildMonitor(self.topobjdir, warnings_path)
 
-        if os.path.exists(warnings_path):
-            try:
-                warnings_database.load_from_file(warnings_path)
-            except ValueError:
-                os.remove(warnings_path)
+        with BuildOutputManager(self.log_manager, monitor) as output:
+            monitor.start()
 
-        warnings_collector = WarningsCollector(database=warnings_database,
-            objdir=self.topobjdir)
-
-        def on_line(line):
-            try:
-                warning = warnings_collector.process_line(line)
-                if warning:
-                    self.log(logging.INFO, 'compiler_warning', warning,
-                        'Warning: {flag} in {filename}: {message}')
-            except:
-                # This will get logged in the more robust implementation.
-                pass
-
-            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
-
-        finder_start_cpu = self._get_finder_cpu_usage()
-        time_start = time.time()
-
-        if what:
-            top_make = os.path.join(self.topobjdir, 'Makefile')
-            if not os.path.exists(top_make):
-                print('Your tree has not been configured yet. Please run '
-                    '|mach build| with no arguments.')
-                return 1
-
-            # Collect target pairs.
-            target_pairs = []
-            for target in what:
-                path_arg = self._wrap_path_argument(target)
-
-                make_dir, make_target = resolve_target_to_make(self.topobjdir,
-                    path_arg.relpath())
-
-                if make_dir is None and make_target is None:
+            if what:
+                top_make = os.path.join(self.topobjdir, 'Makefile')
+                if not os.path.exists(top_make):
+                    print('Your tree has not been configured yet. Please run '
+                        '|mach build| with no arguments.')
                     return 1
 
-                target_pairs.append((make_dir, make_target))
+                # Collect target pairs.
+                target_pairs = []
+                for target in what:
+                    path_arg = self._wrap_path_argument(target)
 
-            # Possibly add extra make depencies using dumbmake.
-            if not disable_extra_make_dependencies:
-                from dumbmake.dumbmake import (dependency_map,
-                                               add_extra_dependencies)
-                depfile = os.path.join(self.topsrcdir, 'build',
-                                       'dumbmake-dependencies')
-                with open(depfile) as f:
-                    dm = dependency_map(f.readlines())
-                new_pairs = list(add_extra_dependencies(target_pairs, dm))
-                self.log(logging.DEBUG, 'dumbmake',
-                         {'target_pairs': target_pairs,
-                          'new_pairs': new_pairs},
-                         'Added extra dependencies: will build {new_pairs} ' +
-                         'instead of {target_pairs}.')
-                target_pairs = new_pairs
+                    make_dir, make_target = resolve_target_to_make(self.topobjdir,
+                        path_arg.relpath())
 
-            # Build target pairs.
-            for make_dir, make_target in target_pairs:
-                status = self._run_make(directory=make_dir, target=make_target,
-                    line_handler=on_line, log=False, print_directory=False,
-                    ensure_exit_code=False, num_jobs=jobs, silent=not verbose)
+                    if make_dir is None and make_target is None:
+                        return 1
 
-                if status != 0:
-                    break
-        else:
-            status = self._run_make(srcdir=True, filename='client.mk',
-                line_handler=on_line, log=False, print_directory=False,
-                allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
-                silent=not verbose)
+                    target_pairs.append((make_dir, make_target))
 
-            self.log(logging.WARNING, 'warning_summary',
-                {'count': len(warnings_collector.database)},
-                '{count} compiler warnings present.')
+                # Possibly add extra make depencies using dumbmake.
+                if not disable_extra_make_dependencies:
+                    from dumbmake.dumbmake import (dependency_map,
+                                                   add_extra_dependencies)
+                    depfile = os.path.join(self.topsrcdir, 'build',
+                                           'dumbmake-dependencies')
+                    with open(depfile) as f:
+                        dm = dependency_map(f.readlines())
+                    new_pairs = list(add_extra_dependencies(target_pairs, dm))
+                    self.log(logging.DEBUG, 'dumbmake',
+                             {'target_pairs': target_pairs,
+                              'new_pairs': new_pairs},
+                             'Added extra dependencies: will build {new_pairs} ' +
+                             'instead of {target_pairs}.')
+                    target_pairs = new_pairs
 
-        warnings_database.prune()
-        warnings_database.save_to_file(warnings_path)
+                # Build target pairs.
+                for make_dir, make_target in target_pairs:
+                    status = self._run_make(directory=make_dir, target=make_target,
+                        line_handler=output.on_line, log=False, print_directory=False,
+                        ensure_exit_code=False, num_jobs=jobs, silent=not verbose)
 
-        time_end = time.time()
-        time_elapsed = time_end - time_start
-        self._handle_finder_cpu_usage(time_elapsed, finder_start_cpu)
+                    if status != 0:
+                        break
+            else:
+                status = self._run_make(srcdir=True, filename='client.mk',
+                    line_handler=output.on_line, log=False, print_directory=False,
+                    allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
+                    silent=not verbose)
 
-        long_build = time_elapsed > 600
+                self.log(logging.WARNING, 'warning_summary',
+                    {'count': len(monitor.warnings_database)},
+                    '{count} compiler warnings present.')
+
+            monitor.finish()
+
+        high_finder, finder_percent = monitor.have_high_finder_usage()
+        if high_finder:
+            print(FINDER_SLOW_MESSAGE % finder_percent)
+
+        long_build = monitor.elapsed > 600
 
         if status:
             return status
@@ -175,61 +353,6 @@ class Build(MachCommandBase):
                     'https://developer.mozilla.org/docs/Developer_Guide/So_You_Just_Built_Firefox')
 
         return status
-
-    def _get_finder_cpu_usage(self):
-        """Obtain the CPU usage of the Finder app on OS X.
-
-        This is used to detect high CPU usage.
-        """
-        if not sys.platform.startswith('darwin'):
-            return None
-
-        try:
-            import psutil
-        except ImportError:
-            return None
-
-        for proc in psutil.process_iter():
-            if proc.name != 'Finder':
-                continue
-
-            if proc.username != getpass.getuser():
-                continue
-
-            # Try to isolate system finder as opposed to other "Finder"
-            # processes.
-            if not proc.exe.endswith('CoreServices/Finder.app/Contents/MacOS/Finder'):
-                continue
-
-            return proc.get_cpu_times()
-
-        return None
-
-    def _handle_finder_cpu_usage(self, elapsed, start):
-        if not start:
-            return
-
-        # We only measure if the measured range is sufficiently long.
-        if elapsed < 15:
-            return
-
-        end = self._get_finder_cpu_usage()
-        if not end:
-            return
-
-        start_total = start.user + start.system
-        end_total = end.user + end.system
-
-        cpu_seconds = end_total - start_total
-
-        # If Finder used more than 25% of 1 core during the build, report an
-        # error.
-        finder_percent = cpu_seconds / elapsed * 100
-        if finder_percent < 25:
-            return
-
-        print(FINDER_SLOW_MESSAGE % finder_percent)
-
 
     @Command('configure', category='build',
         description='Configure the tree (run configure and config.status).')

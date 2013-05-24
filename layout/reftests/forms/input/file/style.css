@@ -6,7 +6,7 @@ vbox, hbox {
 
 .file {
   /* Copy of input properties that apply of forms.css below this */
-  color: -moz-FieldText;
+  color: inherit;
   font: -moz-field;
   text-rendering: optimizeLegibility;
   line-height: normal !important;

@@ -352,12 +352,9 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHa
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
-            argsobj.setElement(arg, vp);
-            if (arg < script->function()->nargs) {
-                if (!script->ensureHasTypes(cx))
-                    return false;
+            argsobj.setElement(cx, arg, vp);
+            if (arg < script->function()->nargs)
                 types::TypeScript::SetArgument(cx, script, arg, vp);
-            }
             return true;
         }
     } else {
@@ -478,7 +475,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj->initialLength()) {
-            argsobj->setElement(arg, vp);
+            argsobj->setElement(cx, arg, vp);
             return true;
         }
     } else {

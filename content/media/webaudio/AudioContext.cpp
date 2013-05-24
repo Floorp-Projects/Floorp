@@ -208,7 +208,7 @@ AudioContext::CreateScriptProcessor(uint32_t aBufferSize,
                                     uint32_t aNumberOfOutputChannels,
                                     ErrorResult& aRv)
 {
-  if (aNumberOfInputChannels == 0 || aNumberOfOutputChannels == 0 ||
+  if ((aNumberOfInputChannels == 0 && aNumberOfOutputChannels == 0) ||
       aNumberOfInputChannels > MAX_SCRIPT_PROCESSOR_CHANNELS ||
       aNumberOfOutputChannels > MAX_SCRIPT_PROCESSOR_CHANNELS ||
       !IsValidBufferSize(aBufferSize)) {

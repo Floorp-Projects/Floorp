@@ -60,6 +60,10 @@ public:
     return SetEventHandler(type, aHandler, rv);
   }
 
+  // Note, for an event 'foo' aType will be 'onfoo'.
+  virtual void EventListenerAdded(nsIAtom* aType) {}
+  virtual void EventListenerRemoved(nsIAtom* aType) {}
+
 protected:
   EventHandlerNonNull* GetEventHandler(nsIAtom* aType);
   void SetEventHandler(nsIAtom* aType, EventHandlerNonNull* aHandler,

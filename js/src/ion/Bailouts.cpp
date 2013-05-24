@@ -295,6 +295,10 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     while (true) {
         IonSpew(IonSpew_Bailouts, " restoring frame");
         fp->initFromBailout(cx, iter);
+        // If the IonScript wasn't compiled with SPS enabled, make sure that the StackFrame
+        // frame isn't marked as having a pushed SPS frame.
+        if (!it.ionScript()->hasSPSInstrumentation())
+            fp->unsetPushedSPSFrame();
 
         if (!iter.moreFrames())
              break;

@@ -298,7 +298,11 @@ nsWebShellWindow::RequestWindowClose(nsIWidget* aWidget)
 
   nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
-  if (eventTarget) {
+  if (!presShell) {
+    bool dying;
+    MOZ_ASSERT(NS_SUCCEEDED(mDocShell->IsBeingDestroyed(&dying)) && dying,
+               "No presShell, but window is not being destroyed");
+  } else if (eventTarget) {
     nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
     nsEventStatus status = nsEventStatus_eIgnore;

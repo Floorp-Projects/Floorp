@@ -3252,6 +3252,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
                 case NS_FORM_INPUT_RANGE:
                 case NS_FORM_INPUT_DATE:
                 case NS_FORM_INPUT_TIME:
+                case NS_FORM_INPUT_COLOR:
                     nodeAsInput->GetValue(valueStr);
                     // Avoid superfluous value="" serialization
                     if (valueStr.IsEmpty())

@@ -2576,7 +2576,7 @@ ion::AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *na
             return;
         }
 
-        types::HeapTypeSet *property = object->getProperty(cx, JSID_VOID, false);
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
         if (property->unknownObject()) {
             observed->addType(cx, types::Type::AnyObjectType());
             return;

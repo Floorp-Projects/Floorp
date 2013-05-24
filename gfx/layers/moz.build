@@ -40,7 +40,6 @@ EXPORTS += [
     'ReadbackLayer.h',
     'ShadowLayersManager.h',
     'SharedTextureImage.h',
-    'ShmemYCbCrImage.h',
     'TexturePoolOGL.h',
 ]
 
@@ -105,7 +104,6 @@ EXPORTS.mozilla.layers += [
     'ShadowLayersManager.h',
     'SharedPlanarYCbCrImage.h',
     'SharedRGBImage.h',
-    'ShmemYCbCrImage.h',
     'TaskThrottler.h',
     'TextureClient.h',
     'TextureClientOGL.h',
@@ -113,6 +111,7 @@ EXPORTS.mozilla.layers += [
     'TextureHostOGL.h',
     'ThebesLayerComposite.h',
     'TiledContentClient.h',
+    'YCbCrImageDataSerializer.h',
 ]
 
 if CONFIG['MOZ_X11']:

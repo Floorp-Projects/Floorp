@@ -101,7 +101,7 @@ MutationBitForEventType(uint32_t aEventType)
 
 uint32_t nsEventListenerManager::sCreatedCount = 0;
 
-nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
+nsEventListenerManager::nsEventListenerManager(EventTarget* aTarget) :
   mMayHavePaintEventListener(false),
   mMayHaveMutationListeners(false),
   mMayHaveCapturingListeners(false),
@@ -352,6 +352,9 @@ nsEventListenerManager::AddEventListenerInternal(
     }
 #endif
   }
+  if (aTypeAtom && mTarget) {
+    mTarget->EventListenerAdded(aTypeAtom);
+  }
 }
 
 bool
@@ -464,6 +467,9 @@ nsEventListenerManager::RemoveEventListenerInternal(
         --count;
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
         mNoListenerForEventAtom = nullptr;
+        if (mTarget && aUserType) {
+          mTarget->EventListenerRemoved(aUserType);
+        }
 
         if (!deviceType
 #ifdef MOZ_B2G
@@ -748,6 +754,9 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName)
     mListeners.RemoveElementAt(uint32_t(ls - &mListeners.ElementAt(0)));
     mNoListenerForEvent = NS_EVENT_TYPE_NULL;
     mNoListenerForEventAtom = nullptr;
+    if (mTarget) {
+      mTarget->EventListenerRemoved(aName);
+    }
   }
 }
 

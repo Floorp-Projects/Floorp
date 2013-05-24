@@ -159,8 +159,12 @@ public:
   virtual uint16_t NumberOfOutputs() const { return 1; }
 
   uint32_t ChannelCount() const { return mChannelCount; }
-  void SetChannelCount(uint32_t aChannelCount)
+  void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv)
   {
+    if (aChannelCount == 0) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
     mChannelCount = aChannelCount;
     SendChannelMixingParametersToStream();
   }

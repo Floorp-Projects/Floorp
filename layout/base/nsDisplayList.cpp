@@ -1144,7 +1144,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, *this,
                            containerParameters, nullptr);
 
-  if (widgetTransaction && !(aFlags & PAINT_NO_CLEAR_INVALIDATIONS)) {
+  if (widgetTransaction) {
     aForFrame->ClearInvalidationStateBits();
   }
 
@@ -1567,7 +1567,8 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
     mFrame->IsThemed(disp, &mThemeTransparency);
     // Perform necessary RegisterThemeGeometry
     if (disp->mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
-        disp->mAppearance == NS_THEME_TOOLBAR) {
+        disp->mAppearance == NS_THEME_TOOLBAR ||
+        disp->mAppearance == NS_THEME_WINDOW_TITLEBAR) {
       RegisterThemeGeometry(aBuilder, aFrame);
     } else if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
                disp->mAppearance == NS_THEME_WIN_GLASS) {
