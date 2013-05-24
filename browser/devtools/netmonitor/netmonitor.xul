@@ -17,7 +17,9 @@
   <script type="text/javascript" src="netmonitor-controller.js"/>
   <script type="text/javascript" src="netmonitor-view.js"/>
 
-  <box id="body" flex="1" class="devtools-responsive-container">
+  <box id="body"
+       class="devtools-responsive-container"
+       flex="1">
     <vbox id="network-table" flex="1">
       <toolbar id="requests-menu-toolbar"
                class="devtools-toolbar"
@@ -28,14 +30,14 @@
                 align="center">
             <button id="requests-menu-status-button"
                     class="requests-menu-header-button requests-menu-status"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('status')">
-              &netmonitorUI.toolbar.status;
+                    onclick="NetMonitorView.RequestsMenu.sortBy('status')"
+                    label="&netmonitorUI.toolbar.status;">
             </button>
             <button id="requests-menu-method-button"
                     class="requests-menu-header-button requests-menu-method"
                     onclick="NetMonitorView.RequestsMenu.sortBy('method')"
+                    label="&netmonitorUI.toolbar.method;"
                     flex="1">
-              &netmonitorUI.toolbar.method;
             </button>
           </hbox>
           <hbox id="requests-menu-file-header-box"
@@ -44,8 +46,8 @@
             <button id="requests-menu-file-button"
                     class="requests-menu-header-button requests-menu-file"
                     onclick="NetMonitorView.RequestsMenu.sortBy('file')"
+                    label="&netmonitorUI.toolbar.file;"
                     flex="1">
-              &netmonitorUI.toolbar.file;
             </button>
           </hbox>
           <hbox id="requests-menu-domain-header-box"
@@ -54,8 +56,8 @@
             <button id="requests-menu-domain-button"
                     class="requests-menu-header-button requests-menu-domain"
                     onclick="NetMonitorView.RequestsMenu.sortBy('domain')"
+                    label="&netmonitorUI.toolbar.domain;"
                     flex="1">
-              &netmonitorUI.toolbar.domain;
             </button>
           </hbox>
           <hbox id="requests-menu-type-header-box"
@@ -64,8 +66,8 @@
             <button id="requests-menu-type-button"
                     class="requests-menu-header-button requests-menu-type"
                     onclick="NetMonitorView.RequestsMenu.sortBy('type')"
+                    label="&netmonitorUI.toolbar.type;"
                     flex="1">
-              &netmonitorUI.toolbar.type;
             </button>
           </hbox>
           <hbox id="requests-menu-size-header-box"
@@ -74,8 +76,8 @@
             <button id="requests-menu-size-button"
                     class="requests-menu-header-button requests-menu-size"
                     onclick="NetMonitorView.RequestsMenu.sortBy('size')"
+                    label="&netmonitorUI.toolbar.size;"
                     flex="1">
-              &netmonitorUI.toolbar.size;
             </button>
           </hbox>
           <hbox id="requests-menu-waterfall-header-box"
@@ -93,7 +95,7 @@
                        disabled="true"
                        tabindex="0"/>
       </toolbar>
-      <label class="plain requests-menu-empty-notice"
+      <label id="requests-menu-empty-notice"
              value="&netmonitorUI.emptyNotice;"/>
       <vbox id="requests-menu-contents" flex="1">
         <hbox id="requests-menu-item-template" hidden="true">
@@ -124,11 +126,66 @@
           </hbox>
         </hbox>
       </vbox>
+      <hbox id="requests-menu-footer">
+        <spacer id="requests-menu-spacer-start"
+                class="requests-menu-footer-spacer"
+                flex="100"/>
+        <button id="requests-menu-filter-all-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn(null)"
+                label="&netmonitorUI.footer.filterAll;">
+        </button>
+        <button id="requests-menu-filter-html-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('html')"
+                label="&netmonitorUI.footer.filterHTML;">
+        </button>
+        <button id="requests-menu-filter-css-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('css')"
+                label="&netmonitorUI.footer.filterCSS;">
+        </button>
+        <button id="requests-menu-filter-js-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('js')"
+                label="&netmonitorUI.footer.filterJS;">
+        </button>
+        <button id="requests-menu-filter-xhr-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('xhr')"
+                label="&netmonitorUI.footer.filterXHR;">
+        </button>
+        <button id="requests-menu-filter-fonts-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('fonts')"
+                label="&netmonitorUI.footer.filterFonts;">
+        </button>
+        <button id="requests-menu-filter-images-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('images')"
+                label="&netmonitorUI.footer.filterImages;">
+        </button>
+        <button id="requests-menu-filter-media-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('media')"
+                label="&netmonitorUI.footer.filterMedia;">
+        </button>
+        <button id="requests-menu-filter-flash-button"
+                class="requests-menu-footer-button"
+                onclick="NetMonitorView.RequestsMenu.filterOn('flash')"
+                label="&netmonitorUI.footer.filterFlash;">
+        </button>
+        <spacer id="requests-menu-spacer-end"
+                class="requests-menu-footer-spacer"
+                flex="100"/>
+      </hbox>
     </vbox>
 
     <splitter class="devtools-side-splitter"/>
 
-    <tabbox id="details-pane" class="devtools-sidebar-tabs" hidden="true">
+    <tabbox id="details-pane"
+            class="devtools-sidebar-tabs"
+            hidden="true">
       <tabs>
         <tab label="&netmonitorUI.tab.headers;"/>
         <tab label="&netmonitorUI.tab.cookies;"/>
@@ -166,7 +223,7 @@
               <label class="plain tabpanel-summary-label"
                      value="&netmonitorUI.summary.status;"/>
               <box id="headers-summary-status-circle"
-                    class="requests-menu-status"/>
+                   class="requests-menu-status"/>
               <label id="headers-summary-status-value"
                      class="plain tabpanel-summary-value"
                      crop="end"
