@@ -374,11 +374,6 @@ public:
         void Add(PtrInfo* aEdge) {
             if (mCurrent == mBlockEnd) {
                 Block *b = new Block();
-                if (!b) {
-                    // This means we just won't collect (some) cycles.
-                    NS_NOTREACHED("out of memory, ignoring edges");
-                    return;
-                }
                 *mNextBlockPtr = b;
                 mCurrent = b->Start();
                 mBlockEnd = b->End();
@@ -805,9 +800,6 @@ public:
     {
         if (!mFreeList) {
             Block *b = new Block;
-            if (!b) {
-                return nullptr;
-            }
             StartBlock(b);
 
             // Add the new block as the second block in the list.
@@ -824,9 +816,6 @@ public:
     nsPurpleBufferEntry* Put(void *p, nsCycleCollectionParticipant *cp)
     {
         nsPurpleBufferEntry *e = NewEntry();
-        if (!e) {
-            return nullptr;
-        }
 
         ++mCount;
 
