@@ -13,7 +13,9 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window id='win'/>";
 const PREF_BRANCH = "browser.newtab.";
 const TOPIC_DELAYED_STARTUP = "browser-delayed-startup-finished";
 const PRELOADER_INIT_DELAY_MS = 5000;
@@ -149,13 +151,13 @@ let HiddenBrowser = {
   },
 
   create: function HiddenBrowser_create() {
-    HostFrame.getFrame(function (aFrame) {
+    HostFrame.get(aFrame => {
       let doc = aFrame.document;
       this._browser = doc.createElementNS(XUL_NS, "browser");
       this._browser.setAttribute("type", "content");
       this._browser.setAttribute("src", Preferences.url);
-      doc.documentElement.appendChild(this._browser);
-    }.bind(this));
+      doc.getElementById("win").appendChild(this._browser);
+    });
   },
 
   update: function HiddenBrowser_update(aURL) {
@@ -171,100 +173,49 @@ let HiddenBrowser = {
 };
 
 let HostFrame = {
-  _listener: null,
-  _privilegedFrame: null,
+  _frame: null,
+  _loading: false,
 
-  _privilegedContentTypes: {
-    "application/vnd.mozilla.xul+xml": true,
-    "application/xhtml+xml": true
+  get hiddenDOMDocument() {
+    return Services.appShell.hiddenDOMWindow.document;
   },
 
-  get _frame() {
-    delete this._frame;
-    return this._frame = Services.appShell.hiddenDOMWindow;
+  get isReady() {
+    return this.hiddenDOMDocument.readyState === "complete";
   },
 
-  get _isReady() {
-    let readyState = this._frame.document.readyState;
-    return (readyState == "complete" || readyState == "interactive");
-  },
-
-  get _isPrivileged() {
-    return (this._frame.location.protocol == "chrome:" &&
-            this._frame.document.contentType in this._privilegedContentTypes);
-  },
-
-  getFrame: function HostFrame_getFrame(aCallback) {
-    if (this._isReady && !this._isPrivileged) {
-      this._createPrivilegedFrame();
-    }
-
-    if (this._isReady) {
-      aCallback(this._frame);
+  get: function (callback) {
+    if (this._frame) {
+      callback(this._frame);
+    } else if (this.isReady && !this._loading) {
+      this._create(callback);
+      this._loading = true;
     } else {
-      this._waitUntilLoaded(aCallback);
+      Services.tm.currentThread.dispatch(() => HostFrame.get(callback),
+                                         Ci.nsIThread.DISPATCH_NORMAL);
     }
   },
 
-  destroy: function HostFrame_destroy() {
-    delete this._frame;
-    this._listener = null;
+  destroy: function () {
+    this._frame = null;
   },
 
-  _createPrivilegedFrame: function HostFrame_createPrivilegedFrame() {
-    let doc = this._frame.document;
-    let iframe = doc.createElement("iframe");
-    iframe.setAttribute("src", "chrome://browser/content/newtab/preload.xhtml");
+  _create: function (callback) {
+    let doc = this.hiddenDOMDocument;
+    let iframe = doc.createElementNS(HTML_NS, "iframe");
     doc.documentElement.appendChild(iframe);
-    this._frame = iframe.contentWindow;
-  },
 
-  _waitUntilLoaded: function HostFrame_waitUntilLoaded(aCallback) {
-    this._listener = new HiddenWindowLoadListener(this._frame, function () {
-      HostFrame.getFrame(aCallback);
-    });
+    let frame = iframe.contentWindow;
+    let docShell = frame.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDocShell);
+
+    docShell.createAboutBlankContentViewer(null);
+    frame.location = XUL_PAGE;
+
+    let eventHandler = docShell.chromeEventHandler;
+    eventHandler.addEventListener("DOMContentLoaded", function onLoad() {
+      eventHandler.removeEventListener("DOMContentLoaded", onLoad, false);
+      callback(HostFrame._frame = frame);
+    }, false);
   }
-};
-
-
-function HiddenWindowLoadListener(aWindow, aCallback) {
-  this._window = aWindow;
-  this._callback = aCallback;
-
-  let docShell = Services.appShell.hiddenWindow.docShell;
-  this._webProgress = docShell.QueryInterface(Ci.nsIWebProgress);
-  this._webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
-}
-
-HiddenWindowLoadListener.prototype = {
-  _window: null,
-  _callback: null,
-  _webProgress: null,
-
-  _destroy: function HiddenWindowLoadListener_destroy() {
-    this._webProgress.removeProgressListener(this);
-    this._window = null;
-    this._callback = null;
-    this._webProgress = null;
-  },
-
-  onStateChange:
-  function HiddenWindowLoadListener_onStateChange(aWebProgress, aRequest,
-                                                  aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
-        this._window == aWebProgress.DOMWindow) {
-      this._callback();
-      this._destroy();
-    }
-  },
-
-  onStatusChange: function () {},
-  onLocationChange: function () {},
-  onProgressChange: function () {},
-  onSecurityChange: function () {},
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
 };
