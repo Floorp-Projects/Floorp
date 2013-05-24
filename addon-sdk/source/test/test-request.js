@@ -218,6 +218,26 @@ exports.testInvalidJSON = function (test) {
   });
 }
 
+exports.testHead = function (test) {
+  let srv = startServerAsync(port, basePath);
+
+  srv.registerPathHandler("/test-head",
+      function handle(request, response) {
+    response.setHeader("Content-Type", "text/plain", false);
+  });
+
+  test.waitUntilDone();
+  Request({
+    url: "http://localhost:" + port + "/test-head",
+    onComplete: function (response) {
+      test.assertEqual(response.text, "");
+      test.assertEqual(response.statusText, "OK");
+      test.assertEqual(response.headers["Content-Type"], "text/plain");
+      srv.stop(function() test.done());
+    }
+  }).head();
+}
+
 function runMultipleURLs (srv, test, options) {
   let urls = [options.url, URL(options.url)];
   let cb = options.onComplete;

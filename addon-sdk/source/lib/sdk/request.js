@@ -50,11 +50,13 @@ const { validateOptions, validateSingleOption } = new OptionsValidator({
 const REUSE_ERROR = "This request object has been used already. You must " +
                     "create a new one to make a new request."
 
-// Utility function to prep the request since it's the same between GET and
-// POST
+// Utility function to prep the request since it's the same between
+// request types
 function runRequest(mode, target) {
   let source = request(target)
   let { xhr, url, content, contentType, headers, overrideMimeType } = source;
+
+  let isGetOrHead = (mode == "GET" || mode == "HEAD");
 
   // If this request has already been used, then we can't reuse it.
   // Throw an error.
@@ -63,11 +65,11 @@ function runRequest(mode, target) {
 
   xhr = source.xhr = new XMLHttpRequest();
 
-  // Build the data to be set. For GET requests, we want to append that to
-  // the URL before opening the request.
+  // Build the data to be set. For GET or HEAD requests, we want to append that
+  // to the URL before opening the request.
   let data = stringify(content);
   // If the URL already has ? in it, then we want to just use &
-  if (mode == "GET" && data)
+  if (isGetOrHead && data)
     url = url + (/\?/.test(url) ? "&" : "?") + data;
 
   // open the request
@@ -97,8 +99,8 @@ function runRequest(mode, target) {
   };
 
   // actually send the request.
-  // We don't want to send data on GET requests.
-  xhr.send(mode !== "GET" ? data : null);
+  // We don't want to send data on GET or HEAD requests.
+  xhr.send(!isGetOrHead ? data : null);
 }
 
 const Request = Class({
@@ -137,6 +139,10 @@ const Request = Class({
   },
   put: function() {
     runRequest('PUT', this);
+    return this;
+  },
+  head: function() {
+    runRequest('HEAD', this);
     return this;
   }
 });
