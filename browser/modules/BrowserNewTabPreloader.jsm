@@ -18,6 +18,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window id='win'/>";
 const PREF_BRANCH = "browser.newtab.";
 const TOPIC_DELAYED_STARTUP = "browser-delayed-startup-finished";
+const PRELOADER_INTERVAL_MS = 3000;
 const PRELOADER_INIT_DELAY_MS = 5000;
 
 this.BrowserNewTabPreloader = {
@@ -33,7 +34,7 @@ this.BrowserNewTabPreloader = {
   },
 
   newTab: function Preloader_newTab(aTab) {
-    HiddenBrowser.swapWithNewTab(aTab);
+    return HiddenBrowser.swapWithNewTab(aTab);
   }
 };
 
@@ -134,6 +135,8 @@ let Preferences = {
 };
 
 let HiddenBrowser = {
+  _timer: null,
+
   get isPreloaded() {
     return this._browser &&
            this._browser.contentDocument &&
@@ -141,16 +144,36 @@ let HiddenBrowser = {
            this._browser.currentURI.spec == Preferences.url;
   },
 
-  swapWithNewTab: function HiddenBrowser_swapWithNewTab(aTab) {
-    if (this.isPreloaded) {
-      let tabbrowser = aTab.ownerDocument.defaultView.gBrowser;
-      if (tabbrowser) {
-        tabbrowser.swapNewTabWithBrowser(aTab, this._browser);
-      }
+  swapWithNewTab: function (aTab) {
+    if (!this.isPreloaded || this._timer) {
+      return false;
+    }
+
+    let tabbrowser = aTab.ownerDocument.defaultView.gBrowser;
+    if (!tabbrowser) {
+      return false;
+    }
+
+    // Swap docShells.
+    tabbrowser.swapNewTabWithBrowser(aTab, this._browser);
+
+    // Start a timer that will kick off preloading the next newtab page.
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._timer.init(this, PRELOADER_INTERVAL_MS, Ci.nsITimer.TYPE_ONE_SHOT);
+
+    // Signal that we swapped docShells.
+    return true;
+  },
+
+  observe: function () {
+    this._timer = null;
+
+    if (this._browser) {
+      this._browser.loadURI(Preferences.url);
     }
   },
 
-  create: function HiddenBrowser_create() {
+  create: function () {
     HostFrame.get(aFrame => {
       let doc = aFrame.document;
       this._browser = doc.createElementNS(XUL_NS, "browser");
@@ -160,14 +183,19 @@ let HiddenBrowser = {
     });
   },
 
-  update: function HiddenBrowser_update(aURL) {
+  update: function (aURL) {
     this._browser.setAttribute("src", aURL);
   },
 
-  destroy: function HiddenBrowser_destroy() {
+  destroy: function () {
     if (this._browser) {
       this._browser.parentNode.removeChild(this._browser);
       this._browser = null;
+    }
+
+    if (this._timer) {
+      this._timer.cancel();
+      this._timer = null;
     }
   }
 };
