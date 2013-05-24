@@ -33,6 +33,9 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_sort-01.js \
 	browser_net_sort-02.js \
 	browser_net_sort-03.js \
+	browser_net_filter-01.js \
+	browser_net_filter-02.js \
+	browser_net_filter-03.js \
 	head.js \
 	$(NULL)
 
@@ -47,6 +50,7 @@ MOCHITEST_BROWSER_PAGES = \
 	html_jsonp-test-page.html \
 	html_json-long-test-page.html \
 	html_sorting-test-page.html \
+	html_filter-test-page.html \
 	html_infinite-get-page.html \
 	sjs_simple-test-server.sjs \
 	sjs_content-type-test-server.sjs \

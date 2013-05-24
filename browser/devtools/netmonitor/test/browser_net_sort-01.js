@@ -142,6 +142,7 @@ function test() {
           return testContents([3, 4, 0, 1, 2]);
         })
         .then(() => {
+          info("Clearing sort.");
           RequestsMenu.sortBy(null);
           return testContents([0, 1, 2, 3, 4]);
         })
@@ -152,8 +153,6 @@ function test() {
     });
 
     function testContents([a, b, c, d, e]) {
-      let deferred = Promise.defer();
-
       is(RequestsMenu.allItems.length, 5,
         "There should be a total of 5 items in the requests menu.");
       is(RequestsMenu.visibleItems.length, 5,
@@ -216,8 +215,7 @@ function test() {
           time: true
         });
 
-      executeSoon(deferred.resolve);
-      return deferred.promise;
+      return Promise.resolve(null);
     }
 
     aDebuggee.performRequests();

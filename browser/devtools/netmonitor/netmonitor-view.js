@@ -103,6 +103,7 @@ let NetMonitorView = {
   _initializePanes: function() {
     dumpn("Initializing the NetMonitorView panes");
 
+    this._body = $("#body");
     this._detailsPane = $("#details-pane");
     this._detailsPaneToggleButton = $("#details-pane-toggle");
 
@@ -153,9 +154,11 @@ let NetMonitorView = {
     ViewHelpers.togglePane(aFlags, pane);
 
     if (aFlags.visible) {
+      this._body.removeAttribute("pane-collapsed");
       button.removeAttribute("pane-collapsed");
       button.setAttribute("tooltiptext", this._collapsePaneString);
     } else {
+      this._body.setAttribute("pane-collapsed", "");
       button.setAttribute("pane-collapsed", "");
       button.setAttribute("tooltiptext", this._expandPaneString);
     }
@@ -190,9 +193,12 @@ let NetMonitorView = {
     return deferred.promise;
   },
 
-  _editorPromises: new Map(),
+  _body: null,
+  _detailsPane: null,
+  _detailsPaneToggleButton: null,
   _collapsePaneString: "",
   _expandPaneString: "",
+  _editorPromises: new Map(),
   _isInitialized: false,
   _isDestroyed: false
 };
@@ -259,6 +265,9 @@ function RequestsMenuView() {
   this._onMouseDown = this._onMouseDown.bind(this);
   this._onSelect = this._onSelect.bind(this);
   this._onResize = this._onResize.bind(this);
+  this._byFile = this._byFile.bind(this);
+  this._byDomain = this._byDomain.bind(this);
+  this._byType = this._byType.bind(this);
 }
 
 create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
@@ -314,8 +323,10 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    *        Specifies the request method (e.g. "GET", "POST", etc.)
    * @param string aUrl
    *        Specifies the request's url.
+   * @param boolean aIsXHR
+   *        True if this request was initiated via XHR.
    */
-  addRequest: function(aId, aStartedDateTime, aMethod, aUrl) {
+  addRequest: function(aId, aStartedDateTime, aMethod, aUrl, aIsXHR) {
     // Convert the received date/time string to a unix timestamp.
     let unixTime = Date.parse(aStartedDateTime);
 
@@ -333,22 +344,75 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
         startedDeltaMillis: unixTime - this._firstRequestStartedMillis,
         startedMillis: unixTime,
         method: aMethod,
-        url: aUrl
+        url: aUrl,
+        isXHR: aIsXHR
       },
       finalize: this._onRequestItemRemoved
     });
 
     $("#details-pane-toggle").disabled = false;
-    $(".requests-menu-empty-notice").hidden = true;
+    $("#requests-menu-empty-notice").hidden = true;
 
     this._cache.set(aId, requestItem);
+  },
+
+  /**
+   * Filters all network requests in this container by a specified type.
+   *
+   * @param string aType
+   *        Either null, "html", "css", "js", "xhr", "fonts", "images", "media"
+   *        or "flash".
+   */
+  filterOn: function(aType) {
+    let target = $("#requests-menu-filter-" + aType + "-button");
+    let buttons = document.querySelectorAll(".requests-menu-footer-button");
+
+    for (let button of buttons) {
+      if (button != target) {
+        button.removeAttribute("checked");
+      } else {
+        button.setAttribute("checked", "");
+      }
+    }
+
+    // Filter on nothing.
+    if (!target) {
+      this.filterContents(() => true);
+    }
+    // Filter on whatever was requested.
+    else switch (aType) {
+      case "html":
+        this.filterContents(this._onHtml);
+        break;
+      case "css":
+        this.filterContents(this._onCss);
+        break;
+      case "js":
+        this.filterContents(this._onJs);
+        break;
+      case "xhr":
+        this.filterContents(this._onXhr);
+        break;
+      case "fonts":
+        this.filterContents(this._onFonts);
+        break;
+      case "images":
+        this.filterContents(this._onImages);
+        break;
+      case "media":
+        this.filterContents(this._onMedia);
+        break;
+      case "flash":
+        this.filterContents(this._onFlash);
+        break;
+    }
   },
 
   /**
    * Sorts all network requests in this container by a specified detail.
    *
    * @param string aType
-   *        Either "status", "method", "file", "domain", "type" or "size".
+   *        Either null, "status", "method", "file", "domain", "type" or "size".
    */
   sortBy: function(aType) {
     let target = $("#requests-menu-" + aType + "-button");
@@ -427,6 +491,54 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Predicates used when filtering items.
+   *
+   * @param MenuItem aItem
+   *        The filtered menu item.
+   * @return boolean
+   *         True if the menu item should be visible, false otherwise.
+   */
+  _onHtml: function({ attachment: { mimeType } })
+    mimeType && mimeType.contains("/html"),
+
+  _onCss: function({ attachment: { mimeType } })
+    mimeType && mimeType.contains("/css"),
+
+  _onJs: function({ attachment: { mimeType } })
+    mimeType && (
+      mimeType.contains("/ecmascript") ||
+      mimeType.contains("/javascript") ||
+      mimeType.contains("/x-javascript")),
+
+  _onXhr: function({ attachment: { isXHR } })
+    isXHR,
+
+  _onFonts: function({ attachment: { url, mimeType } }) // Fonts are a mess.
+    (mimeType && (
+      mimeType.contains("font/") ||
+      mimeType.contains("/font"))) ||
+    url.contains(".eot") ||
+    url.contains(".ttf") ||
+    url.contains(".otf") ||
+    url.contains(".woff"),
+
+  _onImages: function({ attachment: { mimeType } })
+    mimeType && mimeType.contains("image/"),
+
+  _onMedia: function({ attachment: { mimeType } }) // Not including images.
+    mimeType && (
+      mimeType.contains("audio/") ||
+      mimeType.contains("video/") ||
+      mimeType.contains("model/")),
+
+  _onFlash: function({ attachment: { url, mimeType } }) // Flash is a mess.
+    (mimeType && (
+      mimeType.contains("/x-flv") ||
+      mimeType.contains("/x-shockwave-flash"))) ||
+    url.contains(".swf") ||
+    url.contains(".flv"),
+
+  /**
    * Predicates used when sorting items.
    *
    * @param MenuItem aFirst
@@ -438,32 +550,29 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    *          0 to leave aFirst and aSecond unchanged with respect to each other
    *          1 to sort aSecond to a lower index than aFirst
    */
-  _byTiming: (aFirst, aSecond) =>
-    aFirst.attachment.startedMillis > aSecond.attachment.startedMillis,
+  _byTiming: function({ attachment: first }, { attachment: second })
+    first.startedMillis > second.startedMillis,
 
-  _byStatus: (aFirst, aSecond) =>
-    aFirst.attachment.status > aSecond.attachment.status,
+  _byStatus: function({ attachment: first }, { attachment: second })
+    first.status > second.status,
 
-  _byMethod: (aFirst, aSecond) =>
-    aFirst.attachment.method > aSecond.attachment.method,
+  _byMethod: function({ attachment: first }, { attachment: second })
+    first.method > second.method,
 
-  _byFile: (aFirst, aSecond) =>
-    !aFirst.target || !aSecond.target ? -1 :
-      $(".requests-menu-file", aFirst.target).getAttribute("value").toLowerCase() >
-      $(".requests-menu-file", aSecond.target).getAttribute("value").toLowerCase(),
+  _byFile: function({ attachment: first }, { attachment: second })
+    this._getUriNameWithQuery(first.url).toLowerCase() >
+    this._getUriNameWithQuery(second.url).toLowerCase(),
 
-  _byDomain: (aFirst, aSecond) =>
-    !aFirst.target || !aSecond.target ? -1 :
-      $(".requests-menu-domain", aFirst.target).getAttribute("value").toLowerCase() >
-      $(".requests-menu-domain", aSecond.target).getAttribute("value").toLowerCase(),
+  _byDomain: function({ attachment: first }, { attachment: second })
+    this._getUriHostPort(first.url).toLowerCase() >
+    this._getUriHostPort(second.url).toLowerCase(),
 
-  _byType: (aFirst, aSecond) =>
-    !aFirst.target || !aSecond.target ? -1 :
-      $(".requests-menu-type", aFirst.target).getAttribute("value").toLowerCase() >
-      $(".requests-menu-type", aSecond.target).getAttribute("value").toLowerCase(),
+  _byType: function({ attachment: first }, { attachment: second })
+    this._getAbbreviatedMimeType(first.mimeType).toLowerCase() >
+    this._getAbbreviatedMimeType(second.mimeType).toLowerCase(),
 
-  _bySize: (aFirst, aSecond) =>
-    aFirst.attachment.contentSize > aSecond.attachment.contentSize,
+  _bySize: function({ attachment: first }, { attachment: second })
+    first.contentSize > second.contentSize,
 
   /**
    * Schedules adding additional information to a network request.
@@ -577,8 +686,13 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     // We're done flushing all the requests, clear the update queue.
     this._updateQueue = [];
 
-    // Make sure all the requests are sorted.
+    // Make sure all the requests are sorted and filtered.
+    // Freshly added requests may not yet contain all the information required
+    // for sorting and filtering predicates, so this is done each time the
+    // network requests table is flushed (don't worry, events are drained first
+    // so this doesn't happen once per network event update).
     this.sortContents();
+    this.filterContents();
   },
 
   /**
@@ -592,19 +706,19 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    *         The network request view.
    */
   _createMenuView: function(aMethod, aUrl) {
-    let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
-    let name = NetworkHelper.convertToUnicode(unescape(uri.fileName)) || "/";
-    let query = NetworkHelper.convertToUnicode(unescape(uri.query));
-    let hostPort = NetworkHelper.convertToUnicode(unescape(uri.hostPort));
+    let uri = nsIURL(aUrl);
+    let nameWithQuery = this._getUriNameWithQuery(uri);
+    let hostPort = this._getUriHostPort(uri);
 
     let template = $("#requests-menu-item-template");
     let fragment = document.createDocumentFragment();
 
-    $(".requests-menu-method", template).setAttribute("value", aMethod);
+    let method = $(".requests-menu-method", template);
+    method.setAttribute("value", aMethod);
 
     let file = $(".requests-menu-file", template);
-    file.setAttribute("value", name + (query ? "?" + query : ""));
-    file.setAttribute("tooltiptext", name + (query ? "?" + query : ""));
+    file.setAttribute("value", nameWithQuery);
+    file.setAttribute("tooltiptext", nameWithQuery);
 
     let domain = $(".requests-menu-domain", template);
     domain.setAttribute("value", hostPort);
@@ -653,7 +767,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
         break;
       }
       case "mimeType": {
-        let type = aValue.split(";")[0].split("/")[1] || "?";
+        let type = this._getAbbreviatedMimeType(aValue);
         let node = $(".requests-menu-type", aItem.target);
         let text = CONTENT_MIME_TYPE_ABBREVIATIONS[type] || type;
         node.setAttribute("value", text);
@@ -982,6 +1096,40 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Helpers for getting details about an nsIURL.
+   *
+   * @param nsIURL | string aUrl
+   * @return string
+   */
+  _getUriNameWithQuery: function(aUrl) {
+    if (!(aUrl instanceof Ci.nsIURL)) {
+      aUrl = nsIURL(aUrl);
+    }
+    let name = NetworkHelper.convertToUnicode(unescape(aUrl.fileName)) || "/";
+    let query = NetworkHelper.convertToUnicode(unescape(aUrl.query));
+    return name + (query ? "?" + query : "");
+  },
+  _getUriHostPort: function(aUrl) {
+    if (!(aUrl instanceof Ci.nsIURL)) {
+      aUrl = nsIURL(aUrl);
+    }
+    return NetworkHelper.convertToUnicode(unescape(aUrl.hostPort));
+  },
+
+  /**
+   * Helper for getting an abbreviated string for a mime type.
+   *
+   * @param string aMimeType
+   * @return string
+   */
+  _getAbbreviatedMimeType: function(aMimeType) {
+    if (!aMimeType) {
+      return "";
+    }
+    return (aMimeType.split(";")[0].split("/")[1] || "").split("+")[0];
+  },
+
+  /**
    * Gets the available waterfall width in this container.
    * @return number
    */
@@ -1296,8 +1444,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
    *        The request's url.
    */
   _setRequestGetParams: function(aUrl) {
-    let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
-    let query = uri.query;
+    let query = nsIURL(aUrl).query;
     if (query) {
       this._addParams(this._paramsQueryString, query);
     }
@@ -1379,7 +1526,6 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     if (!aResponse) {
       return;
     }
-    let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
     let { mimeType, text, encoding } = aResponse.content;
 
     gNetwork.getString(text).then((aString) => {
@@ -1408,7 +1554,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
 
         // Immediately display additional information about the image:
         // file name, mime type and encoding.
-        $("#response-content-image-name-value").setAttribute("value", uri.fileName);
+        $("#response-content-image-name-value").setAttribute("value", nsIURL(aUrl).fileName);
         $("#response-content-image-mime-value").setAttribute("value", mimeType);
         $("#response-content-image-encoding-value").setAttribute("value", encoding);
 
@@ -1531,14 +1677,26 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
 function $(aSelector, aTarget = document) aTarget.querySelector(aSelector);
 
 /**
+ * Helper for getting an nsIURL instance out of a string.
+ */
+function nsIURL(aUrl, aStore = nsIURL.store) {
+  if (aStore.has(aUrl)) {
+    return aStore.get(aUrl);
+  }
+  let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
+  aStore.set(aUrl, uri);
+  return uri;
+}
+nsIURL.store = new Map();
+
+/**
  * Helper for draining a rapid succession of events and invoking a callback
  * once everything settles down.
  */
-function drain(aId, aWait, aCallback) {
-  window.clearTimeout(drain.store.get(aId));
-  drain.store.set(aId, window.setTimeout(aCallback, aWait));
+function drain(aId, aWait, aCallback, aStore = drain.store) {
+  window.clearTimeout(aStore.get(aId));
+  aStore.set(aId, window.setTimeout(aCallback, aWait));
 }
-
 drain.store = new Map();
 
 /**

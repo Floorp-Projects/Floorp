@@ -1,0 +1,55 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Filtering test</p>
+
+    <script type="text/javascript">
+      function get(aAddress, aCallback) {
+        var xhr = new XMLHttpRequest();
+        // Use a random parameter to defeat caching.
+        xhr.open("GET", aAddress + "&" + Math.random(), true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send(null);
+      }
+
+      function performRequests(aOptions) {
+        var options = JSON.parse(aOptions);
+        get("sjs_content-type-test-server.sjs?fmt=html&res=" + options.htmlContent, function() {
+          get("sjs_content-type-test-server.sjs?fmt=css", function() {
+            get("sjs_content-type-test-server.sjs?fmt=js", function() {
+              if (!options.getMedia) {
+                return;
+              }
+              get("sjs_content-type-test-server.sjs?fmt=font", function() {
+                get("sjs_content-type-test-server.sjs?fmt=image", function() {
+                  get("sjs_content-type-test-server.sjs?fmt=audio", function() {
+                    get("sjs_content-type-test-server.sjs?fmt=video", function() {
+                      if (!options.getFlash) {
+                        return;
+                      }
+                      get("sjs_content-type-test-server.sjs?fmt=flash", function() {
+                        // Done.
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      }
+    </script>
+  </body>
+
+</html>
