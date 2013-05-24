@@ -40,8 +40,6 @@ public:
                         const nsRect&           aDirtyRect,
                         const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
-
   NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               int32_t         aModType);
@@ -85,13 +83,6 @@ nsSVGStopFrame::Init(nsIContent* aContent,
   nsSVGStopFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
-
-/* virtual */ void
-nsSVGStopFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
-{
-  nsSVGStopFrameBase::DidSetStyleContext(aOldStyleContext);
-  nsSVGEffects::InvalidateRenderingObservers(this);
-}
 
 nsIAtom *
 nsSVGStopFrame::GetType() const
