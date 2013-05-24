@@ -4,6 +4,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 // Constants
 
 const PREFILTER_INVISIBLE = nsIAccessibleTraversalRule.PREFILTER_INVISIBLE;
+const PREFILTER_ARIA_HIDDEN = nsIAccessibleTraversalRule.PREFILTER_ARIA_HIDDEN;
 const FILTER_MATCH = nsIAccessibleTraversalRule.FILTER_MATCH;
 const FILTER_IGNORE = nsIAccessibleTraversalRule.FILTER_IGNORE;
 const FILTER_IGNORE_SUBTREE = nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
@@ -46,7 +47,7 @@ var ObjectTraversalRule =
     return 0;
   },
 
-  preFilter: PREFILTER_INVISIBLE,
+  preFilter: PREFILTER_INVISIBLE | PREFILTER_ARIA_HIDDEN,
 
   match: function(aAccessible)
   {
