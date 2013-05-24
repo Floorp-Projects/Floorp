@@ -20,24 +20,26 @@ struct ConvertTimeToTickHelper
   {
     ConvertTimeToTickHelper* This = static_cast<ConvertTimeToTickHelper*> (aClosure);
     if (This->mSourceStream) {
+      MOZ_ASSERT(This->mSourceStream->SampleRate() == This->mDestinationStream->SampleRate());
       return WebAudioUtils::ConvertDestinationStreamTimeToSourceStreamTime(
           aTime, This->mSourceStream, This->mDestinationStream);
     } else {
       StreamTime streamTime = This->mDestinationStream->GetCurrentPosition();
-      return TimeToTicksRoundUp(IdealAudioRate(), streamTime + SecondsToMediaTime(aTime));
+      TrackRate sampleRate = This->mDestinationStream->SampleRate();
+      return TimeToTicksRoundUp(sampleRate, streamTime + SecondsToMediaTime(aTime));
     }
   }
 };
 
 TrackTicks
 WebAudioUtils::ConvertDestinationStreamTimeToSourceStreamTime(double aTime,
-                                                              MediaStream* aSource,
+                                                              AudioNodeStream* aSource,
                                                               MediaStream* aDestination)
 {
   StreamTime streamTime = std::max<MediaTime>(0, SecondsToMediaTime(aTime));
   GraphTime graphTime = aDestination->StreamTimeToGraphTime(streamTime);
   StreamTime thisStreamTime = aSource->GraphTimeToStreamTimeOptimistic(graphTime);
-  TrackTicks ticks = TimeToTicksRoundUp(IdealAudioRate(), thisStreamTime);
+  TrackTicks ticks = TimeToTicksRoundUp(aSource->SampleRate(), thisStreamTime);
   return ticks;
 }
 
@@ -46,7 +48,8 @@ WebAudioUtils::StreamPositionToDestinationTime(TrackTicks aSourcePosition,
                                                AudioNodeStream* aSource,
                                                AudioNodeStream* aDestination)
 {
-  StreamTime sourceTime = TicksToTimeRoundDown(IdealAudioRate(), aSourcePosition);
+  MOZ_ASSERT(aSource->SampleRate() == aDestination->SampleRate());
+  StreamTime sourceTime = TicksToTimeRoundDown(aSource->SampleRate(), aSourcePosition);
   GraphTime graphTime = aSource->StreamTimeToGraphTime(sourceTime);
   StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
   return MediaTimeToSeconds(destinationTime);
@@ -57,10 +60,11 @@ WebAudioUtils::ConvertAudioParamToTicks(AudioParamTimeline& aParam,
                                         AudioNodeStream* aSource,
                                         AudioNodeStream* aDest)
 {
+  MOZ_ASSERT(!aSource || aSource->SampleRate() == aDest->SampleRate());
   ConvertTimeToTickHelper ctth;
   ctth.mSourceStream = aSource;
   ctth.mDestinationStream = aDest;
-  aParam.ConvertEventTimesToTicks(ConvertTimeToTickHelper::Convert, &ctth, IdealAudioRate());
+  aParam.ConvertEventTimesToTicks(ConvertTimeToTickHelper::Convert, &ctth, aDest->SampleRate());
 }
 
 }
