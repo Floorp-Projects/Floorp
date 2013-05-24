@@ -109,13 +109,17 @@ AudioNodeStream::SetTimelineParameter(uint32_t aIndex,
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex,
             const AudioParamTimeline& aValue)
-      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex) {}
+      : ControlMessage(aStream),
+        mValue(aValue),
+        mSampleRate(aStream->SampleRate()),
+        mIndex(aIndex) {}
     virtual void Run()
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
-          SetTimelineParameter(mIndex, mValue);
+          SetTimelineParameter(mIndex, mValue, mSampleRate);
     }
     AudioParamTimeline mValue;
+    TrackRate mSampleRate;
     uint32_t mIndex;
   };
   GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));

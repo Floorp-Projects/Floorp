@@ -66,7 +66,9 @@ public:
     }
   }
 
-  virtual void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue)
+  virtual void SetTimelineParameter(uint32_t aIndex,
+                                    const dom::AudioParamTimeline& aValue,
+                                    TrackRate aSampleRate) MOZ_OVERRIDE
   {
     switch (aIndex) {
     case AudioBufferSourceNode::PLAYBACKRATE:
