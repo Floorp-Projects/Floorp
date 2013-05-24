@@ -11,6 +11,7 @@
 #include "nsGUIEvent.h"
 #include "nsIRollupListener.h"
 #include "nsChildView.h"
+#include "TextInputHandler.h"
 #include "nsWindowMap.h"
 #include "nsAppShell.h"
 #include "nsIAppShellService.h"
@@ -44,6 +45,7 @@ class LayerManager;
 }
 }
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 using namespace mozilla;
 
 // defined in nsAppShell.mm
@@ -2076,6 +2078,40 @@ bool nsCocoaWindow::ShouldFocusPlugin()
     return false;
 
   return true;
+}
+
+NS_IMETHODIMP
+nsCocoaWindow::NotifyIME(NotificationToIME aNotification)
+{
+  switch (aNotification) {
+    case NOTIFY_IME_OF_FOCUS:
+      if (mInputContext.IsPasswordEditor()) {
+        TextInputHandler::EnableSecureEventInput();
+      }
+      return NS_OK;
+    case NOTIFY_IME_OF_BLUR:
+      // When we're going to be deactive, we must disable the secure event input
+      // mode, see the Carbon Event Manager Reference.
+      TextInputHandler::EnsureSecureEventInputDisabled();
+      return NS_OK;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+}
+
+NS_IMETHODIMP_(void)
+nsCocoaWindow::SetInputContext(const InputContext& aContext,
+                               const InputContextAction& aAction)
+{
+  // XXX Ideally, we should check if this instance has focus or not.
+  //     However, this is called only when this widget has focus, so,
+  //     it's not problem at least for now.
+  if (aContext.IsPasswordEditor()) {
+    TextInputHandler::EnableSecureEventInput();
+  } else {
+    TextInputHandler::EnsureSecureEventInputDisabled();
+  }
+  mInputContext = aContext;
 }
 
 @implementation WindowDelegate

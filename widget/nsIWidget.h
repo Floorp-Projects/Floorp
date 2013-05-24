@@ -306,6 +306,11 @@ struct IMEState {
 struct InputContext {
   InputContext() : mNativeIMEContext(nullptr) {}
 
+  bool IsPasswordEditor() const
+  {
+    return mHTMLInputType.LowerCaseEqualsLiteral("password");
+  }
+
   IMEState mIMEState;
 
   /* The type of the input if the input is a html input field */

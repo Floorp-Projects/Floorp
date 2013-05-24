@@ -1678,10 +1678,18 @@ nsChildView::NotifyIME(NotificationToIME aNotification)
       mTextInputHandler->CancelIMEComposition();
       return NS_OK;
     case NOTIFY_IME_OF_FOCUS:
+      if (mInputContext.IsPasswordEditor()) {
+        TextInputHandler::EnableSecureEventInput();
+      }
+
       NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
       mTextInputHandler->OnFocusChangeInGecko(true);
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
+      // When we're going to be deactive, we must disable the secure event input
+      // mode, see the Carbon Event Manager Reference.
+      TextInputHandler::EnsureSecureEventInputDisabled();
+
       NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
       mTextInputHandler->OnFocusChangeInGecko(false);
       return NS_OK;
@@ -1694,7 +1702,16 @@ NS_IMETHODIMP_(void)
 nsChildView::SetInputContext(const InputContext& aContext,
                              const InputContextAction& aAction)
 {
-  NS_ENSURE_TRUE(mTextInputHandler, );
+  // XXX Ideally, we should check if this instance has focus or not.
+  //     However, this is called only when this widget has focus, so,
+  //     it's not problem at least for now.
+  if (aContext.IsPasswordEditor()) {
+    TextInputHandler::EnableSecureEventInput();
+  } else {
+    TextInputHandler::EnsureSecureEventInputDisabled();
+  }
+
+  NS_ENSURE_TRUE_VOID(mTextInputHandler);
   mInputContext = aContext;
   switch (aContext.mIMEState.mEnabled) {
     case IMEState::ENABLED:
