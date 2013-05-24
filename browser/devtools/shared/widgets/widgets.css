@@ -16,6 +16,10 @@
   overflow-y: auto;
 }
 
+.side-menu-widget-item-contents {
+  -moz-user-focus: normal;
+}
+
 /* VariablesView */
 
 .variables-view-container {

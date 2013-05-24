@@ -262,7 +262,6 @@ function RequestsMenuView() {
   this._cache = new Map(); // Can't use a WeakMap because keys are strings.
   this._flushRequests = this._flushRequests.bind(this);
   this._onRequestItemRemoved = this._onRequestItemRemoved.bind(this);
-  this._onMouseDown = this._onMouseDown.bind(this);
   this._onSelect = this._onSelect.bind(this);
   this._onResize = this._onResize.bind(this);
   this._byFile = this._byFile.bind(this);
@@ -281,7 +280,6 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     this.node.maintainSelectionVisible = false;
     this.node.autoscrollWithAppendedItems = true;
 
-    this.node.addEventListener("mousedown", this._onMouseDown, false);
     this.node.addEventListener("select", this._onSelect, false);
     window.addEventListener("resize", this._onResize, false);
   },
@@ -292,7 +290,6 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   destroy: function() {
     dumpn("Destroying the SourcesView");
 
-    this.node.removeEventListener("mousedown", this._onMouseDown, false);
     this.node.removeEventListener("select", this._onSelect, false);
     window.removeEventListener("resize", this._onResize, false);
   },
@@ -1039,17 +1036,6 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   /**
-   * The mouse down listener for this container.
-   */
-  _onMouseDown: function({ target }) {
-    let item = this.getItemForElement(target);
-    if (item) {
-      // The container is not empty and we clicked on an actual item.
-      this.selectedItem = item;
-    }
-  },
-
-  /**
    * The selection listener for this container.
    */
   _onSelect: function({ detail: item }) {
@@ -1165,7 +1151,7 @@ function NetworkDetailsView() {
   this._onTabSelect = this._onTabSelect.bind(this);
 };
 
-create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
+NetworkDetailsView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
@@ -1669,7 +1655,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
   _responseHeaders: "",
   _requestCookies: "",
   _responseCookies: ""
-});
+};
 
 /**
  * DOM query helper.
