@@ -27,7 +27,7 @@
 
       (function performRequests() {
         get("request_" + (count++), function() {
-          setTimeout(performRequests, 0);
+          setTimeout(performRequests, 50);
         });
       })();
     </script>

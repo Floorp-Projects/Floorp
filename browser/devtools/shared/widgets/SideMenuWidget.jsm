@@ -100,9 +100,17 @@ SideMenuWidget.prototype = {
     // Invalidate any notices set on this widget.
     this.removeAttribute("notice");
 
+    // Maintaining scroll position at the bottom when a new item is inserted
+    // depends on several factors (the order of testing is important to avoid
+    // needlessly expensive operations that may cause reflows):
     let maintainScrollAtBottom =
+      // 1. The behavior should be enabled,
       this.autoscrollWithAppendedItems &&
+      // 2. There shouldn't currently be any selected item in the list.
+      !this._selectedItem &&
+      // 3. The new item should be appended at the end of the list.
       (aIndex < 0 || aIndex >= this._orderedMenuElementsArray.length) &&
+      // 4. The list should already be scrolled at the bottom.
       (this._list.scrollTop + this._list.clientHeight >= this._list.scrollHeight);
 
     let group = this._getMenuGroupForName(aGroup);
