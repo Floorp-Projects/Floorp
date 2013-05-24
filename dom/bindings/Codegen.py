@@ -3225,7 +3225,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         def getConversionCode(varName):
             conversionCode = (
-                "if (!ConvertJSValueToString(cx, ${val}, ${valPtr}, %s, %s, %s)) {\n"
+                "if (!ConvertJSValueToString(cx, ${valHandle}, ${valMutableHandle}, %s, %s, %s)) {\n"
                 "%s\n"
                 "}" % (nullBehavior, undefinedBehavior, varName,
                        exceptionCodeIndented.define()))
@@ -6679,7 +6679,7 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
     def define(self):
         # Our first argument is the id we're getting.
         argName = self.arguments[0].identifier.name
-        return (("JS::Value nameVal = %s;\n"
+        return (("JS::Rooted<JS::Value> nameVal(cx, %s);\n"
                  "FakeDependentString %s;\n"
                  "if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n"
                  "                            eStringify, eStringify, %s)) {\n"
