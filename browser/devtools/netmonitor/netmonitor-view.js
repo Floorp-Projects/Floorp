@@ -231,16 +231,14 @@ ToolbarView.prototype = {
    */
   _onTogglePanesPressed: function() {
     let requestsMenu = NetMonitorView.RequestsMenu;
-    let networkDetails = NetMonitorView.NetworkDetails;
+    let selectedIndex = requestsMenu.selectedIndex;
 
     // Make sure there's a selection if the button is pressed, to avoid
     // showing an empty network details pane.
-    if (!requestsMenu.selectedItem && requestsMenu.itemCount) {
+    if (selectedIndex == -1 && requestsMenu.itemCount) {
       requestsMenu.selectedIndex = 0;
-    }
-    // Proceed with toggling the network details pane normally.
-    else {
-      networkDetails.toggle(NetMonitorView.detailsPaneHidden);
+    } else {
+      requestsMenu.selectedIndex = -1;
     }
   },
 
@@ -929,8 +927,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   /**
    * The mouse down listener for this container.
    */
-  _onMouseDown: function(e) {
-    let item = this.getItemForElement(e.target);
+  _onMouseDown: function({ target }) {
+    let item = this.getItemForElement(target);
     if (item) {
       // The container is not empty and we clicked on an actual item.
       this.selectedItem = item;
@@ -940,9 +938,13 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   /**
    * The selection listener for this container.
    */
-  _onSelect: function(e) {
-    NetMonitorView.NetworkDetails.populate(this.selectedItem.attachment);
-    NetMonitorView.NetworkDetails.toggle(true);
+  _onSelect: function({ detail: item }) {
+    if (item) {
+      NetMonitorView.NetworkDetails.populate(item.attachment);
+      NetMonitorView.NetworkDetails.toggle(true);
+    } else {
+      NetMonitorView.NetworkDetails.toggle(false);
+    }
   },
 
   /**
