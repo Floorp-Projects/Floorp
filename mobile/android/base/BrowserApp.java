@@ -957,7 +957,7 @@ abstract public class BrowserApp extends GeckoApp
 
                 // Display notification for Mozilla data reporting, if data should be collected.
                 if (AppConstants.MOZ_DATA_REPORTING) {
-                    DataReportingNotification.checkAndNotifyPolicy(BrowserApp.mAppContext);
+                    DataReportingNotification.checkAndNotifyPolicy(GeckoAppShell.getContext());
                 }
 
             } else if (event.equals("Telemetry:Gather")) {
