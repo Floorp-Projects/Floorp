@@ -1733,6 +1733,7 @@ private:
     nsCString mNextEdgeName;
     nsICycleCollectorListener *mListener;
     bool mMergeZones;
+    bool mRanOutOfMemory;
 
 public:
     GCGraphBuilder(nsCycleCollector *aCollector,
@@ -1754,6 +1755,8 @@ public:
     PtrInfo* AddWeakMapNode(void* node);
     void Traverse(PtrInfo* aPtrInfo);
     void SetLastChild();
+
+    bool RanOutOfMemory() const { return mRanOutOfMemory; }
 
 private:
     void DescribeNode(uint32_t refCount, const char *objName)
@@ -1828,11 +1831,14 @@ GCGraphBuilder::GCGraphBuilder(nsCycleCollector *aCollector,
       mJSParticipant(nullptr),
       mJSZoneParticipant(xpc_JSZoneParticipant()),
       mListener(aListener),
-      mMergeZones(aMergeZones)
+      mMergeZones(aMergeZones),
+      mRanOutOfMemory(false)
 {
     if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
-                           sizeof(PtrToNodeEntry), 32768))
+                           sizeof(PtrToNodeEntry), 32768)) {
         mPtrToNodeMap.ops = nullptr;
+        mRanOutOfMemory = true;
+    }
 
     if (aJSRuntime) {
         mJSParticipant = aJSRuntime->GetParticipant();
@@ -1874,6 +1880,7 @@ GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
 {
     PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
     if (!e) {
+        mRanOutOfMemory = true;
         return nullptr;
     }
 
@@ -2069,7 +2076,6 @@ AddPurpleRoot(GCGraphBuilder &builder, void *root, nsCycleCollectionParticipant 
     if (builder.WantAllTraces() || !cp->CanSkipInCC(root)) {
         PtrInfo *pinfo = builder.AddNode(root, cp);
         if (!pinfo) {
-            NS_WARNING("builder.AddNode returned null");
             return false;
         }
     }
@@ -2209,6 +2215,12 @@ nsCycleCollector::MarkRoots(GCGraphBuilder &builder)
     }
     if (mGraph.mRootCount > 0)
         builder.SetLastChild();
+
+    if (builder.RanOutOfMemory()) {
+        NS_ASSERTION(false,
+                     "Ran out of memory while building cycle collector graph");
+        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+    }
 }
 
 
@@ -2816,8 +2828,11 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 
     GCGraphBuilder builder(this, mGraph, mJSRuntime, aListener,
                            mergeZones);
-    if (!builder.Initialized())
+    if (!builder.Initialized()) {
+        NS_ASSERTION(false, "Failed to initialize GCGraphBuilder, will probably leak.");
+        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
         return false;
+    }
 
     if (mJSRuntime) {
         mJSRuntime->BeginCycleCollection(builder);
