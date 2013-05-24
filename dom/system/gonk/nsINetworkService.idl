@@ -28,6 +28,12 @@ interface nsINetworkStatsCallback : nsISupports
                              in jsval date);
 };
 
+[scriptable, function, uuid(0706bfa2-ac2d-11e2-9a8d-7b6d988d4767)]
+interface nsINetworkUsageAlarmCallback : nsISupports
+{
+  void networkUsageAlarmResult(in jsval error);
+};
+
 [scriptable, function, uuid(9ede8720-f8bc-11e2-b778-0800200c9a66)]
 interface nsIWifiOperationModeCallback : nsISupports
 {
@@ -98,7 +104,7 @@ interface nsIUpdateUpStreamCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(a6c58260-46df-11e3-8f96-0800200c9a66)]
+[scriptable, uuid(c14cabaf-bb8e-470d-a2f1-2cb6de6c5e5c)]
 interface nsINetworkService : nsISupports
 {
   /**
@@ -150,6 +156,24 @@ interface nsINetworkService : nsISupports
    *        and the date when stats are retrieved
    */
   void getNetworkInterfaceStats(in DOMString networkName, in nsINetworkStatsCallback callback);
+
+  /**
+   * Set Alarm of usage per interface
+   *
+   * @param networkName
+   *        Select the Network interface to set an alarm.
+   *
+   * @param threshold
+   *        Amount of data that will trigger the alarm.
+   *
+   * @param callback
+   *        Callback to notify the result.
+   *
+   * @return false if there is no interface registered for the networkType param.
+   */
+  boolean setNetworkInterfaceAlarm(in DOMString networkName,
+                                   in long threshold,
+                                   in nsINetworkUsageAlarmCallback callback);
 
   /**
    * Reload Wifi firmware to specific operation mode.
