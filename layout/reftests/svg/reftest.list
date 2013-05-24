@@ -158,7 +158,7 @@ skip-if(B2G) == filter-scaled-02.html filter-scaled-02-ref.html
 skip-if(B2G) == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 skip-if(B2G) == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-== foreignObject-form-theme.svg foreignObject-form-theme-ref.html
+fails-if(B2G) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 skip-if(B2G) == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg

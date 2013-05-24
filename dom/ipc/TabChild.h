@@ -306,6 +306,17 @@ public:
 
     bool IsAsyncPanZoomEnabled();
 
+    /** Return a boolean indicating if the page has called preventDefault on
+     *  the event.
+     */
+    bool DispatchMouseEvent(const nsString& aType,
+                            const float&    aX,
+                            const float&    aY,
+                            const int32_t&  aButton,
+                            const int32_t&  aClickCount,
+                            const int32_t&  aModifiers,
+                            const bool&     aIgnoreRootScrollFrame);
+
     /**
      * Signal to this TabChild that it should be made visible:
      * activated widget, retained layer tree, etc.  (Respectively,
