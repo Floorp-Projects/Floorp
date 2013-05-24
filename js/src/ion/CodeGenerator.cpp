@@ -5672,6 +5672,59 @@ CodeGenerator::visitGetElementIC(OutOfLineUpdateCache *ool, GetElementIC *ic)
 }
 
 bool
+CodeGenerator::visitSetElementCacheV(LSetElementCacheV *ins)
+{
+    Register obj = ToRegister(ins->object());
+    Register temp = ToRegister(ins->temp());
+    ValueOperand index = ToValue(ins, LSetElementCacheV::Index);
+    ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetElementCacheV::Value));
+
+    SetElementIC cache(obj, temp, index, value, ins->mir()->strict());
+
+    return addCache(ins, allocateCache(cache));
+}
+
+bool
+CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
+{
+    Register obj = ToRegister(ins->object());
+    Register temp = ToRegister(ins->temp());
+    ValueOperand index = ToValue(ins, LSetElementCacheT::Index);
+    ConstantOrRegister value;
+    const LAllocation *tmp = ins->value();
+    if (tmp->isConstant())
+        value = *tmp->toConstant();
+    else
+        value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(tmp));
+
+    SetElementIC cache(obj, temp, index, value, ins->mir()->strict());
+
+    return addCache(ins, allocateCache(cache));
+}
+
+typedef bool (*SetElementICFn)(JSContext *, size_t, HandleObject, HandleValue, HandleValue);
+const VMFunction SetElementIC::UpdateInfo =
+    FunctionInfo<SetElementICFn>(SetElementIC::update);
+
+bool
+CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic)
+{
+    LInstruction *lir = ool->lir();
+    saveLive(lir);
+
+    pushArg(ic->value());
+    pushArg(ic->index());
+    pushArg(ic->object());
+    pushArg(Imm32(ool->getCacheIndex()));
+    if (!callVM(SetElementIC::UpdateInfo, lir))
+        return false;
+    restoreLive(lir);
+
+    masm.jump(ool->rejoin());
+    return true;
+}
+
+bool
 CodeGenerator::visitBindNameCache(LBindNameCache *ins)
 {
     Register scopeChain = ToRegister(ins->scopeChain());
