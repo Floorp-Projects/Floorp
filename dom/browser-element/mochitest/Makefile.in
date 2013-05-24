@@ -28,7 +28,6 @@ MOCHITEST_FILES = \
 		browserElement_DataURI.js \
 		test_browserElement_inproc_DataURI.html \
 		browserElement_ErrorSecurity.js \
-		test_browserElement_inproc_ErrorSecurity.html \
 		browserElement_Titlechange.js \
 		test_browserElement_inproc_Titlechange.html \
 		browserElement_TopBarrier.js \
@@ -161,6 +160,8 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_PurgeHistory.html \
 		browserElement_DocumentFirstPaint.js \
 		test_browserElement_inproc_DocumentFirstPaint.html \
+		browserElement_VisibilityChange.js \
+		test_browserElement_inproc_VisibilityChange.html \
 		$(NULL)
 
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
@@ -168,6 +169,9 @@ MOCHITEST_FILES = \
 
 # Disabled due to focus issues (no bug that I'm aware of)
 # 		test_browserElement_oop_KeyEvents.html \
+
+# Disable due to certificate issue (no bug that I'm aware of)
+#		test_browserElement_inproc_ErrorSecurity.html \
 
 # OOP tests don't work on native-fennec (bug 774939).
 #
@@ -179,6 +183,7 @@ MOCHITEST_FILES += \
 		browserElement_OpenMixedProcess.js \
 		file_browserElement_OpenMixedProcess.html \
 		test_browserElement_inproc_OpenMixedProcess.html \
+		test_browserElement_inproc_ErrorSecurity.html \
 		test_browserElement_oop_OpenMixedProcess.html \
 		test_browserElement_oop_LoadEvents.html \
 		test_browserElement_oop_DataURI.html \
@@ -230,6 +235,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_ReloadPostRequest.html \
 		test_browserElement_oop_PurgeHistory.html \
 		test_browserElement_oop_DocumentFirstPaint.html \
+		test_browserElement_oop_VisibilityChange.html \
 	$(NULL)
 
 endif #}
