@@ -17,7 +17,9 @@ function test() {
 
     // Undo pinning
     gBrowser.unpinTab(tab1);
-    ok("__SS_data" in tab1.linkedBrowser, "tab should still be loading");
+
+    is(tab1.linkedBrowser.__SS_tabStillLoading, true,
+       "_tabStillLoading should be true.");
 
     // Close and restore tab
     gBrowser.removeTab(tab1);
