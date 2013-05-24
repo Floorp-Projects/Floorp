@@ -72,6 +72,12 @@ VARIABLES = {
         This variable contains a list of C source files to compile.
         """),
 
+    'DEFINES': (StrictOrderingOnAppendList, list, [],
+        """Compiler defines to declare.
+
+        Command line -D flags passed to the compiler.
+        """),
+
     'DIRS': (list, list, [],
         """Child directories to descend into looking for build frontend files.
 

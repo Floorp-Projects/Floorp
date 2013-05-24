@@ -136,6 +136,7 @@ const SERVICE_STILL_APPLYING_ON_FAILURE    = 30;
 const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
+const SERVICE_COULD_NOT_COPY_UPDATER       = 49;
 
 const WRITE_ERROR_ACCESS_DENIED                     = 35;
 // const WRITE_ERROR_SHARING_VIOLATION                 = 36; // Replaced with errors 46-48
@@ -151,7 +152,6 @@ const FOTA_UNKNOWN_ERROR                            = 45;
 const WRITE_ERROR_SHARING_VIOLATION_SIGNALED        = 46;
 const WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID = 47;
 const WRITE_ERROR_SHARING_VIOLATION_NOPID           = 48;
-
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -1305,6 +1305,7 @@ function handleUpdateFailure(update, errorCode) {
       update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE ||
       update.errorCode == SERVICE_UPDATER_NOT_FIXED_DRIVE ||
       update.errorCode == SERVICE_COULD_NOT_LOCK_UPDATER ||
+      update.errorCode == SERVICE_COULD_NOT_COPY_UPDATER ||
       update.errorCode == SERVICE_INSTALLDIR_ERROR) {
 
     var failCount = getPref("getIntPref",

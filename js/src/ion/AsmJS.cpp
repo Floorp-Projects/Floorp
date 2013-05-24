@@ -17,6 +17,7 @@ using namespace js;
 using namespace js::frontend;
 using namespace mozilla;
 
+#include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"

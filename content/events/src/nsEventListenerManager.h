@@ -210,7 +210,7 @@ class nsEventListenerManager
 {
 
 public:
-  nsEventListenerManager(nsISupports* aTarget);
+  nsEventListenerManager(mozilla::dom::EventTarget* aTarget);
   virtual ~nsEventListenerManager();
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsEventListenerManager)
@@ -404,7 +404,7 @@ public:
 
   void MarkForCC();
 
-  nsISupports* GetTarget() { return mTarget; }
+  mozilla::dom::EventTarget* GetTarget() { return mTarget; }
 protected:
   void HandleEventInternal(nsPresContext* aPresContext,
                            nsEvent* aEvent,
@@ -533,7 +533,7 @@ protected:
   uint32_t mNoListenerForEvent : 24;
 
   nsAutoTObserverArray<nsListenerStruct, 2> mListeners;
-  nsISupports*                              mTarget;  //WEAK
+  mozilla::dom::EventTarget*                mTarget;  //WEAK
   nsCOMPtr<nsIAtom>                         mNoListenerForEventAtom;
 
   static uint32_t                           mInstanceCount;

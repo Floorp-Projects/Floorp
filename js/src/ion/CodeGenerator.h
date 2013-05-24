@@ -215,6 +215,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIteratorEnd(LIteratorEnd *lir);
     bool visitArgumentsLength(LArgumentsLength *lir);
     bool visitGetArgument(LGetArgument *lir);
+    bool visitRunOncePrologue(LRunOncePrologue *lir);
     bool emitRest(LInstruction *lir, Register array, Register numActuals,
                   Register temp0, Register temp1, unsigned numFormals,
                   JSObject *templateObject, const VMFunction &f);
@@ -335,6 +336,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     // Script counts created when compiling code with no associated JSScript.
     IonScriptCounts *unassociatedScriptCounts_;
+
+    PerfSpewer perfSpewer_;
 };
 
 } // namespace ion

@@ -87,7 +87,7 @@ public class GeckoPreferences
                 int resource = getResources().getIdentifier(resourceName, "xml", getPackageName());
                 addPreferencesFromResource(resource);
             } else {
-                addPreferencesFromResource(R.xml.preferences_nonfragment);
+                addPreferencesFromResource(R.xml.preferences);
             }
         }
 
@@ -118,7 +118,7 @@ public class GeckoPreferences
         } else {
             // Use top-level settings screen.
             if (!onIsMultiPane()) {
-                fragmentArgs.putString(INTENT_EXTRA_RESOURCES, "preferences_main");
+                fragmentArgs.putString(INTENT_EXTRA_RESOURCES, "preferences");
             } else {
                 fragmentArgs.putString(INTENT_EXTRA_RESOURCES, "preferences_general");
             }

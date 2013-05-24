@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedPlanarYCbCrImage.h"
-#include "ShmemYCbCrImage.h"
+#include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"
 
@@ -40,21 +40,21 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrImage::Data& aData)
   // do not set mBuffer like in PlanarYCbCrImage because the later
   // will try to manage this memory without knowing it belongs to a
   // shmem.
-  mBufferSize = ShmemYCbCrImage::ComputeMinBufferSize(mData.mYSize,
-                                                      mData.mCbCrSize);
+  mBufferSize = YCbCrImageDataSerializer::ComputeMinBufferSize(mData.mYSize,
+                                                               mData.mCbCrSize);
   mSize = mData.mPicSize;
 
-  ShmemYCbCrImage shmImg(mShmem);
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
   MOZ_ASSERT(aData.mCbSkip == aData.mCrSkip);
-  if (!shmImg.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
-                       aData.mYSize, aData.mYStride,
-                       aData.mCbCrSize, aData.mCbCrStride,
-                       aData.mYSkip, aData.mCbSkip)) {
+  if (!serializer.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
+                          aData.mYSize, aData.mYStride,
+                          aData.mCbCrSize, aData.mCbCrStride,
+                          aData.mYSkip, aData.mCbSkip)) {
     NS_WARNING("Failed to copy image data!");
   }
-  mData.mYChannel = shmImg.GetYData();
-  mData.mCbChannel = shmImg.GetCbData();
-  mData.mCrChannel = shmImg.GetCrData();
+  mData.mYChannel = serializer.GetYData();
+  mData.mCbChannel = serializer.GetCbData();
+  mData.mCrChannel = serializer.GetCrData();
 }
 
 // needs to be overriden because the parent class sets mBuffer which we
@@ -63,15 +63,15 @@ uint8_t*
 SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
-  size_t size = ShmemYCbCrImage::ComputeMinBufferSize(aSize);
+  size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
   // update buffer size
   mBufferSize = size;
 
   // get new buffer _without_ setting mBuffer.
   AllocateBuffer(mBufferSize);
-  ShmemYCbCrImage shmImg(mShmem);
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
 
-  return shmImg.GetData();
+  return serializer.GetData();
 }
 
 
@@ -80,9 +80,9 @@ SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
   mSize = aData.mPicSize;
-  ShmemYCbCrImage::InitializeBufferInfo(mShmem.get<uint8_t>(),
-                                        aData.mYSize,
-                                        aData.mCbCrSize);
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
+  serializer.InitializeBufferInfo(aData.mYSize,
+                                  aData.mCbCrSize);
 }
 
 uint8_t* 
@@ -103,25 +103,24 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrImage::Data& aData)
 {
   NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
 
-  size_t size = ShmemYCbCrImage::ComputeMinBufferSize(aData.mYSize,
-                                                      aData.mCbCrSize);
+  size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aData.mYSize,
+                                                               aData.mCbCrSize);
 
   if (AllocateBuffer(static_cast<uint32_t>(size)) == nullptr) {
     return false;
   }
 
-  ShmemYCbCrImage::InitializeBufferInfo(mShmem.get<uint8_t>(),
-                                        aData.mYSize,
-                                        aData.mCbCrSize);
-  ShmemYCbCrImage shmImg(mShmem);
-  if (!shmImg.IsValid() || mShmem.Size<uint8_t>() < size) {
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
+  serializer.InitializeBufferInfo(aData.mYSize,
+                                  aData.mCbCrSize);
+  if (!serializer.IsValid() || mShmem.Size<uint8_t>() < size) {
     mSurfaceAllocator->DeallocShmem(mShmem);
     return false;
   }
 
-  aData.mYChannel = shmImg.GetYData();
-  aData.mCbChannel = shmImg.GetCbData();
-  aData.mCrChannel = shmImg.GetCrData();
+  aData.mYChannel = serializer.GetYData();
+  aData.mCbChannel = serializer.GetCbData();
+  aData.mCrChannel = serializer.GetCrData();
 
   // copy some of aData's values in mData (most of them)
   mData.mYChannel = aData.mYChannel;
@@ -150,7 +149,7 @@ SharedPlanarYCbCrImage::ToSurfaceDescriptor(SurfaceDescriptor& aDesc) {
   if (!mAllocated) {
     return false;
   }
-  aDesc = YCbCrImage(mShmem, 0, reinterpret_cast<uint64_t>(this));
+  aDesc = YCbCrImage(mShmem, reinterpret_cast<uint64_t>(this));
   this->AddRef();
   return true;
 }
@@ -160,7 +159,7 @@ SharedPlanarYCbCrImage::DropToSurfaceDescriptor(SurfaceDescriptor& aDesc) {
   if (!mAllocated) {
     return false;
   }
-  aDesc = YCbCrImage(mShmem, 0, 0);
+  aDesc = YCbCrImage(mShmem, 0);
   mShmem = Shmem();
   mAllocated = false;
   return true;

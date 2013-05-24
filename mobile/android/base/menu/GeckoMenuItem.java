@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.menu;
 
 import android.content.Context;
 import android.content.Intent;
@@ -61,7 +61,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     public GeckoMenuItem(Context context, int id) {
         mContext = context;
-        mLayout = (MenuItemDefault) LayoutInflater.from(mContext).inflate(R.layout.menu_item, null);
+        mLayout = new MenuItemDefault(context, null);
         mLayout.setId(id);
 
         mId = id;
@@ -296,7 +296,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
             mLayout = new MenuItemActionBar(mContext, null);
         } else {
             // Change the type to default
-            mLayout = (MenuItemDefault) LayoutInflater.from(mContext).inflate(R.layout.menu_item, null);
+            mLayout = new MenuItemDefault(mContext, null);
         }
 
         mActionItem = (actionEnum > 0);         

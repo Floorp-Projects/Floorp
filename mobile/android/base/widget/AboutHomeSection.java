@@ -4,10 +4,10 @@
 
 package org.mozilla.gecko.widget;
 
-import org.mozilla.gecko.Divider;
 import org.mozilla.gecko.GeckoLinearLayout;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GamepadUtils;
+import org.mozilla.gecko.widget.Divider;
 
 import android.content.Context;
 import android.content.res.TypedArray;
