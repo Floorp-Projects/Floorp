@@ -60,6 +60,7 @@ _SERV_FILES = 	\
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		pywebsocket_wrapper.py \
 		android.json \
+		androidx86.json \
 		b2g.json \
 		root-ev-tester.crl \
 		intermediate-ev-tester.crl \
