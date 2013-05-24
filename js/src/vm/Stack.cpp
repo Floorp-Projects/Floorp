@@ -13,7 +13,6 @@
 #include "ion/BaselineFrame.h"
 #include "ion/IonFrames.h"
 #include "ion/IonCompartment.h"
-#include "ion/Bailouts.h"
 #endif
 #include "Stack.h"
 #include "ForkJoin.h"
@@ -967,35 +966,6 @@ ContextStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Value &
     efg->setPushed(*this);
     return true;
 }
-
-#ifdef JS_ION
-bool
-ContextStack::pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it, InvokeArgsGuard *iag)
-{
-    unsigned argc = it.numActualArgs();
-
-    if (!pushInvokeArgs(cx, argc, iag, DONT_REPORT_ERROR))
-        return false;
-
-    ion::SnapshotIterator s(it);
-    JSFunction *fun = it.callee();
-    iag->setCallee(ObjectValue(*fun));
-
-    CopyTo dst(iag->array());
-    Value *src = it.actualArgs();
-    Value thisv = iag->thisv();
-    s.readFrameArgs(dst, src, NULL, &thisv, 0, fun->nargs, argc, it.script());
-    return true;
-}
-
-StackFrame *
-ContextStack::pushBailoutFrame(JSContext *cx, const ion::IonBailoutIterator &it,
-                               const CallArgs &args, BailoutFrameGuard *bfg)
-{
-    JSFunction *fun = it.callee();
-    return pushInvokeFrame(cx, DONT_REPORT_ERROR, args, fun, INITIAL_NONE, bfg);
-}
-#endif
 
 void
 ContextStack::popFrame(const FrameGuard &fg)
