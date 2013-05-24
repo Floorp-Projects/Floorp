@@ -68,7 +68,7 @@ public class ActivityHandlerHelper {
 
     private int addIntentActivitiesToList(Context context, Intent intent, ArrayList<Prompt.PromptListItem> items, ArrayList<Intent> aIntents) {
         PackageManager pm = context.getPackageManager();
-        List<ResolveInfo> lri = pm.queryIntentActivityOptions(GeckoApp.mAppContext.getComponentName(), null, intent, 0);
+        List<ResolveInfo> lri = pm.queryIntentActivityOptions(GeckoAppShell.getGeckoInterface().getActivity().getComponentName(), null, intent, 0);
 
         if (lri == null) {
             return 0;
@@ -163,7 +163,7 @@ public class ActivityHandlerHelper {
             return intents.get(0);
         }
 
-        final PromptService ps = GeckoApp.mAppContext.getPromptService();
+        final PromptService ps = GeckoAppShell.getGeckoInterface().getPromptService();
         final String title = getFilePickerTitle(context, aMimeType);
 
         // Runnable has to be called to show an intent-like

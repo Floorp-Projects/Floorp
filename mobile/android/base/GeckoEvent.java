@@ -311,7 +311,7 @@ public class GeckoEvent {
             event.mPoints = new Point[1];
 
             PointF geckoPoint = new PointF(pt.x, pt.y);
-            geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);
+            geckoPoint = GeckoAppShell.getGeckoInterface().getLayerView().convertViewPointToLayerPoint(geckoPoint);
 
             if (geckoPoint == null) {
                 // This could happen if Gecko isn't ready yet.
@@ -384,7 +384,7 @@ public class GeckoEvent {
         try {
             PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
             if (!keepInViewCoordinates) {
-                geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);
+                geckoPoint = GeckoAppShell.getLayerView().convertViewPointToLayerPoint(geckoPoint);
             }
 
             mPoints[index] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
@@ -415,7 +415,7 @@ public class GeckoEvent {
                 }
             } else {
                 float size = event.getSize(eventIndex);
-                Resources resources = GeckoApp.mAppContext.getResources();
+                Resources resources = GeckoAppShell.getContext().getResources();
                 DisplayMetrics displaymetrics = resources.getDisplayMetrics();
                 size = size*Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
                 mPointRadii[index] = new Point((int)size,(int)size);

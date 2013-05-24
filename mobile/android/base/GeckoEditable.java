@@ -346,7 +346,7 @@ final class GeckoEditable
                 Editable.class.getClassLoader(),
                 PROXY_INTERFACES, this);
 
-        LayerView v = GeckoApp.mAppContext.getLayerView();
+        LayerView v = GeckoAppShell.getLayerView();
         mListener = GeckoInputConnection.create(v, this);
 
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
@@ -775,7 +775,7 @@ final class GeckoEditable
                 // Set InputConnectionHandler in notifyIMEContext because
                 // GeckoInputConnection.notifyIMEContext calls restartInput() which will invoke
                 // InputConnectionHandler.onCreateInputConnection
-                LayerView v = GeckoApp.mAppContext.getLayerView();
+                LayerView v = GeckoAppShell.getLayerView();
                 if (v != null) {
                     mListener = GeckoInputConnection.create(v, GeckoEditable.this);
                     v.setInputConnectionHandler((InputConnectionHandler)mListener);
