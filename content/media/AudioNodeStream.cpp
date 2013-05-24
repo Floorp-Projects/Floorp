@@ -394,13 +394,19 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
 
   AudioSegment* segment = track->Get<AudioSegment>();
 
-  mLastChunks.SetLength(1);
-  mLastChunks[0].SetNull(0);
+  uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
+  mLastChunks.SetLength(outputCount);
 
   if (mInCycle) {
     // XXX DelayNode not supported yet so just produce silence
-    mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
+    for (uint16_t i = 0; i < outputCount; ++i) {
+      mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
+    }
   } else {
+    for (uint16_t i = 0; i < outputCount; ++i) {
+      mLastChunks[i].SetNull(0);
+    }
+
     // We need to generate at least one input
     uint16_t maxInputs = std::max(uint16_t(1), mEngine->InputCount());
     OutputChunks inputChunks;
