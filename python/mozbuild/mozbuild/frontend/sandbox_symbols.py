@@ -123,6 +123,16 @@ VARIABLES = {
         """Name of target library generated when cross compiling.
         """),
 
+    'LIBRARY_NAME': (unicode, unicode, "",
+        """The name of the library generated for a directory.
+
+        Example:
+        In example/components/moz.build,
+        LIBRARY_NAME = 'xpcomsample'
+        would generate example/components/libxpcomsample.so on Linux, or
+        example/components/xpcomsample.lib on Windows.
+        """),
+
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 
