@@ -529,6 +529,10 @@ class Marionette(object):
         response = self._send_message('getUrl', 'value')
         return response
 
+    def get_window_type(self):
+        response = self._send_message('getWindowType', 'value')
+        return response
+
     def navigate(self, url):
         response = self._send_message('goUrl', 'ok', value=url)
         return response
