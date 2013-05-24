@@ -179,8 +179,8 @@ AudioChannelsDownMix(const nsTArray<const void*>& aChannelArray,
   for (uint32_t s = 0; s < aDuration; ++s) {
     // Reserve an extra junk channel at the end for the cases where we
     // want an input channel to contribute to nothing
-    float outputChannels[CUSTOM_CHANNEL_LAYOUTS];
-    memset(outputChannels, 0, sizeof(float)*(CUSTOM_CHANNEL_LAYOUTS - 1));
+    float outputChannels[CUSTOM_CHANNEL_LAYOUTS + 1];
+    memset(outputChannels, 0, sizeof(float)*(CUSTOM_CHANNEL_LAYOUTS));
     for (uint32_t c = 0; c < inputChannelCount; ++c) {
       outputChannels[m.mInputDestination[c]] +=
         m.mInputCoefficient[c]*(static_cast<const float*>(inputChannels[c]))[s];

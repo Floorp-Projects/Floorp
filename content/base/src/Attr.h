@@ -64,7 +64,6 @@ public:
   virtual int32_t IndexOf(const nsINode* aPossibleChild) const MOZ_OVERRIDE;
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, bool aNotify);
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual already_AddRefed<nsIURI> GetBaseURI() const;

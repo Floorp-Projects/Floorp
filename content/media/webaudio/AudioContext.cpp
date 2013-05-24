@@ -136,8 +136,8 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
                            uint32_t aLength, float aSampleRate,
                            ErrorResult& aRv)
 {
-  if (aSampleRate < 8000 || aSampleRate > 96000) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+  if (aSampleRate < 8000 || aSampleRate > 96000 || !aLength) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
 
