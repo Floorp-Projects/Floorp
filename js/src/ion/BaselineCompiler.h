@@ -152,7 +152,6 @@ namespace ion {
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \
     _(JSOP_ARGUMENTS)          \
-    _(JSOP_RUNONCE)            \
     _(JSOP_REST)               \
     _(JSOP_TOID)               \
     _(JSOP_TABLESWITCH)        \
@@ -237,7 +236,6 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool addPCMappingEntry(bool addIndexEntry);
 
-    void getScopeCoordinateObject(Register reg);
     Address getScopeCoordinateAddress(Register reg);
 };
 
