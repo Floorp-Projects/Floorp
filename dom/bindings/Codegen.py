@@ -2024,8 +2024,9 @@ def CreateBindingJSObject(descriptor, properties, parent):
     else:
         objDecl = "  JSObject *obj;\n"
     if descriptor.proxy:
-        create = """  obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                       JS::PrivateValue(aObject), proto, %s);
+        create = """  JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aObject));
+  obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
+                       proxyPrivateVal, proto, %s);
   if (!obj) {
     return nullptr;
   }
