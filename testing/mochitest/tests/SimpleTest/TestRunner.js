@@ -357,7 +357,10 @@ TestRunner.runNextTest = function() {
              TestRunner.onComplete();
          }
 
-        if (TestRunner._currentLoop <= TestRunner.repeat) {
+        var failCount = parseInt($("fail-count").innerHTML);
+        var stopLooping = failCount > 0 && TestRunner.runUntilFailure;
+
+        if (TestRunner._currentLoop <= TestRunner.repeat && !stopLooping) {
           TestRunner._currentLoop++;
           TestRunner.resetTests(TestRunner._urls);
           TestRunner._loopIsRestarting = true;
