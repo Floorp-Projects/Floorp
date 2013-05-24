@@ -4761,6 +4761,14 @@ static int32_t RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+  if (mGeckoChild &&
+      mGeckoChild->GetInputContext().IsPasswordEditor() !=
+        TextInputHandler::IsSecureEventInputEnabled()) {
+    MOZ_NOT_REACHED("in wrong secure input mode");
+  }
+#endif // #if !defined(RELEASE_BUILD) || defined(DEBUG)
+
   if (mGeckoChild && mTextInputHandler && mIsPluginView) {
     mTextInputHandler->HandleKeyDownEventForPlugin(theEvent);
     return;
