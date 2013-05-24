@@ -7,7 +7,7 @@
   </head>
 
   <body>
-    <p>Infinite GETs</p>
+    <p>Performing a custom number of GETs</p>
 
     <script type="text/javascript">
       function get(aAddress, aCallback) {
@@ -25,11 +25,14 @@
       // Use a count parameter to defeat caching.
       var count = 0;
 
-      (function performRequests() {
-        get("request_" + (count++), function() {
-          setTimeout(performRequests, 50);
+      function performRequests(aTotal, aUrl, aTimeout = 0) {
+        if (!aTotal) {
+          return;
+        }
+        get(aUrl || "request_" + (count++), function() {
+          setTimeout(performRequests.bind(this, --aTotal, aUrl, aTimeout), aTimeout);
         });
-      })();
+      }
     </script>
   </body>
 

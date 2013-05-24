@@ -12,6 +12,8 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
+  browser_telemetry_toolboxtabs.js \
+  browser_telemetry_buttonsandsidebar.js \
   browser_require_basic.js \
   browser_templater_basic.js \
   browser_toolbar_basic.js \
