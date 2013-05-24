@@ -2403,7 +2403,7 @@ var gCSSProperties = {
 		  // Gecko-specific system fonts
 		  "-moz-window", "-moz-document", "-moz-desktop", "-moz-info", "-moz-dialog", "-moz-button", "-moz-pull-down-menu", "-moz-list", "-moz-field", "-moz-workspace",
 		],
-		invalid_values: [ "9 fantasy" ]
+		invalid_values: [ "9 fantasy", "-2px fantasy" ]
 	},
 	"font-family": {
 		domProp: "fontFamily",

@@ -37,12 +37,15 @@ addLoadEvent(function() {
   }
   expectException(function() {
     context.createBuffer(2, 2048, 7999);
-  }, DOMException.SYNTAX_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
   expectException(function() {
     context.createBuffer(2, 2048, 96001);
-  }, DOMException.SYNTAX_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
   context.createBuffer(2, 2048, 8000);  // no exception
   context.createBuffer(2, 2048, 96000); // no exception
+  expectException(function() {
+    context.createBuffer(2, 0, 48000);
+  }, DOMException.NOT_SUPPORTED_ERR);
   SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 });

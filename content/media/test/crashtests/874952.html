@@ -1,0 +1,11 @@
+<script>
+var Context0= new AudioContext()
+var ChannelSplitter0=Context0.createChannelSplitter();
+var BiquadFilter0=Context0.createBiquadFilter();
+var WaveShaper0=Context0.createWaveShaper();
+
+ChannelSplitter0.connect(BiquadFilter0,3,0);
+ChannelSplitter0.connect(WaveShaper0);
+BiquadFilter0.disconnect();
+WaveShaper0.connect(ChannelSplitter0);
+</script>
