@@ -456,10 +456,6 @@ HandleException(ResumeFromException *rfe)
 
     IonSpew(IonSpew_Invalidate, "handling exception");
 
-    // Immediately remove any bailout frame guard that might be left over from
-    // an error in between ConvertFrames and ThunkToInterpreter.
-    js_delete(cx->mainThread().ionActivation->maybeTakeBailout());
-
     // Clear any Ion return override that's been set.
     // This may happen if a callVM function causes an invalidation (setting the
     // override), and then fails, bypassing the bailout handlers that would

@@ -192,10 +192,9 @@ already_AddRefed<gfxImageSurface> gfxQuartzSurface::GetAsImageSurface()
     // shares the refcounts of Cairo surfaces. However, Wrap also adds a
     // reference to the image. We need to remove one of these references
     // explicitly so we don't leak.
-    gfxImageSurface* imgSurface = static_cast<gfxImageSurface*> (img.forget().get());
-    imgSurface->Release();
+    img->Release();
 
-    return imgSurface;
+    return img.forget().downcast<gfxImageSurface>();
 }
 
 gfxQuartzSurface::~gfxQuartzSurface()

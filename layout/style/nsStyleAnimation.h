@@ -160,8 +160,6 @@ public:
    * must keep |aComputedValue| alive longer than |aSpecifiedValue|.
    *
    * @param aProperty      The property whose value we're uncomputing.
-   * @param aPresContext   The presentation context for the document in
-   *                       which we're working.
    * @param aComputedValue The computed value to be converted.
    * @param [out] aSpecifiedValue The resulting specified value.
    * @return true on success, false on failure.
