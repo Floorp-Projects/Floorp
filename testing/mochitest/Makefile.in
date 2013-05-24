@@ -59,7 +59,6 @@ _SERV_FILES = 	\
 		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		pywebsocket_wrapper.py \
- 	 	plain-loop.html \
 		android.json \
 		b2g.json \
 		root-ev-tester.crl \
