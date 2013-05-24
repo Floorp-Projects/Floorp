@@ -1223,7 +1223,8 @@
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.blocked.link");
               this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
-            } else if (!isUpgrade && !this.mAddon.isCompatible) {
+            } else if ((!isUpgrade && !this.mAddon.isCompatible) && (AddonManager.checkCompatibility
+            || (this.mAddon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
                 "notification.incompatible",
