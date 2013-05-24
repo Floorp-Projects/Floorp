@@ -25,6 +25,14 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
+      case "html": {
+        let content = params.filter((s) => s.contains("res="))[0].split("=")[1];
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "text/html; charset=utf-8", false);
+        response.write(content || "<p>Hello HTML!</p>");
+        response.finish();
+        break;
+      }
       case "css": {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.setHeader("Content-Type", "text/css; charset=utf-8", false);
@@ -59,6 +67,36 @@ function handleRequest(request, response) {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.setHeader("Content-Type", "text/json; charset=utf-8", false);
         response.write("[" + new Array(2048).join(str).slice(0, -1) + "]");
+        response.finish();
+        break;
+      }
+      case "font": {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "font/woff", false);
+        response.finish();
+        break;
+      }
+      case "image": {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "image/png", false);
+        response.finish();
+        break;
+      }
+      case "audio": {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "audio/ogg", false);
+        response.finish();
+        break;
+      }
+      case "video": {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "video/webm", false);
+        response.finish();
+        break;
+      }
+      case "flash": {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "application/x-shockwave-flash", false);
         response.finish();
         break;
       }

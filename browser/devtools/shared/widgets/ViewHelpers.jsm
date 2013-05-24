@@ -607,7 +607,7 @@ MenuContainer.prototype = {
 
     // Sort the items before adding them to this container, if preferred.
     if (aOptions.sorted) {
-      stagedItems.sort((a, b) => this._sortPredicate(a.item, b.item));
+      stagedItems.sort((a, b) => this._currentSortPredicate(a.item, b.item));
     }
     // Append the prepared items to this container.
     for (let { item, options } of stagedItems) {
@@ -695,12 +695,32 @@ MenuContainer.prototype = {
   /**
    * Toggles all the items in this container hidden or visible.
    *
+   * This does not change the default filtering predicate, so newly inserted
+   * items will always be visible. Use MenuContainer.prototype.filterContents
+   * if you care.
+   *
    * @param boolean aVisibleFlag
    *        Specifies the intended visibility.
    */
   toggleContents: function(aVisibleFlag) {
-    for (let [, item] of this._itemsByElement) {
-      item._target.hidden = !aVisibleFlag;
+    for (let [element, item] of this._itemsByElement) {
+      element.hidden = !aVisibleFlag;
+    }
+  },
+
+  /**
+   * Toggles all items in this container hidden or visible based on a predicate.
+   *
+   * @param function aPredicate [optional]
+   *        Items are toggled according to the return value of this function,
+   *        which will become the new default filtering predicate in this container.
+   *        If unspecified, all items will be toggled visible.
+   */
+  filterContents: function(aPredicate = this._currentFilterPredicate) {
+    this._currentFilterPredicate = aPredicate;
+
+    for (let [element, item] of this._itemsByElement) {
+      element.hidden = !aPredicate(item);
     }
   },
 
@@ -712,8 +732,8 @@ MenuContainer.prototype = {
    *        will become the new default sorting predicate in this container.
    *        If unspecified, all items will be sorted by their label.
    */
-  sortContents: function(aPredicate = this._sortPredicate) {
-    let sortedItems = this.allItems.sort(this._sortPredicate = aPredicate);
+  sortContents: function(aPredicate = this._currentSortPredicate) {
+    let sortedItems = this.allItems.sort(this._currentSortPredicate = aPredicate);
 
     for (let i = 0, len = sortedItems.length; i < len; i++) {
       this.swapItems(this.getItemAtIndex(i), sortedItems[i]);
@@ -1123,7 +1143,7 @@ MenuContainer.prototype = {
     let itemCount = this.itemCount;
 
     for (let i = 0; i < itemCount; i++) {
-      if (this._sortPredicate(this.getItemAtIndex(i), aItem) > 0) {
+      if (this._currentSortPredicate(this.getItemAtIndex(i), aItem) > 0) {
         return i;
       }
     }
@@ -1160,6 +1180,9 @@ MenuContainer.prototype = {
       aItem.attachment));
 
     // Handle any additional options after entangling the item.
+    if (!this._currentFilterPredicate(aItem)) {
+      aItem._target.hidden = true;
+    }
     if (aOptions.attributes) {
       aItem.setAttributes(aOptions.attributes, aItem._target);
     }
@@ -1218,6 +1241,19 @@ MenuContainer.prototype = {
   },
 
   /**
+   * The predicate used when filtering items. By default, all items in this
+   * view are visible.
+   *
+   * @param MenuItem aItem
+   *        The filtered menu item.
+   * @return boolean
+   *         True if the menu item should be visible, false otherwise.
+   */
+  _currentFilterPredicate: function(aItem) {
+    return true;
+  },
+
+  /**
    * The predicate used when sorting items. By default, items in this view
    * are sorted by their label.
    *
@@ -1230,7 +1266,7 @@ MenuContainer.prototype = {
    *          0 to leave aFirst and aSecond unchanged with respect to each other
    *          1 to sort aSecond to a lower index than aFirst
    */
-  _sortPredicate: function(aFirst, aSecond) {
+  _currentSortPredicate: function(aFirst, aSecond) {
     return +(aFirst._label.toLowerCase() > aSecond._label.toLowerCase());
   },
 

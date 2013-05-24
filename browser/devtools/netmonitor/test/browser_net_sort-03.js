@@ -91,8 +91,6 @@ function test() {
     }
 
     function testContents(aOrder, aSelection) {
-      let deferred = Promise.defer();
-
       isnot(RequestsMenu.selectedItem, null,
         "There should still be a selected item after sorting.");
       is(RequestsMenu.selectedIndex, aSelection,
@@ -171,8 +169,7 @@ function test() {
           });
       }
 
-      executeSoon(deferred.resolve);
-      return deferred.promise;
+      return Promise.resolve(null);
     }
 
     aDebuggee.performRequests();
