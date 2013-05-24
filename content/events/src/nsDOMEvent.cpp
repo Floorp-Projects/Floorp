@@ -1220,17 +1220,6 @@ const char* nsDOMEvent::GetEventName(uint32_t aEventType)
   return nullptr;
 }
 
-bool
-nsDOMEvent::GetPreventDefault() const
-{
-  if (mOwner) {
-    if (nsIDocument* doc = mOwner->GetExtantDoc()) {
-      doc->WarnOnceAbout(nsIDocument::eGetPreventDefault);
-    }
-  }
-  return DefaultPrevented();
-}
-
 NS_IMETHODIMP
 nsDOMEvent::GetPreventDefault(bool* aReturn)
 {
