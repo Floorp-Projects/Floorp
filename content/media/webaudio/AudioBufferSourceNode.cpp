@@ -54,7 +54,7 @@ public:
     mResampler(nullptr),
     mOffset(0), mDuration(0),
     mLoopStart(0), mLoopEnd(0),
-    mSampleRate(0), mPosition(0), mChannels(0), mPlaybackRate(1.0f),
+    mBufferSampleRate(0), mPosition(0), mChannels(0), mPlaybackRate(1.0f),
     mDopplerShift(1.0f),
     mPlaybackRateTimeline(1.0f), mLoop(false)
   {}
@@ -76,7 +76,7 @@ public:
       // resampler, we can release it.
       if (mResampler && mPlaybackRateTimeline.HasSimpleValue() &&
           mPlaybackRateTimeline.GetValue() == 1.0 &&
-          mSampleRate == IdealAudioRate()) {
+          mBufferSampleRate == IdealAudioRate()) {
         speex_resampler_destroy(mResampler);
         mResampler = nullptr;
       }
@@ -111,7 +111,7 @@ public:
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
   {
     switch (aIndex) {
-    case AudioBufferSourceNode::SAMPLE_RATE: mSampleRate = aParam; break;
+    case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
     case AudioBufferSourceNode::OFFSET: mOffset = aParam; break;
     case AudioBufferSourceNode::DURATION: mDuration = aParam; break;
     case AudioBufferSourceNode::LOOP: mLoop = !!aParam; break;
@@ -135,7 +135,7 @@ public:
 
     if (!mResampler) {
       mChannels = aChannels;
-      mResampler = speex_resampler_init(mChannels, mSampleRate,
+      mResampler = speex_resampler_init(mChannels, mBufferSampleRate,
                                         ComputeFinalOutSampleRate(),
                                         SPEEX_RESAMPLER_QUALITY_DEFAULT,
                                         nullptr);
@@ -174,7 +174,7 @@ public:
     }
   }
 
-  // Resamples input data to an output buffer, according to |mSampleRate| and
+  // Resamples input data to an output buffer, according to |mBufferSampleRate| and
   // the playbackRate.
   // The number of frames consumed/produced depends on the amount of space
   // remaining in both the input and output buffer, and the playback rate (that
@@ -186,7 +186,7 @@ public:
                                          uint32_t aAvailableInInputBuffer,
                                          uint32_t& aFramesRead,
                                          uint32_t& aFramesWritten) {
-    double finalPlaybackRate = static_cast<double>(mSampleRate) / ComputeFinalOutSampleRate();
+    double finalPlaybackRate = static_cast<double>(mBufferSampleRate) / ComputeFinalOutSampleRate();
     uint32_t availableInOuputBuffer = WEBAUDIO_BLOCK_SIZE - aBufferOffset;
     uint32_t inputSamples, outputSamples;
 
@@ -318,7 +318,7 @@ public:
   {
     return !(mPlaybackRate == 1.0 &&
              mDopplerShift == 1.0 &&
-             mSampleRate == IdealAudioRate());
+             mBufferSampleRate == IdealAudioRate());
   }
 
   void UpdateSampleRateIfNeeded(AudioNodeStream* aStream, uint32_t aChannels)
@@ -427,7 +427,7 @@ public:
   int32_t mDuration;
   int32_t mLoopStart;
   int32_t mLoopEnd;
-  int32_t mSampleRate;
+  int32_t mBufferSampleRate;
   uint32_t mPosition;
   uint32_t mChannels;
   float mPlaybackRate;
