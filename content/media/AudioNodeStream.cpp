@@ -315,6 +315,8 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
     return;
   }
 
+  MOZ_ASSERT(outputChannelCount > 0, "How did this happen?");
+
   AllocateAudioBlock(outputChannelCount, &aTmpChunk);
   float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
   // The static storage here should be 1KB, so it's fine

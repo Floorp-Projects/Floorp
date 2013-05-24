@@ -3019,7 +3019,17 @@ nsSVGTextFrame2::AttributeChanged(int32_t aNameSpaceID,
     return NS_OK;
 
   if (aAttribute == nsGkAtoms::transform) {
-    NotifySVGChanged(TRANSFORM_CHANGED);
+    // We don't invalidate for transform changes (the layers code does that).
+    // Also note that SVGTransformableElement::GetAttributeChangeHint will
+    // return nsChangeHint_UpdateOverflow for "transform" attribute changes
+    // and cause DoApplyRenderingChangeToTree to make the SchedulePaint call.
+
+    if (!(mState & NS_FRAME_FIRST_REFLOW) &&
+        mCanvasTM && mCanvasTM->IsSingular()) {
+      // We won't have calculated the glyph positions correctly.
+      NotifyGlyphMetricsChange();
+    }
+    mCanvasTM = nullptr;
   } else if (IsGlyphPositioningAttribute(aAttribute)) {
     NotifyGlyphMetricsChange();
   }

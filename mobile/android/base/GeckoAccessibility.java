@@ -160,6 +160,8 @@ public class GeckoAccessibility {
             if (sVirtualCursorNode == null)
                 sVirtualCursorNode = AccessibilityNodeInfo.obtain(view, VIRTUAL_CURSOR_POSITION);
             sVirtualCursorNode.setEnabled(message.optBoolean("enabled", true));
+            sVirtualCursorNode.setClickable(message.optBoolean("clickable"));
+            sVirtualCursorNode.setCheckable(message.optBoolean("checkable"));
             sVirtualCursorNode.setChecked(message.optBoolean("checked"));
             sVirtualCursorNode.setPassword(message.optBoolean("password"));
 
@@ -303,6 +305,10 @@ public class GeckoAccessibility {
                                 default:
                                     break;
                                 }
+                            } else if (action == AccessibilityNodeInfo.ACTION_CLICK && virtualViewId == VIRTUAL_CURSOR_POSITION) {
+                                GeckoAppShell.
+                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", null));
+                                return true;
                             }
                             return host.performAccessibilityAction(action, arguments);
                         }
