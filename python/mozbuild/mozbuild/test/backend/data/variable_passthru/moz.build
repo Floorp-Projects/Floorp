@@ -16,6 +16,8 @@ HOST_CSRCS = ['bar.c', 'foo.c']
 
 HOST_LIBRARY_NAME = 'host_bar'
 
+LIBRARY_NAME = 'lib_name'
+
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
 CSRCS += ['bar.c', 'foo.c']
