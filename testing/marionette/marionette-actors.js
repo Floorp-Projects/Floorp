@@ -1075,7 +1075,24 @@ MarionetteDriverActor.prototype = {
    */
   getTitle: function MDA_getTitle() {
     this.command_id = this.getCommandId();
-    this.sendAsync("getTitle", {}, this.command_id);
+    if (this.context == "chrome"){
+      var curWindow = this.getCurrentWindow();
+      var title = curWindow.document.documentElement.getAttribute('title');
+      this.sendResponse(title, this.command_id);
+    }
+    else {
+      this.sendAsync("getTitle", {}, this.command_id);
+    }
+  },
+
+  /**
+   * Gets the current type of the window
+   */
+  getWindowType: function MDA_getWindowType() {
+    this.command_id = this.getCommandId();
+      var curWindow = this.getCurrentWindow();
+      var type = curWindow.document.documentElement.getAttribute('windowtype');
+      this.sendResponse(type, this.command_id);
   },
 
   /**
@@ -2219,6 +2236,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "getElementPosition": MarionetteDriverActor.prototype.getElementPosition,
   "clearElement": MarionetteDriverActor.prototype.clearElement,
   "getTitle": MarionetteDriverActor.prototype.getTitle,
+  "getWindowType": MarionetteDriverActor.prototype.getWindowType,
   "getPageSource": MarionetteDriverActor.prototype.getPageSource,
   "goUrl": MarionetteDriverActor.prototype.goUrl,
   "getUrl": MarionetteDriverActor.prototype.getUrl,
