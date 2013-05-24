@@ -160,6 +160,8 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_PurgeHistory.html \
 		browserElement_DocumentFirstPaint.js \
 		test_browserElement_inproc_DocumentFirstPaint.html \
+		browserElement_VisibilityChange.js \
+		test_browserElement_inproc_VisibilityChange.html \
 		$(NULL)
 
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
@@ -233,6 +235,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_ReloadPostRequest.html \
 		test_browserElement_oop_PurgeHistory.html \
 		test_browserElement_oop_DocumentFirstPaint.html \
+		test_browserElement_oop_VisibilityChange.html \
 	$(NULL)
 
 endif #}
