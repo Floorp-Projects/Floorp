@@ -84,8 +84,6 @@ DOMCI_CLASS(TreeColumn)
 DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 
-DOMCI_CLASS(TimeEvent)
-
 // other SVG classes
 DOMCI_CLASS(SVGAnimatedEnumeration)
 DOMCI_CLASS(SVGAnimatedInteger)
