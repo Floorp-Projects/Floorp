@@ -7,6 +7,7 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const EPSILON = 0.001;
+const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 102400; // 100 KB in bytes
 const RESIZE_REFRESH_RATE = 50; // ms
 const REQUESTS_REFRESH_RATE = 50; // ms
 const REQUESTS_HEADERS_SAFE_BOUNDS = 30; // px
@@ -1561,11 +1562,14 @@ NetworkDetailsView.prototype = {
           aEditor.setMode(SourceEditor.MODES.TEXT);
           aEditor.setText(aString);
 
-          // Maybe set a more appropriate mode in the Source Editor if possible.
-          for (let key in CONTENT_MIME_TYPE_MAPPINGS) {
-            if (mimeType.contains(key)) {
-              aEditor.setMode(CONTENT_MIME_TYPE_MAPPINGS[key]);
-              break;
+          // Maybe set a more appropriate mode in the Source Editor if possible,
+          // but avoid doing this for very large files.
+          if (aString.length < SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
+            for (let key in CONTENT_MIME_TYPE_MAPPINGS) {
+              if (mimeType.contains(key)) {
+                aEditor.setMode(CONTENT_MIME_TYPE_MAPPINGS[key]);
+                break;
+              }
             }
           }
         });
