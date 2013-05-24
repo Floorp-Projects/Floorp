@@ -269,8 +269,8 @@ NetworkStatsDB.prototype = {
         this.fillResultSamples(start, end, data);
 
         txn.result.connectionType = aOptions.connectionType;
-        txn.result.start = new Date(aOptions.start);
-        txn.result.end = new Date(aOptions.end);
+        txn.result.start = aOptions.start;
+        txn.result.end = aOptions.end;
         txn.result.data = data;
       }.bind(this);
     }.bind(this), aResultCb);
@@ -315,8 +315,8 @@ NetworkStatsDB.prototype = {
         this.fillResultSamples(start, end, data);
 
         txn.result.connectionType = aOptions.connectionType;
-        txn.result.start = new Date(aOptions.start);
-        txn.result.end = new Date(aOptions.end);
+        txn.result.start = aOptions.start;
+        txn.result.end = aOptions.end;
         txn.result.data = data;
       }.bind(this);
     }.bind(this), aResultCb);

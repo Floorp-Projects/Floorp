@@ -1,142 +1,222 @@
-"use strict";
+'use strict';
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
-var iframeScript = function() {
-
-  content.fireContextMenu = function(element) {
-    var ev = content.document.createEvent('HTMLEvents');
-    ev.initEvent('contextmenu', true, false);
-    element.dispatchEvent(ev);
-  };
-
-  XPCNativeWrapper.unwrap(content).ctxCallbackFired = function(data) {
-    sendAsyncMessage('test:callbackfired', {data: data});
-  };
-
-  XPCNativeWrapper.unwrap(content).onerror = function(e) {
-    sendAsyncMessage('test:errorTriggered', {data: e});
-  };
-
-  content.fireContextMenu(content.document.body);
-  content.fireContextMenu(content.document.getElementById('menu1-trigger'));
-  content.fireContextMenu(content.document.getElementById('inner-link').childNodes[0]);
-  content.fireContextMenu(content.document.getElementById('menu2-trigger'));
+function runTests() {
+  createIframe(function onIframeLoaded() {
+    checkEmptyContextMenu();
+  });
 }
 
-var trigger1 = function() {
-  content.fireContextMenu(content.document.getElementById('menu1-trigger'));
+function checkEmptyContextMenu() {
+  sendContextMenuTo('body', function onContextMenu(detail) {
+    is(detail.contextmenu, null, 'Body context clicks have no context menu');
+
+    checkInnerContextMenu();
+  });
+}
+
+function checkInnerContextMenu() {
+  sendContextMenuTo('#inner-link', function onContextMenu(detail) {
+    is(detail.systemTargets.length, 1, 'Includes anchor data');
+    is(detail.contextmenu.items.length, 2, 'Inner clicks trigger correct menu');
+
+    checkCustomContextMenu();
+  });
+}
+
+function checkCustomContextMenu() {
+  sendContextMenuTo('#menu1-trigger', function onContextMenu(detail) {
+    is(detail.contextmenu.items.length, 2, 'trigger custom contextmenu');
+
+    checkNestedContextMenu();
+  });
+}
+
+function checkNestedContextMenu() {
+  sendContextMenuTo('#menu2-trigger', function onContextMenu(detail) {
+    var innerMenu = detail.contextmenu.items.filter(function(x) {
+      return x.type === 'menu';
+    });
+    is(detail.systemTargets.length, 2, 'Includes anchor and img data');
+    ok(innerMenu.length > 0, 'Menu contains a nested menu');
+
+    checkPreviousContextMenuHandler();
+  });
+}
+
+ // Finished testing the data passed to the contextmenu handler,
+ // now we start selecting contextmenu items
+function checkPreviousContextMenuHandler() {
+  // This is previously triggered contextmenu data, since we have
+  // fired subsequent contextmenus this should not be mistaken
+  // for a current menuitem
+  var detail = previousContextMenuDetail;
+  var previousId = detail.contextmenu.items[0].id;
+  checkContextMenuCallbackForId(detail, previousId, function onCallbackFired(label) {
+    is(label, null, 'Callback label should be empty since this handler is old');
+
+    checkCurrentContextMenuHandler();
+  });
+}
+
+function checkCurrentContextMenuHandler() {
+  // This triggers a current menuitem
+  var detail = currentContextMenuDetail;
+
+  var innerMenu = detail.contextmenu.items.filter(function(x) {
+    return x.type === 'menu';
+  });
+
+  var currentId = innerMenu[0].items[1].id;
+  checkContextMenuCallbackForId(detail, currentId, function onCallbackFired(label) {
+    is(label, 'inner 2', 'Callback label should be set correctly');
+
+    checkAgainCurrentContextMenuHandler();
+  });
+}
+
+function checkAgainCurrentContextMenuHandler() {
+  // Once an item it selected, subsequent selections are ignored
+  var detail = currentContextMenuDetail;
+
+  var innerMenu = detail.contextmenu.items.filter(function(x) {
+    return x.type === 'menu';
+  });
+
+  var currentId = innerMenu[0].items[1].id;
+  checkContextMenuCallbackForId(detail, currentId, function onCallbackFired(label) {
+    is(label, null, 'Callback label should be empty since this handler has already been used');
+
+    checkCallbackWithPreventDefault();
+  });
 };
 
-function runTest() {
-  var iframe1 = document.createElement('iframe');
-  SpecialPowers.wrap(iframe1).mozbrowser = true;
-  document.body.appendChild(iframe1);
-  iframe1.src = 'data:text/html,<html>' +
+// Finished testing callbacks if the embedder calls preventDefault() on the
+// mozbrowsercontextmenu event, now we start checking for some cases where the embedder
+// does not want to call preventDefault() for some reasons.
+function checkCallbackWithPreventDefault() {
+  sendContextMenuTo('#menu1-trigger', function onContextMenu(detail) {
+    var id = detail.contextmenu.items[0].id;
+    checkContextMenuCallbackForId(detail, id, function onCallbackFired(label) {
+      is(label, 'foo', 'Callback label should be set correctly');
+
+      checkCallbackWithoutPreventDefault();
+    });
+  });
+}
+
+function checkCallbackWithoutPreventDefault() {
+  sendContextMenuTo('#menu1-trigger', function onContextMenu(detail) {
+    var id = detail.contextmenu.items[0].id;
+    checkContextMenuCallbackForId(detail, id, function onCallbackFired(label) {
+      is(label, null, 'Callback label should be null');
+
+      SimpleTest.finish();
+    });
+  }, /* ignorePreventDefault */ true);
+}
+
+
+/* Helpers */
+var mm = null;
+var previousContextMenuDetail = null;
+var currentContextMenuDetail = null;
+
+function sendContextMenuTo(selector, callback, ignorePreventDefault) {
+  iframe.addEventListener('mozbrowsercontextmenu', function oncontextmenu(e) {
+    iframe.removeEventListener(e.type, oncontextmenu);
+
+    // The embedder should call preventDefault() on the event if it will handle
+    // it. Not calling preventDefault() means it won't handle the event and 
+    // should not be able to deal with context menu callbacks.
+    if (ignorePreventDefault !== true) {
+      e.preventDefault();
+    }
+
+    // Keep a reference to previous/current contextmenu event details.
+    previousContextMenuDetail = currentContextMenuDetail;
+    currentContextMenuDetail = e.detail;
+
+    setTimeout(function() { callback(e.detail); });
+  });
+
+  mm.sendAsyncMessage('contextmenu', { 'selector': selector });
+}
+
+function checkContextMenuCallbackForId(detail, id, callback) {
+  mm.addMessageListener('test:callbackfired', function onCallbackFired(msg) {
+    mm.removeMessageListener('test:callbackfired', onCallbackFired);
+
+    msg = SpecialPowers.wrap(msg);
+    setTimeout(function() { callback(msg.data.label); });
+  });
+
+  detail.contextMenuItemSelected(id);
+}
+
+
+var iframe = null;
+function createIframe(callback) {
+  iframe = document.createElement('iframe');
+  SpecialPowers.wrap(iframe).mozbrowser = true;
+
+  iframe.src = 'data:text/html,<html>' +
     '<body>' +
     '<menu type="context" id="menu1" label="firstmenu">' +
-      '<menuitem label="foo" onclick="window.ctxCallbackFired(\'foo\')"></menuitem>' +
-      '<menuitem label="bar" onclick="throw(\'anerror\')"></menuitem>' +
+      '<menuitem label="foo" onclick="window.onContextMenuCallbackFired(event)"></menuitem>' +
+      '<menuitem label="bar" onclick="window.onContextMenuCallbackFired(event)"></menuitem>' +
     '</menu>' +
     '<menu type="context" id="menu2" label="secondmenu">' +
-      '<menuitem label="outer" onclick="window.ctxCallbackFired(\'err\')"></menuitem>' +
+      '<menuitem label="outer" onclick="window.onContextMenuCallbackFired(event)"></menuitem>' +
       '<menu>' +
         '<menuitem label="inner 1"></menuitem>' +
-        '<menuitem label="inner 2" onclick="window.ctxCallbackFired(\'inner2\')"></menuitem>' +
+        '<menuitem label="inner 2" onclick="window.onContextMenuCallbackFired(event)"></menuitem>' +
       '</menu>' +
     '</menu>' +
     '<div id="menu1-trigger" contextmenu="menu1"><a id="inner-link" href="foo.html">Menu 1</a></div>' +
     '<a href="bar.html" contextmenu="menu2"><img id="menu2-trigger" src="example.png" /></a>' +
     '</body></html>';
+  document.body.appendChild(iframe);
 
-  var mm;
-  var numIframeLoaded = 0;
-  var ctxMenuEvents = 0;
-  var ctxCallbackEvents = 0;
+  // The following code will be included in the child
+  // =========================================================================
+  function iframeScript() {
+    addMessageListener('contextmenu', function onContextMenu(msg) {
+      var document = content.document;
+      var evt = document.createEvent('HTMLEvents');
+      evt.initEvent('contextmenu', true, true);
+      document.querySelector(msg.data.selector).dispatchEvent(evt);
+    });
 
-  var cachedCtxDetail = null;
+    addMessageListener('browser-element-api:call', function onCallback(msg) {
+      if (msg.data.msg_name != 'fire-ctx-callback')
+        return;
 
-  // We fire off various contextmenu events to check the data that gets
-  // passed to the handler
-  function iframeContextmenuHandler(e) {
-    var detail = e.detail;
-    ctxMenuEvents++;
-    if (ctxMenuEvents === 1) {
-      ok(detail.contextmenu === null, 'body context clicks have no context menu');
-    } else if (ctxMenuEvents === 2) {
-      cachedCtxDetail = detail;
-      ok(detail.contextmenu.items.length === 2, 'trigger custom contextmenu');
-    } else if (ctxMenuEvents === 3) {
-      ok(detail.systemTargets.length === 1, 'Includes anchor data');
-      ok(detail.contextmenu.items.length === 2, 'Inner clicks trigger correct menu');
-    } else if (ctxMenuEvents === 4) {
-      var innerMenu = detail.contextmenu.items.filter(function(x) {
-        return x.type === 'menu';
+      /* Use setTimeout in order to react *after* the platform */
+      content.setTimeout(function() {
+        sendAsyncMessage('test:callbackfired', { label: label });
+        label = null;
       });
-      ok(detail.systemTargets.length === 2, 'Includes anchor and img data');
-      ok(innerMenu.length > 0, 'Menu contains a nested menu');
-      ok(true, 'Got correct number of contextmenu events');
-      // Finished testing the data passed to the contextmenu handler,
-      // now we start selecting contextmenu items
+    });
 
-      // This is previously triggered contextmenu data, since we have
-      // fired subsequent contextmenus this should not be mistaken
-      // for a current menuitem
-      var prevId = cachedCtxDetail.contextmenu.items[0].id;
-      cachedCtxDetail.contextMenuItemSelected(prevId);
-      // This triggers a current menuitem
-      detail.contextMenuItemSelected(innerMenu[0].items[1].id);
-      // Once an item it selected, subsequent selections are ignored
-      detail.contextMenuItemSelected(innerMenu[0].items[0].id);
-    } else if (ctxMenuEvents === 5) {
-      ok(detail.contextmenu.label === 'firstmenu', 'Correct menu enabled');
-      detail.contextMenuItemSelected(detail.contextmenu.items[0].id);
-    } else if (ctxMenuEvents === 6) {
-      detail.contextMenuItemSelected(detail.contextmenu.items[1].id);
-    } else if (ctxMenuEvents > 6) {
-      ok(false, 'Too many events');
-    }
+    var label = null;
+    XPCNativeWrapper.unwrap(content).onContextMenuCallbackFired = function(e) {
+      label = e.target.getAttribute('label');
+    };
   }
+  // =========================================================================
 
-  function ctxCallbackRecieved(msg) {
-    msg = SpecialPowers.wrap(msg);
-    ctxCallbackEvents++;
-    if (ctxCallbackEvents === 1) {
-      ok(msg.json.data === 'inner2', 'Callback function got fired correctly');
-      mm.loadFrameScript('data:,(' + trigger1.toString() + ')();', false);
-    } else if (ctxCallbackEvents === 2) {
-      ok(msg.json.data === 'foo', 'Callback function got fired correctly');
-      mm.loadFrameScript('data:,(' + trigger1.toString() + ')();', false);
-    } else if (ctxCallbackEvents > 2) {
-      ok(false, 'Too many callback events');
-    }
-  }
+  iframe.addEventListener('mozbrowserloadend', function onload(e) {
+    iframe.removeEventListener(e.type, onload);
+    mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+    mm.loadFrameScript('data:,(' + iframeScript.toString() + ')();', false);
 
-  var gotError = false;
-  function errorTriggered(msg) {
-    if (gotError) {
-      return;
-    }
-
-    gotError = true;
-    ok(true, 'An error in the callback triggers window.onerror');
-    SimpleTest.finish();
-  }
-
-  function iframeLoadedHandler() {
-    numIframeLoaded++;
-    if (numIframeLoaded === 2) {
-      mm = SpecialPowers.getBrowserFrameMessageManager(iframe1);
-      mm.addMessageListener('test:callbackfired', ctxCallbackRecieved);
-      mm.addMessageListener('test:errorTriggered', errorTriggered);
-      mm.loadFrameScript('data:,(' + iframeScript.toString() + ')();', false);
-    }
-  }
-
-  iframe1.addEventListener('mozbrowsercontextmenu', iframeContextmenuHandler);
-  iframe1.addEventListener('mozbrowserloadend', iframeLoadedHandler);
+    // Now we're ready, let's start testing.
+    callback();
+  });
 }
 
-addEventListener('testready', runTest);
+addEventListener('testready', runTests);
