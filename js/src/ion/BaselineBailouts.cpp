@@ -1119,7 +1119,7 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
 
     info->bailoutKind = bailoutKind;
     *bailoutInfo = info;
-    return BAILOUT_RETURN_BASELINE;
+    return BAILOUT_RETURN_OK;
 }
 
 static bool
