@@ -20,7 +20,22 @@ interface nsIDOMMozNetworkStatsInterface : nsISupports
   readonly attribute DOMString id;
 };
 
-[scriptable, uuid(5f033d31-c9a2-4e2d-83aa-6a807f1e0c11)]
+dictionary NetworkStatsAlarmOptions
+{
+  jsval startTime; // Date object
+  jsval data;
+};
+
+[scriptable, builtinclass, uuid(063ebeb2-5c6e-47ae-bdcd-5e6ebdc7a68c)]
+interface nsIDOMMozNetworkStatsAlarm : nsISupports
+{
+  readonly attribute unsigned long alarmId;
+  readonly attribute nsIDOMMozNetworkStatsInterface network;
+  readonly attribute long threshold;
+  readonly attribute jsval data;
+};
+
+[scriptable,  uuid(50d109b8-0d7f-4208-81fe-5f07a759f159)]
 interface nsIDOMMozNetworkStatsManager : nsISupports
 {
   /**
@@ -41,6 +56,41 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
                               in jsval start,
                               in jsval end,
                               [optional] in DOMString manifestURL);
+
+  /**
+   * Install an alarm on a network. The network must be in the return of
+   * getAvailableNetworks() otherwise an "InvalidNetwork" exception will
+   * be raised.
+   *
+   * When total data usage reaches threshold bytes, a "networkstats-alarm"
+   * system message is sent to the application, where the optional parameter
+   * |data| must be a cloneable object.
+   *
+   * If success, the |result| field of the DOMRequest keeps the alarm Id.
+   */
+  nsIDOMDOMRequest addAlarm(in nsIDOMMozNetworkStatsInterface network,
+                            in long threshold,
+                            [optional] in jsval options /* NetworkStatsAlarmOptions */);
+
+  /**
+   * Obtain all alarms for those networks returned by getAvailableNetworks().
+   * If a network is provided, only retrieves the alarms for that network.
+   * The network must be one of those returned by getAvailebleNetworks() or an
+   * "InvalidNetwork" exception will be raised.
+   *
+   * Each alarm object has the same fields as that in the system message:
+   *  - alarmId
+   *  - network
+   *  - threshold
+   *  - data
+   */
+  nsIDOMDOMRequest getAllAlarms([optional] in nsIDOMMozNetworkStatsInterface network);
+
+  /**
+   * Remove all network alarms. If an |alarmId| is provided, then only that
+   * alarm is removed.
+   */
+  nsIDOMDOMRequest removeAlarms([optional] in long alarmId);
 
   /**
    * Remove all stats related with the provided network from DB.
