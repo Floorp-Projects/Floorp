@@ -1700,6 +1700,10 @@ void HTMLMediaElement::SetMutedInternal(uint32_t aMuted)
 
 NS_IMETHODIMP HTMLMediaElement::SetMuted(bool aMuted)
 {
+  if (aMuted == Muted()) {
+    return NS_OK;
+  }
+
   if (aMuted) {
     SetMutedInternal(mMuted | MUTED_BY_CONTENT);
   } else {
