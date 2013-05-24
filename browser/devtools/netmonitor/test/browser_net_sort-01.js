@@ -153,20 +153,20 @@ function test() {
     });
 
     function testContents([a, b, c, d, e]) {
-      is(RequestsMenu.allItems.length, 5,
+      is(RequestsMenu.orderedItems.length, 5,
         "There should be a total of 5 items in the requests menu.");
       is(RequestsMenu.visibleItems.length, 5,
         "There should be a total of 5 visbile items in the requests menu.");
 
-      is(RequestsMenu.getItemAtIndex(0), RequestsMenu.allItems[0],
+      is(RequestsMenu.getItemAtIndex(0), RequestsMenu.orderedItems[0],
         "The requests menu items aren't ordered correctly. First item is misplaced.");
-      is(RequestsMenu.getItemAtIndex(1), RequestsMenu.allItems[1],
+      is(RequestsMenu.getItemAtIndex(1), RequestsMenu.orderedItems[1],
         "The requests menu items aren't ordered correctly. Second item is misplaced.");
-      is(RequestsMenu.getItemAtIndex(2), RequestsMenu.allItems[2],
+      is(RequestsMenu.getItemAtIndex(2), RequestsMenu.orderedItems[2],
         "The requests menu items aren't ordered correctly. Third item is misplaced.");
-      is(RequestsMenu.getItemAtIndex(3), RequestsMenu.allItems[3],
+      is(RequestsMenu.getItemAtIndex(3), RequestsMenu.orderedItems[3],
         "The requests menu items aren't ordered correctly. Fourth item is misplaced.");
-      is(RequestsMenu.getItemAtIndex(4), RequestsMenu.allItems[4],
+      is(RequestsMenu.getItemAtIndex(4), RequestsMenu.orderedItems[4],
         "The requests menu items aren't ordered correctly. Fifth item is misplaced.");
 
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(a),

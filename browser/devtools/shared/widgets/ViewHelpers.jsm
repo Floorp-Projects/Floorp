@@ -10,6 +10,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const PANE_APPEARANCE_DELAY = 50;
+const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -93,6 +94,38 @@ this.ViewHelpers = {
   delegateWidgetEventMethods: function(aWidget, aNode) {
     aWidget.addEventListener = aNode.addEventListener.bind(aNode);
     aWidget.removeEventListener = aNode.removeEventListener.bind(aNode);
+  },
+
+  /**
+   * Checks if the specified object looks like it's been decorated by an
+   * event emitter.
+   *
+   * @return boolean
+   *         True if it looks, walks and quacks like an event emitter.
+   */
+  isEventEmitter: function(aObject) {
+    return aObject && aObject.on && aObject.off && aObject.once && aObject.emit;
+  },
+
+  /**
+   * Prevents event propagation when navigation keys are pressed.
+   *
+   * @param Event e
+   *        The event to be prevented.
+   */
+  preventScrolling: function(e) {
+    switch (e.keyCode) {
+      case e.DOM_VK_UP:
+      case e.DOM_VK_DOWN:
+      case e.DOM_VK_LEFT:
+      case e.DOM_VK_RIGHT:
+      case e.DOM_VK_PAGE_UP:
+      case e.DOM_VK_PAGE_DOWN:
+      case e.DOM_VK_HOME:
+      case e.DOM_VK_END:
+        e.preventDefault();
+        e.stopPropagation();
+    }
   },
 
   /**
@@ -207,13 +240,13 @@ ViewHelpers.L10N.prototype = {
    * L10N shortcut function for numeric arguments that need to be formatted.
    * All numeric arguments will be fixed to 2 decimals and given a localized
    * decimal separator. Other arguments will be left alone.
+   *
    * @param string aName
    * @param array aArgs
    * @return string
    */
   getFormatStrWithNumbers: function(aName, ...aArgs) {
-    let newArgs = aArgs.map(x => (typeof x == 'number' ?
-                                  this.numberWithDecimals(x, 2) : x));
+    let newArgs = aArgs.map(x => typeof x == "number" ? this.numberWithDecimals(x, 2) : x);
     return this.stringBundle.formatStringFromName(aName, newArgs, newArgs.length);
   },
 
@@ -518,6 +551,11 @@ MenuItem.prototype = {
  *   - function removeAttribute(aName:string)
  *   - function addEventListener(aName:string, aCallback:function, aBubbleFlag:boolean)
  *   - function removeEventListener(aName:string, aCallback:function, aBubbleFlag:boolean)
+ *
+ * For automagical keyboard and mouse accessibility, the element node or widget
+ * should be an event emitter with the following events:
+ *   - "keyPress" -> (aName:string, aEvent:KeyboardEvent)
+ *   - "mousePress" -> (aName:string, aEvent:MouseEvent)
  */
 this.MenuContainer = function MenuContainer() {
 };
@@ -533,6 +571,12 @@ MenuContainer.prototype = {
     this._itemsByValue = new Map();   // itemsByValue because keys are strings,
     this._itemsByElement = new Map(); // and itemsByElement needs to be iterable.
     this._stagedItems = [];
+
+    // Handle internal events emitted by the widget if necessary.
+    if (ViewHelpers.isEventEmitter(this._container)) {
+      this._container.on("keyPress", this._onWidgetKeyPress.bind(this));
+      this._container.on("mousePress", this._onWidgetMousePress.bind(this));
+    }
   },
 
   /**
@@ -733,7 +777,7 @@ MenuContainer.prototype = {
    *        If unspecified, all items will be sorted by their label.
    */
   sortContents: function(aPredicate = this._currentSortPredicate) {
-    let sortedItems = this.allItems.sort(this._currentSortPredicate = aPredicate);
+    let sortedItems = this.orderedItems.sort(this._currentSortPredicate = aPredicate);
 
     for (let i = 0, len = sortedItems.length; i < len; i++) {
       this.swapItems(this.getItemAtIndex(i), sortedItems[i]);
@@ -938,6 +982,123 @@ MenuContainer.prototype = {
     this.selectedItem = this._itemsByValue.get(aValue),
 
   /**
+   * Focuses the first visible item in this container.
+   */
+  focusFirstVisibleItem: function() {
+    this.focusItemAtDelta(-this.itemCount);
+  },
+
+  /**
+   * Focuses the last visible item in this container.
+   */
+  focusLastVisibleItem: function() {
+    this.focusItemAtDelta(+this.itemCount);
+  },
+
+  /**
+   * Focuses the next item in this container.
+   */
+  focusNextItem: function() {
+    this.focusItemAtDelta(+1);
+  },
+
+  /**
+   * Focuses the previous item in this container.
+   */
+  focusPrevItem: function() {
+    this.focusItemAtDelta(-1);
+  },
+
+  /**
+   * Focuses another item in this container based on the index distance
+   * from the currently focused item.
+   *
+   * @param number aDelta
+   *        A scalar specifying by how many items should the selection change.
+   */
+  focusItemAtDelta: function(aDelta) {
+    // Make sure the currently selected item is also focused, so that the
+    // command dispatcher mechanism has a relative node to work with.
+    // If there's no selection, just select an item at a corresponding index
+    // (e.g. the first item in this container if aDelta <= 1).
+    let selectedElement = this._container.selectedItem;
+    if (selectedElement) {
+      selectedElement.focus();
+    } else {
+      this.selectedIndex = Math.max(0, aDelta - 1);
+      return;
+    }
+
+    let direction = aDelta > 0 ? "advanceFocus" : "rewindFocus";
+    let distance = Math.abs(Math[aDelta > 0 ? "ceil" : "floor"](aDelta));
+    while (distance--) {
+      if (!this._focusChange(direction)) {
+        break; // Out of bounds.
+      }
+    }
+
+    // Synchronize the selected item as being the currently focused element.
+    this.selectedItem = this.getItemForElement(this._focusedElement);
+  },
+
+  /**
+   * Focuses the next or previous item in this container.
+   *
+   * @param string aDirection
+   *        Either "advanceFocus" or "rewindFocus".
+   * @return boolean
+   *         False if the focus went out of bounds and the first or last item
+   *         in this container was focused instead.
+   */
+  _focusChange: function(aDirection) {
+    let commandDispatcher = this._commandDispatcher;
+    let prevFocusedElement = commandDispatcher.focusedElement;
+
+    commandDispatcher.suppressFocusScroll = true;
+    commandDispatcher[aDirection]();
+
+    // Make sure the newly focused item is a part of this container.
+    // If the focus goes out of bounds, revert the previously focused item.
+    if (!this.getItemForElement(commandDispatcher.focusedElement)) {
+      prevFocusedElement.focus();
+      return false;
+    }
+    // Focus remained within bounds.
+    return true;
+  },
+
+  /**
+   * Gets the command dispatcher instance associated with this container's DOM.
+   * If there are no items displayed in this container, null is returned.
+   * @return nsIDOMXULCommandDispatcher | null
+   */
+  get _commandDispatcher() {
+    if (this._cachedCommandDispatcher) {
+      return this._cachedCommandDispatcher;
+    }
+    let someElement = this._container.getItemAtIndex(0);
+    if (someElement) {
+      let commandDispatcher = someElement.ownerDocument.commandDispatcher;
+      return this._cachedCommandDispatcher = commandDispatcher;
+    }
+    return null;
+  },
+
+  /**
+   * Gets the currently focused element in this container.
+   *
+   * @return nsIDOMNode
+   *         The focused element, or null if nothing is found.
+   */
+  get _focusedElement() {
+    let commandDispatcher = this._commandDispatcher;
+    if (commandDispatcher) {
+      return commandDispatcher.focusedElement;
+    }
+    return null;
+  },
+
+  /**
    * Gets the item in the container having the specified index.
    *
    * @param number aIndex
@@ -1058,10 +1219,28 @@ MenuContainer.prototype = {
    * Returns a list of all items in this container, in the displayed order.
    * @return array
    */
-  get allItems() {
+  get orderedItems() {
     let items = [];
-    for (let i = 0; i < this.itemCount; i++) {
+    let itemCount = this.itemCount;
+    for (let i = 0; i < itemCount; i++) {
       items.push(this.getItemAtIndex(i));
+    }
+    return items;
+  },
+
+  /**
+   * Returns a list of all the visible (non-hidden) items in this container,
+   * in the displayed order
+   * @return array
+   */
+  get orderedVisibleItems() {
+    let items = [];
+    let itemCount = this.itemCount;
+    for (let i = 0; i < itemCount; i++) {
+      let item = this.getItemAtIndex(i);
+      if (!item._target.hidden) {
+        items.push(item);
+      }
     }
     return items;
   },
@@ -1139,7 +1318,6 @@ MenuContainer.prototype = {
    *         The expected item index.
    */
   _findExpectedIndex: function(aItem) {
-    let container = this._container;
     let itemCount = this.itemCount;
 
     for (let i = 0; i < itemCount; i++) {
@@ -1241,6 +1419,61 @@ MenuContainer.prototype = {
   },
 
   /**
+   * The number of elements in this container to jump when Page Up or Page Down
+   * keys are pressed. If falsy, then the page size will be based on the
+   * number of visible items in the container.
+   */
+  pageSize: 0,
+
+  /**
+   * The keyPress event listener for this container.
+   * @param string aName
+   * @param KeyboardEvent aEvent
+   */
+  _onWidgetKeyPress: function(aName, aEvent) {
+    // Prevent scrolling when pressing navigation keys.
+    ViewHelpers.preventScrolling(aEvent);
+
+    switch (aEvent.keyCode) {
+      case aEvent.DOM_VK_UP:
+        this.focusPrevItem();
+        return;
+      case aEvent.DOM_VK_DOWN:
+        this.focusNextItem();
+        return;
+      case aEvent.DOM_VK_PAGE_UP:
+        this.focusItemAtDelta(-(this.pageSize || (this.itemCount / PAGE_SIZE_ITEM_COUNT_RATIO)));
+        return;
+      case aEvent.DOM_VK_PAGE_DOWN:
+        this.focusItemAtDelta(+(this.pageSize || (this.itemCount / PAGE_SIZE_ITEM_COUNT_RATIO)));
+        return;
+      case aEvent.DOM_VK_HOME:
+        this.focusFirstVisibleItem();
+        return;
+      case aEvent.DOM_VK_END:
+        this.focusLastVisibleItem();
+        return;
+    }
+  },
+
+  /**
+   * The keyPress event listener for this container.
+   * @param string aName
+   * @param MouseEvent aEvent
+   */
+  _onWidgetMousePress: function(aName, aEvent) {
+    if (aEvent.button != 0) {
+      // Only allow left-click to trigger this event.
+      return;
+    }
+    let item = this.getItemForElement(aEvent.target);
+    if (item) {
+      // The container is not empty and we clicked on an actual item.
+      this.selectedItem = item;
+    }
+  },
+
+  /**
    * The predicate used when filtering items. By default, all items in this
    * view are visible.
    *
@@ -1275,7 +1508,8 @@ MenuContainer.prototype = {
   _itemsByLabel: null,
   _itemsByValue: null,
   _itemsByElement: null,
-  _preferredValue: null
+  _preferredValue: null,
+  _cachedCommandDispatcher: null
 };
 
 /**
