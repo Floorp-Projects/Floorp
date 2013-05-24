@@ -1908,6 +1908,9 @@ MediaInputPort::Destroy()
     {
       Run();
     }
+    // This does not need to be strongly referenced; the graph is holding
+    // a strong reference to the port, which we will remove. This will be the
+    // last message for the port.
     MediaInputPort* mPort;
   };
   GraphImpl()->AppendMessage(new Message(this));
@@ -1948,10 +1951,6 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags,
       mPort->Init();
       // The graph holds its reference implicitly
       mPort.forget();
-    }
-    virtual void RunDuringShutdown()
-    {
-      Run();
     }
     nsRefPtr<MediaInputPort> mPort;
   };
