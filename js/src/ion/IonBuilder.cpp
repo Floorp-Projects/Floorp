@@ -6962,13 +6962,13 @@ IonBuilder::jsop_rest()
     // We know the exact number of arguments the callee pushed.
     unsigned numActuals = inlinedArguments_.length();
     unsigned numFormals = info().nargs() - 1;
-    unsigned numRest = numActuals - numFormals;
+    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
     JSObject *templateObject = getNewArrayTemplateObject(numRest);
 
     MNewArray *array = new MNewArray(numRest, templateObject, MNewArray::NewArray_Allocating);
     current->add(array);
 
-    if (numFormals >= numActuals) {
+    if (numActuals <= numFormals) {
         current->push(array);
         return true;
     }
