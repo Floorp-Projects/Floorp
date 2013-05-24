@@ -3311,5 +3311,263 @@
     "high": "10000",
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_OPTIONS_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Options panel been opened?"
+  },
+  "DEVTOOLS_WEBCONSOLE_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Web Console been opened?"
+  },
+  "DEVTOOLS_BROWSERCONSOLE_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Browser Console been opened?"
+  },
+  "DEVTOOLS_INSPECTOR_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Inspector been opened?"
+  },
+  "DEVTOOLS_RULEVIEW_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Rule View been opened?"
+  },
+  "DEVTOOLS_COMPUTEDVIEW_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Computed View been opened?"
+  },
+  "DEVTOOLS_LAYOUTVIEW_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Layout View been opened?"
+  },
+  "DEVTOOLS_FONTINSPECTOR_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Font Inspector been opened?"
+  },
+  "DEVTOOLS_JSDEBUGGER_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Debugger been opened?"
+  },
+  "DEVTOOLS_JSBROWSERDEBUGGER_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Browser Debugger been opened?"
+  },
+  "DEVTOOLS_STYLEEDITOR_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Style Editor been opened?"
+  },
+  "DEVTOOLS_JSPROFILER_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's JS Profiler been opened?"
+  },
+  "DEVTOOLS_NETMONITOR_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Network Monitor been opened?"
+  },
+  "DEVTOOLS_PAINTFLASHING_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Paint Flashing been opened via the toolbox button?"
+  },
+  "DEVTOOLS_TILT_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Tilt been opened via the toolbox button?"
+  },
+  "DEVTOOLS_SCRATCHPAD_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Scratchpad been opened via the toolbox button?"
+  },
+  "DEVTOOLS_RESPONSIVE_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Responsive View been opened via the toolbox button?"
+  },
+  "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Developer Toolbar been opened via the toolbox button?"
+  },
+  "DEVTOOLS_OPTIONS_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many times has the devtool's Options panel been opened?"
+  },
+  "DEVTOOLS_WEBCONSOLE_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Web Console?"
+  },
+  "DEVTOOLS_BROWSERCONSOLE_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Browser Console?"
+  },
+  "DEVTOOLS_INSPECTOR_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Inspector?"
+  },
+  "DEVTOOLS_RULEVIEW_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Rule View?"
+  },
+  "DEVTOOLS_COMPUTEDVIEW_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Computed View?"
+  },
+  "DEVTOOLS_LAYOUTVIEW_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Layout View?"
+  },
+  "DEVTOOLS_FONTINSPECTOR_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Font Inspector?"
+  },
+  "DEVTOOLS_JSDEBUGGER_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Debugger?"
+  },
+  "DEVTOOLS_JSBROWSERDEBUGGER_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Browser Debugger?"
+  },
+  "DEVTOOLS_STYLEEDITOR_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Style Editor?"
+  },
+  "DEVTOOLS_JSPROFILER_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's JS Profiler?"
+  },
+  "DEVTOOLS_NETMONITOR_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Network Monitor?"
+  },
+  "DEVTOOLS_PAINTFLASHING_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Paint Flashing been opened via the toolbox button?"
+  },
+  "DEVTOOLS_TILT_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Tilt been opened via the toolbox button?"
+  },
+  "DEVTOOLS_SCRATCHPAD_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Scratchpad been opened via the toolbox button?"
+  },
+  "DEVTOOLS_RESPONSIVE_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Responsive View been opened via the toolbox button?"
+  },
+  "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Developer Toolbar been opened via the toolbox button?"
+  },
+  "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the toolbox been active (seconds)"
+  },
+  "DEVTOOLS_OPTIONS_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the options panel been active (seconds)"
+  },
+  "DEVTOOLS_WEBCONSOLE_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the web console been active (seconds)"
+  },
+  "DEVTOOLS_BROWSERCONSOLE_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the browser console been active (seconds)"
+  },
+  "DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the inspector been active (seconds)"
+  },
+  "DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the rule view been active (seconds)"
+  },
+  "DEVTOOLS_COMPUTEDVIEW_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the computed view been active (seconds)"
+  },
+  "DEVTOOLS_LAYOUTVIEW_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the layout view been active (seconds)"
+  },
+  "DEVTOOLS_FONTINSPECTOR_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the font inspector been active (seconds)"
+  },
+  "DEVTOOLS_JSDEBUGGER_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the JS debugger been active (seconds)"
+  },
+  "DEVTOOLS_JSBROWSERDEBUGGER_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the JS browser debugger been active (seconds)"
+  },
+  "DEVTOOLS_STYLEEDITOR_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the style editor been active (seconds)"
+  },
+  "DEVTOOLS_JSPROFILER_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the JS profiler been active (seconds)"
+  },
+  "DEVTOOLS_NETMONITOR_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the network monitor been active (seconds)"
+  },
+  "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has paint flashing been active (seconds)"
+  },
+  "DEVTOOLS_TILT_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has Tilt been active (seconds)"
+  },
+  "DEVTOOLS_SCRATCHPAD_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has Scratchpad been active (seconds)"
+  },
+  "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the responsive view been active (seconds)"
+  },
+  "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the developer toolbar been active (seconds)"
   }
 }
