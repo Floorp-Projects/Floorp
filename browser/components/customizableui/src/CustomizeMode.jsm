@@ -124,23 +124,7 @@ CustomizeMode.prototype = {
     deck.addEventListener("transitionend", function customizeTransitionEnd() {
       deck.removeEventListener("transitionend", customizeTransitionEnd);
 
-      // Add drag-and-drop event handlers to all of the customizable areas.
-      self.areas = [];
-      for (let area of CustomizableUI.areas) {
-        let target = CustomizableUI.getCustomizeTargetForArea(area, window);
-        target.addEventListener("dragstart", self);
-        target.addEventListener("dragover", self);
-        target.addEventListener("dragexit", self);
-        target.addEventListener("drop", self);
-        target.addEventListener("dragend", self);
-        for (let child of target.children) {
-          if (self.isCustomizableItem(child)) {
-            self.wrapToolbarItem(child, getPlaceForItem(child));
-          }
-        }
-        self.areas.push(target);
-      }
-
+      self._wrapToolbarItems();
       self.populatePalette();
       self.dispatchToolboxEvent("customizationready");
     });
@@ -195,18 +179,7 @@ CustomizeMode.prototype = {
       documentElement.removeAttribute("customize-exiting");
     });
 
-    for (let target of this.areas) {
-      for (let toolbarItem of target.children) {
-        if (this.isWrappedToolbarItem(toolbarItem)) {
-          this.unwrapToolbarItem(toolbarItem);
-        }
-      }
-      target.removeEventListener("dragstart", this);
-      target.removeEventListener("dragover", this);
-      target.removeEventListener("dragexit", this);
-      target.removeEventListener("drop", this);
-      target.removeEventListener("dragend", this);
-    }
+    this._unwrapToolbarItems();
 
     if (this._changed) {
       // XXXmconley: At first, it seems strange to also persist the old way with
@@ -446,6 +419,41 @@ CustomizeMode.prototype = {
     return toolbarItem;
   },
 
+  _wrapToolbarItems: function() {
+    let window = this.window;
+    // Add drag-and-drop event handlers to all of the customizable areas.
+    this.areas = [];
+    for (let area of CustomizableUI.areas) {
+      let target = CustomizableUI.getCustomizeTargetForArea(area, window);
+      target.addEventListener("dragstart", this);
+      target.addEventListener("dragover", this);
+      target.addEventListener("dragexit", this);
+      target.addEventListener("drop", this);
+      target.addEventListener("dragend", this);
+      for (let child of target.children) {
+        if (this.isCustomizableItem(child)) {
+          this.wrapToolbarItem(child, getPlaceForItem(child));
+        }
+      }
+      this.areas.push(target);
+    }
+  },
+
+  _unwrapToolbarItems: function() {
+    for (let target of this.areas) {
+      for (let toolbarItem of target.children) {
+        if (this.isWrappedToolbarItem(toolbarItem)) {
+          this.unwrapToolbarItem(toolbarItem);
+        }
+      }
+      target.removeEventListener("dragstart", this);
+      target.removeEventListener("dragover", this);
+      target.removeEventListener("dragexit", this);
+      target.removeEventListener("drop", this);
+      target.removeEventListener("dragend", this);
+    }
+  },
+
   persistCurrentSets: function()  {
     let document = this.document;
     let toolbars = document.querySelectorAll("toolbar[customizable='true']");
@@ -459,7 +467,25 @@ CustomizeMode.prototype = {
   },
 
   reset: function() {
+    this.depopulatePalette();
+    this._unwrapToolbarItems();
+
     CustomizableUI.reset();
+
+    this._wrapToolbarItems();
+    this.populatePalette();
+
+    let document = this.document;
+    let toolbars = document.querySelectorAll("toolbar[customizable='true']");
+    for (let toolbar of toolbars) {
+      let set = toolbar.currentSet;
+      toolbar.removeAttribute("currentset");
+      LOG("[RESET] Removing currentset of " + toolbar.id);
+      // Persist the currentset attribute directly on hardcoded toolbars.
+      document.persist(toolbar.id, "currentset");
+    }
+
+    this.resetButton.hidden = CustomizableUI.inDefaultState;
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
