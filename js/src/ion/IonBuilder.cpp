@@ -6980,7 +6980,7 @@ IonBuilder::jsop_rest()
     // checking here.
     MConstant *index;
     for (unsigned i = numFormals; i < numActuals; i++) {
-        index = MConstant::New(Int32Value(i));
+        index = MConstant::New(Int32Value(i - numFormals));
         current->add(index);
         MStoreElement *store = MStoreElement::New(elements, index, inlinedArguments_[i],
                                                   /* needsHoleCheck = */ false);
