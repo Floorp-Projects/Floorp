@@ -111,6 +111,12 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form with input type='color' -->
+  <form id="form17" onsubmit="return false;">
+    <input  type="color" name="field14">
+    <button type="submit">Submit</button>
+  </form>
+
 </div>
 
 <pre id="test">
@@ -151,12 +157,13 @@ function setupFormHistory(aCallback) {
     { op : "add", fieldname : "field11", value : "2010-10-10" },
     { op : "add", fieldname : "field12", value : "21:21" },
     { op : "add", fieldname : "field13", value : "32" },  // not used, since type=range doesn't have a drop down menu
+    { op : "add", fieldname : "field14", value : "#ffffff" }, // not used, since type=color doesn't have autocomplete currently
     { op : "add", fieldname : "searchbar-history", value : "blacklist test" },
   ], aCallback);
 }
 
 // All these non-implemeted types might need autocomplete tests in the future.
-var todoTypes = [ "datetime", "month", "week", "datetime-local", "color" ];
+var todoTypes = [ "datetime", "month", "week", "datetime-local" ];
 var todoInput = document.createElement("input");
 for (var type of todoTypes) {
   todoInput.type = type;
@@ -915,10 +922,19 @@ function runTest() {
         doKey("return");
         checkForm("30"); // default (midway between minimum (0) and maximum (64)) - step
 
-        addEntry("field1", "value1");
+        input = $_(17, "field14");
+        restoreForm();
+        waitForMenuChange(0);
         break;
 
     case 408:
+        checkMenuEntries([]); // type=color does not have a drop down menu
+        checkForm("#000000"); // default color value
+
+        addEntry("field1", "value1");
+        break;
+
+    case 409:
         input = $_(1, "field1");
         // Go to test 500.
         testNum = 499;

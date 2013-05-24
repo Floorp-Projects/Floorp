@@ -19,8 +19,6 @@
          android:layout_height="fill_parent"
          android:background="@android:color/transparent">
 
-        <!-- BrowserToolbar will be added dynamically -->
-
         <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"
@@ -37,6 +35,9 @@
                                          style="@style/FindBar"
                                          android:visibility="gone"/>
 
+        <include layout="@layout/browser_toolbar"
+                 android:layout_width="fill_parent"
+                 android:layout_height="@dimen/browser_toolbar_height"/>
     </view>
 
 </RelativeLayout>

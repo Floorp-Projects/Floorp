@@ -116,6 +116,7 @@ this.AccessFu = {
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
+    Services.obs.addObserver(this, 'Accessibility:ActivateObject', false);
     Utils.win.addEventListener('TabOpen', this);
     Utils.win.addEventListener('TabClose', this);
     Utils.win.addEventListener('TabSelect', this);
@@ -157,6 +158,7 @@ this.AccessFu = {
     Services.obs.removeObserver(this, 'Accessibility:NextObject');
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
     Services.obs.removeObserver(this, 'Accessibility:Focus');
+    Services.obs.removeObserver(this, 'Accessibility:ActivateObject');
 
     if (this.doneCallback) {
       this.doneCallback();
@@ -258,6 +260,9 @@ this.AccessFu = {
         break;
       case 'Accessibility:PreviousObject':
         this.Input.moveCursor('movePrevious', 'Simple', 'gesture');
+        break;
+      case 'Accessibility:ActivateObject':
+        this.Input.activateCurrent();
         break;
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);

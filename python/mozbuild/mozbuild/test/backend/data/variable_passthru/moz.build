@@ -8,6 +8,9 @@ XPIDL_FLAGS = ['-Idir1', '-Idir2', '-Idir3']
 
 ASFILES = ['bar.s', 'foo.asm']
 
+DEFINES = ['-Dbar', '-Dfoo']
+
+
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
 CSRCS += ['bar.c', 'foo.c']

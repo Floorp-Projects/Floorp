@@ -3709,6 +3709,18 @@ if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
 fi
 
 dnl ========================================================
+dnl = Enable perf logging for ion.
+dnl = Perf logging is OFF by default
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(perf,
+[  --enable-perf           Enable Linux perf integration],
+  JS_ION_PERF=1,
+  JS_ION_PERF= )
+if test -n "$JS_ION_PERF"; then
+    AC_DEFINE(JS_ION_PERF)
+fi
+
+dnl ========================================================
 dnl JS opt-mode assertions and minidump instrumentation
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(js-diagnostics,

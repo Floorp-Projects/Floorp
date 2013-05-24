@@ -751,6 +751,9 @@ pref("dom.experimental_forms", false);
 // Don't enable <input type=range> yet:
 pref("dom.experimental_forms_range", true);
 
+// Don't enable <input type=color> yet:
+pref("dom.forms.color", false);
+
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
 
@@ -3989,9 +3992,7 @@ pref("layers.offmainthreadcomposition.enabled", false);
 // use with tests.
 pref("layers.offmainthreadcomposition.testing.enabled", false);
 // Whether to animate simple opacity and transforms on the compositor
-pref("layers.offmainthreadcomposition.animate-opacity", false);
-pref("layers.offmainthreadcomposition.animate-transform", false);
-pref("layers.offmainthreadcomposition.log-animations", false);
+pref("layers.offmainthreadcomposition.async-animations", false);
 
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2

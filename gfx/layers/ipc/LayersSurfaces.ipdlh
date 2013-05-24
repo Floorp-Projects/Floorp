@@ -71,7 +71,6 @@ struct SurfaceStreamDescriptor {
 
 struct YCbCrImage {
   Shmem data;
-  size_t offset;
   uint64_t owner;
 };
 

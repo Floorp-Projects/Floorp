@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=875069 -->
+<!--
+    This test checks that when the content area of the window resizes without
+    any style change that we reflow stroked SVG elements that have
+    'vector-effect' set to 'non-scaling-stroke' and that are under a
+    transformed ancestor. We use an iframe to allow us to resize the content
+    area of the embedded document without changing its style.
+
+    This test should end up rendering a blue square, 100px by 50px.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      class="reftest-wait">
+  <head>
+    <style>
+
+#frame {
+  /* width and height are given the same value since percentage stroke resolves
+     as sqrt(width^2 + height^2).
+  */
+  width: 50px;
+  height: 50px;
+  border: 0;
+}
+
+    </style>
+    <script>
+
+function doTest() {
+  document.getElementById("frame").style.width = "100px";
+  document.getElementById("frame").style.height = "100px";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest, false);
+setTimeout(doTest, 4000); // fallback for running outside reftest
+
+    </script>
+  </head>
+  <body>
+    <iframe id="frame" src="stroke-width-percentage-03-iframe.svg"></iframe>
+  </body>
+</html>

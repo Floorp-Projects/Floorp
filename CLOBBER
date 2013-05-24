@@ -17,6 +17,9 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 854517: Integrate valgrind into B2G builds
 
-clobber needed due to changes in configure.in for js engine and gecko
+Bug 854517: Integrate valgrind into B2G builds
+Bug 874640 touched webidl, so Windows needs to clobber
+
+Alternative to clobber is to run ./config.status from the objdir and to
+touch the CLOBBER file in the objdir.

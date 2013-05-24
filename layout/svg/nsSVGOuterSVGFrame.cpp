@@ -667,7 +667,9 @@ nsSVGOuterSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
                 aAttribute == nsGkAtoms::viewBox ?
                   TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
 
-      static_cast<SVGSVGElement*>(mContent)->ChildrenOnlyTransformChanged();
+      if (aAttribute != nsGkAtoms::transform) {
+        static_cast<SVGSVGElement*>(mContent)->ChildrenOnlyTransformChanged();
+      }
 
     } else if (aAttribute == nsGkAtoms::width ||
                aAttribute == nsGkAtoms::height) {

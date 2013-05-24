@@ -287,15 +287,15 @@ documenttab[selected] .documenttab-selection {
 #identity-icon {
   margin: 0;
   padding: 0 @metro_spacing_snormal@;
-  list-style-image: url(chrome://browser/skin/images/identity-icons-generic.png);
+  list-style-image: url("chrome://browser/skin/images/identity-icons-generic.png");
 }
 
 #identity-box-inner.verifiedDomain > #identity-icon {
-  list-style-image: url(chrome://browser/skin/images/locked-hdpi.png);
+  list-style-image: url("chrome://browser/skin/images/identity-icons-https.png");
 }
 
 #identity-box-inner.verifiedIdentity > #identity-icon {
-  list-style-image: url(chrome://browser/skin/images/locked-hdpi.png);
+  list-style-image: url("chrome://browser/skin/images/identity-icons-https-ev.png");
 }
 
 /* Main URL textbox */

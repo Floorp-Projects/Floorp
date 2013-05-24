@@ -21,5 +21,9 @@ CPPSRCS = \
     nsMediaSnifferModule.cpp \
     $(NULL)
 
+CSRCS = \
+    mp3sniff.c
+    $(NULL)
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk

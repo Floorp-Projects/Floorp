@@ -215,6 +215,7 @@ CPPSRCS +=	MIR.cpp \
 		IonMacroAssembler.cpp \
 		IonSpewer.cpp \
 		JSONSpewer.cpp \
+		PerfSpewer.cpp \
 		LICM.cpp \
 		LinearScan.cpp \
 		LIR.cpp \
