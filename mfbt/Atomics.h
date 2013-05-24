@@ -312,12 +312,10 @@ namespace detail {
  * the <atomic> header and so will be handled above.  We provide a version of
  * atomics using the __sync_* intrinsics to support older versions of GCC.
  *
- * All __sync_* intrinsics that we use below act as full memory
- * barriers, for both compiler and hardware reordering, with one notable
- * exception: __sync_lock_test_and_set.  This intrinsic is not a full
- * barrier, but only an acquire barrier.  In practice, this has turned
- * out to not matter very much, and will become less important as newer
- * compilers are used.
+ * All __sync_* intrinsics that we use below act as full memory barriers, for
+ * both compiler and hardware reordering, except for __sync_lock_test_and_set,
+ * which is a only an acquire barrier.  When we call __sync_lock_test_and_set,
+ * we add a barrier above it as appropriate.
  */
 
 template<MemoryOrdering Order> struct Barrier;
@@ -371,6 +369,12 @@ struct IntrinsicMemoryOps
       Barrier<Order>::afterStore();
     }
     static T exchange(T& ptr, T val) {
+      // __sync_lock_test_and_set is only an acquire barrier; loads and stores
+      // can't be moved up from after to before it, but they can be moved down
+      // from before to after it.  We may want a stricter ordering, so we need
+      // an explicit barrier.
+
+      Barrier<Order>::beforeStore();
       return __sync_lock_test_and_set(&ptr, val);
     }
 };
