@@ -103,7 +103,7 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
    *        - forced: force the source to be immediately added
    */
   addSource: function(aSource, aOptions = {}) {
-    let url = aSource.url;
+    let url = NetworkHelper.convertToUnicode(unescape(aSource.url));
     let label = SourceUtils.getSourceLabel(url.split(" -> ").pop());
     let group = SourceUtils.getSourceGroup(url.split(" -> ").pop());
 

@@ -612,6 +612,9 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     domain.setAttribute("value", hostPort);
     domain.setAttribute("tooltiptext", hostPort);
 
+    let waterfall = $(".requests-menu-waterfall", template);
+    waterfall.style.backgroundImage = this._cachedWaterfallBackground;
+
     // Flatten the DOM by removing one redundant box (the template container).
     for (let node of template.childNodes) {
       fragment.appendChild(node.cloneNode(true));
@@ -995,7 +998,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   _canvas: null,
   _ctx: null,
   _cachedWaterfallWidth: 0,
-  _cachedWaterfallBackground: null,
+  _cachedWaterfallBackground: "",
   _firstRequestStartedMillis: -1,
   _lastRequestEndedMillis: -1,
   _updateQueue: [],
@@ -1422,7 +1425,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
         $("#response-content-textarea-box").hidden = false;
         NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
           aEditor.setMode(SourceEditor.MODES.TEXT);
-          aEditor.setText(NetworkHelper.convertToUnicode(aString, "UTF-8"));
+          aEditor.setText(aString);
 
           // Maybe set a more appropriate mode in the Source Editor if possible.
           for (let key in CONTENT_MIME_TYPE_MAPPINGS) {
