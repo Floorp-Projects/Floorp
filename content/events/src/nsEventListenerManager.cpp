@@ -586,7 +586,13 @@ nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
     MOZ_ASSERT(scriptListener,
                "How can we have an event handler with no nsIJSEventListener?");
 
+    bool same = scriptListener->GetHandler() == aHandler;
+    // Possibly the same listener, but update still the context and scope.
     scriptListener->SetHandler(aHandler, aContext, aScopeObject);
+    if (mTarget && !same) {
+      mTarget->EventListenerRemoved(aName);
+      mTarget->EventListenerAdded(aName);
+    }
   }
 
   if (NS_SUCCEEDED(rv) && ls) {
