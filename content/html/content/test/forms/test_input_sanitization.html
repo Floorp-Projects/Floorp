@@ -42,12 +42,11 @@ var inputTypes =
 [
   "text", "password", "search", "tel", "hidden", "checkbox", "radio",
   "submit", "image", "reset", "button", "email", "url", "number", "date",
-  "time", "range"
+  "time", "range", "color"
 ];
 
 var todoTypes =
 [
-  "color",
   "month", "week", "datetime", "datetime-local",
 ];
 
@@ -152,9 +151,7 @@ function sanitizeValue(aType, aValue)
       ok(false);
       return "";
     case "color":
-      ok(false);
-      // TODO: write the sanitize algorithm.
-      return "";
+      return /^#[0-9A-Fa-f]{6}$/.exec(aValue) ? aValue.toLowerCase() : "#000000";
     default:
       return aValue;
   }
@@ -290,6 +287,17 @@ function checkSanitizing(element)
     "13:37:42.",
     "foo12:12",
     "13:37:42.100000000000",
+    // For color
+    "#00ff00",
+    "#000000",
+    "red",
+    "#0f0",
+    "#FFFFAA",
+    "FFAABB",
+    "fFAaBb",
+    "FFAAZZ",
+    "ABCDEF",
+    "#7654321",
   ];
 
   for (value of testData) {

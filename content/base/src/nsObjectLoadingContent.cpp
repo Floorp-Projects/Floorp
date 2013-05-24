@@ -2145,7 +2145,7 @@ nsObjectLoadingContent::DestroyContent()
     mFrameLoader = nullptr;
   }
 
-  StopPluginInstance();
+  QueueCheckPluginStopEvent();
 }
 
 /* static */

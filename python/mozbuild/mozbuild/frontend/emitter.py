@@ -81,6 +81,7 @@ class TreeMetadataEmitter(object):
             # Makefile.in : moz.build
             ASFILES='ASFILES',
             CSRCS='CSRCS',
+            DEFINES='DEFINES',
             MODULE='MODULE',
             SIMPLE_PROGRAMS='SIMPLE_PROGRAMS',
             XPIDL_FLAGS='XPIDL_FLAGS',

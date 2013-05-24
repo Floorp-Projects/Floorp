@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=874640
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 874640</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 874640 **/
+  var states = [ 'true', 'false', 'end' ];
+  var pref = SpecialPowers.getBoolPref("dom.experimental_forms");
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTest(iframe) {
+    var state = states.shift();
+
+    if (state == 'end') {
+      SpecialPowers.setBoolPref("dom.experimental_forms", pref);
+      SimpleTest.finish();
+      return;
+    }
+
+    SpecialPowers.setBoolPref("dom.experimental_forms", state === 'true');
+    iframe.src = 'data:text/html,<script>' +
+                 'parent.is("valueAsDate" in document.createElement("input"), ' +
+                 state + ', "valueAsDate presence state should be ' + state + '");' +
+                 '<\/script>'
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=874640">Mozilla Bug 874640</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe onload='runTest(this);'></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

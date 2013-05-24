@@ -180,6 +180,9 @@ struct IonScript
     // call targets are compiled.
     bool hasInvalidatedCallTarget_;
 
+    // Flag set if IonScript was compiled with SPS profiling enabled.
+    bool hasSPSInstrumentation_;
+
     // Any kind of data needed by the runtime, these can be either cache
     // information or profiling info.
     uint32_t runtimeData_;
@@ -381,6 +384,15 @@ struct IonScript
     }
     bool hasInvalidatedCallTarget() const {
         return hasInvalidatedCallTarget_;
+    }
+    void setHasSPSInstrumentation() {
+        hasSPSInstrumentation_ = true;
+    }
+    void clearHasSPSInstrumentation() {
+        hasSPSInstrumentation_ = false;
+    }
+    bool hasSPSInstrumentation() const {
+        return hasSPSInstrumentation_;
     }
     const uint8_t *snapshots() const {
         return reinterpret_cast<const uint8_t *>(this) + snapshots_;

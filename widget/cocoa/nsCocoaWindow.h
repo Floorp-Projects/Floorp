@@ -97,6 +97,8 @@ typedef struct _nsCocoaWindowList {
 
 - (ChildView*)mainChildView;
 
+- (NSArray*)titlebarControls;
+
 @end
 
 @interface NSWindow (Undocumented)
@@ -114,6 +116,10 @@ typedef struct _nsCocoaWindowList {
 // rounded bottom corners, so this call doesn't have any effect there.
 - (void)setBottomCornerRounded:(BOOL)rounded;
 - (BOOL)bottomCornerRounded;
+
+// Present in the same form on OS X since at least OS X 10.5.
+- (NSRect)contentRectForFrameRect:(NSRect)windowFrame styleMask:(NSUInteger)windowStyle;
+- (NSRect)frameRectForContentRect:(NSRect)windowContentRect styleMask:(NSUInteger)windowStyle;
 
 @end
 
@@ -179,15 +185,15 @@ typedef struct _nsCocoaWindowList {
 @interface ToolbarWindow : BaseWindow
 {
   TitlebarAndBackgroundColor *mColor;
-  float mUnifiedToolbarHeight;
+  CGFloat mUnifiedToolbarHeight;
   NSColor *mBackgroundColor;
   NSView *mTitlebarView; // strong
 }
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
-- (void)setUnifiedToolbarHeight:(float)aHeight;
-- (float)unifiedToolbarHeight;
-- (float)titlebarHeight;
+- (void)setUnifiedToolbarHeight:(CGFloat)aHeight;
+- (CGFloat)unifiedToolbarHeight;
+- (CGFloat)titlebarHeight;
 - (NSRect)titlebarRect;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect;

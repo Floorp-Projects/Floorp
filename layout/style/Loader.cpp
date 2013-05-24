@@ -1105,6 +1105,7 @@ Loader::CreateSheet(nsIURI* aURI,
         LOG(("  Not cloning completed sheet %p because it's been modified",
              sheet.get()));
         sheet = nullptr;
+        fromCompleteSheets = false;
       }
     }
 
@@ -1166,6 +1167,8 @@ Loader::CreateSheet(nsIURI* aURI,
         // later modified we don't end up with two copies of our inner
         // hanging around.
         URIPrincipalAndCORSModeHashKey key(aURI, aLoaderPrincipal, aCORSMode);
+        NS_ASSERTION((*aSheet)->IsComplete(),
+                     "Should only be caching complete sheets");
         mCompleteSheets.Put(&key, *aSheet);
       }
     }
@@ -1790,6 +1793,8 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       if (cache && cache->IsEnabled()) {
         if (!cache->GetStyleSheet(aLoadData->mURI)) {
           LOG(("  Putting sheet in XUL prototype cache"));
+          NS_ASSERTION(sheet->IsComplete(),
+                       "Should only be caching complete sheets");
           cache->PutStyleSheet(sheet);
         }
       }
@@ -1799,6 +1804,8 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       URIPrincipalAndCORSModeHashKey key(aLoadData->mURI,
                                          aLoadData->mLoaderPrincipal,
                                          aLoadData->mSheet->GetCORSMode());
+      NS_ASSERTION(sheet->IsComplete(),
+                   "Should only be caching complete sheets");
       mCompleteSheets.Put(&key, sheet);
 #ifdef MOZ_XUL
     }
