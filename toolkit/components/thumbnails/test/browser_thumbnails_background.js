@@ -180,6 +180,20 @@ let tests = [
     isnot(imports.BackgroundPageThumbs._thumbBrowser, undefined,
           "Thumb browser should exist immediately after capture.");
   },
+
+  function privateBrowsingActive() {
+    let url = "http://example.com/";
+    let file = fileForURL(url);
+    ok(!file.exists(), "Thumbnail file should not already exist.");
+
+    let win = yield openPrivateWindow();
+    let capturedURL = yield capture(url);
+    is(capturedURL, url, "Captured URL should be URL passed to capture.");
+    ok(!file.exists(),
+       "Thumbnail file should not exist because a private window is open.");
+
+    win.close();
+  },
 ];
 
 function capture(url, options) {
@@ -208,5 +222,20 @@ function wait(ms) {
   setTimeout(function onTimeout() {
     deferred.resolve();
   }, ms);
+  return deferred.promise;
+}
+
+function openPrivateWindow() {
+  let deferred = imports.Promise.defer();
+  // from OpenBrowserWindow in browser.js
+  let win = window.openDialog("chrome://browser/content/", "_blank",
+                              "chrome,all,dialog=no,private",
+                              "about:privatebrowsing");
+  win.addEventListener("load", function load(event) {
+    if (event.target == win.document) {
+      win.removeEventListener("load", load);
+      deferred.resolve(win);
+    }
+  });
   return deferred.promise;
 }
