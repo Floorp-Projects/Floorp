@@ -633,7 +633,7 @@ TabChild::HandlePossibleViewportChange()
 
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.
-  RecvUpdateFrame(metrics);
+  ProcessUpdateFrame(metrics);
 }
 
 nsresult
@@ -1454,6 +1454,20 @@ ScrollWindowTo(nsIDOMWindow* aWindow, const mozilla::gfx::Point& aPoint)
 bool
 TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 {
+    nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
+
+    uint32_t presShellId;
+    nsresult rv = utils->GetPresShellId(&presShellId);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_SUCCEEDED(rv) && aFrameMetrics.mPresShellId != presShellId) {
+        return true;
+    }
+    return ProcessUpdateFrame(aFrameMetrics);
+}
+
+bool
+TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
+  {
     if (!mCx || !mTabChildGlobal) {
         return true;
     }

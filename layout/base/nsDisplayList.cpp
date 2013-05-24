@@ -695,6 +695,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     widget->GetBounds(metrics.mCompositionBounds);
   }
 
+  metrics.mPresShellId = presShell->GetPresShellId();
+
   aRoot->SetFrameMetrics(metrics);
 }
 

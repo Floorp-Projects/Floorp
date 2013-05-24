@@ -522,6 +522,21 @@ nsDOMWindowUtils::GetIsFirstPaint(bool *aIsFirstPaint)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPresShellId(uint32_t *aPresShellId)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (presShell) {
+    *aPresShellId = presShell->GetPresShellId();
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 /* static */
 mozilla::widget::Modifiers
 nsDOMWindowUtils::GetWidgetModifiers(int32_t aModifiers)
