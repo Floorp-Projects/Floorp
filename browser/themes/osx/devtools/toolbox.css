@@ -208,6 +208,32 @@
   box-shadow: 1px -1px 0 hsla(206,37%,4%,.2) inset;
 }
 
+.devtools-tab:not([selected=true]).highlighted {
+  color: #f5f7fa;
+  background-image: radial-gradient(farthest-corner at center top, #c0ff40, hsla(80,100%,63%,.5) 70%, hsla(80,100%,63%,.3) 97%),
+                    radial-gradient(farthest-side at center top, hsla(80,100%,35%,.5), hsla(80,100%,35%,0)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(99,100%,14%,.2), hsla(99,100%,14%,.2));
+  background-size: 100% 1px,
+                   100% 5px,
+                   1px 100%,
+                   1px 100%,
+                   100%;
+  background-repeat: no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     repeat-x;
+  background-position: top right, top left, left, right;
+}
+
+.devtools-tab:not(.highlighted) > .highlighted-icon,
+.devtools-tab[selected=true] > .highlighted-icon,
+.devtools-tab:not([selected=true]).highlighted > .default-icon {
+  visibility: collapse;
+}
+
 #options-panel {
   background-image: url("chrome://browser/skin/newtab/noise.png");
 }
