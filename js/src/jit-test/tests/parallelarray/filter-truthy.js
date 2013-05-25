@@ -12,7 +12,7 @@ function testFilterMisc() {
     }
   }
 
-  testFilter(range(0, 1024), truthy);
+  compareAgainstArray(range(0, 1024), "filter", truthy);
 }
 
 if (getBuildConfiguration().parallelJS)
