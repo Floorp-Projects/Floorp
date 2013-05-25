@@ -4958,32 +4958,38 @@ NodeListType.prototype.name = 'nodelist';
 
 define('util/host', ['require', 'exports', 'module' ], function(require, exports, module) {
 
-  'use strict';
+'use strict';
 
-  /**
-   * The chromeWindow as as required by Highlighter, so it knows where to
-   * create temporary highlight nodes.
-   */
-  exports.chromeWindow = undefined;
+/**
+ * The chromeWindow as as required by Highlighter, so it knows where to
+ * create temporary highlight nodes.
+ */
+exports.chromeWindow = undefined;
 
-  /**
-   * Helper to turn a set of nodes background another color for 0.5 seconds.
-   * There is likely a better way to do this, but this will do for now.
-   */
-  exports.flashNodes = function(nodes, match) {
-    // Commented out until Bug 653545 is completed
-    /*
-    if (exports.chromeWindow == null) {
-      console.log('flashNodes has no chromeWindow. Skipping flash');
-      return;
-    }
+/**
+ * See docs in lib/util/host.js:flashNodes
+ */
+exports.flashNodes = function(nodes, match) {
+  // Commented out until Bug 653545 is completed
+  /*
+  if (exports.chromeWindow == null) {
+    console.log('flashNodes has no chromeWindow. Skipping flash');
+    return;
+  }
 
-    var imports = {};
-    Components.utils.import("resource:///modules/highlighter.jsm", imports);
+  var imports = {};
+  Components.utils.import("resource:///modules/highlighter.jsm", imports);
 
-    imports.Highlighter.flashNodes(nodes, exports.chromeWindow, match);
-    */
-  };
+  imports.Highlighter.flashNodes(nodes, exports.chromeWindow, match);
+  */
+};
+
+/**
+ * See docs in lib/util/host.js:exec
+ */
+exports.exec = function(execSpec) {
+  throw new Error('Not supported');
+};
 
 
 });
@@ -6264,6 +6270,10 @@ function Requisition(environment, doc, commandOutputManager) {
   }
 
   this.commandOutputManager = commandOutputManager || new CommandOutputManager();
+  this.shell = {
+    cwd: '/', // Where we store the current working directory
+    env: {}   // Where we store the current environment
+  };
 
   // The command that we are about to execute.
   // @see setCommandConversion()
@@ -6346,6 +6356,10 @@ Object.defineProperty(Requisition.prototype, 'executionContext', {
       Object.defineProperty(this._executionContext, 'environment', {
         get: function() { return requisition.environment; },
         enumerable: true
+      });
+      Object.defineProperty(this._executionContext, 'shell', {
+        get: function() { return requisition.shell; },
+        enumerable : true
       });
 
       /**
