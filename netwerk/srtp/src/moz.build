@@ -8,3 +8,29 @@ XPIDL_MODULE = 'necko_srtp'
 
 MODULE = 'necko'
 
+CSRCS += [
+    'aes.c',
+    'aes_cbc.c',
+    'aes_icm.c',
+    'alloc.c',
+    'auth.c',
+    'cipher.c',
+    'crypto_kernel.c',
+    'ctr_prng.c',
+    'datatypes.c',
+    'ekt.c',
+    'err.c',
+    'gf2_8.c',
+    'hmac.c',
+    'key.c',
+    'null_auth.c',
+    'null_cipher.c',
+    'prng.c',
+    'rand_source.c',
+    'rdb.c',
+    'rdbx.c',
+    'sha1.c',
+    'srtp.c',
+    'stat.c',
+    'ut_sim.c',
+]
