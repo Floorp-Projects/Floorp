@@ -6191,17 +6191,9 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "SetProp(%s)", js_CodeName[op]);
 
-    JS_ASSERT(op == JSOP_SETPROP ||
-              op == JSOP_SETNAME ||
-              op == JSOP_SETGNAME ||
-              op == JSOP_INITPROP ||
-              op == JSOP_SETALIASEDVAR);
+    JS_ASSERT(op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETGNAME || op == JSOP_INITPROP);
 
-    RootedPropertyName name(cx);
-    if (op == JSOP_SETALIASEDVAR)
-        name = ScopeCoordinateName(cx, script, pc);
-    else
-        name = script->getName(pc);
+    RootedPropertyName name(cx, script->getName(pc));
     RootedId id(cx, NameToId(name));
 
     RootedObject obj(cx, ToObjectFromStack(cx, lhs));
@@ -6217,8 +6209,6 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
     } else if (op == JSOP_SETNAME || op == JSOP_SETGNAME) {
         if (!SetNameOperation(cx, script, pc, obj, rhs))
             return false;
-    } else if (op == JSOP_SETALIASEDVAR) {
-        obj->asScope().setAliasedVar(cx, pc, name, rhs);
     } else if (script->strict) {
         if (!js::SetProperty<true>(cx, obj, id, rhs))
             return false;

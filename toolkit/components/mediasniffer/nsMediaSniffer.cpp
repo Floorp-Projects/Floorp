@@ -10,7 +10,6 @@
 #include "nsString.h"
 #include "nsMimeTypes.h"
 #include "mozilla/ModuleUtils.h"
-#include "mp3sniff.h"
 #ifdef MOZ_WEBM
 #include "nestegg/nestegg.h"
 #endif
@@ -85,13 +84,6 @@ static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength)
 #endif
 }
 
-// This function implements mp3 sniffing based on parsing
-// packet headers and looking for expected boundaries.
-static bool MatchesMP3(const uint8_t* aData, const uint32_t aLength)
-{
-  return mp3_sniff(aData, (long)aLength);
-}
-
 NS_IMETHODIMP
 nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        const uint8_t* aData,
@@ -139,11 +131,6 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
 
   if (MatchesWebM(aData, clampedLength)) {
     aSniffedType.AssignLiteral(VIDEO_WEBM);
-    return NS_OK;
-  }
-
-  if (MatchesMP3(aData, clampedLength)) {
-    aSniffedType.AssignLiteral(AUDIO_MP3);
     return NS_OK;
   }
 
