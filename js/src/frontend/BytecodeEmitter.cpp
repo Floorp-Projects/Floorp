@@ -2478,22 +2478,6 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
-    /*
-     * Emit a prologue for run-once scripts which will deoptimize JIT code if
-     * the script ends up running multiple times via foo.caller related
-     * shenanigans.
-     */
-    bool runOnce = bce->parent &&
-        bce->parent->emittingRunOnceLambda &&
-        !funbox->argumentsHasLocalBinding() &&
-        !funbox->isGenerator();
-    if (runOnce) {
-        bce->switchToProlog();
-        if (!Emit1(cx, bce, JSOP_RUNONCE) < 0)
-            return false;
-        bce->switchToMain();
-    }
-
     if (!EmitTree(cx, bce, body))
         return false;
 
@@ -2511,10 +2495,8 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
      * If this function is only expected to run once, mark the script so that
      * initializers created within it may be given more precise types.
      */
-    if (runOnce) {
+    if (bce->parent && bce->parent->emittingRunOnceLambda)
         bce->script->treatAsRunOnce = true;
-        JS_ASSERT(!bce->script->hasRunOnce);
-    }
 
     /*
      * Mark as singletons any function which will only be executed once, or
