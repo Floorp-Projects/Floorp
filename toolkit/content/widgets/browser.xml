@@ -143,7 +143,7 @@
 
             if (aCharset) {
               try {
-                this.docShell.parentCharset = this.mAtomService.getAtom(aCharset);
+                this.docShell.parentCharset = aCharset;
               }
               catch (e) {
               }

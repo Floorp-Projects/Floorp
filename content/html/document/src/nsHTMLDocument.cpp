@@ -352,17 +352,16 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
 
   if (aDocShell) {
     // This is the Character Encoding menu code path in Firefox
-    nsCOMPtr<nsIAtom> csAtom;
-    aDocShell->GetForcedCharset(getter_AddRefs(csAtom));
-    if (csAtom) {
-      nsAutoCString charset;
-      csAtom->ToUTF8String(charset);
+    nsAutoCString charset;
+    rv = aDocShell->GetForcedCharset(charset);
+
+    if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
       if (!EncodingUtils::IsAsciiCompatible(charset)) {
         return;
       }
       aCharset = charset;
       aCharsetSource = kCharsetFromUserForced;
-      aDocShell->SetForcedCharset(nullptr);
+      aDocShell->SetForcedCharset(NS_LITERAL_CSTRING(""));
     }
   }
 }
@@ -418,15 +417,13 @@ nsHTMLDocument::TryParentCharset(nsIDocShell*  aDocShell,
     return;
   }
 
-  nsCOMPtr<nsIAtom> csAtom;
   int32_t parentSource;
   nsAutoCString parentCharset;
-  aDocShell->GetParentCharset(getter_AddRefs(csAtom));
-  if (!csAtom) {
+  aDocShell->GetParentCharset(parentCharset);
+  if (parentCharset.IsEmpty()) {
     return;
   }
   aDocShell->GetParentCharsetSource(&parentSource);
-  csAtom->ToUTF8String(parentCharset);
   if (kCharsetFromParentForced == parentSource ||
       kCharsetFromUserForced == parentSource) {
     if (WillIgnoreCharsetOverride() ||
