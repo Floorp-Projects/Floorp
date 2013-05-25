@@ -4158,16 +4158,6 @@ class LGetArgument : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
-class LRunOncePrologue : public LCallInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(RunOncePrologue)
-
-    MRunOncePrologue *mir() const {
-        return mir_->toRunOncePrologue();
-    }
-};
-
 // Create the rest parameter.
 class LRest : public LCallInstructionHelper<1, 1, 3>
 {
@@ -4212,6 +4202,7 @@ class LParRest : public LCallInstructionHelper<1, 2, 3>
         return mir_->toRest();
     }
 };
+
 
 class LParWriteGuard : public LCallInstructionHelper<0, 2, 1>
 {

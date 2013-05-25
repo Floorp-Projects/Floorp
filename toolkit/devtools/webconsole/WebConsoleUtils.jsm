@@ -1936,6 +1936,15 @@ NetworkMonitor.prototype = {
     event.method = aChannel.requestMethod;
     event.url = aChannel.URI.spec;
 
+    // Determine if this is an XHR request.
+    try {
+      let callbacks = aChannel.notificationCallbacks;
+      let xhrRequest = callbacks ? callbacks.getInterface(Ci.nsIXMLHttpRequest) : null;
+      event.isXHR = !!xhrRequest;
+    } catch (e) {
+      event.isXHR = false;
+    }
+
     // Determine the HTTP version.
     aChannel.QueryInterface(Ci.nsIHttpChannelInternal);
     aChannel.getRequestVersion(httpVersionMaj, httpVersionMin);

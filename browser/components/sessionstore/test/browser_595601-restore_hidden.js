@@ -73,7 +73,7 @@ let TabsProgressListener = {
   },
 
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (this.callback && SessionStore.isTabStateRestoring(aBrowser) &&
+    if (this.callback && aBrowser.__SS_restoreState == TAB_STATE_RESTORING &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
@@ -85,9 +85,9 @@ let TabsProgressListener = {
 
     for (let i = 0; i < this.window.gBrowser.tabs.length; i++) {
       let browser = this.window.gBrowser.tabs[i].linkedBrowser;
-      if (SessionStore.isTabStateRestoring(browser))
+      if (browser.__SS_restoreState == TAB_STATE_RESTORING)
         isRestoring++;
-      else if (SessionStore.isTabStateNeedsRestore(browser))
+      else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
         needsRestore++;
     }
 

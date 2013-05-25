@@ -81,7 +81,7 @@ ArgumentsObject::element(uint32_t i) const
 }
 
 inline void
-ArgumentsObject::setElement(JSContext *cx, uint32_t i, const Value &v)
+ArgumentsObject::setElement(uint32_t i, const Value &v)
 {
     JS_ASSERT(!isElementDeleted(i));
     HeapValue &lhs = data()->args[i];
@@ -89,7 +89,7 @@ ArgumentsObject::setElement(JSContext *cx, uint32_t i, const Value &v)
         CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall();
         for (AliasedFormalIter fi(callobj.callee().nonLazyScript()); ; fi++) {
             if (fi.frameIndex() == i) {
-                callobj.setAliasedVar(cx, fi, fi->name(), v);
+                callobj.setAliasedVar(fi, v);
                 return;
             }
         }
