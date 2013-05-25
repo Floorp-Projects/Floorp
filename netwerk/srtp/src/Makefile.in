@@ -24,7 +24,7 @@ LIBRARY_NAME = nksrtp_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
-CSRCS := \
+DISABLED_CSRCS := \
   ekt.c \
   srtp.c \
   aes.c \
