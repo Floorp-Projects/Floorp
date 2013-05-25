@@ -113,6 +113,7 @@ Tools.jsdebugger = {
   ordinal: 3,
   visibilityswitch: "devtools.debugger.enabled",
   icon: "chrome://browser/skin/devtools/tool-debugger.png",
+  highlightedicon: "chrome://browser/skin/devtools/tool-debugger-paused.png",
   url: "chrome://browser/content/devtools/debugger.xul",
   label: l10n("ToolboxDebugger.label", debuggerStrings),
   tooltip: l10n("ToolboxDebugger.tooltip", debuggerStrings),
