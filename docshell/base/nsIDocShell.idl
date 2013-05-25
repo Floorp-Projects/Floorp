@@ -597,12 +597,12 @@ interface nsIDocShell : nsIDocShellTreeItem
    *
    * XXX Could this be replaced by a boolean?
    */
-  attribute nsIAtom forcedCharset;
+  attribute ACString forcedCharset;
 
   /**
    * In a child docshell, this is the charset of the parent docshell
    */
-  attribute nsIAtom parentCharset;
+  attribute ACString parentCharset;
 
   /*
    * In a child docshell, this is the source of parentCharset
