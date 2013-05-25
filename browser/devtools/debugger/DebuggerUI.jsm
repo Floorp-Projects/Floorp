@@ -15,6 +15,9 @@ const CHROME_DEBUGGER_PROFILE_NAME = "-chrome-debugger";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+var require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+let Telemetry = require("devtools/shared/telemetry");
+
 XPCOMUtils.defineLazyModuleGetter(this,
   "DebuggerServer", "resource://gre/modules/devtools/dbg-server.jsm");
 
@@ -395,6 +398,7 @@ this.ChromeDebuggerProcess = function ChromeDebuggerProcess(aDebuggerUI, aOnClos
   this._win = aDebuggerUI.chromeWindow;
   this._closeCallback = aOnClose;
   this._runCallback = aOnRun;
+  this._telemetry = new Telemetry();
 
   this._initServer();
   this._initProfile();
@@ -477,6 +481,8 @@ ChromeDebuggerProcess.prototype = {
     process.runwAsync(args, args.length, { observe: this.close.bind(this) });
     this._dbgProcess = process;
 
+    this._telemetry.toolOpened("jsbrowserdebugger");
+
     if (typeof this._runCallback == "function") {
       this._runCallback.call({}, this);
     }
@@ -487,6 +493,9 @@ ChromeDebuggerProcess.prototype = {
    */
   close: function() {
     dumpn("Closing chrome debugging process");
+
+    this._telemetry.toolClosed("jsbrowserdebugger");
+
     if (!this.globalUI) {
       dumpn("globalUI is missing");
       return;

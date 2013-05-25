@@ -13,8 +13,6 @@
 #include "jscompartment.h"
 #include "jsinfer.h"
 #include "jsprf.h"
-#include "jsproxy.h"
-#include "jstypedarray.h"
 
 #include "builtin/ParallelArray.h"
 #ifdef JS_ION
