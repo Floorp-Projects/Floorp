@@ -110,8 +110,9 @@ public final class GeckoJarReader {
                 try {
                     zip = new NativeZip(inputStream);
                 } catch (IllegalArgumentException e) {
-                    Log.e(LOGTAG, "!!! BUG 849589 !!! origUrl=" + origUrl, e);
-                    return null;
+                    String description = "!!! BUG 849589 !!! origUrl=" + origUrl;
+                    Log.e(LOGTAG, description, e);
+                    throw new IllegalArgumentException(description);
                 }
             }
 
