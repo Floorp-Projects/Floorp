@@ -151,6 +151,7 @@ _ERROR_CATEGORIES = '''\
     whitespace/braces
     whitespace/comma
     whitespace/comments
+    whitespace/comments-doublespace
     whitespace/end_of_line
     whitespace/ending_newline
     whitespace/indent
@@ -843,7 +844,7 @@ def check_for_copyright(filename, lines, error):
     # We'll say it should occur by line 10. Don't forget there's a
     # dummy line at the front.
     for line in xrange(1, min(len(lines), 11)):
-        if re.search(r'Copyright', lines[line], re.I):
+        if re.search(r'Copyright|License', lines[line], re.I):
             break
     else:                       # means no copyright line was found
         error(filename, 0, 'legal/copyright', 5,
@@ -1509,7 +1510,7 @@ def check_spacing(filename, clean_lines, line_number, error):
                       and line[comment_position-1] not in string.whitespace)
                      or (comment_position >= 2
                          and line[comment_position-2] not in string.whitespace))):
-                error(filename, line_number, 'whitespace/comments', 2,
+                error(filename, line_number, 'whitespace/comments-doublespace', 2,
                       'At least two spaces is best between code and comments')
             # There should always be a space between the // and the comment
             commentend = comment_position + 2
@@ -1809,6 +1810,14 @@ def check_braces(filename, clean_lines, line_number, error):
 
     line = clean_lines.elided[line_number] # Get rid of comments and strings.
 
+    """
+    These don't match our style guideline:
+    https://developer.mozilla.org/en-US/docs/Developer_Guide/Coding_Style#Control_Structures
+
+    TODO: Spin this off in a different rule and disable that rule for mozilla
+    rather then commenting this out
+
+
     if match(r'\s*{\s*$', line):
         # We allow an open brace to start a line in the case where someone
         # is using braces for function definition or in a block to
@@ -1838,6 +1847,7 @@ def check_braces(filename, clean_lines, line_number, error):
             and search(r'\b(if|for|foreach|while|else)\b', previous_line)):
             error(filename, line_number, 'whitespace/braces', 4,
                   'One line control clauses should not use braces.')
+    """
 
     # An else clause should be on the same line as the preceding closing brace.
     if match(r'\s*else\s*', line):
@@ -2121,11 +2131,11 @@ def check_style(filename, clean_lines, line_number, file_extension, error):
         error(filename, line_number, 'whitespace/end_of_line', 4,
               'Line ends in whitespace.  Consider deleting these extra spaces.')
     # There are certain situations we allow one space, notably for labels
-    elif ((initial_spaces >= 1 and initial_spaces <= 3)
+    elif ((initial_spaces == 1 or initial_spaces == 3)
           and not match(r'\s*\w+\s*:\s*$', cleansed_line)):
         error(filename, line_number, 'whitespace/indent', 3,
               'Weird number of spaces at line-start.  '
-              'Are you using a 4-space indent?')
+              'Are you using at least 2-space indent?')
     # Labels should always be indented at least one space.
     elif not initial_spaces and line[:2] != '//':
         label_match = match(r'(?P<label>[^:]+):\s*$', line)
@@ -2419,12 +2429,14 @@ def check_language(filename, clean_lines, line_number, file_extension, include_s
     # In addition, we look for people taking the address of a cast.  This
     # is dangerous -- casts can assign to temporaries, so the pointer doesn't
     # point where you think.
+    """
     if search(
         r'(&\([^)]+\)[\w(])|(&(static|dynamic|reinterpret)_cast\b)', line):
         error(filename, line_number, 'runtime/casting', 4,
               ('Are you taking an address of a cast?  '
                'This is dangerous: could be a temp var.  '
                'Take the address before doing the cast, rather than after'))
+    """
 
     # Check for people declaring static/global STL strings at the top level.
     # This is dangerous because the C++ language does not guarantee that
@@ -3062,23 +3074,16 @@ def parse_arguments(args, additional_flags=[]):
     return (filenames, additional_flag_values)
 
 
-def use_webkit_styles():
+def use_mozilla_styles():
     """Disables some features which are not suitable for WebKit."""
     # FIXME: For filters we will never want to have, remove them.
     #        For filters we want to have similar functionalities,
     #        modify the implementation and enable them.
     global _DEFAULT_FILTERS
     _DEFAULT_FILTERS = [
-        '-whitespace/comments',
+        '-whitespace/comments-doublespace',
         '-whitespace/blank_line',
-        '-runtime/explicit',  # explicit
-        '-runtime/virtual',  # virtual dtor
-        '-runtime/printf',
-        '-runtime/threadsafe_fn',
-        '-runtime/rtti',
         '-build/include_what_you_use',  # <string> for std::string
-        '-legal/copyright',
-        '-readability/multiline_comment',
         '-readability/braces',  # int foo() {};
         '-readability/fn_size',
         '-build/storage_class',  # const static
@@ -3086,10 +3091,7 @@ def use_webkit_styles():
         '-whitespace/labels',
         '-runtime/arrays',  # variable length array
         '-build/header_guard',
-        '-readability/casting',
-        '-readability/function',
         '-runtime/casting',
-        '-runtime/sizeof',
     ]
 
 

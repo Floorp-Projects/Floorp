@@ -88,13 +88,14 @@ Syntax: %(program_name)s [--verbose=#] [--git-commit=<COMMITISH>] [--output=vs7]
 """ % {'program_name': sys.argv[0]}
 
 
-def process_patch(patch_string):
+def process_patch(patch_string, cwd, scm):
     """Does lint on a single patch.
 
     Args:
       patch_string: A string of a patch.
     """
     patch = DiffParser(patch_string.splitlines())
+
     for filename, diff in patch.files.iteritems():
         file_extension = os.path.splitext(filename)[1]
 
@@ -117,11 +118,11 @@ def process_patch(patch_string):
                 if line_number in line_numbers:
                     cpplint.error(filename, line_number, category, confidence, message)
 
-            cpplint.process_file(filename, error=error_for_patch)
+            cpplint.process_file(os.path.join(scm.find_checkout_root(cwd), filename), error=error_for_patch)
 
 
 def main():
-    cpplint.use_webkit_styles()
+    cpplint.use_mozilla_styles()
 
     (args, flags) = cpplint.parse_arguments(sys.argv[1:], ["git-commit="])
     if args:
@@ -132,9 +133,9 @@ def main():
     scm = detect_scm_system(cwd)
 
     if "--git-commit" in flags:
-        process_patch(scm.create_patch_from_local_commit(flags["--git-commit"]))
+        process_patch(scm.create_patch_from_local_commit(flags["--git-commit"]), cwd, scm)
     else:
-        process_patch(scm.create_patch())
+        process_patch(scm.create_patch(), cwd, scm)
 
     sys.stderr.write('Total errors found: %d\n' % cpplint.error_count())
     sys.exit(cpplint.error_count() > 0)

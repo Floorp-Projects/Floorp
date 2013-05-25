@@ -32,18 +32,22 @@
 import os
 import re
 import subprocess
+import sys
 
 # Import WebKit-specific modules.
 from modules.logging import error, log
 
 def detect_scm_system(path):
+    if HG.in_working_directory(path):
+        return HG(cwd=path)
+
     if SVN.in_working_directory(path):
         return SVN(cwd=path)
-    
+
     if Git.in_working_directory(path):
         return Git(cwd=path)
-    
-    return None
+
+    raise ScriptError("working directory is not a HG/SVN/Git repo")
 
 def first_non_empty_line_after_index(lines, index=0):
     first_non_empty_line = index
@@ -293,7 +297,7 @@ class Git(SCM):
     
     @classmethod
     def in_working_directory(cls, path):
-        return cls.run_command(['git', 'rev-parse', '--is-inside-work-tree'], cwd=path) == "true"
+        return cls.run_command(['git', 'rev-parse', '--is-inside-work-tree'], raise_on_failure=False, cwd=path) == "true"
 
     @classmethod
     def find_checkout_root(cls, path):
@@ -388,3 +392,29 @@ class Git(SCM):
 
     def files_changed_summary_for_commit(self, commit_id):
         return self.run_command(['git', 'diff-tree', '--shortstat', '--no-commit-id', commit_id])
+
+
+# All hg-specific logic should go here.
+class HG(SCM):
+    def __init__(self, cwd, dryrun=False):
+        SCM.__init__(self, cwd, dryrun)
+
+    @classmethod
+    def in_working_directory(cls, path):
+        return cls.run_command(['hg', 'status'], cwd=path, return_exit_code=True) == 0
+
+    @classmethod
+    def find_checkout_root(cls, path):
+        checkout_root = cls.run_command(['hg', 'root'], cwd=path)
+        return checkout_root
+
+    def status_command(self):
+        return ['hg', 'status']
+
+    def display_name(self):
+        return "hg"
+
+    def create_patch(self):
+        if self.run_command(['hg', 'diff']) !=  "":
+            sys.stderr.write("Warning: outstanding changes not include in style check.\n")
+        return self.run_command(['hg', 'export', 'tip'])
