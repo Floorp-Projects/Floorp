@@ -326,13 +326,13 @@ IonCompartment::ensureIonStubsExist(JSContext *cx)
 void
 ion::FinishOffThreadBuilder(IonBuilder *builder)
 {
-    JS_ASSERT(builder->info().executionMode() == SequentialExecution);
+    ExecutionMode executionMode = builder->info().executionMode();
 
     // Clean up if compilation did not succeed.
-    if (builder->script()->isIonCompilingOffThread()) {
+    if (CompilingOffThread(builder->script(), executionMode)) {
         types::TypeCompartment &types = builder->script()->compartment()->types;
         builder->recompileInfo.compilerOutput(types)->invalidate();
-        builder->script()->setIonScript(NULL);
+        SetIonScript(builder->script(), executionMode, NULL);
     }
 
     // The builder is allocated into its LifoAlloc, so destroying that will
@@ -564,7 +564,7 @@ IonScript::IonScript()
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
     numBailouts_(0),
-    hasInvalidatedCallTarget_(false),
+    hasUncompiledCallTarget_(false),
     hasSPSInstrumentation_(false),
     runtimeData_(0),
     runtimeSize_(0),
@@ -1131,6 +1131,12 @@ OptimizeMIR(MIRGenerator *mir)
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);
 
+    if (graph.entryBlock()->info().executionMode() == ParallelExecution) {
+        ParallelArrayAnalysis analysis(mir, graph);
+        if (!analysis.analyze())
+            return false;
+    }
+
     return true;
 }
 
@@ -1247,17 +1253,6 @@ CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm)
     return GenerateCode(mir, lir, maybeMasm);
 }
 
-class SequentialCompileContext {
-public:
-    ExecutionMode executionMode() {
-        return SequentialExecution;
-    }
-
-    MethodStatus checkScriptSize(JSContext *cx, JSScript *script);
-    AbortReason compile(IonBuilder *builder, MIRGraph *graph,
-                        ScopedJSDeletePtr<LifoAlloc> &autoDelete);
-};
-
 void
 AttachFinishedCompilations(JSContext *cx)
 {
@@ -1316,11 +1311,30 @@ AttachFinishedCompilations(JSContext *cx)
 
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
-template <typename CompileContext>
+static inline bool
+OffThreadCompilationAvailable(JSContext *cx)
+{
+    // Even if off thread compilation is enabled, compilation must still occur
+    // on the main thread in some cases. Do not compile off thread during an
+    // incremental GC, as this may trip incremental read barriers.
+    //
+    // Skip off thread compilation if PC count profiling is enabled, as
+    // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
+    // when running off thread.
+    //
+    // Also skip off thread compilation if the SPS profiler is enabled, as it
+    // stores strings in the spsProfiler data structure, which is not protected
+    // by a lock.
+    return OffThreadCompilationEnabled(cx)
+        && cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL
+        && !cx->runtime->profilingScripts
+        && !cx->runtime->spsProfiler.enabled();
+}
+
 static AbortReason
 IonCompile(JSContext *cx, JSScript *script,
            AbstractFramePtr fp, jsbytecode *osrPc, bool constructing,
-           CompileContext &compileContext)
+           ExecutionMode executionMode)
 {
 #if JS_TRACE_LOGGING
     AutoTraceLog logger(TraceLogging::defaultLogger(),
@@ -1353,7 +1367,6 @@ IonCompile(JSContext *cx, JSScript *script,
         return AbortReason_Alloc;
 
     MIRGraph *graph = alloc->new_<MIRGraph>(temp);
-    ExecutionMode executionMode = compileContext.executionMode();
     CompileInfo *info = alloc->new_<CompileInfo>(script, script->function(), osrPc, constructing,
                                                  executionMode);
     if (!info)
@@ -1373,41 +1386,9 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!builder)
         return AbortReason_Alloc;
 
-    AbortReason abortReason  = compileContext.compile(builder, graph, autoDelete);
-    if (abortReason != AbortReason_NoAbort)
-        IonSpew(IonSpew_Abort, "IM Compilation failed.");
-
-    return abortReason;
-}
-
-static inline bool
-OffThreadCompilationAvailable(JSContext *cx)
-{
-    // Even if off thread compilation is enabled, compilation must still occur
-    // on the main thread in some cases. Do not compile off thread during an
-    // incremental GC, as this may trip incremental read barriers.
-    //
-    // Skip off thread compilation if PC count profiling is enabled, as
-    // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
-    // when running off thread.
-    //
-    // Also skip off thread compilation if the SPS profiler is enabled, as it
-    // stores strings in the spsProfiler data structure, which is not protected
-    // by a lock.
-    return OffThreadCompilationEnabled(cx)
-        && cx->runtime->gcIncrementalState == gc::NO_INCREMENTAL
-        && !cx->runtime->profilingScripts
-        && !cx->runtime->spsProfiler.enabled();
-}
-
-AbortReason
-SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
-                                  ScopedJSDeletePtr<LifoAlloc> &autoDelete)
-{
-    JS_ASSERT(!builder->script()->hasIonScript());
+    JS_ASSERT(!GetIonScript(builder->script(), executionMode));
     JS_ASSERT(builder->script()->canIonCompile());
 
-    JSContext *cx = GetIonContext()->cx;
     RootedScript builderScript(cx, builder->script());
     IonSpewNewFunction(graph, builderScript);
 
@@ -1419,7 +1400,7 @@ SequentialCompileContext::compile(IonBuilder *builder, MIRGraph *graph,
 
     // If possible, compile the script off thread.
     if (OffThreadCompilationAvailable(cx)) {
-        builder->script()->setIonScript(ION_COMPILING_SCRIPT);
+        SetIonScript(builder->script(), executionMode, ION_COMPILING_SCRIPT);
 
         if (!StartOffThreadIonCompile(cx, builder)) {
             IonSpew(IonSpew_Abort, "Unable to start off-thread ion compilation.");
@@ -1503,8 +1484,8 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
     return true;
 }
 
-MethodStatus
-SequentialCompileContext::checkScriptSize(JSContext *cx, JSScript *script)
+static MethodStatus
+CheckScriptSize(JSContext *cx, JSScript* script)
 {
     if (!js_IonOptions.limitScriptSize)
         return Method_Compiled;
@@ -1552,20 +1533,16 @@ CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
     if (!script->canIonCompile() || !CheckScript(cx, script, osr))
         return false;
 
-    SequentialCompileContext compileContext;
-    return compileContext.checkScriptSize(cx, script) == Method_Compiled;
+    return CheckScriptSize(cx, script) == Method_Compiled;
 }
 
-template <typename CompileContext>
 static MethodStatus
 Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osrPc,
-        bool constructing, CompileContext &compileContext)
+        bool constructing, ExecutionMode executionMode)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(ion::IsBaselineEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
-
-    ExecutionMode executionMode = compileContext.executionMode();
 
     if (executionMode == SequentialExecution && !script->hasBaselineScript())
         return Method_Skipped;
@@ -1580,7 +1557,7 @@ Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osr
         return Method_CantCompile;
     }
 
-    MethodStatus status = compileContext.checkScriptSize(cx, script);
+    MethodStatus status = CheckScriptSize(cx, script);
     if (status != Method_Compiled) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename(), script->lineno);
         return status;
@@ -1600,7 +1577,7 @@ Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osr
             return Method_Skipped;
     }
 
-    AbortReason reason = IonCompile(cx, script, fp, osrPc, constructing, compileContext);
+    AbortReason reason = IonCompile(cx, script, fp, osrPc, constructing, executionMode);
     if (reason == AbortReason_Disable)
         return Method_CantCompile;
 
@@ -1643,9 +1620,8 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    SequentialCompileContext compileContext;
     RootedScript rscript(cx, script);
-    MethodStatus status = Compile(cx, rscript, fp, pc, isConstructing, compileContext);
+    MethodStatus status = Compile(cx, rscript, fp, pc, isConstructing, SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1715,9 +1691,8 @@ ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp, bool isConst
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    SequentialCompileContext compileContext;
     RootedScript rscript(cx, script);
-    MethodStatus status = Compile(cx, rscript, fp, NULL, isConstructing, compileContext);
+    MethodStatus status = Compile(cx, rscript, fp, NULL, isConstructing, SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1744,8 +1719,7 @@ ion::CompileFunctionForBaseline(JSContext *cx, HandleScript script, AbstractFram
     }
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
-    SequentialCompileContext compileContext;
-    MethodStatus status = Compile(cx, script, fp, NULL, isConstructing, compileContext);
+    MethodStatus status = Compile(cx, script, fp, NULL, isConstructing, SequentialExecution);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1756,158 +1730,47 @@ ion::CompileFunctionForBaseline(JSContext *cx, HandleScript script, AbstractFram
 }
 
 MethodStatus
-ParallelCompileContext::checkScriptSize(JSContext *cx, JSScript *script)
+ion::CanEnterInParallel(JSContext *cx, HandleScript script)
 {
-    if (!js_IonOptions.limitScriptSize)
-        return Method_Compiled;
-
-    // When compiling for parallel execution we don't have off-thread
-    // compilation. We also up the max script size of the kernels.
-    static const uint32_t MAX_SCRIPT_SIZE = 5000;
-    static const uint32_t MAX_LOCALS_AND_ARGS = 256;
-
-    if (script->length > MAX_SCRIPT_SIZE) {
-        IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
-        return Method_CantCompile;
-    }
-
-    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
-    if (numLocalsAndArgs > MAX_LOCALS_AND_ARGS) {
-        IonSpew(IonSpew_Abort, "Too many locals and arguments (%u)", numLocalsAndArgs);
-        return Method_CantCompile;
-    }
-
-    return Method_Compiled;
-}
-
-class AutoEnterTransitiveCompilation
-{
-    JSContext *cx_;
-
-  public:
-    AutoEnterTransitiveCompilation(JSContext *cx, AutoScriptVector &worklist)
-      : cx_(cx)
-    {
-        JS_ASSERT(!cx->compartment->types.transitiveCompilationWorklist);
-        cx->compartment->types.transitiveCompilationWorklist = &worklist;
-    }
-
-    ~AutoEnterTransitiveCompilation()
-    {
-        JS_ASSERT(cx_->compartment->types.transitiveCompilationWorklist);
-        cx_->compartment->types.transitiveCompilationWorklist = NULL;
-    }
-};
-
-MethodStatus
-ParallelCompileContext::compileTransitively()
-{
-    using parallel::SpewBeginCompile;
-    using parallel::SpewEndCompile;
-
-    if (worklist_.empty())
+    // Skip if the script has been disabled.
+    //
+    // Note: We return Method_Skipped in this case because the other
+    // CanEnter() methods do so. However, ForkJoin.cpp detects this
+    // condition differently treats it more like an error.
+    if (!script->canParallelIonCompile())
         return Method_Skipped;
 
-    AutoEnterTransitiveCompilation transCompile(cx_, worklist_);
+    // Skip if the script is being compiled off thread.
+    if (script->isParallelIonCompilingOffThread())
+        return Method_Skipped;
 
-    RootedFunction fun(cx_);
-    RootedScript script(cx_);
-    while (!worklist_.empty()) {
-        script = worklist_.popCopy();
-        fun = script->function();
+    MethodStatus status = Compile(cx, script, AbstractFramePtr(), NULL, false,
+                                  ParallelExecution);
+    if (status != Method_Compiled) {
+        if (status == Method_CantCompile)
+            ForbidCompilation(cx, script, ParallelExecution);
+        return status;
+    }
 
-        SpewBeginCompile(script);
+    // This can GC, so afterward, script->parallelIon is
+    // not guaranteed to be valid.
+    if (!cx->compartment->ionCompartment()->enterJIT())
+        return Method_Error;
 
-        // If we had invalidations last time the parallel script ran, the bit
-        // to check its call targets will be set.
-        if (script->hasParallelIonScript()) {
-            IonScript *ion = script->parallelIonScript();
-            if (ion->hasInvalidatedCallTarget()) {
-                ion->clearHasInvalidatedCallTarget();
-                RootedScript target(cx_);
-                for (uint32_t i = 0; i < ion->callTargetEntries(); i++) {
-                    target = ion->callTargetList()[i];
-                    parallel::Spew(parallel::SpewCompile,
-                                   "Adding previously invalidated function %p:%s:%u",
-                                   fun.get(), target->filename(), target->lineno);
-                    appendToWorklist(target);
-                }
-            }
-        }
-
-        // Attempt compilation. Returns Method_Compiled if already compiled.
-        MethodStatus status = Compile(cx_, script, AbstractFramePtr(), NULL, false, *this);
-        if (status != Method_Compiled) {
-            if (status == Method_CantCompile)
-                ForbidCompilation(cx_, script, ParallelExecution);
-            return SpewEndCompile(status);
-        }
-
-        // This can GC, so afterward, script->parallelIon is not guaranteed to be valid.
-        if (!cx_->compartment->ionCompartment()->enterJIT())
-            return SpewEndCompile(Method_Error);
-
-        // Subtle: it is possible for GC to occur during compilation of
-        // one of the invoked functions, which would cause the earlier
-        // functions (such as the kernel itself) to be collected.  In this
-        // event, we give up and fallback to sequential for now.
-        if (!script->hasParallelIonScript()) {
-            parallel::Spew(parallel::SpewCompile,
-                           "Function %p:%s:%u was garbage-collected or invalidated",
-                           fun.get(), script->filename(), script->lineno);
-            return SpewEndCompile(Method_Skipped);
-        }
-
-        SpewEndCompile(Method_Compiled);
+    // Subtle: it is possible for GC to occur during
+    // compilation of one of the invoked functions, which
+    // would cause the earlier functions (such as the
+    // kernel itself) to be collected.  In this event, we
+    // give up and fallback to sequential for now.
+    if (!script->hasParallelIonScript()) {
+        parallel::Spew(
+            parallel::SpewCompile,
+            "Script %p:%s:%u was garbage-collected or invalidated",
+            script.get(), script->filename(), script->lineno);
+        return Method_Skipped;
     }
 
     return Method_Compiled;
-}
-
-AbortReason
-ParallelCompileContext::compile(IonBuilder *builder,
-                                MIRGraph *graph,
-                                ScopedJSDeletePtr<LifoAlloc> &autoDelete)
-{
-    JS_ASSERT(!builder->script()->hasParallelIonScript());
-    JS_ASSERT(builder->script()->canParallelIonCompile());
-
-    RootedScript builderScript(cx_, builder->script());
-    IonSpewNewFunction(graph, builderScript);
-
-    if (!builder->build())
-        return builder->abortReason();
-    builder->clearForBackEnd();
-
-    // For the time being, we do not enable parallel compilation.
-
-    if (!OptimizeMIR(builder)) {
-        IonSpew(IonSpew_Abort, "Failed during MIR optimization.");
-        return AbortReason_Disable;
-    }
-
-    if (!analyzeAndGrowWorklist(builder, *graph)) {
-        return AbortReason_Disable;
-    }
-
-    LIRGraph *lir = GenerateLIR(builder);
-    if (!lir) {
-        IonSpew(IonSpew_Abort, "Failed during LIR generation.");
-        return AbortReason_Disable;
-    }
-
-    CodeGenerator *codegen = GenerateCode(builder, lir);
-    if (!codegen) {
-        IonSpew(IonSpew_Abort, "Failed during code generation.");
-        return AbortReason_Disable;
-    }
-
-    bool success = codegen->link();
-    js_delete(codegen);
-
-    IonSpewEndFunction();
-
-    return success ? AbortReason_NoAbort : AbortReason_Disable;
 }
 
 MethodStatus

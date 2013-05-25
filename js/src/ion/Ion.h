@@ -18,7 +18,6 @@ namespace js {
 namespace ion {
 
 class TempAllocator;
-class ParallelCompileContext; // in ParallelArrayAnalysis.h
 
 // Possible register allocators which may be used.
 enum IonRegisterAllocator {
@@ -284,6 +283,8 @@ MethodStatus CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp, bool
 MethodStatus CompileFunctionForBaseline(JSContext *cx, HandleScript script, AbstractFramePtr fp,
                                         bool isConstructing);
 MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs);
+
+MethodStatus CanEnterInParallel(JSContext *cx, HandleScript script);
 
 enum IonExecStatus
 {
