@@ -290,6 +290,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-options.png            (devtools/tool-options.png)
   skin/classic/browser/devtools/tool-webconsole.png         (devtools/tool-webconsole.png)
   skin/classic/browser/devtools/tool-debugger.png           (devtools/tool-debugger.png)
+  skin/classic/browser/devtools/tool-debugger-paused.png    (devtools/tool-debugger-paused.png)
   skin/classic/browser/devtools/tool-inspector.png          (devtools/tool-inspector.png)
   skin/classic/browser/devtools/tool-styleeditor.png        (devtools/tool-styleeditor.png)
   skin/classic/browser/devtools/tool-profiler.png           (devtools/tool-profiler.png)
