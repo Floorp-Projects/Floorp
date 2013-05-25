@@ -957,8 +957,6 @@ MediaStreamGraphImpl::RunThread()
   if (!mRealtime) {
     NS_ASSERTION(!mNonRealtimeIsRunning,
                  "We should not be running in non-realtime mode already");
-    NS_ASSERTION(mNonRealtimeTicksToProcess,
-                 "We should have a non-zero number of ticks to process");
     mNonRealtimeIsRunning = true;
   }
 
@@ -1067,7 +1065,7 @@ MediaStreamGraphImpl::RunThread()
     }
     if (!mRealtime) {
       // Terminate processing if we've produce enough non-realtime ticks.
-      if (ticksProcessed >= mNonRealtimeTicksToProcess) {
+      if (!mForceShutDown && ticksProcessed >= mNonRealtimeTicksToProcess) {
         // Wait indefinitely when we've processed enough non-realtime ticks.
         // We'll be woken up when the graph shuts down.
         MonitorAutoLock lock(mMonitor);
@@ -2087,6 +2085,10 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
   MOZ_ASSERT(aGraph != gGraph, "Should not destroy the global graph here");
 
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(aGraph);
+  if (!graph->mNonRealtimeProcessing) {
+    // Start the graph, but don't produce anything
+    graph->StartNonRealtimeProcessing(0);
+  }
   graph->ForceShutDown();
 }
 
