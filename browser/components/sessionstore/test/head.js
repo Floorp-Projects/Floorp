@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const TAB_STATE_NEEDS_RESTORE = 1;
+const TAB_STATE_RESTORING = 2;
+
 let tmp = {};
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
 let SessionStore = tmp.SessionStore;
@@ -238,7 +241,7 @@ let gProgressListener = {
   function gProgressListener_onStateChange(aBrowser, aWebProgress, aRequest,
                                            aStateFlags, aStatus) {
     if ((!this._checkRestoreState ||
-         SessionStore.isTabStateRestoring(aBrowser)) &&
+         aBrowser.__SS_restoreState == TAB_STATE_RESTORING) &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
@@ -253,9 +256,9 @@ let gProgressListener = {
     for (let win in BrowserWindowIterator()) {
       for (let i = 0; i < win.gBrowser.tabs.length; i++) {
         let browser = win.gBrowser.tabs[i].linkedBrowser;
-        if (SessionStore.isTabStateRestoring(browser))
+        if (browser.__SS_restoreState == TAB_STATE_RESTORING)
           isRestoring++;
-        else if (SessionStore.isTabStateNeedsRestore(browser))
+        else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
           needsRestore++;
         else
           wasRestored++;
