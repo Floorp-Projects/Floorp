@@ -59,7 +59,7 @@ class StaticScopeIter
     bool onNamedLambda;
 
   public:
-    explicit StaticScopeIter(JSContext *cx, JSObject *obj);
+    explicit StaticScopeIter(JSContext *cx, HandleObject obj);
 
     bool done() const;
     void operator++(int);
@@ -105,10 +105,6 @@ ScopeCoordinateToStaticScopeShape(JSContext *cx, JSScript *script, jsbytecode *p
 /* Return the name being accessed by the given ALIASEDVAR op. */
 extern PropertyName *
 ScopeCoordinateName(JSContext *cx, JSScript *script, jsbytecode *pc);
-
-/* Return the function script accessed by the given ALIASEDVAR op, or NULL. */
-extern JSScript *
-ScopeCoordinateFunctionScript(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 /*****************************************************************************/
 
@@ -171,7 +167,7 @@ class ScopeObject : public JSObject
      * take a ScopeCoordinate instead of just the slot index.
      */
     inline const Value &aliasedVar(ScopeCoordinate sc);
-    inline void setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name, const Value &v);
+    inline void setAliasedVar(ScopeCoordinate sc, const Value &v);
 
     /* For jit access. */
     static inline size_t offsetOfEnclosingScope();
@@ -191,7 +187,7 @@ class CallObject : public ScopeObject
   public:
     /* These functions are internal and are exposed only for JITs. */
     static CallObject *
-    create(JSContext *cx, HandleScript script, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
+    create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
 
     static CallObject *
     createTemplateObject(JSContext *cx, HandleScript script, gc::InitialHeap heap);
@@ -214,7 +210,7 @@ class CallObject : public ScopeObject
 
     /* Get/set the aliased variable referred to by 'bi'. */
     inline const Value &aliasedVar(AliasedFormalIter fi);
-    inline void setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *name, const Value &v);
+    inline void setAliasedVar(AliasedFormalIter fi, const Value &v);
 
     /* For jit access. */
     static inline size_t offsetOfCallee();

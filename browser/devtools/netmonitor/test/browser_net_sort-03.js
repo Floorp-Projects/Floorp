@@ -91,8 +91,6 @@ function test() {
     }
 
     function testContents(aOrder, aSelection) {
-      let deferred = Promise.defer();
-
       isnot(RequestsMenu.selectedItem, null,
         "There should still be a selected item after sorting.");
       is(RequestsMenu.selectedIndex, aSelection,
@@ -100,13 +98,13 @@ function test() {
       is(NetMonitorView.detailsPaneHidden, false,
         "The details pane should still be visible after sorting.");
 
-      is(RequestsMenu.allItems.length, aOrder.length,
+      is(RequestsMenu.orderedItems.length, aOrder.length,
         "There should be a specific number of items in the requests menu.");
       is(RequestsMenu.visibleItems.length, aOrder.length,
         "There should be a specific number of visbile items in the requests menu.");
 
       for (let i = 0; i < aOrder.length; i++) {
-        is(RequestsMenu.getItemAtIndex(i), RequestsMenu.allItems[i],
+        is(RequestsMenu.getItemAtIndex(i), RequestsMenu.orderedItems[i],
           "The requests menu items aren't ordered correctly. Misplaced item " + i + ".");
       }
 
@@ -171,8 +169,7 @@ function test() {
           });
       }
 
-      executeSoon(deferred.resolve);
-      return deferred.promise;
+      return Promise.resolve(null);
     }
 
     aDebuggee.performRequests();
