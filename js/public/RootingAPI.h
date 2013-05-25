@@ -231,9 +231,13 @@ class MOZ_STACK_CLASS Handle : public js::HandleBase<T>
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
     const T *address() const { return ptr; }
-    T get() const { return *ptr; }
+    const T& get() const { return *ptr; }
 
-    operator T() const { return get(); }
+    /*
+     * Return a reference so passing a Handle<T> to something that
+     * takes a |const T&| is not a GC hazard.
+     */
+    operator const T&() const { return get(); }
     T operator->() const { return get(); }
 
     bool operator!=(const T &other) { return *ptr != other; }
@@ -465,7 +469,11 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     Rooted<T> *previous() { return prev; }
 #endif
 
-    operator T() const { return ptr; }
+    /*
+     * Important: Return a reference here so passing a Rooted<T> to
+     * something that takes a |const T&| is not a GC hazard.
+     */
+    operator const T&() const { return ptr; }
     T operator->() const { return ptr; }
     T *address() { return &ptr; }
     const T *address() const { return &ptr; }
