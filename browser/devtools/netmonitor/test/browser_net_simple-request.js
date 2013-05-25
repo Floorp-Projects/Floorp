@@ -17,7 +17,7 @@ function test() {
     is(document.querySelector("#details-pane-toggle")
       .hasAttribute("disabled"), true,
       "The pane toggle button should be disabled when the frontend is opened.");
-    is(document.querySelector(".requests-menu-empty-notice")
+    is(document.querySelector("#requests-menu-empty-notice")
       .hasAttribute("hidden"), false,
       "An empty notice should be displayed when the frontend is opened.");
     is(RequestsMenu.itemCount, 0,
@@ -29,7 +29,7 @@ function test() {
       is(document.querySelector("#details-pane-toggle")
         .hasAttribute("disabled"), false,
         "The pane toggle button should be enabled after the first request.");
-      is(document.querySelector(".requests-menu-empty-notice")
+      is(document.querySelector("#requests-menu-empty-notice")
         .hasAttribute("hidden"), true,
         "The empty notice should be hidden after the first request.");
       is(RequestsMenu.itemCount, 1,
@@ -41,7 +41,7 @@ function test() {
         is(document.querySelector("#details-pane-toggle")
           .hasAttribute("disabled"), false,
           "The pane toggle button should be still be enabled after a reload.");
-        is(document.querySelector(".requests-menu-empty-notice")
+        is(document.querySelector("#requests-menu-empty-notice")
           .hasAttribute("hidden"), true,
           "The empty notice should be still hidden after a reload.");
         is(RequestsMenu.itemCount, 1,

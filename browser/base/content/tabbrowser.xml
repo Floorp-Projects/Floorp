@@ -1415,7 +1415,18 @@
             evt.initEvent("TabOpen", true, false);
             t.dispatchEvent(evt);
 
-            if (!uriIsAboutBlank) {
+            // If we just created a new tab that loads the default
+            // newtab url, swap in a preloaded page if possible.
+            // Do nothing if we're a private window.
+            let docShellsSwapped = false;
+            if (aURI == BROWSER_NEW_TAB_URL &&
+                !PrivateBrowsingUtils.isWindowPrivate(window)) {
+              docShellsSwapped = gBrowserNewTabPreloader.newTab(t);
+            }
+
+            // If we didn't swap docShells with a preloaded browser
+            // then let's just continue loading the page normally.
+            if (!docShellsSwapped && !uriIsAboutBlank) {
               // pretend the user typed this so it'll be available till
               // the document successfully loads
               if (aURI && gInitialPages.indexOf(aURI) == -1)
@@ -1438,14 +1449,6 @@
             // We start our browsers out as inactive, and then maintain
             // activeness in the tab switcher.
             b.docShellIsActive = false;
-
-            // If we just created a new tab that loads the default
-            // newtab url, swap in a preloaded page if possible.
-            // Do nothing if we're a private window.
-            if (aURI == BROWSER_NEW_TAB_URL &&
-                !PrivateBrowsingUtils.isWindowPrivate(window)) {
-              gBrowserNewTabPreloader.newTab(t);
-            }
 
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.

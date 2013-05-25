@@ -63,6 +63,42 @@
   -  in the network details pane identifying the timings tab. -->
 <!ENTITY netmonitorUI.tab.timings         "Timings">
 
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterAll): This is the label displayed
+  -  in the network details footer for the "All" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterAll    "All">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterHTML): This is the label displayed
+  -  in the network details footer for the "HTML" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterHTML   "HTML">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterCSS): This is the label displayed
+  -  in the network details footer for the "CSS" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterCSS    "CSS">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterJS): This is the label displayed
+  -  in the network details footer for the "JS" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterJS     "JS">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterXHR): This is the label displayed
+  -  in the network details footer for the "XHR" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterXHR    "XHR">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterFonts): This is the label displayed
+  -  in the network details footer for the "Fonts" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterFonts  "Fonts">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterImages): This is the label displayed
+  -  in the network details footer for the "Images" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterImages "Images">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterMedia): This is the label displayed
+  -  in the network details footer for the "Media" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterMedia  "Media">
+
+<!-- LOCALIZATION NOTE (debuggerUI.footer.filterFlash): This is the label displayed
+  -  in the network details footer for the "Flash" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterFlash  "Flash">
+
 <!-- LOCALIZATION NOTE (debuggerUI.panesButton.tooltip): This is the tooltip for
   -  the button that toggles the panes visible or hidden in the netmonitor UI. -->
 <!ENTITY netmonitorUI.panesButton.tooltip "Toggle network info">
