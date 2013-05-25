@@ -225,7 +225,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     WRITE_GUARDED_OP(StoreFixedSlot, object)
     UNSAFE_OP(CallGetProperty)
     UNSAFE_OP(GetNameCache)
-    SAFE_OP(CallGetIntrinsicValue) // Bails in parallel mode
+    UNSAFE_OP(CallGetIntrinsicValue)
     UNSAFE_OP(CallsiteCloneCache)
     UNSAFE_OP(CallGetElement)
     UNSAFE_OP(CallSetElement)
