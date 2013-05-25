@@ -407,14 +407,7 @@ static JSBool
 intrinsic_ParallelTestsShouldPass(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-#if defined(JS_THREADSAFE) && defined(JS_ION)
-    args.rval().setBoolean(ion::IsEnabled(cx) &&
-                           ion::IsBaselineEnabled(cx) &&
-                           !ion::js_IonOptions.eagerCompilation &&
-                           ion::js_IonOptions.baselineUsesBeforeCompile != 0);
-#else
-    args.rval().setBoolean(false);
-#endif
+    args.rval().setBoolean(ParallelTestsShouldPass(cx));
     return true;
 }
 
