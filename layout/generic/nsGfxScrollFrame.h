@@ -235,6 +235,7 @@ public:
   }
   nsMargin GetActualScrollbarSizes() const;
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
+  nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState);
   bool IsLTR() const;
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive() const { return mScrollingActive || ShouldBuildLayer(); }
@@ -485,6 +486,11 @@ public:
           nsRenderingContext* aRC) MOZ_OVERRIDE {
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return GetDesiredScrollbarSizes(&bls);
+  }
+  virtual nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
+          nsRenderingContext* aRC) MOZ_OVERRIDE {
+    nsBoxLayoutState bls(aPresContext, aRC, 0);
+    return mInner.GetNondisappearingScrollbarWidth(&bls);
   }
   virtual nsRect GetScrollPortRect() const MOZ_OVERRIDE {
     return mInner.GetScrollPortRect();
@@ -743,6 +749,11 @@ public:
           nsRenderingContext* aRC) MOZ_OVERRIDE {
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return GetDesiredScrollbarSizes(&bls);
+  }
+  virtual nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
+          nsRenderingContext* aRC) MOZ_OVERRIDE {
+    nsBoxLayoutState bls(aPresContext, aRC, 0);
+    return mInner.GetNondisappearingScrollbarWidth(&bls);
   }
   virtual nsRect GetScrollPortRect() const MOZ_OVERRIDE {
     return mInner.GetScrollPortRect();
