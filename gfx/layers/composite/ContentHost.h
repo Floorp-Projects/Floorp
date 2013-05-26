@@ -34,10 +34,6 @@ public:
                             const nsIntRegion& aOldValidRegionBack,
                             nsIntRegion* aUpdatedRegionBack) = 0;
 
-#ifdef MOZ_DUMP_PAINTING
-  virtual already_AddRefed<gfxImageSurface> Dump() { return nullptr; }
-#endif
-  
   virtual void SetPaintWillResample(bool aResample) { }
 
 protected:
@@ -93,9 +89,9 @@ public:
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual already_AddRefed<gfxImageSurface> Dump()
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface()
   {
-    return mTextureHost->Dump();
+    return mTextureHost->GetAsSurface();
   }
 #endif
 
