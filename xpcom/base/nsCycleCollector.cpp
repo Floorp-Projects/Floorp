@@ -1885,7 +1885,6 @@ GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
 {
     PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
     if (!e) {
-        NS_WARNING("Hash table add in GCGraphBuilder::AddNode failed");
         return nullptr;
     }
 
