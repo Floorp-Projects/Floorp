@@ -174,6 +174,7 @@ const UnsolicitedNotifications = {
   "consoleAPICall": "consoleAPICall",
   "eventNotification": "eventNotification",
   "fileActivity": "fileActivity",
+  "lastPrivateContextExited": "lastPrivateContextExited",
   "networkEvent": "networkEvent",
   "networkEventUpdate": "networkEventUpdate",
   "newGlobal": "newGlobal",
