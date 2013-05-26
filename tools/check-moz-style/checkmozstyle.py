@@ -32,6 +32,7 @@
 
 import os
 import os.path
+import re
 import sys
 
 import modules.cpplint as cpplint
@@ -87,8 +88,7 @@ Syntax: %(program_name)s [--verbose=#] [--git-commit=<COMMITISH>] [--output=vs7]
          --filter=
 """ % {'program_name': sys.argv[0]}
 
-
-def process_patch(patch_string, cwd, scm):
+def process_patch(patch_string, root, cwd, scm):
     """Does lint on a single patch.
 
     Args:
@@ -96,13 +96,35 @@ def process_patch(patch_string, cwd, scm):
     """
     patch = DiffParser(patch_string.splitlines())
 
+    if not len(patch.files):
+        cpplint.error("patch", 0, "patch/notempty", 3,
+                      "Patch does not appear to diff against any file.")
+        return
+
+    if not patch.status_line:
+        cpplint.error("patch", 0, "patch/nosummary", 3,
+                      "Patch does not have a summary.")
+    else:
+        proper_format = re.match(r"^Bug [0-9]+ - ", patch.status_line)
+        if not proper_format:
+            proper_format = re.match(r"^No bug - ", patch.status_line)
+            cpplint.error("patch", 0, "patch/bugnumber", 3,
+                          "Patch summary should begin with 'Bug XXXXX - ' " +
+                          "or 'No bug -'.")
+
+    if not patch.patch_description:
+        cpplint.error("patch", 0, "patch/nodescription", 3,
+                      "Patch does not have a description.")
+
     for filename, diff in patch.files.iteritems():
         file_extension = os.path.splitext(filename)[1]
 
         if file_extension in ['.cpp', '.c', '.h']:
             line_numbers = set()
+            orig_filename = filename
 
-            def error_for_patch(filename, line_number, category, confidence, message):
+            def error_for_patch(filename, line_number, category, confidence,
+                                message):
                 """Wrapper function of cpplint.error for patches.
 
                 This function outputs errors only if the line number
@@ -116,9 +138,12 @@ def process_patch(patch_string, cwd, scm):
                             line_numbers.add(line[1])
 
                 if line_number in line_numbers:
-                    cpplint.error(filename, line_number, category, confidence, message)
+                    cpplint.error(orig_filename, line_number,
+                                  category, confidence, message)
 
-            cpplint.process_file(os.path.join(scm.find_checkout_root(cwd), filename), error=error_for_patch)
+            cpplint.process_file(os.path.join(root, filename),
+                                 relative_name=orig_filename,
+                                 error=error_for_patch)
 
 
 def main():
@@ -126,16 +151,18 @@ def main():
 
     (args, flags) = cpplint.parse_arguments(sys.argv[1:], ["git-commit="])
     if args:
-        sys.stderr.write("ERROR: We don't support files as arguments for now.\n" + cpplint._USAGE)
+        sys.stderr.write("ERROR: We don't support files as arguments for " +
+                         "now.\n" + cpplint._USAGE)
         sys.exit(1)
 
     cwd = os.path.abspath('.')
     scm = detect_scm_system(cwd)
+    root = scm.find_checkout_root(cwd)
 
     if "--git-commit" in flags:
-        process_patch(scm.create_patch_from_local_commit(flags["--git-commit"]), cwd, scm)
+        process_patch(scm.create_patch_from_local_commit(flags["--git-commit"]), root, cwd, scm)
     else:
-        process_patch(scm.create_patch(), cwd, scm)
+        process_patch(scm.create_patch(), root, cwd, scm)
 
     sys.stderr.write('Total errors found: %d\n' % cpplint.error_count())
     sys.exit(cpplint.error_count() > 0)
