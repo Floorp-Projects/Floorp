@@ -89,10 +89,8 @@ this.NetworkHelper =
   {
     let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                createInstance(Ci.nsIScriptableUnicodeConverter);
-    if (aCharset) {
-      conv.charset = aCharset;
-    }
     try {
+      conv.charset = aCharset || "UTF-8";
       return conv.ConvertToUnicode(aText);
     }
     catch (ex) {

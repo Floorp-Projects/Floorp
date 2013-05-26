@@ -20,12 +20,23 @@
   #toolbar-spacer,
   #details-pane-toggle,
   #details-pane[pane-collapsed],
-  .requests-menu-waterfall {
+  .requests-menu-waterfall,
+  .requests-menu-footer-label {
+    display: none;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1024px) {
+  #body:not([pane-collapsed]) #requests-menu-footer {
     display: none;
   }
 }
 
 @media (min-width: 701px) {
+  #requests-menu-spacer-start {
+    display: none;
+  }
+
   #network-table[waterfall-overflows] .requests-menu-waterfall {
     display: none;
   }

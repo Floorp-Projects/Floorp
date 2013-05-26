@@ -10,7 +10,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
@@ -36,6 +35,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 
 XPCOMUtils.defineLazyModuleGetter(this, "ViewHelpers",
     "resource:///modules/devtools/ViewHelpers.jsm");
+
+let Telemetry = devtools.require("devtools/shared/telemetry");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -515,6 +516,7 @@ WebConsole.prototype = {
 function BrowserConsole()
 {
   WebConsole.apply(this, arguments);
+  this._telemetry = new Telemetry();
 }
 
 ViewHelpers.create({ constructor: BrowserConsole, proto: WebConsole.prototype },
@@ -545,6 +547,7 @@ ViewHelpers.create({ constructor: BrowserConsole, proto: WebConsole.prototype },
     window.addEventListener("unload", onClose);
 
     this._bc_init = this.$init().then((aReason) => {
+      this._telemetry.toolOpened("browserconsole");
       let title = this.ui.rootElement.getAttribute("browserConsoleTitle");
       this.ui.rootElement.setAttribute("title", title);
 
@@ -570,6 +573,8 @@ ViewHelpers.create({ constructor: BrowserConsole, proto: WebConsole.prototype },
     if (this._bc_destroyer) {
       return this._bc_destroyer.promise;
     }
+
+    this._telemetry.toolClosed("browserconsole");
 
     this._bc_destroyer = Promise.defer();
 

@@ -26,6 +26,10 @@
   <commandset id="sourceEditorCommands"/>
 
   <commandset id="debuggerCommands">
+    <command id="nextSourceCommand"
+             oncommand="DebuggerView.Sources.selectNextItem()"/>
+    <command id="prevSourceCommand"
+             oncommand="DebuggerView.Sources.selectPrevItem()"/>
     <command id="resumeCommand"
              oncommand="DebuggerView.Toolbar._onResumePressed()"/>
     <command id="stepOverCommand"
@@ -171,6 +175,14 @@
   </popupset>
 
   <keyset id="debuggerKeys">
+    <key id="nextSourceKey"
+         keycode="VK_DOWN"
+         modifiers="accel alt"
+         command="nextSourceCommand"/>
+    <key id="prevSourceKey"
+         keycode="VK_UP"
+         modifiers="accel alt"
+         command="prevSourceCommand"/>
     <key id="resumeKey"
          keycode="&debuggerUI.stepping.resume;"
          command="resumeCommand"/>

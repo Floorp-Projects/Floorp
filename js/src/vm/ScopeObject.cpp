@@ -28,7 +28,7 @@ typedef Rooted<ArgumentsObject *> RootedArgumentsObject;
 
 /*****************************************************************************/
 
-StaticScopeIter::StaticScopeIter(JSContext *cx, JSObject *objArg)
+StaticScopeIter::StaticScopeIter(JSContext *cx, HandleObject objArg)
   : obj(cx, objArg), onNamedLambda(false)
 {
     JS_ASSERT_IF(obj, obj->isStaticBlock() || obj->isFunction());
@@ -97,23 +97,20 @@ StaticScopeIter::funScript() const
 
 /*****************************************************************************/
 
-static JSObject *
-InnermostStaticScope(JSScript *script, jsbytecode *pc)
+Shape *
+js::ScopeCoordinateToStaticScopeShape(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(pc >= script->code && pc < script->code + script->length);
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 
     uint32_t blockIndex = GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t));
-
+    RootedObject innermostStaticScope(cx, NULL);
     if (blockIndex == UINT32_MAX)
-        return script->function();
-    return &script->getObject(blockIndex)->asStaticBlock();
-}
+        innermostStaticScope = script->function();
+    else
+        innermostStaticScope = &script->getObject(blockIndex)->asStaticBlock();
 
-Shape *
-js::ScopeCoordinateToStaticScopeShape(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    StaticScopeIter ssi(cx, InnermostStaticScope(script, pc));
+    StaticScopeIter ssi(cx, innermostStaticScope);
     ScopeCoordinate sc(pc);
     while (true) {
         if (ssi.hasDynamicScopeObject()) {
@@ -141,24 +138,6 @@ js::ScopeCoordinateName(JSContext *cx, JSScript *script, jsbytecode *pc)
     return JSID_TO_ATOM(id)->asPropertyName();
 }
 
-JSScript *
-js::ScopeCoordinateFunctionScript(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    StaticScopeIter ssi(cx, InnermostStaticScope(script, pc));
-    ScopeCoordinate sc(pc);
-    while (true) {
-        if (ssi.hasDynamicScopeObject()) {
-            if (!sc.hops)
-                break;
-            sc.hops--;
-        }
-        ssi++;
-    }
-    if (ssi.type() != StaticScopeIter::FUNCTION)
-        return NULL;
-    return ssi.funScript();
-}
-
 /*****************************************************************************/
 
 /*
@@ -166,24 +145,16 @@ js::ScopeCoordinateFunctionScript(JSContext *cx, JSScript *script, jsbytecode *p
  * The call object must be further initialized to be usable.
  */
 CallObject *
-CallObject::create(JSContext *cx, HandleScript script, HandleShape shape, HandleTypeObject type, HeapSlot *slots)
+CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots)
 {
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    gc::InitialHeap heap = script->treatAsRunOnce ? gc::TenuredHeap : gc::DefaultHeap;
-    JSObject *obj = JSObject::create(cx, kind, heap, shape, type, slots);
+    JSObject *obj = JSObject::create(cx, kind, GetInitialHeap(GenericObject, &CallClass),
+                                     shape, type, slots);
     if (!obj)
         return NULL;
-
-    if (script->treatAsRunOnce) {
-        RootedObject nobj(cx, obj);
-        if (!JSObject::setSingletonType(cx, nobj))
-            return NULL;
-        return &nobj->asCall();
-    }
-
     return &obj->asCall();
 }
 
@@ -228,14 +199,6 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
 
     callobj->asScope().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
-
-    if (script->treatAsRunOnce) {
-        Rooted<CallObject*> ncallobj(cx, callobj);
-        if (!JSObject::setSingletonType(cx, ncallobj))
-            return NULL;
-        return ncallobj;
-    }
-
     return callobj;
 }
 
@@ -273,10 +236,8 @@ CallObject::createForFunction(JSContext *cx, AbstractFramePtr frame)
         return NULL;
 
     /* Copy in the closed-over formal arguments. */
-    for (AliasedFormalIter i(frame.script()); i; i++) {
-        callobj->setAliasedVar(cx, i, i->name(),
-                               frame.unaliasedFormal(i.frameIndex(), DONT_CHECK_ALIASING));
-    }
+    for (AliasedFormalIter i(frame.script()); i; i++)
+        callobj->setAliasedVar(i, frame.unaliasedFormal(i.frameIndex(), DONT_CHECK_ALIASING));
 
     return callobj;
 }

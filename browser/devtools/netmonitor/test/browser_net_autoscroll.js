@@ -21,7 +21,8 @@ function test() {
   // when the requests overflow the vertical size of the container.
   .then(() => {
     return waitForRequestsToOverflowContainer(monitor, requestsContainer);
-  }).then(() => {
+  })
+  .then(() => {
     ok(scrolledToBottom(requestsContainer), "Scrolled to bottom on overflow.");
   })
 
@@ -34,7 +35,8 @@ function test() {
     ok(!scrolledToBottom(requestsContainer), "Not scrolled to bottom.");
     scrollTop = requestsContainer.scrollTop; // save for comparison later
     return waitForNetworkEvents(monitor, 8);
-  }).then(() => {
+  })
+  .then(() => {
     is(requestsContainer.scrollTop, scrollTop, "Did not scroll.");
   })
 
@@ -44,8 +46,19 @@ function test() {
     requestsContainer.scrollTop = requestsContainer.scrollHeight;
     ok(scrolledToBottom(requestsContainer), "Set scroll position to bottom.");
     return waitForNetworkEvents(monitor, 8);
-  }).then(() => {
+  })
+  .then(() => {
     ok(scrolledToBottom(requestsContainer), "Still scrolled to bottom.");
+  })
+
+  // (4) Now select an item in the list and check that additional requests
+  // do not change the scroll position.
+  .then(() => {
+    monitor.panelWin.NetMonitorView.RequestsMenu.selectedIndex = 0;
+    return waitForNetworkEvents(monitor, 8);
+  })
+  .then(() => {
+    is(requestsContainer.scrollTop, 0, "Did not scroll.");
   })
 
   // Done; clean up.

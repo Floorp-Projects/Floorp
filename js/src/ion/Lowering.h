@@ -219,7 +219,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitStringLength(MStringLength *ins);
     bool visitArgumentsLength(MArgumentsLength *ins);
     bool visitGetArgument(MGetArgument *ins);
-    bool visitRunOncePrologue(MRunOncePrologue *ins);
     bool visitRest(MRest *ins);
     bool visitParRest(MParRest *ins);
     bool visitThrow(MThrow *ins);

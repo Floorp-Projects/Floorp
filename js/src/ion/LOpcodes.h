@@ -205,7 +205,6 @@
     _(StringLength)                 \
     _(ArgumentsLength)              \
     _(GetArgument)                  \
-    _(RunOncePrologue)              \
     _(Rest)                         \
     _(ParRest)                      \
     _(TypeOfV)                      \

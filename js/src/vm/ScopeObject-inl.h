@@ -9,7 +9,6 @@
 
 #include "ScopeObject.h"
 
-#include "jsinferinlines.h"
 #include "jsscriptinlines.h"
 
 namespace js {
@@ -43,17 +42,11 @@ ScopeObject::aliasedVar(ScopeCoordinate sc)
 }
 
 inline void
-ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name, const Value &v)
+ScopeObject::setAliasedVar(ScopeCoordinate sc, const Value &v)
 {
     JS_ASSERT(isCall() || isClonedBlock());
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
-
-    // name may be null for non-singletons, whose types do not need to be tracked.
-    JS_ASSERT_IF(hasSingletonType(), name);
-
     setSlot(sc.slot, v);
-    if (hasSingletonType())
-        types::AddTypePropertyId(cx, this, NameToId(name), v);
 }
 
 /*static*/ inline size_t
@@ -84,12 +77,9 @@ CallObject::aliasedVar(AliasedFormalIter fi)
 }
 
 inline void
-CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *name, const Value &v)
+CallObject::setAliasedVar(AliasedFormalIter fi, const Value &v)
 {
-    JS_ASSERT(name == fi->name());
     setSlot(fi.scopeSlot(), v);
-    if (hasSingletonType())
-        types::AddTypePropertyId(cx, this, NameToId(name), v);
 }
 
 /*static*/ inline size_t
