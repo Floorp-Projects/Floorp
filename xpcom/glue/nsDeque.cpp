@@ -175,7 +175,6 @@ bool nsDeque::GrowCapacity() {
  */
 nsDeque& nsDeque::Push(void* aItem) {
   if (mSize==mCapacity && !GrowCapacity()) {
-    NS_WARNING("out of memory");
     return *this;
   }
   mData[modulus(mOrigin + mSize, mCapacity)]=aItem;
