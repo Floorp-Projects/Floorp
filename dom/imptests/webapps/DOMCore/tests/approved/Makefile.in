@@ -29,9 +29,15 @@ MOCHITEST_FILES := \
   test_Range-mutations.html \
   test_Range-selectNode.html \
   test_Range-set.html \
-  test_Range-surroundContents.html \
   common.js \
   Range-test-iframe.html \
   $(NULL)
+
+# Temporarily disable on Windows for bug 875585 and deps
+ifneq (windows,$(MOZ_WIDGET_TOOLKIT))
+MOCHITEST_FILES += \
+  test_Range-surroundContents.html \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
