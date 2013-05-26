@@ -1,0 +1,4 @@
+patch:0:  Patch does not have a summary.  [patch/nosummary] [3]
+patch:0:  Patch does not have a description.  [patch/nodescription] [3]
+tests/test2.cpp:1:  No copyright message found.  [legal/copyright] [3]
+Done processing tests/test2.cpp
