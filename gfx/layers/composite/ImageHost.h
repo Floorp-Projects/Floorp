@@ -87,6 +87,13 @@ public:
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 #endif
 
+#ifdef MOZ_DUMP_PAINTING
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE
+  {
+    return mTextureHost->GetAsSurface();
+  }
+#endif
+
 protected:
   virtual void MakeTextureHost(TextureIdentifier aTextureId,
                                const SurfaceDescriptor& aSurface,
