@@ -140,10 +140,22 @@ static JSBool
 intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(args.length() >= 1);
+    JS_ASSERT(args.length() == 2);
     JS_ASSERT(args[0].isObject());
     JS_ASSERT(args[0].toObject().isFunction());
-    args[0].toObject().toFunction()->setIsSelfHostedConstructor();
+    JS_ASSERT(args[1].isObject());
+
+    // Normal .prototype properties aren't enumerable.  But for this to clone
+    // correctly, it must be enumerable.
+    RootedObject ctor(cx, &args[0].toObject());
+    if (!JSObject::defineProperty(cx, ctor, cx->names().classPrototype, args.handleAt(1),
+                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT))
+    {
+        return false;
+    }
+
+    ctor->toFunction()->setIsSelfHostedConstructor();
     args.rval().setUndefined();
     return true;
 }
@@ -395,14 +407,7 @@ static JSBool
 intrinsic_ParallelTestsShouldPass(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-#if defined(JS_THREADSAFE) && defined(JS_ION)
-    args.rval().setBoolean(ion::IsEnabled(cx) &&
-                           ion::IsBaselineEnabled(cx) &&
-                           !ion::js_IonOptions.eagerCompilation &&
-                           ion::js_IonOptions.baselineUsesBeforeCompile != 0);
-#else
-    args.rval().setBoolean(false);
-#endif
+    args.rval().setBoolean(ParallelTestsShouldPass(cx));
     return true;
 }
 

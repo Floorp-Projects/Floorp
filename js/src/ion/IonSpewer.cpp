@@ -160,6 +160,8 @@ IonSpewer::spewPass(const char *pass)
 {
     if (!isSpewingFunction())
         return;
+    if (!GetIonContext()->cx)
+        return;
 
     c1Spewer.spewPass(pass);
     jsonSpewer.beginPass(pass);
@@ -172,6 +174,8 @@ void
 IonSpewer::spewPass(const char *pass, LinearScanAllocator *ra)
 {
     if (!isSpewingFunction())
+        return;
+    if (!GetIonContext()->cx)
         return;
 
     c1Spewer.spewPass(pass);

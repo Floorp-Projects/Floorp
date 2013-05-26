@@ -413,9 +413,6 @@ public:
   void ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
                              nsIFrame* aChildFrame);
 
-  virtual const void* StyleDataExternal(nsStyleStructID aSID) const MOZ_OVERRIDE;
-
-
   /**
    * @return true if we should avoid a page/column break in this frame.
    */

@@ -87,7 +87,7 @@ public:
   /**
    * Obtains the nsNavHistory object.
    */
-  static nsNavHistory* GetSingleton();
+  static already_AddRefed<nsNavHistory> GetSingleton();
 
   /**
    * Initializes the nsNavHistory object.  This should only be called once.

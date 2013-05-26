@@ -8,10 +8,13 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/Geometry.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
+  'resource://gre/modules/Services.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Rect',
+  'resource://gre/modules/Geometry.jsm');
 
-this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext'];
+this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache'];
 
 this.Utils = {
   _buildAppMap: {
@@ -426,4 +429,55 @@ PivotContext.prototype = {
       return true;
     }
   }
+};
+
+this.PrefCache = function PrefCache(aName, aCallback, aRunCallbackNow) {
+  this.name = aName;
+  this.callback = aCallback;
+
+  let branch = Services.prefs;
+  this.value = this._getValue(branch);
+
+  if (this.callback && aRunCallbackNow) {
+    try {
+      this.callback(this.name, this.value);
+    } catch (x) {
+      Logger.logException(x);
+    }
+  }
+
+  branch.addObserver(aName, this, true);
+};
+
+PrefCache.prototype = {
+  _getValue: function _getValue(aBranch) {
+    if (!this.type) {
+      this.type = aBranch.getPrefType(this.name);
+    }
+
+    switch (this.type) {
+      case Ci.nsIPrefBranch.PREF_STRING:
+        return aBranch.getCharPref(this.name);
+      case Ci.nsIPrefBranch.PREF_INT:
+        return aBranch.getIntPref(this.name);
+      case Ci.nsIPrefBranch.PREF_BOOL:
+        return aBranch.getBoolPref(this.name);
+      default:
+        return null;
+    }
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    this.value = this._getValue(aSubject.QueryInterface(Ci.nsIPrefBranch));
+    if (this.callback) {
+      try {
+        this.callback(this.name, this.value);
+      } catch (x) {
+        Logger.logException(x);
+      }
+    }
+  },
+
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference])
 };

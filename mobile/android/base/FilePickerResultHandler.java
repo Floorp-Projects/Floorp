@@ -40,7 +40,7 @@ abstract class FilePickerResultHandler implements ActivityResultHandler {
             return path == null ? "" : path;
         }
         try {
-            ContentResolver cr = GeckoApp.mAppContext.getContentResolver();
+            ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
             Cursor cursor = cr.query(uri, new String[] { OpenableColumns.DISPLAY_NAME },
                                      null, null, null);
             String name = null;
@@ -63,7 +63,7 @@ abstract class FilePickerResultHandler implements ActivityResultHandler {
                 fileExt = name.substring(period);
                 fileName = name.substring(0, period);
             }
-            File file = File.createTempFile(fileName, fileExt, GeckoLoader.getGREDir(GeckoApp.mAppContext));
+            File file = File.createTempFile(fileName, fileExt, GeckoLoader.getGREDir(GeckoAppShell.getContext()));
             FileOutputStream fos = new FileOutputStream(file);
             InputStream is = cr.openInputStream(uri);
             byte[] buf = new byte[4096];

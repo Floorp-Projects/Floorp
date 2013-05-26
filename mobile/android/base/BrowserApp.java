@@ -128,6 +128,10 @@ abstract public class BrowserApp extends GeckoApp
     // Stored value of the toolbar height, so we know when it's changed.
     private int mToolbarHeight = 0;
 
+    // Stored value of whether the last metrics change allowed for toolbar
+    // scrolling.
+    private boolean mDynamicToolbarCanScroll = false;
+
     private Integer mPrefObserverId;
 
     // Tag for the AboutHome fragment. The fragment is automatically attached
@@ -712,6 +716,23 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
+        // If the page has shrunk so that the toolbar no longer scrolls, make
+        // sure the toolbar is visible.
+        if (aMetrics.getPageHeight() < aMetrics.getHeight()) {
+            if (mDynamicToolbarCanScroll) {
+                mDynamicToolbarCanScroll = false;
+                if (!mBrowserToolbar.isVisible()) {
+                    ThreadUtils.postToUiThread(new Runnable() {
+                        public void run() {
+                            mLayerView.getLayerMarginsAnimator().showMargins(false);
+                        }
+                    });
+                }
+            }
+        } else {
+            mDynamicToolbarCanScroll = true;
+        }
+
         final View toolbarLayout = mBrowserToolbar.getLayout();
         final int marginTop = Math.round(aMetrics.marginTop);
         ThreadUtils.postToUiThread(new Runnable() {
@@ -727,8 +748,12 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
+        // Make sure the toolbar is fully hidden or fully shown when the user
+        // lifts their finger. If the page is shorter than the viewport, the
+        // toolbar is always shown.
         ImmutableViewportMetrics metrics = mLayerView.getViewportMetrics();
-        if (metrics.marginTop >= mToolbarHeight / 2) {
+        if (metrics.getPageHeight() < metrics.getHeight()
+              || metrics.marginTop >= mToolbarHeight / 2) {
             mLayerView.getLayerMarginsAnimator().showMargins(false);
         } else {
             mLayerView.getLayerMarginsAnimator().hideMargins(false);
@@ -957,7 +982,7 @@ abstract public class BrowserApp extends GeckoApp
 
                 // Display notification for Mozilla data reporting, if data should be collected.
                 if (AppConstants.MOZ_DATA_REPORTING) {
-                    DataReportingNotification.checkAndNotifyPolicy(BrowserApp.mAppContext);
+                    DataReportingNotification.checkAndNotifyPolicy(GeckoAppShell.getContext());
                 }
 
             } else if (event.equals("Telemetry:Gather")) {

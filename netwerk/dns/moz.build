@@ -21,3 +21,8 @@ EXPORTS.mozilla.net += [
     'DNS.h',
 ]
 
+CSRCS += [
+    'nameprep.c',
+    'punycode.c',
+    'race.c',
+]

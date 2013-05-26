@@ -9,3 +9,6 @@ if CONFIG['OS_ARCH'] in ('Darwin', 'Linux'):
 
 MODULE = 'breakpad_common'
 
+CSRCS += [
+    'convert_UTF.c',
+]

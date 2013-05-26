@@ -515,10 +515,9 @@ AboutReader.prototype = {
 
     this._article = article;
 
+    this._domainElement.href = article.url;
     let articleUri = Services.io.newURI(article.url, null, null);
-    let domain = articleUri.host;
-
-    this._domainElement.innerHTML = domain;
+    this._domainElement.innerHTML = articleUri.host;
 
     this._creditsElement.innerHTML = article.byline;
 

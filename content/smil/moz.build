@@ -9,6 +9,7 @@ TEST_TOOL_DIRS += ['test']
 MODULE = 'content'
 
 EXPORTS += [
+    'nsDOMTimeEvent.h',
     'nsISMILAttr.h',
     'nsISMILType.h',
     'nsSMILAnimationController.h',

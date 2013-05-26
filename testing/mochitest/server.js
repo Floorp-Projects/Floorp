@@ -583,8 +583,14 @@ function testListing(metadata, response)
                             true);
   var table_class = metadata.queryString.indexOf("hideResultsTable=1") > -1 ? "invisible": "";
 
+  let testname = (metadata.queryString.indexOf("testname=") > -1)
+                 ? metadata.queryString.match(/testname=([^&]+)/)[1]
+                 : "";
+
   dumpn("count: " + count);
-  var tests = jsonArrayOfTestFiles(links);
+  var tests = testname
+              ? "['/" + testname + "']"
+              : jsonArrayOfTestFiles(links);
   response.write(
     HTML(
       HEAD(

@@ -12,12 +12,17 @@ const { Cc, Ci, Cr } = require("chrome");
 
 const { Class } = require("./core/heritage");
 const base64 = require("./base64");
+var tlds = Cc["@mozilla.org/network/effective-tld-service;1"]
+          .getService(Ci.nsIEffectiveTLDService);
 
 var ios = Cc['@mozilla.org/network/io-service;1']
           .getService(Ci.nsIIOService);
 
 var resProt = ios.getProtocolHandler("resource")
               .QueryInterface(Ci.nsIResProtocolHandler);
+
+var URLParser = Cc["@mozilla.org/network/url-parser;1?auth=no"]
+                .getService(Ci.nsIURLParser);
 
 function newURI(uriStr, base) {
   try {
@@ -92,11 +97,29 @@ function URL(url, base) {
     port = uri.port == -1 ? null : uri.port;
   } catch (e if e.result == Cr.NS_ERROR_FAILURE) {}
 
+  let uriData = [uri.path, uri.path.length, {}, {}, {}, {}, {}, {}];
+  URLParser.parsePath.apply(URLParser, uriData);
+  let [{ value: filepathPos }, { value: filepathLen },
+    { value: queryPos }, { value: queryLen },
+    { value: refPos }, { value: refLen }] = uriData.slice(2);
+
+  let hash = uri.ref ? "#" + uri.ref : "";
+  let pathname = uri.path.substr(filepathPos, filepathLen);
+  let search = uri.path.substr(queryPos, queryLen);
+  search = search ? "?" + search : "";
+
   this.__defineGetter__("scheme", function() uri.scheme);
   this.__defineGetter__("userPass", function() userPass);
   this.__defineGetter__("host", function() host);
+  this.__defineGetter__("hostname", function() host);
   this.__defineGetter__("port", function() port);
   this.__defineGetter__("path", function() uri.path);
+  this.__defineGetter__("pathname", function() pathname);
+  this.__defineGetter__("hash", function() hash);
+  this.__defineGetter__("href", function() uri.spec);
+  this.__defineGetter__("origin", function() uri.prePath);
+  this.__defineGetter__("protocol", function() uri.scheme + ":");
+  this.__defineGetter__("search", function() search);
 
   Object.defineProperties(this, {
     toString: {
@@ -234,6 +257,17 @@ const DataURL = Class({
 });
 
 exports.DataURL = DataURL;
+
+let getTLD = exports.getTLD = function getTLD (url) {
+  let uri = newURI(url.toString());
+  let tld = null;
+  try {
+    tld = tlds.getPublicSuffix(uri);
+  } catch (e if
+      e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS ||
+      e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {}
+  return tld;
+};
 
 let isValidURI = exports.isValidURI = function (uri) {
   try {

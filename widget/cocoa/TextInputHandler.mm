@@ -3980,6 +3980,8 @@ PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
  *
  ******************************************************************************/
 
+int32_t TextInputHandlerBase::sSecureEventInputCount = 0;
+
 TextInputHandlerBase::TextInputHandlerBase(nsChildView* aWidget,
                                            NSView<mozView> *aNativeView) :
   mWidget(aWidget)
@@ -4216,4 +4218,37 @@ TextInputHandlerBase::IsModifierKey(UInt32 aNativeKeyCode)
       return true;
   }
   return false;
+}
+
+/* static */ void
+TextInputHandlerBase::EnableSecureEventInput()
+{
+  sSecureEventInputCount++;
+  ::EnableSecureEventInput();
+}
+
+/* static */ void
+TextInputHandlerBase::DisableSecureEventInput()
+{
+  if (!sSecureEventInputCount) {
+    return;
+  }
+  sSecureEventInputCount--;
+  ::DisableSecureEventInput();
+}
+
+/* static */ bool
+TextInputHandlerBase::IsSecureEventInputEnabled()
+{
+  NS_ASSERTION(!!sSecureEventInputCount == !!::IsSecureEventInputEnabled(),
+               "Some other process has enabled secure event input");
+  return !!sSecureEventInputCount;
+}
+
+/* static */ void
+TextInputHandlerBase::EnsureSecureEventInputDisabled()
+{
+  while (sSecureEventInputCount) {
+    TextInputHandlerBase::DisableSecureEventInput();
+  }
 }

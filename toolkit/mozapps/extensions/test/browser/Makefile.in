@@ -40,6 +40,7 @@ MOCHITEST_BROWSER_MAIN = \
   browser_bug618502.js \
   browser_bug679604.js \
   browser_bug714593.js \
+  browser_bug590347.js \
   browser_details.js \
   browser_discovery.js \
   browser_dragdrop.js \

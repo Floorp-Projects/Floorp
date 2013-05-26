@@ -11,10 +11,13 @@ import org.mozilla.gecko.util.GeckoEventListener;
 import org.json.JSONObject;
 
 import android.content.Intent;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.SystemClock;
 import android.util.Log;
+import android.app.Activity;
+
 
 import java.util.Locale;
 
@@ -51,22 +54,28 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             Locale.setDefault(locale);
         }
 
-        GeckoApp app = GeckoApp.mAppContext;
-        String resourcePath = app.getApplication().getPackageResourcePath();
+        Context app = GeckoAppShell.getContext();
+        String resourcePath = "";
+        Resources res  = null;
         String[] pluginDirs = null;
         try {
-            pluginDirs = app.getPluginDirectories();
+            pluginDirs = GeckoAppShell.getPluginDirectories();
         } catch (Exception e) {
             Log.w(LOGTAG, "Caught exception getting plugin dirs.", e);
         }
-        GeckoLoader.setupGeckoEnvironment(app, pluginDirs, GeckoProfile.get(app).getFilesDir().getPath());
+        
+        if (app instanceof Activity) {
+            Activity activity = (Activity)app;
+            resourcePath = activity.getApplication().getPackageResourcePath();
+            res = activity.getBaseContext().getResources();
+            GeckoLoader.setupGeckoEnvironment(activity, pluginDirs, GeckoProfile.get(app).getFilesDir().getPath());
+        }
         GeckoLoader.loadSQLiteLibs(app, resourcePath);
         GeckoLoader.loadNSSLibs(app, resourcePath);
         GeckoLoader.loadGeckoLibs(app, resourcePath);
 
         Locale.setDefault(locale);
 
-        Resources res = app.getBaseContext().getResources();
         Configuration config = res.getConfiguration();
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
@@ -85,7 +94,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     }
 
     private String addCustomProfileArg(String args) {
-        String profile = GeckoApp.sIsUsingCustomProfile ? "" : (" -P " + GeckoApp.mAppContext.getProfile().getName());
+        String profile = GeckoAppShell.getGeckoInterface() == null || GeckoApp.sIsUsingCustomProfile ? "" : (" -P " + GeckoAppShell.getGeckoInterface().getProfile().getName());
         return (args != null ? args : "") + profile;
     }
 
