@@ -239,7 +239,6 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(StringLength)
     UNSAFE_OP(ArgumentsLength)
     UNSAFE_OP(GetArgument)
-    UNSAFE_OP(RunOncePrologue)
     CUSTOM_OP(Rest)
     SAFE_OP(ParRest)
     SAFE_OP(Floor)

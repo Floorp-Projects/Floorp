@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Network requests table */
-
 #body {
   background: url(background-noise-toolbar.png), hsl(208,11%,27%);
 }
 
-.requests-menu-empty-notice {
+/* Network requests table */
+
+#requests-menu-empty-notice {
   background: url(background-noise-toolbar.png), hsl(208,11%,27%);
   padding: 12px;
   font-size: 110%;
@@ -17,17 +17,12 @@
 }
 
 #requests-menu-toolbar {
-  padding: 0;
-  -moz-padding-start: 4px;
   height: 33px;
+  padding: 0;
 }
 
 .requests-menu-header:first-child {
   -moz-padding-start: 4px;
-}
-
-.requests-menu-header {
-  text-align: center;
 }
 
 .requests-menu-subitem {
@@ -43,12 +38,13 @@
 .requests-menu-header-button {
   -moz-appearance: none;
   background: none;
-  min-width: 10px;
-  min-height: 32px; /* Remaining 1px comes from border of the button. */
+  min-width: 20px;
+  min-height: 32px; /* Remaining 1px comes from border of the toolbar. */
   margin: 0;
   border: none;
-  padding: 2px 0px;
+  padding: 0;
   color: inherit;
+  font-weight: inherit !important;
   transition: background-color 0.1s ease-in-out;
 }
 
@@ -86,7 +82,6 @@
 .requests-menu-status {
   width: 10px;
   height: 10px;
-  margin: 0px 2px;
 }
 
 .requests-menu-method {
@@ -118,6 +113,8 @@
 
 box.requests-menu-status {
   background: #fff;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 5px;
   border-radius: 20px;
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.4) inset,
@@ -269,12 +266,14 @@ box.requests-menu-status[code^="5"] {
               0 0 4px 0 rgba(255,255,255,1.0) inset;
 }
 
+/* SideMenuWidget */
+
 .side-menu-widget-item:nth-child(even) {
   background: rgba(255,255,255,0.05);
 }
 
 .side-menu-widget-item-contents {
-  padding: 0px 4px;
+  padding: 0;
 }
 
 /* Network request details */
@@ -364,6 +363,51 @@ box.requests-menu-status[code^="5"] {
   transition: transform 0.2s ease-out;
 }
 
+/* Footer */
+
+#requests-menu-footer {
+  box-shadow: inset 0 1px 16px hsla(210,8%,5%,.3);
+}
+
+.requests-menu-footer-button,
+.requests-menu-footer-label {
+  min-width: 1em;
+  margin: 0;
+  border: none;
+  padding: 0px 1.5vw;
+  color: #fff;
+}
+
+.requests-menu-footer-spacer,
+.requests-menu-footer-button {
+  -moz-border-end: 1px solid hsla(210,8%,5%,.25);
+  box-shadow: 1px 0 0 hsla(210,16%,76%,.1);
+}
+
+.requests-menu-footer-button {
+  -moz-appearance: none;
+  background: rgba(0,0,0,0.025);
+}
+
+.requests-menu-footer-button:hover {
+  background: rgba(0,0,0,0.20);
+}
+
+.requests-menu-footer-button:hover:active {
+  background: rgba(0,0,0,0.35);
+}
+
+.requests-menu-footer-button:not(:active)[checked] {
+  background-color: rgba(0,0,0,0.25);
+  background-image: radial-gradient(farthest-side at center top, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3));
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+}
+
+.requests-menu-footer-label {
+  font-weight: 600;
+}
+
 /* Responsive sidebar */
 @media (max-width: 700px) {
   #requests-menu-toolbar {
@@ -371,7 +415,12 @@ box.requests-menu-status[code^="5"] {
   }
 
   .requests-menu-header-button {
-    min-height: 23px; /* Remaining 1px comes from border of the button. */
+    min-height: 23px; /* Remaining 1px comes from border of the toolbar. */
+  }
+
+  .requests-menu-footer-button,
+  .requests-menu-footer-label {
+    padding: 0px 2vw;
   }
 
   #details-pane {
@@ -381,13 +430,12 @@ box.requests-menu-status[code^="5"] {
   }
 
   .requests-menu-status-and-method {
-    width: 14vw;
+    width: 16vw;
   }
 
   .requests-menu-file,
   .requests-menu-domain {
     width: 30vw;
-    min-width: 10em;
   }
 
   .requests-menu-type {

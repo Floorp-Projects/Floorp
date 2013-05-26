@@ -578,32 +578,6 @@ VariablesView.prototype = {
   },
 
   /**
-   * Focuses the first visible scope, variable, or property in this container.
-   */
-  focusFirstVisibleNode: function() {
-    let focusableItem = this._findInVisibleItems(item => item.focusable);
-
-    if (focusableItem) {
-      this._focusItem(focusableItem);
-    }
-    this._parent.scrollTop = 0;
-    this._parent.scrollLeft = 0;
-  },
-
-  /**
-   * Focuses the last visible scope, variable, or property in this container.
-   */
-  focusLastVisibleNode: function() {
-    let focusableItem = this._findInVisibleItemsReverse(item => item.focusable);
-
-    if (focusableItem) {
-      this._focusItem(focusableItem);
-    }
-    this._parent.scrollTop = this._parent.scrollHeight;
-    this._parent.scrollLeft = 0;
-  },
-
-  /**
    * Searches for the scope in this container displayed by the specified node.
    *
    * @param nsIDOMNode aNode
@@ -644,19 +618,58 @@ VariablesView.prototype = {
   },
 
   /**
-   * Focuses the next scope, variable or property in this view.
-   * @see VariablesView.prototype._focusChange
+   * Focuses the first visible scope, variable, or property in this container.
    */
-  focusNextItem: function(aMaintainViewFocusedFlag) {
-    this._focusChange("advanceFocus", aMaintainViewFocusedFlag)
+  focusFirstVisibleItem: function() {
+    let focusableItem = this._findInVisibleItems(item => item.focusable);
+    if (focusableItem) {
+      this._focusItem(focusableItem);
+    }
+    this._parent.scrollTop = 0;
+    this._parent.scrollLeft = 0;
+  },
+
+  /**
+   * Focuses the last visible scope, variable, or property in this container.
+   */
+  focusLastVisibleItem: function() {
+    let focusableItem = this._findInVisibleItemsReverse(item => item.focusable);
+    if (focusableItem) {
+      this._focusItem(focusableItem);
+    }
+    this._parent.scrollTop = this._parent.scrollHeight;
+    this._parent.scrollLeft = 0;
+  },
+
+  /**
+   * Focuses the next scope, variable or property in this view.
+   */
+  focusNextItem: function() {
+    this.focusItemAtDelta(+1);
   },
 
   /**
    * Focuses the previous scope, variable or property in this view.
-   * @see VariablesView.prototype._focusChange
    */
-  focusPrevItem: function(aMaintainViewFocusedFlag) {
-    this._focusChange("rewindFocus", aMaintainViewFocusedFlag)
+  focusPrevItem: function() {
+    this.focusItemAtDelta(-1);
+  },
+
+  /**
+   * Focuses another scope, variable or property in this view, based on
+   * the index distance from the currently focused item.
+   *
+   * @param number aDelta
+   *        A scalar specifying by how many items should the selection change.
+   */
+  focusItemAtDelta: function(aDelta) {
+    let direction = aDelta > 0 ? "advanceFocus" : "rewindFocus";
+    let distance = Math.abs(Math[aDelta > 0 ? "ceil" : "floor"](aDelta));
+    while (distance--) {
+      if (!this._focusChange(direction)) {
+        break; // Out of bounds.
+      }
+    }
   },
 
   /**
@@ -664,41 +677,29 @@ VariablesView.prototype = {
    *
    * @param string aDirection
    *        Either "advanceFocus" or "rewindFocus".
-   * @param boolean aMaintainViewFocusedFlag
-   *        True too keep this view focused if the element is out of bounds.
    * @return boolean
-   *         True if the focus went out of bounds and the first or last element
+   *         False if the focus went out of bounds and the first or last element
    *         in this view was focused instead.
    */
-  _focusChange: function(aDirection, aMaintainViewFocusedFlag) {
+  _focusChange: function(aDirection) {
     let commandDispatcher = this.document.commandDispatcher;
-    let item;
+    let prevFocusedElement = commandDispatcher.focusedElement;
+    let currFocusedItem = null;
 
     do {
+      commandDispatcher.suppressFocusScroll = true;
       commandDispatcher[aDirection]();
 
-      // If maintaining this view focused is not mandatory, a simple
-      // "advanceFocus" or "rewindFocus" command dispatch is sufficient.
-      if (!aMaintainViewFocusedFlag) {
+      // Make sure the newly focused item is a part of this view.
+      // If the focus goes out of bounds, revert the previously focused item.
+      if (!(currFocusedItem = this.getFocusedItem())) {
+        prevFocusedElement.focus();
         return false;
       }
-
-      // Make sure the newly focused target is a part of this view.
-      item = this.getFocusedItem();
-      if (!item) {
-        if (aDirection == "advanceFocus") {
-          this.focusLastVisibleNode();
-        } else {
-          this.focusFirstVisibleNode();
-        }
-        // Focus went out of bounds so the first or last element in this view
-        // was focused instead.
-        return true;
-      }
-    } while (!item.focusable);
+    } while (!currFocusedItem.focusable);
 
     // Focus remained within bounds.
-    return false;
+    return true;
   },
 
   /**
@@ -729,19 +730,8 @@ VariablesView.prototype = {
   _onViewKeyPress: function(e) {
     let item = this.getFocusedItem();
 
-    switch (e.keyCode) {
-      case e.DOM_VK_UP:
-      case e.DOM_VK_DOWN:
-      case e.DOM_VK_LEFT:
-      case e.DOM_VK_RIGHT:
-      case e.DOM_VK_PAGE_UP:
-      case e.DOM_VK_PAGE_DOWN:
-      case e.DOM_VK_HOME:
-      case e.DOM_VK_END:
-        // Prevent scrolling when pressing navigation keys.
-        e.preventDefault();
-        e.stopPropagation();
-    }
+    // Prevent scrolling when pressing navigation keys.
+    ViewHelpers.preventScrolling(e);
 
     switch (e.keyCode) {
       case e.DOM_VK_UP:
@@ -778,36 +768,24 @@ VariablesView.prototype = {
 
       case e.DOM_VK_PAGE_UP:
         // Rewind a certain number of elements based on the container height.
-        var jumps = this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
+        this.focusItemAtDelta(-(this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
           PAGE_SIZE_SCROLL_HEIGHT_RATIO),
-          PAGE_SIZE_MAX_JUMPS);
-
-        while (jumps--) {
-          if (this.focusPrevItem(true)) {
-            return;
-          }
-        }
+          PAGE_SIZE_MAX_JUMPS)));
         return;
 
       case e.DOM_VK_PAGE_DOWN:
         // Advance a certain number of elements based on the container height.
-        var jumps = this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
+        this.focusItemAtDelta(+(this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
           PAGE_SIZE_SCROLL_HEIGHT_RATIO),
-          PAGE_SIZE_MAX_JUMPS);
-
-        while (jumps--) {
-          if (this.focusNextItem(true)) {
-            return;
-          }
-        }
+          PAGE_SIZE_MAX_JUMPS)));
         return;
 
       case e.DOM_VK_HOME:
-        this.focusFirstVisibleNode();
+        this.focusFirstVisibleItem();
         return;
 
       case e.DOM_VK_END:
-        this.focusLastVisibleNode();
+        this.focusLastVisibleItem();
         return;
 
       case e.DOM_VK_RETURN:
