@@ -95,6 +95,10 @@ public:
   }
 #endif
 
+  virtual void Dump(FILE* aFile=NULL,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) MOZ_OVERRIDE;
+
   virtual TextureHost* GetTextureHost() MOZ_OVERRIDE;
 
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
@@ -152,6 +156,10 @@ public:
                                  ISurfaceAllocator* aAllocator,
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
   virtual void DestroyTextures() MOZ_OVERRIDE;
+
+  virtual void Dump(FILE* aFile=NULL,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
