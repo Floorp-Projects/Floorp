@@ -194,6 +194,11 @@ public:
     SetCompositor(nullptr);
   }
 
+  virtual void Dump(FILE* aFile=NULL,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) { }
+  static void DumpTextureHost(FILE* aFile, TextureHost* aTexture);
+
 #ifdef MOZ_DUMP_PAINTING
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() { return nullptr; }
 #endif
