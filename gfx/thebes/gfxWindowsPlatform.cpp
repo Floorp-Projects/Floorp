@@ -678,7 +678,9 @@ gfxWindowsPlatform::CreateOffscreenImageSurface(const gfxIntSize& aSize,
 {
 #ifdef CAIRO_HAS_D2D_SURFACE
     if (mRenderMode == RENDER_DIRECT2D) {
-        return new gfxImageSurface(aSize, OptimalFormatForContent(aContentType));
+        nsRefPtr<gfxASurface> surface =
+          new gfxImageSurface(aSize, OptimalFormatForContent(aContentType));
+        return surface.forget();
     }
 #endif
 

@@ -68,6 +68,16 @@ TestTypeWithOrdering()
   result = atomic.exchange(42);
   MOZ_ASSERT(atomic == T(42), "Atomic exchange did not work");
   MOZ_ASSERT(result == T(30), "Atomic exchange returned the wrong value");
+
+  // Test CAS.
+  atomic = T(1);
+  DebugOnly<bool> boolResult = atomic.compareExchange(0, 2);
+  MOZ_ASSERT(!boolResult, "CAS should have returned false.");
+  MOZ_ASSERT(atomic == T(1), "CAS shouldn't have done anything.");
+
+  boolResult = atomic.compareExchange(1, 42);
+  MOZ_ASSERT(boolResult, "CAS should have succeeded.");
+  MOZ_ASSERT(atomic == T(42), "CAS should have changed atomic's value.");
 }
 
 template<typename T, MemoryOrdering Order>
@@ -107,6 +117,15 @@ TestPointerWithOrdering()
   result = atomic.exchange(array1);
   MOZ_ASSERT(atomic == array1, "Atomic exchange did not work");
   MOZ_ASSERT(result == array1 + 2, "Atomic exchange returned the wrong value");
+
+  atomic = array1;
+  DebugOnly<bool> boolResult = atomic.compareExchange(array1 + 1, array1 + 2);
+  MOZ_ASSERT(!boolResult, "CAS should have returned false.");
+  MOZ_ASSERT(atomic == array1, "CAS shouldn't have done anything.");
+
+  boolResult = atomic.compareExchange(array1, array1 + 3);
+  MOZ_ASSERT(boolResult, "CAS should have succeeded.");
+  MOZ_ASSERT(atomic == array1 + 3, "CAS should have changed atomic's value.");
 }
 
 template <typename T>

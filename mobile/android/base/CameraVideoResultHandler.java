@@ -30,7 +30,7 @@ class CameraVideoResultHandler implements ActivityResultHandler {
             return;
         }
 
-        Cursor cursor = GeckoApp.mAppContext.managedQuery(data.getData(),
+        Cursor cursor = GeckoAppShell.getGeckoInterface().getActivity().managedQuery(data.getData(),
                 new String[] { MediaStore.Video.Media.DATA },
                 null,
                 null,

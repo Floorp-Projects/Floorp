@@ -1659,7 +1659,9 @@ private:
             NS_ConvertUTF16toUTF8(mFilenameIdentifier).get());
 
         // Get the log directory either from $MOZ_CC_LOG_DIRECTORY or from
-        // the fallback directories in OpenTempFile.
+        // the fallback directories in OpenTempFile.  We don't use an nsCOMPtr
+        // here because OpenTempFile uses an in/out param and getter_AddRefs
+        // wouldn't work.
         nsIFile* logFile = nullptr;
         if (char* env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
             NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
@@ -1671,7 +1673,7 @@ private:
           return nullptr;
         }
 
-        return logFile;
+        return dont_AddRef(logFile);
     }
 
     FILE *mStream;

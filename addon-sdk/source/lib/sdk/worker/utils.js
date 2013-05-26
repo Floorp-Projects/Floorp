@@ -17,10 +17,34 @@ const { Loader } = require("../content/loader");
 const { merge } = require("../util/object");
 const { emit } = require("../event/core");
 
-const LegacyWorker = WorkerTrait.resolve({
+let assetsURI = require("../self").data.url();
+let isArray = Array.isArray;
+
+function isAddonContent({ contentURL }) {
+  return typeof(contentURL) === "string" && contentURL.indexOf(assetsURI) === 0;
+}
+
+function hasContentScript({ contentScript, contentScriptFile }) {
+  return (isArray(contentScript) ? contentScript.length > 0 :
+         !!contentScript) ||
+         (isArray(contentScriptFile) ? contentScriptFile.length > 0 :
+         !!contentScriptFile);
+}
+
+function requiresAddonGlobal(model) {
+  return isAddonContent(model) && !hasContentScript(model);
+}
+exports.requiresAddonGlobal = requiresAddonGlobal;
+
+
+const LegacyWorker = WorkerTrait.compose(Loader).resolve({
   _setListeners: "__setListeners",
-}).compose(Loader, {
+  _injectInDocument: "__injectInDocument",
+  contentURL: "__contentURL"
+}).compose({
   _setListeners: function() {},
+  get contentURL() this._window.document.URL,
+  get _injectInDocument() requiresAddonGlobal(this),
   attach: function(window) this._attach(window),
   detach: function() this._workerCleanup()
 });

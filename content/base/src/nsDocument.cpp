@@ -4828,7 +4828,7 @@ nsIDocument::CreateElement(const nsAString& aTagName, ErrorResult& rv)
   if (rv.Failed()) {
     return nullptr;
   }
-  return content.forget().get()->AsElement();
+  return dont_AddRef(content.forget().get()->AsElement());
 }
 
 NS_IMETHODIMP
@@ -4865,7 +4865,7 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
   if (rv.Failed()) {
     return nullptr;
   }
-  return content.forget().get()->AsElement();
+  return dont_AddRef(content.forget().get()->AsElement());
 }
 
 NS_IMETHODIMP
@@ -6975,7 +6975,7 @@ nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
     nsEventDispatcher::CreateEvent(const_cast<nsIDocument*>(this),
                                    presContext, nullptr, aEventType,
                                    getter_AddRefs(ev));
-  return ev ? ev.forget().get()->InternalDOMEvent() : nullptr;
+  return ev ? dont_AddRef(ev.forget().get()->InternalDOMEvent()) : nullptr;
 }
 
 void

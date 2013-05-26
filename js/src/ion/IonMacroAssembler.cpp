@@ -713,118 +713,24 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
     enterExitFrame();
 
-    Label reflow;
-    Label interpret;
     Label exception;
-    Label osr;
-    Label boundscheck;
-    Label overrecursed;
-    Label invalidate;
     Label baseline;
 
     // The return value from Bailout is tagged as:
-    // - 0x0: done (thunk to interpreter)
+    // - 0x0: done (enter baseline)
     // - 0x1: error (handle exception)
-    // - 0x2: reflow args
-    // - 0x3: reflow barrier
-    // - 0x4: monitor types
-    // - 0x5: bounds check failure
-    // - 0x6: force invalidation
-    // - 0x7: overrecursed
-    // - 0x8: cached shape guard failure
-    // - 0x9: bailout to baseline
+    // - 0x2: overrecursed
 
-    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &interpret);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OK), &baseline);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &exception);
 
-    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_BOUNDS_CHECK), &reflow);
-
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_BOUNDS_CHECK), &boundscheck);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OVERRECURSED), &overrecursed);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_SHAPE_GUARD), &invalidate);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_BASELINE), &baseline);
-
-    // Fall-through: cached shape guard failure.
-    {
-        setupUnalignedABICall(0, scratch);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, CachedShapeGuardFailure));
-
-        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
-        jump(&interpret);
-    }
-
-    // Force invalidation.
-    bind(&invalidate);
-    {
-        setupUnalignedABICall(0, scratch);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ShapeGuardFailure));
-
-        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
-        jump(&interpret);
-    }
-
-    // Bounds-check failure.
-    bind(&boundscheck);
-    {
-        setupUnalignedABICall(0, scratch);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, BoundsCheckFailure));
-
-        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
-        jump(&interpret);
-    }
-
-    // Reflow types.
-    bind(&reflow);
-    {
-        setupUnalignedABICall(1, scratch);
-        passABIArg(ReturnReg);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
-
-        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
-        jump(&interpret);
-    }
-
-    // Throw an over-recursion error.
-    bind(&overrecursed);
+    // Fall-through: overrecursed.
     {
         loadJSContext(ReturnReg);
         setupUnalignedABICall(1, scratch);
         passABIArg(ReturnReg);
         callWithABI(JS_FUNC_TO_DATA_PTR(void *, js_ReportOverRecursed));
         jump(&exception);
-    }
-
-    bind(&interpret);
-    {
-        // Reserve space for Interpret() to store a Value.
-        subPtr(Imm32(sizeof(Value)), StackPointer);
-        mov(StackPointer, ReturnReg);
-
-        // Call out to the interpreter.
-        setupUnalignedABICall(1, scratch);
-        passABIArg(ReturnReg);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
-
-        // Load the value the interpreter returned.
-        popValue(JSReturnOperand);
-
-        // Check for an exception.
-        JS_STATIC_ASSERT(!Interpret_Error);
-        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
-
-        // Remove the exitCode pointer from the stack.
-        leaveExitFrame();
-
-        branch32(Equal, ReturnReg, Imm32(Interpret_OSR), &osr);
-
-        // Return to the caller.
-        ret();
-    }
-
-    bind(&osr);
-    {
-        unboxPrivate(JSReturnOperand, OsrFrameReg);
-        performOsr();
     }
 
     bind(&exception);

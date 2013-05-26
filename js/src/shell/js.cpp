@@ -908,6 +908,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     unsigned lineNumber = 1;
     RootedObject global(cx, NULL);
     bool catchTermination = false;
+    bool saveFrameChain = false;
     RootedObject callerGlobal(cx, cx->global());
 
     global = JS_GetGlobalForObject(cx, &args.callee());
@@ -999,6 +1000,15 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
             catchTermination = b;
         }
+
+        if (!JS_GetProperty(cx, options, "saveFrameChain", v.address()))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSBool b;
+            if (!JS_ValueToBoolean(cx, v, &b))
+                return false;
+            saveFrameChain = b;
+        }
     }
 
     RootedString code(cx, args[0].toString());
@@ -1014,6 +1024,9 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         cx = ancx.get();
     }
+
+    if (saveFrameChain && !JS_SaveFrameChain(cx))
+        return false;
 
     {
         JSAutoCompartment ac(cx, global);
@@ -1050,6 +1063,9 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         }
     }
+
+    if (saveFrameChain)
+        JS_RestoreFrameChain(cx);
 
     return JS_WrapValue(cx, vp);
 }

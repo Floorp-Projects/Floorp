@@ -388,173 +388,17 @@ Telephony::StopTone()
 }
 
 NS_IMPL_EVENT_HANDLER(Telephony, incoming)
+NS_IMPL_EVENT_HANDLER(Telephony, callschanged)
 
-NS_IMETHODIMP
-Telephony::GetOncallschanged(JSContext* aCx, JS::Value* aValue)
-{
-  GetEventHandler(nsGkAtoms::oncallschanged, aCx, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Telephony::SetOncallschanged(JSContext* aCx, const JS::Value& aValue)
-{
-  JS::Value value;
-  GetEventHandler(nsGkAtoms::oncallschanged, aCx, &value);
-  if (aValue == value) {
-    // The event handler is being set to itself.
-    return NS_OK;
-  }
-
-  nsresult rv = SetEventHandler(nsGkAtoms::oncallschanged, aCx, aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Fire oncallschanged on the next tick if the calls array is ready.
-  EnqueueEnumerationAck();
-
-  return NS_OK;
-}
-
-// nsIDOMEventTarget
-
-NS_IMETHODIMP
-Telephony::AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener* aListener, bool aUseCapture,
-                            bool aWantsUntrusted, uint8_t aArgc)
-{
-  nsresult rv = nsDOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                         aUseCapture,
-                                                         aWantsUntrusted,
-                                                         aArgc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aType.EqualsLiteral("callschanged")) {
-    // Fire oncallschanged on the next tick if the calls array is ready.
-    EnqueueEnumerationAck();
-  }
-
-  return NS_OK;
-}
+// EventTarget
 
 void
-Telephony::AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener* aListener, bool aUseCapture,
-                            const Nullable<bool>& aWantsUntrusted,
-                            ErrorResult& aRv)
+Telephony::EventListenerAdded(nsIAtom* aType)
 {
-  nsDOMEventTargetHelper::AddEventListener(aType, aListener, aUseCapture,
-                                           aWantsUntrusted, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  if (aType.EqualsLiteral("callschanged")) {
+  if (aType == nsGkAtoms::oncallschanged) {
     // Fire oncallschanged on the next tick if the calls array is ready.
     EnqueueEnumerationAck();
   }
-}
-
-NS_IMETHODIMP
-Telephony::AddSystemEventListener(const nsAString& aType,
-                                  nsIDOMEventListener* aListener,
-                                  bool aUseCapture, bool aWantsUntrusted,
-                                  uint8_t aArgc)
-{
-  nsresult rv = nsDOMEventTargetHelper::AddSystemEventListener(aType, aListener,
-                                                               aUseCapture,
-                                                               aWantsUntrusted,
-                                                               aArgc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aType.EqualsLiteral("callschanged")) {
-    // Fire oncallschanged on the next tick if the calls array is ready.
-    EnqueueEnumerationAck();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Telephony::RemoveEventListener(const nsAString& aType,
-                               nsIDOMEventListener* aListener,
-                               bool aUseCapture)
-{
-  return nsDOMEventTargetHelper::RemoveEventListener(aType, aListener, false);
-}
-
-NS_IMETHODIMP
-Telephony::RemoveSystemEventListener(const nsAString& aType,
-                                     nsIDOMEventListener* aListener,
-                                     bool aUseCapture)
-{
-  return nsDOMEventTargetHelper::RemoveSystemEventListener(aType, aListener,
-                                                           aUseCapture);
-}
-
-NS_IMETHODIMP
-Telephony::DispatchEvent(nsIDOMEvent* aEvt, bool* aRetval)
-{
-  return nsDOMEventTargetHelper::DispatchEvent(aEvt, aRetval);
-}
-
-EventTarget*
-Telephony::GetTargetForDOMEvent()
-{
-  return nsDOMEventTargetHelper::GetTargetForDOMEvent();
-}
-
-EventTarget*
-Telephony::GetTargetForEventTargetChain()
-{
-  return nsDOMEventTargetHelper::GetTargetForEventTargetChain();
-}
-
-nsresult
-Telephony::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
-{
-  return nsDOMEventTargetHelper::PreHandleEvent(aVisitor);
-}
-
-nsresult
-Telephony::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return nsDOMEventTargetHelper::WillHandleEvent(aVisitor);
-}
-
-nsresult
-Telephony::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return nsDOMEventTargetHelper::PostHandleEvent(aVisitor);
-}
-
-nsresult
-Telephony::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                            nsPresContext* aPresContext,
-                            nsEventStatus* aEventStatus)
-{
-  return nsDOMEventTargetHelper::DispatchDOMEvent(aEvent, aDOMEvent,
-                                                  aPresContext,
-                                                  aEventStatus);
-}
-
-nsEventListenerManager*
-Telephony::GetListenerManager(bool aMayCreate)
-{
-  return nsDOMEventTargetHelper::GetListenerManager(aMayCreate);
-}
-
-nsIScriptContext*
-Telephony::GetContextForEventHandlers(nsresult* aRv)
-{
-  return nsDOMEventTargetHelper::GetContextForEventHandlers(aRv);
-}
-
-JSContext*
-Telephony::GetJSContextForEventHandlers()
-{
-  return nsDOMEventTargetHelper::GetJSContextForEventHandlers();
 }
 
 // nsITelephonyListener

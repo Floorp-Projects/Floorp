@@ -91,7 +91,6 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		file_bug802557.html \
 		test_bug803730.html \
 		test_bug809547.html \
-		test_bug809674.html \
 		test_bug829872.html \
 		test_bug862380.html \
 		test_bug865260.html \

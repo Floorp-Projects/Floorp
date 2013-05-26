@@ -2845,7 +2845,8 @@ var gDetailView = {
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.blocked.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
-      } else if (!this._addon.isCompatible) {
+      } else if (!this._addon.isCompatible && (AddonManager.checkCompatibility ||
+        (this._addon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
         this.node.setAttribute("notification", "warning");
         document.getElementById("detail-warning").textContent = gStrings.ext.formatStringFromName(
           "details.notification.incompatible",

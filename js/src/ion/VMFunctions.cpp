@@ -10,7 +10,6 @@
 #include "ion/BaselineFrame-inl.h"
 #include "ion/BaselineIC.h"
 #include "ion/IonFrames.h"
-#include "ion/IonFrames-inl.h" // for GetTopIonJSScript
 
 #include "vm/StringObject-inl.h"
 #include "vm/Debugger.h"
@@ -21,6 +20,9 @@
 
 #include "jsboolinlines.h"
 #include "jsinterpinlines.h"
+
+#include "ion/IonFrames-inl.h" // for GetTopIonJSScript
+#include "vm/StringObject-inl.h"
 
 using namespace js;
 using namespace js::ion;

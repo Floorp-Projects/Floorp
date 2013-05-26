@@ -241,10 +241,7 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
     }
 
     // Don't inline functions which don't have baseline scripts compiled for them.
-    if (executionMode == SequentialExecution &&
-        ion::IsBaselineEnabled(cx) &&
-        !inlineScript->hasBaselineScript())
-    {
+    if (executionMode == SequentialExecution && !inlineScript->hasBaselineScript()) {
         IonSpew(IonSpew_Inlining, "%s:%d Cannot inline target with no baseline jitcode",
                                   inlineScript->filename(), inlineScript->lineno);
         return false;
@@ -6607,6 +6604,24 @@ IonBuilder::jsop_setelem()
     if (script()->argumentsHasVarBinding() && object->mightBeType(MIRType_Magic))
         return abort("Type is not definitely lazy arguments.");
 
+    // Check if only objects are manipulated valid index, and generate a SetElementCache.
+    do {
+        if (!object->mightBeType(MIRType_Object))
+            break;
+
+        if (!index->mightBeType(MIRType_Int32) &&
+            !index->mightBeType(MIRType_String))
+        {
+            break;
+        }
+
+        MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict);
+        current->add(ins);
+        current->push(value);
+
+        return resumeAfter(ins);
+    } while (false);
+
     MInstruction *ins = MCallSetElement::New(object, index, value);
     current->add(ins);
     current->push(value);
@@ -6961,13 +6976,13 @@ IonBuilder::jsop_rest()
     // We know the exact number of arguments the callee pushed.
     unsigned numActuals = inlinedArguments_.length();
     unsigned numFormals = info().nargs() - 1;
-    unsigned numRest = numActuals - numFormals;
+    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
     JSObject *templateObject = getNewArrayTemplateObject(numRest);
 
     MNewArray *array = new MNewArray(numRest, templateObject, MNewArray::NewArray_Allocating);
     current->add(array);
 
-    if (numFormals >= numActuals) {
+    if (numActuals <= numFormals) {
         current->push(array);
         return true;
     }
@@ -6979,7 +6994,7 @@ IonBuilder::jsop_rest()
     // checking here.
     MConstant *index;
     for (unsigned i = numFormals; i < numActuals; i++) {
-        index = MConstant::New(Int32Value(i));
+        index = MConstant::New(Int32Value(i - numFormals));
         current->add(index);
         MStoreElement *store = MStoreElement::New(elements, index, inlinedArguments_[i],
                                                   /* needsHoleCheck = */ false);

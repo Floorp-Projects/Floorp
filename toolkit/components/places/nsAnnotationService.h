@@ -55,7 +55,7 @@ public:
   /**
    * Obtains the service's object.
    */
-  static nsAnnotationService* GetSingleton();
+  static already_AddRefed<nsAnnotationService> GetSingleton();
 
   /**
    * Initializes the service's object.  This should only be called once.

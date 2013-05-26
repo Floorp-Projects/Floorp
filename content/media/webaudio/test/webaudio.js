@@ -156,7 +156,7 @@ function runTest()
       runTestOnContext(context, callback, testOutput);
     }
 
-    function testOnOfflineContext(callback) {
+    function testOnOfflineContext(callback, sampleRate) {
       function testOutput(nodeToInspect, expectedBuffers, callback) {
         nodeToInspect.connect(context.destination);
         context.oncomplete = function(e) {
@@ -180,12 +180,14 @@ function runTest()
         };
         context.startRendering();
       }
-      var context = new OfflineAudioContext(gTest.numberOfChannels, testLength, 48000);
+      var context = new OfflineAudioContext(gTest.numberOfChannels, testLength, sampleRate);
       runTestOnContext(context, callback, testOutput);
     }
 
     testOnNormalContext(function() {
-      testOnOfflineContext(done);
+      testOnOfflineContext(function() {
+        testOnOfflineContext(done, 44100);
+      }, 48000);
     });
   });
 }

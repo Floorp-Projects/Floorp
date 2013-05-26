@@ -28,10 +28,6 @@ this.AccessFu = {
   attach: function attach(aWindow) {
     Utils.init(aWindow);
 
-    this.prefsBranch = Cc['@mozilla.org/preferences-service;1']
-      .getService(Ci.nsIPrefService).getBranch('accessibility.accessfu.');
-    this.prefsBranch.addObserver('activate', this, false);
-
     try {
       Cc['@mozilla.org/android/bridge;1'].
         getService(Ci.nsIAndroidBridge).handleGeckoMessage(
@@ -44,21 +40,8 @@ this.AccessFu = {
       }
     }
 
-    try {
-      this._activatePref = this.prefsBranch.getIntPref('activate');
-    } catch (x) {
-      this._activatePref = ACCESSFU_DISABLE;
-    }
-
-    try {
-      this._notifyOutput = this.prefsBranch.getBoolPref('notify_output');
-    } catch (x) {
-      this._notifyOutput = false;
-    }
-
-    this.Input.quickNavMode.updateModes(this.prefsBranch);
-
-    this._enableOrDisable();
+    this._activatePref = new PrefCache(
+      'accessibility.accessfu.activate', this._enableOrDisable.bind(this), true);
   },
 
   /**
@@ -76,7 +59,7 @@ this.AccessFu = {
         'mozContentEvent', this);
       Utils.win.removeEventListener('ContentStart', this);
     }
-    this.prefsBranch.removeObserver('activate', this);
+    delete this._activatePref;
     Utils.uninit();
   },
 
@@ -106,6 +89,20 @@ this.AccessFu = {
       'xml-stylesheet', 'href="' + stylesheetURL + '" type="text/css"');
     Utils.win.document.insertBefore(stylesheet, Utils.win.document.firstChild);
     this.stylesheet = Cu.getWeakReference(stylesheet);
+
+
+    // Populate quicknav modes
+    this._quicknavModesPref =
+      new PrefCache(
+        'accessibility.accessfu.quicknav_modes',
+        (aName, aValue) => {
+          this.Input.quickNavMode.updateModes(aValue);
+        }, true);
+
+    // Check for output notification
+    this._notifyOutputPref =
+      new PrefCache('accessibility.accessfu.notify_output');
+
 
     this.Input.start();
     Output.start();
@@ -168,8 +165,9 @@ this.AccessFu = {
 
   _enableOrDisable: function _enableOrDisable() {
     try {
-      if (this._activatePref == ACCESSFU_ENABLE ||
-          this._systemPref && this._activatePref == ACCESSFU_AUTO)
+      let activatePref = this._activatePref.value;
+      if (activatePref == ACCESSFU_ENABLE ||
+          this._systemPref && activatePref == ACCESSFU_AUTO)
         this._enable();
       else
         this._disable();
@@ -211,7 +209,7 @@ this.AccessFu = {
       }
     }
 
-    if (this._notifyOutput) {
+    if (this._notifyOutputPref.value) {
       Services.obs.notifyObservers(null, 'accessfu-output',
                                    JSON.stringify(aPresentationData));
     }
@@ -270,22 +268,6 @@ this.AccessFu = {
           let mm = Utils.getMessageManager(Utils.CurrentBrowser);
           mm.sendAsyncMessage('AccessFu:VirtualCursor',
                               {action: 'whereIsIt', move: true});
-        }
-        break;
-      case 'nsPref:changed':
-        switch (aData) {
-          case 'activate':
-            this._activatePref = this.prefsBranch.getIntPref('activate');
-            this._enableOrDisable();
-            break;
-          case 'quicknav_modes':
-            this.Input.quickNavMode.updateModes(this.prefsBranch);
-            break;
-          case 'notify_output':
-            this._notifyOutput = this.prefsBranch.getBoolPref('notify_output');
-            break;
-          default:
-            break;
         }
         break;
       case 'remote-browser-frame-shown':
@@ -738,11 +720,10 @@ var Input = {
         this._currentIndex = 0;
     },
 
-    updateModes: function updateModes(aPrefsBranch) {
-      try {
-        this.modes = aPrefsBranch.getCharPref('quicknav_modes').split(',');
-      } catch (x) {
-        // Fallback
+    updateModes: function updateModes(aModes) {
+      if (aModes) {
+        this.modes = aModes.split(',');
+      } else {
         this.modes = [];
       }
     },

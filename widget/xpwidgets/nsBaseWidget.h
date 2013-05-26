@@ -148,8 +148,6 @@ public:
   NS_IMETHOD              GetAttention(int32_t aCycleCount);
   virtual bool            HasPendingInputEvent();
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec);
-  NS_IMETHOD              BeginSecureKeyboardInput();
-  NS_IMETHOD              EndSecureKeyboardInput();
   NS_IMETHOD              SetWindowTitlebarColor(nscolor aColor, bool aActive);
   virtual void            SetDrawsInTitlebar(bool aState) {}
   virtual bool            ShowsResizeIndicator(nsIntRect* aResizerRect);
