@@ -95,12 +95,9 @@ already_AddRefed<gfxASurface>
 gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxContentType contentType)
 {
-    gfxASurface *newSurface = nullptr;
-
-    newSurface = new gfxQuartzSurface(size, OptimalFormatForContent(contentType));
-
-    NS_IF_ADDREF(newSurface);
-    return newSurface;
+    nsRefPtr<gfxASurface> newSurface =
+      new gfxQuartzSurface(size, OptimalFormatForContent(contentType));
+    return newSurface.forget();
 }
 
 already_AddRefed<gfxASurface>
@@ -127,8 +124,8 @@ gfxPlatformMac::OptimizeImage(gfxImageSurface *aSurface,
         isurf = new gfxImageSurface (surfaceSize, format);
         if (!isurf->CopyFrom (aSurface)) {
             // don't even bother doing anything more
-            NS_ADDREF(aSurface);
-            return aSurface;
+            nsRefPtr<gfxASurface> ret = aSurface;
+            return ret.forget();
         }
     }
 

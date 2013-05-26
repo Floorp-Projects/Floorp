@@ -9,6 +9,77 @@
  * Browser-specific actors.
  */
 
+/**
+ * Methods shared between BrowserRootActor and BrowserTabActor.
+ */
+
+/**
+ * Populate |this._extraActors| as specified by |aFactories|, reusing whatever
+ * actors are already there. Add all actors in the final extra actors table to
+ * |aPool|.
+ *
+ * The root actor and the tab actor use this to instantiate actors that other
+ * parts of the browser have specified with DebuggerServer.addTabActor antd
+ * DebuggerServer.addGlobalActor.
+ *
+ * @param aFactories
+ *     An object whose own property names are the names of properties to add to
+ *     some reply packet (say, a tab actor grip or the "listTabs" response
+ *     form), and whose own property values are actor constructor functions, as
+ *     documented for addTabActor and addGlobalActor.
+ *
+ * @param this
+ *     The BrowserRootActor or BrowserTabActor with which the new actors will
+ *     be associated. It should support whatever API the |aFactories|
+ *     constructor functions might be interested in, as it is passed to them.
+ *     For the sake of CommonCreateExtraActors itself, it should have at least
+ *     the following properties:
+ *
+ *     - _extraActors
+ *        An object whose own property names are factory table (and packet)
+ *        property names, and whose values are no-argument actor constructors,
+ *        of the sort that one can add to an ActorPool.
+ *
+ *     - conn
+ *        The DebuggerServerConnection in which the new actors will participate.
+ *
+ *     - actorID
+ *        The actor's name, for use as the new actors' parentID.
+ */
+function CommonCreateExtraActors(aFactories, aPool) {
+  // Walk over global actors added by extensions.
+  for (let name in aFactories) {
+    let actor = this._extraActors[name];
+    if (!actor) {
+      actor = aFactories[name].bind(null, this.conn, this);
+      actor.prototype = aFactories[name].prototype;
+      actor.parentID = this.actorID;
+      this._extraActors[name] = actor;
+    }
+    aPool.addActor(actor);
+  }
+}
+
+/**
+ * Append the extra actors in |this._extraActors|, constructed by a prior call
+ * to CommonCreateExtraActors, to |aObject|.
+ *
+ * @param aObject
+ *     The object to which the extra actors should be added, under the
+ *     property names given in the |aFactories| table passed to
+ *     CommonCreateExtraActors.
+ *
+ * @param this
+ *     The BrowserRootActor or BrowserTabActor whose |_extraActors| table we
+ *     should use; see above.
+ */
+function CommonAppendExtraActors(aObject) {
+  for (let name in this._extraActors) {
+    let actor = this._extraActors[name];
+    aObject[name] = actor.actorID;
+  }
+}
+
 var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]
   .getService(Ci.nsIWindowMediator);
 
@@ -143,32 +214,9 @@ BrowserRootActor.prototype = {
     return response;
   },
 
-  /**
-   * Adds dynamically-added actors from add-ons to the provided pool.
-   */
-  _createExtraActors: function BRA_createExtraActors(aFactories, aPool) {
-    // Walk over global actors added by extensions.
-    for (let name in aFactories) {
-      let actor = this._extraActors[name];
-      if (!actor) {
-        actor = aFactories[name].bind(null, this.conn, this);
-        actor.prototype = aFactories[name].prototype;
-        actor.parentID = this.actorID;
-        this._extraActors[name] = actor;
-      }
-      aPool.addActor(actor);
-    }
-  },
-
-  /**
-   * Appends the extra actors to the specified object.
-   */
-  _appendExtraActors: function BRA_appendExtraActors(aObject) {
-    for (let name in this._extraActors) {
-      let actor = this._extraActors[name];
-      aObject[name] = actor.actorID;
-    }
-  },
+  /* Support for DebuggerServer.addGlobalActor. */
+  _createExtraActors: CommonCreateExtraActors,
+  _appendExtraActors: CommonAppendExtraActors,
 
   /**
    * Watch a window that was visited during onListTabs for
@@ -312,8 +360,6 @@ function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
   // A map of actor names to actor instances provided by extensions.
   this._extraActors = {};
 
-  this._createExtraActors = BrowserRootActor.prototype._createExtraActors.bind(this);
-  this._appendExtraActors = BrowserRootActor.prototype._appendExtraActors.bind(this);
   this._onWindowCreated = this.onWindowCreated.bind(this);
 }
 
@@ -443,6 +489,10 @@ BrowserTabActor.prototype = {
     this._browser = null;
     this._tabbrowser = null;
   },
+
+  /* Support for DebuggerServer.addTabActor. */
+  _createExtraActors: CommonCreateExtraActors,
+  _appendExtraActors: CommonAppendExtraActors,
 
   /**
    * Does the actual work of attching to a tab.

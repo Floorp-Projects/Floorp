@@ -25,6 +25,8 @@
 #include "plstr.h"
 #include "sdp_private.h"
 
+static const char* logTag = "gsm_sdp";
+
 //TODO Need to place this in a portable location
 #define MULTICAST_START_ADDRESS 0xe1000000
 #define MULTICAST_END_ADDRESS   0xefffffff
@@ -6717,6 +6719,8 @@ static boolean gsmsdp_add_remote_track(uint16_t idx, uint16_t track,
                                        fsmdef_dcb_t *dcb_p,
                                        fsmdef_media_t *media) {
   cc_media_remote_track_table_t *stream;
+  int vcm_ret;
+
   PR_ASSERT(idx < CC_MAX_STREAMS);
   if (idx >= CC_MAX_STREAMS)
     return FALSE;
@@ -6736,6 +6740,24 @@ static boolean gsmsdp_add_remote_track(uint16_t idx, uint16_t track,
       (media->type == SDP_MEDIA_VIDEO) ? TRUE : FALSE;
 
   ++stream->num_tracks;
+
+  if (media->type == SDP_MEDIA_VIDEO) {
+    vcm_ret = vcmAddRemoteStreamHint(dcb_p->peerconnection, idx, TRUE);
+  } else if (media->type == SDP_MEDIA_AUDIO) {
+    vcm_ret = vcmAddRemoteStreamHint(dcb_p->peerconnection, idx, FALSE);
+  } else {
+    // No other track types should be valid here
+    MOZ_ASSERT(FALSE);
+    // Not setting a hint for this track type will simply cause the
+    // onaddstream callback not to wait for the track to be ready.
+    vcm_ret = 0;
+  }
+
+  if (vcm_ret) {
+      CSFLogError(logTag, "%s: vcmAddRemoteStreamHint returned error: %d",
+          __FUNCTION__, vcm_ret);
+      return FALSE;
+  }
 
   return TRUE;
 }

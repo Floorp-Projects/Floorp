@@ -657,7 +657,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     // should be safe to assume that null means non-private.
                     Tab tab = Tabs.getInstance().getSelectedTab();
                     if (tab == null || !tab.isPrivate())
-                        mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
+                        mSuggestClient = new SuggestClient(getView().getContext(), suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                 } else {
                     searchEngines.add(new SearchEngine(name, identifier, icon));
                 }

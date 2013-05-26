@@ -378,6 +378,30 @@ public:
    */
   static bool IsSpecialGeckoKey(UInt32 aNativeKeyCode);
 
+
+  /**
+   * EnableSecureEventInput() and DisableSecureEventInput() wrap the Carbon
+   * Event Manager APIs with the same names.  In addition they keep track of
+   * how many times we've called them (in the same process) -- unlike the
+   * Carbon Event Manager APIs, which only keep track of how many times they've
+   * been called from any and all processes.
+   *
+   * The Carbon Event Manager's IsSecureEventInputEnabled() returns whether
+   * secure event input mode is enabled (in any process).  This class's
+   * IsSecureEventInputEnabled() returns whether we've made any calls to
+   * EnableSecureEventInput() that are not (yet) offset by the calls we've
+   * made to DisableSecureEventInput().
+   */
+  static void EnableSecureEventInput();
+  static void DisableSecureEventInput();
+  static bool IsSecureEventInputEnabled();
+
+  /**
+   * EnsureSecureEventInputDisabled() calls DisableSecureEventInput() until
+   * our call count becomes 0.
+   */
+  static void EnsureSecureEventInputDisabled();
+
 protected:
   nsAutoRefCnt mRefCnt;
 
@@ -605,6 +629,8 @@ private:
   };
 
   KeyboardLayoutOverride mKeyboardOverride;
+
+  static int32_t sSecureEventInputCount;
 };
 
 /**

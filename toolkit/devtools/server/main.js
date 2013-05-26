@@ -330,7 +330,11 @@ var DebuggerServer = {
    * 'actor', since that would break the protocol.
    *
    * @param aFunction function
-   *        The constructor function for this request type.
+   *        The constructor function for this request type. This expects to be
+   *        called as a constructor (i.e. with 'new'), and passed two
+   *        arguments: the DebuggerServerConnection, and the BrowserTabActor
+   *        with which it will be associated.
+   *
    * @param aName string [optional]
    *        The name of the new request type. If this is not present, the
    *        actorPrefix property of the constructor prototype is used.
@@ -371,7 +375,11 @@ var DebuggerServer = {
    * protocol.
    *
    * @param aFunction function
-   *        The constructor function for this request type.
+   *        The constructor function for this request type. This expects to be
+   *        called as a constructor (i.e. with 'new'), and passed two
+   *        arguments: the DebuggerServerConnection, and the BrowserRootActor
+   *        with which it will be associated.
+   *
    * @param aName string [optional]
    *        The name of the new request type. If this is not present, the
    *        actorPrefix property of the constructor prototype is used.

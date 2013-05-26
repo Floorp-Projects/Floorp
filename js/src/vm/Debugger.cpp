@@ -3506,6 +3506,13 @@ static const JSFunctionSpec DebuggerScript_methods[] = {
 
 /*** Debugger.Source *****************************************************************************/
 
+static inline ScriptSourceObject *
+GetSourceReferent(JSObject *obj)
+{
+    JS_ASSERT(obj->getClass() == &DebuggerSource_class);
+    return static_cast<ScriptSourceObject *>(obj->getPrivate());
+}
+
 static void
 DebuggerSource_trace(JSTracer *trc, JSObject *obj)
 {
@@ -3513,7 +3520,7 @@ DebuggerSource_trace(JSTracer *trc, JSObject *obj)
      * There is a barrier on private pointers, so the Unbarriered marking
      * is okay.
      */
-    if (JSObject *referent = (JSObject *) obj->getPrivate()) {
+    if (JSObject *referent = GetSourceReferent(obj)) {
         MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Source referent");
         obj->setPrivateUnbarriered(referent);
     }
@@ -3573,7 +3580,7 @@ Debugger::wrapSource(JSContext *cx, JS::HandleScriptSource source)
         }
     }
 
-    JS_ASSERT((JSObject *) p->value->getPrivate() == source);
+    JS_ASSERT(GetSourceReferent(p->value) == source);
     return p->value;
 }
 
@@ -3584,7 +3591,55 @@ DebuggerSource_construct(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
+static JSObject *
+DebuggerSource_checkThis(JSContext *cx, const CallArgs &args, const char *fnname)
+{
+    if (!args.thisv().isObject()) {
+        ReportObjectRequired(cx);
+        return NULL;
+    }
+
+    JSObject *thisobj = &args.thisv().toObject();
+    if (thisobj->getClass() != &DebuggerSource_class) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debugger.Source", fnname, thisobj->getClass()->name);
+        return NULL;
+    }
+
+    if (!GetSourceReferent(thisobj)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debugger.Frame", fnname, "prototype object");
+        return NULL;
+    }
+
+    return thisobj;
+}
+
+#define THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, fnname, args, obj, sourceObject)    \
+    CallArgs args = CallArgsFromVp(argc, vp);                                       \
+    RootedObject obj(cx, DebuggerSource_checkThis(cx, args, fnname));               \
+    if (!obj)                                                                       \
+        return false;                                                               \
+    JS::RootedScriptSource sourceObject(cx, GetSourceReferent(obj));                \
+    if (!sourceObject)                                                              \
+        return false;
+
+static JSBool
+DebuggerSource_getText(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get text)", args, obj, sourceObject);
+
+    ScriptSource *ss = sourceObject->source();
+    JSString *str = ss->substring(cx, 0, ss->length());
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
+}
+
 static const JSPropertySpec DebuggerSource_properties[] = {
+    JS_PSG("text", DebuggerSource_getText, 0),
     JS_PS_END
 };
 

@@ -89,34 +89,14 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
     // arguments and the number of formal arguments. It accounts for |this|.
     int maxArgc = 0;
     Value *maxArgv = NULL;
-    int numActualArgs = 0;
+    unsigned numActualArgs = 0;
     RootedValue thisv(cx);
 
     void *calleeToken;
     if (fp->isNonEvalFunctionFrame()) {
-        // CountArgSlot include |this| and the |scopeChain|, and maybe |argumentsObj|
-        // Want to keep including this, but remove the scopeChain and any argumentsObj.
-        maxArgc = CountArgSlots(fp->script(), fp->fun()) - StartArgSlot(fp->script(), fp->fun());
-        maxArgv = fp->formals() - 1;            // -1 = include |this|
-
-        // Formal arguments are the argument corresponding to the function
-        // definition and actual arguments are corresponding to the call-site
-        // arguments.
         numActualArgs = fp->numActualArgs();
-
-        // We do not need to handle underflow because formal arguments are pad
-        // with |undefined| values but we need to distinguish between the
-        if (fp->hasOverflowArgs()) {
-            int formalArgc = maxArgc;
-            Value *formalArgv = maxArgv;
-            maxArgc = numActualArgs + 1; // +1 = include |this|
-            maxArgv = fp->actuals() - 1; // -1 = include |this|
-
-            // The beginning of the actual args is not updated, so we just copy
-            // the formal args into the actual args to get a linear vector which
-            // can be copied by generateEnterJit.
-            memcpy(maxArgv, formalArgv, formalArgc * sizeof(Value));
-        }
+        maxArgc = Max(numActualArgs, fp->numFormalArgs()) + 1; // +1 = include |this|
+        maxArgv = fp->argv() - 1; // -1 = include |this|
         calleeToken = CalleeToToken(&fp->callee());
     } else {
         // For eval function frames, set the callee token to the enclosing function.

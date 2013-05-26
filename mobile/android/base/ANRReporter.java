@@ -181,10 +181,10 @@ public final class ANRReporter extends BroadcastReceiver
     }
 
     private static File getPingFile() {
-        if (GeckoApp.mAppContext == null) {
+        if (GeckoAppShell.getContext() == null) {
             return null;
         }
-        GeckoProfile profile = GeckoApp.mAppContext.getProfile();
+        GeckoProfile profile = GeckoAppShell.getGeckoInterface().getProfile();
         if (profile == null) {
             return null;
         }
@@ -263,9 +263,9 @@ public final class ANRReporter extends BroadcastReceiver
 
     private static long getTotalMem() {
 
-        if (Build.VERSION.SDK_INT >= 16 && GeckoApp.mAppContext != null) {
+        if (Build.VERSION.SDK_INT >= 16 && GeckoAppShell.getContext() != null) {
             ActivityManager am = (ActivityManager)
-                GeckoApp.mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
+                GeckoAppShell.getContext().getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
             mi.totalMem /= 1024L * 1024L;
