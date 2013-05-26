@@ -99,7 +99,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_source_maps-01.js \
 	browser_dbg_source_maps-02.js \
 	head.js \
-	helpers.js \
 	$(NULL)
 
 MOCHITEST_BROWSER_PAGES = \
