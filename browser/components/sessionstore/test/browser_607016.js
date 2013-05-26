@@ -22,6 +22,17 @@ function test() {
   // any given time. This guarantees that a finishing load won't start another.
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
 
+  // We have our own progress listener for this test, which we'll attach before our state is set
+  let progressListener = {
+    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      if (aBrowser.__SS_restoreState == TAB_STATE_RESTORING &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+        progressCallback(aBrowser);
+    }
+  }
+
   let state = { windows: [{ tabs: [
     { entries: [{ url: "http://example.org#1" }], extData: { "uniq": r() } },
     { entries: [{ url: "http://example.org#2" }], extData: { "uniq": r() } }, // overwriting
@@ -31,10 +42,10 @@ function test() {
     { entries: [{ url: "http://example.org#6" }] } // creating
   ], selected: 1 }] };
 
-  gProgressListener.setCallback(function progressCallback(aBrowser) {
+  function progressCallback(aBrowser) {
     // We'll remove the progress listener after the first one because we aren't
     // loading any other tabs
-    gProgressListener.unsetCallback();
+    window.gBrowser.removeTabsProgressListener(progressListener);
 
     let curState = JSON.parse(ss.getBrowserState());
     for (let i = 0; i < curState.windows[0].tabs.length; i++) {
@@ -98,8 +109,9 @@ function test() {
        "(creating) new data is stored in extData where there was none");
 
     cleanup();
-  });
+  }
 
+  window.gBrowser.addTabsProgressListener(progressListener);
   ss.setBrowserState(JSON.stringify(state));
 }
 

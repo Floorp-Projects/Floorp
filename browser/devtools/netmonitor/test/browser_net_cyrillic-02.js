@@ -2,23 +2,24 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests if cyrillic text is rendered correctly in the source editor.
+ * Tests if cyrillic text is rendered correctly in the source editor
+ * when loaded directly from an HTML page.
  */
 
 function test() {
   initNetMonitor(CYRILLIC_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, SourceEditor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
 
     waitForNetworkEvents(aMonitor, 1).then(() => {
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
-        "GET", CONTENT_TYPE_SJS + "?fmt=txt", {
+        "GET", CYRILLIC_URL, {
           status: 200,
-          statusText: "DA DA DA"
+          statusText: "OK"
         });
 
       EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -27,15 +28,15 @@ function test() {
         document.querySelectorAll("#details-pane tab")[3]);
 
       NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
-        is(aEditor.getText().indexOf("\u044F"), 26, // я
+        is(aEditor.getText().indexOf("\u044F"), 189, // я
           "The text shown in the source editor is incorrect.");
-        is(aEditor.getMode(), SourceEditor.MODES.TEXT,
+        is(aEditor.getMode(), SourceEditor.MODES.HTML,
           "The mode active in the source editor is incorrect.");
 
         teardown(aMonitor).then(finish);
       });
     });
 
-    aDebuggee.performRequests();
+    aDebuggee.location.reload();
   });
 }

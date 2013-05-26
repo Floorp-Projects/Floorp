@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1368564124000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1369429787000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -416,8 +416,16 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i358" id="lfind@nijadsoft.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i162" id="{EB7508CA-C7B2-46E0-8C04-3E94A035BD49}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i354" id="{c0c2693d-2ee8-47b4-9df7-b67a0ee31988}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i106" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
@@ -482,6 +490,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i356" id="{341f4dac-1966-47ff-aacf-0ce175f1498a}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>

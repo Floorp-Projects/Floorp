@@ -3,6 +3,9 @@
 
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
+const TAB_STATE_NEEDS_RESTORE = 1;
+const TAB_STATE_RESTORING = 2;
+
 let stateBackup = ss.getBrowserState();
 
 let state = {windows:[{tabs:[
@@ -122,9 +125,9 @@ function countTabs() {
 
     for (let i = 0; i < window.gBrowser.tabs.length; i++) {
       let browser = window.gBrowser.tabs[i].linkedBrowser;
-      if (SessionStore.isTabStateRestoring(browser))
+      if (browser.__SS_restoreState == TAB_STATE_RESTORING)
         isRestoring++;
-      else if (SessionStore.isTabStateNeedsRestore(browser))
+      else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
         needsRestore++;
     }
   }
@@ -165,9 +168,8 @@ let TabsProgressListener = {
       self.callback.apply(null, countTabs());
     };
 
-    let isRestoring = SessionStore.isTabStateRestoring(aBrowser);
-    let needsRestore = SessionStore.isTabStateNeedsRestore(aBrowser);
-    let wasRestoring = !isRestoring && !needsRestore && aBrowser.__wasRestoring;
+    let isRestoring = aBrowser.__SS_restoreState == TAB_STATE_RESTORING;
+    let wasRestoring = !aBrowser.__SS_restoreState && aBrowser.__wasRestoring;
     let hasStopped = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
 
     if (isRestoring && !hasStopped)

@@ -339,11 +339,9 @@ class IonBuilder : public MIRGenerator
 
     bool invalidatedIdempotentCache();
 
-    bool hasStaticScopeObject(ScopeCoordinate sc, MutableHandleObject pcall);
     bool loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
                   bool barrier, types::StackTypeSet *types);
-    bool storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier,
-                   MIRType slotType = MIRType_None);
+    bool storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier);
 
     // jsop_getprop() helpers.
     bool getPropTryArgumentsLength(bool *emitted);
@@ -383,8 +381,8 @@ class IonBuilder : public MIRGenerator
     bool jsop_dup2();
     bool jsop_loophead(jsbytecode *pc);
     bool jsop_compare(JSOp op);
-    bool getStaticName(HandleObject staticObject, HandlePropertyName name);
-    bool setStaticName(HandleObject staticObject, HandlePropertyName name);
+    bool jsop_getgname(HandlePropertyName name);
+    bool jsop_setgname(HandlePropertyName name);
     bool jsop_getname(HandlePropertyName name);
     bool jsop_intrinsic(HandlePropertyName name);
     bool jsop_bindname(PropertyName *name);
@@ -408,7 +406,6 @@ class IonBuilder : public MIRGenerator
     bool jsop_arguments_length();
     bool jsop_arguments_getelem();
     bool jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDefinition *value);
-    bool jsop_runonce();
     bool jsop_rest();
     bool jsop_not();
     bool jsop_getprop(HandlePropertyName name);

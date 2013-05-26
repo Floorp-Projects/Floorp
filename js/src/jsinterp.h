@@ -414,9 +414,6 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rv
 bool
 IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
 
-bool
-RunOnceScriptPrologue(JSContext *cx, HandleScript script);
-
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */
