@@ -118,6 +118,8 @@ class DiffParser:
         state = _INITIAL_STATE
 
         self.files = {}
+        self.status_line = None
+        self.patch_description = None
         current_file = None
         old_diff_line = None
         new_diff_line = None
@@ -126,6 +128,10 @@ class DiffParser:
             if state == _INITIAL_STATE:
                 transform_line = get_diff_converter(line)
             line = transform_line(line)
+
+            comment_line = match(r"^\#", line)
+            if comment_line:
+                continue
 
             file_declaration = match(r"^Index: (?P<FilePath>.+)", line)
             if file_declaration:
@@ -160,3 +166,15 @@ class DiffParser:
                     pass
                 else:
                     logging.error('Unexpected diff format when parsing a chunk: %r' % line)
+
+            # Patch description
+            if state == _INITIAL_STATE:
+                if not self.status_line:
+                    self.status_line = line
+                else:
+                    if not self.patch_description:
+                        # Skip the first blank line after the patch description
+                        if line != "":
+                            self.patch_description = line
+                    else:
+                        self.patch_description = self.patch_description + "\n" + line
