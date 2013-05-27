@@ -1782,28 +1782,28 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 struct CustomPrototypeTraceArgs {
-  TraceCallback callback;
+  const TraceCallbacks& callbacks;
   void* closure;
 };
 
 
 static PLDHashOperator
-CustomPrototypeTrace(const nsAString& aName, JSObject* aObject, void *aArg)
+CustomPrototypeTrace(const nsAString& aName, JSObject*& aObject, void *aArg)
 {
   CustomPrototypeTraceArgs* traceArgs = static_cast<CustomPrototypeTraceArgs*>(aArg);
   MOZ_ASSERT(aObject, "Protocol object value must not be null");
-  traceArgs->callback(aObject, "mCustomPrototypes entry", traceArgs->closure);
+  traceArgs->callbacks.Trace(&aObject, "mCustomPrototypes entry", traceArgs->closure);
   return PL_DHASH_NEXT;
 }
 
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDocument)
-  CustomPrototypeTraceArgs customPrototypeArgs = { aCallback, aClosure };
-  tmp->mCustomPrototypes.EnumerateRead(CustomPrototypeTrace, &customPrototypeArgs);
+  CustomPrototypeTraceArgs customPrototypeArgs = { aCallbacks, aClosure };
+  tmp->mCustomPrototypes.Enumerate(CustomPrototypeTrace, &customPrototypeArgs);
   if (tmp->PreservingWrapper()) {
     NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mExpandoAndGeneration.expando);
   }
-  nsINode::Trace(tmp, aCallback, aClosure);
+  nsINode::Trace(tmp, aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 

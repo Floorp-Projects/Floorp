@@ -11,3 +11,25 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessibleWrap.h',
 ]
 
+CPP_SOURCES += [
+    'AccessibleWrap.cpp',
+    'ApplicationAccessibleWrap.cpp',
+    'AtkSocketAccessible.cpp',
+    'DocAccessibleWrap.cpp',
+    'Platform.cpp',
+    'RootAccessibleWrap.cpp',
+    'UtilInterface.cpp',
+    'nsMaiHyperlink.cpp',
+    'nsMaiInterfaceAction.cpp',
+    'nsMaiInterfaceComponent.cpp',
+    'nsMaiInterfaceDocument.cpp',
+    'nsMaiInterfaceEditableText.cpp',
+    'nsMaiInterfaceHyperlinkImpl.cpp',
+    'nsMaiInterfaceHypertext.cpp',
+    'nsMaiInterfaceImage.cpp',
+    'nsMaiInterfaceSelection.cpp',
+    'nsMaiInterfaceTable.cpp',
+    'nsMaiInterfaceText.cpp',
+    'nsMaiInterfaceValue.cpp',
+]
+

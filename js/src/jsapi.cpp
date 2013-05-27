@@ -2522,6 +2522,36 @@ JS_CallGenericTracer(JSTracer *trc, void *gcthingArg, const char *name)
 }
 
 JS_PUBLIC_API(void)
+JS_CallHeapValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name)
+{
+    MarkValueUnbarriered(trc, valuep->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallHeapIdTracer(JSTracer *trc, JS::Heap<jsid> *idp, const char *name)
+{
+    MarkIdUnbarriered(trc, idp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallHeapObjectTracer(JSTracer *trc, JS::Heap<JSObject *> *objp, const char *name)
+{
+    MarkObjectUnbarriered(trc, objp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallHeapStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *name)
+{
+    MarkStringUnbarriered(trc, strp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallHeapScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name)
+{
+    MarkScriptUnbarriered(trc, scriptp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
 JS_TracerInit(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback)
 {
     InitTracer(trc, rt, callback);

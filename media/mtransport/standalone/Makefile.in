@@ -20,11 +20,6 @@ endif
 
 SRCS_IN_OBJDIR	= 1
 
-CPPSRCS = \
-	$(MTRANSPORT_LCPPSRCS) \
-	$(NULL)
-
-
 # Make a copy into the local directory for dual compilation
 export:: $(MTRANSPORT_CPPSRCS)
 	$(INSTALL) $^ .

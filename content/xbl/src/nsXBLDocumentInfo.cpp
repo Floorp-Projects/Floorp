@@ -412,7 +412,7 @@ UnlinkProtoJSObjects(nsHashKey *aKey, void *aData, void* aClosure)
 
 struct ProtoTracer
 {
-  TraceCallback mCallback;
+  const TraceCallbacks &mCallbacks;
   void *mClosure;
 };
 
@@ -421,7 +421,7 @@ TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);
   nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
-  proto->Trace(closure->mCallback, closure->mClosure);
+  proto->Trace(closure->mCallbacks, closure->mClosure);
   return kHashEnumerateNext;
 }
 
@@ -448,7 +448,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
-    ProtoTracer closure = { aCallback, aClosure };
+    ProtoTracer closure = { aCallbacks, aClosure };
     tmp->mBindingTable->Enumerate(TraceProtos, &closure);
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -463,7 +463,7 @@ static bool
 UnmarkProtos(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLPrototypeBinding* proto = static_cast<nsXBLPrototypeBinding*>(aData);
-  proto->Trace(UnmarkXBLJSObject, nullptr);
+  proto->Trace(TraceCallbackFunc(UnmarkXBLJSObject), nullptr);
   return kHashEnumerateNext;
 }
 

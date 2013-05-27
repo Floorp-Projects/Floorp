@@ -1796,6 +1796,11 @@ template <> struct RootMethods<jsid>
     static jsid initial() { return JSID_VOID; }
     static ThingRootKind kind() { return THING_ROOT_ID; }
     static bool poisoned(jsid id) { return JS::IsPoisonedId(id); }
+    static bool needsPostBarrier(jsid id) { return false; }
+#ifdef JSGC_GENERATIONAL
+    static void postBarrier(jsid *idp) {}
+    static void relocate(jsid *idp) {}
+#endif
 };
 
 } /* namespace js */
@@ -2529,6 +2534,21 @@ JS_CallStringTracer(JSTracer *trc, JSString **strp, const char *name);
 
 extern JS_PUBLIC_API(void)
 JS_CallScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name);
+
+extern JS_PUBLIC_API(void)
+JS_CallHeapValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name);
+
+extern JS_PUBLIC_API(void)
+JS_CallHeapIdTracer(JSTracer *trc, JS::Heap<jsid> *idp, const char *name);
+
+extern JS_PUBLIC_API(void)
+JS_CallHeapObjectTracer(JSTracer *trc, JS::Heap<JSObject *> *objp, const char *name);
+
+extern JS_PUBLIC_API(void)
+JS_CallHeapStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *name);
+
+extern JS_PUBLIC_API(void)
+JS_CallHeapScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name);
 
 extern JS_PUBLIC_API(void)
 JS_CallGenericTracer(JSTracer *trc, void *gcthing, const char *name);

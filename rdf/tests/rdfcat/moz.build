@@ -6,3 +6,6 @@
 
 PROGRAM = 'rdfcat'
 
+CPP_SOURCES += [
+    'rdfcat.cpp',
+]

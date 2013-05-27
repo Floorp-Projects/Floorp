@@ -6,3 +6,7 @@
 
 MODULE = 'omxpluginsony'
 
+CPP_SOURCES += [
+    'OmxPluginSony.cpp',
+]
+

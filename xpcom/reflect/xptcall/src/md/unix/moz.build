@@ -6,3 +6,261 @@
 
 MODULE = 'xpcom'
 
+if CONFIG['OS_ARCH'] == 'Darwin':
+    if CONFIG['OS_TEST'].find('86') != -1:
+        if CONFIG['OS_TEST'] == 'x86_64':
+            CPP_SOURCES += [
+                'xptcinvoke_x86_64_unix.cpp',
+                'xptcstubs_x86_64_darwin.cpp',
+            ]
+        else:
+            CPP_SOURCES += [
+                'xptcinvoke_gcc_x86_unix.cpp',
+                'xptcstubs_gcc_x86_unix.cpp',
+            ]
+
+if CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD', 'GNU'):
+    if CONFIG['OS_TEST'].find('86') != -1:
+        CPP_SOURCES += [
+            'xptcinvoke_gcc_x86_unix.cpp',
+            'xptcstubs_gcc_x86_unix.cpp'
+        ]
+
+if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD') or \
+   CONFIG['OS_ARCH'].startswith('GNU_'):
+    if CONFIG['OS_TEST'] == 'x86_64':
+        CPP_SOURCES += [
+            'xptcinvoke_x86_64_unix.cpp',
+            'xptcstubs_x86_64_linux.cpp',
+        ]
+    elif CONFIG['OS_TEST'].find('86') != -1:
+        CPP_SOURCES += [
+            'xptcinvoke_gcc_x86_unix.cpp',
+            'xptcstubs_gcc_x86_unix.cpp'
+        ]
+
+if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
+    if CONFIG['OS_TEST'].find('ia64') != -1:
+        CPP_SOURCES += [
+            'xptcinvoke_ipf64.cpp',
+            'xptcstubs_ipf64.cpp'
+        ]
+
+if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'x86_64':
+    CPP_SOURCES += [
+        'xptcinvoke_amd64_openbsd.cpp',
+        'xptcstubs_amd64_openbsd.cpp'
+    ]
+
+if CONFIG['OS_TARGET'] == 'NTO':
+    if CONFIG['OS_TEST'] == 'x86':
+        CPP_SOURCES += [
+            'xptcinvoke_gcc_x86_unix.cpp',
+            'xptcstubs_gcc_x86_unix.cpp',
+        ]
+    elif CONFIG['OS_TEST'] == 'arm':
+        CPP_SOURCES += [
+            'xptcinvoke_nto_arm.cpp',
+            'xptcstubs_nto_arm.cpp',
+        ]
+    elif CONFIG['OS_TEST'] == 'sh':
+        CPP_SOURCES += [
+            'xptcinvoke_nto_shle.cpp',
+            'xptcstubs_nto_shle.cpp'
+        ]
+
+if CONFIG['OS_ARCH'] == 'SunOS':
+    if CONFIG['OS_TEST'] == 'x86_64':
+        if CONFIG['GNU_CC']:
+            CPP_SOURCES += [
+                'xptcstubs_x86_64_linux.cpp',
+                'xptcinvoke_x86_64_unix.cpp'
+            ]
+        else:
+            CPP_SOURCES += [
+                'xptcstubs_x86_64_solaris.cpp',
+                'xptcinvoke_x86_64_solaris.cpp',
+            ]
+    elif CONFIG['OS_TEST'].find('86') != -1:
+        if CONFIG['GNU_CC']:
+            CPP_SOURCES += [
+                'xptcinvoke_gcc_x86_unix.cpp',
+                'xptcstubs_gcc_x86_unix.cpp'
+            ]
+        else:
+            CPP_SOURCES += [
+                'xptcinvoke_x86_solaris.cpp',
+                'xptcstubs_x86_solaris.cpp'
+            ]
+
+if CONFIG['OS_TEST'] == 'alpha':
+    if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD'):
+        CPP_SOURCES += [
+            'xptcinvoke_linux_alpha.cpp',
+            'xptcstubs_linux_alpha.cpp',
+        ]
+    elif CONFIG['OS_ARCH'] == 'OpenBSD':
+        CPP_SOURCES += [
+            'xptcinvoke_alpha_openbsd.cpp',
+            'xptcstubs_alpha_openbsd.cpp',
+        ]
+
+if CONFIG['OS_TEST'].startswith('arm') or CONFIG['OS_TEST'] == 'sa110':
+    if CONFIG['OS_ARCH'] == 'Linux':
+        CPP_SOURCES += [
+            'xptcinvoke_arm.cpp',
+            'xptcstubs_arm.cpp'
+        ]
+    elif CONFIG['OS_ARCH'] == 'NetBSD':
+        CPP_SOURCES += [
+            'xptcinvoke_arm_netbsd.cpp',
+            'xptcstubs_arm_netbsd.cpp',
+        ]
+
+if CONFIG['OS_TEST'] == 'arm' and CONFIG['OS_ARCH'] == 'OpenBSD':
+    CPP_SOURCES += [
+        'xptcinvoke_arm_openbsd.cpp',
+        'xptcstubs_arm_openbsd.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'HP-UX':
+    if CONFIG['CC'] != 'gcc':
+        if CONFIG['OS_TEST'] == 'ia64':
+            CPP_SOURCES += [
+                'xptcinvoke_ipf32.cpp',
+                'xptcstubs_ipf32.cpp',
+            ]
+        else:
+            CPP_SOURCES += [
+                'xptcinvoke_pa32.cpp',
+                'xptcstubs_pa32.cpp'
+            ]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    if CONFIG['OS_TEST'] in ('hppa', 'hppa2.0', 'hppa1.1'):
+        if CONFIG['GNU_CXX']:
+            CPP_SOURCES += [
+                'xptcinvoke_pa32.cpp',
+                'xptcstubs_pa32.cpp',
+            ]
+        else:
+            error('Unknown C++ compiler, xptcall assembly will probably be incorrect.')
+
+if CONFIG['OS_ARCH'] == 'NetBSD':
+    if CONFIG['OS_TEST'] in ('amiga', 'atari', 'hp300', 'mac68k', 'mvme68k',
+                             'next68k', 'sun3', 'sun3x', 'x68k'):
+        CPP_SOURCES += [
+            'xptcinvoke_netbsd_m68k.cpp',
+            'xptcstubs_netbsd_m68k.cpp'
+        ]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    if CONFIG['OS_TEST'] == 'm68k':
+        CPP_SOURCES += [
+            'xptcinvoke_linux_m68k.cpp',
+            'xptcstubs_linux_m68k.cpp',
+        ]
+    if CONFIG['OS_TEST'].find('mips') != -1:
+        if CONFIG['OS_TEST'].find('mips64') != -1:
+            CPP_SOURCES += [
+                'xptcinvoke_mips64.cpp',
+                'xptcstubs_mips64.cpp',
+            ]
+        else:
+            CPP_SOURCES += [
+                'xptcinvoke_mips.cpp',
+                'xptcstubs_mips.cpp',
+            ]
+
+if CONFIG['OS_ARCH'] == 'AIX':
+    if CONFIG['HAVE_64BIT_OS']:
+        CPP_SOURCES += [
+            'xptcinvoke_ppc_aix64.cpp',
+            'xptcstubs_ppc_aix64.cpp',
+        ]
+    else:
+        CPP_SOURCES += [
+            'xptcinvoke_ppc_aix.cpp',
+            'xptcstubs_ppc_aix.cpp',
+        ]
+
+if CONFIG['OS_TEST'] == 'powerpc':
+    if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
+        CPP_SOURCES += [
+            'xptcinvoke_ppc_linux.cpp',
+            'xptcstubs_ppc_linux.cpp',
+        ]
+
+if CONFIG['OS_TEST'] == 'powerpc64':
+    if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
+          CPP_SOURCES += [
+              'xptcinvoke_ppc64_linux.cpp',
+              'xptcstubs_ppc64_linux.cpp',
+          ]
+
+if CONFIG['OS_TEST'] in ('macppc', 'bebox', 'ofppc', 'prep', 'amigappc'):
+    if CONFIG['OS_ARCH'] == 'NetBSD':
+        CPP_SOURCES += [
+            'xptcinvoke_ppc_netbsd.cpp',
+            'xptcstubs_ppc_netbsd.cpp',
+        ]
+
+if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'powerpc':
+    CPP_SOURCES += [
+        'xptcinvoke_ppc_openbsd.cpp',
+        'xptcstubs_ppc_openbsd.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['TARGET_CPU'] == 'powerpc':
+    CPP_SOURCES += [
+        'xptcinvoke_ppc_rhapsody.cpp',
+        'xptcstubs_ppc_rhapsody.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TEST'].find('sparc') != -1:
+    CPP_SOURCES += [
+        'xptcinvoke_sparc_solaris.cpp',
+        'xptcstubs_sparc_solaris.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'NetBSD' and CONFIG['OS_TEST'] == 'sparc':
+    CPP_SOURCES += [
+        'xptcinvoke_sparc_netbsd.cpp',
+        'xptcstubs_sparc_netbsd.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'sparc':
+    CPP_SOURCES += [
+        'xptcinvoke_sparc_openbsd.cpp',
+        'xptcstubs_sparc_openbsd.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'sparc64':
+    CPP_SOURCES += [
+        'xptcinvoke_sparc64_openbsd.cpp',
+        'xptcstubs_sparc64_openbsd.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'SunOS' and CONFIG['OS_TEST'].find('86') == -1:
+    if CONFIG['HAVE_64BIT_OS']:
+        CPP_SOURCES += [
+            'xptcinvoke_sparcv9_solaris.cpp',
+            'xptcstubs_sparcv9_solaris.cpp',
+        ]
+    else:
+        CPP_SOURCES += [
+            'xptcinvoke_sparc_solaris.cpp',
+            'xptcstubs_sparc_solaris.cpp',
+        ]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    if CONFIG['OS_TEST'] == 's390':
+        CPP_SOURCES += [
+            'xptcinvoke_linux_s390.cpp',
+            'xptcstubs_linux_s390.cpp',
+        ]
+    elif CONFIG['OS_TEST'] == 's390x':
+        CPP_SOURCES += [
+            'xptcinvoke_linux_s390x.cpp',
+            'xptcstubs_linux_s390x.cpp',
+        ]

@@ -15,15 +15,6 @@ FORCE_STATIC_LIB   = 1
 LIBXUL_LIBRARY     = 1
 EXPORT_LIBRARY     = 1
 
-CPPSRCS = SharedDIB.cpp
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += \
-  SharedDIBWin.cpp \
-  SharedDIBSurface.cpp \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

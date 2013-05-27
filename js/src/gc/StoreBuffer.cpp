@@ -473,6 +473,40 @@ StoreBuffer::releaseVerificationData()
     edgeSet.finish();
 }
 
+JS_PUBLIC_API(void)
+JS::HeapCellPostBarrier(js::gc::Cell **cellp)
+{
+    JS_ASSERT(*cellp);
+    JSRuntime *runtime = (*cellp)->runtime();
+    runtime->gcStoreBuffer.putRelocatableCell(cellp);
+}
+
+JS_PUBLIC_API(void)
+JS::HeapCellRelocate(js::gc::Cell **cellp)
+{
+    /* Called with old contents of *pp before overwriting. */
+    JS_ASSERT(*cellp);
+    JSRuntime *runtime = (*cellp)->runtime();
+    runtime->gcStoreBuffer.removeRelocatableCell(cellp);
+}
+
+JS_PUBLIC_API(void)
+JS::HeapValuePostBarrier(JS::Value *valuep)
+{
+    JS_ASSERT(JSVAL_IS_TRACEABLE(*valuep));
+    JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtime();
+    runtime->gcStoreBuffer.putRelocatableValue(valuep);
+}
+
+JS_PUBLIC_API(void)
+JS::HeapValueRelocate(JS::Value *valuep)
+{
+    /* Called with old contents of *valuep before overwriting. */
+    JS_ASSERT(JSVAL_IS_TRACEABLE(*valuep));
+    JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtime();
+    runtime->gcStoreBuffer.removeRelocatableValue(valuep);
+}
+
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>;
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotEdge>;

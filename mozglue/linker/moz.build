@@ -6,3 +6,11 @@
 
 MODULE = 'mozglue'
 
+CPP_SOURCES += [
+    'CustomElf.cpp',
+    'ElfLoader.cpp',
+    'Mappable.cpp',
+    'SeekableZStream.cpp',
+    'Zip.cpp',
+]
+
