@@ -413,10 +413,10 @@ pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.tabClipWidth", 140);
 pref("browser.tabs.animate", true);
 pref("browser.tabs.onTop", true);
-#ifdef XP_WIN
-pref("browser.tabs.drawInTitlebar", true);
-#else
+#ifdef UNIX_BUT_NOT_MAC
 pref("browser.tabs.drawInTitlebar", false);
+#else
+pref("browser.tabs.drawInTitlebar", true);
 #endif
 
 // Where to show tab close buttons:
@@ -1254,3 +1254,6 @@ pref("media.webaudio.enabled", true);
 // If this turns true, Moz*Gesture events are not called stopPropagation()
 // before content.
 pref("dom.debug.propagate_gesture_events_through_content", false);
+
+// Enable CustomizableUI debug logging.
+pref("browser.uiCustomization.debug", true);
