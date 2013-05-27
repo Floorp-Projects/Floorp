@@ -12,7 +12,7 @@
 #include "GLContext.h"
 #include "SurfaceStream.h"
 #include "SharedSurface.h"
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #endif
 
@@ -110,7 +110,7 @@ CanvasClientWebGL::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
       return;
     }
 
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
     if (surf->Type() != SharedSurfaceType::Gralloc) {
       printf_stderr("Unexpected non-Gralloc SharedSurface in IPC path!");
       return;
@@ -119,7 +119,7 @@ CanvasClientWebGL::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     SharedSurface_Gralloc* grallocSurf = SharedSurface_Gralloc::Cast(surf);
     mTextureClient->SetDescriptor(grallocSurf->GetDescriptor());
 #else
-    printf_stderr("isCrossProcess, but not MOZ_B2G! Someone needs to write some code!");
+    printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
     MOZ_ASSERT(false);
 #endif
   } else {
