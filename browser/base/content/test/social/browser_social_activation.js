@@ -21,24 +21,26 @@ function postTestCleanup(callback) {
   // all providers may have had their manifests added.
   for (let manifest of gProviders)
     Services.prefs.clearUserPref("social.manifest." + manifest.origin);
+
   // all the providers may have been added.
-  let numRemoved = 0;
-  let cbRemoved = function() {
-    if (++numRemoved == gProviders.length) {
+  let providers = gProviders.slice(0)
+  function removeProviders() {
+    if (providers.length < 1) {
       executeSoon(function() {
         is(Social.providers.length, 0, "all providers removed");
         callback();
       });
+      return;
     }
-  }
-  for (let [i, manifest] of Iterator(gProviders)) {
+
+    let provider = providers.pop();
     try {
-      SocialService.removeProvider(manifest.origin, cbRemoved);
+      SocialService.removeProvider(provider.origin, removeProviders);
     } catch(ex) {
-      // this test didn't add this provider - that's ok.
-      cbRemoved();
+      removeProviders();
     }
   }
+  removeProviders();
 }
 
 function addBuiltinManifest(manifest) {
@@ -268,7 +270,7 @@ var tests = {
         Social.provider = Social.providers[1];
         checkSocialUI();
         // activate the last provider.
-        addBuiltinManifest(gProviders[2]);
+        let prefname = addBuiltinManifest(gProviders[2]);
         activateProvider(gTestDomains[2], function() {
           waitForProviderLoad(function() {
             ok(!SocialUI.activationPanel.hidden, "activation panel is showing");
@@ -284,6 +286,7 @@ var tests = {
               is(Social.provider.origin, Social.providers[1].origin, "original provider still be active");
               checkSocialUI();
               Services.prefs.clearUserPref("social.whitelist");
+              resetBuiltinManifestPref(prefname);
               next();
             });
           });
@@ -306,7 +309,7 @@ var tests = {
       let browser = blanktab.linkedBrowser;
       is(browser.currentURI.spec, "about:addons", "about:addons should load into blank tab.");
 
-      addBuiltinManifest(gProviders[0]);
+      let prefname = addBuiltinManifest(gProviders[0]);
       activateOneProvider(gProviders[0], true, function() {
         gBrowser.removeTab(gBrowser.selectedTab);
         tabsToRemove.pop();
@@ -321,6 +324,7 @@ var tests = {
               AddonManager.getAddonsByTypes(["service"], function(aAddons) {
                 is(aAddons.length, 1, "there can be only one");
                 Services.prefs.clearUserPref("social.whitelist");
+                resetBuiltinManifestPref(prefname);
                 next();
               });
             });
