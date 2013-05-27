@@ -37,11 +37,6 @@ CPPSRCS	= \
   SurfaceStream.cpp \
   $(NULL)
 
-ifdef MOZ_B2G
-CPPSRCS += SharedSurfaceGralloc.cpp
-EXPORTS += SharedSurfaceGralloc.h
-endif
-
 GL_PROVIDER = Null
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -79,6 +74,9 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 GL_PROVIDER = EGL
 LOCAL_INCLUDES = -I$(topsrcdir)/widget/gonk
+
+CPPSRCS += SharedSurfaceGralloc.cpp
+EXPORTS += SharedSurfaceGralloc.h
 endif
 
 ifdef MOZ_GL_PROVIDER

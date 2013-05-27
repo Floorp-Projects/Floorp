@@ -10,7 +10,7 @@
 #include "GLContext.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceStream.h"
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #include "nsXULAppAPI.h"
 #endif
@@ -33,7 +33,7 @@ GLScreenBuffer::Create(GLContext* gl,
 
     SurfaceFactory_GL* factory = nullptr;
 
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
     /* On B2G, we want a Gralloc factory, and we want one right at the start */
     if (!factory &&
         XRE_GetProcessType() != GeckoProcessType_Default)

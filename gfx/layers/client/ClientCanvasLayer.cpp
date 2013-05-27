@@ -8,7 +8,7 @@
 #include "SurfaceStream.h"
 #include "SharedSurfaceGL.h"
 #include "SharedSurfaceEGL.h"
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #endif
 
@@ -40,11 +40,11 @@ ClientCanvasLayer::Initialize(const Data& aData)
             factory = SurfaceFactory_EGLImage::Create(mGLContext, screen->Caps());
           } else {
             // [Basic/OGL Layers, OOPC] WebGL layer init. (Out Of Process Compositing)
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
             factory = new SurfaceFactory_Gralloc(mGLContext, screen->Caps(), ClientManager());
 #else
             // we could do readback here maybe
-            NS_NOTREACHED("isCrossProcess but not on B2G!");
+            NS_NOTREACHED("isCrossProcess but not on native B2G!");
 #endif
           }
         } else {
