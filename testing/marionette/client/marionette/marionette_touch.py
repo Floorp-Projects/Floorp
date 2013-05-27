@@ -31,11 +31,10 @@ class MarionetteTouchMixin(object):
         self.execute_script("%s.tap(arguments[0], null, null, null, null, arguments[1]);" % self.library_name, [element, send_all])
 
     def double_tap(self, element):
-        self.check_element(element)
-        self.execute_script("%s.dbltap(arguments[0]);" % self.library_name, [element])
+        action = Actions(self)
+        action.double_tap(element).perform()
 
     def flick(self, element, x1, y1, x2, y2, duration=200):
-        self.check_element(element)
         action = Actions(self)
         action.flick(element, x1, y1, x2, y2, duration).perform()
 
