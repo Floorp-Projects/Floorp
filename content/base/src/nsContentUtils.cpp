@@ -5909,7 +5909,7 @@ nsContentUtils::CheckCCWrapperTraversal(void* aScriptObjectHolder,
              "wrapper! This will probably crash.");
 
   callback.mFound = false;
-  aTracer->Trace(aScriptObjectHolder, DebugWrapperTraceCallback, &callback);
+  aTracer->Trace(aScriptObjectHolder, TraceCallbackFunc(DebugWrapperTraceCallback), &callback);
   MOZ_ASSERT(callback.mFound,
              "Cycle collection participant didn't trace preserved wrapper! "
              "This will probably crash.");
@@ -6433,19 +6433,6 @@ nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
     }
     aCache->SetPreservingWrapper(false);
     DropJSObjects(aScriptObjectHolder);
-  }
-}
-
-// static
-void
-nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
-                             void *aClosure)
-{
-  if (aCache->PreservingWrapper()) {
-    JSObject *wrapper = aCache->GetWrapperPreserveColor();
-    if (wrapper) {
-      aCallback(wrapper, "Preserved wrapper", aClosure);
-    }
   }
 }
 

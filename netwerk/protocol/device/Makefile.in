@@ -14,17 +14,6 @@ LIBRARY_NAME = nkdevice_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-CPPSRCS = \
-  nsDeviceChannel.cpp \
-  nsDeviceProtocolHandler.cpp \
-  $(NULL)
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += AndroidCaptureProvider.cpp \
-           CameraStreamImpl.cpp \
-           $(NULL)
-endif
-
 LOCAL_INCLUDES = -I$(srcdir)/../../base/src/ \
                  $(NULL)
 

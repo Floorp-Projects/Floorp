@@ -47,3 +47,18 @@ EXPORTS.mozilla += [
     'LoadContext.h',
 ]
 
+CPP_SOURCES += [
+    'LoadContext.cpp',
+    'SerializedLoadContext.cpp',
+    'nsAboutRedirector.cpp',
+    'nsDSURIContentListener.cpp',
+    'nsDefaultURIFixup.cpp',
+    'nsDocShell.cpp',
+    'nsDocShellEditorData.cpp',
+    'nsDocShellEnumerator.cpp',
+    'nsDocShellLoadInfo.cpp',
+    'nsDocShellTransferableHooks.cpp',
+    'nsDownloadHistory.cpp',
+    'nsWebNavigationInfo.cpp',
+]
+

@@ -14,11 +14,6 @@ LIBRARY_NAME = profile_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-CPPSRCS = \
-  nsProfileLock.cpp \
-  nsToolkitProfileService.cpp \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../xre \
   -I$(topsrcdir)/profile/dirserviceprovider/src \

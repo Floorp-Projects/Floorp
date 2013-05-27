@@ -16,3 +16,7 @@
 
 MODULE = 'omxplugin'
 
+CPP_SOURCES += [
+    'OmxPlugin.cpp',
+]
+

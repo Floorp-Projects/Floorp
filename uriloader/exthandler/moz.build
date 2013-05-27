@@ -54,3 +54,60 @@ EXPORTS.mozilla.dom += [
     'ExternalHelperAppParent.h',
 ]
 
+CPP_SOURCES += [
+    'ExternalHelperAppChild.cpp',
+    'ExternalHelperAppParent.cpp',
+    'nsExternalHelperAppService.cpp',
+    'nsExternalProtocolHandler.cpp',
+    'nsLocalHandlerApp.cpp',
+    'nsMIMEInfoImpl.cpp',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    # TODO: CMMSRCS go here
+    pass
+else:
+    CPP_SOURCES += [
+        'nsOSHelperAppService.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+    CPP_SOURCES += [
+        'nsGNOMERegistry.cpp',
+        'nsMIMEInfoUnix.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    CPP_SOURCES += [
+        'nsMIMEInfoAndroid.cpp',
+        'nsAndroidHandlerApp.cpp',
+        'nsExternalSharingAppService.cpp',
+        'nsExternalURLHandlerService.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    CPP_SOURCES += [
+        'nsGNOMERegistry.cpp',
+        'nsMIMEInfoUnix.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    CPP_SOURCES += [
+        'nsMIMEInfoWin.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    CPP_SOURCES += [
+        'nsMIMEInfoOS2.cpp',
+    ]
+
+if CONFIG['MOZ_ENABLE_DBUS']:
+    CPP_SOURCES += [
+        'nsDBusHandlerApp.cpp',
+    ]
+
+if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
+    CPP_SOURCES += [
+        'nsMeegoExternalSharingAppService.cpp',
+    ]
+
+if CONFIG['MOZ_ENABLE_CONTENTACTION']:
+    CPP_SOURCES += [
+        'nsContentHandlerApp.cpp',
+    ]

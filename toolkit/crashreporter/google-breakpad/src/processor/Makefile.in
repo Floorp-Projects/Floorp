@@ -13,23 +13,6 @@ LIBRARY_NAME	= breakpad_sps_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../.. -I$(srcdir)/..
 
-CPPSRCS	= \
-  stackwalker.cc \
-  stackwalker_amd64.cc \
-  stackwalker_arm.cc \
-  stackwalker_ppc.cc \
-  stackwalker_x86.cc \
-  stackwalker_sparc.cc \
-  minidump.cc \
-  basic_source_line_resolver.cc \
-  basic_code_modules.cc \
-  cfi_frame_info.cc \
-  call_stack.cc \
-  tokenize.cc \
-  source_line_resolver_base.cc \
-  stack_frame_symbolizer.cc \
-  $(NULL)
-
 # need static lib
 FORCE_STATIC_LIB = 1
 

@@ -10,6 +10,10 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MOCHITEST_CHROME_FILES = \
+		test_system_principal.xul \
+		$(NULL)
+
 MOCHITEST_FILES	= \
 		test_basic_notification.html \
 		test_basic_notification_click.html \

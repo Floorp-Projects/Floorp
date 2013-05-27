@@ -13,9 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 
 FORCE_SHARED_LIB=1
 
-CPPSRCS	= \
-	dummyvccorlib.cpp \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

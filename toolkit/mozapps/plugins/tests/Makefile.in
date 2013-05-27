@@ -21,11 +21,6 @@ _BROWSER_FILES = \
   BadExtension.xpi \
   $(NULL)
 
-CPPSRCS = \
-  GoodPlugin.cpp \
-  BadPlugin.cpp \
-  $(NULL)
-
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 PROGRAMS = $(SIMPLE_PROGRAMS:%$(BIN_SUFFIX)=$(TESTROOT)/%)

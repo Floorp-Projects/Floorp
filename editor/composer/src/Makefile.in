@@ -18,17 +18,6 @@ LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
 
-CPPSRCS  = \
-           nsComposeTxtSrvFilter.cpp            \
-           nsComposerController.cpp       \
-           nsComposerCommands.cpp         \
-           nsComposerDocumentCommands.cpp \
-           nsComposerRegistration.cpp     \
-           nsEditingSession.cpp	          \
-           nsComposerCommandsUpdater.cpp  \
-           nsEditorSpellCheck.cpp         \
-           $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES        += \

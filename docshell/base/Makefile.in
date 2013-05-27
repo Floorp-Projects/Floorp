@@ -18,21 +18,6 @@ ifdef MOZ_TOOLKIT_SEARCH
 DEFINES += -DMOZ_TOOLKIT_SEARCH
 endif
 
-CPPSRCS = \
-  nsDocShell.cpp \
-  nsDocShellLoadInfo.cpp \
-  nsDocShellEditorData.cpp \
-  nsDocShellTransferableHooks.cpp \
-  nsDocShellEnumerator.cpp \
-  nsDSURIContentListener.cpp \
-  nsDefaultURIFixup.cpp \
-  nsWebNavigationInfo.cpp \
-  nsAboutRedirector.cpp \
-  nsDownloadHistory.cpp \
-  SerializedLoadContext.cpp \
-  LoadContext.cpp \
-  $(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1

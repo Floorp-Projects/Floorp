@@ -6,3 +6,7 @@
 
 MODULE = 'minidump_file_writer'
 
+CPP_SOURCES += [
+    'minidump_file_writer.cc',
+]
+

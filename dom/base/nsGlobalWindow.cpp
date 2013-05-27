@@ -1728,25 +1728,22 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 struct TraceData
 {
-  TraceData(TraceCallback& aCallback, void* aClosure) :
-    callback(aCallback), closure(aClosure) {}
-
-  TraceCallback& callback;
+  const TraceCallbacks& callbacks;
   void* closure;
 };
 
 static PLDHashOperator
-TraceXBLHandlers(nsXBLPrototypeHandler* aKey, JSObject* aData, void* aClosure)
+TraceXBLHandlers(nsXBLPrototypeHandler* aKey, JSObject*& aData, void* aClosure)
 {
   TraceData* data = static_cast<TraceData*>(aClosure);
-  data->callback(aData, "Cached XBL prototype handler", data->closure);
+  data->callbacks.Trace(&aData, "Cached XBL prototype handler", data->closure);
   return PL_DHASH_NEXT;
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindow)
   if (tmp->mCachedXBLPrototypeHandlers.IsInitialized()) {
-    TraceData data(aCallback, aClosure);
-    tmp->mCachedXBLPrototypeHandlers.EnumerateRead(TraceXBLHandlers, &data);
+    TraceData data = { aCallbacks, aClosure };
+    tmp->mCachedXBLPrototypeHandlers.Enumerate(TraceXBLHandlers, &data);
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 

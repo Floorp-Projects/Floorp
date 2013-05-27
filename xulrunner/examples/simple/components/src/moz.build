@@ -6,3 +6,7 @@
 
 MODULE = 'simple'
 
+CPP_SOURCES += [
+    'SimpleTest.cpp',
+]
+

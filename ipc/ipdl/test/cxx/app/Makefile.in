@@ -14,10 +14,6 @@ NSDISTMODE = copy
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 
-CPPSRCS = \
-  TestIPDL.cpp \
-  $(NULL)
-
 LIBS = \
   $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
   $(LIBXUL_LIBS) \
