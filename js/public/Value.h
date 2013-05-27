@@ -1393,6 +1393,13 @@ SameType(const Value &lhs, const Value &rhs)
 
 /************************************************************************/
 
+#ifdef JSGC_GENERATIONAL
+namespace JS {
+JS_PUBLIC_API(void) HeapValuePostBarrier(Value *valuep);
+JS_PUBLIC_API(void) HeapValueRelocate(Value *valuep);
+}
+#endif
+
 namespace js {
 
 template <> struct RootMethods<const JS::Value>
@@ -1407,6 +1414,11 @@ template <> struct RootMethods<JS::Value>
     static JS::Value initial() { return JS::UndefinedValue(); }
     static ThingRootKind kind() { return THING_ROOT_VALUE; }
     static bool poisoned(const JS::Value &v) { return JS::IsPoisonedValue(v); }
+    static bool needsPostBarrier(const JS::Value &v) { return v.isMarkable(); }
+#ifdef JSGC_GENERATIONAL
+    static void postBarrier(JS::Value *v) { JS::HeapValuePostBarrier(v); }
+    static void relocate(JS::Value *v) { JS::HeapValueRelocate(v); }
+#endif
 };
 
 template <class Outer> class MutableValueOperations;
@@ -1481,6 +1493,19 @@ class MutableValueOperations : public ValueOperations<Outer>
     bool setNumber(uint32_t ui) { return value()->setNumber(ui); }
     bool setNumber(double d) { return value()->setNumber(d); }
     void setObjectOrNull(JSObject *arg) { value()->setObjectOrNull(arg); }
+};
+
+/*
+ * Augment the generic Heap<T> interface when T = Value with type-querying
+ * and value-extracting operations.
+ */
+template <>
+class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
+{
+    friend class ValueOperations<JS::Heap<JS::Value> >;
+    const JS::Value * extract() const {
+        return static_cast<const JS::Heap<JS::Value>*>(this)->address();
+    }
 };
 
 /*
