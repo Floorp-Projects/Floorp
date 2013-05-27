@@ -11,6 +11,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Constructor]
 interface DocumentFragment : Node {
   // NEW
   /*

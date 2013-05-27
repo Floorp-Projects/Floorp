@@ -20,3 +20,9 @@ EXPORTS.mozilla.dom.devicestorage += [
     'DeviceStorageRequestParent.h',
 ]
 
+CPP_SOURCES += [
+    'DeviceStorageRequestChild.cpp',
+    'DeviceStorageRequestParent.cpp',
+    'nsDeviceStorage.cpp',
+]
+

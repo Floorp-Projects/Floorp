@@ -13,20 +13,23 @@ include $(DEPTH)/config/autoconf.mk
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
+
+# TODO: Previously, LIBRARY_NAME was set as follows:
+#ifdef CPPSRCS
+#LIBRARY_NAME = shellservice_s
+#endif
+# But now we set CPPSRCS in moz.build, which isn't defined at this point.
+# This can be simplified when LIBRARY_NAME is in moz.build as well.
 ifeq ($(OS_ARCH),WINNT)
-CPPSRCS = nsWindowsShellService.cpp
+LIBRARY_NAME = shellservice_s
 else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS = nsMacShellService.cpp
+LIBRARY_NAME = shellservice_s
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
-CPPSRCS = nsGNOMEShellService.cpp
-endif
-endif
-endif
-
-ifdef CPPSRCS
 LIBRARY_NAME = shellservice_s
+endif
+endif
 endif
 
 EXTRA_COMPONENTS = nsSetDefaultBrowser.js nsSetDefaultBrowser.manifest

@@ -21,3 +21,41 @@ EXPORTS += [
 ]
 
 DIRS += ['libdisplay']
+
+CPP_SOURCES += [
+    'EventHub.cpp',
+    'Framebuffer.cpp',
+    'GonkMemoryPressureMonitoring.cpp',
+    'Input.cpp',
+    'InputApplication.cpp',
+    'InputDispatcher.cpp',
+    'InputListener.cpp',
+    'InputReader.cpp',
+    'InputTransport.cpp',
+    'InputWindow.cpp',
+    'KeyCharacterMap.cpp',
+    'KeyLayoutMap.cpp',
+    'Keyboard.cpp',
+    'OrientationObserver.cpp',
+    'PixelFormat.cpp',
+    'PointerController.cpp',
+    'PropertyMap.cpp',
+    'SpriteController.cpp',
+    'Static.cpp',
+    'String16.cpp',
+    'String8.cpp',
+    'Timers.cpp',
+    'Tokenizer.cpp',
+    'Unicode.cpp',
+    'VirtualKeyMap.cpp',
+    'nsAppShell.cpp',
+    'nsIdleServiceGonk.cpp',
+    'nsLookAndFeel.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+]
+
+if CONFIG['ANDROID_VERSION'] == '15':
+    CPP_SOURCES += [
+        'HwcComposer2D.cpp'
+    ]

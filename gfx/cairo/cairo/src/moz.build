@@ -23,6 +23,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'cairo-pdf.h',
         'cairo-win32.h',
     ]
+    if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
+        CPP_SOURCES += [
+            'cairo-dwrite-font.cpp',
+        ]
+    if CONFIG['MOZ_ENABLE_D2D_SURFACE']:
+        CPP_SOURCES += [
+            'cairo-d2d-surface.cpp',
+        ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS.cairo += [
         'cairo-os2.h',
@@ -38,6 +46,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
     EXPORTS.cairo += [
         'cairo-beos.h',
     ]
+    CPP_SOURCES += [
+        'cairo-beos-surface.cpp',
+    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
     EXPORTS.cairo += [
         'cairo-pdf.h',
@@ -51,6 +62,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS.cairo += [
         'cairo-pdf.h',
         'cairo-qt.h',
+    ]
+    CPP_SOURCES += [
+        'cairo-qt-surface.cpp',
     ]
 
 if CONFIG['BUILD_CAIRO_SVG']:

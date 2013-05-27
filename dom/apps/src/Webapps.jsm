@@ -384,7 +384,6 @@ this.DOMApplicationRegistry = {
         for (let id in this.webapps) {
           if (id in aData || this.webapps[id].removable)
             continue;
-          delete this.webapps[id];
           // Remove the permissions, cookies and private data for this app.
           let localId = this.webapps[id].localId;
           let permMgr = Cc["@mozilla.org/permissionmanager;1"]
@@ -392,6 +391,7 @@ this.DOMApplicationRegistry = {
           permMgr.RemovePermissionsForApp(localId, false);
           Services.cookies.removeCookiesForApp(localId, false);
           this._clearPrivateData(localId, false);
+          delete this.webapps[id];
         }
 
         let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);

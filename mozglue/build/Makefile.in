@@ -27,7 +27,6 @@ SHARED_LIBRARY_LIBS = $(call EXPAND_LIBNAME_PATH,memory,$(DEPTH)/memory/build)
 else
 # Temporary, until bug 662814 lands
 VISIBILITY_FLAGS =
-CPPSRCS = dummy.cpp
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
@@ -86,7 +85,6 @@ endif
 endif
 
 ifeq (Android,$(OS_TARGET))
-CPPSRCS += BionicGlue.cpp
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
 endif
 

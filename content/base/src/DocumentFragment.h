@@ -141,6 +141,9 @@ public:
     mHost = aHost;
   }
 
+  static already_AddRefed<DocumentFragment>
+  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const;
   virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const;

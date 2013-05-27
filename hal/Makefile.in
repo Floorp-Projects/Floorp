@@ -25,123 +25,15 @@ LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS = \
-  Hal.cpp \
-  SandboxHal.cpp \
-  WindowIdentifier.cpp \
-  HalWakeLock.cpp \
-  $(NULL)
-
-ifeq (stub,$(MOZ_GAMEPAD_BACKEND))
-CPPSRCS += FallbackGamepad.cpp
-endif
-ifeq (cocoa,$(MOZ_GAMEPAD_BACKEND))
-CPPSRCS += CocoaGamepad.cpp
-endif
-ifeq (windows,$(MOZ_GAMEPAD_BACKEND))
-CPPSRCS += WindowsGamepad.cpp
-endif
-ifeq (linux,$(MOZ_GAMEPAD_BACKEND))
-CPPSRCS += LinuxGamepad.cpp
-endif
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-  AndroidHal.cpp \
-  AndroidSensor.cpp \
-  FallbackPower.cpp \
-  FallbackAlarm.cpp \
-  $(NULL)
-else ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-  GonkHal.cpp \
-  LinuxPower.cpp \
-  GonkSensor.cpp \
-  UeventPoller.cpp \
-  GonkSwitch.cpp \
-  GonkFMRadio.cpp \
-  GonkDiskSpaceWatcher.cpp \
-  $(NULL)
-else ifeq (Linux,$(OS_TARGET))
-CPPSRCS += \
-  LinuxPower.cpp \
-  FallbackScreenConfiguration.cpp \
-  FallbackSensor.cpp \
-  FallbackVibration.cpp \
-  FallbackAlarm.cpp \
-  $(NULL)
-ifdef MOZ_ENABLE_DBUS
-CPPSRCS += UPowerClient.cpp
-else
-CPPSRCS += FallbackBattery.cpp
-endif
-else ifeq (WINNT,$(OS_TARGET))
-CPPSRCS += \
-  WindowsBattery.cpp \
-  WindowsSensor.cpp \
-  FallbackVibration.cpp \
-  FallbackScreenConfiguration.cpp \
-  FallbackPower.cpp \
-  FallbackAlarm.cpp \
-  $(NULL)
-else ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-  CocoaBattery.cpp \
-  FallbackVibration.cpp \
-  FallbackPower.cpp \
-  FallbackScreenConfiguration.cpp \
-  FallbackAlarm.cpp \
-  $(NULL)
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS += \
   CocoaSensor.mm \
   smslib.mm \
-  $(NULL)
-else ifneq (,$(filter OpenBSD NetBSD FreeBSD DragonFly,$(OS_TARGET)))
-CPPSRCS += \
-  FallbackSensor.cpp \
-  FallbackVibration.cpp \
-  FallbackPower.cpp \
-  FallbackScreenConfiguration.cpp \
-  FallbackAlarm.cpp \
-  $(NULL)
-ifdef MOZ_ENABLE_DBUS
-CPPSRCS += UPowerClient.cpp
-else
-CPPSRCS += FallbackBattery.cpp
-endif
-else
-CPPSRCS += \
-  FallbackBattery.cpp \
-  FallbackSensor.cpp \
-  FallbackVibration.cpp \
-  FallbackPower.cpp \
-  FallbackScreenConfiguration.cpp \
-  FallbackAlarm.cpp \
   $(NULL)
 endif
 
 ifdef MOZ_GAMEPAD
 LOCAL_INCLUDES = -I$(topsrcdir)/dom/base
-endif
-
-# Fallbacks for backends implemented on Gonk only.
-ifneq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
-CPPSRCS += \
-  FallbackLights.cpp  \
-  FallbackTime.cpp \
-  FallbackWakeLocks.cpp \
-  FallbackSwitch.cpp \
-  FallbackScreenPower.cpp \
-  FallbackProcessPriority.cpp \
-  FallbackFMRadio.cpp \
-  FallbackFactoryReset.cpp \
-  FallbackDiskSpaceWatcher.cpp \
-  $(NULL)
-endif #}
-
-# Fallbacks for backends implemented on Android only.
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += FallbackNetwork.cpp
 endif
 
 include $(topsrcdir)/config/config.mk

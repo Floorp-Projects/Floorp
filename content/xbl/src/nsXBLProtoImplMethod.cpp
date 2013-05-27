@@ -225,10 +225,10 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 }
 
 void
-nsXBLProtoImplMethod::Trace(TraceCallback aCallback, void *aClosure) const
+nsXBLProtoImplMethod::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 {
   if (IsCompiled() && mJSMethodObject) {
-    aCallback(mJSMethodObject, "mJSMethodObject", aClosure);
+    aCallbacks.Trace(&mJSMethodObject, "mJSMethodObject", aClosure);
   }
 }
 

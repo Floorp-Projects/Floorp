@@ -11,12 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS		= \
-  js.cpp \
-  jsoptparse.cpp \
-  jsheaptools.cpp \
-  $(NULL)
-
 ifdef _MSC_VER
 # unnecessary PGO for js shell.  But gcc cannot turn off pgo because it is
 # necessary to link PGO lib on gcc when a object/static lib are compiled

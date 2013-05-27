@@ -35,8 +35,6 @@ PROGCPPSRCS = \
 
 PROGOBJS = $(PROGCPPSRCS:.cpp=.$(OBJ_SUFFIX))
 
-CPPSRCS = $(filter-out $(LIBCPPSRCS),$(PROGCPPSRCS)) $(LIBCPPSRCS)
-
 LIBS            = \
 		$(NSPR_LIBS) \
 		$(XLDFLAGS) $(XLIBS)

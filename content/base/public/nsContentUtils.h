@@ -1306,8 +1306,6 @@ public:
   }
   static void ReleaseWrapper(void* aScriptObjectHolder,
                              nsWrapperCache* aCache);
-  static void TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
-                           void *aClosure);
 
   /*
    * Notify when the first XUL menu is opened and when the all XUL menus are

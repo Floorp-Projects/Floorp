@@ -13,9 +13,6 @@ include $(srcdir)/objs.mk
 LIBRARY_NAME	= profdirserviceprovider_s
 MOZILLA_INTERNAL_API = 1
 
-
-CPPSRCS		= $(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)
-
 # we don't want the shared lib
 FORCE_STATIC_LIB = 1
 

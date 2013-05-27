@@ -16,15 +16,6 @@ MODULE_NAME = nsDecodersModule
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS = 1
 
-
-CPPSRCS = nsPNGDecoder.cpp nsJPEGDecoder.cpp nsGIFDecoder2.cpp \
-          nsBMPDecoder.cpp nsICODecoder.cpp nsIconDecoder.cpp \
-          $(NULL)
-
-ifdef MOZ_WBMP
-CPPSRCS += nsWBMPDecoder.cpp
-endif
-
 CSRCS   = iccjpeg.c \
           $(NULL)
 
