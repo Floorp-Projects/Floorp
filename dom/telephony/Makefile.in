@@ -16,10 +16,5 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS = \
-  Telephony.cpp \
-  TelephonyCall.cpp \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

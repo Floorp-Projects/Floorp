@@ -12,40 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = accessibility_base_s
 LIBXUL_LIBRARY = 1
 
-
-CPPSRCS = \
-  AccCollector.cpp \
-  AccEvent.cpp \
-  AccGroupInfo.cpp \
-  AccIterator.cpp \
-  Filters.cpp \
-  ARIAMap.cpp \
-  ARIAStateMap.cpp \
-  DocManager.cpp \
-  EventQueue.cpp \
-  FocusManager.cpp \
-  NotificationController.cpp \
-  nsAccessNode.cpp \
-  nsCoreUtils.cpp \
-  nsAccUtils.cpp \
-  nsAccessibilityService.cpp \
-  nsAccessiblePivot.cpp \
-  nsEventShell.cpp \
-  nsTextEquivUtils.cpp \
-  RoleAsserts.cpp \
-  SelectionManager.cpp \
-  StyleInfo.cpp \
-  TextAttrs.cpp \
-  TextUpdater.cpp \
-  TreeWalker.cpp \
-  $(NULL)
-
-ifneq ($(A11Y_LOG),0)
-CPPSRCS += \
-  Logging.cpp \
-  $(NULL)
-endif
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

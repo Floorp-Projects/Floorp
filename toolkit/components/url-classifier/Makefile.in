@@ -16,20 +16,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS = \
-  ChunkSet.cpp \
-  Classifier.cpp \
-  HashStore.cpp \
-  ProtocolParser.cpp \
-  LookupCache.cpp \
-  nsUrlClassifierDBService.cpp \
-  nsUrlClassifierStreamUpdater.cpp \
-  nsUrlClassifierUtils.cpp \
-  nsUrlClassifierPrefixSet.cpp \
-  nsUrlClassifierProxies.cpp \
-  nsCheckSummedOutputStream.cpp \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../build \
   $(SQLITE_CFLAGS) \

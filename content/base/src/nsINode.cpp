@@ -1165,9 +1165,9 @@ nsINode::GetContextForEventHandlers(nsresult* aRv)
 
 /* static */
 void
-nsINode::Trace(nsINode *tmp, TraceCallback cb, void *closure)
+nsINode::Trace(nsINode *tmp, const TraceCallbacks& cb, void *closure)
 {
-  nsContentUtils::TraceWrapper(tmp, cb, closure);
+  tmp->TraceWrapper(cb, closure);
 }
 
 

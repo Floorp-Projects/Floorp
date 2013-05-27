@@ -6,3 +6,7 @@
 
 MODULE = 'nkgio'
 
+CPP_SOURCES += [
+    'nsGIOProtocolHandler.cpp',
+]
+

@@ -18,36 +18,6 @@ FAIL_ON_WARNINGS = 1
 # Internal header files, needed by other editor sublibs:
 INTERNAL_HDR_DIR = ../internal
 
-CPPSRCS		=                           \
-		nsEditor.cpp                \
-		nsEditorCommands.cpp        \
-		nsEditorController.cpp      \
-		nsEditorEventListener.cpp   \
-		nsEditorUtils.cpp           \
-		nsSelectionState.cpp        \
-		$(NULL)
-
-# Transactions: we'd like to split these off,
-# but currently they and nsEditor are too intertwined!
-CPPSRCS		+=                          \
-		EditTxn.cpp                 \
-		PlaceholderTxn.cpp          \
-		ChangeAttributeTxn.cpp      \
-		ChangeCSSInlineStyleTxn.cpp \
-		CreateElementTxn.cpp        \
-		DeleteNodeTxn.cpp           \
-		DeleteRangeTxn.cpp          \
-		DeleteTextTxn.cpp           \
-		EditAggregateTxn.cpp        \
-		IMETextTxn.cpp              \
-		InsertElementTxn.cpp        \
-		InsertTextTxn.cpp           \
-		JoinElementTxn.cpp          \
-		SetDocTitleTxn.cpp          \
-		SplitElementTxn.cpp         \
-		nsStyleSheetTxns.cpp        \
-		$(NULL)
-
 # don't want the shared lib; force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

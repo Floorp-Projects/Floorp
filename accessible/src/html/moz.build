@@ -6,3 +6,14 @@
 
 MODULE = 'accessibility'
 
+CPP_SOURCES += [
+    'HTMLCanvasAccessible.cpp',
+    'HTMLElementAccessibles.cpp',
+    'HTMLFormControlAccessible.cpp',
+    'HTMLImageMapAccessible.cpp',
+    'HTMLLinkAccessible.cpp',
+    'HTMLListAccessible.cpp',
+    'HTMLSelectAccessible.cpp',
+    'HTMLTableAccessible.cpp',
+]
+

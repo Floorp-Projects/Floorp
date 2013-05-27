@@ -16,11 +16,13 @@ XPIDL_SOURCES += [
     'nsIDOMSmsFilter.idl',
     'nsIDOMSmsManager.idl',
     'nsIDOMSmsSegmentInfo.idl',
+    'nsIMmsService.idl',
     'nsIMobileMessageCallback.idl',
     'nsIMobileMessageCursorCallback.idl',
     'nsIMobileMessageDatabaseService.idl',
     'nsIMobileMessageService.idl',
     'nsISmsService.idl',
+    'nsIWapPushApplication.idl',
 ]
 
 if CONFIG['MOZ_B2G_RIL']:

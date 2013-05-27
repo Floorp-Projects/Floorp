@@ -27,12 +27,7 @@ LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
 
 VPATH += $(topsrcdir)/build/
 
-CPPSRCS = \
-  crashreporter.cpp \
-  $(NULL)
-
 ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += crashreporter_win.cpp
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/breakpad-windows-libxul/$(LIB_PREFIX)google_breakpad_libxul_s.$(LIB_SUFFIX)
   $(NULL)
@@ -44,7 +39,6 @@ MOZ_WINCONSOLE = 0
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-CPPSRCS += crashreporter_unix_common.cpp
 CMMSRCS += crashreporter_osx.mm
 OS_LIBS += -framework Cocoa
 LIBS += \
@@ -56,20 +50,14 @@ LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CPPSRCS += crashreporter_gtk_common.cpp crashreporter_unix_common.cpp
 
 ifdef MOZ_PLATFORM_MAEMO
-CPPSRCS += crashreporter_maemo_gtk.cpp
-
 # Maemo's libcurl doesn't ship with a set of CA certificates,
 # so we have to ship our own.
 libs:: $(DIST)/bin/crashreporter.crt
 
 $(DIST)/bin/crashreporter.crt: $(topsrcdir)/security/nss/lib/ckfw/builtins/certdata.txt certdata2pem.py
 	$(PYTHON) $(srcdir)/certdata2pem.py < $< > $@
-
-else
-CPPSRCS += crashreporter_linux.cpp
 endif
 
 LIBS += \
@@ -81,7 +69,6 @@ OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-CPPSRCS += crashreporter_linux.cpp crashreporter_unix.cpp
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/solaris/$(LIB_PREFIX)breakpad_solaris_common_s.$(LIB_SUFFIX) \
   $(NULL)

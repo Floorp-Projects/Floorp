@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=868999
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 868999</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=868999">Mozilla Bug 869002</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 868999 **/
+
+var d = new DocumentFragment();
+ok(d, "DocumentFragment has been created");
+
+document.appendChild(d);
+ok(true, "DocumentFragment has been added to the document");
+
+</script>
+</pre>
+</body>
+</html>

@@ -796,6 +796,11 @@ protected:
    * Mute or unmute the audio and change the value that the |muted| map.
    */
   void SetMutedInternal(uint32_t aMuted);
+  /**
+   * Update the volume of the output audio stream to match the element's
+   * current mMuted/mVolume state.
+   */
+  void SetVolumeInternal();
 
   /**
    * Suspend (if aPauseForInactiveDocument) or resume element playback and

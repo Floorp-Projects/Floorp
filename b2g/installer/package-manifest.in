@@ -197,9 +197,6 @@
 @BINPATH@/components/dom_payment.xpt
 @BINPATH@/components/dom_push.xpt
 @BINPATH@/components/dom_json.xpt
-#ifdef MOZ_B2G_RIL
-@BINPATH@/components/dom_mms.xpt
-#endif
 @BINPATH@/components/dom_browserelement.xpt
 @BINPATH@/components/dom_messages.xpt
 @BINPATH@/components/dom_power.xpt
