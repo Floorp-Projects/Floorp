@@ -1319,7 +1319,8 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
-  AutoPushJSContext cx(mContext);
+  JSContext* cx = mContext;
+  JSAutoRequest ar(cx);
   JS::Rooted<JSObject*> scopeObject(mContext, GetNativeGlobal());
   xpc_UnmarkGrayObject(scopeObject);
 
