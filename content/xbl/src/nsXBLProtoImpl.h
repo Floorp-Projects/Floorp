@@ -60,7 +60,7 @@ public:
     mFields = aFieldList;
   }
 
-  void Trace(TraceCallback aCallback, void *aClosure) const;
+  void Trace(const TraceCallbacks& aCallbacks, void *aClosure);
   void UnlinkJSObjects();
 
   nsXBLProtoImplField* FindField(const nsString& aFieldName) const;

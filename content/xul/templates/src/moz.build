@@ -6,3 +6,32 @@
 
 MODULE = 'xultmpl'
 
+CPP_SOURCES += [
+    'nsContentSupportMap.cpp',
+    'nsContentTestNode.cpp',
+    'nsInstantiationNode.cpp',
+    'nsRDFBinding.cpp',
+    'nsRDFConInstanceTestNode.cpp',
+    'nsRDFConMemberTestNode.cpp',
+    'nsRDFPropertyTestNode.cpp',
+    'nsRDFQuery.cpp',
+    'nsResourceSet.cpp',
+    'nsRuleNetwork.cpp',
+    'nsTemplateMatch.cpp',
+    'nsTemplateRule.cpp',
+    'nsTreeRows.cpp',
+    'nsXMLBinding.cpp',
+    'nsXULContentBuilder.cpp',
+    'nsXULContentUtils.cpp',
+    'nsXULSortService.cpp',
+    'nsXULTemplateBuilder.cpp',
+    'nsXULTemplateQueryProcessorRDF.cpp',
+    'nsXULTemplateQueryProcessorStorage.cpp',
+    'nsXULTemplateQueryProcessorXML.cpp',
+    'nsXULTemplateResultRDF.cpp',
+    'nsXULTemplateResultSetRDF.cpp',
+    'nsXULTemplateResultStorage.cpp',
+    'nsXULTemplateResultXML.cpp',
+    'nsXULTreeBuilder.cpp',
+]
+

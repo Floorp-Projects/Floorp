@@ -25,20 +25,6 @@ LIBRARY_NAME    = display
 FORCE_STATIC_LIB= 1
 STL_FLAGS=
 
-CPPSRCS = BootAnimation.cpp
-
-ifeq (17,$(ANDROID_VERSION))
-CPPSRCS	+= \
-	FramebufferSurface.cpp \
-	GraphicBufferAlloc.cpp \
-	GonkDisplayJB.cpp \
-	$(NULL)
-else ifeq (15,$(ANDROID_VERSION))
-CPPSRCS += GonkDisplayICS.cpp
-else
-$(error Unsupported platform version: $(ANDROID_VERSION))
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXPCOM_GLUE

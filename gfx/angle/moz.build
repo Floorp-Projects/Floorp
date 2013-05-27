@@ -15,3 +15,97 @@ EXPORTS.angle += [
     'include/KHR/khrplatform.h',
 ]
 
+# WARNING: CPP_SOURCES seems very dependent on ordering. Grouping all of these
+# CPP_SOURCES lines into one list may break webgl tests.
+
+# Target: 'preprocessor'
+# src/compiler/preprocessor:
+CPP_SOURCES += [
+    'DiagnosticsBase.cpp',
+    'DirectiveHandlerBase.cpp',
+    'DirectiveParser.cpp',
+    'ExpressionParser.cpp',
+    'Input.cpp',
+    'Lexer.cpp',
+    'Macro.cpp',
+    'MacroExpander.cpp',
+    'Preprocessor.cpp',
+    'Token.cpp',
+    'Tokenizer.cpp',
+]
+
+# src/compiler:
+CPP_SOURCES += [
+    'BuiltInFunctionEmulator.cpp',
+    'Compiler.cpp',
+    'compiler_debug.cpp',
+    'DetectRecursion.cpp',
+    'Diagnostics.cpp',
+    'DirectiveHandler.cpp',
+    'ForLoopUnroll.cpp',
+    'glslang_lex.cpp',
+    'glslang_tab.cpp',
+    'InfoSink.cpp',
+    'Initialize.cpp',
+    'InitializeDll.cpp',
+    'InitializeParseContext.cpp',
+    'Intermediate.cpp',
+    'intermOut.cpp',
+    'IntermTraverse.cpp',
+    'MapLongVariableNames.cpp',
+    'parseConst.cpp',
+    'ParseHelper.cpp',
+    'PoolAlloc.cpp',
+    'QualifierAlive.cpp',
+    'RemoveTree.cpp',
+    'spooky.cpp',
+    'SymbolTable.cpp',
+    'util.cpp',
+    'ValidateLimitations.cpp',
+    'VariableInfo.cpp',
+    'VariablePacker.cpp',
+]
+
+# src/compiler/depgraph:
+CPP_SOURCES += [
+    'DependencyGraph.cpp',
+    'DependencyGraphBuilder.cpp',
+    'DependencyGraphOutput.cpp',
+    'DependencyGraphTraverse.cpp',
+]
+
+# src/compiler/timing:
+CPP_SOURCES += [
+    'RestrictFragmentShaderTiming.cpp',
+    'RestrictVertexShaderTiming.cpp',
+]
+
+# src/third_party/compiler:
+CPP_SOURCES += [
+    'ArrayBoundsClamper.cpp',
+]
+
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    CPP_SOURCES += [
+        'ossource_win.cpp',
+    ]
+else:
+    CPP_SOURCES += [
+        'ossource_posix.cpp',
+    ]
+
+# Target: 'translator_glsl'
+#   Requires: 'translator_common'
+# src/compiler:
+CPP_SOURCES += [
+    'CodeGenGLSL.cpp',
+    'OutputESSL.cpp',
+    'OutputGLSLBase.cpp',
+    'OutputGLSL.cpp',
+    'ShaderLang.cpp',
+    'TranslatorESSL.cpp',
+    'TranslatorGLSL.cpp',
+    'VersionGLSL.cpp',
+]
+

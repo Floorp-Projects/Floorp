@@ -63,7 +63,7 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGenericDOMDataNode)
-  nsINode::Trace(tmp, aCallback, aClosure);
+  nsINode::Trace(tmp, aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGenericDOMDataNode)

@@ -283,7 +283,7 @@ public:
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
   void UnlinkJSObjects();
-  void Trace(TraceCallback aCallback, void *aClosure) const;
+  void Trace(const TraceCallbacks& aCallbacks, void *aClosure) const;
 
 // Internal member functions.
 // XXXbz GetImmediateChild needs to be public to be called by SetAttrs,

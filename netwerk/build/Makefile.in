@@ -18,7 +18,6 @@ MODULE_NAME    = necko
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
-CPPSRCS = nsNetModule.cpp
 SHARED_LIBRARY_LIBS = \
   ../base/src/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
   ../dns/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \

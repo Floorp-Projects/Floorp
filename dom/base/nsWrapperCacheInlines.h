@@ -51,7 +51,7 @@ nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
     nsXPCOMCycleCollectionParticipant* participant = nullptr;
     CallQueryInterface(aThis, &participant);
     bool hasGrayObjects = false;
-    participant->Trace(aThis, SearchGray, &hasGrayObjects);
+    participant->Trace(aThis, TraceCallbackFunc(SearchGray), &hasGrayObjects);
     return !hasGrayObjects;
   }
   return false;

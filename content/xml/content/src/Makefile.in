@@ -15,13 +15,6 @@ MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS		= \
-		nsXMLElement.cpp \
-		CDATASection.cpp \
-		ProcessingInstruction.cpp \
-		XMLStylesheetProcessingInstruction.cpp \
-		$(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
