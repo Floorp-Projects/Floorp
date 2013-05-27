@@ -6,3 +6,13 @@
 
 MODULE = 'libegl'
 
+CPP_SOURCES += [
+    'Config.cpp',
+    'Display.cpp',
+    'RefCountObject.cpp',
+    'Surface.cpp',
+    'debug.cpp',
+    'libEGL.cpp',
+    'main.cpp',
+]
+

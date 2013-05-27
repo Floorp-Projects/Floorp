@@ -16,40 +16,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
-CPPSRCS = \
-  nsHttp.cpp \
-  nsHttpHeaderArray.cpp \
-  nsHttpConnectionInfo.cpp \
-  nsHttpConnection.cpp \
-  nsHttpConnectionMgr.cpp \
-  nsHttpRequestHead.cpp \
-  nsHttpResponseHead.cpp \
-  nsHttpChunkedDecoder.cpp \
-  nsHttpAuthCache.cpp \
-  nsHttpAuthManager.cpp \
-  nsHttpBasicAuth.cpp \
-  nsHttpDigestAuth.cpp \
-  nsHttpNTLMAuth.cpp \
-  nsHttpTransaction.cpp \
-  nsHttpHandler.cpp \
-  HttpBaseChannel.cpp \
-  nsHttpChannel.cpp \
-  nsHttpPipeline.cpp \
-  nsHttpActivityDistributor.cpp \
-  nsHttpChannelAuthProvider.cpp \
-  HttpChannelParent.cpp \
-  HttpChannelChild.cpp \
-  HttpChannelParentListener.cpp \
-  HttpInfo.cpp \
-  NullHttpTransaction.cpp \
-  ASpdySession.cpp \
-  SpdySession2.cpp \
-  SpdyStream2.cpp \
-  SpdySession3.cpp \
-  SpdyStream3.cpp \
-  ConnectionDiagnostics.cpp \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/xpcom/ds \

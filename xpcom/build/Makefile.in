@@ -29,29 +29,6 @@ ifeq (Darwin, $(OS_ARCH))
 CSRCS = mach_override.c
 endif
 
-CPPSRCS = \
-  $(XPCOM_GLUE_SRC_LCPPSRCS) \
-  $(XPCOM_GLUENS_SRC_LCPPSRCS) \
-  nsXPComInit.cpp \
-  nsXPCOMStrings.cpp \
-  Services.cpp \
-  Omnijar.cpp \
-  FileLocation.cpp \
-  FrozenFunctions.cpp \
-  $(NULL)
-
-ifeq (Darwin, $(OS_ARCH))
-CPPSRCS += mozPoisonWriteBase.cpp mozPoisonWriteMac.cpp
-else ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += mozPoisonWriteBase.cpp mozPoisonWriteWin.cpp
-else
-CPPSRCS += mozPoisonWriteStub.cpp
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += perfprobe.cpp
-endif
-
 SHARED_LIBRARY_LIBS = \
 		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
 		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \

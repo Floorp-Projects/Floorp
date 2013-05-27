@@ -32,3 +32,16 @@ EXPORTS.protobuf.google.protobuf.io += [
     'zero_copy_stream_impl_lite.h',
 ]
 
+CPP_SOURCES += [
+    'coded_stream.cc',
+    'common.cc',
+    'extension_set.cc',
+    'generated_message_util.cc',
+    'message_lite.cc',
+    'once.cc',
+    'repeated_field.cc',
+    'wire_format_lite.cc',
+    'zero_copy_stream.cc',
+    'zero_copy_stream_impl_lite.cc',
+]
+

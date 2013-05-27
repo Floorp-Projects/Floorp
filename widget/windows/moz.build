@@ -21,3 +21,62 @@ EXPORTS.mozilla.widget += [
     'AudioSession.h',
 ]
 
+CPP_SOURCES += [
+    'AudioSession.cpp',
+    'GfxInfo.cpp',
+    'IEnumFE.cpp',
+    'JumpListBuilder.cpp',
+    'JumpListItem.cpp',
+    'KeyboardLayout.cpp',
+    'TaskbarPreview.cpp',
+    'TaskbarPreviewButton.cpp',
+    'TaskbarTabPreview.cpp',
+    'TaskbarWindowPreview.cpp',
+    'WidgetTraceEvent.cpp',
+    'WinIMEHandler.cpp',
+    'WinMouseScrollHandler.cpp',
+    'WinTaskbar.cpp',
+    'WinUtils.cpp',
+    'WindowHook.cpp',
+    'nsAppShell.cpp',
+    'nsBidiKeyboard.cpp',
+    'nsClipboard.cpp',
+    'nsDataObj.cpp',
+    'nsDataObjCollection.cpp',
+    'nsDragService.cpp',
+    'nsFilePicker.cpp',
+    'nsIMM32Handler.cpp',
+    'nsIdleServiceWin.cpp',
+    'nsImageClipboard.cpp',
+    'nsLookAndFeel.cpp',
+    'nsNativeDragSource.cpp',
+    'nsNativeDragTarget.cpp',
+    'nsNativeThemeWin.cpp',
+    'nsScreenManagerWin.cpp',
+    'nsScreenWin.cpp',
+    'nsSound.cpp',
+    'nsToolkit.cpp',
+    'nsUXThemeData.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWinGesture.cpp',
+    'nsWindow.cpp',
+    'nsWindowDbg.cpp',
+    'nsWindowGfx.cpp',
+]
+
+if CONFIG['MOZ_CRASHREPORTER']:
+    CPP_SOURCES += [
+        'LSPAnnotator.cpp',
+    ]
+
+if CONFIG['NS_PRINTING']:
+    CPP_SOURCES += [
+        'nsPrintOptionsWin.cpp',
+        'nsPrintSettingsWin.cpp',
+        'nsDeviceContextSpecWin.cpp',
+    ]
+
+if CONFIG['NS_ENABLE_TSF']:
+    CPP_SOURCES += [
+        'nsTextStore.cpp',
+    ]

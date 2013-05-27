@@ -6,3 +6,8 @@
 
 MODULE = 'dom'
 
+CPP_SOURCES += [
+    'AndroidLocationProvider.cpp',
+    'nsHapticFeedback.cpp',
+]
+

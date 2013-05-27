@@ -10,3 +10,8 @@ EXPORTS += [
     'nsUCvTW2CID.h',
 ]
 
+CPP_SOURCES += [
+    'nsEUCTWToUnicode.cpp',
+    'nsUnicodeToEUCTW.cpp',
+]
+

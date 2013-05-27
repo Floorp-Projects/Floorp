@@ -36,3 +36,22 @@ EXPORTS += [
 
 if CONFIG['MOZ_X11']:
     EXPORTS.mozilla += ['X11Util.h']
+    CPP_SOURCES += [
+        'X11Util.cpp',
+    ]
+
+CPP_SOURCES += [
+    'gfxCrashReporterUtils.cpp',
+    'nsColor.cpp',
+    'nsDeviceContext.cpp',
+    'nsFont.cpp',
+    'nsFontMetrics.cpp',
+    'nsRect.cpp',
+    'nsRegion.cpp',
+    'nsRenderingContext.cpp',
+    'nsScriptableRegion.cpp',
+    'nsThebesFontEnumerator.cpp',
+    'nsThebesGfxFactory.cpp',
+    'nsTransform2D.cpp',
+]
+

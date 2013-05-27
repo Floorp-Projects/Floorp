@@ -12,3 +12,8 @@ EXPORTS.mozilla.layout += [
     'RenderFrameUtils.h',
 ]
 
+CPP_SOURCES += [
+    'RenderFrameChild.cpp',
+    'RenderFrameParent.cpp',
+]
+

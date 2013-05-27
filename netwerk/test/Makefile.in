@@ -13,7 +13,7 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS = \
+cppsrcs = \
   TestIncrementalDownload.cpp \
   TestStreamLoader.cpp \
   PropertiesTest.cpp \
@@ -32,7 +32,7 @@ CPPSRCS = \
   TestProtocols.cpp \
   $(NULL)
 
-SIMPLE_PROGRAMS := $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+SIMPLE_PROGRAMS := $(cppsrcs:.cpp=$(BIN_SUFFIX))
 
 # XXX Make this work in libxul builds.
 #SIMPLE_PROGRAMS += \

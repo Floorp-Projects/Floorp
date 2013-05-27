@@ -15,10 +15,6 @@ SHORT_LIBNAME	= nkgnomevfs
 IS_COMPONENT	= 1
 
 
-CPPSRCS		= \
-		nsGnomeVFSProtocolHandler.cpp \
-		$(NULL)
-
 LOCAL_INCLUDES	= $(MOZ_GNOMEVFS_CFLAGS)
 
 EXTRA_DSO_LDOPTS = \

@@ -10,3 +10,7 @@ EXPORTS.mozilla.dom += [
     'Activity.h',
 ]
 
+CPP_SOURCES += [
+    'Activity.cpp',
+]
+

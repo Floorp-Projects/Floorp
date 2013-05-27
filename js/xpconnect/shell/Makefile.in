@@ -12,8 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 SDK_BINARY	= $(PROGRAM)
 
-CPPSRCS		= xpcshell.cpp
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/toolkit/xre \
   $(NULL)

@@ -6,3 +6,13 @@
 
 PROGRAM = 'gdb-tests'
 
+CPP_SOURCES += [
+    'gdb-tests.cpp',
+    'test-JSObject.cpp',
+    'test-JSString.cpp',
+    'test-Root.cpp',
+    'test-jsid.cpp',
+    'test-jsval.cpp',
+    'test-prettyprinters.cpp',
+    'typedef-printers.cpp',
+]

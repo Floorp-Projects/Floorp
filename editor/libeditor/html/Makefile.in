@@ -17,30 +17,7 @@ LIBXUL_LIBRARY	= 1
 
 # Building the full blown HTML Editor  so add its source files and objects:
 
-CPPSRCS  = \
-           nsEditProperty.cpp             \
-           nsHTMLAbsPosition.cpp          \
-           nsHTMLAnonymousUtils.cpp       \
-           nsHTMLDataTransfer.cpp         \
-           nsHTMLCSSUtils.cpp             \
-           nsHTMLEditor.cpp               \
-           nsHTMLEditorStyle.cpp          \
-           nsHTMLEditRules.cpp            \
-           nsHTMLEditUtils.cpp            \
-           nsHTMLObjectResizer.cpp        \
-           nsHTMLEditorEventListener.cpp  \
-           nsHTMLInlineTableEditor.cpp    \
-           nsHTMLURIRefObject.cpp         \
-           nsTableEditor.cpp              \
-           nsWSRunObject.cpp              \
-           TypeInState.cpp                \
-           TextEditorTest.cpp             \
-           $(NULL)
-
 ifdef ENABLE_EDITOR_API_LOG
-CPPSRCS += nsEditorTxnLog.cpp              \
-           $(NULL)
-
 DEFINES += -DENABLE_EDITOR_API_LOG
 endif
 
