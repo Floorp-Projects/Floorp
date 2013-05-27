@@ -190,3 +190,18 @@ function unexpectedCallbackAndFinish(error) {
     SimpleTest.finish();
   }
 }
+
+/**
+ * Generates a callback function fired only for unexpected events happening.
+ *
+ * @param {String} description a description of what the event fired on
+ * @param {String} eventName the name of the unexpected event
+ */
+function unexpectedEventAndFinish(description, eventName) {
+  return function () {
+    var e = new Error();
+    ok(false, "Unexpected event '" + eventName + "' fired for " + description +
+       " " + e.stack.split("\n")[1]);
+    SimpleTest.finish();
+  }
+}
