@@ -171,7 +171,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY feedButton.tooltip           "Subscribe to this page…">
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
-<!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
 <!ENTITY bookmarksCmd.commandkey "b">
 
 <!ENTITY bookmarksMenuButton.label          "Bookmarks">
