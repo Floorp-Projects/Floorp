@@ -14,6 +14,9 @@
 #include "SurfaceStream.h"
 #include "SharedSurfaceGL.h"
 #include "SharedSurfaceEGL.h"
+#ifdef MOZ_B2G
+#include "SharedSurfaceGralloc.h"
+#endif
 #include "GeckoProfiler.h"
 
 #include "nsXULAppAPI.h"
