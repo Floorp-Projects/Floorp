@@ -75,6 +75,10 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'GLContextSkia.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    CPP_SOURCES += ['SharedSurfaceGralloc.cpp']
+    EXPORTS += ['SharedSurfaceGralloc.h']
+
 if gl_provider == 'CGL':
     # TODO: CMMSRCS
     pass
