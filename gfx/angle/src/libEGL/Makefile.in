@@ -52,21 +52,8 @@ LOCAL_INCLUDES = \
 
 VPATH += $(srcdir)/../common
 # src/common:
-CPPSRCS += \
-  debug.cpp \
-  RefCountObject.cpp \
-  $(NULL)
-
 VPATH += $(srcdir)/../libEGL
 # src/libEGL:
-CPPSRCS += \
-  Config.cpp \
-  Display.cpp \
-  libEGL.cpp \
-  main.cpp \
-  Surface.cpp \
-  $(NULL)
-
 DEFFILE = $(srcdir)/libEGL.def
 RCFILE  = $(srcdir)/libEGL.rc
 

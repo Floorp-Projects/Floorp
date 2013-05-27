@@ -6,3 +6,37 @@
 
 PROGRAM = 'updater'
 
+CPP_SOURCES += [
+    'archivereader.cpp',
+    'bspatch.cpp',
+    'updater.cpp',
+]
+
+have_progressui = 0
+if CONFIG['OS_ARCH'] == 'WINNT':
+    have_progressui = 1
+    CPP_SOURCES += [
+        'loaddlls.cpp',
+        'progressui_win.cpp',
+        'win_dirent.cpp',
+    ]
+
+if CONFIG['MOZ_ENABLE_GTK2']:
+    have_progressui = 1
+    CPP_SOURCES += [
+        'progressui_gtk.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    have_progressui = 1
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    have_progressui = 1
+    CPP_SOURCES += [
+        'progressui_gonk.cpp',
+        'automounter_gonk.cpp',
+    ]
+
+if have_progressui == 0:
+    CPP_SOURCES += [
+        'progressui_null.cpp',
+    ]

@@ -14,23 +14,6 @@ LIBRARY_NAME = inspector_s
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS= \
-  inDeepTreeWalker.cpp \
-  inFlasher.cpp \
-  inSearchLoop.cpp \
-  inCSSValueSearch.cpp \
-  inDOMUtils.cpp \
-  inLayoutUtils.cpp \
-  nsFontFace.cpp \
-  nsFontFaceList.cpp \
-	$(NULL)
-
-ifdef MOZ_XUL
-CPPSRCS += \
-  inDOMView.cpp \
-  $(NULL)
-endif
-
 FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES	+= \

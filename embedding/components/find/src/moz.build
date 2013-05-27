@@ -6,3 +6,8 @@
 
 MODULE = 'find'
 
+CPP_SOURCES += [
+    'nsFind.cpp',
+    'nsWebBrowserFind.cpp',
+]
+

@@ -20,3 +20,10 @@ EXPORTS.mozilla.dom.time += [
     'TimeService.h',
 ]
 
+CPP_SOURCES += [
+    'DateCacheCleaner.cpp',
+    'TimeChangeObserver.cpp',
+    'TimeManager.cpp',
+    'TimeService.cpp',
+]
+

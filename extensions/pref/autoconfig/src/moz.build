@@ -6,3 +6,10 @@
 
 MODULE = 'autoconfig'
 
+CPP_SOURCES += [
+    'nsAutoConfig.cpp',
+    'nsConfigFactory.cpp',
+    'nsJSConfigTriggers.cpp',
+    'nsReadConfig.cpp',
+]
+

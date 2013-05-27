@@ -16,3 +16,8 @@ XPIDL_MODULE = 'toolkitprofile'
 
 MODULE = 'xulapp'
 
+CPP_SOURCES += [
+    'nsProfileLock.cpp',
+    'nsToolkitProfileService.cpp',
+]
+

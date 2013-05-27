@@ -8,3 +8,6 @@ MODULE = 'redit'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     PROGRAM  = 'redit'
+    CPP_SOURCES += [
+        'redit.cpp',
+    ]

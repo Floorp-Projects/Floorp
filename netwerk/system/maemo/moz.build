@@ -6,3 +6,8 @@
 
 MODULE = 'necko'
 
+CPP_SOURCES += [
+    'nsMaemoNetworkLinkService.cpp',
+    'nsMaemoNetworkManager.cpp',
+]
+

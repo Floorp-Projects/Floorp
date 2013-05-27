@@ -6,3 +6,7 @@
 
 MODULE = 'xpcom'
 
+CPP_SOURCES += [
+    'TestInterfaceInfo.cpp',
+]
+

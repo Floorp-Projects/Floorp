@@ -14,33 +14,6 @@ LIBRARY_NAME	= gkconsmil_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS	= \
-	nsDOMTimeEvent.cpp \
-	nsSMILAnimationController.cpp \
-	nsSMILAnimationFunction.cpp \
-	nsSMILCompositor.cpp \
-	nsSMILCSSProperty.cpp \
-	nsSMILCSSValueType.cpp \
-	nsSMILFloatType.cpp \
-	nsSMILInstanceTime.cpp \
-	nsSMILInterval.cpp \
-	nsSMILKeySpline.cpp \
-	nsSMILMappedAttribute.cpp \
-	nsSMILNullType.cpp \
-	nsSMILParserUtils.cpp \
-	nsSMILRepeatCount.cpp \
-	nsSMILSetAnimationFunction.cpp \
-	nsSMILTimeContainer.cpp \
-	nsSMILTimedElement.cpp \
-	nsSMILTimeValue.cpp \
-	nsSMILTimeValueSpec.cpp \
-	nsSMILValue.cpp \
-	SMILBoolType.cpp \
-	SMILEnumType.cpp \
-	SMILIntegerType.cpp \
-	SMILStringType.cpp \
-	$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

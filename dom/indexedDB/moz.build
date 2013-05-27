@@ -53,3 +53,28 @@ EXPORTS.mozilla.dom.indexedDB += [
     'KeyPath.h',
 ]
 
+CPP_SOURCES += [
+    'AsyncConnectionHelper.cpp',
+    'CheckPermissionsHelper.cpp',
+    'Client.cpp',
+    'DatabaseInfo.cpp',
+    'FileInfo.cpp',
+    'FileManager.cpp',
+    'IDBCursor.cpp',
+    'IDBDatabase.cpp',
+    'IDBEvents.cpp',
+    'IDBFactory.cpp',
+    'IDBFileHandle.cpp',
+    'IDBIndex.cpp',
+    'IDBKeyRange.cpp',
+    'IDBObjectStore.cpp',
+    'IDBRequest.cpp',
+    'IDBTransaction.cpp',
+    'IDBWrapperCache.cpp',
+    'IndexedDatabaseManager.cpp',
+    'Key.cpp',
+    'KeyPath.cpp',
+    'OpenDatabaseHelper.cpp',
+    'TransactionThreadPool.cpp',
+]
+

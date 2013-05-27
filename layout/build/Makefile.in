@@ -24,12 +24,6 @@ LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
 
-CPPSRCS		= \
-		nsLayoutModule.cpp \
-		nsContentDLF.cpp \
-		nsLayoutStatics.cpp \
-		$(NULL)
-
 SHARED_LIBRARY_LIBS = \
 	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
 	../forms/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
