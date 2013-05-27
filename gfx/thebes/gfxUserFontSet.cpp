@@ -759,14 +759,6 @@ gfxUserFontSet::UserFontCache::Entry::RemoveIfPrivate(Entry* aEntry,
     return aEntry->mPrivate ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
 }
 
-PLDHashOperator
-gfxUserFontSet::UserFontCache::Entry::DisconnectSVG(Entry* aEntry,
-                                                    void* aUserData)
-{
-    aEntry->GetFontEntry()->DisconnectSVG();
-    return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
                                                 const char* aTopic,
@@ -780,8 +772,6 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
         sUserFonts->Clear();
     } else if (!strcmp(aTopic, "last-pb-context-exited")) {
         sUserFonts->EnumerateEntries(Entry::RemoveIfPrivate, nullptr);
-    } else if (!strcmp(aTopic, "xpcom-shutdown")) {
-        sUserFonts->EnumerateEntries(Entry::DisconnectSVG, nullptr);
     } else {
         NS_NOTREACHED("unexpected topic");
     }
@@ -834,7 +824,6 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
             obs->AddObserver(flusher, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID,
                              false);
             obs->AddObserver(flusher, "last-pb-context-exited", false);
-            obs->AddObserver(flusher, "xpcom-shutdown", false);
         }
     }
 

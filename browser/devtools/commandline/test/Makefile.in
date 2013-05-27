@@ -57,6 +57,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_gcli_keyboard3.js \
   browser_gcli_menu.js \
   browser_gcli_node.js \
+  browser_gcli_remote.js \
   browser_gcli_resource.js \
   browser_gcli_scratchpad.js \
   browser_gcli_spell.js \

@@ -24,6 +24,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
                                   "resource://gre/modules/devtools/NetworkHelper.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gActivityDistributor",
                                    "@mozilla.org/network/http-activity-distributor;1",
                                    "nsIHttpActivityDistributor");
@@ -976,23 +979,32 @@ PageErrorListener.prototype =
   /**
    * Get the cached page errors for the current inner window.
    *
+   * @param boolean [aIncludePrivate=false]
+   *        Tells if you want to also retrieve messages coming from private
+   *        windows. Defaults to false.
    * @return array
-   *         The array of cached messages. Each element is an nsIScriptError
-   *         with an added _type property so the remote Web Console instance can
-   *         tell the difference between various types of cached messages.
+   *         The array of cached messages.
    */
-  getCachedMessages: function PEL_getCachedMessages()
+  getCachedMessages: function PEL_getCachedMessages(aIncludePrivate = false)
   {
     let innerWindowId = this.window ?
                         WebConsoleUtils.getInnerWindowId(this.window) : null;
     let errors = Services.console.getMessageArray() || [];
 
-    return errors.filter(function(aError) {
-      return aError instanceof Ci.nsIScriptError &&
-             (!innerWindowId ||
-              (aError.innerWindowID == innerWindowId &&
-               this.isCategoryAllowed(aError.category)));
-    }, this);
+    return errors.filter((aError) => {
+      if (!(aError instanceof Ci.nsIScriptError)) {
+        return false;
+      }
+      if (!aIncludePrivate && aError.isFromPrivateWindow) {
+        return false;
+      }
+      if (innerWindowId &&
+          (aError.innerWindowID != innerWindowId ||
+           !this.isCategoryAllowed(aError.category))) {
+        return false;
+      }
+      return true;
+    });
   },
 
   /**
@@ -1090,15 +1102,22 @@ ConsoleAPIListener.prototype =
   /**
    * Get the cached messages for the current inner window.
    *
+   * @param boolean [aIncludePrivate=false]
+   *        Tells if you want to also retrieve messages coming from private
+   *        windows. Defaults to false.
    * @return array
-   *         The array of cached messages. Each element is a Console API
-   *         prepared to be sent to the remote Web Console instance.
+   *         The array of cached messages.
    */
-  getCachedMessages: function CAL_getCachedMessages()
+  getCachedMessages: function CAL_getCachedMessages(aIncludePrivate = false)
   {
     let innerWindowId = this.window ?
                         WebConsoleUtils.getInnerWindowId(this.window) : null;
-    return ConsoleAPIStorage.getEvents(innerWindowId);
+    return ConsoleAPIStorage.getEvents(innerWindowId).filter((aMessage) => {
+      if (!aIncludePrivate && aMessage.private) {
+        return false;
+      }
+      return true;
+    });
   },
 
   /**
@@ -1905,13 +1924,7 @@ NetworkMonitor.prototype = {
   _onRequestHeader:
   function NM__onRequestHeader(aChannel, aTimestamp, aExtraStringData)
   {
-    let win = null;
-    try {
-      win = NetworkHelper.getWindowForRequest(aChannel);
-    }
-    catch (ex) {
-      // getWindowForRequest() throws on b2g.
-    }
+    let win = NetworkHelper.getWindowForRequest(aChannel);
 
     // Try to get the source window of the request.
     if (this.window && (!win || win.top !== this.window)) {
@@ -1922,6 +1935,7 @@ NetworkMonitor.prototype = {
 
     // see NM__onRequestBodySent()
     httpActivity.charset = win ? win.document.characterSet : null;
+    httpActivity.private = win ? PrivateBrowsingUtils.isWindowPrivate(win) : false;
 
     httpActivity.timings.REQUEST_HEADER = {
       first: aTimestamp,
@@ -1935,14 +1949,15 @@ NetworkMonitor.prototype = {
     event.headersSize = aExtraStringData.length;
     event.method = aChannel.requestMethod;
     event.url = aChannel.URI.spec;
+    event.private = httpActivity.private;
 
     // Determine if this is an XHR request.
     try {
       let callbacks = aChannel.notificationCallbacks;
       let xhrRequest = callbacks ? callbacks.getInterface(Ci.nsIXMLHttpRequest) : null;
-      event.isXHR = !!xhrRequest;
+      httpActivity.isXHR = event.isXHR = !!xhrRequest;
     } catch (e) {
-      event.isXHR = false;
+      httpActivity.isXHR = event.isXHR = false;
     }
 
     // Determine the HTTP version.

@@ -4,4 +4,4 @@ load(libdir + "parallelarray-helpers.js");
 // bitsets, test that all that logic works fine if the number of items
 // is not evenly divisible by 32:
 if (getBuildConfiguration().parallelJS)
-  testFilter(range(0, 617), function(i) { return (i % 2) == 0; });
+  compareAgainstArray(range(0, 617), "filter", function(i) { return (i % 2) == 0; });

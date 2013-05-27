@@ -4,17 +4,17 @@ function testICProto() {
   function C() {}
   C.prototype.foo = "foo";
   var c = new C;
-  assertParallelArrayModesCommute(["seq", "par"], function (m) {
-    return new ParallelArray(minItemsTestingThreshold, function (i) {
-      return c.foo;
-    }, m);
-  });
+  compareAgainstArray(
+    range(0, minItemsTestingThreshold),
+    "map",
+    function() { return c.foo; });
 }
 
 function f(o) {
-  return new ParallelArray(minItemsTestingThreshold, function (i) {
-    return o.foo;
-  }, { mode: "par", expect: "mixed" });
+  compareAgainstArray(
+    range(0, minItemsTestingThreshold),
+    "map",
+    function() { return o.foo; });
 }
 
 function testICMultiple() {
@@ -35,8 +35,8 @@ function testICSameShapeDifferentProto() {
   A.prototype.b = true;
   var y = new B;
 
-  assertEq(f(x).get(0), "a");
-  assertEq(f(y).get(0), "b");
+  f(x);
+  f(y);
 }
 
 if (getBuildConfiguration().parallelJS) {

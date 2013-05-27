@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bug 875402</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+SimpleTest.waitForExplicitFinish();
+try { o1 = new OfflineAudioContext(1, 10, (new AudioContext()).sampleRate); } catch(e) {  }
+try { o2 = o1.createJavaScriptNode(); } catch(e) {  }
+try { o4 = new OfflineAudioContext(1, 10, (new AudioContext()).sampleRate); } catch(e) {  }
+try { o5 = o1.createChannelSplitter(4); } catch(e) {  }
+try { o7 = o4.createScriptProcessor(1024, 4, 1); } catch(e) {  }
+SpecialPowers.forceCC();
+SpecialPowers.forceGC();
+try { o1.startRendering(); } catch(e) {  }
+try { o2.connect(o7); } catch(e) {  }
+try { o7.connect(o4); } catch(e) {  }
+try { o9 = o4.createScriptProcessor(1024, 1, 4); } catch(e) {  }
+try { o2.connect(o7); } catch(e) {  }
+try { o9.connect(o1); } catch(e) {  }
+setTimeout("try { o2.connect(o9); } catch(e) {  } done();",1000)
+try { o7.connect(o4); } catch(e) {  }
+setTimeout("try { o5.disconnect() } catch(e) {  }",100)
+try { o2.connect(o9); } catch(e) {  }
+try { o4.startRendering(); } catch(e) {  }
+try { o2.connect(o9); } catch(e) {  }
+setTimeout("try { o7.connect(o4); } catch(e) {  }",50)
+try { o13 = o4.createGain(); } catch(e) {  }
+setTimeout("try { o7.connect(o13, 0, 0) } catch(e) {  }",50)
+
+function done() {
+  ok(true, "We did not crash.");
+  SpecialPowers.clearUserPref("media.webaudio.enabled");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

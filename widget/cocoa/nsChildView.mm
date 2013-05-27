@@ -1678,10 +1678,18 @@ nsChildView::NotifyIME(NotificationToIME aNotification)
       mTextInputHandler->CancelIMEComposition();
       return NS_OK;
     case NOTIFY_IME_OF_FOCUS:
+      if (mInputContext.IsPasswordEditor()) {
+        TextInputHandler::EnableSecureEventInput();
+      }
+
       NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
       mTextInputHandler->OnFocusChangeInGecko(true);
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
+      // When we're going to be deactive, we must disable the secure event input
+      // mode, see the Carbon Event Manager Reference.
+      TextInputHandler::EnsureSecureEventInputDisabled();
+
       NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
       mTextInputHandler->OnFocusChangeInGecko(false);
       return NS_OK;
@@ -1694,7 +1702,16 @@ NS_IMETHODIMP_(void)
 nsChildView::SetInputContext(const InputContext& aContext,
                              const InputContextAction& aAction)
 {
-  NS_ENSURE_TRUE(mTextInputHandler, );
+  // XXX Ideally, we should check if this instance has focus or not.
+  //     However, this is called only when this widget has focus, so,
+  //     it's not problem at least for now.
+  if (aContext.IsPasswordEditor()) {
+    TextInputHandler::EnableSecureEventInput();
+  } else {
+    TextInputHandler::EnsureSecureEventInputDisabled();
+  }
+
+  NS_ENSURE_TRUE_VOID(mTextInputHandler);
   mInputContext = aContext;
   switch (aContext.mIMEState.mEnabled) {
     case IMEState::ENABLED:
@@ -2343,34 +2360,6 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
 }
 
-NS_IMETHODIMP
-nsChildView::BeginSecureKeyboardInput()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv)) {
-    ::EnableSecureEventInput();
-  }
-  return rv;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
-nsChildView::EndSecureKeyboardInput()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv)) {
-    ::DisableSecureEventInput();
-  }
-  return rv;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
 #ifdef ACCESSIBILITY
 already_AddRefed<a11y::Accessible>
 nsChildView::GetDocumentAccessible()
@@ -2378,19 +2367,19 @@ nsChildView::GetDocumentAccessible()
   if (!mozilla::a11y::ShouldA11yBeEnabled())
     return nullptr;
 
-  a11y::Accessible* docAccessible = nullptr;
   if (mAccessible) {
-    CallQueryReferent(mAccessible.get(), &docAccessible);
-    return docAccessible;
+    nsRefPtr<a11y::Accessible> ret;
+    CallQueryReferent(mAccessible.get(),
+                      static_cast<a11y::Accessible**>(getter_AddRefs(ret)));
+    return ret.forget();
   }
 
   // need to fetch the accessible anew, because it has gone away.
   // cache the accessible in our weak ptr
-  a11y::Accessible* acc = GetAccessible();
-  mAccessible = do_GetWeakReference(static_cast<nsIAccessible *>(acc));
+  nsRefPtr<a11y::Accessible> acc = GetAccessible();
+  mAccessible = do_GetWeakReference(static_cast<nsIAccessible *>(acc.get()));
 
-  NS_IF_ADDREF(acc);
-  return acc;
+  return acc.forget();
 }
 #endif
 
@@ -4771,6 +4760,14 @@ static int32_t RoundUp(double aDouble)
 - (void)keyDown:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+  if (mGeckoChild &&
+      mGeckoChild->GetInputContext().IsPasswordEditor() !=
+        TextInputHandler::IsSecureEventInputEnabled()) {
+    MOZ_NOT_REACHED("in wrong secure input mode");
+  }
+#endif // #if !defined(RELEASE_BUILD) || defined(DEBUG)
 
   if (mGeckoChild && mTextInputHandler && mIsPluginView) {
     mTextInputHandler->HandleKeyDownEventForPlugin(theEvent);

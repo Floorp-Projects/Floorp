@@ -226,6 +226,13 @@ class MochitestOptions(optparse.OptionParser):
                     help = "repeats the test or set of tests the given number of times, ie: repeat=1 will run the test twice.")                   
     defaults["repeat"] = 0
 
+    self.add_option("--run-until-failure",
+                    action = "store_true", dest="runUntilFailure",
+                    help = "Run a test repeatedly and stops on the first time the test fails. "
+                           "Only available when running a single test. Default cap is 30 runs, "
+                           "which can be overwritten with the --repeat parameter.")
+    defaults["runUntilFailure"] = False
+
     self.add_option("--run-only-tests",
                     action = "store", type="string", dest = "runOnlyTests",
                     help = "JSON list of tests that we only want to run, cannot be specified with --exclude-tests. [DEPRECATED- please use --test-manifest]")
@@ -377,6 +384,12 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
         self.error("%s not found, cannot launch immersive tests." %
                    mochitest.immersiveHelperPath)
 
+    if options.runUntilFailure:
+      if not os.path.isfile(os.path.join(mochitest.oldcwd, os.path.dirname(__file__), mochitest.getTestRoot(options), options.testPath)):
+        self.error("--run-until-failure can only be used together with --test-path specifying a single test.")
+      if not options.repeat:
+        options.repeat = 29
+
     return options
 
 
@@ -499,7 +512,6 @@ class Mochitest(object):
   # Path to the test script on the server
   TEST_PATH = "tests"
   CHROME_PATH = "redirect.html"
-  PLAIN_LOOP_PATH = "plain-loop.html"
   urlOpts = []
   runSSLTunnel = True
   vmwareHelper = None
@@ -529,7 +541,7 @@ class Mochitest(object):
     testHost = "http://mochi.test:8888"
     testURL = ("/").join([testHost, self.TEST_PATH, options.testPath])
     if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:
-       testURL = ("/").join([testHost, self.PLAIN_LOOP_PATH])
+       testURL = ("/").join([testHost, self.TEST_PATH, os.path.dirname(options.testPath)])
     if options.chrome or options.a11y:
        testURL = ("/").join([testHost, self.CHROME_PATH])
     elif options.browserChrome:
@@ -659,6 +671,8 @@ class Mochitest(object):
         self.urlOpts.append("shuffle=1")
       if "MOZ_HIDE_RESULTS_TABLE" in env and env["MOZ_HIDE_RESULTS_TABLE"] == "1":
         self.urlOpts.append("hideResultsTable=1")
+      if options.runUntilFailure:
+        self.urlOpts.append("runUntilFailure=1")
       if options.repeat:
         self.urlOpts.append("repeat=%d" % options.repeat)
       if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:

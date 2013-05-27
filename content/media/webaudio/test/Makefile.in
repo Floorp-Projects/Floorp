@@ -23,6 +23,7 @@ MOCHITEST_FILES := \
   test_bug867104.html \
   test_bug867174.html \
   test_bug867203.html \
+  test_bug875402.html \
   test_analyserNode.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
@@ -31,6 +32,7 @@ MOCHITEST_FILES := \
   test_audioParamExponentialRamp.html \
   test_audioParamLinearRamp.html \
   test_audioParamSetCurveAtTime.html \
+  test_audioParamSetCurveAtTimeZeroDuration.html \
   test_audioParamSetTargetAtTime.html \
   test_audioParamTimelineDestinationOffset.html \
   test_audioBufferSourceNode.html \

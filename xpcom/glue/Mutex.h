@@ -20,48 +20,44 @@
 //    locked and unlocked
 //  - MutexAutoUnlock, complementary sibling to MutexAutoLock
 //
-// Using MutexAutoLock/MutexAutoUnlock is MUCH preferred to making bare
-// calls to Mutex.Lock and Unlock.
+//  - OffTheBooksMutex, a non-recursive mutex that doesn't do leak checking
+//  - OffTheBooksMutexAuto{Lock,Unlock} - Like MutexAuto{Lock,Unlock}, but for
+//    an OffTheBooksMutex.
+//
+// Using MutexAutoLock/MutexAutoUnlock etc. is MUCH preferred to making bare
+// calls to Lock and Unlock.
 //
 namespace mozilla {
 
-
 /**
- * Mutex
- * When possible, use MutexAutoLock/MutexAutoUnlock to lock/unlock this
- * mutex within a scope, instead of calling Lock/Unlock directly.
- **/
-
-class NS_COM_GLUE Mutex : BlockingResourceBase
+ * OffTheBooksMutex is identical to Mutex, except that OffTheBooksMutex doesn't
+ * include leak checking.  Sometimes you want to intentionally "leak" a mutex
+ * until shutdown; in these cases, OffTheBooksMutex is for you.
+ */
+class NS_COM_GLUE OffTheBooksMutex : BlockingResourceBase
 {
 public:
     /**
-     * Mutex
      * @param name A name which can reference this lock
      * @returns If failure, nullptr
      *          If success, a valid Mutex* which must be destroyed
      *          by Mutex::DestroyMutex()
      **/
-    Mutex(const char* name) :
+    OffTheBooksMutex(const char* name) :
         BlockingResourceBase(name, eMutex)
     {
-        MOZ_COUNT_CTOR(Mutex);
         mLock = PR_NewLock();
         if (!mLock)
             NS_RUNTIMEABORT("Can't allocate mozilla::Mutex");
     }
 
-    /**
-     * ~Mutex
-     **/
-    ~Mutex()
+    ~OffTheBooksMutex()
     {
         NS_ASSERTION(mLock,
                      "improperly constructed Lock or double free");
         // NSPR does consistency checks for us
         PR_DestroyLock(mLock);
         mLock = 0;
-        MOZ_COUNT_DTOR(Mutex);
     }
 
 #ifndef DEBUG
@@ -116,15 +112,39 @@ public:
 #endif  // ifndef DEBUG
 
 private:
-    Mutex();
-    Mutex(const Mutex&);
-    Mutex& operator=(const Mutex&);
+    OffTheBooksMutex();
+    OffTheBooksMutex(const OffTheBooksMutex&);
+    OffTheBooksMutex& operator=(const OffTheBooksMutex&);
 
     PRLock* mLock;
 
     friend class CondVar;
 };
 
+/**
+ * Mutex
+ * When possible, use MutexAutoLock/MutexAutoUnlock to lock/unlock this
+ * mutex within a scope, instead of calling Lock/Unlock directly.
+ */
+class NS_COM_GLUE Mutex : public OffTheBooksMutex
+{
+public:
+   Mutex(const char* name)
+       : OffTheBooksMutex(name)
+   {
+       MOZ_COUNT_CTOR(Mutex);
+   }
+
+   ~Mutex()
+   {
+       MOZ_COUNT_DTOR(Mutex);
+   }
+
+private:
+    Mutex();
+    Mutex(const Mutex&);
+    Mutex& operator=(const Mutex&);
+};
 
 /**
  * MutexAutoLock
@@ -169,6 +189,7 @@ private:
 };
 
 typedef BaseAutoLock<Mutex> MutexAutoLock;
+typedef BaseAutoLock<OffTheBooksMutex> OffTheBooksMutexAutoLock;
 
 /**
  * MutexAutoUnlock
@@ -206,6 +227,7 @@ private:
 };
 
 typedef BaseAutoUnlock<Mutex> MutexAutoUnlock;
+typedef BaseAutoUnlock<OffTheBooksMutex> OffTheBooksMutexAutoUnlock;
 
 } // namespace mozilla
 

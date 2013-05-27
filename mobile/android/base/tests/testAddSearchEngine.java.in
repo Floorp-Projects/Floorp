@@ -36,7 +36,7 @@ public class testAddSearchEngine extends BaseTest {
         loadUrl(url);
         waitForText("Robocop Search Engine");
 
-        // Open the context menu for the intput field
+        // Open the context menu for the input field
         height = mDriver.getGeckoTop() + 10;
         width = mDriver.getGeckoLeft() + 20;
         mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) + " and height = " + String.valueOf(height));
@@ -51,16 +51,16 @@ public class testAddSearchEngine extends BaseTest {
         // Add the search engine
         mSolo.clickOnText("Add Search Engine");
         waitForText("Cancel");
-        if (mDevice.version.equals("4.x")) {
-            // If the OS is ICS the vkb is opened when the popup is triggered so we need to close it in order to click the OK button
+        if (mDevice.type.equals("tablet")) {
+            // On tablets, the vkb is opened when the popup is triggered so we need to close it in order to click the OK button
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
             waitForText("OK"); // Make sure the OK button is visible
         }
         mSolo.clickOnButton("OK");
-        mAsserter.ok(!mSolo.searchText("Add Search Engine"), "Adding the search engine", "The add serach engine pop-up has been cloesed");
+        mAsserter.ok(!mSolo.searchText("Add Search Engine"), "Adding the search engine", "The add search engine pop-up has been closed");
 
         // Check that the number of search results has increased
-        mAsserter.is(getNumSearchEngines("Robocop Search Engine") ,initialNumSearchEngines + 1 , "The number of search results has increased");
+        mAsserter.is(getNumSearchEngines("Robocop Search Engine"), initialNumSearchEngines + 1 , "The number of search results has increased");
     }
 
     public int getNumSearchEngines(String waitText) {
@@ -96,8 +96,8 @@ public class testAddSearchEngine extends BaseTest {
             }
         }
 
-    // Since the number of Search Engine count was different on every try fail the test
-    mAsserter.is(searchEngineCount,oldSearchEngineCount, "The search engine count could not be established correctly");
-    return searchEngineCount;
+        // Since the number of Search Engine count was different on every try fail the test
+        mAsserter.is(searchEngineCount,oldSearchEngineCount, "The search engine count could not be established correctly");
+        return searchEngineCount;
     }
 }

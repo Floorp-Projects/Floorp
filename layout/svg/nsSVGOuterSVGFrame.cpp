@@ -479,13 +479,45 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     mCallingReflowSVG = false;
   }
 
-  // Make sure we scroll if we're too big:
-  // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-  FinishAndStoreOverflow(&aDesiredSize);
-
   // Set our anonymous kid's offset from our border box:
   anonKid->SetPosition(GetContentRectRelativeToSelf().TopLeft());
+
+  // Including our size in our overflow rects regardless of the value of
+  // 'background', 'border', etc. makes sure that we usually (when we clip to
+  // our content area) don't have to keep changing our overflow rects as our
+  // descendants move about (see perf comment below). Including our size in our
+  // scrollable overflow rect also makes sure that we scroll if we're too big
+  // for our viewport.
+  //
+  // <svg> never allows scrolling to anything outside its mRect (only panning),
+  // so we must always keep our scrollable overflow set to our size.
+  //
+  // With regards to visual overflow, we always clip root-<svg> (see our
+  // BuildDisplayList method) regardless of the value of the 'overflow'
+  // property since that is per-spec, even for the initial 'visible' value. For
+  // that reason there's no point in adding descendant visual overflow to our
+  // own when this frame is for a root-<svg>. That said, there's also a very
+  // good performance reason for us wanting to avoid doing so. If we did, then
+  // the frame's overflow would often change as descendants that are partially
+  // or fully outside its rect moved (think animation on/off screen), and that
+  // would cause us to do a full NS_FRAME_IS_DIRTY reflow and repaint of the
+  // entire document tree each such move (see bug 875175).
+  //
+  // So it's only non-root outer-<svg> that has the visual overflow of its
+  // descendants added to its own. (Note that the default user-agent style
+  // sheet makes 'hidden' the default value for :not(root(svg)), so usually
+  // FinishAndStoreOverflow will still clip this back to the frame's rect.)
+  //
+  // WARNING!! Keep UpdateBounds below in sync with whatever we do for our
+  // overflow rects here! (Again, see bug 875175.)
+  //
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  if (!mIsRootContent) {
+    aDesiredSize.mOverflowAreas.VisualOverflow().UnionRect(
+      aDesiredSize.mOverflowAreas.VisualOverflow(),
+      anonKid->GetVisualOverflowRect() + anonKid->GetPosition());
+  }
+  FinishAndStoreOverflow(&aDesiredSize);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
@@ -507,6 +539,27 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
 
   return rv;
 }
+
+/* virtual */ bool
+nsSVGOuterSVGFrame::UpdateOverflow()
+{
+  // See the comments in Reflow above.
+
+  // WARNING!! Keep this in sync with Reflow above!
+
+  nsRect rect(nsPoint(0, 0), GetSize());
+  nsOverflowAreas overflowAreas(rect, rect);
+
+  if (!mIsRootContent) {
+    nsIFrame *anonKid = GetFirstPrincipalChild();
+    overflowAreas.VisualOverflow().UnionRect(
+      overflowAreas.VisualOverflow(),
+      anonKid->GetVisualOverflowRect() + anonKid->GetPosition());
+  }
+
+  return FinishAndStoreOverflow(overflowAreas, GetSize());
+}
+
 
 //----------------------------------------------------------------------
 // container methods
@@ -712,7 +765,13 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(aBuilder, this);
+  // Per-spec, we always clip root-<svg> even when 'overflow' has its initial
+  // value of 'visible'. See also the "visual overflow" comments in Reflow.
+  DisplayListClipState::AutoSaveRestore autoSR(aBuilder);
+  if (mIsRootContent ||
+      StyleDisplay()->IsScrollableOverflow()) {
+    autoSR.ClipContainingBlockDescendantsToContentBox(aBuilder, this);
+  }
 
   if ((aBuilder->IsForEventDelivery() &&
        NS_SVGDisplayListHitTestingEnabled()) ||

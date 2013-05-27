@@ -40,6 +40,7 @@ CPPSRCS = \
   testGCOutOfMemory.cpp \
   testGetPropertyDefault.cpp \
   testHashTable.cpp \
+  testHashTableInit.cpp \
   testIndexToString.cpp \
   testIntString.cpp \
   testIntTypesABI.cpp \

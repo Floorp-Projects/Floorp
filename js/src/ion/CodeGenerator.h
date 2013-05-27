@@ -268,6 +268,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetPropertyCacheT(LGetPropertyCacheT *ins);
     bool visitGetElementCacheV(LGetElementCacheV *ins);
     bool visitGetElementCacheT(LGetElementCacheT *ins);
+    bool visitSetElementCacheV(LSetElementCacheV *ins);
+    bool visitSetElementCacheT(LSetElementCacheT *ins);
     bool visitBindNameCache(LBindNameCache *ins);
     bool visitCallSetProperty(LInstruction *ins);
     bool visitSetPropertyCacheV(LSetPropertyCacheV *ins);
@@ -279,6 +281,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitParallelGetPropertyIC(OutOfLineUpdateCache *ool, ParallelGetPropertyIC *ic);
     bool visitSetPropertyIC(OutOfLineUpdateCache *ool, SetPropertyIC *ic);
     bool visitGetElementIC(OutOfLineUpdateCache *ool, GetElementIC *ic);
+    bool visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic);
     bool visitBindNameIC(OutOfLineUpdateCache *ool, BindNameIC *ic);
     bool visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic);
     bool visitCallsiteCloneIC(OutOfLineUpdateCache *ool, CallsiteCloneIC *ic);

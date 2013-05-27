@@ -183,7 +183,6 @@ FontInspector.prototype = {
      */
     let extraCSS = "* {padding:0;margin:0}";
     extraCSS += ".theme-dark {color: white}";
-    extraCSS += "p {font-family: '" + name + "';}";
     extraCSS += "p {font-size: 40px;line-height:60px;padding:0 10px;margin:0;}";
     cssCode += extraCSS;
     let src = "data:text/html;charset=utf-8,<!DOCTYPE HTML><head><base></base></head><style></style><p contenteditable>Abc</p>";
@@ -194,6 +193,7 @@ FontInspector.prototype = {
       // nightmare.
       doc.querySelector("base").href = base;
       doc.querySelector("style").textContent = cssCode;
+      doc.querySelector("p").style.fontFamily = name;
       // Forward theme
       doc.documentElement.className = document.documentElement.className;
     }, true);

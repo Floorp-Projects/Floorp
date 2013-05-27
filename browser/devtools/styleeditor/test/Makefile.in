@@ -29,10 +29,8 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_bug_851132_middle_click.js \
                  browser_styleeditor_nostyle.js \
                  head.js \
-                 helpers.js \
                  four.html \
                  head.js \
-                 helpers.js \
                  import.css \
                  import.html \
                  import2.css \

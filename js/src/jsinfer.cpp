@@ -2341,8 +2341,12 @@ JITCodeHasCheck(JSScript *script, jsbytecode *pc, RecompileKind kind)
     if (kind == RECOMPILE_NONE)
         return false;
 
-    if (script->hasAnyIonScript() || script->isIonCompilingOffThread())
+    if (script->hasAnyIonScript() ||
+        script->isIonCompilingOffThread() ||
+        script->isParallelIonCompilingOffThread())
+    {
         return false;
+    }
 
     return true;
 }
@@ -2792,17 +2796,6 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
         switch (co.kind()) {
           case CompilerOutput::Ion:
           case CompilerOutput::ParallelIon:
-# ifdef JS_THREADSAFE
-            /*
-             * If we are inside transitive compilation, which is a worklist
-             * fixpoint algorithm, we need to be re-add invalidated scripts to
-             * the worklist.
-             */
-            if (transitiveCompilationWorklist) {
-                transitiveCompilationWorklist->insert(transitiveCompilationWorklist->begin(),
-                                                      co.script);
-            }
-# endif
             break;
         }
     }
@@ -2913,6 +2906,8 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
+
+    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%d", co->script, co->script->filename(), co->script->lineno);
 
     co->setPendingRecompilation();
 }
@@ -3988,6 +3983,8 @@ TypeObject::print()
             printf(" emulatesUndefined");
         if (hasAnyFlags(OBJECT_FLAG_ITERATED))
             printf(" iterated");
+        if (interpretedFunction)
+            printf(" ifun");
     }
 
     unsigned count = getPropertyCount();

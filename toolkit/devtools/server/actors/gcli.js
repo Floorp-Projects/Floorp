@@ -55,15 +55,17 @@ GcliActor.prototype.execute = function(request) {
                                                    contentWindow.document);
 
   let requisition = new Requisition(environment);
-  let outputPromise = requisition.updateExec(request.typed);
-  let output = util.synchronize(outputPromise);
-
-  return {
-    id: request.id,
-    data: output.data,
-    type: output.type,
-    error: output.error
-  };
+  requisition.updateExec(request.typed).then(output => {
+    return output.promise.then(() => {
+      this.connection.send({
+        from: this.actorID,
+        requestId: request.requestId,
+        data: output.data,
+        type: output.type,
+        error: output.error
+      });
+    });
+  }).then(null, console.error);
 };
 
 GcliActor.prototype.requestTypes = {
