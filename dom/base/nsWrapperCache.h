@@ -179,6 +179,18 @@ public:
     }
   }
 
+  void TraceWrapper(const TraceCallbacks& aCallbacks, void* aClosure)
+  {
+    if (PreservingWrapper()) {
+      JSObject *wrapper = GetWrapperPreserveColor();
+      if (wrapper) {
+        uintptr_t flags = mWrapperPtrBits & kWrapperBitMask;
+        aCallbacks.Trace(&wrapper, "Preserved wrapper", aClosure);
+        mWrapperPtrBits = reinterpret_cast<uintptr_t>(wrapper) | flags;
+      }
+    }
+  }
+
 private:
   JSObject *GetJSObjectFromBits() const
   {
@@ -236,7 +248,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
 // Cycle collector macros for wrapper caches.
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER \
-  nsContentUtils::TraceWrapper(tmp, aCallback, aClosure);
+  tmp->TraceWrapper(aCallbacks, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
   nsContentUtils::ReleaseWrapper(p, tmp);

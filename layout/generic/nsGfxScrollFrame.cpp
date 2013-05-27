@@ -932,6 +932,40 @@ nsGfxScrollFrameInner::GetDesiredScrollbarSizes(nsBoxLayoutState* aState)
   return result;
 }
 
+nscoord
+nsGfxScrollFrameInner::GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState)
+{
+  NS_ASSERTION(aState && aState->GetRenderingContext(),
+               "Must have rendering context in layout state for size "
+               "computations");
+
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
+    // We're using overlay scrollbars, so we need to get the width that
+    // non-disappearing scrollbars would have.
+    nsITheme* theme = aState->PresContext()->GetTheme();
+    if (theme &&
+        theme->ThemeSupportsWidget(aState->PresContext(),
+                                   mVScrollbarBox,
+                                   NS_THEME_SCROLLBAR_NON_DISAPPEARING)) {
+      nsIntSize size;
+      nsRenderingContext* rendContext = aState->GetRenderingContext();
+      if (rendContext) {
+        bool canOverride = true;
+        theme->GetMinimumWidgetSize(rendContext,
+                                    mVScrollbarBox,
+                                    NS_THEME_SCROLLBAR_NON_DISAPPEARING,
+                                    &size,
+                                    &canOverride);
+        if (size.width) {
+          return aState->PresContext()->DevPixelsToAppUnits(size.width);
+        }
+      }
+    }
+  }
+
+  return GetDesiredScrollbarSizes(aState).LeftRight();
+}
+
 nsresult
 nsXULScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {

@@ -7,6 +7,7 @@
 #define nsCycleCollectionParticipant_h__
 
 #include "nsCycleCollectionNoteChild.h"
+#include "jspubtd.h"
 
 #define NS_CYCLECOLLECTIONPARTICIPANT_IID                                      \
 {                                                                              \
@@ -40,7 +41,7 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONISUPPORTS_IID)
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports, 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports,
                               NS_CYCLECOLLECTIONISUPPORTS_IID)
 
 /**
@@ -50,8 +51,43 @@ class nsCycleCollectionParticipant;
 class nsScriptObjectTracer;
 class nsXPCOMCycleCollectionParticipant;
 
-typedef void
-(* TraceCallback)(void *p, const char* name, void *closure);
+/*
+ * A struct defining pure virtual methods which are called when tracing cycle
+ * collection paticipants.  The appropriate method is called depending on the
+ * type of JS GC thing.
+ */
+struct TraceCallbacks
+{
+    virtual void Trace(JS::Value* p, const char* name, void* closure) const = 0;
+    virtual void Trace(jsid* p, const char* name, void* closure) const = 0;
+    virtual void Trace(JSObject** p, const char* name, void* closure) const = 0;
+    virtual void Trace(JSString** p, const char* name, void* closure) const = 0;
+    virtual void Trace(JSScript** p, const char* name, void* closure) const = 0;
+
+    void Trace(JSFlatString** p, const char* name, void* closure) const {
+        Trace(reinterpret_cast<JSString**>(p), name, closure);
+    }
+};
+
+/*
+ * An implementation of TraceCallbacks that calls a single function for all JS
+ * GC thing types encountered.
+ */
+struct TraceCallbackFunc : public TraceCallbacks
+{
+    typedef void (* Func)(void* p, const char* name, void* closure);
+
+    explicit TraceCallbackFunc(Func cb) : mCallback(cb) {}
+
+    virtual void Trace(JS::Value* p, const char* name, void* closure) const MOZ_OVERRIDE;
+    virtual void Trace(jsid* p, const char* name, void* closure) const MOZ_OVERRIDE;
+    virtual void Trace(JSObject** p, const char* name, void* closure) const MOZ_OVERRIDE;
+    virtual void Trace(JSString** p, const char* name, void* closure) const MOZ_OVERRIDE;
+    virtual void Trace(JSScript** p, const char* name, void* closure) const MOZ_OVERRIDE;
+
+  private:
+    Func mCallback;
+};
 
 /**
  * VTables
@@ -100,7 +136,7 @@ typedef nsCycleCollectionParticipantVTableCommon<nsCycleCollectionParticipant>
 /* Additional functions for nsScriptObjectTracer */
 struct nsScriptObjectTracerVTable
 {
-    void (NS_STDCALL *Trace)(void *p, TraceCallback cb, void *closure);
+    void (NS_STDCALL *Trace)(void *p, const TraceCallbacks &cb, void *closure);
 };
 
 /**
@@ -226,7 +262,7 @@ public:
     }
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant, 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
                               NS_CYCLECOLLECTIONPARTICIPANT_IID)
 
 class nsScriptObjectTracer
@@ -243,7 +279,7 @@ public:
     static NS_METHOD RootImpl(void *p);
     static NS_METHOD UnrootImpl(void *p);
 
-    static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb, void *closure);
+    static NS_METHOD_(void) TraceImpl(void *p, const TraceCallbacks &cb, void *closure);
 
     static bool CheckForRightISupports(nsISupports *s);
 };
@@ -458,7 +494,10 @@ T* DowncastCCParticipant(void *p)
   CycleCollectionNoteChild(cb, tmp->_field, #_field);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS                       \
-    that->Trace(p, &nsScriptObjectTracer::NoteJSChild, &cb);
+  {                                                                            \
+  TraceCallbackFunc noteJsChild(&nsScriptObjectTracer::NoteJSChild);           \
+  that->Trace(p, noteJsChild, &cb);                                            \
+  }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                  \
     (void)tmp;                                                                 \
@@ -469,32 +508,28 @@ T* DowncastCCParticipant(void *p)
 // Helpers for implementing nsScriptObjectTracer::Trace
 ///////////////////////////////////////////////////////////////////////////////
 
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)                           \
-  void                                                                         \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraceImpl(void *p,                    \
-                                                   TraceCallback aCallback,    \
-                                                   void *aClosure)             \
-  {                                                                            \
+#define NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)                                 \
+  void                                                                               \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraceImpl(void *p,                          \
+                                                   const TraceCallbacks &aCallbacks, \
+                                                   void *aClosure)                   \
+  {                                                                                  \
     _class *tmp = DowncastCCParticipant<_class >(p);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(_class, _base_class)    \
   NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)                                 \
     nsISupports *s = static_cast<nsISupports*>(p);                             \
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::TraceImpl(s,                   \
-                                                          aCallback,           \
+                                                          aCallbacks,          \
                                                           aClosure);
 
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(_object, _name)             \
-  if (_object)                                                                 \
-    aCallback(_object, _name, aClosure);
-
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(_field)              \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->_field, #_field)
+  if (tmp->_field)                                                             \
+    aCallbacks.Trace(&tmp->_field, #_field, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(_field)           \
   if (JSVAL_IS_TRACEABLE(tmp->_field)) {                                       \
-    void *gcThing = JSVAL_TO_TRACEABLE(tmp->_field);                           \
-    aCallback(gcThing, #_field, aClosure);                                     \
+    aCallbacks.Trace(&tmp->_field, #_field, aClosure);                         \
   }
 
 // NB: The (void)tmp; hack in the TRACE_END macro exists to support
@@ -505,7 +540,7 @@ T* DowncastCCParticipant(void *p)
   }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Helpers for implementing a concrete nsCycleCollectionParticipant 
+// Helpers for implementing a concrete nsCycleCollectionParticipant
 ///////////////////////////////////////////////////////////////////////////////
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)           \
@@ -586,14 +621,14 @@ NOT_INHERITED_CANT_OVERRIDE
 #define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS(_class)                       \
         NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(_class, _class)
 
-#define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _base)  \
-class NS_CYCLE_COLLECTION_INNERCLASS                                           \
- : public nsXPCOMCycleCollectionParticipant                                    \
-{                                                                              \
-  NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                           \
-  static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb, void *closure); \
-  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
-};                                                                             \
+#define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _base)          \
+class NS_CYCLE_COLLECTION_INNERCLASS                                                   \
+ : public nsXPCOMCycleCollectionParticipant                                            \
+{                                                                                      \
+  NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                                   \
+  static NS_METHOD_(void) TraceImpl(void *p, const TraceCallbacks &cb, void *closure); \
+  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
+};                                                                                     \
 NOT_INHERITED_CANT_OVERRIDE
 
 #define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _base)   \
@@ -602,29 +637,29 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
 {                                                                                         \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                                      \
   static const bool isSkippable = true;                                                   \
-  static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb, void *closure);            \
+  static NS_METHOD_(void) TraceImpl(void *p, const TraceCallbacks &cb, void *closure);    \
   static NS_METHOD_(bool) CanSkipImpl(void *p, bool aRemovingAllowed);                    \
   static NS_METHOD_(bool) CanSkipInCCImpl(void *p);                                       \
   static NS_METHOD_(bool) CanSkipThisImpl(void *p);                                       \
-  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                        \
-};                                                                             \
+  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                                  \
+};                                                                                        \
 NOT_INHERITED_CANT_OVERRIDE
 
 #define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(_class)  \
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _class)
 
-#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(_class,      \
-                                                                         _base_class) \
-class NS_CYCLE_COLLECTION_INNERCLASS                                                  \
- : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                                  \
-{                                                                                     \
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                  \
-  static const bool isSkippable = true;                                               \
-  static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb, void *closure);        \
-  static NS_METHOD_(bool) CanSkipImpl(void *p, bool aRemovingAllowed);                \
-  static NS_METHOD_(bool) CanSkipInCCImpl(void *p);                                   \
-  static NS_METHOD_(bool) CanSkipThisImpl(void *p);                                   \
-  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
+#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(_class,       \
+                                                                         _base_class)  \
+class NS_CYCLE_COLLECTION_INNERCLASS                                                   \
+ : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                                   \
+{                                                                                      \
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                   \
+  static const bool isSkippable = true;                                                \
+  static NS_METHOD_(void) TraceImpl(void *p, const TraceCallbacks &cb, void *closure); \
+  static NS_METHOD_(bool) CanSkipImpl(void *p, bool aRemovingAllowed);                 \
+  static NS_METHOD_(bool) CanSkipInCCImpl(void *p);                                    \
+  static NS_METHOD_(bool) CanSkipThisImpl(void *p);                                    \
+  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 };
 
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(_class)  \
@@ -664,14 +699,14 @@ public:                                                                        \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
 };
 
-#define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(_class,         \
-                                                               _base_class)    \
-class NS_CYCLE_COLLECTION_INNERCLASS                                           \
- : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
-{                                                                              \
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)           \
-  static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb, void *closure); \
-  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
+#define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(_class,                 \
+                                                               _base_class)            \
+class NS_CYCLE_COLLECTION_INNERCLASS                                                   \
+ : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                                   \
+{                                                                                      \
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                   \
+  static NS_METHOD_(void) TraceImpl(void *p, const TraceCallbacks &cb, void *closure); \
+  NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 };
 
 /**
@@ -772,7 +807,7 @@ struct Skippable
   {                                                                            \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
     NS_DECL_CYCLE_COLLECTION_NATIVE_UNMARK_IF_PURPLE(_class)                   \
-    static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb,               \
+    static NS_METHOD_(void) TraceImpl(void *p, const TraceCallbacks &cb,       \
                                       void *closure);                          \
     static nsScriptObjectTracer* GetParticipant()                              \
     {                                                                          \
