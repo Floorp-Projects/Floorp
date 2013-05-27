@@ -88,9 +88,8 @@ struct ScopeCoordinate;
  * segment's "current regs", which contains the stack pointer 'sp'. In the
  * interpreter, sp is adjusted as individual values are pushed and popped from
  * the stack and the FrameRegs struct (pointed by the StackSegment) is a local
- * var of js::Interpret. JM JIT code simulates this by lazily updating FrameRegs
- * when calling from JIT code into the VM. Ideally, we'd like to remove all
- * dependence on FrameRegs outside the interpreter.
+ * var of js::Interpret. Ideally, we'd like to remove all dependence on FrameRegs
+ * outside the interpreter.
  *
  * An additional feature (perhaps not for much longer: bug 650361) is that
  * multiple independent "contexts" can interleave (LIFO) on a single contiguous
@@ -104,10 +103,10 @@ struct ScopeCoordinate;
  * to cx2 causes a new segment to be started for cx2's stack on top of cx1's
  * current segment. These two segments are linked from the perspective of
  * StackSpace, since they are adjacent on the thread's stack, but not from the
- * perspective of cx1 and cx2. Thus, each segment has two links: prevInMemory
- * and prevInContext. Each independent stack is encapsulated and managed by
- * the js::ContextStack object stored in JSContext. ContextStack is the primary
- * interface to the rest of the engine for pushing and popping the stack.
+ * perspective of cx1 and cx2. Each independent stack is encapsulated and
+ * managed by the js::ContextStack object stored in JSContext. ContextStack
+ * is the primary interface to the rest of the engine for pushing and popping
+ * the stack.
  */
 
 /*****************************************************************************/
@@ -227,7 +226,7 @@ class AbstractFramePtr
     inline bool prevUpToDate() const;
     inline void setPrevUpToDate() const;
 
-    JSObject *evalPrevScopeChain(JSRuntime *rt) const;
+    JSObject *evalPrevScopeChain(JSContext *cx) const;
 
     inline void *maybeHookData() const;
     inline void setHookData(void *data) const;
@@ -301,12 +300,14 @@ class StackFrame
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
         HAS_PUSHED_SPS_FRAME =  0x10000,  /* SPS was notified of enty */
 
-        /* Ion frame state */
-        RUNNING_IN_ION     =    0x20000,  /* frame is running in Ion */
-        CALLING_INTO_ION   =    0x40000,  /* frame is calling into Ion */
+        /*
+         * If set, we entered one of the JITs and ScriptFrameIter should skip
+         * this frame.
+         */
+        RUNNING_IN_JIT     =    0x20000,
 
         /* Miscellaneous state. */
-        USE_NEW_TYPE       =    0x80000   /* Use new type for constructed |this| object. */
+        USE_NEW_TYPE       =    0x40000   /* Use new type for constructed |this| object. */
     };
 
   private:
@@ -326,10 +327,7 @@ class StackFrame
     ArgumentsObject     *argsObj_;      /* if HAS_ARGS_OBJ, the call's arguments object */
     jsbytecode          *prevpc_;       /* if HAS_PREVPC, pc of previous frame*/
     void                *hookData_;     /* if HAS_HOOK_DATA, closure returned by call hook */
-#ifdef JS_ION
-    ion::BaselineFrame  *prevBaselineFrame_; /* for an eval/debugger frame, the baseline frame
-                                              * to use as prev. */
-#endif
+    AbstractFramePtr    evalInFramePrev_; /* for an eval/debugger frame, the prev frame */
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(StackFrame, rval_) % sizeof(Value) == 0);
@@ -477,18 +475,10 @@ class StackFrame
         return prev_;
     }
 
-#ifdef JS_ION
-    /*
-     * To handle eval-in-frame with a baseline JIT frame, |prev_| points to the
-     * entry frame and prevBaselineFrame_ to the actual BaselineFrame. This is
-     * done so that ScriptFrameIter can skip JIT frames pushed on top of the
-     * baseline frame (these frames should not appear in stack traces).
-     */
-    ion::BaselineFrame *prevBaselineFrame() const {
+    AbstractFramePtr evalInFramePrev() const {
         JS_ASSERT(isEvalFrame());
-        return prevBaselineFrame_;
+        return evalInFramePrev_;
     }
-#endif
 
     inline void resetGeneratorPrev(JSContext *cx);
 
@@ -986,29 +976,15 @@ class StackFrame
   public:
     void mark(JSTracer *trc);
 
-    // Entered IonMonkey from the interpreter.
-    bool runningInIon() const {
-        return !!(flags_ & RUNNING_IN_ION);
+    // Entered Baseline/Ion from the interpreter.
+    bool runningInJit() const {
+        return !!(flags_ & RUNNING_IN_JIT);
     }
-    // Entered IonMonkey from JaegerMonkey.
-    bool callingIntoIon() const {
-        return !!(flags_ & CALLING_INTO_ION);
+    void setRunningInJit() {
+        flags_ |= RUNNING_IN_JIT;
     }
-    // Entered IonMonkey in any way.
-    bool beginsIonActivation() const {
-        return !!(flags_ & (RUNNING_IN_ION | CALLING_INTO_ION));
-    }
-    void setRunningInIon() {
-        flags_ |= RUNNING_IN_ION;
-    }
-    void setCallingIntoIon() {
-        flags_ |= CALLING_INTO_ION;
-    }
-    void clearRunningInIon() {
-        flags_ &= ~RUNNING_IN_ION;
-    }
-    void clearCallingIntoIon() {
-        flags_ &= ~CALLING_INTO_ION;
+    void clearRunningInJit() {
+        flags_ &= ~RUNNING_IN_JIT;
     }
 };
 
@@ -1071,18 +1047,6 @@ class FrameRegs
         sp = newsp;
         fp_ = fp_->prev();
         JS_ASSERT(fp_);
-    }
-
-    /* For FixupArity: */
-    void popPartialFrame(Value *newsp) {
-        sp = newsp;
-        fp_ = fp_->prev();
-        JS_ASSERT(fp_);
-    }
-
-    /* For InternalInterpret: */
-    void restorePartialFrame(Value *newfp) {
-        fp_ = (StackFrame *) newfp;
     }
 
     /* For stubs::CompileFunction, ContextStack: */
@@ -1528,6 +1492,225 @@ struct DefaultHasher<AbstractFramePtr> {
 
 /*****************************************************************************/
 
+class InterpreterActivation;
+
+namespace ion {
+    class JitActivation;
+};
+
+// A JSRuntime's stack consists of a linked list of activations. Every activation
+// contains a number of scripted frames that are either running in the interpreter
+// (InterpreterActivation) or JIT code (JitActivation). The frames inside a single
+// activation are contiguous: whenever C++ calls back into JS, a new activation is
+// pushed.
+//
+// Every activation is tied to a single JSContext and JSCompartment. This means we
+// can construct a given context's stack by skipping activations belonging to other
+// contexts.
+class Activation
+{
+  protected:
+    JSContext *cx_;
+    JSCompartment *compartment_;
+    Activation *prev_;
+
+    // Counter incremented by JS_SaveFrameChain on the top-most activation and
+    // decremented by JS_RestoreFrameChain. If > 0, ScriptFrameIter should stop
+    // iterating when it reaches this activation (if GO_THROUGH_SAVED is not
+    // set).
+    size_t savedFrameChain_;
+
+    enum Kind { Interpreter, Jit };
+    Kind kind_;
+
+    inline Activation(JSContext *cx, Kind kind_);
+    inline ~Activation();
+
+  public:
+    JSContext *cx() const {
+        return cx_;
+    }
+    JSCompartment *compartment() const {
+        return compartment_;
+    }
+    Activation *prev() const {
+        return prev_;
+    }
+
+    bool isInterpreter() const {
+        return kind_ == Interpreter;
+    }
+    bool isJit() const {
+        return kind_ == Jit;
+    }
+
+    InterpreterActivation *asInterpreter() const {
+        JS_ASSERT(isInterpreter());
+        return (InterpreterActivation *)this;
+    }
+    ion::JitActivation *asJit() const {
+        JS_ASSERT(isJit());
+        return (ion::JitActivation *)this;
+    }
+
+    void saveFrameChain() {
+        savedFrameChain_++;
+    }
+    void restoreFrameChain() {
+        JS_ASSERT(savedFrameChain_ > 0);
+        savedFrameChain_--;
+    }
+    bool hasSavedFrameChain() const {
+        return savedFrameChain_ > 0;
+    }
+
+  private:
+    Activation(const Activation &other) MOZ_DELETE;
+    void operator=(const Activation &other) MOZ_DELETE;
+};
+
+class InterpreterFrameIterator;
+
+class InterpreterActivation : public Activation
+{
+    friend class js::InterpreterFrameIterator;
+
+    StackFrame *const entry_; // Entry frame for this activation.
+    StackFrame *current_;     // The most recent frame.
+    FrameRegs &regs_;
+
+  public:
+    inline InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs);
+    inline ~InterpreterActivation();
+
+    void pushFrame(StackFrame *frame) {
+        JS_ASSERT(frame->script()->compartment() == compartment_);
+        current_ = frame;
+    }
+    void popFrame(StackFrame *frame) {
+        JS_ASSERT(current_ == frame);
+        JS_ASSERT(current_ != entry_);
+
+        current_ = frame->prev();
+        JS_ASSERT(current_);
+    }
+    StackFrame *current() const {
+        JS_ASSERT(current_);
+        return current_;
+    }
+};
+
+// Iterates over a runtime's activation list.
+class ActivationIterator
+{
+    uint8_t *jitTop_;
+
+  protected:
+    Activation *activation_;
+
+  public:
+    explicit ActivationIterator(JSRuntime *rt);
+
+    ActivationIterator &operator++();
+
+    Activation *activation() const {
+        return activation_;
+    }
+    uint8_t *jitTop() const {
+        JS_ASSERT(activation_->isJit());
+        return jitTop_;
+    }
+    bool done() const {
+        return activation_ == NULL;
+    }
+};
+
+namespace ion {
+
+// A JitActivation is used for frames running in Baseline or Ion.
+class JitActivation : public Activation
+{
+    uint8_t *prevIonTop_;
+    JSContext *prevIonJSContext_;
+    bool firstFrameIsConstructing_;
+
+  public:
+    JitActivation(JSContext *cx, bool firstFrameIsConstructing);
+    ~JitActivation();
+
+    uint8_t *prevIonTop() const {
+        return prevIonTop_;
+    }
+    JSCompartment *compartment() const {
+        return compartment_;
+    }
+    bool firstFrameIsConstructing() const {
+        return firstFrameIsConstructing_;
+    }
+};
+
+// A filtering of the ActivationIterator to only stop at JitActivations.
+class JitActivationIterator : public ActivationIterator
+{
+    void settle() {
+        while (!done() && !activation_->isJit())
+            ActivationIterator::operator++();
+    }
+
+  public:
+    explicit JitActivationIterator(JSRuntime *rt)
+      : ActivationIterator(rt)
+    {
+        settle();
+    }
+
+    JitActivationIterator &operator++() {
+        ActivationIterator::operator++();
+        settle();
+        return *this;
+    }
+
+    // Returns the bottom and top addresses of the current JitActivation.
+    void jitStackRange(uintptr_t *&min, uintptr_t *&end);
+};
+
+} // namespace ion
+
+// Iterates over the frames of a single InterpreterActivation.
+class InterpreterFrameIterator
+{
+    InterpreterActivation *activation_;
+    StackFrame *fp_;
+    jsbytecode *pc_;
+
+  public:
+    explicit InterpreterFrameIterator(InterpreterActivation *activation)
+      : activation_(activation),
+        fp_(NULL),
+        pc_(NULL)
+    {
+        if (activation) {
+            fp_ = activation->current();
+            pc_ = activation->regs_.pc;
+        }
+    }
+
+    StackFrame *frame() const {
+        JS_ASSERT(!done());
+        return fp_;
+    }
+    jsbytecode *pc() const {
+        JS_ASSERT(!done());
+        return pc_;
+    }
+
+    InterpreterFrameIterator &operator++();
+
+    bool done() const {
+        return fp_ == NULL;
+    }
+};
+
 /*
  * Iterate through the callstack (following fp->prev) of the given context.
  * Each element of said callstack can either be the execution of a script
@@ -1550,7 +1733,8 @@ class ScriptFrameIter
 {
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
-    enum State { DONE, SCRIPTED, ION };
+    enum ContextOption { CURRENT_CONTEXT, ALL_CONTEXTS };
+    enum State { DONE, SCRIPTED, JIT };
 
     /*
      * Unlike ScriptFrameIter itself, ScriptFrameIter::Data can be allocated on
@@ -1561,21 +1745,21 @@ class ScriptFrameIter
         PerThreadData *perThread_;
         JSContext    *cx_;
         SavedOption  savedOption_;
+        ContextOption contextOption_;
 
         State        state_;
 
-        StackFrame   *fp_;
-
-        StackSegment *seg_;
         jsbytecode   *pc_;
 
+        InterpreterFrameIterator interpFrames_;
+        ActivationIterator activations_;
+
 #ifdef JS_ION
-        ion::IonActivationIterator ionActivations_;
         ion::IonFrameIterator ionFrames_;
 #endif
 
-        Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption);
-        Data(JSContext *cx, JSRuntime *rt, StackSegment *seg);
+        Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption,
+             ContextOption contextOption);
         Data(const Data &other);
     };
 
@@ -1587,20 +1771,17 @@ class ScriptFrameIter
     ion::InlineFrameIterator ionInlineFrames_;
 #endif
 
-    void poisonRegs();
-    void popFrame();
+    void popActivation();
+    void popInterpreterFrame();
 #ifdef JS_ION
-    void nextIonFrame();
-    void popIonFrame();
-    void popBaselineDebuggerFrame();
+    void nextJitFrame();
+    void popJitFrame();
 #endif
-    void settleOnNewSegment();
-    void settleOnNewState();
-    void startOnSegment(StackSegment *seg);
+    void settleOnActivation();
 
   public:
     ScriptFrameIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
-    ScriptFrameIter(JSRuntime *rt, StackSegment &seg);
+    ScriptFrameIter(JSContext *cx, ContextOption, SavedOption);
     ScriptFrameIter(const ScriptFrameIter &iter);
     ScriptFrameIter(const Data &data);
 
@@ -1609,9 +1790,6 @@ class ScriptFrameIter
 
     Data *copyData() const;
 
-    bool operator==(const ScriptFrameIter &rhs) const;
-    bool operator!=(const ScriptFrameIter &rhs) const { return !(*this == rhs); }
-
     JSCompartment *compartment() const;
 
     JSScript *script() const {
@@ -1619,7 +1797,7 @@ class ScriptFrameIter
         if (data_.state_ == SCRIPTED)
             return interpFrame()->script();
 #ifdef JS_ION
-        JS_ASSERT(data_.state_ == ION);
+        JS_ASSERT(data_.state_ == JIT);
         if (data_.ionFrames_.isOptimizedJS())
             return ionInlineFrames_.script();
         return data_.ionFrames_.script();
@@ -1627,22 +1805,22 @@ class ScriptFrameIter
         return NULL;
 #endif
     }
-    bool isIon() const {
+    bool isJit() const {
         JS_ASSERT(!done());
-        return data_.state_ == ION;
+        return data_.state_ == JIT;
     }
 
-    bool isIonOptimizedJS() const {
+    bool isIon() const {
 #ifdef JS_ION
-        return isIon() && data_.ionFrames_.isOptimizedJS();
+        return isJit() && data_.ionFrames_.isOptimizedJS();
 #else
         return false;
 #endif
     }
 
-    bool isIonBaselineJS() const {
+    bool isBaseline() const {
 #ifdef JS_ION
-        return isIon() && data_.ionFrames_.isBaselineJS();
+        return isJit() && data_.ionFrames_.isBaselineJS();
 #else
         return false;
 #endif
@@ -1665,7 +1843,12 @@ class ScriptFrameIter
      * contents of the frame are ignored by Ion code (and GC) and thus
      * immediately become garbage and must not be touched directly.
      */
-    StackFrame *interpFrame() const { JS_ASSERT(data_.state_ == SCRIPTED); return data_.fp_; }
+    StackFrame *interpFrame() const {
+        JS_ASSERT(data_.state_ == SCRIPTED);
+        return data_.interpFrames_.frame();
+    }
+
+    Activation *activation() const { return data_.activations_.activation(); }
 
     jsbytecode *pc() const { JS_ASSERT(!done()); return data_.pc_; }
     void        updatePcQuadratic();
@@ -1710,7 +1893,7 @@ class NonBuiltinScriptFrameIter : public ScriptFrameIter
 
   public:
     NonBuiltinScriptFrameIter(JSContext *cx, ScriptFrameIter::SavedOption opt = ScriptFrameIter::STOP_AT_SAVED)
-        : ScriptFrameIter(cx, opt) { settle(); }
+      : ScriptFrameIter(cx, opt) { settle(); }
 
     NonBuiltinScriptFrameIter(const ScriptFrameIter::Data &data)
       : ScriptFrameIter(data)
@@ -1719,50 +1902,16 @@ class NonBuiltinScriptFrameIter : public ScriptFrameIter
     NonBuiltinScriptFrameIter &operator++() { ScriptFrameIter::operator++(); settle(); return *this; }
 };
 
-/*****************************************************************************/
-
 /*
  * Blindly iterate over all frames in the current thread's stack. These frames
- * can be from different contexts and compartments, so beware. Iterates over
- * Ion frames, but does not handle inlined frames.
+ * can be from different contexts and compartments, so beware.
  */
-class AllFramesIter
+class AllFramesIter : public ScriptFrameIter
 {
   public:
-    AllFramesIter(JSRuntime *rt);
-
-    bool done() const { return state_ == DONE; }
-    AllFramesIter& operator++();
-
-    bool isIon() const { return state_ == ION; }
-    bool isIonOptimizedJS() const {
-#ifdef JS_ION
-        return isIon() && ionFrames_.isOptimizedJS();
-#else
-        return false;
-#endif
-    }
-    StackFrame *interpFrame() const { JS_ASSERT(state_ == SCRIPTED); return fp_; }
-    StackSegment *seg() const { return seg_; }
-
-    AbstractFramePtr abstractFramePtr() const;
-
-  private:
-    enum State { DONE, SCRIPTED, ION };
-
-#ifdef JS_ION
-    void popIonFrame();
-#endif
-    void settleOnNewState();
-
-    StackSegment *seg_;
-    StackFrame *fp_;
-    State state_;
-
-#ifdef JS_ION
-    ion::IonActivationIterator ionActivations_;
-    ion::IonFrameIterator ionFrames_;
-#endif
+    AllFramesIter(JSContext *cx)
+      : ScriptFrameIter(cx, ScriptFrameIter::ALL_CONTEXTS, ScriptFrameIter::GO_THROUGH_SAVED)
+    {}
 };
 
 }  /* namespace js */
