@@ -43,29 +43,24 @@ function search_observer(aSubject, aTopic, aData) {
   let engine2 = search.getEngineByName("A second test engine");
 
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine.name, "Test search engine");
-  do_check_eq(search.defaultEngine.searchForm, "http://www.google.com/");
+  do_check_eq(search.defaultEngine, engine1);
   
   // Tests search defaultEngine when it changes
   search.defaultEngine = engine2
-  do_check_eq(search.defaultEngine.name, "A second test engine");
-  do_check_eq(search.defaultEngine.searchForm, "https://duckduckgo.com");
+  do_check_eq(search.defaultEngine, engine2);
 
   // Test search defaultEngine again when we change back
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine.name, "Test search engine");
-  do_check_eq(search.defaultEngine.searchForm, "http://www.google.com/");
+  do_check_eq(search.defaultEngine, engine1);
 
   // Test search defaultEngine when the current default is hidden
-  search.moveEngine(engine2, 0)
+  search.moveEngine(engine2, 0);
   engine1.hidden = true;
-  do_check_eq(search.defaultEngine.name, "A second test engine");
-  do_check_eq(search.defaultEngine.searchForm, "https://duckduckgo.com");
+  do_check_eq(search.defaultEngine, engine2);
   
   // Test search defaultEngine when it is set to a hidden engine
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine.name, "A second test engine");
-  do_check_eq(search.defaultEngine.searchForm, "https://duckduckgo.com");
+  do_check_eq(search.defaultEngine, engine2);
 
   do_test_finished();
 }
