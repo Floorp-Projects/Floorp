@@ -227,9 +227,22 @@ public:
       CreateDrawTargetForFBO(unsigned int aFBOID, mozilla::gl::GLContext* aGLContext,
                              const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
+    /**
+     * Returns true if we will render content using Azure using a gfxPlatform
+     * provided DrawTarget.
+     */
     bool SupportsAzureContent() {
       return GetContentBackend() != mozilla::gfx::BACKEND_NONE;
     }
+
+    /**
+     * Returns true if we should use Azure to render content with aTarget. For
+     * example, it is possible that we are using Direct2D for rendering and thus
+     * using Azure. But we want to render to a CairoDrawTarget, in which case
+     * SupportsAzureContent will return true but SupportsAzureContentForDrawTarget
+     * will return false.
+     */
+    bool SupportsAzureContentForDrawTarget(mozilla::gfx::DrawTarget* aTarget);
 
     virtual bool UseAcceleratedSkiaCanvas();
 
@@ -628,6 +641,8 @@ private:
     mozilla::gfx::BackendType mFallbackCanvasBackend;
     // The backend to use for content
     mozilla::gfx::BackendType mContentBackend;
+    // Bitmask of backend types we can use to render content
+    uint32_t mContentBackendBitmask;
 
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     bool mWorkAroundDriverBugs;
