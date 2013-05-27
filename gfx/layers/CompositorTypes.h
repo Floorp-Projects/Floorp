@@ -36,6 +36,9 @@ const TextureFlags NewTile            = 0x10;
 const TextureFlags HostRelease        = 0x20;
 // The texture is part of a component-alpha pair
 const TextureFlags ComponentAlpha     = 0x40;
+// The shared resources are owned by client
+const TextureFlags OwnByClient        = 0x80;
+
 
 /**
  * The kind of memory held by the texture client/host pair. This will

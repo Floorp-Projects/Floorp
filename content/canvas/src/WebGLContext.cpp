@@ -16,6 +16,7 @@
 #include "nsIXPConnect.h"
 #include "nsError.h"
 #include "nsIGfxInfo.h"
+#include "nsIWidget.h"
 
 #include "nsIPropertyBag.h"
 #include "nsIVariant.h"
@@ -48,6 +49,10 @@
 #include "mozilla/ProcessPriorityManager.h"
 
 #include "Layers.h"
+
+#ifdef MOZ_WIDGET_GONK
+#include "mozilla/layers/ShadowLayers.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -462,6 +467,20 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     caps.bpp16 = prefer16bit;
 
     caps.preserve = mOptions.preserveDrawingBuffer;
+
+#ifdef MOZ_WIDGET_GONK
+    nsIWidget *docWidget = nsContentUtils::WidgetForDocument(mCanvasElement->OwnerDoc());
+    if (docWidget) {
+        layers::LayerManager *layerManager = docWidget->GetLayerManager();
+        if (layerManager) {
+            // XXX we really want "AsSurfaceAllocator" here for generality
+            layers::ShadowLayerForwarder *forwarder = layerManager->AsShadowForwarder();
+            if (forwarder) {
+                caps.surfaceAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
+            }
+        }
+    }
+#endif
 
     bool forceMSAA =
         Preferences::GetBool("webgl.msaa-force", false);
