@@ -79,7 +79,12 @@ this.Downloads = {
 
       download.source = new DownloadSource();
       download.source.uri = aProperties.source.uri;
-      download.source.isPrivate = aProperties.source.isPrivate;
+      if ("isPrivate" in aProperties.source) {
+        download.source.isPrivate = aProperties.source.isPrivate;
+      }
+      if ("referrer" in aProperties.source) {
+        download.source.referrer = aProperties.source.referrer;
+      }
       download.target = new DownloadTarget();
       download.target.file = aProperties.target.file;
 
