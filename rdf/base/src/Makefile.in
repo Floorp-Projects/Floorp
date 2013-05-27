@@ -13,24 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= rdfbase_s
 LIBXUL_LIBRARY  = 1
 
-
-CPPSRCS		= \
-		rdfTriplesSerializer.cpp \
-		nsCompositeDataSource.cpp \
-		nsContainerEnumerator.cpp \
-		nsDefaultResourceFactory.cpp \
-		nsInMemoryDataSource.cpp \
-		nsNameSpaceMap.cpp \
-		nsRDFContentSink.cpp \
-		nsRDFContainer.cpp \
-		nsRDFContainerUtils.cpp \
-		nsRDFService.cpp \
-		nsRDFXMLDataSource.cpp \
-		nsRDFXMLParser.cpp \
-		nsRDFXMLSerializer.cpp \
-		rdfutil.cpp \
-		$(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

@@ -11,55 +11,8 @@ EXPORT_LIBRARY = 1
 
 DEFINES += -D_IMPL_NS_GFX
 
-CPPSRCS = yuv_convert.cpp \
-          yuv_row_c.cpp \
-          yuv_row_table.cpp \
-          ycbcr_to_rgb565.cpp \
-          $(NULL)
-
-# Are we targeting x86 or x64?  If so, build yuv_convert_mmx.cpp and
-# yuv_convert_sse2.cpp.
-ifneq (,$(INTEL_ARCHITECTURE))
-CPPSRCS += yuv_convert_sse2.cpp
-
-# MSVC doesn't support MMX when targeting AMD64.
-ifdef _MSC_VER
-ifneq ($(OS_TEST),x86_64)
-CPPSRCS += yuv_convert_mmx.cpp
-endif
-else
-CPPSRCS += yuv_convert_mmx.cpp
-endif
-endif
-
-ifdef _MSC_VER
-ifeq ($(OS_TEST),x86_64)
-ifeq (1400,$(_MSC_VER))
-# VC8 doesn't support some SSE2 built-in functions
-CPPSRCS += yuv_row_win.cpp \
-           $(NULL)
-else
-CPPSRCS += yuv_row_win64.cpp \
-           $(NULL)
-endif
-else
-CPPSRCS += yuv_row_win.cpp \
-           $(NULL)
-endif
-else
-ifneq (,$(filter Linux SunOS Darwin DragonFly FreeBSD NetBSD OpenBSD, $(OS_ARCH)))
-CPPSRCS += yuv_row_posix.cpp \
-           $(NULL)
-else
-CPPSRCS += yuv_row_other.cpp \
-           $(NULL)
-endif # posix
-endif # windows
-
 ifeq (arm,$(findstring arm,$(OS_TEST)))
 ifdef HAVE_ARM_NEON
-CPPSRCS += yuv_convert_arm.cpp \
-           $(NULL)
 ASFILES = yuv_row_arm.$(ASM_SUFFIX) \
           $(NULL)
 endif

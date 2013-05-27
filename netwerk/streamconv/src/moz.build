@@ -6,3 +6,12 @@
 
 MODULE = 'necko'
 
+CPP_SOURCES += [
+    'nsStreamConverterService.cpp',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    if CONFIG['OS_TEST'] != 'x86_64':
+        CPP_SOURCES += [
+            'nsAppleFileDecoder.cpp',
+        ]

@@ -68,7 +68,8 @@ public:
       return false;
     }
 
-    JSContext* cx = sc->GetNativeContext();
+    AutoPushJSContext cx(sc->GetNativeContext());
+
     JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
     rv = nsContentUtils::WrapNative(cx, global, adapter, aValue);
     if (NS_FAILED(rv)) {
@@ -86,7 +87,7 @@ public:
     BluetoothReplyRunnable::ReleaseMembers();
     mManagerPtr = nullptr;
   }
-  
+
 private:
   nsRefPtr<BluetoothManager> mManagerPtr;
 };

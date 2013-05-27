@@ -47,8 +47,41 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla.plugins += [
         'PluginSurfaceParent.h',
     ]
+    CPP_SOURCES += [
+        'COMMessageFilter.cpp',
+        'PluginSurfaceParent.cpp',
+        'MiniShmParent.cpp',
+        'PluginHangUIParent.cpp',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.plugins += [
         'PluginInterposeOSX.h',
     ]
+
+if CONFIG['MOZ_ENABLE_QT']:
+    CPP_SOURCES += [
+        'moc_NestedLoopTimer.cpp',
+        'NestedLoopTimer.cpp',
+    ]
+
+CPP_SOURCES += [
+    'BrowserStreamChild.cpp',
+    'BrowserStreamParent.cpp',
+    'ChildAsyncCall.cpp',
+    'ChildTimer.cpp',
+    'PluginIdentifierChild.cpp',
+    'PluginIdentifierParent.cpp',
+    'PluginInstanceChild.cpp',
+    'PluginInstanceParent.cpp',
+    'PluginMessageUtils.cpp',
+    'PluginModuleChild.cpp',
+    'PluginModuleParent.cpp',
+    'PluginProcessChild.cpp',
+    'PluginProcessParent.cpp',
+    'PluginScriptableObjectChild.cpp',
+    'PluginScriptableObjectParent.cpp',
+    'PluginStreamChild.cpp',
+    'PluginStreamParent.cpp',
+]
+

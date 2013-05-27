@@ -934,7 +934,7 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
 JS_FRIEND_API(void)
 JS::IncrementalValueBarrier(const Value &v)
 {
-    HeapValue::writeBarrierPre(v);
+    js::HeapValue::writeBarrierPre(v);
 }
 
 JS_FRIEND_API(void)

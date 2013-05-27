@@ -30,3 +30,64 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'MacIOSurface.h',
         'QuartzSupport.h',
     ]
+    CPP_SOURCES += [
+        'SourceSurfaceCG.cpp',
+        'DrawTargetCG.cpp',
+        'PathCG.cpp',
+        'ScaledFontMac.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    CPP_SOURCES += [
+        'DrawTargetD2D.cpp',
+        'SourceSurfaceD2D.cpp',
+        'SourceSurfaceD2DTarget.cpp',
+        'PathD2D.cpp',
+        'ScaledFontDWrite.cpp',
+    ]
+    if CONFIG['MOZ_ENABLE_SKIA']:
+        CPP_SOURCES += [
+            'ScaledFontWin.cpp',
+        ]
+
+if CONFIG['MOZ_ENABLE_SKIA']:
+    CPP_SOURCES += [
+        'SourceSurfaceSkia.cpp',
+        'DrawTargetSkia.cpp',
+        'PathSkia.cpp',
+        'convolver.cpp',
+        'image_operations.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
+    CPP_SOURCES += [
+        'ScaledFontFreetype.cpp',
+    ]
+
+# Are we targeting x86 or x64?  If so, build SSE2 files.
+if CONFIG['INTEL_ARCHITECTURE']:
+    # VC2005 doesn't support _mm_castsi128_ps, so SSE2 is turned off
+    if CONFIG['_MSC_VER'] != '1400':
+        CPP_SOURCES += [
+            'ImageScalingSSE2.cpp',
+            'BlurSSE2.cpp',
+        ]
+
+CPP_SOURCES += [
+    'Blur.cpp',
+    'DrawEventRecorder.cpp',
+    'DrawTargetCairo.cpp',
+    'DrawTargetDual.cpp',
+    'DrawTargetRecording.cpp',
+    'Factory.cpp',
+    'ImageScaling.cpp',
+    'Matrix.cpp',
+    'PathCairo.cpp',
+    'PathRecording.cpp',
+    'RecordedEvent.cpp',
+    'Rect.cpp',
+    'Scale.cpp',
+    'ScaledFontBase.cpp',
+    'SourceSurfaceCairo.cpp',
+    'SourceSurfaceRawData.cpp',
+]
+

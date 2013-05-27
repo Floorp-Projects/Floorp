@@ -15,16 +15,11 @@ FORCE_SHARED_LIB= 1
 
 DEFINES 	+= -DMOZ_NO_MOZALLOC
 
-CPPSRCS		= DMD.cpp
-
 VPATH 		+= $(topsrcdir)/xpcom/base
-CPPSRCS 	+= nsStackWalk.cpp
-
 VPATH 		+= $(topsrcdir)/nsprpub/lib/libc/src
 CSRCS 		+= strcpy.c
 
 VPATH 		+= $(topsrcdir)/mfbt
-CPPSRCS 	+= HashFunctions.cpp
 
 # Disable mozglue.
 WRAP_LDFLAGS 	=

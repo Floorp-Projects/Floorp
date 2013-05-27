@@ -12,3 +12,18 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessible.h',
 ]
 
+CPP_SOURCES += [
+    'ARIAGridAccessible.cpp',
+    'Accessible.cpp',
+    'ApplicationAccessible.cpp',
+    'BaseAccessibles.cpp',
+    'DocAccessible.cpp',
+    'FormControlAccessible.cpp',
+    'HyperTextAccessible.cpp',
+    'ImageAccessible.cpp',
+    'OuterDocAccessible.cpp',
+    'RootAccessible.cpp',
+    'TableCellAccessible.cpp',
+    'TextLeafAccessible.cpp',
+]
+

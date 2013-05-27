@@ -28,3 +28,10 @@ EXPORTS.mozilla += [
     'ModuleUtils.h',
 ]
 
+CPP_SOURCES += [
+    'ManifestParser.cpp',
+    'nsCategoryManager.cpp',
+    'nsComponentManager.cpp',
+    'nsNativeComponentLoader.cpp',
+]
+

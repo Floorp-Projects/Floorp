@@ -26,3 +26,7 @@ EXPORTS.mozilla.dom += [
     'Voicemail.h',
 ]
 
+CPP_SOURCES += [
+    'Voicemail.cpp',
+]
+

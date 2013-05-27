@@ -20,3 +20,7 @@ EXPORTS += [
     'nsMimeTypes.h',
 ]
 
+CPP_SOURCES += [
+    'nsMIMEHeaderParamImpl.cpp',
+]
+

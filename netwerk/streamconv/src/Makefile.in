@@ -21,18 +21,6 @@ FAIL_ON_WARNINGS := 1
 endif
 endif
 
-CPPSRCS		= \
-		nsStreamConverterService.cpp \
-		$(NULL)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-ifneq (x86_64,$(OS_TEST))
-CPPSRCS += \
-		nsAppleFileDecoder.cpp \
-		$(NULL)
-endif
-endif
-
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1

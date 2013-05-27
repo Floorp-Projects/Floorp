@@ -6,3 +6,7 @@
 
 MODULE = 'androidproxy'
 
+CPP_SOURCES += [
+    'nsAndroidSystemProxySettings.cpp',
+]
+

@@ -12,3 +12,10 @@ EXPORTS += [
     'GStreamerReader.h',
 ]
 
+CPP_SOURCES += [
+    'GStreamerDecoder.cpp',
+    'GStreamerFormatHelper.cpp',
+    'GStreamerReader.cpp',
+    'GStreamerMozVideoBuffer.cpp',
+]
+

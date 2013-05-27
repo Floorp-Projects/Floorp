@@ -6,3 +6,10 @@
 
 MODULE = 'handler'
 
+CPP_SOURCES += [
+    'breakpad_nlist_64.cc',
+    'dynamic_images.cc',
+    'exception_handler.cc',
+    'minidump_generator.cc',
+]
+

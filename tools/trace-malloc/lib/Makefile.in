@@ -24,14 +24,6 @@ CSRCS		= \
 		nsTraceMalloc.c \
 		$(NULL)
 
-CPPSRCS		= \
-		nsTypeInfo.cpp \
-		$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp
-endif
-
 DEFINES		+= -DMOZ_NO_MOZALLOC
 
 ifdef WRAP_SYSTEM_INCLUDES
