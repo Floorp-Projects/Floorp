@@ -2393,6 +2393,33 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache *ins)
 }
 
 bool
+LIRGenerator::visitSetElementCache(MSetElementCache *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+    JS_ASSERT(ins->index()->type() == MIRType_Value);
+
+    LInstruction *lir;
+    if (ins->value()->type() == MIRType_Value) {
+        lir = new LSetElementCacheV(useRegister(ins->object()), temp());
+
+        if (!useBox(lir, LSetElementCacheV::Index, ins->index()))
+            return false;
+        if (!useBox(lir, LSetElementCacheV::Value, ins->value()))
+            return false;
+    } else {
+        lir = new LSetElementCacheT(
+            useRegister(ins->object()),
+            useRegisterOrConstant(ins->value()),
+            temp());
+
+        if (!useBox(lir, LSetElementCacheT::Index, ins->index()))
+            return false;
+    }
+
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitCallSetElement(MCallSetElement *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);

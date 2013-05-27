@@ -125,6 +125,26 @@
 // We assume that you do not do unbounded work without invoking
 // |check()|.
 //
+// Transitive compilation:
+//
+// One of the challenges for parallel compilation is that we
+// (currently) have to abort when we encounter an uncompiled script.
+// Therefore, we try to compile everything that might be needed
+// beforehand. The exact strategy is described in `ParallelDo::apply()`
+// in ForkJoin.cpp, but at the highest level the idea is:
+//
+// 1. We maintain a flag on every script telling us if that script and
+//    its transitive callees are believed to be compiled. If that flag
+//    is set, we can skip the initial compilation.
+// 2. Otherwise, we maintain a worklist that begins with the main
+//    script. We compile it and then examine the generated parallel IonScript,
+//    which will have a list of callees. We enqueue those. Some of these
+//    compilations may take place off the main thread, in which case
+//    we will run warmup iterations while we wait for them to complete.
+// 3. If the warmup iterations finish all the work, we're done.
+// 4. If compilations fail, we fallback to sequential.
+// 5. Otherwise, we will try running in parallel once we're all done.
+//
 // Bailout tracing and recording:
 //
 // When a bailout occurs, we record a bit of state so that we can
@@ -399,6 +419,8 @@ InParallelSection()
 #endif
 }
 
+bool ParallelTestsShouldPass(JSContext *cx);
+
 ///////////////////////////////////////////////////////////////////////////
 // Debug Spew
 
@@ -410,6 +432,9 @@ enum ExecutionStatus {
 
     // Parallel exec failed and so we fell back to sequential
     ExecutionSequential,
+
+    // We completed the work in seq mode before parallel compilation completed
+    ExecutionWarmup,
 
     // Parallel exec was successful after some number of bailouts
     ExecutionParallel

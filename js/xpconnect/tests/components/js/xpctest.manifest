@@ -4,6 +4,9 @@ contract @mozilla.org/js/xpc/test/js/ObjectReadWrite;1 {8ff41d9c-66e9-4453-924a-
 component {916c4247-253d-4ed0-a425-adfedf53ecc8} xpctest_attributes.js
 contract @mozilla.org/js/xpc/test/js/ObjectReadOnly;1 {916c4247-253d-4ed0-a425-adfedf53ecc8}
 
+component {2df46559-da21-49bf-b863-0d7b7bbcbc73} xpctest_bug809674.js
+contract @mozilla.org/js/xpc/test/js/Bug809674;1 {2df46559-da21-49bf-b863-0d7b7bbcbc73}
+
 component {e3b86f4e-49c0-487c-a2b0-3a986720a044} xpctest_params.js
 contract @mozilla.org/js/xpc/test/js/Params;1 {e3b86f4e-49c0-487c-a2b0-3a986720a044}
 

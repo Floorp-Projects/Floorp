@@ -176,9 +176,10 @@ struct IonScript
     // Number of times this script bailed out without invalidation.
     uint32_t numBailouts_;
 
-    // Flag set when we bailed out in parallel execution and should ensure its
-    // call targets are compiled.
-    bool hasInvalidatedCallTarget_;
+    // Flag set when it is likely that one of our (transitive) call
+    // targets is not compiled.  Used in ForkJoin.cpp to decide when
+    // we should add call targets to the worklist.
+    bool hasUncompiledCallTarget_;
 
     // Flag set if IonScript was compiled with SPS profiling enabled.
     bool hasSPSInstrumentation_;
@@ -376,14 +377,14 @@ struct IonScript
     bool bailoutExpected() const {
         return numBailouts_ > 0;
     }
-    void setHasInvalidatedCallTarget() {
-        hasInvalidatedCallTarget_ = true;
+    void setHasUncompiledCallTarget() {
+        hasUncompiledCallTarget_ = true;
     }
-    void clearHasInvalidatedCallTarget() {
-        hasInvalidatedCallTarget_ = false;
+    void clearHasUncompiledCallTarget() {
+        hasUncompiledCallTarget_ = false;
     }
-    bool hasInvalidatedCallTarget() const {
-        return hasInvalidatedCallTarget_;
+    bool hasUncompiledCallTarget() const {
+        return hasUncompiledCallTarget_;
     }
     void setHasSPSInstrumentation() {
         hasSPSInstrumentation_ = true;

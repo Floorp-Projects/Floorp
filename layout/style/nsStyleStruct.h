@@ -2202,7 +2202,7 @@ struct nsStyleSVG {
   nsChangeHint CalcDifference(const nsStyleSVG& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateEffects,
-                                         nsChangeHint_AllReflowHints),
+             NS_CombineHint(nsChangeHint_NeedReflow, nsChangeHint_NeedDirtyReflow)), // XXX remove nsChangeHint_NeedDirtyReflow: bug 876085
                                          nsChangeHint_RepaintFrame);
   }
 

@@ -519,9 +519,6 @@ public:
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
 
-  NS_IMETHOD BeginSecureKeyboardInput();
-  NS_IMETHOD EndSecureKeyboardInput();
-
   void              HidePlugin();
   void              UpdatePluginPort();
 

@@ -51,7 +51,6 @@ _BROWSER_FILES = \
 		browser_responsive_cmd.js \
 		browser_responsivecomputedview.js \
 		head.js \
-		helpers.js \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)

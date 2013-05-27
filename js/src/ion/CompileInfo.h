@@ -53,8 +53,9 @@ class CompileInfo
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
     }
 
-    CompileInfo(unsigned nlocals)
-      : script_(NULL), fun_(NULL), osrPc_(NULL), constructing_(false)
+    CompileInfo(unsigned nlocals, ExecutionMode executionMode)
+      : script_(NULL), fun_(NULL), osrPc_(NULL), constructing_(false),
+        executionMode_(executionMode)
     {
         nimplicit_ = 0;
         nargs_ = 0;

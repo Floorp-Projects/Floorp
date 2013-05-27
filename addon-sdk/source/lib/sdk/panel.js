@@ -19,7 +19,8 @@ const { isPrivateBrowsingSupported } = require('./self');
 const { isWindowPBSupported } = require('./private-browsing/utils');
 const { Class } = require("./core/heritage");
 const { merge } = require("./util/object");
-const { WorkerHost, Worker, detach, attach } = require("./worker/utils");
+const { WorkerHost, Worker, detach, attach,
+        requiresAddonGlobal } = require("./worker/utils");
 const { Disposable } = require("./core/disposable");
 const { contract: loaderContract } = require("./content/loader");
 const { contract } = require("./util/contract");
@@ -31,24 +32,6 @@ const systemEvents = require("./system/events");
 const { filter, pipe } = require("./event/utils");
 const { getNodeView, getActiveView } = require("./view/core");
 const { isNil, isObject } = require("./lang/type");
-
-let isArray = Array.isArray;
-let assetsURI = require("./self").data.url();
-
-function isAddonContent({ contentURL }) {
-  return typeof(contentURL) === "string" && contentURL.indexOf(assetsURI) === 0;
-}
-
-function hasContentScript({ contentScript, contentScriptFile }) {
-  return (isArray(contentScript) ? contentScript.length > 0 :
-         !!contentScript) ||
-         (isArray(contentScriptFile) ? contentScriptFile.length > 0 :
-         !!contentScriptFile);
-}
-
-function requiresAddonGlobal(model) {
-  return isAddonContent(model) && !hasContentScript(model);
-}
 
 function getAttachEventType(model) {
   let when = model.contentScriptWhen;

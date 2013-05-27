@@ -621,8 +621,13 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
             if (replacer->isArray() && !replacer->isIndexed())
                 len = Min(len, replacer->getDenseInitializedLength());
 
+            // Cap the initial size to a moderately small value.  This avoids
+            // ridiculous over-allocation if an array with bogusly-huge length
+            // is passed in.  If we end up having to add elements past this
+            // size, the set will naturally resize to accommodate them.
+            const uint32_t MaxInitialSize = 1024;
             HashSet<jsid, JsidHasher> idSet(cx);
-            if (!idSet.init(len))
+            if (!idSet.init(Min(len, MaxInitialSize)))
                 return false;
 
             /* Step 4b(iii). */
@@ -631,6 +636,9 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
             /* Step 4b(iv). */
             RootedValue v(cx);
             for (; i < len; i++) {
+                if (!JS_CHECK_OPERATION_LIMIT(cx))
+                    return false;
+
                 /* Step 4b(iv)(2). */
                 if (!JSObject::getElement(cx, replacer, replacer, i, &v))
                     return false;

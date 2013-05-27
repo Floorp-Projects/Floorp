@@ -9,9 +9,8 @@ function test() {
   }
   var x = new ParallelArray(range(0, 2048));
 
-  // the disqualification occurs because all parallel executions throw
-  // exceptions:
-  x.map(inc, {mode: "par", expect: "disqualified"});
+  assertParallelExecWillBail(
+    m => x.map(inc, m));
 }
 
 if (getBuildConfiguration().parallelJS) test();

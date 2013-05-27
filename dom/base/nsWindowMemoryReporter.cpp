@@ -56,7 +56,7 @@ static already_AddRefed<nsIURI>
 GetWindowURI(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(aWindow);
-  NS_ENSURE_TRUE(pWindow, NULL);
+  NS_ENSURE_TRUE(pWindow, nullptr);
 
   nsCOMPtr<nsIDocument> doc = pWindow->GetExtantDoc();
   nsCOMPtr<nsIURI> uri;
@@ -68,7 +68,7 @@ GetWindowURI(nsIDOMWindow *aWindow)
   if (!uri) {
     nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrincipal =
       do_QueryInterface(aWindow);
-    NS_ENSURE_TRUE(scriptObjPrincipal, NULL);
+    NS_ENSURE_TRUE(scriptObjPrincipal, nullptr);
 
     // GetPrincipal() will print a warning if the window does not have an outer
     // window, so check here for an outer window first.  This code is

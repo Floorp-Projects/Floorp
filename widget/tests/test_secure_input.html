@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for secure input mode</title>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<p>
+  <input id="input_text" type="text"><br>
+  <input id="input_password" type="password"><br>
+  <input id="input_text_readonly" type="text" readonly><br>
+  <input id="input_text_ime_mode_disabled" type="text" style="ime-mode: disabled;"><br>
+  <input id="input_change" type="text"><br>
+  <textarea id="textarea"></textarea><br>
+</p>
+<div id="contenteditable" contenteditable style="min-height: 3em;"></div>
+
+<script class="testbody" type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  function sendAKeyEvent()
+  {
+    SpecialPowers.getDOMWindowUtils(window)
+                 .sendNativeKeyEvent(0, MAC_VK_ANSI_A, 0, "a", "a");
+  }
+
+  function isFocused(aElement)
+  {
+    return (SpecialPowers.focusManager.focusedElement == aElement);
+  }
+
+  function runTest()
+  {
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on the document");
+    $("input_text").focus();
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <input type=\"text\">");
+    $("input_password").focus();
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <input type=\"password\">");
+    $("input_password").blur();
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on the document after blur() of <input type=\"password\">");
+    $("input_password").focus();
+    $("input_text_readonly").focus();
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <input type=\"text\" readonly>");
+    $("input_password").focus();
+    $("input_text_ime_mode_disabled").focus();
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <input type=\"text\" style=\"ime-mode: disabled;\">");
+    $("input_password").focus();
+    $("textarea").focus();
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <textarea>");
+    $("input_password").focus();
+    $("contenteditable").focus();
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <div contenteditable>");
+
+    $("input_change").focus();
+    $("input_change").type = "password";
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <input type=\"password\"> changed from type=\"text\"");
+    $("input_change").type = "text";
+    sendAKeyEvent();
+    ok(true, "Not crashed: input on <input type=\"text\"> changed from type=\"password\"");
+
+    otherWindow =
+      window.open("data:text/html,<input id=\"text\" type\"text\"><input id=\"password\" type\"password\">",
+                  "_blank", "chrome,width=100,height=100");
+    ok(otherWindow, "failed to open other window");
+    if (!otherWindow) {
+      SimpleTest.finish();
+      return;
+    }
+
+    $("input_text").focus();
+    otherWindow.focus();
+
+    SimpleTest.waitForFocus(function () {
+      window.focus();
+      sendAKeyEvent();
+      ok(isFocused($("input_text")), "focused element isn't <input type=\"text\">");
+      ok(true, "Not crashed: input on <input type=\"text\"> after the other document has focus");
+
+      $("input_password").focus();
+      otherWindow.focus();
+      window.focus();
+      sendAKeyEvent();
+      ok(isFocused($("input_password")), "focused element isn't <input type=\"password\">");
+      ok(true, "Not crashed: input on <input type=\"password\"> after the other document has focus");
+
+      $("input_text").focus();
+      otherWindow.focus();
+      otherWindow.document.getElementById("text").focus();
+      window.focus();
+      sendAKeyEvent();
+      ok(isFocused($("input_text")), "focused element isn't <input type=\"text\">");
+      ok(true, "Not crashed: input on <input type=\"text\"> after the other document's <input type=\"text\"> has focus");
+
+      $("input_password").focus();
+      otherWindow.focus();
+      otherWindow.document.getElementById("text").focus();
+      window.focus();
+      sendAKeyEvent();
+      ok(isFocused($("input_password")), "focused element isn't <input type=\"password\">");
+      ok(true, "Not crashed: input on <input type=\"password\"> after the other document's <input type=\"text\"> has focus");
+
+      $("input_text").focus();
+      otherWindow.focus();
+      otherWindow.document.getElementById("password").focus();
+      window.focus();
+      sendAKeyEvent();
+      ok(isFocused($("input_text")), "focused element isn't <input type=\"text\">");
+      ok(true, "Not crashed: input on <input type=\"text\"> after the other document's <input type=\"password\"> has focus");
+
+      $("input_password").focus();
+      otherWindow.focus();
+      otherWindow.document.getElementById("password").focus();
+      window.focus();
+      sendAKeyEvent();
+      ok(isFocused($("input_password")), "focused element isn't <input type=\"password\">");
+      ok(true, "Not crashed: input on <input type=\"password\"> after the other document's <input type=\"password\"> has focus");
+
+      SimpleTest.finish();
+
+    }, otherWindow);
+  }
+
+  SimpleTest.waitForFocus(runTest);
+</script>
+</body>
+</html>

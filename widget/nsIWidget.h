@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xa7d1e8d4, 0xe2c1, 0x45cb, \
-  { 0xab, 0x72, 0xb3, 0xe9, 0xf9, 0xcc, 0xb2, 0xce } }
+{ 0x5b9152, 0x56c8, 0x4a2d, \
+  { 0x94, 0x9e, 0xec, 0xf5, 0x3, 0x83, 0x3d, 0x48 } }
 
 /*
  * Window shadow styles
@@ -305,6 +305,11 @@ struct IMEState {
 
 struct InputContext {
   InputContext() : mNativeIMEContext(nullptr) {}
+
+  bool IsPasswordEditor() const
+  {
+    return mHTMLInputType.LowerCaseEqualsLiteral("password");
+  }
 
   IMEState mIMEState;
 
@@ -1309,24 +1314,6 @@ class nsIWidget : public nsISupports {
      * included, including those not targeted at this nsIwidget instance.
      */
     virtual bool HasPendingInputEvent() = 0;
-
-    /**
-     * Called when when we need to begin secure keyboard input, such as when a password field
-     * gets focus.
-     *
-     * NOTE: Calls to this method may not be nested and you can only enable secure keyboard input
-     * for one widget at a time.
-     */
-    NS_IMETHOD BeginSecureKeyboardInput() = 0;
-
-    /**
-     * Called when when we need to end secure keyboard input, such as when a password field
-     * loses focus.
-     *
-     * NOTE: Calls to this method may not be nested and you can only enable secure keyboard input
-     * for one widget at a time.
-     */
-    NS_IMETHOD EndSecureKeyboardInput() = 0;
 
     /**
      * Set the background color of the window titlebar for this widget. On Mac,

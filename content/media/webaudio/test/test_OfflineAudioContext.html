@@ -13,7 +13,7 @@
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-  var ctx = new OfflineAudioContext(2, 100, (new AudioContext()).sampleRate);
+  var ctx = new OfflineAudioContext(2, 100, 22050);
   ok(ctx instanceof EventTarget, "OfflineAudioContexts must be EventTargets");
 
   var buf = ctx.createBuffer(2, 100, ctx.sampleRate);
@@ -22,6 +22,13 @@ addLoadEvent(function() {
       buf.getChannelData(i)[j] = Math.sin(2 * Math.PI * 200 * j / ctx.sampleRate);
     }
   }
+
+  expectException(function() {
+    new OfflineAudioContext(2, 100, 0);
+  }, DOMException.SYNTAX_ERR);
+  expectException(function() {
+    new OfflineAudioContext(2, 100, -1);
+  }, DOMException.SYNTAX_ERR);
 
   var src = ctx.createBufferSource();
   src.buffer = buf;

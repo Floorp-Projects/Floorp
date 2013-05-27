@@ -52,7 +52,7 @@ public final class ThumbnailHelper {
 
     private ThumbnailHelper() {
         mPendingThumbnails = new LinkedList<Tab>();
-        mPendingWidth = new AtomicInteger((int)GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_width));
+        mPendingWidth = new AtomicInteger((int)GeckoAppShell.getContext().getResources().getDimension(R.dimen.tab_thumbnail_width));
         mWidth = -1;
         mHeight = -1;
     }
@@ -66,7 +66,7 @@ public final class ThumbnailHelper {
         if (tab.getState() == Tab.STATE_DELAYED) {
             String url = tab.getURL();
             if (url != null) {
-                byte[] thumbnail = BrowserDB.getThumbnailForUrl(GeckoApp.mAppContext.getContentResolver(), url);
+                byte[] thumbnail = BrowserDB.getThumbnailForUrl(GeckoAppShell.getContext().getContentResolver(), url);
                 if (thumbnail != null) {
                     setTabThumbnail(tab, null, thumbnail);
                 }
@@ -198,6 +198,6 @@ public final class ThumbnailHelper {
     }
 
     private boolean shouldUpdateThumbnail(Tab tab) {
-        return (Tabs.getInstance().isSelectedTab(tab) || GeckoApp.mAppContext.areTabsShown());
+        return (Tabs.getInstance().isSelectedTab(tab) || (GeckoAppShell.getGeckoInterface() != null && GeckoAppShell.getGeckoInterface().areTabsShown()));
     }
 }

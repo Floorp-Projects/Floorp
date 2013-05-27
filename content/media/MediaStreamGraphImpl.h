@@ -264,6 +264,7 @@ public:
    * This is called whenever we have an AudioNodeStream in the graph.
    */
   void ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
+                                         TrackRate aSampleRate,
                                          GraphTime aFrom,
                                          GraphTime aTo);
   /**
