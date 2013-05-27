@@ -876,18 +876,15 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         /*
          * Pretend we have been passed the 'arguments' object for the current
          * function and read actuals out of the frame.
-         *
-         * N.B. Changes here need to be propagated to stubs::SplatApplyArgs.
          */
         /* Steps 4-6. */
-        StackFrame *fp = cx->fp();
 
 #ifdef JS_ION
         // We do not want to use ScriptFrameIter to abstract here because this
         // is supposed to be a fast path as opposed to ScriptFrameIter which is
         // doing complex logic to settle on the next frame twice.
-        if (fp->beginsIonActivation()) {
-            ion::IonActivationIterator activations(cx);
+        if (cx->mainThread().currentlyRunningInJit()) {
+            ion::JitActivationIterator activations(cx->runtime());
             ion::IonFrameIterator frame(activations);
             if (frame.isNative()) {
                 // Stop on the next Ion JS Frame.
@@ -931,6 +928,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         } else
 #endif
         {
+            StackFrame *fp = cx->fp();
             unsigned length = fp->numActualArgs();
             JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
 

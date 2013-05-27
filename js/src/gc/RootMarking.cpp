@@ -275,15 +275,15 @@ MarkRangeConservativelyAndSkipIon(JSTracer *trc, JSRuntime *rt, const uintptr_t 
     const uintptr_t *i = begin;
 
 #if JS_STACK_GROWTH_DIRECTION < 0 && defined(JS_ION)
-    // Walk only regions in between Ion activations. Note that non-volatile
-    // registers are spilled to the stack before the entry Ion frame, ensuring
+    // Walk only regions in between JIT activations. Note that non-volatile
+    // registers are spilled to the stack before the entry frame, ensuring
     // that the conservative scanner will still see them.
-    for (ion::IonActivationIterator ion(rt); ion.more(); ++ion) {
-        uintptr_t *ionMin, *ionEnd;
-        ion.ionStackRange(ionMin, ionEnd);
+    for (ion::JitActivationIterator iter(rt); !iter.done(); ++iter) {
+        uintptr_t *jitMin, *jitEnd;
+        iter.jitStackRange(jitMin, jitEnd);
 
-        MarkRangeConservatively(trc, i, ionMin);
-        i = ionEnd;
+        MarkRangeConservatively(trc, i, jitMin);
+        i = jitEnd;
     }
 #endif
 
@@ -742,7 +742,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     rt->stackSpace.mark(trc);
 
 #ifdef JS_ION
-    ion::MarkIonActivations(rt, trc);
+    ion::MarkJitActivations(rt, trc);
 #endif
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
