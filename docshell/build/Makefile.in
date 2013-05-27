@@ -18,10 +18,6 @@ EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY	= 1
 
 
-CPPSRCS		= \
-		nsDocShellModule.cpp		\
-		$(NULL)
-
 SHARED_LIBRARY_LIBS= \
 		../base/$(LIB_PREFIX)basedocshell_s.$(LIB_SUFFIX) \
 		$(DEPTH)/uriloader/base/$(LIB_PREFIX)uriloaderbase_s.$(LIB_SUFFIX) \

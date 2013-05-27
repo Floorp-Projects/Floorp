@@ -20,8 +20,6 @@ LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
 
-CPPSRCS		= $(MODULES_LIBJAR_LCPPSRCS)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

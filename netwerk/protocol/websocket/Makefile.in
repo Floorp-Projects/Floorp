@@ -15,13 +15,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS = \
-  WebSocketChannel.cpp \
-  WebSocketChannelParent.cpp \
-  WebSocketChannelChild.cpp \
-  BaseWebSocketChannel.cpp \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/content/base/src \

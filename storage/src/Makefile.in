@@ -32,32 +32,6 @@ DEFINES += -DMOZ_STORAGE_MEMORY
 endif
 endif
 
-CPPSRCS = \
-  mozStorageService.cpp \
-  mozStorageConnection.cpp \
-  mozStorageStatement.cpp \
-  mozStorageStatementParams.cpp \
-  mozStorageStatementRow.cpp \
-  mozStorageArgValueArray.cpp \
-  mozStorageSQLFunctions.cpp \
-  mozStorageRow.cpp \
-  mozStorageResultSet.cpp \
-  mozStorageError.cpp \
-  mozStorageAsyncStatementExecution.cpp \
-  mozStorageStatementJSHelper.cpp \
-  mozStoragePrivateHelpers.cpp \
-  mozStorageBindingParamsArray.cpp \
-  mozStorageBindingParams.cpp \
-  mozStorageAsyncStatement.cpp \
-  mozStorageAsyncStatementJSHelper.cpp \
-  mozStorageAsyncStatementParams.cpp \
-  StorageBaseStatementInternal.cpp \
-  SQLCollations.cpp \
-  VacuumManager.cpp \
-  TelemetryVFS.cpp \
-  FileSystemModule.cpp \
-  $(NULL)
-
 # For nsDependentJSString
 LOCAL_INCLUDES = \
   $(SQLITE_CFLAGS) \

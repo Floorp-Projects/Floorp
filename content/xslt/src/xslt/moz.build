@@ -6,3 +6,36 @@
 
 MODULE = 'transformiix'
 
+CPP_SOURCES += [
+    'txBufferingHandler.cpp',
+    'txCurrentFunctionCall.cpp',
+    'txDocumentFunctionCall.cpp',
+    'txEXSLTFunctions.cpp',
+    'txExecutionState.cpp',
+    'txFormatNumberFunctionCall.cpp',
+    'txGenerateIdFunctionCall.cpp',
+    'txInstructions.cpp',
+    'txKeyFunctionCall.cpp',
+    'txMozillaStylesheetCompiler.cpp',
+    'txMozillaTextOutput.cpp',
+    'txMozillaXMLOutput.cpp',
+    'txMozillaXSLTProcessor.cpp',
+    'txNodeSorter.cpp',
+    'txOutputFormat.cpp',
+    'txPatternOptimizer.cpp',
+    'txPatternParser.cpp',
+    'txRtfHandler.cpp',
+    'txStylesheet.cpp',
+    'txStylesheetCompileHandlers.cpp',
+    'txStylesheetCompiler.cpp',
+    'txTextHandler.cpp',
+    'txToplevelItems.cpp',
+    'txUnknownHandler.cpp',
+    'txXPathResultComparator.cpp',
+    'txXSLTEnvironmentFunctionCall.cpp',
+    'txXSLTNumber.cpp',
+    'txXSLTNumberCounters.cpp',
+    'txXSLTPatterns.cpp',
+    'txXSLTProcessor.cpp',
+]
+

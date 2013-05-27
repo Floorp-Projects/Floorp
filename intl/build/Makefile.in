@@ -15,11 +15,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsI18nModule
 LIBXUL_LIBRARY = 1
 
-
-CPPSRCS		= \
-			nsI18nModule.cpp \
-			$(NULL)
-
 # see also intl/locale/src/Makefile.in
 ifneq (,$(filter os2 windows, $(MOZ_WIDGET_TOOLKIT)))
 LOCALE_DIR		= $(MOZ_WIDGET_TOOLKIT)

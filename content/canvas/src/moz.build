@@ -15,3 +15,47 @@ EXPORTS.mozilla.dom += [
     'TextMetrics.h',
 ]
 
+CPP_SOURCES += [
+    'CanvasImageCache.cpp',
+    'CanvasRenderingContext2D.cpp',
+    'CanvasUtils.cpp',
+    'DocumentRendererChild.cpp',
+    'DocumentRendererParent.cpp',
+    'ImageData.cpp',
+]
+
+if CONFIG['MOZ_WEBGL']:
+    CPP_SOURCES += [
+        'WebGLActiveInfo.cpp',
+        'WebGLBuffer.cpp',
+        'WebGLContext.cpp',
+        'WebGLContextGL.cpp',
+        'WebGLContextUtils.cpp',
+        'WebGLContextReporter.cpp',
+        'WebGLContextValidate.cpp',
+        'WebGLElementArrayCache.cpp',
+        'WebGLExtensionBase.cpp',
+        'WebGLExtensionCompressedTextureATC.cpp',
+        'WebGLExtensionCompressedTexturePVRTC.cpp',
+        'WebGLExtensionCompressedTextureS3TC.cpp',
+        'WebGLExtensionDebugRendererInfo.cpp',
+        'WebGLExtensionDepthTexture.cpp',
+        'WebGLExtensionElementIndexUint.cpp',
+        'WebGLExtensionLoseContext.cpp',
+        'WebGLExtensionStandardDerivatives.cpp',
+        'WebGLExtensionTextureFilterAnisotropic.cpp',
+        'WebGLExtensionTextureFloat.cpp',
+        'WebGLFramebuffer.cpp',
+        'WebGLObjectModel.cpp',
+        'WebGLProgram.cpp',
+        'WebGLRenderbuffer.cpp',
+        'WebGLShader.cpp',
+        'WebGLShaderPrecisionFormat.cpp',
+        'WebGLTexelConversions.cpp',
+        'WebGLTexture.cpp',
+        'WebGLUniformLocation.cpp',
+    ]
+else:
+    CPP_SOURCES += [
+        'WebGLContextNotSupported.cpp',
+    ]

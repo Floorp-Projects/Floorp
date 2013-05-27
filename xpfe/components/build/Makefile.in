@@ -17,8 +17,6 @@ MODULE_NAME	= application
 LIBXUL_LIBRARY	= 1
 
 
-CPPSRCS		= nsModule.cpp
-
 include $(topsrcdir)/config/config.mk
 
 # General includes

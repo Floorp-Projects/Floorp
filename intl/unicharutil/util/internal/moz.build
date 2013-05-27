@@ -6,3 +6,7 @@
 
 MODULE = 'unicharutil'
 
+CPP_SOURCES += [
+    '$(INTL_UNICHARUTIL_UTIL_LCPPSRCS)',
+]
+

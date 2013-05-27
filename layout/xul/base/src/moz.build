@@ -6,3 +6,50 @@
 
 MODULE = 'layout'
 
+CPP_SOURCES += [
+    'nsBox.cpp',
+    'nsBoxFrame.cpp',
+    'nsBoxLayout.cpp',
+    'nsBoxLayoutState.cpp',
+    'nsButtonBoxFrame.cpp',
+    'nsRepeatService.cpp',
+    'nsRootBoxFrame.cpp',
+    'nsScrollBoxFrame.cpp',
+    'nsScrollbarButtonFrame.cpp',
+    'nsScrollbarFrame.cpp',
+    'nsSliderFrame.cpp',
+    'nsSprocketLayout.cpp',
+    'nsStackFrame.cpp',
+    'nsStackLayout.cpp',
+    'nsXULTooltipListener.cpp',
+]
+
+if CONFIG['MOZ_XUL']:
+    CPP_SOURCES += [
+        'nsScrollBoxObject.cpp',
+        'nsContainerBoxObject.cpp',
+        'nsMenuBoxObject.cpp',
+        'nsPopupBoxObject.cpp',
+        'nsListBoxObject.cpp',
+        'nsBoxObject.cpp',
+        'nsImageBoxFrame.cpp',
+        'nsDocElementBoxFrame.cpp',
+        'nsLeafBoxFrame.cpp',
+        'nsTextBoxFrame.cpp',
+        'nsGroupBoxFrame.cpp',
+        'nsSplitterFrame.cpp',
+        'nsDeckFrame.cpp',
+        'nsProgressMeterFrame.cpp',
+        'nsMenuPopupFrame.cpp',
+        'nsMenuFrame.cpp',
+        'nsMenuBarFrame.cpp',
+        'nsMenuBarListener.cpp',
+        'nsPopupSetFrame.cpp',
+        'nsTitleBarFrame.cpp',
+        'nsResizerFrame.cpp',
+        'nsListBoxBodyFrame.cpp',
+        'nsListItemFrame.cpp',
+        'nsListBoxLayout.cpp',
+        'nsXULLabelFrame.cpp',
+        'nsXULPopupManager.cpp',
+    ]

@@ -6,3 +6,11 @@
 
 MODULE = 'transformiix'
 
+CPP_SOURCES += [
+    'txDouble.cpp',
+    'txExpandedNameMap.cpp',
+    'txList.cpp',
+    'txNamespaceMap.cpp',
+    'txURIUtils.cpp',
+]
+

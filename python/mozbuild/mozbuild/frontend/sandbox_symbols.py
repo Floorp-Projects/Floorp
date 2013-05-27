@@ -202,6 +202,13 @@ VARIABLES = {
         BIN_SUFFIX, PROGRAM will remain unchanged.
         """),
 
+    'CPP_SOURCES': (list, list, [],
+        """C++ source file list.
+
+        This is a list of C++ files to be compiled. Entries must be files that
+        exist. These generally have .cpp, .cc, or .cxx extensions.
+        """),
+
     # IDL Generation.
     'XPIDL_SOURCES': (StrictOrderingOnAppendList, list, [],
         """XPCOM Interface Definition Files (xpidl).

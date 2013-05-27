@@ -14,18 +14,6 @@ LIBRARY_NAME	= gkxulgrid_s
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS	= \
-        nsGridLayout2.cpp \
-        nsGridRowLayout.cpp \
-        nsGridRowLeafLayout.cpp \
-        nsGridRowLeafFrame.cpp \
-        nsGridRowGroupLayout.cpp \
-        nsGridRowGroupFrame.cpp \
-        nsGrid.cpp \
-        nsGridRow.cpp \
-        nsGridCell.cpp \
-        $(NULL)
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../base/src \

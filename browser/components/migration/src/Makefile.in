@@ -24,8 +24,6 @@ EXTRA_PP_COMPONENTS = \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += nsIEHistoryEnumerator.cpp
-
 EXTRA_COMPONENTS += IEProfileMigrator.js \
                     $(NULL)
 

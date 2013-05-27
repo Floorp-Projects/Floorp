@@ -14,3 +14,33 @@ XPIDL_MODULE = 'necko_wifi'
 
 MODULE = 'necko'
 
+CPP_SOURCES += [
+    'nsWifiAccessPoint.cpp',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    CPP_SOURCES += [
+        'nsWifiMonitorGonk.cpp',
+    ]
+else:
+    CPP_SOURCES += [
+        'nsWifiMonitor.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'Darwin':
+    CPP_SOURCES += [
+        'nsWifiScannerMac.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'WINNT':
+    CPP_SOURCES += [
+        'nsWifiScannerWin.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'SunOS':
+    CPP_SOURCES += [
+        'nsWifiScannerSolaris.cpp',
+    ]
+
+if CONFIG['MOZ_ENABLE_DBUS']:
+    CPP_SOURCES += [
+        'nsWifiScannerDBus.cpp',
+    ]

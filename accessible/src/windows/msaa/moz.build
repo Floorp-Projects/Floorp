@@ -16,3 +16,28 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessibleWrap.h',
 ]
 
+CPP_SOURCES += [
+    'AccessibleWrap.cpp',
+    'ApplicationAccessibleWrap.cpp',
+    'ARIAGridAccessibleWrap.cpp',
+    'DocAccessibleWrap.cpp',
+    'HTMLTableAccessibleWrap.cpp',
+    'HTMLWin32ObjectAccessible.cpp',
+    'HyperTextAccessibleWrap.cpp',
+    'ImageAccessibleWrap.cpp',
+    'IUnknownImpl.cpp',
+    'nsWinUtils.cpp',
+    'Compatibility.cpp',
+    'EnumVariant.cpp',
+    'Platform.cpp',
+    'ServiceProvider.cpp',
+    'RootAccessibleWrap.cpp',
+    'TextLeafAccessibleWrap.cpp',
+]
+
+if CONFIG['MOZ_XUL']:
+    CPP_SOURCES += [
+        'XULListboxAccessibleWrap.cpp',
+        'XULMenuAccessibleWrap.cpp',
+        'XULTreeGridAccessibleWrap.cpp',
+    ]

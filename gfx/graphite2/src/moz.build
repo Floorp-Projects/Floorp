@@ -14,3 +14,46 @@ EXPORTS.graphite2 += [
     '../include/graphite2/Types.h',
 ]
 
+if CONFIG['GNU_CC']:
+    CPP_SOURCES += [
+        'direct_machine.cpp'
+    ]
+else:
+    CPP_SOURCES += [
+        'call_machine.cpp'
+    ]
+
+# This should contain all of the _SOURCES from files.mk, except *_machine.cpp
+CPP_SOURCES += [
+    'gr_char_info.cpp',
+    'gr_face.cpp',
+    'gr_features.cpp',
+    'gr_font.cpp',
+    'gr_logging.cpp',
+    'gr_segment.cpp',
+    'gr_slot.cpp',
+    'json.cpp',
+    'Bidi.cpp',
+    'CachedFace.cpp',
+    'CmapCache.cpp',
+    'Code.cpp',
+    'Face.cpp',
+    'FeatureMap.cpp',
+    'FileFace.cpp',
+    'Font.cpp',
+    'GlyphCache.cpp',
+    'GlyphFace.cpp',
+    'Justifier.cpp',
+    'NameTable.cpp',
+    'Pass.cpp',
+    'SegCache.cpp',
+    'SegCacheEntry.cpp',
+    'SegCacheStore.cpp',
+    'Segment.cpp',
+    'Silf.cpp',
+    'Slot.cpp',
+    'Sparse.cpp',
+    'TtfUtil.cpp',
+    'UtfCodec.cpp',
+]
+
