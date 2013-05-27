@@ -13,3 +13,7 @@ EXPORTS.mozilla.net += [
     'DataChannelProtocol.h',
 ]
 
+CPP_SOURCES += [
+    'DataChannel.cpp',
+]
+

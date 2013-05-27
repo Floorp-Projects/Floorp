@@ -22,10 +22,6 @@ EXTRA_COMPONENTS = \
   PeerConnection.manifest \
   $(NULL)
 
-CPPSRCS = \
-  MediaManager.cpp \
-  $(NULL)
-
 ifdef MOZ_WEBRTC
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/media/webrtc/trunk/webrtc \

@@ -15,4 +15,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SharedDIBSurface.h',
         'SharedDIBWin.h',
     ]
+    CPP_SOURCES += [
+        'SharedDIBWin.cpp',
+        'SharedDIBSurface.cpp',
+    ]
+
+CPP_SOURCES += [
+    'SharedDIB.cpp',
+]
 

@@ -10,3 +10,7 @@ EXPORTS += [
     'nsIAppStartupNotifier.h',
 ]
 
+CPP_SOURCES += [
+    'nsAppStartupNotifier.cpp',
+]
+

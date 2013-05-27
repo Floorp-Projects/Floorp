@@ -17,17 +17,6 @@ LOCAL_INCLUDES 	= -I$(srcdir)/../..
 # This is a little weird, but we're building a host and a target lib here.
 # The host lib is used for dump_syms, and the target lib for the
 # crash reporter client.  Therefore, we don't need all the srcs in both.
-CPPSRCS	= \
-  arch_utilities.cc \
-  bootstrap_compat.cc \
-  file_id.cc \
-  macho_id.cc \
-  macho_reader.cc \
-  macho_utilities.cc \
-  macho_walker.cc \
-  string_utilities.cc \
-  $(NULL)
-
 CMSRCS = \
   HTTPMultipartUpload.m \
   $(NULL)

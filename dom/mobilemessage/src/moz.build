@@ -19,6 +19,10 @@ if not CONFIG['MOZ_B2G_RIL']:
         'MmsService.h',
         'MobileMessageDatabaseService.h',
     ]
+    CPP_SOURCES += [
+        'MobileMessageDatabaseService.cpp',
+        'MmsService.cpp',
+    ]
 
 EXPORTS.mozilla.dom += [
     'MmsMessage.h',
@@ -27,5 +31,24 @@ EXPORTS.mozilla.dom += [
     'SmsManager.h',
     'SmsMessage.h',
     'SmsSegmentInfo.h',
+]
+
+CPP_SOURCES += [
+    'Constants.cpp',
+    'MmsMessage.cpp',
+    'MobileMessageCallback.cpp',
+    'MobileMessageCursorCallback.cpp',
+    'MobileMessageManager.cpp',
+    'MobileMessageService.cpp',
+    'MobileMessageThread.cpp',
+    'SmsChild.cpp',
+    'SmsFilter.cpp',
+    'SmsIPCService.cpp',
+    'SmsManager.cpp',
+    'SmsMessage.cpp',
+    'SmsParent.cpp',
+    'SmsSegmentInfo.cpp',
+    'SmsService.cpp',
+    'SmsServicesFactory.cpp',
 ]
 

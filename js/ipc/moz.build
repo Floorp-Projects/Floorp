@@ -14,3 +14,8 @@ EXPORTS.mozilla.jsipc += [
     'ObjectWrapperParent.h',
 ]
 
+CPP_SOURCES += [
+    'ObjectWrapperChild.cpp',
+    'ObjectWrapperParent.cpp',
+]
+

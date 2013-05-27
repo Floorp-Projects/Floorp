@@ -35,34 +35,6 @@ ifeq (,$(filter-out OS2,$(OS_ARCH)))
 DEFINES		+= -D_GNU_SOURCE
 endif
 
-CPPSRCS 		=			\
-	mozalloc.cpp				\
-	mozalloc_abort.cpp			\
-	mozalloc_oom.cpp			\
-	$(NULL)
-
-ifdef WRAP_STL_INCLUDES #{
-ifdef _MSC_VER #{
-
-ifeq ($(MOZ_MSVC_STL_WRAP__RAISE),1) #{
-BUILD_MSVC_WRAPPERS = 1
-else
-ifeq ($(MOZ_MSVC_STL_WRAP__Throw),1) #{
-BUILD_MSVC_WRAPPERS = 1
-endif #}
-endif #}
-
-ifdef BUILD_MSVC_WRAPPERS #{
-CPPSRCS			+= 			\
-	msvc_raise_wrappers.cpp			\
-	msvc_throw_wrapper.cpp			\
-	$(NULL)
-endif #}
-
-endif #}
-
-endif #}
-
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else

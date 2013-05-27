@@ -14,8 +14,6 @@ LIBRARY_NAME = browserdir_s
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
-CPPSRCS = DirectoryProvider.cpp
-
 LOCAL_INCLUDES = -I$(srcdir)/../build
 
 EXTRA_DSO_LDOPTS = \

@@ -18,10 +18,6 @@ LIBXUL_LIBRARY = 1
 IS_COMPONENT = 1
 EXPORT_LIBRARY = 1
 
-CPPSRCS = \
-  IdentityCryptoService.cpp \
-  $(NULL)
-
 EXTRA_JS_MODULES = \
 	IdentityUtils.jsm \
 	Identity.jsm \

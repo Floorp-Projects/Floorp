@@ -10,3 +10,10 @@ EXPORTS += [
     'APKOpen.h',
 ]
 
+CPP_SOURCES += [
+    'APKOpen.cpp',
+    'NSSBridge.cpp',
+    'SQLiteBridge.cpp',
+    'nsGeckoUtils.cpp',
+]
+

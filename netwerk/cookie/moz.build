@@ -22,6 +22,12 @@ if CONFIG['NECKO_COOKIES']:
         'CookieServiceParent.h',
         'CookieServiceChild.h',
     ]
+    CPP_SOURCES += [
+        'nsCookie.cpp',
+        'nsCookieService.cpp',
+        'CookieServiceParent.cpp',
+        'CookieServiceChild.cpp',
+    ]
 
 if CONFIG['NECKO_COOKIES']:
     XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

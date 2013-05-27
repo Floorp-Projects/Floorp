@@ -16,11 +16,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsUniversalCharDetModule
 LIBXUL_LIBRARY = 1
 
-CPPSRCS = \
-		nsUniversalCharDetModule.cpp \
-		nsUdetXPCOMWrapper.cpp \
-               $(NULL)
-
 LOCAL_INCLUDES = -I$(srcdir)/../base
 
 SHARED_LIBRARY_LIBS = \

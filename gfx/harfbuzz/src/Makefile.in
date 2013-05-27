@@ -38,33 +38,6 @@ ifneq ($(OS_ARCH),WINNT)
 LIBXUL_LIBRARY = 1
 endif
 
-CPPSRCS	=                        \
-  hb-blob.cc                     \
-  hb-buffer.cc                   \
-  hb-common.cc                   \
-  hb-fallback-shape.cc           \
-  hb-font.cc                     \
-  hb-ot-layout.cc                \
-  hb-ot-map.cc                   \
-  hb-ot-shape-complex-arabic.cc  \
-  hb-ot-shape-complex-default.cc \
-  hb-ot-shape-complex-indic.cc   \
-  hb-ot-shape-complex-indic-table.cc \
-  hb-ot-shape-complex-myanmar.cc \
-  hb-ot-shape-complex-sea.cc     \
-  hb-ot-shape-complex-thai.cc    \
-  hb-ot-shape-fallback.cc        \
-  hb-ot-shape-normalize.cc       \
-  hb-ot-shape.cc                 \
-  hb-ot-tag.cc                   \
-  hb-set.cc                      \
-  hb-shape.cc                    \
-  hb-shape-plan.cc               \
-  hb-shaper.cc                   \
-  hb-unicode.cc                  \
-  hb-warning.cc                  \
-  $(NULL)
-
 LOCAL_INCLUDES  += -I$(srcdir) 
 
 FORCE_STATIC_LIB = 1

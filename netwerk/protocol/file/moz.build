@@ -17,3 +17,8 @@ XPIDL_FLAGS += [
 
 MODULE = 'necko'
 
+CPP_SOURCES += [
+    'nsFileChannel.cpp',
+    'nsFileProtocolHandler.cpp',
+]
+

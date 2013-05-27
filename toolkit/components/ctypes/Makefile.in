@@ -20,10 +20,6 @@ LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 
-CPPSRCS = \
-    ctypes.cpp \
-    $(NULL)
-
 LOCAL_INCLUDES := \
   -I$(topsrcdir)/js/xpconnect/loader \
   $(NULL)

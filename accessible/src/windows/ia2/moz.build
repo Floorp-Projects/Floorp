@@ -16,3 +16,17 @@ EXPORTS += [
     'ia2AccessibleValue.h',
 ]
 
+CPP_SOURCES += [
+    'ia2AccessibleAction.cpp',
+    'ia2AccessibleComponent.cpp',
+    'ia2AccessibleEditableText.cpp',
+    'ia2AccessibleHyperlink.cpp',
+    'ia2AccessibleHypertext.cpp',
+    'ia2AccessibleImage.cpp',
+    'ia2AccessibleRelation.cpp',
+    'ia2AccessibleTable.cpp',
+    'ia2AccessibleTableCell.cpp',
+    'ia2AccessibleText.cpp',
+    'ia2AccessibleValue.cpp',
+]
+

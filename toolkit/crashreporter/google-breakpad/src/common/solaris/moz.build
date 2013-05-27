@@ -6,3 +6,9 @@
 
 MODULE = 'breakpad_solaris_common'
 
+CPP_SOURCES += [
+    'dump_symbols.cc',
+    'file_id.cc',
+    'guid_creator.cc',
+]
+

@@ -6,3 +6,10 @@
 
 MODULE = 'content'
 
+CPP_SOURCES += [
+    'Biquad.cpp',
+    'DynamicsCompressor.cpp',
+    'DynamicsCompressorKernel.cpp',
+    'ZeroPole.cpp',
+]
+

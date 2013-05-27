@@ -44,8 +44,6 @@ CMMSRCS	= nsOSHelperAppService.mm \
 			nsMIMEInfoMac.mm \
 			nsLocalHandlerAppMac.mm \
 			$(NULL)
-else
-OSHELPER	= nsOSHelperAppService.cpp
 endif
 
 LOCAL_INCLUDES = -I$(srcdir)
@@ -57,49 +55,15 @@ LOCAL_INCLUDES += -I$(topsrcdir)/dom/base \
             -I$(topsrcdir)/netwerk/base/src \
             -I$(topsrcdir)/netwerk/protocol/http
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-OSHELPER	+= nsGNOMERegistry.cpp
-OSHELPER  += nsMIMEInfoUnix.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-OSHELPER += nsMIMEInfoAndroid.cpp
-OSHELPER += nsAndroidHandlerApp.cpp
-OSHELPER += nsExternalSharingAppService.cpp
-OSHELPER += nsExternalURLHandlerService.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-OSHELPER += nsGNOMERegistry.cpp
-OSHELPER += nsMIMEInfoUnix.cpp
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-OSHELPER  += nsMIMEInfoWin.cpp
 LOCAL_INCLUDES += -I$(srcdir)/win
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-OSHELPER  += nsMIMEInfoOS2.cpp
-endif
-
-CPPSRCS	= \
-	nsExternalHelperAppService.cpp	\
-	nsExternalProtocolHandler.cpp \
-	nsMIMEInfoImpl.cpp \
-	nsLocalHandlerApp.cpp \
-	$(OSHELPER) \
-	ExternalHelperAppChild.cpp \
-	ExternalHelperAppParent.cpp \
-	$(NULL)
-
 ifdef MOZ_ENABLE_DBUS
-CPPSRCS += nsDBusHandlerApp.cpp
 LOCAL_INCLUDES   += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS)
 endif
 
 ifdef MOZ_ENABLE_MEEGOTOUCHSHARE
-OSHELPER  += nsMeegoExternalSharingAppService.cpp
 LOCAL_INCLUDES   += $(MOZ_PLATFORM_MAEMO_CFLAGS)
 endif
 
@@ -110,10 +74,6 @@ endif
 ifdef MOZ_ENABLE_GIO
 LOCAL_INCLUDES   += $(MOZ_GIO_CFLAGS)
 endif
-endif
-
-ifdef MOZ_ENABLE_CONTENTACTION
-CPPSRCS += nsContentHandlerApp.cpp
 endif
 
 EXTRA_COMPONENTS = \
