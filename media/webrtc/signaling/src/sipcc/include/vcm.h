@@ -500,6 +500,23 @@ short vcmCreateRemoteStream(
              const char *peerconnection,
              int *pc_stream_id);
 
+/*
+ * Add remote stream hint
+ *
+ * We are sending track information up to PeerConnection before
+ * the tracks exist so it knows when the stream is fully constructed.
+ *
+ * @param[in] peerconnection
+ * @param[in] pc_stream_id
+ * @param[in] is_video
+ *
+ * Returns: zero(0) for success; otherwise, ERROR for failure
+ */
+short vcmAddRemoteStreamHint(
+            const char *peerconnection,
+            int pc_stream_id,
+            cc_boolean is_video);
+
 /*!
  *  Release the allocated port
  * @param[in] mcap_id   - media capability id (0 is audio)

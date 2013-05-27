@@ -100,65 +100,7 @@ static const uint32_t BAILOUT_TABLE_SIZE = 16;
 // N.B. the relative order of these values is hard-coded into ::GenerateBailoutThunk.
 static const uint32_t BAILOUT_RETURN_OK = 0;
 static const uint32_t BAILOUT_RETURN_FATAL_ERROR = 1;
-static const uint32_t BAILOUT_RETURN_ARGUMENT_CHECK = 2;
-static const uint32_t BAILOUT_RETURN_TYPE_BARRIER = 3;
-static const uint32_t BAILOUT_RETURN_MONITOR = 4;
-static const uint32_t BAILOUT_RETURN_BOUNDS_CHECK = 5;
-static const uint32_t BAILOUT_RETURN_SHAPE_GUARD = 6;
-static const uint32_t BAILOUT_RETURN_OVERRECURSED = 7;
-static const uint32_t BAILOUT_RETURN_CACHED_SHAPE_GUARD = 8;
-static const uint32_t BAILOUT_RETURN_BASELINE = 9;
-
-// Attached to the compartment for easy passing through from ::Bailout to
-// ::ThunkToInterpreter.
-class BailoutClosure
-{
-    // These class are used to control the stack usage and the order of
-    // declaration is used by the destructor to restore the stack in the
-    // expected order when classes are created. This class is only created
-    // when we need a new stack frame.
-    struct Guards {
-        InvokeArgsGuard iag;
-        BailoutFrameGuard bfg;
-    };
-
-    mozilla::Maybe<Guards> guards_;
-
-    StackFrame *entryfp_;
-    jsbytecode *bailoutPc_;
-
-  public:
-    BailoutClosure()
-      : bailoutPc_(NULL)
-    { }
-
-    void constructFrame() {
-        guards_.construct();
-    }
-    InvokeArgsGuard *argsGuard() {
-        return &guards_.ref().iag;
-    }
-    BailoutFrameGuard *frameGuard() {
-        return &guards_.ref().bfg;
-    }
-    StackFrame *entryfp() const {
-        return entryfp_;
-    }
-    void setEntryFrame(StackFrame *fp) {
-        entryfp_ = fp;
-    }
-
-    // The bailout pc is the pc associated with the MResuemPoint this bailout
-    // is restoring. If the resume point is "ResumeAfter", we'll actually start
-    // executing from the *next* bytecode. This lets us recover the pc used for
-    // type inference reflows.
-    void setBailoutPc(jsbytecode *pc) {
-        bailoutPc_ = pc;
-    }
-    jsbytecode *bailoutPc() const {
-        return bailoutPc_;
-    }
-};
+static const uint32_t BAILOUT_RETURN_OVERRECURSED = 2;
 
 class IonCompartment;
 
@@ -213,18 +155,6 @@ uint32_t Bailout(BailoutStack *sp, BaselineBailoutInfo **info);
 // Called from the invalidation thunk. Returns a BAILOUT_* error code.
 uint32_t InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
                              BaselineBailoutInfo **info);
-
-// Called from a bailout thunk. Interprets the frame(s) that have been bailed
-// out.
-uint32_t ThunkToInterpreter(Value *vp);
-
-uint32_t ReflowTypeInfo(uint32_t bailoutResult);
-
-uint32_t BoundsCheckFailure();
-
-uint32_t ShapeGuardFailure();
-
-uint32_t CachedShapeGuardFailure();
 
 uint32_t FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo);
 

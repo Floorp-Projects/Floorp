@@ -207,7 +207,8 @@ RemoteSourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
                        PeerConnectionMedia *aParent)
     : mMediaStream(aMediaStream),
       mPipelines(),
-      mParent(aParent) {
+      mParent(aParent),
+      mTrackTypeHints(0) {
       MOZ_ASSERT(mMediaStream);
     }
 
@@ -221,6 +222,9 @@ RemoteSourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
   void DetachMedia_m();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteSourceStreamInfo)
+
+public:
+  DOMMediaStream::TrackTypeHints mTrackTypeHints;
  private:
   nsRefPtr<DOMMediaStream> mMediaStream;
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
@@ -271,6 +275,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Add a remote stream. Returns the index in index
   nsresult AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo, int *aIndex);
+  nsresult AddRemoteStreamHint(int aIndex, bool aIsVideo);
 
   const nsCOMPtr<nsIThread>& GetMainThread() const { return mMainThread; }
   const nsCOMPtr<nsIEventTarget>& GetSTSThread() const { return mSTSThread; }

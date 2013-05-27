@@ -774,36 +774,20 @@ public:
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) = 0;
 
   /**
-   * Get the style data associated with this frame.  This returns a
-   * const style struct pointer that should never be modified.  See
-   * |nsStyleContext::StyleData| for more information.
-   *
-   * The use of the typesafe functions below is preferred to direct use
-   * of this function.
-   */
-  virtual const void* StyleDataExternal(nsStyleStructID aSID) const = 0;
-
-  /**
    * Define typesafe getter functions for each style struct by
    * preprocessing the list of style structs.  These functions are the
    * preferred way to get style data.  The macro creates functions like:
    *   const nsStyleBorder* StyleBorder();
    *   const nsStyleColor* StyleColor();
+   *
+   * Callers outside of libxul should use nsIDOMWindow::GetComputedStyle()
+   * instead of these accessors.
    */
-
-#ifdef _IMPL_NS_LAYOUT
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
     const nsStyle##name_ * Style##name_ () const {                            \
       NS_ASSERTION(mStyleContext, "No style context found!");                 \
       return mStyleContext->Style##name_ ();                                  \
     }
-#else
-  #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
-    const nsStyle##name_ * Style##name_ () const {                            \
-      return static_cast<const nsStyle##name_*>(                              \
-                            StyleDataExternal(eStyleStruct_##name_));         \
-    }
-#endif
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 

@@ -512,10 +512,6 @@ class MIRGraph
     // List of compiled/inlined scripts.
     Vector<JSScript *, 4, IonAllocPolicy> scripts_;
 
-    // List of possible scripts that this graph may call. Currently this is
-    // only tracked when compiling for parallel execution.
-    Vector<JSScript *, 4, IonAllocPolicy> callTargets_;
-
     size_t numBlocks_;
 
   public:
@@ -647,19 +643,6 @@ class MIRGraph
     }
     JSScript **scripts() {
         return scripts_.begin();
-    }
-    bool addCallTarget(JSScript *script) {
-        for (size_t i = 0; i < callTargets_.length(); i++) {
-            if (callTargets_[i] == script)
-                return true;
-        }
-        return callTargets_.append(script);
-    }
-    size_t numCallTargets() const {
-        return callTargets_.length();
-    }
-    JSScript **callTargets() {
-        return callTargets_.begin();
     }
 
     // The ParSlice is an instance of ForkJoinSlice*, it carries

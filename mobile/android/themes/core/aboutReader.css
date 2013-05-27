@@ -44,13 +44,25 @@ body {
   display: none;
 }
 
-.header > .domain {
+.domain,
+.credits {
+  font-family: "Open Sans", sans-serif;
+}
+
+.domain {
   margin-top: 10px;
   padding-bottom: 10px;
-  border-bottom: 2px solid; 
+  color: #00acff !important;
+  text-decoration: none;
+}
+
+.domain-border {
+  border-bottom: 1.5px solid #777777;
+  width: 50%;
 }
 
 .header > h1 {
+  font-size: 2.625em;
   font-weight: 300;
   line-height: 1.1em;
   width: 100%;
@@ -58,6 +70,10 @@ body {
   margin-top: 32px;
   margin-bottom: 16px;
   padding: 0px;
+}
+
+.serif > .header > h1 {
+  font-weight: 700;
 }
 
 .header > .credits {
@@ -163,14 +179,14 @@ body {
 .light > .content a:visited,
 .light > .content a:hover,
 .light > .content a:active {
-  color: #ee6700 !important;
+  color: #00acff !important;
 }
 
 .dark > .content a,
 .dark > .content a:visited,
 .dark > .content a:hover,
 .dark > .content a:active {
-  color: #ff9400 !important;
+  color: #00acff !important;
 }
 
 .content * {
@@ -218,6 +234,7 @@ body {
 .content .caption,
 .content .wp-caption-text,
 .content figcaption {
+  font-family: "Open Sans", sans-serif;
   margin: 0px !important;
   padding-top: 4px !important;
 }

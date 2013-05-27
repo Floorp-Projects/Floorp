@@ -785,7 +785,7 @@ PrepareOsrTempData(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     //
 
     // Copy formal args and thisv.
-    memcpy(stackFrameStart, frame->formals() - 1, (numFormalArgs + 1) * sizeof(Value));
+    memcpy(stackFrameStart, frame->argv() - 1, (numFormalArgs + 1) * sizeof(Value));
 
     // Initialize ScopeChain, Exec, and Flags fields in StackFrame struct.
     uint8_t *stackFrame = info->stackFrame;
@@ -8009,7 +8009,7 @@ DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, ICRest_Fallback *stub
     unsigned numActuals = frame->numActualArgs();
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
 
-    JSObject *obj = NewDenseCopiedArray(cx, numRest, frame->actuals() + numFormals, NULL);
+    JSObject *obj = NewDenseCopiedArray(cx, numRest, frame->argv() + numFormals, NULL);
     if (!obj)
         return false;
     obj->setType(type);

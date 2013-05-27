@@ -53,7 +53,8 @@ function test() {
       aWindow.console.log("foo bar baz (private: " + aIsPrivateMode + ")");
     }, true);
 
-    storageShouldOccur = !aIsPrivateMode;
+    // We expect that console API messages are always stored.
+    storageShouldOccur = true;
     innerID = getInnerWindowId(aWindow);
     beforeEvents = CSS.ConsoleAPIStorage.getEvents(innerID);
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);

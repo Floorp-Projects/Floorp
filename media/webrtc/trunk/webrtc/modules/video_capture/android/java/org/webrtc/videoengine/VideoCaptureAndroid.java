@@ -73,13 +73,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         captureAndroid.camera = null;
         captureAndroid.context = 0;
 
-        GeckoApp.mAppContext.cameraView.getHolder().
+        GeckoAppShell.getGeckoInterface().getCameraView().getHolder().
             removeCallback(captureAndroid);
         ThreadUtils.getUiHandler().post(new Runnable() {
             @Override
             public void run() {
                 try {
-                    GeckoApp.mAppContext.disableCameraView();
+                    GeckoAppShell.getGeckoInterface().disableCameraView();
                 } catch (Exception e) {
                     Log.e(TAG,
                           "VideoCaptureAndroid disableCameraView exception: " +
@@ -99,12 +99,12 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         currentDevice = in_device;
 
         try {
-            GeckoApp.mAppContext.cameraView.getHolder().addCallback(this);
+	  GeckoAppShell.getGeckoInterface().getCameraView().getHolder().addCallback(this);
             ThreadUtils.getUiHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        GeckoApp.mAppContext.enableCameraView();
+                        GeckoAppShell.getGeckoInterface().enableCameraView();
                     } catch (Exception e) {
                         Log.e(TAG, 
                               "VideoCaptureAndroid enableCameraView exception: "
@@ -122,7 +122,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         android.hardware.Camera.CameraInfo info =
             new android.hardware.Camera.CameraInfo();
         android.hardware.Camera.getCameraInfo(cameraId, info);
-        int rotation = GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getRotation();
+        int rotation = GeckoAppShell.getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getRotation();
         int degrees = 0;
         switch (rotation) {
             case Surface.ROTATION_0: degrees = 0; break;
