@@ -26,7 +26,7 @@
 #include "PlatformMacros.h"
 
 #include "platform.h"
-#include <iostream>
+#include <ostream>
 
 #include "ProfileEntry.h"
 #include "UnwinderThread2.h"
