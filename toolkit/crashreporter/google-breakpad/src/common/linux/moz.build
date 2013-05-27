@@ -6,3 +6,16 @@
 
 MODULE = 'breakpad_linux_common'
 
+CPP_SOURCES += [
+    'elfutils.cc',
+    'file_id.cc',
+    'guid_creator.cc',
+    'linux_libc_support.cc',
+    'memory_mapped_file.cc',
+    'safe_readlink.cc',
+]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    CPP_SOURCES += [
+        'http_upload.cc',
+    ]

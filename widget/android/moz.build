@@ -18,3 +18,24 @@ EXPORTS += [
     'AndroidJavaWrappers.h',
 ]
 
+CPP_SOURCES += [
+    'AndroidBridge.cpp',
+    'AndroidDirectTexture.cpp',
+    'AndroidGraphicBuffer.cpp',
+    'AndroidJNI.cpp',
+    'AndroidJNIWrapper.cpp',
+    'AndroidJavaWrappers.cpp',
+    'GfxInfo.cpp',
+    'nsAppShell.cpp',
+    'nsClipboard.cpp',
+    'nsDeviceContextAndroid.cpp',
+    'nsFilePicker.cpp',
+    'nsIMEPicker.cpp',
+    'nsIdleServiceAndroid.cpp',
+    'nsLookAndFeel.cpp',
+    'nsPrintOptionsAndroid.cpp',
+    'nsScreenManagerAndroid.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+]
+

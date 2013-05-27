@@ -14,16 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= texteditor_s
 LIBXUL_LIBRARY	= 1
 
-
-CPPSRCS		=                           \
-		nsPlaintextDataTransfer.cpp \
-		nsPlaintextEditor.cpp       \
-		nsTextEditUtils.cpp         \
-		nsTextEditRules.cpp         \
-		nsInternetCiter.cpp  \
-		nsTextEditRulesBidi.cpp \
-		$(NULL)
-
 # don't want the shared lib; force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

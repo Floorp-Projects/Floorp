@@ -10,10 +10,6 @@ relativesrcdir := @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS := \
-  FakeSpeechRecognitionService.cpp \
-  $(NULL)
-
 MOCHITEST_FILES := \
   head.js \
   test_success_without_recognition_service.html \

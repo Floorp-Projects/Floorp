@@ -14,8 +14,6 @@ USE_STATIC_LIBS = 1
 # Don't create a dependency on mozglue
 MOZ_GLUE_LDFLAGS =
 
-CPPSRCS   = nsXULStub.cpp
-
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/xpcom/build \
   -I$(topsrcdir)/xpcom/base \

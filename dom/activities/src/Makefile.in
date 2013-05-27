@@ -16,10 +16,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS = \
-  Activity.cpp \
-  $(NULL)
-
 EXTRA_COMPONENTS = \
   ActivityOptions.js \
   ActivityProxy.js \

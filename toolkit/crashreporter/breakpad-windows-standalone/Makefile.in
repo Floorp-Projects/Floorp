@@ -28,12 +28,6 @@ VPATH += \
   $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation \
   $(NULL)
 
-CPPSRCS = \
-  $(objs_common) \
-  $(objs_handler) \
-  $(objs_crash_generation) \
-  $(NULL)
-
 DEFINES += -DUNICODE -DUNICODE_ -DBREAKPAD_NO_TERMINATE_THREAD -DNOMINMAX
 
 include $(topsrcdir)/config/rules.mk

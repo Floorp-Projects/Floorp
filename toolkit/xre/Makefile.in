@@ -23,24 +23,8 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
-CPPSRCS = \
-  nsAppRunner.cpp \
-  nsConsoleWriter.cpp \
-  nsXREDirProvider.cpp \
-  nsNativeAppSupportBase.cpp \
-  CreateAppData.cpp \
-  nsSigHandlers.cpp \
-  nsEmbedFunctions.cpp \
-  ProfileReset.cpp \
-  $(NULL)
-
 ifeq ($(MOZ_GL_DEFAULT_PROVIDER),GLX)
 DEFINES += -DUSE_GLX_TEST
-CPPSRCS += glxtest.cpp
-endif
-
-ifdef MOZ_INSTRUMENT_EVENT_LOOP
-CPPSRCS += EventTracer.cpp
 endif
 
 DEFINES += -DIMPL_XREAPI \
@@ -49,35 +33,15 @@ DEFINES += -DIMPL_XREAPI \
 
 ifdef MOZ_UPDATER
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += nsUpdateDriver.cpp
 DEFINES += -DMOZ_UPDATER
 endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += nsNativeAppSupportWin.cpp
-CPPSRCS += nsWindowsDllBlocklist.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS = nsNativeAppSupportCocoa.mm
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CPPSRCS += nsNativeAppSupportOS2.cpp
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CPPSRCS += nsNativeAppSupportUnix.cpp
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-MOCSRCS += moc_nsNativeAppSupportQt.cpp
-CPPSRCS += $(MOCSRCS)
-CPPSRCS += nsNativeAppSupportQt.cpp
-CPPSRCS += nsQAppInstance.cpp
-else
-CPPSRCS += nsNativeAppSupportDefault.cpp
-endif
-endif
-endif
 endif
 endif
 
@@ -85,16 +49,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacLaunchHelper.mm
 CMMSRCS += MacApplicationDelegate.mm
 CMMSRCS += MacAutoreleasePool.mm
-CPPSRCS += nsCommandLineServiceMac.cpp
 ENABLE_CXX_EXCEPTIONS = 1
 endif
 
-ifdef MOZ_X11
-CPPSRCS += nsX11ErrorHandler.cpp
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-CPPSRCS += nsAndroidStartup.cpp
 DEFINES += -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"'
 endif
 

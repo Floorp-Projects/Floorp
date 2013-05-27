@@ -14,3 +14,7 @@ EXPORTS += [
 
 XPIDL_MODULE = 'diskspacewatcher'
 MODULE = 'toolkitcomps'
+
+CPP_SOURCES = [
+    'DiskSpaceWatcher.cpp',
+]

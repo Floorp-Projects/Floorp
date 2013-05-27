@@ -11,3 +11,9 @@ EXPORTS += [
     'MediaOmxReader.h',
 ]
 
+CPP_SOURCES += [
+    'MediaOmxDecoder.cpp',
+    'MediaOmxReader.cpp',
+    'OmxDecoder.cpp',
+]
+

@@ -15,26 +15,6 @@ MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS		= \
-    nsXBLBinding.cpp \
-    nsXBLPrototypeBinding.cpp \
-    nsXBLPrototypeResources.cpp \
-    nsXBLResourceLoader.cpp \
-    nsXBLDocumentInfo.cpp \
-    nsXBLContentSink.cpp \
-    nsXBLProtoImplProperty.cpp \
-    nsXBLProtoImplMethod.cpp \
-    nsXBLProtoImplField.cpp \
-    nsXBLProtoImpl.cpp \
-    nsXBLEventHandler.cpp \
-    nsXBLWindowKeyHandler.cpp \
-    nsXBLPrototypeHandler.cpp \
-    nsXBLService.cpp \
-    nsBindingManager.cpp \
-    nsXBLInsertionPoint.cpp \
-    nsXBLSerialize.cpp \
-		$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

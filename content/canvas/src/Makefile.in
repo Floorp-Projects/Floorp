@@ -15,56 +15,10 @@ MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS	= \
-	CanvasImageCache.cpp \
-	CanvasRenderingContext2D.cpp \
-	CanvasUtils.cpp \
-	DocumentRendererParent.cpp \
-	DocumentRendererChild.cpp \
-	ImageData.cpp \
-	$(NULL)
-
 ifdef MOZ_WEBGL
-
-CPPSRCS += \
-	WebGLActiveInfo.cpp \
-	WebGLBuffer.cpp \
-	WebGLContext.cpp \
-	WebGLContextGL.cpp \
-	WebGLContextUtils.cpp \
-	WebGLContextReporter.cpp \
-	WebGLContextValidate.cpp \
-	WebGLElementArrayCache.cpp \
-	WebGLExtensionBase.cpp \
-	WebGLExtensionCompressedTextureATC.cpp \
-	WebGLExtensionCompressedTexturePVRTC.cpp \
-	WebGLExtensionCompressedTextureS3TC.cpp \
-	WebGLExtensionDebugRendererInfo.cpp \
-	WebGLExtensionDepthTexture.cpp \
-	WebGLExtensionElementIndexUint.cpp \
-	WebGLExtensionLoseContext.cpp \
-	WebGLExtensionStandardDerivatives.cpp \
-	WebGLExtensionTextureFilterAnisotropic.cpp \
-	WebGLExtensionTextureFloat.cpp \
-	WebGLFramebuffer.cpp \
-	WebGLObjectModel.cpp \
-	WebGLProgram.cpp \
-	WebGLRenderbuffer.cpp \
-	WebGLShader.cpp \
-	WebGLShaderPrecisionFormat.cpp \
-	WebGLTexelConversions.cpp \
-	WebGLTexture.cpp \
-	WebGLUniformLocation.cpp \
-	$(NULL)
-
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/js/xpconnect/wrappers \
 	$(NULL)
-
-else
-
-CPPSRCS += WebGLContextNotSupported.cpp
-
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

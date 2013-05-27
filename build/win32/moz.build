@@ -11,3 +11,6 @@ TEST_DIRS += ['crashinjectdll']
 
 if CONFIG['ENABLE_TESTS']:
     PROGRAM = 'crashinject'
+    CPP_SOURCES += [
+        'crashinject.cpp',
+    ]

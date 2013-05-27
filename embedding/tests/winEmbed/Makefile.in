@@ -38,12 +38,6 @@ XPI_NAME	= winembed
 
 RESFILE		= winEmbed.res
 
-CPPSRCS		= \
-		winEmbed.cpp \
-		WebBrowserChrome.cpp \
-		WindowCreator.cpp \
-		$(NULL)
-
 LIBS = \
 	$(DEPTH)/profile/dirserviceprovider/standalone/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX) \
 	$(XPCOM_STANDALONE_GLUE_LDOPTS) \

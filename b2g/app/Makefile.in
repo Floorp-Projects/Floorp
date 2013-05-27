@@ -19,8 +19,6 @@ endif
 
 ifndef LIBXUL_SDK
 
-CPPSRCS = nsBrowserApp.cpp
-
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 LIBS += \
   -lui \

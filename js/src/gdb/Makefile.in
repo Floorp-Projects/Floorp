@@ -11,17 +11,6 @@ VPATH		= @srcdir@ @srcdir@/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =					\
-  gdb-tests.cpp					\
-  test-jsid.cpp					\
-  test-JSString.cpp				\
-  test-JSObject.cpp				\
-  test-jsval.cpp				\
-  test-prettyprinters.cpp			\
-  test-Root.cpp					\
-  typedef-printers.cpp				\
-  $(NULL)
-
 # Building against js_static requires that we declare mfbt sybols "exported"
 # on its behalf.
 DEFINES += -DEXPORT_JS_API -DIMPL_MFBT
