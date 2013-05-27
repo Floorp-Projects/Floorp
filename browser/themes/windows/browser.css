@@ -694,7 +694,6 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
 
-#bookmarks-button,
 #bookmarks-menu-button {
   -moz-image-region: rect(0, 144px, 18px, 126px);
 }

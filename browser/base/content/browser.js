@@ -2773,35 +2773,6 @@ function openHomeDialog(aURL)
   }
 }
 
-var bookmarksButtonObserver = {
-  onDrop: function (aEvent)
-  {
-    let name = { };
-    let url = browserDragAndDrop.drop(aEvent, name);
-    try {
-      PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                       , type: "bookmark"
-                                       , uri: makeURI(url)
-                                       , title: name
-                                       , hiddenRows: [ "description"
-                                                     , "location"
-                                                     , "loadInSidebar"
-                                                     , "keyword" ]
-                                       }, window);
-    } catch(ex) { }
-  },
-
-  onDragOver: function (aEvent)
-  {
-    browserDragAndDrop.dragOver(aEvent);
-    aEvent.dropEffect = "link";
-  },
-
-  onDragExit: function (aEvent)
-  {
-  }
-}
-
 var newTabButtonObserver = {
   onDragOver: function (aEvent)
   {

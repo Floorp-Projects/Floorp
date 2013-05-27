@@ -990,14 +990,6 @@
                      observes="viewHistorySidebar" label="&historyButton.label;"
                      tooltiptext="&historyButton.tooltip;"/>
 
-      <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     observes="viewBookmarksSidebar"
-                     tooltiptext="&bookmarksButton.tooltip;"
-                     ondrop="bookmarksButtonObserver.onDrop(event)"
-                     ondragover="bookmarksButtonObserver.onDragOver(event)"
-                     ondragenter="bookmarksButtonObserver.onDragOver(event)"
-                     ondragexit="bookmarksButtonObserver.onDragExit(event)"/>
-
       <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&newNavigatorCmd.label;"
                      command="key_newNavigator"
