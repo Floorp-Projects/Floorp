@@ -36,7 +36,14 @@ private:
     void noteInferred(QualType T, DiagnosticsEngine &Diag);
   };
 
+  class NonHeapClassChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+    void noteInferred(QualType T, DiagnosticsEngine &Diag);
+  };
+
   StackClassChecker stackClassChecker;
+  NonHeapClassChecker nonheapClassChecker;
   MatchFinder astMatcher;
 };
 
@@ -116,57 +123,89 @@ public:
   }
 };
 
-DenseMap<const CXXRecordDecl *, const Decl *> stackClassCauses;
+/**
+ * Where classes may be allocated. Regular classes can be allocated anywhere,
+ * non-heap classes on the stack or as static variables, and stack classes only
+ * on the stack. Note that stack classes subsumes non-heap classes.
+ */
+enum ClassAllocationNature {
+  RegularClass = 0,
+  NonHeapClass = 1,
+  StackClass = 2
+};
 
-bool isStackClass(QualType T);
+/// A cached data of whether classes are stack classes, non-heap classes, or
+/// neither.
+DenseMap<const CXXRecordDecl *,
+  std::pair<const Decl *, ClassAllocationNature> > inferredAllocCauses;
 
-bool isStackClass(CXXRecordDecl *D) {
+ClassAllocationNature getClassAttrs(QualType T);
+
+ClassAllocationNature getClassAttrs(CXXRecordDecl *D) {
   // Normalize so that D points to the definition if it exists. If it doesn't,
   // then we can't allocate it anyways.
   if (!D->hasDefinition())
-    return false;
+    return RegularClass;
   D = D->getDefinition();
   // Base class: anyone with this annotation is obviously a stack class
   if (MozChecker::hasCustomAnnotation(D, "moz_stack_class"))
-    return true;
+    return StackClass;
 
   // See if we cached the result.
-  DenseMap<const CXXRecordDecl *, const Decl *>::iterator it =
-    stackClassCauses.find(D);
-  if (it != stackClassCauses.end()) {
-    // If the cause is NULL, then this is not a stack class.
-    return it->second != NULL;
+  DenseMap<const CXXRecordDecl *,
+    std::pair<const Decl *, ClassAllocationNature> >::iterator it =
+    inferredAllocCauses.find(D);
+  if (it != inferredAllocCauses.end()) {
+    return it->second.second;
   }
 
-  // Look through all base cases to figure out if the parent is a stack class.
+  // Continue looking, we might be a stack class yet. Even if we're a nonheap
+  // class, it might be possible that we've inferred to be a stack class.
+  ClassAllocationNature type = RegularClass;
+  if (MozChecker::hasCustomAnnotation(D, "moz_nonheap_class")) {
+    type = NonHeapClass;
+  }
+  inferredAllocCauses.insert(std::make_pair(D,
+    std::make_pair((const Decl *)0, type)));
+
+  // Look through all base cases to figure out if the parent is a stack class or
+  // a non-heap class. Since we might later infer to also be a stack class, keep
+  // going.
   for (CXXRecordDecl::base_class_iterator base = D->bases_begin(),
        e = D->bases_end(); base != e; ++base) {
-    if (isStackClass(base->getType())) {
-      stackClassCauses.insert(std::make_pair(D,
-        base->getType()->getAsCXXRecordDecl()));
-      return true;
+    ClassAllocationNature super = getClassAttrs(base->getType());
+    if (super == StackClass) {
+      inferredAllocCauses[D] = std::make_pair(
+        base->getType()->getAsCXXRecordDecl(), StackClass);
+      return StackClass;
+    } else if (super == NonHeapClass) {
+      inferredAllocCauses[D] = std::make_pair(
+        base->getType()->getAsCXXRecordDecl(), NonHeapClass);
+      type = NonHeapClass;
     }
   }
 
   // Maybe it has a member which is a stack class.
   for (RecordDecl::field_iterator field = D->field_begin(), e = D->field_end();
        field != e; ++field) {
-    if (isStackClass(field->getType())) {
-      stackClassCauses.insert(std::make_pair(D, *field));
-      return true;
+    ClassAllocationNature fieldType = getClassAttrs(field->getType());
+    if (fieldType == StackClass) {
+      inferredAllocCauses[D] = std::make_pair(*field, StackClass);
+      return StackClass;
+    } else if (fieldType == NonHeapClass) {
+      inferredAllocCauses[D] = std::make_pair(*field, NonHeapClass);
+      type = NonHeapClass;
     }
   }
 
-  // Nope, this class is not a stack class.
-  stackClassCauses.insert(std::make_pair(D, (const Decl*)0));
-  return false;
+  return type;
 }
 
-bool isStackClass(QualType T) {
+ClassAllocationNature getClassAttrs(QualType T) {
   while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
     T = arrTy->getElementType();
   CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
-  return clazz && isStackClass(clazz);
+  return clazz ? getClassAttrs(clazz) : RegularClass;
 }
 
 }
@@ -177,7 +216,13 @@ namespace ast_matchers {
 /// This matcher will match any class with the stack class assertion or an
 /// array of such classes.
 AST_MATCHER(QualType, stackClassAggregate) {
-  return isStackClass(Node);
+  return getClassAttrs(Node) == StackClass;
+}
+
+/// This matcher will match any class with the stack class assertion or an
+/// array of such classes.
+AST_MATCHER(QualType, nonheapClassAggregate) {
+  return getClassAttrs(Node) == NonHeapClass;
 }
 }
 }
@@ -193,6 +238,11 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
   astMatcher.addMatcher(newExpr(hasType(pointerType(
       pointee(stackClassAggregate())
     ))).bind("node"), &stackClassChecker);
+  // Non-heap class assertion: new non-heap class is forbidden (unless placement
+  // new)
+  astMatcher.addMatcher(newExpr(hasType(pointerType(
+      pointee(nonheapClassAggregate())
+    ))).bind("node"), &nonheapClassChecker);
 }
 
 void DiagnosticsMatcher::StackClassChecker::run(
@@ -235,7 +285,49 @@ void DiagnosticsMatcher::StackClassChecker::noteInferred(QualType T,
   if (MozChecker::hasCustomAnnotation(clazz, "moz_stack_class"))
     return;
 
-  const Decl *cause = stackClassCauses[clazz];
+  const Decl *cause = inferredAllocCauses[clazz].first;
+  if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(cause)) {
+    Diag.Report(clazz->getLocation(), inheritsID) << T << CRD->getDeclName();
+  } else if (const FieldDecl *FD = dyn_cast<FieldDecl>(cause)) {
+    Diag.Report(FD->getLocation(), memberID) << T << FD << FD->getType();
+  }
+  
+  // Recursively follow this back.
+  noteInferred(cast<ValueDecl>(cause)->getType(), Diag);
+}
+
+void DiagnosticsMatcher::NonHeapClassChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned stackID = Diag.getDiagnosticIDs()->getCustomDiagID(
+    DiagnosticIDs::Error, "variable of type %0 is not valid on the heap");
+  const CXXNewExpr *expr = Result.Nodes.getNodeAs<CXXNewExpr>("node");
+  // If it's placement new, then this match doesn't count.
+  if (expr->getNumPlacementArgs() > 0)
+    return;
+  Diag.Report(expr->getStartLoc(), stackID) << expr->getAllocatedType();
+  noteInferred(expr->getAllocatedType(), Diag);
+}
+
+void DiagnosticsMatcher::NonHeapClassChecker::noteInferred(QualType T,
+    DiagnosticsEngine &Diag) {
+  unsigned inheritsID = Diag.getDiagnosticIDs()->getCustomDiagID(
+    DiagnosticIDs::Note,
+    "%0 is a non-heap class because it inherits from a non-heap class %1");
+  unsigned memberID = Diag.getDiagnosticIDs()->getCustomDiagID(
+    DiagnosticIDs::Note,
+    "%0 is a non-heap class because member %1 is a non-heap class %2");
+
+  // Find the CXXRecordDecl that is the stack class of interest
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
+
+  // Direct result, we're done.
+  if (MozChecker::hasCustomAnnotation(clazz, "moz_nonheap_class"))
+    return;
+
+  const Decl *cause = inferredAllocCauses[clazz].first;
   if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(cause)) {
     Diag.Report(clazz->getLocation(), inheritsID) << T << CRD->getDeclName();
   } else if (const FieldDecl *FD = dyn_cast<FieldDecl>(cause)) {
