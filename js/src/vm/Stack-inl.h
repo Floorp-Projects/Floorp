@@ -121,6 +121,15 @@ StackFrame::initVarsToUndefined()
     SetValueRangeToUndefined(slots(), script()->nfixed);
 }
 
+inline JSObject *
+StackFrame::createRestParameter(JSContext *cx)
+{
+    JS_ASSERT(fun()->hasRest());
+    unsigned nformal = fun()->nargs - 1, nactual = numActualArgs();
+    unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
+    return NewDenseCopiedArray(cx, nrest, argv() + nformal, NULL);
+}
+
 inline Value &
 StackFrame::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
 {
