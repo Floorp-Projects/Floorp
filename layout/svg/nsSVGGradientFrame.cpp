@@ -82,44 +82,6 @@ nsSVGGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
 
 //----------------------------------------------------------------------
 
-uint32_t
-nsSVGGradientFrame::GetStopCount()
-{
-  return GetStopFrame(-1, nullptr);
-}
-
-void
-nsSVGGradientFrame::GetStopInformation(int32_t aIndex,
-                                       float *aOffset,
-                                       nscolor *aStopColor,
-                                       float *aStopOpacity)
-{
-  *aOffset = 0.0f;
-  *aStopColor = NS_RGBA(0, 0, 0, 0);
-  *aStopOpacity = 1.0f;
-
-  nsIFrame *stopFrame = nullptr;
-  GetStopFrame(aIndex, &stopFrame);
-
-  nsIContent* stopContent = stopFrame->GetContent();
-
-  if (stopContent) {
-    MOZ_ASSERT(stopContent->IsSVG(nsGkAtoms::stop));
-    SVGStopElement* stopElement = nullptr;
-    stopElement = static_cast<SVGStopElement*>(stopContent);
-    nsCOMPtr<nsIDOMSVGAnimatedNumber> aNum = stopElement->Offset();
-
-    aNum->GetAnimVal(aOffset);
-    if (*aOffset < 0.0f)
-      *aOffset = 0.0f;
-    else if (*aOffset > 1.0f)
-      *aOffset = 1.0f;
-  }
-
-  *aStopColor   = stopFrame->StyleSVGReset()->mStopColor;
-  *aStopOpacity = stopFrame->StyleSVGReset()->mStopOpacity;
-}
-
 uint16_t
 nsSVGGradientFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 {
@@ -226,6 +188,23 @@ nsSVGGradientFrame::GetRadialGradientWithLength(uint32_t aIndex,
 //----------------------------------------------------------------------
 // nsSVGPaintServerFrame methods:
 
+//helper
+static void GetStopInformation(nsIFrame* aStopFrame,
+                               float *aOffset,
+                               nscolor *aStopColor,
+                               float *aStopOpacity)
+{
+  nsIContent* stopContent = aStopFrame->GetContent();
+  MOZ_ASSERT(stopContent && stopContent->IsSVG(nsGkAtoms::stop));
+
+  static_cast<SVGStopElement*>(stopContent)->
+    GetAnimatedNumberValues(aOffset, nullptr);
+
+  *aOffset = mozilla::clamped(*aOffset, 0.0f, 1.0f);
+  *aStopColor = aStopFrame->StyleSVGReset()->mStopColor;
+  *aStopOpacity = aStopFrame->StyleSVGReset()->mStopOpacity;
+}
+
 already_AddRefed<gfxPattern>
 nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
                                           const gfxMatrix& aContextMatrix,
@@ -244,7 +223,10 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
                 aSource->GetParent() : aSource;
   }
 
-  uint32_t nStops = GetStopCount();
+  nsAutoTArray<nsIFrame*,8> stopFrames;
+  GetStopFrames(&stopFrames);
+
+  uint32_t nStops = stopFrames.Length();
 
   // SVG specification says that no stops should be treated like
   // the corresponding fill or stroke had "none" specified.
@@ -252,13 +234,13 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
     nsRefPtr<gfxPattern> pattern = new gfxPattern(gfxRGBA(0, 0, 0, 0));
     return pattern.forget();
   }
-  // If the gradient is a single colour,
-  // use the last gradient stop colour as the colour.
-  if (IsSingleColour(nStops)) {
-    float offset, stopOpacity;
-    nscolor stopColor;
 
-    GetStopInformation(nStops - 1, &offset, &stopColor, &stopOpacity);
+  if (nStops == 1 || GradientVectorLengthIsZero()) {
+    // The gradient paints a single colour, using the stop-color of the last
+    // gradient step if there are more than one.
+    float stopOpacity = stopFrames[nStops-1]->StyleSVGReset()->mStopOpacity;
+    nscolor stopColor = stopFrames[nStops-1]->StyleSVGReset()->mStopColor;
+
     nsRefPtr<gfxPattern> pattern = new gfxPattern(
                            gfxRGBA(NS_GET_R(stopColor)/255.0,
                                    NS_GET_G(stopColor)/255.0,
@@ -305,7 +287,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
     float offset, stopOpacity;
     nscolor stopColor;
 
-    GetStopInformation(i, &offset, &stopColor, &stopOpacity);
+    GetStopInformation(stopFrames[i], &offset, &stopColor, &stopOpacity);
 
     if (offset < lastOffset)
       offset = lastOffset;
@@ -384,33 +366,29 @@ nsSVGGradientFrame::GetReferencedGradientIfNotInUse()
   return referenced;
 }
 
-int32_t
-nsSVGGradientFrame::GetStopFrame(int32_t aIndex, nsIFrame * *aStopFrame)
+void
+nsSVGGradientFrame::GetStopFrames(nsTArray<nsIFrame*>* aStopFrames)
 {
-  int32_t stopCount = 0;
   nsIFrame *stopFrame = nullptr;
   for (stopFrame = mFrames.FirstChild(); stopFrame;
        stopFrame = stopFrame->GetNextSibling()) {
     if (stopFrame->GetType() == nsGkAtoms::svgStopFrame) {
-      // Is this the one we're looking for?
-      if (stopCount++ == aIndex)
-        break; // Yes, break out of the loop
+      aStopFrames->AppendElement(stopFrame);
     }
   }
-  if (stopCount > 0) {
-    if (aStopFrame)
-      *aStopFrame = stopFrame;
-    return stopCount;
+  if (aStopFrames->Length() > 0) {
+    return;
   }
 
   // Our gradient element doesn't have stops - try to "inherit" them
 
   AutoGradientReferencer gradientRef(this);
   nsSVGGradientFrame* next = GetReferencedGradientIfNotInUse();
-  if (!next)
-    return 0;
+  if (!next) {
+    return;
+  }
 
-  return next->GetStopFrame(aIndex, aStopFrame);
+  return next->GetStopFrames(aStopFrames);
 }
 
 // -------------------------------------------------------------------------
@@ -500,15 +478,12 @@ nsSVGLinearGradientFrame::GetLinearGradientWithLength(uint32_t aIndex,
 }
 
 bool
-nsSVGLinearGradientFrame::IsSingleColour(uint32_t nStops)
+nsSVGLinearGradientFrame::GradientVectorLengthIsZero()
 {
-  NS_ABORT_IF_FALSE(nStops == GetStopCount(), "Unexpected number of stops");
-
-  return nStops == 1 ||
-         (GetLengthValue(dom::SVGLinearGradientElement::ATTR_X1) ==
-          GetLengthValue(dom::SVGLinearGradientElement::ATTR_X2) &&
-          GetLengthValue(dom::SVGLinearGradientElement::ATTR_Y1) ==
-          GetLengthValue(dom::SVGLinearGradientElement::ATTR_Y2));
+  return GetLengthValue(dom::SVGLinearGradientElement::ATTR_X1) ==
+         GetLengthValue(dom::SVGLinearGradientElement::ATTR_X2) &&
+         GetLengthValue(dom::SVGLinearGradientElement::ATTR_Y1) ==
+         GetLengthValue(dom::SVGLinearGradientElement::ATTR_Y2);
 }
 
 already_AddRefed<gfxPattern>
@@ -630,12 +605,9 @@ nsSVGRadialGradientFrame::GetRadialGradientWithLength(uint32_t aIndex,
 }
 
 bool
-nsSVGRadialGradientFrame::IsSingleColour(uint32_t nStops)
+nsSVGRadialGradientFrame::GradientVectorLengthIsZero()
 {
-  NS_ABORT_IF_FALSE(nStops == GetStopCount(), "Unexpected number of stops");
-
-  return nStops == 1 ||
-         GetLengthValue(dom::SVGRadialGradientElement::ATTR_R) == 0;
+  return GetLengthValue(dom::SVGRadialGradientElement::ATTR_R) == 0;
 }
 
 already_AddRefed<gfxPattern>
