@@ -657,7 +657,6 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
 
-#bookmarks-button,
 #bookmarks-menu-button {
   -moz-image-region: rect(0px 72px 24px 48px);
 }
@@ -690,14 +689,9 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
  * !important.
  *
  * Here are the relevant removal bugs:
- * #bookmarks-button - Bug 867368
  * #cut-button, #copy-button, #paste-button - Bug 870901
  * #zoom-out-button, #zoom-in-button - Bug 870897
  */
-
-#bookmarks-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png") !important;
-}
 
 #cut-button {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar") !important;
@@ -837,7 +831,6 @@ toolbar[iconsize="small"] #history-button {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-toolbar[iconsize="small"] #bookmarks-button,
 toolbar[iconsize="small"] #bookmarks-menu-button,
 #bookmarks-menu-button.bookmark-item {
   -moz-image-region: rect(0px 48px 16px 32px);

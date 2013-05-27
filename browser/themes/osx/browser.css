@@ -898,13 +898,8 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
 
 /* bookmark sidebar & menu buttons */
 
-#bookmarks-button,
 #bookmarks-menu-button {
   -moz-image-region: rect(0, 180px, 20px, 160px);
-}
-
-#bookmarks-button[checked="true"] {
-  -moz-image-region: rect(20px, 180px, 40px, 160px);
 }
 
 #bookmarks-menu-button.bookmark-item {
@@ -913,13 +908,8 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
 }
 
 @media (min-resolution: 2dppx) {
-  #bookmarks-button,
   #bookmarks-menu-button {
     -moz-image-region: rect(0, 360px, 40px, 320px);
-  }
-
-  #bookmarks-button[checked="true"] {
-    -moz-image-region: rect(40px, 360px, 80px, 320px);
   }
 
   #bookmarks-menu-button.bookmark-item {
