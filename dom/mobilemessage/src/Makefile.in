@@ -63,8 +63,18 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 EXTRA_COMPONENTS = \
+  ril/MmsService.js \
+  ril/MmsService.manifest \
   ril/MobileMessageDatabaseService.js \
   ril/MobileMessageDatabaseService.manifest \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  ril/mms_consts.js \
+  ril/MmsPduHelper.jsm \
+  ril/wap_consts.js \
+  ril/WapPushManager.js \
+  ril/WspPduHelper.jsm \
   $(NULL)
 else
 CPPSRCS += \
