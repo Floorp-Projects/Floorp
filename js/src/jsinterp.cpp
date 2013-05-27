@@ -397,8 +397,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (!fun->getOrCreateScript(cx))
         return false;
 
-    if (!TypeMonitorCall(cx, args, construct))
-        return false;
+    TypeMonitorCall(cx, args, construct);
 
     /* Get pointer to new frame/slots, prepare arguments. */
     InvokeFrameGuard ifg;
@@ -532,8 +531,6 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!script->ensureHasTypes(cx))
-        return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
     Probes::startExecution(script);
@@ -2227,8 +2224,7 @@ BEGIN_CASE(JSOP_FUNCALL)
         DO_NEXT_OP(len);
     }
 
-    if (!TypeMonitorCall(cx, args, construct))
-        goto error;
+    TypeMonitorCall(cx, args, construct);
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
@@ -2453,6 +2449,8 @@ END_VARLEN_CASE
 
 BEGIN_CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!regs.fp()->fun()->hasRest());
+    if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx))
+        goto error;
     if (script->needsArgsObj()) {
         ArgumentsObject *obj = ArgumentsObject::createExpected(cx, regs.fp());
         if (!obj)
