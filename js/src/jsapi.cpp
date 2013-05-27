@@ -716,7 +716,7 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
     ionTop(NULL),
     ionJSContext(NULL),
     ionStackLimit(0),
-    ionActivation(NULL),
+    activation_(NULL),
     asmJSActivationStack_(NULL),
     suppressGC(0)
 {}
