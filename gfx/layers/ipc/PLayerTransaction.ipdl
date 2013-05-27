@@ -43,30 +43,8 @@ parent:
    * Only the parent side has privileges to allocate the buffer.
    * Allocation may fail (pmem is a scarce resource), and if so null_t
    * is returned.
-   *
-   * |format| is an Android PixelFormat (see PixelFormat.h)
-   *
-   * commonly used PixelFormats are:
-   *   PIXEL_FORMAT_RGBA_8888
-   *   PIXEL_FORMAT_RGBX_8888
-   *   PIXEL_FORMAT_BGRA_8888
-   *
-   * Note that SurfaceDescriptorGralloc has a "isRBSwapped" boolean
-   * that can treat the R/B bytes as swapped when they are rendered
-   * to the screen, to help with matching the native pixel format
-   * of other rendering engines.
-   *
-   * |usage| is a USAGE_* mask (see GraphicBuffer.h)
-   *
-   * commonly used USAGE flags are:
-   *   USAGE_SW_READ_OFTEN | USAGE_SW_WRITE_OFTEN | USAGE_HW_TEXTURE
-   *     - used for software rendering to a buffer which the compositor
-   *       treats as a texture
-   *   USAGE_HW_RENDER | USAGE_HW_TEXTURE
-   *     - used for GL rendering to a buffer which the compositor
-   *       treats as a texture
    */
-  sync PGrallocBuffer(gfxIntSize size, uint32_t format, uint32_t usage)
+  sync PGrallocBuffer(gfxIntSize size, gfxContentType content)
     returns (MaybeMagicGrallocBufferHandle handle);
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);

@@ -74,9 +74,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 GL_PROVIDER = EGL
 LOCAL_INCLUDES = -I$(topsrcdir)/widget/gonk
-
-CPPSRCS += SharedSurfaceGralloc.cpp
-EXPORTS += SharedSurfaceGralloc.h
 endif
 
 ifdef MOZ_GL_PROVIDER
@@ -112,8 +109,6 @@ CPPSRCS += GLContextSkia.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
