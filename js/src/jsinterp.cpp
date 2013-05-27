@@ -2470,12 +2470,6 @@ BEGIN_CASE(JSOP_REST)
     if (!rest)
         goto error;
     PUSH_COPY(ObjectValue(*rest));
-    if (!SetInitializerObjectType(cx, script, regs.pc, rest, GenericObject))
-        goto error;
-    rootType0 = GetTypeCallerInitObject(cx, JSProto_Array);
-    if (!rootType0)
-        goto error;
-    rest->setType(rootType0);
 }
 END_CASE(JSOP_REST)
 
