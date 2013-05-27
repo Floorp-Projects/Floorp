@@ -146,31 +146,6 @@ PixelFormatForImageFormat(gfxASurface::gfxImageFormat aFormat)
   return gfxASurface::ImageFormatARGB32;
 }
 
-static size_t
-BytesPerPixelForPixelFormat(android::PixelFormat aFormat)
-{
-  switch (aFormat) {
-  case PIXEL_FORMAT_RGBA_8888:
-  case PIXEL_FORMAT_RGBX_8888:
-  case PIXEL_FORMAT_BGRA_8888:
-    return 4;
-  case PIXEL_FORMAT_RGB_888:
-    return 3;
-  case PIXEL_FORMAT_RGB_565:
-  case PIXEL_FORMAT_RGBA_5551:
-  case PIXEL_FORMAT_RGBA_4444:
-  case PIXEL_FORMAT_LA_88:
-    return 2;
-  case PIXEL_FORMAT_L_8:
-  case PIXEL_FORMAT_A_8:
-  case PIXEL_FORMAT_RGB_332:
-    return 1;
-  default:
-    MOZ_NOT_REACHED("Unknown gralloc pixel format");
-  }
-  return gfxASurface::ImageFormatARGB32;
-}
-
 static android::PixelFormat
 PixelFormatForContentType(gfxASurface::gfxContentType aContentType)
 {
@@ -222,32 +197,28 @@ GrallocBufferActor::~GrallocBufferActor()
 
 /*static*/ PGrallocBufferParent*
 GrallocBufferActor::Create(const gfxIntSize& aSize,
-                           const uint32_t& aFormat,
-                           const uint32_t& aUsage,
+                           const gfxContentType& aContent,
                            MaybeMagicGrallocBufferHandle* aOutHandle)
 {
   PROFILER_LABEL("GrallocBufferActor", "Create");
   GrallocBufferActor* actor = new GrallocBufferActor();
   *aOutHandle = null_t();
-  uint32_t format = aFormat;
-  uint32_t usage = aUsage;
-
-  if (format == 0 || usage == 0) {
-    printf_stderr("GrallocBufferActor::Create -- format and usage must be non-zero");
-    return actor;
-  }
-
-  sp<GraphicBuffer> buffer(new GraphicBuffer(aSize.width, aSize.height, format, usage));
+  android::PixelFormat format = PixelFormatForContentType(aContent);
+  sp<GraphicBuffer> buffer(
+    new GraphicBuffer(aSize.width, aSize.height, format,
+                      GraphicBuffer::USAGE_SW_READ_OFTEN |
+                      GraphicBuffer::USAGE_SW_WRITE_OFTEN |
+                      GraphicBuffer::USAGE_HW_TEXTURE));
   if (buffer->initCheck() != OK)
     return actor;
 
-  size_t bpp = BytesPerPixelForPixelFormat(format);
+  size_t bpp = gfxASurface::BytePerPixelFromFormat(
+      gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent));
   actor->mAllocBytes = aSize.width * aSize.height * bpp;
   sCurrentAlloc += actor->mAllocBytes;
 
   actor->mGraphicBuffer = buffer;
   *aOutHandle = MagicGrallocBufferHandle(buffer);
-
   return actor;
 }
 
@@ -288,6 +259,24 @@ LayerManagerComposite::SupportsDirectTexturing()
 LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
 {
   // Nothing to be done for gralloc.
+}
+
+/*static*/ PGrallocBufferParent*
+GrallocBufferActor::Create(const gfxIntSize& aSize,
+                           const uint32_t& aFormat,
+                           const uint32_t& aUsage,
+                           MaybeMagicGrallocBufferHandle* aOutHandle)
+{
+  GrallocBufferActor* actor = new GrallocBufferActor();
+  *aOutHandle = null_t();
+  sp<GraphicBuffer> buffer(
+    new GraphicBuffer(aSize.width, aSize.height, aFormat, aUsage));
+  if (buffer->initCheck() != OK)
+    return actor;
+
+  actor->mGraphicBuffer = buffer;
+  *aOutHandle = MagicGrallocBufferHandle(buffer);
+  return actor;
 }
 
 bool
@@ -333,11 +322,10 @@ GrallocBufferActor::InitFromHandle(const MagicGrallocBufferHandle& aHandle)
 
 PGrallocBufferChild*
 ShadowLayerForwarder::AllocGrallocBuffer(const gfxIntSize& aSize,
-                                         uint32_t aFormat,
-                                         uint32_t aUsage,
+                                         gfxASurface::gfxContentType aContent,
                                          MaybeMagicGrallocBufferHandle* aHandle)
 {
-  return mShadowManager->SendPGrallocBufferConstructor(aSize, aFormat, aUsage, aHandle);
+  return mShadowManager->SendPGrallocBufferConstructor(aSize, aContent, aHandle);
 }
 
 bool
@@ -357,31 +345,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   // Gralloc buffers are efficiently mappable as gfxImageSurface, so
   // no need to check |aCaps & MAP_AS_IMAGE_SURFACE|.
   MaybeMagicGrallocBufferHandle handle;
-  PGrallocBufferChild* gc;
-  bool defaultRBSwap;
-
-  if (aCaps & USING_GL_RENDERING_ONLY) {
-    gc = AllocGrallocBuffer(aSize,
-                            PixelFormatForContentType(aContent),
-                            GraphicBuffer::USAGE_HW_RENDER |
-                            GraphicBuffer::USAGE_HW_TEXTURE,
-                            &handle);
-    // If you're allocating for USING_GL_RENDERING_ONLY, then we don't flag
-    // this for RB swap.
-    defaultRBSwap = false;
-  } else {
-    gc = AllocGrallocBuffer(aSize,
-                            PixelFormatForContentType(aContent),
-                            GraphicBuffer::USAGE_SW_READ_OFTEN |
-                            GraphicBuffer::USAGE_SW_WRITE_OFTEN |
-                            GraphicBuffer::USAGE_HW_TEXTURE,
-                            &handle);
-    // But if you're allocating for non-GL-only rendering, we flag for
-    // RB swap to preserve old behaviour and proper interaction with
-    // cairo.
-    defaultRBSwap = true;
-  }
-
+  PGrallocBufferChild* gc = AllocGrallocBuffer(aSize, aContent, &handle);
   if (!gc) {
     NS_ERROR("GrallocBufferConstructor failed by returned null");
     return false;
@@ -394,9 +358,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
   gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
 
-  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize,
-                                      /* external */ false,
-                                      defaultRBSwap);
+  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize, /* external */ false);
   return true;
 }
 

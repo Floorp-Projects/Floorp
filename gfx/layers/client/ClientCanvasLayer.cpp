@@ -8,9 +8,6 @@
 #include "SurfaceStream.h"
 #include "SharedSurfaceGL.h"
 #include "SharedSurfaceEGL.h"
-#ifdef MOZ_WIDGET_GONK
-#include "SharedSurfaceGralloc.h"
-#endif
 
 using namespace mozilla::gl;
 
@@ -40,12 +37,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
             factory = SurfaceFactory_EGLImage::Create(mGLContext, screen->Caps());
           } else {
             // [Basic/OGL Layers, OOPC] WebGL layer init. (Out Of Process Compositing)
-#ifdef MOZ_WIDGET_GONK
-            factory = new SurfaceFactory_Gralloc(mGLContext, screen->Caps(), ClientManager());
-#else
-            // we could do readback here maybe
-            NS_NOTREACHED("isCrossProcess but not on native B2G!");
-#endif
+            // Fall back to readback.
           }
         } else {
           // [Basic Layers, OMTC] WebGL layer init.
@@ -77,15 +69,6 @@ ClientCanvasLayer::RenderLayer()
     TextureFlags flags = 0;
     if (mNeedsYFlip) {
       flags |= NeedsYFlip;
-    }
-
-    bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
-    //Append OwnByClient flag for streaming buffer under OOPC case
-    if (isCrossProcess && mGLContext) {
-      GLScreenBuffer* screen = mGLContext->Screen();
-      if (screen && screen->Stream()) {
-        flags |= OwnByClient;
-      }
     }
     mCanvasClient = CanvasClient::CreateCanvasClient(GetCompositableClientType(),
                                                      ClientManager(), flags);

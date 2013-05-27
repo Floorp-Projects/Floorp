@@ -39,8 +39,8 @@ namespace layers {
 
 VideoGraphicBuffer::VideoGraphicBuffer(const android::wp<android::OmxDecoder> aOmxDecoder,
                                        android::MediaBuffer *aBuffer,
-                                       SurfaceDescriptor& aDescriptor)
-  : GraphicBufferLocked(aDescriptor),
+                                       SurfaceDescriptor *aDescriptor)
+  : GraphicBufferLocked(*aDescriptor),
     mMediaBuffer(aBuffer),
     mOmxDecoder(aOmxDecoder)
 {
@@ -591,11 +591,11 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       // Change the descriptor's size to video's size. There are cases that
       // GraphicBuffer's size and actual video size is different.
       // See Bug 850566.
-      mozilla::layers::SurfaceDescriptorGralloc newDescriptor = descriptor->get_SurfaceDescriptorGralloc();
-      newDescriptor.size() = nsIntSize(mVideoWidth, mVideoHeight);
+      const mozilla::layers::SurfaceDescriptorGralloc& grallocDesc = descriptor->get_SurfaceDescriptorGralloc();
+      mozilla::layers::SurfaceDescriptor newDescriptor = mozilla::layers::SurfaceDescriptorGralloc(grallocDesc.bufferParent(),
+                                                               grallocDesc.bufferChild(), nsIntSize(mVideoWidth, mVideoHeight), grallocDesc.external());
 
-      mozilla::layers::SurfaceDescriptor descWrapper(newDescriptor);
-      aFrame->mGraphicBuffer = new mozilla::layers::VideoGraphicBuffer(this, mVideoBuffer, descWrapper);
+      aFrame->mGraphicBuffer = new mozilla::layers::VideoGraphicBuffer(this, mVideoBuffer, &newDescriptor);
       aFrame->mRotation = mVideoRotation;
       aFrame->mTimeUs = timeUs;
       aFrame->mKeyFrame = keyFrame;

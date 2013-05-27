@@ -24,9 +24,8 @@ LayerTransactionChild::Destroy()
 
 PGrallocBufferChild*
 LayerTransactionChild::AllocPGrallocBuffer(const gfxIntSize&,
-                                           const uint32_t&,
-                                           const uint32_t&,
-                                           MaybeMagicGrallocBufferHandle*)
+                                       const gfxContentType&,
+                                       MaybeMagicGrallocBufferHandle*)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   return GrallocBufferActor::Create();

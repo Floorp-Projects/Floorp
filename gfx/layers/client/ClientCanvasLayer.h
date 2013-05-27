@@ -73,7 +73,7 @@ protected:
   
   CompositableType GetCompositableClientType()
   {
-    if (mGLContext) {
+    if (mGLContext && XRE_GetProcessType() == GeckoProcessType_Default) {
       return BUFFER_IMAGE_BUFFERED;
     }
     return BUFFER_IMAGE_SINGLE;
