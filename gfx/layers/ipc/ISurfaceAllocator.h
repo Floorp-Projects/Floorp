@@ -44,7 +44,11 @@ enum BufferCapabilities {
    * The allocated buffer must be efficiently mappable as a
    * gfxImageSurface.
    */
-  MAP_AS_IMAGE_SURFACE = 1 << 0
+  MAP_AS_IMAGE_SURFACE = 1 << 0,
+  /**
+   * The allocated buffer will be used for GL rendering only
+   */
+  USING_GL_RENDERING_ONLY = 1 << 1
 };
 
 class SurfaceDescriptor;
@@ -114,8 +118,11 @@ protected:
                                               gfxASurface::gfxContentType aContent,
                                               uint32_t aCaps,
                                               SurfaceDescriptor* aBuffer);
+
+  // method that does the actual allocation work
   virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
-                                                  gfxASurface::gfxContentType aContent,
+                                                  uint32_t aFormat,
+                                                  uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle)
   {
     return nullptr;
