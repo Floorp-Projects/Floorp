@@ -577,7 +577,7 @@ ImageBridgeChild::AllocSurfaceDescriptorGrallocNow(const gfxIntSize& aSize,
   GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
   gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
 
-  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize, /* external */ false);
+  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize, /* external */ false, /* swapRB */ false);
   return true;
 #else
   NS_RUNTIMEABORT("No gralloc buffers for you");
@@ -744,13 +744,14 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 
 PGrallocBufferChild*
 ImageBridgeChild::AllocGrallocBuffer(const gfxIntSize& aSize,
-                                     gfxASurface::gfxContentType aContent,
+                                     uint32_t aFormat,
+                                     uint32_t aUsage,
                                      MaybeMagicGrallocBufferHandle* aHandle)
 {
 #ifdef MOZ_WIDGET_GONK
   return SendPGrallocBufferConstructor(aSize,
-                                       aContent,
-                                       GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN,
+                                       aFormat,
+                                       aUsage,
                                        aHandle);
 #else
   NS_RUNTIMEABORT("not implemented");

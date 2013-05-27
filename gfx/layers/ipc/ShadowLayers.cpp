@@ -36,6 +36,9 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace layers {
 
+// static
+ShadowLayerForwarder* ShadowLayerForwarder::sActiveForwarder = nullptr;
+
 typedef nsTArray<SurfaceDescriptor> BufferArray;
 typedef std::vector<Edit> EditVector;
 typedef std::set<ShadowableLayer*> ShadowableLayerSet;
@@ -170,12 +173,18 @@ ShadowLayerForwarder::ShadowLayerForwarder()
  , mDrawColoredBorders(false)
 {
   mTxn = new Transaction();
+
+  MOZ_ASSERT(!sActiveForwarder);
+  sActiveForwarder = this;
 }
 
 ShadowLayerForwarder::~ShadowLayerForwarder()
 {
   NS_ABORT_IF_FALSE(mTxn->Finished(), "unfinished transaction?");
   delete mTxn;
+
+  MOZ_ASSERT(this == sActiveForwarder);
+  sActiveForwarder = nullptr;
 }
 
 void

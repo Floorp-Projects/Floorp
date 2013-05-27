@@ -37,6 +37,11 @@ CPPSRCS	= \
   SurfaceStream.cpp \
   $(NULL)
 
+ifdef MOZ_B2G
+CPPSRCS += SharedSurfaceGralloc.cpp
+EXPORTS += SharedSurfaceGralloc.h
+endif
+
 GL_PROVIDER = Null
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -109,6 +114,8 @@ CPPSRCS += GLContextSkia.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 

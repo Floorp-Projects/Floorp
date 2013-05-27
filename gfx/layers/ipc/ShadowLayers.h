@@ -138,6 +138,14 @@ class ShadowLayerForwarder : public CompositableForwarder
   friend class TextureClientShmem;
   friend class ContentClientIncremental;
 
+private:
+  static ShadowLayerForwarder* sActiveForwarder;
+
+public:
+  static ShadowLayerForwarder* GetActiveForwarder() {
+    return sActiveForwarder;
+  }
+
 public:
   virtual ~ShadowLayerForwarder();
 
@@ -388,8 +396,10 @@ protected:
   PLayerTransactionChild* mShadowManager;
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+  // from ISurfaceAllocator
   virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
-                                                  gfxASurface::gfxContentType aContent,
+                                                  uint32_t aFormat,
+                                                  uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle) MOZ_OVERRIDE;
 #endif
 

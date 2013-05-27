@@ -639,13 +639,16 @@ TiledTextureHostOGL::Lock()
 
 #ifdef MOZ_WIDGET_GONK
 static gfx::SurfaceFormat
-SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat)
+SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
+                                   bool swapRB = false)
 {
   switch (aFormat) {
+  case android::PIXEL_FORMAT_BGRA_8888:
+    return swapRB ? FORMAT_R8G8B8A8 : FORMAT_B8G8R8A8;
   case android::PIXEL_FORMAT_RGBA_8888:
-    return FORMAT_B8G8R8A8;
+    return swapRB ? FORMAT_B8G8R8A8 : FORMAT_R8G8B8A8;
   case android::PIXEL_FORMAT_RGBX_8888:
-    return FORMAT_B8G8R8X8;
+    return swapRB ? FORMAT_B8G8R8X8 : FORMAT_R8G8B8X8;
   case android::PIXEL_FORMAT_RGB_565:
     return FORMAT_R5G6B5;
   case android::PIXEL_FORMAT_A_8:
@@ -757,7 +760,8 @@ GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
 
   const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
   mGraphicBuffer = GrallocBufferActor::GetFrom(desc);
-  mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
+  mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat(),
+                                               desc.isRBSwapped());
   mTextureTarget = TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
 
   DeleteTextures();
