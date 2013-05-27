@@ -31,40 +31,6 @@ EXTRA_JS_MODULES += \
   ObjectWrapper.jsm \
   $(NULL)
 
-CPPSRCS =			\
-	nsBarProps.cpp          \
-	nsDOMException.cpp 	\
-	nsDOMWindowUtils.cpp 	\
-	nsJSEnvironment.cpp	\
-	nsJSTimeoutHandler.cpp	\
-	nsFocusManager.cpp \
-	nsGlobalWindow.cpp      \
-	nsGlobalWindowCommands.cpp \
-	nsLocation.cpp		\
-	nsDOMWindowList.cpp	\
-	nsJSUtils.cpp		\
-	nsScreen.cpp		\
-	nsHistory.cpp		\
-	nsMimeTypeArray.cpp	\
-	nsPluginArray.cpp	\
-	nsWindowRoot.cpp	\
-	nsDOMClassInfo.cpp	\
-	nsScriptNameSpaceManager.cpp \
-	nsDOMScriptObjectFactory.cpp \
-	nsQueryContentEventResult.cpp \
-	nsContentPermissionHelper.cpp \
-	nsStructuredCloneContainer.cpp \
-	nsDOMNavigationTiming.cpp \
-	nsPerformance.cpp	\
-	nsWindowMemoryReporter.cpp \
-	Crypto.cpp \
-	DOMError.cpp \
-	DOMRequest.cpp \
-	DOMCursor.cpp \
-	Navigator.cpp \
-	URL.cpp \
-	$(NULL)
-
 include $(topsrcdir)/dom/dom-config.mk
 
 ifdef MOZ_JSDEBUGGER

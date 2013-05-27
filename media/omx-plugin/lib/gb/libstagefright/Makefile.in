@@ -32,12 +32,6 @@ USE_STATIC_LIBS = 1
 NO_DIST_INSTALL = 1
 NO_INSTALL = 1
 
-ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
-CPPSRCS = \
-	libstagefright.cpp \
-	$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CXX

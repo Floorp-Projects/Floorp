@@ -13,10 +13,6 @@ LIBRARY_NAME	= linker
 FORCE_STATIC_LIB= 1
 STL_FLAGS =
 
-CPPSRCS = \
-  Zip.cpp \
-  $(NULL)
-
 HOST_PROGRAM = szip
 
 HOST_CPPSRCS = \
@@ -25,13 +21,6 @@ HOST_CPPSRCS = \
   $(NULL)
 
 HOST_LIBS = -lz
-
-CPPSRCS += \
-  ElfLoader.cpp \
-  CustomElf.cpp \
-  Mappable.cpp \
-  SeekableZStream.cpp \
-  $(NULL)
 
 DEFINES += -DIMPL_MFBT
 

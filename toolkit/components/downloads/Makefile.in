@@ -14,15 +14,6 @@ LIBRARY_NAME = download_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-CPPSRCS = \
-  nsDownloadManager.cpp \
-  SQLFunctions.cpp \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += nsDownloadScanner.cpp
-endif
-
 # definition of MOZ_SUITE is only added via config.mk
 include $(topsrcdir)/config/config.mk
 

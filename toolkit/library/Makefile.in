@@ -29,14 +29,6 @@ endif
 
 VPATH += $(topsrcdir)/build/
 
-ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-CPPSRCS += dlldeps-xul.cpp
-endif
-
-ifeq ($(OS_ARCH),OS2)
-CPPSRCS += dlldeps-xul.cpp
-endif
-
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/media/kiss_fft/$(LIB_PREFIX)kiss_fft.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/components/osfile/$(LIB_PREFIX)osfile_s.$(LIB_SUFFIX) \
@@ -74,41 +66,14 @@ SHARED_LIBRARY_LIBS += \
   $(foreach lib,$(STATIC_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
   $(NULL)
 
-CPPSRCS += \
-  nsStaticXULComponents.cpp \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += \
-  nsDllMain.cpp \
-  $(NULL)
-endif
-
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-CPPSRCS += \
-  nsGFXDeps.cpp \
-  $(NULL)
-
 RCINCLUDE = xulrunner.rc
-
-ifndef MOZ_NATIVE_ZLIB
-CPPSRCS += dlldeps-zlib.cpp
-endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/windows
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
 ifeq ($(OS_ARCH),OS2)
-
-CPPSRCS += \
-  nsGFXDeps.cpp \
-  $(NULL)
-
-ifndef MOZ_NATIVE_ZLIB
-CPPSRCS += dlldeps-zlib.cpp
-endif
-
 RESFILE = xulrunos2.res
 RCFLAGS += -i $(topsrcdir)/widget/os2
 
@@ -501,11 +466,6 @@ endif
 EXTRA_DEPS += \
   $(topsrcdir)/intl/unicharutil/util/objs.mk \
   $(topsrcdir)/rdf/util/src/objs.mk \
-  $(NULL)
-
-CPPSRCS += \
-  $(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
-  $(RDF_UTIL_SRC_LCPPSRCS) \
   $(NULL)
 
 GARBAGE += \

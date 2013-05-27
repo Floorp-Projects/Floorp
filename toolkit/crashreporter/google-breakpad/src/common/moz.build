@@ -12,3 +12,38 @@ MODULE = 'breakpad_common'
 CSRCS += [
     'convert_UTF.c',
 ]
+
+CPP_SOURCES += [
+    'logging.cc',
+    'module.cc',
+    'pathname_stripper.cc',
+    'string_conversion.cc',
+    'unique_string.cc',
+]
+
+if CONFIG['OS_TARGET'] != 'WINNT':
+    CPP_SOURCES += [
+        'md5.cc',
+        'dwarf/bytereader.cc',
+        'dwarf_cfi_to_module.cc',
+        'dwarf/dwarf2reader.cc',
+        'dwarf_cu_to_module.cc',
+        'language.cc',
+        'dwarf/dwarf2diehandler.cc',
+        'dwarf_line_to_module.cc',
+    ]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    CPP_SOURCES += [
+        'linux/dump_symbols.cc',
+        'linux/elf_symbols_to_module.cc',
+    ]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    pass
+else:
+    if CONFIG['OS_TARGET'] != 'WINNT':
+        CPP_SOURCES += [
+            'stabs_to_module.cc',
+            'stabs_reader.cc',
+        ]

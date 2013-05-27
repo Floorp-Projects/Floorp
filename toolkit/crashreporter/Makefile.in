@@ -43,17 +43,6 @@ endif
 LOCAL_INCLUDES += -I$(srcdir)/google-breakpad/src
 DEFINES += -DUNICODE -D_UNICODE
 
-CPPSRCS = \
-	nsExceptionHandler.cpp \
-	$(NULL)
-
-ifdef MOZ_CRASHREPORTER_INJECTOR
-CPPSRCS += \
-  LoadLibraryRemote.cpp \
-  InjectCrashReporter.cpp \
-  $(NULL)
-endif
-
 FORCE_STATIC_LIB = 1
 
 EXTRA_JS_MODULES = \

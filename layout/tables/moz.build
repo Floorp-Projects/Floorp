@@ -12,3 +12,18 @@ EXPORTS += [
     'nsITableCellLayout.h',
 ]
 
+CPP_SOURCES += [
+    'BasicTableLayoutStrategy.cpp',
+    'FixedTableLayoutStrategy.cpp',
+    'SpanningCellSorter.cpp',
+    'nsCellMap.cpp',
+    'nsTableCellFrame.cpp',
+    'nsTableColFrame.cpp',
+    'nsTableColGroupFrame.cpp',
+    'nsTableFrame.cpp',
+    'nsTableOuterFrame.cpp',
+    'nsTablePainter.cpp',
+    'nsTableRowFrame.cpp',
+    'nsTableRowGroupFrame.cpp',
+]
+

@@ -7,3 +7,8 @@
 MODULE = 'test_intl_unicharutil'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+CPP_SOURCES += [
+    'NormalizationTest.cpp',
+    'UnicharSelfTest.cpp',
+]
