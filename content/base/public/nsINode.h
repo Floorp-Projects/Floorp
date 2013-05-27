@@ -1725,10 +1725,10 @@ public:
 #include "nsEventNameList.h"
 #undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
-#undef EVENT  
+#undef EVENT
 
 protected:
-  static void Trace(nsINode *tmp, TraceCallback cb, void *closure);
+  static void Trace(nsINode *tmp, const TraceCallbacks &cb, void *closure);
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsINode *tmp);
 
