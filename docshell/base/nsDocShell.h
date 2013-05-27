@@ -33,7 +33,6 @@
 #include "nsIDocCharset.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRefreshURI.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
@@ -130,7 +129,6 @@ class nsDocShell : public nsDocLoader,
                    public nsITextScroll, 
                    public nsIDocCharset, 
                    public nsIContentViewerContainer,
-                   public nsIScriptGlobalObjectOwner,
                    public nsIRefreshURI,
                    public nsIWebProgressListener,
                    public nsIWebPageDescriptor,
@@ -204,9 +202,6 @@ public:
 
     nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType);
     uint32_t ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
-
-    // nsIScriptGlobalObjectOwner methods
-    virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
     // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
     // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
