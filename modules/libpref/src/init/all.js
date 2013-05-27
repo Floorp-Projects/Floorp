@@ -3957,9 +3957,6 @@ pref("webgl.default-no-alpha", false);
 pref("webgl.force-layers-readback", false);
 pref("webgl.lose-context-on-heap-minimize", false);
 pref("webgl.can-lose-context-in-foreground", true);
-#ifdef MOZ_WIDGET_GONK
-pref("gfx.gralloc.fence-with-readpixels", false);
-#endif
 
 // Stagefright prefs
 pref("stagefright.force-enabled", false);

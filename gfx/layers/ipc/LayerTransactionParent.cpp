@@ -464,12 +464,11 @@ LayerTransactionParent::RecvClearCachedResources()
 
 PGrallocBufferParent*
 LayerTransactionParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
-                                            const uint32_t& aFormat,
-                                            const uint32_t& aUsage,
+                                            const gfxContentType& aContent,
                                             MaybeMagicGrallocBufferHandle* aOutHandle)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  return GrallocBufferActor::Create(aSize, aFormat, aUsage, aOutHandle);
+  return GrallocBufferActor::Create(aSize, aContent, aOutHandle);
 #else
   NS_RUNTIMEABORT("No gralloc buffers for you");
   return nullptr;
