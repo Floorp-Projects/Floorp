@@ -160,9 +160,10 @@ TelephonyCall::NotifyError(const nsAString& aError)
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TelephonyCall,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(TelephonyCall,
                                      nsDOMEventTargetHelper,
-                                     mTelephony)
+                                     mTelephony,
+                                     mError);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TelephonyCall)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTelephonyCall)
