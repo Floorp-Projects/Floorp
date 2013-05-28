@@ -69,6 +69,7 @@ MOCHITEST_FILES := \
   test_waveShaper.html \
   test_waveShaperNoCurve.html \
   test_waveShaperZeroLengthCurve.html \
+  test_waveTable.html \
   ting.ogg \
   ting-expected.wav \
   ting-dualchannel44.1.ogg \

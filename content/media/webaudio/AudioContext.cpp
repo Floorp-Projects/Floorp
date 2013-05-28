@@ -25,6 +25,7 @@
 #include "ChannelMergerNode.h"
 #include "ChannelSplitterNode.h"
 #include "WaveShaperNode.h"
+#include "WaveTable.h"
 #include "nsNetUtil.h"
 
 // Note that this number is an arbitrary large value to protect against OOM
@@ -306,6 +307,24 @@ AudioContext::CreateBiquadFilter()
   nsRefPtr<BiquadFilterNode> filterNode =
     new BiquadFilterNode(this);
   return filterNode.forget();
+}
+
+already_AddRefed<WaveTable>
+AudioContext::CreateWaveTable(const Float32Array& aRealData,
+                              const Float32Array& aImagData,
+                              ErrorResult& aRv)
+{
+  if (aRealData.Length() != aImagData.Length() ||
+      aRealData.Length() == 0 ||
+      aRealData.Length() > 4096) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<WaveTable> waveTable =
+    new WaveTable(this, aRealData.Data(), aRealData.Length(),
+                  aImagData.Data(), aImagData.Length());
+  return waveTable.forget();
 }
 
 AudioListener*
