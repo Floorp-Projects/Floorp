@@ -37,6 +37,9 @@ static const WCHAR* kFirefoxExe = L"firefox.exe";
 static const WCHAR* kMetroFirefoxExe = L"firefox.exe";
 static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
 
+static bool GetDesktopBrowserPath(CStringW& aPathBuffer);
+static bool GetDefaultBrowserPath(CStringW& aPathBuffer);
+
 template <class T>void SafeRelease(T **ppT)
 {
   if (*ppT) {
@@ -278,38 +281,49 @@ public:
 
   bool IsDefaultBrowser()
   {
-    bool result = false;
     IApplicationAssociationRegistration* pAAR;
     HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                   NULL,
                                   CLSCTX_INPROC,
                                   IID_IApplicationAssociationRegistration,
                                   (void**)&pAAR);
-    if (SUCCEEDED(hr)) {
-      BOOL res;
-      hr = pAAR->QueryAppIsDefaultAll(AL_EFFECTIVE,
-                                      APP_REG_NAME,
-                                      &res);
-      Log(L"QueryAppIsDefaultAll: %d", res);
-      if (!res) 
-        return false;
-      // Make sure the Prog ID matches what we have
-      LPWSTR registeredApp;
-      hr = pAAR->QueryCurrentDefault(L"http", AT_URLPROTOCOL, AL_EFFECTIVE,
-                                      &registeredApp);
-      Log(L"QueryCurrentDefault: %X", hr);
-      if (SUCCEEDED(hr)) {
-        Log(L"registeredApp=%s", registeredApp);
-        result = !wcsicmp(registeredApp, kDefaultMetroBrowserIDPathKey);
-        CoTaskMemFree(registeredApp);
-      } else {
-        result = false;
-      }
+    if (FAILED(hr))
+      return false;
 
+    BOOL res = FALSE;
+    hr = pAAR->QueryAppIsDefaultAll(AL_EFFECTIVE,
+                                    APP_REG_NAME,
+                                    &res);
+    Log(L"QueryAppIsDefaultAll: %d", res);
+    if (!res) {
       pAAR->Release();
-      return result;
+      return false;
     }
-    return result;
+    // Make sure the Prog ID matches what we have
+    LPWSTR registeredApp;
+    hr = pAAR->QueryCurrentDefault(L"http", AT_URLPROTOCOL, AL_EFFECTIVE,
+                                    &registeredApp);
+    pAAR->Release();
+    Log(L"QueryCurrentDefault: %X", hr);
+    if (FAILED(hr))
+      return false;
+
+    Log(L"registeredApp=%s", registeredApp);
+    bool result = !wcsicmp(registeredApp, kDefaultMetroBrowserIDPathKey);
+    CoTaskMemFree(registeredApp);
+    if (!result)
+      return false;
+
+    // If the registry points another browser's path,
+    // activating the Metro browser will fail. So fallback to the desktop.
+    CStringW selfPath;
+    GetDesktopBrowserPath(selfPath);
+    selfPath.MakeLower();
+    CStringW browserPath;
+    GetDefaultBrowserPath(browserPath);
+    browserPath.MakeLower();
+
+    return selfPath == browserPath;
   }
 private:
   ~CExecuteCommandVerb()
@@ -372,6 +386,32 @@ static bool GetDesktopBrowserPath(CStringW& aPathBuffer)
   // is a firefox only component, this hardcoded filename is ok.
   aPathBuffer.Append(L"\\");
   aPathBuffer.Append(kFirefoxExe);
+  return true;
+}
+
+/*
+ * Retrieve the current default browser's path.
+ *
+ * @aPathBuffer Buffer to fill
+ */
+static bool GetDefaultBrowserPath(CStringW& aPathBuffer)
+{
+  WCHAR buffer[MAX_PATH];
+  DWORD length = MAX_PATH;
+
+  if (FAILED(AssocQueryStringW(ASSOCF_NOTRUNCATE | ASSOCF_INIT_IGNOREUNKNOWN,
+                               ASSOCSTR_EXECUTABLE,
+                               kDefaultMetroBrowserIDPathKey, NULL,
+                               buffer, &length))) {
+    Log(L"AssocQueryString failed.");
+    return false;
+  }
+
+  // sanity check
+  if (lstrcmpiW(PathFindFileNameW(buffer), kFirefoxExe))
+    return false;
+
+  aPathBuffer = buffer;
   return true;
 }
 
@@ -540,6 +580,8 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
   // be the browser exe or file.
   CStringW params;
   if (!IsTargetBrowser()) {
+    // Fallback to the module path if it failed to get the default browser.
+    GetDefaultBrowserPath(browserPath);
     params += "-url ";
     params += "\"";
     params += mTarget;
