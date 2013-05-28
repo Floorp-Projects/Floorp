@@ -12,82 +12,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript"
             src="../common.js"></script>
+    <script type="application/javascript"
+            src="./utterance.js"></script>
     <script type="application/javascript">
 
-      const Cu = Components.utils;
-      const PREF_UTTERANCE_ORDER = "accessibility.accessfu.utterance";
-
-      Cu.import('resource://gre/modules/accessibility/Utils.jsm');
-      Cu.import("resource://gre/modules/accessibility/UtteranceGenerator.jsm",
-        this);
-
-      // Test UtteranceGenerator.genForContext utterance order for
-      // a particular accessible context with an optional old accessible.
-      function testContextUtterance(expected, aAccOrElmOrID, oldAAccOrElmOrID) {
-        oldAAccOrElmOrID = oldAAccOrElmOrID || "root";
-        var accessible = getAccessible(aAccOrElmOrID);
-        var oldAccessible = getAccessible(oldAAccOrElmOrID);
-        var context = new PivotContext(accessible, oldAccessible);
-        var utterance = UtteranceGenerator.genForContext(context);
-        isDeeply(utterance, expected,
-          "Utterance order is correct for " + aAccOrElmOrID);
-      }
-
-      // Test UtteranceGenerator.genForObject for a particular aAccOrElmOrID.
-      function testUtterance(utteranceOrder, aAccOrElmOrID) {
-        var accessible = getAccessible(aAccOrElmOrID);
-        var utterance = UtteranceGenerator.genForObject(accessible);
-        var expectedNameIndex = utteranceOrder === 0 ? utterance.length - 1 : 0;
-
-        if (aAccOrElmOrID === "li_one" || aAccOrElmOrID === "cell") {
-          // List item's and table cell's name is not included into an object
-          // utterance.
-          expectedNameIndex = -1;
-        }
-        ok(utterance.indexOf(accessible.name) === expectedNameIndex,
-          "Object utterance is correct for " + aAccOrElmOrID);
-      }
-
       function doTest() {
-        // Test the following aAccOrElmOrID (with optional old aAccOrElmOrID).
-        // Note: each aAccOrElmOrID entry maps to a unique object utterance
+        // Test the following accOrElmOrID (with optional old accOrElmOrID).
+        // Note: each accOrElmOrID entry maps to a unique object utterance
         // generator function within the UtteranceGenerator.
         var tests = [{
-          aAccOrElmOrID: "anchor",
+          accOrElmOrID: "anchor",
           expected: [["link", "title"], ["title", "link"]]
         }, {
-          aAccOrElmOrID: "textarea",
+          accOrElmOrID: "textarea",
           expected: [[
-            "text area", "Test Text Area", "This is the text area text."
+            "text area", "This is the text area text."
           ], [
-            "This is the text area text.", "Test Text Area", "text area"
+            "This is the text area text.", "text area"
           ]]
         }, {
-          aAccOrElmOrID: "heading",
+          accOrElmOrID: "heading",
           expected: [
             ["heading level 1", "Test heading"],
             ["Test heading", "heading level 1"]
           ]
         }, {
-          aAccOrElmOrID: "list",
+          accOrElmOrID: "list",
           expected: [
-            ["list 1 items", "Test List", "First item", "1. ", "list one"],
-            ["1. ", "list one", "First item", "Test List", "list 1 items"]
+            ["list 1 items", "First item", "1. ", "list one"],
+            ["1. ", "list one", "First item", "list 1 items"]
           ]
         }, {
-          aAccOrElmOrID: "dlist",
+          accOrElmOrID: "dlist",
           expected: [
-            ["definition list 0.5 items", "Test Definition List", "dd one "],
-            ["dd one ", "Test Definition List", "definition list 0.5 items"]
+            ["definition list 0.5 items", "dd one "],
+            ["dd one ", "definition list 0.5 items"]
           ]
         }, {
-          aAccOrElmOrID: "li_one",
+          accOrElmOrID: "li_one",
           expected: [
-            ["list 1 items", "Test List", "First item", "1. ", "list one"],
-            ["1. ", "list one", "First item", "Test List", "list 1 items"]
+            ["list 1 items", "First item", "1. ", "list one"],
+            ["1. ", "list one", "First item", "list 1 items"]
           ]
         }, {
-          aAccOrElmOrID: "cell",
+          accOrElmOrID: "cell",
           expected: [[
             "table", "Fruits and vegetables", "list 4 items", "First item", " ",
             "link", "Apples", " ", "link", "Bananas", " ", "link", "Peaches",
@@ -99,24 +67,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           ]]
         }, {
           // Test pivot to list from li_one.
-          aAccOrElmOrID: "list",
-          oldAAccOrElmOrID: "li_one",
+          accOrElmOrID: "list",
+          oldAccOrElmOrID: "li_one",
           expected: [
-            ["list 1 items", "Test List", "First item", "1. ", "list one"],
-            ["1. ", "list one", "First item", "Test List", "list 1 items"]
+            ["list 1 items", "First item", "1. ", "list one"],
+            ["1. ", "list one", "First item", "list 1 items"]
           ]
         }, {
           // Test pivot to "apples" link from the table cell.
-          aAccOrElmOrID: "apples",
-          oldAAccOrElmOrID: "cell",
+          accOrElmOrID: "apples",
+          oldAccOrElmOrID: "cell",
           expected: [
             ["list 4 items", "First item", "link", "Apples"],
             ["Apples", "link", "First item", "list 4 items"]
           ]
         }, {
           // Test pivot to 'bananas' link from 'apples' link.
-          aAccOrElmOrID: "bananas",
-          oldAAccOrElmOrID: "apples",
+          accOrElmOrID: "bananas",
+          oldAccOrElmOrID: "apples",
           expected: [["link", "Bananas"], ["Bananas", "link"]]
         }];
 
@@ -126,14 +94,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           utteranceOrderValues.forEach(
             function testUtteranceOrder(utteranceOrder) {
               SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, utteranceOrder);
-              testContextUtterance(test.expected[utteranceOrder],
-                test.aAccOrElmOrID, test.oldAAccOrElmOrID);
-              // Just need to test object utterance for individual
-              // aAccOrElmOrID.
-              if (test.oldAAccOrElmOrID) {
-                return;
-              }
-              testUtterance(utteranceOrder, test.aAccOrElmOrID);
+              var expected = test.expected[utteranceOrder];
+              testUtterance(expected, test.accOrElmOrID, test.oldAccOrElmOrID);
             }
           );
         });
@@ -158,12 +120,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <div id="content" style="display: none"></div>
       <pre id="test"></pre>
       <a id="anchor" href="#test" title="title"></a>
-      <textarea id="textarea" title="Test Text Area" cols="80" rows="5">This is the text area text.</textarea>
+      <textarea id="textarea" cols="80" rows="5">This is the text area text.</textarea>
       <h1 id="heading" title="Test heading"></h1>
-      <ol id="list" title="Test List">
+      <ol id="list">
         <li id="li_one">list one</li>
       </ol>
-      <dl id="dlist" title="Test Definition List">
+      <dl id="dlist">
         <dd id="dd_one">dd one</li>
       </dl>
       <table>

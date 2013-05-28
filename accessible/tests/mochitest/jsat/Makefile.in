@@ -13,7 +13,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES =\
 jsatcommon.js \
+utterance.js \
 test_alive.html \
+test_explicit_names.html \
 test_utterance_order.html \
 $(NULL)
 
