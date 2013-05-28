@@ -21,7 +21,7 @@ static JSClass CustomClass = {
 static const uint32_t CUSTOM_SLOT = 0;
 
 static bool
-IsCustomClass(const Value &v)
+IsCustomClass(JS::Handle<JS::Value> v)
 {
   return v.isObject() && JS_GetClass(&v.toObject()) == &CustomClass;
 }

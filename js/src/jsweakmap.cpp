@@ -126,7 +126,7 @@ GetKeyArg(JSContext *cx, CallArgs &args)
 }
 
 JS_ALWAYS_INLINE bool
-IsWeakMap(const Value &v)
+IsWeakMap(HandleValue v)
 {
     return v.isObject() && v.toObject().is<WeakMapObject>();
 }
