@@ -13,10 +13,10 @@ pref("app.update.download.backgroundInterval", 60);
 pref("app.update.promptWaitTime", 86400);
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.
-pref("app.update.url.manual", "http://www.firefox.com");
+pref("app.update.url.manual", "https://www.mozilla.org/firefox/");
 // A default value for the "More information about this update" link
 // supplied in the "An update is available" page of the update wizard. 
-pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/firefox/releases/");
+pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/notes");
 
 // Release notes and vendor URLs
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/firefox/%VERSION%/releasenotes/");
