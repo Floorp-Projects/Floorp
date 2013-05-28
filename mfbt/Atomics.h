@@ -620,7 +620,7 @@ struct PrimitiveIntrinsics<8>
     static Type exchange(Type* ptr, Type val) {
       return _InterlockedExchange64(ptr, val);
     }
-    static bool compareExchange(T* ptr, T oldVal, T newVal) {
+    static bool compareExchange(Type* ptr, Type oldVal, Type newVal) {
       return _InterlockedCompareExchange64(ptr, newVal, oldVal) == oldVal;
     }
 };
