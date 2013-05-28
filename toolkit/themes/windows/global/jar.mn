@@ -296,7 +296,6 @@ toolkit.jar:
         skin/classic/aero/global/icons/information-48.png                (icons/information-48-aero.png)
         skin/classic/aero/global/icons/information-64.png                (icons/information-64-aero.png)
         skin/classic/aero/global/icons/loading_16.png                    (icons/loading_16.png)
-        skin/classic/aero/global/icons/notloading_16.png                 (icons/notloading_16.png)
         skin/classic/aero/global/icons/Minimize.gif                      (icons/Minimize.gif)
         skin/classic/aero/global/icons/Print-preview.png                 (icons/Print-preview-aero.png)
         skin/classic/aero/global/icons/Portrait.png                      (icons/Portrait-aero.png)
