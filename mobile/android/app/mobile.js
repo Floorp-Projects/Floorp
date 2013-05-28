@@ -357,6 +357,9 @@ pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
 
+// Allow 24-bit colour when the hardware supports it
+pref("gfx.android.rgb16.force", false);
+
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
