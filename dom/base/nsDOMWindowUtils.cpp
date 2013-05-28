@@ -74,7 +74,6 @@
 #include "nsIScriptError.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
-#include "mozilla/layers/CompositorParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2372,9 +2371,7 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
-  driver->AdvanceTimeAndRefresh(aMilliseconds);
-  CompositorParent::SetTimeAndSampleAnimations(driver->MostRecentRefresh(), true);
+  GetPresContext()->RefreshDriver()->AdvanceTimeAndRefresh(aMilliseconds);
 
   return NS_OK;
 }
@@ -2386,9 +2383,7 @@ nsDOMWindowUtils::RestoreNormalRefresh()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
-  driver->RestoreNormalRefresh();
-  CompositorParent::SetTimeAndSampleAnimations(driver->MostRecentRefresh(), false);
+  GetPresContext()->RefreshDriver()->RestoreNormalRefresh();
 
   return NS_OK;
 }
