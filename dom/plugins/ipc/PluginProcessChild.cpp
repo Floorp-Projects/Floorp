@@ -15,6 +15,7 @@
 
 #ifdef XP_WIN
 #include <objbase.h>
+bool ShouldProtectPluginCurrentDirectory(LPCWSTR pluginFilePath);
 #endif
 
 using mozilla::ipc::IOThreadChild;
@@ -36,6 +37,7 @@ std::size_t caseInsensitiveFind(std::string aHaystack, std::string aNeedle) {
 
 namespace mozilla {
 namespace plugins {
+
 
 bool
 PluginProcessChild::Init()
@@ -102,21 +104,12 @@ PluginProcessChild::Init()
         CommandLine::ForCurrentProcess()->GetLooseValues();
     NS_ABORT_IF_FALSE(values.size() >= 1, "not enough loose args");
 
-    pluginFilename = WideToUTF8(values[0]);
-
-    bool protectCurrentDirectory = true;
-    // Don't use SetDllDirectory for Shockwave Director
-    const std::string shockwaveDirectorPluginFilename("\\np32dsw.dll");
-    std::size_t index = caseInsensitiveFind(pluginFilename, shockwaveDirectorPluginFilename);
-    if (index != std::string::npos &&
-        index + shockwaveDirectorPluginFilename.length() == pluginFilename.length()) {
-        protectCurrentDirectory = false;
-    }
-    if (protectCurrentDirectory) {
+    if (ShouldProtectPluginCurrentDirectory(values[0].c_str())) {
         SanitizeEnvironmentVariables();
         SetDllDirectory(L"");
     }
 
+    pluginFilename = WideToUTF8(values[0]);
 #else
 #  error Sorry
 #endif
