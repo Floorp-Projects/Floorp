@@ -839,7 +839,8 @@ ContactDB.prototype = {
         let index = store.index(key);
         let filterValue = options.filterValue;
         if (key == "tel") {
-          filterValue = PhoneNumberUtils.normalize(filterValue);
+          filterValue = PhoneNumberUtils.normalize(filterValue,
+                                                   /*numbersOnly*/ true);
         }
         request = index.mozGetAll(filterValue, limit);
       } else if (options.filterOp == "match") {
@@ -850,13 +851,14 @@ ContactDB.prototype = {
         }
 
         let index = store.index("telMatch");
-        let normalized = PhoneNumberUtils.normalize(options.filterValue)
+        let normalized = PhoneNumberUtils.normalize(options.filterValue,
+                                                    /*numbersOnly*/ true);
         request = index.mozGetAll(normalized, limit);
       } else {
         // not case sensitive
         let tmp = options.filterValue.toString().toLowerCase();
-        if (key === 'tel') {
-          tmp = PhoneNumberUtils.normalize(tmp);
+        if (key === "tel") {
+          tmp = PhoneNumberUtils.normalize(tmp, /*numbersOnly*/ true);
         }
         let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
         let index = store.index(key + "LowerCase");
