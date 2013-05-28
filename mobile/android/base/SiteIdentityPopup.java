@@ -48,9 +48,9 @@ public class SiteIdentityPopup extends PopupWindow {
     private int mYOffset;
 
     private SiteIdentityPopup() {
-        super(GeckoApp.mAppContext);
+        super(GeckoAppShell.getContext());
 
-        mResources = GeckoApp.mAppContext.getResources();
+        mResources = GeckoAppShell.getContext().getResources();
         mYOffset = mResources.getDimensionPixelSize(R.dimen.menu_popup_offset);
         mInflated = false;
         setAnimationStyle(R.style.PopupAnimation);
@@ -73,7 +73,7 @@ public class SiteIdentityPopup extends PopupWindow {
         setWindowLayoutMode(HardwareUtils.isTablet() ? LayoutParams.WRAP_CONTENT : LayoutParams.FILL_PARENT,
                 LayoutParams.WRAP_CONTENT);
 
-        LayoutInflater inflater = LayoutInflater.from(GeckoApp.mAppContext);
+        LayoutInflater inflater = LayoutInflater.from(GeckoAppShell.getContext());
         RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.site_identity_popup, null);
         setContentView(layout);
 

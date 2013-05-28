@@ -7,6 +7,7 @@ SYNC_PP_JAVA_FILES := \
   background/common/GlobalConstants.java \
   sync/SyncConstants.java \
   background/announcements/AnnouncementsConstants.java \
+  background/healthreport/HealthReportConstants.java \
   $(NULL)
 
 SYNC_JAVA_FILES := \
@@ -36,6 +37,15 @@ SYNC_JAVA_FILES := \
   background/common/log/writers/ThreadLocalTagLogWriter.java \
   background/db/CursorDumper.java \
   background/db/Tab.java \
+  background/healthreport/Environment.java \
+  background/healthreport/EnvironmentBuilder.java \
+  background/healthreport/HealthReportDatabases.java \
+  background/healthreport/HealthReportDatabaseStorage.java \
+  background/healthreport/HealthReportGenerator.java \
+  background/healthreport/HealthReportProvider.java \
+  background/healthreport/HealthReportStorage.java \
+  background/healthreport/HealthReportUtils.java \
+  background/healthreport/ProfileInformationCache.java \
   sync/AlreadySyncingException.java \
   sync/CollectionKeys.java \
   sync/CommandProcessor.java \

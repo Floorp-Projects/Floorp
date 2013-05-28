@@ -164,6 +164,7 @@ enum nsCSSUnit {
   eCSSUnit_Steps        = 24,     // (nsCSSValue::Array*) a list of (integer, enumerated)
   eCSSUnit_Function     = 25,     // (nsCSSValue::Array*) a function with
                                   //  parameters.  First elem of array is name,
+                                  //  an nsCSSKeyword as eCSSUnit_Enumerated,
                                   //  the rest of the values are arguments.
 
   // The top level of a calc() expression is eCSSUnit_Calc.  All
@@ -344,6 +345,12 @@ public:
                       mUnit == eCSSUnit_EnumColor,
                       "not an int value");
     return mValue.mInt;
+  }
+
+  nsCSSKeyword GetKeywordValue() const
+  {
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Enumerated, "not a keyword value");
+    return static_cast<nsCSSKeyword>(mValue.mInt);
   }
 
   float GetPercentValue() const

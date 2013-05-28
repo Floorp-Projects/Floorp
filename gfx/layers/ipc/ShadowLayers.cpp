@@ -160,6 +160,8 @@ CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIden
 {
   mMaxTextureSize = aIdentifier.mMaxTextureSize;
   mCompositorBackend = aIdentifier.mParentBackend;
+  mSupportsTextureBlitting = aIdentifier.mSupportsTextureBlitting;
+  mSupportsPartialUploads = aIdentifier.mSupportsPartialUploads;
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
@@ -347,6 +349,25 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
 }
 
 void
+ShadowLayerForwarder::UpdateTextureIncremental(CompositableClient* aCompositable,
+                                               TextureIdentifier aTextureId,
+                                               SurfaceDescriptor& aDescriptor,
+                                               const nsIntRegion& aUpdatedRegion,
+                                               const nsIntRect& aBufferRect,
+                                               const nsIntPoint& aBufferRotation)
+{
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  mTxn->AddNoSwapPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
+                                                 aTextureId,
+                                                 aDescriptor,
+                                                 aUpdatedRegion,
+                                                 aBufferRect,
+                                                 aBufferRotation));
+}
+
+
+void
 ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
                                         const nsIntRect& aRect)
 {
@@ -507,6 +528,16 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
                                size,
                                stride,
                                rgbFormat);
+    return surf.forget();
+  }
+  case SurfaceDescriptor::TMemoryImage: {
+    const MemoryImage& image = aSurface.get_MemoryImage();
+    gfxASurface::gfxImageFormat format
+      = static_cast<gfxASurface::gfxImageFormat>(image.format());
+    surf = new gfxImageSurface((unsigned char *)image.data(),
+                               image.size(),
+                               image.stride(),
+                               format);
     return surf.forget();
   }
   default:
@@ -702,6 +733,15 @@ ShadowLayerForwarder::CreatedSingleBuffer(CompositableClient* aCompositable,
                                    *aDescriptorOnWhite,
                                    aTextureInfo));
   }
+}
+
+void
+ShadowLayerForwarder::CreatedIncrementalBuffer(CompositableClient* aCompositable,
+                                               const TextureInfo& aTextureInfo,
+                                               const nsIntRect& aBufferRect)
+{
+  mTxn->AddNoSwapPaint(OpCreatedIncrementalTexture(nullptr, aCompositable->GetIPDLActor(),
+                                                   aTextureInfo, aBufferRect));
 }
 
 void

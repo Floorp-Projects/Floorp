@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(bde19ba2-83c8-4df7-a014-28fe71535527)]
+[scriptable, uuid(37fde795-7ff4-40fd-925b-3ebc07ba0cd1)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -29,6 +29,12 @@ interface nsITelephonyListener : nsISupports
                         in boolean isActive,
                         in boolean isOutgoing,
                         in boolean isEmergency);
+
+  /**
+   * Called when enumeration asked by nsITelephonyProvider::enumerateCalls
+   * is completed.
+   */
+  void enumerateCallStateComplete();
 
   /**
    * Called when nsITelephonyProvider is asked to enumerate the current

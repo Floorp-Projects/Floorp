@@ -94,7 +94,8 @@ protected:
 
 
 /**
- * Accessible for HTML input@type="text" element.
+ * Accessible for HTML input@type="text", input@type="password", textarea and
+ * other HTML text controls.
  */
 class HTMLTextFieldAccessible : public HyperTextAccessibleWrap
 {
@@ -129,6 +130,8 @@ public:
 protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+
+  virtual void CacheChildren() MOZ_OVERRIDE;
 };
 
 

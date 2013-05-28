@@ -169,7 +169,14 @@ AsyncCompositionManager::TransformFixedLayers(Layer* aLayer,
     // The transform already takes the resolution scale into account.  Since we
     // will apply the resolution scale again when computing the effective
     // transform, we must apply the inverse resolution scale here.
-    gfx3DMatrix layerTransform = aLayer->GetTransform();
+    LayerComposite* layerComposite = aLayer->AsLayerComposite();
+    gfx3DMatrix layerTransform;
+    if (layerComposite->GetShadowTransformSetByAnimation()) {
+      // Start with the animated transform
+      layerTransform = aLayer->GetLocalTransform();
+    } else {
+      layerTransform = aLayer->GetTransform();
+    }
     Translate2D(layerTransform, translation);
     if (ContainerLayer* c = aLayer->AsContainerLayer()) {
       layerTransform.Scale(1.0f/c->GetPreXScale(),
@@ -179,8 +186,8 @@ AsyncCompositionManager::TransformFixedLayers(Layer* aLayer,
     layerTransform.ScalePost(1.0f/aLayer->GetPostXScale(),
                              1.0f/aLayer->GetPostYScale(),
                              1);
-    LayerComposite* layerComposite = aLayer->AsLayerComposite();
     layerComposite->SetShadowTransform(layerTransform);
+    layerComposite->SetShadowTransformSetByAnimation(false);
 
     const nsIntRect* clipRect = aLayer->GetClipRect();
     if (clipRect) {
@@ -306,8 +313,8 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                          c->GetInheritedYScale(),
                          1);
       }
-      NS_ASSERTION(!aLayer->GetIsFixedPosition(), "Can't animate transforms on fixed-position layers");
       layerComposite->SetShadowTransform(matrix);
+      layerComposite->SetShadowTransformSetByAnimation(true);
       break;
     }
     default:
@@ -378,6 +385,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
                         1.0f/aLayer->GetPostYScale(),
                         1);
     layerComposite->SetShadowTransform(transform);
+    NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
+                 "overwriting animated transform!");
 
     TransformFixedLayers(
       aLayer,
@@ -512,18 +521,19 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
                               1.0f/container->GetPostYScale(),
                               1);
   layerComposite->SetShadowTransform(computedTransform);
+  NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
+               "overwriting animated transform!");
   TransformFixedLayers(aLayer, fixedOffset, scaleDiff, fixedLayerMargins);
 }
 
 bool
 AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 {
-  bool wantNextFrame = false;
   Layer* root = mLayerManager->GetRoot();
 
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
-  wantNextFrame |= SampleAnimations(root, aCurrentFrame);
+  bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
 
   const gfx3DMatrix& rootTransform = root->GetTransform();
 

@@ -39,6 +39,7 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -137,13 +138,8 @@ ImageDocument::~ImageDocument()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ImageDocument, MediaDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageContent)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ImageDocument, MediaDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mImageContent)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ImageDocument, MediaDocument,
+                                     mImageContent)
 
 NS_IMPL_ADDREF_INHERITED(ImageDocument, MediaDocument)
 NS_IMPL_RELEASE_INHERITED(ImageDocument, MediaDocument)

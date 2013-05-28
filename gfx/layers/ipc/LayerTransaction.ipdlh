@@ -165,7 +165,7 @@ struct Animation {
   // startTime, the direction, the duration, and the current time.
   // The segments must uniquely cover the portion from 0.0 to 1.0
   AnimationSegment[] segments;
-  // How many times to repeat the animation.  < 0 means "forever".
+  // How many times to repeat the animation.  -1 means "forever".
   float numIterations;
   // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
   int32_t direction;
@@ -251,6 +251,12 @@ struct OpCreatedTexture {
   TextureInfo textureInfo;
 };
 
+struct OpCreatedIncrementalTexture {
+  PCompositable compositable;
+  TextureInfo textureInfo;
+  nsIntRect bufferRect;
+};
+
 struct OpDestroyThebesBuffer {
   PCompositable compositable;
 };
@@ -267,6 +273,15 @@ struct OpPaintTextureRegion {
   nsIntRegion updatedRegion;
 };
 
+struct OpPaintTextureIncremental {
+  PCompositable compositable;
+  uint32_t textureId;
+  SurfaceDescriptor image;
+  nsIntRegion updatedRegion;
+  nsIntRect bufferRect;
+  nsIntPoint bufferRotation;
+};
+
 struct OpUpdatePictureRect {
   PCompositable compositable;
   nsIntRect picture;
@@ -276,10 +291,12 @@ union CompositableOperation {
   OpUpdatePictureRect;
 
   OpCreatedTexture;
+  OpCreatedIncrementalTexture;
   OpDestroyThebesBuffer;
 
   OpPaintTexture;
   OpPaintTextureRegion;
+  OpPaintTextureIncremental;
 
   OpPaintTiledLayerBuffer;
 };

@@ -12,29 +12,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE_NAME    = nsGfxModule
 LIBRARY_NAME   = gkgfx
+MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
 IS_COMPONENT   = 1
 FAIL_ON_WARNINGS = 1
-
-CPPSRCS = \
-        nsColor.cpp \
-        nsFont.cpp \
-        nsRect.cpp \
-        nsRegion.cpp \
-        nsTransform2D.cpp \
-        nsScriptableRegion.cpp \
-        gfxCrashReporterUtils.cpp \
-        nsDeviceContext.cpp \
-        nsThebesGfxFactory.cpp \
-        nsRenderingContext.cpp \
-        nsFontMetrics.cpp \
-        nsThebesFontEnumerator.cpp \
-       $(NULL)
-
-ifdef MOZ_X11
-CPPSRCS += X11Util.cpp
-endif
 
 include $(topsrcdir)/config/rules.mk
 

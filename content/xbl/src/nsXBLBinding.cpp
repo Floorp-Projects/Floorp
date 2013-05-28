@@ -19,6 +19,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif
@@ -953,7 +954,6 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             // that was...
 
             // Find the right prototype.
-            JSAutoRequest ar(cx);
             JSAutoCompartment ac(cx, scriptObject);
 
             JS::Rooted<JSObject*> base(cx, scriptObject);
@@ -1088,7 +1088,6 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   nsAutoCString className(aClassName);
   nsAutoCString xblKey(aClassName);
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
   JS::Rooted<JSObject*> parent_proto(cx, nullptr);

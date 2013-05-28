@@ -10,19 +10,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= pipboot
+MSVC_ENABLE_PGO := 1
 IS_COMPONENT	= 1
 MODULE_NAME	= BOOT
 EXPORT_LIBRARY	= 1
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
-
-CPPSRCS = \
-	nsEntropyCollector.cpp \
-	nsSecureBrowserUIImpl.cpp \
-	nsBOOTModule.cpp \
-	nsSecurityWarningDialogs.cpp \
-	nsStrictTransportSecurityService.cpp \
-	$(NULL)
 
 DEFINES += -D__STDC_CONSTANT_MACROS
 

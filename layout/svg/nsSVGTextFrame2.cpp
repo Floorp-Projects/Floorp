@@ -3019,7 +3019,17 @@ nsSVGTextFrame2::AttributeChanged(int32_t aNameSpaceID,
     return NS_OK;
 
   if (aAttribute == nsGkAtoms::transform) {
-    NotifySVGChanged(TRANSFORM_CHANGED);
+    // We don't invalidate for transform changes (the layers code does that).
+    // Also note that SVGTransformableElement::GetAttributeChangeHint will
+    // return nsChangeHint_UpdateOverflow for "transform" attribute changes
+    // and cause DoApplyRenderingChangeToTree to make the SchedulePaint call.
+
+    if (!(mState & NS_FRAME_FIRST_REFLOW) &&
+        mCanvasTM && mCanvasTM->IsSingular()) {
+      // We won't have calculated the glyph positions correctly.
+      NotifyGlyphMetricsChange();
+    }
+    mCanvasTM = nullptr;
   } else if (IsGlyphPositioningAttribute(aAttribute)) {
     NotifyGlyphMetricsChange();
   }
@@ -3496,15 +3506,6 @@ nsSVGTextFrame2::ReflowSVG()
     nsSVGEffects::UpdateEffects(this);
   }
 
-  // We only invalidate if we are dirty, if our outer-<svg> has already had its
-  // initial reflow (since if it hasn't, its entire area will be invalidated
-  // when it gets that initial reflow), and if our parent is not dirty (since
-  // if it is, then it will invalidate its entire new area, which will include
-  // our new area).
-  bool invalidate = (mState & NS_FRAME_IS_DIRTY) &&
-    !(GetParent()->GetStateBits() &
-       (NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY));
-
   nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
   nsOverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
@@ -3517,11 +3518,6 @@ nsSVGTextFrame2::ReflowSVG()
   // children, and calls ConsiderChildOverflow on them.  Does it matter
   // that ConsiderChildOverflow won't be called on our children?
   nsSVGTextFrame2Base::ReflowSVG();
-
-  if (invalidate) {
-    // XXXSDL Let FinishAndStoreOverflow do this.
-    nsSVGUtils::InvalidateBounds(this, true);
-  }
 }
 
 /**
@@ -4778,32 +4774,45 @@ nsSVGTextFrame2::UpdateGlyphPositioning(bool aForceGlobalTransform)
   if (!kid)
     return;
 
-  bool needsReflow =
-    (mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN));
-
   NS_ASSERTION(!(kid->GetStateBits() & NS_FRAME_IN_REFLOW),
                "should not be in reflow when about to reflow again");
 
-  if (!needsReflow)
-    return;
-
-  if (mState & NS_FRAME_IS_DIRTY) {
-    // If we require a full reflow, ensure our kid is marked fully dirty.
-    kid->AddStateBits(NS_FRAME_IS_DIRTY);
-  }
-
-  if (needsReflow) {
+  if (mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) {
+    if (mState & NS_FRAME_IS_DIRTY) {
+      // If we require a full reflow, ensure our kid is marked fully dirty.
+      // (Note that our anonymous nsBlockFrame is not an nsISVGChildFrame, so
+      // even when we are called via our ReflowSVG this will not be done for us
+      // by nsSVGDisplayContainerFrame::ReflowSVG.)
+      kid->AddStateBits(NS_FRAME_IS_DIRTY);
+    }
     nsPresContext::InterruptPreventer noInterrupts(PresContext());
     DoReflow(aForceGlobalTransform);
   }
 
-  DoGlyphPositioning();
+  if (mPositioningDirty) {
+    DoGlyphPositioning();
+  }
 }
 
 void
 nsSVGTextFrame2::DoReflow(bool aForceGlobalTransform)
 {
+  // Since we are going to reflow the anonymous block frame, we will
+  // need to update mPositions.
   mPositioningDirty = true;
+
+  if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    // Normally, this flag would be cleared in ReflowSVG(), but that doesn't
+    // get called for non-display frames. We don't want to reflow our
+    // descendants every time nsSVGTextFrame2::PaintSVG makes sure that we have
+    // valid positions by calling UpdateGlyphPositioning(), so we need to clear
+    // these dirty bits. Note that this also breaks an invalidation loop where
+    // our descendants invalidate as they reflow, which invalidates rendering
+    // observers, which reschedules the frame that is currently painting by
+    // referencing us to paint again. See bug 839958 comment 7. Hopefully we
+    // will break that loop more convincingly at some point.
+    mState &= ~(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
 
   nsPresContext *presContext = PresContext();
   nsIFrame* kid = GetFirstPrincipalChild();

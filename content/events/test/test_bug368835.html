@@ -35,6 +35,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=368835
         ok(isPassed, "getData shouldn't fail.");
         ok(value == "data1", "Wrong value of data.");
 
+        is(aEvent.getData("document"), document);
+        is(aEvent.getData("window"), window);
+        is(aEvent.getData("event"), aEvent);
+        is(aEvent.getData("null"), null);
+        is(aEvent.getData("1"), 1);
+        is(aEvent.getData("1.1"), 1.1);
+        is(aEvent.getData("true"), true);
+
         try {
           aEvent.setData("data3", "data3");
           isPassed = false;
@@ -64,6 +72,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=368835
 
         try {
           event.setData("data1", "data1");
+          event.setData("document", document);
+          event.setData("window", window);
+          event.setData("event", event);
+          event.setData("null", null);
+          event.setData("1", 1);
+          event.setData("1.1", 1.1);
+          event.setData("true", true);
           isPassed = true;
         } catch (e) {
           isPassed = false;

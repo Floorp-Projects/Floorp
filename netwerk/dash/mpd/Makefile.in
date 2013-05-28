@@ -19,19 +19,6 @@ LIBRARY_NAME   := nkdashmpd_s
 LIBXUL_LIBRARY := 1
 FORCE_STATIC_LIB := 1
 
-CPPSRCS := \
-  nsDASHMPDParser.cpp \
-  IMPDManager.cpp \
-  nsDASHWebMODManager.cpp \
-  nsDASHWebMODParser.cpp \
-  MPD.cpp \
-  Period.cpp \
-  AdaptationSet.cpp \
-  Representation.cpp \
-  SegmentBase.cpp \
-  $(NULL)
-
-
 LOCAL_INCLUDES := \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/html/content/public \

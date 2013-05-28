@@ -15,6 +15,7 @@
 #include "nsIURI.h"
 #include "nsXBLSerialize.h"
 #include "nsXBLPrototypeBinding.h"
+#include "nsCxPusher.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "xpcpublic.h"
 #include "WrapperFactory.h"
@@ -410,8 +411,6 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   // compile the literal string
   nsCOMPtr<nsIScriptContext> context = aContext;
 
-  JSAutoRequest ar(cx);
-
   // First, enter the xbl scope, wrap the node, and use that as the scope for
   // the evaluation.
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, aBoundNode));
@@ -425,8 +424,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   JS::Rooted<JS::Value> result(cx);
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber)
-         .setVersion(JSVERSION_LATEST)
-         .setUserBit(true); // Flag us as XBL
+         .setVersion(JSVERSION_LATEST);
   rv = context->EvaluateString(nsDependentString(mFieldText,
                                                  mFieldTextLength),
                                wrappedNode, options,

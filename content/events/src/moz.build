@@ -20,3 +20,48 @@ EXPORTS.mozilla.dom += [
     'Touch.h',
 ]
 
+CPP_SOURCES += [
+    'DOMWheelEvent.cpp',
+    'EventTarget.cpp',
+    'TextComposition.cpp',
+    'Touch.cpp',
+    'nsAsyncDOMEvent.cpp',
+    'nsContentEventHandler.cpp',
+    'nsDOMAnimationEvent.cpp',
+    'nsDOMBeforeUnloadEvent.cpp',
+    'nsDOMClipboardEvent.cpp',
+    'nsDOMCommandEvent.cpp',
+    'nsDOMCompositionEvent.cpp',
+    'nsDOMDataContainerEvent.cpp',
+    'nsDOMDataTransfer.cpp',
+    'nsDOMDeviceMotionEvent.cpp',
+    'nsDOMDragEvent.cpp',
+    'nsDOMEvent.cpp',
+    'nsDOMEventTargetHelper.cpp',
+    'nsDOMKeyboardEvent.cpp',
+    'nsDOMMessageEvent.cpp',
+    'nsDOMMouseEvent.cpp',
+    'nsDOMMouseScrollEvent.cpp',
+    'nsDOMMutationEvent.cpp',
+    'nsDOMNotifyAudioAvailableEvent.cpp',
+    'nsDOMNotifyPaintEvent.cpp',
+    'nsDOMScrollAreaEvent.cpp',
+    'nsDOMSimpleGestureEvent.cpp',
+    'nsDOMTextEvent.cpp',
+    'nsDOMTouchEvent.cpp',
+    'nsDOMTransitionEvent.cpp',
+    'nsDOMUIEvent.cpp',
+    'nsDOMXULCommandEvent.cpp',
+    'nsEventDispatcher.cpp',
+    'nsEventListenerManager.cpp',
+    'nsEventListenerService.cpp',
+    'nsEventStateManager.cpp',
+    'nsIMEStateManager.cpp',
+    'nsPaintRequest.cpp',
+    'nsPrivateTextRange.cpp',
+]
+
+if CONFIG['MOZ_GAMEPAD']:
+    CPP_SOURCES += [
+        'nsDOMGamepad.cpp',
+    ]

@@ -121,10 +121,7 @@ public:
       return nullptr;
     }
 
-    JSObject* global;
-    mGlobal->GetJSObject(&global);
-
-    return global;
+    return mGlobal->GetJSObject();
   }
 protected:
   nsresult Init();

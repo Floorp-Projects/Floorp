@@ -32,9 +32,11 @@
 
 #define _ERROR(X) do { if( skip_error == 0 ) { ERROR(X); } } while(0)
 
-static const webvtt_byte separator[] = {
+static const char separator[] = {
   '-', '-', '>'
 };
+/* UTF8 encoding of U+FFFD REPLACEMENT CHAR */
+static const char replacement[] = { 0xEF, 0xBF, 0xBD };
 
 #define MSECS_PER_HOUR (3600000)
 #define MSECS_PER_MINUTE (60000)
@@ -42,11 +44,12 @@ static const webvtt_byte separator[] = {
 #define BUFFER (self->buffer + self->position)
 #define MALFORMED_TIME ((webvtt_timestamp_t)-1.0)
 
-static webvtt_status find_bytes( const webvtt_byte *buffer, webvtt_uint len, const webvtt_byte *sbytes, webvtt_uint slen );
-static webvtt_int64 parse_int( const webvtt_byte **pb, int *pdigits );
-static void skip_spacetab( const webvtt_byte *text, webvtt_uint *pos,
+static webvtt_status find_bytes( const char *buffer, webvtt_uint len,
+                                 const char *sbytes, webvtt_uint slen );
+static webvtt_int64 parse_int( const char **pb, int *pdigits );
+static void skip_spacetab( const char *text, webvtt_uint *pos,
   webvtt_uint len, webvtt_uint *column );
-static void skip_until_white( const webvtt_byte *text, webvtt_uint *pos,
+static void skip_until_white( const char *text, webvtt_uint *pos,
   webvtt_uint len, webvtt_uint *column );
 
 WEBVTT_EXPORT webvtt_status
@@ -160,7 +163,7 @@ WEBVTT_EXPORT webvtt_status
 webvtt_finish_parsing( webvtt_parser self )
 {
   webvtt_status status = WEBVTT_SUCCESS;
-  const webvtt_byte buffer[] = "\0";
+  const char buffer[] = "\0";
   const webvtt_uint len = 0;
   webvtt_uint pos = 0;
 
@@ -217,9 +220,6 @@ retry:
       case M_SKIP_CUE:
         /* Nothing to do here. */
         break;
-      case M_READ_LINE:
-        /* Nothing to do here. */
-        break;
     }
     cleanup_stack( self );
   }
@@ -251,7 +251,7 @@ webvtt_delete_parser( webvtt_parser self )
 #define ELSE } else {
 
 static int
-find_newline( const webvtt_byte *buffer, webvtt_uint *pos, webvtt_uint len )
+find_newline( const char *buffer, webvtt_uint *pos, webvtt_uint len )
 {
   while( *pos < len ) {
     if( buffer[ *pos ] == '\r' || buffer[ *pos ] == '\n' ) {
@@ -264,7 +264,7 @@ find_newline( const webvtt_byte *buffer, webvtt_uint *pos, webvtt_uint len )
 }
 
 static void
-skip_spacetab( const webvtt_byte *text, webvtt_uint *pos, webvtt_uint len,
+skip_spacetab( const char *text, webvtt_uint *pos, webvtt_uint len,
   webvtt_uint *column )
 {
   webvtt_uint c = 0;
@@ -272,7 +272,7 @@ skip_spacetab( const webvtt_byte *text, webvtt_uint *pos, webvtt_uint len,
     column = &c;
   }
   while( *pos < len ) {
-    webvtt_byte ch = text[ *pos ];
+    char ch = text[ *pos ];
     if( ch == ' ' || ch == '\t' ) {
       ++( *pos );
       ++( *column );
@@ -283,7 +283,7 @@ skip_spacetab( const webvtt_byte *text, webvtt_uint *pos, webvtt_uint len,
 }
 
 static void
-skip_until_white( const webvtt_byte *text, webvtt_uint *pos, webvtt_uint len,
+skip_until_white( const char *text, webvtt_uint *pos, webvtt_uint len,
   webvtt_uint *column )
 {
   webvtt_uint c = 0;
@@ -291,7 +291,7 @@ skip_until_white( const webvtt_byte *text, webvtt_uint *pos, webvtt_uint len,
     column = &c;
   }
   while( *pos < len ) {
-    webvtt_byte ch = text[ *pos ];
+    char ch = text[ *pos ];
     if( ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' ) {
       break;
     } else {
@@ -306,8 +306,8 @@ skip_until_white( const webvtt_byte *text, webvtt_uint *pos, webvtt_uint len,
  * basic strnstr-ish routine
  */
 static webvtt_status
-find_bytes( const webvtt_byte *buffer, webvtt_uint len,
-    const webvtt_byte *sbytes, webvtt_uint slen )
+find_bytes( const char *buffer, webvtt_uint len,
+    const char *sbytes, webvtt_uint slen )
 {
   webvtt_uint slen2;
   // check params for integrity
@@ -341,10 +341,14 @@ find_bytes( const webvtt_byte *buffer, webvtt_uint len,
  * More state stack helpers
  */
 WEBVTT_INTERN webvtt_status
-do_push( webvtt_parser self, webvtt_uint token, webvtt_uint back, webvtt_uint state, void *data, webvtt_state_value_type type, webvtt_uint line, webvtt_uint column )
+do_push( webvtt_parser self, webvtt_uint token, webvtt_uint back,
+         webvtt_uint state, void *data, webvtt_state_value_type type,
+         webvtt_uint line, webvtt_uint column )
 {
   if( STACK_SIZE + 1 >= self->stack_alloc ) {
-    webvtt_state *stack = ( webvtt_state * )webvtt_alloc0( sizeof( webvtt_state ) * ( self->stack_alloc << 1 ) ), *tmp;
+    webvtt_state *stack =
+        ( webvtt_state * )webvtt_alloc0( sizeof( webvtt_state ) *
+                                         ( self->stack_alloc << 1 ) ), *tmp;
     if( !stack ) {
       ERROR( WEBVTT_ALLOCATION_FAILED );
       return WEBVTT_OUT_OF_MEMORY;
@@ -403,7 +407,7 @@ do \
 #define POPBACK() do_pop(self)
 
 static webvtt_status
-webvtt_parse_cuesetting( webvtt_parser self, const webvtt_byte *text,
+webvtt_parse_cuesetting( webvtt_parser self, const char *text,
   webvtt_uint *pos, webvtt_uint len, webvtt_error bv, webvtt_token
   keyword, webvtt_token values[], webvtt_uint *value_column ) {
   enum webvtt_param_mode
@@ -446,7 +450,7 @@ webvtt_parse_cuesetting( webvtt_parser self, const webvtt_byte *text,
             }
             if( *pos < len ) {
               webvtt_uint column = last_column;
-              webvtt_byte ch = text[ *pos ];
+              char ch = text[ *pos ];
               if( ch != ':' ) {
                 webvtt_error e = WEBVTT_INVALID_CUESETTING;
                 if( ch == ' ' || ch == '\t' ) {
@@ -519,7 +523,7 @@ get_value:
           int flags = values[ i ] & TF_FLAGS_MASK;
           *value_column = last_column;
           if( *pos < len ) {
-            webvtt_byte ch = text[ *pos ];
+            char ch = text[ *pos ];
             if( ch != ' ' && ch != '\t' && ch != '\r' && ch != '\n' ) {
               goto bad_value;
             }
@@ -528,7 +532,7 @@ get_value:
             case INTEGER:
             case PERCENTAGE:
               if( ( flags & TF_SIGN_MASK ) != TF_SIGN_MASK ) {
-                const webvtt_byte p = self->token[ 0 ];
+                const char p = self->token[ 0 ];
                 if( ( ( flags & TF_NEGATIVE ) && p != '-' )
                   || ( ( flags & TF_POSITIVE ) && p == '-' ) ) {
                   goto bad_value;
@@ -567,7 +571,7 @@ bad_value_eol:
 
 WEBVTT_INTERN webvtt_status
 webvtt_parse_align( webvtt_parser self, webvtt_cue *cue,
-                    const webvtt_byte *text, webvtt_uint *pos, webvtt_uint len )
+                    const char *text, webvtt_uint *pos, webvtt_uint len )
 {
   webvtt_uint last_line = self->line;
   webvtt_uint last_column = self->column;
@@ -590,7 +594,7 @@ webvtt_parse_align( webvtt_parser self, webvtt_cue *cue,
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_parse_line( webvtt_parser self, webvtt_cue *cue, const webvtt_byte *text,
+webvtt_parse_line( webvtt_parser self, webvtt_cue *cue, const char *text,
                    webvtt_uint *pos, webvtt_uint len )
 {
   webvtt_uint last_line = self->line;
@@ -603,7 +607,7 @@ webvtt_parse_line( webvtt_parser self, webvtt_cue *cue, const webvtt_byte *text,
     WEBVTT_LINE_BAD_VALUE, LINE, values, &vc ) ) > 0 ) {
     int digits;
     webvtt_int64 value;
-    const webvtt_byte *t = self->token;
+    const char *t = self->token;
     if( cue->flags & CUE_HAVE_LINE ) {
       ERROR_AT( WEBVTT_LINE_ALREADY_SET, last_line, last_column );
     } else {
@@ -636,7 +640,7 @@ webvtt_parse_line( webvtt_parser self, webvtt_cue *cue, const webvtt_byte *text,
 
 WEBVTT_INTERN webvtt_status
 webvtt_parse_position( webvtt_parser self, webvtt_cue *cue,
-                       const webvtt_byte *text, webvtt_uint *pos,
+                       const char *text, webvtt_uint *pos,
                        webvtt_uint len )
 {
   webvtt_uint last_line = self->line;
@@ -649,7 +653,7 @@ webvtt_parse_position( webvtt_parser self, webvtt_cue *cue,
     WEBVTT_POSITION_BAD_VALUE, POSITION, values, &vc ) ) > 0 ) {
     int digits;
     webvtt_int64 value;
-    const webvtt_byte *t = self->token;
+    const char *t = self->token;
     if( cue->flags & CUE_HAVE_LINE ) {
       ERROR_AT( WEBVTT_POSITION_ALREADY_SET, last_line, last_column );
     } else {
@@ -670,7 +674,7 @@ webvtt_parse_position( webvtt_parser self, webvtt_cue *cue,
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_parse_size( webvtt_parser self, webvtt_cue *cue, const webvtt_byte *text,
+webvtt_parse_size( webvtt_parser self, webvtt_cue *cue, const char *text,
                    webvtt_uint *pos, webvtt_uint len )
 {
   webvtt_uint last_line = self->line;
@@ -686,7 +690,7 @@ webvtt_parse_size( webvtt_parser self, webvtt_cue *cue, const webvtt_byte *text,
     cue->flags |= CUE_HAVE_SIZE;
     if( tokens[ v - 1 ] ) {
       int digits;
-      const webvtt_byte *t = self->token;
+      const char *t = self->token;
       webvtt_int64 value;
       self->token_pos = 0;
       value = parse_int( &t, &digits );
@@ -702,7 +706,7 @@ webvtt_parse_size( webvtt_parser self, webvtt_cue *cue, const webvtt_byte *text,
 
 WEBVTT_INTERN webvtt_status
 webvtt_parse_vertical( webvtt_parser self, webvtt_cue *cue,
-                       const webvtt_byte *text, webvtt_uint *pos,
+                       const char *text, webvtt_uint *pos,
                        webvtt_uint len )
 {
   webvtt_uint last_line = self->line;
@@ -732,7 +736,7 @@ webvtt_parse_vertical( webvtt_parser self, webvtt_cue *cue,
  */
 WEBVTT_INTERN webvtt_status
 webvtt_get_timestamp( webvtt_parser self, webvtt_timestamp *result,
-                      const webvtt_byte *text, webvtt_uint *pos,
+                      const char *text, webvtt_uint *pos,
                       webvtt_uint len, const char *accepted )
 {
   webvtt_uint last_column = self->column;
@@ -781,7 +785,7 @@ WEBVTT_INTERN webvtt_status
 webvtt_proc_cueline( webvtt_parser self, webvtt_cue *cue,
                      webvtt_string *line )
 {
-  const webvtt_byte *text;
+  const char *text;
   webvtt_uint length;
   DIE_IF( line == NULL );
   length = webvtt_string_length( line );
@@ -842,7 +846,7 @@ webvtt_proc_cueline( webvtt_parser self, webvtt_cue *cue,
 }
 
 WEBVTT_INTERN int
-parse_cueparams( webvtt_parser self, const webvtt_byte *buffer,
+parse_cueparams( webvtt_parser self, const char *buffer,
                  webvtt_uint len, webvtt_cue *cue )
 {
   webvtt_uint pos = 0;
@@ -1017,7 +1021,7 @@ parse_cueparams( webvtt_parser self, const webvtt_byte *buffer,
 }
 
 static webvtt_status
-parse_webvtt( webvtt_parser self, const webvtt_byte *buffer, webvtt_uint *ppos,
+parse_webvtt( webvtt_parser self, const char *buffer, webvtt_uint *ppos,
               webvtt_uint len, int finish )
 {
   webvtt_status status = WEBVTT_SUCCESS;
@@ -1049,6 +1053,17 @@ parse_webvtt( webvtt_parser self, const webvtt_byte *buffer, webvtt_uint *ppos,
             status = WEBVTT_OUT_OF_MEMORY;
             goto _finish;
           }
+          /* replace '\0' with u+fffd */
+          if( WEBVTT_FAILED( status = webvtt_string_replace_all( &SP->v.text,
+                                                                 "\0", 1,
+                                                                 replacement,
+                                                                 3 ) ) ) {
+            webvtt_release_string( &SP->v.text );
+            SP->type = V_NONE;
+            POP();
+            ERROR( WEBVTT_ALLOCATION_FAILED );
+            goto _finish;
+          }
           SP->flags = 1;
         }
       }
@@ -1071,7 +1086,8 @@ parse_webvtt( webvtt_parser self, const webvtt_byte *buffer, webvtt_uint *ppos,
      * Otherwise, if we are expecting further data at some point, and have
      * an unfinished token, return and let the next chunk deal with it.
      */
-    if( SP->state != T_CUE || !( self->popped && FRAMEUP( 1 )->state == T_CUEREAD ) ) {
+    if( SP->state != T_CUE ||
+        !( self->popped && FRAMEUP( 1 )->state == T_CUEREAD ) ) {
       /**
        * We don't tokenize in certain states
        */
@@ -1280,7 +1296,7 @@ _finish:
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_read_cuetext( webvtt_parser self, const webvtt_byte *b,
+webvtt_read_cuetext( webvtt_parser self, const char *b,
                      webvtt_uint *ppos, webvtt_uint len, webvtt_bool finish )
 {
   webvtt_status status = WEBVTT_SUCCESS;
@@ -1310,9 +1326,19 @@ webvtt_read_cuetext( webvtt_parser self, const webvtt_byte *b,
                                        &self->truncate, finish ) ) ) {
         if( v < 0 || WEBVTT_FAILED( webvtt_string_putc( &self->line_buffer,
                                                         '\n' ) ) ) {
+          ERROR( WEBVTT_ALLOCATION_FAILED );
           status = WEBVTT_OUT_OF_MEMORY;
           goto _finish;
         }
+        /* replace '\0' with u+fffd */
+        if( WEBVTT_FAILED( status =
+                           webvtt_string_replace_all( &self->line_buffer,
+                                                      "\0", 1, replacement,
+                                                      3 ) ) ) {
+          ERROR( WEBVTT_ALLOCATION_FAILED );
+          goto _finish;
+        }
+
         flags = 1;
       }
     }
@@ -1381,7 +1407,7 @@ _finish:
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_proc_cuetext( webvtt_parser self, const webvtt_byte *b,
+webvtt_proc_cuetext( webvtt_parser self, const char *b,
                      webvtt_uint *ppos, webvtt_uint len, webvtt_bool finish )
 {
   webvtt_status status;
@@ -1436,12 +1462,13 @@ webvtt_parse_chunk( webvtt_parser self, const void *buffer, webvtt_uint len )
 {
   webvtt_status status;
   webvtt_uint pos = 0;
-  const webvtt_byte *b = ( const webvtt_byte * )buffer;
+  const char *b = ( const char * )buffer;
 
   while( pos < len ) {
     switch( self->mode ) {
       case M_WEBVTT:
-        if( WEBVTT_FAILED( status = parse_webvtt( self, b, &pos, len, self->finished ) ) ) {
+        if( WEBVTT_FAILED( status = parse_webvtt( self, b, &pos, len,
+                                                  self->finished ) ) ) {
           return status;
         }
         break;
@@ -1451,7 +1478,7 @@ webvtt_parse_chunk( webvtt_parser self, const void *buffer, webvtt_uint len )
          * read in cuetext
          */
         if( WEBVTT_FAILED( status = webvtt_proc_cuetext( self, b, &pos, len,
-                                                  self->finished ) ) ) {
+                                                         self->finished ) ) ) {
           if( status == WEBVTT_UNFINISHED ) {
             /* Make an exception here, because this isn't really a failure. */
             return WEBVTT_SUCCESS;
@@ -1467,28 +1494,10 @@ webvtt_parse_chunk( webvtt_parser self, const void *buffer, webvtt_uint len )
 
       case M_SKIP_CUE:
         if( WEBVTT_FAILED( status = webvtt_proc_cuetext( self, b, &pos, len,
-                                                  self->finished ) ) ) {
+                                                         self->finished ) ) ) {
           return status;
         }
         break;
-
-      case M_READ_LINE: {
-        /**
-         * Read in a line of text into the line-buffer,
-         * we will and depending on our state, do something with it.
-         */
-        int ret;
-        if( ( ret = webvtt_string_getline( &self->line_buffer, b, &pos, len,
-                                           &self->truncate,
-                                           self->finished ) ) ) {
-          if( ret < 0 ) {
-            ERROR( WEBVTT_ALLOCATION_FAILED );
-            return WEBVTT_OUT_OF_MEMORY;
-          }
-          self->mode = M_WEBVTT;
-        }
-        break;
-      }
     }
   }
 
@@ -1507,14 +1516,14 @@ webvtt_parse_chunk( webvtt_parser self, const void *buffer, webvtt_uint len )
  * Get an integer value from a series of digits.
  */
 static webvtt_int64
-parse_int( const webvtt_byte **pb, int *pdigits )
+parse_int( const char **pb, int *pdigits )
 {
   int digits = 0;
   webvtt_int64 result = 0;
   webvtt_int64 mul = 1;
-  const webvtt_byte *b = *pb;
+  const char *b = *pb;
   while( *b ) {
-    webvtt_byte ch = *b;
+    char ch = *b;
     if( webvtt_isdigit( ch ) ) {
       /**
        * Digit character, carry on
@@ -1540,7 +1549,7 @@ parse_int( const webvtt_byte **pb, int *pdigits )
  * returns 0 if it fails
  */
 WEBVTT_INTERN int
-parse_timestamp( const webvtt_byte *b, webvtt_timestamp *result )
+parse_timestamp( const char *b, webvtt_timestamp *result )
 {
   webvtt_int64 tmp;
   int have_hours = 0;

@@ -145,8 +145,6 @@ def main(argv):
                       ['--ion-eager'], # implies --baseline-eager
                       ['--baseline-eager'],
                       ['--baseline-eager', '--no-ti', '--no-fpu'],
-                      ['--no-baseline'],
-                      ['--no-baseline', '--ion-eager'],
                       ['--no-baseline', '--no-ion'],
                       ['--no-baseline', '--no-ion', '--no-ti'],
                     ]
@@ -156,7 +154,7 @@ def main(argv):
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
     elif options.ion:
-        flags = [['--no-jm'], ['--ion-eager']]
+        flags = [['--baseline-eager'], ['--ion-eager']]
         for test in test_list:
             for variant in flags:
                 new_test = test.copy()

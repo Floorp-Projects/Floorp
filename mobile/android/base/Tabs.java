@@ -15,10 +15,12 @@ import org.json.JSONObject;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.OnAccountsUpdateListener;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -57,15 +59,23 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_DESKTOP = 32;
     public static final int LOADURL_BACKGROUND = 64;
 
-    private static final int SCORE_INCREMENT_TAB_LOCATION_CHANGE = 5;
-    private static final int SCORE_INCREMENT_TAB_SELECTED = 10;
-    private static final int SCORE_THRESHOLD = 30;
+    private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 5;
 
     private static AtomicInteger sTabId = new AtomicInteger(0);
     private volatile boolean mInitialTabsAdded;
 
-    private GeckoApp mActivity;
+    private Activity mActivity;
     private ContentObserver mContentObserver;
+
+    private final Runnable mPersistTabsRunnable = new Runnable() {
+        @Override
+        public void run() {
+            boolean syncIsSetup = SyncAccounts.syncAccountsExist(getActivity());
+            if (syncIsSetup) {
+                TabsAccessor.persistLocalTabs(getContentResolver(), getTabsInOrder());
+            }
+        }
+    };
 
     private Tabs() {
         registerEventListener("Session:RestoreEnd");
@@ -90,7 +100,7 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("DesktopMode:Changed");
     }
 
-    public synchronized void attachToActivity(GeckoApp activity) {
+    public synchronized void attachToActivity(Activity activity) {
         if (mActivity == activity) {
             return;
         }
@@ -121,7 +131,9 @@ public class Tabs implements GeckoEventListener {
     // detached; however, we have lifecycle issues with GeckoApp and Tabs that
     // requires us to keep it around (see
     // https://bugzilla.mozilla.org/show_bug.cgi?id=844407).
-    public synchronized void detachFromActivity(GeckoApp activity) {
+    public synchronized void detachFromActivity(Activity activity) {
+        ThreadUtils.getBackgroundHandler().removeCallbacks(mPersistTabsRunnable);
+
         if (mContentObserver != null) {
             BrowserDB.unregisterContentObserver(getContentResolver(), mContentObserver);
         }
@@ -320,7 +332,11 @@ public class Tabs implements GeckoEventListener {
         if (nextTab == null && getPrivate) {
             // If there are no private tabs remaining, get the last normal tab
             Tab lastTab = mOrder.get(mOrder.size() - 1);
-            nextTab = getPreviousTabFrom(lastTab, false);
+            if (!lastTab.isPrivate()) {
+                nextTab = lastTab;
+            } else {
+                nextTab = getPreviousTabFrom(lastTab, false);
+            }
         }
 
         Tab parent = getTab(tab.getParentId());
@@ -342,7 +358,7 @@ public class Tabs implements GeckoEventListener {
      * @return the current GeckoApp instance, or throws if
      *         we aren't correctly initialized.
      */
-    private synchronized GeckoApp getActivity() {
+    private synchronized android.app.Activity getActivity() {
         if (mActivity == null) {
             throw new IllegalStateException("Tabs not initialized with a GeckoApp instance.");
         }
@@ -541,44 +557,40 @@ public class Tabs implements GeckoEventListener {
     private void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch (msg) {
             case LOCATION_CHANGE:
-                mScore += SCORE_INCREMENT_TAB_LOCATION_CHANGE;
+                queuePersistAllTabs();
                 break;
             case RESTORED:
                 mInitialTabsAdded = true;
                 break;
 
             // When one tab is deselected, another one is always selected, so only
-            // increment the score once. When tabs are added/closed, they are also
-            // selected/unselected, so it would be redundant to also listen
+            // queue a single persist operation. When tabs are added/closed, they
+            // are also selected/unselected, so it would be redundant to also listen
             // for ADDED/CLOSED events.
             case SELECTED:
-                mScore += SCORE_INCREMENT_TAB_SELECTED;
+                queuePersistAllTabs();
             case UNSELECTED:
                 tab.onChange();
                 break;
             default:
                 break;
         }
-
-        if (mScore > SCORE_THRESHOLD) {
-            persistAllTabs();
-            mScore = 0;
-        }
     }
 
     // This method persists the current ordered list of tabs in our tabs content provider.
     public void persistAllTabs() {
-        final GeckoApp activity = getActivity();
-        final Iterable<Tab> tabs = getTabsInOrder();
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                boolean syncIsSetup = SyncAccounts.syncAccountsExist(activity);
-                if (syncIsSetup) {
-                    TabsAccessor.persistLocalTabs(getContentResolver(), tabs);
-                }
-            }
-        });
+        ThreadUtils.postToBackgroundThread(mPersistTabsRunnable);
+    }
+
+    /**
+     * Queues a request to persist tabs after PERSIST_TABS_AFTER_MILLISECONDS
+     * milliseconds have elapsed. If any existing requests are already queued then
+     * those requests are removed.
+     */
+    private void queuePersistAllTabs() {
+        Handler backgroundHandler = ThreadUtils.getBackgroundHandler();
+        backgroundHandler.removeCallbacks(mPersistTabsRunnable);
+        backgroundHandler.postDelayed(mPersistTabsRunnable, PERSIST_TABS_AFTER_MILLISECONDS);
     }
 
     private void registerEventListener(String event) {

@@ -19,13 +19,7 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
-ifeq ($(OS_TARGET),Android)
-CPPSRCS = \
-  ifaddrs_android.cpp \
-  $(NULL)
-endif
-
-CSRCS = \
+DISABLED_CSRCS = \
   user_environment.c \
   user_mbuf.c \
   user_recv_thread.c \

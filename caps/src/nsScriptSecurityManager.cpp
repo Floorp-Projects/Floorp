@@ -61,6 +61,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -97,7 +98,6 @@ IDToString(JSContext *cx, jsid id_)
     if (JSID_IS_STRING(id))
         return JS_GetInternedStringChars(JSID_TO_STRING(id));
 
-    JSAutoRequest ar(cx);
     JS::Value idval;
     if (!JS_IdToValue(cx, id, &idval))
         return nullptr;
@@ -179,13 +179,11 @@ GetScriptContext(JSContext *cx)
 
 inline void SetPendingException(JSContext *cx, const char *aMsg)
 {
-    JSAutoRequest ar(cx);
     JS_ReportError(cx, "%s", aMsg);
 }
 
 inline void SetPendingException(JSContext *cx, const PRUnichar *aMsg)
 {
-    JSAutoRequest ar(cx);
     JS_ReportError(cx, "%hs", aMsg);
 }
 
@@ -1570,7 +1568,7 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
     };
 
     for (uint32_t i = 0; i < ArrayLength(flags); ++i) {
-        rv = fixup->CreateFixupURI(aTargetURIStr, flags[i],
+        rv = fixup->CreateFixupURI(aTargetURIStr, flags[i], nullptr,
                                    getter_AddRefs(target));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1633,7 +1631,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     /*
     ** Get origin of subject and object and compare.
     */
-    JSObject* obj = (JSObject*)aTargetObj;
+    JS::Rooted<JSObject*> obj(aCx, (JSObject*)aTargetObj);
     nsIPrincipal* object = doGetObjectPrincipal(obj);
 
     if (!object)
@@ -2023,7 +2021,8 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                                             nsIPrincipal **result)
 {
-    *result = doGetObjectPrincipal(aObj);
+    JS::Rooted<JSObject*> obj(aCx, aObj);
+    *result = doGetObjectPrincipal(obj);
     if (!*result)
         return NS_ERROR_FAILURE;
     NS_ADDREF(*result);
@@ -2032,7 +2031,7 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 // static
 nsIPrincipal*
-nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj)
+nsScriptSecurityManager::doGetObjectPrincipal(JS::Handle<JSObject*> aObj)
 {
     JSCompartment *compartment = js::GetObjectCompartment(aObj);
     JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
@@ -2052,14 +2051,15 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj)
 #ifdef DEBUG
 // static
 nsIPrincipal*
-nsScriptSecurityManager::old_doGetObjectPrincipal(JSObject *aObj,
+nsScriptSecurityManager::old_doGetObjectPrincipal(JS::Handle<JSObject*> aObj,
                                                   bool aAllowShortCircuit)
 {
     NS_ASSERTION(aObj, "Bad call to doGetObjectPrincipal()!");
     nsIPrincipal* result = nullptr;
 
-    JS::RootedObject obj(sXPConnect->GetCurrentJSContext(), aObj);
-    JSObject* origObj = obj;
+    JSContext* cx = sXPConnect->GetCurrentJSContext();
+    JS::RootedObject obj(cx, aObj);
+    JS::RootedObject origObj(cx, obj);
     js::Class *jsClass = js::GetObjectClass(obj);
 
     // A common case seen in this code is that we enter this function
@@ -2292,8 +2292,8 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
                     do_QueryInterface(aObj);
                 if (xpcwrappedjs)
                 {
-                    rv = xpcwrappedjs->GetJSObject(jsObject.address());
-                    NS_ENSURE_SUCCESS(rv, rv);
+                    jsObject = xpcwrappedjs->GetJSObject();
+                    NS_ENSURE_STATE(jsObject);
                 }
             }
 
@@ -2802,8 +2802,6 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
         end = PL_strchr(start, '.');
         if (end)
             *end = '\0';
-
-        JSAutoRequest ar(cx);
 
         JSString* propertyKey = ::JS_InternString(cx, start);
         if (!propertyKey)

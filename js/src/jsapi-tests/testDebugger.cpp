@@ -242,10 +242,6 @@ BEGIN_TEST(testDebugger_singleStepThrow)
         CHECK(JS_SetDebugModeForCompartment(cx, cx->compartment, true));
         CHECK(JS_SetInterrupt(rt, onStep, NULL));
 
-        uint32_t opts = JS_GetOptions(cx);
-        opts |= JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
-        JS_SetOptions(cx, opts);
-
         CHECK(JS_DefineFunction(cx, global, "setStepMode", setStepMode, 0, 0));
         EXEC("var e;\n"
              "setStepMode();\n"

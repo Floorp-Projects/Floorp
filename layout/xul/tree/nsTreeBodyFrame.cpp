@@ -857,9 +857,10 @@ nsTreeBodyFrame::UpdateScrollbars(const ScrollParts& aParts)
     curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
     aParts.mVScrollbarContent->
       SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curPos, true);
+    // 'this' might be deleted here
   }
 
-  if (aParts.mHScrollbar) {
+  if (weakFrame.IsAlive() && aParts.mHScrollbar) {
     nsAutoString curPos;
     curPos.AppendInt(mHorzPosition);
     aParts.mHScrollbarContent->
@@ -973,7 +974,7 @@ nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts, nsWeakFrame& aW
       SetAttr(kNameSpaceID_None, nsGkAtoms::increment, pageStr, true);
   }
 
-  if (mScrollbarActivity) {
+  if (weakFrame.IsAlive() && mScrollbarActivity) {
     mScrollbarActivity->ActivityOccurred();
   }
 }

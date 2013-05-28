@@ -109,9 +109,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMarkerElement)
 already_AddRefed<SVGAnimatedRect>
 SVGMarkerElement::ViewBox()
 {
-  nsRefPtr<SVGAnimatedRect> rect;
-  mViewBox.ToDOMAnimatedRect(getter_AddRefs(rect), this);
-  return rect.forget();
+  return mViewBox.ToSVGAnimatedRect(this);
 }
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>

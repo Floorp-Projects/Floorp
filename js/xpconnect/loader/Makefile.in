@@ -10,6 +10,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= jsloader_s
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 LOCAL_INCLUDES += \
@@ -17,8 +18,6 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../wrappers \
   -I$(topsrcdir)/content/base/src \
   $(NULL)
-
-CPPSRCS		= mozJSComponentLoader.cpp mozJSSubScriptLoader.cpp mozJSLoaderUtils.cpp
 
 EXTRA_JS_MODULES = XPCOMUtils.jsm ISO8601DateUtils.jsm
 

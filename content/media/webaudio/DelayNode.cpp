@@ -84,7 +84,9 @@ public:
     DELAY,
     MAX_DELAY
   };
-  void SetTimelineParameter(uint32_t aIndex, const AudioParamTimeline& aValue) MOZ_OVERRIDE
+  void SetTimelineParameter(uint32_t aIndex,
+                            const AudioParamTimeline& aValue,
+                            TrackRate aSampleRate) MOZ_OVERRIDE
   {
     switch (aIndex) {
     case DELAY:
@@ -105,7 +107,7 @@ public:
     }
   }
 
-  bool EnsureBuffer(uint32_t aNumberOfChannels)
+  bool EnsureBuffer(uint32_t aNumberOfChannels, TrackRate aSampleRate)
   {
     if (aNumberOfChannels == 0) {
       return false;
@@ -114,7 +116,7 @@ public:
       if (!mBuffer.SetLength(aNumberOfChannels)) {
         return false;
       }
-      const int32_t numFrames = NS_lround(mMaxDelay) * IdealAudioRate();
+      const int32_t numFrames = NS_lround(mMaxDelay) * aSampleRate;
       for (uint32_t channel = 0; channel < aNumberOfChannels; ++channel) {
         if (!mBuffer[channel].SetLength(numFrames)) {
           return false;
@@ -144,11 +146,13 @@ public:
     if (!mBuffer.IsEmpty() &&
         mLeftOverData == INT32_MIN &&
         aStream->AllInputsFinished()) {
-      mLeftOverData = static_cast<int32_t>(mCurrentDelayTime * IdealAudioRate());
+      mLeftOverData = static_cast<int32_t>(mCurrentDelayTime * aStream->SampleRate()) - WEBAUDIO_BLOCK_SIZE;
 
-      nsRefPtr<PlayingRefChanged> refchanged =
-        new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-      NS_DispatchToMainThread(refchanged);
+      if (mLeftOverData > 0) {
+        nsRefPtr<PlayingRefChanged> refchanged =
+          new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
+        NS_DispatchToMainThread(refchanged);
+      }
     } else if (mLeftOverData != INT32_MIN) {
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
       if (mLeftOverData <= 0) {
@@ -161,7 +165,7 @@ public:
       }
     }
 
-    if (!EnsureBuffer(numChannels)) {
+    if (!EnsureBuffer(numChannels, aStream->SampleRate())) {
       aOutput->SetNull(0);
       return;
     }
@@ -171,7 +175,7 @@ public:
     double delayTime = 0;
     float computedDelay[WEBAUDIO_BLOCK_SIZE];
     // Use a smoothing range of 20ms
-    const double smoothingRate = WebAudioUtils::ComputeSmoothingRate(0.02, IdealAudioRate());
+    const double smoothingRate = WebAudioUtils::ComputeSmoothingRate(0.02, aStream->SampleRate());
 
     if (mDelay.HasSimpleValue()) {
       delayTime = std::max(0.0, std::min(mMaxDelay, double(mDelay.GetValue())));
@@ -215,7 +219,7 @@ public:
         // from currentDelayTime seconds in the past.  We also interpolate the two input
         // frames in case the read position does not match an integer index.
         double readPosition = writeIndex + bufferLength -
-                              (currentDelayTime * IdealAudioRate());
+                              (currentDelayTime * aStream->SampleRate());
         if (readPosition >= bufferLength) {
           readPosition -= bufferLength;
         }

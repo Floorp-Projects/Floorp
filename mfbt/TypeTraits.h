@@ -197,6 +197,21 @@ template<> struct IsPod<double>             : TrueType {};
 template<> struct IsPod<wchar_t>            : TrueType {};
 template<typename T> struct IsPod<T*>       : TrueType {};
 
+namespace detail {
+
+template<typename T, bool = IsFloatingPoint<T>::value>
+struct IsSignedHelper;
+
+template<typename T>
+struct IsSignedHelper<T, true> : TrueType {};
+
+template<typename T>
+struct IsSignedHelper<T, false>
+  : IntegralConstant<bool, IsArithmetic<T>::value && T(-1) < T(1)>
+{};
+
+} // namespace detail
+
 /**
  * IsSigned determines whether a type is a signed arithmetic type.
  *
@@ -209,9 +224,25 @@ template<typename T> struct IsPod<T*>       : TrueType {};
  * mozilla::IsSigned<float>::value is true.
  */
 template<typename T>
-struct IsSigned
-  : IntegralConstant<bool, IsArithmetic<T>::value && T(-1) < T(0)>
+struct IsSigned : detail::IsSignedHelper<T> {};
+
+namespace detail {
+
+template<typename T, bool = IsFloatingPoint<T>::value>
+struct IsUnsignedHelper;
+
+template<typename T>
+struct IsUnsignedHelper<T, true> : FalseType {};
+
+template<typename T>
+struct IsUnsignedHelper<T, false>
+  : IntegralConstant<bool,
+                     IsArithmetic<T>::value &&
+                     (IsSame<typename RemoveCV<T>::Type, bool>::value ||
+                      T(1) < T(-1))>
 {};
+
+} // namespace detail
 
 /**
  * IsUnsigned determines whether a type is an unsigned arithmetic type.
@@ -225,9 +256,7 @@ struct IsSigned
  * mozilla::IsUnsigned<float>::value is false.
  */
 template<typename T>
-struct IsUnsigned
-  : IntegralConstant<bool, IsArithmetic<T>::value && T(0) < T(-1)>
-{};
+struct IsUnsigned : detail::IsUnsignedHelper<T> {};
 
 /* 20.9.5 Type property queries [meta.unary.prop.query] */
 

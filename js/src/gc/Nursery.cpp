@@ -68,6 +68,7 @@ js::Nursery::allocate(size_t size)
 {
     JS_ASSERT(size % ThingAlignment == 0);
     JS_ASSERT(position() % ThingAlignment == 0);
+    JS_ASSERT(!runtime()->isHeapBusy());
 
     if (position() + size > end())
         return NULL;
@@ -169,7 +170,6 @@ class MinorCollectionTracer : public JSTracer
 {
   public:
     Nursery *nursery;
-    JSRuntime *runtime;
     AutoTraceSession session;
 
     /*
@@ -194,18 +194,17 @@ class MinorCollectionTracer : public JSTracer
     MinorCollectionTracer(JSRuntime *rt, Nursery *nursery)
       : JSTracer(),
         nursery(nursery),
-        runtime(rt),
-        session(runtime, MinorCollecting),
+        session(rt, MinorCollecting),
         head(NULL),
         tail(&head),
-        savedNeedsBarrier(runtime->needsBarrier()),
-        disableStrictProxyChecking(runtime)
+        savedNeedsBarrier(rt->needsBarrier()),
+        disableStrictProxyChecking(rt)
     {
-        JS_TracerInit(this, runtime, Nursery::MinorGCCallback);
+        JS_TracerInit(this, rt, Nursery::MinorGCCallback);
         eagerlyTraceWeakMaps = TraceWeakMapKeysValues;
 
-        runtime->gcNumber++;
-        runtime->setNeedsBarrier(false);
+        rt->gcNumber++;
+        rt->setNeedsBarrier(false);
         for (ZonesIter zone(rt); !zone.done(); zone.next())
             zone->saveNeedsBarrier(false);
     }
@@ -221,11 +220,16 @@ class MinorCollectionTracer : public JSTracer
 } /* namespace js */
 
 static AllocKind
-GetObjectAllocKindForCopy(JSObject *obj)
+GetObjectAllocKindForCopy(JSRuntime *rt, JSObject *obj)
 {
     if (obj->isArray()) {
         JS_ASSERT(obj->numFixedSlots() == 0);
-        size_t nelements = obj->getDenseInitializedLength();
+
+        /* Use minimal size object if we are just going to copy the pointer. */
+        if (!IsInsideNursery(rt, (void *)obj->getElementsHeader()))
+            return FINALIZE_OBJECT0_BACKGROUND;
+
+        size_t nelements = obj->getDenseCapacity();
         return GetBackgroundAllocKind(GetGCArrayKind(nelements));
     }
 
@@ -261,7 +265,7 @@ void *
 js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
 {
     Zone *zone = src->zone();
-    AllocKind dstKind = GetObjectAllocKindForCopy(src);
+    AllocKind dstKind = GetObjectAllocKindForCopy(trc->runtime, src);
     JSObject *dst = static_cast<JSObject *>(allocateFromTenured(zone, dstKind));
     if (!dst)
         MOZ_CRASH();
@@ -325,6 +329,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     ObjectElements *srcHeader = src->getElementsHeader();
     ObjectElements *dstHeader;
 
+    /* TODO Bug 874151: Prefer to put element data inline if we have space. */
     if (!isInside(srcHeader)) {
         JS_ASSERT(src->elements == dst->elements);
         hugeSlots.remove(reinterpret_cast<HeapSlot*>(srcHeader));
@@ -347,14 +352,13 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         return;
     }
 
-    size_t nslots = ObjectElements::VALUES_PER_HEADER + srcHeader->initializedLength;
+    size_t nslots = ObjectElements::VALUES_PER_HEADER + srcHeader->capacity;
 
     /* Unlike other objects, Arrays can have fixed elements. */
     if (src->isArray() && nslots <= GetGCKindSlots(dstKind)) {
         dst->setFixedElements();
         dstHeader = dst->getElementsHeader();
         js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
-        dstHeader->capacity = GetGCKindSlots(dstKind) - ObjectElements::VALUES_PER_HEADER;
         return;
     }
 
@@ -363,7 +367,6 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     if (!dstHeader)
         MOZ_CRASH();
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
-    dstHeader->capacity = srcHeader->initializedLength;
     dst->elements = dstHeader->elements();
 }
 
@@ -487,6 +490,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
         comp->markAllInitialShapeTableEntries(&trc);
     }
     markStoreBuffer(&trc);
+    rt->newObjectCache.clearNurseryObjects(rt);
 
     /*
      * Most of the work is done here. This loop iterates over objects that have

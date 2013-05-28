@@ -74,10 +74,6 @@ SystemMessageManager.prototype = {
 
     aHandler.handleMessage(wrapped ? aMessage
                                    : ObjectWrapper.wrap(aMessage, this._window));
-
-    Services.obs.notifyObservers(/* aSubject */ null,
-                                 "SystemMessageManager:HandleMessageDone",
-                                 /* aData */ null);
   },
 
   mozSetMessageHandler: function sysMessMgr_setMessageHandler(aType, aHandler) {
@@ -148,44 +144,59 @@ SystemMessageManager.prototype = {
 
     cpmm.sendAsyncMessage("SystemMessageManager:Unregister",
                           { manifest: this._manifest,
-                            innerWindowID: this.innerWindowID
-                          });
+                            innerWindowID: this.innerWindowID });
   },
 
+  // Possible messages:
+  //
+  //   - SystemMessageManager:Message
+  //     This one will only be received when the child process is alive when
+  //     the message is initially sent.
+  //
+  //   - SystemMessageManager:GetPendingMessages:Return
+  //     This one will be received when the starting child process wants to
+  //     retrieve the pending system messages from the parent (i.e. after
+  //     sending SystemMessageManager:GetPendingMessages).
   receiveMessage: function sysMessMgr_receiveMessage(aMessage) {
     debug("receiveMessage " + aMessage.name + " for [" + aMessage.data.type + "] " +
-          "with manifest = " + aMessage.data.manifest + " (" + this._manifest + ") " +
-          "and uri = " + aMessage.data.uri + " (" + this._uri + ")");
+          "with manifest = " + this._manifest + " and uri = " + this._uri);
 
     let msg = aMessage.data;
-    if (msg.manifest != this._manifest || msg.uri != this._uri) {
-      return;
-    }
 
     if (aMessage.name == "SystemMessageManager:Message") {
       // Send an acknowledgement to parent to clean up the pending message,
       // so a re-launched app won't handle it again, which is redundant.
-      cpmm.sendAsyncMessage(
-        "SystemMessageManager:Message:Return:OK",
-        { type: msg.type,
-          manifest: msg.manifest,
-          uri: msg.uri,
-          msgID: msg.msgID });
-    }
-
-    // Bail out if we have no handlers registered for this type.
-    if (!(msg.type in this._handlers)) {
-      debug("No handler for this type");
-      return;
+      cpmm.sendAsyncMessage("SystemMessageManager:Message:Return:OK",
+                            { type: msg.type,
+                              manifest: this._manifest,
+                              uri: this._uri,
+                              msgID: msg.msgID });
     }
 
     let messages = (aMessage.name == "SystemMessageManager:Message")
                    ? [msg.msg]
                    : msg.msgQueue;
 
-    messages.forEach(function(aMsg) {
-      this._dispatchMessage(msg.type, this._handlers[msg.type], aMsg);
-    }, this);
+    // We only dispatch messages when a handler is registered.
+    let handler = this._handlers[msg.type];
+    if (handler) {
+      messages.forEach(function(aMsg) {
+        this._dispatchMessage(msg.type, handler, aMsg);
+      }, this);
+    }
+
+    // We need to notify the parent the system messages have been handled,
+    // even if there are no handlers registered for them, so the parent can
+    // release the CPU wake lock it took on our behalf.
+    cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
+                          { type: msg.type,
+                            manifest: this._manifest,
+                            uri: this._uri,
+                            handledCount: messages.length });
+
+    Services.obs.notifyObservers(/* aSubject */ null,
+                                 "handle-system-messages-done",
+                                 /* aData */ null);
   },
 
   // nsIDOMGlobalPropertyInitializer implementation.
@@ -239,8 +250,9 @@ SystemMessageManager.prototype = {
     if (!this._registerManifestReady) {
       cpmm.sendAsyncMessage("SystemMessageManager:Register",
                             { manifest: this._manifest,
-                              innerWindowID: this.innerWindowID
-                            });
+                              uri: this._uri,
+                              innerWindowID: this.innerWindowID });
+
       this._registerManifestReady = true;
     }
   },

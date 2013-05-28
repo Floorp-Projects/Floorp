@@ -67,6 +67,13 @@ JSD_GetDefaultJSContext(JSDContext* jsdc)
     return jsdc->dumbContext;
 }
 
+JSD_PUBLIC_API(JSObject*)
+JSD_GetDefaultGlobal(JSDContext* jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsdc->glob;
+}
+
 JSD_PUBLIC_API(JSRuntime*)
 JSD_GetJSRuntime(JSDContext* jsdc)
 {

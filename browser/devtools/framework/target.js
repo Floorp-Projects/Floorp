@@ -221,6 +221,7 @@ TabTarget.prototype = {
     if (this._tab && this._tab.linkedBrowser) {
       return this._tab.linkedBrowser.contentWindow;
     }
+    return null;
   },
 
   get name() {

@@ -11,6 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= mozjpeg
+MSVC_ENABLE_PGO := 1
 
 ifeq ($(OS_ARCH),WINNT)
 VISIBILITY_FLAGS	=
@@ -90,7 +91,7 @@ endif
 
 ifeq (1,$(LIBJPEG_TURBO_X64_ASM))
   CSRCS   += simd/jsimd_x86_64.c
-  ASFILES += \
+  DISABLED_ASFILES += \
 	simd/jccolss2-64.asm \
 	simd/jcgrass2-64.asm \
 	simd/jcqnts2f-64.asm \
@@ -111,7 +112,7 @@ endif
 
 ifeq (1,$(LIBJPEG_TURBO_X86_ASM))
   CSRCS   +=simd/jsimd_i386.c
-  ASFILES += \
+  DISABLED_ASFILES += \
 	simd/jccolmmx.asm \
 	simd/jccolss2.asm \
 	simd/jcgrammx.asm \

@@ -12,8 +12,10 @@
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
+#include "TreeWalker.h"
 
 #include "nsContentList.h"
+#include "nsCxPusher.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMNSEditableElement.h"
@@ -477,6 +479,22 @@ HTMLTextFieldAccessible::GetEditor() const
   editableElt->GetEditor(getter_AddRefs(editor));
 
   return editor.forget();
+}
+
+void
+HTMLTextFieldAccessible::CacheChildren()
+{
+  // XXX: textarea shouldn't contain anything but text leafs. Currently it may
+  // contain a trailing fake HTML br element added for layout needs. We don't
+  // need to expose it since it'd be confusing for AT.
+  TreeWalker walker(this, mContent);
+  Accessible* child = nullptr;
+  while ((child = walker.NextChild())) {
+    if (child->IsTextLeaf())
+      AppendChild(child);
+    else
+      Document()->UnbindFromDocument(child);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

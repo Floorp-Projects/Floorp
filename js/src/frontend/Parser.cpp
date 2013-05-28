@@ -4970,40 +4970,26 @@ template <>
 bool
 Parser<FullParseHandler>::setIncOpKid(ParseNode *pn, ParseNode *kid, TokenKind tt, bool preorder)
 {
-    JSOp op;
-
     if (!setLvalKid(pn, kid, incop_name_str[tt == TOK_DEC]))
         return false;
 
     switch (kid->getKind()) {
       case PNK_NAME:
-        op = (tt == TOK_INC)
-             ? (preorder ? JSOP_INCNAME : JSOP_NAMEINC)
-             : (preorder ? JSOP_DECNAME : JSOP_NAMEDEC);
         handler.noteLValue(kid);
-        break;
-
-      case PNK_DOT:
-        op = (tt == TOK_INC)
-             ? (preorder ? JSOP_INCPROP : JSOP_PROPINC)
-             : (preorder ? JSOP_DECPROP : JSOP_PROPDEC);
         break;
 
       case PNK_CALL:
         if (!makeSetCall(kid, JSMSG_BAD_INCOP_OPERAND))
             return false;
-        /* FALL THROUGH */
+        break;
+
+      case PNK_DOT:
       case PNK_ELEM:
-        op = (tt == TOK_INC)
-             ? (preorder ? JSOP_INCELEM : JSOP_ELEMINC)
-             : (preorder ? JSOP_DECELEM : JSOP_ELEMDEC);
         break;
 
       default:
         JS_ASSERT(0);
-        op = JSOP_NOP;
     }
-    pn->setOp(op);
     return true;
 }
 
@@ -6234,7 +6220,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             bool spread = false, missingTrailingComma = false;
             unsigned index = 0;
             for (; ; index++) {
-                if (index == StackSpace::ARGS_LENGTH_MAX) {
+                if (index == JSObject::NELEMENTS_LIMIT) {
                     report(ParseError, false, null(), JSMSG_ARRAY_INIT_TOO_BIG);
                     return null();
                 }

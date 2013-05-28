@@ -38,8 +38,8 @@
   function testSetLocalDescriptionError() {
     var pc = new mozRTCPeerConnection();
     info ("Testing setLocalDescription error callback");
-    pc.setLocalDescription(
-      {sdp: "Ralph Waldo Picklechips!", type: "offer"},
+    pc.setLocalDescription(new mozRTCSessionDescription({ sdp: "Picklechips!",
+                                                          type: "offer" }),
       successCallback("setLocalDescription with nonsense SDP should fail"),
       errorCallback(testSetRemoteDescriptionError));
   };
@@ -47,8 +47,8 @@
   function testSetRemoteDescriptionError() {
     var pc = new mozRTCPeerConnection();
     info ("Testing setRemoteDescription error callback");
-    pc.setRemoteDescription(
-      {sdp: "I don't know him.", type: "offer"},
+    pc.setRemoteDescription(new mozRTCSessionDescription({ sdp: "Who?",
+                                                           type: "offer" }),
       successCallback("setRemoteDescription with nonsense SDP should fail"),
       errorCallback(testAddIceCandidateError));
   };
@@ -56,9 +56,9 @@
   function testAddIceCandidateError() {
     var pc = new mozRTCPeerConnection();
     info ("Testing addIceCandidate error callback");
-    pc.addIceCandidate(
-      {candidate: "Pony Lords, jump for your lives!",
-       sdpMid: "whee", sdpMLineIndex: 1},
+    pc.addIceCandidate(new mozRTCIceCandidate({ candidate: "Pony Lords, jump!",
+                                                sdpMid: "whee",
+                                                sdpMLineIndex: 1 }),
       successCallback("addIceCandidate with nonsense candidate should fail"),
       errorCallback(SimpleTest.finish));
   };

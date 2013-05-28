@@ -31,6 +31,7 @@ let ContactService = {
                       "Contact:Remove", "Contacts:RegisterForMessages",
                       "child-process-shutdown", "Contacts:GetRevision"];
     this._children = [];
+    this._cursors = {};
     this._messages.forEach(function(msgName) {
       ppmm.addMessageListener(msgName, this);
     }.bind(this));
@@ -54,6 +55,8 @@ let ContactService = {
     if (this._db)
       this._db.close();
     this._db = null;
+    this._children = null;
+    this._cursors = null;
   },
 
   assertPermission: function(aMessage, aPerm) {
@@ -98,15 +101,24 @@ let ContactService = {
         if (!this.assertPermission(aMessage, "contacts-read")) {
           return null;
         }
+        if (!this._cursors[mm]) {
+          this._cursors[mm] = [];
+        }
+        this._cursors[mm].push(msg.cursorId);
+
         this._db.getAll(
           function(aContacts) {
             try {
               mm.sendAsyncMessage("Contacts:GetAll:Next", {cursorId: msg.cursorId, contacts: aContacts});
+              if (aContacts === null) {
+                let index = this._cursors[mm].indexOf(msg.cursorId);
+                this._cursors[mm].splice(index, 1);
+              }
             } catch (e) {
               if (DEBUG) debug("Child is dead, DB should stop sending contacts");
               throw e;
             }
-          },
+          }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { errorMsg: aErrorMsg }); },
           msg.findOptions, msg.cursorId);
         break;
@@ -187,6 +199,12 @@ let ContactService = {
         if (index != -1) {
           if (DEBUG) debug("Unregister index: " + index);
           this._children.splice(index, 1);
+        }
+        if (this._cursors[mm]) {
+          for (let id of this._cursors[mm]) {
+            this._db.clearDispatcher(id);
+          }
+          delete this._cursors[mm];
         }
         break;
       default:

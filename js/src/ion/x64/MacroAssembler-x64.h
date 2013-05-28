@@ -206,15 +206,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         JS_ASSERT(src != dest);
 
         JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
-        mov(ImmShiftedTag(tag), dest);
 #ifdef DEBUG
         if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
             Label upper32BitsZeroed;
-            branchPtr(Assembler::BelowOrEqual, src, Imm32(UINT32_MAX), &upper32BitsZeroed);
+            movePtr(ImmWord(UINT32_MAX), dest);
+            branchPtr(Assembler::BelowOrEqual, src, dest, &upper32BitsZeroed);
             breakpoint();
             bind(&upper32BitsZeroed);
         }
 #endif
+        mov(ImmShiftedTag(tag), dest);
         orq(src, dest);
     }
 

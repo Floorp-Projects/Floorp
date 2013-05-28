@@ -10,6 +10,7 @@
 #include "nsXBLProtoImplProperty.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsReadableUtils.h"
 #include "nsIScriptContext.h"
 #include "nsJSUtils.h"
@@ -212,12 +213,10 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     nsDependentString getter(mGetterText->GetText());
     if (!getter.IsEmpty()) {
       AutoPushJSContext cx(aContext->GetNativeContext());
-      JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), mGetterText->GetLineNumber())
-             .setVersion(JSVERSION_LATEST)
-             .setUserBit(true); // Flag us as XBL
+             .setVersion(JSVERSION_LATEST);
       nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
       JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
       JS::RootedObject getterObject(cx);
@@ -261,12 +260,10 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     nsDependentString setter(mSetterText->GetText());
     if (!setter.IsEmpty()) {
       AutoPushJSContext cx(aContext->GetNativeContext());
-      JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), mSetterText->GetLineNumber())
-             .setVersion(JSVERSION_LATEST)
-             .setUserBit(true); // Flag us as XBL
+             .setVersion(JSVERSION_LATEST);
       nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
       JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
       JS::RootedObject setterObject(cx);
@@ -298,19 +295,19 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
 #ifdef DEBUG
   mIsCompiled = NS_SUCCEEDED(rv);
 #endif
-  
+
   return rv;
 }
 
 void
-nsXBLProtoImplProperty::Trace(TraceCallback aCallback, void *aClosure) const
+nsXBLProtoImplProperty::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 {
   if (mJSAttributes & JSPROP_GETTER) {
-    aCallback(mJSGetterObject, "mJSGetterObject", aClosure);
+    aCallbacks.Trace(&mJSGetterObject, "mJSGetterObject", aClosure);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
-    aCallback(mJSSetterObject, "mJSSetterObject", aClosure);
+    aCallbacks.Trace(&mJSSetterObject, "mJSSetterObject", aClosure);
   }
 }
 
@@ -373,12 +370,14 @@ nsXBLProtoImplProperty::Write(nsIScriptContext* aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mJSAttributes & JSPROP_GETTER) {
-    rv = XBL_SerializeFunction(aContext, aStream, mJSGetterObject);
+    rv = XBL_SerializeFunction(aContext, aStream,
+      JS::Handle<JSObject*>::fromMarkedLocation(&mJSGetterObject));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
-    rv = XBL_SerializeFunction(aContext, aStream, mJSSetterObject);
+    rv = XBL_SerializeFunction(aContext, aStream,
+      JS::Handle<JSObject*>::fromMarkedLocation(&mJSSetterObject));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

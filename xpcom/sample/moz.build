@@ -12,3 +12,8 @@ XPIDL_SOURCES += ['nsISample.idl']
 
 MODULE = 'xpcomsample'
 
+CPP_SOURCES += [
+    'nsSample.cpp',
+    'nsSampleModule.cpp',
+]
+

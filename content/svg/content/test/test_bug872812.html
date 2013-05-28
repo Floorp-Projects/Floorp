@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=872812
+-->
+<head>
+  <title>Test for Bug 872812</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=872812">Mozilla Bug 872812</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="viewport-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
+ok(svg, "SVG exists");
+var a = document.createEvent('CustomEvent').initCustomEvent('', '', '', svg.viewBox);
+ok(true, "CustomEvent exists and we are not crashed!");
+
+</script>
+</pre>
+</body>
+</html>

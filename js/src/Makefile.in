@@ -8,6 +8,8 @@ DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 
+TOPLEVEL_BUILD := 1
+
 run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 include $(DEPTH)/config/autoconf.mk
 
@@ -18,6 +20,7 @@ LIBRARY_NAME	= mozjs
 endif
 
 STATIC_LIBRARY_NAME = js_static
+MSVC_ENABLE_PGO := 1
 LIBS		= $(NSPR_LIBS)
 
 # JavaScript must be built shared, even for static builds, as it is used by
@@ -51,109 +54,6 @@ VPATH		+= \
 		$(srcdir)/vm \
 		$(NULL)
 
-CPPSRCS		= \
-		jsalloc.cpp \
-		jsanalyze.cpp \
-		jsapi.cpp \
-		jsarray.cpp \
-		jsatom.cpp \
-		jsbool.cpp \
-		jsclone.cpp \
-		jscntxt.cpp \
-		jscompartment.cpp \
-		jsdate.cpp \
-		jsdbgapi.cpp \
-		jsdhash.cpp \
-		jsdtoa.cpp \
-		jsexn.cpp \
-		jsfriendapi.cpp \
-		jsfun.cpp \
-		jsgc.cpp \
-		jscrashreport.cpp \
-		jsinfer.cpp \
-		jsinterp.cpp \
-		jsiter.cpp \
-		jslog2.cpp \
-		jsmath.cpp \
-		jsmemorymetrics.cpp \
-		jsnativestack.cpp \
-		jsnum.cpp \
-		jsobj.cpp \
-		json.cpp \
-		jsonparser.cpp \
-		jsopcode.cpp \
-		jsproxy.cpp \
-		jsprf.cpp \
-		jsprobes.cpp \
-		jspropertycache.cpp \
-		jspropertytree.cpp \
-		jsreflect.cpp \
-		jsscript.cpp \
-		jsstr.cpp \
-		jstypedarray.cpp \
-		jsutil.cpp \
-		jswatchpoint.cpp \
-		jsweakmap.cpp \
-		jsworkers.cpp \
-		ThreadPool.cpp \
-		Monitor.cpp \
-		ForkJoin.cpp \
-		jswrapper.cpp \
-		prmjtime.cpp \
-		sharkctl.cpp \
-		ArgumentsObject.cpp \
-		DateTime.cpp \
-		Debugger.cpp \
-		GlobalObject.cpp \
-		Object.cpp \
-		ObjectImpl.cpp \
-		PropertyKey.cpp \
-		ScopeObject.cpp \
-		Shape.cpp \
-		Stack.cpp \
-		String.cpp \
-		BytecodeCompiler.cpp \
-		BytecodeEmitter.cpp \
-		CharacterEncoding.cpp \
-		FoldConstants.cpp \
-		Intl.cpp \
-		NameFunctions.cpp \
-		ParallelArray.cpp \
-		ParseMaps.cpp \
-		ParseNode.cpp \
-		Parser.cpp \
-		SPSProfiler.cpp \
-		SelfHosting.cpp \
-		TokenStream.cpp \
-		TestingFunctions.cpp \
-		Profilers.cpp \
-		LifoAlloc.cpp \
-		Eval.cpp \
-		MapObject.cpp \
-		RegExpObject.cpp \
-		RegExpStatics.cpp \
-		RegExp.cpp \
-		RootMarking.cpp \
-		Marking.cpp \
-		Memory.cpp \
-		Statistics.cpp \
-		StoreBuffer.cpp \
-		Nursery.cpp \
-		Iteration.cpp \
-		Zone.cpp \
-		Verifier.cpp \
-		StringBuffer.cpp \
-		Unicode.cpp \
-		Xdr.cpp \
-		Module.cpp \
-		$(NULL)
-
-ifdef MOZ_INSTRUMENTS
-CPPSRCS		+= \
-		Instruments.cpp \
-		$(NULL)
-endif
-
 ######################################################
 # BEGIN include exported headers from the JS engine
 #
@@ -175,141 +75,20 @@ ifeq (,$(filter aurora beta release esr,$(MOZ_UPDATE_CHANNEL)))
 DEFINES += -DENABLE_PARALLEL_JS
 endif
 
-ifdef ENABLE_TRACE_LOGGING
-
-###############################################
-# BEGIN include sources for trace logging
-#
-CPPSRCS += 	TraceLogging.cpp
-
-endif
-
 # Ion
 ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion
 VPATH +=	$(srcdir)/ion/shared
 
-CPPSRCS +=	MIR.cpp \
-		BytecodeAnalysis.cpp \
-		BaselineCompiler.cpp \
-		BaselineIC.cpp \
-		BaselineFrame.cpp \
-		BaselineFrameInfo.cpp \
-		BaselineJIT.cpp \
-		BaselineInspector.cpp \
-		BaselineBailouts.cpp \
-		BacktrackingAllocator.cpp \
-		Bailouts.cpp \
-		BitSet.cpp \
-		C1Spewer.cpp \
-		CodeGenerator.cpp \
-		CodeGenerator-shared.cpp \
-		Ion.cpp \
-		IonAnalysis.cpp \
-		IonBuilder.cpp \
-		IonCaches.cpp \
-		IonFrames.cpp \
-		IonMacroAssembler.cpp \
-		IonSpewer.cpp \
-		JSONSpewer.cpp \
-		LICM.cpp \
-		LinearScan.cpp \
-		LIR.cpp \
-		LiveRangeAllocator.cpp \
-		Lowering.cpp \
-		Lowering-shared.cpp \
-		MCallOptimize.cpp \
-		MIRGraph.cpp \
-		MoveResolver.cpp \
-		EdgeCaseAnalysis.cpp \
-		RegisterAllocator.cpp \
-		Snapshots.cpp \
-		Safepoints.cpp \
-		StupidAllocator.cpp \
-		TypePolicy.cpp \
-		ValueNumbering.cpp \
-		RangeAnalysis.cpp \
-		VMFunctions.cpp \
-		ParallelFunctions.cpp \
-		AliasAnalysis.cpp \
-		ParallelArrayAnalysis.cpp \
-		UnreachableCodeElimination.cpp \
-		BaselineCompiler-shared.cpp \
-		EffectiveAddressAnalysis.cpp \
-		AsmJS.cpp \
-		AsmJSLink.cpp \
-		AsmJSSignalHandlers.cpp \
-		$(NULL)
-endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
-ifdef ENABLE_ION
-CPPSRCS +=	CodeGenerator-x86-shared.cpp
-CPPSRCS +=	IonFrames-x86-shared.cpp
-CPPSRCS +=	MoveEmitter-x86-shared.cpp
-CPPSRCS +=	Assembler-x86-shared.cpp
-CPPSRCS +=	Lowering-x86-shared.cpp
-CPPSRCS +=	BaselineCompiler-x86-shared.cpp
-CPPSRCS +=	BaselineIC-x86-shared.cpp
-endif #ENABLE_ION
 ifeq (x86_64, $(TARGET_CPU))
-ifdef _MSC_VER
-ASFILES +=	TrampolineMasmX64.asm
-endif
-ifeq ($(OS_ARCH),WINNT)
-ifdef GNU_CC
-ASFILES +=	TrampolineMingwX64.s
-endif
-endif
-ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	TrampolineSUNWX64.s
-endif
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x64
-CPPSRCS += 	Lowering-x64.cpp \
-		CodeGenerator-x64.cpp \
-		Trampoline-x64.cpp \
-		Assembler-x64.cpp \
-		Bailouts-x64.cpp \
-		MacroAssembler-x64.cpp \
-		BaselineCompiler-x64.cpp \
-		BaselineIC-x64.cpp \
-		$(NULL)
-endif #ENABLE_ION
 else
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x86
-CPPSRCS +=	Lowering-x86.cpp \
-		CodeGenerator-x86.cpp \
-		Trampoline-x86.cpp \
-		Assembler-x86.cpp \
-		Bailouts-x86.cpp \
-		MacroAssembler-x86.cpp \
-		BaselineCompiler-x86.cpp \
-		BaselineIC-x86.cpp \
-		$(NULL)
-endif #ENABLE_ION
-ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
-endif
-ifdef ENABLE_ION
 ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/arm
-CPPSRCS +=	Lowering-arm.cpp \
-		CodeGenerator-arm.cpp \
-		Trampoline-arm.cpp \
-		Assembler-arm.cpp \
-		Bailouts-arm.cpp \
-		IonFrames-arm.cpp \
-		MoveEmitter-arm.cpp \
-		Architecture-arm.cpp \
-		MacroAssembler-arm.cpp \
-		BaselineCompiler-arm.cpp \
-		BaselineIC-arm.cpp \
-		$(NULL)
-endif #ENABLE_ION
 endif
 endif #ENABLE_ION
 
@@ -323,54 +102,9 @@ VPATH += 	$(srcdir)/assembler \
 		$(srcdir)/yarr \
 		$(NONE)
 
-CPPSRCS += 	ExecutableAllocator.cpp \
-		PageBlock.cpp \
-		YarrInterpreter.cpp \
-		YarrPattern.cpp \
-		YarrSyntaxChecker.cpp \
-		YarrCanonicalizeUCS2.cpp \
-		$(NONE)
-
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-CPPSRCS += ExecutableAllocatorPosix.cpp \
-           OSAllocatorPosix.cpp \
-           $(NONE)
-endif
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += ExecutableAllocatorWin.cpp \
-           OSAllocatorWin.cpp \
-           $(NONE)
-endif
-ifeq ($(OS_ARCH),OS2)
-CPPSRCS += ExecutableAllocatorOS2.cpp \
-           OSAllocatorOS2.cpp \
-           $(NONE)
-endif
-
 ifneq (,$(ENABLE_ION)$(ENABLE_YARR_JIT))
 VPATH += 	$(srcdir)/assembler/assembler \
 		$(NONE)
-
-CPPSRCS +=	ARMAssembler.cpp \
-		MacroAssemblerARM.cpp \
-		MacroAssemblerX86Common.cpp \
-		$(NONE)
-
-ifdef ENABLE_YARR_JIT
-CPPSRCS +=	YarrJIT.cpp
-endif
-
-ifeq (86, $(findstring 86,$(TARGET_CPU)))
-ifeq (x86_64, $(TARGET_CPU))
-#CPPSRCS		+= only_on_x86_64.cpp
-else
-#CPPSRCS		+= only_on_x86.cpp
-endif
-endif
-ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-#CPPSRCS		+= only_on_arm.cpp
-endif
-
 endif
 
 #
@@ -379,11 +113,6 @@ endif
 
 ifdef JS_HAS_CTYPES
 VPATH += $(srcdir)/ctypes
-
-CPPSRCS += \
-    CTypes.cpp \
-    Library.cpp \
-    $(NULL)
 
 ifdef MOZ_NATIVE_FFI
 LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
@@ -419,12 +148,6 @@ LOCAL_INCLUDES += -I$(MFBT_ROOT)/double-conversion
 # implementation source file per supported operating system, plus a stub
 # for unsupported OSes, plus the Javascript wrapper.
 VPATH += $(srcdir)/perf
-CPPSRCS += jsperf.cpp
-ifdef HAVE_LINUX_PERF_EVENT_H
-CPPSRCS += pm_linux.cpp
-else
-CPPSRCS += pm_stub.cpp
-endif
 
 DASH_R		= -r
 
@@ -797,7 +520,6 @@ JS_CONFIG_SUBSTITUTIONS=\
 	-Dexec_prefix="$(exec_prefix)" \
 	-Dincludedir="$(includedir)" \
 	-Dlibdir="$(libdir)" \
-	-DMODULE="$(MODULE)" \
 	-DMOZILLA_VERSION="$(MOZILLA_VERSION)" \
 	-DLIBRARY_NAME="$(LIBRARY_NAME)" \
 	-DJS_CONFIG_LIBS="$(JS_CONFIG_LIBS)" \
@@ -835,7 +557,7 @@ install:: $(LIBRARY_NAME).pc
 # The overall directory structure of the installed headers looks like so:
 #
 #   $(includedir)/
-#      $(MODULE)/
+#      $(LIBRARY_NAME)/
 #        jsapi.h, jspubtd.h, etc. (all of EXPORTS)
 #        js/
 #          js/public/* headers (all are public)
@@ -848,13 +570,13 @@ install:: $(LIBRARY_NAME).pc
 #
 
 install:: $(EXPORTS)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)
 
 install:: $(EXPORTS_js)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/js
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)/js
 
 install:: $(EXPORTS_mozilla)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/mozilla
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)/mozilla
 
 #
 # END SpiderMonkey header installation
@@ -947,8 +669,15 @@ selfhosted_out_h_deps := \
   $(srcdir)/builtin/embedjs.py \
   $(NULL)
 
+SELFHOSTED_DEFINES += $(DEFINES) $(ACDEFINES)
+ifdef MOZ_DEBUG
+SELFHOSTED_DEFINES += $(MOZ_DEBUG_ENABLE_DEFS)
+else
+SELFHOSTED_DEFINES += $(MOZ_DEBUG_DISABLE_DEFS)
+endif
+
 selfhosted.out.h: $(selfhosted_out_h_deps)
-	$(PYTHON) $(srcdir)/builtin/embedjs.py $(DEFINES) $(ACDEFINES) \
+	$(PYTHON) $(srcdir)/builtin/embedjs.py $(SELFHOSTED_DEFINES) \
 	  -p '$(CPP)' -m $(srcdir)/js.msg -o $@ $(selfhosting_srcs)
 
 ###############################################

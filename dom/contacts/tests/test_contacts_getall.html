@@ -409,6 +409,27 @@ let steps = [
   },
 
   clearDatabase,
+  addContacts,
+
+  function() {
+    if (!SpecialPowers.isMainProcess()) {
+      // We stop calling continue() intentionally here to see if the cursor gets
+      // cleaned up properly in the parent.
+      ok(true, "Leaking a cursor");
+      req = mozContacts.getAll({
+        sortBy: "familyName",
+        sortOrder: "ascending"
+      });
+      req.onsuccess = function(event) {
+        next();
+      };
+      req.onerror = onFailure;
+    } else {
+      next();
+    }
+  },
+
+  clearDatabase,
 
   function() {
     ok(true, "all done!\n");
@@ -422,8 +443,9 @@ function next() {
     ok(false, "Shouldn't get here!");
     return;
   }
+  let i = index++;
   try {
-    steps[index++]();
+    steps[i]();
   } catch(ex) {
     ok(false, "Caught exception", ex);
   }

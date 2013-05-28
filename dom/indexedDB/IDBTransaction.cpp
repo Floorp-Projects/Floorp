@@ -11,7 +11,6 @@
 #include "nsIAppShell.h"
 #include "nsIScriptContext.h"
 
-#include "DOMError.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
@@ -37,6 +36,7 @@
 
 #define SAVEPOINT_NAME "savepoint"
 
+using namespace mozilla::dom;
 USING_INDEXEDDB_NAMESPACE
 using mozilla::dom::quota::QuotaManager;
 
@@ -515,11 +515,11 @@ IDBTransaction::ClearCreatedFileInfos()
 
 nsresult
 IDBTransaction::AbortInternal(nsresult aAbortCode,
-                              already_AddRefed<nsIDOMDOMError> aError)
+                              already_AddRefed<DOMError> aError)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIDOMDOMError> error = aError;
+  nsRefPtr<DOMError> error = aError;
 
   if (IsFinished()) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
@@ -586,8 +586,8 @@ IDBTransaction::Abort(IDBRequest* aRequest)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aRequest, "This is undesirable.");
 
-  nsCOMPtr<nsIDOMDOMError> error;
-  aRequest->GetError(getter_AddRefs(error));
+  ErrorResult rv;
+  nsRefPtr<DOMError> error = aRequest->GetError(rv);
 
   return AbortInternal(aRequest->GetErrorCode(), error.forget());
 }
@@ -597,7 +597,8 @@ IDBTransaction::Abort(nsresult aErrorCode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  return AbortInternal(aErrorCode, DOMError::CreateForNSResult(aErrorCode));
+  nsRefPtr<DOMError> error = new DOMError(GetOwner(), aErrorCode);
+  return AbortInternal(aErrorCode, error.forget());
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
@@ -665,7 +666,7 @@ IDBTransaction::GetMode(nsAString& aMode)
 }
 
 NS_IMETHODIMP
-IDBTransaction::GetError(nsIDOMDOMError** aError)
+IDBTransaction::GetError(nsISupports** aError)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -858,7 +859,7 @@ CommitHelper::Run()
       // programmatically, create one now.
       if (!mTransaction->mError &&
           mAbortCode != NS_ERROR_DOM_INDEXEDDB_ABORT_ERR) {
-        mTransaction->mError = DOMError::CreateForNSResult(mAbortCode);
+        mTransaction->mError = new DOMError(mTransaction->GetOwner(), mAbortCode);
       }
     }
     else {

@@ -98,3 +98,13 @@ skip-if(Android||B2G) needs-focus == 462758-grabbers-resizers.html 462758-grabbe
 == 388980-1.html 388980-1-ref.html
 needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1-ref.html
 skip-if(B2G) fails-if(Android) needs-focus != spellcheck-superscript-2.html spellcheck-superscript-2-ref.html # bug 783658
+== 824080-1.html 824080-1-ref.html
+== 824080-2.html 824080-2-ref.html
+== 824080-3.html 824080-3-ref.html
+!= 824080-2.html 824080-3.html
+== 824080-4.html 824080-4-ref.html
+== 824080-5.html 824080-5-ref.html
+!= 824080-4.html 824080-5.html
+== 824080-6.html 824080-6-ref.html
+== 824080-7.html 824080-7-ref.html
+!= 824080-6.html 824080-7.html

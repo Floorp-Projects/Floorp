@@ -4,8 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:html="http://www.w3.org/1999/xhtml"
-     class="reftest-wait"
-     onload="startTest()">
+     class="reftest-wait">
 
   <title>Testcase for repaint of the area previously covered by a foreignObject</title>
 
@@ -17,11 +16,8 @@
 // has rendered the foreignObject (and thus div) is moved out
 // of the viewport which should then be filled by the green rect as a result.
 
-  function startTest() {
-    document.addEventListener("MozReftestInvalidate", doTest, false);
-    // in case we're not gecko
-    setTimeout(doTest, 5000);
-  }
+  document.addEventListener("MozReftestInvalidate", doTest, false);
+  setTimeout(doTest, 4000); // fallback for running outside reftest
 
   function doTest() {
     document.getElementById('fo').setAttribute('y', '100%');

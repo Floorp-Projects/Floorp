@@ -6,3 +6,7 @@
 
 MODULE = 'dom'
 
+CPP_SOURCES += [
+    'nsJSEventListener.cpp',
+]
+

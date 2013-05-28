@@ -35,6 +35,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://gre/modules/devtools/Loader.jsm");
 
+let Telemetry = devtools.require("devtools/shared/telemetry");
+
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;
 const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties";
@@ -46,6 +48,10 @@ const BUTTON_POSITION_DONT_SAVE = 2;
 const BUTTON_POSITION_REVERT = 0;
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
+// Because we have no constructor / destructor where we can log metrics we need
+// to do so here.
+let telemetry = new Telemetry();
+telemetry.toolOpened("scratchpad");
 
 /**
  * The scratchpad object handles the Scratchpad window functionality.
@@ -1390,6 +1396,7 @@ var Scratchpad = {
       }
 
       if (shouldClose) {
+        telemetry.toolClosed("scratchpad");
         window.close();
       }
       if (aCallback) {

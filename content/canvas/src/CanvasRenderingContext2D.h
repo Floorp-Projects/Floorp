@@ -307,11 +307,13 @@ public:
 
   JSObject* GetMozCurrentTransform(JSContext* cx,
                                    mozilla::ErrorResult& error) const;
-  void SetMozCurrentTransform(JSContext* cx, JSObject& currentTransform,
+  void SetMozCurrentTransform(JSContext* cx,
+                              JS::Handle<JSObject*> currentTransform,
                               mozilla::ErrorResult& error);
   JSObject* GetMozCurrentTransformInverse(JSContext* cx,
                                           mozilla::ErrorResult& error) const;
-  void SetMozCurrentTransformInverse(JSContext* cx, JSObject& currentTransform, 
+  void SetMozCurrentTransformInverse(JSContext* cx,
+                                     JS::Handle<JSObject*> currentTransform,
                                      mozilla::ErrorResult& error);
   void GetFillRule(nsAString& fillRule);
   void SetFillRule(const nsAString& fillRule);
@@ -472,7 +474,7 @@ protected:
 
   // Some helpers.  Doesn't modify a color on failure.
   void SetStyleFromJSValue(JSContext* cx, JS::Handle<JS::Value> value,
-			   Style whichStyle);
+                           Style whichStyle);
   void SetStyleFromString(const nsAString& str, Style whichStyle);
 
   void SetStyleFromGradient(CanvasGradient *gradient, Style whichStyle)

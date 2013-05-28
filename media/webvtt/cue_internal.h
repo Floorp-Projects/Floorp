@@ -47,6 +47,7 @@ enum {
   CUE_HEADER_MASK = CUE_HAVE_CUEPARAMS|CUE_HAVE_ID,
 };
 
-WEBVTT_INTERN webvtt_bool cue_is_incomplete( const webvtt_cue *cue );
+WEBVTT_INTERN webvtt_bool
+cue_is_incomplete( const webvtt_cue *cue );
 
 #endif

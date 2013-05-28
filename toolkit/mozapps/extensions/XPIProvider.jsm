@@ -4605,11 +4605,13 @@ AddonInstall.prototype = {
    *         XPI is incorrectly signed
    */
   loadManifest: function AI_loadManifest(aCallback) {
+    let self = this;
     function addRepositoryData(aAddon) {
       // Try to load from the existing cache first
       AddonRepository.getCachedAddonByID(aAddon.id, function loadManifest_getCachedAddonByID(aRepoAddon) {
         if (aRepoAddon) {
           aAddon._repositoryAddon = aRepoAddon;
+          self.name = self.name || aAddon._repositoryAddon.name;
           aAddon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
           aAddon.appDisabled = !isUsableAddon(aAddon);
           aCallback();
@@ -4620,6 +4622,7 @@ AddonInstall.prototype = {
         AddonRepository.cacheAddons([aAddon.id], function loadManifest_cacheAddons() {
           AddonRepository.getCachedAddonByID(aAddon.id, function loadManifest_getCachedAddonByID(aRepoAddon) {
             aAddon._repositoryAddon = aRepoAddon;
+            self.name = self.name || aAddon._repositoryAddon.name;
             aAddon.compatibilityOverrides = aRepoAddon ?
                                               aRepoAddon.compatibilityOverrides :
                                               null;
@@ -4667,7 +4670,6 @@ AddonInstall.prototype = {
     }
 
     if (this.addon.type == "multipackage") {
-      let self = this;
       this.loadMultipackageManifests(zipreader, function loadManifest_loadMultipackageManifests() {
         addRepositoryData(self.addon);
       });

@@ -34,6 +34,7 @@
 #include "nsIXPCScriptable.h"
 
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsThreadUtils.h"
@@ -1026,9 +1027,8 @@ XPCShellEnvironment::Init()
         return false;
     }
 
-    JS::Rooted<JSObject*> globalObj(cx);
-    rv = holder->GetJSObject(globalObj.address());
-    if (NS_FAILED(rv)) {
+    JS::Rooted<JSObject*> globalObj(cx, holder->GetJSObject());
+    if (!globalObj) {
         NS_ERROR("Failed to get global JSObject!");
         return false;
     }

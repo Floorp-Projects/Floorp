@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMClassInfo.h"
-#include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "SimToolKit.h"
 #include "StkCommandEvent.h"
@@ -11,8 +9,6 @@
 #include "nsJSON.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-
-DOMCI_DATA(MozStkCommandEvent, mozilla::dom::icc::StkCommandEvent)
 
 namespace mozilla {
 namespace dom {
@@ -32,7 +28,6 @@ NS_IMPL_RELEASE_INHERITED(StkCommandEvent, nsDOMEvent)
 
 NS_INTERFACE_MAP_BEGIN(StkCommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozStkCommandEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozStkCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP

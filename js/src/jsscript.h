@@ -315,7 +315,7 @@ class JSScript : public js::gc::Cell
     js::types::TypeScript *types;
 
   private:
-    js::ScriptSource *scriptSource_; /* source code */
+    js::HeapPtrObject sourceObject_; /* source code object */
     js::HeapPtrFunction function_;
 
     // For callsite clones, which cannot have enclosing scopes, the original
@@ -441,7 +441,6 @@ class JSScript : public js::gc::Cell
                                          JSCompartment::debugScriptMap */
     bool            hasFreezeConstraints:1; /* freeze constraints for stack
                                              * type sets have been generated */
-    bool            userBit:1; /* Opaque, used by the embedding. */
 
   private:
     /* See comments below. */
@@ -455,8 +454,9 @@ class JSScript : public js::gc::Cell
 
   public:
     static JSScript *Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
-                                const JS::CompileOptions &options, unsigned staticLevel,
-                                js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
+                            const JS::CompileOptions &options, unsigned staticLevel,
+                            JS::HandleScriptSource sourceObject, uint32_t sourceStart,
+                            uint32_t sourceEnd);
 
     // Three ways ways to initialize a JSScript. Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
@@ -628,11 +628,13 @@ class JSScript : public js::gc::Cell
 
     static bool loadSource(JSContext *cx, js::HandleScript scr, bool *worked);
 
-    js::ScriptSource *scriptSource() const {
-        return scriptSource_;
+    js::ScriptSource *scriptSource() const;
+
+    js::ScriptSourceObject *sourceObject() const {
+        return &sourceObject_->asScriptSource();;
     }
 
-    void setScriptSource(js::ScriptSource *ss);
+    void setSourceObject(js::ScriptSourceObject *sourceObject);
 
     inline const char *filename() const;
 
@@ -1080,6 +1082,27 @@ class ScriptSourceHolder
     }
 };
 
+class ScriptSourceObject : public JSObject {
+  public:
+    static void finalize(FreeOp *fop, JSObject *obj);
+    static ScriptSourceObject *create(JSContext *cx, ScriptSource *source);
+
+    ScriptSource *source() {
+        return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
+    }
+
+    void setSource(ScriptSource *source) {
+        if (source)
+            source->incref();
+        if (this->source())
+            this->source()->decref();
+        setReservedSlot(SOURCE_SLOT, PrivateValue(source));
+    }
+
+  private:
+    static const uint32_t SOURCE_SLOT = 0;
+};
+
 #ifdef JS_THREADSAFE
 /*
  * Background thread to compress JS source code. This happens only while parsing
@@ -1251,6 +1274,13 @@ struct ScriptAndCounts
 
 } /* namespace js */
 
+inline js::ScriptSourceObject &
+JSObject::asScriptSource()
+{
+    JS_ASSERT(isScriptSource());
+    return *static_cast<js::ScriptSourceObject *>(this);
+}
+
 extern jssrcnote *
 js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc);
 
@@ -1290,10 +1320,12 @@ inline void
 CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
 extern JSScript *
-CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script);
+CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
+            NewObjectKind newKind = GenericObject);
 
 bool
-CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone);
+CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
+                    NewObjectKind newKind = GenericObject);
 
 /*
  * NB: after a successful XDR_DECODE, XDRScript callers must do any required

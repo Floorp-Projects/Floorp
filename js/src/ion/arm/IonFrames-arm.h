@@ -192,6 +192,7 @@ class IonBaselineStubFrameLayout : public IonCommonFrameLayout
 class IonNativeExitFrameLayout;
 class IonOOLNativeGetterExitFrameLayout;
 class IonOOLPropertyOpExitFrameLayout;
+class IonOOLProxyGetExitFrameLayout;
 class IonDOMExitFrameLayout;
 
 // this is the frame layout when we are exiting ion code, and about to enter EABI code
@@ -234,6 +235,9 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     inline bool isOOLPropertyOpExit() {
         return footer()->ionCode() == ION_FRAME_OOL_PROPERTY_OP;
     }
+    inline bool isOOLProxyGetExit() {
+        return footer()->ionCode() == ION_FRAME_OOL_PROXY_GET;
+    }
     inline bool isDomExit() {
         IonCode *code = footer()->ionCode();
         return
@@ -254,6 +258,10 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     inline IonOOLPropertyOpExitFrameLayout *oolPropertyOpExit() {
         JS_ASSERT(isOOLPropertyOpExit());
         return reinterpret_cast<IonOOLPropertyOpExitFrameLayout *>(footer());
+    }
+    inline IonOOLProxyGetExitFrameLayout *oolProxyGetExit() {
+        JS_ASSERT(isOOLProxyGetExit());
+        return reinterpret_cast<IonOOLProxyGetExitFrameLayout *>(footer());
     }
     inline IonDOMExitFrameLayout *DOMExit() {
         JS_ASSERT(isDomExit());
@@ -372,6 +380,57 @@ class IonOOLPropertyOpExitFrameLayout
     }
 };
 
+// Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+//            MutableHandleValue vp)
+class IonOOLProxyGetExitFrameLayout
+{
+  protected: // only to silence a clang warning about unused private fields
+    IonExitFooterFrame footer_;
+    IonExitFrameLayout exit_;
+
+    // The proxy object.
+    JSObject *proxy_;
+
+    // Object for JSHandleObject
+    JSObject *receiver_;
+
+    // id for JSHandleId
+    jsid id_;
+
+    // space for JSMutableHandleValue result
+    // use two uint32_t so compiler doesn't align.
+    uint32_t vp0_;
+    uint32_t vp1_;
+
+    // pointer to root the stub's IonCode
+    IonCode *stubCode_;
+
+  public:
+    static inline size_t Size() {
+        return sizeof(IonOOLProxyGetExitFrameLayout);
+    }
+
+    static size_t offsetOfResult() {
+        return offsetof(IonOOLProxyGetExitFrameLayout, vp0_);
+    }
+
+    inline IonCode **stubCode() {
+        return &stubCode_;
+    }
+    inline Value *vp() {
+        return reinterpret_cast<Value*>(&vp0_);
+    }
+    inline jsid *id() {
+        return &id_;
+    }
+    inline JSObject **receiver() {
+        return &receiver_;
+    }
+    inline JSObject **proxy() {
+        return &proxy_;
+    }
+};
+
 class IonDOMExitFrameLayout
 {
     IonExitFooterFrame footer_;
@@ -396,9 +455,6 @@ class IonDOMExitFrameLayout
     }
     inline JSObject **thisObjAddress() {
         return &thisObj;
-    }
-    inline bool isSetterFrame() {
-        return footer_.ionCode() == ION_FRAME_DOMSETTER;
     }
     inline bool isMethodFrame() {
         return footer_.ionCode() == ION_FRAME_DOMMETHOD;

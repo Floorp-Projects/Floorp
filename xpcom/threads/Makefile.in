@@ -11,21 +11,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xpcomthreads_s
+MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API = 1
 LIBXUL_LIBRARY = 1
-
-CPPSRCS		= \
-		nsEventQueue.cpp \
-		nsEnvironment.cpp \
-		nsThread.cpp \
-		nsThreadManager.cpp \
-		nsThreadPool.cpp \
-		nsProcessCommon.cpp \
-		nsTimerImpl.cpp \
-		TimerThread.cpp \
-		HangMonitor.cpp \
-		LazyIdleThread.cpp \
-		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../components
 

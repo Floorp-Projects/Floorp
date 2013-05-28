@@ -134,6 +134,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
                                    int aSurfaceWidth, int aSurfaceHeight)
   : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
+  , mIsTesting(false)
   , mPaused(false)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
@@ -451,7 +452,8 @@ CompositorParent::Composite()
     }
   }
 
-  bool requestNextFrame = mCompositionManager->TransformShadowTree(mLastCompose);
+  TimeStamp time = mIsTesting ? mTestTime : mLastCompose;
+  bool requestNextFrame = mCompositionManager->TransformShadowTree(time);
   if (requestNextFrame) {
     ScheduleComposition();
   }
@@ -507,6 +509,7 @@ SetShadowProperties(Layer* aLayer)
   LayerComposite* layerComposite = aLayer->AsLayerComposite();
   // Set the layerComposite's base transform to the layer's base transform.
   layerComposite->SetShadowTransform(aLayer->GetBaseTransform());
+  layerComposite->SetShadowTransformSetByAnimation(false);
   layerComposite->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
   layerComposite->SetShadowClipRect(aLayer->GetClipRect());
   layerComposite->SetShadowOpacity(aLayer->GetOpacity());
@@ -647,6 +650,19 @@ CompositorParent* CompositorParent::RemoveCompositor(uint64_t id)
   CompositorParent *retval = it->second;
   sCompositorMap->erase(it);
   return retval;
+}
+
+/* static */ void
+CompositorParent::SetTimeAndSampleAnimations(TimeStamp aTime, bool aIsTesting)
+{
+  if (!sCompositorMap) {
+    return;
+  }
+  for (CompositorMap::iterator it = sCompositorMap->begin(); it != sCompositorMap->end(); ++it) {
+    it->second->mIsTesting = aIsTesting;
+    it->second->mTestTime = aTime;
+    it->second->mCompositionManager->TransformShadowTree(aTime);
+  }
 }
 
 typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;

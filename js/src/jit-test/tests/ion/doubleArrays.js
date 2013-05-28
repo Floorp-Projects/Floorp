@@ -12,19 +12,6 @@ function testPushConvert() {
 }
 testPushConvert();
 
-var UnsafeSetElement = getSelfHostedValue("UnsafeSetElement");
-function testUnsafeSetConvert() {
-  var x = [0.5, 1.5, 2.1];
-  for (var i = 0; i < 2000; i++)
-    // try to ensure we JIT and hence inline
-    UnsafeSetElement(x, 1, i);
-  var res = 0;
-  for (var i = 0; i < x.length; i++)
-    res += x[i];
-  assertEq(res, 2001.6);
-}
-testUnsafeSetConvert();
-
 function testArrayInitializer() {
   var x = [.5,1.5,2.5,3];
   var res = 0;

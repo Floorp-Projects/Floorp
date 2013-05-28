@@ -56,8 +56,8 @@ exports.testSplitSimple = function(options) {
 
   args = cli.tokenize('s');
   requisition._split(args);
-  assert.is(0, args.length);
-  assert.is('s', requisition.commandAssignment.arg.text);
+  assert.is(args.length, 0);
+  assert.is(requisition.commandAssignment.arg.text, 's');
 };
 
 exports.testFlatCommand = function(options) {
@@ -66,15 +66,15 @@ exports.testFlatCommand = function(options) {
 
   args = cli.tokenize('tsv');
   requisition._split(args);
-  assert.is(0, args.length);
-  assert.is('tsv', requisition.commandAssignment.value.name);
+  assert.is(args.length, 0);
+  assert.is(requisition.commandAssignment.value.name, 'tsv');
 
   args = cli.tokenize('tsv a b');
   requisition._split(args);
-  assert.is('tsv', requisition.commandAssignment.value.name);
-  assert.is(2, args.length);
-  assert.is('a', args[0].text);
-  assert.is('b', args[1].text);
+  assert.is(requisition.commandAssignment.value.name, 'tsv');
+  assert.is(args.length, 2);
+  assert.is(args[0].text, 'a');
+  assert.is(args[1].text, 'b');
 };
 
 exports.testJavascript = function(options) {
@@ -88,10 +88,10 @@ exports.testJavascript = function(options) {
 
   args = cli.tokenize('{');
   requisition._split(args);
-  assert.is(1, args.length);
-  assert.is('', args[0].text);
-  assert.is('', requisition.commandAssignment.arg.text);
-  assert.is('{', requisition.commandAssignment.value.name);
+  assert.is(args.length, 1);
+  assert.is(args[0].text, '');
+  assert.is(requisition.commandAssignment.arg.text, '');
+  assert.is(requisition.commandAssignment.value.name, '{');
 };
 
 // BUG 663081 - add tests for sub commands

@@ -11,18 +11,18 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-CSRCS += \
+DISABLED_CSRCS += \
 		codesighs.c \
 		maptsvdifftool.c \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-CSRCS += \
+DISABLED_CSRCS += \
 		msmap2tsv.c \
 		msdump2symdb.c \
 		$(NULL)
 else
-CSRCS += \
+DISABLED_CSRCS += \
 		nm2tsv.c \
 		$(NULL)
 endif

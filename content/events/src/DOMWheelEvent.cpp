@@ -8,10 +8,6 @@
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
-#include "DictionaryHelpers.h"
-#include "nsDOMClassInfoID.h"
-
-DOMCI_DATA(WheelEvent, mozilla::dom::DOMWheelEvent)
 
 namespace mozilla {
 namespace dom {
@@ -50,7 +46,6 @@ NS_IMPL_RELEASE_INHERITED(DOMWheelEvent, nsDOMMouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(DOMWheelEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWheelEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WheelEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 NS_IMETHODIMP
@@ -148,28 +143,6 @@ GetModifierList(bool aCtrl, bool aShift, bool aAlt, bool aMeta,
     }
     aModifierList.AppendLiteral(NS_DOM_KEYNAME_META);
   }
-}
-
-nsresult
-DOMWheelEvent::InitFromCtor(const nsAString& aType,
-                            JSContext* aCx, JS::Value* aVal)
-{
-  mozilla::idl::WheelEventInit d;
-  nsresult rv = d.Init(aCx, aVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString modifierList;
-  GetModifierList(d.ctrlKey, d.shiftKey, d.altKey, d.metaKey, modifierList);
-
-  rv = InitWheelEvent(aType, d.bubbles, d.cancelable,
-                      d.view, d.detail, d.screenX, d.screenY,
-                      d.clientX, d.clientY, d.button, d.relatedTarget,
-                      modifierList, d.deltaX, d.deltaY, d.deltaZ, d.deltaMode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  static_cast<widget::WheelEvent*>(mEvent)->buttons = d.buttons;
-
-  return NS_OK;
 }
 
 already_AddRefed<DOMWheelEvent>

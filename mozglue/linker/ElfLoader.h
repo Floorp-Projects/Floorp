@@ -68,14 +68,16 @@ __dl_munmap(void *handle, void *addr, size_t length);
 class LibHandle;
 
 namespace mozilla {
+namespace detail {
 
-template <> inline void RefCounted<LibHandle>::Release();
+template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release();
 
-template <> inline RefCounted<LibHandle>::~RefCounted()
+template <> inline RefCounted<LibHandle, AtomicRefCount>::~RefCounted()
 {
   MOZ_ASSERT(refCnt == 0x7fffdead);
 }
 
+} /* namespace detail */
 } /* namespace mozilla */
 
 /* Forward declaration */
@@ -85,7 +87,7 @@ class Mappable;
  * Abstract class for loaded libraries. Libraries may be loaded through the
  * system linker or this linker, both cases will be derived from this class.
  */
-class LibHandle: public mozilla::RefCounted<LibHandle>
+class LibHandle: public mozilla::AtomicRefCounted<LibHandle>
 {
 public:
   /**
@@ -136,7 +138,7 @@ public:
   void AddDirectRef()
   {
     ++directRefCnt;
-    mozilla::RefCounted<LibHandle>::AddRef();
+    mozilla::AtomicRefCounted<LibHandle>::AddRef();
   }
 
   /**
@@ -147,10 +149,11 @@ public:
   {
     bool ret = false;
     if (directRefCnt) {
-      MOZ_ASSERT(directRefCnt <= mozilla::RefCounted<LibHandle>::refCount());
+      MOZ_ASSERT(directRefCnt <=
+                 mozilla::AtomicRefCounted<LibHandle>::refCount());
       if (--directRefCnt)
         ret = true;
-      mozilla::RefCounted<LibHandle>::Release();
+      mozilla::AtomicRefCounted<LibHandle>::Release();
     }
     return ret;
   }
@@ -213,8 +216,9 @@ private:
  * would mean too many Releases from within the destructor.
  */
 namespace mozilla {
+namespace detail {
 
-template <> inline void RefCounted<LibHandle>::Release() {
+template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() {
 #ifdef DEBUG
   if (refCnt > 0x7fff0000)
     MOZ_ASSERT(refCnt > 0x7fffdead);
@@ -232,6 +236,7 @@ template <> inline void RefCounted<LibHandle>::Release() {
   }
 }
 
+} /* namespace detail */
 } /* namespace mozilla */
 
 /**

@@ -4,7 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     onload="startTest()" class="reftest-wait">
+     class="reftest-wait">
   <title>Test for changes to the IDs in the document causing textPath references to update</title>
 
   <defs>
@@ -15,11 +15,8 @@
   <text style="16px sans-serif"><textPath xlink:href="#p1">Hello</textPath></text>
 
   <script>
-    function startTest() {
-      window.addEventListener("MozReftestInvalidate", doTest, false);
-      // in case we're not in the reftest harness
-      setTimeout(doTest, 5000);
-    }
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    setTimeout(doTest, 4000); // fallback for running outside reftest
 
     function doTest() {
       document.getElementsByTagName("path")[0].removeAttribute("id");

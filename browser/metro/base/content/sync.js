@@ -176,6 +176,7 @@ let Sync = {
         Services.obs.addObserver(self._boundOnEngineSync, "weave:engine:sync:error", false);
         Services.obs.addObserver(self._boundOnServiceSync, "weave:service:sync:finish", false);
         Services.obs.addObserver(self._boundOnServiceSync, "weave:service:sync:error", false);
+        Services.obs.addObserver(self._boundOnServiceSync, "weave:service:login:error", false);
         self.setupData = aCredentials;
         self.connect();
       },
@@ -278,6 +279,7 @@ let Sync = {
       Services.obs.removeObserver(this._boundOnEngineSync, "weave:engine:sync:error");
       Services.obs.removeObserver(this._boundOnServiceSync, "weave:service:sync:finish");
       Services.obs.removeObserver(this._boundOnServiceSync, "weave:service:sync:error");
+      Services.obs.removeObserver(this._boundOnServiceSync, "weave:service:login:error");
     }
     catch(e) {
       // Observers weren't registered because we never got as far as onComplete.
@@ -447,7 +449,7 @@ let Sync = {
 
     let settingids = ["device", "connect", "connected", "disconnect", "lastsync", "pairdevice",
                       "errordescription", "accountinfo", "disconnectwarnpanel", "disconnectthrobber",
-                      "disconnectwarntitle"];
+                      "disconnectwarntitle", "description"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -468,6 +470,7 @@ let Sync = {
     let lastsync = this._elements.lastsync;
     let pairdevice = this._elements.pairdevice;
     let accountinfo = this._elements.accountinfo;
+    let description = this._elements.description;
     let disconnectthrobber = this._elements.disconnectthrobber;
 
     // This gets updated when an error occurs
@@ -489,6 +492,7 @@ let Sync = {
     lastsync.collapsed = !isConfigured;
     device.collapsed = !isConfigured;
     disconnect.collapsed = !isConfigured;
+    description.collapsed = isConfigured;
 
     if (this._disconnecting) {
       connect.collapsed = true;
@@ -565,7 +569,7 @@ let Sync = {
     let accountinfo = this._elements.accountinfo;
 
     // Show what went wrong with login if necessary
-    if (aTopic == "weave:ui:login:error") {
+    if (aTopic == "weave:ui:login:error" || aTopic == "weave:service:login:error") {
       this._loginError = true;
       errormsg.textContent = Weave.Utils.getErrorString(Weave.Status.login);
       errormsg.collapsed = false;

@@ -248,41 +248,43 @@ NS_IMETHODIMP
 nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
                              bool* aReturn)
 {
-  if (aOrientation.isObject() && IsArrayLike(aCx, &aOrientation.toObject())) {
+  if (aOrientation.isObject()) {
     JS::Rooted<JSObject*> seq(aCx, &aOrientation.toObject());
-    uint32_t length;
-    // JS_GetArrayLength actually works on all objects
-    if (!JS_GetArrayLength(aCx, seq, &length)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    Sequence<nsString> orientations;
-    if (!orientations.SetCapacity(length)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    for (uint32_t i = 0; i < length; ++i) {
-      JS::Rooted<JS::Value> temp(aCx);
-      if (!JS_GetElement(aCx, seq, i, temp.address())) {
+    if (IsArrayLike(aCx, seq)) {
+      uint32_t length;
+      // JS_GetArrayLength actually works on all objects
+      if (!JS_GetArrayLength(aCx, seq, &length)) {
         return NS_ERROR_FAILURE;
       }
 
-      JS::RootedString jsString(aCx, JS_ValueToString(aCx, temp));
-      if (!jsString) {
-        return NS_ERROR_FAILURE;
+      Sequence<nsString> orientations;
+      if (!orientations.SetCapacity(length)) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      nsDependentJSString str;
-      if (!str.init(aCx, jsString)) {
-        return NS_ERROR_FAILURE;
+      for (uint32_t i = 0; i < length; ++i) {
+        JS::Rooted<JS::Value> temp(aCx);
+        if (!JS_GetElement(aCx, seq, i, temp.address())) {
+          return NS_ERROR_FAILURE;
+        }
+
+        JS::RootedString jsString(aCx, JS_ValueToString(aCx, temp));
+        if (!jsString) {
+          return NS_ERROR_FAILURE;
+        }
+
+        nsDependentJSString str;
+        if (!str.init(aCx, jsString)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        *orientations.AppendElement() = str;
       }
 
-      *orientations.AppendElement() = str;
+      ErrorResult rv;
+      *aReturn = MozLockOrientation(orientations, rv);
+      return rv.ErrorCode();
     }
-
-    ErrorResult rv;
-    *aReturn = MozLockOrientation(orientations, rv);
-    return rv.ErrorCode();
   }
 
   JS::RootedString jsString(aCx, JS_ValueToString(aCx, aOrientation));

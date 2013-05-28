@@ -51,13 +51,8 @@ AddStyleSheetTxn::AddStyleSheetTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AddStyleSheetTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSheet)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AddStyleSheetTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSheet)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AddStyleSheetTxn, EditTxn,
+                                     mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
@@ -69,7 +64,7 @@ AddStyleSheetTxn::Init(nsIEditor *aEditor, nsCSSStyleSheet *aSheet)
 
   mEditor = aEditor;
   mSheet = aSheet;
-  
+
   return NS_OK;
 }
 
@@ -78,7 +73,7 @@ NS_IMETHODIMP
 AddStyleSheetTxn::DoTransaction()
 {
   NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
-  
+
   AddStyleSheet(mEditor, mSheet);
   return NS_OK;
 }
@@ -87,7 +82,7 @@ NS_IMETHODIMP
 AddStyleSheetTxn::UndoTransaction()
 {
   NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
-  
+
   RemoveStyleSheet(mEditor, mSheet);
   return NS_OK;
 }
@@ -106,13 +101,8 @@ RemoveStyleSheetTxn::RemoveStyleSheetTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(RemoveStyleSheetTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSheet)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(RemoveStyleSheetTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSheet)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(RemoveStyleSheetTxn, EditTxn,
+                                     mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Char boundary text tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      //
+      // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+
+      var IDs = [ "i1", "d1", "e1", "t1" ];
+
+      testCharBeforeOffset(IDs, 0, "", 0, 0);
+      testCharBeforeOffset(IDs, 1, "h", 0, 1);
+      testCharBeforeOffset(IDs, 14, "n", 13, 14);
+      testCharBeforeOffset(IDs, 15, "d", 14, 15);
+
+      testCharAtOffset(IDs, 0, "h", 0, 1);
+      testCharAtOffset(IDs, 1, "e", 1, 2);
+      testCharAtOffset(IDs, 14, "d", 14, 15);
+      testCharAtOffset(IDs, 15, "", 15, 15);
+
+      testCharAfterOffset(IDs, 0, "e", 1, 2);
+      testCharAfterOffset(IDs, 1, "l", 2, 3);
+      testCharAfterOffset(IDs, 14, "", 15, 15);
+
+      // 15 is out of range offset for get text after, keep todos until we
+      // decide how to handle out of range values (ATK and IA2 seems to have
+      // different expectations.
+      testTextAfterOffset(15, BOUNDARY_CHAR, "", 15, 15,
+                          "i1", kOk, kTodo, kTodo,
+                          "d1", kOk, kTodo, kTodo,
+                          "e1", kOk, kTodo, kTodo,
+                          "t1", kOk, kTodo, kTodo);
+
+      //////////////////////////////////////////////////////////////////////////
+      //
+      // __B__r__a__v__e__ __S__i__r__ __ __R__o__b__i__n__ __ __ __r__a__n
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+
+      IDs = [ "i2", "d2", "e2", "t2" ];
+
+      testCharBeforeOffset(IDs, 0, "", 0, 0);
+      testCharBeforeOffset(IDs, 1, "B", 0, 1);
+      testCharBeforeOffset(IDs, 6, " ", 5, 6);
+      testCharBeforeOffset(IDs, 10, " ", 9, 10);
+      testCharBeforeOffset(IDs, 11, " ", 10, 11);
+      testCharBeforeOffset(IDs, 17, " ", 16, 17);
+      testCharBeforeOffset(IDs, 19, " ", 18, 19);
+
+      testCharAtOffset(IDs, 0, "B", 0, 1);
+      testCharAtOffset(IDs, 1, "r", 1, 2);
+      testCharAtOffset(IDs, 5, " ", 5, 6);
+      testCharAtOffset(IDs, 9, " ", 9, 10);
+      testCharAtOffset(IDs, 10, " ", 10, 11);
+      testCharAtOffset(IDs, 17, " ", 17, 18);
+
+      testCharAfterOffset(IDs, 0, "r", 1, 2);
+      testCharAfterOffset(IDs, 1, "a", 2, 3);
+      testCharAfterOffset(IDs, 4, " ", 5, 6);
+      testCharAfterOffset(IDs, 5, "S", 6, 7);
+      testCharAfterOffset(IDs, 8, " ", 9, 10);
+      testCharAfterOffset(IDs, 9, " ", 10, 11);
+      testCharAfterOffset(IDs, 10, "R", 11, 12);
+      testCharAfterOffset(IDs, 15, " ", 16, 17);
+      testCharAfterOffset(IDs, 16, " ", 17, 18);
+      testCharAfterOffset(IDs, 17, " ", 18, 19);
+      testCharAfterOffset(IDs, 18, "r", 19, 20);
+
+      //////////////////////////////////////////////////////////////////////////
+      //
+      // __o__n__e__w__o__r__d__\n
+      //  0  1  2  3  4  5  6  7
+      // __\n
+      //  8
+      // __t__w__o__ __w__o__r__d__s__\n
+      //  9 10 11 12 13 14 15 16 17 18
+
+      IDs = ["d3", "dbr3", "e3", "ebr3", "t3"];
+
+      testCharBeforeOffset(IDs, 8, "\n", 7, 8);
+      testCharBeforeOffset(IDs, 9, "\n", 8, 9);
+      testCharBeforeOffset(IDs, 10, "t", 9, 10);
+
+      testCharAtOffset(IDs, 7, "\n", 7, 8);
+      testCharAtOffset(IDs, 8, "\n", 8, 9);
+      testCharAtOffset(IDs, 9, "t", 9, 10);
+
+      testCharAfterOffset(IDs, 6, "\n", 7, 8);
+      testCharAfterOffset(IDs, 7, "\n", 8, 9);
+      testCharAfterOffset(IDs, 8, "t", 9, 10);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="i1" value="hello my friend"/>
+  <div id="d1">hello my friend</div>
+  <div id="e1" contenteditable="true">hello my friend</div>
+  <textarea id="t1" contenteditable="true">hello my friend</textarea>
+
+  <input id="i2" value="Brave Sir  Robin   ran"/>
+  <pre>
+    <div id="d2">Brave Sir  Robin   ran</div>
+    <div id="e2" contenteditable="true">Brave Sir  Robin   ran</div>
+  </pre>
+  <textarea id="t2" cols="300">Brave Sir  Robin   ran</textarea>
+
+  <pre>
+    <div id="d3">oneword
+
+two words
+</div>
+    <div id="dbr3">oneword<br/><br/>two words<br/></div>
+    <div id="e3" contenteditable="true">oneword
+
+two words
+</div>
+    <div id="ebr3" contenteditable="true">oneword<br/><br/>two words<br/></div>
+    <textarea id="t3" cols="300">oneword
+
+two words</textarea>
+  </pre>
+
+</body>
+</html>

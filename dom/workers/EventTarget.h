@@ -37,25 +37,25 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   void
-  AddEventListener(const nsAString& aType, JSObject* aListener,
+  AddEventListener(const nsAString& aType, JS::Handle<JSObject*> aListener,
                    bool aCapture, Nullable<bool> aWantsUntrusted,
                    ErrorResult& aRv);
 
   void
-  RemoveEventListener(const nsAString& aType, JSObject* aListener,
+  RemoveEventListener(const nsAString& aType, JS::Handle<JSObject*> aListener,
                       bool aCapture, ErrorResult& aRv);
 
   bool
-  DispatchEvent(JSObject& aEvent, ErrorResult& aRv) const
+  DispatchEvent(JS::Handle<JSObject*> aEvent, ErrorResult& aRv) const
   {
-    return mListenerManager.DispatchEvent(GetJSContext(), *this, &aEvent, aRv);
+    return mListenerManager.DispatchEvent(GetJSContext(), *this, aEvent, aRv);
   }
 
   JSObject*
   GetEventListener(const nsAString& aType, ErrorResult& aRv) const;
 
   void
-  SetEventListener(const nsAString& aType, JSObject* aListener,
+  SetEventListener(const nsAString& aType, JS::Handle<JSObject*> aListener,
                    ErrorResult& aRv);
 
   bool

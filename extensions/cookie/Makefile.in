@@ -11,20 +11,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= cookie
+MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCookieModule
 LIBXUL_LIBRARY = 1
 
-
-CPPSRCS		= \
-		nsCookieModule.cpp \
-		nsPermission.cpp \
-		nsPermissionManager.cpp \
-		nsPopupWindowManager.cpp \
-		nsCookiePromptService.cpp \
-		nsCookiePermission.cpp \
-		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

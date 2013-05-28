@@ -51,33 +51,39 @@ webvtt_string_t {
  *
  * initialize a string to point to the empty string
  */
-WEBVTT_EXPORT void webvtt_init_string( webvtt_string *result );
+WEBVTT_EXPORT void
+webvtt_init_string( webvtt_string *result );
 
 /**
  * webvtt_string_is_empty
- * 
+ *
  * return whether or not the string is empty
- * qualifications for it being empty are it equaling &empty_string or its length equaling 0
+ * qualifications for it being empty are it equaling &empty_string or its
+ * length equaling 0
  */
-WEBVTT_EXPORT webvtt_uint webvtt_string_is_empty( const webvtt_string *str );
+WEBVTT_EXPORT webvtt_uint
+webvtt_string_is_empty( const webvtt_string *str );
 
 /**
  * webvtt_create_string
  *
  * allocate a new string object with an initial capacity of 'alloc'
- * (the string data of 'result' is not expected to contain string data, 
- * regardless of its value. be sure to release existing strings before using 
+ * (the string data of 'result' is not expected to contain string data,
+ * regardless of its value. be sure to release existing strings before using
  * webvtt_create_string)
  */
-WEBVTT_EXPORT webvtt_status webvtt_create_string( webvtt_uint32 alloc, webvtt_string *result );
+WEBVTT_EXPORT webvtt_status
+webvtt_create_string( webvtt_uint32 alloc, webvtt_string *result );
 
 /**
  * webvtt_create_init_string
  *
- * allocate and initialize a string with the contents of 'init_text' of length 
+ * allocate and initialize a string with the contents of 'init_text' of length
  * 'len' if 'len' < 0, assume init_text to be null-terminated.
  */
-WEBVTT_EXPORT webvtt_status webvtt_create_string_with_text( webvtt_string *result, const webvtt_byte *init_text, int len );
+WEBVTT_EXPORT webvtt_status
+webvtt_create_string_with_text( webvtt_string *out, const char *init_text,
+                                int len );
 
 /**
  * webvtt_ref_string
@@ -86,7 +92,8 @@ WEBVTT_EXPORT webvtt_status webvtt_create_string_with_text( webvtt_string *resul
  *
  * when the reference count drops to zero, the string is deallocated.
  */
-WEBVTT_EXPORT void webvtt_ref_string( webvtt_string *str );
+WEBVTT_EXPORT void
+webvtt_ref_string( webvtt_string *str );
 
 /**
  * webvtt_release_string
@@ -95,7 +102,8 @@ WEBVTT_EXPORT void webvtt_ref_string( webvtt_string *str );
  *
  * when the reference count drops to zero, the string is deallocated.
  */
-WEBVTT_EXPORT void webvtt_release_string( webvtt_string *str );
+WEBVTT_EXPORT void
+webvtt_release_string( webvtt_string *str );
 
 /**
  * webvtt_string_detach
@@ -105,52 +113,78 @@ WEBVTT_EXPORT void webvtt_release_string( webvtt_string *str );
  * if the reference count is greater than 1, allocate a new copy of the string
  * and return it.
  */
-WEBVTT_EXPORT webvtt_status webvtt_string_detach( webvtt_string *str );
+WEBVTT_EXPORT webvtt_status
+webvtt_string_detach( webvtt_string *str );
 
 /**
  * webvtt_copy_string
  *
  * shallow-clone 'right', storing the result in 'left'.
  */
-WEBVTT_EXPORT void webvtt_copy_string( webvtt_string *left, const webvtt_string *right );
+WEBVTT_EXPORT void
+webvtt_copy_string( webvtt_string *left, const webvtt_string *right );
 
 /**
  * webvtt_string_text
  *
  * return the text contents of a string
  */
-WEBVTT_EXPORT const webvtt_byte *webvtt_string_text( const webvtt_string *str );
+WEBVTT_EXPORT const char *
+webvtt_string_text( const webvtt_string *str );
 
 /**
  * webvtt_string_length
  *
  * return the length of a strings text
  */
-WEBVTT_EXPORT webvtt_uint32 webvtt_string_length( const webvtt_string *str );
+WEBVTT_EXPORT webvtt_uint32
+webvtt_string_length( const webvtt_string *str );
 
 /**
  * webvtt_string_capacity
  *
  * return the current capacity of a string
  */
-WEBVTT_EXPORT webvtt_uint32 webvtt_string_capacity( const webvtt_string *str );
+WEBVTT_EXPORT webvtt_uint32
+webvtt_string_capacity( const webvtt_string *str );
 
 /**
  * webvtt_string_getline
  *
- * collect a line of text (terminated by CR/LF/CRLF) from a buffer, without 
+ * collect a line of text (terminated by CR/LF/CRLF) from a buffer, without
  * including the terminating character(s)
  */
-WEBVTT_EXPORT int webvtt_string_getline( webvtt_string *str, const webvtt_byte *buffer,
-    webvtt_uint *pos, int len, int *truncate, webvtt_bool finish );
+WEBVTT_EXPORT int
+webvtt_string_getline( webvtt_string *str, const char *buffer,
+                       webvtt_uint *pos, int len, int *truncate,
+                       webvtt_bool finish );
 
 /**
  * webvtt_string_putc
  *
  * append a single byte to a webvtt string
  */
-WEBVTT_EXPORT webvtt_status webvtt_string_putc( webvtt_string *str, webvtt_byte to_append );
+WEBVTT_EXPORT webvtt_status
+webvtt_string_putc( webvtt_string *str, char to_append );
 
+/**
+ * webvtt_string_replace
+ *
+ * replace first instance of substring with replacement string.
+ */
+WEBVTT_EXPORT webvtt_status
+webvtt_string_replace( webvtt_string *str, const char *search, int search_len,
+                       const char *replace, int replace_len );
+
+/**
+ * webvtt_string_replace_all
+ *
+ * replace all instances of substring with replacement string
+ */
+WEBVTT_EXPORT webvtt_status
+webvtt_string_replace_all( webvtt_string *str, const char *search,
+                           int search_len, const char *replace,
+                           int replace_len );
 
 /**
  * webvtt_string_is_equal
@@ -158,8 +192,9 @@ WEBVTT_EXPORT webvtt_status webvtt_string_putc( webvtt_string *str, webvtt_byte 
  * compare a string's text to a byte array
  *
  */
-WEBVTT_EXPORT webvtt_bool webvtt_string_is_equal( const webvtt_string *str, 
-    const webvtt_byte *to_compare, int len );
+WEBVTT_EXPORT webvtt_bool
+webvtt_string_is_equal( const webvtt_string *str, const char *to_compare,
+                        int len );
 
 /**
  * webvtt_string_append
@@ -168,14 +203,17 @@ WEBVTT_EXPORT webvtt_bool webvtt_string_is_equal( const webvtt_string *str,
  *
  * if 'len' is < 0, then buffer is expected to be null-terminated.
  */
-WEBVTT_EXPORT webvtt_status webvtt_string_append( webvtt_string *str, const webvtt_byte *buffer, int len );
+WEBVTT_EXPORT webvtt_status
+webvtt_string_append( webvtt_string *str, const char *buffer, int len );
 
 /**
  * webvtt_string_appendstr
  *
- * append the contents of a string object 'other' to a string object 'str'
+ * if 'len' is < 0 then the max length of the string will be taken to be the
+ * first occurence of a null byte character
  */
-WEBVTT_EXPORT webvtt_status webvtt_string_append_string( webvtt_string *str, const webvtt_string *other );
+WEBVTT_EXPORT webvtt_status
+webvtt_string_append_string( webvtt_string *str, const webvtt_string *other );
 
 /**
  * basic dynamic array of strings
@@ -193,35 +231,48 @@ webvtt_stringlist_t {
  *
  * allocate a new, empty stringlist
  */
-WEBVTT_EXPORT webvtt_status webvtt_create_stringlist( webvtt_stringlist **result );
+WEBVTT_EXPORT webvtt_status
+webvtt_create_stringlist( webvtt_stringlist **result );
 
 /**
  * webvtt_ref_stringlist
  *
  * Increase the ref count of the stringlist
  */
-WEBVTT_EXPORT void webvtt_ref_stringlist( webvtt_stringlist *list );
+WEBVTT_EXPORT void
+webvtt_ref_stringlist( webvtt_stringlist *list );
 
 /**
  * webvtt_copy_stringlist
  *
  * create a copy shallow of right from left
  */
-WEBVTT_EXPORT void webvtt_copy_stringlist( webvtt_stringlist **left, webvtt_stringlist *right );
+WEBVTT_EXPORT void
+webvtt_copy_stringlist( webvtt_stringlist **left, webvtt_stringlist *right );
 
 /**
  * webvtt_release_stringlist
  *
  * Decrease the ref count of the stringlist and delete it if the ref count is 0
  */
-WEBVTT_EXPORT void webvtt_release_stringlist( webvtt_stringlist **list );
+WEBVTT_EXPORT void
+webvtt_release_stringlist( webvtt_stringlist **list );
 
 /**
  * webvtt_stringlist_push
  *
  * add a new string to the end of the stringlist
  */
-WEBVTT_EXPORT webvtt_status webvtt_stringlist_push( webvtt_stringlist *list, webvtt_string *str );
+WEBVTT_EXPORT webvtt_status
+webvtt_stringlist_push( webvtt_stringlist *list, webvtt_string *str );
+
+/**
+ * webvtt_stringlist_pop
+ *
+ * pop the top of the string list
+ */
+WEBVTT_EXPORT webvtt_bool
+webvtt_stringlist_pop( webvtt_stringlist *list, webvtt_string *out );
 
 /**
  * Helper functions
@@ -233,8 +284,8 @@ WEBVTT_EXPORT webvtt_status webvtt_stringlist_push( webvtt_stringlist *list, web
  * move the 'begin' pointer to the beginning of the next utf8 character
  * sequence.
  */
-WEBVTT_EXPORT webvtt_bool webvtt_next_utf8( const webvtt_byte **begin,
-  const webvtt_byte *end );
+WEBVTT_EXPORT webvtt_bool
+webvtt_next_utf8( const char **begin, const char *end );
 
 /**
  * webvtt_skip_utf8
@@ -244,25 +295,25 @@ WEBVTT_EXPORT webvtt_bool webvtt_next_utf8( const webvtt_byte **begin,
  *
  * if 'end' is less than 'begin', will seek backwards.
  */
-WEBVTT_EXPORT webvtt_bool webvtt_skip_utf8( const webvtt_byte **begin,
-  const webvtt_byte *end, int n_chars );
+WEBVTT_EXPORT webvtt_bool
+webvtt_skip_utf8( const char **begin, const char *end, int n_chars );
 
 /**
  * webvtt_utf8_to_utf16
  *
  * return the utf16 value of a given character
  */
-WEBVTT_EXPORT webvtt_uint16 webvtt_utf8_to_utf16( const webvtt_byte *utf8,
-  const webvtt_byte *end, webvtt_uint16 *high_surrogate );
+WEBVTT_EXPORT webvtt_uint16
+webvtt_utf8_to_utf16( const char *utf8, const char *end, webvtt_uint16 *high );
 
 /**
  * webvtt_utf8_chcount
  *
- * return the number of Unicode characters (as opposed to units) 
+ * return the number of Unicode characters (as opposed to units)
  * in a utf8 string
  */
-WEBVTT_EXPORT int webvtt_utf8_chcount( const webvtt_byte *utf8,
-  const webvtt_byte *end );
+WEBVTT_EXPORT int
+webvtt_utf8_chcount( const char *utf8, const char *end );
 
 /**
  * webvtt_utf8_length
@@ -271,7 +322,8 @@ WEBVTT_EXPORT int webvtt_utf8_chcount( const webvtt_byte *utf8,
  * if 'utf8' is null, return 0.
  * if 'utf8' points to a trail byte, return -1
  */
-WEBVTT_EXPORT int webvtt_utf8_length( const webvtt_byte *utf8 );
+WEBVTT_EXPORT int
+webvtt_utf8_length( const char *utf8 );
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

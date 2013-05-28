@@ -20,6 +20,7 @@ _TEST_FILES = \
   test_sanityWindowSnapshot.html \
   test_SpecialPowersExtension.html \
   test_SpecialPowersExtension2.html \
+  test_SpecialPowersPushPermissions.html \
   file_SpecialPowersFrame1.html \
   test_bug816847.html \
   test_sanity_cleanup.html \

@@ -11,14 +11,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= strres_s
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY  = 1
-
-
-CPPSRCS		= \
-		nsStringBundle.cpp \
-		nsStringBundleTextOverride.cpp \
-		$(NULL)
 
 
 include $(topsrcdir)/config/rules.mk

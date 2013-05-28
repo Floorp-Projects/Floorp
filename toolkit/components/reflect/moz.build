@@ -6,3 +6,7 @@
 
 MODULE = 'jsreflect'
 
+CPP_SOURCES += [
+    'reflect.cpp',
+]
+

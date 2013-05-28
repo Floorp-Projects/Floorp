@@ -18,7 +18,10 @@ the Sandbox consists of, you've come to the right place.
 from __future__ import unicode_literals
 
 from collections import OrderedDict
-from mozbuild.util import HierarchicalStringList
+from mozbuild.util import (
+    HierarchicalStringList,
+    StrictOrderingOnAppendList,
+)
 
 
 def doc_to_paragraphs(doc):
@@ -53,17 +56,29 @@ def doc_to_paragraphs(doc):
 #
 # Each variable is a tuple of:
 #
-#   (type, default_value, docs)
+#   (storage_type, input_types, default_value, docs)
 #
 VARIABLES = {
     # Variables controlling reading of other frontend files.
-    'ASFILES': (list, [],
-        """ Assembly file sources.
+    'ASFILES': (StrictOrderingOnAppendList, list, [],
+        """Assembly file sources.
 
         This variable contains a list of files to invoke the assembler on.
         """),
 
-    'DIRS': (list, [],
+    'CSRCS': (StrictOrderingOnAppendList, list, [],
+        """C code source files.
+
+        This variable contains a list of C source files to compile.
+        """),
+
+    'DEFINES': (StrictOrderingOnAppendList, list, [],
+        """Compiler defines to declare.
+
+        Command line -D flags passed to the compiler.
+        """),
+
+    'DIRS': (list, list, [],
         """Child directories to descend into looking for build frontend files.
 
         This works similarly to the DIRS variable in make files. Each str value
@@ -77,7 +92,7 @@ VARIABLES = {
         delimiters.
         """),
 
-    'PARALLEL_DIRS': (list, [],
+    'PARALLEL_DIRS': (list, list, [],
         """A parallel version of DIRS.
 
         Ideally this variable does not exist. It is provided so a transition
@@ -86,7 +101,13 @@ VARIABLES = {
         likely go away.
         """),
 
-    'TOOL_DIRS': (list, [],
+    'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
+        """Generate a list of binaries from source.
+
+        A list of sources, one per program, to compile & link with libs into standalone programs.
+        """),
+
+    'TOOL_DIRS': (list, list, [],
         """Like DIRS but for tools.
 
         Tools are for pieces of the build system that aren't required to
@@ -94,7 +115,7 @@ VARIABLES = {
         code and utilities.
         """),
 
-    'TEST_DIRS': (list, [],
+    'TEST_DIRS': (list, list, [],
         """Like DIRS but only for directories that contain test-only code.
 
         If tests are not enabled, this variable will be ignored.
@@ -103,12 +124,12 @@ VARIABLES = {
         complete.
         """),
 
-    'TEST_TOOL_DIRS': (list, [],
+    'TEST_TOOL_DIRS': (list, list, [],
         """TOOL_DIRS that is only executed if tests are enabled.
         """),
 
 
-    'TIERS': (OrderedDict, OrderedDict(),
+    'TIERS': (OrderedDict, dict, OrderedDict(),
         """Defines directories constituting the tier traversal mechanism.
 
         The recursive make backend iteration is organized into tiers. There are
@@ -126,7 +147,7 @@ VARIABLES = {
         populated by calling add_tier_dir().
         """),
 
-    'EXTERNAL_MAKE_DIRS': (list, [],
+    'EXTERNAL_MAKE_DIRS': (list, list, [],
         """Directories that build with make but don't use moz.build files.
 
         This is like DIRS except it implies that |make| is used to build the
@@ -134,11 +155,11 @@ VARIABLES = {
         files.
         """),
 
-    'PARALLEL_EXTERNAL_MAKE_DIRS': (list, [],
+    'PARALLEL_EXTERNAL_MAKE_DIRS': (list, list, [],
         """Parallel version of EXTERNAL_MAKE_DIRS.
         """),
 
-    'CONFIGURE_SUBST_FILES': (list, [],
+    'CONFIGURE_SUBST_FILES': (StrictOrderingOnAppendList, list, [],
         """Output files that will be generated using configure-like substitution.
 
         This is a substitute for AC_OUTPUT in autoconf. For each path in this
@@ -148,7 +169,7 @@ VARIABLES = {
         variables declared during configure.
         """),
 
-    'MODULE': (unicode, "",
+    'MODULE': (unicode, unicode, "",
         """Module name.
 
         Historically, this variable was used to describe where to install header
@@ -158,7 +179,7 @@ VARIABLES = {
         in the future.
         """),
 
-    'EXPORTS': (HierarchicalStringList, HierarchicalStringList(),
+    'EXPORTS': (HierarchicalStringList, list, HierarchicalStringList(),
         """List of files to be exported, and in which subdirectories.
 
         EXPORTS is generally used to list the include files to be exported to
@@ -173,7 +194,7 @@ VARIABLES = {
         EXPORTS.mozilla.dom += ['bar.h']
         """),
 
-    'PROGRAM' : (unicode, "",
+    'PROGRAM' : (unicode, unicode, "",
         """Compiled executable name.
 
         If the configuration token 'BIN_SUFFIX' is set, its value will be
@@ -181,8 +202,15 @@ VARIABLES = {
         BIN_SUFFIX, PROGRAM will remain unchanged.
         """),
 
+    'CPP_SOURCES': (list, list, [],
+        """C++ source file list.
+
+        This is a list of C++ files to be compiled. Entries must be files that
+        exist. These generally have .cpp, .cc, or .cxx extensions.
+        """),
+
     # IDL Generation.
-    'XPIDL_SOURCES': (list, [],
+    'XPIDL_SOURCES': (StrictOrderingOnAppendList, list, [],
         """XPCOM Interface Definition Files (xpidl).
 
         This is a list of files that define XPCOM interface definitions.
@@ -190,7 +218,7 @@ VARIABLES = {
         files.
         """),
 
-    'XPIDL_MODULE': (unicode, "",
+    'XPIDL_MODULE': (unicode, unicode, "",
         """XPCOM Interface Definition Module Name.
 
         This is the name of the .xpt file that is created by linking
@@ -198,7 +226,7 @@ VARIABLES = {
         MODULE.
         """),
 
-    'XPIDL_FLAGS': (list, [],
+    'XPIDL_FLAGS': (list, list, [],
         """XPCOM Interface Definition Module Flags.
 
         This is a list of extra flags that are passed to the IDL compiler.
@@ -206,7 +234,7 @@ VARIABLES = {
         directories to search for included .idl files.
         """),
 
-    'XPCSHELL_TESTS_MANIFESTS': (list, [],
+    'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """XPCSHELL Test Manifest list
 
         This is a list of xpcshell.ini manifest files.

@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsXULPopupManager.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 #include "jsapi.h"
 #include "nsIScriptGlobalObject.h"

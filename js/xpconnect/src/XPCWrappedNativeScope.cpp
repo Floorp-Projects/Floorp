@@ -9,6 +9,7 @@
 #include "XPCWrapper.h"
 #include "jsproxy.h"
 #include "nsContentUtils.h"
+#include "nsCycleCollectionNoteRootCallback.h"
 #include "nsPrincipal.h"
 #include "mozilla/Preferences.h"
 
@@ -253,7 +254,6 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
     ep = new nsExpandedPrincipal(principalAsArray);
 
     // Create the sandbox.
-    JSAutoRequest ar(cx);
     JS::RootedValue v(cx, JS::UndefinedValue());
     nsresult rv = xpc_CreateSandboxObject(cx, v.address(), ep, options);
     NS_ENSURE_SUCCESS(rv, nullptr);
@@ -415,8 +415,8 @@ WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
 
     if (wrapper->HasExternalReference()) {
-        nsCycleCollectionTraversalCallback *cb =
-            static_cast<nsCycleCollectionTraversalCallback *>(arg);
+        nsCycleCollectionNoteRootCallback *cb =
+            static_cast<nsCycleCollectionNoteRootCallback *>(arg);
         XPCJSRuntime::SuspectWrappedNative(wrapper, *cb);
     }
 
@@ -424,7 +424,7 @@ WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
 }
 
 static void
-SuspectDOMExpandos(JSObject *obj, nsCycleCollectionTraversalCallback &cb)
+SuspectDOMExpandos(JSObject *obj, nsCycleCollectionNoteRootCallback &cb)
 {
     const dom::DOMClass* clasp = dom::GetDOMClass(obj);
     MOZ_ASSERT(clasp && clasp->mDOMObjectIsISupports);
@@ -435,7 +435,7 @@ SuspectDOMExpandos(JSObject *obj, nsCycleCollectionTraversalCallback &cb)
 // static
 void
 XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
-                                          nsCycleCollectionTraversalCallback& cb)
+                                          nsCycleCollectionNoteRootCallback& cb)
 {
     XPCAutoLock lock(rt->GetMapLock());
 

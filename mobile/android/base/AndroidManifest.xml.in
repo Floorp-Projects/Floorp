@@ -201,6 +201,7 @@
 
 #include ../services/manifests/AnnouncementsAndroidManifest_activities.xml.in
 #include ../services/manifests/SyncAndroidManifest_activities.xml.in
+#include ../services/manifests/HealthReportAndroidManifest_activities.xml.in
 
 #if MOZ_CRASHREPORTER
   <activity android:name="org.mozilla.gecko.CrashReporter"

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Get text between offsets tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      //
+      // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+
+      var IDs = [ "i1", "d1", "e1", "t1" ];
+
+      testCharacterCount(IDs, 15);
+
+      testText(IDs, 0, 1, "h");
+      testText(IDs, 1, 3, "el");
+      testText(IDs, 14, 15, "d");
+      testText(IDs, 0, 15, "hello my friend");
+      testText(IDs, 0, -1, "hello my friend");
+
+      //////////////////////////////////////////////////////////////////////////
+      //
+      // __B__r__a__v__e__ __S__i__r__ __ __R__o__b__i__n__ __ __ __r__a__n
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+
+      IDs = [ "i2", "dpre2", "epre2", "t2" ];
+
+      testCharacterCount(IDs, 22);
+
+      testText(IDs, 0, 1, "B");
+      testText(IDs, 5, 6, " ");
+      testText(IDs, 9, 11, "  ");
+      testText(IDs, 16, 19, "   ");
+      testText(IDs, 0, 22, "Brave Sir  Robin   ran");
+      testText(IDs, 0, -1, "Brave Sir  Robin   ran");
+
+      testCharacterCount(["d2", "e2"], 19);
+      testText(["d2", "e2"], 0, 19, "Brave Sir Robin ran");
+
+      //////////////////////////////////////////////////////////////////////////
+      //
+      // __o__n__e__w__o__r__d__\n
+      //  0  1  2  3  4  5  6  7
+      // __\n
+      //  8
+      // __t__w__o__ __w__o__r__d__s__\n
+      //  9 10 11 12 13 14 15 16 17 18
+
+      var IDs = ["d3", "dbr3", "e3", "ebr3", "t3"];
+
+      testCharacterCount(IDs, 19);
+
+      testText(IDs, 0, 19, "oneword\n\ntwo words\n");
+      testText(IDs, 0, -1, "oneword\n\ntwo words\n");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="i1" value="hello my friend"/>
+  <div id="d1">hello my friend</div>
+  <div id="e1" contenteditable="true">hello my friend</div>
+  <textarea id="t1">hello my friend</textarea>
+
+  <input id="i2" value="Brave Sir  Robin   ran"/>
+  <pre><div id="dpre2">Brave Sir  Robin   ran</div></pre>
+  <pre><div id="epre2" contenteditable="true">Brave Sir  Robin   ran</div></pre>
+  <textarea id="t2" cols="300">Brave Sir  Robin   ran</textarea>
+  <div id="d2">Brave Sir  Robin   ran</div>
+  <div id="e2" contenteditable="true">Brave Sir  Robin   ran</div>
+
+  <pre>
+  <div id="d3">oneword
+
+two words
+</div>
+  <div id="dbr3">oneword<br/><br/>two words<br/></div>
+  <div id="e3" contenteditable="true">oneword
+
+two words
+</div>
+  <div id="ebr3" contenteditable="true">oneword<br/><br/>two words<br/></div>
+  <textarea id="t3" cols="300">oneword
+
+two words
+</textarea>
+  </pre>
+
+</body>
+</html>

@@ -146,6 +146,57 @@ SVGFEMorphologyElement::GetRXY(int32_t *aRX, int32_t *aRY,
                      MORPHOLOGY_EPSILON);
 }
 
+template<uint32_t Operator>
+static void
+DoMorphology(nsSVGFilterInstance* instance,
+             uint8_t* sourceData,
+             uint8_t* targetData,
+             int32_t stride,
+             const nsIntRect& rect,
+             int32_t rx,
+             int32_t ry)
+{
+  MOZ_STATIC_ASSERT(Operator == SVG_OPERATOR_ERODE ||
+                    Operator == SVG_OPERATOR_DILATE,
+                    "unexpected morphology operator");
+
+  volatile uint8_t extrema[4];         // RGBA magnitude of extrema
+
+  // Scan the kernel for each pixel to determine max/min RGBA values.
+  for (int32_t y = rect.y; y < rect.YMost(); y++) {
+    int32_t startY = std::max(0, y - ry);
+    // We need to read pixels not just in 'rect', which is limited to
+    // the dirty part of our filter primitive subregion, but all pixels in
+    // the given radii from the source surface, so use the surface size here.
+    int32_t endY = std::min(y + ry, instance->GetSurfaceHeight() - 1);
+    for (int32_t x = rect.x; x < rect.XMost(); x++) {
+      int32_t startX = std::max(0, x - rx);
+      int32_t endX = std::min(x + rx, instance->GetSurfaceWidth() - 1);
+      int32_t targIndex = y * stride + 4 * x;
+
+      for (int32_t i = 0; i < 4; i++) {
+        extrema[i] = sourceData[targIndex + i];
+      }
+      for (int32_t y1 = startY; y1 <= endY; y1++) {
+        for (int32_t x1 = startX; x1 <= endX; x1++) {
+          for (int32_t i = 0; i < 4; i++) {
+            uint8_t pixel = sourceData[y1 * stride + 4 * x1 + i];
+            if (Operator == SVG_OPERATOR_ERODE) {
+              extrema[i] -= (extrema[i] - pixel) & -(extrema[i] > pixel);
+            } else {
+              extrema[i] -= (extrema[i] - pixel) & -(extrema[i] < pixel);
+            }
+          }
+        }
+      }
+      targetData[targIndex  ] = extrema[0];
+      targetData[targIndex+1] = extrema[1];
+      targetData[targIndex+2] = extrema[2];
+      targetData[targIndex+3] = extrema[3];
+    }
+  }
+}
+
 nsresult
 SVGFEMorphologyElement::Filter(nsSVGFilterInstance* instance,
                                const nsTArray<const Image*>& aSources,
@@ -170,43 +221,15 @@ SVGFEMorphologyElement::Filter(nsSVGFilterInstance* instance,
   uint8_t* sourceData = aSources[0]->mImage->Data();
   uint8_t* targetData = aTarget->mImage->Data();
   int32_t stride = aTarget->mImage->Stride();
-  uint8_t extrema[4];         // RGBA magnitude of extrema
-  uint16_t op = mEnumAttributes[OPERATOR].GetAnimValue();
 
-  // Scan the kernel for each pixel to determine max/min RGBA values.
-  for (int32_t y = rect.y; y < rect.YMost(); y++) {
-    int32_t startY = std::max(0, y - ry);
-    // We need to read pixels not just in 'rect', which is limited to
-    // the dirty part of our filter primitive subregion, but all pixels in
-    // the given radii from the source surface, so use the surface size here.
-    int32_t endY = std::min(y + ry, instance->GetSurfaceHeight() - 1);
-    for (int32_t x = rect.x; x < rect.XMost(); x++) {
-      int32_t startX = std::max(0, x - rx);
-      int32_t endX = std::min(x + rx, instance->GetSurfaceWidth() - 1);
-      int32_t targIndex = y * stride + 4 * x;
-
-      for (int32_t i = 0; i < 4; i++) {
-        extrema[i] = sourceData[targIndex + i];
-      }
-      for (int32_t y1 = startY; y1 <= endY; y1++) {
-        for (int32_t x1 = startX; x1 <= endX; x1++) {
-          for (int32_t i = 0; i < 4; i++) {
-            uint8_t pixel = sourceData[y1 * stride + 4 * x1 + i];
-            if ((extrema[i] > pixel &&
-                 op == SVG_OPERATOR_ERODE) ||
-                (extrema[i] < pixel &&
-                 op == SVG_OPERATOR_DILATE)) {
-              extrema[i] = pixel;
-            }
-          }
-        }
-      }
-      targetData[targIndex  ] = extrema[0];
-      targetData[targIndex+1] = extrema[1];
-      targetData[targIndex+2] = extrema[2];
-      targetData[targIndex+3] = extrema[3];
-    }
+  if (mEnumAttributes[OPERATOR].GetAnimValue() == SVG_OPERATOR_ERODE) {
+    DoMorphology<SVG_OPERATOR_ERODE>(instance, sourceData, targetData, stride,
+                                     rect, rx, ry);
+  } else {
+    DoMorphology<SVG_OPERATOR_DILATE>(instance, sourceData, targetData, stride,
+                                      rect, rx, ry);
   }
+
   return NS_OK;
 }
 

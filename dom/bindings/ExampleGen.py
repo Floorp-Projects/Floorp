@@ -34,13 +34,10 @@ def main():
     configFile = os.path.normpath(args[0])
     interfaceName = args[1]
 
-    # Load the parsing results
+    # Load the configuration
     f = open('ParserResults.pkl', 'rb')
-    parserData = cPickle.load(f)
+    config = cPickle.load(f)
     f.close()
-
-    # Create the configuration data.
-    config = Configuration(configFile, parserData)
 
     # Generate the example class.
     generate_interface_example(config, interfaceName)

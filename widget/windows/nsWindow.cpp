@@ -6333,7 +6333,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
       touchPoint.x = TOUCH_COORD_TO_PIXEL(pInputs[i].x);
       touchPoint.y = TOUCH_COORD_TO_PIXEL(pInputs[i].y);
       touchPoint.ScreenToClient(mWnd);
-      nsCOMPtr<nsIDOMTouch> touch =
+      nsRefPtr<Touch> touch =
         new Touch(pInputs[i].dwID,
                   touchPoint,
                   /* radius, if known */

@@ -20,13 +20,13 @@ if toolkit == 'windows':
         'nsIJumpListBuilder.idl',
         'nsIJumpListItem.idl',
         'nsIPrintSettingsWin.idl',
+        'nsITaskbarOverlayIconController.idl',
         'nsITaskbarPreview.idl',
+        'nsITaskbarPreviewButton.idl',
+        'nsITaskbarPreviewController.idl',
+        'nsITaskbarProgress.idl',
         'nsITaskbarTabPreview.idl',
         'nsITaskbarWindowPreview.idl',
-        'nsITaskbarPreviewController.idl',
-        'nsITaskbarPreviewButton.idl',
-        'nsITaskbarProgress.idl',
-        'nsITaskbarOverlayIconController.idl',
         'nsIWinTaskbar.idl',
     ]
 elif toolkit == 'cocoa':

@@ -26,7 +26,6 @@ using namespace std;
 #include "PeerConnectionCtx.h"
 #include "runnable_utils.h"
 #include "nsStaticComponents.h"
-#include "nsIDOMRTCPeerConnection.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
@@ -145,13 +144,6 @@ public:
   enum Action {
     OFFER,
     ANSWER
-  };
-
-  enum StateType {
-    kReadyState,
-    kIceState,
-    kSdpState,
-    kSipccState
   };
 
   enum ResponseState {
@@ -294,21 +286,21 @@ TestObserver::OnStateChange(uint32_t state_type)
 
   switch (state_type)
   {
-  case kReadyState:
+  case IPeerConnectionObserver::kReadyState:
     rv = pc->GetReadyState(&gotstate);
     NS_ENSURE_SUCCESS(rv, rv);
     cout << "Ready State: " << gotstate << endl;
     break;
-  case kIceState:
+  case IPeerConnectionObserver::kIceState:
     rv = pc->GetIceState(&gotstate);
     NS_ENSURE_SUCCESS(rv, rv);
     cout << "ICE State: " << gotstate << endl;
     break;
-  case kSdpState:
+  case IPeerConnectionObserver::kSdpState:
     cout << "SDP State: " << endl;
     // NS_ENSURE_SUCCESS(rv, rv);
     break;
-  case kSipccState:
+  case IPeerConnectionObserver::kSipccState:
     rv = pc->GetSipccState(&gotstate);
     NS_ENSURE_SUCCESS(rv, rv);
     cout << "SIPCC State: " << gotstate << endl;
@@ -325,14 +317,14 @@ TestObserver::OnStateChange(uint32_t state_type)
 
 
 NS_IMETHODIMP
-TestObserver::OnAddStream(nsIDOMMediaStream *stream, const char *type)
+TestObserver::OnAddStream(nsIDOMMediaStream *stream)
 {
   PR_ASSERT(stream);
 
   DOMMediaStream *ms = static_cast<DOMMediaStream *>(stream);
 
-  cout << "OnAddStream called hints=" << ms->GetHintContents() << " type=" << type << " thread=" <<
-    PR_GetCurrentThread() << endl ;
+  cout << "OnAddStream called hints=" << ms->GetHintContents()
+      << " thread=" << PR_GetCurrentThread() << endl ;
 
   onAddStreamCalled = true;
 

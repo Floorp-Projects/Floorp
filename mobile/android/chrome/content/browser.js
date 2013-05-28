@@ -179,6 +179,14 @@ function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
 
+/**
+ * Convert a font size from CSS pixels (px) to twenteiths-of-a-point
+ * (twips).
+ */
+function convertFromPxToTwips(aSize) {
+  return (20.0 * 12.0 * (aSize/16.0));
+}
+
 #ifdef MOZ_CRASHREPORTER
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -415,13 +423,6 @@ var BrowserApp = {
         let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
         NativeWindow.toast.show(label, "short");
-      });
-
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.addToReadingList"),
-      NativeWindow.contextmenus.linkOpenableContext,
-      function(aTarget) {
-        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        Services.obs.notifyObservers(null, "Reader:Add", JSON.stringify({ url: url }));
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
@@ -2449,6 +2450,8 @@ function Tab(aURL, aParams) {
   this.originalURI = null;
   this.savedArticle = null;
   this.hasTouchListener = false;
+  this.browserWidth = 0;
+  this.browserHeight = 0;
 
   this.create(aURL, aParams);
 }
@@ -2596,16 +2599,45 @@ Tab.prototype = {
     }
   },
 
+  /**
+   * Retrieves the font size in twips for a given element.
+   */
+  getFontSizeInTwipsFor: function(aElement) {
+    // GetComputedStyle should always give us CSS pixels for a font size.
+    let fontSizeStr = this.window.getComputedStyle(aElement)['fontSize'];
+    let fontSize = fontSizeStr.slice(0, -2);
+    // This is in px, so we want to convert it to points then to twips.
+    return convertFromPxToTwips(fontSize);
+  },
+
+  /**
+   * This returns the zoom necessary to match the font size of an element to
+   * the minimum font size specified by the browser.zoom.reflowOnZoom.minFontSizeTwips
+   * preference.
+   */
+  getZoomToMinFontSize: function(aElement) {
+    let currentZoom = this._zoom;
+    let minFontSize = Services.prefs.getIntPref("browser.zoom.reflowZoom.minFontSizeTwips");
+    let curFontSize = this.getFontSizeInTwipsFor(aElement);
+    if (!fuzzyEquals(curFontSize*(currentZoom), minFontSize)) {
+      return 1.0 + minFontSize / curFontSize;
+    }
+
+    return 1.0;
+  },
+
   performReflowOnZoom: function(aViewport) {
-      let viewportWidth = gScreenWidth / aViewport.zoom;
+      let zoom = this._drawZoom ? this._drawZoom : aViewport.zoom;
+
+      let viewportWidth = gScreenWidth / zoom;
       let reflozTimeout = Services.prefs.getIntPref("browser.zoom.reflowZoom.reflowTimeout");
 
       if (gReflowPending) {
         clearTimeout(gReflowPending);
       }
 
-      // We add in a bit of fudge just so that the end characters don't accidentally
-      // get clipped. 15px is an arbitrary choice.
+      // We add in a bit of fudge just so that the end characters
+      // don't accidentally get clipped. 15px is an arbitrary choice.
       gReflowPending = setTimeout(doChangeMaxLineBoxWidth,
                                   reflozTimeout,
                                   viewportWidth - 15);
@@ -2960,7 +2992,21 @@ Tab.prototype = {
 
     // Adjust the max line box width to be no more than the viewport width, but
     // only if the reflow-on-zoom preference is enabled.
-    let isZooming = Math.abs(aViewport.zoom - this._zoom) >= 1e-6;
+    let isZooming = !fuzzyEquals(aViewport.zoom, this._zoom);
+    if (BrowserApp.selectedTab.reflozPinchSeen &&
+        isZooming && aViewport.zoom < 1.0) {
+      // In this case, we want to restore the max line box width,
+      // because we are pinch-zooming to zoom out.
+      BrowserEventHandler.resetMaxLineBoxWidth();
+      BrowserApp.selectedTab.reflozPinchSeen = false;
+    } else if (BrowserApp.selectedTab.reflozPinchSeen &&
+               isZooming) {
+      // In this case, the user pinch-zoomed in, so we don't want to
+      // preserve position as we would with reflow-on-zoom.
+      BrowserApp.selectedTab.probablyNeedRefloz = false;
+      BrowserApp.selectedTab._mReflozPoint = null;
+    }
+
     if (isZooming &&
         BrowserEventHandler.mReflozPref &&
         BrowserApp.selectedTab._mReflozPoint &&
@@ -3859,10 +3905,15 @@ var BrowserEventHandler = {
   },
 
   resetMaxLineBoxWidth: function() {
-    let webNav = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-    let docShell = webNav.QueryInterface(Ci.nsIDocShell);
-    let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
-    docViewer.changeMaxLineBoxWidth(0);
+    BrowserApp.selectedTab.probablyNeedRefloz = false;
+
+    if (gReflowPending) {
+      clearTimeout(gReflowPending);
+    }
+
+    let reflozTimeout = Services.prefs.getIntPref("browser.zoom.reflowZoom.reflowTimeout");
+    gReflowPending = setTimeout(doChangeMaxLineBoxWidth,
+                                reflozTimeout, 0);
   },
 
   updateReflozPref: function() {
@@ -4093,6 +4144,18 @@ var BrowserEventHandler = {
   onDoubleTap: function(aData) {
     let data = JSON.parse(aData);
 
+    // We only want to do this if reflow-on-zoom is enabled.
+    if (BrowserEventHandler.mReflozPref &&
+       !BrowserApp.selectedTab._mReflozPoint) {
+     let data = JSON.parse(aData);
+     let zoomPointX = data.x;
+     let zoomPointY = data.y;
+
+     BrowserApp.selectedTab._mReflozPoint = { x: zoomPointX, y: zoomPointY,
+       range: BrowserApp.selectedBrowser.contentDocument.caretPositionFromPoint(zoomPointX, zoomPointY) };
+       BrowserApp.selectedTab.probablyNeedRefloz = true;
+    }
+
     let zoom = BrowserApp.selectedTab._zoom;
     let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
     if (!element) {
@@ -4127,9 +4190,21 @@ var BrowserEventHandler = {
 
     // if the rect is already taking up most of the visible area and is stretching the
     // width of the page, then we want to zoom out instead.
-    if (this._isRectZoomedIn(bRect, viewport)) {
-      if (aCanZoomOut)
+    if (BrowserEventHandler.mReflozPref) {
+      let zoomFactor = BrowserApp.selectedTab.getZoomToMinFontSize(aElement);
+
+      bRect.width = zoomFactor == 1.0 ? bRect.width : gScreenWidth / zoomFactor;
+      bRect.height = zoomFactor == 1.0 ? bRect.height : bRect.height / zoomFactor;
+      if (zoomFactor == 1.0 || this._isRectZoomedIn(bRect, viewport)) {
+        if (aCanZoomOut) {
+          this._zoomOut();
+        }
+        return;
+      }
+    } else if (this._isRectZoomedIn(bRect, viewport)) {
+      if (aCanZoomOut) {
         this._zoomOut();
+      }
       return;
     }
 
@@ -4313,8 +4388,7 @@ var BrowserEventHandler = {
        * - It's a select element showing multiple rows
        */
       if (checkElem) {
-        if (((elem.scrollHeight > elem.clientHeight) ||
-             (elem.scrollWidth > elem.clientWidth)) &&
+        if ((elem.scrollTopMax > 0 || elem.scrollLeftMax > 0) &&
             (this._hasScrollableOverflow(elem) ||
              elem.mozMatchesSelector("html, body, textarea")) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
@@ -4345,10 +4419,10 @@ var BrowserEventHandler = {
 
   _elementCanScroll: function(elem, x, y) {
     let scrollX = (x < 0 && elem.scrollLeft > 0)
-               || (x > 0 && elem.scrollLeft < (elem.scrollWidth - elem.clientWidth));
+               || (x > 0 && elem.scrollLeft < elem.scrollLeftMax);
 
     let scrollY = (y < 0 && elem.scrollTop > 0)
-               || (y > 0 && elem.scrollTop < (elem.scrollHeight - elem.clientHeight));
+               || (y > 0 && elem.scrollTop < elem.scrollTopMax);
 
     return scrollX || scrollY;
   }
@@ -4822,7 +4896,7 @@ var FormAssistant = {
           if (hasResults)
             return;
 
-          if (!this._showValidationMessage(currentElement))
+          if (this._showValidationMessage(currentElement))
             return;
 
           // If we're not showing autocomplete suggestions, hide the form assist popup
@@ -4871,8 +4945,8 @@ var FormAssistant = {
 
         // Supply a label and value, since they can differ for datalist suggestions
         suggestions.push({ label: value, value: value });
-        aCallback(suggestions);
       }
+      aCallback(suggestions);
     };
 
     this._formAutoCompleteService.autoCompleteSearchAsync(aElement.name || aElement.id,

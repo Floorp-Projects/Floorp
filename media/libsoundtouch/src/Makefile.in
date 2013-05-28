@@ -10,29 +10,13 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = soundtouch
+MSVC_ENABLE_PGO := 1
 SHORT_LIBNAME = soundt
 VISIBILITY_FLAGS =
 EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
 
 # Use abort() instead of exception in SoundTouch.
 DEFINES += -DST_NO_EXCEPTION_HANDLING=1
-
-CPPSRCS = AAFilter.cpp \
-          cpu_detect_x86.cpp \
-          FIFOSampleBuffer.cpp \
-          FIRFilter.cpp \
-          RateTransposer.cpp \
-          SoundTouch.cpp \
-          TDStretch.cpp \
-          $(NULL)
-
-ifneq (,$(INTEL_ARCHITECTURE))
-ifdef MOZ_SAMPLE_TYPE_FLOAT32
-CPPSRCS += sse_optimized.cpp
-else
-CPPSRCS += mmx_optimized.cpp
-endif
-endif
 
 include $(topsrcdir)/config/rules.mk
 

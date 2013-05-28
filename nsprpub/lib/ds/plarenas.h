@@ -47,6 +47,9 @@ PR_EXTERN(void) PL_CompactArenaPool(PLArenaPool *pool);
 
 /*
 ** Friend functions used by the PL_ARENA_*() macros.
+**
+** WARNING: do not call these functions directly. Always use the
+** PL_ARENA_*() macros.
 **/
 PR_EXTERN(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb);
 

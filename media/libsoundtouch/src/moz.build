@@ -13,3 +13,22 @@ EXPORTS.soundtouch += [
     'soundtouch_config.h',
 ]
 
+CPP_SOURCES += [
+    'AAFilter.cpp',
+    'FIFOSampleBuffer.cpp',
+    'FIRFilter.cpp',
+    'RateTransposer.cpp',
+    'SoundTouch.cpp',
+    'TDStretch.cpp',
+    'cpu_detect_x86.cpp',
+]
+
+if CONFIG['INTEL_ARCHITECTURE']:
+    if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        CPP_SOURCES += [
+            'sse_optimized.cpp',
+        ]
+    else:
+        CPP_SOURCES += [
+            'mmx_optimized.cpp',
+        ]

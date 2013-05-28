@@ -10,17 +10,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xpcwrappers_s
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
-CPPSRCS = \
-  AccessCheck.cpp \
-  WaiveXrayWrapper.cpp \
-  FilteringWrapper.cpp \
-  ChromeObjectWrapper.cpp \
-  XrayWrapper.cpp \
-  WrapperFactory.cpp \
-  $(NULL)
-
 LOCAL_INCLUDES = \
                 -I$(srcdir)/../src \
                 -I$(srcdir)/../../../dom/base \

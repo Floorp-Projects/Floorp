@@ -36,10 +36,13 @@
 #include "ipc/IndexedDBChild.h"
 #include "ipc/IndexedDBParent.h"
 
+#include "mozilla/dom/IDBDatabaseBinding.h"
+
 USING_INDEXEDDB_NAMESPACE
 using mozilla::dom::ContentParent;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::QuotaManager;
+using namespace mozilla::dom;
 
 namespace {
 
@@ -528,36 +531,22 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
 
   DatabaseInfo* databaseInfo = transaction->DBInfo();
 
-  mozilla::idl::IDBObjectStoreParameters params;
+  RootedDictionary<IDBObjectStoreParameters> params(aCx);
+  JS::Rooted<JS::Value> options(aCx, aOptions);
+  if (!params.Init(aCx, options)) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
   KeyPath keyPath(0);
-
-  nsresult rv;
-
-  if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
-    rv = params.Init(aCx, &aOptions);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // We need a default value here, which the XPIDL dictionary stuff doesn't
-    // support.  WebIDL shall save us all!
-    JSBool hasProp = false;
-    JSObject* obj = JSVAL_TO_OBJECT(aOptions);
-    if (!JS_HasProperty(aCx, obj, "keyPath", &hasProp)) {
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    if (NS_FAILED(KeyPath::Parse(aCx, hasProp ? params.keyPath : JSVAL_NULL,
-                                 &keyPath))) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
+  if (NS_FAILED(KeyPath::Parse(aCx, params.mKeyPath, &keyPath))) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   if (databaseInfo->ContainsStoreName(aName)) {
     return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
 
-  if (!keyPath.IsAllowedForObjectStore(params.autoIncrement)) {
+  if (!keyPath.IsAllowedForObjectStore(params.mAutoIncrement)) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
@@ -566,11 +555,11 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
   guts.name = aName;
   guts.id = databaseInfo->nextObjectStoreId++;
   guts.keyPath = keyPath;
-  guts.autoIncrement = params.autoIncrement;
+  guts.autoIncrement = params.mAutoIncrement;
 
   nsRefPtr<IDBObjectStore> objectStore;
-  rv = CreateObjectStoreInternal(transaction, guts,
-                                 getter_AddRefs(objectStore));
+  nsresult rv = CreateObjectStoreInternal(transaction, guts,
+                                          getter_AddRefs(objectStore));
   NS_ENSURE_SUCCESS(rv, rv);
 
   objectStore.forget(_retval);

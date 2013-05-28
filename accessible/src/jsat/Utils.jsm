@@ -8,10 +8,13 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/Geometry.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
+  'resource://gre/modules/Services.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Rect',
+  'resource://gre/modules/Geometry.jsm');
 
-this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext'];
+this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache'];
 
 this.Utils = {
   _buildAppMap: {
@@ -37,6 +40,9 @@ this.Utils = {
   },
 
   get win() {
+    if (!this._win) {
+      return null;
+    }
     return this._win.get();
   },
 
@@ -90,6 +96,9 @@ this.Utils = {
   },
 
   get BrowserApp() {
+    if (!this.win) {
+      return null;
+    }
     switch (this.MozBuildApp) {
       case 'mobile/android':
         return this.win.BrowserApp;
@@ -103,6 +112,9 @@ this.Utils = {
   },
 
   get CurrentBrowser() {
+    if (!this.BrowserApp) {
+      return null;
+    }
     if (this.MozBuildApp == 'b2g')
       return this.BrowserApp.contentBrowser;
     return this.BrowserApp.selectedBrowser;
@@ -122,13 +134,25 @@ this.Utils = {
     let document = this.CurrentContentDoc;
 
     if (document) {
-      let remoteframes = document.querySelectorAll('iframe[remote=true]');
+      let remoteframes = document.querySelectorAll('iframe');
 
-      for (let i = 0; i < remoteframes.length; ++i)
-        messageManagers.push(this.getMessageManager(remoteframes[i]));
+      for (let i = 0; i < remoteframes.length; ++i) {
+        let mm = this.getMessageManager(remoteframes[i]);
+        if (mm) {
+          messageManagers.push(mm);
+        }
+      }
+
     }
 
     return messageManagers;
+  },
+
+  get isContentProcess() {
+    delete this.isContentProcess;
+    this.isContentProcess =
+      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+    return this.isContentProcess;
   },
 
   getMessageManager: function getMessageManager(aBrowser) {
@@ -164,15 +188,12 @@ this.Utils = {
     let doc = (aDocument instanceof Ci.nsIAccessible) ? aDocument :
       this.AccRetrieval.getAccessibleFor(aDocument);
 
-    while (doc) {
-      try {
-        return doc.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
-      } catch (x) {
-        doc = doc.parentDocument;
-      }
-    }
+    return doc.QueryInterface(Ci.nsIAccessibleDocument).virtualCursor;
+  },
 
-    return null;
+  getPixelsPerCSSPixel: function getPixelsPerCSSPixel(aWindow) {
+    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).screenPixelsPerCSSPixel;
   }
 };
 
@@ -228,9 +249,10 @@ this.Logger = {
 
   logException: function logException(aException) {
     try {
-      this.error(
-        aException.message,
-        '(' + aException.fileName + ':' + aException.lineNumber + ')');
+      let args = [aException.message];
+      args.push.apply(args, aException.stack ? ['\n', aException.stack] :
+        ['(' + aException.fileName + ':' + aException.lineNumber + ')']);
+      this.error.apply(this, args);
     } catch (x) {
       this.error(x);
     }
@@ -392,15 +414,7 @@ PivotContext.prototype = {
 
       this._accessible.getBounds(objX, objY, objW, objH);
 
-      // XXX: OOP content provides a screen offset of 0, while in-process provides a real
-      // offset. Removing the offset and using content-relative coords normalizes this.
-      let docX = {}, docY = {};
-      let docRoot = this._accessible.rootDocument.
-        QueryInterface(Ci.nsIAccessible);
-      docRoot.getBounds(docX, docY, {}, {});
-
-      this._bounds = new Rect(objX.value, objY.value, objW.value, objH.value).
-        translate(-docX.value, -docY.value);
+      this._bounds = new Rect(objX.value, objY.value, objW.value, objH.value);
     }
 
     return this._bounds.clone();
@@ -415,4 +429,55 @@ PivotContext.prototype = {
       return true;
     }
   }
+};
+
+this.PrefCache = function PrefCache(aName, aCallback, aRunCallbackNow) {
+  this.name = aName;
+  this.callback = aCallback;
+
+  let branch = Services.prefs;
+  this.value = this._getValue(branch);
+
+  if (this.callback && aRunCallbackNow) {
+    try {
+      this.callback(this.name, this.value);
+    } catch (x) {
+      Logger.logException(x);
+    }
+  }
+
+  branch.addObserver(aName, this, true);
+};
+
+PrefCache.prototype = {
+  _getValue: function _getValue(aBranch) {
+    if (!this.type) {
+      this.type = aBranch.getPrefType(this.name);
+    }
+
+    switch (this.type) {
+      case Ci.nsIPrefBranch.PREF_STRING:
+        return aBranch.getCharPref(this.name);
+      case Ci.nsIPrefBranch.PREF_INT:
+        return aBranch.getIntPref(this.name);
+      case Ci.nsIPrefBranch.PREF_BOOL:
+        return aBranch.getBoolPref(this.name);
+      default:
+        return null;
+    }
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    this.value = this._getValue(aSubject.QueryInterface(Ci.nsIPrefBranch));
+    if (this.callback) {
+      try {
+        this.callback(this.name, this.value);
+      } catch (x) {
+        Logger.logException(x);
+      }
+    }
+  },
+
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference])
 };

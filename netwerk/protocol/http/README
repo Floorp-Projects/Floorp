@@ -19,7 +19,7 @@ CLASS BREAKDOWN
     - initiates http transactions
     - processes http response codes
     - intercepts progress notifications
-  
+
   nsHttpConnection
     - implements nsIStreamListener & nsIStreamProvider
     - talks to the socket transport service
@@ -37,7 +37,7 @@ CLASS BREAKDOWN
   nsHttpChunkedDecoder
     - owned by a transaction
     - removes chunked decoding
-  
+
   nsHttpRequestHead
     - owns a nsHttpHeaderArray
     - knows how to fill a request buffer
@@ -70,7 +70,7 @@ TRANSACTION MODEL
   InitiateTransaction -> ActivateConnection -> AsyncWrite, AsyncRead
 
   The channel creates transactions, and passes them to the handler via
-  InitiateTransaction along with a nsHttpConnectionInfo object 
+  InitiateTransaction along with a nsHttpConnectionInfo object
   identifying the requested connection.  The handler either dispatches
   the transaction immediately or queues it up to be dispatched later,
   depending on whether or not the limit on the number of connections

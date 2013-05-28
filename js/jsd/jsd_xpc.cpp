@@ -33,6 +33,7 @@
 #include "SandboxPrivate.h"
 #include "nsJSPrincipals.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 /*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
@@ -123,7 +124,6 @@ enum PatternType {
 static struct FilterRecord {
     PRCList      links;
     jsdIFilter  *filterObject;
-    void        *glob;
     nsCString    urlPattern;
     PatternType  patternType;
     uint32_t     startLine;
@@ -233,20 +233,9 @@ jsds_SyncFilter (FilterRecord *rec, jsdIFilter *filter)
 {
     NS_ASSERTION (rec, "jsds_SyncFilter without rec");
     NS_ASSERTION (filter, "jsds_SyncFilter without filter");
-    
-    JSObject *glob_proper = nullptr;
-    nsCOMPtr<nsISupports> glob;
-    nsresult rv = filter->GetGlobalObject(getter_AddRefs(glob));
-    if (NS_FAILED(rv))
-        return false;
-    if (glob) {
-        nsCOMPtr<nsIScriptGlobalObject> nsiglob = do_QueryInterface(glob);
-        if (nsiglob)
-            glob_proper = nsiglob->GetGlobalJSObject();
-    }
-    
+
     uint32_t startLine;
-    rv = filter->GetStartLine(&startLine);
+    nsresult rv = filter->GetStartLine(&startLine);
     if (NS_FAILED(rv))
         return false;
 
@@ -298,8 +287,6 @@ jsds_SyncFilter (FilterRecord *rec, jsdIFilter *filter)
         rec->filterObject = filter;
     }
     
-    rec->glob = glob_proper;
-    
     rec->startLine     = startLine;
     rec->endLine       = endLine;
     
@@ -331,14 +318,6 @@ jsds_FindFilter (jsdIFilter *filter)
 bool
 jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
 {
-    JSContext *cx = JSD_GetJSContext (jsdc, state);
-    void *glob = static_cast<void *>(JS_GetGlobalObject (cx));
-
-    if (!glob) {
-        NS_WARNING("No global in threadstate");
-        return false;
-    }
-    
     JSDStackFrameInfo *frame = JSD_GetStackFrame (jsdc, state);
 
     if (!frame) {
@@ -374,11 +353,9 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
         NS_ASSERTION(NS_SUCCEEDED(rv), "Error getting flags for filter");
 
         if (flags & jsdIFilter::FLAG_ENABLED) {
-            /* if there is no glob, or the globs match */
-            if ((!currentFilter->glob || currentFilter->glob == glob) &&
-                /* and there is no start line, or the start line is before 
-                 * or equal to the current */
-                (!currentFilter->startLine || 
+            /* If there is no start line, or the start line is before 
+             * or equal to the current */
+            if ((!currentFilter->startLine ||
                  currentFilter->startLine <= currentLine) &&
                 /* and there is no end line, or the end line is after
                  * or equal to the current */
@@ -994,7 +971,6 @@ PCMapEntry *
 jsdScript::CreatePPLineMap()
 {
     JSContext  *cx  = JSD_GetDefaultJSContext (mCx);
-    JSAutoRequest ar(cx);
     JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
     if (!obj)
         return nullptr;
@@ -1239,7 +1215,6 @@ jsdScript::GetParameterNames(uint32_t* count, PRUnichar*** paramNames)
         return NS_OK;
     }
 
-    JSAutoRequest ar(cx);
     JSAutoCompartment ac(cx, JS_GetFunctionObject(fun));
 
     unsigned nargs;
@@ -1328,8 +1303,6 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
         return NS_ERROR_FAILURE;
     }
     JS::RootedFunction fun(cx, JSD_GetJSFunction (mCx, mScript));
-
-    JSAutoRequest ar(cx);
 
     JSString *jsstr;
     mozilla::Maybe<JSAutoCompartment> ac;
@@ -1748,7 +1721,7 @@ NS_IMETHODIMP
 jsdContext::GetGlobalObject (jsdIValue **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    JSObject *glob = JS_GetGlobalObject(mJSCx);
+    JSObject *glob = JS_GetGlobalForScopeChain(mJSCx);
     JSDValue *jsdv = JSD_NewValue (mJSDCx, OBJECT_TO_JSVAL(glob));
     if (!jsdv)
         return NS_ERROR_FAILURE;
@@ -2039,7 +2012,6 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
     JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
 
     JS::RootedValue jv(cx);
-    JSAutoRequest ar(cx);
 
     estate = JS_SaveExceptionState (cx);
     JS_ClearPendingException (cx);
@@ -2353,8 +2325,6 @@ jsdValue::GetProperty (const nsACString &name, jsdIProperty **_rval)
     ASSERT_VALID_EPHEMERAL;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
 
-    JSAutoRequest ar(cx);
-
     /* not rooting this */
     JSString *jstr_name = JS_NewStringCopyZ(cx, PromiseFlatCString(name).get());
     if (!jstr_name)
@@ -2539,7 +2509,7 @@ jsdService::ActivateDebugger (JSRuntime *rt)
         return NS_ERROR_FAILURE;
 
     JSContext *cx   = JSD_GetDefaultJSContext (mCx);
-    JS::RootedObject glob(cx, JS_GetGlobalObject (cx));
+    JS::RootedObject glob(cx, JSD_GetDefaultGlobal (mCx));
 
     /* init xpconnect on the debugger's context in case xpconnect tries to
      * use it for stuff. */

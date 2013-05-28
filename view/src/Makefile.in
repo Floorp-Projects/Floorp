@@ -11,17 +11,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkview_s
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsViewModule
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS := 1
 
 DEFINES += -D_IMPL_NS_LAYOUT
-
-CPPSRCS		= \
-		nsView.cpp \
-		nsViewManager.cpp \
-		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

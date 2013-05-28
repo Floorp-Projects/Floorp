@@ -50,14 +50,14 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 };
 
 %{C++
-// ----------- Categories ----------- 
+// ----------- Categories -----------
 /**
  * At initialization time, the HTTP handler will initialize each service
  * registered under this category:
  */
 #define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
 
-// ----------- Observer topics ----------- 
+// ----------- Observer topics -----------
 /**
  * nsIObserver notification corresponding to startup category.  Services
  * registered under the startup category will receive this observer topic at

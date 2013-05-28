@@ -48,4 +48,5 @@ asserts(4-7) load 590302-1.xhtml # bug 584564
 load 626014.xhtml
 load 639733.xhtml
 asserts(0-1) load 669767.html
+load 682684.xhtml
 load 865602.html

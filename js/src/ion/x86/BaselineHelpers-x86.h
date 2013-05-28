@@ -48,12 +48,8 @@ EmitEnterTypeMonitorIC(MacroAssembler &masm,
     // is properly initialized to point to the stub.
     masm.movl(Operand(BaselineStubReg, (int32_t) monitorStubOffset), BaselineStubReg);
 
-    // Load stubcode pointer from BaselineStubReg into BaselineTailCallReg.
-    masm.movl(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
-              BaselineTailCallReg);
-
     // Jump to the stubcode.
-    masm.jmp(Operand(BaselineTailCallReg));
+    masm.jmp(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()));
 }
 
 inline void
@@ -276,13 +272,8 @@ EmitStubGuardFailure(MacroAssembler &masm)
     // Load next stub into BaselineStubReg
     masm.movl(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfNext()), BaselineStubReg);
 
-    // Load stubcode pointer from BaselineStubEntry into BaselineTailCallReg
-    // BaselineTailCallReg will always be unused in the contexts where IC stub guards fail
-    masm.movl(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()),
-              BaselineTailCallReg);
-
     // Return address is already loaded, just jump to the next stubcode.
-    masm.jmp(Operand(BaselineTailCallReg));
+    masm.jmp(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()));
 }
 
 

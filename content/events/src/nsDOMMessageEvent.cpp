@@ -6,7 +6,6 @@
 #include "nsDOMMessageEvent.h"
 #include "nsContentUtils.h"
 #include "jsapi.h"
-#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -24,11 +23,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mData)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-DOMCI_DATA(MessageEvent, nsDOMMessageEvent)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMMessageEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMessageEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MessageEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMMessageEvent, nsDOMEvent)

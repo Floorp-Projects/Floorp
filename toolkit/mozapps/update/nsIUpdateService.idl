@@ -19,7 +19,7 @@ interface nsIFile;
  * be downloaded and applied to a version of this application so that it
  * can be updated.
  */
-[scriptable, uuid(1134957d-9449-481b-a515-4d88b9998278)]
+[scriptable, uuid(dc8fb8a9-3a53-4031-9469-2a5197ea30e7)]
 interface nsIUpdatePatch : nsISupports
 {
   /**
@@ -428,6 +428,15 @@ interface nsIApplicationUpdateService : nsISupports
    * privileges to the install directory.
    */
   readonly attribute boolean canApplyUpdates;
+
+  /**
+   * Whether or not a different instance is handling updates of this
+   * installation.  This currently only ever returns true on Windows
+   * when 2 instances of an application are open or when both the Metro
+   * and Desktop browsers are open.  Only one of the instances will actually
+   * handle updates for the installation.
+   */
+  readonly attribute boolean isOtherInstanceHandlingUpdates;
 
   /**
    * Whether the Update Service is able to stage updates.

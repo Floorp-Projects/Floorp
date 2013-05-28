@@ -10,6 +10,7 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = speex_resampler
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 
 # We don't compile the full speex codec, only the resampler.

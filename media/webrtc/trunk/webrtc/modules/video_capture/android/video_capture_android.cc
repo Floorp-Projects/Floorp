@@ -71,6 +71,13 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
   g_jvm = static_cast<JavaVM*> (javaVM);
 
   if (javaVM) {
+    // Already done? Exit early.
+    if (g_javaCmClass != NULL
+        && g_javaCmDevInfoClass != NULL
+        && g_javaCmDevInfoObject != NULL) {
+        return 0;
+    }
+
     JNIEnv* env = NULL;
     if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
       WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
@@ -514,11 +521,6 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
     }
   }
 
-  // I guess the libyuv rotate is CCW vs Android being CW,
-  // so we need to invert.
-  // Note that SetCaptureRotation calls SetDisplayOrientation,
-  // but we don't use a visible Surface so we can ignore that one.
-  rotation = (360 - rotation) % 360;
   switch (rotation) {
     case 90:
       SetCaptureRotation(kCameraRotate90);

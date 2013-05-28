@@ -67,7 +67,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Attr)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Attr)
-  nsINode::Trace(tmp, aCallback, aClosure);
+  nsINode::Trace(tmp, aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Attr)
@@ -369,12 +369,6 @@ Attr::IndexOf(const nsINode* aPossibleChild) const
 nsresult
 Attr::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                               bool aNotify)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-Attr::AppendChildTo(nsIContent* aKid, bool aNotify)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

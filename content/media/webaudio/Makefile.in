@@ -15,31 +15,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
 endif # !_MSC_VER
 
-CPPSRCS := \
-  AnalyserNode.cpp \
-  AudioBuffer.cpp \
-  AudioBufferSourceNode.cpp \
-  AudioContext.cpp \
-  AudioDestinationNode.cpp \
-  AudioListener.cpp \
-  AudioNode.cpp \
-  AudioParam.cpp \
-  AudioProcessingEvent.cpp \
-  BiquadFilterNode.cpp \
-  ChannelMergerNode.cpp \
-  ChannelSplitterNode.cpp \
-  DelayNode.cpp \
-  DynamicsCompressorNode.cpp \
-  EnableWebAudioCheck.cpp \
-  GainNode.cpp \
-  MediaBufferDecoder.cpp \
-  PannerNode.cpp \
-  ScriptProcessorNode.cpp \
-  ThreeDPoint.cpp \
-  WaveShaperNode.cpp \
-  WebAudioUtils.cpp \
-  $(NULL)
-
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/rules.mk

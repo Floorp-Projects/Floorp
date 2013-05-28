@@ -14,8 +14,6 @@ DEFFILE = $(srcdir)/crashinjectdll.def
 FORCE_SHARED_LIB = 1
 USE_STATIC_LIBS = 1
 
-CPPSRCS = crashinjectdll.cpp
-
 MOZ_GLUE_LDFLAGS =
 
 include $(topsrcdir)/config/rules.mk

@@ -7,9 +7,7 @@ ac_add_options --enable-official-branding
 # Avoid dependency on libstdc++ 4.5
 ac_add_options --enable-stdcxx-compat
 
-# PGO
 mk_add_options MOZ_PGO=1
-mk_add_options PROFILE_GEN_SCRIPT='EXTRA_TEST_ARGS=10 $(MAKE) -C $(MOZ_OBJDIR) pgo-profile-run'
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1

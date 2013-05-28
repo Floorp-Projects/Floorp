@@ -36,6 +36,7 @@
 #include "nsIContentViewer.h"
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIScriptChannel.h"
@@ -258,8 +259,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
     JS::Rooted<JS::Value> v (cx, JS::UndefinedValue());
     // Finally, we have everything needed to evaluate the expression.
-
-    JSAutoRequest ar(cx);
     if (useSandbox) {
         // We were asked to use a sandbox, or the channel owner isn't allowed
         // to execute in this context.  Evaluate the javascript URL in a
@@ -290,9 +289,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         // our current compartment. Because our current context doesn't necessarily
         // subsume that of the sandbox, we want to unwrap and enter the sandbox's
         // compartment. It's a shame that the APIs here are so clunkly. :-(
-        JS::Rooted<JSObject*> sandboxObj(cx);
-        rv = sandbox->GetJSObject(sandboxObj.address());
-        NS_ENSURE_SUCCESS(rv, rv);
+        JS::Rooted<JSObject*> sandboxObj(cx, sandbox->GetJSObject());
+        NS_ENSURE_STATE(sandboxObj);
         sandboxObj = js::UncheckedUnwrap(sandboxObj);
         JSAutoCompartment ac(cx, sandboxObj);
 

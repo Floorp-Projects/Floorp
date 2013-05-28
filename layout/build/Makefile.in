@@ -16,18 +16,13 @@ SHELL := ksh
 endif
 
 LIBRARY_NAME	= gklayout
+MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-
-CPPSRCS		= \
-		nsLayoutModule.cpp \
-		nsContentDLF.cpp \
-		nsLayoutStatics.cpp \
-		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \

@@ -218,9 +218,9 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
 
 
 //
-// Debug implementation of Mutex
+// Debug implementation of (OffTheBooks)Mutex
 void
-Mutex::Lock()
+OffTheBooksMutex::Lock()
 {
     CallStack callContext = CallStack();
 
@@ -230,7 +230,7 @@ Mutex::Lock()
 }
 
 void
-Mutex::Unlock()
+OffTheBooksMutex::Unlock()
 {
     Release();                  // protected by mLock
     PRStatus status = PR_Unlock(mLock);

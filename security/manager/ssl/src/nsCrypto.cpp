@@ -35,6 +35,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsDOMJSUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIRunnable.h"
@@ -1856,10 +1857,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   nrv = ncc->GetJSContext(&cx);
   NS_ENSURE_SUCCESS(nrv, nrv);
 
-  JS::RootedObject script_obj(cx);
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
-  JSAutoRequest ar(cx);
 
   /*
    * Get all of the parameters.
@@ -1921,8 +1919,8 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
                         NS_GET_IID(nsIDOMCrypto), getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(nrv, nrv);
 
-  nrv = holder->GetJSObject(script_obj.address());
-  NS_ENSURE_SUCCESS(nrv, nrv);
+  JS::RootedObject script_obj(cx, holder->GetJSObject());
+  NS_ENSURE_STATE(script_obj);
 
   //Put up some UI warning that someone is trying to 
   //escrow the private key.

@@ -21,6 +21,7 @@ VPATH       = \
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = layers
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
@@ -29,148 +30,12 @@ ifdef MOZ_DEBUG
 DEFINES += -DD3D_DEBUG_INFO
 endif
 
-CPPSRCS = \
-        BasicImages.cpp \
-        BasicLayerManager.cpp \
-        BasicCanvasLayer.cpp \
-        BasicColorLayer.cpp \
-        BasicCompositor.cpp \
-        BasicContainerLayer.cpp \
-        BasicImageLayer.cpp \
-        BasicLayersImpl.cpp \
-        BasicThebesLayer.cpp \
-        ClientCanvasLayer.cpp \
-        ClientColorLayer.cpp \
-        ClientContainerLayer.cpp \
-        ClientImageLayer.cpp \
-        ClientLayerManager.cpp \
-        ClientThebesLayer.cpp \
-        ClientTiledThebesLayer.cpp \
-        CompositableHost.cpp \
-        CompositableTransactionParent.cpp \
-		CopyableCanvasLayer.cpp \
-        ImageContainer.cpp \
-        Layers.cpp \
-        LayersLogging.cpp \
-        RenderTrace.cpp \
-        ReadbackProcessor.cpp \
-        ThebesLayerBuffer.cpp \
-        CanvasLayerOGL.cpp \
-        ColorLayerOGL.cpp \
-        ContainerLayerOGL.cpp \
-        ImageLayerOGL.cpp \
-        LayerManagerOGL.cpp \
-        ThebesLayerOGL.cpp \
-        LayerManagerOGLProgram.cpp \
-        CanvasLayerComposite.cpp \
-        ColorLayerComposite.cpp \
-        ContainerLayerComposite.cpp \
-        ImageLayerComposite.cpp \
-        LayerManagerComposite.cpp \
-        ThebesLayerComposite.cpp \
-        LayerSorter.cpp \
-        LayerTreeInvalidation.cpp \
-        ImageLayers.cpp \
-        TexturePoolOGL.cpp \
-        $(NULL)
-
 GTEST_CPPSRCS = \
         TestTiledLayerBuffer.cpp \
         $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += \
-        D3D9SurfaceImage.cpp \
-        $(NULL)
-ifdef MOZ_ENABLE_D3D9_LAYER
-CPPSRCS += \
-        LayerManagerD3D9.cpp \
-        ThebesLayerD3D9.cpp \
-        ContainerLayerD3D9.cpp \
-        ImageLayerD3D9.cpp \
-        ColorLayerD3D9.cpp \
-        CanvasLayerD3D9.cpp \
-        DeviceManagerD3D9.cpp \
-        Nv3DVUtils.cpp \
-        $(NULL)
-endif
-ifdef MOZ_ENABLE_D3D10_LAYER
-CPPSRCS += \
-        CanvasLayerD3D10.cpp \
-        ColorLayerD3D10.cpp \
-        CompositorD3D11.cpp \
-        ContainerLayerD3D10.cpp \
-        ImageLayerD3D10.cpp \
-        LayerManagerD3D10.cpp \
-        ReadbackManagerD3D10.cpp \
-        ShadowLayerUtilsD3D10.cpp \
-        TextureD3D11.cpp \
-        ThebesLayerD3D10.cpp \
-        $(NULL)
-endif
-endif
-
-CPPSRCS += \
-        AsyncCompositionManager.cpp \
-        AsyncPanZoomController.cpp \
-        Axis.cpp \
-        CanvasClient.cpp \
-        CompositableClient.cpp \
-        Compositor.cpp \
-        CompositorOGL.cpp \
-        CompositorCocoaWidgetHelper.cpp \
-        CompositorChild.cpp \
-        CompositorParent.cpp \
-        ContentClient.cpp \
-        ContentHost.cpp \
-        Effects.cpp \
-        GestureEventListener.cpp \
-        ImageBridgeChild.cpp \
-        ImageBridgeParent.cpp \
-        ShadowLayers.cpp \
-        ShadowLayerChild.cpp \
-        ShadowLayerParent.cpp \
-        LayerTransactionChild.cpp \
-        LayerTransactionParent.cpp \
-        SharedPlanarYCbCrImage.cpp \
-        ShmemYCbCrImage.cpp \
-        SharedRGBImage.cpp \
-        TaskThrottler.cpp \
-        ImageClient.cpp \
-        ImageHost.cpp \
-        ISurfaceAllocator.cpp \
-        TextureClient.cpp \
-        TextureClientOGL.cpp \
-        TextureHost.cpp \
-        TextureHostOGL.cpp \
-        TiledContentClient.cpp \
-        TiledContentHost.cpp \
-        $(NULL)
-
-ifdef MOZ_X11 #{
-CPPSRCS += ShadowLayerUtilsX11.cpp
-endif #}
-
 ifdef MOZ_ENABLE_D3D10_LAYER
 DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CPPSRCS += \
-  ShadowLayerUtilsMac.cpp \
-  GLManager.cpp \
-  $(NULL)
-endif
-
-# NB: Gralloc is available on other platforms that use the android GL
-# libraries, but only Gonk is able to use it reliably because Gecko
-# has full system permissions there.
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-CPPSRCS += \
-        ShadowLayerUtilsGralloc.cpp \
-        GrallocImages.cpp \
-        GonkIOSurfaceImage.cpp \
-        $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk

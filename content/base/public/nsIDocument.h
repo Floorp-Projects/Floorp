@@ -2096,6 +2096,16 @@ public:
   already_AddRefed<nsIDOMTouchList>
     CreateTouchList(const mozilla::dom::Sequence<mozilla::dom::OwningNonNull<mozilla::dom::Touch> >& aTouches);
 
+  void SetStyleSheetChangeEventsEnabled(bool aValue)
+  {
+    mStyleSheetChangeEventsEnabled = aValue;
+  }
+
+  bool StyleSheetChangeEventsEnabled() const
+  {
+    return mStyleSheetChangeEventsEnabled;
+  }
+
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
 
   virtual JSObject* WrapObject(JSContext *aCx,
@@ -2298,6 +2308,9 @@ protected:
   bool mHaveInputEncoding;
 
   bool mHasHadDefaultView;
+
+  // Whether style sheet change events will be dispatched for this document
+  bool mStyleSheetChangeEventsEnabled;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the

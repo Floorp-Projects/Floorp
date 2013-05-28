@@ -12,18 +12,10 @@ FAIL_ON_WARNINGS = 1
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = nkftp_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
-
-CPPSRCS = \
-  nsFtpProtocolHandler.cpp \
-  nsFTPChannel.cpp \
-  nsFtpConnectionThread.cpp \
-  nsFtpControlConnection.cpp \
-  FTPChannelParent.cpp \
-  FTPChannelChild.cpp \
-  $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \

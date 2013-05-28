@@ -11,6 +11,7 @@
 
 #include "nsNPAPIPlugin.h"
 #include "mozilla/unused.h"
+#include "nsCxPusher.h"
 
 using namespace mozilla::plugins;
 using namespace mozilla::plugins::parent;
@@ -1040,9 +1041,7 @@ PluginScriptableObjectParent::AnswerEnumerate(InfallibleTArray<PPluginIdentifier
 
   aProperties->SetCapacity(idCount);
 
-  JSContext* cx = GetJSContext(instance->GetNPP());
-  JSAutoRequest ar(cx);
-
+  mozilla::AutoSafeJSContext cx;
   for (uint32_t index = 0; index < idCount; index++) {
     // Because of GC hazards, all identifiers returned from enumerate
     // must be made permanent.

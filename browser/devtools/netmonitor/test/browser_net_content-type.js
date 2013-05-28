@@ -21,7 +21,7 @@ function test() {
           statusText: "OK",
           type: "xml",
           fullMimeType: "text/xml; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.04),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
@@ -30,7 +30,7 @@ function test() {
           statusText: "OK",
           type: "css",
           fullMimeType: "text/css; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(2),
@@ -39,7 +39,7 @@ function test() {
           statusText: "OK",
           type: "js",
           fullMimeType: "application/javascript; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(3),
@@ -48,7 +48,7 @@ function test() {
           statusText: "OK",
           type: "json",
           fullMimeType: "application/json; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(4),
@@ -57,7 +57,7 @@ function test() {
           statusText: "Not Found",
           type: "html",
           fullMimeType: "text/html; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(5),
@@ -66,7 +66,7 @@ function test() {
           statusText: "OK",
           type: "png",
           fullMimeType: "image/png",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.75),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.75),
           time: true
         });
 

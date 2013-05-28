@@ -1169,6 +1169,23 @@ StackBaseShape::match(UnownedBaseShape *key, const StackBaseShape *lookup)
         && key->rawSetter == lookup->rawSetter;
 }
 
+void
+StackBaseShape::AutoRooter::trace(JSTracer *trc)
+{
+    if (base->parent) {
+        gc::MarkObjectRoot(trc, (JSObject**)&base->parent,
+                           "StackBaseShape::AutoRooter parent");
+    }
+    if ((base->flags & BaseShape::HAS_GETTER_OBJECT) && base->rawGetter) {
+        gc::MarkObjectRoot(trc, (JSObject**)&base->rawGetter,
+                           "StackBaseShape::AutoRooter getter");
+    }
+    if ((base->flags & BaseShape::HAS_SETTER_OBJECT) && base->rawSetter) {
+        gc::MarkObjectRoot(trc, (JSObject**)&base->rawSetter,
+                           "StackBaseShape::AutoRooter setter");
+    }
+}
+
 /* static */ UnownedBaseShape*
 BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
 {
@@ -1413,3 +1430,11 @@ JSCompartment::sweepInitialShapeTable()
     }
 }
 
+void
+AutoRooterGetterSetter::Inner::trace(JSTracer *trc)
+{
+    if ((attrs & JSPROP_GETTER) && *pgetter)
+        gc::MarkObjectRoot(trc, (JSObject**) pgetter, "AutoRooterGetterSetter getter");
+    if ((attrs & JSPROP_SETTER) && *psetter)
+        gc::MarkObjectRoot(trc, (JSObject**) psetter, "AutoRooterGetterSetter setter");
+}

@@ -9,6 +9,7 @@ XPIDL_SOURCES += [
     'nsIDOMICCCardLockErrorEvent.idl',
     'nsIDOMIccManager.idl',
     'nsIIccProvider.idl',
+    'nsINavigatorIccManager.idl',
 ]
 
 XPIDL_MODULE = 'dom_icc'

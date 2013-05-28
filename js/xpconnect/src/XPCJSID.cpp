@@ -725,7 +725,7 @@ GetWrapperObject(MutableHandleObject obj)
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
     ccxp->GetCalleeWrapper(getter_AddRefs(wrapper));
-    wrapper->GetJSObject(obj.address());
+    obj.set(wrapper->GetJSObject());
 }
 
 /* nsISupports createInstance (); */
@@ -819,7 +819,9 @@ nsJSCID::GetService(const JS::Value& iidval, JSContext* cx,
     RootedObject instJSObj(cx);
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = nsXPConnect::GetXPConnect()->WrapNative(cx, obj, srvc, *iid, getter_AddRefs(holder));
-    if (NS_FAILED(rv) || !holder || NS_FAILED(holder->GetJSObject(instJSObj.address())))
+    if (NS_FAILED(rv) || !holder ||
+        // Assign, not compare
+        !(instJSObj = holder->GetJSObject()))
         return NS_ERROR_XPC_CANT_CREATE_WN;
 
     *retval = OBJECT_TO_JSVAL(instJSObj);
@@ -901,7 +903,7 @@ xpc_NewIDObject(JSContext *cx, HandleObject jsobj, const nsID& aID)
                                           NS_GET_IID(nsIJSID),
                                           getter_AddRefs(holder));
             if (NS_SUCCEEDED(rv) && holder) {
-                holder->GetJSObject(obj.address());
+                obj = holder->GetJSObject();
             }
         }
     }

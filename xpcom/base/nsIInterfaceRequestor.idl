@@ -27,9 +27,8 @@ interface nsIInterfaceRequestor : nsISupports
     * @param uuid The IID of the interface being requested.
     * @param result [out] The interface pointer to be filled in if
     *               the interface is accessible.
-    * @return NS_OK - interface was successfully returned.
-    *         NS_NOINTERFACE - interface not accessible.
-    *         NS_ERROR* - method failure.
+    * @throws NS_NOINTERFACE - interface not accessible.
+    * @throws NS_ERROR* - method failure.
     */
 	void getInterface(in nsIIDRef uuid, 
                       [iid_is(uuid),retval] out nsQIResult result);

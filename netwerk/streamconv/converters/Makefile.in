@@ -11,35 +11,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= nkcnvts_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
-
-
-CPPSRCS		= \
-		mozTXTToHTMLConv.cpp \
-		nsUnknownDecoder.cpp \
-		nsHTTPCompressConv.cpp \
-		nsTXTToHTMLConv.cpp \
-		nsDirIndex.cpp \
-		nsDirIndexParser.cpp \
-		nsIndexedToHTML.cpp \
-		nsMultiMixedConv.cpp \
-		$(NULL)
-
-# only include FTP directory listing support if the FTP
-# protocol is being built.
-ifneq (,$(filter ftp,$(NECKO_PROTOCOLS)))
-CPPSRCS += \
-		ParseFTPList.cpp \
-		nsFTPDirListingConv.cpp \
-        $(NULL)
-endif
-
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-		nsBinHexDecoder.cpp \
-		$(NULL)
-endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

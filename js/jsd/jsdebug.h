@@ -158,6 +158,12 @@ extern JSD_PUBLIC_API(JSContext*)
 JSD_GetDefaultJSContext(JSDContext* jsdc);
 
 /*
+* Returns the default JSD global associated with a given JSDContext.
+*/
+extern JSD_PUBLIC_API(JSObject*)
+JSD_GetDefaultGlobal(JSDContext* jsdc);
+
+/*
 * Returns a JSRuntime this context is associated with
 */
 extern JSD_PUBLIC_API(JSRuntime*)

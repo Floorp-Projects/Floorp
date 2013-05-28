@@ -11,6 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xpcomio_s
+MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API = 1
 LIBXUL_LIBRARY  = 1
 
@@ -21,46 +22,11 @@ MODULE_OPTIMIZE_FLAGS = $(MOZ_OPTIMIZE_FLAGS) -fno-strict-aliasing
 endif
 endif
 
-CPPSRCS		= \
-		Base64.cpp \
-		nsAnonymousTemporaryFile.cpp \
-		nsAppFileLocationProvider.cpp \
-		nsBinaryStream.cpp \
-		nsDirectoryService.cpp \
-		nsEscape.cpp \
-		nsInputStreamTee.cpp \
-		nsLinebreakConverter.cpp \
-		nsLocalFileCommon.cpp \
-		nsMultiplexInputStream.cpp \
-		nsNativeCharsetUtils.cpp \
-		nsPipe3.cpp \
-		nsStreamUtils.cpp \
-		nsScriptableInputStream.cpp \
-		nsScriptableBase64Encoder.cpp \
-		nsSegmentedBuffer.cpp \
-		nsStorageStream.cpp \
-		nsStringStream.cpp \
-		nsUnicharInputStream.cpp \
-		nsIOUtil.cpp \
-		nsWildCard.cpp \
-		SpecialSystemDirectory.cpp \
-		$(NULL)
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS		+= \
 		CocoaFileUtils.mm \
 		$(NULL)
 endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CPPSRCS		+= nsLocalFileOS2.cpp
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS		+= nsLocalFileWin.cpp
-else
-CPPSRCS		+= nsLocalFileUnix.cpp
-endif # windows
-endif # OS2
 
 SDK_HEADERS =  \
 		nsDirectoryServiceDefs.h \

@@ -34,17 +34,10 @@ CreateElementTxn::CreateElementTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CreateElementTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNewNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRefNode)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CreateElementTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNewNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRefNode)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_3(CreateElementTxn, EditTxn,
+                                     mParent,
+                                     mNewNode,
+                                     mRefNode)
 
 NS_IMPL_ADDREF_INHERITED(CreateElementTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(CreateElementTxn, EditTxn)

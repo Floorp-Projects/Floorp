@@ -95,6 +95,13 @@ toolbarpaletteitem[type="spacer"] {
 
 /* ..... drag and drop feedback ..... */
 
+toolbarpaletteitem[place="toolbar"] {
+  margin-left: -2px;
+  margin-right: -2px;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+}
+
 toolbarpaletteitem[dragover="left"] {
   border-left-color: #000000;
 }

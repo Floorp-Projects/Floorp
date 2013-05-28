@@ -84,12 +84,27 @@ function test() {
           message: '',
           args: {
             file: { value: TEST_URI, message: '' },
-            line: { value: 10 }, // would like to use line0, but see above
-                                 // if this proves to be too fragile, disable
+            line: { value: 10 }
           }
         },
         exec: {
-          output: '',
+          output: 'Added breakpoint',
+          completed: false
+        },
+      },
+      {
+        setup: 'break add line http://example.com/browser/browser/devtools/debugger/test/browser_dbg_cmd_break.html 13',
+        check: {
+          hints: '',
+          status: 'VALID',
+          message: '',
+          args: {
+            file: { value: TEST_URI, message: '' },
+            line: { value: 13 }
+          }
+        },
+        exec: {
+          output: 'Added breakpoint',
           completed: false
         },
       },
@@ -102,12 +117,17 @@ function test() {
           status: 'VALID'
         },
         exec: {
-          output: ''
+          output: [
+            /Source/, /Remove/,
+            /cmd_break\.html:10/,
+            /cmd_break\.html:13/
+          ]
         },
       },
       {
         name: 'cleanup',
         setup: function() {
+          // a.k.a "return client.activeThread.resume();"
           var deferred = Promise.defer();
           client.activeThread.resume(function() {
             deferred.resolve();
@@ -116,35 +136,84 @@ function test() {
         },
       },
       {
-        setup: 'break del 9',
+        setup: 'break del 0',
         check: {
-          input:  'break del 9',
-          hints:             '',
-          markup: 'VVVVVVVVVVE',
+          input:  'break del 0',
+          hints:             ' -> browser_dbg_cmd_break.html:10',
+          markup: 'VVVVVVVVVVI',
           status: 'ERROR',
           args: {
-            breakid: {
-              status: 'ERROR',
-              message: '9 is greater than maximum allowed: 0.'
+            breakpoint: {
+              status: 'INCOMPLETE',
+              message: ''
             },
           }
         },
       },
       {
-        setup: 'break del 0',
+        setup: 'break del browser_dbg_cmd_break.html:10',
         check: {
-          input:  'break del 0',
-          hints:             '',
-          markup: 'VVVVVVVVVVV',
+          input:  'break del browser_dbg_cmd_break.html:10',
+          hints:                                         '',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
           status: 'VALID',
           args: {
-            breakid: { value: 0 },
+            breakpoint: { arg: ' browser_dbg_cmd_break.html:10' },
           }
         },
         exec: {
-          output: '',
+          output: 'Breakpoint removed',
           completed: false
         },
+      },
+      {
+        setup: 'break list',
+        check: {
+          input:  'break list',
+          hints:            '',
+          markup: 'VVVVVVVVVV',
+          status: 'VALID'
+        },
+        exec: {
+          output: [
+            /Source/, /Remove/,
+            /browser_dbg_cmd_break\.html:13/
+          ]
+        },
+      },
+      {
+        setup: 'break del browser_dbg_cmd_break.html:13',
+        check: {
+          input:  'break del browser_dbg_cmd_break.html:13',
+          hints:                                         '',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          status: 'VALID',
+          args: {
+            breakpoint: { arg: ' browser_dbg_cmd_break.html:13' },
+          }
+        },
+        exec: {
+          output: 'Breakpoint removed',
+          completed: false
+        },
+      },
+      {
+        setup: 'break list',
+        check: {
+          input:  'break list',
+          hints:            '',
+          markup: 'VVVVVVVVVV',
+          status: 'VALID'
+        },
+        exec: {
+          output: 'No breakpoints set'
+        },
+        post: function() {
+          client = undefined;
+
+          let toolbox = gDevTools.getToolbox(options.target);
+          return toolbox.destroy();
+        }
       },
     ]);
   }).then(finish);

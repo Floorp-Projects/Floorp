@@ -9,23 +9,26 @@
 %define forward_width 22px
 %define forward_spacing 12px
 
-/* Sliding Toolbar/Tab Tray ------------------------------------------------- */
+/* Progress meter ------------------------------------------------- */
 
-#tray {
-  transition: transform @metro_animation_duration@ @metro_animation_easing@;
-  transform: translateY(-@tabs_height@);
-  width: 100%;
-}
-
-#progress-control {
+#progress-container {
   display: block;
   position: absolute;
   top: -@progress_height@;
   height: @progress_height@;
-  max-height: @progress_height@;
-  background: linear-gradient(to right,  @progress_start_color@,  @progress_end_color@);
+  width: 100%;
+  background-color: hsla(210,5%,80%,1);
+  box-shadow: 0 1px 0 hsla(210,5%,50%,.1) inset;
   -moz-user-focus: ignore;
+}
+
+#progress-control {
+  display: block;
+  height: @progress_height@;
+  background-image: -moz-linear-gradient(left, hsla(200,100%,83%,.5), hsla(200,100%,83%,0)), -moz-linear-gradient(top, #1ab2ff, #0091ff);
+  border-right: 1px solid #0082e5;
   transition: width .3s ease-in;
+  -moz-user-focus: ignore;
 }
 
 #progress-control:-moz-dir(rtl) {
@@ -37,9 +40,15 @@
   transition: width .3s ease-in, .5s opacity ease-in;
 }
 
-/* in non-tabsonly mode the navigation bar and tab tray float over content. In
-   tabsonly mode they are always visible and offset content. */
-#tray:not([tabsonly]) {
+/* Sliding Toolbar/Tab Tray ------------------------------------------------- */
+
+#tray {
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
+  transform: translateY(-@tabs_height@);
+  width: 100%;
+}
+
+#tray {
   position: fixed;
 }
 
@@ -133,16 +142,16 @@
   }
 }
 
-#tray:not([tabsonly]) .documenttab-container {
+.documenttab-container {
   animation: open-documenttab 0.4s ease-out;
 }
 
-#tray:not([tabsonly]) documenttab[closing] > .documenttab-container {
+documenttab[closing] > .documenttab-container {
   animation: close-documenttab 0.4s ease-out;
   animation-fill-mode: forwards;
 }
 
-#tray:not([tabsonly]) .documenttab-favicon {
+.documenttab-favicon {
   visibility: collapse;
 }
 
@@ -192,87 +201,6 @@ documenttab[selected] .documenttab-selection {
   display: none;
 }
 
-#tray[tabsonly] {
-  transform: none !important;
-}
-
-#tray[tabsonly] #tabs {
-  -moz-padding-start: @metro_spacing_small@;
-}
-
-#tray[tabsonly] #tabs-controls {
-  -moz-box-align: center;
-  -moz-box-orient: horizontal;
-  -moz-box-pack: end;
-  margin: 0;
-}
-
-#tray[tabsonly] #tabs-controls toolbarbutton {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-#tray[tabsonly] documenttab {
-  height: @toolbar_height@;
-  margin: 0 -@tab_compression@;
-}
-
-#tray[tabsonly] documenttab:first-child {
-  -moz-margin-start: 0;
-}
-
-#tray[tabsonly] documenttab:last-child {
-  -moz-margin-end: 0;
-}
-
-#tray[tabsonly] .documenttab-thumbnail,
-#tray[tabsonly] .documenttab-selection,
-#tray[tabsonly] .documenttab-crop {
-  visibility: collapse;
-}
-
-#tray[tabsonly] .documenttab-container {
-  display: -moz-box;
-  -moz-box-orient: horizontal;
-  -moz-box-align: center;
-  padding: 0 @tab_spacing@;
-}
-
-#tray[tabsonly] .documenttab-favicon {
-  -moz-margin-start: @metro_spacing_normal@;
-  -moz-margin-end: @metro_spacing_snormal@;
-}
-
-#tray[tabsonly] .documenttab-title {
-  padding: 0;
-  margin: 0;
-  height: auto;
-  background: 0 none;
-  opacity: 1;
-  box-shadow: none;
-  width: @tab_inner_width@;
-}
-
-#tray[tabsonly] .documenttab-close {
-  list-style-image: url("chrome://browser/skin/images/closetab-tab.png");
-  position: relative;
-  padding: 0 !important;
-  z-index: 1;
-}
-
-#tray[tabsonly] documenttab[selected=true] {
-  background-color: @panel_light_color@;
-  background-image: url("chrome://browser/skin/images/tab-selection-left.png"),
-                    url("chrome://browser/skin/images/tab-selection-right.png"),
-                    @panel_light_background@;
-  background-position: left top, right top, center center;
-  background-repeat: no-repeat, no-repeat, repeat;
-}
-
-#tray[tabsonly] documenttab[selected=true] .documenttab-close {
-  list-style-image: url("chrome://browser/skin/images/closetab-tabselected.png");
-}
-
 #page,
 .selection-overlay {
   -moz-stack-sizing: ignore;
@@ -288,10 +216,6 @@ documenttab[selected] .documenttab-selection {
 
 .selection-overlay-hidden {
   display: none;
-}
-
-#tray[tabsonly] documenttab[selected=true] .documenttab-title {
-  color: #000;
 }
 
 #tabs-controls {
@@ -363,15 +287,15 @@ documenttab[selected] .documenttab-selection {
 #identity-icon {
   margin: 0;
   padding: 0 @metro_spacing_snormal@;
-  list-style-image: url(chrome://browser/skin/images/identity-icons-generic.png);
+  list-style-image: url("chrome://browser/skin/images/identity-icons-generic.png");
 }
 
-#identity-box[mode="verifiedDomain"] > #identity-icon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/images/identity-icons-https.png);
+#identity-box-inner.verifiedDomain > #identity-icon {
+  list-style-image: url("chrome://browser/skin/images/identity-icons-https.png");
 }
- 
-#identity-box[mode="verifiedIdentity"] > #identity-icon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
+
+#identity-box-inner.verifiedIdentity > #identity-icon {
+  list-style-image: url("chrome://browser/skin/images/identity-icons-https-ev.png");
 }
 
 /* Main URL textbox */
@@ -394,25 +318,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #toolbar[mode="loading"] > #tool-reload,
-#toolbar:-moz-any([mode="edit"], [mode="view"]) > #tool-stop {
-  visibility: collapse;
-}
-
-/* Hide the tab toggle if we're showing classic tabs or we're snap-viewed. */
-#toolbar[viewstate="snapped"],
-#tray[tabsonly] #toolbar {
-  background: @panel_light_color@ @panel_light_background@;
-  -moz-padding-end: 0;
-}
-
-#toolbar[viewstate="snapped"] {
-  -moz-padding-end: 0;
-}
-
-#toolbar[viewstate="snapped"] > #urlbar-container {
-  -moz-margin-end: 0;
-}
-
+#toolbar:-moz-any([mode="edit"], [mode="view"]) > #tool-stop,
 #toolbar[viewstate="snapped"] > #tool-stop ~ toolbarbutton {
   visibility: collapse;
 }
@@ -424,7 +330,7 @@ appbar {
   position: fixed;
   bottom: 0;
   width: 100%;
-  transform: translateY(@toolbar_height@);
+  transform: translateY(100%);
   transition: transform @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
 }
@@ -451,18 +357,18 @@ appbar > toolbar > toolbarbutton[disabled] {
 }
 
 #appbar[startpage],
-#appbar[visible] {
+appbar[visible] {
   transform: none;
 }
 
-#appbar > toolbar > toolbarbutton {
+appbar > toolbar > toolbarbutton {
   list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
   -moz-image-region: rect(0px, 200px, 40px, 160px); /* Gear icon is default. */
 }
-#appbar > toolbar > toolbarbutton:hover {
+appbar > toolbar > toolbarbutton:hover {
   -moz-image-region: rect(40px, 200px, 80px, 160px);
 }
-#appbar > toolbar > toolbarbutton:active {
+appbar > toolbar > toolbarbutton:active {
   -moz-image-region: rect(80px, 200px, 120px, 160px);
 }
 
@@ -530,12 +436,6 @@ appbar > toolbar > toolbarbutton[disabled] {
 #star-button:active,
 #star-button[checked] {
   -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
-}
-
-/* Tile-selection-Specific */
-#appbar[contextual] > #toolbar,
-#appbar:not([contextual]) > #contextualactions-tray {
-  visibility: collapse;
 }
 
 #contextualactions-tray {
@@ -981,34 +881,45 @@ setting[type="radio"] > vbox {
   background-position: left 6px center;
 }
 
+#stack[fullscreen] > .overlay-button,
+#appbar[visible] ~ .overlay-button,
 .overlay-button[disabled] {
   box-shadow: none;
+  visibility: collapse;
 }
 
+#stack[fullscreen] > #overlay-back:-moz-locale-dir(ltr),
+#stack[fullscreen] > #overlay-plus:-moz-locale-dir(rtl),
+#appbar[visible] ~ #overlay-back:-moz-locale-dir(ltr),
+#appbar[visible] ~ #overlay-plus:-moz-locale-dir(rtl),
 #overlay-back[disabled]:-moz-locale-dir(ltr),
 #overlay-plus[disabled]:-moz-locale-dir(rtl) {
   transform: translateX(-60px);
 }
 
+#stack[fullscreen] > #overlay-plus:-moz-locale-dir(ltr),
+#stack[fullscreen] > #overlay-back:-moz-locale-dir(rtl),
+#appbar[visible] ~ #overlay-plus:-moz-locale-dir(ltr),
+#appbar[visible] ~ #overlay-back:-moz-locale-dir(rtl),
 #overlay-plus[disabled]:-moz-locale-dir(ltr),
 #overlay-back[disabled]:-moz-locale-dir(rtl) {
   transform: translateX(60px);
 }
 
-.overlay-button:not([disabled]):hover {
+.overlay-button:hover {
   background-color: hsla(210,30%,10%,.4);
   background-size: 90px;
   border-color: hsla(0,0%,100%,.9);
 }
 
-#overlay-back:not([disabled]):-moz-locale-dir(ltr):hover,
-#overlay-plus:not([disabled]):-moz-locale-dir(rtl):hover {
+#overlay-back:-moz-locale-dir(ltr):hover,
+#overlay-plus:-moz-locale-dir(rtl):hover {
   background-position: right 12px center;
   transform: translateX(40px) scale(1.2);
 }
 
-#overlay-plus:not([disabled]):-moz-locale-dir(ltr):hover,
-#overlay-back:not([disabled]):-moz-locale-dir(rtl):hover {
+#overlay-plus:-moz-locale-dir(ltr):hover,
+#overlay-back:-moz-locale-dir(rtl):hover {
   background-position: left 12px center;
   transform: translateX(-40px) scale(1.2);
 }

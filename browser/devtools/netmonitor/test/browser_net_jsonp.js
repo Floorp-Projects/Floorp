@@ -21,7 +21,7 @@ function test() {
           statusText: "OK",
           type: "json",
           fullMimeType: "text/json; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.04),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
           time: true
         });
 

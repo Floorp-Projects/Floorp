@@ -34,7 +34,9 @@ public:
   enum Parameters {
     GAIN
   };
-  void SetTimelineParameter(uint32_t aIndex, const AudioParamTimeline& aValue) MOZ_OVERRIDE
+  void SetTimelineParameter(uint32_t aIndex,
+                            const AudioParamTimeline& aValue,
+                            TrackRate aSampleRate) MOZ_OVERRIDE
   {
     switch (aIndex) {
     case GAIN:

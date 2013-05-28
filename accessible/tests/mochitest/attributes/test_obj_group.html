@@ -68,7 +68,7 @@
       testGroupAttrs("li9", 3, 3);
 
       //////////////////////////////////////////////////////////////////////////
-      // ARIA list (nested lists)
+      // ARIA list (nested lists: list -> listitem -> list -> listitem)
       testGroupAttrs("li10", 1, 3, 1);
       testGroupAttrs("li11", 2, 3, 1);
       testGroupAttrs("li12", 3, 3, 1);
@@ -76,6 +76,15 @@
       testGroupAttrs("n_li10", 1, 3, 2);
       testGroupAttrs("n_li11", 2, 3, 2);
       testGroupAttrs("n_li12", 3, 3, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA list (nested lists: list -> listitem -> group -> listitem)
+      testGroupAttrs("lgt_li1", 1, 2, 1);
+      testGroupAttrs("lgt_li1_nli1", 1, 2, 2);
+      testGroupAttrs("lgt_li1_nli2", 2, 2, 2);
+      testGroupAttrs("lgt_li2", 2, 2, 1);
+      testGroupAttrs("lgt_li2_nli1", 1, 2, 2);
+      testGroupAttrs("lgt_li2_nli2", 2, 2, 2);
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA menu (menuitem, separator, menuitemradio and menuitemcheckbox)
@@ -109,6 +118,24 @@
       testGroupAttrs("ti6", 2, 3, 2);
       testGroupAttrs("ti7", 3, 3, 2);
       testGroupAttrs("ti8", 3, 3, 1);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA tree (tree -> treeitem -> group -> treeitem)
+      testGroupAttrs("tree2_ti1", 1, 2, 1);
+      testGroupAttrs("tree2_ti1a", 1, 2, 2);
+      testGroupAttrs("tree2_ti1b", 2, 2, 2);
+      testGroupAttrs("tree2_ti2", 2, 2, 1);
+      testGroupAttrs("tree2_ti2a", 1, 2, 2);
+      testGroupAttrs("tree2_ti2b", 2, 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA tree (tree -> treeitem, group -> treeitem)
+      testGroupAttrs("tree3_ti1", 1, 2, 1);
+      testGroupAttrs("tree3_ti1a", 1, 2, 2);
+      testGroupAttrs("tree3_ti1b", 2, 2, 2);
+      testGroupAttrs("tree3_ti2", 2, 2, 1);
+      testGroupAttrs("tree3_ti2a", 1, 2, 2);
+      testGroupAttrs("tree3_ti2b", 2, 2, 2);
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA grid
@@ -163,6 +190,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=468418"
      title="Expose level for nested lists in HTML">
     Mozilla Bug 468418
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=864224"
+     title="Support nested ARIA listitems structured by role='group'">
+    Bug 864224
   </a>
 
   <p id="display"></p>
@@ -228,6 +260,21 @@
     </span>
   </span>
 
+  <div role="list">
+    <div role="listitem" id="lgt_li1">Item 1
+      <div role="group">
+        <div role="listitem" id="lgt_li1_nli1">Item 1A</div>
+        <div role="listitem" id="lgt_li1_nli2">Item 1B</div>
+      </div>
+    </div>
+    <div role="listitem" id="lgt_li2">Item 2
+      <div role="group">
+        <div role="listitem" id="lgt_li2_nli1">Item 2A</div>
+        <div role="listitem" id="lgt_li2_nli2">Item 2B</div>
+      </div>
+    </div>
+  </div>
+
   <ul role="menubar">
     <li role="menuitem" aria-haspopup="true" id="menu_item1">File
       <ul role="menu">
@@ -282,6 +329,34 @@
       <td role="treeitem" aria-level="1" id="ti8">people</td>
     </tr>
   </table>
+
+  <ul role="tree">
+    <li role="treeitem" id="tree2_ti1">Item 1
+      <ul role="group">
+        <li role="treeitem" id="tree2_ti1a">Item 1A</li>
+        <li role="treeitem" id="tree2_ti1b">Item 1B</li>
+      </ul>
+    </li>
+    <li role="treeitem" id="tree2_ti2">Item 2
+      <ul role="group">
+        <li role="treeitem" id="tree2_ti2a">Item 2A</li>
+        <li role="treeitem" id="tree2_ti2b">Item 2B</li>
+      </ul>
+    </li>
+  </div>
+
+  <div role="tree">
+    <div role="treeitem" id="tree3_ti1">Item 1</div>
+    <div role="group">
+      <li role="treeitem" id="tree3_ti1a">Item 1A</li>
+      <li role="treeitem" id="tree3_ti1b">Item 1B</li>
+    </div>
+    <div role="treeitem" id="tree3_ti2">Item 2</div>
+    <div role="group">
+      <div role="treeitem" id="tree3_ti2a">Item 2A</div>
+      <div role="treeitem" id="tree3_ti2b">Item 2B</div>
+    </div>
+  </div>
 
   <table role="grid">
     <tr role="row" id="grid_row1">

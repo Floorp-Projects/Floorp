@@ -10,7 +10,6 @@
 
 #include "jsapi.h"
 #include "jswrapper.h"
-#include "WrapperFactory.h"
 
 class nsIPrincipal;
 
@@ -40,7 +39,7 @@ struct Opaque : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act) {
         return act == js::Wrapper::CALL;
     }
-    static bool deny(js::Wrapper::Action act) {
+    static bool deny(js::Wrapper::Action act, JSHandleId id) {
         return false;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl)
@@ -55,7 +54,7 @@ struct GentlyOpaque : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act) {
         return false;
     }
-    static bool deny(js::Wrapper::Action act) {
+    static bool deny(js::Wrapper::Action act, JSHandleId id) {
         return true;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl)
@@ -75,7 +74,10 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act) {
         return AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act);
     }
-    static bool deny(js::Wrapper::Action act) {
+    static bool deny(js::Wrapper::Action act, JSHandleId id) {
+        // Silently fail for enumerate-like operations.
+        if (act == js::Wrapper::GET && id == JS::JSID_VOIDHANDLE)
+            return true;
         return false;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl)
@@ -89,7 +91,7 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
 struct ExposedPropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act);
 
-    static bool deny(js::Wrapper::Action act) {
+    static bool deny(js::Wrapper::Action act, JSHandleId id) {
         // Fail silently for GETs.
         return act == js::Wrapper::GET;
     }
@@ -100,7 +102,7 @@ struct ExposedPropertiesOnly : public Policy {
 struct ComponentsObjectPolicy : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act);
 
-    static bool deny(js::Wrapper::Action act) {
+    static bool deny(js::Wrapper::Action act, JSHandleId id) {
         return false;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {

@@ -900,17 +900,16 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (mTextRendering != aOther.mTextRendering) {
-    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-    // May be needed for non-svg frames
-    NS_UpdateHint(hint, nsChangeHint_AllReflowHints);
-  }
-
   if (!EqualURIs(mMarkerEnd, aOther.mMarkerEnd) ||
       !EqualURIs(mMarkerMid, aOther.mMarkerMid) ||
       !EqualURIs(mMarkerStart, aOther.mMarkerStart)) {
-    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    // Markers currently contribute to nsSVGPathGeometryFrame::mRect,
+    // so we need a reflow as well as a repaint. No intrinsic sizes need
+    // to change, so nsChangeHint_NeedReflow is sufficient.
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+    NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     return hint;
   }
 
@@ -921,17 +920,33 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
         PaintURIChanged(mStroke, aOther.mStroke)) {
       NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
     }
-    // Nothing more to do, below we can only set "repaint"
+  }
+
+  // Stroke currently contributes to nsSVGPathGeometryFrame::mRect, so
+  // we need a reflow here. No intrinsic sizes need to change, so
+  // nsChangeHint_NeedReflow is sufficient.
+  // Note that stroke-dashoffset does not affect nsSVGPathGeometryFrame::mRect.
+  // text-anchor and text-rendering changes also require a reflow since they
+  // change frames' rects.
+  if (mStrokeWidth           != aOther.mStrokeWidth           ||
+      mStrokeMiterlimit      != aOther.mStrokeMiterlimit      ||
+      mStrokeLinecap         != aOther.mStrokeLinecap         ||
+      mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
+      mTextAnchor            != aOther.mTextAnchor            ||
+      mTextRendering         != aOther.mTextRendering) {
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+    NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     return hint;
   }
 
+  if (hint & nsChangeHint_RepaintFrame) {
+    return hint; // we don't add anything else below
+  }
+
   if ( mStrokeDashoffset      != aOther.mStrokeDashoffset      ||
-       mStrokeWidth           != aOther.mStrokeWidth           ||
-
        mFillOpacity           != aOther.mFillOpacity           ||
-       mStrokeMiterlimit      != aOther.mStrokeMiterlimit      ||
        mStrokeOpacity         != aOther.mStrokeOpacity         ||
-
        mClipRule              != aOther.mClipRule              ||
        mColorInterpolation    != aOther.mColorInterpolation    ||
        mColorInterpolationFilters != aOther.mColorInterpolationFilters ||
@@ -940,9 +955,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mPaintOrder            != aOther.mPaintOrder            ||
        mShapeRendering        != aOther.mShapeRendering        ||
        mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
-       mStrokeLinecap         != aOther.mStrokeLinecap         ||
-       mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
-       mTextAnchor            != aOther.mTextAnchor            ||
        mFillOpacitySource     != aOther.mFillOpacitySource     ||
        mStrokeOpacitySource   != aOther.mStrokeOpacitySource   ||
        mStrokeDasharrayFromObject != aOther.mStrokeDasharrayFromObject ||
@@ -1010,18 +1022,29 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
       !EqualURIs(mFilter, aOther.mFilter)     ||
       !EqualURIs(mMask, aOther.mMask)) {
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
-    NS_UpdateHint(hint, nsChangeHint_AllReflowHints);
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-  } else if (mDominantBaseline != aOther.mDominantBaseline) {
+  }
+
+  if (mDominantBaseline != aOther.mDominantBaseline) {
+    // XXXjwatt: why NS_STYLE_HINT_REFLOW? Isn't that excessive?
     NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
+  } else if (mVectorEffect  != aOther.mVectorEffect) {
+    // Stroke currently affects nsSVGPathGeometryFrame::mRect, and
+    // vector-effect affect stroke. As a result we need to reflow if
+    // vector-effect changes in order to have nsSVGPathGeometryFrame::
+    // ReflowSVG called to update its mRect. No intrinsic sizes need
+    // to change so nsChangeHint_NeedReflow is sufficient.
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+    NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   } else if (mStopColor     != aOther.mStopColor     ||
              mFloodColor    != aOther.mFloodColor    ||
              mLightingColor != aOther.mLightingColor ||
              mStopOpacity   != aOther.mStopOpacity   ||
              mFloodOpacity  != aOther.mFloodOpacity  ||
-             mVectorEffect  != aOther.mVectorEffect  ||
-             mMaskType      != aOther.mMaskType)
+             mMaskType      != aOther.mMaskType) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
 
   return hint;
 }
@@ -1092,11 +1115,8 @@ nsStylePosition::nsStylePosition(void)
   mHeight.SetAutoValue();
   mMinHeight.SetCoordValue(0);
   mMaxHeight.SetNoneValue();
-#ifdef MOZ_FLEXBOX
   mFlexBasis.SetAutoValue();
-#endif // MOZ_FLEXBOX
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
-#ifdef MOZ_FLEXBOX
   mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
   mAlignSelf = NS_STYLE_ALIGN_SELF_AUTO;
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
@@ -1104,7 +1124,6 @@ nsStylePosition::nsStylePosition(void)
   mOrder = NS_STYLE_ORDER_INITIAL;
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
-#endif // MOZ_FLEXBOX
   mZIndex.SetAutoValue();
 }
 
@@ -1129,7 +1148,6 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
-#ifdef MOZ_FLEXBOX
   // Properties that apply to flex items:
   // NOTE: Changes to "order" on a flex item may trigger some repositioning.
   // If we're in a multi-line flex container, it also may affect our size
@@ -1157,7 +1175,6 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   if (mJustifyContent != aOther.mJustifyContent) {
     NS_UpdateHint(hint, nsChangeHint_NeedReflow);
   }
-#endif // MOZ_FLEXBOX
 
   if (mHeight != aOther.mHeight ||
       mMinHeight != aOther.mMinHeight ||
@@ -2302,12 +2319,21 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
 
   if (mDirection != aOther.mDirection) {
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
-  } else if (mVisible != aOther.mVisible) {
-    if ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) ||
-        (NS_STYLE_VISIBILITY_COLLAPSE == aOther.mVisible)) {
-      NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
-    } else {
-      NS_UpdateHint(hint, NS_STYLE_HINT_VISUAL);
+  } else {
+    if (mVisible != aOther.mVisible) {
+      if ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) ||
+          (NS_STYLE_VISIBILITY_COLLAPSE == aOther.mVisible)) {
+        NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
+      } else {
+        NS_UpdateHint(hint, NS_STYLE_HINT_VISUAL);
+      }
+    }
+    if (mPointerEvents != aOther.mPointerEvents) {
+      // nsSVGPathGeometryFrame's mRect depends on stroke _and_ on the value
+      // of pointer-events. See nsSVGPathGeometryFrame::ReflowSVG's use of
+      // GetHitTestFlags. (Only a reflow, no visual change.)
+      NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+      NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
     }
   }
   return hint;

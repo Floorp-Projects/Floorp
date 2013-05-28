@@ -1522,8 +1522,6 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
 
     if (res && cx->typeInferenceEnabled()) {
         JSScript *script = callee->toFunction()->nonLazyScript();
-        if (!script->ensureHasTypes(cx))
-            return NULL;
         TypeScript::SetThis(cx, script, types::Type::ObjectType(res));
     }
 
@@ -1551,8 +1549,6 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
         JSObject::clear(cx, nobj);
 
         JSScript *calleeScript = callee->toFunction()->nonLazyScript();
-        if (!calleeScript->ensureHasTypes(cx))
-            return NULL;
         TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(nobj));
 
         return nobj;
@@ -4178,14 +4174,6 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
          * need to check name-access because this method is only supposed to be
          * called in assignment contexts.
          */
-        MOZ_ASSERT(*pc != JSOP_INCNAME);
-        MOZ_ASSERT(*pc != JSOP_INCGNAME);
-        MOZ_ASSERT(*pc != JSOP_NAMEINC);
-        MOZ_ASSERT(*pc != JSOP_GNAMEINC);
-        MOZ_ASSERT(*pc != JSOP_DECNAME);
-        MOZ_ASSERT(*pc != JSOP_DECGNAME);
-        MOZ_ASSERT(*pc != JSOP_NAMEDEC);
-        MOZ_ASSERT(*pc != JSOP_GNAMEDEC);
         MOZ_ASSERT(*pc != JSOP_NAME);
         MOZ_ASSERT(*pc != JSOP_GETGNAME);
         if (*pc != JSOP_SETNAME && *pc != JSOP_SETGNAME)

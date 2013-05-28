@@ -188,8 +188,6 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   JS::Rooted<JSFlatString*> expr(cx);
   JS::Rooted<JSObject*> funobj(cx);
 
-  JSAutoRequest ar(cx);
-
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 2 parameter",
                      *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);

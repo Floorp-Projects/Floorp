@@ -1,0 +1,9 @@
+<html><head><title>[HTML5] Crash [@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFoster] with document.write and removing stuff</title></head><body><a>
+<script>
+var x=document.getElementsByTagName("*"); 
+x[1].parentNode.removeChild(x[1]);
+x[2].parentNode.removeChild(x[2]);
+</script>
+<div>
+<script>document.write('<'+'script>document.removeChild(document.documentElement);<'+'/script>');</script>
+</a></body></html>

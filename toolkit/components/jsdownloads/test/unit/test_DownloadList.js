@@ -25,6 +25,19 @@ function promiseNewDownloadList() {
   return Downloads.getPublicDownloadList();
 }
 
+/**
+ * Returns a new private DownloadList object.
+ *
+ * @return {Promise}
+ * @resolves The newly created DownloadList object.
+ * @rejects JavaScript exception.
+ */
+function promiseNewPrivateDownloadList() {
+  // Force the creation of a new public download list.
+  Downloads._privateDownloadList = null;
+  return Downloads.getPrivateDownloadList();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
@@ -35,8 +48,12 @@ add_task(function test_construction()
 {
   let downloadListOne = yield promiseNewDownloadList();
   let downloadListTwo = yield promiseNewDownloadList();
+  let privateDownloadListOne = yield promiseNewPrivateDownloadList();
+  let privateDownloadListTwo = yield promiseNewPrivateDownloadList();
 
   do_check_neq(downloadListOne, downloadListTwo);
+  do_check_neq(privateDownloadListOne, privateDownloadListTwo);
+  do_check_neq(downloadListOne, privateDownloadListOne);
 });
 
 /**

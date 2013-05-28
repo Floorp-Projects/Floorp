@@ -45,7 +45,7 @@ public:
 
         SetOriginServer(host, port);
     }
-    
+
    ~nsHttpConnectionInfo()
     {
         LOG(("Destroying nsHttpConnectionInfo @%x\n", this));
@@ -75,7 +75,7 @@ public:
     {
         SetOriginServer(nsDependentCString(host), port);
     }
-    
+
     // OK to treat this as an infalible allocation
     nsHttpConnectionInfo* Clone() const;
 
@@ -87,7 +87,7 @@ public:
     // Two connections are 'equal' if they end up talking the same
     // protocol to the same server. This is needed to properly manage
     // persistent connections to proxies
-    // Note that we don't care about transparent proxies - 
+    // Note that we don't care about transparent proxies -
     // it doesn't matter if we're talking via socks or not, since
     // a request will end up at the same host.
     bool Equals(const nsHttpConnectionInfo *info)
@@ -102,7 +102,7 @@ public:
     bool          UsingSSL() const       { return mUsingSSL; }
     bool          UsingConnect() const   { return mUsingConnect; }
     int32_t       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
-    void          SetAnonymous(bool anon)         
+    void          SetAnonymous(bool anon)
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
     bool          GetAnonymous() const   { return mHashKey.CharAt(2) == 'A'; }
     void          SetPrivate(bool priv)  { mHashKey.SetCharAt(priv ? 'P' : '.', 3); }

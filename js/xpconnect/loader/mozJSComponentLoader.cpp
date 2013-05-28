@@ -58,6 +58,7 @@
 #include "xpcpublic.h"
 #include "nsIResProtocolHandler.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "WrapperFactory.h"
 
 #include "mozilla/scache/StartupCache.h"
@@ -546,7 +547,6 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
     JSCLContextHelper cx(mContext);
     JSAutoCompartment ac(cx, entry->obj);
 
-    JSObject* cm_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> cm_holder;
     rv = xpc->WrapNative(cx, entry->obj, cm,
                          NS_GET_IID(nsIComponentManager),
@@ -560,15 +560,14 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
         return NULL;
     }
 
-    rv = cm_holder->GetJSObject(&cm_jsobj);
-    if (NS_FAILED(rv)) {
+    JSObject* cm_jsobj = cm_holder->GetJSObject();
+    if (!cm_jsobj) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "GetJSObject of ComponentManager failed\n");
 #endif
         return NULL;
     }
 
-    JSObject* file_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> file_holder;
     rv = xpc->WrapNative(cx, entry->obj, file,
                          NS_GET_IID(nsIFile),
@@ -578,8 +577,8 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
         return NULL;
     }
 
-    rv = file_holder->GetJSObject(&file_jsobj);
-    if (NS_FAILED(rv)) {
+    JSObject* file_jsobj = file_holder->GetJSObject();
+    if (!file_jsobj) {
         return NULL;
     }
 
@@ -662,7 +661,7 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
         rv = cc->GetCalleeWrapper(getter_AddRefs(wn));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        wn->GetJSObject(targetObject.address());
+        targetObject = wn->GetJSObject();
         if (!targetObject) {
             NS_ERROR("null calling object");
             return NS_ERROR_FAILURE;
@@ -745,9 +744,8 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
                                                   getter_AddRefs(holder));
         NS_ENSURE_SUCCESS(rv, nullptr);
 
-        RootedObject global(aCx);
-        rv = holder->GetJSObject(global.address());
-        NS_ENSURE_SUCCESS(rv, nullptr);
+        RootedObject global(aCx, holder->GetJSObject());
+        NS_ENSURE_TRUE(global, nullptr);
 
         backstagePass->SetGlobalObject(global);
 
@@ -762,9 +760,8 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
         }
     }
 
-    RootedObject obj(aCx);
-    rv = holder->GetJSObject(obj.address());
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    RootedObject obj(aCx, holder->GetJSObject());
+    NS_ENSURE_TRUE(obj, nullptr);
 
     JSAutoCompartment ac(aCx, obj);
 
@@ -795,9 +792,8 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
                              getter_AddRefs(locationHolder));
         NS_ENSURE_SUCCESS(rv, nullptr);
 
-        RootedObject locationObj(aCx);
-        rv = locationHolder->GetJSObject(locationObj.address());
-        NS_ENSURE_SUCCESS(rv, nullptr);
+        RootedObject locationObj(aCx, locationHolder->GetJSObject());
+        NS_ENSURE_TRUE(locationObj, nullptr);
 
         if (!JS_DefineProperty(aCx, obj, "__LOCATION__",
                                JS::ObjectValue(*locationObj),
@@ -1140,9 +1136,8 @@ mozJSComponentLoader::UnloadModules()
     if (mLoaderGlobal) {
         MOZ_ASSERT(mReuseLoaderGlobal, "How did this happen?");
 
-        RootedObject global(mContext);
-        if (NS_SUCCEEDED(mLoaderGlobal->GetJSObject(global.address()))) {
-            JSAutoRequest ar(mContext);
+        RootedObject global(mContext, mLoaderGlobal->GetJSObject());
+        if (global) {
             JS_SetAllNonReservedSlotsToUndefined(mContext, global);
         } else {
             NS_WARNING("Going to leak!");
@@ -1174,7 +1169,6 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
                              uint8_t optionalArgc,
                              JS::Value* retval)
 {
-    JSAutoRequest ar(cx);
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
     RootedValue targetVal(cx, targetValArg);

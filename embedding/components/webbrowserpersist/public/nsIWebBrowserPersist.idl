@@ -95,9 +95,8 @@ interface nsIWebBrowserPersist : nsICancelable
    * Value indicating the success or failure of the persist
    * operation.
    *
-   * @return NS_OK Operation was successful or is still ongoing.
-   * @return NS_BINDING_ABORTED Operation cancelled.
-   * @return NS_ERROR_FAILURE Non-specific failure.
+   * @throws NS_BINDING_ABORTED Operation cancelled.
+   * @throws NS_ERROR_FAILURE Non-specific failure.
    */
   readonly attribute nsresult result;
 
@@ -141,8 +140,7 @@ interface nsIWebBrowserPersist : nsICancelable
    * @see nsIURI
    * @see nsIInputStream
    *
-   * @return NS_OK Operation has been started.
-   * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
+   * @throws NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
   void saveURI(in nsIURI aURI, in nsISupports aCacheKey,
       in nsIURI aReferrer, in nsIInputStream aPostData,
@@ -263,8 +261,7 @@ interface nsIWebBrowserPersist : nsICancelable
    * @see nsIFile
    * @see nsIURI
    *
-   * @return NS_OK Operation has been started.
-   * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
+   * @throws NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
   void saveDocument(in nsIDOMDocument aDocument,
      in nsISupports aFile, in nsISupports aDataPath,

@@ -42,16 +42,17 @@ function get_test_plugin() {
 }
 
 // Finds the test nsIPluginTag
-function get_test_plugintag() {
+function get_test_plugintag(aName) {
   const Cc = Components.classes;
   const Ci = Components.interfaces;
 
+  var name = aName || "Test Plug-in";
   var host = Cc["@mozilla.org/plugin/host;1"].
              getService(Ci.nsIPluginHost);
   var tags = host.getPluginTags();
 
   for (var i = 0; i < tags.length; i++) {
-    if (tags[i].name == "Test Plug-in")
+    if (tags[i].name == name)
       return tags[i];
   }
   return null;

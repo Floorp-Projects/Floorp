@@ -128,6 +128,24 @@ Touch::GetForce(float* aForce)
   return NS_OK;
 }
 
+void
+Touch::InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
+{
+  if (mPointsInitialized) {
+    return;
+  }
+  mClientPoint = nsDOMEvent::GetClientCoords(aPresContext,
+                                             aEvent,
+                                             mRefPoint,
+                                             mClientPoint);
+  mPagePoint = nsDOMEvent::GetPageCoords(aPresContext,
+                                         aEvent,
+                                         mRefPoint,
+                                         mClientPoint);
+  mScreenPoint = nsDOMEvent::GetScreenCoords(aPresContext, aEvent, mRefPoint);
+  mPointsInitialized = true;
+}
+
 bool
 Touch::Equals(nsIDOMTouch* aTouch)
 {

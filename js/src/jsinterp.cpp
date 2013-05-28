@@ -334,12 +334,6 @@ js::RunScript(JSContext *cx, StackFrame *fp)
             return false;
         if (status == ion::Method_Compiled) {
             ion::IonExecStatus status = ion::Cannon(cx, fp);
-
-            // Note that if we bailed out, new inline frames may have been
-            // pushed, so we interpret with the current fp.
-            if (status == ion::IonExec_Bailout)
-                return Interpret(cx, fp, JSINTERP_REJOIN);
-
             return !IsErrorStatus(status);
         }
     }
@@ -350,13 +344,6 @@ js::RunScript(JSContext *cx, StackFrame *fp)
             return false;
         if (status == ion::Method_Compiled) {
             ion::IonExecStatus status = ion::EnterBaselineMethod(cx, fp);
-
-            // For now, we can never bail out from the baseline jit.
-            // TODO: This may need to be removed when we want to add support for
-            // OSR into Ion, which will be implemented by bailing out to the interpreter
-            // from baseline.
-            JS_ASSERT(status != ion::IonExec_Bailout);
-
             return !IsErrorStatus(status);
         }
     }
@@ -410,8 +397,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (!fun->getOrCreateScript(cx))
         return false;
 
-    if (!TypeMonitorCall(cx, args, construct))
-        return false;
+    TypeMonitorCall(cx, args, construct);
 
     /* Get pointer to new frame/slots, prepare arguments. */
     InvokeFrameGuard ifg;
@@ -545,8 +531,6 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!script->ensureHasTypes(cx))
-        return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
     Probes::startExecution(script);
@@ -972,11 +956,6 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 
-/* For the fastest case inder JSOP_INCNAME, etc. */
-JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_DECNAME_LENGTH);
-JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEINC_LENGTH);
-JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
-
 /*
  * Inline fast paths for iteration. js_IteratorMore and js_IteratorNext handle
  * all cases, but we inline the most frequently taken paths here.
@@ -1353,48 +1332,13 @@ check_backedge:
 BEGIN_CASE(JSOP_LOOPENTRY)
 
 #ifdef JS_ION
-    // Attempt on-stack replacement with Ion code. IonMonkey OSR takes place at
-    // the point of the initial loop entry, to consolidate hoisted code between
-    // entry points.
-    if (ion::IsEnabled(cx)) {
-        ion::MethodStatus status =
-            ion::CanEnterAtBranch(cx, script, AbstractFramePtr(regs.fp()), regs.pc,
-                                  regs.fp()->isConstructing());
-        if (status == ion::Method_Error)
-            goto error;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus maybeOsr = ion::SideCannon(cx, regs.fp(), regs.pc);
-            if (maybeOsr == ion::IonExec_Bailout) {
-                // We hit a deoptimization path in the first Ion frame, so now
-                // we've just replaced the entire Ion activation.
-                SET_SCRIPT(regs.fp()->script());
-                op = JSOp(*regs.pc);
-                DO_OP();
-            }
-
-            // We failed to call into Ion at all, so treat as an error.
-            if (maybeOsr == ion::IonExec_Aborted)
-                goto error;
-
-            interpReturnOK = (maybeOsr == ion::IonExec_Ok);
-
-            if (entryFrame != regs.fp())
-                goto jit_return;
-
-            regs.fp()->setFinishedInInterpreter();
-            goto leave_on_safe_point;
-        }
-    }
-
+    // Attempt on-stack replacement with Baseline code.
     if (ion::IsBaselineEnabled(cx)) {
         ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, regs.fp(), false);
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
             ion::IonExecStatus maybeOsr = ion::EnterBaselineAtBranch(cx, regs.fp(), regs.pc);
-
-            // We can never bail out from the baseline jit.
-            JS_ASSERT(maybeOsr != ion::IonExec_Bailout);
 
             // We failed to call into baseline at all, so treat as an error.
             if (maybeOsr == ion::IonExec_Aborted)
@@ -2108,53 +2052,6 @@ BEGIN_CASE(JSOP_VOID)
     regs.sp[-1].setUndefined();
 END_CASE(JSOP_VOID)
 
-BEGIN_CASE(JSOP_INCELEM)
-BEGIN_CASE(JSOP_DECELEM)
-BEGIN_CASE(JSOP_ELEMINC)
-BEGIN_CASE(JSOP_ELEMDEC)
-    /* No-op */
-END_CASE(JSOP_INCELEM)
-
-BEGIN_CASE(JSOP_INCPROP)
-BEGIN_CASE(JSOP_DECPROP)
-BEGIN_CASE(JSOP_PROPINC)
-BEGIN_CASE(JSOP_PROPDEC)
-BEGIN_CASE(JSOP_INCNAME)
-BEGIN_CASE(JSOP_DECNAME)
-BEGIN_CASE(JSOP_NAMEINC)
-BEGIN_CASE(JSOP_NAMEDEC)
-BEGIN_CASE(JSOP_INCGNAME)
-BEGIN_CASE(JSOP_DECGNAME)
-BEGIN_CASE(JSOP_GNAMEINC)
-BEGIN_CASE(JSOP_GNAMEDEC)
-    /* No-op */
-END_CASE(JSOP_INCPROP)
-
-BEGIN_CASE(JSOP_DECALIASEDVAR)
-BEGIN_CASE(JSOP_ALIASEDVARDEC)
-BEGIN_CASE(JSOP_INCALIASEDVAR)
-BEGIN_CASE(JSOP_ALIASEDVARINC)
-    /* No-op */
-END_CASE(JSOP_ALIASEDVARINC)
-
-BEGIN_CASE(JSOP_DECARG)
-BEGIN_CASE(JSOP_ARGDEC)
-BEGIN_CASE(JSOP_INCARG)
-BEGIN_CASE(JSOP_ARGINC)
-{
-    /* No-op */
-}
-END_CASE(JSOP_ARGINC);
-
-BEGIN_CASE(JSOP_DECLOCAL)
-BEGIN_CASE(JSOP_LOCALDEC)
-BEGIN_CASE(JSOP_INCLOCAL)
-BEGIN_CASE(JSOP_LOCALINC)
-{
-    /* No-op */
-}
-END_CASE(JSOP_LOCALINC)
-
 BEGIN_CASE(JSOP_THIS)
     if (!ComputeThis(cx, regs.fp()))
         goto error;
@@ -2327,8 +2224,7 @@ BEGIN_CASE(JSOP_FUNCALL)
         DO_NEXT_OP(len);
     }
 
-    if (!TypeMonitorCall(cx, args, construct))
-        goto error;
+    TypeMonitorCall(cx, args, construct);
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
@@ -2350,11 +2246,6 @@ BEGIN_CASE(JSOP_FUNCALL)
         if (status == ion::Method_Compiled) {
             ion::IonExecStatus exec = ion::Cannon(cx, regs.fp());
             CHECK_BRANCH();
-            if (exec == ion::IonExec_Bailout) {
-                SET_SCRIPT(regs.fp()->script());
-                op = JSOp(*regs.pc);
-                DO_OP();
-            }
             interpReturnOK = !IsErrorStatus(exec);
             goto jit_return;
         }
@@ -2367,13 +2258,6 @@ BEGIN_CASE(JSOP_FUNCALL)
         if (status == ion::Method_Compiled) {
             ion::IonExecStatus exec = ion::EnterBaselineMethod(cx, regs.fp());
             CHECK_BRANCH();
-
-            // For now, we can never bail out from the baseline jit.
-            // TODO: This may need to be removed when we want to add support for
-            // OSR into Ion, which will be implemented by bailing out to the interpreter
-            // from baseline.
-            JS_ASSERT(exec != ion::IonExec_Bailout);
-
             interpReturnOK = !IsErrorStatus(exec);
             goto jit_return;
         }
@@ -2565,6 +2449,8 @@ END_VARLEN_CASE
 
 BEGIN_CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!regs.fp()->fun()->hasRest());
+    if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx))
+        goto error;
     if (script->needsArgsObj()) {
         ArgumentsObject *obj = ArgumentsObject::createExpected(cx, regs.fp());
         if (!obj)
@@ -2582,12 +2468,6 @@ BEGIN_CASE(JSOP_REST)
     if (!rest)
         goto error;
     PUSH_COPY(ObjectValue(*rest));
-    if (!SetInitializerObjectType(cx, script, regs.pc, rest, GenericObject))
-        goto error;
-    rootType0 = GetTypeCallerInitObject(cx, JSProto_Array);
-    if (!rootType0)
-        goto error;
-    rest->setType(rootType0);
 }
 END_CASE(JSOP_REST)
 
@@ -3381,7 +3261,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
 JSObject *
 js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
 {
-    RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent));
+    RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent, TenuredObject));
     if (!clone)
         return NULL;
 

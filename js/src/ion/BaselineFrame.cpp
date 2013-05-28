@@ -20,15 +20,14 @@ using namespace js::ion;
 void
 BaselineFrame::trace(JSTracer *trc)
 {
-    MarkCalleeToken(trc, calleeToken());
+    replaceCalleeToken(MarkCalleeToken(trc, calleeToken()));
 
     gc::MarkValueRoot(trc, &thisValue(), "baseline-this");
 
     // Mark actual and formal args.
     if (isNonEvalFunctionFrame()) {
         unsigned numArgs = js::Max(numActualArgs(), numFormalArgs());
-        JS_ASSERT(actuals() == formals());
-        gc::MarkValueRootRange(trc, numArgs, actuals(), "baseline-args");
+        gc::MarkValueRootRange(trc, numArgs, argv(), "baseline-args");
     }
 
     // Mark scope chain.
@@ -62,7 +61,7 @@ BaselineFrame::copyRawFrameSlots(AutoValueVector *vec) const
     if (!vec->resize(nformals + nfixed))
         return false;
 
-    mozilla::PodCopy(vec->begin(), formals(), nformals);
+    mozilla::PodCopy(vec->begin(), argv(), nformals);
     for (unsigned i = 0; i < nfixed; i++)
         (*vec)[nformals + i] = *valueSlot(i);
     return true;
