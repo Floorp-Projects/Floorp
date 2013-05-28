@@ -4,4 +4,4 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              style="@style/AddressBar"/>
+              style="@style/UrlBar"/>

@@ -23,10 +23,10 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
-  <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
-  <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
-  <string name="awesomebar_history_title">&awesomebar_history_title;</string>
-  <string name="awesomebar_switch_to_tab">&awesomebar_switch_to_tab;</string>
+  <string name="all_pages_title">&all_pages_title;</string>
+  <string name="bookmarks_title">&bookmarks_title;</string>
+  <string name="history_title">&history_title;</string>
+  <string name="switch_to_tab">&switch_to_tab;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message2">&crash_message2;</string>
@@ -47,7 +47,7 @@
   
   <string name="choose_file">&choose_file;</string>
 
-  <string name="awesomebar_default_text">&awesomebar_default_text;</string>
+  <string name="url_bar_default_text">&url_bar_default_text;</string>
   
   <string name="remote_tabs">&remote_tabs;</string>
   <string name="remote_tabs_show_all">&remote_tabs_show_all;</string>

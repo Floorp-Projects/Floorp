@@ -31,7 +31,7 @@
       <item name="android:paddingRight">60dip</item>
     </style>
 
-    <style name="AddressBar.ImageButton.Forward">
+    <style name="UrlBar.ImageButton.Forward">
         <item name="android:contentDescription">@string/forward</item>
         <item name="android:layout_width">45dip</item>
         <item name="android:layout_height">38dip</item>
@@ -41,13 +41,13 @@
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:src">@drawable/ic_menu_forward</item>
-        <item name="android:background">@drawable/address_bar_nav_button</item>
+        <item name="android:background">@drawable/url_bar_nav_button</item>
         <!-- Start with the button hidden -->
         <item name="android:alpha">0</item>
         <item name="android:layout_marginLeft">@dimen/forward_default_offset</item>
     </style>
 
-   <style name="AddressBar.Button.Container">
+   <style name="UrlBar.Button.Container">
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">6dp</item>
         <!-- Start with forward hidden -->

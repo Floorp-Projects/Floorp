@@ -59,7 +59,7 @@ public class HistoryTab extends AwesomeBarTab {
 
     @Override
     public int getTitleStringId() {
-        return R.string.awesomebar_history_title;
+        return R.string.history_title;
     }
 
     @Override
@@ -209,7 +209,7 @@ public class HistoryTab extends AwesomeBarTab {
                               View.VISIBLE : View.GONE);
 
             viewHolder.bookmarkIconView.setVisibility(visibility);
-            viewHolder.bookmarkIconView.setImageResource(R.drawable.ic_awesomebar_star);
+            viewHolder.bookmarkIconView.setImageResource(R.drawable.ic_url_bar_star);
 
             return convertView;
         }

@@ -9,10 +9,10 @@
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
 <!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
 
-<!ENTITY  awesomebar_all_pages_title "Top Sites">
-<!ENTITY  awesomebar_bookmarks_title "Bookmarks">
-<!ENTITY  awesomebar_history_title "History">
-<!ENTITY  awesomebar_switch_to_tab "Switch to tab">
+<!ENTITY  all_pages_title "Top Sites">
+<!ENTITY  bookmarks_title "Bookmarks">
+<!ENTITY  history_title "History">
+<!ENTITY  switch_to_tab "Switch to tab">
 
 <!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
 <!ENTITY  crash_message2 "&brandShortName; had a problem and crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
@@ -33,7 +33,7 @@
 
 <!ENTITY choose_file "Choose File">
 
-<!ENTITY awesomebar_default_text "Enter Search or Address">
+<!ENTITY url_bar_default_text "Enter Search or Address">
 
 <!ENTITY remote_tabs "Synced Tabs">
 <!ENTITY remote_tabs_show_all "Show all tabs">

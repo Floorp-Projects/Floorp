@@ -145,7 +145,7 @@ public class AwesomeBar extends GeckoActivity
         if (mTarget.equals(Target.CURRENT_TAB.name())) {
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null && tab.isPrivate()) {
-                BrowserToolbarBackground mAddressBarBg = (BrowserToolbarBackground) findViewById(R.id.address_bar_bg);
+                BrowserToolbarBackground mAddressBarBg = (BrowserToolbarBackground) findViewById(R.id.url_bar_bg);
                 mAddressBarBg.setPrivateMode(true);
 
                 ShapedButton mTabs = (ShapedButton) findViewById(R.id.dummy_tab);
@@ -302,13 +302,13 @@ public class AwesomeBar extends GeckoActivity
 
         mGoButton.setVisibility(View.VISIBLE);
 
-        int imageResource = R.drawable.ic_awesomebar_go;
+        int imageResource = R.drawable.ic_url_bar_go;
         String contentDescription = getString(R.string.go);
         int imeAction = EditorInfo.IME_ACTION_GO;
 
         int actionBits = mText.getImeOptions() & EditorInfo.IME_MASK_ACTION;
         if (StringUtils.isSearchQuery(text, actionBits == EditorInfo.IME_ACTION_SEARCH)) {
-            imageResource = R.drawable.ic_awesomebar_search;
+            imageResource = R.drawable.ic_url_bar_search;
             contentDescription = getString(R.string.search);
             imeAction = EditorInfo.IME_ACTION_SEARCH;
         }
@@ -323,7 +323,7 @@ public class AwesomeBar extends GeckoActivity
             mText.setImeOptions(optionBits | imeAction);
 
             mDelayRestartInput = (imeAction == EditorInfo.IME_ACTION_GO) &&
-                                 (InputMethods.shouldDelayAwesomebarUpdate(mText.getContext()));
+                                 (InputMethods.shouldDelayUrlBarUpdate(mText.getContext()));
             if (!mDelayRestartInput) {
                 restartInput = true;
             }

@@ -168,51 +168,51 @@
         <item name="android:orientation">horizontal</item>
     </style>
 
-    <style name="AddressBar.ImageButton.TabCount">
+    <style name="UrlBar.ImageButton.TabCount">
         <item name="android:background">@drawable/tabs_count</item>
         <item name="android:gravity">center_horizontal</item>
         <item name="android:clipChildren">false</item>
         <item name="android:clipToPadding">false</item>
     </style>
 
-    <!-- Address bar -->
-    <style name="AddressBar">
+    <!-- URL bar -->
+    <style name="UrlBar">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:orientation">horizontal</item>
     </style>
 
-    <!-- Address bar - Button -->
-    <style name="AddressBar.Button">
+    <!-- URL bar - Button -->
+    <style name="UrlBar.Button">
         <item name="android:layout_height">fill_parent</item>
         <item name="android:textSize">16sp</item>
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <!-- Address bar - Image Button -->
-    <style name="AddressBar.ImageButton" parent="AddressBar.Button">
+    <!-- URL bar - Image Button -->
+    <style name="UrlBar.ImageButton" parent="UrlBar.Button">
         <item name="android:scaleType">center</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <!-- Address bar - Image Button - Unused -->
-    <style name="AddressBar.ImageButton.Unused">
+    <!-- URL bar - Image Button - Unused -->
+    <style name="UrlBar.ImageButton.Unused">
         <item name="android:layout_width">0dip</item>
         <item name="android:layout_height">0dip</item>
         <item name="android:visibility">gone</item>
     </style>
 
-    <style name="AddressBar.ImageButton.Back" parent="AddressBar.ImageButton.Unused">
+    <style name="UrlBar.ImageButton.Back" parent="UrlBar.ImageButton.Unused">
         <item name="android:contentDescription">@string/back</item>
     </style>
 
-    <style name="AddressBar.ImageButton.Forward" parent="AddressBar.ImageButton.Unused">
+    <style name="UrlBar.ImageButton.Forward" parent="UrlBar.ImageButton.Unused">
         <item name="android:contentDescription">@string/forward</item>
     </style>
 
-    <!-- Address bar - Image Button - Icon -->
-    <style name="AddressBar.ImageButton.Icon">
+    <!-- URL bar - Image Button - Icon -->
+    <style name="UrlBar.ImageButton.Icon">
          <item name="android:layout_width">@dimen/browser_toolbar_icon_width</item>
          <item name="android:layout_height">@dimen/browser_toolbar_height</item>
          <item name="android:layout_weight">0.0</item>

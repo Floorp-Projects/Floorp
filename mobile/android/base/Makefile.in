@@ -571,7 +571,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/abouthome_thumbnail.png \
   res/drawable-mdpi/abouthome_thumbnail_bg.png \
   res/drawable-mdpi/abouthome_thumbnail_add.png \
-  res/drawable-mdpi/address_bar_bg_shadow.png \
   res/drawable-mdpi/alert_addon.png \
   res/drawable-mdpi/alert_app.png \
   res/drawable-mdpi/alert_download.png \
@@ -583,11 +582,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/awesomebar_sep_right.9.png \
   res/drawable-mdpi/desktop_notification.png \
   res/drawable-mdpi/ic_addons_empty.png \
-  res/drawable-mdpi/ic_awesomebar_go.png \
-  res/drawable-mdpi/ic_awesomebar_reader.png \
-  res/drawable-mdpi/ic_awesomebar_search.png \
-  res/drawable-mdpi/ic_awesomebar_star.png \
-  res/drawable-mdpi/ic_awesomebar_tab.png \
   res/drawable-mdpi/ic_menu_addons_filler.png \
   res/drawable-mdpi/ic_menu_bookmark_add.png \
   res/drawable-mdpi/ic_menu_bookmark_remove.png \
@@ -598,6 +592,11 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_menu_new_tab.png \
   res/drawable-mdpi/ic_menu_reload.png \
   res/drawable-mdpi/ic_status_logo.png \
+  res/drawable-mdpi/ic_url_bar_go.png \
+  res/drawable-mdpi/ic_url_bar_reader.png \
+  res/drawable-mdpi/ic_url_bar_search.png \
+  res/drawable-mdpi/ic_url_bar_star.png \
+  res/drawable-mdpi/ic_url_bar_tab.png \
   res/drawable-mdpi/progress_spinner_1.png \
   res/drawable-mdpi/progress_spinner_2.png \
   res/drawable-mdpi/progress_spinner_3.png \
@@ -623,10 +622,11 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tab_thumbnail_shadow.png \
   res/drawable-mdpi/tabs_count.png \
   res/drawable-mdpi/tabs_count_foreground.png \
-  res/drawable-mdpi/address_bar_url_default.9.png \
-  res/drawable-mdpi/address_bar_url_default_pb.9.png \
-  res/drawable-mdpi/address_bar_url_pressed.9.png \
-  res/drawable-mdpi/address_bar_url_pressed_pb.9.png \
+  res/drawable-mdpi/url_bar_bg_shadow.png \
+  res/drawable-mdpi/url_bar_entry_default.9.png \
+  res/drawable-mdpi/url_bar_entry_default_pb.9.png \
+  res/drawable-mdpi/url_bar_entry_pressed.9.png \
+  res/drawable-mdpi/url_bar_entry_pressed_pb.9.png \
   res/drawable-mdpi/doorhanger_popup_bg.9.png \
   res/drawable-mdpi/find_close.png \
   res/drawable-mdpi/find_next.png \
@@ -686,7 +686,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/abouthome_thumbnail_bg.png \
   res/drawable-hdpi/abouthome_thumbnail_add.png \
-  res/drawable-hdpi/address_bar_bg_shadow.png \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
   res/drawable-hdpi/alert_download.png \
@@ -696,11 +695,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/awesomebar_sep_left.9.png \
   res/drawable-hdpi/awesomebar_sep_right.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
-  res/drawable-hdpi/ic_awesomebar_go.png \
-  res/drawable-hdpi/ic_awesomebar_reader.png \
-  res/drawable-hdpi/ic_awesomebar_search.png \
-  res/drawable-hdpi/ic_awesomebar_star.png \
-  res/drawable-hdpi/ic_awesomebar_tab.png \
   res/drawable-hdpi/ic_menu_addons_filler.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
@@ -711,6 +705,11 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_new_tab.png \
   res/drawable-hdpi/ic_menu_reload.png \
   res/drawable-hdpi/ic_status_logo.png \
+  res/drawable-hdpi/ic_url_bar_go.png \
+  res/drawable-hdpi/ic_url_bar_reader.png \
+  res/drawable-hdpi/ic_url_bar_search.png \
+  res/drawable-hdpi/ic_url_bar_star.png \
+  res/drawable-hdpi/ic_url_bar_tab.png \
   res/drawable-hdpi/tab_indicator_divider.9.png \
   res/drawable-hdpi/tab_indicator_selected.9.png \
   res/drawable-hdpi/tab_indicator_selected_focused.9.png \
@@ -724,10 +723,11 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_count.png \
   res/drawable-hdpi/tabs_count_foreground.png \
-  res/drawable-hdpi/address_bar_url_default.9.png \
-  res/drawable-hdpi/address_bar_url_default_pb.9.png \
-  res/drawable-hdpi/address_bar_url_pressed.9.png \
-  res/drawable-hdpi/address_bar_url_pressed_pb.9.png \
+  res/drawable-hdpi/url_bar_bg_shadow.png \
+  res/drawable-hdpi/url_bar_entry_default.9.png \
+  res/drawable-hdpi/url_bar_entry_default_pb.9.png \
+  res/drawable-hdpi/url_bar_entry_pressed.9.png \
+  res/drawable-hdpi/url_bar_entry_pressed_pb.9.png \
   res/drawable-hdpi/doorhanger_popup_bg.9.png \
   res/drawable-hdpi/find_close.png \
   res/drawable-hdpi/find_next.png \
@@ -775,11 +775,11 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_thumbnail.png \
   res/drawable-xhdpi/abouthome_thumbnail_bg.png \
   res/drawable-xhdpi/abouthome_thumbnail_add.png \
-  res/drawable-xhdpi/address_bar_bg_shadow.png \
-  res/drawable-xhdpi/address_bar_url_default.9.png \
-  res/drawable-xhdpi/address_bar_url_default_pb.9.png \
-  res/drawable-xhdpi/address_bar_url_pressed.9.png \
-  res/drawable-xhdpi/address_bar_url_pressed_pb.9.png \
+  res/drawable-xhdpi/url_bar_bg_shadow.png \
+  res/drawable-xhdpi/url_bar_entry_default.9.png \
+  res/drawable-xhdpi/url_bar_entry_default_pb.9.png \
+  res/drawable-xhdpi/url_bar_entry_pressed.9.png \
+  res/drawable-xhdpi/url_bar_entry_pressed_pb.9.png \
   res/drawable-xhdpi/alert_addon.png \
   res/drawable-xhdpi/alert_app.png \
   res/drawable-xhdpi/alert_download.png \
@@ -789,11 +789,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/awesomebar_sep_left.9.png \
   res/drawable-xhdpi/awesomebar_sep_right.9.png \
   res/drawable-xhdpi/ic_addons_empty.png \
-  res/drawable-xhdpi/ic_awesomebar_go.png \
-  res/drawable-xhdpi/ic_awesomebar_reader.png \
-  res/drawable-xhdpi/ic_awesomebar_search.png \
-  res/drawable-xhdpi/ic_awesomebar_star.png \
-  res/drawable-xhdpi/ic_awesomebar_tab.png \
   res/drawable-xhdpi/ic_menu_addons_filler.png \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xhdpi/ic_menu_bookmark_remove.png \
@@ -804,6 +799,11 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_new_tab.png \
   res/drawable-xhdpi/ic_menu_reload.png \
   res/drawable-xhdpi/ic_status_logo.png \
+  res/drawable-xhdpi/ic_url_bar_go.png \
+  res/drawable-xhdpi/ic_url_bar_reader.png \
+  res/drawable-xhdpi/ic_url_bar_search.png \
+  res/drawable-xhdpi/ic_url_bar_star.png \
+  res/drawable-xhdpi/ic_url_bar_tab.png \
   res/drawable-xhdpi/spinner_default.9.png \
   res/drawable-xhdpi/spinner_focused.9.png \
   res/drawable-xhdpi/spinner_pressed.9.png \
@@ -982,8 +982,6 @@ RES_COLOR = \
   res/color/abouthome_section_more_text.xml \
   res/color/abouthome_section_subtitle.xml \
   res/color/abouthome_section_title.xml \
-  res/color/awesome_bar_title.xml \
-  res/color/awesome_bar_title_hint.xml \
   res/color/menu_item_title.xml \
   res/color/primary_text.xml \
   res/color/primary_text_inverse.xml \
@@ -992,6 +990,8 @@ RES_COLOR = \
   res/color/select_item_multichoice.xml \
   res/color/tertiary_text.xml \
   res/color/tertiary_text_inverse.xml \
+  res/color/url_bar_title.xml \
+  res/color/url_bar_title_hint.xml \
   $(NULL)
 
 RES_MENU = \
@@ -1019,11 +1019,11 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/abouthome_promo_box.xml                \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
   mobile/android/base/resources/drawable/action_bar_button_inverse.xml          \
-  mobile/android/base/resources/drawable/address_bar_bg.xml                     \
-  mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
-  mobile/android/base/resources/drawable/address_bar_nav_button.xml             \
-  mobile/android/base/resources/drawable/address_bar_right_edge.xml             \
-  mobile/android/base/resources/drawable/address_bar_url.xml                    \
+  mobile/android/base/resources/drawable/url_bar_bg.xml                         \
+  mobile/android/base/resources/drawable/url_bar_bg_shadow_repeat.xml           \
+  mobile/android/base/resources/drawable/url_bar_entry.xml                      \
+  mobile/android/base/resources/drawable/url_bar_nav_button.xml                 \
+  mobile/android/base/resources/drawable/url_bar_right_edge.xml                 \
   mobile/android/base/resources/drawable/awesomebar_listview_divider.xml        \
   mobile/android/base/resources/drawable/awesomebar_header_row.xml              \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \

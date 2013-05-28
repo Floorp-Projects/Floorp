@@ -375,7 +375,7 @@ public class AwesomeBarTabs extends TabHost
                                          getPaddingRight(),
                                          getPaddingBottom()
                                        };
-            setBackgroundResource(R.drawable.address_bar_bg);
+            setBackgroundResource(R.drawable.url_bar_bg);
             setPadding(padding[0], padding[1], padding[2], padding[3]);
         }
     }
