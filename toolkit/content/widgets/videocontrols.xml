@@ -1430,6 +1430,7 @@
                       addListener(this.volumeStack, "mouseout", this.onVolumeMouseInOut);
                     }
 
+                    addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
                     addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
                     addListener(this.video, "keypress", this.keyHandler);
