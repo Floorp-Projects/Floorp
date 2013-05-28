@@ -133,6 +133,7 @@ UploadLastDir* HTMLInputElement::gUploadLastDir;
 static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
+  { "color", NS_FORM_INPUT_COLOR },
   { "date", NS_FORM_INPUT_DATE },
   { "email", NS_FORM_INPUT_EMAIL },
   { "file", NS_FORM_INPUT_FILE },
@@ -153,7 +154,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[15];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[16];
 
 static const uint8_t NS_INPUT_AUTOCOMPLETE_OFF     = 0;
 static const uint8_t NS_INPUT_AUTOCOMPLETE_ON      = 1;
@@ -383,6 +384,24 @@ HTMLInputElement::AsyncClickHandler::AsyncClickHandler(HTMLInputElement* aInput)
 
 NS_IMETHODIMP
 HTMLInputElement::AsyncClickHandler::Run()
+{
+  if (mInput->GetType() == NS_FORM_INPUT_FILE) {
+    return InitFilePicker();
+  } else if (mInput->GetType() == NS_FORM_INPUT_COLOR) {
+    return InitColorPicker();
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+HTMLInputElement::AsyncClickHandler::InitColorPicker()
+{
+  // TODO
+  return NS_OK;
+}
+
+nsresult
+HTMLInputElement::AsyncClickHandler::InitFilePicker()
 {
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = mInput->OwnerDoc();
@@ -3149,13 +3168,15 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     PostHandleEventForRangeThumb(aVisitor);
   }
 
-  // Open a file picker when we receive a click on a <input type='file'>.
+  // Open a file picker when we receive a click on a <input type='file'>, or
+  // open a color picker when we receive a click on a <input type='color'>.
   // A click is handled in the following cases:
   // - preventDefault() has not been called (or something similar);
   // - it's the left mouse button.
   // We do not prevent non-trusted click because authors can already use
   // .click(). However, the file picker will follow the rules of popup-blocking.
-  if (mType == NS_FORM_INPUT_FILE && NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
+  if ((mType == NS_FORM_INPUT_FILE || mType == NS_FORM_INPUT_COLOR) &&
+      NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
       !aVisitor.mEvent->mFlags.mDefaultPrevented) {
     return FireAsyncClickHandler();
   }
@@ -3539,7 +3560,33 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
         }
       }
       break;
+    case NS_FORM_INPUT_COLOR:
+      {
+        if (IsValidSimpleColor(aValue)) {
+          ToLowerCase(aValue);
+        } else {
+          // Set default (black) color, if aValue wasn't parsed correctly.
+          aValue.AssignLiteral("#000000");
+        }
+      }
+      break;
   }
+}
+
+bool HTMLInputElement::IsValidSimpleColor(const nsAString& aValue) const
+{
+  if (aValue.Length() != 7 || aValue.First() != '#') {
+    return false;
+  }
+
+  for (int i = 1; i < 7; ++i) {
+    if (!nsCRT::IsAsciiDigit(aValue[i]) &&
+        !(aValue[i] >= 'a' && aValue[i] <= 'f') &&
+        !(aValue[i] >= 'A' && aValue[i] <= 'F')) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool
@@ -3747,7 +3794,9 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
         if ((IsExperimentalMobileType(newType) &&
              !Preferences::GetBool("dom.experimental_forms", false)) ||
             (newType == NS_FORM_INPUT_RANGE &&
-             !Preferences::GetBool("dom.experimental_forms_range", false))) {
+             !Preferences::GetBool("dom.experimental_forms_range", false)) ||
+            (newType == NS_FORM_INPUT_COLOR &&
+             !Preferences::GetBool("dom.forms.color", false))) {
           newType = kInputDefaultType->value;
           aResult.SetTo(newType, &aValue);
         }
@@ -4851,6 +4900,7 @@ HTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_RANGE:
     case NS_FORM_INPUT_DATE:
     case NS_FORM_INPUT_TIME:
+    case NS_FORM_INPUT_COLOR:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -4884,8 +4934,7 @@ HTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_FILE:
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RANGE:
-    // TODO:
-    // case NS_FORM_INPUT_COLOR:
+    case NS_FORM_INPUT_COLOR:
       return false;
 #ifdef DEBUG
     case NS_FORM_INPUT_TEXT:
@@ -4919,8 +4968,7 @@ HTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_RESET:
     case NS_FORM_INPUT_SUBMIT:
     case NS_FORM_INPUT_RANGE:
-    // TODO:
-    // case NS_FORM_INPUT_COLOR:
+    case NS_FORM_INPUT_COLOR:
       return false;
 #ifdef DEBUG
     case NS_FORM_INPUT_RADIO:
@@ -4995,6 +5043,7 @@ HTMLInputElement::DoesMinMaxApply() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_COLOR:
       return false;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");

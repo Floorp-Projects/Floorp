@@ -7,13 +7,13 @@
 #define MOZILLA_AUDIONODEENGINE_H_
 
 #include "AudioSegment.h"
+#include "mozilla/dom/AudioNode.h"
 #include "mozilla/dom/AudioParam.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
 
 namespace dom {
-class AudioNode;
 struct ThreeDPoint;
 }
 
@@ -154,6 +154,7 @@ public:
     , mInputCount(aNode ? aNode->NumberOfInputs() : 1)
     , mOutputCount(aNode ? aNode->NumberOfOutputs() : 0)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_COUNT_CTOR(AudioNodeEngine);
   }
   virtual ~AudioNodeEngine()
@@ -175,7 +176,8 @@ public:
     NS_ERROR("Invalid SetInt32Parameter index");
   }
   virtual void SetTimelineParameter(uint32_t aIndex,
-                                    const dom::AudioParamTimeline& aValue)
+                                    const dom::AudioParamTimeline& aValue,
+                                    TrackRate aSampleRate)
   {
     NS_ERROR("Invalid SetTimelineParameter index");
   }
@@ -198,8 +200,8 @@ public:
    * Produce the next block of audio samples, given input samples aInput
    * (the mixed data for input 0).
    * aInput is guaranteed to have float sample format (if it has samples at all)
-   * and to have been resampled to IdealAudioRate(), and to have exactly
-   * WEBAUDIO_BLOCK_SIZE samples.
+   * and to have been resampled to the sampling rate for the stream, and to have
+   * exactly WEBAUDIO_BLOCK_SIZE samples.
    * *aFinished is set to false by the caller. If the callee sets it to true,
    * we'll finish the stream and not call this again.
    */

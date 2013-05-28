@@ -1,0 +1,24 @@
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:mathml="http://www.w3.org/1998/Math/MathML" style="-moz-binding:url(#a);" class="reftest-wait">
+
+<content xmlns="http://www.mozilla.org/xbl" ordinal="-1">
+<mathml:median style="display: block;"/>
+</content>
+
+<script xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+function finish() {
+  document.documentElement.removeAttribute("class");
+}
+function doe() {
+document.documentElement.removeAttribute('style');
+setTimeout(finish, 0);
+}
+setTimeout(doe, 100);
+]]></script>
+
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="a">
+<content><children/></content>
+</binding></bindings>
+</window>

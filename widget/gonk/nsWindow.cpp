@@ -227,7 +227,7 @@ nsWindow::DoDraw(void)
 
         listener = gWindowToRedraw->GetWidgetListener();
         if (listener) {
-            listener->PaintWindow(gWindowToRedraw, region, 0);
+            listener->PaintWindow(gWindowToRedraw, region);
         }
     } else if (mozilla::layers::LAYERS_CLIENT == lm->GetBackendType()) {
       // No need to do anything, the compositor will handle drawing
@@ -252,7 +252,7 @@ nsWindow::DoDraw(void)
 
             listener = gWindowToRedraw->GetWidgetListener();
             if (listener) {
-                listener->PaintWindow(gWindowToRedraw, region, 0);
+                listener->PaintWindow(gWindowToRedraw, region);
             }
         }
 

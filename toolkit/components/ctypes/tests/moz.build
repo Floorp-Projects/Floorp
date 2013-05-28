@@ -7,3 +7,9 @@
 MODULE = 'jsctypes-test'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+CPP_SOURCES += [
+    'jsctypes-test-errno.cpp',
+    'jsctypes-test-finalizer.cpp',
+    'jsctypes-test.cpp',
+]

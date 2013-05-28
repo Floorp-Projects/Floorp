@@ -24,6 +24,7 @@
 #include "nsJSPrincipals.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsDOMJSUtils.h"
 #include "mozilla/Services.h"
 #include "xpcpublic.h"
@@ -277,7 +278,6 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   mScriptContext = newCtx;
 
   AutoPushJSContext cx(mScriptContext->GetNativeContext());
-  JSAutoRequest ar(cx);
 
   // nsJSEnvironment set the error reporter to NS_ScriptErrorReporter so
   // we must apparently override that with our own (although it isn't clear 
@@ -342,13 +342,7 @@ nsXBLDocGlobalObject::GetGlobalJSObject()
   if (!mScriptContext)
     return nullptr;
 
-  JSContext* cx = mScriptContext->GetNativeContext();
-  if (!cx)
-    return nullptr;
-
-  JSObject *ret = ::JS_GetGlobalObject(cx);
-  NS_ASSERTION(mJSObject == ret, "How did this magic switch happen?");
-  return ret;
+  return mScriptContext->GetNativeGlobal();
 }
 
 void
@@ -418,7 +412,7 @@ UnlinkProtoJSObjects(nsHashKey *aKey, void *aData, void* aClosure)
 
 struct ProtoTracer
 {
-  TraceCallback mCallback;
+  const TraceCallbacks &mCallbacks;
   void *mClosure;
 };
 
@@ -427,7 +421,7 @@ TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);
   nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
-  proto->Trace(closure->mCallback, closure->mClosure);
+  proto->Trace(closure->mCallbacks, closure->mClosure);
   return kHashEnumerateNext;
 }
 
@@ -454,7 +448,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
-    ProtoTracer closure = { aCallback, aClosure };
+    ProtoTracer closure = { aCallbacks, aClosure };
     tmp->mBindingTable->Enumerate(TraceProtos, &closure);
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -469,7 +463,7 @@ static bool
 UnmarkProtos(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLPrototypeBinding* proto = static_cast<nsXBLPrototypeBinding*>(aData);
-  proto->Trace(UnmarkXBLJSObject, nullptr);
+  proto->Trace(TraceCallbackFunc(UnmarkXBLJSObject), nullptr);
   return kHashEnumerateNext;
 }
 

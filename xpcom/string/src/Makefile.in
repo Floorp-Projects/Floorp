@@ -12,31 +12,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= string_s
+MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API = 1
-
-
-CPPSRCS		=				\
-		nsDependentString.cpp		\
-		nsDependentSubstring.cpp	\
-		nsPromiseFlatString.cpp		\
-		nsReadableUtils.cpp		\
-		nsSubstring.cpp			\
-		nsSubstringTuple.cpp		\
-		nsString.cpp			\
-		nsStringComparator.cpp		\
-		nsStringObsolete.cpp		\
-		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
-
-
-# Are we targeting x86 or x86-64?  If so, compile the SSE2 functions for
-# nsUTF8Utils.cpp.
-ifneq (,$(INTEL_ARCHITECTURE))
-CPPSRCS += nsUTF8UtilsSSE2.cpp
-endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -11,6 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xpcombase_s
+MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API =1
 LIBXUL_LIBRARY = 1
 
@@ -19,45 +20,9 @@ ifeq ($(OS_ARCH),Linux)
 DEFINES += -DXP_LINUX
 endif
 
-CPPSRCS		= \
-		nsVersionComparatorImpl.cpp \
-		nsConsoleMessage.cpp \
-		nsConsoleService.cpp \
-		nsDebugImpl.cpp \
-		nsErrorService.cpp \
-		nsExceptionService.cpp \
-		nsMemoryImpl.cpp \
-		nsTraceRefcntImpl.cpp \
-		nsInterfaceRequestorAgg.cpp \
-		nsUUIDGenerator.cpp \
-		nsSystemInfo.cpp \
-		nsCycleCollector.cpp \
-		nsStackWalk.cpp \
-		nsMemoryReporterManager.cpp \
-		ClearOnShutdown.cpp \
-		VisualEventTracer.cpp \
-		nsErrorAsserts.cpp \
-		nsGZFileWriter.cpp \
-		nsMemoryInfoDumper.cpp \
-		nsMessageLoop.cpp \
-		AvailableMemoryTracker.cpp \
-		$(NULL)
-
-ifeq ($(OS_ARCH),Linux)
-CPPSRCS += MapsMemoryReporter.cpp
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS		+= nsMacUtilsImpl.cpp
-endif
-
 CSRCS = \
 		nsErrorAssertsC.c \
 		$(NULL)
-
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += nsCrashOnException.cpp
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 

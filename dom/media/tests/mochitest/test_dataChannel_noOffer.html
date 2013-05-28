@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "856319",
+    title: "Don't offer m=application unless createDataChannel is called first"
+  });
+
+  runTest(function () {
+    var pc = new mozRTCPeerConnection();
+
+    // necessary to circumvent bug 864109
+    var options = { mandatory: { OfferToReceiveAudio: true} };
+
+    pc.createOffer(function (offer) {
+      ok(!offer.sdp.contains("m=application"),
+        "m=application is not contained in the SDP");
+
+      SimpleTest.finish();
+    }, unexpectedCallbackAndFinish(new Error), options);
+  }, true);
+
+</script>
+</pre>
+</body>
+</html>

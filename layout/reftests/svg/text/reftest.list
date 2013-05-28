@@ -153,14 +153,14 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 
 # text and masks
 HTTP(../..) == mask-applied.svg mask-applied-ref.svg
-# HTTP(../..) == mask-content.svg mask-content-ref.svg  # disabled due to infinite invalidation loop bug
+# HTTP(../..) == mask-content.svg mask-content-ref.svg  # fails due to invalidation problem - bug 873806
 
 # text and clipPaths
 HTTP(../..) == clipPath-applied.svg clipPath-applied-ref.svg
-# HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg  # disabled due to infinite invalidation loop bug
+# HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg  # fails due to invalidation problem - bug 873806
 
 # text and patterns
-# == pattern-content.svg pattern-content-ref.svg  # disabled due to infinite invalidation loop bug
+fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content-ref.svg
 
 # text and filters
 HTTP(../..) == filter-applied.svg filter-applied-ref.svg

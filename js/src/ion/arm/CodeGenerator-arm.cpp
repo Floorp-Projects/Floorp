@@ -10,6 +10,7 @@
 #include "jsnum.h"
 
 #include "CodeGenerator-arm.h"
+#include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonFrames.h"

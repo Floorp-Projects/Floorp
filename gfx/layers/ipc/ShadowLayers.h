@@ -136,10 +136,9 @@ class ShadowLayerForwarder : public CompositableForwarder
 {
   friend class AutoOpenSurface;
   friend class TextureClientShmem;
+  friend class ContentClientIncremental;
 
 public:
-  typedef gfxASurface::gfxContentType gfxContentType;
-
   virtual ~ShadowLayerForwarder();
 
   /**
@@ -152,6 +151,9 @@ public:
                                    const SurfaceDescriptor& aDescriptor,
                                    const TextureInfo& aTextureInfo,
                                    const SurfaceDescriptor* aDescriptorOnWhite = nullptr) MOZ_OVERRIDE;
+  virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
+                                        const TextureInfo& aTextureInfo,
+                                        const nsIntRect& aBufferRect) MOZ_OVERRIDE;
   virtual void CreatedDoubleBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptor& aFrontDescriptor,
                                    const SurfaceDescriptor& aBackDescriptor,
@@ -287,6 +289,13 @@ public:
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
                                    const nsIntRegion& aUpdatedRegion) MOZ_OVERRIDE;
+
+  virtual void UpdateTextureIncremental(CompositableClient* aCompositable,
+                                        TextureIdentifier aTextureId,
+                                        SurfaceDescriptor& aDescriptor,
+                                        const nsIntRegion& aUpdatedRegion,
+                                        const nsIntRect& aBufferRect,
+                                        const nsIntPoint& aBufferRotation) MOZ_OVERRIDE;
 
   /**
    * Communicate the picture rect of an image to the compositor

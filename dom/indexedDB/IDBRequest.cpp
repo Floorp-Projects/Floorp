@@ -12,6 +12,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
@@ -23,7 +24,6 @@
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBTransaction.h"
-#include "DOMError.h"
 
 namespace {
 
@@ -117,7 +117,6 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   JS::Rooted<JSObject*> global(cx, GetParentObject());
   NS_ASSERTION(global, "This should never be null!");
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
   AssertIsRooted();
 
@@ -164,7 +163,7 @@ IDBRequest::SetError(nsresult aRv)
   NS_ASSERTION(!mError, "Already have an error?");
 
   mHaveResultOrErrorCode = true;
-  mError = DOMError::CreateForNSResult(aRv);
+  mError = new mozilla::dom::DOMError(GetOwner(), aRv);
   mErrorCode = aRv;
 
   mResultVal = JSVAL_VOID;
@@ -278,17 +277,26 @@ IDBRequest::GetResult(jsval* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-IDBRequest::GetError(nsIDOMDOMError** aError)
+mozilla::dom::DOMError*
+IDBRequest::GetError(mozilla::ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mHaveResultOrErrorCode) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
   }
 
-  NS_IF_ADDREF(*aError = mError);
-  return NS_OK;
+  return mError;
+}
+
+NS_IMETHODIMP
+IDBRequest::GetError(nsISupports** aError)
+{
+  ErrorResult rv;
+  *aError = GetError(rv);
+  NS_IF_ADDREF(*aError);
+  return rv.ErrorCode();
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
@@ -296,12 +304,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
   // nsDOMEventTargetHelper does it for us.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransaction)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
   tmp->mResultVal = JSVAL_VOID;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransaction)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)

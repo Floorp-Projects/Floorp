@@ -133,10 +133,10 @@ public:
     //
     // - the handler keeps a count of active connections to enforce the
     //   steady-state max-connections pref.
-    // 
+    //
 
     // Called to kick-off a new transaction, by default the transaction
-    // will be put on the pending transaction queue if it cannot be 
+    // will be put on the pending transaction queue if it cannot be
     // initiated at this time.  Callable from any thread.
     nsresult InitiateTransaction(nsHttpTransaction *trans, int32_t priority)
     {
@@ -258,7 +258,7 @@ public:
     {
         return mPipelineRescheduleTimeout;
     }
-    
+
     PRIntervalTime GetPipelineTimeout()   { return mPipelineReadTimeout; }
 
     mozilla::net::SpdyInformation *SpdyInfo() { return &mSpdyInfo; }
@@ -388,7 +388,7 @@ private:
     bool           mUseCache;
 
     bool           mPromptTempRedirect;
-    // mSendSecureXSiteReferrer: default is false, 
+    // mSendSecureXSiteReferrer: default is false,
     // if true allow referrer headers between secure non-matching hosts
     bool           mSendSecureXSiteReferrer;
 
@@ -485,7 +485,7 @@ class nsHttpsHandler : public nsIHttpProtocolHandler
 public:
     // we basically just want to override GetScheme and GetDefaultPort...
     // all other methods should be forwarded to the nsHttpHandler instance.
-    
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_FORWARD_NSIPROXIEDPROTOCOLHANDLER (gHttpHandler->)

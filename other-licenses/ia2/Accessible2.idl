@@ -1,45 +1,76 @@
 /*************************************************************************
  *
  *  File Name (Accessible2.idl)
+ * 
+ *  IAccessible2 IDL Specification 
+ * 
+ *  Copyright (c) 2007, 2013 Linux Foundation 
+ *  Copyright (c) 2006 IBM Corporation 
+ *  Copyright (c) 2000, 2006 Sun Microsystems, Inc. 
+ *  All rights reserved. 
+ *   
+ *   
+ *  Redistribution and use in source and binary forms, with or without 
+ *  modification, are permitted provided that the following conditions 
+ *  are met: 
+ *   
+ *   1. Redistributions of source code must retain the above copyright 
+ *      notice, this list of conditions and the following disclaimer. 
+ *   
+ *   2. Redistributions in binary form must reproduce the above 
+ *      copyright notice, this list of conditions and the following 
+ *      disclaimer in the documentation and/or other materials 
+ *      provided with the distribution. 
  *
- *  IAccessible2 IDL Specification
- *
- *  Copyright (c) Linux Foundation 2007, 2009
- *  Copyright (c) IBM Corp. 2006
- *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License version 2.1, as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
- ************************************************************************/
+ *   3. Neither the name of the Linux Foundation nor the names of its 
+ *      contributors may be used to endorse or promote products 
+ *      derived from this software without specific prior written 
+ *      permission. 
+ *   
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
+ *  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ *  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ *  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ *  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ *  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+ *  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ *   
+ *  This BSD License conforms to the Open Source Initiative "Simplified 
+ *  BSD License" as published at: 
+ *  http://www.opensource.org/licenses/bsd-license.php 
+ *   
+ *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2 
+ *  mark may be used in accordance with the Linux Foundation Trademark 
+ *  Policy to indicate compliance with the IAccessible2 specification. 
+ * 
+ ************************************************************************/ 
 
 /** @mainpage
 
  @section _interfaces Interfaces
   IAccessible2\n
+  IAccessible2_2\n
   IAccessibleAction\n
   IAccessibleApplication\n
   IAccessibleComponent\n
+  IAccessibleDocument\n
+  IAccessibleEditableText\n
   IAccessibleHypertext\n
+  IAccessibleHypertext2\n
   IAccessibleHyperlink\n
   IAccessibleImage\n
   IAccessibleRelation\n
-  IAccessibleTable [deprecated]\n
+  IAccessibleTable [Deprecated]\n
   IAccessibleTable2\n
   IAccessibleTableCell\n
   IAccessibleText\n
-  IAccessibleEditableText\n
+  IAccessibleText2\n
   IAccessibleValue
 
  @section _structs Structs
@@ -48,6 +79,7 @@
   IA2TextSegment
 
  @section _enums Enums
+  ::IA2Actions values are predefined actions for use when implementing support for HTML5 media.\n
   ::IA2CoordinateType values define the requested coordinate type (screen or parent window).\n
   ::IA2EventID values identify events.\n
   ::IA2Role values defines roles which are in addition to the existing MSAA roles.\n
@@ -61,31 +93,56 @@
   @ref grpRelations
 
  @section _misc Miscellaneous
-  @ref _licensePage "LGPL License"\n
+  @ref _licensePage "BSD License"\n
   @ref _generalInfo "General Information"\n
 
- @page _licensePage LGPL License
-  IAccessible2 IDL Specification
+ @page _licensePage BSD License
+  %IAccessible2 IDL Specification
 
-  Copyright (c) Linux Foundation 2007, 2008\n
-  Copyright (c) IBM Corp. 2006\n
-  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+  Copyright (c) 2007, 2013 Linux Foundation\n
+  Copyright (c) 2006 IBM Corporation\n
+  Copyright (c) 2000, 2006 Sun Microsystems, Inc.\n
+  All rights reserved.
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License version 2.1, as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
-  You may also refer to http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+  Redistribution and use in source and binary forms, with or without 
+  modification, are permitted provided that the following conditions 
+  are met: 
+    
+   1. Redistributions of source code must retain the above copyright 
+      notice, this list of conditions and the following disclaimer. 
+ 
+   2. Redistributions in binary form must reproduce the above 
+      copyright notice, this list of conditions and the following 
+      disclaimer in the documentation and/or other materials 
+      provided with the distribution. 
+ 
+   3. Neither the name of the Linux Foundation nor the names of its 
+      contributors may be used to endorse or promote products 
+      derived from this software without specific prior written 
+      permission. 
+ 
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
+  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ 
+  This BSD License conforms to the Open Source Initiative "Simplified 
+  BSD License" as published at: 
+  http://www.opensource.org/licenses/bsd-license.php 
+ 
+  %IAccessible2 is a trademark of the Linux Foundation. The %IAccessible2 
+  mark may be used in accordance with the
+  <a href="http://www.linuxfoundation.org/collaborate/workgroups/accessibility/trademark-policy">
+  Linux Foundation Trademark Policy</a> to indicate compliance with the %IAccessible2 specification. 
 
  @page _generalInfo General Information 
   The following information is applicable to two or more interfaces.
@@ -105,9 +162,9 @@
  @ref _trademark
 
  @section _errors Error Handling
-  HRESULT values are defined by the Microsoft&reg; Win32&reg; API.  For more information, refer to 
-  <a href="http://msdn2.microsoft.com/en-us/library/bb401631.aspx">Interpreting HRESULT Values</a>
-  in MSDN&reg;.
+  HRESULT values are defined by the Microsoft&reg; Win32&reg; API.  For more information, refer to
+  <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa378137%28v=vs.85%29.aspx">
+  Interpreting HRESULT Values</a> in MSDN&reg;.
 
   Note that the S_FALSE return value is considered a non-error value and the 
   SUCCEEDED macro will return TRUE.  S_FALSE is used when there is no failure
@@ -144,21 +201,28 @@
    String: What are the rules for BSTR allocation and deallocation?</a>
 
  @subsection _arrayConsideration Special Consideration when using Arrays
-  There are several methods which return arrays.  It is considered a best practice
-  for the client to allocate and free the arrays.  This can be done for 
-  IAccessible2::relations and IAccessibleRelation::targets.  However, due to the
-  coding of the IDL for the remaining methods which return arrays, the server must
-  allocate the array and the client must free the array when no longer needed.  
-  These methods are IAccessible2::extendedStates, IAccessible2::localizedExtendedStates, 
-  IAccessibleAction::keyBinding, IAccessibleTable::selectedChildren, 
-  IAccessibleTable::selectedColumns, and IAccessibleTable::selectedRows.  For those 
-  methods, the server must allocate both the top level array and any storage 
-  associated with it, e.g. for BSTRs.  The client must use CoTaskMemFree to free
-  the array and any BSTRs must be freed with SysFreeString.  
+  There are several methods which return arrays.  In the case of IAccessible2::relations
+  and IAccessibleRelation::targets the client must allocate and free the arrays.
+
+  For the remaining methods which return arrays, the server must allocate the array
+  and the client must free the array when no longer needed.  These methods are
+  IAccessible2::extendedStates, IAccessible2::localizedExtendedStates,
+  IAccessible2_2::relationTargetsOfType, IAccessibleAction::keyBinding, 
+  IAccessibleHypertext2::hyperlinks, IAccessibleTable::selectedChildren, 
+  IAccessibleTable::selectedColumns, IAccessibleTable::selectedRows,
+  IAccessibleTable2::selectedCells, IAccessibleTable2::selectedColumns,
+  IAccessibleTable2::selectedRows, IAccessibleTableCell::columnHeaderCells,
+  and IAccessibleTableCell::rowHeaderCells.
+  For those methods, the server must allocate both the top level array and any storage 
+  associated with it, e.g. for BSTRs.  The server must allocate the arrays with 
+  CoTaskMemAlloc and any BSTRs with SysAllocString.  The client must use CoTaskMemFree
+  to free the array and any BSTRs must be freed with SysFreeString.  
   
-  Also, the IDL for those methods includes an extraneous [in] parameter for the 
-  caller to specify the max size of the array.  This parameter will be ignored by 
-  the COM server.
+  Also, the IDL for IAccessible2::extendedStates, IAccessible2::localizedExtendedStates, 
+  IAccessibleAction::keyBinding, IAccessibleTable::selectedChildren, 
+  IAccessibleTable::selectedColumns, and IAccessibleTable::selectedRows includes an
+  extraneous [in] parameter for the caller to specify the max size of the array.
+  This parameter will be ignored by the COM server.
 
  @section _indexes Zero and One Based Indexes
   Unless otherwise specified all offsets and indexes are 0 based. 
@@ -203,18 +267,16 @@
   } 
   @endcode
 
- @section _changingInterfaces Changing between Accessible Interfaces
-  Note that developers must always implement MSAA's IAccessible and, if needed, some 
-  of the interfaces in the set of IAccessible2 interfaces.  Although the IAccessible2 
-  IDL is currently coded such that IAccessible2 is a subclass of MSAA's IAccessible, 
-  none of MSAA's IAccessible methods are overridden or extended.  In order to allow 
-  future removal of the inheritance, Assistive Technologies (ATs) should not rely on 
-  that inheritance. 
+  @section _changingInterfaces Changing between Accessible Interfaces
+  Note that developers must always implement MSAA's IAccessible and, if needed, some
+  of the interfaces in the set of IAccessible2 interfaces.  Although the IAccessible2
+  IDL is coded such that IAccessible2 is a subclass of MSAA's IAccessible, none of
+  MSAA's IAccessible methods are redefined by IAccessible2.
 
   QueryService must be used to switch from a reference to an MSAA IAccessible interface 
   to another interface.  This has been 
-  <a href="http://www.accessinteropalliance.org/docs/Introducing_IAccessibleEx.doc">
-  documented by Microsoft</a> and the pertinent facts have been extracted below: 
+  <a href="http://www.atia.org/files/public/Introducing_IAccessibleEx.doc">
+  documented</a> and the pertinent facts have been extracted below: 
 
   @par 
    Why use QueryService instead of just using QueryInterface to get IAccessibleEx 
@@ -304,13 +366,15 @@ typedef struct IA2Locale {
   BSTR variant;  ///< Application specific variant of the locale
 } IA2Locale;
 
-/** This interface must always be provided for objects that support some
+/** @brief This interface exposes the primary set of information about an
+ IAccessible2 enabled accessible object.
+
+ This interface must always be provided for objects that support some
  portion of the collection of the %IAccessible2 interfaces.
 
  Please refer to @ref _changingInterfaces "Changing between Accessible Interfaces"
  for special considerations related to use of the MSAA IAccessible interface and 
  the set of %IAccessible2 interfaces.
-
  */
 [object, uuid(E89F726E-C4F4-4c19-BB19-B647D7FA8478)]
 interface IAccessible2 : IAccessible
@@ -330,7 +394,7 @@ interface IAccessible2 : IAccessible
      0 based
    @param [out] relation
    @retval S_OK
-   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL
+   @retval E_INVALIDARG if bad [in] passed
   */
   [propget] HRESULT relation
     (
@@ -349,6 +413,7 @@ interface IAccessible2 : IAccessible
     actual number of relations in the returned array (not more than maxRelations)
    @retval S_OK
    @retval S_FALSE if there are no relations, nRelations is set to 0
+   @note As a performant alternative, client code should consider using IAccessible2_2::relationTargetsOfType.
   */
   [propget] HRESULT relations
     (
@@ -418,16 +483,19 @@ interface IAccessible2 : IAccessible
     1 based, 0 indicates that this value is not applicable
    @param [out] positionInGroup
     1 based, 0 indicates that this value is not applicable. This is an index
-	into the objects in the current group, not an index into all the objects
-	at the same group level.
+    into the objects in the current group, not an index into all the objects
+    at the same group level.
    @retval S_OK if at least one value is valid
-   @retval S_FALSE if no values are valid
+   @retval S_FALSE if no values are valid, [out] values are 0s
    @note This method is meant to describe the nature of an object's containment
-    structure.  This is normally not implemented on a combo box to describe the nature
+    structure.  It's exposed by trees, tree grids, nested lists, nested menus,
+    but not headings, which uses the level object attribute.  It is also exposed
+    by radio buttons (with groupLevel == 0).
+   @note This is normally not implemented on a combo box to describe the nature
     of its contents.  Normally an AT will get that information from its child list 
-	object.  However, in some cases when combo boxes are not able to be structured
-	such that the list is a child of the combo box, this method is implemented
-	on the combo box itself. ATs can use this interface if a child list is not found.
+    object.  However, in some cases when non-edit combo boxes are not able to be structured
+    such that the list is a child of the combo box, this method is implemented on
+    the combo box itself. ATs can use this interface if a child list is not found.
 	*/
   [propget] HRESULT groupPosition
     (
@@ -491,7 +559,7 @@ interface IAccessible2 : IAccessible
     This parameter is ignored. Refer to @ref _arrayConsideration 
 	"Special Consideration when using Arrays" for more details.
    @param [out] extendedStates
-    This array is allocated by the server.  Free it with CoTaskMemFree.
+    This array is allocated by the server.  The client must free it with CoTaskMemFree.
    @param [out] nExtendedStates
     The number of extended states returned; the size of the returned array.
    @retval S_OK
@@ -505,11 +573,12 @@ interface IAccessible2 : IAccessible
     );
 
   /** @brief Returns the localized extended states (array of strings).
+
    @param [in] maxLocalizedExtendedStates
     This parameter is ignored. Refer to @ref _arrayConsideration 
 	"Special Consideration when using Arrays" for more details.
    @param [out] localizedExtendedStates
-    This array is allocated by the server.  Free it with CoTaskMemFree. 
+    This array is allocated by the server.  The client must free it with CoTaskMemFree. 
    @param [out] nLocalizedExtendedStates
     The number of localized extended states returned; the size of the returned array.
    @retval S_OK
@@ -554,7 +623,11 @@ interface IAccessible2 : IAccessible
    One means of implementing this would be to create a factory with a 32 bit number 
    generator and a reuse pool.  The number generator would emit numbers starting 
    at 1.  Each time an object's life cycle ended, its number would be saved into a 
-   resuse pool.  The number generator would be used whenever the reuse pool was empty.
+   reuse pool.  The number generator would be used whenever the reuse pool was empty.
+
+   Another way to create a unique ID is to generate it from a pointer value, e.g. an
+   object's address. That would be unique because no two active objects can use the
+   same allocated memory space.
 
    @param [out] uniqueID
    @retval S_OK
@@ -605,7 +678,7 @@ interface IAccessible2 : IAccessible
      [out, retval] IA2Locale *locale
     );
 
-  /** @brief Returns the attributes specific to this %IAccessible2 object, such as a cell's formula.
+  /** @brief Returns the attributes specific to this object, such as a cell's formula.
    @param [out] attributes
    @retval S_OK
    @retval S_FALSE returned if there is nothing to return, [out] value is NULL
@@ -616,3 +689,4 @@ interface IAccessible2 : IAccessible
     );
 
 }
+

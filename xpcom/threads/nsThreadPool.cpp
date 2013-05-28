@@ -285,7 +285,10 @@ nsThreadPool::SetThreadLimit(uint32_t value)
   mThreadLimit = value;
   if (mIdleThreadLimit > mThreadLimit)
     mIdleThreadLimit = mThreadLimit;
-  mon.NotifyAll();  // wake up threads so they observe this change
+
+  if (static_cast<uint32_t>(mThreads.Count()) > mThreadLimit) {
+    mon.NotifyAll();  // wake up threads so they observe this change
+  }
   return NS_OK;
 }
 
@@ -303,7 +306,11 @@ nsThreadPool::SetIdleThreadLimit(uint32_t value)
   mIdleThreadLimit = value;
   if (mIdleThreadLimit > mThreadLimit)
     mIdleThreadLimit = mThreadLimit;
-  mon.NotifyAll();  // wake up threads so they observe this change
+
+  // Do we need to kill some idle threads?
+  if (mIdleCount > mIdleThreadLimit) {
+    mon.NotifyAll();  // wake up threads so they observe this change
+  }
   return NS_OK;
 }
 
@@ -318,8 +325,13 @@ NS_IMETHODIMP
 nsThreadPool::SetIdleThreadTimeout(uint32_t value)
 {
   ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
+  uint32_t oldTimeout = mIdleThreadTimeout;
   mIdleThreadTimeout = value;
-  mon.NotifyAll();  // wake up threads so they observe this change
+
+  // Do we need to notify any idle threads that their sleep time has shortened?
+  if (mIdleThreadTimeout < oldTimeout && mIdleCount > 0) {
+    mon.NotifyAll();  // wake up threads so they observe this change
+  }
   return NS_OK;
 }
 

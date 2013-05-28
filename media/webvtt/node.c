@@ -24,11 +24,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
  #include <string.h>
  #include <stdlib.h>
  #include "node_internal.h"
- 
+
  static webvtt_node empty_node = {
   { 1 }, /* init ref count */
   0, /* parent */
@@ -44,11 +44,11 @@ webvtt_ref_node( webvtt_node *node )
   }
 }
 
-WEBVTT_EXPORT void 
+WEBVTT_EXPORT void
 webvtt_init_node( webvtt_node **node )
 {
   if( *node != &empty_node ) {
-    if( node && *node ) { 
+    if( node && *node ) {
       webvtt_release_node( node );
     }
     *node = &empty_node;
@@ -57,7 +57,8 @@ webvtt_init_node( webvtt_node **node )
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_create_node( webvtt_node **node, webvtt_node_kind kind, webvtt_node *parent )
+webvtt_create_node( webvtt_node **node, webvtt_node_kind kind,
+                    webvtt_node *parent )
 {
   webvtt_node *temp_node;
 
@@ -79,8 +80,10 @@ webvtt_create_node( webvtt_node **node, webvtt_node_kind kind, webvtt_node *pare
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_create_internal_node( webvtt_node **node, webvtt_node *parent, webvtt_node_kind kind, 
-  webvtt_stringlist *css_classes, webvtt_string *annotation )
+webvtt_create_internal_node( webvtt_node **node, webvtt_node *parent,
+                             webvtt_node_kind kind,
+                             webvtt_stringlist *css_classes,
+                             webvtt_string *annotation )
 {
   webvtt_status status;
   webvtt_internal_node_data *node_data;
@@ -89,13 +92,15 @@ webvtt_create_internal_node( webvtt_node **node, webvtt_node *parent, webvtt_nod
     return status;
   }
 
-  if ( !( node_data = (webvtt_internal_node_data *)webvtt_alloc0( sizeof(*node_data) ) ) )
+  if ( !( node_data =
+         (webvtt_internal_node_data *)webvtt_alloc0( sizeof(*node_data) ) ) )
   {
     return WEBVTT_OUT_OF_MEMORY;
   }
 
   webvtt_copy_stringlist( &node_data->css_classes, css_classes );
   webvtt_copy_string( &node_data->annotation, annotation );
+  webvtt_init_string( &node_data->lang );
   node_data->children = NULL;
   node_data->length = 0;
   node_data->alloc = 0;
@@ -106,25 +111,51 @@ webvtt_create_internal_node( webvtt_node **node, webvtt_node *parent, webvtt_nod
 }
 
 WEBVTT_INTERN webvtt_status
+webvtt_create_lang_node( webvtt_node **node, webvtt_node *parent,
+                         webvtt_stringlist *css_classes,
+                         webvtt_string *lang )
+{
+  webvtt_string empty_annotation;
+  webvtt_status status;
+
+  webvtt_init_string( &empty_annotation );
+  status = webvtt_create_internal_node( node, parent, WEBVTT_LANG, css_classes,
+                                        &empty_annotation );
+  webvtt_release_string( &empty_annotation );
+
+  /* We need to release as create internal node put a default value in. */
+  webvtt_release_string( &(*node)->data.internal_data->lang );
+  webvtt_copy_string( &(*node)->data.internal_data->lang, lang );
+
+  return status;
+}
+
+WEBVTT_INTERN webvtt_status
 webvtt_create_head_node( webvtt_node **node )
 {
   webvtt_status status;
-  webvtt_string temp_annotation;
+  webvtt_string empty_annotation;
 
-  webvtt_init_string( &temp_annotation );
-  if( WEBVTT_FAILED( status = webvtt_create_internal_node( node, NULL, WEBVTT_HEAD_NODE, NULL, &temp_annotation ) ) ) {
+  webvtt_init_string( &empty_annotation );
+  if( WEBVTT_FAILED( status =
+                   webvtt_create_internal_node( node, NULL, WEBVTT_HEAD_NODE,
+                                                NULL, &empty_annotation ) ) ) {
     return status;
   }
 
+  webvtt_release_string( &empty_annotation );
   return WEBVTT_SUCCESS;
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_create_timestamp_node( webvtt_node **node, webvtt_node *parent, webvtt_timestamp time_stamp )
+webvtt_create_timestamp_node( webvtt_node **node, webvtt_node *parent,
+                              webvtt_timestamp time_stamp )
 {
   webvtt_status status;
 
-  if( WEBVTT_FAILED( status = webvtt_create_node( node, WEBVTT_TIME_STAMP, parent ) ) ) {
+  if( WEBVTT_FAILED( status = webvtt_create_node( node,
+                                                  WEBVTT_TIME_STAMP,
+                                                  parent ) ) ) {
     return status;
   }
 
@@ -134,11 +165,13 @@ webvtt_create_timestamp_node( webvtt_node **node, webvtt_node *parent, webvtt_ti
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_create_text_node( webvtt_node **node, webvtt_node *parent, webvtt_string *text )
+webvtt_create_text_node( webvtt_node **node, webvtt_node *parent,
+                         webvtt_string *text )
 {
   webvtt_status status;
 
-  if( WEBVTT_FAILED( status = webvtt_create_node( node, WEBVTT_TEXT, parent ) ) ) {
+  if( WEBVTT_FAILED( status = webvtt_create_node( node, WEBVTT_TEXT,
+                                                  parent ) ) ) {
     return status;
   }
 
@@ -148,12 +181,12 @@ webvtt_create_text_node( webvtt_node **node, webvtt_node *parent, webvtt_string 
 
 }
 
-WEBVTT_EXPORT void 
+WEBVTT_EXPORT void
 webvtt_release_node( webvtt_node **node )
 {
   webvtt_uint i;
   webvtt_node *n;
-  
+
   if( !node || !*node ) {
     return;
   }
@@ -162,8 +195,10 @@ webvtt_release_node( webvtt_node **node )
   if( webvtt_deref( &n->refs )  == 0 ) {
     if( n->kind == WEBVTT_TEXT ) {
         webvtt_release_string( &n->data.text );
-    } else if( WEBVTT_IS_VALID_INTERNAL_NODE( n->kind ) && n->data.internal_data ) {
+    } else if( WEBVTT_IS_VALID_INTERNAL_NODE( n->kind ) &&
+               n->data.internal_data ) {
       webvtt_release_stringlist( &n->data.internal_data->css_classes );
+      webvtt_release_string( &n->data.internal_data->lang );
       webvtt_release_string( &n->data.internal_data->annotation );
       for( i = 0; i < n->data.internal_data->length; i++ ) {
         webvtt_release_node( n->data.internal_data->children + i );
@@ -181,27 +216,27 @@ webvtt_attach_node( webvtt_node *parent, webvtt_node *to_attach )
 {
   webvtt_node **next = 0;
   webvtt_internal_node_data *nd = 0;
-  
+
   if( !parent || !to_attach || !parent->data.internal_data ) {
     return WEBVTT_INVALID_PARAM;
   }
   nd = parent->data.internal_data;
-  
+
   if( nd->alloc == 0 ) {
     next = (webvtt_node **)webvtt_alloc0( sizeof( webvtt_node * ) * 8 );
-    
+
     if( !next ) {
       return WEBVTT_OUT_OF_MEMORY;
     }
-    
+
     nd->children = next;
     nd->alloc = 8;
   }
-  
+
   if( nd->length + 1 >= ( nd->alloc / 3 ) * 2 ) {
 
     next = (webvtt_node **)webvtt_alloc0( sizeof( *next ) * nd->alloc * 2 );
-    
+
     if( !next ) {
       return WEBVTT_OUT_OF_MEMORY;
     }

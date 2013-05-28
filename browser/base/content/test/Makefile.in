@@ -64,6 +64,9 @@ _BROWSER_FILES = \
                  head.js \
                  browser_typeAheadFind.js \
                  browser_keywordSearch.js \
+                 browser_keywordSearch_postData.js \
+                 POSTSearchEngine.xml \
+                 print_postdata.sjs \
                  browser_alltabslistener.js \
                  browser_bug304198.js \
                  title_test.svg \

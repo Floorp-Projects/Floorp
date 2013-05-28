@@ -27,6 +27,7 @@
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
@@ -75,7 +76,6 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
      */
     JS::Rooted<JSObject*> obj(cx, global);
     JS::Rooted<JSObject*> proto(cx);
-    JSAutoRequest ar(cx);
     for (;;) {
         MOZ_ALWAYS_TRUE(JS_GetPrototype(cx, obj, proto.address()));
         if (!proto)

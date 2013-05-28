@@ -14,7 +14,8 @@ FAIL_ON_WARNINGS = 1
 
 VPATH += $(topsrcdir)/build
 
-CPPSRCS = \
+# This can be deleted when SIMPLE_PROGRAMS is in moz.build
+cppsrcs = \
   nsIFileEnumerator.cpp \
   TestCallTemplates.cpp \
   TestINIParser.cpp \
@@ -27,18 +28,20 @@ CPPSRCS = \
   TestQuickReturn.cpp \
   TestArguments.cpp \
   TestUnicodeArguments.cpp \
-  $(STDCPPFLAGS) \
   $(NULL)
 
+# This can be deleted when SIMPLE_PROGRAMS is in moz.build
 ifeq ($(OS_TARGET),WINNT)
-CPPSRCS += TestBase64.cpp
+cppsrcs += TestBase64.cpp
 endif
 
+# This can be deleted when SIMPLE_PROGRAMS is in moz.build
 ifdef WRAP_STL_INCLUDES
-CPPSRCS += TestSTLWrappers.cpp
+cppsrcs += TestSTLWrappers.cpp
 endif
 
-SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+# TODO: Use CPPSRCS from moz.build
+SIMPLE_PROGRAMS	:= $(cppsrcs:.cpp=$(BIN_SUFFIX))
 
 CPP_UNIT_TESTS = \
                  ShowAlignments.cpp \

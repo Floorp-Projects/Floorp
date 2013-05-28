@@ -20,7 +20,7 @@ STL_FLAGS =
 # support
 ENABLE_CXX_EXCEPTIONS = 1
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifndef GNU_CC
 # Enable unwind semantics for exception handlers in response to warning C4530.
 OS_CPPFLAGS += -EHsc
 endif
@@ -52,21 +52,8 @@ LOCAL_INCLUDES = \
 
 VPATH += $(srcdir)/../common
 # src/common:
-CPPSRCS += \
-  debug.cpp \
-  RefCountObject.cpp \
-  $(NULL)
-
 VPATH += $(srcdir)/../libEGL
 # src/libEGL:
-CPPSRCS += \
-  Config.cpp \
-  Display.cpp \
-  libEGL.cpp \
-  main.cpp \
-  Surface.cpp \
-  $(NULL)
-
 DEFFILE = $(srcdir)/libEGL.def
 RCFILE  = $(srcdir)/libEGL.rc
 

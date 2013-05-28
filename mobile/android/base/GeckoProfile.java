@@ -1,11 +1,7 @@
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
- *
  * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/.
- *
- * ***** END LICENSE BLOCK ***** */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko;
 
@@ -17,8 +13,11 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -397,6 +396,20 @@ public final class GeckoProfile {
 
         parser.addSection(profileSection);
         parser.write();
+
+        // Write out profile creation time, mirroring the logic in nsToolkitProfileService.
+        try {
+            FileOutputStream stream = new FileOutputStream(profileDir.getAbsolutePath() + File.separator + "times.json");
+            OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
+            try {
+                writer.append("{\"created\": " + System.currentTimeMillis() + "}\n");
+            } finally {
+                writer.close();
+            }
+        } catch (Exception e) {
+            // Best-effort.
+            Log.w(LOGTAG, "Couldn't write times.json.", e);
+        }
 
         return profileDir;
     }

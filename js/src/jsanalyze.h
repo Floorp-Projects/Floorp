@@ -168,15 +168,7 @@ ExtendedDef(jsbytecode *pc)
 {
     switch ((JSOp)*pc) {
       case JSOP_SETARG:
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
       case JSOP_SETLOCAL:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC:
         return true;
       default:
         return false;
@@ -322,22 +314,6 @@ BytecodeUpdatesSlot(JSOp op)
     return (op == JSOP_SETARG || op == JSOP_SETLOCAL);
 }
 
-static inline int32_t
-GetBytecodeInteger(jsbytecode *pc)
-{
-    switch (JSOp(*pc)) {
-      case JSOP_ZERO:   return 0;
-      case JSOP_ONE:    return 1;
-      case JSOP_UINT16: return GET_UINT16(pc);
-      case JSOP_UINT24: return GET_UINT24(pc);
-      case JSOP_INT8:   return GET_INT8(pc);
-      case JSOP_INT32:  return GET_INT32(pc);
-      default:
-        JS_NOT_REACHED("Bad op");
-        return 0;
-    }
-}
-
 /*
  * Information about the lifetime of a local or argument. These form a linked
  * list describing successive intervals in the program where the variable's
@@ -465,26 +441,6 @@ struct LifetimeVariable
     }
     uint32_t firstWrite(LoopAnalysis *loop) const {
         return firstWrite(loop->head, loop->backedge);
-    }
-
-    /* Return true if the variable cannot decrease during the body of a loop. */
-    bool nonDecreasing(JSScript *script, LoopAnalysis *loop) const {
-        Lifetime *segment = lifetime ? lifetime : saved;
-        while (segment && segment->start <= loop->backedge) {
-            if (segment->start >= loop->head && segment->write) {
-                switch (JSOp(script->code[segment->start])) {
-                  case JSOP_INCLOCAL:
-                  case JSOP_LOCALINC:
-                  case JSOP_INCARG:
-                  case JSOP_ARGINC:
-                    break;
-                  default:
-                    return false;
-                }
-            }
-            segment = segment->next;
-        }
-        return true;
     }
 
     /*
@@ -752,6 +708,8 @@ class ScriptAnalysis
 
     bool *escapedSlots;
 
+    types::StackTypeSet *undefinedTypeSet;
+
     /* Which analyses have been performed. */
     bool ranBytecode_;
     bool ranSSA_;
@@ -868,11 +826,6 @@ class ScriptAnalysis
         return JSOp(*next) == JSOP_POP && !jumpTarget(next);
     }
 
-    bool incrementInitialValueObserved(jsbytecode *pc) {
-        const JSCodeSpec *cs = &js_CodeSpec[*pc];
-        return (cs->format & JOF_POST) && !popGuaranteed(pc);
-    }
-
     const SSAValue &poppedValue(uint32_t offset, uint32_t which) {
         JS_ASSERT(offset < script_->length);
         JS_ASSERT(which < GetUseCount(script_, offset) +
@@ -939,7 +892,9 @@ class ScriptAnalysis
           case SSAValue::VAR:
             JS_ASSERT(!slotEscapes(v.varSlot()));
             if (v.varInitial()) {
-                return types::TypeScript::SlotTypes(script_, v.varSlot());
+                if (v.varSlot() < LocalSlot(script_, 0))
+                    return types::TypeScript::SlotTypes(script_, v.varSlot());
+                return undefinedTypeSet;
             } else {
                 /*
                  * Results of intermediate assignments have the same type as

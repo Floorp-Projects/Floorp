@@ -19,7 +19,6 @@
 #include "nsJSON.h"
 #include "jsapi.h"
 #include "mozilla/Services.h"
-#include "IccManager.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
@@ -55,12 +54,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MobileConnection,
   // Don't traverse mListener because it doesn't keep any reference to
   // MobileConnection but a raw pointer instead. Neither does mProvider because
   // it's an xpcom service and is only released at shutting down.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
                                                 nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIccManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MobileConnection)
@@ -107,9 +104,7 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Failed registering mobile connection messages with provider");
 
-    mIccManager = new icc::IccManager();
-    mIccManager->Init(aWindow);
-    printf_stderr("MobileConnection & IccManager initialized");
+    printf_stderr("MobileConnection initialized");
   }
 }
 
@@ -121,11 +116,6 @@ MobileConnection::Shutdown()
     mProvider->UnregisterMobileConnectionMsg(mListener);
     mProvider = nullptr;
     mListener = nullptr;
-  }
-
-  if (mIccManager) {
-    mIccManager->Shutdown();
-    mIccManager = nullptr;
   }
 }
 
@@ -238,19 +228,6 @@ MobileConnection::GetNetworkSelectionMode(nsAString& networkSelectionMode)
      return NS_OK;
   }
   return mProvider->GetNetworkSelectionMode(networkSelectionMode);
-}
-
-NS_IMETHODIMP
-MobileConnection::GetIcc(nsIDOMMozIccManager** aIcc)
-{
-  *aIcc = nullptr;
-
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  NS_IF_ADDREF(*aIcc = mIccManager);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -412,6 +389,40 @@ MobileConnection::SetCallForwardingOption(nsIDOMMozMobileCFInfo* aCFInfo,
   }
 
   return mProvider->SetCallForwardingOption(GetOwner(), aCFInfo, aRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetCallBarringOption(const JS::Value& aOption,
+                                       nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCallBarringOption(GetOwner(), aOption, aRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::SetCallBarringOption(const JS::Value& aOption,
+                                       nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetCallBarringOption(GetOwner(), aOption, aRequest);
 }
 
 NS_IMETHODIMP

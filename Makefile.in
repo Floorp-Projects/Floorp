@@ -17,6 +17,8 @@ $(error GNU Make 3.80 or higher is required)
 endif
 endif
 
+export TOPLEVEL_BUILD := 1
+
 include $(DEPTH)/config/autoconf.mk
 
 default::
@@ -36,7 +38,9 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
 ifndef MOZ_PROFILE_USE
-default alldep all:: CLOBBER $(topsrcdir)/configure config.status
+# We need to explicitly put backend.RecursiveMakeBackend.built here
+# otherwise the rule in rules.mk doesn't run early enough.
+default alldep all:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
 	$(RM) -r $(DIST)/sdk
 	$(RM) -r $(DIST)/include
 	$(RM) -r $(DIST)/private

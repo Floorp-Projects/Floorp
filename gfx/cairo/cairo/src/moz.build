@@ -20,9 +20,17 @@ EXPORTS.cairo += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.cairo += [
-        'cairo-win32.h',
         'cairo-pdf.h',
+        'cairo-win32.h',
     ]
+    if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
+        CPP_SOURCES += [
+            'cairo-dwrite-font.cpp',
+        ]
+    if CONFIG['MOZ_ENABLE_D2D_SURFACE']:
+        CPP_SOURCES += [
+            'cairo-d2d-surface.cpp',
+        ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS.cairo += [
         'cairo-os2.h',
@@ -31,12 +39,15 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.cairo += [
-        'cairo-quartz.h',
         'cairo-quartz-image.h',
+        'cairo-quartz.h',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
     EXPORTS.cairo += [
         'cairo-beos.h',
+    ]
+    CPP_SOURCES += [
+        'cairo-beos-surface.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
     EXPORTS.cairo += [
@@ -49,8 +60,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS.cairo += [
-        'cairo-qt.h',
         'cairo-pdf.h',
+        'cairo-qt.h',
+    ]
+    CPP_SOURCES += [
+        'cairo-qt-surface.cpp',
     ]
 
 if CONFIG['BUILD_CAIRO_SVG']:

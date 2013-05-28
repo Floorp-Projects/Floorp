@@ -70,8 +70,7 @@ interface nsIPrefBranch : nsISupports
    * @param aPrefName The boolean preference to set the state of.
    * @param aValue    The boolean value to set the preference to.
    *
-   * @return NS_OK The value was successfully set.
-   * @return Other The value was not set or is the wrong type.
+   * @throws Error if setting failed or the value is the wrong type.
    *
    * @see getBoolPref
    */
@@ -107,8 +106,7 @@ interface nsIPrefBranch : nsISupports
    * @param aPrefName The string preference to set.
    * @param aValue    The string value to set the preference to.
    *
-   * @return NS_OK The value was successfully set.
-   * @return Other The value was not set or is the wrong type.
+   * @throws Error if setting failed or the value is the wrong type.
    *
    * @see getCharPref
    */
@@ -131,8 +129,7 @@ interface nsIPrefBranch : nsISupports
    * @param aPrefName The integer preference to set the value of.
    * @param aValue    The integer value to set the preference to.
    *
-   * @return NS_OK The value was successfully set.
-   * @return Other The value was not set or is the wrong type.
+   * @throws Error if setting failed or the value is the wrong type.
    *
    * @see getIntPref
    */
@@ -152,8 +149,7 @@ interface nsIPrefBranch : nsISupports
    * @param aValue    The XPCOM object into which to the complex preference 
    *                  value should be retrieved.
    *
-   * @return NS_OK The value was successfully retrieved.
-   * @return Other The value does not exist or is the wrong type.
+   * @throws Error The value does not exist or is the wrong type.
    *
    * @see setComplexValue
    */
@@ -174,8 +170,7 @@ interface nsIPrefBranch : nsISupports
    * @param aValue    The XPCOM object from which to set the complex preference 
    *                  value.
    *
-   * @return NS_OK The value was successfully set.
-   * @return Other The value was not set or is the wrong type.
+   * @throws Error if setting failed or the value is the wrong type.
    *
    * @see getComplexValue
    */
@@ -190,8 +185,6 @@ interface nsIPrefBranch : nsISupports
    *
    * @note
    * This method does nothing if this object is a default branch.
-   *
-   * @return NS_OK The user preference was successfully cleared.
    */
   void clearUserPref(in string aPrefName);
 
@@ -206,8 +199,7 @@ interface nsIPrefBranch : nsISupports
    * This method can be called on either a default or user branch but, in
    * effect, always operates on the default branch.
    *
-   * @return NS_OK The preference was successfully locked.
-   * @return Other The preference does not exist or an error occurred.
+   * @throws Error The preference does not exist or an error occurred.
    *
    * @see unlockPref
    */
@@ -264,8 +256,7 @@ interface nsIPrefBranch : nsISupports
    * This method can be called on either a default or user branch but, in
    * effect, always operates on the default branch.
    *
-   * @return NS_OK The preference was successfully unlocked.
-   * @return Other The preference does not exist or an error occurred.
+   * @throws Error The preference does not exist or an error occurred.
    *
    * @see lockPref
    */
@@ -283,8 +274,7 @@ interface nsIPrefBranch : nsISupports
    * This method can be called on either a default or user branch but, in
    * effect, always operates on both.
    *
-   * @return NS_OK The preference(s) were successfully removed.
-   * @return Other The preference(s) do not exist or an error occurred.
+   * @throws Error The preference(s) do not exist or an error occurred.
    */
   void deleteBranch(in string aStartingAt);
 
@@ -302,8 +292,7 @@ interface nsIPrefBranch : nsISupports
    * This method can be called on either a default or user branch but, in
    * effect, always operates on both.
    *
-   * @return NS_OK The preference list was successfully retrieved.
-   * @return Other The preference(s) do not exist or an error occurred.
+   * @throws Error The preference(s) do not exist or an error occurred.
    */
   void getChildList(in string aStartingAt,
                     [optional] out unsigned long aCount,
@@ -321,8 +310,7 @@ interface nsIPrefBranch : nsISupports
    * This method can be called on either a default or user branch but, in
    * effect, always operates on the user branch.
    *
-   * @return NS_OK The preference(s) were successfully reset.
-   * @return Other The preference(s) do not exist or an error occurred.
+   * @throws Error The preference(s) do not exist or an error occurred.
    */
   void resetBranch(in string aStartingAt);
 

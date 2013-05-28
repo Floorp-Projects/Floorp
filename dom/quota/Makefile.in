@@ -10,18 +10,12 @@ VPATH            = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME     = domquota_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
-
-CPPSRCS = \
-  CheckQuotaHelper.cpp \
-  FileStreams.cpp \
-  QuotaManager.cpp \
-  QuotaObject.cpp \
-  $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/caps/include \

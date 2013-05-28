@@ -16,12 +16,12 @@ XPIDL_SOURCES += [
 
 if CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
+        'nsIDOMCFStateChangeEvent.idl',
         'nsIDOMMobileConnection.idl',
+        'nsIDOMNetworkStats.idl',
+        'nsIDOMNetworkStatsManager.idl',
         'nsIMobileConnectionProvider.idl',
         'nsINavigatorMobileConnection.idl',
-        'nsIDOMNetworkStatsManager.idl',
-        'nsIDOMNetworkStats.idl',
-        'nsIDOMCFStateChangeEvent.idl',
     ]
 
 XPIDL_MODULE = 'dom_network'

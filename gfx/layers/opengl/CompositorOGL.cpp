@@ -777,7 +777,7 @@ CompositorOGL::BeginFrame(const Rect *aClipRectIn, const gfxMatrix& aTransform,
       // sent atomically with rotation changes
       nsIntRect intRect;
       mWidget->GetClientBounds(intRect);
-      rect = gfxRect(intRect.x, intRect.y, intRect.width, intRect.height);
+      rect = gfxRect(0, 0, intRect.width, intRect.height);
     }
   }
 
@@ -962,8 +962,8 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
 
   IntRect intClipRect;
   aClipRect.ToIntRect(&intClipRect);
-  mGLContext->fScissor(intClipRect.x, intClipRect.y,
-                       intClipRect.width, intClipRect.height);
+  mGLContext->PushScissorRect(nsIntRect(intClipRect.x, intClipRect.y,
+                                        intClipRect.width, intClipRect.height));
 
   MaskType maskType;
   EffectMask* effectMask;
@@ -1198,6 +1198,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
     break;
   }
 
+  mGLContext->PopScissorRect();
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
   // in case rendering has used some other GL context
   MakeCurrent();

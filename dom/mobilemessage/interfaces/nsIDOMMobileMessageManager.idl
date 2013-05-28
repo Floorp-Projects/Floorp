@@ -11,14 +11,6 @@ interface nsIDOMDOMCursor;
 interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 
-dictionary MmsParameters
-{
-  jsval      receivers; // DOMString[]
-  DOMString? subject;
-  DOMString? smil;
-  jsval      attachments; // MmsAttachment[]
-};
-
 [scriptable, builtinclass, uuid(a7984cb3-27c8-4e3d-82a4-01553e93c078)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {

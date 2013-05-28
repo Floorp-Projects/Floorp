@@ -6,3 +6,9 @@
 
 MODULE = 'xpctest'
 
+CPP_SOURCES += [
+    'xpctest_attributes.cpp',
+    'xpctest_module.cpp',
+    'xpctest_params.cpp',
+]
+

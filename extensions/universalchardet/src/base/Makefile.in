@@ -12,34 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= universalchardet_s
 
-CPPSRCS = \
-		CharDistribution.cpp \
-		JpCntx.cpp \
-		LangBulgarianModel.cpp \
-		LangCyrillicModel.cpp \
-		LangGreekModel.cpp \
-		LangHungarianModel.cpp \
-		LangHebrewModel.cpp \
-		LangThaiModel.cpp \
-		nsHebrewProber.cpp \
-		nsCharSetProber.cpp \
-		nsBig5Prober.cpp \
-		nsEUCJPProber.cpp \
-		nsEUCKRProber.cpp \
-		nsEUCTWProber.cpp \
-		nsEscCharsetProber.cpp \
-		nsEscSM.cpp \
-		nsGB2312Prober.cpp \
-		nsMBCSGroupProber.cpp \
-		nsMBCSSM.cpp \
-		nsSBCSGroupProber.cpp \
-		nsSBCharSetProber.cpp \
-		nsSJISProber.cpp \
-		nsUTF8Prober.cpp \
-		nsLatin1Prober.cpp \
-		nsUniversalDetector.cpp \
-               $(NULL)
-
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 

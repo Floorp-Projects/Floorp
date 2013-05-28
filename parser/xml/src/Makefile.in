@@ -10,16 +10,11 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= saxp
+MSVC_ENABLE_PGO := 1
 
 MOZILLA_INTERNAL_API = 1
 LIBXUL_LIBRARY	= 1
 
-
-CPPSRCS		= \
-		nsSAXAttributes.cpp \
-		nsSAXLocator.cpp \
-		nsSAXXMLReader.cpp \
-		$(NULL)
 
 FORCE_STATIC_LIB = 1
 

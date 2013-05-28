@@ -6,3 +6,8 @@
 
 MODULE = 'test_xulapp'
 
+CPP_SOURCES += [
+    'TestDllInterceptor.cpp',
+    'TestXREMakeCommandLineWin.cpp',
+]
+

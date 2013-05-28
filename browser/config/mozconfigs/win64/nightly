@@ -3,9 +3,6 @@
 ac_add_options --target=x86_64-pc-mingw32
 ac_add_options --host=x86_64-pc-mingw32
 
-# for pgo
-mk_add_options PROFILE_GEN_SCRIPT='$(MAKE) -C $(MOZ_OBJDIR) pgo-profile-run'
-
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --enable-jemalloc

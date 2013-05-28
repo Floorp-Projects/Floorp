@@ -64,7 +64,7 @@ public:
 
     // called to indicate a failure with proxy CONNECT
     virtual void SetProxyConnectFailed() = 0;
-    
+
     // called to retrieve the request headers of the transaction
     virtual nsHttpRequestHead *RequestHead() = 0;
 
@@ -89,7 +89,7 @@ public:
     // classes that do not implement sub transactions
     // return NS_ERROR_NOT_IMPLEMENTED
     virtual nsresult AddTransaction(nsAHttpTransaction *transaction) = 0;
-    
+
     // The total length of the outstanding pipeline comprised of transacations
     // and sub-transactions.
     virtual uint32_t PipelineDepth() = 0;
@@ -109,7 +109,7 @@ public:
     // A null transaction is expected to return BASE_STREAM_CLOSED on all of
     // its IO functions all the time.
     virtual bool IsNullTransaction() { return false; }
-    
+
     // Every transaction is classified into one of the types below. When using
     // HTTP pipelines, only transactions with the same type appear on the same
     // pipeline.
@@ -123,7 +123,7 @@ public:
         // Transactions for content expected to be an image
         CLASS_IMAGE,
 
-        // Transactions that cannot involve a pipeline 
+        // Transactions that cannot involve a pipeline
         CLASS_SOLO,
 
         // Transactions that do not fit any of the other categories. HTML

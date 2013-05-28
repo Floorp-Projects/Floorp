@@ -34,6 +34,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsPIWindowRoot.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -43,6 +44,18 @@ static char *sPopupAllowedEvents;
 
 nsDOMEvent::nsDOMEvent(mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext, nsEvent* aEvent)
+{
+  ConstructorInit(aOwner, aPresContext, aEvent);
+}
+
+nsDOMEvent::nsDOMEvent(nsPIDOMWindow* aParent)
+{
+  ConstructorInit(static_cast<nsGlobalWindow *>(aParent), nullptr, nullptr);
+  SetIsDOMBinding();
+}
+
+void nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
+                                 nsPresContext* aPresContext, nsEvent* aEvent)
 {
   SetOwner(aOwner);
 
@@ -115,7 +128,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIJSNativeInitializer, !IsDOMBinding())
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
 
@@ -316,6 +329,7 @@ NS_IMETHODIMP
 nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
                        const JS::CallArgs& aArgs)
 {
+  MOZ_ASSERT(!IsDOMBinding());
   NS_ENSURE_TRUE(aArgs.length() >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
   bool trusted = false;
@@ -335,7 +349,6 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
     mOwner = w;
   }
 
-  JSAutoRequest ar(aCx);
   JSString* jsstr = JS_ValueToString(aCx, aArgs[0]);
   if (!jsstr) {
     return NS_ERROR_DOM_SYNTAX_ERR;
@@ -455,50 +468,6 @@ nsDOMEvent::StopImmediatePropagation()
 {
   mEvent->mFlags.mPropagationStopped = true;
   mEvent->mFlags.mImmediatePropagationStopped = true;
-  return NS_OK;
-}
-
-static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
-{
-  EventTarget* target = aEvent->currentTarget;
-  if (nsCOMPtr<nsINode> node = do_QueryInterface(target)) {
-    return node->OwnerDoc();
-  }
-
-  if (nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(target)) {
-    return window->GetExtantDoc();
-  }
-
-  return nullptr;
-}
-
-static void
-ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                            const char* aWarning)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocumentForReport(aEvent));
-
-  nsAutoString type;
-  aDOMEvent->GetType(type);
-  const PRUnichar *strings[] = { type.get() };
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM Events", doc,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning,
-                                  strings, ArrayLength(strings));
-}
-
-NS_IMETHODIMP
-nsDOMEvent::PreventBubble()
-{
-  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventBubbleWarning");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEvent::PreventCapture()
-{
-  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventCaptureWarning");
   return NS_OK;
 }
 
@@ -1038,6 +1007,22 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       }
     }
     break;
+  case NS_TOUCH_EVENT :
+    if (aEvent->mFlags.mIsTrusted) {
+      switch (aEvent->message) {
+      case NS_TOUCH_START :
+        if (PopupAllowedForEvent("touchstart")) {
+          abuse = openControlled;
+        }
+        break;
+      case NS_TOUCH_END :
+        if (PopupAllowedForEvent("touchend")) {
+          abuse = openControlled;
+        }
+        break;
+      }
+    }
+    break;
   case NS_MOUSE_EVENT :
     if (aEvent->mFlags.mIsTrusted &&
         static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
@@ -1233,6 +1218,17 @@ const char* nsDOMEvent::GetEventName(uint32_t aEventType)
   // arrays in nsEventListenerManager too, since the events for which
   // this is a problem generally *are* created by nsDOMEvent.)
   return nullptr;
+}
+
+bool
+nsDOMEvent::GetPreventDefault() const
+{
+  if (mOwner) {
+    if (nsIDocument* doc = mOwner->GetExtantDoc()) {
+      doc->WarnOnceAbout(nsIDocument::eGetPreventDefault);
+    }
+  }
+  return DefaultPrevented();
 }
 
 NS_IMETHODIMP

@@ -553,10 +553,8 @@ protected:
   bool ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask);
   bool RequireWhitespace();
 
-#ifdef MOZ_FLEXBOX
   // For "flex" shorthand property, defined in CSS3 Flexbox
   bool ParseFlex();
-#endif
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
@@ -675,7 +673,7 @@ protected:
 
   /* Functions for transform Parsing */
   bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue, bool& aIs3D);
-  bool ParseFunction(const nsString &aFunction, const int32_t aAllowedTypes[],
+  bool ParseFunction(nsCSSKeyword aFunction, const int32_t aAllowedTypes[],
                      int32_t aVariantMaskAll, uint16_t aMinElems,
                      uint16_t aMaxElems, nsCSSValue &aValue);
   bool ParseFunctionInternals(const int32_t aVariantMask[],
@@ -4045,6 +4043,8 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
                                               nsCSSPseudoClasses::Type aType)
 {
   int32_t numbers[2] = { 0, 0 };
+  int32_t sign[2] = { 1, 1 };
+  bool hasSign[2] = { false, false };
   bool lookForB = true;
 
   // Follow the whitespace rules as proposed in
@@ -4053,6 +4053,17 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   if (! GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
     return eSelectorParsingStatus_Error;
+  }
+
+  if (mToken.IsSymbol('+') || mToken.IsSymbol('-')) {
+    hasSign[0] = true;
+    if (mToken.IsSymbol('-')) {
+      sign[0] = -1;
+    }
+    if (! GetToken(false)) {
+      REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
+      return eSelectorParsingStatus_Error;
+    }
   }
 
   if (eCSSToken_Ident == mToken.mType || eCSSToken_Dimension == mToken.mType) {
@@ -4064,7 +4075,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     uint32_t truncAt = 0;
     if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("n-"))) {
       truncAt = 1;
-    } else if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("-n-"))) {
+    } else if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("-n-")) && !hasSign[0]) {
       truncAt = 2;
     }
     if (truncAt != 0) {
@@ -4074,20 +4085,20 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   }
 
   if (eCSSToken_Ident == mToken.mType) {
-    if (mToken.mIdent.LowerCaseEqualsLiteral("odd")) {
+    if (mToken.mIdent.LowerCaseEqualsLiteral("odd") && !hasSign[0]) {
       numbers[0] = 2;
       numbers[1] = 1;
       lookForB = false;
     }
-    else if (mToken.mIdent.LowerCaseEqualsLiteral("even")) {
+    else if (mToken.mIdent.LowerCaseEqualsLiteral("even") && !hasSign[0]) {
       numbers[0] = 2;
       numbers[1] = 0;
       lookForB = false;
     }
     else if (mToken.mIdent.LowerCaseEqualsLiteral("n")) {
-      numbers[0] = 1;
+      numbers[0] = sign[0];
     }
-    else if (mToken.mIdent.LowerCaseEqualsLiteral("-n")) {
+    else if (mToken.mIdent.LowerCaseEqualsLiteral("-n") && !hasSign[0]) {
       numbers[0] = -1;
     }
     else {
@@ -4100,15 +4111,43 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
-    numbers[1] = mToken.mInteger;
-    lookForB = false;
+    // for +-an case
+    if (mToken.mHasSign && hasSign[0]) {
+      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+    }
+    int32_t intValue = mToken.mInteger * sign[0];
+    // for -a/**/n case
+    if (! GetToken(false)) {
+      numbers[1] = intValue;
+      lookForB = false;
+    }
+    else {
+      if (eCSSToken_Ident == mToken.mType && mToken.mIdent.LowerCaseEqualsLiteral("n")) {
+        numbers[0] = intValue;
+      }
+      else if (eCSSToken_Ident == mToken.mType && StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("n-"))) {
+        numbers[0] = intValue;
+        mScanner->Backup(mToken.mIdent.Length() - 1);
+      }
+      else {
+        UngetToken();
+        numbers[1] = intValue;
+        lookForB = false;
+      }
+    }
   }
   else if (eCSSToken_Dimension == mToken.mType) {
     if (!mToken.mIntegerValid || !mToken.mIdent.LowerCaseEqualsLiteral("n")) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
-    numbers[0] = mToken.mInteger;
+    // for +-an case
+    if ( mToken.mHasSign && hasSign[0] ) {
+      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+    }
+    numbers[0] = mToken.mInteger * sign[0];
   }
   // XXX If it's a ')', is that valid?  (as 0n+0)
   else {
@@ -4125,12 +4164,10 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     // The '+' or '-' sign can optionally be separated by whitespace.
     // If it is separated by whitespace from what follows it, it appears
     // as a separate token rather than part of the number token.
-    bool haveSign = false;
-    int32_t sign = 1;
     if (mToken.IsSymbol('+') || mToken.IsSymbol('-')) {
-      haveSign = true;
+      hasSign[1] = true;
       if (mToken.IsSymbol('-')) {
-        sign = -1;
+        sign[1] = -1;
       }
       if (! GetToken(true)) {
         REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
@@ -4138,11 +4175,11 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
       }
     }
     if (eCSSToken_Number != mToken.mType ||
-        !mToken.mIntegerValid || mToken.mHasSign == haveSign) {
+        !mToken.mIntegerValid || mToken.mHasSign == hasSign[1]) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
-    numbers[1] = mToken.mInteger * sign;
+    numbers[1] = mToken.mInteger * sign[1];
     if (! GetToken(true)) {
       REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
       return eSelectorParsingStatus_Error;
@@ -5560,7 +5597,6 @@ CSSParserImpl::ParseElement(nsCSSValue& aValue)
   return false;
 }
 
-#ifdef MOZ_FLEXBOX
 // flex: none | [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]
 bool
 CSSParserImpl::ParseFlex()
@@ -5677,7 +5713,6 @@ CSSParserImpl::ParseFlex()
 
   return true;
 }
-#endif
 
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
@@ -6505,10 +6540,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseCounterData(aPropID);
   case eCSSProperty_cursor:
     return ParseCursor();
-#ifdef MOZ_FLEXBOX
   case eCSSProperty_flex:
     return ParseFlex();
-#endif // MOZ_FLEXBOX
   case eCSSProperty_font:
     return ParseFont();
   case eCSSProperty_image_region:
@@ -8616,7 +8649,8 @@ CSSParserImpl::ParseFont()
 
   // Get mandatory font-size
   nsCSSValue  size;
-  if (! ParseVariant(size, VARIANT_KEYWORD | VARIANT_LP, nsCSSProps::kFontSizeKTable)) {
+  if (! ParseNonNegativeVariant(size, VARIANT_KEYWORD | VARIANT_LP,
+                                nsCSSProps::kFontSizeKTable)) {
     return false;
   }
 
@@ -8770,7 +8804,7 @@ CSSParserImpl::ParseSingleAlternate(int32_t& aWhichFeature,
       keyword == eCSSKeyword_character_variant) {
     maxElems = MAX_ALLOWED_FEATURES;
   }
-  return ParseFunction(mToken.mIdent, nullptr, VARIANT_IDENTIFIER,
+  return ParseFunction(keyword, nullptr, VARIANT_IDENTIFIER,
                        1, maxElems, aValue);
 }
 
@@ -9753,7 +9787,7 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
  * @param aValue (out) The value that was parsed.
  */
 bool
-CSSParserImpl::ParseFunction(const nsString &aFunction,
+CSSParserImpl::ParseFunction(nsCSSKeyword aFunction,
                              const int32_t aAllowedTypes[],
                              int32_t aAllowedTypesAll,
                              uint16_t aMinElems, uint16_t aMaxElems,
@@ -9769,12 +9803,6 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
    */
   static const arrlen_t MAX_ALLOWED_ELEMS = 0xFFFE;
 
-  /* Make a copy of the function name, since the reference is _probably_ to
-   * mToken.mIdent, which is going to get overwritten during the course of this
-   * function.
-   */
-  nsString functionName(aFunction);
-
   /* Read in a list of values as an array, failing if we can't or if
    * it's out of bounds.
    */
@@ -9784,23 +9812,17 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
     return false;
   }
 
-  /* Now, convert this array into an nsCSSValue::Array object.
-   * We'll need N + 1 spots, one for the function name and the rest for the
-   * arguments.  In case the user has given us more than 2^16 - 2 arguments,
+  /*
+   * In case the user has given us more than 2^16 - 2 arguments,
    * we'll truncate them at 2^16 - 2 arguments.
    */
-  uint16_t numElements = (foundValues.Length() <= MAX_ALLOWED_ELEMS ?
-                          foundValues.Length() + 1 : MAX_ALLOWED_ELEMS);
+  uint16_t numArgs = std::min(foundValues.Length(), MAX_ALLOWED_ELEMS);
   nsRefPtr<nsCSSValue::Array> convertedArray =
-    nsCSSValue::Array::Create(numElements);
+    aValue.InitFunction(aFunction, numArgs);
 
   /* Copy things over. */
-  convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_Ident);
-  for (uint16_t index = 0; index + 1 < numElements; ++index)
+  for (uint16_t index = 0; index < numArgs; ++index)
     convertedArray->Item(index + 1) = foundValues[static_cast<arrlen_t>(index)];
-
-  /* Fill in the outparam value with the array. */
-  aValue.SetArrayValue(convertedArray, eCSSUnit_Function);
 
   /* Return it! */
   return true;
@@ -10028,37 +10050,7 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
                                    minElems, maxElems, variantMask, aIs3D))
     return false;
 
-  // Bug 721136: Normalize the identifier to lowercase, except that things
-  // like scaleX should have the last character capitalized.  This matches
-  // what other browsers do.
-  nsContentUtils::ASCIIToLower(mToken.mIdent);
-  switch (keyword) {
-    case eCSSKeyword_rotatex:
-    case eCSSKeyword_scalex:
-    case eCSSKeyword_skewx:
-    case eCSSKeyword_translatex:
-      mToken.mIdent.Replace(mToken.mIdent.Length() - 1, 1, PRUnichar('X'));
-      break;
-
-    case eCSSKeyword_rotatey:
-    case eCSSKeyword_scaley:
-    case eCSSKeyword_skewy:
-    case eCSSKeyword_translatey:
-      mToken.mIdent.Replace(mToken.mIdent.Length() - 1, 1, PRUnichar('Y'));
-      break;
-
-    case eCSSKeyword_rotatez:
-    case eCSSKeyword_scalez:
-    case eCSSKeyword_translatez:
-      mToken.mIdent.Replace(mToken.mIdent.Length() - 1, 1, PRUnichar('Z'));
-      break;
-
-    default:
-      break;
-  }
-
-  return ParseFunction(mToken.mIdent, variantMask, 0, minElems,
-                       maxElems, aValue);
+  return ParseFunction(keyword, variantMask, 0, minElems, maxElems, aValue);
 }
 
 /* Parses a transform property list by continuously reading in properties

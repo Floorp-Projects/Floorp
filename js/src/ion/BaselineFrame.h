@@ -113,6 +113,10 @@ class BaselineFrame
         uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
         return *(CalleeToken *)pointer;
     }
+    void replaceCalleeToken(CalleeToken token) {
+        uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
+        *(CalleeToken *)pointer = token;
+    }
     JSScript *script() const {
         if (isEvalFrame())
             return evalScript();
@@ -154,14 +158,14 @@ class BaselineFrame
         JS_ASSERT(i < numFormalArgs());
         JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
         JS_ASSERT_IF(checkAliasing, !script()->formalIsAliased(i));
-        return formals()[i];
+        return argv()[i];
     }
 
     Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const {
         JS_ASSERT(i < numActualArgs());
         JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
         JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
-        return actuals()[i];
+        return argv()[i];
     }
 
     Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
@@ -184,13 +188,10 @@ class BaselineFrame
                          BaselineFrame::Size() +
                          offsetOfThis());
     }
-    Value *formals() const {
+    Value *argv() const {
         return (Value *)(reinterpret_cast<const uint8_t *>(this) +
                          BaselineFrame::Size() +
                          offsetOfArg(0));
-    }
-    Value *actuals() const {
-        return formals();
     }
 
     bool copyRawFrameSlots(AutoValueVector *vec) const;

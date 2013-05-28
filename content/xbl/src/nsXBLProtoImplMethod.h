@@ -94,7 +94,7 @@ public:
                                  const nsCString& aClassStr,
                                  JS::Handle<JSObject*> aClassObject);
 
-  virtual void Trace(TraceCallback aCallback, void *aClosure) const;
+  virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure);
 
   nsresult Read(nsIScriptContext* aContext, nsIObjectInputStream* aStream);
   virtual nsresult Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream);

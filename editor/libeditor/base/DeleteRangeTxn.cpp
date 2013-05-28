@@ -32,15 +32,8 @@ DeleteRangeTxn::DeleteRangeTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DeleteRangeTxn,
-                                                EditAggregateTxn)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRange)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DeleteRangeTxn,
-                                                  EditAggregateTxn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRange)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(DeleteRangeTxn, EditAggregateTxn,
+                                     mRange)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTxn)

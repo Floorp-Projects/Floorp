@@ -406,6 +406,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_arguments_length();
     bool jsop_arguments_getelem();
     bool jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDefinition *value);
+    bool jsop_rest();
     bool jsop_not();
     bool jsop_getprop(HandlePropertyName name);
     bool jsop_setprop(HandlePropertyName name);
@@ -771,6 +772,8 @@ class CallInfo
 };
 
 bool TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *inputTypes);
+
+bool NeedsPostBarrier(CompileInfo &info, MDefinition *value);
 
 } // namespace ion
 } // namespace js

@@ -43,6 +43,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           is(bound.primitiveField, undefined, "Xrays don't show fields");
           is(bound.wrappedJSObject.primitiveField, 2, "Waiving Xrays show fields");
 
+          // Check that here document.QueryInterface works
+          ok("QueryInterface" in document,
+             "Should have a document.QueryInterface here");
+          is(document.QueryInterface(Components.interfaces.nsIDOMDocument),
+             document, "Should be able to QI the document");
+
           // This gets invoked by an event handler.
           window.finish = function() {
             // Content messed with stuff. Make sure we still see the right thing.
@@ -102,6 +108,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
   // hit a native property.
   window.contentVal = { foo: 10, rabbit: { hole: { bar: 100, win: window} } };
   ok(true, "Set contentVal");
+
+  // Check that we're not exposing QueryInterface to non-XBL code
+  ok(!("QueryInterface" in document),
+     "Should not have a document.QueryInterface here");
 
   function go() {
     "use strict";

@@ -30,6 +30,21 @@ function sendEmulatorCommand(cmd, callback) {
   });
 }
 
+function setEmulatorOperatorNamesAndMccMnc(which, longName, shortName,
+                                           mcc, mnc, callback) {
+  let cmd = "operator set " + which + " " + longName + "," +
+            shortName + "," + mcc + mnc;
+  sendEmulatorCommand(cmd, function (result) {
+    let re = new RegExp("^" + longName + "," +
+                        shortName + "," + mcc + mnc);
+    ok(result[which].match(re), "Long/short name and mcc/mnc should be changed.");
+
+    if (callback) {
+      window.setTimeout(callback, 0);
+    }
+  });
+}
+
 function setEmulatorOperatorNames(which, longName, shortName, callback) {
   let cmd = "operator set " + which + " " + longName + "," + shortName;
   sendEmulatorCommand(cmd, function (result) {
@@ -87,9 +102,32 @@ function testMobileOperatorNames() {
     doTestMobileOperatorNames("Mozilla", "", function () {
       doTestMobileOperatorNames("", "B2G", function () {
         doTestMobileOperatorNames("", "", function () {
-          doTestMobileOperatorNames("Android", "Android", testRoamingCheck);
+          doTestMobileOperatorNames("Android", "Android", testOperatorPLMNList);
         });
       });
+    });
+  });
+}
+
+function doTestOperatorPLMNList(mcc, mnc, expectedLongName,
+                                expectedShortName, callback) {
+  log("Testing mcc = " + mcc + ", mnc = " + mnc + ":");
+
+  waitForVoiceChange(function () {
+    is(network.longName, expectedLongName, "network.longName");
+    is(network.shortName, expectedShortName, "network.shortName");
+    is(network.mcc, mcc, "network.mcc");
+    is(network.mnc, mnc, "network.mnc");
+    window.setTimeout(callback, 0);
+  });
+
+  setEmulatorOperatorNamesAndMccMnc(OPERATOR_HOME, "Android", "Android", mcc, mnc);
+}
+
+function testOperatorPLMNList() {
+  doTestOperatorPLMNList("123", "456", "Android", "Android", function() {
+    doTestOperatorPLMNList("310", "070", "AT&T", "", function() {
+      doTestOperatorPLMNList("310", "260", "Android", "Android", testRoamingCheck);
     });
   });
 }

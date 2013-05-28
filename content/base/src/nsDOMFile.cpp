@@ -611,6 +611,9 @@ nsDOMMemoryFile::GetInternalStream(nsIInputStream **aStream)
   return DataOwnerAdapter::Create(mDataOwner, mStart, mLength, aStream);
 }
 
+/* static */ StaticMutex
+nsDOMMemoryFile::DataOwner::sDataOwnerMutex;
+
 /* static */ StaticAutoPtr<LinkedList<nsDOMMemoryFile::DataOwner> >
 nsDOMMemoryFile::DataOwner::sDataOwners;
 
@@ -634,6 +637,8 @@ class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
                             nsISupports *aClosure)
   {
     typedef nsDOMMemoryFile::DataOwner DataOwner;
+
+    StaticMutexAutoLock lock(DataOwner::sDataOwnerMutex);
 
     if (!DataOwner::sDataOwners) {
       return NS_OK;

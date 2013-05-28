@@ -248,6 +248,8 @@
   border: none;
 }
 
+/* Security styles */
+
 .webconsole-msg-security > .webconsole-msg-icon-container {
   -moz-border-start: solid red 6px;
 }
@@ -255,4 +257,12 @@
 .webconsole-filter-button[category="security"] > .toolbarbutton-menubutton-button:before {
   background-image: linear-gradient(#FF3030, #FF7D7D);
   border-color: #D12C2C;
+}
+
+.webconsole-msg-security.webconsole-msg-error {
+  -moz-image-region: rect(32px, 16px, 40px, 8px);
+}
+
+.webconsole-msg-security.webconsole-msg-warn {
+  -moz-image-region: rect(32px, 24px, 40px, 16px);
 }

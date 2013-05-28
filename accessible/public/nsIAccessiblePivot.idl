@@ -20,7 +20,7 @@ interface nsIAccessiblePivotObserver;
  * provides traversal methods to move the pivot to next/prev state that complies 
  * to a given rule.
  */
-[scriptable, uuid(15ff23de-879e-47ea-b536-6532466108c5)]
+[scriptable, uuid(c2938033-e240-4fe5-9cb6-e7ad649ccd10)]
 interface nsIAccessiblePivot : nsISupports
 {
   const TextBoundaryType CHAR_BOUNDARY = 0;
@@ -45,6 +45,11 @@ interface nsIAccessiblePivot : nsISupports
    * The root of the subtree in which the pivot traverses.
    */
   readonly attribute nsIAccessible root;
+
+  /**
+   * The temporary modal root to which traversal is limited to.
+   */
+  attribute nsIAccessible modalRoot;
 
   /**
    * The start offset of the text range the pivot points at, otherwise -1.
@@ -181,7 +186,7 @@ interface nsIAccessiblePivotObserver : nsISupports
                       in PivotMoveReason aReason);
 };
 
-[scriptable, uuid(307d98b6-dba9-49cf-ba17-ef8b053044eb)]
+[scriptable, uuid(366fe92b-44c9-4769-ae40-7c2a075d3b16)]
 interface nsIAccessibleTraversalRule : nsISupports
 {
   /* Ignore this accessible object */
@@ -195,6 +200,7 @@ interface nsIAccessibleTraversalRule : nsISupports
   const unsigned long PREFILTER_INVISIBLE     = 0x00000001;
   const unsigned long PREFILTER_OFFSCREEN     = 0x00000002;
   const unsigned long PREFILTER_NOT_FOCUSABLE = 0x00000004;
+  const unsigned long PREFILTER_ARIA_HIDDEN   = 0x00000008;
 
   /**
    * Pre-filter bitfield to filter out obviously ignorable nodes and lighten

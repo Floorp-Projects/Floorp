@@ -393,12 +393,10 @@ public:
   static int32_t kDisplayKTable[];
   static const int32_t kElevationKTable[];
   static const int32_t kEmptyCellsKTable[];
-#ifdef MOZ_FLEXBOX
   static const int32_t kAlignItemsKTable[];
   static const int32_t kAlignSelfKTable[];
   static const int32_t kFlexDirectionKTable[];
   static const int32_t kJustifyContentKTable[];
-#endif // MOZ_FLEXBOX
   static const int32_t kFloatKTable[];
   static const int32_t kFloatEdgeKTable[];
   static const int32_t kFontKTable[];

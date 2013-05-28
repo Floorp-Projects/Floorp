@@ -21,3 +21,11 @@ EXPORTS.mozilla.net += [
     'WyciwygChannelParent.h',
 ]
 
+CPP_SOURCES += [
+    'WyciwygChannelChild.cpp',
+    'WyciwygChannelParent.cpp',
+    'nsWyciwyg.cpp',
+    'nsWyciwygChannel.cpp',
+    'nsWyciwygProtocolHandler.cpp',
+]
+

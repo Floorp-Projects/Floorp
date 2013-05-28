@@ -23,6 +23,7 @@
 #include "nsMeterFrame.h"
 #include "nsMenuFrame.h"
 #include "nsRangeFrame.h"
+#include "nsCSSRendering.h"
 #include "mozilla/dom/Element.h"
 #include <algorithm>
 
@@ -676,4 +677,28 @@ nsNativeTheme::IsRangeHorizontal(nsIFrame* aFrame)
   MOZ_ASSERT(rangeFrame->GetType() == nsGkAtoms::rangeFrame);
 
   return static_cast<nsRangeFrame*>(rangeFrame)->IsHorizontal();
+}
+
+bool
+nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
+{
+  nsIScrollableFrame* scrollFrame = nullptr;
+  while (!scrollFrame && aFrame) {
+    scrollFrame = aFrame->GetScrollTargetFrame();
+    aFrame = aFrame->GetParent();
+  }
+  if (!scrollFrame)
+    return false;
+
+  nsIFrame* frame = scrollFrame->GetScrolledFrame();
+  nsStyleContext* bgSC;
+  if (nsCSSRendering::FindBackground(frame, &bgSC)) {
+    nscolor bgColor = bgSC->StyleBackground()->mBackgroundColor;
+    // Consider the background color dark if the sum of the r, g and b values is
+    // less than 384 in a semi-transparent document.  This heuristic matches what
+    // WebKit does, and we can improve it later if needed.
+    return NS_GET_A(bgColor) > 127 &&
+           NS_GET_R(bgColor) + NS_GET_G(bgColor) + NS_GET_B(bgColor) < 384;
+  }
+  return false;
 }

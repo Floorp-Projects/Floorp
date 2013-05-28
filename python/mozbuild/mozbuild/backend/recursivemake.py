@@ -58,24 +58,7 @@ class BackendMakeFile(object):
     tree to rebuild!
 
     The solution is to not update the mtimes of backend.mk files unless they
-    actually change. We use FileAvoidWrite to accomplish this. However, this
-    puts us in a somewhat complicated position when it comes to tree recursion.
-    As you are recursing the tree, the first time you come across a backend.mk
-    that is out of date, a full tree build will be incurred. In typical make
-    build systems, we would touch the out-of-date target (backend.mk) to ensure
-    its mtime is newer than all its dependencies - even if the contents did
-    not change. However, we can't rely on just this approach. During recursion,
-    the first trigger of backend generation will cause only that backend.mk to
-    update. If there is another backend.mk that is also out of date according
-    to mtime but whose contents were not changed, when we recurse to that
-    directory, make will trigger another full backend generation! This would
-    be completely redundant and would slow down builds! This is not acceptable.
-
-    We work around this problem by having backend generation update the mtime
-    of backend.mk if they are older than their inputs - even if the file
-    contents did not change. This is essentially a middle ground between
-    always updating backend.mk and only updating the backend.mk that was out
-    of date during recursion.
+    actually change. We use FileAvoidWrite to accomplish this.
     """
 
     def __init__(self, srcdir, objdir, environment):
@@ -84,16 +67,12 @@ class BackendMakeFile(object):
         self.environment = environment
         self.path = os.path.join(objdir, 'backend.mk')
 
-        # Filenames that influenced the content of this file.
-        self.inputs = set()
-
         self.fh = FileAvoidWrite(self.path)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
         self.fh.write('MOZBUILD_DERIVED := 1\n')
 
-        # SUBSTITUTE_FILES handles Makefile.in -> Makefile conversion. This
-        # also doubles to handle the case where there is no Makefile.in.
+        # The global rule to incur backend generation generates Makefiles.
         self.fh.write('NO_MAKEFILE_RULE := 1\n')
 
         # We can't blindly have a SUBMAKEFILES rule because some of the
@@ -108,34 +87,7 @@ class BackendMakeFile(object):
         self.fh.write(buf)
 
     def close(self):
-        if self.inputs:
-            l = ' '.join(sorted(self.inputs))
-            self.fh.write('BACKEND_INPUT_FILES += %s\n' % l)
-
-        result = self.fh.close()
-
-        if not self.inputs:
-            return result
-
-        # Update mtime iff any of its input files are newer. See class notes
-        # for why we do this.
-        existing_mtime = os.path.getmtime(self.path)
-
-        def mtime(path):
-            try:
-                return os.path.getmtime(path)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    return 0
-
-                raise
-
-        input_mtime = max(mtime(path) for path in self.inputs)
-
-        if input_mtime > existing_mtime:
-            os.utime(self.path, None)
-
-        return result
+        return self.fh.close()
 
 
 class RecursiveMakeBackend(BuildBackend):
@@ -170,6 +122,9 @@ class RecursiveMakeBackend(BuildBackend):
         self.summary.backend_detailed_summary = types.MethodType(detailed,
             self.summary)
 
+        self.backend_input_files.add(os.path.join(self.environment.topobjdir,
+            'config', 'autoconf.mk'))
+
     def _update_from_avoid_write(self, result):
         existed, updated = result
 
@@ -189,19 +144,12 @@ class RecursiveMakeBackend(BuildBackend):
         backend_file = self._backend_files.get(obj.srcdir,
             BackendMakeFile(obj.srcdir, obj.objdir, self.get_environment(obj)))
 
-        # Define the paths that will trigger a backend rebuild. We always
-        # add autoconf.mk because that is proxy for CONFIG. We can't use
-        # config.status because there is no make target for that!
-        autoconf_path = os.path.join(obj.topobjdir, 'config', 'autoconf.mk')
-        backend_file.inputs.add(autoconf_path)
-        backend_file.inputs |= obj.sandbox_all_paths
-
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
         elif isinstance(obj, ConfigFileSubstitution):
-            backend_file.write('SUBSTITUTE_FILES += %s\n' % obj.relpath)
             self._update_from_avoid_write(
                 backend_file.environment.create_config_file(obj.output_path))
+            self.backend_input_files.add(obj.input_path)
             self.summary.managed_count += 1
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
@@ -247,7 +195,12 @@ class RecursiveMakeBackend(BuildBackend):
                     bf.environment.create_config_file(makefile))
                 self.summary.managed_count += 1
 
-                bf.write('SUBSTITUTE_FILES += Makefile\n')
+                # Adding the Makefile.in here has the desired side-effect that
+                # if the Makefile.in disappears, this will force moz.build
+                # traversal. This means that when we remove empty Makefile.in
+                # files, the old file will get replaced with the autogenerated
+                # one automatically.
+                self.backend_input_files.add(makefile_in)
             else:
                 self.log(logging.DEBUG, 'stub_makefile',
                     {'path': makefile}, 'Creating stub Makefile: {path}')
@@ -266,6 +219,24 @@ class RecursiveMakeBackend(BuildBackend):
 
             self._update_from_avoid_write(bf.close())
             self.summary.managed_count += 1
+
+        # Write out a dependency file used to determine whether a config.status
+        # re-run is needed.
+        backend_built_path = os.path.join(self.environment.topobjdir,
+            'backend.%s.built' % self.__class__.__name__).replace(os.sep, '/')
+        backend_deps = FileAvoidWrite('%s.pp' % backend_built_path)
+        inputs = sorted(p.replace(os.sep, '/') for p in self.backend_input_files)
+
+        # We need to use $(DEPTH) so the target here matches what's in
+        # rules.mk. If they are different, the dependencies don't get pulled in
+        # properly.
+        backend_deps.write('$(DEPTH)/backend.RecursiveMakeBackend.built: %s\n' %
+            ' '.join(inputs))
+        for path in inputs:
+            backend_deps.write('%s:\n' % path)
+
+        self._update_from_avoid_write(backend_deps.close())
+        self.summary.managed_count += 1
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""

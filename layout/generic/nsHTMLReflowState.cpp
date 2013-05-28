@@ -432,12 +432,14 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
       nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
     // Create our font inflation data if we don't have it already, and
     // give it our current width information.
-    bool dirty = nsFontInflationData::UpdateFontInflationDataWidthFor(*this) &&
-                 // Avoid running this at the box-to-block interface
-                 // (where we shouldn't be inflating anyway, and where
-                 // reflow state construction is probably to construct a
-                 // dummy parent reflow state anyway).
-                 !mFlags.mDummyParentReflowState;
+
+    // Avoid running this at the box-to-block interface
+    // (where we shouldn't be inflating anyway, and where
+    // reflow state construction is probably to construct a
+    // dummy parent reflow state anyway).
+    bool dirty = !mFlags.mDummyParentReflowState &&
+                 nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
+
 
     if (dirty || (!frame->GetParent() && isHResize)) {
       // When font size inflation is enabled, a change in either:
@@ -686,9 +688,7 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
-#ifdef MOZ_FLEXBOX
     case NS_STYLE_DISPLAY_FLEX:
-#endif // MOZ_FLEXBOX
       frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
@@ -698,9 +698,7 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     case NS_STYLE_DISPLAY_INLINE_BOX:
     case NS_STYLE_DISPLAY_INLINE_GRID:
     case NS_STYLE_DISPLAY_INLINE_STACK:
-#ifdef MOZ_FLEXBOX
     case NS_STYLE_DISPLAY_INLINE_FLEX:
-#endif // MOZ_FLEXBOX
       frameType = NS_CSS_FRAME_TYPE_INLINE;
       break;
 
@@ -1780,7 +1778,6 @@ IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay)
          captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
 }
 
-#ifdef MOZ_FLEXBOX
 static nsFlexContainerFrame*
 GetFlexContainer(nsIFrame* aFrame)
 {
@@ -1792,7 +1789,6 @@ GetFlexContainer(nsIFrame* aFrame)
 
   return static_cast<nsFlexContainerFrame*>(parent);
 }
-#endif // MOZ_FLEXBOX
 
 // Flex items resolve percentage margin & padding against the flex
 // container's height (which is the containing block height).
@@ -2036,7 +2032,6 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
         computeSizeFlags |= nsIFrame::eShrinkWrap;
       }
 
-#ifdef MOZ_FLEXBOX
       const nsFlexContainerFrame* flexContainerFrame = GetFlexContainer(frame);
       if (flexContainerFrame) {
         computeSizeFlags |= nsIFrame::eShrinkWrap;
@@ -2051,7 +2046,6 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                    "We're not in a flex container, so the flag "
                    "'mIsFlexContainerMeasuringHeight' shouldn't be set");
       }
-#endif // MOZ_FLEXBOX
 
       nsSize size =
         frame->ComputeSize(rendContext,
@@ -2077,12 +2071,10 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       // Exclude inline tables and flex items from the block margin calculations
       if (isBlock &&
           !IsSideCaption(frame, mStyleDisplay) &&
-          mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE
-#ifdef MOZ_FLEXBOX
-          && !flexContainerFrame
-#endif // MOZ_FLEXBOX
-          )
+          mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE &&
+          !flexContainerFrame) {
         CalculateBlockSideMargins(availableWidth, mComputedWidth, aFrameType);
+      }
     }
   }
 }

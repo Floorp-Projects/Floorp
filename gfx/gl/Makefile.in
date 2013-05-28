@@ -10,6 +10,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME     = gl
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY   = 1
 EXPORT_LIBRARY   = 1
 FAIL_ON_WARNINGS = 1
@@ -22,20 +23,8 @@ DEFINES += -DMOZ_D3DCOMPILER_DLL=$(MOZ_D3DCOMPILER_DLL)
 endif
 endif
 
-CPPSRCS	= \
-  GLContext.cpp \
-  GLContextTypes.cpp \
-  GLContextUtils.cpp \
-  GLLibraryLoader.cpp \
-  GLScreenBuffer.cpp \
-  GLTextureImage.cpp \
-  SharedSurface.cpp \
-  SharedSurfaceEGL.cpp \
-  SharedSurfaceGL.cpp \
-  SurfaceFactory.cpp \
-  SurfaceStream.cpp \
-  $(NULL)
-
+# NOTE: Please keep GL_PROVIDER in sync with moz.build until all variables
+# are moved over.
 GL_PROVIDER = Null
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -82,29 +71,10 @@ endif
 # Mac is a special snowflake
 ifeq ($(GL_PROVIDER),CGL)
 CMMSRCS += GLContextProvider$(GL_PROVIDER).mm
-else
-CPPSRCS += GLContextProvider$(GL_PROVIDER).cpp
-endif
-
-ifeq ($(GL_PROVIDER),EGL)
-CPPSRCS += GLLibraryEGL.cpp
-endif
-
-# Win32 is a special snowflake, for ANGLE
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += \
-  GLContextProviderEGL.cpp \
-  GLLibraryEGL.cpp \
-  SharedSurfaceANGLE.cpp \
-  $(NULL)
 endif
 
 ifdef MOZ_ANDROID_OMTC
 DEFINES += -DMOZ_ANDROID_OMTC
-endif
-
-ifdef MOZ_ENABLE_SKIA_GPU
-CPPSRCS += GLContextSkia.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

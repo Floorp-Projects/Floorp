@@ -13,9 +13,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816720
 
 <pre id="test"></pre>
 
-<p><span id=control-serif>.</span></p>
-<p><span id=control-monospace>.</span></p>
-<p><span id=test-font>.</span></p>
+<p><span id=control-serif>........</span></p>
+<p><span id=control-monospace>........</span></p>
+<p><span id=test-font>........</span></p>
 
 <style id=other-styles>
   #test { font-size: 16px; animation: test 1s both }
@@ -85,7 +85,7 @@ var innerRuleInfo = [
      if (navigator.oscpu.match(/Linux/)) {
        return true;
     }
-    return width == (aApplied ? monospaceWidth : serifWidth) ||
+    return Math.abs(width - (aApplied ? monospaceWidth : serifWidth)) <= 1 ||
            navigator.oscpu.match(/Android/); // bug 769194 prevents local()
                                              // fonts working on Android
    }],
@@ -112,7 +112,7 @@ function runTest()
   // and have expected metrics.
   ok(monospaceWidth > 0, "monospace text has width");
   ok(serifWidth > 0, "serif text has width");
-  isnot(monospaceWidth, serifWidth, "monospace and serif text have different widths");
+  ok(Math.abs(monospaceWidth - serifWidth) > 1, "monospace and serif text have sufficiently different widths");
 
   // And that the #test-font element starts off using the "serif" font.
   var initialFontTestWidth = testFont.getBoundingClientRect().width;

@@ -11,27 +11,9 @@ VPATH		=  $(srcdir) $(srcdir)/unittest
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gfx2d
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
-
-CPPSRCS	= \
-        Factory.cpp \
-        Rect.cpp \
-        Matrix.cpp \
-        DrawTargetCairo.cpp \
-        SourceSurfaceCairo.cpp \
-        PathCairo.cpp \
-        DrawTargetRecording.cpp \
-        PathRecording.cpp \
-        RecordedEvent.cpp \
-        DrawEventRecorder.cpp \
-        Blur.cpp \
-        Scale.cpp \
-        ScaledFontBase.cpp \
-        DrawTargetDual.cpp \
-        ImageScaling.cpp \
-        SourceSurfaceRawData.cpp \
-        $(NULL)
 
 GTEST_CPPSRCS = \
         GTestMain.cpp \
@@ -42,12 +24,6 @@ GTEST_CPPSRCS = \
         $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS	+= \
-	   SourceSurfaceCG.cpp \
-	   DrawTargetCG.cpp \
-	   PathCG.cpp \
-	   $(NULL)
-
 CMMSRCS = \
 	   QuartzSupport.mm \
 	   $(NULL)
@@ -55,27 +31,7 @@ endif
 
 DEFINES += -DMOZ_GFX -DUSE_CAIRO -DGFX2D_INTERNAL
 
-ifdef MOZ_ENABLE_SKIA
-CPPSRCS	+= \
-        SourceSurfaceSkia.cpp \
-        DrawTargetSkia.cpp \
-        PathSkia.cpp \
-        convolver.cpp \
-        image_operations.cpp \
-        $(NULL)
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-        ScaledFontMac.cpp \
-        $(NULL)
-
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))
-CPPSRCS	+= \
-        ScaledFontFreetype.cpp \
-        $(NULL)
 DEFINES += -DMOZ_ENABLE_FREETYPE
 endif
 
@@ -89,28 +45,14 @@ endif
 ifneq (,$(INTEL_ARCHITECTURE))
 # VC2005 doesn't support _mm_castsi128_ps, so SSE2 is turned off
 ifneq (1400,$(_MSC_VER))
-CPPSRCS += \
-        ImageScalingSSE2.cpp \
-        BlurSSE2.cpp \
-        $(NULL)
 DEFINES += -DUSE_SSE2
 endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS	+= \
-        DrawTargetD2D.cpp \
-        SourceSurfaceD2D.cpp \
-        SourceSurfaceD2DTarget.cpp \
-        PathD2D.cpp \
-        ScaledFontDWrite.cpp \
-        $(NULL)
 DEFINES += -DWIN32 -DINITGUID
 
 ifdef MOZ_ENABLE_SKIA
-CPPSRCS += \
-        ScaledFontWin.cpp \
-        $(NULL)
 DEFINES += -DSKIA_IMPLEMENTATION=1 -DGR_IMPLEMENTATION=1
 endif
 endif
@@ -122,16 +64,6 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 # macros changes the type of LOGFONT to LOGFONTW instead of LOGFONTA. This
 # changes the symbol names of exported C++ functions that use LOGFONT.
 DEFINES := $(filter-out -DUNICODE -D_UNICODE,$(DEFINES))
-
-#ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-#CPPSRCS	+= \
-#        DrawTargetCG.cpp \
-#        SourceSurfaceCG.cpp \
-#	$(NULL)
-#
-## Always link with OpenGL/AGL
-#EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit -framework QuartzCore
-#endif
 
 # The file uses SSE2 intrinsics, so it needs special compile flags on some
 # compilers.

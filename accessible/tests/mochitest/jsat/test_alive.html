@@ -38,21 +38,23 @@
       // Firs listen for initial 'EventManager.start' and disable AccessFu.
       var initialStartListener = makeEventManagerListener("EventManager.start",
         function () {
-          ok(EventManager._started, "EventManager was started.");
+          ok(true, "EventManager was started.");
           Services.console.registerListener(stopListener);
           AccessFu._disable();
         });
       // Listen for 'EventManager.stop' and enable AccessFu again.
       var stopListener = makeEventManagerListener("EventManager.stop",
         function () {
-          isnot(EventManager._started, true, "EventManager was stopped.");
+          ok(true, "EventManager was stopped.");
+          isnot(AccessFu._enabled, true, "AccessFu was disabled.");
           Services.console.registerListener(finalStartListener);
           AccessFu._enable();
         });
       // Make sure EventManager is started again.
       var finalStartListener = makeEventManagerListener("EventManager.start",
         function () {
-          ok(EventManager._started, "EventManager was started again.");
+          ok(true, "EventManager was started again.");
+          ok(AccessFu._enabled, "AccessFu was enabled again.");
           AccessFuTest.finish();
         });
 

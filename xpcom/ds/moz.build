@@ -37,6 +37,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     EXPORTS += ['nsWindowsRegKey.h']
     EXPORTS.mozilla += ['TimeStamp_windows.h']
+    CPP_SOURCES += [
+        'nsWindowsRegKey.cpp'
+    ]
 
 XPIDL_MODULE = 'xpcom_ds'
 
@@ -72,3 +75,39 @@ EXPORTS.mozilla += [
     'TimeStamp.h',
 ]
 
+CPP_SOURCES += [
+    'nsArray.cpp',
+    'nsAtomService.cpp',
+    'nsAtomTable.cpp',
+    'nsByteBuffer.cpp',
+    'nsCRT.cpp',
+    'nsHashPropertyBag.cpp',
+    'nsHashtable.cpp',
+    'nsINIParserImpl.cpp',
+    'nsObserverList.cpp',
+    'nsObserverService.cpp',
+    'nsPersistentProperties.cpp',
+    'nsProperties.cpp',
+    'nsStaticNameTable.cpp',
+    'nsStringEnumerator.cpp',
+    'nsSupportsArray.cpp',
+    'nsSupportsArrayEnumerator.cpp',
+    'nsSupportsPrimitives.cpp',
+    'nsUnicharBuffer.cpp',
+    'nsVariant.cpp',
+]
+
+if CONFIG['HAVE_CLOCK_MONOTONIC']:
+    CPP_SOURCES += [
+        'TimeStamp_posix.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    CPP_SOURCES += [
+        'TimeStamp_darwin.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'WINNT':
+    CPP_SOURCES += [
+        'TimeStamp_windows.cpp',
+    ]
+else:
+    error('No TimeStamp implementation on this platform.  Build will not succeed')

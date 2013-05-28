@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_bluetooth_bluetoothprofilemanagerbase_h__
 #define mozilla_dom_bluetooth_bluetoothprofilemanagerbase_h__
 
+#define ERR_SERVICE_CHANNEL_NOT_FOUND "DeviceChannelRetrievalError"
+
 #include "BluetoothCommon.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -17,6 +19,8 @@ public:
   virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
                                    const nsAString& aServiceUuid,
                                    int aChannel) = 0;
+
+  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) = 0;
 };
 
 END_BLUETOOTH_NAMESPACE

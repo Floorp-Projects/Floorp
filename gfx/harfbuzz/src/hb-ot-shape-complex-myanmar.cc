@@ -540,6 +540,6 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_myanmar =
   NULL, /* decompose */
   NULL, /* compose */
   setup_masks_myanmar,
-  HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF,
+  HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY,
   false, /* fallback_position */
 };

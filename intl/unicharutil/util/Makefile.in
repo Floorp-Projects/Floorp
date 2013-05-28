@@ -25,13 +25,6 @@ SDK_HEADERS = \
 	nsUnicharUtils.h \
 	$(NULL)
 
-CPPSRCS	= \
-	nsUnicharUtils.cpp \
-	nsBidiUtils.cpp \
-	nsSpecialCasingData.cpp \
-	nsUnicodeProperties.cpp \
-	$(NULL)
-
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 

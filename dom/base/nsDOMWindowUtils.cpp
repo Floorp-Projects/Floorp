@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/layers/CompositorParent.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h"
@@ -72,11 +73,19 @@
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
 #include "nsIScriptError.h"
+#include "nsIAppShell.h"
+#include "nsWidgetsCID.h"
+
+#ifdef XP_WIN
+#undef GetClassName
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 DOMCI_DATA(WindowUtils, nsDOMWindowUtils)
 
@@ -293,31 +302,36 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
 {
   if (aPresContext) {
     nsIPresShell* presShell = aPresContext->GetPresShell();
-    if (presShell && nsLayoutUtils::FontSizeInflationEnabled(aPresContext) &&
+    bool fontInflationWasEnabled = presShell->FontSizeInflationEnabled();
+    presShell->NotifyFontSizeInflationEnabledIsDirty();
+    bool changed = false;
+    if (presShell && presShell->FontSizeInflationEnabled() &&
         presShell->FontSizeInflationMinTwips() != 0) {
-      bool changed;
       aPresContext->ScreenWidthInchesForFontInflation(&changed);
-      if (changed) {
-        nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-        if (docShell) {
-          nsCOMPtr<nsIContentViewer> cv;
-          docShell->GetContentViewer(getter_AddRefs(cv));
-          nsCOMPtr<nsIMarkupDocumentViewer> mudv = do_QueryInterface(cv);
-          if (mudv) {
-            nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> > array;
-            mudv->AppendSubtree(array);
-            for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
-              nsCOMPtr<nsIPresShell> shell;
-              nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
-              cv->GetPresShell(getter_AddRefs(shell));
-              if (shell) {
-                nsIFrame *rootFrame = shell->GetRootFrame();
-                if (rootFrame) {
-                  shell->FrameNeedsReflow(rootFrame,
-                                          nsIPresShell::eStyleChange,
-                                          NS_FRAME_IS_DIRTY);
-                }
+    }
+
+    changed = changed ||
+      (fontInflationWasEnabled != presShell->FontSizeInflationEnabled());
+    if (changed) {
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+      if (docShell) {
+        nsCOMPtr<nsIContentViewer> cv;
+        docShell->GetContentViewer(getter_AddRefs(cv));
+        nsCOMPtr<nsIMarkupDocumentViewer> mudv = do_QueryInterface(cv);
+        if (mudv) {
+          nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> > array;
+          mudv->AppendSubtree(array);
+          for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
+            nsCOMPtr<nsIPresShell> shell;
+            nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
+            cv->GetPresShell(getter_AddRefs(shell));
+            if (shell) {
+              nsIFrame *rootFrame = shell->GetRootFrame();
+              if (rootFrame) {
+                shell->FrameNeedsReflow(rootFrame,
+                                        nsIPresShell::eStyleChange,
+                                        NS_FRAME_IS_DIRTY);
               }
             }
           }
@@ -508,6 +522,21 @@ nsDOMWindowUtils::GetIsFirstPaint(bool *aIsFirstPaint)
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
     *aIsFirstPaint = presShell->GetIsFirstPaint();
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPresShellId(uint32_t *aPresShellId)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (presShell) {
+    *aPresShellId = presShell->GetPresShellId();
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -851,11 +880,11 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
   event.touches.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount; ++i) {
     nsIntPoint pt = ToWidgetPoint(aXs[i], aYs[i], offset, presContext);
-    nsCOMPtr<nsIDOMTouch> t(new Touch(aIdentifiers[i],
-                                      pt,
-                                      nsIntPoint(aRxs[i], aRys[i]),
-                                      aRotationAngles[i],
-                                      aForces[i]));
+    nsRefPtr<Touch> t = new Touch(aIdentifiers[i],
+                                  pt,
+                                  nsIntPoint(aRxs[i], aRys[i]),
+                                  aRotationAngles[i],
+                                  aForces[i]);
     event.touches.AppendElement(t);
   }
 
@@ -1215,8 +1244,12 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     msg = NS_SIMPLE_GESTURE_TAP;
   else if (aType.EqualsLiteral("MozPressTapGesture"))
     msg = NS_SIMPLE_GESTURE_PRESSTAP;
-  else if (aType.EqualsLiteral("MozEdgeUIGesture"))
-    msg = NS_SIMPLE_GESTURE_EDGEUI;
+  else if (aType.EqualsLiteral("MozEdgeUIStarted"))
+    msg = NS_SIMPLE_GESTURE_EDGE_STARTED;
+  else if (aType.EqualsLiteral("MozEdgeUICanceled"))
+    msg = NS_SIMPLE_GESTURE_EDGE_CANCELED;
+  else if (aType.EqualsLiteral("MozEdgeUICompleted"))
+    msg = NS_SIMPLE_GESTURE_EDGE_COMPLETED;
   else
     return NS_ERROR_FAILURE;
  
@@ -1972,7 +2005,7 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
     msg = NS_CONTENT_COMMAND_PASTE_TRANSFERABLE;
   else
     return NS_ERROR_FAILURE;
- 
+
   nsContentCommandEvent event(true, msg, widget);
   if (msg == NS_CONTENT_COMMAND_PASTE_TRANSFERABLE) {
     event.mTransferable = aTransferable;
@@ -2343,7 +2376,9 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  GetPresContext()->RefreshDriver()->AdvanceTimeAndRefresh(aMilliseconds);
+  nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
+  driver->AdvanceTimeAndRefresh(aMilliseconds);
+  CompositorParent::SetTimeAndSampleAnimations(driver->MostRecentRefresh(), true);
 
   return NS_OK;
 }
@@ -2355,7 +2390,9 @@ nsDOMWindowUtils::RestoreNormalRefresh()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  GetPresContext()->RefreshDriver()->RestoreNormalRefresh();
+  nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
+  driver->RestoreNormalRefresh();
+  CompositorParent::SetTimeAndSampleAnimations(driver->MostRecentRefresh(), false);
 
   return NS_OK;
 }
@@ -3296,3 +3333,34 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
   aTarget->DispatchEvent(aEvent, aRetVal);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::RunInStableState(nsIRunnable *runnable)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
+  if (!appShell) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return appShell->RunInStableState(runnable);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::RunBeforeNextEvent(nsIRunnable *runnable)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
+  if (!appShell) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return appShell->RunBeforeNextEvent(runnable);
+}
+

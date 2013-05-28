@@ -115,7 +115,7 @@ public class ExtendedJSONObject {
   /**
    * Helper method to get a JSON object from a stream.
    *
-   * @param jsonString input.
+   * @param in input {@link Reader}.
    * @throws ParseException
    * @throws IOException
    * @throws NonArrayJSONException if the object is valid JSON, but not an object.

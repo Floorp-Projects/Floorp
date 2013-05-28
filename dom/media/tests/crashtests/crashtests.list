@@ -10,8 +10,7 @@ load 812785.html
 load 834100.html
 load 836349.html
 load 837324.html
-load 837421.html
-load 855796.html
+skip-if(Android) load 855796.html # bug 875640
 load 860143.html
 load 861958.html
 load 863929.html

@@ -1049,9 +1049,12 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
                                     uint32_t                   aFlags)
 {
   nsPoint curOrigin = aKidFrame->GetPosition();
-  nsRect  bounds(aX, aY, aDesiredSize.width, aDesiredSize.height);
 
-  aKidFrame->SetRect(bounds);
+  if (NS_FRAME_NO_MOVE_FRAME != (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
+    aKidFrame->SetRect(nsRect(aX, aY, aDesiredSize.width, aDesiredSize.height));
+  } else {
+    aKidFrame->SetSize(nsSize(aDesiredSize.width, aDesiredSize.height));
+  }
 
   if (aKidFrame->HasView()) {
     nsView* view = aKidFrame->GetView();

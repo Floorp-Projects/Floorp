@@ -13,13 +13,8 @@ ifneq ($(dir $(PROGRAM)),./)
   GENERATED_DIRS = $(dir $(PROGRAM))
 endif
 
-CPPSRCS = \
-  MozillaRuntimeMain.cpp \
-  $(NULL)
-
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 WRAP_LDFLAGS =
-CPPSRCS = MozillaRuntimeMainAndroid.cpp
 else
 LIBS += \
   $(XPCOM_LIBS) \

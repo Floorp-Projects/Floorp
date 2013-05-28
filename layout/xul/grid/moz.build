@@ -18,3 +18,15 @@ EXPORTS += [
     'nsIGridPart.h',
 ]
 
+CPP_SOURCES += [
+    'nsGrid.cpp',
+    'nsGridCell.cpp',
+    'nsGridLayout2.cpp',
+    'nsGridRow.cpp',
+    'nsGridRowGroupFrame.cpp',
+    'nsGridRowGroupLayout.cpp',
+    'nsGridRowLayout.cpp',
+    'nsGridRowLeafFrame.cpp',
+    'nsGridRowLeafLayout.cpp',
+]
+

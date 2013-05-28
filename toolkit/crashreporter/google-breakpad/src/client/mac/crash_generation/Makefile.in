@@ -14,11 +14,6 @@ XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
-CPPSRCS	= \
-  crash_generation_client.cc \
-  crash_generation_server.cc \
-  $(NULL)
-
 # need static lib
 FORCE_STATIC_LIB = 1
 

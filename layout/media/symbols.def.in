@@ -533,6 +533,7 @@ hb_buffer_set_script
 hb_buffer_set_unicode_funcs
 hb_face_create_for_tables
 hb_face_destroy
+hb_face_reference
 hb_font_create
 hb_font_destroy
 hb_font_funcs_create
@@ -574,3 +575,9 @@ hb_unicode_funcs_set_eastasian_width_func
 hb_unicode_funcs_set_general_category_func
 hb_unicode_funcs_set_mirroring_func
 hb_unicode_funcs_set_script_func
+webvtt_string_text
+webvtt_create_parser
+webvtt_delete_parser
+webvtt_parse_chunk
+webvtt_ref_node
+webvtt_release_node

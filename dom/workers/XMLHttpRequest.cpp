@@ -15,6 +15,7 @@
 
 #include "jsfriendapi.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXMLHttpRequest.h"
@@ -665,6 +666,8 @@ public:
     }
 
     XMLHttpRequest::StateData state;
+    // XXXbz there is no AutoValueRooter anymore?
+    JS::AutoArrayRooter rooter(aCx, 1, &state.mResponse);
 
     state.mResponseTextResult = mResponseTextResult;
     state.mResponseText = mResponseText;

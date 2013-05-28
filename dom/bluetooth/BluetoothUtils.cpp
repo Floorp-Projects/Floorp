@@ -12,6 +12,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIScriptContext.h"
 #include "nsISystemMessagesInternal.h"
 #include "nsString.h"
@@ -104,11 +105,10 @@ bool
 BroadcastSystemMessage(const nsAString& aType,
                        const InfallibleTArray<BluetoothNamedValue>& aData)
 {
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  mozilla::AutoSafeJSContext cx;
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
       "Shouldn't get here when an exception is pending!");
 
-  JSAutoRequest jsar(cx);
   JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!obj) {
     NS_WARNING("Failed to new JSObject for system message!");

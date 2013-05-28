@@ -24,6 +24,7 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/UnixSocket.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
 #include "nsISystemMessagesInternal.h"
@@ -751,13 +752,19 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
 void
 BluetoothService::Notify(const BluetoothSignal& aData)
 {
-  nsString type;
+  /**
+   * We'd like to keep old mechanisms for now and remove them after Bug 873917
+   * is fixed. Basically, three system messages are going to be merged into one
+   * with an extra property named 'method' for distinguishing pairing method.
+   * Please see Bug 853235 for more details.
+   */
+  nsString type = NS_LITERAL_STRING("bluetooth-pairing-request");
+  nsAutoString oldType;
 
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  AutoSafeJSContext cx;
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
                "Shouldn't get here when an exception is pending!");
 
-  JSAutoRequest jsar(cx);
   JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!obj) {
     NS_WARNING("Failed to new JSObject for system message!");
@@ -772,36 +779,35 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   BT_LOG("[S] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
 
   if (aData.name().EqualsLiteral("RequestConfirmation")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
+    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 4,
       "RequestConfirmation: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-requestconfirmation");
+    oldType.AssignLiteral("bluetooth-requestconfirmation");
   } else if (aData.name().EqualsLiteral("RequestPinCode")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-requestpincode");
+    oldType.AssignLiteral("bluetooth-requestpincode");
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-requestpasskey");
+    oldType.AssignLiteral("bluetooth-requestpasskey");
   } else if (aData.name().EqualsLiteral("Authorize")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
       "Authorize: Wrong length of parameters");
     type.AssignLiteral("bluetooth-authorize");
   } else if (aData.name().EqualsLiteral("Cancel")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
+    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
       "Cancel: Wrong length of parameters");
     type.AssignLiteral("bluetooth-cancel");
   } else if (aData.name().EqualsLiteral("PairedStatusChanged")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 1,
+    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 1,
       "PairedStatusChagned: Wrong length of parameters");
     type.AssignLiteral("bluetooth-pairedstatuschanged");
   } else {
-#ifdef DEBUG
     nsCString warningMsg;
     warningMsg.AssignLiteral("Not handling service signal: ");
     warningMsg.Append(NS_ConvertUTF16toUTF8(aData.name()));
     NS_WARNING(warningMsg.get());
-#endif
+    return;
   }
 
   nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
@@ -809,4 +815,8 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   NS_ENSURE_TRUE_VOID(systemMessenger);
 
   systemMessenger->BroadcastMessage(type, OBJECT_TO_JSVAL(obj));
+
+  if (!oldType.IsEmpty()) {
+    systemMessenger->BroadcastMessage(oldType, OBJECT_TO_JSVAL(obj));
+  }
 }

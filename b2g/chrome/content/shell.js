@@ -139,7 +139,7 @@ var shell = {
       if (Services.prefs.getBoolPref('app.reportCrashes')) {
         this.submitCrash(crashID);
       } else {
-        debugCrashReport('app.reportCrashes is disabled');
+        this.deleteCrash(crashID);
       }
     } catch (e) {
       debugCrashReport('Can\'t fetch app.reportCrashes. Exception: ' + e);
@@ -154,6 +154,13 @@ var shell = {
         crashID: crashID,
         chrome: isChrome
       });
+    }
+  },
+
+  deleteCrash: function shell_deleteCrash(aCrashID) {
+    if (aCrashID) {
+      debugCrashReport('Deleting pending crash: ' + aCrashID);
+      shell.CrashSubmit.delete(aCrashID);
     }
   },
 
@@ -424,8 +431,8 @@ var shell = {
   },
 
   lastHardwareButtonEventType: null, // property for the hack above
-  needBufferSysMsgs: true,
-  bufferedSysMsgs: [],
+  needBufferOpenAppReq: true,
+  bufferedOpenAppReqs: [],
   timer: null,
   visibleNormalAudioActive: false,
 
@@ -541,7 +548,7 @@ var shell = {
                    ObjectWrapper.wrap(details, getContentWindow()));
   },
 
-  sendSystemMessage: function shell_sendSystemMessage(msg) {
+  openAppForSystemMessage: function shell_openAppForSystemMessage(msg) {
     let origin = Services.io.newURI(msg.manifest, null, null).prePath;
     this.sendChromeEvent({
       type: 'open-app',
@@ -616,16 +623,16 @@ nsBrowserAccess.prototype = {
   }
 };
 
-// Listen for system messages and relay them to Gaia.
-Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
+// Listen for the request of opening app and relay them to Gaia.
+Services.obs.addObserver(function onSystemMessageOpenApp(subject, topic, data) {
   let msg = JSON.parse(data);
-  // Buffer non-activity messages until content starts to load for 10 seconds.
-  // We'll revisit this later if new kind of messages don't need to be cached.
-  if (shell.needBufferSysMsgs && msg.type !== 'activity') {
-    shell.bufferedSysMsgs.push(msg);
+  // Buffer non-activity request until content starts to load for 10 seconds.
+  // We'll revisit this later if new kind of requests don't need to be cached.
+  if (shell.needBufferOpenAppReq && msg.type !== 'activity') {
+    shell.bufferedOpenAppReqs.push(msg);
     return;
   }
-  shell.sendSystemMessage(msg);
+  shell.openAppForSystemMessage(msg);
 }, 'system-messages-open-app', false);
 
 Services.obs.addObserver(function(aSubject, aTopic, aData) {
@@ -655,14 +662,17 @@ var CustomEventManager = {
       content.addEventListener("mozContentEvent", this, false, true);
 
       // After content starts to load for 10 seconds, send and
-      // clean up the buffered system messages if there is any.
+      // clean up the buffered open-app requests if there is any.
+      //
+      // TODO: Bug 793420 - Remove the waiting timer for the 'open-app'
+      //                    mozChromeEvents requested by System Message
       shell.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       shell.timer.initWithCallback(function timerCallback() {
-        shell.bufferedSysMsgs.forEach(function sendSysMsg(msg) {
-          shell.sendSystemMessage(msg);
+        shell.bufferedOpenAppReqs.forEach(function bufferOpenAppReq(msg) {
+          shell.openAppForSystemMessage(msg);
         });
-        shell.bufferedSysMsgs.length = 0;
-        shell.needBufferSysMsgs = false;
+        shell.bufferedOpenAppReqs.length = 0;
+        shell.needBufferOpenAppReq = false;
         shell.timer = null;
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
     }).bind(this), false);
@@ -997,7 +1007,15 @@ let RemoteDebugger = {
     if (!DebuggerServer.initialized) {
       // Ask for remote connections.
       DebuggerServer.init(this.prompt.bind(this));
-      DebuggerServer.addBrowserActors();
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+#ifndef MOZ_WIDGET_GONK
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
+#endif
+      if ("nsIProfiler" in Ci) {
+        DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
+      }
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
       DebuggerServer.addActors('chrome://browser/content/dbg-webapps-actors.js');
     }
@@ -1096,7 +1114,11 @@ window.addEventListener('ContentStart', function cr_onContentStart() {
   let content = shell.contentBrowser.contentWindow;
   content.addEventListener("mozContentEvent", function cr_onMozContentEvent(e) {
     if (e.detail.type == "submit-crash" && e.detail.crashID) {
+      debugCrashReport("submitting crash at user request ", e.detail.crashID);
       shell.submitCrash(e.detail.crashID);
+    } else if (e.detail.type == "delete-crash" && e.detail.crashID) {
+      debugCrashReport("deleting crash at user request ", e.detail.crashID);
+      shell.deleteCrash(e.detail.crashID);
     }
   });
 });
@@ -1198,3 +1220,19 @@ Services.obs.addObserver(function(aSubject, aTopic, aData) {
     pageURL: data.pageURL
   });
 }, "activity-done", false);
+
+#ifdef MOZ_WIDGET_GONK
+// Devices don't have all the same partition size for /cache where we
+// store the http cache.
+(function setHTTPCacheSize() {
+  let path = Services.prefs.getCharPref("browser.cache.disk.parent_directory");
+  let volumeService = Cc["@mozilla.org/telephony/volume-service;1"]
+                        .getService(Ci.nsIVolumeService);
+
+  let stats = volumeService.createOrGetVolumeByPath(path).getStats();
+
+  // We must set the size in KB, and keep a bit of free space.
+  let size = Math.floor(stats.totalBytes / 1024) - 1024;
+  Services.prefs.setIntPref("browser.cache.disk.capacity", size);
+}) ()
+#endif

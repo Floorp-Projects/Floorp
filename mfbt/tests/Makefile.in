@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 STL_FLAGS =
 
 CPP_UNIT_TESTS = \
+  TestAtomics.cpp \
   TestBloomFilter.cpp \
   TestCasting.cpp \
   TestCheckedInt.cpp \

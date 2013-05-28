@@ -1,0 +1,12 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+a11y_log = 0
+if CONFIG['MOZ_DEBUG']:
+    a11y_log = 1
+
+if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('aurora', 'beta', 'release', 'esr'):
+    a11y_log = 1

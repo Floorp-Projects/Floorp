@@ -27,6 +27,7 @@
     "dom/tests/mochitest/ajax/jquery/test_jQuery.html":"",
  
     "content/base/test/test_CSP_inlinescript.html":"",
+    "content/base/test/test_CSP_inlinestyle.html":"",
     "content/base/test/test_XHRSendData.html":"",
     "content/base/test/test_XHR_parameters.html":"",
     "content/base/test/test_XHR_system.html":"",

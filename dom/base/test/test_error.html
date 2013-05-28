@@ -1,0 +1,44 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=869013
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 869013</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=869013">Mozilla Bug 869013</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="x" id="x"></iframe>
+  <iframe name="y" id="y"></iframe>
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 869013 **/
+  var a = new DOMError('name');
+  ok(a, "DOMError created with name: " + a.name + " and message: " + a.message);
+  is(a.name, "name", "Name is correct");
+  is(a.message, "", "Message is correct");
+
+  a = new DOMError('name1', 'message1');
+  ok(a, "DOMError created with name: " + a.name + " and message: " + a.message);
+  is(a.name, "name1", "Name is correct");
+  is(a.message, "message1", "Message is correct");
+
+  try {
+    a = new DOMError();
+    ok(false, "DOMError should throw if there are not params");
+  } catch(e) {
+    ok(true, "DOMError should throw if there are not params");
+  }
+
+  </script>
+</body>
+</html>

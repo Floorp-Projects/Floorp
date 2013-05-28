@@ -352,7 +352,6 @@ protected:
   nsresult DidCauseReflow();
   friend class nsAutoCauseReflowNotifier;
 
-  bool TouchesAreEqual(nsIDOMTouch *aTouch1, nsIDOMTouch *aTouch2);
   void DispatchTouchEvent(nsEvent *aEvent,
                           nsEventStatus* aStatus,
                           nsPresShellEventCB* aEventCB,
@@ -394,7 +393,8 @@ protected:
   void DoScrollContentIntoView();
 
   /**
-   * Initialize cached font inflation preference values.
+   * Initialize cached font inflation preference values and do an initial
+   * computation to determine if font inflation is enabled.
    *
    * @see nsLayoutUtils::sFontSizeInflationEmPerLine
    * @see nsLayoutUtils::sFontSizeInflationMinTwips

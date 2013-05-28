@@ -169,7 +169,8 @@ SkipScopeParent(JSObject *parent)
 }
 
 inline JSFunction *
-CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObject parent)
+CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObject parent,
+                                  NewObjectKind newKind = GenericObject)
 {
     /*
      * For attempts to clone functions at a function definition opcode,
@@ -202,7 +203,7 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
     gc::AllocKind kind = fun->isExtended()
                          ? extendedFinalizeKind
                          : finalizeKind;
-    return CloneFunctionObject(cx, fun, parent, kind);
+    return CloneFunctionObject(cx, fun, parent, kind, newKind);
 }
 
 } /* namespace js */

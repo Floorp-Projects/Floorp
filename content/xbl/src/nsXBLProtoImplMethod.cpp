@@ -15,6 +15,7 @@
 #include "nsIScriptContext.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "xpcpublic.h"
@@ -198,13 +199,11 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
   }
 
   AutoPushJSContext cx(aContext->GetNativeContext());
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, aClassObject);
   JS::CompileOptions options(cx);
   options.setFileAndLine(functionUri.get(),
                          uncompiledMethod->mBodyText.GetLineNumber())
-         .setVersion(JSVERSION_LATEST)
-         .setUserBit(true); // Flag us as XBL
+         .setVersion(JSVERSION_LATEST);
   JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
   JS::RootedObject methodObject(cx);
   nsresult rv = nsJSUtils::CompileFunction(cx, rootedNull, options, cname,
@@ -226,10 +225,10 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 }
 
 void
-nsXBLProtoImplMethod::Trace(TraceCallback aCallback, void *aClosure) const
+nsXBLProtoImplMethod::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 {
   if (IsCompiled() && mJSMethodObject) {
-    aCallback(mJSMethodObject, "mJSMethodObject", aClosure);
+    aCallbacks.Trace(&mJSMethodObject, "mJSMethodObject", aClosure);
   }
 }
 
@@ -264,7 +263,8 @@ nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
     rv = aStream->WriteWStringZ(mName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return XBL_SerializeFunction(aContext, aStream, mJSMethodObject);
+    return XBL_SerializeFunction(aContext, aStream,
+                                 JS::Handle<JSObject*>::fromMarkedLocation(&mJSMethodObject));
   }
 
   return NS_OK;
@@ -320,7 +320,6 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, scopeObject);
   if (!JS_WrapObject(cx, thisObject.address()))
       return NS_ERROR_OUT_OF_MEMORY;
@@ -369,7 +368,8 @@ nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
     nsresult rv = aStream->Write8(aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = XBL_SerializeFunction(aContext, aStream, mJSMethodObject);
+    rv = XBL_SerializeFunction(aContext, aStream,
+                               JS::Handle<JSObject*>::fromMarkedLocation(&mJSMethodObject));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

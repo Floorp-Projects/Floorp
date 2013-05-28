@@ -185,7 +185,7 @@ gTests.push({
     // left and up - selection should shrink
     let xpos = SelectionHelperUI.endMark.xPos;
     let ypos = SelectionHelperUI.endMark.yPos + 10;
-    yield touchdrag.start(gWindow, xpos, ypos, 105, 25);
+    yield touchdrag.start(gWindow, xpos, ypos, 110, 25);
     yield waitForCondition(function () {
       return getTrimmedSelection(gInput).toString() == 
         "straight on like a tunnel for";

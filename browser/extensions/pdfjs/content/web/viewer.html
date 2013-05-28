@@ -36,8 +36,8 @@ limitations under the License.
     <script type="text/javascript" src="viewer.js"></script>
   </head>
 
-  <body>
-    <div id="outerContainer">
+  <body tabindex="1">
+    <div id="outerContainer" class="loadingInProgress">
 
       <div id="sidebarContainer">
         <div id="toolbarSidebar">
@@ -105,7 +105,7 @@ limitations under the License.
               <div id="toolbarViewerRight">
                 <input id="fileInput" class="fileInput" type="file" oncontextmenu="return false;" style="visibility: hidden; position: fixed; right: 0; top: 0" />
 
-                <button id="fullscreen" class="toolbarButton fullscreen hiddenSmallView" title="Switch to Presentation Mode" tabindex="12" data-l10n-id="presentation_mode">
+                <button id="presentationMode" class="toolbarButton presentationMode hiddenSmallView" title="Switch to Presentation Mode" tabindex="12" data-l10n-id="presentation_mode">
                   <span data-l10n-id="presentation_mode_label">Presentation Mode</span>
                 </button>
 
@@ -126,11 +126,11 @@ limitations under the License.
               <div class="outerCenter">
                 <div class="innerCenter" id="toolbarViewerMiddle">
                   <div class="splitToolbarButton">
-                    <button class="toolbarButton zoomOut" id="zoom_out" title="Zoom Out" tabindex="9" data-l10n-id="zoom_out">
+                    <button id="zoomOut" class="toolbarButton zoomOut" title="Zoom Out" tabindex="9" data-l10n-id="zoom_out">
                       <span data-l10n-id="zoom_out_label">Zoom Out</span>
                     </button>
                     <div class="splitToolbarButtonSeparator"></div>
-                    <button class="toolbarButton zoomIn" id="zoom_in" title="Zoom In" tabindex="10" data-l10n-id="zoom_in">
+                    <button id="zoomIn" class="toolbarButton zoomIn" title="Zoom In" tabindex="10" data-l10n-id="zoom_in">
                       <span data-l10n-id="zoom_in_label">Zoom In</span>
                      </button>
                   </div>
@@ -152,27 +152,28 @@ limitations under the License.
                 </div>
               </div>
             </div>
+            <div id="loadingBar">
+              <div class="progress">
+                <div class="glimmer">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <menu type="context" id="viewerContextMenu">
-          <menuitem label="First Page" id="first_page"
+          <menuitem id="firstPage" label="First Page"
                     data-l10n-id="first_page" ></menuitem>
-          <menuitem label="Last Page" id="last_page"
+          <menuitem id="lastPage" label="Last Page"
                     data-l10n-id="last_page" ></menuitem>
-          <menuitem label="Rotate Counter-Clockwise" id="page_rotate_ccw"
+          <menuitem id="pageRotateCcw" label="Rotate Counter-Clockwise"
                     data-l10n-id="page_rotate_ccw" ></menuitem>
-          <menuitem label="Rotate Clockwise" id="page_rotate_cw"
+          <menuitem id="pageRotateCw" label="Rotate Clockwise"
                     data-l10n-id="page_rotate_cw" ></menuitem>
         </menu>
 
-        <div id="viewerContainer" tabindex="1">
+        <div id="viewerContainer">
           <div id="viewer" contextmenu="viewerContextMenu"></div>
-        </div>
-
-        <div id="loadingBox">
-          <div id="loading"></div>
-          <div id="loadingBar"><div class="progress"></div></div>
         </div>
 
         <div id="errorWrapper" hidden='true'>

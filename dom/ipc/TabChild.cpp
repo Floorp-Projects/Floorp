@@ -29,6 +29,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsEmbedCID.h"
 #include "nsEventListenerManager.h"
 #include <algorithm>
@@ -632,7 +633,7 @@ TabChild::HandlePossibleViewportChange()
 
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.
-  RecvUpdateFrame(metrics);
+  ProcessUpdateFrame(metrics);
 }
 
 nsresult
@@ -1417,26 +1418,26 @@ void
 TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
                                         const nsACString& aJSONData)
 {
-    JSAutoRequest ar(mCx);
-    JS::Rooted<JS::Value> json(mCx, JSVAL_NULL);
+    AutoSafeJSContext cx;
+    JS::Rooted<JS::Value> json(cx, JSVAL_NULL);
     StructuredCloneData cloneData;
     JSAutoStructuredCloneBuffer buffer;
-    if (JS_ParseJSON(mCx,
+    if (JS_ParseJSON(cx,
                       static_cast<const jschar*>(NS_ConvertUTF8toUTF16(aJSONData).get()),
                       aJSONData.Length(),
                       json.address())) {
-        WriteStructuredClone(mCx, json, buffer, cloneData.mClosure);
+        WriteStructuredClone(cx, json, buffer, cloneData.mClosure);
         cloneData.mData = buffer.data();
         cloneData.mDataLength = buffer.nbytes();
     }
 
-    nsFrameScriptCx cx(static_cast<nsIWebBrowserChrome*>(this), this);
+    nsFrameScriptCx frameScriptCx(static_cast<nsIWebBrowserChrome*>(this), this);
     // Let the BrowserElementScrolling helper (if it exists) for this
     // content manipulate the frame state.
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
-                       aMessageName, false, &cloneData, nullptr, nullptr);
+                       aMessageName, false, &cloneData, JS::NullPtr(), nullptr);
 }
 
 static void
@@ -1453,6 +1454,20 @@ ScrollWindowTo(nsIDOMWindow* aWindow, const mozilla::gfx::Point& aPoint)
 bool
 TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 {
+    nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
+
+    uint32_t presShellId;
+    nsresult rv = utils->GetPresShellId(&presShellId);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_SUCCEEDED(rv) && aFrameMetrics.mPresShellId != presShellId) {
+        return true;
+    }
+    return ProcessUpdateFrame(aFrameMetrics);
+}
+
+bool
+TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
+  {
     if (!mCx || !mTabChildGlobal) {
         return true;
     }
@@ -1593,11 +1608,8 @@ TabChild::RecvMouseEvent(const nsString& aType,
                          const int32_t&  aModifiers,
                          const bool&     aIgnoreRootScrollFrame)
 {
-  nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
-  NS_ENSURE_TRUE(utils, true);
-  bool ignored = false;
-  utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
-                        aIgnoreRootScrollFrame, 0, 0, &ignored);
+  DispatchMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
+                     aIgnoreRootScrollFrame);
   return true;
 }
 
@@ -1734,8 +1746,21 @@ void
 TabChild::FireContextMenuEvent()
 {
   MOZ_ASSERT(mTapHoldTimer && mActivePointerId >= 0);
-  RecvHandleLongTap(mGestureDownPoint);
-  CancelTapTracking();
+  bool defaultPrevented = DispatchMouseEvent(NS_LITERAL_STRING("contextmenu"),
+                                             mGestureDownPoint.x, mGestureDownPoint.y,
+                                             2 /* Right button */,
+                                             1 /* Click count */,
+                                             0 /* Modifiers */,
+                                             false /* Ignore root scroll frame */);
+
+  // Fire a click event if someone didn't call preventDefault() on the context
+  // menu event.
+  if (defaultPrevented) {
+    CancelTapTracking();
+  } else if (mTapHoldTimer) {
+    mTapHoldTimer->Cancel();
+    mTapHoldTimer = nullptr;
+  }
 }
 
 void
@@ -1974,7 +1999,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
-                       aMessage, false, &cloneData, nullptr, nullptr);
+                       aMessage, false, &cloneData, JS::NullPtr(), nullptr);
   }
   return true;
 }
@@ -2207,6 +2232,24 @@ TabChild::IsAsyncPanZoomEnabled()
     return mScrolling == ASYNC_PAN_ZOOM;
 }
 
+bool
+TabChild::DispatchMouseEvent(const nsString& aType,
+                             const float&    aX,
+                             const float&    aY,
+                             const int32_t&  aButton,
+                             const int32_t&  aClickCount,
+                             const int32_t&  aModifiers,
+                             const bool&     aIgnoreRootScrollFrame)
+{
+  nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
+  NS_ENSURE_TRUE(utils, true);
+  
+  bool defaultPrevented = false;
+  utils->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers,
+                        aIgnoreRootScrollFrame, 0, 0, &defaultPrevented);
+  return defaultPrevented;
+}
+
 void
 TabChild::MakeVisible()
 {
@@ -2289,15 +2332,8 @@ TabChildGlobal::Init()
                                               MM_CHILD);
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChildGlobal,
-                                                nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TabChildGlobal,
-                                                  nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TabChildGlobal, nsDOMEventTargetHelper,
+                                     mMessageManager)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)

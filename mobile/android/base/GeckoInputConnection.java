@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.InputConnectionHandler;
+import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.R;
@@ -326,7 +327,7 @@ class GeckoInputConnection
     }
 
     private static View getView() {
-        return GeckoApp.mAppContext.getLayerView();
+        return GeckoAppShell.getLayerView();
     }
 
     private static InputMethodManager getInputMethodManager() {
@@ -608,8 +609,8 @@ class GeckoInputConnection
             outAttrs.actionLabel = mIMEActionHint;
         }
 
-        GeckoApp app = GeckoApp.mAppContext;
-        DisplayMetrics metrics = app.getResources().getDisplayMetrics();
+        Context context = GeckoAppShell.getContext();
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         if (Math.min(metrics.widthPixels, metrics.heightPixels) > INLINE_IME_MIN_DISPLAY_SIZE) {
             // prevent showing full-screen keyboard only when the screen is tall enough
             // to show some reasonable amount of the page (see bug 752709)
@@ -624,14 +625,14 @@ class GeckoInputConnection
         }
 
         String prevInputMethod = mCurrentInputMethod;
-        mCurrentInputMethod = InputMethods.getCurrentInputMethod(app);
+        mCurrentInputMethod = InputMethods.getCurrentInputMethod(context);
         if (DEBUG) {
             Log.d(LOGTAG, "IME: CurrentInputMethod=" + mCurrentInputMethod);
         }
 
         // If the user has changed IMEs, then notify input method observers.
-        if (!mCurrentInputMethod.equals(prevInputMethod)) {
-            FormAssistPopup popup = app.mFormAssistPopup;
+        if (!mCurrentInputMethod.equals(prevInputMethod) && GeckoAppShell.getGeckoInterface() != null) {
+            FormAssistPopup popup = GeckoAppShell.getGeckoInterface().getFormAssistPopup();
             if (popup != null) {
                 popup.onInputMethodChanged(mCurrentInputMethod);
             }
@@ -769,6 +770,11 @@ class GeckoInputConnection
     }
 
     private boolean processKey(int keyCode, KeyEvent event, boolean down) {
+        if (GamepadUtils.isSonyXperiaGamepadKeyEvent(event)) {
+            event = GamepadUtils.translateSonyXperiaGamepadKeys(keyCode, event);
+            keyCode = event.getKeyCode();
+        }
+
         if (keyCode > KeyEvent.getMaxKeyCode() ||
             !shouldProcessKey(keyCode, event)) {
             return false;

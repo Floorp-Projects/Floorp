@@ -40,7 +40,10 @@ function cbError() {
 function go() {
   ok(true, "Launched app");
   var request = window.navigator.mozApps.getSelf();
-  request.onsuccess = function() { var app = request.result; checkApp(app); }
+  request.onsuccess = function() {
+    var app = request.result;
+    checkApp(app);
+  }
   request.onerror = cbError;
 }
 

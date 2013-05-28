@@ -13,16 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_XUL
 LIBRARY_NAME	= gkconxulcon_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
-endif
-
-
-ifdef MOZ_XUL
-CPPSRCS		+= \
-		nsXULElement.cpp \
-		nsXULPopupListener.cpp \
-		nsXULContextMenuBuilder.cpp \
-		$(NULL)
 endif
 
 # we don't want the shared lib, but we want to force the creation of a

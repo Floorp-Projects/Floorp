@@ -11,15 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS = \
-	bfd.cpp    \
-	coff.cpp   \
-	elf.cpp	   \
-	leaky.cpp  \
-	strset.cpp \
-	intcnt.cpp \
-	$(NULL)
-
 OS_LIBS = \
 	-ldl \
 	-lbfd \

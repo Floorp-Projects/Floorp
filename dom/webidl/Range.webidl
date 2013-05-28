@@ -12,6 +12,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Constructor]
 interface Range {
   [Throws]
   readonly attribute Node startContainer;

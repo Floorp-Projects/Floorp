@@ -20,6 +20,7 @@ IS_COMPONENT = 1
 FAIL_ON_WARNINGS = 1
 
 LIBRARY_NAME = telemetry
+MSVC_ENABLE_PGO := 1
 
 EXTRA_PP_COMPONENTS = \
   TelemetryPing.js \
@@ -31,10 +32,6 @@ EXTRA_COMPONENTS = \
 
 EXTRA_JS_MODULES = \
   TelemetryStopwatch.jsm \
-  $(NULL)
-
-CPPSRCS = \
-  Telemetry.cpp \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build

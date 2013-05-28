@@ -11,9 +11,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xptcall
+MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API = 1
-
-CPPSRCS		= xptcall.cpp
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

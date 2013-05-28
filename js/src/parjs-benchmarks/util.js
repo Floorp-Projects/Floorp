@@ -2,6 +2,13 @@ DEFAULT_WARMUP = 10
 DEFAULT_MEASURE = 3
 MODE = MODE || "compare" // MODE is often set on the command-line by run.sh
 
+/**
+ * label: for the printouts
+ * w: warmup runs
+ * m: measurement runs
+ * seq: closure to compute sequentially
+ * par: closure to compute in parallel
+ */
 function benchmark(label, w, m, seq, par) {
   var SEQ = 1
   var PAR = 2
@@ -51,7 +58,7 @@ function benchmark(label, w, m, seq, par) {
   if (mode(SEQ|PAR)) {
     print(label + " SEQ/PAR RATIO     : " + seqAvg/parAvg);
     print(label + " PAR/SEQ RATIO     : " + parAvg/seqAvg);
-    print(label + " SPEEDUP           : " +
+    print(label + " IMPROVEMENT       : " +
           (((seqAvg - parAvg) / seqAvg * 100.0) | 0) + "%");
   }
 
@@ -94,10 +101,28 @@ function measureN(iters, f) {
 function assertStructuralEq(e1, e2) {
     if (e1 instanceof ParallelArray && e2 instanceof ParallelArray) {
       assertEqParallelArray(e1, e2);
+    } else if (typeof(RectArray) != "undefined" &&
+               e1 instanceof ParallelArray && e2 instanceof RectArray) {
+      assertEqParallelArrayRectArray(e1, e2);
+    } else if (typeof(RectArray) != "undefined" &&
+               e1 instanceof RectArray && e2 instanceof ParallelArray) {
+      assertEqParallelArrayRectArray(e2, e1);
+    } else if (typeof(WrapArray) != "undefined" &&
+               e1 instanceof ParallelArray && e2 instanceof WrapArray) {
+      assertEqParallelArrayWrapArray(e1, e2);
+    } else if (typeof(WrapArray) != "undefined" &&
+               e1 instanceof WrapArray && e2 instanceof ParallelArray) {
+      assertEqParallelArrayWrapArray(e2, e1);
     } else if (e1 instanceof Array && e2 instanceof ParallelArray) {
       assertEqParallelArrayArray(e2, e1);
     } else if (e1 instanceof ParallelArray && e2 instanceof Array) {
       assertEqParallelArrayArray(e1, e2);
+    } else if (typeof(RectArray) != "undefined" &&
+               e1 instanceof RectArray && e2 instanceof RectArray) {
+      assertEqRectArray(e1, e2);
+    } else if (typeof(WrapArray) != "undefined" &&
+               e1 instanceof WrapArray && e2 instanceof WrapArray) {
+      assertEqWrapArray(e1, e2);
     } else if (e1 instanceof Array && e2 instanceof Array) {
       assertEqArray(e1, e2);
     } else if (e1 instanceof Object && e2 instanceof Object) {
@@ -113,11 +138,53 @@ function assertStructuralEq(e1, e2) {
     }
 }
 
+function assertEqParallelArrayRectArray(a, b) {
+  assertEq(a.shape.length, 2);
+  assertEq(a.shape[0], b.width);
+  assertEq(a.shape[1], b.height);
+  for (var i = 0, w = a.shape[0]; i < w; i++) {
+    for (var j = 0, h = a.shape[1]; j < h; j++) {
+      assertStructuralEq(a.get(i,j), b.get(i,j));
+    }
+  }
+}
+
+function assertEqParallelArrayWrapArray(a, b) {
+  assertEq(a.shape.length, 2);
+  assertEq(a.shape[0], b.width);
+  assertEq(a.shape[1], b.height);
+  for (var i = 0, w = a.shape[0]; i < w; i++) {
+    for (var j = 0, h = a.shape[1]; j < h; j++) {
+      assertStructuralEq(a.get(i,j), b.get(i,j));
+    }
+  }
+}
+
 function assertEqParallelArrayArray(a, b) {
   assertEq(a.shape.length, 1);
   assertEq(a.length, b.length);
   for (var i = 0, l = a.shape[0]; i < l; i++) {
     assertStructuralEq(a.get(i), b[i]);
+  }
+}
+
+function assertEqRectArray(a, b) {
+  assertEq(a.width, b.width);
+  assertEq(a.height, b.height);
+  for (var i = 0, w = a.width; i < w; i++) {
+    for (var j = 0, h = a.height; j < h; j++) {
+      assertStructuralEq(a.get(i,j), b.get(i,j));
+    }
+  }
+}
+
+function assertEqWrapArray(a, b) {
+  assertEq(a.width, b.width);
+  assertEq(a.height, b.height);
+  for (var i = 0, w = a.width; i < w; i++) {
+    for (var j = 0, h = a.height; j < h; j++) {
+      assertStructuralEq(a.get(i,j), b.get(i,j));
+    }
   }
 }
 

@@ -20,6 +20,7 @@
 #include "XrayWrapper.h"
 
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
@@ -344,11 +345,10 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
     if (!success)
         return NS_ERROR_FAILURE;
 
-    // Construct the wrapper.
-    nsRefPtr<XPCWrappedNative> wrapper = new XPCWrappedNative(identity, proto);
-
-    // The wrapper takes over the strong reference to the native object.
-    nativeHelper.forgetCanonical();
+    // Construct the wrapper, which takes over the strong reference to the
+    // native object.
+    nsRefPtr<XPCWrappedNative> wrapper =
+        new XPCWrappedNative(nativeHelper.forgetCanonical(), proto);
 
     //
     // We don't call ::Init() on this wrapper, because our setup requirements
@@ -564,9 +564,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         nsISupports *Object = helper.Object();
         if (nsXPCWrappedJSClass::IsWrappedJS(Object)) {
             nsCOMPtr<nsIXPConnectWrappedJS> wrappedjs(do_QueryInterface(Object));
-            RootedObject obj(ccx);
-            wrappedjs->GetJSObject(obj.address());
-            if (xpc::AccessCheck::isChrome(js::GetObjectCompartment(obj)) &&
+            if (xpc::AccessCheck::isChrome(js::GetObjectCompartment(wrappedjs->GetJSObject())) &&
                 !xpc::AccessCheck::isChrome(js::GetObjectCompartment(Scope->GetGlobalJSObject()))) {
                 needsCOW = true;
             }
@@ -588,9 +586,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
         proto->CacheOffsets(identity);
 
-        wrapper = new XPCWrappedNative(identity, proto);
-        if (!wrapper)
-            return NS_ERROR_FAILURE;
+        wrapper = new XPCWrappedNative(helper.forgetCanonical(), proto);
     } else {
         AutoMarkingNativeInterfacePtr iface(ccx, Interface);
         if (!iface)
@@ -602,16 +598,11 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if (!set)
             return NS_ERROR_FAILURE;
 
-        wrapper = new XPCWrappedNative(identity, Scope, set);
-        if (!wrapper)
-            return NS_ERROR_FAILURE;
+        wrapper =
+            new XPCWrappedNative(helper.forgetCanonical(), Scope, set);
 
         DEBUG_ReportShadowedMembers(set, wrapper, nullptr);
     }
-
-    // The strong reference was taken over by the wrapper, so make the nsCOMPtr
-    // forget about it.
-    helper.forgetCanonical();
 
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
                  "Xray wrapper being used to parent XPCWrappedNative?");
@@ -1926,9 +1917,8 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
         nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(obj));
         if (wrappedJS) {
-            RootedObject jso(ccx);
-            if (NS_SUCCEEDED(wrappedJS->GetJSObject(jso.address())) &&
-                jso == mFlatJSObject) {
+            RootedObject jso(ccx, wrappedJS->GetJSObject());
+            if (jso == mFlatJSObject) {
                 // The implementing JSObject is the same as ours! Just say OK
                 // without actually extending the set.
                 //
@@ -2951,11 +2941,11 @@ CallMethodHelper::Invoke()
 /***************************************************************************/
 // interface methods
 
-/* readonly attribute JSObjectPtr JSObject; */
-NS_IMETHODIMP XPCWrappedNative::GetJSObject(JSObject * *aJSObject)
+/* JSObjectPtr GetJSObject(); */
+JSObject*
+XPCWrappedNative::GetJSObject()
 {
-    *aJSObject = GetFlatJSObject();
-    return NS_OK;
+    return GetFlatJSObject();
 }
 
 /* readonly attribute nsISupports Native; */
@@ -3009,13 +2999,10 @@ NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithMember (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsid nameArg,
+/* XPCNativeInterface FindInterfaceWithMember (in JSHandleId name); */
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(HandleId name,
                                                         nsIInterfaceInfo * *_retval)
 {
-    AutoJSContext cx;
-    RootedId name(cx, nameArg);
-
     XPCNativeInterface* iface;
     XPCNativeMember*  member;
 
@@ -3028,13 +3015,10 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsid nameArg,
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithName (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid nameArg,
+/* XPCNativeInterface FindInterfaceWithName (in JSHandleId name); */
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(HandleId name,
                                                       nsIInterfaceInfo * *_retval)
 {
-    AutoJSContext cx;
-    RootedId name(cx, nameArg);
-
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
     if (iface) {
         nsIInterfaceInfo* temp = iface->GetInterfaceInfo();
@@ -3045,13 +3029,10 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid nameArg,
     return NS_OK;
 }
 
-/* [notxpcom] bool HasNativeMember (in jsval name); */
+/* [notxpcom] bool HasNativeMember (in JSHandleId name); */
 NS_IMETHODIMP_(bool)
-XPCWrappedNative::HasNativeMember(jsid nameArg)
+XPCWrappedNative::HasNativeMember(HandleId name)
 {
-    AutoJSContext cx;
-    RootedId name(cx, nameArg);
-
     XPCNativeMember *member = nullptr;
     uint16_t ignored;
     return GetSet()->FindMember(name, &member, &ignored) && !!member;
@@ -3557,13 +3538,11 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSObjectHolder, nsIXPConnectJSObjectHolder)
 
-NS_IMETHODIMP
-XPCJSObjectHolder::GetJSObject(JSObject** aJSObj)
+JSObject*
+XPCJSObjectHolder::GetJSObject()
 {
-    NS_PRECONDITION(aJSObj, "bad param");
     NS_PRECONDITION(mJSObj, "bad object state");
-    *aJSObj = mJSObj;
-    return NS_OK;
+    return mJSObj;
 }
 
 XPCJSObjectHolder::XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj)

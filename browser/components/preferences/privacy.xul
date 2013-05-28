@@ -88,11 +88,11 @@
                   preference="privacy.donottrackheader.value"
                   onsynctopreference="return gPrivacyPane.setTrackingPrefs()"
                   onsyncfrompreference="return gPrivacyPane.getTrackingPrefs()">
-        <radio id="dntnotrack" value="1" label="&dntTrackingNotOkay.label;"
+        <radio id="dntnotrack" value="1" label="&dntTrackingNotOkay.label2;"
                 accesskey="&dntTrackingNotOkay.accesskey;" />
-        <radio id="dntdotrack" value="0" label="&dntTrackingOkay.label;"
+        <radio id="dntdotrack" value="0" label="&dntTrackingOkay.label2;"
                 accesskey="&dntTrackingOkay.accesskey;" />
-        <radio id="dntnopref" value="-1" label="&dntTrackingNopref.label;"
+        <radio id="dntnopref" value="-1" label="&dntTrackingNopref.label2;"
                 accesskey="&dntTrackingNopref.accesskey;" />
       </radiogroup>
       <label class="text-link" id="doNotTrackInfo"

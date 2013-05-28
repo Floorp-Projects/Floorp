@@ -636,10 +636,11 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 bool
 CodeGeneratorX86Shared::visitAsmJSDivOrMod(LAsmJSDivOrMod *ins)
 {
-    JS_ASSERT(ToRegister(ins->remainder()) == edx);
     JS_ASSERT(ToRegister(ins->lhs()) == eax);
     Register rhs = ToRegister(ins->rhs());
     Register output = ToRegister(ins->output());
+
+    JS_ASSERT_IF(output == eax, ToRegister(ins->remainder()) == edx);
 
     Label afterDiv;
 

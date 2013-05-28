@@ -12,6 +12,7 @@
 #include "AudioNodeStream.h"
 #include "AudioProcessingEvent.h"
 #include "WebAudioUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
 #include <deque>
@@ -19,11 +20,11 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptProcessorNode, AudioNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptProcessorNode)
   if (tmp->Context()) {
     tmp->Context()->UnregisterScriptProcessorNode(tmp);
   }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ScriptProcessorNode, AudioNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -312,7 +313,6 @@ private:
 
         AutoPushJSContext cx(node->Context()->GetJSContext());
         if (cx) {
-          JSAutoRequest ar(cx);
 
           // Create the input buffer
           nsRefPtr<AudioBuffer> inputBuffer;

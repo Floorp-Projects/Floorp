@@ -544,8 +544,6 @@ IDBCursor::GetKey(JSContext* aCx,
       mRooted = true;
     }
 
-    JSAutoRequest ar(aCx);
-
     nsresult rv = mKey.ToJSVal(aCx, &mCachedKey);
     NS_ENSURE_SUCCESS(rv, rv);
 

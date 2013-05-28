@@ -13,7 +13,7 @@ void
 nsHttpRequestHead::Flatten(nsACString &buf, bool pruneProxyHeaders)
 {
     // note: the first append is intentional.
- 
+
     buf.Append(mMethod.get());
     buf.Append(' ');
     buf.Append(mRequestURI);

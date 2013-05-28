@@ -194,7 +194,7 @@ inline JSContext *
 xpc_UnmarkGrayContext(JSContext *cx)
 {
     if (cx) {
-        JSObject *global = JS_GetGlobalObject(cx);
+        JSObject *global = js::GetDefaultGlobalForContext(cx);
         xpc_UnmarkGrayObject(global);
         if (global && JS_IsInRequest(JS_GetRuntime(cx))) {
             JSObject *scope = JS_GetGlobalForScopeChain(cx);
@@ -204,15 +204,6 @@ xpc_UnmarkGrayContext(JSContext *cx)
     }
     return cx;
 }
-
-#ifdef __cplusplus
-class XPCAutoRequest : public JSAutoRequest {
-public:
-    XPCAutoRequest(JSContext *cx) : JSAutoRequest(cx) {
-        xpc_UnmarkGrayContext(cx);
-    }
-};
-#endif
 
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
 // This also unmarks the gray JSObject.
@@ -462,21 +453,6 @@ GetJunkScope();
 
 nsCycleCollectionParticipant *
 xpc_JSZoneParticipant();
-
-// This API is for internal use only and should _not_ be used without approval
-// by the XPConnect Module Owner. Consumers who want to push/pop contexts
-// should go through one of the RAII classes (nsCxPusher, or one of the
-// convenience wrappers defined in nsContentUtils.h).
-namespace xpc {
-namespace danger {
-
-NS_EXPORT_(bool) PushJSContext(JSContext *aCx);
-NS_EXPORT_(void) PopJSContext();
-
-bool IsJSContextOnStack(JSContext *aCx);
-
-} /* namespace danger */
-} /* namespace xpc */
 
 namespace mozilla {
 namespace dom {

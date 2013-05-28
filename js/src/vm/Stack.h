@@ -29,7 +29,6 @@ class InvokeArgsGuard;
 class InvokeFrameGuard;
 class FrameGuard;
 class ExecuteFrameGuard;
-class BailoutFrameGuard;
 class GeneratorFrameGuard;
 
 class CallIter;
@@ -41,11 +40,6 @@ class ScopeObject;
 class StaticBlockObject;
 
 struct ScopeCoordinate;
-
-namespace ion {
-    class IonBailoutIterator;
-    class SnapshotIterator;
-}
 
 /*****************************************************************************/
 
@@ -218,8 +212,7 @@ class AbstractFramePtr
     inline unsigned numActualArgs() const;
     inline unsigned numFormalArgs() const;
 
-    inline Value *formals() const;
-    inline Value *actuals() const;
+    inline Value *argv() const;
 
     inline bool hasArgsObj() const;
     inline ArgumentsObject &argsObj() const;
@@ -293,33 +286,29 @@ class StackFrame
         YIELDING           =       0x40,  /* Interpret dispatched JSOP_YIELD */
         FINISHED_IN_INTERP =       0x80,  /* set if frame finished in Interpret() */
 
-        /* Function arguments */
-        OVERFLOW_ARGS      =      0x100,  /* numActualArgs > numFormalArgs */
-        UNDERFLOW_ARGS     =      0x200,  /* numActualArgs < numFormalArgs */
-
         /* Function prologue state */
-        HAS_CALL_OBJ       =      0x400,  /* CallObject created for heavyweight fun */
-        HAS_ARGS_OBJ       =      0x800,  /* ArgumentsObject created for needsArgsObj script */
+        HAS_CALL_OBJ       =      0x100,  /* CallObject created for heavyweight fun */
+        HAS_ARGS_OBJ       =      0x200,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_HOOK_DATA      =     0x1000,  /* frame has hookData_ set */
-        HAS_RVAL           =     0x2000,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =     0x4000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =     0x8000,  /* frame has prevpc_ and prevInline_ set */
-        HAS_BLOCKCHAIN     =    0x10000,  /* frame has blockChain_ set */
+        HAS_HOOK_DATA      =      0x400,  /* frame has hookData_ set */
+        HAS_RVAL           =      0x800,  /* frame has rval_ set */
+        HAS_SCOPECHAIN     =     0x1000,  /* frame has scopeChain_ set */
+        HAS_PREVPC         =     0x2000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =     0x4000,  /* frame has blockChain_ set */
 
         /* Debugger state */
-        PREV_UP_TO_DATE    =    0x20000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE    =     0x8000,  /* see DebugScopes::updateLiveScopes */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME =  0x40000,  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME =  0x10000,  /* SPS was notified of enty */
 
         /* Ion frame state */
-        RUNNING_IN_ION     =    0x80000,  /* frame is running in Ion */
-        CALLING_INTO_ION   =   0x100000,  /* frame is calling into Ion */
+        RUNNING_IN_ION     =    0x20000,  /* frame is running in Ion */
+        CALLING_INTO_ION   =    0x40000,  /* frame is calling into Ion */
 
         /* Miscellaneous state. */
-        USE_NEW_TYPE       =   0x200000   /* Use new type for constructed |this| object. */
+        USE_NEW_TYPE       =    0x80000   /* Use new type for constructed |this| object. */
     };
 
   private:
@@ -334,7 +323,6 @@ class StackFrame
     } u;
     mutable JSObject    *scopeChain_;   /* if HAS_SCOPECHAIN, current scope chain */
     StackFrame          *prev_;         /* if HAS_PREVPC, previous cx->regs->fp */
-    void                *ncode_;        /* for a jit frame, return address for method JIT */
     Value               rval_;          /* if HAS_RVAL, return value of the frame */
     StaticBlockObject   *blockChain_;   /* if HAS_BLOCKCHAIN, innermost let block */
     ArgumentsObject     *argsObj_;      /* if HAS_ARGS_OBJ, the call's arguments object */
@@ -363,9 +351,7 @@ class StackFrame
   public:
     Value *slots() const { return (Value *)(this + 1); }
     Value *base() const { return slots() + script()->nfixed; }
-    Value *formals() const { return (Value *)this - fun()->nargs; }
-    Value *actuals() const { return formals() - (flags_ & OVERFLOW_ARGS ? 2 + u.nactual : 0); }
-    unsigned nactual() const { return u.nactual; }
+    Value *argv() const { return (Value *)this - Max(numActualArgs(), numFormalArgs()); }
 
   private:
     friend class FrameRegs;
@@ -384,9 +370,6 @@ class StackFrame
     /* Used for Invoke, Interpret, trace-jit LeaveTree, and method-jit stubs. */
     void initCallFrame(JSContext *cx, JSFunction &callee,
                        JSScript *script, uint32_t nactual, StackFrame::Flags flags);
-
-    /* Used for getFixupFrame (for FixupArity). */
-    void initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual);
 
     /* Used for eval. */
     void initExecuteFrame(JSScript *script, StackFrame *prevLink, AbstractFramePtr prev,
@@ -416,12 +399,6 @@ class StackFrame
     bool prologue(JSContext *cx);
     void epilogue(JSContext *cx);
 
-    /* Subsets of 'prologue' called from jit code. */
-    inline bool jitHeavyweightFunctionPrologue(JSContext *cx);
-    bool jitStrictEvalPrologue(JSContext *cx);
-
-    /* Called from IonMonkey to transition from bailouts. */
-    void initFromBailout(JSContext *cx, ion::SnapshotIterator &iter);
     bool initFunctionScopeObjects(JSContext *cx);
 
     /* Initialize local variables of newly-pushed frame. */
@@ -522,15 +499,8 @@ class StackFrame
      *
      * Only non-eval function frames have arguments. The arguments pushed by
      * the caller are the 'actual' arguments. The declared arguments of the
-     * callee are the 'formal' arguments. When the caller passes less or equal
-     * actual arguments, the actual and formal arguments are the same array
-     * (but with different extents). When the caller passes too many arguments,
-     * the formal subset of the actual arguments is copied onto the top of the
-     * stack. This allows the engine to maintain a jit-time constant offset of
-     * arguments from the frame pointer. Since the formal subset of the actual
-     * arguments is potentially on the stack twice, it is important for all
-     * reads/writes to refer to the same canonical memory location. This is
-     * abstracted by the unaliased{Formal,Actual} methods.
+     * callee are the 'formal' arguments. When the caller passes less actual
+     * arguments, missing formal arguments are padded with |undefined|.
      *
      * When a local/formal variable is "aliased" (accessed by nested closures,
      * dynamic scope operations, or 'arguments), the canonical location for
@@ -552,15 +522,13 @@ class StackFrame
 
     bool copyRawFrameSlots(AutoValueVector *v);
 
-    inline unsigned numFormalArgs() const;
-    inline unsigned numActualArgs() const;
+    unsigned numFormalArgs() const { JS_ASSERT(hasArgs()); return fun()->nargs; }
+    unsigned numActualArgs() const { JS_ASSERT(hasArgs()); return u.nactual; }
 
     inline Value &canonicalActualArg(unsigned i) const;
     template <class Op>
     inline bool forEachCanonicalActualArg(Op op, unsigned start = 0, unsigned count = unsigned(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
-
-    void cleanupTornValues();
 
     /*
      * Arguments object
@@ -576,7 +544,7 @@ class StackFrame
     ArgumentsObject &argsObj() const;
     void initArgsObj(ArgumentsObject &argsobj);
 
-    inline JSObject *createRestParameter(JSContext *cx);
+    JSObject *createRestParameter(JSContext *cx);
 
     /*
      * Scope chain
@@ -724,18 +692,18 @@ class StackFrame
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value *)this)[-1];
-        return formals()[-1];
+        return argv()[-1];
     }
 
     JSObject &constructorThis() const {
         JS_ASSERT(hasArgs());
-        return formals()[-1].toObject();
+        return argv()[-1].toObject();
     }
 
     Value &thisValue() const {
         if (flags_ & (EVAL | GLOBAL))
             return ((Value *)this)[-1];
-        return formals()[-1];
+        return argv()[-1];
     }
 
     /*
@@ -760,7 +728,7 @@ class StackFrame
     const Value &maybeCalleev() const {
         Value &calleev = flags_ & (EVAL | GLOBAL)
                          ? ((Value *)this)[-2]
-                         : formals()[-2];
+                         : argv()[-2];
         JS_ASSERT(calleev.isObjectOrNull());
         return calleev;
     }
@@ -769,11 +737,11 @@ class StackFrame
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value *)this)[-2];
-        return formals()[-2];
+        return argv()[-2];
     }
 
     CallReceiver callReceiver() const {
-        return CallReceiverFromArgv(formals());
+        return CallReceiverFromArgv(argv());
     }
 
     /*
@@ -843,20 +811,6 @@ class StackFrame
         markReturnValue();
     }
 
-    /* Native-code return address */
-
-    void *nativeReturnAddress() const {
-        return ncode_;
-    }
-
-    void setNativeReturnAddress(void *addr) {
-        ncode_ = addr;
-    }
-
-    void **addressOfNativeReturnAddress() {
-        return &ncode_;
-    }
-
     /*
      * A "generator" frame is a function frame associated with a generator.
      * Since generators are not executed LIFO, the VM copies a single abstract
@@ -882,7 +836,7 @@ class StackFrame
 
     Value *generatorArgsSnapshotBegin() const {
         JS_ASSERT(isGeneratorFrame());
-        return actuals() - 2;
+        return argv() - 2;
     }
 
     Value *generatorArgsSnapshotEnd() const {
@@ -977,10 +931,6 @@ class StackFrame
 
     void setPrevUpToDate() {
         flags_ |= PREV_UP_TO_DATE;
-    }
-
-    bool hasOverflowArgs() const {
-        return !!(flags_ & OVERFLOW_ARGS);
     }
 
     bool isYielding() {
@@ -1260,10 +1210,6 @@ class StackSegment
     void popInvokeArgsEnd(Value *prev) {
         invokeArgsEnd_ = prev;
     }
-
-    /* For jit access: */
-
-    static const size_t offsetOfRegs() { return offsetof(StackSegment, regs_); }
 };
 
 static const size_t VALUES_PER_STACK_SEGMENT = sizeof(StackSegment) / sizeof(Value);
@@ -1347,33 +1293,6 @@ class StackSpace
     inline Value *firstUnused() const { return seg_ ? seg_->end() : base_; }
 
     StackSegment &containingSegment(const StackFrame *target) const;
-
-    /*
-     * Extra space to reserve on the stack for method JIT frames, beyond the
-     * frame's nslots. This may be used for inlined stack frames, slots storing
-     * loop invariant code, or to reserve space for pushed callee frames. Note
-     * that this space should be reserved when pushing interpreter frames as
-     * well, so that we don't need to check the stack when entering the method
-     * JIT at loop heads or safe points.
-     */
-    static const size_t STACK_JIT_EXTRA = (/*~VALUES_PER_STACK_FRAME*/ 8 + 18) * 10;
-
-    /*
-     * Return a limit against which jit code can check for. This limit is not
-     * necessarily the end of the stack since we lazily commit stack memory on
-     * some platforms. Thus, when the stack limit is exceeded, the caller should
-     * use tryBumpLimit to attempt to increase the stack limit by committing
-     * more memory. If the stack is truly exhausted, tryBumpLimit will report an
-     * error and return NULL.
-     *
-     * An invariant of the methodjit is that there is always space to push a
-     * frame on top of the current frame's expression stack (which can be at
-     * most script->nslots deep). getStackLimit ensures that the returned limit
-     * does indeed have this required space and reports an error and returns
-     * NULL if this reserve space cannot be allocated.
-     */
-    inline Value *getStackLimit(JSContext *cx, MaybeReportError report);
-    bool tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **limit);
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
@@ -1483,7 +1402,6 @@ class ContextStack
     bool pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *ag,
                         MaybeReportError report = REPORT_ERROR);
 
-    /* Factor common code between pushInvokeFrame and pushBailoutFrame */
     StackFrame *pushInvokeFrame(JSContext *cx, MaybeReportError report,
                                 const CallArgs &args, JSFunction *fun,
                                 InitialFrameFlags initial, FrameGuard *fg);
@@ -1496,14 +1414,6 @@ class ContextStack
     bool pushExecuteFrame(JSContext *cx, HandleScript script, const Value &thisv,
                           HandleObject scopeChain, ExecuteType type,
                           AbstractFramePtr evalInFrame, ExecuteFrameGuard *efg);
-
-    /* Allocate actual argument space for the bailed frame */
-    bool pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it,
-                         InvokeArgsGuard *iag);
-
-    /* Bailout for normal functions. */
-    StackFrame *pushBailoutFrame(JSContext *cx, const ion::IonBailoutIterator &it,
-                                 const CallArgs &args, BailoutFrameGuard *bfg);
 
     /*
      * Called by SendToGenerator to resume a yielded generator. In addition to
@@ -1526,9 +1436,6 @@ class ContextStack
                          HandleFunction callee, HandleScript script,
                          InitialFrameFlags initial, Value **stackLimit);
     void popInlineFrame(FrameRegs &regs);
-
-    /* Pop a partially-pushed frame after hitting the limit before throwing. */
-    void popFrameAfterOverflow();
 
     /*
      * Get the topmost script and optional pc on the stack. By default, this
@@ -1594,9 +1501,6 @@ class InvokeFrameGuard : public FrameGuard
 {};
 
 class ExecuteFrameGuard : public FrameGuard
-{};
-
-class BailoutFrameGuard : public FrameGuard
 {};
 
 class DummyFrameGuard : public FrameGuard

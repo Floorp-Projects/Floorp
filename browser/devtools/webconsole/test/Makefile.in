@@ -129,6 +129,8 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug_869003_inspect_cross_domain_object.js \
 	browser_bug_862916_console_dir_and_filter_off.js \
 	browser_console_native_getters.js \
+	browser_bug_871156_ctrlw_close_tab.js \
+	browser_console_private_browsing.js \
 	head.js \
 	$(NULL)
 
@@ -163,7 +165,6 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-593003-iframe-wrong-hud-iframe.html \
 	test-console-replaced-api.html \
 	test-own-console.html \
-	test-bug-595934-dom-events.html \
 	test-bug-595934-css-loader.html \
 	test-bug-595934-css-loader.css \
 	test-bug-595934-css-loader.css^headers^ \
@@ -176,8 +177,6 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-595934-workers.js \
 	test-bug-595934-dom-html-external.html \
 	test-bug-595934-dom-html-external.js \
-	test-bug-595934-dom-events-external2.html \
-	test-bug-595934-dom-events-external2.js \
 	test-bug-595934-canvas.html \
 	test-bug-595934-canvas.js \
 	test-bug-595934-css-parser.html \

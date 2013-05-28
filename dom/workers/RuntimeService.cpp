@@ -25,6 +25,7 @@
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsDOMJSUtils.h"
 #include <Navigator.h>
 #include "nsNetUtil.h"
@@ -150,8 +151,6 @@ MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gStringChars) == ID_COUNT,
 enum {
   PREF_strict = 0,
   PREF_werror,
-  PREF_methodjit,
-  PREF_methodjit_always,
   PREF_typeinference,
   PREF_jit_hardening,
   PREF_mem_max,
@@ -172,8 +171,6 @@ enum {
 const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "strict",
   JS_OPTIONS_DOT_STR "werror",
-  JS_OPTIONS_DOT_STR "methodjit.content",
-  JS_OPTIONS_DOT_STR "methodjit_always",
   JS_OPTIONS_DOT_STR "typeinference",
   JS_OPTIONS_DOT_STR "jit_hardening",
   JS_OPTIONS_DOT_STR "mem.max",
@@ -221,12 +218,6 @@ PrefCallback(const char* aPrefName, void* aClosure)
     }
     if (Preferences::GetBool(gPrefsToWatch[PREF_werror])) {
       newOptions |= JSOPTION_WERROR;
-    }
-    if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit])) {
-      newOptions |= JSOPTION_METHODJIT;
-    }
-    if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit_always])) {
-      newOptions |= JSOPTION_METHODJIT_ALWAYS;
     }
     if (Preferences::GetBool(gPrefsToWatch[PREF_typeinference])) {
       newOptions |= JSOPTION_TYPE_INFERENCE;

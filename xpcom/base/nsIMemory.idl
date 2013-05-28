@@ -90,7 +90,7 @@ interface nsIMemory : nsISupports
      *   immediately if the call was made on the main thread. If
      *   false, the flush will be scheduled to happen when the app is
      *   idle.
-     * @return NS_ERROR_FAILURE if 'immediate' is set an the call
+     * @throws NS_ERROR_FAILURE if 'immediate' is set an the call
      *   was not on the application's main thread.
      */
     void heapMinimize(in boolean immediate);

@@ -15,3 +15,20 @@
 # limitations under the License.
 
 MODULE = 'display'
+
+CPP_SOURCES += [
+    'BootAnimation.cpp',
+]
+
+if CONFIG['ANDROID_VERSION'] == '17':
+    CPP_SOURCES += [
+        'FramebufferSurface.cpp',
+        'GraphicBufferAlloc.cpp',
+        'GonkDisplayJB.cpp',
+    ]
+elif CONFIG['ANDROID_VERSION'] == '15':
+    CPP_SOURCES += [
+        'GonkDisplayICS.cpp'
+    ]
+else:
+    error('Unsupported platform version: %s' % (CONFIG['ANDROID_VERSION']))

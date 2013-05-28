@@ -14,3 +14,19 @@ EXPORTS += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+
+CPP_SOURCES += [
+    'jsd_atom.cpp',
+    'jsd_high.cpp',
+    'jsd_hook.cpp',
+    'jsd_lock.cpp',
+    'jsd_obj.cpp',
+    'jsd_scpt.cpp',
+    'jsd_stak.cpp',
+    'jsd_step.cpp',
+    'jsd_text.cpp',
+    'jsd_val.cpp',
+    'jsd_xpc.cpp',
+    'jsdebug.cpp',
+    'jshash.cpp',
+]

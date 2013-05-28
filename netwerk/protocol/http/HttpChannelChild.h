@@ -67,8 +67,8 @@ public:
   NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext);
   // HttpBaseChannel::nsIHttpChannel
-  NS_IMETHOD SetRequestHeader(const nsACString& aHeader, 
-                              const nsACString& aValue, 
+  NS_IMETHOD SetRequestHeader(const nsACString& aHeader,
+                              const nsACString& aValue,
                               bool aMerge);
   NS_IMETHOD RedirectTo(nsIURI *newURI);
   // nsIHttpChannelInternal

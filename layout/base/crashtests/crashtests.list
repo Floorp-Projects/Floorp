@@ -133,6 +133,8 @@ load 366271-1.html
 load 366967-1.html
 load 367015-1.html
 load 367243-1.html
+load 367498-1.html
+load 367498-2.html
 load 369176-1.html
 load 369945-1.xhtml
 load 371681-1.xhtml
@@ -309,6 +311,7 @@ load 499858-1.xhtml
 load 500467-1.html
 load 501878-1.html
 load 503936-1.html
+load 507119.html
 load 514104-1.xul
 load 522374-1.html
 load 522374-2.html
@@ -346,6 +349,7 @@ load 576649-1.html
 load 579655.html
 load 580494-1.html
 load 580834-1.xhtml
+asserts(0-13) load 589787.html # bug 574889
 load 595039-1.html
 load 597924-1.html
 load 606432-1.html
@@ -397,9 +401,10 @@ load 770381-1.html
 load 772306.html
 load 788360.html
 load 793848.html
+test-pref(font.size.inflation.minTwips,120) load 794693.html
 load 795646.html
 load 802902.html
-load 813372-1.html
+skip-if(!gtk2Widget) load 813372-1.html # bug 873083
 asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
 load 833604-1.html
 load 835056.html

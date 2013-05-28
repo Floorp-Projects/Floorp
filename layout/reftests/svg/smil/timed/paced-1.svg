@@ -2,13 +2,16 @@
      despite the many small-jump values before it, leaving the canvas blank. -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     onload="setTimeout('go()', 1000);"
-     class="reftest-wait"
->
+     class="reftest-wait">
   <script>
     function go() {
       document.documentElement.removeAttribute("class");
     }
+    function delay_go() {
+      setTimeout(go, 1000);
+    }
+    document.addEventListener("MozReftestInvalidate", delay_go, false);
+    setTimeout(delay_go, 4000); // fallback for running outside reftest
   </script>
   <rect height="90" width="90" fill="green"></rect>
   <rect x="40" y="40" width="10" height="10" fill="red">

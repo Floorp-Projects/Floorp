@@ -13,8 +13,8 @@ namespace mozilla {
 namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedRect)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedRect, mSVGElement)
@@ -35,19 +35,15 @@ SVGAnimatedRect::~SVGAnimatedRect()
 }
 
 already_AddRefed<SVGIRect>
-SVGAnimatedRect::GetBaseVal(ErrorResult& aRv)
+SVGAnimatedRect::GetBaseVal()
 {
-  nsRefPtr<SVGIRect> rect;
-  aRv = mVal->ToDOMBaseVal(getter_AddRefs(rect), mSVGElement);
-  return rect.forget();
+  return mVal->ToDOMBaseVal(mSVGElement);
 }
 
 already_AddRefed<SVGIRect>
-SVGAnimatedRect::GetAnimVal(ErrorResult& aRv)
+SVGAnimatedRect::GetAnimVal()
 {
-  nsRefPtr<SVGIRect> rect;
-  aRv = mVal->ToDOMAnimVal(getter_AddRefs(rect), mSVGElement);
-  return rect.forget();
+  return mVal->ToDOMAnimVal(mSVGElement);
 }
 
 JSObject*

@@ -442,6 +442,18 @@ this.CrashSubmit = {
   },
 
   /**
+   * Delete the minidup from the "pending" directory.
+   *
+   * @param id
+   *        Filename (minus .dmp extension) of the minidump to delete.
+   */
+  delete: function CrashSubmit_delete(id) {
+    let [dump, extra] = getPendingMinidump(id);
+    dump.QueryInterface(Ci.nsIFile).remove(false);
+    extra.QueryInterface(Ci.nsIFile).remove(false);
+  },
+
+  /**
    * Get the list of pending crash IDs.
    *
    * @return an array of string, each being an ID as

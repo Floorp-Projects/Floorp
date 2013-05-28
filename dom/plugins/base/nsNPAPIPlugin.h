@@ -11,6 +11,7 @@
 #include "nsPluginHost.h"
 
 #include "jsapi.h"
+#include "nsCxPusher.h"
 
 #include "mozilla/PluginLibrary.h"
 
@@ -137,11 +138,7 @@ JSContext* GetJSContext(NPP npp);
 inline bool
 NPStringIdentifierIsPermanent(NPP npp, NPIdentifier id)
 {
-  JSContext* cx = GetJSContext(npp);
-  if (!cx) // OOM?
-    return false;
-
-  JSAutoRequest ar(cx);
+  AutoSafeJSContext cx;
   return JS_StringHasBeenInterned(cx, NPIdentifierToString(id));
 }
 

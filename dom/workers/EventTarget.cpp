@@ -39,11 +39,11 @@ EventTarget::GetEventListener(const nsAString& aType, ErrorResult& aRv) const
 }
 
 void
-EventTarget::SetEventListener(const nsAString& aType, JSObject* aListener_,
+EventTarget::SetEventListener(const nsAString& aType,
+                              JS::Handle<JSObject*> aListener,
                               ErrorResult& aRv)
 {
   JSContext* cx = GetJSContext();
-  JS::Rooted<JSObject*> aListener(cx, aListener_);
 
   JSString* type =
     JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
@@ -57,16 +57,16 @@ EventTarget::SetEventListener(const nsAString& aType, JSObject* aListener_,
 }
 
 void
-EventTarget::AddEventListener(const nsAString& aType, JSObject* aListener_,
+EventTarget::AddEventListener(const nsAString& aType,
+                              JS::Handle<JSObject*> aListener,
                               bool aCapturing, Nullable<bool> aWantsUntrusted,
                               ErrorResult& aRv)
 {
-  if (!aListener_) {
+  if (!aListener) {
     return;
   }
 
   JSContext* cx = GetJSContext();
-  JS::Rooted<JSObject*> aListener(cx, aListener_);
 
   JSString* type =
     JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
@@ -82,15 +82,15 @@ EventTarget::AddEventListener(const nsAString& aType, JSObject* aListener_,
 }
 
 void
-EventTarget::RemoveEventListener(const nsAString& aType, JSObject* aListener_,
+EventTarget::RemoveEventListener(const nsAString& aType,
+                                 JS::Handle<JSObject*> aListener,
                                  bool aCapturing, ErrorResult& aRv)
 {
-  if (!aListener_) {
+  if (!aListener) {
     return;
   }
 
   JSContext* cx = GetJSContext();
-  JS::Rooted<JSObject*> aListener(cx, aListener_);
 
   JSString* type =
     JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());

@@ -11,64 +11,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkbase_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
-
-
-
-CPPSRCS		= \
-		DisplayItemClip.cpp \
-		DisplayListClipState.cpp \
-		FrameLayerBuilder.cpp \
-		FramePropertyTable.cpp \
-		MaskLayerImageCache.cpp \
-		nsCSSColorUtils.cpp \
-		nsCSSFrameConstructor.cpp \
-		nsCSSRendering.cpp \
-		nsCSSRenderingBorders.cpp \
-		nsCaret.cpp \
-		nsChildIterator.cpp \
-		nsCounterManager.cpp \
-		nsDisplayList.cpp \
-		nsDisplayListInvalidation.cpp \
-		nsDocumentViewer.cpp \
-		nsFrameManager.cpp \
-		nsFrameTraversal.cpp \
-		nsGenConList.cpp \
-		nsLayoutDebugger.cpp \
-		nsLayoutHistoryState.cpp \
-		nsLayoutUtils.cpp \
-		nsPresArena.cpp \
-		nsPresContext.cpp \
-		nsPresShell.cpp \
-		nsQuoteList.cpp \
-		nsRefreshDriver.cpp \
-		nsStyleChangeList.cpp \
-		nsStyleSheetService.cpp \
-		PaintTracker.cpp \
- 		PositionedEventTargeting.cpp \
-		RestyleTracker.cpp \
-		StackArena.cpp \
-		$(NULL)
-
-ifndef MOZ_XUL
-CPPSRCS    += \
-		nsBoxObject.cpp \
-		$(NULL)
-endif
-
-ifdef IBMBIDI
-CPPSRCS		+= \
-		nsBidiPresUtils.cpp \
-		nsBidi.cpp \
-		$(NULL)
-endif                
-
-ifdef MOZ_DEBUG
-CPPSRCS		+= \
-		nsAutoLayoutPhase.cpp \
-		$(NULL)
-endif
 
 FORCE_STATIC_LIB = 1
 

@@ -693,7 +693,8 @@ ContactDB.prototype = {
     }
   },
 
-  _clearDispatcher: function CDB_clearDispatcher(aCursorId) {
+  clearDispatcher: function CDB_clearDispatcher(aCursorId) {
+    if (DEBUG) debug("clearDispatcher: " + aCursorId);
     if (aCursorId in this._dispatcher) {
       delete this._dispatcher[aCursorId];
     }
@@ -709,7 +710,7 @@ ContactDB.prototype = {
       // object store again.
       if (aCachedResults && aCachedResults.length > 0) {
         let newTxnFn = this.newTxn.bind(this);
-        let clearDispatcherFn = this._clearDispatcher.bind(this, aCursorId);
+        let clearDispatcherFn = this.clearDispatcher.bind(this, aCursorId);
         this._dispatcher[aCursorId] = new ContactDispatcher(aCachedResults, aFullContacts,
                                                             aSuccessCb, newTxnFn, clearDispatcherFn);
         this._dispatcher[aCursorId].sendNow();

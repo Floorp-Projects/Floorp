@@ -26,7 +26,6 @@
 
 static const WCHAR* kFirefoxExe = L"firefox.exe";
 static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
-static const WCHAR* kDemoMetroBrowserIDPathKey = L"Mozilla.Firefox.URL";
 
 // Logging pipe handle
 HANDLE gTestOutputPipe = INVALID_HANDLE_VALUE;
@@ -131,10 +130,7 @@ static bool GetDefaultBrowserAppModelID(WCHAR* aIDBuffer,
   HKEY key;
   if (RegOpenKeyExW(HKEY_CLASSES_ROOT, kDefaultMetroBrowserIDPathKey,
                     0, KEY_READ, &key) != ERROR_SUCCESS) {
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, kDemoMetroBrowserIDPathKey,
-                      0, KEY_READ, &key) != ERROR_SUCCESS) {
-      return false;
-    }
+    return false;
   }
   DWORD len = aCharLength * sizeof(WCHAR);
   memset(aIDBuffer, 0, len);

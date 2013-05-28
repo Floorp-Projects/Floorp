@@ -12,14 +12,13 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
+MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsJarModule
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-
-CPPSRCS		= $(MODULES_LIBJAR_LCPPSRCS)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

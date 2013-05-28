@@ -10,6 +10,8 @@ import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GamepadUtils;
+import org.mozilla.gecko.menu.GeckoMenu;
+import org.mozilla.gecko.menu.MenuPopup;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 
@@ -461,11 +463,7 @@ public class BrowserToolbar implements TextWatcher,
             public void onClick(View view) {
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab != null) {
-                    if (ReaderModeUtils.isAboutReader(tab.getURL())) {
-                        tab.doBack();
-                    } else {
-                        tab.readerMode();
-                    }
+                    tab.toggleReaderMode();
                 }
             }
         });
@@ -1582,7 +1580,7 @@ public class BrowserToolbar implements TextWatcher,
         if (!mHasSoftMenuButton)
             return false;
 
-        GeckoApp.mAppContext.invalidateOptionsMenu();
+        GeckoAppShell.getGeckoInterface().invalidateOptionsMenu();
         if (mMenuPopup != null && !mMenuPopup.isShowing())
             mMenuPopup.showAsDropDown(mMenu);
 

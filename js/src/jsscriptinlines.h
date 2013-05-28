@@ -87,7 +87,6 @@ SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 inline const char *
 JSScript::filename() const
 {
-    JS_ASSERT(scriptSource_);
     return scriptSource()->filename();
 }
 
@@ -95,6 +94,12 @@ inline void
 JSScript::setFunction(JSFunction *fun)
 {
     function_ = fun;
+}
+
+inline js::ScriptSource *
+JSScript::scriptSource() const
+{
+    return sourceObject()->source();
 }
 
 inline JSFunction *

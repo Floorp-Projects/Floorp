@@ -8,7 +8,7 @@
 
 #include "nsIDOMCallEvent.h"
 
-#include "DOMError.h"
+#include "mozilla/dom/DOMError.h"
 #include "GeneratedEvents.h"
 #include "nsDOMClassInfo.h"
 #include "Telephony.h"
@@ -149,7 +149,7 @@ TelephonyCall::NotifyError(const nsAString& aError)
   // Set the error string
   NS_ASSERTION(!mError, "Already have an error?");
 
-  mError = DOMError::CreateWithName(aError);
+  mError = new mozilla::dom::DOMError(GetOwner(), aError);
 
   // Do the state transitions
   ChangeStateInternal(nsITelephonyProvider::CALL_STATE_DISCONNECTED, true);
@@ -160,9 +160,10 @@ TelephonyCall::NotifyError(const nsAString& aError)
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TelephonyCall,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(TelephonyCall,
                                      nsDOMEventTargetHelper,
-                                     mTelephony)
+                                     mTelephony,
+                                     mError);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TelephonyCall)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTelephonyCall)
@@ -196,7 +197,7 @@ TelephonyCall::GetEmergency(bool* aEmergency)
 }
 
 NS_IMETHODIMP
-TelephonyCall::GetError(nsIDOMDOMError** aError)
+TelephonyCall::GetError(nsISupports** aError)
 {
   NS_IF_ADDREF(*aError = mError);
   return NS_OK;

@@ -12,10 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = alerts_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
-CPPSRCS = \
-  nsAlertsService.cpp \
-  nsXULAlerts.cpp \
-  $(NULL)
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
 
 include $(topsrcdir)/config/config.mk

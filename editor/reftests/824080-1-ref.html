@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript">
+    function doTest()
+    {
+      var editor = document.getElementById("editor");
+      document.getSelection().selectAllChildren(document.body);
+    }
+  </script>
+</head>
+<body onload="doTest();">
+<p>normal text</p>
+<div id="editor">editable text</div>
+</body>
+</html>
+

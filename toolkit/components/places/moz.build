@@ -32,5 +32,24 @@ if CONFIG['MOZ_PLACES']:
         'Database.h',
     ]
 
+    CPP_SOURCES += [
+        'nsAnnoProtocolHandler.cpp',
+        'nsAnnotationService.cpp',
+        'nsFaviconService.cpp',
+        'nsNavHistory.cpp',
+        'nsNavHistoryQuery.cpp',
+        'nsNavHistoryResult.cpp',
+        'nsNavBookmarks.cpp',
+        'nsMaybeWeakPtr.cpp',
+        'nsPlacesModule.cpp',
+        'SQLFunctions.cpp',
+        'Helpers.cpp',
+        'History.cpp',
+        'AsyncFaviconHelpers.cpp',
+        'PlaceInfo.cpp',
+        'VisitInfo.cpp',
+        'Database.cpp',
+    ]
+
 MODULE = 'places'
 

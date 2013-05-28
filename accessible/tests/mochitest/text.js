@@ -11,45 +11,51 @@ const BOUNDARY_ATTRIBUTE_RANGE = nsIAccessibleText.BOUNDARY_ATTRIBUTE_RANGE;
 const kTextEndOffset = nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT;
 const kCaretOffset = nsIAccessibleText.TEXT_OFFSET_CARET;
 
-const kTodo = 1;
-const kOk = 2;
+const kTodo = 1; // a test is expected to fail
+const kOk = 2; // a test doesn't fail
 
 /**
  * Test characterCount for the given array of accessibles.
  *
- * @param aCount  [in] the expected character count
- * @param aIDs    [in] array of accessible identifiers to test
+ * @param aCount    [in] the expected character count
+ * @param aIDs      [in] array of accessible identifiers to test
+ * @param aTodoFlag [in, optional] either kOk or kTodo
  */
-function testCharacterCount(aIDs, aCount)
+function testCharacterCount(aIDs, aCount, aTodoFlag)
 {
-  for (var i = 0; i < aIDs.length; i++) {
-    var textacc = getAccessible(aIDs[i], [nsIAccessibleText]);
-    is(textacc.characterCount, aCount,
-       "Wrong character count for " + prettyName(aIDs[i]));
+  var ids = (aIDs instanceof Array) ? aIDs : [ aIDs ];
+  var isFunc = (aTodoFlag == kTodo) ? todo_is : is;
+  for (var i = 0; i < ids.length; i++) {
+    var textacc = getAccessible(ids[i], [nsIAccessibleText]);
+    isFunc(textacc.characterCount, aCount,
+           "Wrong character count for " + prettyName(ids[i]));
   }
 }
 
 /**
- * Test text between two given offsets
+ * Test text between two given offsets.
  *
  * @param aIDs          [in] an array of accessible IDs to test
  * @param aStartOffset  [in] the start offset within the text to test
  * @param aEndOffset    [in] the end offset up to which the text is tested
  * @param aText         [in] the expected result from the test
+ * @param aTodoFlag     [in, optional] either kOk or kTodo
  */
-function testText(aIDs, aStartOffset, aEndOffset, aText)
+function testText(aIDs, aStartOffset, aEndOffset, aText, aTodoFlag)
 {
-  for (var i = 0; i < aIDs.length; i++)
-  {
-    var acc = getAccessible(aIDs[i], nsIAccessibleText);
+  var ids = (aIDs instanceof Array) ? aIDs : [ aIDs ];
+  var isFunc = (aTodoFlag == kTodo) ? todo_is : is;
+  for (var i = 0; i < ids.length; i++) {
+    var acc = getAccessible(ids[i], nsIAccessibleText);
     try {
-      is(acc.getText(aStartOffset, aEndOffset), aText,
-         "getText: wrong text between start and end offsets '" + aStartOffset +
-         "', '" + aEndOffset + " for '" + prettyName(aIDs[i]) + "'");
+      isFunc(acc.getText(aStartOffset, aEndOffset), aText,
+             "getText: wrong text between start and end offsets '" +
+             aStartOffset + "', '" + aEndOffset + " for '" +
+             prettyName(ids[i]) + "'");
     } catch (e) {
       ok(false,
-         "getText fails between start and end offsets '" + aStartOffset +
-         "', '" + aEndOffset + " for '" + prettyName(aIDs[i]) + "'");
+        "getText fails between start and end offsets '" + aStartOffset +
+        "', '" + aEndOffset + " for '" + prettyName(ids[i]) + "'");
     }
   }
 }
@@ -105,7 +111,17 @@ function testCharAtOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
 }
 
 /**
- * Test getTextAtOffset function over different elements
+ * Test getTextAtOffset function over different elements.
+ *
+ * @param aIDs            [in] ID or array of IDs
+ * @param aBoundaryType   [in] boundary type for text to be retrieved
+ * @param aTestList       [in] array of sets:
+ *                              offset1 and offset2 defining the offset range
+ *                              the text in the range
+ *                              start offset of the text in the range
+ *                              end offset of the text in the range
+ *
+ * or
  *
  * @param aOffset         [in] the offset to get the text at
  * @param aBoundaryType   [in] Boundary type for text to be retrieved
@@ -118,35 +134,9 @@ function testCharAtOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
  *                              kTodo or kOk for returned start offset
  *                              kTodo or kOk for returned offset result
  */
-function testTextAtOffset(aOffset, aBoundaryType, aText,
-                          aStartOffset, aEndOffset)
+function testTextAtOffset()
 {
-  // List of IDs.
-  if (arguments[5] instanceof Array) {
-    var ids = arguments[5];
-    for (var i = 0; i < ids.length; i++) {
-      var acc = getAccessible(ids[i], nsIAccessibleText);
-      testTextHelper(ids[i], aOffset, aBoundaryType,
-                     aText, aStartOffset, aEndOffset,
-                     kOk, kOk, kOk,
-                     acc.getTextAtOffset, "getTextAtOffset ");
-    }
-
-    return;
-  }
-
-  for (var i = 5; i < arguments.length; i = i + 4) {
-    var ID = arguments[i];
-    var acc = getAccessible(ID, nsIAccessibleText);
-    var toDoFlag1 = arguments[i + 1];
-    var toDoFlag2 = arguments[i + 2];
-    var toDoFlag3 = arguments[i + 3];
-
-    testTextHelper(ID, aOffset, aBoundaryType,
-                   aText, aStartOffset, aEndOffset,
-                   toDoFlag1, toDoFlag2, toDoFlag3,
-                   acc.getTextAtOffset, "getTextAtOffset ");
-  }
+  testTextSuperHelper("getTextAtOffset", arguments);
 }
 
 /**
@@ -174,6 +164,16 @@ function testCharAfterOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
 /**
  * Test getTextAfterOffset function over different elements
  *
+ * @param aIDs            [in] ID or array of IDs
+ * @param aBoundaryType   [in] boundary type for text to be retrieved
+ * @param aTestList       [in] array of sets:
+ *                              offset1 and offset2 defining the offset range
+ *                              the text in the range
+ *                              start offset of the text in the range
+ *                              end offset of the text in the range
+ *
+ * or
+ *
  * @param aOffset         [in] the offset to get the text after
  * @param aBoundaryType   [in] Boundary type for text to be retrieved
  * @param aText           [in] expected return text for getTextAfterOffset
@@ -188,33 +188,7 @@ function testCharAfterOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
 function testTextAfterOffset(aOffset, aBoundaryType,
                              aText, aStartOffset, aEndOffset)
 {
-  // List of IDs.
-  if (arguments[5] instanceof Array) {
-    var ids = arguments[5];
-    for (var i = 0; i < ids.length; i++) {
-      var acc = getAccessible(ids[i], nsIAccessibleText);
-      testTextHelper(ids[i], aOffset, aBoundaryType,
-                     aText, aStartOffset, aEndOffset,
-                     kOk, kOk, kOk,
-                     acc.getTextAfterOffset, "getTextAfterOffset ");
-    }
-
-    return;
-  }
-
-  // List of tuples.
-  for (var i = 5; i < arguments.length; i = i + 4) {
-    var ID = arguments[i];
-    var acc = getAccessible(ID, nsIAccessibleText);
-    var toDoFlag1 = arguments[i + 1];
-    var toDoFlag2 = arguments[i + 2];
-    var toDoFlag3 = arguments[i + 3];
-
-    testTextHelper(ID, aOffset, aBoundaryType,
-                   aText, aStartOffset, aEndOffset,
-                   toDoFlag1, toDoFlag2, toDoFlag3, 
-                   acc.getTextAfterOffset, "getTextAfterOffset ");
-  }
+  testTextSuperHelper("getTextAfterOffset", arguments);
 }
 
 /**
@@ -242,6 +216,16 @@ function testCharBeforeOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
 /**
  * Test getTextBeforeOffset function over different elements
  *
+ * @param aIDs            [in] ID or array of IDs
+ * @param aBoundaryType   [in] boundary type for text to be retrieved
+ * @param aTestList       [in] array of sets:
+ *                              offset1 and offset2 defining the offset range
+ *                              the text in the range
+ *                              start offset of the text in the range
+ *                              end offset of the text in the range
+ *
+ * or
+ *
  * @param aOffset         [in] the offset to get the text before
  * @param aBoundaryType   [in] Boundary type for text to be retrieved
  * @param aText           [in] expected return text for getTextBeforeOffset
@@ -256,32 +240,7 @@ function testCharBeforeOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
 function testTextBeforeOffset(aOffset, aBoundaryType,
                               aText, aStartOffset, aEndOffset)
 {
-  // List of IDs.
-  if (arguments[5] instanceof Array) {
-    var ids = arguments[5];
-    for (var i = 0; i < ids.length; i++) {
-      var acc = getAccessible(ids[i], nsIAccessibleText);
-      testTextHelper(ids[i], aOffset, aBoundaryType,
-                     aText, aStartOffset, aEndOffset,
-                     kOk, kOk, kOk,
-                     acc.getTextBeforeOffset, "getTextBeforeOffset ");
-    }
-
-    return;
-  }
-
-  for (var i = 5; i < arguments.length; i = i + 4) {
-    var ID = arguments[i];
-    var acc = getAccessible(ID, nsIAccessibleText);
-    var toDoFlag1 = arguments[i + 1];
-    var toDoFlag2 = arguments[i + 2];
-    var toDoFlag3 = arguments[i + 3];
-
-    testTextHelper(ID, aOffset, aBoundaryType,
-                   aText, aStartOffset, aEndOffset,
-                   toDoFlag1, toDoFlag2, toDoFlag3,
-                   acc.getTextBeforeOffset, "getTextBeforeOffset ");
-  }
+  testTextSuperHelper("getTextBeforeOffset", arguments);
 }
 
 /**
@@ -501,6 +460,78 @@ function testTextGetSelection(aID, aStartOffset, aEndOffset, aSelectionIndex)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private
+
+function testTextSuperHelper(aFuncName, aArgs)
+{
+  // List of tests.
+  if (aArgs[2] instanceof Array) {
+    var ids = (aArgs[0] instanceof Array) ? aArgs[0] : [ aArgs[0] ];
+    var boundaryType = aArgs[1];
+    var list = aArgs[2];
+    for (var i = 0; i < list.length; i++) {
+      var offset1 = list[i][0], offset2 = list[i][1];
+      var text = list[i][2], startOffset = list[i][3], endOffset = list[i][4];
+      var failureList = list[i][5];
+      for (var offset = offset1; offset <= offset2; offset++) {
+        for (var idIdx = 0; idIdx < ids.length; idIdx++) {
+          var id = ids[idIdx];
+
+          var flagOk1 = kOk, flagOk2 = kOk, flagOk3 = kOk;
+          if (failureList) {
+            for (var fIdx = 0; fIdx < failureList.length; fIdx++) {
+              if (offset == failureList[fIdx][0] && id == failureList[fIdx][1]) {
+                flagOk1 = failureList[fIdx][2];
+                flagOk2 = failureList[fIdx][3];
+                flagOk3 = failureList[fIdx][4];
+                break;
+              }
+            }
+          }
+
+          var acc = getAccessible(id, nsIAccessibleText);
+          testTextHelper(id, offset, boundaryType,
+                         text, startOffset, endOffset,
+                         flagOk1, flagOk2, flagOk3,
+                         acc[aFuncName], aFuncName + " ");
+        }
+      }
+    }
+    return;
+  }
+
+  // Test at single offset. List of IDs.
+  var offset = aArgs[0];
+  var boundaryType = aArgs[1];
+  var text = aArgs[2];
+  var startOffset = aArgs[3];
+  var endOffset = aArgs[4];
+  if (aArgs[5] instanceof Array) {
+    var ids = aArgs[5];
+    for (var i = 0; i < ids.length; i++) {
+      var acc = getAccessible(ids[i], nsIAccessibleText);
+      testTextHelper(ids[i], offset, boundaryType,
+                     text, startOffset, endOffset,
+                     kOk, kOk, kOk,
+                     acc[aFuncName], aFuncName + " ");
+    }
+
+    return;
+  }
+
+  // Each ID is tested separately.
+  for (var i = 5; i < aArgs.length; i = i + 4) {
+    var ID = aArgs[i];
+    var acc = getAccessible(ID, nsIAccessibleText);
+    var toDoFlag1 = aArgs[i + 1];
+    var toDoFlag2 = aArgs[i + 2];
+    var toDoFlag3 = aArgs[i + 3];
+
+    testTextHelper(ID, offset, boundaryType,
+                   text, startOffset, endOffset,
+                   toDoFlag1, toDoFlag2, toDoFlag3,
+                   acc[aFuncName], aFuncName + " ");
+  }
+}
 
 function testTextHelper(aID, aOffset, aBoundaryType,
                         aText, aStartOffset, aEndOffset,

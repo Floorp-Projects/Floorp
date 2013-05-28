@@ -11,3 +11,8 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessibleWrap.h',
 ]
 
+CPP_SOURCES += [
+    'AccessibleWrap.cpp',
+    'Platform.cpp',
+]
+

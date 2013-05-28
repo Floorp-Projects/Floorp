@@ -1,6 +1,6 @@
 load(libdir + "parallelarray-helpers.js");
 
-function testScatter() {
+function testScatter8() {
   var shape = [5];
   for (var i = 0; i < 7; i++) {
     shape.push(2);
@@ -11,5 +11,6 @@ function testScatter() {
   }
 }
 
-if (getBuildConfiguration().parallelJS) testScatter();
+if (getBuildConfiguration().parallelJS)
+  testScatter8();
 

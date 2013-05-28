@@ -51,15 +51,8 @@ SVGSVGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return SVGSVGElementBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMSVGTranslatePoint,
-                                                nsISVGPoint)
-NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMSVGTranslatePoint,
-                                                  nsISVGPoint)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(DOMSVGTranslatePoint, nsISVGPoint,
+                                     mElement)
 
 NS_IMPL_ADDREF_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
 NS_IMPL_RELEASE_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
@@ -445,9 +438,7 @@ SVGSVGElement::GetElementById(const nsAString& elementId, ErrorResult& rv)
 already_AddRefed<SVGAnimatedRect>
 SVGSVGElement::ViewBox()
 {
-  nsRefPtr<SVGAnimatedRect> rect;
-  mViewBox.ToDOMAnimatedRect(getter_AddRefs(rect), this);
-  return rect.forget();
+  return mViewBox.ToSVGAnimatedRect(this);
 }
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>

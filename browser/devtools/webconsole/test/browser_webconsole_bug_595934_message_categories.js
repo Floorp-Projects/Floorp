@@ -16,21 +16,16 @@ const TESTS = [
     matchString: "text/css",
   },
   { // #1
-    file: "test-bug-595934-dom-events.html",
-    category: "DOM Events",
-    matchString: "preventBubble()",
-  },
-  { // #2
     file: "test-bug-595934-dom-html.html",
     category: "DOM:HTML",
     matchString: "getElementById",
   },
-  { // #3
+  { // #2
     file: "test-bug-595934-imagemap.html",
     category: "ImageMap",
     matchString: "shape=\"rect\"",
   },
-  { // #4
+  { // #3
     file: "test-bug-595934-html.html",
     category: "HTML",
     matchString: "multipart/form-data",
@@ -39,58 +34,53 @@ const TESTS = [
       form.submit();
     },
   },
-  { // #5
+  { // #4
     file: "test-bug-595934-workers.html",
     category: "Web Worker",
     matchString: "fooBarWorker",
     expectError: true,
   },
-  { // #6
+  { // #5
     file: "test-bug-595934-malformedxml.xhtml",
     category: "malformed-xml",
     matchString: "no element found",
   },
-  { // #7
+  { // #6
     file: "test-bug-595934-svg.xhtml",
     category: "SVG",
     matchString: "fooBarSVG",
   },
-  { // #8
+  { // #7
     file: "test-bug-595934-dom-html-external.html",
     category: "DOM:HTML",
     matchString: "document.all",
   },
-  { // #9
-    file: "test-bug-595934-dom-events-external2.html",
-    category: "DOM Events",
-    matchString: "preventBubble()",
-  },
-  { // #10
+  { // #8
     file: "test-bug-595934-canvas.html",
     category: "Canvas",
     matchString: "strokeStyle",
   },
-  { // #11
+  { // #9
     file: "test-bug-595934-css-parser.html",
     category: "CSS Parser",
     matchString: "foobarCssParser",
   },
-  { // #12
+  { // #10
     file: "test-bug-595934-malformedxml-external.html",
     category: "malformed-xml",
     matchString: "</html>",
   },
-  { // #13
+  { // #11
     file: "test-bug-595934-empty-getelementbyid.html",
     category: "DOM",
     matchString: "getElementById",
   },
-  { // #14
+  { // #12
     file: "test-bug-595934-canvas-css.html",
     category: "CSS Parser",
     matchString: "foobarCanvasCssParser",
   },
-  { // #15
+  { // #13
     file: "test-bug-595934-image.html",
     category: "Image",
     matchString: "corrupt",

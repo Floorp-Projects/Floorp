@@ -37,9 +37,9 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  already_AddRefed<SVGIRect> GetBaseVal(ErrorResult& aRv);
+  already_AddRefed<SVGIRect> GetBaseVal();
 
-  already_AddRefed<SVGIRect> GetAnimVal(ErrorResult& aRv);
+  already_AddRefed<SVGIRect> GetAnimVal();
 
 private:
   nsSVGViewBox* mVal; // kept alive because it belongs to content

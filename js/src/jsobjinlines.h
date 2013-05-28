@@ -906,6 +906,7 @@ inline bool JSObject::isPrimitive() const { return isNumber() || isString() || i
 inline bool JSObject::isRegExp() const { return hasClass(&js::RegExpClass); }
 inline bool JSObject::isRegExpStatics() const { return hasClass(&js::RegExpStaticsClass); }
 inline bool JSObject::isScope() const { return isCall() || isDeclEnv() || isNestedScope(); }
+inline bool JSObject::isScriptSource() const { return hasClass(&js::ScriptSourceClass); }
 inline bool JSObject::isSetIterator() const { return hasClass(&js::SetIteratorClass); }
 inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
 inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
