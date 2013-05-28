@@ -461,7 +461,7 @@ skip-if(B2G) == 336153-1.html 336153-1-ref.html
 == 346774-1c.html 346774-1-ref.html
 == 347348-1.xhtml 347348-1-ref.xhtml
 == 347496-1.xhtml 347496-1-ref.xhtml
-== 347912-1.html 347912-1-ref.html
+fails-if(Android) == 347912-1.html 347912-1-ref.html
 == 348049-1.xhtml 348049-1-ref.xhtml
 == 348516-1.html 348516-1-ref.html
 == 348516-2.html 348516-2-ref.html
@@ -796,7 +796,7 @@ skip-if(Android) == 391979.html 391979-ref.html
 == 393671-2.html 393671-2-ref.html
 == 393671-3.html 393671-3-ref.html
 == 393760-1.xml 393760-1-ref.xml
-== 393760-2.xml 393760-2-ref.xml
+fails-if(Android) == 393760-2.xml 393760-2-ref.xml
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
@@ -1474,7 +1474,7 @@ needs-focus != 542116-1.html 542116-1-ref.html
 needs-focus != 542116-2.html 542116-2-ref.html
 needs-focus != 542116-3.html 542116-3-ref.html
 == 542317-1.html 542317-1-ref.html
-fuzzy-if(Android,17,2) == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
+== 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
 == 542620-1.html 542620-1-ref.html
 == 545049-1.html 545049-1-ref.html
 == 546033-1.html 546033-1-ref.html
@@ -1644,7 +1644,7 @@ skip-if(B2G) fails-if(Android) == 632423-1.html 632423-1-ref.html
 skip-if(Android||B2G) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 fails-if(Android) == 633344-1.html 633344-1-ref.html
-== 634232-1.html 634232-1-ref.html
+fails-if(Android) == 634232-1.html 634232-1-ref.html
 fails-if(Android) == 635302-1.html 635302-1-ref.html
 skip-if(B2G) random-if(d2d) fails-if(Android) == 635373-1.html 635373-1-ref.html
 skip-if(B2G) random-if(d2d) fails-if(Android) == 635373-2.html 635373-2-ref.html
@@ -1653,7 +1653,7 @@ HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 skip-if(B2G) == 637852-1.html 637852-1-ref.html # bug 839735
-== 637852-2.html 637852-2-ref.html
+fails-if(Android) == 637852-2.html 637852-2-ref.html
 == 637852-3.html 637852-3-ref.html
 skip-if(B2G) == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
@@ -1671,7 +1671,7 @@ fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android) == 654950-1.html 6
 != 656875.html about:blank
 == 658952.html 658952-ref.html
 == 660682-1.html 660682-1-ref.html
-== 664127-1.xul 664127-1-ref.xul
+fails-if(Android) == 664127-1.xul 664127-1-ref.xul
 skip-if(B2G) == 665597-1.html 665597-1-ref.html
 skip-if(B2G) == 665597-2.html 665597-2-ref.html
 == 668319-1.xul about:blank
@@ -1735,11 +1735,11 @@ fuzzy(40,850) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) te
 == 801681-2.html 801681-2-ref.html
 == 801994-1.html 801994-1-ref.html
 == 804323-1.html 804323-1-ref.html
-fuzzy-if(Android,4,100) == 811301-1.html 811301-1-ref.html
+== 811301-1.html 811301-1-ref.html
 == 812824-1.html 812824-1-ref.html
 == 814677.html 814677-ref.html
 skip-if(B2G) == 814952-1.html 814952-1-ref.html
-skip-if(B2G) fuzzy-if(Android,4,61) == 815593-1.html 815593-1-ref.html
+skip-if(B2G) == 815593-1.html 815593-1-ref.html
 == 816359-1.html 816359-1-ref.html
 == 816458-1.html 816458-1-ref.html
 == 816948-1.html 816948-1-ref.html
