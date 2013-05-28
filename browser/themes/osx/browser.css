@@ -962,42 +962,6 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   }
 }
 
-/* cut button */
-
-#cut-button {
-  -moz-image-region: rect(0, 260px, 20px, 240px);
-}
-
-@media (min-resolution: 2dppx) {
-  #cut-button {
-    -moz-image-region: rect(0, 520px, 40px, 480px);
-  }
-}
-
-/* copy button */
-
-#copy-button {
-  -moz-image-region: rect(0, 280px, 20px, 260px);
-}
-
-@media (min-resolution: 2dppx) {
-  #copy-button {
-    -moz-image-region: rect(0, 560px, 40px, 520px);
-  }
-}
-
-/* paste button */
-
-#paste-button {
-  -moz-image-region: rect(0, 300px, 20px, 280px);
-}
-
-@media (min-resolution: 2dppx) {
-  #paste-button {
-    -moz-image-region: rect(0, 600px, 40px, 560px);
-  }
-}
-
 /* alltabs button */
 
 #alltabs-button {

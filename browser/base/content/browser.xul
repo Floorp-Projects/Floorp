@@ -1031,21 +1031,6 @@
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
 
-      <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&cutCmd.label;"
-                     command="cmd_cut"
-                     tooltiptext="&cutButton.tooltip;"/>
-
-      <toolbarbutton id="copy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&copyCmd.label;"
-                     command="cmd_copy"
-                     tooltiptext="&copyButton.tooltip;"/>
-
-      <toolbarbutton id="paste-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&pasteCmd.label;"
-                     command="cmd_paste"
-                     tooltiptext="&pasteButton.tooltip;"/>
-
 #ifdef MOZ_SERVICES_SYNC
       <toolbarbutton id="sync-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
