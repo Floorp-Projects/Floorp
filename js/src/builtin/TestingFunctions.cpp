@@ -1071,7 +1071,7 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  validated according to the asm.js spec."),
 
     JS_FN_HELP("isAsmJSFunction", IsAsmJSFunction, 1, 0,
-"isAsmJSModule(fn)",
+"isAsmJSFunction(fn)",
 "  Returns whether the given value is a nested function in an asm.js module that has been\n"
 "  both compile- and link-time validated."),
 
