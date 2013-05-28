@@ -465,6 +465,7 @@ public:
   static const int32_t kWindowShadowKTable[];
   static const int32_t kWordBreakKTable[];
   static const int32_t kWordWrapKTable[];
+  static const int32_t kWritingModeKTable[];
   static const int32_t kHyphensKTable[];
 };
 

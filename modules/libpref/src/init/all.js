@@ -1772,6 +1772,9 @@ pref("layout.css.scope-pseudo.enabled", false);
 pref("layout.css.scope-pseudo.enabled", true);
 #endif
 
+// Is support for CSS vertical text enabled?
+pref("layout.css.vertical-text.enabled", false);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
