@@ -6850,7 +6850,9 @@ IonBuilder::jsop_length_fastPath()
 
     MDefinition *obj = current->peek(-1);
 
-    if (obj->type() == MIRType_String) {
+    if (obj->mightBeType(MIRType_String)) {
+        if (obj->mightBeType(MIRType_Object))
+            return false;
         current->pop();
         MStringLength *ins = MStringLength::New(obj);
         current->add(ins);
@@ -6858,7 +6860,7 @@ IonBuilder::jsop_length_fastPath()
         return true;
     }
 
-    if (obj->type() == MIRType_Object) {
+    if (obj->mightBeType(MIRType_Object)) {
         types::StackTypeSet *objTypes = obj->resultTypeSet();
 
         if (objTypes &&
