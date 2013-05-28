@@ -34,6 +34,7 @@ const CustomizableWidgets = [{
     viewId: "PanelUI-history",
     name: "History...",
     description: "History",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     icons: {
@@ -103,6 +104,7 @@ const CustomizableWidgets = [{
     id: "privatebrowsing-button",
     name: "Private Browsing\u2026",
     description: "Open a new Private Browsing window",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {
@@ -123,6 +125,7 @@ const CustomizableWidgets = [{
     name: "Save Page",
     shortcut: "Ctrl+S",
     description: "Save this page",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {
@@ -143,6 +146,7 @@ const CustomizableWidgets = [{
     name: "Find",
     shortcut: "Ctrl+F",
     description: "Find in this page",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {
@@ -163,6 +167,7 @@ const CustomizableWidgets = [{
     name: "Open File",
     shortcut: "Ctrl+O",
     description: "Open file",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {
@@ -183,6 +188,7 @@ const CustomizableWidgets = [{
     name: "Developer",
     shortcut: "Shift+F11",
     description: "Toggle Developer Tools",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {
@@ -203,6 +209,7 @@ const CustomizableWidgets = [{
     name: "Add-ons",
     shortcut: "Ctrl+Shift+A",
     description: "Add-ons Manager",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {
@@ -223,6 +230,7 @@ const CustomizableWidgets = [{
     name: "Preferences",
     shortcut: "Ctrl+Shift+O",
     description: "Preferences\u2026",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {

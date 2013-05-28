@@ -685,6 +685,7 @@ let CustomizableUIInternal = {
     if (aWidget.disabled) {
       node.setAttribute("disabled", true);
     }
+    node.setAttribute("removable", aWidget.removable);
     node.setAttribute("label", aWidget.name);
     node.setAttribute("tooltiptext", aWidget.description);
     //XXXunf Need to hook this up to a <key> element or something.
@@ -1170,7 +1171,7 @@ let CustomizableUIInternal = {
 
   createBuiltinWidget: function(aData) {
     // This should only ever be called on startup, before any windows are
-    // openned - so we know there's no build areas to handle. Also, builtin
+    // opened - so we know there's no build areas to handle. Also, builtin
     // widgets are expected to be (mostly) static, so shouldn't affect the
     // current placement settings.
     let widget = this.normalizeWidget(aData, CustomizableUI.SOURCE_BUILTIN);
@@ -1197,6 +1198,7 @@ let CustomizableUIInternal = {
       source: aSource || "addon",
       instances: new Map(),
       currentArea: null,
+      removable: false,
       defaultArea: null,
       allowedAreas: [],
       shortcut: null,
@@ -1222,6 +1224,10 @@ let CustomizableUIInternal = {
       if (typeof aData[prop] == "string") {
         widget[prop] = aData[prop];
       }
+    }
+
+    if ("removable" in aData && typeof aData.removable == "boolean") {
+      widget.removable = aData.removable;
     }
 
     if (aData.defaultArea && gAreas.has(aData.defaultArea)) {
