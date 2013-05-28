@@ -1474,7 +1474,7 @@ needs-focus != 542116-1.html 542116-1-ref.html
 needs-focus != 542116-2.html 542116-2-ref.html
 needs-focus != 542116-3.html 542116-3-ref.html
 == 542317-1.html 542317-1-ref.html
-fuzzy-if(Android,17,2) == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
+== 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
 == 542620-1.html 542620-1-ref.html
 == 545049-1.html 545049-1-ref.html
 == 546033-1.html 546033-1-ref.html
@@ -1735,11 +1735,11 @@ fuzzy(40,850) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) te
 == 801681-2.html 801681-2-ref.html
 == 801994-1.html 801994-1-ref.html
 == 804323-1.html 804323-1-ref.html
-fuzzy-if(Android,4,100) == 811301-1.html 811301-1-ref.html
+== 811301-1.html 811301-1-ref.html
 == 812824-1.html 812824-1-ref.html
 == 814677.html 814677-ref.html
 skip-if(B2G) == 814952-1.html 814952-1-ref.html
-skip-if(B2G) fuzzy-if(Android,4,61) == 815593-1.html 815593-1-ref.html
+skip-if(B2G) == 815593-1.html 815593-1-ref.html
 == 816359-1.html 816359-1-ref.html
 == 816458-1.html 816458-1-ref.html
 == 816948-1.html 816948-1-ref.html
