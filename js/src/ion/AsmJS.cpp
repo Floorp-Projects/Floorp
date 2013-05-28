@@ -4354,6 +4354,7 @@ CheckSwitchRange(FunctionCompiler &f, ParseNode *stmt, int32_t *low, int32_t *hi
 
     *low = *high = i;
 
+    ParseNode *initialStmt = stmt;
     for (stmt = NextNode(stmt); stmt && stmt->isKind(PNK_CASE); stmt = NextNode(stmt)) {
         int32_t i = 0;
         if (!CheckCaseExpr(f, CaseExpr(stmt), &i))
@@ -4365,7 +4366,7 @@ CheckSwitchRange(FunctionCompiler &f, ParseNode *stmt, int32_t *low, int32_t *hi
 
     int64_t i64 = (int64_t(*high) - int64_t(*low)) + 1;
     if (i64 > 128*1024*1024)
-        return f.fail(stmt, "all switch statements generate tables; this table would be too big");
+        return f.fail(initialStmt, "all switch statements generate tables; this table would be too big");
 
     *tableLength = int32_t(i64);
     return true;
