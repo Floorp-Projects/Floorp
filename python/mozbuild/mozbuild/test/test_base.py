@@ -25,7 +25,7 @@ from mozbuild.backend.configenvironment import ConfigEnvironment
 
 
 curdir = os.path.dirname(__file__)
-topsrcdir = os.path.normpath(os.path.join(curdir, '..', '..', '..', '..'))
+topsrcdir = os.path.abspath(os.path.join(curdir, '..', '..', '..', '..'))
 log_manager = LoggingManager()
 
 
