@@ -316,12 +316,7 @@ public class TopSitesView extends GridView {
                 if (b == null)
                     continue;
 
-                Bitmap thumbnail = null;
-                try {
-                    thumbnail = BitmapUtils.decodeByteArray(b);
-                } catch (IllegalArgumentException e) {
-                    Log.e(LOGTAG, "Error decoding thumbnail", e);
-                }
+                Bitmap thumbnail = BitmapUtils.decodeByteArray(b);
                 if (thumbnail == null)
                     continue;
 
