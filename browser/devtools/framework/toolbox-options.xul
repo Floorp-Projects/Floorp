@@ -18,6 +18,9 @@
         <vbox id="default-tools-box" class="options-groupbox" tabindex="0"/>
         <label value="&options.selectAdditionalTools.label;"/>
         <vbox id="additional-tools-box" class="options-groupbox"/>
+        <label id="tools-not-supported-label"
+               class="options-citation-label"
+               value="&options.toolNotSupported.label;"/>
       </vbox>
       <vbox class="options-vertical-pane" flex="1">
         <label value="&options.selectDevToolsTheme.label;"/>
@@ -45,8 +48,10 @@
           <checkbox id="devtools-disable-javascript"
                     label="&options.disableJavaScript.label;"
                     tooltiptext="&options.disableJavaScript.tooltip;"/>
-          <label value="&options.context.requiresRestart;"/>
-          <label value="&options.context.triggersPageRefresh;"/>
+          <label class="options-citation-label"
+                 value="&options.context.requiresRestart;"/>
+          <label class="options-citation-label"
+                 value="&options.context.triggersPageRefresh;"/>
         </vbox>
       </vbox>
     </hbox>
