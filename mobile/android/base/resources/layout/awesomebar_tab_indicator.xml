@@ -14,5 +14,5 @@
                 android:singleLine="true"
                 android:ellipsize="marquee"
                 android:textSize="14sp"
-                android:textColor="@color/awesome_bar_title"
+                android:textColor="@color/url_bar_title"
                 gecko:autoUpdateTheme="false"/>

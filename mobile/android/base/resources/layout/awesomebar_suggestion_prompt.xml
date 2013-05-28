@@ -7,7 +7,7 @@
       class="org.mozilla.gecko.AwesomeBarTabs$BackgroundLayout"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
-      android:background="@drawable/address_bar_bg">
+      android:background="@drawable/url_bar_bg">
 
     <LinearLayout android:id="@+id/prompt_container"
                   android:layout_width="fill_parent"
@@ -20,7 +20,7 @@
         <Gecko.TextView android:id="@+id/suggestions_prompt_title"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        android:textColor="@color/awesome_bar_title"
+                        android:textColor="@color/url_bar_title"
                         android:layout_marginLeft="6dip"
                         android:textSize="14sp"
                         android:layout_weight="1" />

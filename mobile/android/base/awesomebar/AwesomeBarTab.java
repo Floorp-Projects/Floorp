@@ -177,8 +177,8 @@ abstract public class AwesomeBarTab {
         Integer tabId = getOpenTabs().get(url);
         holder.url = url;
         if (tabId != null) {
-            holder.urlView.setText(R.string.awesomebar_switch_to_tab);
-            holder.urlView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_awesomebar_tab, 0, 0, 0);
+            holder.urlView.setText(R.string.switch_to_tab);
+            holder.urlView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_url_bar_tab, 0, 0, 0);
         } else {
             holder.urlView.setText(url);
             holder.urlView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);

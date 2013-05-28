@@ -16,7 +16,7 @@
           android:layout_weight="1.0"/>
 
     <ImageButton android:id="@+id/add_tab"
-                 style="@style/AddressBar.ImageButton"
+                 style="@style/UrlBar.ImageButton"
                  android:layout_width="@dimen/browser_toolbar_height"
                  android:layout_height="@dimen/browser_toolbar_height"
                  android:padding="@dimen/browser_toolbar_button_padding"

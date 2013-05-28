@@ -98,13 +98,12 @@ public class BrowserToolbar implements TextWatcher,
     }
 
     private GeckoRelativeLayout mLayout;
-    private LayoutParams mAwesomeBarParams;
     private View mUrlDisplayContainer;
     private View mUrlEditContainer;
     private CustomEditText mUrlEditText;
-    private View mAwesomeBarEntry;
-    private ImageView mAwesomeBarRightEdge;
-    private BrowserToolbarBackground mAddressBarBg;
+    private View mUrlBarEntry;
+    private ImageView mUrlBarRightEdge;
+    private BrowserToolbarBackground mUrlBarBackground;
     private GeckoTextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
@@ -152,7 +151,7 @@ public class BrowserToolbar implements TextWatcher,
     private TranslateAnimation mTitleSlideLeft;
     private TranslateAnimation mTitleSlideRight;
 
-    private int mAddressBarViewOffset;
+    private int mUrlBarViewOffset;
     private int mDefaultForwardMargin;
     private PropertyAnimator mForwardAnim = null;
 
@@ -273,14 +272,14 @@ public class BrowserToolbar implements TextWatcher,
 
         mAnimatingEntry = false;
 
-        mAddressBarBg = (BrowserToolbarBackground) mLayout.findViewById(R.id.address_bar_bg);
-        mAddressBarViewOffset = mActivity.getResources().getDimensionPixelSize(R.dimen.addressbar_offset_left);
+        mUrlBarBackground = (BrowserToolbarBackground) mLayout.findViewById(R.id.url_bar_bg);
+        mUrlBarViewOffset = mActivity.getResources().getDimensionPixelSize(R.dimen.url_bar_offset_left);
         mDefaultForwardMargin = mActivity.getResources().getDimensionPixelSize(R.dimen.forward_default_offset);
-        mUrlDisplayContainer = mLayout.findViewById(R.id.awesome_bar_display_container);
-        mAwesomeBarEntry = mLayout.findViewById(R.id.awesome_bar_entry);
+        mUrlDisplayContainer = mLayout.findViewById(R.id.url_display_container);
+        mUrlBarEntry = mLayout.findViewById(R.id.url_bar_entry);
 
-        mUrlEditContainer = mLayout.findViewById(R.id.awesome_bar_edit_container);
-        mUrlEditText = (CustomEditText) mLayout.findViewById(R.id.awesome_bar_edit_text);
+        mUrlEditContainer = mLayout.findViewById(R.id.url_edit_container);
+        mUrlEditText = (CustomEditText) mLayout.findViewById(R.id.url_edit_text);
 
         mUrlEditText.addTextChangedListener(this);
 
@@ -292,7 +291,7 @@ public class BrowserToolbar implements TextWatcher,
                     return false;
 
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    // If the AwesomeBar has a composition string, don't submit the text yet.
+                    // If the edit text has a composition string, don't submit the text yet.
                     // ENTER is needed to commit the composition string.
                     Editable content = mUrlEditText.getText();
                     if (!hasCompositionString(content)) {
@@ -373,12 +372,12 @@ public class BrowserToolbar implements TextWatcher,
         });
 
         // This will clip the right edge's image at half of its width
-        mAwesomeBarRightEdge = (ImageView) mLayout.findViewById(R.id.awesome_bar_right_edge);
-        if (mAwesomeBarRightEdge != null) {
-            mAwesomeBarRightEdge.getDrawable().setLevel(5000);
+        mUrlBarRightEdge = (ImageView) mLayout.findViewById(R.id.url_bar_right_edge);
+        if (mUrlBarRightEdge != null) {
+            mUrlBarRightEdge.getDrawable().setLevel(5000);
         }
 
-        mTitle = (GeckoTextView) mLayout.findViewById(R.id.awesome_bar_title);
+        mTitle = (GeckoTextView) mLayout.findViewById(R.id.url_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
         if (Build.VERSION.SDK_INT >= 16)
             mTitle.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -622,7 +621,7 @@ public class BrowserToolbar implements TextWatcher,
             final int prevSelStart = mUrlEditText.getSelectionStart();
             final int prevSelEnd = mUrlEditText.getSelectionEnd();
 
-            // Manually dispatch the key event to the AwesomeBar. If selection changed as
+            // Manually dispatch the key event to the edit text. If selection changed as
             // a result of the key event, then give focus back to mUrlEditText
             mUrlEditText.dispatchKeyEvent(event);
 
@@ -765,7 +764,7 @@ public class BrowserToolbar implements TextWatcher,
             }
         }
 
-        // If the AwesomeBar has a composition string, don't call updateGoButton().
+        // If the edit text has a composition string, don't call updateGoButton().
         // That method resets IME and composition state will be broken.
         if (!hasCompositionString(s)) {
             updateGoButton(text);
@@ -832,11 +831,11 @@ public class BrowserToolbar implements TextWatcher,
         }
     }
 
-    private int getAwesomeBarEntryTranslation() {
-        return mLayout.getWidth() - mAwesomeBarEntry.getRight();
+    private int getUrlBarEntryTranslation() {
+        return mLayout.getWidth() - mUrlBarEntry.getRight();
     }
 
-    private int getAwesomeBarCurveTranslation() {
+    private int getUrlBarCurveTranslation() {
         return mLayout.getWidth() - mTabs.getLeft();
     }
 
@@ -1195,8 +1194,8 @@ public class BrowserToolbar implements TextWatcher,
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
         contentAnimator.setUseHardwareLayer(false);
 
-        final int entryTranslation = getAwesomeBarEntryTranslation();
-        final int curveTranslation = getAwesomeBarCurveTranslation();
+        final int entryTranslation = getUrlBarEntryTranslation();
+        final int curveTranslation = getUrlBarCurveTranslation();
 
         // Keep the entry highlighted during the animation
         mLayout.setSelected(true);
@@ -1207,8 +1206,8 @@ public class BrowserToolbar implements TextWatcher,
 
         // Slide the right side elements of the toolbar
 
-        if (mAwesomeBarRightEdge != null) {
-            contentAnimator.attach(mAwesomeBarRightEdge,
+        if (mUrlBarRightEdge != null) {
+            contentAnimator.attach(mUrlBarRightEdge,
                                    PropertyAnimator.Property.TRANSLATION_X,
                                    entryTranslation);
         }
@@ -1283,10 +1282,10 @@ public class BrowserToolbar implements TextWatcher,
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
         contentAnimator.setUseHardwareLayer(false);
 
-        // Shrink the awesome entry back to its original size
+        // Shrink the urlbar entry back to its original size
 
-        if (mAwesomeBarRightEdge != null) {
-            contentAnimator.attach(mAwesomeBarRightEdge,
+        if (mUrlBarRightEdge != null) {
+            contentAnimator.attach(mUrlBarRightEdge,
                                    PropertyAnimator.Property.TRANSLATION_X,
                                    0);
         }
@@ -1352,13 +1351,13 @@ public class BrowserToolbar implements TextWatcher,
 
         mGo.setVisibility(View.VISIBLE);
 
-        int imageResource = R.drawable.ic_awesomebar_go;
+        int imageResource = R.drawable.ic_url_bar_go;
         String contentDescription = mActivity.getString(R.string.go);
         int imeAction = EditorInfo.IME_ACTION_GO;
 
         int actionBits = mUrlEditText.getImeOptions() & EditorInfo.IME_MASK_ACTION;
         if (StringUtils.isSearchQuery(text, actionBits == EditorInfo.IME_ACTION_SEARCH)) {
-            imageResource = R.drawable.ic_awesomebar_search;
+            imageResource = R.drawable.ic_url_bar_search;
             contentDescription = mActivity.getString(R.string.search);
             imeAction = EditorInfo.IME_ACTION_SEARCH;
         }
@@ -1373,7 +1372,7 @@ public class BrowserToolbar implements TextWatcher,
             mUrlEditText.setImeOptions(optionBits | imeAction);
 
             mDelayRestartInput = (imeAction == EditorInfo.IME_ACTION_GO) &&
-                                 (InputMethods.shouldDelayAwesomebarUpdate(mUrlEditText.getContext()));
+                                 (InputMethods.shouldDelayUrlBarUpdate(mUrlEditText.getContext()));
             if (!mDelayRestartInput) {
                 restartInput = true;
             }
@@ -1451,7 +1450,7 @@ public class BrowserToolbar implements TextWatcher,
                 if (enabled) {
                     ViewGroup.MarginLayoutParams layoutParams =
                         (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
-                    layoutParams.leftMargin = mAddressBarViewOffset;
+                    layoutParams.leftMargin = mUrlBarViewOffset;
 
                     ViewHelper.setTranslationX(mTitle, 0);
                     ViewHelper.setTranslationX(mFavicon, 0);
@@ -1493,9 +1492,9 @@ public class BrowserToolbar implements TextWatcher,
             // We're hiding the forward button. We're going to reset the margin before
             // the animation starts, so we shift these items to the right so that they don't
             // appear to move initially.
-            ViewHelper.setTranslationX(mTitle, mAddressBarViewOffset);
-            ViewHelper.setTranslationX(mFavicon, mAddressBarViewOffset);
-            ViewHelper.setTranslationX(mSiteSecurity, mAddressBarViewOffset);
+            ViewHelper.setTranslationX(mTitle, mUrlBarViewOffset);
+            ViewHelper.setTranslationX(mFavicon, mUrlBarViewOffset);
+            ViewHelper.setTranslationX(mSiteSecurity, mUrlBarViewOffset);
         } else {
             anim.attach(mForward,
                       PropertyAnimator.Property.TRANSLATION_X,
@@ -1505,13 +1504,13 @@ public class BrowserToolbar implements TextWatcher,
                       1);
             anim.attach(mTitle,
                       PropertyAnimator.Property.TRANSLATION_X,
-                      mAddressBarViewOffset);
+                      mUrlBarViewOffset);
             anim.attach(mFavicon,
                       PropertyAnimator.Property.TRANSLATION_X,
-                      mAddressBarViewOffset);
+                      mUrlBarViewOffset);
             anim.attach(mSiteSecurity,
                       PropertyAnimator.Property.TRANSLATION_X,
-                      mAddressBarViewOffset);
+                      mUrlBarViewOffset);
         }
     }
 
@@ -1555,7 +1554,7 @@ public class BrowserToolbar implements TextWatcher,
             updateForwardButton(tab.canDoForward());
 
             final boolean isPrivate = tab.isPrivate();
-            mAddressBarBg.setPrivateMode(isPrivate);
+            mUrlBarBackground.setPrivateMode(isPrivate);
             mLayout.setPrivateMode(isPrivate);
             mTabs.setPrivateMode(isPrivate);
             mTitle.setPrivateMode(isPrivate);

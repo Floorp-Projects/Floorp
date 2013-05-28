@@ -61,7 +61,7 @@ final class InputMethods {
         return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);
     }
 
-    public static boolean shouldDelayAwesomebarUpdate(Context context) {
+    public static boolean shouldDelayUrlBarUpdate(Context context) {
         String inputMethod = getCurrentInputMethod(context);
         return METHOD_SAMSUNG.equals(inputMethod) ||
                METHOD_SWIFTKEY.equals(inputMethod);
