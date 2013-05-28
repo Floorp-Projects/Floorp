@@ -12,6 +12,7 @@ const Cr = Components.results;
 const INCLUDE_DESC = 0x01;
 const INCLUDE_NAME = 0x02;
 const INCLUDE_CUSTOM = 0x04;
+const NAME_FROM_SUBTREE_RULE = 0x08;
 
 const UTTERANCE_DESC_FIRST = 0;
 
@@ -74,15 +75,24 @@ this.UtteranceGenerator = {
       utterance.push.apply(utterance,
         UtteranceGenerator.genForObject(aAccessible));
     };
-
+    let roleString = Utils.AccRetrieval.getStringRole(aContext.accessible.role);
+    let nameRule = this.roleRuleMap[roleString] || 0;
     let utteranceOrder = gUtteranceOrder.value || UTTERANCE_DESC_FIRST;
+    // Include subtree if the name is not explicit or the role's name rule is
+    // not the NAME_FROM_SUBTREE_RULE.
+    let includeSubtree = (Utils.getAttributes(aContext.accessible)[
+      'explicit-name'] !== 'true') || !(nameRule & NAME_FROM_SUBTREE_RULE);
 
     if (utteranceOrder === UTTERANCE_DESC_FIRST) {
       aContext.newAncestry.forEach(addUtterance);
       addUtterance(aContext.accessible);
-      aContext.subtreePreorder.forEach(addUtterance);
+      if (includeSubtree) {
+        aContext.subtreePreorder.forEach(addUtterance);
+      }
     } else {
-      aContext.subtreePostorder.forEach(addUtterance);
+      if (includeSubtree) {
+        aContext.subtreePostorder.forEach(addUtterance);
+      }
       addUtterance(aContext.accessible);
       aContext.newAncestry.reverse().forEach(addUtterance);
     }
@@ -98,7 +108,7 @@ this.UtteranceGenerator = {
    * @return {Array} Two string array. The first string describes the object
    *    and its states. The second string is the object's name. Whether the
    *    object's description or it's role is included is determined by
-   *    {@link verbosityRoleMap}.
+   *    {@link roleRuleMap}.
    */
   genForObject: function genForObject(aAccessible) {
     let roleString = Utils.AccRetrieval.getStringRole(aAccessible.role);
@@ -106,7 +116,7 @@ this.UtteranceGenerator = {
     let func = this.objectUtteranceFunctions[roleString] ||
       this.objectUtteranceFunctions.defaultFunc;
 
-    let flags = this.verbosityRoleMap[roleString] || UTTERANCE_DESC_FIRST;
+    let flags = this.roleRuleMap[roleString] || 0;
 
     if (aAccessible.childCount == 0)
       flags |= INCLUDE_NAME;
@@ -182,29 +192,35 @@ this.UtteranceGenerator = {
               aIsEditing ? 'editingMode' : 'navigationMode')];
   },
 
-  verbosityRoleMap: {
+  roleRuleMap: {
     'menubar': INCLUDE_DESC,
     'scrollbar': INCLUDE_DESC,
     'grip': INCLUDE_DESC,
     'alert': INCLUDE_DESC | INCLUDE_NAME,
     'menupopup': INCLUDE_DESC,
-    'menuitem': INCLUDE_DESC,
-    'tooltip': INCLUDE_DESC,
+    'menuitem': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'tooltip': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'columnheader': NAME_FROM_SUBTREE_RULE,
+    'rowheader': NAME_FROM_SUBTREE_RULE,
+    'column': NAME_FROM_SUBTREE_RULE,
+    'row': NAME_FROM_SUBTREE_RULE,
     'application': INCLUDE_NAME,
     'document': INCLUDE_NAME,
     'grouping': INCLUDE_DESC | INCLUDE_NAME,
     'toolbar': INCLUDE_DESC,
     'table': INCLUDE_DESC | INCLUDE_NAME,
-    'link': INCLUDE_DESC,
+    'link': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'helpballoon': NAME_FROM_SUBTREE_RULE,
     'list': INCLUDE_DESC | INCLUDE_NAME,
-    'listitem': INCLUDE_DESC,
+    'listitem': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
     'outline': INCLUDE_DESC,
-    'outlineitem': INCLUDE_DESC,
-    'pagetab': INCLUDE_DESC,
+    'outlineitem': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'pagetab': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
     'graphic': INCLUDE_DESC,
-    'pushbutton': INCLUDE_DESC,
-    'checkbutton': INCLUDE_DESC,
-    'radiobutton': INCLUDE_DESC,
+    'pushbutton': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'checkbutton': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'radiobutton': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'buttondropdown': NAME_FROM_SUBTREE_RULE,
     'combobox': INCLUDE_DESC,
     'droplist': INCLUDE_DESC,
     'progressbar': INCLUDE_DESC,
@@ -213,15 +229,20 @@ this.UtteranceGenerator = {
     'diagram': INCLUDE_DESC,
     'animation': INCLUDE_DESC,
     'equation': INCLUDE_DESC,
-    'buttonmenu': INCLUDE_DESC,
+    'buttonmenu': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'buttondropdowngrid': NAME_FROM_SUBTREE_RULE,
     'pagetablist': INCLUDE_DESC,
     'canvas': INCLUDE_DESC,
-    'check menu item': INCLUDE_DESC,
-    'label': INCLUDE_DESC,
+    'check menu item': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'label': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
     'password text': INCLUDE_DESC,
     'popup menu': INCLUDE_DESC,
-    'radio menu item': INCLUDE_DESC,
-    'toggle button': INCLUDE_DESC,
+    'radio menu item': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'table column header': NAME_FROM_SUBTREE_RULE,
+    'table row header': NAME_FROM_SUBTREE_RULE,
+    'tear off menu item': NAME_FROM_SUBTREE_RULE,
+    'toggle button': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'parent menuitem': NAME_FROM_SUBTREE_RULE,
     'header': INCLUDE_DESC,
     'footer': INCLUDE_DESC,
     'entry': INCLUDE_DESC | INCLUDE_NAME,
@@ -230,7 +251,14 @@ this.UtteranceGenerator = {
     'heading': INCLUDE_DESC,
     'calendar': INCLUDE_DESC | INCLUDE_NAME,
     'combobox list': INCLUDE_DESC,
-    'combobox option': INCLUDE_DESC,
+    'combobox option': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
+    'listbox option': NAME_FROM_SUBTREE_RULE,
+    'listbox rich option': NAME_FROM_SUBTREE_RULE,
+    'gridcell': NAME_FROM_SUBTREE_RULE,
+    'check rich option': NAME_FROM_SUBTREE_RULE,
+    'term': NAME_FROM_SUBTREE_RULE,
+    'definition': NAME_FROM_SUBTREE_RULE,
+    'key': NAME_FROM_SUBTREE_RULE,
     'image map': INCLUDE_DESC,
     'option': INCLUDE_DESC,
     'listbox': INCLUDE_DESC,
@@ -314,12 +342,16 @@ this.UtteranceGenerator = {
   },
 
   _addName: function _addName(utterance, aAccessible, aFlags) {
-    let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
-    let utteranceOrder = gUtteranceOrder.value || 0;
+    let name;
+    if (Utils.getAttributes(aAccessible)['explicit-name'] === 'true' ||
+      (aFlags & INCLUDE_NAME)) {
+      name = aAccessible.name;
+    }
 
     if (name) {
+      let utteranceOrder = gUtteranceOrder.value || UTTERANCE_DESC_FIRST;
       utterance[utteranceOrder === UTTERANCE_DESC_FIRST ?
-        "push" : "unshift"](name);
+        'push' : 'unshift'](name);
     }
   },
 
