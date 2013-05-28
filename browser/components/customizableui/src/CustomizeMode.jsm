@@ -123,11 +123,11 @@ CustomizeMode.prototype = {
     let self = this;
     deck.addEventListener("transitionend", function customizeTransitionEnd() {
       deck.removeEventListener("transitionend", customizeTransitionEnd);
-
-      self._wrapToolbarItems();
-      self.populatePalette();
       self.dispatchToolboxEvent("customizationready");
     });
+
+    this._wrapToolbarItems();
+    this.populatePalette();
 
     this.visiblePalette.addEventListener("dragstart", this);
     this.visiblePalette.addEventListener("dragover", this);
@@ -273,46 +273,26 @@ CustomizeMode.prototype = {
   },
 
   depopulatePalette: function() {
-    let wrapper = this.visiblePalette.firstChild;
-
-    while (wrapper) {
-      let widgetNode = wrapper.firstChild;
-
-      let provider = CustomizableUI.getWidget(widgetNode.id);
-      // If provider is PROVIDER_SPECIAL, then it just gets thrown away.
-      if (provider = CustomizableUI.PROVIDER_XUL) {
-        if (wrapper.hasAttribute("itemdisabled")) {
-          widgetNode.disabled = true;
-        }
-
-        if (wrapper.hasAttribute("itemchecked")) {
-          widgetNode.checked = true;
-        }
-
-        if (wrapper.hasAttribute("itemcommand")) {
-          let commandID = wrapper.getAttribute("itemcommand");
-          widgetNode.setAttribute("command", commandID);
-
-          // Ensure node is in sync with its command after customizing.
-          let command = this.document.getElementById(commandID);
-          if (command && command.hasAttribute("disabled")) {
-            widgetNode.setAttribute("disabled",
-                                    command.getAttribute("disabled"));
-          }
-        }
-
-        this._stowedPalette.appendChild(widgetNode);
-      } else if (provider = CustomizableUI.PROVIDER_API) {
+    let paletteChild = this.visiblePalette.firstChild;
+    let nextChild;
+    while (paletteChild) {
+      nextChild = paletteChild.nextElementSibling;
+      let provider = CustomizableUI.getWidget(paletteChild.id).provider;
+      if (provider == CustomizableUI.PROVIDER_XUL) {
+        let unwrappedPaletteItem = this.unwrapToolbarItem(paletteChild);
+        this._stowedPalette.appendChild(unwrappedPaletteItem);
+      } else if (provider == CustomizableUI.PROVIDER_API) {
         //XXXunf Currently this doesn't destroy the (now unused) node. It would
         //       be good to do so, but we need to keep strong refs to it in
         //       CustomizableUI (can't iterate of WeakMaps), and there's the
         //       question of what behavior wrappers should have if consumers
         //       keep hold of them.
         //widget.destroyInstance(widgetNode);
+      } else if (provider == CustomizableUI.PROVIDER_SPECIAL) {
+        this.visiblePalette.removeChild(paletteChild);
       }
 
-      this.visiblePalette.removeChild(wrapper);
-      wrapper = this.visiblePalette.firstChild;
+      paletteChild = nextChild;
     }
     this.window.gNavToolbox.palette = this._stowedPalette;
   },
