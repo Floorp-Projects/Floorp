@@ -159,6 +159,15 @@ class MarionetteTestCase(CommonTestCase):
             qemu = self.marionette.extra_emulators[self.extra_emulator_index]
         return qemu
 
+    def wait_for_condition(self, method, timeout=30):
+        timeout = float(timeout) + time.time()
+        while time.time() < timeout:
+            value = method(self.marionette)
+            if value:
+                return value
+            time.sleep(0.5)
+        else:
+            raise TimeoutException("wait_for_condition timed out")
 
 class MarionetteJSTestCase(CommonTestCase):
 

@@ -76,18 +76,10 @@ HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLTextAreaElement,
-                                                nsGenericHTMLFormElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
-  tmp->mState.Unlink();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTextAreaElement,
-                                                  nsGenericHTMLFormElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
-  tmp->mState.Traverse(cb);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_3(HTMLTextAreaElement, nsGenericHTMLFormElement,
+                                     mValidity,
+                                     mControllers,
+                                     mState)
 
 NS_IMPL_ADDREF_INHERITED(HTMLTextAreaElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTextAreaElement, Element)
