@@ -3475,8 +3475,6 @@ var XULBrowserWindow = {
   },
 
   init: function () {
-    this.throbberElement = document.getElementById("navigator-throbber");
-
     // Bug 666809 - SecurityUI support for e10s
     if (gMultiProcessBrowser)
       return;
@@ -3490,7 +3488,6 @@ var XULBrowserWindow = {
 
   destroy: function () {
     // XXXjag to avoid leaks :-/, see bug 60729
-    delete this.throbberElement;
     delete this.stopCommand;
     delete this.reloadCommand;
     delete this.statusTextField;
@@ -3615,10 +3612,6 @@ var XULBrowserWindow = {
       if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
         this._busyUI = true;
 
-        // Turn the throbber on.
-        if (this.throbberElement)
-          this.throbberElement.setAttribute("busy", "true");
-
         // XXX: This needs to be based on window activity...
         this.stopCommand.removeAttribute("disabled");
         CombinedStopReload.switchToStop();
@@ -3662,10 +3655,6 @@ var XULBrowserWindow = {
 
       if (this._busyUI) {
         this._busyUI = false;
-
-        // Turn the throbber off.
-        if (this.throbberElement)
-          this.throbberElement.removeAttribute("busy");
 
         this.stopCommand.setAttribute("disabled", "true");
         CombinedStopReload.switchToReload(aRequest instanceof Ci.nsIRequest);
