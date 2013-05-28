@@ -144,6 +144,9 @@ Machine::Code::Code(bool is_constraint, const byte * bytecode_begin, const byte 
  :  _code(0), _data(0), _data_size(0), _instr_count(0), _max_ref(0), _status(loaded),
     _constraint(is_constraint), _modify(false), _delete(false), _own(true)
 {
+#ifdef GRAPHITE2_TELEMETRY
+    telemetry::category _code_cat(face.tele.code);
+#endif
     assert(bytecode_begin != 0);
     if (bytecode_begin == bytecode_end)
     {
@@ -210,12 +213,16 @@ Machine::Code::Code(bool is_constraint, const byte * bytecode_begin, const byte 
     assert((bytecode_end - bytecode_begin) >= std::ptrdiff_t(_data_size));
     _code = static_cast<instr *>(realloc(_code, (_instr_count+1)*sizeof(instr)));
     _data = static_cast<byte *>(realloc(_data, _data_size*sizeof(byte)));
-    
-    // Make this RET_ZERO, we should never reach this but just in case ...
-    _code[_instr_count] = op_to_fn[RET_ZERO].impl[_constraint];
 
     if (!_code)
         failure(alloc_failed);
+
+    // Make this RET_ZERO, we should never reach this but just in case ...
+    _code[_instr_count] = op_to_fn[RET_ZERO].impl[_constraint];
+
+#ifdef GRAPHITE2_TELEMETRY
+    telemetry::count_bytes(_data_size + (_instr_count+1)*sizeof(instr));
+#endif
 }
 
 Machine::Code::~Code() throw ()
