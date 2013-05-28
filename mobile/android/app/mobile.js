@@ -362,6 +362,9 @@ pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inch
 // (see bug 700023, bug 846832, bug 847344)
 pref("gfx.font_rendering.graphite.enabled", false);
 
+// Allow 24-bit colour when the hardware supports it
+pref("gfx.android.rgb16.force", false);
+
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
