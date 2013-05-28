@@ -39,39 +39,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           accOrElmOrID: "list",
           expected: [
-            ["list 1 items", "First item", "1. ", "list one"],
-            ["1. ", "list one", "First item", "list 1 items"]
+            ["list 1 items", "First item", "1.", "list one"],
+            ["1.", "list one", "First item", "list 1 items"]
           ]
         }, {
           accOrElmOrID: "dlist",
           expected: [
-            ["definition list 0.5 items", "dd one "],
-            ["dd one ", "definition list 0.5 items"]
+            ["definition list 0.5 items", "dd one"],
+            ["dd one", "definition list 0.5 items"]
           ]
         }, {
           accOrElmOrID: "li_one",
           expected: [
-            ["list 1 items", "First item", "1. ", "list one"],
-            ["1. ", "list one", "First item", "list 1 items"]
+            ["list 1 items", "First item", "1.", "list one"],
+            ["1.", "list one", "First item", "list 1 items"]
           ]
         }, {
           accOrElmOrID: "cell",
           expected: [[
-            "table", "Fruits and vegetables", "list 4 items", "First item", " ",
-            "link", "Apples", " ", "link", "Bananas", " ", "link", "Peaches",
-            "Last item", " ", "link", "Plums"
+            "table", "Fruits and vegetables", "list 4 items", "First item",
+            "link", "Apples", "link", "Bananas", "link", "Peaches",
+            "Last item", "link", "Plums"
           ], [
-            " ", "Apples", "link", "First item", " ", "Bananas", "link", " ",
-            "Peaches", "link", " ", "Plums", "link", "Last item",
-            "list 4 items", "Fruits and vegetables", "table"
+            "Apples", "link", "First item", "Bananas", "link", "Peaches",
+            "link", "Plums", "link", "Last item", "list 4 items",
+            "Fruits and vegetables", "table"
           ]]
         }, {
           // Test pivot to list from li_one.
           accOrElmOrID: "list",
           oldAccOrElmOrID: "li_one",
           expected: [
-            ["list 1 items", "First item", "1. ", "list one"],
-            ["1. ", "list one", "First item", "list 1 items"]
+            ["list 1 items", "First item", "1.", "list one"],
+            ["1.", "list one", "First item", "list 1 items"]
           ]
         }, {
           // Test pivot to "apples" link from the table cell.
@@ -120,13 +120,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <div id="content" style="display: none"></div>
       <pre id="test"></pre>
       <a id="anchor" href="#test" title="title"></a>
-      <textarea id="textarea" cols="80" rows="5">This is the text area text.</textarea>
+      <textarea id="textarea" cols="80" rows="5">
+        This is the text area text.
+      </textarea>
       <h1 id="heading" title="Test heading"></h1>
       <ol id="list">
         <li id="li_one">list one</li>
       </ol>
       <dl id="dlist">
-        <dd id="dd_one">dd one</li>
+        <dd id="dd_one">
+          dd one
+        </dd>
       </dl>
       <table>
         <caption>Fruits and vegetables</caption>
@@ -136,7 +140,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
               <li><a id="apples" href="#">Apples</a></li>
               <li><a id="bananas" href="#">Bananas</a></li>
               <li><a href="#">Peaches</a></li>
-              <li><a href="#">Plums</a></li>
+              <li>
+                <a href="#">
+                  Plums
+                </a>
+              </li>
             </ul>
           </td>
         </tr>

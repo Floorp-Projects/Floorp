@@ -41,31 +41,32 @@
       }, {
         accOrElmOrID: "list",
         expected: ["list 2 items", "Test List", "First item", "Top of the list",
-          "1. ", "list one", "Last item", "2. ", "list two"]
+          "1.", "list one", "Last item", "2.", "list two"]
       }, {
         accOrElmOrID: "dlist",
-        expected: ["definition list 0.5 items", "Test Definition List", "dd one "]
+        expected: ["definition list 0.5 items", "Test Definition List",
+          "dd one"]
       }, {
         accOrElmOrID: "li_one",
         expected: ["list 2 items", "Test List", "First item", "Top of the list"]
       }, {
         accOrElmOrID: "li_two",
-        expected: ["list 2 items", "Test List", "Last item", "2. ", "list two"]
+        expected: ["list 2 items", "Test List", "Last item", "2.", "list two"]
       }, {
         accOrElmOrID: "cell",
         expected: ["table", "Fruits and vegetables", "List of Fruits",
-          "list 4 items","First item", " ", "link", "Apples", " ", "link",
-          "Bananas", " ", "link", "Peaches", "Last item", " ", "link", "Plums"]
+          "list 4 items","First item", "link", "Apples", "link", "Bananas",
+          "link", "Peaches", "Last item", "link", "Plums"]
       }, {
         accOrElmOrID: "app.net",
-        expected: ["list 2 items", "First item", " ", "link", "star",
-          "Last item", " ", "link", "repost"]
+        expected: ["list 2 items", "First item", "link", "star", "Last item",
+          "link", "repost"]
       }, {
         // Test pivot to list from li_one.
         accOrElmOrID: "list",
         oldAccOrElmOrID: "li_one",
         expected: ["list 2 items", "Test List", "First item", "Top of the list",
-          "1. ", "list one", "Last item", "2. ", "list two"]
+          "1.", "list one", "Last item", "2.", "list two"]
       }, {
         // Test pivot to li_one from list.
         accOrElmOrID: "li_one",
@@ -81,9 +82,9 @@
         // Test pivot to the table cell from the "apples" link.
         accOrElmOrID: "cell",
         oldAccOrElmOrID: "apples",
-        expected: ["List of Fruits", "list 4 items", "First item", " ", "link",
-          "Apples", " ", "link", "Bananas", " ", "link", "Peaches", "Last item",
-          " ", "link", "Plums"]
+        expected: ["List of Fruits", "list 4 items", "First item", "link",
+          "Apples", "link", "Bananas", "link", "Peaches", "Last item", "link",
+          "Plums"]
       }];
 
       // Test various explicit names vs the utterance generated from subtrees.
@@ -109,19 +110,25 @@
     <div id="content" style="display: none"></div>
     <pre id="test"></pre>
     <button id="button1" aria-label="Press me">This is not a name</button>
-    <button id="button2">Press me</button>
+    <button id="button2">
+      Press me
+    </button>
     <a id="anchor1" href="#test" title="title"></a>
     <a id="anchor2" href="#test">This is a link</a>
     <textarea id="textarea1" title="Test Text Area" cols="80" rows="5">This is the text area text.</textarea>
-    <textarea id="textarea2" cols="80" rows="5">This is the text area text.</textarea>
+    <textarea id="textarea2" cols="80" rows="5">
+      This is the text area text.
+    </textarea>
     <h1 id="heading1" title="Test heading">This is the heading.</h1>
-    <h1 id="heading2">This is the heading.</h1>
+    <h1 id="heading2">
+      This is the heading.
+    </h1>
     <ol id="list" title="Test List">
       <li id="li_one" aria-label="Top of the list">list one</li>
       <li id="li_two">list two</li>
     </ol>
     <dl id="dlist" title="Test Definition List">
-      <dd id="dd_one">dd one</li>
+      <dd id="dd_one">dd one</dd>
     </dl>
     <table>
       <caption>Fruits and vegetables</caption>
@@ -131,7 +138,12 @@
             <li><a id="apples" href="#">Apples</a></li>
             <li><a id="bananas" href="#">Bananas</a></li>
             <li><a href="#">Peaches</a></li>
-            <li><a href="#">Plums</a></li>
+            <li>
+              <a href="#">
+
+                Plums
+              </a>
+            </li>
           </ul>
         </td>
       </tr>
