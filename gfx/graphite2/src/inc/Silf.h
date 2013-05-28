@@ -82,6 +82,7 @@ public:
     uint8 aPseudo() const { return m_aPseudo; }
     uint8 aBreak() const { return m_aBreak; }
     uint8 aMirror() const {return m_aMirror; }
+    uint8 aPassBits() const { return m_aPassBits; }
     uint8 substitutionPass() const { return m_sPass; }
     uint8 positionPass() const { return m_pPass; }
     uint8 justificationPass() const { return m_jPass; }
@@ -111,7 +112,7 @@ private:
     uint8           m_sPass, m_pPass, m_jPass, m_bPass,
                     m_flags;
 
-    uint8   m_aPseudo, m_aBreak, m_aUser, m_aBidi, m_aMirror,
+    uint8   m_aPseudo, m_aBreak, m_aUser, m_aBidi, m_aMirror, m_aPassBits,
             m_iMaxComp;
     uint16  m_aLig,
             m_numPseudo,

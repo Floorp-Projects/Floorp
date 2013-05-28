@@ -123,8 +123,10 @@ public:
     int addFeatures(const Features& feats) { m_feats.push_back(feats); return m_feats.size() - 1; }
     uint32 getFeature(int index, uint8 findex) const { const FeatureRef* pFR=m_face->theSill().theFeatureMap().featureRef(findex); if (!pFR) return 0; else return pFR->getFeatureVal(m_feats[index]); }
     void dir(int8 val) { m_dir = val; }
-    uint16 glyphAttr(uint16 gid, uint16 gattr) const { const GlyphFace * p = m_face->glyphs().glyphSafe(gid); return p ? p->attrs()[gattr] : 0; }
-    uint16 getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const;
+    unsigned int passBits() const { return m_passBits; }
+    void mergePassBits(const unsigned int val) { m_passBits &= val; }
+    int16 glyphAttr(uint16 gid, uint16 gattr) const { const GlyphFace * p = m_face->glyphs().glyphSafe(gid); return p ? p->attrs()[gattr] : 0; }
+    int32 getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const;
     float glyphAdvance(uint16 gid) const { return m_face->glyphs().glyph(gid)->theAdvance().x; }
     const Rect &theGlyphBBoxTemporary(uint16 gid) const { return m_face->glyphs().glyph(gid)->theBBox(); }   //warning value may become invalid when another glyph is accessed
     Slot *findRoot(Slot *is) const { return is->attachedTo() ? findRoot(is->attachedTo()) : is; }
@@ -163,7 +165,8 @@ private:
     Slot          * m_last;             // last slot in segment
     unsigned int    m_bufSize,          // how big a buffer to create when need more slots
                     m_numGlyphs,
-                    m_numCharinfo;      // size of the array and number of input characters
+                    m_numCharinfo,      // size of the array and number of input characters
+                    m_passBits;         // if bit set then skip pass
     int             m_defaultOriginal;  // number of whitespace chars in the string
     int8            m_dir;
 };
@@ -181,7 +184,7 @@ void Segment::finalise(const Font *font)
 }
 
 inline
-uint16 Segment::getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const {
+int32 Segment::getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const {
     if (attrLevel > 0)
     {
         Slot *is = findRoot(iSlot);
