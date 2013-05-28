@@ -1,22 +1,24 @@
-#
+#!/usr/bin/env python
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from automation import Automation
-from mozfile import NamedTemporaryFile
+# This script exists to generate the Certificate Authority and server
+# certificates used for SSL testing in Mochitest. The already generated
+# certs are located at $topsrcdir/build/pgo/certs/ .
+
+import mozinfo
 import os
 import random
 import re
 import shutil
+import subprocess
 import sys
+import tempfile
 
-#expand DIST_BIN = __XPC_BIN_PATH__
-#expand BIN_SUFFIX = __BIN_SUFFIX__
-#expand PROFILE_DIR = __PROFILE_DIR__
-#expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
-
-automation = Automation()
+from mozbuild.base import MozbuildObject
+from mozfile import NamedTemporaryFile
+from mozprofile.permissions import ServerLocations
 
 dbFiles = [
   re.compile("^cert[0-9]+\.db$"),
@@ -41,11 +43,18 @@ def dbFilesExist(path):
 
 
 def runUtil(util, args, inputdata = None):
-  if inputdata:
-    proc = automation.Process([util] + args, env = automation.environment(), stdin = automation.PIPE)
-    proc.communicate(inputdata)
-    return proc.returncode
-  return automation.Process([util] + args, env = automation.environment()).wait()
+  env = os.environ.copy()
+  if mozinfo.os == "linux":
+    pathvar = "LD_LIBRARY_PATH"
+    app_path = os.path.dirname(util)
+    if pathvar in env:
+      env[pathvar] = "%s%s%s" % (app_path, os.pathsep, env[pathvar])
+    else:
+      env[pathvar] = app_path
+  proc = subprocess.Popen([util] + args, env=env,
+                          stdin=subprocess.PIPE if inputdata else None)
+  proc.communicate(inputdata)
+  return proc.returncode
 
 
 def createRandomFile(randomFile):
@@ -53,48 +62,43 @@ def createRandomFile(randomFile):
     randomFile.write(chr(random.randint(0, 255)))
 
 
-def createCertificateAuthority(profileDir, srcDir):
-  certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
-  pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
+def createCertificateAuthority(build, srcDir):
+  certutil = build.get_binary_path(what="certutil")
+  pk12util = build.get_binary_path(what="pk12util")
 
-  tempDbDir = os.path.join(profileDir, ".temp")
-  if not os.path.exists(tempDbDir):
-    os.mkdir(tempDbDir)
-
+  #TODO: mozfile.TemporaryDirectory
+  tempDbDir = tempfile.mkdtemp()
   with NamedTemporaryFile() as pwfile, NamedTemporaryFile() as rndfile:
     pgoCAModulePathSrc = os.path.join(srcDir, "pgoca.p12")
     pgoCAPathSrc = os.path.join(srcDir, "pgoca.ca")
 
     pwfile.write("\n")
 
-    unlinkDbFiles(tempDbDir)
-
     # Create temporary certification database for CA generation
     status = runUtil(certutil, ["-N", "-d", tempDbDir, "-f", pwfile.name])
-    if status != 0:
+    if status:
       return status
 
     createRandomFile(rndfile)
     status = runUtil(certutil, ["-S", "-d", tempDbDir, "-s", "CN=Temporary Certificate Authority, O=Mozilla Testing, OU=Profile Guided Optimization", "-t", "C,,", "-x", "-m", "1", "-v", "120", "-n", "pgo temporary ca", "-2", "-f", pwfile.name, "-z", rndfile.name], "Y\n0\nN\n")
-    if status != 0:
+    if status:
       return status
 
     status = runUtil(certutil, ["-L", "-d", tempDbDir, "-n", "pgo temporary ca", "-a", "-o", pgoCAPathSrc, "-f", pwfile.name])
-    if status != 0:
+    if status:
       return status
 
     status = runUtil(pk12util, ["-o", pgoCAModulePathSrc, "-n", "pgo temporary ca", "-d", tempDbDir, "-w", pwfile.name, "-k", pwfile.name])
-    if status != 0:
+    if status:
       return status
 
-    unlinkDbFiles(tempDbDir)
-    os.rmdir(tempDbDir)
+  shutil.rmtree(tempDbDir)
   return 0
 
 
-def createSSLServerCertificate(profileDir, srcDir):
-  certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
-  pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
+def createSSLServerCertificate(build, srcDir):
+  certutil = build.get_binary_path(what="certutil")
+  pk12util = build.get_binary_path(what="pk12util")
 
   with NamedTemporaryFile() as pwfile, NamedTemporaryFile() as rndfile:
     pgoCAPath = os.path.join(srcDir, "pgoca.p12")
@@ -107,19 +111,25 @@ def createSSLServerCertificate(profileDir, srcDir):
 
       # Create certification database for ssltunnel
       status = runUtil(certutil, ["-N", "-d", srcDir, "-f", pwfile.name])
-      if status != 0:
+      if status:
         return status
 
       status = runUtil(pk12util, ["-i", pgoCAPath, "-w", pwfile.name, "-d", srcDir, "-k", pwfile.name])
-      if status != 0:
+      if status:
         return status
 
     # Generate automatic certificate
-    locations = automation.readLocations(os.path.join(profileDir, "server-locations.txt"))
-    locations.pop(0)
+    locations = ServerLocations(os.path.join(build.topsrcdir,
+                                             "build", "pgo",
+                                             "server-locations.txt"))
+    iterator = iter(locations)
+
+    # Skips the first entry, I don't know why: bug 879740
+    iterator.next()
+
     locationsParam = ""
     firstLocation = ""
-    for loc in locations:
+    for loc in iterator:
       if loc.scheme == "https" and "nocert" not in loc.options:
         customCertOption = False
         customCertRE = re.compile("^cert=(?:\w+)")
@@ -137,7 +147,7 @@ def createSSLServerCertificate(profileDir, srcDir):
           if firstLocation == "":
             firstLocation = loc.host
 
-    if firstLocation == "":
+    if not firstLocation:
       print "Nothing to generate, no automatic secure hosts specified"
     else:
       createRandomFile(rndfile)
@@ -146,26 +156,27 @@ def createSSLServerCertificate(profileDir, srcDir):
       # Ignore the result, the certificate may not be present when new database is being built
 
       status = runUtil(certutil, ["-S", "-s", "CN=%s" % firstLocation, "-t", "Pu,,", "-c", "pgo temporary ca", "-m", "2", "-8", locationsParam, "-v", "120", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfile.name, "-f", pwfile.name])
-      if status != 0:
+      if status:
         return status
 
   return 0
-
 
 if len(sys.argv) == 1:
   print "Specify --gen-server or --gen-ca"
   sys.exit(1)
 
+build = MozbuildObject.from_environment()
+certdir = os.path.join(build.topsrcdir, "build", "pgo", "certs")
 if sys.argv[1] == "--gen-server":
-  certificateStatus = createSSLServerCertificate(PROFILE_DIR, CERTS_SRC_DIR)
-  if certificateStatus != 0:
+  certificateStatus = createSSLServerCertificate(build, certdir)
+  if certificateStatus:
     print "TEST-UNEXPECTED-FAIL | SSL Server Certificate generation"
 
   sys.exit(certificateStatus)
 
 if sys.argv[1] == "--gen-ca":
-  certificateStatus = createCertificateAuthority(PROFILE_DIR, CERTS_SRC_DIR)
-  if certificateStatus != 0:
+  certificateStatus = createCertificateAuthority(build, certdir)
+  if certificateStatus:
     print "TEST-UNEXPECTED-FAIL | Certificate Authority generation"
   else:
     print "\n\n"
