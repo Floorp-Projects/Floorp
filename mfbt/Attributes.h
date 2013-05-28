@@ -382,16 +382,26 @@
  * MOZ_STACK_CLASS: Applies to all classes. Any class with this annotation is
  *   expected to live on the stack, so it is a compile-time error to use it, or
  *   an array of such objects, as a global or static variable, or as the type of
- *   a new expression (unless placement new is being used). It may be a base or
- *   a member of another class only if both classes are marked with this
- *   annotation.
+ *   a new expression (unless placement new is being used). If a member of
+ *   another class uses this class, or if another class inherits from this
+ *   class, then it is considered to be a stack class as well, although this
+ *   attribute need not be provided in such cases.
+ * MOZ_NONHEAP_CLASS: Applies to all classes. Any class with this annotation is
+ *   expected to live on the stack or in static storage, so it is a compile-time
+ *   error to use it, or an array of such objects, as the type of a new
+ *   expression (unless placement new is being used). If a member of another
+ *   class uses this class, or if another class inherits from this class, then
+ *   it is considered to be a stack class as well, although this attribute need
+ *   not be provided in such cases.
  */
 #ifdef MOZ_CLANG_PLUGIN
 # define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))
 # define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
+# define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
 #else
 # define MOZ_MUST_OVERRIDE /* nothing */
 # define MOZ_STACK_CLASS /* nothing */
+# define MOZ_NONHEAP_CLASS /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
 
 #endif /* __cplusplus */
