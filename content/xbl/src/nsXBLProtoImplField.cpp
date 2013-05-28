@@ -105,7 +105,7 @@ static const uint32_t XBLPROTO_SLOT = 0;
 static const uint32_t FIELD_SLOT = 1;
 
 bool
-ValueHasISupportsPrivate(const JS::Value &v)
+ValueHasISupportsPrivate(JS::Handle<JS::Value> v)
 {
   if (!v.isObject()) {
     return false;
@@ -122,6 +122,15 @@ ValueHasISupportsPrivate(const JS::Value &v)
   return (clasp->flags & HAS_PRIVATE_NSISUPPORTS) == HAS_PRIVATE_NSISUPPORTS;
 }
 
+#ifdef DEBUG
+static bool
+ValueHasISupportsPrivate(JSContext* cx, const JS::Value& aVal)
+{
+    JS::Rooted<JS::Value> v(cx, aVal);
+    return ValueHasISupportsPrivate(v);
+}
+#endif
+
 // Define a shadowing property on |this| for the XBL field defined by the
 // contents of the callee's reserved slots.  If the property was defined,
 // *installed will be true, and idp will be set to the property name that was
@@ -137,7 +146,7 @@ InstallXBLField(JSContext* cx,
   //
   // FieldAccessorGuard already determined whether |thisObj| was acceptable as
   // |this| in terms of not throwing a TypeError.  Assert this for good measure.
-  MOZ_ASSERT(ValueHasISupportsPrivate(JS::ObjectValue(*thisObj)));
+  MOZ_ASSERT(ValueHasISupportsPrivate(cx, JS::ObjectValue(*thisObj)));
 
   // But there are some cases where we must accept |thisObj| but not install a
   // property on it, or otherwise touch it.  Hence this split of |this|-vetting
@@ -222,7 +231,7 @@ InstallXBLField(JSContext* cx,
 bool
 FieldGetterImpl(JSContext *cx, JS::CallArgs args)
 {
-  const JS::Value &thisv = args.thisv();
+  JS::Handle<JS::Value> thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
   JS::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
@@ -263,7 +272,7 @@ FieldGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 bool
 FieldSetterImpl(JSContext *cx, JS::CallArgs args)
 {
-  const JS::Value &thisv = args.thisv();
+  JS::Handle<JS::Value> thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
   JS::Rooted<JSObject*> thisObj(cx, &thisv.toObject());

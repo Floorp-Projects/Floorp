@@ -415,10 +415,10 @@ IsTypedArrayProtoClass(const Class *clasp)
 }
 
 bool
-IsTypedArrayConstructor(const Value &v, uint32_t type);
+IsTypedArrayConstructor(HandleValue v, uint32_t type);
 
 bool
-IsTypedArrayBuffer(const Value &v);
+IsTypedArrayBuffer(HandleValue v);
 
 static inline unsigned
 TypedArrayShift(ArrayBufferView::ViewType viewType)
@@ -450,7 +450,7 @@ class DataViewObject : public ArrayBufferViewObject
   private:
     static Class protoClass;
 
-    static bool is(const Value &v) {
+    static bool is(HandleValue v) {
         return v.isObject() && v.toObject().hasClass(&class_);
     }
 
