@@ -2400,6 +2400,17 @@ BaselineCompiler::emit_JSOP_SETRVAL()
 }
 
 bool
+BaselineCompiler::emit_JSOP_CALLEE()
+{
+    JS_ASSERT(function());
+    frame.syncStack(0);
+    masm.loadPtr(frame.addressOfCallee(), R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_POPV()
 {
     return emit_JSOP_SETRVAL();
