@@ -364,6 +364,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DIRECTION_RTL                  1
 #define NS_STYLE_DIRECTION_INHERIT              2
 
+// See nsStyleVisibility
+#define NS_STYLE_WRITING_MODE_HORIZONTAL_TB     0
+#define NS_STYLE_WRITING_MODE_VERTICAL_LR       1
+#define NS_STYLE_WRITING_MODE_VERTICAL_RL       2
+
 // See nsStyleDisplay
 #define NS_STYLE_DISPLAY_NONE                   0
 #define NS_STYLE_DISPLAY_BLOCK                  1
