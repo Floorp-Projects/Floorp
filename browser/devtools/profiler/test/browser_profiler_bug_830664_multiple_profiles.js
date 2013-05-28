@@ -33,6 +33,11 @@ function getCleoControls(doc) {
   ];
 }
 
+function sendFromProfile(uid, msg) {
+  let [win, doc] = getProfileInternals(uid);
+  win.parent.postMessage({ uid: uid, status: msg }, "*");
+}
+
 function startProfiling() {
   gPanel.profiles.get(gPanel.activeProfile.uid).once("started", function () {
     setTimeout(function () {
