@@ -291,3 +291,15 @@ SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
 SettingsListener.observe('app.update.interval', 86400, function(value) {
   Services.prefs.setIntPref('app.update.interval', value);
 });
+
+// ================ Debug ================
+// XXX could factor out into a settings->pref map.
+SettingsListener.observe("debug.fps.enabled", false, function(value) {
+  Services.prefs.setBoolPref("layers.acceleration.draw-fps", value);
+});
+SettingsListener.observe("debug.paint-flashing.enabled", false, function(value) {
+  Services.prefs.setBoolPref("nglayout.debug.paint_flashing", value);
+});
+SettingsListener.observe("layers.draw-borders", false, function(value) {
+  Services.prefs.setBoolPref("layers.draw-borders", value);
+});
