@@ -348,10 +348,8 @@
                     // Since the play button will be showing, we don't want to
                     // show the throbber behind it. The throbber here will
                     // only show if needed after the play button has been pressed.
-                    if (!this.clickToPlay.hidden) {
-                        this.startFadeOut(this.statusOverlay, true);
+                    if (!this.clickToPlay.hidden)
                         return;
-                    }
 
                     var show = false;
                     if (this.video.seeking ||
@@ -465,26 +463,6 @@
                     this.video.addEventListener("media-showStatistics", this._handleCustomEventsBound, false, true);
                 },
 
-                setupNewLoadState : function() {
-                    // videocontrols.css hides the control bar by default, because if script
-                    // is disabled our binding's script is disabled too (bug 449358). Thus,
-                    // the controls are broken and we don't want them shown. But if script is
-                    // enabled, the code here will run and can explicitly unhide the controls.
-                    //
-                    // For videos with |autoplay| set, we'll leave the controls initially hidden,
-                    // so that they don't get in the way of the playing video. Otherwise we'll
-                    // go ahead and reveal the controls now, so they're an obvious user cue.
-                    //
-                    // (Note: the |controls| attribute is already handled via layout/style/html.css)
-                    var shouldShow = this.video.paused &&
-                       (!(this.video.autoplay && this.video.mozAutoplayEnabled) ||
-                        !this.dynamicControls);
-                    // Hide the overlay if the video time is non-zero or if an error occurred to workaround bug 718107.
-                    this.startFade(this.clickToPlay, shouldShow && !this.isAudioOnly &&
-                                   this.video.currentTime == 0 && !this.hasError(), true);
-                    this.startFade(this.controlBar, shouldShow, true);
-                },
-
                 handleCustomEvents : function (e) {
                     if (!e.isTrusted)
                         return;
@@ -575,8 +553,6 @@
                             this.statusIcon.setAttribute("type", "throbber");
                             this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                             this.setPlayButtonState(true);
-                            this.setupNewLoadState();
-                            this.setupStatusFader();
                             break;
                         case "progress":
                             this.statusIcon.removeAttribute("stalled");
@@ -620,7 +596,6 @@
                             break;
                         case "emptied":
                             this.bufferBar.value = 0;
-                            this.showPosition(0, 0);
                             break;
                         case "seeking":
                             this.showBuffered();
@@ -1404,7 +1379,23 @@
                     this.stats.framesPainted   = document.getAnonymousElementByAttribute(binding, "class", "statFramesPainted");
 
                     this.setupInitialState();
-                    this.setupNewLoadState();
+
+                    // videocontrols.css hides the control bar by default, because if script
+                    // is disabled our binding's script is disabled too (bug 449358). Thus,
+                    // the controls are broken and we don't want them shown. But if script is
+                    // enabled, the code here will run and can explicitly unhide the controls.
+                    //
+                    // For videos with |autoplay| set, we'll leave the controls initially hidden,
+                    // so that they don't get in the way of the playing video. Otherwise we'll
+                    // go ahead and reveal the controls now, so they're an obvious user cue.
+                    //
+                    // (Note: the |controls| attribute is already handled via layout/style/html.css)
+                    var shouldShow = (!(this.video.autoplay && this.video.mozAutoplayEnabled) || !this.dynamicControls);
+                    // Hide the overlay if the video time is non-zero or if the video is already playing
+                    // or if an error occurred to workaround bug 718107.
+                    this.startFade(this.clickToPlay, shouldShow && this.video.paused && !this.isAudioOnly &&
+                                   this.video.currentTime == 0 && !this.hasError(), true);
+                    this.startFade(this.controlBar, shouldShow, true);
 
                     // Use the handleEvent() callback for all media events.
                     // The "error" event listener must capture, so that it can trap error events
