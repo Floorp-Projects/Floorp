@@ -37,18 +37,26 @@ void uwt__stop();
 // and can safely release any resources.
 void uwt__deinit();
 
-// Registers a sampler thread for profiling.  Threads must be registered
-// before they are allowed to call utb__acquire_empty_buffer or
-// utb__release_full_buffer.
+// Registers a sampler thread for profiling.  Threads must be
+// registered before calls to call utb__acquire_empty_buffer or
+// utb__release_full_buffer have any effect.  If stackTop is
+// NULL, the call is ignored.
 void uwt__register_thread_for_profiling(void* stackTop);
 
-// RUNS IN SIGHANDLER CONTEXT
+// Deregister a sampler thread for profiling.
+void uwt__unregister_thread_for_profiling();
+
+// RUNS IN SIGHANDLER CONTEXT 
 // Called in the sampled thread (signal) context.  Get an empty buffer
 // into which ProfileEntries can be put.  It may return NULL if no
 // empty buffers can be found, which will be the case if the unwinder
 // thread(s) have fallen behind for some reason.  In this case the
-// sampled thread must simply give up and return from the signal handler
-// immediately, else it risks deadlock.
+// sampled thread must simply give up and return from the signal
+// handler immediately, else it risks deadlock.
+//
+// If the calling thread has not previously registered itself for
+// profiling via uwt__register_thread_for_profiling, this routine
+// returns NULL.
 UnwinderThreadBuffer* uwt__acquire_empty_buffer();
 
 // RUNS IN SIGHANDLER CONTEXT

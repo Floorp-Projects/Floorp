@@ -169,7 +169,8 @@ LazyIdleThread::EnsureThread()
 void
 LazyIdleThread::InitThread()
 {
-  profiler_register_thread(mName.get());
+  char aLocal;
+  profiler_register_thread(mName.get(), &aLocal);
 
   PR_SetCurrentThreadName(mName.get());
 
