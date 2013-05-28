@@ -134,7 +134,6 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
                                    int aSurfaceWidth, int aSurfaceHeight)
   : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
-  , mIsTesting(false)
   , mPaused(false)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
@@ -452,8 +451,7 @@ CompositorParent::Composite()
     }
   }
 
-  TimeStamp time = mIsTesting ? mTestTime : mLastCompose;
-  bool requestNextFrame = mCompositionManager->TransformShadowTree(time);
+  bool requestNextFrame = mCompositionManager->TransformShadowTree(mLastCompose);
   if (requestNextFrame) {
     ScheduleComposition();
   }
@@ -650,19 +648,6 @@ CompositorParent* CompositorParent::RemoveCompositor(uint64_t id)
   CompositorParent *retval = it->second;
   sCompositorMap->erase(it);
   return retval;
-}
-
-/* static */ void
-CompositorParent::SetTimeAndSampleAnimations(TimeStamp aTime, bool aIsTesting)
-{
-  if (!sCompositorMap) {
-    return;
-  }
-  for (CompositorMap::iterator it = sCompositorMap->begin(); it != sCompositorMap->end(); ++it) {
-    it->second->mIsTesting = aIsTesting;
-    it->second->mTestTime = aTime;
-    it->second->mCompositionManager->TransformShadowTree(aTime);
-  }
 }
 
 typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;
