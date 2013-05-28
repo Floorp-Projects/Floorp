@@ -624,6 +624,13 @@ BaselineCompiler::emit_JSOP_POP()
 }
 
 bool
+BaselineCompiler::emit_JSOP_POPN()
+{
+    frame.popn(GET_UINT16(pc));
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_DUP()
 {
     // Keep top stack value in R0, sync the rest so that we can use R1. We use
@@ -2389,6 +2396,17 @@ BaselineCompiler::emit_JSOP_SETRVAL()
     storeValue(frame.peek(-1), frame.addressOfReturnValue(), R2);
     masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
     frame.pop();
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_CALLEE()
+{
+    JS_ASSERT(function());
+    frame.syncStack(0);
+    masm.loadPtr(frame.addressOfCallee(), R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
+    frame.push(R0);
     return true;
 }
 

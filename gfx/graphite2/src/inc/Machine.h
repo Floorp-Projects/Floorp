@@ -36,7 +36,7 @@ of the License or (at your option) any later version.
 #include "inc/Main.h"
 
 #if defined(__GNUC__)
-#if defined(__clang__)
+#if defined(__clang__) || (__GNUC__ * 100 + __GNUC_MINOR__ * 10) < 430
 #define     HOT
 #if defined(__x86_64)
 #define     REGPARM(n)      __attribute__((regparm(n)))

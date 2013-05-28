@@ -3232,7 +3232,12 @@ _cairo_d2d_paint(void			*surface,
     op = _cairo_d2d_simplify_operator(op, source);
 
     if (op == CAIRO_OPERATOR_SOURCE) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	if (!clip) {
+	    _cairo_d2d_clear(d2dsurf, NULL);
+	    op = CAIRO_OPERATOR_OVER;
+	} else {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
     }
 
     if (op == CAIRO_OPERATOR_CLEAR) {
