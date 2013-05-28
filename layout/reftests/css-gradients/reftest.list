@@ -1,9 +1,9 @@
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) == linear-1a.html linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) == linear-1b.html linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) == linear-keywords-1a.html linear-keywords-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) == linear-keywords-1b.html linear-keywords-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) == linear-percent.html linear-percent-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,92400) == linear-mix.html linear-mix-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-1a.html linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-1b.html linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-keywords-1a.html linear-keywords-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-keywords-1b.html linear-keywords-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fails-if(Android) == linear-percent.html linear-percent-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,92400) fails-if(Android) == linear-mix.html linear-mix-ref.html
 == linear-diagonal-1a.html linear-diagonal-1-ref.html
 == linear-diagonal-1b.html linear-diagonal-1-ref.html
 == linear-diagonal-1c.html linear-diagonal-1-ref.html
@@ -38,11 +38,11 @@ fails-if(d2d) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
 == linear-stops-1d.html linear-stops-1-ref.html
 == linear-stops-1e.html linear-stops-1-ref.html
 == linear-stops-1f.html linear-stops-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) == linear-vertical-1a.html linear-vertical-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) == linear-vertical-1b.html linear-vertical-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) == linear-vertical-1c.html linear-vertical-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) == linear-vertical-1d.html linear-vertical-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) == linear-vertical-1e.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1a.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1b.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1c.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1d.html linear-vertical-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fails-if(Android) == linear-vertical-1e.html linear-vertical-1-ref.html
 == linear-vertical-subpixel-1.html linear-vertical-subpixel-1-ref.html
 == linear-viewport.html linear-viewport-ref.html
 == linear-zero-length-1a.html linear-zero-length-1-ref.html
@@ -50,15 +50,15 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) == linear-vertical-1e.html line
 == linear-zero-length-1c.html linear-zero-length-1-ref.html
 == nostops.html about:blank
 == onestop.html about:blank
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) random-if(d2d) == radial-1a.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) random-if(d2d) == radial-1b.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) random-if(d2d) == radial-1c.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) == radial-2a.html radial-2-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) == radial-2b.html radial-2-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) == radial-2c.html radial-2-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) == radial-2d.html radial-2-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) == radial-2e.html radial-2-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) == radial-2f.html radial-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) fails-if(Android) random-if(d2d) == radial-1a.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) fails-if(Android) random-if(d2d) == radial-1b.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,51018) fails-if(Android) random-if(d2d) == radial-1c.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2a.html radial-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2b.html radial-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2c.html radial-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2d.html radial-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2e.html radial-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,7860) fails-if(Android) == radial-2f.html radial-2-ref.html
 == radial-position-1a.html radial-position-1-ref.html
 == radial-position-1b.html radial-position-1-ref.html
 == radial-shape-closest-corner-1a.html radial-shape-closest-corner-1-ref.html
@@ -105,23 +105,23 @@ fails-if(OSX==10.6) == twostops-1c.html twostops-1-ref.html # bug 524173
 == twostops-1g.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-1a.html aja-linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-1a.html aja-linear-1-ref.html
 fails-if(!d2d) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-1c.html aja-linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-1d.html aja-linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-1e.html aja-linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-1f.html aja-linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-1g.html aja-linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-2a.html aja-linear-2-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) == aja-linear-2b.html aja-linear-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-1c.html aja-linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-1d.html aja-linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-1e.html aja-linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-1f.html aja-linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-1g.html aja-linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-2a.html aja-linear-2-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fails-if(Android) == aja-linear-2b.html aja-linear-2-ref.html
 fails == aja-linear-2c.html aja-linear-2-ref.html # bug 522607
 fails-if(!d2d) == aja-linear-2d.html aja-linear-2-ref.html # bug 526694
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,19999) == aja-linear-3a.html aja-linear-3-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,19999) == aja-linear-3b.html aja-linear-3-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) == aja-linear-4a.html aja-linear-4-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) == aja-linear-4b.html aja-linear-4-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) == aja-linear-5a.html aja-linear-5-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,16477) == aja-linear-6a.html aja-linear-6-ref.html # bug 526708
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,19999) fails-if(Android) == aja-linear-3a.html aja-linear-3-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,19999) fails-if(Android) == aja-linear-3b.html aja-linear-3-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fails-if(Android) == aja-linear-4a.html aja-linear-4-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fails-if(Android) == aja-linear-4b.html aja-linear-4-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fails-if(Android) == aja-linear-5a.html aja-linear-5-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,16477) fails-if(Android) == aja-linear-6a.html aja-linear-6-ref.html # bug 526708
 fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
 skip-if(B2G) == height-dependence-1.html height-dependence-1-ref.html
 skip-if(B2G) fuzzy-if(cocoaWidget,1,40000) == height-dependence-2.html height-dependence-2-ref.html
