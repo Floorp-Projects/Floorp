@@ -57,6 +57,12 @@ XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
   return Sanitizer;
 });
 
+XPCOMUtils.defineLazyGetter(this, "Prompt", function() {
+  let temp = {};
+  Cu.import("resource://gre/modules/Prompt.jsm", temp);
+  return temp.Prompt;
+});
+
 // Lazily-loaded browser scripts:
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
