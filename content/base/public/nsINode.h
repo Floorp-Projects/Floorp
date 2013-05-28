@@ -1728,7 +1728,6 @@ public:
 #undef EVENT
 
 protected:
-  static void Trace(nsINode *tmp, const TraceCallbacks &cb, void *closure);
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsINode *tmp);
 
