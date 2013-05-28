@@ -944,7 +944,7 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
 #endif
 
 #ifdef JSGC_GENERATIONAL
-    if (!rt->gcNursery.enable())
+    if (!rt->gcNursery.init())
         return false;
 
     if (!rt->gcStoreBuffer.enable())
