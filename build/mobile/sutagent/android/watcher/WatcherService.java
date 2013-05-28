@@ -328,10 +328,19 @@ public class WatcherService extends Service
                         }
                     }
 
+                Class<?> serviceClass = null;
+                try {
+                    serviceClass = Class.forName("com.mozilla.watcher.WatcherService");
+                    }
+                catch (Exception e)
+                    {
+                    Log.e(LOGTAG, "unable to find service class: "+e.toString());
+                    return;
+                    }
                 mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
                 try {
-                    mStartForeground = getClass().getMethod("startForeground", mStartForegroundSignature);
-                    mStopForeground = getClass().getMethod("stopForeground", mStopForegroundSignature);
+                    mStartForeground = serviceClass.getMethod("startForeground", mStartForegroundSignature);
+                    mStopForeground = serviceClass.getMethod("stopForeground", mStopForegroundSignature);
                     }
                 catch (NoSuchMethodException e)
                     {
@@ -340,7 +349,7 @@ public class WatcherService extends Service
                     Log.w(LOGTAG, "unable to find start/stopForeground method(s) -- older platform?");
                     }
                 try {
-                    mSetForeground = getClass().getMethod("setForeground", mSetForegroundSignature);
+                    mSetForeground = serviceClass.getMethod("setForeground", mSetForegroundSignature);
                     }
                 catch (NoSuchMethodException e) 
                     {
