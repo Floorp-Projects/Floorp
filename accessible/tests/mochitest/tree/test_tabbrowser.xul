@@ -99,16 +99,6 @@
               role: ROLE_PAGETAB,
               children: [
                 {
-                  // :before and :after image
-                  // (selected tab border on left/right)
-                  role: ROLE_GRAPHIC,
-                  children: []
-                },
-                {
-                  role: ROLE_GRAPHIC,
-                  children: []
-                },
-                {
                   // xul:toolbarbutton ("Close Tab")
                   role: ROLE_PUSHBUTTON,
                   children: []
@@ -122,11 +112,6 @@
                 {
                   // xul:toolbarbutton ("Close Tab")
                   role: ROLE_PUSHBUTTON,
-                  children: []
-                },
-                {
-                  // :after image (separator)
-                  role: ROLE_GRAPHIC,
                   children: []
                 }
               ]
