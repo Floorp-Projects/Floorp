@@ -23,7 +23,7 @@
     </style>
 
     <style name="GeckoAwesomeBarBase" parent="GeckoBase">
-        <item name="android:windowBackground">@null</item>
+        <item name="android:windowBackground">@color/background_normal</item>
         <item name="android:windowActionBar">true</item>
         <item name="android:windowNoTitle">false</item>
         <item name="android:actionBarStyle">@style/ActionBar.AwesomeBar</item>
