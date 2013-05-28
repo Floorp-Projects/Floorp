@@ -23,11 +23,7 @@ random-if(bug685516) == jpg-gray.jpg jpg-gray.png
 # CMYK colorspace
 random-if(bug685516) == jpg-cmyk-1.jpg jpg-cmyk-1.png
 random-if(bug685516) == jpg-cmyk-2.jpg jpg-cmyk-2.png
-# This intermittently fails on Android due to async image decoding (bug #685516)
-# Sometimes the image decodes in time and the test passes, other times the image
-# appears blank and the test fails. This only seems to be triggered since the
-# switch to 24-bit colour (bug #803299).
-random-if(bug685516) random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.png
+random-if(bug685516) == jpg-srgb-icc.jpg jpg-srgb-icc.png
 
 # webcam-simulacrum.mjpg is a hand-edited file containing red.jpg and blue.jpg,
 # concatenated together with the relevant headers for
