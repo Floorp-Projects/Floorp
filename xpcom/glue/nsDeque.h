@@ -25,7 +25,9 @@
 #define _NSDEQUE
 
 #include "nscore.h"
+#include "nsDebug.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/fallible.h"
 
 /**
  * The nsDequeFunctor class is used when you want to create
@@ -58,6 +60,7 @@ class nsDequeIterator;
 
 class NS_COM_GLUE nsDeque {
   friend class nsDequeIterator;
+  typedef mozilla::fallible_t fallible_t;
   public:
    nsDeque(nsDequeFunctor* aDeallocator = nullptr);
   ~nsDeque();
@@ -74,17 +77,27 @@ class NS_COM_GLUE nsDeque {
    * Appends new member at the end of the deque.
    *
    * @param   item to store in deque
-   * @return  *this
    */
-  nsDeque& Push(void* aItem);
+  void Push(void* aItem) {
+    if (!Push(aItem, fallible_t())) {
+      NS_RUNTIMEABORT("OOM");
+    }
+  }
+
+  bool Push(void* aItem, const fallible_t&) NS_WARN_UNUSED_RESULT;
 
   /**
    * Inserts new member at the front of the deque.
    *
    * @param   item to store in deque
-   * @return  *this
    */
-  nsDeque& PushFront(void* aItem);
+  void PushFront(void* aItem) {
+    if (!PushFront(aItem, fallible_t())) {
+      NS_RUNTIMEABORT("OOM");
+    }
+  }
+
+  bool PushFront(void* aItem, const fallible_t&) NS_WARN_UNUSED_RESULT;
 
   /**
    * Remove and return the last item in the container.
@@ -132,19 +145,15 @@ class NS_COM_GLUE nsDeque {
 
   /**
    * Remove all items from container without destroying them.
-   *
-   * @return  *this
    */
-  nsDeque& Empty();
+  void Empty();
 
   /**
    * Remove and delete all items from container.
    * Deletes are handled by the deallocator nsDequeFunctor
    * which is specified at deque construction.
-   *
-   * @return  *this
    */
-  nsDeque& Erase();
+  void Erase();
 
   /**
    * Creates a new iterator, pointing to the first
@@ -163,13 +172,13 @@ class NS_COM_GLUE nsDeque {
   nsDequeIterator End() const;
 
   void* Last() const;
+
   /**
    * Call this method when you want to iterate all the
    * members of the container, passing a functor along
    * to call your code.
    *
    * @param   aFunctor object to call for each member
-   * @return  *this
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
 

@@ -103,37 +103,29 @@ void nsDeque::SetDeallocator(nsDequeFunctor* aDeallocator){
 
 /**
  * Remove all items from container without destroying them.
- *
- * @return  *this
  */
-nsDeque& nsDeque::Empty() {
+void nsDeque::Empty() {
   if (mSize && mData) {
     memset(mData, 0, mCapacity*sizeof(mData));
   }
   mSize=0;
   mOrigin=0;
-  return *this;
 }
 
 /**
  * Remove and delete all items from container
- *
- * @return  *this
  */
-nsDeque& nsDeque::Erase() {
+void nsDeque::Erase() {
   if (mDeallocator && mSize) {
     ForEach(*mDeallocator);
   }
-  return Empty();
+  Empty();
 }
 
 /**
  * This method quadruples the size of the deque
  * Elements in the deque are resequenced so that elements
  * in the deque are stored sequentially
- *
- * If the deque actually overflows, there's very little we can do.
- * Perhaps this function should return bool/nsresult indicating success/failure.
  *
  * @return  whether growing succeeded
  */
@@ -171,15 +163,14 @@ bool nsDeque::GrowCapacity() {
  * underlying buffer to resize.
  *
  * @param   aItem: new item to be added to deque
- * @return  *this
  */
-nsDeque& nsDeque::Push(void* aItem) {
+bool nsDeque::Push(void* aItem, const fallible_t&) {
   if (mSize==mCapacity && !GrowCapacity()) {
-    return *this;
+    return false;
   }
   mData[modulus(mOrigin + mSize, mCapacity)]=aItem;
   mSize++;
-  return *this;
+  return true;
 }
 
 /**
@@ -213,22 +204,20 @@ nsDeque& nsDeque::Push(void* aItem) {
  * and increment size: 9. (C is no longer out of bounds)
  * --
  * @param   aItem: new item to be added to deque
- * @return  *this
  */
-nsDeque& nsDeque::PushFront(void* aItem) {
+bool nsDeque::PushFront(void* aItem, const fallible_t&) {
   mOrigin--;
   modasgn(mOrigin,mCapacity);
   if (mSize==mCapacity) {
     if (!GrowCapacity()) {
-      NS_WARNING("out of memory");
-      return *this;
+      return false;
     }
     /* Comments explaining this are above*/
     mData[mSize]=mData[mOrigin];
   }
   mData[mOrigin]=aItem;
   mSize++;
-  return *this;
+  return true;
 }
 
 /**
