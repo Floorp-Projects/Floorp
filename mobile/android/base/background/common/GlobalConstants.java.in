@@ -29,6 +29,13 @@ public class GlobalConstants {
   public static final String BROWSER_INTENT_PACKAGE = "@ANDROID_PACKAGE_NAME@";
   public static final String BROWSER_INTENT_CLASS = BROWSER_INTENT_PACKAGE + ".App";
 
+  /**
+   * Bug 800244: this signing-level permission protects broadcast intents that
+   * should be received only by the Firefox versions with the given Android
+   * package name.
+   */
+  public static final String PER_ANDROID_PACKAGE_PERMISSION = "@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE";
+
   public static final int SHARED_PREFERENCES_MODE = 0;
   // These are used to ask Fennec (via reflection) to send
   // us a pref notification. This avoids us having to guess
