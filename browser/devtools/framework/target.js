@@ -207,10 +207,6 @@ TabTarget.prototype = {
     return this._form;
   },
 
-  get root() {
-    return this._root;
-  },
-
   get client() {
     return this._client;
   },
@@ -291,7 +287,6 @@ TabTarget.prototype = {
     if (this.isLocalTab) {
       this._client.connect((aType, aTraits) => {
         this._client.listTabs(aResponse => {
-          this._root = aResponse;
           this._form = aResponse.tabs[aResponse.selected];
           attachTab();
         });

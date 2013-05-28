@@ -515,7 +515,6 @@ HistogramView.prototype = {
       cancelAnimationFrame(self._pendingAnimationFrame);
       self._pendingAnimationFrame = null;
       self._render(highlightedCallstack);
-      self._busyCover.classList.remove("busy");
     });
   },
   _render: function HistogramView__render(highlightedCallstack) {
