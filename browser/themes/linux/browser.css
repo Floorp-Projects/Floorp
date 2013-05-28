@@ -1604,22 +1604,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-color: Window;
 }
 
-/* Throbber */
-#navigator-throbber {
-  width: 16px;
-  min-height: 16px;
-  margin: 0 3px;
-}
-
-#navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
-#navigator-throbber,
-#wrapper-navigator-throbber > #navigator-throbber {
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
-}
-
 /* Tabstrip */
 
 %include ../shared/tabs.inc.css

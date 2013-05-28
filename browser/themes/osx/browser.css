@@ -2128,22 +2128,6 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 }
 
 
-/* ----- THROBBER ----- */
-
-#navigator-throbber {
-  width: 17px;
-  min-height: 16px;
-  margin: 0 4px;
-}
-
-#navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
-#wrapper-navigator-throbber > #navigator-throbber {
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
-}
-
 toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
 }
