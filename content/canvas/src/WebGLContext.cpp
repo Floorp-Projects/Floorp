@@ -949,10 +949,15 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
 
     switch (ext) {
         case OES_element_index_uint:
-            return !gl->IsGLES2() || gl->IsExtensionSupported(GLContext::OES_element_index_uint);
+            if (!gl->IsGLES2())
+                return true;
+            return gl->IsExtensionSupported(GLContext::OES_element_index_uint);
         case OES_standard_derivatives:
+            if (!gl->IsGLES2())
+                return true;
+            return gl->IsExtensionSupported(GLContext::OES_standard_derivatives);
         case WEBGL_lose_context:
-            // We always support these extensions.
+            // We always support this extension.
             return true;
         case OES_texture_float:
             return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float
@@ -964,15 +969,12 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
                 return true;
             }
             else if (gl->IsExtensionSupported(GLContext::EXT_texture_compression_dxt1) &&
-                       gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt3) &&
-                       gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt5))
+                     gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt3) &&
+                     gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt5))
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         case WEBGL_compressed_texture_atc:
             return gl->IsExtensionSupported(GLContext::AMD_compressed_ATC_texture);
         case WEBGL_compressed_texture_pvrtc:
@@ -989,17 +991,12 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         case WEBGL_debug_renderer_info:
             return xpc::AccessCheck::isChrome(js::GetContextCompartment(cx));
-        default:
-            MOZ_ASSERT(false, "should not get there.");
     }
 
-    MOZ_ASSERT(false, "should not get there.");
+    MOZ_NOT_REACHED("Query for unknown extension.");
     return false;
 }
 
