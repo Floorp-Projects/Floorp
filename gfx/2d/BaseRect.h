@@ -418,6 +418,22 @@ struct BaseRect {
                  std::max(y, std::min(YMost(), aPoint.y)));
   }
 
+  /**
+   * Clamp aRect to this rectangle. This returns aRect after it is forced
+   * inside the bounds of this rectangle. It will attempt to retain the size
+   * but will shrink the dimensions that don't fit.
+   */
+  Sub ClampRect(const Sub& aRect) const
+  {
+    Sub rect(std::max(aRect.x, x),
+             std::max(aRect.y, y),
+             std::min(aRect.width, width),
+             std::min(aRect.height, height));
+    rect.x = std::min(rect.XMost(), XMost()) - rect.width;
+    rect.y = std::min(rect.YMost(), YMost()) - rect.height;
+    return rect;
+  }
+
 private:
   // Do not use the default operator== or operator!= !
   // Use IsEqualEdges or IsEqualInterior explicitly.
