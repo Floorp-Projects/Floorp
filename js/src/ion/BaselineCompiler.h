@@ -35,6 +35,7 @@ namespace ion {
     _(JSOP_LABEL)              \
     _(JSOP_NOTEARG)            \
     _(JSOP_POP)                \
+    _(JSOP_POPN)               \
     _(JSOP_DUP)                \
     _(JSOP_DUP2)               \
     _(JSOP_SWAP)               \
