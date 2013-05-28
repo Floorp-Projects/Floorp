@@ -107,7 +107,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.17";
+    private final String prgVersion = "SUTAgentAndroid Version 1.18";
 
     public enum Command
         {
@@ -124,6 +124,7 @@ public class DoCommand {
         ID ("id"),
         UPTIME ("uptime"),
         UPTIMEMILLIS ("uptimemillis"),
+        SUTUPTIMEMILLIS ("sutuptimemillis"),
         SETTIME ("settime"),
         SYSTIME ("systime"),
         SCREEN ("screen"),
@@ -429,6 +430,8 @@ public class DoCommand {
                     strReturn += "\n";
                     strReturn += GetUptimeMillis();
                     strReturn += "\n";
+                    strReturn += GetSutUptimeMillis();
+                    strReturn += "\n";
                     strReturn += GetScreenInfo();
                     strReturn += "\n";
                     strReturn += GetRotationInfo();
@@ -484,6 +487,10 @@ public class DoCommand {
 
                         case UPTIMEMILLIS:
                             strReturn = GetUptimeMillis();
+                            break;
+
+                        case SUTUPTIMEMILLIS:
+                            strReturn = GetSutUptimeMillis();
                             break;
 
                         case MEMORY:
@@ -3066,6 +3073,12 @@ private void CancelNotification()
         return Long.toString(SystemClock.uptimeMillis());
         }
  
+    public String GetSutUptimeMillis()
+        {
+        long now = System.currentTimeMillis();
+        return "SUTagent running for "+Long.toString(now - SUTAgentAndroid.nCreateTimeMillis)+" ms";
+        }
+ 
     public String NewKillProc(String sProcId, OutputStream out)
         {
         String sRet = "";
@@ -3889,6 +3902,7 @@ private void CancelNotification()
             "        [id]                    - unique identifier for device\n" +
             "        [uptime]                - uptime for device\n" +
             "        [uptimemillis]          - uptime for device in milliseconds\n" +
+            "        [sutuptimemillis]       - uptime for SUT in milliseconds\n" +
             "        [systime]               - current system time\n" +
             "        [screen]                - width, height and bits per pixel for device\n" +
             "        [memory]                - physical, free, available, storage memory\n" +
