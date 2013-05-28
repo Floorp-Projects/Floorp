@@ -1385,7 +1385,7 @@ public class GeckoAppShell
      * Returns the colour depth of the default screen. This will either be
      * 24 or 16.
      */
-    public static int getScreenDepth() {
+    public static synchronized int getScreenDepth() {
         if (sScreenDepth == 0 && getGeckoInterface() != null) {
             switch (getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getPixelFormat()) {
             case PixelFormat.RGBA_8888 :
@@ -1400,6 +1400,15 @@ public class GeckoAppShell
         }
 
         return sScreenDepth;
+    }
+
+    public static synchronized void setScreenDepthOverride(int aScreenDepth) {
+        if (sScreenDepth != 0) {
+            Log.e(LOGTAG, "Tried to override screen depth after it's already been set");
+            return;
+        }
+
+        sScreenDepth = aScreenDepth;
     }
 
     public static void setFullScreen(boolean fullscreen) {
