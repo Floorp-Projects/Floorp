@@ -624,6 +624,13 @@ BaselineCompiler::emit_JSOP_POP()
 }
 
 bool
+BaselineCompiler::emit_JSOP_POPN()
+{
+    frame.popn(GET_UINT16(pc));
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_DUP()
 {
     // Keep top stack value in R0, sync the rest so that we can use R1. We use

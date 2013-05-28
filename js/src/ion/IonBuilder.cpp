@@ -1244,6 +1244,11 @@ IonBuilder::inspectOpcode(JSOp op)
             return true;
         return maybeInsertResume();
 
+      case JSOP_POPN:
+        for (uint32_t i = 0, n = GET_UINT16(pc); i < n; i++)
+            current->pop();
+        return true;
+
       case JSOP_NEWINIT:
       {
         if (GET_UINT8(pc) == JSProto_Array)
