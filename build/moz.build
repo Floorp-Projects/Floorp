@@ -12,8 +12,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['STLPORT_SOURCES']:
     DIRS += ['stlport']
 
-DIRS += ['pgo']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     TEST_DIRS += [
         'mobile/sutagent/android',
