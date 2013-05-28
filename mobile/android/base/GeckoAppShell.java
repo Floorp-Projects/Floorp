@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+G/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2487,28 +2487,12 @@ public class GeckoAppShell
         return true;
     }
 
-    static class AsyncResultHandler extends FilePickerResultHandler {
-        private long mId;
-        AsyncResultHandler(long id) {
-            super(null);
-            mId = id;
-        }
-
-        @Override
-        public void onActivityResult(int resultCode, Intent data) {
-            GeckoAppShell.notifyFilePickerResult(handleActivityResult(resultCode, data), mId);
-        }
-        
-    }
-
-    static native void notifyFilePickerResult(String filePath, long id);
-
-    /* Called by JNI from AndroidBridge */
-    public static void showFilePickerAsync(String aMimeType, long id) {
-        if (getGeckoInterface() != null)
-            if (!sActivityHelper.showFilePicker(getGeckoInterface().getActivity(), aMimeType, new AsyncResultHandler(id))) {
-                GeckoAppShell.notifyFilePickerResult("", id);
+    public static void showFilePickerAsync(String aMimeType, final long id) {
+        sActivityHelper.showFilePickerAsync(GeckoApp.mAppContext, aMimeType, new ActivityHandlerHelper.FileResultHandler() {
+            public void gotFile(String filename) {
+                GeckoAppShell.notifyFilePickerResult(filename, id);
             }
+        });
     }
 
     public static void notifyWakeLockChanged(String topic, String state) {
