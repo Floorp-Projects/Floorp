@@ -22,7 +22,7 @@ BEGIN_TEST(testAtomizedIsNotInterned)
 }
 END_TEST(testAtomizedIsNotInterned)
 
-struct StringWrapper
+struct StringWrapperStruct
 {
     JSString *str;
     bool     strOk;

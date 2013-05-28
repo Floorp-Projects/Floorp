@@ -177,7 +177,8 @@ struct JSFunctionSpecWithHelp {
 extern JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
 
-typedef bool (* JS_SourceHook)(JSContext *cx, JSScript *script, jschar **src, uint32_t *length);
+typedef bool (* JS_SourceHook)(JSContext *cx, JS::Handle<JSScript*> script,
+                               jschar **src, uint32_t *length);
 
 extern JS_FRIEND_API(void)
 JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
@@ -422,6 +423,10 @@ GetObjectParentMaybeScope(JSObject *obj);
 
 JS_FRIEND_API(JSObject *)
 GetGlobalForObjectCrossCompartment(JSObject *obj);
+
+// For legacy consumers only. This whole concept is going away soon.
+JS_FRIEND_API(JSObject *)
+GetDefaultGlobalForContext(JSContext *cx);
 
 JS_FRIEND_API(void)
 NotifyAnimationActivity(JSObject *obj);
@@ -1059,7 +1064,9 @@ class ArrayBufferBuilder
     }
 
     JSObject* getArrayBuffer(JSContext *cx) {
-        if (capacity_ > length_) {
+        // we need to check for length_ == 0, because nothing may have been
+        // added
+        if (capacity_ > length_ || length_ == 0) {
             if (!setCapacity(length_))
                 return NULL;
         }

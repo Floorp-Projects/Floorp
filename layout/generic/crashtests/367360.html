@@ -1,0 +1,30 @@
+<html><head>
+<title>Testcase bug - Crash [@ nsHTMLButtonControlFrame::GetContentInsertionFrame] with -moz-column-count and display: list-item</title>
+</head>
+<body>
+<div style="display: table;">
+text
+<listing style="-moz-column-count: 2;">
+<dl>
+
+
+
+
+
+
+
+
+tesxt
+
+
+<menu>
+<span style="display: list-item;  -moz-column-count: 1;">
+<span style="display: list-item;  -moz-column-count: 1;">
+text
+</span></span>
+</menu>
+<div>text</div>
+</dl>
+</listing>
+</div>
+</body></html>

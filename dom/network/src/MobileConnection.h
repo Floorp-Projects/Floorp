@@ -12,11 +12,6 @@
 
 namespace mozilla {
 namespace dom {
-
-namespace icc {
-  class IccManager;
-} // namespace icc
-
 namespace network {
 
 class MobileConnection : public nsDOMEventTargetHelper
@@ -50,7 +45,6 @@ public:
 private:
   nsCOMPtr<nsIMobileConnectionProvider> mProvider;
   nsRefPtr<Listener> mListener;
-  nsRefPtr<icc::IccManager> mIccManager;
   nsWeakPtr mWindow;
 
   bool CheckPermission(const char* type);

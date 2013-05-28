@@ -10,6 +10,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = angle
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
@@ -22,19 +23,6 @@ DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
 VPATH += $(srcdir)/src/compiler/preprocessor
-CPPSRCS += \
-  DiagnosticsBase.cpp \
-  DirectiveHandlerBase.cpp \
-  DirectiveParser.cpp \
-  ExpressionParser.cpp \
-  Input.cpp \
-  Lexer.cpp \
-  Macro.cpp \
-  MacroExpander.cpp \
-  Preprocessor.cpp \
-  Token.cpp \
-  Tokenizer.cpp \
-  $(NULL)
 
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
@@ -46,85 +34,13 @@ LOCAL_INCLUDES += \
 DEFINES += -DCOMPILER_IMPLEMENTATION
 
 VPATH += $(srcdir)/src/compiler
-# src/compiler:
-CPPSRCS += \
-  BuiltInFunctionEmulator.cpp \
-  Compiler.cpp \
-  compiler_debug.cpp \
-  DetectRecursion.cpp \
-  Diagnostics.cpp \
-  DirectiveHandler.cpp \
-  ForLoopUnroll.cpp \
-  glslang_lex.cpp \
-  glslang_tab.cpp \
-  InfoSink.cpp \
-  Initialize.cpp \
-  InitializeDll.cpp \
-  InitializeParseContext.cpp \
-  Intermediate.cpp \
-  intermOut.cpp \
-  IntermTraverse.cpp \
-  MapLongVariableNames.cpp \
-  parseConst.cpp \
-  ParseHelper.cpp \
-  PoolAlloc.cpp \
-  QualifierAlive.cpp \
-  RemoveTree.cpp \
-  spooky.cpp \
-  SymbolTable.cpp \
-  util.cpp \
-  ValidateLimitations.cpp \
-  VariableInfo.cpp \
-  VariablePacker.cpp \
-  $(NULL)
-
 VPATH += $(srcdir)/src/compiler/depgraph
-# src/compiler/depgraph:
-CPPSRCS += \
-  DependencyGraph.cpp \
-  DependencyGraphBuilder.cpp \
-  DependencyGraphOutput.cpp \
-  DependencyGraphTraverse.cpp \
-  $(NULL)
-
 VPATH += $(srcdir)/src/compiler/timing
-# src/compiler/timing:
-CPPSRCS += \
-  RestrictFragmentShaderTiming.cpp \
-  RestrictVertexShaderTiming.cpp \
-  $(NULL)
-
 VPATH += $(srcdir)/src/third_party/compiler
-# src/third_party/compiler:
-CPPSRCS += \
-  ArrayBoundsClamper.cpp \
-  $(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += ossource_win.cpp
-else
-CPPSRCS += ossource_posix.cpp
-endif
-
 
 # Target: 'translator_glsl'
 #   Requires: 'translator_common'
 # src/compiler:
-CPPSRCS += \
-  CodeGenGLSL.cpp \
-  OutputESSL.cpp \
-  OutputGLSLBase.cpp \
-  OutputGLSL.cpp \
-  ShaderLang.cpp \
-  TranslatorESSL.cpp \
-  TranslatorGLSL.cpp \
-  VersionGLSL.cpp \
-  $(NULL)
-
-  
-# End gpy translation. Remainder of targets are in src/libEGL/Makefile.in and
-# src/libGLESv2/Makefile.in
-
 ifdef MOZ_ANGLE_RENDERER
 
 libs::

@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include "mozilla/StandardInteger.h"
-const PRTime gPreloadListExpirationTime = INT64_C(1378548805558000);
+const PRTime gPreloadListExpirationTime = INT64_C(1380363248599000);
 
 class nsSTSPreload
 {
@@ -35,13 +35,13 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "csawctf.poly.edu", true },
   { "developer.mydigipass.com", false },
   { "dist.torproject.org", false },
-  { "dm.lookout.com", false },
-  { "dm.mylookout.com", false },
+  { "download.jitsi.org", false },
   { "ebanking.indovinabank.com.vn", false },
   { "entropia.de", false },
   { "espra.com", true },
   { "factor.cc", false },
   { "gocardless.com", true },
+  { "grc.com", false },
   { "howrandom.org", true },
   { "id.mayfirst.org", false },
   { "intercom.io", false },
@@ -72,7 +72,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "roundcube.mayfirst.org", false },
   { "sandbox.mydigipass.com", false },
   { "serverdensity.io", true },
-  { "silentcircle.com", true },
+  { "silentcircle.com", false },
   { "simple.com", false },
   { "stocktrade.de", false },
   { "stripe.com", true },
@@ -91,6 +91,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.cueup.com", false },
   { "www.entropia.de", false },
   { "www.gov.uk", false },
+  { "www.grc.com", false },
   { "www.intercom.io", false },
   { "www.irccloud.com", false },
   { "www.lookout.com", false },

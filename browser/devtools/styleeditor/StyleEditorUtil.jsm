@@ -127,11 +127,10 @@ this.log = function log()
  *        Selector string or DOMElement for the element(s) to wire up.
  * @param object aDescriptor
  *        An object describing how to wire matching selector, supported properties
- *        are "events", "attributes" and "userData" taking objects themselves.
- *        Each key of properties above represents the name of the event, attribute
- *        or userData, with the value being a function used as an event handler,
- *        string to use as attribute value, or object to use as named userData
- *        respectively.
+ *        are "events" and "attributes" taking objects themselves.
+ *        Each key of properties above represents the name of the event or
+ *        attribute, with the value being a function used as an event handler or
+ *        string to use as attribute value.
  *        If aDescriptor is a function, the argument is equivalent to :
  *        {events: {'click': aDescriptor}}
  */
@@ -157,7 +156,6 @@ this.wire = function wire(aRoot, aSelectorOrElement, aDescriptor)
       element.addEventListener(aName, aHandler, false);
     });
     forEach(aDescriptor.attributes, element.setAttribute);
-    forEach(aDescriptor.userData, element.setUserData);
   }
 }
 

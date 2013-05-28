@@ -15,6 +15,7 @@ MODULE = 'xpcom'
 
 EXPORTS += [
     'nsCycleCollectionNoteChild.h',
+    'nsCycleCollectionNoteRootCallback.h',
     'nsCycleCollectionTraversalCallback.h',
     'nsCycleCollectorUtils.h',
     'nsProxyRelease.h',
@@ -43,5 +44,12 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.threads += [
     'nsThreadIDs.h',
+]
+
+CPP_SOURCES += [
+    '$(XPCOM_GLUENS_SRC_LCPPSRCS)',
+    '$(XPCOM_GLUE_SRC_LCPPSRCS)',
+    'GenericModule.cpp',
+    'nsStringAPI.cpp',
 ]
 

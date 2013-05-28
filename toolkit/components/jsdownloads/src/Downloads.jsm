@@ -56,6 +56,8 @@ this.Downloads = {
    *        {
    *          source: {
    *            uri: The nsIURI for the download source.
+   *            isPrivate: Indicates whether the download originated from a
+   *                       private window.
    *          },
    *          target: {
    *            file: The nsIFile for the download target.
@@ -77,6 +79,7 @@ this.Downloads = {
 
       download.source = new DownloadSource();
       download.source.uri = aProperties.source.uri;
+      download.source.isPrivate = aProperties.source.isPrivate;
       download.target = new DownloadTarget();
       download.target.file = aProperties.target.file;
 
@@ -150,6 +153,25 @@ this.Downloads = {
     return Promise.resolve(this._publicDownloadList);
   },
   _publicDownloadList: null,
+
+  /**
+   * Retrieves the DownloadList object for downloads that were started from
+   * a private browsing window.
+   *
+   * This method always retrieves a reference to the same download list.
+   *
+   * @return {Promise}
+   * @resolves The DownloadList object for private downloads.
+   * @rejects JavaScript exception.
+   */
+  getPrivateDownloadList: function D_getPrivateDownloadList()
+  {
+    if (!this._privateDownloadList) {
+      this._privateDownloadList = new DownloadList();
+    }
+    return Promise.resolve(this._privateDownloadList);
+  },
+  _privateDownloadList: null,
 
   /**
    * Constructor for a DownloadError object.  When you catch an exception during

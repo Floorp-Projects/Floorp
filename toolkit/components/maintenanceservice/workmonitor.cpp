@@ -587,16 +587,19 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
            oldUpdaterPath, secureUpdaterPath));
       DeleteSecureUpdater(secureUpdaterPath);
       result = CopyFileW(oldUpdaterPath, secureUpdaterPath, FALSE);
-      if (!result) {
-        LOG_WARN(("Could not copy path to secure location.  (%d)",
-                  GetLastError()));
-      }
     }
 
-    // If we obtained the path and copied it successfully update the path to
-    // use for the service update.  If there was a problem use the original
-    // path so things work like it used to.
-    if (result) {
+    if (!result) {
+      LOG_WARN(("Could not copy path to secure location.  (%d)",
+                GetLastError()));
+      if (argc > 4 && !WriteStatusFailure(argv[4],
+                                          SERVICE_COULD_NOT_COPY_UPDATER)) {
+        LOG_WARN(("Could not write update.status could not copy updater error"));
+      }
+    } else {
+
+      // We obtained the path and copied it successfully, update the path to
+      // use for the service update.
       argv[3] = secureUpdaterPath;
 
       WCHAR oldUpdaterINIPath[MAX_PATH + 1] = { L'\0' };
@@ -611,10 +614,10 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
                     oldUpdaterINIPath, secureUpdaterINIPath, GetLastError()));
         }
       }
-    }
 
-    result = ProcessSoftwareUpdateCommand(argc - 3, argv + 3);
-    DeleteSecureUpdater(secureUpdaterPath);
+      result = ProcessSoftwareUpdateCommand(argc - 3, argv + 3);
+      DeleteSecureUpdater(secureUpdaterPath);
+    }
 
     // We might not reach here if the service install succeeded
     // because the service self updates itself and the service

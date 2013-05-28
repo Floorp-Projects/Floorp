@@ -10,18 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS = \
-  updater.cpp \
-  bspatch.cpp \
-  archivereader.cpp \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += \
-  loaddlls.cpp \
-  $(NULL)
-endif
-
 # Don't link the updater against libmozglue. See bug 687139
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
@@ -39,12 +27,7 @@ LIBS += \
 ifeq ($(OS_ARCH),WINNT)
 LIBS += $(DEPTH)/modules/libmar/verify/$(LIB_PREFIX)verifymar.$(LIB_SUFFIX)
 USE_STATIC_LIBS = 1
-HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
-CPPSRCS += \
-  progressui_win.cpp \
-  win_dirent.cpp \
-  $(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,delayimp comctl32 ws2_32 shell32 shlwapi)
 DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
@@ -56,32 +39,21 @@ endif
 endif
 
 ifneq ($(MOZ_ENABLE_GTK2),)
-HAVE_PROGRESSUI = 1
-CPPSRCS += \
-  progressui_gtk.cpp \
-  $(NULL)
 OS_CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-HAVE_PROGRESSUI = 1
 CMMSRCS += progressui_osx.mm launchchild_osx.mm
 OS_LIBS += -framework Cocoa
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
-HAVE_PROGRESSUI = 1
 STL_FLAGS =
-CPPSRCS += progressui_gonk.cpp automounter_gonk.cpp
 OS_LIBS += -lcutils -lsysutils
 # clear out all the --wrap flags and remove dependency on mozglue for Gonk
 WRAP_LDFLAGS :=
 endif #}
-
-ifndef HAVE_PROGRESSUI
-CPPSRCS += progressui_null.cpp
-endif
 
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG

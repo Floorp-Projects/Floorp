@@ -911,6 +911,12 @@ public:
   void SetAnimationGeneration(uint64_t aCount) { mAnimationGeneration = aCount; }
 
   /**
+   * Returns the local transform for this layer: either mTransform or,
+   * for shadow layers, GetShadowTransform()
+   */
+  const gfx3DMatrix GetLocalTransform();
+
+  /**
    * DRAWING PHASE ONLY
    *
    * Apply pending changes to layers before drawing them, if those
@@ -1163,12 +1169,6 @@ protected:
   // an implementation that first calls the base implementation then
   // appends additional info to aTo.
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
-
-  /**
-   * Returns the local transform for this layer: either mTransform or,
-   * for shadow layers, GetShadowTransform()
-   */
-  const gfx3DMatrix GetLocalTransform();
 
   /**
    * Returns the local opacity for this layer: either mOpacity or,

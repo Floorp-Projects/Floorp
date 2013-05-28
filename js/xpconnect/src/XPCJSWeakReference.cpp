@@ -16,8 +16,6 @@ NS_IMPL_ISUPPORTS1(xpcJSWeakReference, xpcIJSWeakReference)
 
 nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
 {
-    JSAutoRequest ar(cx);
-
     if (!object.isObject())
         return NS_OK;
 
@@ -78,8 +76,7 @@ xpcJSWeakReference::Get(JSContext* aCx, JS::Value* aRetval)
                                           aRetval);
     }
 
-    JS::RootedObject obj(aCx);
-    wrappedObj->GetJSObject(obj.address());
+    JS::RootedObject obj(aCx, wrappedObj->GetJSObject());
     if (!obj) {
         return NS_OK;
     }

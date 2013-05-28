@@ -38,7 +38,7 @@ public:
                                  const nsCString& aClassStr,
                                  JS::Handle<JSObject*> aClassObject);
 
-  virtual void Trace(TraceCallback aCallback, void *aClosure) const;
+  virtual void Trace(const TraceCallbacks& aCallback, void *aClosure);
 
   nsresult Read(nsIScriptContext* aContext,
                 nsIObjectInputStream* aStream,

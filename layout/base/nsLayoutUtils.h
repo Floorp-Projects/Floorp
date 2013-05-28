@@ -676,8 +676,7 @@ public:
     PAINT_ALL_CONTINUATIONS = 0x40,
     PAINT_TO_WINDOW = 0x80,
     PAINT_EXISTING_TRANSACTION = 0x100,
-    PAINT_NO_COMPOSITE = 0x200,
-    PAINT_NO_CLEAR_INVALIDATIONS = 0x400
+    PAINT_NO_COMPOSITE = 0x200
   };
 
   /**
@@ -809,13 +808,6 @@ public:
    */
   static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                 RectCallback* aCallback, uint32_t aFlags = 0);
-  /**
-   * The same as GetAllInFlowRects, but it collects the CSS padding-boxes
-   * rather than the CSS border-boxes. SVG frames are handled the same way
-   * as in GetAllInFlowRects.
-   */
-  static void GetAllInFlowPaddingRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                RectCallback* aCallback, uint32_t aFlags = 0);
 
   /**
    * Computes the union of all rects returned by GetAllInFlowRects. If
@@ -826,14 +818,6 @@ public:
    */
   static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                        uint32_t aFlags = 0);
-
-  /**
-   * The same as GetAllInFlowRectsUnion, but it computes the union of the
-   * rects returned by GetAllInFlowPaddingRects.
-   */
-  static nsRect GetAllInFlowPaddingRectsUnion(nsIFrame* aFrame,
-                                              nsIFrame* aRelativeTo,
-                                              uint32_t aFlags = 0);
 
   enum {
     EXCLUDE_BLUR_SHADOWS = 0x01
@@ -1601,10 +1585,9 @@ public:
   static bool Are3DTransformsEnabled();
 
   /**
-   * Checks if off-main-thread transform and opacity animations are enabled.
+   * Checks if off-main-thread animations are enabled.
    */
-  static bool AreOpacityAnimationsEnabled();
-  static bool AreTransformAnimationsEnabled();
+  static bool AreAsyncAnimationsEnabled();
 
   /**
    * Checks if we should warn about animations that can't be async

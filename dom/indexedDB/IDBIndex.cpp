@@ -1491,8 +1491,6 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
   nsTArray<Key> keys;
   mKeys.SwapElements(keys);
 
-  JSAutoRequest ar(aCx);
-
   JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, NULL));
   if (!array) {
     NS_WARNING("Failed to make array!");

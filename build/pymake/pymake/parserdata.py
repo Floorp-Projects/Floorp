@@ -167,9 +167,13 @@ class Rule(Statement):
         This lets us go really fast and is generally good.
         """
         assert context.weak
-        assert len(self.targetexp.resolvesplit(makefile, makefile.variables)) == 1
-        target = self.targetexp.resolvesplit(makefile, makefile.variables)[0]
         deps = self.depexp.resolvesplit(makefile, makefile.variables)
+        # Skip targets with no rules and no dependencies
+        if not deps:
+            return
+        targets = self.targetexp.resolvesplit(makefile, makefile.variables)
+        assert len(targets) == 1
+        target = targets[0]
         rule = data.Rule(deps, self.doublecolon, loc=self.targetexp.loc, weakdeps=True)
         makefile.gettarget(target).addrule(rule)
         makefile.foundtarget(target)

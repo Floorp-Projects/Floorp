@@ -136,6 +136,7 @@ const SERVICE_STILL_APPLYING_ON_FAILURE    = 30;
 const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
+const SERVICE_COULD_NOT_COPY_UPDATER       = 49;
 
 const WRITE_ERROR_ACCESS_DENIED                     = 35;
 // const WRITE_ERROR_SHARING_VIOLATION                 = 36; // Replaced with errors 46-48
@@ -151,7 +152,6 @@ const FOTA_UNKNOWN_ERROR                            = 45;
 const WRITE_ERROR_SHARING_VIOLATION_SIGNALED        = 46;
 const WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID = 47;
 const WRITE_ERROR_SHARING_VIOLATION_NOPID           = 48;
-
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -385,6 +385,108 @@ function testWriteAccess(updateTestFile, createDirectory) {
   updateTestFile.remove(false);
 }
 
+#ifdef XP_WIN
+
+/**
+ * Closes a Win32 handle
+ *
+ * @param handle The handle to close
+ */
+function closeHandle(handle) {
+  var lib = ctypes.open("kernel32.dll");
+  var CloseHandle = lib.declare("CloseHandle",
+                                ctypes.winapi_abi,
+                                ctypes.int32_t, /* success */
+                                ctypes.void_t.ptr); /* handle */
+  CloseHandle(handle);
+  lib.close();
+}
+
+/**
+ * Creates a mutex.
+ *
+ * @param aAllowExisting false if the function should fail if the mutex exists
+ * @return The Win32 handle to the mutex
+ */
+function createMutex(name, aAllowExisting) {
+  if (aAllowExisting === undefined) {
+    aAllowExisting = true;
+  }
+
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  const INITIAL_OWN = 1;
+  const ERROR_ALREADY_EXISTS = 0xB7;
+  var lib = ctypes.open("kernel32.dll");
+  var CreateMutexW = lib.declare("CreateMutexW",
+                                 ctypes.winapi_abi,
+                                 ctypes.void_t.ptr, /* return handle */
+                                 ctypes.void_t.ptr, /* security attributes */
+                                 ctypes.int32_t, /* initial owner */
+                                 ctypes.jschar.ptr); /* name */
+
+  var handle = CreateMutexW(null, INITIAL_OWN, name);
+  var alreadyExists = ctypes.winLastError == ERROR_ALREADY_EXISTS;
+  if (handle && !handle.isNull() && !aAllowExisting && alreadyExists) {
+    closeHandle(handle);
+    handle = null;
+  }
+  lib.close();
+
+  if (handle && handle.isNull())
+    handle = null;
+
+  return handle;
+}
+
+/**
+ * Determines a unique mutex name for the installation
+ *
+ * @param aGlobal true if the function should return a global mutex. A global
+ *                mutex is valid across different sessions
+ * @return Global mutex path
+ */
+function getPerInstallationMutexName(aGlobal) {
+  if (aGlobal === undefined) {
+    aGobal = true;
+  }
+  let hasher = Components.classes["@mozilla.org/security/hash;1"].
+              createInstance(Components.interfaces.nsICryptoHash);
+    hasher.init(hasher.SHA1);
+
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  var exeFile = Services.dirsvc.get("XREExeF", Components.interfaces.nsILocalFile);
+
+  let converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
+                  createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  var data = converter.convertToByteArray(exeFile.path.toLowerCase());
+
+  hasher.update(data, data.length);
+  return (aGlobal ? "Global\\" : "") + "MozillaUpdateMutex-" + hasher.finish(true);
+}
+#endif // XP_WIN
+
+/**
+ * Whether or not the current instance has the update mutex. The update mutex
+ * gives protection against 2 browsers from the same installation updating:
+ * 1) Running multiple profiles from the same installation path
+ * 2) Running a Metro and Desktop browser at the same time from the same path
+ * 3) 2 browsers running in 2 different user sessions from the same path
+ *
+ * @return true if this instance holds the update mutex
+ */
+function hasUpdateMutex() {
+#ifdef XP_WIN
+  if (!this._updateMutexHandle) {
+    this._updateMutexHandle = createMutex(getPerInstallationMutexName(true), false);
+  }
+
+  return !!this._updateMutexHandle;
+#else
+  return true;
+#endif // XP_WIN
+}
+
 XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
   function submitHasPermissionsTelemetryPing(val) {
       try {
@@ -480,6 +582,12 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
     return false;
   }
 
+  if (!hasUpdateMutex()) {
+    LOG("gCanApplyUpdates - unable to apply updates because another " +
+        "browser is already handling updates for this installation.");
+    return false;
+  }
+
   LOG("gCanApplyUpdates - able to apply updates");
   submitHasPermissionsTelemetryPing(true);
   return true;
@@ -524,6 +632,12 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpda
     return false;
   }
 
+  if (!hasUpdateMutex()) {
+    LOG("gCanStageUpdates - unable to stage updates because another " +
+        "browser is already handling updates for this installation.");
+    return false;
+  }
+
   LOG("gCanStageUpdates - able to stage updates");
   return true;
 });
@@ -549,6 +663,12 @@ XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckF
   if (!gOSVersion) {
     LOG("gCanCheckForUpdates - unable to check for updates, unknown OS " +
         "version");
+    return false;
+  }
+
+  if (!hasUpdateMutex()) {
+    LOG("gCanCheckForUpdates - unable to apply updates because another " +
+        "browser is already handling updates for this installation.");
     return false;
   }
 
@@ -1185,6 +1305,7 @@ function handleUpdateFailure(update, errorCode) {
       update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE ||
       update.errorCode == SERVICE_UPDATER_NOT_FIXED_DRIVE ||
       update.errorCode == SERVICE_COULD_NOT_LOCK_UPDATER ||
+      update.errorCode == SERVICE_COULD_NOT_COPY_UPDATER ||
       update.errorCode == SERVICE_INSTALLDIR_ERROR) {
 
     var failCount = getPref("getIntPref",
@@ -2523,6 +2644,14 @@ UpdateService.prototype = {
   get canStageUpdates() {
     return gCanStageUpdates;
   },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get isOtherInstanceHandlingUpdates() {
+    return !hasUpdateMutex();
+  },
+
 
   /**
    * See nsIUpdateService.idl

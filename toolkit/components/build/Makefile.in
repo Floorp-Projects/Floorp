@@ -16,8 +16,6 @@ IS_COMPONENT = 1
 MODULE_NAME = nsToolkitCompsModule
 LIBXUL_LIBRARY = 1
 
-CPPSRCS = nsToolkitCompsModule.cpp
-
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \

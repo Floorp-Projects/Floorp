@@ -9,9 +9,6 @@ ac_add_options --enable-stdcxx-compat
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-# PGO
-mk_add_options PROFILE_GEN_SCRIPT='EXTRA_TEST_ARGS=10 $(MAKE) -C $(MOZ_OBJDIR) pgo-profile-run'
-
 #Use ccache
 ac_add_options --with-ccache=/usr/bin/ccache
 

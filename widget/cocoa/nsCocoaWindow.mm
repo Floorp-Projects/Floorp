@@ -11,6 +11,7 @@
 #include "nsGUIEvent.h"
 #include "nsIRollupListener.h"
 #include "nsChildView.h"
+#include "TextInputHandler.h"
 #include "nsWindowMap.h"
 #include "nsAppShell.h"
 #include "nsIAppShellService.h"
@@ -44,6 +45,7 @@ class LayerManager;
 }
 }
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 using namespace mozilla;
 
 // defined in nsAppShell.mm
@@ -2029,32 +2031,6 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
   return nullptr;
 }
 
-NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv)) {
-    ::EnableSecureEventInput();
-  }
-  return rv;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
-  if (NS_SUCCEEDED(rv)) {
-    ::DisableSecureEventInput();
-  }
-  return rv;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
 void nsCocoaWindow::SetPopupWindowLevel()
 {
   if (!mWindow)
@@ -2102,6 +2078,40 @@ bool nsCocoaWindow::ShouldFocusPlugin()
     return false;
 
   return true;
+}
+
+NS_IMETHODIMP
+nsCocoaWindow::NotifyIME(NotificationToIME aNotification)
+{
+  switch (aNotification) {
+    case NOTIFY_IME_OF_FOCUS:
+      if (mInputContext.IsPasswordEditor()) {
+        TextInputHandler::EnableSecureEventInput();
+      }
+      return NS_OK;
+    case NOTIFY_IME_OF_BLUR:
+      // When we're going to be deactive, we must disable the secure event input
+      // mode, see the Carbon Event Manager Reference.
+      TextInputHandler::EnsureSecureEventInputDisabled();
+      return NS_OK;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+}
+
+NS_IMETHODIMP_(void)
+nsCocoaWindow::SetInputContext(const InputContext& aContext,
+                               const InputContextAction& aAction)
+{
+  // XXX Ideally, we should check if this instance has focus or not.
+  //     However, this is called only when this widget has focus, so,
+  //     it's not problem at least for now.
+  if (aContext.IsPasswordEditor()) {
+    TextInputHandler::EnableSecureEventInput();
+  } else {
+    TextInputHandler::EnsureSecureEventInputDisabled();
+  }
+  mInputContext = aContext;
 }
 
 @implementation WindowDelegate
@@ -2474,15 +2484,16 @@ GetDPI(NSWindow* aWindow)
 @interface BaseWindow(Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
+- (void)updateContentViewSize;
 @end
 
 @implementation BaseWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
+  mDrawsIntoWindowFrame = NO;
   [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag];
   mState = nil;
-  mDrawsIntoWindowFrame = NO;
   mActiveTitlebarColor = nil;
   mInactiveTitlebarColor = nil;
   mScheduledShadowInvalidation = NO;
@@ -2539,6 +2550,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState
 {
   mDrawsIntoWindowFrame = aState;
+  [self updateContentViewSize];
 }
 
 - (BOOL)drawsContentsIntoWindowFrame
@@ -2647,6 +2659,73 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   // Nothing to do here, but NSTrackingArea wants us to implement this method.
 }
 
+- (void)updateContentViewSize
+{
+  NSRect rect = [self contentRectForFrameRect:[self frame]];
+  [[self contentView] setFrameSize:rect.size];
+}
+
+// Override methods that translate between content rect and frame rect.
+- (NSRect)contentRectForFrameRect:(NSRect)aRect
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  return [super contentRectForFrameRect:aRect];
+}
+
+- (NSRect)contentRectForFrameRect:(NSRect)aRect styleMask:(NSUInteger)aMask
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  if ([super respondsToSelector:@selector(contentRectForFrameRect:styleMask:)]) {
+    return [super contentRectForFrameRect:aRect styleMask:aMask];
+  } else {
+    return [NSWindow contentRectForFrameRect:aRect styleMask:aMask];
+  }
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  return [super frameRectForContentRect:aRect];
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect styleMask:(NSUInteger)aMask
+{
+  if ([self drawsContentsIntoWindowFrame]) {
+    return aRect;
+  }
+  if ([super respondsToSelector:@selector(frameRectForContentRect:styleMask:)]) {
+    return [super frameRectForContentRect:aRect styleMask:aMask];
+  } else {
+    return [NSWindow frameRectForContentRect:aRect styleMask:aMask];
+  }
+}
+
+- (void)setContentView:(NSView*)aView
+{
+  [super setContentView:aView];
+
+  // Now move the contentView to the bottommost layer so that it's guaranteed
+  // to be under the window buttons.
+  NSView* frameView = [aView superview];
+  [aView removeFromSuperview];
+  [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
+}
+
+- (NSArray*)titlebarControls
+{
+  // Return all subviews of the frameView which are not the content view.
+  NSView* frameView = [[self contentView] superview];
+  NSMutableArray* array = [[[frameView subviews] mutableCopy] autorelease];
+  [array removeObject:[self contentView]];
+  return array;
+}
+
 - (BOOL)respondsToSelector:(SEL)aSelector
 {
   // Claim the window doesn't respond to this so that the system
@@ -2731,94 +2810,9 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 @end
 
-@interface TitlebarMouseHandlingView : NSView<EventRedirection>
-{
-  ToolbarWindow* mWindow; // weak
-  BOOL mProcessingRightMouseDown;
-}
-
-- (id)initWithWindow:(ToolbarWindow*)aWindow;
-@end
-
-@implementation TitlebarMouseHandlingView
-
-- (id)initWithWindow:(ToolbarWindow*)aWindow
-{
-  if ((self = [super initWithFrame:[aWindow titlebarRect]])) {
-    mWindow = aWindow;
-    [self setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
-    [ChildView registerViewForDraggedTypes:self];
-    mProcessingRightMouseDown = NO;
-  }
-  return self;
-}
-
-- (NSView*)targetView
-{
-  return [mWindow mainChildView];
-}
-
-- (BOOL)mouseDownCanMoveWindow
-{
-  return [mWindow isMovableByWindowBackground];
-}
-
-// We redirect many types of events to the window's mainChildView simply by
-// passing the event object to the respective handler method. We don't need any
-// coordinate transformations because event coordinates are relative to the
-// window.
-// We only need to handle event types whose target NSView is determined by the
-// event's position. We don't need to handle key events and NSMouseMoved events
-// because those are only sent to the window's first responder. This view
-// doesn't override acceptsFirstResponder, so it will never receive those kinds
-// of events.
-
-- (void)mouseMoved:(NSEvent*)aEvent            { [[self targetView] mouseMoved:aEvent]; }
-- (void)mouseDown:(NSEvent*)aEvent             { [[self targetView] mouseDown:aEvent]; }
-- (void)mouseUp:(NSEvent*)aEvent               { [[self targetView] mouseUp:aEvent]; }
-- (void)mouseDragged:(NSEvent*)aEvent          { [[self targetView] mouseDragged:aEvent]; }
-- (void)rightMouseDown:(NSEvent*)aEvent
-{
-  // To avoid recursion...
-  if (mProcessingRightMouseDown)
-    return;
-  mProcessingRightMouseDown = YES;
-  [[self targetView] rightMouseDown:aEvent];
-  mProcessingRightMouseDown = NO;
-}
-- (void)rightMouseUp:(NSEvent*)aEvent          { [[self targetView] rightMouseUp:aEvent]; }
-- (void)rightMouseDragged:(NSEvent*)aEvent     { [[self targetView] rightMouseDragged:aEvent]; }
-- (void)otherMouseDown:(NSEvent*)aEvent        { [[self targetView] otherMouseDown:aEvent]; }
-- (void)otherMouseUp:(NSEvent*)aEvent          { [[self targetView] otherMouseUp:aEvent]; }
-- (void)otherMouseDragged:(NSEvent*)aEvent     { [[self targetView] otherMouseDragged:aEvent]; }
-- (void)scrollWheel:(NSEvent*)aEvent           { [[self targetView] scrollWheel:aEvent]; }
-- (void)swipeWithEvent:(NSEvent*)aEvent        { [[self targetView] swipeWithEvent:aEvent]; }
-- (void)beginGestureWithEvent:(NSEvent*)aEvent { [[self targetView] beginGestureWithEvent:aEvent]; }
-- (void)magnifyWithEvent:(NSEvent*)aEvent      { [[self targetView] magnifyWithEvent:aEvent]; }
-- (void)rotateWithEvent:(NSEvent*)aEvent       { [[self targetView] rotateWithEvent:aEvent]; }
-- (void)endGestureWithEvent:(NSEvent*)aEvent   { [[self targetView] endGestureWithEvent:aEvent]; }
-- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
-  { return [[self targetView] draggingEntered:sender]; }
-- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
-  { return [[self targetView] draggingUpdated:sender]; }
-- (void)draggingExited:(id <NSDraggingInfo>)sender
-  { [[self targetView] draggingExited:sender]; }
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
-  { return [[self targetView] performDragOperation:sender]; }
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
-  { [[self targetView] draggedImage:anImage endedAt:aPoint operation:operation]; }
-- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal
-  { return [[self targetView] draggingSourceOperationMaskForLocal:isLocal]; }
-- (NSArray *)namesOfPromisedFilesDroppedAtDestination:(NSURL*)dropDestination
-  { return [[self targetView] namesOfPromisedFilesDroppedAtDestination:dropDestination]; }
-- (NSMenu*)menuForEvent:(NSEvent*)aEvent
-  { return [[self targetView] menuForEvent:aEvent]; }
-
-@end
-
 // This class allows us to exercise control over the window's title bar. This
-// allows for a "unified toolbar" look, and for extending the content area into
-// the title bar. It works like this:
+// allows for a "unified toolbar" look without having to extend the content
+// area into the title bar. It works like this:
 // 1) We set the window's style to textured.
 // 2) Because of this, the background color applies to the entire window, including
 //     the titlebar area. For normal textured windows, the default pattern is a 
@@ -2830,10 +2824,11 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 // 4) Whenever the window's main state changes and when [window display] is called,
 //    Cocoa redraws the titlebar using the patternDraw callback function.
 //
-// This class also provides us with a pill button to show/hide the toolbar.
+// This class also provides us with a pill button to show/hide the toolbar up to 10.6.
 //
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
-// 1) In the style sheet we set the toolbar's -moz-appearance to -moz-mac-unified-toolbar.
+// 1) In the style sheet we set the toolbar's -moz-appearance to toolbar or
+//    -moz-mac-unified-toolbar.
 // 2) When the toolbar is visible and we paint the application chrome
 //    window, the array that Gecko passes nsChildView::UpdateThemeGeometries
 //    will contain an entry for the widget type NS_THEME_TOOLBAR or
@@ -2847,16 +2842,15 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 //
 // Whenever the unified gradient is drawn in the titlebar or the toolbar, both
 // titlebar height and toolbar height must be known in order to construct the
-// correct gradient (which is a linear gradient with the length
-// titlebarHeight + toolbarHeight - 1). But you can only get from the toolbar frame
+// correct gradient. But you can only get from the toolbar frame
 // to the containing window - the other direction doesn't work. That's why the
 // toolbar height is cached in the ToolbarWindow but nsNativeThemeCocoa can simply
 // query the window for its titlebar height when drawing the toolbar.
-@interface ToolbarWindow(Private)
-- (void)installTitlebarMouseHandlingView;
-- (void)uninstallTitlebarMouseHandlingView;
-@end;
-
+//
+// Note that in drawsContentsIntoWindowFrame mode, titlebar drawing works in a
+// completely different way: In that mode, the window's mainChildView will
+// cover the titlebar completely and nothing that happens in the window
+// background will reach the screen.
 @implementation ToolbarWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
@@ -2870,7 +2864,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     [super setBackgroundColor:mColor];
     mBackgroundColor = [[NSColor whiteColor] retain];
 
-    mUnifiedToolbarHeight = 0.0f;
+    mUnifiedToolbarHeight = 22.0f;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -2936,8 +2930,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   } else {
     [borderView setNeedsDisplayInRect:rect];
   }
-
-  [[self mainChildView] maybeDrawInTitlebar];
 }
 
 - (NSRect)titlebarRect
@@ -2946,26 +2938,32 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
                     [self frame].size.width, [self titlebarHeight]);
 }
 
-- (float)unifiedToolbarHeight
+// Returns the unified height of titlebar + toolbar.
+- (CGFloat)unifiedToolbarHeight
 {
   return mUnifiedToolbarHeight;
 }
 
-- (float)titlebarHeight
+- (CGFloat)titlebarHeight
 {
   NSRect frameRect = [self frame];
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
-- (void)setUnifiedToolbarHeight:(float)aHeight
+// Stores the complete height of titlebar + toolbar.
+- (void)setUnifiedToolbarHeight:(CGFloat)aHeight
 {
-  if ([self drawsContentsIntoWindowFrame] || aHeight == mUnifiedToolbarHeight)
+  if (aHeight == mUnifiedToolbarHeight)
     return;
 
   mUnifiedToolbarHeight = aHeight;
 
-  // Update sheet positioning hint.
-  [self setContentBorderThickness:mUnifiedToolbarHeight forEdge:NSMaxYEdge];
+  // Update sheet positioning hint
+  NSRect frameRect = [self frame];
+  NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:[self styleMask]];
+  CGFloat originalTitlebarHeight = NSMaxY(frameRect) - NSMaxY(originalContentRect);
+  CGFloat topMargin = mUnifiedToolbarHeight - originalTitlebarHeight;
+  [self setContentBorderThickness:topMargin forEdge:NSMaxYEdge];
 
   // Redraw the title bar. If we're inside painting, we'll do it right now,
   // otherwise we'll just invalidate it.
@@ -2973,39 +2971,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:needSyncRedraw];
 }
 
-// Extending the content area into the title bar works by redirection of both
-// drawing and mouse events.
-// The window's NSView hierarchy looks like this:
-//  - border view ([[window contentView] superview])
-//     - transparent title bar event redirection view
-//     - window controls (traffic light buttons)
-//     - content view ([window contentView], default NSView provided by the window)
-//        - our main Gecko ChildView ([window mainChildView]), which has an
-//          OpenGL context attached to it when accelerated
-//           - possibly more ChildViews for plugins
-//
-// When the window is in title bar extension mode, the mainChildView covers the
-// whole window but is only visible in the content area of the window, because
-// it's a subview of the window's contentView and thus clipped to its dimensions.
-// This clipping is a good thing because it avoids a few problems. For example,
-// if the mainChildView weren't clipped and thus visible in the titlebar, we'd
-// have have to do the rounded corner masking and the drawing of the highlight
-// line ourselves.
-// This would be especially hard in combination with OpenGL acceleration since
-// rounded corners would require making the OpenGL context transparent, which
-// would bring another set of challenges with it. Having the window controls
-// draw on top of an OpenGL context could be hard, too.
-//
-// So title bar drawing happens in the border view. The border view's drawRect
-// method is not under our control, but we can get it to call into our code
-// using some tricks, see the TitlebarAndBackgroundColor class below.
-// Specifically, we have it call the TitlebarDrawCallback function, which
-// draws the contents of mainChildView into the provided CGContext.
-// (Even if the ChildView uses OpenGL for rendering, drawing in the title bar
-// will happen non-accelerated in that CGContext.)
-//
-// Mouse event redirection happens via a TitlebarMouseHandlingView which we
-// install below.
+// Extending the content area into the title bar works by resizing the
+// mainChildView so that it covers the titlebar.
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState
 {
   BOOL stateChanged = ([self drawsContentsIntoWindowFrame] != aState);
@@ -3028,26 +2995,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     // content area, so that event would have wrong position information. So
     // we'll send a mouse move event with the correct new position.
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
-
-    if (aState) {
-      [self installTitlebarMouseHandlingView];
-    } else {
-      [self uninstallTitlebarMouseHandlingView];
-    }
   }
-}
-
-- (void)installTitlebarMouseHandlingView
-{
-  mTitlebarView = [[TitlebarMouseHandlingView alloc] initWithWindow:self];
-  [[[self contentView] superview] addSubview:mTitlebarView positioned:NSWindowBelow relativeTo:nil];
-}
-
-- (void)uninstallTitlebarMouseHandlingView
-{
-  [mTitlebarView removeFromSuperview];
-  [mTitlebarView release];
-  mTitlebarView = nil;
 }
 
 // Returning YES here makes the setShowsToolbarButton method work even though
@@ -3139,7 +3087,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 @end
 
 // Custom NSColor subclass where most of the work takes place for drawing in
-// the titlebar area.
+// the titlebar area. Not used in drawsContentsIntoWindowFrame mode.
 @implementation TitlebarAndBackgroundColor
 
 - (id)initWithWindow:(ToolbarWindow*)aWindow
@@ -3152,18 +3100,18 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 static void
 DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                   float aToolbarHeight, BOOL aIsMain)
+                   CGFloat aUnifiedToolbarHeight, BOOL aIsMain)
 {
   if (aTitlebarRect.size.width * aTitlebarRect.size.height > CUIDRAW_MAX_AREA) {
     return;
   }
-  int unifiedHeight = aTitlebarRect.size.height + aToolbarHeight;
+
   CUIDraw([NSWindow coreUIRenderer], aTitlebarRect, aContext,
           (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
             @"kCUIWidgetWindowFrame", @"widget",
             @"regularwin", @"windowtype",
             (aIsMain ? @"normal" : @"inactive"), @"state",
-            [NSNumber numberWithInt:unifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+            [NSNumber numberWithDouble:aUnifiedToolbarHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
             [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
             nil],
           nil);
@@ -3183,17 +3131,8 @@ static void
 TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 {
   ToolbarWindow *window = (ToolbarWindow*)aInfo;
-  NSRect titlebarRect = [window titlebarRect];
-
-  if ([window drawsContentsIntoWindowFrame]) {
-    ChildView* view = [window mainChildView];
-    if (!view)
-      return;
-
-    CGContextTranslateCTM(aContext, 0.0f, [window frame].size.height - titlebarRect.size.height);
-
-    [view drawTitlebar:[window frame] inTitlebarContext:aContext];
-  } else {
+  if (![window drawsContentsIntoWindowFrame]) {
+    NSRect titlebarRect = [window titlebarRect];
     BOOL isMain = [window isMainWindow];
     NSColor *titlebarColor = [window titlebarColorForActiveWindow:isMain];
     if (!titlebarColor) {

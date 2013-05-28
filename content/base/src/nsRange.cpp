@@ -3077,3 +3077,15 @@ nsRange::AutoInvalidateSelection::~AutoInvalidateSelection()
     ::InvalidateAllFrames(commonAncestor);
   }
 }
+
+/* static */ already_AddRefed<nsRange>
+nsRange::Constructor(const dom::GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  if (!window || !window->GetDoc()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  return window->GetDoc()->CreateRange(aRv);
+}

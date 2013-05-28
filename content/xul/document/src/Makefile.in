@@ -11,20 +11,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkconxuldoc_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
-
-
-CPPSRCS		= nsXULControllers.cpp
-
-ifdef MOZ_XUL
-CPPSRCS		+= \
-		nsXULCommandDispatcher.cpp \
-		nsXULContentSink.cpp \
-		XULDocument.cpp \
-		nsXULPrototypeCache.cpp \
-		nsXULPrototypeDocument.cpp \
-		$(NULL)
-endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

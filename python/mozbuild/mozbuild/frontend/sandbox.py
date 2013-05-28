@@ -81,8 +81,8 @@ class GlobalNamespace(dict):
 
         allowed_variables is a dict of the variables that can be queried and
         mutated. Keys in this dict are the strings representing keys in this
-        namespace which are valid. Values are tuples of type, default value,
-        and a docstring describing the purpose of the variable.
+        namespace which are valid. Values are tuples of stored type, assigned
+        type, default value, and a docstring describing the purpose of the variable.
 
         builtins is the value to use for the special __builtins__ key. If not
         defined, the BUILTINS constant attached to this class is used. The
@@ -114,7 +114,7 @@ class GlobalNamespace(dict):
             self.last_name_error = KeyError('global_ns', 'get_unknown', name)
             raise self.last_name_error
 
-        dict.__setitem__(self, name, copy.deepcopy(default[1]))
+        dict.__setitem__(self, name, copy.deepcopy(default[2]))
         return dict.__getitem__(self, name)
 
     def __setitem__(self, name, value):
@@ -124,17 +124,27 @@ class GlobalNamespace(dict):
 
         # We don't need to check for name.isupper() here because LocalNamespace
         # only sends variables our way if isupper() is True.
-        default = self._allowed_variables.get(name, None)
+        stored_type, input_type, default, docs = \
+            self._allowed_variables.get(name, (None, None, None, None))
 
-        if default is None:
+        # Variable is unknown.
+        if stored_type is None:
             self.last_name_error = KeyError('global_ns', 'set_unknown', name,
                 value)
             raise self.last_name_error
 
-        if not isinstance(value, default[0]):
-            self.last_name_error = ValueError('global_ns', 'set_type', name,
-                value, default[0])
-            raise self.last_name_error
+        # If the incoming value is not the type we store, we try to convert
+        # it to that type. This relies on proper coercion rules existing. This
+        # is the responsibility of whoever defined the symbols: a type should
+        # not be in the allowed set if the constructor function for the stored
+        # type does not accept an instance of that type.
+        if not isinstance(value, stored_type):
+            if not isinstance(value, input_type):
+                self.last_name_error = ValueError('global_ns', 'set_type', name,
+                    value, input_type)
+                raise self.last_name_error
+
+            value = stored_type(value)
 
         dict.__setitem__(self, name, value)
 

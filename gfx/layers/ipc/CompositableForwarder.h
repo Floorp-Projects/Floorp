@@ -37,8 +37,13 @@ class CompositableForwarder : public ISurfaceAllocator
   friend class AutoOpenSurface;
   friend class TextureClientShmem;
 public:
+  typedef gfxASurface::gfxContentType gfxContentType;
+
   CompositableForwarder()
-  : mMaxTextureSize(0), mCompositorBackend(layers::LAYERS_NONE)
+  : mMaxTextureSize(0)
+  , mCompositorBackend(layers::LAYERS_NONE)
+  , mSupportsTextureBlitting(false)
+  , mSupportsPartialUploads(false)
   {}
 
   /**
@@ -66,6 +71,14 @@ public:
                                    const TextureInfo& aTextureInfo,
                                    const SurfaceDescriptor* aFrontDescriptorOnWhite = nullptr,
                                    const SurfaceDescriptor* aBackDescriptorOnWhite = nullptr) = 0;
+
+  /**
+   * Notify the CompositableHost that it should create host-side-only
+   * texture(s), that we will update incrementally using UpdateTextureIncremental.
+   */
+  virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
+                                        const TextureInfo& aTextureInfo,
+                                        const nsIntRect& aBufferRect) = 0;
 
   /**
    * Tell the compositor that a Compositable is killing its buffer(s),
@@ -98,6 +111,23 @@ public:
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
                                    const nsIntRegion& aUpdatedRegion) = 0;
+
+  /**
+   * Notify the compositor to update aTextureId using aDescriptor, and take
+   * ownership of aDescriptor.
+   *
+   * aDescriptor only contains the pixels for aUpdatedRegion, and is relative
+   * to aUpdatedRegion.TopLeft().
+   *
+   * aBufferRect/aBufferRotation define the new valid region contained
+   * within the texture after the update has been applied.
+   */
+  virtual void UpdateTextureIncremental(CompositableClient* aCompositable,
+                                        TextureIdentifier aTextureId,
+                                        SurfaceDescriptor& aDescriptor,
+                                        const nsIntRegion& aUpdatedRegion,
+                                        const nsIntRect& aBufferRect,
+                                        const nsIntPoint& aBufferRotation) = 0;
 
   /**
    * Communicate the picture rect of a YUV image in aLayer to the compositor
@@ -134,9 +164,21 @@ public:
     return mCompositorBackend;
   }
 
+  bool SupportsTextureBlitting() const
+  {
+    return mSupportsTextureBlitting;
+  }
+
+  bool SupportsPartialUploads() const
+  {
+    return mSupportsPartialUploads;
+  }
+
 protected:
   uint32_t mMaxTextureSize;
   LayersBackend mCompositorBackend;
+  bool mSupportsTextureBlitting;
+  bool mSupportsPartialUploads;
 };
 
 } // namespace

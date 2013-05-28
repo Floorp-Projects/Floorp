@@ -44,8 +44,10 @@ let Elements = {};
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
   ["appbar",             "appbar"],
+  ["contextappbar",      "contextappbar"],
   ["contentViewport",    "content-viewport"],
   ["progress",           "progress-control"],
+  ["progressContainer",  "progress-container"],
   ["contentNavigator",   "content-navigator"],
   ["aboutFlyout",        "about-flyoutpanel"],
   ["prefsFlyout",        "prefs-flyoutpanel"],
@@ -94,7 +96,6 @@ var BrowserUI = {
     window.addEventListener("MozPrecisePointer", this, true);
     window.addEventListener("MozImprecisePointer", this, true);
 
-    Services.prefs.addObserver("browser.tabs.tabsOnly", this, false);
     Services.prefs.addObserver("browser.cache.disk_cache_ssl", this, false);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
@@ -141,7 +142,6 @@ var BrowserUI = {
       messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
       try {
-        BrowserUI._updateTabsOnly();
         Downloads.init();
         DialogUI.init();
         FormHelperUI.init();
@@ -154,11 +154,7 @@ var BrowserUI = {
         Util.dumpLn("Exception in delay load module:", ex.message);
       }
 
-#ifdef MOZ_UPDATER
-      // Check for updates in progress
-      let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
-      updatePrompt.checkForUpdates();
-#endif
+      BrowserUI._pullDesktopControlledPrefs();
 
       // check for left over crash reports and submit them if found.
       if (BrowserUI.startupCrashCheck()) {
@@ -248,6 +244,37 @@ var BrowserUI = {
     } catch (ex) {}
 
     return uri.spec;
+  },
+
+  /**
+    * Some prefs that have consequences in both Metro and Desktop such as
+    * app-update prefs, are automatically pulled from Desktop here.
+    */
+  _pullDesktopControlledPrefs: function() {
+    function pullDesktopControlledPrefType(prefType, prefFunc) {
+      try {
+        registry.create(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                      "Software\\Mozilla\\Firefox\\Metro\\Prefs\\" + prefType,
+                      Ci.nsIWindowsRegKey.ACCESS_ALL);
+        for (let i = 0; i < registry.valueCount; i++) {
+          let prefName = registry.getValueName(i);
+          let prefValue = registry.readStringValue(prefName);
+          if (prefType == Ci.nsIPrefBranch.PREF_BOOL) {
+            prefValue = prefValue == "true";
+          }
+          Services.prefs[prefFunc](prefName, prefValue);
+        }
+      } catch (ex) {
+        Util.dumpLn("Could not pull for prefType " + prefType + ": " + ex);
+      } finally {
+        registry.close();
+      }
+    }
+    let registry = Cc["@mozilla.org/windows-registry-key;1"].
+                   createInstance(Ci.nsIWindowsRegKey);
+    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_INT, "setIntPref");
+    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_BOOL, "setBoolPref");
+    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_STRING, "setCharPref");
   },
 
   /* Set the location to the current content */
@@ -400,23 +427,18 @@ var BrowserUI = {
   },
 
   animateClosingTab: function animateClosingTab(tabToClose) {
-    if (this.isTabsOnly) {
-      Browser.closeTab(tabToClose, { forceClose: true } );
-    } else {
-      // Trigger closing animation
-      tabToClose.chromeTab.setAttribute("closing", "true");
+    tabToClose.chromeTab.setAttribute("closing", "true");
 
-      let wasCollapsed = !ContextUI.isExpanded;
-      if (wasCollapsed) {
-        ContextUI.displayTabs();
-      }
+    let wasCollapsed = !ContextUI.isExpanded;
+    if (wasCollapsed) {
+      ContextUI.displayTabs();
+    }
 
-      this.setOnTabAnimationEnd(function() {
-	Browser.closeTab(tabToClose, { forceClose: true } );
+    this.setOnTabAnimationEnd(function() {
+	    Browser.closeTab(tabToClose, { forceClose: true } );
         if (wasCollapsed)
           ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
-      });
-    }
+    });
   },
 
   /**
@@ -523,32 +545,10 @@ var BrowserUI = {
     ContextUI.cancelDismiss();
   },
 
-
-  /*********************************
-   * Conventional tabs
-   */
-
-  // Tabsonly displays the url bar with conventional tabs. Also
-  // the tray does not auto hide.
-  get isTabsOnly() {
-    return Services.prefs.getBoolPref("browser.tabs.tabsOnly");
-  },
-
-  _updateTabsOnly: function _updateTabsOnly() {
-    if (this.isTabsOnly) {
-      Elements.windowState.setAttribute("tabsonly", "true");
-    } else {
-      Elements.windowState.removeAttribute("tabsonly");
-    }
-  },
-
   observe: function BrowserUI_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
         switch (aData) {
-          case "browser.tabs.tabsOnly":
-            this._updateTabsOnly();
-            break;
           case "browser.cache.disk_cache_ssl":
             this._sslDiskCacheEnabled = Services.prefs.getBoolPref(aData);
             break;
@@ -1117,7 +1117,9 @@ var ContextUI = {
     Elements.browsers.addEventListener("mousedown", this, true);
     Elements.browsers.addEventListener("touchstart", this, true);
     Elements.browsers.addEventListener("AlertActive", this, true);
-    window.addEventListener("MozEdgeUIGesture", this, true);
+    window.addEventListener("MozEdgeUIStarted", this, true);
+    window.addEventListener("MozEdgeUICanceled", this, true);
+    window.addEventListener("MozEdgeUICompleted", this, true);
     window.addEventListener("keypress", this, true);
     window.addEventListener("KeyboardChanged", this, false);
 
@@ -1282,8 +1284,7 @@ var ContextUI = {
 
   // tab tray state
   _setIsExpanded: function _setIsExpanded(aFlag, setSilently) {
-    // if the tray can't be expanded because we're in
-    // tabsonly mode, don't expand it.
+    // if the tray can't be expanded, don't expand it.
     if (!this.isExpandable || this.isExpanded == aFlag)
       return;
 
@@ -1311,7 +1312,29 @@ var ContextUI = {
    * Events
    */
 
-  _onEdgeUIEvent: function _onEdgeUIEvent(aEvent) {
+  _onEdgeUIStarted: function(aEvent) {
+    this._hasEdgeSwipeStarted = true;
+    this._clearDelayedTimeout();
+
+    if (StartUI.hide()) {
+      this.dismiss();
+      return;
+    }
+    this.toggle();
+  },
+
+  _onEdgeUICanceled: function(aEvent) {
+    this._hasEdgeSwipeStarted = false;
+    StartUI.hide();
+    this.dismiss();
+  },
+
+  _onEdgeUICompleted: function(aEvent) {
+    if (this._hasEdgeSwipeStarted) {
+      this._hasEdgeSwipeStarted = false;
+      return;
+    }
+
     this._clearDelayedTimeout();
     if (StartUI.hide()) {
       this.dismiss();
@@ -1322,8 +1345,14 @@ var ContextUI = {
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "MozEdgeUIGesture":
-        this._onEdgeUIEvent(aEvent);
+      case "MozEdgeUIStarted":
+        this._onEdgeUIStarted(aEvent);
+        break;
+      case "MozEdgeUICanceled":
+        this._onEdgeUICanceled(aEvent);
+        break;
+      case "MozEdgeUICompleted":
+        this._onEdgeUICompleted(aEvent);
         break;
       case "mousedown":
         if (aEvent.button == 0 && this.isVisible)
@@ -1469,7 +1498,7 @@ var StartUI = {
         break;
       case "contextmenu":
         let event = document.createEvent("Events");
-        event.initEvent("MozEdgeUIGesture", true, false);
+        event.initEvent("MozEdgeUICompleted", true, false);
         window.dispatchEvent(event);
         break;
     }
@@ -1489,23 +1518,8 @@ var SyncPanelUI = {
 };
 
 var FlyoutPanelsUI = {
-  get _aboutVersionLabel() {
-    return document.getElementById('about-version-label');
-  },
-
-  _initAboutPanel: function() {
-    // Include the build ID if this is an "a#" (nightly or aurora) build
-    let version = Services.appinfo.version;
-    if (/a\d+$/.test(version)) {
-      let buildID = Services.appinfo.appBuildID;
-      let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) +
-                      "-" + buildID.slice(6,8);
-      this._aboutVersionLabel.textContent +=" (" + buildDate + ")";
-    }
-  },
-
   init: function() {
-    this._initAboutPanel();
+    AboutPanelUI.init();
     PreferencesPanelView.init();
     SyncPanelUI.init();
   },

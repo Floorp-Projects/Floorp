@@ -6,6 +6,35 @@
 
 MODULE = 'gl'
 
+# NOTE: Please keep gl_provider in sync with Makefile.in until all variables
+# are moved over.
+gl_provider = 'Null'
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    gl_provider = 'WGL'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    gl_provider = 'CGL'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+    if CONFIG['fdef MOZ_PLATFORM_MAEMO']:
+        gl_provider = 'EGL'
+    else:
+        if CONFIG['MOZ_EGL_XRENDER_COMPOSITE']:
+            gl_provider = 'EGL'
+        else:
+            gl_provider = 'GLX'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    if CONFIG['fdef MOZ_PLATFORM_MAEMO']:
+        gl_provider = 'EGL'
+    else:
+        gl_provider = 'GLX'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    gl_provider = 'EGL'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    gl_provider = 'EGL'
+
+if CONFIG['MOZ_GL_PROVIDER']:
+    gl_provider = CONFIG['MOZ_GL_PROVIDER']
+
 EXPORTS += [
     'ForceDiscreteGPUHelperCGL.h',
     'GLContext.h',
@@ -28,10 +57,48 @@ EXPORTS += [
 
 if CONFIG['MOZ_X11']:
     EXPORTS += ['GLXLibrary.h']
+
+# Win32 is a special snowflake, for ANGLE
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
-        'WGLLibrary.h',
         'SharedSurfaceANGLE.h',
+        'WGLLibrary.h',
+    ]
+    CPP_SOURCES += [
+        'GLContextProviderEGL.cpp',
+        'GLLibraryEGL.cpp',
+        'SharedSurfaceANGLE.cpp',
     ]
 if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     EXPORTS += ['GLContextSkia.h']
+    CPP_SOURCES += [
+        'GLContextSkia.cpp',
+    ]
+
+if gl_provider == 'CGL':
+    # TODO: CMMSRCS
+    pass
+else:
+    CPP_SOURCES += [
+        'GLContextProvider%s.cpp' % gl_provider,
+    ]
+
+if gl_provider == 'EGL':
+    CPP_SOURCES += [
+        'GLLibraryEGL.cpp',
+    ]
+
+CPP_SOURCES += [
+    'GLContext.cpp',
+    'GLContextTypes.cpp',
+    'GLContextUtils.cpp',
+    'GLLibraryLoader.cpp',
+    'GLScreenBuffer.cpp',
+    'GLTextureImage.cpp',
+    'SharedSurface.cpp',
+    'SharedSurfaceEGL.cpp',
+    'SharedSurfaceGL.cpp',
+    'SurfaceFactory.cpp',
+    'SurfaceStream.cpp',
+]
+

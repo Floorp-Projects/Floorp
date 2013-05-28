@@ -11,72 +11,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= widget_windows
+MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 RESFILE		= widget.res
 MODULE_NAME	= nsWidgetWinModule
 LIBXUL_LIBRARY = 1
-
-CPPSRCS = \
-  nsWindow.cpp \
-  nsWindowGfx.cpp \
-  nsWindowDbg.cpp \
-  nsAppShell.cpp \
-  nsToolkit.cpp \
-  nsFilePicker.cpp \
-  nsScreenWin.cpp  \
-  nsScreenManagerWin.cpp \
-  nsLookAndFeel.cpp \
-  nsUXThemeData.cpp \
-  nsNativeThemeWin.cpp \
-  nsWinGesture.cpp \
-  nsIdleServiceWin.cpp \
-  nsSound.cpp \
-  nsIMM32Handler.cpp \
-  WindowHook.cpp \
-  WinTaskbar.cpp \
-  TaskbarPreview.cpp \
-  TaskbarTabPreview.cpp \
-  TaskbarWindowPreview.cpp \
-  TaskbarPreviewButton.cpp \
-  JumpListBuilder.cpp \
-  JumpListItem.cpp \
-  GfxInfo.cpp \
-  WidgetTraceEvent.cpp \
-  AudioSession.cpp \
-  nsWidgetFactory.cpp \
-  WinUtils.cpp \
-  WinMouseScrollHandler.cpp \
-  WinIMEHandler.cpp \
-  $(NULL)
-
-ifdef MOZ_CRASHREPORTER
-CPPSRCS += LSPAnnotator.cpp
-endif
-
-ifdef NS_PRINTING
-CPPSRCS		+= \
-	nsPrintOptionsWin.cpp \
-	nsPrintSettingsWin.cpp \
-	nsDeviceContextSpecWin.cpp \
-	$(NULL)
-endif
-
-CPPSRCS += \
-	KeyboardLayout.cpp \
-	IEnumFE.cpp  \
-	nsDataObj.cpp  \
-	nsDataObjCollection.cpp  \
-	nsNativeDragTarget.cpp  \
-	nsNativeDragSource.cpp  \
-	nsDragService.cpp  \
-	nsClipboard.cpp      \
-	nsImageClipboard.cpp \
-	nsBidiKeyboard.cpp   \
-	$(NULL)
-ifdef NS_ENABLE_TSF
-CPPSRCS		+= nsTextStore.cpp
-endif
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_UNICODE 
 

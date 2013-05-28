@@ -320,7 +320,8 @@ class IDLUnresolvedIdentifier(IDLObject):
                               [location])
         if name[0] == '_' and not allowDoubleUnderscore:
             name = name[1:]
-        if name in ["constructor", "iterator", "toString", "toJSON"] and not allowForbidden:
+        # TODO: Bug 872377, Restore "toJSON" to below list.
+        if name in ["constructor", "iterator", "toString"] and not allowForbidden:
             raise WebIDLError("Cannot use reserved identifier '%s'" % (name),
                               [location])
 

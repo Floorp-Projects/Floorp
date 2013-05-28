@@ -39,7 +39,29 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXPORTS += [
         'GonkGPSGeolocationProvider.h',
         'nsVolume.h',
+        'nsVolumeService.h',
+    ]
+    CPP_SOURCES += [
+        'AudioManager.cpp',
+        'AutoMounter.cpp',
+        'AutoMounterSetting.cpp',
+        'GonkGPSGeolocationProvider.cpp',
+        'AudioChannelManager.cpp',
+        'nsVolume.cpp',
+        'nsVolumeMountLock.cpp',
+        'nsVolumeService.cpp',
+        'nsVolumeStat.cpp',
+        'TimeZoneSettingObserver.cpp',
+        'Volume.cpp',
+        'VolumeCommand.cpp',
+        'VolumeManager.cpp',
+        'VolumeServiceIOThread.cpp',
+        'VolumeServiceTest.cpp',
     ]
 
 if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+
+CPP_SOURCES += [
+    'SystemWorkerManager.cpp',
+]

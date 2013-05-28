@@ -19,9 +19,7 @@ function move_small_object()
 }
 
 document.addEventListener("MozReftestInvalidate", move_small_object, false);
-
-// fallback for browsers that don't support MozReftestInvalidate
-setTimeout(move_small_object, 500);
+setTimeout(move_small_objects, 4000); // fallback for running outside reftest
 
   //]]></script>
   <rect width="100%" height="100%" fill="lime"/>

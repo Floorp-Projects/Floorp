@@ -8,6 +8,7 @@
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIMobileMessageCallback.h"
 #include "DOMCursor.h"
+#include "nsCxPusher.h"
 #include "nsServiceManagerUtils.h"      // for do_GetService
 
 namespace mozilla {
@@ -70,7 +71,6 @@ MobileMessageCursorCallback::NotifyCursorResult(nsISupports* aResult)
   JS::Rooted<JSObject*> global(cx, scriptContext->GetNativeGlobal());
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
   JS::Rooted<JS::Value> wrappedResult(cx);

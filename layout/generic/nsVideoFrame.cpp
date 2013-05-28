@@ -28,6 +28,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "ImageContainer.h"
 #include "ImageLayers.h"

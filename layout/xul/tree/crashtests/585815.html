@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 585815</title>
+<script>
+function done()
+{
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="setTimeout(done,1000)">
+
+<iframe src="585815-iframe.xul"></iframe>
+
+
+</body>
+</html>

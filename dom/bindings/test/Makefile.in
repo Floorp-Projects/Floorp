@@ -30,8 +30,6 @@ include $(topsrcdir)/dom/webidl/WebIDL.mk
 # But the webidl actually lives in our parent dir
 test_webidl_files := $(addprefix ../,$(test_webidl_files))
 
-CPPSRCS := $(subst .webidl,Binding.cpp,$(test_webidl_files))
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \
@@ -47,6 +45,7 @@ bindinggen_dependencies := \
   ../Bindings.conf \
   ../Configuration.py \
   ../Codegen.py \
+  ../ParserResults.pkl \
   ../parser/WebIDL.py \
   ../Makefile \
   $(GLOBAL_DEPS) \
@@ -89,19 +88,18 @@ endif
 # rules.mk and running make with no target in this dir does the right thing.
 include $(topsrcdir)/config/rules.mk
 
-$(CPPSRCS): ../%Binding.cpp: $(bindinggen_dependencies) \
-                             ../%.webidl \
-                             TestExampleInterface-example \
-                             TestExampleProxyInterface-example \
-                             $(NULL)
-	$(MAKE) -C .. $*Binding.h
-	$(MAKE) -C .. $*Binding.cpp
+$(CPPSRCS): .BindingGen
 
-TestExampleInterface-example:
-	$(MAKE) -C .. TestExampleInterface-example
-
-TestExampleProxyInterface-example:
-	$(MAKE) -C .. TestExampleProxyInterface-example
+.BindingGen: $(bindinggen_dependencies) \
+             $(test_webidl_files) \
+             $(NULL)
+	# The export phase in dom/bindings is what actually looks at
+	# dependencies and regenerates things as needed, so just go ahead and
+	# make that phase here.  Also make our example interface files.  If the
+	# target used here ever changes, change the conditional around
+	# $(CPPSRCS) in dom/bindings/Makefile.in.
+	$(MAKE) -C .. export TestExampleInterface-example TestExampleProxyInterface-example
+	@$(TOUCH) $@
 
 check::
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
@@ -110,3 +108,27 @@ check::
 check-interactive:
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) $(srcdir)/../parser/runtests.py -q
+
+# Since we define MOCHITEST_FILES, config/makefiles/mochitest.mk goes ahead and
+# sets up a rule with libs:: in itm which makes our .DEFAULT_TARGET be "libs".
+# Then ruls.mk does |.DEFAULT_TARGET ?= default| which leaves it as "libs".  So
+# if we make without an explicit target in this directory, we try to make
+# "libs", but with a $(MAKECMDGOALS) of empty string.  And then rules.mk
+# helpfully does not include our *.o.pp files, since it includes them only if
+# filtering some stuff out from $(MAKECMDGOALS) leaves it nonempty.  The upshot
+# is that if some headers change and we run make in this dir without an explicit
+# target things don't get rebuilt.
+#
+# On the other hand, if we set .DEFAULT_TARGET to "default" explicitly here,
+# then rules.mk will reinvoke make with "export" and "libs" but this time hey
+# will be passed as explicit targets, show up in $(MAKECMDGOALS), and things
+# will work.  Do this at the end of our Makefile so the rest of the build system
+# does not get a chance to muck with it after we set it.
+.DEFAULT_GOAL := default
+
+# Make sure to add .BindingGen to GARBAGE so we'll rebuild our example
+# files if someone goes through and deletes GARBAGE all over, which
+# will delete example files from our parent dir.
+GARBAGE += \
+  .BindingGen \
+  $(NULL)

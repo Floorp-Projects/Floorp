@@ -498,7 +498,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     return nullptr;
   }
 
-  NS_WARN_IF_FALSE(!CommonAnimationManager::ThrottlingEnabled() ||
+  NS_WARN_IF_FALSE(!nsLayoutUtils::AreAsyncAnimationsEnabled() ||
                      mPresContext->ThrottledStyleIsUpToDate(),
                    "throttled animations not up to date");
 

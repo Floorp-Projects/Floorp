@@ -42,11 +42,7 @@
 
     makePC(1, false);
 
-    makePC({}, false);
-
-    makePC([], false);
-
-    makePC({ iceServers: {}}, false);
+    makePC({}, true);
 
     makePC({ iceServers: [] }, true);
 
@@ -60,8 +56,6 @@
                 { url:"turn:[::192.9.5.5]:42", username:"p", credential:"p" },
                 { url:"turns:x.org:42", username:"p", credential:"p" }
                 ]}, true);
-
-    makePC({ iceServers: [{ url:"stun:0.0.0.0", credential:{}}] }, false);
 
     pcs = null;
     SimpleTest.finish();

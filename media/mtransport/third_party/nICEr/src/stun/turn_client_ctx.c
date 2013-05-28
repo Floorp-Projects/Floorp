@@ -661,7 +661,7 @@ static void nr_turn_client_refresh_cb(NR_SOCKET s, int how, void *arg)
   UINT4 lifetime = ctx->stun->results.refresh_response.lifetime_secs;
 
   r_log(NR_LOG_TURN, LOG_DEBUG, "TURN(%s): Refresh succeeded. lifetime=%u",
-        lifetime);
+        ctx->tctx->label, lifetime);
 
   if ((r=nr_turn_client_start_refresh_timer(
           ctx->tctx, ctx, lifetime)))
@@ -709,7 +709,8 @@ int nr_turn_client_send_indication(nr_turn_client_ctx *ctx,
   if ((r=nr_socket_sendto(ctx->sock,
                           ind->buffer, ind->length, flags,
                           &ctx->turn_server_addr))) {
-    r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): Failed sending send indication");
+    r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): Failed sending send indication",
+          ctx->label);
     ABORT(r);
   }
 
@@ -902,9 +903,11 @@ abort:
   return(_status);
 }
 
-static void nr_turn_client_permissions_cb(NR_SOCKET s, int how, void *cb)
+static void nr_turn_client_permissions_cb(NR_SOCKET s, int how, void *arg)
 {
-  r_log(NR_LOG_TURN, LOG_DEBUG, "TURN(%s): Successfully refreshed permission");
+  nr_turn_stun_ctx *ctx = (nr_turn_stun_ctx *)arg;
+  r_log(NR_LOG_TURN, LOG_DEBUG, "TURN(%s): Successfully refreshed permission",
+        ctx->tctx->label);
 }
 
 /* Note that we don't destroy the nr_turn_stun_ctx. That is owned by the

@@ -1044,6 +1044,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mZoom);
     WriteParam(aMsg, aParam.mDevPixelsPerCSSPixel);
     WriteParam(aMsg, aParam.mMayHaveTouchListeners);
+    WriteParam(aMsg, aParam.mPresShellId);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -1059,7 +1060,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mResolution) &&
             ReadParam(aMsg, aIter, &aResult->mZoom) &&
             ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
-            ReadParam(aMsg, aIter, &aResult->mMayHaveTouchListeners));
+            ReadParam(aMsg, aIter, &aResult->mMayHaveTouchListeners) &&
+            ReadParam(aMsg, aIter, &aResult->mPresShellId));
   }
 };
 
@@ -1072,12 +1074,16 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
   {
     WriteParam(aMsg, aParam.mParentBackend);
     WriteParam(aMsg, aParam.mMaxTextureSize);
+    WriteParam(aMsg, aParam.mSupportsTextureBlitting);
+    WriteParam(aMsg, aParam.mSupportsPartialUploads);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
-           ReadParam(aMsg, aIter, &aResult->mMaxTextureSize);
+           ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
+           ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
+           ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads);
   }
 };
 

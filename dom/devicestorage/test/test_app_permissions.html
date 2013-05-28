@@ -476,21 +476,25 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: false,
+    fileExtension: '.png',
     test: TestEnumerate
   },
   {
     type: 'videos',
     shouldPass: false,
+    fileExtension: '.ogv',
     test: TestEnumerate
   },
   {
     type: 'music',
     shouldPass: false,
+    fileExtension: '.ogg',
     test: TestEnumerate
   },
   {
     type: 'sdcard',
     shouldPass: false,
+    fileExtension: '.txt',
     test: TestEnumerate
   },
 
@@ -498,6 +502,7 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: true,
+    fileExtension: '.png',
 
     permissions: ["device-storage:pictures"],
 
@@ -506,6 +511,7 @@ var gData = [
   {
     type: 'videos',
     shouldPass: true,
+    fileExtension: '.ogv',
 
     permissions: ["device-storage:videos"],
 
@@ -514,6 +520,7 @@ var gData = [
   {
     type: 'music',
     shouldPass: true,
+    fileExtension: '.ogg',
 
     permissions: ["device-storage:music"],
 
@@ -522,6 +529,7 @@ var gData = [
   {
     type: 'sdcard',
     shouldPass: true,
+    fileExtension: '.txt',
 
     permissions: ["device-storage:sdcard"],
 
@@ -532,6 +540,7 @@ var gData = [
   {
     type: 'pictures',
     shouldPass: true,
+    fileExtension: '.png',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:pictures"],
@@ -541,6 +550,7 @@ var gData = [
   {
     type: 'videos',
     shouldPass: true,
+    fileExtension: '.ogv',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:videos"],
@@ -550,6 +560,7 @@ var gData = [
   {
     type: 'music',
     shouldPass: true,
+    fileExtension: '.ogg',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:music"],
@@ -559,6 +570,7 @@ var gData = [
   {
     type: 'sdcard',
     shouldPass: true,
+    fileExtension: '.txt',
 
     app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:sdcard"],

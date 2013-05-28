@@ -615,8 +615,7 @@ nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
                     func->Item(0).GetUnit() == eCSSUnit_Enumerated,
                     "illegally structured function value");
 
-  nsCSSKeyword thisFunctionId =
-    static_cast<nsCSSKeyword>(func->Item(0).GetIntValue());
+  nsCSSKeyword thisFunctionId = func->Item(0).GetKeywordValue();
   return thisFunctionId == aFunctionId;
 }
 
@@ -775,13 +774,38 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     const nsCSSValue& functionName = array->Item(0);
     if (functionName.GetUnit() == eCSSUnit_Enumerated) {
       // We assume that the first argument is always of nsCSSKeyword type.
-      const nsCSSKeyword functionId =
-        static_cast<nsCSSKeyword>(functionName.GetIntValue());
-      nsStyleUtil::AppendEscapedCSSIdent(
-        NS_ConvertASCIItoUTF16(nsCSSKeywords::GetStringValue(functionId)),
-        aResult);
+      const nsCSSKeyword functionId = functionName.GetKeywordValue();
+      NS_ConvertASCIItoUTF16 ident(nsCSSKeywords::GetStringValue(functionId));
+      // Bug 721136: Normalize the identifier to lowercase, except that things
+      // like scaleX should have the last character capitalized.  This matches
+      // what other browsers do.
+      switch (functionId) {
+        case eCSSKeyword_rotatex:
+        case eCSSKeyword_scalex:
+        case eCSSKeyword_skewx:
+        case eCSSKeyword_translatex:
+          ident.Replace(ident.Length() - 1, 1, PRUnichar('X'));
+          break;
+
+        case eCSSKeyword_rotatey:
+        case eCSSKeyword_scaley:
+        case eCSSKeyword_skewy:
+        case eCSSKeyword_translatey:
+          ident.Replace(ident.Length() - 1, 1, PRUnichar('Y'));
+          break;
+
+        case eCSSKeyword_rotatez:
+        case eCSSKeyword_scalez:
+        case eCSSKeyword_translatez:
+          ident.Replace(ident.Length() - 1, 1, PRUnichar('Z'));
+          break;
+
+        default:
+          break;
+      }
+      nsStyleUtil::AppendEscapedCSSIdent(ident, aResult);
     } else {
-      functionName.AppendToString(aProperty, aResult);
+      MOZ_ASSERT(false, "should no longer have non-enumerated functions");
     }
     aResult.AppendLiteral("(");
 

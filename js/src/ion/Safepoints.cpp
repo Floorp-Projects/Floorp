@@ -231,11 +231,6 @@ SafepointWriter::writeNunboxParts(LSafepoint *safepoint)
     // Safepoints are permitted to have partially filled in entries for nunboxes,
     // provided that only the type is live and not the payload. Omit these from
     // the written safepoint.
-    //
-    // Note that partial entries typically appear when one part of a nunbox is
-    // stored in multiple places, in which case we will end up with incomplete
-    // information about all the places the value is stored. This will need to
-    // be fixed when the GC is permitted to move structures.
     uint32_t partials = safepoint->partialNunboxes();
 
     stream_.writeUnsigned(entries.length() - partials);

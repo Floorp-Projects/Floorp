@@ -49,8 +49,8 @@ function open(url, options) {
 
       let tab = getActiveTab(chromeWindow);
 
-      tab.addEventListener("load", function ready(event) {
-        let { document } = getTabContentWindow(this);
+      tab.linkedBrowser.addEventListener("load", function ready(event) {
+        let { document } = getTabContentWindow(tab);
 
         if (document.readyState === "complete" && document.URL === url) {
           this.removeEventListener(event.type, ready);
@@ -60,7 +60,7 @@ function open(url, options) {
 
           resolve(document.defaultView);
         }
-      })
+      }, true);
 
       setTabURL(tab, url);
     });

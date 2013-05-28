@@ -87,6 +87,12 @@ permissions.forEach(function (perm) {
         self.marionette = self._marionette_weakref()
         if self.marionette.session is None:
             self.marionette.start_session()
+        if self.marionette.timeout is not None:
+            self.marionette.timeouts(self.marionette.TIMEOUT_SEARCH, self.marionette.timeout)
+            self.marionette.timeouts(self.marionette.TIMEOUT_SCRIPT, self.marionette.timeout)
+            self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, self.marionette.timeout)
+        else:
+            self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
 
     def tearDown(self):
         self.duration = time.time() - self.start_time
@@ -153,6 +159,15 @@ class MarionetteTestCase(CommonTestCase):
             qemu = self.marionette.extra_emulators[self.extra_emulator_index]
         return qemu
 
+    def wait_for_condition(self, method, timeout=30):
+        timeout = float(timeout) + time.time()
+        while time.time() < timeout:
+            value = method(self.marionette)
+            if value:
+                return value
+            time.sleep(0.5)
+        else:
+            raise TimeoutException("wait_for_condition timed out")
 
 class MarionetteJSTestCase(CommonTestCase):
 

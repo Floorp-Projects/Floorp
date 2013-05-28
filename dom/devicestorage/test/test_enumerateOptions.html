@@ -48,7 +48,7 @@ ok(throws, "enumerate two string parameter");
 
 throws = false;
 try {
-var cursor = storage.enumerate("string", {"since": 1});
+var cursor = storage.enumerate("string", {"since": new Date(1)});
 } catch(e) {throws = true}
 ok(!throws, "enumerate a string and object parameter");
 
@@ -66,7 +66,7 @@ ok(throws, "enumerate object then a string");
 
 throws = false;
 try {
-var cursor = storage.enumerate({"path": "a", "since": 0});
+var cursor = storage.enumerate({"path": "a", "since": new Date(0) });
 } catch(e) {throws = true}
 ok(!throws, "enumerate object parameter with path");
 

@@ -168,16 +168,6 @@
    ...
 }
 {
-   Bug 794364
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN9PICLinker4initEP9JSContext
-   fun:_ZN2js4mjit2ic12GetElementIC13attachGetPropERNS_7VMFrameEN2JS6HandleIP8JSObjectEENS6_INS5_5ValueEEENS6_IPNS_12PropertyNameEEENS5_13MutableHandleISA_EE
-   fun:_ZN2js4mjit2ic12GetElementIC6updateERNS_7VMFrameEN2JS6HandleIP8JSObjectEENS6_INS5_5ValueEEENS6_IlEENS5_13MutableHandleISA_EE
-   fun:_ZN2js4mjit2ic10GetElementERNS_7VMFrameEPNS1_12GetElementICE
-   ...
-}
-{
    Bug 794369
    Memcheck:Leak
    fun:malloc
@@ -305,5 +295,13 @@
    fun:malloc
    ...
    fun:_ZN7mozilla3dom7workers13WorkerPrivate9DoRunLoopEP9JSContext
+   ...
+}
+{
+   Bug 874658
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_Z31mozilla_sampler_register_threadPKc
    ...
 }

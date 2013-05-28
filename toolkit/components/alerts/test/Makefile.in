@@ -15,6 +15,7 @@ include $(DEPTH)/config/autoconf.mk
 # Synchronous tests like test_alerts.html must come before
 # asynchronous tests like test_alerts_noobserve.html!
 MOCHITEST_FILES = \
+		test_multiple_alerts.html \
 		test_alerts.html \
 		test_alerts_noobserve.html \
 		$(NULL)

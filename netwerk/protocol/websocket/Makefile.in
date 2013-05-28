@@ -10,16 +10,10 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = nkwebsocket_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS = 1
-
-CPPSRCS = \
-  WebSocketChannel.cpp \
-  WebSocketChannelParent.cpp \
-  WebSocketChannelChild.cpp \
-  BaseWebSocketChannel.cpp \
-  $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \

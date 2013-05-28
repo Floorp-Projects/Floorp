@@ -158,22 +158,6 @@ CommonAnimationManager::ExtractComputedValueForTransition(
   return result;
 }
 
-/* static */ bool
-CommonAnimationManager::ThrottlingEnabled()
-{
-  static bool sThrottlePref = false;
-  static bool sThrottlePrefCached = false;
-
-  if (!sThrottlePrefCached) {
-    Preferences::AddBoolVarCache(&sThrottlePref,
-      "layers.offmainthreadcomposition.throttle-animations", false);
-    sThrottlePrefCached = true;
-  }
-
-  return sThrottlePref;
-}
-
-
 NS_IMPL_ISUPPORTS1(AnimValuesStyleRule, nsIStyleRule)
 
 /* virtual */ void
@@ -287,15 +271,6 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
     }
     return false;
   }
-  if (aProperty == eCSSProperty_opacity) {
-    bool enabled = nsLayoutUtils::AreOpacityAnimationsEnabled();
-    if (!enabled && shouldLog) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animation of 'opacity' is disabled");
-      LogAsyncAnimationFailure(message);
-    }
-    return enabled;
-  }
   if (aProperty == eCSSProperty_transform) {
     if (frame->Preserves3D() &&
         frame->Preserves3DChildren()) {
@@ -322,15 +297,14 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
       }
       return false;
     }
-    bool enabled = nsLayoutUtils::AreTransformAnimationsEnabled();
-    if (!enabled && shouldLog) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animation of 'transform' is disabled");
-      LogAsyncAnimationFailure(message);
-    }
-    return enabled;
   }
-  return aFlags & CanAnimate_AllowPartial;
+  bool enabled = nsLayoutUtils::AreAsyncAnimationsEnabled();
+  if (!enabled && shouldLog) {
+    nsCString message;
+    message.AppendLiteral("Performance warning: Async animations are disabled");
+    LogAsyncAnimationFailure(message);
+  }
+  return enabled && (aFlags & CanAnimate_AllowPartial);
 }
 
 /* static */ void
@@ -356,7 +330,7 @@ CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
 bool
 CommonElementAnimationData::CanThrottleTransformChanges(TimeStamp aTime)
 {
-  if (!CommonAnimationManager::ThrottlingEnabled()) {
+  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     return false;
   }
 

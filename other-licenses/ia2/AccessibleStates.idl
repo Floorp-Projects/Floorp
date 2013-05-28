@@ -1,28 +1,55 @@
 /*************************************************************************
  *
  *  File Name (AccessibleStates.idl)
+ * 
+ *  IAccessible2 IDL Specification 
+ * 
+ *  Copyright (c) 2007, 2010 Linux Foundation 
+ *  Copyright (c) 2006 IBM Corporation 
+ *  Copyright (c) 2000, 2006 Sun Microsystems, Inc. 
+ *  All rights reserved. 
+ *   
+ *   
+ *  Redistribution and use in source and binary forms, with or without 
+ *  modification, are permitted provided that the following conditions 
+ *  are met: 
+ *   
+ *   1. Redistributions of source code must retain the above copyright 
+ *      notice, this list of conditions and the following disclaimer. 
+ *   
+ *   2. Redistributions in binary form must reproduce the above 
+ *      copyright notice, this list of conditions and the following 
+ *      disclaimer in the documentation and/or other materials 
+ *      provided with the distribution. 
  *
- *  IAccessible2 IDL Specification
- *
- *  Copyright (c) Linux Foundation 2007, 2008
- *  Copyright (c) IBM Corp. 2006
- *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License version 2.1, as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
- *
- ************************************************************************/
+ *   3. Neither the name of the Linux Foundation nor the names of its 
+ *      contributors may be used to endorse or promote products 
+ *      derived from this software without specific prior written 
+ *      permission. 
+ *   
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
+ *  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ *  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ *  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ *  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ *  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+ *  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ *   
+ *  This BSD License conforms to the Open Source Initiative "Simplified 
+ *  BSD License" as published at: 
+ *  http://www.opensource.org/licenses/bsd-license.php 
+ *   
+ *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2 
+ *  mark may be used in accordance with the Linux Foundation Trademark 
+ *  Policy to indicate compliance with the IAccessible2 specification. 
+ * 
+ ************************************************************************/ 
 
 import "objidl.idl";
 
@@ -65,7 +92,12 @@ IA2_STATE_ARMED =					0x2,
 /** Indicates the user interface object corresponding to this object no longer exists. */
 IA2_STATE_DEFUNCT =					0x4,
 
-/** Indicates the user can change the contents of this object. */
+/** An object with this state has a caret and implements the IAccessibleText interface.
+  
+ Such fields may be read-only, so STATE_SYSTEM_READONLY is valid in combination
+  with IA2_STATE_EDITABLE.
+
+*/
 IA2_STATE_EDITABLE =				0x8,
 
 /** Indicates the orientation of this object is horizontal. */
@@ -151,6 +183,27 @@ IA2_STATE_SUPPORTS_AUTOCOMPLETION =	0x8000,
 IA2_STATE_TRANSIENT =				0x10000,
 
 /** Indicates the orientation of this object is vertical. */
-IA2_STATE_VERTICAL =				0x20000
+IA2_STATE_VERTICAL =				0x20000,
+
+/** Indicates this object is checkable.
+
+ The standard checkable objects are check boxes, radio buttons, check box menu
+ items, radio menu items, and toggle buttons.  Since assistive technology will
+ determine that these objects are checkable via the object's role the checkable
+ state is not required.  However, this state is necessary in those cases where
+ an object has a role which is not one of the previously mentioned roles.  An
+ example is a table cell which indicates whether or not an email has an attachment,
+ whether or not an mail is considered spam, and whether or not an email has been read.
+ */
+IA2_STATE_CHECKABLE =				0x40000,
+
+/** Indicates this object is pinned.
+
+ This state indicates that an object is fixed at a certain location.  One example
+ is a browser tab that when pinned cannot be moved until unpinned.  Another example
+ is a movable or floating object that when pinned remains in its pinned location
+ until being unpinned.
+ */
+IA2_STATE_PINNED =					0x80000
 
 };

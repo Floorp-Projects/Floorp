@@ -11,7 +11,6 @@ class TestBuildDict(unittest.TestCase):
         """
         Test that missing required values raises.
         """
-        self.assertRaises(Exception, build_dict, {})
         self.assertRaises(Exception, build_dict, {'OS_TARGET':'foo'})
         self.assertRaises(Exception, build_dict, {'TARGET_CPU':'foo'})
         self.assertRaises(Exception, build_dict, {'MOZ_WIDGET_TOOLKIT':'foo'})

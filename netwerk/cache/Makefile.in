@@ -11,30 +11,11 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = nkcache_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
 FORCE_STATIC_LIB = 1
-
-CPPSRCS = \
-  nsCache.cpp \
-  nsCacheEntry.cpp \
-  nsCacheEntryDescriptor.cpp \
-  nsCacheMetaData.cpp \
-  nsCacheService.cpp \
-  nsCacheSession.cpp \
-  nsCacheUtils.cpp \
-  nsMemoryCacheDevice.cpp \
-  nsDiskCacheBinding.cpp \
-  nsDiskCacheBlockFile.cpp \
-  nsDiskCacheDevice.cpp \
-  nsDiskCacheDeviceSQL.cpp \
-  nsDiskCacheEntry.cpp \
-  nsDiskCacheMap.cpp \
-  nsDiskCacheStreams.cpp \
-  nsDeleteDir.cpp \
-  nsApplicationCacheService.cpp \
-  $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \

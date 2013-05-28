@@ -46,6 +46,7 @@ class nsWrapperCache;
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
       native ZoneSpecifier(uintptr_t);
 [ref] native JSCallArgsRef(const JS::CallArgs);
+      native JSHandleId(JS::HandleId);
 
 /***************************************************************************/
 
@@ -63,13 +64,13 @@ class nsScriptObjectTracer;
 %}
 
 /***************************************************************************/
-[uuid(8916a320-d118-11d3-8f3a-0010a4e73d9a)]
+[uuid(909e8641-7c54-4dff-9b94-ba631f057b33)]
 interface nsIXPConnectJSObjectHolder : nsISupports
 {
-    readonly attribute JSObjectPtr      JSObject;
+    [notxpcom, nostdcall] JSObjectPtr GetJSObject();
 };
 
-[uuid(92e98688-0154-4b65-971b-0d4afe8fd7cb)]
+[uuid(b1b0d624-0759-4037-9517-45972781dcc1)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -81,9 +82,9 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      */
 
     readonly attribute nsIXPConnect XPConnect;
-    nsIInterfaceInfo FindInterfaceWithMember(in jsid nameID);
-    nsIInterfaceInfo FindInterfaceWithName(in jsid nameID);
-    [notxpcom] bool HasNativeMember(in jsid name);
+    nsIInterfaceInfo FindInterfaceWithMember(in JSHandleId nameID);
+    nsIInterfaceInfo FindInterfaceWithName(in JSHandleId nameID);
+    [notxpcom] bool HasNativeMember(in JSHandleId name);
 
     void debugDump(in short depth);
 

@@ -1,0 +1,45 @@
+diff --git a/cmd/bltest/blapitest.c b/cmd/bltest/blapitest.c
+--- a/cmd/bltest/blapitest.c
++++ b/cmd/bltest/blapitest.c
+@@ -1028,17 +1028,18 @@ bltestCopyIO(PLArenaPool *arena, bltestI
+ }
+ 
+ void
+ misalignBuffer(PLArenaPool *arena, bltestIO *io, int off)
+ {
+     ptrdiff_t offset = (ptrdiff_t)io->buf.data % WORDSIZE;
+     int length = io->buf.len;
+     if (offset != off) {
+-	SECITEM_ReallocItemV2(arena, &io->buf, length + 2*WORDSIZE);
++	SECITEM_ReallocItem(arena, &io->buf, length, length + 2*WORDSIZE);
++	io->buf.len = length + 2*WORDSIZE; /* why doesn't realloc do this? */
+ 	/* offset may have changed? */
+ 	offset = (ptrdiff_t)io->buf.data % WORDSIZE;
+ 	if (offset != off) {
+ 	    memmove(io->buf.data + off, io->buf.data, length);
+ 	    io->pBuf.data = io->buf.data + off;
+ 	    io->pBuf.len = length;
+ 	} else {
+ 	    io->pBuf.data = io->buf.data;
+diff --git a/cmd/lib/secutil.c b/cmd/lib/secutil.c
+--- a/cmd/lib/secutil.c
++++ b/cmd/lib/secutil.c
+@@ -525,17 +525,17 @@ SECU_ReadDERFromFile(SECItem *der, PRFil
+ 		*trailer = '\0';
+ 	    if (!body || !trailer) {
+ 		fprintf(stderr, "input has header but no trailer\n");
+ 		PORT_Free(filedata.data);
+ 		return SECFailure;
+ 	    }
+ 	} else {
+ 	    /* need one additional byte for zero terminator */
+-	    rv = SECITEM_ReallocItemV2(NULL, &filedata, filedata.len+1);
++	    rv = SECITEM_ReallocItem(NULL, &filedata, filedata.len, filedata.len+1);
+ 	    if (rv != SECSuccess) {
+ 		PORT_Free(filedata.data);
+ 		return rv;
+ 	    }
+ 	    body = (char*)filedata.data;
+ 	    body[filedata.len-1] = '\0';
+ 	}
+      

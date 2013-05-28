@@ -1966,9 +1966,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Script) {
         nsXULPrototypeScript *script =
             static_cast<nsXULPrototypeScript*>(tmp);
-        NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(script->GetScriptObject(),
-                                                   "mScriptObject")
-
+        script->Trace(aCallbacks, aClosure);
     }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -2305,6 +2303,9 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
         nsCSSParser parser;
 
         // XXX Get correct Base URI (need GetBaseURI on *prototype* element)
+        // TODO: If we implement Content Security Policy for chrome documents
+        // as has been discussed, the CSP should be checked here to see if
+        // inline styles are allowed to be applied.
         parser.ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,
                                    // This is basically duplicating what
                                    // nsINode::NodePrincipal() does
@@ -2523,7 +2524,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
                     bool isChrome = false;
                     mSrcURI->SchemeIs("chrome", &isChrome);
                     if (isChrome)
-                        cache->PutScript(mSrcURI, mScriptObject);
+                        cache->PutScript(mSrcURI, GetScriptObject());
                 }
                 cache->FinishInputStream(mSrcURI);
             } else {
@@ -2625,9 +2626,9 @@ nsXULPrototypeScript::Set(JSScript* aObject)
         return;
     }
 
+    mScriptObject = aObject;
     nsContentUtils::HoldJSObjects(
         this, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
-    mScriptObject = aObject;
 }
 
 //----------------------------------------------------------------------

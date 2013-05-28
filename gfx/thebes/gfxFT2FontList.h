@@ -66,7 +66,9 @@ public:
     cairo_scaled_font_t *CreateScaledFont(const gfxFontStyle *aStyle);
 
     nsresult ReadCMAP();
-    nsresult GetFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer);
+
+    virtual nsresult CopyFontTable(uint32_t aTableTag,
+                                   FallibleTArray<uint8_t>& aBuffer) MOZ_OVERRIDE;
 
     // Check for various kinds of brokenness, and set flags on the entry
     // accordingly so that we avoid using bad font tables

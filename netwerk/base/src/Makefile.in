@@ -12,90 +12,17 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= neckobase_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS := 1
 
-CPPSRCS		= \
-+		ArrayBufferInputStream.cpp \
-		BackgroundFileSaver.cpp \
-		nsTransportUtils.cpp \
-		nsAsyncStreamCopier.cpp \
-		nsAsyncRedirectVerifyHelper.cpp \
-		nsAuthInformationHolder.cpp \
-		nsBaseChannel.cpp \
-		nsBaseContentStream.cpp \
-		nsBufferedStreams.cpp \
-		nsChannelClassifier.cpp \
-		nsDirectoryIndexStream.cpp \
-		nsDownloader.cpp \
-		nsFileStreams.cpp \
-		nsIncrementalDownload.cpp \
-		nsInputStreamChannel.cpp \
-		nsInputStreamPump.cpp \
-		nsStreamTransportService.cpp \
-		nsIOService.cpp \
-		nsLoadGroup.cpp \
-		nsMediaFragmentURIParser.cpp \
-		nsMIMEInputStream.cpp \
-		nsProtocolProxyService.cpp \
-		nsProxyInfo.cpp \
-		nsPACMan.cpp \
-		nsRequestObserverProxy.cpp \
-		nsSimpleStreamListener.cpp \
-		nsSimpleURI.cpp \
-		nsSimpleNestedURI.cpp \
-		nsStandardURL.cpp \
-		nsSocketTransport2.cpp \
-		nsSocketTransportService2.cpp \
-		nsServerSocket.cpp \
-		nsUDPServerSocket.cpp \
-		nsStreamListenerTee.cpp \
-		nsStreamLoader.cpp \
-		nsSyncStreamListener.cpp \
-		nsUnicharStreamLoader.cpp \
-		nsURIChecker.cpp \
-		nsURLHelper.cpp \
-		nsURLParsers.cpp \
-		nsNetAddr.cpp \
-		nsNetStrings.cpp \
-		nsBase64Encoder.cpp \
-		nsSerializationHelper.cpp \
-		nsDNSPrefetch.cpp \
-		RedirectChannelRegistrar.cpp \
-		nsPreloadedStream.cpp \
-		nsStreamListenerWrapper.cpp \
-		ProxyAutoConfig.cpp \
-		Dashboard.cpp \
-		NetworkActivityMonitor.cpp \
-		EventTokenBucket.cpp \
-		$(NULL)
-
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/base
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-	CPPSRCS += nsURLHelperOS2.cpp
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-	CPPSRCS += nsURLHelperWin.cpp
-	CPPSRCS += nsNativeConnectionHelper.cpp
-	CPPSRCS += nsAutodialWin.cpp
-else
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-	CPPSRCS += nsURLHelperOSX.cpp
-else
-	CPPSRCS += nsURLHelperUnix.cpp
-endif
-endif
-endif
-
 ifdef MOZ_PLATFORM_MAEMO
-	CPPSRCS += nsNativeConnectionHelper.cpp
 ifdef MOZ_ENABLE_LIBCONIC
-	CPPSRCS += nsAutodialMaemo.cpp
 	LOCAL_INCLUDES += -I$(srcdir)/../../system/maemo
 endif
 ifdef MOZ_ENABLE_QTNETWORK
-	CPPSRCS += nsAutodialQt.cpp
 	LOCAL_INCLUDES += -I$(srcdir)/../../system/qt
 	OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif

@@ -401,6 +401,30 @@ hb_ot_substitute (hb_ot_shape_context_t *c)
 /* Position */
 
 static inline void
+zero_mark_widths_by_unicode (hb_buffer_t *buffer)
+{
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    if (_hb_glyph_info_get_general_category (&buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
+    {
+      buffer->pos[i].x_advance = 0;
+      buffer->pos[i].y_advance = 0;
+    }
+}
+
+static inline void
+zero_mark_widths_by_gdef (hb_buffer_t *buffer)
+{
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    if ((buffer->info[i].glyph_props() & HB_OT_LAYOUT_GLYPH_PROPS_MARK))
+    {
+      buffer->pos[i].x_advance = 0;
+      buffer->pos[i].y_advance = 0;
+    }
+}
+
+static inline void
 hb_ot_position_default (hb_ot_shape_context_t *c)
 {
   hb_ot_layout_position_start (c->font, c->buffer);
@@ -419,22 +443,22 @@ hb_ot_position_default (hb_ot_shape_context_t *c)
 
   }
 
-  /* Zero'ing mark widths by GDEF (as used in Myanmar spec) happens
-   * *before* GPOS. */
   switch (c->plan->shaper->zero_width_marks)
   {
-    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF:
-      for (unsigned int i = 0; i < count; i++)
-	if ((c->buffer->info[i].glyph_props() & HB_OT_LAYOUT_GLYPH_PROPS_MARK))
-	{
-	  c->buffer->pos[i].x_advance = 0;
-	  c->buffer->pos[i].y_advance = 0;
-	}
+    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY:
+      zero_mark_widths_by_gdef (c->buffer);
       break;
+
+    /* Not currently used for any shaper:
+    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE_EARLY:
+      zero_mark_widths_by_unicode (c->buffer);
+      break;
+    */
 
     default:
     case HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE:
-    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE:
+    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE_LATE:
+    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE:
       break;
   }
 }
@@ -468,22 +492,20 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
     ret = true;
   }
 
-  /* Zero'ing mark widths by Unicode happens
-   * *after* GPOS. */
   switch (c->plan->shaper->zero_width_marks)
   {
-    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE:
-      for (unsigned int i = 0; i < count; i++)
-	if (_hb_glyph_info_get_general_category (&c->buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
-	{
-	  c->buffer->pos[i].x_advance = 0;
-	  c->buffer->pos[i].y_advance = 0;
-	}
+    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE_LATE:
+      zero_mark_widths_by_unicode (c->buffer);
+      break;
+
+    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE:
+      zero_mark_widths_by_gdef (c->buffer);
       break;
 
     default:
     case HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE:
-    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF:
+    //case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE_EARLY:
+    case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY:
       break;
   }
 

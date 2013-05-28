@@ -50,7 +50,6 @@ public:
 private:
 
   void ReadAndPushData(guint aLength);
-  bool WaitForDecodedData(int* counter);
   void NotifyBytesConsumed();
   int64_t QueryDuration();
 

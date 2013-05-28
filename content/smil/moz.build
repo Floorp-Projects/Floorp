@@ -9,6 +9,7 @@ TEST_TOOL_DIRS += ['test']
 MODULE = 'content'
 
 EXPORTS += [
+    'nsDOMTimeEvent.h',
     'nsISMILAttr.h',
     'nsISMILType.h',
     'nsSMILAnimationController.h',
@@ -31,5 +32,32 @@ EXPORTS += [
     'nsSMILTimedElement.h',
     'nsSMILTypes.h',
     'nsSMILValue.h',
+]
+
+CPP_SOURCES += [
+    'SMILBoolType.cpp',
+    'SMILEnumType.cpp',
+    'SMILIntegerType.cpp',
+    'SMILStringType.cpp',
+    'nsDOMTimeEvent.cpp',
+    'nsSMILAnimationController.cpp',
+    'nsSMILAnimationFunction.cpp',
+    'nsSMILCSSProperty.cpp',
+    'nsSMILCSSValueType.cpp',
+    'nsSMILCompositor.cpp',
+    'nsSMILFloatType.cpp',
+    'nsSMILInstanceTime.cpp',
+    'nsSMILInterval.cpp',
+    'nsSMILKeySpline.cpp',
+    'nsSMILMappedAttribute.cpp',
+    'nsSMILNullType.cpp',
+    'nsSMILParserUtils.cpp',
+    'nsSMILRepeatCount.cpp',
+    'nsSMILSetAnimationFunction.cpp',
+    'nsSMILTimeContainer.cpp',
+    'nsSMILTimeValue.cpp',
+    'nsSMILTimeValueSpec.cpp',
+    'nsSMILTimedElement.cpp',
+    'nsSMILValue.cpp',
 ]
 

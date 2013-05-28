@@ -4957,6 +4957,62 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   return NS_OK;
 }
 
+void
+nsEditor::FinalizeSelection()
+{
+  nsCOMPtr<nsISelectionController> selCon;
+  nsresult rv = GetSelectionController(getter_AddRefs(selCon));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsISelection> selection;
+  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                            getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsISelectionPrivate> selectionPrivate = do_QueryInterface(selection);
+  NS_ENSURE_TRUE_VOID(selectionPrivate);
+
+  selectionPrivate->SetAncestorLimiter(nullptr);
+
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  NS_ENSURE_TRUE_VOID(presShell);
+
+  selCon->SetCaretEnabled(false);
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE_VOID(fm);
+  fm->UpdateCaretForCaretBrowsingMode();
+
+  if (!HasIndependentSelection()) {
+    // If this editor doesn't have an independent selection, i.e., it must
+    // mean that it is an HTML editor, the selection controller is shared with
+    // presShell.  So, even this editor loses focus, other part of the document
+    // may still have focus.
+    nsCOMPtr<nsIDocument> doc = GetDocument();
+    ErrorResult ret;
+    if (!doc || !doc->HasFocus(ret)) {
+      // If the document already lost focus, mark the selection as disabled.
+      selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+    } else {
+      // Otherwise, mark selection as normal because outside of a
+      // contenteditable element should be selected with normal selection
+      // color after here.
+      selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+    }
+  } else if (IsFormWidget() || IsPasswordEditor() ||
+             IsReadonly() || IsDisabled() || IsInputFiltered()) {
+    // In <input> or <textarea>, the independent selection should be hidden
+    // while this editor doesn't have focus.
+    selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
+  } else {
+    // Otherwise, although we're not sure how this case happens, the
+    // independent selection should be marked as disabled.
+    selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+  }
+
+  selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+}
+
 dom::Element *
 nsEditor::GetRoot()
 {

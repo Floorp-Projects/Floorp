@@ -113,7 +113,8 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
 
 /* nsIURI createFixupURI (in nsAUTF8String aURIText, in unsigned long aFixupFlags); */
 NS_IMETHODIMP
-nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupFlags, nsIURI **aURI)
+nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupFlags,
+                                  nsIInputStream **aPostData, nsIURI **aURI)
 {
     NS_ENSURE_ARG(!aStringURI.IsEmpty());
     NS_ENSURE_ARG_POINTER(aURI);
@@ -147,7 +148,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
                                        sizeof("view-source:") - 1,
                                        uriString.Length() -
                                          (sizeof("view-source:") - 1)),
-                             newFixupFlags, getter_AddRefs(uri));
+                             newFixupFlags, aPostData, getter_AddRefs(uri));
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
         nsAutoCString spec;
@@ -243,7 +244,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
         if (fixupKeywords)
         {
-            KeywordURIFixup(uriString, aURI);
+            KeywordURIFixup(uriString, aPostData, aURI);
             if(*aURI)
                 return NS_OK;
         }
@@ -309,7 +310,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
     // keyword match.  This catches search strings with '.' or ':' in them.
     if (!*aURI && fixupKeywords)
     {
-        KeywordToURI(aStringURI, aURI);
+        KeywordToURI(aStringURI, aPostData, aURI);
         if(*aURI)
             return NS_OK;
     }
@@ -318,9 +319,13 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
 }
 
 NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
+                                              nsIInputStream **aPostData,
                                               nsIURI **aURI)
 {
     *aURI = nullptr;
+    if (aPostData) {
+        *aPostData = nullptr;
+    }
     NS_ENSURE_STATE(Preferences::GetRootBranch());
 
     // Strip leading "?" and leading/trailing spaces from aKeyword
@@ -354,13 +359,16 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
                                            NS_LITERAL_STRING("keyword"),
                                            getter_AddRefs(submission));
             if (submission) {
-                // The submission depends on POST data (i.e. the search engine's
-                // "method" is POST), we can't use this engine for keyword
-                // searches
                 nsCOMPtr<nsIInputStream> postData;
                 submission->GetPostData(getter_AddRefs(postData));
-                if (postData) {
-                    return NS_ERROR_NOT_AVAILABLE;
+                if (aPostData) {
+                  postData.forget(aPostData);
+                } else if (postData) {
+                  // The submission specifies POST data (i.e. the search
+                  // engine's "method" is POST), but our caller didn't allow
+                  // passing post data back. No point passing back a URL that
+                  // won't load properly.
+                  return NS_ERROR_FAILURE;
                 }
 
                 // This notification is meant for Firefox Health Report so it
@@ -762,8 +770,9 @@ const char * nsDefaultURIFixup::GetCharsetForUrlBar()
   return charset;
 }
 
-nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString, 
-                                            nsIURI** aURI)
+void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
+                                        nsIInputStream **aPostData,
+                                        nsIURI** aURI)
 {
     // These are keyword formatted strings
     // "what is mozilla"
@@ -802,13 +811,8 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
          (spaceLoc < qMarkLoc || quoteLoc < qMarkLoc)) ||
         qMarkLoc == 0)
     {
-        KeywordToURI(aURIString, aURI);
+        KeywordToURI(aURIString, aPostData, aURI);
     }
-
-    if(*aURI)
-        return NS_OK;
-
-    return NS_ERROR_FAILURE;
 }
 
 

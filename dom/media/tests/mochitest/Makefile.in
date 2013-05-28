@@ -11,6 +11,7 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
+  test_dataChannel_noOffer.html \
   test_getUserMedia_exceptions.html \
   test_getUserMedia_basicAudio.html \
   test_getUserMedia_basicVideo.html \
@@ -39,7 +40,6 @@ MOCHITEST_FILES = \
   test_peerConnection_bug827843.html \
   test_peerConnection_bug834153.html \
   test_peerConnection_bug835370.html \
-  test_peerConnection_bug840344.html \
   head.js \
   mediaStreamPlayback.js \
   pc.js \

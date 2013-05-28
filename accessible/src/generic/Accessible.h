@@ -881,16 +881,6 @@ protected:
    */
   AccGroupInfo* GetGroupInfo();
 
-  /**
-   * Fires platform accessible event. It's notification method only. It does
-   * change nothing on Gecko side. Don't use it until you're sure what you do
-   * (see example in XUL tree accessible), use nsEventShell::FireEvent()
-   * instead. MUST be overridden in wrap classes.
-   *
-   * @param aEvent  the accessible event to fire.
-   */
-  virtual nsresult FirePlatformEvent(AccEvent* aEvent) = 0;
-
   // Data Members
   nsRefPtr<Accessible> mParent;
   nsTArray<nsRefPtr<Accessible> > mChildren;

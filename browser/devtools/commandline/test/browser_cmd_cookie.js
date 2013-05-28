@@ -78,6 +78,21 @@ function test() {
         },
       },
       {
+        setup:    'cookie set fruit ban --path ""',
+        check: {
+          input:  'cookie set fruit ban --path ""',
+          hints:                                ' [options]',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          status: 'VALID',
+          args: {
+            name: { value: 'fruit' },
+            value: { value: 'ban' },
+            path: { value: '' },
+            secure: { value: false },
+          }
+        },
+      },
+      {
         setup: "cookie list",
         exec: {
           output: [ /zap=zep/, /zip=zop/, /Edit/ ]

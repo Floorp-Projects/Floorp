@@ -223,6 +223,19 @@ typedef enum {
                                AUDIO_CHANNEL_IN_VOICE_DNLINK),
 } audio_channels_t;
 
+#if ANDROID_VERSION >= 17
+typedef enum {
+    AUDIO_MODE_INVALID          = -2,
+    AUDIO_MODE_CURRENT          = -1,
+    AUDIO_MODE_NORMAL           = 0,
+    AUDIO_MODE_RINGTONE         = 1,
+    AUDIO_MODE_IN_CALL          = 2,
+    AUDIO_MODE_IN_COMMUNICATION = 3,
+
+    AUDIO_MODE_CNT,
+    AUDIO_MODE_MAX              = AUDIO_MODE_CNT - 1,
+} audio_mode_t;
+#endif
 #endif
 
 typedef enum {
@@ -300,7 +313,13 @@ typedef enum {
                                AUDIO_DEVICE_IN_FM_RX_A2DP |
                                AUDIO_DEVICE_IN_DEFAULT),
     AUDIO_DEVICE_IN_ALL_SCO = AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
+#if ANDROID_VERSION < 17
 } audio_devices_t;
+#else
+};
+
+typedef uint32_t audio_devices_t;
+#endif
 
 /* device connection states used for audio_policy->set_device_connection_state()
  *  */
@@ -650,6 +669,9 @@ public:
     static status_t setDeviceConnectionState(audio_devices device, device_connection_state state, const char *device_address);
     static device_connection_state getDeviceConnectionState(audio_devices device, const char *device_address);
     static status_t setPhoneState(int state);
+#if ANDROID_VERSION >= 17
+    static status_t setPhoneState(audio_mode_t state);
+#endif
     static status_t setRingerMode(uint32_t mode, uint32_t mask);
 #ifdef VANILLA_ANDROID
     static status_t setForceUse(force_use usage, forced_config config);
@@ -706,6 +728,14 @@ public:
                                       int indexMax);
     static status_t setStreamVolumeIndex(stream_type stream, int index);
     static status_t setStreamVolumeIndex(audio_stream_type_t stream, int index);
+#if ANDROID_VERSION >= 17
+    static status_t setStreamVolumeIndex(audio_stream_type_t stream,
+                                         int index,
+                                         audio_devices_t device);
+    static status_t getStreamVolumeIndex(audio_stream_type_t stream,
+                                         int *index,
+                                         audio_devices_t device);
+#endif
     static status_t getStreamVolumeIndex(stream_type stream, int *index);
     static status_t getStreamVolumeIndex(audio_stream_type_t stream, int *index);
 

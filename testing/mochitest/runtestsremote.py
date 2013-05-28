@@ -80,14 +80,24 @@ class RemoteOptions(MochitestOptions):
                     help = "name of the pidfile to generate")
         defaults["pidFile"] = ""
 
+        self.add_option("--robocop-ini", action = "store",
+                    type = "string", dest = "robocopIni",
+                    help = "name of the .ini file containing the list of tests to run")
+        defaults["robocopIni"] = ""
+
         self.add_option("--robocop", action = "store",
                     type = "string", dest = "robocop",
-                    help = "name of the .ini file containing the list of tests to run")
+                    help = "name of the .ini file containing the list of tests to run. [DEPRECATED- please use --robocop-ini")
         defaults["robocop"] = ""
+
+        self.add_option("--robocop-apk", action = "store",
+                    type = "string", dest = "robocopApk",
+                    help = "name of the Robocop APK to use for ADB test running")
+        defaults["robocopApk"] = ""
 
         self.add_option("--robocop-path", action = "store",
                     type = "string", dest = "robocopPath",
-                    help = "Path to the folder where robocop.apk is located at.  Primarily used for ADB test running")
+                    help = "Path to the folder where robocop.apk is located at.  Primarily used for ADB test running. [DEPRECATED- please use --robocop-apk]")
         defaults["robocopPath"] = ""
 
         self.add_option("--robocop-ids", action = "store",
@@ -158,22 +168,37 @@ class RemoteOptions(MochitestOptions):
             f.write("%s" % os.getpid())
             f.close()
 
-        # Robocop specific options
-        if options.robocop != "":
-            if not os.path.exists(options.robocop):
-                print "ERROR: Unable to find specified manifest '%s'" % options.robocop
+        # Robocop specific deprecated options.
+        if options.robocop:
+            if options.robocopIni:
+                print "ERROR: can not use deprecated --robocop and replacement --robocop-ini together"
                 return None
-            options.robocop = os.path.abspath(options.robocop)
+            options.robocopIni = options.robocop
+            del options.robocop
 
-        if options.robocopPath != "":
-            if not os.path.exists(os.path.join(options.robocopPath, 'robocop.apk')):
-                print "ERROR: Unable to find robocop.apk in path '%s'" % options.robocopPath
+        if options.robocopPath:
+            if options.robocopApk:
+                print "ERROR: can not use deprecated --robocop-path and replacement --robocop-apk together"
                 return None
-            options.robocopPath = os.path.abspath(options.robocopPath)
+            options.robocopApk = os.path.join(options.robocopPath, 'robocop.apk')
+            del options.robocopPath
+
+        # Robocop specific options
+        if options.robocopIni != "":
+            if not os.path.exists(options.robocopIni):
+                print "ERROR: Unable to find specified robocop .ini manifest '%s'" % options.robocopIni
+                return None
+            options.robocopIni = os.path.abspath(options.robocopIni)
+
+        if options.robocopApk != "":
+            if not os.path.exists(options.robocopApk):
+                print "ERROR: Unable to find robocop APK '%s'" % options.robocopApk
+                return None
+            options.robocopApk = os.path.abspath(options.robocopApk)
 
         if options.robocopIds != "":
             if not os.path.exists(options.robocopIds):
-                print "ERROR: Unable to find specified IDs file '%s'" % options.robocopIds
+                print "ERROR: Unable to find specified robocop IDs file '%s'" % options.robocopIds
                 return None
             options.robocopIds = os.path.abspath(options.robocopIds)
 
@@ -212,6 +237,7 @@ class MochiRemote(Mochitest):
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
         self.localLog = options.logFile
+        self._automation.deleteANRs()
 
     def cleanup(self, manifest, options):
         if self._dm.fileExists(self.remoteLog):
@@ -308,7 +334,7 @@ class MochiRemote(Mochitest):
         self._dm.removeDir(self.remoteProfile)
 
         # we do not need this for robotium based tests, lets save a LOT of time
-        if options.robocop:
+        if options.robocopIni:
             shutil.rmtree(os.path.join(options.profilePath, 'webapps'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'mochikit@mozilla.org'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'worker-test@mozilla.org'))
@@ -335,7 +361,7 @@ class MochiRemote(Mochitest):
         env["MOZ_HIDE_RESULTS_TABLE"] = "1"
         retVal = Mochitest.buildURLOptions(self, options, env)
 
-        if not options.robocop:
+        if not options.robocopIni:
             #we really need testConfig.js (for browser chrome)
             try:
                 self._dm.pushDir(options.profilePath, self.remoteProfile)
@@ -490,6 +516,7 @@ def main():
     auto = RemoteAutomation(None, "fennec")
     parser = RemoteOptions(auto, scriptdir)
     options, args = parser.parse_args()
+
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
             dm = droid.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
@@ -526,12 +553,12 @@ def main():
     if (dm.processExist(procName)):
         dm.killProcess(procName)
 
-    if options.robocop != "":
+    if options.robocopIni != "":
         # sut may wait up to 300 s for a robocop am process before returning
         dm.default_timeout = 320
         mp = manifestparser.TestManifest(strict=False)
         # TODO: pull this in dynamically
-        mp.read(options.robocop)
+        mp.read(options.robocopIni)
         robocop_tests = mp.active_tests(exists=False)
         tests = []
         my_tests = tests
@@ -559,8 +586,8 @@ def main():
         options.extraPrefs.append('browser.viewport.scaleRatio=100')
         options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
 
-        if (options.dm_trans == 'adb' and options.robocopPath):
-          dm._checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
+        if (options.dm_trans == 'adb' and options.robocopApk):
+          dm._checkCmd(["install", "-r", options.robocopApk])
 
         retVal = None
         for test in robocop_tests:
@@ -575,6 +602,29 @@ def main():
             options.browserArgs.append("%s.tests.%s" % (options.remoteappname, test['name']))
             options.browserArgs.append("org.mozilla.roboexample.test/%s.FennecInstrumentationTestRunner" % options.remoteappname)
 
+            # If the test is for checking the import from bookmarks then make sure there is data to import
+            if test['name'] == "testImportFromAndroid":
+                
+                # Get the OS so we can run the insert in the apropriate database and following the correct table schema
+                osInfo = dm.getInfo("os")
+                devOS = " ".join(osInfo['os'])
+
+                if ("pandaboard" in devOS):
+                    delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
+                else:
+                    delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
+                if (options.dm_trans == "sut"):
+                    dm._runCmds([{"cmd": " ".join(delete)}])
+
+                # Insert the bookmarks
+                print "Insert bookmarks in the default android browser database"
+                for i in range(20):
+                   if ("pandaboard" in devOS):
+                       cmd = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db 'insert or replace into bookmarks(_id,title,url,folder,parent,position) values (" + str(30 + i) + ",\"Bookmark"+ str(i) + "\",\"http://www.bookmark" + str(i) + ".com\",0,1," + str(100 + i) + ");'"]
+                   else:
+                       cmd = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db 'insert into bookmarks(title,url,bookmark) values (\"Bookmark"+ str(i) + "\",\"http://www.bookmark" + str(i) + ".com\",1);'"]
+                   if (options.dm_trans == "sut"):
+                       dm._runCmds([{"cmd": " ".join(cmd)}])
             try:
                 dm.removeDir("/mnt/sdcard/Robotium-Screenshots")
                 dm.recordLogcat()
@@ -600,6 +650,15 @@ def main():
                     pass
                 retVal = 1
                 break
+            finally:
+                # Clean-up added bookmarks
+                if test['name'] == "testImportFromAndroid":
+                    if ("pandaboard" in devOS):
+                        cmd_del = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
+                    else:
+                        cmd_del = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
+                    if (options.dm_trans == "sut"):
+                        dm._runCmds([{"cmd": " ".join(cmd_del)}])
         if retVal is None:
             print "No tests run. Did you pass an invalid TEST_PATH?"
             retVal = 1

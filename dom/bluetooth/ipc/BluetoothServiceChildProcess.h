@@ -87,9 +87,13 @@ public:
                mozilla::ipc::UnixSocketConsumer* aConsumer) MOZ_OVERRIDE;
 
   virtual nsresult
-  GetServiceChannel(const nsAString& aObjectPath,
+  GetServiceChannel(const nsAString& aDeviceAddress,
                     const nsAString& aServiceUuid,
                     BluetoothProfileManagerBase* aManager) MOZ_OVERRIDE;
+
+  virtual bool
+  UpdateSdpRecords(const nsAString& aDeviceAddress,
+                   BluetoothProfileManagerBase* aManager) MOZ_OVERRIDE;
 
   virtual bool
   SetPinCodeInternal(const nsAString& aDeviceAddress,

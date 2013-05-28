@@ -29,7 +29,7 @@
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 
-#define TARGET_SUBDIR "downloads/bluetooth/"
+#define TARGET_SUBDIR "Download/Bluetooth/"
 
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla;
@@ -251,7 +251,7 @@ BluetoothOppManager::Get()
 }
 
 void
-BluetoothOppManager::Connect(const nsAString& aDeviceObjectPath,
+BluetoothOppManager::Connect(const nsAString& aDeviceAddress,
                              BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -261,13 +261,14 @@ BluetoothOppManager::Connect(const nsAString& aDeviceObjectPath,
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
+  mNeedsUpdatingSdpRecords = true;
+
   nsString uuid;
   BluetoothUuidHelper::GetString(BluetoothServiceClass::OBJECT_PUSH, uuid);
 
-  if (NS_FAILED(bs->GetServiceChannel(aDeviceObjectPath, uuid, this))) {
-    BluetoothValue v;
-    DispatchBluetoothReply(aRunnable, v,
-                           NS_LITERAL_STRING("GetServiceChannelError"));
+  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_SERVICE_CHANNEL_NOT_FOUND));
     return;
   }
 
@@ -438,6 +439,7 @@ BluetoothOppManager::AfterFirstPut()
   sSentFileLength = 0;
   sWaitingToSendPutFinal = false;
   mSuccessFlag = false;
+  mBodySegmentLength = 0;
 }
 
 void
@@ -709,19 +711,22 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
     ReplyToConnect();
     AfterOppConnected();
     mIsServer = true;
-  } else if (opCode == ObexRequestCode::Disconnect ||
-             opCode == ObexRequestCode::Abort) {
-    // Section 3.3.2 "Disconnect", IrOBEX 1.2
+  } else if (opCode == ObexRequestCode::Abort) {
     // Section 3.3.5 "Abort", IrOBEX 1.2
     // [opcode:1][length:2][Headers:var]
     ParseHeaders(&aMessage->mData[3],
                 receivedLength - 3,
                 &pktHeaders);
-    ReplyToDisconnect();
+    ReplyToDisconnectOrAbort();
+    DeleteReceivedFile();
+  } else if (opCode == ObexRequestCode::Disconnect) {
+    // Section 3.3.2 "Disconnect", IrOBEX 1.2
+    // [opcode:1][length:2][Headers:var]
+    ParseHeaders(&aMessage->mData[3],
+                receivedLength - 3,
+                &pktHeaders);
+    ReplyToDisconnectOrAbort();
     AfterOppDisconnected();
-    if (opCode == ObexRequestCode::Abort) {
-      DeleteReceivedFile();
-    }
     FileTransferComplete();
   } else if (opCode == ObexRequestCode::Put ||
              opCode == ObexRequestCode::PutFinal) {
@@ -767,7 +772,7 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
 
     // When we cancel the transfer, delete the file and notify complemention
     if (mAbortFlag) {
-      ReplyToPut(mPutFinalFlag, !mAbortFlag);
+      ReplyToPut(mPutFinalFlag, false);
       sSentFileLength += mBodySegmentLength;
       DeleteReceivedFile();
       FileTransferComplete();
@@ -1142,11 +1147,12 @@ BluetoothOppManager::ReplyToConnect()
 }
 
 void
-BluetoothOppManager::ReplyToDisconnect()
+BluetoothOppManager::ReplyToDisconnectOrAbort()
 {
   if (!mConnected) return;
 
-  // Section 3.3.2 "Disconnect", IrOBEX 1.2
+  // Section 3.3.2 "Disconnect" and Section 3.3.5 "Abort", IrOBEX 1.2
+  // The format of response packet of "Disconnect" and "Abort" are the same
   // [opcode:1][length:2][Headers:var]
   uint8_t req[255];
   int index = 3;
@@ -1371,7 +1377,7 @@ BluetoothOppManager::OnConnectSuccess(BluetoothSocket* aSocket)
     if (NS_FAILED(NS_DispatchToMainThread(mRunnable))) {
       NS_WARNING("Failed to dispatch to main thread!");
     }
-    mRunnable.forget();
+    mRunnable = nullptr;
   }
 
   // Cache device address since we can't get socket address when a remote
@@ -1383,10 +1389,9 @@ void
 BluetoothOppManager::OnConnectError(BluetoothSocket* aSocket)
 {
   if (mRunnable) {
-    BluetoothValue v;
-    DispatchBluetoothReply(mRunnable, v,
+    DispatchBluetoothReply(mRunnable, BluetoothValue(),
                            NS_LITERAL_STRING("OnConnectError:no runnable"));
-    mRunnable.forget();
+    mRunnable = nullptr;
   }
 
   mSocket = nullptr;
@@ -1434,24 +1439,55 @@ BluetoothOppManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
                                          int aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
   MOZ_ASSERT(mRunnable);
 
-  BluetoothValue v;
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
 
   if (aChannel < 0) {
-    DispatchBluetoothReply(mRunnable, v,
-                           NS_LITERAL_STRING("DeviceChannelRetrievalError"));
-    mSocket = nullptr;
-    Listen();
+    if (mNeedsUpdatingSdpRecords) {
+      mNeedsUpdatingSdpRecords = false;
+      bs->UpdateSdpRecords(aDeviceAddress, this);
+    } else {
+      DispatchBluetoothReply(mRunnable, BluetoothValue(),
+                             NS_LITERAL_STRING(ERR_SERVICE_CHANNEL_NOT_FOUND));
+      mRunnable = nullptr;
+      mSocket = nullptr;
+      Listen();
+    }
+
     return;
   }
 
   if (!mSocket->Connect(NS_ConvertUTF16toUTF8(aDeviceAddress), aChannel)) {
-    DispatchBluetoothReply(mRunnable, v,
+    DispatchBluetoothReply(mRunnable, BluetoothValue(),
                            NS_LITERAL_STRING("SocketConnectionError"));
+    mRunnable = nullptr;
     mSocket = nullptr;
     Listen();
-    return;
+  }
+}
+
+void
+BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
+  MOZ_ASSERT(mRunnable);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  nsString uuid;
+  BluetoothUuidHelper::GetString(BluetoothServiceClass::OBJECT_PUSH, uuid);
+
+  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_SERVICE_CHANNEL_NOT_FOUND));
+    mRunnable = nullptr;
+    mSocket = nullptr;
+    Listen();
   }
 }
 

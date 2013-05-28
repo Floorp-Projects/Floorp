@@ -222,11 +222,19 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
         return true;
 
     if (act == Wrapper::CALL)
-        return true;
+        return false;
 
     RootedId id(cx, idArg);
     RootedObject wrapper(cx, wrapperArg);
     RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
+
+    // Enumerate-like operations pass JSID_VOID to |enter|, since there isn't
+    // another sane value to pass. For XOWs, we generally want to deny such
+    // operations but fail silently (see CrossOriginAccessiblePropertiesOnly::
+    // deny). We could just fall through here and rely on the fact that none
+    // of the whitelisted properties below will match JSID_VOID, but EIBTI.
+    if (id == JSID_VOID)
+        return false;
 
     const char *name;
     js::Class *clasp = js::GetObjectClass(obj);

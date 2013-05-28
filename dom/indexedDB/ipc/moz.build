@@ -12,3 +12,8 @@ EXPORTS.mozilla.dom.indexedDB += [
 
 # Need to enable these tests sometime soon.
 #XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+CPP_SOURCES += [
+    'IndexedDBChild.cpp',
+    'IndexedDBParent.cpp',
+]

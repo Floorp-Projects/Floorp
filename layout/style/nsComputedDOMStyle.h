@@ -93,6 +93,8 @@ public:
   virtual nsIDocument* DocToUpdate() MOZ_OVERRIDE;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) MOZ_OVERRIDE;
 
+  static mozilla::dom::CSSValue* MatrixToCSSValue(gfx3DMatrix& aMatrix);
+
 private:
   void AssertFlushedPendingReflows() {
     NS_ASSERTION(mFlushedPendingReflows,
@@ -386,7 +388,6 @@ private:
   mozilla::dom::CSSValue* DoGetAnimationIterationCount();
   mozilla::dom::CSSValue* DoGetAnimationPlayState();
 
-#ifdef MOZ_FLEXBOX
   /* CSS Flexbox properties */
   mozilla::dom::CSSValue* DoGetAlignItems();
   mozilla::dom::CSSValue* DoGetAlignSelf();
@@ -396,7 +397,6 @@ private:
   mozilla::dom::CSSValue* DoGetFlexShrink();
   mozilla::dom::CSSValue* DoGetOrder();
   mozilla::dom::CSSValue* DoGetJustifyContent();
-#endif // MOZ_FLEXBOX
 
   /* SVG properties */
   mozilla::dom::CSSValue* DoGetFill();
@@ -439,7 +439,6 @@ private:
   mozilla::dom::CSSValue* DoGetMaskType();
   mozilla::dom::CSSValue* DoGetPaintOrder();
 
-  nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(bool aCommaDelimited);
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   void SetValueToStyleImage(const nsStyleImage& aStyleImage,

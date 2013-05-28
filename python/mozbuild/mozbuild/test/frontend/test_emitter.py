@@ -125,8 +125,11 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[1], VariablePassthru)
 
         wanted = dict(
-            ASFILES=['tans.s', 'fans.asm'],
-            XPIDLSRCS=['foo.idl', 'bar.idl', 'biz.idl'],
+            ASFILES=['fans.asm', 'tans.s'],
+            CSRCS=['fans.c', 'tans.c'],
+            DEFINES=['-Dfans', '-Dtans'],
+            SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
+            XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],
             XPIDL_MODULE='module_name',
             XPIDL_FLAGS=['-Idir1', '-Idir2', '-Idir3'],
             )

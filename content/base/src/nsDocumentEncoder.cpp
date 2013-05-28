@@ -1183,17 +1183,11 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  bool chromeCaller = nsContentUtils::IsCallerChrome();
-  if (chromeCaller) {
-    mStream = aStream;
-  }
+  mStream = aStream;
+
   nsAutoString buf;
 
   rv = EncodeToString(buf);
-
-  if (!chromeCaller) {
-    mStream = aStream;
-  }
 
   // Force a flush of the last chunk of data.
   FlushText(buf, true);

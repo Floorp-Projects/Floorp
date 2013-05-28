@@ -14,7 +14,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_aaa_run_first_leaktest.js \
 	browser_dbg_clean-exit.js \
 	browser_dbg_cmd.js \
-	$(browser_dbg_cmd_break.js disabled until bug 722727 is fixed) \
+	browser_dbg_cmd_break.js \
 	$(browser_dbg_createRemote.js disabled for intermittent failures, bug 753225) \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
@@ -99,7 +99,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_source_maps-01.js \
 	browser_dbg_source_maps-02.js \
 	head.js \
-	helpers.js \
 	$(NULL)
 
 MOCHITEST_BROWSER_PAGES = \

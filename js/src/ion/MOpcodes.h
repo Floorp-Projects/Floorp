@@ -102,10 +102,12 @@ namespace ion {
     _(FunctionEnvironment)                                                  \
     _(TypeBarrier)                                                          \
     _(MonitorTypes)                                                         \
+    _(PostWriteBarrier)                                                     \
     _(GetPropertyCache)                                                     \
     _(GetPropertyPolymorphic)                                               \
     _(SetPropertyPolymorphic)                                               \
     _(GetElementCache)                                                      \
+    _(SetElementCache)                                                      \
     _(BindNameCache)                                                        \
     _(GuardShape)                                                           \
     _(GuardObjectType)                                                      \
@@ -153,6 +155,7 @@ namespace ion {
     _(StringLength)                                                         \
     _(ArgumentsLength)                                                      \
     _(GetArgument)                                                          \
+    _(Rest)                                                                 \
     _(Floor)                                                                \
     _(Round)                                                                \
     _(In)                                                                   \
@@ -185,6 +188,7 @@ namespace ion {
     _(ParNewDenseArray)                                                     \
     _(ParBailout)                                                           \
     _(ParLambda)                                                            \
+    _(ParRest)                                                              \
     _(ParSlice)                                                             \
     _(ParWriteGuard)                                                        \
     _(ParDump)                                                              \

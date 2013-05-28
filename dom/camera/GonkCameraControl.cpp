@@ -1040,6 +1040,18 @@ nsGonkCameraControl::TakePictureComplete(uint8_t* aData, uint32_t aLength)
 }
 
 void
+nsGonkCameraControl::TakePictureError()
+{
+  nsCOMPtr<nsIRunnable> takePictureError = new CameraErrorResult(mTakePictureOnErrorCb, NS_LITERAL_STRING("FAILURE"), mWindowId);
+  mTakePictureOnSuccessCb = nullptr;
+  mTakePictureOnErrorCb = nullptr;
+  nsresult rv = NS_DispatchToMainThread(takePictureError);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch takePicture() onError callback to main thread!");
+  }
+}
+
+void
 nsGonkCameraControl::SetPreviewSize(uint32_t aWidth, uint32_t aHeight)
 {
   Vector<Size> previewSizes;
@@ -1453,6 +1465,12 @@ void
 ReceiveImage(nsGonkCameraControl* gc, uint8_t* aData, uint32_t aLength)
 {
   gc->TakePictureComplete(aData, aLength);
+}
+
+void
+ReceiveImageError(nsGonkCameraControl* gc)
+{
+  gc->TakePictureError();
 }
 
 void

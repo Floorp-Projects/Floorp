@@ -106,6 +106,24 @@ function ignoreEdgeUse(edge, variable)
     return false;
 }
 
+function ignoreEdgeAddressTaken(edge)
+{
+    // Functions which may take indirect pointers to unrooted GC things,
+    // but will copy them into rooted locations before calling anything
+    // that can GC. These parameters should usually be replaced with
+    // handles or mutable handles.
+    if (edge.Kind == "Call") {
+        var callee = edge.Exp[0];
+        if (callee.Kind == "Var") {
+            var name = callee.Variable.Name[0];
+            if (/js::Invoke\(/.test(name))
+                return true;
+        }
+    }
+
+    return false;
+}
+
 // Ignore calls of these functions (so ignore any stack containing these)
 var ignoreFunctions = {
     "ptio.c:pt_MapError" : true,

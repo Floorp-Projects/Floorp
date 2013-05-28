@@ -51,11 +51,9 @@ pref("toolkit.browser.cacheRatioHeight", 3000);
 // expires.
 pref("toolkit.browser.contentViewExpire", 3000);
 
+
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("browser.chromeURL", "chrome://browser/content/");
-
-// When true, always show the tab strip and use desktop-style tabs (no thumbnails)
-pref("browser.tabs.tabsOnly", false);
 
 pref("browser.tabs.remote", false);
 
@@ -397,20 +395,110 @@ pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616
 // Override some named colors to avoid inverse OS themes
 
 /* app update prefs */
-pref("app.update.timer", 60000); // milliseconds (1 min)
 
 #ifdef MOZ_UPDATER
-// temp
-pref("app.update.enabled", false);
-pref("app.update.timerFirstInterval", 20000); // milliseconds
-pref("app.update.auto", false);
-pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
-pref("app.update.mode", 1);
-pref("app.update.silent", false);
-pref("app.update.url", "https://aus2.mozilla.org/update/4/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%-xul/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PLATFORM_VERSION%/update.xml");
+
+// Whether or not app updates are enabled
+pref("app.update.enabled", true);
+
+// This preference turns on app.update.mode and allows automatic download and
+// install to take place. We use a separate boolean toggle for this to make
+// the UI easier to construct.
+pref("app.update.auto", true);
+
+// Defines how the Application Update Service notifies the user about updates:
+//
+// AUM Set to:        Minor Releases:     Major Releases:
+// 0                  download no prompt  download no prompt
+// 1                  download no prompt  download no prompt if no incompatibilities
+// 2                  download no prompt  prompt
+//
+// See chart in nsUpdateService.js source for more details
+pref("app.update.mode", 0);
+
+// If set to true, the Update Service will present no UI for any event.
+pref("app.update.silent", true);
+
+// If set to true, the Update Service will apply updates in the background
+// when it finishes downloading them.
+pref("app.update.staging.enabled", true);
+
+// Update service URL:
+pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
+
+// Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
+
+// Whether or not we show a dialog box informing the user that the update was
+// successfully applied. This is off in Firefox by default since we show a
+// upgrade start page instead! Other apps may wish to show this UI, and supply
+// a whatsNewURL field in their brand.properties that contains a link to a page
+// which tells users what's new in this new update.
 pref("app.update.showInstalledUI", false);
+
+// 0 = suppress prompting for incompatibilities if there are updates available
+//     to newer versions of installed addons that resolve them.
+// 1 = suppress prompting for incompatibilities only if there are VersionInfo
+//     updates available to installed addons that resolve them, not newer
+//     versions.
 pref("app.update.incompatible.mode", 0);
+
+// Whether or not to attempt using the service for updates.
+#ifdef MOZ_MAINTENANCE_SERVICE
+pref("app.update.service.enabled", true);
+#endif
+
+// The minimum delay in seconds for the timer to fire.
+// default=2 minutes
+pref("app.update.timerMinimumDelay", 120);
+
+// Enables some extra Application Update Logging (can reduce performance)
+pref("app.update.log", false);
+
+// The number of general background check failures to allow before notifying the
+// user of the failure. User initiated update checks always notify the user of
+// the failure.
+pref("app.update.backgroundMaxErrors", 10);
+
+// When |app.update.cert.requireBuiltIn| is true or not specified the
+// final certificate and all certificates the connection is redirected to before
+// the final certificate for the url specified in the |app.update.url|
+// preference must be built-in.
+pref("app.update.cert.requireBuiltIn", true);
+
+// When |app.update.cert.checkAttributes| is true or not specified the
+// certificate attributes specified in the |app.update.certs.| preference branch
+// are checked against the certificate for the url specified by the
+// |app.update.url| preference.
+pref("app.update.cert.checkAttributes", true);
+
+// The number of certificate attribute check failures to allow for background
+// update checks before notifying the user of the failure. User initiated update
+// checks always notify the user of the certificate attribute check failure.
+pref("app.update.cert.maxErrors", 5);
+
+// The |app.update.certs.| preference branch contains branches that are
+// sequentially numbered starting at 1 that contain attribute name / value
+// pairs for the certificate used by the server that hosts the update xml file
+// as specified in the |app.update.url| preference. When these preferences are
+// present the following conditions apply for a successful update check:
+// 1. the uri scheme must be https
+// 2. the preference name must exist as an attribute name on the certificate and
+//    the value for the name must be the same as the value for the attribute name
+//    on the certificate.
+// If these conditions aren't met it will be treated the same as when there is
+// no update available. This validation will not be performed when the
+// |app.update.url.override| user preference has been set for testing updates or
+// when the |app.update.cert.checkAttributes| preference is set to false. Also,
+// the |app.update.url.override| preference should ONLY be used for testing.
+// IMPORTANT! firefox.js should also be updated for updates to certs.X.issuerName
+pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
+pref("app.update.certs.1.commonName", "aus3.mozilla.org");
+pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
+pref("app.update.certs.2.commonName", "aus3.mozilla.org");
+
+// User-settable override to app.update.url for testing purposes.
+//pref("app.update.url.override", "");
 
 // replace newlines with spaces on paste into single-line text boxes
 pref("editor.singleLine.pasteNewlines", 2);

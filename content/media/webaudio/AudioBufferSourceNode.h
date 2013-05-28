@@ -56,7 +56,7 @@ public:
     duration.Construct(aDuration);
     Start(aWhen, aOffset, duration, aRv);
   }
-  void Stop(double aWhen, ErrorResult& aRv);
+  void Stop(double aWhen, ErrorResult& aRv, bool aShuttingDown = false);
   void NoteOff(double aWhen, ErrorResult& aRv)
   {
     Stop(aWhen, aRv);

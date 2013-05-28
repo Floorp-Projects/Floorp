@@ -617,8 +617,6 @@ AsyncConnectionHelper::ConvertToArrayAndCleanup(
   NS_ASSERTION(aCx, "Null context!");
   NS_ASSERTION(aResult, "Null pointer!");
 
-  JSAutoRequest ar(aCx);
-
   nsresult rv = ConvertCloneReadInfosToArrayInternal(aCx, aReadInfos, aResult);
 
   for (uint32_t index = 0; index < aReadInfos.Length(); index++) {

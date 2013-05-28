@@ -5,259 +5,90 @@
 <!DOCTYPE html>
 
 <html>
+<meta charset="UTF-8">
 <head>
 <title>Marionette Test</title>
 </head>
 <body>
   <h1 id="testh1">Test Page</h1>
-  <!-- "mozLink" and "mozLinkPos" work together to perform touchdown on mozLink, vertical move and then touchup on mozLinkPos-->
-  <button id="mozLink" style="position:absolute;left:0px;top:55px;" type="button" allowevents=true>Button1</button>
-  <button id="mozLinkPos" style="position:absolute;left:0px;top:355px;" type="button" allowevents=true>Button2</button>
-  <!-- "mozLinkCopy" listens for a touchdown and touchup -->
-  <button id="mozLinkCopy" style="position:absolute;left:0px;top:455px;" type="button" allowevents=true>Button3</button>
-  <!-- "mozLinkScroll" listens for scroll -->
-  <button id="mozLinkScroll" style="position:absolute;left:0px;top:655px;" type="button" allowevents=true>Button8</button>
-  <!-- "mozLinkScrollStart" listens for scroll -->
-  <button id="mozLinkScrollStart" style="position:absolute;left:0px;top:405px;" type="button" allowevents=true>Button9</button>
-  <!-- "mozLinkStart" and "mozLinkEnd" work together to perform touchdown on mozLinkStart, horizontal move and then touchup on mozLinkEnd -->  
-  <button id="mozLinkStart" style="position:absolute;left:10px;top:200px;" type="button" allowevents=true>Press</button>
-  <button id="mozLinkEnd" style="position:absolute;left:140px;top:200px;" type="button" allowevents=true>Release</button>
-  <!-- "mozLinkCopy2" listens for a touchdown and touchup. It shows the time when it's fired-->
-  <button id="mozLinkCopy2" style="position:absolute;left:80px;top:455px;" type="button" allowevents=true>Button4</button>
-  <!-- "mozLinkCancel" listens for a touchdown and touchcancel -->
-  <button id="mozLinkCancel" style="position:absolute;left:0px;top:255px;" type="button" allowevents=true>Button5</button>
-  <!-- "mozMouse" listens for mouse events -->
-  <button id="mozMouse" style="position:absolute;left:0px;top:305px;" type="button" allowevents=true>Button7</button>
+  <button id="button1" style="position:absolute;left:0px;top:55px;" type="button" allowevents=true>button1</button>
+  <button id="button2" style="position:absolute;left:0px;top:355px;" type="button" allowevents=true>button2</button>
+  <button id="button3" style="position:absolute;left:0px;top:455px;" type="button" allowevents=true>button3</button>
+  <button id="button4" style="position:absolute;left:100px;top:455px;" type="button" allowevents=true>button4</button>
+  <button id="buttonScroll" style="position:absolute;left:100px;top:855px;" type="button" allowevents=true>buttonScroll</button>
+  <h2 id="hidden" style="visibility: hidden" class="linkClass">Hidden</h2>
+  <button id="buttonFlick" style="position:absolute;left:0px;top:255px;" type="button" allowevents=true>buttonFlick</button>
   <script type="text/javascript">
-    window.ready = true;
-    var press = document.getElementById("mozLink");
-    var second = document.getElementById("mozLinkCopy");
-    var third = document.getElementById("mozLinkStart");
-    var fourth = document.getElementById("mozLinkCopy2");
-    var fifth = document.getElementById("mozLinkCancel");
-    var sixth = document.getElementById("mozMouse");
-    var seventh = document.getElementById("mozLinkScrollStart");
-    // touchmove and touchend must be performed on the same element as touchstart
-    // here is press for vertical move
-    press.addEventListener("touchstart", function(){changePressText("mozLink")}, false);
-    press.addEventListener("touchmove", changeMoveText, false);
-    press.addEventListener("touchend", changeReleaseText, false);
-    // here is second for a tap
-    second.addEventListener("touchstart", function(){changePressText("mozLinkCopy")}, false);
-    second.addEventListener("touchend", function(){changeClickText("mozLinkCopy")}, false);
-    // change for contextmenu
-    second.addEventListener("contextmenu", onContextMenuChange, false);
-    // here is third for horizontal move
-    third.addEventListener("touchstart", function(){changePressText("mozLinkStart")}, false);
-    third.addEventListener("touchmove", changeHorizontalMove, false);
-    third.addEventListener("touchend", changeHorizontalRelease, false);
-    // here is fourth for touch up and down with time shown
-    fourth.addEventListener("touchstart", changeTimePress, false);
-    fourth.addEventListener("touchend", changeTimeRelease, false);
-    // here is fifth for a cancel
-    fifth.addEventListener("touchstart", function(){changePressText("mozLinkCancel")}, false);
-    fifth.addEventListener("touchcancel", function(){changeClickText("mozLinkCancel")}, false);
-    // here is sixth for mouse event
-    sixth.addEventListener("touchstart", function(){changeMouseText("TouchStart")}, false);
-    sixth.addEventListener("touchend", function(){changeMouseText("TouchEnd")}, false);
-    sixth.addEventListener("mousemove", function(){changeMouseText("MouseMove")}, false);
-    sixth.addEventListener("mousedown", function(){changeMouseText("MouseDown")}, false);
-    sixth.addEventListener("mouseup", function(){changeMouseText("MouseUp")}, false);
-    sixth.addEventListener("click", function(){changeMouseText("MouseClick")}, false);
-    // here is seventh for a scroll
-    seventh.addEventListener("touchstart", function(){changePressText("mozLinkScrollStart")}, false);
-    seventh.addEventListener("touchend", function(){changeScrollText("mozLinkScroll")}, false);
-    function changeMouseText(strId) {
-      var mouse = document.getElementById("mozMouse");
-      switch(strId) {
-        case "TouchStart":
-          if (mouse.innerHTML == "MouseClick") {
-            mouse.innerHTML = "TouchStart2";
-          }
-          else if (mouse.innerHTML == "TouchEnd") {
-            mouse.innerHTML = "TouchStart2";
-          }
-          else {
-            mouse.innerHTML = strId;
-          }
-          break;
-        case "TouchEnd":
-          if (mouse.innerHTML == "TouchStart") {
-            mouse.innerHTML = strId;
-          }
-          else if (mouse.innerHTML == "TouchStart2") {
-            mouse.innerHTML = "TouchEnd2";
-          }
-          else {
-            mouse.innerHTML = "Error";
-          }
-          break;
-        case "MouseMove":
-          if (mouse.innerHTML == "TouchEnd") {
-            mouse.innerHTML = strId;
-          }
-          else if (mouse.innerHTML == "TouchEnd2") {
-            mouse.innerHTML = "MouseMove2";
-          }
-          else {
-            mouse.innerHTML = "Error";
-          }
-          break;
-        case "MouseDown":
-          if (mouse.innerHTML == "MouseMove") {
-            mouse.innerHTML = strId;
-          }
-          else if (mouse.innerHTML == "MouseMove2") {
-            mouse.innerHTML = "MouseDown2";
-          }
-          else {
-            mouse.innerHTML = "Error";
-          }
-          break;
-        case "MouseUp":
-          if (mouse.innerHTML == "MouseDown") {
-            mouse.innerHTML = strId;
-          }
-          else if (mouse.innerHTML == "MouseDown2") {
-            mouse.innerHTML = "MouseUp2";
-          }
-          else {
-            mouse.innerHTML = "Error";
-          }
-          break;
-        case "MouseClick":
-          if (mouse.innerHTML == "MouseUp") {
-            mouse.innerHTML = strId;
-          }
-          else if (mouse.innerHTML == "MouseUp2") {
-            mouse.innerHTML = "MouseClick2";
-          }
-          else {
-            mouse.innerHTML = "Error";
-          }
-          break;
-        default:
-          mouse.innerHTML = "Error";
-          break;
-      }
+    var button3Timer = null;
+    var button4Timer = null;
+    //appends passed in text to the innerHTML of the event's target
+    function appendText(text) {
+      return function(evt) {
+         var element;
+         if (evt.type.indexOf("touch") !== -1) {
+           if (evt.type == "touchstart") {
+             element = evt.target;
+           }
+           else {
+             //since the target of touchstart is the target of all subsequent events, then
+             //changedTouches holds the current coordinates of this touch event, so we 
+             //use these coordinates to find the element under the touch event
+             var touches = evt.changedTouches;
+             var x = touches[0].clientX;
+             var y = touches[0].clientY;
+             element = document.elementFromPoint(x,y);
+           }
+         }
+         //handle mouse events or contextmenu
+         else {
+          element = evt.target;
+         }
+         element.innerHTML += text;
+      };
+    };
+    //use this function outside of attachListeners when you want to test sendMouseOnlyEvents on a target
+    function attachMouseListeners(element) {
+      element.addEventListener("contextmenu", appendText("-contextmenu"), false);
+      element.addEventListener("mousedown", appendText("-mousedown"), false);
+      element.addEventListener("mousemove", appendText("-mousemove"), false);
+      element.addEventListener("mouseup", appendText("-mouseup"), false);
+      element.addEventListener("click", appendText("-click"), false);
+    };
+    function attachListeners(id) {
+      var element = document.getElementById(id);
+      element.addEventListener("touchstart", appendText("-touchstart"), false);
+      element.addEventListener("touchmove", appendText("-touchmove"), false);
+      element.addEventListener("touchend", appendText("-touchend"), false);
+      element.addEventListener("touchcancel", appendText("-touchcancel"), false);
+      attachMouseListeners(element);
+    };
+    //for tracking time on an element
+    function addTimers(id, timer) {
+      var element = document.getElementById(id);
+      element.addEventListener("touchstart", function(evt) { timer = (new Date()).getTime();}, false);
+      element.addEventListener("touchend", function(evt) { timer = (new Date()).getTime() - timer; evt.target.innerHTML += "-" + timer;}, false);
     }
-
-    function changePressText(strId) {
-      var press = document.getElementById(strId);
-      press.innerHTML = "Start";
-    }
-
-    function changeMoveText() {
-      var move = document.getElementById("mozLink");
-      move.innerHTML = "Move";
-    }
-
-    function checkPosition(event, ele) {
-      var touches = event.changedTouches;
-      var clientX = touches[0].clientX;
-      var clientY = touches[0].clientY;
-      var release = document.getElementById(ele);
-      var boxr = release.getBoundingClientRect();
-      return (clientY >= boxr.top &&
-              clientY <= boxr.bottom &&
-              clientX >= boxr.left &&
-              clientX <= boxr.right);
-    }
-
-    function changeReleaseText(event) {
-      if (checkPosition(event, "mozLinkPos")) {
-        document.getElementById("mozLinkPos").innerHTML = "End";
-      }
-    }
-
-    function changeHorizontalMove() {
-      var press = document.getElementById("mozLinkStart");
-      if (press.innerHTML == "Start") {
-        var d = new Date();
-        press.innerHTML = d.getTime();
-      }
-    }
-
-    function changeHorizontalRelease(event) {
-      if (checkPosition(event, "mozLinkEnd")) {
-        var press = document.getElementById("mozLinkStart");
-        var d = new Date();
-        var timeDiff = d.getTime() - press.innerHTML;
-        document.getElementById("mozLinkEnd").innerHTML = timeDiff;
-        
-      }
-    }
-
-    function changeClickText(strId) {
-      var second = document.getElementById(strId);
-      if (second.innerHTML == "Start") {
-        second.innerHTML = "End";
-      }
-      else if (second.innerHTML == "Context") {
-        second.innerHTML = "ContextEnd";
-      }
-      else {
-        second.innerHTML = "Error";
-      }
-    }
-
-    function changeScrollText(strId) {
-      var seventh = document.getElementById(strId);
-      if (elementInViewport(seventh)) {
-        seventh.innerHTML = "End";
-      }
-      else {
-        seventh.innerHTML = "Error";
-      }
-    }
-
-    function changeTimePress() {
-      var fourth = document.getElementById("mozLinkCopy2");
-      var d = new Date();
-      fourth.innerHTML = d.getTime();
+    attachListeners("button1");
+    attachListeners("button2");
+    attachListeners("button3");
+    attachListeners("button4");
+    attachListeners("buttonScroll");
+    addTimers("button3");
+    addTimers("button4");
+    var buttonFlick = document.getElementById("buttonFlick");
+    attachMouseListeners(buttonFlick);
+    function createDelayed() {
       var newButton = document.createElement("button");
       newButton.id = "delayed";
       newButton.setAttribute("style", "position:absolute;left:220px;top:455px;");
-      var content = document.createTextNode("Button6");
+      var content = document.createTextNode("delayed");
       newButton.appendChild(content);
       document.body.appendChild(newButton);
-    }
-
-    function changeTimeRelease(event) {
-      var fourth = document.getElementById("mozLinkCopy2");
-      if (fourth.innerHTML != "Button4") {
-        var d = new Date();
-        var timeDiff = d.getTime() - fourth.innerHTML;
-        fourth.innerHTML = timeDiff;
-      }
-      else {
-        fourth.innerHTML = "Error";
-      }
-      if (checkPosition(event, "delayed")) {
-        document.getElementById("delayed").innerHTML = "End";
-      }
-    }
-
-    function onContextMenuChange() {
-      var context = document.getElementById("mozLinkCopy");
-      context.innerHTML = "Context";
-    }
-
-    function elementInViewport(el) {
-      var top = el.offsetTop;
-      var left = el.offsetLeft;
-      var width = el.offsetWidth;
-      var height = el.offsetHeight;
-      while(el.offsetParent) {
-        el = el.offsetParent;
-        top += el.offsetTop;
-        left += el.offsetLeft;
-      }
-      return (top >= window.pageYOffset &&
-              left >= window.pageXOffset &&
-              (top + height) <= (window.pageYOffset + window.innerHeight) &&
-              (left + width) <= (window.pageXOffset + window.innerWidth));
-    }
+      newButton.addEventListener("mousemove", appendText("-mousemove"), false);
+      newButton.addEventListener("mouseup", appendText("-mouseup"), false);
+      newButton.addEventListener("click", appendText("-click"), false);
+    };
+    window.setTimeout(createDelayed, 5000);
   </script>
 </body>
 </html>

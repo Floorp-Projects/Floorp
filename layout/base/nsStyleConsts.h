@@ -393,12 +393,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_POPUP                  27
 #define NS_STYLE_DISPLAY_GROUPBOX               28
 #endif
-#ifdef MOZ_FLEXBOX
 #define NS_STYLE_DISPLAY_FLEX                   29
 #define NS_STYLE_DISPLAY_INLINE_FLEX            30
-#endif // MOZ_FLEXBOX
 
-#ifdef MOZ_FLEXBOX
 // See nsStylePosition
 #define NS_STYLE_ALIGN_ITEMS_FLEX_START         0
 #define NS_STYLE_ALIGN_ITEMS_FLEX_END           1
@@ -432,7 +429,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_JUSTIFY_CONTENT_CENTER         2
 #define NS_STYLE_JUSTIFY_CONTENT_SPACE_BETWEEN  3
 #define NS_STYLE_JUSTIFY_CONTENT_SPACE_AROUND   4
-#endif // MOZ_FLEXBOX
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0

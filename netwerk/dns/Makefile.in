@@ -11,18 +11,11 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = neckodns_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
-CPPSRCS = \
-  DNS.cpp \
-  nsIDNService.cpp \
-  nsHostResolver.cpp \
-  nsDNSService2.cpp \
-  nsEffectiveTLDService.cpp \
-  $(NULL)
-
-CSRCS = \
+DISABLED_CSRCS = \
   race.c \
   nameprep.c \
   punycode.c \

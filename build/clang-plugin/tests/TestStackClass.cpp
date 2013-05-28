@@ -35,7 +35,7 @@ void misuseStackClass(int len) {
 
 Stack notValid; // expected-error {{variable of type 'Stack' only valid on the stack}}
 struct RandomClass {
-  Stack nonstaticMember; // expected-error {{member of type 'Stack' in class 'RandomClass' that is not a stack class}}
+  Stack nonstaticMember; // expected-note {{'RandomClass' is a stack class because member 'nonstaticMember' is a stack class 'Stack'}}
   static Stack staticMember; // expected-error {{variable of type 'Stack' only valid on the stack}}
 };
 struct MOZ_STACK_CLASS RandomStackClass {
@@ -43,5 +43,8 @@ struct MOZ_STACK_CLASS RandomStackClass {
   static Stack staticMember; // expected-error {{variable of type 'Stack' only valid on the stack}}
 };
 
-struct BadInherit : Stack {}; // expected-error {{'BadInherit' inherits from a stack class 'Stack'}}
+struct BadInherit : Stack {}; // expected-note {{'BadInherit' is a stack class because it inherits from a stack class 'Stack'}}
 struct MOZ_STACK_CLASS GoodInherit : Stack {};
+
+BadInherit moreInvalid; // expected-error {{variable of type 'BadInherit' only valid on the stack}}
+RandomClass evenMoreInvalid; // expected-error {{variable of type 'RandomClass' only valid on the stack}}

@@ -150,9 +150,7 @@ AppendFunction(nsCSSKeyword aTransformFunction)
   }
 
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(nargs + 1);
-  arr->Item(0).SetStringValue(
-    NS_ConvertUTF8toUTF16(nsCSSKeywords::GetStringValue(aTransformFunction)),
-    eCSSUnit_Ident);
+  arr->Item(0).SetIntValue(aTransformFunction, eCSSUnit_Enumerated);
 
   return arr.forget();
 }
@@ -420,7 +418,6 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       return true;
     }
     case eUnit_Float: {
-#ifdef MOZ_FLEXBOX
       // Special case for flex-grow and flex-shrink: animations are
       // disallowed between 0 and other values.
       if ((aProperty == eCSSProperty_flex_grow ||
@@ -430,7 +427,6 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           aStartValue.GetFloatValue() != aEndValue.GetFloatValue()) {
         return false;
       }
-#endif // MOZ_FLEXBOX
 
       float startFloat = aStartValue.GetFloatValue();
       float endFloat = aEndValue.GetFloatValue();
@@ -1758,7 +1754,6 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       return true;
     }
     case eUnit_Float: {
-#ifdef MOZ_FLEXBOX
       // Special case for flex-grow and flex-shrink: animations are
       // disallowed between 0 and other values.
       if ((aProperty == eCSSProperty_flex_grow ||
@@ -1768,7 +1763,6 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           aValue1.GetFloatValue() != aValue2.GetFloatValue()) {
         return false;
       }
-#endif // MOZ_FLEXBOX
 
       aResultValue.SetFloatValue(RestrictValue(aProperty,
         aCoeff1 * aValue1.GetFloatValue() +
@@ -2682,7 +2676,6 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
-#ifdef MOZ_FLEXBOX
         case eCSSProperty_order: {
           const nsStylePosition *stylePosition =
             static_cast<const nsStylePosition*>(styleStruct);
@@ -2690,7 +2683,6 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                      eUnit_Integer);
           break;
         }
-#endif // MOZ_FLEXBOX
 
         case eCSSProperty_text_decoration_color: {
           const nsStyleTextReset *styleTextReset =

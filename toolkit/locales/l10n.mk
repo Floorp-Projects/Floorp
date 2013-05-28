@@ -105,6 +105,7 @@ endif
 endif
 endif
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
+repackage-zip: ALREADY_SZIPPED=1
 repackage-zip:  libs-$(AB_CD)
 # call a hook for apps to put their uninstall helper.exe into the package
 	$(UNINSTALLER_PACKAGE_HOOK)

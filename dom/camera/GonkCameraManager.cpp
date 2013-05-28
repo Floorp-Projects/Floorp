@@ -33,7 +33,7 @@ nsresult
 nsDOMCameraManager::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
 {
   int32_t count = android::Camera::getNumberOfCameras();
-  DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
+  DOM_CAMERA_LOGI("GetCameraName : getNumberOfCameras() returned %d\n", count);
   if (aDeviceNum > count) {
     DOM_CAMERA_LOGE("GetCameraName : invalid device number");
     return NS_ERROR_NOT_AVAILABLE;
@@ -63,53 +63,70 @@ nsDOMCameraManager::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
   return NS_OK;
 }
 
-/* [implicit_jscontext] jsval getListOfCameras (); */
+/* void getListOfCameras ([optional] out unsigned long aCount, [array, size_is (aCount), retval] out string aCameras); */
 NS_IMETHODIMP
-nsDOMCameraManager::GetListOfCameras(JSContext* cx, JS::Value* _retval)
+nsDOMCameraManager::GetListOfCameras(uint32_t *aCount, char * **aCameras)
 {
-  JSObject* a = JS_NewArrayObject(cx, 0, nullptr);
-  uint32_t index = 0;
-  int32_t count;
+  int32_t count = android::Camera::getNumberOfCameras();
 
-  if (!a) {
-    DOM_CAMERA_LOGE("getListOfCameras : Could not create array object");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  count = android::Camera::getNumberOfCameras();
-  if (count <= 0) {
-    return NS_ERROR_NOT_AVAILABLE;
+  DOM_CAMERA_LOGI("GetListOfCameras : getNumberOfCameras() returned %d\n", count);
+  if (count < 1) {
+    *aCameras = nullptr;
+    *aCount = 0;
+    return NS_OK;
   }
 
-  DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
-  while (count--) {
+  // Allocate 2 extra slots to reserve space for 'front' and 'back' cameras
+  // at the front of the array--we will collapse any empty slots below.
+  int32_t arraySize = count + 2;
+  char** cameras = static_cast<char**>(NS_Alloc(arraySize * sizeof(char*)));
+  for (int32_t i = 0; i < arraySize; ++i) {
+    cameras[i] = nullptr;
+  }
+
+  uint32_t extraIndex = 2;
+  bool gotFront = false;
+  bool gotBack = false;
+
+  for (int32_t i = 0; i < count; ++i) {
     nsCString cameraName;
-    nsresult result = GetCameraName(count, cameraName);
+    nsresult result = GetCameraName(i, cameraName);
     if (result != NS_OK) {
       continue;
     }
 
-    JSString* v = JS_NewStringCopyZ(cx, cameraName.get());
-    JS::Value jv;
-    if (!cameraName.Compare("back")) {
+    // The first camera we find named 'back' gets slot 0; and the first
+    // we find named 'front' gets slot 1.  All others appear after these.
+    uint32_t index;
+    if (!gotBack && !cameraName.Compare("back")) {
       index = 0;
-    } else if (!cameraName.Compare("front")) {
+      gotBack = true;
+    } else if (!gotFront && !cameraName.Compare("front")) {
       index = 1;
+      gotFront = true;
     } else {
-      static uint32_t extraIndex = 2;
       index = extraIndex++;
     }
 
-    if (!v) {
-      DOM_CAMERA_LOGE("getListOfCameras : out of memory populating camera list");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    jv = STRING_TO_JSVAL(v);
-    if (!JS_SetElement(cx, a, index, &jv)) {
-      DOM_CAMERA_LOGE("getListOfCameras : failed building list of cameras");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+    MOZ_ASSERT(index < arraySize);
+    cameras[index] = ToNewCString(cameraName);
   }
 
-  *_retval = OBJECT_TO_JSVAL(a);
+  // Make a forward pass over the array to compact it; after this loop,
+  // 'offset' will contain the number of nullptrs in the array, which
+  // we use to adjust the value returned in 'aCount'.
+  int32_t offset = 0;
+  for (int32_t i = 0; i < arraySize; ++i) {
+    if (cameras[i] == nullptr) {
+      offset++;
+    } else if (offset != 0) {
+      cameras[i - offset] = cameras[i];
+      cameras[i] = nullptr;
+    }
+  }
+  MOZ_ASSERT(offset >= 2);
+
+  *aCameras = cameras;
+  *aCount = arraySize - offset;
   return NS_OK;
 }

@@ -247,6 +247,15 @@ public:
   virtual void UpdateTextureNoSwap(CompositableClient* aCompositable,
                                    TextureIdentifier aTextureId,
                                    SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
+  virtual void UpdateTextureIncremental(CompositableClient* aCompositable,
+                                        TextureIdentifier aTextureId,
+                                        SurfaceDescriptor& aDescriptor,
+                                        const nsIntRegion& aUpdatedRegion,
+                                        const nsIntRect& aBufferRect,
+                                        const nsIntPoint& aBufferRotation) MOZ_OVERRIDE
+  {
+    NS_RUNTIMEABORT("should not be called");
+  }
 
   /**
    * Communicate the picture rect of a YUV image in aLayer to the compositor
@@ -261,6 +270,12 @@ public:
                                    const SurfaceDescriptor& aDescriptor,
                                    const TextureInfo& aTextureInfo,
                                    const SurfaceDescriptor* aDescriptorOnWhite = nullptr) MOZ_OVERRIDE {
+    NS_RUNTIMEABORT("should not be called");
+  }
+  virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
+                                        const TextureInfo& aTextureInfo,
+                                        const nsIntRect& aBufferRect) MOZ_OVERRIDE
+  {
     NS_RUNTIMEABORT("should not be called");
   }
   virtual void CreatedDoubleBuffer(CompositableClient* aCompositable,

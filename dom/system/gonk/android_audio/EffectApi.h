@@ -600,12 +600,14 @@ enum audio_device_e {
     DEVICE_EXTERNAL_SPEAKER = 0x800             // external speaker (stereo and High quality)
 };
 
+#if ANDROID_VERSION < 17
 // Audio mode
 enum audio_mode_e {
     AUDIO_MODE_NORMAL,      // device idle
     AUDIO_MODE_RINGTONE,    // device ringing
     AUDIO_MODE_IN_CALL      // audio call connected (VoIP or telephony)
 };
+#endif
 
 // Values for "accessMode" field of buffer_config_t:
 //   overwrite, read only, accumulate (read/modify/write)

@@ -24,8 +24,7 @@ nsHttpConnectionMgr::PrintDiagnostics()
 void
 nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, void *)
 {
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -38,8 +37,8 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, void *)
   mLogData.AppendPrintf("mNumActiveConns = %d\n", mNumActiveConns);
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
-  mCT.Enumerate(PrintDiagnosticsCB, this);    
-    
+  mCT.Enumerate(PrintDiagnosticsCB, this);
+
   consoleService->LogStringMessage(NS_ConvertUTF8toUTF16(mLogData).Data());
   mLogData.Truncate();
 }
@@ -92,7 +91,7 @@ nsHttpConnectionMgr::PrintDiagnosticsCB(const nsACString &key,
     self->mLogData.AppendPrintf("   :: Pending Transaction #%u\n", i);
     ent->mPendingQ[i]->PrintDiagnostics(self->mLogData);
   }
-    
+
   return PL_DHASH_NEXT;
 }
 
@@ -103,7 +102,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::PrintDiagnostics(nsCString &log)
                    HasConnected(), IsSpeculative());
 
   TimeStamp now = TimeStamp::Now();
-    
+
   if (mPrimarySynStarted.IsNull())
     log.AppendPrintf("    primary not started\n");
   else
@@ -115,7 +114,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::PrintDiagnostics(nsCString &log)
   else
     log.AppendPrintf("    backup started %.2f ago\n",
                      (now - mBackupSynStarted).ToMilliseconds());
-    
+
   log.AppendPrintf("    primary transport %d, backup transport %d\n",
                    !!mSocketTransport.get(), !!mBackupTransport.get());
 }
@@ -143,15 +142,15 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
 
   log.AppendPrintf("    max-read/read/written %lld/%lld/%lld\n",
                    mMaxBytesRead, mTotalBytesRead, mTotalBytesWritten);
-    
+
   log.AppendPrintf("    rtt = %ums\n", PR_IntervalToMilliseconds(mRtt));
 
   log.AppendPrintf("    idlemonitoring = %d transactionCount=%d\n",
                    mIdleMonitoring, mHttp1xTransactionCount);
-    
+
   log.AppendPrintf("    supports pipeline = %d classification = 0x%x\n",
                    mSupportsPipelining, mClassification);
-    
+
   if (mSpdySession)
     mSpdySession->PrintDiagnostics(log);
 }
@@ -165,26 +164,26 @@ SpdySession3::PrintDiagnostics(nsCString &log)
 
   log.AppendPrintf("     concurrent = %d maxconcurrent = %d\n",
                    mConcurrent, mMaxConcurrent);
-    
+
   log.AppendPrintf("     roomformorestreams = %d roomformoreconcurrent = %d\n",
                    RoomForMoreStreams(), RoomForMoreConcurrent());
-    
+
   log.AppendPrintf("     transactionHashCount = %d streamIDHashCount = %d\n",
                    mStreamTransactionHash.Count(),
                    mStreamIDHash.Count());
 
   log.AppendPrintf("     Queued Stream Size = %d\n", mQueuedStreams.GetSize());
 
-  PRIntervalTime now = PR_IntervalNow();    
+  PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("     Ping Threshold = %ums next ping id = 0x%X\n",
                    PR_IntervalToMilliseconds(mPingThreshold),
                    mNextPingID);
   log.AppendPrintf("     Ping Timeout = %ums\n",
                    PR_IntervalToMilliseconds(gHttpHandler->SpdyPingTimeout()));
   log.AppendPrintf("     Idle for Any Activity (ping) = %ums\n",
-                   PR_IntervalToMilliseconds(now - mLastReadEpoch));    
+                   PR_IntervalToMilliseconds(now - mLastReadEpoch));
   log.AppendPrintf("     Idle for Data Activity = %ums\n",
-                   PR_IntervalToMilliseconds(now - mLastDataReadEpoch));    
+                   PR_IntervalToMilliseconds(now - mLastDataReadEpoch));
   if (mPingSentEpoch)
     log.AppendPrintf("     Ping Outstanding (ping) = %ums, expired = %d\n",
                      PR_IntervalToMilliseconds(now - mPingSentEpoch),
@@ -202,26 +201,26 @@ SpdySession2::PrintDiagnostics(nsCString &log)
 
   log.AppendPrintf("     concurrent = %d maxconcurrent = %d\n",
                    mConcurrent, mMaxConcurrent);
-    
+
   log.AppendPrintf("     roomformorestreams = %d roomformoreconcurrent = %d\n",
                    RoomForMoreStreams(), RoomForMoreConcurrent());
-    
+
   log.AppendPrintf("     transactionHashCount = %d streamIDHashCount = %d\n",
                    mStreamTransactionHash.Count(),
                    mStreamIDHash.Count());
 
   log.AppendPrintf("     Queued Stream Size = %d\n", mQueuedStreams.GetSize());
 
-  PRIntervalTime now = PR_IntervalNow();    
+  PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("     Ping Threshold = %ums next ping id = 0x%X\n",
                    PR_IntervalToMilliseconds(mPingThreshold),
                    mNextPingID);
   log.AppendPrintf("     Ping Timeout = %ums\n",
                    PR_IntervalToMilliseconds(gHttpHandler->SpdyPingTimeout()));
   log.AppendPrintf("     Idle for Any Activity (ping) = %ums\n",
-                   PR_IntervalToMilliseconds(now - mLastReadEpoch));    
+                   PR_IntervalToMilliseconds(now - mLastReadEpoch));
   log.AppendPrintf("     Idle for Data Activity = %ums\n",
-                   PR_IntervalToMilliseconds(now - mLastDataReadEpoch));    
+                   PR_IntervalToMilliseconds(now - mLastDataReadEpoch));
   if (mPingSentEpoch)
     log.AppendPrintf("     Ping Outstanding (ping) = %ums, expired = %d\n",
                      PR_IntervalToMilliseconds(now - mPingSentEpoch),

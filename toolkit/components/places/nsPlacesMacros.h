@@ -26,22 +26,22 @@
 #define PLACES_FACTORY_SINGLETON_IMPLEMENTATION(_className, _sInstance)        \
   _className * _className::_sInstance = nullptr;                                \
                                                                                \
-  _className *                                                                 \
+  already_AddRefed<_className>                                                 \
   _className::GetSingleton()                                                   \
   {                                                                            \
     if (_sInstance) {                                                          \
-      NS_ADDREF(_sInstance);                                                   \
-      return _sInstance;                                                       \
+      nsRefPtr<_className> ret = _sInstance;                                   \
+      return ret.forget();                                                     \
     }                                                                          \
     _sInstance = new _className();                                             \
-    if (_sInstance) {                                                          \
-      NS_ADDREF(_sInstance);                                                   \
-      if (NS_FAILED(_sInstance->Init())) {                                     \
-        NS_RELEASE(_sInstance);                                                \
-        _sInstance = nullptr;                                                   \
-      }                                                                        \
+    nsRefPtr<_className> ret = _sInstance;                                     \
+    if (NS_FAILED(_sInstance->Init())) {                                       \
+      /* Null out ret before _sInstance so the destructor doesn't assert */    \
+      ret = nullptr;                                                           \
+      _sInstance = nullptr;                                                    \
+      return nullptr;                                                          \
     }                                                                          \
-    return _sInstance;                                                         \
+    return ret.forget();                                                       \
   }
 
 #define PLACES_WARN_DEPRECATED()                                               \

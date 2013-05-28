@@ -25,7 +25,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Util.h"
-#include "nsContentUtils.h" // nsCxPusher
+#include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
@@ -144,13 +145,10 @@ protected:
     // is gone
     nsAutoMicroTask mMt;
 
-    // Can't construct an XPCAutoRequest until we have a JSContext, so
-    // this needs to be a Maybe.
-    Maybe<XPCAutoRequest> mAr;
-
-    // Can't construct a TerminationFuncHolder without an nsJSContext.  But we
-    // generally want its destructor to come after the destructor of mCxPusher.
-    Maybe<nsJSContext::TerminationFuncHolder> mTerminationFuncHolder;
+    // We construct our JS::Rooted right after our JSAutoRequest; let's just
+    // hope that the change in ordering wrt the mCxPusher constructor here is
+    // ok.
+    Maybe<JS::Rooted<JSObject*> > mRootedCallable;
 
     nsCxPusher mCxPusher;
 
@@ -343,8 +341,8 @@ public:
 
     AutoSafeJSContext cx;
 
-    JS::Rooted<JSObject*> obj(cx);
-    if (NS_FAILED(wrappedJS->GetJSObject(obj.address())) || !obj) {
+    JS::Rooted<JSObject*> obj(cx, wrappedJS->GetJSObject());
+    if (!obj) {
       return nullptr;
     }
 

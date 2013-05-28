@@ -11,17 +11,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkconhtmldoc_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
-
-CPPSRCS		= \
-		nsHTMLContentSink.cpp \
-		nsHTMLDocument.cpp \
-		ImageDocument.cpp \
-		MediaDocument.cpp \
-		PluginDocument.cpp \
-		VideoDocument.cpp \
-		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

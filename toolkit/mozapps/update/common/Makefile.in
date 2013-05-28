@@ -16,17 +16,5 @@ ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1
 endif
 
-CPPSRCS = \
-  updatelogging.cpp \
-  readstrings.cpp \
-  $(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += updatehelper.cpp \
-  uachelper.cpp \
-  pathhash.cpp \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 

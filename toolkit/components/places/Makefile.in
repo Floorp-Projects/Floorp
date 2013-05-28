@@ -11,29 +11,11 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_PLACES
 LIBRARY_NAME  = places
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 MODULE_NAME = nsPlacesModule
 IS_COMPONENT = 1
-
-CPPSRCS = \
-  nsAnnoProtocolHandler.cpp \
-  nsAnnotationService.cpp \
-  nsFaviconService.cpp \
-  nsNavHistory.cpp \
-  nsNavHistoryQuery.cpp \
-  nsNavHistoryResult.cpp \
-  nsNavBookmarks.cpp \
-  nsMaybeWeakPtr.cpp \
-  nsPlacesModule.cpp \
-  SQLFunctions.cpp \
-  Helpers.cpp \
-  History.cpp \
-  AsyncFaviconHelpers.cpp \
-  PlaceInfo.cpp \
-  VisitInfo.cpp \
-  Database.cpp \
-  $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 

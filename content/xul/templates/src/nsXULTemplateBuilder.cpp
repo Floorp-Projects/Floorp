@@ -67,6 +67,7 @@
 #include "nsXULTemplateQueryProcessorXML.h"
 #include "nsXULTemplateQueryProcessorStorage.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 using namespace mozilla::dom;
 using namespace mozilla;
@@ -1384,9 +1385,6 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
         return NS_ERROR_UNEXPECTED;
 
     JS::Rooted<JSObject*> scope(jscontext, global->GetGlobalJSObject());
-
-    JSAutoRequest ar(jscontext);
-
     JS::Rooted<JS::Value> v(jscontext);
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
     rv = nsContentUtils::WrapNative(jscontext, scope, mRoot, mRoot, v.address(),

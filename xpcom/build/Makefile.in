@@ -15,6 +15,7 @@ include $(srcdir)/../glue/objs.mk
 EXTRA_DEPS += $(srcdir)/../glue/objs.mk
 
 LIBRARY_NAME	= xpcom_core
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
@@ -26,29 +27,6 @@ endif
 
 ifeq (Darwin, $(OS_ARCH))
 CSRCS = mach_override.c
-endif
-
-CPPSRCS = \
-  $(XPCOM_GLUE_SRC_LCPPSRCS) \
-  $(XPCOM_GLUENS_SRC_LCPPSRCS) \
-  nsXPComInit.cpp \
-  nsXPCOMStrings.cpp \
-  Services.cpp \
-  Omnijar.cpp \
-  FileLocation.cpp \
-  FrozenFunctions.cpp \
-  $(NULL)
-
-ifeq (Darwin, $(OS_ARCH))
-CPPSRCS += mozPoisonWriteBase.cpp mozPoisonWriteMac.cpp
-else ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += mozPoisonWriteBase.cpp mozPoisonWriteWin.cpp
-else
-CPPSRCS += mozPoisonWriteStub.cpp
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += perfprobe.cpp
 endif
 
 SHARED_LIBRARY_LIBS = \

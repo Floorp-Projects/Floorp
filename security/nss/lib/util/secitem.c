@@ -115,6 +115,66 @@ SECITEM_ReallocItem(PLArenaPool *arena, SECItem *item, unsigned int oldlen,
     return SECSuccess;
 }
 
+SECStatus
+SECITEM_ReallocItemV2(PLArenaPool *arena, SECItem *item, unsigned int newlen)
+{
+    unsigned char *newdata = NULL;
+
+    PORT_Assert(item);
+    if (!item) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    
+    if (item->len == newlen) {
+	return SECSuccess;
+    }
+
+    if (!newlen) {
+	if (!arena) {
+	    PORT_Free(item->data);
+	}
+	item->data = NULL;
+	item->len = 0;
+	return SECSuccess;
+    }
+    
+    if (!item->data) {
+	/* allocate fresh block of memory */
+	PORT_Assert(!item->len);
+	if (arena) {
+	    newdata = PORT_ArenaAlloc(arena, newlen);
+	} else {
+	    newdata = PORT_Alloc(newlen);
+	}
+    } else {
+	/* reallocate or adjust existing block of memory */
+	if (arena) {
+	    if (item->len > newlen) {
+		/* There's no need to realloc a shorter block from the arena,
+		 * because it would result in using even more memory!
+		 * Therefore we'll continue to use the old block and 
+		 * set the item to the shorter size.
+		 */
+		item->len = newlen;
+		return SECSuccess;
+	    }
+	    newdata = PORT_ArenaGrow(arena, item->data, item->len, newlen);
+	} else {
+	    newdata = PORT_Realloc(item->data, newlen);
+	}
+    }
+
+    if (!newdata) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return SECFailure;
+    }
+
+    item->len = newlen;
+    item->data = newdata;
+    return SECSuccess;
+}
+
 SECComparison
 SECITEM_CompareItem(const SECItem *a, const SECItem *b)
 {
@@ -366,7 +426,7 @@ secitem_FreeArray(SECItemArray *array, PRBool zero_items, PRBool freeit)
     if (!array || !array->len || !array->items)
         return;
 
-    for (i=0; i<array->len; ++i) {
+    for (i = 0; i < array->len; ++i) {
         SECItem *item = &array->items[i];
 
         if (item->data) {
@@ -401,14 +461,18 @@ SECITEM_DupArray(PLArenaPool *arena, const SECItemArray *from)
     SECItemArray *result;
     unsigned int i;
 
-    if (!from || !from->items || !from->len)
+    /* Require a "from" array.
+     * Reject an inconsistent "from" array with NULL data and nonzero length.
+     * However, allow a "from" array of zero length.
+     */
+    if (!from || (!from->items && from->len))
         return NULL;
 
     result = SECITEM_AllocArray(arena, NULL, from->len);
     if (!result)
         return NULL;
 
-    for (i=0; i<from->len; ++i) {
+    for (i = 0; i < from->len; ++i) {
         SECStatus rv = SECITEM_CopyItem(arena,
                                         &result->items[i], &from->items[i]);
         if (rv != SECSuccess) {

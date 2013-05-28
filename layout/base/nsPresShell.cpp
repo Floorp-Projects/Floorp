@@ -87,6 +87,7 @@
 #include "nsIBaseWindow.h"
 #include "nsError.h"
 #include "nsLayoutUtils.h"
+#include "nsViewportInfo.h"
 #include "nsCSSRendering.h"
   // for |#ifdef DEBUG| code
 #include "prenv.h"
@@ -686,6 +687,7 @@ nsIPresShell::FrameSelection()
 //----------------------------------------------------------------------
 
 static bool sSynthMouseMove = true;
+static uint32_t sNextPresShellId;
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
@@ -712,6 +714,7 @@ PresShell::PresShell()
 #else
   mIsFirstPaint = true;
 #endif
+  mPresShellId = sNextPresShellId++;
   mFrozen = false;
 #ifdef DEBUG
   mPresArenaAllocCount = 0;
@@ -3836,7 +3839,7 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       }
 
       if (aFlush.mFlushAnimations &&
-          CommonAnimationManager::ThrottlingEnabled() &&
+          nsLayoutUtils::AreAsyncAnimationsEnabled() &&
           !mPresContext->StyleUpdateForAllAnimationsIsUpToDate()) {
         mPresContext->AnimationManager()->
           FlushAnimations(CommonAnimationManager::Cannot_Throttle);
@@ -4056,6 +4059,12 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   mFrameConstructor->RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
 
   mFrameConstructor->ContentAppended(aContainer, aFirstNewContent, true);
+
+  if (static_cast<nsINode*>(aContainer) == static_cast<nsINode*>(aDocument) &&
+      aFirstNewContent->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    NotifyFontSizeInflationEnabledIsDirty();
+  }
+
   VERIFY_STYLE_TREE;
 }
 
@@ -4081,6 +4090,13 @@ PresShell::ContentInserted(nsIDocument* aDocument,
     mFrameConstructor->RestyleForInsertOrChange(aContainer->AsElement(), aChild);
 
   mFrameConstructor->ContentInserted(aContainer, aChild, nullptr, true);
+
+  if (((!aContainer && aDocument) ||
+      (static_cast<nsINode*>(aContainer) == static_cast<nsINode*>(aDocument))) &&
+      aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    NotifyFontSizeInflationEnabledIsDirty();
+  }
+
   VERIFY_STYLE_TREE;
 }
 
@@ -4101,6 +4117,12 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
+
+  // XXX_jwir3: There is no null check for aDocument necessary, since, even
+  //            though by nsIMutationObserver, aDocument could be null, the
+  //            precondition check that mDocument == aDocument ensures that
+  //            aDocument will not be null (since mDocument can't be null unless
+  //            we're still intializing).
   mPresContext->EventStateManager()->ContentRemoved(aDocument, aChild);
 
   nsAutoCauseReflowNotifier crNotifier(this);
@@ -4124,6 +4146,13 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   mFrameConstructor->ContentRemoved(aContainer, aChild, oldNextSibling,
                                     nsCSSFrameConstructor::REMOVE_CONTENT,
                                     &didReconstruct);
+
+
+  if (((aContainer &&
+      static_cast<nsINode*>(aContainer) == static_cast<nsINode*>(aDocument)) ||
+      aDocument) && aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    NotifyFontSizeInflationEnabledIsDirty();
+  }
 
   VERIFY_STYLE_TREE;
 }
@@ -5548,9 +5577,6 @@ PresShell::Paint(nsView*        aViewToPaint,
   uint32_t flags = nsLayoutUtils::PAINT_WIDGET_LAYERS | nsLayoutUtils::PAINT_EXISTING_TRANSACTION;
   if (!(aFlags & PAINT_COMPOSITE)) {
     flags |= nsLayoutUtils::PAINT_NO_COMPOSITE;
-  }
-  if (aViewToPaint->InAlternatePaint()) {
-    flags |= nsLayoutUtils::PAINT_NO_CLEAR_INVALIDATIONS;
   }
 
   if (frame) {
@@ -9472,6 +9498,91 @@ PresShell::SetupFontInflation()
   mFontSizeInflationLineThreshold = nsLayoutUtils::FontSizeInflationLineThreshold();
   mFontSizeInflationForceEnabled = nsLayoutUtils::FontSizeInflationForceEnabled();
   mFontSizeInflationDisabledInMasterProcess = nsLayoutUtils::FontSizeInflationDisabledInMasterProcess();
+
+  NotifyFontSizeInflationEnabledIsDirty();
+}
+
+void
+nsIPresShell::RecomputeFontSizeInflationEnabled()
+{
+  mFontSizeInflationEnabledIsDirty = false;
+
+  MOZ_ASSERT(mPresContext, "our pres context should not be null");
+  if ((FontSizeInflationEmPerLine() == 0 &&
+      FontSizeInflationMinTwips() == 0) || mPresContext->IsChrome()) {
+    mFontSizeInflationEnabled = false;
+    return;
+  }
+
+  // Force-enabling font inflation always trumps the heuristics here.
+  if (!FontSizeInflationForceEnabled()) {
+    if (TabChild* tab = GetTabChildFrom(this)) {
+      // We're in a child process.  Cancel inflation if we're not
+      // async-pan zoomed.
+      if (!tab->IsAsyncPanZoomEnabled()) {
+        mFontSizeInflationEnabled = false;
+        return;
+      }
+    } else if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      // We're in the master process.  Cancel inflation if it's been
+      // explicitly disabled.
+      if (FontSizeInflationDisabledInMasterProcess()) {
+        mFontSizeInflationEnabled = false;
+        return;
+      }
+    }
+  }
+
+  // XXXjwir3:
+  // See bug 706918, comment 23 for more information on this particular section
+  // of the code. We're using "screen size" in place of the size of the content
+  // area, because on mobile, these are close or equal. This will work for our
+  // purposes (bug 706198), but it will need to be changed in the future to be
+  // more correct when we bring the rest of the viewport code into platform.
+  // We actually want the size of the content area, in the event that we don't
+  // have any metadata about the width and/or height. On mobile, the screen size
+  // and the size of the content area are very close, or the same value.
+  // In XUL fennec, the content area is the size of the <browser> widget, but
+  // in native fennec, the content area is the size of the Gecko LayerView
+  // object.
+
+  // TODO:
+  // Once bug 716575 has been resolved, this code should be changed so that it
+  // does the right thing on all platforms.
+  nsresult rv;
+  nsCOMPtr<nsIScreenManager> screenMgr =
+    do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
+  if (!NS_SUCCEEDED(rv)) {
+    mFontSizeInflationEnabled = false;
+    return;
+  }
+
+  nsCOMPtr<nsIScreen> screen;
+  screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+  if (screen) {
+    int32_t screenLeft, screenTop, screenWidth, screenHeight;
+    screen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
+
+    nsViewportInfo vInf =
+      nsContentUtils::GetViewportInfo(GetDocument(), screenWidth, screenHeight);
+
+    if (vInf.GetDefaultZoom() >= 1.0 || vInf.IsAutoSizeEnabled()) {
+      mFontSizeInflationEnabled = false;
+      return;
+    }
+  }
+
+  mFontSizeInflationEnabled = true;
+}
+
+bool
+nsIPresShell::FontSizeInflationEnabled()
+{
+  if (mFontSizeInflationEnabledIsDirty) {
+    RecomputeFontSizeInflationEnabled();
+  }
+
+  return mFontSizeInflationEnabled;
 }
 
 void

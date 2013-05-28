@@ -7,8 +7,11 @@
 #include "AndroidBridge.h"
 #include "nsIAndroidBridge.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIWidget.h"
+#include "nsGUIEvent.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 jclass AndroidGeckoEvent::jGeckoEventClass = 0;
 jfieldID AndroidGeckoEvent::jActionField = 0;
@@ -736,11 +739,11 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
     const nsIntPoint& offset = widget->WidgetToScreenOffset();
     event.touches.SetCapacity(endIndex - startIndex);
     for (int i = startIndex; i < endIndex; i++) {
-        nsCOMPtr<nsIDOMTouch> t(new dom::Touch(PointIndicies()[i],
-                                               Points()[i] - offset,
-                                               PointRadii()[i],
-                                               Orientations()[i],
-                                               Pressures()[i]));
+        nsRefPtr<Touch> t = new Touch(PointIndicies()[i],
+                                      Points()[i] - offset,
+                                      PointRadii()[i],
+                                      Orientations()[i],
+                                      Pressures()[i]);
         event.touches.AppendElement(t);
     }
 

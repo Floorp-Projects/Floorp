@@ -438,6 +438,12 @@ VectorImage::ShouldAnimate()
   return ImageResource::ShouldAnimate() && mIsFullyLoaded && mHaveAnimations;
 }
 
+NS_IMETHODIMP_(void)
+VectorImage::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
+{
+  // We don't care about animation start time.
+}
+
 //------------------------------------------------------------------------------
 // imgIContainer methods
 
@@ -466,6 +472,7 @@ NS_IMETHODIMP_(void)
 VectorImage::RequestRefresh(const mozilla::TimeStamp& aTime)
 {
   // TODO: Implement for b666446.
+  EvaluateAnimation();
 }
 
 //******************************************************************************
@@ -549,6 +556,23 @@ VectorImage::GetAnimated(bool* aAnimated)
   *aAnimated = mSVGDocumentWrapper->IsAnimated();
   return NS_OK;
 }
+
+//******************************************************************************
+/* [notxpcom] int32_t getFirstFrameDelay (); */
+int32_t
+VectorImage::GetFirstFrameDelay()
+{
+  if (mError)
+    return -1;
+
+  if (!mSVGDocumentWrapper->IsAnimated())
+    return -1;
+
+  // We don't really have a frame delay, so just pretend that we constantly
+  // need updates.
+  return 0;
+}
+
 
 //******************************************************************************
 /* [notxpcom] boolean frameIsOpaque(in uint32_t aWhichFrame); */

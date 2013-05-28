@@ -71,6 +71,7 @@ static const uint32_t sRelationTypesForIA2[] = {
   nsIAccessibleRelation::RELATION_DESCRIBED_BY,
   nsIAccessibleRelation::RELATION_DESCRIPTION_FOR,
   nsIAccessibleRelation::RELATION_NODE_CHILD_OF,
+  nsIAccessibleRelation::RELATION_NODE_PARENT_OF,
   nsIAccessibleRelation::RELATION_CONTROLLED_BY,
   nsIAccessibleRelation::RELATION_CONTROLLER_FOR,
   nsIAccessibleRelation::RELATION_FLOWS_TO,

@@ -23,7 +23,6 @@ DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
                        JS::MutableHandle<JS::Value> aVal)
 {
   JSContext* cx = nsContentUtils::GetSafeJSContext();
-  JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, aObj);
 
   JS::Rooted<JSObject*> obj(cx, JS_NewArrayBuffer(cx, aBuffer.Length()));

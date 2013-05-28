@@ -121,6 +121,11 @@ function appUpdater()
     return;
   }
 
+  if (this.aus.isOtherInstanceHandlingUpdates) {
+    this.selectPanel("otherInstanceHandlingUpdates");
+    return;
+  }
+
   if (this.isDownloading) {
     this.startDownload();
     return;
@@ -142,7 +147,7 @@ appUpdater.prototype =
   // true when there is an update already staged / ready to be applied.
   get isPending() {
     if (this.update) {
-      return this.update.state == "pending" || 
+      return this.update.state == "pending" ||
              this.update.state == "pending-service";
     }
     return this.um.activeUpdate &&
@@ -470,7 +475,7 @@ appUpdater.prototype =
     this.aus.pauseDownload();
     let state = this.aus.downloadUpdate(this.update, false);
     if (state == "failed") {
-      this.selectPanel("downloadFailed");      
+      this.selectPanel("downloadFailed");
       return;
     }
 

@@ -65,7 +65,7 @@ exports.testActivate = function(options) {
   var ev = {};
   stubScratchpad.activatedCount = 0;
   options.display.inputter.handleKeyUp(ev);
-  assert.is(1, stubScratchpad.activatedCount, 'scratchpad is activated');
+  assert.is(stubScratchpad.activatedCount, 1, 'scratchpad is activated');
 };
 
 

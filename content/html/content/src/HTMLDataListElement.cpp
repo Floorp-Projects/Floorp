@@ -21,15 +21,8 @@ HTMLDataListElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLDataListElementBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLDataListElement,
-                                                nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOptions)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLDataListElement,
-                                                  nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOptions)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLDataListElement, nsGenericHTMLElement,
+                                     mOptions)
 
 NS_IMPL_ADDREF_INHERITED(HTMLDataListElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLDataListElement, Element)

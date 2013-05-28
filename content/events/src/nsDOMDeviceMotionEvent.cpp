@@ -1,33 +1,25 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMClassInfoID.h"
 #include "nsDOMDeviceMotionEvent.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAcceleration)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccelerationIncludingGravity)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRotationRate)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAcceleration)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccelerationIncludingGravity)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRotationRate)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_3(nsDOMDeviceMotionEvent, nsDOMEvent,
+                                     mAcceleration,
+                                     mAccelerationIncludingGravity,
+                                     mRotationRate)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
 
-DOMCI_DATA(DeviceMotionEvent, nsDOMDeviceMotionEvent)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceMotionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceMotionEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceMotionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP

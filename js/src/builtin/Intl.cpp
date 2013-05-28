@@ -1276,7 +1276,7 @@ js::intl_numberingSystem(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
     const char *name = numbers->getName();
-    JSString *jsname = JS_NewStringCopyZ(cx, name);
+    RootedString jsname(cx, JS_NewStringCopyZ(cx, name));
     delete numbers;
     if (!jsname)
         return false;

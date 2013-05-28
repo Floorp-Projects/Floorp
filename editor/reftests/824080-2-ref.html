@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript">
+    function doTest()
+    {
+      document.getSelection().selectAllChildren(document.getElementById("text"));
+      var editor = document.getElementById("editor");
+      var editorBody = editor.contentDocument.body;
+      editor.contentDocument.getSelection().selectAllChildren(editorBody);
+      editor.focus();
+      editor.blur();
+    }
+  </script>
+</head>
+<body>
+<p id="text">normal text</p>
+<iframe id="editor" onload="doTest();"
+  src="data:text/html,<body>editable text</body>"></iframe>
+</body>
+</html>
+

@@ -52,7 +52,7 @@ public:
    * either call Disconnect() to close RFCOMM connection or start another
    * file-sending thread via calling SendFile() again.
    */
-  void Connect(const nsAString& aDeviceObjectPath,
+  void Connect(const nsAString& aDeviceAddress,
                BluetoothReplyRunnable* aRunnable);
   void Disconnect();
   bool Listen();
@@ -88,6 +88,7 @@ public:
   virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
                                    const nsAString& aServiceUuid,
                                    int aChannel) MOZ_OVERRIDE;
+  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE;
 
 private:
   BluetoothOppManager();
@@ -100,7 +101,7 @@ private:
   bool WriteToFile(const uint8_t* aData, int aDataLength);
   void DeleteReceivedFile();
   void ReplyToConnect();
-  void ReplyToDisconnect();
+  void ReplyToDisconnectOrAbort();
   void ReplyToPut(bool aFinal, bool aContinue);
   void AfterOppConnected();
   void AfterFirstPut();
@@ -137,6 +138,12 @@ private:
   int mBodySegmentLength;
   int mReceivedDataBufferOffset;
   int mUpdateProgressCounter;
+
+  /**
+   * When it is true and the target service on target device couldn't be found,
+   * refreshing SDP records is necessary.
+   */
+  bool mNeedsUpdatingSdpRecords;
 
   /**
    * Set when StopSendingFile() is called.

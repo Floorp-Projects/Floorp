@@ -84,10 +84,11 @@ extern JS_PUBLIC_API(void) JS_Abort(void);
 #else
 # ifdef DEBUG
 /*
- * In order to test OOM conditions, when the shell command-line option
- * |-A NUM| is passed, we fail continuously after the NUM'th allocation.
+ * In order to test OOM conditions, when the testing function
+ * oomAfterAllocations COUNT is passed, we fail continuously after the NUM'th
+ * allocation from now.
  */
-extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set from shell/js.cpp */
+extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set in builtins/TestingFunctions.cpp */
 extern JS_PUBLIC_DATA(uint32_t) OOM_counter; /* data race, who cares. */
 
 #ifdef JS_OOM_DO_BACKTRACES

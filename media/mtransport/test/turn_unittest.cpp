@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "sigslot.h"
 
+#include "logging.h"
 #include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
@@ -52,7 +53,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
-#include "logging.h"
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 

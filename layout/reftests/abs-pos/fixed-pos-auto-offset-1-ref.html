@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testcase Bug 851514</title>
+  <style>
+  #parent {
+    position: fixed;
+    height: 30px;
+    width: 30px;
+    background: green;
+    left: 70px;
+    top: 70px;
+  }
+  #child {
+    position: fixed;
+    top: auto;
+    left: auto;
+    width: 10px;
+    height: 10px;
+    background: purple;
+  }
+  </style>
+</head>
+<body>
+  <div id="parent">
+    <div id="child"></div>
+  </div>
+  The purple block should be inside the green block.
+</body>
+</html>

@@ -502,7 +502,7 @@ SpecialPowersAPI.prototype = {
 
      inPermissions is an array of objects where each object has a type, action, context, ex:
      [{'type': 'SystemXHR', 'allow': 1, 'context': document}, 
-      {'type': 'SystemXHR', 'allow': 0, 'context': document}]
+      {'type': 'SystemXHR', 'allow': Ci.nsIPermissionManager.PROMPT_ACTION, 'context': document}]
 
     allow is a boolean and can be true/false or 1/0
   */
@@ -517,12 +517,19 @@ SpecialPowersAPI.prototype = {
           originalValue = Ci.nsIPermissionManager.ALLOW_ACTION;
         } else if (this.testPermission(permission.type, Ci.nsIPermissionManager.DENY_ACTION, permission.context)) {
           originalValue = Ci.nsIPermissionManager.DENY_ACTION;
+        } else if (this.testPermission(permission.type, Ci.nsIPermissionManager.PROMPT_ACTION, permission.context)) {
+          originalValue = Ci.nsIPermissionManager.PROMPT_ACTION;
         }
 
         let [url, appId, isInBrowserElement] = this._getInfoFromPermissionArg(permission.context);
 
-        let perm = permission.allow ? Ci.nsIPermissionManager.ALLOW_ACTION
-                           : Ci.nsIPermissionManager.DENY_ACTION;
+        let perm;
+        if (typeof permission.allow !== 'boolean') {
+          perm = permission.allow;
+        } else {
+          perm = permission.allow ? Ci.nsIPermissionManager.ALLOW_ACTION
+                             : Ci.nsIPermissionManager.DENY_ACTION;
+        }
 
         if (originalValue == perm) {
           continue;
@@ -534,7 +541,8 @@ SpecialPowersAPI.prototype = {
         if (originalValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
           cleanupTodo.op = 'remove';
         } else {
-          cleeanupTodo.value = originalValue;
+          cleanupTodo.value = originalValue;
+          cleanupTodo.permission = originalValue;
         }
         cleanupPermissions.push(cleanupTodo);
     }
@@ -1422,8 +1430,13 @@ SpecialPowersAPI.prototype = {
   addPermission: function(type, allow, arg) {
     let [url, appId, isInBrowserElement] = this._getInfoFromPermissionArg(arg);
 
-    let permission = allow ? Ci.nsIPermissionManager.ALLOW_ACTION
-                           : Ci.nsIPermissionManager.DENY_ACTION;
+    let permission;
+    if (typeof allow !== 'boolean') {
+      permission = allow;
+    } else {
+      permission = allow ? Ci.nsIPermissionManager.ALLOW_ACTION
+                         : Ci.nsIPermissionManager.DENY_ACTION;
+    }
 
     var msg = {
       'op': 'add',

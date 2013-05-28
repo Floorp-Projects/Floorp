@@ -11,35 +11,17 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= lwbrk_s
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY  = 1
 
 
-CPPSRCS		= \
-		nsJISx4051LineBreaker.cpp \
-		nsSampleWordBreaker.cpp \
-		nsSemanticUnitScanner.cpp \
-		$(NULL)
-
 ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CPPSRCS		+= \
-		nsPangoBreaker.cpp \
-		$(NULL)
 else
 ifeq  ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS		+= \
-		nsUniscribeBreaker.cpp \
-		$(NULL)
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
-CPPSRCS		+= \
-		nsCarbonBreaker.cpp \
-		$(NULL)
 else
-CPPSRCS		+= \
-	nsRuleBreaker.cpp \
-		$(NULL)
-
 CSRCS		= rulebrk.c
 endif
 endif

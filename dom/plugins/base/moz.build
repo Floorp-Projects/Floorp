@@ -42,3 +42,49 @@ EXPORTS.mozilla += [
     'PluginPRLibrary.h',
 ]
 
+CPP_SOURCES += [
+    'PluginPRLibrary.cpp',
+    'nsJSNPRuntime.cpp',
+    'nsNPAPIPlugin.cpp',
+    'nsNPAPIPluginInstance.cpp',
+    'nsNPAPIPluginStreamListener.cpp',
+    'nsPluginHost.cpp',
+    'nsPluginInstanceOwner.cpp',
+    'nsPluginModule.cpp',
+    'nsPluginPlayPreviewInfo.cpp',
+    'nsPluginStreamListenerPeer.cpp',
+    'nsPluginTags.cpp',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    CPP_SOURCES += [
+        'nsPluginsDirWin.cpp',
+        'nsPluginNativeWindowWin.cpp',
+        'nsPluginDirServiceProvider.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    CPP_SOURCES += [
+        'nsPluginsDirOS2.cpp',
+        'nsPluginNativeWindowOS2.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    CPP_SOURCES += [
+        'nsPluginsDirDarwin.cpp',
+        'nsPluginNativeWindow.cpp',
+    ]
+else:
+    CPP_SOURCES += [
+        'nsPluginsDirUnix.cpp',
+    ]
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+        CPP_SOURCES += [
+            'nsPluginNativeWindowGtk2.cpp',
+        ]
+    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+        CPP_SOURCES += [
+            'nsPluginNativeWindowQt.cpp',
+        ]
+    else:
+        CPP_SOURCES += [
+            'nsPluginNativeWindow.cpp',
+        ]

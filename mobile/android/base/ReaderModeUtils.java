@@ -75,4 +75,15 @@ public class ReaderModeUtils {
 
         return aboutReaderUrl;
     }
+
+    /**
+     * Performs the inverse of getAboutReaderForUrl.
+     */
+    public static String getUrlForAboutReader(String aboutReaderUrl) {
+        String query = Uri.parse(aboutReaderUrl).getQuery();
+
+        // It would be nice if we could use Uri.getQueryParameter, but that
+        // doesn't work because "about:reader" isn't a hierarchical URI.
+        return query.substring(4, query.indexOf("&readingList="));
+    }
 }

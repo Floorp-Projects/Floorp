@@ -239,14 +239,15 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
   IDBRequest* request = static_cast<IDBRequest*>(strongRequest.get());
   NS_ENSURE_TRUE(request, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMDOMError> error;
-  rv = request->GetError(getter_AddRefs(error));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult ret;
+  nsRefPtr<DOMError> error = request->GetError(ret);
+  if (ret.Failed()) {
+    return ret.ErrorCode();
+  }
 
   nsString errorName;
   if (error) {
-    rv = error->GetName(errorName);
-    NS_ENSURE_SUCCESS(rv, rv);
+    error->GetName(errorName);
   }
 
   nsScriptErrorEvent event(true, NS_LOAD_ERROR);

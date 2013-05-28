@@ -38,6 +38,9 @@ using namespace mozilla::dom;
 static bool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
 static WebGLenum InternalFormatForFormatAndType(WebGLenum format, WebGLenum type, bool isGLES2);
 
+// For a Tegra workaround.
+static const int MAX_DRAW_CALLS_SINCE_FLUSH = 100;
+
 //
 //  WebGL API
 //
@@ -1477,6 +1480,17 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
         mShouldPresent = true;
         mIsScreenCleared = false;
     }
+
+    if (gl->WorkAroundDriverBugs()) {
+        if (gl->Renderer() == gl::GLContext::RendererTegra) {
+            mDrawCallsSinceLastFlush++;
+
+            if (mDrawCallsSinceLastFlush >= MAX_DRAW_CALLS_SINCE_FLUSH) {
+                gl->fFlush();
+                mDrawCallsSinceLastFlush = 0;
+            }
+        }
+    }
 }
 
 void
@@ -1575,6 +1589,17 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
         Invalidate();
         mShouldPresent = true;
         mIsScreenCleared = false;
+    }
+
+    if (gl->WorkAroundDriverBugs()) {
+        if (gl->Renderer() == gl::GLContext::RendererTegra) {
+            mDrawCallsSinceLastFlush++;
+
+            if (mDrawCallsSinceLastFlush >= MAX_DRAW_CALLS_SINCE_FLUSH) {
+                gl->fFlush();
+                mDrawCallsSinceLastFlush = 0;
+            }
+        }
     }
 }
 
@@ -4255,8 +4280,13 @@ WebGLContext::CompileShader(WebGLShader *shader)
         resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
         resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
         resources.MaxDrawBuffers = 1;
+
         if (IsExtensionEnabled(OES_standard_derivatives))
             resources.OES_standard_derivatives = 1;
+
+        // Tell ANGLE to allow highp in frag shaders. (unless disabled)
+        // If underlying GLES doesn't have highp in frag shaders, it should complain anyways.
+        resources.FragmentPrecisionHigh = mDisableFragHighP ? 0 : 1;
 
         // We're storing an actual instance of StripComments because, if we don't, the 
         // cleanSource nsAString instance will be destroyed before the reference is
@@ -4287,13 +4317,10 @@ WebGLContext::CompileShader(WebGLShader *shader)
         int compileOptions = SH_ATTRIBUTES_UNIFORMS |
                              SH_ENFORCE_PACKING_RESTRICTIONS;
 
-        // we want to do this everywhere, but:
-//TODO: Enable on windows:
-#ifndef XP_WIN // to do this on Windows, we need ANGLE r1719, 1733, 1734.
-#ifndef XP_MACOSX // to do this on Mac, we need to do it only on Mac OSX > 10.6 as this
+        // We want to do this everywhere, but:
+#ifndef XP_MACOSX // To do this on Mac, we need to do it only on Mac OSX > 10.6 as this
                   // causes the shader compiler in 10.6 to crash
         compileOptions |= SH_CLAMP_INDIRECT_ARRAY_BOUNDS;
-#endif
 #endif
 
         if (useShaderSourceTranslation) {
@@ -4677,9 +4704,19 @@ WebGLContext::GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precision
     }
 
     MakeContextCurrent();
-
     GLint range[2], precision;
-    gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
+
+    if (mDisableFragHighP &&
+        shadertype == LOCAL_GL_FRAGMENT_SHADER &&
+        (precisiontype == LOCAL_GL_HIGH_FLOAT ||
+         precisiontype == LOCAL_GL_HIGH_INT))
+    {
+      precision = 0;
+      range[0] = 0;
+      range[1] = 0;
+    } else {
+      gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
+    }
 
     nsRefPtr<WebGLShaderPrecisionFormat> retShaderPrecisionFormat
         = new WebGLShaderPrecisionFormat(this, range[0], range[1], precision);

@@ -12,12 +12,6 @@ interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
 interface nsIDOMEventListener;
 
-dictionary IDBObjectStoreParameters
-{
-  jsval keyPath;
-  boolean autoIncrement;
-};
-
 /**
  * IDBDatabase interface.  See
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase

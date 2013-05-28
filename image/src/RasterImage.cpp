@@ -617,7 +617,8 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
       NS_WARNING("RasterImage::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
       mAnim->currentAnimationFrameIndex = nextFrameIndex;
-      mAnim->currentAnimationFrameTime = aTime;
+      mAnim->currentAnimationFrameTime = mAnim->currentAnimationFrameTime +
+                                         TimeDuration::FromMilliseconds(timeout);
       return false;
     }
 
@@ -626,7 +627,8 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
 
   // Set currentAnimationFrameIndex at the last possible moment
   mAnim->currentAnimationFrameIndex = nextFrameIndex;
-  mAnim->currentAnimationFrameTime = aTime;
+  mAnim->currentAnimationFrameTime = mAnim->currentAnimationFrameTime +
+                                     TimeDuration::FromMilliseconds(timeout);
 
   return true;
 }
@@ -636,11 +638,12 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
 NS_IMETHODIMP_(void)
 RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
 {
-  if (!mAnimating || !ShouldAnimate()) {
+  if (!ShouldAnimate()) {
     return;
   }
 
   EnsureAnimExists();
+  EvaluateAnimation();
 
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
@@ -664,7 +667,7 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
     // if we didn't advance a frame, and our frame end time didn't change,
     // then we need to break out of this loop & wait for the frame(s)
     // to finish downloading
-    if (!frameAdvanced && (currentFrameEndTime == oldFrameEndTime)) {
+    if (!didAdvance && (currentFrameEndTime == oldFrameEndTime)) {
       break;
     }
   }
@@ -934,6 +937,21 @@ RasterImage::GetAnimated(bool *aAnimated)
   *aAnimated = false;
 
   return NS_OK;
+}
+
+//******************************************************************************
+/* [notxpcom] int32_t getFirstFrameDelay (); */
+NS_IMETHODIMP_(int32_t)
+RasterImage::GetFirstFrameDelay()
+{
+  if (mError)
+    return -1;
+
+  bool animated = false;
+  if (NS_FAILED(GetAnimated(&animated)) || !animated)
+    return -1;
+
+  return mFrames[0]->GetTimeout();
 }
 
 nsresult
@@ -1257,6 +1275,10 @@ RasterImage::InternalAddFrame(uint32_t framenum,
   nsAutoPtr<imgFrame> frame(new imgFrame());
 
   nsresult rv = frame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
+  if (!(mSize.width > 0 && mSize.height > 0))
+    NS_WARNING("Shouldn't call InternalAddFrame with zero size");
+  if (!NS_SUCCEEDED(rv))
+    NS_WARNING("imgFrame::Init should succeed");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We know we are in a decoder. Therefore, we must unlock the previous frame
@@ -1293,9 +1315,6 @@ RasterImage::InternalAddFrame(uint32_t framenum,
 
   rv = InternalAddFrameHelper(framenum, frame.forget(), imageData, imageLength,
                               paletteData, paletteLength, aRetFrame);
-
-  // We may be able to start animating, if we now have enough frames
-  EvaluateAnimation();
 
   return rv;
 }
@@ -1539,7 +1558,9 @@ RasterImage::StartAnimation()
 
     // We need to set the time that this initial frame was first displayed, as
     // this is used in AdvanceFrame().
-    mAnim->currentAnimationFrameTime = TimeStamp::Now();
+    if (mAnim->currentAnimationFrameTime.IsNull()) {
+      mAnim->currentAnimationFrameTime = TimeStamp::Now();
+    }
   }
 
   return NS_OK;
@@ -1596,6 +1617,17 @@ RasterImage::ResetAnimation()
   }
 
   return NS_OK;
+}
+
+//******************************************************************************
+// [notxpcom] void requestRefresh ([const] in TimeStamp aTime);
+NS_IMETHODIMP_(void)
+RasterImage::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
+{
+  if (mError || mAnimating || !mAnim)
+    return;
+
+  mAnim->currentAnimationFrameTime = aTime;
 }
 
 NS_IMETHODIMP_(float)
@@ -2752,6 +2784,12 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mDecoded)
     return NS_OK;
 
+  // If we don't have any bytes to flush to the decoder, we can't do anything.
+  // mBytesDecoded can be bigger than mSourceData.Length() if we're not storing
+  // the source data.
+  if (mBytesDecoded > mSourceData.Length())
+    return NS_OK;
+
   // mFinishing protects against the case when we enter RequestDecode from
   // ShutdownDecoder -- in that case, we're done with the decode, we're just
   // not quite ready to admit it.  See bug 744309.
@@ -2899,6 +2937,12 @@ RasterImage::SyncDecode()
   // If we're decoded already, or decoding until the size was available
   // finished us as a side-effect, no worries
   if (mDecoded)
+    return NS_OK;
+
+  // If we don't have any bytes to flush to the decoder, we can't do anything.
+  // mBytesDecoded can be bigger than mSourceData.Length() if we're not storing
+  // the source data.
+  if (mBytesDecoded > mSourceData.Length())
     return NS_OK;
 
   // If we have a decoder open with different flags than what we need, shut it
@@ -3285,6 +3329,8 @@ RasterImage::DecodeSomeData(uint32_t aMaxBytes)
   // If we have nothing else to decode, return
   if (mBytesDecoded == mSourceData.Length())
     return NS_OK;
+
+  MOZ_ASSERT(mBytesDecoded < mSourceData.Length());
 
   // write the proper amount of data
   uint32_t bytesToDecode = std::min(aMaxBytes,

@@ -6,12 +6,13 @@
 #ifndef mozilla_dom_Touch_h
 #define mozilla_dom_Touch_h
 
-#include "nsDOMUIEvent.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "nsJSEnvironment.h"
+#include "nsWrapperCache.h"
+#include "mozilla/dom/EventTarget.h"
 
 namespace mozilla {
 namespace dom {
@@ -76,22 +77,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Touch)
   NS_DECL_NSIDOMTOUCH
-  void InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
-  {
-    if (mPointsInitialized) {
-      return;
-    }
-    mClientPoint = nsDOMEvent::GetClientCoords(aPresContext,
-                                               aEvent,
-                                               mRefPoint,
-                                               mClientPoint);
-    mPagePoint = nsDOMEvent::GetPageCoords(aPresContext,
-                                           aEvent,
-                                           mRefPoint,
-                                           mClientPoint);
-    mScreenPoint = nsDOMEvent::GetScreenCoords(aPresContext, aEvent, mRefPoint);
-    mPointsInitialized = true;
-  }
+
+  void InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent);
+
   void SetTarget(mozilla::dom::EventTarget *aTarget)
   {
     mTarget = aTarget;
@@ -99,7 +87,7 @@ public:
   bool Equals(nsIDOMTouch* aTouch);
 
   virtual JSObject* WrapObject(JSContext* aCx,
-			       JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
   EventTarget* GetParentObject() { return mTarget; }
 
   // WebIDL

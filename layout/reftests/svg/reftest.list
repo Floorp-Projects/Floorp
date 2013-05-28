@@ -158,7 +158,7 @@ skip-if(B2G) == filter-scaled-02.html filter-scaled-02-ref.html
 skip-if(B2G) == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 skip-if(B2G) == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-== foreignObject-form-theme.svg foreignObject-form-theme-ref.html
+fails-if(B2G) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 skip-if(B2G) == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
@@ -199,6 +199,7 @@ pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-04.svg m
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 
 fuzzy-if(Android,9,61) fuzzy-if(!contentSameGfxBackendAsCanvas,1,99) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg 
+== non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg 
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
 random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
@@ -215,6 +216,13 @@ skip-if(d2d) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
 == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
+== overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
+== overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02-ref.xhtml
+== overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03-ref.xhtml
+== overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03-ref.xhtml
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
@@ -258,6 +266,9 @@ pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 == script-empty-01.svg pass.svg
 == selector-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
+== stroke-width-percentage-02a.svg stroke-width-percentage-02-ref.svg
+== stroke-width-percentage-02b.svg stroke-width-percentage-02-ref.svg
+== stroke-width-percentage-03.xhtml stroke-width-percentage-03-ref.xhtml
 == style-property-on-script-element-01.svg pass.svg
 == style-without-type-attribute.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml

@@ -23,6 +23,7 @@ MOCHITEST_FILES := \
   test_bug867104.html \
   test_bug867174.html \
   test_bug867203.html \
+  test_bug875402.html \
   test_analyserNode.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
@@ -31,6 +32,7 @@ MOCHITEST_FILES := \
   test_audioParamExponentialRamp.html \
   test_audioParamLinearRamp.html \
   test_audioParamSetCurveAtTime.html \
+  test_audioParamSetCurveAtTimeZeroDuration.html \
   test_audioParamSetTargetAtTime.html \
   test_audioParamTimelineDestinationOffset.html \
   test_audioBufferSourceNode.html \
@@ -58,9 +60,11 @@ MOCHITEST_FILES := \
   test_mediaDecoding.html \
   test_mixingRules.html \
   test_nodeToParamConnection.html \
+  test_OfflineAudioContext.html \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \
+  test_scriptProcessorNodeZeroInputOutput.html \
   test_singleSourceDest.html \
   test_waveShaper.html \
   test_waveShaperNoCurve.html \

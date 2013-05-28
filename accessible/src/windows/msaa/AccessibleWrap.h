@@ -243,7 +243,6 @@ public: // construction, destruction
   static IDispatch *NativeAccessible(nsIAccessible *aXPAccessible);
 
 protected:
-  virtual nsresult FirePlatformEvent(AccEvent* aEvent);
 
   /**
    * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.

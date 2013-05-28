@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=867758
+-->
+<head>
+  <title>Test for Bug 867758</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=867758">Mozilla Bug 867758</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+/** Test for Bug 867758**/
+
+SimpleTest.waitForExplicitFinish();
+
+const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const gContent = document.getElementById("content");
+
+var gDispatched = false;
+var gRanEvent = false;
+var gObserver;
+var gImg1;
+var gImg2;
+var gOuter;
+var gFinished = false;
+var gFirstRequest = null;
+
+function cleanUpAndFinish() {
+  if (gFinished) {
+    return;
+  }
+  var imgLoadingContent = gImg1.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.removeObserver(gOuter);
+
+  imgLoadingContent = gImg2.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.removeObserver(gOuter);
+
+  SimpleTest.finish();
+
+  gFinished = true;
+}
+
+function frameUpdate(aRequest) {
+  if (!gDispatched) {
+    var util = window.getInterface(Ci.nsIDOMWindowUtils);
+    util.runBeforeNextEvent(function() { 
+      gRanEvent = true;
+    });
+    gDispatched = true;
+    gFirstRequest = aRequest;
+  } else if (aRequest != gFirstRequest) {
+    ok(!gRanEvent, "Should not have run event before all frame update events occurred!");
+    cleanUpAndFinish();
+  }
+}
+
+function failTest() {
+  ok(false, "timing out after " + FAILURE_TIMEOUT + "ms.  ");
+  cleanUpAndFinish();
+}
+
+function main() {
+  gImg1 = new Image();
+  gImg2 = new Image();
+
+  // Create, customize & attach decoder observer
+  var obs = new ImageDecoderObserverStub();
+  obs.frameUpdate = frameUpdate;
+
+  gOuter = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools).createScriptedObserver(obs);
+  var imgLoadingContent = gImg1.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.addObserver(gOuter);
+
+  imgLoadingContent = gImg2.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.addObserver(gOuter);
+
+  // We want to test the cold loading behavior, so clear cache in case an
+  // earlier test got our image in there already.
+  clearImageCache();
+
+  // These are two copies of the same image; hence, they have the same frame rate.
+  gImg1.src = "animated1.gif";
+  gImg2.src = "animated2.gif";
+
+  gContent.appendChild(gImg1);
+  gContent.appendChild(gImg2);
+
+  // In case something goes wrong, fail earlier than mochitest timeout,
+  // and with more information.
+  setTimeout(failTest, FAILURE_TIMEOUT);
+}
+
+window.onload = main;
+
+</script>
+</pre>
+</body>
+</html>

@@ -324,17 +324,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULDocument, XMLDocument)
     // document, so we'll traverse the table here instead of from the element.
     if (tmp->mTemplateBuilderTable)
         tmp->mTemplateBuilderTable->EnumerateRead(TraverseTemplateBuilders, &cb);
-        
+
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentPrototype)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMasterPrototype)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
-
-    uint32_t i, count = tmp->mPrototypes.Length();
-    for (i = 0; i < count; ++i) {
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mPrototypes[i]");
-        cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(tmp->mPrototypes[i]));
-    }
-
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypes);
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStore)
 
     if (tmp->mOverlayLoadObservers.IsInitialized())
@@ -3644,7 +3638,8 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
 
 nsresult
-XULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObject)
+XULDocument::ExecuteScript(nsIScriptContext * aContext,
+                           JS::Handle<JSScript*> aScriptObject)
 {
     NS_PRECONDITION(aScriptObject != nullptr && aContext != nullptr, "null ptr");
     if (! aScriptObject || ! aContext)
@@ -3653,9 +3648,8 @@ XULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObject)
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
 
     // Execute the precompiled script with the given version
-    JS::Rooted<JSScript*> script(aContext->GetNativeContext(), aScriptObject);
     JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
-    return aContext->ExecuteScript(script, global);
+    return aContext->ExecuteScript(aScriptObject, global);
 }
 
 nsresult

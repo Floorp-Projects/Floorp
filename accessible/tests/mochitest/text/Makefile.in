@@ -14,14 +14,16 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_A11Y_FILES = \
 		doc.html \
 		test_atcaretoffset.html \
+		test_charboundary.html \
 		test_doc.html \
+		test_gettext.html \
 		test_hypertext.html \
 		test_label.xul \
 		test_multiline.html \
 		test_passwords.html \
 		test_selection.html \
 		test_singleline.html \
-		test_whitespaces.html \
+		test_wordboundary.html \
 		test_words.html \
 		$(NULL)
 

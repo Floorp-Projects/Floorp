@@ -8,3 +8,8 @@ MODULE = 'winEmbed'
 
 PROGRAM = 'winEmbed'
 
+CPP_SOURCES += [
+    'WebBrowserChrome.cpp',
+    'WindowCreator.cpp',
+    'winEmbed.cpp',
+]

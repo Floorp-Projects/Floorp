@@ -127,7 +127,7 @@ NullHttpTransaction::RequestHead()
     // the NullHttpTransaction and let them be retried from the pending queue
     // with a bound transcation
   }
-  
+
   return mRequestHead;
 }
 
@@ -168,7 +168,7 @@ NullHttpTransaction::SetPipelinePosition(int32_t position)
 {
     return NS_OK;
 }
- 
+
 int32_t
 NullHttpTransaction::PipelinePosition()
 {

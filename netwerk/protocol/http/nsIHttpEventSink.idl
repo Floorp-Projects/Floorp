@@ -32,6 +32,6 @@ interface nsIHttpEventSink : nsISupports
      *
      * @return failure cancels redirect
      */
-    void onRedirect(in nsIHttpChannel httpChannel, 
+    void onRedirect(in nsIHttpChannel httpChannel,
                     in nsIChannel newChannel);
 };

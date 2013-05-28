@@ -6,6 +6,7 @@
 #include "mozilla/layers/ContentHost.h"
 #include "mozilla/layers/Effects.h"
 #include "nsPrintfCString.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 using namespace gfx;
@@ -430,6 +431,218 @@ ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
   // empty, and that the first time Swap() is called we don't have a
   // valid front buffer that we're going to return to content.
   mValidRegionForNextBackBuffer = aOldValidRegionBack;
+}
+
+void
+ContentHostIncremental::EnsureTextureHost(ISurfaceAllocator* aAllocator,
+                                          const TextureInfo& aTextureInfo,
+                                          const nsIntRect& aBufferRect)
+{
+  mUpdateList.AppendElement(new TextureCreationRequest(aTextureInfo,
+                                                       aBufferRect));
+  mDeAllocator = aAllocator;
+}
+
+void
+ContentHostIncremental::UpdateIncremental(TextureIdentifier aTextureId,
+                                          SurfaceDescriptor& aSurface,
+                                          const nsIntRegion& aUpdated,
+                                          const nsIntRect& aBufferRect,
+                                          const nsIntPoint& aBufferRotation)
+{
+  mUpdateList.AppendElement(new TextureUpdateRequest(mDeAllocator,
+                                                     aTextureId,
+                                                     aSurface,
+                                                     aUpdated,
+                                                     aBufferRect,
+                                                     aBufferRotation));
+}
+
+void
+ContentHostIncremental::ProcessTextureUpdates()
+{
+  for (uint32_t i = 0; i < mUpdateList.Length(); i++) {
+    mUpdateList[i]->Execute(this);
+  }
+  mUpdateList.Clear();
+}
+
+void
+ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* aHost)
+{
+  RefPtr<TextureHost> newHost =
+    TextureHost::CreateTextureHost(SurfaceDescriptor::TShmem,
+                                   mTextureInfo.mTextureHostFlags,
+                                   mTextureInfo.mTextureFlags);
+  Compositor* compositor = aHost->GetCompositor();
+  if (compositor) {
+    newHost->SetCompositor(compositor);
+  }
+  RefPtr<TextureHost> newHostOnWhite;
+  if (mTextureInfo.mTextureFlags & ComponentAlpha) {
+    newHostOnWhite =
+      TextureHost::CreateTextureHost(SurfaceDescriptor::TShmem,
+                                     mTextureInfo.mTextureHostFlags,
+                                     mTextureInfo.mTextureFlags);
+    Compositor* compositor = aHost->GetCompositor();
+    if (compositor) {
+      newHostOnWhite->SetCompositor(compositor);
+    }
+  }
+
+  if (mTextureInfo.mTextureHostFlags & TEXTURE_HOST_COPY_PREVIOUS) {
+    nsIntRect bufferRect = aHost->mBufferRect;
+    nsIntPoint bufferRotation = aHost->mBufferRotation;
+    nsIntRect overlap;
+
+    // The buffer looks like:
+    //  ______
+    // |1  |2 |  Where the center point is offset by mBufferRotation from the top-left corner.
+    // |___|__|
+    // |3  |4 |
+    // |___|__|
+    //
+    // This is drawn to the screen as:
+    //  ______
+    // |4  |3 |  Where the center point is { width - mBufferRotation.x, height - mBufferRotation.y } from
+    // |___|__|  from the top left corner - rotationPoint.
+    // |2  |1 |
+    // |___|__|
+    //
+
+    // The basic idea below is to take all quadrant rectangles from the src and transform them into rectangles
+    // in the destination. Unfortunately, it seems it is overly complex and could perhaps be simplified.
+
+    nsIntRect srcBufferSpaceBottomRight(bufferRotation.x, bufferRotation.y, bufferRect.width - bufferRotation.x, bufferRect.height - bufferRotation.y);
+    nsIntRect srcBufferSpaceTopRight(bufferRotation.x, 0, bufferRect.width - bufferRotation.x, bufferRotation.y);
+    nsIntRect srcBufferSpaceTopLeft(0, 0, bufferRotation.x, bufferRotation.y);
+    nsIntRect srcBufferSpaceBottomLeft(0, bufferRotation.y, bufferRotation.x, bufferRect.height - bufferRotation.y);
+
+    overlap.IntersectRect(bufferRect, mBufferRect);
+
+    nsIntRect srcRect(overlap), dstRect(overlap);
+    srcRect.MoveBy(- bufferRect.TopLeft() + bufferRotation);
+
+    nsIntRect srcRectDrawTopRight(srcRect);
+    nsIntRect srcRectDrawTopLeft(srcRect);
+    nsIntRect srcRectDrawBottomLeft(srcRect);
+    // transform into the different quadrants
+    srcRectDrawTopRight  .MoveBy(-nsIntPoint(0, bufferRect.height));
+    srcRectDrawTopLeft   .MoveBy(-nsIntPoint(bufferRect.width, bufferRect.height));
+    srcRectDrawBottomLeft.MoveBy(-nsIntPoint(bufferRect.width, 0));
+
+    // Intersect with the quadrant
+    srcRect               = srcRect              .Intersect(srcBufferSpaceBottomRight);
+    srcRectDrawTopRight   = srcRectDrawTopRight  .Intersect(srcBufferSpaceTopRight);
+    srcRectDrawTopLeft    = srcRectDrawTopLeft   .Intersect(srcBufferSpaceTopLeft);
+    srcRectDrawBottomLeft = srcRectDrawBottomLeft.Intersect(srcBufferSpaceBottomLeft);
+
+    dstRect = srcRect;
+    nsIntRect dstRectDrawTopRight(srcRectDrawTopRight);
+    nsIntRect dstRectDrawTopLeft(srcRectDrawTopLeft);
+    nsIntRect dstRectDrawBottomLeft(srcRectDrawBottomLeft);
+
+    // transform back to src buffer space
+    dstRect              .MoveBy(-bufferRotation);
+    dstRectDrawTopRight  .MoveBy(-bufferRotation + nsIntPoint(0, bufferRect.height));
+    dstRectDrawTopLeft   .MoveBy(-bufferRotation + nsIntPoint(bufferRect.width, bufferRect.height));
+    dstRectDrawBottomLeft.MoveBy(-bufferRotation + nsIntPoint(bufferRect.width, 0));
+
+    // transform back to draw coordinates
+    dstRect              .MoveBy(bufferRect.TopLeft());
+    dstRectDrawTopRight  .MoveBy(bufferRect.TopLeft());
+    dstRectDrawTopLeft   .MoveBy(bufferRect.TopLeft());
+    dstRectDrawBottomLeft.MoveBy(bufferRect.TopLeft());
+
+    // transform to destBuffer space
+    dstRect              .MoveBy(-mBufferRect.TopLeft());
+    dstRectDrawTopRight  .MoveBy(-mBufferRect.TopLeft());
+    dstRectDrawTopLeft   .MoveBy(-mBufferRect.TopLeft());
+    dstRectDrawBottomLeft.MoveBy(-mBufferRect.TopLeft());
+
+    newHost->EnsureBuffer(mBufferRect.Size(),
+                          ContentForFormat(aHost->mTextureHost->GetFormat()));
+
+    aHost->mTextureHost->CopyTo(srcRect, newHost, dstRect);
+    if (bufferRotation != nsIntPoint(0, 0)) {
+      // Draw the remaining quadrants. We call BlitTextureImage 3 extra
+      // times instead of doing a single draw call because supporting that
+      // with a tiled source is quite tricky.
+
+      if (!srcRectDrawTopRight.IsEmpty())
+        aHost->mTextureHost->CopyTo(srcRectDrawTopRight,
+                                          newHost, dstRectDrawTopRight);
+      if (!srcRectDrawTopLeft.IsEmpty())
+        aHost->mTextureHost->CopyTo(srcRectDrawTopLeft,
+                                          newHost, dstRectDrawTopLeft);
+      if (!srcRectDrawBottomLeft.IsEmpty())
+        aHost->mTextureHost->CopyTo(srcRectDrawBottomLeft,
+                                          newHost, dstRectDrawBottomLeft);
+    }
+
+    if (newHostOnWhite) {
+      newHostOnWhite->EnsureBuffer(mBufferRect.Size(),
+                                   ContentForFormat(aHost->mTextureHostOnWhite->GetFormat()));
+      aHost->mTextureHostOnWhite->CopyTo(srcRect, newHostOnWhite, dstRect);
+      if (bufferRotation != nsIntPoint(0, 0)) {
+        // draw the remaining quadrants
+        if (!srcRectDrawTopRight.IsEmpty())
+          aHost->mTextureHostOnWhite->CopyTo(srcRectDrawTopRight,
+                                                   newHostOnWhite, dstRectDrawTopRight);
+        if (!srcRectDrawTopLeft.IsEmpty())
+          aHost->mTextureHostOnWhite->CopyTo(srcRectDrawTopLeft,
+                                                   newHostOnWhite, dstRectDrawTopLeft);
+        if (!srcRectDrawBottomLeft.IsEmpty())
+          aHost->mTextureHostOnWhite->CopyTo(srcRectDrawBottomLeft,
+                                                   newHostOnWhite, dstRectDrawBottomLeft);
+      }
+    }
+  }
+
+  aHost->mTextureHost = newHost;
+  aHost->mTextureHostOnWhite = newHostOnWhite;
+
+  aHost->mBufferRect = mBufferRect;
+  aHost->mBufferRotation = nsIntPoint();
+}
+
+nsIntRect
+ContentHostIncremental::TextureUpdateRequest::GetQuadrantRectangle(XSide aXSide,
+                                                                   YSide aYSide) const
+{
+  // quadrantTranslation is the amount we translate the top-left
+  // of the quadrant by to get coordinates relative to the layer
+  nsIntPoint quadrantTranslation = -mBufferRotation;
+  quadrantTranslation.x += aXSide == LEFT ? mBufferRect.width : 0;
+  quadrantTranslation.y += aYSide == TOP ? mBufferRect.height : 0;
+  return mBufferRect + quadrantTranslation;
+}
+
+void
+ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aHost)
+{
+  nsIntRect drawBounds = mUpdated.GetBounds();
+
+  aHost->mBufferRect = mBufferRect;
+  aHost->mBufferRotation = mBufferRotation;
+
+  // Figure out which quadrant to draw in
+  int32_t xBoundary = mBufferRect.XMost() - mBufferRotation.x;
+  int32_t yBoundary = mBufferRect.YMost() - mBufferRotation.y;
+  XSide sideX = drawBounds.XMost() <= xBoundary ? RIGHT : LEFT;
+  YSide sideY = drawBounds.YMost() <= yBoundary ? BOTTOM : TOP;
+  nsIntRect quadrantRect = GetQuadrantRectangle(sideX, sideY);
+  NS_ASSERTION(quadrantRect.Contains(drawBounds), "Messed up quadrants");
+
+  mUpdated.MoveBy(-nsIntPoint(quadrantRect.x, quadrantRect.y));
+
+  nsIntPoint offset = -mUpdated.GetBounds().TopLeft();
+
+  if (mTextureId == TextureFront) {
+    aHost->mTextureHost->Update(mDescriptor, &mUpdated, &offset);
+  } else {
+    aHost->mTextureHostOnWhite->Update(mDescriptor, &mUpdated, &offset);
+  }
 }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
