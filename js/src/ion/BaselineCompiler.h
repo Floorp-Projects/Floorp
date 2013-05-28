@@ -160,6 +160,7 @@ namespace ion {
     _(JSOP_MOREITER)           \
     _(JSOP_ITERNEXT)           \
     _(JSOP_ENDITER)            \
+    _(JSOP_CALLEE)             \
     _(JSOP_POPV)               \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETURN)             \
