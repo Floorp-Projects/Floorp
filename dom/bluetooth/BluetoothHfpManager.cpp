@@ -354,7 +354,6 @@ BluetoothHfpManager::BluetoothHfpManager()
 void
 BluetoothHfpManager::ResetCallArray()
 {
-  mCurrentCallIndex = 0;
   mCurrentCallArray.Clear();
   // Append a call object at the beginning of mCurrentCallArray since call
   // index from RIL starts at 1.
@@ -1181,7 +1180,11 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint8_t aValue)
           message.AppendInt(3);
           break;
         case nsITelephonyProvider::CALL_STATE_INCOMING:
-          message.AppendInt((i == mCurrentCallIndex) ? 4 : 5);
+          if (!FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED)) {
+            message.AppendInt(4);
+          } else {
+            message.AppendInt(5);
+          }
           break;
         default:
           NS_WARNING("Not handling call status for CLCC");
@@ -1214,6 +1217,35 @@ BluetoothHfpManager::UpdateCIND(uint8_t aType, uint8_t aValue, bool aSend)
   }
 }
 
+uint32_t
+BluetoothHfpManager::FindFirstCall(uint16_t aState)
+{
+  uint32_t callLength = mCurrentCallArray.Length();
+
+  for (uint32_t i = 1; i < callLength; ++i) {
+    if (mCurrentCallArray[i].mState == aState) {
+      return i;
+    }
+  }
+
+  return 0;
+}
+
+uint32_t
+BluetoothHfpManager::GetNumberOfCalls(uint16_t aState)
+{
+  uint32_t num = 0;
+  uint32_t callLength = mCurrentCallArray.Length();
+
+  for (uint32_t i = 1; i < callLength; ++i) {
+    if (mCurrentCallArray[i].mState == aState) {
+      ++num;
+    }
+  }
+
+  return num;
+}
+
 void
 BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
                                             uint16_t aCallState,
@@ -1243,8 +1275,6 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
 
   nsRefPtr<nsRunnable> sendRingTask;
   nsString address;
-  uint32_t callArrayLength = mCurrentCallArray.Length();
-  uint32_t index = 1;
 
   switch (aCallState) {
     case nsITelephonyProvider::CALL_STATE_HELD:
@@ -1252,8 +1282,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
       SendCommand("+CIEV: ", CINDType::CALLHELD);
       break;
     case nsITelephonyProvider::CALL_STATE_INCOMING:
-
-      if (mCurrentCallIndex) {
+      if (FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED)) {
         if (mCCWA) {
           nsAutoCString ccwaMsg("+CCWA: \"");
           ccwaMsg.Append(NS_ConvertUTF16toUTF8(aNumber));
@@ -1296,7 +1325,6 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
       ConnectSco();
       break;
     case nsITelephonyProvider::CALL_STATE_CONNECTED:
-      mCurrentCallIndex = aCallIndex;
       switch (prevCallState) {
         case nsITelephonyProvider::CALL_STATE_INCOMING:
         case nsITelephonyProvider::CALL_STATE_DISCONNECTED:
@@ -1309,23 +1337,18 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           UpdateCIND(CINDType::CALLSETUP, CallSetupState::NO_CALLSETUP, aSend);
           break;
         case nsITelephonyProvider::CALL_STATE_HELD:
-          // Check whether to update CINDType::CALLHELD or not
-          while (index < callArrayLength) {
-            if (index == mCurrentCallIndex) {
-              index++;
-              continue;
-            }
-
-            uint16_t state = mCurrentCallArray[index].mState;
-            // If there's another call on hold or other calls exist, no need to
-            // update CINDType::CALLHELD
-            if (state != nsITelephonyProvider::CALL_STATE_DISCONNECTED) {
-              break;
-            }
-            index++;
-          }
-
-          if (index == callArrayLength) {
+          // Besides checking if there is still held calls, another thing we
+          // need to consider is the state change when receiving AT+CHLD=2.
+          // Assume that there is one active call(c1) and one call on hold(c2).
+          // We got AT+CHLD=2, which swaps active/held position. The first
+          // action would be c2 -> ACTIVE, then c1 -> HELD. When we get the
+          // CallStateChanged event of c2 becoming ACTIVE, we enter here.
+          // However we can't send callheld=0 at this time because we should
+          // see c2 -> ACTIVE + c1 -> HELD as one operation. That's the reason
+          // why I added the GetNumberOfCalls() condition check.
+          if (!FindFirstCall(nsITelephonyProvider::CALL_STATE_HELD) &&
+              GetNumberOfCalls(
+                nsITelephonyProvider::CALL_STATE_CONNECTED) == 1) {
             UpdateCIND(CINDType::CALLHELD, CallHeldState::NO_CALLHELD, aSend);
           }
           break;
@@ -1358,23 +1381,12 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           NS_WARNING("Not handling state changed");
       }
 
-      if (aCallIndex == mCurrentCallIndex) {
-        // Find the first non-disconnected call (like connected, held),
-        // and update mCurrentCallIndex
-        while (index < callArrayLength) {
-          if (mCurrentCallArray[index].mState !=
-              nsITelephonyProvider::CALL_STATE_DISCONNECTED) {
-            mCurrentCallIndex = index;
-            break;
-          }
-          index++;
-        }
-
+      // -1 is necessary because call 0 is an invalid (padding) call object.
+      if (mCurrentCallArray.Length() - 1 ==
+          GetNumberOfCalls(nsITelephonyProvider::CALL_STATE_DISCONNECTED)) {
         // There is no call, close Sco and clear mCurrentCallArray
-        if (index == callArrayLength) {
-          DisconnectSco();
-          ResetCallArray();
-        }
+        DisconnectSco();
+        ResetCallArray();
       }
       break;
     default:

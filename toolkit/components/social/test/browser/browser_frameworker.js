@@ -632,4 +632,24 @@ let tests = {
     }
     worker.port.postMessage({topic: "get-ready"});
   },
+
+  testEventSource: function(cbnext) {
+    let worker = getFrameWorkerHandle("https://example.com/browser/toolkit/components/social/test/browser/worker_eventsource.js", undefined, "testEventSource");
+    worker.port.onmessage = function(e) {
+      let m = e.data;
+      if (m.topic == "eventSourceTest") {
+        if (m.result.ok != undefined)
+          ok(m.result.ok, e.data.result.msg);
+        if (m.result.is != undefined)
+          is(m.result.is, m.result.match, m.result.msg);
+        if (m.result.info != undefined)
+          info(m.result.info);
+      } else if (e.data.topic == "pong") {
+        worker.terminate();
+        cbnext();
+      }
+    }
+    worker.port.postMessage({topic: "ping"})
+  },
+
 }

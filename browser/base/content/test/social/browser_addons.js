@@ -87,9 +87,8 @@ var tests = {
         is(expectEvent, "onEnabled", "provider onEnabled");
         ok(!addon.userDisabled, "provider enabled");
         executeSoon(function() {
-          // restore previous state
           expectEvent = "onDisabling";
-          addon.userDisabled = !addon.userDisabled;
+          addon.userDisabled = true;
         });
       },
       onEnabling: function(addon) {
@@ -99,14 +98,10 @@ var tests = {
       onDisabled: function(addon) {
         is(expectEvent, "onDisabled", "provider onDisabled");
         ok(addon.userDisabled, "provider disabled");
-        executeSoon(function() {
-          // restore previous state
-          AddonManager.removeAddonListener(listener);
-          addon.userDisabled = !addon.userDisabled;
-          // clear the provider user-level pref
-          Services.prefs.clearUserPref(prefname);
-          next();
-        });
+        AddonManager.removeAddonListener(listener);
+        // clear the provider user-level pref
+        Services.prefs.clearUserPref(prefname);
+        executeSoon(next);
       },
       onDisabling: function(addon) {
         is(expectEvent, "onDisabling", "provider onDisabling");
@@ -121,10 +116,12 @@ var tests = {
     ok(Services.prefs.prefHasUserValue(prefname), "manifest is in user-prefs");
     AddonManager.getAddonsByTypes([ADDON_TYPE_SERVICE], function(addons) {
       for (let addon of addons) {
-        expectEvent = addon.userDisabled ? "onEnabling" : "onDisabling";
-        addon.userDisabled = !addon.userDisabled;
-        // only test with one addon
-        return;
+        if (addon.userDisabled) {
+          expectEvent = "onEnabling";
+          addon.userDisabled = false;
+          // only test with one addon
+          return;
+        }
       }
       ok(false, "no addons toggled");
       next();

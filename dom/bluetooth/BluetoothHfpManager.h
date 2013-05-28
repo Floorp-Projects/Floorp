@@ -109,6 +109,8 @@ private:
   void Cleanup();
   void Reset();
   void ResetCallArray();
+  uint32_t FindFirstCall(uint16_t aState);
+  uint32_t GetNumberOfCalls(uint16_t aState);
 
   void NotifyDialer(const nsAString& aCommand);
   void NotifyStatusChanged(const nsAString& aType);
@@ -123,7 +125,6 @@ private:
 
   int mCurrentVgs;
   int mCurrentVgm;
-  uint32_t mCurrentCallIndex;
   bool mCCWA;
   bool mCLIP;
   bool mCMEE;
