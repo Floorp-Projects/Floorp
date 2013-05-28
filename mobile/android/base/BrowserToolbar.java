@@ -1056,7 +1056,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
                 ViewGroup.MarginLayoutParams layoutParams =
                     (ViewGroup.MarginLayoutParams)mForward.getLayoutParams();
-                layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? mForward.getWidth() / 2 : 0);
+                layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? width : 0);
                 ViewHelper.setTranslationX(mForward, 0);
 
                 mUrlDisplayContainer.requestLayout();
