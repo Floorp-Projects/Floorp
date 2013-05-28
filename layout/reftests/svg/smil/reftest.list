@@ -137,7 +137,7 @@ skip-if(B2G) == anim-feComposite-operator-01.svg lime.svg
 skip-if(B2G) == anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg # bug 773482
 
 # animate some viewBox attributes
-== anim-svg-viewBox-01.svg lime.svg
+fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg lime.svg
 == anim-svg-viewBox-02.svg lime.svg
 == anim-svg-viewBox-03.svg lime.svg
 == anim-view-01.svg#view lime.svg
