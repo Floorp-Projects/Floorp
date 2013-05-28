@@ -241,3 +241,8 @@
 .options-groupbox > * {
   padding: 2px;
 }
+
+.options-citation-label {
+  font-size: 0.9rem !important;
+  /* !important is required otherwise font-size will still be 1.4rem */
+}
