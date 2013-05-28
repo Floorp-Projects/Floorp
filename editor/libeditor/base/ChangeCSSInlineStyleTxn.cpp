@@ -25,15 +25,8 @@ class nsIEditor;
 
 #define kNullCh (PRUnichar('\0'))
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ChangeCSSInlineStyleTxn,
-                                                EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ChangeCSSInlineStyleTxn,
-                                                  EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ChangeCSSInlineStyleTxn, EditTxn,
+                                     mElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeCSSInlineStyleTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)

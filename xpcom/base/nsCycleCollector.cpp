@@ -160,6 +160,9 @@ using namespace mozilla;
 
 #define DEFAULT_SHUTDOWN_COLLECTIONS 5
 
+// One to do the freeing, then another to detect there is no more work to do.
+#define NORMAL_SHUTDOWN_COLLECTIONS 2
+
 #if defined(XP_WIN)
 // Defined in nsThreadManager.cpp.
 extern DWORD gTLSThreadIDIndex;
@@ -2538,6 +2541,7 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
 
 nsCycleCollector::~nsCycleCollector()
 {
+    NS_ASSERTION(!mRunner, "Destroying cycle collector without destroying its runner, may leak");
     NS_UnregisterMemoryMultiReporter(mReporter);
 }
 
@@ -2753,6 +2757,8 @@ nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
         return;
 
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
+        NS_WARN_IF_FALSE(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
+
         // Synchronous cycle collection. Always force a JS GC beforehand.
         FixGrayBits(true);
         if (aListener && NS_FAILED(aListener->Begin()))

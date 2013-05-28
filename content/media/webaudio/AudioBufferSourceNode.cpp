@@ -547,10 +547,12 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
 
   if (offset >= endOffset) {
     // The offset falls past the end of the buffer.  In this case, we need to
-    // stop the playback immediately if it's in progress.  No need to check
-    // mStartCalled here, since Stop() does that for us.
-    ErrorResult rv;
-    Stop(0.0, rv);
+    // stop the playback immediately if it's in progress.
+    // Note that we can't call Stop() here since that might be overridden if
+    // web content calls Stop() too, so we just null out the buffer.
+    if (mStartCalled) {
+      aStream->SetBuffer(nullptr);
+    }
     return;
   }
 

@@ -479,10 +479,6 @@ class Marionette(object):
         response = self._send_message('setSearchTimeout', 'ok', value=timeout)
         return response
 
-    def send_mouse_event(self, send):
-        response = self._send_message('sendMouseEvent', 'ok', value=send)
-        return response
-
     @property
     def current_window_handle(self):
         self.window = self._send_message('getWindow', 'value')
@@ -527,6 +523,10 @@ class Marionette(object):
 
     def get_url(self):
         response = self._send_message('getUrl', 'value')
+        return response
+
+    def get_window_type(self):
+        response = self._send_message('getWindowType', 'value')
         return response
 
     def navigate(self, url):
