@@ -911,6 +911,11 @@ let CustomizableUIInternal = {
     }
 
     placements.splice(oldPlacement.position, 1);
+    // If we just removed the item from *before* where it is now added,
+    // we need to compensate the position offset for that:
+    if (oldPlacement.position < aPosition) {
+      aPosition--;
+    }
     placements.splice(aPosition, 0, aWidgetId);
 
     let widget = gPalette.get(aWidgetId);
