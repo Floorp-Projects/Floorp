@@ -154,8 +154,9 @@ loadGeckoLibs(const char *apkName)
   chdir(getenv("GRE_HOME"));
 
   uint64_t t0 = TimeStamp_Now();
-  struct rusage usage1;
-  getrusage(RUSAGE_THREAD, &usage1);
+  struct rusage usage1_thread, usage1;
+  getrusage(RUSAGE_THREAD, &usage1_thread);
+  getrusage(RUSAGE_SELF, &usage1);
   
   RefPtr<Zip> zip = ZipCollection::GetZip(apkName);
 
@@ -177,14 +178,22 @@ loadGeckoLibs(const char *apkName)
   xul_dlsym("XRE_StartupTimelineRecord", &XRE_StartupTimelineRecord);
 
   uint64_t t1 = TimeStamp_Now();
-  struct rusage usage2;
-  getrusage(RUSAGE_THREAD, &usage2);
+  struct rusage usage2_thread, usage2;
+  getrusage(RUSAGE_THREAD, &usage2_thread);
+  getrusage(RUSAGE_SELF, &usage2);
 
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %lldms total, %ldms user, %ldms system, %ld faults",
-                      (t1 - t0) / 1000,
-                      (usage2.ru_utime.tv_sec - usage1.ru_utime.tv_sec)*1000 + (usage2.ru_utime.tv_usec - usage1.ru_utime.tv_usec)/1000,
-                      (usage2.ru_stime.tv_sec - usage1.ru_stime.tv_sec)*1000 + (usage2.ru_stime.tv_usec - usage1.ru_stime.tv_usec)/1000,
-                      usage2.ru_majflt-usage1.ru_majflt);
+#define RUSAGE_TIMEDIFF(u1, u2, field) \
+  ((u2.ru_ ## field.tv_sec - u1.ru_ ## field.tv_sec) * 1000 + \
+   (u2.ru_ ## field.tv_usec - u1.ru_ ## field.tv_usec) / 1000)
+
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %lldms total, %ldms(%ldms) user, %ldms(%ldms) system, %ld(%ld) faults",
+                      (t1 - t0) / 1000000,
+                      RUSAGE_TIMEDIFF(usage1_thread, usage2_thread, utime),
+                      RUSAGE_TIMEDIFF(usage1, usage2, utime),
+                      RUSAGE_TIMEDIFF(usage1_thread, usage2_thread, stime),
+                      RUSAGE_TIMEDIFF(usage1, usage2, stime),
+                      usage2_thread.ru_majflt - usage1_thread.ru_majflt,
+                      usage2.ru_majflt - usage1.ru_majflt);
 
   XRE_StartupTimelineRecord(LINKER_INITIALIZED, t0);
   XRE_StartupTimelineRecord(LIBRARIES_LOADED, t1);
