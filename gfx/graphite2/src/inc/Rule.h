@@ -64,11 +64,11 @@ struct RuleEntry
 
   inline
   bool operator < (const RuleEntry &r) const
-  { 
-    const unsigned short lsort = rule->sort, rsort = r.rule->sort; 
+  {
+    const unsigned short lsort = rule->sort, rsort = r.rule->sort;
     return lsort > rsort || (lsort == rsort && rule < r.rule);
   }
-  
+
   inline
   bool operator == (const RuleEntry &r) const
   {
@@ -81,29 +81,14 @@ struct State
 {
   const RuleEntry     * rules,
                       * rules_end;
-  const State * const * transitions;
   
-  size_t size() const;
-  bool   is_success() const;
-  bool   is_transition() const;
+  bool   empty() const;
 };
 
 inline
-size_t State::size() const
+bool State::empty() const
 {
-  return rules_end - rules;
-}
-
-inline
-bool State::is_success() const
-{
-  return (rules != NULL);
-}
-
-inline
-bool State::is_transition() const
-{
-  return (transitions != NULL);
+    return rules_end == rules;
 }
 
 
@@ -222,12 +207,13 @@ inline
 void FiniteStateMachine::Rules::accumulate_rules(const State &state)
 {
   // Only bother if there are rules in the State object.
-  if (state.size() == 0) return;
+  if (state.empty()) return;
   
   // Merge the new sorted rules list into the current sorted result set.
   const RuleEntry * lre = begin(), * rre = state.rules;
   RuleEntry * out = m_rules + (m_begin == m_rules)*MAX_RULES;    
-  const RuleEntry * lrend = out + MAX_RULES;
+  const RuleEntry * const lrend = out + MAX_RULES,
+                  * const rrend = state.rules_end;
   m_begin = out; 
   while (lre != end() && out != lrend)
   {
@@ -235,14 +221,14 @@ void FiniteStateMachine::Rules::accumulate_rules(const State &state)
     else if (*rre < *lre) { *out++ = *rre++; }
     else                { *out++ = *lre++; ++rre; }
 
-    if (rre == state.rules_end) 
+    if (rre == rrend)
     { 
       while (lre != end() && out != lrend) { *out++ = *lre++; }
       m_end = out;
       return;
     }
   }
-  while (rre != state.rules_end && out != lrend) { *out++ = *rre++; }
+  while (rre != rrend && out != lrend) { *out++ = *rre++; }
   m_end = out;
 }
 
@@ -289,7 +275,7 @@ void SlotMap::reset(Slot & slot, short unsigned int ctxt)
 inline
 void SlotMap::pushSlot(Slot*const slot)
 {
-  m_slot_map[m_size++ + 1] = slot;
+  m_slot_map[++m_size] = slot;
 }
 
 inline
