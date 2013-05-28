@@ -1053,11 +1053,6 @@
                      oncommand="gSyncUI.handleToolbarButton()"/>
 #endif
 
-      <toolbaritem id="navigator-throbber" title="&throbberItem.title;" align="center" pack="center"
-                   mousethrough="always">
-        <image/>
-      </toolbaritem>
-
       <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&tabGroupsButton.label;"
                      command="Browser:ToggleTabView"
