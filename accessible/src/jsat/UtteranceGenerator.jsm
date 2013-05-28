@@ -97,6 +97,10 @@ this.UtteranceGenerator = {
       aContext.newAncestry.reverse().forEach(addUtterance);
     }
 
+    // Clean up the white space.
+    let trimmed;
+    utterance = [trimmed for (word of utterance) if (trimmed = word.trim())];
+
     return utterance;
   },
 
