@@ -27,6 +27,7 @@
 #include "APKOpen.h"
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/prctl.h>
 #include "Zip.h"
 #include "sqlite3.h"
 #include "SQLiteBridge.h"
@@ -37,6 +38,20 @@
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
 #define RUSAGE_THREAD 1
+#endif
+
+#ifndef RELEASE_BUILD
+/* Official builds have the debuggable flag set to false, which disables
+ * the backtrace dumper from bionic. However, as it is useful for native
+ * crashes happening before the crash reporter is registered, re-enable
+ * it on non release builds (i.e. nightly and aurora).
+ * Using a constructor so that it is re-enabled as soon as libmozglue.so
+ * is loaded.
+ */
+__attribute__((constructor))
+void make_dumpable() {
+  prctl(PR_SET_DUMPABLE, 1);
+}
 #endif
 
 extern "C" {
