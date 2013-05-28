@@ -58,8 +58,8 @@
       <item>0</item>
     </string-array>
     <string-array name="pref_import_android_entries">
-        <item>@string/awesomebar_bookmarks_title</item>
-        <item>@string/awesomebar_history_title</item>
+        <item>@string/bookmarks_title</item>
+        <item>@string/history_title</item>
     </string-array>
     <string-array name="pref_import_android_values">
         <item>true</item>

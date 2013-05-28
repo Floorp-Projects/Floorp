@@ -23,14 +23,16 @@
 
     <dimen name="awesomebar_header_row_height">20dp</dimen>
     <dimen name="awesomebar_row_height">48dp</dimen>
-    <dimen name="awesomebar_row_favicon_size_small">16dp</dimen>
-    <dimen name="awesomebar_row_favicon_size_large">32dp</dimen>
     <dimen name="awesomebar_tab_transparency_height">38dp</dimen>
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
     <dimen name="browser_toolbar_lock_width">20dp</dimen>
     <dimen name="browser_toolbar_favicon_size">29.33dip</dimen>
+
+    <!-- Dimensions used by Favicons and FaviconView -->
+    <dimen name="favicon_size_small">16dp</dimen>
+    <dimen name="favicon_size_large">32dp</dimen>
     <dimen name="favicon_bg">32dp</dimen>
     <dimen name="favicon_bg_radius">1dp</dimen>
 
@@ -70,5 +72,5 @@
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
-    <dimen name="addressbar_offset_left">32dp</dimen>
+    <dimen name="url_bar_offset_left">32dp</dimen>
 </resources>

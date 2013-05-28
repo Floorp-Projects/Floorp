@@ -7,18 +7,18 @@
                 xmlns:gecko="http://schemas.android.com/apk/res-auto"
                 style="@style/AwesomeBar">
 
-    <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
+    <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/url_bar_bg"
                                                 android:layout_width="fill_parent"
                                                 android:layout_height="fill_parent"
                                                 android:layout_alignParentTop="true"
                                                 android:layout_alignParentRight="true"
                                                 gecko:curveTowards="none"
-                                                android:background="@drawable/address_bar_bg"/>
+                                                android:background="@drawable/url_bar_bg"/>
 
     <view class="org.mozilla.gecko.CustomEditText"
           android:id="@+id/awesomebar_text"
-          style="@style/AddressBar.Button"
-          android:background="@drawable/address_bar_url"
+          style="@style/UrlBar.Button"
+          android:background="@drawable/url_bar_entry"
           android:layout_marginLeft="4dip"
           android:layout_marginRight="4dip"
           android:layout_marginTop="5dip"
@@ -27,9 +27,9 @@
           android:layout_centerVertical="true"
           android:paddingLeft="15dip"
           android:paddingRight="40dip"
-          android:hint="@string/awesomebar_default_text"
-          android:textColor="@color/awesome_bar_title"
-          android:textColorHint="@color/awesome_bar_title_hint"
+          android:hint="@string/url_bar_default_text"
+          android:textColor="@color/url_bar_title"
+          android:textColorHint="@color/url_bar_title_hint"
           android:textColorHighlight="@color/url_bar_text_highlight"
           android:textSelectHandle="@drawable/handle_middle"
           android:textSelectHandleLeft="@drawable/handle_start"
@@ -50,11 +50,11 @@
                   android:layout_alignParentRight="true"/>
 
     <ImageButton android:id="@+id/awesomebar_button"
-                 style="@style/AddressBar.ImageButton.Icon"
+                 style="@style/UrlBar.ImageButton.Icon"
                  android:padding="12dip"
                  android:layout_centerVertical="true"
                  android:layout_alignRight="@id/awesomebar_text"
                  android:visibility="gone"
-                 android:src="@drawable/ic_awesomebar_go"/>
+                 android:src="@drawable/ic_url_bar_go"/>
 
 </RelativeLayout>

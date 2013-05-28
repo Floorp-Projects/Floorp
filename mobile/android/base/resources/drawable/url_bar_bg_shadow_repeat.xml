@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<clip xmlns:android="http://schemas.android.com/apk/res/android"
-      android:drawable="@drawable/address_bar_url"
-      android:clipOrientation="horizontal"
-      android:gravity="right"/>
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+        android:src="@drawable/url_bar_bg_shadow"
+        android:tileMode="repeat"
+        android:dither="false"/>

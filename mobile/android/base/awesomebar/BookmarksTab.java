@@ -46,7 +46,7 @@ public class BookmarksTab extends AwesomeBarTab {
 
     @Override
     public int getTitleStringId() {
-        return R.string.awesomebar_bookmarks_title;
+        return R.string.bookmarks_title;
     }
 
     @Override

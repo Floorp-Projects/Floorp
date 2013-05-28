@@ -9,29 +9,29 @@
     <!-- private browsing mode -->
     <item gecko:state_private="true"
           android:state_focused="true"
-          android:drawable="@drawable/address_bar_url_pressed_pb"/>
+          android:drawable="@drawable/url_bar_entry_pressed_pb"/>
 
     <item gecko:state_private="true"
           android:state_pressed="true"
-          android:drawable="@drawable/address_bar_url_pressed_pb"/>
+          android:drawable="@drawable/url_bar_entry_pressed_pb"/>
 
     <item gecko:state_private="true"
           android:state_selected="true"
-          android:drawable="@drawable/address_bar_url_pressed_pb"/>
+          android:drawable="@drawable/url_bar_entry_pressed_pb"/>
 
     <item gecko:state_private="true"
-          android:drawable="@drawable/address_bar_url_default_pb"/>
+          android:drawable="@drawable/url_bar_entry_default_pb"/>
  
     <!-- normal modes -->
     <item android:state_focused="true"
-          android:drawable="@drawable/address_bar_url_pressed"/>
+          android:drawable="@drawable/url_bar_entry_pressed"/>
 
     <item android:state_pressed="true"
-          android:drawable="@drawable/address_bar_url_pressed"/>
+          android:drawable="@drawable/url_bar_entry_pressed"/>
 
     <item android:state_selected="true"
-          android:drawable="@drawable/address_bar_url_pressed"/>
+          android:drawable="@drawable/url_bar_entry_pressed"/>
 
-    <item android:drawable="@drawable/address_bar_url_default"/>
+    <item android:drawable="@drawable/url_bar_entry_default"/>
 
 </selector>

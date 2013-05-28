@@ -109,7 +109,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     @Override
     public int getTitleStringId() {
-        return R.string.awesomebar_all_pages_title;
+        return R.string.all_pages_title;
     }
 
     @Override
@@ -806,9 +806,9 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         bookmarkIconView.setVisibility(visibility);
 
         if (display == Combined.DISPLAY_READER) {
-            bookmarkIconView.setImageResource(R.drawable.ic_awesomebar_reader);
+            bookmarkIconView.setImageResource(R.drawable.ic_url_bar_reader);
         } else {
-            bookmarkIconView.setImageResource(R.drawable.ic_awesomebar_star);
+            bookmarkIconView.setImageResource(R.drawable.ic_url_bar_star);
         }
     }
 

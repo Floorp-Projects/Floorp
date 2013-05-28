@@ -9,7 +9,7 @@
               android:layout_marginLeft="5dip"
               android:layout_marginRight="5dip"
               android:contentDescription="@string/find_text"
-              android:background="@drawable/address_bar_url"
+              android:background="@drawable/url_bar_entry"
               android:singleLine="true"
               android:textColor="#000000"
               android:textCursorDrawable="@null"
