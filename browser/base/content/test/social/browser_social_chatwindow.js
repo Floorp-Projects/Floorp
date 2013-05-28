@@ -663,15 +663,16 @@ function resizeWindowToChatAreaWidth(desired, cb) {
   }
   // Otherwise we request resize and expect a resize event
   window.addEventListener("resize", function resize_handler() {
-    window.removeEventListener("resize", resize_handler);
     // we did resize - but did we get far enough to be able to continue?
     let newSize = window.SocialChatBar.chatbar.getBoundingClientRect().width;
     let sizedOk = widthDeltaCloseEnough(newSize - desired);
     if (!sizedOk) {
-      // not an error...
-      info("skipping this as we can't resize chat area to " + desired + " - got " + newSize);
+      return;
     }
-    cb(sizedOk);
+    window.removeEventListener("resize", resize_handler);
+    executeSoon(function() {
+      cb(sizedOk);
+    });
   });
   window.resizeBy(delta, 0);
 }

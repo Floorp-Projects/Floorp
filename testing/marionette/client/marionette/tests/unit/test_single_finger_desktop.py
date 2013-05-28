@@ -1,0 +1,98 @@
+from marionette_test import MarionetteTestCase
+from marionette import Actions
+from errors import MarionetteException
+#add this directory to the path
+import os
+import sys
+sys.path.append(os.path.dirname(__file__))
+from single_finger_functions import *
+
+class testSingleFingerMouse(MarionetteTestCase):
+    def setUp(self):
+        super(MarionetteTestCase, self).setUp()
+        # set context menu related preferences needed for some tests
+        self.marionette.set_context("chrome")
+        self.enabled = self.marionette.execute_script("""
+let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+let value = false;
+try {
+  value = prefs.getBoolPref("ui.click_hold_context_menus");
+}
+catch (e) {}
+prefs.setBoolPref("ui.click_hold_context_menus", true);
+return value;
+""")
+        self.wait_time = self.marionette.execute_script("""
+let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+let value = 750;
+try {
+  value = prefs.getIntPref("ui.click_hold_context_menus.delay");
+}
+catch (e) {}
+prefs.setIntPref("ui.click_hold_context_menus.delay", value);
+return value;
+""")
+        self.marionette.set_context("content")
+
+    def tearDown(self):
+        self.marionette.set_context("chrome")
+        self.marionette.execute_script(
+                          """
+let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+prefs.setBoolPref("ui.click_hold_context_menus", arguments[0]);
+""", [self.enabled])
+        self.marionette.execute_script(
+                          """
+let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+prefs.setIntPref("ui.click_hold_context_menus.delay", arguments[0]);
+""", [self.wait_time])
+        self.marionette.set_context("content")
+        super(MarionetteTestCase, self).tearDown()
+
+    def test_press_release(self):
+        press_release(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-mouseup-click")
+
+    def test_move_element(self):
+        move_element(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown", "button2-mousemove-mouseup")
+
+    def test_move_by_offset(self):
+        move_element_offset(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown", "button2-mousemove-mouseup")
+
+    def test_wait(self):
+        wait(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-mouseup-click")
+
+    def test_wait_with_value(self):
+        wait_with_value(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-mouseup-click")
+
+    def test_context_menu(self):
+        context_menu(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-contextmenu", "button1-mousemove-mousedown-contextmenu-mouseup-click")
+
+    def test_long_press_action(self):
+        long_press_action(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-contextmenu-mouseup-click")
+
+    """
+    //Skipping due to Bug 865334
+    def test_long_press_fail(self):
+        testAction = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testAction)
+        button = self.marionette.find_element("id", "button1Copy")
+        action = Actions(self.marionette)
+        action.press(button).long_press(button, 5)
+        assertRaises(MarionetteException, action.perform)
+    """
+
+    def test_chain(self):
+        chain(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown", "delayed-mousemove-mouseup")
+
+    def test_chain_flick(self):
+        chain_flick(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-mousemove", "buttonFlick-mousemove-mouseup")
+
+    def test_single_tap(self):
+        single_tap(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-mouseup-click")
+
+    def test_double_tap(self):
+        double_tap(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-mouseup-click-mousemove-mousedown-mouseup-click")

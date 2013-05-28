@@ -5,17 +5,19 @@
 
 <!DOCTYPE window [
 ]>
+<window id="winTest" title="Title Test" windowtype="Test Type"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <dialog id="dia"
+                xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<dialog id="dia"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-  <vbox id="things">
-    <checkbox id="testBox"  label="box" />
-    <textbox id="textInput"  size="6" value="test" label="input" />
-    <textbox id="textInput2"  size="6" value="test" label="input" />
-    <textbox id="textInput3" class="asdf" size="6" value="test" label="input" />
-  </vbox>
-     
-  <iframe id="iframe" name="iframename" src="chrome://marionette/content/test2.xul"/>
-  <iframe id="iframe" name="iframename" src="chrome://marionette/content/test_nested_iframe.xul"/>
-</dialog>
+      <vbox id="things">
+        <checkbox id="testBox"  label="box" />
+        <textbox id="textInput"  size="6" value="test" label="input" />
+        <textbox id="textInput2"  size="6" value="test" label="input" />
+        <textbox id="textInput3" class="asdf" size="6" value="test" label="input" />
+      </vbox>
+         
+      <iframe id="iframe" name="iframename" src="chrome://marionette/content/test2.xul"/>
+      <iframe id="iframe" name="iframename" src="chrome://marionette/content/test_nested_iframe.xul"/>
+    </dialog>
+</window>
