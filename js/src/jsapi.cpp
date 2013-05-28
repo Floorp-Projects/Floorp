@@ -104,7 +104,7 @@ bool
 JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                CallArgs args)
 {
-    const Value &thisv = args.thisv();
+    HandleValue thisv = args.thisv();
     JS_ASSERT(!test(thisv));
 
     if (thisv.isObject()) {

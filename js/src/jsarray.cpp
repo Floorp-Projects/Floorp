@@ -799,7 +799,7 @@ AddLengthProperty(ExclusiveContext *cx, HandleObject obj)
 
 #if JS_HAS_TOSOURCE
 JS_ALWAYS_INLINE bool
-IsArray(const Value &v)
+IsArray(HandleValue v)
 {
     return v.isObject() && v.toObject().is<ArrayObject>();
 }

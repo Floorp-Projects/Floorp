@@ -460,7 +460,7 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
 }
 
 JS_ALWAYS_INLINE bool
-IsString(const Value &v)
+IsString(HandleValue v)
 {
     return v.isString() || (v.isObject() && v.toObject().is<StringObject>());
 }
