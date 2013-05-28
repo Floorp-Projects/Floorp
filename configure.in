@@ -9347,20 +9347,30 @@ if test -z "$MOZ_NATIVE_NSPR"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
     ac_configure_args="$ac_configure_args $NSPR_CONFIGURE_ARGS"
+
+    # Save these, so we can mess with them for the subconfigure ..
+    _SAVE_CFLAGS="$CFLAGS"
+    _SAVE_CPPFLAGS="$CPPFLAGS"
+    _SAVE_LDFLAGS="$LDFLAGS"
+
     if test -n "$MOZ_LINKER" -a "$ac_cv_func_dladdr" = no ; then
       # dladdr is supported by the new linker, even when the system linker doesn't
       # support it. Trick nspr into using dladdr when it's not supported.
-      _SAVE_CPPFLAGS="$CPPFLAGS"
       export CPPFLAGS="-include $_topsrcdir/mozglue/linker/dladdr.h $CPPFLAGS"
     fi
-    _SAVE_LDFLAGS="$LDFLAGS"
     export LDFLAGS="$LDFLAGS $NSPR_LDFLAGS"
+    export CFLAGS="$CFLAGS $MOZ_FRAMEPTR_FLAGS"
+
     AC_OUTPUT_SUBDIRS(nsprpub)
+
+    # .. and restore them
+    unset CFLAGS
+    unset CPPFLAGS
+    unset LDFLAGS
+    CFLAGS="$_SAVE_CFLAGS"
+    CPPFLAGS="$_SAVE_CPPFLAGS"
     LDFLAGS="$_SAVE_LDFLAGS"
-    if test -n "$MOZ_LINKER" -a "$ac_cv_func_dladdr" = no; then
-      unset CPPFLAGS
-      CPPFLAGS="$_SAVE_CFLAGS"
-    fi
+
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 

@@ -189,10 +189,7 @@ public:
   mozilla::dom::EventTarget* GetOriginalTarget() const;
   mozilla::dom::EventTarget* GetExplicitOriginalTarget() const;
 
-  bool GetPreventDefault() const
-  {
-    return DefaultPrevented();
-  }
+  bool GetPreventDefault() const;
 
 protected:
 
