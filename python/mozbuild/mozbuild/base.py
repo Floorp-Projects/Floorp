@@ -239,7 +239,7 @@ class MozbuildObject(ProcessExecutionMixin):
         # mozfile doesn't like unicode arguments (bug 818783).
         rmtree(self.topobjdir.encode('utf-8'))
 
-    def get_binary_path(self, what='app', validate_exists=True):
+    def get_binary_path(self, what='app', validate_exists=True, where='default'):
         """Obtain the path to a compiled binary for this build configuration.
 
         The what argument is the program or tool being sought after. See the
@@ -248,17 +248,26 @@ class MozbuildObject(ProcessExecutionMixin):
         If validate_exists is True (the default), we will ensure the found path
         exists before returning, raising an exception if it doesn't.
 
+        If where is 'staged-package', we will return the path to the binary in
+        the package staging directory.
+
         If no arguments are specified, we will return the main binary for the
         configured XUL application.
         """
 
+        if where not in ('default', 'staged-package'):
+            raise Exception("Don't know location %s" % where)
+
         substs = self.substs
 
         stem = self.distdir
+        if where == 'staged-package':
+            stem = os.path.join(stem, substs['MOZ_APP_NAME'])
+
         if substs['OS_ARCH'] == 'Darwin':
             stem = os.path.join(stem, substs['MOZ_MACBUNDLE_NAME'], 'Contents',
                 'MacOS')
-        else:
+        elif where == 'default':
             stem = os.path.join(stem, 'bin')
 
         leaf = None
