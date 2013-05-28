@@ -66,6 +66,7 @@ public class SUTAgentAndroid extends Activity
     public static String sPowerStatus = null;
     public static int    nChargeLevel = 0;
     public static int    nBatteryTemp = 0;
+    public static long   nCreateTimeMillis = System.currentTimeMillis();
 
     String lineSep = System.getProperty("line.separator");
     public PrintWriter dataOut = null;
