@@ -367,6 +367,15 @@ public:
                         const EventFlags& aExtraFlags) const;
 
   /**
+   * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
+   * for following WM_*CHAR message.
+   * Returns true if the event is consumed.  Otherwise, false.
+   */
+  bool DispatchKeyPressEventForFollowingCharMessage(
+                        const UniCharsAndModifiers& aInputtingChars,
+                        const EventFlags& aExtraFlags) const;
+
+  /**
    * Checkes whether the key event down message is handled without following
    * WM_CHAR messages.  For example, if following WM_CHAR message indicates
    * control character input, the WM_CHAR message is unclear whether it's
