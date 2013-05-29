@@ -326,9 +326,6 @@ protected:
   bool                    DispatchCommandEvent(uint32_t aEventCommand);
   void                    RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
   static void             RemoveNextCharMessage(HWND aWnd);
-  void                    RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
-                            UINT aLastMsg,
-                            nsFakeCharMessage* aFakeCharMessage = nullptr);
   virtual bool            ProcessMessage(UINT msg, WPARAM &wParam,
                                          LPARAM &lParam, LRESULT *aRetValue);
   bool                    ProcessMessageForPlugin(const MSG &aMsg,
