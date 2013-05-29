@@ -377,9 +377,6 @@ protected:
                                     const mozilla::widget::ModifierKeyState &aModKeyState,
                                     bool *aEventDispatched,
                                     nsFakeCharMessage* aFakeCharMessage);
-  LRESULT                 OnKeyUp(const MSG &aMsg,
-                                  const mozilla::widget::ModifierKeyState &aModKeyState,
-                                  bool *aEventDispatched);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
