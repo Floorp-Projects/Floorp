@@ -744,6 +744,19 @@ class ICStub
         }
     }
 
+    static bool NeedsPostBarrier(ICStub::Kind kind) {
+        JS_ASSERT(IsValidKind(kind));
+        switch (kind) {
+          case SetProp_Native:
+          case SetProp_NativeAdd:
+          case SetElem_Dense:
+          case SetElem_DenseAdd:
+            return true;
+          default:
+            return false;
+        }
+    }
+
     // Optimized stubs get purged on GC.  But some stubs can be active on the
     // stack during GC - specifically the ones that can make calls.  To ensure
     // that these do not get purged, all stubs that can make calls are allocated
@@ -1045,6 +1058,11 @@ class ICStubCompiler
 
         return regs;
     }
+
+#ifdef JSGC_GENERATIONAL
+    inline bool emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Register scratch,
+                                         GeneralRegisterSet saveRegs);
+#endif
 
   public:
     virtual ICStub *getStub(ICStubSpace *space) = 0;
@@ -4552,7 +4570,7 @@ class ICSetProp_Native : public ICUpdatedStub
     }
 
     class Compiler : public ICStubCompiler {
-        HandleObject obj_;
+        RootedObject obj_;
         bool isFixedSlot_;
         uint32_t offset_;
 
@@ -4566,7 +4584,7 @@ class ICSetProp_Native : public ICUpdatedStub
       public:
         Compiler(JSContext *cx, HandleObject obj, bool isFixedSlot, uint32_t offset)
           : ICStubCompiler(cx, ICStub::SetProp_Native),
-            obj_(obj),
+            obj_(cx, obj),
             isFixedSlot_(isFixedSlot),
             offset_(offset)
         {}
