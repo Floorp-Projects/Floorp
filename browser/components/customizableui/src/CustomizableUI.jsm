@@ -795,8 +795,6 @@ let CustomizableUIInternal = {
   },
 
   getPlacementOfWidget: function(aWidgetId) {
-    let widget = gPalette.get(aWidgetId);
-
     for (let [area, placements] of gPlacements) {
       let index = placements.indexOf(aWidgetId);
       if (index != -1) {
