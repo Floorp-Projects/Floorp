@@ -22,10 +22,8 @@
 #include "nsPrintOptionsAndroid.h"
 #include "nsPrintSession.h"
 #include "nsDeviceContextAndroid.h"
-#include "nsFilePicker.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsIMEPicker.h"
-#include "nsFilePickerProxy.h"
 #include "nsXULAppAPI.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
@@ -49,24 +47,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 }
 }
 
-static nsresult
-nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
-                        void **aResult)
-{
-  *aResult = nullptr;
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsCOMPtr<nsIFilePicker> picker;
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content)
-    picker = new nsFilePickerProxy();
-  else
-    picker = new nsFilePicker;
-
-  return picker->QueryInterface(aIID, aResult);
-}
-
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
 NS_DEFINE_NAMED_CID(NS_CHILD_CID);
@@ -78,7 +58,6 @@ NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTSESSION_CID);
 NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
-NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_IMEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
@@ -96,7 +75,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsAndroidConstructor },
   { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },
   { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecAndroidConstructor },
-  { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
   { &kNS_IMEPICKER_CID, false, NULL, nsIMEPickerConstructor },
   { &kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor },
@@ -116,7 +94,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
   { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
   { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
-  { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
   { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
   { "@mozilla.org/imepicker;1", &kNS_IMEPICKER_CID },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },

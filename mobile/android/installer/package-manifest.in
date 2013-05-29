@@ -156,9 +156,6 @@
 @BINPATH@/components/exthelper.xpt
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
-#ifdef MOZ_GTK2
-@BINPATH@/components/filepicker.xpt
-#endif
 @BINPATH@/components/find.xpt
 @BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
@@ -296,10 +293,6 @@
 @BINPATH@/components/crypto-SDR.js
 @BINPATH@/components/jsconsole-clhandler.manifest
 @BINPATH@/components/jsconsole-clhandler.js
-#ifdef MOZ_GTK2
-@BINPATH@/components/nsFilePicker.manifest
-@BINPATH@/components/nsFilePicker.js
-#endif
 @BINPATH@/components/nsHelperAppDlg.manifest
 @BINPATH@/components/nsHelperAppDlg.js
 @BINPATH@/components/nsDownloadManagerUI.manifest
@@ -351,8 +344,6 @@
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/messageWakeupService.js
 @BINPATH@/components/messageWakeupService.manifest
-@BINPATH@/components/nsFilePicker.js
-@BINPATH@/components/nsFilePicker.manifest
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
@@ -559,6 +550,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/ContentPermissionPrompt.js
 @BINPATH@/components/DirectoryProvider.js
 @BINPATH@/components/DownloadManagerUI.js
+@BINPATH@/components/FilePicker.js
 @BINPATH@/components/HelperAppDialog.js
 @BINPATH@/components/LoginManagerPrompter.js
 @BINPATH@/components/MobileComponents.manifest
