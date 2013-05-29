@@ -936,7 +936,7 @@ public:
 
 #ifdef USE_SKIA_GPU
   static TemporaryRef<DrawTarget>
-    CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext *aContext, const IntSize &aSize, SurfaceFormat aFormat);
+    CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext* aContext, const IntSize &aSize, SurfaceFormat aFormat);
 #endif
 
 #ifdef WIN32
