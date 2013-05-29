@@ -6,6 +6,7 @@
 #ifndef nsXMLElement_h___
 #define nsXMLElement_h___
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMElement.h"
 #include "mozilla/dom/Element.h"
 
@@ -29,28 +30,28 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsINode interface methods
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  virtual nsXPCClassInfo* GetClassInfo();
+  virtual nsXPCClassInfo* GetClassInfo() MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // nsIContent interface methods
-  virtual nsIAtom *GetIDAttributeName() const;
-  virtual nsIAtom* DoGetID() const;
+  virtual nsIAtom *GetIDAttributeName() const MOZ_OVERRIDE;
+  virtual nsIAtom* DoGetID() const MOZ_OVERRIDE;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             bool aNotify) MOZ_OVERRIDE;
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult);
+                                nsAttrValue& aResult) MOZ_OVERRIDE;
 
   // Element overrides
-  virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo);
+  virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo) MOZ_OVERRIDE;
 
 protected:
   virtual JSObject* WrapNode(JSContext *aCx,

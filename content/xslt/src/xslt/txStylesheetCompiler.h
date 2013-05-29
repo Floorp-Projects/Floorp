@@ -6,6 +6,7 @@
 #ifndef TRANSFRMX_TXSTYLESHEETCOMPILER_H
 #define TRANSFRMX_TXSTYLESHEETCOMPILER_H
 
+#include "mozilla/Attributes.h"
 #include "txStack.h"
 #include "txXSLTPatterns.h"
 #include "txExpr.h"
@@ -120,10 +121,10 @@ public:
     nsresult addVariable(const txExpandedName& aName);
 
     // txIParseContext
-    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID);
+    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID) MOZ_OVERRIDE;
     nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
-                                 FunctionCall** aFunction);
-    bool caseInsensitiveNameTests();
+                                 FunctionCall** aFunction) MOZ_OVERRIDE;
+    bool caseInsensitiveNameTests() MOZ_OVERRIDE;
 
     /**
      * Should the stylesheet be parsed in forwards compatible parsing mode.
@@ -133,7 +134,7 @@ public:
         return mElementContext->mForwardsCompatibleParsing;
     }
 
-    void SetErrorOffset(uint32_t aOffset);
+    void SetErrorOffset(uint32_t aOffset) MOZ_OVERRIDE;
 
     static void shutdown();
 

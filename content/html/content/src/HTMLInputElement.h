@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLInputElement_h
 #define mozilla_dom_HTMLInputElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -119,38 +120,38 @@ public:
   NS_DECL_NSIPHONETIC
 
   // nsIDOMNSEditableElement
-  NS_IMETHOD GetEditor(nsIEditor** aEditor)
+  NS_IMETHOD GetEditor(nsIEditor** aEditor) MOZ_OVERRIDE
   {
     return nsGenericHTMLElement::GetEditor(aEditor);
   }
 
-  NS_IMETHOD SetUserInput(const nsAString& aInput);
+  NS_IMETHOD SetUserInput(const nsAString& aInput) MOZ_OVERRIDE;
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD_(uint32_t) GetType() const { return mType; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
-  NS_IMETHOD SaveState();
-  virtual bool RestoreState(nsPresState* aState);
-  virtual bool AllowDrop();
-  virtual bool IsDisabledForEvents(uint32_t aMessage);
+  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return mType; }
+  NS_IMETHOD Reset() MOZ_OVERRIDE;
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
+  NS_IMETHOD SaveState() MOZ_OVERRIDE;
+  virtual bool RestoreState(nsPresState* aState) MOZ_OVERRIDE;
+  virtual bool AllowDrop() MOZ_OVERRIDE;
+  virtual bool IsDisabledForEvents(uint32_t aMessage) MOZ_OVERRIDE;
 
-  virtual void FieldSetDisabledChanged(bool aNotify);
+  virtual void FieldSetDisabledChanged(bool aNotify) MOZ_OVERRIDE;
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) MOZ_OVERRIDE;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult);
+                                nsAttrValue& aResult) MOZ_OVERRIDE;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
+                                              int32_t aModType) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   void PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor);
   void StartRangeThumbDrag(nsGUIEvent* aEvent);
   void FinishRangeThumbDrag(nsGUIEvent* aEvent = nullptr);
@@ -159,40 +160,40 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              bool aNullParent = true) MOZ_OVERRIDE;
 
-  virtual void DoneCreatingElement();
+  virtual void DoneCreatingElement() MOZ_OVERRIDE;
 
-  virtual nsEventStates IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
   // nsITextControlElement
-  NS_IMETHOD SetValueChanged(bool aValueChanged);
-  NS_IMETHOD_(bool) IsSingleLineTextControl() const;
-  NS_IMETHOD_(bool) IsTextArea() const;
-  NS_IMETHOD_(bool) IsPlainTextControl() const;
-  NS_IMETHOD_(bool) IsPasswordTextControl() const;
-  NS_IMETHOD_(int32_t) GetCols();
-  NS_IMETHOD_(int32_t) GetWrapCols();
-  NS_IMETHOD_(int32_t) GetRows();
-  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue);
-  NS_IMETHOD_(bool) ValueChanged() const;
-  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const;
-  NS_IMETHOD_(nsIEditor*) GetTextEditor();
-  NS_IMETHOD_(nsISelectionController*) GetSelectionController();
-  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection();
-  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame);
-  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame);
-  NS_IMETHOD CreateEditor();
-  NS_IMETHOD_(nsIContent*) GetRootEditorNode();
-  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
-  NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
-  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify);
-  NS_IMETHOD_(bool) GetPlaceholderVisibility();
-  NS_IMETHOD_(void) InitializeKeyboardEventListeners();
-  NS_IMETHOD_(void) OnValueChanged(bool aNotify);
-  NS_IMETHOD_(bool) HasCachedSelection();
+  NS_IMETHOD SetValueChanged(bool aValueChanged) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsSingleLineTextControl() const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsTextArea() const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsPlainTextControl() const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsPasswordTextControl() const MOZ_OVERRIDE;
+  NS_IMETHOD_(int32_t) GetCols() MOZ_OVERRIDE;
+  NS_IMETHOD_(int32_t) GetWrapCols() MOZ_OVERRIDE;
+  NS_IMETHOD_(int32_t) GetRows() MOZ_OVERRIDE;
+  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) ValueChanged() const MOZ_OVERRIDE;
+  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const MOZ_OVERRIDE;
+  NS_IMETHOD_(nsIEditor*) GetTextEditor() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsISelectionController*) GetSelectionController() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() MOZ_OVERRIDE;
+  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) MOZ_OVERRIDE;
+  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) MOZ_OVERRIDE;
+  NS_IMETHOD CreateEditor() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsIContent*) GetRootEditorNode() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsIContent*) GetPlaceholderNode() MOZ_OVERRIDE;
+  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) GetPlaceholderVisibility() MOZ_OVERRIDE;
+  NS_IMETHOD_(void) InitializeKeyboardEventListeners() MOZ_OVERRIDE;
+  NS_IMETHOD_(void) OnValueChanged(bool aNotify) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) HasCachedSelection() MOZ_OVERRIDE;
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
@@ -220,7 +221,7 @@ public:
    */
   already_AddRefed<nsIDOMHTMLInputElement> GetSelectedRadioButton();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   NS_IMETHOD FireAsyncClickHandler();
 
@@ -235,7 +236,7 @@ public:
 
   void MaybeLoadImage();
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // nsIConstraintValidation
   bool     IsTooLong();
@@ -255,7 +256,7 @@ public:
   void     UpdateAllValidityStates(bool aNotify);
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
-                                ValidityStateType aType);
+                                ValidityStateType aType) MOZ_OVERRIDE;
   /**
    * Update the value missing validity state for radio elements when they have
    * a group.
@@ -757,12 +758,12 @@ protected:
    */
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
-                                 bool aNotify);
+                                 bool aNotify) MOZ_OVERRIDE;
   /**
    * Called when an attribute has just been changed
    */
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
   /**
    * Dispatch a select event. Returns true if the event was not cancelled.
@@ -1234,7 +1235,7 @@ private:
   {
   public:
     AsyncClickHandler(HTMLInputElement* aInput);
-    NS_IMETHOD Run();
+    NS_IMETHOD Run() MOZ_OVERRIDE;
 
   protected:
     nsresult InitFilePicker();
@@ -1256,7 +1257,7 @@ private:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Done(int16_t aResult);
+    NS_IMETHOD Done(int16_t aResult) MOZ_OVERRIDE;
 
   private:
     nsCOMPtr<nsIFilePicker> mFilePicker;
