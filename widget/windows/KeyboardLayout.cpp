@@ -389,7 +389,7 @@ VirtualKey::FillKbdState(PBYTE aKbdState,
 NativeKey::NativeKey(nsWindowBase* aWidget,
                      const MSG& aKeyOrCharMessage,
                      const ModifierKeyState& aModKeyState,
-                     const nsFakeCharMessage* aFakeCharMessage) :
+                     const FakeCharMsg* aFakeCharMsg) :
   mWidget(aWidget), mMsg(aKeyOrCharMessage), mDOMKeyCode(0),
   mModKeyState(aModKeyState), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0),
   mIsFakeCharMsg(false)
@@ -408,8 +408,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
       // Store following WM_*CHAR message into mCharMsg.
-      if (aFakeCharMessage) {
-        mCharMsg = aFakeCharMessage->GetCharMessage(mMsg.hwnd);
+      if (aFakeCharMsg) {
+        mCharMsg = aFakeCharMsg->GetCharMsg(mMsg.hwnd);
         mIsFakeCharMsg = true;
       } else {
         MSG msg;
@@ -2183,10 +2183,10 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
     MSG keyDownMsg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam,
                                        aWidget->GetWindowHandle());
     if (i == keySequence.Length() - 1) {
-      bool makeDeadCharMessage =
+      bool makeDeadCharMsg =
         (IsDeadKey(key, modKeyState) && aCharacters.IsEmpty());
       nsAutoString chars(aCharacters);
-      if (makeDeadCharMessage) {
+      if (makeDeadCharMsg) {
         UniCharsAndModifiers deadChars =
           GetUniCharsAndModifiers(key, modKeyState);
         chars = deadChars.ToString();
@@ -2197,15 +2197,15 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
         NativeKey nativeKey(aWidget, keyDownMsg, modKeyState);
         nativeKey.HandleKeyDownMessage();
       } else {
-        nsFakeCharMessage fakeMsgForKeyDown = { chars.CharAt(0), scanCode,
-                                                makeDeadCharMessage };
-        NativeKey nativeKey(aWidget, keyDownMsg, modKeyState, &fakeMsgForKeyDown);
+        NativeKey::FakeCharMsg fakeMsgForKeyDown = { chars.CharAt(0), scanCode,
+                                                     makeDeadCharMsg };
+        NativeKey nativeKey(aWidget, keyDownMsg, modKeyState,
+                            &fakeMsgForKeyDown);
         nativeKey.HandleKeyDownMessage();
         for (uint32_t j = 1; j < chars.Length(); j++) {
-          nsFakeCharMessage fakeMsgForChar = { chars.CharAt(j), scanCode,
-                                               false };
-          MSG charMsg =
-            fakeMsgForChar.GetCharMessage(aWidget->GetWindowHandle());
+          NativeKey::FakeCharMsg fakeMsgForChar = { chars.CharAt(j), scanCode,
+                                                    false };
+          MSG charMsg = fakeMsgForChar.GetCharMsg(aWidget->GetWindowHandle());
           NativeKey nativeKey(aWidget, charMsg, modKeyState);
           nativeKey.HandleCharMessage(charMsg);
         }
