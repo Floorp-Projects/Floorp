@@ -408,8 +408,8 @@ abstract public class GeckoApp
  
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Custom Menu should be opened when hardware menu key is pressed.
-        if (Build.VERSION.SDK_INT >= 11 && keyCode == KeyEvent.KEYCODE_MENU) {
+        // Handle hardware menu key presses separately so that we can show a custom menu in some cases.
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
             openOptionsMenu();
             return true;
         }
