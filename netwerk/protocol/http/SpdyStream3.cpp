@@ -862,6 +862,7 @@ SpdyStream3::zlib_destructor(void *opaque, void *addr)
   moz_free(addr);
 }
 
+// This can be called N times.. 1 for syn_reply and 0->N for headers
 nsresult
 SpdyStream3::Uncompress(z_stream *context,
                         char *blockStart,
@@ -915,6 +916,7 @@ SpdyStream3::Uncompress(z_stream *context,
   return NS_OK;
 }
 
+// mDecompressBuffer contains 0 to N uncompressed Name/Value Header blocks
 nsresult
 SpdyStream3::FindHeader(nsCString name,
                         nsDependentCSubstring &value)
@@ -925,30 +927,40 @@ SpdyStream3::FindHeader(nsCString name,
     (mDecompressBuffer.get()) + mDecompressBufferUsed;
   if (lastHeaderByte < nvpair)
     return NS_ERROR_ILLEGAL_VALUE;
-  uint32_t numPairs =
-    PR_ntohl(reinterpret_cast<uint32_t *>(mDecompressBuffer.get())[0]);
-  for (uint32_t index = 0; index < numPairs; ++index) {
-    if (lastHeaderByte < nvpair + 4)
-      return NS_ERROR_ILLEGAL_VALUE;
-    uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
-      (nvpair[2] << 8) + nvpair[3];
-    if (lastHeaderByte < nvpair + 4 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-    nsDependentCSubstring nameString =
-      Substring(reinterpret_cast<const char *>(nvpair) + 4,
-                reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
-    if (lastHeaderByte < nvpair + 8 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-    uint32_t valueLen = (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
-      (nvpair[6 + nameLen] << 8) + nvpair[7 + nameLen];
-    if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-    if (nameString.Equals(name)) {
-      value.Assign(((char *)nvpair) + 8 + nameLen, valueLen);
-      return NS_OK;
+
+  do {
+    uint32_t numPairs = PR_ntohl(reinterpret_cast<const uint32_t *>(nvpair)[-1]);
+
+    for (uint32_t index = 0; index < numPairs; ++index) {
+      if (lastHeaderByte < nvpair + 4)
+        return NS_ERROR_ILLEGAL_VALUE;
+      uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
+        (nvpair[2] << 8) + nvpair[3];
+      if (lastHeaderByte < nvpair + 4 + nameLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+      nsDependentCSubstring nameString =
+        Substring(reinterpret_cast<const char *>(nvpair) + 4,
+                  reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
+      if (lastHeaderByte < nvpair + 8 + nameLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+      uint32_t valueLen = (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
+        (nvpair[6 + nameLen] << 8) + nvpair[7 + nameLen];
+      if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+      if (nameString.Equals(name)) {
+        value.Assign(((char *)nvpair) + 8 + nameLen, valueLen);
+        return NS_OK;
+      }
+
+      // that pair didn't match - try the next one in this block
+      nvpair += 8 + nameLen + valueLen;
     }
-    nvpair += 8 + nameLen + valueLen;
-  }
+
+    // move to the next name/value header block (if there is one) - the
+    // first pair is offset 4 bytes into it
+    nvpair += 4;
+  } while (lastHeaderByte >= nvpair);
+
   return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -995,101 +1007,107 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
     (mDecompressBuffer.get()) + 4;
   const unsigned char *lastHeaderByte = reinterpret_cast<unsigned char *>
     (mDecompressBuffer.get()) + mDecompressBufferUsed;
-
   if (lastHeaderByte < nvpair)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  uint32_t numPairs =
-    PR_ntohl(reinterpret_cast<uint32_t *>(mDecompressBuffer.get())[0]);
+  do {
+    uint32_t numPairs = PR_ntohl(reinterpret_cast<const uint32_t *>(nvpair)[-1]);
 
-  for (uint32_t index = 0; index < numPairs; ++index) {
-    if (lastHeaderByte < nvpair + 4)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
-      (nvpair[2] << 8) + nvpair[3];
-    if (lastHeaderByte < nvpair + 4 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    nsDependentCSubstring nameString =
-      Substring(reinterpret_cast<const char *>(nvpair) + 4,
-                reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
-
-    if (lastHeaderByte < nvpair + 8 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    // Look for illegal characters in the nameString.
-    // This includes upper case characters and nulls (as they will
-    // break the fixup-nulls-in-value-string algorithm)
-    // Look for upper case characters in the name. They are illegal.
-    for (char *cPtr = nameString.BeginWriting();
-         cPtr && cPtr < nameString.EndWriting();
-         ++cPtr) {
-      if (*cPtr <= 'Z' && *cPtr >= 'A') {
-        nsCString toLog(nameString);
-
-        LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
-              "upper case response header found. [%s]\n",
-              mSession, this, toLog.get()));
-
+    for (uint32_t index = 0; index < numPairs; ++index) {
+      if (lastHeaderByte < nvpair + 4)
         return NS_ERROR_ILLEGAL_VALUE;
-      }
 
-      // check for null characters
-      if (*cPtr == '\0')
+      uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
+        (nvpair[2] << 8) + nvpair[3];
+      if (lastHeaderByte < nvpair + 4 + nameLen)
         return NS_ERROR_ILLEGAL_VALUE;
-    }
 
-    // HTTP Chunked responses are not legal over spdy. We do not need
-    // to look for chunked specifically because it is the only HTTP
-    // allowed default encoding and we did not negotiate further encodings
-    // via TE
-    if (nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding"))) {
-      LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
-            "transfer-encoding found. Chunked is invalid and no TE sent.",
-            mSession, this));
+      nsDependentCSubstring nameString =
+        Substring(reinterpret_cast<const char *>(nvpair) + 4,
+                  reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
 
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
+      if (lastHeaderByte < nvpair + 8 + nameLen)
+        return NS_ERROR_ILLEGAL_VALUE;
 
-    uint32_t valueLen =
-      (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
-      (nvpair[6 + nameLen] << 8)  +   nvpair[7 + nameLen];
-
-    if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    if (!nameString.Equals(NS_LITERAL_CSTRING(":version")) &&
-        !nameString.Equals(NS_LITERAL_CSTRING(":status")) &&
-        !nameString.Equals(NS_LITERAL_CSTRING("connection")) &&
-        !nameString.Equals(NS_LITERAL_CSTRING("keep-alive"))) {
-      nsDependentCSubstring valueString =
-        Substring(reinterpret_cast<const char *>(nvpair) + 8 + nameLen,
-                  reinterpret_cast<const char *>(nvpair) + 8 + nameLen +
-                  valueLen);
-      
-      aHeadersOut.Append(nameString);
-      aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
-
-      // expand NULL bytes in the value string
-      for (char *cPtr = valueString.BeginWriting();
-           cPtr && cPtr < valueString.EndWriting();
+      // Look for illegal characters in the nameString.
+      // This includes upper case characters and nulls (as they will
+      // break the fixup-nulls-in-value-string algorithm)
+      // Look for upper case characters in the name. They are illegal.
+      for (char *cPtr = nameString.BeginWriting();
+           cPtr && cPtr < nameString.EndWriting();
            ++cPtr) {
-        if (*cPtr != 0) {
-          aHeadersOut.Append(*cPtr);
-          continue;
+        if (*cPtr <= 'Z' && *cPtr >= 'A') {
+          nsCString toLog(nameString);
+
+          LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
+                "upper case response header found. [%s]\n",
+                mSession, this, toLog.get()));
+
+          return NS_ERROR_ILLEGAL_VALUE;
         }
 
-        // NULLs are really "\r\nhdr: "
-        aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
-        aHeadersOut.Append(nameString);
-        aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+        // check for null characters
+        if (*cPtr == '\0')
+          return NS_ERROR_ILLEGAL_VALUE;
       }
 
-      aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+      // HTTP Chunked responses are not legal over spdy. We do not need
+      // to look for chunked specifically because it is the only HTTP
+      // allowed default encoding and we did not negotiate further encodings
+      // via TE
+      if (nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding"))) {
+        LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
+              "transfer-encoding found. Chunked is invalid and no TE sent.",
+              mSession, this));
+
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      uint32_t valueLen =
+        (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
+        (nvpair[6 + nameLen] << 8)  +   nvpair[7 + nameLen];
+
+      if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+      // spdy transport level headers shouldn't be gatewayed into http/1
+      if (!nameString.Equals(NS_LITERAL_CSTRING(":version")) &&
+          !nameString.Equals(NS_LITERAL_CSTRING(":status")) &&
+          !nameString.Equals(NS_LITERAL_CSTRING("connection")) &&
+          !nameString.Equals(NS_LITERAL_CSTRING("keep-alive"))) {
+        nsDependentCSubstring valueString =
+          Substring(reinterpret_cast<const char *>(nvpair) + 8 + nameLen,
+                    reinterpret_cast<const char *>(nvpair) + 8 + nameLen +
+                    valueLen);
+
+        aHeadersOut.Append(nameString);
+        aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+
+        // expand NULL bytes in the value string
+        for (char *cPtr = valueString.BeginWriting();
+             cPtr && cPtr < valueString.EndWriting();
+             ++cPtr) {
+          if (*cPtr != 0) {
+            aHeadersOut.Append(*cPtr);
+            continue;
+          }
+
+          // NULLs are really "\r\nhdr: "
+          aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+          aHeadersOut.Append(nameString);
+          aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+        }
+
+        aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+      }
+      // move to the next name/value pair in this block
+      nvpair += 8 + nameLen + valueLen;
     }
-    nvpair += 8 + nameLen + valueLen;
-  }
+
+    // move to the next name/value header block (if there is one) - the
+    // first pair is offset 4 bytes into it
+    nvpair += 4;
+  } while (lastHeaderByte >= nvpair);
 
   aHeadersOut.Append(NS_LITERAL_CSTRING("X-Firefox-Spdy: 3\r\n\r\n"));
   LOG (("decoded response headers are:\n%s",
