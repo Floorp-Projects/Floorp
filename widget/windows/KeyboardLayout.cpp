@@ -1986,6 +1986,35 @@ DeadKeyTable::GetCompositeChar(PRUnichar aBaseChar) const
   return 0;
 }
 
+/*****************************************************************************
+ * mozilla::widget::RedirectedKeyDownMessage
+ *****************************************************************************/
+
+MSG RedirectedKeyDownMessageManager::sRedirectedKeyDownMsg;
+bool RedirectedKeyDownMessageManager::sDefaultPreventedOfRedirectedMsg = false;
+
+// static
+bool
+RedirectedKeyDownMessageManager::IsRedirectedMessage(const MSG& aMsg)
+{
+  return (aMsg.message == WM_KEYDOWN || aMsg.message == WM_SYSKEYDOWN) &&
+         (sRedirectedKeyDownMsg.message == aMsg.message &&
+          WinUtils::GetScanCode(sRedirectedKeyDownMsg.lParam) ==
+            WinUtils::GetScanCode(aMsg.lParam));
+}
+
+// static
+void
+RedirectedKeyDownMessageManager::RemoveNextCharMessage(HWND aWnd)
+{
+  MSG msg;
+  if (WinUtils::PeekMessage(&msg, aWnd, WM_KEYFIRST, WM_KEYLAST,
+                            PM_NOREMOVE | PM_NOYIELD) &&
+      (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
+    WinUtils::GetMessage(&msg, aWnd, msg.message, msg.message);
+  }
+}
+
 } // namespace widget
 } // namespace mozilla
 
