@@ -338,6 +338,15 @@ public:
   bool DispatchKeyDownEvent(bool* aEventDispatched = nullptr) const;
 
   /**
+   * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
+   * initialized with WM_KEYDOWN, WM_SYSKEYDOWN or them.
+   * Returns true if dispatched keypress event is consumed.  Otherwise, false.
+   */
+  bool HandleCharMessage(const MSG& aCharMsg,
+                         bool* aEventDispatched = nullptr,
+                         const EventFlags* aExtraFlags = nullptr) const;
+
+  /**
    * Handles keyup message.  Returns true if the event is consumed.
    * Otherwise, false.
    */
