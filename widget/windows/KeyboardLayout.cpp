@@ -548,6 +548,9 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
     keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mOriginalVirtualKeyCode);
 
   keyboardLayout->InitNativeKey(*this, mModKeyState);
+
+  mIsDeadKey = keyboardLayout->IsDeadKey(mOriginalVirtualKeyCode, mModKeyState);
+  mIsPrintableKey = KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode);
 }
 
 UINT
@@ -872,6 +875,35 @@ NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const
     *aEventDispatched = true;
   }
   return DispatchKeyEvent(keyupEvent, &mMsg);
+}
+
+bool
+NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
+{
+  MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+
+  // Enter and backspace are always handled here to avoid for example the
+  // confusion between ctrl-enter and ctrl-J.
+  if (mDOMKeyCode == NS_VK_RETURN || mDOMKeyCode == NS_VK_BACK) {
+    return true;
+  }
+
+  // If any modifier keys which may cause printable keys becoming non-printable
+  // are not pressed, we don't need special handling for the key.
+  if (!mModKeyState.IsControl() && !mModKeyState.IsAlt() &&
+      !mModKeyState.IsWin()) {
+    return false;
+  }
+
+  // If the key event causes dead key event, we don't need to dispatch keypress
+  // event.
+  if (mIsDeadKey) {
+    return false;
+  }
+
+  // Even if the key is a printable key, it might cause non-printable character
+  // input with modifier key(s).
+  return IsPrintableKey();
 }
 
 bool
