@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_SVGAnimatedLength_h
 #define mozilla_dom_SVGAnimatedLength_h
 
+#include "mozilla/Attributes.h"
 #include "nsSVGElement.h"
 #include "nsIDOMSVGAnimatedLength.h"
 
@@ -28,10 +29,10 @@ public:
 
   ~SVGAnimatedLength();
 
-  NS_IMETHOD GetBaseVal(nsIDOMSVGLength **aBaseVal)
+  NS_IMETHOD GetBaseVal(nsIDOMSVGLength **aBaseVal) MOZ_OVERRIDE
     { *aBaseVal = BaseVal().get(); return NS_OK; }
 
-  NS_IMETHOD GetAnimVal(nsIDOMSVGLength **aAnimVal)
+  NS_IMETHOD GetAnimVal(nsIDOMSVGLength **aAnimVal) MOZ_OVERRIDE
     { *aAnimVal = AnimVal().get(); return NS_OK; }
 
   // WebIDL

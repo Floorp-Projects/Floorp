@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLTemplateElement_h
 #define mozilla_dom_HTMLTemplateElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -35,9 +36,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTemplateElement,
                                            nsGenericHTMLElement)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   nsresult Init();
 

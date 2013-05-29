@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_ImageDocument_h
 #define mozilla_dom_ImageDocument_h
 
+#include "mozilla/Attributes.h"
 #include "imgINotificationObserver.h"
 #include "MediaDocument.h"
 #include "nsIDOMEventListener.h"
@@ -24,7 +25,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsresult Init();
+  virtual nsresult Init() MOZ_OVERRIDE;
 
   virtual nsresult StartDocumentLoad(const char*         aCommand,
                                      nsIChannel*         aChannel,
@@ -32,18 +33,18 @@ public:
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
                                      bool                aReset = true,
-                                     nsIContentSink*     aSink = nullptr);
+                                     nsIContentSink*     aSink = nullptr) MOZ_OVERRIDE;
 
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
-  virtual void Destroy();
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject) MOZ_OVERRIDE;
+  virtual void Destroy() MOZ_OVERRIDE;
   virtual void OnPageShow(bool aPersisted,
-                          EventTarget* aDispatchStartTarget);
+                          EventTarget* aDispatchStartTarget) MOZ_OVERRIDE;
 
   NS_DECL_NSIIMAGEDOCUMENT
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ImageDocument, MediaDocument)
 
