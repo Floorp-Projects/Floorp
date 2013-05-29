@@ -347,10 +347,6 @@ protected:
   virtual void            OnDestroy();
   virtual bool            OnMove(int32_t aX, int32_t aY);
   virtual bool            OnResize(nsIntRect &aWindowRect);
-  LRESULT                 OnKeyDown(const MSG &aMsg,
-                                    const mozilla::widget::ModifierKeyState &aModKeyState,
-                                    bool *aEventDispatched,
-                                    nsFakeCharMessage* aFakeCharMessage);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);

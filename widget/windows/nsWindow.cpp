@@ -5588,28 +5588,22 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, bool *aEventDispatched)
 LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
                                         bool *aEventDispatched)
 {
-  // If this method doesn't call OnKeyDown(), this method must clean up the
-  // redirected message information itself.  For more information, see above
-  // comment of RedirectedKeyDownMessageManager::AutoFlusher class definition
-  // in KeyboardLayout.h.
+  // If this method doesn't call NativeKey::HandleKeyDownMessage(), this method
+  // must clean up the redirected message information itself.  For more
+  // information, see above comment of
+  // RedirectedKeyDownMessageManager::AutoFlusher class definition in
+  // KeyboardLayout.h.
   RedirectedKeyDownMessageManager::AutoFlusher redirectedMsgFlusher(this, aMsg);
 
   ModifierKeyState modKeyState;
 
-  // Note: the original code passed (HIWORD(lParam)) to OnKeyDown as
-  // scan code. However, this breaks Alt+Num pad input.
-  // MSDN states the following:
-  //  Typically, ToAscii performs the translation based on the
-  //  virtual-key code. In some cases, however, bit 15 of the
-  //  uScanCode parameter may be used to distinguish between a key
-  //  press and a key release. The scan code is used for
-  //  translating ALT+number key combinations.
-
   LRESULT result = 0;
   if (!IMEHandler::IsComposingOn(this)) {
-    result = OnKeyDown(aMsg, modKeyState, aEventDispatched, nullptr);
-    // OnKeyDown cleaned up the redirected message information itself, so,
-    // we should do nothing.
+    NativeKey nativeKey(this, aMsg, modKeyState);
+    result =
+      static_cast<LRESULT>(nativeKey.HandleKeyDownMessage(aEventDispatched));
+    // HandleKeyDownMessage cleaned up the redirected message information
+    // itself, so, we should do nothing.
     redirectedMsgFlusher.Cancel();
   }
 
@@ -5753,7 +5747,7 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
     if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
       lParam |= 0x1000000;
     }
-    MSG msg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam, mWnd);
+    MSG keyDownMsg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam, mWnd);
     if (i == keySequence.Length() - 1) {
       bool makeDeadCharMessage =
         keyboardLayout->IsDeadKey(key, modKeyState) && aCharacters.IsEmpty();
@@ -5766,20 +5760,24 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                      "Dead char must be only one character");
       }
       if (chars.IsEmpty()) {
-        OnKeyDown(msg, modKeyState, nullptr, nullptr);
+        NativeKey nativeKey(this, keyDownMsg, modKeyState);
+        nativeKey.HandleKeyDownMessage();
       } else {
-        nsFakeCharMessage fakeMsg = { chars.CharAt(0), scanCode,
-                                      makeDeadCharMessage };
-        OnKeyDown(msg, modKeyState, nullptr, &fakeMsg);
+        nsFakeCharMessage fakeMsgForKeyDown = { chars.CharAt(0), scanCode,
+                                                makeDeadCharMessage };
+        NativeKey nativeKey(this, keyDownMsg, modKeyState, &fakeMsgForKeyDown);
+        nativeKey.HandleKeyDownMessage();
         for (uint32_t j = 1; j < chars.Length(); j++) {
-          nsFakeCharMessage fakeMsg = { chars.CharAt(j), scanCode, false };
-          MSG msg = fakeMsg.GetCharMessage(mWnd);
-          NativeKey nativeKey(this, msg, modKeyState);
-          nativeKey.HandleCharMessage(msg);
+          nsFakeCharMessage fakeMsgForChar = { chars.CharAt(j), scanCode,
+                                               false };
+          MSG charMsg = fakeMsgForChar.GetCharMessage(mWnd);
+          NativeKey nativeKey(this, charMsg, modKeyState, &fakeMsgForChar);
+          nativeKey.HandleCharMessage(charMsg);
         }
       }
     } else {
-      OnKeyDown(msg, modKeyState, nullptr, nullptr);
+      NativeKey nativeKey(this, keyDownMsg, modKeyState);
+      nativeKey.HandleKeyDownMessage();
     }
   }
   for (uint32_t i = keySequence.Length(); i > 0; --i) {
@@ -6314,135 +6312,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   return true; // Handled
 }
 
-/**
- * nsWindow::OnKeyDown peeks into the message queue and pulls out
- * WM_CHAR messages for processing. During testing we don't want to
- * mess with the real message queue. Instead we pass a
- * pseudo-WM_CHAR-message using this structure, and OnKeyDown will use
- * that as if it was in the message queue, and refrain from actually
- * looking at or touching the message queue.
- */
-LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
-                            const ModifierKeyState &aModKeyState,
-                            bool *aEventDispatched,
-                            nsFakeCharMessage* aFakeCharMessage)
-{
-  KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
-  NativeKey nativeKey(this, aMsg, aModKeyState, aFakeCharMessage);
-  uint32_t DOMKeyCode = nativeKey.GetDOMKeyCode();
-
-  bool noDefault;
-  if (aFakeCharMessage ||
-      !RedirectedKeyDownMessageManager::IsRedirectedMessage(aMsg)) {
-    bool isIMEEnabled = IMEHandler::IsIMEEnabled(mInputContext);
-    bool eventDispatched;
-    noDefault = nativeKey.DispatchKeyDownEvent(&eventDispatched);
-    if (aEventDispatched) {
-      *aEventDispatched = eventDispatched;
-    }
-    if (!eventDispatched) {
-      // If keydown event was not dispatched, keypress event shouldn't be
-      // caused with the message.
-      RedirectedKeyDownMessageManager::Forget();
-      return 0;
-    }
-
-    // If IMC wasn't associated to the window but is associated it now (i.e.,
-    // focus is moved from a non-editable editor to an editor by keydown
-    // event handler), WM_CHAR and WM_SYSCHAR shouldn't cause first character
-    // inputting if IME is opened.  But then, we should redirect the native
-    // keydown message to IME.
-    // However, note that if focus has been already moved to another
-    // application, we shouldn't redirect the message to it because the keydown
-    // message is processed by us, so, nobody shouldn't process it.
-    HWND focusedWnd = ::GetFocus();
-    if (!noDefault && !aFakeCharMessage && focusedWnd && !PluginHasFocus() &&
-        !isIMEEnabled && IMEHandler::IsIMEEnabled(mInputContext)) {
-      RedirectedKeyDownMessageManager::RemoveNextCharMessage(focusedWnd);
-
-      INPUT keyinput;
-      keyinput.type = INPUT_KEYBOARD;
-      keyinput.ki.wVk = aMsg.wParam;
-      keyinput.ki.wScan = WinUtils::GetScanCode(aMsg.lParam);
-      keyinput.ki.dwFlags = KEYEVENTF_SCANCODE;
-      if (WinUtils::IsExtendedScanCode(aMsg.lParam)) {
-        keyinput.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
-      }
-      keyinput.ki.time = 0;
-      keyinput.ki.dwExtraInfo = 0;
-
-      RedirectedKeyDownMessageManager::WillRedirect(aMsg, noDefault);
-
-      ::SendInput(1, &keyinput, sizeof(keyinput));
-
-      // Return here.  We shouldn't dispatch keypress event for this WM_KEYDOWN.
-      // If it's needed, it will be dispatched after next (redirected)
-      // WM_KEYDOWN.
-      return true;
-    }
-
-    if (mOnDestroyCalled) {
-      // If this was destroyed by the keydown event handler, we shouldn't
-      // dispatch keypress event on this window.
-      return true;
-    }
-  } else {
-    noDefault = RedirectedKeyDownMessageManager::DefaultPrevented();
-    // If this is redirected keydown message, we have dispatched the keydown
-    // event already.
-    if (aEventDispatched) {
-      *aEventDispatched = true;
-    }
-  }
-
-  RedirectedKeyDownMessageManager::Forget();
-
-  // If the key was processed by IME, we shouldn't dispatch keypress event.
-  if (aMsg.wParam == VK_PROCESSKEY) {
-    return noDefault;
-  }
-
-  // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress
-  // for almost all keys
-  switch (DOMKeyCode) {
-    case NS_VK_SHIFT:
-    case NS_VK_CONTROL:
-    case NS_VK_ALT:
-    case NS_VK_CAPS_LOCK:
-    case NS_VK_NUM_LOCK:
-    case NS_VK_SCROLL_LOCK:
-    case NS_VK_WIN:
-      return noDefault;
-  }
-
-  EventFlags extraFlags;
-  extraFlags.mDefaultPrevented = noDefault;
-
-  if (nativeKey.NeedsToHandleWithoutFollowingCharMessages()) {
-    return nativeKey.DispatchKeyPressEventsAndDiscardsCharMessages(extraFlags);
-  }
-
-  if (nativeKey.IsFollowedByCharMessage()) {
-    return static_cast<LRESULT>(
-      nativeKey.DispatchKeyPressEventForFollowingCharMessage(extraFlags));
-  }
-
-  if (!aModKeyState.IsControl() && !aModKeyState.IsAlt() &&
-      !aModKeyState.IsWin() && nativeKey.IsPrintableKey()) {
-    // If this is simple KeyDown event but next message is not WM_CHAR,
-    // this event may not input text, so we should ignore this event.
-    // See bug 314130.
-    return PluginHasFocus() && noDefault;
-  }
-
-  if (nativeKey.IsDeadKey()) {
-    return PluginHasFocus() && noDefault;
-  }
-
-  return static_cast<LRESULT>(
-    nativeKey.DispatchKeyPressEventsWithKeyboardLayout(extraFlags));
-}
-
 void
 nsWindow::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, uint32_t aModifiers)
 {
@@ -6900,7 +6769,7 @@ NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
   mInputContext.mIMEState.mOpen = IMEState::CLOSED;
-  if (IMEHandler::IsIMEEnabled(mInputContext) && IMEHandler::GetOpenState(this)) {
+  if (WinUtils::IsIMEEnabled(mInputContext) && IMEHandler::GetOpenState(this)) {
     mInputContext.mIMEState.mOpen = IMEState::OPEN;
   } else {
     mInputContext.mIMEState.mOpen = IMEState::CLOSED;

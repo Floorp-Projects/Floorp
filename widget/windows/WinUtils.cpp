@@ -1028,5 +1028,20 @@ WinUtils::ToIntRect(const RECT& aRect)
                    aRect.bottom - aRect.top);
 }
 
+/* static */
+bool
+WinUtils::IsIMEEnabled(const InputContext& aInputContext)
+{
+  return IsIMEEnabled(aInputContext.mIMEState.mEnabled);
+}
+
+/* static */
+bool
+WinUtils::IsIMEEnabled(IMEState::Enabled aIMEState)
+{
+  return (aIMEState == IMEState::ENABLED ||
+          aIMEState == IMEState::PLUGIN);
+}
+
 } // namespace widget
 } // namespace mozilla
