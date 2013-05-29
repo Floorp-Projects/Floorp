@@ -6358,7 +6358,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                             nsFakeCharMessage* aFakeCharMessage)
 {
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
-  NativeKey nativeKey(this, aMsg, aModKeyState);
+  NativeKey nativeKey(this, aMsg, aModKeyState, aFakeCharMessage);
   UniCharsAndModifiers inputtingChars =
     nativeKey.GetCommittedCharsAndModifiers();
   uint32_t DOMKeyCode = nativeKey.GetDOMKeyCode();
@@ -6453,18 +6453,12 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 
   if (nativeKey.NeedsToHandleWithoutFollowingCharMessages()) {
     return nativeKey.DispatchKeyPressEventsAndDiscardsCharMessages(
-                       inputtingChars, extraFlags, aFakeCharMessage);
+                       inputtingChars, extraFlags);
   }
 
-  MSG msg;
-  BOOL gotMsg = aFakeCharMessage ||
-    WinUtils::PeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST,
-                          PM_NOREMOVE | PM_NOYIELD);
-  if (gotMsg &&
-      (aFakeCharMessage || msg.message == WM_CHAR ||
-       msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
+  if (nativeKey.IsFollowedByCharMessage()) {
+    const MSG& msg = nativeKey.RemoveFollowingCharMessage();
     if (aFakeCharMessage) {
-      MSG msg = aFakeCharMessage->GetCharMessage(mWnd);
       if (msg.message == WM_DEADCHAR) {
         return false;
       }
@@ -6493,8 +6487,6 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     }
 
     // If prevent default set for keydown, do same for keypress
-    WinUtils::GetMessage(&msg, mWnd, msg.message, msg.message);
-
     if (msg.message == WM_DEADCHAR) {
       if (!PluginHasFocus())
         return false;

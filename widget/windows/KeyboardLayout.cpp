@@ -387,23 +387,39 @@ VirtualKey::FillKbdState(PBYTE aKbdState,
 
 NativeKey::NativeKey(nsWindowBase* aWidget,
                      const MSG& aKeyOrCharMessage,
-                     const ModifierKeyState& aModKeyState) :
+                     const ModifierKeyState& aModKeyState,
+                     const nsFakeCharMessage* aFakeCharMessage) :
   mWidget(aWidget), mMsg(aKeyOrCharMessage), mDOMKeyCode(0),
-  mModKeyState(aModKeyState), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0)
+  mModKeyState(aModKeyState), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0),
+  mIsFakeCharMsg(false)
 {
   MOZ_ASSERT(aWidget);
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
   mKeyboardLayout = keyboardLayout->GetLayout();
   mScanCode = WinUtils::GetScanCode(mMsg.lParam);
   mIsExtended = WinUtils::IsExtendedScanCode(mMsg.lParam);
+  memset(&mCharMsg, 0, sizeof(MSG));
   // On WinXP and WinServer2003, we cannot compute the virtual keycode for
   // extended keys due to the API limitation.
   bool canComputeVirtualKeyCodeFromScanCode =
     (!mIsExtended || WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION);
   switch (mMsg.message) {
     case WM_KEYDOWN:
-    case WM_KEYUP:
     case WM_SYSKEYDOWN:
+      // Store following WM_*CHAR message into mCharMsg.
+      if (aFakeCharMessage) {
+        mCharMsg = aFakeCharMessage->GetCharMessage(mMsg.hwnd);
+        mIsFakeCharMsg = true;
+      } else {
+        MSG msg;
+        if (WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
+                                  PM_NOREMOVE | PM_NOYIELD) &&
+            (msg.message == WM_CHAR || msg.message == WM_SYSCHAR ||
+             msg.message == WM_DEADCHAR)) {
+          mCharMsg = msg;
+        }
+      }
+    case WM_KEYUP:
     case WM_SYSKEYUP: {
       // First, resolve the IME converted virtual keycode to its original
       // keycode.
@@ -549,7 +565,9 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
 
   keyboardLayout->InitNativeKey(*this, mModKeyState);
 
-  mIsDeadKey = keyboardLayout->IsDeadKey(mOriginalVirtualKeyCode, mModKeyState);
+  mIsDeadKey =
+    (mCharMsg.message == WM_DEADCHAR ||
+     keyboardLayout->IsDeadKey(mOriginalVirtualKeyCode, mModKeyState));
   mIsPrintableKey = KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode);
 }
 
@@ -940,16 +958,39 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
   return IsPrintableKey();
 }
 
+const MSG&
+NativeKey::RemoveFollowingCharMessage() const
+{
+  MOZ_ASSERT(IsFollowedByCharMessage());
+
+  if (mIsFakeCharMsg) {
+    return mCharMsg;
+  }
+
+  MSG msg;
+  if (!WinUtils::GetMessage(&msg, mMsg.hwnd,
+                            mCharMsg.message, mCharMsg.message)) {
+    MOZ_NOT_REACHED("We lost the following char message");
+    return mCharMsg;
+  }
+
+  MOZ_ASSERT(mCharMsg.message == msg.message &&
+             mCharMsg.wParam == msg.wParam &&
+             mCharMsg.lParam == msg.lParam);
+
+  return mCharMsg;
+}
+
 void
-NativeKey::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg,
-                        const nsFakeCharMessage* aFakeCharMessage) const
+NativeKey::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
+                                               UINT aLastMsg) const
 {
   MSG msg;
-  if (aFakeCharMessage) {
+  if (mIsFakeCharMsg) {
     if (aFirstMsg > WM_CHAR || aLastMsg < WM_CHAR) {
       return;
     }
-    msg = aFakeCharMessage->GetCharMessage(mMsg.hwnd);
+    msg = mCharMsg;
   } else {
     WinUtils::GetMessage(&msg, mMsg.hwnd, aFirstMsg, aLastMsg);
   }
@@ -959,8 +1000,7 @@ NativeKey::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg,
 bool
 NativeKey::DispatchKeyPressEventsAndDiscardsCharMessages(
                         const UniCharsAndModifiers& aInputtingChars,
-                        const EventFlags& aExtraFlags,
-                        const nsFakeCharMessage* aFakeCharMessage) const
+                        const EventFlags& aExtraFlags) const
 {
   MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
 
@@ -970,9 +1010,8 @@ NativeKey::DispatchKeyPressEventsAndDiscardsCharMessages(
   //  * Some keyboard layouts may map up to 4 characters to the single key
   bool anyCharMessagesRemoved = false;
 
-  if (aFakeCharMessage) {
-    RemoveMessageAndDispatchPluginEvent(WM_KEYFIRST, WM_KEYLAST,
-                                        aFakeCharMessage);
+  if (mIsFakeCharMsg) {
+    RemoveMessageAndDispatchPluginEvent(WM_KEYFIRST, WM_KEYLAST);
     anyCharMessagesRemoved = true;
   } else {
     MSG msg;
@@ -989,7 +1028,7 @@ NativeKey::DispatchKeyPressEventsAndDiscardsCharMessages(
 
   if (!anyCharMessagesRemoved &&
       mDOMKeyCode == NS_VK_BACK && IsIMEDoingKakuteiUndo()) {
-    MOZ_ASSERT(!aFakeCharMessage);
+    MOZ_ASSERT(!mIsFakeCharMsg);
     RemoveMessageAndDispatchPluginEvent(WM_CHAR, WM_CHAR);
   }
 
