@@ -169,7 +169,9 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage *message, nsConsoleServic
     }
 
     if (NS_IsMainThread() && mDeliveringMessage) {
-        NS_WARNING("Some console listener threw an error while inside itself. Discarding this message");
+        NS_WARNING(nsPrintfCString("Reentrancy error: some client attempted "
+            "to display a message to the console while in a console listener. "
+            "The following message was discarded: \"%s\"", message).get())
         return NS_ERROR_FAILURE;
     }
 
