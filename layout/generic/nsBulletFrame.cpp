@@ -249,8 +249,12 @@ public:
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
                             nsRenderingContext* aCtx)
 {
+  uint32_t flags = imgIContainer::FLAG_NONE;
+  if (aBuilder->ShouldSyncDecodeImages()) {
+    flags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
   static_cast<nsBulletFrame*>(mFrame)->
-    PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect);
+    PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect, flags);
 }
 
 void
@@ -269,7 +273,7 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
-                           const nsRect& aDirtyRect)
+                           const nsRect& aDirtyRect, uint32_t aFlags)
 {
   const nsStyleList* myList = StyleList();
   uint8_t listStyleType = myList->mListStyleType;
@@ -287,7 +291,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                     mRect.height - (mPadding.top + mPadding.bottom));
         nsLayoutUtils::DrawSingleImage(&aRenderingContext,
              imageCon, nsLayoutUtils::GetGraphicsFilterForFrame(this),
-             dest + aPt, aDirtyRect, nullptr, imgIContainer::FLAG_NONE);
+             dest + aPt, aDirtyRect, nullptr, aFlags);
         return;
       }
     }
