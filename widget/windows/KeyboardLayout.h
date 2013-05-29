@@ -290,10 +290,10 @@ public:
     return mCommittedCharsAndModifiers;
   }
 
-  UINT GetMessage() const { return mMessage; }
+  UINT GetMessage() const { return mMsg.message; }
   bool IsKeyDownMessage() const
   {
-    return (mMessage == WM_KEYDOWN || mMessage == WM_SYSKEYDOWN);
+    return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
   }
   WORD GetScanCode() const { return mScanCode; }
   uint8_t GetVirtualKeyCode() const { return mVirtualKeyCode; }
@@ -331,14 +331,19 @@ public:
   bool DispatchKeyEvent(nsKeyEvent& aKeyEvent,
                         const MSG* aMsgSentToPlugin = nullptr) const;
 
+  /**
+   * Handles keyup message.  Returns true if the event is consumed.
+   * Otherwise, false.
+   */
+  bool HandleKeyUpMessage(bool* aEventDispatched = nullptr) const;
+
 private:
   nsRefPtr<nsWindowBase> mWidget;
   HKL mKeyboardLayout;
+  MSG mMsg;
+
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
-
-  // The message which the instance was initialized with.
-  UINT mMessage;
 
   ModifierKeyState mModKeyState;
 
