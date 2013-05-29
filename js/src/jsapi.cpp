@@ -6353,13 +6353,17 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacerArg, jsval space,
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandleValue vp)
+JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, jsval *vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
     RootedValue reviver(cx, NullValue()), value(cx);
-    return ParseJSONWithReviver(cx, JS::StableCharPtr(chars, len), len, reviver, vp);
+    if (!ParseJSONWithReviver(cx, JS::StableCharPtr(chars, len), len, reviver, &value))
+        return false;
+
+    *vp = value;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)

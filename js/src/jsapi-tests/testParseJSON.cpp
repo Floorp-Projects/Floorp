@@ -46,78 +46,54 @@ NewString(JSContext *cx, const jschar (&chars)[N])
 BEGIN_TEST(testParseJSON_success)
 {
     // Primitives
-    JS::RootedValue expected(cx);
-    expected = JSVAL_TRUE;
-    CHECK(TryParse(cx, "true", expected));
-
-    expected = JSVAL_FALSE;
-    CHECK(TryParse(cx, "false", expected));
-
-    expected = JSVAL_NULL;
-    CHECK(TryParse(cx, "null", expected));
-
-    expected = INT_TO_JSVAL(0);
-    CHECK(TryParse(cx, "0", expected));
-
-    expected = INT_TO_JSVAL(1);
-    CHECK(TryParse(cx, "1", expected));
-
-    expected = INT_TO_JSVAL(-1);
-    CHECK(TryParse(cx, "-1", expected));
-
-    expected = DOUBLE_TO_JSVAL(1);
-    CHECK(TryParse(cx, "1", expected));
-
-    expected = DOUBLE_TO_JSVAL(1.75);
-    CHECK(TryParse(cx, "1.75", expected));
-
-    expected = DOUBLE_TO_JSVAL(9e9);
-    CHECK(TryParse(cx, "9e9", expected));
-
-    expected = DOUBLE_TO_JSVAL(std::numeric_limits<double>::infinity());
-    CHECK(TryParse(cx, "9e99999", expected));
+    CHECK(TryParse(cx, "true", JSVAL_TRUE));
+    CHECK(TryParse(cx, "false", JSVAL_FALSE));
+    CHECK(TryParse(cx, "null", JSVAL_NULL));
+    CHECK(TryParse(cx, "0", INT_TO_JSVAL(0)));
+    CHECK(TryParse(cx, "1", INT_TO_JSVAL(1)));
+    CHECK(TryParse(cx, "-1", INT_TO_JSVAL(-1)));
+    CHECK(TryParse(cx, "1", DOUBLE_TO_JSVAL(1)));
+    CHECK(TryParse(cx, "1.75", DOUBLE_TO_JSVAL(1.75)));
+    CHECK(TryParse(cx, "9e9", DOUBLE_TO_JSVAL(9e9)));
+    CHECK(TryParse(cx, "9e99999", DOUBLE_TO_JSVAL(std::numeric_limits<double>::infinity())));
 
     JS::Rooted<JSFlatString*> str(cx);
 
     const jschar emptystr[] = { '\0' };
     str = js_NewStringCopyN<CanGC>(cx, emptystr, 0);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
-    CHECK(TryParse(cx, "\"\"", expected));
+    CHECK(TryParse(cx, "\"\"", STRING_TO_JSVAL(str)));
 
     const jschar nullstr[] = { '\0' };
     str = NewString(cx, nullstr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
-    CHECK(TryParse(cx, "\"\\u0000\"", expected));
+    CHECK(TryParse(cx, "\"\\u0000\"", STRING_TO_JSVAL(str)));
 
     const jschar backstr[] = { '\b' };
     str = NewString(cx, backstr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
-    CHECK(TryParse(cx, "\"\\b\"", expected));
-    CHECK(TryParse(cx, "\"\\u0008\"", expected));
+    CHECK(TryParse(cx, "\"\\b\"", STRING_TO_JSVAL(str)));
+    CHECK(TryParse(cx, "\"\\u0008\"", STRING_TO_JSVAL(str)));
 
     const jschar newlinestr[] = { '\n', };
     str = NewString(cx, newlinestr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
-    CHECK(TryParse(cx, "\"\\n\"", expected));
-    CHECK(TryParse(cx, "\"\\u000A\"", expected));
+    CHECK(TryParse(cx, "\"\\n\"", STRING_TO_JSVAL(str)));
+    CHECK(TryParse(cx, "\"\\u000A\"", STRING_TO_JSVAL(str)));
 
 
     // Arrays
     JS::RootedValue v(cx), v2(cx);
     JS::RootedObject obj(cx);
 
-    CHECK(Parse(cx, "[]", &v));
+    CHECK(Parse(cx, "[]", v.address()));
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "length", v2.address()));
     CHECK_SAME(v2, JSVAL_ZERO);
 
-    CHECK(Parse(cx, "[1]", &v));
+    CHECK(Parse(cx, "[1]", v.address()));
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(JS_IsArrayObject(cx, obj));
@@ -128,12 +104,12 @@ BEGIN_TEST(testParseJSON_success)
 
 
     // Objects
-    CHECK(Parse(cx, "{}", &v));
+    CHECK(Parse(cx, "{}", v.address()));
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(!JS_IsArrayObject(cx, obj));
 
-    CHECK(Parse(cx, "{ \"f\": 17 }", &v));
+    CHECK(Parse(cx, "{ \"f\": 17 }", v.address()));
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(!JS_IsArrayObject(cx, obj));
@@ -144,7 +120,7 @@ BEGIN_TEST(testParseJSON_success)
 }
 
 template<size_t N> inline bool
-Parse(JSContext *cx, const char (&input)[N], JS::MutableHandleValue vp)
+Parse(JSContext *cx, const char (&input)[N], jsval *vp)
 {
     AutoInflatedString str(cx);
     str = input;
@@ -153,12 +129,13 @@ Parse(JSContext *cx, const char (&input)[N], JS::MutableHandleValue vp)
 }
 
 template<size_t N> inline bool
-TryParse(JSContext *cx, const char (&input)[N], JS::HandleValue expected)
+TryParse(JSContext *cx, const char (&input)[N], const jsval &expectedArg)
 {
     AutoInflatedString str(cx);
+    JS::RootedValue expected(cx, expectedArg);
     RootedValue v(cx);
     str = input;
-    CHECK(JS_ParseJSON(cx, str.chars(), str.length(), &v));
+    CHECK(JS_ParseJSON(cx, str.chars(), str.length(), v.address()));
     CHECK_SAME(v, expected);
     return true;
 }
@@ -183,7 +160,7 @@ template<size_t N> inline bool
 Error(JSContext *cx, const char (&input)[N])
 {
     AutoInflatedString str(cx);
-    RootedValue dummy(cx);
+    jsval dummy;
     str = input;
 
     ContextPrivate p = {0, 0};

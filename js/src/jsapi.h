@@ -4478,7 +4478,7 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
  * JSON.parse as specified by ES5.
  */
 JS_PUBLIC_API(JSBool)
-JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandle<JS::Value> vp);
+JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, jsval *vp);
 
 JS_PUBLIC_API(JSBool)
 JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval reviver,
