@@ -745,4 +745,4 @@ gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
 
 // Load the browser devtools main module as the loader's main module.
-devtools.main("devtools/main");
+devtools.main("main");
