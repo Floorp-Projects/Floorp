@@ -149,8 +149,8 @@
 
 /* CSS Transitions */
 .controlBar:not([immediate]) {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 200ms;
+  transition-property: opacity;
+  transition-duration: 200ms;
 }
 
 .controlBar[fadeout] {
@@ -158,9 +158,9 @@
 }
 
 .statusOverlay:not([immediate]) {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 300ms;
-  -moz-transition-delay: 750ms;
+  transition-property: opacity;
+  transition-duration: 300ms;
+  transition-delay: 750ms;
 }
 
 .statusOverlay[fadeout] {
