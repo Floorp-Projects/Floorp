@@ -1299,7 +1299,6 @@ SpdySession3::HandleGoAway(SpdySession3 *self)
         PR_ntohl(reinterpret_cast<uint32_t *>(self->mInputFrameBuffer.get())[3]),
         self->mStreamTransactionHash.Count()));
 
-  self->ResumeRecv();
   self->ResetDownstreamState();
   return NS_OK;
 }
@@ -1430,7 +1429,6 @@ SpdySession3::HandleWindowUpdate(SpdySession3 *self)
   }
 
   self->ResetDownstreamState();
-  self->ResumeRecv();
   return NS_OK;
 }
 
@@ -1610,7 +1608,7 @@ SpdySession3::ReadSegments(nsAHttpSegmentReader *reader,
 // we call writer->OnWriteSegment via NetworkRead() to get a spdy header..
 // and decide if it is data or control.. if it is control, just deal with it.
 // if it is data, identify the spdy stream
-// call stream->WriteSegemnts which can call this::OnWriteSegment to get the
+// call stream->WriteSegments which can call this::OnWriteSegment to get the
 // data. It always gets full frames if they are part of the stream
 
 nsresult
@@ -1648,7 +1646,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
             this, rv));
       // maybe just blocked reading from network
       if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-        ResumeRecv();
+        rv = NS_OK;
       return rv;
     }
 
@@ -1823,6 +1821,13 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
       mNeedsCleanup = nullptr;
     }
 
+    if (NS_FAILED(rv)) {
+      LOG3(("SpdySession3 %p data frame read failure %x\n", this, rv));
+      // maybe just blocked reading from network
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+        rv = NS_OK;
+    }
+
     return rv;
   }
 
@@ -1842,7 +1847,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
       LOG3(("SpdySession3 %p discard frame read failure %x\n", this, rv));
       // maybe just blocked reading from network
       if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-        ResumeRecv();
+        rv = NS_OK;
       return rv;
     }
 
@@ -1872,7 +1877,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
           this, rv));
     // maybe just blocked reading from network
     if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-      ResumeRecv();
+      rv = NS_OK;
     return rv;
   }
 
