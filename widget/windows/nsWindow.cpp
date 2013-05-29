@@ -248,9 +248,6 @@ static const char *sScreenManagerContractID       = "@mozilla.org/gfx/screenmana
 PRLogModuleInfo* gWindowsLog                      = nullptr;
 #endif
 
-// Kbd layout. Used throughout character processing.
-static KeyboardLayout gKbdLayout;
-
 // Global used in Show window enumerations.
 static bool     gWindowsVisible                   = false;
 
@@ -356,7 +353,7 @@ nsWindow::nsWindow() : nsWindowBase()
     // Global app registration id for Win7 and up. See
     // WinTaskbar.cpp for details.
     mozilla::widget::WinTaskbar::RegisterAppUserModelID();
-    gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
+    KeyboardLayout::GetInstance()->OnLayoutChange(::GetKeyboardLayout(0));
     IMEHandler::Initialize();
     if (SUCCEEDED(::OleInitialize(NULL))) {
       sIsOleInitialized = TRUE;
@@ -5110,7 +5107,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
             sJustGotDeactivate = true;
 
           if (mIsTopWidgetWindow)
-            mLastKeyboardLayout = gKbdLayout.GetLayout();
+            mLastKeyboardLayout = KeyboardLayout::GetInstance()->GetLayout();
 
         } else {
           StopFlashing();
@@ -5195,7 +5192,9 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_INPUTLANGCHANGE:
-      result = OnInputLangChange((HKL)lParam);
+      KeyboardLayout::GetInstance()->
+        OnLayoutChange(reinterpret_cast<HKL>(lParam));
+      result = false; // always pass to child window
       break;
 
     case WM_DESTROYCLIPBOARD:
@@ -5656,8 +5655,7 @@ LRESULT nsWindow::ProcessCharMessage(const MSG &aMsg, bool *aEventDispatched)
   // These must be checked here too as a lone WM_CHAR could be received
   // if a child window didn't handle it (for example Alt+Space in a content window)
   ModifierKeyState modKeyState;
-  NativeKey nativeKey(gKbdLayout, this, aMsg);
-  gKbdLayout.InitNativeKey(nativeKey, modKeyState);
+  NativeKey nativeKey(this, aMsg, modKeyState);
   return OnChar(aMsg, nativeKey, modKeyState, aEventDispatched);
 }
 
@@ -5790,8 +5788,9 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
   // This changes the state of the keyboard for the current thread only,
   // and we'll restore it soon, so this should be OK.
   ::SetKeyboardState(kbdState);
-  HKL oldLayout = gKbdLayout.GetLayout();
-  gKbdLayout.LoadLayout(loadedLayout);
+
+  KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
+  keyboardLayout->OverrideLayout(loadedLayout);
 
   uint8_t argumentKeySpecific = 0;
   switch (aNativeKeyCode) {
@@ -5865,7 +5864,8 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
     ModifierKeyState modKeyState;
     UINT scanCode = ::MapVirtualKeyEx(argumentKeySpecific ?
                                         argumentKeySpecific : aNativeKeyCode,
-                                      MAPVK_VK_TO_VSC, gKbdLayout.GetLayout());
+                                      MAPVK_VK_TO_VSC,
+                                      keyboardLayout->GetLayout());
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
     // Add extended key flag to the lParam for right control key and right alt
     // key.
@@ -5875,11 +5875,11 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
     MSG msg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam);
     if (i == keySequence.Length() - 1) {
       bool makeDeadCharMessage =
-        gKbdLayout.IsDeadKey(key, modKeyState) && aCharacters.IsEmpty();
+        keyboardLayout->IsDeadKey(key, modKeyState) && aCharacters.IsEmpty();
       nsAutoString chars(aCharacters);
       if (makeDeadCharMessage) {
         UniCharsAndModifiers deadChars =
-          gKbdLayout.GetUniCharsAndModifiers(key, modKeyState);
+          keyboardLayout->GetUniCharsAndModifiers(key, modKeyState);
         chars = deadChars.ToString();
         NS_ASSERTION(chars.Length() == 1,
                      "Dead char must be only one character");
@@ -5893,7 +5893,7 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
         for (uint32_t j = 1; j < chars.Length(); j++) {
           nsFakeCharMessage fakeMsg = { chars.CharAt(j), scanCode, false };
           MSG msg = fakeMsg.GetCharMessage(mWnd);
-          NativeKey nativeKey(gKbdLayout, this, msg);
+          NativeKey nativeKey(this, msg, modKeyState);
           OnChar(msg, nativeKey, modKeyState, nullptr);
         }
       }
@@ -5912,7 +5912,8 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
     ModifierKeyState modKeyState;
     UINT scanCode = ::MapVirtualKeyEx(argumentKeySpecific ?
                                         argumentKeySpecific : aNativeKeyCode,
-                                      MAPVK_VK_TO_VSC, gKbdLayout.GetLayout());
+                                      MAPVK_VK_TO_VSC,
+                                      keyboardLayout->GetLayout());
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
     // Add extended key flag to the lParam for right control key and right alt
     // key.
@@ -5925,7 +5926,7 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
 
   // Restore old key state and layout
   ::SetKeyboardState(originalKbdState);
-  gKbdLayout.LoadLayout(oldLayout, true);
+  keyboardLayout->RestoreLayout();
 
   // Don't unload the layout if it's installed actually.
   for (uint32_t i = 0; i < keyboardLayoutListCount; i++) {
@@ -5984,15 +5985,6 @@ nsWindow::SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
  * implemented in specific platform code.
  *
  **************************************************************/
-
-BOOL nsWindow::OnInputLangChange(HKL aHKL)
-{
-#ifdef KE_DEBUG
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("OnInputLanguageChange\n"));
-#endif
-  gKbdLayout.LoadLayout(aHKL);
-  return false;   // always pass to child window
-}
 
 void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
 {
@@ -6464,8 +6456,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                             bool *aEventDispatched,
                             nsFakeCharMessage* aFakeCharMessage)
 {
-  NativeKey nativeKey(gKbdLayout, this, aMsg);
-  gKbdLayout.InitNativeKey(nativeKey, aModKeyState);
+  KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
+  NativeKey nativeKey(this, aMsg, aModKeyState);
   UniCharsAndModifiers inputtingChars =
     nativeKey.GetCommittedCharsAndModifiers();
   uint32_t DOMKeyCode = nativeKey.GetDOMKeyCode();
@@ -6556,7 +6548,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   }
 
   UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
-  bool isDeadKey = gKbdLayout.IsDeadKey(virtualKeyCode, aModKeyState);
+  bool isDeadKey = keyboardLayout->IsDeadKey(virtualKeyCode, aModKeyState);
   EventFlags extraFlags;
   extraFlags.mDefaultPrevented = noDefault;
   MSG msg;
@@ -6681,10 +6673,10 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     widget::ModifierKeyState capsLockState(
       aModKeyState.GetModifiers() & MODIFIER_CAPSLOCK);
     unshiftedChars =
-      gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
+      keyboardLayout->GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
     capsLockState.Set(MODIFIER_SHIFT);
     shiftedChars =
-      gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
+      keyboardLayout->GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
 
     // The current keyboard cannot input alphabets or numerics,
     // we should append them for Shortcut/Access keys.
@@ -6831,8 +6823,7 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
   if (aEventDispatched)
     *aEventDispatched = true;
   nsKeyEvent keyupEvent(true, NS_KEY_UP, this);
-  NativeKey nativeKey(gKbdLayout, this, aMsg);
-  gKbdLayout.InitNativeKey(nativeKey, aModKeyState);
+  NativeKey nativeKey(this, aMsg, aModKeyState);
   keyupEvent.keyCode = nativeKey.GetDOMKeyCode();
   InitKeyEvent(keyupEvent, nativeKey, aModKeyState);
   // Set defaultPrevented of the key event if the VK_MENU is not a system key
@@ -6900,14 +6891,15 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
   // Keep the characters unshifted for shortcuts and accesskeys and make sure
   // that numbers are always passed as such (among others: bugs 50255 and 351310)
   if (uniChar && (modKeyState.IsControl() || modKeyState.IsAlt())) {
-    UINT virtualKeyCode = ::MapVirtualKeyEx(aNativeKey.GetScanCode(),
-                                            MAPVK_VSC_TO_VK,
-                                            gKbdLayout.GetLayout());
+    KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
+    UINT virtualKeyCode =
+      ::MapVirtualKeyEx(aNativeKey.GetScanCode(),
+                        MAPVK_VSC_TO_VK, keyboardLayout->GetLayout());
     UINT unshiftedCharCode =
       virtualKeyCode >= '0' && virtualKeyCode <= '9' ? virtualKeyCode :
-        modKeyState.IsShift() ? ::MapVirtualKeyEx(virtualKeyCode,
-                                                  MAPVK_VK_TO_CHAR,
-                                                  gKbdLayout.GetLayout()) : 0;
+        modKeyState.IsShift() ?
+          ::MapVirtualKeyEx(virtualKeyCode, MAPVK_VK_TO_CHAR,
+                            keyboardLayout->GetLayout()) : 0;
     // ignore diacritics (top bit set) and key mapping errors (char code 0)
     if ((INT)unshiftedCharCode > 0)
       uniChar = unshiftedCharCode;

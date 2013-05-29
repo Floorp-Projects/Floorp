@@ -388,7 +388,6 @@ protected:
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
-  BOOL                    OnInputLangChange(HKL aHKL);
   bool                    OnPaint(HDC aDC, uint32_t aNestingLevel);
   void                    OnWindowPosChanged(WINDOWPOS *wp, bool& aResult);
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
