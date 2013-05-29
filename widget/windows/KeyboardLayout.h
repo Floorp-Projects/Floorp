@@ -11,6 +11,7 @@
 #include "nsEvent.h"
 #include "nsString.h"
 #include "nsWindowBase.h"
+#include "nsWindowDefs.h "
 #include <windows.h>
 
 #define NS_NUM_OF_KEYS          68
@@ -349,6 +350,17 @@ public:
                         const EventFlags& aExtraFlags) const;
 
   /**
+   * Dispatches keypress events after removing WM_*CHAR messages for the
+   * WM_*KEYDOWN message.
+   * Returns true if the dispatched keypress event is consumed.  Otherwise,
+   * false.
+   */
+  bool DispatchKeyPressEventsAndDiscardsCharMessages(
+                        const UniCharsAndModifiers& aInputtingChars,
+                        const EventFlags& aExtraFlags,
+                        const nsFakeCharMessage* aFakeCharMessage) const;
+
+  /**
    * Checkes whether the key event down message is handled without following
    * WM_CHAR messages.  For example, if following WM_CHAR message indicates
    * control character input, the WM_CHAR message is unclear whether it's
@@ -414,6 +426,19 @@ private:
 
   // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
   uint32_t GetKeyLocation() const;
+
+  /**
+   * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
+   * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
+   * returns true, the caller needs to be careful for processing the messages.
+   */
+  bool IsIMEDoingKakuteiUndo() const;
+
+  /*
+   * Dispatches a plugin event after the specified message is removed.
+   */
+  void RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg,
+                const nsFakeCharMessage* aFakeCharMessage = nullptr) const;
 };
 
 class KeyboardLayout

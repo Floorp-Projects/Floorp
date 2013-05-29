@@ -3736,26 +3736,11 @@ bool nsWindow::DispatchPluginEvent(UINT aMessage,
                                      bool aDispatchPendingEvents)
 {
   bool ret = nsWindowBase::DispatchPluginEvent(
-               WinUtils::InitMSG(aMessage, aWParam, aLParam));
+               WinUtils::InitMSG(aMessage, aWParam, aLParam, mWnd));
   if (aDispatchPendingEvents) {
     DispatchPendingEvents();
   }
   return ret;
-}
-
-void nsWindow::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
-                 UINT aLastMsg, nsFakeCharMessage* aFakeCharMessage)
-{
-  MSG msg;
-  if (aFakeCharMessage) {
-    if (aFirstMsg > WM_CHAR || aLastMsg < WM_CHAR) {
-      return;
-    }
-    msg = aFakeCharMessage->GetCharMessage(mWnd);
-  } else {
-    WinUtils::GetMessage(&msg, mWnd, aFirstMsg, aLastMsg);
-  }
-  nsWindowBase::DispatchPluginEvent(msg);
 }
 
 // Deal with all sort of mouse event
@@ -4453,7 +4438,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
   if (PluginHasFocus()) {
     bool callDefaultWndProc;
-    MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
+    MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam, mWnd);
     if (ProcessMessageForPlugin(nativeMsg, aRetValue, callDefaultWndProc)) {
       return mWnd ? !callDefaultWndProc : true;
     }
@@ -4748,7 +4733,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SYSCHAR:
     case WM_CHAR:
     {
-      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
+      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam, mWnd);
       result = ProcessCharMessage(nativeMsg, nullptr);
       DispatchPendingEvents();
     }
@@ -4757,7 +4742,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SYSKEYUP:
     case WM_KEYUP:
     {
-      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
+      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam, mWnd);
       nativeMsg.time = ::GetMessageTime();
       result = ProcessKeyUpMessage(nativeMsg, nullptr);
       DispatchPendingEvents();
@@ -4767,7 +4752,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
     {
-      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
+      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam, mWnd);
       result = ProcessKeyDownMessage(nativeMsg, nullptr);
       DispatchPendingEvents();
     }
@@ -5789,7 +5774,7 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
     if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
       lParam |= 0x1000000;
     }
-    MSG msg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam);
+    MSG msg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam, mWnd);
     if (i == keySequence.Length() - 1) {
       bool makeDeadCharMessage =
         keyboardLayout->IsDeadKey(key, modKeyState) && aCharacters.IsEmpty();
@@ -5835,7 +5820,7 @@ nsWindow::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
     if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
       lParam |= 0x1000000;
     }
-    MSG msg = WinUtils::InitMSG(WM_KEYUP, key, lParam);
+    MSG msg = WinUtils::InitMSG(WM_KEYUP, key, lParam, mWnd);
     NativeKey nativeKey(this, msg, modKeyState);
     nativeKey.HandleKeyUpMessage();
   }
@@ -6465,48 +6450,19 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 
   EventFlags extraFlags;
   extraFlags.mDefaultPrevented = noDefault;
+
+  if (nativeKey.NeedsToHandleWithoutFollowingCharMessages()) {
+    return nativeKey.DispatchKeyPressEventsAndDiscardsCharMessages(
+                       inputtingChars, extraFlags, aFakeCharMessage);
+  }
+
   MSG msg;
   BOOL gotMsg = aFakeCharMessage ||
     WinUtils::PeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST,
                           PM_NOREMOVE | PM_NOYIELD);
-  // Enter and backspace are always handled here to avoid for example the
-  // confusion between ctrl-enter and ctrl-J.
-  if (nativeKey.NeedsToHandleWithoutFollowingCharMessages()) {
-    // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
-    // They can be more than one because of:
-    //  * Dead-keys not pairing with base character
-    //  * Some keyboard layouts may map up to 4 characters to the single key
-    bool anyCharMessagesRemoved = false;
-
-    if (aFakeCharMessage) {
-      RemoveMessageAndDispatchPluginEvent(WM_KEYFIRST, WM_KEYLAST,
-                                          aFakeCharMessage);
-      anyCharMessagesRemoved = true;
-    } else {
-      while (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR))
-      {
-        PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
-               ("%s charCode=%d scanCode=%d\n", msg.message == WM_SYSCHAR ? 
-                                                "WM_SYSCHAR" : "WM_CHAR",
-                msg.wParam, HIWORD(msg.lParam) & 0xFF));
-        RemoveMessageAndDispatchPluginEvent(WM_KEYFIRST, WM_KEYLAST);
-        anyCharMessagesRemoved = true;
-
-        gotMsg = WinUtils::PeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST,
-                                       PM_NOREMOVE | PM_NOYIELD);
-      }
-    }
-
-    if (!anyCharMessagesRemoved && DOMKeyCode == NS_VK_BACK &&
-        IMEHandler::IsDoingKakuteiUndo(mWnd)) {
-      NS_ASSERTION(!aFakeCharMessage,
-                   "We shouldn't be touching the real msg queue");
-      RemoveMessageAndDispatchPluginEvent(WM_CHAR, WM_CHAR);
-    }
-  }
-  else if (gotMsg &&
-           (aFakeCharMessage ||
-            msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
+  if (gotMsg &&
+      (aFakeCharMessage || msg.message == WM_CHAR ||
+       msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
     if (aFakeCharMessage) {
       MSG msg = aFakeCharMessage->GetCharMessage(mWnd);
       if (msg.message == WM_DEADCHAR) {

@@ -161,7 +161,7 @@ public:
    * InitMSG() returns an MSG struct which was initialized by the params.
    * Don't trust the other members in the result.
    */
-  static MSG InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam);
+  static MSG InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam, HWND aWnd);
 
   /**
    * GetScanCode() returns a scan code for the LPARAM of WM_KEYDOWN, WM_KEYUP,
