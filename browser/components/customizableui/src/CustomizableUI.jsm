@@ -82,7 +82,8 @@ let gDefaultPlacements = new Map([
     "bookmarks-menu-button",
     "downloads-button",
     "home-button",
-    "social-toolbar-button",
+    "social-share-button",
+    "social-toolbar-item",
   ]],
   ["PersonalToolbar", [
     "personal-bookmarks",
