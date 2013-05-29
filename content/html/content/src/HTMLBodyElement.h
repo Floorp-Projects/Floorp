@@ -5,6 +5,7 @@
 #ifndef HTMLBodyElement_h___
 #define HTMLBodyElement_h___
 
+#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIStyleRule.h"
@@ -24,9 +25,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleRule interface
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
 
   HTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
@@ -133,15 +134,15 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult);
+                              nsAttrValue& aResult) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+                              bool aNullParent = true) MOZ_OVERRIDE;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIEditor> GetAssociatedEditor() MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 

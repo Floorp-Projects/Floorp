@@ -12,6 +12,7 @@
 #ifndef NS_MAPPEDATTRIBUTEELEMENT_H_
 #define NS_MAPPEDATTRIBUTEELEMENT_H_
 
+#include "mozilla/Attributes.h"
 #include "nsStyledElement.h"
 
 class nsMappedAttributes;
@@ -37,11 +38,11 @@ public:
   static void MapNoAttributesInto(const nsMappedAttributes* aAttributes, 
                                   nsRuleData* aRuleData);
 
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
   virtual bool SetMappedAttribute(nsIDocument* aDocument,
                                     nsIAtom* aName,
                                     nsAttrValue& aValue,
-                                    nsresult* aRetval);
+                                    nsresult* aRetval) MOZ_OVERRIDE;
 };
 
 #endif // NS_MAPPEDATTRIBUTEELEMENT_H_

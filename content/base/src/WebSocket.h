@@ -7,6 +7,7 @@
 #ifndef WebSocket_h__
 #define WebSocket_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
 #include "nsWrapperCache.h"
@@ -75,7 +76,7 @@ public:
   virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
   virtual void EventListenerRemoved(nsIAtom* aType) MOZ_OVERRIDE;
 
-  virtual void DisconnectFromOwner();
+  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
 
   // nsWrapperCache
   nsPIDOMWindow* GetParentObject() { return GetOwner(); }

@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLIFrameElement_h
 #define mozilla_dom_HTMLIFrameElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMGetSVGDocument.h"
@@ -46,16 +47,16 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
+                                nsAttrValue& aResult) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
-                                bool aNotify);
+                                bool aNotify) MOZ_OVERRIDE;
 
   uint32_t GetSandboxFlags();
 
@@ -165,8 +166,8 @@ public:
   // nsGenericHTMLFrameElement::GetAppManifestURL is fine
 
 protected:
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
+  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

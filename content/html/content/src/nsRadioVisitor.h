@@ -6,6 +6,7 @@
 #ifndef _nsRadioVisitor_h__
 #define _nsRadioVisitor_h__
 
+#include "mozilla/Attributes.h"
 #include "nsIRadioVisitor.h"
 
 class nsIFormControl;
@@ -22,7 +23,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual bool Visit(nsIFormControl* aRadio) = 0;
+  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE = 0;
 };
 
 /**
@@ -40,7 +41,7 @@ public:
     : mCheckedChanged(aCheckedChanged)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio);
+  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE;
 
 protected:
   bool mCheckedChanged;
@@ -60,7 +61,7 @@ public:
     , mExcludeElement(aExcludeElement)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio);
+  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE;
 
 protected:
   bool* mCheckedChanged;
@@ -82,7 +83,7 @@ public:
     , mNotify(aNotify)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio);
+  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE;
 
 protected:
   nsIFormControl* mExcludeElement;

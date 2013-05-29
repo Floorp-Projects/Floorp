@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_SVGPolygonElement_h
 #define mozilla_dom_SVGPolygonElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsSVGPolyElement.h"
 
 nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
@@ -27,8 +28,8 @@ protected:
 
 public:
   // nsSVGPathGeometryElement methods:
-  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
-  virtual void ConstructPath(gfxContext *aCtx);
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
+  virtual void ConstructPath(gfxContext *aCtx) MOZ_OVERRIDE;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };

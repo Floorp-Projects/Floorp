@@ -9,6 +9,7 @@
 #ifndef MOZILLA_SVGMOTIONSMILPATHUTILS_H_
 #define MOZILLA_SVGMOTIONSMILPATHUTILS_H_
 
+#include "mozilla/Attributes.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "nsCOMPtr.h"
@@ -78,7 +79,7 @@ public:
     }
 
     // nsSMILParserUtils::GenericValueParser interface
-    virtual nsresult Parse(const nsAString& aValueStr);
+    virtual nsresult Parse(const nsAString& aValueStr) MOZ_OVERRIDE;
 
   protected:
     PathGenerator*    mPathGenerator;

@@ -6,6 +6,7 @@
 #ifndef nsXULPrototypeDocument_h__
 #define nsXULPrototypeDocument_h__
 
+#include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -114,7 +115,7 @@ public:
     nsNodeInfoManager *GetNodeInfoManager();
 
     // nsIScriptGlobalObjectOwner methods
-    virtual nsIScriptGlobalObject* GetScriptGlobalObject();
+    virtual nsIScriptGlobalObject* GetScriptGlobalObject() MOZ_OVERRIDE;
 
     void MarkInCCGeneration(uint32_t aCCGeneration)
     {

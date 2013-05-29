@@ -7,6 +7,7 @@
 #ifndef AbstractMediaDecoder_h_
 #define AbstractMediaDecoder_h_
 
+#include "mozilla/Attributes.h"
 #include "nsISupports.h"
 #include "nsDataHashtable.h"
 #include "nsThreadUtils.h"
@@ -137,7 +138,7 @@ class AudioMetadataEventRunner : public nsRunnable
         mTags(aTags)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     mDecoder->MetadataLoaded(mChannels, mRate, mHasAudio, mHasVideo, mTags);
     return NS_OK;
