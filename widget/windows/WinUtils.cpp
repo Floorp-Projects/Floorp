@@ -416,12 +416,13 @@ WinUtils::GetMouseInputSource()
 
 /* static */
 MSG
-WinUtils::InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam)
+WinUtils::InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam, HWND aWnd)
 {
   MSG msg;
   msg.message = aMessage;
   msg.wParam  = wParam;
   msg.lParam  = lParam;
+  msg.hwnd    = aWnd;
   return msg;
 }
 

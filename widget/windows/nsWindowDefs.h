@@ -221,7 +221,7 @@ struct nsFakeCharMessage {
   UINT mScanCode;
   bool mIsDeadKey;
 
-  MSG GetCharMessage(HWND aWnd)
+  MSG GetCharMessage(HWND aWnd) const
   {
     MSG msg;
     msg.hwnd = aWnd;

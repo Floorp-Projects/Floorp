@@ -373,41 +373,6 @@ IMEHandler::CurrentKeyboardLayoutHasIME()
 #endif // #ifdef DEBUG
 
 // static
-bool
-IMEHandler::IsDoingKakuteiUndo(HWND aWnd)
-{
-  // Following message pattern is caused by "Kakutei-Undo" of ATOK or WXG:
-  // ---------------------------------------------------------------------------
-  // WM_KEYDOWN              * n (wParam = VK_BACK, lParam = 0x1)
-  // WM_KEYUP                * 1 (wParam = VK_BACK, lParam = 0xC0000001) # ATOK
-  // WM_IME_STARTCOMPOSITION * 1 (wParam = 0x0, lParam = 0x0)
-  // WM_IME_COMPOSITION      * 1 (wParam = 0x0, lParam = 0x1BF)
-  // WM_CHAR                 * n (wParam = VK_BACK, lParam = 0x1)
-  // WM_KEYUP                * 1 (wParam = VK_BACK, lParam = 0xC00E0001)
-  // ---------------------------------------------------------------------------
-  // This doesn't match usual key message pattern such as:
-  //   WM_KEYDOWN -> WM_CHAR -> WM_KEYDOWN -> WM_CHAR -> ... -> WM_KEYUP
-  // See following bugs for the detail.
-  // https://bugzilla.mozilla.gr.jp/show_bug.cgi?id=2885 (written in Japanese)
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=194559 (written in English)
-  MSG startCompositionMsg, compositionMsg, charMsg;
-  return WinUtils::PeekMessage(&startCompositionMsg, aWnd,
-                               WM_IME_STARTCOMPOSITION, WM_IME_STARTCOMPOSITION,
-                               PM_NOREMOVE | PM_NOYIELD) &&
-         WinUtils::PeekMessage(&compositionMsg, aWnd, WM_IME_COMPOSITION,
-                               WM_IME_COMPOSITION, PM_NOREMOVE | PM_NOYIELD) &&
-         WinUtils::PeekMessage(&charMsg, aWnd, WM_CHAR, WM_CHAR,
-                               PM_NOREMOVE | PM_NOYIELD) &&
-         startCompositionMsg.wParam == 0x0 &&
-         startCompositionMsg.lParam == 0x0 &&
-         compositionMsg.wParam == 0x0 &&
-         compositionMsg.lParam == 0x1BF &&
-         charMsg.wParam == VK_BACK && charMsg.lParam == 0x1 &&
-         startCompositionMsg.time <= compositionMsg.time &&
-         compositionMsg.time <= charMsg.time;
-}
-
-// static
 void
 IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
                                   const nsAString& aHTMLInputType)
