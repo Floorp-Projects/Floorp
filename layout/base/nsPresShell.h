@@ -81,8 +81,8 @@ public:
   NS_IMETHOD SetDisplaySelection(int16_t aToggle) MOZ_OVERRIDE;
   NS_IMETHOD GetDisplaySelection(int16_t *aToggle) MOZ_OVERRIDE;
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion,
-                                     int16_t aFlags);
-  NS_IMETHOD RepaintSelection(SelectionType aType);
+                                     int16_t aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD RepaintSelection(SelectionType aType) MOZ_OVERRIDE;
 
   virtual NS_HIDDEN_(void) BeginObservingDocument() MOZ_OVERRIDE;
   virtual NS_HIDDEN_(void) EndObservingDocument() MOZ_OVERRIDE;
