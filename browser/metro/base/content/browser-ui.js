@@ -1520,6 +1520,11 @@ var FlyoutPanelsUI = {
     AboutPanelUI.init();
     PreferencesPanelView.init();
     SyncPanelUI.init();
+
+    // make sure to hide all flyouts when window is deactivated
+    window.addEventListener("deactivate", function(window) {
+      FlyoutPanelsUI.hide();
+    });
   },
 
   hide: function() {
