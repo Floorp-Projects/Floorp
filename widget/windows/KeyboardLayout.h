@@ -286,10 +286,87 @@ public:
             const ModifierKeyState& aModKeyState,
             const nsFakeCharMessage* aFakeCharMessage = nullptr);
 
-  uint32_t GetDOMKeyCode() const { return mDOMKeyCode; }
-  KeyNameIndex GetKeyNameIndex() const { return mKeyNameIndex; }
+  /**
+   * Handle WM_KEYDOWN message or WM_SYSKEYDOWN message.  The instance must be
+   * initialized with WM_KEYDOWN or WM_SYSKEYDOWN.
+   * Returns true if dispatched keydown event or keypress event is consumed.
+   * Otherwise, false.
+   */
+  bool HandleKeyDownMessage(bool* aEventDispatched = nullptr) const;
 
-  UINT GetMessage() const { return mMsg.message; }
+  /**
+   * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
+   * initialized with WM_KEYDOWN, WM_SYSKEYDOWN or them.
+   * Returns true if dispatched keypress event is consumed.  Otherwise, false.
+   */
+  bool HandleCharMessage(const MSG& aCharMsg,
+                         bool* aEventDispatched = nullptr,
+                         const EventFlags* aExtraFlags = nullptr) const;
+
+  /**
+   * Handles keyup message.  Returns true if the event is consumed.
+   * Otherwise, false.
+   */
+  bool HandleKeyUpMessage(bool* aEventDispatched = nullptr) const;
+
+private:
+  nsRefPtr<nsWindowBase> mWidget;
+  HKL mKeyboardLayout;
+  MSG mMsg;
+  // mCharMsg stores WM_*CHAR message following WM_*KEYDOWN message.
+  // If mMsg isn't WM_*KEYDOWN message or WM_*KEYDOWN but there is no following
+  // WM_*CHAR message, the message member is 0.
+  MSG mCharMsg;
+
+  uint32_t mDOMKeyCode;
+  KeyNameIndex mKeyNameIndex;
+
+  ModifierKeyState mModKeyState;
+
+  // mVirtualKeyCode distinguishes left key or right key of modifier key.
+  uint8_t mVirtualKeyCode;
+  // mOriginalVirtualKeyCode doesn't distinguish left key or right key of
+  // modifier key.  However, if the given keycode is VK_PROCESS, it's resolved
+  // to a keycode before it's handled by IME.
+  uint8_t mOriginalVirtualKeyCode;
+
+  // mCommittedChars indicates the inputted characters which is committed by
+  // the key.  If dead key fail to composite a character, mCommittedChars
+  // indicates both the dead characters and the base characters.
+  UniCharsAndModifiers mCommittedCharsAndModifiers;
+
+  WORD    mScanCode;
+  bool    mIsExtended;
+  bool    mIsDeadKey;
+  // mIsPrintableKey is true if the key may be a printable key without
+  // any modifier keys.  Otherwise, false.
+  // Please note that the event may not cause any text input even if this
+  // is true.  E.g., it might be dead key state or Ctrl key may be pressed.
+  bool    mIsPrintableKey;
+  bool    mIsFakeCharMsg;
+
+  NativeKey()
+  {
+    MOZ_NOT_REACHED("The default constructor of NativeKey isn't available");
+  }
+
+  UINT GetScanCodeWithExtendedFlag() const;
+
+  // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
+  uint32_t GetKeyLocation() const;
+
+  /**
+   * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
+   * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
+   * returns true, the caller needs to be careful for processing the messages.
+   */
+  bool IsIMEDoingKakuteiUndo() const;
+
+  /*
+   * Dispatches a plugin event after the specified message is removed.
+   */
+  void RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg) const;
+
   bool IsKeyDownMessage() const
   {
     return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
@@ -300,17 +377,6 @@ public:
     return (mCharMsg.message != 0);
   }
   const MSG& RemoveFollowingCharMessage() const;
-  bool IsDeadKey() const { return mIsDeadKey; }
-  /**
-   * IsPrintableKey() returns true if the key may be a printable key without
-   * any modifier keys.  Otherwise, false.
-   * Please note that the event may not cause any text input even if this
-   * returns true.  E.g., it might be dead key state or Ctrl key may be pressed.
-   */
-  inline bool IsPrintableKey() const { return mIsPrintableKey; }
-  WORD GetScanCode() const { return mScanCode; }
-  uint8_t GetVirtualKeyCode() const { return mVirtualKeyCode; }
-  uint8_t GetOriginalVirtualKeyCode() const { return mOriginalVirtualKeyCode; }
 
   /**
    * Wraps MapVirtualKeyEx() with MAPVK_VSC_TO_VK.
@@ -376,83 +442,6 @@ public:
    * or Backspace.
    */
   bool NeedsToHandleWithoutFollowingCharMessages() const;
-
-  /**
-   * Handle WM_KEYDOWN message or WM_SYSKEYDOWN message.  The instance must be
-   * initialized with WM_KEYDOWN or WM_SYSKEYDOWN.
-   * Returns true if dispatched keydown event or keypress event is consumed.
-   * Otherwise, false.
-   */
-  bool HandleKeyDownMessage(bool* aEventDispatched = nullptr) const;
-
-  /**
-   * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
-   * initialized with WM_KEYDOWN, WM_SYSKEYDOWN or them.
-   * Returns true if dispatched keypress event is consumed.  Otherwise, false.
-   */
-  bool HandleCharMessage(const MSG& aCharMsg,
-                         bool* aEventDispatched = nullptr,
-                         const EventFlags* aExtraFlags = nullptr) const;
-
-  /**
-   * Handles keyup message.  Returns true if the event is consumed.
-   * Otherwise, false.
-   */
-  bool HandleKeyUpMessage(bool* aEventDispatched = nullptr) const;
-
-private:
-  nsRefPtr<nsWindowBase> mWidget;
-  HKL mKeyboardLayout;
-  MSG mMsg;
-  // mCharMsg stores WM_*CHAR message following WM_*KEYDOWN message.
-  // If mMsg isn't WM_*KEYDOWN message or WM_*KEYDOWN but there is no following
-  // WM_*CHAR message, the message member is 0.
-  MSG mCharMsg;
-
-  uint32_t mDOMKeyCode;
-  KeyNameIndex mKeyNameIndex;
-
-  ModifierKeyState mModKeyState;
-
-  // mVirtualKeyCode distinguishes left key or right key of modifier key.
-  uint8_t mVirtualKeyCode;
-  // mOriginalVirtualKeyCode doesn't distinguish left key or right key of
-  // modifier key.  However, if the given keycode is VK_PROCESS, it's resolved
-  // to a keycode before it's handled by IME.
-  uint8_t mOriginalVirtualKeyCode;
-
-  // mCommittedChars indicates the inputted characters which is committed by
-  // the key.  If dead key fail to composite a character, mCommittedChars
-  // indicates both the dead characters and the base characters.
-  UniCharsAndModifiers mCommittedCharsAndModifiers;
-
-  WORD    mScanCode;
-  bool    mIsExtended;
-  bool    mIsDeadKey;
-  bool    mIsPrintableKey;
-  bool    mIsFakeCharMsg;
-
-  NativeKey()
-  {
-    MOZ_NOT_REACHED("The default constructor of NativeKey isn't available");
-  }
-
-  UINT GetScanCodeWithExtendedFlag() const;
-
-  // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
-  uint32_t GetKeyLocation() const;
-
-  /**
-   * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
-   * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
-   * returns true, the caller needs to be careful for processing the messages.
-   */
-  bool IsIMEDoingKakuteiUndo() const;
-
-  /*
-   * Dispatches a plugin event after the specified message is removed.
-   */
-  void RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg) const;
 };
 
 class KeyboardLayout
