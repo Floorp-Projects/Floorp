@@ -9,8 +9,8 @@ html {
 body {
   margin-top: 20px;
   margin-bottom: 20px;
-  -moz-transition-property: background-color, color;
-  -moz-transition-duration: 0.7s;
+  transition-property: background-color, color;
+  transition-duration: 0.7s;
 }
 
 .light {
@@ -323,8 +323,8 @@ body {
 
 .toolbar {
   font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
-  -moz-transition-property: visibility, opacity;
-  -moz-transition-duration: 0.7s;
+  transition-property: visibility, opacity;
+  transition-duration: 0.7s;
   visibility: visible;
   opacity: 1.0;
   position: fixed;
@@ -338,8 +338,8 @@ body {
 }
 
 .toolbar-hidden {
-  -moz-transition-property: visibility, opacity;
-  -moz-transition-duration: 0.7s;
+  transition-property: visibility, opacity;
+  transition-duration: 0.7s;
   visibility: hidden;
   opacity: 0.0;
 }
