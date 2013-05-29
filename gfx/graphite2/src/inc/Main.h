@@ -44,15 +44,55 @@ typedef gr_int16        int16;
 typedef gr_int32        int32;
 typedef size_t          uintptr;
 
+#if GRAPHITE2_TELEMETRY
+struct telemetry
+{
+    class category;
+
+    static size_t   * _category;
+    static void set_category(size_t & t) throw()    { _category = &t; }
+    static void stop() throw()                      { _category = 0; }
+    static void count_bytes(size_t n) throw()       { if (_category) *_category += n; }
+
+    size_t  misc,
+            silf,
+            glyph,
+            code,
+            states,
+            starts,
+            transitions;
+
+    telemetry() : misc(0), silf(0), glyph(0), code(0), states(0), starts(0), transitions(0) {}
+};
+
+class telemetry::category
+{
+    size_t * _prev;
+public:
+    category(size_t & t) : _prev(_category) { _category = &t; }
+    ~category() { _category = _prev; }
+};
+
+#else
+struct telemetry  {};
+#endif
+
 // typesafe wrapper around malloc for simple types
 // use free(pointer) to deallocate
+
 template <typename T> T * gralloc(size_t n)
 {
+#if GRAPHITE2_TELEMETRY
+    telemetry::count_bytes(sizeof(T) * n);
+#endif
     return reinterpret_cast<T*>(malloc(sizeof(T) * n));
 }
 
 template <typename T> T * grzeroalloc(size_t n)
 {
+#if GRAPHITE2_TELEMETRY
+    telemetry::count_bytes(sizeof(T) * n);
+#endif
     return reinterpret_cast<T*>(calloc(n, sizeof(T)));
 }
 
@@ -71,9 +111,9 @@ inline T max(const T a, const T b)
 } // namespace graphite2
 
 #define CLASS_NEW_DELETE \
-    void * operator new   (size_t size){ return malloc(size);} \
+    void * operator new   (size_t size){ return gralloc<byte>(size);} \
     void * operator new   (size_t, void * p) throw() { return p; } \
-    void * operator new[] (size_t size) {return malloc(size);} \
+    void * operator new[] (size_t size) {return gralloc<byte>(size);} \
     void * operator new[] (size_t, void * p) throw() { return p; } \
     void operator delete   (void * p) throw() { free(p);} \
     void operator delete   (void *, void *) throw() {} \

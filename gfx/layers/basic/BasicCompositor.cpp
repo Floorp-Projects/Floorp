@@ -59,6 +59,14 @@ protected:
     return true;
   }
 
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE {
+    if (!mThebesImage) {
+      mThebesImage = mThebesSurface->GetAsImageSurface();
+    }
+    nsRefPtr<gfxImageSurface> result = mThebesImage;
+    return result.forget();
+  }
+
   BasicCompositor *mCompositor;
   RefPtr<SourceSurface> mSurface;
   nsRefPtr<gfxImageSurface> mThebesImage;

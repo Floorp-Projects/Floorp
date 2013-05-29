@@ -19,6 +19,13 @@
 
 using namespace mozilla::a11y;
 
+/**
+ * The accessible for which we are computing a text equivalent. It is useful
+ * for bailing out during recursive text computation, or for special cases
+ * like step f. of the ARIA implementation guide.
+ */
+static Accessible* sInitiatorAcc = nullptr;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Public.
 
@@ -28,10 +35,10 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
 {
   aName.Truncate();
 
-  if (gInitiatorAcc)
+  if (sInitiatorAcc)
     return NS_OK;
 
-  gInitiatorAcc = aAccessible;
+  sInitiatorAcc = aAccessible;
   if (GetRoleRule(aAccessible->Role()) == eNameFromSubtreeRule) {
     //XXX: is it necessary to care the accessible is not a document?
     if (aAccessible->IsContent()) {
@@ -43,7 +50,7 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
     }
   }
 
-  gInitiatorAcc = nullptr;
+  sInitiatorAcc = nullptr;
 
   return NS_OK;
 }
@@ -92,10 +99,10 @@ nsTextEquivUtils::AppendTextEquivFromContent(Accessible* aInitiatorAcc,
                                              nsAString *aString)
 {
   // Prevent recursion which can cause infinite loops.
-  if (gInitiatorAcc)
+  if (sInitiatorAcc)
     return NS_OK;
 
-  gInitiatorAcc = aInitiatorAcc;
+  sInitiatorAcc = aInitiatorAcc;
 
   // If the given content is not visible or isn't accessible then go down
   // through the DOM subtree otherwise go down through accessible subtree and
@@ -108,7 +115,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(Accessible* aInitiatorAcc,
 
   if (isVisible) {
     Accessible* accessible =
-      gInitiatorAcc->Document()->GetAccessible(aContent);
+      sInitiatorAcc->Document()->GetAccessible(aContent);
     if (accessible) {
       rv = AppendFromAccessible(accessible, aString);
       goThroughDOMSubtree = false;
@@ -118,7 +125,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(Accessible* aInitiatorAcc,
   if (goThroughDOMSubtree)
     rv = AppendFromDOMNode(aContent, aString);
 
-  gInitiatorAcc = nullptr;
+  sInitiatorAcc = nullptr;
   return rv;
 }
 
@@ -175,8 +182,6 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Private.
-
-nsRefPtr<Accessible> nsTextEquivUtils::gInitiatorAcc;
 
 nsresult
 nsTextEquivUtils::AppendFromAccessibleChildren(Accessible* aAccessible,
@@ -257,7 +262,7 @@ nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
   // value if and only if the given accessible is in the middle of its parent.
 
   nsAutoString text;
-  if (aAccessible != gInitiatorAcc) {
+  if (aAccessible != sInitiatorAcc) {
     aAccessible->Value(text);
 
     return AppendString(aString, text) ?

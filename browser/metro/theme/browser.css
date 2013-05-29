@@ -733,6 +733,14 @@ setting[type="radio"] > vbox {
   transition-timing-function: ease-in-out;
 }
 
+#browsers browser {
+  transition: padding-bottom @metro_animation_duration@ @metro_animation_easing@;
+}
+
+#browsers[findbar] browser {
+  padding-bottom: @findbar_height@;
+}
+
 /* Panel UI ---------------------------------------------------------------- */
 
 #panel-container {

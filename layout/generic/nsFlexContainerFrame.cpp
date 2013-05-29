@@ -1138,8 +1138,9 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
-  MOZ_ASSERT(nsLayoutUtils::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
-             "Frame list should've been sorted in reflow");
+  NS_ASSERTION(
+    nsLayoutUtils::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
+    "Child frames aren't sorted correctly");
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 

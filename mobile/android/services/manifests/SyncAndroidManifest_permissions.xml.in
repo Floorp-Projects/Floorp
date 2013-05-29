@@ -17,3 +17,16 @@
     </permission>
 
     <uses-permission android:name="@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE" />
+
+    <!-- A signature level permission specific to each Firefox version
+         (Android package name, e.g., org.mozilla.firefox).  Use this
+         permission to broadcast securely within a single Firefox
+         version.  This needs to agree with
+         GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION.
+
+         This is not Sync-specific, but we don't have a better place
+         to put generic background service manifest snippets, so here
+         is expedient. -->
+    <permission
+        android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE"
+        android:protectionLevel="signature"/>

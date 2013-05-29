@@ -152,6 +152,9 @@ pref("media.cache_size", 512000);
 // Master HTML5 media volume scale.
 pref("media.volume_scale", "1.0");
 
+// Timeout for wakelock release
+pref("media.wakelock_timeout", 2000);
+
 #ifdef MOZ_WMF
 pref("media.windows-media-foundation.enabled", true);
 pref("media.windows-media-foundation.use-dxva", true);
@@ -1017,6 +1020,8 @@ pref("network.http.spdy.persistent-settings", false);
 pref("network.http.spdy.ping-threshold", 58);
 pref("network.http.spdy.ping-timeout", 8);
 pref("network.http.spdy.send-buffer-size", 131072);
+pref("network.http.spdy.allow-push", true);
+pref("network.http.spdy.push-allowance", 65536);
 
 pref("network.http.diagnostics", false);
 

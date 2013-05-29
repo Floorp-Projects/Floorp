@@ -257,7 +257,7 @@ class AddonManager(object):
             extensions_path = os.path.join(self.profile, 'extensions', 'staged')
             for backup in os.listdir(self.backup_dir):
                 backup_path = os.path.join(self.backup_dir, backup)
-                addon_path = os.path.join(extensions_path, addon)
+                addon_path = os.path.join(extensions_path, backup)
                 shutil.move(backup_path, addon_path)
             if not os.listdir(self.backup_dir):
                 shutil.rmtree(self.backup_dir, ignore_errors=True)

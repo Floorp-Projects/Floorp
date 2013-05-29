@@ -21,7 +21,7 @@ class testMultiFinger(MarionetteTestCase):
       expected = "button1-touchstart"
       self.wait_for_condition(lambda m: m.execute_script("return document.getElementById('button1').innerHTML;") == expected)
       self.assertEqual("button2-touchmove-touchend", self.marionette.execute_script("return document.getElementById('button2').innerHTML;"))
-      self.assertIn("button3-touchstart-touchend", self.marionette.execute_script("return document.getElementById('button3').innerHTML;"))
+      self.assertTrue("button3-touchstart-touchend" in self.marionette.execute_script("return document.getElementById('button3').innerHTML;"))
 
     def test_move_offset_element(self):
       testAction = self.marionette.absolute_url("testAction.html")
@@ -37,7 +37,7 @@ class testMultiFinger(MarionetteTestCase):
       expected = "button1-touchstart"
       self.wait_for_condition(lambda m: m.execute_script("return document.getElementById('button1').innerHTML;") == expected)
       self.assertEqual("button2-touchmove-touchend", self.marionette.execute_script("return document.getElementById('button2').innerHTML;"))
-      self.assertIn("button3-touchstart-touchend", self.marionette.execute_script("return document.getElementById('button3').innerHTML;"))
+      self.assertTrue("button3-touchstart-touchend" in self.marionette.execute_script("return document.getElementById('button3').innerHTML;"))
 
     def test_three_fingers(self):
       testAction = self.marionette.absolute_url("testAction.html")
@@ -59,7 +59,7 @@ class testMultiFinger(MarionetteTestCase):
       self.assertEqual("button2-touchmove-touchend", self.marionette.execute_script("return document.getElementById('button2').innerHTML;"))
       button3_text = self.marionette.execute_script("return document.getElementById('button3').innerHTML;")
       button4_text = self.marionette.execute_script("return document.getElementById('button4').innerHTML;")
-      self.assertIn("button3-touchstart-touchend", button3_text)
-      self.assertIn("button4-touchstart-touchend", button4_text)
+      self.assertTrue("button3-touchstart-touchend" in button3_text)
+      self.assertTrue("button4-touchstart-touchend" in button4_text)
       self.assertTrue(int(button3_text.rsplit("-")[-1]) >= 5000)
       self.assertTrue(int(button4_text.rsplit("-")[-1]) >= 5000)

@@ -1,7 +1,3 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 var protocol = exports;
 
 //
@@ -17,6 +13,7 @@ protocol.parseSynHead = function parseSynHead(type, flags, data) {
   return {
     type: stream ? 'SYN_STREAM' : 'SYN_REPLY',
     id: data.readUInt32BE(0, true) & 0x7fffffff,
+    version: 2,
     associated: stream ? data.readUInt32BE(4, true) & 0x7fffffff : 0,
     priority: stream ? data[8] >> 6 : 0,
     fin: (flags & 0x01) === 0x01,
