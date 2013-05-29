@@ -6,7 +6,6 @@
 #include "mozilla/Util.h"
 
 #include "KeyboardLayout.h"
-#include "nsWindow.h"
 #include "nsIMM32Handler.h"
 
 #include "nsMemory.h"
@@ -17,6 +16,7 @@
 #include "nsUnicharUtils.h"
 #include "WidgetUtils.h"
 #include "WinUtils.h"
+#include "nsWindowDbg.h"
 
 #include "nsIDOMKeyEvent.h"
 
@@ -381,12 +381,13 @@ VirtualKey::FillKbdState(PBYTE aKbdState,
  * mozilla::widget::NativeKey
  *****************************************************************************/
 
-NativeKey::NativeKey(nsWindow* aWindow,
+NativeKey::NativeKey(nsWindowBase* aWidget,
                      const MSG& aKeyOrCharMessage,
                      const ModifierKeyState& aModKeyState) :
-  mDOMKeyCode(0), mMessage(aKeyOrCharMessage.message),
-  mVirtualKeyCode(0), mOriginalVirtualKeyCode(0)
+  mWidget(aWidget), mDOMKeyCode(0), mMessage(aKeyOrCharMessage.message),
+  mModKeyState(aModKeyState), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0)
 {
+  MOZ_ASSERT(aWidget);
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
   mKeyboardLayout = keyboardLayout->GetLayout();
   mScanCode = WinUtils::GetScanCode(aKeyOrCharMessage.lParam);
@@ -404,7 +405,7 @@ NativeKey::NativeKey(nsWindow* aWindow,
       // keycode.
       if (aKeyOrCharMessage.wParam == VK_PROCESSKEY) {
         mOriginalVirtualKeyCode = static_cast<uint8_t>(
-          ::ImmGetVirtualKey(aWindow->GetWindowHandle()));
+          ::ImmGetVirtualKey(mWidget->GetWindowHandle()));
       } else {
         mOriginalVirtualKeyCode =
           static_cast<uint8_t>(aKeyOrCharMessage.wParam);
@@ -543,7 +544,7 @@ NativeKey::NativeKey(nsWindow* aWindow,
   mKeyNameIndex =
     keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mOriginalVirtualKeyCode);
 
-  keyboardLayout->InitNativeKey(*this, aModKeyState);
+  keyboardLayout->InitNativeKey(*this, mModKeyState);
 }
 
 UINT
@@ -651,6 +652,17 @@ NativeKey::ComputeUnicharFromScanCode() const
   return static_cast<PRUnichar>(
            ::MapVirtualKeyEx(ComputeVirtualKeyCodeFromScanCode(),
                              MAPVK_VK_TO_CHAR, mKeyboardLayout));
+}
+
+void
+NativeKey::InitKeyEvent(nsKeyEvent& aKeyEvent,
+                        const ModifierKeyState& aModKeyState) const
+{
+  nsIntPoint point(0, 0);
+  mWidget->InitEvent(aKeyEvent, &point);
+  aKeyEvent.mKeyNameIndex = mKeyNameIndex;
+  aKeyEvent.location = GetKeyLocation();
+  aModKeyState.InitInputEvent(aKeyEvent);
 }
 
 /*****************************************************************************

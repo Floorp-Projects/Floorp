@@ -195,9 +195,6 @@ public:
                                              int16_t aButton = nsMouseEvent::eLeftButton,
                                              uint16_t aInputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE);
   virtual bool            DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
-  void                    InitKeyEvent(nsKeyEvent& aKeyEvent,
-                                       const NativeKey& aNativeKey,
-                                       const mozilla::widget::ModifierKeyState &aModKeyState);
   virtual bool            DispatchKeyEvent(nsKeyEvent& aKeyEvent,
                                            const MSG *aMsgSentToPlugin);
   void                    DispatchPendingEvents();

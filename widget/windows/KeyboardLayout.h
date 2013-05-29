@@ -7,8 +7,10 @@
 #define KeyboardLayout_h__
 
 #include "nscore.h"
+#include "nsAutoPtr.h"
 #include "nsEvent.h"
 #include "nsString.h"
+#include "nsWindowBase.h"
 #include <windows.h>
 
 #define NS_NUM_OF_KEYS          68
@@ -32,7 +34,6 @@
 #define VK_OEM_102              0xE2
 #define VK_OEM_CLEAR            0xFE
 
-class nsWindow;
 struct nsModifierKeyState;
 
 namespace mozilla {
@@ -277,7 +278,7 @@ class MOZ_STACK_CLASS NativeKey
   friend class KeyboardLayout;
 
 public:
-  NativeKey(nsWindow* aWindow,
+  NativeKey(nsWindowBase* aWidget,
             const MSG& aKeyOrCharMessage,
             const ModifierKeyState& aModKeyState);
 
@@ -288,8 +289,6 @@ public:
     return mCommittedCharsAndModifiers;
   }
 
-  // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
-  uint32_t GetKeyLocation() const;
   UINT GetMessage() const { return mMessage; }
   bool IsKeyDownMessage() const
   {
@@ -314,13 +313,26 @@ public:
    */
   PRUnichar ComputeUnicharFromScanCode() const;
 
+  /**
+   * Initializes the aKeyEvent with the information stored in the instance.
+   */
+  void InitKeyEvent(nsKeyEvent& aKeyEvent,
+                    const ModifierKeyState& aModKeyState) const;
+  void InitKeyEvent(nsKeyEvent& aKeyEvent) const
+  {
+    InitKeyEvent(aKeyEvent, mModKeyState);
+  }
+
 private:
+  nsRefPtr<nsWindowBase> mWidget;
   HKL mKeyboardLayout;
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
 
   // The message which the instance was initialized with.
   UINT mMessage;
+
+  ModifierKeyState mModKeyState;
 
   // mVirtualKeyCode distinguishes left key or right key of modifier key.
   uint8_t mVirtualKeyCode;
@@ -343,6 +355,9 @@ private:
   }
 
   UINT GetScanCodeWithExtendedFlag() const;
+
+  // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
+  uint32_t GetKeyLocation() const;
 };
 
 class KeyboardLayout
