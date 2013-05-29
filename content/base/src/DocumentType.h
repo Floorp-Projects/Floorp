@@ -10,7 +10,6 @@
 #ifndef DocumentType_h
 #define DocumentType_h
 
-#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
@@ -58,23 +57,23 @@ public:
   NS_DECL_NSIDOMDOCUMENTTYPE
 
   // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
-  virtual void GetNodeValueInternal(nsAString& aNodeValue) MOZ_OVERRIDE
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
+  virtual void GetNodeValueInternal(nsAString& aNodeValue)
   {
     SetDOMStringToNull(aNodeValue);
   }
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    mozilla::ErrorResult& aError) MOZ_OVERRIDE
+                                    mozilla::ErrorResult& aError)
   {
   }
 
   // nsIContent overrides
-  virtual const nsTextFragment* GetText() MOZ_OVERRIDE;
+  virtual const nsTextFragment* GetText();
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              bool aCloneText) const MOZ_OVERRIDE;
+                                              bool aCloneText) const;
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
 protected:
   virtual JSObject* WrapNode(JSContext *cx,

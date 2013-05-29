@@ -6,7 +6,6 @@
 #ifndef nsDOMScrollAreaEvent_h__
 #define nsDOMScrollAreaEvent_h__
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsDOMUIEvent.h"
 
@@ -34,8 +33,8 @@ public:
   {
     return nsDOMEvent::DuplicatePrivateData();
   }
-  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;
+  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
+  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

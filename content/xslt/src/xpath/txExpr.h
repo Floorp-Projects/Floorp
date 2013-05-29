@@ -6,7 +6,6 @@
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
-#include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "txExprResult.h"
 #include "txCore.h"
@@ -286,8 +285,8 @@ public:
                                  txIEvalContext* aContext);
 
     TX_DECL_TOSTRING
-    Expr* getSubExprAt(uint32_t aPos) MOZ_OVERRIDE;
-    void setSubExprAt(uint32_t aPos, Expr* aExpr) MOZ_OVERRIDE;
+    Expr* getSubExprAt(uint32_t aPos);
+    void setSubExprAt(uint32_t aPos, Expr* aExpr);
 
 protected:
 
@@ -443,7 +442,7 @@ public:
     txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, int32_t aNSID,
                uint16_t aNodeType);
 
-    NodeTestType getType() MOZ_OVERRIDE;
+    NodeTestType getType();
 
     TX_DECL_NODE_TEST
 
@@ -488,7 +487,7 @@ public:
         return mNodeType;
     }
 
-    NodeTestType getType() MOZ_OVERRIDE;
+    NodeTestType getType();
 
     TX_DECL_NODE_TEST
 

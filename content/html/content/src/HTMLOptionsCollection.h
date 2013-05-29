@@ -5,7 +5,6 @@
 #ifndef mozilla_dom_HTMLOptionsCollection_h
 #define mozilla_dom_HTMLOptionsCollection_h
 
-#include "mozilla/Attributes.h"
 #include "nsIHTMLCollection.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsWrapperCache.h"
@@ -52,7 +51,7 @@ public:
   // nsIDOMHTMLOptionsCollection
 
   virtual Element* GetElementAt(uint32_t aIndex);
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE;
+  virtual nsINode* GetParentObject();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(HTMLOptionsCollection,
                                                          nsIHTMLCollection)
@@ -123,7 +122,7 @@ public:
                           int32_t* aIndex);
 
   virtual JSObject* NamedItem(JSContext* aCx, const nsAString& aName,
-                              ErrorResult& error) MOZ_OVERRIDE;
+                              ErrorResult& error);
 
   void Add(const HTMLOptionOrOptGroupElement& aElement,
            const Nullable<HTMLElementOrLong>& aBefore,
@@ -136,7 +135,7 @@ public:
   {
     aError = SetOption(aIndex, aOption);
   }
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) MOZ_OVERRIDE;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
 private:
   /** The list of options (holds strong references).  This is infallible, so

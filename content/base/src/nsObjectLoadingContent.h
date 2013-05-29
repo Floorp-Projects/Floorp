@@ -13,7 +13,6 @@
 #ifndef NSOBJECTLOADINGCONTENT_H_
 #define NSOBJECTLOADINGCONTENT_H_
 
-#include "mozilla/Attributes.h"
 #include "nsImageLoadingContent.h"
 #include "nsIStreamListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -449,7 +448,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       SetupProtoChainRunner(nsIScriptContext* scriptContext,
                             nsObjectLoadingContent* aContent);
 
-      NS_IMETHOD Run() MOZ_OVERRIDE;
+      NS_IMETHOD Run();
 
     private:
       nsCOMPtr<nsIScriptContext> mContext;

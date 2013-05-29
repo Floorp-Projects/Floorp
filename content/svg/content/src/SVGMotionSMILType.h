@@ -8,7 +8,6 @@
 #ifndef MOZILLA_SVGMOTIONSMILTYPE_H_
 #define MOZILLA_SVGMOTIONSMILTYPE_H_
 
-#include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
 #include "nsISMILType.h"
 
@@ -42,23 +41,23 @@ public:
 protected:
   // nsISMILType Methods
   // -------------------
-  virtual void     Init(nsSMILValue& aValue) const MOZ_OVERRIDE;
-  virtual void     Destroy(nsSMILValue& aValue) const MOZ_OVERRIDE;
-  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const MOZ_OVERRIDE;
+  virtual void     Init(nsSMILValue& aValue) const;
+  virtual void     Destroy(nsSMILValue& aValue) const;
+  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const;
   virtual bool     IsEqual(const nsSMILValue& aLeft,
-                           const nsSMILValue& aRight) const MOZ_OVERRIDE;
+                           const nsSMILValue& aRight) const;
   virtual nsresult Add(nsSMILValue& aDest,
                        const nsSMILValue& aValueToAdd,
-                       uint32_t aCount) const MOZ_OVERRIDE;
+                       uint32_t aCount) const;
   virtual nsresult SandwichAdd(nsSMILValue& aDest,
-                               const nsSMILValue& aValueToAdd) const MOZ_OVERRIDE;
+                               const nsSMILValue& aValueToAdd) const;
   virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
                                    const nsSMILValue& aTo,
-                                   double& aDistance) const MOZ_OVERRIDE;
+                                   double& aDistance) const;
   virtual nsresult Interpolate(const nsSMILValue& aStartVal,
                                const nsSMILValue& aEndVal,
                                double aUnitDistance,
-                               nsSMILValue& aResult) const MOZ_OVERRIDE;
+                               nsSMILValue& aResult) const;
 public:
   // Used to generate a transform matrix from an <animateMotion> nsSMILValue.
   static gfxMatrix CreateMatrix(const nsSMILValue& aSMILVal);

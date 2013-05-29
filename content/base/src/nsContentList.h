@@ -12,7 +12,6 @@
 #ifndef nsContentList_h___
 #define nsContentList_h___
 
-#include "mozilla/Attributes.h"
 #include "nsContentListDeclarations.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
@@ -50,8 +49,8 @@ public:
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList
-  virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual int32_t IndexOf(nsIContent* aContent);
+  virtual nsIContent* Item(uint32_t aIndex);
 
   uint32_t Length() const { 
     return mElements.Length();
@@ -112,7 +111,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSimpleContentList,
                                            nsBaseContentList)
 
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE
+  virtual nsINode* GetParentObject()
   {
     return mRoot;
   }
@@ -255,18 +254,18 @@ public:
   NS_DECL_NSIDOMHTMLCOLLECTION
 
   // nsBaseContentList overrides
-  virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush) MOZ_OVERRIDE;
-  virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE
+  virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush);
+  virtual int32_t IndexOf(nsIContent* aContent);
+  virtual nsINode* GetParentObject()
   {
     return mRootNode;
   }
 
-  virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
-  virtual mozilla::dom::Element* GetElementAt(uint32_t index) MOZ_OVERRIDE;
+  virtual nsIContent* Item(uint32_t aIndex);
+  virtual mozilla::dom::Element* GetElementAt(uint32_t index);
   virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
-                              mozilla::ErrorResult& error) MOZ_OVERRIDE;
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) MOZ_OVERRIDE;
+                              mozilla::ErrorResult& error);
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
   // nsContentList public methods
   NS_HIDDEN_(uint32_t) Length(bool aDoFlush);
@@ -493,7 +492,7 @@ protected:
     MOZ_ASSERT(mData);
   }
 
-  virtual void RemoveFromCaches() MOZ_OVERRIDE {
+  virtual void RemoveFromCaches() {
     RemoveFromFuncStringHashtable();
   }
   void RemoveFromFuncStringHashtable();

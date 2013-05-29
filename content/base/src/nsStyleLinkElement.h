@@ -13,7 +13,6 @@
 #ifndef nsStyleLinkElement_h___
 #define nsStyleLinkElement_h___
 
-#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -37,7 +36,7 @@ public:
   nsStyleLinkElement();
   virtual ~nsStyleLinkElement();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE = 0;
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) = 0;
 
   // nsIDOMLinkStyle
   NS_DECL_NSIDOMLINKSTYLE
@@ -45,17 +44,17 @@ public:
   nsCSSStyleSheet* GetSheet() const { return mStyleSheet; }
 
   // nsIStyleSheetLinkingElement  
-  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aStyleSheet) MOZ_OVERRIDE;
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet) MOZ_OVERRIDE;
-  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) MOZ_OVERRIDE;
+  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aStyleSheet);
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
+  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle);
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                               bool* aWillNotify,
-                              bool* aIsAlternate) MOZ_OVERRIDE;
-  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates) MOZ_OVERRIDE;
-  NS_IMETHOD GetCharset(nsAString& aCharset) MOZ_OVERRIDE;
+                              bool* aIsAlternate);
+  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates);
+  NS_IMETHOD GetCharset(nsAString& aCharset);
 
-  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) MOZ_OVERRIDE;
-  virtual void SetLineNumber(uint32_t aLineNumber) MOZ_OVERRIDE;
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI);
+  virtual void SetLineNumber(uint32_t aLineNumber);
 
   static uint32_t ParseLinkTypes(const nsAString& aTypes);
   

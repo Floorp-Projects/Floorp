@@ -7,7 +7,6 @@
 #ifndef ReportDecodeResultTask_h_
 #define ReportDecodeResultTask_h_
 
-#include "mozilla/Attributes.h"
 #include "MediaBufferDecoder.h"
 
 namespace mozilla {
@@ -23,7 +22,7 @@ public:
     MOZ_ASSERT(aFunction);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
 

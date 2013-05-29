@@ -7,7 +7,6 @@
 #ifndef MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
 #define MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
 
-#include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsISMILAttr.h"
 #include "SVGTransformList.h"
@@ -119,10 +118,10 @@ private:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-    virtual void ClearAnimValue() MOZ_OVERRIDE;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+                                     bool& aPreventCachingOfSandwich) const;
+    virtual nsSMILValue GetBaseValue() const;
+    virtual void ClearAnimValue();
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
 
   protected:
     static void ParseValue(const nsAString& aSpec,

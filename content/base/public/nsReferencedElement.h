@@ -7,7 +7,6 @@
 #ifndef NSREFERENCEDELEMENT_H_
 #define NSREFERENCEDELEMENT_H_
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 #include "nsIAtom.h"
 #include "nsIDocument.h"
@@ -135,7 +134,7 @@ private:
     virtual ~ChangeNotification() {}
 
     NS_DECL_ISUPPORTS_INHERITED
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() {
       if (mTarget) {
         mTarget->mPendingNotification = nullptr;
         mTarget->ElementChanged(mFrom, mTo);

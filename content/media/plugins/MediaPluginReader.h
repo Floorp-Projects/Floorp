@@ -6,7 +6,6 @@
 #if !defined(MediaPluginReader_h_)
 #define MediaPluginReader_h_
 
-#include "mozilla/Attributes.h"
 #include "MediaResource.h"
 #include "MediaDecoderReader.h"
 #include "ImageContainer.h"
@@ -70,7 +69,7 @@ public:
   public:
     ImageBufferCallback(mozilla::layers::ImageContainer *aImageContainer);
     void *operator()(size_t aWidth, size_t aHeight,
-                     MPAPI::ColorFormat aColorFormat) MOZ_OVERRIDE;
+                     MPAPI::ColorFormat aColorFormat);
     already_AddRefed<Image> GetImage();
   private:
     mozilla::layers::ImageContainer *mImageContainer;

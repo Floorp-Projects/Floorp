@@ -6,7 +6,6 @@
 #ifndef nsDOMFileReader_h__
 #define nsDOMFileReader_h__
 
-#include "mozilla/Attributes.h"
 #include "nsISupportsUtils.h"      
 #include "nsString.h"
 #include "nsWeakReference.h"
@@ -51,10 +50,10 @@ public:
   virtual void DoAbort(nsAString& aEvent) MOZ_OVERRIDE;
   NS_IMETHOD DoOnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                              nsresult aStatus, nsAString& aSuccessEvent,
-                             nsAString& aTerminationEvent) MOZ_OVERRIDE;
+                             nsAString& aTerminationEvent);
   NS_IMETHOD DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                nsIInputStream* aInputStream, uint64_t aOffset,
-                               uint32_t aCount) MOZ_OVERRIDE;
+                               uint32_t aCount);
 
   nsPIDOMWindow* GetParentObject() const
   {

@@ -7,7 +7,6 @@
 #ifndef nsInProcessTabChildGlobal_h
 #define nsInProcessTabChildGlobal_h
 
-#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
@@ -49,17 +48,17 @@ public:
       ? mMessageManager->SendSyncMessage(aMessageName, aObject, aCx, aArgc, aRetval)
       : NS_ERROR_NULL_POINTER;
   }
-  NS_IMETHOD GetContent(nsIDOMWindow** aContent) MOZ_OVERRIDE;
-  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) MOZ_OVERRIDE;
-  NS_IMETHOD Dump(const nsAString& aStr) MOZ_OVERRIDE
+  NS_IMETHOD GetContent(nsIDOMWindow** aContent);
+  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
+  NS_IMETHOD Dump(const nsAString& aStr)
   {
     return mMessageManager ? mMessageManager->Dump(aStr) : NS_OK;
   }
-  NS_IMETHOD PrivateNoteIntentionalCrash() MOZ_OVERRIDE;
+  NS_IMETHOD PrivateNoteIntentionalCrash();
   NS_IMETHOD Btoa(const nsAString& aBinaryData,
-                  nsAString& aAsciiBase64String) MOZ_OVERRIDE;
+                  nsAString& aAsciiBase64String);
   NS_IMETHOD Atob(const nsAString& aAsciiString,
-                  nsAString& aBinaryData) MOZ_OVERRIDE;
+                  nsAString& aBinaryData);
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER
 
@@ -68,11 +67,11 @@ public:
    */
   virtual bool DoSendSyncMessage(const nsAString& aMessage,
                                  const mozilla::dom::StructuredCloneData& aData,
-                                 InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
+                                 InfallibleTArray<nsString>* aJSONRetVal);
   virtual bool DoSendAsyncMessage(const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData) MOZ_OVERRIDE;
+                                  const mozilla::dom::StructuredCloneData& aData);
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
                               bool aUseCapture)
@@ -84,7 +83,7 @@ public:
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
                               bool aUseCapture, bool aWantsUntrusted,
-                              uint8_t optional_argc) MOZ_OVERRIDE
+                              uint8_t optional_argc)
   {
     return nsDOMEventTargetHelper::AddEventListener(aType, aListener,
                                                     aUseCapture,
@@ -93,8 +92,8 @@ public:
   }
   using nsDOMEventTargetHelper::AddEventListener;
 
-  virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE { return mCx; }
-  virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE { return mPrincipal; }
+  virtual JSContext* GetJSContextForEventHandlers() { return mCx; }
+  virtual nsIPrincipal* GetPrincipal() { return mPrincipal; }
   void LoadFrameScript(const nsAString& aURL);
   void Disconnect();
   void SendMessageToParent(const nsString& aMessage, bool aSync,
@@ -117,7 +116,7 @@ public:
 
   void DelayedDisconnect();
 
-  virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE {
+  virtual JSObject* GetGlobalJSObject() {
     if (!mGlobal) {
       return nullptr;
     }

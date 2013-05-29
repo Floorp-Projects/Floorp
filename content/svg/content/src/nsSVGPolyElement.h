@@ -6,7 +6,6 @@
 #ifndef NS_SVGPOLYELEMENT_H_
 #define NS_SVGPOLYELEMENT_H_
 
-#include "mozilla/Attributes.h"
 #include "nsSVGPathGeometryElement.h"
 #include "SVGAnimatedPointList.h"
 
@@ -39,10 +38,10 @@ public:
   }
 
   // nsSVGPathGeometryElement methods:
-  virtual bool AttributeDefinesGeometry(const nsIAtom *aName) MOZ_OVERRIDE;
-  virtual bool IsMarkable() MOZ_OVERRIDE { return true; }
-  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
-  virtual void ConstructPath(gfxContext *aCtx) MOZ_OVERRIDE;
+  virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
+  virtual bool IsMarkable() { return true; }
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
+  virtual void ConstructPath(gfxContext *aCtx);
 
   // WebIDL
   already_AddRefed<mozilla::DOMSVGPointList> Points();

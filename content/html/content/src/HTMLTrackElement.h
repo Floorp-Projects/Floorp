@@ -9,7 +9,6 @@
 #define WEBVTT_NO_CONFIG_H 1
 #define WEBVTT_STATIC 1
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/TextTrack.h"
 #include "nsCycleCollectionParticipant.h"
@@ -104,13 +103,13 @@ public:
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // For Track, ItemValue reflects the src attribute
-  virtual void GetItemValueText(nsAString& aText) MOZ_OVERRIDE
+  virtual void GetItemValueText(nsAString& aText)
   {
     DOMString value;
     GetSrc(value);
     aText = value;
   }
-  virtual void SetItemValueText(const nsAString& aText) MOZ_OVERRIDE
+  virtual void SetItemValueText(const nsAString& aText)
   {
     ErrorResult rv;
     SetSrc(aText, rv);
@@ -120,7 +119,7 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult) MOZ_OVERRIDE;
+                              nsAttrValue& aResult);
 
   // Override BindToTree() so that we can trigger a load when we become
   // the child of a media element.
