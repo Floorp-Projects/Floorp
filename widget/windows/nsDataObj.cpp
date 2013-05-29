@@ -37,6 +37,7 @@
 
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
 
@@ -1114,7 +1115,8 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   const char *shortcutFormatStr;
   int totalLen;
   nsCString path;
-  if (!Preferences::GetBool(kShellIconPref, true)) {
+  if (!Preferences::GetBool(kShellIconPref, true) ||
+      WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
     shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n";
     const int formatLen = strlen(shortcutFormatStr) - 2;  // don't include %s
     totalLen = formatLen + asciiUrl.Length();  // don't include null character
