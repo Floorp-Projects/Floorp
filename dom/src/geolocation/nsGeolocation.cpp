@@ -712,7 +712,7 @@ nsGeolocationService::HandleMozsettingChanged(const PRUnichar* aData)
 
     nsDependentString dataStr(aData);
     JS::Rooted<JS::Value> val(cx);
-    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) || !val.isObject()) {
+    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), val.address()) || !val.isObject()) {
       return;
     }
 

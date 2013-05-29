@@ -1425,7 +1425,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
     if (JS_ParseJSON(cx,
                       static_cast<const jschar*>(NS_ConvertUTF8toUTF16(aJSONData).get()),
                       aJSONData.Length(),
-                      &json)) {
+                      json.address())) {
         WriteStructuredClone(cx, json, buffer, cloneData.mClosure);
         cloneData.mData = buffer.data();
         cloneData.mDataLength = buffer.nbytes();

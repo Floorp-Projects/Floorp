@@ -538,7 +538,7 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
     return NS_OK;
   }
 
-  JS::Rooted<JS::Value> val(cx);
+  JS::Value val;
   if (!JS_ParseJSON(cx, aData.BeginReading(), aData.Length(), &val)) {
     return JS_ReportPendingException(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }

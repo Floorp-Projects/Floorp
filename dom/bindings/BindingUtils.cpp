@@ -1322,7 +1322,7 @@ MainThreadDictionaryBase::ParseJSON(JSContext *aCx,
   }
   return JS_ParseJSON(aCx,
                       static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                      aJSON.Length(), aVal);
+                      aJSON.Length(), aVal.address());
 }
 
 static JSString*

@@ -162,7 +162,7 @@ TestSettingsObserver::Observe(nsISupports *aSubject,
 
   // Parse the JSON data.
   nsDependentString dataStr(aData);
-  JS::Rooted<JS::Value> data(cx);
+  JS::Value data;
   if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &data) ||
       !data.isObject()) {
     CHECK_MSG(false, "Failed to get the data");
