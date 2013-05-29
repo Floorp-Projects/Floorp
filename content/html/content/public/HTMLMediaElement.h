@@ -43,6 +43,8 @@ class MediaResource;
 class MediaDecoder;
 }
 
+class nsITimer;
+
 namespace mozilla {
 namespace dom {
 
@@ -533,6 +535,8 @@ protected:
     WakeLockBoolWrapper(bool val = false)
       : mValue(val), mCanPlay(true), mOuter(nullptr) {}
 
+    ~WakeLockBoolWrapper();
+
     void SetOuter(HTMLMediaElement* outer) { mOuter = outer; }
     void SetCanPlay(bool aCanPlay);
 
@@ -542,12 +546,15 @@ protected:
 
     bool operator !() const { return !mValue; }
 
+    static void TimerCallback(nsITimer* aTimer, void* aClosure);
+
   private:
     void UpdateWakeLock();
 
     bool mValue;
     bool mCanPlay;
     HTMLMediaElement* mOuter;
+    nsCOMPtr<nsITimer> mTimer;
   };
 
   /**

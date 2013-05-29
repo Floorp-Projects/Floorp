@@ -36,6 +36,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549475
  * The value sanitization algorithm is just an internal spec concept after all.
  */
 
+// We buffer up the results of sets of sub-tests, and avoid outputting log
+// entries for them all if they all pass.  Otherwise, we have an enormous amount
+// of test output.
+
+var delayedTests = [];
+var anyFailedDelayedTests = false;
+
+function delayed_is(actual, expected, description)
+{
+  var result = actual == expected;
+  delayedTests.push({ actual: actual, expected: expected, description: description });
+  if (!result) {
+    anyFailedDelayedTests = true;
+  }
+}
+
+function flushDelayedTests(description)
+{
+  if (anyFailedDelayedTests) {
+    info("Outputting individual results for \"" + description + "\" due to failures in subtests");
+    for (var test of delayedTests) {
+      is(test.actual, test.expected, test.description);
+    }
+  } else {
+    ok(true, description + " (" + delayedTests.length + " subtests)");
+  }
+  delayedTests = [];
+  anyFailedDelayedTests = false;
+}
+
 // We are excluding "file" because it's too different from the other types.
 // And it has no sanitizing algorithm.
 var inputTypes =
@@ -157,7 +187,7 @@ function sanitizeValue(aType, aValue)
   }
 }
 
-function checkSanitizing(element)
+function checkSanitizing(element, inputTypeDescription)
 {
   var testData =
   [
@@ -302,17 +332,17 @@ function checkSanitizing(element)
 
   for (value of testData) {
     element.setAttribute('value', value);
-    is(element.value, sanitizeValue(type, value),
+    delayed_is(element.value, sanitizeValue(type, value),
        "The value has not been correctly sanitized for type=" + type);
-    is(element.getAttribute('value'), value,
+    delayed_is(element.getAttribute('value'), value,
        "The content value should not have been sanitized");
 
     if (type in valueModeValue) {
       element.setAttribute('value', 'tulip');
       element.value = value;
-      is(element.value, sanitizeValue(type, value),
+      delayed_is(element.value, sanitizeValue(type, value),
          "The value has not been correctly sanitized for type=" + type);
-      is(element.getAttribute('value'), 'tulip',
+      delayed_is(element.getAttribute('value'), 'tulip',
          "The content value should not have been sanitized");
     }
 
@@ -320,26 +350,28 @@ function checkSanitizing(element)
     form.reset();
     element.type = 'checkbox'; // We know this type has no sanitizing algorithm.
     element.setAttribute('value', value);
-    is(element.value, value, "The value should not have been sanitized");
+    delayed_is(element.value, value, "The value should not have been sanitized");
     element.type = type;
-    is(element.value, sanitizeValue(type, value),
+    delayed_is(element.value, sanitizeValue(type, value),
        "The value has not been correctly sanitized for type=" + type);
-    is(element.getAttribute('value'), value,
+    delayed_is(element.getAttribute('value'), value,
        "The content value should not have been sanitized");
 
     element.setAttribute('value', '');
     form.reset();
     element.setAttribute('value', value);
     form.reset();
-    is(element.value, sanitizeValue(type, value),
+    delayed_is(element.value, sanitizeValue(type, value),
        "The value has not been correctly sanitized for type=" + type);
-    is(element.getAttribute('value'), value,
+    delayed_is(element.getAttribute('value'), value,
        "The content value should not have been sanitized");
 
     // Cleaning-up.
     element.setAttribute('value', '');
     form.reset();
   }
+
+  flushDelayedTests(inputTypeDescription);
 }
 
 for (type of inputTypes) {
@@ -349,17 +381,17 @@ for (type of inputTypes) {
   element.type = type;
   form.appendChild(element);
 
-  checkSanitizing(element); // no frame, no editor
+  checkSanitizing(element, "type=" + type + ", no frame, no editor");
 
   element.style.display = "";
-  checkSanitizing(element); // frame, no editor
+  checkSanitizing(element, "type=" + type + ", frame, no editor");
 
   element.focus();
   element.blur();
-  checkSanitizing(element); // frame, editor
+  checkSanitizing(element, "type=" + type + ", frame, editor");
 
   element.style.display = "none";
-  checkSanitizing(element); // no frame, editor
+  checkSanitizing(element, "type=" + type + ", no frame, editor");
 
   form.removeChild(element);
 }

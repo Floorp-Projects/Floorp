@@ -61,7 +61,7 @@ private:
                      const uint16 * o_constraint, const byte *constraint_data, 
                      const uint16 * o_action, const byte * action_data,
                      const Face &);
-    bool   	readStates(const byte * starts, const byte * states, const byte * o_rule_map);
+    bool   	readStates(const byte * starts, const byte * states, const byte * o_rule_map, const Face &);
     bool   	readRanges(const byte * ranges, size_t num_ranges);
     uint16 	glyphToCol(const uint16 gid) const;
     bool   	runFSM(FiniteStateMachine & fsm, Slot * slot) const;
@@ -72,18 +72,19 @@ private:
     uint16    * m_cols;
     Rule      * m_rules; // rules
     RuleEntry * m_ruleMap;
-    State *   * m_startStates; // prectxt length
-    State *   * m_sTable;
+    uint16    * m_startStates; // prectxt length
+    uint16    * m_transitions;
     State     * m_states;
     
     byte   m_flags;
     byte   m_iMaxLoop;
     uint16 m_numGlyphs;
     uint16 m_numRules;
-    uint16 m_sRows;
-    uint16 m_sTransition;
-    uint16 m_sSuccess;
-    uint16 m_sColumns;
+    uint16 m_numStates;
+    uint16 m_numTransition;
+    uint16 m_numSuccess;
+    uint16 m_successStart;
+    uint16 m_numColumns;
     byte m_minPreCtxt;
     byte m_maxPreCtxt;
     vm::Machine::Code m_cPConstraint;

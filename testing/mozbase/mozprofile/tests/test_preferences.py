@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mozfile
+import mozhttpd
 import os
 import shutil
 import tempfile
@@ -16,6 +18,12 @@ here = os.path.dirname(os.path.abspath(__file__))
 
 class PreferencesTest(unittest.TestCase):
     """test mozprofile preference handling"""
+
+    # preferences from files/prefs_with_comments.js
+    _prefs_with_comments = {'browser.startup.homepage': 'http://planet.mozilla.org',
+                            'zoom.minPercent': 30,
+                            'zoom.maxPercent': 300,
+                            'webgl.verbose': 'false'}
 
     def run_command(self, *args):
         """
@@ -231,28 +239,49 @@ user_pref("webgl.force-enabled", true);
 
         # write them to a temporary location
         path = None
+        read_prefs = None
         try:
-            with tempfile.NamedTemporaryFile(suffix='.js', delete=False) as f:
+            with mozfile.NamedTemporaryFile(suffix='.js', delete=False) as f:
                 path = f.name
                 preferences.write(f, _prefs)
 
             # read them back and ensure we get what we put in
-            self.assertEqual(dict(Preferences.read_prefs(path)), _prefs)
+            read_prefs = dict(Preferences.read_prefs(path))
 
         finally:
             # cleanup
-            os.remove(path)
+            if path and os.path.exists(path):
+                os.remove(path)
+
+        self.assertEqual(read_prefs, _prefs)
 
     def test_read_prefs_with_comments(self):
         """test reading preferences from a prefs.js file that contains comments"""
 
-        _prefs = {'browser.startup.homepage': 'http://planet.mozilla.org',
-                  'zoom.minPercent': 30,
-                  'zoom.maxPercent': 300,
-                  'webgl.verbose': 'false'}
         path = os.path.join(here, 'files', 'prefs_with_comments.js')
-        self.assertEqual(dict(Preferences.read_prefs(path)), _prefs)
+        self.assertEqual(dict(Preferences.read_prefs(path)), self._prefs_with_comments)
 
+    def test_read_prefs_ttw(self):
+        """test reading preferences through the web via mozhttpd"""
+
+        # create a MozHttpd instance
+        docroot = os.path.join(here, 'files')
+        host = '127.0.0.1'
+        port = 8888
+        httpd = mozhttpd.MozHttpd(host=host, port=port, docroot=docroot)
+
+        # create a preferences instance
+        prefs = Preferences()
+
+        try:
+            # start server
+            httpd.start(block=False)
+
+            # read preferences through the web
+            read = prefs.read_prefs('http://%s:%d/prefs_with_comments.js' % (host, port))
+            self.assertEqual(dict(read), self._prefs_with_comments)
+        finally:
+            httpd.stop()
 
 if __name__ == '__main__':
     unittest.main()
