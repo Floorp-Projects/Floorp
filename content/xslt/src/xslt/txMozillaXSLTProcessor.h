@@ -66,18 +66,18 @@ public:
     NS_DECL_NSIXSLTPROCESSORPRIVATE
 
     // nsIDocumentTransformer interface
-    NS_IMETHOD Init(nsIPrincipal* aPrincipal);
-    NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver);
-    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup);
-    NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource);
-    NS_IMETHOD CancelLoads() {return NS_OK;}
+    NS_IMETHOD Init(nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
+    NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) MOZ_OVERRIDE;
+    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup) MOZ_OVERRIDE;
+    NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) MOZ_OVERRIDE;
+    NS_IMETHOD CancelLoads() MOZ_OVERRIDE {return NS_OK;}
     NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
-                                     const nsString& aNamespace);
+                                     const nsString& aNamespace) MOZ_OVERRIDE;
     NS_IMETHOD AddXSLTParam(const nsString& aName,
                             const nsString& aNamespace,
                             const nsString& aSelect,
                             const nsString& aValue,
-                            nsIDOMNode* aContext);
+                            nsIDOMNode* aContext) MOZ_OVERRIDE;
 
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED

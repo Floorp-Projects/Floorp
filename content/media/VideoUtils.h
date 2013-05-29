@@ -7,6 +7,7 @@
 #ifndef VideoUtils_h
 #define VideoUtils_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/CheckedInt.h"
 
@@ -115,7 +116,7 @@ class ShutdownThreadEvent : public nsRunnable
 public:
   ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
   ~ShutdownThreadEvent() {}
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() MOZ_OVERRIDE {
     mThread->Shutdown();
     mThread = nullptr;
     return NS_OK;

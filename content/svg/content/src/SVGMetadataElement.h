@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_SVGMetadataElement_h
 #define mozilla_dom_SVGMetadataElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsSVGElement.h"
 
 nsresult NS_NewSVGMetadataElement(nsIContent **aResult,
@@ -28,7 +29,7 @@ protected:
   nsresult Init();
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 };
 
 } // namespace dom

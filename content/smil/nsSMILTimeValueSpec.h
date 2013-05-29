@@ -6,6 +6,7 @@
 #ifndef NS_SMILTIMEVALUESPEC_H_
 #define NS_SMILTIMEVALUESPEC_H_
 
+#include "mozilla/Attributes.h"
 #include "nsSMILTimeValueSpecParams.h"
 #include "nsReferencedElement.h"
 #include "nsAutoPtr.h"
@@ -92,12 +93,12 @@ protected:
     }
 
   protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo)
+    virtual void ElementChanged(Element* aFrom, Element* aTo) MOZ_OVERRIDE
     {
       nsReferencedElement::ElementChanged(aFrom, aTo);
       mSpec->UpdateReferencedElement(aFrom, aTo);
     }
-    virtual bool IsPersistent() { return true; }
+    virtual bool IsPersistent() MOZ_OVERRIDE { return true; }
   private:
     nsSMILTimeValueSpec* mSpec;
   };

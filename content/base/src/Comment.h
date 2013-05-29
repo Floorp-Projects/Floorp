@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_Comment_h
 #define mozilla_dom_Comment_h
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMComment.h"
 #include "nsGenericDOMDataNode.h"
 
@@ -54,13 +55,13 @@ public:
   virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              bool aCloneText) const;
+                                              bool aCloneText) const MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 #ifdef DEBUG
-  virtual void List(FILE* out, int32_t aIndent) const;
+  virtual void List(FILE* out, int32_t aIndent) const MOZ_OVERRIDE;
   virtual void DumpContent(FILE* out = stdout, int32_t aIndent = 0,
-                           bool aDumpAll = true) const
+                           bool aDumpAll = true) const MOZ_OVERRIDE
   {
     return;
   }

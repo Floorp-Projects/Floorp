@@ -6,6 +6,7 @@
 #ifndef NS_SMILANIMATIONCONTROLLER_H_
 #define NS_SMILANIMATIONCONTROLLER_H_
 
+#include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -50,15 +51,15 @@ public:
   void Disconnect();
 
   // nsSMILContainer
-  virtual void Pause(uint32_t aType);
-  virtual void Resume(uint32_t aType);
-  virtual nsSMILTime GetParentTime() const;
+  virtual void Pause(uint32_t aType) MOZ_OVERRIDE;
+  virtual void Resume(uint32_t aType) MOZ_OVERRIDE;
+  virtual nsSMILTime GetParentTime() const MOZ_OVERRIDE;
 
   // nsARefreshObserver
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD_(nsrefcnt) AddRef() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsrefcnt) Release() MOZ_OVERRIDE;
 
-  virtual void WillRefresh(mozilla::TimeStamp aTime);
+  virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE;
 
   // Methods for registering and enumerating animation elements
   void RegisterAnimationElement(mozilla::dom::SVGAnimationElement* aAnimationElement);
@@ -145,7 +146,7 @@ protected:
   void MaybeStartSampling(nsRefreshDriver* aRefreshDriver);
 
   // Sample-related callbacks and implementation helpers
-  virtual void DoSample();
+  virtual void DoSample() MOZ_OVERRIDE;
   void DoSample(bool aSkipUnchangedContainers);
 
   void RewindElements();
@@ -174,8 +175,8 @@ protected:
       mozilla::dom::SVGAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult);
 
   // Methods for adding/removing time containers
-  virtual nsresult AddChild(nsSMILTimeContainer& aChild);
-  virtual void     RemoveChild(nsSMILTimeContainer& aChild);
+  virtual nsresult AddChild(nsSMILTimeContainer& aChild) MOZ_OVERRIDE;
+  virtual void     RemoveChild(nsSMILTimeContainer& aChild) MOZ_OVERRIDE;
 
   void FlagDocumentNeedsFlush();
 

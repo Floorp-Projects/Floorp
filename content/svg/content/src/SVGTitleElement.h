@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_SVGTitleElement_h
 #define mozilla_dom_SVGTitleElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsSVGElement.h"
 #include "nsStubMutationObserver.h"
 
@@ -38,16 +39,16 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
 
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              bool aNullParent = true) MOZ_OVERRIDE;
 
-  virtual void DoneAddingChildren(bool aHaveNotified);
+  virtual void DoneAddingChildren(bool aHaveNotified) MOZ_OVERRIDE;
 private:
   void SendTitleChangeEvent(bool aBound);
 };

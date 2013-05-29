@@ -19,10 +19,10 @@ public:
 	nsPrivateTextRange(const nsTextRange &aTextRange);
 	virtual ~nsPrivateTextRange(void);
 
-	NS_IMETHOD    GetRangeStart(uint16_t* aRangeStart);
-	NS_IMETHOD    GetRangeEnd(uint16_t* aRangeEnd);
-	NS_IMETHOD    GetRangeType(uint16_t* aRangeType);
-	NS_IMETHOD    GetRangeStyle(nsTextRangeStyle* aRangeStyle);
+	NS_IMETHOD    GetRangeStart(uint16_t* aRangeStart) MOZ_OVERRIDE;
+	NS_IMETHOD    GetRangeEnd(uint16_t* aRangeEnd) MOZ_OVERRIDE;
+	NS_IMETHOD    GetRangeType(uint16_t* aRangeType) MOZ_OVERRIDE;
+	NS_IMETHOD    GetRangeStyle(nsTextRangeStyle* aRangeStyle) MOZ_OVERRIDE;
 
 protected:
 
@@ -40,9 +40,9 @@ public:
 
 	void          AppendTextRange(nsRefPtr<nsPrivateTextRange>& aRange);
 
-	NS_IMETHOD_(uint16_t)    GetLength();
+	NS_IMETHOD_(uint16_t)    GetLength() MOZ_OVERRIDE;
 
-	NS_IMETHOD_(already_AddRefed<nsIPrivateTextRange>)    Item(uint16_t aIndex);
+	NS_IMETHOD_(already_AddRefed<nsIPrivateTextRange>)    Item(uint16_t aIndex) MOZ_OVERRIDE;
 protected:
 	nsTArray<nsRefPtr<nsPrivateTextRange> > mList;
 };
