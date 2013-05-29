@@ -22,6 +22,7 @@ public:
 private:
     ~nsConsoleMessage() {}
 
+    int64_t mTimeStamp;
     nsString mMessage;
 };
 

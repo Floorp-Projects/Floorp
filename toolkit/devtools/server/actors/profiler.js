@@ -5,6 +5,11 @@
 "use strict";
 
 var connCount = 0;
+var startTime = 0;
+
+function getCurrentTime() {
+  return (new Date()).getTime() - startTime;
+}
 
 /**
  * Creates a ProfilerActor. ProfilerActor provides remote access to the
@@ -44,6 +49,7 @@ ProfilerActor.prototype = {
     this._profiler.StartProfiler(aRequest.entries, aRequest.interval,
                            aRequest.features, aRequest.features.length);
     this._started = true;
+    startTime = (new Date()).getTime();
     return { "msg": "profiler started" }
   },
   onStopProfiler: function(aRequest) {
@@ -57,11 +63,12 @@ ProfilerActor.prototype = {
   },
   onGetProfile: function(aRequest) {
     var profile = this._profiler.getProfileData();
-    return { "profile": profile }
+    return { "profile": profile, "currentTime": getCurrentTime() }
   },
   onIsActive: function(aRequest) {
     var isActive = this._profiler.IsActive();
-    return { "isActive": isActive }
+    var currentTime = isActive ? getCurrentTime() : null;
+    return { "isActive": isActive, "currentTime": currentTime }
   },
   onGetResponsivenessTimes: function(aRequest) {
     var times = this._profiler.GetResponsivenessTimes({});
@@ -128,11 +135,62 @@ ProfilerActor.prototype = {
     aSubject = (aSubject && aSubject.wrappedJSObject) || aSubject;
     aData    = (aData    && aData.wrappedJSObject)    || aData;
 
-    this.conn.send({ from: this.actorID,
-                     type: "eventNotification",
-                     event: aTopic,
-                     subject: JSON.parse(JSON.stringify(aSubject, cycleBreaker)),
-                     data:    JSON.parse(JSON.stringify(aData,    cycleBreaker)) });
+    let subj = JSON.parse(JSON.stringify(aSubject, cycleBreaker));
+    let data = JSON.parse(JSON.stringify(aData,    cycleBreaker));
+
+    let send = (extra) => {
+      data = data || {};
+
+      if (extra)
+        data.extra = extra;
+
+      this.conn.send({
+        from:    this.actorID,
+        type:    "eventNotification",
+        event:   aTopic,
+        subject: subj,
+        data:    data
+      });
+    }
+
+    if (aTopic !== "console-api-profiler")
+      return void send();
+
+    // If the event was generated from console.profile or
+    // console.profileEnd we need to start the profiler
+    // right away and only then notify our client. Otherwise,
+    // we'll lose precious samples.
+
+    let name = subj.arguments[0];
+
+    if (subj.action === "profile") {
+      let resp = this.onIsActive();
+
+      if (resp.isActive) {
+        return void send({
+          name: name,
+          currentTime: resp.currentTime,
+          action: "profile"
+        });
+      }
+
+      this.onStartProfiler({
+        entries: 1000000,
+        interval: 1,
+        features: ["js"]
+      });
+
+      return void send({ currentTime: 0, action: "profile", name: name });
+    }
+
+    if (subj.action === "profileEnd") {
+      let resp = this.onGetProfile();
+      resp.action = "profileEnd";
+      resp.name = name;
+      send(resp);
+    }
+
+    return undefined; // Otherwise xpcshell tests fail.
   }, "ProfilerActor.prototype.observe"),
 };
 
