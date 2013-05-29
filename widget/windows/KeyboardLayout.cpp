@@ -1000,7 +1000,6 @@ NativeKey::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
 
 bool
 NativeKey::DispatchKeyPressEventsAndDiscardsCharMessages(
-                        const UniCharsAndModifiers& aInputtingChars,
                         const EventFlags& aExtraFlags) const
 {
   MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
@@ -1033,12 +1032,11 @@ NativeKey::DispatchKeyPressEventsAndDiscardsCharMessages(
     RemoveMessageAndDispatchPluginEvent(WM_CHAR, WM_CHAR);
   }
 
-  return DispatchKeyPressEventsWithKeyboardLayout(aInputtingChars, aExtraFlags);
+  return DispatchKeyPressEventsWithKeyboardLayout(aExtraFlags);
 }
 
 bool
 NativeKey::DispatchKeyPressEventsWithKeyboardLayout(
-                        const UniCharsAndModifiers& aInputtingChars,
                         const EventFlags& aExtraFlags) const
 {
   MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
@@ -1046,7 +1044,7 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout(
 
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
 
-  UniCharsAndModifiers inputtingChars(aInputtingChars);
+  UniCharsAndModifiers inputtingChars(mCommittedCharsAndModifiers);
   UniCharsAndModifiers shiftedChars;
   UniCharsAndModifiers unshiftedChars;
   uint32_t shiftedLatinChar = 0;
@@ -1203,7 +1201,6 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout(
 
 bool
 NativeKey::DispatchKeyPressEventForFollowingCharMessage(
-                        const UniCharsAndModifiers& aInputtingChars,
                         const EventFlags& aExtraFlags) const
 {
   MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
@@ -1216,17 +1213,20 @@ NativeKey::DispatchKeyPressEventForFollowingCharMessage(
 #ifdef DEBUG
     if (IsPrintableKey()) {
       nsPrintfCString log(
-        "mOriginalVirtualKeyCode=0x%02X, aInputtingChars={ mChars=[ 0x%04X, "
-        "0x%04X, 0x%04X, 0x%04X, 0x%04X ], mLength=%d }, wParam=0x%04X",
-        mOriginalVirtualKeyCode, aInputtingChars.mChars[0],
-        aInputtingChars.mChars[1], aInputtingChars.mChars[2],
-        aInputtingChars.mChars[3], aInputtingChars.mChars[4],
-        aInputtingChars.mLength, msg.wParam);
-      if (aInputtingChars.IsEmpty()) {
+        "mOriginalVirtualKeyCode=0x%02X, mCommittedCharsAndModifiers={ "
+        "mChars=[ 0x%04X, 0x%04X, 0x%04X, 0x%04X, 0x%04X ], mLength=%d }, "
+        "wParam=0x%04X",
+        mOriginalVirtualKeyCode, mCommittedCharsAndModifiers.mChars[0],
+        mCommittedCharsAndModifiers.mChars[1],
+        mCommittedCharsAndModifiers.mChars[2],
+        mCommittedCharsAndModifiers.mChars[3],
+        mCommittedCharsAndModifiers.mChars[4],
+        mCommittedCharsAndModifiers.mLength, msg.wParam);
+      if (mCommittedCharsAndModifiers.IsEmpty()) {
         log.Insert("length is zero: ", 0);
         NS_ERROR(log.get());
         NS_ABORT();
-      } else if (aInputtingChars.mChars[0] != msg.wParam) {
+      } else if (mCommittedCharsAndModifiers.mChars[0] != msg.wParam) {
         log.Insert("character mismatch: ", 0);
         NS_ERROR(log.get());
         NS_ABORT();
