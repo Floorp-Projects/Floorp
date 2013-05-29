@@ -6359,8 +6359,6 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 {
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
   NativeKey nativeKey(this, aMsg, aModKeyState, aFakeCharMessage);
-  UniCharsAndModifiers inputtingChars =
-    nativeKey.GetCommittedCharsAndModifiers();
   uint32_t DOMKeyCode = nativeKey.GetDOMKeyCode();
 
   static bool sRedirectedKeyDownEventPreventedDefault = false;
@@ -6452,14 +6450,12 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   extraFlags.mDefaultPrevented = noDefault;
 
   if (nativeKey.NeedsToHandleWithoutFollowingCharMessages()) {
-    return nativeKey.DispatchKeyPressEventsAndDiscardsCharMessages(
-                       inputtingChars, extraFlags);
+    return nativeKey.DispatchKeyPressEventsAndDiscardsCharMessages(extraFlags);
   }
 
   if (nativeKey.IsFollowedByCharMessage()) {
     return static_cast<LRESULT>(
-      nativeKey.DispatchKeyPressEventForFollowingCharMessage(inputtingChars,
-                                                             extraFlags));
+      nativeKey.DispatchKeyPressEventForFollowingCharMessage(extraFlags));
   }
 
   if (!aModKeyState.IsControl() && !aModKeyState.IsAlt() &&
@@ -6475,8 +6471,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   }
 
   return static_cast<LRESULT>(
-    nativeKey.DispatchKeyPressEventsWithKeyboardLayout(inputtingChars,
-                                                       extraFlags));
+    nativeKey.DispatchKeyPressEventsWithKeyboardLayout(extraFlags));
 }
 
 void
