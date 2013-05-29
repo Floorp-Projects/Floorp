@@ -18,6 +18,7 @@
 #include "WinUtils.h"
 #include "nsWindowDbg.h"
 #include "nsServiceManagerUtils.h"
+#include "nsPrintfCString.h"
 
 #include "nsIDOMKeyEvent.h"
 #include "nsIIdleServiceInternal.h"
@@ -1197,6 +1198,61 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout(
     defaultPrevented = (DispatchKeyEvent(keypressEvent) || defaultPrevented);
   }
 
+  return defaultPrevented;
+}
+
+bool
+NativeKey::DispatchKeyPressEventForFollowingCharMessage(
+                        const UniCharsAndModifiers& aInputtingChars,
+                        const EventFlags& aExtraFlags) const
+{
+  MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+
+  const MSG& msg = RemoveFollowingCharMessage();
+  if (mIsFakeCharMsg) {
+    if (msg.message == WM_DEADCHAR) {
+      return aExtraFlags.mDefaultPrevented;
+    }
+#ifdef DEBUG
+    if (IsPrintableKey()) {
+      nsPrintfCString log(
+        "mOriginalVirtualKeyCode=0x%02X, aInputtingChars={ mChars=[ 0x%04X, "
+        "0x%04X, 0x%04X, 0x%04X, 0x%04X ], mLength=%d }, wParam=0x%04X",
+        mOriginalVirtualKeyCode, aInputtingChars.mChars[0],
+        aInputtingChars.mChars[1], aInputtingChars.mChars[2],
+        aInputtingChars.mChars[3], aInputtingChars.mChars[4],
+        aInputtingChars.mLength, msg.wParam);
+      if (aInputtingChars.IsEmpty()) {
+        log.Insert("length is zero: ", 0);
+        NS_ERROR(log.get());
+        NS_ABORT();
+      } else if (aInputtingChars.mChars[0] != msg.wParam) {
+        log.Insert("character mismatch: ", 0);
+        NS_ERROR(log.get());
+        NS_ABORT();
+      }
+    }
+#endif // #ifdef DEBUG
+    return HandleCharMessage(msg, nullptr, &aExtraFlags);
+  }
+
+  // If prevent default set for keydown, do same for keypress
+  if (msg.message == WM_DEADCHAR) {
+    bool defaultPrevented = aExtraFlags.mDefaultPrevented;
+    if (mWidget->PluginHasFocus()) {
+      // We need to send the removed message to focused plug-in.
+      defaultPrevented = mWidget->DispatchPluginEvent(msg) || defaultPrevented;
+    }
+    return defaultPrevented;
+  }
+
+  bool defaultPrevented = (HandleCharMessage(msg, nullptr, &aExtraFlags) ||
+                           aExtraFlags.mDefaultPrevented);
+  // If a syschar keypress wasn't processed, Windows may want to
+  // handle it to activate a native menu.
+  if (!defaultPrevented && msg.message == WM_SYSCHAR) {
+    ::DefWindowProcW(msg.hwnd, msg.message, msg.wParam, msg.lParam);
+  }
   return defaultPrevented;
 }
 

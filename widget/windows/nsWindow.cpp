@@ -6457,59 +6457,13 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   }
 
   if (nativeKey.IsFollowedByCharMessage()) {
-    const MSG& msg = nativeKey.RemoveFollowingCharMessage();
-    if (aFakeCharMessage) {
-      if (msg.message == WM_DEADCHAR) {
-        return false;
-      }
-#ifdef DEBUG
-      if (nativeKey.IsPrintableKey()) {
-        nsPrintfCString log(
-          "OriginalVirtualKeyCode=0x%02X, inputtingChar={ mChars=[ 0x%04X, "
-          "0x%04X, 0x%04X, 0x%04X, 0x%04X ], mLength=%d }, wParam=0x%04X",
-          nativeKey.GetOriginalVirtualKeyCode(), inputtingChars.mChars[0],
-          inputtingChars.mChars[1], inputtingChars.mChars[2],
-          inputtingChars.mChars[3], inputtingChars.mChars[4],
-          inputtingChars.mLength, msg.wParam);
-        if (!inputtingChars.mLength) {
-          log.Insert("length is zero: ", 0);
-          NS_ERROR(log.get());
-          NS_ABORT();
-        } else if (inputtingChars.mChars[0] != msg.wParam) {
-          log.Insert("character mismatch: ", 0);
-          NS_ERROR(log.get());
-          NS_ABORT();
-        }
-      }
-#endif // #ifdef DEBUG
-      return static_cast<LRESULT>(
-        nativeKey.HandleCharMessage(msg, nullptr, &extraFlags));
-    }
-
-    // If prevent default set for keydown, do same for keypress
-    if (msg.message == WM_DEADCHAR) {
-      if (!PluginHasFocus())
-        return false;
-
-      // We need to send the removed message to focused plug-in.
-      nsWindowBase::DispatchPluginEvent(msg);
-      return noDefault;
-    }
-
-    PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
-           ("%s charCode=%d scanCode=%d\n",
-            msg.message == WM_SYSCHAR ? "WM_SYSCHAR" : "WM_CHAR",
-            msg.wParam, HIWORD(msg.lParam) & 0xFF));
-
-    bool result = nativeKey.HandleCharMessage(msg, nullptr, &extraFlags);
-    // If a syschar keypress wasn't processed, Windows may want to
-    // handle it to activate a native menu.
-    if (!result && msg.message == WM_SYSCHAR)
-      ::DefWindowProcW(mWnd, msg.message, msg.wParam, msg.lParam);
-    return static_cast<LRESULT>(result);
+    return static_cast<LRESULT>(
+      nativeKey.DispatchKeyPressEventForFollowingCharMessage(inputtingChars,
+                                                             extraFlags));
   }
-  else if (!aModKeyState.IsControl() && !aModKeyState.IsAlt() &&
-            !aModKeyState.IsWin() && nativeKey.IsPrintableKey()) {
+
+  if (!aModKeyState.IsControl() && !aModKeyState.IsAlt() &&
+      !aModKeyState.IsWin() && nativeKey.IsPrintableKey()) {
     // If this is simple KeyDown event but next message is not WM_CHAR,
     // this event may not input text, so we should ignore this event.
     // See bug 314130.
