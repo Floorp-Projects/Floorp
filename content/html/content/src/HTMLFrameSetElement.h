@@ -6,7 +6,6 @@
 #ifndef HTMLFrameSetElement_h
 #define HTMLFrameSetElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsGenericHTMLElement.h"
 
@@ -121,7 +120,7 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify);
 
    /**
     * GetRowSpec is used to get the "rows" spec.
@@ -144,12 +143,12 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
+                                nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const MOZ_OVERRIDE;
+                                              int32_t aModType) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
 protected:
   virtual JSObject* WrapNode(JSContext *aCx,

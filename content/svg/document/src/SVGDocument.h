@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGDocument_h
 #define mozilla_dom_SVGDocument_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/XMLDocument.h"
 #include "nsIDOMSVGDocument.h"
 
@@ -37,7 +36,7 @@ public:
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_DECL_ISUPPORTS_INHERITED
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // WebIDL API
   void GetDomain(nsAString& aDomain, ErrorResult& aRv);

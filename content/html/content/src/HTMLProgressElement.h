@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_HTMLProgressElement_h
 #define mozilla_dom_HTMLProgressElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLProgressElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValue.h"
@@ -39,14 +38,14 @@ public:
   // nsIDOMHTMLProgressElement
   NS_DECL_NSIDOMHTMLPROGRESSELEMENT
 
-  nsEventStates IntrinsicState() const MOZ_OVERRIDE;
+  nsEventStates IntrinsicState() const;
 
-  nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
-                        const nsAString& aValue, nsAttrValue& aResult) MOZ_OVERRIDE;
+                        const nsAString& aValue, nsAttrValue& aResult);
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   double Value() const;

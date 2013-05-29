@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/PSpeechSynthesisChild.h"
 #include "mozilla/dom/PSpeechSynthesisRequestChild.h"
 #include "nsSpeechTask.h"
@@ -76,10 +75,10 @@ public:
   SpeechTaskChild(SpeechSynthesisUtterance* aUtterance);
 
   NS_IMETHOD Setup(nsISpeechTaskCallback* aCallback,
-                   uint32_t aChannels, uint32_t aRate, uint8_t argc) MOZ_OVERRIDE;
+                   uint32_t aChannels, uint32_t aRate, uint8_t argc);
 
   NS_IMETHOD SendAudio (const JS::Value& aData, const JS::Value& aLandmarks,
-                        JSContext* aCx) MOZ_OVERRIDE;
+                        JSContext* aCx);
 
   virtual void Pause();
 

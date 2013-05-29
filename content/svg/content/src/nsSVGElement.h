@@ -11,7 +11,6 @@
   It implements all the common DOM interfaces and handles attributes.
 */
 
-#include "mozilla/Attributes.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsAutoPtr.h"
 #include "nsChangeHint.h"
@@ -75,7 +74,7 @@ protected:
 
 public:
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_MUST_OVERRIDE;
 
   typedef mozilla::SVGNumberList SVGNumberList;
   typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
@@ -281,11 +280,11 @@ public:
     return nullptr;
   }
 
-  virtual nsISMILAttr* GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName) MOZ_OVERRIDE;
+  virtual nsISMILAttr* GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName);
   void AnimationNeedsResample();
   void FlushAnimations();
 
-  virtual void RecompileScriptEventListeners() MOZ_OVERRIDE;
+  virtual void RecompileScriptEventListeners();
 
   void GetStringBaseValue(uint8_t aAttrEnum, nsAString& aResult) const;
   void SetStringBaseValue(uint8_t aAttrEnum, const nsAString& aValue);
@@ -300,7 +299,7 @@ public:
     return nullptr;
   }
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_FINAL MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_FINAL { return this; }
   virtual bool IsTransformable() { return false; }
 
   // WebIDL

@@ -6,7 +6,6 @@
 #ifndef __NS_SVGPATHDATAPARSER_H__
 #define __NS_SVGPATHDATAPARSER_H__
 
-#include "mozilla/Attributes.h"
 #include "gfxPoint.h"
 #include "nsSVGDataParser.h"
 
@@ -39,7 +38,7 @@ protected:
   virtual nsresult StoreEllipticalArc(bool absCoords, float x, float y,
                                       float r1, float r2, float angle,
                                       bool largeArcFlag, bool sweepFlag) = 0;
-  virtual nsresult Match() MOZ_OVERRIDE;
+  virtual nsresult Match();
  
   nsresult MatchCoordPair(float* aX, float* aY);
   bool IsTokenCoordPairStarter();
@@ -134,22 +133,22 @@ public:
   nsresult Parse(const nsAString &aValue);
 
 protected:
-  virtual nsresult StoreMoveTo(bool absCoords, float x, float y) MOZ_OVERRIDE;
-  virtual nsresult StoreClosePath() MOZ_OVERRIDE;
-  virtual nsresult StoreLineTo(bool absCoords, float x, float y) MOZ_OVERRIDE;
-  virtual nsresult StoreHLineTo(bool absCoords, float x) MOZ_OVERRIDE;
-  virtual nsresult StoreVLineTo(bool absCoords, float y) MOZ_OVERRIDE;
+  virtual nsresult StoreMoveTo(bool absCoords, float x, float y);
+  virtual nsresult StoreClosePath();
+  virtual nsresult StoreLineTo(bool absCoords, float x, float y);
+  virtual nsresult StoreHLineTo(bool absCoords, float x);
+  virtual nsresult StoreVLineTo(bool absCoords, float y);
   virtual nsresult StoreCurveTo(bool absCoords, float x, float y,
-                                float x1, float y1, float x2, float y2) MOZ_OVERRIDE;
+                                float x1, float y1, float x2, float y2);
   virtual nsresult StoreSmoothCurveTo(bool absCoords, float x, float y,
-                                      float x2, float y2) MOZ_OVERRIDE;
+                                      float x2, float y2);
   virtual nsresult StoreQuadCurveTo(bool absCoords, float x, float y,
-                                    float x1, float y1) MOZ_OVERRIDE;
+                                    float x1, float y1);
   virtual nsresult StoreSmoothQuadCurveTo(bool absCoords,
-                                          float x, float y) MOZ_OVERRIDE;
+                                          float x, float y);
   virtual nsresult StoreEllipticalArc(bool absCoords, float x, float y,
                                       float r1, float r2, float angle,
-                                      bool largeArcFlag, bool sweepFlag) MOZ_OVERRIDE;
+                                      bool largeArcFlag, bool sweepFlag);
 
 private:
   mozilla::SVGPathData *mPathSegList;

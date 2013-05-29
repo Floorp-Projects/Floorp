@@ -6,7 +6,6 @@
 #ifndef TX_XSLT_PATTERNS_H
 #define TX_XSLT_PATTERNS_H
 
-#include "mozilla/Attributes.h"
 #include "txExpr.h"
 #include "txXMLUtils.h"
 
@@ -136,7 +135,7 @@ public:
     }
 
     TX_DECL_PATTERN;
-    Type getType() MOZ_OVERRIDE;
+    Type getType();
 
 private:
     txOwningArray<txPattern> mLocPathPatterns;
@@ -228,7 +227,7 @@ public:
     }
 
     TX_DECL_PATTERN;
-    Type getType() MOZ_OVERRIDE;
+    Type getType();
 
     txNodeTest* getNodeTest()
     {

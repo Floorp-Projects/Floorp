@@ -6,7 +6,6 @@
 #ifndef nsRDFConMemberTestNode_h__
 #define nsRDFConMemberTestNode_h__
 
-#include "mozilla/Attributes.h"
 #include "nscore.h"
 #include "nsRDFTestNode.h"
 #include "nsIRDFDataSource.h"
@@ -26,18 +25,18 @@ public:
                            nsIAtom* aMemberVariable);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          bool* aCantHandleYet) const MOZ_OVERRIDE;
+                                          bool* aCantHandleYet) const;
 
     virtual bool
     CanPropagate(nsIRDFResource* aSource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget,
-                 Instantiation& aInitialBindings) const MOZ_OVERRIDE;
+                 Instantiation& aInitialBindings) const;
 
     virtual void
     Retract(nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
-            nsIRDFNode* aTarget) const MOZ_OVERRIDE;
+            nsIRDFNode* aTarget) const;
 
     class Element : public MemoryElement {
     public:
@@ -49,14 +48,14 @@ public:
 
         virtual ~Element() { MOZ_COUNT_DTOR(nsRDFConMemberTestNode::Element); }
 
-        virtual const char* Type() const MOZ_OVERRIDE {
+        virtual const char* Type() const {
             return "nsRDFConMemberTestNode::Element"; }
 
-        virtual PLHashNumber Hash() const MOZ_OVERRIDE {
+        virtual PLHashNumber Hash() const {
             return PLHashNumber(NS_PTR_TO_INT32(mContainer.get())) ^
                 (PLHashNumber(NS_PTR_TO_INT32(mMember.get())) >> 12); }
 
-        virtual bool Equals(const MemoryElement& aElement) const MOZ_OVERRIDE {
+        virtual bool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {
                 const Element& element = static_cast<const Element&>(aElement);
                 return mContainer == element.mContainer && mMember == element.mMember;

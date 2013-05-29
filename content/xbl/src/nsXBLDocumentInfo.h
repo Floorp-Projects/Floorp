@@ -5,7 +5,6 @@
 #ifndef nsXBLDocumentInfo_h__
 #define nsXBLDocumentInfo_h__
 
-#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -49,7 +48,7 @@ public:
   bool IsChrome() { return mIsChrome; }
 
   // nsIScriptGlobalObjectOwner methods
-  virtual nsIScriptGlobalObject* GetScriptGlobalObject() MOZ_OVERRIDE;
+  virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
   void MarkInCCGeneration(uint32_t aGeneration);
 

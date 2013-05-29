@@ -6,7 +6,6 @@
 #ifndef nsXBLProtoImplMethod_h__
 #define nsXBLProtoImplMethod_h__
 
-#include "mozilla/Attributes.h"
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "jsapi.h"
@@ -90,15 +89,15 @@ public:
   void SetLineNumber(uint32_t aLineNumber);
   
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JS::Handle<JSObject*> aTargetClassObject) MOZ_OVERRIDE;
+                                 JS::Handle<JSObject*> aTargetClassObject);
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
-                                 JS::Handle<JSObject*> aClassObject) MOZ_OVERRIDE;
+                                 JS::Handle<JSObject*> aClassObject);
 
-  virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure) MOZ_OVERRIDE;
+  virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure);
 
   nsresult Read(nsIScriptContext* aContext, nsIObjectInputStream* aStream);
-  virtual nsresult Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream) MOZ_OVERRIDE;
+  virtual nsresult Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream);
 
   bool IsCompiled() const
   {
@@ -139,7 +138,7 @@ public:
   // binding instantiations (though they may hang out in mMembers on the
   // prototype implementation).
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JS::Handle<JSObject*> aTargetClassObject) MOZ_OVERRIDE {
+                                 JS::Handle<JSObject*> aTargetClassObject) {
     return NS_OK;
   }
 

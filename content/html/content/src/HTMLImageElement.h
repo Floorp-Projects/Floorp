@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_HTMLImageElement_h
 #define mozilla_dom_HTMLImageElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -51,15 +50,15 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
+                                nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
+                                              int32_t aModType) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
-  bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) MOZ_OVERRIDE;
+  bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
@@ -70,22 +69,22 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify);
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify) MOZ_OVERRIDE;
+                             bool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
 
-  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsEventStates IntrinsicState() const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(Element* aDest);
 
   void MaybeLoadImage();
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   bool IsMap()
   {
@@ -167,8 +166,8 @@ public:
 
 protected:
   nsIntPoint GetXY();
-  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
-  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 };

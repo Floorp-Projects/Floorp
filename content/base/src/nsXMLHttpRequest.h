@@ -7,7 +7,6 @@
 #ifndef nsXMLHttpRequest_h__
 #define nsXMLHttpRequest_h__
 
-#include "mozilla/Attributes.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
@@ -474,7 +473,7 @@ public:
   bool AllowUploadProgress();
   void RootJSResultObjects();
 
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner();
 
 protected:
   nsresult DetectCharset();
@@ -722,7 +721,7 @@ class nsXHRParseEndListener : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event) MOZ_OVERRIDE
+  NS_IMETHOD HandleEvent(nsIDOMEvent *event)
   {
     nsCOMPtr<nsIXMLHttpRequest> xhr = do_QueryReferent(mXHR);
     if (xhr) {

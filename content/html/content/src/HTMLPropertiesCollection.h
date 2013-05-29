@@ -7,7 +7,6 @@
 #ifndef HTMLPropertiesCollection_h_
 #define HTMLPropertiesCollection_h_
 
-#include "mozilla/Attributes.h"
 #include "nsDOMLists.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
@@ -63,9 +62,9 @@ public:
   virtual Element* GetElementAt(uint32_t aIndex);
 
   void SetDocument(nsIDocument* aDocument);
-  nsINode* GetParentObject() MOZ_OVERRIDE;
+  nsINode* GetParentObject();
   virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
-                              mozilla::ErrorResult& error) MOZ_OVERRIDE;
+                              mozilla::ErrorResult& error);
   PropertyNodeList* NamedItem(const nsAString& aName);
   PropertyNodeList* NamedGetter(const nsAString& aName, bool& aFound)
   {
@@ -77,7 +76,7 @@ public:
     EnsureFresh();
     return mNames;
   }
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) MOZ_OVERRIDE;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
   NS_DECL_NSIDOMHTMLCOLLECTION
 
@@ -142,7 +141,7 @@ public:
   void GetValues(JSContext* aCx, nsTArray<JS::Value >& aResult,
                  ErrorResult& aError);
 
-  virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual nsIContent* Item(uint32_t aIndex);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -156,8 +155,8 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   // nsINodeList interface
-  virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE;
+  virtual int32_t IndexOf(nsIContent* aContent);
+  virtual nsINode* GetParentObject();
 
   void AppendElement(nsGenericHTMLElement* aElement)
   {

@@ -13,7 +13,6 @@
 
 // Base class for contentsink implementations.
 
-#include "mozilla/Attributes.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
@@ -87,7 +86,7 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
-                              nsresult aStatus) MOZ_OVERRIDE;
+                              nsresult aStatus);
 
   virtual nsresult ProcessMETATag(nsIContent* aContent);
 

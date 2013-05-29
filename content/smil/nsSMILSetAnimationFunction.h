@@ -6,7 +6,6 @@
 #ifndef NS_SMILSETANIMATIONFUNCTION_H_
 #define NS_SMILSETANIMATIONFUNCTION_H_
 
-#include "mozilla/Attributes.h"
 #include "nsSMILAnimationFunction.h"
 
 //----------------------------------------------------------------------
@@ -32,7 +31,7 @@ public:
    *          attribute; false otherwise.
    */
   virtual bool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
-                         nsAttrValue& aResult, nsresult* aParseResult = nullptr) MOZ_OVERRIDE;
+                         nsAttrValue& aResult, nsresult* aParseResult = nullptr);
 
   /*
    * Unsets the given attribute.

@@ -6,7 +6,6 @@
 #ifndef SVGTransformableElement_h
 #define SVGTransformableElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
 #include "gfxMatrix.h"
@@ -39,27 +38,27 @@ public:
                                                     ErrorResult& rv);
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                      int32_t aModType) const MOZ_OVERRIDE;
+                                      int32_t aModType) const;
 
 
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
 
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                      TransformTypes aWhich = eAllTransforms) const MOZ_OVERRIDE;
-  virtual const gfxMatrix* GetAnimateMotionTransform() const MOZ_OVERRIDE;
-  virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) MOZ_OVERRIDE;
+                      TransformTypes aWhich = eAllTransforms) const;
+  virtual const gfxMatrix* GetAnimateMotionTransform() const;
+  virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix);
 
   virtual nsSVGAnimatedTransformList*
-    GetAnimatedTransformList(uint32_t aFlags = 0) MOZ_OVERRIDE;
-  virtual nsIAtom* GetTransformListAttrName() const MOZ_OVERRIDE {
+    GetAnimatedTransformList(uint32_t aFlags = 0);
+  virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::transform;
   }
 
-  virtual bool IsTransformable() MOZ_OVERRIDE { return true; }
+  virtual bool IsTransformable() { return true; }
 
 protected:
   // nsSVGElement overrides

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsString.h"
@@ -281,7 +280,7 @@ public:
 
   ~SpeechEvent();
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run();
   AudioSegment* mAudioSegment;
   nsRefPtr<SpeechRecognitionResultList> mRecognitionResultList; // TODO: make this a session being passed which also has index and stuff
   nsCOMPtr<nsIDOMSpeechRecognitionError> mError;

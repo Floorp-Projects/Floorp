@@ -8,7 +8,6 @@
 #ifndef MOZILLA_SVGMOTIONSMILATTR_H_
 #define MOZILLA_SVGMOTIONSMILATTR_H_
 
-#include "mozilla/Attributes.h"
 #include "nsISMILAttr.h"
 
 class nsIContent;
@@ -38,11 +37,11 @@ public:
   virtual nsresult ValueFromString(const nsAString& aStr,
                                    const dom::SVGAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
-                                   bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-  virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-  virtual nsresult    SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
-  virtual void        ClearAnimValue() MOZ_OVERRIDE;
-  virtual const nsIContent* GetTargetNode() const MOZ_OVERRIDE;
+                                   bool& aPreventCachingOfSandwich) const;
+  virtual nsSMILValue GetBaseValue() const;
+  virtual nsresult    SetAnimValue(const nsSMILValue& aValue);
+  virtual void        ClearAnimValue();
+  virtual const nsIContent* GetTargetNode() const;
 
 protected:
   // Raw pointers are OK here because this SVGMotionSMILAttr is both
