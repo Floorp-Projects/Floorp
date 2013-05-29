@@ -985,9 +985,8 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
       
     if (isradio) {
         gtk_style_context_add_class(style, GTK_STYLE_CLASS_RADIO);
-        if (selected) {
-            gtk_style_context_set_state(style, GTK_STATE_FLAG_ACTIVE);
-        }
+        gtk_style_context_set_state(style, selected ? GTK_STATE_FLAG_ACTIVE :
+                                                      GTK_STATE_FLAG_NORMAL);
         gtk_render_option(style, cr, x, y, width, height);
         if (state->focused) {
             gtk_render_focus(style, cr, focus_x, focus_y,
