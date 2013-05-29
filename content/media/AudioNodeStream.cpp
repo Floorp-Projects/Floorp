@@ -321,7 +321,10 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
     return;
   }
 
-  MOZ_ASSERT(outputChannelCount > 0, "How did this happen?");
+  if (outputChannelCount == 0) {
+    aTmpChunk.SetNull(WEBAUDIO_BLOCK_SIZE);
+    return;
+  }
 
   AllocateAudioBlock(outputChannelCount, &aTmpChunk);
   float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
