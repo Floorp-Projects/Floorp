@@ -732,6 +732,126 @@ NativeKey::DispatchKeyDownEvent(bool* aEventDispatched) const
 }
 
 bool
+NativeKey::HandleCharMessage(const MSG& aCharMsg,
+                             bool* aEventDispatched,
+                             const EventFlags* aExtraFlags) const
+{
+  MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN ||
+             mMsg.message == WM_CHAR || mMsg.message == WM_SYSCHAR);
+  MOZ_ASSERT(aCharMsg.message == WM_CHAR || aCharMsg.message == WM_SYSCHAR);
+
+  if (aEventDispatched) {
+    *aEventDispatched = false;
+  }
+
+  // Alt+Space key is handled by OS, we shouldn't touch it.
+  if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
+      mVirtualKeyCode == VK_SPACE) {
+    return false;
+  }
+
+  // Bug 818235: Ignore Ctrl+Enter.
+  if (!mModKeyState.IsAlt() && mModKeyState.IsControl() &&
+      mVirtualKeyCode == VK_RETURN) {
+    return false;
+  }
+
+  // XXXmnakao I think that if aNativeKeyDown is null, such lonely WM_CHAR
+  //           should cause composition events because they are not caused
+  //           by actual keyboard operation.
+
+  static const PRUnichar U_SPACE = 0x20;
+  static const PRUnichar U_EQUAL = 0x3D;
+
+  // First, handle normal text input or non-printable key case here.
+  if ((!mModKeyState.IsAlt() && !mModKeyState.IsControl()) ||
+      mModKeyState.IsAltGr() ||
+      (mOriginalVirtualKeyCode &&
+       !KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode))) {
+    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    if (aExtraFlags) {
+      keypressEvent.mFlags.Union(*aExtraFlags);
+    }
+    if (aCharMsg.wParam >= U_SPACE) {
+      keypressEvent.charCode = static_cast<uint32_t>(aCharMsg.wParam);
+    } else {
+      keypressEvent.keyCode = mDOMKeyCode;
+    }
+    // When AltGr (Alt+Ctrl) is pressed, that causes normal text input.
+    // At this time, if either alt or ctrl flag is set, nsEditor ignores the
+    // keypress event.  For avoiding this issue, we should remove ctrl and alt
+    // flags.
+    ModifierKeyState modKeyState(mModKeyState);
+    modKeyState.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
+    InitKeyEvent(keypressEvent, modKeyState);
+    if (aEventDispatched) {
+      *aEventDispatched = true;
+    }
+    return DispatchKeyEvent(keypressEvent, &aCharMsg);
+  }
+
+  // XXX It seems that following code was implemented for shortcut key
+  //     handling.  However, it's now handled in WM_KEYDOWN message handler.
+  //     So, this actually runs only when WM_CHAR is sent/posted without
+  //     WM_KEYDOWN.  I think that we don't need to keypress event in such
+  //     case especially for shortcut keys.
+
+  PRUnichar uniChar;
+  // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
+  if (mModKeyState.IsControl() && aCharMsg.wParam <= 0x1A) {
+    // Bug 16486: Need to account for shift here.
+    uniChar = aCharMsg.wParam - 1 + (mModKeyState.IsShift() ? 'A' : 'a');
+  } else if (mModKeyState.IsControl() && aCharMsg.wParam <= 0x1F) {
+    // Bug 50255: <ctrl><[> and <ctrl><]> are not being processed.
+    // also fixes ctrl+\ (x1c), ctrl+^ (x1e) and ctrl+_ (x1f)
+    // for some reason the keypress handler need to have the uniChar code set
+    // with the addition of a upper case A not the lower case.
+    uniChar = aCharMsg.wParam - 1 + 'A';
+  } else if (aCharMsg.wParam < U_SPACE ||
+             (aCharMsg.wParam == U_EQUAL && mModKeyState.IsControl())) {
+    uniChar = 0;
+  } else {
+    uniChar = aCharMsg.wParam;
+  }
+
+  // Bug 50255 and Bug 351310: Keep the characters unshifted for shortcuts and
+  // accesskeys and make sure that numbers are always passed as such.
+  if (uniChar && (mModKeyState.IsControl() || mModKeyState.IsAlt())) {
+    KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
+    PRUnichar unshiftedCharCode =
+      (mVirtualKeyCode >= '0' && mVirtualKeyCode <= '9') ?
+        mVirtualKeyCode :  mModKeyState.IsShift() ?
+                             ComputeUnicharFromScanCode() : 0;
+    // Ignore diacritics (top bit set) and key mapping errors (char code 0)
+    if (static_cast<int32_t>(unshiftedCharCode) > 0) {
+      uniChar = unshiftedCharCode;
+    }
+  }
+
+  // Bug 285161 and Bug 295095: They were caused by the initial fix for
+  // bug 178110.  When pressing (alt|ctrl)+char, the char must be lowercase
+  // unless shift is pressed too.
+  if (!mModKeyState.IsShift() &&
+      (mModKeyState.IsAlt() || mModKeyState.IsControl())) {
+    uniChar = towlower(uniChar);
+  }
+
+  nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+  if (aExtraFlags) {
+    keypressEvent.mFlags.Union(*aExtraFlags);
+  }
+  keypressEvent.charCode = uniChar;
+  if (!keypressEvent.charCode) {
+    keypressEvent.keyCode = mDOMKeyCode;
+  }
+  InitKeyEvent(keypressEvent, mModKeyState);
+  if (aEventDispatched) {
+    *aEventDispatched = true;
+  }
+  return DispatchKeyEvent(keypressEvent, &aCharMsg);
+}
+
+bool
 NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const
 {
   MOZ_ASSERT(mMsg.message == WM_KEYUP || mMsg.message == WM_SYSKEYUP);
