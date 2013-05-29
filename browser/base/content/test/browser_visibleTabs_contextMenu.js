@@ -33,6 +33,7 @@ function test() {
   // Check the context menu on the unpinned visible tab
   updateTabContextMenu(testTab);
   is(document.getElementById("context_closeOtherTabs").disabled, true, "Close Other Tabs is disabled");
+  is(document.getElementById("context_closeTabsToTheEnd").disabled, true, "Close Tabs To The End is disabled");
 
   // Show all tabs
   let allTabs = [tab for each (tab in gBrowser.tabs)];
@@ -41,7 +42,13 @@ function test() {
   // Check the context menu now
   updateTabContextMenu(testTab);
   is(document.getElementById("context_closeOtherTabs").disabled, false, "Close Other Tabs is enabled");
+  is(document.getElementById("context_closeTabsToTheEnd").disabled, true, "Close Tabs To The End is disabled");
   
+  // Check the context menu of the original tab
+  // Close Tabs To The End should now be enabled
+  updateTabContextMenu(origTab);
+  is(document.getElementById("context_closeTabsToTheEnd").disabled, false, "Close Tabs To The End is enabled");
+
   gBrowser.removeTab(testTab);
   gBrowser.removeTab(pinned);
 }
