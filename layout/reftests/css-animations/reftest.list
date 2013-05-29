@@ -1,0 +1,4 @@
+== screen-animations.html screen-animations-ref.html
+!= screen-animations.html screen-animations-notref.html
+fails == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
+fails != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests

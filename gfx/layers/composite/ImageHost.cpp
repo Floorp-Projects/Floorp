@@ -180,5 +180,22 @@ ImageHostBuffered::MakeTextureHost(TextureIdentifier aTextureId,
   }
 }
 
+void
+ImageHostSingle::Dump(FILE* aFile,
+                      const char* aPrefix,
+                      bool aDumpHtml)
+{
+  if (!aFile) {
+    aFile = stderr;
+  }
+  if (mTextureHost) {
+    fprintf(aFile, aPrefix);
+    fprintf(aFile, aDumpHtml ? "<ul><li>TextureHost: "
+                             : "TextureHost: ");
+    DumpTextureHost(aFile, mTextureHost);
+    fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
+  }
+}
+
 }
 }

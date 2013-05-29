@@ -95,6 +95,9 @@ pref("network.http.max-connections", 20);
 pref("network.http.max-persistent-connections-per-server", 6);
 pref("network.http.max-persistent-connections-per-proxy", 20);
 
+// spdy
+pref("network.http.spdy.push-allowance", 32768);
+
 // See bug 545869 for details on why these are set the way they are
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
@@ -356,11 +359,6 @@ pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone
 
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
-
-// disable Graphite font shaping by default on Android until memory footprint
-// of using the Charis SIL fonts that we ship with the product is addressed
-// (see bug 700023, bug 846832, bug 847344)
-pref("gfx.font_rendering.graphite.enabled", false);
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);

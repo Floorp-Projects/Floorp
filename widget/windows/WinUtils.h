@@ -21,10 +21,12 @@
 #endif
 #include "nsIDownloader.h"
 #include "nsIURI.h"
+#include "nsIWidget.h"
 
 #include "mozilla/Attributes.h"
 
 class nsWindow;
+struct KeyPair;
 
 namespace mozilla {
 namespace widget {
@@ -161,7 +163,7 @@ public:
    * InitMSG() returns an MSG struct which was initialized by the params.
    * Don't trust the other members in the result.
    */
-  static MSG InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam);
+  static MSG InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam, HWND aWnd);
 
   /**
    * GetScanCode() returns a scan code for the LPARAM of WM_KEYDOWN, WM_KEYUP,
@@ -244,6 +246,19 @@ public:
    */
   static nsIntRect ToIntRect(const RECT& aRect);
 
+  /**
+   * Returns true if the context or IME state is enabled.  Otherwise, false.
+   */
+  static bool IsIMEEnabled(const InputContext& aInputContext);
+  static bool IsIMEEnabled(IMEState::Enabled aIMEState);
+
+  /**
+   * Returns modifier key array for aModifiers.  This is for
+   * nsIWidget::SynthethizeNative*Event().
+   */
+  static void SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
+                                        uint32_t aModifiers);
+
 private:
   typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
                                                             IBindCtx *pbc,
@@ -278,27 +293,30 @@ private:
 /**
   * Asynchronously tries add the list to the build
   */
-class AsyncWriteIconToDisk : public nsIRunnable
+class AsyncEncodeAndWriteIcon : public nsIRunnable
 {
 public:
   const bool mURLShortcut;
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  // Warning: AsyncWriteIconToDisk assumes ownership of the aData buffer passed in
-  AsyncWriteIconToDisk(const nsAString &aIconPath,
-                       const nsACString &aMimeTypeOfInputData,
-                       uint8_t *aData, 
-                       uint32_t aDataLen,
-                       const bool aURLShortcut);
-  virtual ~AsyncWriteIconToDisk();
+  // Warning: AsyncEncodeAndWriteIcon assumes ownership of the aData buffer passed in
+  AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
+                          uint8_t *aData, uint32_t aDataLen, uint32_t aStride,
+                          uint32_t aWidth, uint32_t aHeight,
+                          const bool aURLShortcut);
+  virtual ~AsyncEncodeAndWriteIcon();
 
 private:
   nsAutoString mIconPath;
   nsAutoCString mMimeTypeOfInputData;
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mBufferLength;
+  uint32_t mStride;
+  uint32_t mWidth;
+  uint32_t mHeight;
 };
+
 
 class AsyncDeleteIconFromDisk : public nsIRunnable
 {

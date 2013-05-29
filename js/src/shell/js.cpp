@@ -883,6 +883,30 @@ class AutoNewContext
     }
 };
 
+class AutoSaveFrameChain
+{
+    JSContext *cx_;
+    bool saved_;
+
+  public:
+    AutoSaveFrameChain(JSContext *cx)
+      : cx_(cx),
+        saved_(false)
+    {}
+
+    bool save() {
+        if (!JS_SaveFrameChain(cx_))
+            return false;
+        saved_ = true;
+        return true;
+    }
+
+    ~AutoSaveFrameChain() {
+        if (saved_)
+            JS_RestoreFrameChain(cx_);
+    }
+};
+
 static JSBool
 Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -1025,7 +1049,8 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         cx = ancx.get();
     }
 
-    if (saveFrameChain && !JS_SaveFrameChain(cx))
+    AutoSaveFrameChain asfc(cx);
+    if (saveFrameChain && !asfc.save())
         return false;
 
     {
@@ -1063,9 +1088,6 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         }
     }
-
-    if (saveFrameChain)
-        JS_RestoreFrameChain(cx);
 
     return JS_WrapValue(cx, vp);
 }
@@ -3603,6 +3625,8 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "      lineNumber: starting line number for error messages and debug info\n"
 "      global: global in which to execute the code\n"
 "      newContext: if true, create and use a new cx (default: false)\n"
+"      saveFrameChain: if true, save the frame chain before evaluating code\n"
+"         and restore it afterwards\n"
 "      catchTermination: if true, catch termination (failure without\n"
 "         an exception value, as for slow scripts or out-of-memory)\n"
 "          and return 'terminated'\n"),
