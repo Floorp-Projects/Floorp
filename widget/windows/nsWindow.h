@@ -269,8 +269,6 @@ public:
 
   bool                    const DestroyCalled() { return mDestroyCalled; }
 
-  static void             SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, uint32_t aModifiers);
-
   virtual mozilla::layers::LayersBackend GetPreferredCompositorBackend() { return mozilla::layers::LAYERS_D3D11; }
 
 protected:

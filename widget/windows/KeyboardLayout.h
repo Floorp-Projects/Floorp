@@ -584,6 +584,16 @@ public:
    * This wraps MapVirtualKeyEx() API with MAPVK_VK_TO_VSC.
    */
   WORD ComputeScanCodeForVirtualKeyCode(uint8_t aVirtualKeyCode) const;
+
+  /**
+   * Implementation of nsIWidget::SynthesizeNativeKeyEvent().
+   */
+  nsresult SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
+                                    int32_t aNativeKeyboardLayout,
+                                    int32_t aNativeKeyCode,
+                                    uint32_t aModifierFlags,
+                                    const nsAString& aCharacters,
+                                    const nsAString& aUnmodifiedCharacters);
 };
 
 class RedirectedKeyDownMessageManager

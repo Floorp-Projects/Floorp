@@ -26,6 +26,7 @@
 #include "mozilla/Attributes.h"
 
 class nsWindow;
+struct KeyPair;
 
 namespace mozilla {
 namespace widget {
@@ -250,6 +251,13 @@ public:
    */
   static bool IsIMEEnabled(const InputContext& aInputContext);
   static bool IsIMEEnabled(IMEState::Enabled aIMEState);
+
+  /**
+   * Returns modifier key array for aModifiers.  This is for
+   * nsIWidget::SynthethizeNative*Event().
+   */
+  static void SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
+                                        uint32_t aModifiers);
 
 private:
   typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
