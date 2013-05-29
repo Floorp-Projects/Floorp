@@ -697,6 +697,13 @@ KeyboardLayout::IsPrintableCharKey(uint8_t aVirtualKey)
   return GetKeyIndex(aVirtualKey) >= 0;
 }
 
+WORD
+KeyboardLayout::ComputeScanCodeForVirtualKeyCode(uint8_t aVirtualKeyCode) const
+{
+  return static_cast<WORD>(
+           ::MapVirtualKeyEx(aVirtualKeyCode, MAPVK_VK_TO_VSC, GetLayout()));
+}
+
 bool
 KeyboardLayout::IsDeadKey(uint8_t aVirtualKey,
                           const ModifierKeyState& aModKeyState) const
