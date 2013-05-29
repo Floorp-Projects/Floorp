@@ -13,20 +13,11 @@ class FilePickerResultHandlerSync extends FilePickerResultHandler {
     private static final String LOGTAG = "GeckoFilePickerResultHandlerSync";
 
     FilePickerResultHandlerSync(Queue<String> resultQueue) {
-        super(resultQueue, null);
-    }
-
-    /* Use this constructor to asynchronously listen for results */
-    public FilePickerResultHandlerSync(ActivityHandlerHelper.FileResultHandler handler) {
-        super(null, handler);
+        super(resultQueue);
     }
 
     @Override
     public void onActivityResult(int resultCode, Intent data) {
-        if (mFilePickerResult != null)
-            mFilePickerResult.offer(handleActivityResult(resultCode, data));
-
-        if (mHandler != null)
-            mHandler.gotFile(handleActivityResult(resultCode, data));
+        mFilePickerResult.offer(handleActivityResult(resultCode, data));
     }
 }
