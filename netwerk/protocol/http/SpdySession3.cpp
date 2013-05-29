@@ -1931,7 +1931,7 @@ SpdySession3::UpdateLocalRwin(SpdyStream3 *stream,
 
   // Generate window updates directly out of spdysession instead of the stream
   // in order to avoid queue delays in getting the ACK out.
-  uint32_t toack = unacked & 0x7fffffff;
+  uint32_t toack = (unacked <= 0x7fffffffU) ? unacked : 0x7fffffffU;
 
   LOG3(("SpdySession3::UpdateLocalRwin Ack %p 0x%X %d\n",
         this, stream->StreamID(), toack));
