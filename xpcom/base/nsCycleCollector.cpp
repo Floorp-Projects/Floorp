@@ -1219,6 +1219,14 @@ private:
 
     void DoWalk(nsDeque &aQueue);
 
+    void CheckedPush(nsDeque &aQueue, PtrInfo *pi)
+    {
+        CC_AbortIfNull(pi);
+        if (!aQueue.Push(pi, fallible_t())) {
+            mVisitor.Failed();
+        }
+    }
+
 public:
     void Walk(PtrInfo *s0);
     void WalkFromRoots(GCGraph &aGraph);
@@ -1285,8 +1293,7 @@ MOZ_NEVER_INLINE void
 GraphWalker<Visitor>::Walk(PtrInfo *s0)
 {
     nsDeque queue;
-    CC_AbortIfNull(s0);
-    queue.Push(s0);
+    CheckedPush(queue, s0);
     DoWalk(queue);
 }
 
@@ -1297,9 +1304,7 @@ GraphWalker<Visitor>::WalkFromRoots(GCGraph& aGraph)
     nsDeque queue;
     NodePool::Enumerator etor(aGraph.mNodes);
     for (uint32_t i = 0; i < aGraph.mRootCount; ++i) {
-        PtrInfo *pi = etor.GetNext();
-        CC_AbortIfNull(pi);
-        queue.Push(pi);
+        CheckedPush(queue, etor.GetNext());
     }
     DoWalk(queue);
 }
@@ -1319,11 +1324,10 @@ GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
             for (EdgePool::Iterator child = pi->FirstChild(),
                                 child_end = pi->LastChild();
                  child != child_end; ++child) {
-                CC_AbortIfNull(*child);
-                aQueue.Push(*child);
+                CheckedPush(aQueue, *child);
             }
         }
-    };
+    }
 }
 
 struct CCGraphDescriber
@@ -2416,8 +2420,8 @@ nsCycleCollector::MarkRoots(GCGraphBuilder &builder)
 
 struct ScanBlackVisitor
 {
-    ScanBlackVisitor(uint32_t &aWhiteNodeCount)
-        : mWhiteNodeCount(aWhiteNodeCount)
+    ScanBlackVisitor(uint32_t &aWhiteNodeCount, bool &aFailed)
+        : mWhiteNodeCount(aWhiteNodeCount), mFailed(aFailed)
     {
     }
 
@@ -2433,13 +2437,21 @@ struct ScanBlackVisitor
         pi->mColor = black;
     }
 
+    void Failed()
+    {
+        mFailed = true;
+    }
+
+private:
     uint32_t &mWhiteNodeCount;
+    bool &mFailed;
 };
 
 
 struct scanVisitor
 {
-    scanVisitor(uint32_t &aWhiteNodeCount) : mWhiteNodeCount(aWhiteNodeCount)
+    scanVisitor(uint32_t &aWhiteNodeCount, bool &aFailed)
+        : mWhiteNodeCount(aWhiteNodeCount), mFailed(aFailed)
     {
     }
 
@@ -2457,13 +2469,19 @@ struct scanVisitor
             pi->mColor = white;
             ++mWhiteNodeCount;
         } else {
-            GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount)).Walk(pi);
+            GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, mFailed)).Walk(pi);
             MOZ_ASSERT(pi->mColor == black,
                        "Why didn't ScanBlackVisitor make pi black?");
         }
     }
 
+    void Failed() {
+        mFailed = true;
+    }
+
+private:
     uint32_t &mWhiteNodeCount;
+    bool &mFailed;
 };
 
 // Iterate over the WeakMaps.  If we mark anything while iterating
@@ -2472,6 +2490,7 @@ void
 nsCycleCollector::ScanWeakMaps()
 {
     bool anyChanged;
+    bool failed = false;
     do {
         anyChanged = false;
         for (uint32_t i = 0; i < mGraph.mWeakMaps.Length(); i++) {
@@ -2493,16 +2512,21 @@ nsCycleCollector::ScanWeakMaps()
             MOZ_ASSERT(vColor != grey, "Uncolored weak map value");
 
             if (mColor == black && kColor != black && kdColor == black) {
-                GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount)).Walk(wm->mKey);
+                GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(wm->mKey);
                 anyChanged = true;
             }
 
             if (mColor == black && kColor == black && vColor != black) {
-                GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount)).Walk(wm->mVal);
+                GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(wm->mVal);
                 anyChanged = true;
             }
         }
     } while (anyChanged);
+
+    if (failed) {
+        NS_ASSERTION(false, "Ran out of memory in ScanWeakMaps");
+        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+    }
 }
 
 void
@@ -2513,7 +2537,13 @@ nsCycleCollector::ScanRoots()
     // On the assumption that most nodes will be black, it's
     // probably faster to use a GraphWalker than a
     // NodePool::Enumerator.
-    GraphWalker<scanVisitor>(scanVisitor(mWhiteNodeCount)).WalkFromRoots(mGraph);
+    bool failed = false;
+    GraphWalker<scanVisitor>(scanVisitor(mWhiteNodeCount, failed)).WalkFromRoots(mGraph);
+
+    if (failed) {
+        NS_ASSERTION(false, "Ran out of memory in ScanRoots");
+        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+    }
 
     ScanWeakMaps();
 }
