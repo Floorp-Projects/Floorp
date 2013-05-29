@@ -102,6 +102,3 @@ contract @mozilla.org/dom/site-specific-user-agent;1 {d5234c9d-0ee2-4b3c-9da3-18
 component {3c6c9575-f57e-427b-a8aa-57bc3cbff48f} PaymentsUI.js
 contract @mozilla.org/payment/ui-glue;1 {3c6c9575-f57e-427b-a8aa-57bc3cbff48f}
 
-# FilePicker.js
-component {18a4e042-7c7c-424b-a583-354e68553a7f} FilePicker.js
-contract @mozilla.org/filepicker;1 {18a4e042-7c7c-424b-a583-354e68553a7f}
