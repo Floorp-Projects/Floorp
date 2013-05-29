@@ -666,6 +666,7 @@ NativeKey::InitKeyEvent(nsKeyEvent& aKeyEvent,
 
   switch (aKeyEvent.message) {
     case NS_KEY_DOWN:
+      aKeyEvent.keyCode = mDOMKeyCode;
       break;
     case NS_KEY_UP:
       aKeyEvent.keyCode = mDOMKeyCode;
@@ -705,6 +706,29 @@ NativeKey::DispatchKeyEvent(nsKeyEvent& aKeyEvent,
   }
 
   return mWidget->DispatchWindowEvent(&aKeyEvent);
+}
+
+bool
+NativeKey::DispatchKeyDownEvent(bool* aEventDispatched) const
+{
+  MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+
+  if (aEventDispatched) {
+    *aEventDispatched = false;
+  }
+
+  // Ignore [shift+]alt+space so the OS can handle it.
+  if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
+      mVirtualKeyCode == VK_SPACE) {
+    return false;
+  }
+
+  nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+  InitKeyEvent(keydownEvent, mModKeyState);
+  if (aEventDispatched) {
+    *aEventDispatched = true;
+  }
+  return DispatchKeyEvent(keydownEvent, &mMsg);
 }
 
 bool
