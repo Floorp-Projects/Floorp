@@ -1605,11 +1605,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: linear-gradient(to top, rgba(0,0,0,.3) 1px, rgba(0,0,0,.05) 1px, transparent 50%);
 }
 
-.tab-background-middle[selected=true]:-moz-lwtheme {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabTexture@;
-}
-
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
 }

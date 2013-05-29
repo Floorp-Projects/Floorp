@@ -133,6 +133,7 @@
   background-size: 100% 100%;
   content: "";
   display: -moz-box;
+  position: relative;
 }
 
 .tab-background-start[selected=true]::before,
@@ -172,6 +173,7 @@
 .tab-background-middle[selected=true] {
   background-color: transparent;
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                    @fgTabTexture@,
                     @fgTabBackgroundMiddle@;
   background-repeat: repeat-x;
   background-size: 100% 100%;
@@ -179,6 +181,8 @@
 
 /* Selected tab lightweight theme styles */
 .tab-background-middle[selected=true]:-moz-lwtheme {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                    @fgTabTextureLWT@;
   /* Don't stretch the LWT header images */
   background-size: 100% 100%, 100% 100%, auto auto;
 }
@@ -186,10 +190,6 @@
 .tab-background-start[selected=true]:-moz-lwtheme::before,
 .tab-background-end[selected=true]:-moz-lwtheme::before {
   background-image: @fgTabTextureLWT@;
-}
-
-.tab-background-middle[selected=true]:-moz-lwtheme {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle-lwtheme.png), @fgTabTextureLWT@;
 }
 
 .tab-background-start[selected=true]:-moz-lwtheme::before,
@@ -253,6 +253,7 @@
   background-size: 3px 100%;
   content: "";
   display: -moz-box;
+  margin-bottom: 1px;
   width: 3px;
 }
 
