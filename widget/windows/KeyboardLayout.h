@@ -281,10 +281,29 @@ class MOZ_STACK_CLASS NativeKey
   friend class KeyboardLayout;
 
 public:
+  struct FakeCharMsg
+  {
+    UINT mCharCode;
+    UINT mScanCode;
+    bool mIsDeadKey;
+
+    MSG GetCharMsg(HWND aWnd) const
+    {
+      MSG msg;
+      msg.hwnd = aWnd;
+      msg.message = mIsDeadKey ? WM_DEADCHAR : WM_CHAR;
+      msg.wParam = static_cast<WPARAM>(mCharCode);
+      msg.lParam = static_cast<LPARAM>(mScanCode);
+      msg.time = 0;
+      msg.pt.x = msg.pt.y = 0;
+      return msg;
+    }
+  };
+
   NativeKey(nsWindowBase* aWidget,
             const MSG& aKeyOrCharMessage,
             const ModifierKeyState& aModKeyState,
-            const nsFakeCharMessage* aFakeCharMessage = nullptr);
+            const FakeCharMsg* aFakeCharMsg = nullptr);
 
   /**
    * Handle WM_KEYDOWN message or WM_SYSKEYDOWN message.  The instance must be
