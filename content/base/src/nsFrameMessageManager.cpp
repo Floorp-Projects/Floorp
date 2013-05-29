@@ -344,7 +344,7 @@ GetParamsForMessage(JSContext* aCx,
 
   JS::Rooted<JS::Value> val(aCx, JS::NullValue());
   NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const jschar*>(json.get()),
-                              json.Length(), &val), false);
+                              json.Length(), val.address()), false);
 
   return WriteStructuredClone(aCx, val, aBuffer, aClosure);
 }
@@ -388,7 +388,7 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
 
       JS::Rooted<JS::Value> ret(aCx);
       if (!JS_ParseJSON(aCx, static_cast<const jschar*>(retval[i].get()),
-                        retval[i].Length(), &ret)) {
+                        retval[i].Length(), ret.address())) {
         return NS_ERROR_UNEXPECTED;
       }
       NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, ret.address()),
