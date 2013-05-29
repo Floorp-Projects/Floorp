@@ -44,9 +44,9 @@ ParseZoomRatioItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
   d /= 100;
 #endif
 
-  JS::Value v = JS_NumberValue(d);
+  JS::Rooted<JS::Value> v(aCx, JS_NumberValue(d));
 
-  if (!JS_SetElement(aCx, aArray, aIndex, &v)) {
+  if (!JS_SetElement(aCx, aArray, aIndex, v.address())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -68,8 +68,8 @@ ParseStringItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  JS::Value v = STRING_TO_JSVAL(s);
-  if (!JS_SetElement(aCx, aArray, aIndex, &v)) {
+  JS::Rooted<JS::Value> v(aCx, STRING_TO_JSVAL(s));
+  if (!JS_SetElement(aCx, aArray, aIndex, v.address())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -102,8 +102,8 @@ ParseDimensionItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
     return NS_ERROR_FAILURE;
   }
 
-  JS::Value v = OBJECT_TO_JSVAL(o);
-  if (!JS_SetElement(aCx, aArray, aIndex, &v)) {
+  JS::Rooted<JS::Value> v(aCx, OBJECT_TO_JSVAL(o));
+  if (!JS_SetElement(aCx, aArray, aIndex, v.address())) {
     return NS_ERROR_FAILURE;
   }
 

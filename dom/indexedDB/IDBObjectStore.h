@@ -67,7 +67,7 @@ public:
                         bool aUnique,
                         bool aMultiEntry,
                         JSContext* aCx,
-                        jsval aObject,
+                        JS::Handle<JS::Value> aObject,
                         nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
   static nsresult
