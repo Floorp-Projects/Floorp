@@ -96,7 +96,7 @@ protected:
       : mFrame(aFrame)
     {}
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() MOZ_OVERRIDE {
       nsFileControlFrame* frame = static_cast<nsFileControlFrame*>(mFrame.GetFrame());
       NS_ENSURE_STATE(frame);
 

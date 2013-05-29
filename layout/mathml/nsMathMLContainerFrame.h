@@ -475,7 +475,7 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList)
+                      nsFrameList&    aChildList) MOZ_OVERRIDE
   {
     NS_ASSERTION(aListID == kPrincipalList, "unexpected frame list");
     nsresult rv = nsInlineFrame::SetInitialChildList(aListID, aChildList);
