@@ -73,6 +73,8 @@ public class Tab {
     public static final int STATE_SUCCESS = 2;
     public static final int STATE_ERROR = 3;
 
+    private static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
+
     public Tab(Context context, int id, String url, boolean external, int parentId, String title) {
         mContext = context;
         mId = id;
@@ -106,7 +108,7 @@ public class Tab {
         // At startup, the background is set to a color specified by LayerView
         // when the LayerView is created. Shortly after, this background color
         // will be used before the tab's content is shown.
-        mBackgroundColor = getBackgroundColorForUrl(url);
+        mBackgroundColor = DEFAULT_BACKGROUND_COLOR;
     }
 
     private ContentResolver getContentResolver() {
@@ -589,20 +591,13 @@ public class Tab {
         setReaderEnabled(false);
         setZoomConstraints(new ZoomConstraints(true));
         setHasTouchListeners(false);
-        setBackgroundColor(getBackgroundColorForUrl(uri));
+        setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
 
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, uri);
     }
 
     private boolean shouldShowProgress(String url) {
         return "about:home".equals(url) || ReaderModeUtils.isAboutReader(url);
-    }
-
-    private int getBackgroundColorForUrl(String url) {
-        if ("about:home".equals(url)) {
-            return mContext.getResources().getColor(R.color.background_normal);
-        }
-        return Color.WHITE;
     }
 
     void handleDocumentStart(boolean showProgress, String url) {
