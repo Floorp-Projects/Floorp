@@ -783,8 +783,8 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
 
   // The Unicode converter has already zapped the BOM if there was one
   if (!JS_ParseJSON(aCx,
-                    static_cast<const jschar*>(mResponseText.get()), mResponseText.Length(),
-                    JS::MutableHandle<JS::Value>::fromMarkedLocation(&mResultJSON))) {
+                    static_cast<const jschar*>(mResponseText.get()),
+                    mResponseText.Length(), &mResultJSON)) {
     return NS_ERROR_FAILURE;
   }
 
