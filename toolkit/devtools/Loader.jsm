@@ -194,16 +194,17 @@ this.devtools = {
     }
 
     if (this._provider) {
+      var events = this.require("sdk/system/events");
+      events.emit("devtools-unloaded", {});
       delete this.require;
       this._provider.unload("newprovider");
-      gDevTools._teardown();
     }
     this._provider = provider;
     this._provider.load();
     this.require = loader.Require(this._provider.loader, { id: "devtools" });
 
     if (this._mainid) {
-      this.main(mainid);
+      this.main(this._mainid);
     }
   },
 
@@ -224,10 +225,10 @@ this.devtools = {
   reload: function() {
     var events = devtools.require("sdk/system/events");
     events.emit("startupcache-invalidate", {});
+    events.emit("devtools-unloaded", {});
 
     this._provider.unload("reload");
     delete this._provider;
-    gDevTools._teardown();
     this._chooseProvider();
   },
 };
