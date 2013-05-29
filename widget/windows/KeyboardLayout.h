@@ -467,6 +467,11 @@ public:
     return mIsPendingToRestoreKeyboardLayout ? ::GetKeyboardLayout(0) :
                                                mKeyboardLayout;
   }
+
+  /**
+   * This wraps MapVirtualKeyEx() API with MAPVK_VK_TO_VSC.
+   */
+  WORD ComputeScanCodeForVirtualKeyCode(uint8_t aVirtualKeyCode) const;
 };
 
 } // namespace widget
