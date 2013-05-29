@@ -131,26 +131,6 @@ NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, u
 
 NS_IMPL_FRAMEARENA_HELPERS(nsComboboxControlFrame)
 
-namespace {
-
-class DestroyWidgetRunnable : public nsRunnable {
-public:
-  NS_DECL_NSIRUNNABLE
-
-  explicit DestroyWidgetRunnable(nsIWidget* aWidget) : mWidget(aWidget) {}
-
-private:
-  nsCOMPtr<nsIWidget> mWidget;
-};
-
-NS_IMETHODIMP DestroyWidgetRunnable::Run()
-{
-  mWidget = nullptr;
-  return NS_OK;
-}
-
-}
-
 //-----------------------------------------------------------
 // Reflow Debugging Macros
 // These let us "see" how many reflow counts are happening
@@ -389,12 +369,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
     }
   } else {
     if (widget) {
-      nsCOMPtr<nsIRunnable> widgetDestroyer =
-        new DestroyWidgetRunnable(widget);
-      // 'widgetDestroyer' now has a strong ref on the widget so calling
-      // DestroyWidget here will not *delete* it.
       view->DestroyWidget();
-      NS_DispatchToMainThread(widgetDestroyer);
     }
   }
 

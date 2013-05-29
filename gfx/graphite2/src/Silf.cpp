@@ -55,6 +55,7 @@ Silf::Silf() throw()
   m_aUser(0),
   m_aBidi(0),
   m_aMirror(0),
+  m_aPassBits(0),
   m_iMaxComp(0),
   m_aLig(0),
   m_numPseudo(0),
@@ -111,7 +112,7 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, const Face&
     m_aBreak    = be::read<uint8>(p);
     m_aBidi     = be::read<uint8>(p);
     m_aMirror   = be::read<uint8>(p);
-    be::skip<byte>(p);     // skip reserved stuff
+    m_aPassBits = be::read<uint8>(p);
 
     // Read Justification levels.
     m_numJusts  = be::read<uint8>(p);
@@ -374,7 +375,8 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass) const
 #endif
 
         // test whether to reorder, prepare for positioning
-        m_passes[i].runGraphite(m, fsm);
+        if (i >= 32 || (seg->passBits() & (1 << i)) == 0)
+            m_passes[i].runGraphite(m, fsm);
         // only subsitution passes can change segment length, cached subsegments are short for their text
         if (m.status() != vm::Machine::finished
         	|| (i < m_pPass && (seg->slotCount() > initSize * MAX_SEG_GROWTH_FACTOR

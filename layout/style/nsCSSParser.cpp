@@ -4177,6 +4177,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     if (eCSSToken_Number != mToken.mType ||
         !mToken.mIntegerValid || mToken.mHasSign == hasSign[1]) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      UngetToken();
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
     numbers[1] = mToken.mInteger * sign[1];

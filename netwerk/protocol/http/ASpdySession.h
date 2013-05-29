@@ -42,6 +42,12 @@ public:
 
   const static uint32_t kSendingChunkSize = 4096;
   const static uint32_t kTCPSendBufferSize = 131072;
+
+  // until we have an API that can push back on receiving data (right now
+  // WriteSegments is obligated to accept data and buffer) there is no
+  // reason to throttle with the rwin other than in server push
+  // scenarios.
+  const static uint32_t kInitialRwin = 256 * 1024 * 1024;
 };
 
 // this is essentially a single instantiation as a member of nsHttpHandler.

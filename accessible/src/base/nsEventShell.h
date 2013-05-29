@@ -8,6 +8,9 @@
 
 #include "AccEvent.h"
 
+namespace mozilla {
+template<typename T> class StaticRefPtr;
+}
 class nsIPersistentProperties;
 
 /**
@@ -43,7 +46,7 @@ public:
                                  nsIPersistentProperties *aAttributes);
 
 private:
-  static nsCOMPtr<nsINode> sEventTargetNode;
+  static mozilla::StaticRefPtr<nsINode> sEventTargetNode;
   static bool sEventFromUserInput;
 };
 

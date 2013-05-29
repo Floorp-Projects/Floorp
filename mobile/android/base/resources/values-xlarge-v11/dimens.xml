@@ -21,6 +21,5 @@
     <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="tabs_panel_indicator_width">60dp</dimen>
     <dimen name="tabs_panel_list_padding">8dip</dimen>
-    <dimen name="addressbar_offset_left">84dip</dimen>
 
 </resources>

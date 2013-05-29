@@ -1803,7 +1803,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDocument)
   if (tmp->PreservingWrapper()) {
     NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mExpandoAndGeneration.expando);
   }
-  nsINode::Trace(tmp, aCallbacks, aClosure);
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 
@@ -2500,29 +2500,30 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     }
   }
 
-  // ----- Figure out if we need to apply an app default CSP
+  // Figure out if we need to apply an app default CSP or a CSP from an app manifest
   bool applyAppDefaultCSP = false;
+  bool applyAppManifestCSP = false;
+
   nsIPrincipal* principal = NodePrincipal();
-  uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+
   bool unknownAppId;
+  uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  nsAutoString appManifestCSP;
   if (NS_SUCCEEDED(principal->GetUnknownAppId(&unknownAppId)) &&
       !unknownAppId &&
       NS_SUCCEEDED(principal->GetAppStatus(&appStatus))) {
     applyAppDefaultCSP = ( appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED ||
                            appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
 
-    // Bug 773981. Allow a per-app policy from the manifest.
-    // Just read the CSP from the manifest into cspHeaderValue.
-    // That way we don't have to change the rest of the function logic
-    if (applyAppDefaultCSP || appStatus == nsIPrincipal::APP_STATUS_INSTALLED) {
-      nsCOMPtr<nsIAppsService> appsService =
-        do_GetService(APPS_SERVICE_CONTRACTID);
-
-      if (appsService)  {
-        uint32_t appId;
-
-        if ( NS_SUCCEEDED(principal->GetAppId(&appId)) ) {
-          appsService->GetCSPByLocalId(appId, cspHeaderValue);
+    if (appStatus != nsIPrincipal::APP_STATUS_NOT_INSTALLED) {
+      nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+      if (appsService) {
+        uint32_t appId = 0;
+        if (NS_SUCCEEDED(principal->GetAppId(&appId))) {
+          appsService->GetCSPByLocalId(appId, appManifestCSP);
+          if (!appManifestCSP.IsEmpty()) {
+            applyAppManifestCSP = true;
+          }
         }
       }
     }
@@ -2534,6 +2535,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   // If there's no CSP to apply, go ahead and return early
   if (!applyAppDefaultCSP &&
+      !applyAppManifestCSP &&
       cspHeaderValue.IsEmpty() &&
       cspROHeaderValue.IsEmpty() &&
       cspOldHeaderValue.IsEmpty() &&
@@ -2572,7 +2574,13 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   // Store the request context for violation reports
   csp->ScanRequestData(httpChannel);
 
-  // ----- process the app default policy, if necessary
+  // The CSP is refined in the following order:
+  // 1. Default app CSP, if applicable
+  // 2. App manifest CSP, if provided
+  // 3. HTTP header CSP, if provided
+  // Note that since each application of refinePolicy is a set intersection,
+  // the order in which multiple CSP's are refined does not matter.
+
   if (applyAppDefaultCSP) {
     nsAdoptingString appCSP;
     if (appStatus ==  nsIPrincipal::APP_STATUS_PRIVILEGED) {
@@ -2586,6 +2594,11 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     if (appCSP)
       // Use the 1.0 CSP parser for apps if the pref to do so is set.
       csp->RefinePolicy(appCSP, chanURI, specCompliantEnabled);
+  }
+
+  if (applyAppManifestCSP) {
+    // Use the 1.0 CSP parser for apps if the pref to do so is set.
+    csp->RefinePolicy(appManifestCSP, chanURI, specCompliantEnabled);
   }
 
   // While we are supporting both CSP 1.0 and the x- headers, the 1.0 headers
@@ -6854,7 +6867,7 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     mWidthStrEmpty = widthStr.IsEmpty();
     mValidScaleFloat = !scaleStr.IsEmpty() && NS_SUCCEEDED(scaleErrorCode);
     mValidMaxScale = !maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode);
-  
+
     mViewportType = Specified;
   }
   case Specified:

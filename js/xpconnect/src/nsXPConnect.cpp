@@ -23,7 +23,6 @@
 #include "nsJSEnvironment.h"
 #include "nsThreadUtils.h"
 #include "nsDOMJSUtils.h"
-#include "nsContentUtils.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"

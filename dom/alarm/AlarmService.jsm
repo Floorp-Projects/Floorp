@@ -20,6 +20,10 @@ Cu.import("resource://gre/modules/AlarmDB.jsm");
 
 this.EXPORTED_SYMBOLS = ["AlarmService"];
 
+XPCOMUtils.defineLazyGetter(this, "appsService", function() {
+  return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
@@ -49,6 +53,7 @@ this.AlarmService = {
   init: function init() {
     debug("init()");
     Services.obs.addObserver(this, "profile-change-teardown", false);
+    Services.obs.addObserver(this, "webapps-clear-data",false);
 
     this._currentTimezoneOffset = (new Date()).getTimezoneOffset();
 
@@ -496,12 +501,30 @@ this.AlarmService = {
     switch (aTopic) {
       case "profile-change-teardown":
         this.uninit();
+        break;
+      case "webapps-clear-data":
+        let params =
+          aSubject.QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
+        let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        this._db.getAll(
+          manifestURL,
+          function getAllSuccessCb(aAlarms) {
+            aAlarms.forEach(function removeAlarm(aAlarm) {
+              this.remove(aAlarm.id, manifestURL);
+            }, this);
+          }.bind(this),
+          function getAllErrorCb(aErrorMsg) {
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          }
+        );
+        break;
     }
   },
 
   uninit: function uninit() {
     debug("uninit()");
     Services.obs.removeObserver(this, "profile-change-teardown");
+    Services.obs.removeObserver(this, "webapps-clear-data");
 
     this._messages.forEach(function(aMsgName) {
       ppmm.removeMessageListener(aMsgName, this);

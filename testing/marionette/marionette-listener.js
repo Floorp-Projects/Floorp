@@ -594,10 +594,31 @@ function coordinates(target, x, y) {
  */
 function elementInViewport(el) {
   let rect = el.getBoundingClientRect();
-  return (rect.top >= curWindow.pageYOffset &&
-          rect.left >= curWindow.pageXOffset &&
-          rect.bottom <= (curWindow.pageYOffset + curWindow.innerHeight) &&
-          rect.right <= (curWindow.pageXOffset + curWindow.innerWidth)
+  return  (/* Top left corner is in view */
+           (rect.top >= curWindow.pageYOffset &&
+            rect.top <= (curWindow.pageYOffset + curWindow.innerHeight) &&
+            rect.left >= curWindow.pageXOffset &&
+            rect.left <= (curWindow.pageXOffset + curWindow.innerWidth)) ||
+           /* Top right corner is in view */ 
+           (rect.top >= curWindow.pageYOffset &&
+            rect.top <= (curWindow.pageYOffset + curWindow.innerHeight) &&
+            rect.right >= curWindow.pageXOffset &&
+            rect.right <= (curWindow.pageXOffset + curWindow.innerWidth)) ||
+           /* Bottom right corner is in view */
+           (rect.bottom >= curWindow.pageYOffset &&
+            rect.bottom <= (curWindow.pageYOffset + curWindow.innerHeight)  &&
+            rect.right >= curWindow.pageXOffset &&
+            rect.right <= (curWindow.pageXOffset + curWindow.innerWidth)) ||
+           /* Bottom left corner is in view */
+           (rect.bottom >= curWindow.pageYOffset &&
+            rect.bottom <= (curWindow.pageYOffset + curWindow.innerHeight)  &&
+            rect.left >= curWindow.pageXOffset &&
+            rect.left <= (curWindow.pageXOffset + curWindow.innerWidth)) ||
+           /* Center of the element is in view if element larger than viewport */
+           ((rect.top + (rect.height/2)) <= curWindow.pageYOffset &&
+            (rect.top + (rect.height/2)) >= (curWindow.pageYOffset + curWindow.innerHeight) &&
+            (rect.left + (rect.width/2)) <= curWindow.pageXOffset &&
+            (rect.left + (rect.width/2)) >= (curWindow.pageXOffset + curWindow.innerWidth))
          );
 }
 
