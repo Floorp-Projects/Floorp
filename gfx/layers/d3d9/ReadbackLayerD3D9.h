@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace layers {
 
-class THEBES_API ReadbackLayerD3D9 :
+class ReadbackLayerD3D9 :
   public ReadbackLayer,
   public LayerD3D9
 {
