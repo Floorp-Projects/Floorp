@@ -128,15 +128,9 @@ public:
   void GetPropertyPriority(const nsAString& aPropName, nsString& aPriority) {
     GetPropertyPriority(aPropName, static_cast<nsAString&>(aPriority));
   }
-  // XXXbz we should nix the Optional thing once bug 759622 is fixed.
   void SetProperty(const nsAString& aPropName, const nsAString& aValue,
-                   const mozilla::dom::Optional<nsAString>& aPriority,
-                   mozilla::ErrorResult& rv) {
-    if (aPriority.WasPassed()) {
-      rv = SetProperty(aPropName, aValue, aPriority.Value());
-    } else {
-      rv = SetProperty(aPropName, aValue, EmptyString());
-    }
+                   const nsAString& aPriority, mozilla::ErrorResult& rv) {
+    rv = SetProperty(aPropName, aValue, aPriority);
   }
   void RemoveProperty(const nsAString& aPropName, nsString& aRetval,
                       mozilla::ErrorResult& rv) {
