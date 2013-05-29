@@ -20,6 +20,10 @@
 #include <string>
 #endif
 
+#ifdef USE_SKIA_GPU
+#include <skia/SkRefCnt.h>
+#endif
+
 struct _cairo_surface;
 typedef _cairo_surface cairo_surface_t;
 
@@ -921,7 +925,7 @@ public:
 
 #ifdef USE_SKIA_GPU
   static TemporaryRef<DrawTarget>
-    CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext *aContext, const IntSize &aSize, SurfaceFormat aFormat);
+    CreateSkiaDrawTargetForFBO(unsigned int aFBOID, SkRefPtr<GrContext> aContext, const IntSize &aSize, SurfaceFormat aFormat);
 #endif
 
 #ifdef WIN32
