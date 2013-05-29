@@ -685,7 +685,7 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
 
         // Fast path: we managed to allocate the array inline; initialize the
         // slots.
-        if (length) {
+        if (length > 0) {
             if (!res->ensureElements(cx, length))
                 return NULL;
             res->setDenseInitializedLength(length);
