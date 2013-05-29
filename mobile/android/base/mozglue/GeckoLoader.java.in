@@ -205,6 +205,13 @@ public final class GeckoLoader {
             putenv("MOZ_LINKER_CACHE=" + linkerCache);
         }
 
+        // Disable on-demand decompression of the linker on devices where it
+        // is known to cause crashes.
+        if ("samsung".equals(android.os.Build.MANUFACTURER) &&
+            "GT-I9505".equals(android.os.Build.MODEL)) {
+            putenv("MOZ_LINKER_ONDEMAND=0");
+        }
+
 #ifdef MOZ_LINKER_EXTRACT
         putenv("MOZ_LINKER_EXTRACT=1");
         // Ensure that the cache dir is world-writable
