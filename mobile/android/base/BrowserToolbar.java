@@ -347,6 +347,10 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             }
         });
 
+        if (Build.VERSION.SDK_INT >= 16) {
+            mShadow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        }
+
         mHandler = new Handler();
 
         float slideWidth = mActivity.getResources().getDimension(R.dimen.browser_toolbar_lock_width);
