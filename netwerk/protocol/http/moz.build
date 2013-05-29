@@ -39,6 +39,7 @@ EXPORTS.mozilla.net += [
     'HttpChannelParent.h',
     'HttpInfo.h',
     'PHttpChannelParams.h',
+    'PSpdyPush3.h',
 ]
 
 CPP_SOURCES += [
@@ -50,6 +51,7 @@ CPP_SOURCES += [
     'HttpChannelParentListener.cpp',
     'HttpInfo.cpp',
     'NullHttpTransaction.cpp',
+    'SpdyPush3.cpp',
     'SpdySession2.cpp',
     'SpdySession3.cpp',
     'SpdyStream2.cpp',
