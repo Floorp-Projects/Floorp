@@ -48,6 +48,9 @@ include bugs/reftest.list
 # canvas 2D
 include canvas/reftest.list
 
+# css animations
+include css-animations/reftest.list
+
 # css calc() tests
 include css-calc/reftest.list
 
