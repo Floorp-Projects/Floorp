@@ -153,6 +153,7 @@ public:
   static nsresult HandleGoAway(SpdySession3 *);
   static nsresult HandleHeaders(SpdySession3 *);
   static nsresult HandleWindowUpdate(SpdySession3 *);
+  static nsresult HandleCredential(SpdySession3 *);
 
   template<typename T>
   static void EnsureBuffer(nsAutoArrayPtr<T> &,
