@@ -1481,9 +1481,14 @@ ObjectActor.prototype = {
    * Returns a grip for this actor for returning in a protocol message.
    */
   grip: function OA_grip() {
-    let g = { "type": "object",
-              "class": this.obj.class,
-              "actor": this.actorID };
+    let g = {
+      "type": "object",
+      "class": this.obj.class,
+      "actor": this.actorID,
+      "extensible": this.obj.isExtensible(),
+      "frozen": this.obj.isFrozen(),
+      "sealed": this.obj.isSealed()
+    };
 
     // Add additional properties for functions.
     if (this.obj.class === "Function") {
@@ -1780,7 +1785,7 @@ ObjectActor.prototype.requestTypes = {
 
 
 /**
- * Creates a pause-scoped  actor for the specified object.
+ * Creates a pause-scoped actor for the specified object.
  * @see ObjectActor
  */
 function PauseScopedObjectActor()

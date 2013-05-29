@@ -1437,6 +1437,10 @@ GripClient.prototype = {
 
   valid: true,
 
+  get isFrozen() this._grip.frozen,
+  get isSealed() this._grip.sealed,
+  get isExtensible() this._grip.extensible,
+
   /**
    * Request the names of a function's formal parameters.
    *
