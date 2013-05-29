@@ -187,7 +187,8 @@ static Control_FX sControlFunctions[] =
   SpdySession3::HandlePing,
   SpdySession3::HandleGoAway,
   SpdySession3::HandleHeaders,
-  SpdySession3::HandleWindowUpdate
+  SpdySession3::HandleWindowUpdate,
+  SpdySession3::HandleCredential
 };
 
 bool
@@ -1430,6 +1431,19 @@ SpdySession3::HandleWindowUpdate(SpdySession3 *self)
 
   self->ResetDownstreamState();
   self->ResumeRecv();
+  return NS_OK;
+}
+
+nsresult
+SpdySession3::HandleCredential(SpdySession3 *self)
+{
+  MOZ_ASSERT(self->mFrameControlType == CONTROL_TYPE_CREDENTIAL);
+
+  // These aren't used yet. Just ignore the frame.
+
+  LOG3(("SpdySession3::HandleCredential %p NOP.", self));
+
+  self->ResetDownstreamState();
   return NS_OK;
 }
 
