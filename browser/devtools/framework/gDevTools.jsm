@@ -424,6 +424,9 @@ let gDevToolsBrowser = {
     let allDefs = gDevTools.getToolDefinitionArray();
     let prevDef;
     for (let def of allDefs) {
+      if (def.id == "options") {
+        continue;
+      }
       if (def === toolDefinition) {
         break;
       }
