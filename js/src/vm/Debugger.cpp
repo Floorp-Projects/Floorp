@@ -2849,6 +2849,22 @@ DebuggerScript_getSource(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
+DebuggerScript_getSourceStart(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceStart)", args, obj, script);
+    args.rval().setNumber(script->sourceStart);
+    return true;
+}
+
+static JSBool
+DebuggerScript_getSourceLength(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceEnd)", args, obj, script);
+    args.rval().setNumber(script->sourceEnd - script->sourceStart);
+    return true;
+}
+
+static JSBool
 DebuggerScript_getStaticLevel(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get staticLevel)", args, obj, script);
@@ -3485,6 +3501,8 @@ static const JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("startLine", DebuggerScript_getStartLine, 0),
     JS_PSG("lineCount", DebuggerScript_getLineCount, 0),
     JS_PSG("source", DebuggerScript_getSource, 0),
+    JS_PSG("sourceStart", DebuggerScript_getSourceStart, 0),
+    JS_PSG("sourceLength", DebuggerScript_getSourceLength, 0),
     JS_PSG("staticLevel", DebuggerScript_getStaticLevel, 0),
     JS_PSG("sourceMapURL", DebuggerScript_getSourceMapUrl, 0),
     JS_PS_END
@@ -3638,8 +3656,26 @@ DebuggerSource_getText(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static JSBool
+DebuggerSource_getUrl(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get url)", args, obj, sourceObject);
+
+    ScriptSource *ss = sourceObject->source();
+    if (ss->filename()) {
+        JSString *str = js_NewStringCopyZ<CanGC>(cx, ss->filename());
+        if (!str)
+            return false;
+        args.rval().setString(str);
+    } else {
+        args.rval().setNull();
+    }
+    return true;
+}
+
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
+    JS_PSG("url", DebuggerSource_getUrl, 0),
     JS_PS_END
 };
 

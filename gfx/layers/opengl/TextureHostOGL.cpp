@@ -141,7 +141,6 @@ TextureImageTextureHostOGL::GetSize() const
   return gfx::IntSize(0, 0);
 }
 
-
 void
 TextureImageTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
@@ -234,7 +233,7 @@ bool
 TextureImageTextureHostOGL::Lock()
 {
   if (!mTexture) {
-    NS_WARNING("TextureImageAsTextureHost to be composited without texture");
+    NS_WARNING("TextureImageTextureHost to be composited without texture");
     return false;
   }
 
@@ -875,6 +874,68 @@ GrallocTextureHostOGL::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* 
   RegisterTextureHostAtGrallocBufferActor(this, *mBuffer);
 }
 
+#endif
+
+already_AddRefed<gfxImageSurface>
+TextureImageTextureHostOGL::GetAsSurface() {
+  nsRefPtr<gfxImageSurface> surf = IsValid() ?
+    mGL->GetTexImage(mTexture->GetTextureID(),
+                     false,
+                     mTexture->GetShaderProgramType())
+    : nullptr;
+  return surf.forget();
+}
+
+already_AddRefed<gfxImageSurface>
+YCbCrTextureHostOGL::GetAsSurface() {
+  nsRefPtr<gfxImageSurface> surf = IsValid() ?
+    mGL->GetTexImage(mYTexture->mTexImage->GetTextureID(),
+                     false,
+                     mYTexture->mTexImage->GetShaderProgramType())
+    : nullptr;
+  return surf.forget();
+}
+
+already_AddRefed<gfxImageSurface>
+SharedTextureHostOGL::GetAsSurface() {
+  nsRefPtr<gfxImageSurface> surf = IsValid() ?
+    mGL->GetTexImage(GetTextureHandle(),
+                     false,
+                     GetShaderProgram())
+    : nullptr;
+  return surf.forget();
+}
+
+already_AddRefed<gfxImageSurface>
+SurfaceStreamHostOGL::GetAsSurface() {
+  nsRefPtr<gfxImageSurface> surf = IsValid() ?
+    mGL->GetTexImage(mTextureHandle,
+                     false,
+                     GetShaderProgram())
+    : nullptr;
+  return surf.forget();
+}
+
+already_AddRefed<gfxImageSurface>
+TiledTextureHostOGL::GetAsSurface() {
+  nsRefPtr<gfxImageSurface> surf = IsValid() ?
+    mGL->GetTexImage(mTextureHandle,
+                     false,
+                     GetShaderProgram())
+    : nullptr;
+  return surf.forget();
+}
+
+#ifdef MOZ_WIDGET_GONK
+already_AddRefed<gfxImageSurface>
+GrallocTextureHostOGL::GetAsSurface() {
+  nsRefPtr<gfxImageSurface> surf = IsValid() && mGLTexture ?
+    mGL->GetTexImage(mGLTexture,
+                     false,
+                     GetShaderProgram())
+    : nullptr;
+  return surf.forget();
+}
 #endif
 
 } // namespace
