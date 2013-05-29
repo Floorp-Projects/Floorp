@@ -231,8 +231,6 @@ const PRUnichar* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
 uint32_t        nsWindow::sOOPPPluginFocusEvent   =
                   RegisterWindowMessageW(kOOPPPluginFocusEventId);
 
-MSG             nsWindow::sRedirectedKeyDown;
-
 /**************************************************************
  *
  * SECTION: globals variables
@@ -361,7 +359,7 @@ nsWindow::nsWindow() : nsWindowBase()
     nsUXThemeData::InitTitlebarInfo();
     // Init theme data
     nsUXThemeData::UpdateNativeThemeInfo();
-    ForgetRedirectedKeyDownMessage();
+    RedirectedKeyDownMessageManager::Forget();
   } // !sInstanceCount
 
   mIdleService = nullptr;
@@ -5104,7 +5102,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       // If previous focused window isn't ours, it must have received the
       // redirected message.  So, we should forget it.
       if (!WinUtils::IsOurProcessWindow(HWND(wParam))) {
-        ForgetRedirectedKeyDownMessage();
+        RedirectedKeyDownMessageManager::Forget();
       }
       if (sJustGotActivate) {
         DispatchFocusToTopLevelWindow(true);
@@ -5562,25 +5560,6 @@ void nsWindow::PostSleepWakeNotification(const bool aIsSleepMode)
                      NS_WIDGET_WAKE_OBSERVER_TOPIC, nullptr);
 }
 
-// RemoveNextCharMessage() should be called by WM_KEYDOWN or WM_SYSKEYDOWM
-// message handler.  If there is no WM_(SYS)CHAR message for it, this
-// method does nothing.
-// NOTE: WM_(SYS)CHAR message is posted by TranslateMessage() API which is
-// called in message loop.  So, WM_(SYS)KEYDOWN message should have
-// WM_(SYS)CHAR message in the queue if the keydown event causes character
-// input.
-
-/* static */
-void nsWindow::RemoveNextCharMessage(HWND aWnd)
-{
-  MSG msg;
-  if (WinUtils::PeekMessage(&msg, aWnd, WM_KEYFIRST, WM_KEYLAST,
-                            PM_NOREMOVE | PM_NOYIELD) &&
-      (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
-    WinUtils::GetMessage(&msg, aWnd, msg.message, msg.message);
-  }
-}
-
 LRESULT nsWindow::ProcessCharMessage(const MSG &aMsg, bool *aEventDispatched)
 {
   if (IMEHandler::IsComposingOn(this)) {
@@ -5611,9 +5590,9 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
 {
   // If this method doesn't call OnKeyDown(), this method must clean up the
   // redirected message information itself.  For more information, see above
-  // comment of AutoForgetRedirectedKeyDownMessage struct definition in
-  // nsWindow.h.
-  AutoForgetRedirectedKeyDownMessage forgetRedirectedMessage(this, aMsg);
+  // comment of RedirectedKeyDownMessageManager::AutoFlusher class definition
+  // in KeyboardLayout.h.
+  RedirectedKeyDownMessageManager::AutoFlusher redirectedMsgFlusher(this, aMsg);
 
   ModifierKeyState modKeyState;
 
@@ -5631,7 +5610,7 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
     result = OnKeyDown(aMsg, modKeyState, aEventDispatched, nullptr);
     // OnKeyDown cleaned up the redirected message information itself, so,
     // we should do nothing.
-    forgetRedirectedMessage.mCancel = true;
+    redirectedMsgFlusher.Cancel();
   }
 
   if (aMsg.wParam == VK_MENU ||
@@ -6335,15 +6314,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   return true; // Handled
 }
 
-/* static */
-bool nsWindow::IsRedirectedKeyDownMessage(const MSG &aMsg)
-{
-  return (aMsg.message == WM_KEYDOWN || aMsg.message == WM_SYSKEYDOWN) &&
-         (sRedirectedKeyDown.message == aMsg.message &&
-          WinUtils::GetScanCode(sRedirectedKeyDown.lParam) ==
-            WinUtils::GetScanCode(aMsg.lParam));
-}
-
 /**
  * nsWindow::OnKeyDown peeks into the message queue and pulls out
  * WM_CHAR messages for processing. During testing we don't want to
@@ -6361,9 +6331,9 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   NativeKey nativeKey(this, aMsg, aModKeyState, aFakeCharMessage);
   uint32_t DOMKeyCode = nativeKey.GetDOMKeyCode();
 
-  static bool sRedirectedKeyDownEventPreventedDefault = false;
   bool noDefault;
-  if (aFakeCharMessage || !IsRedirectedKeyDownMessage(aMsg)) {
+  if (aFakeCharMessage ||
+      !RedirectedKeyDownMessageManager::IsRedirectedMessage(aMsg)) {
     bool isIMEEnabled = IMEHandler::IsIMEEnabled(mInputContext);
     bool eventDispatched;
     noDefault = nativeKey.DispatchKeyDownEvent(&eventDispatched);
@@ -6373,7 +6343,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     if (!eventDispatched) {
       // If keydown event was not dispatched, keypress event shouldn't be
       // caused with the message.
-      ForgetRedirectedKeyDownMessage();
+      RedirectedKeyDownMessageManager::Forget();
       return 0;
     }
 
@@ -6388,7 +6358,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     HWND focusedWnd = ::GetFocus();
     if (!noDefault && !aFakeCharMessage && focusedWnd && !PluginHasFocus() &&
         !isIMEEnabled && IMEHandler::IsIMEEnabled(mInputContext)) {
-      RemoveNextCharMessage(focusedWnd);
+      RedirectedKeyDownMessageManager::RemoveNextCharMessage(focusedWnd);
 
       INPUT keyinput;
       keyinput.type = INPUT_KEYBOARD;
@@ -6401,8 +6371,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       keyinput.ki.time = 0;
       keyinput.ki.dwExtraInfo = 0;
 
-      sRedirectedKeyDownEventPreventedDefault = noDefault;
-      sRedirectedKeyDown = aMsg;
+      RedirectedKeyDownMessageManager::WillRedirect(aMsg, noDefault);
 
       ::SendInput(1, &keyinput, sizeof(keyinput));
 
@@ -6418,7 +6387,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       return true;
     }
   } else {
-    noDefault = sRedirectedKeyDownEventPreventedDefault;
+    noDefault = RedirectedKeyDownMessageManager::DefaultPrevented();
     // If this is redirected keydown message, we have dispatched the keydown
     // event already.
     if (aEventDispatched) {
@@ -6426,7 +6395,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     }
   }
 
-  ForgetRedirectedKeyDownMessage();
+  RedirectedKeyDownMessageManager::Forget();
 
   // If the key was processed by IME, we shouldn't dispatch keypress event.
   if (aMsg.wParam == VK_PROCESSKEY) {
