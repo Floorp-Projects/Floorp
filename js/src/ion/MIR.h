@@ -1999,6 +1999,8 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
         return mode() != Infallible;
     }
     bool congruentTo(MDefinition *const &ins) const {
+        if (!ins->isUnbox() || ins->toUnbox()->mode() != mode())
+            return false;
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
