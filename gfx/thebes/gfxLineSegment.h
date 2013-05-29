@@ -9,7 +9,7 @@
 #include "gfxTypes.h"
 #include "gfxPoint.h"
 
-struct THEBES_API gfxLineSegment {
+struct gfxLineSegment {
   gfxLineSegment(const gfxPoint &aStart, const gfxPoint &aEnd) 
     : mStart(aStart)
     , mEnd(aEnd)

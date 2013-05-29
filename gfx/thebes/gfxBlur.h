@@ -35,7 +35,7 @@ namespace mozilla {
  * any desired content onto the context acquired through GetContext, and lastly
  * calls Paint to apply the blurred content as an alpha mask.
  */
-class THEBES_API gfxAlphaBoxBlur
+class gfxAlphaBoxBlur
 {
 public:
     gfxAlphaBoxBlur();

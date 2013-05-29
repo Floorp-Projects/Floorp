@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace layers {
 
-class THEBES_API ColorLayerOGL : public ColorLayer,
-                                 public LayerOGL
+class ColorLayerOGL : public ColorLayer,
+                      public LayerOGL
 {
 public:
   ColorLayerOGL(LayerManagerOGL *aManager)

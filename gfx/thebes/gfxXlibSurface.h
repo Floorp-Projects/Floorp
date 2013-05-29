@@ -15,7 +15,7 @@
 #include "GLXLibrary.h"
 #endif
 
-class THEBES_API gfxXlibSurface : public gfxASurface {
+class gfxXlibSurface : public gfxASurface {
 public:
     // construct a wrapper around the specified drawable with dpy/visual.
     // Will use XGetGeometry to query the window/pixmap size.

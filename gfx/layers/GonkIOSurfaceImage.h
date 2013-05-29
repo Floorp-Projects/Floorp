@@ -46,7 +46,7 @@ protected:
   SurfaceDescriptor mSurfaceDescriptor;
 };
 
-class THEBES_API GonkIOSurfaceImage : public Image {
+class GonkIOSurfaceImage : public Image {
   typedef android::GraphicBuffer GraphicBuffer;
   static uint32_t sColorIdMap[];
 public:

@@ -14,8 +14,6 @@
  */
 typedef double gfxFloat;
 
-# define THEBES_API
-
 /**
  * Priority of a line break opportunity.
  *

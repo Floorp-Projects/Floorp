@@ -32,7 +32,7 @@ const int CBfLayerOpacity = 0;
  * SwapChain class, this class manages the swap chain belonging to a
  * LayerManagerD3D9.
  */
-class THEBES_API SwapChainD3D9
+class SwapChainD3D9
 {
   NS_INLINE_DECL_REFCOUNTING(SwapChainD3D9)
 public:
@@ -79,7 +79,7 @@ private:
  * device and create swap chains for the individual windows the layer managers
  * belong to.
  */
-class THEBES_API DeviceManagerD3D9 MOZ_FINAL
+class DeviceManagerD3D9 MOZ_FINAL
 {
 public:
   DeviceManagerD3D9();

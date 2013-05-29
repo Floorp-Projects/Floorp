@@ -22,7 +22,7 @@ class gfxContext;
  * unncessarily, these surfaces are released on a timer.
  */
 
-class THEBES_API gfxCachedTempSurface {
+class gfxCachedTempSurface {
 public:
   /**
    * Returns a context for a surface that can be efficiently copied to
