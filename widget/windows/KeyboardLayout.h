@@ -378,6 +378,14 @@ public:
   bool NeedsToHandleWithoutFollowingCharMessages() const;
 
   /**
+   * Handle WM_KEYDOWN message or WM_SYSKEYDOWN message.  The instance must be
+   * initialized with WM_KEYDOWN or WM_SYSKEYDOWN.
+   * Returns true if dispatched keydown event or keypress event is consumed.
+   * Otherwise, false.
+   */
+  bool HandleKeyDownMessage(bool* aEventDispatched = nullptr) const;
+
+  /**
    * Dspatces keydown event.  Retrns true if the event is consumed.
    * Otherwise, false.
    */
