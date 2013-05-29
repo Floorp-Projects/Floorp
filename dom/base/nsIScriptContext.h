@@ -186,7 +186,7 @@ public:
   virtual void ScriptEvaluated(bool aTerminated) = 0;
 
   virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                             JSScript* aScriptObject) = 0;
+                             JS::Handle<JSScript*> aScriptObject) = 0;
   
   /* Deserialize a script from a stream.
    */
