@@ -137,9 +137,8 @@ pref(webgl.force-layers-readback,true) random-if(B2G) == webgl-color-test.html?r
 # Check alpha behavior:
 fuzzy-if(B2G,256,83)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=1.0&nogl        wrapper.html?colors.png
 fuzzy-if(B2G,256,83)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=1.0             wrapper.html?colors.png
-# These tests don't use wrapper.html, as there appear to be invalidation issues with black.png and async image decoding - Bug 803299
-== webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0&nogl        black.html
-== webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0             black.html
+fails-if(B2G)  == webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0&nogl        wrapper.html?black.png
+fails-if(B2G)  == webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0             wrapper.html?black.png
 
 fuzzy-if(B2G,256,83)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0&nogl        wrapper.html?colors.png
 fuzzy-if(B2G,256,83)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0             wrapper.html?colors.png

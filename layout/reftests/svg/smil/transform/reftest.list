@@ -1,14 +1,14 @@
 # Tests related to SVG Animation (using SMIL), focusing on the animateTransform
 # element.
 
-fuzzy(110,1058) == additive-1.svg additive-1-ref.svg     # bug 839865
+fuzzy(110,1056) == additive-1.svg additive-1-ref.svg     # bug 839865
 == animate-width-1.svg lime.svg
 fuzzy(155,4352) == paced-1.svg paced-1-ref.svg           # bug 839865
-fuzzy(32,225) == rotate-angle-1.svg rotate-angle-ref.svg # bug 839865
-fuzzy(32,225) == rotate-angle-2.svg rotate-angle-ref.svg # bug 839865
-fuzzy(32,225) == rotate-angle-3.svg rotate-angle-ref.svg # bug 839865
-fuzzy(32,200) == rotate-angle-4.svg rotate-angle-ref.svg # bug 839865
-fuzzy(32,125) == rotate-angle-5.svg rotate-angle-ref.svg # bug 839865
+fuzzy(32,216) == rotate-angle-1.svg rotate-angle-ref.svg # bug 839865
+fuzzy(32,216) == rotate-angle-2.svg rotate-angle-ref.svg # bug 839865
+fuzzy(32,216) == rotate-angle-3.svg rotate-angle-ref.svg # bug 839865
+fuzzy(32,192) == rotate-angle-4.svg rotate-angle-ref.svg # bug 839865
+fuzzy(32,120) == rotate-angle-5.svg rotate-angle-ref.svg # bug 839865
 fuzzy(16,6237) == scale-1.svg scale-1-ref.svg            # bug 839865
 == set-transform-1.svg lime.svg
 fuzzy(132,13656) == skew-1.svg skew-1-ref.svg            # bug 839865
