@@ -6,7 +6,6 @@
 #ifndef nsDOMFile_h__
 #define nsDOMFile_h__
 
-#include "mozilla/Attributes.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsIFile.h"
 #include "nsIDOMFile.h"
@@ -291,12 +290,12 @@ public:
   }
 
   // Overrides
-  NS_IMETHOD GetSize(uint64_t* aSize) MOZ_OVERRIDE;
-  NS_IMETHOD GetType(nsAString& aType) MOZ_OVERRIDE;
-  NS_IMETHOD GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate) MOZ_OVERRIDE;
-  NS_IMETHOD GetMozLastModifiedDate(uint64_t* aLastModifiedDate) MOZ_OVERRIDE;
-  NS_IMETHOD GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
-  NS_IMETHOD GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
+  NS_IMETHOD GetSize(uint64_t* aSize);
+  NS_IMETHOD GetType(nsAString& aType);
+  NS_IMETHOD GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate);
+  NS_IMETHOD GetMozLastModifiedDate(uint64_t* aLastModifiedDate);
+  NS_IMETHOD GetMozFullPathInternal(nsAString& aFullPath);
+  NS_IMETHOD GetInternalStream(nsIInputStream**);
 
 protected:
   // Create slice
@@ -328,14 +327,14 @@ protected:
 
   virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType) MOZ_OVERRIDE;
+              const nsAString& aContentType);
 
-  virtual bool IsStoredFile() const MOZ_OVERRIDE
+  virtual bool IsStoredFile() const
   {
     return mStoredFile;
   }
 
-  virtual bool IsWholeFile() const MOZ_OVERRIDE
+  virtual bool IsWholeFile() const
   {
     return mWholeFile;
   }
@@ -373,7 +372,7 @@ public:
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  NS_IMETHOD GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
+  NS_IMETHOD GetInternalStream(nsIInputStream**);
 
 protected:
   // Create slice
@@ -387,7 +386,7 @@ protected:
   }
   virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType) MOZ_OVERRIDE;
+              const nsAString& aContentType);
 
   // These classes need to see DataOwner.
   friend class DataOwnerAdapter;

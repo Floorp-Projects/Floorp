@@ -5,7 +5,6 @@
 #ifndef nsIFormSubmission_h___
 #define nsIFormSubmission_h___
 
-#include "mozilla/Attributes.h"
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -160,12 +159,12 @@ public:
   ~nsFSMultipartFormData();
  
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) MOZ_OVERRIDE;
+                                    const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    nsIDOMBlob* aBlob,
-                                   const nsString& aFilename) MOZ_OVERRIDE;
+                                   const nsString& aFilename);
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) MOZ_OVERRIDE;
+                                        nsIInputStream** aPostDataStream);
 
   void GetContentType(nsACString& aContentType)
   {

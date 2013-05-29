@@ -12,7 +12,6 @@
 #ifndef FragmentOrElement_h___
 #define FragmentOrElement_h___
 
-#include "mozilla/Attributes.h"
 #include "nsAttrAndChildArray.h"          // member
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_*
 #include "nsIContent.h"                   // base class
@@ -61,15 +60,15 @@ public:
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
-  virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual int32_t IndexOf(nsIContent* aContent);
+  virtual nsIContent* Item(uint32_t aIndex);
 
   void DropReference()
   {
     mNode = nullptr;
   }
 
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE
+  virtual nsINode* GetParentObject()
   {
     return mNode;
   }
@@ -187,40 +186,40 @@ public:
   nsresult PostQueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsINode interface methods
-  virtual uint32_t GetChildCount() const MOZ_OVERRIDE;
-  virtual nsIContent *GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
-  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const MOZ_OVERRIDE;
+  virtual uint32_t GetChildCount() const;
+  virtual nsIContent *GetChildAt(uint32_t aIndex) const;
+  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
   virtual int32_t IndexOf(const nsINode* aPossibleChild) const MOZ_OVERRIDE;
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                 bool aNotify) MOZ_OVERRIDE;
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
-  virtual void GetTextContentInternal(nsAString& aTextContent) MOZ_OVERRIDE;
+                                 bool aNotify);
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
+  virtual void GetTextContentInternal(nsAString& aTextContent);
   virtual void SetTextContentInternal(const nsAString& aTextContent,
-                                      mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+                                      mozilla::ErrorResult& aError);
 
   // nsIContent interface methods
-  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) MOZ_OVERRIDE;
-  virtual const nsTextFragment *GetText() MOZ_OVERRIDE;
-  virtual uint32_t TextLength() const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter);
+  virtual const nsTextFragment *GetText();
+  virtual uint32_t TextLength() const;
   virtual nsresult SetText(const PRUnichar* aBuffer, uint32_t aLength,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify);
   // Need to implement this here too to avoid hiding.
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
   virtual nsresult AppendText(const PRUnichar* aBuffer, uint32_t aLength,
-                              bool aNotify) MOZ_OVERRIDE;
-  virtual bool TextIsOnlyWhitespace() MOZ_OVERRIDE;
-  virtual void AppendTextTo(nsAString& aResult) MOZ_OVERRIDE;
-  virtual nsIContent *GetBindingParent() const MOZ_OVERRIDE;
-  virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
+                              bool aNotify);
+  virtual bool TextIsOnlyWhitespace();
+  virtual void AppendTextTo(nsAString& aResult);
+  virtual nsIContent *GetBindingParent() const;
+  virtual bool IsLink(nsIURI** aURI) const;
 
-  virtual void DestroyContent() MOZ_OVERRIDE;
-  virtual void SaveSubtreeState() MOZ_OVERRIDE;
+  virtual void DestroyContent();
+  virtual void SaveSubtreeState();
 
-  virtual const nsAttrValue* DoGetClasses() const MOZ_OVERRIDE;
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
+  virtual const nsAttrValue* DoGetClasses() const;
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
 
   nsIHTMLCollection* Children();
 
@@ -240,7 +239,7 @@ public:
    */
   void FireNodeRemovedForChildren();
 
-  virtual bool OwnedOnlyByTheDOMTree() MOZ_OVERRIDE
+  virtual bool OwnedOnlyByTheDOMTree()
   {
     uint32_t rc = mRefCnt.get();
     if (GetParent()) {
@@ -250,12 +249,12 @@ public:
     return rc == 0;
   }
 
-  virtual bool IsPurple() MOZ_OVERRIDE
+  virtual bool IsPurple()
   {
     return mRefCnt.IsPurple();
   }
 
-  virtual void RemovePurple() MOZ_OVERRIDE
+  virtual void RemovePurple()
   {
     mRefCnt.RemovePurple();
   }
@@ -362,7 +361,7 @@ public:
 
 protected:
   // Override from nsINode
-  virtual nsINode::nsSlots* CreateSlots() MOZ_OVERRIDE;
+  virtual nsINode::nsSlots* CreateSlots();
 
   nsDOMSlots *DOMSlots()
   {

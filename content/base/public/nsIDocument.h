@@ -5,7 +5,6 @@
 #ifndef nsIDocument_h___
 #define nsIDocument_h___
 
-#include "mozilla/Attributes.h"
 #include "mozFlushType.h"                // for enum
 #include "nsAutoPtr.h"                   // for member
 #include "nsCOMArray.h"                  // for member
@@ -261,7 +260,7 @@ public:
   {
     return mDocumentBaseURI ? mDocumentBaseURI : mDocumentURI;
   }
-  virtual already_AddRefed<nsIURI> GetBaseURI() const MOZ_OVERRIDE
+  virtual already_AddRefed<nsIURI> GetBaseURI() const
   {
     nsCOMPtr<nsIURI> uri = GetDocBaseURI();
 

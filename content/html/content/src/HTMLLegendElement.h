@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_HTMLLegendElement_h
 #define mozilla_dom_HTMLLegendElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLFormElement.h"
@@ -45,20 +44,20 @@ public:
   virtual void Focus(ErrorResult& aError) MOZ_OVERRIDE;
 
   virtual void PerformAccesskey(bool aKeyCausesActivation,
-                                bool aIsTrustedEvent) MOZ_OVERRIDE;
+                                bool aIsTrustedEvent);
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true);
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
+                                nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const MOZ_OVERRIDE;
+                                              int32_t aModType) const;
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -66,11 +65,11 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify);
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify) MOZ_OVERRIDE;
+                             bool aNotify);
 
-  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   Element* GetFormElement()
   {
@@ -79,7 +78,7 @@ public:
     return fieldsetControl ? fieldsetControl->GetFormElement() : nullptr;
   }
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   /**
    * WebIDL Interface

@@ -6,7 +6,6 @@
 #ifndef nsDOMEvent_h__
 #define nsDOMEvent_h__
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMEvent.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
@@ -100,7 +99,7 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                        const JS::CallArgs& aArgs) MOZ_OVERRIDE;
+                        const JS::CallArgs& aArgs);
 
   virtual nsresult InitFromCtor(const nsAString& aType,
                                 JSContext* aCx, JS::Value* aVal);

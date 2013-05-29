@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_ProcessingInstruction_h
 #define mozilla_dom_ProcessingInstruction_h
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsAString.h"
@@ -38,14 +37,14 @@ public:
   virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              bool aCloneText) const MOZ_OVERRIDE;
+                                              bool aCloneText) const;
 
 #ifdef DEBUG
-  virtual void List(FILE* out, int32_t aIndent) const MOZ_OVERRIDE;
-  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const MOZ_OVERRIDE;
+  virtual void List(FILE* out, int32_t aIndent) const;
+  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const;
 #endif
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL API
   void GetTarget(nsString& aTarget)

@@ -13,7 +13,6 @@
 #ifndef nsNodeInfo_h___
 #define nsNodeInfo_h___
 
-#include "mozilla/Attributes.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "plhash.h"
@@ -30,7 +29,7 @@ public:
 
   // nsINodeInfo
   virtual void GetNamespaceURI(nsAString& aNameSpaceURI) const;
-  virtual bool NamespaceEquals(const nsAString& aNamespaceURI) const MOZ_OVERRIDE;
+  virtual bool NamespaceEquals(const nsAString& aNamespaceURI) const;
 
   // nsNodeInfo
 public:

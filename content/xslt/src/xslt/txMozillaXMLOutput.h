@@ -39,7 +39,7 @@ public:
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 bool aWasAlternate,
-                                nsresult aStatus) MOZ_OVERRIDE;
+                                nsresult aStatus);
 
     void Init(nsITransformObserver* aObserver);
     nsresult AddScriptElement(nsIScriptElement* aElement);

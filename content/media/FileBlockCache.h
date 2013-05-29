@@ -7,7 +7,6 @@
 #ifndef FILE_BLOCK_CACHE_H_
 #define FILE_BLOCK_CACHE_H_
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "prio.h"
 #include "nsTArray.h"
@@ -66,7 +65,7 @@ public:
   nsresult WriteBlock(uint32_t aBlockIndex, const uint8_t* aData);
 
   // Performs block writes and block moves on its own thread.
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run();
 
   // Synchronously reads data from file. May read from file or memory
   // depending on whether written blocks have been flushed to file yet.

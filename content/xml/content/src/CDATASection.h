@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_CDATASection_h
 #define mozilla_dom_CDATASection_h
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMCDATASection.h"
 #include "mozilla/dom/Text.h"
 
@@ -60,12 +59,12 @@ public:
   virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              bool aCloneText) const MOZ_OVERRIDE;
+                                              bool aCloneText) const;
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 #ifdef DEBUG
-  virtual void List(FILE* out, int32_t aIndent) const MOZ_OVERRIDE;
-  virtual void DumpContent(FILE* out, int32_t aIndent,bool aDumpAll) const MOZ_OVERRIDE;
+  virtual void List(FILE* out, int32_t aIndent) const;
+  virtual void DumpContent(FILE* out, int32_t aIndent,bool aDumpAll) const;
 #endif
 
 protected:

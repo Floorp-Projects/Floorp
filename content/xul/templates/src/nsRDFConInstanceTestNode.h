@@ -6,7 +6,6 @@
 #ifndef nsRDFConInstanceTestNode_h__
 #define nsRDFConInstanceTestNode_h__
 
-#include "mozilla/Attributes.h"
 #include "nscore.h"
 #include "nsRDFTestNode.h"
 #include "nsIRDFResource.h"
@@ -29,18 +28,18 @@ public:
                              Test aEmpty);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          bool* aCantHandleYet) const MOZ_OVERRIDE;
+                                          bool* aCantHandleYet) const;
 
     virtual bool
     CanPropagate(nsIRDFResource* aSource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget,
-                 Instantiation& aInitialBindings) const MOZ_OVERRIDE;
+                 Instantiation& aInitialBindings) const;
 
     virtual void
     Retract(nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
-            nsIRDFNode* aTarget) const MOZ_OVERRIDE;
+            nsIRDFNode* aTarget) const;
 
 
     class Element : public MemoryElement {
@@ -55,14 +54,14 @@ public:
 
         virtual ~Element() { MOZ_COUNT_DTOR(nsRDFConInstanceTestNode::Element); }
 
-        virtual const char* Type() const MOZ_OVERRIDE {
+        virtual const char* Type() const {
             return "nsRDFConInstanceTestNode::Element"; }
 
-        virtual PLHashNumber Hash() const MOZ_OVERRIDE {
+        virtual PLHashNumber Hash() const {
             return mozilla::HashGeneric(mContainerTest, mEmptyTest, mContainer.get());
         }
 
-        virtual bool Equals(const MemoryElement& aElement) const MOZ_OVERRIDE {
+        virtual bool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {
                 const Element& element = static_cast<const Element&>(aElement);
                 return mContainer == element.mContainer

@@ -13,7 +13,6 @@
 #ifndef mozilla_dom_EventSource_h
 #define mozilla_dom_EventSource_h
 
-#include "mozilla/Attributes.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIObserver.h"
 #include "nsIStreamListener.h"
@@ -107,7 +106,7 @@ public:
   // Determine if preferences allow EventSource
   static bool PrefEnabled();
 
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner();
 
 protected:
   nsresult Init(nsISupports* aOwner,

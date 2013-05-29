@@ -8,7 +8,6 @@
 #ifndef nsGenericHTMLFrameElement_h
 #define nsGenericHTMLFrameElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIFrameLoader.h"
 #include "nsIMozBrowserFrame.h"
@@ -38,18 +37,18 @@ public:
 
   virtual ~nsGenericHTMLFrameElement();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_DECL_NSIFRAMELOADEROWNER
   NS_DECL_NSIDOMMOZBROWSERFRAME
   NS_DECL_NSIMOZBROWSERFRAME
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) MOZ_OVERRIDE;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true);
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -60,7 +59,7 @@ public:
                            bool aNotify) MOZ_OVERRIDE;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) MOZ_OVERRIDE;
-  virtual void DestroyContent() MOZ_OVERRIDE;
+  virtual void DestroyContent();
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 

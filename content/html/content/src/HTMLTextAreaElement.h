@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_HTMLTextAreaElement_h
 #define mozilla_dom_HTMLTextAreaElement_h
 
-#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
@@ -61,75 +60,75 @@ public:
   NS_DECL_NSIDOMHTMLTEXTAREAELEMENT
 
   // nsIDOMNSEditableElement
-  NS_IMETHOD GetEditor(nsIEditor** aEditor) MOZ_OVERRIDE
+  NS_IMETHOD GetEditor(nsIEditor** aEditor)
   {
     return nsGenericHTMLElement::GetEditor(aEditor);
   }
-  NS_IMETHOD SetUserInput(const nsAString& aInput) MOZ_OVERRIDE;
+  NS_IMETHOD SetUserInput(const nsAString& aInput);
 
   // nsIFormControl
-  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return NS_FORM_TEXTAREA; }
-  NS_IMETHOD Reset() MOZ_OVERRIDE;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
-  NS_IMETHOD SaveState() MOZ_OVERRIDE;
-  virtual bool RestoreState(nsPresState* aState) MOZ_OVERRIDE;
-  virtual bool IsDisabledForEvents(uint32_t aMessage) MOZ_OVERRIDE;
+  NS_IMETHOD_(uint32_t) GetType() const { return NS_FORM_TEXTAREA; }
+  NS_IMETHOD Reset();
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
+  NS_IMETHOD SaveState();
+  virtual bool RestoreState(nsPresState* aState);
+  virtual bool IsDisabledForEvents(uint32_t aMessage);
 
-  virtual void FieldSetDisabledChanged(bool aNotify) MOZ_OVERRIDE;
+  virtual void FieldSetDisabledChanged(bool aNotify);
 
-  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
+  virtual nsEventStates IntrinsicState() const;
 
   // nsITextControlElemet
-  NS_IMETHOD SetValueChanged(bool aValueChanged) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsSingleLineTextControl() const MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsTextArea() const MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsPlainTextControl() const MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsPasswordTextControl() const MOZ_OVERRIDE;
-  NS_IMETHOD_(int32_t) GetCols() MOZ_OVERRIDE;
-  NS_IMETHOD_(int32_t) GetWrapCols() MOZ_OVERRIDE;
-  NS_IMETHOD_(int32_t) GetRows() MOZ_OVERRIDE;
-  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) ValueChanged() const MOZ_OVERRIDE;
-  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIEditor*) GetTextEditor() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsISelectionController*) GetSelectionController() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() MOZ_OVERRIDE;
-  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) MOZ_OVERRIDE;
-  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) MOZ_OVERRIDE;
-  NS_IMETHOD CreateEditor() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIContent*) GetRootEditorNode() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIContent*) GetPlaceholderNode() MOZ_OVERRIDE;
-  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) GetPlaceholderVisibility() MOZ_OVERRIDE;
-  NS_IMETHOD_(void) InitializeKeyboardEventListeners() MOZ_OVERRIDE;
-  NS_IMETHOD_(void) OnValueChanged(bool aNotify) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) HasCachedSelection() MOZ_OVERRIDE;
+  NS_IMETHOD SetValueChanged(bool aValueChanged);
+  NS_IMETHOD_(bool) IsSingleLineTextControl() const;
+  NS_IMETHOD_(bool) IsTextArea() const;
+  NS_IMETHOD_(bool) IsPlainTextControl() const;
+  NS_IMETHOD_(bool) IsPasswordTextControl() const;
+  NS_IMETHOD_(int32_t) GetCols();
+  NS_IMETHOD_(int32_t) GetWrapCols();
+  NS_IMETHOD_(int32_t) GetRows();
+  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue);
+  NS_IMETHOD_(bool) ValueChanged() const;
+  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const;
+  NS_IMETHOD_(nsIEditor*) GetTextEditor();
+  NS_IMETHOD_(nsISelectionController*) GetSelectionController();
+  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection();
+  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame);
+  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame);
+  NS_IMETHOD CreateEditor();
+  NS_IMETHOD_(nsIContent*) GetRootEditorNode();
+  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
+  NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
+  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify);
+  NS_IMETHOD_(bool) GetPlaceholderVisibility();
+  NS_IMETHOD_(void) InitializeKeyboardEventListeners();
+  NS_IMETHOD_(void) OnValueChanged(bool aNotify);
+  NS_IMETHOD_(bool) HasCachedSelection();
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
-                               bool aCompileEventHandlers) MOZ_OVERRIDE;
+                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true);
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
+                                nsAttrValue& aResult);
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+                                              int32_t aModType) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) MOZ_OVERRIDE;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
 
-  virtual void DoneAddingChildren(bool aHaveNotified) MOZ_OVERRIDE;
-  virtual bool IsDoneAddingChildren() MOZ_OVERRIDE;
+  virtual void DoneAddingChildren(bool aHaveNotified);
+  virtual bool IsDoneAddingChildren();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   nsresult CopyInnerTo(Element* aDest);
 
@@ -138,7 +137,7 @@ public:
    */
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
-                                 bool aNotify) MOZ_OVERRIDE;
+                                 bool aNotify);
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
@@ -149,7 +148,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTextAreaElement,
                                            nsGenericHTMLFormElement)
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // nsIConstraintValidation
   bool     IsTooLong();
@@ -158,7 +157,7 @@ public:
   void     UpdateValueMissingValidityState();
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
-                                ValidityStateType aType) MOZ_OVERRIDE;
+                                ValidityStateType aType);
 
   // Web IDL binding methods
   bool Autofocus()
@@ -323,7 +322,7 @@ protected:
   void ContentChanged(nsIContent* aContent);
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom *aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+                                const nsAttrValue* aValue, bool aNotify);
 
   /**
    * Return if an element should have a specific validity UI

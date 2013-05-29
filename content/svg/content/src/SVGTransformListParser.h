@@ -7,7 +7,6 @@
 #ifndef MOZILLA_SVGTRANSFORMLISTPARSER_H__
 #define MOZILLA_SVGTRANSFORMLISTPARSER_H__
 
-#include "mozilla/Attributes.h"
 #include "nsSVGDataParser.h"
 #include "nsTArray.h"
 
@@ -35,7 +34,7 @@ private:
   nsTArray<nsSVGTransform> mTransforms;
 
   // helpers
-  virtual nsresult Match() MOZ_OVERRIDE;
+  virtual nsresult Match();
 
   nsresult MatchNumberArguments(float *aResult,
                                 uint32_t aMaxNum,

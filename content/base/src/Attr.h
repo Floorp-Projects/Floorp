@@ -10,7 +10,6 @@
 #ifndef mozilla_dom_Attr_h
 #define mozilla_dom_Attr_h
 
-#include "mozilla/Attributes.h"
 #include "nsIAttribute.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMText.h"
@@ -40,34 +39,34 @@ public:
 
   // nsIDOMNode interface
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  virtual void GetTextContentInternal(nsAString& aTextContent) MOZ_OVERRIDE;
+  virtual void GetTextContentInternal(nsAString& aTextContent);
   virtual void SetTextContentInternal(const nsAString& aTextContent,
-                                      ErrorResult& aError) MOZ_OVERRIDE;
-  virtual void GetNodeValueInternal(nsAString& aNodeValue) MOZ_OVERRIDE;
+                                      ErrorResult& aError);
+  virtual void GetNodeValueInternal(nsAString& aNodeValue);
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    ErrorResult& aError) MOZ_OVERRIDE;
+                                    ErrorResult& aError);
 
   // nsIDOMAttr interface
   NS_DECL_NSIDOMATTR
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
   // nsIAttribute interface
-  void SetMap(nsDOMAttributeMap *aMap) MOZ_OVERRIDE;
-  nsIContent *GetContent() const MOZ_OVERRIDE;
-  nsresult SetOwnerDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
+  void SetMap(nsDOMAttributeMap *aMap);
+  nsIContent *GetContent() const;
+  nsresult SetOwnerDocument(nsIDocument* aDocument);
 
   // nsINode interface
-  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
-  virtual uint32_t GetChildCount() const MOZ_OVERRIDE;
-  virtual nsIContent *GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
-  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const MOZ_OVERRIDE;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
+  virtual uint32_t GetChildCount() const;
+  virtual nsIContent *GetChildAt(uint32_t aIndex) const;
+  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
   virtual int32_t IndexOf(const nsINode* aPossibleChild) const MOZ_OVERRIDE;
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                 bool aNotify) MOZ_OVERRIDE;
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIURI> GetBaseURI() const MOZ_OVERRIDE;
+                                 bool aNotify);
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   static void Initialize();
   static void Shutdown();

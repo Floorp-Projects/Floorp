@@ -6,7 +6,6 @@
 #ifndef nsContentTestNode_h__
 #define nsContentTestNode_h__
 
-#include "mozilla/Attributes.h"
 #include "nscore.h"
 #include "nsRuleNetwork.h"
 #include "nsIAtom.h"
@@ -26,10 +25,10 @@ public:
                       nsIAtom* aContentVariable);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          bool* aCantHandleYet) const MOZ_OVERRIDE;
+                                          bool* aCantHandleYet) const;
 
     nsresult
-    Constrain(InstantiationSet& aInstantiations) MOZ_OVERRIDE;
+    Constrain(InstantiationSet& aInstantiations);
 
     void SetTag(nsIAtom* aTag, nsIDOMDocument* aDocument)
     {

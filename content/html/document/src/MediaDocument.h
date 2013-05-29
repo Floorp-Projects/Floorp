@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_MediaDocument_h
 #define mozilla_dom_MediaDocument_h
 
-#include "mozilla/Attributes.h"
 #include "nsHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAutoPtr.h"
@@ -23,7 +22,7 @@ public:
   MediaDocument();
   virtual ~MediaDocument();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init();
 
   virtual nsresult StartDocumentLoad(const char*         aCommand,
                                      nsIChannel*         aChannel,
@@ -31,9 +30,9 @@ public:
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
                                      bool                aReset = true,
-                                     nsIContentSink*     aSink = nullptr) MOZ_OVERRIDE;
+                                     nsIContentSink*     aSink = nullptr);
 
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
 protected:
   void BecomeInteractive();

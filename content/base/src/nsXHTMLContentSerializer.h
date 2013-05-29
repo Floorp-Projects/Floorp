@@ -12,7 +12,6 @@
 #ifndef nsXHTMLContentSerializer_h__
 #define nsXHTMLContentSerializer_h__
 
-#include "mozilla/Attributes.h"
 #include "nsXMLContentSerializer.h"
 #include "nsIEntityConverter.h"
 #include "nsString.h"
@@ -28,49 +27,49 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
-                  bool aRewriteEncodingDeclaration) MOZ_OVERRIDE;
+                  bool aRewriteEncodingDeclaration);
 
   NS_IMETHOD AppendText(nsIContent* aText,
                         int32_t aStartOffset,
                         int32_t aEndOffset,
-                        nsAString& aStr) MOZ_OVERRIDE;
+                        nsAString& aStr);
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
-                                 nsAString& aStr) MOZ_OVERRIDE;
+                                 nsAString& aStr);
 
  protected:
 
 
   virtual bool CheckElementStart(nsIContent * aContent,
                           bool & aForceFormat,
-                          nsAString& aStr) MOZ_OVERRIDE;
+                          nsAString& aStr);
 
   virtual void AppendEndOfElementStart(nsIContent *aOriginalElement,
                                nsIAtom * aName,
                                int32_t aNamespaceID,
-                               nsAString& aStr) MOZ_OVERRIDE;
+                               nsAString& aStr);
 
   virtual void AfterElementStart(nsIContent * aContent,
                          nsIContent *aOriginalElement,
-                         nsAString& aStr) MOZ_OVERRIDE;
+                         nsAString& aStr);
 
   virtual bool CheckElementEnd(nsIContent * aContent,
                           bool & aForceFormat,
-                          nsAString& aStr) MOZ_OVERRIDE;
+                          nsAString& aStr);
 
   virtual void AfterElementEnd(nsIContent * aContent,
-                               nsAString& aStr) MOZ_OVERRIDE;
+                               nsAString& aStr);
 
-  virtual bool LineBreakBeforeOpen(int32_t aNamespaceID, nsIAtom* aName) MOZ_OVERRIDE;
-  virtual bool LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aName) MOZ_OVERRIDE;
-  virtual bool LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aName) MOZ_OVERRIDE;
-  virtual bool LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aName) MOZ_OVERRIDE;
+  virtual bool LineBreakBeforeOpen(int32_t aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aName);
 
   bool HasLongLines(const nsString& text, int32_t& aLastNewlineOffset);
 
   // functions to check if we enter in or leave from a preformated content
-  virtual void MaybeEnterInPreContent(nsIContent* aNode) MOZ_OVERRIDE;
-  virtual void MaybeLeaveFromPreContent(nsIContent* aNode) MOZ_OVERRIDE;
+  virtual void MaybeEnterInPreContent(nsIContent* aNode);
+  virtual void MaybeLeaveFromPreContent(nsIContent* aNode);
 
   virtual void SerializeAttributes(nsIContent* aContent,
                            nsIContent *aOriginalElement,
@@ -79,7 +78,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                            nsIAtom* aTagName,
                            nsAString& aStr,
                            uint32_t aSkipAttr,
-                           bool aAddNSAttr) MOZ_OVERRIDE;
+                           bool aAddNSAttr);
 
   bool IsFirstChildOfOL(nsIContent* aElement);
 
@@ -88,7 +87,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   bool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);
   virtual void AppendAndTranslateEntities(const nsAString& aStr,
-                                          nsAString& aOutputStr) MOZ_OVERRIDE;
+                                          nsAString& aOutputStr);
   nsresult EscapeURI(nsIContent* aContent,
                      const nsAString& aURI,
                      nsAString& aEscapedURI);

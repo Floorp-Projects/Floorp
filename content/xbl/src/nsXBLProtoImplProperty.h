@@ -6,7 +6,6 @@
 #ifndef nsXBLProtoImplProperty_h__
 #define nsXBLProtoImplProperty_h__
 
-#include "mozilla/Attributes.h"
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "jsapi.h"
@@ -34,18 +33,18 @@ public:
   void SetSetterLineNumber(uint32_t aLineNumber);
 
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JS::Handle<JSObject*> aTargetClassObject) MOZ_OVERRIDE;
+                                 JS::Handle<JSObject*> aTargetClassObject);
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
-                                 JS::Handle<JSObject*> aClassObject) MOZ_OVERRIDE;
+                                 JS::Handle<JSObject*> aClassObject);
 
-  virtual void Trace(const TraceCallbacks& aCallback, void *aClosure) MOZ_OVERRIDE;
+  virtual void Trace(const TraceCallbacks& aCallback, void *aClosure);
 
   nsresult Read(nsIScriptContext* aContext,
                 nsIObjectInputStream* aStream,
                 XBLBindingSerializeDetails aType);
   virtual nsresult Write(nsIScriptContext* aContext,
-                         nsIObjectOutputStream* aStream) MOZ_OVERRIDE;
+                         nsIObjectOutputStream* aStream);
 
 protected:
   union {

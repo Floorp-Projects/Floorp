@@ -6,7 +6,6 @@
 #ifndef WEBGLCONTEXT_H_
 #define WEBGLCONTEXT_H_
 
-#include "mozilla/Attributes.h"
 #include "WebGLElementArrayCache.h"
 #include "WebGLObjectModel.h"
 #include "WebGLShader.h"
@@ -203,25 +202,25 @@ public:
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD SetDimensions(int32_t width, int32_t height) MOZ_OVERRIDE;
-    NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height) MOZ_OVERRIDE
+    NS_IMETHOD SetDimensions(int32_t width, int32_t height);
+    NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height)
         { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD Reset() MOZ_OVERRIDE
+    NS_IMETHOD Reset()
         { /* (InitializeWithSurface) */ return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Render(gfxContext *ctx,
                       gfxPattern::GraphicsFilter f,
-                      uint32_t aFlags = RenderFlagPremultAlpha) MOZ_OVERRIDE;
+                      uint32_t aFlags = RenderFlagPremultAlpha);
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
-                              nsIInputStream **aStream) MOZ_OVERRIDE;
-    NS_IMETHOD GetThebesSurface(gfxASurface **surface) MOZ_OVERRIDE;
-    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() MOZ_OVERRIDE
+                              nsIInputStream **aStream);
+    NS_IMETHOD GetThebesSurface(gfxASurface **surface);
+    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot()
         { return nullptr; }
 
-    NS_IMETHOD SetIsOpaque(bool b) MOZ_OVERRIDE { return NS_OK; };
-    NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions) MOZ_OVERRIDE;
+    NS_IMETHOD SetIsOpaque(bool b) { return NS_OK; };
+    NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions);
 
-    NS_IMETHOD SetIsIPC(bool b) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD SetIsIPC(bool b) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
                     int32_t x, int32_t y, int32_t w, int32_t h)
@@ -257,11 +256,11 @@ public:
 
     already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                  CanvasLayer *aOldLayer,
-                                                 LayerManager *aManager) MOZ_OVERRIDE;
+                                                 LayerManager *aManager);
 
     // Note that 'clean' here refers to its invalidation state, not the
     // contents of the buffer.
-    void MarkContextClean() MOZ_OVERRIDE { mInvalidated = false; }
+    void MarkContextClean() { mInvalidated = false; }
 
     gl::GLContext* GL() const {
         return gl;
