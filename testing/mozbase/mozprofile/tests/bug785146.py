@@ -4,15 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mozfile
 import os
 import shutil
+import tempfile
+import unittest
+from mozprofile.permissions import Permissions
 try:
     import sqlite3
 except ImportError:
     from pysqlite2 import dbapi2 as sqlite3
-import tempfile
-import unittest
-from mozprofile.permissions import Permissions
+
 
 class PermissionsTest(unittest.TestCase):
 
@@ -21,12 +23,9 @@ http://127.0.0.1:80             noxul
 http://127.0.0.1:8888           privileged
 """
 
-    profile_dir = None
-    locations_file = None
-
     def setUp(self):
         self.profile_dir = tempfile.mkdtemp()
-        self.locations_file = tempfile.NamedTemporaryFile()
+        self.locations_file = mozfile.NamedTemporaryFile()
         self.locations_file.write(self.locations)
         self.locations_file.flush()
 

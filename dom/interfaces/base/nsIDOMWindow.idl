@@ -25,7 +25,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(e0f33b20-72ef-415b-9ff2-8bf176f581f8)]
+[scriptable, uuid(be62660a-e3f6-409c-a4a9-378364a9526f)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -454,6 +454,7 @@ interface nsIDOMWindow : nsISupports
   void mozCancelAnimationFrame(in long aHandle);
   // Backwards-compat shim for now to make Google maps work
   void mozCancelRequestAnimationFrame(in long aHandle);
+  void cancelAnimationFrame(in long aHandle);
 
   /**
    * The current animation start time in milliseconds since the epoch.
@@ -508,5 +509,5 @@ interface nsIDOMWindowPerformance : nsISupports
  * Empty interface for compatibility with older versions.
  * @deprecated Use nsIDOMWindow instead
  */
-[scriptable, uuid(36aeaa8e-3126-49de-9581-276dd7117826)]
+[scriptable, uuid(ad5768c7-8668-4cd4-bcac-3d0a400d50be)]
 interface nsIDOMWindowInternal : nsIDOMWindow {};

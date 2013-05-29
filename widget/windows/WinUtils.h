@@ -278,27 +278,30 @@ private:
 /**
   * Asynchronously tries add the list to the build
   */
-class AsyncWriteIconToDisk : public nsIRunnable
+class AsyncEncodeAndWriteIcon : public nsIRunnable
 {
 public:
   const bool mURLShortcut;
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  // Warning: AsyncWriteIconToDisk assumes ownership of the aData buffer passed in
-  AsyncWriteIconToDisk(const nsAString &aIconPath,
-                       const nsACString &aMimeTypeOfInputData,
-                       uint8_t *aData, 
-                       uint32_t aDataLen,
-                       const bool aURLShortcut);
-  virtual ~AsyncWriteIconToDisk();
+  // Warning: AsyncEncodeAndWriteIcon assumes ownership of the aData buffer passed in
+  AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
+                          uint8_t *aData, uint32_t aDataLen, uint32_t aStride,
+                          uint32_t aWidth, uint32_t aHeight,
+                          const bool aURLShortcut);
+  virtual ~AsyncEncodeAndWriteIcon();
 
 private:
   nsAutoString mIconPath;
   nsAutoCString mMimeTypeOfInputData;
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mBufferLength;
+  uint32_t mStride;
+  uint32_t mWidth;
+  uint32_t mHeight;
 };
+
 
 class AsyncDeleteIconFromDisk : public nsIRunnable
 {
