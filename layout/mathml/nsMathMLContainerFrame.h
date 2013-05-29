@@ -162,7 +162,7 @@ public:
   nscoord
   MirrorIfRTL(nscoord aParentWidth, nscoord aChildWidth, nscoord aChildLeading)
   {
-    return (NS_MATHML_IS_RTL(mPresentationData.flags) ?
+    return (StyleVisibility()->mDirection ?
             aParentWidth - aChildWidth - aChildLeading : aChildLeading);
   }
 
