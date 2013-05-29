@@ -4393,11 +4393,11 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadValue(valueAddr, tmpVal);
     EmitPreBarrier(masm, element, MIRType_Value);
     masm.storeValue(tmpVal, element);
+    regs.add(key);
+    regs.add(tmpVal);
 #ifdef JSGC_GENERATIONAL
     Label skipBarrier;
     masm.branchTestObject(Assembler::NotEqual, tmpVal, &skipBarrier);
-    regs.add(key);
-    regs.add(tmpVal);
     {
         Register r = regs.takeAny();
         GeneralRegisterSet saveRegs;
@@ -4582,11 +4582,11 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     BaseIndex element(scratchReg, key, TimesEight);
     masm.loadValue(valueAddr, tmpVal);
     masm.storeValue(tmpVal, element);
+    regs.add(key);
+    regs.add(tmpVal);
 #ifdef JSGC_GENERATIONAL
     Label skipBarrier;
     masm.branchTestObject(Assembler::NotEqual, tmpVal, &skipBarrier);
-    regs.add(key);
-    regs.add(tmpVal);
     {
         Register r = regs.takeAny();
         GeneralRegisterSet saveRegs;
