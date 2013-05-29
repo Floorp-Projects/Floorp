@@ -5187,7 +5187,9 @@ AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,
          * this is being used in a function call and we need to analyze the
          * callee's behavior.
          */
-        Shape *shape = type->proto ? type->proto->nativeLookup(cx, id) : NULL;
+        Shape *shape = (type->proto && type->proto->isNative())
+                       ? type->proto->nativeLookup(cx, id)
+                       : NULL;
         if (shape && shape->hasSlot()) {
             Value protov = type->proto->getSlot(shape->slot());
             TypeSet *types = TypeScript::BytecodeTypes(script, pc);
