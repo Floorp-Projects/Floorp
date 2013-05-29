@@ -15,6 +15,7 @@
 
 #include "nsICanvasElementExternal.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/gfx/Rect.h"
 
 class nsICanvasRenderingContextInternal;
 class nsIDOMFile;
@@ -26,10 +27,6 @@ namespace mozilla {
 namespace layers {
 class CanvasLayer;
 class LayerManager;
-}
-
-namespace gfx {
-struct Rect;
 }
 
 namespace dom {

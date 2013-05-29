@@ -20,12 +20,12 @@
 #include "mozilla/dom/CanvasGradient.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasPattern.h"
+#include "mozilla/gfx/Rect.h"
 
 class nsXULElement;
 
 namespace mozilla {
 namespace gfx {
-struct Rect;
 class SourceSurface;
 }
 
