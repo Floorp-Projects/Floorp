@@ -3615,22 +3615,6 @@ bool nsWindow::DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aStatus) {
   return ConvertStatus(aStatus);
 }
 
-bool nsWindow::DispatchKeyEvent(nsKeyEvent& aKeyEvent,
-                                const MSG *aMsgSentToPlugin)
-{
-  UserActivity();
-
-  NPEvent pluginEvent;
-  if (aMsgSentToPlugin && PluginHasFocus()) {
-    pluginEvent.event = aMsgSentToPlugin->message;
-    pluginEvent.wParam = aMsgSentToPlugin->wParam;
-    pluginEvent.lParam = aMsgSentToPlugin->lParam;
-    aKeyEvent.pluginEvent = (void *)&pluginEvent;
-  }
-
-  return DispatchWindowEvent(&aKeyEvent);
-}
-
 bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
 {
   nsCOMPtr<nsIAtom> command;
@@ -6458,7 +6442,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     nsKeyEvent keydownEvent(true, NS_KEY_DOWN, this);
     keydownEvent.keyCode = DOMKeyCode;
     nativeKey.InitKeyEvent(keydownEvent);
-    noDefault = DispatchKeyEvent(keydownEvent, &aMsg);
+    noDefault = nativeKey.DispatchKeyEvent(keydownEvent, &aMsg);
     if (aEventDispatched) {
       *aEventDispatched = true;
     }
@@ -6783,14 +6767,14 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       keypressEvent.charCode = uniChar;
       keypressEvent.alternativeCharCodes.AppendElements(altArray);
       nativeKey.InitKeyEvent(keypressEvent, modKeyState);
-      DispatchKeyEvent(keypressEvent, nullptr);
+      nativeKey.DispatchKeyEvent(keypressEvent);
     }
   } else {
     nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
     keypressEvent.mFlags.Union(extraFlags);
     keypressEvent.keyCode = DOMKeyCode;
     nativeKey.InitKeyEvent(keypressEvent, aModKeyState);
-    DispatchKeyEvent(keypressEvent, nullptr);
+    nativeKey.DispatchKeyEvent(keypressEvent);
   }
 
   return noDefault;
@@ -6818,7 +6802,7 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
   // of IME.
   keyupEvent.mFlags.mDefaultPrevented =
     (aMsg.wParam == VK_MENU && aMsg.message != WM_SYSKEYUP);
-  return DispatchKeyEvent(keyupEvent, &aMsg);
+  return nativeKey.DispatchKeyEvent(keyupEvent, &aMsg);
 }
 
 // OnChar
@@ -6903,7 +6887,7 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
     keypressEvent.keyCode = aNativeKey.GetDOMKeyCode();
   }
   aNativeKey.InitKeyEvent(keypressEvent, modKeyState);
-  bool result = DispatchKeyEvent(keypressEvent, &aMsg);
+  bool result = aNativeKey.DispatchKeyEvent(keypressEvent, &aMsg);
   if (aEventDispatched)
     *aEventDispatched = true;
   return result;

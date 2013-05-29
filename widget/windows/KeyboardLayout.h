@@ -34,6 +34,7 @@
 #define VK_OEM_102              0xE2
 #define VK_OEM_CLEAR            0xFE
 
+class nsIIdleServiceInternal;
 struct nsModifierKeyState;
 
 namespace mozilla {
@@ -323,6 +324,13 @@ public:
     InitKeyEvent(aKeyEvent, mModKeyState);
   }
 
+  /**
+   * Dispatches the key event.  Returns true if the event is consumed.
+   * Otherwise, false.
+   */
+  bool DispatchKeyEvent(nsKeyEvent& aKeyEvent,
+                        const MSG* aMsgSentToPlugin = nullptr) const;
+
 private:
   nsRefPtr<nsWindowBase> mWidget;
   HKL mKeyboardLayout;
@@ -369,6 +377,7 @@ private:
   ~KeyboardLayout();
 
   static KeyboardLayout* sInstance;
+  static nsIIdleServiceInternal* sIdleService;
 
   struct DeadKeyTableListEntry
   {
@@ -421,6 +430,7 @@ private:
 public:
   static KeyboardLayout* GetInstance();
   static void Shutdown();
+  static void NotifyIdleServiceOfUserActivity();
 
   static bool IsPrintableCharKey(uint8_t aVirtualKey);
 
