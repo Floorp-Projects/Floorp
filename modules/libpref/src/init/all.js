@@ -1020,6 +1020,8 @@ pref("network.http.spdy.persistent-settings", false);
 pref("network.http.spdy.ping-threshold", 58);
 pref("network.http.spdy.ping-timeout", 8);
 pref("network.http.spdy.send-buffer-size", 131072);
+pref("network.http.spdy.allow-push", true);
+pref("network.http.spdy.push-allowance", 65536);
 
 pref("network.http.diagnostics", false);
 

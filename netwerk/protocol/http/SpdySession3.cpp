@@ -4,15 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHttp.h"
-#include "SpdySession3.h"
-#include "SpdyStream3.h"
-#include "nsHttpConnection.h"
-#include "nsHttpHandler.h"
-#include "prnetdb.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Preferences.h"
+#include "nsHttp.h"
+#include "nsHttpHandler.h"
+#include "nsHttpConnection.h"
+#include "nsILoadGroup.h"
 #include "prprf.h"
+#include "prnetdb.h"
+#include "SpdyPush3.h"
+#include "SpdySession3.h"
+#include "SpdyStream3.h"
+
 #include <algorithm>
 
 #ifdef DEBUG
@@ -38,7 +41,6 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
   : mSocketTransport(aSocketTransport),
     mSegmentReader(nullptr),
     mSegmentWriter(nullptr),
-    mSendingChunkSize(ASpdySession::kSendingChunkSize),
     mNextStreamID(1),
     mConcurrentHighWater(0),
     mDownstreamState(BUFFERING_FRAME_HEADER),
@@ -65,8 +67,11 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  LOG3(("SpdySession3::SpdySession3 %p transaction 1 = %p",
-        this, aHttpTransaction));
+  static uint64_t sSerial;
+  mSerial = ++sSerial;
+
+  LOG3(("SpdySession3::SpdySession3 %p transaction 1 = %p serial=0x%X\n",
+        this, aHttpTransaction, mSerial));
 
   mStreamIDHash.Init();
   mStreamTransactionHash.Init();
@@ -75,6 +80,7 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
   mOutputQueueBuffer = new char[mOutputQueueSize];
   zlibInit();
 
+  mPushAllowance = gHttpHandler->SpdyPushAllowance();
   mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
   GenerateSettings();
 
@@ -116,9 +122,12 @@ SpdySession3::GoAwayEnumerator(nsAHttpTransaction *key,
 
   // these streams were not processed by the server and can be restarted.
   // Do that after the enumerator completes to avoid the risk of
-  // a restart event re-entrantly modifying this hash.
-  if (stream->StreamID() > self->mGoAwayID || !stream->HasRegisteredID())
+  // a restart event re-entrantly modifying this hash. Be sure not to restart
+  // a pushed (even numbered) stream
+  if ((stream->StreamID() > self->mGoAwayID && (stream->StreamID() & 1)) ||
+      !stream->HasRegisteredID()) {
     self->mGoAwayStreamsToRestart.Push(stream);
+  }
 
   return PL_DHASH_NEXT;
 }
@@ -220,11 +229,11 @@ SpdySession3::ReadTimeoutTick(PRIntervalTime now)
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(mNextPingID & 1, "Ping Counter Not Odd");
 
-    if (!mPingThreshold)
-      return;
-
     LOG(("SpdySession3::ReadTimeoutTick %p delta since last read %ds\n",
          this, PR_IntervalToSeconds(now - mLastReadEpoch)));
+
+    if (!mPingThreshold)
+      return;
 
     if ((now - mLastReadEpoch) < mPingThreshold) {
       // recent activity means ping is not an issue
@@ -260,6 +269,35 @@ SpdySession3::ReadTimeoutTick(PRIntervalTime now)
     mNextPingID += 2;
     ResumeRecv(); // read the ping reply
 
+    // Check for orphaned push streams. This looks expensive, but generally the
+    // list is empty.
+    SpdyPushedStream3 *deleteMe;
+    TimeStamp timestampNow;
+    do {
+      deleteMe = nullptr;
+
+      for (uint32_t index = mPushedStreams.Length();
+           index > 0 ; --index) {
+        SpdyPushedStream3 *pushedStream = mPushedStreams[index - 1];
+
+        if (timestampNow.IsNull())
+          timestampNow = TimeStamp::Now(); // lazy initializer
+
+        // if spdy finished, but not connected, and its been like that for too long..
+        // cleanup the stream..
+        if (pushedStream->IsOrphaned(timestampNow))
+        {
+          LOG3(("SpdySession3 Timeout Pushed Stream %p 0x%X\n",
+                this, pushedStream->StreamID()));
+          deleteMe = pushedStream;
+          break; // don't CleanupStream() while iterating this vector
+        }
+      }
+      if (deleteMe)
+        CleanupStream(deleteMe, NS_ERROR_ABORT, RST_CANCEL);
+
+    } while (deleteMe);
+
     if (mNextPingID == 0xffffffff) {
       LOG(("SpdySession3::ReadTimeoutTick %p "
            "ping ids exhausted marking goaway\n", this));
@@ -268,35 +306,41 @@ SpdySession3::ReadTimeoutTick(PRIntervalTime now)
 }
 
 uint32_t
-SpdySession3::RegisterStreamID(SpdyStream3 *stream)
+SpdySession3::RegisterStreamID(SpdyStream3 *stream, uint32_t aNewID)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-
-  LOG3(("SpdySession3::RegisterStreamID session=%p stream=%p id=0x%X "
-        "concurrent=%d",this, stream, mNextStreamID, mConcurrent));
 
   MOZ_ASSERT(mNextStreamID < 0xfffffff0,
              "should have stopped admitting streams");
 
-  uint32_t result = mNextStreamID;
-  mNextStreamID += 2;
+  MOZ_ASSERT(!(aNewID & 1),
+             "0 for autoassign pull, otherwise explicit even push assignment");
+  if (!aNewID) {
+    // auto generate a new pull stream ID
+    aNewID = mNextStreamID;
+    MOZ_ASSERT(aNewID & 1, "pull ID must be odd.");
+    mNextStreamID += 2;
+  }
+
+  LOG3(("SpdySession3::RegisterStreamID session=%p stream=%p id=0x%X "
+        "concurrent=%d",this, stream, aNewID, mConcurrent));
 
   // We've used up plenty of ID's on this session. Start
   // moving to a new one before there is a crunch involving
   // server push streams or concurrent non-registered submits
-  if (mNextStreamID >= kMaxStreamID)
+  if (aNewID >= kMaxStreamID)
     mShouldGoAway = true;
 
   // integrity check
-  if (mStreamIDHash.Get(result)) {
+  if (mStreamIDHash.Get(aNewID)) {
     LOG3(("   New ID already present\n"));
     MOZ_ASSERT(false, "New ID already present in mStreamIDHash");
     mShouldGoAway = true;
     return kDeadStreamID;
   }
 
-  mStreamIDHash.Put(result, stream);
-  return result;
+  mStreamIDHash.Put(aNewID, stream);
+  return aNewID;
 }
 
 bool
@@ -313,12 +357,7 @@ SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
   }
 
   aHttpTransaction->SetConnection(this);
-  SpdyStream3 *stream = new SpdyStream3(aHttpTransaction,
-                                      this,
-                                      mSocketTransport,
-                                      mSendingChunkSize,
-                                      &mUpstreamZlib,
-                                      aPriority);
+  SpdyStream3 *stream = new SpdyStream3(aHttpTransaction, this, aPriority);
 
   LOG3(("SpdySession3::AddStream session=%p stream=%p NextID=0x%X (tentative)",
         this, stream, mNextStreamID));
@@ -331,8 +370,7 @@ SpdySession3::AddStream(nsAHttpTransaction *aHttpTransaction,
     ActivateStream(stream);
   }
   else {
-    LOG3(("SpdySession3::AddStream %p stream %p queued.",
-          this, stream));
+    LOG3(("SpdySession3::AddStream %p stream %p queued.", this, stream));
     mQueuedStreams.Push(stream);
   }
 
@@ -343,8 +381,10 @@ void
 SpdySession3::ActivateStream(SpdyStream3 *stream)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(!stream->StreamID() || (stream->StreamID() & 1),
+             "Do not activate pushed streams");
 
-  mConcurrent++;
+  ++mConcurrent;
   if (mConcurrent > mConcurrentHighWater)
     mConcurrentHighWater = mConcurrent;
   LOG3(("SpdySession3::AddStream %p activating stream %p Currently %d "
@@ -486,9 +526,9 @@ SpdySession3::ResetDownstreamState()
   if (mInputFrameDataLast && mInputFrameDataStream) {
     mInputFrameDataLast = false;
     if (!mInputFrameDataStream->RecvdFin()) {
+      LOG3(("  SetRecvdFin id=0x%x\n", mInputFrameDataStream->StreamID()));
       mInputFrameDataStream->SetRecvdFin(true);
-      --mConcurrent;
-      ProcessPending();
+      DecrementConcurrent(mInputFrameDataStream);
     }
   }
   mInputFrameBufferUsed = 0;
@@ -528,6 +568,21 @@ SpdySession3::EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf,
                            uint32_t newSize,
                            uint32_t preserve,
                            uint32_t &objSize);
+
+void
+SpdySession3::DecrementConcurrent(SpdyStream3 *aStream)
+{
+  uint32_t id = aStream->StreamID();
+
+  if (id && !(id & 0x1))
+    return; // pushed streams aren't counted in concurrent limit
+
+  MOZ_ASSERT(mConcurrent);
+  --mConcurrent;
+  LOG3(("DecrementConcurrent %p id=0x%X concurrent=%d\n",
+        this, id, mConcurrent));
+  ProcessPending();
+}
 
 void
 SpdySession3::zlibInit()
@@ -692,11 +747,13 @@ SpdySession3::GenerateSettings()
   // 2nd entry is bytes 20 to 27
   // 3rd entry is bytes 28 to 35
 
+  if (!gHttpHandler->AllowSpdyPush()) {
   // announcing that we accept 0 incoming streams is done to
-  // disable server push until that is implemented.
-  packet[15 + 8 * numberOfEntries] = SETTINGS_TYPE_MAX_CONCURRENT;
-  // The value portion of the setting pair is already initialized to 0
-  numberOfEntries++;
+  // disable server push
+    packet[15 + 8 * numberOfEntries] = SETTINGS_TYPE_MAX_CONCURRENT;
+    // The value portion of the setting pair is already initialized to 0
+    numberOfEntries++;
+  }
 
   nsRefPtr<nsHttpConnectionInfo> ci;
   uint32_t cwnd = 0;
@@ -712,8 +769,11 @@ SpdySession3::GenerateSettings()
     numberOfEntries++;
   }
 
+  // Advertise the Push RWIN and on each client SYN_STREAM pipeline
+  // a window update with it in order to use larger initial windows with pulled
+  // streams.
   packet[15 + 8 * numberOfEntries] = SETTINGS_TYPE_INITIAL_WINDOW;
-  uint32_t rwin = PR_htonl(kInitialRwin);
+  uint32_t rwin = PR_htonl(mPushAllowance);
   memcpy(packet + 16 + 8 * numberOfEntries, &rwin, 4);
   numberOfEntries++;
 
@@ -780,6 +840,7 @@ SpdySession3::VerifyStream(SpdyStream3 *aStream, uint32_t aOptionalID = 0)
        "optionalID=0x%X trans=%p test=%d\n",
        this, aStream, aStream->StreamID(),
        aOptionalID, aStream->Transaction(), test));
+
   MOZ_ASSERT(false, "VerifyStream");
   return false;
 }
@@ -792,24 +853,39 @@ SpdySession3::CleanupStream(SpdyStream3 *aStream, nsresult aResult,
   LOG3(("SpdySession3::CleanupStream %p %p 0x%X %X\n",
         this, aStream, aStream->StreamID(), aResult));
 
+  SpdyPushedStream3 *pushSource = nullptr;
+
+  if (NS_SUCCEEDED(aResult) && aStream->DeferCleanupOnSuccess()) {
+    LOG(("SpdySession3::CleanupStream 0x%X deferred\n", aStream->StreamID()));
+    return;
+  }
+
   if (!VerifyStream(aStream)) {
     LOG(("SpdySession3::CleanupStream failed to verify stream\n"));
     return;
   }
 
+  pushSource = aStream->PushSource();
+
   if (!aStream->RecvdFin() && aStream->StreamID()) {
     LOG3(("Stream had not processed recv FIN, sending RST code %X\n",
           aResetCode));
     GenerateRstStream(aResetCode, aStream->StreamID());
-    --mConcurrent;
-    ProcessPending();
+    DecrementConcurrent(aStream);
   }
 
   CloseStream(aStream, aResult);
 
-  // Remove the stream from the ID hash table. (this one isn't short, which is
-  // why it is hashed.)
-  mStreamIDHash.Remove(aStream->StreamID());
+  // Remove the stream from the ID hash table and, if an even id, the pushed
+  // table too.
+  uint32_t id = aStream->StreamID();
+  if (id > 0) {
+    mStreamIDHash.Remove(id);
+    if (!(id & 1))
+      mPushedStreams.RemoveElement(aStream);
+  }
+
+  RemoveStreamFromQueues(aStream);
 
   // removing from the stream transaction hash will
   // delete the SpdyStream3 and drop the reference to
@@ -818,6 +894,29 @@ SpdySession3::CleanupStream(SpdyStream3 *aStream, nsresult aResult,
 
   if (mShouldGoAway && !mStreamTransactionHash.Count())
     Close(NS_OK);
+
+  if (pushSource) {
+    pushSource->SetDeferCleanupOnSuccess(false);
+    CleanupStream(pushSource, aResult, aResetCode);
+  }
+}
+
+static void RemoveStreamFromQueue(SpdyStream3 *aStream, nsDeque &queue)
+{
+  uint32_t size = queue.GetSize();
+  for (uint32_t count = 0; count < size; ++count) {
+    SpdyStream3 *stream = static_cast<SpdyStream3 *>(queue.PopFront());
+    if (stream != aStream)
+      queue.Push(stream);
+  }
+}
+
+void
+SpdySession3::RemoveStreamFromQueues(SpdyStream3 *aStream)
+{
+  RemoveStreamFromQueue(aStream, mReadyForWrite);
+  RemoveStreamFromQueue(aStream, mQueuedStreams);
+  RemoveStreamFromQueue(aStream, mReadyForRead);
 }
 
 void
@@ -834,23 +933,7 @@ SpdySession3::CloseStream(SpdyStream3 *aStream, nsresult aResult)
     mInputFrameDataStream = nullptr;
   }
 
-  // check the streams blocked on write, this is linear but the list
-  // should be pretty short.
-  uint32_t size = mReadyForWrite.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
-    SpdyStream3 *stream = static_cast<SpdyStream3 *>(mReadyForWrite.PopFront());
-    if (stream != aStream)
-      mReadyForWrite.Push(stream);
-  }
-
-  // Check the streams queued for activation. Because we normally accept a high
-  // level of parallelization this should also be short.
-  size = mQueuedStreams.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
-    SpdyStream3 *stream = static_cast<SpdyStream3 *>(mQueuedStreams.PopFront());
-    if (stream != aStream)
-      mQueuedStreams.Push(stream);
-  }
+  RemoveStreamFromQueues(aStream);
 
   // Send the stream the close() indication
   aStream->Close(aResult);
@@ -871,9 +954,10 @@ SpdySession3::HandleSynStream(SpdySession3 *self)
     PR_ntohl(reinterpret_cast<uint32_t *>(self->mInputFrameBuffer.get())[2]);
   uint32_t associatedID =
     PR_ntohl(reinterpret_cast<uint32_t *>(self->mInputFrameBuffer.get())[3]);
+  uint8_t flags = reinterpret_cast<uint8_t *>(self->mInputFrameBuffer.get())[4];
 
   LOG3(("SpdySession3::HandleSynStream %p recv SYN_STREAM (push) "
-        "for ID 0x%X associated with 0x%X.",
+        "for ID 0x%X associated with 0x%X.\n",
         self, streamID, associatedID));
 
   if (streamID & 0x01) {                   // test for odd stream ID
@@ -882,6 +966,12 @@ SpdySession3::HandleSynStream(SpdySession3 *self)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  // confirm associated-to
+  nsresult rv = self->SetInputFrameDataStream(associatedID);
+  if (NS_FAILED(rv))
+    return rv;
+  SpdyStream3 *associatedStream = self->mInputFrameDataStream;
+
   ++(self->mServerPushedResources);
 
   // Anytime we start using the high bit of stream ID (either client or server)
@@ -889,17 +979,127 @@ SpdySession3::HandleSynStream(SpdySession3 *self)
   if (streamID >= kMaxStreamID)
     self->mShouldGoAway = true;
 
-  // Need to decompress the headers even though we aren't using them yet in
-  // order to keep the compression context consistent for other syn_reply frames
-  nsresult rv =
-    self->UncompressAndDiscard(18, self->mInputFrameDataSize - 10);
+  bool resetStream = true;
+  SpdyPushCache3 *cache = nullptr;
+
+  if (!(flags & kFlag_Data_UNI)) {
+    // pushed streams require UNIDIRECTIONAL flag
+    LOG3(("SpdySession3::HandleSynStream %p ID %0x%X associated ID 0x%X failed.\n",
+          self, streamID, associatedID));
+    self->GenerateRstStream(RST_PROTOCOL_ERROR, streamID);
+
+  } else if (!associatedID) {
+    // associated stream 0 will never find a match, but the spec requires a
+    // PROTOCOL_ERROR in this specific case
+    LOG3(("SpdySession3::HandleSynStream %p associated ID of 0 failed.\n", self));
+    self->GenerateRstStream(RST_PROTOCOL_ERROR, streamID);
+
+  } else if (!gHttpHandler->AllowSpdyPush()) {
+    // MAX_CONCURRENT_STREAMS of 0 in settings should have disabled push,
+    // but some servers are buggy about that.. or the config could have
+    // been updated after the settings frame was sent. In both cases just
+    // reject the pushed stream as refused
+    LOG3(("SpdySession3::HandleSynStream Push Recevied when Disabled\n"));
+    self->GenerateRstStream(RST_REFUSED_STREAM, streamID);
+
+  } else if (!associatedStream) {
+    LOG3(("SpdySession3::HandleSynStream %p lookup associated ID failed.\n", self));
+    self->GenerateRstStream(RST_INVALID_STREAM, streamID);
+
+  } else {
+    nsILoadGroupConnectionInfo *loadGroupCI = associatedStream->LoadGroupConnectionInfo();
+    if (loadGroupCI) {
+      loadGroupCI->GetSpdyPushCache3(&cache);
+      if (!cache) {
+        cache = new SpdyPushCache3();
+        if (!cache || NS_FAILED(loadGroupCI->SetSpdyPushCache3(cache))) {
+          delete cache;
+          cache = nullptr;
+        }
+      }
+    }
+    if (!cache) {
+      // this is unexpected, but we can handle it just be refusing the push
+      LOG3(("SpdySession3::HandleSynStream Push Recevied without loadgroup cache\n"));
+      self->GenerateRstStream(RST_REFUSED_STREAM, streamID);
+    }
+    else {
+      resetStream = false;
+    }
+  }
+
+  if (resetStream) {
+    // Need to decompress the headers even though we aren't using them yet in
+    // order to keep the compression context consistent for other syn_reply frames
+    rv = self->UncompressAndDiscard(18, self->mInputFrameDataSize - 10);
+    if (NS_FAILED(rv)) {
+      LOG(("SpdySession3::HandleSynStream uncompress failed\n"));
+      return rv;
+    }
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
+  // Create the buffering transaction and push stream
+  nsRefPtr<SpdyPush3TransactionBuffer> transactionBuffer =
+    new SpdyPush3TransactionBuffer();
+  transactionBuffer->SetConnection(self);
+  SpdyPushedStream3 *pushedStream =
+    new SpdyPushedStream3(transactionBuffer, self,
+                          associatedStream, streamID);
+
+  // ownership of the pushed stream is by the transaction hash, just as it
+  // is for a client initiated stream. Errors that aren't fatal to the
+  // whole session must call cleanupStream() after this point in order
+  // to remove the stream from that hash.
+  self->mStreamTransactionHash.Put(transactionBuffer, pushedStream);
+  self->mPushedStreams.AppendElement(pushedStream);
+
+  // The pushed stream is unidirectional so it is fully open immediately
+  pushedStream->SetFullyOpen();
+
+  // Uncompress the response headers into a stream specific buffer, leaving them
+  // in spdy format for the time being.
+  rv = pushedStream->Uncompress(&self->mDownstreamZlib,
+                                self->mInputFrameBuffer + 18,
+                                self->mInputFrameDataSize - 10);
   if (NS_FAILED(rv)) {
     LOG(("SpdySession3::HandleSynStream uncompress failed\n"));
     return rv;
   }
 
-  // todo populate cache. For now, just reject server push p3
-  self->GenerateRstStream(RST_REFUSED_STREAM, streamID);
+  if (self->RegisterStreamID(pushedStream, streamID) == kDeadStreamID) {
+    LOG(("SpdySession3::HandleSynStream registerstreamid failed\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  // Fake the request side of the pushed HTTP transaction. Sets up hash
+  // key and origin
+  uint32_t notUsed;
+  pushedStream->ReadSegments(nullptr, 1, &notUsed);
+
+  nsAutoCString key;
+  if (!pushedStream->GetHashKey(key)) {
+    LOG(("SpdySession3::HandleSynStream one of :host :scheme :path missing from push\n"));
+    self->CleanupStream(pushedStream, NS_ERROR_FAILURE, RST_INVALID_STREAM);
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
+  if (!associatedStream->Origin().Equals(pushedStream->Origin())) {
+    LOG(("SpdySession3::HandleSynStream pushed stream mismatched origin\n"));
+    self->CleanupStream(pushedStream, NS_ERROR_FAILURE, RST_INVALID_STREAM);
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
+  if (!cache->RegisterPushedStream(key, pushedStream)) {
+    LOG(("SpdySession3::HandleSynStream registerPushedStream Failed\n"));
+    self->CleanupStream(pushedStream, NS_ERROR_FAILURE, RST_INVALID_STREAM);
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
   self->ResetDownstreamState();
   return NS_OK;
 }
@@ -1267,8 +1467,8 @@ SpdySession3::HandleGoAway(SpdySession3 *self)
   self->mCleanShutdown = true;
 
   // Find streams greater than the last-good ID and mark them for deletion
-  // in the mGoAwayStreamsToRestart queue with the GoAwayEnumerator. They can
-  // be restarted.
+  // in the mGoAwayStreamsToRestart queue with the GoAwayEnumerator. The
+  // underlying transaction can be restarted.
   self->mStreamTransactionHash.Enumerate(GoAwayEnumerator, self);
 
   // Process the streams marked for deletion and restart.
@@ -1330,7 +1530,7 @@ SpdySession3::HandleHeaders(SpdySession3 *self)
 
     if (NS_FAILED(self->UncompressAndDiscard(12,
                                              self->mInputFrameDataSize - 4))) {
-      LOG(("SpdySession3::HandleSynReply uncompress failed\n"));
+      LOG(("SpdySession3::HandleHeaders uncompress failed\n"));
       // this is fatal to the session
       return NS_ERROR_FAILURE;
     }
@@ -1466,8 +1666,9 @@ SpdySession3::OnTransportStatus(nsITransport* aTransport,
   case NS_NET_STATUS_CONNECTED_TO:
   {
     SpdyStream3 *target = mStreamIDHash.Get(1);
-    if (target)
-      target->Transaction()->OnTransportStatus(aTransport, aStatus, aProgress);
+    nsAHttpTransaction *transaction = target ? target->Transaction() : nullptr;
+    if (transaction)
+      transaction->OnTransportStatus(aTransport, aStatus, aProgress);
     break;
   }
 
@@ -1625,6 +1826,42 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
     return NS_ERROR_FAILURE;
 
   SetWriteCallbacks();
+
+  // If there are http transactions attached to a push stream with filled buffers
+  // trigger that data pump here. This only reads from buffers (not the network)
+  // so mDownstreamState doesn't matter.
+  SpdyStream3 *pushConnectedStream =
+    static_cast<SpdyStream3 *>(mReadyForRead.PopFront());
+  if (pushConnectedStream) {
+    LOG3(("SpdySession3::WriteSegments %p processing pushed stream 0x%X\n",
+          this, pushConnectedStream->StreamID()));
+    mSegmentWriter = writer;
+    rv = pushConnectedStream->WriteSegments(this, count, countWritten);
+    mSegmentWriter = nullptr;
+
+    // The pipe in nsHttpTransaction rewrites CLOSED error codes into OK
+    // so we need this check to determine the truth.
+    if (NS_SUCCEEDED(rv) && !*countWritten &&
+        pushConnectedStream->PushSource() &&
+        pushConnectedStream->PushSource()->GetPushComplete()) {
+      rv = NS_BASE_STREAM_CLOSED;
+    }
+
+    if (rv == NS_BASE_STREAM_CLOSED) {
+      CleanupStream(pushConnectedStream, NS_OK, RST_CANCEL);
+      rv = NS_OK;
+    }
+
+    // if we return OK to nsHttpConnection it will use mSocketInCondition
+    // to determine whether to schedule more reads, incorrectly
+    // assuming that nsHttpConnection::OnSocketWrite() was called.
+    if (NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK) {
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+      ResumeRecv();
+    }
+
+    return rv;
+  }
 
   // We buffer all control frames and act on them in this layer.
   // We buffer the first 8 bytes of data frames (the header) but
@@ -1860,9 +2097,9 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
     return rv;
   }
 
+  MOZ_ASSERT(mDownstreamState == BUFFERING_CONTROL_FRAME);
   if (mDownstreamState != BUFFERING_CONTROL_FRAME) {
     // this cannot happen
-    MOZ_ASSERT(false, "Not in Bufering Control Frame State");
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1918,27 +2155,34 @@ SpdySession3::UpdateLocalRwin(SpdyStream3 *stream,
   if (!stream || stream->RecvdFin())
     return;
 
-  LOG3(("SpdySession3::UpdateLocalRwin %p 0x%X %d\n",
-        this, stream->StreamID(), bytes));
   stream->DecrementLocalWindow(bytes);
 
   // Don't necessarily ack every data packet. Only do it
   // after a significant amount of data.
   uint64_t unacked = stream->LocalUnAcked();
+  int64_t  localWindow = stream->LocalWindow();
 
-  if (unacked < kMinimumToAck) {
-    // Sanity check to make sure this won't let the window drop below 1MB
-    PR_STATIC_ASSERT(kMinimumToAck < kInitialRwin);
-    PR_STATIC_ASSERT((kInitialRwin - kMinimumToAck) > 1024 * 1024);
+  LOG3(("SpdySession3::UpdateLocalRwin this=%p id=0x%X newbytes=%u "
+        "unacked=%llu localWindow=%lld\n",
+        this, stream->StreamID(), bytes, unacked, localWindow));
 
+  if (!unacked)
+    return;
+
+  if ((unacked < kMinimumToAck) && (localWindow > kEmergencyWindowThreshold))
+    return;
+
+  if (!stream->HasSink()) {
+    LOG3(("SpdySession3::UpdateLocalRwin %p 0x%X Pushed Stream Has No Sink\n",
+          this, stream->StreamID()));
     return;
   }
 
   // Generate window updates directly out of spdysession instead of the stream
-  // in order to avoid queue delays in getting the ACK out.
+  // in order to avoid queue delays in getting the 'ACK' out.
   uint32_t toack = (unacked <= 0x7fffffffU) ? unacked : 0x7fffffffU;
 
-  LOG3(("SpdySession3::UpdateLocalRwin Ack %p 0x%X %d\n",
+  LOG3(("SpdySession3::UpdateLocalRwin Ack this=%p id=0x%X acksize=%d\n",
         this, stream->StreamID(), toack));
   stream->IncrementLocalWindow(toack);
 
@@ -2203,6 +2447,13 @@ SpdySession3::SetNeedsCleanup()
   MOZ_ASSERT(!mNeedsCleanup, "mNeedsCleanup unexpectedly set");
   mNeedsCleanup = mInputFrameDataStream;
   ResetDownstreamState();
+}
+
+void
+SpdySession3::ConnectPushedStream(SpdyStream3 *stream)
+{
+  mReadyForRead.Push(stream);
+  ForceRecv();
 }
 
 //-----------------------------------------------------------------------------

@@ -1096,6 +1096,35 @@ nsHttpConnection::ResumeRecv()
     return NS_ERROR_UNEXPECTED;
 }
 
+
+class nsHttpConnectionForceRecv : public nsRunnable
+{
+public:
+    nsHttpConnectionForceRecv(nsHttpConnection *aConn)
+        : mConn(aConn) {}
+
+    NS_IMETHOD Run()
+    {
+        MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+        if (!mConn->mSocketIn)
+            return NS_OK;
+        return mConn->OnInputStreamReady(mConn->mSocketIn);
+    }
+private:
+    nsRefPtr<nsHttpConnection> mConn;
+};
+
+// trigger an asynchronous read
+nsresult
+nsHttpConnection::ForceRecv()
+{
+    LOG(("nsHttpConnection::ForceRecv [this=%p]\n", this));
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+    return NS_DispatchToCurrentThread(new nsHttpConnectionForceRecv(this));
+}
+
 void
 nsHttpConnection::BeginIdleMonitoring()
 {
