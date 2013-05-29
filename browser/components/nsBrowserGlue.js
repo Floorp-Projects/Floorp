@@ -505,7 +505,7 @@ BrowserGlue.prototype = {
     if (WINTASKBAR_CONTRACTID in Cc &&
         Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
       let temp = {};
-      Cu.import("resource://gre/modules/WindowsJumpLists.jsm", temp);
+      Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
       temp.WinTaskbarJumpList.startup();
     }
 #endif
