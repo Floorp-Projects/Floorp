@@ -584,6 +584,84 @@ public:
   WORD ComputeScanCodeForVirtualKeyCode(uint8_t aVirtualKeyCode) const;
 };
 
+class RedirectedKeyDownMessageManager
+{
+public:
+  /*
+   * If a window receives WM_KEYDOWN message or WM_SYSKEYDOWM message which is
+   * a redirected message, NativeKey::DispatchKeyDownAndKeyPressEvent()
+   * prevents to dispatch NS_KEY_DOWN event because it has been dispatched
+   * before the message was redirected.  However, in some cases, WM_*KEYDOWN
+   * message handler may not handle actually.  Then, the message handler needs
+   * to forget the redirected message and remove WM_CHAR message or WM_SYSCHAR
+   * message for the redirected keydown message.  AutoFlusher class is a helper
+   * class for doing it.  This must be created in the stack.
+   */
+  class MOZ_STACK_CLASS AutoFlusher MOZ_FINAL
+  {
+  public:
+    AutoFlusher(nsWindowBase* aWidget, const MSG &aMsg) :
+      mCancel(!RedirectedKeyDownMessageManager::IsRedirectedMessage(aMsg)),
+      mWidget(aWidget), mMsg(aMsg)
+    {
+    }
+
+    ~AutoFlusher()
+    {
+      if (mCancel) {
+        return;
+      }
+      // Prevent unnecessary keypress event
+      if (!mWidget->Destroyed()) {
+        RedirectedKeyDownMessageManager::RemoveNextCharMessage(mMsg.hwnd);
+      }
+      // Foreget the redirected message
+      RedirectedKeyDownMessageManager::Forget();
+    }
+
+    void Cancel() { mCancel = true; }
+
+  private:
+    bool mCancel;
+    nsRefPtr<nsWindowBase> mWidget;
+    const MSG &mMsg;
+  };
+
+  static void WillRedirect(const MSG& aMsg, bool aDefualtPrevented)
+  {
+    sRedirectedKeyDownMsg = aMsg;
+    sDefaultPreventedOfRedirectedMsg = aDefualtPrevented;
+  }
+
+  static void Forget()
+  {
+    sRedirectedKeyDownMsg.message = WM_NULL;
+  }
+
+  static void PreventDefault() { sDefaultPreventedOfRedirectedMsg = true; }
+  static bool DefaultPrevented() { return sDefaultPreventedOfRedirectedMsg; }
+
+  static bool IsRedirectedMessage(const MSG& aMsg);
+
+  /**
+   * RemoveNextCharMessage() should be called by WM_KEYDOWN or WM_SYSKEYDOWM
+   * message handler.  If there is no WM_(SYS)CHAR message for it, this
+   * method does nothing.
+   * NOTE: WM_(SYS)CHAR message is posted by TranslateMessage() API which is
+   * called in message loop.  So, WM_(SYS)KEYDOWN message should have
+   * WM_(SYS)CHAR message in the queue if the keydown event causes character
+   * input.
+   */
+  static void RemoveNextCharMessage(HWND aWnd);
+
+private:
+  // sRedirectedKeyDownMsg is WM_KEYDOWN message or WM_SYSKEYDOWN message which
+  // is reirected with SendInput() API by
+  // widget::NativeKey::DispatchKeyDownAndKeyPressEvent()
+  static MSG sRedirectedKeyDownMsg;
+  static bool sDefaultPreventedOfRedirectedMsg;
+};
+
 } // namespace widget
 } // namespace mozilla
 

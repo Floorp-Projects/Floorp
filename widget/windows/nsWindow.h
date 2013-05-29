@@ -325,7 +325,6 @@ protected:
   bool                    DispatchStandardEvent(uint32_t aMsg);
   bool                    DispatchCommandEvent(uint32_t aEventCommand);
   void                    RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
-  static void             RemoveNextCharMessage(HWND aWnd);
   virtual bool            ProcessMessage(UINT msg, WPARAM &wParam,
                                          LPARAM &lParam, LRESULT *aRetValue);
   bool                    ProcessMessageForPlugin(const MSG &aMsg,
@@ -341,11 +340,6 @@ protected:
   static bool             ConvertStatus(nsEventStatus aStatus);
   static void             PostSleepWakeNotification(const bool aIsSleepMode);
   int32_t                 ClientMarginHitTestPoint(int32_t mx, int32_t my);
-  static bool             IsRedirectedKeyDownMessage(const MSG &aMsg);
-  static void             ForgetRedirectedKeyDownMessage()
-  {
-    sRedirectedKeyDown.message = WM_NULL;
-  }
 
   /**
    * Event handlers
@@ -543,46 +537,8 @@ protected:
   //  painting too rapidly in response to frequent input events.
   TimeStamp mLastPaintEndTime;
 
-  // sRedirectedKeyDown is WM_KEYDOWN message or WM_SYSKEYDOWN message which
-  // was reirected to SendInput() API by OnKeyDown().
-  static MSG            sRedirectedKeyDown;
-
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
-
-  // If a window receives WM_KEYDOWN message or WM_SYSKEYDOWM message which is
-  // redirected message, OnKeyDowm() prevents to dispatch NS_KEY_DOWN event
-  // because it has been dispatched before the message was redirected.
-  // However, in some cases, ProcessKeyDownMessage() doesn't call OnKeyDown().
-  // Then, ProcessKeyDownMessage() needs to forget the redirected message and
-  // remove WM_CHAR message or WM_SYSCHAR message for the redirected keydown
-  // message.  AutoForgetRedirectedKeyDownMessage struct is a helper struct
-  // for doing that.  This must be created in stack.
-  struct AutoForgetRedirectedKeyDownMessage
-  {
-    AutoForgetRedirectedKeyDownMessage(nsWindow* aWindow, const MSG &aMsg) :
-      mCancel(!nsWindow::IsRedirectedKeyDownMessage(aMsg)),
-      mWindow(aWindow), mMsg(aMsg)
-    {
-    }
-
-    ~AutoForgetRedirectedKeyDownMessage()
-    {
-      if (mCancel) {
-        return;
-      }
-      // Prevent unnecessary keypress event
-      if (!mWindow->mOnDestroyCalled) {
-        nsWindow::RemoveNextCharMessage(mWindow->mWnd);
-      }
-      // Foreget the redirected message
-      nsWindow::ForgetRedirectedKeyDownMessage();
-    }
-
-    bool mCancel;
-    nsRefPtr<nsWindow> mWindow;
-    const MSG &mMsg;
-  };
 };
 
 /**
