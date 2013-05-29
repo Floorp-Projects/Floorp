@@ -765,29 +765,6 @@ NativeKey::DispatchKeyEvent(nsKeyEvent& aKeyEvent,
 }
 
 bool
-NativeKey::DispatchKeyDownEvent(bool* aEventDispatched) const
-{
-  MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
-
-  if (aEventDispatched) {
-    *aEventDispatched = false;
-  }
-
-  // Ignore [shift+]alt+space so the OS can handle it.
-  if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
-      mVirtualKeyCode == VK_SPACE) {
-    return false;
-  }
-
-  nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
-  InitKeyEvent(keydownEvent, mModKeyState);
-  if (aEventDispatched) {
-    *aEventDispatched = true;
-  }
-  return DispatchKeyEvent(keydownEvent, &mMsg);
-}
-
-bool
 NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
 {
   MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
@@ -799,18 +776,19 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
   bool defaultPrevented = false;
   if (mIsFakeCharMsg ||
       !RedirectedKeyDownMessageManager::IsRedirectedMessage(mMsg)) {
-    bool isIMEEnabled = WinUtils::IsIMEEnabled(mWidget->GetInputContext());
-    bool eventDispatched;
-    defaultPrevented = DispatchKeyDownEvent(&eventDispatched);
-    if (aEventDispatched) {
-      *aEventDispatched = eventDispatched;
-    }
-    if (!eventDispatched) {
-      // If keydown event was not dispatched, keypress event shouldn't be
-      // caused with the message.
-      RedirectedKeyDownMessageManager::Forget();
+    // Ignore [shift+]alt+space so the OS can handle it.
+    if (mModKeyState.IsAlt() && !mModKeyState.IsControl() &&
+        mVirtualKeyCode == VK_SPACE) {
       return false;
     }
+
+    bool isIMEEnabled = WinUtils::IsIMEEnabled(mWidget->GetInputContext());
+    nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+    InitKeyEvent(keydownEvent, mModKeyState);
+    if (aEventDispatched) {
+      *aEventDispatched = true;
+    }
+    defaultPrevented = DispatchKeyEvent(keydownEvent, &mMsg);
 
     // If IMC wasn't associated to the window but is associated it now (i.e.,
     // focus is moved from a non-editable editor to an editor by keydown
