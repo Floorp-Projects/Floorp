@@ -83,6 +83,6 @@ skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(A
 == iframe-1.html iframe-1-ref.html
 
 # Test for antialiasing gaps between background and border
-skip-if(B2G) fails-if(winWidget) fuzzy-if(Android,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+skip-if(B2G) fails-if(winWidget) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html

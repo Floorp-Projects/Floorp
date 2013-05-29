@@ -182,9 +182,7 @@ public class Tab {
         }
 
         if (mThumbnailBitmap == null) {
-            Bitmap.Config config = (GeckoAppShell.getScreenDepth() == 24) ?
-                Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-            mThumbnailBitmap = Bitmap.createBitmap(width, height, config);
+            mThumbnailBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         }
 
         return mThumbnailBitmap;
