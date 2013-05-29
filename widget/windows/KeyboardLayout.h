@@ -140,6 +140,7 @@ struct UniCharsAndModifiers
    */
   void Append(PRUnichar aUniChar, Modifiers aModifiers);
   void Clear() { mLength = 0; }
+  bool IsEmpty() const { return !mLength; }
 
   void FillModifiers(Modifiers aModifiers);
 
@@ -330,6 +331,14 @@ public:
    */
   bool DispatchKeyEvent(nsKeyEvent& aKeyEvent,
                         const MSG* aMsgSentToPlugin = nullptr) const;
+
+  /**
+   * DispatchKeyPressEventsWithKeyboardLayout() dispatches keypress event(s)
+   * with the information provided by KeyboardLayout class.
+   */
+  bool DispatchKeyPressEventsWithKeyboardLayout(
+                        const UniCharsAndModifiers& aInputtingChars,
+                        const EventFlags& aExtraFlags) const;
 
   /**
    * Dspatces keydown event.  Retrns true if the event is consumed.
