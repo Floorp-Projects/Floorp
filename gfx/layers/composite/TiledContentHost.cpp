@@ -327,7 +327,7 @@ TiledContentHost::Dump(FILE* aFile,
     fprintf(aFile, "<ul>");
   }
   for (;it != stop; ++it) {
-    fprintf(aFile, aPrefix);
+    fprintf(aFile, "%s", aPrefix);
     fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Tile ");
     DumpTextureHost(aFile, it->mTextureHost);
     fprintf(aFile, aDumpHtml ? " >Tile</a></li>" : " ");
