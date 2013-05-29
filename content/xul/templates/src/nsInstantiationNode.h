@@ -6,6 +6,7 @@
 #ifndef nsInstantiationNode_h__
 #define nsInstantiationNode_h__
 
+#include "mozilla/Attributes.h"
 #include "nsRuleNetwork.h"
 #include "nsRDFQuery.h"
 
@@ -25,7 +26,7 @@ public:
 
     // "downward" propagations
     virtual nsresult Propagate(InstantiationSet& aInstantiations,
-                               bool aIsUpdate, bool& aMatched);
+                               bool aIsUpdate, bool& aMatched) MOZ_OVERRIDE;
 
 protected:
 

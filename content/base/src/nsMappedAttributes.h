@@ -72,9 +72,9 @@ public:
   
 
   // nsIStyleRule 
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;

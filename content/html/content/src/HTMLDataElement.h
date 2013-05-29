@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLDataElement_h
 #define mozilla_dom_HTMLDataElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -43,10 +44,10 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aError);
   }
 
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
-  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,
