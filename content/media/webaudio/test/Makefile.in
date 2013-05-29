@@ -62,6 +62,8 @@ MOCHITEST_FILES := \
   test_mixingRules.html \
   test_nodeToParamConnection.html \
   test_OfflineAudioContext.html \
+  test_offlineDestinationChannelCountLess.html \
+  test_offlineDestinationChannelCountMore.html \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \
