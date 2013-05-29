@@ -332,6 +332,12 @@ public:
                         const MSG* aMsgSentToPlugin = nullptr) const;
 
   /**
+   * Dspatces keydown event.  Retrns true if the event is consumed.
+   * Otherwise, false.
+   */
+  bool DispatchKeyDownEvent(bool* aEventDispatched = nullptr) const;
+
+  /**
    * Handles keyup message.  Returns true if the event is consumed.
    * Otherwise, false.
    */

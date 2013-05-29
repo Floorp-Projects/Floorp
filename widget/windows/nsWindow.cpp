@@ -5646,12 +5646,6 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, bool *aEventDispatched)
 LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
                                         bool *aEventDispatched)
 {
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
-         ("%s VK=%d\n", aMsg.message == WM_SYSKEYDOWN ?
-                        "WM_SYSKEYDOWN" : "WM_KEYDOWN", aMsg.wParam));
-  NS_PRECONDITION(aMsg.message == WM_KEYDOWN || aMsg.message == WM_SYSKEYDOWN,
-                  "message is not keydown event");
-
   // If this method doesn't call OnKeyDown(), this method must clean up the
   // redirected message information itself.  For more information, see above
   // comment of AutoForgetRedirectedKeyDownMessage struct definition in
@@ -5668,11 +5662,6 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
   //  uScanCode parameter may be used to distinguish between a key
   //  press and a key release. The scan code is used for
   //  translating ALT+number key combinations.
-
-  // ignore [shift+]alt+space so the OS can handle it
-  if (modKeyState.IsAlt() && !modKeyState.IsControl() &&
-      IS_VK_DOWN(NS_VK_SPACE))
-    return FALSE;
 
   LRESULT result = 0;
   if (!IMEHandler::IsComposingOn(this)) {
@@ -6411,20 +6400,20 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     nativeKey.GetCommittedCharsAndModifiers();
   uint32_t DOMKeyCode = nativeKey.GetDOMKeyCode();
 
-#ifdef DEBUG
-  //PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("In OnKeyDown virt: %d\n", DOMKeyCode));
-#endif
-
   static bool sRedirectedKeyDownEventPreventedDefault = false;
   bool noDefault;
   if (aFakeCharMessage || !IsRedirectedKeyDownMessage(aMsg)) {
     bool isIMEEnabled = IMEHandler::IsIMEEnabled(mInputContext);
-    nsKeyEvent keydownEvent(true, NS_KEY_DOWN, this);
-    keydownEvent.keyCode = DOMKeyCode;
-    nativeKey.InitKeyEvent(keydownEvent);
-    noDefault = nativeKey.DispatchKeyEvent(keydownEvent, &aMsg);
+    bool eventDispatched;
+    noDefault = nativeKey.DispatchKeyDownEvent(&eventDispatched);
     if (aEventDispatched) {
-      *aEventDispatched = true;
+      *aEventDispatched = eventDispatched;
+    }
+    if (!eventDispatched) {
+      // If keydown event was not dispatched, keypress event shouldn't be
+      // caused with the message.
+      ForgetRedirectedKeyDownMessage();
+      return 0;
     }
 
     // If IMC wasn't associated to the window but is associated it now (i.e.,
