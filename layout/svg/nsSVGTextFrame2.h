@@ -6,6 +6,7 @@
 #ifndef NS_SVGTEXTFRAME2_H
 #define NS_SVGTEXTFRAME2_H
 
+#include "mozilla/Attributes.h"
 #include "gfxFont.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
@@ -206,9 +207,9 @@ public:
 
   NS_IMETHOD AttributeChanged(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
-                              int32_t aModType);
+                              int32_t aModType) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame()
+  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE
   {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
@@ -216,7 +217,7 @@ public:
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -227,10 +228,10 @@ public:
    *
    * @see nsGkAtoms::svgTextFrame2
    */
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGText2"), aResult);
   }
@@ -240,21 +241,21 @@ public:
    * Finds the nsTextFrame for the closest rendered run to the specified point.
    */
   virtual void FindCloserFrameForSelection(nsPoint aPoint,
-                                          FrameWithDistance* aCurrentBestFrame);
+                                          FrameWithDistance* aCurrentBestFrame) MOZ_OVERRIDE;
 
 
   // nsISVGChildFrame interface:
-  virtual void NotifySVGChanged(uint32_t aFlags);
+  virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
-                      const nsIntRect* aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint& aPoint);
-  virtual void ReflowSVG();
-  NS_IMETHOD_(nsRect) GetCoveredRegion();
+                      const nsIntRect* aDirtyRect) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint& aPoint) MOZ_OVERRIDE;
+  virtual void ReflowSVG() MOZ_OVERRIDE;
+  NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
   virtual SVGBBox GetBBoxContribution(const gfxMatrix& aToBBoxUserspace,
-                                      uint32_t aFlags);
+                                      uint32_t aFlags) MOZ_OVERRIDE;
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM(uint32_t aFor);
+  virtual gfxMatrix GetCanvasTM(uint32_t aFor) MOZ_OVERRIDE;
   
   // SVG DOM text methods:
   uint32_t GetNumberOfChars(nsIContent* aContent);
