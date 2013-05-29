@@ -1,7 +1,7 @@
 HTTP == fixed-1.html fixed-1.html?ref
 random-if(bug685516) HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref
 skip-if(B2G) random-if(bug685516) HTTP == fixed-opacity-2.html fixed-opacity-2.html?ref
-skip-if(B2G) random-if(gtk2Widget) random-if(bug685516) HTTP == fixed-text-1.html fixed-text-1.html?ref
+skip-if(B2G) random-if(gtk2Widget) random-if(bug685516) fuzzy-if(Android,3,60) HTTP == fixed-text-1.html fixed-text-1.html?ref
 random-if(bug685516) HTTP == fixed-text-2.html fixed-text-2.html?ref
 random-if(Android&&!browserIsRemote) == iframe-border-radius.html iframe-border-radius-ref.html # bug 760269
 random-if(Android) HTTP == image-1.html image-1.html?ref
@@ -10,8 +10,8 @@ skip-if(B2G) random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opaci
 random-if(bug685516) HTTP == simple-1.html simple-1.html?ref
 skip-if(B2G) HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 fuzzy-if(Android,4,32) HTTP == text-1.html text-1.html?ref
-fuzzy-if(Android,4,5) HTTP == text-2.html?up text-2.html?ref
-fuzzy-if(Android,255,675) HTTP == transformed-1.html transformed-1.html?ref
+fuzzy-if(Android,3,11) HTTP == text-2.html?up text-2.html?ref
+fuzzy-if(Android,251,722) HTTP == transformed-1.html transformed-1.html?ref
 HTTP == transformed-1.html?up transformed-1.html?ref
 fuzzy-if(Android,5,20000) == uncovering-1.html uncovering-1-ref.html
 fuzzy-if(Android,5,20000) == uncovering-2.html uncovering-2-ref.html
