@@ -283,7 +283,8 @@ class MOZ_STACK_CLASS NativeKey
 public:
   NativeKey(nsWindowBase* aWidget,
             const MSG& aKeyOrCharMessage,
-            const ModifierKeyState& aModKeyState);
+            const ModifierKeyState& aModKeyState,
+            const nsFakeCharMessage* aFakeCharMessage = nullptr);
 
   uint32_t GetDOMKeyCode() const { return mDOMKeyCode; }
   KeyNameIndex GetKeyNameIndex() const { return mKeyNameIndex; }
@@ -297,6 +298,12 @@ public:
   {
     return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
   }
+  bool IsFollowedByCharMessage() const
+  {
+    MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+    return (mCharMsg.message != 0);
+  }
+  const MSG& RemoveFollowingCharMessage() const;
   bool IsDeadKey() const { return mIsDeadKey; }
   /**
    * IsPrintableKey() returns true if the key may be a printable key without
@@ -357,8 +364,7 @@ public:
    */
   bool DispatchKeyPressEventsAndDiscardsCharMessages(
                         const UniCharsAndModifiers& aInputtingChars,
-                        const EventFlags& aExtraFlags,
-                        const nsFakeCharMessage* aFakeCharMessage) const;
+                        const EventFlags& aExtraFlags) const;
 
   /**
    * Checkes whether the key event down message is handled without following
@@ -394,6 +400,10 @@ private:
   nsRefPtr<nsWindowBase> mWidget;
   HKL mKeyboardLayout;
   MSG mMsg;
+  // mCharMsg stores WM_*CHAR message following WM_*KEYDOWN message.
+  // If mMsg isn't WM_*KEYDOWN message or WM_*KEYDOWN but there is no following
+  // WM_*CHAR message, the message member is 0.
+  MSG mCharMsg;
 
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
@@ -416,6 +426,7 @@ private:
   bool    mIsExtended;
   bool    mIsDeadKey;
   bool    mIsPrintableKey;
+  bool    mIsFakeCharMsg;
 
   NativeKey()
   {
@@ -437,8 +448,7 @@ private:
   /*
    * Dispatches a plugin event after the specified message is removed.
    */
-  void RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg,
-                const nsFakeCharMessage* aFakeCharMessage = nullptr) const;
+  void RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg) const;
 };
 
 class KeyboardLayout
