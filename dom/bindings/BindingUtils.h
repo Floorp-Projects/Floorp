@@ -1866,6 +1866,19 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::Handle<jsid> id, JSPropertyDescriptor* desc);
 
 /**
+ * Define a property on obj through an Xray wrapper.
+ *
+ * wrapper is the Xray JS object.
+ * obj is the target object of the Xray, a binding's instance object or a
+ *     interface or interface prototype object.
+ * defined will be set to true if a property was set as a result of this call.
+ */
+bool
+XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper, 
+                   JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                   JSPropertyDescriptor* desc, bool* defined);
+
+/**
  * This enumerates indexed or named properties of obj and operations, attributes
  * and constants of the interfaces for obj.
  *
