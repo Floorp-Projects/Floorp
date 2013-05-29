@@ -47,8 +47,6 @@
     -moz-image-region: rect(64px 192px 128px 128px);
   }
 
-  #PanelUI-contents[type="grid"] #history-button,
-  #customization-palette #history-button,
   #PanelUI-contents[type="grid"] #history-panelmenu,
   #customization-palette #history-panelmenu {
     -moz-image-region: rect(128px 64px 192px 0);

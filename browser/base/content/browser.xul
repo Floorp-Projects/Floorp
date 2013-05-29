@@ -986,10 +986,6 @@
                      label="&downloads.label;"
                      tooltiptext="&downloads.tooltip;"/>
 
-      <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     observes="viewHistorySidebar" label="&historyButton.label;"
-                     tooltiptext="&historyButton.tooltip;"/>
-
       <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&newNavigatorCmd.label;"
                      command="key_newNavigator"
