@@ -788,6 +788,126 @@ NativeKey::DispatchKeyDownEvent(bool* aEventDispatched) const
 }
 
 bool
+NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
+{
+  MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+
+  if (aEventDispatched) {
+    *aEventDispatched = false;
+  }
+
+  bool defaultPrevented = false;
+  if (mIsFakeCharMsg ||
+      !RedirectedKeyDownMessageManager::IsRedirectedMessage(mMsg)) {
+    bool isIMEEnabled = WinUtils::IsIMEEnabled(mWidget->GetInputContext());
+    bool eventDispatched;
+    defaultPrevented = DispatchKeyDownEvent(&eventDispatched);
+    if (aEventDispatched) {
+      *aEventDispatched = eventDispatched;
+    }
+    if (!eventDispatched) {
+      // If keydown event was not dispatched, keypress event shouldn't be
+      // caused with the message.
+      RedirectedKeyDownMessageManager::Forget();
+      return false;
+    }
+
+    // If IMC wasn't associated to the window but is associated it now (i.e.,
+    // focus is moved from a non-editable editor to an editor by keydown
+    // event handler), WM_CHAR and WM_SYSCHAR shouldn't cause first character
+    // inputting if IME is opened.  But then, we should redirect the native
+    // keydown message to IME.
+    // However, note that if focus has been already moved to another
+    // application, we shouldn't redirect the message to it because the keydown
+    // message is processed by us, so, nobody shouldn't process it.
+    HWND focusedWnd = ::GetFocus();
+    if (!defaultPrevented && !mIsFakeCharMsg && focusedWnd &&
+        !mWidget->PluginHasFocus() && !isIMEEnabled &&
+        WinUtils::IsIMEEnabled(mWidget->GetInputContext())) {
+      RedirectedKeyDownMessageManager::RemoveNextCharMessage(focusedWnd);
+
+      INPUT keyinput;
+      keyinput.type = INPUT_KEYBOARD;
+      keyinput.ki.wVk = mOriginalVirtualKeyCode;
+      keyinput.ki.wScan = mScanCode;
+      keyinput.ki.dwFlags = KEYEVENTF_SCANCODE;
+      if (mIsExtended) {
+        keyinput.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+      }
+      keyinput.ki.time = 0;
+      keyinput.ki.dwExtraInfo = 0;
+
+      RedirectedKeyDownMessageManager::WillRedirect(mMsg, defaultPrevented);
+
+      ::SendInput(1, &keyinput, sizeof(keyinput));
+
+      // Return here.  We shouldn't dispatch keypress event for this WM_KEYDOWN.
+      // If it's needed, it will be dispatched after next (redirected)
+      // WM_KEYDOWN.
+      return true;
+    }
+
+    if (mWidget->Destroyed()) {
+      // If this was destroyed by the keydown event handler, we shouldn't
+      // dispatch keypress event on this window.
+      return true;
+    }
+  } else {
+    defaultPrevented = RedirectedKeyDownMessageManager::DefaultPrevented();
+    // If this is redirected keydown message, we have dispatched the keydown
+    // event already.
+    if (aEventDispatched) {
+      *aEventDispatched = true;
+    }
+  }
+
+  RedirectedKeyDownMessageManager::Forget();
+
+  // If the key was processed by IME, we shouldn't dispatch keypress event.
+  if (mOriginalVirtualKeyCode == VK_PROCESSKEY) {
+    return defaultPrevented;
+  }
+
+  // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress
+  // for almost all keys
+  switch (mDOMKeyCode) {
+    case NS_VK_SHIFT:
+    case NS_VK_CONTROL:
+    case NS_VK_ALT:
+    case NS_VK_CAPS_LOCK:
+    case NS_VK_NUM_LOCK:
+    case NS_VK_SCROLL_LOCK:
+    case NS_VK_WIN:
+      return defaultPrevented;
+  }
+
+  EventFlags extraFlags;
+  extraFlags.mDefaultPrevented = defaultPrevented;
+
+  if (NeedsToHandleWithoutFollowingCharMessages()) {
+    return DispatchKeyPressEventsAndDiscardsCharMessages(extraFlags);
+  }
+
+  if (IsFollowedByCharMessage()) {
+    return DispatchKeyPressEventForFollowingCharMessage(extraFlags);
+  }
+
+  if (!mModKeyState.IsControl() && !mModKeyState.IsAlt() &&
+      !mModKeyState.IsWin() && IsPrintableKey()) {
+    // If this is simple KeyDown event but next message is not WM_CHAR,
+    // this event may not input text, so we should ignore this event.
+    // See bug 314130.
+    return mWidget->PluginHasFocus() && defaultPrevented;
+  }
+
+  if (IsDeadKey()) {
+    return mWidget->PluginHasFocus() && defaultPrevented;
+  }
+
+  return DispatchKeyPressEventsWithKeyboardLayout(extraFlags);
+}
+
+bool
 NativeKey::HandleCharMessage(const MSG& aCharMsg,
                              bool* aEventDispatched,
                              const EventFlags* aExtraFlags) const

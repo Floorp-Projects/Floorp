@@ -38,12 +38,6 @@ public:
   static void* GetNativeData(uint32_t aDataType);
 
   /**
-   * Returns true if the context or IME state is enabled.  Otherwise, false.
-   */
-  static bool IsIMEEnabled(const InputContext& aInputContext);
-  static bool IsIMEEnabled(IMEState::Enabled aIMEState);
-
-  /**
    * ProcessRawKeyMessage() message is called before calling TranslateMessage()
    * and DispatchMessage().  If this returns true, the message is consumed.
    * Then, caller must not perform TranslateMessage() nor DispatchMessage().
