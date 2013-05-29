@@ -386,12 +386,6 @@ public:
   bool HandleKeyDownMessage(bool* aEventDispatched = nullptr) const;
 
   /**
-   * Dspatces keydown event.  Retrns true if the event is consumed.
-   * Otherwise, false.
-   */
-  bool DispatchKeyDownEvent(bool* aEventDispatched = nullptr) const;
-
-  /**
    * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
    * initialized with WM_KEYDOWN, WM_SYSKEYDOWN or them.
    * Returns true if dispatched keypress event is consumed.  Otherwise, false.
