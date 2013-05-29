@@ -29,7 +29,6 @@ CPP_SOURCES += [
     'nsAppShell.cpp',
     'nsClipboard.cpp',
     'nsDeviceContextAndroid.cpp',
-    'nsFilePicker.cpp',
     'nsIMEPicker.cpp',
     'nsIdleServiceAndroid.cpp',
     'nsLookAndFeel.cpp',
