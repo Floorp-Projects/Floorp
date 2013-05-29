@@ -103,6 +103,7 @@ function handleRequest(req, res) {
     m.checkReady();
     return;
   } else if (u.pathname == "/header") {
+    m = new Multiplex();
     var val = req.headers["x-test-header"];
     if (val) {
       res.setHeader("X-Received-Test-Header", val);
