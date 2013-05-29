@@ -223,7 +223,7 @@ this.devtools = {
    * Reload the current provider.
    */
   reload: function() {
-    var events = devtools.require("sdk/system/events");
+    var events = this.require("sdk/system/events");
     events.emit("startupcache-invalidate", {});
     events.emit("devtools-unloaded", {});
 
