@@ -1245,10 +1245,17 @@ private:
 class CreateMessage : public ControlMessage {
 public:
   CreateMessage(MediaStream* aStream) : ControlMessage(aStream) {}
-  virtual void Run()
+  virtual void Run() MOZ_OVERRIDE
   {
     mStream->GraphImpl()->AddStream(mStream);
     mStream->Init();
+  }
+  virtual void RunDuringShutdown() MOZ_OVERRIDE
+  {
+    // Make sure to run this message during shutdown too, to make sure
+    // that we balance the number of streams registered with the graph
+    // as they're destroyed during shutdown.
+    Run();
   }
 };
 
