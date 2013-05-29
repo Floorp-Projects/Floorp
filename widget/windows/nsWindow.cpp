@@ -3615,17 +3615,6 @@ bool nsWindow::DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aStatus) {
   return ConvertStatus(aStatus);
 }
 
-void nsWindow::InitKeyEvent(nsKeyEvent& aKeyEvent,
-                            const NativeKey& aNativeKey,
-                            const ModifierKeyState &aModKeyState)
-{
-  nsIntPoint point(0, 0);
-  InitEvent(aKeyEvent, &point);
-  aKeyEvent.mKeyNameIndex = aNativeKey.GetKeyNameIndex();
-  aKeyEvent.location = aNativeKey.GetKeyLocation();
-  aModKeyState.InitInputEvent(aKeyEvent);
-}
-
 bool nsWindow::DispatchKeyEvent(nsKeyEvent& aKeyEvent,
                                 const MSG *aMsgSentToPlugin)
 {
@@ -6468,7 +6457,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     bool isIMEEnabled = IMEHandler::IsIMEEnabled(mInputContext);
     nsKeyEvent keydownEvent(true, NS_KEY_DOWN, this);
     keydownEvent.keyCode = DOMKeyCode;
-    InitKeyEvent(keydownEvent, nativeKey, aModKeyState);
+    nativeKey.InitKeyEvent(keydownEvent);
     noDefault = DispatchKeyEvent(keydownEvent, &aMsg);
     if (aEventDispatched) {
       *aEventDispatched = true;
@@ -6793,14 +6782,14 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       keypressEvent.mFlags.Union(extraFlags);
       keypressEvent.charCode = uniChar;
       keypressEvent.alternativeCharCodes.AppendElements(altArray);
-      InitKeyEvent(keypressEvent, nativeKey, modKeyState);
+      nativeKey.InitKeyEvent(keypressEvent, modKeyState);
       DispatchKeyEvent(keypressEvent, nullptr);
     }
   } else {
     nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
     keypressEvent.mFlags.Union(extraFlags);
     keypressEvent.keyCode = DOMKeyCode;
-    InitKeyEvent(keypressEvent, nativeKey, aModKeyState);
+    nativeKey.InitKeyEvent(keypressEvent, aModKeyState);
     DispatchKeyEvent(keypressEvent, nullptr);
   }
 
@@ -6821,7 +6810,7 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
   nsKeyEvent keyupEvent(true, NS_KEY_UP, this);
   NativeKey nativeKey(this, aMsg, aModKeyState);
   keyupEvent.keyCode = nativeKey.GetDOMKeyCode();
-  InitKeyEvent(keyupEvent, nativeKey, aModKeyState);
+  nativeKey.InitKeyEvent(keyupEvent);
   // Set defaultPrevented of the key event if the VK_MENU is not a system key
   // release, so that the menu bar does not trigger.  This helps avoid
   // triggering the menu bar for ALT key accelerators used in assistive
@@ -6913,7 +6902,7 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
   if (!keypressEvent.charCode) {
     keypressEvent.keyCode = aNativeKey.GetDOMKeyCode();
   }
-  InitKeyEvent(keypressEvent, aNativeKey, modKeyState);
+  aNativeKey.InitKeyEvent(keypressEvent, modKeyState);
   bool result = DispatchKeyEvent(keypressEvent, &aMsg);
   if (aEventDispatched)
     *aEventDispatched = true;
