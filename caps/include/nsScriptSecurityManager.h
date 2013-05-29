@@ -27,7 +27,6 @@ class nsIDocShell;
 class nsString;
 class nsIClassInfo;
 class nsIIOService;
-class nsIXPConnect;
 class nsIStringBundle;
 class nsSystemPrincipal;
 struct ClassPolicy;
@@ -523,7 +522,6 @@ private:
     static bool sStrictFileOriginPolicy;
 
     static nsIIOService    *sIOService;
-    static nsIXPConnect    *sXPConnect;
     static nsIStringBundle *sStrBundle;
     static JSRuntime       *sRuntime;
 };
