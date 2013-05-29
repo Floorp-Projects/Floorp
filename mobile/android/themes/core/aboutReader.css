@@ -10,7 +10,7 @@ body {
   margin-top: 20px;
   margin-bottom: 20px;
   transition-property: background-color, color;
-  transition-duration: 0.7s;
+  transition-duration: 0.4s;
 }
 
 .light {
