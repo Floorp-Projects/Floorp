@@ -697,7 +697,8 @@ BrowserGlue.prototype = {
         // tabs checks browser.tabs.warnOnClose and returns if it's ok to close
         // the window. It doesn't actually close the window.
         mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(true);
+        let allTabs = mostRecentBrowserWindow.gBrowser.closingTabsEnum.ALL;
+        aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(allTabs)
       }
       return;
     }
