@@ -41,6 +41,17 @@ struct nsModifierKeyState;
 namespace mozilla {
 namespace widget {
 
+static const uint32_t sModifierKeyMap[][3] = {
+  { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0 },
+  { nsIWidget::NUM_LOCK,  VK_NUMLOCK, 0 },
+  { nsIWidget::SHIFT_L,   VK_SHIFT,   VK_LSHIFT },
+  { nsIWidget::SHIFT_R,   VK_SHIFT,   VK_RSHIFT },
+  { nsIWidget::CTRL_L,    VK_CONTROL, VK_LCONTROL },
+  { nsIWidget::CTRL_R,    VK_CONTROL, VK_RCONTROL },
+  { nsIWidget::ALT_L,     VK_MENU,    VK_LMENU },
+  { nsIWidget::ALT_R,     VK_MENU,    VK_RMENU }
+};
+
 class KeyboardLayout;
 
 class ModifierKeyState {

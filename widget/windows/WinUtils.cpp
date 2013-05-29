@@ -7,6 +7,7 @@
 #include "WinUtils.h"
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
+#include "KeyboardLayout.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "mozilla/Preferences.h"
