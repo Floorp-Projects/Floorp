@@ -76,7 +76,7 @@
         Activity based themes.
     -->
     <style name="Gecko.App">
-        <item name="android:windowBackground">@color/background_normal</item>
+        <item name="android:windowBackground">@android:color/white</item>
         <item name="android:buttonStyle">@style/Widget.Button</item>
         <item name="android:dropDownItemStyle">@style/Widget.DropDownItem</item>
         <item name="android:editTextStyle">@style/Widget.EditText</item>

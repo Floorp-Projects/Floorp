@@ -5,9 +5,7 @@
 
 package org.mozilla.gecko.home;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
+import org.mozilla.gecko.widget.AboutHome;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -18,14 +16,16 @@ import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 
-import org.mozilla.gecko.widget.AboutHome;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
 
 public class HomePager extends ViewPager {
     private final Context mContext;
     private volatile boolean mLoaded;
 
+    // List of pages in order.
     private enum Page {
-        ABOUT_HOME
     }
 
     private EnumMap<Page, Fragment> mPages = new EnumMap<Page, Fragment>(Page.class);
@@ -48,7 +48,9 @@ public class HomePager extends ViewPager {
     public void show(FragmentManager fm) {
         mLoaded = true;
         TabsAdapter adapter = new TabsAdapter(fm);
-        adapter.addTab(Page.ABOUT_HOME, AboutHome.class, null, "");
+
+        // Add the pages to the adapter in order.
+
         setAdapter(adapter);
         setVisibility(VISIBLE);
     }
@@ -78,20 +80,14 @@ public class HomePager extends ViewPager {
      * @see AboutHome#update(EnumSet)
      */
     public void updateAboutHome(final EnumSet<AboutHome.UpdateFlags> flags) {
-        AboutHome aboutHome = (AboutHome) mPages.get(Page.ABOUT_HOME);
-        if (aboutHome != null) {
-            aboutHome.update(flags);
-        }
+        // FIXME: Individual sections should update based on the flags.
     }
 
     /**
      * @see AboutHome#setLastTabsVisibility(boolean)
      */
     public void setAboutHomeLastTabsVisibility(boolean visible) {
-        AboutHome aboutHome = (AboutHome) mPages.get(Page.ABOUT_HOME);
-        if (aboutHome != null) {
-            aboutHome.setLastTabsVisibility(visible);
-        }
+        // FIXME: Page handling last tabs should update it.
     }
 
     class TabsAdapter extends FragmentStatePagerAdapter {
