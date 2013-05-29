@@ -662,3 +662,8 @@ chatbar {
   height: 0;
   max-height: 0;
 }
+
+#customization-reset-button[hidden="true"] {
+  display: -moz-box;
+  visibility: hidden;
+}
