@@ -172,7 +172,7 @@ TimeZoneSettingObserver::Observe(nsISupports *aSubject,
 
   // Parse the JSON value.
   nsDependentString dataStr(aData);
-  JS::Value val;
+  JS::Rooted<JS::Value> val(cx);
   if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
       !val.isObject()) {
     return NS_OK;
