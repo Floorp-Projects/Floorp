@@ -151,9 +151,6 @@
 #include "nsIWinTaskbar.h"
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
-// Windowless plugin support
-#include "npapi.h"
-
 #include "nsWindowDefs.h"
 
 #include "nsCrashOnException.h"
@@ -3733,30 +3730,13 @@ void nsWindow::DispatchPendingEvents()
   }
 }
 
-// Deal with plugin events
-bool nsWindow::DispatchPluginEvent(const MSG &aMsg)
-{
-  if (!PluginHasFocus())
-    return false;
-
-  nsPluginEvent event(true, NS_PLUGIN_INPUT_EVENT, this);
-  nsIntPoint point(0, 0);
-  InitEvent(event, &point);
-  NPEvent pluginEvent;
-  pluginEvent.event = aMsg.message;
-  pluginEvent.wParam = aMsg.wParam;
-  pluginEvent.lParam = aMsg.lParam;
-  event.pluginEvent = (void *)&pluginEvent;
-  event.retargetToFocusedDocument = true;
-  return DispatchWindowEvent(&event);
-}
-
 bool nsWindow::DispatchPluginEvent(UINT aMessage,
                                      WPARAM aWParam,
                                      LPARAM aLParam,
                                      bool aDispatchPendingEvents)
 {
-  bool ret = DispatchPluginEvent(WinUtils::InitMSG(aMessage, aWParam, aLParam));
+  bool ret = nsWindowBase::DispatchPluginEvent(
+               WinUtils::InitMSG(aMessage, aWParam, aLParam));
   if (aDispatchPendingEvents) {
     DispatchPendingEvents();
   }
@@ -3775,7 +3755,7 @@ void nsWindow::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
   } else {
     WinUtils::GetMessage(&msg, mWnd, aFirstMsg, aLastMsg);
   }
-  DispatchPluginEvent(msg);
+  nsWindowBase::DispatchPluginEvent(msg);
 }
 
 // Deal with all sort of mouse event
@@ -4412,7 +4392,7 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
   }
 
   if (!eventDispatched)
-    aCallDefWndProc = !DispatchPluginEvent(aMsg);
+    aCallDefWndProc = !nsWindowBase::DispatchPluginEvent(aMsg);
   DispatchPendingEvents();
   return true;
 }
@@ -6568,7 +6548,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         return false;
 
       // We need to send the removed message to focused plug-in.
-      DispatchPluginEvent(msg);
+      nsWindowBase::DispatchPluginEvent(msg);
       return noDefault;
     }
 
