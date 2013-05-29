@@ -272,18 +272,14 @@ public:
   UniCharsAndModifiers GetUniChars(ShiftState aShiftState) const;
 };
 
-class NativeKey {
-public:
-  NativeKey() :
-    mDOMKeyCode(0), mKeyNameIndex(KEY_NAME_INDEX_Unidentified),
-    mMessage(0), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0),
-    mScanCode(0), mIsExtended(false)
-  {
-  }
+class MOZ_STACK_CLASS NativeKey
+{
+  friend class KeyboardLayout;
 
-  NativeKey(const KeyboardLayout& aKeyboardLayout,
-            nsWindow* aWindow,
-            const MSG& aKeyOrCharMessage);
+public:
+  NativeKey(nsWindow* aWindow,
+            const MSG& aKeyOrCharMessage,
+            const ModifierKeyState& aModKeyState);
 
   uint32_t GetDOMKeyCode() const { return mDOMKeyCode; }
   KeyNameIndex GetKeyNameIndex() const { return mKeyNameIndex; }
@@ -325,13 +321,24 @@ private:
   WORD    mScanCode;
   bool    mIsExtended;
 
-  UINT GetScanCodeWithExtendedFlag() const;
+  NativeKey()
+  {
+    MOZ_NOT_REACHED("The default constructor of NativeKey isn't available");
+  }
 
-  friend class KeyboardLayout;
+  UINT GetScanCodeWithExtendedFlag() const;
 };
 
 class KeyboardLayout
 {
+  friend class NativeKey;
+
+private:
+  KeyboardLayout();
+  ~KeyboardLayout();
+
+  static KeyboardLayout* sInstance;
+
   struct DeadKeyTableListEntry
   {
     DeadKeyTableListEntry* next;
@@ -339,12 +346,14 @@ class KeyboardLayout
   };
 
   HKL mKeyboardLayout;
-  HKL mPendingKeyboardLayout;
 
   VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
   int32_t mActiveDeadKey;                 // -1 = no active dead-key
   VirtualKey::ShiftState mDeadKeyShiftState;
+
+  bool mIsOverridden : 1;
+  bool mIsPendingToRestoreKeyboardLayout : 1;
 
   static inline int32_t GetKeyIndex(uint8_t aVirtualKey);
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
@@ -363,9 +372,24 @@ class KeyboardLayout
                                       uint32_t aEntries);
   void ReleaseDeadKeyTables();
 
+  /**
+   * Loads the specified keyboard layout. This method always clear the dead key
+   * state.
+   */
+  void LoadLayout(HKL aLayout);
+
+  /**
+   * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or
+   * WM_KEYUP.  This method is stateful.  This saves current dead key state at
+   * WM_KEYDOWN.  Additionally, computes current inputted character(s) and set
+   * them to the aNativeKey.
+   */
+  void InitNativeKey(NativeKey& aNativeKey,
+                     const ModifierKeyState& aModKeyState);
+
 public:
-  KeyboardLayout();
-  ~KeyboardLayout();
+  static KeyboardLayout* GetInstance();
+  static void Shutdown();
 
   static bool IsPrintableCharKey(uint8_t aVirtualKey);
 
@@ -385,19 +409,34 @@ public:
                          const ModifierKeyState& aModKeyState) const;
 
   /**
-   * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or
-   * WM_KEYUP.  This method is stateful.  This saves current dead key state at
-   * WM_KEYDOWN.  Additionally, computes current inputted character(s) and set
-   * them to the aNativeKey.
+   * OnLayoutChange() must be called before the first keydown message is
+   * received.  LoadLayout() changes the keyboard state, that causes breaking
+   * dead key state.  Therefore, we need to load the layout before the first
+   * keydown message.
    */
-  void InitNativeKey(NativeKey& aNativeKey,
-                     const ModifierKeyState& aModKeyState);
+  void OnLayoutChange(HKL aKeyboardLayout)
+  {
+    MOZ_ASSERT(!mIsOverridden);
+    LoadLayout(aKeyboardLayout);
+  }
 
   /**
-   * LoadLayout() loads the keyboard layout.  If aLoadLater is true,
-   * it will be done when OnKeyDown() is called.
+   * OverrideLayout() loads the specified keyboard layout.
    */
-  void LoadLayout(HKL aLayout, bool aLoadLater = false);
+  void OverrideLayout(HKL aLayout)
+  {
+    mIsOverridden = true;
+    LoadLayout(aLayout);
+  }
+
+  /**
+   * RestoreLayout() loads the current keyboard layout of the thread.
+   */
+  void RestoreLayout()
+  {
+    mIsOverridden = false;
+    mIsPendingToRestoreKeyboardLayout = true;
+  }
 
   uint32_t ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const;
 
@@ -409,7 +448,8 @@ public:
 
   HKL GetLayout() const
   {
-    return mPendingKeyboardLayout ? mPendingKeyboardLayout : mKeyboardLayout;
+    return mIsPendingToRestoreKeyboardLayout ? ::GetKeyboardLayout(0) :
+                                               mKeyboardLayout;
   }
 };
 
