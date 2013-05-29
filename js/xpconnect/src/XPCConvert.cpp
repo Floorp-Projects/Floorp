@@ -357,7 +357,7 @@ CheckJSCharInCharRange(jschar c)
 #endif
 
 template<typename T>
-bool ConvertToPrimitive(JSContext *cx, const JS::Value& v, T *retval)
+bool ConvertToPrimitive(JSContext *cx, HandleValue v, T *retval)
 {
     return ValueToPrimitive<T, eDefault>(cx, v, retval);
 }

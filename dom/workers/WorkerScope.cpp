@@ -453,8 +453,8 @@ private:
       return false;
     }
 
-    jsval dummy;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", &dummy)) {
+    JS::Rooted<JS::Value> dummy(aCx);
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", dummy.address())) {
       return false;
     }
 
@@ -495,8 +495,8 @@ private:
       return false;
     }
 
-    jsval dummy;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", &dummy)) {
+    JS::Rooted<JS::Value> dummy(aCx);
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", dummy.address())) {
       return false;
     }
 

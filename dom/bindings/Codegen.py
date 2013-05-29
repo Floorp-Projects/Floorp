@@ -3524,7 +3524,7 @@ for (uint32_t i = 0; i < length; ++i) {
         template = (
             "if (%s) {\n"
             "  ${declName}.SetNull();\n"
-            "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
+            "} else if (!ValueToPrimitive<%s, %s>(cx, ${valHandle}, &%s)) {\n"
             "%s\n"
             "}" % (nullCondition, typeName, conversionBehavior,
                    writeLoc, exceptionCodeIndented.define()))
@@ -3534,7 +3534,7 @@ for (uint32_t i = 0; i < length; ++i) {
         writeLoc = "${declName}"
         readLoc = writeLoc
         template = (
-            "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
+            "if (!ValueToPrimitive<%s, %s>(cx, ${valHandle}, &%s)) {\n"
             "%s\n"
             "}" % (typeName, conversionBehavior, writeLoc,
                    exceptionCodeIndented.define()))
@@ -5377,9 +5377,9 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
                                                         self.attr)
         argv = CGGeneric("""JS::Value* argv = JS_ARGV(cx, vp);
-JS::Value undef = JS::UndefinedValue();
+JS::Rooted<JS::Value> undef(cx, JS::UndefinedValue());
 if (argc == 0) {
-  argv = &undef;
+  argv = undef.address();
 }""")
         call = CGSetterCall(self.attr.type, nativeName, self.descriptor,
                             self.attr)
