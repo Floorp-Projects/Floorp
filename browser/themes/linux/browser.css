@@ -651,7 +651,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 
-#history-button,
 toolbar > .customization-target > #history-panelmenu,
 toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 48px 24px 24px);
@@ -804,8 +803,7 @@ toolbar[iconsize="small"] #downloads-button {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-toolbar[iconsize="small"] #webrtc-status-button /* temporary placeholder (bug 824825) */,
-toolbar[iconsize="small"] #history-button {
+toolbar[iconsize="small"] #webrtc-status-button /* temporary placeholder (bug 824825) */ {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
