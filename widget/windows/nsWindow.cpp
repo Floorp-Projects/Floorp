@@ -6463,8 +6463,6 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       return noDefault;
   }
 
-  UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
-  bool isDeadKey = keyboardLayout->IsDeadKey(virtualKeyCode, aModKeyState);
   EventFlags extraFlags;
   extraFlags.mDefaultPrevented = noDefault;
   MSG msg;
@@ -6473,10 +6471,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                           PM_NOREMOVE | PM_NOYIELD);
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
-  if (DOMKeyCode == NS_VK_RETURN || DOMKeyCode == NS_VK_BACK ||
-      ((aModKeyState.IsControl() || aModKeyState.IsAlt() || aModKeyState.IsWin())
-       && !isDeadKey && KeyboardLayout::IsPrintableCharKey(virtualKeyCode)))
-  {
+  if (nativeKey.NeedsToHandleWithoutFollowingCharMessages()) {
     // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
     // They can be more than one because of:
     //  * Dead-keys not pairing with base character
@@ -6518,13 +6513,14 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         return false;
       }
 #ifdef DEBUG
-      if (KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
+      if (nativeKey.IsPrintableKey()) {
         nsPrintfCString log(
-          "virtualKeyCode=0x%02X, inputtingChar={ mChars=[ 0x%04X, 0x%04X, "
-          "0x%04X, 0x%04X, 0x%04X ], mLength=%d }, wParam=0x%04X",
-          virtualKeyCode, inputtingChars.mChars[0], inputtingChars.mChars[1],
-          inputtingChars.mChars[2], inputtingChars.mChars[3],
-          inputtingChars.mChars[4], inputtingChars.mLength, msg.wParam);
+          "OriginalVirtualKeyCode=0x%02X, inputtingChar={ mChars=[ 0x%04X, "
+          "0x%04X, 0x%04X, 0x%04X, 0x%04X ], mLength=%d }, wParam=0x%04X",
+          nativeKey.GetOriginalVirtualKeyCode(), inputtingChars.mChars[0],
+          inputtingChars.mChars[1], inputtingChars.mChars[2],
+          inputtingChars.mChars[3], inputtingChars.mChars[4],
+          inputtingChars.mLength, msg.wParam);
         if (!inputtingChars.mLength) {
           log.Insert("length is zero: ", 0);
           NS_ERROR(log.get());
@@ -6565,15 +6561,14 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     return static_cast<LRESULT>(result);
   }
   else if (!aModKeyState.IsControl() && !aModKeyState.IsAlt() &&
-            !aModKeyState.IsWin() &&
-            KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
+            !aModKeyState.IsWin() && nativeKey.IsPrintableKey()) {
     // If this is simple KeyDown event but next message is not WM_CHAR,
     // this event may not input text, so we should ignore this event.
     // See bug 314130.
     return PluginHasFocus() && noDefault;
   }
 
-  if (isDeadKey) {
+  if (nativeKey.IsDeadKey()) {
     return PluginHasFocus() && noDefault;
   }
 

@@ -296,6 +296,14 @@ public:
   {
     return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
   }
+  bool IsDeadKey() const { return mIsDeadKey; }
+  /**
+   * IsPrintableKey() returns true if the key may be a printable key without
+   * any modifier keys.  Otherwise, false.
+   * Please note that the event may not cause any text input even if this
+   * returns true.  E.g., it might be dead key state or Ctrl key may be pressed.
+   */
+  inline bool IsPrintableKey() const { return mIsPrintableKey; }
   WORD GetScanCode() const { return mScanCode; }
   uint8_t GetVirtualKeyCode() const { return mVirtualKeyCode; }
   uint8_t GetOriginalVirtualKeyCode() const { return mOriginalVirtualKeyCode; }
@@ -339,6 +347,15 @@ public:
   bool DispatchKeyPressEventsWithKeyboardLayout(
                         const UniCharsAndModifiers& aInputtingChars,
                         const EventFlags& aExtraFlags) const;
+
+  /**
+   * Checkes whether the key event down message is handled without following
+   * WM_CHAR messages.  For example, if following WM_CHAR message indicates
+   * control character input, the WM_CHAR message is unclear whether it's
+   * caused by a printable key with Ctrl or just a function key such as Enter
+   * or Backspace.
+   */
+  bool NeedsToHandleWithoutFollowingCharMessages() const;
 
   /**
    * Dspatces keydown event.  Retrns true if the event is consumed.
@@ -385,6 +402,8 @@ private:
 
   WORD    mScanCode;
   bool    mIsExtended;
+  bool    mIsDeadKey;
+  bool    mIsPrintableKey;
 
   NativeKey()
   {
