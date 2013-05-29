@@ -171,6 +171,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
 {
     FixedList<Label>            labels_;
     HeapLabel *                 return_;
+#ifdef JSGC_GENERATIONAL
+    HeapLabel *                 postBarrierSlot_;
+#endif
 
     // Native code offset right before the scope chain is initialized.
     CodeOffsetLabel prologueOffset_;
@@ -190,6 +193,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool emitPrologue();
     bool emitEpilogue();
+#ifdef JSGC_GENERATIONAL
+    bool emitOutOfLinePostBarrierSlot();
+#endif
     bool emitIC(ICStub *stub, bool isForOp);
     bool emitOpIC(ICStub *stub) {
         return emitIC(stub, true);
@@ -238,6 +244,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool addPCMappingEntry(bool addIndexEntry);
 
+    void getScopeCoordinateObject(Register reg);
+    Address getScopeCoordinateAddressFromObject(Register objReg, Register reg);
     Address getScopeCoordinateAddress(Register reg);
 };
 
