@@ -871,14 +871,14 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
   }
 
   if (!mModKeyState.IsControl() && !mModKeyState.IsAlt() &&
-      !mModKeyState.IsWin() && IsPrintableKey()) {
+      !mModKeyState.IsWin() && mIsPrintableKey) {
     // If this is simple KeyDown event but next message is not WM_CHAR,
     // this event may not input text, so we should ignore this event.
     // See bug 314130.
     return mWidget->PluginHasFocus() && defaultPrevented;
   }
 
-  if (IsDeadKey()) {
+  if (mIsDeadKey) {
     return mWidget->PluginHasFocus() && defaultPrevented;
   }
 
@@ -1054,7 +1054,7 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
 
   // Even if the key is a printable key, it might cause non-printable character
   // input with modifier key(s).
-  return IsPrintableKey();
+  return mIsPrintableKey;
 }
 
 const MSG&
@@ -1309,7 +1309,7 @@ NativeKey::DispatchKeyPressEventForFollowingCharMessage(
       return aExtraFlags.mDefaultPrevented;
     }
 #ifdef DEBUG
-    if (IsPrintableKey()) {
+    if (mIsPrintableKey) {
       nsPrintfCString log(
         "mOriginalVirtualKeyCode=0x%02X, mCommittedCharsAndModifiers={ "
         "mChars=[ 0x%04X, 0x%04X, 0x%04X, 0x%04X, 0x%04X ], mLength=%d }, "
@@ -1439,7 +1439,7 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     LoadLayout(::GetKeyboardLayout(0));
   }
 
-  uint8_t virtualKey = aNativeKey.GetOriginalVirtualKeyCode();
+  uint8_t virtualKey = aNativeKey.mOriginalVirtualKeyCode;
   int32_t virtualKeyIndex = GetKeyIndex(virtualKey);
 
   if (virtualKeyIndex < 0) {
