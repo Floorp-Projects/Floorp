@@ -876,24 +876,9 @@ toolbarbutton.bookmark-item > menupopup {
 
 /* history sidebar button */
 
-#history-button,
 toolbar > .customization-target > #history-panelmenu,
 toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0, 160px, 20px, 140px);
-}
-
-#history-button[checked="true"] {
-  -moz-image-region: rect(20px, 160px, 40px, 140px);
-}
-
-@media (min-resolution: 2dppx) {
-  #history-button {
-    -moz-image-region: rect(0, 320px, 40px, 280px);
-  }
-
-  #history-button[checked="true"] {
-    -moz-image-region: rect(40px, 320px, 80px, 280px);
-  }
 }
 
 /* bookmark sidebar & menu buttons */
