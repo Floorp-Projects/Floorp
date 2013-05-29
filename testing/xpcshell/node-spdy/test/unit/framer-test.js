@@ -9,8 +9,8 @@ suite('A Framer of SPDY module', function() {
       framer;
 
   setup(function() {
-    inflate = spdy.utils.zwrap(spdy.utils.createInflate());
-    deflate = spdy.utils.zwrap(spdy.utils.createDeflate());
+    inflate = spdy.utils.zwrap(spdy.utils.createInflate(2));
+    deflate = spdy.utils.zwrap(spdy.utils.createDeflate(2));
     framer = new spdy.protocol[2].Framer(deflate, inflate);
   });
 
@@ -175,15 +175,6 @@ suite('A Framer of SPDY module', function() {
 
       // Verify that cache works
       var frame = framer.rstFrame(1, 2);
-      assert.ok(frame.length > 0);
-    });
-
-    test('.maxStreamsFrame() should generate correct frame', function() {
-      var frame = framer.maxStreamsFrame(13);
-      assert.ok(frame.length > 0);
-
-      // Verify that cache works
-      var frame = framer.maxStreamsFrame(13);
       assert.ok(frame.length > 0);
     });
   });

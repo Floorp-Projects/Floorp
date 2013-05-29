@@ -11,12 +11,11 @@ var spdy = require('../../../spdy'),
 // Framer constructor
 //
 function Framer(deflate, inflate) {
-  this.version = 2;
+  this.version = 3;
   this.deflate = deflate;
   this.inflate = inflate;
 }
 exports.Framer = Framer;
-
 
 //
 // ### function execute (header, body, callback)
@@ -42,7 +41,7 @@ Framer.prototype.execute = function execute(header, body, callback) {
       }
 
       frame.headers = protocol.parseHeaders(pairs);
-      frame.url = frame.headers.url || '';
+      frame.url = frame.headers.path || '';
 
       callback(null, frame);
     });
@@ -51,7 +50,7 @@ Framer.prototype.execute = function execute(header, body, callback) {
     callback(null, protocol.parseRst(body));
   // SETTINGS
   } else if (header.type === 0x04) {
-    callback(null, { type: 'SETTINGS' });
+    callback(null, protocol.parseSettings(body));
   } else if (header.type === 0x05) {
     callback(null, { type: 'NOOP' });
   // PING
@@ -60,6 +59,8 @@ Framer.prototype.execute = function execute(header, body, callback) {
   // GOAWAY
   } else if (header.type === 0x07) {
     callback(null, protocol.parseGoaway(body));
+  } else if (header.type === 0x09) {
+    callback(null, protocol.parseWindowUpdate(body));
   } else {
     callback(null, { type: 'unknown: ' + header.type, body: body });
   }
@@ -93,7 +94,7 @@ function headersToDict(headers, preprocess) {
   if (preprocess) preprocess(loweredHeaders);
 
   // Transform object into kv pairs
-  var len = 2,
+  var len = 4,
       pairs = Object.keys(loweredHeaders).filter(function(key) {
         var lkey = key.toLowerCase();
         return lkey !== 'connection' && lkey !== 'keep-alive' &&
@@ -103,28 +104,28 @@ function headersToDict(headers, preprocess) {
             value = stringify(loweredHeaders[key]),
             vlen = Buffer.byteLength(value);
 
-        len += 4 + klen + vlen;
+        len += 8 + klen + vlen;
         return [klen, key, vlen, value];
       }),
       result = new Buffer(len);
 
-  result.writeUInt16BE(pairs.length, 0, true);
+  result.writeUInt32BE(pairs.length, 0, true);
 
-  var offset = 2;
+  var offset = 4;
   pairs.forEach(function(pair) {
     // Write key length
-    result.writeUInt16BE(pair[0], offset, true);
+    result.writeUInt32BE(pair[0], offset, true);
     // Write key
-    result.write(pair[1], offset + 2);
+    result.write(pair[1], offset + 4);
 
-    offset += pair[0] + 2;
+    offset += pair[0] + 4;
 
     // Write value length
-    result.writeUInt16BE(pair[2], offset, true);
+    result.writeUInt32BE(pair[2], offset, true);
     // Write value
-    result.write(pair[3], offset + 2);
+    result.write(pair[3], offset + 4);
 
-    offset += pair[2] + 2;
+    offset += pair[2] + 4;
   });
 
   return result;
@@ -136,11 +137,11 @@ Framer.prototype._synFrame = function _synFrame(type, id, assoc, priority, dict,
   this.deflate(dict, function (err, chunks, size) {
     if (err) return callback(err);
 
-    var offset = type === 'SYN_STREAM' ? 18 : 14,
-        total = (type === 'SYN_STREAM' ? 10 : 6) + size,
+    var offset = type === 'SYN_STREAM' ? 18 : 12,
+        total = (type === 'SYN_STREAM' ? 10 : 4) + size,
         frame = new Buffer(offset + size);;
 
-    frame.writeUInt16BE(0x8002, 0, true); // Control + Version
+    frame.writeUInt16BE(0x8003, 0, true); // Control + Version
     frame.writeUInt16BE(type === 'SYN_STREAM' ? 1 : 2, 2, true); // type
     frame.writeUInt32BE(total & 0x00ffffff, 4, true); // No flag support
     frame.writeUInt32BE(id & 0x7fffffff, 8, true); // Stream-ID
@@ -150,7 +151,7 @@ Framer.prototype._synFrame = function _synFrame(type, id, assoc, priority, dict,
       frame.writeUInt32BE(assoc & 0x7fffffff, 12, true); // Stream-ID
     }
 
-    frame.writeUInt8(priority & 0x3, 16, true); // Priority
+    frame.writeUInt8(priority & 0x7, 16, true); // Priority
 
     for (var i = 0; i < chunks.length; i++) {
       chunks[i].copy(frame, offset);
@@ -173,8 +174,8 @@ Framer.prototype._synFrame = function _synFrame(type, id, assoc, priority, dict,
 Framer.prototype.replyFrame = function replyFrame(id, code, reason, headers,
                                                   callback) {
   var dict = headersToDict(headers, function(headers) {
-    headers.status = code + ' ' + reason;
-    headers.version = 'HTTP/1.1';
+    headers[':status'] = code + ' ' + reason;
+    headers[':version'] = 'HTTP/1.1';
   });
 
   this._synFrame('SYN_REPLY', id, null, 0, dict, callback);
@@ -193,9 +194,11 @@ Framer.prototype.replyFrame = function replyFrame(id, code, reason, headers,
 Framer.prototype.streamFrame = function streamFrame(id, assoc, meta, headers,
                                                     callback) {
   var dict = headersToDict(headers, function(headers) {
-    headers.status = 200;
-    headers.version = 'HTTP/1.1';
-    headers.url = meta.url;
+    headers[':status'] = 200;
+    headers[':version'] = meta.version || 'HTTP/1.1';
+    headers[':path'] = meta.path;
+    headers[':scheme'] = meta.scheme || 'https';
+    headers[':host'] = meta.host;
   });
 
   this._synFrame('SYN_STREAM', id, assoc, meta.priority, dict, callback);
@@ -230,7 +233,7 @@ Framer.prototype.dataFrame = function dataFrame(id, fin, data) {
 Framer.prototype.pingFrame = function pingFrame(id) {
   var header = new Buffer(12);
 
-  header.writeUInt32BE(0x80020006, 0, true); // Version and type
+  header.writeUInt32BE(0x80030006, 0, true); // Version and type
   header.writeUInt32BE(0x00000004, 4, true); // Length
   id.copy(header, 8, 0, 4); // ID
 
@@ -249,7 +252,7 @@ Framer.prototype.rstFrame = function rstFrame(id, code) {
   if (!(header = Framer.rstCache[code])) {
     header = new Buffer(16);
 
-    header.writeUInt32BE(0x80020003, 0, true); // Version and type
+    header.writeUInt32BE(0x80030003, 0, true); // Version and type
     header.writeUInt32BE(0x00000008, 4, true); // Length
     header.writeUInt32BE(id & 0x7fffffff, 8, true); // Stream ID
     header.writeUInt32BE(code, 12, true); // Status Code
@@ -264,23 +267,69 @@ Framer.rstCache = {};
 //
 // ### function settingsFrame (options)
 // #### @options {Object} settings frame options
-// Sends SETTINGS frame with MAX_CONCURRENT_STREAMS
+// Sends SETTINGS frame with MAX_CONCURRENT_STREAMS and initial window
 //
 Framer.prototype.settingsFrame = function settingsFrame(options) {
-  var settings;
+  var settings,
+      key = options.maxStreams + ':' + options.windowSize;
 
-  if (!(settings = Framer.settingsCache[options.maxStreams])) {
-    settings = new Buffer(20);
+  if (!(settings = Framer.settingsCache[key])) {
+    settings = new Buffer(28);
 
-    settings.writeUInt32BE(0x80020004, 0, true); // Version and type
-    settings.writeUInt32BE(0x0000000C, 4, true); // length
-    settings.writeUInt32BE(0x00000001, 8, true); // Count of entries
-    settings.writeUInt32LE(0x01000004, 12, true); // Entry ID and Persist flag
-    settings.writeUInt32BE(options.maxStreams, 16, true);
+    settings.writeUInt32BE(0x80030004, 0, true); // Version and type
+    settings.writeUInt32BE((4 + 8 * 2) & 0x00FFFFFF, 4, true); // length
+    settings.writeUInt32BE(0x00000002, 8, true); // Count of entries
 
-    Framer.settingsCache[options.maxStreams] = settings;
+    settings.writeUInt32BE(0x01000004, 12, true); // Entry ID and Persist flag
+    settings.writeUInt32BE(options.maxStreams & 0x7fffffff, 16, true);
+
+    settings.writeUInt32BE(0x01000007, 20, true); // Entry ID and Persist flag
+    settings.writeUInt32BE(options.windowSize & 0x7fffffff, 24, true);
+
+    Framer.settingsCache[key] = settings;
   }
 
   return settings;
 };
 Framer.settingsCache = {};
+
+//
+// ### function windowSizeFrame (size)
+// #### @size {Number} data transfer window size
+// Sends SETTINGS frame with window size
+//
+Framer.prototype.windowSizeFrame = function windowSizeFrame(size) {
+  var settings;
+
+  if (!(settings = Framer.windowSizeCache[size])) {
+    settings = new Buffer(20);
+
+    settings.writeUInt32BE(0x80030004, 0, true); // Version and type
+    settings.writeUInt32BE((4 + 8) & 0x00FFFFFF, 4, true); // length
+    settings.writeUInt32BE(0x00000001, 8, true); // Count of entries
+
+    settings.writeUInt32BE(0x01000007, 12, true); // Entry ID and Persist flag
+    settings.writeUInt32BE(size & 0x7fffffff, 16, true); // Window Size (KB)
+
+    Framer.windowSizeCache[size] = settings;
+  }
+
+  return settings;
+};
+Framer.windowSizeCache = {};
+
+//
+// ### function windowUpdateFrame (id)
+// #### @id {Buffer} WindowUpdate ID
+// Sends WINDOW_UPDATE frame
+//
+Framer.prototype.windowUpdateFrame = function windowUpdateFrame(id, delta) {
+  var header = new Buffer(16);
+
+  header.writeUInt32BE(0x80030009, 0, true); // Version and type
+  header.writeUInt32BE(0x00000008, 4, true); // Length
+  header.writeUInt32BE(id & 0x7fffffff, 8, true); // ID
+  header.writeUInt32BE(delta & 0x7fffffff, 12, true); // delta
+
+  return header;
+};
