@@ -1043,5 +1043,19 @@ WinUtils::IsIMEEnabled(IMEState::Enabled aIMEState)
           aIMEState == IMEState::PLUGIN);
 }
 
+/* static */
+void
+WinUtils::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
+                                    uint32_t aModifiers)
+{
+  for (uint32_t i = 0; i < ArrayLength(sModifierKeyMap); ++i) {
+    const uint32_t* map = sModifierKeyMap[i];
+    if (aModifiers & map[0]) {
+      aArray->AppendElement(KeyPair(map[1], map[2]));
+    }
+  }
+}
+
+
 } // namespace widget
 } // namespace mozilla

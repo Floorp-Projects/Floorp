@@ -2062,6 +2062,202 @@ KeyboardLayout::ConvertNativeKeyCodeToKeyNameIndex(uint8_t aVirtualKey) const
   }
 }
 
+nsresult
+KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
+                                         int32_t aNativeKeyboardLayout,
+                                         int32_t aNativeKeyCode,
+                                         uint32_t aModifierFlags,
+                                         const nsAString& aCharacters,
+                                         const nsAString& aUnmodifiedCharacters)
+{
+  UINT keyboardLayoutListCount = ::GetKeyboardLayoutList(0, NULL);
+  NS_ASSERTION(keyboardLayoutListCount > 0,
+               "One keyboard layout must be installed at least");
+  HKL keyboardLayoutListBuff[50];
+  HKL* keyboardLayoutList =
+    keyboardLayoutListCount < 50 ? keyboardLayoutListBuff :
+                                   new HKL[keyboardLayoutListCount];
+  keyboardLayoutListCount =
+    ::GetKeyboardLayoutList(keyboardLayoutListCount, keyboardLayoutList);
+  NS_ASSERTION(keyboardLayoutListCount > 0,
+               "Failed to get all keyboard layouts installed on the system");
+
+  nsPrintfCString layoutName("%08x", aNativeKeyboardLayout);
+  HKL loadedLayout = LoadKeyboardLayoutA(layoutName.get(), KLF_NOTELLSHELL);
+  if (loadedLayout == NULL) {
+    if (keyboardLayoutListBuff != keyboardLayoutList) {
+      delete [] keyboardLayoutList;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Setup clean key state and load desired layout
+  BYTE originalKbdState[256];
+  ::GetKeyboardState(originalKbdState);
+  BYTE kbdState[256];
+  memset(kbdState, 0, sizeof(kbdState));
+  // This changes the state of the keyboard for the current thread only,
+  // and we'll restore it soon, so this should be OK.
+  ::SetKeyboardState(kbdState);
+
+  OverrideLayout(loadedLayout);
+
+  uint8_t argumentKeySpecific = 0;
+  switch (aNativeKeyCode) {
+    case VK_SHIFT:
+      aModifierFlags &= ~(nsIWidget::SHIFT_L | nsIWidget::SHIFT_R);
+      argumentKeySpecific = VK_LSHIFT;
+      break;
+    case VK_LSHIFT:
+      aModifierFlags &= ~nsIWidget::SHIFT_L;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_SHIFT;
+      break;
+    case VK_RSHIFT:
+      aModifierFlags &= ~nsIWidget::SHIFT_R;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_SHIFT;
+      break;
+    case VK_CONTROL:
+      aModifierFlags &= ~(nsIWidget::CTRL_L | nsIWidget::CTRL_R);
+      argumentKeySpecific = VK_LCONTROL;
+      break;
+    case VK_LCONTROL:
+      aModifierFlags &= ~nsIWidget::CTRL_L;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_CONTROL;
+      break;
+    case VK_RCONTROL:
+      aModifierFlags &= ~nsIWidget::CTRL_R;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_CONTROL;
+      break;
+    case VK_MENU:
+      aModifierFlags &= ~(nsIWidget::ALT_L | nsIWidget::ALT_R);
+      argumentKeySpecific = VK_LMENU;
+      break;
+    case VK_LMENU:
+      aModifierFlags &= ~nsIWidget::ALT_L;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_MENU;
+      break;
+    case VK_RMENU:
+      aModifierFlags &= ~nsIWidget::ALT_R;
+      argumentKeySpecific = aNativeKeyCode;
+      aNativeKeyCode = VK_MENU;
+      break;
+    case VK_CAPITAL:
+      aModifierFlags &= ~nsIWidget::CAPS_LOCK;
+      argumentKeySpecific = VK_CAPITAL;
+      break;
+    case VK_NUMLOCK:
+      aModifierFlags &= ~nsIWidget::NUM_LOCK;
+      argumentKeySpecific = VK_NUMLOCK;
+      break;
+  }
+
+  nsAutoTArray<KeyPair,10> keySequence;
+  WinUtils::SetupKeyModifiersSequence(&keySequence, aModifierFlags);
+  NS_ASSERTION(aNativeKeyCode >= 0 && aNativeKeyCode < 256,
+               "Native VK key code out of range");
+  keySequence.AppendElement(KeyPair(aNativeKeyCode, argumentKeySpecific));
+
+  // Simulate the pressing of each modifier key and then the real key
+  for (uint32_t i = 0; i < keySequence.Length(); ++i) {
+    uint8_t key = keySequence[i].mGeneral;
+    uint8_t keySpecific = keySequence[i].mSpecific;
+    kbdState[key] = 0x81; // key is down and toggled on if appropriate
+    if (keySpecific) {
+      kbdState[keySpecific] = 0x81;
+    }
+    ::SetKeyboardState(kbdState);
+    ModifierKeyState modKeyState;
+    UINT scanCode = ComputeScanCodeForVirtualKeyCode(
+      argumentKeySpecific ? argumentKeySpecific : aNativeKeyCode);
+    LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
+    // Add extended key flag to the lParam for right control key and right alt
+    // key.
+    if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
+      lParam |= 0x1000000;
+    }
+    MSG keyDownMsg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam,
+                                       aWidget->GetWindowHandle());
+    if (i == keySequence.Length() - 1) {
+      bool makeDeadCharMessage =
+        (IsDeadKey(key, modKeyState) && aCharacters.IsEmpty());
+      nsAutoString chars(aCharacters);
+      if (makeDeadCharMessage) {
+        UniCharsAndModifiers deadChars =
+          GetUniCharsAndModifiers(key, modKeyState);
+        chars = deadChars.ToString();
+        NS_ASSERTION(chars.Length() == 1,
+                     "Dead char must be only one character");
+      }
+      if (chars.IsEmpty()) {
+        NativeKey nativeKey(aWidget, keyDownMsg, modKeyState);
+        nativeKey.HandleKeyDownMessage();
+      } else {
+        nsFakeCharMessage fakeMsgForKeyDown = { chars.CharAt(0), scanCode,
+                                                makeDeadCharMessage };
+        NativeKey nativeKey(aWidget, keyDownMsg, modKeyState, &fakeMsgForKeyDown);
+        nativeKey.HandleKeyDownMessage();
+        for (uint32_t j = 1; j < chars.Length(); j++) {
+          nsFakeCharMessage fakeMsgForChar = { chars.CharAt(j), scanCode,
+                                               false };
+          MSG charMsg =
+            fakeMsgForChar.GetCharMessage(aWidget->GetWindowHandle());
+          NativeKey nativeKey(aWidget, charMsg, modKeyState);
+          nativeKey.HandleCharMessage(charMsg);
+        }
+      }
+    } else {
+      NativeKey nativeKey(aWidget, keyDownMsg, modKeyState);
+      nativeKey.HandleKeyDownMessage();
+    }
+  }
+  for (uint32_t i = keySequence.Length(); i > 0; --i) {
+    uint8_t key = keySequence[i - 1].mGeneral;
+    uint8_t keySpecific = keySequence[i - 1].mSpecific;
+    kbdState[key] = 0; // key is up and toggled off if appropriate
+    if (keySpecific) {
+      kbdState[keySpecific] = 0;
+    }
+    ::SetKeyboardState(kbdState);
+    ModifierKeyState modKeyState;
+    UINT scanCode = ComputeScanCodeForVirtualKeyCode(
+      argumentKeySpecific ? argumentKeySpecific : aNativeKeyCode);
+    LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
+    // Add extended key flag to the lParam for right control key and right alt
+    // key.
+    if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
+      lParam |= 0x1000000;
+    }
+    MSG keyUpMsg = WinUtils::InitMSG(WM_KEYUP, key, lParam,
+                                     aWidget->GetWindowHandle());
+    NativeKey nativeKey(aWidget, keyUpMsg, modKeyState);
+    nativeKey.HandleKeyUpMessage();
+  }
+
+  // Restore old key state and layout
+  ::SetKeyboardState(originalKbdState);
+  RestoreLayout();
+
+  // Don't unload the layout if it's installed actually.
+  for (uint32_t i = 0; i < keyboardLayoutListCount; i++) {
+    if (keyboardLayoutList[i] == loadedLayout) {
+      loadedLayout = 0;
+      break;
+    }
+  }
+  if (keyboardLayoutListBuff != keyboardLayoutList) {
+    delete [] keyboardLayoutList;
+  }
+  if (loadedLayout) {
+    ::UnloadKeyboardLayout(loadedLayout);
+  }
+  return NS_OK;
+}
+
 /*****************************************************************************
  * mozilla::widget::DeadKeyTable
  *****************************************************************************/
