@@ -3365,10 +3365,6 @@ nsDownload::Cancel()
   if (IsFinished())
     return NS_OK;
 
-  // if the download is fake-paused, we have to resume it so we can cancel it
-  if (IsPaused() && !IsResumable())
-    (void)Resume();
-
   // Have the download cancel its connection
   (void)CancelTransfer();
 
