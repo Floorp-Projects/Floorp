@@ -6,26 +6,28 @@
 #ifndef mozilla_net_SpdyStream3_h
 #define mozilla_net_SpdyStream3_h
 
-#include "nsAHttpTransaction.h"
 #include "mozilla/Attributes.h"
+#include "nsAHttpTransaction.h"
 
 namespace mozilla { namespace net {
 
-class SpdyStream3 MOZ_FINAL : public nsAHttpSegmentReader
-                            , public nsAHttpSegmentWriter
+class SpdyStream3 : public nsAHttpSegmentReader
+                  , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  SpdyStream3(nsAHttpTransaction *,
-             SpdySession3 *, nsISocketTransport *,
-             uint32_t, z_stream *, int32_t);
+  SpdyStream3(nsAHttpTransaction *, SpdySession3 *, int32_t);
 
   uint32_t StreamID() { return mStreamID; }
+  SpdyPushedStream3 *PushSource() { return mPushSource; }
 
-  nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *);
-  nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *);
+  virtual nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *);
+  virtual nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *);
+  virtual bool DeferCleanupOnSuccess() { return false; }
+
+  const nsAFlatCString &Origin()   const { return mOrigin; }
 
   bool RequestBlockedOnRead()
   {
@@ -42,9 +44,10 @@ public:
 
   bool HasRegisteredID() { return mStreamID != 0; }
 
-  nsAHttpTransaction *Transaction()
+  nsAHttpTransaction *Transaction() { return mTransaction; }
+  virtual nsILoadGroupConnectionInfo *LoadGroupConnectionInfo()
   {
-    return mTransaction;
+    return mTransaction ? mTransaction->LoadGroupConnectionInfo() : nullptr;
   }
 
   void Close(nsresult reason);
@@ -81,15 +84,25 @@ public:
   }
 
   uint64_t LocalUnAcked() { return mLocalUnacked; }
+  int64_t  LocalWindow()  { return mLocalWindow; }
+
   bool     BlockedOnRwin() { return mBlockedOnRwin; }
 
-private:
+  // A pull stream has an implicit sink, a pushed stream has a sink
+  // once it is matched to a pull stream.
+  virtual bool HasSink() { return true; }
 
-  // a SpdyStream3 object is only destroyed by being removed from the
-  // SpdySession3 mStreamTransactionHash - make the dtor private to
-  // just the AutoPtr implementation needed for that hash.
-  friend class nsAutoPtr<SpdyStream3>;
-  ~SpdyStream3();
+  virtual ~SpdyStream3();
+
+protected:
+  nsresult FindHeader(nsCString, nsDependentCSubstring &);
+
+  static void CreatePushHashKey(const nsCString &scheme,
+                                const nsCString &hostHeader,
+                                uint64_t serial,
+                                const nsCSubstring &pathInfo,
+                                nsCString &outOrigin,
+                                nsCString &outKey);
 
   enum stateType {
     GENERATING_SYN_STREAM,
@@ -99,12 +112,36 @@ private:
     UPSTREAM_COMPLETE
   };
 
+  uint32_t mStreamID;
+
+  // The session that this stream is a subset of
+  SpdySession3 *mSession;
+
+  nsCString     mOrigin;
+
+  // Each stream goes from syn_stream to upstream_complete, perhaps
+  // looping on multiple instances of generating_request_body and
+  // sending_request_body for each SPDY chunk in the upload.
+  enum stateType mUpstreamState;
+
+  // Flag is set when all http request headers have been read and ID is stable
+  uint32_t                     mSynFrameComplete     : 1;
+
+  // Flag is set when a FIN has been placed on a data or syn packet
+  // (i.e after the client has closed)
+  uint32_t                     mSentFinOnData        : 1;
+
+  void     ChangeState(enum stateType);
+
+private:
+  friend class nsAutoPtr<SpdyStream3>;
+
   static PLDHashOperator hdrHashEnumerate(const nsACString &,
                                           nsAutoPtr<nsCString> &,
                                           void *);
 
-  void     ChangeState(enum stateType);
   nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
+  void     AdjustInitialWindow();
   nsresult TransmitFrame(const char *, uint32_t *, bool forceCommitment);
   void     GenerateDataFrameHeader(uint32_t, bool);
 
@@ -114,21 +151,12 @@ private:
   void     CompressToFrame(uint32_t);
   void     CompressFlushFrame();
   void     ExecuteCompress(uint32_t);
-  nsresult FindHeader(nsCString, nsDependentCSubstring &);
-
-  // Each stream goes from syn_stream to upstream_complete, perhaps
-  // looping on multiple instances of generating_request_body and
-  // sending_request_body for each SPDY chunk in the upload.
-  enum stateType mUpstreamState;
 
   // The underlying HTTP transaction. This pointer is used as the key
   // in the SpdySession3 mStreamTransactionHash so it is important to
   // keep a reference to it as long as this stream is a member of that hash.
   // (i.e. don't change it or release it after it is set in the ctor).
   nsRefPtr<nsAHttpTransaction> mTransaction;
-
-  // The session that this stream is a subset of
-  SpdySession3                *mSession;
 
   // The underlying socket transport object is needed to propogate some events
   nsISocketTransport         *mSocketTransport;
@@ -139,22 +167,12 @@ private:
   nsAHttpSegmentReader        *mSegmentReader;
   nsAHttpSegmentWriter        *mSegmentWriter;
 
-  // The 24 bit SPDY stream ID
-  uint32_t                    mStreamID;
-
   // The quanta upstream data frames are chopped into
   uint32_t                    mChunkSize;
-
-  // Flag is set when all http request headers have been read and ID is stable
-  uint32_t                     mSynFrameComplete     : 1;
 
   // Flag is set when the HTTP processor has more data to send
   // but has blocked in doing so.
   uint32_t                     mRequestBlockedOnRead : 1;
-
-  // Flag is set when a FIN has been placed on a data or syn packet
-  // (i.e after the client has closed)
-  uint32_t                     mSentFinOnData        : 1;
 
   // Flag is set after the response frame bearing the fin bit has
   // been processed. (i.e. after the server has closed).
@@ -230,6 +248,9 @@ private:
   // For Progress Events
   uint64_t                     mTotalSent;
   uint64_t                     mTotalRead;
+
+  // For SpdyPush
+  SpdyPushedStream3 *mPushSource;
 };
 
 }} // namespace mozilla::net
