@@ -244,6 +244,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "Should be able to construct my event " + e);
       }
 
+      try {
+        var elem = Components.utils.evalInSandbox('document.createElement("p")', sandbox);
+        elem.expando = 5;
+        elem.expando = 7;
+        is(elem.expando, 7, "Should be able to set expandos on Xrays for DOM bindings");
+        var doc = Components.utils.evalInSandbox('document', sandbox);
+        doc.expando = 5;
+        doc.expando = 7;
+        is(doc.expando, 7, "Should be able to set expandos on Xrays for DOM bindings with named properties");
+      } catch (e) {
+        ok(false, "Setting expandos on Xrays shouldn't throw " + e);
+      }
+
       SimpleTest.finish();
     }
 
