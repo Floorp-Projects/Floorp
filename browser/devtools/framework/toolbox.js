@@ -410,6 +410,49 @@ Toolbox.prototype = {
   },
 
   /**
+   * Load a tool with a given id.
+   *
+   * @param {string} id
+   *        The id of the tool to load.
+   */
+  loadTool: function TBOX_loadTool(id) {
+    let deferred = Promise.defer();
+    let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
+
+    if (iframe) {
+      this.once(id + "-ready", () => { deferred.resolve() });
+      return deferred.promise;
+    }
+
+    let definition = gDevTools.getToolDefinitionMap().get(id);
+    iframe = this.doc.createElement("iframe");
+    iframe.className = "toolbox-panel-iframe";
+    iframe.id = "toolbox-panel-iframe-" + id;
+    iframe.setAttribute("flex", 1);
+    iframe.setAttribute("forceOwnRefreshDriver", "");
+    iframe.tooltip = "aHTMLTooltip";
+
+    let vbox = this.doc.getElementById("toolbox-panel-" + id);
+    vbox.appendChild(iframe);
+
+    let onLoad = () => {
+      iframe.removeEventListener("DOMContentLoaded", onLoad, true);
+
+      let built = definition.build(iframe.contentWindow, this);
+      Promise.resolve(built).then((panel) => {
+        this._toolPanels.set(id, panel);
+        this.emit(id + "-ready", panel);
+        gDevTools.emit(id + "-ready", this, panel);
+        deferred.resolve(panel);
+      });
+    };
+
+    iframe.addEventListener("DOMContentLoaded", onLoad, true);
+    iframe.setAttribute("src", definition.url);
+    return deferred.promise;
+  },
+
+  /**
    * Switch to the tool with the given id
    *
    * @param {string} id
@@ -464,8 +507,6 @@ Toolbox.prototype = {
     let deck = this.doc.getElementById("toolbox-deck");
     deck.selectedIndex = index;
 
-    let definition = gDevTools.getToolDefinitionMap().get(id);
-
     this._currentToolId = id;
 
     let resolveSelected = panel => {
@@ -476,32 +517,11 @@ Toolbox.prototype = {
 
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
     if (!iframe) {
-      iframe = this.doc.createElement("iframe");
-      iframe.className = "toolbox-panel-iframe";
-      iframe.id = "toolbox-panel-iframe-" + id;
-      iframe.setAttribute("flex", 1);
-      iframe.setAttribute("forceOwnRefreshDriver", "");
-      iframe.tooltip = "aHTMLTooltip";
-
-      let vbox = this.doc.getElementById("toolbox-panel-" + id);
-      vbox.appendChild(iframe);
-
-      let boundLoad = function() {
-        iframe.removeEventListener("DOMContentLoaded", boundLoad, true);
-
-        let built = definition.build(iframe.contentWindow, this);
-        Promise.resolve(built).then(function(panel) {
-          this._toolPanels.set(id, panel);
-
-          this.emit(id + "-ready", panel);
-          gDevTools.emit(id + "-ready", this, panel);
-
-          resolveSelected(panel);
-        }.bind(this));
-      }.bind(this);
-
-      iframe.addEventListener("DOMContentLoaded", boundLoad, true);
-      iframe.setAttribute("src", definition.url);
+      this.loadTool(id).then((panel) => {
+        this.emit("select", id);
+        this.emit(id + "-selected", panel);
+        deferred.resolve(panel);
+      });
     } else {
       let panel = this._toolPanels.get(id);
       // only emit 'select' event if the iframe has been loaded
