@@ -11,6 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";
 const kAboutURI = "about:customizing";
+const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
@@ -548,7 +549,15 @@ CustomizeMode.prototype = {
 
     let dt = aEvent.dataTransfer;
     let documentId = aEvent.target.ownerDocument.documentElement.id;
-    dt.setData("text/toolbarwrapper-id/" + documentId, item.firstChild.id);
+    let draggedItem = item.firstChild;
+    let draggedItemWidth = draggedItem.getBoundingClientRect().width + "px";
+
+    let data = {
+      id: draggedItem.id,
+      width: draggedItemWidth,
+    };
+
+    dt.mozSetDataAt(kDragDataTypePrefix + documentId, data, 0);
     dt.effectAllowed = "move";
   },
 
@@ -557,12 +566,12 @@ CustomizeMode.prototype = {
 
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
-    if (!aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/"
-                                            + documentId.toLowerCase())) {
+    if (!aEvent.dataTransfer.mozTypesAt(0)) {
       return;
     }
 
-    let draggedItemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
+    let {id: draggedItemId, width: draggedItemWidth} =
+      aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
     let targetNode = aEvent.target;
     let targetParent = targetNode.parentNode;
@@ -588,8 +597,15 @@ CustomizeMode.prototype = {
 
     // We need to determine the place that the widget is being dropped in
     // the target.
-    let position = Array.indexOf(targetParent.children, targetNode);
-    let dragOverItem = position == -1 ? targetParent.lastChild : targetParent.children[position];
+    let dragOverItem;
+    let atEnd = false;
+    if (targetNode == targetArea.customizationTarget) {
+      dragOverItem = targetNode.lastChild;
+      atEnd = true;
+    } else {
+      let position = Array.indexOf(targetParent.children, targetNode);
+      dragOverItem = position == -1 ? targetParent.lastChild : targetParent.children[position];
+    }
 
     if (this._dragOverItem && dragOverItem != this._dragOverItem) {
       this._setDragActive(this._dragOverItem, false);
@@ -597,7 +613,11 @@ CustomizeMode.prototype = {
 
     // XXXjaws Only handling the toolbar case first.
     if (targetArea.localName == "toolbar") {
-      this._setDragActive(dragOverItem, true);
+      let draggedItem = document.getElementById(draggedItemId);
+      if (getPlaceForItem(draggedItem) == "toolbar") {
+        draggedItem.hidden = true;
+      }
+      this._setDragActive(dragOverItem, true, draggedItemWidth, atEnd);
     }
     this._dragOverItem = dragOverItem;
 
@@ -612,9 +632,14 @@ CustomizeMode.prototype = {
 
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
-    let draggedItemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
+    let {id: draggedItemId} =
+      aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
 
+    let draggedItem = document.getElementById(draggedItemId);
+    if (getPlaceForItem(draggedItem) == "toolbar") {
+      draggedItem.hidden = false;
+    }
     draggedWrapper.removeAttribute("mousedown");
 
     let targetNode = aEvent.target;
@@ -719,26 +744,31 @@ CustomizeMode.prototype = {
     document.documentElement.removeAttribute("customizing-movingItem");
 
     let documentId = document.documentElement.id;
-    if (!aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/"
-                                            + documentId.toLowerCase())) {
+    if (!aEvent.dataTransfer.mozTypesAt(0)) {
       return;
     }
 
-    let draggedItemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
-    let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
+    let {id: draggedItemId} =
+      aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
+    let draggedItem = document.getElementById(draggedItemId);
+    if (getPlaceForItem(draggedItem) == "toolbar") {
+      draggedItem.hidden = false;
+    }
 
+    let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
     draggedWrapper.removeAttribute("mousedown");
   },
 
-  // XXXjaws Show a ghost image or blank area where the item could be added, instead of black bar
-  _setDragActive: function(aItem, aValue) {
+  _setDragActive: function(aItem, aValue, aWidth, aAtEnd) {
     let node = aItem;
     let window = aItem.ownerDocument.defaultView;
     let direction = window.getComputedStyle(aItem, null).direction;
-    let value = direction == "ltr"? "left" : "right";
-    if (aItem.localName == "toolbar") {
-      node = aItem.lastChild;
+    let value = direction == "ltr" ? "left" : "right";
+    if (aItem.localName == "toolbar" || aAtEnd) {
       value = direction == "ltr"? "right" : "left";
+      if (aItem.localName == "toolbar") {
+        node = aItem.lastChild;
+      }
     }
 
     if (!node) {
@@ -748,9 +778,21 @@ CustomizeMode.prototype = {
     if (aValue) {
       if (!node.hasAttribute("dragover")) {
         node.setAttribute("dragover", value);
+
+        if (aWidth) {
+          if (value == "left") {
+            node.style.borderLeftWidth = aWidth;
+          } else {
+            node.style.borderRightWidth = aWidth;
+          }
+        }
       }
     } else {
       node.removeAttribute("dragover");
+      // Remove both property values in the case that the end padding
+      // had been set.
+      node.style.removeProperty("border-left-width");
+      node.style.removeProperty("border-right-width");
     }
   },
 

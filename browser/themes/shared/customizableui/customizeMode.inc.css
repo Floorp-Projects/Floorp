@@ -63,9 +63,9 @@
 
 toolbarpaletteitem {
   cursor: -moz-grab;
-  transition: transform, background-color, border-color, box-shadow;
-  transition-duration: 50ms, 10ms, 10ms, 10ms;
-  transition-timing-function: ease-in-out, linear, linear, linear;
+  transition: transform, background-color, border-color, box-shadow, border-width;
+  transition-duration: 50ms, 10ms, 10ms, 10ms, 250ms;
+  transition-timing-function: ease-in-out, linear, linear, linear, ease-in-out;
 }
 
 toolbarpaletteitem[mousedown] {
@@ -73,6 +73,12 @@ toolbarpaletteitem[mousedown] {
   cursor: -moz-grabbing;
   opacity: 0.8;
   transform: scale(1.1);
+}
+
+/* Override the toolkit styling for items being dragged over. */
+toolbarpaletteitem[dragover] {
+  border-left-color: transparent;
+  border-right-color: transparent;
 }
 
 #customization-palette {
