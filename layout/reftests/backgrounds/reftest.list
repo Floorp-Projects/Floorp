@@ -7,8 +7,8 @@ random-if(bug685516) == layers-layer-count-inheritance-1.xhtml layers-layer-coun
 random-if(bug685516) == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
 random-if(bug685516) == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
 fuzzy-if(Android,9,600000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
-fails-if(Android) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
-fails-if(Android) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
+== viewport-translucent-color-2.html viewport-translucent-color-ref.html
+== viewport-translucent-color-3.html viewport-translucent-color-ref.html
 != viewport-translucent-color-ref.html about:blank
 random-if(bug685516) == iframe-translucent-color-1.html iframe-translucent-color-ref.html
 random-if(bug685516) == translucent-color-1.html translucent-color-ref.html
