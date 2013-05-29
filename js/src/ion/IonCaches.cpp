@@ -98,7 +98,7 @@ IonCache::linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, IonCode 
 {
     Linker linker(masm);
     *code = linker.newCode(cx, JSC::ION_CODE);
-    if (!code)
+    if (!*code)
         return LINK_ERROR;
 
     if (ion->invalidated())
