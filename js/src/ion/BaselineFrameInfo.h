@@ -163,7 +163,6 @@ class BaselineCompilerShared;
 
 class FrameInfo
 {
-    BaselineCompilerShared &compiler;
     RootedScript script;
     MacroAssembler &masm;
 
@@ -171,10 +170,8 @@ class FrameInfo
     size_t spIndex;
 
   public:
-    FrameInfo(JSContext *cx, BaselineCompilerShared &compiler, HandleScript script,
-              MacroAssembler &masm)
-      : compiler(compiler),
-        script(cx, script),
+    FrameInfo(JSContext *cx, HandleScript script, MacroAssembler &masm)
+      : script(cx, script),
         masm(masm),
         stack(),
         spIndex(0)
@@ -323,9 +320,9 @@ class FrameInfo
 
 #ifdef DEBUG
     // Assert the state is valid before excuting "pc".
-    void assertValidState(jsbytecode *pc);
+    void assertValidState(const BytecodeInfo &info);
 #else
-    inline void assertValidState(jsbytecode *pc) {}
+    inline void assertValidState(const BytecodeInfo &info) {}
 #endif
 };
 
