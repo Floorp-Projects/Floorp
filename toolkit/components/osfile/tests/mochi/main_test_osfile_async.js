@@ -896,12 +896,12 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
         Services.console.registerListener(listener);
         logStart = Date.now();
         f();
-        // If listener does not resolve webObservation in timely manner (100MS),
+        // If listener does not resolve webObservation in timely manner (1000MS),
         // reject it.
         setTimeout(function() {
           test.info("waitObservation timeout exceeded.");
           waitObservation.reject();
-        }, 500);
+        }, 1000);
         yield waitObservation.promise;
       });
     }
