@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 406541</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+</head>
+<body>
+<script type="application/x-child-payload" id="child-payload">
+  // This is injected into the file:/// origin iframe, see below.
+
+  // appletA should spawn, appletB, with a codebase outside the temp directory,
+  // should not.
+  var appletA = document.createElement("applet");
+  var appletB = document.createElement("applet");
+  var appletC = document.createElement("applet");
+  appletA.type = appletB.type = appletC.type = "application/x-java-test";
+  appletB.setAttribute("codebase", "file:///");
+  appletC.setAttribute("codebase", "./subdir_bug406541/");
+  document.body.appendChild(appletA);
+  document.body.appendChild(appletB);
+  document.body.appendChild(appletC);
+  function isSpawned(plugin) {
+    try {
+      var x = plugin.getJavaCodebase();
+      return true;
+    } catch (e) {}
+    return false;
+  }
+  window.parent.postMessage({ "A": isSpawned(appletA),
+                              "B": isSpawned(appletB),
+                              "C": isSpawned(appletC) }, "*");
+</script>
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED,
+                            "Java Test Plug-in");
+  SpecialPowers.pushPrefEnv({ "set": [
+                              ['plugin.java.mime', 'application/x-java-test']
+                            ] }, runTest);
+
+  function runTest() {
+    // Create a empty file and point an iframe at it
+    var Cc = SpecialPowers.Cc;
+    var Ci = SpecialPowers.Ci;
+    var file = Cc["@mozilla.org/file/directory_service;1"]
+      .getService(Ci.nsIProperties)
+      .get("TmpD", Ci.nsIFile);
+    var subdir = Cc["@mozilla.org/file/directory_service;1"]
+      .getService(Ci.nsIProperties)
+      .get("TmpD", Ci.nsIFile);
+    file.append("test_bug406541.html");
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+    subdir.append("subdir_bug406541");
+    subdir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0600);
+
+    var i = document.createElement("iframe");
+    var loaded = false;
+    i.addEventListener("load", function initialLoad() {
+      if (!loaded) {
+        // Once loaded, use special powers to point it at the file
+        SpecialPowers.wrap(i.contentWindow).location.href = "file://" + file.path;
+        loaded = true;
+      } else {
+        // Inject the child-payload script to the file:/// origin. Let it test
+        // applet spawning and send the results in a postMessage. (Because I
+        // couldn't get SpecialPowers to let me touch applets cross-origin, then
+        // gave up.)
+        var innerdoc = SpecialPowers.wrap(i.contentWindow).document;
+        var s = innerdoc.createElement("script");
+        s.type = "text/javascript";
+        s.textContent = document.getElementById("child-payload").textContent;
+        var finished = false;
+        window.onmessage = function(message) {
+          ok(message.data.A, "Plugin A should spawn");
+          ok(!message.data.B, "Plugin B should NOT spawn");
+          ok(message.data.C, "Plugin C should spawn");
+          file.remove(false);
+          subdir.remove(false);
+          finished = true;
+          SimpleTest.finish();
+        };
+        innerdoc.body.appendChild(s);
+
+        SimpleTest.executeSoon(function() {
+          if (!finished) {
+            ok(finished, "Should have received callback by now");
+            SimpleTest.finish();
+          }
+        });
+      }
+    }, false);
+    document.body.appendChild(i);
+  }
+</script>
+</body>
+</html>
