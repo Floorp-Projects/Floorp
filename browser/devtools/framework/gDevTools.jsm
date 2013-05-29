@@ -28,9 +28,11 @@ this.DevTools = function DevTools() {
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
+  this._teardown = this._teardown.bind(this);
 
   EventEmitter.decorate(this);
 
+  Services.obs.addObserver(this._teardown, "devtools-unloaded", false);
   Services.obs.addObserver(this.destroy, "quit-application", false);
 }
 
@@ -273,6 +275,7 @@ DevTools.prototype = {
    */
   destroy: function() {
     Services.obs.removeObserver(this.destroy, "quit-application");
+    Services.obs.removeObserver(this._teardown, "devtools-unloaded");
 
     for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
