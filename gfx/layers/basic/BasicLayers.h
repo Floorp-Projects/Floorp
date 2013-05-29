@@ -38,7 +38,7 @@ class PaintLayerContext;
  * context (with appropriate clipping and Push/PopGroups performed
  * between layers).
  */
-class THEBES_API BasicLayerManager :
+class BasicLayerManager :
     public LayerManager
 {
 public:

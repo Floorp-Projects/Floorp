@@ -29,7 +29,7 @@ struct nsIntRect;
  * A surface is something you can draw on. Instantiate a subclass of this
  * abstract class, and use gfxContext to draw on this surface.
  */
-class THEBES_API gfxASurface {
+class gfxASurface {
 public:
 #ifdef MOZILLA_INTERNAL_API
     nsrefcnt AddRef(void);
@@ -352,7 +352,7 @@ protected:
 /**
  * An Unknown surface; used to wrap unknown cairo_surface_t returns from cairo
  */
-class THEBES_API gfxUnknownSurface : public gfxASurface {
+class gfxUnknownSurface : public gfxASurface {
 public:
     gfxUnknownSurface(cairo_surface_t *surf) {
         Init(surf, true);

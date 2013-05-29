@@ -56,7 +56,7 @@ struct ShaderConstantRect
  * This is the LayerManager used for Direct3D 9. For now this will render on
  * the main thread.
  */
-class THEBES_API LayerManagerD3D9 : public LayerManager {
+class LayerManagerD3D9 : public LayerManager {
 public:
   LayerManagerD3D9(nsIWidget *aWidget);
   virtual ~LayerManagerD3D9();
