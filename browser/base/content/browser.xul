@@ -184,6 +184,22 @@
       </hbox>
     </panel>
 
+    <!-- UI tour experience -->
+    <panel id="UITourTooltip"
+           type="arrow"
+           hidden="true"
+           consumeoutsideclicks="false"
+           noautofocus="true"
+           align="start"
+           orient="vertical"
+           role="alert">
+      <label id="UITourTooltipTitle" flex="1"/>
+      <description id="UITourTooltipDescription" flex="1"/>
+    </panel>
+    <html:div id="UITourHighlightContainer" style="position:relative">
+      <html:div id="UITourHighlight"></html:div>
+    </html:div>
+
     <panel id="socialActivatedNotification"
            type="arrow"
            hidden="true"
