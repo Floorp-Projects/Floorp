@@ -1133,7 +1133,6 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
     JSAutoCompartment ac(lccx.GetJSContext(), aScope);
-    lccx.SetScopeForNewJSObjects(aScope);
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
@@ -1852,7 +1851,7 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
         return NS_ERROR_FAILURE;
     XPCLazyCallContext lccx(ccx);
 
-    ccx.SetScopeForNewJSObjects(scope);
+    MOZ_ASSERT(js::IsObjectInContextCompartment(scope, ctx));
 
     nsresult rv = NS_OK;
     if (!XPCVariant::VariantDataToJS(lccx, value, &rv, _retval)) {

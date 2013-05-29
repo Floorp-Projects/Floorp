@@ -1161,7 +1161,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     RootedObject thisObj(cx, obj);
 
     JSAutoCompartment ac(cx, obj);
-    ccx.SetScopeForNewJSObjects(obj);
 
     AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);
