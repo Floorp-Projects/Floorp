@@ -72,17 +72,17 @@
   }
 
   #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
-    background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
+    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
                 linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
     color: CaptionText;
   }
   #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
-    background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
+    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
                 linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
     color: InactiveCaptionText;
   }
   #TabsToolbar:-moz-lwtheme {
-    background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px);
+    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px);
   }
   #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
     visibility: hidden;
@@ -1518,7 +1518,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #TabsToolbar:not(:-moz-lwtheme),
 #TabsToolbar[tabsontop=false] {
-  background-image: linear-gradient(to top, @toolbarShadowColor@ 1px, rgba(0,0,0,.05) 1px, transparent 50%);
+  background-image: linear-gradient(to top, @toolbarShadowColor@ 2px, rgba(0,0,0,.05) 2px, transparent 50%);
 }
 
 #main-window[tabsintitlebar] #TabsToolbar {
