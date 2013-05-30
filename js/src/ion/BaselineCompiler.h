@@ -144,6 +144,7 @@ namespace ion {
     _(JSOP_INSTANCEOF)         \
     _(JSOP_TYPEOF)             \
     _(JSOP_TYPEOFEXPR)         \
+    _(JSOP_SETCALL)            \
     _(JSOP_THROW)              \
     _(JSOP_TRY)                \
     _(JSOP_ENTERBLOCK)         \
