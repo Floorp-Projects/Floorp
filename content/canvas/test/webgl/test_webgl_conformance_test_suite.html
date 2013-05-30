@@ -70,44 +70,44 @@ function detectDriverInfo() {
 }
 
 function start() {
-  var OS_WINDOWS = "windows"
-  var OS_MAC     = "mac"
-  var OS_LINUX   = "linux"
-  var OS_ANDROID = "android"
+  var OS_WINDOWS = 'windows';
+  var OS_MAC     = 'mac';
+  var OS_LINUX   = 'linux';
+  var OS_ANDROID = 'android';
   
-  var GLDRIVER_MESA   = "mesa"
-  var GLDRIVER_NVIDIA = "nvidia"
+  var GLDRIVER_MESA   = 'mesa';
+  var GLDRIVER_NVIDIA = 'nvidia';
 
   var kOS = null;
   var kOSVersion = null;
   var kGLDriver = null;
 
-  if (navigator.platform.indexOf("Win") == 0) {
+  if (navigator.platform.indexOf('Win') == 0) {
     kOS = OS_WINDOWS;
     
     // code borrowed from browser/modules/test/browser_taskbar_preview.js
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var version = SpecialPowers.Cc["@mozilla.org/system-info;1"]
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var version = SpecialPowers.Cc['@mozilla.org/system-info;1']
                                .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                               .getProperty("version");
+                               .getProperty('version');
     kOSVersion = parseFloat(version);
     // Version 6.0 is Vista, 6.1 is 7.
-  } else if (navigator.platform.indexOf("Mac") == 0) {
+  } else if (navigator.platform.indexOf('Mac') == 0) {
     kOS = OS_MAC;
     
     var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
     kOSVersion = versionMatch ? parseFloat(versionMatch[1]) : null;
-  } else if (navigator.appVersion.indexOf("Android") != -1) {
+  } else if (navigator.appVersion.indexOf('Android') != -1) {
     kOS = OS_ANDROID;
-  } else if (navigator.platform.indexOf("Linux") == 0) {
+  } else if (navigator.platform.indexOf('Linux') == 0) {
     // Must be checked after android, as android also has a 'Linux' platform string.
     kOS = OS_LINUX;
   }
   
   var glVendor, glRenderer;
   [glVendor, glRenderer] = detectDriverInfo();
-  info("GL vendor: " + glVendor);
-  info("GL renderer: " + glRenderer);
+  info('GL vendor: ' + glVendor);
+  info('GL renderer: ' + glRenderer);
   
   if (glRenderer.contains('llvmpipe')) {
     kGLDriver = GLDRIVER_MESA;
@@ -116,18 +116,18 @@ function start() {
   }
   
   if (kOS) {
-    info("OS detected as: " + kOS);
-    info("  Version: " + kOSVersion);
+    info('OS detected as: ' + kOS);
+    info('  Version: ' + kOSVersion);
   } else {
-    info("OS not detected.");
-    info("  `platform`:   " + navigator.platform);
-    info("  `appVersion`: " + navigator.appVersion);
-    info("  `userAgent`:  " + navigator.userAgent);
+    info('OS not detected.');
+    info('  `platform`:   ' + navigator.platform);
+    info('  `appVersion`: ' + navigator.appVersion);
+    info('  `userAgent`:  ' + navigator.userAgent);
   }
   if (kGLDriver) {
-    info("GL driver detected as: " + kGLDriver);
+    info('GL driver detected as: ' + kGLDriver);
   } else {
-    info("GL driver not detected.");
+    info('GL driver not detected.');
   }
   
   var requestLongerTimeoutLen = 3;
@@ -531,8 +531,8 @@ function start() {
     }
   }
   
-  info("Failing tests file: " + failingTestsFilename);
-  info("Skipped tests file: " + skippedTestsFilename);
+  info('Failing tests file: ' + failingTestsFilename);
+  info('Skipped tests file: ' + skippedTestsFilename);
   
   function LoadNewlineSepFile(filename) {
     var lines = loadTextFileSynchronous(filename)
@@ -541,7 +541,7 @@ function start() {
     
     // Remove empty lines.
     while (true) {
-      var emptyLineIndex = lines.indexOf("");
+      var emptyLineIndex = lines.indexOf('');
       if (emptyLineIndex == -1)
         break;
       
