@@ -64,15 +64,19 @@ const WebProgress = {
 
   _securityChange: function _securityChange(aJson, aTab) {
     let state = aJson.state;
-    let identityBox = document.getElementById("identity-box-inner");
     let nsIWebProgressListener = Ci.nsIWebProgressListener;
 
     if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
-      aTab._identityState = identityBox.className = "verifiedIdentity";
+      aTab._identityState = "verifiedIdentity";
     } else if (state & nsIWebProgressListener.STATE_IS_SECURE) {
-      aTab._identityState = identityBox.className = "verifiedDomain";
+      aTab._identityState = "verifiedDomain";
     } else {
-      aTab._identityState = identityBox.className = "";
+      aTab._identityState = "";
+    }
+
+    if (aTab == Browser.selectedTab) {
+      let identityBox = document.getElementById("identity-box-inner");
+      identityBox.className = aTab._identityState;
     }
   },
 
