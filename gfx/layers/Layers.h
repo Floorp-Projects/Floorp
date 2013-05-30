@@ -917,6 +917,12 @@ public:
   const gfx3DMatrix GetLocalTransform();
 
   /**
+   * Returns the local opacity for this layer: either mOpacity or,
+   * for shadow layers, GetShadowOpacity()
+   */
+  const float GetLocalOpacity();
+
+  /**
    * DRAWING PHASE ONLY
    *
    * Apply pending changes to layers before drawing them, if those
@@ -1169,12 +1175,6 @@ protected:
   // an implementation that first calls the base implementation then
   // appends additional info to aTo.
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
-
-  /**
-   * Returns the local opacity for this layer: either mOpacity or,
-   * for shadow layers, GetShadowOpacity()
-   */
-  const float GetLocalOpacity();
 
   /**
    * We can snap layer transforms for two reasons:
