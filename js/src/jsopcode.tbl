@@ -171,7 +171,7 @@ OPDEF(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, 10,  JOF_BYTE|J
  * for web compatibility. Instead we emit JSOP_SETCALL after the function call,
  * an opcode that always throws.
  */
-OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         1,  0,  0, 18,  JOF_BYTE)
+OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         1,  1,  2, 18,  JOF_BYTE)
 
 /*
  * JSOP_ITER sets up a for-in or for-each-in loop using the JSITER_* flag bits
