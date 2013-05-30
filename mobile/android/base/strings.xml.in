@@ -30,11 +30,11 @@
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message2">&crash_message2;</string>
-  <string name="crash_send_report_message2">&crash_send_report_message2;</string>
+  <string name="crash_send_report_message3">&crash_send_report_message3;</string>
   <string name="crash_include_url2">&crash_include_url2;</string>
   <string name="crash_sorry">&crash_sorry;</string>
   <string name="crash_comment">&crash_comment;</string>
-  <string name="crash_allow_contact">&crash_allow_contact;</string>
+  <string name="crash_allow_contact2">&crash_allow_contact2;</string>
   <string name="crash_email">&crash_email;</string>
   <string name="crash_closing_alert">&crash_closing_alert;</string>
   <string name="sending_crash_report">&sending_crash_report;</string>
