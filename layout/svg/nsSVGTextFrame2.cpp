@@ -3196,7 +3196,7 @@ nsSVGTextFrame2::NotifySVGChanged(uint32_t aFlags)
   bool needGlyphMetricsUpdate = false;
   bool needNewCanvasTM = false;
 
-  if (aFlags & COORD_CONTEXT_CHANGED) {
+  if ((aFlags & COORD_CONTEXT_CHANGED) && mPositioningMayUsePercentages) {
     needGlyphMetricsUpdate = true;
   }
 
@@ -4078,6 +4078,7 @@ nsSVGTextFrame2::ResolvePositions(nsIContent* aContent,
     }
 
     uint32_t count = GetTextContentLength(aContent);
+    bool& percentages = mPositioningMayUsePercentages;
 
     // New text anchoring chunks start at each character assigned a position
     // with x="" or y="", or if we forced one with aForceStartOfChunk due to
@@ -4100,12 +4101,14 @@ nsSVGTextFrame2::ResolvePositions(nsIContent* aContent,
       for (uint32_t i = 0, j = 0; i < dx.Length() && j < count; j++) {
         if (!mPositions[aIndex + j].mUnaddressable) {
           aDeltas[aIndex + j].x = dx[i];
+          percentages = percentages || dx.HasPercentageValueAt(i);
           i++;
         }
       }
       for (uint32_t i = 0, j = 0; i < dy.Length() && j < count; j++) {
         if (!mPositions[aIndex + j].mUnaddressable) {
           aDeltas[aIndex + j].y = dy[i];
+          percentages = percentages || dy.HasPercentageValueAt(i);
           i++;
         }
       }
@@ -4115,12 +4118,14 @@ nsSVGTextFrame2::ResolvePositions(nsIContent* aContent,
     for (uint32_t i = 0, j = 0; i < x.Length() && j < count; j++) {
       if (!mPositions[aIndex + j].mUnaddressable) {
         mPositions[aIndex + j].mPosition.x = x[i];
+        percentages = percentages || x.HasPercentageValueAt(i);
         i++;
       }
     }
     for (uint32_t i = 0, j = 0; i < y.Length() && j < count; j++) {
       if (!mPositions[aIndex + j].mUnaddressable) {
         mPositions[aIndex + j].mPosition.y = y[i];
+        percentages = percentages || y.HasPercentageValueAt(i);
         i++;
       }
     }
@@ -4164,6 +4169,7 @@ bool
 nsSVGTextFrame2::ResolvePositions(nsTArray<gfxPoint>& aDeltas)
 {
   NS_ASSERTION(mPositions.IsEmpty(), "expected mPositions to be empty");
+  mPositioningMayUsePercentages = false;
 
   CharIterator it(this, CharIterator::eOriginal);
   if (it.AtEnd()) {

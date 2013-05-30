@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-wait">
+<iframe style="width: 400px; height: 400px; border: 0" src="multiple-x-percentages-2-iframe.svg"></iframe>
+<script>
+function doTest() {
+  var iframe = document.querySelector("iframe");
+  iframe.style.width = "200px";
+  iframe.style.height = "200px";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest, false);
+setTimeout(doTest, 4000); // fallback for running outside reftest
+</script>

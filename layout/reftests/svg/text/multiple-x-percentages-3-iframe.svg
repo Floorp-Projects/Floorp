@@ -1,0 +1,8 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <text x="50 60 70 80 90 50%" y="100" style="font: 16px sans-serif">hello</text>
+  <text x="150" y="100 110 120 130 140 75%" style="font: 16px sans-serif">there</text>
+</svg>

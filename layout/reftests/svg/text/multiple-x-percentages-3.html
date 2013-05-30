@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-wait">
+<iframe style="width: 400px; height: 400px; border: 0" src="multiple-x-percentages-3-iframe.svg"></iframe>
+<script>
+var iframe = document.querySelector("iframe");
+
+function doTestPart1() {
+  iframe.style.width = "200px";
+  iframe.style.height = "200px";
+  window.removeEventListener("MozReftestInvalidate", doTestPart1);
+
+  window.addEventListener("MozReftestInvalidate", doTestPart2, false);
+  setTimeout(doTestPart2, 4000); // fallback for running outside reftest
+}
+
+function doTestPart2() {
+  var text = iframe.contentDocument.querySelectorAll("text");
+  text[0].firstChild.nodeValue += "!";
+  text[1].firstChild.nodeValue += "!";
+
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTestPart1, false);
+setTimeout(doTestPart1, 4000); // fallback for running outside reftest
+</script>
