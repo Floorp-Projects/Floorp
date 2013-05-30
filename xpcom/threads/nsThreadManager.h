@@ -21,6 +21,7 @@ public:
   NS_DECL_NSITHREADMANAGER
 
   static nsThreadManager *get() {
+    static nsThreadManager sInstance;
     return &sInstance;
   }
 
@@ -59,8 +60,6 @@ private:
     , mCurrentNumberOfThreads(1)
     , mHighestNumberOfThreads(1) {
   }
-
-  static nsThreadManager sInstance;
 
   nsRefPtrHashtable<nsPtrHashKey<PRThread>, nsThread> mThreadsByPRThread;
   unsigned             mCurThreadIndex;  // thread-local-storage index

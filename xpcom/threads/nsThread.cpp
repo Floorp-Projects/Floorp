@@ -85,8 +85,6 @@ public:
   nsThreadClassInfo() {}
 };
 
-static nsThreadClassInfo sThreadClassInfo;
-
 NS_IMETHODIMP_(nsrefcnt) nsThreadClassInfo::AddRef() { return 2; }
 NS_IMETHODIMP_(nsrefcnt) nsThreadClassInfo::Release() { return 1; }
 NS_IMPL_QUERY_INTERFACE1(nsThreadClassInfo, nsIClassInfo)
@@ -156,6 +154,7 @@ NS_INTERFACE_MAP_BEGIN(nsThread)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIThread)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+    static nsThreadClassInfo sThreadClassInfo;
     foundInterface = static_cast<nsIClassInfo*>(&sThreadClassInfo);
   } else
 NS_INTERFACE_MAP_END
