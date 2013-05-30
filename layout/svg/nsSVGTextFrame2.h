@@ -294,7 +294,7 @@ public:
    * Updates the mFontSizeScaleFactor value by looking at the range of
    * font-sizes used within the <text>.
    */
-  void UpdateFontSizeScaleFactor(bool aForceGlobalTransform);
+  void UpdateFontSizeScaleFactor();
 
   double GetFontSizeScaleFactor() const;
 
@@ -389,7 +389,7 @@ private:
   /**
    * Reflows the anonymous block child.
    */
-  void DoReflow(bool aForceGlobalTransform);
+  void DoReflow();
 
   /**
    * Calls FrameNeedsReflow on the anonymous block child.
@@ -398,12 +398,8 @@ private:
 
   /**
    * Reflows the anonymous block child and recomputes mPositions if needed.
-   *
-   * @param aForceGlobalTransform passed down to UpdateFontSizeScaleFactor to
-   * control whether it should use the global transform even when
-   * NS_STATE_NONDISPLAY_CHILD
    */
-  void UpdateGlyphPositioning(bool aForceGlobalTransform);
+  void UpdateGlyphPositioning();
 
   /**
    * Populates mPositions with positioning information for each character
@@ -626,6 +622,13 @@ private:
    * The flag to pass to GetCanvasTM from UpdateFontSizeScaleFactor.  This is
    * normally FOR_OUTERSVG_TM, but while painting or hit testing a pattern or
    * marker, we set it to FOR_PAINTING or FOR_HIT_TESTING appropriately.
+   *
+   * This flag is also used to determine whether in UpdateFontSizeScaleFactor
+   * GetCanvasTM should be called at all.  When the nsSVGTextFrame2 is a
+   * non-display child, and we are not painting or hit testing, there is
+   * no sensible CTM stack to use.  Additionally, when inside a <marker>,
+   * calling GetCanvasTM on the nsSVGMarkerFrame would crash due to not
+   * having a current mMarkedFrame.
    */
   uint32_t mGetCanvasTMForFlag;
 
