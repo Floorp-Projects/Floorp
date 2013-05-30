@@ -2260,7 +2260,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     virtual void initExtraZoneStats(JS::Zone *zone, JS::ZoneStats *zStats) MOZ_OVERRIDE {
         // Get the compartment's global.
         nsXPConnect *xpc = nsXPConnect::GetXPConnect();
-        JSContext *cx = xpc->GetSafeJSContext();
+        AutoSafeJSContext cx;
         JSCompartment *comp = js::GetAnyCompartmentInZone(zone);
         xpc::ZoneStatsExtras *extras = new xpc::ZoneStatsExtras;
         extras->pathPrefix.AssignLiteral("explicit/js-non-window/zones/");
@@ -2293,7 +2293,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
 
         // Get the compartment's global.
         nsXPConnect *xpc = nsXPConnect::GetXPConnect();
-        JSContext *cx = xpc->GetSafeJSContext();
+        AutoSafeJSContext cx;
         bool needZone = true;
         RootedObject global(cx, JS_GetGlobalForCompartmentOrNull(cx, c));
         if (global) {
