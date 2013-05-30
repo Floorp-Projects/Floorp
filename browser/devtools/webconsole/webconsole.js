@@ -2683,8 +2683,14 @@ function JSTerm(aWebConsoleFrame)
 
   this.lastCompletion = { value: null };
   this.history = [];
-  this.historyIndex = 0;
-  this.historyPlaceHolder = 0;  // this.history.length;
+
+  // Holds the number of entries in history. This value is incremented in
+  // this.execute().
+  this.historyIndex = 0; // incremented on this.execute()
+
+  // Holds the index of the history entry that the user is currently viewing.
+  // This is reset to this.history.length when this.execute() is invoked.
+  this.historyPlaceHolder = 0;
   this._objectActorsInVariablesViews = new Map();
 
   this._keyPress = this.keyPress.bind(this);
@@ -2954,8 +2960,10 @@ JSTerm.prototype = {
     let options = { frame: this.SELECTED_FRAME };
     this.requestEvaluation(aExecuteString, options).then(onResult, onResult);
 
-    this.history.push(aExecuteString);
-    this.historyIndex++;
+    // Append a new value in the history of executed code, or overwrite the most
+    // recent entry. The most recent entry may contain the last edited input
+    // value that was not evaluated yet.
+    this.history[this.historyIndex++] = aExecuteString;
     this.historyPlaceHolder = this.history.length;
     this.setInputValue("");
     this.clearCompletion();
@@ -3937,27 +3945,26 @@ JSTerm.prototype = {
       if (this.historyPlaceHolder <= 0) {
         return false;
       }
-
       let inputVal = this.history[--this.historyPlaceHolder];
-      if (inputVal){
-        this.setInputValue(inputVal);
+
+      // Save the current input value as the latest entry in history, only if
+      // the user is already at the last entry.
+      // Note: this code does not store changes to items that are already in
+      // history.
+      if (this.historyPlaceHolder+1 == this.historyIndex) {
+        this.history[this.historyIndex] = this.inputNode.value || "";
       }
+
+      this.setInputValue(inputVal);
     }
     // Down Arrow key
     else if (aDirection == HISTORY_FORWARD) {
-      if (this.historyPlaceHolder == this.history.length - 1) {
-        this.historyPlaceHolder ++;
-        this.setInputValue("");
-      }
-      else if (this.historyPlaceHolder >= (this.history.length)) {
+      if (this.historyPlaceHolder >= (this.history.length-1)) {
         return false;
       }
-      else {
-        let inputVal = this.history[++this.historyPlaceHolder];
-        if (inputVal){
-          this.setInputValue(inputVal);
-        }
-      }
+
+      let inputVal = this.history[++this.historyPlaceHolder];
+      this.setInputValue(inputVal);
     }
     else {
       throw new Error("Invalid argument 0");
