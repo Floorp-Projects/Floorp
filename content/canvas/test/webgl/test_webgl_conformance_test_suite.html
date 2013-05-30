@@ -39,6 +39,10 @@ var OPTIONS = {
     if (request.readyState != 4) {
       throw error;
     }
+    if (request.status >= 400) {
+      // Error response, probably a 404.
+      throw 'Error: request.status: ' + request.status;
+    }
     return request.responseText;
   };
 
@@ -535,20 +539,30 @@ function start() {
   info('Skipped tests file: ' + skippedTestsFilename);
   
   function LoadNewlineSepFile(filename) {
-    var lines = loadTextFileSynchronous(filename)
-                .replace(/\r/g, '') // convert to unix line breaks
-                .split('\n');
-    
-    // Remove empty lines.
-    while (true) {
-      var emptyLineIndex = lines.indexOf('');
-      if (emptyLineIndex == -1)
-        break;
-      
-      lines.splice(emptyLineIndex, 1);
+    var lines;
+    try {
+      lines = loadTextFileSynchronous(filename)
+              .replace(/\r/g, '') // convert to unix line breaks
+              .split('\n');
+    }
+    catch(e) {
+      // Request failed for some reason.
+      ok(false, 'Loading \'' + filename + '\' failed: ' + e);
+      return [];
     }
     
-    return lines;
+    // Remove comments and trim whitespace.
+    var retLines = [];
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      line = line.split('#', 1)[0].trim();
+      if (!line.length)
+        continue;
+      
+      retLines.push(line);
+    }
+    
+    return retLines;
   };
 
   var testsExpectedToFail = [];
