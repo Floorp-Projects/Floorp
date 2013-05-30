@@ -89,8 +89,6 @@ def parse_args():
                           help='Example: --jitflags=m,amd to run each test with -m, -a -m -d [default=%default]')
     harness_og.add_option('-g', '--debug', action='store_true', help='Run a test in debugger.')
     harness_og.add_option('--debugger', default='gdb -q --args', help='Debugger command.')
-    harness_og.add_option('-J', '--jorendb', action='store_true', help='Run under JS debugger.')
-    harness_og.add_option('--passthrough', action='store_true', help='Run tests with stdin/stdout attached to caller.')
     harness_og.add_option('--valgrind', action='store_true', help='Run tests in valgrind.')
     harness_og.add_option('--valgrind-args', default='', help='Extra args to pass to valgrind.')
     op.add_option_group(harness_og)
@@ -155,15 +153,7 @@ def parse_args():
         if os.uname()[0] == 'Darwin':
             prefix.append('--dsymutil=yes')
         options.show_output = True
-
-    js_cmd_args = options.shell_args.split()
-    if options.jorendb:
-        options.passthrough = True
-        options.hide_progress = True
-        options.worker_count = 1
-        debugger_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../../examples/jorendb.js")
-        js_cmd_args.extend([ '-d', '-f', debugger_path, '--' ])
-    TestCase.set_js_cmd_prefix(options.js_shell, js_cmd_args, prefix)
+    TestCase.set_js_cmd_prefix(options.js_shell, options.shell_args.split(), prefix)
 
     # If files with lists of tests to run were specified, add them to the
     # requested tests set.
