@@ -28,7 +28,6 @@ EXTRA_COMPONENTS = \
         DownloadManagerUI.js \
         PromptService.js \
         ContentDispatchChooser.js \
-        FormAutoComplete.js \
         LoginManagerPrompter.js \
         $(NULL)
 
