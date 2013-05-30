@@ -48,6 +48,7 @@ var Appbar = {
       case 'ToolPanelShown':
       case 'ToolPanelHidden':
         Elements.navbar.dismiss();
+        Elements.contextappbar.dismiss();
         break;
       case 'MozAppbarShowing':
         this._updatePinButton();
