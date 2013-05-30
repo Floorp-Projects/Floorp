@@ -272,9 +272,12 @@ FoldConstants<FullParseHandler>(JSContext *cx, ParseNode **pnp,
             if (!FoldConstants(cx, &pn->pn_body, parser))
                 return false;
         } else {
+            // Note: pn_body is NULL for functions which are being lazily parsed.
             JS_ASSERT(pn->getKind() == PNK_FUNCTION);
-            if (!FoldConstants(cx, &pn->pn_body, parser, pn->pn_funbox->inGenexpLambda))
-                return false;
+            if (pn->pn_body) {
+                if (!FoldConstants(cx, &pn->pn_body, parser, pn->pn_funbox->inGenexpLambda))
+                    return false;
+            }
         }
         break;
 
