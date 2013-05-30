@@ -20,6 +20,7 @@
 #include "nsIStyleSheet.h"
 #include "pldhash.h"
 #include "mozilla/Attributes.h"
+#include "nsString.h"
 
 class nsMappedAttributes;
 
@@ -75,6 +76,8 @@ public:
   already_AddRefed<nsMappedAttributes>
     UniqueMappedAttributes(nsMappedAttributes* aMapped);
   void DropMappedAttributes(nsMappedAttributes* aMapped);
+
+  nsIStyleRule* LangRuleFor(const nsString& aLanguage);
 
 private: 
   nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) MOZ_DELETE;
@@ -136,6 +139,26 @@ private:
     virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
   };
 
+public: // for mLangRuleTable structures only
+
+  // Rule to handle xml:lang attributes, of which we have exactly one
+  // per language string, maintained in mLangRuleTable.
+  class LangRule MOZ_FINAL : public nsIStyleRule {
+  public:
+    LangRule(const nsSubstring& aLang) : mLang(aLang) {}
+
+    NS_DECL_ISUPPORTS
+
+    // nsIStyleRule interface
+    virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
+  #ifdef DEBUG
+    virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+  #endif
+
+    nsString mLang;
+  };
+
+private:
   nsCOMPtr<nsIURI>        mURL;
   nsIDocument*            mDocument;
   nsRefPtr<HTMLColorRule> mLinkRule;
@@ -145,6 +168,7 @@ private:
   nsRefPtr<TableTHRule>   mTableTHRule;
 
   PLDHashTable            mMappedAttrTable;
+  PLDHashTable            mLangRuleTable;
 };
 
 #endif /* !defined(nsHTMLStyleSheet_h_) */
