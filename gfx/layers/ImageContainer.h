@@ -153,7 +153,7 @@ public:
 
 /**
  * A class that manages Image creation for a LayerManager. The only reason
- * we need a separate class here is that LayerMananers aren't threadsafe
+ * we need a separate class here is that LayerManagers aren't threadsafe
  * (because layers can only be used on the main thread) and we want to
  * be able to create images from any thread, to facilitate video playback
  * without involving the main thread, for example.
