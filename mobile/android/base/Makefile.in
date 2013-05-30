@@ -219,20 +219,17 @@ FENNEC_JAVA_FILES = \
   menu/GeckoMenuItem.java \
   menu/GeckoSubMenu.java \
   menu/MenuItemActionBar.java \
-  menu/MenuItemActionView.java \
   menu/MenuItemDefault.java \
   menu/MenuPanel.java \
   menu/MenuPopup.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
-  widget/ActivityChooserModel.java \
   widget/AddonsSection.java \
   widget/DateTimePicker.java \
   widget/Divider.java \
   widget/FaviconView.java \
   widget/GeckoPopupMenu.java \
-  widget/GeckoActionProvider.java \
   widget/IconTabWidget.java \
   widget/LastTabsSection.java \
   widget/LinkTextView.java \
@@ -443,7 +440,6 @@ RES_LAYOUT = \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
   res/layout/menu_action_bar.xml \
-  res/layout/menu_item_action_view.xml \
   res/layout/menu_popup.xml \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
@@ -1042,7 +1038,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
-  mobile/android/base/resources/drawable/divider_vertical.xml                   \
   mobile/android/base/resources/drawable/favicon_bg.xml                         \
   mobile/android/base/resources/drawable/handle_end_level.xml                   \
   mobile/android/base/resources/drawable/handle_start_level.xml                 \
