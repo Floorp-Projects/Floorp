@@ -3030,6 +3030,10 @@ class MSqrt
     static MSqrt *New(MDefinition *num) {
         return new MSqrt(num);
     }
+    static MSqrt *NewAsmJS(MDefinition *num, MIRType type) {
+        JS_ASSERT(type == MIRType_Double);
+        return new MSqrt(num);
+    }
     MDefinition *num() const {
         return getOperand(0);
     }
