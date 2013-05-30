@@ -26,6 +26,7 @@ EXTRA_JS_MODULES := \
   PopupNotifications.jsm \
   Preferences.jsm \
   PrivateBrowsingUtils.jsm \
+  Promise.jsm \
   PropertyListUtils.jsm \
   RemoteWebProgress.jsm \
   Sqlite.jsm \
