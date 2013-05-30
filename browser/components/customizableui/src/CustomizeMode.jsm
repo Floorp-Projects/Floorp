@@ -599,7 +599,7 @@ CustomizeMode.prototype = {
       return;
     }
 
-    let targetNode = this._getDragOverNode(aEvent.target);
+    let targetNode = this._getDragOverNode(aEvent.target, targetArea);
     let targetParent = targetNode.parentNode;
 
     // We need to determine the place that the widget is being dropped in
@@ -657,7 +657,7 @@ CustomizeMode.prototype = {
       return;
     }
 
-    let targetNode = this._getDragOverNode(aEvent.target);
+    let targetNode = this._getDragOverNode(aEvent.target, targetArea);
 
     // Do nothing if the target was dropped onto itself (ie, no change in area
     // or position).
