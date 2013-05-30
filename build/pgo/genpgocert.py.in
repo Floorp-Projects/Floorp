@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from automation import Automation
+from mozfile import NamedTemporaryFile
 import os
+import random
 import re
 import shutil
 import sys
@@ -47,11 +49,8 @@ def runUtil(util, args, inputdata = None):
 
 
 def createRandomFile(randomFile):
-  import random
-  file = open(randomFile, "wb");
   for count in xrange(0, 2048):
-    file.write(chr(random.randint(0, 255)))
-  file.close()
+    randomFile.write(chr(random.randint(0, 255)))
 
 
 def createCertificateAuthority(profileDir, srcDir):
@@ -61,40 +60,35 @@ def createCertificateAuthority(profileDir, srcDir):
   tempDbDir = os.path.join(profileDir, ".temp")
   if not os.path.exists(tempDbDir):
     os.mkdir(tempDbDir)
-  
-  pwfilePath = os.path.join(tempDbDir, ".crtdbpw")
-  rndfilePath = os.path.join(tempDbDir, ".rndfile")
-  pgoCAModulePathSrc = os.path.join(srcDir, "pgoca.p12")
-  pgoCAPathSrc = os.path.join(srcDir, "pgoca.ca")
-  
-  pwfile = open(pwfilePath, "w")
-  pwfile.write("\n")
-  pwfile.close()
 
-  unlinkDbFiles(tempDbDir)
+  with NamedTemporaryFile() as pwfile, NamedTemporaryFile() as rndfile:
+    pgoCAModulePathSrc = os.path.join(srcDir, "pgoca.p12")
+    pgoCAPathSrc = os.path.join(srcDir, "pgoca.ca")
 
-  # Create temporary certification database for CA generation
-  status = runUtil(certutil, ["-N", "-d", tempDbDir, "-f", pwfilePath])
-  if status != 0:
-    return status
+    pwfile.write("\n")
 
-  createRandomFile(rndfilePath);
-  status = runUtil(certutil, ["-S", "-d", tempDbDir, "-s", "CN=Temporary Certificate Authority, O=Mozilla Testing, OU=Profile Guided Optimization", "-t", "C,,", "-x", "-m", "1", "-v", "120", "-n", "pgo temporary ca", "-2", "-f", pwfilePath, "-z", rndfilePath], "Y\n0\nN\n")
-  if status != 0:
-    return status
- 
-  status = runUtil(certutil, ["-L", "-d", tempDbDir, "-n", "pgo temporary ca", "-a", "-o", pgoCAPathSrc, "-f", pwfilePath])
-  if status != 0:
-    return status
- 
-  status = runUtil(pk12util, ["-o", pgoCAModulePathSrc, "-n", "pgo temporary ca", "-d", tempDbDir, "-w", pwfilePath, "-k", pwfilePath])
-  if status != 0:
-    return status
-    
-  unlinkDbFiles(tempDbDir)
-  os.unlink(pwfilePath)
-  os.unlink(rndfilePath)
-  os.rmdir(tempDbDir)
+    unlinkDbFiles(tempDbDir)
+
+    # Create temporary certification database for CA generation
+    status = runUtil(certutil, ["-N", "-d", tempDbDir, "-f", pwfile.name])
+    if status != 0:
+      return status
+
+    createRandomFile(rndfile)
+    status = runUtil(certutil, ["-S", "-d", tempDbDir, "-s", "CN=Temporary Certificate Authority, O=Mozilla Testing, OU=Profile Guided Optimization", "-t", "C,,", "-x", "-m", "1", "-v", "120", "-n", "pgo temporary ca", "-2", "-f", pwfile.name, "-z", rndfile.name], "Y\n0\nN\n")
+    if status != 0:
+      return status
+
+    status = runUtil(certutil, ["-L", "-d", tempDbDir, "-n", "pgo temporary ca", "-a", "-o", pgoCAPathSrc, "-f", pwfile.name])
+    if status != 0:
+      return status
+
+    status = runUtil(pk12util, ["-o", pgoCAModulePathSrc, "-n", "pgo temporary ca", "-d", tempDbDir, "-w", pwfile.name, "-k", pwfile.name])
+    if status != 0:
+      return status
+
+    unlinkDbFiles(tempDbDir)
+    os.rmdir(tempDbDir)
   return 0
 
 
@@ -102,64 +96,59 @@ def createSSLServerCertificate(profileDir, srcDir):
   certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
   pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
 
-  pwfilePath = os.path.join(profileDir, ".crtdbpw")
-  rndfilePath = os.path.join(profileDir, ".rndfile")
-  pgoCAPath = os.path.join(srcDir, "pgoca.p12")
-  
-  pwfile = open(pwfilePath, "w")
-  pwfile.write("\n")
-  pwfile.close()
+  with NamedTemporaryFile() as pwfile, NamedTemporaryFile() as rndfile:
+    pgoCAPath = os.path.join(srcDir, "pgoca.p12")
 
-  if not dbFilesExist(srcDir):
-    # Make sure all DB files from src are really deleted
-    unlinkDbFiles(srcDir)
-    
-    # Create certification database for ssltunnel
-    status = runUtil(certutil, ["-N", "-d", srcDir, "-f", pwfilePath])
-    if status != 0:
-      return status
-  
-    status = runUtil(pk12util, ["-i", pgoCAPath, "-w", pwfilePath, "-d", srcDir, "-k", pwfilePath])
-    if status != 0:
-      return status
+    pwfile.write("\n")
 
-  # Generate automatic certificate
-  locations = automation.readLocations(os.path.join(profileDir, "server-locations.txt"))
-  locations.pop(0)
-  locationsParam = ""
-  firstLocation = ""
-  for loc in locations:
-    if loc.scheme == "https" and "nocert" not in loc.options:
-      customCertOption = False
-      customCertRE = re.compile("^cert=(?:\w+)")
-      for option in loc.options:
-        match = customCertRE.match(option)
-        if match:
-          customCertOption = True
-          break
+    if not dbFilesExist(srcDir):
+      # Make sure all DB files from src are really deleted
+      unlinkDbFiles(srcDir)
 
-      if not customCertOption:
-        if len(locationsParam) > 0:
-          locationsParam += ","
-        locationsParam += loc.host
-        
-        if firstLocation == "":
-          firstLocation = loc.host
-      
-  if firstLocation == "":
-    print "Nothing to generate, no automatic secure hosts specified"
-  else:
-    createRandomFile(rndfilePath);
-    
-    runUtil(certutil, ["-D", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfilePath, "-f", pwfilePath])
-    # Ignore the result, the certificate may not be present when new database is being built
-    
-    status = runUtil(certutil, ["-S", "-s", "CN=%s" % firstLocation, "-t", "Pu,,", "-c", "pgo temporary ca", "-m", "2", "-8", locationsParam, "-v", "120", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfilePath, "-f", pwfilePath])
-    if status != 0:
-      return status
-    
-  os.unlink(pwfilePath)
-  os.unlink(rndfilePath)
+      # Create certification database for ssltunnel
+      status = runUtil(certutil, ["-N", "-d", srcDir, "-f", pwfile.name])
+      if status != 0:
+        return status
+
+      status = runUtil(pk12util, ["-i", pgoCAPath, "-w", pwfile.name, "-d", srcDir, "-k", pwfile.name])
+      if status != 0:
+        return status
+
+    # Generate automatic certificate
+    locations = automation.readLocations(os.path.join(profileDir, "server-locations.txt"))
+    locations.pop(0)
+    locationsParam = ""
+    firstLocation = ""
+    for loc in locations:
+      if loc.scheme == "https" and "nocert" not in loc.options:
+        customCertOption = False
+        customCertRE = re.compile("^cert=(?:\w+)")
+        for option in loc.options:
+          match = customCertRE.match(option)
+          if match:
+            customCertOption = True
+            break
+
+        if not customCertOption:
+          if len(locationsParam) > 0:
+            locationsParam += ","
+          locationsParam += loc.host
+
+          if firstLocation == "":
+            firstLocation = loc.host
+
+    if firstLocation == "":
+      print "Nothing to generate, no automatic secure hosts specified"
+    else:
+      createRandomFile(rndfile)
+
+      runUtil(certutil, ["-D", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfile.name, "-f", pwfile.name])
+      # Ignore the result, the certificate may not be present when new database is being built
+
+      status = runUtil(certutil, ["-S", "-s", "CN=%s" % firstLocation, "-t", "Pu,,", "-c", "pgo temporary ca", "-m", "2", "-8", locationsParam, "-v", "120", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfile.name, "-f", pwfile.name])
+      if status != 0:
+        return status
+
   return 0
 
 
@@ -171,9 +160,9 @@ if sys.argv[1] == "--gen-server":
   certificateStatus = createSSLServerCertificate(PROFILE_DIR, CERTS_SRC_DIR)
   if certificateStatus != 0:
     print "TEST-UNEXPECTED-FAIL | SSL Server Certificate generation"
-  
+
   sys.exit(certificateStatus)
-  
+
 if sys.argv[1] == "--gen-ca":
   certificateStatus = createCertificateAuthority(PROFILE_DIR, CERTS_SRC_DIR)
   if certificateStatus != 0:
