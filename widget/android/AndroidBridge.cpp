@@ -2193,6 +2193,20 @@ NS_IMETHODIMP nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrow
     return NS_OK;
 }
 
+/* void displayedDocumentChanged(); */
+NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged()
+{
+    AndroidBridge::Bridge()->ContentDocumentChanged();
+    return NS_OK;
+}
+
+/* boolean isContentDocumentDisplayed(); */
+NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
+{
+    *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
+    return NS_OK;
+}
+
 void
 AndroidBridge::NotifyDefaultPrevented(bool aDefaultPrevented)
 {
@@ -2695,6 +2709,26 @@ AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDispla
         return;
     AutoLocalJNIFrame jniFrame(env, 0);
     mLayerClient->GetDisplayPort(&jniFrame, aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
+}
+
+void
+AndroidBridge::ContentDocumentChanged()
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return;
+    AutoLocalJNIFrame jniFrame(env, 0);
+    mLayerClient->ContentDocumentChanged(&jniFrame);
+}
+
+bool
+AndroidBridge::IsContentDocumentDisplayed()
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return false;
+    AutoLocalJNIFrame jniFrame(env, 0);
+    return mLayerClient->IsContentDocumentDisplayed(&jniFrame);
 }
 
 bool
