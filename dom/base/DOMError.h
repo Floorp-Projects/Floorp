@@ -11,9 +11,8 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
-
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {

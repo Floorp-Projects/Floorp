@@ -20,6 +20,10 @@
 #include <windows.h>
 #endif
 
+#ifdef GetClassName
+#undef GetClassName
+#endif
+
 #include "GLDefs.h"
 #include "GLLibraryLoader.h"
 #include "gfxASurface.h"
