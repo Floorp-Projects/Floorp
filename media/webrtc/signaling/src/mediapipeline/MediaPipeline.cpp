@@ -784,12 +784,44 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
 }
 
 #ifdef MOZILLA_INTERNAL_API
+static void FillBlackYCbCr420PixelData(uint8_t* aBuffer, const gfxIntSize& aSize)
+{
+  // Fill Y plane
+}
+
 void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     VideoSessionConduit* conduit,
     TrackRate rate,
     VideoChunk& chunk) {
-  // We now need to send the video frame to the other side
   layers::Image *img = chunk.mFrame.GetImage();
+  gfxIntSize size = img ? img->GetSize() : chunk.mFrame.GetIntrinsicSize();
+  if ((size.width & 1) != 0 || (size.height & 1) != 0) {
+    MOZ_ASSERT(false, "Can't handle odd-sized images");
+    return;
+  }
+
+  if (chunk.mFrame.GetForceBlack()) {
+    uint32_t yPlaneLen = size.width*size.height;
+    uint32_t cbcrPlaneLen = yPlaneLen/2;
+    uint32_t length = yPlaneLen + cbcrPlaneLen;
+
+    // Send a black image.
+    nsAutoArrayPtr<uint8_t> pixelData;
+    static const fallible_t fallible = fallible_t();
+    pixelData = new (fallible) uint8_t[length];
+    if (pixelData) {
+      memset(pixelData, 0x10, yPlaneLen);
+      // Fill Cb/Cr planes
+      memset(pixelData + yPlaneLen, 0x80, cbcrPlaneLen);
+
+      MOZ_MTLOG(PR_LOG_DEBUG, "Sending a black video frame");
+      conduit->SendVideoFrame(pixelData, length, size.width, size.height,
+                              mozilla::kVideoI420, 0);
+    }
+    return;
+  }
+
+  // We now need to send the video frame to the other side
   if (!img) {
     // segment.AppendFrame() allows null images, which show up here as null
     return;
@@ -1055,7 +1087,11 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
   ReentrantMonitorAutoEnter enter(monitor_);
 
   // Create a video frame and append it to the track.
+#ifdef MOZ_WIDGET_GONK
+  ImageFormat format = GRALLOC_PLANAR_YCBCR;
+#else
   ImageFormat format = PLANAR_YCBCR;
+#endif
   nsRefPtr<layers::Image> image = image_container_->CreateImage(&format, 1);
 
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());

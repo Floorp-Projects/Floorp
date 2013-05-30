@@ -12,10 +12,17 @@ if CONFIG['TARGET_CPU'] == 'x86_64':
             'xptcinvoke_x86_64.cpp',
             'xptcstubs_x86_64_gnu.cpp',
         ]
+        ASFILES += [
+            'xptcinvoke_asm_x86_64_gnu.s'
+        ]
     else:
         CPP_SOURCES += [
             'xptcinvoke_x86_64.cpp',
             'xptcstubs_x86_64.cpp'
+        ]
+        ASFILES += [
+            'xptcinvoke_asm_x86_64.asm',
+            'xptcstubs_asm_x86_64.asm'
         ]
 else:
     if CONFIG['GNU_CXX']:

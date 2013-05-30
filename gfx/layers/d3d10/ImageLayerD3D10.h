@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace layers {
 
-class THEBES_API ImageLayerD3D10 : public ImageLayer,
-                                   public LayerD3D10
+class ImageLayerD3D10 : public ImageLayer,
+                        public LayerD3D10
 {
 public:
   ImageLayerD3D10(LayerManagerD3D10 *aManager)

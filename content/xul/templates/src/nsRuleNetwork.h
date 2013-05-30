@@ -28,6 +28,7 @@
 #ifndef nsRuleNetwork_h__
 #define nsRuleNetwork_h__
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIAtom.h"
@@ -797,7 +798,7 @@ public:
      * aTakenInstantiations will be set properly even if an error occurs.
      */
     virtual nsresult Propagate(InstantiationSet& aInstantiations,
-                               bool aIsUpdate, bool& aTakenInstantiations);
+                               bool aIsUpdate, bool& aTakenInstantiations) MOZ_OVERRIDE;
 
     /**
      * This is called by a child node on its parent to allow the

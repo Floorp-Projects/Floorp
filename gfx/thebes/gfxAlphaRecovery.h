@@ -11,7 +11,7 @@
 #include "mozilla/SSE.h"
 #include "nsRect.h"
 
-class THEBES_API gfxAlphaRecovery {
+class gfxAlphaRecovery {
 public:
     struct Analysis {
         bool uniformColor;

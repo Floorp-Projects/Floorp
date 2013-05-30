@@ -1081,9 +1081,9 @@ WrapNativeParent(JSContext *cx, JS::Handle<JSObject*> scope, nsISupports *native
   JS::Rooted<JSObject*> obj(cx, nativeWrapperCache->GetWrapper());
   if (obj) {
 #ifdef DEBUG
-    jsval debugVal;
+    JS::Rooted<JS::Value> debugVal(cx);
     nsresult rv = WrapNative(cx, scope, native, nativeWrapperCache, false,
-                             &debugVal);
+                             debugVal.address());
     NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
                  "Unexpected object in nsWrapperCache");
 #endif
@@ -2534,8 +2534,8 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   }
 
 #ifdef DEBUG
-    JSObject *proto2;
-    JS_GetPrototype(cx, proto, &proto2);
+    JS::Rooted<JSObject*> proto2(cx);
+    JS_GetPrototype(cx, proto, proto2.address());
     NS_ASSERTION(proto2 && JS_GetClass(proto2) == sObjectClass,
                  "Hmm, somebody did something evil?");
 #endif
@@ -3002,7 +3002,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JS::Handle<JSObject*> obj)
 struct ResolveGlobalNameClosure
 {
   JSContext* cx;
-  JSObject* obj;
+  JS::Handle<JSObject*> obj;
   bool* retval;
 };
 
@@ -3011,10 +3011,10 @@ ResolveGlobalName(const nsAString& aName, void* aClosure)
 {
   ResolveGlobalNameClosure* closure =
     static_cast<ResolveGlobalNameClosure*>(aClosure);
-  JS::Value dummy;
+  JS::Rooted<JS::Value> dummy(closure->cx);
   bool ok = JS_LookupUCProperty(closure->cx, closure->obj,
                                 aName.BeginReading(), aName.Length(),
-                                &dummy);
+                                dummy.address());
   if (!ok) {
     *closure->retval = false;
     return PL_DHASH_STOP;
@@ -3152,8 +3152,9 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
           rooter.changeLength(i + 1);
         }
 
-        JS::Value frval;
-        bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, argv, &frval);
+        JS::Rooted<JS::Value> frval(cx);
+        bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, argv,
+                                        frval.address());
 
         if (!ret) {
           return NS_ERROR_FAILURE;
@@ -4813,10 +4814,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
       if (proto) {
         JS::Rooted<JSObject*> pobj(cx);
-        jsval val;
+        JS::Rooted<JS::Value> val(cx);
 
         if (!::JS_LookupPropertyWithFlagsById(cx, proto, id, flags,
-                                              pobj.address(), &val)) {
+                                              pobj.address(), val.address())) {
           *_retval = JS_FALSE;
 
           return NS_OK;
