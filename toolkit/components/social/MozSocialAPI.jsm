@@ -53,13 +53,20 @@ function injectController(doc, topic, data) {
                                   .getInterface(Ci.nsIWebNavigation)
                                   .QueryInterface(Ci.nsIDocShell)
                                   .chromeEventHandler;
+    // limit injecting into social panels or same-origin browser tabs if
+    // social.debug.injectIntoTabs is enabled
+    let allowTabs = false;
+    try {
+      allowTabs = containingBrowser.contentWindow == window &&
+                  Services.prefs.getBoolPref("social.debug.injectIntoTabs");
+    } catch(e) {}
 
     let origin = containingBrowser.getAttribute("origin");
-    if (!origin) {
+    if (!allowTabs && !origin) {
       return;
     }
 
-    SocialService.getProvider(origin, function(provider) {
+    SocialService.getProvider(doc.nodePrincipal.origin, function(provider) {
       if (provider && provider.workerURL && provider.enabled) {
         attachToWindow(provider, window);
       }
