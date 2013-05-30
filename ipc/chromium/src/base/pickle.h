@@ -246,16 +246,25 @@ class Pickle {
   // the return result for true (i.e., successful resizing).
   bool Resize(uint32_t new_capacity);
 
-  // Aligns 'i' by rounding it up to the next multiple of 'alignment'
-  static uint32_t AlignInt(uint32_t i, int alignment) {
-    return i + (alignment - (i % alignment)) % alignment;
+  // Round 'bytes' up to the next multiple of 'alignment'.  'alignment' must be
+  // a power of 2.
+  template<uint32_t alignment> struct ConstantAligner {
+    static uint32_t align(int bytes) {
+      MOZ_STATIC_ASSERT((alignment & (alignment - 1)) == 0,
+			"alignment must be a power of two");
+      return (bytes + (alignment - 1)) & ~static_cast<uint32_t>(alignment - 1);
+    }
+  };
+
+  static uint32_t AlignInt(int bytes) {
+    return ConstantAligner<sizeof(uint32_t)>::align(bytes);
   }
 
   // Moves the iterator by the given number of bytes, making sure it is aligned.
   // Pointer (iterator) is NOT aligned, but the change in the pointer
   // is guaranteed to be a multiple of sizeof(uint32_t).
   static void UpdateIter(void** iter, int bytes) {
-    *iter = static_cast<char*>(*iter) + AlignInt(bytes, sizeof(uint32_t));
+    *iter = static_cast<char*>(*iter) + AlignInt(bytes);
   }
 
   // Find the end of the pickled data that starts at range_start.  Returns NULL

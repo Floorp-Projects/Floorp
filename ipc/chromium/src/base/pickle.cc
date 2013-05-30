@@ -32,7 +32,7 @@ Pickle::Pickle()
 
 Pickle::Pickle(int header_size)
     : header_(NULL),
-      header_size_(AlignInt(header_size, sizeof(uint32_t))),
+      header_size_(AlignInt(header_size)),
       capacity_(0),
       variable_buffer_offset_(0) {
   DCHECK(static_cast<uint32_t>(header_size) >= sizeof(Header));
@@ -47,7 +47,7 @@ Pickle::Pickle(const char* data, int data_len)
       capacity_(kCapacityReadOnly),
       variable_buffer_offset_(0) {
   DCHECK(header_size_ >= sizeof(Header));
-  DCHECK(header_size_ == AlignInt(header_size_, sizeof(uint32_t)));
+  DCHECK(header_size_ == AlignInt(header_size_));
 }
 
 Pickle::Pickle(const Pickle& other)
@@ -411,9 +411,9 @@ char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
   DCHECK(alignment % 4 == 0) << "Must be at least 32-bit aligned!";
 
   // write at an alignment-aligned offset from the beginning of the header
-  uint32_t offset = AlignInt(header_->payload_size, sizeof(uint32_t));
+  uint32_t offset = AlignInt(header_->payload_size);
   uint32_t padding = (header_size_ + offset) %  alignment;
-  uint32_t new_size = offset + padding + AlignInt(length, sizeof(uint32_t));
+  uint32_t new_size = offset + padding + AlignInt(length);
   uint32_t needed_size = header_size_ + new_size;
 
   if (needed_size > capacity_ && !Resize(std::max(capacity_ * 2, needed_size)))
@@ -525,7 +525,7 @@ void Pickle::TrimWriteData(int new_length) {
 }
 
 bool Pickle::Resize(uint32_t new_capacity) {
-  new_capacity = AlignInt(new_capacity, kPayloadUnit);
+  new_capacity = ConstantAligner<kPayloadUnit>::align(new_capacity);
 
   void* p = realloc(header_, new_capacity);
   if (!p)
@@ -540,7 +540,7 @@ bool Pickle::Resize(uint32_t new_capacity) {
 const char* Pickle::FindNext(uint32_t header_size,
                              const char* start,
                              const char* end) {
-  DCHECK(header_size == AlignInt(header_size, sizeof(uint32_t)));
+  DCHECK(header_size == AlignInt(header_size));
   DCHECK(header_size <= static_cast<uint32_t>(kPayloadUnit));
 
   const Header* hdr = reinterpret_cast<const Header*>(start);
