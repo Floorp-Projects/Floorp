@@ -62,6 +62,10 @@ GetStreamFromInfo(T* info, bool& found)
 DOMMediaStream*
 MediaStreamList::IndexedGetter(uint32_t index, bool& found)
 {
+  if (!mPeerConnection->media()) { // PeerConnection closed
+    found = false;
+    return nullptr;
+  }
   if (mType == Local) {
     return GetStreamFromInfo(mPeerConnection->media()->
       GetLocalStream(index), found);
@@ -74,6 +78,9 @@ MediaStreamList::IndexedGetter(uint32_t index, bool& found)
 uint32_t
 MediaStreamList::Length()
 {
+  if (!mPeerConnection->media()) { // PeerConnection closed
+    return 0;
+  }
   return mType == Local ? mPeerConnection->media()->LocalStreamsLength() :
       mPeerConnection->media()->RemoteStreamsLength();
 }
