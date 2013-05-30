@@ -1055,7 +1055,11 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
   ReentrantMonitorAutoEnter enter(monitor_);
 
   // Create a video frame and append it to the track.
+#ifdef MOZ_WIDGET_GONK
+  ImageFormat format = GRALLOC_PLANAR_YCBCR;
+#else
   ImageFormat format = PLANAR_YCBCR;
+#endif
   nsRefPtr<layers::Image> image = image_container_->CreateImage(&format, 1);
 
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
