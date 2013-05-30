@@ -1096,6 +1096,10 @@ var BrowserUI = {
         this.savePage();
         break;
     }
+  },
+
+  crashReportingPrefChanged: function crashReportingPrefChanged(aState) {
+    CrashReporter.submitReports = aState;
   }
 };
 
