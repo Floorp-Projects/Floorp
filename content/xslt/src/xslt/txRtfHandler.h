@@ -6,6 +6,7 @@
 #ifndef txRtfHandler_h___
 #define txRtfHandler_h___
 
+#include "mozilla/Attributes.h"
 #include "txBufferingHandler.h"
 #include "txExprResult.h"
 #include "txXPathNode.h"
@@ -40,8 +41,8 @@ class txRtfHandler : public txBufferingHandler
 public:
     nsresult getAsRTF(txAExprResult** aResult);
 
-    nsresult endDocument(nsresult aResult);
-    nsresult startDocument();
+    nsresult endDocument(nsresult aResult) MOZ_OVERRIDE;
+    nsresult startDocument() MOZ_OVERRIDE;
 };
 
 #endif /* txRtfHandler_h___ */

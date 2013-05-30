@@ -177,7 +177,8 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
 
   mozilla::Maybe<JSAutoCompartment> ac;
   if (value->isObject()) {
-    ac.construct(cx, &value->toObject());
+    JS::Rooted<JSObject*> obj(cx, &value->toObject());
+    ac.construct(cx, obj);
   }
 
   nsJSONWriter writer;
@@ -385,11 +386,13 @@ nsJSON::DecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
 NS_IMETHODIMP
 nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
 {
+  JS::Rooted<JS::Value> value(cx);
   if (!JS_ParseJSON(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
-                    str.Length(), result)) {
+                    str.Length(), &value)) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  *result = value;
   return NS_OK;
 }
 

@@ -37,7 +37,7 @@ class nsTreeContentView MOZ_FINAL : public nsINativeTreeView,
 
     NS_DECL_NSITREEVIEW
     // nsINativeTreeView: Untrusted code can use us
-    NS_IMETHOD EnsureNative() { return NS_OK; }
+    NS_IMETHOD EnsureNative() MOZ_OVERRIDE { return NS_OK; }
 
     NS_DECL_NSITREECONTENTVIEW
 

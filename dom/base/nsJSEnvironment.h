@@ -90,7 +90,8 @@ public:
   virtual void WillInitializeContext();
   virtual void DidInitializeContext();
 
-  virtual nsresult Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject);
+  virtual nsresult Serialize(nsIObjectOutputStream* aStream,
+                             JS::Handle<JSScript*> aScriptObject);
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                JS::MutableHandle<JSScript*> aResult);
 

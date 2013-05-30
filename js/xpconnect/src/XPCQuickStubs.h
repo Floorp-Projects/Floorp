@@ -8,13 +8,15 @@
 #define xpcquickstubs_h___
 
 #include "xpcpublic.h"
-#include "xpcprivate.h"
+#include "XPCForwards.h"
 #include "qsObjectHelper.h"
 #include "mozilla/dom/BindingUtils.h"
 
 /* XPCQuickStubs.h - Support functions used only by quick stubs. */
 
 class XPCCallContext;
+class XPCLazyCallContext;
+class XPCWrappedNativeJSClass;
 
 #define XPC_QS_NULL_INDEX  ((uint16_t) -1)
 
@@ -416,17 +418,7 @@ xpc_qsUnwrapThis(JSContext *cx,
     return true;
 }
 
-MOZ_ALWAYS_INLINE bool
-HasBitInInterfacesBitmap(JSObject *obj, uint32_t interfaceBit)
-{
-    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)), "Not a wrapper?");
-
-    XPCWrappedNativeJSClass *clasp =
-      (XPCWrappedNativeJSClass*)js::GetObjectClass(obj);
-    return (clasp->interfacesBitmap & (1 << interfaceBit)) != 0;
-}
-
-MOZ_ALWAYS_INLINE nsISupports*
+nsISupports*
 castNativeFromWrapper(JSContext *cx,
                       JSObject *obj,
                       uint32_t interfaceBit,
@@ -435,62 +427,7 @@ castNativeFromWrapper(JSContext *cx,
                       nsISupports **pRef,
                       jsval *pVal,
                       XPCLazyCallContext *lccx,
-                      nsresult *rv)
-{
-    XPCWrappedNative *wrapper;
-    XPCWrappedNativeTearOff *tearoff;
-    JSObject *cur;
-
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
-        cur = obj;
-        wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
-                  (XPCWrappedNative*)xpc_GetJSPrivate(obj) :
-                  nullptr;
-        tearoff = nullptr;
-    } else {
-        *rv = getWrapper(cx, obj, &wrapper, &cur, &tearoff);
-        if (NS_FAILED(*rv))
-            return nullptr;
-    }
-
-    nsISupports *native;
-    if (wrapper) {
-        native = wrapper->GetIdentityObject();
-        cur = wrapper->GetFlatJSObject();
-        if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
-            native = nullptr;
-        } else if (lccx) {
-            lccx->SetWrapper(wrapper, tearoff);
-        }
-    } else if (cur && IS_SLIM_WRAPPER(cur)) {
-        native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
-        if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
-            native = nullptr;
-        } else if (lccx) {
-            lccx->SetWrapper(cur);
-        }
-    } else if (cur && protoDepth >= 0) {
-        const mozilla::dom::DOMClass* domClass =
-            mozilla::dom::GetDOMClass(cur);
-        native = mozilla::dom::UnwrapDOMObject<nsISupports>(cur);
-        if (native &&
-            (uint32_t)domClass->mInterfaceChain[protoDepth] != protoID) {
-            native = nullptr;
-        }
-    } else {
-        native = nullptr;
-    }
-
-    if (native) {
-        *pRef = nullptr;
-        *pVal = OBJECT_TO_JSVAL(cur);
-        *rv = NS_OK;
-    } else {
-        *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-
-    return native;
-}
+                      nsresult *rv);
 
 JSBool
 xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,

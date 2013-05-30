@@ -435,6 +435,9 @@ pref("browser.ui.touch.top", 48);
 pref("browser.ui.touch.bottom", 16);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
+// The percentage of the screen that needs to be scrolled before margins are exposed.
+pref("browser.ui.show-margins-threshold", 20);
+
 // plugins
 pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);

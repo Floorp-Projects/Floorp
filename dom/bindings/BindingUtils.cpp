@@ -698,7 +698,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   }
 
   nsIJSID* iid;
-  xpc_qsSelfRef iidRef;
+  SelfRef iidRef;
   if (NS_FAILED(xpc_qsUnwrapArg<nsIJSID>(cx, argv[0], &iid, &iidRef.ptr,
                                           &argv[0]))) {
     return Throw<true>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
@@ -1322,7 +1322,7 @@ MainThreadDictionaryBase::ParseJSON(JSContext *aCx,
   }
   return JS_ParseJSON(aCx,
                       static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                      aJSON.Length(), aVal.address());
+                      aJSON.Length(), aVal);
 }
 
 static JSString*
@@ -1635,14 +1635,13 @@ GlobalObject::GlobalObject(JSContext* aCx, JSObject* aObject)
     return;
   }
 
-  JS::Value val;
-  val.setObject(*mGlobalJSObject);
+  JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*mGlobalJSObject));
 
   // Switch this to UnwrapDOMObjectToISupports once our global objects are
   // using new bindings.
   nsresult rv = xpc_qsUnwrapArg<nsISupports>(aCx, val, &mGlobalObject,
                                              static_cast<nsISupports**>(getter_AddRefs(mGlobalObjectRef)),
-                                             &val);
+                                             val.address());
   if (NS_FAILED(rv)) {
     mGlobalObject = nullptr;
     Throw<true>(aCx, NS_ERROR_XPC_BAD_CONVERT_JS);
@@ -1729,6 +1728,17 @@ ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj)
   if (window && window->GetDoc()) {
     window->GetDoc()->WarnOnceAbout(nsIDocument::eLenientThis);
   }
+  return true;
+}
+
+bool
+RegisterForDeferredFinalization(DeferredFinalizeStartFunction start,
+                                DeferredFinalizeFunction run)
+{
+  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+  NS_ENSURE_TRUE(rt, false);
+
+  rt->RegisterDeferredFinalize(start, run);
   return true;
 }
 

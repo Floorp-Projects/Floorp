@@ -47,6 +47,7 @@ const HTTP_BASE = "http://localhost:" + HTTP_SERVER_PORT;
 const FAKE_SERVER_PORT = 4445;
 const FAKE_BASE = "http://localhost:" + FAKE_SERVER_PORT;
 
+const TEST_REFERRER_URI = NetUtil.newURI(HTTP_BASE + "/referrer.html");
 const TEST_SOURCE_URI = NetUtil.newURI(HTTP_BASE + "/source.txt");
 const TEST_EMPTY_URI = NetUtil.newURI(HTTP_BASE + "/empty.txt");
 const TEST_FAKE_SOURCE_URI = NetUtil.newURI(FAKE_BASE + "/source.txt");
