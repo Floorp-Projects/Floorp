@@ -3217,10 +3217,11 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         break;
 #endif
       case PNK_CALL:
+        JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
         if (!EmitTree(cx, bce, lhs))
             return false;
-        JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
-        offset += 2;
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
         break;
       default:
         JS_ASSERT(0);
@@ -3332,8 +3333,11 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         if (!EmitIndexOp(cx, lhs->getOp(), atomIndex, bce))
             return false;
         break;
-      case PNK_ELEM:
       case PNK_CALL:
+        /* Do nothing. The JSOP_SETCALL we emitted will always throw. */
+        JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
+        break;
+      case PNK_ELEM:
         if (Emit1(cx, bce, JSOP_SETELEM) < 0)
             return false;
         break;
@@ -5050,9 +5054,8 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         break;
       case PNK_CALL:
+        JS_ASSERT(pn2->pn_xflags & PNX_SETCALL);
         if (!EmitTree(cx, bce, pn2))
-            return false;
-        if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
         break;
       default:

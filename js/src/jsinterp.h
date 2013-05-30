@@ -398,6 +398,9 @@ bool
 DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain, HandleFunction funArg);
 
 bool
+SetCallOperation(JSContext *cx);
+
+bool
 GetAndClearException(JSContext *cx, MutableHandleValue res);
 
 bool
