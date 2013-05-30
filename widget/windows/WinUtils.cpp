@@ -7,6 +7,7 @@
 #include "WinUtils.h"
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
+#include "KeyboardLayout.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "mozilla/Preferences.h"
@@ -416,12 +417,13 @@ WinUtils::GetMouseInputSource()
 
 /* static */
 MSG
-WinUtils::InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam)
+WinUtils::InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam, HWND aWnd)
 {
   MSG msg;
   msg.message = aMessage;
   msg.wParam  = wParam;
   msg.lParam  = lParam;
+  msg.hwnd    = aWnd;
   return msg;
 }
 
@@ -1026,6 +1028,35 @@ WinUtils::ToIntRect(const RECT& aRect)
                    aRect.right - aRect.left,
                    aRect.bottom - aRect.top);
 }
+
+/* static */
+bool
+WinUtils::IsIMEEnabled(const InputContext& aInputContext)
+{
+  return IsIMEEnabled(aInputContext.mIMEState.mEnabled);
+}
+
+/* static */
+bool
+WinUtils::IsIMEEnabled(IMEState::Enabled aIMEState)
+{
+  return (aIMEState == IMEState::ENABLED ||
+          aIMEState == IMEState::PLUGIN);
+}
+
+/* static */
+void
+WinUtils::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
+                                    uint32_t aModifiers)
+{
+  for (uint32_t i = 0; i < ArrayLength(sModifierKeyMap); ++i) {
+    const uint32_t* map = sModifierKeyMap[i];
+    if (aModifiers & map[0]) {
+      aArray->AppendElement(KeyPair(map[1], map[2]));
+    }
+  }
+}
+
 
 } // namespace widget
 } // namespace mozilla

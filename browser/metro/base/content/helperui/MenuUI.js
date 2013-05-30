@@ -194,7 +194,7 @@ var ContextMenuUI = {
 
     // chrome calls don't need to be translated and as such
     // don't provide target.
-    if (aMessage.target) {
+    if (aMessage.target && aMessage.target.localName === "browser") {
       coords = aMessage.target.msgBrowserToClient(aMessage, true);
     }
     this._menuPopup.show(Util.extend({}, this._defaultPositionOptions, {

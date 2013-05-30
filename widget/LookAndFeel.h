@@ -188,6 +188,8 @@ public:
     eIntID_MenusCanOverlapOSBar,
     // should overlay scrollbars be used?
     eIntID_UseOverlayScrollbars,
+    // allow H and V overlay scrollbars to overlap?
+    eIntID_AllowOverlayScrollbarsOverlap,
     // show/hide scrollbars based on activity
     eIntID_ShowHideScrollbars,
     // skip navigating to disabled menu item?

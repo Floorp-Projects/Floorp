@@ -460,12 +460,12 @@ public:
 
   void RemoveEntry(nsINode* aTextNode, Element* aElement)
   {
-    if (mElements.Contains(aElement)) {
-      mElements.Remove(aElement);
+    NS_ASSERTION(mElements.Contains(aElement),
+                 "element already removed from map");
 
-      aElement->ClearHasDirAutoSet();
-      aElement->UnsetProperty(nsGkAtoms::dirAutoSetBy);
-    }
+    mElements.Remove(aElement);
+    aElement->ClearHasDirAutoSet();
+    aElement->UnsetProperty(nsGkAtoms::dirAutoSetBy);
   }
 
 private:

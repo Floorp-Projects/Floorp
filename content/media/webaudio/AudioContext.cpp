@@ -109,7 +109,7 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  if (aSampleRate <= 0.0f) {
+  if (aSampleRate <= 0.0f || aSampleRate >= TRACK_RATE_MAX) {
     // The DOM binding protects us against infinity and NaN
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
