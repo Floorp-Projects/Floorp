@@ -4,11 +4,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
-interface nsIDOMDOMRequest;
 interface nsIDOMContact;
+interface nsIDOMDOMRequest;
+interface nsIDOMMozIccInfo;
+interface nsIDOMWindow;
 
-[scriptable, uuid(5902d9b0-c2be-11e2-8b8b-0800200c9a66)]
+[scriptable, uuid(82d25440-c913-11e2-8b8b-0800200c9a66)]
 interface nsIIccListener : nsISupports
 {
   void notifyStkCommand(in DOMString aMessage);
@@ -16,12 +17,13 @@ interface nsIIccListener : nsISupports
   void notifyIccCardLockError(in DOMString lockType,
                               in unsigned long retryCount);
   void notifyCardStateChanged();
+  void notifyIccInfoChanged();
 };
 
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(7131dfbe-9a2c-434d-b6b8-3eebf491ce1a)]
+[scriptable, uuid(52fa6780-c913-11e2-8b8b-0800200c9a66)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -31,6 +33,11 @@ interface nsIIccProvider : nsISupports
    */
   void registerIccMsg(in nsIIccListener listener);
   void unregisterIccMsg(in nsIIccListener listener);
+
+  /**
+   * UICC Information
+   */
+  readonly attribute nsIDOMMozIccInfo iccInfo;
 
   /**
    * Card State
