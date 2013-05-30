@@ -39,8 +39,8 @@ public:
     return val.forget();
   }
 
-  void SetData(JSContext* aCx, const nsAString& aKey, JS::Value aVal,
-               mozilla::ErrorResult& aRv);
+  void SetData(JSContext* aCx, const nsAString& aKey,
+               JS::Handle<JS::Value> aVal, mozilla::ErrorResult& aRv);
 
 private:
   static PLDHashOperator
