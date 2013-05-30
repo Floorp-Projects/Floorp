@@ -14,13 +14,12 @@ packaged_fonts =  \
 	CharisSILCompact-B.ttf \
 	CharisSILCompact-I.ttf \
 	CharisSILCompact-BI.ttf \
-	ClearSans-Italic.ttf \
-	ClearSans-BoldItalic.ttf \
-	ClearSans-Bold.ttf \
-	ClearSans-Italic.ttf \
-	ClearSans-MediumItalic.ttf \
-	ClearSans-Regular.ttf \
-	ClearSans-Thin.ttf \
+	OpenSans-Regular.ttf \
+	OpenSans-Bold.ttf \
+	OpenSans-Light.ttf \
+	OpenSans-Italic.ttf \
+	OpenSans-BoldItalic.ttf \
+	OpenSans-LightItalic.ttf \
 	$(NULL)
 
 GARBAGE += $(packaged_fonts)
