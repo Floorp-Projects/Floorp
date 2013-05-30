@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+const kSpecialWidgetPfx = "customizableui-special-";
+
 const kPrefCustomizationState        = "browser.uiCustomization.state";
 const kPrefCustomizationAutoAdd      = "browser.uiCustomization.autoAdd";
 const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
@@ -371,8 +373,9 @@ let CustomizableUIInternal = {
     let document = aWindow.document;
 
     if (this.isSpecialWidget(aWidgetId)) {
-      return [ CustomizableUI.PROVIDER_SPECIAL,
-               this.createSpecialWidget(aWidgetId, document) ];
+      let widgetNode = document.getElementById(aWidgetId) ||
+                       this.createSpecialWidget(aWidgetId, document);
+      return [ CustomizableUI.PROVIDER_SPECIAL, widgetNode];
     }
 
     let widget = gPalette.get(aWidgetId);
@@ -596,20 +599,29 @@ let CustomizableUIInternal = {
   },
 
   isSpecialWidget: function(aId) {
-    //XXXunf Need to double check these are getting handled correctly
-    //       everywhere, notably save/restore.
-    return (aId.startsWith("separator") ||
+    return (aId.startsWith(kSpecialWidgetPfx) ||
+            aId.startsWith("separator") ||
             aId.startsWith("spring") ||
             aId.startsWith("spacer"));
   },
 
+  ensureSpecialWidgetId: function(aId) {
+    let nodeType = aId.match(/spring|spacer|separator/)[0];
+    // If the ID we were passed isn't a generated one, generate one now:
+    if (nodeType == aId) {
+      // Due to timers resolution Date.now() can be the same for
+      // elements created in small timeframes.  So ids are
+      // differentiated through a unique count suffix.
+      return kSpecialWidgetPfx + aId + Date.now() + (++gNewElementCount);
+    }
+    return aId;
+  },
+
   createSpecialWidget: function(aId, aDocument) {
-    let node = aDocument.createElementNS(kNSXUL, "toolbar" + aId);
-    // Due to timers resolution Date.now() can be the same for
-    // elements created in small timeframes.  So ids are
-    // differentiated through a unique count suffix.
-    node.id = aId + Date.now() + (++gNewElementCount);
-    if (aId == "spring") {
+    let nodeName = "toolbar" + aId.match(/spring|spacer|separator/)[0];
+    let node = aDocument.createElementNS(kNSXUL, nodeName);
+    node.id = this.ensureSpecialWidgetId(aId);
+    if (nodeName == "toolbarspring") {
       node.flex = 1;
     }
     return node;
@@ -820,6 +832,10 @@ let CustomizableUIInternal = {
     if (this.isAreaLazy(aArea)) {
       gFuturePlacements.get(aArea).set(aWidgetId);
       return;
+    }
+
+    if (this.isSpecialWidget(aWidgetId)) {
+      aWidgetId = this.ensureSpecialWidgetId(aWidgetId);
     }
 
     let oldPlacement = this.getPlacementOfWidget(aWidgetId);
