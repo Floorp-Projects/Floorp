@@ -279,6 +279,7 @@ TabChild::TabChild(const TabContext& aContext, uint32_t aChromeFlags)
   , mInnerSize(0, 0)
   , mActivePointerId(-1)
   , mTapHoldTimer(nullptr)
+  , mAppPackageFileDescriptorRecved(false)
   , mOldViewportWidth(0.0f)
   , mLastBackgroundColor(NS_RGB(255, 255, 255))
   , mDidFakeShow(false)
@@ -1224,6 +1225,9 @@ TabChild::RecvCacheFileDescriptor(const nsString& aPath,
 {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!aPath.IsEmpty());
+    MOZ_ASSERT(!mAppPackageFileDescriptorRecved);
+
+    mAppPackageFileDescriptorRecved = true;
 
     // aFileDescriptor may be invalid here, but the callback will choose how to
     // handle it.
@@ -1288,8 +1292,10 @@ TabChild::GetCachedFileDescriptor(const nsAString& aPath,
     if (index == mCachedFileDescriptorInfos.NoIndex) {
         // We haven't received a file descriptor for this path yet. Assume that
         // we will in a little while and save the request here.
-        mCachedFileDescriptorInfos.AppendElement(
-            new CachedFileDescriptorInfo(aPath, aCallback));
+        if (!mAppPackageFileDescriptorRecved) {
+          mCachedFileDescriptorInfos.AppendElement(
+              new CachedFileDescriptorInfo(aPath, aCallback));
+        }
         return false;
     }
 
@@ -1329,6 +1335,11 @@ TabChild::CancelCachedFileDescriptorCallback(
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!aPath.IsEmpty());
     MOZ_ASSERT(aCallback);
+
+    if (mAppPackageFileDescriptorRecved) {
+      // Already received cached file descriptor for the app package. Nothing to do here.
+      return;
+    }
 
     const CachedFileDescriptorInfo search(aPath, aCallback);
     uint32_t index =
