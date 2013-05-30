@@ -554,7 +554,7 @@ BaselineCompiler::emitBody()
         if (frame.stackDepth() > 2)
             frame.syncStack(2);
 
-        frame.assertValidState(pc);
+        frame.assertValidState(*info);
 
         masm.bind(labelOf(pc));
 

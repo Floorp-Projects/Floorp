@@ -169,10 +169,10 @@ let HiddenBrowsers = {
   },
 
   uninit: function () {
-    this._topics.forEach(t => Services.obs.removeObserver(this, t, false));
-    this._updateTimer = clearTimer(this._updateTimer);
-
     if (this._browsers) {
+      this._topics.forEach(t => Services.obs.removeObserver(this, t, false));
+      this._updateTimer = clearTimer(this._updateTimer);
+
       for (let [key, browser] of this._browsers) {
         browser.destroy();
       }

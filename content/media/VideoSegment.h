@@ -28,7 +28,9 @@ public:
 
   bool operator==(const VideoFrame& aFrame) const
   {
-    return mImage == aFrame.mImage && mIntrinsicSize == aFrame.mIntrinsicSize;
+    return mIntrinsicSize == aFrame.mIntrinsicSize &&
+           mForceBlack == aFrame.mForceBlack &&
+           ((mForceBlack && aFrame.mForceBlack) || mImage == aFrame.mImage);
   }
   bool operator!=(const VideoFrame& aFrame) const
   {
@@ -36,6 +38,8 @@ public:
   }
 
   Image* GetImage() const { return mImage; }
+  void SetForceBlack(bool aForceBlack) { mForceBlack = true; }
+  bool GetForceBlack() const { return mForceBlack; }
   const gfxIntSize& GetIntrinsicSize() const { return mIntrinsicSize; }
   void SetNull();
   void TakeFrom(VideoFrame* aFrame);
@@ -46,8 +50,8 @@ protected:
   nsRefPtr<Image> mImage;
   // The desired size to render the video frame at.
   gfxIntSize mIntrinsicSize;
+  bool mForceBlack;
 };
-
 
 struct VideoChunk {
   VideoChunk();
@@ -69,6 +73,7 @@ struct VideoChunk {
     mDuration = aDuration;
     mFrame.SetNull();
   }
+  void SetForceBlack(bool aForceBlack) { mFrame.SetForceBlack(aForceBlack); }
 
   TrackTicks mDuration;
   VideoFrame mFrame;

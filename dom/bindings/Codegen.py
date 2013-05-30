@@ -1006,23 +1006,17 @@ def finalizeHook(descriptor, hookName, context):
         if descriptor.workers:
             finalize += "self->Release();"
         elif descriptor.nativeOwnership == 'nsisupports':
-            finalize += """XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
-if (rt) {
-  rt->DeferredRelease(reinterpret_cast<nsISupports*>(self));
-} else {
-  NS_RELEASE(self);
-}"""
+            finalize += "xpc::DeferredRelease(reinterpret_cast<nsISupports*>(self));"
         else:
             smartPtr = DeferredFinalizeSmartPtr(descriptor)
             finalize += """static bool registered = false;
 if (!registered) {
-  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
-  if (!rt) {
+  if (!RegisterForDeferredFinalization(GetDeferredFinalizePointers,
+                                       DeferredFinalize)) {
     %(smartPtr)s dying;
     Take(dying, self);
     return;
   }
-  rt->RegisterDeferredFinalize(GetDeferredFinalizePointers, DeferredFinalize);
   registered = true;
 }
 if (!sDeferredFinalizePointers) {
@@ -2312,9 +2306,9 @@ class CastableObjectUnwrapper():
             # not.
             self.substitution["codeOnFailure"] = CGIndenter(CGGeneric(string.Template(
                 "${type} *objPtr;\n"
-                "xpc_qsSelfRef objRef;\n"
+                "SelfRef objRef;\n"
                 "JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*${source}));\n"
-                "nsresult rv = xpc_qsUnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, val.address());\n"
+                "nsresult rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, val.address());\n"
                 "if (NS_FAILED(rv)) {\n"
                 "${codeOnFailure}\n"
                 "}\n"
@@ -3115,7 +3109,7 @@ for (uint32_t i = 0; i < length; ++i) {
             templateBody += (
                 "JS::Rooted<JS::Value> tmpVal(cx, ${val});\n" +
                 typePtr + " tmp;\n"
-                "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), tmpVal.address()))) {\n")
+                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), tmpVal.address()))) {\n")
             templateBody += CGIndenter(onFailureBadType(failureCode,
                                                         descriptor.interface.identifier.name)).define()
             templateBody += ("}\n"
@@ -3524,7 +3518,7 @@ for (uint32_t i = 0; i < length; ++i) {
         template = (
             "if (%s) {\n"
             "  ${declName}.SetNull();\n"
-            "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
+            "} else if (!ValueToPrimitive<%s, %s>(cx, ${valHandle}, &%s)) {\n"
             "%s\n"
             "}" % (nullCondition, typeName, conversionBehavior,
                    writeLoc, exceptionCodeIndented.define()))
@@ -3534,7 +3528,7 @@ for (uint32_t i = 0; i < length; ++i) {
         writeLoc = "${declName}"
         readLoc = writeLoc
         template = (
-            "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
+            "if (!ValueToPrimitive<%s, %s>(cx, ${valHandle}, &%s)) {\n"
             "%s\n"
             "}" % (typeName, conversionBehavior, writeLoc,
                    exceptionCodeIndented.define()))
@@ -5377,9 +5371,9 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
                                                         self.attr)
         argv = CGGeneric("""JS::Value* argv = JS_ARGV(cx, vp);
-JS::Value undef = JS::UndefinedValue();
+JS::Rooted<JS::Value> undef(cx, JS::UndefinedValue());
 if (argc == 0) {
-  argv = &undef;
+  argv = undef.address();
 }""")
         call = CGSetterCall(self.attr.type, nativeName, self.descriptor,
                             self.attr)
@@ -8213,6 +8207,8 @@ class CGBindingRoot(CGThing):
         def descriptorHasChromeOnlyMembers(desc):
             return any(isChromeOnly(a) for a in desc.interface.members)
         hasChromeOnlyMembers = any(descriptorHasChromeOnlyMembers(d) for d in descriptors)
+        # XXXkhuey ugly hack but this is going away soon.
+        isEventTarget = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
         mainDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
@@ -8317,10 +8313,7 @@ class CGBindingRoot(CGThing):
                          ['mozilla/dom/BindingUtils.h',
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
-                          'XPCQuickStubs.h',
-                          'XPCWrapper.h',
                           'WrapperFactory.h',
-                          'nsDOMQS.h',
                           # Have to include nsDOMQS.h to get fast arg unwrapping
                           # for old-binding things with castability.
                           'nsDOMQS.h'
@@ -8330,7 +8323,8 @@ class CGBindingRoot(CGThing):
                             + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
                             + (['nsContentUtils.h'] if requiresContentUtils else [])
                             + (['nsCxPusher.h'] if requiresContentUtils else [])
-                            + (['AccessCheck.h'] if hasChromeOnlyMembers else []),
+                            + (['AccessCheck.h'] if hasChromeOnlyMembers else [])
+                            + (['xpcprivate.h'] if isEventTarget else []),
                          curr,
                          config,
                          jsImplemented)

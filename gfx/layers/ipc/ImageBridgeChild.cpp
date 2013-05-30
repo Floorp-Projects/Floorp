@@ -310,6 +310,10 @@ static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContaine
 void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
                                                  ImageContainer* aContainer)
 {
+  if (InImageBridgeChildThread()) {
+    UpdateImageClientNow(aClient, aContainer);
+    return;
+  }
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
     NewRunnableFunction(&UpdateImageClientNow, aClient, aContainer));

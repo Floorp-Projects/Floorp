@@ -97,22 +97,6 @@ XPCCallContext::GetPrevCallContext() const
 }
 
 inline JSObject*
-XPCCallContext::GetScopeForNewJSObjects() const
-{
-    CHECK_STATE(HAVE_SCOPE);
-    return mScopeForNewJSObjects;
-}
-
-inline void
-XPCCallContext::SetScopeForNewJSObjects(JSObject *scope)
-{
-    NS_ABORT_IF_FALSE(mState == HAVE_CONTEXT, "wrong call context state");
-    NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(scope, mJSContext), "wrong compartment");
-    mScopeForNewJSObjects = scope;
-    mState = HAVE_SCOPE;
-}
-
-inline JSObject*
 XPCCallContext::GetFlattenedJSObject() const
 {
     CHECK_STATE(HAVE_OBJECT);

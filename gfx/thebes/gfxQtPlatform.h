@@ -23,7 +23,7 @@ class FontFamily;
 class FontEntry;
 #endif
 
-class THEBES_API gfxQtPlatform : public gfxPlatform {
+class gfxQtPlatform : public gfxPlatform {
 public:
 
     enum RenderMode {

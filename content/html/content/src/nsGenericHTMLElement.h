@@ -6,6 +6,7 @@
 #ifndef nsGenericHTMLElement_h___
 #define nsGenericHTMLElement_h___
 
+#include "mozilla/Attributes.h"
 #include "nsMappedAttributeElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
@@ -319,8 +320,8 @@ protected:
 public:
   nsresult SetContentEditable(const nsAString &aContentEditable);
   virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager();
-  virtual bool UndoScope();
-  virtual void SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError);
+  virtual bool UndoScope() MOZ_OVERRIDE;
+  virtual void SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError) MOZ_OVERRIDE;
   nsresult GetDataset(nsISupports** aDataset);
   // Callback for destructor of of dataset to ensure to null out weak pointer.
   nsresult ClearDataset();
@@ -334,9 +335,9 @@ public:
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              bool aNullParent = true) MOZ_OVERRIDE;
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -344,10 +345,10 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           bool aNotify) MOZ_OVERRIDE;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                             bool aNotify);
-  virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false)
+                             bool aNotify) MOZ_OVERRIDE;
+  virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false) MOZ_OVERRIDE
   {
     bool isFocusable = false;
     IsHTMLFocusable(aWithMouse, &isFocusable, aTabIndex);
@@ -361,7 +362,7 @@ public:
                                bool *aIsFocusable,
                                int32_t *aTabIndex);
   virtual void PerformAccesskey(bool aKeyCausesActivation,
-                                bool aIsTrustedEvent);
+                                bool aIsTrustedEvent) MOZ_OVERRIDE;
 
   /**
    * Check if an event for an anchor can be handled
@@ -375,9 +376,9 @@ public:
   // HTML element methods
   void Compact() { mAttrsAndChildren.Compact(); }
 
-  virtual void UpdateEditableState(bool aNotify);
+  virtual void UpdateEditableState(bool aNotify) MOZ_OVERRIDE;
 
-  virtual nsEventStates IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
   // Helper for setting our editable flag and notifying
   void DoSetEditableFlag(bool aEditable, bool aNotify) {
@@ -388,15 +389,15 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult);
+                              nsAttrValue& aResult) MOZ_OVERRIDE;
 
   bool ParseBackgroundAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
 
   /**
    * Get the base target for any links within this piece
@@ -667,7 +668,7 @@ public:
    */
   nsHTMLFormElement* FindAncestorForm(nsHTMLFormElement* aCurrentForm = nullptr);
 
-  virtual void RecompileScriptEventListeners();
+  virtual void RecompileScriptEventListeners() MOZ_OVERRIDE;
 
   /**
    * See if the document being tested has nav-quirks mode enabled.
@@ -713,7 +714,7 @@ public:
     return HasAttr(kNameSpaceID_None, nsGkAtoms::hidden);
   }
 
-  virtual bool IsLabelable() const;
+  virtual bool IsLabelable() const MOZ_OVERRIDE;
 
   static bool TouchEventsEnabled(JSContext* /* unused */, JSObject* /* unused */);
 
@@ -788,12 +789,12 @@ private:
 
 protected:
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
   virtual nsEventListenerManager*
-    GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer);
+    GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer) MOZ_OVERRIDE;
 
-  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
+  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const MOZ_OVERRIDE;
 
   /**
    * Create a URI for the given aURISpec string.
@@ -1077,34 +1078,34 @@ public:
   nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsGenericHTMLFormElement();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
 
   nsINode* GetParentObject() const;
 
-  virtual bool IsNodeOfType(uint32_t aFlags) const;
-  virtual void SaveSubtreeState();
+  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
+  virtual void SaveSubtreeState() MOZ_OVERRIDE;
 
   // nsIFormControl
-  virtual mozilla::dom::Element* GetFormElement();
+  virtual mozilla::dom::Element* GetFormElement() MOZ_OVERRIDE;
   nsHTMLFormElement* GetForm() const
   {
     return mForm;
   }
-  virtual void SetForm(nsIDOMHTMLFormElement* aForm);
-  virtual void ClearForm(bool aRemoveFromForm);
+  virtual void SetForm(nsIDOMHTMLFormElement* aForm) MOZ_OVERRIDE;
+  virtual void ClearForm(bool aRemoveFromForm) MOZ_OVERRIDE;
 
   nsresult GetForm(nsIDOMHTMLFormElement** aForm);
 
-  NS_IMETHOD SaveState()
+  NS_IMETHOD SaveState() MOZ_OVERRIDE
   {
     return NS_OK;
   }
 
-  virtual bool RestoreState(nsPresState* aState)
+  virtual bool RestoreState(nsPresState* aState) MOZ_OVERRIDE
   {
     return false;
   }
-  virtual bool AllowDrop()
+  virtual bool AllowDrop() MOZ_OVERRIDE
   {
     return true;
   }
@@ -1112,15 +1113,15 @@ public:
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  virtual IMEState GetDesiredIMEState();
-  virtual nsEventStates IntrinsicState() const;
+                              bool aNullParent = true) MOZ_OVERRIDE;
+  virtual IMEState GetDesiredIMEState() MOZ_OVERRIDE;
+  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
-  virtual bool IsDisabled() const;
+  virtual bool IsDisabled() const MOZ_OVERRIDE;
 
   /**
    * This callback is called by a fieldest on all its elements whenever its
@@ -1152,17 +1153,17 @@ public:
   bool CanBeDisabled() const;
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                                 int32_t* aTabIndex);
+                                 int32_t* aTabIndex) MOZ_OVERRIDE;
 
-  virtual bool IsLabelable() const;
+  virtual bool IsLabelable() const MOZ_OVERRIDE;
 
 protected:
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
-                                 bool aNotify);
+                                 bool aNotify) MOZ_OVERRIDE;
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
   /**
    * This method will update the form owner, using @form or looking to a parent.

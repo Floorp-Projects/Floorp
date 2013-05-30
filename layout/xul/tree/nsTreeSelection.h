@@ -27,7 +27,7 @@ public:
   NS_DECL_NSITREESELECTION
 
   // nsINativeTreeSelection: Untrusted code can use us
-  NS_IMETHOD EnsureNative() { return NS_OK; }
+  NS_IMETHOD EnsureNative() MOZ_OVERRIDE { return NS_OK; }
 
   friend struct nsTreeRange;
 
