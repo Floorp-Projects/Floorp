@@ -434,6 +434,12 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
     }
   }
 
+  if (mDisabledTrackIDs.Contains(AUDIO_NODE_STREAM_TRACK_ID)) {
+    for (uint32_t i = 0; i < mLastChunks.Length(); ++i) {
+      mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
+    }
+  }
+
   if (mKind == MediaStreamGraph::EXTERNAL_STREAM) {
     segment->AppendAndConsumeChunk(&mLastChunks[0]);
   } else {
