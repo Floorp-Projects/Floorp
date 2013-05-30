@@ -470,15 +470,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
           break;
         case eTreeSortDirection_Natural:
         default:
-          /* GTK_ARROW_NONE is implemented since GTK 2.10
-           * This prevents the treecolums from getting smaller
+          /* This prevents the treecolums from getting smaller
            * and wider when switching sort direction off and on
            * */
-#if GTK_CHECK_VERSION(2,10,0)
           *aWidgetFlags = GTK_ARROW_NONE;
-#else
-          return false; // Don't draw when we shouldn't
-#endif // GTK_CHECK_VERSION(2,10,0)
           break;
       }
     }
