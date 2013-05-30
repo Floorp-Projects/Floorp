@@ -2057,6 +2057,11 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t o
     if (obj->getClass()->resolve != JS_ResolveStub)
         return false;
 
+    // Likewise for a non-default addProperty hook, since we'll need
+    // to invoke it.
+    if (obj->getClass()->addProperty != JS_PropertyStub)
+        return false;
+
     if (!obj->isExtensible() || !shape->writable())
         return false;
 
