@@ -16,7 +16,7 @@
 #include "nsDeque.h"
 #include "mozilla/ReentrantMonitor.h"
 
-class AndroidCaptureProvider : public nsDeviceCaptureProvider {
+class AndroidCaptureProvider MOZ_FINAL : public nsDeviceCaptureProvider {
   public:
     AndroidCaptureProvider();
     ~AndroidCaptureProvider();
@@ -27,7 +27,7 @@ class AndroidCaptureProvider : public nsDeviceCaptureProvider {
     static AndroidCaptureProvider* sInstance;
 };
 
-class AndroidCameraInputStream : public nsIAsyncInputStream, mozilla::net::CameraStreamImpl::FrameCallback {
+class AndroidCameraInputStream MOZ_FINAL : public nsIAsyncInputStream, mozilla::net::CameraStreamImpl::FrameCallback {
   public:
     AndroidCameraInputStream();
     ~AndroidCameraInputStream();
