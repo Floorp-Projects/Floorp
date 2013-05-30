@@ -104,6 +104,7 @@
 #include "DocumentType.h"
 #include <algorithm>
 #include "nsDOMEvent.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1161,6 +1162,14 @@ nsIScriptContext*
 nsINode::GetContextForEventHandlers(nsresult* aRv)
 {
   return nsContentUtils::GetContextForEventHandlers(this, aRv);
+}
+
+nsIDOMWindow*
+nsINode::GetOwnerGlobal()
+{
+  bool dummy;
+  return nsPIDOMWindow::GetOuterFromCurrentInner(
+    static_cast<nsGlobalWindow*>(OwnerDoc()->GetScriptHandlingObject(dummy)));
 }
 
 bool

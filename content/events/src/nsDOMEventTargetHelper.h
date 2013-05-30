@@ -95,6 +95,10 @@ public:
                        JSContext* aCx,
                        JS::Value* aValue);
   using mozilla::dom::EventTarget::GetEventHandler;
+  virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE
+  {
+    return nsPIDOMWindow::GetOuterFromCurrentInner(GetOwner());
+  }
 
   nsresult CheckInnerWindowCorrectness()
   {
