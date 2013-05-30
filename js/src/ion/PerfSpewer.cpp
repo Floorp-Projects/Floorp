@@ -25,9 +25,9 @@ using namespace js::ion;
 #define PERF_MODE_BLOCK 3
 
 static bool PerfChecked = false;
-static uint32_t PerfMode = 0;
 
 #ifdef JS_ION_PERF
+static uint32_t PerfMode = 0;
 
 void
 js::ion::CheckPerf() {
