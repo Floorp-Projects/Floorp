@@ -17,7 +17,7 @@ typedef struct cairo_path cairo_path_t;
  * Class representing a path. Can be created by copying the current path
  * of a gfxContext.
  */
-class THEBES_API gfxPath {
+class gfxPath {
     NS_INLINE_DECL_REFCOUNTING(gfxPath)
 
     friend class gfxContext;
@@ -36,7 +36,7 @@ protected:
  * Specialization of a path that only contains linear pieces. Can be created
  * from the existing path of a gfxContext.
  */
-class THEBES_API gfxFlattenedPath : public gfxPath {
+class gfxFlattenedPath : public gfxPath {
     friend class gfxContext;
 
 protected:

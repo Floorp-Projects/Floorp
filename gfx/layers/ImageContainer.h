@@ -56,7 +56,7 @@ protected:
  * When resampling an Image, only pixels within the buffer should be
  * sampled. For example, cairo images should be sampled in EXTEND_PAD mode.
  */
-class THEBES_API Image {
+class Image {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Image)
 
 public:
@@ -153,7 +153,7 @@ public:
 
 /**
  * A class that manages Image creation for a LayerManager. The only reason
- * we need a separate class here is that LayerMananers aren't threadsafe
+ * we need a separate class here is that LayerManagers aren't threadsafe
  * (because layers can only be used on the main thread) and we want to
  * be able to create images from any thread, to facilitate video playback
  * without involving the main thread, for example.
@@ -167,7 +167,7 @@ public:
  * wrapper.
  */
 
-class THEBES_API ImageFactory
+class ImageFactory
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageFactory)
 protected:
@@ -260,7 +260,7 @@ struct RemoteImageData {
  * updates the shared state to point to the new image and the old image
  * is immediately released (not true in Normal or Asynchronous modes).
  */
-class THEBES_API ImageContainer {
+class ImageContainer {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
 public:
 
@@ -634,7 +634,7 @@ private:
  * |            |<->|
  *                mYSkip
  */
-class THEBES_API PlanarYCbCrImage : public Image {
+class PlanarYCbCrImage : public Image {
 public:
   struct Data {
     // Luminance buffer
@@ -754,7 +754,7 @@ protected:
  * device output color space. This class is very simple as all backends
  * have to know about how to deal with drawing a cairo image.
  */
-class THEBES_API CairoImage : public Image {
+class CairoImage : public Image {
 public:
   struct Data {
     gfxASurface* mSurface;

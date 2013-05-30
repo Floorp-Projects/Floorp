@@ -90,7 +90,7 @@ protected:
 };
 
 #ifndef ANDROID // not needed on Android, uses the standard gfxFontGroup directly
-class THEBES_API gfxFT2FontGroup : public gfxFontGroup {
+class gfxFT2FontGroup : public gfxFontGroup {
 public: // new functions
     gfxFT2FontGroup (const nsAString& families,
                     const gfxFontStyle *aStyle,

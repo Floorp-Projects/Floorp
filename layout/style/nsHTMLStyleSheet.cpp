@@ -32,7 +32,9 @@
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/Element.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsHashKeys.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::HTMLColorRule, nsIStyleRule)
@@ -94,6 +96,31 @@ nsHTMLStyleSheet::TableQuirkColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
   }
 }
 
+
+NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::LangRule, nsIStyleRule)
+
+/* virtual */ void
+nsHTMLStyleSheet::LangRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
+    nsCSSValue* lang = aRuleData->ValueForLang();
+    if (lang->GetUnit() == eCSSUnit_Null) {
+      lang->SetStringValue(mLang, eCSSUnit_Ident);
+    }
+  }
+}
+
+#ifdef DEBUG
+/* virtual */ void
+nsHTMLStyleSheet::LangRule::List(FILE* out, int32_t aIndent) const
+{
+  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
+  fputs("[lang rule] { language: \"", out);
+  fputs(NS_ConvertUTF16toUTF8(mLang).get(), out);
+  fputs("\" }\n", out);
+}
+#endif
+
 // -----------------------------------------------------------
 
 struct MappedAttrTableEntry : public PLDHashEntryHdr {
@@ -138,7 +165,64 @@ static PLDHashTableOps MappedAttrTable_Ops = {
   PL_DHashMoveEntryStub,
   MappedAttrTable_ClearEntry,
   PL_DHashFinalizeStub,
-  NULL
+  nullptr
+};
+
+// -----------------------------------------------------------
+
+struct LangRuleTableEntry : public PLDHashEntryHdr {
+  nsRefPtr<nsHTMLStyleSheet::LangRule> mRule;
+};
+
+static PLDHashNumber
+LangRuleTable_HashKey(PLDHashTable *table, const void *key)
+{
+  const nsString *lang = static_cast<const nsString*>(key);
+  return HashString(*lang);
+}
+
+static void
+LangRuleTable_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  LangRuleTableEntry *entry = static_cast<LangRuleTableEntry*>(hdr);
+
+  entry->~LangRuleTableEntry();
+  memset(entry, 0, sizeof(LangRuleTableEntry));
+}
+
+static bool
+LangRuleTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                         const void *key)
+{
+  const nsString *lang = static_cast<const nsString*>(key);
+  const LangRuleTableEntry *entry = static_cast<const LangRuleTableEntry*>(hdr);
+
+  return entry->mRule->mLang == *lang;
+}
+
+static bool
+LangRuleTable_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                        const void *key)
+{
+  const nsString *lang = static_cast<const nsString*>(key);
+
+  LangRuleTableEntry *entry = new (hdr) LangRuleTableEntry();
+
+  // Create the unique rule for this language
+  entry->mRule = new nsHTMLStyleSheet::LangRule(*lang);
+
+  return true;
+}
+
+static PLDHashTableOps LangRuleTable_Ops = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  LangRuleTable_HashKey,
+  LangRuleTable_MatchEntry,
+  PL_DHashMoveEntryStub,
+  LangRuleTable_ClearEntry,
+  PL_DHashFinalizeStub,
+  LangRuleTable_InitEntry
 };
 
 // -----------------------------------------------------------
@@ -152,10 +236,13 @@ nsHTMLStyleSheet::nsHTMLStyleSheet(nsIURI* aURL, nsIDocument* aDocument)
   MOZ_ASSERT(aURL);
   MOZ_ASSERT(aDocument);
   mMappedAttrTable.ops = nullptr;
+  mLangRuleTable.ops = nullptr;
 }
 
 nsHTMLStyleSheet::~nsHTMLStyleSheet()
 {
+  if (mLangRuleTable.ops)
+    PL_DHashTableFinish(&mLangRuleTable);
   if (mMappedAttrTable.ops)
     PL_DHashTableFinish(&mMappedAttrTable);
 }
@@ -211,6 +298,14 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
   // considered style.
   if (!ruleWalker->AuthorStyleDisabled() || aData->mElement->IsSVG()) {
     aData->mElement->WalkContentStyleRules(ruleWalker);
+  }
+
+  // http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#language
+  // says that the xml:lang attribute overrides HTML's lang attribute,
+  // so we need to do this after WalkContentStyleRules.
+  nsString lang;
+  if (aData->mElement->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang, lang)) {
+    ruleWalker->Forward(LangRuleFor(lang));
   }
 }
 
@@ -387,6 +482,10 @@ nsHTMLStyleSheet::Reset(nsIURI* aURL)
   mVisitedRule       = nullptr;
   mActiveRule        = nullptr;
 
+  if (mLangRuleTable.ops) {
+    PL_DHashTableFinish(&mLangRuleTable);
+    mLangRuleTable.ops = nullptr;
+  }
   if (mMappedAttrTable.ops) {
     PL_DHashTableFinish(&mMappedAttrTable);
     mMappedAttrTable.ops = nullptr;
@@ -474,6 +573,27 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
   NS_ASSERTION(entryCount == mMappedAttrTable.entryCount, "not removed");
 }
 
+nsIStyleRule*
+nsHTMLStyleSheet::LangRuleFor(const nsString& aLanguage)
+{
+  if (!mLangRuleTable.ops) {
+    bool res = PL_DHashTableInit(&mLangRuleTable, &LangRuleTable_Ops,
+                                 nullptr, sizeof(LangRuleTableEntry), 16);
+    if (!res) {
+      NS_ASSERTION(false, "out of memory");
+      mLangRuleTable.ops = nullptr;
+      return nullptr;
+    }
+  }
+  LangRuleTableEntry *entry = static_cast<LangRuleTableEntry*>
+    (PL_DHashTableOperate(&mLangRuleTable, &aLanguage, PL_DHASH_ADD));
+  if (!entry) {
+    NS_ASSERTION(false, "out of memory");
+    return nullptr;
+  }
+  return entry->mRule;
+}
+
 #ifdef DEBUG
 /* virtual */ void
 nsHTMLStyleSheet::List(FILE* out, int32_t aIndent) const
@@ -522,6 +642,7 @@ nsHTMLStyleSheet::DOMSizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   // - mActiveRule
   // - mTableQuirkColorRule
   // - mTableTHRule
+  // - mLangRuleTable
   //
   // The following members are not measured:
   // - mDocument, because it's non-owning

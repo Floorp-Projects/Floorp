@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_SVGAnimateMotionElement_h
 #define mozilla_dom_SVGAnimateMotionElement_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "SVGMotionSMILAnimationFunction.h"
 
@@ -30,7 +31,7 @@ protected:
 
 public:
   // nsIDOMNode specializations
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // SVGAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
@@ -39,7 +40,7 @@ public:
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
 
   // nsSVGElement
-  virtual nsIAtom* GetPathDataAttrName() const {
+  virtual nsIAtom* GetPathDataAttrName() const MOZ_OVERRIDE {
     return nsGkAtoms::path;
   }
 

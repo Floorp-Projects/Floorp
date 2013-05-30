@@ -21,7 +21,7 @@ class gfxContext;
  * override DrawWithGDK, and then call Draw(). The drawing will be subjected
  * to all Thebes transformations, clipping etc.
  */
-class THEBES_API gfxGdkNativeRenderer
+class gfxGdkNativeRenderer
 #ifdef MOZ_X11
     : private gfxXlibNativeRenderer
 #endif

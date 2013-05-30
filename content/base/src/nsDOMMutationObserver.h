@@ -7,6 +7,7 @@
 #ifndef nsDOMMutationObserver_h
 #define nsDOMMutationObserver_h
 
+#include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptContext.h"
@@ -328,7 +329,7 @@ public:
   virtual void AttributeSetToCurrentValue(nsIDocument* aDocument,
                                           mozilla::dom::Element* aElement,
                                           int32_t aNameSpaceID,
-                                          nsIAtom* aAttribute)
+                                          nsIAtom* aAttribute) MOZ_OVERRIDE
   {
     // We can reuse AttributeWillChange implementation.
     AttributeWillChange(aDocument, aElement, aNameSpaceID, aAttribute,

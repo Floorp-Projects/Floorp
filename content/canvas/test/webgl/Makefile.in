@@ -23,6 +23,7 @@ MOCHITEST_FILES = \
   failing_tests_mac.txt \
   failing_tests_mac_mtnlion.txt \
   failing_tests_android.txt \
+  failing_tests_android_nvidia.txt \
   skipped_tests_android.txt \
   $(NULL)
 
