@@ -32,6 +32,7 @@ EXTRA_COMPONENTS = \
         NSSDialogService.js \
         SiteSpecificUserAgent.js \
         PaymentsUI.js \
+        FilePicker.js \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

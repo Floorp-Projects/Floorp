@@ -27,9 +27,9 @@ public:
                                 TrackRate aTrackRate,
                                 TrackTicks aTrackOffset,
                                 uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia);
+                                const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
 
-  void NotifyFinished(MediaStreamGraph* aGraph);
+  void NotifyFinished(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
 
 private:
   template<typename SampleFormatType> void ConvertAndDispatchAudioChunk(AudioChunk& aChunk);

@@ -561,6 +561,12 @@ flyoutpanel > settings:first-child {
  margin-top: 24pt;
 }
 
+#currentChannel {
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+}
+
 /* Preferences flyout */
 
 #prefs-flyoutpanel {

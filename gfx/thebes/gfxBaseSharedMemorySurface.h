@@ -30,7 +30,7 @@ GetShmInfoPtr(const mozilla::ipc::Shmem& aShmem)
 extern const cairo_user_data_key_t SHM_KEY;
 
 template <typename Base, typename Sub>
-class THEBES_API gfxBaseSharedMemorySurface : public Base {
+class gfxBaseSharedMemorySurface : public Base {
     typedef mozilla::ipc::SharedMemory SharedMemory;
     typedef mozilla::ipc::Shmem Shmem;
 

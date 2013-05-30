@@ -6,6 +6,7 @@
 #ifndef nsXBLContentSink_h__
 #define nsXBLContentSink_h__
 
+#include "mozilla/Attributes.h"
 #include "nsXMLContentSink.h"
 #include "nsXBLDocumentInfo.h"
 #include "nsXBLPrototypeHandler.h"
@@ -69,32 +70,32 @@ public:
                                 const PRUnichar **aAtts, 
                                 uint32_t aAttsCount, 
                                 int32_t aIndex, 
-                                uint32_t aLineNumber);
+                                uint32_t aLineNumber) MOZ_OVERRIDE;
 
-  NS_IMETHOD HandleEndElement(const PRUnichar *aName);
+  NS_IMETHOD HandleEndElement(const PRUnichar *aName) MOZ_OVERRIDE;
   
   NS_IMETHOD HandleCDataSection(const PRUnichar *aData, 
-                                uint32_t aLength);
+                                uint32_t aLength) MOZ_OVERRIDE;
 
 protected:
     // nsXMLContentSink overrides
-    virtual void MaybeStartLayout(bool aIgnorePendingSheets);
+    virtual void MaybeStartLayout(bool aIgnorePendingSheets) MOZ_OVERRIDE;
 
     bool OnOpenContainer(const PRUnichar **aAtts, 
                            uint32_t aAttsCount, 
                            int32_t aNameSpaceID, 
                            nsIAtom* aTagName,
-                           uint32_t aLineNumber);
+                           uint32_t aLineNumber) MOZ_OVERRIDE;
 
-    bool NotifyForDocElement() { return false; }
+    bool NotifyForDocElement() MOZ_OVERRIDE { return false; }
 
     nsresult CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
                            nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                            nsIContent** aResult, bool* aAppendContent,
-                           mozilla::dom::FromParser aFromParser);
+                           mozilla::dom::FromParser aFromParser) MOZ_OVERRIDE;
     
     nsresult AddAttributes(const PRUnichar** aAtts, 
-                           nsIContent* aContent);
+                           nsIContent* aContent) MOZ_OVERRIDE;
 
 #ifdef MOZ_XUL    
     nsresult AddAttributesToXULPrototype(const PRUnichar **aAtts, 
@@ -114,13 +115,13 @@ protected:
   
 
   // nsXMLContentSink overrides
-  nsresult FlushText(bool aReleaseTextNode = true);
+  nsresult FlushText(bool aReleaseTextNode = true) MOZ_OVERRIDE;
 
   // nsIExpatSink overrides
   NS_IMETHOD ReportError(const PRUnichar* aErrorText,
                          const PRUnichar* aSourceText,
                          nsIScriptError *aError,
-                         bool *_retval);
+                         bool *_retval) MOZ_OVERRIDE;
 
 protected:
   nsresult ReportUnexpectedElement(nsIAtom* aElementName, uint32_t aLineNumber);

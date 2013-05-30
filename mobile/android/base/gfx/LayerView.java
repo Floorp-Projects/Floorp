@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
@@ -115,6 +116,45 @@ public class LayerView extends FrameLayout {
         setFocusableInTouchMode(true);
 
         GeckoAccessibility.setDelegate(this);
+    }
+
+    public void geckoConnected() {
+        mLayerClient.notifyGeckoReady();
+        addTouchInterceptor(new TouchEventInterceptor() {
+            private PointF mInitialTouchPoint = null;
+
+            @Override
+            public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+                return false;
+            }
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                if (event == null) {
+                    return true;
+                }
+
+                int action = event.getActionMasked();
+                PointF point = new PointF(event.getX(), event.getY());
+                if (action == MotionEvent.ACTION_DOWN) {
+                    mInitialTouchPoint = point;
+                }
+
+                if (mInitialTouchPoint != null && action == MotionEvent.ACTION_MOVE) {
+                    if (PointUtils.subtract(point, mInitialTouchPoint).length() <
+                        PanZoomController.PAN_THRESHOLD) {
+                        // Don't send the touchmove event if if the users finger hasn't moved far.
+                        // Necessary for Google Maps to work correctly. See bug 771099.
+                        return true;
+                    } else {
+                        mInitialTouchPoint = null;
+                    }
+                }
+
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event, false));
+                return true;
+            }
+        });
     }
 
     public void show() {

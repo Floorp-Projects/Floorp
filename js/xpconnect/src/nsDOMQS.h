@@ -26,6 +26,7 @@
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
+#include "XPCQuickStubs.h"
 
 template<class T>
 struct ProtoIDAndDepth
@@ -101,6 +102,7 @@ xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
         *ppArg = static_cast<_interface*>(static_cast<_base*>(native));       \
     return rv;                                                                \
 }                                                                             \
+                                                                              \
 template <>                                                                   \
 inline nsresult                                                               \
 xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
@@ -113,7 +115,35 @@ xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
     nsresult rv = xpc_qsUnwrapArg<_interface>(cx, v, ppArg, &argRef, vp);     \
     *ppArgRef = static_cast<_interface*>(static_cast<_base*>(argRef));        \
     return rv;                                                                \
-}
+}                                                                             \
+                                                                              \
+namespace mozilla {                                                           \
+namespace dom {                                                               \
+                                                                              \
+template <>                                                                   \
+MOZ_ALWAYS_INLINE nsresult                                                    \
+UnwrapArg<_interface>(JSContext *cx,                                          \
+                      jsval v,                                                \
+                      _interface **ppArg,                                     \
+                      nsISupports **ppArgRef,                                 \
+                      jsval *vp)                                              \
+{                                                                             \
+  return xpc_qsUnwrapArg<_interface>(cx, v, ppArg, ppArgRef, vp);             \
+}                                                                             \
+                                                                              \
+template <>                                                                   \
+inline nsresult                                                               \
+UnwrapArg<_interface>(JSContext *cx,                                          \
+                      jsval v,                                                \
+                      _interface **ppArg,                                     \
+                      _interface **ppArgRef,                                  \
+                      jsval *vp)                                              \
+{                                                                             \
+  return xpc_qsUnwrapArg<_interface>(cx, v, ppArg, ppArgRef, vp);             \
+}                                                                             \
+                                                                              \
+} /* namespace dom */                                                         \
+} /* namespace mozilla */
 
 #undef DOMCI_CASTABLE_INTERFACE
 
@@ -174,7 +204,32 @@ xpc_qsUnwrapArg<_clazz>(JSContext *cx, jsval v, _clazz **ppArg,               \
     nsresult rv = xpc_qsUnwrapArg<_clazz>(cx, v, ppArg, &argRef, vp);         \
     *ppArgRef = static_cast<_clazz*>(static_cast<nsIContent*>(argRef));       \
     return rv;                                                                \
-}
+}                                                                             \
+                                                                              \
+namespace mozilla {                                                           \
+namespace dom {                                                               \
+                                                                              \
+template <>                                                                   \
+inline nsresult                                                               \
+UnwrapArg<_clazz>(JSContext *cx,                                              \
+                  jsval v,                                                    \
+                  _clazz **ppArg,                                             \
+                  nsISupports **ppArgRef,                                     \
+                  jsval *vp)                                                  \
+{                                                                             \
+    return xpc_qsUnwrapArg<_clazz>(cx, v, ppArg, ppArgRef, vp);               \
+}                                                                             \
+                                                                              \
+template <>                                                                   \
+inline nsresult                                                               \
+UnwrapArg<_clazz>(JSContext *cx, jsval v, _clazz **ppArg,                     \
+                  _clazz **ppArgRef, jsval *vp)                               \
+{                                                                             \
+    return xpc_qsUnwrapArg<_clazz>(cx, v, ppArg, ppArgRef, vp);               \
+}                                                                             \
+                                                                              \
+} /* namespace dom */                                                         \
+} /* namespace mozilla */
 
 DEFINE_UNWRAP_CAST_HTML(canvas, mozilla::dom::HTMLCanvasElement)
 DEFINE_UNWRAP_CAST_HTML(form, nsHTMLFormElement)

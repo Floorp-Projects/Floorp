@@ -11,11 +11,11 @@ namespace mozilla {
 using namespace layers;
 
 VideoFrame::VideoFrame(already_AddRefed<Image> aImage, const gfxIntSize& aIntrinsicSize)
-  : mImage(aImage), mIntrinsicSize(aIntrinsicSize)
+  : mImage(aImage), mIntrinsicSize(aIntrinsicSize), mForceBlack(false)
 {}
 
 VideoFrame::VideoFrame()
-  : mIntrinsicSize(0, 0)
+  : mIntrinsicSize(0, 0), mForceBlack(false)
 {}
 
 VideoFrame::~VideoFrame()
