@@ -361,7 +361,10 @@ nsContentUtils::Init()
   nsresult rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  sXPConnect = nsXPConnect::XPConnect();
+  nsXPConnect* xpconnect = nsXPConnect::GetXPConnect();
+  NS_ENSURE_TRUE(xpconnect, NS_ERROR_FAILURE);
+
+  sXPConnect = xpconnect;
 
   sSecurityManager = nsScriptSecurityManager::GetScriptSecurityManager();
   if(!sSecurityManager)

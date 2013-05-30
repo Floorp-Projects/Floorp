@@ -125,7 +125,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
 
     if (!clazz) {
         nsCOMPtr<nsIInterfaceInfo> info;
-        nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
+        nsXPConnect::GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (info) {
             bool canScript, isBuiltin;
             if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
@@ -240,7 +240,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     // We so often ask for nsISupports that we can short-circuit the test...
     if (!aIID.Equals(NS_GET_IID(nsISupports))) {
         nsCOMPtr<nsIInterfaceInfo> info;
-        nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
+        nsXPConnect::GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (!info)
             return nullptr;
         bool canScript, isBuiltin;
@@ -276,7 +276,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                     // C++ QI failure. See if that is the case.
                     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
 
-                    nsXPConnect::XPConnect()->
+                    nsXPConnect::GetXPConnect()->
                         GetWrappedNativeOfJSObject(cx,
                                                    &jsexception.toObject(),
                                                    getter_AddRefs(wrapper));
@@ -684,7 +684,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 
         *aInstancePtr = nullptr;
 
-        nsXPConnect *xpc = nsXPConnect::XPConnect();
+        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
         nsCOMPtr<nsIScriptSecurityManager> secMan =
             do_QueryInterface(xpc->GetDefaultSecurityManager());
         if (!secMan)
