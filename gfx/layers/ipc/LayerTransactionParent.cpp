@@ -434,6 +434,30 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   return true;
 }
 
+bool
+LayerTransactionParent::RecvGetOpacity(PLayerParent* aParent,
+                                       float* aOpacity)
+{
+  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    return false;
+  }
+
+  *aOpacity = cast(aParent)->AsLayer()->GetLocalOpacity();
+  return true;
+}
+
+bool
+LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
+                                         gfx3DMatrix* aTransform)
+{
+  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    return false;
+  }
+
+  *aTransform = cast(aParent)->AsLayer()->GetLocalTransform();
+  return true;
+}
+
 void
 LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable)
 {

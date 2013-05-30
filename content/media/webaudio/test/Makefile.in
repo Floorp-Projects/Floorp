@@ -23,6 +23,7 @@ MOCHITEST_FILES := \
   test_bug867104.html \
   test_bug867174.html \
   test_bug867203.html \
+  test_bug875221.html \
   test_bug875402.html \
   test_analyserNode.html \
   test_AudioBuffer.html \
@@ -61,6 +62,8 @@ MOCHITEST_FILES := \
   test_mixingRules.html \
   test_nodeToParamConnection.html \
   test_OfflineAudioContext.html \
+  test_offlineDestinationChannelCountLess.html \
+  test_offlineDestinationChannelCountMore.html \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \

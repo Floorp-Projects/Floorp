@@ -98,8 +98,8 @@ private:
   gfxIntSize mRecycledTextureSizes[2];
 };
 
-class THEBES_API ImageLayerOGL : public ImageLayer,
-                                 public LayerOGL
+class ImageLayerOGL : public ImageLayer,
+                      public LayerOGL
 {
 public:
   ImageLayerOGL(LayerManagerOGL *aManager);
@@ -122,7 +122,7 @@ protected:
   nsRefPtr<TextureRecycleBin> mTextureRecycleBin;
 };
 
-struct THEBES_API PlanarYCbCrOGLBackendData : public ImageBackendData
+struct PlanarYCbCrOGLBackendData : public ImageBackendData
 {
   ~PlanarYCbCrOGLBackendData()
   {

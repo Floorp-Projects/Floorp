@@ -48,28 +48,28 @@ public:
   NS_DECL_NSIDOMHTMLSCRIPTELEMENT
 
   // nsIScriptElement
-  virtual void GetScriptType(nsAString& type);
-  virtual void GetScriptText(nsAString& text);
-  virtual void GetScriptCharset(nsAString& charset);
-  virtual void FreezeUriAsyncDefer();
+  virtual void GetScriptType(nsAString& type) MOZ_OVERRIDE;
+  virtual void GetScriptText(nsAString& text) MOZ_OVERRIDE;
+  virtual void GetScriptCharset(nsAString& charset) MOZ_OVERRIDE;
+  virtual void FreezeUriAsyncDefer() MOZ_OVERRIDE;
   virtual CORSMode GetCORSMode() const;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult);
+                              nsAttrValue& aResult) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // Element
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // WebIDL
   void SetText(const nsAString& aValue, ErrorResult& rv);
@@ -88,7 +88,7 @@ protected:
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
   // nsScriptElement
-  virtual bool HasScriptContent();
+  virtual bool HasScriptContent() MOZ_OVERRIDE;
 };
 
 } // namespace dom

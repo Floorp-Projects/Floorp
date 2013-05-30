@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_CanvasGradient_h
 #define mozilla_dom_CanvasGradient_h
 
+#include "mozilla/Attributes.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
@@ -53,7 +54,7 @@ public:
   // WebIDL
   void AddColorStop(float offset, const nsAString& colorstr, ErrorResult& rv);
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return CanvasGradientBinding::Wrap(aCx, aScope, this);
   }

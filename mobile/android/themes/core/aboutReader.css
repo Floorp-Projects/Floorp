@@ -9,8 +9,8 @@ html {
 body {
   margin-top: 20px;
   margin-bottom: 20px;
-  -moz-transition-property: background-color, color;
-  -moz-transition-duration: 0.7s;
+  transition-property: background-color, color;
+  transition-duration: 0.4s;
 }
 
 .light {
@@ -109,23 +109,23 @@ body {
 }
 
 .font-size1 > .header > h1 {
-  font-size: 25px;
-}
-
-.font-size2 > .header > h1 {
   font-size: 27px;
 }
 
-.font-size3 > .header > h1 {
+.font-size2 > .header > h1 {
   font-size: 29px;
 }
 
-.font-size4 > .header > h1 {
+.font-size3 > .header > h1 {
   font-size: 31px;
 }
 
-.font-size5 > .header > h1 {
+.font-size4 > .header > h1 {
   font-size: 33px;
+}
+
+.font-size5 > .header > h1 {
+  font-size: 35px;
 }
 
 /* This covers caption, domain, and credits
@@ -135,35 +135,35 @@ body {
 .font-size1 > .content figcaption,
 .font-size1 > .header > .domain,
 .font-size1 > .header > .credits {
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .font-size2 > .content .wp-caption-text,
 .font-size2 > .content figcaption,
 .font-size2 > .header > .domain,
 .font-size2 > .header > .credits {
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .font-size3 > .content .wp-caption-text,
 .font-size3 > .content figcaption,
 .font-size3 > .header > .domain,
 .font-size3 > .header > .credits {
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .font-size4 > .content .wp-caption-text,
 .font-size4 > .content figcaption,
 .font-size4 > .header > .domain,
 .font-size4 > .header > .credits {
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .font-size5 > .content .wp-caption-text,
 .font-size5 > .content figcaption,
 .font-size5 > .header > .domain,
 .font-size5 > .header > .credits {
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .content {
@@ -298,33 +298,33 @@ body {
 
 .font-size1-sample,
 .font-size1 > .content {
-  font-size: 12px !important;
+  font-size: 14px !important;
 }
 
 .font-size2-sample,
 .font-size2 > .content {
-  font-size: 14px !important;
+  font-size: 16px !important;
 }
 
 .font-size3-sample,
 .font-size3 > .content {
-  font-size: 16px !important;
+  font-size: 18px !important;
 }
 
 .font-size4-sample,
 .font-size4 > .content {
-  font-size: 18px !important;
+  font-size: 20px !important;
 }
 
 .font-size5-sample,
 .font-size5 > .content {
-  font-size: 20px !important;
+  font-size: 22px !important;
 }
 
 .toolbar {
   font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
-  -moz-transition-property: visibility, opacity;
-  -moz-transition-duration: 0.7s;
+  transition-property: visibility, opacity;
+  transition-duration: 0.7s;
   visibility: visible;
   opacity: 1.0;
   position: fixed;
@@ -338,8 +338,8 @@ body {
 }
 
 .toolbar-hidden {
-  -moz-transition-property: visibility, opacity;
-  -moz-transition-duration: 0.7s;
+  transition-property: visibility, opacity;
+  transition-duration: 0.7s;
   visibility: hidden;
   opacity: 0.0;
 }

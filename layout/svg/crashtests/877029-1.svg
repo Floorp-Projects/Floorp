@@ -1,0 +1,10 @@
+<!--
+  Check that we don't crash due to an nsSVGMarkerFrame having a null
+  mMarkedFrame and incorrectly calling GetCanvasTM() on the nsSVGMarkerFrame.
+  -->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <marker><text>a</text></marker>
+  <script>
+    document.querySelector("text").getComputedTextLength();
+  </script>
+</svg>
