@@ -196,26 +196,26 @@
         <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
           <!-- portrait/landscape/filled view -->
           <hbox id="start" class="start-page" flex="1" observes="bcast_windowState">
-            <scrollbox id="start-scrollbox" orient="horizontal" flex="1">
-            <vbox id="start-topsites" class="meta-section">
-              <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-              <richgrid id="start-topsites-grid" rows="3" columns="3" seltype="multiple" flex="1"/>
-            </vbox>
-            <vbox id="start-bookmarks" class="meta-section">
-              <label class="meta-section-title" value="&startBookmarksHeader.label;"
-                onclick="PanelUI.show('bookmarks-container');"/>
-              <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
-            </vbox>
-            <vbox id="start-history" class="meta-section">
-              <label class="meta-section-title" value="&startHistoryHeader.label;"
-                onclick="PanelUI.show('history-container');"/>
-              <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
-            </vbox>
-            <vbox id="start-remotetabs" class="meta-section">
-              <label class="meta-section-title" value="&startRemoteTabsHeader.label;"
-                onclick="PanelUI.show('remotetabs-container');"/>
-              <richgrid id="start-remotetabs-grid" seltype="multiple" flex="1"/>
-            </vbox>
+            <scrollbox id="start-scrollbox" orient="horizontal" observes="bcast_preciseInput" flex="1">
+              <vbox id="start-topsites" class="meta-section">
+                <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
+                <richgrid id="start-topsites-grid" rows="3" columns="3" seltype="multiple" flex="1"/>
+              </vbox>
+              <vbox id="start-bookmarks" class="meta-section">
+                <label class="meta-section-title" value="&startBookmarksHeader.label;"
+                  onclick="PanelUI.show('bookmarks-container');"/>
+                <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
+              </vbox>
+              <vbox id="start-history" class="meta-section">
+                <label class="meta-section-title" value="&startHistoryHeader.label;"
+                  onclick="PanelUI.show('history-container');"/>
+                <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
+              </vbox>
+              <vbox id="start-remotetabs" class="meta-section">
+                <label class="meta-section-title" value="&startRemoteTabsHeader.label;"
+                  onclick="PanelUI.show('remotetabs-container');"/>
+                <richgrid id="start-remotetabs-grid" seltype="multiple" flex="1"/>
+              </vbox>
             </scrollbox>
           </hbox>
           <!-- snapped view -->
@@ -240,7 +240,7 @@
 
       <!-- Content viewport -->
       <stack id="content-viewport">
-        <deck id="browsers" flex="1"/>
+        <deck id="browsers" flex="1" observes="bcast_preciseInput"/>
         <box id="vertical-scroller" class="scroller" orient="vertical" end="0" top="0"/>
         <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="0"/>
       </stack>
