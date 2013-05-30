@@ -331,7 +331,8 @@ appbar {
   bottom: 0;
   width: 100%;
   transform: translateY(100%);
-  transition: transform @metro_animation_duration@ @metro_animation_easing@;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@,
+              bottom @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
 }
 
