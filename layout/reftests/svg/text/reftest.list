@@ -73,6 +73,10 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 == multiple-x-multiple-dx-anchor-end-rtl.svg multiple-x-multiple-dx-anchor-end-rtl-ref.svg
 == multiple-x-multiple-dx-anchor-end.svg multiple-x-multiple-dx-anchor-end-ref.svg
 
+== multiple-x-percentages.svg multiple-x-percentages-ref.svg
+== multiple-x-percentages-2.html multiple-x-percentages-2-ref.html
+== multiple-x-percentages-3.html multiple-x-percentages-3-ref.html
+
 == multiple-x-white-space.svg multiple-x-white-space-ref.svg
 
 == multiple-chunks-bidi.svg multiple-chunks-bidi-ref.svg
