@@ -58,7 +58,7 @@ public class test_bug720538 extends PixelTest {
 
         // now we do double-tap again to zoom out and wait for the animation to finish, as before
         paintExpecter = mActions.expectPaint();
-        meh.doubleTap(100, mDriver.getGeckoWidth() / 2);
+        meh.doubleTap(mDriver.getGeckoWidth() / 2, 100);
         painted = waitForPaint(paintExpecter);
         paintExpecter.unregisterListener();
 
