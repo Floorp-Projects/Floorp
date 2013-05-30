@@ -122,10 +122,6 @@ namespace mgfx = mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-static float kDefaultFontSize = 10.0;
-static NS_NAMED_LITERAL_STRING(kDefaultFontName, "sans-serif");
-static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
-
 // Cap sigma to avoid overly large temp surfaces.
 const Float SIGMA_MAX = 100;
 
@@ -2708,12 +2704,14 @@ gfxFontGroup *CanvasRenderingContext2D::GetCurrentFontStyle()
   // use lazy initilization for the font group since it's rather expensive
   if (!CurrentState().fontGroup) {
     ErrorResult err;
+    NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
+    static float kDefaultFontSize = 10.0;
     SetFont(kDefaultFontStyle, err);
     if (err.Failed()) {
       gfxFontStyle style;
       style.size = kDefaultFontSize;
       CurrentState().fontGroup =
-        gfxPlatform::GetPlatform()->CreateFontGroup(kDefaultFontName,
+        gfxPlatform::GetPlatform()->CreateFontGroup(NS_LITERAL_STRING("sans-serif"),
                                                     &style,
                                                     nullptr);
       if (CurrentState().fontGroup) {

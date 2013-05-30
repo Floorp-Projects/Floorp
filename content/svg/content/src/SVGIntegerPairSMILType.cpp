@@ -10,8 +10,6 @@
 
 namespace mozilla {
 
-/*static*/ SVGIntegerPairSMILType SVGIntegerPairSMILType::sSingleton;
-
 void
 SVGIntegerPairSMILType::Init(nsSMILValue& aValue) const
 {
@@ -28,7 +26,7 @@ SVGIntegerPairSMILType::Destroy(nsSMILValue& aValue) const
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mIntPair[0] = 0;
   aValue.mU.mIntPair[1] = 0;
-  aValue.mType = &nsSMILNullType::sSingleton;
+  aValue.mType = nsSMILNullType::Singleton();
 }
 
 nsresult
