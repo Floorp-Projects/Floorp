@@ -160,10 +160,12 @@ var ContentAreaObserver = {
     this.styles["viewable-width"].width = newWidth + "px";
     this.styles["viewable-width"].maxWidth = newWidth + "px";
 
-    // Adjust the app bar position above the soft keyboard
+    // Adjust the app and find bar position above the soft keyboard
     let appBar = document.getElementById("appbar");
+    let findBar = document.getElementById("content-navigator");
     let keyboardHeight = MetroUtils.keyboardHeight;
     appBar.style.bottom = keyboardHeight + "px";
+    findBar.style.bottom = keyboardHeight + "px";
 
     this._disatchBrowserEvent("ViewableSizeChanged");
   },
