@@ -132,11 +132,11 @@ CustomizeMode.prototype = {
     this._wrapToolbarItems();
     this.populatePalette();
 
-    this.visiblePalette.addEventListener("dragstart", this);
-    this.visiblePalette.addEventListener("dragover", this);
-    this.visiblePalette.addEventListener("dragexit", this);
-    this.visiblePalette.addEventListener("drop", this);
-    this.visiblePalette.addEventListener("dragend", this);
+    this.visiblePalette.addEventListener("dragstart", this, true);
+    this.visiblePalette.addEventListener("dragover", this, true);
+    this.visiblePalette.addEventListener("dragexit", this, true);
+    this.visiblePalette.addEventListener("drop", this, true);
+    this.visiblePalette.addEventListener("dragend", this, true);
 
     this.resetButton.hidden = CustomizableUI.inDefaultState;
 
@@ -163,11 +163,11 @@ CustomizeMode.prototype = {
 
     this.depopulatePalette();
 
-    this.visiblePalette.removeEventListener("dragstart", this);
-    this.visiblePalette.removeEventListener("dragover", this);
-    this.visiblePalette.removeEventListener("dragexit", this);
-    this.visiblePalette.removeEventListener("drop", this);
-    this.visiblePalette.removeEventListener("dragend", this);
+    this.visiblePalette.removeEventListener("dragstart", this, true);
+    this.visiblePalette.removeEventListener("dragover", this, true);
+    this.visiblePalette.removeEventListener("dragexit", this, true);
+    this.visiblePalette.removeEventListener("drop", this, true);
+    this.visiblePalette.removeEventListener("dragend", this, true);
 
     let window = this.window;
     let document = this.document;
@@ -313,6 +313,9 @@ CustomizeMode.prototype = {
   },
 
   wrapToolbarItem: function(aNode, aPlace) {
+    if (!this.isCustomizableItem(aNode)) {
+      return aNode;
+    }
     let wrapper = this.createWrapper(aNode, aPlace);
     // It's possible that this toolbar node is "mid-flight" and doesn't have
     // a parent, in which case we skip replacing it. This can happen if a
@@ -372,6 +375,9 @@ CustomizeMode.prototype = {
   },
 
   unwrapToolbarItem: function(aWrapper) {
+    if (aWrapper.nodeName != "toolbarpaletteitem") {
+      return aWrapper;
+    }
     aWrapper.removeEventListener("mousedown", this);
     aWrapper.removeEventListener("mouseup", this);
 
@@ -408,11 +414,11 @@ CustomizeMode.prototype = {
     this.areas = [];
     for (let area of CustomizableUI.areas) {
       let target = CustomizableUI.getCustomizeTargetForArea(area, window);
-      target.addEventListener("dragstart", this);
-      target.addEventListener("dragover", this);
-      target.addEventListener("dragexit", this);
-      target.addEventListener("drop", this);
-      target.addEventListener("dragend", this);
+      target.addEventListener("dragstart", this, true);
+      target.addEventListener("dragover", this, true);
+      target.addEventListener("dragexit", this, true);
+      target.addEventListener("drop", this, true);
+      target.addEventListener("dragend", this, true);
       for (let child of target.children) {
         if (this.isCustomizableItem(child)) {
           this.wrapToolbarItem(child, getPlaceForItem(child));
@@ -429,11 +435,11 @@ CustomizeMode.prototype = {
           this.unwrapToolbarItem(toolbarItem);
         }
       }
-      target.removeEventListener("dragstart", this);
-      target.removeEventListener("dragover", this);
-      target.removeEventListener("dragexit", this);
-      target.removeEventListener("drop", this);
-      target.removeEventListener("dragend", this);
+      target.removeEventListener("dragstart", this, true);
+      target.removeEventListener("dragover", this, true);
+      target.removeEventListener("dragexit", this, true);
+      target.removeEventListener("drop", this, true);
+      target.removeEventListener("dragend", this, true);
     }
   },
 
@@ -573,9 +579,7 @@ CustomizeMode.prototype = {
     let {id: draggedItemId, width: draggedItemWidth} =
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
-    let targetNode = aEvent.target;
-    let targetParent = targetNode.parentNode;
-    let targetArea = this._getCustomizableParent(targetNode);
+    let targetArea = this._getCustomizableParent(aEvent.currentTarget);
     let originArea = this._getCustomizableParent(draggedWrapper);
 
     // Do nothing if the target or origin are not customizable.
@@ -594,6 +598,9 @@ CustomizeMode.prototype = {
         !CustomizableUI.canWidgetMoveToArea(draggedItemId, targetArea.id)) {
       return;
     }
+
+    let targetNode = this._getDragOverNode(aEvent.target);
+    let targetParent = targetNode.parentNode;
 
     // We need to determine the place that the widget is being dropped in
     // the target.
@@ -642,15 +649,15 @@ CustomizeMode.prototype = {
     }
     draggedWrapper.removeAttribute("mousedown");
 
-    let targetNode = aEvent.target;
-    let targetParent = targetNode.parentNode;
-    let targetArea = this._getCustomizableParent(targetNode);
+    let targetArea = this._getCustomizableParent(aEvent.currentTarget);
     let originArea = this._getCustomizableParent(draggedWrapper);
 
     // Do nothing if the target area or origin area are not customizable.
     if (!targetArea || !originArea) {
       return;
     }
+
+    let targetNode = this._getDragOverNode(aEvent.target);
 
     // Do nothing if the target was dropped onto itself (ie, no change in area
     // or position).
@@ -695,9 +702,13 @@ CustomizeMode.prototype = {
 
     // We need to determine the place that the widget is being dropped in
     // the target.
-    let placement = CustomizableUI.getPlacementOfWidget(targetNode.firstChild.id);
+    let targetNodeId = (targetNode.nodeName == "toolbarpaletteitem") ?
+                          targetNode.firstChild && targetNode.firstChild.id :
+                          targetNode.id;
+
+    let placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
     if (!placement) {
-      ERROR("Could not get a position for " + targetNode.firstChild.id);
+      ERROR("Could not get a position for " + targetNodeId);
       return;
     }
 
@@ -806,6 +817,15 @@ CustomizeMode.prototype = {
       aElement = aElement.parentNode;
     }
     return null;
+  },
+
+  _getDragOverNode: function(aElement, aAreaElement) {
+    let expectedParent = aAreaElement.customizationTarget || aAreaElement;
+    let targetNode = aElement;
+    while (targetNode && targetNode.parentNode != expectedParent) {
+      targetNode = targetNode.parentNode;
+    }
+    return targetNode || aElement;
   },
 
   _onMouseDown: function(aEvent) {
