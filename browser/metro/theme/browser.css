@@ -357,7 +357,7 @@ appbar > toolbar > toolbarbutton[disabled] {
   visibility: collapse;
 }
 
-#appbar[startpage],
+#navbar[startpage],
 appbar[visible] {
   transform: none;
 }

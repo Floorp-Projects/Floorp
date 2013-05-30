@@ -307,8 +307,8 @@
       </deck>
     </vbox>
 
-    <!-- Windows 8 Appbar -->
-    <appbar id="appbar" mousethrough="never" observes="bcast_windowState">
+    <!-- Navbar -->
+    <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
       <hbox id="progress-container" layer="true">
         <hbox id="progress-control" />
       </hbox>
@@ -360,6 +360,7 @@
       </toolbar>
     </appbar>
 
+    <!-- Context button bar -->
     <appbar id="contextappbar">
       <toolbar id="contextualactions-tray" flex="1">
         <toolbarbutton id="delete-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
