@@ -27,8 +27,6 @@ class MinorCollectionTracer;
 namespace ion {
 class CodeGenerator;
 class MacroAssembler;
-class ICStubCompiler;
-class BaselineCompiler;
 }
 
 class Nursery
@@ -191,8 +189,6 @@ class Nursery
     friend class gc::MinorCollectionTracer;
     friend class ion::CodeGenerator;
     friend class ion::MacroAssembler;
-    friend class ion::ICStubCompiler;
-    friend class ion::BaselineCompiler;
 };
 
 } /* namespace js */
