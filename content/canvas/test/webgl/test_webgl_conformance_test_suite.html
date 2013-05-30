@@ -94,7 +94,7 @@ function start() {
     // Version 6.0 is Vista, 6.1 is 7.
   } else if (navigator.platform.indexOf("Mac") == 0) {
     kOS = OS_MAC;
-      
+    
     var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
     kOSVersion = versionMatch ? parseFloat(versionMatch[1]) : null;
   } else if (navigator.appVersion.indexOf("Android") != -1) {
@@ -518,8 +518,15 @@ function start() {
       break;
     }
     case OS_ANDROID: {
-      failingTestsFilename = 'failing_tests_android.txt';
       skippedTestsFilename = 'skipped_tests_android.txt';
+      switch (kGLDriver) {
+        case GLDRIVER_NVIDIA:
+          failingTestsFilename = 'failing_tests_android_nvidia.txt';
+          break;
+        default:
+          failingTestsFilename = 'failing_tests_android.txt';
+          break;
+      }
       break;
     }
   }
@@ -553,6 +560,22 @@ function start() {
     testsToSkip = LoadNewlineSepFile(skippedTestsFilename);
     
   var testsToIgnore = [];
+  
+  info('Tests to fail: ' + testsExpectedToFail.length + (testsExpectedToFail.length ? ':' : ''));
+  for (var i = 0; i < testsExpectedToFail.length; i++) {
+    var test = testsExpectedToFail[i];
+    info('  ' + test);
+  }
+  info('Tests to skip: ' + testsToSkip.length + (testsToSkip.length ? ':' : ''));
+  for (var i = 0; i < testsToSkip.length; i++) {
+    var test = testsToSkip[i];
+    info('  ' + test);
+  }
+  info('Tests to ignore: ' + testsToIgnore.length + (testsToIgnore.length ? ':' : ''));
+  for (var i = 0; i < testsToIgnore.length; i++) {
+    var test = testsToIgnore[i];
+    info('  ' + test);
+  }
 
   runTestSuite();
 }
