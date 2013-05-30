@@ -324,8 +324,9 @@ struct TypeObject {
 };
 
 struct BaseShape {
-    js::Class   *clasp;
-    JSObject    *parent;
+    js::Class *clasp;
+    JSObject *parent;
+    JSObject *_1;
     JSCompartment *compartment;
 };
 
@@ -1695,6 +1696,26 @@ assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id);
 #else
 inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id) {};
 #endif
+
+typedef JSObject *
+(* ObjectMetadataCallback)(JSContext *cx);
+
+/*
+ * Specify a callback to invoke when creating each JS object in the current
+ * compartment, which may return a metadata object to associate with the
+ * object. Objects with different metadata have different shape hierarchies,
+ * so for efficiency, objects should generally try to share metadata objects.
+ */
+JS_FRIEND_API(void)
+SetObjectMetadataCallback(JSContext *cx, ObjectMetadataCallback callback);
+
+/* Manipulate the metadata associated with an object. */
+
+JS_FRIEND_API(bool)
+SetObjectMetadata(JSContext *cx, JSHandleObject obj, JSHandleObject metadata);
+
+JS_FRIEND_API(JSObject *)
+GetObjectMetadata(JSObject *obj);
 
 } /* namespace js */
 
