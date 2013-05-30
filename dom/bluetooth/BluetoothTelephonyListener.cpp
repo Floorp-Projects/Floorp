@@ -67,6 +67,17 @@ NS_IMETHODIMP
 TelephonyListener::NotifyError(int32_t aCallIndex,
                                const nsAString& aError)
 {
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  // In order to not miss any related call state transition.
+  // It's possible that 3G network signal lost for unknown reason.
+  // If a call is released abnormally, NotifyError() will be called,
+  // instead of CallStateChanged(). We need to reset the call array state
+  // via setting CALL_STATE_DISCONNECTED
+  hfp->HandleCallStateChanged(aCallIndex,
+                              nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED,
+                              EmptyString(), false, true);
+  NS_WARNING("Reset the call state due to call transition ends abnormally");
+  NS_WARNING(aError.get());
   return NS_OK;
 }
 
