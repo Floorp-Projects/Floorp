@@ -30,7 +30,7 @@ SVGOrientSMILType::Destroy(nsSMILValue& aValue) const
 {
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value.");
   aValue.mU.mPtr = nullptr;
-  aValue.mType = &nsSMILNullType::sSingleton;
+  aValue.mType = nsSMILNullType::Singleton();
 }
 
 nsresult
