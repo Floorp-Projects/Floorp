@@ -12,6 +12,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.graphics.Rect;
+import android.os.Build;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
@@ -23,6 +25,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -36,6 +39,10 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private LinearLayout mChoicesLayout;
     private TextView mTextView;
     private List<PromptInput> mInputs;
+
+    private static int mInputPadding = -1;
+    private static int mSpinnerTextColor = -1;
+    private static int mSpinnerTextSize = -1;
 
     // LayoutParams used for adding button layouts
     static private LayoutParams mLayoutParams;
@@ -59,6 +66,16 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         mPopup = popup;
         mTabId = tabId;
         mValue = value;
+
+        if (mInputPadding == -1) {
+            mInputPadding = getResources().getDimensionPixelSize(R.dimen.doorhanger_padding_spinners);
+        }
+        if (mSpinnerTextColor == -1) {
+            mSpinnerTextColor = getResources().getColor(R.color.text_color_primary_disable_only);
+        }
+        if (mSpinnerTextSize == -1) {
+            mSpinnerTextSize = getResources().getDimensionPixelSize(R.dimen.doorhanger_spinner_textsize);
+        }
     }
  
     int getTabId() {
@@ -207,9 +224,12 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
             for (int i = 0; i < inputs.length(); i++) {
                 try {
-                    PromptInput pi = PromptInput.getInput(inputs.getJSONObject(i));
-                    mInputs.add(pi);
-                    group.addView(pi.getView(getContext()));
+                    PromptInput input = PromptInput.getInput(inputs.getJSONObject(i));
+                    mInputs.add(input);
+
+                    View v = input.getView(getContext());
+                    styleInput(input, v);
+                    group.addView(v);
                 } catch(JSONException ex) { }
             }
         }
@@ -220,6 +240,49 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             mCheckBox.setText(checkBoxText);
             mCheckBox.setVisibility(VISIBLE);
         } catch (JSONException e) { }
+    }
+
+    private void styleInput(PromptInput input, View view) {
+        if (input instanceof PromptInput.MenulistInput) {
+            styleSpinner(input, view);
+        } else {
+            // add some top and bottom padding to separate inputs
+            view.setPadding(0, mInputPadding,
+                            0, mInputPadding);
+        }
+    }
+
+    private void styleSpinner(PromptInput input, View view) {
+        PromptInput.MenulistInput spinInput = (PromptInput.MenulistInput) input;
+        // Spinners have some intrinsic padding of their own. This aligns things so that
+        // the spinner text, spinner label text, and main doorhanger text are all aligned
+
+        // First get the padding of the selected view inside the spinner. Since the spinner
+        // hasn't been shown yet, we get this view directly from the adapter.
+        SpinnerAdapter a = spinInput.spinner.getAdapter();
+        View dropView = a.getView(0, null, spinInput.spinner);
+        int left = 0;
+        if (dropView != null) {
+            left = dropView.getPaddingLeft();
+        }
+
+        // Then get the intrinsic padding built into the background image of the spinner.
+        int p = getResources().getDimensionPixelSize(R.dimen.doorhanger_padding);
+        Rect rect = new Rect();
+        spinInput.spinner.getBackground().getPadding(rect);
+
+        // Now offset the entire spinner view enough so that when the background drawable
+        // padding and the textview's padding are added, the text is aligned
+        // with the doorhanger text.
+        view.setPadding(p - rect.left - left, 0, rect.right, mInputPadding);
+
+        if (spinInput.textView != null) {
+            spinInput.textView.setTextColor(mSpinnerTextColor);
+            spinInput.textView.setTextSize(mSpinnerTextSize);
+
+            // If this spinner has a label, offset it to also be aligned with the doorhanger text.
+            spinInput.textView.setPadding(rect.left + left, 0, 0, 0);
+        }
     }
 
     // This method checks with persistence and timeout options to see if
