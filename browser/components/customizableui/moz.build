@@ -7,4 +7,5 @@
 PARALLEL_DIRS += [
 		'content',
 		'src',
+		'test',
 ]
