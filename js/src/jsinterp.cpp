@@ -2288,7 +2288,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
 BEGIN_CASE(JSOP_SETCALL)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
+    JS_ALWAYS_FALSE(SetCallOperation(cx));
     goto error;
 }
 END_CASE(JSOP_SETCALL)
@@ -3373,6 +3373,13 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
     /* Step 5f. */
     return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict);
+}
+
+bool
+js::SetCallOperation(JSContext *cx)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
+    return false;
 }
 
 bool

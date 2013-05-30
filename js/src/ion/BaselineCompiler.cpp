@@ -2099,6 +2099,16 @@ BaselineCompiler::emit_JSOP_TYPEOFEXPR()
     return emit_JSOP_TYPEOF();
 }
 
+typedef bool (*SetCallFn)(JSContext *);
+static const VMFunction SetCallInfo = FunctionInfo<SetCallFn>(js::SetCallOperation);
+
+bool
+BaselineCompiler::emit_JSOP_SETCALL()
+{
+    prepareVMCall();
+    return callVM(SetCallInfo);
+}
+
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
 static const VMFunction ThrowInfo = FunctionInfo<ThrowFn>(js::Throw);
 
