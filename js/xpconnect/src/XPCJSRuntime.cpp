@@ -1662,6 +1662,11 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "heap that holds over-sized string headers, in which "
                       "string characters are stored inline.");
 
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/lazy-scripts"),
+                      zStats.gcHeapLazyScripts,
+                      "Memory on the garbage-collected JavaScript "
+                      "heap that represents scripts which haven't executed yet.");
+
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/type-objects"),
                       zStats.gcHeapTypeObjects,
                       "Memory on the garbage-collected JavaScript "
@@ -1672,6 +1677,11 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds references to executable code pools "
                       "used by the IonMonkey JIT.");
+
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts"),
+                   zStats.lazyScripts,
+                   "Memory holding miscellaneous additional information associated with lazy "
+                   "scripts.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects"),
                    zStats.typeObjects,

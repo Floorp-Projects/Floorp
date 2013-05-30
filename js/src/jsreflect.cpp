@@ -3069,7 +3069,9 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     size_t length = stable->length();
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
-    Parser<FullParseHandler> parser(cx, options, chars.get(), length, /* foldConstants = */ false);
+    options.setCanLazilyParse(false);
+    Parser<FullParseHandler> parser(cx, options, chars.get(), length,
+                                    /* foldConstants = */ false, NULL, NULL);
     if (!parser.init())
         return JS_FALSE;
 

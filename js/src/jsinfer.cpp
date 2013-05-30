@@ -5949,20 +5949,12 @@ JSScript::makeAnalysis(JSContext *cx)
 /* static */ bool
 JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton /* = false */)
 {
-    JS_ASSERT(fun->nonLazyScript());
-    JS_ASSERT(fun->nonLazyScript()->function() == fun);
-
     if (!cx->typeInferenceEnabled())
         return true;
 
     if (singleton) {
         if (!setSingletonType(cx, fun))
             return false;
-    } else if (UseNewTypeForClone(fun)) {
-        /*
-         * Leave the default unknown-properties type for the function, it
-         * should not be used by scripts or appear in type sets.
-         */
     } else {
         RootedObject funProto(cx, fun->getProto());
         TypeObject *type = cx->compartment->types.newTypeObject(cx, &FunctionClass, funProto);
