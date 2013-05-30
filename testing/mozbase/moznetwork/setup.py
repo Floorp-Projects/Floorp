@@ -4,15 +4,13 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.6'
+PACKAGE_VERSION = '0.21'
 
-# dependencies
-deps = ['mozfile >= 0.3',
-        'mozlog']
+deps=[]
 
-setup(name='mozcrash',
+setup(name='moznetwork',
       version=PACKAGE_VERSION,
-      description="Library for printing stack traces from minidumps left behind by crashed processes",
+      description="Library of network utilities for use in Mozilla testing",
       long_description="see http://mozbase.readthedocs.org/",
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='mozilla',
@@ -20,8 +18,8 @@ setup(name='mozcrash',
       author_email='tools@lists.mozilla.org',
       url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
       license='MPL',
-      packages=['mozcrash'],
+      packages=['moznetwork'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=deps,
+      install_requires=deps
       )
