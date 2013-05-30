@@ -3466,11 +3466,6 @@ nsSVGTextFrame2::ReflowSVG()
     return;
   }
 
-  // UpdateGlyphPositioning may have been called under DOM calls and set
-  // mPositioningDirty to false. We may now have better positioning, though, so
-  // set it to true so that UpdateGlyphPositioning will do its work.
-  mPositioningDirty = true;
-
   // UpdateGlyphPositioning will call DoReflow if necessary.
   UpdateGlyphPositioning();
 
