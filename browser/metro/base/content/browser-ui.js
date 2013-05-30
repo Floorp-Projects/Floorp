@@ -617,6 +617,9 @@ var BrowserUI = {
 
   _updateButtons: function _updateButtons() {
     let browser = Browser.selectedBrowser;
+    if (!browser) {
+      return;
+    }
     if (browser.canGoBack) {
       this._back.removeAttribute("disabled");
     } else {
