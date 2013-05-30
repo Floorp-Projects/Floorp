@@ -5373,15 +5373,22 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
 
         JSOp op = pn2->getOp();
-        if (op == JSOP_GETTER || op == JSOP_SETTER) {
+        JS_ASSERT(op == JSOP_INITPROP ||
+                  op == JSOP_INITPROP_GETTER ||
+                  op == JSOP_INITPROP_SETTER);
+
+        if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
             obj = NULL;
-            if (Emit1(cx, bce, op) < 0)
-                return false;
-        }
 
         if (pn3->isKind(PNK_NUMBER)) {
             obj = NULL;
-            if (Emit1(cx, bce, JSOP_INITELEM) < 0)
+            switch (op) {
+              case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
+              case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
+              case JSOP_INITPROP_SETTER: op = JSOP_INITELEM_SETTER; break;
+              default: JS_NOT_REACHED("Invalid op");
+            }
+            if (Emit1(cx, bce, op) < 0)
                 return false;
         } else {
             JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
@@ -5395,7 +5402,6 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              */
             if (pn3->pn_atom == cx->names().proto)
                 obj = NULL;
-            op = JSOP_INITPROP;
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
