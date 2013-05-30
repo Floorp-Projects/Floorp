@@ -827,6 +827,13 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     return;
   }
 
+  // We get passed duplicate frames every ~10ms even if there's no frame change!
+  int32_t serial = img->GetSerial();
+  if (serial == last_img_) {
+    return;
+  }
+  last_img_ = serial;
+
   ImageFormat format = img->GetFormat();
 #ifdef MOZ_WIDGET_GONK
   if (format == GONK_IO_SURFACE) {
