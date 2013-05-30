@@ -4,10 +4,10 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMMozIccInfo;
 interface nsIDOMMozMobileConnectionInfo;
-interface nsIDOMMozMobileICCInfo;
-interface nsIMobileMessageCallback;
 interface nsIDOMMozSmsSegmentInfo;
+interface nsIMobileMessageCallback;
 
 [scriptable, uuid(1e602d20-d066-4399-8997-daf36b3158ef)]
 interface nsIRILDataCallInfo : nsISupports
@@ -59,7 +59,7 @@ interface nsIVoicemailInfo : nsISupports
   readonly attribute DOMString displayName;
 };
 
-[scriptable, uuid(2f1c8055-322e-490a-b1e1-4ccd5d546b3c)]
+[scriptable, uuid(95e1be50-c912-11e2-8b8b-0800200c9a66)]
 interface nsIRilContext : nsISupports
 {
   readonly attribute DOMString radioState;
@@ -72,7 +72,7 @@ interface nsIRilContext : nsISupports
 
   readonly attribute DOMString networkSelectionMode;
 
-  readonly attribute nsIDOMMozMobileICCInfo iccInfo;
+  readonly attribute nsIDOMMozIccInfo iccInfo;
 
   readonly attribute nsIDOMMozMobileConnectionInfo voice;
 
