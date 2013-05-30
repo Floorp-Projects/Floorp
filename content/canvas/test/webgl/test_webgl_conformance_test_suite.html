@@ -70,43 +70,69 @@ function detectDriverInfo() {
 }
 
 function start() {
-  var kIsWindows = false;
-  var kIsAndroid = false;
-  var kIsLinux = false;
-  var kIsLinuxNVidia = false;
-  var kIsLinuxMesa = false;
+  var OS_WINDOWS = "windows"
+  var OS_MAC     = "mac"
+  var OS_LINUX   = "linux"
+  var OS_ANDROID = "android"
+  
+  var GLDRIVER_MESA   = "mesa"
+  var GLDRIVER_NVIDIA = "nvidia"
 
-  if (navigator.platform.indexOf("Win") == 0)
-    kIsWindows = true;
-  else if (navigator.appVersion.indexOf("Android") != -1)
-    kIsAndroid = true;
-  else if (navigator.platform.indexOf("Linux") == 0)  {
-    // must be checked after android, as android also has a 'Linux' platform string
-    var webglVendor, webglRenderer;
-    [webglVendor, webglRenderer] = detectDriverInfo();
+  var kOS = null;
+  var kOSVersion = null;
+  var kGLDriver = null;
+
+  if (navigator.platform.indexOf("Win") == 0) {
+    kOS = OS_WINDOWS;
     
-    if (webglRenderer.contains('llvmpipe')) {
-      kIsLinuxMesa = true;
-    } else if (webglVendor.contains('NVIDIA')) {
-      kIsLinuxNVidia = true;
-    } else {
-      kIsLinux = true;
-    }
-  }
-
-  // Set kMacVersion to the OS X version for Mac, and 0 otherwise.
-  var osxmatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
-  var kMacVersion = osxmatch ? parseFloat(osxmatch[1]) : 0;
-
-  var kIsWindowsVistaOrHigher = false;
-  if (kIsWindows) {
     // code borrowed from browser/modules/test/browser_taskbar_preview.js
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var version = SpecialPowers.Cc["@mozilla.org/system-info;1"]
-                            .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                            .getProperty("version");
-    kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
+                               .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                               .getProperty("version");
+    kOSVersion = parseFloat(version);
+    // Version 6.0 is Vista, 6.1 is 7.
+  } else if (navigator.platform.indexOf("Mac") == 0) {
+    kOS = OS_MAC;
+      
+    var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
+    kOSVersion = versionMatch ? parseFloat(versionMatch[1]) : null;
+  } else if (navigator.appVersion.indexOf("Android") != -1) {
+    kOS = OS_ANDROID;
+  } else if (navigator.platform.indexOf("Linux") == 0) {
+    // Must be checked after android, as android also has a 'Linux' platform string.
+    kOS = OS_LINUX;
   }
+  
+  var glVendor, glRenderer;
+  [glVendor, glRenderer] = detectDriverInfo();
+  info("GL vendor: " + glVendor);
+  info("GL renderer: " + glRenderer);
+  
+  if (glRenderer.contains('llvmpipe')) {
+    kGLDriver = GLDRIVER_MESA;
+  } else if (glVendor.contains('NVIDIA')) {
+    kGLDriver = GLDRIVER_NVIDIA;
+  }
+  
+  if (kOS) {
+    info("OS detected as: " + kOS);
+    info("  Version: " + kOSVersion);
+  } else {
+    info("OS not detected.");
+    info("  `platform`:   " + navigator.platform);
+    info("  `appVersion`: " + navigator.appVersion);
+    info("  `userAgent`:  " + navigator.userAgent);
+  }
+  if (kGLDriver) {
+    info("GL driver detected as: " + kGLDriver);
+  } else {
+    info("GL driver not detected.");
+  }
+  
+  var requestLongerTimeoutLen = 3;
+  if (kOS == OS_ANDROID)
+    requestLongerTimeoutLen = 6;
 
   function getEnv(env) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -437,7 +463,7 @@ function start() {
     window.webglTestHarness = testHarness;
   }
 
-  SimpleTest.requestLongerTimeout(kIsAndroid ? 6 : 3);
+  SimpleTest.requestLongerTimeout(requestLongerTimeoutLen);
 
   var statusElem = document.getElementById("status");
   var statusTextNode = document.createTextNode('');
@@ -455,60 +481,78 @@ function start() {
   // failing tests. It's easier to do a platform check for Windows than for ANGLE itself.
   // Moreover, we currently also have different tests failing on Mac and on Linux,
   // presumably due to differences in the drivers.
-  var failingTestsFilename;
-  if (kIsWindows)
-    failingTestsFilename = 'failing_tests_windows.txt';
-  else if (kIsLinux)
-    failingTestsFilename = 'failing_tests_linux.txt';
-  else if (kIsLinuxMesa)
-    failingTestsFilename = 'failing_tests_linux_mesa.txt';
-  else if (kIsLinuxNVidia)
-    failingTestsFilename = 'failing_tests_linux_nvidia.txt';
-  else if (kMacVersion == 10.8)
-    failingTestsFilename = 'failing_tests_mac_mtnlion.txt';
-  else if (kMacVersion)
-    failingTestsFilename = 'failing_tests_mac.txt';
-  else if (kIsAndroid)
-    failingTestsFilename = 'failing_tests_android.txt';
-
-  var testsExpectedToFail = loadTextFileSynchronous(failingTestsFilename)
-                            .replace(/\r/g, '') // convert to unix line breaks
-                            .split('\n');
-
-  // remove empty filenames
-  var indexOfEmptyFilename = testsExpectedToFail.indexOf("");
-  while(indexOfEmptyFilename != -1) {
-    testsExpectedToFail.splice(indexOfEmptyFilename, 1);
-    indexOfEmptyFilename = testsExpectedToFail.indexOf("");
-  }
-
-  var testsToIgnore = [];
-
-  var testsToSkip = [];
-
-  if (kIsAndroid) {
-    testsToSkip = loadTextFileSynchronous('skipped_tests_android.txt')
-                      .replace(/\r/g, '') // convert to unix line breaks
-                      .split('\n');
-  }
-
-  if (kIsLinuxMesa) {
-    testsToSkip = loadTextFileSynchronous('skipped_tests_linux_mesa.txt')
-                      .replace(/\r/g, '') // convert to unix line breaks
-                      .split('\n');
-  }
-
-  if (kIsWindows) {
-    if (!kIsWindowsVistaOrHigher) {
-      testsToSkip = loadTextFileSynchronous('skipped_tests_winxp.txt')
-                        .replace(/\r/g, '') // convert to unix line breaks
-                        .split('\n');
-    } else {
-      testsToSkip = loadTextFileSynchronous('skipped_tests_win_vista.txt')
-                        .replace(/\r/g, '') // convert to unix line breaks
-                        .split('\n');
+  var failingTestsFilename = null;
+  var skippedTestsFilename = null;
+  switch (kOS) {
+    case OS_WINDOWS: {
+      failingTestsFilename = 'failing_tests_windows.txt';
+      
+      if (kOSVersion >= 6.0) // 6.0 is Vista
+        skippedTestsFilename = 'skipped_tests_win_vista.txt'
+      else // XP
+        skippedTestsFilename = 'skipped_tests_winxp.txt';
+        
+      break;
+    }
+    case OS_MAC: {
+      if (kOSVersion == 10.8)
+        failingTestsFilename = 'failing_tests_mac_mtnlion.txt';
+      else
+        failingTestsFilename = 'failing_tests_mac.txt';
+        
+      break;
+    }
+    case OS_LINUX: {
+      switch (kGLDriver) {
+        case GLDRIVER_MESA:
+          failingTestsFilename = 'failing_tests_linux_mesa.txt';
+          skippedTestsFilename = 'skipped_tests_linux_mesa.txt';
+          break;
+        case GLDRIVER_NVIDIA:
+          failingTestsFilename = 'failing_tests_linux_nvidia.txt';
+          break;
+        default:
+          failingTestsFilename = 'failing_tests_linux.txt';
+          break;
+      }
+      break;
+    }
+    case OS_ANDROID: {
+      failingTestsFilename = 'failing_tests_android.txt';
+      skippedTestsFilename = 'skipped_tests_android.txt';
+      break;
     }
   }
+  
+  info("Failing tests file: " + failingTestsFilename);
+  info("Skipped tests file: " + skippedTestsFilename);
+  
+  function LoadNewlineSepFile(filename) {
+    var lines = loadTextFileSynchronous(filename)
+                .replace(/\r/g, '') // convert to unix line breaks
+                .split('\n');
+    
+    // Remove empty lines.
+    while (true) {
+      var emptyLineIndex = lines.indexOf("");
+      if (emptyLineIndex == -1)
+        break;
+      
+      lines.splice(emptyLineIndex, 1);
+    }
+    
+    return lines;
+  };
+
+  var testsExpectedToFail = [];
+  if (failingTestsFilename)
+    testsExpectedToFail = LoadNewlineSepFile(failingTestsFilename);
+  
+  var testsToSkip = [];
+  if (skippedTestsFilename)
+    testsToSkip = LoadNewlineSepFile(skippedTestsFilename);
+    
+  var testsToIgnore = [];
 
   runTestSuite();
 }
