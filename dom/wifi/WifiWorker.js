@@ -1326,7 +1326,7 @@ var WifiManager = (function() {
   var networkConfigurationFields = [
     "ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
     "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid", "disabled",
-    "identity", "password", "auth_alg"
+    "identity", "password", "auth_alg", "phase1", "phase2", "eap"
   ];
 
   manager.getNetworkConfiguration = function(config, callback) {
@@ -1683,7 +1683,10 @@ Network.api = {
   psk: "rw",
   identity: "rw",
   wep: "rw",
-  hidden: "rw"
+  hidden: "rw",
+  eap: "rw",
+  phase1: "rw",
+  phase2: "rw"
 };
 
 // Note: We never use ScanResult.prototype, so the fact that it's unrelated to
@@ -1944,6 +1947,12 @@ function WifiWorker() {
       configured.wep_key0 = net.wep_key0 = isWepHexKey(net.wep) ? net.wep : quote(net.wep);
       configured.auth_alg = net.auth_alg = "OPEN SHARED";
     }
+
+    if ("phase1" in net)
+      net.phase1 = quote(net.phase1);
+
+    if ("phase2" in net)
+      net.phase2 = quote(net.phase2);
 
     return net;
   };
