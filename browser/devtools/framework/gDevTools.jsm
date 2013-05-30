@@ -28,9 +28,11 @@ this.DevTools = function DevTools() {
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
+  this._teardown = this._teardown.bind(this);
 
   EventEmitter.decorate(this);
 
+  Services.obs.addObserver(this._teardown, "devtools-unloaded", false);
   Services.obs.addObserver(this.destroy, "quit-application", false);
 }
 
@@ -273,6 +275,7 @@ DevTools.prototype = {
    */
   destroy: function() {
     Services.obs.removeObserver(this.destroy, "quit-application");
+    Services.obs.removeObserver(this._teardown, "devtools-unloaded");
 
     for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
@@ -421,6 +424,9 @@ let gDevToolsBrowser = {
     let allDefs = gDevTools.getToolDefinitionArray();
     let prevDef;
     for (let def of allDefs) {
+      if (def.id == "options") {
+        continue;
+      }
       if (def === toolDefinition) {
         break;
       }
@@ -739,4 +745,4 @@ gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
 
 // Load the browser devtools main module as the loader's main module.
-devtools.main("devtools/main");
+devtools.main("main");
