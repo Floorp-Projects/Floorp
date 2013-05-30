@@ -544,7 +544,7 @@ StackFrames.prototype = {
 
 
     // Watch expressions are evaluated in the context of the topmost frame,
-    // and the results and displayed in the variables view.
+    // and the results are displayed in the variables view.
     if (this.currentWatchExpressions) {
       // Evaluation causes the stack frames to be cleared and active thread to
       // pause, sending a 'clientEvaluated' packed and adding the frames again.
