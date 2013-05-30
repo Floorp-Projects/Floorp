@@ -43,7 +43,7 @@ let Elements = {};
   ["tray",               "tray"],
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
-  ["appbar",             "appbar"],
+  ["navbar",             "navbar"],
   ["contextappbar",      "contextappbar"],
   ["contentViewport",    "content-viewport"],
   ["progress",           "progress-control"],
@@ -1035,7 +1035,7 @@ var BrowserUI = {
         this._editURI(true);
         break;
       case "cmd_addBookmark":
-        Elements.appbar.show();
+        Elements.navbar.show();
         Appbar.onStarButton(true);
         break;
       case "cmd_bookmarks":
@@ -1178,9 +1178,9 @@ var ContextUI = {
       this._setIsVisible(true);
       shown = true;
     }
-    if (!Elements.appbar.isShowing) {
-      // show the appbar
-      Elements.appbar.show();
+    if (!Elements.navbar.isShowing) {
+      // show the navbar
+      Elements.navbar.show();
       shown = true;
     }
 
@@ -1231,7 +1231,7 @@ var ContextUI = {
       this._setIsVisible(false);
       dismissed = true;
     }
-    if (Elements.appbar.isShowing) {
+    if (Elements.navbar.isShowing) {
       this.dismissAppbar();
       dismissed = true;
     }
