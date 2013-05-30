@@ -1325,6 +1325,15 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   return rv;
 }
 
+bool
+nsTableRowGroupFrame::UpdateOverflow()
+{
+  // Row cursor invariants depend on the visual overflow area of the rows,
+  // which may have changed, so we need to clear the cursor now.
+  ClearRowCursor();
+  return nsContainerFrame::UpdateOverflow();
+}
+
 /* virtual */ void
 nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
