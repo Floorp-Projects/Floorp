@@ -41,10 +41,12 @@ interface nsIAndroidDisplayport : nsISupports {
   attribute float resolution;
 };
 
-[scriptable, uuid(bbb8e0d7-5cca-4ad0-88be-538ce6d04f63)]
+[scriptable, uuid(5aa0cfa5-377c-4f5e-8dcf-59ebd9482d65)]
 interface nsIAndroidBridge : nsISupports
 {
   AString handleGeckoMessage(in AString message);
   attribute nsIAndroidBrowserApp browserApp;
   nsIAndroidDisplayport getDisplayPort(in boolean aPageSizeUpdate, in boolean isBrowserContentDisplayed, in int32_t tabId, in nsIAndroidViewport metrics);
+  void contentDocumentChanged();
+  boolean isContentDocumentDisplayed();
 };
