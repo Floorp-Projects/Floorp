@@ -189,7 +189,8 @@ protected:
     : nsSVGTextFrame2Base(aContext),
       mFontSizeScaleFactor(1.0f),
       mGetCanvasTMForFlag(FOR_OUTERSVG_TM),
-      mPositioningDirty(true)
+      mPositioningDirty(true),
+      mPositioningMayUsePercentages(false)
   {
   }
 
@@ -639,6 +640,30 @@ private:
    * necessary.
    */
   bool mPositioningDirty;
+
+  /**
+   * Whether the values from x/y/dx/dy attributes have any percentage values
+   * that are used in determining the positions of glyphs.  The value will
+   * be true even if a positioning value is overridden by a descendant element's
+   * attribute with a non-percentage length.  For example,
+   * mPositioningMayUsePercentages would be true for:
+   *
+   *   <text x="10%"><tspan x="0">abc</tspan></text>
+   *
+   * Percentage values beyond the number of addressable characters, however, do
+   * not influence mPositioningMayUsePercentages.  For example,
+   * mPositioningMayUsePercentages would be false for:
+   *
+   *   <text x="10 20 30 40%">abc</text>
+   *
+   * mPositioningMayUsePercentages is used to determine whether to recompute
+   * mPositions when the viewport size changes.  So although the first example
+   * above shows that mPositioningMayUsePercentages can be true even if a viewport
+   * size change will not affect mPositions, determining a completley accurate
+   * value for mPositioningMayUsePercentages would require extra work that is
+   * probably not worth it.
+   */
+  bool mPositioningMayUsePercentages;
 };
 
 #endif
