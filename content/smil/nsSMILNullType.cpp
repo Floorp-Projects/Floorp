@@ -7,15 +7,13 @@
 #include "nsSMILValue.h"
 #include "nsDebug.h"
 
-/*static*/ nsSMILNullType nsSMILNullType::sSingleton;
-
 nsresult
 nsSMILNullType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
 {
   NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   NS_PRECONDITION(aSrc.mType == this, "Unexpected source type");
   aDest.mU    = aSrc.mU;
-  aDest.mType = &sSingleton;
+  aDest.mType = Singleton();
   return NS_OK;
 }
 
