@@ -12,15 +12,18 @@ import org.mozilla.gecko.widget.DateTimePicker;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.content.Context;
+import android.graphics.Color;
+import android.os.Build;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.content.Context;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
@@ -202,7 +205,7 @@ class PromptInput {
         }
 
         public String getValue() {
-            if (android.os.Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
+            if (Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
                 // We can't use the custom DateTimePicker with a sdk older than 11.
                 // Fallback on the native DatePicker.
                 DatePicker dp = (DatePicker)mView;
@@ -241,6 +244,9 @@ class PromptInput {
         private static String[] mListitems;
         private static int mSelected;
 
+        public Spinner spinner;
+        public AllCapsTextView textView;
+
         public MenulistInput(JSONObject obj) {
             super(obj);
             mListitems = Prompt.getStringArray(obj, "values");
@@ -248,21 +254,37 @@ class PromptInput {
         }
 
         public View getView(final Context context) throws UnsupportedOperationException {
-            Spinner spinner = new Spinner(context, Spinner.MODE_DIALOG);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                spinner = new Spinner(context);
+            } else {
+                spinner = new Spinner(context, Spinner.MODE_DIALOG);
+            }
             try {
                 if (mListitems.length > 0) {
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.simple_dropdown_item_1line, mListitems);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, mListitems);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
                     spinner.setAdapter(adapter);
                     spinner.setSelection(mSelected);
                 }
             } catch(Exception ex) { }
 
-            mView = (View)spinner;
-            return mView;
+            if (!TextUtils.isEmpty(mLabel)) {
+                LinearLayout container = new LinearLayout(context);
+                container.setOrientation(LinearLayout.VERTICAL);
+
+                textView = new AllCapsTextView(context, null);
+                textView.setText(mLabel);
+                container.addView(textView);
+
+                container.addView(spinner);
+                return container;
+            }
+
+            return spinner;
         }
 
         public String getValue() {
-            Spinner spinner = (Spinner)mView;
             return Integer.toString(spinner.getSelectedItemPosition());
         }
     }
