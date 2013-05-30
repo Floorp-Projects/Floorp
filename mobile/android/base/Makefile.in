@@ -110,6 +110,7 @@ FENNEC_JAVA_FILES = \
   GeckoJavaSampler.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
+  GeckoView.java \
   health/BrowserHealthRecorder.java \
   InputMethods.java \
   JavaAddonManager.java \
