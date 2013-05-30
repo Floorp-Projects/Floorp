@@ -7500,13 +7500,15 @@ class CGDescriptor(CGThing):
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
-            if (not descriptor.interface.isExternal() and
-                # Workers stuff is never pref-controlled
-                not descriptor.workers):
-                if descriptor.interface.getExtendedAttribute("PrefControlled") is not None:
-                    cgThings.append(CGPrefEnabledNative(descriptor))
-                elif descriptor.interface.getExtendedAttribute("Pref") is not None:
-                    cgThings.append(CGPrefEnabled(descriptor))
+
+        if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.getNavigatorProperty()) and
+            not descriptor.interface.isExternal() and
+            # Workers stuff is never pref-controlled
+            not descriptor.workers):
+            if descriptor.interface.getExtendedAttribute("PrefControlled") is not None:
+                cgThings.append(CGPrefEnabledNative(descriptor))
+            elif descriptor.interface.getExtendedAttribute("Pref") is not None:
+                cgThings.append(CGPrefEnabled(descriptor))
 
         if descriptor.concrete:
             if descriptor.proxy:
