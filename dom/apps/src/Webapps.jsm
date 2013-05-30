@@ -84,6 +84,11 @@ this.DOMApplicationRegistry = {
   webapps: { },
   children: [ ],
   allAppsLaunchable: false,
+#ifdef MOZ_OFFICIAL_BRANDING
+  get allowSideloadingCertified() false,
+#else
+  get allowSideloadingCertified() true,
+#endif
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
