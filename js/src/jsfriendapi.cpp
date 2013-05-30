@@ -635,6 +635,10 @@ js_DumpChars(const jschar *s, size_t n)
 JS_FRIEND_API(void)
 js_DumpObject(JSObject *obj)
 {
+    if (!obj) {
+        fprintf(stderr, "NULL\n");
+        return;
+    }
     obj->dump();
 }
 
