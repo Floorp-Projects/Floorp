@@ -1516,8 +1516,8 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::Value *ret)
 
   const size_t length = stacks.GetStackCount();
   for (size_t i = 0; i < length; ++i) {
-    JS::Value duration = INT_TO_JSVAL(mHangReports.GetDuration(i));
-    if (!JS_SetElement(cx, durationArray, i, &duration)) {
+    JS::Rooted<JS::Value> duration(cx, INT_TO_JSVAL(mHangReports.GetDuration(i)));
+    if (!JS_SetElement(cx, durationArray, i, duration.address())) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -1553,8 +1553,8 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
     if (!moduleInfoArray) {
       return nullptr;
     }
-    JS::Value val = OBJECT_TO_JSVAL(moduleInfoArray);
-    if (!JS_SetElement(cx, moduleArray, moduleIndex, &val)) {
+    JS::Rooted<JS::Value> val(cx, OBJECT_TO_JSVAL(moduleInfoArray));
+    if (!JS_SetElement(cx, moduleArray, moduleIndex, val.address())) {
       return nullptr;
     }
 
@@ -1566,7 +1566,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     val = STRING_TO_JSVAL(str);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
+    if (!JS_SetElement(cx, moduleInfoArray, index++, val.address())) {
       return nullptr;
     }
 
@@ -1576,7 +1576,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     val = STRING_TO_JSVAL(id);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
+    if (!JS_SetElement(cx, moduleInfoArray, index++, val.address())) {
       return nullptr;
     }
   }
@@ -1600,8 +1600,8 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
 
-    JS::Value pcArrayVal = OBJECT_TO_JSVAL(pcArray);
-    if (!JS_SetElement(cx, reportArray, i, &pcArrayVal)) {
+    JS::Rooted<JS::Value> pcArrayVal(cx, OBJECT_TO_JSVAL(pcArray));
+    if (!JS_SetElement(cx, reportArray, i, pcArrayVal.address())) {
       return nullptr;
     }
 
@@ -1615,16 +1615,16 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       }
       int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex) ?
         -1 : frame.mModIndex;
-      JS::Value modIndexVal = INT_TO_JSVAL(modIndex);
-      if (!JS_SetElement(cx, framePair, 0, &modIndexVal)) {
+      JS::Rooted<JS::Value> modIndexVal(cx, INT_TO_JSVAL(modIndex));
+      if (!JS_SetElement(cx, framePair, 0, modIndexVal.address())) {
         return nullptr;
       }
-      JS::Value mOffsetVal = INT_TO_JSVAL(frame.mOffset);
-      if (!JS_SetElement(cx, framePair, 1, &mOffsetVal)) {
+      JS::Rooted<JS::Value> mOffsetVal(cx, INT_TO_JSVAL(frame.mOffset));
+      if (!JS_SetElement(cx, framePair, 1, mOffsetVal.address())) {
         return nullptr;
       }
-      JS::Value framePairVal = OBJECT_TO_JSVAL(framePair);
-      if (!JS_SetElement(cx, pcArray, pcIndex, &framePairVal)) {
+      JS::Rooted<JS::Value> framePairVal(cx, OBJECT_TO_JSVAL(framePair));
+      if (!JS_SetElement(cx, pcArray, pcIndex, framePairVal.address())) {
         return nullptr;
       }
     }

@@ -678,11 +678,13 @@ nsINode::SetUserData(const nsAString &aKey, nsIVariant *aData,
 }
 
 JS::Value
-nsINode::SetUserData(JSContext* aCx, const nsAString& aKey, JS::Value aData,
+nsINode::SetUserData(JSContext* aCx, const nsAString& aKey,
+                     JS::Handle<JS::Value> aData,
                      nsIDOMUserDataHandler* aHandler, ErrorResult& aError)
 {
   nsCOMPtr<nsIVariant> data;
-  aError = nsContentUtils::XPConnect()->JSValToVariant(aCx, &aData,
+  JS::Rooted<JS::Value> dataVal(aCx, aData);
+  aError = nsContentUtils::XPConnect()->JSValToVariant(aCx, dataVal.address(),
                                                        getter_AddRefs(data));
   if (aError.Failed()) {
     return JS::UndefinedValue();
