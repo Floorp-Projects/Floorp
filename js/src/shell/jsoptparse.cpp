@@ -59,14 +59,6 @@ OptionParser::setArgTerminatesOptions(const char *name, bool enabled)
     findArgument(name)->setTerminatesOptions(enabled);
 }
 
-void
-OptionParser::setArgCapturesRest(const char *name)
-{
-    MOZ_ASSERT(restArgument == -1, "only one argument may be set to capture the rest");
-    restArgument = findArgumentIndex(name);
-    MOZ_ASSERT(restArgument != -1, "unknown argument name passed to setArgCapturesRest");
-}
-
 OptionParser::Result
 OptionParser::error(const char *fmt, ...)
 {
@@ -358,17 +350,10 @@ OptionParser::parseArgs(int inputArgc, char **argv)
             /* Option. */
             Option *opt;
             if (arg[1] == '-') {
-                if (arg[2] == '\0') {
-                    /* End of options */
-                    optionsAllowed = false;
-                    nextArgument = restArgument;
-                    continue;
-                } else {
-                    /* Long option. */
-                    opt = findOption(arg + 2);
-                    if (!opt)
-                        return error("Invalid long option: %s", arg);
-                }
+                /* Long option. */
+                opt = findOption(arg + 2);
+                if (!opt)
+                    return error("Invalid long option: %s", arg);
             } else {
                 /* Short option */
                 if (arg[2] != '\0')
@@ -384,8 +369,12 @@ OptionParser::parseArgs(int inputArgc, char **argv)
             r = handleArg(argc, argv, &i, &optionsAllowed);
         }
 
-        if (r != Okay)
+        switch (r) {
+          case Okay:
+            break;
+          default:
             return r;
+        }
     }
     return Okay;
 }
@@ -509,29 +498,21 @@ OptionParser::findOption(const char *longflag) const
 
 /* Argument accessors */
 
-ssize_t
-OptionParser::findArgumentIndex(const char *name) const
-{
-    for (Option * const *it = arguments.begin(); it != arguments.end(); ++it) {
-        const char *target = (*it)->longflag;
-        if (strcmp(target, name) == 0)
-            return it - arguments.begin();
-    }
-    return -1;
-}
-
 Option *
 OptionParser::findArgument(const char *name)
 {
-    ssize_t index = findArgumentIndex(name);
-    return (index == -1) ? NULL : arguments[index];
+    for (Option **it = arguments.begin(), **end = arguments.end(); it != end; ++it) {
+        const char *target = (*it)->longflag;
+        if (strcmp(target, name) == 0)
+            return *it;
+    }
+    return NULL;
 }
 
 const Option *
 OptionParser::findArgument(const char *name) const
 {
-    ssize_t index = findArgumentIndex(name);
-    return (index == -1) ? NULL : arguments[index];
+    return const_cast<OptionParser *>(this)->findArgument(name);
 }
 
 const char *
