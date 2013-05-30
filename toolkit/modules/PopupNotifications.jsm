@@ -260,6 +260,13 @@ PopupNotifications.prototype = {
       // Otherwise, update() will display the notification the next time the
       // relevant tab/window is selected.
 
+      // If the tab is selected but the window is in the background, let the OS
+      // tell the user that there's a notification waiting in that window.
+      // At some point we might want to do something about background tabs here
+      // too.
+      if (browser == this.tabbrowser.selectedBrowser)
+        this.window.getAttention();
+
       // Notify observers that we're not showing the popup (useful for testing)
       this._notify("backgroundShow");
     }
