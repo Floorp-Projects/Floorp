@@ -19,7 +19,7 @@ static const uint32_t kCapacityReadOnly = (uint32_t) -1;
 
 static const char kBytePaddingMarker = char(0xbf);
 
-// Payload is uint32_t aligned.
+// Payload is sizeof(Pickle::memberAlignmentType) aligned.
 
 Pickle::Pickle()
     : header_(NULL),
@@ -35,7 +35,7 @@ Pickle::Pickle(int header_size)
       header_size_(AlignInt(header_size)),
       capacity_(0),
       variable_buffer_offset_(0) {
-  DCHECK(static_cast<uint32_t>(header_size) >= sizeof(Header));
+  DCHECK(static_cast<memberAlignmentType>(header_size) >= sizeof(Header));
   DCHECK(header_size <= kPayloadUnit);
   Resize(kPayloadUnit);
   header_->payload_size = 0;
@@ -441,8 +441,9 @@ char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
 void Pickle::EndWrite(char* dest, int length) {
   // Zero-pad to keep tools like purify from complaining about uninitialized
   // memory.
-  if (length % sizeof(uint32_t))
-    memset(dest + length, 0, sizeof(uint32_t) - (length % sizeof(uint32_t)));
+  if (length % sizeof(memberAlignmentType))
+    memset(dest + length, 0,
+	   sizeof(memberAlignmentType) - (length % sizeof(memberAlignmentType)));
 }
 
 bool Pickle::WriteBytes(const void* data, int data_len, uint32_t alignment) {
@@ -494,7 +495,7 @@ char* Pickle::BeginWriteData(int length) {
   if (!WriteInt(length))
     return NULL;
 
-  char *data_ptr = BeginWrite(length, sizeof(uint32_t));
+  char *data_ptr = BeginWrite(length, sizeof(memberAlignmentType));
   if (!data_ptr)
     return NULL;
 
@@ -541,7 +542,7 @@ const char* Pickle::FindNext(uint32_t header_size,
                              const char* start,
                              const char* end) {
   DCHECK(header_size == AlignInt(header_size));
-  DCHECK(header_size <= static_cast<uint32_t>(kPayloadUnit));
+  DCHECK(header_size <= static_cast<memberAlignmentType>(kPayloadUnit));
 
   const Header* hdr = reinterpret_cast<const Header*>(start);
   const char* payload_base = start + header_size;
