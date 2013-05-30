@@ -67,7 +67,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(MobileConnection, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MobileConnection, nsDOMEventTargetHelper)
 
-NS_IMPL_EVENT_HANDLER(MobileConnection, iccinfochange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
@@ -170,17 +169,6 @@ MobileConnection::GetRetryCount(int32_t* retryCount)
     return NS_OK;
   }
   return mProvider->GetRetryCount(retryCount);
-}
-
-NS_IMETHODIMP
-MobileConnection::GetIccInfo(nsIDOMMozMobileICCInfo** aIccInfo)
-{
-  *aIccInfo = nullptr;
-
-  if (!mProvider || !CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-  return mProvider->GetIccInfo(aIccInfo);
 }
 
 NS_IMETHODIMP
@@ -414,16 +402,6 @@ MobileConnection::NotifyDataChanged()
   }
 
   return DispatchTrustedEvent(NS_LITERAL_STRING("datachange"));
-}
-
-NS_IMETHODIMP
-MobileConnection::NotifyIccInfoChanged()
-{
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  return DispatchTrustedEvent(NS_LITERAL_STRING("iccinfochange"));
 }
 
 NS_IMETHODIMP
