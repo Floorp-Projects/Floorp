@@ -54,7 +54,7 @@ MoveEmitterX86::spillSlot() const
 Operand
 MoveEmitterX86::toOperand(const MoveOperand &operand) const
 {
-    if (operand.isMemory() || operand.isEffectiveAddress()) {
+    if (operand.isMemory() || operand.isEffectiveAddress() || operand.isFloatAddress()) {
         if (operand.base() != StackPointer)
             return Operand(operand.base(), operand.disp());
 
