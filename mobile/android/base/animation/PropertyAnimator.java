@@ -85,6 +85,10 @@ public class PropertyAnimator implements Runnable {
         mListener = listener;
     }
 
+    public long getDuration() {
+        return mDuration;
+    }
+
     public long getRemainingTime() {
         int timePassed = (int) (AnimationUtils.currentAnimationTimeMillis() - mStartTime);
         return mDuration - timePassed;
