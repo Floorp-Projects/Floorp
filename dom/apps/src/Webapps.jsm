@@ -132,6 +132,10 @@ this.DOMApplicationRegistry = {
           let appDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], false);
           for (let id in this.webapps) {
             let app = this.webapps[id];
+            if (!app) {
+              delete this.webapps[id];
+              continue;
+            }
 
             app.id = id;
 
@@ -1141,6 +1145,8 @@ this.DOMApplicationRegistry = {
           DOMApplicationRegistry._writeFile(manFile,
                                             JSON.stringify(aManifest),
                                             function() { });
+
+          app = DOMApplicationRegistry.webapps[aId];
           // Set state and fire events.
           app.downloading = false;
           app.downloadAvailable = false;
@@ -2049,7 +2055,7 @@ this.DOMApplicationRegistry = {
       manifest = new ManifestHelper(jsonManifest, app.manifestURL);
       this.downloadPackage(manifest, appObject, false, (function(aId, aManifest) {
         // Success! Move the zip out of TmpD.
-        let app = DOMApplicationRegistry.webapps[id];
+        let app = DOMApplicationRegistry.webapps[aId];
         let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
         let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
         zipFile.moveTo(dir, "application.zip");
@@ -2557,15 +2563,65 @@ this.DOMApplicationRegistry = {
                   app.appStatus = AppsUtils.getAppManifestStatus(manifest);
                 }
 
+                // Check if the app declares which origin it will use.
+                if (isSigned &&
+                    app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED &&
+                    manifest.origin !== undefined) {
+
+                  let uri;
+                  try {
+                    uri = Services.io.newURI(manifest.origin, null, null);
+                  } catch(e) {
+                    throw "INVALID_ORIGIN";
+                  }
+
+                  if (uri.scheme != "app") {
+                    throw "INVALID_ORIGIN";
+                  }
+
+                  // Changing the origin during an update is not allowed.
+                  if (aIsUpdate && uri.prePath != app.origin) {
+                    throw "INVALID_ORIGIN_CHANGE";
+                  }
+
+                  debug("Setting origin to " + uri.prePath +
+                        " for " + app.manifestURL);
+                  let newId = uri.prePath.substring(6); // "app://".length
+
+                  if (newId in self.webapps) {
+                    throw "DUPLICATE_ORIGIN";
+                  }
+                  app.origin = uri.prePath;
+
+                  // Update the registry.
+                  app.id = newId;
+                  self.webapps[newId] = app;
+                  delete self.webapps[id];
+
+                  // Rename the directories where the files are installed.
+                  [DIRECTORY_NAME, "TmpD"].forEach(function(aDir) {
+                    let parent = FileUtils.getDir(aDir,
+                                             ["webapps"], true, true);
+                    let dir = FileUtils.getDir(aDir,
+                                             ["webapps", id], true, true);
+                    dir.moveTo(parent, newId);
+                  });
+
+                  // Signals that we need to swap the old id with the new app.
+                  self.broadcastMessage("Webapps:RemoveApp", { id: id });
+                  self.broadcastMessage("Webapps:AddApp", { id: newId,
+                                                            app: app });
+                }
+
                 if (aOnSuccess) {
-                  aOnSuccess(id, manifest);
+                  aOnSuccess(app.id, manifest);
                 }
               } catch (e) {
                 // Something bad happened when reading the package.
                 // Unrecoverable error, don't bug the user.
                 // Apps with installState 'pending' does not produce any
                 // notification, so we are safe with its current
-                // downladAvailable state.
+                // downloadAvailable state.
                 if (app.installState !== "pending") {
                   app.downloadAvailable = false;
                 }
