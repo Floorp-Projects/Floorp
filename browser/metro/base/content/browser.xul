@@ -197,7 +197,7 @@
         </hbox>
 
         <!-- Start UI -->
-        <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width" onclick="false;">
+        <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
           <!-- portrait/landscape/filled view -->
           <hbox id="start" class="start-page" flex="1" observes="bcast_windowState">
             <scrollbox id="start-scrollbox" orient="horizontal" flex="1">
