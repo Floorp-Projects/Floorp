@@ -18,6 +18,7 @@ EXTRA_COMPONENTS = \
 EXTRA_JS_MODULES = \
   gonk/WbxmlPduHelper.jsm \
   gonk/SiPduHelper.jsm \
+  gonk/SlPduHelper.jsm \
   $(NULL)
 endif
 
