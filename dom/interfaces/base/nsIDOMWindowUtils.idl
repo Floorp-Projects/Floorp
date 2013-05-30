@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIDOMEventTarget;
 interface nsIRunnable;
 
-[scriptable, uuid(e57ba9cd-289e-46ba-9c3c-f9a1ddc690d8)]
+[scriptable, uuid(dba80826-6251-4947-bf2a-a3873b9ec764)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1396,4 +1396,11 @@ interface nsIDOMWindowUtils : nsISupports {
     * purposes, eg testing or setting a flag.
     */
    void runBeforeNextEvent(in nsIRunnable runnable);
+
+   /*
+    * Returns the value of a given property.  If the property is animated off the
+    * main thread, this function will fetch the correct value from the compositor.
+    */
+   AString getOMTAOrComputedStyle(in nsIDOMNode aNode,
+                                  in AString aProperty);
 };
