@@ -2373,21 +2373,24 @@ WebConsoleFrame.prototype = {
 
     // Create the text, which consists of an abbreviated version of the URL
     // plus an optional line number. Scratchpad URLs should not be abbreviated.
-    let text;
+    let displayLocation;
+    let fullURL;
 
     if (/^Scratchpad\/\d+$/.test(aSourceURL)) {
-      text = aSourceURL;
+      displayLocation = aSourceURL;
+      fullURL = aSourceURL;
     }
     else {
-      text = WebConsoleUtils.abbreviateSourceURL(aSourceURL);
+      fullURL = aSourceURL.split(" -> ").pop();
+      displayLocation = WebConsoleUtils.abbreviateSourceURL(fullURL);
     }
 
     if (aSourceLine) {
-      text += ":" + aSourceLine;
+      displayLocation += ":" + aSourceLine;
       locationNode.sourceLine = aSourceLine;
     }
 
-    locationNode.setAttribute("value", text);
+    locationNode.setAttribute("value", displayLocation);
 
     // Style appropriately.
     locationNode.setAttribute("crop", "center");
@@ -2397,7 +2400,7 @@ WebConsoleFrame.prototype = {
     locationNode.classList.add("text-link");
 
     // Make the location clickable.
-    locationNode.addEventListener("click", function() {
+    locationNode.addEventListener("click", () => {
       if (/^Scratchpad\/\d+$/.test(aSourceURL)) {
         let wins = Services.wm.getEnumerator("devtools:scratchpad");
 
@@ -2411,16 +2414,16 @@ WebConsoleFrame.prototype = {
         }
       }
       else if (locationNode.parentNode.category == CATEGORY_CSS) {
-        this.owner.viewSourceInStyleEditor(aSourceURL, aSourceLine);
+        this.owner.viewSourceInStyleEditor(fullURL, aSourceLine);
       }
       else if (locationNode.parentNode.category == CATEGORY_JS ||
                locationNode.parentNode.category == CATEGORY_WEBDEV) {
-        this.owner.viewSourceInDebugger(aSourceURL, aSourceLine);
+        this.owner.viewSourceInDebugger(fullURL, aSourceLine);
       }
       else {
-        this.owner.viewSource(aSourceURL, aSourceLine);
+        this.owner.viewSource(fullURL, aSourceLine);
       }
-    }.bind(this), true);
+    }, true);
 
     return locationNode;
   },
