@@ -11,9 +11,13 @@ import time
 
 from collections import namedtuple
 
-try:
-    import psutil
-except ImportError:
+# keep in sync with psutil os support, see psutil/__init__.py
+if sys.platform.startswith("freebsd") or sys.platform.startswith("darwin") or sys.platform.startswith("win32") or sys.platform.startswith("linux"):
+    try:
+        import psutil
+    except ImportError:
+        psutil = None
+else:
     psutil = None
 
 from ..compilation.warnings import (
