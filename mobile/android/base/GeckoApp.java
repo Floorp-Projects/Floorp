@@ -55,6 +55,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StrictMode;
+
+import android.telephony.CellLocation;
+import android.telephony.NeighboringCellInfo;
+import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
+import android.telephony.gsm.GsmCellLocation;
+
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -84,14 +93,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -133,6 +148,8 @@ abstract public class GeckoApp
     static public final int RESTORE_OOM = 1;
     static public final int RESTORE_CRASH = 2;
 
+    static private final String LOCATION_URL = "https://location.services.mozilla.com/v1/submit";
+
     protected RelativeLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
@@ -171,6 +188,9 @@ abstract public class GeckoApp
 
     private volatile BrowserHealthRecorder mHealthRecorder = null;
 
+    private int mSignalStrenth;
+    private PhoneStateListener mPhoneStateListener = null;
+
     abstract public int getLayout();
     abstract public boolean hasTabsSideBar();
     abstract protected String getDefaultProfileName();
@@ -202,6 +222,15 @@ abstract public class GeckoApp
     }
 
     public LocationListener getLocationListener() {
+        if (mPhoneStateListener == null) {
+            mPhoneStateListener = new PhoneStateListener() {
+                public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+                    setCurrentSignalStrenth(signalStrength);
+                }
+            };
+            TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+            tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        }
         return this;
     }
 
@@ -2152,6 +2181,129 @@ abstract public class GeckoApp
     public void onLocationChanged(Location location) {
         // No logging here: user-identifying information.
         GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
+        collectAndReportLocInfo(location);
+    }
+
+    public void setCurrentSignalStrenth(SignalStrength ss) {
+        if (ss.isGsm())
+            mSignalStrenth = ss.getGsmSignalStrength();
+    }
+
+    private int getCellInfo(JSONArray cellInfo) {
+        TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        if (tm == null)
+            return TelephonyManager.PHONE_TYPE_NONE;
+        List<NeighboringCellInfo> cells = tm.getNeighboringCellInfo();
+        CellLocation cl = tm.getCellLocation();
+        String mcc = "", mnc = "";
+        if (cl instanceof GsmCellLocation) {
+            JSONObject obj = new JSONObject();
+            GsmCellLocation gcl = (GsmCellLocation)cl;
+            try {
+                obj.put("lac", gcl.getLac());
+                obj.put("cid", gcl.getCid());
+                obj.put("psc", gcl.getPsc());
+                switch(tm.getNetworkType()) {
+                case TelephonyManager.NETWORK_TYPE_GPRS:
+                case TelephonyManager.NETWORK_TYPE_EDGE:
+                    obj.put("radio", "gsm");
+                    break;
+                case TelephonyManager.NETWORK_TYPE_UMTS:
+                case TelephonyManager.NETWORK_TYPE_HSDPA:
+                case TelephonyManager.NETWORK_TYPE_HSUPA:
+                case TelephonyManager.NETWORK_TYPE_HSPA:
+                case TelephonyManager.NETWORK_TYPE_HSPAP:
+                    obj.put("radio", "umts");
+                    break;
+                }
+                String mcc_mnc = tm.getNetworkOperator();
+                mcc = mcc_mnc.substring(0, 3);
+                mnc = mcc_mnc.substring(3);
+                obj.put("mcc", mcc);
+                obj.put("mnc", mnc);
+                obj.put("asu", mSignalStrenth);
+            } catch(JSONException jsonex) {}
+            cellInfo.put(obj);
+        }
+        if (cells != null) {
+            for (NeighboringCellInfo nci : cells) {
+                try {
+                    JSONObject obj = new JSONObject();
+                    obj.put("lac", nci.getLac());
+                    obj.put("cid", nci.getCid());
+                    obj.put("psc", nci.getPsc());
+                    obj.put("mcc", mcc);
+                    obj.put("mnc", mnc);
+
+                    int dbm;
+                    switch(nci.getNetworkType()) {
+                    case TelephonyManager.NETWORK_TYPE_GPRS:
+                    case TelephonyManager.NETWORK_TYPE_EDGE:
+                        obj.put("radio", "gsm");
+                        break;
+                    case TelephonyManager.NETWORK_TYPE_UMTS:
+                    case TelephonyManager.NETWORK_TYPE_HSDPA:
+                    case TelephonyManager.NETWORK_TYPE_HSUPA:
+                    case TelephonyManager.NETWORK_TYPE_HSPA:
+                    case TelephonyManager.NETWORK_TYPE_HSPAP:
+                        obj.put("radio", "umts");
+                        break;
+                    }
+
+                    obj.put("asu", nci.getRssi());
+                    cellInfo.put(obj);
+                } catch(JSONException jsonex) {}
+            }
+        }
+        return tm.getPhoneType();
+    }
+
+    private void collectAndReportLocInfo(Location location) {
+        final JSONObject locInfo = new JSONObject();
+        try {
+            JSONArray cellInfo = new JSONArray();
+            int radioType = getCellInfo(cellInfo);
+            if (radioType == TelephonyManager.PHONE_TYPE_GSM)
+                locInfo.put("radio", "gsm");
+            else
+                return; // we don't care about other radio types for now
+            locInfo.put("lon", location.getLongitude());
+            locInfo.put("lat", location.getLatitude());
+            locInfo.put("accuracy", (int)location.getAccuracy());
+            locInfo.put("altitude", (int)location.getAltitude());
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+            locInfo.put("time", df.format(new Date(location.getTime())));
+            locInfo.put("cell", cellInfo);
+        } catch(JSONException jsonex) {}
+
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            public void run() {
+                try {
+                    URL url = new URL(LOCATION_URL);
+                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                    try {
+                        urlConnection.setDoOutput(true);
+                        JSONArray batch = new JSONArray();
+                        batch.put(locInfo);
+                        JSONObject wrapper = new JSONObject();
+                        wrapper.put("items", batch);
+                        byte[] bytes = wrapper.toString().getBytes();
+                        urlConnection.setFixedLengthStreamingMode(bytes.length);
+                        OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
+                        out.write(bytes);
+                        out.flush();
+                    } catch (JSONException jsonex) {
+                        Log.e("GeckoCell", "error wrapping data as a batch", jsonex);
+                    } catch (IOException ioex) {
+                        Log.e("GeckoCell", "error submitting data", ioex);
+                    } finally {
+                        urlConnection.disconnect();
+                    }
+                } catch (IOException ioex) {
+                    Log.e("GeckoCell", "error submitting data", ioex);
+                }
+            }
+        });
     }
 
     @Override
