@@ -85,6 +85,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     checkAppState(app, true, 3, continueTest);
     yield;
 
+    // check for update
+    var icons = app.manifest.icons;
+    var oldIcon = icons[Object.keys(icons)[0]];
+    var oldUpdateTime = app.updateTime;
+    setAppIcon('new_icon', continueTest);
+    yield;
+
+    app.ondownloadavailable = function() {
+      ok(false, 'Got a downloadavailable event for non-cached hosted apps');
+    };
+
+    app.ondownloadapplied = function() {
+      ok(true, 'Got a downloadapplied when checking for update');
+      app.ondownloadapplied = app.ondownloadavailable = null;
+      continueTest();
+    };
+    app.checkForUpdate();
+    yield;
+
+    icons = app.manifest.icons;
+    var newIcon = icons[Object.keys(icons)[0]];
+    var newUpdateTime = app.updateTime;
+    isnot(oldIcon, newIcon, 'The icon should be updated');
+    isnot(oldUpdateTime, newUpdateTime, 'The update time should be updated');
+
     // Uninstall the app.
     request = navigator.mozApps.mgmt.uninstall(app);
     request.onerror = cbError;
@@ -157,6 +182,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     xhr.send();
   }
 
+  function setAppIcon(icon, cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", function() { is(xhr.responseText, "OK", "setIcon OK"); cb(); });
+    xhr.addEventListener("error", cbError);
+    xhr.addEventListener("abort", cbError);
+    xhr.open('GET', gBaseURL + 'file_app.sjs?setIcon=' + icon, true);
+    xhr.send();
+  }
+
   // This function checks the state of an installed app. It does the following:
   //
   // * Check various state on the app object itself.
@@ -199,6 +233,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
         cb();
       }
     }
+
+    // This event is triggered when the app calls "alert".
     ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
 
     // Add the iframe to the DOM, triggering the launch.
@@ -227,6 +263,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
 </head>
 <body onload="go()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=826058">Mozilla Bug 826058</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=863337">Mozilla Bug 863337</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 

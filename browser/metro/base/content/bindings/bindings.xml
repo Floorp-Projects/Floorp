@@ -151,25 +151,6 @@
         document.getAnonymousElementByAttribute(this, "anonid", "close-button");
       </field>
 
-      <method name="contentHasChanged">
-        <body><![CDATA[
-          if (!this.isActive)
-            return;
-
-          // There is a race condition with getBoundingClientRect and when the
-          // box is displayed, the padding is ignored in the size calculation.
-          // A nested timeouts below are used to workaround this problem.
-          this.getBoundingClientRect();
-
-          setTimeout(function(self) {
-            setTimeout(function(self) {
-              let height = Math.floor(self.getBoundingClientRect().height);
-              self.top = window.innerHeight - height;
-            }, 0, self);
-          }, 0, this);
-        ]]></body>
-      </method>
-
       <property name="isActive" onget="return !!this.model;"/>
 
       <field name="model">null</field>
@@ -192,7 +173,6 @@
           this._nextButton.disabled = document.getElementById(aModel.commands.next).getAttribute("disabled") == "true";
 
           this.model = aModel;
-          this.contentHasChanged();
         ]]></body>
       </method>
 
@@ -204,7 +184,6 @@
           this.removeAttribute("close");
           this.removeAttribute("type");
 
-          this.contentHasChanged();
           this.model = null;
         ]]></body>
       </method>

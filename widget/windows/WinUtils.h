@@ -21,10 +21,12 @@
 #endif
 #include "nsIDownloader.h"
 #include "nsIURI.h"
+#include "nsIWidget.h"
 
 #include "mozilla/Attributes.h"
 
 class nsWindow;
+struct KeyPair;
 
 namespace mozilla {
 namespace widget {
@@ -161,7 +163,7 @@ public:
    * InitMSG() returns an MSG struct which was initialized by the params.
    * Don't trust the other members in the result.
    */
-  static MSG InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam);
+  static MSG InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam, HWND aWnd);
 
   /**
    * GetScanCode() returns a scan code for the LPARAM of WM_KEYDOWN, WM_KEYUP,
@@ -243,6 +245,19 @@ public:
    * returns the nsIntRect.
    */
   static nsIntRect ToIntRect(const RECT& aRect);
+
+  /**
+   * Returns true if the context or IME state is enabled.  Otherwise, false.
+   */
+  static bool IsIMEEnabled(const InputContext& aInputContext);
+  static bool IsIMEEnabled(IMEState::Enabled aIMEState);
+
+  /**
+   * Returns modifier key array for aModifiers.  This is for
+   * nsIWidget::SynthethizeNative*Event().
+   */
+  static void SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
+                                        uint32_t aModifiers);
 
 private:
   typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
