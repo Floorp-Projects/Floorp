@@ -31,6 +31,7 @@ protected:
   static const int kThemeScrollBarArrowsUpperLeft = 3;
 
   static bool UseOverlayScrollbars();
+  static bool AllowOverlayScrollbarsOverlap();
 };
 
 #endif // nsLookAndFeel_h_

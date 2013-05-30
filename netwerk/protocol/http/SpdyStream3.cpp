@@ -4,16 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHttp.h"
-#include "SpdySession3.h"
-#include "SpdyStream3.h"
-#include "nsAlgorithm.h"
-#include "prnetdb.h"
-#include "nsHttpRequestHead.h"
 #include "mozilla/Telemetry.h"
+#include "nsAlgorithm.h"
+#include "nsHttp.h"
+#include "nsHttpHandler.h"
+#include "nsHttpRequestHead.h"
 #include "nsISocketTransport.h"
 #include "nsISupportsPriority.h"
-#include "nsHttpHandler.h"
+#include "prnetdb.h"
+#include "SpdyPush3.h"
+#include "SpdySession3.h"
+#include "SpdyStream3.h"
+
 #include <algorithm>
 
 #ifdef DEBUG
@@ -26,21 +28,18 @@ namespace net {
 
 SpdyStream3::SpdyStream3(nsAHttpTransaction *httpTransaction,
                        SpdySession3 *spdySession,
-                       nsISocketTransport *socketTransport,
-                       uint32_t chunkSize,
-                       z_stream *compressionContext,
                        int32_t priority)
-  : mUpstreamState(GENERATING_SYN_STREAM),
-    mTransaction(httpTransaction),
+  : mStreamID(0),
     mSession(spdySession),
-    mSocketTransport(socketTransport),
+    mUpstreamState(GENERATING_SYN_STREAM),
+    mSynFrameComplete(0),
+    mSentFinOnData(0),
+    mTransaction(httpTransaction),
+    mSocketTransport(spdySession->SocketTransport()),
     mSegmentReader(nullptr),
     mSegmentWriter(nullptr),
-    mStreamID(0),
-    mChunkSize(chunkSize),
-    mSynFrameComplete(0),
+    mChunkSize(spdySession->SendingChunkSize()),
     mRequestBlockedOnRead(0),
-    mSentFinOnData(0),
     mRecvdFin(0),
     mFullyOpen(0),
     mSentWaitingFor(0),
@@ -49,23 +48,25 @@ SpdyStream3::SpdyStream3(nsAHttpTransaction *httpTransaction,
     mTxInlineFrameSize(SpdySession3::kDefaultBufferSize),
     mTxInlineFrameUsed(0),
     mTxStreamFrameSize(0),
-    mZlib(compressionContext),
+    mZlib(spdySession->UpstreamZlib()),
     mDecompressBufferSize(SpdySession3::kDefaultBufferSize),
     mDecompressBufferUsed(0),
     mDecompressedBytes(0),
     mRequestBodyLenRemaining(0),
     mPriority(priority),
-    mLocalWindow(SpdySession3::kInitialRwin),
     mLocalUnacked(0),
     mBlockedOnRwin(false),
     mTotalSent(0),
-    mTotalRead(0)
+    mTotalRead(0),
+    mPushSource(nullptr)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
   LOG3(("SpdyStream3::SpdyStream3 %p", this));
 
   mRemoteWindow = spdySession->GetServerInitialWindow();
+  mLocalWindow = spdySession->PushAllowance();
+
   mTxInlineFrame = new uint8_t[mTxInlineFrameSize];
   mDecompressBuffer = new char[mDecompressBufferSize];
 }
@@ -186,15 +187,16 @@ SpdyStream3::WriteSegments(nsAHttpSegmentWriter *writer,
                           uint32_t count,
                           uint32_t *countWritten)
 {
-  LOG3(("SpdyStream3::WriteSegments %p count=%d state=%x",
-        this, count, mUpstreamState));
-
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   MOZ_ASSERT(!mSegmentWriter, "segment writer in progress");
 
+  LOG3(("SpdyStream3::WriteSegments %p count=%d state=%x",
+        this, count, mUpstreamState));
+
   mSegmentWriter = writer;
-  nsresult rv = mTransaction->WriteSegments(writer, count, countWritten);
+  nsresult rv = mTransaction->WriteSegments(this, count, countWritten);
   mSegmentWriter = nullptr;
+
   return rv;
 }
 
@@ -209,6 +211,26 @@ SpdyStream3::hdrHashEnumerate(const nsACString &key,
   self->CompressToFrame(value.get());
   return PL_DHASH_NEXT;
 }
+
+void
+SpdyStream3::CreatePushHashKey(const nsCString &scheme,
+                               const nsCString &hostHeader,
+                               uint64_t serial,
+                               const nsCSubstring &pathInfo,
+                               nsCString &outOrigin,
+                               nsCString &outKey)
+{
+  outOrigin = scheme;
+  outOrigin.Append(NS_LITERAL_CSTRING("://"));
+  outOrigin.Append(hostHeader);
+
+  outKey = outOrigin;
+  outKey.Append(NS_LITERAL_CSTRING("/[spdy3."));
+  outKey.AppendInt(serial);
+  outKey.Append(NS_LITERAL_CSTRING("]"));
+  outKey.Append(pathInfo);
+}
+
 
 nsresult
 SpdyStream3::ParseHttpRequestHeaders(const char *buf,
@@ -246,6 +268,44 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   mFlatHttpRequestHeaders.SetLength(endHeader + 2);
   *countUsed = avail - (oldLen - endHeader) + 4;
   mSynFrameComplete = 1;
+
+  nsCString hostHeader;
+  nsCString hashkey;
+  mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
+
+  CreatePushHashKey(NS_LITERAL_CSTRING("https"),
+                    hostHeader, mSession->Serial(),
+                    mTransaction->RequestHead()->RequestURI(),
+                    mOrigin, hashkey);
+
+  // check the push cache for GET
+  if (mTransaction->RequestHead()->Method() == nsHttp::Get) {
+    // from :scheme, :host, :path
+    nsILoadGroupConnectionInfo *loadGroupCI = mTransaction->LoadGroupConnectionInfo();
+    SpdyPushCache3 *cache = nullptr;
+    if (loadGroupCI)
+      loadGroupCI->GetSpdyPushCache3(&cache);
+
+    SpdyPushedStream3 *pushedStream = nullptr;
+    // we remove the pushedstream from the push cache so that
+    // it will not be used for another GET. This does not destroy the
+    // stream itself - that is done when the transactionhash is done with it.
+    if (cache)
+      pushedStream = cache->RemovePushedStream(hashkey);
+
+    if (pushedStream) {
+      LOG3(("Pushed Stream Match located id=0x%X key=%s\n",
+            pushedStream->StreamID(), hashkey.get()));
+      pushedStream->SetConsumerStream(this);
+      mPushSource = pushedStream;
+      mSentFinOnData = 1;
+
+      // There is probably pushed data buffered so trigger a read manually
+      // as we can't rely on future network events to do it
+      mSession->ConnectPushedStream(this);
+      return NS_OK;
+    }
+  }
 
   // It is now OK to assign a streamID that we are assured will
   // be monotonically increasing amongst syn-streams on this
@@ -308,11 +368,6 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
 
   // The client cert "slot". Right now we don't send client certs
   mTxInlineFrame[17] = 0;
-
-  const char *methodHeader = mTransaction->RequestHead()->Method().get();
-
-  nsCString hostHeader;
-  mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
 
   nsCString versionHeader;
   if (mTransaction->RequestHead()->Version() == NS_HTTP_VERSION_1_1)
@@ -388,6 +443,8 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   // contain auth. The http transaction already logs the sanitized request
   // headers at this same level so it is not necessary to do so here.
 
+  const char *methodHeader = mTransaction->RequestHead()->Method().get();
+
   // The header block length
   uint16_t count = hdrHash.Count() + 5; /* method, path, version, host, scheme */
   CompressToFrame(count);
@@ -453,6 +510,75 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
 }
 
 void
+SpdyStream3::AdjustInitialWindow()
+{
+  MOZ_ASSERT(mSession->PushAllowance() <= ASpdySession::kInitialRwin);
+
+  // The session initial_window is sized for serverpushed streams. When we
+  // generate a client pulled stream we want to adjust the initial window
+  // to a huge value in a pipeline with that SYN_STREAM.
+
+  // >0 even numbered IDs are pushed streams.
+  // odd numbered IDs are pulled streams.
+  // 0 is the sink for a pushed stream.
+  SpdyStream3 *stream = this;
+  if (!mStreamID) {
+    MOZ_ASSERT(mPushSource);
+    if (!mPushSource)
+      return;
+    stream = mPushSource;
+    MOZ_ASSERT(stream->mStreamID);
+    MOZ_ASSERT(!(stream->mStreamID & 1)); // is a push stream
+
+    // If the pushed stream has sent a FIN, there is no reason to update
+    // the window
+    if (stream->RecvdFin())
+      return;
+  }
+
+  // For server pushes we also want to include in the ack any data that has been
+  // buffered but unacknowledged.
+
+  // mLocalUnacked is technically 64 bits, but because it can never grow larger than
+  // our window size (which is closer to 29bits max) we know it fits comfortably in 32.
+  // However we don't really enforce that, and track it as a 64 so that broken senders
+  // can still interoperate. That means we have to be careful with this calculation.
+  uint64_t toack64 = (ASpdySession::kInitialRwin - mSession->PushAllowance()) +
+    stream->mLocalUnacked;
+  stream->mLocalUnacked = 0;
+  if (toack64 > 0x7fffffff) {
+    stream->mLocalUnacked = toack64 - 0x7fffffff;
+    toack64 = 0x7fffffff;
+  }
+  uint32_t toack = static_cast<uint32_t>(toack64);
+  if (!toack)
+    return;
+  toack = PR_htonl(toack);
+
+  SpdySession3::EnsureBuffer(mTxInlineFrame,
+                             mTxInlineFrameUsed + 16,
+                             mTxInlineFrameUsed,
+                             mTxInlineFrameSize);
+
+  unsigned char *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
+  mTxInlineFrameUsed += 16;
+
+  memset(packet, 0, 8);
+  packet[0] = SpdySession3::kFlag_Control;
+  packet[1] = SpdySession3::kVersion;
+  packet[3] = SpdySession3::CONTROL_TYPE_WINDOW_UPDATE;
+  packet[7] = 8; // 8 data bytes after 8 byte header
+
+  uint32_t id = PR_htonl(stream->mStreamID);
+  memcpy(packet + 8, &id, 4);
+  memcpy(packet + 12, &toack, 4);
+
+  stream->mLocalWindow += PR_ntohl(toack);
+  LOG3(("AdjustInitialwindow %p 0x%X %u\n",
+        this, stream->mStreamID, PR_ntohl(toack)));
+}
+
+void
 SpdyStream3::UpdateTransportReadEvents(uint32_t count)
 {
   mTotalRead += count;
@@ -510,6 +636,16 @@ SpdyStream3::TransmitFrame(const char *buf,
   // flush internal buffers that were previously blocked on writing. You can
   // of course feed new data to it as well.
 
+  LOG3(("SpdyStream3::TransmitFrame %p inline=%d stream=%d",
+        this, mTxInlineFrameUsed, mTxStreamFrameSize));
+  if (countUsed)
+    *countUsed = 0;
+
+  if (!mTxInlineFrameUsed) {
+    MOZ_ASSERT(!buf);
+    return NS_OK;
+  }
+
   MOZ_ASSERT(mTxInlineFrameUsed, "empty stream frame in transmit");
   MOZ_ASSERT(mSegmentReader, "TransmitFrame with null mSegmentReader");
   MOZ_ASSERT((buf && countUsed) || (!buf && !countUsed),
@@ -517,11 +653,6 @@ SpdyStream3::TransmitFrame(const char *buf,
 
   uint32_t transmittedCount;
   nsresult rv;
-
-  LOG3(("SpdyStream3::TransmitFrame %p inline=%d stream=%d",
-        this, mTxInlineFrameUsed, mTxStreamFrameSize));
-  if (countUsed)
-    *countUsed = 0;
 
   // In the (relatively common) event that we have a small amount of data
   // split between the inlineframe and the streamframe, then move the stream
@@ -862,6 +993,7 @@ SpdyStream3::zlib_destructor(void *opaque, void *addr)
   moz_free(addr);
 }
 
+// This can be called N times.. 1 for syn_reply and 0->N for headers
 nsresult
 SpdyStream3::Uncompress(z_stream *context,
                         char *blockStart,
@@ -915,6 +1047,7 @@ SpdyStream3::Uncompress(z_stream *context,
   return NS_OK;
 }
 
+// mDecompressBuffer contains 0 to N uncompressed Name/Value Header blocks
 nsresult
 SpdyStream3::FindHeader(nsCString name,
                         nsDependentCSubstring &value)
@@ -925,30 +1058,40 @@ SpdyStream3::FindHeader(nsCString name,
     (mDecompressBuffer.get()) + mDecompressBufferUsed;
   if (lastHeaderByte < nvpair)
     return NS_ERROR_ILLEGAL_VALUE;
-  uint32_t numPairs =
-    PR_ntohl(reinterpret_cast<uint32_t *>(mDecompressBuffer.get())[0]);
-  for (uint32_t index = 0; index < numPairs; ++index) {
-    if (lastHeaderByte < nvpair + 4)
-      return NS_ERROR_ILLEGAL_VALUE;
-    uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
-      (nvpair[2] << 8) + nvpair[3];
-    if (lastHeaderByte < nvpair + 4 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-    nsDependentCSubstring nameString =
-      Substring(reinterpret_cast<const char *>(nvpair) + 4,
-                reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
-    if (lastHeaderByte < nvpair + 8 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-    uint32_t valueLen = (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
-      (nvpair[6 + nameLen] << 8) + nvpair[7 + nameLen];
-    if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-    if (nameString.Equals(name)) {
-      value.Assign(((char *)nvpair) + 8 + nameLen, valueLen);
-      return NS_OK;
+
+  do {
+    uint32_t numPairs = PR_ntohl(reinterpret_cast<const uint32_t *>(nvpair)[-1]);
+
+    for (uint32_t index = 0; index < numPairs; ++index) {
+      if (lastHeaderByte < nvpair + 4)
+        return NS_ERROR_ILLEGAL_VALUE;
+      uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
+        (nvpair[2] << 8) + nvpair[3];
+      if (lastHeaderByte < nvpair + 4 + nameLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+      nsDependentCSubstring nameString =
+        Substring(reinterpret_cast<const char *>(nvpair) + 4,
+                  reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
+      if (lastHeaderByte < nvpair + 8 + nameLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+      uint32_t valueLen = (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
+        (nvpair[6 + nameLen] << 8) + nvpair[7 + nameLen];
+      if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+      if (nameString.Equals(name)) {
+        value.Assign(((char *)nvpair) + 8 + nameLen, valueLen);
+        return NS_OK;
+      }
+
+      // that pair didn't match - try the next one in this block
+      nvpair += 8 + nameLen + valueLen;
     }
-    nvpair += 8 + nameLen + valueLen;
-  }
+
+    // move to the next name/value header block (if there is one) - the
+    // first pair is offset 4 bytes into it
+    nvpair += 4;
+  } while (lastHeaderByte >= nvpair);
+
   return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -995,101 +1138,106 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
     (mDecompressBuffer.get()) + 4;
   const unsigned char *lastHeaderByte = reinterpret_cast<unsigned char *>
     (mDecompressBuffer.get()) + mDecompressBufferUsed;
-
   if (lastHeaderByte < nvpair)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  uint32_t numPairs =
-    PR_ntohl(reinterpret_cast<uint32_t *>(mDecompressBuffer.get())[0]);
+  do {
+    uint32_t numPairs = PR_ntohl(reinterpret_cast<const uint32_t *>(nvpair)[-1]);
 
-  for (uint32_t index = 0; index < numPairs; ++index) {
-    if (lastHeaderByte < nvpair + 4)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
-      (nvpair[2] << 8) + nvpair[3];
-    if (lastHeaderByte < nvpair + 4 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    nsDependentCSubstring nameString =
-      Substring(reinterpret_cast<const char *>(nvpair) + 4,
-                reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
-
-    if (lastHeaderByte < nvpair + 8 + nameLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    // Look for illegal characters in the nameString.
-    // This includes upper case characters and nulls (as they will
-    // break the fixup-nulls-in-value-string algorithm)
-    // Look for upper case characters in the name. They are illegal.
-    for (char *cPtr = nameString.BeginWriting();
-         cPtr && cPtr < nameString.EndWriting();
-         ++cPtr) {
-      if (*cPtr <= 'Z' && *cPtr >= 'A') {
-        nsCString toLog(nameString);
-
-        LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
-              "upper case response header found. [%s]\n",
-              mSession, this, toLog.get()));
-
+    for (uint32_t index = 0; index < numPairs; ++index) {
+      if (lastHeaderByte < nvpair + 4)
         return NS_ERROR_ILLEGAL_VALUE;
-      }
 
-      // check for null characters
-      if (*cPtr == '\0')
+      uint32_t nameLen = (nvpair[0] << 24) + (nvpair[1] << 16) +
+        (nvpair[2] << 8) + nvpair[3];
+      if (lastHeaderByte < nvpair + 4 + nameLen)
         return NS_ERROR_ILLEGAL_VALUE;
-    }
 
-    // HTTP Chunked responses are not legal over spdy. We do not need
-    // to look for chunked specifically because it is the only HTTP
-    // allowed default encoding and we did not negotiate further encodings
-    // via TE
-    if (nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding"))) {
-      LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
-            "transfer-encoding found. Chunked is invalid and no TE sent.",
-            mSession, this));
+      nsDependentCSubstring nameString =
+        Substring(reinterpret_cast<const char *>(nvpair) + 4,
+                  reinterpret_cast<const char *>(nvpair) + 4 + nameLen);
 
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
+      if (lastHeaderByte < nvpair + 8 + nameLen)
+        return NS_ERROR_ILLEGAL_VALUE;
 
-    uint32_t valueLen =
-      (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
-      (nvpair[6 + nameLen] << 8)  +   nvpair[7 + nameLen];
-
-    if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    if (!nameString.Equals(NS_LITERAL_CSTRING(":version")) &&
-        !nameString.Equals(NS_LITERAL_CSTRING(":status")) &&
-        !nameString.Equals(NS_LITERAL_CSTRING("connection")) &&
-        !nameString.Equals(NS_LITERAL_CSTRING("keep-alive"))) {
-      nsDependentCSubstring valueString =
-        Substring(reinterpret_cast<const char *>(nvpair) + 8 + nameLen,
-                  reinterpret_cast<const char *>(nvpair) + 8 + nameLen +
-                  valueLen);
-      
-      aHeadersOut.Append(nameString);
-      aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
-
-      // expand NULL bytes in the value string
-      for (char *cPtr = valueString.BeginWriting();
-           cPtr && cPtr < valueString.EndWriting();
+      // Look for illegal characters in the nameString.
+      // This includes upper case characters and nulls (as they will
+      // break the fixup-nulls-in-value-string algorithm)
+      // Look for upper case characters in the name. They are illegal.
+      for (char *cPtr = nameString.BeginWriting();
+           cPtr && cPtr < nameString.EndWriting();
            ++cPtr) {
-        if (*cPtr != 0) {
-          aHeadersOut.Append(*cPtr);
-          continue;
+        if (*cPtr <= 'Z' && *cPtr >= 'A') {
+          nsCString toLog(nameString);
+
+          LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
+                "upper case response header found. [%s]\n",
+                mSession, this, toLog.get()));
+
+          return NS_ERROR_ILLEGAL_VALUE;
         }
 
-        // NULLs are really "\r\nhdr: "
-        aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
-        aHeadersOut.Append(nameString);
-        aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+        // check for null characters
+        if (*cPtr == '\0')
+          return NS_ERROR_ILLEGAL_VALUE;
       }
 
-      aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+      // HTTP Chunked responses are not legal over spdy. We do not need
+      // to look for chunked specifically because it is the only HTTP
+      // allowed default encoding and we did not negotiate further encodings
+      // via TE
+      if (nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding"))) {
+        LOG3(("SpdyStream3::ConvertHeaders session=%p stream=%p "
+              "transfer-encoding found. Chunked is invalid and no TE sent.",
+              mSession, this));
+
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      uint32_t valueLen =
+        (nvpair[4 + nameLen] << 24) + (nvpair[5 + nameLen] << 16) +
+        (nvpair[6 + nameLen] << 8)  +   nvpair[7 + nameLen];
+
+      if (lastHeaderByte < nvpair + 8 + nameLen + valueLen)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+      // spdy transport level headers shouldn't be gatewayed into http/1
+      if (!nameString.IsEmpty() && nameString[0] != ':' &&
+          !nameString.Equals(NS_LITERAL_CSTRING("connection")) &&
+          !nameString.Equals(NS_LITERAL_CSTRING("keep-alive"))) {
+        nsDependentCSubstring valueString =
+          Substring(reinterpret_cast<const char *>(nvpair) + 8 + nameLen,
+                    reinterpret_cast<const char *>(nvpair) + 8 + nameLen +
+                    valueLen);
+
+        aHeadersOut.Append(nameString);
+        aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+
+        // expand NULL bytes in the value string
+        for (char *cPtr = valueString.BeginWriting();
+             cPtr && cPtr < valueString.EndWriting();
+             ++cPtr) {
+          if (*cPtr != 0) {
+            aHeadersOut.Append(*cPtr);
+            continue;
+          }
+
+          // NULLs are really "\r\nhdr: "
+          aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+          aHeadersOut.Append(nameString);
+          aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
+        }
+
+        aHeadersOut.Append(NS_LITERAL_CSTRING("\r\n"));
+      }
+      // move to the next name/value pair in this block
+      nvpair += 8 + nameLen + valueLen;
     }
-    nvpair += 8 + nameLen + valueLen;
-  }
+
+    // move to the next name/value header block (if there is one) - the
+    // first pair is offset 4 bytes into it
+    nvpair += 4;
+  } while (lastHeaderByte >= nvpair);
 
   aHeadersOut.Append(NS_LITERAL_CSTRING("X-Firefox-Spdy: 3\r\n\r\n"));
   LOG (("decoded response headers are:\n%s",
@@ -1206,7 +1354,7 @@ SpdyStream3::OnReadSegment(const char *buf,
     LOG3(("ParseHttpRequestHeaders %p used %d of %d. complete = %d",
           this, *countRead, count, mSynFrameComplete));
     if (mSynFrameComplete) {
-      MOZ_ASSERT(mTxInlineFrameUsed, "OnReadSegment SynFrameComplete 0b");
+      AdjustInitialWindow();
       rv = TransmitFrame(nullptr, nullptr, true);
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         // this can't happen
@@ -1288,16 +1436,25 @@ SpdyStream3::OnReadSegment(const char *buf,
 
 nsresult
 SpdyStream3::OnWriteSegment(char *buf,
-                           uint32_t count,
-                           uint32_t *countWritten)
+                            uint32_t count,
+                            uint32_t *countWritten)
 {
-  LOG3(("SpdyStream3::OnWriteSegment %p count=%d state=%x",
-        this, count, mUpstreamState));
+  LOG3(("SpdyStream3::OnWriteSegment %p count=%d state=%x 0x%X\n",
+        this, count, mUpstreamState, mStreamID));
 
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-  MOZ_ASSERT(mSegmentWriter, "OnWriteSegment with null mSegmentWriter");
+  MOZ_ASSERT(mSegmentWriter);
 
-  return mSegmentWriter->OnWriteSegment(buf, count, countWritten);
+  if (!mPushSource)
+    return mSegmentWriter->OnWriteSegment(buf, count, countWritten);
+
+  nsresult rv;
+  rv = mPushSource->GetBufferedData(buf, count, countWritten);
+  if (NS_FAILED(rv))
+    return rv;
+
+  mSession->ConnectPushedStream(this);
+  return NS_OK;
 }
 
 } // namespace mozilla::net
