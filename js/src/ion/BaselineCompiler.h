@@ -97,7 +97,11 @@ namespace ion {
     _(JSOP_NEWOBJECT)          \
     _(JSOP_NEWINIT)            \
     _(JSOP_INITELEM)           \
+    _(JSOP_INITELEM_GETTER)    \
+    _(JSOP_INITELEM_SETTER)    \
     _(JSOP_INITPROP)           \
+    _(JSOP_INITPROP_GETTER)    \
+    _(JSOP_INITPROP_SETTER)    \
     _(JSOP_ENDINIT)            \
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
@@ -232,6 +236,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitTest(bool branchIfTrue);
     bool emitAndOr(bool branchIfTrue);
     bool emitCall();
+
+    bool emitInitPropGetterSetter();
+    bool emitInitElemGetterSetter();
 
     bool emitFormalArgAccess(uint32_t arg, bool get);
 

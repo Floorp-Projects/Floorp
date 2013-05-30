@@ -417,6 +417,18 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rv
 bool
 IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
 
+bool
+InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleId id,
+                          HandleValue val);
+
+bool
+InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandlePropertyName name,
+                          HandleValue val);
+
+bool
+InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleValue idval,
+                          HandleValue val);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */
