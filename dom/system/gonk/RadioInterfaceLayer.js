@@ -2154,8 +2154,8 @@ RadioInterface.prototype = {
     }
     // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
     // when the MCC or MNC codes have changed.
-    gMessageManager.sendMobileConnectionMessage("RIL:IccInfoChanged",
-                                                this.clientId, message);
+    gMessageManager.sendIccMessage("RIL:IccInfoChanged",
+                                   this.clientId, message);
 
     // Update lastKnownHomeNetwork.
     if (message.mcc && message.mnc) {
