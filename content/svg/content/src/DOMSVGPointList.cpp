@@ -36,8 +36,14 @@ UpdateListIndicesFromIndex(FallibleTArray<mozilla::nsISVGPoint*>& aItemsArray,
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<void, DOMSVGPointList>
-  sSVGPointListTearoffTable;
+  static inline
+nsSVGAttrTearoffTable<void, DOMSVGPointList>&
+SVGPointListTearoffTable()
+{
+  static nsSVGAttrTearoffTable<void, DOMSVGPointList>
+    sSVGPointListTearoffTable;
+  return sSVGPointListTearoffTable;
+}
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPointList)
   // No unlinking of mElement, we'd need to null out the value pointer (the
@@ -67,10 +73,10 @@ DOMSVGPointList::GetDOMWrapper(void *aList,
                                bool aIsAnimValList)
 {
   nsRefPtr<DOMSVGPointList> wrapper =
-    sSVGPointListTearoffTable.GetTearoff(aList);
+    SVGPointListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGPointList(aElement, aIsAnimValList);
-    sSVGPointListTearoffTable.AddTearoff(aList, wrapper);
+    SVGPointListTearoffTable().AddTearoff(aList, wrapper);
   }
   return wrapper.forget();
 }
@@ -78,7 +84,7 @@ DOMSVGPointList::GetDOMWrapper(void *aList,
 /* static */ DOMSVGPointList*
 DOMSVGPointList::GetDOMWrapperIfExists(void *aList)
 {
-  return sSVGPointListTearoffTable.GetTearoff(aList);
+  return SVGPointListTearoffTable().GetTearoff(aList);
 }
 
 DOMSVGPointList::~DOMSVGPointList()
@@ -88,7 +94,7 @@ DOMSVGPointList::~DOMSVGPointList()
   void *key = mIsAnimValList ?
     InternalAList().GetAnimValKey() :
     InternalAList().GetBaseValKey();
-  sSVGPointListTearoffTable.RemoveTearoff(key);
+  SVGPointListTearoffTable().RemoveTearoff(key);
 }
 
 JSObject*

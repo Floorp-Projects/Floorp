@@ -8,8 +8,6 @@
 #include "nsDebug.h"
 #include <math.h>
 
-/*static*/ nsSMILFloatType nsSMILFloatType::sSingleton;
-
 void
 nsSMILFloatType::Init(nsSMILValue& aValue) const
 {
@@ -23,7 +21,7 @@ nsSMILFloatType::Destroy(nsSMILValue& aValue) const
 {
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mDouble = 0.0;
-  aValue.mType      = &nsSMILNullType::sSingleton;
+  aValue.mType      = nsSMILNullType::Singleton();
 }
 
 nsresult

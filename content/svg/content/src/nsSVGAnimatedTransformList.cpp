@@ -225,7 +225,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
     return;
   }
 
-  nsSMILValue val(&SVGTransformListSMILType::sSingleton);
+  nsSMILValue val(SVGTransformListSMILType::Singleton());
   SVGTransformSMILData transform(transformType, params);
   if (NS_FAILED(SVGTransformListSMILType::AppendTransform(transform, val))) {
     return; // OOM
@@ -292,7 +292,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue() const
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
   // from ALL return points. This function must only return THIS variable:
-  nsSMILValue val(&SVGTransformListSMILType::sSingleton);
+  nsSMILValue val(SVGTransformListSMILType::Singleton());
   if (!SVGTransformListSMILType::AppendTransforms(mVal->mBaseVal, val)) {
     val = nsSMILValue();
   }
@@ -305,7 +305,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
   const nsSMILValue& aNewAnimValue)
 {
   NS_ABORT_IF_FALSE(
-    aNewAnimValue.mType == &SVGTransformListSMILType::sSingleton,
+    aNewAnimValue.mType == SVGTransformListSMILType::Singleton(),
     "Unexpected type to assign animated value");
   SVGTransformList animVal;
   if (!SVGTransformListSMILType::GetTransforms(aNewAnimValue,
