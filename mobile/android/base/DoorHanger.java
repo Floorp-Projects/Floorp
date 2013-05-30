@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
@@ -18,19 +19,23 @@ import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private static final String LOGTAG = "GeckoDoorHanger";
 
-    private GeckoApp mActivity;
     // The popup that holds this doorhanger
     private DoorHangerPopup mPopup;
     private LinearLayout mChoicesLayout;
     private TextView mTextView;
+    private List<PromptInput> mInputs;
 
     // LayoutParams used for adding button layouts
     static private LayoutParams mLayoutParams;
@@ -48,13 +53,12 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private boolean mPersistWhileVisible = false;
     private long mTimeout = 0;
 
-    DoorHanger(GeckoApp aActivity, DoorHangerPopup aPopup, int aTabId, String aValue) {
-        super(aActivity);
+    DoorHanger(Context context, DoorHangerPopup popup, int tabId, String value) {
+        super(context);
 
-        mActivity = aActivity;
-        mPopup = aPopup;
-        mTabId = aTabId;
-        mValue = aValue;
+        mPopup = popup;
+        mTabId = tabId;
+        mValue = value;
     }
  
     int getTabId() {
@@ -77,7 +81,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     void init(String message, JSONArray buttons, JSONObject options) {
         setOrientation(VERTICAL);
 
-        LayoutInflater.from(mActivity).inflate(R.layout.doorhanger, this);
+        LayoutInflater.from(getContext()).inflate(R.layout.doorhanger, this);
         setVisibility(View.GONE);
 
         mTextView = (TextView) findViewById(R.id.doorhanger_title);
@@ -114,13 +118,13 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
                                              LayoutParams.FILL_PARENT,
                                              1.0f);
 
-        Button button = (Button) LayoutInflater.from(mActivity).inflate(R.layout.doorhanger_button, null);
+        Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
         button.setText(aText);
         button.setTag(Integer.toString(aCallback));
         button.setOnClickListener(this);
 
         if (mChoicesLayout.getChildCount() > 0) {
-            Divider divider = new Divider(mActivity, null);
+            Divider divider = new Divider(getContext(), null);
             divider.setOrientation(Divider.Orientation.VERTICAL);
             divider.setBackgroundColor(0xFFD1D5DA);
             mChoicesLayout.addView(divider);
@@ -138,6 +142,14 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             // If the checkbox is being used, pass its value
             if (mCheckBox != null)
                 response.put("checked", mCheckBox.isChecked());
+
+            if (mInputs != null) {
+                JSONObject inputs = new JSONObject();
+                for (PromptInput input : mInputs) {
+                    inputs.put(input.getId(), input.getValue());
+                }
+                response.put("inputs", inputs);
+            }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error creating onClick response", e);
         }
@@ -151,7 +163,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         mPopup.updatePopup();
     }
 
-    private void setOptions(JSONObject options) {
+    private void setOptions(final JSONObject options) {
         try {
             mPersistence = options.getInt("persistence");
         } catch (JSONException e) { }
@@ -185,6 +197,22 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             mTextView.setText(titleWithLink);
             mTextView.setMovementMethod(LinkMovementMethod.getInstance());
         } catch (JSONException e) { }
+
+        final JSONArray inputs = options.optJSONArray("inputs");
+        if (inputs != null) {
+            mInputs = new ArrayList<PromptInput>();
+
+            final ViewGroup group = (ViewGroup) findViewById(R.id.doorhanger_inputs);
+            group.setVisibility(VISIBLE);
+
+            for (int i = 0; i < inputs.length(); i++) {
+                try {
+                    PromptInput pi = PromptInput.getInput(inputs.getJSONObject(i));
+                    mInputs.add(pi);
+                    group.addView(pi.getView(getContext()));
+                } catch(JSONException ex) { }
+            }
+        }
 
         try {
             String checkBoxText = options.getString("checkbox");

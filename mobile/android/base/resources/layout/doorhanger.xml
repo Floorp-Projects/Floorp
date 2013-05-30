@@ -14,6 +14,13 @@
               android:textColorLink="@color/doorhanger_link"
               android:padding="10dp"/>
 
+    <LinearLayout android:id="@+id/doorhanger_inputs"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:gravity="right"
+              android:visibility="gone"/>
+
     <CheckBox android:id="@+id/doorhanger_checkbox"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
