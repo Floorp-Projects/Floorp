@@ -525,9 +525,25 @@ WebappsApplication.prototype = {
         if (msg.manifestURL != this.manifestURL)
           return;
 
-        for (let prop in msg.app) {
-          this[prop] = msg.app[prop];
-        }
+        manifestCache.evict(this.manifestURL, this.innerWindowID);
+
+        let hiddenProps = ["manifest", "updateManifest"];
+        let updatableProps = ["installOrigin", "installTime", "installState",
+            "lastUpdateCheck", "updateTime", "progress", "downloadAvailable",
+            "downloading", "readyToApplyDownload", "downloadSize"];
+        // Props that we don't update: origin, receipts, manifestURL, removable.
+
+        updatableProps.forEach(function(prop) {
+          if (msg.app[prop]) {
+            this[prop] = msg.app[prop];
+          }
+        }, this);
+
+        hiddenProps.forEach(function(prop) {
+          if (msg.app[prop]) {
+            this["_" + prop] = msg.app[prop];
+          }
+        }, this);
 
         if (msg.event == "downloadapplied") {
           this._fireEvent("downloadapplied", this._ondownloadapplied);

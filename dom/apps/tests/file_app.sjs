@@ -1,10 +1,13 @@
 var gBasePath = "tests/dom/apps/tests/";
 var gAppTemplatePath = "tests/dom/apps/tests/file_app.template.html";
 var gAppcacheTemplatePath = "tests/dom/apps/tests/file_cached_app.template.appcache";
+var gDefaultIcon = "default_icon";
 
 function makeResource(templatePath, version, apptype) {
+  let icon = getState('icon') || gDefaultIcon;
   var res = readTemplate(templatePath).replace(/VERSIONTOKEN/g, version)
-                                      .replace(/APPTYPETOKEN/g, apptype);
+                                      .replace(/APPTYPETOKEN/g, apptype)
+                                      .replace(/ICONTOKEN/g, icon);
 
   // Hack - This is necessary to make the tests pass, but hbambas says it
   // shouldn't be necessary. Comment it out and watch the tests fail.
@@ -21,6 +24,20 @@ function handleRequest(request, response) {
   // If this is a version update, update state and return.
   if ("setVersion" in query) {
     setState('version', query.setVersion);
+    response.setHeader("Content-Type", "text/html", false);
+    response.setHeader("Access-Control-Allow-Origin", "*", false);
+    response.write('OK');
+    return;
+  }
+
+  if ("setIcon" in query) {
+    let icon = query.setIcon;
+    if (icon === 'DEFAULT') {
+      icon = null;
+    }
+
+    setState('icon', icon);
+
     response.setHeader("Content-Type", "text/html", false);
     response.setHeader("Access-Control-Allow-Origin", "*", false);
     response.write('OK');

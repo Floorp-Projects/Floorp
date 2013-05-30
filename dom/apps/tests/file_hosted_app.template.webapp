@@ -1,5 +1,8 @@
 {
   "name": "Really Rapid Release (hosted)",
   "description": "Updated even faster than <a href='http://mozilla.org'>Firefox</a>, just to annoy slashdotters.",
-  "launch_path": "/tests/dom/apps/tests/file_app.sjs?apptype=hosted"
+  "launch_path": "/tests/dom/apps/tests/file_app.sjs?apptype=hosted",
+  "icons": {
+    "128": "ICONTOKEN"
+  }
 }

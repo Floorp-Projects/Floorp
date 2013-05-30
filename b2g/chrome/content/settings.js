@@ -199,12 +199,15 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
   // Get the hardware info and firmware revision from device properties.
   let hardware_info = null;
   let firmware_revision = null;
+  let product_model = null;
 #ifdef MOZ_WIDGET_GONK
     hardware_info = libcutils.property_get('ro.hardware');
     firmware_revision = libcutils.property_get('ro.firmware_revision');
+    product_model = libcutils.property_get('ro.product.model');
 #endif
   lock.set('deviceinfo.hardware', hardware_info, null, null);
   lock.set('deviceinfo.firmware_revision', firmware_revision, null, null);
+  lock.set('deviceinfo.product_model', product_model, null, null);
 })();
 
 // =================== Debugger ====================
