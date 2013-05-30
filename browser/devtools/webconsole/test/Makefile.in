@@ -133,6 +133,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console_private_browsing.js \
 	browser_console_nsiconsolemessage.js \
 	browser_webconsole_bug_817834_add_edited_input_to_history.js \
+	browser_console_addonsdk_loader_exception.js \
 	head.js \
 	$(NULL)
 
