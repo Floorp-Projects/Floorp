@@ -1439,12 +1439,6 @@ abstract public class BrowserApp extends GeckoApp
         if (Build.VERSION.SDK_INT >= 14) {
             MenuItem share = mMenu.findItem(R.id.share);
             GeckoActionProvider provider = new GeckoActionProvider(this);
-            provider.setOnTargetSelectedListener(new GeckoActionProvider.OnTargetSelectedListener() {
-                @Override
-                public void onTargetSelected() {
-                    closeOptionsMenu();
-                }
-            });
             share.setActionProvider(provider);
         }
 
