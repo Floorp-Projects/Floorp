@@ -4688,6 +4688,18 @@ nsImageRenderer::IsRasterImage()
   return mImageContainer->GetType() == imgIContainer::TYPE_RASTER;
 }
 
+bool
+nsImageRenderer::IsAnimatedImage()
+{
+  if (mType != eStyleImageType_Image || !mImageContainer)
+    return false;
+  bool animated = false;
+  if (NS_SUCCEEDED(mImageContainer->GetAnimated(&animated)) && animated)
+    return true;
+
+  return false;
+}
+
 already_AddRefed<mozilla::layers::ImageContainer>
 nsImageRenderer::GetContainer(LayerManager* aManager)
 {
