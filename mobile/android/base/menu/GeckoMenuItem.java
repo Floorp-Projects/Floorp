@@ -218,6 +218,16 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     @Override
     public MenuItem setActionProvider(ActionProvider actionProvider) {
         mActionProvider = actionProvider;
+        if (mActionProvider != null && mActionProvider instanceof GeckoActionProvider) {
+            GeckoActionProvider provider = (GeckoActionProvider) mActionProvider;
+            provider.setOnTargetSelectedListener(new GeckoActionProvider.OnTargetSelectedListener() {
+                @Override
+                public void onTargetSelected() {
+                    mMenu.close();
+                }
+            });
+        }
+
         return this;
     }
 
