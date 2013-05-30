@@ -8,9 +8,10 @@ os_win = 0
 os_posix = 0
 os_macosx = 0
 os_dragonfly = 0
-os_bsd = 0
+os_freebsd = 0
 os_netbsd = 0
 os_openbsd = 0
+os_bsd = 0
 os_linux = 0
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -24,7 +25,7 @@ else:
         os_bsd = 1
     elif CONFIG['OS_ARCH'] == 'FreeBSD':
         os_freebsd = 1
-        os_freebsd = 1
+        os_bsd = 1
     elif CONFIG['OS_ARCH'] == 'NetBSD':
         os_netbsd = 1
         os_bsd = 1
