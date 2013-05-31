@@ -57,6 +57,7 @@
   <string name="bookmark_added">&bookmark_added;</string>
   <string name="bookmark_removed">&bookmark_removed;</string>
   <string name="bookmark_updated">&bookmark_updated;</string>
+  <string name="bookmark_options">&bookmark_options;</string>
 
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
