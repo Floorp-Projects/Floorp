@@ -25,7 +25,6 @@
 #include "nsRangeFrame.h"
 #include "nsCSSRendering.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLBodyElement.h"
 #include <algorithm>
 
 nsNativeTheme::nsNativeTheme()
@@ -680,21 +679,6 @@ nsNativeTheme::IsRangeHorizontal(nsIFrame* aFrame)
   return static_cast<nsRangeFrame*>(rangeFrame)->IsHorizontal();
 }
 
-static nsIFrame*
-GetBodyFrame(nsIFrame* aCanvasFrame)
-{
-  nsIContent* content = aCanvasFrame->GetContent();
-  if (!content) {
-    return nullptr;
-  }
-  nsIDocument* document = content->OwnerDoc();
-  nsIContent* body = document->GetBodyElement();
-  if (!body) {
-    return nullptr;
-  }
-  return body->GetPrimaryFrame();
-}
-
 bool
 nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
 {
@@ -707,16 +691,6 @@ nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
     return false;
 
   nsIFrame* frame = scrollFrame->GetScrolledFrame();
-  if (nsCSSRendering::IsCanvasFrame(frame)) {
-    // For canvas frames, prefer to look at the body first, because the body
-    // background color is most likely what will be visible as the background
-    // color of the page, even if the html element has a different background
-    // color which prevents that of the body frame to propagate to the viewport.
-    nsIFrame* bodyFrame = GetBodyFrame(frame);
-    if (bodyFrame) {
-      frame = bodyFrame;
-    }
-  }
   nsStyleContext* bgSC = nullptr;
   if (!nsCSSRendering::FindBackground(frame, &bgSC) ||
       bgSC->StyleBackground()->IsTransparent()) {
