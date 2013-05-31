@@ -177,7 +177,8 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
 
   mozilla::Maybe<JSAutoCompartment> ac;
   if (value->isObject()) {
-    ac.construct(cx, &value->toObject());
+    JS::Rooted<JSObject*> obj(cx, &value->toObject());
+    ac.construct(cx, obj);
   }
 
   nsJSONWriter writer;
@@ -385,11 +386,13 @@ nsJSON::DecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
 NS_IMETHODIMP
 nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
 {
+  JS::Rooted<JS::Value> value(cx);
   if (!JS_ParseJSON(cx, static_cast<const jschar*>(PromiseFlatString(str).get()),
-                    str.Length(), result)) {
+                    str.Length(), &value)) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  *result = value;
   return NS_OK;
 }
 
@@ -398,8 +401,7 @@ nsJSON::DecodeInternal(JSContext* cx,
                        nsIInputStream *aStream,
                        int32_t aContentLength,
                        bool aNeedsConverter,
-                       JS::Value* aRetval,
-                       DecodingMode mode /* = STRICT */)
+                       JS::Value* aRetval)
 {
   // Consume the stream
   nsCOMPtr<nsIChannel> jsonChannel;
@@ -416,7 +418,7 @@ nsJSON::DecodeInternal(JSContext* cx,
     return NS_ERROR_FAILURE;
 
   nsRefPtr<nsJSONListener> jsonListener =
-    new nsJSONListener(cx, aRetval, aNeedsConverter, mode);
+    new nsJSONListener(cx, aRetval, aNeedsConverter);
 
   //XXX this stream pattern should be consolidated in netwerk
   rv = jsonListener->OnStartRequest(jsonChannel, nullptr);
@@ -465,44 +467,6 @@ nsJSON::DecodeInternal(JSContext* cx,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsJSON::LegacyDecode(const nsAString& json, JSContext* cx, JS::Value* aRetval)
-{
-  const PRUnichar *data;
-  uint32_t len = NS_StringGetData(json, &data);
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      (const char*) data,
-                                      len * sizeof(PRUnichar),
-                                      NS_ASSIGNMENT_DEPEND);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return DecodeInternal(cx, stream, len, false, aRetval, LEGACY);
-}
-
-NS_IMETHODIMP
-nsJSON::LegacyDecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
-                               JSContext* cx, JS::Value* aRetval)
-{
-  return DecodeInternal(cx, aStream, aContentLength, true, aRetval, LEGACY);
-}
-
-NS_IMETHODIMP
-nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
-{
-  JS::RootedValue reviver(cx, JS::NullValue()), value(cx);
-
-  JS::StableCharPtr chars(static_cast<const jschar*>(PromiseFlatString(str).get()),
-                          str.Length());
-  if (!js::ParseJSONWithReviver(cx, chars, str.Length(), reviver,
-                                &value, LEGACY)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  *result = value;
-  return NS_OK;
-}
-
 nsresult
 NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
@@ -517,12 +481,10 @@ NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 }
 
 nsJSONListener::nsJSONListener(JSContext *cx, JS::Value *rootVal,
-                               bool needsConverter,
-                               DecodingMode mode /* = STRICT */)
+                               bool needsConverter)
   : mNeedsConverter(needsConverter), 
     mCx(cx),
-    mRootVal(rootVal),
-    mDecodingMode(mode)
+    mRootVal(rootVal)
 {
 }
 
@@ -565,10 +527,9 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
   JS::StableCharPtr chars(reinterpret_cast<const jschar*>(mBufferedChars.Elements()),
                           mBufferedChars.Length());
-  JSBool ok = js::ParseJSONWithReviver(mCx, chars,
-                                       (uint32_t) mBufferedChars.Length(),
-                                       reviver, &value,
-                                       mDecodingMode);
+  JSBool ok = JS_ParseJSONWithReviver(mCx, chars.get(),
+                                      uint32_t(mBufferedChars.Length()),
+                                      reviver, value.address());
 
   *mRootVal = value;
   mBufferedChars.TruncateLength(0);

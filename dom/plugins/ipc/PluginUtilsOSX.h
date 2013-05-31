@@ -40,7 +40,7 @@ bool SetProcessName(const char* aProcessName);
  * The buffers can be initialized and cleared individually.
  * Swapping still occurs regardless if the buffers are initialized.
  */
-class THEBES_API nsDoubleBufferCARenderer {
+class nsDoubleBufferCARenderer {
 public:
   nsDoubleBufferCARenderer() : mCALayer(nullptr), mContentsScaleFactor(1.0) {}
   // Returns width in "display pixels".  A "display pixel" is the smallest

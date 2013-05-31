@@ -49,7 +49,7 @@ operator==(const gfxAlternateValue& a, const gfxAlternateValue& b)
     return (a.alternate == b.alternate) && (a.value == b.value);
 }
 
-class THEBES_API gfxFontFeatureValueSet {
+class gfxFontFeatureValueSet {
 public:
     NS_INLINE_DECL_REFCOUNTING(gfxFontFeatureValueSet)
 

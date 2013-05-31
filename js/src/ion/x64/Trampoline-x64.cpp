@@ -388,7 +388,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
 
     // Call the target function.
     // Note that this code assumes the function is JITted.
-    masm.movq(Operand(rax, offsetof(JSFunction, u.i.script_)), rax);
+    masm.movq(Operand(rax, JSFunction::offsetOfNativeOrScript()), rax);
     masm.loadBaselineOrIonRaw(rax, rax, mode, NULL);
     masm.call(rax);
     uint32_t returnOffset = masm.currentOffset();

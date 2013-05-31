@@ -1258,35 +1258,43 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const FrameLayerBuilder::ContainerParameters& aParameters)
 {
-  if (mImage->GetType() != imgIContainer::TYPE_RASTER ||
-      !aManager->IsCompositingCheap() ||
-      !nsLayoutUtils::GPUImageScalingEnabled()) {
-    return LAYER_NONE;
+  bool animated = false;
+  if (!nsLayoutUtils::AnimatedImageLayersEnabled() ||
+      mImage->GetType() != imgIContainer::TYPE_RASTER ||
+      NS_FAILED(mImage->GetAnimated(&animated)) ||
+      !animated) {
+    if (!aManager->IsCompositingCheap() ||
+        !nsLayoutUtils::GPUImageScalingEnabled()) {
+      return LAYER_NONE;
+    }
   }
 
-  int32_t imageWidth;
-  int32_t imageHeight;
-  mImage->GetWidth(&imageWidth);
-  mImage->GetHeight(&imageHeight);
+  if (!animated) {
+    int32_t imageWidth;
+    int32_t imageHeight;
+    mImage->GetWidth(&imageWidth);
+    mImage->GetHeight(&imageHeight);
 
-  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+    NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
 
-  gfxRect destRect = GetDestRect();
+    gfxRect destRect = GetDestRect();
 
-  destRect.width *= aParameters.mXScale;
-  destRect.height *= aParameters.mYScale;
+    destRect.width *= aParameters.mXScale;
+    destRect.height *= aParameters.mYScale;
 
-  // Calculate the scaling factor for the frame.
-  gfxSize scale = gfxSize(destRect.width / imageWidth, destRect.height / imageHeight);
+    // Calculate the scaling factor for the frame.
+    gfxSize scale = gfxSize(destRect.width / imageWidth,
+                            destRect.height / imageHeight);
 
-  // If we are not scaling at all, no point in separating this into a layer.
-  if (scale.width == 1.0f && scale.height == 1.0f) {
-    return LAYER_NONE;
-  }
+    // If we are not scaling at all, no point in separating this into a layer.
+    if (scale.width == 1.0f && scale.height == 1.0f) {
+      return LAYER_NONE;
+    }
 
-  // If the target size is pretty small, no point in using a layer.
-  if (destRect.width * destRect.height < 64 * 64) {
-    return LAYER_NONE;
+    // If the target size is pretty small, no point in using a layer.
+    if (destRect.width * destRect.height < 64 * 64) {
+      return LAYER_NONE;
+    }
   }
 
   nsRefPtr<ImageContainer> container;
@@ -1307,7 +1315,13 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsresult rv = mImage->GetImageContainer(aManager, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
+  nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateImageLayer();
+    if (!layer)
+      return nullptr;
+  }
   layer->SetContainer(container);
   ConfigureLayer(layer, aParameters.mOffset);
   return layer.forget();

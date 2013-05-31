@@ -40,10 +40,6 @@
         <item name="android:textAppearance">@style/TextAppearance.Widget.TextView</item>
     </style>
 
-    <style name="Widget.TextView.SpinnerItem">
-        <item name="android:textAppearance">@style/TextAppearance.Widget.TextView</item>
-    </style>
-
     <style name="Widget.ListView" parent="Widget.BaseListView">
         <item name="android:divider">#D1D5DA</item>
         <item name="android:dividerHeight">1dp</item>
@@ -68,6 +64,12 @@
         <item name="android:checkMark">?android:attr/listChoiceIndicatorMultiple</item>
         <item name="android:ellipsize">marquee</item>
     </style>
+
+    <style name="Widget.Spinner" parent="android:style/Widget.Spinner">
+        <item name="android:minWidth">@dimen/doorhanger_input_width</item>
+    </style>
+
+    <style name="Widget.TextView.SpinnerItem" parent="android:style/Widget.TextView.SpinnerItem"/>
 
     <!--
         TextAppearance
@@ -436,7 +438,7 @@
     <style name="PopupAnimation">
         <item name="@android:windowEnterAnimation">@anim/popup_show</item>
         <item name="@android:windowExitAnimation">@anim/popup_hide</item>
-    </style>   
+    </style>
 
     <style name="MenuItemDefault">
           <item name="android:textSize">16sp</item>

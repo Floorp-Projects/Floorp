@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_CanvasPattern_h
 #define mozilla_dom_CanvasPattern_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/RefPtr.h"
@@ -54,7 +55,7 @@ public:
     SetIsDOMBinding();
   }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return CanvasPatternBinding::Wrap(aCx, aScope, this);
   }

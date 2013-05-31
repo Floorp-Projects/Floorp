@@ -618,7 +618,6 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                bool aMayHaveTouchListeners) {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
-  float auPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
 
   nsIntRect visible = aVisibleRect.ScaleToNearestPixels(
     aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
@@ -664,9 +663,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     metrics.mContentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
     nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
-    metrics.mScrollOffset = mozilla::gfx::Point(
-      NSAppUnitsToDoublePixels(scrollPosition.x, auPerCSSPixel),
-      NSAppUnitsToDoublePixels(scrollPosition.y, auPerCSSPixel));
+    metrics.mScrollOffset = CSSPoint::FromAppUnits(scrollPosition);
   }
   else {
     nsRect contentBounds = aForFrame->GetRect();
@@ -687,7 +684,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   }
   metrics.mResolution = gfxSize(presShell->GetXResolution(), presShell->GetYResolution());
 
-  metrics.mDevPixelsPerCSSPixel = auPerCSSPixel / auPerDevPixel;
+  metrics.mDevPixelsPerCSSPixel =
+    (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel;
 
   metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
 
@@ -1561,6 +1559,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   , mLayer(aLayer)
   , mIsThemed(aIsThemed)
   , mIsBottommostLayer(true)
+  , mIsAnimated(false)
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
@@ -1822,6 +1821,7 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(LayerManager* aManager,
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   mDestRect = nsLayoutUtils::RectToGfxRect(state.mDestArea, appUnitsPerDevPixel);
   mImageContainer = imageContainer;
+  mIsAnimated = imageRenderer->IsAnimatedImage();
 
   // Ok, we can turn this into a layer if needed.
   return true;
@@ -1845,31 +1845,36 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
                                         const FrameLayerBuilder::ContainerParameters& aParameters)
 {
-  if (!aManager->IsCompositingCheap() ||
-      !nsLayoutUtils::GPUImageScalingEnabled() ||
-      !TryOptimizeToImageLayer(aManager, aBuilder)) {
-    return LAYER_NONE;
+  if (!TryOptimizeToImageLayer(aManager, aBuilder) ||
+      !nsLayoutUtils::AnimatedImageLayersEnabled() ||
+      !mIsAnimated) {
+    if (!aManager->IsCompositingCheap() ||
+        !nsLayoutUtils::GPUImageScalingEnabled()) {
+      return LAYER_NONE;
+    }
   }
 
-  gfxSize imageSize = mImageContainer->GetCurrentSize();
-  NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
+  if (!mIsAnimated) {
+    gfxSize imageSize = mImageContainer->GetCurrentSize();
+    NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
 
-  gfxRect destRect = mDestRect;
+    gfxRect destRect = mDestRect;
 
-  destRect.width *= aParameters.mXScale;
-  destRect.height *= aParameters.mYScale;
+    destRect.width *= aParameters.mXScale;
+    destRect.height *= aParameters.mYScale;
 
-  // Calculate the scaling factor for the frame.
-  gfxSize scale = gfxSize(destRect.width / imageSize.width, destRect.height / imageSize.height);
+    // Calculate the scaling factor for the frame.
+    gfxSize scale = gfxSize(destRect.width / imageSize.width, destRect.height / imageSize.height);
 
-  // If we are not scaling at all, no point in separating this into a layer.
-  if (scale.width == 1.0f && scale.height == 1.0f) {
-    return LAYER_NONE;
-  }
+    // If we are not scaling at all, no point in separating this into a layer.
+    if (scale.width == 1.0f && scale.height == 1.0f) {
+      return LAYER_NONE;
+    }
 
-  // If the target size is pretty small, no point in using a layer.
-  if (destRect.width * destRect.height < 64 * 64) {
-    return LAYER_NONE;
+    // If the target size is pretty small, no point in using a layer.
+    if (destRect.width * destRect.height < 64 * 64) {
+      return LAYER_NONE;
+    }
   }
 
   return LAYER_ACTIVE;
@@ -1880,7 +1885,13 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerParameters& aParameters)
 {
-  nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
+  nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateImageLayer();
+    if (!layer)
+      return nullptr;
+  }
   layer->SetContainer(mImageContainer);
   ConfigureLayer(layer, aParameters.mOffset);
   return layer.forget();

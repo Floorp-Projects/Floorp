@@ -417,14 +417,14 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   // attributes, tweak our metrics and move children to achieve the desired visual
   // effects.
 
-  if ((NS_MATHML_IS_RTL(mPresentationData.flags) ?
+  if ((StyleVisibility()->mDirection ?
        mWidthSign : mLeadingSpaceSign) != NS_MATHML_SIGN_INVALID) {
     // there was padding on the left. dismiss the left italic correction now
     // (so that our parent won't correct us)
     mBoundingMetrics.leftBearing = 0;
   }
 
-  if ((NS_MATHML_IS_RTL(mPresentationData.flags) ?
+  if ((StyleVisibility()->mDirection ?
        mLeadingSpaceSign : mWidthSign) != NS_MATHML_SIGN_INVALID) {
     // there was padding on the right. dismiss the right italic correction now
     // (so that our parent won't correct us)
@@ -433,8 +433,8 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   }
 
   nscoord dy = height - mBoundingMetrics.ascent;
-  nscoord dx = NS_MATHML_IS_RTL(mPresentationData.flags) ?
-    width - initialWidth - lspace : lspace;
+  nscoord dx = (StyleVisibility()->mDirection ?
+                width - initialWidth - lspace : lspace);
     
   aDesiredSize.ascent += dy;
   aDesiredSize.width = mBoundingMetrics.width;

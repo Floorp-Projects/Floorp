@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko.background.healthreport;
 
+import java.util.Iterator;
+
+import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.SysInfo;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -39,6 +42,7 @@ public class EnvironmentBuilder {
     public boolean isBlocklistEnabled();
     public boolean isTelemetryEnabled();
     public long getProfileCreationTime();
+    public JSONObject getAddonsJSON();
   }
 
   protected static void populateEnvironment(Environment e,
@@ -69,12 +73,40 @@ public class EnvironmentBuilder {
     // GeckoPreferences as "datareporting.telemetry.enabled".
     e.isTelemetryEnabled = (info.isTelemetryEnabled() ? 1 : 0);
 
-    // TODO
     e.extensionCount = 0;
     e.pluginCount = 0;
     e.themeCount = 0;
-    // e.addons;
 
+    JSONObject addons = info.getAddonsJSON();
+    if (addons == null) {
+      return;
+    }
+
+    @SuppressWarnings("unchecked")
+    Iterator<String> it = addons.keys();
+    while (it.hasNext()) {
+      String key = it.next();
+      try {
+        JSONObject addon = addons.getJSONObject(key);
+        String type = addon.optString("type");
+        Logger.pii(LOG_TAG, "Add-on " + key + " is a " + type);
+        if ("extension".equals(type)) {
+          ++e.extensionCount;
+        } else if ("plugin".equals(type)) {
+          ++e.pluginCount;
+        } else if ("theme".equals(type)) {
+          ++e.themeCount;
+        } else if ("service".equals(type)) {
+          // Later.
+        } else {
+          Logger.debug(LOG_TAG, "Unknown add-on type: " + type);
+        }
+      } catch (Exception ex) {
+        Logger.warn(LOG_TAG, "Failed to process add-on " + key, ex);
+      }
+    }
+
+    e.addons = addons;
   }
 
   /**
@@ -102,6 +134,8 @@ public class EnvironmentBuilder {
                                                ProfileInformationProvider info) {
     Environment e = storage.getEnvironment();
     populateEnvironment(e, info);
-    return e.register();
+    e.register();
+    Logger.debug(LOG_TAG, "Registering current environment: " + e.getHash() + " = " + e.id);
+    return e.id;
   }
 }

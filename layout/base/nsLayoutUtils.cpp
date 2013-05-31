@@ -382,6 +382,22 @@ nsLayoutUtils::GPUImageScalingEnabled()
   return sGPUImageScalingEnabled;
 }
 
+bool
+nsLayoutUtils::AnimatedImageLayersEnabled()
+{
+  static bool sAnimatedImageLayersEnabled;
+  static bool sAnimatedImageLayersPrefCached = false;
+
+  if (!sAnimatedImageLayersPrefCached) {
+    sAnimatedImageLayersPrefCached = true;
+    Preferences::AddBoolVarCache(&sAnimatedImageLayersEnabled,
+                                 "layout.animated-image-layers.enabled",
+                                 false);
+  }
+
+  return sAnimatedImageLayersEnabled;
+}
+
 void
 nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
                                   nsOverflowAreas& aOverflowAreas)

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=815105
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 815105 </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=815105">Mozilla Bug 815105 </a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript;version=1.8" src="file_framework.js"></script>
+<script type="application/javascript;version=1.8">
+/* mozTCPSocket only returns null on window init
+ * if the permission isn't set
+ */
+function verifier(success, failure) {
+  try {
+    var conn = this.getObj().open("http://mochi.test/", 80);
+
+    if (conn) {
+      success("Opened connection");
+    } else {
+      failure("failed to open connection");
+    }
+  } catch (e) {
+    failure("Got an exception " + e);
+  }
+}
+
+var gData = [
+  {
+    perm: ["tcp-socket"],
+    needParentPerm: true,
+    obj: "mozTCPSocket",
+    idl: "nsIDOMTCPSocket",
+    settings: [["dom.mozTCPSocket.enabled", true]],
+    verifier: verifier.toSource(),
+  }
+]
+</script>
+</pre>
+</body>
+</html>
+

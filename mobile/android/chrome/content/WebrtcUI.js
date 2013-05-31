@@ -27,28 +27,71 @@ var WebrtcUI = {
     );
   },
 
-  getDeviceButtons: function(aDevices, aCallID, stringBundle) {
-    let buttons = [{
-      label: stringBundle.GetStringFromName("getUserMedia.denyRequest.label"),
+  getDeviceButtons: function(audioDevices, videoDevices, aCallID) {
+    return [{
+      label: Strings.browser.GetStringFromName("getUserMedia.denyRequest.label"),
       callback: function() {
         Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
       }
-    }];
-    for (let device of aDevices) {
-      let button = {
-        label: stringBundle.GetStringFromName("getUserMedia.shareRequest.label"),
-        callback: function() {
-          let allowedDevices = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
-          allowedDevices.AppendElement(device);
-          Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
-          // Show browser-specific indicator for the active camera/mic access.
-          // XXX: Mobile?
-        }
-      };
-      buttons.push(button);
-    }
+    },
+    {
+      label: Strings.browser.GetStringFromName("getUserMedia.shareRequest.label"),
+      callback: function(checked /* ignored */, inputs) {
+        let allowedDevices = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
 
-    return buttons;
+        let audioId = 0;
+        if (inputs && inputs.audioDevice != undefined)
+          audioId = inputs.audioDevice;
+        if (audioDevices[audioId])
+          allowedDevices.AppendElement(audioDevices[audioId]);
+
+        let videoId = 0;
+        if (inputs && inputs.videoDevice != undefined)
+          videoId = inputs.videoDevice;
+        if (videoDevices[videoId])
+          allowedDevices.AppendElement(videoDevices[videoId]);
+
+        Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
+        // TODO: Show tab-specific indicator for the active camera/mic access.
+      }
+    }];
+  },
+
+  // Get a list of string names for devices. Ensures that none of the strings are blank
+  _getList: function(aDevices, aType) {
+    let defaultCount = 0;
+    return aDevices.map(function(device) {
+        // if this is a Camera input, convert the name to something readable
+        let res = /Camera\ \d+,\ Facing (front|back)/.exec(device.name);
+        if (res)
+          return Strings.browser.GetStringFromName("getUserMedia." + aType + "." + res[1]);
+
+        if (device.name.trim() == "") {
+          defaultCount++;
+          return Strings.browser.formatStringFromName("getUserMedia." + aType + ".default", [defaultCount], 1);
+        }
+        return device.name
+      }, this);
+  },
+
+  _addDevicesToOptions: function(aDevices, aType, aOptions, extraOptions) {
+    if (aDevices.length) {
+
+      // Filter out empty items from the list
+      let list = this._getList(aDevices, aType);
+      if (extraOptions)
+        list = list.concat(extraOptions);
+
+      if (list.length > 0) {
+        aOptions.inputs.push({
+          id: aType,
+          type: "menulist",
+          label: Strings.browser.GetStringFromName("getUserMedia." + aType + ".prompt"),
+          values: list
+        });
+
+      }
+    }
   },
 
   prompt: function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
@@ -80,17 +123,29 @@ var WebrtcUI = {
 
     let host = aBrowser.contentDocument.documentURIObject.asciiHost;
     let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name  + "'" : host;
-    let stringBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    let message = stringBundle.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
+    let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
-    if (audioDevices.length) {
-      let buttons = this.getDeviceButtons(audioDevices, aCallID, stringBundle);
-      NativeWindow.doorhanger.show(message, "webrtc-request-audio", buttons, BrowserApp.selectedTab.id);
+    let options = { inputs: [] };
+    // if the users only option would be to select "No Audio" or "No Video"
+    // i.e. we're only showing audio or only video and there is only one device for that type
+    // don't bother showing a menulist to select from
+    var extraItems = null;
+    if (videoDevices.length > 1 || audioDevices.length > 0) {
+      // Only show the No Video option if there are also Audio devices to choose from
+      if (audioDevices.length > 0)
+        extraItems = [ Strings.browser.GetStringFromName("getUserMedia.videoDevice.none") ];
+      this._addDevicesToOptions(videoDevices, "videoDevice", options, extraItems);
     }
 
-    if (videoDevices.length) {
-      let buttons = this.getDeviceButtons(videoDevices, aCallID, stringBundle);
-      NativeWindow.doorhanger.show(message, "webrtc-request-video", buttons, BrowserApp.selectedTab.id);
+    if (audioDevices.length > 1 || videoDevices.length > 0) {
+      // Only show the No Audio option if there are also Video devices to choose from
+      if (videoDevices.length > 0)
+        extraItems = [ Strings.browser.GetStringFromName("getUserMedia.audioDevice.none") ];
+      this._addDevicesToOptions(audioDevices, "audioDevice", options, extraItems);
     }
+
+    let buttons = this.getDeviceButtons(audioDevices, videoDevices, aCallID);
+
+    NativeWindow.doorhanger.show(message, "webrtc-request", buttons, BrowserApp.selectedTab.id, options);
   }
 }

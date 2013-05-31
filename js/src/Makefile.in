@@ -68,10 +68,7 @@ VPATH		+= \
 ###############################################
 # BEGIN enable non-releasable features
 #
-ifeq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
-DEFINES += -DENABLE_TYPEDARRAY_MOVE
-endif
-ifeq (,$(filter aurora beta release esr,$(MOZ_UPDATE_CHANNEL)))
+ifdef NIGHTLY_BUILD
 DEFINES += -DENABLE_PARALLEL_JS
 endif
 

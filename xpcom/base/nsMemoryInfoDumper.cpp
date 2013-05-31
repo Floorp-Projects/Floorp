@@ -713,13 +713,44 @@ nsMemoryInfoDumper::OpenTempFile(const nsACString &aFilename, nsIFile* *aFile)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+#ifdef ANDROID
+  // /data/local/tmp is a true tmp directory; anyone can create a file there,
+  // but only the user which created the file can remove it.  We want non-root
+  // users to be able to remove these files, so we write them into a
+  // subdirectory of the temp directory and chmod 777 that directory.
+  rv = (*aFile)->AppendNative(NS_LITERAL_CSTRING("memory-reports"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // It's OK if this fails; that probably just means that the directory already
+  // exists.
+  (*aFile)->Create(nsIFile::DIRECTORY_TYPE, 0777);
+
+  nsAutoCString dirPath;
+  rv = (*aFile)->GetNativePath(dirPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (chmod(dirPath.get(), 0777) == -1 && errno == EINTR) {}
+#endif
+
   nsCOMPtr<nsIFile> file(*aFile);
 
   rv = file->AppendNative(aFilename);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
+  rv = file->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0666);
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef ANDROID
+    // Make this file world-read/writable; the permissions passed to the
+    // CreateUnique call above are not sufficient on Android, which runs with a
+    // umask.
+    nsAutoCString path;
+    rv = file->GetNativePath(path);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    while (chmod(path.get(), 0666) == -1 && errno == EINTR) {}
+#endif
+
   return NS_OK;
 }
 
@@ -905,6 +936,11 @@ DumpProcessMemoryInfoToTempDir(const nsAString& aIdentifier)
   nsCOMPtr<nsIFile> mrFinalFile;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mrFinalFile));
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef ANDROID
+  rv = mrFinalFile->AppendNative(NS_LITERAL_CSTRING("memory-reports"));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   rv = mrFinalFile->AppendNative(mrFilename);
   NS_ENSURE_SUCCESS(rv, rv);

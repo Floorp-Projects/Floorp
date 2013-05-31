@@ -740,6 +740,8 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
 // --------------------
 // nsStyleColumn
 //
+/* static */ const uint32_t nsStyleColumn::kMaxColumnCount = 1000;
+
 nsStyleColumn::nsStyleColumn(nsPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(nsStyleColumn);

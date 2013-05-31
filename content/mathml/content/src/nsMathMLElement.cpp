@@ -191,6 +191,11 @@ static Element::MappedAttributeEntry sCommonPresStyles[] = {
   { nullptr }
 };
 
+static Element::MappedAttributeEntry sDirStyles[] = {
+  { &nsGkAtoms::dir },
+  { nullptr }
+};
+
 bool
 nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
@@ -200,22 +205,28 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   };
   static const MappedAttributeEntry* const tokenMap[] = {
     sTokenStyles,
-    sCommonPresStyles
+    sCommonPresStyles,
+    sDirStyles
   };
   static const MappedAttributeEntry* const mstyleMap[] = {
     sTokenStyles,
     sEnvironmentStyles,
-    sCommonPresStyles
+    sCommonPresStyles,
+    sDirStyles
   };
   static const MappedAttributeEntry* const commonPresMap[] = {
     sCommonPresStyles
   };
-  
+  static const MappedAttributeEntry* const mrowMap[] = {
+    sCommonPresStyles,
+    sDirStyles
+  };
+
   // We don't support mglyph (yet).
   nsIAtom* tag = Tag();
   if (tag == nsGkAtoms::ms_ || tag == nsGkAtoms::mi_ ||
       tag == nsGkAtoms::mn_ || tag == nsGkAtoms::mo_ ||
-      tag == nsGkAtoms::mtext_ || tag == nsGkAtoms::mspace_)
+      tag == nsGkAtoms::mtext_)
     return FindAttributeDependence(aAttribute, tokenMap);
   if (tag == nsGkAtoms::mstyle_ ||
       tag == nsGkAtoms::math)
@@ -223,6 +234,9 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 
   if (tag == nsGkAtoms::mtable_)
     return FindAttributeDependence(aAttribute, mtableMap);
+
+  if (tag == nsGkAtoms::mrow_)
+    return FindAttributeDependence(aAttribute, mrowMap);
 
   if (tag == nsGkAtoms::maction_ ||
       tag == nsGkAtoms::maligngroup_ ||
@@ -236,7 +250,6 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       tag == nsGkAtoms::mphantom_ ||
       tag == nsGkAtoms::mprescripts_ ||
       tag == nsGkAtoms::mroot_ ||
-      tag == nsGkAtoms::mrow_ ||
       tag == nsGkAtoms::msqrt_ ||
       tag == nsGkAtoms::msub_ ||
       tag == nsGkAtoms::msubsup_ ||
@@ -725,6 +738,44 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     }
   }
 
+  // dir
+  //
+  // Overall Directionality of Mathematics Formulas:
+  // "The overall directionality for a formula, basically the direction of the
+  // Layout Schemata, is specified by the dir attribute on the containing math
+  // element (see Section 2.2 The Top-Level math Element). The default is ltr.
+  // [...] The overall directionality is usually set on the math, but may also 
+  // be switched for individual subformula by using the dir attribute on mrow
+  // or mstyle elements." 
+  //
+  // Bidirectional Layout in Token Elements:
+  // "Specifies the initial directionality for text within the token:
+  // ltr (Left To Right) or rtl (Right To Left). This attribute should only be
+  // needed in rare cases involving weak or neutral characters;
+  // see Section 3.1.5.1 Overall Directionality of Mathematics Formulas for
+  // further discussion. It has no effect on mspace."
+  //
+  // values: "ltr" | "rtl"
+  // default: inherited
+  //
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::dir);
+    nsCSSValue* direction = aData->ValueForDirection();
+    if (value && value->Type() == nsAttrValue::eString &&
+        direction->GetUnit() == eCSSUnit_Null) {
+      nsAutoString str(value->GetStringValue());
+      static const char dirs[][4] = { "ltr", "rtl" };
+      static const int32_t dirValues[NS_ARRAY_LENGTH(dirs)] = {
+        NS_STYLE_DIRECTION_LTR, NS_STYLE_DIRECTION_RTL
+      };
+      for (uint32_t i = 0; i < ArrayLength(dirs); ++i) {
+        if (str.EqualsASCII(dirs[i])) {
+          direction->SetIntValue(dirValues[i], eCSSUnit_Enumerated);
+          break;
+        }
+      }
+    }
+  }
 }
 
 nsresult

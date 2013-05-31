@@ -137,21 +137,21 @@ PerfSpewer::writeProfile(JSScript *script,
     if (PerfFuncEnabled()) {
         fprintf(fp_,
                 "%lx %lx %s:%d: Func%02d\n",
-                (unsigned long) code->raw(),
+                reinterpret_cast<uintptr_t>(code->raw()),
                 (unsigned long) code->instructionsSize(),
                 script->filename(),
                 script->lineno,
                 thisFunctionIndex);
     } else if (PerfBlockEnabled()) {
-        unsigned long funcStart = (unsigned long) code->raw();
-        unsigned long funcEnd = funcStart + code->instructionsSize();
+        uintptr_t funcStart = uintptr_t(code->raw());
+        uintptr_t funcEnd = funcStart + code->instructionsSize();
 
-        unsigned long cur = funcStart;
+        uintptr_t cur = funcStart;
         for (uint32_t i = 0; i < basicBlocks_.length(); i++) {
             Record &r = basicBlocks_[i];
 
-            unsigned long blockStart = funcStart + masm.actualOffset(r.start.offset());
-            unsigned long blockEnd = funcStart + masm.actualOffset(r.end.offset());
+            uintptr_t blockStart = funcStart + masm.actualOffset(r.start.offset());
+            uintptr_t blockEnd = funcStart + masm.actualOffset(r.end.offset());
 
             JS_ASSERT(cur <= blockStart);
             if (cur < blockStart) {

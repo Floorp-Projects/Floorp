@@ -8,7 +8,7 @@ interface nsIURI;
 interface nsIDOMNode;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(cba513eb-c457-4b93-832c-1a979e66edd1)]
+[scriptable, uuid(bc4dbb34-b148-11e2-b82c-08002734a811)]
 interface nsIPrefetchService : nsISupports
 {
     /**
@@ -26,27 +26,10 @@ interface nsIPrefetchService : nsISupports
                      in boolean aExplicit);
 
     /**
-     * @status DEPRECATED This method is no longer used, and will throw
-     * NS_ERROR_NOT_IMPLEMENTED.
-     */
-    void prefetchURIForOfflineUse(in nsIURI aURI,
-                                  in nsIURI aReferrerURI,
-                                  in nsIDOMNode aSource,
-                                  in boolean aExplicit);
-
-    /**
      * Enumerate the items in the prefetch queue.  Each element in the
      * enumeration is an nsIDOMLoadStatus.
-     *
-     * @param aIncludeNormalItems include normal prefetch items in the
-     *        list.  This parameter is deprecated and must be TRUE,
-     *        or NS_ERROR_INT_IMPLEMENTED will be thrown.
-     * @param aIncludeOfflineItems include items being fetched for offline
-     *        use.  This parameter is deprecated and must be FALSE,
-     *        or NS_ERROR_NOT_IMPLEMENTED will be thrown.
      */
-    nsISimpleEnumerator enumerateQueue(in boolean aIncludeNormalItems,
-                                       in boolean aIncludeOfflineItems);
+    nsISimpleEnumerator enumerateQueue();
 
     // XXX do we need a way to cancel prefetch requests?
 };

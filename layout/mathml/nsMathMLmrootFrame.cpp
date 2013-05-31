@@ -271,7 +271,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,
                    NS_STRETCH_LARGER,
-                   NS_MATHML_IS_RTL(mPresentationData.flags));
+                   StyleVisibility()->mDirection);
   // radicalSize have changed at this point, and should match with
   // the bounding metrics of the char
   mSqrChar.GetBoundingMetrics(bmSqr);

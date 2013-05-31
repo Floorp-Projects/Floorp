@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLMetaElement_h
 #define mozilla_dom_HTMLMetaElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLMetaElement.h"
 
@@ -36,14 +37,14 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              bool aNullParent = true) MOZ_OVERRIDE;
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // XPCOM GetName is fine.
   void SetName(const nsAString& aName, ErrorResult& aRv)
@@ -70,8 +71,8 @@ public:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 protected:
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
+  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
 };
 
 } // namespace dom

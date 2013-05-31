@@ -7072,8 +7072,9 @@ nsGlobalWindow::FinalClose()
   //   round-trips to the event loop before the call to ReallyCloseWindow. This
   //   allows setTimeout handlers that are set after FinalClose() is called to
   //   run before the window is torn down.
-  bool indirect = nsContentUtils::GetCurrentJSContext() ==
-                  GetContextInternal()->GetNativeContext();
+  bool indirect = GetContextInternal() && // Occasionally null. See bug 877390.
+                  (nsContentUtils::GetCurrentJSContext() ==
+                   GetContextInternal()->GetNativeContext());
   if ((!indirect && nsContentUtils::IsCallerChrome()) ||
       NS_FAILED(nsCloseEvent::PostCloseEvent(this, indirect))) {
     ReallyCloseWindow();
