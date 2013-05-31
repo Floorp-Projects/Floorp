@@ -17,7 +17,6 @@
 #include "nsHistory.h"
 #include "nsPerformance.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsBarProps.h"
 #include "nsIDOMStorage.h"
 #include "nsIDOMStorageManager.h"
 #include "DOMStorage.h"
@@ -61,6 +60,7 @@
 #include "nsPluginHost.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsGeolocation.h"
+#include "mozilla/dom/BarProps.h"
 #include "mozilla/dom/DesktopNotification.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
@@ -3593,7 +3593,7 @@ nsGlobalWindow::GetMenubar(nsIDOMBarProp** aMenubar)
   *aMenubar = nullptr;
 
   if (!mMenubar) {
-    mMenubar = new nsMenubarProp(this);
+    mMenubar = new MenubarProp(this);
     if (!mMenubar) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3612,7 +3612,7 @@ nsGlobalWindow::GetToolbar(nsIDOMBarProp** aToolbar)
   *aToolbar = nullptr;
 
   if (!mToolbar) {
-    mToolbar = new nsToolbarProp(this);
+    mToolbar = new ToolbarProp(this);
     if (!mToolbar) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3631,7 +3631,7 @@ nsGlobalWindow::GetLocationbar(nsIDOMBarProp** aLocationbar)
   *aLocationbar = nullptr;
 
   if (!mLocationbar) {
-    mLocationbar = new nsLocationbarProp(this);
+    mLocationbar = new LocationbarProp(this);
     if (!mLocationbar) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3650,7 +3650,7 @@ nsGlobalWindow::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
   *aPersonalbar = nullptr;
 
   if (!mPersonalbar) {
-    mPersonalbar = new nsPersonalbarProp(this);
+    mPersonalbar = new PersonalbarProp(this);
     if (!mPersonalbar) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3669,7 +3669,7 @@ nsGlobalWindow::GetStatusbar(nsIDOMBarProp** aStatusbar)
   *aStatusbar = nullptr;
 
   if (!mStatusbar) {
-    mStatusbar = new nsStatusbarProp(this);
+    mStatusbar = new StatusbarProp(this);
     if (!mStatusbar) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3688,7 +3688,7 @@ nsGlobalWindow::GetScrollbars(nsIDOMBarProp** aScrollbars)
   *aScrollbars = nullptr;
 
   if (!mScrollbars) {
-    mScrollbars = new nsScrollbarsProp(this);
+    mScrollbars = new ScrollbarsProp(this);
     if (!mScrollbars) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -9,8 +9,8 @@
    the appropriate property (window.menubar.visible)
 */
 
-#ifndef nsBarProps_h___
-#define nsBarProps_h___
+#ifndef mozilla_dom_BarProps_h
+#define mozilla_dom_BarProps_h
 
 #include "nscore.h"
 #include "nsIScriptContext.h"
@@ -20,12 +20,15 @@
 class nsGlobalWindow;
 class nsIWebBrowserChrome;
 
+namespace mozilla {
+namespace dom {
+
 // Script "BarProp" object
-class nsBarProp : public nsIDOMBarProp
+class BarProp : public nsIDOMBarProp
 {
 public:
-  explicit nsBarProp(nsGlobalWindow *aWindow);
-  virtual ~nsBarProp();
+  explicit BarProp(nsGlobalWindow *aWindow);
+  virtual ~BarProp();
 
   NS_DECL_ISUPPORTS
 
@@ -48,64 +51,67 @@ protected:
 };
 
 // Script "menubar" object
-class nsMenubarProp : public nsBarProp
+class MenubarProp : public BarProp
 {
 public:
-  explicit nsMenubarProp(nsGlobalWindow *aWindow);
-  virtual ~nsMenubarProp();
+  explicit MenubarProp(nsGlobalWindow *aWindow);
+  virtual ~MenubarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "toolbar" object
-class nsToolbarProp : public nsBarProp
+class ToolbarProp : public BarProp
 {
 public:
-  explicit nsToolbarProp(nsGlobalWindow *aWindow);
-  virtual ~nsToolbarProp();
+  explicit ToolbarProp(nsGlobalWindow *aWindow);
+  virtual ~ToolbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "locationbar" object
-class nsLocationbarProp : public nsBarProp
+class LocationbarProp : public BarProp
 {
 public:
-  explicit nsLocationbarProp(nsGlobalWindow *aWindow);
-  virtual ~nsLocationbarProp();
+  explicit LocationbarProp(nsGlobalWindow *aWindow);
+  virtual ~LocationbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "personalbar" object
-class nsPersonalbarProp : public nsBarProp
+class PersonalbarProp : public BarProp
 {
 public:
-  explicit nsPersonalbarProp(nsGlobalWindow *aWindow);
-  virtual ~nsPersonalbarProp();
+  explicit PersonalbarProp(nsGlobalWindow *aWindow);
+  virtual ~PersonalbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "statusbar" object
-class nsStatusbarProp : public nsBarProp
+class StatusbarProp : public BarProp
 {
 public:
-  explicit nsStatusbarProp(nsGlobalWindow *aWindow);
-  virtual ~nsStatusbarProp();
+  explicit StatusbarProp(nsGlobalWindow *aWindow);
+  virtual ~StatusbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "scrollbars" object
-class nsScrollbarsProp : public nsBarProp
+class ScrollbarsProp : public BarProp
 {
 public:
-  explicit nsScrollbarsProp(nsGlobalWindow *aWindow);
-  virtual ~nsScrollbarsProp();
+  explicit ScrollbarsProp(nsGlobalWindow *aWindow);
+  virtual ~ScrollbarsProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
-#endif /* nsBarProps_h___ */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_BarProps_h */
 
