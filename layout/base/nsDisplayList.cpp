@@ -1846,6 +1846,7 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         const FrameLayerBuilder::ContainerParameters& aParameters)
 {
   if (!TryOptimizeToImageLayer(aManager, aBuilder) ||
+      !nsLayoutUtils::AnimatedImageLayersEnabled() ||
       !mIsAnimated) {
     if (!aManager->IsCompositingCheap() ||
         !nsLayoutUtils::GPUImageScalingEnabled()) {
