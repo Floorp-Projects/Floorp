@@ -70,8 +70,8 @@ const PanelUI = {
    * @param aMainView
    *        The mainView node to put back into place.
    */
-  replaceMainView: function(aMainView) {
-    this.multiView.insertBefore(aMainView, this.multiView.firstChild);
+  setMainView: function(aMainView) {
+    this.multiView.setMainView(aMainView);
   },
 
   /**
@@ -180,17 +180,27 @@ const PanelUI = {
       viewNode.dispatchEvent(evt);
 
       let tempPanel = document.createElement("panel");
-      tempPanel.appendChild(viewNode);
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
       document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
+
+      let multiView = document.createElement("panelmultiview");
+      tempPanel.appendChild(multiView);
+      multiView.setMainView(viewNode);
+      tempPanel.addEventListener("command", PanelUI._onWidgetPanelCommand);
+
       tempPanel.addEventListener("popuphidden", function panelRemover() {
         tempPanel.removeEventListener("popuphidden", panelRemover);
+        tempPanel.removeEventListener("command", PanelUI._onWidgetPanelCommand);
         this.multiView.appendChild(viewNode);
         tempPanel.parentElement.removeChild(tempPanel);
       }.bind(this));
 
-      tempPanel.openPopup(aAnchor, "bottomcenter topright");
+      let iconAnchor =
+        document.getAnonymousElementByAttribute(aAnchor, "class",
+                                                "toolbarbutton-icon");
+
+      tempPanel.openPopup(iconAnchor || aAnchor, "bottomcenter topright");
     }
   },
 
@@ -208,9 +218,14 @@ const PanelUI = {
       .getFormattedString("zoomReset.label", [Math.floor(ZoomManager.zoom * 100)]));
   },
 
-  // Button onclick handler which hides the whole PanelUI
-  _onHelpViewClick: function(aEvent) {
-    if (aEvent.button == 0 && !aEvent.target.hasAttribute("disabled")) {
+  _onWidgetPanelCommand: function(aEvent) {
+    if (!aEvent.originalTarget.hasAttribute("noautoclose")) {
+      aEvent.currentTarget.hidePopup();
+    }
+  },
+
+  _onHelpViewCommand: function(aEvent) {
+    if (!aEvent.originalTarget.hasAttribute("noautoclose")) {
       PanelUI.hide();
     }
   },
@@ -246,10 +261,10 @@ const PanelUI = {
     }
     items.appendChild(fragment);
 
-    this.addEventListener("click", PanelUI._onHelpViewClick, false);
+    this.addEventListener("command", PanelUI._onHelpViewCommand);
   },
 
   _onHelpViewHide: function(aEvent) {
-    this.removeEventListener("click", PanelUI._onHelpViewClick);
+    this.removeEventListener("command", PanelUI._onHelpViewCommand);
   }
 };
