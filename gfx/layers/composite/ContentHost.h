@@ -223,9 +223,9 @@ public:
 
   virtual CompositableType GetType() { return BUFFER_CONTENT; }
 
-  virtual void EnsureTextureHost(ISurfaceAllocator* aAllocator,
-                                 const TextureInfo& aTextureInfo,
-                                 const nsIntRect& aBufferRect) MOZ_OVERRIDE;
+  virtual void EnsureTextureHostIncremental(ISurfaceAllocator* aAllocator,
+                                            const TextureInfo& aTextureInfo,
+                                            const nsIntRect& aBufferRect) MOZ_OVERRIDE;
 
   virtual void EnsureTextureHost(TextureIdentifier aTextureId,
                                  const SurfaceDescriptor& aSurface,
