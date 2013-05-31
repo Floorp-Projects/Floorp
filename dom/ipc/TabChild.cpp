@@ -354,7 +354,7 @@ TabChild::Observe(nsISupports *aSubject,
                                                     mInnerSize);
         mLastMetrics.mResolution =
           AsyncPanZoomController::CalculateResolution(mLastMetrics);
-        mLastMetrics.mScrollOffset = gfx::Point(0, 0);
+        mLastMetrics.mScrollOffset = CSSPoint(0, 0);
         utils->SetResolution(mLastMetrics.mResolution.width,
                              mLastMetrics.mResolution.height);
 
@@ -1452,7 +1452,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
 }
 
 static void
-ScrollWindowTo(nsIDOMWindow* aWindow, const mozilla::gfx::Point& aPoint)
+ScrollWindowTo(nsIDOMWindow* aWindow, const CSSPoint& aPoint)
 {
     nsGlobalWindow* window = static_cast<nsGlobalWindow*>(aWindow);
     nsIScrollableFrame* sf = window->GetScrollFrame();
