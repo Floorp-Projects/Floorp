@@ -45,7 +45,7 @@
     <content>
       <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen">
         <xul:stack anonid="viewStack" view="main" class="panel-viewstack">
-          <xul:vbox anonid="mainViewContainer" class="panel-mainview"/>
+          <children includes="panelmainview"/>
 
           <!-- Used to capture click events over the PanelUI-mainView if we're in
                subview mode. That way, any click on the PanelUI-mainView causes us
@@ -59,7 +59,7 @@
                whether or not it is shown. That's not good for our case, since we
                want to allow each subview to be uniquely sized. -->
           <xul:vbox anonid="subViews" class="panel-subviews" xbl:inherits="panelopen">
-            <children includes="panelview"/>
+            <children includes="panelsubview"/>
           </xul:vbox>
         </xul:stack>
       </xul:box>
@@ -71,8 +71,8 @@
       <field name="_viewContainer" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "viewContainer");
       </field>
-      <field name="_mainViewContainer" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "mainViewContainer");
+      <field name="_mainView" readonly="true">
+        this.querySelector("panelmainview");
       </field>
       <field name="_subViews" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "subViews");
@@ -88,62 +88,27 @@
       <field name="_anchorElement">null</field>
       <field name="_mainViewHeight">0</field>
       <field name="_subViewObserver">null</field>
-      <field name="_transitioning">false</field>
 
       <property name="showingSubView" readonly="true"
                 onget="return this._viewStack.getAttribute('view') == 'subview'"/>
-      <property name="_mainViewId" onget="return this.getAttribute('mainViewId');" onset="this.setAttribute('mainViewId', val); return val;"/>
-      <property name="_mainView" readonly="true"
-                onget="return document.getElementById(this._mainViewId);"/>
 
       <constructor><![CDATA[
         this._clickCapturer.addEventListener("click", this);
         this._panel.addEventListener("popupshowing", this);
         this._panel.addEventListener("popuphidden", this);
-        this._subViews.addEventListener("overflow", this);
-        this._mainViewContainer.addEventListener("overflow", this);
-
         // Get a MutationObserver ready to react to subview size changes. We
         // only attach this MutationObserver when a subview is being displayed.
         this._subViewObserver =
           new MutationObserver(this._syncContainerWithSubView.bind(this));
-        this._mainViewObserver =
-          new MutationObserver(this._syncContainerWithMainView.bind(this));
-
-        this._mainViewContainer.setAttribute("panelid",
-                                             this._panel.id);
-
-        if (this._mainView) {
-          this.setMainView(this._mainView);
-        }
+        this._subViews.addEventListener("overflow", this);
       ]]></constructor>
 
       <destructor><![CDATA[
-        if (this._mainView) {
-          this._mainView.removeAttribute("mainview");
-        }
-        this._mainViewObserver.disconnect();
         this._subViewObserver.disconnect();
         this._panel.removeEventListener("popupshowing", this);
         this._panel.removeEventListener("popuphidden", this);
-        this._subViews.removeEventListener("overflow", this);
-        this._mainViewContainer.removeEventListener("overflow", this);
         this._clickCapturer.removeEventListener("click", this);
       ]]></destructor>
-
-      <method name="setMainView">
-        <parameter name="aNewMainView"/>
-        <body><![CDATA[
-        if (this._mainView) {
-          this._mainViewObserver.disconnect();
-          this._subViews.appendChild(this._mainView);
-          this._mainView.removeAttribute("mainview");
-        }
-        this._mainViewId = aNewMainView.id;
-        aNewMainView.setAttribute("mainview", "true");
-        this._mainViewContainer.appendChild(aNewMainView);
-        ]]></body>
-      </method>
 
       <method name="showMainView">
         <body><![CDATA[
@@ -156,25 +121,11 @@
             viewNode.removeAttribute("current");
             this._currentSubView = null;
 
-            this._subViewObserver.disconnect();
-
-            this._transitioning = true;
-
-            this._viewContainer.addEventListener("transitionend", function trans() {
-              this._viewContainer.removeEventListener("transitionend", trans);
-              this._transitioning = false;
-            }.bind(this));
             this._viewContainer.style.height = this._mainViewHeight + "px";
+            this._subViewObserver.disconnect();
 
             this._viewStack.setAttribute("view", "main");
           }
-
-          this._mainViewObserver.observe(this._mainView, {
-            attributes: true,
-            characterData: true,
-            childList: true,
-            subtree: true
-          });
 
           this._shiftMainView();
         ]]></body>
@@ -210,14 +161,7 @@
           this._shiftMainView(aAnchor);
 
           this._mainViewHeight = this._viewStack.clientHeight;
-
-          this._transitioning = true;
-          this._viewContainer.addEventListener("transitionend", function trans() {
-            this._viewContainer.removeEventListener("transitionend", trans);
-            this._transitioning = false;
-          }.bind(this));
           this._viewContainer.style.height = this._subViews.scrollHeight + "px";
-
           this._subViewObserver.observe(viewNode, {
             attributes: true,
             characterData: true,
@@ -235,14 +179,14 @@
             // panel. Then we need to add half the width of the anchor. This is the
             // target that we need to transition to.
             let anchorRect = aAnchor.getBoundingClientRect();
-            let mainViewRect = this._mainViewContainer.getBoundingClientRect();
+            let mainViewRect = this._mainView.getBoundingClientRect();
             let leftEdge = anchorRect.left - mainViewRect.left;
             let center = aAnchor.clientWidth / 2;
             let target = leftEdge + center;
-            this._mainViewContainer.style.transform = "translateX(-" + target + "px)";
+            this._mainView.style.transform = "translateX(-" + target + "px)";
             aAnchor.classList.add("panel-multiview-anchor");
           } else {
-            this._mainViewContainer.style.transform = "";
+            this._mainView.style.transform = "";
             if (this.anchorElement)
               this.anchorElement.classList.remove("panel-multiview-anchor");
           }
@@ -260,12 +204,8 @@
               }
               break;
             case "overflow":
-              // Resize the right view on the next tick.
-              if (this.showingSubView) {
-                setTimeout(this._syncContainerWithSubView.bind(this), 0);
-              } else if (!this.transitioning) {
-                setTimeout(this._syncContainerWithMainView.bind(this), 0);
-              }
+              // Resize the subview on the next tick.
+              setTimeout(this._syncContainerWithSubView.bind(this), 0);
               break;
             case "popupshowing":
               this.setAttribute("panelopen", "true");
@@ -281,35 +221,16 @@
 
       <method name="_syncContainerWithSubView">
         <body><![CDATA[
-          if (this.showingSubView) {
-            this._viewContainer.style.height =
-              this._subViews.scrollHeight + "px";
-          }
+          this._viewContainer.style.height = this._subViews.scrollHeight + "px";
         ]]></body>
       </method>
       <method name="_syncContainerWithMainView">
         <body><![CDATA[
-          if (!this.showingSubView && !this._transitioning) {
-            this._viewContainer.style.height =
-              this._mainViewContainer.scrollHeight + "px";
-          }
+          this._viewContainer.style.height = this._mainView.scrollHeight + "px";
         ]]></body>
       </method>
 
     </implementation>
   </binding>
 
-  <binding id="panelview">
-    <implementation>
-      <property name="panelMultiView" readonly="true">
-        <getter><![CDATA[
-          if (this.parentNode.localName != "panelmultiview") {
-            return document.getBindingParent(this.parentNode);
-          }
-
-          return this.parentNode;
-        ]]></getter>
-      </property>
-    </implementation>
-  </binding>
 </bindings>
