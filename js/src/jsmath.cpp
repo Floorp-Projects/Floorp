@@ -22,6 +22,10 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
+#ifdef XP_UNIX
+# include <unistd.h>
+#endif
+
 #include "jstypes.h"
 #include "prmjtime.h"
 #include "jsapi.h"
