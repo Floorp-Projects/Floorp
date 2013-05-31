@@ -173,7 +173,10 @@ DebuggerTransport.prototype = {
   onStopRequest:
   makeInfallible(function DT_onStopRequest(aRequest, aContext, aStatus) {
     this.close();
-    this.hooks.onClosed(aStatus);
+    if (this.hooks) {
+      this.hooks.onClosed(aStatus);
+      this.hooks = null;
+    }
   }, "DebuggerTransport.prototype.onStopRequest"),
 
   onDataAvailable:
@@ -292,7 +295,10 @@ LocalDebuggerTransport.prototype = {
       delete this.other;
       other.close();
     }
-    this.hooks.onClosed();
+    if (this.hooks) {
+      this.hooks.onClosed();
+      this.hooks = null;
+    }
   },
 
   /**
