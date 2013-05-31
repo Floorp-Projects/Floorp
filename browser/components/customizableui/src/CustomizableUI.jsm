@@ -60,49 +60,6 @@ let gPlacements = new Map();
  */
 let gFuturePlacements = new Map();
 
-/**
- * If the user does not have any state saved, this is the default set of
- * placements to use.
- */
-let gDefaultPlacements = new Map([
-  ["toolbar-menubar", [
-    "menubar-items",
-  ]],
-  ["TabsToolbar", [
-    "tabbrowser-tabs",
-    "new-tab-button",
-    "alltabs-button",
-    "tabs-closebutton"
-  ]],
-  ["nav-bar", [
-    "unified-back-forward-button",
-    "urlbar-container",
-    "reload-button",
-    "stop-button",
-    "search-container",
-    "webrtc-status-button",
-    "bookmarks-menu-button",
-    "downloads-button",
-    "home-button",
-    "social-share-button",
-    "social-toolbar-item",
-  ]],
-  ["PersonalToolbar", [
-    "personal-bookmarks",
-  ]],
-  ["PanelUI-contents", [
-    "new-window-button",
-    "privatebrowsing-button",
-    "save-page-button",
-    "print-button",
-    "history-panelmenu",
-    "fullscreen-button",
-    "find-button",
-    "preferences-button",
-    "add-ons-button"
-  ]]
-]);
-
 //XXXunf Temporary. Need a nice way to abstract functions to build widgets
 //       of these types.
 let gSupportedWidgetTypes = new Set(["button", "view"]);
@@ -158,24 +115,61 @@ let CustomizableUIInternal = {
 
     this.registerArea(CustomizableUI.AREA_PANEL, {
       anchor: "PanelUI-menu-button",
-      type: CustomizableUI.TYPE_MENU_PANEL
+      type: CustomizableUI.TYPE_MENU_PANEL,
+      defaultPlacements: [
+        "new-window-button",
+        "privatebrowsing-button",
+        "save-page-button",
+        "print-button",
+        "history-panelmenu",
+        "fullscreen-button",
+        "find-button",
+        "preferences-button",
+        "add-ons-button",
+      ]
     });
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
-      overflowable: true
+      overflowable: true,
+      defaultPlacements: [
+        "unified-back-forward-button",
+        "urlbar-container",
+        "reload-button",
+        "stop-button",
+        "urlbar-search-splitter",
+        "search-container",
+        "webrtc-status-button",
+        "bookmarks-menu-button",
+        "downloads-button",
+        "home-button",
+        "social-share-button",
+        "social-toolbar-item",
+      ]
     });
     this.registerArea(CustomizableUI.AREA_MENUBAR, {
       legacy: true,
-      type: CustomizableUI.TYPE_TOOLBAR
+      type: CustomizableUI.TYPE_TOOLBAR,
+      defaultPlacements: [
+        "menubar-items",
+      ]
     });
     this.registerArea(CustomizableUI.AREA_TABSTRIP, {
       legacy: true,
-      type: CustomizableUI.TYPE_TOOLBAR
+      type: CustomizableUI.TYPE_TOOLBAR,
+      defaultPlacements: [
+        "tabbrowser-tabs",
+        "new-tab-button",
+        "alltabs-button",
+        "tabs-closebutton",
+      ]
     });
     this.registerArea(CustomizableUI.AREA_BOOKMARKS, {
       legacy: true,
-      type: CustomizableUI.TYPE_TOOLBAR
+      type: CustomizableUI.TYPE_TOOLBAR,
+      defaultPlacements: [
+        "personal-bookmarks",
+      ]
     });
   },
 
@@ -215,7 +209,13 @@ let CustomizableUIInternal = {
 
     let props = new Map();
     for (let key in aProperties) {
-      props.set(key, aProperties[key]);
+      //XXXgijs for special items, we need to make sure they have an appropriate ID
+      // so we aren't perpetually in a non-default state:
+      if (key == "defaultPlacements" && Array.isArray(aProperties[key])) {
+        props.set(key, aProperties[key].map(x => this.isSpecialWidget(x) ? this.ensureSpecialWidgetId(x) : x ));
+      } else {
+        props.set(key, aProperties[key]);
+      }
     }
     gAreas.set(aName, props);
 
@@ -1011,8 +1011,8 @@ let CustomizableUIInternal = {
 
     if (!restored) {
       LOG("Restoring " + aArea + " from default state");
-      if (gDefaultPlacements.has(aArea)) {
-        let defaults = gDefaultPlacements.get(aArea);
+      let defaults = gAreas.get(aArea).get("defaultPlacements");
+      if (defaults) {
         for (let id of defaults)
           this.addWidgetToArea(id, aArea);
       }
@@ -1113,11 +1113,13 @@ let CustomizableUIInternal = {
     this.notifyListeners("onWidgetCreated", widget.id);
 
     if (widget.defaultArea) {
-      let area = widget.defaultArea;
-      if (gDefaultPlacements.has(area)) {
-        gDefaultPlacements.get(area).push(widget.id);
+      let area = gAreas.get(widget.defaultArea);
+      //XXXgijs this won't have any effect for legacy items. Sort of OK because
+      // consumers can modify currentset? Maybe?
+      if (area.has("defaultPlacements")) {
+        area.get("defaultPlacements").push(widget.id);
       } else {
-        gDefaultPlacements.set(area, [widget.id]);
+        area.set("defaultPlacements", [widget.id]);
       }
     }
 
@@ -1452,8 +1454,8 @@ let CustomizableUIInternal = {
     // Clear the saved state to ensure that defaults will be used.
     gSavedState = null;
     // Restore the state for each area to its defaults
-    for (let [area, defaultPlacements] of gDefaultPlacements) {
-      this.restoreStateForArea(area);
+    for (let [areaId,] of gAreas) {
+      this.restoreStateForArea(areaId);
     }
 
     // Rebuild each registered area (across windows) to reflect the state that
@@ -1519,8 +1521,16 @@ let CustomizableUIInternal = {
   },
 
   get inDefaultState() {
-    for (let [areaId, defaultPlacements] of gDefaultPlacements) {
+    for (let [areaId, props] of gAreas) {
+      let defaultPlacements = props.get("defaultPlacements");
+      // Areas without default placements (like legacy ones?) get skipped
+      if (!defaultPlacements) {
+        continue;
+      }
+
       let currentPlacements = gPlacements.get(areaId);
+      LOG("Checking default state for " + areaId + ":\n" + currentPlacements.join("\n") +
+          " vs. " + defaultPlacements.join("\n"));
 
       if (currentPlacements.length != defaultPlacements.length) {
         return false;
@@ -1528,6 +1538,8 @@ let CustomizableUIInternal = {
 
       for (let i = 0; i < currentPlacements.length; ++i) {
         if (currentPlacements[i] != defaultPlacements[i]) {
+          LOG("Found " + currentPlacements[i] + " in " + areaId + " where " +
+              defaultPlacements[i] + " was expected!");
           return false;
         }
       }
