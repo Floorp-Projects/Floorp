@@ -1053,6 +1053,28 @@ js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext *cx,
         callback(cx, beginType);
 }
 
+JS_FRIEND_API(void)
+js::SetObjectMetadataCallback(JSContext *cx, ObjectMetadataCallback callback)
+{
+    // Clear any jitcode in the runtime, which behaves differently depending on
+    // whether there is a creation callback.
+    ReleaseAllJITCode(cx->runtime->defaultFreeOp());
+
+    cx->compartment->objectMetadataCallback = callback;
+}
+
+JS_FRIEND_API(bool)
+js::SetObjectMetadata(JSContext *cx, JSHandleObject obj, JSHandleObject metadata)
+{
+    return JSObject::setMetadata(cx, obj, metadata);
+}
+
+JS_FRIEND_API(JSObject *)
+js::GetObjectMetadata(JSObject *obj)
+{
+    return obj->getMetadata();
+}
+
 JS_FRIEND_API(JSBool)
 js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
                      const js::PropertyDescriptor& descriptor, JSBool *bp)

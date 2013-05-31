@@ -559,7 +559,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
     JS_ASSERT(obj->getClass() == &ArrayBufferClass);
 
     js::Shape *empty = EmptyShape::getInitialShape(cx, &ArrayBufferClass,
-                                                   obj->getProto(), obj->getParent(),
+                                                   obj->getProto(), obj->getParent(), obj->getMetadata(),
                                                    gc::FINALIZE_OBJECT16_BACKGROUND);
     if (!empty)
         return NULL;
@@ -1785,7 +1785,7 @@ class TypedArrayTemplate
         // would just boil down to a slightly slower wrapper around the
         // following code anyway:
         js::Shape *empty = EmptyShape::getInitialShape(cx, fastClass(),
-                                                       obj->getProto(), obj->getParent(),
+                                                       obj->getProto(), obj->getParent(), obj->getMetadata(),
                                                        gc::FINALIZE_OBJECT8_BACKGROUND,
                                                        BaseShape::NOT_EXTENSIBLE);
         if (!empty)

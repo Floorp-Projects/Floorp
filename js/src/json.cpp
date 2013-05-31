@@ -46,58 +46,6 @@ Class js::JSONClass = {
     JS_ConvertStub
 };
 
-/* ES5 15.12.2. */
-JSBool
-js_json_parse(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Step 1. */
-    JSString *str = (argc >= 1) ? ToString<CanGC>(cx, args[0]) : cx->names().undefined;
-    if (!str)
-        return false;
-
-    JSStableString *stable = str->ensureStable(cx);
-    if (!stable)
-        return false;
-
-    JS::Anchor<JSString *> anchor(stable);
-
-    RootedValue reviver(cx, (argc >= 2) ? args[1] : UndefinedValue());
-
-    /* Steps 2-5. */
-    return ParseJSONWithReviver(cx, stable->chars(), stable->length(), reviver, args.rval());
-}
-
-/* ES5 15.12.3. */
-JSBool
-js_json_stringify(JSContext *cx, unsigned argc, Value *vp)
-{
-    RootedObject replacer(cx, (argc >= 2 && vp[3].isObject())
-                              ? &vp[3].toObject()
-                              : NULL);
-    RootedValue value(cx, (argc >= 1) ? vp[2] : UndefinedValue());
-    RootedValue space(cx, (argc >= 3) ? vp[4] : UndefinedValue());
-
-    StringBuffer sb(cx);
-    if (!js_Stringify(cx, &value, replacer, space, sb))
-        return false;
-
-    // XXX This can never happen to nsJSON.cpp, but the JSON object
-    // needs to support returning undefined. So this is a little awkward
-    // for the API, because we want to support streaming writers.
-    if (!sb.empty()) {
-        JSString *str = sb.finishString();
-        if (!str)
-            return false;
-        vp->setString(str);
-    } else {
-        vp->setUndefined();
-    }
-
-    return true;
-}
-
 static inline bool IsQuoteSpecialCharacter(jschar c)
 {
     JS_STATIC_ASSERT('\b' < ' ');
@@ -855,13 +803,12 @@ Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
     return Walk(cx, obj, id, reviver, vp);
 }
 
-JSBool
+bool
 js::ParseJSONWithReviver(JSContext *cx, StableCharPtr chars, size_t length, HandleValue reviver,
-                         MutableHandleValue vp, DecodingMode decodingMode /* = STRICT */)
+                         MutableHandleValue vp)
 {
     /* 15.12.2 steps 2-3. */
-    JSONParser parser(cx, chars, length,
-                      decodingMode == STRICT ? JSONParser::StrictJSON : JSONParser::LegacyJSON);
+    JSONParser parser(cx, chars, length);
     if (!parser.parse(vp))
         return false;
 
@@ -879,6 +826,58 @@ json_toSource(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 #endif
+
+/* ES5 15.12.2. */
+JSBool
+js_json_parse(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
+    JSString *str = (argc >= 1) ? ToString<CanGC>(cx, args[0]) : cx->names().undefined;
+    if (!str)
+        return false;
+
+    JSStableString *stable = str->ensureStable(cx);
+    if (!stable)
+        return false;
+
+    JS::Anchor<JSString *> anchor(stable);
+
+    RootedValue reviver(cx, (argc >= 2) ? args[1] : UndefinedValue());
+
+    /* Steps 2-5. */
+    return ParseJSONWithReviver(cx, stable->chars(), stable->length(), reviver, args.rval());
+}
+
+/* ES5 15.12.3. */
+JSBool
+js_json_stringify(JSContext *cx, unsigned argc, Value *vp)
+{
+    RootedObject replacer(cx, (argc >= 2 && vp[3].isObject())
+                              ? &vp[3].toObject()
+                              : NULL);
+    RootedValue value(cx, (argc >= 1) ? vp[2] : UndefinedValue());
+    RootedValue space(cx, (argc >= 3) ? vp[4] : UndefinedValue());
+
+    StringBuffer sb(cx);
+    if (!js_Stringify(cx, &value, replacer, space, sb))
+        return false;
+
+    // XXX This can never happen to nsJSON.cpp, but the JSON object
+    // needs to support returning undefined. So this is a little awkward
+    // for the API, because we want to support streaming writers.
+    if (!sb.empty()) {
+        JSString *str = sb.finishString();
+        if (!str)
+            return false;
+        vp->setString(str);
+    } else {
+        vp->setUndefined();
+    }
+
+    return true;
+}
 
 static const JSFunctionSpec json_static_methods[] = {
 #if JS_HAS_TOSOURCE

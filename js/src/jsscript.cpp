@@ -93,7 +93,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
     gc::AllocKind allocKind = gc::FINALIZE_OBJECT2_BACKGROUND;
     JS_ASSERT(gc::GetGCKindSlots(allocKind) == CallObject::RESERVED_SLOTS);
     RootedShape initial(cx,
-        EmptyShape::getInitialShape(cx, &CallClass, NULL, cx->global(),
+        EmptyShape::getInitialShape(cx, &CallClass, NULL, cx->global(), NULL,
                                     allocKind, BaseShape::VAROBJ | BaseShape::DELEGATE));
     if (!initial)
         return false;
@@ -118,7 +118,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
             return false;
 #endif
 
-        StackBaseShape base(cx->compartment, &CallClass, cx->global(),
+        StackBaseShape base(cx->compartment, &CallClass, cx->global(), NULL,
                             BaseShape::VAROBJ | BaseShape::DELEGATE);
 
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);

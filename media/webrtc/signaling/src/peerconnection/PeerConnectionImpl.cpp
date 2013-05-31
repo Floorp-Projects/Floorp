@@ -1486,18 +1486,24 @@ static nsresult
 GetStreams(JSContext* cx, PeerConnectionImpl* peerConnection,
            MediaStreamList::StreamType type, JS::Value* streams)
 {
-  nsAutoPtr<MediaStreamList> list(new MediaStreamList(peerConnection, type));
+  nsRefPtr<MediaStreamList> list(new MediaStreamList(peerConnection, type));
 
-  bool tookOwnership = false;
-  JSObject* obj = list->WrapObject(cx, &tookOwnership);
-  if (!tookOwnership) {
+  nsCOMPtr<nsIScriptGlobalObject> global =
+    do_QueryInterface(peerConnection->GetWindow());
+  JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
+  if (!scope) {
     streams->setNull();
     return NS_ERROR_FAILURE;
   }
 
-  // Transfer ownership to the binding.
+  JSAutoCompartment ac(cx, scope);
+  JSObject* obj = list->WrapObject(cx, scope);
+  if (!obj) {
+    streams->setNull();
+    return NS_ERROR_FAILURE;
+  }
+
   streams->setObject(*obj);
-  list.forget();
   return NS_OK;
 }
 #endif

@@ -72,21 +72,38 @@ public:
   }
   void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
   {
+    if (!WebAudioUtils::IsTimeValid(aStartTime)) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
     AudioParamTimeline::SetValueAtTime(aValue, aStartTime, aRv);
     mCallback(mNode);
   }
   void LinearRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
+    if (!WebAudioUtils::IsTimeValid(aEndTime)) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
     AudioParamTimeline::LinearRampToValueAtTime(aValue, aEndTime, aRv);
     mCallback(mNode);
   }
   void ExponentialRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
+    if (!WebAudioUtils::IsTimeValid(aEndTime)) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
     AudioParamTimeline::ExponentialRampToValueAtTime(aValue, aEndTime, aRv);
     mCallback(mNode);
   }
   void SetTargetAtTime(float aTarget, double aStartTime, double aTimeConstant, ErrorResult& aRv)
   {
+    if (!WebAudioUtils::IsTimeValid(aStartTime) ||
+        !WebAudioUtils::IsTimeValid(aTimeConstant)) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
     AudioParamTimeline::SetTargetAtTime(aTarget, aStartTime, aTimeConstant, aRv);
     mCallback(mNode);
   }
@@ -94,8 +111,12 @@ public:
   {
     SetTargetAtTime(aTarget, aStartTime, aTimeConstant, aRv);
   }
-  void CancelScheduledValues(double aStartTime)
+  void CancelScheduledValues(double aStartTime, ErrorResult& aRv)
   {
+    if (!WebAudioUtils::IsTimeValid(aStartTime)) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
     AudioParamTimeline::CancelScheduledValues(aStartTime);
     mCallback(mNode);
   }

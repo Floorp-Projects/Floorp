@@ -294,7 +294,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
 
     RootedShape emptyDeclEnvShape(cx);
     emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
-                                                    cx->global(), FINALIZE_KIND,
+                                                    cx->global(), NULL, FINALIZE_KIND,
                                                     BaseShape::DELEGATE);
     if (!emptyDeclEnvShape)
         return NULL;
@@ -337,7 +337,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
         return NULL;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &WithClass, TaggedProto(proto),
-                                                      &enclosing->global(), FINALIZE_KIND));
+                                                      &enclosing->global(), NULL, FINALIZE_KIND));
     if (!shape)
         return NULL;
 
@@ -670,7 +670,7 @@ StaticBlockObject::create(JSContext *cx)
         return NULL;
 
     RootedShape emptyBlockShape(cx);
-    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND,
+    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, NULL, FINALIZE_KIND,
                                                   BaseShape::DELEGATE);
     if (!emptyBlockShape)
         return NULL;

@@ -992,17 +992,19 @@ DownloadsPlacesView.prototype = {
 
   _removeElement: function DPV__removeElement(aElement) {
     // If the element was selected exclusively, select its next
-    // sibling first, if any.
-    if (aElement.nextSibling &&
+    // sibling first, if not, try for previous sibling, if any.
+    if ((aElement.nextSibling || aElement.previousSibling) &&
         this._richlistbox.selectedItems &&
-        this._richlistbox.selectedItems.length > 0 &&
+        this._richlistbox.selectedItems.length == 1 &&
         this._richlistbox.selectedItems[0] == aElement) {
-      this._richlistbox.selectItem(aElement.nextSibling);
+      this._richlistbox.selectItem(aElement.nextSibling ||
+                                   aElement.previousSibling);
     }
 
     if (this._lastSessionDownloadElement == aElement)
       this._lastSessionDownloadElement = aElement.previousSibling;
 
+    this._richlistbox.removeItemFromSelection(aElement);
     this._richlistbox.removeChild(aElement);
     this._ensureVisibleElementsAreActive();
     goUpdateCommand("downloadsCmd_clearDownloads");
@@ -1461,7 +1463,11 @@ DownloadsPlacesView.prototype = {
         goUpdateCommand("downloadsCmd_clearDownloads");
         break;
       default: {
-        let selectedElements = this._richlistbox.selectedItems;
+        // Slicing the array to get a freezed list of selected items. Otherwise,
+        // the selectedItems array is live and doCommand may alter the selection
+        // while we are trying to do one particular action, like removing items
+        // from history.
+        let selectedElements = this._richlistbox.selectedItems.slice();
         for (let element of selectedElements) {
           element._shell.doCommand(aCommand);
         }
