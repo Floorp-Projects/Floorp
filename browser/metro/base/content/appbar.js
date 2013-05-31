@@ -6,8 +6,6 @@
 var Appbar = {
   get consoleButton() { return document.getElementById('console-button'); },
   get jsShellButton() { return document.getElementById('jsshell-button'); },
-  get zoomInButton()  { return document.getElementById('zoomin-button'); },
-  get zoomOutButton() { return document.getElementById('zoomout-button'); },
   get starButton()    { return document.getElementById('star-button'); },
   get pinButton()     { return document.getElementById('pin-button'); },
   get moreButton()    { return document.getElementById('more-button'); },
@@ -21,8 +19,6 @@ var Appbar = {
     window.addEventListener('MozAppbarDismiss', this);
     Elements.contextappbar.addEventListener('MozAppbarShowing', this, false);
     Elements.contextappbar.addEventListener('MozAppbarDismissing', this, false);
-    window.addEventListener('MozPrecisePointer', this, false);
-    window.addEventListener('MozImprecisePointer', this, false);
     window.addEventListener('MozContextActionsChange', this, false);
     Elements.browsers.addEventListener('URLChanged', this, true);
     Elements.tabList.addEventListener('TabSelect', this, true);
@@ -30,7 +26,6 @@ var Appbar = {
     Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
 
     this._updateDebugButtons();
-    this._updateZoomButtons();
 
     // tilegroup selection events for all modules get bubbled up
     window.addEventListener("selectionchange", this, false);
@@ -63,10 +58,6 @@ var Appbar = {
         this.clearContextualActions();
         this.activeTileset = null;
         break;
-      case 'MozPrecisePointer':
-      case 'MozImprecisePointer':
-        this._updateZoomButtons();
-        break;
       case 'MozContextActionsChange':
         let actions = aEvent.actions;
         // could transition in old, new buttons?
@@ -94,14 +85,6 @@ var Appbar = {
   onDownloadButton: function() {
     PanelUI.show("downloads-container");
     ContextUI.dismiss();
-  },
-
-  onZoomOutButton: function() {
-    Browser.zoom(1);
-  },
-
-  onZoomInButton: function() {
-    Browser.zoom(-1);
   },
 
   onPinButton: function() {
@@ -281,9 +264,4 @@ var Appbar = {
     this.consoleButton.disabled = !ConsolePanelView.enabled;
     this.jsShellButton.disabled = MetroUtils.immersive;
   },
-
-  _updateZoomButtons: function() {
-    let zoomDisabled = !InputSourceHelper.isPrecise;
-    this.zoomOutButton.disabled = this.zoomInButton.disabled = zoomDisabled;
-  }
   };

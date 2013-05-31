@@ -95,8 +95,6 @@
     <command id="cmd_contextUI" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- screen/display -->
-    <command id="cmd_zoomin" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_zoomout" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_lockscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <command id="cmd_volumeLeft" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -143,8 +141,6 @@
     <key id="key_save" key="s" modifiers="accel" command="cmd_savePage"/>
 
     <!-- misc -->
-    <key id="key_zoomin" key="+" modifiers="accel" command="cmd_zoomin"/>
-    <key id="key_zoomout" key="-" modifiers="accel" command="cmd_zoomout"/>
     <key id="key_find" key="f" modifiers="accel" command="cmd_find"/>
     <key id="key_find" key="/" command="cmd_find"/>
     <key id="key_findNext" keycode="VK_F3" command="cmd_findNext"/>
@@ -352,8 +348,6 @@
         <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
 
         <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
-        <toolbarbutton id="zoomout-button" oncommand="Appbar.onZoomOutButton()"/>
-        <toolbarbutton id="zoomin-button" oncommand="Appbar.onZoomInButton()"/>
         <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
         <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
         <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)"/>
