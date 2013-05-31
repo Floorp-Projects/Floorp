@@ -37,7 +37,7 @@
   -->
   <!-- Default colors -->
   <color name="text_color_primary">#222222</color>
-  <color name="text_color_secondary">#666666</color>
+  <color name="text_color_secondary">#777777</color>
   <color name="text_color_tertiary">#9198A1</color>
 
   <!-- Default inverse colors -->

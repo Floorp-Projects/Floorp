@@ -69,6 +69,27 @@
         <item name="android:ellipsize">marquee</item>
     </style>
 
+    <style name="Widget.TwoLinePageRow" />
+
+    <style name="Widget.TwoLinePageRow.Title">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLinePageRow.Title</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">middle</item>
+    </style>
+
+    <style name="Widget.TwoLinePageRow.Url">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLinePageRow.Url</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">middle</item>
+    </style>
+
+    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:drawablePadding">10dip</item>
+        <item name="android:drawableLeft">@drawable/bookmark_folder</item>
+    </style>
+
     <!--
         TextAppearance
         Note: Gecko uses light theme as default, while Android uses dark.
@@ -159,6 +180,14 @@
 
     <style name="TextAppearance.Widget.HomePagerTabStrip" parent="TextAppearance.Small">
         <item name="android:textColor">?android:attr/textColorHint</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TwoLinePageRow" />
+
+    <style name="TextAppearance.Widget.TwoLinePageRow.Title" parent="TextAppearance.Medium"/>
+
+    <style name="TextAppearance.Widget.TwoLinePageRow.Url" parent="TextAppearance.Micro">
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
     <!-- BrowserToolbar -->
