@@ -18,7 +18,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PATH = "/submit/telemetry/test-ping";
 const SERVER = "http://localhost:4444";
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
@@ -58,7 +57,7 @@ function dummyHandler(request, response) {
 }
 
 function registerPingHandler(handler) {
-  httpserver.registerPathHandler(PATH, handler);
+  httpserver.registerPathHandler(TelemetryPing.submissionPath(), handler);
 }
 
 function nonexistentServerObserver(aSubject, aTopic, aData) {
