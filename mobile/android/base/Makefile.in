@@ -214,8 +214,11 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
+  home/BookmarksPage.java \
+  home/BookmarkFolderView.java \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
+  home/TwoLinePageRow.java \
   menu/GeckoMenu.java \
   menu/GeckoMenuInflater.java \
   menu/GeckoMenuItem.java \
@@ -430,6 +433,8 @@ RES_LAYOUT = \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
+  res/layout/bookmark_folder_row.xml \
+  res/layout/bookmark_item_row.xml \
   res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
   res/layout/doorhangerpopup.xml \
@@ -460,6 +465,7 @@ RES_LAYOUT = \
   res/layout/tabs_item_cell.xml \
   res/layout/tabs_item_row.xml \
   res/layout/text_selection_handles.xml \
+  res/layout/two_line_page_row.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
   res/layout/select_dialog_multichoice.xml \
@@ -544,6 +550,10 @@ RES_VALUES_V14 = \
   res/values-v14/styles.xml \
   $(NULL)
 
+RES_VALUES_V16 = \
+  res/values-v16/styles.xml \
+  $(NULL)
+
 RES_XML = \
   res/xml/preferences_datareporting.xml \
   $(SYNC_RES_XML) \
@@ -591,6 +601,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/awesomebar_tab_right.9.png \
   res/drawable-mdpi/awesomebar_sep_left.9.png \
   res/drawable-mdpi/awesomebar_sep_right.9.png \
+  res/drawable-mdpi/bookmark_folder_closed.png \
+  res/drawable-mdpi/bookmark_folder_opened.png \
   res/drawable-mdpi/desktop_notification.png \
   res/drawable-mdpi/ic_addons_empty.png \
   res/drawable-mdpi/ic_menu_addons_filler.png \
@@ -705,6 +717,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/awesomebar_tab_right.9.png \
   res/drawable-hdpi/awesomebar_sep_left.9.png \
   res/drawable-hdpi/awesomebar_sep_right.9.png \
+  res/drawable-hdpi/bookmark_folder_closed.png \
+  res/drawable-hdpi/bookmark_folder_opened.png \
   res/drawable-hdpi/ic_addons_empty.png \
   res/drawable-hdpi/ic_menu_addons_filler.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
@@ -799,6 +813,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
   res/drawable-xhdpi/awesomebar_sep_left.9.png \
   res/drawable-xhdpi/awesomebar_sep_right.9.png \
+  res/drawable-xhdpi/bookmark_folder_closed.png \
+  res/drawable-xhdpi/bookmark_folder_opened.png \
   res/drawable-xhdpi/ic_addons_empty.png \
   res/drawable-xhdpi/ic_menu_addons_filler.png \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
@@ -1040,6 +1056,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
+  mobile/android/base/resources/drawable/bookmark_folder.xml                    \
   mobile/android/base/resources/drawable/favicon_bg.xml                         \
   mobile/android/base/resources/drawable/handle_end_level.xml                   \
   mobile/android/base/resources/drawable/handle_start_level.xml                 \
@@ -1065,7 +1082,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_VALUES_V16) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \
@@ -1077,7 +1094,8 @@ RES_DIRS= \
   res/values-v11                \
   res/values-large-v11          \
   res/values-xlarge-v11         \
-  res/values-land-v14           \
+  res/values-v14                \
+  res/values-v16                \
   res/xml                       \
   res/xml-v11                   \
   res/anim                      \
