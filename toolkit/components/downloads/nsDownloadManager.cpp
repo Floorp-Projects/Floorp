@@ -2525,13 +2525,6 @@ nsDownload::~nsDownload()
 {
 }
 
-NS_IMETHODIMP nsDownload::SetSha256Hash(const nsACString& aHash) {
-  MOZ_ASSERT(NS_IsMainThread(), "Must call SetSha256Hash on main thread");
-  // This will be used later to query the application reputation service.
-  mHash = aHash;
-  return NS_OK;
-}
-
 #ifdef MOZ_ENABLE_GIO
 static void gio_set_metadata_done(GObject *source_obj, GAsyncResult *res, gpointer user_data)
 {
@@ -2594,6 +2587,7 @@ nsDownload::SetState(DownloadState aState)
 #endif
     case nsIDownloadManager::DOWNLOAD_FINISHED:
     {
+      // Do what exthandler would have done if necessary
       nsresult rv = ExecuteDesiredAction();
       if (NS_FAILED(rv)) {
         // We've failed to execute the desired action.  As a result, we should
@@ -2935,8 +2929,6 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
                           nsIRequest *aRequest, uint32_t aStateFlags,
                           nsresult aStatus)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must call OnStateChange in main thread");
-
   // We don't want to lose access to our member variables
   nsRefPtr<nsDownload> kungFuDeathGrip = this;
 
@@ -3196,12 +3188,10 @@ nsDownload::Finalize()
 nsresult
 nsDownload::ExecuteDesiredAction()
 {
-  // nsExternalHelperAppHandler is the only caller of AddDownload that sets a
-  // tempfile parameter. In this case, execute the desired action according to
-  // the saved mime info.
-  if (!mTempFile) {
+  // If we have a temp file and we have resumed, we have to do what the
+  // external helper app service would have done.
+  if (!mTempFile || !WasResumed())
     return NS_OK;
-  }
 
   // We need to bail if for some reason the temp file got removed
   bool fileExists;

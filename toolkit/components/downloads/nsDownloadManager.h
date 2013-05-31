@@ -421,11 +421,6 @@ private:
   enum AutoResume { DONT_RESUME, AUTO_RESUME };
   AutoResume mAutoResume;
 
-  /**
-   * Stores the SHA-256 hash associated with the downloaded file.
-   */
-  nsAutoCString mHash;
-
   friend class nsDownloadManager;
 };
 
