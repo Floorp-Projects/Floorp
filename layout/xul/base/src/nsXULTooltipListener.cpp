@@ -656,6 +656,10 @@ nsXULTooltipListener::DestroyTooltip()
   nsCOMPtr<nsIDOMEventListener> kungFuDeathGrip(this);
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
   if (currentTooltip) {
+    // release tooltip before removing listener to prevent our destructor from
+    // being called recursively (bug 120863)
+    mCurrentTooltip = nullptr;
+
     // clear out the tooltip node on the document
     nsCOMPtr<nsIDocument> doc = currentTooltip->GetDocument();
     if (doc) {
@@ -668,12 +672,8 @@ nsXULTooltipListener::DestroyTooltip()
       doc->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"), this, true);
     }
 
-    // release tooltip before removing listener to prevent our destructor from
-    // being called recursively (bug 120863)
-    mCurrentTooltip = nullptr;
-
     // remove the popuphidden listener from tooltip
-    currentTooltip->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), this, false);
+    currentTooltip->RemoveSystemEventListener(NS_LITERAL_STRING("popuphiding"), this, false);
   }
 
   // kill any ongoing timers
