@@ -395,25 +395,6 @@ appbar > toolbar > toolbarbutton:active {
 }
 
 /* Page-Specific */
-#zoomout-button {
-  -moz-image-region: rect(0px, 120px, 40px, 80px) !important;
-}
-#zoomout-button:hover {
-  -moz-image-region: rect(40px, 120px, 80px, 80px) !important;
-}
-#zoomout-button:active {
-  -moz-image-region: rect(80px, 120px, 120px, 80px) !important;
-}
-
-#zoomin-button {
-  -moz-image-region: rect(0px, 160px, 40px, 120px) !important;
-}
-#zoomin-button:hover {
-  -moz-image-region: rect(40px, 160px, 80px, 120px) !important;
-}
-#zoomin-button:active {
-  -moz-image-region: rect(80px, 160px, 120px, 120px) !important;
-}
 
 #pin-button {
   -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
