@@ -11,6 +11,9 @@
 # E.g.: update-test402.sh http://hg.ecmascript.org/tests/test262/
 # Note that test402 is part of the test262 repository.
 
+# Abort when an error occurs.
+set -e
+
 if [ $# -lt 1 ]; then
   echo "Usage: update-test402.sh <URL of test262 hg>"
   exit 1
@@ -47,8 +50,8 @@ for dir in `find test402/ch* -type d -print` ; do
 done
 
 # Restore our own jstests adapter files.
-hg revert --no-backup test402/browser.js
-hg revert --no-backup test402/shell.js
+cp supporting/test402-browser.js test402/browser.js
+cp supporting/test402-shell.js test402/shell.js
 
 # Keep a record of what we imported.
 echo "URL:         $1" > ${test402_dir}/HG-INFO
@@ -59,3 +62,8 @@ hg addremove ${test402_dir}
 
 # Get rid of the Test262 clone.
 rm -rf ${tmp_dir}
+
+# The alert reader may now be wondering: what about test402 tests we don't
+# currently pass?  We disable such tests in js/src/tests/jstests.list, one by
+# one.  This has the moderate benefit that if a bug is fixed, only that one file
+# must be updated, and we don't have to rerun this script.
