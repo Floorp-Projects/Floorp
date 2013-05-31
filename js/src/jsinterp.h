@@ -418,6 +418,9 @@ bool
 IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
 
 bool
+RunOnceScriptPrologue(JSContext *cx, HandleScript script);
+
+bool
 InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleId id,
                           HandleValue val);
 
