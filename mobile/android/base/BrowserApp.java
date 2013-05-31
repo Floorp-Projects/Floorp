@@ -20,6 +20,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.AboutHome;
+import org.mozilla.gecko.widget.ButtonToast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -104,7 +105,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private Vector<MenuItemInfo> mAddonMenuItemsCache;
-
+    private ButtonToast mToast;
     private PropertyAnimator mMainLayoutAnimator;
 
     private static final Interpolator sTabsInterpolator = new Interpolator() {
@@ -358,6 +359,11 @@ abstract public class BrowserApp extends GeckoApp
         super.onCreate(savedInstanceState);
 
         RelativeLayout actionBar = (RelativeLayout) findViewById(R.id.browser_toolbar);
+
+        mToast = new ButtonToast(findViewById(R.id.toast), new ButtonToast.ToastListener() {
+            public void onButtonClicked(CharSequence token) {
+            }
+        });
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
