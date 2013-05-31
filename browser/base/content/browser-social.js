@@ -42,12 +42,6 @@ SocialUI = {
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
 
-    // Called when we enter DOM full-screen mode.
-    window.addEventListener("mozfullscreenchange", function () {
-      SocialSidebar.update();
-      SocialChatBar.update();
-    });
-
     SocialChatBar.init();
     SocialMark.init();
     SocialShare.init();
@@ -379,7 +373,7 @@ SocialChatBar = {
       this.chatbar.removeAll();
       this.chatbar.hidden = command.hidden = true;
     } else {
-      this.chatbar.hidden = command.hidden = document.mozFullScreen;
+      this.chatbar.hidden = command.hidden = false;
     }
     command.setAttribute("disabled", command.hidden ? "true" : "false");
   },
