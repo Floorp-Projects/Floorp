@@ -57,13 +57,17 @@ function dummyHandler(request, response) {
   return p;
 }
 
+function registerPingHandler(handler) {
+  httpserver.registerPathHandler(PATH, handler);
+}
+
 function nonexistentServerObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(nonexistentServerObserver, aTopic);
 
   httpserver.start(4444);
 
   // Provide a dummy function so it returns 200 instead of 404 to telemetry.
-  httpserver.registerPathHandler(PATH, dummyHandler);
+  registerPingHandler(dummyHandler);
   Services.obs.addObserver(telemetryObserver, "telemetry-test-xhr-complete", false);
   telemetry_ping();
 }
@@ -96,7 +100,7 @@ function getSavedHistogramsFile(basename) {
 
 function telemetryObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(telemetryObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkHistogramsSync);
+  registerPingHandler(checkHistogramsSync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
   setupTestData();
 
@@ -276,13 +280,13 @@ function checkPersistedHistogramsSync(request, response) {
 }
 
 function checkHistogramsSync(request, response) {
-  httpserver.registerPathHandler(PATH, checkPersistedHistogramsSync);
+  registerPingHandler(checkPersistedHistogramsSync);
   checkPayload(request, "test-ping", 1);
 }
 
 function runAsyncTestObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(runAsyncTestObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkHistogramsAsync);
+  registerPingHandler(checkHistogramsAsync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms2.dat");
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
@@ -312,7 +316,7 @@ function checkPersistedHistogramsAsync(request, response) {
 }
 
 function checkHistogramsAsync(request, response) {
-  httpserver.registerPathHandler(PATH, checkPersistedHistogramsAsync);
+  registerPingHandler(checkPersistedHistogramsAsync);
   checkPayload(request, "test-ping", 3);
 }
 
