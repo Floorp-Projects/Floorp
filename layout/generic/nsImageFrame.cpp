@@ -1259,7 +1259,8 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                               const FrameLayerBuilder::ContainerParameters& aParameters)
 {
   bool animated = false;
-  if (mImage->GetType() != imgIContainer::TYPE_RASTER ||
+  if (!nsLayoutUtils::AnimatedImageLayersEnabled() ||
+      mImage->GetType() != imgIContainer::TYPE_RASTER ||
       NS_FAILED(mImage->GetAnimated(&animated)) ||
       !animated) {
     if (!aManager->IsCompositingCheap() ||
