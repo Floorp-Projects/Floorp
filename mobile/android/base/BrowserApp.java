@@ -32,6 +32,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
@@ -60,6 +61,7 @@ import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import java.io.InputStream;
@@ -85,6 +87,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_SUCCESS = 0;
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
+    private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
 
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
 
@@ -362,6 +365,10 @@ abstract public class BrowserApp extends GeckoApp
 
         mToast = new ButtonToast(findViewById(R.id.toast), new ButtonToast.ToastListener() {
             public void onButtonClicked(CharSequence token) {
+                Log.i(LOGTAG, "Clicked " + token);
+                if (ADD_SHORTCUT_TOAST.equals(token)) {
+                    showBookmarkDialog();
+                }
             }
         });
 
@@ -468,6 +475,39 @@ abstract public class BrowserApp extends GeckoApp
                 return true;
             }
         });
+    }
+
+    private void showBookmarkDialog() {
+        final Prompt ps = new Prompt(BrowserApp.this, new Prompt.PromptCallback() {
+            public void onPromptFinished(String result) {
+                int itemId = -1;
+                try {
+                  itemId = new JSONObject(result).getInt("button");
+                } catch(Exception ex) { }
+
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab == null)
+                    return;
+
+                if (itemId == 0) {
+                    new EditBookmarkDialog(BrowserApp.this).show(tab.getURL());
+                } else if (itemId == 1) {
+                    String url = tab.getURL();
+                    String title = tab.getDisplayTitle();
+                    Bitmap favicon = tab.getFavicon();
+                    if (url != null && title != null) {
+                        GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon, "");
+                    }
+                }
+            }
+        });
+
+        final Prompt.PromptListItem[] items = new Prompt.PromptListItem[2];
+        Resources res = getResources();
+        items[0] = new Prompt.PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
+        items[1] = new Prompt.PromptListItem(res.getString(R.string.contextmenu_add_to_launcher));
+
+        ps.show("", "", items, false);
     }
 
     private void setDynamicToolbarEnabled(boolean enabled) {
@@ -1548,7 +1588,11 @@ abstract public class BrowserApp extends GeckoApp
                         item.setIcon(R.drawable.ic_menu_bookmark_add);
                     } else {
                         tab.addBookmark();
-                        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
+                        mToast.show(false,
+                                    getResources().getString(R.string.bookmark_added),
+                                    getResources().getString(R.string.bookmark_options),
+                                    0,
+                                    ADD_SHORTCUT_TOAST);
                         item.setIcon(R.drawable.ic_menu_bookmark_remove);
                     }
                 }
