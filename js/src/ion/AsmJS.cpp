@@ -4597,7 +4597,7 @@ CheckVariableDecls(ModuleCompiler &m, FunctionCompiler::LocalMap *locals, ParseN
 {
     ParseNode *stmt = *stmtIter;
 
-    for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNode(stmt)) {
+    for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNonEmptyStatement(stmt)) {
         for (ParseNode *var = VarListHead(stmt); var; var = NextNode(var)) {
             if (!CheckVariableDecl(m, var, locals))
                 return false;
