@@ -197,6 +197,7 @@ abstract public class GeckoApp
 
     private int mSignalStrenth;
     private PhoneStateListener mPhoneStateListener = null;
+    private boolean mShouldReportGeoData = false;
 
     abstract public int getLayout();
     abstract public boolean hasTabsSideBar();
@@ -229,7 +230,7 @@ abstract public class GeckoApp
     }
 
     public LocationListener getLocationListener() {
-        if (mPhoneStateListener == null) {
+        if (mShouldReportGeoData && mPhoneStateListener == null) {
             mPhoneStateListener = new PhoneStateListener() {
                 public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                     setCurrentSignalStrenth(signalStrength);
@@ -1450,6 +1451,15 @@ abstract public class GeckoApp
             }
         });
 
+        PrefsHelper.getPref("app.geo.reportdata", new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, int value) {
+                if (value == 1)
+                    mShouldReportGeoData = true;
+                else
+                    mShouldReportGeoData = false;
+            }
+        });
+
         // End of the startup of our Java App
         mJavaUiStartupTimer.stop();
 
@@ -2188,7 +2198,8 @@ abstract public class GeckoApp
     public void onLocationChanged(Location location) {
         // No logging here: user-identifying information.
         GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
-        collectAndReportLocInfo(location);
+        if (mShouldReportGeoData)
+            collectAndReportLocInfo(location);
     }
 
     public void setCurrentSignalStrenth(SignalStrength ss) {
