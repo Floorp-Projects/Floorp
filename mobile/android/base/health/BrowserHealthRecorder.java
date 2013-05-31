@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -59,6 +60,13 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     private static final String EVENT_ADDONS_ALL = "Addons:All";
     private static final String EVENT_ADDONS_CHANGE = "Addons:Change";
     private static final String EVENT_PREF_CHANGE = "Pref:Change";
+ 
+    // This is raised from Gecko. It avoids browser.js having to know about the
+    // location that invoked it (the URL bar).
+    public static final String EVENT_KEYWORD_SEARCH = "Search:Keyword";
+
+    // This is raised from Java. We include the location in the message.
+    public static final String EVENT_SEARCH = "Search:Event";
 
     public enum State {
         NOT_INITIALIZED,
@@ -141,6 +149,8 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         this.dispatcher.unregisterEventListener(EVENT_ADDONS_ALL, this);
         this.dispatcher.unregisterEventListener(EVENT_ADDONS_CHANGE, this);
         this.dispatcher.unregisterEventListener(EVENT_PREF_CHANGE, this);
+        this.dispatcher.unregisterEventListener(EVENT_KEYWORD_SEARCH, this);
+        this.dispatcher.unregisterEventListener(EVENT_SEARCH, this);
     }
 
     public void onBlocklistPrefChanged(boolean to) {
@@ -343,6 +353,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                         dispatcher.registerEventListener(EVENT_PREF_CHANGE, self);
 
                         // Initialize each provider here.
+                        initializeSearchProvider();
 
                         Log.d(LOG_TAG, "Ensuring environment.");
                         ensureEnvironment();
@@ -444,9 +455,95 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                 this.onEnvironmentChanged();
                 return;
             }
+
+            // Searches.
+            if (EVENT_KEYWORD_SEARCH.equals(event)) {
+                recordSearch(message.getString("identifier"), "bartext");
+                return;
+            }
+            if (EVENT_SEARCH.equals(event)) {
+                if (!message.has("location")) {
+                    Log.d(LOG_TAG, "Ignoring search without location.");
+                    return;
+                }
+                recordSearch(message.getString("identifier"), message.getString("location"));
+                return;
+            }
         } catch (Exception e) {
             Log.e(LOG_TAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    /*
+     * Searches.
+     */
+
+    public static final String MEASUREMENT_NAME_SEARCH_COUNTS = "org.mozilla.searches.counts";
+    public static final int MEASUREMENT_VERSION_SEARCH_COUNTS = 3;
+
+    public static final String[] SEARCH_LOCATIONS = {
+        "barkeyword",
+        "barsuggest",
+        "bartext",
+    };
+
+    private void initializeSearchProvider() {
+        this.storage.ensureMeasurementInitialized(
+            MEASUREMENT_NAME_SEARCH_COUNTS,
+            MEASUREMENT_VERSION_SEARCH_COUNTS,
+            new MeasurementFields() {
+                @Override
+                public Iterable<FieldSpec> getFields() {
+                    ArrayList<FieldSpec> out = new ArrayList<FieldSpec>(SEARCH_LOCATIONS.length);
+                    for (String location : SEARCH_LOCATIONS) {
+                        // We're not using a counter, because the set of engine
+                        // identifiers is potentially unbounded, and thus our
+                        // measurement version would have to keep growing as
+                        // fields changed.
+                        out.add(new FieldSpec(location, Field.TYPE_STRING_DISCRETE));
+                    }
+                    return out;
+                }
+        });
+
+        // Do this here, rather than in a centralized registration spot, in
+        // case the above throws and we wind up handling events that we can't
+        // store.
+        this.dispatcher.registerEventListener(EVENT_KEYWORD_SEARCH, this);
+        this.dispatcher.registerEventListener(EVENT_SEARCH, this);
+    }
+
+    /**
+     * Record a search.
+     *
+     * @param engine the string identifier for the engine, or null if it's not a partner.
+     * @param location one of a fixed set of locations: see {@link #SEARCH_LOCATIONS}.
+     */
+    public void recordSearch(final String engine, final String location) {
+        if (this.state != State.INITIALIZED) {
+            Log.d(LOG_TAG, "Not initialized: not recording search. (" + this.state + ")");
+            return;
+        }
+
+        if (location == null) {
+            throw new IllegalArgumentException("location must be provided for search.");
+        }
+
+        final int day = storage.getDay();
+        final int env = this.env;
+        final String key = ((engine == null) ? "other" : engine);
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(LOG_TAG, "Recording search: " + key + ", " + location +
+                               " (" + day + ", " + env + ").");
+                final int searchField = storage.getField(MEASUREMENT_NAME_SEARCH_COUNTS,
+                                                         MEASUREMENT_VERSION_SEARCH_COUNTS,
+                                                         location)
+                                               .getID();
+                storage.recordDailyDiscrete(env, day, searchField, key);
+            }
+        });
     }
 }
 
