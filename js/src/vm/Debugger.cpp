@@ -2892,6 +2892,16 @@ DebuggerScript_getSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+EnsureFunctionHasScript(JSContext *cx, JSFunction *fun)
+{
+    if (fun->isInterpretedLazy()) {
+        AutoCompartment ac(cx, fun);
+        return fun->getOrCreateScript(cx);
+    }
+    return true;
+}
+
 static JSBool
 DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2905,16 +2915,21 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
         /*
          * script->savedCallerFun indicates that this is a direct eval script
          * and the calling function is stored as script->objects()->vector[0].
-         * It is not really a child script of this script, so skip it.
+         * It is not really a child script of this script, so skip it using
+         * innerObjectsStart().
          */
         ObjectArray *objects = script->objects();
         RootedFunction fun(cx);
         RootedScript funScript(cx);
         RootedObject obj(cx), s(cx);
-        for (uint32_t i = script->savedCallerFun ? 1 : 0; i < objects->length; i++) {
+        for (uint32_t i = script->innerObjectsStart(); i < objects->length; i++) {
             obj = objects->vector[i];
             if (obj->isFunction()) {
                 fun = static_cast<JSFunction *>(obj.get());
+
+                if (!EnsureFunctionHasScript(cx, fun))
+                    return false;
+
                 funScript = fun->nonLazyScript();
                 s = dbg->wrapScript(cx, funScript);
                 if (!s || !js_NewbornArrayPush(cx, result, ObjectValue(*s)))
@@ -4122,7 +4137,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
            .setCompileAndGo(true)
            .setForEval(true)
            .setNoScriptRval(false)
-           .setFileAndLine(filename, lineno);
+           .setFileAndLine(filename, lineno)
+           .setCanLazilyParse(false);
     RootedScript callerScript(cx, frame ? frame.script() : NULL);
     RootedScript script(cx, frontend::CompileScript(cx, env, callerScript,
                                                     options, chars.get(), length,
@@ -4455,6 +4471,9 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
+        if (!EnsureFunctionHasScript(cx, fun))
+            return false;
+
         JS_ASSERT(fun->nargs == fun->nonLazyScript()->bindings.numArgs());
 
         if (fun->nargs > 0) {
@@ -4495,6 +4514,9 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setUndefined();
         return true;
     }
+
+    if (!EnsureFunctionHasScript(cx, fun))
+        return false;
 
     RootedScript script(cx, fun->nonLazyScript());
     RootedObject scriptObject(cx, dbg->wrapScript(cx, script));

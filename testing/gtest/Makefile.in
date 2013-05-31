@@ -36,3 +36,15 @@ LOCAL_INCLUDES += \
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq (browser,$(MOZ_BUILD_APP))
+# Disable because of metro linking error:
+# LNK1181: cannot open input file 'runtimeobject.lib'
+ifndef MOZ_METRO
+check gtest::
+	$(MAKE) -C $(DEPTH)/toolkit/library gtestxul
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+	$(MAKE) -C $(DEPTH)/browser/app repackage
+endif
+endif
+endif
+

@@ -323,7 +323,14 @@ var SelectionHandler = {
       this._onFail("Unexpected, caret position isn't supported with non-inputs.");
       return;
     }
-    let cp = this._contentWindow.document.caretPositionFromPoint(aX, aY);
+
+    // SelectionHelperUI sends text input tap coordinates and a caret move
+    // event at the start of a monocle drag. caretPositionFromPoint isn't
+    // going to give us correct info if the coord is outside the edit bounds,
+    // so restrict the coordinates before we call cpfp.
+    let containedCoords = this._restrictCoordinateToEditBounds(aX, aY);
+    let cp = this._contentWindow.document.caretPositionFromPoint(containedCoords.xPos,
+                                                                 containedCoords.yPos);
     let input = cp.offsetNode;
     let offset = cp.offset;
     input.selectionStart = input.selectionEnd = offset;
@@ -601,6 +608,24 @@ var SelectionHandler = {
       this._cache.end.yPos = bounds.bottom;
     if (this._cache.caret.yPos > bounds.bottom)
       this._cache.caret.yPos = bounds.bottom;
+  },
+
+  _restrictCoordinateToEditBounds: function _restrictCoordinateToEditBounds(aX, aY) {
+    let result = {
+      xPos: aX,
+      yPos: aY
+    };
+    if (!this._targetIsEditable)
+      return result;
+    let bounds = this._getTargetBrowserRect();
+    if (aX <= bounds.left)
+      result.xPos = bounds.left + 1;
+    if (aX >= bounds.right)
+      result.xPos = bounds.right - 1;
+    if (aY <= bounds.top)
+      result.yPos = bounds.top + 1;
+    if (aY >= bounds.bottom)
+      result.yPos = bounds.bottom - 1;
   },
 
   /*
