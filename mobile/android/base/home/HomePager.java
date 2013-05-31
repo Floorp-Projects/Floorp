@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.AboutHome;
 
 import android.content.Context;
@@ -26,6 +27,7 @@ public class HomePager extends ViewPager {
 
     // List of pages in order.
     private enum Page {
+        BOOKMARKS
     }
 
     private EnumMap<Page, Fragment> mPages = new EnumMap<Page, Fragment>(Page.class);
@@ -50,6 +52,7 @@ public class HomePager extends ViewPager {
         TabsAdapter adapter = new TabsAdapter(fm);
 
         // Add the pages to the adapter in order.
+        adapter.addTab(Page.BOOKMARKS, BookmarksPage.class, null, getContext().getString(R.string.bookmarks_title));
 
         setAdapter(adapter);
         setVisibility(VISIBLE);

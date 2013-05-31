@@ -36,6 +36,9 @@
     <dimen name="favicon_bg">32dp</dimen>
     <dimen name="favicon_bg_radius">1dp</dimen>
 
+    <!-- Page Row height -->
+    <dimen name="page_row_height">64dp</dimen>
+
     <!-- Max width of the doorhanger on tablets -->
     <dimen name="doorhanger_width">400dp</dimen>
 
