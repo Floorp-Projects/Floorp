@@ -112,8 +112,6 @@ public class BrowserDB {
         public void unpinAllSites(ContentResolver cr);
 
         public Cursor getPinnedSites(ContentResolver cr, int limit);
-
-        public Cursor getBookmarkForUrl(ContentResolver cr, String url);
     }
 
     static {
@@ -289,10 +287,6 @@ public class BrowserDB {
 
     public static Cursor getPinnedSites(ContentResolver cr, int limit) {
         return sDb.getPinnedSites(cr, limit);
-    }
-
-    public static Cursor getBookmarkForUrl(ContentResolver cr, String url) {
-        return sDb.getBookmarkForUrl(cr, url);
     }
 
     public static class PinnedSite {
