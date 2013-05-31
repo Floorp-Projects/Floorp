@@ -228,6 +228,26 @@ let CustomizableUIInternal = {
     }
   },
 
+  unregisterArea: function(aName) {
+    if (typeof aName != "string" || !/^[a-z0-9-_]{1,}$/i.test(aName)) {
+      throw new Error("Invalid area name");
+    }
+    if (!gAreas.has(aName)) {
+      throw new Error("Area not registered");
+    }
+
+    // Move all the widgets out
+    this.beginBatchUpdate();
+    let placements = gPlacements.get(aName);
+    placements.forEach(this.removeWidgetFromArea, this);
+
+    // Delete all remaining traces.
+    gAreas.delete(aName);
+    gPlacements.delete(aName);
+    gFuturePlacements.delete(aName);
+    this.endBatchUpdate(true);
+  },
+
   registerToolbar: function(aToolbar) {
     let document = aToolbar.ownerDocument;
     let area = aToolbar.id;
@@ -1583,6 +1603,9 @@ this.CustomizableUI = {
   },
   registerMenuPanel: function(aPanel) {
     CustomizableUIInternal.registerMenuPanel(aPanel);
+  },
+  unregisterArea: function(aName) {
+    CustomizableUIInternal.unregisterArea(aName);
   },
   addWidgetToArea: function(aWidgetId, aArea, aPosition) {
     CustomizableUIInternal.addWidgetToArea(aWidgetId, aArea, aPosition);
