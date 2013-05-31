@@ -140,7 +140,7 @@ CustomizeMode.prototype = {
 
     this.resetButton.hidden = CustomizableUI.inDefaultState;
 
-    let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
+    let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true]):not([collapsed=true])");
     for (let toolbar of customizableToolbars)
       toolbar.setAttribute("customizing", true);
 
