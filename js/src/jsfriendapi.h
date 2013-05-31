@@ -1717,6 +1717,11 @@ SetObjectMetadata(JSContext *cx, JSHandleObject obj, JSHandleObject metadata);
 JS_FRIEND_API(JSObject *)
 GetObjectMetadata(JSObject *obj);
 
+/* ES5 8.12.8. */
+extern JS_FRIEND_API(JSBool)
+DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
+
+
 } /* namespace js */
 
 extern JS_FRIEND_API(JSBool)
