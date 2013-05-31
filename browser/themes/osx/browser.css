@@ -2243,6 +2243,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
  */
 #TabsToolbar::after {
   content: '';
+  /* Because we use placeholders for window controls etc. in the tabstrip,
+   * and position those with ordinal attributes, and because our layout code
+   * expects :before/:after nodes to come first/last in the frame list,
+   * we have to reorder this element to come last, hence the
+   * ordinal group value (see bug 853415). */
+  -moz-box-ordinal-group: 1001;
   position: absolute;
   bottom: 1px;
   left: 0;
