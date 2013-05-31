@@ -11,7 +11,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
 MOCHITEST_FILES = \
   test_settings_basics.html \
   test_settings_events.html \
@@ -19,7 +18,9 @@ MOCHITEST_FILES = \
   test_settings_blobs.html \
   $(NULL)
 
-_CHROMEMOCHITEST_FILES = \
+MOCHITEST_CHROME_FILES = \
+  test_settings_service.xul \
+  test_settings_service.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
