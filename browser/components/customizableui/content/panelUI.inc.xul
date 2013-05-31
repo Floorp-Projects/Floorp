@@ -7,8 +7,8 @@
        type="arrow"
        level="top"
        consumeoutsideclicks="true">
-  <panelmultiview id="PanelUI-multiView">
-    <panelmainview id="PanelUI-mainView">
+  <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
+    <panelview id="PanelUI-mainView" flex="1">
       <vbox class="PanelUI-pageControls" pack="center">
         <hbox class="PanelUI-editControls">
           <toolbarbutton id="PanelUI-cut-btn" flex="1"
@@ -58,9 +58,9 @@
         <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;"
                        command="cmd_CustomizeToolbars"/>
       </footer>
-    </panelmainview>
+    </panelview>
 
-    <panelsubview id="PanelUI-history" flex="1">
+    <panelview id="PanelUI-history" flex="1">
       <label value="&appMenuHistory.label;"/>
       <toolbarbutton id="appMenuClearRecentHistory"
                      label="&appMenuHistory.clearRecent.label;"
@@ -73,12 +73,12 @@
              id="PanelUI-historyMore"
              class="text-link"
              onclick="PlacesCommandHook.showPlacesOrganizer('History'); PanelUI.hide();"/>
-    </panelsubview>
+    </panelview>
 
-    <panelsubview id="PanelUI-help" flex="1">
+    <panelview id="PanelUI-help" flex="1">
       <label value="&helpMenu.label;"/>
       <vbox id="PanelUI-helpItems"/>
-    </panelsubview>
+    </panelview>
   </panelmultiview>
 </panel>
 

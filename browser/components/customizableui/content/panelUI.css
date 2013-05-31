@@ -6,6 +6,7 @@
   pointer-events: none;
 }
 
+.panel-mainview,
 .panel-viewcontainer,
 .panel-viewstack {
   overflow: hidden;
