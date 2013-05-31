@@ -3075,6 +3075,32 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
 AC_SUBST(MOZ_UPDATE_CHANNEL)
 
+
+dnl set GRE_MILESTONE
+dnl ========================================================
+GRE_MILESTONE=`tail -n 1 "$_topsrcdir"/config/milestone.txt 2>/dev/null || tail -1 "$_topsrcdir"/config/milestone.txt`
+AC_SUBST(GRE_MILESTONE)
+
+dnl set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
+dnl The logic works like this:
+dnl - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
+dnl - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
+dnl - otherwise, we're building Release/Beta (define RELEASE_BUILD)
+case "$GRE_MILESTONE" in
+  *a1*)
+      NIGHTLY_BUILD=1
+      AC_DEFINE(NIGHTLY_BUILD)
+      ;;
+  *a*)
+      ;;
+  *)
+      RELEASE_BUILD=1
+      AC_DEFINE(RELEASE_BUILD)
+      ;;
+esac
+AC_SUBST(NIGHTLY_BUILD)
+AC_SUBST(RELEASE_BUILD)
+
 dnl ========================================================
 dnl =
 dnl = Check for external package dependencies
