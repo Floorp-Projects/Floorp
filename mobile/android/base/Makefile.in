@@ -82,7 +82,6 @@ FENNEC_JAVA_FILES = \
   Distribution.java \
   DoorHanger.java \
   DoorHangerPopup.java \
-  EditBookmarkDialog.java \
   Favicons.java \
   FilePickerResultHandler.java \
   FilePickerResultHandlerSync.java \
@@ -229,7 +228,6 @@ FENNEC_JAVA_FILES = \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
   widget/AddonsSection.java \
-  widget/ButtonToast.java \
   widget/DateTimePicker.java \
   widget/Divider.java \
   widget/FaviconView.java \
@@ -636,11 +634,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tab_thumbnail_shadow.png \
   res/drawable-mdpi/tabs_count.png \
   res/drawable-mdpi/tabs_count_foreground.png \
-  res/drawable-mdpi/toast.9.png \
-  res/drawable-mdpi/toast_button_focused.9.png \
-  res/drawable-mdpi/toast_button_focused.9.png \
-  res/drawable-mdpi/toast_button_pressed.9.png \
-  res/drawable-mdpi/toast_divider.9.png \
   res/drawable-mdpi/address_bar_url_default.9.png \
   res/drawable-mdpi/address_bar_url_default_pb.9.png \
   res/drawable-mdpi/address_bar_url_pressed.9.png \
@@ -1067,7 +1060,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/textbox_bg.xml                         \
-  mobile/android/base/resources/drawable/toast_button.xml                       \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 
