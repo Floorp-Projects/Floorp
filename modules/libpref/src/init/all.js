@@ -4078,6 +4078,9 @@ pref("dom.event.handling-user-input-time-limit", 1000);
 //3D Transforms
 pref("layout.3d-transforms.enabled", true);
 
+// Whether we should layerize all animated images (if otherwise possible).
+pref("layout.animated-image-layers.enabled", false);
+
 pref("dom.vibrator.enabled", true);
 pref("dom.vibrator.max_vibrate_ms", 10000);
 pref("dom.vibrator.max_vibrate_list_len", 128);
