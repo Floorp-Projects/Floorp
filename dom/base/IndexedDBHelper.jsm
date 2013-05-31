@@ -68,7 +68,7 @@ IndexedDBHelper.prototype = {
     };
     req.onerror = function (aEvent) {
       if (DEBUG) debug("Failed to open database:" + self.dbName);
-      aFailureCb(aEvent.target.errorMessage);
+      aFailureCb(aEvent.target.error.name);
     };
     req.onblocked = function (aEvent) {
       if (DEBUG) debug("Opening database request is blocked.");
