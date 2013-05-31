@@ -498,6 +498,8 @@
 @BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/SettingsManager.js
 @BINPATH@/components/SettingsManager.manifest
+@BINPATH@/components/SettingsService.js
+@BINPATH@/components/SettingsService.manifest
 @BINPATH@/components/Webapps.js
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
