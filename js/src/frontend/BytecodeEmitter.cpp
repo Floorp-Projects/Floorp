@@ -3358,10 +3358,19 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             break;
           }
           case PNK_ELEM:
-          case PNK_CALL:
             if (Emit1(cx, bce, JSOP_DUP2) < 0)
                 return false;
             if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
+                return false;
+            break;
+          case PNK_CALL:
+            /*
+             * We just emitted a JSOP_SETCALL (which will always throw) and
+             * popped the call's return value. Push a random value to make sure
+             * the stack depth is correct.
+             */
+            JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
+            if (Emit1(cx, bce, JSOP_NULL) < 0)
                 return false;
             break;
           default:;
