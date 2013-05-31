@@ -9,9 +9,9 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -20,11 +20,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.util.Pair;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -36,14 +33,13 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
 
 import java.util.LinkedList;
 
 /**
  * A page in about:home that displays a ListView of bookmarks.
  */
-public class BookmarksPage extends Fragment {
+public class BookmarksPage extends HomeFragment {
     public static final String LOGTAG = "GeckoBookmarksPage";
 
     private int mFolderId = Bookmarks.FIXED_ROOT_ID;
@@ -53,7 +49,7 @@ public class BookmarksPage extends Fragment {
     private BookmarksQueryTask mQueryTask = null;
 
     // The view shown by the fragment.
-    private ListView mList;
+    private HomeListView mList;
 
     // Folder title for the currently shown list of bookmarks.
     private BookmarkFolderView mFolderView;
@@ -108,7 +104,7 @@ public class BookmarksPage extends Fragment {
 
         // All list views are styled to look the same with a global activity theme.
         // If the style of the list changes, inflate it from an XML.
-        mList = new ListView(container.getContext());
+        mList = new HomeListView(container.getContext());
         return mList;
     }
 
@@ -240,29 +236,18 @@ public class BookmarksPage extends Fragment {
 
         @Override
         public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
-            ListView list = (ListView) view;
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            Object selectedItem = list.getItemAtPosition(info.position);
-            Cursor cursor = (Cursor) selectedItem;
-
-            // Don't show the context menu for folders
-            if (cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER) {
+            if (!(menuInfo instanceof HomeContextMenuInfo)) {
                 return;
             }
 
-            String keyword = null;
-            int keywordCol = cursor.getColumnIndex(URLColumns.KEYWORD);
-            if (keywordCol != -1) {
-                keyword = cursor.getString(keywordCol);
+            HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
+
+            // Don't show the context menu for folders.
+            if (info.isFolder) {
+                return;
             }
 
-            int id = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
-            String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-            String title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-            byte[] favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
-            int display = Combined.DISPLAY_NORMAL;
-
-            MenuInflater inflater = new MenuInflater(list.getContext());
+            MenuInflater inflater = new MenuInflater(view.getContext());
             inflater.inflate(R.menu.awesomebar_contextmenu, menu);
 
             // Show Open Private Tab if we're in private mode, Open New Tab otherwise
@@ -275,10 +260,10 @@ public class BookmarksPage extends Fragment {
             menu.findItem(R.id.open_private_tab).setVisible(isPrivate);
 
             // Hide "Remove" item if there isn't a valid history ID
-            if (id < 0) {
+            if (info.rowId < 0) {
                 menu.findItem(R.id.remove_history).setVisible(false);
             }
-            menu.setHeaderTitle(title);
+            menu.setHeaderTitle(info.title);
  
             menu.findItem(R.id.remove_history).setVisible(false);
             menu.findItem(R.id.open_in_reader).setVisible(false);

@@ -222,6 +222,8 @@ FENNEC_JAVA_FILES = \
   gfx/VirtualLayer.java \
   home/BookmarksPage.java \
   home/BookmarkFolderView.java \
+  home/HomeFragment.java \
+  home/HomeListView.java \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
   home/FadedTextView.java \
