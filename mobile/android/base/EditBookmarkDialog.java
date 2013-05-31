@@ -31,8 +31,8 @@ public class EditBookmarkDialog {
     private static final String LOGTAG = "GeckoEditBookmarkDialog";
     private Context mContext;
 
-    public EditBookmarkDialog(Context activity) {
-        mContext = activity;
+    public EditBookmarkDialog(Context context) {
+        mContext = context;
     }
 
     /**

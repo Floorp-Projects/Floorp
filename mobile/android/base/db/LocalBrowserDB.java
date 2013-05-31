@@ -1255,8 +1255,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         if (c == null) {
             return c;
         } else if (c.getCount() == 0) {
-          c.close();
-          c = null;
+            c.close();
+            c = null;
         }
 
         return c;
