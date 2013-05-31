@@ -331,7 +331,8 @@ appbar {
   bottom: 0;
   width: 100%;
   transform: translateY(100%);
-  transition: transform @metro_animation_duration@ @metro_animation_easing@;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@,
+              bottom @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
 }
 
@@ -356,7 +357,7 @@ appbar > toolbar > toolbarbutton[disabled] {
   visibility: collapse;
 }
 
-#appbar[startpage],
+#navbar[startpage],
 appbar[visible] {
   transform: none;
 }
@@ -895,6 +896,7 @@ setting[type="radio"] > vbox {
   background-position: left 6px center;
 }
 
+#stack[keyboardVisible] > .overlay-button,
 #stack[fullscreen] > .overlay-button,
 #appbar[visible] ~ .overlay-button,
 .overlay-button[disabled] {
@@ -902,6 +904,8 @@ setting[type="radio"] > vbox {
   visibility: collapse;
 }
 
+#stack[keyboardVisible] > #overlay-back:-moz-locale-dir(ltr),
+#stack[keyboardVisible] > #overlay-plus:-moz-locale-dir(rtl),
 #stack[fullscreen] > #overlay-back:-moz-locale-dir(ltr),
 #stack[fullscreen] > #overlay-plus:-moz-locale-dir(rtl),
 #appbar[visible] ~ #overlay-back:-moz-locale-dir(ltr),
@@ -911,6 +915,8 @@ setting[type="radio"] > vbox {
   transform: translateX(-60px);
 }
 
+#stack[keyboardVisible] > #overlay-plus:-moz-locale-dir(ltr),
+#stack[keyboardVisible] > #overlay-back:-moz-locale-dir(rtl),
 #stack[fullscreen] > #overlay-plus:-moz-locale-dir(ltr),
 #stack[fullscreen] > #overlay-back:-moz-locale-dir(rtl),
 #appbar[visible] ~ #overlay-plus:-moz-locale-dir(ltr),

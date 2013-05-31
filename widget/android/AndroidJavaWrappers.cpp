@@ -97,6 +97,8 @@ jmethodID AndroidGeckoLayerClient::jCreateFrameMethod = 0;
 jmethodID AndroidGeckoLayerClient::jActivateProgramMethod = 0;
 jmethodID AndroidGeckoLayerClient::jDeactivateProgramMethod = 0;
 jmethodID AndroidGeckoLayerClient::jGetDisplayPort = 0;
+jmethodID AndroidGeckoLayerClient::jContentDocumentChanged = 0;
+jmethodID AndroidGeckoLayerClient::jIsContentDocumentDisplayed = 0;
 jmethodID AndroidGeckoLayerClient::jViewportCtor = 0;
 jfieldID AndroidGeckoLayerClient::jDisplayportPosition = 0;
 jfieldID AndroidGeckoLayerClient::jDisplayportResolution = 0;
@@ -359,6 +361,8 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jActivateProgramMethod = getMethod("activateProgram", "()V");
     jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
     jGetDisplayPort = getMethod("getDisplayPort", "(ZZILorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)Lorg/mozilla/gecko/gfx/DisplayPortMetrics;");
+    jContentDocumentChanged = getMethod("contentDocumentChanged", "()V");
+    jIsContentDocumentDisplayed = getMethod("isContentDocumentDisplayed", "()Z");
 
     jViewportClass = GetClassGlobalRef(jEnv, "org/mozilla/gecko/gfx/ImmutableViewportMetrics");
     jViewportCtor = GetMethodID(jEnv, jViewportClass, "<init>", "(FFFFFFFFFFFFF)V");
@@ -1066,6 +1070,18 @@ AndroidGeckoLayerClient::GetDisplayPort(AutoLocalJNIFrame *jniFrame, bool aPageS
     if (jniFrame->CheckForException()) return;
     createDisplayPort(jniFrame, jobj, displayPort);
     (*displayPort)->AddRef();
+}
+
+void
+AndroidGeckoLayerClient::ContentDocumentChanged(AutoLocalJNIFrame *jniFrame)
+{
+    jniFrame->GetEnv()->CallVoidMethod(wrapped_obj, jContentDocumentChanged);
+}
+
+bool
+AndroidGeckoLayerClient::IsContentDocumentDisplayed(AutoLocalJNIFrame *jniFrame)
+{
+    return jniFrame->GetEnv()->CallBooleanMethod(wrapped_obj, jIsContentDocumentDisplayed);
 }
 
 bool

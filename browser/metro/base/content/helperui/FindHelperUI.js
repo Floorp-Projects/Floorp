@@ -108,7 +108,9 @@ var FindHelperUI = {
     // Shutdown selection related ui
     SelectionHelperUI.closeEditSession();
 
+    // See bindings.xml
     this._container.show(this);
+
     this.search(this._textbox.value);
     this._textbox.select();
     this._textbox.focus();

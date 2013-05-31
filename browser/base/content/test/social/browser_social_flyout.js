@@ -58,14 +58,26 @@ var tests = {
           port.postMessage({topic: "test-flyout-open"});
           break;
         case "got-flyout-visibility":
-          // The width of the flyout should be 250px
+          if (e.data.result != "shown")
+            return;
+          // The width of the flyout should be 400px initially
           let iframe = panel.firstChild;
-          let cs = iframe.contentWindow.getComputedStyle(iframe.contentDocument.body);
-          is(cs.width, "250px", "should be 250px wide");
-          iframe.contentDocument.addEventListener("SocialTest-DoneMakeWider", function _doneHandler() {
-            iframe.contentDocument.removeEventListener("SocialTest-DoneMakeWider", _doneHandler, false);
-            cs = iframe.contentWindow.getComputedStyle(iframe.contentDocument.body);
+          let body = iframe.contentDocument.body;
+          let cs = iframe.contentWindow.getComputedStyle(body);
+
+          is(cs.width, "400px", "should be 400px wide");
+          is(iframe.boxObject.width, 400, "iframe should now be 400px wide");
+          is(cs.height, "400px", "should be 400px high");
+          is(iframe.boxObject.height, 400, "iframe should now be 400px high");
+
+          iframe.contentWindow.addEventListener("resize", function _doneHandler() {
+            iframe.contentWindow.removeEventListener("resize", _doneHandler, false);
+            cs = iframe.contentWindow.getComputedStyle(body);
+
             is(cs.width, "500px", "should now be 500px wide");
+            is(iframe.boxObject.width, 500, "iframe should now be 500px wide");
+            is(cs.height, "500px", "should now be 500px high");
+            is(iframe.boxObject.height, 500, "iframe should now be 500px high");
             panel.hidePopup();
             port.close();
             next();

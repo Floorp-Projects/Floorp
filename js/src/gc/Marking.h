@@ -101,6 +101,7 @@ DeclMarker(Object, JSObject)
 DeclMarker(Object, JSFunction)
 DeclMarker(Object, ScopeObject)
 DeclMarker(Script, JSScript)
+DeclMarker(LazyScript, LazyScript)
 DeclMarker(Shape, Shape)
 DeclMarker(String, JSAtom)
 DeclMarker(String, JSString)
@@ -394,6 +395,12 @@ inline JSGCTraceKind
 TraceKind(JSScript *script)
 {
     return JSTRACE_SCRIPT;
+}
+
+inline JSGCTraceKind
+TraceKind(LazyScript *lazy)
+{
+    return JSTRACE_LAZY_SCRIPT;
 }
 
 } /* namespace gc */
