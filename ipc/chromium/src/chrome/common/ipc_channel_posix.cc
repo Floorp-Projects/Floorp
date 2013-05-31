@@ -356,6 +356,15 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
   return EnqueueHelloMessage();
 }
 
+/**
+ * Reset the file descriptor for communication with the peer.
+ */
+void Channel::ChannelImpl::ResetFileDescriptor(int fd) {
+  NS_ASSERTION(fd > 0 && fd == pipe_, "Invalid file descriptor");
+
+  EnqueueHelloMessage();
+}
+
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
   scoped_ptr<Message> msg(new Message(MSG_ROUTING_NONE,
                                       HELLO_MESSAGE_TYPE,
@@ -971,8 +980,12 @@ void Channel::GetClientFileDescriptorMapping(int *src_fd, int *dest_fd) const {
   return channel_impl_->GetClientFileDescriptorMapping(src_fd, dest_fd);
 }
 
-int Channel::GetServerFileDescriptor() const {
-  return channel_impl_->GetServerFileDescriptor();
+void Channel::ResetFileDescriptor(int fd) {
+  channel_impl_->ResetFileDescriptor(fd);
+}
+
+int Channel::GetFileDescriptor() const {
+    return channel_impl_->GetFileDescriptor();
 }
 
 void Channel::CloseClientFileDescriptor() {
