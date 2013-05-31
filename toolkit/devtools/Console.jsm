@@ -484,8 +484,7 @@ function sendConsoleAPIMessage(aLevel, aFrame, aArgs, aOptions = {})
 
 /**
  * This creates a console object that somewhat replicates Firebug's console
- * object. It currently writes to dump(), but should write to the web
- * console's chrome error section (when it has one)
+ * object.
  */
 this.console = {
   debug: createMultiLineDumper("debug"),
@@ -493,6 +492,7 @@ this.console = {
   info: createDumper("info"),
   warn: createDumper("warn"),
   error: createMultiLineDumper("error"),
+  exception: createMultiLineDumper("error"),
 
   trace: function Console_trace() {
     let args = Array.prototype.slice.call(arguments, 0);
