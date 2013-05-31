@@ -104,6 +104,11 @@ struct WebAudioUtils {
     return 1.0 - std::exp(-1.0 / (sampleRate * timeConstant));
   }
 
+  static bool IsTimeValid(double aTime)
+  {
+    return aTime >= 0 &&  aTime <= (MEDIA_TIME_MAX >> MEDIA_TIME_FRAC_BITS);
+  }
+
   /**
    * Convert a stream position into the time coordinate of the destination
    * stream.
