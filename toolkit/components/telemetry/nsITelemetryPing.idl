@@ -58,4 +58,9 @@ interface nsITelemetryPing : nsIObserver {
    * @param aSync - Use sync reads.
    */
   void testLoadHistograms(in nsIFile aFile, in boolean aSync);
+
+  /**
+   * Return the path component of the current submission URL.
+   */
+  AString submissionPath();
 };
