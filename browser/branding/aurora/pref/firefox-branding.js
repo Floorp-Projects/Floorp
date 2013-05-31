@@ -21,10 +21,6 @@ pref("app.update.url.manual", "https://www.mozilla.org/firefox/aurora/");
 // supplied in the "An update is available" page of the update wizard. 
 pref("app.update.url.details", "https://www.mozilla.org/firefox/aurora/");
 
-// Release notes and vendor URLs
-pref("app.releaseNotesURL", "http://www.mozilla.org/projects/firefox/%VERSION%/releasenotes/");
-pref("app.vendorURL", "http://www.mozilla.org/projects/firefox/");
-
 // Search codes belong only in builds with official branding
 pref("browser.search.param.yahoo-fr", "");
 pref("browser.search.param.yahoo-fr-cjkt", ""); // now unused

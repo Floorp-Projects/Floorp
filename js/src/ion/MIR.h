@@ -371,6 +371,9 @@ class MDefinition : public MNode
     ValueNumberData *valueNumberData() {
         return valueNumber_;
     }
+    void clearValueNumberData() {
+        valueNumber_ = NULL;
+    }
     void setValueNumberData(ValueNumberData *vn) {
         JS_ASSERT(valueNumber_ == NULL);
         valueNumber_ = vn;
@@ -6586,9 +6589,9 @@ class MSetDOMProperty
   : public MAryInstruction<2>,
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
 {
-    const JSJitPropertyOp func_;
+    const JSJitSetterOp func_;
 
-    MSetDOMProperty(const JSJitPropertyOp func, MDefinition *obj, MDefinition *val)
+    MSetDOMProperty(const JSJitSetterOp func, MDefinition *obj, MDefinition *val)
       : func_(func)
     {
         setOperand(0, obj);
@@ -6598,12 +6601,12 @@ class MSetDOMProperty
   public:
     INSTRUCTION_HEADER(SetDOMProperty)
 
-    static MSetDOMProperty *New(const JSJitPropertyOp func, MDefinition *obj, MDefinition *val)
+    static MSetDOMProperty *New(const JSJitSetterOp func, MDefinition *obj, MDefinition *val)
     {
         return new MSetDOMProperty(func, obj, val);
     }
 
-    const JSJitPropertyOp fun() {
+    const JSJitSetterOp fun() {
         return func_;
     }
 
@@ -6631,6 +6634,7 @@ class MGetDOMProperty
       : info_(jitinfo)
     {
         JS_ASSERT(jitinfo);
+        JS_ASSERT(jitinfo->type == JSJitInfo::Getter);
 
         setOperand(0, obj);
 
@@ -6657,8 +6661,8 @@ class MGetDOMProperty
         return new MGetDOMProperty(info, obj, guard);
     }
 
-    const JSJitPropertyOp fun() {
-        return info_->op;
+    const JSJitGetterOp fun() {
+        return info_->getter;
     }
     bool isInfallible() const {
         return info_->isInfallible;

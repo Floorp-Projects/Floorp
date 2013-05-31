@@ -7,6 +7,7 @@
 #include "UnreachableCodeElimination.h"
 #include "IonAnalysis.h"
 #include "AliasAnalysis.h"
+#include "ValueNumbering.h"
 
 using namespace js;
 using namespace ion;
@@ -63,7 +64,7 @@ UnreachableCodeElimination::removeUnmarkedBlocksAndCleanup()
 
     AssertGraphCoherency(graph_);
 
-    IonSpewPass("UCEMidPoint");
+    IonSpewPass("UCE-mid-point");
 
     // Pass 3: Recompute dominators and tweak phis.
     BuildDominatorTree(graph_);
@@ -74,6 +75,19 @@ UnreachableCodeElimination::removeUnmarkedBlocksAndCleanup()
     if (rerunAliasAnalysis_) {
         AliasAnalysis analysis(mir_, graph_);
         if (!analysis.analyze())
+            return false;
+    }
+
+    // Pass 5: It's important for optimizations to re-run GVN (and in
+    // turn alias analysis) after UCE if we eliminated branches.
+    if (rerunAliasAnalysis_ && js_IonOptions.gvn) {
+        ValueNumberer gvn(mir_, graph_, js_IonOptions.gvnIsOptimistic);
+        if (!gvn.clear() || !gvn.analyze())
+            return false;
+        IonSpewPass("GVN-after-UCE");
+        AssertExtendedGraphCoherency(graph_);
+
+        if (mir_->shouldCancel("GVN-after-UCE"))
             return false;
     }
 
