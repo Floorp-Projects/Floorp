@@ -227,6 +227,7 @@ FENNEC_JAVA_FILES = \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
   widget/AddonsSection.java \
+  widget/ButtonToast.java \
   widget/DateTimePicker.java \
   widget/Divider.java \
   widget/FaviconView.java \
