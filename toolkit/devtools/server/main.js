@@ -150,20 +150,15 @@ var DebuggerServer = {
    * method returns, the debugger server must be initialized again before use.
    */
   destroy: function DS_destroy() {
-    if (!this._initialized) {
-      return;
+    if (Object.keys(this._connections).length == 0) {
+      this.closeListener();
+      this.globalActorFactories = {};
+      this.tabActorFactories = {};
+      delete this._allowConnection;
+      this._transportInitialized = false;
+      this._initialized = false;
+      dumpn("Debugger server is shut down.");
     }
-
-    for (let connID of Object.getOwnPropertyNames(this._connections)) {
-      this._connections[connID].close();
-    }
-    this.closeListener();
-    this.globalActorFactories = {};
-    this.tabActorFactories = {};
-    delete this._allowConnection;
-    this._transportInitialized = false;
-    this._initialized = false;
-    dumpn("Debugger server is shut down.");
   },
 
   /**
@@ -527,10 +522,6 @@ DebuggerServerConnection.prototype = {
 
   _transport: null,
   get transport() { return this._transport },
-
-  close: function() {
-    this._transport.close();
-  },
 
   send: function DSC_send(aPacket) {
     this.transport.send(aPacket);
