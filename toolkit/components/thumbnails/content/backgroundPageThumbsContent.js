@@ -11,6 +11,13 @@ Cu.import("resource://gre/modules/PageThumbs.jsm");
 const backgroundPageThumbsContent = {
 
   init: function () {
+    // Arrange to prevent (most) popup dialogs for this window - popups done
+    // in the parent (eg, auth) aren't prevented, but alert() etc are.
+    let dwu = content.
+                QueryInterface(Ci.nsIInterfaceRequestor).
+                getInterface(Ci.nsIDOMWindowUtils);
+    dwu.preventFurtherDialogs();
+
     // Stop about:blank from loading.  If it finishes loading after a capture
     // request is received, it could trigger the capture's load listener.
     this._webNav.stop(Ci.nsIWebNavigation.STOP_NETWORK);
