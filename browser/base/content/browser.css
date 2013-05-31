@@ -408,6 +408,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 2147483647 !important;
 }
 
 #full-screen-warning-container[fade-warning-out] {
@@ -660,4 +661,38 @@ chatbar {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbar");
   height: 0;
   max-height: 0;
+}
+
+/* full screen chat window support */
+chatbar:-moz-full-screen-ancestor,
+chatbox:-moz-full-screen-ancestor  {
+  border: none;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  -moz-box-sizing: border-box !important; 
+}
+
+/* hide chat chrome when chat is fullscreen */
+chatbox:-moz-full-screen-ancestor > .chat-titlebar {
+  display: none;
+}
+
+/* hide chatbar if browser tab is fullscreen */
+*:-moz-full-screen-ancestor chatbar:not(:-moz-full-screen-ancestor) {
+  display: none;
+}
+
+/* hide sidebar when fullscreen */
+*:-moz-full-screen-ancestor #social-sidebar-box:not(:-moz-full-screen-ancestor) {
+  display: none;
 }
