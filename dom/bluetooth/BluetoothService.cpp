@@ -550,12 +550,12 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"bluetooth.enabled","value":true}
 
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  AutoSafeJSContext cx;
   if (!cx) {
     return NS_OK;
   }
 
-  JS::Value val;
+  JS::Rooted<JS::Value> val(cx);
   if (!JS_ParseJSON(cx, aData.BeginReading(), aData.Length(), &val)) {
     return JS_ReportPendingException(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }

@@ -28,15 +28,15 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList);
+                      nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual nsresult
-  ChildListChanged(int32_t aModType);
+  ChildListChanged(int32_t aModType) MOZ_OVERRIDE;
 
   NS_IMETHOD
   AttributeChanged(int32_t  aNameSpaceID,
                    nsIAtom* aAttribute,
-                   int32_t  aModType);
+                   int32_t  aModType) MOZ_OVERRIDE;
 
 private:
   void MouseClick();
@@ -66,7 +66,7 @@ private:
 
   // helper to return the frame for the attribute selection="number"
   nsIFrame* 
-  GetSelectedFrame();
+  GetSelectedFrame() MOZ_OVERRIDE;
 };
 
 #endif /* nsMathMLmactionFrame_h___ */

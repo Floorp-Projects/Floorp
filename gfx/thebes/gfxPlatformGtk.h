@@ -23,7 +23,7 @@ class FontEntry;
 typedef struct FT_LibraryRec_ *FT_Library;
 #endif
 
-class THEBES_API gfxPlatformGtk : public gfxPlatform {
+class gfxPlatformGtk : public gfxPlatform {
 public:
     gfxPlatformGtk();
     virtual ~gfxPlatformGtk();

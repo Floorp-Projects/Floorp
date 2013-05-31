@@ -21,7 +21,7 @@ class gfxFontFamily;
 
 namespace mozilla { namespace gfx { class DrawTarget; }}
 
-class THEBES_API gfxPlatformMac : public gfxPlatform {
+class gfxPlatformMac : public gfxPlatform {
 public:
     gfxPlatformMac();
     virtual ~gfxPlatformMac();

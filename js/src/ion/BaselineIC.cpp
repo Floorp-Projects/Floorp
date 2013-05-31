@@ -638,6 +638,37 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
     masm.branch32(Assembler::Equal, AbsoluteAddress(enabledAddr), Imm32(0), skip);
 }
 
+#ifdef JSGC_GENERATIONAL
+inline bool
+ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Register scratch,
+                                         GeneralRegisterSet saveRegs)
+{
+    Nursery &nursery = cx->runtime->gcNursery;
+
+    Label skipBarrier;
+    Label isTenured;
+    masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.start()), &isTenured);
+    masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.end()), &skipBarrier);
+    masm.bind(&isTenured);
+
+    // void PostWriteBarrier(JSRuntime *rt, JSObject *obj);
+#ifdef JS_CPU_ARM
+    saveRegs.add(BaselineTailCallReg);
+#endif
+    saveRegs = GeneralRegisterSet::Intersect(saveRegs, GeneralRegisterSet::Volatile());
+    masm.PushRegsInMask(saveRegs);
+    masm.setupUnalignedABICall(2, scratch);
+    masm.movePtr(ImmWord(cx->runtime), scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PostWriteBarrier));
+    masm.PopRegsInMask(saveRegs);
+
+    masm.bind(&skipBarrier);
+    return true;
+}
+#endif // JSGC_GENERATIONAL
+
 //
 // UseCount_Fallback
 //
@@ -4324,11 +4355,12 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     regs = availableGeneralRegs(2);
     scratchReg = regs.takeAny();
 
+    // Unbox object and key.
+    obj = masm.extractObject(R0, ExtractTemp0);
+    Register key = masm.extractInt32(R1, ExtractTemp1);
+
     // Load obj->elements in scratchReg.
     masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
-
-    // Unbox key.
-    Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Bounds check.
     Address initLength(scratchReg, ObjectElements::offsetOfInitializedLength());
@@ -4338,32 +4370,50 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     BaseIndex element(scratchReg, key, TimesEight);
     masm.branchTestMagic(Assembler::Equal, element, &failure);
 
+    // Failure is not possible now.  Free up registers.
+    regs.add(R0);
+    regs.add(R1);
+    regs.takeUnchecked(obj);
+    regs.takeUnchecked(key);
+    Address valueAddr(BaselineStackReg, ICStackValueOffset);
+
     // Convert int32 values to double if convertDoubleElements is set. In this
     // case the heap typeset is guaranteed to contain both int32 and double, so
     // it's okay to store a double.
-    Label convertDoubles, convertDoublesDone;
+    Label dontConvertDoubles;
     Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
-    masm.branchTest32(Assembler::NonZero, elementsFlags,
+    masm.branchTest32(Assembler::Zero, elementsFlags,
                       Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
-                      &convertDoubles);
-    masm.bind(&convertDoublesDone);
-
-    // It's safe to overwrite R0 now.
-    Address valueAddr(BaselineStackReg, ICStackValueOffset);
-    masm.loadValue(valueAddr, R0);
-    EmitPreBarrier(masm, element, MIRType_Value);
-    masm.storeValue(R0, element);
-    EmitReturnFromIC(masm);
-
-    // Convert to double and jump back. Note that double arrays are only
-    // created by IonMonkey, so if we have no floating-point support
-    // Ion is disabled and there should be no double arrays.
-    masm.bind(&convertDoubles);
+                      &dontConvertDoubles);
+    // Note that double arrays are only created by IonMonkey, so if we have no
+    // floating-point support Ion is disabled and there should be no double arrays.
     if (cx->runtime->jitSupportsFloatingPoint)
-        masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+        masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &dontConvertDoubles);
     else
         masm.breakpoint();
-    masm.jump(&convertDoublesDone);
+    masm.bind(&dontConvertDoubles);
+
+    // Don't overwrite R0 becuase |obj| might overlap with it, and it's needed
+    // for post-write barrier later.
+    ValueOperand tmpVal = regs.takeAnyValue();
+    masm.loadValue(valueAddr, tmpVal);
+    EmitPreBarrier(masm, element, MIRType_Value);
+    masm.storeValue(tmpVal, element);
+    regs.add(key);
+    regs.add(tmpVal);
+#ifdef JSGC_GENERATIONAL
+    Label skipBarrier;
+    masm.branchTestObject(Assembler::NotEqual, tmpVal, &skipBarrier);
+    {
+        Register r = regs.takeAny();
+        GeneralRegisterSet saveRegs;
+        emitPostWriteBarrierSlot(masm, obj, r, saveRegs);
+        regs.add(r);
+    }
+    masm.bind(&skipBarrier);
+#endif
+    EmitReturnFromIC(masm);
+
 
     // Failure case - fail but first unstow R0 and R1
     masm.bind(&failureUnstow);
@@ -4459,6 +4509,7 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     Register protoReg = regs.takeAny();
     for (size_t i = 0; i < protoChainDepth_; i++) {
         masm.loadObjProto(i == 0 ? obj : protoReg, protoReg);
+        masm.branchTestPtr(Assembler::Zero, protoReg, protoReg, &failureUnstow);
         masm.loadPtr(Address(BaselineStubReg, ICSetElem_DenseAddImpl<0>::offsetOfShape(i + 1)),
                      scratchReg);
         masm.branchTestObjShape(Assembler::NotEqual, protoReg, scratchReg, &failureUnstow);
@@ -4481,11 +4532,12 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     regs = availableGeneralRegs(2);
     scratchReg = regs.takeAny();
 
+    // Unbox obj and key.
+    obj = masm.extractObject(R0, ExtractTemp0);
+    Register key = masm.extractInt32(R1, ExtractTemp1);
+
     // Load obj->elements in scratchReg.
     masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
-
-    // Unbox key.
-    Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Bounds check (key == initLength)
     Address initLength(scratchReg, ObjectElements::offsetOfInitializedLength());
@@ -4494,6 +4546,12 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     // Capacity check.
     Address capacity(scratchReg, ObjectElements::offsetOfCapacity());
     masm.branch32(Assembler::BelowOrEqual, capacity, key, &failure);
+
+    // Failure is not possible now.  Free up registers.
+    regs.add(R0);
+    regs.add(R1);
+    regs.takeUnchecked(obj);
+    regs.takeUnchecked(key);
 
     // Increment initLength before write.
     masm.add32(Imm32(1), initLength);
@@ -4505,33 +4563,43 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     masm.add32(Imm32(1), length);
     masm.bind(&skipIncrementLength);
 
+    Address valueAddr(BaselineStackReg, ICStackValueOffset);
+
     // Convert int32 values to double if convertDoubleElements is set. In this
     // case the heap typeset is guaranteed to contain both int32 and double, so
     // it's okay to store a double.
-    Label convertDoubles, convertDoublesDone;
+    Label dontConvertDoubles;
     Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
-    masm.branchTest32(Assembler::NonZero, elementsFlags,
+    masm.branchTest32(Assembler::Zero, elementsFlags,
                       Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
-                      &convertDoubles);
-    masm.bind(&convertDoublesDone);
-
-    // Write the value.  No need for write barrier since we're not overwriting an old value.
-    // It's safe to overwrite R0 now.
-    BaseIndex element(scratchReg, key, TimesEight);
-    Address valueAddr(BaselineStackReg, ICStackValueOffset);
-    masm.loadValue(valueAddr, R0);
-    masm.storeValue(R0, element);
-    EmitReturnFromIC(masm);
-
-    // Convert to double and jump back. Note that double arrays are only
-    // created by IonMonkey, so if we have no floating-point support
-    // Ion is disabled and there should be no double arrays.
-    masm.bind(&convertDoubles);
+                      &dontConvertDoubles);
+    // Note that double arrays are only created by IonMonkey, so if we have no
+    // floating-point support Ion is disabled and there should be no double arrays.
     if (cx->runtime->jitSupportsFloatingPoint)
-        masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+        masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &dontConvertDoubles);
     else
         masm.breakpoint();
-    masm.jump(&convertDoublesDone);
+    masm.bind(&dontConvertDoubles);
+
+    // Write the value.  No need for pre-barrier since we're not overwriting an old value.
+    ValueOperand tmpVal = regs.takeAnyValue();
+    BaseIndex element(scratchReg, key, TimesEight);
+    masm.loadValue(valueAddr, tmpVal);
+    masm.storeValue(tmpVal, element);
+    regs.add(key);
+    regs.add(tmpVal);
+#ifdef JSGC_GENERATIONAL
+    Label skipBarrier;
+    masm.branchTestObject(Assembler::NotEqual, tmpVal, &skipBarrier);
+    {
+        Register r = regs.takeAny();
+        GeneralRegisterSet saveRegs;
+        emitPostWriteBarrierSlot(masm, obj, r, saveRegs);
+        regs.add(r);
+    }
+    masm.bind(&skipBarrier);
+#endif
+    EmitReturnFromIC(masm);
 
     // Failure case - fail but first unstow R0 and R1
     masm.bind(&failureUnstow);
@@ -6299,13 +6367,35 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
     // Unstow R0 and R1 (object and key)
     EmitUnstowICValues(masm, 2);
 
-    if (!isFixedSlot_)
-        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
+    regs.add(R0);
+    regs.takeUnchecked(objReg);
+
+    Register holderReg;
+    if (isFixedSlot_) {
+        holderReg = objReg;
+    } else {
+        holderReg = regs.takeAny();
+        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), holderReg);
+    }
 
     // Perform the store.
     masm.load32(Address(BaselineStubReg, ICSetProp_Native::offsetOfOffset()), scratch);
-    EmitPreBarrier(masm, BaseIndex(objReg, scratch, TimesOne), MIRType_Value);
-    masm.storeValue(R1, BaseIndex(objReg, scratch, TimesOne));
+    EmitPreBarrier(masm, BaseIndex(holderReg, scratch, TimesOne), MIRType_Value);
+    masm.storeValue(R1, BaseIndex(holderReg, scratch, TimesOne));
+    if (holderReg != objReg)
+        regs.add(holderReg);
+#ifdef JSGC_GENERATIONAL
+    Label skipBarrier;
+    masm.branchTestObject(Assembler::NotEqual, R1, &skipBarrier);
+    {
+        Register scr = regs.takeAny();
+        GeneralRegisterSet saveRegs;
+        saveRegs.add(R1);
+        emitPostWriteBarrierSlot(masm, objReg, scr, saveRegs);
+        regs.add(scr);
+    }
+    masm.bind(&skipBarrier);
+#endif
 
     // The RHS has to be in R0.
     masm.moveValue(R1, R0);
@@ -6374,6 +6464,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     // Check the proto chain.
     for (size_t i = 0; i < protoChainDepth_; i++) {
         masm.loadObjProto(i == 0 ? objReg : protoReg, protoReg);
+        masm.branchTestPtr(Assembler::Zero, protoReg, protoReg, &failureUnstow);
         masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAddImpl<0>::offsetOfShape(i + 1)),
                      scratch);
         masm.branchTestObjShape(Assembler::NotEqual, protoReg, scratch, &failureUnstow);
@@ -6400,13 +6491,35 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfNewShape()), scratch);
     masm.storePtr(scratch, shapeAddr);
 
-    if (!isFixedSlot_)
-        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
+    Register holderReg;
+    regs.add(R0);
+    regs.takeUnchecked(objReg);
+    if (isFixedSlot_) {
+        holderReg = objReg;
+    } else {
+        holderReg = regs.takeAny();
+        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), holderReg);
+    }
 
     // Perform the store.  No write barrier required since this is a new
     // initialization.
     masm.load32(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfOffset()), scratch);
-    masm.storeValue(R1, BaseIndex(objReg, scratch, TimesOne));
+    masm.storeValue(R1, BaseIndex(holderReg, scratch, TimesOne));
+
+    if (holderReg != objReg)
+        regs.add(holderReg);
+
+#ifdef JSGC_GENERATIONAL
+    Label skipBarrier;
+    masm.branchTestObject(Assembler::NotEqual, R1, &skipBarrier);
+    {
+        Register scr = regs.takeAny();
+        GeneralRegisterSet saveRegs;
+        saveRegs.add(R1);
+        emitPostWriteBarrierSlot(masm, objReg, scr, saveRegs);
+    }
+    masm.bind(&skipBarrier);
+#endif
 
     // The RHS has to be in R0.
     masm.moveValue(R1, R0);
@@ -8008,11 +8121,17 @@ DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, ICRest_Fallback *stub
     unsigned numFormals = frame->numFormalArgs() - 1;
     unsigned numActuals = frame->numActualArgs();
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
+    Value *rest = frame->argv() + numFormals;
 
-    JSObject *obj = NewDenseCopiedArray(cx, numRest, frame->argv() + numFormals, NULL);
+    JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, NULL);
     if (!obj)
         return false;
     obj->setType(type);
+
+    // Ensure that values in the rest array are represented in the type of the
+    // array.
+    for (unsigned i = 0; i < numRest; i++)
+        types::AddTypePropertyId(cx, obj, JSID_VOID, rest[i]);
 
     res.setObject(*obj);
     return true;
@@ -8219,7 +8338,8 @@ ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
 
 ICSetProp_NativeAdd::ICSetProp_NativeAdd(IonCode *stubCode, HandleTypeObject type,
                                          size_t protoChainDepth,
-                                         HandleShape newShape, uint32_t offset)
+                                         HandleShape newShape,
+                                         uint32_t offset)
   : ICUpdatedStub(SetProp_NativeAdd, stubCode),
     type_(type),
     newShape_(newShape),
@@ -8244,7 +8364,8 @@ ICSetProp_NativeAddImpl<ProtoChainDepth>::ICSetProp_NativeAddImpl(IonCode *stubC
 
 ICSetPropNativeAddCompiler::ICSetPropNativeAddCompiler(JSContext *cx, HandleObject obj,
                                                        HandleShape oldShape,
-                                                       size_t protoChainDepth, bool isFixedSlot,
+                                                       size_t protoChainDepth,
+                                                       bool isFixedSlot,
                                                        uint32_t offset)
   : ICStubCompiler(cx, ICStub::SetProp_NativeAdd),
     obj_(cx, obj),

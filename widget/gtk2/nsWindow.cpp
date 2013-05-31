@@ -1952,7 +1952,7 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
                          &x,
                          &y);
 
-  gc = gdk_gc_new(GDK_ROOT_PARENT());
+  gc = gdk_gc_new(gdk_get_default_root_window());
 
   white.pixel = WhitePixel(gdk_display,DefaultScreen(gdk_display));
 
@@ -1969,7 +1969,7 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
    */
   for (i = 0; i < aTimes * 2; i++)
   {
-    gdk_draw_rectangle(GDK_ROOT_PARENT(),
+    gdk_draw_rectangle(gdk_get_default_root_window(),
                        gc,
                        TRUE,
                        x,

@@ -829,8 +829,8 @@ gfxDownloadedFcFontEntry::GetFontTable(uint32_t aTableTag)
     const SFNTHeader* header = reinterpret_cast<const SFNTHeader*>(mFontData);
     const TableDirEntry* dir = reinterpret_cast<const TableDirEntry*>(header + 1);
     dir = static_cast<const TableDirEntry*>
-        (bsearch(&aTableTag, dir, header->numTables, sizeof(TableDirEntry),
-                 DirEntryCmp));
+        (bsearch(&aTableTag, dir, uint16_t(header->numTables),
+                 sizeof(TableDirEntry), DirEntryCmp));
     if (dir) {
         return hb_blob_create(reinterpret_cast<const char*>(mFontData) +
                                   dir->offset, dir->length,

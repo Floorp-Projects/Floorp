@@ -93,7 +93,7 @@ public:
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance);
+  NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) MOZ_OVERRIDE;
 
   virtual void SetIsDocumentActive(bool aIsActive) MOZ_OVERRIDE;
 
@@ -258,7 +258,7 @@ private:
     PluginEventNotifier(const nsString &aEventType) : 
       mEventType(aEventType) {}
     
-    NS_IMETHOD Run();
+    NS_IMETHOD Run() MOZ_OVERRIDE;
   private:
     nsString mEventType;
   };

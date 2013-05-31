@@ -15,6 +15,7 @@ skip-if(Android||B2G) load 789075-1.html # load failed, bug 833371 for B2G
 load 844563.html
 load 846612.html
 load 852838.html
+load 868504.html
 load 874869.html
 load 874915.html
 load 874934.html
@@ -22,6 +23,12 @@ load 874952.html
 load 875144.html
 load 875596.html
 load 875911.html
+load 876024-1.html
+load 876024-2.html
+load 876118.html
+load 876207.html
+load 876215.html
 load 876249.html
 load 876252.html
 load 876834.html
+load 877820.html

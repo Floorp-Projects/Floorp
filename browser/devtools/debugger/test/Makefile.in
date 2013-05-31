@@ -63,6 +63,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_location-changes-bp.js \
 	browser_dbg_sources-cache.js \
 	browser_dbg_scripts-switching.js \
+	browser_dbg_scripts-switching-02.js \
 	browser_dbg_scripts-sorting.js \
 	browser_dbg_scripts-searching-01.js \
 	browser_dbg_scripts-searching-02.js \
@@ -110,6 +111,7 @@ MOCHITEST_BROWSER_PAGES = \
 	browser_dbg_debuggerstatement.html \
 	browser_dbg_stack.html \
 	browser_dbg_script-switching.html \
+	browser_dbg_script-switching-02.html \
 	test-script-switching-01.js \
 	test-script-switching-02.js \
 	browser_dbg_big-data.html \
