@@ -61,7 +61,6 @@ import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import java.io.InputStream;
@@ -87,6 +86,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_SUCCESS = 0;
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
+
     private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
 
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
@@ -364,8 +364,8 @@ abstract public class BrowserApp extends GeckoApp
         RelativeLayout actionBar = (RelativeLayout) findViewById(R.id.browser_toolbar);
 
         mToast = new ButtonToast(findViewById(R.id.toast), new ButtonToast.ToastListener() {
+            @Override
             public void onButtonClicked(CharSequence token) {
-                Log.i(LOGTAG, "Clicked " + token);
                 if (ADD_SHORTCUT_TOAST.equals(token)) {
                     showBookmarkDialog();
                 }
@@ -478,14 +478,17 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void showBookmarkDialog() {
-        final Prompt ps = new Prompt(BrowserApp.this, new Prompt.PromptCallback() {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
+            @Override
             public void onPromptFinished(String result) {
                 int itemId = -1;
                 try {
                   itemId = new JSONObject(result).getInt("button");
-                } catch(Exception ex) { }
+                } catch(Exception ex) {
+                    Log.e(LOGTAG, "Exception reading bookmark prompt result", ex);
+                }
 
-                Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab == null)
                     return;
 
