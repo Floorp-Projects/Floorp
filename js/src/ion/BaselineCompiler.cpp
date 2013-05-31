@@ -1775,6 +1775,29 @@ BaselineCompiler::emit_JSOP_CALLALIASEDVAR()
 bool
 BaselineCompiler::emit_JSOP_SETALIASEDVAR()
 {
+    JSScript *outerScript = ScopeCoordinateFunctionScript(cx, script, pc);
+    if (outerScript && outerScript->treatAsRunOnce) {
+        // Type updates for this operation might need to be tracked, so treat
+        // this as a SETPROP.
+
+        // Load rhs into R1.
+        frame.syncStack(1);
+        frame.popValue(R1);
+
+        // Load and box lhs into R0.
+        getScopeCoordinateObject(R2.scratchReg());
+        masm.tagValue(JSVAL_TYPE_OBJECT, R2.scratchReg(), R0);
+
+        // Call SETPROP IC.
+        ICSetProp_Fallback::Compiler compiler(cx);
+        if (!emitOpIC(compiler.getStub(&stubSpace_)))
+            return false;
+
+        // The IC will return the RHS value in R0, mark it as pushed value.
+        frame.push(R0);
+        return true;
+    }
+
     // Keep rvalue in R0.
     frame.popRegsAndSync(1);
     Register objReg = R2.scratchReg();
@@ -2612,6 +2635,23 @@ BaselineCompiler::emit_JSOP_ARGUMENTS()
     masm.bind(&done);
     frame.push(R0);
     return true;
+}
+
+typedef bool (*RunOnceScriptPrologueFn)(JSContext *, HandleScript);
+static const VMFunction RunOnceScriptPrologueInfo =
+    FunctionInfo<RunOnceScriptPrologueFn>(js::RunOnceScriptPrologue);
+
+bool
+BaselineCompiler::emit_JSOP_RUNONCE()
+{
+    frame.syncStack(0);
+
+    prepareVMCall();
+
+    masm.movePtr(ImmGCPtr(script), R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    return callVM(RunOnceScriptPrologueInfo);
 }
 
 bool
