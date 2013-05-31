@@ -378,6 +378,10 @@ box.requests-menu-status[code^="5"] {
   color: #fff;
 }
 
+.requests-menu-footer-spacer {
+  min-width: 2px;
+}
+
 .requests-menu-footer-spacer,
 .requests-menu-footer-button {
   -moz-border-end: 1px solid hsla(210,8%,5%,.25);

@@ -39,6 +39,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_filter-03.js \
 	browser_net_accessibility-01.js \
 	browser_net_accessibility-02.js \
+	browser_net_footer-summary.js \
 	head.js \
 	$(NULL)
 
