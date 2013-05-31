@@ -177,7 +177,7 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript,
             if (cp == end) {
                 bool isArray = (chars[0] == '[');
                 JSONParser parser(cx, isArray ? chars : chars + 1U, isArray ? length : length - 2,
-                                  JSONParser::StrictJSON, JSONParser::NoError);
+                                  JSONParser::NoError);
                 RootedValue tmp(cx);
                 if (!parser.parse(&tmp))
                     return EvalJSON_Failure;

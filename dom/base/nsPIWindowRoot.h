@@ -15,10 +15,9 @@ class nsIControllers;
 class nsIController;
 struct JSContext;
 
-// 426C1B56-E38A-435E-B291-BE1557F2A0A2
 #define NS_IWINDOWROOT_IID \
-{ 0xc89780f2, 0x8905, 0x417f, \
-  { 0xa6, 0x62, 0xf6, 0xc, 0xa6, 0xd7, 0xc, 0x91 } }
+{ 0x3f71f50c, 0xa7e0, 0x43bc, \
+ { 0xac, 0x25, 0x4d, 0xbb, 0x88, 0x7b, 0x21, 0x09 } }
 
 class nsPIWindowRoot : public mozilla::dom::EventTarget
 {
@@ -37,6 +36,7 @@ public:
 
   virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) = 0;
   virtual mozilla::dom::EventTarget* GetParentTarget() = 0;
+  virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)

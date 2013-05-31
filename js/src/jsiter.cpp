@@ -378,7 +378,7 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
             return NULL;
 
         Class *clasp = &PropertyIteratorObject::class_;
-        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, NULL, NULL,
+        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, NULL, NULL, NewObjectMetadata(cx),
                                                           ITERATOR_FINALIZE_KIND));
         if (!shape)
             return NULL;

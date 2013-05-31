@@ -24,13 +24,13 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
   var worker = new Worker("xhr_implicit_cancel_worker.js");
 
   worker.onmessage = function(event) {
-    is(event.target, worker);
+    is(event.target, worker, "Expected event target for message");
     ok(true, "Worker didn't have an error");
     SimpleTest.finish();
   };
 
   worker.onerror = function(event) {
-    is(event.target, worker);
+    is(event.target, worker, "Expected event target for error");
     ok(false, "Worker had an error:" + event.data);
     SimpleTest.finish();
   }
