@@ -230,6 +230,18 @@ panelsubview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:acti
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+#PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+@media (min-resolution: 2dppx) {
+  #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 .PanelUI-footer.panel-multiview-anchor,
 .PanelUI-footer.panel-multiview-anchor > #PanelUI-help-btn,
 toolbarbutton.panel-multiview-anchor {
