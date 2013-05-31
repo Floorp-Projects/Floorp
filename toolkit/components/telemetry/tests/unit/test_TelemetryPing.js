@@ -38,10 +38,6 @@ const RW_OWNER = 0600;
 const NUMBER_OF_THREADS_TO_LAUNCH = 30;
 var gNumberOfThreadsLaunched = 0;
 
-const BinaryInputStream = Components.Constructor(
-  "@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream",
-  "setInputStream");
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
 
