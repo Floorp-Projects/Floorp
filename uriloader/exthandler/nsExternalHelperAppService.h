@@ -282,9 +282,12 @@ protected:
   bool mShouldCloseWindow;
 
   /**
-   * True if a stop request has been issued.
+   * have we received information from the user about how they want to
+   * dispose of this content
    */
+  bool mReceivedDispositionInfo;
   bool mStopRequestIssued; 
+  bool mProgressListenerInitialized;
 
   bool mIsFileChannel;
 
@@ -321,11 +324,6 @@ protected:
   nsCOMPtr<nsIBackgroundFileSaver> mSaver;
 
   /**
-   * Stores the SHA-256 hash associated with the file that we downloaded.
-   */
-  nsAutoCString mHash;
-
-  /**
    * Creates the temporary file for the download and an output stream for it.
    * Upon successful return, both mTempFile and mSaver will be valid.
    */
@@ -338,10 +336,12 @@ protected:
    */
   void RetargetLoadNotifications(nsIRequest *request); 
   /**
-   * Once the user tells us how they want to dispose of the content
-   * create an nsITransfer so they know what's going on...
+   * If the user tells us how they want to dispose of the content and
+   * we still haven't finished downloading while they were deciding,
+   * then create a progress listener of some kind so they know
+   * what's going on...
    */
-  nsresult CreateTransfer();
+  nsresult CreateProgressListener();
 
 
   /* 
@@ -380,11 +380,23 @@ protected:
    */
   void ProcessAnyRefreshTags();
 
-  /**
-   * Notify our nsITransfer object that we are done with the download.
+  /** 
+   * An internal method used to actually move the temp file to the final
+   * destination once we done receiving data AND have showed the progress dialog
    */
-  nsresult NotifyTransfer();
-
+  nsresult MoveFile(nsIFile * aNewFileLocation);
+  /**
+   * An internal method used to actually launch a helper app given the temp file
+   * once we are done receiving data AND have showed the progress dialog.
+   * Uses the application specified in the mime info.
+   */
+  nsresult OpenWithApplication();
+  
+  /**
+   * Helper routine which peaks at the mime action specified by mMimeInfo
+   * and calls either MoveFile or OpenWithApplication
+   */
+  nsresult ExecuteDesiredAction();
   /**
    * Helper routine that searches a pref string for a given mime type
    */
@@ -415,17 +427,7 @@ protected:
    */
   nsresult MaybeCloseWindow();
 
-  /**
-   * Set in nsHelperDlgApp.js. This is always null after the user has chosen an
-   * action.
-   */
-  nsCOMPtr<nsIWebProgressListener2> mDialogProgressListener;
-  /**
-   * Set once the user has chosen an action. This is null after the download
-   * has been canceled or completes.
-   */
-  nsCOMPtr<nsITransfer> mTransfer;
-
+  nsCOMPtr<nsIWebProgressListener2> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
 
