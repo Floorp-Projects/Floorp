@@ -1614,6 +1614,11 @@ public:
   static bool GPUImageScalingEnabled();
 
   /**
+   * Checks whether we want to layerize animated images whenever possible.
+   */
+  static bool AnimatedImageLayersEnabled();
+
+  /**
    * Unions the overflow areas of all non-popup children of aFrame with
    * aOverflowAreas.
    */

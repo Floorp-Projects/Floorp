@@ -1856,13 +1856,14 @@ abstract public class GeckoApp
                 SmsManager.getInstance().shutdown();
         }
 
+        if (mHealthRecorder != null) {
+            mHealthRecorder.close();
+            mHealthRecorder = null;
+        }
+
         super.onDestroy();
 
         Tabs.unregisterOnTabsChangedListener(this);
-        if (mHealthRecorder != null) {
-            mHealthRecorder.close(GeckoAppShell.getEventDispatcher());
-            mHealthRecorder = null;
-        }
     }
 
     protected void registerEventListener(String event) {

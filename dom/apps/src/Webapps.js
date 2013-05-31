@@ -590,6 +590,7 @@ WebappsApplication.prototype = {
         this.progress = app.progress || msg.progress || 0;
         this.readyToApplyDownload = app.readyToApplyDownload;
         this.updateTime = app.updateTime;
+        this.origin = app.origin;
 
         switch(msg.type) {
           case "error":

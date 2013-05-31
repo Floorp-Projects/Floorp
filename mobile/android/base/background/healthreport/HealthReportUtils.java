@@ -91,31 +91,6 @@ public class HealthReportUtils {
   }
 
   /**
-   * {@link JSONObject} doesn't provide a <code>clone</code> method, nor any
-   * useful constructors, so we do this the hard way.
-   *
-   * @return a new object containing the same keys and values as the old.
-   * @throws JSONException
-   *           if JSONObject is even more stupid than expected and cannot store
-   *           a value from the provided object in the new object. This should
-   *           never happen.
-   */
-  public static JSONObject shallowCopyObject(JSONObject o) throws JSONException {
-    if (o == null) {
-      return null;
-    }
-
-    JSONObject out = new JSONObject();
-    @SuppressWarnings("unchecked")
-    Iterator<String> keys = out.keys();
-    while (keys.hasNext()) {
-      final String key = keys.next();
-      out.put(key, o.get(key));
-    }
-    return out;
-  }
-
-  /**
    * Just like {@link JSONObject#accumulate(String, Object)}, but doesn't do the wrong thing for single values.
    * @throws JSONException 
    */
