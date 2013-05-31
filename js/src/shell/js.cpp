@@ -3168,7 +3168,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     Parser<FullParseHandler> parser(cx, options,
                                     JS_GetStringCharsZ(cx, scriptContents),
                                     JS_GetStringLength(scriptContents),
-                                    /* foldConstants = */ true);
+                                    /* foldConstants = */ true, NULL, NULL);
     if (!parser.init())
         return false;
 
@@ -3208,8 +3208,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
     size_t length = JS_GetStringLength(scriptContents);
-    Parser<frontend::SyntaxParseHandler> parser(cx, options, chars, length,
-                                                /* foldConstants = */ false);
+    Parser<frontend::SyntaxParseHandler> parser(cx, options, chars, length, false, NULL, NULL);
     if (!parser.init())
         return false;
 
@@ -3217,7 +3216,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     if (cx->isExceptionPending())
         return false;
 
-    if (!succeeded && !parser.hadUnknownResult()) {
+    if (!succeeded && !parser.hadAbortedSyntaxParse()) {
         // If no exception is posted, either there was an OOM or a language
         // feature unhandled by the syntax parser was encountered.
         JS_ASSERT(cx->runtime->hadOutOfMemory);

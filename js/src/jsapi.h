@@ -3894,10 +3894,12 @@ struct JS_PUBLIC_API(CompileOptions) {
     bool utf8;
     const char *filename;
     unsigned lineno;
+    unsigned column;
     bool compileAndGo;
     bool forEval;
     bool noScriptRval;
     bool selfHostingMode;
+    bool canLazilyParse;
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -3912,10 +3914,12 @@ struct JS_PUBLIC_API(CompileOptions) {
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename = f; lineno = l; return *this;
     }
+    CompileOptions &setColumn(unsigned c) { column = c; return *this; }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setForEval(bool eval) { forEval = eval; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
+    CompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 

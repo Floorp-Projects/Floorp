@@ -154,7 +154,7 @@ TestSettingsObserver::Observe(nsISupports *aSubject,
 
   // Get the safe JS context.
   nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-  JSContext *cx = xpc->GetSafeJSContext();
+  AutoSafeJSContext cx;
   if (!cx) {
     CHECK_MSG(false, "Failed to GetSafeJSContext");
     return NS_OK;

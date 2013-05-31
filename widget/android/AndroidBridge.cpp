@@ -2186,6 +2186,27 @@ NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message, nsA
     return NS_OK;
 }
 
+/* nsIAndroidDisplayport getDisplayPort(in boolean aPageSizeUpdate, in boolean isBrowserContentDisplayed, in int32_t tabId, in nsIAndroidViewport metrics); */
+NS_IMETHODIMP nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
+{
+    AndroidBridge::Bridge()->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
+    return NS_OK;
+}
+
+/* void displayedDocumentChanged(); */
+NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged()
+{
+    AndroidBridge::Bridge()->ContentDocumentChanged();
+    return NS_OK;
+}
+
+/* boolean isContentDocumentDisplayed(); */
+NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
+{
+    *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
+    return NS_OK;
+}
+
 void
 AndroidBridge::NotifyDefaultPrevented(bool aDefaultPrevented)
 {
@@ -2680,22 +2701,34 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     return NS_OK;
 }
 
-nsresult
-nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
-{
-    return AndroidBridge::Bridge()->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
-}
-
-nsresult
+void
 AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
 {
     JNIEnv* env = GetJNIEnv();
     if (!env || !mLayerClient)
-        return NS_OK;
+        return;
     AutoLocalJNIFrame jniFrame(env, 0);
     mLayerClient->GetDisplayPort(&jniFrame, aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
+}
 
-    return NS_OK;
+void
+AndroidBridge::ContentDocumentChanged()
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return;
+    AutoLocalJNIFrame jniFrame(env, 0);
+    mLayerClient->ContentDocumentChanged(&jniFrame);
+}
+
+bool
+AndroidBridge::IsContentDocumentDisplayed()
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return false;
+    AutoLocalJNIFrame jniFrame(env, 0);
+    return mLayerClient->IsContentDocumentDisplayed(&jniFrame);
 }
 
 bool

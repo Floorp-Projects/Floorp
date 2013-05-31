@@ -69,10 +69,6 @@ category command-line-handler x-browser @mozilla.org/browser/browser-clh;1
 component {5a072a22-1e66-4100-afc1-07aed8b62fc5} ContentDispatchChooser.js
 contract @mozilla.org/content-dispatch-chooser;1 {5a072a22-1e66-4100-afc1-07aed8b62fc5}
 
-# FormAutoComplete.js
-component {cccd414c-3ec2-4cc5-9dc4-36c87cc3c4fe} FormAutoComplete.js
-contract @mozilla.org/satchel/form-autocomplete;1 {cccd414c-3ec2-4cc5-9dc4-36c87cc3c4fe}
-
 # LoginManagerPrompter.js
 component {97d12931-abe2-11df-94e2-0800200c9a66} LoginManagerPrompter.js
 contract @mozilla.org/login-manager/prompter;1 {97d12931-abe2-11df-94e2-0800200c9a66}

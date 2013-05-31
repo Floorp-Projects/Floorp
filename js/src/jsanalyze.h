@@ -1044,13 +1044,12 @@ class ScriptAnalysis
 
     struct TypeInferenceState {
         Vector<SSAPhiNode *> phiNodes;
-        bool hasGetSet;
         bool hasHole;
         types::StackTypeSet *forTypes;
         bool hasPropertyReadTypes;
         uint32_t propertyReadIndex;
         TypeInferenceState(JSContext *cx)
-            : phiNodes(cx), hasGetSet(false), hasHole(false), forTypes(NULL),
+            : phiNodes(cx), hasHole(false), forTypes(NULL),
               hasPropertyReadTypes(false), propertyReadIndex(0)
         {}
     };

@@ -128,9 +128,8 @@ add_tier_dir('platform', 'media/kiss_fft')
 if CONFIG['ENABLE_TESTS']:
     add_tier_dir('platform', 'testing/specialpowers')
 
-if CONFIG['MOZ_ENABLE_GTEST']:
+if CONFIG['ENABLE_TESTS']:
     add_tier_dir('platform', 'testing/gtest')
-    add_tier_dir('platform', 'xpcom/glue/tests/gtest')
 
 add_tier_dir('platform', [
     'uriloader',
