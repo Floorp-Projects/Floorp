@@ -1216,6 +1216,12 @@ MenuContainer.prototype = {
   get itemCount() this._itemsByElement.size,
 
   /**
+   * Gets the total number of visible (non-hidden) items in this container.
+   * @return number
+   */
+  get visibleItemsCount() this.visibleItems.length,
+
+  /**
    * Returns a list of all items in this container, in the displayed order.
    * @return array
    */
