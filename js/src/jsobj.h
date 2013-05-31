@@ -528,6 +528,10 @@ class JSObject : public js::ObjectImpl
      */
     inline JSObject *enclosingScope();
 
+    /* Access the metadata on an object. */
+    inline JSObject *getMetadata() const;
+    static bool setMetadata(JSContext *cx, js::HandleObject obj, js::HandleObject newMetadata);
+
     inline js::GlobalObject &global() const;
     using js::ObjectImpl::compartment;
 

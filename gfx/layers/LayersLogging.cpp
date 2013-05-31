@@ -95,8 +95,9 @@ AppendToString(nsACString& s, const nsIntPoint& p,
   return s += sfx;
 }
 
+template<class T>
 nsACString&
-AppendToString(nsACString& s, const Point& p,
+AppendToString(nsACString& s, const PointTyped<T>& p,
                const char* pfx, const char* sfx)
 {
   s += pfx;

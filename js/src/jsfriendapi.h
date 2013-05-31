@@ -14,6 +14,8 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
+#include "js/CallArgs.h"
+
 /*
  * This macro checks if the stack pointer has exceeded a given limit. If
  * |tolerance| is non-zero, it returns true only if the stack pointer has
@@ -322,8 +324,9 @@ struct TypeObject {
 };
 
 struct BaseShape {
-    js::Class   *clasp;
-    JSObject    *parent;
+    js::Class *clasp;
+    JSObject *parent;
+    JSObject *_1;
     JSCompartment *compartment;
 };
 
@@ -1433,13 +1436,85 @@ JS_FRIEND_API(void *)
 JS_GetDataViewData(JSObject *obj);
 
 /*
+ * A class, expected to be passed by value, which represents the CallArgs for a
+ * JSJitGetterOp.
+ */
+class JSJitGetterCallArgs : protected JS::MutableHandleValue
+{
+  public:
+    explicit JSJitGetterCallArgs(const JS::CallArgs& args)
+      : JS::MutableHandleValue(args.rval())
+    {}
+
+    JS::MutableHandleValue rval() {
+        return *this;
+    }
+};
+
+/*
+ * A class, expected to be passed by value, which represents the CallArgs for a
+ * JSJitSetterOp.
+ */
+class JSJitSetterCallArgs : protected JS::MutableHandleValue
+{
+  public:
+    explicit JSJitSetterCallArgs(const JS::CallArgs& args)
+      : JS::MutableHandleValue(args.handleAt(0))
+    {}
+
+    JS::MutableHandleValue handleAt(unsigned i) {
+        MOZ_ASSERT(i == 0);
+        return *this;
+    }
+
+    unsigned length() const { return 1; }
+
+    // Add get() or maybe hasDefined() as needed
+};
+
+/*
+ * A class, expected to be passed by reference, which represents the CallArgs
+ * for a JSJitMethodOp.
+ */
+class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUsedRval>
+{
+  private:
+    typedef JS::detail::CallArgsBase<JS::detail::NoUsedRval> Base;
+
+  public:
+    explicit JSJitMethodCallArgs(const JS::CallArgs& args) {
+        argv_ = args.array();
+        argc_ = args.length();
+    }
+
+    JS::MutableHandleValue rval() const {
+        return Base::rval();
+    }
+
+    unsigned length() const { return Base::length(); }
+
+    JS::MutableHandleValue handleAt(unsigned i) const {
+        return Base::handleAt(i);
+    }
+
+    bool hasDefined(unsigned i) const {
+        return Base::hasDefined(i);
+    }
+
+    // Add get() as needed
+};
+
+/*
  * This struct contains metadata passed from the DOM to the JS Engine for JIT
  * optimizations on DOM property accessors. Eventually, this should be made
  * available to general JSAPI users, but we are not currently ready to do so.
  */
 typedef bool
-(* JSJitPropertyOp)(JSContext *cx, JSHandleObject thisObj,
-                    void *specializedThis, JS::Value *vp);
+(* JSJitGetterOp)(JSContext *cx, JSHandleObject thisObj,
+                  void *specializedThis, JS::Value *vp);
+typedef bool
+(* JSJitSetterOp)(JSContext *cx, JSHandleObject thisObj,
+                  void *specializedThis, JS::Value *vp);
 typedef bool
 (* JSJitMethodOp)(JSContext *cx, JSHandleObject thisObj,
                   void *specializedThis, unsigned argc, JS::Value *vp);
@@ -1451,7 +1526,11 @@ struct JSJitInfo {
         Method
     };
 
-    JSJitPropertyOp op;
+    union {
+        JSJitGetterOp getter;
+        JSJitSetterOp setter;
+        JSJitMethodOp method;
+    };
     uint32_t protoID;
     uint32_t depth;
     OpType type;
@@ -1617,6 +1696,26 @@ assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id);
 #else
 inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id) {};
 #endif
+
+typedef JSObject *
+(* ObjectMetadataCallback)(JSContext *cx);
+
+/*
+ * Specify a callback to invoke when creating each JS object in the current
+ * compartment, which may return a metadata object to associate with the
+ * object. Objects with different metadata have different shape hierarchies,
+ * so for efficiency, objects should generally try to share metadata objects.
+ */
+JS_FRIEND_API(void)
+SetObjectMetadataCallback(JSContext *cx, ObjectMetadataCallback callback);
+
+/* Manipulate the metadata associated with an object. */
+
+JS_FRIEND_API(bool)
+SetObjectMetadata(JSContext *cx, JSHandleObject obj, JSHandleObject metadata);
+
+JS_FRIEND_API(JSObject *)
+GetObjectMetadata(JSObject *obj);
 
 } /* namespace js */
 

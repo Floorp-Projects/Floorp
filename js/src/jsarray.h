@@ -87,10 +87,6 @@ WouldDefinePastNonwritableLength(JSContext *cx, HandleObject obj, uint32_t index
 extern bool
 CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *canonicalized);
 
-/* Get the common shape used by all dense arrays with a prototype at globalObj. */
-extern Shape *
-GetDenseArrayShape(JSContext *cx, HandleObject globalObj);
-
 extern JSBool
 GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp);
 
