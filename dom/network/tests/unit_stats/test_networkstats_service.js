@@ -139,7 +139,95 @@ add_test(function test_queue() {
   do_check_eq(NetworkStatsService.updateQueue[0].callbacks[0], null);
   do_check_neq(NetworkStatsService.updateQueue[0].callbacks[1], null);
 
+  // Clear queue because in test environment requests for mobile networks
+  // can not be handled.
+  NetworkStatsService.updateQueue =  [];
   run_next_test();
+});
+
+var wifiId = '00';
+
+add_test(function test_updateThreshold() {
+  let alarm = { networkId: wifiId, threshold: 10000 };
+
+  NetworkStatsService._updateThreshold(alarm, function onSet(error, threshold){
+    do_check_eq(error, null);
+    do_check_neq(threshold.systemThreshold, undefined);
+    do_check_neq(threshold.absoluteThreshold, undefined);
+    run_next_test();
+  });
+});
+
+var testPageURL = "http://test.com";
+var testManifestURL = "http://test.com/manifest.webapp";
+
+add_test(function test_setAlarm() {
+  let alarm = { id: null,
+                networkId: wifiId,
+                threshold: 10000,
+                absoluteThreshold: null,
+                alarmStart: null,
+                alarmEnd: null,
+                data: null,
+                pageURL: testPageURL,
+                manifestURL: testManifestURL };
+
+  NetworkStatsService._setAlarm(alarm, function onSet(error, result) {
+    do_check_eq(result, 1);
+    run_next_test();
+  });
+});
+
+add_test(function test_setAlarm_invalid_threshold() {
+  let alarm = { id: null,
+                networkId: wifiId,
+                threshold: -10000,
+                absoluteThreshold: null,
+                alarmStart: null,
+                alarmEnd: null,
+                data: null,
+                pageURL: testPageURL,
+                manifestURL: testManifestURL };
+
+  NetworkStatsService._setAlarm(alarm, function onSet(error, result) {
+    do_check_eq(error, "InvalidStateError");
+    run_next_test();
+  });
+});
+
+add_test(function test_fireAlarm() {
+  // Add a fake alarm into database.
+  let alarm = { id: null,
+                networkId: wifiId,
+                threshold: 10000,
+                absoluteThreshold: null,
+                alarmStart: null,
+                alarmEnd: null,
+                data: null,
+                pageURL: testPageURL,
+                manifestURL: testManifestURL };
+
+  NetworkStatsService._db.addAlarm(alarm, function addSuccessCb(error, newId) {
+    NetworkStatsService._db.getAlarms(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+                                      testManifestURL, function onGet(error, result) {
+      do_check_eq(error, null);
+      do_check_eq(result.length, 1);
+
+      // Result of getAlarms is based on expected child's data format, so
+      // some changes are needed to be able to use it.
+      result[0].networkId = wifiId;
+      result[0].pageURL = testPageURL;
+      result[0].manifestURL = testManifestURL;
+
+      NetworkStatsService._fireAlarm(result[0], false);
+      NetworkStatsService._db.getAlarms(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+                                        testManifestURL, function onGet(error, result) {
+        do_check_eq(error, undefined);
+        do_check_eq(result.length, 0);
+        run_next_test();
+      });
+    });
+  });
 });
 
 function run_test() {
