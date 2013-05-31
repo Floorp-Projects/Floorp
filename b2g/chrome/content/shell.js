@@ -1009,7 +1009,7 @@ let RemoteDebugger = {
       }
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
-      DebuggerServer.addActors('chrome://browser/content/dbg-webapps-actors.js');
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     }
 
     let port = Services.prefs.getIntPref('devtools.debugger.remote-port') || 6000;

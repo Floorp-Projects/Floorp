@@ -7,6 +7,11 @@ Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cu = Components.utils;
+const Cr = Components.results;
+
 let gClient, gActor;
 let gAppId = "actor-test";
 
@@ -16,7 +21,6 @@ add_test(function testSetup() {
   // We need to register browser actors to have `listTabs` working
   // and also have a root actor
   DebuggerServer.addBrowserActors();
-  DebuggerServer.addActors("chrome://browser/content/dbg-webapps-actors.js");
 
   // Setup client and actor used in all tests
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
@@ -61,6 +65,12 @@ add_test(function testInstallPackaged() {
   // if the installation succeed or failed
   gClient.addListener("webappsEvent", function (aState, aType, aPacket) {
     do_check_eq(aType.appId, gAppId);
+    if ("error" in aType) {
+      do_print("Error: " + aType.error);
+    }
+    if ("message" in aType) {
+      do_print("Error message: " + aType.message);
+    }
     do_check_eq("error" in aType, false);
 
     run_next_test();
@@ -175,6 +185,10 @@ function run_test() {
   // will throw random exception when trying to get profile folder
   do_get_profile();
 
+  // The webapps dir isn't registered on b2g xpcshell tests,
+  // we have to manually set it to the directory service.
+  do_get_webappsdir();
+
   // We also need a valid nsIXulAppInfo service as Webapps.jsm is querying it
   Components.utils.import("resource://testing-common/AppInfo.jsm");
   updateAppInfo();
@@ -186,4 +200,40 @@ function run_test() {
 
   run_next_test();
 }
+
+function do_get_webappsdir() {
+  var webappsDir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  webappsDir.append("test_webapps");
+  if (!webappsDir.exists())
+    webappsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+
+  var coreAppsDir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  coreAppsDir.append("test_coreapps");
+  if (!coreAppsDir.exists())
+    coreAppsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+
+  // Register our own provider for the profile directory.
+  // It will return our special docshell profile directory.
+  var provider = {
+    getFile: function(prop, persistent) {
+      persistent.value = true;
+      if (prop == "webappsDir") {
+        return webappsDir.clone();
+      }
+      else if (prop == "coreAppsDir") {
+        return coreAppsDir.clone();
+      }
+      throw Cr.NS_ERROR_FAILURE;
+    },
+    QueryInterface: function(iid) {
+      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
+          iid.equals(Ci.nsISupports)) {
+        return this;
+      }
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    }
+  };
+  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
+}
+
 
