@@ -19,7 +19,7 @@
  * JS operation bytecodes.
  */
 typedef enum JSOp {
-#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+#define OPDEF(op,val,name,token,length,nuses,ndefs,format) \
     op = val,
 #include "jsopcode.tbl"
 #undef OPDEF
@@ -209,7 +209,6 @@ struct JSCodeSpec {
     int8_t              length;         /* length including opcode byte */
     int8_t              nuses;          /* arity, -1 if variadic */
     int8_t              ndefs;          /* number of stack results */
-    uint8_t             prec;           /* operator precedence */
     uint32_t            format;         /* immediate operand format */
 
     uint32_t type() const { return JOF_TYPE(format); }
