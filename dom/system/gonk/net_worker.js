@@ -229,20 +229,18 @@ function removeDefaultRoute(options) {
  * Add host route for given network interface.
  */
 function addHostRoute(options) {
-  libnetutils.ifc_add_route(options.ifname, options.dns1, 32, options.gateway);
-  libnetutils.ifc_add_route(options.ifname, options.dns2, 32, options.gateway);
-  libnetutils.ifc_add_route(options.ifname, options.httpproxy, 32, options.gateway);
-  libnetutils.ifc_add_route(options.ifname, options.mmsproxy, 32, options.gateway);
+  for (let i = 0; i < options.hostnames.length; i++) {
+    libnetutils.ifc_add_route(options.ifname, options.hostnames[i], 32, options.gateway);
+  }
 }
 
 /**
  * Remove host route for given network interface.
  */
 function removeHostRoute(options) {
-  libnetutils.ifc_remove_route(options.ifname, options.dns1, 32, options.gateway);
-  libnetutils.ifc_remove_route(options.ifname, options.dns2, 32, options.gateway);
-  libnetutils.ifc_remove_route(options.ifname, options.httpproxy, 32, options.gateway);
-  libnetutils.ifc_remove_route(options.ifname, options.mmsproxy, 32, options.gateway);
+  for (let i = 0; i < options.hostnames.length; i++) {
+    libnetutils.ifc_remove_route(options.ifname, options.hostnames[i], 32, options.gateway);
+  }
 }
 
 function removeNetworkRoute(options) {
