@@ -1461,10 +1461,12 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
   }
 
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
-    if (value && value->Type() == nsAttrValue::eString) {
-      aData->ValueForLang()->SetStringValue(value->GetStringValue(),
-                                            eCSSUnit_Ident);
+    nsCSSValue* lang = aData->ValueForLang();
+    if (lang->GetUnit() == eCSSUnit_Null) {
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
+      if (value && value->Type() == nsAttrValue::eString) {
+        lang->SetStringValue(value->GetStringValue(), eCSSUnit_Ident);
+      }
     }
   }
 

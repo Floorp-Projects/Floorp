@@ -5,26 +5,23 @@
 %filter substitution
 %include defines.inc
 
-/* Content Navigator popup ------------------------------------------------- */
+/* Find bar ------------------------------------------------------------- */
+
 #content-navigator {
-  display: none;
+  display: block;
+  position: fixed;
   pointer-events: none;
   padding: 0;
-  background-color: @metro_orange@;
   bottom: 0;
-  position: fixed;
-  transition: margin-bottom @metro_animation_duration@ @metro_animation_easing@;
-  margin-bottom: -@findbar_height@;
+  transform: translateY(100%);
+  transition: transform @metro_animation_duration@ @metro_animation_easing@,
+              bottom @metro_animation_duration@ @metro_animation_easing@;
+  background-color: @metro_orange@;
 }
 
-#content-navigator[showing] {
-  margin-bottom: 0;
-}
-
-#content-navigator[type="find"],
-#content-navigator[type="form"]:not([disabled]) {
-  display: -moz-box;
-}
+#content-navigator[type] {
+  transform: none;
+ }
 
 #content-navigator > .previous-button,
 #content-navigator > .next-button,
@@ -37,7 +34,6 @@
   pointer-events: auto;
   -moz-user-focus: ignore !important;
   margin: 0 @margin_normal@ !important;
-
 }
 
 #content-navigator > .close-button {
@@ -102,7 +98,6 @@
   border-bottom-right-radius: 0;
 }
 
-/* Find Helper ------------------------------------------------------------- */
 #content-navigator[type="find"] > .previous-button {
   /* previous button overlap the textbox */
   -moz-margin-start: -@margin_normal@;
@@ -114,11 +109,7 @@
 
 #find-helper-textbox {
   pointer-events: auto;
-  margin: @margin_normal@;
   -moz-margin-end: 0;
-  padding: @padding_xnormal@;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
   border: none !important;
   width: 20em;
 }
@@ -144,73 +135,6 @@
 
 #find-helper-textbox:hover:active {
   background: #8db8d8;
-}
-
-/* Form Helper Autofill ---------------------------------------------------- */
-#form-helper-suggestions-container .panel-arrowcontent {
-  border-radius: @border_radius_normal@;
-  padding: 0; /* half core spacing & none (autorepeat arrows compensate) */
-  background-color: white;
-}
-
-#form-helper-suggestions {
-  background-color: white;
-  margin: 0;
-  color: black;
-  max-width: 0;
-}
-
-#form-helper-suggestions > .autorepeatbutton-down,
-#form-helper-suggestions > .autorepeatbutton-up {
-  border: none;
-}
-
-#form-helper-suggestions > .autorepeatbutton-down {
-  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
-}
-
-#form-helper-suggestions > .autorepeatbutton-down:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
-}
-
-#form-helper-suggestions > .autorepeatbutton-up {
-  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
-}
-
-#form-helper-suggestions > .autorepeatbutton-up:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
-}
-
-/* force the autorepeat buttons to create a 'padding' when collapsed */
-#form-helper-suggestions > autorepeatbutton[collapsed="true"],
-#form-helper-suggestions > autorepeatbutton[disabled] {
-  visibility: hidden;
-}
-
-#form-helper-suggestions .form-helper-suggestions-label {
-  padding: @padding_xxnormal@ @padding_normal@; /* 12px helps get row size for the labels */
-  margin: 0;
-  border-color: transparent rgb(215,215,215) transparent rgb(255,255,255);
-  border-style: solid;
-  border-width: @border_width_tiny@;
-  background-color: white;
-}
-
-#form-helper-suggestions .form-helper-suggestions-label:first-child {
-  -moz-padding-start: initial; /* the arrowscrollbox creates enough left padding */
-  -moz-border-start: none;
-}
-
-#form-helper-suggestions .form-helper-suggestions-label:last-child {
-  -moz-border-end: none;
-}
-
-#form-helper-suggestions .form-helper-suggestions-label:hover {
-  background-color: #dedad0;
-}
-
-#form-helper-suggestions .form-helper-suggestions-label:hover:active {
-  background-color: @selected_color@ !important;
 }
 
 /* Select popup ------------------------------------------------------------- */

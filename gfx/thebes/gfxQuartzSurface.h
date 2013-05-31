@@ -13,7 +13,7 @@
 
 class gfxContext;
 
-class THEBES_API gfxQuartzSurface : public gfxASurface {
+class gfxQuartzSurface : public gfxASurface {
 public:
     gfxQuartzSurface(const gfxSize& size, gfxImageFormat format, bool aForPrinting = false);
     gfxQuartzSurface(CGContextRef context, const gfxSize& size, bool aForPrinting = false);

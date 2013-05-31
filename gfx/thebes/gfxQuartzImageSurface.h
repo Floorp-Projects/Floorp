@@ -9,7 +9,7 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
-class THEBES_API gfxQuartzImageSurface : public gfxASurface {
+class gfxQuartzImageSurface : public gfxASurface {
 public:
     gfxQuartzImageSurface(gfxImageSurface *imageSurface);
     gfxQuartzImageSurface(cairo_surface_t *csurf);

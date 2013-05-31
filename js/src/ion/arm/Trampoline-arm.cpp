@@ -416,7 +416,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
 
     // Call the target function.
     // Note that this code assumes the function is JITted.
-    masm.ma_ldr(DTRAddr(r1, DtrOffImm(offsetof(JSFunction, u.i.script_))), r3);
+    masm.ma_ldr(DTRAddr(r1, DtrOffImm(JSFunction::offsetOfNativeOrScript())), r3);
     masm.loadBaselineOrIonRaw(r3, r3, mode, NULL);
     masm.ma_callIonHalfPush(r3);
 
@@ -741,8 +741,14 @@ IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
 {
     MacroAssembler masm(cx);
 
-    RegisterSet save = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
-                                   FloatRegisterSet(FloatRegisters::VolatileMask));
+    RegisterSet save;
+    if (cx->runtime->jitSupportsFloatingPoint) {
+        save = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                           FloatRegisterSet(FloatRegisters::VolatileMask));
+    } else {
+        save = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                           FloatRegisterSet());
+    }
     masm.PushRegsInMask(save);
 
     JS_ASSERT(PreBarrierReg == r1);

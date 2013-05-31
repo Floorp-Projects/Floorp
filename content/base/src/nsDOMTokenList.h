@@ -12,13 +12,11 @@
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/Element.h"
 
 namespace mozilla {
 class ErrorResult;
 
-namespace dom {
-class Element;
-} // namespace dom
 } // namespace mozilla
 
 class nsAttrValue;

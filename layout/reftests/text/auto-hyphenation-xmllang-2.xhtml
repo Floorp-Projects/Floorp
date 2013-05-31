@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>Hyphenation test</title></head>
+<!-- mixed languages in a word should inhibit automatic hyphenation -->
+<body xml:lang="en-us">
+<div style="width: 5em; -moz-hyphens: auto; font-family:sans-serif;">
+supercalifragilisticexpialidocious
+super<span xml:lang="foo">cali</span>fragilisticexpialidocious
+supercalifragilisticexpialidocious
+</div>
+</body>
+</html>
+

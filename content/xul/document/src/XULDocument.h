@@ -99,9 +99,9 @@ public:
     NS_DECL_NSISTREAMLOADEROBSERVER
 
     // nsIDocument interface
-    virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+    virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) MOZ_OVERRIDE;
     virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup,
-                            nsIPrincipal* aPrincipal);
+                            nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
 
     virtual nsresult StartDocumentLoad(const char* aCommand,
                                        nsIChannel *channel,
@@ -109,11 +109,11 @@ public:
                                        nsISupports* aContainer,
                                        nsIStreamListener **aDocListener,
                                        bool aReset = true,
-                                       nsIContentSink* aSink = nullptr);
+                                       nsIContentSink* aSink = nullptr) MOZ_OVERRIDE;
 
-    virtual void SetContentType(const nsAString& aContentType);
+    virtual void SetContentType(const nsAString& aContentType) MOZ_OVERRIDE;
 
-    virtual void EndLoad();
+    virtual void EndLoad() MOZ_OVERRIDE;
 
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -124,17 +124,17 @@ public:
 
     // nsIXULDocument interface
     virtual void GetElementsForID(const nsAString& aID,
-                                  nsCOMArray<nsIContent>& aElements);
+                                  nsCOMArray<nsIContent>& aElements) MOZ_OVERRIDE;
 
-    NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner);
-    NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent);
-    NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent);
+    NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner) MOZ_OVERRIDE;
+    NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent) MOZ_OVERRIDE;
+    NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent) MOZ_OVERRIDE;
     NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent,
-                                     nsIXULTemplateBuilder* aBuilder);
+                                     nsIXULTemplateBuilder* aBuilder) MOZ_OVERRIDE;
     NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent,
-                                     nsIXULTemplateBuilder** aResult);
-    NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk);
-    bool OnDocumentParserError();
+                                     nsIXULTemplateBuilder** aResult) MOZ_OVERRIDE;
+    NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) MOZ_OVERRIDE;
+    bool OnDocumentParserError() MOZ_OVERRIDE;
 
     // nsINode interface overrides
     virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
@@ -154,7 +154,7 @@ public:
     using nsIDocument::GetLocation;
 
     // nsDocument interface overrides
-    virtual Element* GetElementById(const nsAString & elementId);
+    virtual Element* GetElementById(const nsAString & elementId) MOZ_OVERRIDE;
 
     // nsIDOMXULDocument interface
     NS_DECL_NSIDOMXULDOCUMENT
@@ -162,17 +162,17 @@ public:
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 bool aWasAlternate,
-                                nsresult aStatus);
+                                nsresult aStatus) MOZ_OVERRIDE;
 
-    virtual void EndUpdate(nsUpdateType aUpdateType);
+    virtual void EndUpdate(nsUpdateType aUpdateType) MOZ_OVERRIDE;
 
-    virtual bool IsDocumentRightToLeft();
+    virtual bool IsDocumentRightToLeft() MOZ_OVERRIDE;
 
-    virtual void ResetDocumentDirection();
+    virtual void ResetDocumentDirection() MOZ_OVERRIDE;
 
-    virtual int GetDocumentLWTheme();
+    virtual int GetDocumentLWTheme() MOZ_OVERRIDE;
 
-    virtual void ResetDocumentLWTheme() { mDocLWTheme = Doc_Theme_Uninitialized; }
+    virtual void ResetDocumentLWTheme() MOZ_OVERRIDE { mDocLWTheme = Doc_Theme_Uninitialized; }
 
     static bool
     MatchAttribute(nsIContent* aContent,
@@ -225,7 +225,7 @@ protected:
     friend nsresult
     (::NS_NewXULDocument(nsIXULDocument** aResult));
 
-    nsresult Init(void);
+    nsresult Init(void) MOZ_OVERRIDE;
     nsresult StartLayout(void);
 
     nsresult
@@ -508,8 +508,8 @@ protected:
 
         virtual ~BroadcasterHookup();
 
-        virtual Phase GetPhase() { return eHookup; }
-        virtual Result Resolve();
+        virtual Phase GetPhase() MOZ_OVERRIDE { return eHookup; }
+        virtual Result Resolve() MOZ_OVERRIDE;
     };
 
     friend class BroadcasterHookup;
@@ -533,8 +533,8 @@ protected:
 
         virtual ~OverlayForwardReference();
 
-        virtual Phase GetPhase() { return eConstruction; }
-        virtual Result Resolve();
+        virtual Phase GetPhase() MOZ_OVERRIDE { return eConstruction; }
+        virtual Result Resolve() MOZ_OVERRIDE;
     };
 
     friend class OverlayForwardReference;
@@ -548,8 +548,8 @@ protected:
         TemplateBuilderHookup(nsIContent* aElement)
             : mElement(aElement) {}
 
-        virtual Phase GetPhase() { return eHookup; }
-        virtual Result Resolve();
+        virtual Phase GetPhase() MOZ_OVERRIDE { return eHookup; }
+        virtual Result Resolve() MOZ_OVERRIDE;
     };
 
     friend class TemplateBuilderHookup;

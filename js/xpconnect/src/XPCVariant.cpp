@@ -418,9 +418,6 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
 
     nsID iid;
 
-    NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
-                      "bad scope for new JSObjects");
-
     switch (type) {
         case nsIDataType::VTYPE_INT8:
         case nsIDataType::VTYPE_INT16:

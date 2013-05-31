@@ -82,6 +82,13 @@ function testScriptsDisplay() {
   ok(gDebugger.DebuggerView.Sources.containsLabel(
     label2), "Second script label is incorrect.");
 
+  ok(gDebugger.DebuggerView.Sources.selectedItem,
+    "There should be a selected item in the sources pane.");
+  is(gDebugger.DebuggerView.Sources.selectedLabel,
+    label2, "The selected label is the sources pane is incorrect.");
+  is(gDebugger.DebuggerView.Sources.selectedValue, EXAMPLE_URL +
+    label2, "The selected value is the sources pane is incorrect.");
+
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The correct script was loaded initially.");
 
@@ -101,6 +108,18 @@ function testScriptsDisplay() {
 
 function testSwitchPaused()
 {
+  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+
+  let label1 = "test-script-switching-01.js";
+  let label2 = "test-script-switching-02.js";
+
+  ok(gDebugger.DebuggerView.Sources.selectedItem,
+    "There should be a selected item in the sources pane.");
+  is(gDebugger.DebuggerView.Sources.selectedLabel,
+    label1, "The selected label is the sources pane is incorrect.");
+  is(gDebugger.DebuggerView.Sources.selectedValue, EXAMPLE_URL +
+    label1, "The selected value is the sources pane is incorrect.");
+
   ok(gDebugger.editor.getText().search(/debugger/) == -1,
     "The second script is no longer displayed.");
 
@@ -108,7 +127,7 @@ function testSwitchPaused()
     "The first script is displayed.");
 
   is(gDebugger.editor.getDebugLocation(), -1,
-     "editor debugger location has been cleared.");
+    "Editor debugger location has been cleared.");
 
   gDebugger.DebuggerController.activeThread.resume(function() {
     gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
@@ -119,14 +138,23 @@ function testSwitchPaused()
       }
     });
 
-    gDebugger.DebuggerView.Sources.selectedValue = EXAMPLE_URL +
-                                                   "test-script-switching-02.js";
+    gDebugger.DebuggerView.Sources.selectedValue = EXAMPLE_URL + label2;
   });
 }
 
 function testSwitchRunning()
 {
   dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+
+  let label1 = "test-script-switching-01.js";
+  let label2 = "test-script-switching-02.js";
+
+  ok(gDebugger.DebuggerView.Sources.selectedItem,
+    "There should be a selected item in the sources pane.");
+  is(gDebugger.DebuggerView.Sources.selectedLabel,
+    label2, "The selected label is the sources pane is incorrect.");
+  is(gDebugger.DebuggerView.Sources.selectedValue, EXAMPLE_URL +
+    label2, "The selected value is the sources pane is incorrect.");
 
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The second script is displayed again.");
@@ -135,7 +163,7 @@ function testSwitchRunning()
     "The first script is no longer displayed.");
 
   is(gDebugger.editor.getDebugLocation(), -1,
-     "editor debugger location is still -1.");
+    "Editor debugger location is still -1.");
 
   closeDebuggerAndFinish();
 }

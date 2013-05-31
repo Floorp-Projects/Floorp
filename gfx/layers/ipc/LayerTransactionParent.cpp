@@ -26,6 +26,7 @@
 #include "mozilla/layers/ColorLayerComposite.h"
 #include "mozilla/layers/ContainerLayerComposite.h"
 #include "mozilla/layers/CanvasLayerComposite.h"
+#include "mozilla/layers/PLayerTransaction.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -431,6 +432,52 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   }
 #endif
 
+  return true;
+}
+
+bool
+LayerTransactionParent::RecvGetOpacity(PLayerParent* aParent,
+                                       float* aOpacity)
+{
+  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    return false;
+  }
+
+  *aOpacity = cast(aParent)->AsLayer()->GetLocalOpacity();
+  return true;
+}
+
+bool
+LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
+                                         gfx3DMatrix* aTransform)
+{
+  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    return false;
+  }
+
+  // The following code recovers the untranslated transform
+  // from the shadow transform by undoing the translations in
+  // AsyncCompositionManager::SampleValue.
+  Layer* layer = cast(aParent)->AsLayer();
+  *aTransform = layer->GetLocalTransform();
+  float scale = 1;
+  gfxPoint3D scaledOrigin;
+  gfxPoint3D mozOrigin;
+  for (uint32_t i=0; i < layer->GetAnimations().Length(); i++) {
+    if (layer->GetAnimations()[i].data().type() == AnimationData::TTransformData) {
+      const TransformData& data = layer->GetAnimations()[i].data().get_TransformData();
+      scale = data.appUnitsPerDevPixel();
+      scaledOrigin =
+        gfxPoint3D(NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),
+                   NS_round(NSAppUnitsToFloatPixels(data.origin().y, scale)),
+                   0.0f);
+      mozOrigin = data.mozOrigin();
+      break;
+    }
+  }
+
+  aTransform->Translate(-scaledOrigin);
+  *aTransform = nsLayoutUtils::ChangeMatrixBasis(-scaledOrigin - mozOrigin, *aTransform);
   return true;
 }
 

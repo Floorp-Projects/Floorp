@@ -35,11 +35,6 @@ nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent)
 
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  if (mContent->Tag() == nsGkAtoms::mrow_) {
-    // see if the directionality attribute is there
-    nsMathMLFrame::FindAttrDirectionality(mContent, mPresentationData);
-  }
-
   return NS_OK;
 }
 

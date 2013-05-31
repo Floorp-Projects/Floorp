@@ -133,15 +133,16 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
       "architecture", "sysName", "sysVersion", "vendor", "appName", "appID",
       "appVersion", "appBuildID", "platformVersion", "platformBuildID", "os",
-      "xpcomabi", "updateChannel"
+      "xpcomabi", "updateChannel",
+
+      // Joined to the add-ons table.
+      "addonsBody"
   };
 
   public static final String[] COLUMNS_MEASUREMENT_DETAILS = new String[] {"id", "name", "version"};
   public static final String[] COLUMNS_MEASUREMENT_AND_FIELD_DETAILS =
       new String[] {"measurement_name", "measurement_id", "measurement_version",
                     "field_name", "field_id", "field_flags"};
-
-  private static final String[] ENVIRONMENT_RECORD_COLUMNS = null;
 
   private static final String[] COLUMNS_VALUE = new String[] {"value"};
   private static final String[] COLUMNS_ID = new String[] {"id"};
@@ -184,7 +185,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   protected final HealthReportSQLiteOpenHelper helper;
 
   public static class HealthReportSQLiteOpenHelper extends SQLiteOpenHelper {
-    public static final int CURRENT_VERSION = 2;
+    public static final int CURRENT_VERSION = 3;
     public static final String LOG_TAG = "HealthReportSQL";
 
     /**
@@ -240,6 +241,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     public void onCreate(SQLiteDatabase db) {
       db.beginTransaction();
       try {
+        db.execSQL("CREATE TABLE addons (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                   "                     body TEXT, " +
+                   "                     UNIQUE (body) " +
+                   ")");
+
         db.execSQL("CREATE TABLE environments (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                    "                           hash TEXT, " +
                    "                           profileCreation INTEGER, " +
@@ -263,6 +269,8 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
                    "                           os              TEXT, " +
                    "                           xpcomabi        TEXT, " +
                    "                           updateChannel   TEXT, " +
+                   "                           addonsID        INTEGER, " +
+                   "                           FOREIGN KEY (addonsID) REFERENCES addons(id) ON DELETE RESTRICT, " +
                    "                           UNIQUE (hash) " +
                    ")");
 
@@ -330,16 +338,76 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
         db.execSQL("CREATE VIEW current_measurements AS " +
                    "SELECT name, MAX(version) AS version FROM measurements GROUP BY name");
 
+        createAddonsEnvironmentsView(db);
+
         db.setTransactionSuccessful();
       } finally {
         db.endTransaction();
       }
     }
 
+    private void createAddonsEnvironmentsView(SQLiteDatabase db) {
+      db.execSQL("CREATE VIEW environments_with_addons AS " +
+          "SELECT e.id AS id, " +
+          "       e.hash AS hash, " +
+          "       e.profileCreation AS profileCreation, " +
+          "       e.cpuCount AS cpuCount, " +
+          "       e.memoryMB AS memoryMB, " +
+          "       e.isBlocklistEnabled AS isBlocklistEnabled, " +
+          "       e.isTelemetryEnabled AS isTelemetryEnabled, " +
+          "       e.extensionCount AS extensionCount, " +
+          "       e.pluginCount AS pluginCount, " +
+          "       e.themeCount AS themeCount, " +
+          "       e.architecture AS architecture, " +
+          "       e.sysName AS sysName, " +
+          "       e.sysVersion AS sysVersion, " +
+          "       e.vendor AS vendor, " +
+          "       e.appName AS appName, " +
+          "       e.appID AS appID, " +
+          "       e.appVersion AS appVersion, " +
+          "       e.appBuildID AS appBuildID, " +
+          "       e.platformVersion AS platformVersion, " +
+          "       e.platformBuildID AS platformBuildID, " +
+          "       e.os AS os, " +
+          "       e.xpcomabi AS xpcomabi, " +
+          "       e.updateChannel AS updateChannel, " +
+          "       addons.body AS addonsBody " +
+          "FROM environments AS e, addons " +
+          "WHERE e.addonsID = addons.id");
+    }
+
+    private void upgradeDatabaseFrom2To3(SQLiteDatabase db) {
+      db.execSQL("CREATE TABLE addons (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                 "                     body TEXT, " +
+                 "                     UNIQUE (body) " +
+                 ")");
+
+      db.execSQL("ALTER TABLE environments ADD COLUMN addonsID INTEGER REFERENCES addons(id) ON DELETE RESTRICT");
+
+      createAddonsEnvironmentsView(db);
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+      if (oldVersion >= newVersion) {
+        return;
+      }
+
       Logger.info(LOG_TAG, "onUpgrade: from " + oldVersion + " to " + newVersion + ".");
-    }
+      try {
+        db.beginTransaction();
+        switch (oldVersion) {
+        case 2:
+          upgradeDatabaseFrom2To3(db);
+        }
+        db.setTransactionSuccessful();
+      } catch (Exception e) {
+        Logger.error(LOG_TAG, "Failure in onUpgrade.", e);
+        throw new RuntimeException(e);
+      } finally {
+        db.endTransaction();
+      }
+   }
 
     public void deleteEverything() {
       final SQLiteDatabase db = this.getWritableDatabase();
@@ -350,6 +418,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
         // Cascade will clear the rest.
         db.delete("measurements", null, null);
         db.delete("environments", null, null);
+        db.delete("addons", null, null);
         db.setTransactionSuccessful();
         Logger.info(LOG_TAG, "Deletion successful.");
       } finally {
@@ -431,7 +500,8 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     public int register() {
       final String h = getHash();
       if (storage.envs.containsKey(h)) {
-        return storage.envs.get(h);
+        this.id = storage.envs.get(h);
+        return this.id;
       }
 
       // Otherwise, add data and hash to the DB.
@@ -461,30 +531,84 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
       final SQLiteDatabase db = storage.helper.getWritableDatabase();
 
+      // If we're not already, we want all of our inserts to be in a transaction.
+      boolean newTransaction = !db.inTransaction();
+
       // Insert, with a little error handling to populate the cache in case of
       // omission and consequent collision.
+      //
+      // We would like to hang a trigger off a view here, and just use that for
+      // inserts. But triggers don't seem to correctly update the last inserted
+      // ID, so Android's insertOrThrow method returns -1.
+      //
+      // Instead, we go without the trigger, simply running the inserts ourselves.
       //
       // insertWithOnConflict doesn't work as documented: <http://stackoverflow.com/questions/11328877/android-sqllite-on-conflict-ignore-is-ignored-in-ics/11424150>.
       // So we do this the hard way.
       // We presume that almost every get will hit the cache (except for the first, obviously), so we
-      // bias here towards inserts.
+      // bias here towards inserts for the environments.
+      // For add-ons we assume that different environments will share add-ons, so we query first.
+
+      final String addonsJSON = getNormalizedAddonsJSON();
+      if (newTransaction) {
+        db.beginTransaction();
+      }
+
       try {
-        this.id = (int) db.insertOrThrow("environments", null, v);
-        storage.envs.put(h, this.id);
-        return this.id;
-      } catch (SQLException e) {
-        // The inserter should take care of updating `envs`. But if it doesn't...
-        Cursor c = db.query("environments", COLUMNS_ID, "hash = ?", new String[] {hash}, null, null, null);
+        int addonsID = ensureAddons(db, addonsJSON);
+        v.put("addonsID", addonsID);
+
         try {
-          if (!c.moveToFirst()) {
-            throw e;
+          int inserted = (int) db.insertOrThrow("environments", null, v);
+          Logger.debug(LOG_TAG, "Inserted ID: " + inserted + " for hash " + h);
+          if (inserted == -1) {
+            throw new SQLException("Insert returned -1!");
           }
-          this.id = (int) c.getLong(0);
-          storage.envs.put(hash, this.id);
-          return this.id;
-        } finally {
-          c.close();
+          this.id = inserted;
+          storage.envs.put(h, this.id);
+          if (newTransaction) {
+            db.setTransactionSuccessful();
+          }
+          return inserted;
+        } catch (SQLException e) {
+          // The inserter should take care of updating `envs`. But if it
+          // doesn't...
+          Cursor c = db.query("environments", COLUMNS_ID, "hash = ?",
+                              new String[] { h }, null, null, null);
+          try {
+            if (!c.moveToFirst()) {
+              throw e;
+            }
+            this.id = (int) c.getLong(0);
+            Logger.debug(LOG_TAG, "Found " + this.id + " for hash " + h);
+            storage.envs.put(h, this.id);
+            if (newTransaction) {
+              db.setTransactionSuccessful();
+            }
+            return this.id;
+          } finally {
+            c.close();
+          }
         }
+      } finally {
+        if (newTransaction) {
+          db.endTransaction();
+        }
+      }
+    }
+
+    protected static int ensureAddons(SQLiteDatabase db, String json) {
+      Cursor c = db.query("addons", COLUMNS_ID, "body = ?",
+                          new String[] { (json == null) ? "null" : json }, null, null, null);
+      try {
+        if (c.moveToFirst()) {
+          return c.getInt(0);
+        }
+        ContentValues values = new ContentValues();
+        values.put("body", json);
+        return (int) db.insert("addons", null, values);
+      } finally {
+        c.close();
       }
     }
 
@@ -512,6 +636,12 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       os              = v.getAsString("os");
       xpcomabi        = v.getAsString("xpcomabi");
       updateChannel   = v.getAsString("updateChannel");
+
+      try {
+        setJSONForAddons(v.getAsString("addonsBody"));
+      } catch (Exception e) {
+        // Nothing we can do.
+      }
 
       this.hash = null;
       this.id = -1;
@@ -552,7 +682,18 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       xpcomabi        = cursor.getString(i++);
       updateChannel   = cursor.getString(i++);
 
+      try {
+        setJSONForAddons(cursor.getBlob(i++));
+      } catch (Exception e) {
+        // Nothing we can do.
+      }
+
       return cursor.moveToNext();
+    }
+
+    public DatabaseEnvironment(HealthReportDatabaseStorage storage, Class<? extends EnvironmentAppender> appender) {
+      super(appender);
+      this.storage = storage;
     }
 
     public DatabaseEnvironment(HealthReportDatabaseStorage storage) {
@@ -572,7 +713,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   @Override
   public SparseArray<Environment> getEnvironmentRecordsByID() {
     final SQLiteDatabase db = this.helper.getReadableDatabase();
-    Cursor c = db.query("environments", COLUMNS_ENVIRONMENT_DETAILS, null, null, null, null, null);
+    Cursor c = db.query("environments_with_addons", COLUMNS_ENVIRONMENT_DETAILS, null, null, null, null, null);
     try {
       SparseArray<Environment> results = new SparseArray<Environment>();
       if (!c.moveToFirst()) {
@@ -603,7 +744,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   @Override
   public Cursor getEnvironmentRecordForID(int id) {
     final SQLiteDatabase db = this.helper.getReadableDatabase();
-    return db.query("environments", ENVIRONMENT_RECORD_COLUMNS, "id = " + id, null, null, null, null);
+    return db.query("environments_with_addons", COLUMNS_ENVIRONMENT_DETAILS, "id = " + id, null, null, null, null);
   }
 
   @Override
@@ -618,6 +759,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
       while (!c.isAfterLast()) {
         results.put(c.getInt(0), c.getString(1));
+        c.moveToNext();
       }
       return results;
     } finally {
@@ -784,7 +926,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     for (FieldSpec field : fields.getFields()) {
       v.put("name", field.name);
       v.put("flags", field.type);
-      Logger.info(LOG_TAG, "M: " + measurementID + " F: " + field.name + " (" + field.type + ")");
+      Logger.debug(LOG_TAG, "M: " + measurementID + " F: " + field.name + " (" + field.type + ")");
       db.insert("fields", null, v);
     }
 
@@ -856,6 +998,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   }
 
   private void recordDailyLast(int env, int day, int field, Object value, String table) {
+    if (env == -1) {
+      Logger.warn(LOG_TAG, "Refusing to record with environment = -1.");
+      return;
+    }
+
     final SQLiteDatabase db = this.helper.getWritableDatabase();
 
     final String envString = Integer.toString(env);
@@ -890,6 +1037,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   }
 
   private void recordDailyDiscrete(int env, int day, int field, Object value, String table) {
+    if (env == -1) {
+      Logger.warn(LOG_TAG, "Refusing to record with environment = -1.");
+      return;
+    }
+
     final ContentValues v = new ContentValues();
     v.put("env", env);
     v.put("field", field);
@@ -925,6 +1077,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
    */
   @Override
   public void incrementDailyCount(int env, int day, int field, int by) {
+    if (env == -1) {
+      Logger.warn(LOG_TAG, "Refusing to record with environment = -1.");
+      return;
+    }
+
     final SQLiteDatabase db = this.helper.getWritableDatabase();
     final String envString = Integer.toString(env);
     final String fieldIDString = Integer.toString(field, 10);

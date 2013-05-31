@@ -343,6 +343,7 @@
                 timeUpdateCount : 0,
                 maxCurrentTimeSeen : 0,
                 isAudioOnly : false,
+                suppressError : false,
 
                 setupStatusFader : function(immediate) {
                     // Since the play button will be showing, we don't want to
@@ -355,7 +356,7 @@
 
                     var show = false;
                     if (this.video.seeking ||
-                        this.video.error ||
+                        (this.video.error && !this.suppressError) ||
                         this.video.networkState == this.video.NETWORK_NO_SOURCE ||
                         (this.video.networkState == this.video.NETWORK_LOADING &&
                          (this.video.paused || this.video.ended
@@ -648,6 +649,7 @@
                             //    loading from child source elements, but we were unable to select
                             //    any of the child elements for playback during resource selection.
                             if (this.hasError()) {
+                                this.suppressError = false;
                                 this.clickToPlay.hidden = true;
                                 this.statusIcon.setAttribute("type", "error");
                                 this.updateErrorText();
@@ -1062,8 +1064,17 @@
                 },
 
                 clickToPlayClickHandler : function(e) {
-                    if (e.button != 0 || this.hasError())
+                    if (e.button != 0)
                         return;
+                    if (this.hasError() && !this.suppressError) {
+                        // Errors that can be dismissed should be placed here as we discover them.
+                        if (this.video.error.code != this.video.error.MEDIA_ERR_ABORTED)
+                            return;
+                        this.statusOverlay.hidden = true;
+                        this.suppressError = true;
+                        return;
+                    }
+
                     // Read defaultPrevented asynchronously, since Web content
                     // may want to consume the "click" event but will only
                     // receive it after us.
@@ -1084,6 +1095,7 @@
                     if (this._overlayPlayButtonHeight * animationScale > (videoHeight - this._controlBarHeight)||
                         this._overlayPlayButtonWidth * animationScale > videoWidth) {
                         this.clickToPlay.setAttribute("immediate", "true");
+                        this.clickToPlay.hidden = true;
                     } else {
                         this.clickToPlay.removeAttribute("immediate");
                     }
