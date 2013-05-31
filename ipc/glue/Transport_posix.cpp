@@ -29,7 +29,7 @@ CreateTransport(ProcessHandle /*unused*/, ProcessHandle /*unused*/,
   wstring id = ChildProcessInfo::GenerateRandomChannelID(aOne);
   // Use MODE_SERVER to force creation of the socketpair
   Transport t(id, Transport::MODE_SERVER, nullptr);
-  int fd1 = t.GetServerFileDescriptor();
+  int fd1 = t.GetFileDescriptor();
   int fd2, dontcare;
   t.GetClientFileDescriptorMapping(&fd2, &dontcare);
   if (fd1 < 0 || fd2 < 0) {
