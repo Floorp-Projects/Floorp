@@ -228,9 +228,10 @@
 
 /* Pinned tabs */
 
-/* pinned tabs need position: fixed for separator when overflowing */
+/* Pinned tab separators need position: absolute when positioned (during overflow). */
 #tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]::before {
-  position: fixed;
+  height: 100%;
+  position: absolute;
 }
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
