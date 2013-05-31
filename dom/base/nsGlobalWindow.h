@@ -102,7 +102,6 @@ class nsIDOMEvent;
 class nsIScrollableFrame;
 class nsIControllers;
 
-class nsBarProp;
 class nsLocation;
 class nsScreen;
 class nsHistory;
@@ -121,6 +120,7 @@ class nsWindowSizes;
 
 namespace mozilla {
 namespace dom {
+class BarProp;
 class Navigator;
 class URL;
 class SpeechSynthesis;
@@ -797,7 +797,7 @@ protected:
   static bool sIdleObserversAPIFuzzTimeDisabled;
 
   friend class HashchangeCallback;
-  friend class nsBarProp;
+  friend class mozilla::dom::BarProp;
 
   // Object Management
   virtual ~nsGlobalWindow();
@@ -1177,12 +1177,12 @@ protected:
   nsRefPtr<Navigator>           mNavigator;
   nsRefPtr<nsScreen>            mScreen;
   nsRefPtr<nsDOMWindowList>     mFrames;
-  nsRefPtr<nsBarProp>           mMenubar;
-  nsRefPtr<nsBarProp>           mToolbar;
-  nsRefPtr<nsBarProp>           mLocationbar;
-  nsRefPtr<nsBarProp>           mPersonalbar;
-  nsRefPtr<nsBarProp>           mStatusbar;
-  nsRefPtr<nsBarProp>           mScrollbars;
+  nsRefPtr<mozilla::dom::BarProp> mMenubar;
+  nsRefPtr<mozilla::dom::BarProp> mToolbar;
+  nsRefPtr<mozilla::dom::BarProp> mLocationbar;
+  nsRefPtr<mozilla::dom::BarProp> mPersonalbar;
+  nsRefPtr<mozilla::dom::BarProp> mStatusbar;
+  nsRefPtr<mozilla::dom::BarProp> mScrollbars;
   nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
