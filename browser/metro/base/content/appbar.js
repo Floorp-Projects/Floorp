@@ -38,21 +38,23 @@ var Appbar = {
 
   handleEvent: function Appbar_handleEvent(aEvent) {
     switch (aEvent.type) {
+      case 'URLChanged':
+      case 'TabSelect':
+        this.update();
+        Elements.navbar.dismiss();
+        Elements.contextappbar.dismiss();
+        break;
       case 'MozContextUIShow':
         Elements.navbar.show();
         break;
       case 'MozAppbarDismiss':
       case 'MozContextUIDismiss':
-      case 'URLChanged':
-      case 'TabSelect':
       case 'ToolPanelShown':
       case 'ToolPanelHidden':
         Elements.navbar.dismiss();
         Elements.contextappbar.dismiss();
         break;
       case 'MozAppbarShowing':
-        this._updatePinButton();
-        this._updateStarButton();
         break;
       case 'MozAppbarDismissing':
         if (this.activeTileset) {
@@ -77,6 +79,16 @@ var Appbar = {
         }
         break;
     }
+  },
+
+  /*
+   * Called from various places when the visible content
+   * has changed such that button states may need to be
+   * updated.
+   */
+  update: function update() {
+    this._updatePinButton();
+    this._updateStarButton();
   },
 
   onDownloadButton: function() {
