@@ -16,6 +16,9 @@ Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+  "resource://gre/modules/PluralForm.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
   "resource://gre/modules/devtools/NetworkHelper.jsm");
 
