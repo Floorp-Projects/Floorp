@@ -83,6 +83,7 @@ FENNEC_JAVA_FILES = \
   Distribution.java \
   DoorHanger.java \
   DoorHangerPopup.java \
+  EditBookmarkDialog.java \
   Favicons.java \
   FilePickerResultHandler.java \
   FilePickerResultHandlerSync.java \
