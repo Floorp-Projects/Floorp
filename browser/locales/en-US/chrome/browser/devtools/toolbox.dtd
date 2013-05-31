@@ -10,22 +10,37 @@
 <!ENTITY toolboxCloseButton.tooltip    "Close Developer Tools">
 <!ENTITY toolboxOptionsButton.key      "O">
 
-<!-- LOCALIZATION NOTE (options.context.label): This is the label for the
-  -  heading of the group of two about:config preferences to toggle chrome
-  -  and remote debugging in the options panel. -->
-<!ENTITY options.context.label         "Advanced settings (requires a browser restart)">
+<!-- LOCALIZATION NOTE (options.context.advancedSettings): This is the label for
+  -  the heading of the advanced settings group in the options panel. -->
+<!ENTITY options.context.advancedSettings "Advanced settings">
+
+<!-- LOCALIZATION NOTE (options.context.requiresRestart): This is the requires
+  -  restart label at the bottom of the advanced settings group in the options
+  -  panel. -->
+<!ENTITY options.context.requiresRestart  "* Requires browser restart">
+
+<!-- LOCALIZATION NOTE (options.context.triggersPageRefresh): This is the
+  -  triggers page refresh label at the bottom of the advanced settings group in
+  -  the options panel. -->
+<!ENTITY options.context.triggersPageRefresh  "&#8224; Triggers page refresh">
 
 <!-- LOCALIZATION NOTE (options.enableChrome.label): This is the label for the
   -  checkbox that toggles chrome debugging, i.e. devtools.chrome.enabled
   -  boolean preference in about:config, in the options panel. -->
-<!ENTITY options.enableChrome.label    "Enable chrome debugging">
+<!ENTITY options.enableChrome.label2    "Enable chrome debugging *">
 <!ENTITY options.enableChrome.tooltip  "Turning this option on will allow you to use various developer tools in browser context">
 
 <!-- LOCALIZATION NOTE (options.enableRemote.label): This is the label for the
   -  checkbox that toggles remote debugging, i.e. devtools.debugger.remote-enabled
   -  boolean preference in about:config, in the options panel. -->
-<!ENTITY options.enableRemote.label    "Enable remote debugging">
+<!ENTITY options.enableRemote.label2    "Enable remote debugging *">
 <!ENTITY options.enableRemote.tooltip  "Turning this option on will allow the developer tools to debug remote Firefox instance like Firefox OS">
+
+<!-- LOCALIZATION NOTE (options.disableJavaScript.label,
+  -  options.disableJavaScript.tooltip): This is the options panel label and
+  - tooltip for the checkbox that toggles JavaScript on or off. -->
+<!ENTITY options.disableJavaScript.label    "Disable JavaScript for the current tab (temporary) &#8224;">
+<!ENTITY options.disableJavaScript.tooltip  "Turning this option on will disable JavaScript for the current tab. If the tab or the toolbox is closed then this setting will be forgotten.">
 
 <!-- LOCALIZATION NOTE (options.selectDefaultTools.label): This is the label for
   -  the heading of group of checkboxes corresponding to the default developer
