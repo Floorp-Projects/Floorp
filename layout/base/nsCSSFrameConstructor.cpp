@@ -3513,6 +3513,19 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   const nsStyleDisplay* display = styleContext->StyleDisplay();
   nsIContent* const content = aItem.mContent;
 
+  // Get the parent of the content and check if it is a XBL children element.
+  // Push the children element as an ancestor here because it does
+  // not have a frame and would not otherwise be pushed as an ancestor. It is
+  // necessary to do so in order to correctly handle style resolution on
+  // descendants.
+  nsIContent* parent = content->GetParent();
+  bool pushInsertionPoint = aState.mTreeMatchContext.mAncestorFilter.HasFilter() &&
+    parent && parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+  TreeMatchContext::AutoAncestorPusher
+    insertionPointPusher(pushInsertionPoint,
+                         aState.mTreeMatchContext,
+                         parent && parent->IsElement() ? parent->AsElement() : nullptr);
+
   // Push the content as a style ancestor now, so we don't have to do
   // it in our various full-constructor functions.  In particular,
   // since a number of full-constructor functions don't actually call
@@ -9945,6 +9958,20 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 
     FlattenedChildIterator iter(aContent);
     for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
+      // Get the parent of the content and check if it is a XBL children element
+      // (if the content is a children element then parent != aContent because the
+      // FlattenedChildIterator will transitively iterate through <xbl:children>
+      // for default content). Push the children element as an ancestor here because
+      // it does not have a frame and would not otherwise be pushed as an ancestor.
+      nsIContent* parent = child->GetParent();
+      MOZ_ASSERT(parent, "Parent must be non-null because we are iterating children.");
+      MOZ_ASSERT(parent->IsElement());
+      bool pushInsertionPoint = parent != aContent &&
+        aState.mTreeMatchContext.mAncestorFilter.HasFilter();
+      TreeMatchContext::AutoAncestorPusher
+        ancestorPusher(pushInsertionPoint, aState.mTreeMatchContext,
+                       parent->AsElement());
+
       // Frame construction item construction should not post
       // restyles, so removing restyle flags here is safe.
       if (child->IsElement()) {
@@ -11204,6 +11231,20 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
 
   FlattenedChildIterator iter(parentContent);
   for (nsIContent* content = iter.GetNextChild(); content; content = iter.GetNextChild()) {
+    // Get the parent of the content and check if it is a XBL children element
+    // (if the content is a children element then contentParent != parentContent because the
+    // FlattenedChildIterator will transitively iterate through <xbl:children>
+    // for default content). Push the children element as an ancestor here because
+    // it does not have a frame and would not otherwise be pushed as an ancestor.
+    nsIContent* contentParent = content->GetParent();
+    MOZ_ASSERT(contentParent, "Parent must be non-null because we are iterating children.");
+    MOZ_ASSERT(contentParent->IsElement());
+    bool pushInsertionPoint = contentParent != parentContent &&
+      aState.mTreeMatchContext.mAncestorFilter.HasFilter();
+    TreeMatchContext::AutoAncestorPusher
+      insertionPointPusher(pushInsertionPoint, aState.mTreeMatchContext,
+                           contentParent->AsElement());
+
     // Manually check for comments/PIs, since we don't have a frame to pass to
     // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
     // so there is no need to do the NeedFrameFor check.

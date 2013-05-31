@@ -3395,14 +3395,6 @@ TreeMatchContext::InitAncestors(Element *aElement)
         break;
       }
 
-      if (parent->AsElement()->NodeInfo()->Equals(nsGkAtoms::children,
-                                                  kNameSpaceID_XBL)) {
-        parent = parent->GetParentNode();
-        if (!parent->IsElement()) {
-          break;
-        }
-      }
-
       cur = parent->AsElement();
     } while (true);
 
@@ -3471,17 +3463,6 @@ AncestorFilter::AssertHasAllAncestors(Element *aElement) const
 {
   nsINode* cur = aElement->GetParentNode();
   while (cur && cur->IsElement()) {
-    // We build our ancestor tree from the top-down. However, because
-    // <xbl:children> elements don't have frames and don't directly
-    // participate in the style tree, they never get pushed as ancestors.
-    // Skip them on the way up as we do on the way down (see also
-    // mozilla::dom::ExplicitChildIterator).
-    if (cur->AsElement()->NodeInfo()->Equals(nsGkAtoms::children,
-                                             kNameSpaceID_XBL)) {
-      cur = cur->GetParentNode();
-      continue;
-    }
-
     MOZ_ASSERT(mElements.Contains(cur));
     cur = cur->GetParentNode();
   }
