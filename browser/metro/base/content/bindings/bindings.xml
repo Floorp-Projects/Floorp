@@ -129,6 +129,7 @@
     </handlers>
   </binding>
 
+  <!-- remnants of the old fennec content navigation system, now just the find bar. this can be stripped down further. -->
   <binding id="content-navigator">
     <content class="window-width content-navigator-box" orient="horizontal" pack="start">
       <children includes="textbox"/>
@@ -157,10 +158,6 @@
       <method name="show">
         <parameter name="aModel" />
         <body><![CDATA[
-          // call the hide callback of the current object if any
-          if (this.model && this.model.type != aModel.type)
-            this.model.hide();
-
           this.setAttribute("type", aModel.type);
           this.setAttribute("next", aModel.commands.next);
           this.setAttribute("previous", aModel.commands.previous);
@@ -183,7 +180,6 @@
           this.removeAttribute("previous");
           this.removeAttribute("close");
           this.removeAttribute("type");
-
           this.model = null;
         ]]></body>
       </method>

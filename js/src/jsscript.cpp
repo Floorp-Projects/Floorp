@@ -1213,17 +1213,15 @@ SourceDataCache::purge()
     map_ = NULL;
 }
 
-JSStableString *
-ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
+const jschar *
+ScriptSource::chars(JSContext *cx)
 {
-    const jschar *chars;
 #ifdef USE_ZLIB
     Rooted<JSStableString *> cached(cx, NULL);
 #endif
 #ifdef JS_THREADSAFE
-    if (!ready()) {
-        chars = cx->runtime->sourceCompressorThread.currentChars();
-    } else
+    if (!ready())
+        return cx->runtime->sourceCompressorThread.currentChars();
 #endif
 #ifdef USE_ZLIB
     if (compressed()) {
@@ -1247,14 +1245,21 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
             }
             cx->runtime->sourceDataCache.put(this, cached);
         }
-        chars = cached->chars().get();
-        JS_ASSERT(chars);
-    } else {
-        chars = data.source;
+        return cached->chars().get();
     }
+    return data.source;
 #else
-    chars = data.source;
+    return data.source;
 #endif
+}
+
+JSStableString *
+ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
+{
+    JS_ASSERT(start <= stop);
+    const jschar *chars = this->chars(cx);
+    if (!chars)
+        return NULL;
     JSFlatString *flatStr = js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
     if (!flatStr)
         return NULL;
@@ -1667,6 +1672,8 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
                  const CompileOptions &options, unsigned staticLevel,
                  JS::HandleScriptSource sourceObject, uint32_t bufStart, uint32_t bufEnd)
 {
+    JS_ASSERT(bufStart <= bufEnd);
+
     RootedScript script(cx, js_NewGCScript(cx));
     if (!script)
         return NULL;
@@ -1958,7 +1965,7 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
     while (enclosing) {
         if (enclosing->isFunction()) {
             JSFunction *fun = enclosing->toFunction();
-            if (!fun->hasScript())
+            if (!fun->hasScript() || !fun->nonLazyScript())
                 return false;
             enclosing = fun->nonLazyScript()->enclosingStaticScope();
         } else {
@@ -2294,6 +2301,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                 clone = CloneStaticBlockObject(cx, enclosingScope, innerBlock);
             } else if (obj->isFunction()) {
                 RootedFunction innerFun(cx, obj->toFunction());
+                if (!innerFun->getOrCreateScript(cx))
+                    return NULL;
                 RootedObject staticScope(cx, innerFun->nonLazyScript()->enclosingStaticScope());
                 StaticScopeIter ssi(cx, staticScope);
                 RootedObject enclosingScope(cx);
@@ -2737,6 +2746,31 @@ JSScript::markChildren(JSTracer *trc)
 }
 
 void
+LazyScript::markChildren(JSTracer *trc)
+{
+    if (parent_)
+        MarkScriptUnbarriered(trc, &parent_, "lazyScriptParent");
+
+    if (script_)
+        MarkScriptUnbarriered(trc, &script_, "lazyScript");
+
+    HeapPtrAtom *freeVariables = this->freeVariables();
+    for (size_t i = 0; i < numFreeVariables(); i++)
+        MarkString(trc, &freeVariables[i], "lazyScriptFreeVariable");
+
+    HeapPtrFunction *innerFunctions = this->innerFunctions();
+    for (size_t i = 0; i < numInnerFunctions(); i++)
+        MarkObject(trc, &innerFunctions[i], "lazyScriptInnerFunction");
+}
+
+void
+LazyScript::finalize(FreeOp *fop)
+{
+    if (table_)
+        fop->free_(table_);
+}
+
+void
 JSScript::setArgumentsHasVarBinding()
 {
     argsHasVarBinding_ = true;
@@ -2880,6 +2914,29 @@ bool
 JSScript::formalLivesInArgumentsObject(unsigned argSlot)
 {
     return argsObjAliasesFormals() && !formalIsAliased(argSlot);
+}
+
+/* static */ LazyScript *
+LazyScript::Create(JSContext *cx, uint32_t numFreeVariables, uint32_t numInnerFunctions,
+                   uint32_t begin, uint32_t end, uint32_t lineno, uint32_t column)
+{
+    JS_ASSERT(begin <= end);
+
+    size_t bytes = (numFreeVariables * sizeof(HeapPtrAtom))
+                 + (numInnerFunctions * sizeof(HeapPtrFunction));
+
+    void *table = NULL;
+    if (bytes) {
+        table = cx->malloc_(bytes);
+        if (!table)
+            return NULL;
+    }
+
+    LazyScript *res = js_NewGCLazyScript(cx);
+    if (!res)
+        return NULL;
+
+    return new (res) LazyScript(table, numFreeVariables, numInnerFunctions, begin, end, lineno, column);
 }
 
 void

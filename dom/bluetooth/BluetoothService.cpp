@@ -550,7 +550,7 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"bluetooth.enabled","value":true}
 
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  AutoSafeJSContext cx;
   if (!cx) {
     return NS_OK;
   }

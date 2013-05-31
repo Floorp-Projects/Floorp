@@ -637,7 +637,7 @@ var BrowserApp = {
   // off to the compositor.
   isBrowserContentDocumentDisplayed: function() {
     try {
-      if (window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint)
+      if (!getBridge().isContentDocumentDisplayed())
         return false;
     } catch (e) {
       return false;
@@ -649,8 +649,9 @@ var BrowserApp = {
     return tab.contentDocumentIsDisplayed;
   },
 
-  displayedDocumentChanged: function() {
+  contentDocumentChanged: function() {
     window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
+    getBridge().contentDocumentChanged();
   },
 
   get tabs() {
@@ -677,7 +678,7 @@ var BrowserApp = {
     Tabs.touch(aTab);
     aTab.setActive(true);
     aTab.setResolution(aTab._zoom, true);
-    this.displayedDocumentChanged();
+    this.contentDocumentChanged();
     this.deck.selectedPanel = aTab.browser;
     // Focus the browser so that things like selection will be styled correctly.
     aTab.browser.focus();
@@ -1442,7 +1443,7 @@ var BrowserApp = {
         break;
 
       case "Viewport:Flush":
-        this.displayedDocumentChanged();
+        this.contentDocumentChanged();
         break;
 
       case "Passwords:Init": {
@@ -3840,7 +3841,7 @@ Tab.prototype = {
         let contentDocument = aSubject;
         if (contentDocument == this.browser.contentDocument) {
           if (BrowserApp.selectedTab == this) {
-            BrowserApp.displayedDocumentChanged();
+            BrowserApp.contentDocumentChanged();
           }
           this.contentDocumentIsDisplayed = true;
 
