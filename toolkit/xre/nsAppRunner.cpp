@@ -196,7 +196,7 @@ using mozilla::scache::StartupCache;
 #endif
 
 #include "base/command_line.h"
-#ifdef MOZ_ENABLE_TESTS
+#ifdef MOZ_ENABLE_GTEST
 #include "GTestRunner.h"
 #endif
 
@@ -241,10 +241,6 @@ static char **gQtOnlyArgv;
 #include "nsGTKToolkit.h"
 #endif
 #include "BinaryPath.h"
-
-namespace mozilla {
-int (*RunGTest)() = 0;
-}
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
@@ -3181,15 +3177,14 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     return 0;
   }
 
-  if (PR_GetEnv("MOZ_RUN_GTEST")) {
-    int result;
-    // RunGTest will only be set if we're in xul-unit
-    if (mozilla::RunGTest) {
-      result = mozilla::RunGTest();
-    } else {
-      result = 1;
-      printf("TEST-UNEXPECTED-FAIL | gtest | Not compiled with enable-tests\n");
-    }
+  ar = CheckArg("unittest", true);
+  if (ar == ARG_FOUND) {
+#if MOZ_ENABLE_GTEST
+    int result = mozilla::RunGTest();
+#else
+    int result = 1;
+    printf("TEST-UNEXPECTED-FAIL | Not compiled with GTest enabled\n");
+#endif
     *aExitFlag = true;
     return result;
   }
