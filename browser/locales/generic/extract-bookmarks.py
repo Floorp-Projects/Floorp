@@ -32,7 +32,7 @@ template = '''#filter emptyLines
 #define bookmarks_toolbarfolder_description %s
 
 # LOCALIZATION NOTE (getting_started):
-# link title for http://www.mozilla.com/en-US/firefox/central/
+# link title for https://www.mozilla.org/en-US/firefox/central/
 #define getting_started %s
 
 # LOCALIZATION NOTE (firefox_heading):
@@ -40,19 +40,19 @@ template = '''#filter emptyLines
 #define firefox_heading %s
 
 # LOCALIZATION NOTE (firefox_help):
-# link title for http://www.mozilla.com/en-US/firefox/help/
+# link title for https://www.mozilla.org/en-US/firefox/help/
 #define firefox_help %s
 
 # LOCALIZATION NOTE (firefox_customize):
-# link title for http://www.mozilla.com/en-US/firefox/customize/
+# link title for https://www.mozilla.org/en-US/firefox/customize/
 #define firefox_customize %s
 
 # LOCALIZATION NOTE (firefox_community):
-# link title for http://www.mozilla.com/en-US/firefox/community/
+# link title for https://www.mozilla.org/en-US/contribute/
 #define firefox_community %s
 
 # LOCALIZATION NOTE (firefox_about):
-# link title for http://www.mozilla.com/en-US/about/
+# link title for https://www.mozilla.org/en-US/about/
 #define firefox_about %s
 
 #unfilter emptyLines'''

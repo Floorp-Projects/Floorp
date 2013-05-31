@@ -139,6 +139,7 @@ else
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 endif
+	cp -RL $(srcdir)/b2g.icns $(DIST)/$(APP_NAME).app/Contents/Resources/$(MOZ_APP_NAME).icns
 	printf "APPLMOZB" > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 
 else # MOZ_WIDGET_TOOLKIT != cocoa

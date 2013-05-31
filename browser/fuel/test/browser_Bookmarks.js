@@ -78,13 +78,13 @@ function test() {
   testFolder.events.addListener("removechild", onFolderRemoveChild);
 
   // test adding a bookmark
-  var testBookmark = testFolder.addBookmark("Mozilla", url("http://www.mozilla.com/"));
+  var testBookmark = testFolder.addBookmark("Mozilla", url("https://www.mozilla.org/"));
   ok(testBookmark, "Check bookmark creation");
   ok(testBookmark.parent, "Check parent after bookmark creation");
   is(gLastFolderAction, "addchild", "Check event handler for adding a child to a folder");
   is(testBookmark.type, "bookmark", "Check 'bookmark.type' after creation");
   is(testBookmark.title, "Mozilla", "Check 'bookmark.title' after creation");
-  is(testBookmark.uri.spec, "http://www.mozilla.com/", "Check 'bookmark.uri' after creation");
+  is(testBookmark.uri.spec, "https://www.mozilla.org/", "Check 'bookmark.uri' after creation");
 
   is(testFolder.children.length, 1, "Check test folder child count after adding a child bookmark");
 
@@ -175,7 +175,7 @@ function test() {
   var testFolderA = root.addFolder("folder-a");
   var testFolderB = root.addFolder("folder-b");
 
-  var testMove = testFolderA.addBookmark("Mozilla", url("http://www.mozilla.com/"));
+  var testMove = testFolderA.addBookmark("Mozilla", url("https://www.mozilla.org/"));
   testMove.events.addListener("move", onBookmarkMove);
   is(testMove.parent.title, "folder-a", "Checking for new parent before moving bookmark");
 

@@ -4953,7 +4953,7 @@ DOMCallNeedsBarrier(const JSJitInfo* jitinfo, types::StackTypeSet *types)
         return true;
 
     // No need for a barrier if we're already expecting the type we'll produce.
-    return jitinfo->returnType == types->getKnownTypeTag();
+    return jitinfo->returnType != types->getKnownTypeTag();
 }
 
 bool
@@ -7791,7 +7791,8 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         // properties.
         RootedFunction setter(cx, commonSetter);
         if (isDOM && TestShouldDOMCall(cx, objTypes, setter, JSJitInfo::Setter)) {
-            MSetDOMProperty *set = MSetDOMProperty::New(setter->jitInfo()->op, obj, value);
+            JS_ASSERT(setter->jitInfo()->type == JSJitInfo::Setter);
+            MSetDOMProperty *set = MSetDOMProperty::New(setter->jitInfo()->setter, obj, value);
             if (!set)
                 return false;
 

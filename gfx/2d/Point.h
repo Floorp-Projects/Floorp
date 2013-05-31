@@ -36,6 +36,17 @@ struct PointTyped :
   PointTyped() : Super() {}
   PointTyped(Float aX, Float aY) : Super(aX, aY) {}
   PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
+
+  // XXX When all of the code is ported, the following functions to convert to and from
+  // unknown types should be removed.
+
+  static PointTyped<units> FromUnknownPoint(const PointTyped<UnknownUnits>& pt) {
+    return PointTyped<units>(pt.x, pt.y);
+  }
+
+  PointTyped<UnknownUnits> ToUnknownPoint() const {
+    return PointTyped<UnknownUnits>(this->x, this->y);
+  }
 };
 typedef PointTyped<UnknownUnits> Point;
 
