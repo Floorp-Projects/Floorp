@@ -27,23 +27,6 @@ toolbar[customizable="true"]:not([nowindowdrag="true"]) {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-autohide");
 }
 
-panelmultiview {
-  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
-}
-
-panelview {
-  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelview");
-  -moz-box-orient: vertical;
-}
-
-.panel-mainview {
-  transition: transform 150ms;
-}
-
-panelview:not([mainview]):not([current]) {
-  display: none;
-}
-
 tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
 }

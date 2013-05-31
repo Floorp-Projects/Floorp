@@ -198,7 +198,7 @@ CustomizeMode.prototype = {
     // Let everybody in this window know that we're starting to
     // exit customization mode.
     this.dispatchToolboxEvent("customizationending");
-    window.PanelUI.setMainView(window.PanelUI.mainView);
+    window.PanelUI.replaceMainView(window.PanelUI.mainView);
 
     let browser = document.getElementById("browser");
     browser.parentNode.selectedPanel = browser;
