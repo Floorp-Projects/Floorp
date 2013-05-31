@@ -739,28 +739,35 @@ ContactDB.prototype = {
     if (!aFindOptions)
       return;
     if (aFindOptions.sortBy != "undefined") {
+      const sortOrder = aFindOptions.sortOrder;
+      const sortBy = aFindOptions.sortBy == "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
+
       aResults.sort(function (a, b) {
         let x, y;
         let result = 0;
-        let sortOrder = aFindOptions.sortOrder;
-        let sortBy = aFindOptions.sortBy == "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
         let xIndex = 0;
         let yIndex = 0;
 
         do {
           while (xIndex < sortBy.length && !x) {
-            x = a.properties[sortBy[xIndex]] && a.properties[sortBy[xIndex]][0] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
+            x = a.properties[sortBy[xIndex]];
+            if (x) {
+              x = x.join("").toLowerCase();
+            }
             xIndex++;
           }
           if (!x) {
-            return sortOrder == 'descending' ? 1 : -1;
+            return sortOrder == "descending" ? 1 : -1;
           }
           while (yIndex < sortBy.length && !y) {
-            y = b.properties[sortBy[yIndex]] && b.properties[sortBy[yIndex]][0] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
+            y = b.properties[sortBy[yIndex]];
+            if (y) {
+              y = y.join("").toLowerCase();
+            }
             yIndex++;
           }
           if (!y) {
-            return sortOrder == 'ascending' ? 1 : -1;
+            return sortOrder == "ascending" ? 1 : -1;
           }
 
           result = x.localeCompare(y);
@@ -768,7 +775,7 @@ ContactDB.prototype = {
           y = null;
         } while (result == 0);
 
-        return sortOrder == 'ascending' ? result : -result;
+        return sortOrder == "ascending" ? result : -result;
       });
     }
     if (aFindOptions.filterLimit && aFindOptions.filterLimit != 0) {
