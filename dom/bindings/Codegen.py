@@ -7516,6 +7516,12 @@ class CGDescriptor(CGThing):
 
         if descriptor.concrete:
             if descriptor.proxy:
+                if descriptor.nativeOwnership != 'nsisupports':
+                    raise TypeError("We don't support non-nsISupports native classes for "
+                                    "proxy-based bindings yet (" + descriptor.name + ")")
+                if not descriptor.wrapperCache:
+                    raise TypeError("We need a wrappercache to support expandos for proxy-based "
+                                    "bindings (" + descriptor.name + ")")
                 cgThings.append(CGProxyIsProxy(descriptor))
                 cgThings.append(CGProxyUnwrap(descriptor))
                 cgThings.append(CGDOMJSProxyHandlerDOMClass(descriptor))
