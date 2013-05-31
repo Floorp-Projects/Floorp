@@ -2,6 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+panelmultiview {
+  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
+}
+
+panelmainview,
+panelsubview {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+}
+
+panelmainview {
+  transition: transform 150ms;
+}
+
+panelmultiview > panelsubview:not([current]) {
+  display: none;
+}
+
 .panel-subviews {
   background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
   background-color: -moz-dialog;
@@ -61,13 +79,13 @@
 .PanelUI-zoomControls,
 #PanelUI-contents,
 .PanelUI-footer,
-.panel-mainview:not([panelid="PanelUI-popup"]) {
+#customizationui-widget-panel {
   max-width: @menuPanelWidth@;
   padding: .5em 1em;
 }
 
 #PanelUI-contents[type="list"] toolbarbutton > .toolbarbutton-text,
-panelview:not([mainview]) .toolbarbutton-text,
+panelsubview toolbarbutton > .toolbarbutton-text,
 #customizationui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
   -moz-padding-start: 8px;
@@ -159,7 +177,9 @@ panelview:not([mainview]) .toolbarbutton-text,
   display: none;
 }
 
-panelview toolbarbutton,
+panelmainview toolbarbutton,
+panelsubview toolbarbutton,
+#customizationui-widget-panel toolbarbutton,
 #widget-overflow-list > toolbarbutton,
 .customizationmode-button {
   -moz-appearance: none;
@@ -176,7 +196,9 @@ panelview toolbarbutton,
   transition-duration: 150ms;
 }
 
-panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+panelmainview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+panelsubview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+#customizationui-widget-panel toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #PanelUI-mainView .PanelUI-pageControls toolbarbutton,
 .customizationmode-button,
@@ -188,8 +210,10 @@ panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):
               0 0 2px hsla(210,54%,20%,.1);
 }
 
-panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+panelmainview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+panelsubview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
 .customizationmode-button:hover:active,
+#customizationui-widget-panel toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
 #widget-overflow-list > toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
