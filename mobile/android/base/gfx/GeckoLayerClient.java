@@ -93,6 +93,15 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private final LayerMarginsAnimator mMarginsAnimator;
     private LayerView mView;
 
+    /* This flag is true from the time that browser.js detects a first-paint is about to start,
+     * to the time that we receive the first-paint composite notification from the compositor.
+     * Note that there is a small race condition with this; if there are two paints that both
+     * have the first-paint flag set, and the second paint happens concurrently with the
+     * composite for the first paint, then this flag may be set to true prematurely. Fixing this
+     * is possible but risky; see https://bugzilla.mozilla.org/show_bug.cgi?id=797615#c751
+     */
+    private volatile boolean mContentDocumentIsDisplayed;
+
     public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
         // to before being read
@@ -120,6 +129,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mMarginsAnimator = new LayerMarginsAnimator(this, view);
         mView = view;
         mView.setListener(this);
+        mContentDocumentIsDisplayed = true;
     }
 
     /** Attaches to root layer so that Gecko appears. */
@@ -396,7 +406,8 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mDisplayPort;
     }
 
-    public DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ImmutableViewportMetrics metrics) {
+    /* This is invoked by JNI on the gecko thread */
+    DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ImmutableViewportMetrics metrics) {
         Tabs tabs = Tabs.getInstance();
         if (tabs.isSelectedTab(tabs.getTab(tabId)) && isBrowserContentDisplayed) {
             // for foreground tabs, send the viewport update unless the document
@@ -410,6 +421,16 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             // get to java, and again once java figures out the display port).
             return DisplayPortCalculator.calculate(metrics, null);
         }
+    }
+
+    /* This is invoked by JNI on the gecko thread */
+    void contentDocumentChanged() {
+        mContentDocumentIsDisplayed = false;
+    }
+
+    /* This is invoked by JNI on the gecko thread */
+    boolean isContentDocumentDisplayed() {
+        return mContentDocumentIsDisplayed;
     }
 
     // This is called on the Gecko thread to determine if we're still interested
@@ -578,6 +599,8 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
         DisplayPortCalculator.resetPageState();
         mDrawTimingQueue.reset();
+
+        mContentDocumentIsDisplayed = true;
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.

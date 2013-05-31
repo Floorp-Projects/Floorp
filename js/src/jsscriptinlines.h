@@ -184,6 +184,23 @@ JSScript::writeBarrierPost(JSScript *script, void *addr)
 {
 }
 
+/* static */ inline void
+js::LazyScript::writeBarrierPre(js::LazyScript *lazy)
+{
+#ifdef JSGC_INCREMENTAL
+    if (!lazy)
+        return;
+
+    JS::Zone *zone = lazy->zone();
+    if (zone->needsBarrier()) {
+        JS_ASSERT(!zone->rt->isHeapBusy());
+        js::LazyScript *tmp = lazy;
+        MarkLazyScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == lazy);
+    }
+#endif
+}
+
 inline JSPrincipals *
 JSScript::principals()
 {
