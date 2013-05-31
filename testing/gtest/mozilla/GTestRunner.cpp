@@ -3,11 +3,9 @@
  * * License, v. 2.0. If a copy of the MPL was not distributed with this
  * * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "GTestRunner.h"
 #include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/NullPtr.h"
-#include "prenv.h"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -67,7 +65,7 @@ static void ReplaceGTestLogger()
   listeners.Append(new MozillaPrinter);
 }
 
-int RunGTestFunc()
+int RunGTest()
 {
   int c = 0;
   InitGoogleTest(&c, static_cast<char**>(nullptr));
@@ -76,20 +74,9 @@ int RunGTestFunc()
     ReplaceGTestLogger();
   }
 
-  PR_SetEnv("XPCOM_DEBUG_BREAK=stack-and-abort");
+  setenv("XPCOM_DEBUG_BREAK", "stack-and-abort", false);
 
   return RUN_ALL_TESTS();
 }
-
-// We use a static var 'RunGTest' defined in nsAppRunner.cpp.
-// RunGTest is initialized to NULL but if GTest (this file)
-// is linked in then RunGTest will be set here indicating
-// GTest is supported.
-class _InitRunGTest {
-public:
-  _InitRunGTest() {
-    RunGTest = RunGTestFunc;
-  }
-} InitRunGTest;
 
 }
