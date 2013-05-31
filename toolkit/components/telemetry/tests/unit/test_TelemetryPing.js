@@ -43,12 +43,12 @@ const BinaryInputStream = Components.Constructor(
   "nsIBinaryInputStream",
   "setInputStream");
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
 
 var httpserver = new HttpServer();
 var gFinished = false;
 
 function telemetry_ping () {
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.gatherStartup();
   TelemetryPing.enableLoadSaveNotifications();
   TelemetryPing.cacheProfileDirectory();
@@ -104,7 +104,6 @@ function telemetryObserver(aSubject, aTopic, aData) {
   let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
   setupTestData();
 
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.saveHistograms(histogramsFile, true);
   TelemetryPing.testLoadHistograms(histogramsFile, true);
   telemetry_ping();
@@ -290,7 +289,6 @@ function runAsyncTestObserver(aSubject, aTopic, aData) {
   httpserver.registerPathHandler(PATH, checkHistogramsAsync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms2.dat");
 
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     Services.obs.removeObserver(arguments.callee, aTopic);
 
@@ -327,14 +325,12 @@ function runInvalidJSONTest() {
   writeStringToFile(histogramsFile, "this.is.invalid.JSON");
   do_check_true(histogramsFile.exists());
   
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.testLoadHistograms(histogramsFile, true);
   do_check_false(histogramsFile.exists());
 }
 
 function runOldPingFileTest() {
   let histogramsFile = getSavedHistogramsFile("old-histograms.dat");
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.saveHistograms(histogramsFile, true);
   do_check_true(histogramsFile.exists());
 
