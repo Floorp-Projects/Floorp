@@ -123,7 +123,12 @@ OPDEF(JSOP_AND,       69, "and",        NULL,         5,  1,  1, JOF_JUMP|JOF_DE
 
 /* The switch bytecodes have variable length. */
 OPDEF(JSOP_TABLESWITCH, 70, "tableswitch", NULL,     -1,  1,  0,  JOF_TABLESWITCH|JOF_DETECTING)
-OPDEF(JSOP_UNUSED71,  71, "unused71",   NULL,         1,  0,  0,  JOF_BYTE)
+
+/*
+ * Prologue emitted in scripts expected to run once, which deoptimizes code if
+ * it executes multiple times.
+ */
+OPDEF(JSOP_RUNONCE,   71, "runonce",    NULL,         1,  0,  0,  JOF_BYTE)
 
 /* New, infallible/transitive identity ops. */
 OPDEF(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC|JOF_ARITH)
