@@ -6116,6 +6116,29 @@ ${body}
                   'const': ' const' if self.const else '',
                   'body': body })
 
+class ClassUsingDeclaration(ClassItem):
+    """"
+    Used for importing a name from a base class into a CGClass
+
+    baseClass is the name of the base class to import the name from
+
+    name is the name to import
+
+    visibility determines the visibility of the name (public,
+    protected, private), defaults to public.
+    """
+    def __init__(self, baseClass, name, visibility='public'):
+        self.baseClass = baseClass
+        ClassItem.__init__(self, name, visibility)
+
+    def declare(self, cgClass):
+        return string.Template("""using ${baseClass}::${name};
+""").substitute({ 'baseClass': self.baseClass,
+                  'name': self.name })
+
+    def define(self, cgClass):
+        return ''
+
 class ClassConstructor(ClassItem):
     """
     Used for adding a constructor to a CGClass.
@@ -6885,8 +6908,8 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JSPropertyDescriptor*', 'desc')]
-        ClassMethod.__init__(self, "defineProperty", "bool", args)
+                Argument('JSPropertyDescriptor*', 'desc'), Argument('bool*', 'defined')]
+        ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True)
         self.descriptor = descriptor
     def getBody(self):
         set = ""
@@ -6897,6 +6920,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 raise TypeError("Can't handle creator that's different from the setter")
             set += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                     "if (IsArrayIndex(index)) {\n" +
+                    "  *defined = true;" +
                     CGIndenter(CGProxyIndexedSetter(self.descriptor)).define() +
                     "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
@@ -6914,8 +6938,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                                    "  return false;\n"
                                    "}\n"
                                    "if (hasUnforgeable) {\n"
-                                   "  JSBool defined;\n"
-                                   "  return js_DefineOwnProperty(cx, ${holder}, id, *desc, &defined);\n"
+                                   "  *defined = true;" +
+                                   "  JSBool unused;\n"
+                                   "  return js_DefineOwnProperty(cx, ${holder}, id, *desc, &unused);\n"
                                    "}\n")
             set += CallOnUnforgeableHolder(self.descriptor,
                                            defineOnUnforgeable,
@@ -6927,7 +6952,8 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 raise TypeError("Can't handle creator that's different from the setter")
             # If we support indexed properties, we won't get down here for
             # indices, so we can just do our setter unconditionally here.
-            set += (CGProxyNamedSetter(self.descriptor).define() + "\n" +
+            set += ("*defined = true;\n" +
+                    CGProxyNamedSetter(self.descriptor).define() + "\n" +
                     "return true;\n")
         else:
             if self.descriptor.supportsNamedProperties():
@@ -7328,7 +7354,9 @@ class CGDOMJSProxyHandler(CGClass):
         if (descriptor.operations['IndexedSetter'] or
             descriptor.operations['NamedSetter'] or
             UseHolderForUnforgeable(descriptor)):
-            methods.append(CGDOMJSProxyHandler_defineProperty(descriptor))
+            methods.extend([CGDOMJSProxyHandler_defineProperty(descriptor),
+                            ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
+                                                  "defineProperty")])
         methods.extend([CGDOMJSProxyHandler_getOwnPropertyNames(descriptor),
                         CGDOMJSProxyHandler_hasOwn(descriptor),
                         CGDOMJSProxyHandler_get(descriptor),
@@ -7472,13 +7500,15 @@ class CGDescriptor(CGThing):
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
-            if (not descriptor.interface.isExternal() and
-                # Workers stuff is never pref-controlled
-                not descriptor.workers):
-                if descriptor.interface.getExtendedAttribute("PrefControlled") is not None:
-                    cgThings.append(CGPrefEnabledNative(descriptor))
-                elif descriptor.interface.getExtendedAttribute("Pref") is not None:
-                    cgThings.append(CGPrefEnabled(descriptor))
+
+        if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.getNavigatorProperty()) and
+            not descriptor.interface.isExternal() and
+            # Workers stuff is never pref-controlled
+            not descriptor.workers):
+            if descriptor.interface.getExtendedAttribute("PrefControlled") is not None:
+                cgThings.append(CGPrefEnabledNative(descriptor))
+            elif descriptor.interface.getExtendedAttribute("Pref") is not None:
+                cgThings.append(CGPrefEnabled(descriptor))
 
         if descriptor.concrete:
             if descriptor.proxy:

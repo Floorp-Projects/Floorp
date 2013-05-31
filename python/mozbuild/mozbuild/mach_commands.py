@@ -464,12 +464,18 @@ class GTestCommands(MachCommandBase):
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
     def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser):
+
+        # We lazy build gtest because it's slow to link
+        self._run_make(directory="testing/gtest", target='gtest', ensure_exit_code=True)
+
         app_path = self.get_binary_path('app')
 
         # Use GTest environment variable to control test execution
         # For details see:
         # https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_Test_Programs:_Advanced_Options
         gtest_env = {b'GTEST_FILTER': gtest_filter}
+
+        gtest_env[b"MOZ_RUN_GTEST"] = b"True"
 
         if shuffle:
             gtest_env[b"GTEST_SHUFFLE"] = b"True"
@@ -594,7 +600,9 @@ class RunProgram(MachCommandBase):
         help='Command-line arguments to pass to the program.')
     @CommandArgument('+remote', '+r', action='store_true',
         help='Do not pass the -no-remote argument by default.')
-    def run(self, params, remote):
+    @CommandArgument('+background', '+b', action='store_true',
+        help='Do not pass the -foreground argument by default on Mac')
+    def run(self, params, remote, background):
         try:
             args = [self.get_binary_path('app')]
         except Exception as e:
@@ -604,6 +612,8 @@ class RunProgram(MachCommandBase):
             return 1
         if not remote:
             args.append('-no-remote')
+        if not background and sys.platform == 'darwin':
+            args.append('-foreground')
         if params:
             args.extend(params)
         return self.run_process(args=args, ensure_exit_code=False,
@@ -619,7 +629,9 @@ class DebugProgram(MachCommandBase):
         help='Command-line arguments to pass to the program.')
     @CommandArgument('+remote', '+r', action='store_true',
         help='Do not pass the -no-remote argument by default')
-    def debug(self, params, remote):
+    @CommandArgument('+background', '+b', action='store_true',
+        help='Do not pass the -foreground argument by default on Mac')
+    def debug(self, params, remote, background):
         import which
         try:
             debugger = which.which('gdb')
@@ -636,6 +648,8 @@ class DebugProgram(MachCommandBase):
             return 1
         if not remote:
             args.append('-no-remote')
+        if not background and sys.platform == 'darwin':
+            args.append('-foreground')
         if params:
             args.extend(params)
         return self.run_process(args=args, ensure_exit_code=False,

@@ -15,7 +15,7 @@
         port.postMessage({topic: "flyout-visibility", result: "hidden"});
       }, false);
       window.addEventListener("socialTest-MakeWider", function(e) {
-        document.body.setAttribute("style", "width: 500px;");
+        document.body.setAttribute("style", "width: 500px; height: 500px; margin: 0; overflow: hidden;");
         document.body.offsetWidth; // force a layout flush
         var evt = document.createEvent("CustomEvent");
         evt.initCustomEvent("SocialTest-DoneMakeWider", true, true, {});
@@ -29,7 +29,7 @@
       }, false);
     </script>
   </head>
-  <body style="max-width: 250px;" onload="pingWorker();">
+  <body style="width: 400px; height: 400px; margin: 0; overflow: hidden;" onload="pingWorker();">
     <p>This is a test social flyout panel.</p>
     <a id="traversal" href="http://mochi.test">test link</a>
   </body>

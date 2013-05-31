@@ -106,7 +106,7 @@ public:
   NS_IMETHOD Run();
 
   nsTimerEvent(nsTimerImpl *timer, int32_t generation)
-    : mTimer(timer), mGeneration(generation) {
+    : mTimer(dont_AddRef(timer)), mGeneration(generation) {
     // timer is already addref'd for us
     MOZ_COUNT_CTOR(nsTimerEvent);
 
@@ -135,10 +135,6 @@ public:
 private:
   nsTimerEvent(); // Not implemented
   ~nsTimerEvent() {
-#ifdef DEBUG
-    if (mTimer)
-      NS_WARNING("leaking reference to nsTimerImpl");
-#endif
     MOZ_COUNT_DTOR(nsTimerEvent);
 
     MOZ_ASSERT(!sCanDeleteAllocator || sAllocatorUsers > 0,
@@ -146,7 +142,7 @@ private:
     PR_ATOMIC_DECREMENT(&sAllocatorUsers);
   }
 
-  nsTimerImpl *mTimer;
+  nsRefPtr<nsTimerImpl> mTimer;
   int32_t      mGeneration;
 
   static TimerEventAllocator* sAllocator;
@@ -616,10 +612,7 @@ void nsTimerEvent::DeleteAllocatorIfNeeded()
 
 NS_IMETHODIMP nsTimerEvent::Run()
 {
-  nsRefPtr<nsTimerImpl> timer;
-  timer.swap(mTimer);
-
-  if (mGeneration != timer->GetGeneration())
+  if (mGeneration != mTimer->GetGeneration())
     return NS_OK;
 
 #ifdef DEBUG_TIMERS
@@ -631,7 +624,7 @@ NS_IMETHODIMP nsTimerEvent::Run()
   }
 #endif
 
-  timer->Fire();
+  mTimer->Fire();
 
   return NS_OK;
 }

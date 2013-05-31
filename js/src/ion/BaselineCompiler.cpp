@@ -1884,6 +1884,78 @@ BaselineCompiler::emit_JSOP_DEFFUN()
     return callVM(DefFunOperationInfo);
 }
 
+typedef bool (*InitPropGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandlePropertyName,
+                                       HandleValue);
+static const VMFunction InitPropGetterSetterInfo =
+    FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation);
+
+bool
+BaselineCompiler::emitInitPropGetterSetter()
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_INITPROP_GETTER ||
+              JSOp(*pc) == JSOP_INITPROP_SETTER);
+
+    // Load value in R0, keep object on the stack.
+    frame.popRegsAndSync(1);
+    prepareVMCall();
+
+    pushArg(R0);
+    pushArg(ImmGCPtr(script->getName(pc)));
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    pushArg(R0.scratchReg());
+    pushArg(ImmWord(pc));
+
+    return callVM(InitPropGetterSetterInfo);
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITPROP_GETTER()
+{
+    return emitInitPropGetterSetter();
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITPROP_SETTER()
+{
+    return emitInitPropGetterSetter();
+}
+
+typedef bool (*InitElemGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandleValue,
+                                       HandleValue);
+static const VMFunction InitElemGetterSetterInfo =
+    FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation);
+
+bool
+BaselineCompiler::emitInitElemGetterSetter()
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_INITELEM_GETTER ||
+              JSOp(*pc) == JSOP_INITELEM_SETTER);
+
+    // Load index and value in R0 and R1, keep object on the stack.
+    frame.popRegsAndSync(2);
+    prepareVMCall();
+
+    pushArg(R1);
+    pushArg(R0);
+    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    pushArg(R0.scratchReg());
+    pushArg(ImmWord(pc));
+
+    return callVM(InitElemGetterSetterInfo);
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITELEM_GETTER()
+{
+    return emitInitElemGetterSetter();
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITELEM_SETTER()
+{
+    return emitInitElemGetterSetter();
+}
+
 bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
@@ -2097,6 +2169,16 @@ bool
 BaselineCompiler::emit_JSOP_TYPEOFEXPR()
 {
     return emit_JSOP_TYPEOF();
+}
+
+typedef bool (*SetCallFn)(JSContext *);
+static const VMFunction SetCallInfo = FunctionInfo<SetCallFn>(js::SetCallOperation);
+
+bool
+BaselineCompiler::emit_JSOP_SETCALL()
+{
+    prepareVMCall();
+    return callVM(SetCallInfo);
 }
 
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
