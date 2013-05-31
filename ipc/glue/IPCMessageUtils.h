@@ -788,10 +788,10 @@ struct ParamTraits<nsIntSize>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::Point>
+template<class T>
+struct ParamTraits< mozilla::gfx::PointTyped<T> >
 {
-  typedef mozilla::gfx::Point paramType;
+  typedef mozilla::gfx::PointTyped<T> paramType;
 
   static void Write(Message* msg, const paramType& param)
   {
