@@ -1369,6 +1369,18 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         NS_ASSERTION(!undisplayed->mStyle->GetPseudo(),
                      "Shouldn't have random pseudo style contexts in the "
                      "undisplayed map");
+
+        // Get the parent of the undisplayed content and check if it is a XBL
+        // children element. Push the children element as an ancestor here because it does
+        // not have a frame and would not otherwise be pushed as an ancestor.
+        nsIContent* parent = undisplayed->mContent->GetParent();
+        bool pushInsertionPoint = parent &&
+          parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+        TreeMatchContext::AutoAncestorPusher
+          insertionPointPusher(pushInsertionPoint,
+                               aTreeMatchContext,
+                               parent && parent->IsElement() ? parent->AsElement() : nullptr);
+
         nsRestyleHint thisChildHint = childRestyleHint;
         RestyleTracker::RestyleData undisplayedRestyleData;
         if (aRestyleTracker.GetRestyleData(undisplayed->mContent->AsElement(),
@@ -1524,6 +1536,19 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         for (; !childFrames.AtEnd(); childFrames.Next()) {
           nsIFrame* child = childFrames.get();
           if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+            // Get the parent of the child frame's content and check if it is a XBL
+            // children element. Push the children element as an ancestor here because it does
+            // not have a frame and would not otherwise be pushed as an ancestor.
+
+            // Check if the frame has a content because |child| may be a nsPageFrame that does
+            // not have a content.
+            nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
+            bool pushInsertionPoint = parent &&
+              parent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL);
+            TreeMatchContext::AutoAncestorPusher
+              insertionPointPusher(pushInsertionPoint, aTreeMatchContext,
+                                   parent && parent->IsElement() ? parent->AsElement() : nullptr);
+
             // only do frames that are in flow
             if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder
               // get out of flow frame and recur there
