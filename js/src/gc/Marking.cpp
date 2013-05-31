@@ -1204,7 +1204,7 @@ struct SlotArrayLayout
 {
     union {
         HeapSlot *end;
-        HeapSlot::Kind kind;
+        uintptr_t kind;
     };
     union {
         HeapSlot *start;
