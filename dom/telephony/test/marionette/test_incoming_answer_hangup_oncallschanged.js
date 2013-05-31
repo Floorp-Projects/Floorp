@@ -69,6 +69,11 @@ function simulateIncoming() {
   telephony.oncallschanged = function oncallschanged(event) {
     log("Received 'callschanged' event.");
 
+    if (!event.call) {
+      log("Notifying calls array is loaded. No call information accompanies.");
+      return;
+    }
+
     let expected_states = ["incoming", "disconnected"];
     ok(expected_states.indexOf(event.call.state) != -1,
       "Unexpected call state: " + event.call.state);
