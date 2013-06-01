@@ -1019,25 +1019,4 @@ public:
   }
 };
 
-class nsOfflineResourceListSH : public nsStringArraySH
-{
-protected:
-  nsOfflineResourceListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
-  {
-  }
-
-  virtual ~nsOfflineResourceListSH()
-  {
-  }
-
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult);
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsOfflineResourceListSH(aData);
-  }
-};
-
 #endif /* nsDOMClassInfo_h___ */
