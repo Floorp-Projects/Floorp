@@ -525,6 +525,12 @@ private:
     mRuntime = JS_NewRuntime(sRuntimeHeapSize, JS_NO_HELPER_THREADS);
     NS_ENSURE_TRUE(mRuntime, NS_ERROR_OUT_OF_MEMORY);
 
+    /*
+     * Not setting this will cause JS_CHECK_RECURSION to report false
+     * positives
+     */ 
+    JS_SetNativeStackQuota(mRuntime, 128 * sizeof(size_t) * 1024); 
+
     mContext = JS_NewContext(mRuntime, 0);
     NS_ENSURE_TRUE(mContext, NS_ERROR_OUT_OF_MEMORY);
 
