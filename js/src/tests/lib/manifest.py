@@ -344,8 +344,7 @@ def load(location, xul_tester, reldir = ''):
 
     # Any file whose basename matches something in this set is ignored.
     EXCLUDED = set(('browser.js', 'shell.js', 'jsref.js', 'template.js',
-                    'user.js', 'test402-browser.js', 'test402-shell.js',
-                    'js-test-driver-begin.js', 'js-test-driver-end.js'))
+                    'user.js', 'js-test-driver-begin.js', 'js-test-driver-end.js'))
 
     manifestFile = os.path.join(location, 'jstests.list')
     externalManifestEntries = _parse_external_manifest(manifestFile, '')
