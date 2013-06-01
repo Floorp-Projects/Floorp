@@ -840,14 +840,14 @@ CharsMatch(const jschar *p, const char *q) {
 bool
 TokenStream::getAtSourceMappingURL(bool isMultiline)
 {
-    /* Match comments of the form "//@ sourceMappingURL=<url>" or
-     * "/\* //@ sourceMappingURL=<url> *\/"
+    /* Match comments of the form "//# sourceMappingURL=<url>" or
+     * "/\* //# sourceMappingURL=<url> *\/"
      *
      * To avoid a crashing bug in IE, several JavaScript transpilers
      * wrap single line comments containing a source mapping URL
      * inside a multiline comment to avoid a crashing bug in IE. To
      * avoid potentially expensive lookahead and backtracking, we
-     * only check for this case if we encounter an '@' character.
+     * only check for this case if we encounter an '#' character.
      */
     jschar peeked[18];
     int32_t c;
@@ -1581,8 +1581,13 @@ TokenStream::getTokenInternal()
          * Look for a single-line comment.
          */
         if (matchChar('/')) {
-            if (matchChar('@') && !getAtSourceMappingURL(false))
-                goto error;
+            c = peekChar();
+            if (c == '@' || c == '#') {
+                if (getChar() == '@' && !reportWarning(JSMSG_DEPRECATED_SOURCE_MAP))
+                    goto error;
+                if (!getAtSourceMappingURL(false))
+                    goto error;
+            }
 
   skipline:
             /* Optimize line skipping if we are not in an HTML comment. */
@@ -1607,8 +1612,12 @@ TokenStream::getTokenInternal()
             unsigned linenoBefore = lineno;
             while ((c = getChar()) != EOF &&
                    !(c == '*' && matchChar('/'))) {
-                if (c == '@' && !getAtSourceMappingURL(true))
-                   goto error;
+                if (c == '@' || c == '#') {
+                    if (c == '@' && !reportWarning(JSMSG_DEPRECATED_SOURCE_MAP))
+                        goto error;
+                    if (!getAtSourceMappingURL(true))
+                        goto error;
+                }
             }
             if (c == EOF) {
                 reportError(JSMSG_UNTERMINATED_COMMENT);
