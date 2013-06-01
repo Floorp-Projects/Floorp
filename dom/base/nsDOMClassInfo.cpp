@@ -908,7 +908,6 @@ jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
 jsid nsDOMClassInfo::sFrames_id          = JSID_VOID;
 jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
 jsid nsDOMClassInfo::sAll_id             = JSID_VOID;
-jsid nsDOMClassInfo::sTags_id            = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
 jsid nsDOMClassInfo::sOnload_id          = JSID_VOID;
@@ -1165,7 +1164,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSID_TO_STRING(sSelf_id,            cx, "self");
   SET_JSID_TO_STRING(sAll_id,             cx, "all");
-  SET_JSID_TO_STRING(sTags_id,            cx, "tags");
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
   SET_JSID_TO_STRING(sURL_id,             cx, "URL");
   SET_JSID_TO_STRING(sOnload_id,          cx, "onload");
@@ -2710,7 +2708,6 @@ nsDOMClassInfo::ShutDown()
   sFrames_id          = JSID_VOID;
   sSelf_id            = JSID_VOID;
   sAll_id             = JSID_VOID;
-  sTags_id            = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
   sOnload_id          = JSID_VOID;
   sOnerror_id         = JSID_VOID;
@@ -5756,21 +5753,6 @@ static JSClass sHTMLDocumentAllHelperClass = {
 };
 
 
-static JSClass sHTMLDocumentAllTagsClass = {
-  "HTML document.all.tags class",
-  JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub,                                         /* addProperty */
-  JS_DeletePropertyStub,                                   /* delProperty */
-  JS_PropertyStub,                                         /* getProperty */
-  JS_StrictPropertyStub,                                   /* setProperty */
-  JS_EnumerateStub,
-  (JSResolveOp)nsHTMLDocumentSH::DocumentAllTagsNewResolve,
-  JS_ConvertStub,
-  nsHTMLDocumentSH::ReleaseDocument,
-  nullptr,                                                  /* checkAccess */
-  nsHTMLDocumentSH::CallToGetPropMapper
-};
-
 // static
 JSBool
 nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
@@ -5894,21 +5876,15 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
       vp.set(INT_TO_JSVAL(length));
 
       return JS_TRUE;
-    } else if (nsDOMClassInfo::sTags_id != id) {
-      // For all other strings, look for an element by id or name.
-
-      nsDependentJSString str(id);
-
-      result = doc->GetDocumentAllResult(str, &cache, &rv);
-
-      if (NS_FAILED(rv)) {
-        xpc::Throw(cx, rv);
-
-        return JS_FALSE;
-      }
     }
-    else {
-      result = nullptr;
+
+    // For all other strings, look for an element by id or name.
+    nsDependentJSString str(id);
+    result = doc->GetDocumentAllResult(str, &cache, &rv);
+
+    if (NS_FAILED(rv)) {
+      xpc::Throw(cx, rv);
+      return JS_FALSE;
     }
   } else if (JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) {
     // Map document.all[n] (where n is a number) to the n:th item in
@@ -5964,21 +5940,6 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
     // DocumentAllGetProperty().
 
     v = JSVAL_ONE;
-  } else if (nsDOMClassInfo::sTags_id == id) {
-    nsHTMLDocument *doc = GetDocument(obj);
-
-    JSObject *tags = ::JS_NewObject(cx, &sHTMLDocumentAllTagsClass, nullptr,
-                                    ::JS_GetGlobalForObject(cx, obj));
-    if (!tags) {
-      return JS_FALSE;
-    }
-
-    ::JS_SetPrivate(tags, doc);
-
-    // The "tags" JSObject now also owns doc.
-    NS_ADDREF(doc);
-
-    v = OBJECT_TO_JSVAL(tags);
   } else {
     if (!DocumentAllGetProperty(cx, obj, id, &v)) {
       return JS_FALSE;
@@ -6118,58 +6079,6 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
       }
 
       objp.set(helper);
-    }
-  }
-
-  return JS_TRUE;
-}
-
-
-JSBool
-nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
-                                            JSHandleId id, unsigned flags,
-                                            JS::MutableHandle<JSObject*> objp)
-{
-  if (JSID_IS_STRING(id)) {
-    nsDocument *doc = GetDocument(obj);
-
-    JS::Rooted<JSObject*> proto(cx);
-    if (!::JS_GetPrototype(cx, obj, proto.address())) {
-      return JS_FALSE;
-    }
-    if (MOZ_UNLIKELY(!proto)) {
-      return JS_TRUE;
-    }
-
-    JSBool found;
-    if (!::JS_HasPropertyById(cx, proto, id, &found)) {
-      return JS_FALSE;
-    }
-
-    if (found) {
-      return JS_TRUE;
-    }
-
-    nsRefPtr<nsContentList> tags =
-      doc->GetElementsByTagName(nsDependentJSString(id));
-
-    if (tags) {
-      JS::Rooted<JS::Value> v(cx);
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      nsresult rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx),
-                               static_cast<nsINodeList*>(tags), tags, true,
-                               v.address(), getter_AddRefs(holder));
-      if (NS_FAILED(rv)) {
-        xpc::Throw(cx, rv);
-
-        return JS_FALSE;
-      }
-
-      if (!::JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr, 0)) {
-        return JS_FALSE;
-      }
-
-      objp.set(obj);
     }
   }
 
