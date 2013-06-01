@@ -1484,9 +1484,9 @@ NS_IMPL_CYCLE_COLLECTION_1(DeviceStorageCursorRequest,
 class PostErrorEvent : public nsRunnable
 {
 public:
-  PostErrorEvent(nsRefPtr<DOMRequest>& aRequest, const char* aMessage)
+  PostErrorEvent(already_AddRefed<DOMRequest> aRequest, const char* aMessage)
+    : mRequest(aRequest)
   {
-    mRequest.swap(aRequest);
     CopyASCIItoUTF16(aMessage, mError);
   }
 
@@ -1511,9 +1511,9 @@ private:
   nsString mError;
 };
 
-ContinueCursorEvent::ContinueCursorEvent(nsRefPtr<DOMRequest>& aRequest)
+ContinueCursorEvent::ContinueCursorEvent(already_AddRefed<DOMRequest> aRequest)
+  : mRequest(aRequest)
 {
-  mRequest.swap(aRequest);
 }
 
 ContinueCursorEvent::ContinueCursorEvent(DOMRequest* aRequest)
@@ -1619,7 +1619,8 @@ public:
       bool check;
       mFile->mFile->IsDirectory(&check);
       if (!check) {
-        nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest, POST_ERROR_EVENT_FILE_NOT_ENUMERABLE);
+        nsCOMPtr<PostErrorEvent> event =
+          new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_FILE_NOT_ENUMERABLE);
         NS_DispatchToMainThread(event);
         return NS_OK;
       }
@@ -1628,7 +1629,7 @@ public:
     nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
     mFile->CollectFiles(cursor->mFiles, cursor->mSince);
 
-    nsCOMPtr<ContinueCursorEvent> event = new ContinueCursorEvent(mRequest);
+    nsCOMPtr<ContinueCursorEvent> event = new ContinueCursorEvent(mRequest.forget());
     event->Continue();
 
     return NS_OK;
@@ -1821,23 +1822,20 @@ private:
 class PostResultEvent : public nsRunnable
 {
 public:
-  PostResultEvent(nsRefPtr<DOMRequest>& aRequest, DeviceStorageFile* aFile)
+  PostResultEvent(already_AddRefed<DOMRequest> aRequest, DeviceStorageFile* aFile)
     : mFile(aFile)
-    {
-      mRequest.swap(aRequest);
-    }
+    , mRequest(aRequest)
+  {}
 
-  PostResultEvent(nsRefPtr<DOMRequest>& aRequest, const nsAString & aPath)
+  PostResultEvent(already_AddRefed<DOMRequest> aRequest, const nsAString & aPath)
     : mPath(aPath)
-    {
-      mRequest.swap(aRequest);
-    }
+    , mRequest(aRequest)
+  {}
 
-  PostResultEvent(nsRefPtr<DOMRequest>& aRequest, const uint64_t aValue)
+  PostResultEvent(already_AddRefed<DOMRequest> aRequest, const uint64_t aValue)
     : mValue(aValue)
-    {
-      mRequest.swap(aRequest);
-    }
+    , mRequest(aRequest)
+  {}
 
   ~PostResultEvent() {}
 
@@ -1875,12 +1873,11 @@ class WriteFileEvent : public nsRunnable
 public:
   WriteFileEvent(nsIDOMBlob* aBlob,
                  DeviceStorageFile *aFile,
-                 nsRefPtr<DOMRequest>& aRequest)
-  : mBlob(aBlob)
-  , mFile(aFile)
-    {
-      mRequest.swap(aRequest);
-    }
+                 already_AddRefed<DOMRequest> aRequest)
+    : mBlob(aBlob)
+    , mFile(aFile)
+    , mRequest(aRequest)
+  {}
 
   ~WriteFileEvent() {}
 
@@ -1894,7 +1891,7 @@ public:
     bool check = false;
     mFile->mFile->Exists(&check);
     if (check) {
-      nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest, POST_ERROR_EVENT_FILE_EXISTS);
+      nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_FILE_EXISTS);
       NS_DispatchToMainThread(event);
       return NS_OK;
     }
@@ -1904,12 +1901,12 @@ public:
     if (NS_FAILED(rv)) {
       mFile->mFile->Remove(false);
 
-      nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest, POST_ERROR_EVENT_UNKNOWN);
+      nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_UNKNOWN);
       NS_DispatchToMainThread(event);
       return NS_OK;
     }
 
-    nsCOMPtr<PostResultEvent> event = new PostResultEvent(mRequest, mFile->mPath);
+    nsCOMPtr<PostResultEvent> event = new PostResultEvent(mRequest.forget(), mFile->mPath);
     NS_DispatchToMainThread(event);
     return NS_OK;
   }
@@ -1923,13 +1920,13 @@ private:
 class ReadFileEvent : public nsRunnable
 {
 public:
-    ReadFileEvent(DeviceStorageFile* aFile,
-                  nsRefPtr<DOMRequest>& aRequest)
-  : mFile(aFile)
-    {
-      mRequest.swap(aRequest);
-      mFile->CalculateMimeType();
-    }
+  ReadFileEvent(DeviceStorageFile* aFile,
+                already_AddRefed<DOMRequest> aRequest)
+    : mFile(aFile)
+    , mRequest(aRequest)
+  {
+    mFile->CalculateMimeType();
+  }
 
   ~ReadFileEvent() {}
 
@@ -1942,19 +1939,19 @@ public:
       bool check = false;
       mFile->mFile->Exists(&check);
       if (!check) {
-        r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_FILE_DOES_NOT_EXIST);
+        r = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_FILE_DOES_NOT_EXIST);
       }
     }
 
     if (!r) {
       nsresult rv = mFile->CalculateSizeAndModifiedDate();
       if (NS_FAILED(rv)) {
-        r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_UNKNOWN);
+        r = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_UNKNOWN);
       }
     }
 
     if (!r) {
-      r = new PostResultEvent(mRequest, mFile);
+      r = new PostResultEvent(mRequest.forget(), mFile);
     }
     NS_DispatchToMainThread(r);
     return NS_OK;
@@ -1969,11 +1966,10 @@ class DeleteFileEvent : public nsRunnable
 {
 public:
   DeleteFileEvent(DeviceStorageFile* aFile,
-                  nsRefPtr<DOMRequest>& aRequest)
-  : mFile(aFile)
-    {
-      mRequest.swap(aRequest);
-    }
+                  already_AddRefed<DOMRequest> aRequest)
+    : mFile(aFile)
+    , mRequest(aRequest)
+  {}
 
   ~DeleteFileEvent() {}
 
@@ -1986,10 +1982,10 @@ public:
     bool check = false;
     mFile->mFile->Exists(&check);
     if (check) {
-      r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_FILE_DOES_NOT_EXIST);
+      r = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_FILE_DOES_NOT_EXIST);
     }
     else {
-      r = new PostResultEvent(mRequest, mFile->mPath);
+      r = new PostResultEvent(mRequest.forget(), mFile->mPath);
     }
     NS_DispatchToMainThread(r);
     return NS_OK;
@@ -2003,11 +1999,11 @@ private:
 class UsedSpaceFileEvent : public nsRunnable
 {
 public:
-  UsedSpaceFileEvent(DeviceStorageFile* aFile, nsRefPtr<DOMRequest>& aRequest)
-     : mFile(aFile)
-     {
-       mRequest.swap(aRequest);
-     }
+  UsedSpaceFileEvent(DeviceStorageFile* aFile,
+                     already_AddRefed<DOMRequest> aRequest)
+    : mFile(aFile)
+    , mRequest(aRequest)
+  {}
 
   ~UsedSpaceFileEvent() {}
 
@@ -2020,15 +2016,15 @@ public:
                           &musicUsage, &totalUsage);
     nsCOMPtr<nsIRunnable> r;
     if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
-      r = new PostResultEvent(mRequest, picturesUsage);
+      r = new PostResultEvent(mRequest.forget(), picturesUsage);
     }
     else if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
-      r = new PostResultEvent(mRequest, videosUsage);
+      r = new PostResultEvent(mRequest.forget(), videosUsage);
     }
     else if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
-      r = new PostResultEvent(mRequest, musicUsage);
+      r = new PostResultEvent(mRequest.forget(), musicUsage);
     } else {
-      r = new PostResultEvent(mRequest, totalUsage);
+      r = new PostResultEvent(mRequest.forget(), totalUsage);
     }
     NS_DispatchToMainThread(r);
     return NS_OK;
@@ -2042,11 +2038,11 @@ private:
 class FreeSpaceFileEvent : public nsRunnable
 {
 public:
-  FreeSpaceFileEvent(DeviceStorageFile* aFile, nsRefPtr<DOMRequest>& aRequest)
-  : mFile(aFile)
-    {
-      mRequest.swap(aRequest);
-    }
+  FreeSpaceFileEvent(DeviceStorageFile* aFile,
+                     already_AddRefed<DOMRequest> aRequest)
+    : mFile(aFile)
+    , mRequest(aRequest)
+  {}
 
   ~FreeSpaceFileEvent() {}
 
@@ -2060,7 +2056,7 @@ public:
     }
 
     nsCOMPtr<nsIRunnable> r;
-    r = new PostResultEvent(mRequest, static_cast<uint64_t>(freeSpace));
+    r = new PostResultEvent(mRequest.forget(), static_cast<uint64_t>(freeSpace));
     NS_DispatchToMainThread(r);
     return NS_OK;
   }
@@ -2189,7 +2185,7 @@ public:
 
   NS_IMETHOD Cancel()
   {
-    nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest, POST_ERROR_EVENT_PERMISSION_DENIED);
+    nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_PERMISSION_DENIED);
     NS_DispatchToMainThread(event);
     return NS_OK;
   }
@@ -2216,7 +2212,7 @@ public:
 
         if (!typeChecker->Check(mFile->mStorageType, mFile->mFile) ||
             !typeChecker->Check(mFile->mStorageType, mBlob)) {
-          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          r = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_ILLEGAL_TYPE);
           NS_DispatchToMainThread(r);
           return NS_OK;
         }
@@ -2238,7 +2234,7 @@ public:
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
-        r = new WriteFileEvent(mBlob, mFile, mRequest);
+        r = new WriteFileEvent(mBlob, mFile, mRequest.forget());
         break;
       }
 
@@ -2255,7 +2251,7 @@ public:
         }
 
         if (!typeChecker->Check(mFile->mStorageType, mFile->mFile)) {
-          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          r = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_ILLEGAL_TYPE);
           NS_DispatchToMainThread(r);
           return NS_OK;
         }
@@ -2270,7 +2266,7 @@ public:
           return NS_OK;
         }
 
-        r = new ReadFileEvent(mFile, mRequest);
+        r = new ReadFileEvent(mFile, mRequest.forget());
         break;
       }
 
@@ -2286,7 +2282,7 @@ public:
         }
 
         if (!typeChecker->Check(mFile->mStorageType, mFile->mFile)) {
-          r = new PostErrorEvent(mRequest, POST_ERROR_EVENT_ILLEGAL_TYPE);
+          r = new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_ILLEGAL_TYPE);
           NS_DispatchToMainThread(r);
           return NS_OK;
         }
@@ -2299,7 +2295,7 @@ public:
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
-        r = new DeleteFileEvent(mFile, mRequest);
+        r = new DeleteFileEvent(mFile, mRequest.forget());
         break;
       }
 
@@ -2312,7 +2308,7 @@ public:
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
-        r = new FreeSpaceFileEvent(mFile, mRequest);
+        r = new FreeSpaceFileEvent(mFile, mRequest.forget());
         break;
       }
 
@@ -2329,7 +2325,7 @@ public:
         // thread or we will do more work than required.
         DeviceStorageUsedSpaceCache* usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
         NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
-        r = new UsedSpaceFileEvent(mFile, mRequest);
+        r = new UsedSpaceFileEvent(mFile, mRequest.forget());
         usedSpaceCache->Dispatch(r);
         return NS_OK;
       }
