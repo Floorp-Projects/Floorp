@@ -24,6 +24,8 @@
 
 namespace mozilla {
 namespace dom {
+class DeviceStorageEnumerationParameters;
+class DOMCursor;
 class DOMRequest;
 } // namespace dom
 } // namespace mozilla
@@ -139,6 +141,9 @@ class nsDOMDeviceStorage MOZ_FINAL
   , public nsIObserver
 {
   typedef mozilla::ErrorResult ErrorResult;
+  typedef mozilla::dom::DeviceStorageEnumerationParameters
+    EnumerationParameters;
+  typedef mozilla::dom::DOMCursor DOMCursor;
   typedef mozilla::dom::DOMRequest DOMRequest;
 public:
   typedef nsTArray<nsString> VolumeNameArray;
@@ -169,6 +174,58 @@ public:
 
   void SetRootDirectoryForType(const nsAString& aType, const nsAString& aVolName);
 
+  // WebIDL
+  nsPIDOMWindow*
+  GetParentObject() const
+  {
+    return GetOwner();
+  }
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  IMPL_EVENT_HANDLER(change)
+
+  already_AddRefed<DOMRequest>
+  Add(nsIDOMBlob* aBlob, ErrorResult& aRv);
+  already_AddRefed<DOMRequest>
+  AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath, ErrorResult& aRv);
+
+  already_AddRefed<DOMRequest>
+  Get(const nsAString& aPath, ErrorResult& aRv)
+  {
+    return GetInternal(aPath, false, aRv);
+  }
+  already_AddRefed<DOMRequest>
+  GetEditable(const nsAString& aPath, ErrorResult& aRv)
+  {
+    return GetInternal(aPath, true, aRv);
+  }
+  already_AddRefed<DOMRequest>
+  Delete(const nsAString& aPath, ErrorResult& aRv);
+
+  already_AddRefed<DOMCursor>
+  Enumerate(const EnumerationParameters& aOptions, ErrorResult& aRv)
+  {
+    return Enumerate(NullString(), aOptions, aRv);
+  }
+  already_AddRefed<DOMCursor>
+  Enumerate(const nsAString& aPath, const EnumerationParameters& aOptions,
+            ErrorResult& aRv);
+  already_AddRefed<DOMCursor>
+  EnumerateEditable(const EnumerationParameters& aOptions, ErrorResult& aRv)
+  {
+    return EnumerateEditable(NullString(), aOptions, aRv);
+  }
+  already_AddRefed<DOMCursor>
+  EnumerateEditable(const nsAString& aPath,
+                    const EnumerationParameters& aOptions, ErrorResult& aRv);
+
+  already_AddRefed<DOMRequest> FreeSpace(ErrorResult& aRv);
+  already_AddRefed<DOMRequest> UsedSpace(ErrorResult& aRv);
+  already_AddRefed<DOMRequest> Available(ErrorResult& aRv);
+
+  // Uses XPCOM GetStorageName
+
   static void CreateDeviceStorageFor(nsPIDOMWindow* aWin,
                                      const nsAString& aType,
                                      nsDOMDeviceStorage** aStore);
@@ -190,9 +247,8 @@ public:
 private:
   ~nsDOMDeviceStorage();
 
-  nsresult GetInternal(const nsAString& aName,
-                       nsIDOMDOMRequest** aRetval,
-                       bool aEditable);
+  already_AddRefed<DOMRequest>
+  GetInternal(const nsAString& aPath, bool aEditable, ErrorResult& aRv);
 
   void
   GetInternal(nsPIDOMWindow* aWin, const nsAString& aPath, DOMRequest* aRequest,
@@ -202,12 +258,10 @@ private:
   DeleteInternal(nsPIDOMWindow* aWin, const nsAString& aPath,
                  DOMRequest* aRequest);
 
-  nsresult EnumerateInternal(const JS::Value& aName,
-                             const JS::Value& aOptions,
-                             JSContext* aCx,
-                             uint8_t aArgc,
-                             bool aEditable,
-                             nsIDOMDOMCursor** aRetval);
+  already_AddRefed<DOMCursor>
+  EnumerateInternal(const nsAString& aName,
+                    const EnumerationParameters& aOptions, bool aEditable,
+                    ErrorResult& aRv);
 
   nsString mStorageType;
   nsCOMPtr<nsIFile> mRootDirectory;

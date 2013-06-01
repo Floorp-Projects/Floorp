@@ -10,14 +10,15 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DeviceStorageBinding.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/LazyIdleThread.h"
 
 #include "nsAutoPtr.h"
 #include "nsDOMEvent.h"
@@ -2403,12 +2404,9 @@ NS_IMPL_CYCLE_COLLECTION_4(DeviceStorageRequest,
                            mDeviceStorage)
 
 
-DOMCI_DATA(DeviceStorage, nsDOMDeviceStorage)
-
 NS_INTERFACE_MAP_BEGIN(nsDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorage)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
@@ -2418,7 +2416,15 @@ nsDOMDeviceStorage::nsDOMDeviceStorage()
   : mCompositeComponent(false),
     mIsWatchingFile(false)
   , mAllowedToWatchFile(false)
-{ }
+{
+  SetIsDOMBinding();
+}
+
+/* virtual */ JSObject*
+nsDOMDeviceStorage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return DeviceStorageBinding::Wrap(aCx, aScope, this);
+}
 
 nsresult
 nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType,
@@ -2708,13 +2714,23 @@ nsDOMDeviceStorage::IsAvailable()
 NS_IMETHODIMP
 nsDOMDeviceStorage::Add(nsIDOMBlob *aBlob, nsIDOMDOMRequest * *_retval)
 {
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = Add(aBlob, rv);
+  request.forget(_retval);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::Add(nsIDOMBlob* aBlob, ErrorResult& aRv)
+{
   if (!aBlob) {
-    return NS_OK;
+    return nullptr;
   }
 
   nsCOMPtr<nsIMIMEService> mimeSvc = do_GetService(NS_MIMESERVICE_CONTRACTID);
   if (!mimeSvc) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   // if mimeType isn't set, we will not get a correct
@@ -2738,7 +2754,7 @@ nsDOMDeviceStorage::Add(nsIDOMBlob *aBlob, nsIDOMDOMRequest * *_retval)
   path.Append(".");
   path.Append(extension);
 
-  return AddNamed(aBlob, NS_ConvertASCIItoUTF16(path), _retval);
+  return AddNamed(aBlob, NS_ConvertASCIItoUTF16(path), aRv);
 }
 
 NS_IMETHODIMP
@@ -2746,19 +2762,31 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
                              const nsAString & aPath,
                              nsIDOMDOMRequest * *_retval)
 {
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = AddNamed(aBlob, aPath, rv);
+  request.forget(_retval);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
+                             ErrorResult& aRv)
+{
   // if the blob is null here, bail
   if (!aBlob) {
-    return NS_OK;
+    return nullptr;
   }
 
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
   if (!typeChecker) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   nsCOMPtr<nsIRunnable> r;
@@ -2768,16 +2796,14 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
     nsRefPtr<nsDOMDeviceStorage> ds = GetStorage(aPath, storagePath);
     if (!ds) {
       nsRefPtr<DOMRequest> request = new DOMRequest(win);
-      NS_ADDREF(*_retval = request);
       r = new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
       NS_DispatchToMainThread(r);
-      return NS_OK;
+      return request.forget();
     }
-    return ds->AddNamed(aBlob, storagePath, _retval);
+    return ds->AddNamed(aBlob, storagePath, aRv);
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*_retval = request);
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
                                                           mStorageName,
@@ -2793,33 +2819,39 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
   }
 
   NS_DispatchToMainThread(r);
-  return NS_OK;
+  return request.forget();
 }
 
 NS_IMETHODIMP
 nsDOMDeviceStorage::Get(const nsAString& aPath, nsIDOMDOMRequest** aRetval)
 {
-  return GetInternal(aPath, aRetval, false);
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = Get(aPath, rv);
+  request.forget(aRetval);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 nsDOMDeviceStorage::GetEditable(const nsAString& aPath,
                                 nsIDOMDOMRequest** aRetval)
 {
-  return GetInternal(aPath, aRetval, true);
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = GetEditable(aPath, rv);
+  request.forget(aRetval);
+  return rv.ErrorCode();
 }
 
-nsresult
-nsDOMDeviceStorage::GetInternal(const nsAString& aPath,
-                                nsIDOMDOMRequest** aRetval, bool aEditable)
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::GetInternal(const nsAString& aPath, bool aEditable,
+                                ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*aRetval = request);
 
   if (IsComposite()) {
     nsString storagePath;
@@ -2828,13 +2860,13 @@ nsDOMDeviceStorage::GetInternal(const nsAString& aPath,
       nsCOMPtr<nsIRunnable> r =
         new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
       NS_DispatchToMainThread(r);
-      return NS_OK;
+      return request.forget();
     }
     ds->GetInternal(win, storagePath, request, aEditable);
-    return NS_OK;
+    return request.forget();
   }
   GetInternal(win, aPath, request, aEditable);
-  return NS_OK;
+  return request.forget();
 }
 
 void
@@ -2861,13 +2893,22 @@ nsDOMDeviceStorage::GetInternal(nsPIDOMWindow *aWin,
 NS_IMETHODIMP
 nsDOMDeviceStorage::Delete(const nsAString& aPath, nsIDOMDOMRequest** aRetval)
 {
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = Delete(aPath, rv);
+  request.forget(aRetval);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::Delete(const nsAString& aPath, ErrorResult& aRv)
+{
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*aRetval = request);
 
   if (IsComposite()) {
     nsString storagePath;
@@ -2876,19 +2917,19 @@ nsDOMDeviceStorage::Delete(const nsAString& aPath, nsIDOMDOMRequest** aRetval)
       nsCOMPtr<nsIRunnable> r =
         new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
       NS_DispatchToMainThread(r);
-      return NS_OK;
+      return request.forget();
     }
-    ds->DeleteInternal(win, storagePath, request.get());
-    return NS_OK;
+    ds->DeleteInternal(win, storagePath, request);
+    return request.forget();
   }
   DeleteInternal(win, aPath, request);
-  return NS_OK;
+  return request.forget();
 }
 
 void
 nsDOMDeviceStorage::DeleteInternal(nsPIDOMWindow *aWin,
                                    const nsAString& aPath,
-                                   mozilla::dom::DOMRequest* aRequest)
+                                   DOMRequest* aRequest)
 {
   nsCOMPtr<nsIRunnable> r;
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
@@ -2906,13 +2947,22 @@ nsDOMDeviceStorage::DeleteInternal(nsPIDOMWindow *aWin,
 NS_IMETHODIMP
 nsDOMDeviceStorage::FreeSpace(nsIDOMDOMRequest** aRetval)
 {
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = FreeSpace(rv);
+  request.forget(aRetval);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::FreeSpace(ErrorResult& aRv)
+{
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*aRetval = request);
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
                                                           mStorageName);
@@ -2922,22 +2972,31 @@ nsDOMDeviceStorage::FreeSpace(nsIDOMDOMRequest** aRetval)
                                                      dsf,
                                                      request);
   NS_DispatchToMainThread(r);
-  return NS_OK;
+  return request.forget();
 }
 
 NS_IMETHODIMP
 nsDOMDeviceStorage::UsedSpace(nsIDOMDOMRequest** aRetval)
 {
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = UsedSpace(rv);
+  request.forget(aRetval);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::UsedSpace(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   DebugOnly<DeviceStorageUsedSpaceCache*> usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
   NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
 
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*aRetval = request);
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
                                                           mStorageName);
@@ -2947,19 +3006,28 @@ nsDOMDeviceStorage::UsedSpace(nsIDOMDOMRequest** aRetval)
                                                      dsf,
                                                      request);
   NS_DispatchToMainThread(r);
-  return NS_OK;
+  return request.forget();
 }
 
 NS_IMETHODIMP
 nsDOMDeviceStorage::Available(nsIDOMDOMRequest** aRetval)
 {
+  ErrorResult rv;
+  nsRefPtr<DOMRequest> request = Available(rv);
+  request.forget(aRetval);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::Available(ErrorResult& aRv)
+{
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*aRetval = request);
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
                                                           mStorageName);
@@ -2969,7 +3037,7 @@ nsDOMDeviceStorage::Available(nsIDOMDOMRequest** aRetval)
                                                      dsf,
                                                      request);
   NS_DispatchToMainThread(r);
-  return NS_OK;
+  return request.forget();
 }
 
 NS_IMETHODIMP
@@ -2996,87 +3064,42 @@ nsDOMDeviceStorage::GetStorageName(nsAString& aStorageName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMDeviceStorage::Enumerate(const JS::Value & aName,
-                              const JS::Value & aOptions,
-                              JSContext* aCx,
-                              uint8_t aArgc,
-                              nsIDOMDOMCursor** aRetval)
+already_AddRefed<DOMCursor>
+nsDOMDeviceStorage::Enumerate(const nsAString& aPath,
+                              const EnumerationParameters& aOptions,
+                              ErrorResult& aRv)
 {
-  return EnumerateInternal(aName, aOptions, aCx, aArgc, false, aRetval);
+  return EnumerateInternal(aPath, aOptions, false, aRv);
 }
 
-NS_IMETHODIMP
-nsDOMDeviceStorage::EnumerateEditable(const JS::Value & aName,
-                                      const JS::Value & aOptions,
-                                      JSContext* aCx,
-                                      uint8_t aArgc,
-                                      nsIDOMDOMCursor** aRetval)
+already_AddRefed<DOMCursor>
+nsDOMDeviceStorage::EnumerateEditable(const nsAString& aPath,
+                                      const EnumerationParameters& aOptions,
+                                      ErrorResult& aRv)
 {
-  return EnumerateInternal(aName, aOptions, aCx, aArgc, true, aRetval);
+  return EnumerateInternal(aPath, aOptions, true, aRv);
 }
 
 
-static bool
-ExtractDateFromOptions(JSContext* aCx, const JS::Value& aOptions, PRTime* aTime)
-{
-  JS::Rooted<JS::Value> options(aCx, aOptions);
-  RootedDictionary<DeviceStorageEnumerationParameters> params(aCx);
-  if (!params.Init(aCx, options)) {
-    return false;
-  }
-  if (params.mSince.WasPassed() && !params.mSince.Value().IsUndefined()) {
-    *aTime = params.mSince.Value().TimeStamp();
-  } else {
-    *aTime = 0;
-  }
-  return true;
-}
-
-nsresult
-nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
-                                      const JS::Value & aOptions,
-                                      JSContext* aCx,
-                                      uint8_t aArgc,
-                                      bool aEditable,
-                                      nsIDOMDOMCursor** aRetval)
+already_AddRefed<DOMCursor>
+nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
+                                      const EnumerationParameters& aOptions,
+                                      bool aEditable, ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   PRTime since = 0;
-  nsString path;
-  path.SetIsVoid(true);
-
-  if (aArgc > 0) {
-    // inspect the first value to see if it is a string
-    if (JSVAL_IS_STRING(aName)) {
-      JSString* jsstr = JS_ValueToString(aCx, aName);
-      nsDependentJSString jspath;
-      jspath.init(aCx, jsstr);
-      path.Assign(jspath);
-    } else if (!JSVAL_IS_PRIMITIVE(aName)) {
-      // it also might be an options object
-      if (!ExtractDateFromOptions(aCx, aName, &since)) {
-        return NS_ERROR_FAILURE;
-      }
-    } else {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (aArgc == 2 && !aOptions.isObject()) {
-      return NS_ERROR_FAILURE;
-    }
-    if (!ExtractDateFromOptions(aCx, aOptions, &since)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (aOptions.mSince.WasPassed() && !aOptions.mSince.Value().IsUndefined()) {
+    since = PRTime(aOptions.mSince.Value().TimeStamp());
   }
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
                                                           mStorageName,
-                                                          path,
+                                                          aPath,
                                                           EmptyString());
   dsf->SetEditable(aEditable);
 
@@ -3084,11 +3107,9 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
                                                                            dsf, since);
   nsRefPtr<DeviceStorageCursorRequest> r = new DeviceStorageCursorRequest(cursor);
 
-  NS_ADDREF(*aRetval = cursor);
-
   if (mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
     r->Allow();
-    return NS_OK;
+    return cursor.forget();
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
@@ -3096,7 +3117,7 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
     // the one and only TabChild.
     TabChild* child = GetTabChildFrom(win->GetDocShell());
     if (!child) {
-      return NS_OK;
+      return cursor.forget();
     }
 
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
@@ -3104,15 +3125,15 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
     r->AddRef();
 
     nsCString type;
-    nsresult rv = DeviceStorageTypeChecker::GetPermissionForType(mStorageType, type);
-    if (NS_FAILED(rv)) {
-      return rv;
+    aRv = DeviceStorageTypeChecker::GetPermissionForType(mStorageType, type);
+    if (aRv.Failed()) {
+      return nullptr;
     }
     child->SendPContentPermissionRequestConstructor(r, type, NS_LITERAL_CSTRING("read"), IPC::Principal(mPrincipal));
 
     r->Sendprompt();
 
-    return NS_OK;
+    return cursor.forget();
   }
 
   nsCOMPtr<nsIContentPermissionPrompt> prompt = do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
@@ -3120,7 +3141,7 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
     prompt->Prompt(r);
   }
 
-  return NS_OK;
+  return cursor.forget();
 }
 
 #ifdef MOZ_WIDGET_GONK
