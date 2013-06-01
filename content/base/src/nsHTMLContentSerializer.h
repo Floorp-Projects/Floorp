@@ -12,6 +12,7 @@
 #ifndef nsHTMLContentSerializer_h__
 #define nsHTMLContentSerializer_h__
 
+#include "mozilla/Attributes.h"
 #include "nsXHTMLContentSerializer.h"
 #include "nsIEntityConverter.h"
 #include "nsString.h"
@@ -26,13 +27,13 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
 
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
                                 mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr);
+                                nsAString& aStr) MOZ_OVERRIDE;
 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              nsAString& aStr);
+                              nsAString& aStr) MOZ_OVERRIDE;
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
-                                 nsAString& aStr);
+                                 nsAString& aStr) MOZ_OVERRIDE;
  protected:
 
   virtual void SerializeHTMLAttributes(nsIContent* aContent,
@@ -44,7 +45,7 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
                                        nsAString& aStr);
 
   virtual void AppendAndTranslateEntities(const nsAString& aStr,
-                                          nsAString& aOutputStr);
+                                          nsAString& aOutputStr) MOZ_OVERRIDE;
 
 };
 

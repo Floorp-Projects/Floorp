@@ -751,8 +751,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
     nsresult res = mMathMLChar.Stretch(PresContext(), aRenderingContext,
                                        aStretchDirection, container, charSize,
                                        stretchHint,
-                                       NS_MATHML_IS_RTL(mPresentationData.
-                                                        flags));
+                                       StyleVisibility()->mDirection);
     if (NS_FAILED(res)) {
       // gracefully handle cases where stretching the char failed (i.e., GetBoundingMetrics failed)
       // clear our 'form' to behave as if the operator wasn't in the dictionary
@@ -876,7 +875,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
     aDesiredStretchSize.width = mBoundingMetrics.width;
     aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
-    nscoord dx = (NS_MATHML_IS_RTL(mPresentationData.flags) ?
+    nscoord dx = (StyleVisibility()->mDirection ?
                   trailingSpace : leadingSpace);
     if (dx) {
       // adjust the offsets

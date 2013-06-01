@@ -191,7 +191,7 @@ public:
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupShowingEvent constructor");
   }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() MOZ_OVERRIDE;
 
 private:
   nsCOMPtr<nsIContent> mPopup;
@@ -218,7 +218,7 @@ public:
     // aNextPopup and aLastPopup may be null
   }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() MOZ_OVERRIDE;
 
 private:
   nsCOMPtr<nsIContent> mPopup;
@@ -253,7 +253,7 @@ public:
     NS_ASSERTION(aMenu, "null menu supplied to nsXULMenuCommandEvent constructor");
   }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() MOZ_OVERRIDE;
 
   void SetCloseMenuMode(CloseMenuMode aCloseMenuMode) { mCloseMenuMode = aCloseMenuMode; }
 
@@ -286,13 +286,13 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIRollupListener
-  virtual bool Rollup(uint32_t aCount, nsIContent** aLastRolledUp);
-  virtual bool ShouldRollupOnMouseWheelEvent();
-  virtual bool ShouldConsumeOnMouseWheelEvent();
-  virtual bool ShouldRollupOnMouseActivate();
-  virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
-  virtual void NotifyGeometryChange() {}
-  virtual nsIWidget* GetRollupWidget();
+  virtual bool Rollup(uint32_t aCount, nsIContent** aLastRolledUp) MOZ_OVERRIDE;
+  virtual bool ShouldRollupOnMouseWheelEvent() MOZ_OVERRIDE;
+  virtual bool ShouldConsumeOnMouseWheelEvent() MOZ_OVERRIDE;
+  virtual bool ShouldRollupOnMouseActivate() MOZ_OVERRIDE;
+  virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) MOZ_OVERRIDE;
+  virtual void NotifyGeometryChange() MOZ_OVERRIDE {}
+  virtual nsIWidget* GetRollupWidget() MOZ_OVERRIDE;
 
   static nsXULPopupManager* sInstance;
 

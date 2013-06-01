@@ -70,7 +70,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.20
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.16.1
+SQLITE_VERSION=3.7.17
 
 MSMANIFEST_TOOL=
 
@@ -2092,6 +2092,7 @@ ia64*-hpux*)
         RC='$(WINDRES)'
         # Use static libgcc and libstdc++
         LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++"
+        NSPR_LDFLAGS="$NSPR_LDFLAGS -static-libgcc"
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly

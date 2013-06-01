@@ -20,5 +20,5 @@
     android:textAppearance="@style/TextAppearance.Widget.TextView"
     android:singleLine="true"
     android:layout_width="match_parent"
-    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:layout_height="?android:attr/listPreferredItemHeightSmall"
     android:ellipsize="marquee"/>

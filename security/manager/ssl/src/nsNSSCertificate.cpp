@@ -37,6 +37,7 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsXULAppAPI.h"
 #include "ScopedNSSTypes.h"
+#include "nsProxyRelease.h"
 
 #include "nspr.h"
 #include "certdb.h"
@@ -1407,13 +1408,15 @@ nsNSSCertificate::GetUsagesArray(bool localOnly,
 NS_IMETHODIMP
 nsNSSCertificate::RequestUsagesArrayAsync(nsICertVerificationListener *aResultListener)
 {
+  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
+
   if (!aResultListener)
     return NS_ERROR_FAILURE;
   
   nsCertVerificationJob *job = new nsCertVerificationJob;
 
   job->mCert = this;
-  job->mListener = aResultListener;
+  job->mListener = new nsMainThreadPtrHolder<nsICertVerificationListener>(aResultListener);
 
   nsresult rv = nsCertVerificationThread::addJob(job);
   if (NS_FAILED(rv))

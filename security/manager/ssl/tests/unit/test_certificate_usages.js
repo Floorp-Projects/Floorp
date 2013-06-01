@@ -1,9 +1,5 @@
 "use strict";
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
-let Cr = Components.results;
 /* To regenerate the certificates and apps for this test:
 
         cd security/manager/ssl/tests/unit/test_certificate_usages
@@ -20,25 +16,8 @@ let Cr = Components.results;
    tools or libraries built for the host platform.
 */
 
-let tempScope = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
-let NetUtil = tempScope.NetUtil;
-
-
-Cu.import("resource://gre/modules/FileUtils.jsm"); // XXX: tempScope?
-Cu.import("resource://gre/modules/Services.jsm");  // XXX: tempScope?
-
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
-
-function readFile(file) {
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
-  fstream.close();
-  return data;
-}
 
 var ca_usages = ['Client,Server,Sign,Encrypt,SSL CA,Status Responder',
                  'SSL CA',
@@ -116,11 +95,7 @@ function run_test() {
   for (var i = 0; i < ca_usages.length; i++) {
     var ca_name = "ca-" + (i + 1);
     var ca_filename = ca_name + ".der";
-    var root_cert_der =
-      do_get_file("test_certificate_usages/" + ca_filename, false);
-    var der = readFile(root_cert_der);
-    certdb.addCert(der, "CTu,CTu,CTu", ca_name);
-
+    addCertFromFile(certdb, "test_certificate_usages/" + ca_filename, "CTu,CTu,CTu");
     do_print("ca_name=" + ca_name);
     var cert;
     cert = certdb.findCertByNickname(null, ca_name);
@@ -136,10 +111,7 @@ function run_test() {
       var ee_name = "ee-" + (j + 1) + "-" + ca_name;
       var ee_filename = ee_name + ".der";
       //do_print("ee_filename" + ee_filename);
-      var ee_cert_der =
-        do_get_file("test_certificate_usages/" + ee_filename, false);
-      var der = readFile(ee_cert_der);
-      certdb.addCert(der, ",,", ee_name);
+      addCertFromFile(certdb, "test_certificate_usages/" + ee_filename, ",,");
       var ee_cert;
       ee_cert = certdb.findCertByNickname(null, ee_name);
       var verified = {};

@@ -27,7 +27,7 @@
  * vectors as column vectors, the double transposition makes everything work
  * out nicely.
  */
-class THEBES_API gfx3DMatrix
+class gfx3DMatrix
 {
 public:
   /**

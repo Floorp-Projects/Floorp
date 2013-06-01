@@ -168,7 +168,14 @@ class DMCli(object):
             subparser = subparsers.add_parser(commandname, help=commandprops['help'])
             if commandprops.get('args'):
                 for arg in commandprops['args']:
-                    kwargs = { k: v for k,v in arg.items() if k is not 'name' }
+                    # this is more elegant but doesn't work in python 2.6
+                    # (which we still use on tbpl @ mozilla where we install
+                    # this package)
+                    # kwargs = { k: v for k,v in arg.items() if k is not 'name' }
+                    kwargs = {}
+                    for (k, v) in arg.items():
+                        if k is not 'name':
+                            kwargs[k] = v
                     subparser.add_argument(arg['name'], **kwargs)
             subparser.set_defaults(func=commandprops['function'])
 

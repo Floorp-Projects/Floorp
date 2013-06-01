@@ -100,8 +100,11 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
+#ifdef MOZ_WEBSMS_BACKEND
     jclass jAndroidSmsMessageClass = jEnv->FindClass("android/telephony/SmsMessage");
     mAndroidSmsMessageClass = (jclass) jEnv->NewGlobalRef(jAndroidSmsMessageClass);
+    jCalculateLength = (jmethodID) jEnv->GetStaticMethodID(jAndroidSmsMessageClass, "calculateLength", "(Ljava/lang/CharSequence;Z)[I");
+#endif
 
     jNotifyIME = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIME", "(I)V");
     jNotifyIMEContext = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEContext", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
@@ -160,7 +163,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
     jSetUriTitle = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
 
-    jCalculateLength = (jmethodID) jEnv->GetStaticMethodID(jAndroidSmsMessageClass, "calculateLength", "(Ljava/lang/CharSequence;Z)[I");
     jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
     jGetMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMessage", "(II)V");
     jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(II)V");
@@ -1630,6 +1632,9 @@ nsresult
 AndroidBridge::GetSegmentInfoForText(const nsAString& aText,
                                      dom::mobilemessage::SmsSegmentInfoData* aData)
 {
+#ifndef MOZ_WEBSMS_BACKEND
+    return NS_ERROR_FAILURE;
+#else
     ALOG_BRIDGE("AndroidBridge::GetSegmentInfoForText");
 
     aData->segments() = 0;
@@ -1660,6 +1665,7 @@ AndroidBridge::GetSegmentInfoForText(const nsAString& aText,
 
     env->ReleaseIntArrayElements(arr, info, JNI_ABORT);
     return NS_OK;
+#endif
 }
 
 void
@@ -2180,6 +2186,27 @@ NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message, nsA
     return NS_OK;
 }
 
+/* nsIAndroidDisplayport getDisplayPort(in boolean aPageSizeUpdate, in boolean isBrowserContentDisplayed, in int32_t tabId, in nsIAndroidViewport metrics); */
+NS_IMETHODIMP nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
+{
+    AndroidBridge::Bridge()->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
+    return NS_OK;
+}
+
+/* void displayedDocumentChanged(); */
+NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged()
+{
+    AndroidBridge::Bridge()->ContentDocumentChanged();
+    return NS_OK;
+}
+
+/* boolean isContentDocumentDisplayed(); */
+NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
+{
+    *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
+    return NS_OK;
+}
+
 void
 AndroidBridge::NotifyDefaultPrevented(bool aDefaultPrevented)
 {
@@ -2674,22 +2701,34 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     return NS_OK;
 }
 
-nsresult
-nsAndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
-{
-    return AndroidBridge::Bridge()->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
-}
-
-nsresult
+void
 AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
 {
     JNIEnv* env = GetJNIEnv();
     if (!env || !mLayerClient)
-        return NS_OK;
+        return;
     AutoLocalJNIFrame jniFrame(env, 0);
     mLayerClient->GetDisplayPort(&jniFrame, aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
+}
 
-    return NS_OK;
+void
+AndroidBridge::ContentDocumentChanged()
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return;
+    AutoLocalJNIFrame jniFrame(env, 0);
+    mLayerClient->ContentDocumentChanged(&jniFrame);
+}
+
+bool
+AndroidBridge::IsContentDocumentDisplayed()
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
+        return false;
+    AutoLocalJNIFrame jniFrame(env, 0);
+    return mLayerClient->IsContentDocumentDisplayed(&jniFrame);
 }
 
 bool

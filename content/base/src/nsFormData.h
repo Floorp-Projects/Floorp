@@ -5,6 +5,7 @@
 #ifndef nsFormData_h__
 #define nsFormData_h__
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMFormData.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsFormSubmission.h"
@@ -59,9 +60,9 @@ public:
 
   // nsFormSubmission
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream);
+                                        nsIInputStream** aPostDataStream) MOZ_OVERRIDE;
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue)
+                                    const nsAString& aValue) MOZ_OVERRIDE
   {
     FormDataTuple* data = mFormData.AppendElement();
     data->name = aName;
@@ -71,7 +72,7 @@ public:
   }
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    nsIDOMBlob* aBlob,
-                                   const nsString& aFilename)
+                                   const nsString& aFilename) MOZ_OVERRIDE
   {
     FormDataTuple* data = mFormData.AppendElement();
     data->name = aName;

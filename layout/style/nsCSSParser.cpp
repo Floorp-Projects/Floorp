@@ -9005,19 +9005,16 @@ CSSParserImpl::ParseOneFamily(nsAString& aFamily, bool& aOneKeyword)
 
       if (eCSSToken_Ident == tk->mType) {
         aOneKeyword = false;
+        // We had at least another keyword before.
+        // "If a sequence of identifiers is given as a font family name,
+        //  the computed value is the name converted to a string by joining
+        //  all the identifiers in the sequence by single spaces."
+        // -- CSS 2.1, section 15.3
+        // Whitespace tokens do not actually matter,
+        // identifier tokens can be separated by comments.
+        aFamily.Append(PRUnichar(' '));
         aFamily.Append(tk->mIdent);
-      } else if (eCSSToken_Whitespace == tk->mType) {
-        // Lookahead one token and drop whitespace if we are ending the
-        // font name.
-        if (!GetToken(true))
-          break;
-
-        UngetToken();
-        if (eCSSToken_Ident == tk->mType)
-          aFamily.Append(PRUnichar(' '));
-        else
-          break;
-      } else {
+      } else if (eCSSToken_Whitespace != tk->mType) {
         UngetToken();
         break;
       }

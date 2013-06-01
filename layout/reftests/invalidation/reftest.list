@@ -5,3 +5,5 @@
 == 540247-1.xul 540247-1-ref.xul
 == 543681-1.html 543681-1-ref.html
 == test-image-layers.html test-image-layers-ref.html
+pref(layout.animated-image-layers.enabled,true) == test-animated-image-layers.html test-animated-image-layers-ref.html
+pref(layout.animated-image-layers.enabled,true) == test-animated-image-layers-background.html test-animated-image-layers-ref.html

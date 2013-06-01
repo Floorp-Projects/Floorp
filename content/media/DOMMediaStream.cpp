@@ -97,7 +97,7 @@ public:
                                         TrackRate aTrackRate,
                                         TrackTicks aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia)
+                                        const MediaSegment& aQueuedMedia) MOZ_OVERRIDE
   {
     if (aTrackEvents & (TRACK_EVENT_CREATED | TRACK_EVENT_ENDED)) {
       nsRefPtr<TrackChange> runnable =

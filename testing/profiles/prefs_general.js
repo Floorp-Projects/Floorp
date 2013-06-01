@@ -123,3 +123,6 @@ user_pref("dom.global-constructor.disable.mozContact", false);
 // Enable mozSettings
 user_pref("dom.mozSettings.enabled", true);
 user_pref("dom.navigator-property.disable.mozSettings", false);
+
+// Make sure the disk cache doesn't get auto disabled
+user_pref("network.http.bypass-cachelock-threshold", 200000);

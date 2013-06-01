@@ -10,9 +10,19 @@
 namespace js {
 namespace frontend {
 
+// Parse handler used when processing the syntax in a block of code, to generate
+// the minimal information which is required to detect syntax errors and allow
+// bytecode to be emitted for outer functions.
+//
+// When parsing, we start at the top level with a full parse, and when possible
+// only check the syntax for inner functions, so that they can be lazily parsed
+// into bytecode when/if they first run. Checking the syntax of a function is
+// several times faster than doing a full parse/emit, and lazy parsing improves
+// both performance and memory usage significantly when pages contain large
+// amounts of code that never executes (which happens often).
 class SyntaxParseHandler
 {
-    /* Remember the last encountered name or string literal during syntax parses. */
+    // Remember the last encountered name or string literal during syntax parses.
     JSAtom *lastAtom;
     TokenPos lastStringPos;
     TokenStream &tokenStream;
@@ -28,7 +38,8 @@ class SyntaxParseHandler
     };
     typedef Definition::Kind DefinitionNode;
 
-    SyntaxParseHandler(JSContext *cx, TokenStream &tokenStream, bool foldConstants)
+    SyntaxParseHandler(JSContext *cx, TokenStream &tokenStream, bool foldConstants,
+                       Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
       : lastAtom(NULL),
         tokenStream(tokenStream)
     {}
@@ -42,7 +53,7 @@ class SyntaxParseHandler
         lastAtom = name;
         return NodeName;
     }
-    DefinitionNode newPlaceholder(Node pn, ParseContext<SyntaxParseHandler> *pc) {
+    DefinitionNode newPlaceholder(JSAtom *atom, ParseContext<SyntaxParseHandler> *pc) {
         return Definition::PLACEHOLDER;
     }
     Node newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
@@ -181,6 +192,8 @@ class SyntaxParseHandler
     }
     static DefinitionNode nullDefinition() {
         return Definition::MISSING;
+    }
+    void disableSyntaxParser() {
     }
 };
 

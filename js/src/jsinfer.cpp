@@ -4120,6 +4120,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_TABLESWITCH:
       case JSOP_TRY:
       case JSOP_LABEL:
+      case JSOP_RUNONCE:
         break;
 
         /* Bytecodes pushing values of known type. */
@@ -4571,6 +4572,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_INITELEM:
       case JSOP_INITELEM_INC:
       case JSOP_INITELEM_ARRAY:
+      case JSOP_INITELEM_GETTER:
+      case JSOP_INITELEM_SETTER:
       case JSOP_SPREAD: {
         const SSAValue &objv = poppedValue(pc, (op == JSOP_INITELEM_ARRAY) ? 1 : 2);
         jsbytecode *initpc = script->code + objv.pushedOffset();
@@ -4587,8 +4590,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
                 TypeSet *types = initializer->getProperty(cx, JSID_VOID, true);
                 if (!types)
                     return false;
-                if (state.hasGetSet) {
-                    JS_ASSERT(op != JSOP_INITELEM_ARRAY);
+                if (op == JSOP_INITELEM_GETTER || op == JSOP_INITELEM_SETTER) {
                     types->addType(cx, Type::UnknownType());
                 } else if (state.hasHole) {
                     if (!initializer->unknownProperties())
@@ -4611,21 +4613,17 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
           default:
             break;
         }
-        state.hasGetSet = false;
         state.hasHole = false;
         break;
       }
-
-      case JSOP_GETTER:
-      case JSOP_SETTER:
-        state.hasGetSet = true;
-        break;
 
       case JSOP_HOLE:
         state.hasHole = true;
         break;
 
-      case JSOP_INITPROP: {
+      case JSOP_INITPROP:
+      case JSOP_INITPROP_GETTER:
+      case JSOP_INITPROP_SETTER: {
         const SSAValue &objv = poppedValue(pc, 1);
         jsbytecode *initpc = script->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);
@@ -4639,7 +4637,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
                     return false;
                 if (id == id___proto__(cx) || id == id_prototype(cx))
                     cx->compartment->types.monitorBytecode(cx, script, offset);
-                else if (state.hasGetSet)
+                else if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
                     types->addType(cx, Type::UnknownType());
                 else
                     poppedTypes(pc, 0)->addSubset(cx, types);
@@ -4647,7 +4645,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
         } else {
             pushed[0].addType(cx, Type::UnknownType());
         }
-        state.hasGetSet = false;
         JS_ASSERT(!state.hasHole);
         break;
       }
@@ -5187,7 +5184,9 @@ AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,
          * this is being used in a function call and we need to analyze the
          * callee's behavior.
          */
-        Shape *shape = type->proto ? type->proto->nativeLookup(cx, id) : NULL;
+        Shape *shape = (type->proto && type->proto->isNative())
+                       ? type->proto->nativeLookup(cx, id)
+                       : NULL;
         if (shape && shape->hasSlot()) {
             Value protov = type->proto->getSlot(shape->slot());
             TypeSet *types = TypeScript::BytecodeTypes(script, pc);
@@ -5518,10 +5517,10 @@ types::MarkIteratorUnknownSlow(JSContext *cx)
     if (JSOp(*pc) != JSOP_ITER)
         return;
 
-    if (!script->types)
-        return;
-
     AutoEnterAnalysis enter(cx);
+
+    if (!script->ensureHasTypes(cx))
+        return;
 
     /*
      * This script is iterating over an actual Iterator or Generator object, or
@@ -5947,20 +5946,12 @@ JSScript::makeAnalysis(JSContext *cx)
 /* static */ bool
 JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton /* = false */)
 {
-    JS_ASSERT(fun->nonLazyScript());
-    JS_ASSERT(fun->nonLazyScript()->function() == fun);
-
     if (!cx->typeInferenceEnabled())
         return true;
 
     if (singleton) {
         if (!setSingletonType(cx, fun))
             return false;
-    } else if (UseNewTypeForClone(fun)) {
-        /*
-         * Leave the default unknown-properties type for the function, it
-         * should not be used by scripts or appear in type sets.
-         */
     } else {
         RootedObject funProto(cx, fun->getProto());
         TypeObject *type = cx->compartment->types.newTypeObject(cx, &FunctionClass, funProto);

@@ -279,21 +279,6 @@ public:
                                                 const nsRect &aUnfilteredRect);
 
   /**
-   * Invalidates the area that is painted by the frame without updating its
-   * bounds.
-   *
-   * This is similar to InvalidateOverflowRect(). It will go away when we
-   * support display list based invalidation of SVG.
-   *
-   * @param aBoundsSubArea If non-null, a sub-area of aFrame's pre-filter
-   *   visual overflow rect that should be invalidated instead of aFrame's
-   *   entire visual overflow rect.
-   */
-  static void InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate = false,
-                               const nsRect *aBoundsSubArea = nullptr,
-                               uint32_t aFlags = 0);
-
-  /**
    * Schedules an update of the frame's bounds (which will in turn invalidate
    * the new area that the frame should paint to).
    *
@@ -402,12 +387,6 @@ public:
   /**
    * Notify the descendants of aFrame of a change to one of their ancestors
    * that might affect them.
-   *
-   * If the changed ancestor renders and needs to be invalidated, it should
-   * call nsSVGUtils::InvalidateAndScheduleBoundsUpdate or
-   * nsSVGUtils::InvalidateBounds _before_ calling this method. That makes it
-   * cheaper when descendants schedule their own bounds update because the code
-   * that walks up the parent chain marking dirty bits can stop earlier.
    */
   static void
   NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags);

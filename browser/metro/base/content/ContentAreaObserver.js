@@ -160,6 +160,19 @@ var ContentAreaObserver = {
     this.styles["viewable-width"].width = newWidth + "px";
     this.styles["viewable-width"].maxWidth = newWidth + "px";
 
+    // Adjust the app and find bar position above the soft keyboard
+    let navBar = document.getElementById("navbar");
+    let contextAppBar = document.getElementById("contextappbar");
+    let findBar = document.getElementById("content-navigator");
+    let keyboardHeight = MetroUtils.keyboardHeight;
+    navBar.style.bottom = keyboardHeight + "px";
+    contextAppBar.style.bottom = keyboardHeight + "px";
+    findBar.style.bottom = keyboardHeight + "px";
+
+    // Update the back/tab button states. If the keyboard is up
+    // these are hidden.
+    BrowserUI._updateButtons();
+
     this._disatchBrowserEvent("ViewableSizeChanged");
   },
 
@@ -173,6 +186,12 @@ var ContentAreaObserver = {
    */
 
   _onKeyboardDisplayChanging: function _onKeyboardDisplayChanging(aNewState) {
+    if (aNewState) {
+      Elements.stack.setAttribute("keyboardVisible", true);
+    } else {
+      Elements.stack.removeAttribute("keyboardVisible");
+    }
+
     this.updateViewableArea();
 
     if (!aNewState) {

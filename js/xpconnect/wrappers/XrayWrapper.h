@@ -103,6 +103,10 @@ class XrayWrapper : public Base {
     virtual bool construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
                            const JS::CallArgs &args) MOZ_OVERRIDE;
 
+    virtual bool defaultValue(JSContext *cx, JS::HandleObject wrapper,
+                              JSType hint, JS::MutableHandleValue vp)
+                              MOZ_OVERRIDE;
+
     static XrayWrapper singleton;
 
   private:

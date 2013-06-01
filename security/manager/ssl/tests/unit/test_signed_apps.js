@@ -1,9 +1,4 @@
 "use strict";
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
-
 /* To regenerate the certificates and apps for this test:
 
         cd security/manager/ssl/tests/unit/test_signed_apps
@@ -24,13 +19,6 @@ var Cr = Components.results;
 const PR_RDWR        = 0x04; 
 const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE    = 0x20;
-
-let tempScope = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
-let NetUtil = tempScope.NetUtil;
-
-Cu.import("resource://gre/modules/FileUtils.jsm"); // XXX: tempScope?
-Cu.import("resource://gre/modules/Services.jsm");  // XXX: tempScope?
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
@@ -120,15 +108,6 @@ function truncateEntry(entry, entryInput) {
   content.data = "";
 
   return [entry, content]
-}
-
-function readFile(file) {
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
-  fstream.close();
-  return data;
 }
 
 function run_test() {

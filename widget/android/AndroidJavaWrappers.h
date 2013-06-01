@@ -281,6 +281,8 @@ public:
     bool ActivateProgram(AutoLocalJNIFrame *jniFrame);
     bool DeactivateProgram(AutoLocalJNIFrame *jniFrame);
     void GetDisplayPort(AutoLocalJNIFrame *jniFrame, bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort);
+    void ContentDocumentChanged(AutoLocalJNIFrame *jniFrame);
+    bool IsContentDocumentDisplayed(AutoLocalJNIFrame *jniFrame);
 
 protected:
     static jclass jGeckoLayerClientClass;
@@ -292,6 +294,8 @@ protected:
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
     static jmethodID jGetDisplayPort;
+    static jmethodID jContentDocumentChanged;
+    static jmethodID jIsContentDocumentDisplayed;
     static jmethodID jProgressiveUpdateCallbackMethod;
 
 public:

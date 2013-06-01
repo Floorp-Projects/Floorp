@@ -398,6 +398,10 @@ this.UtteranceGenerator = {
       stateUtterances.push(gStringBundle.GetStringFromName('stateTraversed'));
     }
 
+    if (aStates.base & Ci.nsIAccessibleStates.STATE_HASPOPUP) {
+      stateUtterances.push(gStringBundle.GetStringFromName('stateHasPopup'));
+    }
+
     return stateUtterances;
   },
 

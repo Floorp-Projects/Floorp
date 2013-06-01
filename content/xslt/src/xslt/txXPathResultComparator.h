@@ -6,6 +6,7 @@
 #ifndef TRANSFRMX_XPATHRESULTCOMPARATOR_H
 #define TRANSFRMX_XPATHRESULTCOMPARATOR_H
 
+#include "mozilla/Attributes.h"
 #include "txCore.h"
 #include "nsCOMPtr.h"
 #include "nsICollation.h"
@@ -46,9 +47,9 @@ public:
     txResultStringComparator(bool aAscending, bool aUpperFirst,
                              const nsAFlatString& aLanguage);
 
-    int compareValues(txObject* aVal1, txObject* aVal2);
+    int compareValues(txObject* aVal1, txObject* aVal2) MOZ_OVERRIDE;
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 txObject *&aResult);
+                                 txObject *&aResult) MOZ_OVERRIDE;
 private:
     nsCOMPtr<nsICollation> mCollation;
     nsresult init(const nsAFlatString& aLanguage);
@@ -78,9 +79,9 @@ class txResultNumberComparator : public txXPathResultComparator
 public:
     txResultNumberComparator(bool aAscending);
 
-    int compareValues(txObject* aVal1, txObject* aVal2);
+    int compareValues(txObject* aVal1, txObject* aVal2) MOZ_OVERRIDE;
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 txObject *&aResult);
+                                 txObject *&aResult) MOZ_OVERRIDE;
 
 private:
     int mAscending;
