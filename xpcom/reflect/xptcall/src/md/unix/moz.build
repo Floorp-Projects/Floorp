@@ -20,7 +20,7 @@ if CONFIG['OS_ARCH'] == 'Darwin':
             ]
 
 if CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD', 'GNU'):
-    if CONFIG['OS_TEST'].find('86') != -1:
+    if CONFIG['CPU_ARCH'] == 'x86':
         CPP_SOURCES += [
             'xptcinvoke_gcc_x86_unix.cpp',
             'xptcstubs_gcc_x86_unix.cpp'
