@@ -2040,6 +2040,12 @@ bool
 GetWindowForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
                                 nsPIDOMWindow** window);
 
+already_AddRefed<nsPIDOMWindow>
+ConstructJSImplementation(JSContext* aCx, const char* aContractId,
+                          const GlobalObject& aGlobal,
+                          JS::MutableHandle<JSObject*> aObject,
+                          ErrorResult& aRv);
+
 bool
 RegisterForDeferredFinalization(DeferredFinalizeStartFunction start,
                                 DeferredFinalizeFunction run);
