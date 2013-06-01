@@ -194,6 +194,43 @@ let tests = [
 
     win.close();
   },
+
+  function noCookies() {
+    // Visit the test page in the browser and tell it to set a cookie.
+    let url = testPageURL({ setGreenCookie: true });
+    let tab = gBrowser.loadOneTab(url, { inBackground: false });
+    let browser = tab.linkedBrowser;
+    yield onPageLoad(browser);
+
+    // The root element of the page shouldn't be green yet.
+    let greenStr = "rgb(0, 255, 0)";
+    isnot(browser.contentDocument.documentElement.style.backgroundColor,
+          greenStr,
+          "The page shouldn't be green yet.");
+
+    // Cookie should be set now.  Reload the page to verify.  Its root element
+    // will be green if the cookie's set.
+    browser.reload();
+    yield onPageLoad(browser);
+    is(browser.contentDocument.documentElement.style.backgroundColor,
+       greenStr,
+       "The page should be green now.");
+
+    // Capture the page.  Get the image data of the capture and verify it's not
+    // green.  (Checking only the first pixel suffices.)
+    yield capture(url);
+    let file = fileForURL(url);
+    ok(file.exists(), "Thumbnail file should exist after capture.");
+
+    let deferred = imports.Promise.defer();
+    retrieveImageDataForURL(url, function ([r, g, b]) {
+      isnot([r, g, b].toString(), [0, 255, 0].toString(),
+            "The captured page should not be green.");
+      gBrowser.removeTab(tab);
+      deferred.resolve();
+    });
+    yield deferred.promise;
+  },
 ];
 
 function capture(url, options) {
@@ -237,5 +274,16 @@ function openPrivateWindow() {
       deferred.resolve(win);
     }
   });
+  return deferred.promise;
+}
+
+function onPageLoad(browser) {
+  let deferred = imports.Promise.defer();
+  browser.addEventListener("load", function load(event) {
+    if (event.target == browser.contentWindow.document) {
+      browser.removeEventListener("load", load, true);
+      deferred.resolve();
+    }
+  }, true);
   return deferred.promise;
 }
