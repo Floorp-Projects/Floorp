@@ -155,6 +155,54 @@ function basicNotification() {
   }
 }
 
+function errorNotification() {
+  var self = this;
+  this.browser = gBrowser.selectedBrowser;
+  this.id = "test-notification-" + gTestIndex;
+  this.message = "This is popup notification " + this.id + " from test " + gTestIndex;
+  this.anchorID = null;
+  this.mainAction = {
+    label: "Main Action",
+    accessKey: "M",
+    callback: function () {
+      self.mainActionClicked = true;
+      throw new Error("Oops!");
+    }
+  };
+  this.secondaryActions = [
+    {
+      label: "Secondary Action",
+      accessKey: "S",
+      callback: function () {
+        self.secondaryActionClicked = true;
+        throw new Error("Oops!");
+      }
+    }
+  ];
+  this.options = {
+    eventCallback: function (eventName) {
+      switch (eventName) {
+        case "dismissed":
+          self.dismissalCallbackTriggered = true;
+          break;
+        case "showing":
+          self.showingCallbackTriggered = true;
+          break;
+        case "shown":
+          self.shownCallbackTriggered = true;
+          break;
+        case "removed":
+          self.removedCallbackTriggered = true;
+          break;
+      }
+    }
+  };
+  this.addOptions = function(options) {
+    for (let [name, value] in Iterator(options))
+      self.options[name] = value;
+  }
+}
+
 var wrongBrowserNotificationObject = new basicNotification();
 var wrongBrowserNotification;
 
@@ -831,7 +879,69 @@ var tests = [
       });
     }
   },
-  { // Test #29 -  Existing popup notification shouldn't disappear when adding a dismissed notification
+  { // Test #29 - Popup Notifications should catch exceptions from callbacks
+    run: function () {
+      let callbackCount = 0;
+      this.testNotif1 = new basicNotification();
+      this.testNotif1.message += " 1";
+      showNotification(this.testNotif1);
+      this.testNotif1.options.eventCallback = function (eventName) {
+        info("notifyObj1.options.eventCallback: " + eventName);
+        if (eventName == "dismissed") {
+          throw new Error("Oops 1!");
+          if (++callbackCount == 2) {
+            executeSoon(goNext);
+          }
+        }
+      };
+
+      this.testNotif2 = new basicNotification();
+      this.testNotif2.message += " 2";
+      this.testNotif2.id += "-2";
+      this.testNotif2.options.eventCallback = function (eventName) {
+        info("notifyObj2.options.eventCallback: " + eventName);
+        if (eventName == "dismissed") {
+          throw new Error("Oops 2!");
+          if (++callbackCount == 2) {
+            executeSoon(goNext);
+          }
+        }
+      };
+      showNotification(this.testNotif2);
+    },
+    onShown: function (popup) {
+      is(popup.childNodes.length, 2, "two notifications are shown");
+      dismissNotification(popup);
+    },
+    onHidden: function () {}
+  },
+  { // Test #30 - Popup Notifications main actions should catch exceptions from callbacks
+    run: function () {
+      this.testNotif = new errorNotification();
+      showNotification(this.testNotif);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.testNotif);
+      triggerMainCommand(popup);
+    },
+    onHidden: function (popup) {
+      ok(this.testNotif.mainActionClicked, "main action has been triggered");
+    }
+  },
+  { // Test #31 - Popup Notifications secondary actions should catch exceptions from callbacks
+    run: function () {
+      this.testNotif = new errorNotification();
+      showNotification(this.testNotif);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.testNotif);
+      triggerSecondaryCommand(popup, 0);
+    },
+    onHidden: function (popup) {
+      ok(this.testNotif.secondaryActionClicked, "secondary action has been triggered");
+    }
+  },
+  { // Test #32 -  Existing popup notification shouldn't disappear when adding a dismissed notification
     run: function () {
       this.notifyObj1 = new basicNotification();
       this.notifyObj1.id += "_1";
@@ -862,7 +972,7 @@ var tests = [
       this.notification2.remove();
     }
   },
-  { // Test #30 - Showing should be able to modify the popup data
+  { // Test #33 - Showing should be able to modify the popup data
     run: function() {
       this.notifyObj = new basicNotification();
       var normalCallback = this.notifyObj.options.eventCallback;
