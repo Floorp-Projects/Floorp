@@ -872,7 +872,6 @@ private:
     nsCString         mForcedCharset;
     nsCString         mParentCharset;
     nsTObserverArray<nsWeakPtr> mPrivacyObservers;
-    nsTObserverArray<nsWeakPtr> mReflowObservers;
     int32_t           mParentCharsetSource;
     nsCString         mOriginalUriString;
 

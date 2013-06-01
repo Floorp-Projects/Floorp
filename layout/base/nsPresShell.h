@@ -701,8 +701,6 @@ protected:
 
   nscolor GetDefaultBackgroundColorToDraw();
 
-  DOMHighResTimeStamp GetPerformanceNow();
-
   // The callback for the mPaintSuppressionTimer timer.
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
 
@@ -784,9 +782,6 @@ protected:
   // posted messages are processed before other messages when the modal
   // moving/sizing loop is running, see bug 491700 for details.
   nsCOMPtr<nsITimer>        mReflowContinueTimer;
-
-  // The `performance.now()` value when we last started to process reflows.
-  DOMHighResTimeStamp       mLastReflowStart;
 
   // Information needed to properly handle scrolling content into view if the
   // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
