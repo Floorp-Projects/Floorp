@@ -109,8 +109,6 @@ DOMCI_CLASS(XPathResult)
 // WhatWG WebApps Objects
 DOMCI_CLASS(Storage)
 
-DOMCI_CLASS(OfflineResourceList)
-
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
 

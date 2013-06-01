@@ -662,9 +662,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
 
-  NS_DEFINE_CLASSINFO_DATA(OfflineResourceList, nsOfflineResourceListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(Blob, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(File, nsDOMGenericSH,
@@ -1761,11 +1758,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(OfflineResourceList, nsIDOMOfflineResourceList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMOfflineResourceList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Blob, nsIDOMBlob)
@@ -6887,23 +6879,4 @@ nsNonDOMObjectSH::GetFlags(uint32_t *aFlags)
   // way.
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::SINGLETON_CLASSINFO;
   return NS_OK;
-}
-
-// nsOfflineResourceListSH
-nsresult
-nsOfflineResourceListSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
-                                     nsAString& aResult)
-{
-  nsCOMPtr<nsIDOMOfflineResourceList> list(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
-
-  nsresult rv = list->MozItem(aIndex, aResult);
-#ifdef DEBUG
-  if (DOMStringIsNull(aResult)) {
-    uint32_t length = 0;
-    list->GetMozLength(&length);
-    NS_ASSERTION(uint32_t(aIndex) >= length, "MozItem should only return null for out-of-bounds access");
-  }
-#endif
-  return rv;
 }
