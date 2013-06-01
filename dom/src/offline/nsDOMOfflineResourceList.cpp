@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMOfflineResourceList.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsError.h"
 #include "nsDOMLists.h"
@@ -22,6 +21,7 @@
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
+#include "mozilla/dom/OfflineResourceListBinding.h"
 #include "mozilla/Preferences.h"
 
 #include "nsXULAppAPI.h"
@@ -29,6 +29,7 @@
     (GeckoProcessType_Default != XRE_GetProcessType())
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // Event names
 
@@ -57,14 +58,11 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_2(nsDOMOfflineResourceList,
                                      mCacheUpdate,
                                      mPendingEvents)
 
-DOMCI_DATA(OfflineResourceList, nsDOMOfflineResourceList)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdateObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(OfflineResourceList)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMOfflineResourceList, nsDOMEventTargetHelper)
@@ -92,11 +90,19 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
   , mCachedKeysCount(0)
 {
   BindToOwner(aWindow);
+  SetIsDOMBinding();
 }
 
 nsDOMOfflineResourceList::~nsDOMOfflineResourceList()
 {
   ClearCachedKeys();
+}
+
+JSObject*
+nsDOMOfflineResourceList::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aScope)
+{
+  return OfflineResourceListBinding::Wrap(aCx, aScope, this);
 }
 
 nsresult
@@ -187,7 +193,6 @@ nsDOMOfflineResourceList::GetMozItems(nsIDOMDOMStringList **aItems)
   *aItems = nullptr;
 
   nsRefPtr<nsDOMStringList> items = new nsDOMStringList();
-  NS_ENSURE_TRUE(items, NS_ERROR_OUT_OF_MEMORY);
 
   // If we are not associated with an application cache, return an
   // empty list.
