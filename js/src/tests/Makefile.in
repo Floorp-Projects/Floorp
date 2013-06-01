@@ -36,6 +36,7 @@ TEST_FILES = \
   js1_8/ \
   js1_8_1/ \
   js1_8_5/ \
+  test262/ \
   $(NULL)
 
 PKG_STAGE = $(DIST)/test-package-stage
