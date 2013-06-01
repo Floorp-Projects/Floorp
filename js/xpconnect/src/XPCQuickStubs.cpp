@@ -633,7 +633,7 @@ castNative(JSContext *cx,
     } else if (cur) {
         nsISupports *native;
         QITableEntry *entries;
-        if (mozilla::dom::UnwrapDOMObjectToISupports(cur, native)) {
+        if ((native = mozilla::dom::UnwrapDOMObjectToISupports(cur))) {
             entries = nullptr;
         } else if (IS_SLIM_WRAPPER(cur)) {
             native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));

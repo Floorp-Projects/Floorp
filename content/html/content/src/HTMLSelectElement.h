@@ -206,10 +206,9 @@ public:
   {
     return mOptions->ItemAsOption(aIdx);
   }
-  JSObject* NamedItem(JSContext* aCx, const nsAString& aName,
-                      ErrorResult& aRv) const
+  HTMLOptionElement* NamedItem(const nsAString& aName) const
   {
-    return mOptions->NamedItem(aCx, aName, aRv);
+    return mOptions->GetNamedItem(aName);
   }
   void Add(const HTMLOptionElementOrHTMLOptGroupElement& aElement,
            const Nullable<HTMLElementOrLong>& aBefore,
