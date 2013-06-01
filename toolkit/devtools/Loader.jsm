@@ -29,13 +29,20 @@ this.EXPORTED_SYMBOLS = ["devtools"];
 
 let loaderGlobals = {
   console: console,
-  _Iterator: Iterator
+  _Iterator: Iterator,
+  loader: {
+    lazyGetter: XPCOMUtils.defineLazyGetter.bind(XPCOMUtils),
+    lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils)
+  }
 }
 
 // Used when the tools should be loaded from the Firefox package itself (the default)
 var BuiltinProvider = {
   load: function(done) {
     this.loader = new loader.Loader({
+      modules: {
+        "toolkit/loader": loader
+      },
       paths: {
         "": "resource://gre/modules/commonjs/",
         "main": "resource:///modules/devtools/main.js",
@@ -73,6 +80,9 @@ var SrcdirProvider = {
     let serverURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "server"));
     let mainURI = this.fileURI(OS.Path.join(srcdir, "browser", "devtools", "main.js"));
     this.loader = new loader.Loader({
+      modules: {
+        "toolkit/loader": loader
+      },
       paths: {
         "": "resource://gre/modules/commonjs/",
         "devtools/server": serverURI,

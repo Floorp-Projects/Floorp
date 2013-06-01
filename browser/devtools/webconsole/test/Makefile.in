@@ -132,6 +132,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug_871156_ctrlw_close_tab.js \
 	browser_console_private_browsing.js \
 	browser_console_nsiconsolemessage.js \
+	browser_webconsole_bug_817834_add_edited_input_to_history.js \
 	head.js \
 	$(NULL)
 
