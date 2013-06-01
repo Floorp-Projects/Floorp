@@ -1678,6 +1678,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioContexts)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMenubar)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mToolbar)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocationbar)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPersonalbar)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStatusbar)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScrollbars)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -1724,6 +1731,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioContexts)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMenubar)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mToolbar)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocationbar)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPersonalbar)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStatusbar)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScrollbars)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 struct TraceData
@@ -3586,7 +3600,7 @@ nsGlobalWindow::GetPrompter(nsIPrompt** aPrompt)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetMenubar(nsIDOMBarProp** aMenubar)
+nsGlobalWindow::GetMenubar(nsISupports** aMenubar)
 {
   FORWARD_TO_OUTER(GetMenubar, (aMenubar), NS_ERROR_NOT_INITIALIZED);
 
@@ -3605,7 +3619,7 @@ nsGlobalWindow::GetMenubar(nsIDOMBarProp** aMenubar)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetToolbar(nsIDOMBarProp** aToolbar)
+nsGlobalWindow::GetToolbar(nsISupports** aToolbar)
 {
   FORWARD_TO_OUTER(GetToolbar, (aToolbar), NS_ERROR_NOT_INITIALIZED);
 
@@ -3624,7 +3638,7 @@ nsGlobalWindow::GetToolbar(nsIDOMBarProp** aToolbar)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetLocationbar(nsIDOMBarProp** aLocationbar)
+nsGlobalWindow::GetLocationbar(nsISupports** aLocationbar)
 {
   FORWARD_TO_OUTER(GetLocationbar, (aLocationbar), NS_ERROR_NOT_INITIALIZED);
 
@@ -3643,7 +3657,7 @@ nsGlobalWindow::GetLocationbar(nsIDOMBarProp** aLocationbar)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
+nsGlobalWindow::GetPersonalbar(nsISupports** aPersonalbar)
 {
   FORWARD_TO_OUTER(GetPersonalbar, (aPersonalbar), NS_ERROR_NOT_INITIALIZED);
 
@@ -3662,7 +3676,7 @@ nsGlobalWindow::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetStatusbar(nsIDOMBarProp** aStatusbar)
+nsGlobalWindow::GetStatusbar(nsISupports** aStatusbar)
 {
   FORWARD_TO_OUTER(GetStatusbar, (aStatusbar), NS_ERROR_NOT_INITIALIZED);
 
@@ -3680,22 +3694,22 @@ nsGlobalWindow::GetStatusbar(nsIDOMBarProp** aStatusbar)
   return NS_OK;
 }
 
+mozilla::dom::BarProp*
+nsGlobalWindow::Scrollbars()
+{
+  if (!mScrollbars) {
+    mScrollbars = new ScrollbarsProp(this);
+  }
+
+  return mScrollbars;
+}
+
 NS_IMETHODIMP
-nsGlobalWindow::GetScrollbars(nsIDOMBarProp** aScrollbars)
+nsGlobalWindow::GetScrollbars(nsISupports** aScrollbars)
 {
   FORWARD_TO_OUTER(GetScrollbars, (aScrollbars), NS_ERROR_NOT_INITIALIZED);
 
-  *aScrollbars = nullptr;
-
-  if (!mScrollbars) {
-    mScrollbars = new ScrollbarsProp(this);
-    if (!mScrollbars) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  NS_ADDREF(*aScrollbars = mScrollbars);
-
+  NS_ADDREF(*aScrollbars = Scrollbars());
   return NS_OK;
 }
 

@@ -146,7 +146,6 @@
 
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
-#include "nsIDOMBarProp.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMLinkStyle.h"
@@ -485,8 +484,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MimeTypeArray, nsMimeTypeArraySH,
                            ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(BarProp, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(History, nsHistorySH,
                            ARRAY_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
@@ -1520,10 +1517,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MimeTypeArray, nsIDOMMimeTypeArray)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMimeTypeArray)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(BarProp, nsIDOMBarProp)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBarProp)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
