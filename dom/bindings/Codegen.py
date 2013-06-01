@@ -7640,7 +7640,15 @@ class CGDictionary(CGThing):
                 "// Per spec, we init the parent's members first\n"
                 "if (!%s::Init(cx, val)) {\n"
                 "  return false;\n"
-                "}\n") % self.makeClassName(self.dictionary.parent)
+                "}\n"
+                "MOZ_ASSERT(IsConvertibleToDictionary(cx, val));\n"
+                "\n") % self.makeClassName(self.dictionary.parent)
+        else:
+            body += (
+                "if (!IsConvertibleToDictionary(cx, val)) {\n"
+                "  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
+                "}\n"
+                "\n")
 
         memberInits = [self.getMemberConversion(m).define()
                        for m in self.memberInfo]
@@ -7649,14 +7657,6 @@ class CGDictionary(CGThing):
                 "JSBool found;\n"
                 "JS::Rooted<JS::Value> temp(cx);\n"
                 "bool isNull = val.isNullOrUndefined();\n")
-
-        body += (
-            "if (!IsConvertibleToDictionary(cx, val)) {\n"
-            "  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
-            "}\n"
-            "\n")
-
-        if memberInits:
             body += "\n\n".join(memberInits) + "\n"
 
         body += "return true;"
