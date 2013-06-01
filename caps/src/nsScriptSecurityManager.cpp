@@ -2102,8 +2102,8 @@ nsScriptSecurityManager::old_doGetObjectPrincipal(JS::Handle<JSObject*> aObj,
             if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
                                      JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
                 priv = (nsISupports *) js::GetObjectPrivate(obj);
-            } else if (!UnwrapDOMObjectToISupports(obj, priv)) {
-                priv = nullptr;
+            } else {
+                priv = UnwrapDOMObjectToISupports(obj);
             }
 
             if (aAllowShortCircuit) {

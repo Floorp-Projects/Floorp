@@ -7640,7 +7640,15 @@ class CGDictionary(CGThing):
                 "// Per spec, we init the parent's members first\n"
                 "if (!%s::Init(cx, val)) {\n"
                 "  return false;\n"
-                "}\n") % self.makeClassName(self.dictionary.parent)
+                "}\n"
+                "MOZ_ASSERT(IsConvertibleToDictionary(cx, val));\n"
+                "\n") % self.makeClassName(self.dictionary.parent)
+        else:
+            body += (
+                "if (!IsConvertibleToDictionary(cx, val)) {\n"
+                "  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
+                "}\n"
+                "\n")
 
         memberInits = [self.getMemberConversion(m).define()
                        for m in self.memberInfo]
@@ -7649,14 +7657,6 @@ class CGDictionary(CGThing):
                 "JSBool found;\n"
                 "JS::Rooted<JS::Value> temp(cx);\n"
                 "bool isNull = val.isNullOrUndefined();\n")
-
-        body += (
-            "if (!IsConvertibleToDictionary(cx, val)) {\n"
-            "  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
-            "}\n"
-            "\n")
-
-        if memberInits:
             body += "\n\n".join(memberInits) + "\n"
 
         body += "return true;"
@@ -9053,60 +9053,24 @@ class CGJSImplMethod(CGNativeMember):
         return genConstructorBody(self.descriptor, initCall)
 
 def genConstructorBody(descriptor, initCall=""):
-    return string.Template(
-"""  // Get the window to use as a parent and for initialization.
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());
-  if (!window) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
+    template = (
+        "JS::Rooted<JSObject*> jsImplObj(cx);\n"
+        "nsCOMPtr<nsPIDOMWindow> window =\n"
+        '  ConstructJSImplementation(cx, "${contractId}", global, &jsImplObj, aRv);\n'
+        "if (aRv.Failed()) {\n"
+        "  return nullptr;\n"
+        "}\n"
+        "// Build the C++ implementation.\n"
+        # Leave off the newline in case initCall is empty.
+        "nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, window);"
+        "${initCall}\n"
+        "return impl.forget();")
 
-  JS::Rooted<JSObject*> jsImplObj(cx);
-
-  // Make sure to have nothing on the JS context stack while creating and
-  // initializing the object, so exceptions from that will get reported
-  // properly, since those are never exceptions that a spec wants to be thrown.
-  {  // Scope for the nsCxPusher
-    nsCxPusher pusher;
-    pusher.PushNull();
-    // Get the XPCOM component containing the JS implementation.
-    nsCOMPtr<nsISupports> implISupports = do_CreateInstance("${contractId}");
-    if (!implISupports) {
-      NS_WARNING("Failed to get JS implementation for contract \\"${contractId}\\"");
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
-    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi = do_QueryInterface(implISupports);
-    if (gpi) {
-      JS::Rooted<JS::Value> initReturn(cx);
-      nsresult rv = gpi->Init(window, initReturn.address());
-      if (NS_FAILED(rv)) {
-        aRv.Throw(rv);
-       return nullptr;
-      }
-      MOZ_ASSERT(initReturn.isUndefined(),
-                 "Expected nsIDOMGlobalPropertyInitializer to return undefined");
-    }
-    // Extract the JS implementation from the XPCOM object.
-    nsCOMPtr<nsIXPConnectWrappedJS> implWrapped = do_QueryInterface(implISupports);
-    MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
-    if (!implWrapped) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    jsImplObj = implWrapped->GetJSObject();
-    if (!jsImplObj) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-  }
-  // Build the C++ implementation.
-  nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, window);${initCall}
-  return impl.forget();""").substitute({"implClass" : descriptor.name,
-                 "contractId" : descriptor.interface.getJSImplementation(),
-                 "initCall" : initCall
-                 })
+    return string.Template(template).substitute({
+        "implClass" : descriptor.name,
+        "contractId" : descriptor.interface.getJSImplementation(),
+        "initCall" : initCall
+    })
 
 # We're always fallible
 def callbackGetterName(attr):
