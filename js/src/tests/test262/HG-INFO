@@ -1,0 +1,7 @@
+URL:         http://hg.ecmascript.org/tests/test262
+changeset:   365:99aac3bc1cad
+tag:         tip
+user:        Norbert Lindenberg <ecmascript@lindenbergsoftware.com>
+date:        Mon Apr 29 17:35:48 2013 -0700
+summary:     Added test data for proper rounding in NumberFormat.format.
+
