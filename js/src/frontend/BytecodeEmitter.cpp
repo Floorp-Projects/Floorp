@@ -5595,6 +5595,9 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         if (Emit1(cx, bce, JSOP_STRICTEQ) < 0)
             return false;
+        // Emit source note to enable ion compilation.
+        if (NewSrcNote(cx, bce, SRC_IF) < 0)
+            return false;
         ptrdiff_t jump = EmitJump(cx, bce, JSOP_IFEQ, 0);
         if (jump < 0)
             return false;
