@@ -11,7 +11,7 @@ interface nsIDOMDeviceStorageChangeEvent;
 interface nsIDOMEventListener;
 interface nsIFile;
 
-[scriptable, uuid(446b5221-e2ca-4ebe-873b-e1f06cfdafdf), builtinclass]
+[scriptable, uuid(7cef14d4-d767-4da7-a18e-32c5e009a8e4), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
@@ -22,16 +22,8 @@ interface nsIDOMDeviceStorage : nsIDOMEventTarget
     nsIDOMDOMRequest getEditable([Null(Stringify)] in DOMString aName);
     nsIDOMDOMRequest delete([Null(Stringify)] in DOMString aName);
 
-    [optional_argc, implicit_jscontext]
-    nsIDOMDOMCursor enumerate([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
-
-    [optional_argc, implicit_jscontext]
-    nsIDOMDOMCursor enumerateEditable([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
-
     nsIDOMDOMRequest freeSpace();
-
     nsIDOMDOMRequest usedSpace();
-
     nsIDOMDOMRequest available();
 
     // Note that the storageName is just a name (like sdcard), and doesn't
