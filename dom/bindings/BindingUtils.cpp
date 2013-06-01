@@ -600,8 +600,7 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
 bool
 TryPreserveWrapper(JSObject* obj)
 {
-  nsISupports* native;
-  if (UnwrapDOMObjectToISupports(obj, native)) {
+  if (nsISupports* native = UnwrapDOMObjectToISupports(obj)) {
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(native, &cache);
     if (cache) {
@@ -683,8 +682,8 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
       return false;
   }
 
-  nsISupports* native;
-  if (!UnwrapDOMObjectToISupports(obj, native)) {
+  nsISupports* native = UnwrapDOMObjectToISupports(obj);
+  if (!native) {
     return Throw<true>(cx, NS_ERROR_FAILURE);
   }
 
@@ -1469,8 +1468,8 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
     return NS_OK;
   }
 
-  nsISupports* native;
-  if (!UnwrapDOMObjectToISupports(aObj, native)) {
+  nsISupports* native = UnwrapDOMObjectToISupports(aObj);
+  if (!native) {
     return NS_OK;
   }
 
