@@ -712,6 +712,9 @@
         <![CDATA[
           // left-click/touch handler
           this.control.handleItemClick(this, event);
+          // Stop this from bubbling, when the richgrid container
+          // receives click events, we blur the nav bar.
+          event.stopPropagation();
         ]]>
       </handler>
       <handler event="contextmenu">

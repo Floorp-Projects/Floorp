@@ -93,7 +93,7 @@ public:
   virtual nsIDocument* DocToUpdate() MOZ_OVERRIDE;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) MOZ_OVERRIDE;
 
-  static mozilla::dom::CSSValue* MatrixToCSSValue(gfx3DMatrix& aMatrix);
+  static nsROCSSPrimitiveValue* MatrixToCSSValue(gfx3DMatrix& aMatrix);
 
 private:
   void AssertFlushedPendingReflows() {

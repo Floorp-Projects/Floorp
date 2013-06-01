@@ -111,7 +111,7 @@ private:
                                nsINode* aEventTarget,
                                uint32_t aEventMessage,
                                const nsAString& aData);
-    NS_IMETHOD Run();
+    NS_IMETHOD Run() MOZ_OVERRIDE;
 
   private:
     nsRefPtr<nsPresContext> mPresContext;

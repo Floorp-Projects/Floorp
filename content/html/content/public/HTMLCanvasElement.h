@@ -6,6 +6,7 @@
 #if !defined(mozilla_dom_HTMLCanvasElement_h)
 #define mozilla_dom_HTMLCanvasElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMHTMLCanvasElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -15,6 +16,7 @@
 
 #include "nsICanvasElementExternal.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/gfx/Rect.h"
 
 class nsICanvasRenderingContextInternal;
 class nsIDOMFile;
@@ -26,10 +28,6 @@ namespace mozilla {
 namespace layers {
 class CanvasLayer;
 class LayerManager;
-}
-
-namespace gfx {
-struct Rect;
 }
 
 namespace dom {
@@ -185,16 +183,16 @@ public:
   /*
    * nsICanvasElementExternal -- for use outside of content/layout
    */
-  NS_IMETHOD_(nsIntSize) GetSizeExternal();
+  NS_IMETHOD_(nsIntSize) GetSizeExternal() MOZ_OVERRIDE;
   NS_IMETHOD RenderContextsExternal(gfxContext *aContext,
                                     gfxPattern::GraphicsFilter aFilter,
-                                    uint32_t aFlags = RenderFlagPremultAlpha);
+                                    uint32_t aFlags = RenderFlagPremultAlpha) MOZ_OVERRIDE;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult);
-  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute, int32_t aModType) const;
+                                nsAttrValue& aResult) MOZ_OVERRIDE;
+  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute, int32_t aModType) const MOZ_OVERRIDE;
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
@@ -205,8 +203,8 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+                           bool aNotify) MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   /*
@@ -229,7 +227,7 @@ public:
 
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,

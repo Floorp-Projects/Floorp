@@ -39,7 +39,7 @@ var Appbar = {
   handleEvent: function Appbar_handleEvent(aEvent) {
     switch (aEvent.type) {
       case 'MozContextUIShow':
-        Elements.appbar.show();
+        Elements.navbar.show();
         break;
       case 'MozAppbarDismiss':
       case 'MozContextUIDismiss':
@@ -47,7 +47,8 @@ var Appbar = {
       case 'TabSelect':
       case 'ToolPanelShown':
       case 'ToolPanelHidden':
-        Elements.appbar.dismiss();
+        Elements.navbar.dismiss();
+        Elements.contextappbar.dismiss();
         break;
       case 'MozAppbarShowing':
         this._updatePinButton();
@@ -129,7 +130,7 @@ var Appbar = {
       }
 
       var x = this.moreButton.getBoundingClientRect().left;
-      var y = Elements.appbar.getBoundingClientRect().top;
+      var y = Elements.navbar.getBoundingClientRect().top;
       ContextMenuUI.showContextMenu({
         json: {
           types: typesArray,

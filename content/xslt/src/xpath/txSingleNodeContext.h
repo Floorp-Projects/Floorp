@@ -6,6 +6,7 @@
 #ifndef __TX_XPATH_SINGLENODE_CONTEXT
 #define __TX_XPATH_SINGLENODE_CONTEXT
 
+#include "mozilla/Attributes.h"
 #include "txIXPathContext.h"
 
 class txSingleNodeContext : public txIEvalContext
@@ -20,31 +21,31 @@ public:
     }
 
     nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
-                         txAExprResult*& aResult)
+                         txAExprResult*& aResult) MOZ_OVERRIDE
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->getVariable(aNamespace, aLName, aResult);
     }
 
-    bool isStripSpaceAllowed(const txXPathNode& aNode)
+    bool isStripSpaceAllowed(const txXPathNode& aNode) MOZ_OVERRIDE
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->isStripSpaceAllowed(aNode);
     }
 
-    void* getPrivateContext()
+    void* getPrivateContext() MOZ_OVERRIDE
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->getPrivateContext();
     }
 
-    txResultRecycler* recycler()
+    txResultRecycler* recycler() MOZ_OVERRIDE
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->recycler();
     }
 
-    void receiveError(const nsAString& aMsg, nsresult aRes)
+    void receiveError(const nsAString& aMsg, nsresult aRes) MOZ_OVERRIDE
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
 #ifdef DEBUG
@@ -56,17 +57,17 @@ public:
 #endif
     }
 
-    const txXPathNode& getContextNode()
+    const txXPathNode& getContextNode() MOZ_OVERRIDE
     {
         return mNode;
     }
 
-    uint32_t size()
+    uint32_t size() MOZ_OVERRIDE
     {
         return 1;
     }
 
-    uint32_t position()
+    uint32_t position() MOZ_OVERRIDE
     {
         return 1;
     }

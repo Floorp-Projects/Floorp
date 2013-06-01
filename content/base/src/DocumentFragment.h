@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_DocumentFragment_h__
 #define mozilla_dom_DocumentFragment_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "nsIDOMDocumentFragment.h"
 
@@ -75,7 +76,7 @@ public:
 
   // nsIContent
   virtual already_AddRefed<nsINodeInfo>
-    GetExistingAttrNameFromQName(const nsAString& aStr) const
+    GetExistingAttrNameFromQName(const nsAString& aStr) const MOZ_OVERRIDE
   {
     return nullptr;
   }
@@ -87,40 +88,40 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify)
+                           bool aNotify) MOZ_OVERRIDE
   {
     return NS_OK;
   }
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute, 
-                             bool aNotify)
+                             bool aNotify) MOZ_OVERRIDE
   {
     return NS_OK;
   }
-  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const
+  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const MOZ_OVERRIDE
   {
     return nullptr;
   }
-  virtual uint32_t GetAttrCount() const
+  virtual uint32_t GetAttrCount() const MOZ_OVERRIDE
   {
     return 0;
   }
 
-  virtual bool IsNodeOfType(uint32_t aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
-  virtual nsIAtom* DoGetID() const;
-  virtual nsIAtom *GetIDAttributeName() const;
+  virtual nsIAtom* DoGetID() const MOZ_OVERRIDE;
+  virtual nsIAtom *GetIDAttributeName() const MOZ_OVERRIDE;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers)
+                              bool aCompileEventHandlers) MOZ_OVERRIDE
   {
     NS_ASSERTION(false, "Trying to bind a fragment to a tree");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent)
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE
   {
     NS_ASSERTION(false, "Trying to unbind a fragment from a tree");
     return;
@@ -145,12 +146,12 @@ public:
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
 #ifdef DEBUG
-  virtual void List(FILE* out, int32_t aIndent) const;
-  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const;
+  virtual void List(FILE* out, int32_t aIndent) const MOZ_OVERRIDE;
+  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const MOZ_OVERRIDE;
 #endif
 
 protected:
-  nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   mozilla::dom::HTMLTemplateElement* mHost; // Weak
 };
 

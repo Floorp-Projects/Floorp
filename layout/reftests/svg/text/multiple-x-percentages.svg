@@ -1,0 +1,15 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" class="reftest-wait">
+  <text x="50 50%" y="100" style="font: 16px sans-serif">hello</text>
+  <text x="150" y="100 75%" style="font: 16px sans-serif">there</text>
+  <script>
+    window.addEventListener("MozReftestInvalidate", function() {
+      document.documentElement.setAttribute("width", "200");
+      document.documentElement.setAttribute("height", "200");
+      document.documentElement.removeAttribute("class");
+    }, false);
+  </script>
+</svg>

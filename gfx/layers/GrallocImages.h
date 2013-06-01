@@ -37,7 +37,7 @@ namespace layers {
  * mPicX, mPicY and mPicSize. The size of the rendered image is
  * mPicSize, not mYSize or mCbCrSize.
  */
-class THEBES_API GrallocPlanarYCbCrImage : public PlanarYCbCrImage {
+class GrallocPlanarYCbCrImage : public PlanarYCbCrImage {
   typedef PlanarYCbCrImage::Data Data;
 
 public:

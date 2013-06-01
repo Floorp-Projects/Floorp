@@ -154,7 +154,7 @@ TestSettingsObserver::Observe(nsISupports *aSubject,
 
   // Get the safe JS context.
   nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-  JSContext *cx = xpc->GetSafeJSContext();
+  AutoSafeJSContext cx;
   if (!cx) {
     CHECK_MSG(false, "Failed to GetSafeJSContext");
     return NS_OK;
@@ -162,7 +162,7 @@ TestSettingsObserver::Observe(nsISupports *aSubject,
 
   // Parse the JSON data.
   nsDependentString dataStr(aData);
-  JS::Value data;
+  JS::Rooted<JS::Value> data(cx);
   if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &data) ||
       !data.isObject()) {
     CHECK_MSG(false, "Failed to get the data");

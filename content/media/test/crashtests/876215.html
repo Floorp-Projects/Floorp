@@ -1,0 +1,14 @@
+<script>
+try { o1 = new window.OfflineAudioContext(1, 10, 44100); } catch(e) { }
+try { o6 = o1.createJavaScriptNode(0, 0, 2); } catch(e) { }
+try { o8 = o1.createBufferSource(); } catch(e) { }
+try { o8.connect(o1.destination); } catch(e) { }
+try { o8.connect(o6) } catch(e) { }
+try { o3.disconnect() } catch(e) { }
+try { o8.buffer = function() {
+o21 = o1.createBuffer(1, 3, o1.sampleRate);
+o22 = o21.getChannelData(0);
+return o21;
+}()
+; } catch(e) { }
+</script>

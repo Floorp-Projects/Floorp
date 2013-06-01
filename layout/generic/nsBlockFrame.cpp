@@ -1502,6 +1502,10 @@ nsBlockFrame::UpdateOverflow()
     line->SetOverflowAreas(lineAreas);
   }
 
+  // Line cursor invariants depend on the overflow areas of the lines, so
+  // we must clear the line cursor since those areas may have changed.
+  ClearLineCursor();
+
   return nsBlockFrameSuper::UpdateOverflow();
 }
 

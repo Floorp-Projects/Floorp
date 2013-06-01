@@ -28,12 +28,6 @@
 #include "WaveTable.h"
 #include "nsNetUtil.h"
 
-// Note that this number is an arbitrary large value to protect against OOM
-// attacks.
-const unsigned MAX_SCRIPT_PROCESSOR_CHANNELS = 10000;
-const unsigned MAX_CHANNEL_SPLITTER_OUTPUTS = UINT16_MAX;
-const unsigned MAX_CHANNEL_MERGER_INPUTS = UINT16_MAX;
-
 namespace mozilla {
 namespace dom {
 
@@ -109,9 +103,13 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  if (aSampleRate <= 0.0f || aSampleRate >= TRACK_RATE_MAX) {
+  if (aNumberOfChannels == 0 ||
+      aNumberOfChannels > WebAudioUtils::MaxChannelCount ||
+      aLength == 0 ||
+      aSampleRate <= 1.0f ||
+      aSampleRate >= TRACK_RATE_MAX) {
     // The DOM binding protects us against infinity and NaN
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
 
@@ -211,8 +209,8 @@ AudioContext::CreateScriptProcessor(uint32_t aBufferSize,
                                     ErrorResult& aRv)
 {
   if ((aNumberOfInputChannels == 0 && aNumberOfOutputChannels == 0) ||
-      aNumberOfInputChannels > MAX_SCRIPT_PROCESSOR_CHANNELS ||
-      aNumberOfOutputChannels > MAX_SCRIPT_PROCESSOR_CHANNELS ||
+      aNumberOfInputChannels > WebAudioUtils::MaxChannelCount ||
+      aNumberOfOutputChannels > WebAudioUtils::MaxChannelCount ||
       !IsValidBufferSize(aBufferSize)) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
@@ -269,7 +267,7 @@ already_AddRefed<ChannelSplitterNode>
 AudioContext::CreateChannelSplitter(uint32_t aNumberOfOutputs, ErrorResult& aRv)
 {
   if (aNumberOfOutputs == 0 ||
-      aNumberOfOutputs > MAX_CHANNEL_SPLITTER_OUTPUTS) {
+      aNumberOfOutputs > WebAudioUtils::MaxChannelCount) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
@@ -283,7 +281,7 @@ already_AddRefed<ChannelMergerNode>
 AudioContext::CreateChannelMerger(uint32_t aNumberOfInputs, ErrorResult& aRv)
 {
   if (aNumberOfInputs == 0 ||
-      aNumberOfInputs > MAX_CHANNEL_MERGER_INPUTS) {
+      aNumberOfInputs > WebAudioUtils::MaxChannelCount) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }

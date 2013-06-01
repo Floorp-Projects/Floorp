@@ -7,7 +7,7 @@
 
 #include "nsIGeolocationProvider.h"
 
-class AndroidLocationProvider : public nsIGeolocationProvider
+class AndroidLocationProvider MOZ_FINAL : public nsIGeolocationProvider
 {
 public:
     NS_DECL_ISUPPORTS

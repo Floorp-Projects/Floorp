@@ -151,6 +151,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   if (!mDocument)
     return;
 
+  if (mObservingState == eRefreshProcessing ||
+      mObservingState == eRefreshProcessingForUpdate)
+    return;
+
   // Any generic notifications should be queued if we're processing content
   // insertions or generic notifications.
   mObservingState = eRefreshProcessingForUpdate;
@@ -265,18 +269,20 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   mDocument->ProcessInvalidationList();
 
   // If a generic notification occurs after this point then we may be allowed to
-  // process it synchronously.
-  mObservingState = eRefreshObserving;
+  // process it synchronously.  However we do not want to reenter if fireing
+  // events causes script to run.
+  mObservingState = eRefreshProcessing;
 
   ProcessEventQueue();
+  mObservingState = eRefreshObserving;
   if (!mDocument)
     return;
 
   // Stop further processing if there are no new notifications of any kind or
   // events and document load is processed.
-  if (mContentInsertions.Length() == 0 && mNotifications.Length() == 0 &&
-      mEvents.Length() == 0 && mTextHash.Count() == 0 &&
-      mHangingChildDocuments.Length() == 0 &&
+  if (mContentInsertions.IsEmpty() && mNotifications.IsEmpty() &&
+      mEvents.IsEmpty() && mTextHash.Count() == 0 &&
+      mHangingChildDocuments.IsEmpty() &&
       mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
       mPresShell->RemoveRefreshObserver(this, Flush_Display)) {
     mObservingState = eNotObservingRefresh;

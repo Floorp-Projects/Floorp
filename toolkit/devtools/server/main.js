@@ -184,6 +184,7 @@ var DebuggerServer = {
       this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
 
     this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
   },
 
   /**

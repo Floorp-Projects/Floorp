@@ -347,6 +347,10 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             }
         });
 
+        if (Build.VERSION.SDK_INT >= 16) {
+            mShadow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        }
+
         mHandler = new Handler();
 
         float slideWidth = mActivity.getResources().getDimension(R.dimen.browser_toolbar_lock_width);
@@ -795,19 +799,20 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         setSiteSecurityVisibility(mShowSiteSecurity && !isLoading);
 
         // Handle the readerMode image and visibility: We show the reader mode button if 1) you can
-        // enter reader mode for current page or 2) if you're already in reader mode and can exit back,
+        // enter reader mode for current page or 2) if you're already in reader mode,
         // in which case we show the reader mode "close" (reader_active) icon.
-        boolean exitableReaderMode = false;
+        boolean inReaderMode = false;
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null)
-            exitableReaderMode = ReaderModeUtils.isAboutReader(tab.getURL()) && tab.canDoBack();
-        mReader.setImageResource(exitableReaderMode ? R.drawable.reader_active : R.drawable.reader);
-        mReader.setVisibility(!isLoading && (mShowReader || exitableReaderMode) ? View.VISIBLE : View.GONE);
+            inReaderMode = ReaderModeUtils.isAboutReader(tab.getURL());
+        mReader.setImageResource(inReaderMode ? R.drawable.reader_active : R.drawable.reader);
+
+        mReader.setVisibility(!isLoading && (mShowReader || inReaderMode) ? View.VISIBLE : View.GONE);
 
         // We want title to fill the whole space available for it when there are icons
         // being shown on the right side of the toolbar as the icons already have some
         // padding in them. This is just to avoid wasting space when icons are shown.
-        mTitle.setPadding(0, 0, (!isLoading && !(mShowReader || exitableReaderMode) ? mTitlePadding : 0), 0);
+        mTitle.setPadding(0, 0, (!isLoading && !(mShowReader || inReaderMode) ? mTitlePadding : 0), 0);
 
         updateFocusOrder();
     }

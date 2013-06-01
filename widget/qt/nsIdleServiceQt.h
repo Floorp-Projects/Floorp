@@ -33,14 +33,13 @@ public:
 
     static already_AddRefed<nsIdleServiceQt> GetInstance()
     {
-        nsIdleServiceQt* idleService =
-            static_cast<nsIdleServiceQt*>(nsIdleService::GetInstance().get());
+        nsRefPtr<nsIdleServiceQt> idleService =
+            nsIdleService::GetInstance().downcast<nsIdleServiceQt>();
         if (!idleService) {
             idleService = new nsIdleServiceQt();
-            NS_ADDREF(idleService);
         }
         
-        return idleService;
+        return idleService.forget();
     }
 
 private:

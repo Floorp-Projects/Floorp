@@ -13,6 +13,8 @@
 #include "jscompartment.h"
 #include "jsinfer.h"
 #include "jsprf.h"
+#include "jsproxy.h"
+#include "jstypedarray.h"
 
 #include "builtin/ParallelArray.h"
 #ifdef JS_ION
@@ -716,7 +718,7 @@ UseNewTypeForClone(JSFunction *fun)
     if (!fun->isInterpreted())
         return false;
 
-    if (fun->nonLazyScript()->shouldCloneAtCallsite)
+    if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite)
         return true;
 
     if (fun->isArrow())

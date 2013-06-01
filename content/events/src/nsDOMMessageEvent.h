@@ -54,7 +54,7 @@ public:
                         const nsAString& aType,
                         bool aCanBubble,
                         bool aCancelable,
-                        JS::Value aData,
+                        JS::Handle<JS::Value> aData,
                         const nsAString& aOrigin,
                         const nsAString& aLastEventId,
                         nsIDOMWindow* aSource,

@@ -219,13 +219,13 @@ ContentHostBase::Dump(FILE* aFile,
     fprintf(aFile, "<ul>");
   }
   if (mTextureHost) {
-    fprintf(aFile, aPrefix);
+    fprintf(aFile, "%s", aPrefix);
     fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Front buffer: ");
     DumpTextureHost(aFile, mTextureHost);
     fprintf(aFile, aDumpHtml ? "> Front buffer </a></li> " : " ");
   }
   if (mTextureHostOnWhite) {
-    fprintf(aFile, aPrefix);
+    fprintf(aFile, "%s", aPrefix);
     fprintf(aFile, aDumpHtml ? "<li> <a href=" : "TextureHost on white: ");
     DumpTextureHost(aFile, mTextureHostOnWhite);
     fprintf(aFile, aDumpHtml ? "> Front buffer on white </a> </li> " : " ");
@@ -736,13 +736,13 @@ ContentHostDoubleBuffered::Dump(FILE* aFile,
     fprintf(aFile, "<ul>");
   }
   if (mBackHost) {
-    fprintf(aFile, aPrefix);
+    fprintf(aFile, "%s", aPrefix);
     fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Back buffer: ");
     DumpTextureHost(aFile, mBackHost);
     fprintf(aFile, aDumpHtml ? " >Back buffer</a></li>" : " ");
   }
   if (mBackHostOnWhite) {
-    fprintf(aFile, aPrefix);
+    fprintf(aFile, "%s", aPrefix);
     fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Back buffer on white: ");
     DumpTextureHost(aFile, mBackHostOnWhite);
     fprintf(aFile, aDumpHtml ? " >Back buffer on white</a> </li>" : " ");

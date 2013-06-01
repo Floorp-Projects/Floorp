@@ -195,9 +195,9 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
     JSString* str = JS_NewUCStringCopyZ(aCx, filename.get());
     NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-    JS::Value item = STRING_TO_JSVAL(str);
+    JS::Rooted<JS::Value> item(aCx, STRING_TO_JSVAL(str));
 
-    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, &item)) {
+    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, item.address())) {
       return NS_ERROR_FAILURE;
     }
   }
