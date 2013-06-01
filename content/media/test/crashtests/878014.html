@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+try { o2 = new window.AudioContext(1, 15, 44100); } catch(e) { }
+try { o5 = o2.createDelay(0.1); } catch(e) { }
+try { o6 = o2.createPanner(); } catch(e) { }
+try { o8 = o2.createBufferSource(); } catch(e) { }
+try { o9 = (function() {
+var buf = o2.createBuffer(1, 12134, o2.sampleRate);
+for(var j=0; j<1; ++j) {
+for(var i=0; i<12134; ++i) { buf.getChannelData(j)[i] = Math.sin(i * (-127));}
+}
+return buf;
+})(); } catch(e) { }
+try { o8.buffer = o9; } catch(e) { }
+try { o8.connect(o6); } catch(e) { }
+try { o6.connect(o5, 0, 0) } catch(e) { }
+try { o8.buffer = (function() {
+var buf = o2.createBuffer(1, 5409, o2.sampleRate);
+for(var j=0; j<1; ++j) {
+for(var i=0; i<5409; ++i) { buf.getChannelData(j)[i] = Math.sin(i * (-1));}
+}
+return buf;
+})(); } catch(e) { }
+setTimeout(function() { try { o5.delayTime.setValueAtTime(0.78, 121560862.56366833); } catch(e) { } setTimeout(done, 0); },128)
+try { o5.delayTime.value = 0.4283; } catch(e) { }
+
+function done() {
+  document.documentElement.removeAttribute("class");
+}
+</script>

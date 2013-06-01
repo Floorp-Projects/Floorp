@@ -173,7 +173,7 @@ public:
     AllocateAudioBlock(numChannels, aOutput);
 
     double delayTime = 0;
-    float computedDelay[WEBAUDIO_BLOCK_SIZE];
+    double computedDelay[WEBAUDIO_BLOCK_SIZE];
     // Use a smoothing range of 20ms
     const double smoothingRate = WebAudioUtils::ComputeSmoothingRate(0.02, aStream->SampleRate());
 
