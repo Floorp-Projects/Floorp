@@ -94,7 +94,6 @@
 #define MIN_IDLE_NOTIFICATION_TIME_S 1
 
 class nsIContent;
-class nsIDOMBarProp;
 class nsIDocument;
 class nsPresContext;
 class nsIDOMCrypto;
@@ -767,6 +766,8 @@ public:
 #ifdef MOZ_WEBSPEECH
   mozilla::dom::SpeechSynthesis* GetSpeechSynthesisInternal();
 #endif
+
+  mozilla::dom::BarProp* Scrollbars();
 
 protected:
   // Array of idle observers that are notified of idle events.
