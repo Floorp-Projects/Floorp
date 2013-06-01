@@ -22,6 +22,12 @@
 #define DEVICESTORAGE_APPS       "apps"
 #define DEVICESTORAGE_SDCARD     "sdcard"
 
+namespace mozilla {
+namespace dom {
+class DOMRequest;
+} // namespace dom
+} // namespace mozilla
+
 class DeviceStorageFile MOZ_FINAL
   : public nsISupports {
 public:
@@ -132,6 +138,8 @@ class nsDOMDeviceStorage MOZ_FINAL
   , public nsIDOMDeviceStorage
   , public nsIObserver
 {
+  typedef mozilla::ErrorResult ErrorResult;
+  typedef mozilla::dom::DOMRequest DOMRequest;
 public:
   typedef nsTArray<nsString> VolumeNameArray;
 
@@ -144,11 +152,11 @@ public:
                                 nsIDOMEventListener* aListener,
                                 bool aUseCapture,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+                                ErrorResult& aRv) MOZ_OVERRIDE;
   virtual void RemoveEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
                                    bool aUseCapture,
-                                   mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+                                   ErrorResult& aRv) MOZ_OVERRIDE;
 
   nsDOMDeviceStorage();
 
@@ -186,14 +194,13 @@ private:
                        nsIDOMDOMRequest** aRetval,
                        bool aEditable);
 
-  nsresult GetInternal(nsPIDOMWindow* aWin,
-                       const nsAString& aPath,
-                       mozilla::dom::DOMRequest* aRequest,
-                       bool aEditable);
+  void
+  GetInternal(nsPIDOMWindow* aWin, const nsAString& aPath, DOMRequest* aRequest,
+              bool aEditable);
 
-  nsresult DeleteInternal(nsPIDOMWindow* aWin,
-                          const nsAString& aPath,
-                          mozilla::dom::DOMRequest* aRequest);
+  void
+  DeleteInternal(nsPIDOMWindow* aWin, const nsAString& aPath,
+                 DOMRequest* aRequest);
 
   nsresult EnumerateInternal(const JS::Value& aName,
                              const JS::Value& aOptions,
