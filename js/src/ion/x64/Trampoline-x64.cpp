@@ -528,7 +528,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
       case Type_Handle:
         outReg = regs.takeAny();
-        masm.Push(UndefinedValue());
+        masm.PushEmptyRooted(f.outParamRootType);
         masm.movq(esp, outReg);
         break;
 
@@ -599,6 +599,9 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Load the outparam and free any allocated stack.
     switch (f.outParam) {
       case Type_Handle:
+        masm.popRooted(f.outParamRootType, ReturnReg, JSReturnOperand);
+        break;
+
       case Type_Value:
         masm.loadValue(Address(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
