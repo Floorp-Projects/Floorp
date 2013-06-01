@@ -153,16 +153,15 @@ GetDOMClass(JSObject* obj)
   return nullptr;
 }
 
-inline bool
-UnwrapDOMObjectToISupports(JSObject* obj, nsISupports*& result)
+inline nsISupports*
+UnwrapDOMObjectToISupports(JSObject* aObject)
 {
-  const DOMClass* clasp = GetDOMClass(obj);
+  const DOMClass* clasp = GetDOMClass(aObject);
   if (!clasp || !clasp->mDOMObjectIsISupports) {
-    return false;
+    return nullptr;
   }
  
-  result = UnwrapDOMObject<nsISupports>(obj);
-  return true;
+  return UnwrapDOMObject<nsISupports>(aObject);
 }
 
 inline bool
