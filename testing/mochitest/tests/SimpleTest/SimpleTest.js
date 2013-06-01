@@ -260,6 +260,17 @@ SimpleTest.ise = function (a, b, name) {
     SimpleTest.ok(pass, name, diag);
 };
 
+/**
+ * Check that the function call throws an exception.
+ */
+SimpleTest.doesThrow = function(fn, name) {
+    var gotException = false;
+    try {
+      fn();
+    } catch (ex) { gotException = true; }
+    ok(gotException, name);
+};
+
 //  --------------- Test.Builder/Test.More todo() -----------------
 
 SimpleTest.todo = function(condition, name, diag) {
