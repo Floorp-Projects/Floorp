@@ -24,6 +24,7 @@ XPIDL_SOURCES += [
     'nsILoadContext.idl',
     'nsIMarkupDocumentViewer.idl',
     'nsIPrivacyTransitionObserver.idl',
+    'nsIReflowObserver.idl',
     'nsIRefreshURI.idl',
     'nsIScrollable.idl',
     'nsITextScroll.idl',

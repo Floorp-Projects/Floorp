@@ -80,6 +80,7 @@ MOCHITEST_CHROME_FILES =	\
 		test_bug449780.xul \
 		bug449780_window.xul \
 		bug454235-subframe.xul \
+		test_bug453650.xul \
 		test_bug456980.xul \
 		test_bug662200.xul \
 		bug662200_window.xul \
