@@ -11,21 +11,16 @@ interface nsIDOMDeviceStorageChangeEvent;
 interface nsIDOMEventListener;
 interface nsIFile;
 
-[scriptable, uuid(be690a9b-f0b4-4cde-a505-0b442abe2109), builtinclass]
+[scriptable, uuid(446b5221-e2ca-4ebe-873b-e1f06cfdafdf), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
     nsIDOMDOMRequest add(in nsIDOMBlob aBlob);
     nsIDOMDOMRequest addNamed(in nsIDOMBlob aBlob, in DOMString aName);
 
-    [implicit_jscontext]
-    nsIDOMDOMRequest get(in jsval aName);
-
-    [implicit_jscontext]
-    nsIDOMDOMRequest getEditable(in jsval aName);
-
-    [implicit_jscontext]
-    nsIDOMDOMRequest delete(in jsval aName);
+    nsIDOMDOMRequest get([Null(Stringify)] in DOMString aName);
+    nsIDOMDOMRequest getEditable([Null(Stringify)] in DOMString aName);
+    nsIDOMDOMRequest delete([Null(Stringify)] in DOMString aName);
 
     [optional_argc, implicit_jscontext]
     nsIDOMDOMCursor enumerate([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
