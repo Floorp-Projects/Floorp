@@ -2804,26 +2804,21 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::Get(const JS::Value & aPath,
-                        JSContext* aCx,
-                        nsIDOMDOMRequest * *_retval)
+nsDOMDeviceStorage::Get(const nsAString& aPath, nsIDOMDOMRequest** aRetval)
 {
-  return GetInternal(aPath, aCx, _retval, false);
+  return GetInternal(aPath, aRetval, false);
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::GetEditable(const JS::Value & aPath,
-                                JSContext* aCx,
-                                nsIDOMDOMRequest * *_retval)
+nsDOMDeviceStorage::GetEditable(const nsAString& aPath,
+                                nsIDOMDOMRequest** aRetval)
 {
-  return GetInternal(aPath, aCx, _retval, true);
+  return GetInternal(aPath, aRetval, true);
 }
 
 nsresult
-nsDOMDeviceStorage::GetInternal(const JS::Value & aPath,
-                                JSContext* aCx,
-                                nsIDOMDOMRequest * *_retval,
-                                bool aEditable)
+nsDOMDeviceStorage::GetInternal(const nsAString& aPath,
+                                nsIDOMDOMRequest** aRetval, bool aEditable)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
@@ -2831,21 +2826,13 @@ nsDOMDeviceStorage::GetInternal(const JS::Value & aPath,
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*_retval = request);
+  NS_ADDREF(*aRetval = request);
 
   nsCOMPtr<nsIRunnable> r;
 
-  JSString* jsstr = JS_ValueToString(aCx, aPath);
-  nsDependentJSString path;
-  if (!path.init(aCx, jsstr)) {
-    r = new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
-    NS_DispatchToMainThread(r);
-    return NS_OK;
-  }
-
   if (IsComposite()) {
     nsString storagePath;
-    nsRefPtr<nsDOMDeviceStorage> ds = GetStorage(path, storagePath);
+    nsRefPtr<nsDOMDeviceStorage> ds = GetStorage(aPath, storagePath);
     if (!ds) {
       r = new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
       NS_DispatchToMainThread(r);
@@ -2853,7 +2840,7 @@ nsDOMDeviceStorage::GetInternal(const JS::Value & aPath,
     }
     return ds->GetInternal(win, storagePath, request.get(), aEditable);
   }
-  return GetInternal(win, path, request.get(), aEditable);
+  return GetInternal(win, aPath, request, aEditable);
 }
 
 nsresult
@@ -2878,7 +2865,7 @@ nsDOMDeviceStorage::GetInternal(nsPIDOMWindow *aWin,
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMRequest * *_retval)
+nsDOMDeviceStorage::Delete(const nsAString& aPath, nsIDOMDOMRequest** aRetval)
 {
   nsCOMPtr<nsIRunnable> r;
 
@@ -2888,19 +2875,11 @@ nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMReq
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  NS_ADDREF(*_retval = request);
-
-  JSString* jsstr = JS_ValueToString(aCx, aPath);
-  nsDependentJSString path;
-  if (!path.init(aCx, jsstr)) {
-    r = new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
-    NS_DispatchToMainThread(r);
-    return NS_OK;
-  }
+  NS_ADDREF(*aRetval = request);
 
   if (IsComposite()) {
     nsString storagePath;
-    nsRefPtr<nsDOMDeviceStorage> ds = GetStorage(path, storagePath);
+    nsRefPtr<nsDOMDeviceStorage> ds = GetStorage(aPath, storagePath);
     if (!ds) {
       r = new PostErrorEvent(request, POST_ERROR_EVENT_UNKNOWN);
       NS_DispatchToMainThread(r);
@@ -2908,7 +2887,7 @@ nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMReq
     }
     return ds->DeleteInternal(win, storagePath, request.get());
   }
-  return DeleteInternal(win, path, request.get());
+  return DeleteInternal(win, aPath, request);
 }
 
 nsresult

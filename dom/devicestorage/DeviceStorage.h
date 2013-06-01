@@ -182,8 +182,7 @@ public:
 private:
   ~nsDOMDeviceStorage();
 
-  nsresult GetInternal(const JS::Value & aName,
-                       JSContext* aCx,
+  nsresult GetInternal(const nsAString& aName,
                        nsIDOMDOMRequest** aRetval,
                        bool aEditable);
 
