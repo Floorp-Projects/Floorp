@@ -134,7 +134,7 @@ public:
 
 class gfxProxyFontEntry;
 
-class THEBES_API gfxUserFontSet {
+class gfxUserFontSet {
 
 public:
 

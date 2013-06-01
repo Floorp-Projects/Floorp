@@ -434,17 +434,3 @@ msub > :not(:first-child),
 msup > :not(:first-child),
 msubsup > :not(:first-child),
 mmultiscripts > :not(:first-child) { -moz-script-level:+1; }
-
-/*****************************************/
-/* Controlling directionality            */
-/*****************************************/
-
-math[dir="rtl"], mstyle[dir="rtl"], mrow[dir="rtl"],
-mi[dir="rtl"], mn[dir="rtl"], mo[dir="rtl"], mtext[dir="rtl"], ms[dir="rtl"] {
-    direction: rtl;
-}
-
-math[dir="ltr"], mstyle[dir="ltr"], mrow[dir="ltr"],
-mi[dir="ltr"], mn[dir="ltr"], mo[dir="ltr"], mtext[dir="ltr"], ms[dir="ltr"] {
-    direction: ltr;
-}

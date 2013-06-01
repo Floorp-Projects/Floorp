@@ -48,7 +48,14 @@ function testConsoleData(aMessageObject) {
   else {
     is(aMessageObject.arguments.length, gArgs.length, "arguments.length matches");
     gArgs.forEach(function (a, i) {
-      is(aMessageObject.arguments[i], a, "correct arg " + i);
+      // Waive Xray so that we don't get messed up by Xray ToString.
+      //
+      // It'd be nice to just use XPCNativeWrapper.unwrap here, but there are
+      // a number of dumb reasons we can't. See bug 868675.
+      var arg = aMessageObject.arguments[i];
+      if (Components.utils.isXrayWrapper(arg))
+        arg = arg.wrappedJSObject;
+      is(arg, a, "correct arg " + i);
     });
   }
 

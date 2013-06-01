@@ -57,6 +57,7 @@ ZoneStats::GCHeapThingsSize()
     size_t n = 0;
     n += gcHeapStringsNormal;
     n += gcHeapStringsShort;
+    n += gcHeapLazyScripts;
     n += gcHeapTypeObjects;
     n += gcHeapIonCodes;
 
@@ -268,6 +269,13 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             closure->seenSources.add(entry, ss); // Not much to be done on failure.
             rtStats->runtime.scriptSources += ss->sizeOfIncludingThis(rtStats->mallocSizeOf_);
         }
+        break;
+      }
+
+      case JSTRACE_LAZY_SCRIPT: {
+        LazyScript *lazy = static_cast<LazyScript *>(thing);
+        zStats->gcHeapLazyScripts += thingSize;
+        zStats->lazyScripts += lazy->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         break;
       }
 

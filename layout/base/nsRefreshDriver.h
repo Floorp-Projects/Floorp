@@ -277,7 +277,7 @@ private:
   void DoRefresh();
 
   double GetRefreshTimerInterval() const;
-  double GetRegularTimerInterval() const;
+  double GetRegularTimerInterval(bool *outIsDefault = nullptr) const;
   double GetThrottledTimerInterval() const;
 
   bool HaveFrameRequestCallbacks() const {

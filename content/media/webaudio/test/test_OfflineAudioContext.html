@@ -25,10 +25,20 @@ addLoadEvent(function() {
 
   expectException(function() {
     new OfflineAudioContext(2, 100, 0);
-  }, DOMException.SYNTAX_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
   expectException(function() {
     new OfflineAudioContext(2, 100, -1);
-  }, DOMException.SYNTAX_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    new OfflineAudioContext(0, 100, 44100);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  new OfflineAudioContext(32, 100, 44100);
+  expectException(function() {
+    new OfflineAudioContext(33, 100, 44100);
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    new OfflineAudioContext(2, 0, 44100);
+  }, DOMException.NOT_SUPPORTED_ERR);
 
   var src = ctx.createBufferSource();
   src.buffer = buf;

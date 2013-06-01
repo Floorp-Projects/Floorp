@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Attributes.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIScriptElement.h"
 #include "nsStubMutationObserver.h"
@@ -30,7 +31,7 @@ public:
   {
   }
 
-  virtual nsresult FireErrorEvent();
+  virtual nsresult FireErrorEvent() MOZ_OVERRIDE;
 
 protected:
   // Internal methods
@@ -40,5 +41,5 @@ protected:
    */
   virtual bool HasScriptContent() = 0;
 
-  virtual bool MaybeProcessScript();
+  virtual bool MaybeProcessScript() MOZ_OVERRIDE;
 };

@@ -6,6 +6,7 @@
 #ifndef nsXULContentSink_h__
 #define nsXULContentSink_h__
 
+#include "mozilla/Attributes.h"
 #include "nsIExpatSink.h"
 #include "nsIXMLContentSink.h"
 #include "nsAutoPtr.h"
@@ -35,15 +36,15 @@ public:
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(XULContentSinkImpl, nsIXMLContentSink)
 
     // nsIContentSink
-    NS_IMETHOD WillParse(void) { return NS_OK; }
-    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-    NS_IMETHOD DidBuildModel(bool aTerminated);
-    NS_IMETHOD WillInterrupt(void);
-    NS_IMETHOD WillResume(void);
-    NS_IMETHOD SetParser(nsParserBase* aParser);
-    virtual void FlushPendingNotifications(mozFlushType aType) { }
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
-    virtual nsISupports *GetTarget();
+    NS_IMETHOD WillParse(void) MOZ_OVERRIDE { return NS_OK; }
+    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
+    NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
+    NS_IMETHOD WillInterrupt(void) MOZ_OVERRIDE;
+    NS_IMETHOD WillResume(void) MOZ_OVERRIDE;
+    NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE;
+    virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE { }
+    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE;
+    virtual nsISupports *GetTarget() MOZ_OVERRIDE;
 
     /**
      * Initialize the content sink, giving it an nsIDocument object

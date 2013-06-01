@@ -42,13 +42,13 @@ public:
     NS_DECL_NSIDOMXPATHEVALUATOR
 
     // nsIXPathEvaluatorInternal interface
-    NS_IMETHOD SetDocument(nsIDOMDocument* aDocument);
+    NS_IMETHOD SetDocument(nsIDOMDocument* aDocument) MOZ_OVERRIDE;
     NS_IMETHOD CreateExpression(const nsAString &aExpression, 
                                 nsIDOMXPathNSResolver *aResolver,
                                 nsTArray<nsString> *aNamespaceURIs,
                                 nsTArray<nsCString> *aContractIDs,
                                 nsCOMArray<nsISupports> *aState,
-                                nsIDOMXPathExpression **aResult);
+                                nsIDOMXPathExpression **aResult) MOZ_OVERRIDE;
 
     // WebIDL API
     JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);

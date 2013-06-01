@@ -3330,9 +3330,8 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         // the buffer to zero and compute the parameters to pass to OpenGL. We have to use an intermediate buffer
         // to accomodate the potentially different strides (widths).
 
-        // zero the whole destination buffer. Too bad for the part that's going to be overwritten, we're not
-        // 100% efficient here, but in practice this is a quite rare case anyway.
-        memset(data, 0, dataByteLen);
+        // Zero the whole pixel dest area in the destination buffer.
+        memset(data, 0, checked_neededByteLength.value());
 
         if (   x >= framebufferWidth
             || x+width <= 0

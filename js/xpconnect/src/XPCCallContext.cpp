@@ -30,7 +30,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mScopeForNewJSObjects(cx),
         mFlattenedJSObject(cx),
         mWrapper(nullptr),
         mTearOff(nullptr),
@@ -55,7 +54,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mScopeForNewJSObjects(cx),
         mFlattenedJSObject(cx, flattenedJSObject),
         mWrapper(wrapper),
         mTearOff(tearOff),
@@ -138,10 +136,6 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
 
     if (!obj)
         return;
-
-    mScopeForNewJSObjects = obj;
-
-    mState = HAVE_SCOPE;
 
     mMethodIndex = 0xDEAD;
 

@@ -6,6 +6,7 @@
 #ifndef nsTreeStyleCache_h__
 #define nsTreeStyleCache_h__
 
+#include "mozilla/Attributes.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsCOMArray.h"
@@ -23,16 +24,16 @@ public:
 
   uint32_t GetStateID() { return mStateID; }
 
-  uint32_t HashCode(void) const {
+  uint32_t HashCode(void) const MOZ_OVERRIDE {
     return mStateID;
   }
 
-  bool Equals(const nsHashKey *aKey) const {
+  bool Equals(const nsHashKey *aKey) const MOZ_OVERRIDE {
     nsDFAState* key = (nsDFAState*)aKey;
     return key->mStateID == mStateID;
   }
 
-  nsHashKey *Clone(void) const {
+  nsHashKey *Clone(void) const MOZ_OVERRIDE {
     return new nsDFAState(mStateID);
   }
 };
@@ -45,19 +46,19 @@ public:
 
   nsTransitionKey(uint32_t aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {}
 
-  uint32_t HashCode(void) const {
+  uint32_t HashCode(void) const MOZ_OVERRIDE {
     // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
     int32_t hb = mState << 16;
     int32_t lb = (NS_PTR_TO_INT32(mInputSymbol.get()) << 16) >> 16;
     return hb+lb;
   }
 
-  bool Equals(const nsHashKey *aKey) const {
+  bool Equals(const nsHashKey *aKey) const MOZ_OVERRIDE {
     nsTransitionKey* key = (nsTransitionKey*)aKey;
     return key->mState == mState && key->mInputSymbol == mInputSymbol;
   }
 
-  nsHashKey *Clone(void) const {
+  nsHashKey *Clone(void) const MOZ_OVERRIDE {
     return new nsTransitionKey(mState, mInputSymbol);
   }
 };

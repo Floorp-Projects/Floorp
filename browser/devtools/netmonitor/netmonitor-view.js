@@ -278,6 +278,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     dumpn("Initializing the RequestsMenuView");
 
     this.node = new SideMenuWidget($("#requests-menu-contents"), false);
+    this._summary = $("#request-menu-network-summary");
+
     this.node.maintainSelectionVisible = false;
     this.node.autoscrollWithAppendedItems = true;
 
@@ -351,6 +353,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     $("#details-pane-toggle").disabled = false;
     $("#requests-menu-empty-notice").hidden = true;
 
+    this.refreshSummary();
     this._cache.set(aId, requestItem);
   },
 
@@ -404,6 +407,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
         this.filterContents(this._onFlash);
         break;
     }
+
+    this.refreshSummary();
   },
 
   /**
@@ -573,6 +578,32 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     first.contentSize > second.contentSize,
 
   /**
+   * Refreshes the status displayed in this container's footer, providing
+   * concise information about all requests.
+   */
+  refreshSummary: function() {
+    let visibleItems = this.visibleItems;
+    let visibleRequestsCount = visibleItems.length;
+    if (!visibleRequestsCount) {
+      this._summary.setAttribute("value", L10N.getStr("networkMenu.empty"));
+      return;
+    }
+
+    let totalBytes = this._getTotalBytesOfRequests(visibleItems);
+    let totalMillis =
+      this._getNewestRequest(visibleItems).attachment.endedMillis -
+      this._getOldestRequest(visibleItems).attachment.startedMillis;
+
+    // https://developer.mozilla.org/en-US/docs/Localization_and_Plurals
+    let str = PluralForm.get(visibleRequestsCount, L10N.getStr("networkMenu.summary"));
+    this._summary.setAttribute("value", str
+      .replace("#1", visibleRequestsCount)
+      .replace("#2", L10N.numberWithDecimals((totalBytes || 0) / 1024, 2))
+      .replace("#3", L10N.numberWithDecimals((totalMillis || 0) / 1000, 2))
+    );
+  },
+
+  /**
    * Schedules adding additional information to a network request.
    *
    * @param string aId
@@ -691,6 +722,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     // so this doesn't happen once per network event update).
     this.sortContents();
     this.filterContents();
+    this.refreshSummary();
   },
 
   /**
@@ -1117,6 +1149,50 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Gets the total number of bytes representing the cumulated content size of
+   * a set of requests. Returns 0 for an empty set.
+   *
+   * @param array aItemsArray
+   * @return number
+   */
+  _getTotalBytesOfRequests: function(aItemsArray) {
+    if (!aItemsArray.length) {
+      return 0;
+    }
+    return aItemsArray.reduce((prev, curr) => prev + curr.attachment.contentSize || 0, 0);
+  },
+
+  /**
+   * Gets the oldest (first performed) request in a set. Returns null for an
+   * empty set.
+   *
+   * @param array aItemsArray
+   * @return MenuItem
+   */
+  _getOldestRequest: function(aItemsArray) {
+    if (!aItemsArray.length) {
+      return null;
+    }
+    return aItemsArray.reduce((prev, curr) =>
+      prev.attachment.startedMillis < curr.attachment.startedMillis ? prev : curr);
+  },
+
+  /**
+   * Gets the newest (latest performed) request in a set. Returns null for an
+   * empty set.
+   *
+   * @param array aItemsArray
+   * @return MenuItem
+   */
+  _getNewestRequest: function(aItemsArray) {
+    if (!aItemsArray.length) {
+      return null;
+    }
+    return aItemsArray.reduce((prev, curr) =>
+      prev.attachment.startedMillis > curr.attachment.startedMillis ? prev : curr);
+  },
+
+  /**
    * Gets the available waterfall width in this container.
    * @return number
    */
@@ -1132,6 +1208,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   _cache: null,
+  _summary: null,
   _canvas: null,
   _ctx: null,
   _cachedWaterfallWidth: 0,

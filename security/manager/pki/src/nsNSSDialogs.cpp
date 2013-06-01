@@ -33,6 +33,9 @@
 #include "nsIX509CertValidity.h"
 #include "nsICRLInfo.h"
 
+#include "nsEmbedCID.h"
+#include "nsIPromptService.h"
+
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
 /* ==== */
@@ -214,17 +217,24 @@ nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
 {
   nsresult rv;
 
+  nsCOMPtr<nsIPromptService> promptSvc(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+  if (!promptSvc)
+    return NS_ERROR_FAILURE;
+
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIDialogParamBlock> block =
-           do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  if (!block) return NS_ERROR_FAILURE;
+  nsAutoString title;
+  rv = mPIPStringBundle->GetStringFromName(NS_LITERAL_STRING("caCertExistsTitle").get(),
+                                           getter_Copies(title));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  
-  rv = nsNSSDialogHelper::openDialog(parent, 
-                                     "chrome://pippki/content/cacertexists.xul",
-                                     block);
+  nsAutoString msg;
+  rv = mPIPStringBundle->GetStringFromName(NS_LITERAL_STRING("caCertExistsMessage").get(),
+                                           getter_Copies(msg));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = promptSvc->Alert(parent, title.get(), msg.get());
 
   return rv;
 }

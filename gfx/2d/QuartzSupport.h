@@ -15,7 +15,7 @@
 #include "mozilla/gfx/MacIOSurface.h"
 
 // Get the system color space.
-CGColorSpaceRef THEBES_API CreateSystemColorSpace();
+CGColorSpaceRef CreateSystemColorSpace();
 
 // Manages a CARenderer
 struct _CGLPBufferObject;

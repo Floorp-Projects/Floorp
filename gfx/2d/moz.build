@@ -84,7 +84,6 @@ CPP_SOURCES += [
     'PathCairo.cpp',
     'PathRecording.cpp',
     'RecordedEvent.cpp',
-    'Rect.cpp',
     'Scale.cpp',
     'ScaledFontBase.cpp',
     'SourceSurfaceCairo.cpp',

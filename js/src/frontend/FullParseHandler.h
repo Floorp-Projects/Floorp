@@ -15,6 +15,13 @@
 namespace js {
 namespace frontend {
 
+template <typename ParseHandler>
+class Parser;
+
+class SyntaxParseHandler;
+
+// Parse handler used when generating a full parse tree for all code which the
+// parser encounters.
 class FullParseHandler
 {
     ParseNodeAllocator allocator;
@@ -34,17 +41,38 @@ class FullParseHandler
         return node;
     }
 
+    /*
+     * If this is a full parse to construct the bytecode for a function that
+     * was previously lazily parsed, that lazy function and the current index
+     * into its inner functions. We do not want to reparse the inner functions.
+     */
+    LazyScript * const lazyOuterFunction_;
+    size_t lazyInnerFunctionIndex;
+
   public:
+
+    /*
+     * If non-NULL, points to a syntax parser which can be used for inner
+     * functions. Cleared if language features not handled by the syntax parser
+     * are encountered, in which case all future activity will use the full
+     * parser.
+     */
+    Parser<SyntaxParseHandler> *syntaxParser;
+
     /* new_ methods for creating parse nodes. These report OOM on context. */
     JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
     typedef ParseNode *Node;
     typedef Definition *DefinitionNode;
 
-    FullParseHandler(JSContext *cx, TokenStream &tokenStream, bool foldConstants)
+    FullParseHandler(JSContext *cx, TokenStream &tokenStream, bool foldConstants,
+                     Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
       : allocator(cx),
         tokenStream(tokenStream),
-        foldConstants(foldConstants)
+        foldConstants(foldConstants),
+        lazyOuterFunction_(lazyOuterFunction),
+        lazyInnerFunctionIndex(0),
+        syntaxParser(syntaxParser)
     {}
 
     static ParseNode *null() { return NULL; }
@@ -61,8 +89,8 @@ class FullParseHandler
         pn->setOp(JSOP_NAME);
         return pn;
     }
-    Definition *newPlaceholder(ParseNode *pn, ParseContext<FullParseHandler> *pc) {
-        Definition *dn = (Definition *) NameNode::create(PNK_NAME, pn->pn_atom, this, pc);
+    Definition *newPlaceholder(JSAtom *atom, ParseContext<FullParseHandler> *pc) {
+        Definition *dn = (Definition *) NameNode::create(PNK_NAME, atom, this, pc);
         if (!dn)
             return NULL;
 
@@ -312,6 +340,17 @@ class FullParseHandler
     }
     static Definition *nullDefinition() {
         return NULL;
+    }
+    void disableSyntaxParser() {
+        syntaxParser = NULL;
+    }
+
+    LazyScript *lazyOuterFunction() {
+        return lazyOuterFunction_;
+    }
+    JSFunction *nextLazyInnerFunction() {
+        JS_ASSERT(lazyInnerFunctionIndex < lazyOuterFunction()->numInnerFunctions());
+        return lazyOuterFunction()->innerFunctions()[lazyInnerFunctionIndex++];
     }
 };
 

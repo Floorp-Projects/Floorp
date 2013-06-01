@@ -71,12 +71,12 @@ static gfxIntSize gAndroidScreenBounds;
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 
-
 class ContentCreationNotifier;
 static nsCOMPtr<ContentCreationNotifier> gContentCreationNotifier;
+
 // A helper class to send updates when content processes
 // are created. Currently an update for the screen size is sent.
-class ContentCreationNotifier : public nsIObserver
+class ContentCreationNotifier MOZ_FINAL : public nsIObserver
 {
     NS_DECL_ISUPPORTS
 

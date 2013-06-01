@@ -1,0 +1,30 @@
+<script>
+try { o1 = new window.OfflineAudioContext(1, 10, 44100); } catch(e) { }
+try { o2 = o1.createChannelSplitter(1); } catch(e) { }
+try { o3 = o1.createAnalyser(); } catch(e) { }
+try { o4 = o1.createWaveShaper(); } catch(e) { }
+try { o5 = o1.createChannelSplitter(6); } catch(e) { }
+try { o6 = o1.createAnalyser(); } catch(e) { }
+try { o7 = o1.createBufferSource(); } catch(e) { }
+try { o7.connect(o1.destination); } catch(e) { }
+try { o7.buffer = function() {
+o8 = o1.createBuffer(1, 3, o1.sampleRate);
+o9 = o8.getChannelData(0);
+for(var i = 0; i < 3; ++i) {
+o9[i] = Math.sin(i * 127);
+}
+return o8;
+}()
+; } catch(e) { }
+try { o7.playbackRate.cancelScheduledValues(0) } catch(e) { }
+try { o7.channelInterpretation = 'speakers'; } catch(e) { }
+try { o1.destination.channelInterpretation = 'speakers'; } catch(e) { }
+try { o5.connect(o1.destination, 1, 1) } catch(e) { }
+try { o1.listener.setOrientation(0, 1073741824, 1073741824, 4194304, 1, 0) } catch(e) { }
+try { o4.curve = Float32Array(127); } catch(e) { }
+try { o6.getByteFrequencyData(Uint8Array(12)) } catch(e) { }
+try { o6.disconnect() } catch(e) { }
+try { o1.destination.channelCount = 33554432; } catch(e) { }
+try { o7.playbackRate.setTargetAtTime(0, 8388608, 1) } catch(e) { }
+try { o6.getByteTimeDomainData(Uint8Array(12)) } catch(e) { }
+</script>

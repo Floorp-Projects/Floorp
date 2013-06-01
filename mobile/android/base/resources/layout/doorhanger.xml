@@ -12,7 +12,14 @@
               android:textAppearance="?android:attr/textAppearanceMedium"
               android:textColor="@color/doorhanger_text"
               android:textColorLink="@color/doorhanger_link"
-              android:padding="10dp"/>
+              android:padding="@dimen/doorhanger_padding"/>
+
+    <LinearLayout android:id="@+id/doorhanger_inputs"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:gravity="right"
+              android:visibility="gone"/>
 
     <CheckBox android:id="@+id/doorhanger_checkbox"
               android:layout_width="fill_parent"

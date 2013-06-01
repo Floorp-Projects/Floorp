@@ -2127,6 +2127,12 @@ struct nsStyleColumn {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
 
+  /**
+   * This is the maximum number of columns we can process. It's used in both
+   * nsColumnSetFrame and nsRuleNode.
+   */
+  static const uint32_t kMaxColumnCount;
+
   uint32_t     mColumnCount; // [reset] see nsStyleConsts.h
   nsStyleCoord mColumnWidth; // [reset] coord, auto
   nsStyleCoord mColumnGap;   // [reset] coord, normal

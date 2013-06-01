@@ -162,7 +162,7 @@ public:
   nscoord
   MirrorIfRTL(nscoord aParentWidth, nscoord aChildWidth, nscoord aChildLeading)
   {
-    return (NS_MATHML_IS_RTL(mPresentationData.flags) ?
+    return (StyleVisibility()->mDirection ?
             aParentWidth - aChildWidth - aChildLeading : aChildLeading);
   }
 
@@ -475,7 +475,7 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList)
+                      nsFrameList&    aChildList) MOZ_OVERRIDE
   {
     NS_ASSERTION(aListID == kPrincipalList, "unexpected frame list");
     nsresult rv = nsInlineFrame::SetInitialChildList(aListID, aChildList);

@@ -92,6 +92,34 @@ class TestCrash(unittest.TestCase):
                                                 dump_save_path=save_path))
         self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
 
+    def test_save_path_not_present(self):
+        """
+        Test that dump_save_path works when the directory doesn't exist.
+        """
+        open(os.path.join(self.tempdir, "test.dmp"), "w").write("foo")
+        save_path = os.path.join(self.tempdir, "saved")
+        self.stdouts.append(["this is some output"])
+        self.assert_(mozcrash.check_for_crashes(self.tempdir,
+                                                'symbols_path',
+                                                stackwalk_binary=self.stackwalk,
+                                                dump_save_path=save_path))
+        self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
+
+    def test_save_path_isfile(self):
+        """
+        Test that dump_save_path works when the directory doesn't exist,
+        but a file with the same name exists.
+        """
+        open(os.path.join(self.tempdir, "test.dmp"), "w").write("foo")
+        save_path = os.path.join(self.tempdir, "saved")
+        open(save_path, "w").write("junk")
+        self.stdouts.append(["this is some output"])
+        self.assert_(mozcrash.check_for_crashes(self.tempdir,
+                                                'symbols_path',
+                                                stackwalk_binary=self.stackwalk,
+                                                dump_save_path=save_path))
+        self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
+
     def test_save_path_envvar(self):
         """
         Test that the MINDUMP_SAVE_PATH environment variable works.

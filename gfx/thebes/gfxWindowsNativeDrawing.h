@@ -11,7 +11,7 @@
 #include "gfxContext.h"
 #include "gfxWindowsSurface.h"
 
-class THEBES_API gfxWindowsNativeDrawing {
+class gfxWindowsNativeDrawing {
 public:
 
     /* Flags for notifying this class what kind of operations the native

@@ -54,7 +54,7 @@
           box.showContextMenu(this, event, true);
         ]]>
       </handler>
-      
+
       <handler event="keypress" phase="capturing" keycode="VK_RETURN">
         <![CDATA[
           event.preventDefault();
@@ -268,7 +268,7 @@
             for (let i = 0; i < iterCount; i++) {
               if (i > lastMatch) {
                 let lastItem = this._results.itemCount - 1;
-                this._results.removeItemAt(lastItem);
+                this._results.removeItemAt(lastItem, true);
                 continue;
               }
 
@@ -278,7 +278,7 @@
 
               let item = this._results.getItemAtIndex(i);
               if (item == null) {
-                item = this._results.appendItem(label, value);
+                item = this._results.appendItem(label, value, true);
                 item.setAttribute("autocomplete", "true");
               } else {
                 item.setAttribute("label", label);
@@ -308,10 +308,10 @@
             this._engines = Services.search.getVisibleEngines();
 
             while (this._searches.itemCount > 0)
-              this._searches.removeItemAt(0);
+              this._searches.removeItemAt(0, true);
 
             this._engines.forEach(function (anEngine) {
-              let item = this._searches.appendItem(anEngine.name, anEngine.name);
+              let item = this._searches.appendItem(anEngine.name, anEngine.name, true);
               item.setAttribute("autocomplete", "true");
               item.setAttribute("search", "true");
 
@@ -336,9 +336,8 @@
             for (let i = 0, len = this._searches.itemCount; i < len; i++) {
               let item = this._searches.getItemAtIndex(i);
               item.setAttribute("label", label);
+              item.refresh && item.refresh();
             }
-
-            this._searches.arrangeItems();
           ]]>
         </body>
       </method>

@@ -50,6 +50,7 @@ public:
     mParent = aTarget;
   }
   virtual mozilla::dom::EventTarget* GetParentTarget() { return mParent; }
+  virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsWindowRoot,
                                                          nsIDOMEventTarget)

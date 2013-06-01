@@ -553,6 +553,7 @@ void SourceBufferDestroy(void *srcSurfUD)
   delete static_cast<SourceSurfaceUserData*>(srcSurfUD);
 }
 
+#if MOZ_TREE_CAIRO
 void SourceSnapshotDetached(cairo_surface_t *nullSurf)
 {
   gfxImageSurface* origSurf =
@@ -560,6 +561,13 @@ void SourceSnapshotDetached(cairo_surface_t *nullSurf)
 
   origSurf->SetData(&kSourceSurface, NULL, NULL);
 }
+#else
+void SourceSnapshotDetached(void *nullSurf)
+{
+  gfxImageSurface* origSurf = static_cast<gfxImageSurface*>(nullSurf);
+  origSurf->SetData(&kSourceSurface, NULL, NULL);
+}
+#endif
 
 RefPtr<SourceSurface>
 gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurface)
@@ -672,6 +680,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 
     }
 
+#if MOZ_TREE_CAIRO
     cairo_surface_t *nullSurf =
 	cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
     cairo_surface_set_user_data(nullSurf,
@@ -680,6 +689,9 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
                                 NULL);
     cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
     cairo_surface_destroy(nullSurf);
+#else
+    cairo_surface_set_mime_data(imgSurface->CairoSurface(), "mozilla/magic", (const unsigned char*) "data", 4, SourceSnapshotDetached, imgSurface.get());
+#endif
   }
 
   SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;

@@ -91,6 +91,17 @@ private:
   uint32_t mVideoHeight;
   uint32_t mVideoStride;
 
+  // The offset, in audio frames, at which playback started since the
+  // last discontinuity.
+  int64_t mAudioFrameOffset;
+  // The number of audio frames that we've played since the last
+  // discontinuity.
+  int64_t mAudioFrameSum;
+  // True if we need to re-initialize mAudioFrameOffset and mAudioFrameSum
+  // from the next audio packet we decode. This happens after a seek, since
+  // WMF doesn't mark a stream as having a discontinuity after a seek(0).
+  bool mMustRecaptureAudioPosition;
+
   bool mHasAudio;
   bool mHasVideo;
   bool mCanSeek;

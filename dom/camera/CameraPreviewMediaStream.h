@@ -13,7 +13,7 @@ namespace mozilla {
 
 class CameraPreviewFrameCallback {
 public:
-  virtual void OnNewFrame(const gfxIntSize& aIntrinsicSize, layers::Image* aImage);
+  virtual void OnNewFrame(const gfxIntSize& aIntrinsicSize, layers::Image* aImage) = 0;
 };
 
 /**

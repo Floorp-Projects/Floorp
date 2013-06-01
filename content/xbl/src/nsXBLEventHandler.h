@@ -6,6 +6,7 @@
 #ifndef nsXBLEventHandler_h__
 #define nsXBLEventHandler_h__
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsTArray.h"
@@ -42,7 +43,7 @@ public:
   virtual ~nsXBLMouseEventHandler();
 
 private:
-  bool EventMatched(nsIDOMEvent* aEvent);
+  bool EventMatched(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
 };
 
 class nsXBLKeyEventHandler : public nsIDOMEventListener

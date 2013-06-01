@@ -36,3 +36,5 @@
 <!ENTITY doNotTrack.options.trackingNotOkay                      "I do not want to be tracked">
 <!ENTITY doNotTrack.options.noPreference                         "Nothing about my tracking preferences">
 <!ENTITY doNotTrack.options.trackingOkay                         "I want to be tracked">
+<!ENTITY optionsHeader.reporting.title                           "Crash Reporter">
+<!ENTITY optionsHeader.reporting.crashes.label                   "&brandShortName; submits crash reports to help Mozilla make your browser more stable and secure">

@@ -15,6 +15,10 @@ AC_DEFUN([MOZ_SET_FRAMEPTR_FLAGS], [
   if test "$GNU_CC"; then
     MOZ_ENABLE_FRAME_PTR="-fno-omit-frame-pointer $unwind_tables"
     MOZ_DISABLE_FRAME_PTR="-fomit-frame-pointer"
+    if test "$CPU_ARCH" = arm; then
+      # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=54398
+      MOZ_ENABLE_FRAME_PTR="$unwind_tables"
+    fi
   else
     case "$target" in
     *-mingw*)

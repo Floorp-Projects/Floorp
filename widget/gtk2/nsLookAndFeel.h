@@ -31,7 +31,13 @@ public:
     virtual bool GetEchoPasswordImpl();
 
 protected:
+#if (MOZ_WIDGET_GTK == 2)
     struct _GtkStyle *mStyle;
+#else
+    struct _GtkStyleContext *mBackgroundStyle;
+    struct _GtkStyleContext *mViewStyle;
+    struct _GtkStyleContext *mButtonStyle;
+#endif
 
     // Cached fonts
     bool mDefaultFontCached;
@@ -47,31 +53,35 @@ protected:
     gfxFontStyle mFieldFontStyle;
     gfxFontStyle mMenuFontStyle;
 
-    // Cached colors, we have to create a dummy widget to actually
-    // get the style
+    // Cached colors
+    nscolor sInfoBackground;
+    nscolor sInfoText;
+    nscolor sMenuBackground;
+    nscolor sMenuBarText;
+    nscolor sMenuBarHoverText;
+    nscolor sMenuText;
+    nscolor sMenuHover;
+    nscolor sMenuHoverText;
+    nscolor sButtonBackground;
+    nscolor sButtonText;
+    nscolor sButtonOuterLightBorder;
+    nscolor sButtonInnerDarkBorder;
+    nscolor sOddCellBackground;
+    nscolor sNativeHyperLinkText;
+    nscolor sComboBoxText;
+    nscolor sComboBoxBackground;
+    nscolor sMozFieldText;
+    nscolor sMozFieldBackground;
+    nscolor sMozWindowText;
+    nscolor sMozWindowBackground;
+    nscolor sMozWindowSelectedText;
+    nscolor sMozWindowSelectedBackground;
+    nscolor sMozScrollbar;
+    PRUnichar sInvisibleCharacter;
+    float   sCaretRatio;
+    bool    sMenuSupportsDrag;
 
-    static nscolor sInfoBackground;
-    static nscolor sInfoText;
-    static nscolor sMenuBackground;
-    static nscolor sMenuBarText;
-    static nscolor sMenuBarHoverText;
-    static nscolor sMenuText;
-    static nscolor sMenuHover;
-    static nscolor sMenuHoverText;
-    static nscolor sButtonBackground;
-    static nscolor sButtonText;
-    static nscolor sButtonOuterLightBorder;
-    static nscolor sButtonInnerDarkBorder;
-    static nscolor sOddCellBackground;
-    static nscolor sNativeHyperLinkText;
-    static nscolor sComboBoxText;
-    static nscolor sComboBoxBackground;
-    static PRUnichar sInvisibleCharacter;
-    static float   sCaretRatio;
-    static bool    sMenuSupportsDrag;
-
-    static void InitLookAndFeel();
-    void InitWidget();
+    void Init();
 };
 
 #endif
