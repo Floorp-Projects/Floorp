@@ -166,7 +166,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if (payload != dest.valueReg())
             movq(payload, dest.valueReg());
         mov(ImmShiftedTag(type), ScratchReg);
-        orq(Operand(ScratchReg), dest.valueReg());
+        orq(ScratchReg, dest.valueReg());
     }
     void pushValue(ValueOperand val) {
         push(val.valueReg());
@@ -548,7 +548,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void loadPtr(const BaseIndex &src, Register dest) {
         movq(Operand(src), dest);
-	}
+    }
     void loadPrivate(const Address &src, Register dest) {
         loadPtr(src, dest);
         shlq(Imm32(1), dest);
@@ -622,7 +622,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void cmpTag(const ValueOperand &operand, ImmTag tag) {
         Register reg = splitTagForTest(operand);
-        cmpl(Operand(reg), tag);
+        cmpl(reg, tag);
     }
 
     void branchTestUndefined(Condition cond, Register tag, Label *label) {
@@ -788,7 +788,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Note that the |dest| register here may be ScratchReg, so we shouldn't
     // use it.
     void unboxInt32(const ValueOperand &src, const Register &dest) {
-        movl(Operand(src.valueReg()), dest);
+        movl(src.valueReg(), dest);
     }
     void unboxInt32(const Operand &src, const Register &dest) {
         movl(src, dest);
@@ -811,7 +811,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void unboxBoolean(const ValueOperand &src, const Register &dest) {
-        movl(Operand(src.valueReg()), dest);
+        movl(src.valueReg(), dest);
     }
     void unboxBoolean(const Operand &src, const Register &dest) {
         movl(src, dest);
@@ -821,7 +821,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void unboxMagic(const ValueOperand &src, const Register &dest) {
-        movl(Operand(src.valueReg()), dest);
+        movl(src.valueReg(), dest);
     }
 
     void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
@@ -913,10 +913,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     // These two functions use the low 32-bits of the full value register.
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(Operand(operand.valueReg()), dest);
+        cvtsi2sd(operand.valueReg(), dest);
     }
     void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(Operand(operand.valueReg()), dest);
+        cvtsi2sd(operand.valueReg(), dest);
     }
 
     void loadConstantDouble(double d, const FloatRegister &dest) {
