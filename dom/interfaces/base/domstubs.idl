@@ -47,7 +47,6 @@ interface nsIDOMPlugin;
 interface nsIDOMPluginArray;
 interface nsIDOMMimeType;
 interface nsIDOMMimeTypeArray;
-interface nsIDOMBarProp;
 interface nsIDOMNavigator;
 interface nsIDOMScreen;
 interface nsIDOMHistory;

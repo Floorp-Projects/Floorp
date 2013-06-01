@@ -12,102 +12,112 @@
 #ifndef mozilla_dom_BarProps_h
 #define mozilla_dom_BarProps_h
 
-#include "nscore.h"
-#include "nsIScriptContext.h"
-#include "nsIDOMBarProp.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIWeakReference.h"
+#include "nsWrapperCache.h"
+#include "nsAutoPtr.h"
 
 class nsGlobalWindow;
 class nsIWebBrowserChrome;
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
 
 // Script "BarProp" object
-class BarProp : public nsIDOMBarProp
+class BarProp : public nsISupports,
+                public nsWrapperCache
 {
 public:
   explicit BarProp(nsGlobalWindow *aWindow);
   virtual ~BarProp();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BarProp)
 
-  NS_IMETHOD GetVisibleByFlag(bool *aVisible, uint32_t aChromeFlag);
-  NS_IMETHOD SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag);
+  nsPIDOMWindow* GetParentObject() const;
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  virtual bool GetVisible(ErrorResult& aRv) = 0;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) = 0;
 
 protected:
+  bool GetVisibleByFlag(uint32_t aChromeFlag, ErrorResult& aRv);
+  void SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag, ErrorResult &aRv);
+
   already_AddRefed<nsIWebBrowserChrome> GetBrowserChrome();
 
-  nsGlobalWindow             *mDOMWindow;
-  nsCOMPtr<nsIWeakReference>  mDOMWindowWeakref;
-  /* Note the odd double reference to the owning global window.
-     Since the corresponding DOM window nominally owns this object,
-     but refcounted ownership of this object can be handed off to
-     owners unknown, we need a weak ref back to the DOM window.
-     However we also need access to properties of the DOM Window
-     that aren't available through interfaces. Then it's either
-     a weak ref and some skanky casting, or this funky double ref.
-     Funky beats skanky, so here we are. */
+  nsRefPtr<nsGlobalWindow> mDOMWindow;
 };
 
 // Script "menubar" object
-class MenubarProp : public BarProp
+class MenubarProp MOZ_FINAL : public BarProp
 {
 public:
   explicit MenubarProp(nsGlobalWindow *aWindow);
   virtual ~MenubarProp();
 
-  NS_DECL_NSIDOMBARPROP
+  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
 };
 
 // Script "toolbar" object
-class ToolbarProp : public BarProp
+class ToolbarProp MOZ_FINAL : public BarProp
 {
 public:
   explicit ToolbarProp(nsGlobalWindow *aWindow);
   virtual ~ToolbarProp();
 
-  NS_DECL_NSIDOMBARPROP
+  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
 };
 
 // Script "locationbar" object
-class LocationbarProp : public BarProp
+class LocationbarProp MOZ_FINAL : public BarProp
 {
 public:
   explicit LocationbarProp(nsGlobalWindow *aWindow);
   virtual ~LocationbarProp();
 
-  NS_DECL_NSIDOMBARPROP
+  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
 };
 
 // Script "personalbar" object
-class PersonalbarProp : public BarProp
+class PersonalbarProp MOZ_FINAL : public BarProp
 {
 public:
   explicit PersonalbarProp(nsGlobalWindow *aWindow);
   virtual ~PersonalbarProp();
 
-  NS_DECL_NSIDOMBARPROP
+  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
 };
 
 // Script "statusbar" object
-class StatusbarProp : public BarProp
+class StatusbarProp MOZ_FINAL : public BarProp
 {
 public:
   explicit StatusbarProp(nsGlobalWindow *aWindow);
   virtual ~StatusbarProp();
 
-  NS_DECL_NSIDOMBARPROP
+  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
 };
 
 // Script "scrollbars" object
-class ScrollbarsProp : public BarProp
+class ScrollbarsProp MOZ_FINAL : public BarProp
 {
 public:
   explicit ScrollbarsProp(nsGlobalWindow *aWindow);
   virtual ~ScrollbarsProp();
 
-  NS_DECL_NSIDOMBARPROP
+  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
 };
 
 } // namespace dom
