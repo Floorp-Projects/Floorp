@@ -99,9 +99,6 @@ JSCompartment::init(JSContext *cx)
     if (!regExps.init(cx))
         return false;
 
-    if (cx)
-        InitRandom(cx->runtime, &rngState);
-
     enumerators = NativeIterator::allocateSentinel(cx);
     if (!enumerators)
         return false;

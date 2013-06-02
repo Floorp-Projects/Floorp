@@ -1430,16 +1430,6 @@ struct JSRuntime : public JS::shadow::Runtime,
   public:
     js::AutoEnterPolicy *enteredPolicy;
 #endif
-
-  private:
-    /*
-     * Used to ensure that compartments created at the same time get different
-     * random number sequences. See js::InitRandom.
-     */
-    uint64_t rngNonce;
-
-  public:
-    uint64_t nextRNGNonce() { return rngNonce++; }
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */

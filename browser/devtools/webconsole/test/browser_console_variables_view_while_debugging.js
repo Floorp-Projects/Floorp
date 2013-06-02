@@ -101,7 +101,7 @@ function onTestPropFound(aResults)
 function onFooObjFetchAfterUpdate(aEvent, aVar)
 {
   info("onFooObjFetchAfterUpdate");
-  let para = content.document.querySelector("p");
+  let para = content.wrappedJSObject.document.querySelector("p");
   let expectedValue = content.document.title + "foo2SecondCall" + para;
 
   findVariableViewProperties(aVar, [
@@ -120,7 +120,7 @@ function onUpdatedTestPropFound(aResults)
 
 function onExecuteFooObjTestProp2()
 {
-  let para = content.document.querySelector("p");
+  let para = content.wrappedJSObject.document.querySelector("p");
   let expected = content.document.title + "foo2SecondCall" + para;
 
   isnot(gWebConsole.outputNode.textContent.indexOf(expected), -1,

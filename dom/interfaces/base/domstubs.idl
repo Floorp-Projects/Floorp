@@ -12,6 +12,7 @@ class nsWrapperCache;
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
 
 typedef unsigned long long DOMTimeStamp;
+typedef double DOMHighResTimeStamp;
 
 // Core
 interface nsIDOMAttr;

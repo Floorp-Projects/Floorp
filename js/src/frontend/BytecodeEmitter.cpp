@@ -2559,6 +2559,22 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
+    /*
+     * Emit a prologue for run-once scripts which will deoptimize JIT code if
+     * the script ends up running multiple times via foo.caller related
+     * shenanigans.
+     */
+    bool runOnce = bce->parent &&
+        bce->parent->emittingRunOnceLambda &&
+        !funbox->argumentsHasLocalBinding() &&
+        !funbox->isGenerator();
+    if (runOnce) {
+        bce->switchToProlog();
+        if (!Emit1(cx, bce, JSOP_RUNONCE) < 0)
+            return false;
+        bce->switchToMain();
+    }
+
     if (!EmitTree(cx, bce, body))
         return false;
 
@@ -2576,8 +2592,10 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
      * If this function is only expected to run once, mark the script so that
      * initializers created within it may be given more precise types.
      */
-    if (bce->parent && bce->parent->emittingRunOnceLambda)
+    if (runOnce) {
         bce->script->treatAsRunOnce = true;
+        JS_ASSERT(!bce->script->hasRunOnce);
+    }
 
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
     RootedFunction fun(cx, bce->script->function());
@@ -3358,10 +3376,19 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             break;
           }
           case PNK_ELEM:
-          case PNK_CALL:
             if (Emit1(cx, bce, JSOP_DUP2) < 0)
                 return false;
             if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
+                return false;
+            break;
+          case PNK_CALL:
+            /*
+             * We just emitted a JSOP_SETCALL (which will always throw) and
+             * popped the call's return value. Push a random value to make sure
+             * the stack depth is correct.
+             */
+            JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
+            if (Emit1(cx, bce, JSOP_NULL) < 0)
                 return false;
             break;
           default:;

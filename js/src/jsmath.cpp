@@ -8,13 +8,24 @@
  * JS math package.
  */
 
+#if defined(XP_WIN)
+/* _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s(). */
+#define _CRT_RAND_S
+#endif
+
 #include "jsmath.h"
 
 #include "mozilla/Constants.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include <fcntl.h>
 #include <stdlib.h>
+
+#ifdef XP_UNIX
+# include <unistd.h>
+#endif
+
 #include "jstypes.h"
 #include "prmjtime.h"
 #include "jsapi.h"
@@ -543,6 +554,42 @@ js_math_pow(JSContext *cx, unsigned argc, Value *vp)
 # pragma optimize("", on)
 #endif
 
+static uint64_t
+random_generateSeed()
+{
+    union {
+        uint8_t     u8[8];
+        uint32_t    u32[2];
+        uint64_t    u64;
+    } seed;
+    seed.u64 = 0;
+
+#if defined(XP_WIN)
+    /*
+     * Our PRNG only uses 48 bits, so calling rand_s() twice to get 64 bits is
+     * probably overkill.
+     */
+    rand_s(&seed.u32[0]);
+#elif defined(XP_UNIX)
+    /*
+     * In the unlikely event we can't read /dev/urandom, there's not much we can
+     * do, so just mix in the fd error code and the current time.
+     */
+    int fd = open("/dev/urandom", O_RDONLY);
+    MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom");
+    if (fd >= 0) {
+        read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
+        close(fd);
+    }
+    seed.u32[0] ^= fd;
+#else
+# error "Platform needs to implement random_generateSeed()"
+#endif
+
+    seed.u32[1] ^= PRMJ_Now();
+    return seed.u64;
+}
+
 static const uint64_t RNG_MULTIPLIER = 0x5DEECE66DLL;
 static const uint64_t RNG_ADDEND = 0xBLL;
 static const uint64_t RNG_MASK = (1LL << 48) - 1;
@@ -551,28 +598,25 @@ static const double RNG_DSCALE = double(1LL << 53);
 /*
  * Math.random() support, lifted from java.util.Random.java.
  */
-extern void
-random_setSeed(uint64_t *rngState, uint64_t seed)
+static void
+random_initState(uint64_t *rngState)
 {
+    /* Our PRNG only uses 48 bits, so squeeze our entropy into those bits. */
+    uint64_t seed = random_generateSeed();
+    seed ^= (seed >> 16);
     *rngState = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
 }
 
-void
-js::InitRandom(JSRuntime *rt, uint64_t *rngState)
-{
-    /*
-     * Set the seed from current time. Since we have a RNG per compartment and
-     * we often bring up several compartments at the same time, mix in a
-     * different integer each time. This is only meant to prevent all the new
-     * compartments from getting the same sequence of pseudo-random
-     * numbers. There's no security guarantee.
-     */
-    random_setSeed(rngState, (uint64_t(PRMJ_Now()) << 8) ^ rt->nextRNGNonce());
-}
-
-extern uint64_t
+uint64_t
 random_next(uint64_t *rngState, int bits)
 {
+    MOZ_ASSERT((*rngState & 0xffff000000000000ULL) == 0, "Bad rngState");
+    MOZ_ASSERT(bits > 0 && bits <= 48, "bits is out of range");
+
+    if (*rngState == 0) {
+        random_initState(rngState);
+    }
+
     uint64_t nextstate = *rngState * RNG_MULTIPLIER;
     nextstate += RNG_ADDEND;
     nextstate &= RNG_MASK;

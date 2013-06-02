@@ -17,7 +17,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_cmd_break.js \
 	$(browser_dbg_createRemote.js disabled for intermittent failures, bug 753225) \
 	browser_dbg_debuggerstatement.js \
-	browser_dbg_listtabs.js \
+	browser_dbg_listtabs-01.js \
+	browser_dbg_listtabs-02.js \
 	browser_dbg_tabactor-01.js \
 	browser_dbg_tabactor-02.js \
 	browser_dbg_globalactor-01.js \
@@ -33,6 +34,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-09.js \
 	browser_dbg_propertyview-10.js \
 	browser_dbg_propertyview-11.js \
+	browser_dbg_propertyview-12.js \
 	browser_dbg_propertyview-edit-value.js \
 	browser_dbg_propertyview-edit-watch.js \
 	browser_dbg_propertyview-data-big.js \

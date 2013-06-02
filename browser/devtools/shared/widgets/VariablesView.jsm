@@ -2364,21 +2364,15 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
 
       let tooltip = document.createElement("tooltip");
       tooltip.id = "tooltip-" + this._idString;
-
-      let configurableLabel = document.createElement("label");
-      let enumerableLabel = document.createElement("label");
-      let writableLabel = document.createElement("label");
-      let safeGetterLabel = document.createElement("label");
-      configurableLabel.setAttribute("value", "configurable");
-      enumerableLabel.setAttribute("value", "enumerable");
-      writableLabel.setAttribute("value", "writable");
-      safeGetterLabel.setAttribute("value", "native-getter");
-
       tooltip.setAttribute("orient", "horizontal");
-      tooltip.appendChild(configurableLabel);
-      tooltip.appendChild(enumerableLabel);
-      tooltip.appendChild(writableLabel);
-      tooltip.appendChild(safeGetterLabel);
+
+      let labels = ["configurable", "enumerable", "writable", "native-getter",
+                    "frozen", "sealed", "non-extensible"];
+      for (let label of labels) {
+        let labelElement = document.createElement("label");
+        labelElement.setAttribute("value", label);
+        tooltip.appendChild(labelElement);
+      }
 
       this._target.appendChild(tooltip);
       this._target.setAttribute("tooltip", tooltip.id);
@@ -2408,14 +2402,27 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
     if (this.ownerView.eval) {
       this._target.setAttribute("editable", "");
     }
-    if (!descriptor.null && !descriptor.configurable) {
-      this._target.setAttribute("non-configurable", "");
-    }
-    if (!descriptor.null && !descriptor.enumerable) {
-      this._target.setAttribute("non-enumerable", "");
-    }
-    if (!descriptor.null && !descriptor.writable && !this.ownerView.getter && !this.ownerView.setter) {
-      this._target.setAttribute("non-writable", "");
+    if (!descriptor.null) {
+      if (!descriptor.configurable) {
+        this._target.setAttribute("non-configurable", "");
+      }
+      if (!descriptor.enumerable) {
+        this._target.setAttribute("non-enumerable", "");
+      }
+      if (!descriptor.writable && !this.ownerView.getter && !this.ownerView.setter) {
+        this._target.setAttribute("non-writable", "");
+      }
+      if (descriptor.value && typeof descriptor.value == "object") {
+        if (descriptor.value.frozen) {
+          this._target.setAttribute("frozen", "");
+        }
+        if (descriptor.value.sealed) {
+          this._target.setAttribute("sealed", "");
+        }
+        if (!descriptor.value.extensible) {
+          this._target.setAttribute("non-extensible", "");
+        }
+      }
     }
     if (descriptor && "getterValue" in descriptor) {
       this._target.setAttribute("safe-getter", "");

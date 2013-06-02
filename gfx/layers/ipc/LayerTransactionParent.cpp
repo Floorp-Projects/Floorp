@@ -459,7 +459,12 @@ LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
   Layer* layer = cast(aParent)->AsLayer();
-  *aTransform = layer->GetLocalTransform();
+  *aTransform = layer->AsLayerComposite()->GetShadowTransform();
+  if (ContainerLayer* c = layer->AsContainerLayer()) {
+    aTransform->ScalePost(1.0f/c->GetInheritedXScale(),
+                          1.0f/c->GetInheritedYScale(),
+                          1.0f);
+  }
   float scale = 1;
   gfxPoint3D scaledOrigin;
   gfxPoint3D mozOrigin;

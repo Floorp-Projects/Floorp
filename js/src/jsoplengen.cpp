@@ -12,7 +12,7 @@ static const struct {
     const char  *name;
     int         length;
 } pairs[] = {
-#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
+#define OPDEF(op,val,name,token,length,nuses,ndefs,format)               \
     { #op, length } ,
 #include "jsopcode.tbl"
 #undef OPDEF

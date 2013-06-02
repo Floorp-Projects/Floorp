@@ -109,15 +109,11 @@ DOMCI_CLASS(XPathResult)
 // WhatWG WebApps Objects
 DOMCI_CLASS(Storage)
 
-DOMCI_CLASS(OfflineResourceList)
-
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
 
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
-
-DOMCI_CLASS(DeviceStorage)
 
 // Geolocation
 DOMCI_CLASS(GeoPositionCoords)

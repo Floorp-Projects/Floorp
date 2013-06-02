@@ -338,6 +338,12 @@ WebConsole.prototype = {
   viewSourceInStyleEditor:
   function WC_viewSourceInStyleEditor(aSourceURL, aSourceLine)
   {
+    let toolbox = gDevTools.getToolbox(this.target);
+    if (!toolbox) {
+      this.viewSource(aSourceURL, aSourceLine);
+      return;
+    }
+
     gDevTools.showToolbox(this.target, "styleeditor").then(function(toolbox) {
       try {
         toolbox.getCurrentPanel().selectStyleSheet(aSourceURL, aSourceLine);

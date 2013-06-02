@@ -156,6 +156,7 @@ function attachTestTabAndResume(aClient, aTitle, aCallback) {
  */
 function initTestDebuggerServer()
 {
+  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
   DebuggerServer.addActors("resource://test/testactors.js");
   // Allow incoming connections.
   DebuggerServer.init(function () { return true; });
@@ -163,7 +164,9 @@ function initTestDebuggerServer()
 
 function initSourcesBackwardsCompatDebuggerServer()
 {
+  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
   DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
   DebuggerServer.addActors("resource://test/testcompatactors.js");
   DebuggerServer.init(function () { return true; });
 }
