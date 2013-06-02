@@ -25,6 +25,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMEventTargetHelper.h"
+#include "mozilla/ErrorResult.h"
+#include "nsIDOMDOMStringList.h"
 
 class nsIDOMWindow;
 
@@ -34,6 +36,8 @@ class nsDOMOfflineResourceList : public nsDOMEventTargetHelper,
                                  public nsIOfflineCacheUpdateObserver,
                                  public nsSupportsWeakReference
 {
+  typedef mozilla::ErrorResult ErrorResult;
+
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMOFFLINERESOURCELIST
@@ -52,6 +56,80 @@ public:
   void Disconnect();
 
   nsresult Init();
+
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  uint16_t GetStatus(ErrorResult& aRv)
+  {
+    uint16_t status = 0;
+    aRv = GetStatus(&status);
+    return status;
+  }
+  void Update(ErrorResult& aRv)
+  {
+    aRv = Update();
+  }
+  void SwapCache(ErrorResult& aRv)
+  {
+    aRv = SwapCache();
+  }
+
+  IMPL_EVENT_HANDLER(checking)
+  IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(noupdate)
+  IMPL_EVENT_HANDLER(downloading)
+  IMPL_EVENT_HANDLER(progress)
+  IMPL_EVENT_HANDLER(cached)
+  IMPL_EVENT_HANDLER(updateready)
+  IMPL_EVENT_HANDLER(obsolete)
+
+  already_AddRefed<nsIDOMDOMStringList> GetMozItems(ErrorResult& aRv)
+  {
+    nsCOMPtr<nsIDOMDOMStringList> items;
+    aRv = GetMozItems(getter_AddRefs(items));
+    return items.forget();
+  }
+  bool MozHasItem(const nsAString& aURI, ErrorResult& aRv)
+  {
+    bool hasItem = false;
+    aRv = MozHasItem(aURI, &hasItem);
+    return hasItem;
+  }
+  uint32_t GetMozLength(ErrorResult& aRv)
+  {
+    uint32_t length = 0;
+    aRv = GetMozLength(&length);
+    return length;
+  }
+  void MozItem(uint32_t aIndex, nsAString& aURI, ErrorResult& aRv)
+  {
+    aRv = MozItem(aIndex, aURI);
+  }
+  void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aURI,
+                     ErrorResult& aRv)
+  {
+    MozItem(aIndex, aURI, aRv);
+    aFound = !aURI.IsVoid();
+  }
+  uint32_t Length()
+  {
+    ErrorResult rv;
+    uint32_t length = GetMozLength(rv);
+    return rv.Failed() ? 0 : length;
+  }
+  void MozAdd(const nsAString& aURI, ErrorResult& aRv)
+  {
+    aRv = MozAdd(aURI);
+  }
+  void MozRemove(const nsAString& aURI, ErrorResult& aRv)
+  {
+    aRv = MozRemove(aURI);
+  }
 
 private:
   nsresult SendEvent(const nsAString &aEventName);

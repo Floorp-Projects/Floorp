@@ -9,7 +9,8 @@
 #include "nsMIMEInfoImpl.h"
 #include "nsIMutableArray.h"
 #include "nsAndroidHandlerApp.h"
-class nsMIMEInfoAndroid : public nsIMIMEInfo
+
+class nsMIMEInfoAndroid MOZ_FINAL : public nsIMIMEInfo
 {
 public:
   static bool
@@ -40,7 +41,7 @@ protected:
   nsString mDescription;
   nsCOMPtr<nsIHandlerApp> mPrefApp;
   
-  class SystemChooser : public nsIHandlerApp {
+  class SystemChooser MOZ_FINAL : public nsIHandlerApp {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHANDLERAPP

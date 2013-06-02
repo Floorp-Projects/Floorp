@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1369429787000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1369693795000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -708,14 +708,14 @@
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
-                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.4.*" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.6.602.175" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="19.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
-                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.4.*" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.6.602.175" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
                           </targetApplication>

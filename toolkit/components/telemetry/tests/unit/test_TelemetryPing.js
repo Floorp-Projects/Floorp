@@ -18,7 +18,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PATH = "/submit/telemetry/test-ping";
 const SERVER = "http://localhost:4444";
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
@@ -38,17 +37,13 @@ const RW_OWNER = 0600;
 const NUMBER_OF_THREADS_TO_LAUNCH = 30;
 var gNumberOfThreadsLaunched = 0;
 
-const BinaryInputStream = Components.Constructor(
-  "@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream",
-  "setInputStream");
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
 
 var httpserver = new HttpServer();
 var gFinished = false;
 
 function telemetry_ping () {
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.gatherStartup();
   TelemetryPing.enableLoadSaveNotifications();
   TelemetryPing.cacheProfileDirectory();
@@ -61,13 +56,17 @@ function dummyHandler(request, response) {
   return p;
 }
 
+function registerPingHandler(handler) {
+  httpserver.registerPathHandler(TelemetryPing.submissionPath(), handler);
+}
+
 function nonexistentServerObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(nonexistentServerObserver, aTopic);
 
   httpserver.start(4444);
 
   // Provide a dummy function so it returns 200 instead of 404 to telemetry.
-  httpserver.registerPathHandler(PATH, dummyHandler);
+  registerPingHandler(dummyHandler);
   Services.obs.addObserver(telemetryObserver, "telemetry-test-xhr-complete", false);
   telemetry_ping();
 }
@@ -100,11 +99,10 @@ function getSavedHistogramsFile(basename) {
 
 function telemetryObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(telemetryObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkHistogramsSync);
+  registerPingHandler(checkHistogramsSync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
   setupTestData();
 
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.saveHistograms(histogramsFile, true);
   TelemetryPing.testLoadHistograms(histogramsFile, true);
   telemetry_ping();
@@ -281,16 +279,15 @@ function checkPersistedHistogramsSync(request, response) {
 }
 
 function checkHistogramsSync(request, response) {
-  httpserver.registerPathHandler(PATH, checkPersistedHistogramsSync);
+  registerPingHandler(checkPersistedHistogramsSync);
   checkPayload(request, "test-ping", 1);
 }
 
 function runAsyncTestObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(runAsyncTestObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkHistogramsAsync);
+  registerPingHandler(checkHistogramsAsync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms2.dat");
 
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     Services.obs.removeObserver(arguments.callee, aTopic);
 
@@ -318,7 +315,7 @@ function checkPersistedHistogramsAsync(request, response) {
 }
 
 function checkHistogramsAsync(request, response) {
-  httpserver.registerPathHandler(PATH, checkPersistedHistogramsAsync);
+  registerPingHandler(checkPersistedHistogramsAsync);
   checkPayload(request, "test-ping", 3);
 }
 
@@ -327,14 +324,12 @@ function runInvalidJSONTest() {
   writeStringToFile(histogramsFile, "this.is.invalid.JSON");
   do_check_true(histogramsFile.exists());
   
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.testLoadHistograms(histogramsFile, true);
   do_check_false(histogramsFile.exists());
 }
 
 function runOldPingFileTest() {
   let histogramsFile = getSavedHistogramsFile("old-histograms.dat");
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
   TelemetryPing.saveHistograms(histogramsFile, true);
   do_check_true(histogramsFile.exists());
 

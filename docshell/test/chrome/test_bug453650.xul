@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=453650
+-->
+<window title="Mozilla Bug 453650"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 453650</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 453650 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var Ci = Components.interfaces;
+  var Cr = Components.results;
+
+  var iter = runTests();
+  nextTest();
+
+  function runTests() {
+    var iframe = document.createElement("iframe");
+    iframe.style.width = "300px";
+    iframe.style.height = "300px";
+    iframe.setAttribute("src", "data:text/html,<h1 id='h'>hello</h1>");
+
+    document.documentElement.appendChild(iframe);
+    yield whenLoaded(iframe);
+    info("iframe loaded");
+
+    var h1 = iframe.contentDocument.getElementById("h");
+    h1.style.width = "400px";
+    yield waitForInterruptibleReflow(iframe.docShell);
+
+    h1.style.width = "300px";
+    waitForReflow(iframe.docShell);
+    yield is(300, h1.offsetWidth, "h1 has correct width");
+  }
+
+  function waitForInterruptibleReflow(docShell) {
+    waitForReflow(docShell, true);
+  }
+
+  function waitForReflow(docShell, interruptible = false) {
+    function done() {
+      docShell.removeWeakReflowObserver(observer);
+      SimpleTest.executeSoon(nextTest);
+    }
+
+    var observer = {
+      reflow: function (start, end) {
+        if (interruptible) {
+          ok(false, "expected interruptible reflow");
+        } else {
+          ok(true, "observed uninterruptible reflow");
+        }
+
+        info("times: " + start + ", " + end);
+        ok(start < end, "reflow start time lower than end time");
+        done();
+      },
+
+      reflowInterruptible: function (start, end) {
+        if (!interruptible) {
+          ok(false, "expected uninterruptible reflow");
+        } else {
+          ok(true, "observed interruptible reflow");
+        }
+
+        info("times: " + start + ", " + end);
+        ok(start < end, "reflow start time lower than end time");
+        done();
+      },
+
+      QueryInterface: function (iid) {
+        if (Ci.nsIReflowObserver.equals(iid) ||
+            Ci.nsISupportsWeakReference.equals(iid) ||
+            Ci.nsISupports.equals(iid))
+          return this;
+        throw Cr.NS_ERROR_NO_INTERFACE;
+      },
+    };
+
+    docShell.addWeakReflowObserver(observer);
+  }
+
+  function whenLoaded(iframe) {
+    iframe.addEventListener("load", function onLoad() {
+      iframe.removeEventListener("load", onLoad);
+      SimpleTest.executeSoon(nextTest);
+    });
+  }
+
+  function nextTest() {
+    try {
+      iter.next();
+    } catch (e if e instanceof StopIteration) {
+      SimpleTest.finish();
+    }
+  }
+
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=453650"
+     target="_blank">Mozilla Bug 453650</a>
+  </body>
+</window>

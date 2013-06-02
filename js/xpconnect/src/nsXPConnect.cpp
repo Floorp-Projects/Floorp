@@ -1328,9 +1328,8 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         return nullptr;
     }
 
-    nsISupports* supports = nullptr;
-    mozilla::dom::UnwrapDOMObjectToISupports(aJSObj, supports);
-    nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
+    nsCOMPtr<nsISupports> canonical =
+        do_QueryInterface(mozilla::dom::UnwrapDOMObjectToISupports(aJSObj));
     return canonical;
 }
 

@@ -28,6 +28,9 @@ tests.gatTest = function(options) {
           hints:                       '',
           markup: 'VVVVVVVVVVVVVVVVVVVVV',
           status: 'VALID'
+        },
+        exec: {
+          output: 'There are no add-ons of that type installed.'
         }
       },
       {
@@ -37,6 +40,9 @@ tests.gatTest = function(options) {
           hints:                      '',
           markup: 'VVVVVVVVVVVVVVVVVVVV',
           status: 'VALID'
+        },
+        exec: {
+          output: [/The following/, /Mochitest/, /Special Powers/]
         }
       },
       {
@@ -46,6 +52,9 @@ tests.gatTest = function(options) {
           hints:                   '',
           markup: 'VVVVVVVVVVVVVVVVV',
           status: 'VALID'
+        },
+        exec: {
+          output: 'There are no add-ons of that type installed.'
         }
       },
       {
@@ -55,6 +64,9 @@ tests.gatTest = function(options) {
           hints:                   '',
           markup: 'VVVVVVVVVVVVVVVVV',
           status: 'VALID'
+        },
+        exec: {
+          output: [/Test Plug-in/, /Second Test Plug-in/]
         }
       },
       {
@@ -64,6 +76,9 @@ tests.gatTest = function(options) {
           hints:                  '',
           markup: 'VVVVVVVVVVVVVVVV',
           status: 'VALID'
+        },
+        exec: {
+          output: [/following themes/, /Default/]
         }
       },
       {
@@ -73,6 +88,10 @@ tests.gatTest = function(options) {
           hints:                '',
           markup: 'VVVVVVVVVVVVVV',
           status: 'VALID'
+        },
+        exec: {
+          output: [/The following/, /Default/, /Mochitest/, /Test Plug-in/,
+                   /Second Test Plug-in/, /Special Powers/]
         }
       },
       {
@@ -82,6 +101,9 @@ tests.gatTest = function(options) {
           hints:                                    '',
           markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
           status: 'VALID'
+        },
+        exec: {
+          output: 'Test Plug-in 1.0.0.0 disabled.'
         }
       },
       {
@@ -106,7 +128,7 @@ tests.gatTest = function(options) {
           }
         },
         exec: {
-          completed: false
+          output: 'Test Plug-in 1.0.0.0 enabled.'
         }
       }
     ]);

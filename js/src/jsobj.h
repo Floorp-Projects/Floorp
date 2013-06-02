@@ -203,10 +203,6 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded);
 
 } /* namespace js::baseops */
 
-/* ES5 8.12.8. */
-extern JSBool
-DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
-
 extern Class ArrayClass;
 extern Class ArrayBufferClass;
 extern Class BlockClass;

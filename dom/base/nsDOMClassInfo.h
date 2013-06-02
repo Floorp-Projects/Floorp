@@ -218,7 +218,6 @@ public:
   static jsid sFrames_id;
   static jsid sSelf_id;
   static jsid sAll_id;
-  static jsid sTags_id;
   static jsid sJava_id;
   static jsid sPackages_id;
   static jsid sWrappedJSObject_id;
@@ -612,9 +611,6 @@ public:
   static JSBool DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
                                             JSHandleId id, unsigned flags,
                                             JS::MutableHandle<JSObject*> objp);
-  static JSBool DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
-                                          JSHandleId id, unsigned flags,
-                                          JS::MutableHandle<JSObject*> objp);
 
   static nsresult TryResolveAll(JSContext* cx, nsHTMLDocument* doc,
                                 JS::Handle<JSObject*> obj);
@@ -1020,27 +1016,6 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsNonDOMObjectSH(aData);
-  }
-};
-
-class nsOfflineResourceListSH : public nsStringArraySH
-{
-protected:
-  nsOfflineResourceListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
-  {
-  }
-
-  virtual ~nsOfflineResourceListSH()
-  {
-  }
-
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult);
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsOfflineResourceListSH(aData);
   }
 };
 

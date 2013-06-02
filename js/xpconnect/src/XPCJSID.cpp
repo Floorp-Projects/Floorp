@@ -531,8 +531,9 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         } else if (IsDOMObject(obj)) {
               // Not all DOM objects implement nsISupports. But if they don't,
               // there's nothing to do in this HasInstance hook.
-              if (!UnwrapDOMObjectToISupports(obj, identity))
-                  return NS_OK;;
+              identity = UnwrapDOMObjectToISupports(obj);
+              if (!identity)
+                  return NS_OK;
               nsCOMPtr<nsISupports> supp;
               identity->QueryInterface(*iid, getter_AddRefs(supp));
               *bp = supp;

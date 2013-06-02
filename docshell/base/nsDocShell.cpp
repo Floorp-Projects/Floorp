@@ -83,6 +83,7 @@
 #include "nsIOfflineCacheUpdate.h"
 #include "nsITimedChannel.h"
 #include "nsIPrivacyTransitionObserver.h"
+#include "nsIReflowObserver.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
 #include "nsIDocShellTreeItem.h"
@@ -2203,6 +2204,43 @@ nsDocShell::AddWeakPrivacyTransitionObserver(nsIPrivacyTransitionObserver* aObse
         return NS_ERROR_NOT_AVAILABLE;
     }
     return mPrivacyObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::AddWeakReflowObserver(nsIReflowObserver* aObserver)
+{
+    nsWeakPtr weakObs = do_GetWeakReference(aObserver);
+    if (!weakObs) {
+        return NS_ERROR_FAILURE;
+    }
+    return mReflowObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::RemoveWeakReflowObserver(nsIReflowObserver* aObserver)
+{
+    nsWeakPtr obs = do_GetWeakReference(aObserver);
+    return mReflowObservers.RemoveElement(obs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::NotifyReflowObservers(bool aInterruptible,
+                                  DOMHighResTimeStamp aStart,
+                                  DOMHighResTimeStamp aEnd)
+{
+    nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mReflowObservers);
+    while (iter.HasMore()) {
+        nsWeakPtr ref = iter.GetNext();
+        nsCOMPtr<nsIReflowObserver> obs = do_QueryReferent(ref);
+        if (!obs) {
+            mReflowObservers.RemoveElement(ref);
+        } else if (aInterruptible) {
+            obs->ReflowInterruptible(aStart, aEnd);
+        } else {
+            obs->Reflow(aStart, aEnd);
+        }
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetAllowMetaRedirects(bool * aReturn)

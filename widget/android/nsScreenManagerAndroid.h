@@ -12,7 +12,7 @@
 #include "nsIScreenManager.h"
 #include "WidgetUtils.h"
 
-class nsScreenAndroid : public nsBaseScreen
+class nsScreenAndroid MOZ_FINAL : public nsBaseScreen
 {
 public:
     nsScreenAndroid(void *nativeScreen);
@@ -27,8 +27,7 @@ protected:
     virtual void ApplyMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE;
 };
 
-class nsScreenManagerAndroid :
-    public nsIScreenManager
+class nsScreenManagerAndroid MOZ_FINAL : public nsIScreenManager
 {
 public:
     nsScreenManagerAndroid();
