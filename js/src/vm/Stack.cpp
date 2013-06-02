@@ -19,10 +19,10 @@
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
-#include "jsinterpinlines.h"
 
 #include "jsopcode.h"
 
+#include "Interpreter-inl.h"
 #include "Stack-inl.h"
 
 /* Includes to get to low-level memory-mapping functionality. */

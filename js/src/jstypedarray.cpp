@@ -19,13 +19,13 @@
 #include "jscpucfg.h"
 #include "jsversion.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 
 #include "jsatominlines.h"

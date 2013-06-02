@@ -13,7 +13,6 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 #include "jsgcinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jscompartment.h"
@@ -25,6 +24,7 @@
 #include "js/Vector.h"
 
 #include "gc/FindSCCs-inl.h"
+#include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

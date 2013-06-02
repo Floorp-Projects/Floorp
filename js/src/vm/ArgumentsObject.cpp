@@ -6,9 +6,9 @@
 
 #include "jsgc.h"
 #include "jsinfer.h"
-#include "jsinterp.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/Stack.h"
 #include "vm/Xdr.h"
 
