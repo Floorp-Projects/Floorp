@@ -4742,7 +4742,7 @@ sctp_add_to_readq(struct sctp_inpcb *inp,
 			if ((buffer = malloc(control->length)) == NULL) {
 				return;
 			}
-			so = inp->sctp_socket;
+			so = stcb->sctp_socket;
 			for (m = control->data; m; m = SCTP_BUF_NEXT(m)) {
 				sctp_sbfree(control, control->stcb, &so->so_rcv, m);
 			}
