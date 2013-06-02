@@ -1274,7 +1274,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
 
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
-ADD_EMPTY_CASE(JSOP_UNUSED71)
 ADD_EMPTY_CASE(JSOP_UNUSED125)
 ADD_EMPTY_CASE(JSOP_UNUSED126)
 ADD_EMPTY_CASE(JSOP_UNUSED132)
@@ -2463,6 +2462,13 @@ BEGIN_CASE(JSOP_ARGUMENTS)
     }
 END_CASE(JSOP_ARGUMENTS)
 
+BEGIN_CASE(JSOP_RUNONCE)
+{
+    if (!RunOnceScriptPrologue(cx, script))
+        goto error;
+}
+END_CASE(JSOP_RUNONCE)
+
 BEGIN_CASE(JSOP_REST)
 {
     RootedObject &rest = rootObject0;
@@ -2485,7 +2491,13 @@ END_CASE(JSOP_GETALIASEDVAR)
 BEGIN_CASE(JSOP_SETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(regs.pc);
-    regs.fp()->aliasedVarScope(sc).setAliasedVar(sc, regs.sp[-1]);
+    ScopeObject &obj = regs.fp()->aliasedVarScope(sc);
+
+    // Avoid computing the name if no type updates are needed, as this may be
+    // expensive on scopes with large numbers of variables.
+    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(cx, script, regs.pc) : NULL;
+
+    obj.setAliasedVar(cx, sc, name, regs.sp[-1]);
 }
 END_CASE(JSOP_SETALIASEDVAR)
 
@@ -3533,6 +3545,25 @@ js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyNa
 }
 
 bool
+js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
+{
+    JS_ASSERT(script->treatAsRunOnce);
+
+    if (!script->hasRunOnce) {
+        script->hasRunOnce = true;
+        return true;
+    }
+
+    // Force instantiation of the script's function's type to ensure the flag
+    // is preserved in type information.
+    if (!script->function()->getType(cx))
+        return false;
+
+    types::MarkTypeObjectFlags(cx, script->function(), types::OBJECT_FLAG_RUNONCE_INVALIDATED);
+    return true;
+}
+
+bool
 js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleId id,
                               HandleValue val)
 {
@@ -3583,5 +3614,6 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, idval, &id))
         return false;
+
     return InitGetterSetterOperation(cx, pc, obj, id, val);
 }

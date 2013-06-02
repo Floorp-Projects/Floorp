@@ -46,3 +46,18 @@ try {
     assertEq(e instanceof ReferenceError, true);
 }
 assertEq(calls, 3);
+
+function test4() {
+    for (var i=0; i<20; i++) {
+	if (i > 18)
+	    g() >>= 2;
+    }
+}
+try {
+    test4();
+    assertEq(0, 1);
+} catch(e) {
+    assertEq(e instanceof ReferenceError, true);
+}
+
+assertEq(calls, 4);

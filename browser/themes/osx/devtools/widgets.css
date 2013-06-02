@@ -531,6 +531,21 @@
   text-shadow: 0 0 8px #fcc;
 }
 
+.variable-or-property[non-extensible]:not([non-writable]) > .title:after {
+  content: "N";
+  display: inline-block;
+}
+
+.variable-or-property[sealed]:not([non-writable]) > .title:after {
+  content: "S";
+  display: inline-block;
+}
+
+.variable-or-property[frozen]:not([non-writable]) > .title:after {
+  content: "F";
+  display: inline-block;
+}
+
 /* Variables and properties tooltips */
 
 .variable-or-property > tooltip > label {
@@ -543,7 +558,10 @@
   text-decoration: line-through;
 }
 
-.variable-or-property:not([safe-getter]) > tooltip > label[value=native-getter] {
+.variable-or-property:not([safe-getter]) > tooltip > label[value=native-getter],
+.variable-or-property:not([non-extensible]) > tooltip > label[value=non-extensible],
+.variable-or-property:not([frozen]) > tooltip > label[value=frozen],
+.variable-or-property:not([sealed]) > tooltip > label[value=sealed] {
   display: none;
 }
 

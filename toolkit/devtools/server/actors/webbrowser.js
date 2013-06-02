@@ -10,339 +10,437 @@
  */
 
 /**
- * Methods shared between BrowserRootActor and BrowserTabActor.
+ * Yield all windows of type |aWindowType|, from the oldest window to the
+ * youngest, using nsIWindowMediator::getEnumerator. We're usually
+ * interested in "navigator:browser" windows.
  */
-
-/**
- * Populate |this._extraActors| as specified by |aFactories|, reusing whatever
- * actors are already there. Add all actors in the final extra actors table to
- * |aPool|.
- *
- * The root actor and the tab actor use this to instantiate actors that other
- * parts of the browser have specified with DebuggerServer.addTabActor antd
- * DebuggerServer.addGlobalActor.
- *
- * @param aFactories
- *     An object whose own property names are the names of properties to add to
- *     some reply packet (say, a tab actor grip or the "listTabs" response
- *     form), and whose own property values are actor constructor functions, as
- *     documented for addTabActor and addGlobalActor.
- *
- * @param this
- *     The BrowserRootActor or BrowserTabActor with which the new actors will
- *     be associated. It should support whatever API the |aFactories|
- *     constructor functions might be interested in, as it is passed to them.
- *     For the sake of CommonCreateExtraActors itself, it should have at least
- *     the following properties:
- *
- *     - _extraActors
- *        An object whose own property names are factory table (and packet)
- *        property names, and whose values are no-argument actor constructors,
- *        of the sort that one can add to an ActorPool.
- *
- *     - conn
- *        The DebuggerServerConnection in which the new actors will participate.
- *
- *     - actorID
- *        The actor's name, for use as the new actors' parentID.
- */
-function CommonCreateExtraActors(aFactories, aPool) {
-  // Walk over global actors added by extensions.
-  for (let name in aFactories) {
-    let actor = this._extraActors[name];
-    if (!actor) {
-      actor = aFactories[name].bind(null, this.conn, this);
-      actor.prototype = aFactories[name].prototype;
-      actor.parentID = this.actorID;
-      this._extraActors[name] = actor;
-    }
-    aPool.addActor(actor);
+function allAppShellDOMWindows(aWindowType)
+{
+  let e = windowMediator.getEnumerator(aWindowType);
+  while (e.hasMoreElements()) {
+    yield e.getNext();
   }
 }
 
 /**
- * Append the extra actors in |this._extraActors|, constructed by a prior call
- * to CommonCreateExtraActors, to |aObject|.
- *
- * @param aObject
- *     The object to which the extra actors should be added, under the
- *     property names given in the |aFactories| table passed to
- *     CommonCreateExtraActors.
- *
- * @param this
- *     The BrowserRootActor or BrowserTabActor whose |_extraActors| table we
- *     should use; see above.
+ * Return true if the top-level window |aWindow| is a "navigator:browser"
+ * window.
  */
-function CommonAppendExtraActors(aObject) {
-  for (let name in this._extraActors) {
-    let actor = this._extraActors[name];
-    aObject[name] = actor.actorID;
+function appShellDOMWindowType(aWindow) {
+  /* This is what nsIWindowMediator's enumerator checks. */
+  return aWindow.document.documentElement.getAttribute('windowtype');
+}
+
+/**
+ * Send Debugger:Shutdown events to all "navigator:browser" windows.
+ */
+function sendShutdownEvent() {
+  for (let win of allAppShellDOMWindows("navigator:browser")) {
+    let evt = win.document.createEvent("Event");
+    evt.initEvent("Debugger:Shutdown", true, false);
+    win.document.documentElement.dispatchEvent(evt);
   }
+}
+
+/**
+ * Construct a root actor appropriate for use in a server running in a
+ * browser. The returned root actor:
+ * - respects the factories registered with DebuggerServer.addGlobalActor,
+ * - uses a BrowserTabList to supply tab actors,
+ * - sends all navigator:browser window documents a Debugger:Shutdown event
+ *   when it exits.
+ *
+ * * @param aConnection DebuggerServerConnection
+ *        The conection to the client.
+ */
+function createRootActor(aConnection)
+{
+  return new RootActor(aConnection,
+                       {
+                         tabList: new BrowserTabList(aConnection),
+                         globalActorFactories: DebuggerServer.globalActorFactories,
+                         onShutdown: sendShutdownEvent
+                       });
 }
 
 var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]
-  .getService(Ci.nsIWindowMediator);
-
-function createRootActor(aConnection)
-{
-  return new BrowserRootActor(aConnection);
-}
+                     .getService(Ci.nsIWindowMediator);
 
 /**
- * Creates the root actor that client-server communications always start with.
- * The root actor is responsible for the initial 'hello' packet and for
- * responding to a 'listTabs' request that produces the list of currently open
- * tabs.
+ * A live list of BrowserTabActors representing the current browser tabs,
+ * to be provided to the root actor to answer 'listTabs' requests.
+ *
+ * This object also takes care of listening for TabClose events and
+ * onCloseWindow notifications, and exiting the BrowserTabActors concerned.
+ *
+ * (See the documentation for RootActor for the definition of the "live
+ * list" interface.)
  *
  * @param aConnection DebuggerServerConnection
- *        The conection to the client.
+ *     The connection in which this list's tab actors may participate.
+ *
+ * Some notes:
+ *
+ * This constructor is specific to the desktop browser environment; it
+ * maintains the tab list by tracking XUL windows and their XUL documents'
+ * "tabbrowser", "tab", and "browser" elements. What's entailed in maintaining
+ * an accurate list of open tabs in this context?
+ *
+ * - Opening and closing XUL windows:
+ *
+ * An nsIWindowMediatorListener is notified when new XUL windows (i.e., desktop
+ * windows) are opened and closed. It is not notified of individual content
+ * browser tabs coming and going within such a XUL window. That seems
+ * reasonable enough; it's concerned with XUL windows, not tab elements in the
+ * window's XUL document.
+ *
+ * However, even if we attach TabOpen and TabClose event listeners to each XUL
+ * window as soon as it is created:
+ *
+ * - we do not receive a TabOpen event for the initial empty tab of a new XUL
+ *   window; and
+ *
+ * - we do not receive TabClose events for the tabs of a XUL window that has
+ *   been closed.
+ *
+ * This means that TabOpen and TabClose events alone are not sufficient to
+ * maintain an accurate list of live tabs and mark tab actors as closed
+ * promptly. Our nsIWindowMediatorListener onCloseWindow handler must find and
+ * exit all actors for tabs that were in the closing window.
+ *
+ * Since this is a bit hairy, we don't make each individual attached tab actor
+ * responsible for noticing when it has been closed; we watch for that, and
+ * promise to call each actor's 'exit' method when it's closed, regardless of
+ * how we learn the news.
+ *
+ * - nsIWindowMediator locks
+ *
+ * nsIWindowMediator holds a lock protecting its list of top-level windows
+ * while it calls nsIWindowMediatorListener methods. nsIWindowMediator's
+ * GetEnumerator method also tries to acquire that lock. Thus, enumerating
+ * windows from within a listener method deadlocks (bug 873589). Rah. One
+ * can sometimes work around this by leaving the enumeration for a later
+ * tick.
+ *
+ * - Dragging tabs between windows:
+ *
+ * When a tab is dragged from one desktop window to another, we receive a
+ * TabOpen event for the new tab, and a TabClose event for the old tab; tab XUL
+ * elements do not really move from one document to the other (although their
+ * linked browser's content window objects do).
+ *
+ * However, while we could thus assume that each tab stays with the XUL window
+ * it belonged to when it was created, I'm not sure this is behavior one should
+ * rely upon. When a XUL window is closed, we take the less efficient, more
+ * conservative approach of simply searching the entire table for actors that
+ * belong to the closing XUL window, rather than trying to somehow track which
+ * XUL window each tab belongs to.
  */
-function BrowserRootActor(aConnection)
+function BrowserTabList(aConnection)
 {
-  this.conn = aConnection;
-  this._tabActors = new WeakMap();
-  this._tabActorPool = null;
-  // A map of actor names to actor instances provided by extensions.
-  this._extraActors = {};
+  this._connection = aConnection;
 
-  this.onTabClosed = this.onTabClosed.bind(this);
-  windowMediator.addListener(this);
+  /*
+   * The XUL document of a tabbed browser window has "tab" elements, whose
+   * 'linkedBrowser' JavaScript properties are "browser" elements; those
+   * browsers' 'contentWindow' properties are wrappers on the tabs' content
+   * window objects.
+   *
+   * This map's keys are "browser" XUL elements; it maps each browser element
+   * to the tab actor we've created for its content window, if we've created
+   * one. This map serves several roles:
+   *
+   * - During iteration, we use it to find actors we've created previously.
+   *
+   * - On a TabClose event, we use it to find the tab's actor and exit it.
+   *
+   * - When the onCloseWindow handler is called, we iterate over it to find all
+   *   tabs belonging to the closing XUL window, and exit them.
+   *
+   * - When it's empty, and the onListChanged hook is null, we know we can
+   *   stop listening for events and notifications.
+   *
+   * We listen for TabClose events and onCloseWindow notifications in order to
+   * send onListChanged notifications, but also to tell actors when their
+   * referent has gone away and remove entries for dead browsers from this map.
+   * If that code is working properly, neither this map nor the actors in it
+   * should ever hold dead tabs alive.
+   */
+  this._actorByBrowser = new Map();
+
+  /* The current onListChanged handler, or null. */
+  this._onListChanged = null;
+
+  /*
+   * True if we've been iterated over since we last called our onListChanged
+   * hook.
+   */
+  this._mustNotify = false;
+
+  /* True if we're testing, and should throw if consistency checks fail. */
+  this._testing = false;
 }
 
-BrowserRootActor.prototype = {
+BrowserTabList.prototype.constructor = BrowserTabList;
 
-  /**
-   * Return a 'hello' packet as specified by the Remote Debugging Protocol.
-   */
-  sayHello: function BRA_sayHello() {
-    return {
-      from: "root",
-      applicationType: "browser",
-      traits: {
-        sources: true
+BrowserTabList.prototype.iterator = function() {
+  let topXULWindow = windowMediator.getMostRecentWindow("navigator:browser");
+
+  // As a sanity check, make sure all the actors presently in our map get
+  // picked up when we iterate over all windows' tabs.
+  let initialMapSize = this._actorByBrowser.size;
+  let foundCount = 0;
+
+  // To avoid mysterious behavior if tabs are closed or opened mid-iteration,
+  // we update the map first, and then make a second pass over it to yield
+  // the actors. Thus, the sequence yielded is always a snapshot of the
+  // actors that were live when we began the iteration.
+
+  // Iterate over all navigator:browser XUL windows.
+  for (let win of allAppShellDOMWindows("navigator:browser")) {
+    let selectedTab = win.gBrowser.selectedBrowser;
+
+    // For each tab in this XUL window, ensure that we have an actor for
+    // it, reusing existing actors where possible. We actually iterate
+    // over 'browser' XUL elements, and BrowserTabActor uses
+    // browser.contentWindow.wrappedJSObject as the debuggee global.
+    for (let browser of win.gBrowser.browsers) {
+      // Do we have an existing actor for this browser? If not, create one.
+      let actor = this._actorByBrowser.get(browser);
+      if (actor) {
+        foundCount++;
+      } else {
+        actor = new BrowserTabActor(this._connection, browser, win.gBrowser);
+        this._actorByBrowser.set(browser, actor);
       }
-    };
-  },
 
-  /**
-   * Disconnects the actor from the browser window.
-   */
-  disconnect: function BRA_disconnect() {
-    windowMediator.removeListener(this);
-    this._extraActors = null;
-
-    // We may have registered event listeners on browser windows to
-    // watch for tab closes, remove those.
-    let e = windowMediator.getEnumerator("navigator:browser");
-    while (e.hasMoreElements()) {
-      let win = e.getNext();
-      this.unwatchWindow(win);
-      // Signal our imminent shutdown.
-      let evt = win.document.createEvent("Event");
-      evt.initEvent("Debugger:Shutdown", true, false);
-      win.document.documentElement.dispatchEvent(evt);
+      // Set the 'selected' properties on all actors correctly.
+      actor.selected = (win === topXULWindow && browser === selectedTab);
     }
-  },
+  }
 
-  /**
-   * Handles the listTabs request.  Builds a list of actors for the tabs running
-   * in the process.  The actors will survive until at least the next listTabs
-   * request.
-   */
-  onListTabs: function BRA_onListTabs() {
-    // Get actors for all the currently-running tabs (reusing existing actors
-    // where applicable), and store them in an ActorPool.
+  if (this._testing && initialMapSize !== foundCount)
+    throw Error("_actorByBrowser map contained actors for dead tabs");
 
-    let actorPool = new ActorPool(this.conn);
-    let tabActorList = [];
+  this._mustNotify = true;
+  this._checkListening();
 
-    // Get the chrome debugger actor.
-    let actor = this._chromeDebugger;
-    if (!actor) {
-      actor = new ChromeDebuggerActor(this);
-      actor.parentID = this.actorID;
-      this._chromeDebugger = actor;
-      actorPool.addActor(actor);
-    }
-
-    // Walk over open browser windows.
-    let e = windowMediator.getEnumerator("navigator:browser");
-    let top = windowMediator.getMostRecentWindow("navigator:browser");
-    let selected;
-    while (e.hasMoreElements()) {
-      let win = e.getNext();
-
-      // Watch the window for tab closes so we can invalidate actors as needed.
-      this.watchWindow(win);
-
-      // List the tabs in this browser.
-      let selectedBrowser = win.getBrowser().selectedBrowser;
-
-      let browsers = win.getBrowser().browsers;
-      for each (let browser in browsers) {
-        if (browser == selectedBrowser && win == top) {
-          selected = tabActorList.length;
-        }
-        let actor = this._tabActors.get(browser);
-        if (!actor) {
-          actor = new BrowserTabActor(this.conn, browser, win.gBrowser);
-          actor.parentID = this.actorID;
-          this._tabActors.set(browser, actor);
-        }
-        actorPool.addActor(actor);
-        tabActorList.push(actor);
-      }
-    }
-
-    this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
-
-    // Now drop the old actorID -> actor map.  Actors that still mattered were
-    // added to the new map, others will go away.
-    if (this._tabActorPool) {
-      this.conn.removeActorPool(this._tabActorPool);
-    }
-    this._tabActorPool = actorPool;
-    this.conn.addActorPool(this._tabActorPool);
-
-    let response = {
-      "from": "root",
-      "selected": selected,
-      "tabs": [actor.grip() for (actor of tabActorList)],
-      "chromeDebugger": this._chromeDebugger.actorID
-    };
-    this._appendExtraActors(response);
-    return response;
-  },
-
-  /* Support for DebuggerServer.addGlobalActor. */
-  _createExtraActors: CommonCreateExtraActors,
-  _appendExtraActors: CommonAppendExtraActors,
-
-  /**
-   * Watch a window that was visited during onListTabs for
-   * tab closures.
-   */
-  watchWindow: function BRA_watchWindow(aWindow) {
-    this.getTabContainer(aWindow).addEventListener("TabClose",
-                                                   this.onTabClosed,
-                                                   false);
-  },
-
-  /**
-   * Stop watching a window for tab closes.
-   */
-  unwatchWindow: function BRA_unwatchWindow(aWindow) {
-    this.getTabContainer(aWindow).removeEventListener("TabClose",
-                                                      this.onTabClosed);
-    this.exitTabActor(aWindow);
-  },
-
-  /**
-   * Return the tab container for the specified window.
-   */
-  getTabContainer: function BRA_getTabContainer(aWindow) {
-    return aWindow.getBrowser().tabContainer;
-  },
-
-  /**
-   * When a tab is closed, exit its tab actor.  The actor
-   * will be dropped at the next listTabs request.
-   */
-  onTabClosed:
-  makeInfallible(function BRA_onTabClosed(aEvent) {
-    this.exitTabActor(aEvent.target.linkedBrowser);
-  }, "BrowserRootActor.prototype.onTabClosed"),
-
-  /**
-   * Exit the tab actor of the specified tab.
-   */
-  exitTabActor: function BRA_exitTabActor(aWindow) {
-    let actor = this._tabActors.get(aWindow);
-    if (actor) {
-      this._tabActors.delete(actor.browser);
-      actor.exit();
-    }
-  },
-
-  // ChromeDebuggerActor hooks.
-
-  /**
-   * Add the specified actor to the default actor pool connection, in order to
-   * keep it alive as long as the server is. This is used by breakpoints in the
-   * thread and chrome debugger actors.
-   *
-   * @param actor aActor
-   *        The actor object.
-   */
-  addToParentPool: function BRA_addToParentPool(aActor) {
-    this.conn.addActor(aActor);
-  },
-
-  /**
-   * Remove the specified actor from the default actor pool.
-   *
-   * @param BreakpointActor aActor
-   *        The actor object.
-   */
-  removeFromParentPool: function BRA_removeFromParentPool(aActor) {
-    this.conn.removeActor(aActor);
-  },
-
-  /**
-   * Prepare to enter a nested event loop by disabling debuggee events.
-   */
-  preNest: function BRA_preNest() {
-    // Disable events in all open windows.
-    let e = windowMediator.getEnumerator(null);
-    while (e.hasMoreElements()) {
-      let win = e.getNext();
-      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-      windowUtils.suppressEventHandling(true);
-      windowUtils.suspendTimeouts();
-    }
-  },
-
-  /**
-   * Prepare to exit a nested event loop by enabling debuggee events.
-   */
-  postNest: function BRA_postNest(aNestData) {
-    // Enable events in all open windows.
-    let e = windowMediator.getEnumerator(null);
-    while (e.hasMoreElements()) {
-      let win = e.getNext();
-      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-      windowUtils.resumeTimeouts();
-      windowUtils.suppressEventHandling(false);
-    }
-  },
-
-  // nsIWindowMediatorListener.
-
-  onWindowTitleChange: function BRA_onWindowTitleChange(aWindow, aTitle) { },
-  onOpenWindow: function BRA_onOpenWindow(aWindow) { },
-  onCloseWindow:
-  makeInfallible(function BRA_onCloseWindow(aWindow) {
-    // An nsIWindowMediatorListener's onCloseWindow method gets passed all
-    // sorts of windows; we only care about the tab containers. Those have
-    // 'getBrowser' methods.
-    if (aWindow.getBrowser) {
-      this.unwatchWindow(aWindow);
-    }
-  }, "BrowserRootActor.prototype.onCloseWindow"),
+  /* Yield the values. */
+  for (let [browser, actor] of this._actorByBrowser) {
+    yield actor;
+  }
 };
 
+Object.defineProperty(BrowserTabList.prototype, 'onListChanged', {
+  enumerable: true, configurable:true,
+  get: function() { return this._onListChanged; },
+  set: function(v) {
+    if (v !== null && typeof v !== 'function') {
+      throw Error("onListChanged property may only be set to 'null' or a function");
+    }
+    this._onListChanged = v;
+    this._checkListening();
+  }
+});
+
 /**
- * The request types this actor can handle.
+ * The set of tabs has changed somehow. Call our onListChanged handler, if
+ * one is set, and if we haven't already called it since the last iteration.
  */
-BrowserRootActor.prototype.requestTypes = {
-  "listTabs": BrowserRootActor.prototype.onListTabs
+BrowserTabList.prototype._notifyListChanged = function() {
+  if (!this._onListChanged)
+    return;
+  if (this._mustNotify) {
+    this._onListChanged();
+    this._mustNotify = false;
+  }
 };
 
 /**
- * Creates a tab actor for handling requests to a browser tab, like attaching
- * and detaching.
+ * Exit |aActor|, belonging to |aBrowser|, and notify the onListChanged
+ * handle if needed.
+ */
+BrowserTabList.prototype._handleActorClose = function(aActor, aBrowser) {
+  if (this._testing) {
+    if (this._actorByBrowser.get(aBrowser) !== aActor) {
+      throw Error("BrowserTabActor not stored in map under given browser");
+    }
+    if (aActor.browser !== aBrowser) {
+      throw Error("actor's browser and map key don't match");
+    }
+  }
+
+  this._actorByBrowser.delete(aBrowser);
+  aActor.exit();
+
+  this._notifyListChanged();
+  this._checkListening();
+};
+
+/**
+ * Make sure we are listening or not listening for activity elsewhere in
+ * the browser, as appropriate. Other than setting up newly created XUL
+ * windows, all listener / observer connection and disconnection should
+ * happen here.
+ */
+BrowserTabList.prototype._checkListening = function() {
+  /*
+   * If we have an onListChanged handler that we haven't sent an announcement
+   * to since the last iteration, we need to watch for tab creation.
+   *
+   * Oddly, we don't need to watch for 'close' events here. If our actor list
+   * is empty, then either it was empty the last time we iterated, and no
+   * close events are possible, or it was not empty the last time we
+   * iterated, but all the actors have since been closed, and we must have
+   * sent a notification already when they closed.
+   */
+  this._listenForEventsIf(this._onListChanged && this._mustNotify,
+                          "_listeningForTabOpen", ["TabOpen", "TabSelect"]);
+
+  /* If we have live actors, we need to be ready to mark them dead. */
+  this._listenForEventsIf(this._actorByBrowser.size > 0,
+                          "_listeningForTabClose", ["TabClose"]);
+
+  /*
+   * We must listen to the window mediator in either case, since that's the
+   * only way to find out about tabs that come and go when top-level windows
+   * are opened and closed.
+   */
+  this._listenToMediatorIf((this._onListChanged && this._mustNotify) ||
+                           (this._actorByBrowser.size > 0));
+};
+
+/*
+ * Add or remove event listeners for all XUL windows.
+ *
+ * @param aShouldListen boolean
+ *    True if we should add event handlers; false if we should remove them.
+ * @param aGuard string
+ *    The name of a guard property of 'this', indicating whether we're
+ *    already listening for those events.
+ * @param aEventNames array of strings
+ *    An array of event names.
+ */
+BrowserTabList.prototype._listenForEventsIf = function(aShouldListen, aGuard, aEventNames) {
+  if (!aShouldListen !== !this[aGuard]) {
+    let op = aShouldListen ? "addEventListener" : "removeEventListener";
+    for (let win of allAppShellDOMWindows("navigator:browser")) {
+      for (let name of aEventNames) {
+        win[op](name, this, false);
+      }
+    }
+    this[aGuard] = aShouldListen;
+  }
+};
+
+/**
+ * Implement nsIDOMEventListener.
+ */
+BrowserTabList.prototype.handleEvent = makeInfallible(function(aEvent) {
+  switch (aEvent.type) {
+  case "TabOpen":
+  case "TabSelect":
+    /* Don't create a new actor; iterate will take care of that. Just notify. */
+    this._notifyListChanged();
+    this._checkListening();
+    break;
+  case "TabClose":
+    let browser = aEvent.target.linkedBrowser;
+    let actor = this._actorByBrowser.get(browser);
+    if (actor) {
+      this._handleActorClose(actor, browser);
+    }
+    break;
+  }
+}, "BrowserTabList.prototype.handleEvent");
+
+/*
+ * If |aShouldListen| is true, ensure we've registered a listener with the
+ * window mediator. Otherwise, ensure we haven't registered a listener.
+ */
+BrowserTabList.prototype._listenToMediatorIf = function(aShouldListen) {
+  if (!aShouldListen !== !this._listeningToMediator) {
+    let op = aShouldListen ? "addListener" : "removeListener";
+    windowMediator[op](this);
+    this._listeningToMediator = aShouldListen;
+  }
+};
+
+/**
+ * nsIWindowMediatorListener implementation.
+ *
+ * See _onTabClosed for explanation of why we needn't actually tweak any
+ * actors or tables here.
+ *
+ * An nsIWindowMediatorListener's methods get passed all sorts of windows; we
+ * only care about the tab containers. Those have 'getBrowser' methods.
+ */
+BrowserTabList.prototype.onWindowTitleChange = () => { };
+
+BrowserTabList.prototype.onOpenWindow = makeInfallible(function(aWindow) {
+  /*
+   * You can hardly do anything at all with a XUL window at this point; it
+   * doesn't even have its document yet. Wait until its document has
+   * loaded, and then see what we've got. This also avoids
+   * nsIWindowMediator enumeration from within listeners (bug 873589).
+   */
+  aWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindow);
+  aWindow.addEventListener("load", makeInfallible(handleLoad.bind(this)), false);
+
+  function handleLoad(aEvent) {
+    /* We don't want any further load events from this window. */
+    aWindow.removeEventListener("load", handleLoad, false);
+
+    if (appShellDOMWindowType(aWindow) !== "navigator:browser")
+      return;
+
+    // Listen for future tab activity.
+    if (this._listeningForTabOpen) {
+      aWindow.addEventListener("TabOpen", this, false);
+      aWindow.addEventListener("TabSelect", this, false);
+    }
+    if (this._listeningForTabClose) {
+      aWindow.addEventListener("TabClose", this, false);
+    }
+
+    // As explained above, we will not receive a TabOpen event for this
+    // document's initial tab, so we must notify our client of the new tab
+    // this will have.
+    this._notifyListChanged();
+  }
+}, "BrowserTabList.prototype.onOpenWindow");
+
+BrowserTabList.prototype.onCloseWindow = makeInfallible(function(aWindow) {
+  aWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindow);
+
+  if (appShellDOMWindowType(aWindow) !== "navigator:browser")
+    return;
+
+  /*
+   * nsIWindowMediator deadlocks if you call its GetEnumerator method from
+   * a nsIWindowMediatorListener's onCloseWindow hook (bug 873589), so
+   * handle the close in a different tick.
+   */
+  Services.tm.currentThread.dispatch(makeInfallible(() => {
+    /*
+     * Scan the entire map for actors representing tabs that were in this
+     * top-level window, and exit them.
+     */
+    for (let [browser, actor] of this._actorByBrowser) {
+      /* The browser document of a closed window has no default view. */
+      if (!browser.ownerDocument.defaultView) {
+        this._handleActorClose(actor, browser);
+      }
+    }
+  }, "BrowserTabList.prototype.onCloseWindow's delayed body"), 0);
+}, "BrowserTabList.prototype.onCloseWindow");
+
+/**
+ * Creates a tab actor for handling requests to a browser tab, like
+ * attaching and detaching. BrowserTabActor respects the actor factories
+ * registered with DebuggerServer.addTabActor.
  *
  * @param aConnection DebuggerServerConnection
  *        The conection to the client.
@@ -370,7 +468,7 @@ BrowserTabActor.prototype = {
   get browser() { return this._browser; },
 
   get exited() { return !this.browser; },
-  get attached() { return !!this._attached },
+  get attached() { return !!this._attached; },
 
   _tabPool: null,
   get tabActorPool() { return this._tabPool; },
@@ -449,7 +547,7 @@ BrowserTabActor.prototype = {
     let response = {
       actor: this.actorID,
       title: this.title,
-      url: this.url,
+      url: this.url
     };
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.
@@ -676,7 +774,7 @@ BrowserTabActor.prototype = {
     }
     catch (ex) { }
     return isNative;
-  },
+  }
 };
 
 /**
@@ -732,7 +830,7 @@ DebuggerProgressListener.prototype = {
         type: "tabNavigated",
         url: aRequest.URI.spec,
         nativeConsoleAPI: true,
-        state: "start",
+        state: "start"
       });
     } else if (isStop) {
       if (this._tabActor.threadActor.state == "running") {
@@ -746,7 +844,7 @@ DebuggerProgressListener.prototype = {
         url: this._tabActor.url,
         title: this._tabActor.title,
         nativeConsoleAPI: this._tabActor.hasNativeConsoleAPI(window),
-        state: "stop",
+        state: "stop"
       });
     }
   }, "DebuggerProgressListener.prototype.onStateChange"),

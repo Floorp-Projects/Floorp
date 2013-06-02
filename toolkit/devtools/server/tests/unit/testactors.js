@@ -6,15 +6,15 @@ DebuggerServer.addTestGlobal = function(aGlobal) {
   gTestGlobals.push(aGlobal);
 };
 
-function createRootActor(aConnection)
-{
-  return new TestRootActor(aConnection);
-}
-
-function TestRootActor(aConnection)
-{
+// A mock tab list, for use by tests. This simply presents each global in
+// gTestGlobals as a tab, and the list is fixed: it never calls its
+// onListChanged handler.
+//
+// As implemented now, we consult gTestGlobals when we're constructed, not
+// when we're iterated over, so tests have to add their globals before the
+// root actor is created.
+function TestTabList(aConnection) {
   this.conn = aConnection;
-  this.actorID = "root";
 
   // An array of actors for each global added with
   // DebuggerServer.addTestGlobal.
@@ -25,37 +25,33 @@ function TestRootActor(aConnection)
 
   for (let global of gTestGlobals) {
     let actor = new TestTabActor(aConnection, global);
+    actor.selected = false;
     this._tabActors.push(actor);
     this._tabActorPool.addActor(actor);
+  }
+  if (this._tabActors.length > 0) {
+    this._tabActors[0].selected = true;
   }
 
   aConnection.addActorPool(this._tabActorPool);
 }
 
-TestRootActor.prototype = {
-  constructor: TestRootActor,
-
-  sayHello: function () {
-    return { from: "root",
-             applicationType: "xpcshell-tests",
-             testConnectionPrefix: this.conn.prefix,
-             traits: {
-               sources: true
-             }
-           };
-  },
-
-  onListTabs: function(aRequest) {
-    return { tabs:[actor.grip() for (actor of this._tabActors)], selected:0 };
-  },
-
-  onEcho: function(aRequest) { return aRequest; },
+TestTabList.prototype = {
+  constructor: TestTabList,
+  iterator: function() {
+    for (let actor of this._tabActors) {
+      yield actor;
+    }
+  }
 };
 
-TestRootActor.prototype.requestTypes = {
-  "listTabs": TestRootActor.prototype.onListTabs,
-  "echo": TestRootActor.prototype.onEcho
-};
+function createRootActor(aConnection)
+{
+  let root = new RootActor(aConnection,
+                           { tabList: new TestTabList(aConnection) });
+  root.applicationType = "xpcshell-tests";
+  return root;
+}
 
 function TestTabActor(aConnection, aGlobal)
 {
@@ -68,7 +64,7 @@ function TestTabActor(aConnection, aGlobal)
 
 TestTabActor.prototype = {
   constructor: TestTabActor,
-  actorPrefix:"TestTabActor",
+  actorPrefix: "TestTabActor",
 
   grip: function() {
     return { actor: this.actorID, title: this._global.__name };

@@ -177,7 +177,7 @@ class ArgumentsObject : public JSObject
      *    needed, the frontend should have emitted JSOP_GETALIASEDVAR.
      */
     inline const Value &element(uint32_t i) const;
-    inline void setElement(uint32_t i, const Value &v);
+    inline void setElement(JSContext *cx, uint32_t i, const Value &v);
     inline const Value &arg(unsigned i) const;
     inline void setArg(unsigned i, const Value &v);
 

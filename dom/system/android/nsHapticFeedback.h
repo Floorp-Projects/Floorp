@@ -5,7 +5,7 @@
 
 #include "nsIHapticFeedback.h"
 
-class nsHapticFeedback : public nsIHapticFeedback
+class nsHapticFeedback MOZ_FINAL : public nsIHapticFeedback
 {
 public:
   NS_DECL_ISUPPORTS

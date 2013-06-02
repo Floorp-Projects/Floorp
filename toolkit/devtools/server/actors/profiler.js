@@ -4,7 +4,7 @@
 
 "use strict";
 
-var connCount = 0;
+var startedProfilers = 0;
 var startTime = 0;
 
 function getCurrentTime() {
@@ -20,7 +20,6 @@ function ProfilerActor(aConnection)
   this._profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
   this._started = false;
   this._observedEvents = [];
-  connCount += 1;
 }
 
 ProfilerActor.prototype = {
@@ -31,30 +30,36 @@ ProfilerActor.prototype = {
       Services.obs.removeObserver(this, event);
     }
 
-    // We stop the profiler only after the last client is
-    // disconnected. Otherwise there's a problem where
+    this.stopProfiler();
+    this._profiler = null;
+  },
+
+  stopProfiler: function() {
+    // We stop the profiler only after the last client has
+    // stopped profiling. Otherwise there's a problem where
     // we stop the profiler as soon as you close the devtools
     // panel in one tab even though there might be other
     // profiler instances running in other tabs.
-
-    connCount -= 1;
-    if (connCount <= 0 && this._profiler && this._started) {
+    if (!this._started) {
+      return;
+    }
+    this._started = false;
+    startedProfilers -= 1;
+    if (startedProfilers <= 0) {
       this._profiler.StopProfiler();
     }
-
-    this._profiler = null;
   },
 
   onStartProfiler: function(aRequest) {
     this._profiler.StartProfiler(aRequest.entries, aRequest.interval,
                            aRequest.features, aRequest.features.length);
     this._started = true;
+    startedProfilers += 1;
     startTime = (new Date()).getTime();
     return { "msg": "profiler started" }
   },
   onStopProfiler: function(aRequest) {
-    this._profiler.StopProfiler();
-    this._started = false;
+    this.stopProfiler();
     return { "msg": "profiler stopped" }
   },
   onGetProfileStr: function(aRequest) {

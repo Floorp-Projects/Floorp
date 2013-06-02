@@ -217,9 +217,9 @@ static void AddTransformFunctions(nsCSSValueList* aList,
         matrix._11 = array->Item(1).GetFloatValue();
         matrix._12 = array->Item(2).GetFloatValue();
         matrix._13 = 0;
-        matrix._14 = array->Item(3).GetFloatValue();
-        matrix._21 = array->Item(4).GetFloatValue();
-        matrix._22 = array->Item(5).GetFloatValue();
+        matrix._14 = array->Item(5).GetFloatValue();
+        matrix._21 = array->Item(3).GetFloatValue();
+        matrix._22 = array->Item(4).GetFloatValue();
         matrix._23 = 0;
         matrix._24 = array->Item(6).GetFloatValue();
         matrix._31 = 0;
