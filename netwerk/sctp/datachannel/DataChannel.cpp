@@ -222,33 +222,41 @@ DataChannelConnection::Destroy()
   // we can deregister this DataChannelConnection without leaking.
   ClearResets();
 
-  if (mSocket && mSocket != mMasterSocket)
-    usrsctp_close(mSocket);
-  if (mMasterSocket)
-    usrsctp_close(mMasterSocket);
+  MOZ_ASSERT(mSTS);
+  ASSERT_WEBRTC(NS_IsMainThread());
+  // Finish Destroy on STS thread to avoid bug 876167 - once that's fixed,
+  // the usrsctp_close() calls can move back here (and just proxy the
+  // disconnect_all())
+  RUN_ON_THREAD(mSTS, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
+                                   &DataChannelConnection::DestroyOnSTS,
+                                   mSocket, mMasterSocket),
+                NS_DISPATCH_NORMAL);
 
+  // These will be released on STS
   mSocket = nullptr;
   mMasterSocket = nullptr; // also a flag that we've Destroyed this connection
 
+  // Must do this in Destroy() since we may then delete this object
   if (mUsingDtls) {
     usrsctp_deregister_address(static_cast<void *>(this));
     LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
   }
+
   // We can't get any more new callbacks from the SCTP library
   // All existing callbacks have refs to DataChannelConnection
 
   // nsDOMDataChannel objects have refs to DataChannels that have refs to us
+}
 
-  if (mTransportFlow) {
-    MOZ_ASSERT(mSTS);
-    ASSERT_WEBRTC(NS_IsMainThread());
-    RUN_ON_THREAD(mSTS, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
-                                     &DataChannelConnection::disconnect_all),
-                  NS_DISPATCH_NORMAL);
-    // don't release mTransportFlow until we are destroyed in case
-    // runnables are in flight.  We may well have packets to send as the
-    // SCTP lib may have sent a shutdown.
-  }
+void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
+                                         struct socket *aSocket)
+{
+  if (aSocket && aSocket != aMasterSocket)
+    usrsctp_close(aSocket);
+  if (aMasterSocket)
+    usrsctp_close(aMasterSocket);
+
+  disconnect_all();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(DataChannelConnection,
