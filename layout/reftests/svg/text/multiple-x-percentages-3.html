@@ -8,12 +8,16 @@
 <script>
 var iframe = document.querySelector("iframe");
 
-function doTest() {
-  window.removeEventListener("MozReftestInvalidate", doTest);
-
+function doTestPart1() {
   iframe.style.width = "200px";
   iframe.style.height = "200px";
+  window.removeEventListener("MozReftestInvalidate", doTestPart1);
 
+  window.addEventListener("MozReftestInvalidate", doTestPart2, false);
+  setTimeout(doTestPart2, 4000); // fallback for running outside reftest
+}
+
+function doTestPart2() {
   var text = iframe.contentDocument.querySelectorAll("text");
   text[0].firstChild.nodeValue += "!";
   text[1].firstChild.nodeValue += "!";
@@ -21,6 +25,6 @@ function doTest() {
   document.documentElement.removeAttribute("class");
 }
 
-window.addEventListener("MozReftestInvalidate", doTest, false);
-setTimeout(doTest, 4000); // fallback for running outside reftest
+window.addEventListener("MozReftestInvalidate", doTestPart1, false);
+setTimeout(doTestPart1, 4000); // fallback for running outside reftest
 </script>
