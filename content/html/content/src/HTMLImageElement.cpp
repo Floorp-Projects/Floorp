@@ -178,19 +178,29 @@ HTMLImageElement::GetXY()
   return point;
 }
 
+int32_t
+HTMLImageElement::X()
+{
+  return GetXY().x;
+}
+
+int32_t
+HTMLImageElement::Y()
+{
+  return GetXY().y;
+}
+
 NS_IMETHODIMP
 HTMLImageElement::GetX(int32_t* aX)
 {
-  *aX = GetXY().x;
-
+  *aX = X();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLImageElement::GetY(int32_t* aY)
 {
-  *aY = GetXY().y;
-
+  *aY = Y();
   return NS_OK;
 }
 
