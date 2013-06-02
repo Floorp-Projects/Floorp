@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Make sure the listTabs request works as specified.
-
 var gTab1 = null;
 var gTab1Actor = null;
 
