@@ -30,7 +30,6 @@
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -44,6 +43,7 @@
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
+#include "vm/Interpreter.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"

@@ -52,10 +52,11 @@
 #include "jsheaptools.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "ion/Ion.h"
+
+#include "vm/Interpreter-inl.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>

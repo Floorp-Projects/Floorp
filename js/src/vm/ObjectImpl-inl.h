@@ -11,13 +11,13 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsproxy.h"
 
 #include "gc/Heap.h"
 #include "gc/Marking.h"
 #include "js/TemplateLib.h"
 
+#include "Interpreter.h"
 #include "ObjectImpl.h"
 
 namespace js {

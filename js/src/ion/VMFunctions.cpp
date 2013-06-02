@@ -6,22 +6,23 @@
 
 #include "Ion.h"
 #include "IonCompartment.h"
-#include "jsinterp.h"
 #include "ion/BaselineFrame-inl.h"
 #include "ion/BaselineIC.h"
 #include "ion/IonFrames.h"
 
-#include "vm/StringObject-inl.h"
 #include "vm/Debugger.h"
+#include "vm/Interpreter.h"
+#include "vm/StringObject-inl.h"
 
 #include "builtin/ParallelArray.h"
 
 #include "frontend/TokenStream.h"
 
 #include "jsboolinlines.h"
-#include "jsinterpinlines.h"
 
 #include "ion/IonFrames-inl.h" // for GetTopIonJSScript
+
+#include "vm/Interpreter-inl.h"
 #include "vm/StringObject-inl.h"
 
 using namespace js;

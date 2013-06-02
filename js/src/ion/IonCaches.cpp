@@ -16,9 +16,9 @@
 
 #include "vm/Shape.h"
 
-#include "jsinterpinlines.h"
-
 #include "IonFrames-inl.h"
+
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 using namespace js::ion;
