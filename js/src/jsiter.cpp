@@ -19,7 +19,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
@@ -28,6 +27,7 @@
 #include "ds/Sort.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/Shape.h"
 
 #include "jsinferinlines.h"

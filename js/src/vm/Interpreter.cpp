@@ -8,7 +8,7 @@
  * JavaScript bytecode interpreter.
  */
 
-#include "jsinterp.h"
+#include "Interpreter.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
@@ -48,13 +48,13 @@
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsprobes.h"
 #include "jsscriptinlines.h"
 
 #include "builtin/Iterator-inl.h"
+#include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 
 #include "jsautooplen.h"

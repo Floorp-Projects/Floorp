@@ -17,7 +17,6 @@
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
-#include "jsinterp.h"
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -26,17 +25,18 @@
 #include "ds/Sort.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
+#include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
 #include "vm/ArgumentsObject-inl.h"
+#include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
