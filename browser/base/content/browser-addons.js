@@ -415,3 +415,58 @@ var LightWeightThemeWebInstaller = {
                                     node.baseURI);
   }
 }
+
+/*
+ * Listen for Lightweight Theme styling changes and update the browser's theme accordingly.
+ */
+let LightweightThemeListener = {
+  _modifiedStyles: [],
+
+  init: function () {
+    XPCOMUtils.defineLazyGetter(this, "styleSheet", function() {
+      for (let i = document.styleSheets.length - 1; i >= 0; i--) {
+        let sheet = document.styleSheets[i];
+        if (sheet.href == "chrome://browser/skin/browser-lightweightTheme.css")
+          return sheet;
+      }
+    });
+
+    Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
+    if (document.documentElement.hasAttribute("lwtheme"))
+      this.updateStyleSheet(document.documentElement.style.backgroundImage);
+  },
+
+  uninit: function () {
+    Services.obs.removeObserver(this, "lightweight-theme-styling-update");
+  },
+
+  /**
+   * Append the headerImage to the background-image property of all rulesets in
+   * browser-lightweightTheme.css.
+   *
+   * @param headerImage - a string containing a CSS image for the lightweight theme header.
+   */
+  updateStyleSheet: function(headerImage) {
+    if (!this.styleSheet)
+      return;
+    for (let i = 0; i < this.styleSheet.cssRules.length; i++) {
+      let rule = this.styleSheet.cssRules[i];
+      if (!rule.style.backgroundImage)
+        continue;
+
+      if (!this._modifiedStyles[i])
+        this._modifiedStyles[i] = { backgroundImage: rule.style.backgroundImage };
+
+      rule.style.backgroundImage = this._modifiedStyles[i].backgroundImage + ", " + headerImage;
+    }
+  },
+
+  // nsIObserver
+  observe: function (aSubject, aTopic, aData) {
+    if (aTopic != "lightweight-theme-styling-update" || !this.styleSheet)
+      return;
+
+    let themeData = JSON.parse(aData);
+    this.updateStyleSheet("url(" + themeData.headerURL + ")");
+  },
+};
