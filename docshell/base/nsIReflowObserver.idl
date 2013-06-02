@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISupports.idl"
+
+[scriptable, uuid(832e692c-c4a6-11e2-8fd1-dce678957a39)]
+interface nsIReflowObserver : nsISupports
+{
+  /**
+   * Called when an uninterruptible reflow has occurred.
+   *
+   * @param start timestamp when reflow ended, in milliseconds since
+   *              navigationStart (accurate to 1/1000 of a ms)
+   * @param end   timestamp when reflow ended, in milliseconds since
+   *              navigationStart (accurate to 1/1000 of a ms)
+   */
+  void reflow(in DOMHighResTimeStamp start,
+              in DOMHighResTimeStamp end);
+
+  /**
+   * Called when an interruptible reflow has occurred.
+   *
+   * @param start timestamp when reflow ended, in milliseconds since
+   *              navigationStart (accurate to 1/1000 of a ms)
+   * @param end   timestamp when reflow ended, in milliseconds since
+   *              navigationStart (accurate to 1/1000 of a ms)
+   */
+  void reflowInterruptible(in DOMHighResTimeStamp start,
+                           in DOMHighResTimeStamp end);
+};

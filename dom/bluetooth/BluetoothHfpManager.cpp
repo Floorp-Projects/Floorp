@@ -58,7 +58,7 @@ namespace {
 
   // Wait for 2 seconds for Dialer processing event 'BLDN'. '2' seconds is a
   // magic number. The mechanism should be revised once we can get call history.
-  static int sWaitingForProcessingBLDNInterval = 2000; //unit: ms
+  static int sWaitingForDialingInterval = 2000; //unit: ms
 } // anonymous namespace
 
 /* CallState for sCINDItems[CINDType::CALL].value
@@ -276,8 +276,8 @@ private:
   {
     MOZ_ASSERT(gBluetoothHfpManager);
 
-    if (!gBluetoothHfpManager->mBLDNProcessed) {
-      gBluetoothHfpManager->mBLDNProcessed = true;
+    if (!gBluetoothHfpManager->mDialingRequestProcessed) {
+      gBluetoothHfpManager->mDialingRequestProcessed = true;
       gBluetoothHfpManager->SendLine("ERROR");
     }
   }
@@ -374,7 +374,7 @@ BluetoothHfpManager::Reset()
   mCMEE = false;
   mCMER = false;
   mReceiveVgsFlag = false;
-  mBLDNProcessed = true;
+  mDialingRequestProcessed = true;
 
   ResetCallArray();
 }
@@ -881,15 +881,19 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     os->NotifyObservers(nullptr, "bluetooth-volume-change", data.get());
   } else if ((msg.Find("AT+BLDN") != -1) || (msg.Find("ATD>") != -1)) {
     // Dialer app of FFOS v1 does not have plan to support Memory Dailing.
-    // However, in order to pass Bluetooth HFP certification, we have to
-    // make a call when we receive AT command 'ATD>n'. The solution here
-    // is firing a 'BLDN' event to Dialer to do 'Last Number Redial'.
-    mBLDNProcessed = false;
-    NotifyDialer(NS_LITERAL_STRING("BLDN"));
+    // However, in order to pass Bluetooth HFP certification, we still have to
+    // make a call when we receive AT command 'ATD>n'.
+    mDialingRequestProcessed = false;
+
+    if (msg.Find("AT+BLDN") != -1) {
+      NotifyDialer(NS_LITERAL_STRING("BLDN"));
+    } else {
+      NotifyDialer(NS_ConvertUTF8toUTF16(msg));
+    }
 
     MessageLoop::current()->
       PostDelayedTask(FROM_HERE, new RespondToBLDNTask(),
-                      sWaitingForProcessingBLDNInterval);
+                      sWaitingForDialingInterval);
 
     // Don't send response 'OK' here because we'll respond later in either
     // RespondToBLDNTask or HandleCallStateChanged()
@@ -1309,9 +1313,9 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
       }
       break;
     case nsITelephonyProvider::CALL_STATE_DIALING:
-      if (!mBLDNProcessed) {
+      if (!mDialingRequestProcessed) {
         SendLine("OK");
-        mBLDNProcessed = true;
+        mDialingRequestProcessed = true;
       }
 
       UpdateCIND(CINDType::CALLSETUP, CallSetupState::OUTGOING, aSend);
