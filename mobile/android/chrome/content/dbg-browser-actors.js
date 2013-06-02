@@ -5,130 +5,98 @@
 
 "use strict";
 /**
- * Fennec-specific root actor that extends BrowserRootActor and overrides some
- * of its methods.
+ * Fennec-specific actors.
  */
 
 /**
- * The function that creates the root actor. DebuggerServer expects to find this
- * function in the loaded actors in order to initialize properly.
- */
-function createRootActor(aConnection) {
-  return new DeviceRootActor(aConnection);
-}
-
-/**
- * Creates the root actor that client-server communications always start with.
- * The root actor is responsible for the initial 'hello' packet and for
- * responding to a 'listTabs' request that produces the list of currently open
- * tabs.
+ * Construct a root actor appropriate for use in a server running in a
+ * browser on Android. The returned root actor:
+ * - respects the factories registered with DebuggerServer.addGlobalActor,
+ * - uses a MobileTabList to supply tab actors,
+ * - sends all navigator:browser window documents a Debugger:Shutdown event
+ *   when it exits.
  *
- * @param aConnection DebuggerServerConnection
+ * * @param aConnection DebuggerServerConnection
  *        The conection to the client.
  */
-function DeviceRootActor(aConnection) {
-  BrowserRootActor.call(this, aConnection);
+function createRootActor(aConnection)
+{
+  let parameters = {
+    tabList: new MobileTabList(aConnection),
+    globalActorFactories: DebuggerServer.globalActorFactories,
+    onShutdown: sendShutdownEvent
+  };
+  return new RootActor(aConnection, parameters);
 }
 
-DeviceRootActor.prototype = new BrowserRootActor();
-
 /**
- * Handles the listTabs request.  Builds a list of actors
- * for the tabs running in the process.  The actors will survive
- * until at least the next listTabs request.
+ * A live list of BrowserTabActors representing the current browser tabs,
+ * to be provided to the root actor to answer 'listTabs' requests.
+ *
+ * This object also takes care of listening for TabClose events and
+ * onCloseWindow notifications, and exiting the BrowserTabActors concerned.
+ *
+ * (See the documentation for RootActor for the definition of the "live
+ * list" interface.)
+ *
+ * @param aConnection DebuggerServerConnection
+ *     The connection in which this list's tab actors may participate.
+ *
+ * @see BrowserTabList for more a extensive description of how tab list objects
+ *      work.
  */
-DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
-  // Get actors for all the currently-running tabs (reusing
-  // existing actors where applicable), and store them in
-  // an ActorPool.
+function MobileTabList(aConnection)
+{
+  BrowserTabList.call(this, aConnection);
+}
 
-  let actorPool = new ActorPool(this.conn);
-  let tabActorList = [];
+MobileTabList.prototype = Object.create(BrowserTabList.prototype);
 
-  // Get the chrome debugger actor.
-  let actor = this._chromeDebugger;
-  if (!actor) {
-    actor = new ChromeDebuggerActor(this);
-    actor.parentID = this.actorID;
-    this._chromeDebugger = actor;
-    actorPool.addActor(actor);
-  }
+MobileTabList.prototype.constructor = MobileTabList;
 
-  let win = windowMediator.getMostRecentWindow("navigator:browser");
-  this.browser = win.BrowserApp.selectedBrowser;
+MobileTabList.prototype.iterator = function() {
+  // As a sanity check, make sure all the actors presently in our map get
+  // picked up when we iterate over all windows' tabs.
+  let initialMapSize = this._actorByBrowser.size;
+  let foundCount = 0;
 
-  // Watch the window for tab closes so we can invalidate
-  // actors as needed.
-  this.watchWindow(win);
+  // To avoid mysterious behavior if tabs are closed or opened mid-iteration,
+  // we update the map first, and then make a second pass over it to yield
+  // the actors. Thus, the sequence yielded is always a snapshot of the
+  // actors that were live when we began the iteration.
 
-  let tabs = win.BrowserApp.tabs;
-  let selected;
+  // Iterate over all navigator:browser XUL windows.
+  for (let win of allAppShellDOMWindows("navigator:browser")) {
+    let selectedTab = win.BrowserApp.selectedBrowser;
 
-  for each (let tab in tabs) {
-    let browser = tab.browser;
+    // For each tab in this XUL window, ensure that we have an actor for
+    // it, reusing existing actors where possible. We actually iterate
+    // over 'browser' XUL elements, and BrowserTabActor uses
+    // browser.contentWindow.wrappedJSObject as the debuggee global.
+    for (let tab of win.BrowserApp.tabs) {
+      let browser = tab.browser;
+      // Do we have an existing actor for this browser? If not, create one.
+      let actor = this._actorByBrowser.get(browser);
+      if (actor) {
+        foundCount++;
+      } else {
+        actor = new BrowserTabActor(this._connection, browser);
+        this._actorByBrowser.set(browser, actor);
+      }
 
-    if (browser == this.browser) {
-      selected = tabActorList.length;
+      // Set the 'selected' properties on all actors correctly.
+      actor.selected = (browser === selectedTab);
     }
-
-    let actor = this._tabActors.get(browser);
-    if (!actor) {
-      actor = new BrowserTabActor(this.conn, browser);
-      actor.parentID = this.actorID;
-      this._tabActors.set(browser, actor);
-    }
-
-    actorPool.addActor(actor);
-    tabActorList.push(actor);
   }
 
-  this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
+  if (this._testing && initialMapSize !== foundCount)
+    throw Error("_actorByBrowser map contained actors for dead tabs");
 
-  // Now drop the old actorID -> actor map.  Actors that still
-  // mattered were added to the new map, others will go
-  // away.
-  if (this._tabActorPool) {
-    this.conn.removeActorPool(this._tabActorPool);
+  this._mustNotify = true;
+  this._checkListening();
+
+  /* Yield the values. */
+  for (let [browser, actor] of this._actorByBrowser) {
+    yield actor;
   }
-
-  this._tabActorPool = actorPool;
-  this.conn.addActorPool(this._tabActorPool);
-
-  let response = {
-    "from": "root",
-    "selected": selected,
-    "tabs": [actor.grip() for (actor of tabActorList)],
-    "chromeDebugger": this._chromeDebugger.actorID
-  };
-  this._appendExtraActors(response);
-  return response;
-};
-
-/**
- * Return the tab container for the specified window.
- */
-DeviceRootActor.prototype.getTabContainer = function DRA_getTabContainer(aWindow) {
-  return aWindow.document.getElementById("browsers");
-};
-
-/**
- * When a tab is closed, exit its tab actor.  The actor
- * will be dropped at the next listTabs request.
- */
-DeviceRootActor.prototype.onTabClosed = function DRA_onTabClosed(aEvent) {
-  this.exitTabActor(aEvent.target.browser);
-};
-
-// nsIWindowMediatorListener
-DeviceRootActor.prototype.onCloseWindow = function DRA_onCloseWindow(aWindow) {
-  if (aWindow.BrowserApp) {
-    this.unwatchWindow(aWindow);
-  }
-};
-
-/**
- * The request types this actor can handle.
- */
-DeviceRootActor.prototype.requestTypes = {
-  "listTabs": DeviceRootActor.prototype.onListTabs
 };

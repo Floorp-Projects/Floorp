@@ -225,5 +225,7 @@ window.setPanel = function(panel) {
 }
 
 window.onunload = function() {
-  window.fontInspector.destroy();
+  if (window.fontInspector) {
+    window.fontInspector.destroy();
+  }
 }
