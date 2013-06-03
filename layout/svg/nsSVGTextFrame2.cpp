@@ -3043,6 +3043,52 @@ nsSVGTextFrame2::GetType() const
   return nsGkAtoms::svgTextFrame2;
 }
 
+void
+nsSVGTextFrame2::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    // We need this DidSetStyleContext override to handle cases like this:
+    //
+    //   <defs>
+    //     <g>
+    //       <mask>
+    //         <text>...</text>
+    //       </mask>
+    //     </g>
+    //   </defs>
+    //
+    // where the <text> is non-display, and a style change occurs on the <defs>,
+    // the <g>, the <mask>, or the <text> itself.  If the style change happened
+    // on the parent of the <defs>, then in
+    // nsSVGDisplayContainerFrame::ReflowSVG, we would find the non-display
+    // <defs> container and then call ReflowSVGNonDisplayText on it.  If we do
+    // not actually reflow the parent of the <defs>, then without this
+    // DidSetStyleContext we would (a) not cause the <text>'s anonymous block
+    // child to be reflowed when it is next painted, and (b) not cause the
+    // <text> to be repainted anyway since the user of the <mask> would not
+    // know it needs to be repainted.
+    ReflowSVGNonDisplayText();
+  }
+}
+
+void
+nsSVGTextFrame2::ReflowSVGNonDisplayText()
+{
+  MOZ_ASSERT(mState & NS_STATE_SVG_NONDISPLAY_CHILD,
+             "only call ReflowSVGNonDisplayText if the frame is "
+             "NS_STATE_SVG_NONDISPLAY_CHILD");
+
+  // We had a style change, so we mark this frame as dirty so that the next
+  // time it is painted, we reflow the anonymous block frame.
+  AddStateBits(NS_FRAME_IS_DIRTY);
+
+  // We also need to call InvalidateRenderingObservers, so that if the <text>
+  // element is within a <mask>, say, the element referencing the <mask> will
+  // be updated, which will then cause this nsSVGTextFrame2 to be painted and
+  // in doing so cause the anonymous block frame to be reflowed.
+  nsSVGEffects::InvalidateRenderingObservers(this);
+}
+
 NS_IMPL_ISUPPORTS1(nsSVGTextFrame2::MutationObserver, nsIMutationObserver)
 
 void

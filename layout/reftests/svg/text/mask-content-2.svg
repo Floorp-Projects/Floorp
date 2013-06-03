@@ -13,6 +13,7 @@
     <mask id="m" x="0" y="0" width="600" height="400">
       <g style="font: 32px Ahem; white-space: pre; fill: white">
         <text x="20" y="100">one</text>
+        <text x="20" y="150" style="text-decoration: line-through">   </text>
       </g>
     </mask>
   </defs>
