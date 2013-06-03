@@ -1641,7 +1641,7 @@ fuzzy-if(d2d,5,1) == 622585-1.html 622585-1-ref.html # bug 789402
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
 skip-if(B2G) fails-if(Android) == 632423-1.html 632423-1-ref.html
-skip-if(Android||B2G) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 632781-verybig.html 632781-ref.html
+skip-if(Android||B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 fails-if(Android) == 633344-1.html 633344-1-ref.html
 fails-if(Android) == 634232-1.html 634232-1-ref.html
