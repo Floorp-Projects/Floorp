@@ -59,6 +59,8 @@ JS_ComputeThis(JSContext *cx, JS::Value *vp);
 
 namespace JS {
 
+extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
+
 /*
  * JS::CallReceiver encapsulates access to the callee, |this|, and eventual
  * return value for a function call.  The principal way to create a
@@ -296,6 +298,16 @@ class MOZ_STACK_CLASS CallArgsBase :
      */
     Value get(unsigned i) const {
         return i < length() ? this->argv_[i] : UndefinedValue();
+    }
+
+    /*
+     * Returns the i-th zero-indexed argument as a handle, or |undefined| if
+     * there's no such argument.
+     */
+    HandleValue handleOrUndefinedAt(unsigned i) const {
+        return i < length()
+               ? HandleValue::fromMarkedLocation(&this->argv_[i])
+               : UndefinedHandleValue;
     }
 
     /*

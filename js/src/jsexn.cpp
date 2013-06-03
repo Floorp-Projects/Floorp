@@ -559,7 +559,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     /* Set the 'message' property. */
     RootedString message(cx);
     if (args.hasDefined(0)) {
-        message = ToString<CanGC>(cx, args[0]);
+        message = ToString<CanGC>(cx, args.handleAt(0));
         if (!message)
             return false;
         args[0].setString(message);
@@ -574,7 +574,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     RootedScript script(cx, iter.done() ? NULL : iter.script());
     RootedString filename(cx);
     if (args.length() > 1) {
-        filename = ToString<CanGC>(cx, args[1]);
+        filename = ToString<CanGC>(cx, args.handleAt(1));
         if (!filename)
             return false;
         args[1].setString(filename);
@@ -1083,7 +1083,7 @@ js_ReportUncaughtException(JSContext *cx)
         }
 
         if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
-            JSString *tmp = ToString<CanGC>(cx, roots[4]);
+            JSString *tmp = ToString<CanGC>(cx, HandleValue::fromMarkedLocation(&roots[4]));
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }

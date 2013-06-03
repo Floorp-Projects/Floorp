@@ -288,6 +288,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
     double d;
     JSString *str;
     RootedObject obj(cx);
+    RootedValue val(cx);
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -347,7 +348,8 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             break;
           case 'S':
           case 'W':
-            str = ToString<CanGC>(cx, *sp);
+            val = *sp;
+            str = ToString<CanGC>(cx, val);
             if (!str)
                 return JS_FALSE;
             *sp = STRING_TO_JSVAL(str);

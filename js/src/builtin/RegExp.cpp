@@ -277,7 +277,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 
     RegExpFlag flags = RegExpFlag(0);
     if (args.hasDefined(1)) {
-        RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
+        RootedString flagStr(cx, ToString<CanGC>(cx, args.handleAt(1)));
         if (!flagStr)
             return false;
         args[1].setString(flagStr);
@@ -602,7 +602,7 @@ ExecuteRegExp(JSContext *cx, CallArgs args, MatchConduit &matches)
     RootedObject regexp(cx, &args.thisv().toObject());
 
     /* Step 2. */
-    RootedString string(cx, ToString<CanGC>(cx, args.get(0)));
+    RootedString string(cx, ToString<CanGC>(cx, args.handleOrUndefinedAt(0)));
     if (!string)
         return RegExpRunStatus_Error;
 
@@ -622,7 +622,7 @@ regexp_exec_impl(JSContext *cx, CallArgs args)
      * and CreateRegExpMatchResult().
      */
     RootedObject regexp(cx, &args.thisv().toObject());
-    RootedString string(cx, ToString<CanGC>(cx, args.get(0)));
+    RootedString string(cx, ToString<CanGC>(cx, args.handleOrUndefinedAt(0)));
     if (!string)
         return false;
 

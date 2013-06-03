@@ -447,8 +447,10 @@ inline bool
 CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, unsigned attrs,
            unsigned shortid, JSBool strict, MutableHandleValue vp)
 {
-    if (attrs & JSPROP_SETTER)
-        return InvokeGetterOrSetter(cx, obj, CastAsObjectJsval(op), 1, vp.address(), vp.address());
+    if (attrs & JSPROP_SETTER) {
+        RootedValue opv(cx, CastAsObjectJsval(op));
+        return InvokeGetterOrSetter(cx, obj, opv, 1, vp.address(), vp.address());
+    }
 
     if (attrs & JSPROP_GETTER)
         return js_ReportGetterOnlyAssignment(cx);
