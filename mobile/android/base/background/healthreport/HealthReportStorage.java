@@ -34,12 +34,16 @@ public interface HealthReportStorage {
     protected static final int FLAG_LAST     = 1 << 9;
     protected static final int FLAG_COUNTER  = 1 << 10;
 
+    protected static final int FLAG_COUNTED  = 1 << 14;
+
     public static final int TYPE_INTEGER_DISCRETE = FLAG_INTEGER | FLAG_DISCRETE;
     public static final int TYPE_INTEGER_LAST     = FLAG_INTEGER | FLAG_LAST;
     public static final int TYPE_INTEGER_COUNTER  = FLAG_INTEGER | FLAG_COUNTER;
 
     public static final int TYPE_STRING_DISCRETE  = FLAG_STRING | FLAG_DISCRETE;
     public static final int TYPE_STRING_LAST      = FLAG_STRING | FLAG_LAST;
+
+    public static final int TYPE_COUNTED_STRING_DISCRETE = FLAG_COUNTED | TYPE_STRING_DISCRETE;
 
     protected int fieldID = UNKNOWN_TYPE_OR_FIELD_ID;
     protected int flags;
@@ -71,6 +75,15 @@ public interface HealthReportStorage {
 
     public boolean isDiscreteField() {
       return (this.flags & FLAG_DISCRETE) > 0;
+    }
+
+    /**
+     * True if the accrued values are intended to be bucket-counted. For strings,
+     * each discrete value will name a bucket, with the number of instances per
+     * day being the value in the bucket.
+     */
+    public boolean isCountedField() {
+      return (this.flags & FLAG_COUNTED) > 0;
     }
   }
 
