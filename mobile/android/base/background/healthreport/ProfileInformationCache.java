@@ -26,6 +26,7 @@ import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ProfileInfor
 public class ProfileInformationCache implements ProfileInformationProvider {
   private static final String LOG_TAG = "GeckoProfileInfo";
   private static final String CACHE_FILE = "profile_info_cache.json";
+  public static final int FORMAT_VERSION = 1;
 
   protected boolean initialized = false;
   protected boolean needsWrite = false;
@@ -51,6 +52,7 @@ public class ProfileInformationCache implements ProfileInformationProvider {
   public JSONObject toJSON() {
     JSONObject object = new JSONObject();
     try {
+      object.put("version", FORMAT_VERSION);
       object.put("blocklist", blocklistEnabled);
       object.put("telemetry", telemetryEnabled);
       object.put("profileCreated", profileCreationTime);
@@ -63,11 +65,50 @@ public class ProfileInformationCache implements ProfileInformationProvider {
     return object;
   }
 
-  private void fromJSON(JSONObject object) throws JSONException {
-    blocklistEnabled = object.getBoolean("blocklist");
-    telemetryEnabled = object.getBoolean("telemetry");
-    profileCreationTime = object.getLong("profileCreated");
-    addons = object.optJSONObject("addons");
+  /**
+   * Attempt to restore this object from a JSON blob.
+   *
+   * @return false if there's a version mismatch or an error, true on success.
+   */
+  private boolean fromJSON(JSONObject object) throws JSONException {
+    int version = object.optInt("version", 1);
+    switch (version) {
+    case FORMAT_VERSION:
+      blocklistEnabled = object.getBoolean("blocklist");
+      telemetryEnabled = object.getBoolean("telemetry");
+      profileCreationTime = object.getLong("profileCreated");
+      addons = object.optJSONObject("addons");
+      return true;
+    default:
+      Logger.warn(LOG_TAG, "Unable to restore from version " + version + " PIC file: expecting " + FORMAT_VERSION);
+      return false;
+    }
+  }
+
+  protected JSONObject readFromFile() throws FileNotFoundException, JSONException {
+    Scanner scanner = null;
+    try {
+      scanner = new Scanner(file, "UTF-8");
+      final String contents = scanner.useDelimiter("\\A").next();
+      return new JSONObject(contents);
+    } finally {
+      if (scanner != null) {
+        scanner.close();
+      }
+    }
+  }
+
+  protected void writeToFile(JSONObject object) throws IOException {
+    Logger.debug(LOG_TAG, "Writing profile information.");
+    Logger.pii(LOG_TAG, "Writing to file: " + file.getAbsolutePath());
+    FileOutputStream stream = new FileOutputStream(file);
+    OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
+    try {
+      writer.append(object.toString());
+      needsWrite = false;
+    } finally {
+      writer.close();
+    }
   }
 
   /**
@@ -86,16 +127,7 @@ public class ProfileInformationCache implements ProfileInformationProvider {
       throw new IOException("Couldn't serialize JSON.");
     }
 
-    Logger.debug(LOG_TAG, "Writing profile information.");
-    Logger.pii(LOG_TAG, "Writing to file: " + file.getAbsolutePath());
-    FileOutputStream stream = new FileOutputStream(file);
-    OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
-    try {
-      writer.append(object.toString());
-      needsWrite = false;
-    } finally {
-      writer.close();
-    }
+    writeToFile(object);
   }
 
   /**
@@ -118,11 +150,11 @@ public class ProfileInformationCache implements ProfileInformationProvider {
     Logger.info(LOG_TAG, "Restoring ProfileInformationCache from file.");
     Logger.pii(LOG_TAG, "Restoring from file: " + file.getAbsolutePath());
 
-    Scanner scanner = null;
     try {
-      scanner = new Scanner(file, "UTF-8");
-      final String contents = scanner.useDelimiter("\\A").next();
-      fromJSON(new JSONObject(contents));
+      if (!fromJSON(readFromFile())) {
+        // No need to blow away the file; the caller can eventually overwrite it.
+        return false;
+      }
       initialized = true;
       needsWrite = false;
       return true;
@@ -130,10 +162,6 @@ public class ProfileInformationCache implements ProfileInformationProvider {
       return false;
     } catch (JSONException e) {
       return false;
-    } finally {
-      if (scanner != null) {
-        scanner.close();
-      }
     }
   }
 
