@@ -26,15 +26,6 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace layers {
 
-void
-AsyncCompositionManager::SetTransformation(float aScale,
-                                           const nsIntPoint& aScrollOffset)
-{
-  mXScale = aScale;
-  mYScale = aScale;
-  mScrollOffset = aScrollOffset;
-}
-
 enum Op { Resolve, Detach };
 
 static bool
@@ -454,8 +445,11 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
   gfx::Point offset(0, 0);
+  ScreenPoint scrollOffset(0, 0);
+  float scaleX = 1.0,
+        scaleY = 1.0;
   SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
-                   mScrollOffset, mXScale, mYScale, fixedLayerMargins,
+                   scrollOffset, scaleX, scaleY, fixedLayerMargins,
                    offset);
   mLayersUpdated = false;
 
@@ -468,8 +462,8 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   // primary scrollable layer. We compare this to the desired zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  float tempScaleDiffX = rootScaleX * mXScale;
-  float tempScaleDiffY = rootScaleY * mYScale;
+  float tempScaleDiffX = rootScaleX * scaleX;
+  float tempScaleDiffY = rootScaleY * scaleY;
 
   nsIntPoint metricsScrollOffset(0, 0);
   if (metrics.IsScrollable()) {
@@ -477,13 +471,13 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   }
 
   nsIntPoint scrollCompensation(
-    (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
-    (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
+    (scrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * scaleX,
+    (scrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * scaleY);
   treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
-                                            gfxSize(mXScale, mYScale)));
+                                            gfxSize(scaleX, scaleY)));
 
   // Translate fixed position layers so that they stay in the correct position
-  // when mScrollOffset and metricsScrollOffset differ.
+  // when scrollOffset and metricsScrollOffset differ.
   gfxPoint fixedOffset;
   gfxSize scaleDiff;
 
@@ -494,7 +488,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
     fixedOffset.x = -metricsScrollOffset.x;
     scaleDiff.width = std::min(1.0f, metrics.mCompositionBounds.width / (float)mContentRect.width);
   } else {
-    fixedOffset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
+    fixedOffset.x = clamped(scrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
                        mContentRect.XMost() - metrics.mCompositionBounds.width / tempScaleDiffX) -
                metricsScrollOffset.x;
     scaleDiff.width = tempScaleDiffX;
@@ -504,7 +498,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
     fixedOffset.y = -metricsScrollOffset.y;
     scaleDiff.height = std::min(1.0f, metrics.mCompositionBounds.height / (float)mContentRect.height);
   } else {
-    fixedOffset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
+    fixedOffset.y = clamped(scrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
                        mContentRect.YMost() - metrics.mCompositionBounds.height / tempScaleDiffY) -
                metricsScrollOffset.y;
     scaleDiff.height = tempScaleDiffY;
@@ -589,7 +583,7 @@ void
 AsyncCompositionManager::SyncViewportInfo(const nsIntRect& aDisplayPort,
                                           float aDisplayResolution,
                                           bool aLayersUpdated,
-                                          nsIntPoint& aScrollOffset,
+                                          ScreenPoint& aScrollOffset,
                                           float& aScaleX, float& aScaleY,
                                           gfx::Margin& aFixedLayerMargins,
                                           gfx::Point& aOffset)

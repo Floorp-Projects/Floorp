@@ -58,6 +58,11 @@ struct LayerPixel {
 typedef gfx::RectTyped<LayerPixel> LayerRect;
 typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
 
+struct ScreenPixel {
+};
+
+typedef gfx::PointTyped<ScreenPixel> ScreenPoint;
+
 };
 
 #endif

@@ -374,7 +374,7 @@ public:
     void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const CSSRect& aCssPageRect);
     void SetPageRect(const CSSRect& aCssPageRect);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
-                          nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
+                          ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
                           gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset);
     void SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                           bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
