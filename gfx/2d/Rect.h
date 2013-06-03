@@ -41,6 +41,17 @@ struct IntRectTyped :
     void Round() {}
     void RoundIn() {}
     void RoundOut() {}
+
+    // XXX When all of the code is ported, the following functions to convert to and from
+    // unknown types should be removed.
+
+    static IntRectTyped<units> FromUnknownRect(const IntRectTyped<UnknownUnits>& rect) {
+        return IntRectTyped<units>(rect.x, rect.y, rect.width, rect.height);
+    }
+
+    IntRectTyped<UnknownUnits> ToUnknownRect() const {
+        return IntRectTyped<UnknownUnits>(this->x, this->y, this->width, this->height);
+    }
 };
 typedef IntRectTyped<UnknownUnits> IntRect;
 
@@ -74,6 +85,17 @@ struct RectTyped :
       return RectTyped<units>(Float(aOut->x), Float(aOut->y), 
                               Float(aOut->width), Float(aOut->height))
              .IsEqualEdges(*this);
+    }
+
+    // XXX When all of the code is ported, the following functions to convert to and from
+    // unknown types should be removed.
+
+    static RectTyped<units> FromUnknownRect(const RectTyped<UnknownUnits>& rect) {
+        return RectTyped<units>(rect.x, rect.y, rect.width, rect.height);
+    }
+
+    RectTyped<UnknownUnits> ToUnknownRect() const {
+        return RectTyped<UnknownUnits>(this->x, this->y, this->width, this->height);
     }
 };
 typedef RectTyped<UnknownUnits> Rect;

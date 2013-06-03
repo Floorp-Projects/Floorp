@@ -237,7 +237,10 @@ ThebesLayerComposite::GetCompositionBounds()
       scrollableLayer = parent;
     if (!parentMetrics.mDisplayPort.IsEmpty() && scrollableLayer) {
       // Get the composition bounds, so as not to waste rendering time.
-      compositionBounds = gfxRect(parentMetrics.mCompositionBounds);
+      compositionBounds = gfxRect(parentMetrics.mCompositionBounds.x,
+                                  parentMetrics.mCompositionBounds.y,
+                                  parentMetrics.mCompositionBounds.width,
+                                  parentMetrics.mCompositionBounds.height);
 
       // Calculate the scale transform applied to the root layer to determine
       // the content resolution.

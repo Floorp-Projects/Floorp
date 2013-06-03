@@ -121,8 +121,8 @@ private:
   void SetFirstPaintViewport(const nsIntPoint& aOffset,
                              float aZoom,
                              const nsIntRect& aPageRect,
-                             const gfx::Rect& aCssPageRect);
-  void SetPageRect(const gfx::Rect& aCssPageRect);
+                             const CSSRect& aCssPageRect);
+  void SetPageRect(const CSSRect& aCssPageRect);
   void SyncViewportInfo(const nsIntRect& aDisplayPort,
                         float aDisplayResolution,
                         bool aLayersUpdated,
@@ -132,7 +132,7 @@ private:
                         gfx::Point& aOffset);
   void SyncFrameMetrics(const gfx::Point& aScrollOffset,
                         float aZoom,
-                        const gfx::Rect& aCssPageRect,
+                        const CSSRect& aCssPageRect,
                         bool aLayersUpdated,
                         const gfx::Rect& aDisplayPort,
                         float aDisplayResolution,
