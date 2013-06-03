@@ -24,9 +24,17 @@ let WebrtcIndicator = {
   fillPopup: function (aPopup) {
     this._menuitemData = new WeakMap;
     for (let streamData of this.UIModule.activeStreams) {
+      let pageURI = Services.io.newURI(streamData.uri, null, null);
       let menuitem = document.createElement("menuitem");
-      menuitem.setAttribute("label", streamData.uri);
+      menuitem.setAttribute("class", "menuitem-iconic");
+      menuitem.setAttribute("label", streamData.browser.contentTitle || streamData.uri);
       menuitem.setAttribute("tooltiptext", streamData.uri);
+      PlacesUtils.favicons.getFaviconURLForPage(pageURI, function (aURI) {
+        if (aURI) {
+          let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
+          menuitem.setAttribute("image", iconURL);
+        }
+      });
 
       this._menuitemData.set(menuitem, streamData);
 
