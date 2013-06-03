@@ -11,7 +11,8 @@
 #include "jscompartment.h"
 #include "IonCode.h"
 #include "jsinfer.h"
-#include "jsinterp.h"
+
+#include "vm/Interpreter.h"
 
 #include "IonAllocPolicy.h"
 #include "BaselineJIT.h"
