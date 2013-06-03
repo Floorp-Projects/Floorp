@@ -683,14 +683,6 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
 
-/* These buttons are going to be removed in later bugs, but until then
- * we're overriding the menuPanel-icons sprites with these ones with
- * !important.
- *
- * Here are the relevant removal bugs:
- * #zoom-out-button, #zoom-in-button - Bug 870897
- */
-
 #zoom-out-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar") !important;
 }
