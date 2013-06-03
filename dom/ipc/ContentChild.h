@@ -216,6 +216,8 @@ public:
                                       const bool& aIsMediaPresent,
                                       const bool& aIsSharing);
 
+    virtual bool RecvNuwaFork() MOZ_OVERRIDE;
+
     virtual bool RecvNotifyProcessPriorityChanged(const hal::ProcessPriority& aPriority);
     virtual bool RecvMinimizeMemoryUsage();
     virtual bool RecvCancelMinimizeMemoryUsage();
