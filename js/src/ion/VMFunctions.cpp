@@ -367,10 +367,14 @@ ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObje
 bool
 CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code)
 {
-    jschar c;
-    if (!str->getChar(cx, index, &c))
+    JS_ASSERT(index >= 0 &&
+              static_cast<uint32_t>(index) < str->length());
+
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
         return false;
-    *code = c;
+
+    *code = chars[index];
     return true;
 }
 
