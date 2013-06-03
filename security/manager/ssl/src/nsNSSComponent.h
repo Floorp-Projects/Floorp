@@ -20,7 +20,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
-#include "nsIScriptSecurityManager.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMEventTarget.h"
 #include "nsSmartCardMonitor.h"
@@ -300,7 +299,6 @@ private:
   
   Mutex mutex;
   
-  nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
