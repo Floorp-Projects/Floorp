@@ -777,6 +777,9 @@ CustomizeMode.prototype = {
   },
 
   _setDragActive: function(aItem, aValue, aWidth, aAtEnd) {
+    if (!aItem) {
+      return;
+    }
     let node = aItem;
     let window = aItem.ownerDocument.defaultView;
     let direction = window.getComputedStyle(aItem, null).direction;
