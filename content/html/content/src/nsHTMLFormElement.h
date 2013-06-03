@@ -21,6 +21,13 @@
 #include "nsDataHashtable.h"
 #include "nsAsyncDOMEvent.h"
 
+// Including 'windows.h' will #define GetClassInfo to something else.
+#ifdef XP_WIN
+#ifdef GetClassInfo
+#undef GetClassInfo
+#endif
+#endif
+
 class nsFormControlList;
 class nsIMutableArray;
 class nsIURI;
@@ -219,8 +226,7 @@ public:
    */
   bool CheckValidFormSubmission();
 
-  // XXXdholbert This should be MOZ_OVERRIDE, or maybe dropped (see bug 877510)
-  virtual nsXPCClassInfo* GetClassInfo();
+  virtual nsXPCClassInfo* GetClassInfo() MOZ_OVERRIDE;
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
