@@ -12,6 +12,7 @@
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGAnimatedTransformList.h"
+#include "nsSVGTextFrame2.h"
 
 using namespace mozilla;
 
@@ -242,6 +243,50 @@ nsSVGDisplayContainerFrame::GetCoveredRegion()
   return nsSVGUtils::GetCoveredRegion(mFrames);
 }
 
+/**
+ * Traverses a frame tree, marking any nsSVGTextFrame2 frame as dirty
+ * and calling InvalidateRenderingObservers() on it.
+ *
+ * The reason that this helper exists is because nsSVGTextFrame2 is special.
+ * None of the other SVG frames ever need to be reflowed when they have the
+ * NS_STATE_SVG_NONDISPLAY_CHILD bit set on them because their PaintSVG methods
+ * (and those of any containers that they can validly be contained within) do
+ * not make use of mRect or overflow rects. "em" lengths, etc., are resolved
+ * as those elements are painted.
+ *
+ * nsSVGTextFrame2 is different because its anonymous block and inline frames
+ * need to be reflowed in order to get the correct metrics when things like
+ * inherited font-size of an ancestor changes, or a delayed webfont loads and
+ * applies.
+ *
+ * We assume that any change that requires the anonymous kid of an
+ * nsSVGTextFrame2 to reflow will result in an NS_FRAME_IS_DIRTY reflow. When
+ * that reflow reaches an NS_STATE_SVG_NONDISPLAY_CHILD frame it would normally
+ * stop, but this helper looks for any nsSVGTextFrame2 descendants of such
+ * frames and marks them NS_FRAME_IS_DIRTY so that the next time that they are
+ * painted their anonymous kid will first get the necessary reflow.
+ */
+static void
+ReflowSVGNonDisplayText(nsSVGContainerFrame* aContainer)
+{
+  NS_ASSERTION(aContainer->GetStateBits() & NS_FRAME_IS_DIRTY,
+               "expected aContainer to be NS_FRAME_IS_DIRTY");
+  NS_ASSERTION(aContainer->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD,
+               "it is wasteful to call ReflowSVGNonDisplayText on a container "
+               "frame that is not NS_STATE_SVG_NONDISPLAY_CHILD");
+  for (nsIFrame* kid = aContainer->GetFirstPrincipalChild(); kid;
+       kid = kid->GetNextSibling()) {
+    if (kid->GetType() == nsGkAtoms::svgTextFrame2) {
+      static_cast<nsSVGTextFrame2*>(kid)->ReflowSVGNonDisplayText();
+    } else {
+      nsSVGContainerFrame* kidContainer = do_QueryFrame(kid);
+      if (kidContainer && kidContainer->GetContent()->IsSVG()) {
+        ReflowSVGNonDisplayText(kidContainer);
+      }
+    }
+  }
+}
+
 void
 nsSVGDisplayContainerFrame::ReflowSVG()
 {
@@ -287,6 +332,18 @@ nsSVGDisplayContainerFrame::ReflowSVG()
       // nsLayoutUtils::UnionChildOverflow since SVG frame's all use the same
       // frame list, and we're iterating over that list now anyway.
       ConsiderChildOverflow(overflowRects, kid);
+    } else {
+      // Inside a non-display container frame, we might have some
+      // nsSVGTextFrame2s.  We need to cause those to get reflowed in
+      // case they are the target of a rendering observer.
+      NS_ASSERTION(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD,
+                   "expected kid to be a NS_STATE_SVG_NONDISPLAY_CHILD frame");
+      if (kid->GetStateBits() & NS_FRAME_IS_DIRTY) {
+        nsSVGContainerFrame* container = do_QueryFrame(kid);
+        if (container && container->GetContent()->IsSVG()) {
+          ReflowSVGNonDisplayText(container);
+        }
+      }
     }
   }
 

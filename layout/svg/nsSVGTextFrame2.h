@@ -238,11 +238,14 @@ public:
   }
 #endif
 
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+
   /**
    * Finds the nsTextFrame for the closest rendered run to the specified point.
    */
   virtual void FindCloserFrameForSelection(nsPoint aPoint,
                                           FrameWithDistance* aCurrentBestFrame) MOZ_OVERRIDE;
+
 
 
   // nsISVGChildFrame interface:
@@ -289,6 +292,15 @@ public:
    * Enum for NotifyGlyphMetricsChange's aFlags argument.
    */
   enum { ePositioningDirtyDueToMutation = 1 };
+
+  /**
+   * Performs any operations required when this frame is non-display and
+   * has had a style change.  See the two callers for more information:
+   * ReflowSVGNonDisplayText in nsSVGContainer.cpp (called under
+   * nsSVGDisplayContainerFrame::ReflowSVG) and
+   * nsSVGTextFrame2::DidSetStyleContext.
+   */
+  void ReflowSVGNonDisplayText();
 
   /**
    * Updates the mFontSizeScaleFactor value by looking at the range of

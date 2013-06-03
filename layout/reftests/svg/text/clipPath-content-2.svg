@@ -10,13 +10,12 @@
     }
   </style>
   <defs>
-    <mask id="m" x="0" y="0" width="600" height="400">
-      <g style="font: 32px Ahem; white-space: pre; fill: white">
-        <text x="20" y="100">one</text>
-      </g>
-    </mask>
+    <clipPath id="c" x="0" y="0" width="600" height="400">
+      <text x="20" y="100" style="font: 32px Ahem; white-space: pre">one</text>
+      <text x="20" y="150" style="font: 32px Ahem; white-space: pre; text-decoration: line-through">   </text>
+    </clipPath>
   </defs>
-  <rect x="0" y="0" width="600" height="400" fill="blue" mask="url(#m)"/>
+  <rect x="0" y="0" width="600" height="400" fill="blue" clip-path="url(#c)"/>
   <g fill="none" stroke="black" stroke-width="4" shape-rendering="crispEdges">
     <rect x="20" y="73" width="96" height="32"/>
   </g>
