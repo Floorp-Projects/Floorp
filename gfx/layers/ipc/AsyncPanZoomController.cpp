@@ -839,9 +839,7 @@ void AsyncPanZoomController::SetPageRect(const CSSRect& aCSSPageRect) {
   // The page rect is the css page rect scaled by the current zoom.
   // Round the page rect so we don't get any truncation, then get the nsIntRect
   // from this.
-  LayerIntRect pageSize = LayerRect::FromCSSRectRoundOut(aCSSPageRect, resolution);
-  metrics.mContentRect = nsIntRect(pageSize.x, pageSize.y,
-                                   pageSize.width, pageSize.height);
+  metrics.mContentRect = LayerRect::FromCSSRectRoundOut(aCSSPageRect, resolution);
   metrics.mScrollableRect = aCSSPageRect;
 
   mFrameMetrics = metrics;

@@ -68,6 +68,7 @@ struct LayerPixel {
 };
 
 typedef gfx::IntPointTyped<LayerPixel> LayerIntPoint;
+typedef gfx::IntSizeTyped<LayerPixel> LayerIntSize;
 typedef gfx::RectTyped<LayerPixel> LayerRect;
 typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
 
