@@ -2015,7 +2015,7 @@ var NativeWindow = {
       if (itemArray.length == 0)
         return;
 
-      let prompt = new Promt({
+      let prompt = new Prompt({
         window: aTarget.ownerDocument.defaultView,
         title: title
       }).setSingleChoiceItems(itemArray)
