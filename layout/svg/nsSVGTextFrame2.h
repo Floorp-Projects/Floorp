@@ -294,13 +294,32 @@ public:
   enum { ePositioningDirtyDueToMutation = 1 };
 
   /**
-   * Performs any operations required when this frame is non-display and
-   * has had a style change.  See the two callers for more information:
-   * ReflowSVGNonDisplayText in nsSVGContainer.cpp (called under
-   * nsSVGDisplayContainerFrame::ReflowSVG) and
-   * nsSVGTextFrame2::DidSetStyleContext.
+   * Reflows the anonymous block frame of this non-display nsSVGTextFrame2.
+   *
+   * When we are under nsSVGDisplayContainerFrame::ReflowSVG, we need to
+   * reflow any nsSVGTextFrame2 frames in the subtree in case they are
+   * being observed (by being for example in a <mask>) and the change
+   * that caused the reflow would not already have caused a reflow.
+   *
+   * Note that displayed nsSVGTextFrame2s are reflowed as needed, when PaintSVG
+   * is called or some SVG DOM method is called on the element.
    */
   void ReflowSVGNonDisplayText();
+
+  /**
+   * This is a function that behaves similarly to nsSVGUtils::ScheduleReflowSVG,
+   * but which will skip over any ancestor non-display container frames on the
+   * way to the nsSVGOuterSVGFrame.  It exists for the situation where a
+   * non-display <text> element has changed and needs to ensure ReflowSVG will
+   * be called on its closest display container frame, so that
+   * nsSVGDisplayContainerFrame::ReflowSVG will call ReflowSVGNonDisplayText on
+   * it.
+   *
+   * The only case where we have to do this is in response to a style change on
+   * a non-display <text>; the only caller of ScheduleReflowSVGNonDisplayText
+   * currently is nsSVGTextFrame2::DidSetStyleContext.
+   */
+  void ScheduleReflowSVGNonDisplayText();
 
   /**
    * Updates the mFontSizeScaleFactor value by looking at the range of
@@ -352,7 +371,6 @@ private:
     }
     ~AutoCanvasTMForMarker()
     {
-      // Default
       mFrame->mGetCanvasTMForFlag = mOldFor;
     }
   private:
@@ -399,17 +417,19 @@ private:
   };
 
   /**
-   * Reflows the anonymous block child.
+   * Reflows the anonymous block child if it is dirty or has dirty
+   * children, or if the nsSVGTextFrame2 itself is dirty.
+   */
+  void MaybeReflowAnonymousBlockChild();
+
+  /**
+   * Performs the actual work of reflowing the anonymous block child.
    */
   void DoReflow();
 
   /**
-   * Calls FrameNeedsReflow on the anonymous block child.
-   */
-  void RequestReflow(nsIPresShell::IntrinsicDirty aType, uint32_t aBit);
-
-  /**
-   * Reflows the anonymous block child and recomputes mPositions if needed.
+   * Recomputes mPositions by calling DoGlyphPositioning if this information
+   * is out of date.
    */
   void UpdateGlyphPositioning();
 
