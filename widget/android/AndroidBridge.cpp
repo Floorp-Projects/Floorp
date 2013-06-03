@@ -2134,7 +2134,7 @@ AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
 void
 AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset)
+                                gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
@@ -2147,7 +2147,7 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplay
 
 void AndroidBridge::SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                      bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
-                                     bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset)
+                                     bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)

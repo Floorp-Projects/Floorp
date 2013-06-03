@@ -354,7 +354,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
                                       metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
-    gfx::Point offset(0, 0);
+    ScreenPoint offset(0, 0);
     SyncFrameMetrics(scrollOffset, treeTransform.mScale.width, metrics.mScrollableRect,
                      mLayersUpdated, displayPortLayersPixels, 1 / rootTransform.GetXScale(),
                      mIsFirstPaint, fixedLayerMargins, offset);
@@ -435,7 +435,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   displayPort.y += scrollOffsetLayerPixels.y;
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
-  gfx::Point offset(0, 0);
+  ScreenPoint offset(0, 0);
   ScreenPoint scrollOffset(0, 0);
   float scaleX = 1.0,
         scaleY = 1.0;
@@ -577,7 +577,7 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                           ScreenPoint& aScrollOffset,
                                           float& aScaleX, float& aScaleY,
                                           gfx::Margin& aFixedLayerMargins,
-                                          gfx::Point& aOffset)
+                                          ScreenPoint& aOffset)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort,
@@ -599,7 +599,7 @@ AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aScrollOffset,
                                           float aDisplayResolution,
                                           bool aIsFirstPaint,
                                           gfx::Margin& aFixedLayerMargins,
-                                          gfx::Point& aOffset)
+                                          ScreenPoint& aOffset)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncFrameMetrics(aScrollOffset, aZoom, aCssPageRect,
