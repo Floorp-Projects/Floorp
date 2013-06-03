@@ -137,14 +137,12 @@ let CustomizableUIInternal = {
         "urlbar-container",
         "reload-button",
         "stop-button",
-        "urlbar-search-splitter",
         "search-container",
         "webrtc-status-button",
         "bookmarks-menu-button",
         "downloads-button",
         "home-button",
         "social-share-button",
-        "social-toolbar-item",
       ]
     });
     this.registerArea(CustomizableUI.AREA_MENUBAR, {
@@ -345,7 +343,7 @@ let CustomizableUIInternal = {
             } else {
               container.removeChild(node);
             }
-          } else {
+          } else if (node.getAttribute("skipintoolbarset") != "true") {
             this.setLocationAttributes(currentNode, container, aArea);
             node.setAttribute("removable", false);
             LOG("Adding non-removable widget to placements of " + aArea + ": " +
