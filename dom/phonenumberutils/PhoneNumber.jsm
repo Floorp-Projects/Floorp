@@ -239,7 +239,7 @@ this.PhoneNumber = (function (dataBase) {
 
   // Normalize a number by converting unicode numbers and symbols to their
   // ASCII equivalents and removing all non-dialable characters.
-  function NormalizeNumber(number) {
+  function NormalizeNumber(number, numbersOnly) {
     if (typeof number !== 'string') {
       return '';
     }
@@ -248,10 +248,12 @@ this.PhoneNumber = (function (dataBase) {
                             function (ch) {
                               return String.fromCharCode(48 + (ch.charCodeAt(0) & 0xf));
                             });
-    number = number.replace(VALID_ALPHA_PATTERN,
-                            function (ch) {
-                              return String(E161[ch.toLowerCase()] || 0);
-                            });
+    if (!numbersOnly) {
+      number = number.replace(VALID_ALPHA_PATTERN,
+                              function (ch) {
+                                return String(E161[ch.toLowerCase()] || 0);
+                              });
+    }
     number = number.replace(LEADING_PLUS_CHARS_PATTERN, "+");
     number = number.replace(NON_DIALABLE_CHARS, "");
     return number;
