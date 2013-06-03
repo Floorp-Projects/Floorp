@@ -812,6 +812,23 @@ RTCPeerConnection.prototype = {
     if (dict == undefined) {
       dict = {};
     }
+    if (dict.maxRetransmitNum != undefined) {
+      dict.maxRetransmits = dict.maxRetransmitNum;
+      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry maxRetransmitNum used!", null, 0);
+    }
+    if (dict.outOfOrderAllowed != undefined) {
+      dict.ordered = !dict.outOfOrderAllowed; // the meaning is swapped with the name change
+      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry outOfOrderAllowed used!", null, 0);
+    }
+    if (dict.preset != undefined) {
+      dict.negotiated = dict.preset;
+      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry preset used!", null, 0);
+    }
+    if (dict.stream != undefined) {
+      dict.id = dict.stream;
+      this.reportWarning("Deprecated RTCDataChannelInit dictionary entry stream used!", null, 0);
+    }
+
     if (dict.maxRetransmitTime != undefined &&
         dict.maxRetransmitNum != undefined) {
       throw new Components.Exception("Both maxRetransmitTime and maxRetransmitNum cannot be provided");

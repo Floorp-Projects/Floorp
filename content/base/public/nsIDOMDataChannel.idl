@@ -15,7 +15,7 @@
 
 interface nsIVariant;
 
-[scriptable, builtinclass, uuid(4410f28d-c9eb-481d-a47e-e7ef49f382c8)]
+[scriptable, builtinclass, uuid(af7077ac-0f9f-44e1-815f-9b1a94618531)]
 interface nsIDOMDataChannel : nsIDOMEventTarget
 {
   readonly attribute DOMString label;
@@ -26,7 +26,8 @@ interface nsIDOMDataChannel : nsIDOMEventTarget
   readonly attribute DOMString readyState;
   readonly attribute unsigned long bufferedAmount;
 
-  readonly attribute unsigned short stream;
+  readonly attribute unsigned short id;
+  readonly attribute unsigned short stream; /* deprecated name for 'id' */
 
   [implicit_jscontext] attribute jsval onopen;
   [implicit_jscontext] attribute jsval onerror;
