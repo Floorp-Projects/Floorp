@@ -53,3 +53,17 @@ function addVisits(aPlaceInfo, aCallback) {
     }
   );
 }
+
+/**
+ * Clears history invoking callback when done.
+ */
+function waitForClearHistory(aCallback) {
+  const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
+  Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(observer, TOPIC_EXPIRATION_FINISHED);
+    aCallback();
+  }, TOPIC_EXPIRATION_FINISHED, false);
+  Cc["@mozilla.org/browser/nav-history-service;1"]
+    .getService(Ci.nsINavHistoryService)
+    .QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+}

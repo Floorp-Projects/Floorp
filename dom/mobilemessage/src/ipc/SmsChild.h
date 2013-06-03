@@ -38,6 +38,9 @@ protected:
   RecvNotifyReceivedMessage(const MobileMessageData& aMessage) MOZ_OVERRIDE;
 
   virtual bool
+  RecvNotifyRetrievingMessage(const MobileMessageData& aMessage) MOZ_OVERRIDE;
+
+  virtual bool
   RecvNotifySendingMessage(const MobileMessageData& aMessage) MOZ_OVERRIDE;
 
   virtual bool

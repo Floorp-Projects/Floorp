@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <foreignObject requiredFeatures="fail">
+    <svg>
+      <text>a</text>
+    </svg>
+  </foreignObject>
+  <script>
+    document.querySelector("text").getBBox();
+  </script>
+</svg>
