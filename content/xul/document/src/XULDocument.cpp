@@ -4045,8 +4045,7 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (attr == nsGkAtoms::removeelement &&
             value.EqualsLiteral("true")) {
 
-            nsCOMPtr<nsINode> parent = aTargetNode->GetParentNode();
-            if (!parent) return NS_ERROR_FAILURE;
+            nsCOMPtr<nsIContent> parent = aTargetNode->GetParent();
             rv = RemoveElement(parent, aTargetNode);
             if (NS_FAILED(rv)) return rv;
 
@@ -4428,7 +4427,7 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
 }
 
 nsresult
-XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild,
+XULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild,
                            bool aNotify)
 {
     // Insert aChild appropriately into aParent, accounting for a
@@ -4509,7 +4508,7 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild,
 }
 
 nsresult
-XULDocument::RemoveElement(nsINode* aParent, nsINode* aChild)
+XULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
 {
     int32_t nodeOffset = aParent->IndexOf(aChild);
 
