@@ -28,13 +28,13 @@
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled");
 }
 
-#PanelUI-zoomOut-btn {
+#PanelUI-contents #zoom-out-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar");
   padding-left: 12px;
   padding-right: 12px;
 }
 
-#PanelUI-zoomIn-btn {
+#PanelUI-contents #zoom-in-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar");
   padding-left: 12px;
   padding-right: 12px;
