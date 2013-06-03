@@ -297,26 +297,26 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
         nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, wrapScope, wn->Native(), nullptr,
                                                     &NS_GET_IID(nsISupports), false,
                                                     v.address(), getter_AddRefs(holder));
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    if (NS_SUCCEEDED(rv)) {
+        obj = JSVAL_TO_OBJECT(v);
+        NS_ASSERTION(IS_WN_WRAPPER(obj), "bad object");
 
-    obj = JSVAL_TO_OBJECT(v);
-    NS_ASSERTION(IS_WN_WRAPPER(obj), "bad object");
-
-    // Because the underlying native didn't have a PreCreate hook, we had
-    // to a new (or possibly pre-existing) XPCWN in our compartment.
-    // This could be a problem for chrome code that passes XPCOM objects
-    // across compartments, because the effects of QI would disappear across
-    // compartments.
-    //
-    // So whenever we pull an XPCWN across compartments in this manner, we
-    // give the destination object the union of the two native sets. We try
-    // to do this cleverly in the common case to avoid too much overhead.
-    XPCWrappedNative *newwn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
-    XPCNativeSet *unionSet = XPCNativeSet::GetNewOrUsed(ccx, newwn->GetSet(),
-                                                        wn->GetSet(), false);
-    if (!unionSet)
-        return nullptr;
-    newwn->SetSet(unionSet);
+        // Because the underlying native didn't have a PreCreate hook, we had
+        // to a new (or possibly pre-existing) XPCWN in our compartment.
+        // This could be a problem for chrome code that passes XPCOM objects
+        // across compartments, because the effects of QI would disappear across
+        // compartments.
+        //
+        // So whenever we pull an XPCWN across compartments in this manner, we
+        // give the destination object the union of the two native sets. We try
+        // to do this cleverly in the common case to avoid too much overhead.
+        XPCWrappedNative *newwn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+        XPCNativeSet *unionSet = XPCNativeSet::GetNewOrUsed(ccx, newwn->GetSet(),
+                                                            wn->GetSet(), false);
+        if (!unionSet)
+            return nullptr;
+        newwn->SetSet(unionSet);
+    }
 
     return DoubleWrap(cx, obj, flags);
 }
