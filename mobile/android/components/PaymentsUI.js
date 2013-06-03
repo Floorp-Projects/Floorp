@@ -82,28 +82,19 @@ PaymentUI.prototype = {
         requestText += " (" + request.productPrice[0].amount + " " +
                               request.productPrice[0].currency + ")";
       }
-      listItems.push({
-        label: requestText,
-        isGroup: false,
-        inGroup: false,
-        disabled: false,
-        id: i
-      });
+      listItems.push({ label: requestText });
     }
 
-    let result = this.sendMessageToJava({
-      type: "Prompt:Show",
+    let p = new Prompt({
+      window: null,
       title: this.bundle.GetStringFromName("payments.providerdialog.title"),
-      multiple: false,
-      selected: [],
-      listItems: listItems,
+    }).setSingleChoiceItems(listItems).show(function(data) {
+      if (data.button > -1 && aSuccessCb) {
+        aSuccessCb.onresult(aRequestId, aRequests[data.button].wrappedJSObject.type);
+      } else {
+        _error(aRequestId, "USER_CANCELED");
+      }
     });
-
-    if (result.button > -1 && aSuccessCb) {
-      aSuccessCb.onresult(aRequestId, aRequests[result.button].wrappedJSObject.type);
-    } else {
-      _error(aRequestId, "USER_CANCELED");
-    }
   },
 
   _error: function(aCallback) {
