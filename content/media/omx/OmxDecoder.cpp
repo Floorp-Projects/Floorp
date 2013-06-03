@@ -98,6 +98,7 @@ ssize_t MediaStreamSource::readAt(off64_t offset, void *data, size_t size)
   char *ptr = static_cast<char *>(data);
   size_t todo = size;
   while (todo > 0) {
+    Mutex::Autolock autoLock(mLock);
     uint32_t bytesRead;
     if ((offset != mResource->Tell() &&
          NS_FAILED(mResource->Seek(nsISeekableStream::NS_SEEK_SET, offset))) ||
