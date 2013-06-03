@@ -57,9 +57,7 @@ class AsyncCompositionManager MOZ_FINAL : public RefCounted<AsyncCompositionMana
   friend class AutoResolveRefLayers;
 public:
   AsyncCompositionManager(LayerManagerComposite* aManager)
-    : mXScale(1.0)
-    , mYScale(1.0)
-    , mLayerManager(aManager)
+    : mLayerManager(aManager)
     , mIsFirstPaint(false)
     , mLayersUpdated(false)
     , mReadyForCompose(true)
@@ -108,8 +106,6 @@ public:
   // particular document.
   bool IsFirstPaint() { return mIsFirstPaint; }
 
-  void SetTransformation(float aScale, const nsIntPoint& aScrollOffset);
-
 private:
   void TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform);
   // Return true if an AsyncPanZoomController content transform was
@@ -126,7 +122,7 @@ private:
   void SyncViewportInfo(const nsIntRect& aDisplayPort,
                         float aDisplayResolution,
                         bool aLayersUpdated,
-                        nsIntPoint& aScrollOffset,
+                        ScreenPoint& aScrollOffset,
                         float& aScaleX, float& aScaleY,
                         gfx::Margin& aFixedLayerMargins,
                         gfx::Point& aOffset);
@@ -167,9 +163,6 @@ private:
   void DetachRefLayers();
 
   TargetConfig mTargetConfig;
-  float mXScale;
-  float mYScale;
-  nsIntPoint mScrollOffset;
   nsIntRect mContentRect;
 
   nsRefPtr<LayerManagerComposite> mLayerManager;
