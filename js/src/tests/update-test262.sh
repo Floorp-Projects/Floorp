@@ -9,26 +9,50 @@ set -e
 # Updates the jstests copy of the test cases of Test262, the conformance test
 # suite for ECMA-262 and ECMA-402, ECMAScript and its Internationalization API.
 
-if [ $# -lt 1 ]; then
-  echo "Usage: update-test262.sh <URL of test262 hg, e.g. http://hg.ecmascript.org/tests/test262/ or a local clone>"
-  exit 1
-fi
-
-# Mercurial doesn't have a way to download just a part of a repository, or to
-# just get the working copy - we have to clone the entire thing. We use a
-# temporary test262 directory for that.
-unique_dir=`mktemp -d /tmp/test262.XXXX` || exit 1
-tmp_dir=${unique_dir}/test262
-
-# Remove the temporary test262 directory on exit.
-function cleanupTempFiles()
+function usage()
 {
-  rm -rf ${unique_dir}
+  echo "Usage: update-test262.sh <URL of test262 hg> [clone | copy]"
+  echo ""
+  echo "The URL will most commonly be http://hg.ecmascript.org/tests/test262/ "
+  echo "but may also be a local clone.  Don't use a local clone when generating"
+  echo "the final import patch"\!"  test262/HG-INFO will record the wrong URL"
+  echo "if you do so.  Local cloning is only useful when editing this script to"
+  echo "import a larger test262 subset."
+  echo ""
+  echo "If a local clone is specified, the optional clone/copy argument will"
+  echo "either clone into a temporary directory, or directly copy from the"
+  echo "clone's checkout.  'clone' semantics are the default."
+  exit 1
 }
-trap cleanupTempFiles EXIT
 
-echo "Feel free to get some coffee - this could take a few minutes..."
-hg clone $1 ${tmp_dir}
+if [ $# -lt 1 ]; then
+  usage
+elif [ $# -eq 1 -o "$2" == "clone" ]; then
+  # Beware!  'copy' support requires that the clone performed here *never* be
+  # altered.  If it were altered, those changes wouldn't appear in the final
+  # set of changes as determined by the 'copy' path below.
+
+  # Mercurial doesn't have a way to download just a part of a repository, or to
+  # just get the working copy - we have to clone the entire thing. We use a
+  # temporary test262 directory for that.
+  unique_dir=`mktemp -d /tmp/test262.XXXX` || exit 1
+  tmp_dir=${unique_dir}/test262
+
+  # Remove the temporary test262 directory on exit.
+  function cleanupTempFiles()
+  {
+    rm -rf ${unique_dir}
+  }
+  trap cleanupTempFiles EXIT
+
+  echo "Feel free to get some coffee - this could take a few minutes..."
+  hg clone $1 ${tmp_dir}
+elif [ "$2" == "copy" ]; then
+  echo "Copying directly from $1; be sure this repository is updated to tip"\!
+  tmp_dir="$1"
+else
+  usage
+fi
 
 # Now to the actual test262 directory.
 js_src_tests_dir=`dirname $0`
