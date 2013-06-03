@@ -112,16 +112,12 @@ Prompt.prototype = {
       this.callback(data);
   },
 
-  _setListItems: function(aItems, aInGroup) {
+  _setListItems: function(aItems) {
     let hasSelected = false;
-    if (!aInGroup)
-      this.msg.listitems = [];
+    this.msg.listitems = [];
 
     aItems.forEach(function(item) {
       let obj = { id: item.id };
-
-      if (aInGroup !== undefined)
-        obj.inGroup = aInGroup;
 
       obj.label = item.label;
 
@@ -136,18 +132,16 @@ Prompt.prototype = {
         this.msg.selected[this.msg.listitems.length] = item.selected;
       }
 
-      if (item.children) {
+      if (item.header)
         obj.isGroup = true;
-      } else if (item.submenu) {
+
+      if (item.menu)
         obj.isParent = true;
-      }
 
-      // Order matters in the java message, so make sure we add the obj
-      // to the list before we add its children
+      if (item.child)
+        obj.inGroup = true;
+
       this.msg.listitems.push(obj);
-
-      if (item.children)
-        this._setListItems(item.children, true);
 
     }, this);
     return this;
