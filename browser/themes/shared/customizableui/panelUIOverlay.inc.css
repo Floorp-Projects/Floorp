@@ -52,29 +52,32 @@
   font-size: 10px;
 }
 
+#PanelUI-contents #wrapper-edit-controls,
 #PanelUI-contents #wrapper-zoom-controls {
   margin-left: -1em;
   margin-right: -1em;
   width: calc(100% + 2em);
 }
 
-#PanelUI-contents #zoom-controls,
-#PanelUI-pageControls {
+#PanelUI-contents #edit-controls,
+#PanelUI-contents #zoom-controls {
   padding: 1em 0 0;
 }
 
+#PanelUI-contents #edit-controls,
 #PanelUI-contents #zoom-controls {
   -moz-margin-start: -1em;
   -moz-box-align: stretch;
   width: calc(100% + 2em);
 }
 
+#PanelUI-contents #wrapper-edit-controls #edit-controls,
 #PanelUI-contents #wrapper-zoom-controls #zoom-controls {
   -moz-margin-start: 0;
 }
 
 .PanelUI-footer,
-.PanelUI-editControls,
+#PanelUI-contents #edit-controls,
 #PanelUI-contents #zoom-controls,
 #PanelUI-contents,
 .PanelUI-footer,
@@ -109,7 +112,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   display: block;
 }
 
-#PanelUI-pageControls toolbarbutton > .toolbarbutton-icon,
+#PanelUI-contents #edit-controls toolbarbutton > .toolbarbutton-icon,
 #PanelUI-contents #zoom-controls toolbarbutton > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
@@ -125,12 +128,14 @@ panelview:not([mainview]) .toolbarbutton-text,
   list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons.png);
 }
 
-#PanelUI-contents #zoom-controls toolbarbutton,
-#PanelUI-pageControls toolbarbutton {
+#PanelUI-contents #edit-controls toolbarbutton,
+#PanelUI-contents #zoom-controls toolbarbutton {
   -moz-box-orient: horizontal;
   min-width: 7em;
 }
 
+#customization-palette #edit-controls toolbarbutton,
+#PanelUI-contents #edit-controls toolbarbutton,
 #customization-palette #zoom-controls toolbarbutton,
 #PanelUI-contents #zoom-controls toolbarbutton {
   max-width: none;
@@ -142,12 +147,14 @@ panelview:not([mainview]) .toolbarbutton-text,
   display: none;
 }
 
+#customization-palette #edit-controls toolbarbutton,
 #customization-palette #zoom-controls toolbarbutton {
   min-width: 1em;
 }
 
 /* These smaller icons have different styling between the panel and the toolbar,
    hence not referencing toolbar.png for these icons. */
+#PanelUI-contents #edit-controls toolbarbutton,
 #PanelUI-contents #zoom-controls toolbarbutton,
 .panel-combined-button {
   list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons.png);
@@ -160,13 +167,14 @@ panelview:not([mainview]) .toolbarbutton-text,
   margin: calc(5em / 12);
 }
 
+#PanelUI-contents #edit-controls toolbarbutton > .toolbarbutton-icon,
 #PanelUI-contents #zoom-controls toolbarbutton > .toolbarbutton-icon {
   min-width: 0;
   min-height: 0;
   margin: 0;
 }
 
-.PanelUI-editControls #PanelUI-copy-btn,
+#PanelUI-contents #edit-controls #copy-button,
 #PanelUI-contents #zoom-controls #zoom-reset-button {
   border-left: none;
   border-right: none;
@@ -220,7 +228,7 @@ panelview toolbarbutton,
 
 panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#PanelUI-pageControls toolbarbutton,
+#PanelUI-contents #edit-controls toolbarbutton,
 #PanelUI-contents #zoom-controls toolbarbutton,
 .customizationmode-button,
 #PanelUI-mainView #PanelUI-customize-btn {
@@ -372,15 +380,15 @@ toolbarbutton.panel-multiview-anchor {
   -moz-image-region: rect(192px 64px 224px 32px);
 }
 
-#PanelUI-cut-btn {
+#PanelUI-contents #cut-button {
   -moz-image-region: rect(0 16px 16px 0);
 }
 
-#PanelUI-copy-btn {
+#PanelUI-contents #copy-button {
   -moz-image-region: rect(0 32px 16px 16px);
 }
 
-#PanelUI-paste-btn {
+#PanelUI-contents #paste-button {
   -moz-image-region: rect(0 48px 16px 32px);
 }
 
@@ -400,17 +408,22 @@ toolbarbutton.panel-multiview-anchor {
   -moz-margin-end: none;
 }
 
+#PanelUI-contents #paste-button,
 #PanelUI-contents #zoom-in-button {
   -moz-border-start: 1px solid;
   -moz-margin-start: none;
 }
 
+#PanelUI-contents #cut-button:-moz-locale-dir(ltr),
+#PanelUI-contents #paste-button:-moz-locale-dir(rtl),
 #PanelUI-contents #zoom-out-button:-moz-locale-dir(ltr),
 #PanelUI-contents #zoom-in-button:-moz-locale-dir(rtl) {
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
 
+#PanelUI-contents #cut-button:-moz-locale-dir(rtl),
+#PanelUI-contents #paste-button:-moz-locale-dir(ltr),
 #PanelUI-contents #zoom-out-button:-moz-locale-dir(rtl),
 #PanelUI-contents #zoom-in-button:-moz-locale-dir(ltr) {
   border-top-left-radius: 2px;
