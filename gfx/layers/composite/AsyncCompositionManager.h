@@ -114,12 +114,12 @@ private:
   bool ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame, Layer* aLayer,
                                         bool* aWantNextFrame);
 
-  void SetFirstPaintViewport(const nsIntPoint& aOffset,
+  void SetFirstPaintViewport(const LayerIntPoint& aOffset,
                              float aZoom,
                              const nsIntRect& aPageRect,
                              const CSSRect& aCssPageRect);
   void SetPageRect(const CSSRect& aCssPageRect);
-  void SyncViewportInfo(const nsIntRect& aDisplayPort,
+  void SyncViewportInfo(const LayerIntRect& aDisplayPort,
                         float aDisplayResolution,
                         bool aLayersUpdated,
                         ScreenPoint& aScrollOffset,
