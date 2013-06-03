@@ -634,10 +634,22 @@ nsSocketTransportService::AfterProcessNextEvent(nsIThreadInternal* thread,
     return NS_OK;
 }
 
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
+
 NS_IMETHODIMP
 nsSocketTransportService::Run()
 {
     PR_SetCurrentThreadName("Socket Thread");
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        NS_ASSERTION(NuwaMarkCurrentThread != nullptr,
+                     "NuwaMarkCurrentThread is undefined!");
+        NuwaMarkCurrentThread(nullptr, nullptr);
+    }
+#endif
 
     SOCKET_LOG(("STS thread init\n"));
 
