@@ -383,10 +383,12 @@ SystemMessageInternal.prototype = {
         page.pendingMessages.length = 0;
 
         // Send the array of pending messages.
-        aMessage.target.sendAsyncMessage("SystemMessageManager:GetPendingMessages:Return",
-                                         { type: msg.type,
-                                           manifest: msg.manifest,
-                                           msgQueue: pendingMessages });
+        aMessage.target
+                .sendAsyncMessage("SystemMessageManager:GetPendingMessages:Return",
+                                  { type: msg.type,
+                                    manifest: msg.manifest,
+                                    uri: msg.uri,
+                                    msgQueue: pendingMessages });
         break;
       }
       case "SystemMessageManager:HasPendingMessages":
@@ -543,8 +545,9 @@ SystemMessageInternal.prototype = {
     if (targets) {
       for (let index = 0; index < targets.length; ++index) {
         let target = targets[index];
-        // We only need to send the system message to the targets which match
-        // the manifest URL and page URL of the destination of system message.
+        // We only need to send the system message to the targets (processes)
+        // which contain the window page that matches the manifest/page URL of
+        // the destination of system message.
         if (target.winCounts[aPageURI] === undefined) {
           continue;
         }
@@ -556,10 +559,15 @@ SystemMessageInternal.prototype = {
         // we'll release the lock we acquired.
         this._acquireCpuWakeLock(pageKey);
 
+        // Multiple windows can share the same target (process), the content
+        // window needs to check if the manifest/page URL is matched. Only
+        // *one* window should handle the system message.
         let manager = target.target;
         manager.sendAsyncMessage("SystemMessageManager:Message",
                                  { type: aType,
                                    msg: aMessage,
+                                   manifest: aManifestURI,
+                                   uri: aPageURI,
                                    msgID: aMessageID });
       }
     }

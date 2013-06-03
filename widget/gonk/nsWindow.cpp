@@ -547,12 +547,17 @@ nsWindow::GetDPI()
 double
 nsWindow::GetDefaultScaleInternal()
 {
-    double rawscale = GetDPI() / 192.0;
-    if (rawscale < 1.25)
-        return 1;
-    else if (rawscale < 1.75)
-        return 1.5;
-    return 2;
+    float dpi = GetDPI();
+    // The mean pixel density for mdpi devices is 160dpi, 240dpi for hdpi,
+    // and 320dpi for xhdpi, respectively.
+    // We'll take the mid-value between these three numbers as the boundary.
+    if (dpi < 200.0) {
+        return 1.0; // mdpi devices.
+    }
+    if (dpi < 280.0) {
+        return 1.5; // hdpi devices.
+    }
+    return 2.0; // xhdpi devices.
 }
 
 LayerManager *
