@@ -41,7 +41,7 @@ interface nsIContactFindSortOptions : nsISupports
 interface nsIContactFindOptions : nsIContactFindSortOptions
 {
   attribute DOMString filterValue;  // e.g. "Tom"
-  attribute DOMString filterOp;     // e.g. "contains"
+  attribute DOMString filterOp;     // e.g. "startsWith"
   attribute jsval filterBy;         // DOMString[], e.g. ["givenName", "nickname"]
   attribute unsigned long filterLimit;
 };
