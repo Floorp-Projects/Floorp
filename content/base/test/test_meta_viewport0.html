@@ -5,6 +5,7 @@
   <title>meta viewport test</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="viewport_helpers.js"></script>
 </head>
 <body>
   <p>No &lt;meta name="viewport"&gt; tag</p>
@@ -16,7 +17,7 @@
     let tests = [];
 
     tests.push(function test1() {
-      SpecialPowers.pushPrefEnv({"set": [["browser.viewport.scaleRatio", 100]]},
+      SpecialPowers.pushPrefEnv(scaleRatio(1.0),
         function() {
           let info = getViewportInfo(800, 480);
           is(info.defaultZoom, 0,       "initial scale is unspecified");
@@ -36,7 +37,7 @@
     });
 
     tests.push(function test2() {
-      SpecialPowers.pushPrefEnv({"set": [["browser.viewport.scaleRatio", 150]]},
+      SpecialPowers.pushPrefEnv(scaleRatio(1.5),
         function() {
           let info = getViewportInfo(800, 480);
           is(info.width,       980,     "width is still the default width");
