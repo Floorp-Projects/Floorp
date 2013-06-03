@@ -740,7 +740,7 @@ let SessionStoreInternal = {
       this._deferredInitialState._firstTabs = true;
       this._restoreCount = this._deferredInitialState.windows ?
         this._deferredInitialState.windows.length : 0;
-      this.restoreWindow(aWindow, this._deferredInitialState, true);
+      this.restoreWindow(aWindow, this._deferredInitialState, false);
       this._deferredInitialState = null;
     }
     else if (this._restoreLastWindow && aWindow.toolbar.visible &&
