@@ -10,6 +10,26 @@
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
     <panelview id="PanelUI-mainView" flex="1">
+      <vbox id="PanelUI-pageControls" pack="center">
+        <hbox class="PanelUI-editControls">
+          <toolbarbutton id="PanelUI-cut-btn" flex="1"
+                         label="&cutCmd.label;"
+                         tooltiptext="&cutButton.tooltip;"
+                         class="panel-combined-button"
+                         command="cmd_cut"/>
+          <toolbarbutton id="PanelUI-copy-btn" flex="1"
+                         label="&copyCmd.label;"
+                         tooltiptext="&copyButton.tooltip;"
+                         class="panel-combined-button"
+                         command="cmd_copy"/>
+          <toolbarbutton id="PanelUI-paste-btn" flex="1"
+                         label="&pasteCmd.label;"
+                         tooltiptext="&pasteButton.tooltip;"
+                         class="panel-combined-button"
+                         command="cmd_paste"/>
+        </hbox>
+      </vbox>
+
       <vbox id="PanelUI-contents" type="grid"/>
 
       <vbox id="PanelUI-mainView-spring" flex="1"/>

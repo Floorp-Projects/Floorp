@@ -7,24 +7,24 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
-#PanelUI-contents #cut-button {
+#PanelUI-cut-btn {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar");
 }
-#PanelUI-contents #cut-button[disabled="true"] {
+#PanelUI-cut-btn[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar&state=disabled");
 }
 
-#PanelUI-contents #copy-button {
+#PanelUI-copy-btn {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar");
 }
-#PanelUI-contents #copy-button[disabled="true"] {
+#PanelUI-copy-btn[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar&state=disabled");
 }
 
-#PanelUI-contents #paste-button {
+#PanelUI-paste-btn {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar");
 }
-#PanelUI-contents #paste-button[disabled="true"] {
+#PanelUI-paste-btn[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled");
 }
 
