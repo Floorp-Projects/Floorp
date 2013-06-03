@@ -1475,7 +1475,6 @@ public:
         }
         if (mWantAfterProcessing) {
             CCGraphDescriber* d = mDescribers.AppendElement();
-            NS_ENSURE_TRUE(d, NS_ERROR_OUT_OF_MEMORY);
             mCurrentAddress.AssignLiteral("0x");
             mCurrentAddress.AppendInt(aAddress, 16);
             d->mType = CCGraphDescriber::eRefCountedObject;
@@ -1494,7 +1493,6 @@ public:
         }
         if (mWantAfterProcessing) {
             CCGraphDescriber* d = mDescribers.AppendElement();
-            NS_ENSURE_TRUE(d, NS_ERROR_OUT_OF_MEMORY);
             mCurrentAddress.AssignLiteral("0x");
             mCurrentAddress.AppendInt(aAddress, 16);
             d->mType = aMarked ? CCGraphDescriber::eGCMarkedObject :
@@ -1511,7 +1509,6 @@ public:
         }
         if (mWantAfterProcessing) {
             CCGraphDescriber* d = mDescribers.AppendElement();
-            NS_ENSURE_TRUE(d, NS_ERROR_OUT_OF_MEMORY);
             d->mType = CCGraphDescriber::eEdge;
             d->mAddress = mCurrentAddress;
             d->mToAddress.AppendInt(aToAddress, 16);
@@ -1533,7 +1530,6 @@ public:
         }
         if (mWantAfterProcessing) {
             CCGraphDescriber* d = mDescribers.AppendElement();
-            NS_ENSURE_TRUE(d, NS_ERROR_OUT_OF_MEMORY);
             d->mType = CCGraphDescriber::eRoot;
             d->mAddress.AppendInt(aAddress, 16);
             d->mCnt = aKnownEdges;
@@ -1547,7 +1543,6 @@ public:
         }
         if (mWantAfterProcessing) {
             CCGraphDescriber* d = mDescribers.AppendElement();
-            NS_ENSURE_TRUE(d, NS_ERROR_OUT_OF_MEMORY);
             d->mType = CCGraphDescriber::eGarbage;
             d->mAddress.AppendInt(aAddress, 16);
         }
@@ -2361,7 +2356,8 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     while (!etor.IsDone())
     {
         PtrInfo *pinfo = etor.GetNext();
-        if (pinfo->mColor == white && mWhiteNodes->AppendElement(pinfo)) {
+        if (pinfo->mColor == white) {
+            mWhiteNodes->AppendElement(pinfo);
             rv = pinfo->mParticipant->Root(pinfo->mPointer);
             if (NS_FAILED(rv)) {
                 Fault("Failed root call while unlinking", pinfo);
