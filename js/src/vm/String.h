@@ -269,7 +269,6 @@ class JSString : public js::gc::Cell
 
     inline const jschar *getChars(JSContext *cx);
     inline const jschar *getCharsZ(JSContext *cx);
-    inline bool getChar(JSContext *cx, size_t index, jschar *code);
 
     /* Fallible conversions to more-derived string types. */
 
@@ -890,40 +889,6 @@ JSString::getChars(JSContext *cx)
     if (JSLinearString *str = ensureLinear(cx))
         return str->chars();
     return NULL;
-}
-
-JS_ALWAYS_INLINE bool
-JSString::getChar(JSContext *cx, size_t index, jschar *code)
-{
-    JS_ASSERT(index < length());
-
-    /*
-     * Optimization for one level deep ropes.
-     * This is common for the following pattern:
-     *
-     * while() {
-     *   text = text.substr(0, x) + "bla" + text.substr(x)
-     *   test.charCodeAt(x + 1)
-     * }
-     */
-    const jschar *chars;
-    if (isRope()) {
-        JSRope *rope = &asRope();
-        if (uint32_t(index) < rope->leftChild()->length()) {
-            chars = rope->leftChild()->getChars(cx);
-        } else {
-            chars = rope->rightChild()->getChars(cx);
-            index -= rope->leftChild()->length();
-        }
-    } else {
-        chars = getChars(cx);
-    }
-
-    if (!chars)
-        return false;
-
-    *code = chars[index];
-    return true;
 }
 
 JS_ALWAYS_INLINE const jschar *

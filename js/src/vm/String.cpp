@@ -204,36 +204,15 @@ JSRope::flattenInternal(JSContext *maybecx)
     jschar *pos;
     JSRuntime *rt = runtime();
 
-    /* Find the left most string, containing the first string. */
-    JSRope *leftMostRope = this;
-    while (leftMostRope->leftChild()->isRope())
-        leftMostRope = &leftMostRope->leftChild()->asRope();
-
-    if (leftMostRope->leftChild()->isExtensible()) {
-        JSExtensibleString &left = leftMostRope->leftChild()->asExtensible();
+    if (this->leftChild()->isExtensible()) {
+        JSExtensibleString &left = this->leftChild()->asExtensible();
         size_t capacity = left.capacity();
         if (capacity >= wholeLength) {
-            /*
-             * Simulate a left-most traversal from the root to leftMost->leftChild()
-             * via first_visit_node
-             */
-            while (str != leftMostRope) {
-                JS_ASSERT(str->isRope());
-                if (b == WithIncrementalBarrier) {
-                    JSString::writeBarrierPre(str->d.u1.left);
-                    JSString::writeBarrierPre(str->d.s.u2.right);
-                }
-                JSString *child = str->d.u1.left;
-                str->d.u1.chars = left.chars();
-                child->d.s.u3.parent = str;
-                child->d.lengthAndFlags = 0x200;
-                str = child;
-            }
-            str->d.u1.chars = left.chars();
             if (b == WithIncrementalBarrier) {
-                JSString::writeBarrierPre(str->d.u1.left);
-                JSString::writeBarrierPre(str->d.s.u2.right);
+                JSString::writeBarrierPre(d.u1.left);
+                JSString::writeBarrierPre(d.s.u2.right);
             }
+
             wholeCapacity = capacity;
             wholeChars = const_cast<jschar *>(left.chars());
             size_t bits = left.d.lengthAndFlags;
