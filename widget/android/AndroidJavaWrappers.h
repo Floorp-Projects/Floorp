@@ -18,6 +18,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/Touch.h"
 #include "InputData.h"
+#include "Units.h"
 
 //#define FORCE_ALOG 1
 
@@ -268,12 +269,12 @@ public:
     AndroidGeckoLayerClient() {}
     AndroidGeckoLayerClient(jobject jobj) { Init(jobj); }
 
-    void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
-    void SetPageRect(const gfx::Rect& aCssPageRect);
+    void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const CSSRect& aCssPageRect);
+    void SetPageRect(const CSSRect& aCssPageRect);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
                           gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset);
-    void SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const gfx::Rect& aCssPageRect,
+    void SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                           bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
                           bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset);
     bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, gfx::Rect& aViewport, float& aScaleX, float& aScaleY);

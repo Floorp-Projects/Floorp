@@ -120,7 +120,7 @@ public:
   //
   // This is only valid on the root layer. Nested iframes do not need this
   // metric as they do not have a displayport set. See bug 775452.
-  nsIntRect mCompositionBounds;
+  LayerIntRect mCompositionBounds;
 
   // |mScrollableRect|, stored in device pixels. DECPRECATED, DO NOT USE.
   //
@@ -208,7 +208,7 @@ public:
   // window.scrollTo().
   //
   // This is valid on any layer unless it has no content.
-  gfx::Rect mScrollableRect;
+  mozilla::CSSRect mScrollableRect;
 
   // ---------------------------------------------------------------------------
   // The following metrics are dimensionless.
