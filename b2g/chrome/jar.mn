@@ -21,7 +21,7 @@ chrome.jar:
 * content/content.css                   (content/content.css)
   content/touchcontrols.css             (content/touchcontrols.css)
 
-  content/payment.js                    (content/payment.js)
+* content/payment.js                    (content/payment.js)
   content/identity.js                   (content/identity.js)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
