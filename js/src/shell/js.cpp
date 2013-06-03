@@ -3567,7 +3567,7 @@ GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
                              "getSelfHostedValue");
         return false;
     }
-    RootedAtom srcAtom(cx, ToAtom<CanGC>(cx, args[0]));
+    RootedAtom srcAtom(cx, ToAtom<CanGC>(cx, args.handleAt(0)));
     if (!srcAtom)
         return false;
     RootedPropertyName srcName(cx, srcAtom->asPropertyName());

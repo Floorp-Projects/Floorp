@@ -235,7 +235,7 @@ AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInt
 
 template <AllowGC allowGC>
 inline JSAtom *
-ToAtom(JSContext *cx, const js::Value &v);
+ToAtom(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v);
 
 template<XDRMode mode>
 bool

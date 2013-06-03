@@ -112,7 +112,7 @@ ReportObjectRequired(JSContext *cx)
 }
 
 bool
-ValueToIdentifier(JSContext *cx, const Value &v, MutableHandleId id)
+ValueToIdentifier(JSContext *cx, HandleValue v, MutableHandleId id)
 {
     if (!ValueToId<CanGC>(cx, v, id))
         return false;
@@ -3247,9 +3247,10 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
                  * Store it in the result array.
                  */
                 RootedId id(cx);
+                RootedValue v(cx, NumberValue(lineno));
                 offsets = NewDenseEmptyArray(cx);
                 if (!offsets ||
-                    !ValueToId<CanGC>(cx, NumberValue(lineno), &id))
+                    !ValueToId<CanGC>(cx, v, &id))
                 {
                     return false;
                 }
@@ -4569,7 +4570,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyDescriptor", args, dbg, obj);
 
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, argc >= 1 ? args[0] : UndefinedValue(), &id))
+    if (!ValueToId<CanGC>(cx, args.handleOrUndefinedAt(0), &id))
         return false;
 
     /* Bug: This can cause the debuggee to run! */
@@ -4659,7 +4660,7 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Object.defineProperty", 2);
 
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args[0], &id))
+    if (!ValueToId<CanGC>(cx, args.handleAt(0), &id))
         return false;
 
     const Value &descval = args[1];
@@ -5302,7 +5303,7 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGENV_OWNER(cx, argc, vp, "find", args, envobj, env, dbg);
 
     RootedId id(cx);
-    if (!ValueToIdentifier(cx, args[0], &id))
+    if (!ValueToIdentifier(cx, args.handleAt(0), &id))
         return false;
 
     {
@@ -5333,7 +5334,7 @@ DebuggerEnv_getVariable(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGENV_OWNER(cx, argc, vp, "getVariable", args, envobj, env, dbg);
 
     RootedId id(cx);
-    if (!ValueToIdentifier(cx, args[0], &id))
+    if (!ValueToIdentifier(cx, args.handleAt(0), &id))
         return false;
 
     RootedValue v(cx);
@@ -5362,7 +5363,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGENV_OWNER(cx, argc, vp, "setVariable", args, envobj, env, dbg);
 
     RootedId id(cx);
-    if (!ValueToIdentifier(cx, args[0], &id))
+    if (!ValueToIdentifier(cx, args.handleAt(0), &id))
         return false;
 
     RootedValue v(cx, args[1]);
