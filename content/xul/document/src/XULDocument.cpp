@@ -3871,8 +3871,10 @@ XULDocument::CreateTemplateBuilder(nsIContent* aElement)
         if (! builder)
             return NS_ERROR_FAILURE;
 
-        builder->Init(aElement);
-        builder->CreateContents(aElement, false);
+        nsresult rv = builder->Init(aElement);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = builder->CreateContents(aElement, false);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;
