@@ -7,7 +7,6 @@ const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
-const Cu = Components.utils;
 
 function do_check_throws(f, result, stack)
 {
