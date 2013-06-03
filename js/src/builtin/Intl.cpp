@@ -14,12 +14,12 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsinterp.h"
 #include "jsobj.h"
 
 #include "builtin/Intl.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/Stack.h"
 #include "vm/StringBuffer.h"
 

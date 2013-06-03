@@ -129,6 +129,8 @@ class JavaPanZoomController
     private float mAutonavZoomDelta;
     /* The user selected panning mode */
     private AxisLockMode mMode;
+    /* A medium-length tap/press is happening */
+    private boolean mMediumPress;
 
     public JavaPanZoomController(PanZoomTarget target, View view, EventDispatcher eventDispatcher) {
         mTarget = target;
@@ -1233,14 +1235,33 @@ class JavaPanZoomController
     }
 
     @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        mMediumPress = false;
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent motionEvent) {
+        // If we get this, it will be followed either by a call to
+        // onSingleTapUp (if the user lifts their finger before the
+        // long-press timeout) or a call to onLongPress (if the user
+        // does not). In the former case, we want to make sure it is
+        // treated as a click. (Note that if this is called, we will
+        // not get a call to onDoubleTap).
+        mMediumPress = true;
+    }
+
+    @Override
     public void onLongPress(MotionEvent motionEvent) {
         sendPointToGecko("Gesture:LongPress", motionEvent);
     }
 
     @Override
     public boolean onSingleTapUp(MotionEvent motionEvent) {
-        // When zooming is enabled, wait to see if there's a double-tap.
-        if (!mTarget.getZoomConstraints().getAllowZoom()) {
+        // When zooming is enabled, we wait to see if there's a double-tap.
+        // However, if mMediumPress is true then we know there will be no
+        // double-tap so we treat this as a click.
+        if (mMediumPress || !mTarget.getZoomConstraints().getAllowZoom()) {
             sendPointToGecko("Gesture:SingleTap", motionEvent);
         }
         // return false because we still want to get the ACTION_UP event that triggers this

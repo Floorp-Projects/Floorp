@@ -32,7 +32,8 @@
 #include "jsnativestack.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
+
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 using namespace js::parallel;

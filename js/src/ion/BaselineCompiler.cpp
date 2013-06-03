@@ -14,8 +14,9 @@
 #include "VMFunctions.h"
 #include "IonFrames-inl.h"
 
-#include "jsinterpinlines.h"
 #include "jsopcodeinlines.h"
+
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 using namespace js::ion;

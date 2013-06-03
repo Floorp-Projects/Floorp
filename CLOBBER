@@ -17,7 +17,7 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 869002 touched webidl, so Windows needs to clobber
+Bug 778948 moved a file, which make is still looking for
 
 Alternative to clobber is to run ./config.status from the objdir and to
 touch the CLOBBER file in the objdir.
