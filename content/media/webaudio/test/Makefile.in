@@ -25,7 +25,7 @@ MOCHITEST_FILES := \
   test_bug867203.html \
   test_bug875221.html \
   test_bug875402.html \
-  test_bug877427.html \
+  test_bug877527.html \
   test_analyserNode.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
