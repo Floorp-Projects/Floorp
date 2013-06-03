@@ -3058,6 +3058,14 @@ nsDOMDeviceStorage::GetRootDirectoryForFile(const nsAString& aName, nsIFile** aR
 }
 
 NS_IMETHODIMP
+nsDOMDeviceStorage::GetDefault(bool* aDefault) {
+  nsString defaultStorageName;
+  GetWritableStorageName(mStorageType, defaultStorageName);
+  *aDefault = mStorageName.Equals(defaultStorageName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMDeviceStorage::GetStorageName(nsAString& aStorageName)
 {
   aStorageName = mStorageName;
