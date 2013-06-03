@@ -3354,14 +3354,13 @@ function updateEditUIVisibility()
   // The UI is visible if the Edit menu is opening or open, if the context menu
   // is open, or if the toolbar has been customized to include the Cut, Copy,
   // or Paste toolbar buttons.
-  // XXXgijs: this needs to be updated with the unified cut/copy/paste toolbarbutton
-  // once that is customizable! See bug 870901.
   gEditUIVisible = editMenuPopupState == "showing" ||
                    editMenuPopupState == "open" ||
                    contextMenuPopupState == "showing" ||
                    contextMenuPopupState == "open" ||
                    placesContextMenuPopupState == "showing" ||
-                   placesContextMenuPopupState == "open";
+                   placesContextMenuPopupState == "open" ||
+                   document.getElementById("edit-controls") ? true : false;
 
   // If UI is visible, update the edit commands' enabled state to reflect
   // whether or not they are actually enabled for the current focus/selection.
