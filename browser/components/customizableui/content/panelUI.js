@@ -162,6 +162,9 @@ const PanelUI = {
       let evt = document.createEvent("CustomEvent");
       evt.initCustomEvent("ViewShowing", true, true, viewNode);
       viewNode.dispatchEvent(evt);
+      if (evt.defaultPrevented) {
+        return;
+      }
 
       let tempPanel = document.createElement("panel");
       tempPanel.setAttribute("type", "arrow");
