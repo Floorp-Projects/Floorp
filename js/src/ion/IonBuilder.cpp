@@ -4464,7 +4464,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
             return false;
         return makeCall(native, callInfo, false);
     }
-    current->peek(calleeDepth)->setFolded();
+    current->peek(calleeDepth)->setFoldedUnchecked();
 
     // Extract call target.
     types::StackTypeSet *funTypes = current->peek(funcDepth)->resultTypeSet();
@@ -4540,7 +4540,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
         return abort("fun.apply speculation failed");
     }
 
-    current->peek(calleeDepth)->setFolded();
+    current->peek(calleeDepth)->setFoldedUnchecked();
 
     // Use funapply that definitely uses |arguments|
     return jsop_funapplyarguments(argc);
@@ -6435,7 +6435,7 @@ IonBuilder::jsop_getelem_typed_static(bool *psucceeded)
     if (!ptr)
         return true;
 
-    obj->setFolded();
+    obj->setFoldedUnchecked();
 
     MLoadTypedArrayElementStatic *load = MLoadTypedArrayElementStatic::New(typedArray, ptr);
     current->add(load);
@@ -6753,7 +6753,7 @@ IonBuilder::jsop_setelem_typed_static(MDefinition *obj, MDefinition *id, MDefini
     if (!ptr)
         return true;
 
-    obj->setFolded();
+    obj->setFoldedUnchecked();
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
     MDefinition *toWrite = value;
