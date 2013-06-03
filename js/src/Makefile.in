@@ -154,15 +154,6 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
-# for compiler bug (http://support.microsoft.com/kb/982107) for MSVC x64
-ifdef _MSC_VER
-ifneq (,$(filter 1400 1500,$(_MSC_VER)))
-ifeq ($(OS_TEST),x86_64)
-ASFILES += jswin64.asm
-endif
-endif
-endif
-
 include $(topsrcdir)/config/config.mk
 
 ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
