@@ -28,8 +28,6 @@ CPP_SOURCES += [
     'nsClientAuthRemember.cpp',
     'nsCMS.cpp',
     'nsCMSSecureMessage.cpp',
-    'nsCRLInfo.cpp',
-    'nsCRLManager.cpp',
     'nsCrypto.cpp',
     'nsCryptoHash.cpp',
     'nsDataSignatureVerifier.cpp',
