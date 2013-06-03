@@ -2030,8 +2030,6 @@ protected:
   bool mIsThemed;
   /* true if this item represents the bottom-most background layer */
   bool mIsBottommostLayer;
-  /* true if this image is known to be animated */
-  bool mIsAnimated;
 };
 
 class nsDisplayBackgroundColor : public nsDisplayItem
