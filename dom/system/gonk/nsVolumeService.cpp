@@ -187,7 +187,7 @@ NS_IMETHODIMP nsVolumeService::GetVolumeByName(const nsAString& aVolName, nsIVol
 NS_IMETHODIMP
 nsVolumeService::GetVolumeByPath(const nsAString& aPath, nsIVolume **aResult)
 {
-  nsCString utf8Path = NS_ConvertUTF16toUTF8(aPath);
+  NS_ConvertUTF16toUTF8 utf8Path(aPath);
   char realPathBuf[PATH_MAX];
 
   while (realpath(utf8Path.get(), realPathBuf) < 0) {
@@ -204,7 +204,7 @@ nsVolumeService::GetVolumeByPath(const nsAString& aPath, nsIVolume **aResult)
       ERR("GetVolumeByPath: realpath on '%s' failed.", utf8Path.get());
       return NSRESULT_FOR_ERRNO();
     }
-    utf8Path = Substring(utf8Path, 0, slashIndex);
+    utf8Path.Assign(Substring(utf8Path, 0, slashIndex));
   }
 
   // The volume mount point is always a directory. Something like /mnt/sdcard
@@ -223,7 +223,7 @@ nsVolumeService::GetVolumeByPath(const nsAString& aPath, nsIVolume **aResult)
   nsVolume::Array::index_type volIndex;
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
     nsRefPtr<nsVolume> vol = mVolumeArray[volIndex];
-    nsAutoCString volMountPointSlash = NS_ConvertUTF16toUTF8(vol->MountPoint());
+    NS_ConvertUTF16toUTF8 volMountPointSlash(vol->MountPoint());
     volMountPointSlash.Append(NS_LITERAL_CSTRING("/"));
     nsDependentCSubstring testStr(realPathBuf, volMountPointSlash.Length());
     if (volMountPointSlash.Equals(testStr)) {
