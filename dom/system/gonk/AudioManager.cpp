@@ -193,11 +193,11 @@ AudioManager::Observe(nsISupports* aSubject,
       String8 cmd;
       cmd.appendFormat("bt_samplerate=%d", kBtSampleRate);
       AudioSystem::setParameters(0, cmd);
-      const char* address = NS_ConvertUTF16toUTF8(nsDependentString(aData)).get();
+      NS_ConvertUTF16toUTF8 address(aData);
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,
-                                            AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address);
+                                            AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address.get());
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
-                                            AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address);
+                                            AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address.get());
       SetForceForUse(nsIAudioManager::USE_COMMUNICATION, nsIAudioManager::FORCE_BT_SCO);
     } else {
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,
