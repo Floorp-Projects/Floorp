@@ -48,6 +48,8 @@ Prompt.prototype = {
     obj.id = aOptions.id || (aOptions.type + this[aOptions.type + "_count"]);
     this[aOptions.type + "_count"]++;
 
+    if (!this.msg.inputs)
+      this.msg.inputs = [];
     this.msg.inputs.push(obj);
     return this;
   },
@@ -78,6 +80,13 @@ Prompt.prototype = {
       hint: aOptions.hint,
       autofocus: aOptions.autofocus,
       id : aOptions.id
+    });
+  },
+
+  addDatePicker: function(aOptions) {
+    return this._addInput({
+      type: aOptions.type || "date",
+      value: aOptions.value,
     });
   },
 
