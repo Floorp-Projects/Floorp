@@ -404,23 +404,16 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
 
   gfx3DMatrix treeTransform;
 
-  float rootScaleX = aRootTransform.GetXScale(),
-        rootScaleY = aRootTransform.GetYScale();
-  // The ratio of layers pixels to device pixels.  The Java
-  // compositor wants to see values in units of device pixels, so we
-  // map our FrameMetrics values to that space.  This is not exposed
-  // as a FrameMetrics helper because it's a deprecated conversion.
-  float devPixelRatioX = 1 / rootScaleX, devPixelRatioY = 1 / rootScaleY;
+  float layerPixelRatioX = 1 / aRootTransform.GetXScale(),
+        layerPixelRatioY = 1 / aRootTransform.GetYScale();
 
-  gfxPoint scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
-  nsIntPoint scrollOffsetDevPixels(
-    NS_lround(scrollOffsetLayersPixels.x * devPixelRatioX),
-    NS_lround(scrollOffsetLayersPixels.y * devPixelRatioY));
+  LayerIntPoint scrollOffsetLayerPixels = LayerIntPoint::FromCSSPointRounded(
+    metrics.mScrollOffset, layerPixelRatioX, layerPixelRatioY);
 
   if (mIsFirstPaint) {
     mContentRect = metrics.mContentRect;
-    SetFirstPaintViewport(scrollOffsetDevPixels,
-                          1/rootScaleX,
+    SetFirstPaintViewport(scrollOffsetLayerPixels,
+                          layerPixelRatioX,
                           mContentRect,
                           metrics.mScrollableRect);
     mIsFirstPaint = false;
@@ -432,23 +425,21 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   // We synchronise the viewport information with Java after sending the above
   // notifications, so that Java can take these into account in its response.
   // Calculate the absolute display port to send to Java
-  gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
-                                    metrics.mDisplayPort : metrics.mCriticalDisplayPort);
-  nsIntRect displayPortDevPixels(
-    NS_lround(displayPortLayersPixels.x * devPixelRatioX),
-    NS_lround(displayPortLayersPixels.y * devPixelRatioY),
-    NS_lround(displayPortLayersPixels.width * devPixelRatioX),
-    NS_lround(displayPortLayersPixels.height * devPixelRatioY));
+  LayerIntRect displayPort = LayerIntRect::FromCSSRectRounded(
+    CSSRect::FromUnknownRect(metrics.mCriticalDisplayPort.IsEmpty()
+                             ? metrics.mDisplayPort
+                             : metrics.mCriticalDisplayPort),
+    layerPixelRatioX, layerPixelRatioY);
 
-  displayPortDevPixels.x += scrollOffsetDevPixels.x;
-  displayPortDevPixels.y += scrollOffsetDevPixels.y;
+  displayPort.x += scrollOffsetLayerPixels.x;
+  displayPort.y += scrollOffsetLayerPixels.y;
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
   gfx::Point offset(0, 0);
   ScreenPoint scrollOffset(0, 0);
   float scaleX = 1.0,
         scaleY = 1.0;
-  SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
+  SyncViewportInfo(displayPort, layerPixelRatioX, mLayersUpdated,
                    scrollOffset, scaleX, scaleY, fixedLayerMargins,
                    offset);
   mLayersUpdated = false;
@@ -462,12 +453,12 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   // primary scrollable layer. We compare this to the desired zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  float tempScaleDiffX = rootScaleX * scaleX;
-  float tempScaleDiffY = rootScaleY * scaleY;
+  float tempScaleDiffX = aRootTransform.GetXScale() * scaleX;
+  float tempScaleDiffY = aRootTransform.GetYScale() * scaleY;
 
-  nsIntPoint metricsScrollOffset(0, 0);
+  LayerIntPoint metricsScrollOffset(0, 0);
   if (metrics.IsScrollable()) {
-    metricsScrollOffset = scrollOffsetDevPixels;
+    metricsScrollOffset = scrollOffsetLayerPixels;
   }
 
   nsIntPoint scrollCompensation(
@@ -561,7 +552,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 }
 
 void
-AsyncCompositionManager::SetFirstPaintViewport(const nsIntPoint& aOffset,
+AsyncCompositionManager::SetFirstPaintViewport(const LayerIntPoint& aOffset,
                                                float aZoom,
                                                const nsIntRect& aPageRect,
                                                const CSSRect& aCssPageRect)
@@ -580,7 +571,7 @@ AsyncCompositionManager::SetPageRect(const CSSRect& aCssPageRect)
 }
 
 void
-AsyncCompositionManager::SyncViewportInfo(const nsIntRect& aDisplayPort,
+AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                           float aDisplayResolution,
                                           bool aLayersUpdated,
                                           ScreenPoint& aScrollOffset,
