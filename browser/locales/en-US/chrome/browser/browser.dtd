@@ -526,10 +526,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY newWindowButton.tooltip        "Open a new window">
 <!ENTITY sidebarCloseButton.tooltip     "Close sidebar">
 
-<!ENTITY cutButton.tooltip              "Cut">
-<!ENTITY copyButton.tooltip             "Copy">
-<!ENTITY pasteButton.tooltip            "Paste">
-
 <!ENTITY fullScreenButton.tooltip       "Display the window in full screen">
 
 <!ENTITY quitApplicationCmdWin.label       "Exit"> 
