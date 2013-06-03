@@ -88,6 +88,8 @@ sync protocol PSms {
 child:
   NotifyReceivedMessage(MobileMessageData aMessageData);
 
+  NotifyRetrievingMessage(MobileMessageData aMessageData);
+
   NotifySendingMessage(MobileMessageData aMessageData);
 
   NotifySentMessage(MobileMessageData aMessageData);
