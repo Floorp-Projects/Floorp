@@ -28,6 +28,7 @@ const kSmsSendingObserverTopic           = "sms-sending";
 const kSmsSentObserverTopic              = "sms-sent";
 const kSmsFailedObserverTopic            = "sms-failed";
 const kSmsReceivedObserverTopic          = "sms-received";
+const kSmsRetrievingObserverTopic        = "sms-retrieving";
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kXpcomShutdownObserverTopic        = "xpcom-shutdown";
@@ -627,6 +628,11 @@ function RetrieveTransaction(contentLocation) {
 }
 RetrieveTransaction.prototype = {
   /**
+   * We need to keep a reference to the timer to assure the timer is fired.
+   */
+  timer: null,
+
+  /**
    * @param callback [optional]
    *        A callback function that takes two arguments: one for X-Mms-Status,
    *        the other for the parsed M-Retrieve.conf message.
@@ -637,12 +643,15 @@ RetrieveTransaction.prototype = {
     this.retrieve((function retryCallback(mmsStatus, msg) {
       if (MMS.MMS_PDU_STATUS_DEFERRED == mmsStatus &&
           that.retryCount < PREF_RETRIEVAL_RETRY_COUNT) {
-        let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        timer.initWithCallback((function (){
-                                 this.retrieve(retryCallback);
-                               }).bind(that),
-                               PREF_RETRIEVAL_RETRY_INTERVALS[that.retryCount],
-                               Ci.nsITimer.TYPE_ONE_SHOT);
+        if (that.timer == null) {
+          that.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        }
+
+        that.timer.initWithCallback((function (){
+                                      this.retrieve(retryCallback);
+                                    }).bind(that),
+                                    PREF_RETRIEVAL_RETRY_INTERVALS[that.retryCount],
+                                    Ci.nsITimer.TYPE_ONE_SHOT);
         that.retryCount++;
         return;
       }
@@ -751,6 +760,11 @@ function SendTransaction(msg) {
   this.msg = msg;
 }
 SendTransaction.prototype = {
+  /**
+   * We need to keep a reference to the timer to assure the timer is fired.
+   */
+  timer: null,
+
   istreamComposed: false,
 
   /**
@@ -828,12 +842,15 @@ SendTransaction.prototype = {
       if ((MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE == mmsStatus ||
             MMS.MMS_PDU_ERROR_PERMANENT_FAILURE == mmsStatus) &&
           this.retryCount < PREF_SEND_RETRY_COUNT) {
+        if (this.timer == null) {
+          this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        }
+
         this.retryCount++;
 
-        let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        timer.initWithCallback(this.send.bind(this, retryCallback),
-                               PREF_SEND_RETRY_INTERVAL,
-                               Ci.nsITimer.TYPE_ONE_SHOT);
+        this.timer.initWithCallback(this.send.bind(this, retryCallback),
+                                    PREF_SEND_RETRY_INTERVAL,
+                                    Ci.nsITimer.TYPE_ONE_SHOT);
         return;
       }
 
@@ -1039,18 +1056,20 @@ MmsService.prototype = {
   },
 
   /**
-   * @param contentLocation
+   * @param aContentLocation
    *        X-Mms-Content-Location of the message.
-   * @param callback [optional]
+   * @param aCallback [optional]
    *        A callback function that takes two arguments: one for X-Mms-Status,
    *        the other parsed MMS message.
+   * @param aDomMessage
+   *        The nsIDOMMozMmsMessage object.
    */
-  retrieveMessage: function retrieveMessage(contentLocation, callback) {
-    // TODO: bug 810099 - support onretrieving event
-    // TODO: bug 809832 - support customizable max incoming/outgoing message size.
+  retrieveMessage: function retrieveMessage(aContentLocation, aCallback, aDomMessage) {
+    // Notifying observers an MMS message is retrieving.
+    Services.obs.notifyObservers(aDomMessage, kSmsRetrievingObserverTopic, null);
 
-    let transaction = new RetrieveTransaction(contentLocation);
-    transaction.run(callback);
+    let transaction = new RetrieveTransaction(aContentLocation);
+    transaction.run(aCallback);
   },
 
   /**
@@ -1275,7 +1294,8 @@ MmsService.prototype = {
         .saveReceivedMessage(savableMessage,
                              this.saveReceivedMessageCallback.bind(this,
                                                                    retrievalMode,
-                                                                   savableMessage));
+                                                                   savableMessage),
+                             domMessage);
     }).bind(this));
   },
 

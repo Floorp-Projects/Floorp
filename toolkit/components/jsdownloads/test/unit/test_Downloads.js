@@ -121,3 +121,33 @@ add_task(function test_public_and_private_lists_differ()
 
   do_check_neq(publicDownloadList, privateDownloadList);
 });
+
+/**
+ * Tests that the getSystemDownloadsDirectory returns a valid nsFile
+ * download directory object.
+ */
+add_task(function test_getSystemDownloadsDirectory()
+{
+  let downloadDir = yield Downloads.getSystemDownloadsDirectory();
+  do_check_true(downloadDir instanceof Ci.nsIFile);
+});
+
+/**
+ * Tests that the getUserDownloadsDirectory returns a valid nsFile
+ * download directory object.
+ */
+add_task(function test_getUserDownloadsDirectory()
+{
+  let downloadDir = yield Downloads.getUserDownloadsDirectory();
+  do_check_true(downloadDir instanceof Ci.nsIFile);
+});
+
+/**
+ * Tests that the getTemporaryDownloadsDirectory returns a valid nsFile
+ * download directory object.
+ */
+add_task(function test_getTemporaryDownloadsDirectory()
+{
+  let downloadDir = yield Downloads.getTemporaryDownloadsDirectory();
+  do_check_true(downloadDir instanceof Ci.nsIFile);
+});

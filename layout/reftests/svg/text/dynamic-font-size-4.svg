@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <!--
+    This tests that a style change on a <text> element within a resource
+    element like <mask> will cause a reflow of the <text>.
+  -->
+  <style>
+    g text { font: 16px sans-serif; }
+    g.a text { font-size: 32px; }
+  </style>
+  <defs>
+    <g>
+      <mask id="m" x="0" y="0" width="600" height="400">
+        <text x="100" y="100" fill="white"><tspan>abc</tspan><tspan>def</tspan></text>
+      </mask>
+    </g>
+  </defs>
+  <rect width="600" height="400" fill="blue" mask="url(#m)"/>
+  <script>
+    function doTest() {
+      document.querySelector("g").setAttribute("class", "a");
+      document.documentElement.removeAttribute("class");
+    }
+
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+    window.setTimeout(doTest, 4000); // fallback for running outside reftest
+  </script>
+</svg>

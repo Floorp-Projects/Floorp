@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsinterpinlines_h__
-#define jsinterpinlines_h__
+#ifndef Interpreter_inl_h__
+#define Interpreter_inl_h__
 
 #include "jsapi.h"
 #include "jsbool.h"
 #include "jscompartment.h"
 #include "jsinfer.h"
-#include "jsinterp.h"
 #include "jslibmath.h"
 #include "jsnum.h"
 #include "jsprobes.h"
 #include "jsstr.h"
 
+#include "vm/Interpreter.h"
 #include "vm/ForkJoin.h"
 
 #include "jsatominlines.h"
@@ -1186,4 +1186,4 @@ class FastInvokeGuard
 
 }  /* namespace js */
 
-#endif /* jsinterpinlines_h__ */
+#endif /* Interpreter_inl_h__ */

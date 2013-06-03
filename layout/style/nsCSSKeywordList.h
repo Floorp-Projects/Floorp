@@ -524,6 +524,8 @@ CSS_KEY(x-large, x_large)
 CSS_KEY(x-small, x_small)
 CSS_KEY(xx-large, xx_large)
 CSS_KEY(xx-small, xx_small)
+CSS_KEY(zoom-in, zoom_in)
+CSS_KEY(zoom-out, zoom_out)
 
 // Appearance keywords for widget styles
 CSS_KEY(radio, radio)

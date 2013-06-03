@@ -167,6 +167,19 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   SVGSVGElement *svg = static_cast<SVGSVGElement*>(aContent);
   if (!svg->PassesConditionalProcessingTests()) {
     AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
+  } else {
+    // If this outer <svg> element is the child of a <foreignObject> that
+    // is non-display, or is the child of a frame for HTML content that
+    // itself is a descendant of a non-display SVG frame, then we want to
+    // it non-display also.  The second case is not as simple to handle
+    // as copying a state bit from the parent, since non-SVG frames do
+    // not use NS_STATE_SVG_NONDISPLAY_CHILD.
+    for (nsIFrame* f = aParent; f; f = f->GetParent()) {
+      if (f->IsFrameOfType(eSVG)) {
+        AddStateBits(f->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
+        break;
+      }
+    }
   }
 
   nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);

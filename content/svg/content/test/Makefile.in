@@ -82,6 +82,7 @@ MOCHITEST_FILES = \
 		test_text_2.html \
 		test_text_scaled.html \
 		test_text_selection.html \
+		test_text_update.html \
 		text-helper.svg \
 		text-helper-scaled.svg \
 		text-helper-selection.svg \
