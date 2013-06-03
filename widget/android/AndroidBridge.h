@@ -375,10 +375,10 @@ public:
     void SetPageRect(const CSSRect& aCssPageRect);
     void SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                          gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset);
+                          gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
     void SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                           bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
-                          bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset);
+                          bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
 
     void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen);
     void RemovePluginView(jobject view, bool isFullScreen);

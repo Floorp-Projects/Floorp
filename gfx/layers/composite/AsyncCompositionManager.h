@@ -125,7 +125,7 @@ private:
                         ScreenPoint& aScrollOffset,
                         float& aScaleX, float& aScaleY,
                         gfx::Margin& aFixedLayerMargins,
-                        gfx::Point& aOffset);
+                        ScreenPoint& aOffset);
   void SyncFrameMetrics(const gfx::Point& aScrollOffset,
                         float aZoom,
                         const CSSRect& aCssPageRect,
@@ -134,7 +134,7 @@ private:
                         float aDisplayResolution,
                         bool aIsFirstPaint,
                         gfx::Margin& aFixedLayerMargins,
-                        gfx::Point& aOffset);
+                        ScreenPoint& aOffset);
 
   /**
    * Recursively applies the given translation to all top-level fixed position
