@@ -1243,7 +1243,8 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* aDocument,
     if (!mRoot->IsXUL()) {
         // Hmm. This must be an HTML element. Try to set it as a
         // JS property "by hand".
-        InitHTMLTemplateRoot();
+        rv = InitHTMLTemplateRoot();
+        NS_ENSURE_SUCCESS(rv, rv);
     }
   
     return NS_OK;
