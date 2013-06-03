@@ -570,6 +570,59 @@ ValueToIntegerRange(JSContext *cx, const Value &v, int32_t *out)
     return true;
 }
 
+static JSString *
+DoSubstr(JSContext *cx, JSString *str, size_t begin, size_t len)
+{
+    /*
+     * Optimization for one level deep ropes.
+     * This is common for the following pattern:
+     *
+     * while() {
+     *   text = text.substr(0, x) + "bla" + text.substr(x)
+     *   test.charCodeAt(x + 1)
+     * }
+     */
+    if (str->isRope()) {
+        JSRope *rope = &str->asRope();
+
+        /* Substring is totally in leftChild of rope. */
+        if (begin + len <= rope->leftChild()->length()) {
+            str = rope->leftChild();
+            return js_NewDependentString(cx, str, begin, len);
+        }
+
+        /* Substring is totally in rightChild of rope. */
+        if (begin >= rope->leftChild()->length()) {
+            str = rope->rightChild();
+            begin -= rope->leftChild()->length();
+            return js_NewDependentString(cx, str, begin, len);
+        }
+
+        /*
+         * Requested substring is partly in the left and partly in right child.
+         * Create a rope of substrings for both childs.
+         */
+        JS_ASSERT (begin < rope->leftChild()->length() &&
+                   begin + len > rope->leftChild()->length());
+
+        size_t lhsLength = rope->leftChild()->length() - begin;
+        size_t rhsLength = begin + len - rope->leftChild()->length();
+
+        RootedString lhs(cx, js_NewDependentString(cx, rope->leftChild(),
+                                                   begin, lhsLength));
+        if (!lhs)
+            return NULL;
+
+        RootedString rhs(cx, js_NewDependentString(cx, rope->rightChild(), 0, rhsLength));
+        if (!rhs)
+            return NULL;
+
+        return JSRope::new_<CanGC>(cx, lhs, rhs, len);
+    }
+
+    return js_NewDependentString(cx, str, begin, len);
+}
+
 static JSBool
 str_substring(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -620,7 +673,7 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
             }
         }
 
-        str = js_NewDependentString(cx, str, size_t(begin), size_t(end - begin));
+        str = DoSubstr(cx, str, size_t(begin), size_t(end - begin));
         if (!str)
             return false;
     }
@@ -859,12 +912,10 @@ js_str_charCodeAt(JSContext *cx, unsigned argc, Value *vp)
         i = size_t(d);
     }
 
-    const jschar *chars;
-    chars = str->getChars(cx);
-    if (!chars)
+    jschar c;
+    if (!str->getChar(cx, i, &c))
         return false;
-
-    args.rval().setInt32(chars[i]);
+    args.rval().setInt32(c);
     return true;
 
 out_of_range:
@@ -3109,7 +3160,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
             len = length - begin;
         }
 
-        str = js_NewDependentString(cx, str, size_t(begin), size_t(len));
+        str = DoSubstr(cx, str, size_t(begin), size_t(len));
         if (!str)
             return false;
     }
