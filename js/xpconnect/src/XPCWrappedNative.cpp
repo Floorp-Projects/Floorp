@@ -2987,18 +2987,6 @@ XPCWrappedNative::GetObjectPrincipal() const
     return principal;
 }
 
-/* readonly attribute nsIXPConnect XPConnect; */
-NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
-{
-    if (IsValid()) {
-        nsIXPConnect* temp = GetRuntime()->GetXPConnect();
-        NS_IF_ADDREF(temp);
-        *aXPConnect = temp;
-    } else
-        *aXPConnect = nullptr;
-    return NS_OK;
-}
-
 /* XPCNativeInterface FindInterfaceWithMember (in JSHandleId name); */
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(HandleId name,
                                                         nsIInterfaceInfo * *_retval)

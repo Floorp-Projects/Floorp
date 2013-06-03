@@ -55,6 +55,16 @@ partial interface HTMLImageElement {
   [TreatNullAs=EmptyString,SetterThrows] attribute DOMString border;
 };
 
+// Mozilla extensions.
+partial interface HTMLImageElement {
+           attribute DOMString lowsrc;
+
+  // These attributes are offsets from the closest view (to mimic
+  // NS4's "offset-from-layer" behavior).
+  readonly attribute long x;
+  readonly attribute long y;
+};
+
 [NoInterfaceObject]
 interface MozImageLoadingContent {
   // Mirrored chrome-only nsIImageLoadingContent methods.  Please make sure

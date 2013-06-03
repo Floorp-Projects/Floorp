@@ -70,7 +70,7 @@ interface nsIXPConnectJSObjectHolder : nsISupports
     [notxpcom, nostdcall] JSObjectPtr GetJSObject();
 };
 
-[uuid(b1b0d624-0759-4037-9517-45972781dcc1)]
+[uuid(2d08015d-7556-4f12-9e89-4c756d129310)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -81,7 +81,6 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      * These are here as an aid to nsIXPCScriptable implementors
      */
 
-    readonly attribute nsIXPConnect XPConnect;
     nsIInterfaceInfo FindInterfaceWithMember(in JSHandleId nameID);
     nsIInterfaceInfo FindInterfaceWithName(in JSHandleId nameID);
     [notxpcom] bool HasNativeMember(in JSHandleId name);

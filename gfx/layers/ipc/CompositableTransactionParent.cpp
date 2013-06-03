@@ -46,9 +46,9 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         static_cast<CompositableParent*>(op.compositableParent());
       CompositableHost* compositable = compositableParent->GetCompositableHost();
 
-      compositable->EnsureTextureHost(compositableParent->GetCompositableManager(),
-                                      op.textureInfo(),
-                                      op.bufferRect());
+      compositable->EnsureTextureHostIncremental(compositableParent->GetCompositableManager(),
+                                                 op.textureInfo(),
+                                                 op.bufferRect());
       break;
     }
     case CompositableOperation::TOpDestroyThebesBuffer: {

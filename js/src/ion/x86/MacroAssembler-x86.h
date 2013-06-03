@@ -731,7 +731,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         if (dest.isFloat()) {
             Label notInt32, end;
             branchTestInt32(Assembler::NotEqual, src, &notInt32);
-            cvtsi2sd(Operand(src.payloadReg()), dest.fpu());
+            cvtsi2sd(src.payloadReg(), dest.fpu());
             jump(&end);
             bind(&notInt32);
             unboxDouble(src, dest.fpu());
