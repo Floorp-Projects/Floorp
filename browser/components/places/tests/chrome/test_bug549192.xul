@@ -35,9 +35,9 @@
 
   <script type="application/javascript"><![CDATA[
     /**
+     * Bug 874407
+     * Ensures that history views are updated properly after visits.
      * Bug 549192
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=549192
-     *
      * Ensures that history views are updated after deleting entries.
      */
 
@@ -52,64 +52,64 @@
       // Add some visits.
       let vtime = Date.now() * 1000;
       const ttype = PlacesUtils.history.TRANSITION_TYPED;
-
-      addVisits(
+      let places =
         [{ uri: Services.io.newURI("http://example.tld/", null, null),
-           visitDate: vtime, transition: ttype },
+           visitDate: ++vtime, transition: ttype },
          { uri: Services.io.newURI("http://example2.tld/", null, null),
-           visitDate: vtime++, transition: ttype },
+           visitDate: ++vtime, transition: ttype },
          { uri: Services.io.newURI("http://example3.tld/", null, null),
-           visitDate: vtime++, transition: ttype }],
-         function() {
-           // Make a history query.
-           let query = PlacesUtils.history.getNewQuery();
-           let opts = PlacesUtils.history.getNewQueryOptions();
-           let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
+           visitDate: ++vtime, transition: ttype }];
 
-           // Setup the places tree contents.
-           var tree = document.getElementById("tree");
-           tree.place = queryURI;
+      addVisits(places, function() {
+        // Make a history query.
+        let query = PlacesUtils.history.getNewQuery();
+        let opts = PlacesUtils.history.getNewQueryOptions();
+        opts.sortingMode = opts.SORT_BY_DATE_DESCENDING;
+        let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
 
-           // loop through the rows and check formatting
-           let treeView = tree.view;
-           for (let i = 0; i < rc; i++) {
-             selection.select(rc);
-             let node = tree.selectedNode;
-             ok(true, "found " + node.title);
-           }
-           let rc = treeView.rowCount;
-           is(rc, 3, "Rows found.");
-           let selection = treeView.selection;
-           for (let i = 0; i < rc; i++) {
-             selection.select(0);
-             let node = tree.selectedNode;
-             tree.controller.remove("Removing page");
-             ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
-               node.uri + " removed.");
-             ok(treeView.rowCount == rc - i - 1, "Rows count decreased");
-           }
+        // Setup the places tree contents.
+        var tree = document.getElementById("tree");
+        tree.place = queryURI;
 
-           // Cleanup.
-           waitForClearHistory(SimpleTest.finish);
-         });
-    }
+        // loop through the rows and check them.
+        let treeView = tree.view;
+        let selection = treeView.selection;
+        let rc = treeView.rowCount;
 
-    /**
-     * Clears history invoking callback when done.
-     */
-    function waitForClearHistory(aCallback) {
-      const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
-      let observer = {
-        observe: function(aSubject, aTopic, aData) {
-          Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
-          aCallback();
+        for (let i = 0; i < rc; i++) {
+          selection.select(i);
+          let node = tree.selectedNode;
+          is(node.uri, places[rc - i - 1].uri.spec,
+             "Found expected node at position " + i + ".");
         }
-      };
-      Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
-      let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-               getService(Ci.nsINavHistoryService);
-      hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
-   }
+
+        is(rc, 3, "Found expected number of rows.");
+
+        // First check live-update of the view when adding visits.
+        places.forEach(place => place.visitDate = ++vtime);
+        addVisits(places, function() {
+          for (let i = 0; i < rc; i++) {
+            selection.select(i);
+            let node = tree.selectedNode;
+            is(node.uri, places[rc - i - 1].uri.spec,
+               "Found expected node at position " + i + ".");
+          }
+
+          // Now remove the pages and verify live-update again.
+          for (let i = 0; i < rc; i++) {
+            selection.select(0);
+            let node = tree.selectedNode;
+            tree.controller.remove("Removing page");
+            ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
+              node.uri + " removed.");
+            ok(treeView.rowCount == rc - i - 1, "Rows count decreased");
+          }
+
+          // Cleanup.
+          waitForClearHistory(SimpleTest.finish);
+        });
+      });
+    }
 
   ]]></script>
 </window>
