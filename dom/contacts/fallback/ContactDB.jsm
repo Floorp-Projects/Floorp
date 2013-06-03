@@ -16,6 +16,7 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
+Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 const DB_NAME = "contacts";
 const DB_VERSION = 11;
@@ -800,7 +801,8 @@ ContactDB.prototype = {
     if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp);
     let self = this;
     this.newTxn("readonly", STORE_NAME, function (txn, store) {
-      if (aOptions && (["equals", "contains", "match"].indexOf(aOptions.filterOp) >= 0)) {
+      let filterOps = ["equals", "contains", "match", "startsWith"];
+      if (aOptions && (filterOps.indexOf(aOptions.filterOp) >= 0)) {
         self._findWithIndex(txn, store, aOptions);
       } else {
         self._findAll(txn, store, aOptions);
@@ -862,6 +864,11 @@ ContactDB.prototype = {
                                                     /*numbersOnly*/ true);
         request = index.mozGetAll(normalized, limit);
       } else {
+        // XXX: "contains" should be handled separately, this is "startsWith"
+        if (options.filterOp === 'contains' && key !== 'tel') {
+          console.warn("ContactDB: 'contains' only works for 'tel'. " +
+                       "Falling back to 'startsWith'.");
+        }
         // not case sensitive
         let tmp = options.filterValue.toString().toLowerCase();
         if (key === "tel") {
