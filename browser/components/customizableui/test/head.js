@@ -11,22 +11,30 @@ let {Task, CustomizableUI} = tmp;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+function createDummyXULButton(id, label) {
+  let btn = document.createElementNS(kNSXUL, "toolbarbutton");
+  btn.id = id;
+  btn.setAttribute("label", label || id);
+  btn.className = "toolbarbutton-1 chromeclass-toolbar-additional";
+  window.gNavToolbox.palette.appendChild(btn);
+  return btn;
+}
+
 function createToolbarWithPlacements(id, placements) {
   let tb = document.createElementNS(kNSXUL, "toolbar");
   tb.id = id;
   tb.setAttribute("customizable", "true");
   document.getElementById("customToolbars").appendChild(tb);
   CustomizableUI.registerArea(id, {
-    type: CustomizableUI.TYPE_TOOLBAR
+    type: CustomizableUI.TYPE_TOOLBAR,
+    defaultPlacements: placements
   });
-  for (let p of placements) {
-    CustomizableUI.addWidgetToArea(p, id);
-  }
 }
 
 function removeCustomToolbars() {
   let customToolbarSet = document.getElementById("customToolbars");
   while (customToolbarSet.lastChild) {
+    CustomizableUI.unregisterArea(customToolbarSet.lastChild.id);
     customToolbarSet.lastChild.remove();
   }
 }
