@@ -570,7 +570,7 @@ void
 AsyncCompositionManager::SetFirstPaintViewport(const nsIntPoint& aOffset,
                                                float aZoom,
                                                const nsIntRect& aPageRect,
-                                               const gfx::Rect& aCssPageRect)
+                                               const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SetFirstPaintViewport(aOffset, aZoom, aPageRect, aCssPageRect);
@@ -578,7 +578,7 @@ AsyncCompositionManager::SetFirstPaintViewport(const nsIntPoint& aOffset,
 }
 
 void
-AsyncCompositionManager::SetPageRect(const gfx::Rect& aCssPageRect)
+AsyncCompositionManager::SetPageRect(const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SetPageRect(aCssPageRect);
@@ -608,7 +608,7 @@ AsyncCompositionManager::SyncViewportInfo(const nsIntRect& aDisplayPort,
 void
 AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aScrollOffset,
                                           float aZoom,
-                                          const gfx::Rect& aCssPageRect,
+                                          const CSSRect& aCssPageRect,
                                           bool aLayersUpdated,
                                           const gfx::Rect& aDisplayPort,
                                           float aDisplayResolution,

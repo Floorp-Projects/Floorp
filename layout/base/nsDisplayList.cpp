@@ -655,11 +655,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     nsRect contentBounds = scrollableFrame->GetScrollRange();
     contentBounds.width += scrollableFrame->GetScrollPortRect().width;
     contentBounds.height += scrollableFrame->GetScrollPortRect().height;
-    metrics.mScrollableRect =
-      mozilla::gfx::Rect(nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.x),
-                         nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.y),
-                         nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.width),
-                         nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
+    metrics.mScrollableRect = CSSRect::FromAppUnits(contentBounds);
     metrics.mContentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
     nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
@@ -667,11 +663,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   }
   else {
     nsRect contentBounds = aForFrame->GetRect();
-    metrics.mScrollableRect =
-      mozilla::gfx::Rect(nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.x),
-                         nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.y),
-                         nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.width),
-                         nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
+    metrics.mScrollableRect = CSSRect::FromAppUnits(contentBounds);
     metrics.mContentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
@@ -690,7 +682,11 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
 
   if (nsIWidget* widget = aForFrame->GetNearestWidget()) {
-    widget->GetBounds(metrics.mCompositionBounds);
+    nsIntRect bounds;
+    widget->GetBounds(bounds);
+    // I don't know what units bounds are in, hence FromUnknownRect
+    metrics.mCompositionBounds = LayerIntRect::FromUnknownRect(
+      mozilla::gfx::IntRect(bounds.x, bounds.y, bounds.width, bounds.height));
   }
 
   metrics.mPresShellId = presShell->GetPresShellId();
