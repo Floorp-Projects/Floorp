@@ -463,9 +463,9 @@ ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
 }
 
 void
-ContentHostIncremental::EnsureTextureHost(ISurfaceAllocator* aAllocator,
-                                          const TextureInfo& aTextureInfo,
-                                          const nsIntRect& aBufferRect)
+ContentHostIncremental::EnsureTextureHostIncremental(ISurfaceAllocator* aAllocator,
+                                                     const TextureInfo& aTextureInfo,
+                                                     const nsIntRect& aBufferRect)
 {
   mUpdateList.AppendElement(new TextureCreationRequest(aTextureInfo,
                                                        aBufferRect));

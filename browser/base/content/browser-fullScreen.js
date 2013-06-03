@@ -110,11 +110,13 @@ var FullScreen = {
       return;
 
     // However, if we receive a "MozEnteredDomFullScreen" event for a document
-    // which is not a subdocument of the currently selected tab, we know that
-    // we've switched tabs since the request to enter full-screen was made,
-    // so we should exit full-screen since the "full-screen document" isn't
-    // acutally visible.
-    if (event.target.defaultView.top != gBrowser.contentWindow) {
+    // which is not a subdocument of a currently active (ie. visible) browser
+    // or iframe, we know that we've switched to a different frame since the
+    // request to enter full-screen was made, so we should exit full-screen
+    // since the "full-screen document" isn't acutally visible.
+    if (!event.target.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebNavigation)
+                                 .QueryInterface(Ci.nsIDocShell).isActive) {
       document.mozCancelFullScreen();
       return;
     }

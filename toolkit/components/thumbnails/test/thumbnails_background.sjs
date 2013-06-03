@@ -17,6 +17,16 @@ function handleRequest(req, resp) {
   }
   catch (err) {}
 
+  if (opts.setGreenCookie)
+    resp.setHeader("Set-Cookie", "green", false);
+
+  if (req.hasHeader("Cookie") &&
+      req.getHeader("Cookie").split(";").indexOf("green") >= 0) {
+    resp.write('<html style="background: #0f0;"></html>');
+    resp.finish();
+    return;
+  }
+
   if (opts.redirect) {
     resp.setHeader("Location", opts.redirect);
     resp.setStatusLine(null, 303, null);

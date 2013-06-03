@@ -5292,6 +5292,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       filename(NULL),
       lineno(1),
       column(0),
+      element(NullPtr()),
       compileAndGo(cx->hasOption(JSOPTION_COMPILE_N_GO)),
       forEval(false),
       noScriptRval(cx->hasOption(JSOPTION_NO_SCRIPT_RVAL)),

@@ -155,6 +155,8 @@ namespace ion {
     _(JSOP_ENTERLET0)          \
     _(JSOP_ENTERLET1)          \
     _(JSOP_LEAVEBLOCK)         \
+    _(JSOP_LEAVEBLOCKEXPR)     \
+    _(JSOP_LEAVEFORLETIN)      \
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \
     _(JSOP_ARGUMENTS)          \
@@ -250,6 +252,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitFormalArgAccess(uint32_t arg, bool get);
 
     bool emitEnterBlock();
+    bool emitLeaveBlock();
 
     bool addPCMappingEntry(bool addIndexEntry);
 

@@ -35,6 +35,7 @@
 #include "nsBoxFrame.h"
 #include "mozilla/dom/Touch.h"
 #include "nsStyleContext.h"
+#include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h"
@@ -1889,7 +1890,10 @@ bool
 IsBoxOrdinalLEQ(nsIFrame* aFrame1,
                 nsIFrame* aFrame2)
 {
-  return aFrame1->GetOrdinal() <= aFrame2->GetOrdinal();
+  // If we've got a placeholder frame, use its out-of-flow frame's ordinal val.
+  nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
+  nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
+  return aRealFrame1->GetOrdinal() <= aRealFrame2->GetOrdinal();
 }
 
 void 

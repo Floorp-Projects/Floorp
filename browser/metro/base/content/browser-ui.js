@@ -979,8 +979,6 @@ var BrowserUI = {
       case "cmd_panel":
       case "cmd_flyout_back":
       case "cmd_sanitize":
-      case "cmd_zoomin":
-      case "cmd_zoomout":
       case "cmd_volumeLeft":
       case "cmd_volumeRight":
       case "cmd_openFile":
@@ -1081,12 +1079,6 @@ var BrowserUI = {
         break;
       case "cmd_panel":
         PanelUI.toggle();
-        break;
-      case "cmd_zoomin":
-        Browser.zoom(-1);
-        break;
-      case "cmd_zoomout":
-        Browser.zoom(1);
         break;
       case "cmd_volumeLeft":
         // Zoom in (portrait) or out (landscape)

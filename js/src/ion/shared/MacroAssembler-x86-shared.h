@@ -204,7 +204,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest) {
-        cvtsi2sd(Operand(src), dest);
+        cvtsi2sd(src, dest);
     }
     void convertInt32ToDouble(const Address &src, FloatRegister dest) {
         cvtsi2sd(Operand(src), dest);

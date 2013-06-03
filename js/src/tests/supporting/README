@@ -1,0 +1,9 @@
+================================
+= DANGER!!!!!!!!1!!!cos(0)!!!! =
+================================
+
+Any *.js files you add in this directory *will* be considered to be tests by the
+test-staging Makefile target, used to package up JS tests for running on
+Tinderbox.  You are now probably sorry this is the case.  But there is a
+hackaround!  To make the packaging algorithm ignore a *.js file here, add it to
+the EXCLUDED set in lib/manifest.py.

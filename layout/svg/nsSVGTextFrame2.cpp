@@ -4803,8 +4803,8 @@ nsSVGTextFrame2::DoReflow()
   mPositioningDirty = true;
 
   if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
-    // Normally, this flag would be cleared in ReflowSVG(), but that doesn't
-    // get called for non-display frames. We don't want to reflow our
+    // Normally, these dirty flags would be cleared in ReflowSVG(), but that
+    // doesn't get called for non-display frames. We don't want to reflow our
     // descendants every time nsSVGTextFrame2::PaintSVG makes sure that we have
     // valid positions by calling UpdateGlyphPositioning(), so we need to clear
     // these dirty bits. Note that this also breaks an invalidation loop where

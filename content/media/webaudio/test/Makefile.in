@@ -35,6 +35,7 @@ MOCHITEST_FILES := \
   test_audioParamSetCurveAtTime.html \
   test_audioParamSetCurveAtTimeZeroDuration.html \
   test_audioParamSetTargetAtTime.html \
+  test_audioParamSetValueAtTime.html \
   test_audioParamTimelineDestinationOffset.html \
   test_audioBufferSourceNode.html \
   test_audioBufferSourceNodeEnded.html \
