@@ -36,6 +36,18 @@ typedef gfx::RectTyped<CSSPixel> CSSRect;
 typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
 
 struct LayerPixel {
+  static gfx::IntPointTyped<LayerPixel> FromCSSPointRounded(const CSSPoint& pt, float resolutionX, float resolutionY) {
+    return gfx::IntPointTyped<LayerPixel>(NS_lround(pt.x * resolutionX),
+                                          NS_lround(pt.y * resolutionY));
+  }
+
+  static gfx::IntRectTyped<LayerPixel> FromCSSRectRounded(const CSSRect& rect, float resolutionX, float resolutionY) {
+    return gfx::IntRectTyped<LayerPixel>(NS_lround(rect.x * resolutionX),
+                                         NS_lround(rect.y * resolutionY),
+                                         NS_lround(rect.width * resolutionX),
+                                         NS_lround(rect.height * resolutionY));
+  }
+
   static gfx::IntRectTyped<LayerPixel> FromCSSRectRoundOut(const CSSRect& rect, gfxFloat resolution) {
     gfx::RectTyped<LayerPixel> scaled(rect.x, rect.y, rect.width, rect.height);
     scaled.ScaleInverseRoundOut(resolution);
@@ -55,6 +67,7 @@ struct LayerPixel {
   }
 };
 
+typedef gfx::IntPointTyped<LayerPixel> LayerIntPoint;
 typedef gfx::RectTyped<LayerPixel> LayerRect;
 typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
 

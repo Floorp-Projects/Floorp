@@ -863,7 +863,7 @@ AndroidProgressiveUpdateData::Init(jobject jobj)
 }
 
 void
-AndroidGeckoLayerClient::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const CSSRect& aCssPageRect)
+AndroidGeckoLayerClient::SetFirstPaintViewport(const LayerIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const CSSRect& aCssPageRect)
 {
     NS_ASSERTION(!isNull(), "SetFirstPaintViewport called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -890,7 +890,7 @@ AndroidGeckoLayerClient::SetPageRect(const CSSRect& aCssPageRect)
 }
 
 void
-AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                           ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
                                           gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset)
 {
