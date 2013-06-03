@@ -86,6 +86,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           accOrElmOrID: "bananas",
           oldAccOrElmOrID: "apples",
           expected: [["link", "Bananas"], ["Bananas", "link"]]
+        }, {
+          // test unavailable state utterance
+          accOrElmOrID: 'unavailableButton',
+          expected: [["unavailable button", "I am unavailable"],
+            ["I am unavailable", "unavailable button"]]
+        }, {
+          // test expanded state utterance
+          accOrElmOrID: 'expandedButton',
+          expected: [["expanded button", "I am expanded"],
+            ["I am expanded", "expanded button"]]
+        }, {
+          // test collapsed state utterance
+          accOrElmOrID: 'collapsedButton',
+          expected: [["collapsed button", "I am collapsed"],
+            ["I am collapsed", "collapsed button"]]
+        }, {
+          // test required state utterance
+          accOrElmOrID: 'requiredInput',
+          expected: [["required entry", "I am required"],
+            ["I am required", "required entry"]]
+        }, {
+          // test has popup state utterance
+          accOrElmOrID: 'hasPopupButton',
+          expected: [["has pop up button menu", "I have a popup"],
+            ["I have a popup", "has pop up button menu"]]
         }];
 
         // Test all possible utterance order preference values.
@@ -149,6 +174,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           </td>
         </tr>
       </table>
+      <button id="unavailableButton" disabled>I am unavailable</button>
+      <button id="expandedButton" aria-expanded="true">I am expanded</button>
+      <button id="collapsedButton" aria-expanded="false">I am collapsed</button>
+      <input id="requiredInput" required placeholder="I am required" />
+      <button id="hasPopupButton" aria-haspopup="true">I have a popup</button>
     </div>
   </body>
 </html>

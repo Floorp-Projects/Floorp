@@ -13,7 +13,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsonparser.h"
@@ -21,6 +20,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "vm/Interpreter.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"

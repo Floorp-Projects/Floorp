@@ -53,11 +53,11 @@ public class PropertyAnimator implements Runnable {
     private FramePoster mFramePoster;
     private boolean mUseHardwareLayer;
 
-    public PropertyAnimator(int duration) {
+    public PropertyAnimator(long duration) {
         this(duration, new DecelerateInterpolator());
     }
 
-    public PropertyAnimator(int duration, Interpolator interpolator) {
+    public PropertyAnimator(long duration, Interpolator interpolator) {
         mDuration = duration;
         mDurationReciprocal = 1.0f / (float) mDuration;
         mInterpolator = interpolator;
@@ -83,6 +83,10 @@ public class PropertyAnimator implements Runnable {
 
     public void setPropertyAnimationListener(PropertyAnimationListener listener) {
         mListener = listener;
+    }
+
+    public long getDuration() {
+        return mDuration;
     }
 
     public long getRemainingTime() {

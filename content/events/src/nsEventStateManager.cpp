@@ -3781,10 +3781,10 @@ nsEventStateManager::SetCursor(int32_t aCursor, imgIContainer* aContainer,
   case NS_STYLE_CURSOR_SPINNING:
     c = eCursor_spinning;
     break;
-  case NS_STYLE_CURSOR_MOZ_ZOOM_IN:
+  case NS_STYLE_CURSOR_ZOOM_IN:
     c = eCursor_zoom_in;
     break;
-  case NS_STYLE_CURSOR_MOZ_ZOOM_OUT:
+  case NS_STYLE_CURSOR_ZOOM_OUT:
     c = eCursor_zoom_out;
     break;
   case NS_STYLE_CURSOR_NOT_ALLOWED:
