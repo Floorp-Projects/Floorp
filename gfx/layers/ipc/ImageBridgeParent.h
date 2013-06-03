@@ -88,6 +88,12 @@ public:
     PImageBridgeParent::DeallocShmem(aShmem);
   }
 
+  // Overriden from IToplevelProtocol
+  IToplevelProtocol*
+  CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
+                base::ProcessHandle aPeerProcess,
+                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+
 private:
   void DeferredDestroy();
 
