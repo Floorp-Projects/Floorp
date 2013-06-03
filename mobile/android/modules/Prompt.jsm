@@ -48,8 +48,6 @@ Prompt.prototype = {
     obj.id = aOptions.id || (aOptions.type + this[aOptions.type + "_count"]);
     this[aOptions.type + "_count"]++;
 
-    if (!this.msg.inputs)
-      this.msg.inputs = [];
     this.msg.inputs.push(obj);
     return this;
   },
@@ -80,13 +78,6 @@ Prompt.prototype = {
       hint: aOptions.hint,
       autofocus: aOptions.autofocus,
       id : aOptions.id
-    });
-  },
-
-  addDatePicker: function(aOptions) {
-    return this._addInput({
-      type: aOptions.type || "date",
-      value: aOptions.value,
     });
   },
 
@@ -121,12 +112,16 @@ Prompt.prototype = {
       this.callback(data);
   },
 
-  _setListItems: function(aItems) {
+  _setListItems: function(aItems, aInGroup) {
     let hasSelected = false;
-    this.msg.listitems = [];
+    if (!aInGroup)
+      this.msg.listitems = [];
 
     aItems.forEach(function(item) {
       let obj = { id: item.id };
+
+      if (aInGroup !== undefined)
+        obj.inGroup = aInGroup;
 
       obj.label = item.label;
 
@@ -141,16 +136,18 @@ Prompt.prototype = {
         this.msg.selected[this.msg.listitems.length] = item.selected;
       }
 
-      if (item.header)
+      if (item.children) {
         obj.isGroup = true;
-
-      if (item.menu)
+      } else if (item.submenu) {
         obj.isParent = true;
+      }
 
-      if (item.child)
-        obj.inGroup = true;
-
+      // Order matters in the java message, so make sure we add the obj
+      // to the list before we add its children
       this.msg.listitems.push(obj);
+
+      if (item.children)
+        this._setListItems(item.children, true);
 
     }, this);
     return this;
