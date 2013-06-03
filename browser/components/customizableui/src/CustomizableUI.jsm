@@ -62,7 +62,7 @@ let gFuturePlacements = new Map();
 
 //XXXunf Temporary. Need a nice way to abstract functions to build widgets
 //       of these types.
-let gSupportedWidgetTypes = new Set(["button", "view", "custom"]);
+let gSupportedWidgetTypes = new Set(["button", "view"]);
 
 /**
  * gSeenWidgets remembers which widgets the user has seen for the first time
@@ -76,7 +76,6 @@ let gSavedState = null;
 let gRestoring = false;
 let gDirty = false;
 let gInBatch = false;
-let gResetting = false;
 
 /**
  * gBuildAreas maps area IDs to actual area nodes within browser windows.
@@ -118,7 +117,6 @@ let CustomizableUIInternal = {
       anchor: "PanelUI-menu-button",
       type: CustomizableUI.TYPE_MENU_PANEL,
       defaultPlacements: [
-        "zoom-controls",
         "new-window-button",
         "privatebrowsing-button",
         "save-page-button",
@@ -325,8 +323,6 @@ let CustomizableUIInternal = {
       }
       this.insertWidgetBefore(node, currentNode, container, aArea);
       this._addParentFlex(node);
-      if (gResetting)
-        this.notifyListeners("onWidgetReset", id);
     }
 
     if (currentNode) {
@@ -712,66 +708,52 @@ let CustomizableUIInternal = {
       throw new Error("buildWidget was passed a non-widget to build.");
     }
 
-    LOG("Building " + aWidget.id + " of type " + aWidget.type);
+    LOG("Building " + aWidget.id);
 
-    let node;
-    if (aWidget.type == "custom") {
-      if (aWidget.onBuild) {
-        try {
-          node = aWidget.onBuild(aDocument);
-        } catch (ex) {
-          ERROR("Custom widget with id " + aWidget.id + " threw an error: " + ex.message);
-        }
-      }
-      if (!node || !(node instanceof aDocument.defaultView.XULElement))
-        ERROR("Custom widget with id " + aWidget.id + " does not return a valid node");
+    let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+
+    node.setAttribute("id", aWidget.id);
+    node.setAttribute("widget-id", aWidget.id);
+    node.setAttribute("widget-type", aWidget.type);
+    if (aWidget.disabled) {
+      node.setAttribute("disabled", true);
     }
-    else {
-      node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+    node.setAttribute("removable", aWidget.removable);
+    node.setAttribute("label", aWidget.name);
+    node.setAttribute("tooltiptext", aWidget.description);
+    //XXXunf Need to hook this up to a <key> element or something.
+    if (aWidget.shortcut) {
+      node.setAttribute("acceltext", aWidget.shortcut);
+    }
+    node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
-      node.setAttribute("id", aWidget.id);
-      node.setAttribute("widget-id", aWidget.id);
-      node.setAttribute("widget-type", aWidget.type);
-      if (aWidget.disabled) {
-        node.setAttribute("disabled", true);
+    let handler = this.handleWidgetClick.bind(this, aWidget, node);
+    node.addEventListener("command", handler, false);
+
+    // If the widget has a view, and has view showing / hiding listeners,
+    // hook those up to this widget.
+    if (aWidget.type == "view" &&
+        (aWidget.onViewShowing || aWidget.onViewHiding)) {
+      LOG("Widget " + aWidget.id + " has a view with showing and hiding events. Auto-registering event handlers.");
+      let viewNode = aDocument.getElementById(aWidget.viewId);
+
+      if (!viewNode) {
+        ERROR("Could not find the view node with id: " + aWidget.viewId);
+        throw new Error("Could not find the view node with id: " + aWidget.viewId);
       }
-      node.setAttribute("removable", aWidget.removable);
-      node.setAttribute("label", aWidget.name);
-      node.setAttribute("tooltiptext", aWidget.description);
-      //XXXunf Need to hook this up to a <key> element or something.
-      if (aWidget.shortcut) {
-        node.setAttribute("acceltext", aWidget.shortcut);
-      }
-      node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
-      let handler = this.handleWidgetClick.bind(this, aWidget, node);
-      node.addEventListener("command", handler, false);
+      // PanelUI relies on the .PanelUI-subView class to be able to show only
+      // one sub-view at a time.
+      viewNode.classList.add("PanelUI-subView");
 
-      // If the widget has a view, and has view showing / hiding listeners,
-      // hook those up to this widget.
-      if (aWidget.type == "view" &&
-          (aWidget.onViewShowing || aWidget.onViewHiding)) {
-        LOG("Widget " + aWidget.id + " has a view with showing and hiding events. Auto-registering event handlers.");
-        let viewNode = aDocument.getElementById(aWidget.viewId);
-
-        if (!viewNode) {
-          ERROR("Could not find the view node with id: " + aWidget.viewId);
-          throw new Error("Could not find the view node with id: " + aWidget.viewId);
+      for (let eventName of kSubviewEvents) {
+        let handler = "on" + eventName;
+        if (typeof aWidget[handler] == "function") {
+          viewNode.addEventListener(eventName, aWidget[handler], false);
         }
-
-        // PanelUI relies on the .PanelUI-subView class to be able to show only
-        // one sub-view at a time.
-        viewNode.classList.add("PanelUI-subView");
-
-        for (let eventName of kSubviewEvents) {
-          let handler = "on" + eventName;
-          if (typeof aWidget[handler] == "function") {
-            viewNode.addEventListener(eventName, aWidget[handler], false);
-          }
-        }
-
-        LOG("Widget " + aWidget.id + " showing and hiding event handlers set.");
       }
+
+      LOG("Widget " + aWidget.id + " showing and hiding event handlers set.");
     }
 
     aWidget.instances.set(aDocument, node);
@@ -1135,7 +1117,7 @@ let CustomizableUIInternal = {
           listener[aEvent].apply(listener, aArgs);
         }
       } catch (e) {
-        Cu.reportError(e + " -- " + (e.fileName ? e.fileName + ":" + e.lineNumber : ""));
+        Cu.reportError(e + " -- " + e.fileName + ":" + e.lineNumber);
       }
     }
   },
@@ -1329,10 +1311,6 @@ let CustomizableUIInternal = {
       widget.onViewHiding = typeof aData.onViewHiding == "function" ? 
                                  aData.onViewHiding :
                                  null;
-    } else if (widget.type == "custom") {
-      widget.onBuild = typeof aData.onBuild == "function" ?
-                                 aData.onBuild :
-                                 null;
     }
 
     if (gPalette.has(widget.id)) {
@@ -1488,7 +1466,6 @@ let CustomizableUIInternal = {
   },
 
   reset: function() {
-    gResetting = true;
     Services.prefs.clearUserPref(kPrefCustomizationState);
     LOG("State reset");
 
@@ -1509,7 +1486,6 @@ let CustomizableUIInternal = {
         this.buildArea(areaId, placements, areaNode);
       }
     }
-    gResetting = false;
   },
 
   _addParentFlex: function(aElement) {
