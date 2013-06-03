@@ -147,10 +147,7 @@ XPCJSContextStack::GetSafeJSContext()
     if (NS_FAILED(rv))
         return NULL;
 
-    nsRefPtr<nsXPConnect> xpc = nsXPConnect::GetXPConnect();
-    if (!xpc)
-        return NULL;
-
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     XPCJSRuntime* xpcrt = xpc->GetRuntime();
     if (!xpcrt)
         return NULL;

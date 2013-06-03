@@ -44,10 +44,10 @@ public:
   // True if the second step of verification (VerifyEntry) 
   // has taken place:
   bool                entryVerified;
-  
+
   // Not signed, valid, or failure code
   int16_t             status;
-  
+
   // Internal storage of digests
   nsCString           calculatedSectionDigest;
   nsCString           storedEntryDigest;

@@ -2422,11 +2422,7 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
 nsresult nsScriptSecurityManager::Init()
 {
-    nsXPConnect* xpconnect = nsXPConnect::GetXPConnect();
-     if (!xpconnect)
-        return NS_ERROR_FAILURE;
-
-    NS_ADDREF(sXPConnect = xpconnect);
+    NS_ADDREF(sXPConnect = nsXPConnect::XPConnect());
 
     JSContext* cx = GetSafeJSContext();
     if (!cx) return NS_ERROR_FAILURE;   // this can happen of xpt loading fails

@@ -20,6 +20,10 @@ function test() {
 var tests = {
   testOpenCloseFlyout: function(next) {
     let panel = document.getElementById("social-flyout-panel");
+    panel.addEventListener("popupshowing", function onShowing() {
+      panel.removeEventListener("popupshowing", onShowing);
+      is(panel.firstChild.contentDocument.readyState, "complete", "panel is loaded prior to showing");
+    });
     let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {

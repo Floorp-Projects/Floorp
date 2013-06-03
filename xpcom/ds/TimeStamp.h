@@ -207,7 +207,7 @@ public:
   /**
    * Initialize to the "null" moment
    */
-  TimeStamp() : mValue(0) {}
+  MOZ_CONSTEXPR TimeStamp() : mValue(0) {}
   // Default copy-constructor and assignment are OK
 
   /**

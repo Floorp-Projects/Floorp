@@ -54,6 +54,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'BarProps.h',
     'DOMCursor.h',
     'DOMError.h',
     'DOMRequest.h',
@@ -63,13 +64,13 @@ EXPORTS.mozilla.dom += [
 ]
 
 CPP_SOURCES += [
+    'BarProps.cpp',
     'Crypto.cpp',
     'DOMCursor.cpp',
     'DOMError.cpp',
     'DOMRequest.cpp',
     'Navigator.cpp',
     'URL.cpp',
-    'nsBarProps.cpp',
     'nsContentPermissionHelper.cpp',
     'nsDOMClassInfo.cpp',
     'nsDOMException.cpp',
