@@ -1890,18 +1890,6 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
         break;
       }
 
-      if (!mScriptSecurityManager) {
-        MutexAutoLock lock(mutex);
-        // re-test the condition to prevent double initialization
-        if (!mScriptSecurityManager) {
-          mScriptSecurityManager = 
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv2);
-          if (NS_FAILED(rv2)) {
-            break;
-          }
-        }
-      }
-
       //-- Create a certificate principal with id and organization data
       nsAutoString fingerprint;
       rv2 = pCert->GetSha1Fingerprint(fingerprint);
