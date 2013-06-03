@@ -92,6 +92,8 @@ public:
      */
     static already_AddRefed<ContentParent> PreallocateAppProcess();
 
+    static void RunNuwaProcess();
+
     /**
      * Get or create a content process for the given TabContext.  aFrameElement
      * should be the frame/iframe element with which this process will
@@ -172,6 +174,8 @@ public:
      */
     void FriendlyName(nsAString& aName);
 
+    virtual void OnChannelError() MOZ_OVERRIDE;
+
     virtual PIndexedDBParent* AllocPIndexedDBParent() MOZ_OVERRIDE;
     virtual bool
     RecvPIndexedDBConstructor(PIndexedDBParent* aActor) MOZ_OVERRIDE;
@@ -198,6 +202,7 @@ public:
     virtual bool RecvPStorageConstructor(PStorageParent* aActor) MOZ_OVERRIDE {
         return PContentParent::RecvPStorageConstructor(aActor);
     }
+
     virtual PJavaScriptParent*
     AllocPJavaScriptParent() MOZ_OVERRIDE;
     virtual bool
@@ -205,9 +210,12 @@ public:
         return PContentParent::RecvPJavaScriptConstructor(aActor);
     }
 
+    virtual bool SendNuwaFork();
+
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why);
+    void OnNuwaForkTimeout();
 
     bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
 
@@ -241,7 +249,19 @@ private:
                   bool aIsForBrowser,
                   bool aIsForPreallocated,
                   ChildPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT,
-                  hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
+                  hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND,
+                  bool aIsNuwaProcess = false);
+
+#ifdef MOZ_NUWA_PROCESS
+    ContentParent(ContentParent* aTemplate,
+                  const nsAString& aAppManifestURL,
+                  base::ProcessHandle aPid,
+                  const nsTArray<ProtocolFdMapping>& aFds,
+                  ChildPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT);
+#endif
+
+    // The common initialization for the constructors.
+    void InitializeMembers();
 
     virtual ~ContentParent();
 
@@ -450,6 +470,11 @@ private:
     virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus);
 
     virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
+
+    virtual bool RecvNuwaReady() MOZ_OVERRIDE;
+
+    virtual bool RecvAddNewProcess(const uint32_t& aPid,
+                                   const InfallibleTArray<ProtocolFdMapping>& aFds) MOZ_OVERRIDE;
 
     virtual bool RecvCreateFakeVolume(const nsString& fsName, const nsString& mountPoint) MOZ_OVERRIDE;
 
