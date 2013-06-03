@@ -21,6 +21,10 @@
 #define LOG(args...)  \
   __android_log_print(ANDROID_LOG_INFO, "GonkMemoryPressure" , ## args)
 
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
+
 using namespace mozilla;
 
 namespace {
@@ -112,6 +116,14 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(!NS_IsMainThread());
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+      NS_ASSERTION(NuwaMarkCurrentThread != nullptr,
+                   "NuwaMarkCurrentThread is undefined!");
+      NuwaMarkCurrentThread(nullptr, nullptr);
+    }
+#endif
 
     int lowMemFd = open("/sys/kernel/mm/lowmemkiller/notify_trigger_active",
                         O_RDONLY | O_CLOEXEC);
