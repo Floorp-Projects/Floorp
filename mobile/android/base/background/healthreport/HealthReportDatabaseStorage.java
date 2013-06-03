@@ -185,7 +185,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   protected final HealthReportSQLiteOpenHelper helper;
 
   public static class HealthReportSQLiteOpenHelper extends SQLiteOpenHelper {
-    public static final int CURRENT_VERSION = 3;
+    public static final int CURRENT_VERSION = 4;
     public static final String LOG_TAG = "HealthReportSQL";
 
     /**
@@ -387,6 +387,12 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       createAddonsEnvironmentsView(db);
     }
 
+    private void upgradeDatabaseFrom3To4(SQLiteDatabase db) {
+      // Update search measurements to use a different type.
+      db.execSQL("UPDATE OR IGNORE fields SET flags = " + Field.TYPE_COUNTED_STRING_DISCRETE +
+                 " WHERE measurement IN (SELECT id FROM measurements WHERE name = 'org.mozilla.searches.counts')");
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
       if (oldVersion >= newVersion) {
@@ -399,6 +405,8 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
         switch (oldVersion) {
         case 2:
           upgradeDatabaseFrom2To3(db);
+        case 3:
+          upgradeDatabaseFrom3To4(db);
         }
         db.setTransactionSuccessful();
       } catch (Exception e) {

@@ -171,22 +171,10 @@ public class HealthReportGenerator {
           measurement.put("_v", field.measurementVersion);
           envObject.put(field.measurementName, measurement);
         }
-        if (field.isDiscreteField()) {
-          if (field.isStringField()) {
-            HealthReportUtils.append(measurement, field.fieldName, cursor.getString(3));
-          } else if (field.isIntegerField()) {
-            HealthReportUtils.append(measurement, field.fieldName, cursor.getLong(3));
-          } else {
-            // Uh oh!
-            throw new IllegalStateException("Unknown field type: " + field.flags);
-          }
-        } else {
-          if (field.isStringField()) {
-            measurement.put(field.fieldName, cursor.getString(3));
-          } else {
-            measurement.put(field.fieldName, cursor.getLong(3));
-          }
-        }
+
+        // How we record depends on the type of the field, so we
+        // break this out into a separate method for clarity.
+        recordMeasurementFromCursor(field, measurement, cursor);
 
         cursor.moveToNext();
         continue;
@@ -196,6 +184,40 @@ public class HealthReportGenerator {
       cursor.close();
     }
     return days;
+  }
+
+  protected static void recordMeasurementFromCursor(final Field field,
+                                             JSONObject measurement,
+                                             Cursor cursor)
+                                                           throws JSONException {
+    if (field.isDiscreteField()) {
+      // Discrete counted. Increment the named counter.
+      if (field.isCountedField()) {
+        if (!field.isStringField()) {
+          throw new IllegalStateException("Unable to handle non-string counted types.");
+        }
+        HealthReportUtils.count(measurement, field.fieldName, cursor.getString(3));
+        return;
+      }
+
+      // Discrete string or integer. Append it.
+      if (field.isStringField()) {
+        HealthReportUtils.append(measurement, field.fieldName, cursor.getString(3));
+        return;
+      }
+      if (field.isIntegerField()) {
+        HealthReportUtils.append(measurement, field.fieldName, cursor.getLong(3));
+        return;
+      }
+      throw new IllegalStateException("Unknown field type: " + field.flags);
+    }
+
+    // Non-discrete -- must be LAST or COUNTER, so just accumulate the value.
+    if (field.isStringField()) {
+      measurement.put(field.fieldName, cursor.getString(3));
+      return;
+    }
+    measurement.put(field.fieldName, cursor.getLong(3));
   }
 
   public static JSONObject getEnvironmentsJSON(Environment currentEnvironment,
