@@ -28,9 +28,6 @@
 #include "nsITimer.h"
 #include "nsNetUtil.h"
 #include "nsHashtable.h"
-#include "nsICryptoHash.h"
-#include "nsICryptoHMAC.h"
-#include "hasht.h"
 #include "nsNSSCallbacks.h"
 #include "nsNSSShutDown.h"
 
@@ -59,8 +56,6 @@ class CertVerifier;
 
 #define NS_PSMCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
 #define NS_PSMCONTENTLISTEN_CONTRACTID "@mozilla.org/security/psmdownload;1"
-#define NS_CRYPTO_HASH_CID {0x36a1d3b3, 0xd886, 0x4317, {0x96, 0xff, 0x87, 0xb0, 0x00, 0x5c, 0xfe, 0xf7}}
-#define NS_CRYPTO_HMAC_CID {0xa496d0a2, 0xdff7, 0x4e23, {0xbd, 0x65, 0x1c, 0xa7, 0x42, 0xfa, 0x17, 0x8a}}
 
 enum EnsureNSSOperator
 {
@@ -167,40 +162,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
-
-class nsCryptoHash : public nsICryptoHash, public nsNSSShutDownObject
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICRYPTOHASH
-
-  nsCryptoHash();
-
-private:
-  ~nsCryptoHash();
-
-  HASHContext* mHashContext;
-  bool mInitialized;
-
-  virtual void virtualDestroyNSSReference();
-  void destructorSafeDestroyNSSReference();
-};
-
-class nsCryptoHMAC : public nsICryptoHMAC, public nsNSSShutDownObject
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICRYPTOHMAC
-
-  nsCryptoHMAC();
-
-private:
-  ~nsCryptoHMAC();
-  PK11Context* mHMACContext;
-
-  virtual void virtualDestroyNSSReference();
-  void destructorSafeDestroyNSSReference();
-};
 
 class nsNSSShutDownList;
 class nsCertVerificationThread;
