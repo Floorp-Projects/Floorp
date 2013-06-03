@@ -1561,7 +1561,6 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   , mLayer(aLayer)
   , mIsThemed(aIsThemed)
   , mIsBottommostLayer(true)
-  , mIsAnimated(false)
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
@@ -1823,7 +1822,6 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(LayerManager* aManager,
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   mDestRect = nsLayoutUtils::RectToGfxRect(state.mDestArea, appUnitsPerDevPixel);
   mImageContainer = imageContainer;
-  mIsAnimated = imageRenderer->IsAnimatedImage();
 
   // Ok, we can turn this into a layer if needed.
   return true;
@@ -1847,16 +1845,34 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
                                         const FrameLayerBuilder::ContainerParameters& aParameters)
 {
-  if (!TryOptimizeToImageLayer(aManager, aBuilder) ||
-      !nsLayoutUtils::AnimatedImageLayersEnabled() ||
-      !mIsAnimated) {
+  bool animated = false;
+  if (!mIsThemed && mBackgroundStyle) {
+    const nsStyleBackground::Layer &layer = mBackgroundStyle->mLayers[mLayer];
+    const nsStyleImage* image = &layer.mImage;
+    if (image->GetType() == eStyleImageType_Image) {
+      imgIRequest* imgreq = image->GetImageData();
+      nsCOMPtr<imgIContainer> image;
+      if (NS_SUCCEEDED(imgreq->GetImage(getter_AddRefs(image))) && image) {
+        if (NS_FAILED(image->GetAnimated(&animated))) {
+          animated = false;
+        }
+      }
+    }
+  }
+
+  if (!animated ||
+      !nsLayoutUtils::AnimatedImageLayersEnabled()) {
     if (!aManager->IsCompositingCheap() ||
         !nsLayoutUtils::GPUImageScalingEnabled()) {
       return LAYER_NONE;
     }
   }
 
-  if (!mIsAnimated) {
+  if (!TryOptimizeToImageLayer(aManager, aBuilder)) {
+    return LAYER_NONE;
+  }
+
+  if (!animated) {
     gfxSize imageSize = mImageContainer->GetCurrentSize();
     NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
 
