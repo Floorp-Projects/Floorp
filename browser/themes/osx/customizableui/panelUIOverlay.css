@@ -18,7 +18,6 @@
     width: 20px;
   }
 
-  #PanelUI-contents #zoom-controls toolbarbutton,
   .panel-combined-button {
     list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons@2x.png);
   }
@@ -130,37 +129,41 @@
     -moz-image-region: rect(0 96px 32px 64px);
   }
 
-  #PanelUI-contents #zoom-out-button {
+  #PanelUI-zoomOut-btn {
     -moz-image-region: rect(0 128px 32px 96px);
   }
 
-  #PanelUI-contents #zoom-in-button {
+  #PanelUI-zoomIn-btn {
     -moz-image-region: rect(0 160px 32px 128px);
   }
 }
 
-#PanelUI-pageControls toolbarbutton:not(:first-child),
-#PanelUI-contents #zoom-controls toolbarbutton:not(:first-child) {
+.PanelUI-pageControls toolbarbutton:not(:first-child) {
   -moz-margin-start: 0;
 }
-#PanelUI-pageControls toolbarbutton:not(:last-child),
-#PanelUI-contents #zoom-controls toolbarbutton:not(:last-child) {
+.PanelUI-pageControls toolbarbutton:not(:last-child) {
   -moz-margin-end: 0;
 }
-#PanelUI-pageControls toolbarbutton:not(:first-child):not(:last-child),
-#PanelUI-contents #zoom-controls toolbarbutton:not(:first-child):not(:last-child) {
+.PanelUI-pageControls toolbarbutton:not(:first-child):not(:last-child) {
   margin-left: 0;
   margin-right: 0;
 }
 
-#PanelUI-contents #zoom-in-button,
-#PanelUI-contents #zoom-out-button {
+#PanelUI-zoomIn-btn,
+#PanelUI-zoomOut-btn {
   padding-left: 12px;
   padding-right: 12px;
 }
 
-#PanelUI-contents #zoom-in-button .toolbarbutton-text,
-#PanelUI-contents #zoom-out-button .toolbarbutton-text,
-#PanelUI-contents #zoom-reset-button .toolbarbutton-icon {
+.PanelUI-editControls #PanelUI-copy-btn,
+.PanelUI-zoomControls #PanelUI-zoomReset-btn {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+}
+
+#PanelUI-zoomIn-btn .toolbarbutton-text,
+#PanelUI-zoomOut-btn .toolbarbutton-text,
+#PanelUI-zoomReset-btn .toolbarbutton-icon {
   display: none;
 }
