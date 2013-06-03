@@ -3074,6 +3074,9 @@ nsSVGTextFrame2::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 void
 nsSVGTextFrame2::ReflowSVGNonDisplayText()
 {
+  MOZ_ASSERT(nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(this),
+             "only call ReflowSVGNonDisplayText when an outer SVG frame is "
+             "under ReflowSVG");
   MOZ_ASSERT(mState & NS_STATE_SVG_NONDISPLAY_CHILD,
              "only call ReflowSVGNonDisplayText if the frame is "
              "NS_STATE_SVG_NONDISPLAY_CHILD");
@@ -4832,6 +4835,8 @@ nsSVGTextFrame2::UpdateGlyphPositioning()
       // by nsSVGDisplayContainerFrame::ReflowSVG.)
       kid->AddStateBits(NS_FRAME_IS_DIRTY);
     }
+    MOZ_ASSERT(nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(this),
+               "should be under ReflowSVG");
     nsPresContext::InterruptPreventer noInterrupts(PresContext());
     DoReflow();
   }
