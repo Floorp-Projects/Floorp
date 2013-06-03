@@ -37,34 +37,6 @@ from .logging import LoggingManager
 from .registrar import Registrar
 
 
-AVATAR = '''
-                       _.-;:q=._
-                      .' j=""^k;:\.
-                     ; .F       ";`Y
-                    ,;.J_        ;'j
-                  ,-;"^7F       : .F
-                 ,-'-_<.        ;gj.
-                ;  _,._`\.     : `T"5
-                : `?8w7 `J  ,-'" -^q.
-                 \;._ _,=' ;   n58L Y.
-                   F;";  .' k_ `^'  j'
-                   J;:: ;     "y:-='
-                    L;;==      |:;   jT\\
-                    L;:;J      J:L  7:;'
-                    I;|:.L     |:k J:.'
-                    |;J:.|     ;.I F.:
-                    J;:L::     |.| |.J
-                    J:`J.`.    :.J |. L
-                     L :k:`._ ,',j J; |
-                     I :`=.:."_".'  L J
-                     |.:  `"-=-'    |.J
-                     `: :           ;:;
-                      J: :         /.;'
-                       k;.\.    _.;:Y'
-                        `Y;."-=';:='
-                          `"==="'
-'''
-
 
 MACH_ERROR = r'''
 The error occurred in mach itself. This is likely a bug in mach itself or a
@@ -296,15 +268,12 @@ To see more help for a specific command, run:
         try:
             args = parser.parse_args(argv)
         except NoCommandError:
-            print(AVATAR)
             print(NO_COMMAND_ERROR)
             return 1
         except UnknownCommandError as e:
-            print(AVATAR)
             print(UNKNOWN_COMMAND_ERROR % (e.verb, e.command))
             return 1
         except UnrecognizedArgumentError as e:
-            print(AVATAR)
             print(UNRECOGNIZED_ARGUMENT_ERROR % (e.command,
                 ' '.join(e.arguments)))
             return 1
