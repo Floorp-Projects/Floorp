@@ -101,7 +101,8 @@ panelview:not([mainview]) .toolbarbutton-text,
 }
 
 #PanelUI-contents[type="grid"] toolbarbutton,
-#customization-palette toolbarbutton {
+#customization-palette toolbarbutton,
+.panel-customization-placeholder {
   -moz-appearance: none;
   -moz-box-orient: vertical;
   min-width: 7em;

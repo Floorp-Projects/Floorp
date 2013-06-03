@@ -10,15 +10,27 @@
   transition-timing-function: ease-out;
 }
 
-#main-window[customizing] .customization-target,
-#main-window[customizing] #customization-panelHolder > #PanelUI-mainView {
-  border: 1px dashed transparent;
+#main-window[customizing] .customization-target {
   margin: 3px;
 }
 
+#main-window[customizing] .customization-target,
+#main-window[customizing] #customization-panelHolder > #PanelUI-mainView > #PanelUI-contents > .panel-customization-placeholder {
+  outline: 1px dashed transparent;
+}
+
 #main-window[customizing-movingItem] .customization-target,
-#main-window[customizing-movingItem] #customization-panelHolder > #PanelUI-mainView {
-  border-color: #bbb;
+#main-window[customizing-movingItem] #customization-panelHolder > #PanelUI-mainView > #PanelUI-contents > .panel-customization-placeholder {
+  outline-color: #bbb;
+}
+
+#PanelUI-contents > .panel-customization-placeholder {
+  cursor: auto;
+  outline-offset: -5px;
+}
+
+#PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
+  list-style-image: none;
 }
 
 #main-window[customizing] .customization-target {
@@ -62,7 +74,6 @@
 }
 
 toolbarpaletteitem {
-  cursor: -moz-grab;
   transition: transform, background-color, border-color, box-shadow, border-width;
   transition-duration: 50ms, 10ms, 10ms, 10ms, 250ms;
   transition-timing-function: ease-in-out, linear, linear, linear, ease-in-out;
