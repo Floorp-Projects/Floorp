@@ -768,8 +768,10 @@ let CustomizableUIInternal = {
       }
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
-      let handler = this.handleWidgetClick.bind(this, aWidget, node);
-      node.addEventListener("command", handler, false);
+      let commandHandler = this.handleWidgetCommand.bind(this, aWidget, node);
+      node.addEventListener("command", commandHandler, false);
+      let clickHandler = this.handleWidgetClick.bind(this, aWidget, node);
+      node.addEventListener("click", clickHandler, false);
 
       // If the widget has a view, and has view showing / hiding listeners,
       // hook those up to this widget.
@@ -795,6 +797,10 @@ let CustomizableUIInternal = {
         }
 
         LOG("Widget " + aWidget.id + " showing and hiding event handlers set.");
+      }
+
+      if (aWidget.onCreated) {
+        aWidget.onCreated(node);
       }
     }
 
@@ -826,8 +832,8 @@ let CustomizableUIInternal = {
     return def;
   },
 
-  handleWidgetClick: function(aWidget, aNode, aEvent) {
-    LOG("handleWidgetClick");
+  handleWidgetCommand: function(aWidget, aNode, aEvent) {
+    LOG("handleWidgetCommand");
 
     if (aWidget.type == "button") {
       this.maybeAutoHidePanel(aEvent);
@@ -841,13 +847,31 @@ let CustomizableUIInternal = {
       } else {
         //XXXunf Need to think this through more, and formalize.
         Services.obs.notifyObservers(aNode,
-                                     "customizedui-widget-click",
+                                     "customizedui-widget-command",
                                      aWidget.id);
       }
     } else if (aWidget.type == "view") {
       let ownerWindow = aNode.ownerDocument.defaultView;
       ownerWindow.PanelUI.showSubView(aWidget.viewId, aNode,
                                       this.getPlacementOfWidget(aNode.id).area);
+    }
+  },
+
+  handleWidgetClick: function(aWidget, aNode, aEvent) {
+    LOG("handleWidgetClick");
+    if (aWidget.type == "button") {
+      this.maybeAutoHidePanel(aEvent);
+    }
+
+    if (aWidget.onClick) {
+      try {
+        aWidget.onClick.call(null, aEvent);
+      } catch(e) {
+        Cu.reportError(e);
+      }
+    } else {
+      //XXXunf Need to think this through more, and formalize.
+      Services.obs.notifyObservers(aNode, "customizedui-widget-click", aWidget.id);
     }
   },
 
@@ -1360,6 +1384,10 @@ let CustomizableUIInternal = {
         }
       }
     }
+
+    widget.onClick = typeof aData.onClick == "function" ? aData.onClick : null;
+
+    widget.onCreated = typeof aData.onCreated == "function" ? aData.onCreated : null;
 
     if (widget.type == "button") {
       widget.onCommand = typeof aData.onCommand == "function" ?

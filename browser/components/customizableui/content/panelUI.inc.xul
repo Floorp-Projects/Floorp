@@ -40,6 +40,8 @@
              onclick="PlacesCommandHook.showPlacesOrganizer('History'); PanelUI.hide();"/>
     </panelview>
 
+    <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);"></panelview>
+
     <panelview id="PanelUI-help" flex="1">
       <label value="&helpMenu.label;"/>
       <vbox id="PanelUI-helpItems"/>
