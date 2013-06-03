@@ -14,7 +14,6 @@
 #include "nsIURIContentListener.h"
 #include "nsIStreamListener.h"
 #include "nsIEntropyCollector.h"
-#include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
@@ -22,17 +21,17 @@
 #include "nsWeakReference.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMEventTarget.h"
-#include "nsSmartCardMonitor.h"
 #endif
 #include "nsINSSErrorsService.h"
-#include "nsITimer.h"
 #include "nsNetUtil.h"
-#include "nsHashtable.h"
 #include "nsNSSCallbacks.h"
-#include "nsNSSShutDown.h"
-
+#include "ScopedNSSTypes.h"
 #include "nsNSSHelper.h"
 #include "nsClientAuthRemember.h"
+#include "prerror.h"
+
+class nsIPrompt;
+class SmartCardThreadList;
 
 namespace mozilla { namespace psm {
 
@@ -79,7 +78,6 @@ public:
   PSMContentDownloader(uint32_t type);
   virtual ~PSMContentDownloader();
   void setSilentDownload(bool flag);
-  void setCrlAutodownloadKey(nsAutoString key);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -90,17 +88,13 @@ public:
   enum {X509_USER_CERT  = 2};
   enum {X509_EMAIL_CERT  = 3};
   enum {X509_SERVER_CERT  = 4};
-  enum {PKCS7_CRL = 5};
 
 protected:
   char* mByteData;
   int32_t mBufferOffset;
   int32_t mBufferSize;
   uint32_t mType;
-  bool mDoSilentDownload;
-  nsString mCrlAutoDownloadKey;
   nsCOMPtr<nsIURI> mURI;
-  nsresult handleContentDownloadError(nsresult errCode);
 };
 
 class nsNSSComponent;
@@ -133,12 +127,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   // values in the preferences.
   NS_IMETHOD SkipOcspOff() = 0;
 
-  NS_IMETHOD RemoveCrlFromList(nsAutoString) = 0;
-
-  NS_IMETHOD DefineNextTimer() = 0;
-
-  NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString) = 0;
-  
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
@@ -171,8 +159,7 @@ class nsNSSComponent : public nsISignatureVerifier,
                        public nsIEntropyCollector,
                        public nsINSSComponent,
                        public nsIObserver,
-                       public nsSupportsWeakReference,
-                       public nsITimerCallback
+                       public nsSupportsWeakReference
 {
   typedef mozilla::Mutex Mutex;
 
@@ -186,7 +173,6 @@ public:
   NS_DECL_NSISIGNATUREVERIFIER
   NS_DECL_NSIENTROPYCOLLECTOR
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
 
   NS_METHOD Init();
 
@@ -208,12 +194,7 @@ public:
                                            nsAString &outString);
   NS_IMETHOD SkipOcsp();
   NS_IMETHOD SkipOcspOff();
-  nsresult InitializeCRLUpdateTimer();
-  nsresult StopCRLUpdateTimer();
-  NS_IMETHOD RemoveCrlFromList(nsAutoString);
-  NS_IMETHOD DefineNextTimer();
   NS_IMETHOD LogoutAuthenticatedPK11();
-  NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString);
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule *module);
@@ -247,9 +228,6 @@ private:
   nsresult RegisterPSMContentListener();
   nsresult RegisterObservers();
   nsresult DeregisterObservers();
-  nsresult DownloadCrlSilently();
-  nsresult PostCRLImportEvent(const nsCSubstring &urlString, nsIStreamListener *psmDownloader);
-  nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);
 
   // Methods that we use to handle the profile change notifications (and to
   // synthesize a full profile change when we're just doing a profile startup):
@@ -264,15 +242,8 @@ private:
   nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
-  nsCOMPtr<nsITimer> mTimer;
   bool mNSSInitialized;
   bool mObserversRegistered;
-  nsAutoString mDownloadURL;
-  nsAutoString mCrlUpdateKey;
-  Mutex mCrlTimerLock;
-  nsHashtable *crlsScheduledForDownload;
-  bool crlDownloadTimerOn;
-  bool mUpdateTimerInitialized;
   static int mInstanceCount;
   nsNSSShutDownList *mShutdownObjectList;
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
