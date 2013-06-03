@@ -12,6 +12,7 @@ const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";
 const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
+const kPlaceholderClass = "panel-customization-placeholder";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
@@ -54,6 +55,10 @@ CustomizeMode.prototype = {
 
   get resetButton() {
     return this.document.getElementById("customization-reset-button");
+  },
+
+  get panelUIContents() {
+    return this.document.getElementById("PanelUI-contents");
   },
 
   init: function() {
@@ -122,6 +127,7 @@ CustomizeMode.prototype = {
     // while customizing.
     let panelHolder = document.getElementById("customization-panelHolder");
     panelHolder.appendChild(window.PanelUI.mainView);
+    this._showPanelCustomizationPlaceholders();
 
     let self = this;
     deck.addEventListener("transitionend", function customizeTransitionEnd() {
@@ -161,6 +167,7 @@ CustomizeMode.prototype = {
     this.window.PanelUI.menuButton.removeEventListener("click", this, false);
     this.window.PanelUI.menuButton.disabled = false;
 
+    this._removePanelCustomizationPlaceholders();
     this.depopulatePalette();
 
     this.visiblePalette.removeEventListener("dragstart", this, true);
@@ -456,6 +463,7 @@ CustomizeMode.prototype = {
   },
 
   reset: function() {
+    this._removePanelCustomizationPlaceholders();
     this.depopulatePalette();
     this._unwrapToolbarItems();
 
@@ -475,6 +483,7 @@ CustomizeMode.prototype = {
     }
 
     this.resetButton.hidden = CustomizableUI.inDefaultState;
+    this._showPanelCustomizationPlaceholders();
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
@@ -547,7 +556,8 @@ CustomizeMode.prototype = {
     __dumpDragData(aEvent);
     let item = aEvent.target;
     while (item && item.localName != "toolbarpaletteitem") {
-      if (item.localName == "toolbar") {
+      if (item.localName == "toolbar" ||
+          item.classList.contains(kPlaceholderClass)) {
         return;
       }
       item = item.parentNode;
@@ -565,6 +575,14 @@ CustomizeMode.prototype = {
 
     dt.mozSetDataAt(kDragDataTypePrefix + documentId, data, 0);
     dt.effectAllowed = "move";
+
+    // Hack needed so that the dragimage will still show the
+    // item as it appeared before it was hidden.
+    let win = aEvent.target.ownerDocument.defaultView;
+    win.setTimeout(function() {
+      item.hidden = true;
+      this._showPanelCustomizationPlaceholders();
+    }.bind(this), 0);
   },
 
   _onDragOver: function(aEvent) {
@@ -587,7 +605,7 @@ CustomizeMode.prototype = {
       return;
     }
 
-    // Do nothing if thw widget is not allowed to be removed.
+    // Do nothing if the widget is not allowed to be removed.
     if (targetArea.id == kPaletteId &&
        !CustomizableUI.isWidgetRemovable(draggedItemId)) {
       return;
@@ -618,15 +636,10 @@ CustomizeMode.prototype = {
       this._setDragActive(this._dragOverItem, false);
     }
 
-    // XXXjaws Only handling the toolbar case first.
-    if (targetArea.localName == "toolbar") {
-      let draggedItem = document.getElementById(draggedItemId);
-      if (getPlaceForItem(draggedItem) == "toolbar") {
-        draggedItem.hidden = true;
-      }
+    if (dragOverItem != this._dragOverItem) {
       this._setDragActive(dragOverItem, true, draggedItemWidth, atEnd);
+      this._dragOverItem = dragOverItem;
     }
-    this._dragOverItem = dragOverItem;
 
     aEvent.preventDefault();
     aEvent.stopPropagation();
@@ -636,6 +649,7 @@ CustomizeMode.prototype = {
     __dumpDragData(aEvent);
 
     this._setDragActive(this._dragOverItem, false);
+    this._removePanelCustomizationPlaceholders();
 
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
@@ -643,10 +657,7 @@ CustomizeMode.prototype = {
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
 
-    let draggedItem = document.getElementById(draggedItemId);
-    if (getPlaceForItem(draggedItem) == "toolbar") {
-      draggedItem.hidden = false;
-    }
+    draggedWrapper.hidden = false;
     draggedWrapper.removeAttribute("mousedown");
 
     let targetArea = this._getCustomizableParent(aEvent.currentTarget);
@@ -684,6 +695,7 @@ CustomizeMode.prototype = {
       } else {
         this.visiblePalette.insertBefore(draggedWrapper, targetNode);
       }
+      this._showPanelCustomizationPlaceholders();
       return;
     }
 
@@ -697,22 +709,25 @@ CustomizeMode.prototype = {
       let widget = this.unwrapToolbarItem(draggedWrapper);
       CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id);
       this.wrapToolbarItem(widget, getPlaceForItem(targetNode));
+      this._showPanelCustomizationPlaceholders();
       return;
     }
 
     // We need to determine the place that the widget is being dropped in
     // the target.
-    let targetNodeId = (targetNode.nodeName == "toolbarpaletteitem") ?
-                          targetNode.firstChild && targetNode.firstChild.id :
-                          targetNode.id;
-
-    let placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
-    if (!placement) {
-      ERROR("Could not get a position for " + targetNodeId);
-      return;
+    let placement;
+    if (!targetNode.classList.contains(kPlaceholderClass)) {
+      let targetNodeId = (targetNode.nodeName == "toolbarpaletteitem") ?
+                            targetNode.firstChild && targetNode.firstChild.id :
+                            targetNode.id;
+      placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
     }
+    if (!placement) {
+      LOG("Could not get a position for " + targetNode + "#" + targetNode.id + "." + targetNode.className);
+    }
+    let position = placement ? placement.position :
+                               targetArea.childElementCount;
 
-    let position = placement.position;
 
     // Is the target area the same as the origin? Since we've already handled
     // the possibility that the target is the customization palette, we know
@@ -727,6 +742,7 @@ CustomizeMode.prototype = {
       CustomizableUI.moveWidgetWithinArea(draggedItemId, position);
       this.wrapToolbarItem(targetWidget, properPlace);
       this.wrapToolbarItem(widget, properPlace);
+      this._showPanelCustomizationPlaceholders();
       return;
     }
 
@@ -740,6 +756,7 @@ CustomizeMode.prototype = {
     CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id, position);
     this.wrapToolbarItem(targetWidget, properPlace);
     draggedWrapper = this.wrapToolbarItem(widget, properPlace);
+    this._showPanelCustomizationPlaceholders();
   },
 
   _onDragExit: function(aEvent) {
@@ -761,13 +778,11 @@ CustomizeMode.prototype = {
 
     let {id: draggedItemId} =
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
-    let draggedItem = document.getElementById(draggedItemId);
-    if (getPlaceForItem(draggedItem) == "toolbar") {
-      draggedItem.hidden = false;
-    }
 
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
+    draggedWrapper.hidden = false;
     draggedWrapper.removeAttribute("mousedown");
+    this._showPanelCustomizationPlaceholders();
   },
 
   _setDragActive: function(aItem, aValue, aWidth, aAtEnd) {
@@ -885,6 +900,34 @@ CustomizeMode.prototype = {
     } else if (browser.currentURI.spec != kAboutURI &&
                this._customizing) {
       this.exit();
+    }
+  },
+
+  _showPanelCustomizationPlaceholders: function() {
+    const kColumns = 3;
+    this._removePanelCustomizationPlaceholders();
+    let doc = this.document;
+    let contents = this.panelUIContents;
+    let visibleChildren = contents.querySelectorAll("toolbarpaletteitem:not([hidden])");
+    let hangingItems = visibleChildren.length % kColumns;
+    let newPlaceholders = kColumns - hangingItems;
+    while (newPlaceholders--) {
+      let placeholder = doc.createElement("toolbarpaletteitem");
+      placeholder.classList.add(kPlaceholderClass);
+      //XXXjaws The toolbarbutton child here is only necessary to get
+      //  the styling right here.
+      let placeholderChild = doc.createElement("toolbarbutton");
+      placeholderChild.classList.add(kPlaceholderClass + "-child");
+      placeholder.appendChild(placeholderChild);
+      contents.appendChild(placeholder);
+    }
+  },
+
+  _removePanelCustomizationPlaceholders: function() {
+    let contents = this.panelUIContents;
+    let oldPlaceholders = contents.getElementsByClassName(kPlaceholderClass);
+    while (oldPlaceholders.length) {
+      contents.removeChild(oldPlaceholders[0]);
     }
   }
 };
