@@ -6724,11 +6724,13 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             return null();
 
         RootedAtom atom(context);
+        Value tmp;
         for (;;) {
             TokenKind ltok = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
             switch (ltok) {
               case TOK_NUMBER:
-                atom = ToAtom<CanGC>(context, DoubleValue(tokenStream.currentToken().number()));
+                tmp = DoubleValue(tokenStream.currentToken().number());
+                atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                 if (!atom)
                     return null();
                 pn3 = handler.newNumber(tokenStream.currentToken());
@@ -6761,7 +6763,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                             pn3 = handler.newNumber(index);
                             if (!pn3)
                                 return null();
-                            atom = ToAtom<CanGC>(context, DoubleValue(index));
+                            tmp = DoubleValue(index);
+                            atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                             if (!atom)
                                 return null();
                         } else {
@@ -6771,7 +6774,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                         }
                     } else if (tt == TOK_NUMBER) {
                         double number = tokenStream.currentToken().number();
-                        atom = ToAtom<CanGC>(context, DoubleValue(number));
+                        tmp = DoubleValue(number);
+                        atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                         if (!atom)
                             return null();
                         pn3 = handler.newNumber(tokenStream.currentToken());

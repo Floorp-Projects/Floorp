@@ -389,7 +389,8 @@ Reify(JSContext *cx, JSCompartment *origin, MutableHandleValue vp)
             return false;
         for (size_t i = 0; i < length; ++i) {
             RootedId id(cx);
-            if (!ValueToId<CanGC>(cx, StringValue(ni->begin()[i]), &id))
+            RootedValue v(cx, StringValue(ni->begin()[i]));
+            if (!ValueToId<CanGC>(cx, v, &id))
                 return false;
             keys.infallibleAppend(id);
             if (!origin->wrapId(cx, &keys[i]))

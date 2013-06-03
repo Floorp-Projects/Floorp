@@ -1210,7 +1210,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JSString *str = ToString<CanGC>(cx, args[0]);
+    JSString *str = ToString<CanGC>(cx, args.handleAt(0));
     if (!str)
         return false;
 
@@ -2896,7 +2896,7 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
                              , args.rval());
     }
 
-    RootedString fmt(cx, ToString<CanGC>(cx, args[0]));
+    RootedString fmt(cx, ToString<CanGC>(cx, args.handleAt(0)));
     if (!fmt)
         return false;
 
