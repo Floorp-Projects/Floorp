@@ -2339,7 +2339,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "crosshair", "default", "pointer", "move", "e-resize", "ne-resize", "nw-resize", "n-resize", "se-resize", "sw-resize", "s-resize", "w-resize", "text", "wait", "help", "progress", "copy", "alias", "context-menu", "cell", "not-allowed", "col-resize", "row-resize", "no-drop", "vertical-text", "all-scroll", "nesw-resize", "nwse-resize", "ns-resize", "ew-resize", "none", "-moz-grab", "-moz-grabbing", "-moz-zoom-in", "-moz-zoom-out", "url(foo.png), move", "url(foo.png) 5 7, move", "url(foo.png) 12 3, url(bar.png), no-drop", "url(foo.png), url(bar.png) 7 2, wait", "url(foo.png) 3 2, url(bar.png) 7 9, pointer" ],
+		other_values: [ "crosshair", "default", "pointer", "move", "e-resize", "ne-resize", "nw-resize", "n-resize", "se-resize", "sw-resize", "s-resize", "w-resize", "text", "wait", "help", "progress", "copy", "alias", "context-menu", "cell", "not-allowed", "col-resize", "row-resize", "no-drop", "vertical-text", "all-scroll", "nesw-resize", "nwse-resize", "ns-resize", "ew-resize", "none", "zoom-in", "zoom-out", "-moz-grab", "-moz-grabbing", "-moz-zoom-in", "-moz-zoom-out", "url(foo.png), move", "url(foo.png) 5 7, move", "url(foo.png) 12 3, url(bar.png), no-drop", "url(foo.png), url(bar.png) 7 2, wait", "url(foo.png) 3 2, url(bar.png) 7 9, pointer" ],
 		invalid_values: [ "url(foo.png)", "url(foo.png) 5 5" ]
 	},
 	"direction": {

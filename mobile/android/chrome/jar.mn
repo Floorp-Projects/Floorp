@@ -49,6 +49,7 @@ chrome.jar:
   content/FindHelper.js                (content/FindHelper.js)
   content/PermissionsHelper.js         (content/PermissionsHelper.js)
   content/FeedHandler.js               (content/FeedHandler.js)
+  content/Feedback.js                  (content/Feedback.js)
 #ifdef MOZ_SERVICES_HEALTHREPORT
   content/aboutHealthReport.xhtml      (content/aboutHealthReport.xhtml)
 * content/aboutHealthReport.js         (content/aboutHealthReport.js)

@@ -33,7 +33,6 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -41,17 +40,18 @@
 
 #include "builtin/RegExp.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 #include "jsautooplen.h"        // generated headers last
 
+#include "vm/Interpreter-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/StringObject-inl.h"
