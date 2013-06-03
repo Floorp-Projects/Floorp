@@ -12,6 +12,7 @@
 #include "chrome/common/child_process_info.h"
 
 #include "mozilla/ipc/Transport.h"
+#include "mozilla/ipc/FileDescriptor.h"
 
 using namespace base;
 using namespace std;
@@ -44,8 +45,8 @@ CreateTransport(ProcessHandle /*unused*/, ProcessHandle /*unused*/,
     return false;
   }
 
-  aOne->mFd = FileDescriptor(fd1, true/*close after sending*/);
-  aTwo->mFd = FileDescriptor(fd2, true/*close after sending*/);
+  aOne->mFd = base::FileDescriptor(fd1, true/*close after sending*/);
+  aTwo->mFd = base::FileDescriptor(fd2, true/*close after sending*/);
   return true;
 }
 
@@ -53,6 +54,12 @@ Transport*
 OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
 {
   return new Transport(aTd.mFd.fd, aMode, nullptr);
+}
+
+Transport*
+OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
+{
+  return new Transport(aFd.PlatformHandle(), aMode, nullptr);
 }
 
 void

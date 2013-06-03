@@ -93,6 +93,10 @@ public:
     return mChildProcessHandle;
   }
 
+  GeckoProcessType GetProcessType() {
+    return mProcessType;
+  }
+
 #ifdef XP_MACOSX
   task_t GetChildTask() {
     return mChildTask;

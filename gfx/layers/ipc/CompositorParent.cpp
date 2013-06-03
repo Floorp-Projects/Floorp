@@ -49,6 +49,7 @@
 #include "mozilla/layers/CompositorD3D9.h"
 #endif
 #include "GeckoProfiler.h"
+#include "mozilla/ipc/ProtocolTypes.h"
 
 using namespace base;
 using namespace mozilla;
@@ -869,6 +870,12 @@ public:
   {}
   virtual ~CrossProcessCompositorParent();
 
+  // IToplevelProtocol::CloneToplevel()
+  virtual IToplevelProtocol*
+  CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
+                base::ProcessHandle aPeerProcess,
+                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   // FIXME/bug 774388: work out what shutdown protocol we need.
@@ -929,6 +936,24 @@ CompositorParent::Create(Transport* aTransport, ProcessId aOtherProcess)
     NewRunnableFunction(OpenCompositor, cpcp.get(),
                         aTransport, handle, XRE_GetIOMessageLoop()));
   return true;
+}
+
+IToplevelProtocol*
+CompositorParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
+                                base::ProcessHandle aPeerProcess,
+                                mozilla::ipc::ProtocolCloneContext* aCtx)
+{
+  for (unsigned int i = 0; i < aFds.Length(); i++) {
+    if (aFds[i].protocolId() == (unsigned)GetProtocolId()) {
+      Transport* transport = OpenDescriptor(aFds[i].fd(),
+                                            Transport::MODE_SERVER);
+      PCompositorParent* compositor = Create(transport, base::GetProcId(aPeerProcess));
+      compositor->CloneManagees(this, aCtx);
+      compositor->IToplevelProtocol::SetTransport(transport);
+      return compositor;
+    }
+  }
+  return nullptr;
 }
 
 static void
@@ -1028,6 +1053,25 @@ CrossProcessCompositorParent::~CrossProcessCompositorParent()
 {
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new DeleteTask<Transport>(mTransport));
+}
+
+IToplevelProtocol*
+CrossProcessCompositorParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
+                                            base::ProcessHandle aPeerProcess,
+                                            mozilla::ipc::ProtocolCloneContext* aCtx)
+{
+  for (unsigned int i = 0; i < aFds.Length(); i++) {
+    if (aFds[i].protocolId() == (unsigned)GetProtocolId()) {
+      Transport* transport = OpenDescriptor(aFds[i].fd(),
+                                            Transport::MODE_SERVER);
+      PCompositorParent* compositor =
+        CompositorParent::Create(transport, base::GetProcId(aPeerProcess));
+      compositor->CloneManagees(this, aCtx);
+      compositor->IToplevelProtocol::SetTransport(transport);
+      return compositor;
+    }
+  }
+  return nullptr;
 }
 
 } // namespace layers
