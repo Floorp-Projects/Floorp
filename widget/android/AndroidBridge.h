@@ -371,7 +371,7 @@ public:
     void EnableNetworkNotifications();
     void DisableNetworkNotifications();
 
-    void SetFirstPaintViewport(const LayerIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const CSSRect& aCssPageRect);
+    void SetFirstPaintViewport(const LayerIntPoint& aOffset, float aZoom, const LayerIntRect& aPageRect, const CSSRect& aCssPageRect);
     void SetPageRect(const CSSRect& aCssPageRect);
     void SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,

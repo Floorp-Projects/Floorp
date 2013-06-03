@@ -554,7 +554,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 void
 AsyncCompositionManager::SetFirstPaintViewport(const LayerIntPoint& aOffset,
                                                float aZoom,
-                                               const nsIntRect& aPageRect,
+                                               const LayerIntRect& aPageRect,
                                                const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID

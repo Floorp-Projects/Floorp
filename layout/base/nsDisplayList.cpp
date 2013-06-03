@@ -656,16 +656,22 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     contentBounds.width += scrollableFrame->GetScrollPortRect().width;
     contentBounds.height += scrollableFrame->GetScrollPortRect().height;
     metrics.mScrollableRect = CSSRect::FromAppUnits(contentBounds);
-    metrics.mContentRect = contentBounds.ScaleToNearestPixels(
+    nsIntRect contentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    // I'm not sure what units contentRect is really in, hence FromUnknownRect
+    metrics.mContentRect = LayerIntRect::FromUnknownRect(mozilla::gfx::IntRect(
+      contentRect.x, contentRect.y, contentRect.width, contentRect.height));
     nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
     metrics.mScrollOffset = CSSPoint::FromAppUnits(scrollPosition);
   }
   else {
     nsRect contentBounds = aForFrame->GetRect();
     metrics.mScrollableRect = CSSRect::FromAppUnits(contentBounds);
-    metrics.mContentRect = contentBounds.ScaleToNearestPixels(
+    nsIntRect contentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    // I'm not sure what units contentRect is really in, hence FromUnknownRect
+    metrics.mContentRect = LayerIntRect::FromUnknownRect(mozilla::gfx::IntRect(
+      contentRect.x, contentRect.y, contentRect.width, contentRect.height));
   }
 
   metrics.mScrollId = aScrollId;
