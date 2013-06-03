@@ -120,75 +120,6 @@ extern char* pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 #define NSSERR_STRBUNDLE_URL "chrome://pipnss/locale/nsserrors.properties"
 
-static PLHashNumber certHashtable_keyHash(const void *key)
-{
-  if (!key)
-    return 0;
-  
-  SECItem *certKey = (SECItem*)key;
-  
-  // lazy hash function, sum up all char values of SECItem
-  
-  PLHashNumber hash = 0;
-  unsigned int i = 0;
-  unsigned char *c = certKey->data;
-  
-  for (i = 0; i < certKey->len; ++i, ++c) {
-    hash += *c;
-  }
-  
-  return hash;
-}
-
-static int certHashtable_keyCompare(const void *k1, const void *k2)
-{
-  // return type is a bool, answering the question "are the keys equal?"
-
-  if (!k1 || !k2)
-    return false;
-  
-  SECItem *certKey1 = (SECItem*)k1;
-  SECItem *certKey2 = (SECItem*)k2;
-  
-  if (certKey1->len != certKey2->len) {
-    return false;
-  }
-  
-  unsigned int i = 0;
-  unsigned char *c1 = certKey1->data;
-  unsigned char *c2 = certKey2->data;
-  
-  for (i = 0; i < certKey1->len; ++i, ++c1, ++c2) {
-    if (*c1 != *c2) {
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-static int certHashtable_valueCompare(const void *v1, const void *v2)
-{
-  // two values are identical if their keys are identical
-  
-  if (!v1 || !v2)
-    return false;
-  
-  CERTCertificate *cert1 = (CERTCertificate*)v1;
-  CERTCertificate *cert2 = (CERTCertificate*)v2;
-  
-  return certHashtable_keyCompare(&cert1->certKey, &cert2->certKey);
-}
-
-static int certHashtable_clearEntry(PLHashEntry *he, int /*index*/, void * /*userdata*/)
-{
-  if (he && he->value) {
-    CERT_DestroyCertificate((CERTCertificate*)he->value);
-  }
-  
-  return HT_ENUMERATE_NEXT;
-}
-
 class CRLDownloadEvent : public nsRunnable {
 public:
   CRLDownloadEvent(const nsCSubstring &urlString, nsIStreamListener *listener)
@@ -365,7 +296,6 @@ nsNSSComponent::nsNSSComponent()
 
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
-  hashTableCerts = nullptr;
   mShutdownObjectList = nsNSSShutDownList::construct();
   mIsNetworkDown = false;
 }
@@ -1555,9 +1485,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
       }
     }
 
-    hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare,
-      certHashtable_valueCompare, 0, 0 );
-
 #ifndef NSS_NO_LIBPKIX
     rv = mPrefBranch->GetBoolPref("security.use_libpkix_verification", &globalConstFlagUsePKIXVerification);
     if (NS_FAILED(rv))
@@ -1733,12 +1660,6 @@ nsNSSComponent::ShutdownNSS()
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::ShutdownNSS\n"));
 
   MutexAutoLock lock(mutex);
-
-  if (hashTableCerts) {
-    PL_HashTableEnumerateEntries(hashTableCerts, certHashtable_clearEntry, 0);
-    PL_HashTableDestroy(hashTableCerts);
-    hashTableCerts = nullptr;
-  }
 
   if (mNSSInitialized) {
     mNSSInitialized = false;
@@ -2290,37 +2211,6 @@ nsNSSComponent::DeregisterObservers()
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::RememberCert(CERTCertificate *cert)
-{
-  nsNSSShutDownPreventionLock locker;
-
-  // Must not interfere with init / shutdown / profile switch.
-
-  MutexAutoLock lock(mutex);
-
-  if (!hashTableCerts || !cert)
-    return NS_OK;
-  
-  void *found = PL_HashTableLookup(hashTableCerts, (void*)&cert->certKey);
-  
-  if (found) {
-    // we remember that cert already
-    return NS_OK;
-  }
-  
-  CERTCertificate *myDupCert = CERT_DupCertificate(cert);
-  
-  if (!myDupCert)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  if (!PL_HashTableAdd(hashTableCerts, (void*)&myDupCert->certKey, myDupCert)) {
-    CERT_DestroyCertificate(myDupCert);
-  }
-  
   return NS_OK;
 }
 

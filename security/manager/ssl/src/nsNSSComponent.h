@@ -139,8 +139,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   // values in the preferences.
   NS_IMETHOD SkipOcspOff() = 0;
 
-  NS_IMETHOD RememberCert(CERTCertificate *cert) = 0;
-
   NS_IMETHOD RemoveCrlFromList(nsAutoString) = 0;
 
   NS_IMETHOD DefineNextTimer() = 0;
@@ -256,7 +254,6 @@ public:
   NS_IMETHOD DefineNextTimer();
   NS_IMETHOD LogoutAuthenticatedPK11();
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString);
-  NS_IMETHOD RememberCert(CERTCertificate *cert);
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule *module);
@@ -311,7 +308,6 @@ private:
   nsCOMPtr<nsITimer> mTimer;
   bool mNSSInitialized;
   bool mObserversRegistered;
-  PLHashTable *hashTableCerts;
   nsAutoString mDownloadURL;
   nsAutoString mCrlUpdateKey;
   Mutex mCrlTimerLock;
