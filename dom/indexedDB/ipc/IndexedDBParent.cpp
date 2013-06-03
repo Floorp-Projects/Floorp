@@ -112,6 +112,24 @@ IndexedDBParent::CheckWritePermission(const nsAString& aDatabaseName)
   return CheckPermissionInternal(aDatabaseName, permission);
 }
 
+mozilla::ipc::IProtocol*
+IndexedDBParent::CloneProtocol(Channel* aChannel,
+                               mozilla::ipc::ProtocolCloneContext* aCtx)
+{
+  MOZ_ASSERT(mManagerContent != nullptr);
+  MOZ_ASSERT(mManagerTab == nullptr);
+  MOZ_ASSERT(!mDisconnected);
+  MOZ_ASSERT(IndexedDatabaseManager::Get());
+  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+
+  ContentParent* contentParent = aCtx->GetContentParent();
+  nsAutoPtr<PIndexedDBParent> actor(contentParent->AllocPIndexedDBParent());
+  if (!actor || !contentParent->RecvPIndexedDBConstructor(actor)) {
+    return nullptr;
+  }
+  return actor.forget();
+}
+
 bool
 IndexedDBParent::CheckPermissionInternal(const nsAString& aDatabaseName,
                                          const nsDependentCString& aPermission)

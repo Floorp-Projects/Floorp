@@ -8,6 +8,7 @@
 #include "DOMStorageManager.h"
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/unused.h"
 #include "nsIDiskSpaceWatcher.h"
 #include "nsThreadUtils.h"
@@ -362,6 +363,18 @@ DOMStorageDBParent::~DOMStorageDBParent()
   if (observer) {
     observer->RemoveSink(this);
   }
+}
+
+mozilla::ipc::IProtocol*
+DOMStorageDBParent::CloneProtocol(Channel* aChannel,
+                                  mozilla::ipc::ProtocolCloneContext* aCtx)
+{
+  ContentParent* contentParent = aCtx->GetContentParent();
+  nsAutoPtr<PStorageParent> actor(contentParent->AllocPStorageParent());
+  if (!actor || !contentParent->RecvPStorageConstructor(actor)) {
+    return nullptr;
+  }
+  return actor.forget();
 }
 
 DOMStorageDBParent::CacheParentBridge*
