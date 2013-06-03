@@ -280,10 +280,6 @@ private:
   nsresult InitializeNSS(bool showWarningBox);
   void ShutdownNSS();
 
-#ifdef XP_MACOSX
-  void TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath);
-#endif
-  
   void InstallLoadableRoots();
   void UnloadLoadableRoots();
   void CleanupIdentityInfo();
