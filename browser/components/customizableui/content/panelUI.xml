@@ -191,6 +191,9 @@
           let evt = document.createEvent("CustomEvent");
           evt.initCustomEvent("ViewShowing", true, true, viewNode);
           viewNode.dispatchEvent(evt);
+          if (evt.defaultPrevented) {
+            return;
+          }
 
           this._currentSubView = viewNode;
 

@@ -166,9 +166,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY tabGroupsButton.label        "Tab Groups">
 <!ENTITY tabGroupsButton.tooltip      "Group your tabs">
 
-<!ENTITY feedButton.label             "Subscribe">
-<!ENTITY feedButton.tooltip           "Subscribe to this page…">
-
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksCmd.commandkey "b">
 

@@ -183,11 +183,7 @@ toolbar[overflowable]:not([overflowing]) > .overflow-button {
   visibility: collapse;
 }
 
-#feed-button > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
-#feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
+#PanelUI-feeds > .feed-toolbarbutton:-moz-locale-dir(rtl) {
   direction: rtl;
 }
 
