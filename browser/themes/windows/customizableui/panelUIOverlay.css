@@ -7,17 +7,17 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
-#PanelUI-contents #edit-controls toolbarbutton {
+#PanelUI-pageControls toolbarbutton {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-#PanelUI-contents #cut-button {
+#PanelUI-cut-btn {
   -moz-image-region: rect(0, 216px, 18px, 198px);
 }
-#PanelUI-contents #copy-button {
+#PanelUI-copy-btn {
   -moz-image-region: rect(0, 234px, 18px, 216px);
 }
-#PanelUI-contents #paste-button {
+#PanelUI-paste-btn {
   -moz-image-region: rect(0, 252px, 18px, 234px);
 }
 
