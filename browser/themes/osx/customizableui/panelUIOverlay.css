@@ -18,6 +18,7 @@
     width: 20px;
   }
 
+  #PanelUI-contents #edit-controls toolbarbutton,
   #PanelUI-contents #zoom-controls toolbarbutton,
   .panel-combined-button {
     list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons@2x.png);
@@ -118,15 +119,15 @@
     -moz-image-region: rect(384px 128px 448px 64px);
   }
 
-  #PanelUI-cut-btn {
+  #PanelUI-contents #cut-button {
     -moz-image-region: rect(0 32px 32px 0);
   }
 
-  #PanelUI-copy-btn {
+  #PanelUI-contents #copy-button {
     -moz-image-region: rect(0 64px 32px 32px);
   }
 
-  #PanelUI-paste-btn {
+  #PanelUI-contents #paste-button {
     -moz-image-region: rect(0 96px 32px 64px);
   }
 
@@ -139,15 +140,15 @@
   }
 }
 
-#PanelUI-pageControls toolbarbutton:not(:first-child),
+#PanelUI-contents #edit-controls toolbarbutton:not(:first-child),
 #PanelUI-contents #zoom-controls toolbarbutton:not(:first-child) {
   -moz-margin-start: 0;
 }
-#PanelUI-pageControls toolbarbutton:not(:last-child),
+#PanelUI-contents #edit-controls toolbarbutton:not(:last-child),
 #PanelUI-contents #zoom-controls toolbarbutton:not(:last-child) {
   -moz-margin-end: 0;
 }
-#PanelUI-pageControls toolbarbutton:not(:first-child):not(:last-child),
+#PanelUI-contents #edit-controls toolbarbutton:not(:first-child):not(:last-child),
 #PanelUI-contents #zoom-controls toolbarbutton:not(:first-child):not(:last-child) {
   margin-left: 0;
   margin-right: 0;
