@@ -11,7 +11,7 @@ interface nsIDOMDOMCursor;
 interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(a7984cb3-27c8-4e3d-82a4-01553e93c078)]
+[scriptable, builtinclass, uuid(efff5276-0f3f-4137-9b16-66e894400e01)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
@@ -41,6 +41,7 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
   nsIDOMDOMRequest retrieveMMS(in long id);
 
   [implicit_jscontext] attribute jsval onreceived;
+  [implicit_jscontext] attribute jsval onretrieving;
   [implicit_jscontext] attribute jsval onsending;
   [implicit_jscontext] attribute jsval onsent;
   [implicit_jscontext] attribute jsval onfailed;
