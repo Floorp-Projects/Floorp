@@ -29,12 +29,12 @@
 /* We want a 4px gap between the TabsToolbar and the toolbar-menubar when the
    toolbar-menu is displayed, and a 16px gap when it is not. 1px is taken care
    of by the (light) outer shadow of the tab, the remaining 3/15 are these margins. */
-#toolbar-menubar:not([inactive]) {
-  margin-bottom: 3px;
+#toolbar-menubar:not([inactive]) ~ #TabsToolbar {
+  margin-top: 3px;
 }
 
-#main-window[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] {
-  margin-bottom: 15px;
+#main-window[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
+  margin-top: 15px;
 }
 
 #toolbar-menubar:not([autohide="true"]) {
