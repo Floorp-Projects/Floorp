@@ -13,9 +13,7 @@ function test() {
   let mode;
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
-    aWindow.BrowserOpenTab();
-    aWindow.gBrowser.selectedTab.linkedBrowser.addEventListener("load", function onLoad() {
-      aWindow.gBrowser.selectedTab.linkedBrowser.removeEventListener("load", onLoad, true);
+    whenNewTabLoaded(aWindow, function () {
       if (aIsPrivateMode) {
         mode = "per window private browsing";
         newTabURL = "about:privatebrowsing";
@@ -29,7 +27,7 @@ function test() {
 
       aWindow.gBrowser.removeTab(aWindow.gBrowser.selectedTab);
       aCallback()
-    }, true);
+    });
   };
 
   function testOnWindow(aOptions, aCallback) {
