@@ -13,7 +13,7 @@ LIBRARY_NAME = kiss_fft
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
-CSRCS = kiss_fft.c kiss_fftr.c
+DISABLED_CSRCS = kiss_fft.c kiss_fftr.c
 
 include $(topsrcdir)/config/rules.mk
 

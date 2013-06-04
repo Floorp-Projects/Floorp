@@ -28,13 +28,5 @@ setRestoreFunction((function () {
  * synchronously available to that same script is difficult. Instead, request
  * all of them to be loaded before we start.
  */
-include("test402/lib/testBuiltInObject.js");
-include("test402/lib/testIntl.js");
-
-/*
- * Test262 function $INCLUDE loads a file with support functions for the tests.
- * Since we've already loaded all of these files, just ignore the call.
- * This function replaces one in shell.js.
- */
-function $INCLUDE(file) {
-}
+include("supporting/testBuiltInObject.js");
+include("supporting/testIntl.js");

@@ -503,27 +503,6 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 {
   nsresult res;
 
-  // Generate a random handle
-  unsigned char handle_bin[8];
-  SECStatus rv;
-  rv = PK11_GenerateRandom(handle_bin, sizeof(handle_bin));
-  if (rv != SECSuccess) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  char hex[17];
-  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
-    handle_bin[0],
-    handle_bin[1],
-    handle_bin[2],
-    handle_bin[3],
-    handle_bin[4],
-    handle_bin[5],
-    handle_bin[6],
-    handle_bin[7]);
-
-  mHandle = hex;
-
   // Invariant: we receive configuration one way or the other but not both (XOR)
   MOZ_ASSERT(!aConfiguration != !aRTCConfiguration);
 #ifdef MOZILLA_INTERNAL_API
@@ -550,6 +529,28 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mWindow = do_QueryInterface(aWindow);
   NS_ENSURE_STATE(mWindow);
 #endif
+
+  // Generate a random handle
+  unsigned char handle_bin[8];
+  SECStatus rv;
+  rv = PK11_GenerateRandom(handle_bin, sizeof(handle_bin));
+  if (rv != SECSuccess) {
+    MOZ_CRASH();
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  char hex[17];
+  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
+    handle_bin[0],
+    handle_bin[1],
+    handle_bin[2],
+    handle_bin[3],
+    handle_bin[4],
+    handle_bin[5],
+    handle_bin[6],
+    handle_bin[7]);
+
+  mHandle = hex;
 
   res = PeerConnectionCtx::InitializeGlobal(mThread);
   NS_ENSURE_SUCCESS(res, res);

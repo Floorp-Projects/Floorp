@@ -22,7 +22,7 @@ endif
 
 VPATH += $(topsrcdir)/memory/build
 
-CSRCS = \
+DISABLED_CSRCS = \
   mozjemalloc_compat.c \
   jemalloc_config.c \
   $(NULL)
@@ -34,7 +34,7 @@ WRAP_LDFLAGS = # Never wrap malloc function calls with -Wl,--wrap
 # It shouldn't make much problem, as the use of fork is pretty limited on
 # Android.
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-CSRCS += pthread_atfork.c
+DISABLED_CSRCS += pthread_atfork.c
 endif
 
 include $(topsrcdir)/config/rules.mk

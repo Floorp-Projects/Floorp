@@ -7026,15 +7026,23 @@ IonBuilder::jsop_rest()
         }
 
         current->add(store);
-
-        if (store->isCallSetElement() && !resumeAfter(store))
-            return false;
     }
 
     MSetInitializedLength *initLength = MSetInitializedLength::New(elements, index);
     current->add(initLength);
 
     current->push(array);
+
+    // The reason this loop of resumeAfters is here and not above is because
+    // resume points check the stack depth at its callsite in IonBuilder
+    // matches the expected stack depth at the point where we would bail back
+    // to in the interpreter. So we can't call resumeAfter until after we have
+    // pushed the array onto the stack.
+    for (unsigned i = 0; i < setElemCalls.length(); i++) {
+        if (!resumeAfter(setElemCalls[i]))
+            return false;
+    }
+
     return true;
 }
 

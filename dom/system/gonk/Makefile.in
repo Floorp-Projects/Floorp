@@ -43,6 +43,8 @@ EXTRA_COMPONENTS = \
   RadioInterfaceLayer.manifest \
   RadioInterfaceLayer.js \
   RILContentHelper.js \
+  NetworkInterfaceListService.manifest \
+  NetworkInterfaceListService.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
