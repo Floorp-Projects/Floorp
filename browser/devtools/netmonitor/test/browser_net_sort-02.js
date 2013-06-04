@@ -45,7 +45,7 @@ function test() {
         .then(() => {
           info("Clearing status sort.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-status-button"));
-          testHeaders("waterfall", "ascending");
+          testHeaders();
           return testContents([0, 2, 4, 3, 1]);
         })
         .then(() => {
@@ -63,7 +63,7 @@ function test() {
         .then(() => {
           info("Clearing method sort.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-method-button"));
-          testHeaders("waterfall", "ascending");
+          testHeaders();
           return testContents([0, 2, 4, 3, 1]);
         })
         .then(() => {
@@ -81,7 +81,7 @@ function test() {
         .then(() => {
           info("Clearing file sort.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-file-button"));
-          testHeaders("waterfall", "ascending");
+          testHeaders();
           return testContents([0, 2, 4, 3, 1]);
         })
         .then(() => {
@@ -99,7 +99,7 @@ function test() {
         .then(() => {
           info("Clearing type sort.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-type-button"));
-          testHeaders("waterfall", "ascending");
+          testHeaders();
           return testContents([0, 2, 4, 3, 1]);
         })
         .then(() => {
@@ -117,26 +117,8 @@ function test() {
         .then(() => {
           info("Clearing size sort.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
-          testHeaders("waterfall", "ascending");
+          testHeaders();
           return testContents([0, 2, 4, 3, 1]);
-        })
-        .then(() => {
-          info("Testing waterfall sort, descending.");
-          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
-          testHeaders("waterfall", "descending");
-          return testContents([4, 2, 0, 1, 3]);
-        })
-        .then(() => {
-          info("Testing waterfall sort, ascending.");
-          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
-          testHeaders("waterfall", "ascending");
-          return testContents([0, 2, 4, 3, 1]);
-        })
-        .then(() => {
-          info("Testing waterfall sort, descending. Checking sort cycles correctly.");
-          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
-          testHeaders("waterfall", "descending");
-          return testContents([4, 2, 0, 1, 3]);
         })
         .then(() => {
           return teardown(aMonitor);
