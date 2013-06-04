@@ -3144,10 +3144,6 @@
           document.getElementById("menu_close").setAttribute("label",
             this.tabbrowser.mStringBundle.getString(visible ? "tabs.closeTab" : "tabs.close"));
 
-          goSetCommandEnabled("cmd_ToggleTabsOnTop", visible);
-
-          TabsOnTop.syncUI();
-
           TabsInTitlebar.allowedBy("tabs-visible", visible);
         ]]></body>
       </method>
@@ -3788,8 +3784,7 @@
         // When the tabbar has an unified appearance with the titlebar
         // and menubar, a double-click in it should have the same behavior
         // as double-clicking the titlebar
-        if (TabsInTitlebar.enabled ||
-            (TabsOnTop.enabled && this.parentNode._dragBindingAlive))
+        if (TabsInTitlebar.enabled || this.parentNode._dragBindingAlive)
           return;
 #endif
 
