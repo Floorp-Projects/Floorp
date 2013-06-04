@@ -12,3 +12,24 @@ EXPORTS += [
     'pngconf.h',
 ]
 
+CSRCS += [
+    'png.c',
+    'pngerror.c',
+    'pngget.c',
+    'pngmem.c',
+    'pngset.c',
+    'pngtrans.c',
+]
+
+# These files enable support for reading/writing PNGs
+CSRCS += [
+    'pngpread.c',
+    'pngread.c',
+    'pngrio.c',
+    'pngrtran.c',
+    'pngrutil.c',
+    'pngwio.c',
+    'pngwrite.c',
+    'pngwtran.c',
+    'pngwutil.c',
+]
