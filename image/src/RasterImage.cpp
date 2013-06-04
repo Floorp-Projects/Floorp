@@ -2765,7 +2765,10 @@ RasterImage::RequestDecode()
 NS_IMETHODIMP
 RasterImage::StartDecoding()
 {
-  return RequestDecodeCore(SYNCHRONOUS_NOTIFY_AND_SOME_DECODE);
+  // Here we are explicitly trading off flashing for responsiveness in the case
+  // that we're redecoding an image (see bug 845147).
+  return RequestDecodeCore(mHasBeenDecoded ?
+    SYNCHRONOUS_NOTIFY : SYNCHRONOUS_NOTIFY_AND_SOME_DECODE);
 }
 
 
