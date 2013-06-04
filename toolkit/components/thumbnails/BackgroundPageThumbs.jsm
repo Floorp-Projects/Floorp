@@ -129,6 +129,11 @@ const BackgroundPageThumbs = {
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.setAttribute("privatebrowsing", "true");
+
+    let [width, height] = PageThumbs._getThumbnailSize();
+    browser.style.width = width + "px";
+    browser.style.height = height + "px";
+
     this._parentWin.document.documentElement.appendChild(browser);
 
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
