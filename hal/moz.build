@@ -19,6 +19,7 @@ EXPORTS.mozilla += [
     'HalWakeLock.h',
 ]
 
+TEST_DIRS += ['tests']
 CPP_SOURCES += [
     'Hal.cpp',
     'HalWakeLock.cpp',
