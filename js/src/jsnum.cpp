@@ -429,24 +429,26 @@ Class js::NumberClass = {
 static JSBool
 Number(JSContext *cx, unsigned argc, Value *vp)
 {
-    /* Sample JS_CALLEE before clobbering. */
-    bool isConstructing = IsConstructing(vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc > 0) {
-        if (!ToNumber(cx, &vp[2]))
+    /* Sample JS_CALLEE before clobbering. */
+    bool isConstructing = IsConstructing(args);
+
+    if (args.length() > 0) {
+        if (!ToNumber(cx, args.handleAt(0)))
             return false;
-        vp[0] = vp[2];
+        args.rval().set(args[0]);
     } else {
-        vp[0].setInt32(0);
+        args.rval().setInt32(0);
     }
 
     if (!isConstructing)
         return true;
 
-    JSObject *obj = NumberObject::create(cx, vp[0].toNumber());
+    JSObject *obj = NumberObject::create(cx, args.rval().toNumber());
     if (!obj)
         return false;
-    vp->setObject(*obj);
+    args.rval().setObject(*obj);
     return true;
 }
 
@@ -1427,10 +1429,7 @@ js::ToNumberSlow(JSContext *cx, Value v, double *out)
      * least Windows debug shell builds complete again.
      */
 #ifndef _MSC_VER
-    {
-        SkipRoot skip(cx, &v);
-        MaybeCheckStackRoots(cx);
-    }
+    MaybeCheckStackRoots(cx);
 #endif
 #endif
 
