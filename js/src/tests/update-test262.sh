@@ -9,50 +9,26 @@ set -e
 # Updates the jstests copy of the test cases of Test262, the conformance test
 # suite for ECMA-262 and ECMA-402, ECMAScript and its Internationalization API.
 
-function usage()
-{
-  echo "Usage: update-test262.sh <URL of test262 hg> [clone | copy]"
-  echo ""
-  echo "The URL will most commonly be http://hg.ecmascript.org/tests/test262/ "
-  echo "but may also be a local clone.  Don't use a local clone when generating"
-  echo "the final import patch"\!"  test262/HG-INFO will record the wrong URL"
-  echo "if you do so.  Local cloning is only useful when editing this script to"
-  echo "import a larger test262 subset."
-  echo ""
-  echo "If a local clone is specified, the optional clone/copy argument will"
-  echo "either clone into a temporary directory, or directly copy from the"
-  echo "clone's checkout.  'clone' semantics are the default."
-  exit 1
-}
-
 if [ $# -lt 1 ]; then
-  usage
-elif [ $# -eq 1 -o "$2" == "clone" ]; then
-  # Beware!  'copy' support requires that the clone performed here *never* be
-  # altered.  If it were altered, those changes wouldn't appear in the final
-  # set of changes as determined by the 'copy' path below.
-
-  # Mercurial doesn't have a way to download just a part of a repository, or to
-  # just get the working copy - we have to clone the entire thing. We use a
-  # temporary test262 directory for that.
-  unique_dir=`mktemp -d /tmp/test262.XXXX` || exit 1
-  tmp_dir=${unique_dir}/test262
-
-  # Remove the temporary test262 directory on exit.
-  function cleanupTempFiles()
-  {
-    rm -rf ${unique_dir}
-  }
-  trap cleanupTempFiles EXIT
-
-  echo "Feel free to get some coffee - this could take a few minutes..."
-  hg clone $1 ${tmp_dir}
-elif [ "$2" == "copy" ]; then
-  echo "Copying directly from $1; be sure this repository is updated to tip"\!
-  tmp_dir="$1"
-else
-  usage
+  echo "Usage: update-test262.sh <URL of test262 hg, e.g. http://hg.ecmascript.org/tests/test262/ or a local clone>"
+  exit 1
 fi
+
+# Mercurial doesn't have a way to download just a part of a repository, or to
+# just get the working copy - we have to clone the entire thing. We use a
+# temporary test262 directory for that.
+unique_dir=`mktemp -d /tmp/test262.XXXX` || exit 1
+tmp_dir=${unique_dir}/test262
+
+# Remove the temporary test262 directory on exit.
+function cleanupTempFiles()
+{
+  rm -rf ${unique_dir}
+}
+trap cleanupTempFiles EXIT
+
+echo "Feel free to get some coffee - this could take a few minutes..."
+hg clone $1 ${tmp_dir}
 
 # Now to the actual test262 directory.
 js_src_tests_dir=`dirname $0`
@@ -80,7 +56,6 @@ cp ${tmp_dir}/LICENSE ${test262_dir}
 # ...we instead individually import folders whose tests we pass.  (Well, mostly
 # pass -- see the comment at the end of this script.)
 cp -r ${tmp_dir}/test/suite/ch06 ${test262_dir}/ch06
-cp -r ${tmp_dir}/test/suite/ch10 ${test262_dir}/ch10
 
 # The test402 tests are in test/suite/intl402/.  For now there are no
 # "bestPractice" tests to omit.  The remaining tests are in chNN directories,
@@ -92,7 +67,6 @@ mkdir ${test262_dir}/intl402
 cp -r ${tmp_dir}/test/suite/intl402/ch* ${test262_dir}/intl402
 
 # Copy over harness supporting files needed by the test402 tests.
-cp ${tmp_dir}/test/harness/sta.js ${js_src_tests_dir}/supporting/
 cp ${tmp_dir}/test/harness/testBuiltInObject.js ${js_src_tests_dir}/supporting/
 cp ${tmp_dir}/test/harness/testIntl.js ${js_src_tests_dir}/supporting/
 
@@ -103,9 +77,9 @@ for dir in `find ${test262_dir} ${test262_dir}/ch* ${test262_dir}/intl402/ch* -t
   touch $dir/shell.js
 done
 
-# Construct the test262 tests' jstests adapter files.
+# Restore the test262 tests' jstests adapter files.
 cp ${js_src_tests_dir}/supporting/test262-browser.js ${test262_dir}/browser.js
-cat ${js_src_tests_dir}/supporting/sta.js ${js_src_tests_dir}/supporting/test262-shell.js > ${test262_dir}/shell.js
+cp ${js_src_tests_dir}/supporting/test262-shell.js ${test262_dir}/shell.js
 
 # Restore the Intl tests' jstests adapter files.
 cp ${js_src_tests_dir}/supporting/test402-browser.js ${test262_dir}/intl402/browser.js
