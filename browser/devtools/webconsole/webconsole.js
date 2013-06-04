@@ -1192,14 +1192,34 @@ WebConsoleFrame.prototype = {
       severity = SEVERITY_WARNING;
     }
 
+    let objectActors = new Set();
+
+    // Gather the actor IDs.
+    for (let prop of ["errorMessage", "lineText"]) {
+      let grip = aScriptError[prop];
+      if (WebConsoleUtils.isActorGrip(grip)) {
+        objectActors.add(grip.actor);
+      }
+    }
+
+    let errorMessage = aScriptError.errorMessage;
+    if (errorMessage.type && errorMessage.type == "longString") {
+      errorMessage = errorMessage.initial;
+    }
+
     let node = this.createMessageNode(aCategory, severity,
-                                      aScriptError.errorMessage,
+                                      errorMessage,
                                       aScriptError.sourceName,
                                       aScriptError.lineNumber, null, null,
                                       aScriptError.timeStamp);
     if (aScriptError.private) {
       node.setAttribute("private", true);
     }
+
+    if (objectActors.size > 0) {
+      node._objectActors = objectActors;
+    }
+
     return node;
   },
 
@@ -1225,10 +1245,32 @@ WebConsoleFrame.prototype = {
    */
   handleLogMessage: function WCF_handleLogMessage(aPacket)
   {
-    this.outputMessage(CATEGORY_JS, () => {
-      return this.createMessageNode(CATEGORY_JS, SEVERITY_LOG, aPacket.message,
-                                    null, null, null, null, aPacket.timeStamp);
-    });
+    if (aPacket.message) {
+      this.outputMessage(CATEGORY_JS, this._reportLogMessage, [aPacket]);
+    }
+  },
+
+  /**
+   * Display log messages received from the server.
+   *
+   * @private
+   * @param object aPacket
+   *        The message packet received from the server.
+   * @return nsIDOMElement
+   *         The message element to render for the given log message.
+   */
+  _reportLogMessage: function WCF__reportLogMessage(aPacket)
+  {
+    let msg = aPacket.message;
+    if (msg.type && msg.type == "longString") {
+      msg = msg.initial;
+    }
+    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_LOG, msg, null,
+                                      null, null, null, aPacket.timeStamp);
+    if (WebConsoleUtils.isActorGrip(aPacket.message)) {
+      node._objectActors = new Set([aPacket.message.actor]);
+    }
+    return node;
   },
 
   /**
@@ -1991,6 +2033,22 @@ WebConsoleFrame.prototype = {
           this._releaseObject(aValue.actor);
         }
       });
+    }
+    else if (category == CATEGORY_JS &&
+             methodOrNode == this.reportPageError) {
+      let pageError = args[1];
+      for (let prop of ["errorMessage", "lineText"]) {
+        let grip = pageError[prop];
+        if (WebConsoleUtils.isActorGrip(grip)) {
+          this._releaseObject(grip.actor);
+        }
+      }
+    }
+    else if (category == CATEGORY_JS &&
+             methodOrNode == this._reportLogMessage) {
+      if (WebConsoleUtils.isActorGrip(args[0].message)) {
+        this._releaseObject(args[0].message.actor);
+      }
     }
   },
 
