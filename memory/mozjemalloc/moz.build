@@ -10,3 +10,7 @@ EXPORTS += [
     'jemalloc_types.h',
 ]
 
+if not CONFIG['MOZ_JEMALLOC3']:
+    CSRCS += [
+        'jemalloc.c',
+    ]
