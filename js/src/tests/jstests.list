@@ -3,9 +3,32 @@
 
 skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list # Intl is not enabled in all builds
 
+##################################################
+# Test262 tests skipped due to SpiderMonkey bugs #
+##################################################
+
+skip script test262/ch10/10.4/10.4.3/10.4.3-1-104.js # bug 603201
+skip script test262/ch10/10.4/10.4.3/10.4.3-1-106.js # bug 603201
+
 skip script test262/intl402/ch10/10.1/10.1.1_a.js # bug 854320
 skip script test262/intl402/ch10/10.1/10.1.1_13.js # bug 853704
 skip script test262/intl402/ch10/10.1/10.1.1_19_c.js # bug 853704
 skip script test262/intl402/ch11/11.1/11.1.1_a.js # bug 854320
 skip script test262/intl402/ch11/11.3/11.3.2_TRP.js # bug 853706
 skip script test262/intl402/ch12/12.1/12.1.1_a.js # bug 854320
+
+#######################################################################
+# Tests disabled due to jstest limitations wrt imported test262 tests #
+#######################################################################
+
+# These tests are disabled because jstest doesn't understand @negative (without
+# a pattern) yet.
+
+# These tests are disabled because jstest doesn't understand @negative with a
+# pattern yet.
+skip script test262/ch10/10.1/10.1.1/10.1.1-2gs.js
+skip script test262/ch10/10.1/10.1.1/10.1.1-5gs.js
+skip script test262/ch10/10.1/10.1.1/10.1.1-8gs.js
+skip script test262/ch10/10.4/10.4.2/10.4.2.1-1gs.js
+skip script test262/ch10/10.5/10.5-1gs.js
+skip script test262/ch10/10.6/10.6-2gs.js
