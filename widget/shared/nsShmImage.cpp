@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_GTK3)
+#if defined(MOZ_WIDGET_GTK)
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #elif defined(MOZ_WIDGET_QT)
@@ -57,7 +57,7 @@ nsShmImage::Create(const gfxIntSize& aSize,
     shm->mInfo.readOnly = False;
 
     int xerror = 0;
-#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_GTK3)
+#if defined(MOZ_WIDGET_GTK)
     gdk_error_trap_push();
     Status attachOk = XShmAttach(dpy, &shm->mInfo);
     XSync(dpy, False);
@@ -107,7 +107,7 @@ nsShmImage::AsSurface()
         ).forget();
 }
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 void
 nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
 {
@@ -137,7 +137,7 @@ nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
     XSync(dpy, False);
 }
 
-#elif defined(MOZ_WIDGET_GTK3)
+#elif (MOZ_WIDGET_GTK == 3)
 void
 nsShmImage::Put(GdkWindow* aWindow, cairo_rectangle_list_t* aRects)
 {
