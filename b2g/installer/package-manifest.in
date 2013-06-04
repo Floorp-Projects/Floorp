@@ -471,6 +471,8 @@
 @BINPATH@/components/DOMWifiManager.manifest
 @BINPATH@/components/NetworkStatsManager.js
 @BINPATH@/components/NetworkStatsManager.manifest
+@BINPATH@/components/NetworkInterfaceListService.manifest
+@BINPATH@/components/NetworkInterfaceListService.js
 #endif
 #ifdef MOZ_B2G_FM
 @BINPATH@/components/DOMFMRadioChild.js

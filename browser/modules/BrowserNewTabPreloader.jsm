@@ -62,7 +62,10 @@ this.BrowserNewTabPreloader = {
   newTab: function Preloader_newTab(aTab) {
     let win = aTab.ownerDocument.defaultView;
     if (win.gBrowser) {
-      let {boxObject: {width, height}} = win.gBrowser;
+      let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils);
+
+      let {width, height} = utils.getBoundsWithoutFlushing(win.gBrowser);
       let hiddenBrowser = HiddenBrowsers.get(width, height)
       if (hiddenBrowser) {
         return hiddenBrowser.swapWithNewTab(aTab);
