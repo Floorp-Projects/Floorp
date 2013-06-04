@@ -169,9 +169,6 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public SubMenu getSubMenu() {
-        if (mActionProvider != null)
-            mActionProvider.onPrepareSubMenu(mSubMenu);
-
         return mSubMenu;
     }
 
@@ -221,7 +218,6 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     @Override
     public MenuItem setActionProvider(ActionProvider actionProvider) {
         mActionProvider = actionProvider;
-        mSubMenu = new GeckoSubMenu(mContext, null);
         return this;
     }
 
@@ -346,7 +342,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     public MenuItem setSubMenu(GeckoSubMenu subMenu) {
         mSubMenu = subMenu;
-        mLayout.setSubMenuIndicator(subMenu != null);
+        mLayout.setSubMenuIndicator(mActionProvider == null && subMenu != null);
         return this;
     }
 
