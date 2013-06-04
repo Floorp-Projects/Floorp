@@ -25,6 +25,8 @@ function setAttributes(aNode, aAttrs) {
       if (aNode.hasAttribute(name))
         aNode.removeAttribute(name);
     } else {
+      if (name == "label" || name == "tooltiptext")
+        value = CustomizableUI.getLocalizedProperty(aAttrs, name);
       aNode.setAttribute(name, value);
     }
   }
@@ -34,8 +36,6 @@ const CustomizableWidgets = [{
     id: "history-panelmenu",
     type: "view",
     viewId: "PanelUI-history",
-    name: "History...",
-    description: "History",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
@@ -104,8 +104,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "privatebrowsing-button",
-    name: "Private Browsing\u2026",
-    description: "Open a new Private Browsing window",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
@@ -124,9 +122,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "save-page-button",
-    name: "Save Page",
-    shortcut: "Ctrl+S",
-    description: "Save this page",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
@@ -145,9 +140,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "find-button",
-    name: "Find",
-    shortcut: "Ctrl+F",
-    description: "Find in this page",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
@@ -166,9 +158,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "open-file-button",
-    name: "Open File",
-    shortcut: "Ctrl+O",
-    description: "Open file",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
@@ -187,9 +176,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "developer-button",
-    name: "Developer",
-    shortcut: "Shift+F11",
-    description: "Toggle Developer Tools",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
@@ -208,9 +194,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "add-ons-button",
-    name: "Add-ons",
-    shortcut: "Ctrl+Shift+A",
-    description: "Add-ons Manager",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
@@ -229,9 +212,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "preferences-button",
-    name: "Preferences",
-    shortcut: "Ctrl+Shift+O",
-    description: "Preferences\u2026",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
@@ -250,7 +230,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "zoom-controls",
-    name: "Zoom Controls",
     type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
@@ -266,23 +245,23 @@ const CustomizableWidgets = [{
         command: "cmd_fullZoomReduce",
         flex: flex,
         class: cls,
-        label: "Zoom out",
-        tooltiptext: "Zoom out"
+        label: true,
+        tooltiptext: true
       }, {
         id: "zoom-reset-button",
         noautoclose: noautoclose,
         command: "cmd_fullZoomReset",
         flex: flex,
         class: cls,
-        tooltiptext: "Reset Zoom"
+        tooltiptext: true
       }, {
         id: "zoom-in-button",
         noautoclose: noautoclose,
         command: "cmd_fullZoomEnlarge",
         flex: flex,
         class: cls,
-        label: "Zoom in",
-        tooltiptext: "Zoom in"
+        label: true,
+        tooltiptext: true
       }];
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
@@ -302,8 +281,9 @@ const CustomizableWidgets = [{
       let zoomResetButton = node.childNodes[1];
       let window = aDocument.defaultView;
       function updateZoomResetButton() {
-        zoomResetButton.setAttribute("label", window.gNavigatorBundle
-          .getFormattedString("zoomReset.label", [Math.floor(window.ZoomManager.zoom * 100)]));
+        zoomResetButton.setAttribute("label", CustomizableUI.getLocalizedProperty(
+          buttons[1], "label", [Math.floor(window.ZoomManager.zoom * 100)]
+        ));
       };
 
       // Register ourselves with the service so we know when the zoom prefs change.
@@ -375,7 +355,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "edit-controls",
-    name: "Edit Controls",
     type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
@@ -389,22 +368,22 @@ const CustomizableWidgets = [{
         command: "cmd_cut",
         flex: flex,
         class: cls,
-        label: "Cut",
-        tooltiptext: "Cut"
+        label: true,
+        tooltiptext: true
       }, {
         id: "copy-button",
         command: "cmd_copy",
         flex: flex,
         class: cls,
-        label: "Copy",
-        tooltiptext: "Copy"
+        label: true,
+        tooltiptext: true
       }, {
         id: "paste-button",
         command: "cmd_paste",
         flex: flex,
         class: cls,
-        label: "Paste",
-        tooltiptext: "Paste"
+        label: true,
+        tooltiptext: true
       }];
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
