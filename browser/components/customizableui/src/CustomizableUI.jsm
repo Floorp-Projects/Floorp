@@ -92,18 +92,8 @@ let gNewElementCount = 0;
 let gWrapperCache = new WeakMap();
 let gListeners = new Set();
 
-let gDebug = false;
-try {
-  gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
-} catch (e) {}
-
-function LOG(aMsg) {
-  if (gDebug) {
-    Services.console.logStringMessage("[CustomizableUI] " + aMsg);
-  }
-}
-function ERROR(aMsg) Cu.reportError("[CustomizableUI] " + aMsg);
-
+let gModuleName = "[CustomizableUI]";
+#include logging.js
 
 let CustomizableUIInternal = {
   initialize: function() {
@@ -449,8 +439,8 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(aArea);
     if (!placements) {
-      Cu.reportError("Could not find any placements for " + aArea +
-                     " when adding a widget.");
+      ERROR("Could not find any placements for " + aArea +
+            " when adding a widget.");
       return;
     }
 
@@ -508,8 +498,8 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(aArea);
     if (!placements) {
-      Cu.reportError("Could not find any placements for " + aArea +
-                     " when moving a widget.");
+      ERROR("Could not find any placements for " + aArea +
+            " when moving a widget.");
       return;
     }
 
@@ -768,7 +758,7 @@ let CustomizableUIInternal = {
         try {
           aWidget.onCommand.call(null, aEvent);
         } catch (e) {
-          Cu.reportError(e);
+          ERROR(e);
         }
       } else {
         //XXXunf Need to think this through more, and formalize.
@@ -1115,7 +1105,7 @@ let CustomizableUIInternal = {
           listener[aEvent].apply(listener, aArgs);
         }
       } catch (e) {
-        Cu.reportError(e + " -- " + e.fileName + ":" + e.lineNumber);
+        ERROR(e + " -- " + e.fileName + ":" + e.lineNumber);
       }
     }
   },
@@ -1376,7 +1366,7 @@ let CustomizableUIInternal = {
       }
     }
     catch (e) {
-      Cu.reportError(e);
+      ERROR(e);
       return;
     }
     data = JSON.parse(data);

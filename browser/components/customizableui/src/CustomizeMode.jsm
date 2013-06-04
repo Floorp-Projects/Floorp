@@ -16,19 +16,10 @@ const kPlaceholderClass = "panel-customization-placeholder";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let gDebug = false;
-try {
-  gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
-} catch (e) {}
-
-function LOG(str) {
-  if (gDebug) {
-    Services.console.logStringMessage("[CustomizeMode] " + str);
-  }
-}
-
-function ERROR(aMsg) Cu.reportError("[CustomizeMode] " + aMsg);
+let gModuleName = "[CustomizeMode]";
+#include logging.js
 
 function CustomizeMode(aWindow) {
   this.window = aWindow;

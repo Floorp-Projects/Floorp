@@ -9,7 +9,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_JS_MODULES = \
+EXTRA_PP_JS_MODULES = \
   CustomizableUI.jsm \
   CustomizableWidgets.jsm \
   CustomizeMode.jsm \
