@@ -140,7 +140,7 @@ FTPChannelChild::GetUploadStream(nsIInputStream** stream)
 NS_IMETHODIMP
 FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
 {
-  LOG(("FTPChannelChild::AsyncOpen [this=%x]\n", this));
+  LOG(("FTPChannelChild::AsyncOpen [this=%p]\n", this));
 
   NS_ENSURE_TRUE((gNeckoChild), NS_ERROR_FAILURE);
   NS_ENSURE_ARG_POINTER(listener);
@@ -259,7 +259,7 @@ FTPChannelChild::DoOnStartRequest(const int64_t& aContentLength,
                                   const nsCString& aEntityID,
                                   const URIParams& aURI)
 {
-  LOG(("FTPChannelChild::RecvOnStartRequest [this=%x]\n", this));
+  LOG(("FTPChannelChild::RecvOnStartRequest [this=%p]\n", this));
 
   mContentLength = aContentLength;
   SetContentType(aContentType);
@@ -309,7 +309,7 @@ FTPChannelChild::DoOnDataAvailable(const nsCString& data,
                                    const uint64_t& offset,
                                    const uint32_t& count)
 {
-  LOG(("FTPChannelChild::RecvOnDataAvailable [this=%x]\n", this));
+  LOG(("FTPChannelChild::RecvOnDataAvailable [this=%p]\n", this));
 
   if (mCanceled)
     return;
@@ -362,7 +362,7 @@ FTPChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 void
 FTPChannelChild::DoOnStopRequest(const nsresult& statusCode)
 {
-  LOG(("FTPChannelChild::RecvOnStopRequest [this=%x status=%u]\n",
+  LOG(("FTPChannelChild::RecvOnStopRequest [this=%p status=%u]\n",
            this, statusCode));
 
   if (!mCanceled)
@@ -531,7 +531,7 @@ NS_IMETHODIMP
 FTPChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
                                        nsISupports *aContext)
 {
-  LOG(("FTPChannelChild::CompleteRedirectSetup [this=%x]\n", this));
+  LOG(("FTPChannelChild::CompleteRedirectSetup [this=%p]\n", this));
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);

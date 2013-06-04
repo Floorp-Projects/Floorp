@@ -3699,7 +3699,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
 {
     nsresult rv;
 
-    LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%x] begin", this));
+    LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] begin", this));
     // Store secure data in memory only
     if (mSecurityInfo)
         entry->SetSecurityInfo(mSecurityInfo);
@@ -3734,7 +3734,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
             char *val = buf.BeginWriting(); // going to munge buf
             char *token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
             while (token) {
-                LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%x] " \
+                LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] " \
                         "processing %s", this, token));
                 if (*token != '*') {
                     nsHttpAtom atom = nsHttp::ResolveAtom(token);
@@ -3743,7 +3743,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
                     if (val) {
                         // If cookie-header, store a hash of the value
                         if (atom == nsHttp::Cookie) {
-                            LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%x] " \
+                            LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] " \
                                     "cookie-value %s", this, val));
                             rv = Hash(val, hash);
                             // If hash failed, store a string not very likely
@@ -3760,7 +3760,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
                         metaKey = prefix + nsDependentCString(token);
                         entry->SetMetaDataElement(metaKey.get(), val);
                     } else {
-                        LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%x] " \
+                        LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] " \
                                 "clearing metadata for %s", this, token));
                         metaKey = prefix + nsDependentCString(token);
                         entry->SetMetaDataElement(metaKey.get(), nullptr);
@@ -4553,7 +4553,7 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
 {
     ENSURE_CALLED_BEFORE_CONNECT();
 
-    LOG(("nsHttpChannel::SetupFallbackChannel [this=%x, key=%s]",
+    LOG(("nsHttpChannel::SetupFallbackChannel [this=%p, key=%s]",
          this, aFallbackKey));
     mFallbackChannel = true;
     mFallbackKey = aFallbackKey;
