@@ -63,6 +63,9 @@ XPCOMUtils.defineLazyGetter(this, "Prompt", function() {
   return temp.Prompt;
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
+                                  "resource://gre/modules/FormHistory.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
@@ -352,8 +355,6 @@ var BrowserApp = {
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-    // Init FormHistory
-    Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = null;
     let pinned = false;
@@ -1458,9 +1459,8 @@ var BrowserApp = {
       }
 
       case "FormHistory:Init": {
-        let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
         // Force creation/upgrade of formhistory.sqlite
-        let db = fh.DBConnection;
+        FormHistory.count({});
         Services.obs.removeObserver(this, "FormHistory:Init");
         break;
       }
