@@ -6,3 +6,15 @@
 
 MODULE = 'memory'
 
+CSRCS += [
+    'jemalloc_config.c',
+    'mozjemalloc_compat.c',
+]
+
+# Android doesn't have pthread_atfork, so just implement a dummy function.
+# It shouldn't make much problem, as the use of fork is pretty limited on
+# Android.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    CSRCS += [
+        'pthread_atfork.c',
+    ]

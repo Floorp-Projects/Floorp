@@ -73,3 +73,74 @@ if CONFIG['LIBJPEG_TURBO_X86_ASM']:
         'simd/jisseflt.asm',
         'simd/jsimdcpu.asm',
 ]
+
+CSRCS += [
+    'jcomapi.c',
+    'jdapimin.c',
+    'jdapistd.c',
+    'jdatadst.c',
+    'jdatasrc.c',
+    'jdcoefct.c',
+    'jdcolor.c',
+    'jddctmgr.c',
+    'jdhuff.c',
+    'jdinput.c',
+    'jdmainct.c',
+    'jdmarker.c',
+    'jdmaster.c',
+    'jdmerge.c',
+    'jdphuff.c',
+    'jdpostct.c',
+    'jdsample.c',
+    'jdtrans.c',
+    'jerror.c',
+    'jfdctflt.c',
+    'jfdctfst.c',
+    'jfdctint.c',
+    'jidctflt.c',
+    'jidctfst.c',
+    'jidctint.c',
+    'jidctred.c',
+    'jmemmgr.c',
+    'jmemnobs.c',
+    'jquant1.c',
+    'jquant2.c',
+    'jutils.c',
+]
+
+# These files enable support for writing JPEGs
+CSRCS += [
+    'jcapimin.c',
+    'jcapistd.c',
+    'jccoefct.c',
+    'jccolor.c',
+    'jcdctmgr.c',
+    'jchuff.c',
+    'jcinit.c',
+    'jcmainct.c',
+    'jcmarker.c',
+    'jcmaster.c',
+    'jcparam.c',
+    'jcphuff.c',
+    'jcprepct.c',
+    'jcsample.c',
+    'jctrans.c',
+]
+
+
+if CONFIG['LIBJPEG_TURBO_ARM_ASM']:
+    CSRCS += [
+        'simd/jsimd_arm.c',
+    ]
+elif CONFIG['LIBJPEG_TURBO_X64_ASM']:
+    CSRCS += [
+        'simd/jsimd_x86_64.c',
+    ]
+elif CONFIG['LIBJPEG_TURBO_X86_ASM']:
+    CSRCS += [
+        'simd/jsimd_i386.c',
+    ]
+else: # No SIMD support?
+    CSRCS += [
+        'jsimd_none.c',
+    ]

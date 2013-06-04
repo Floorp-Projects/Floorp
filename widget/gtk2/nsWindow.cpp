@@ -3713,8 +3713,10 @@ nsWindow::Create(nsIWidget        *aParent,
     }
 
     if (eventWidget) {
+#if defined(MOZ_WIDGET_GTK2)
         // Don't let GTK mess with the shapes of our GdkWindows
         GTK_PRIVATE_SET_FLAG(eventWidget, GTK_HAS_SHAPE_MASK);
+#endif
 
         // These events are sent to the owning widget of the relevant window
         // and propagate up to the first widget that handles the events, so we

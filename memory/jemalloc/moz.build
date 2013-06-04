@@ -6,3 +6,34 @@
 
 MODULE = 'jemalloc'
 
+CSRCS += [
+    'arena.c',
+    'atomic.c',
+    'base.c',
+    'bitmap.c',
+    'chunk.c',
+    'chunk_dss.c',
+    'chunk_mmap.c',
+    'ckh.c',
+    'ctl.c',
+    'extent.c',
+    'hash.c',
+    'huge.c',
+    'jemalloc.c',
+    'mb.c',
+    'mutex.c',
+    'prof.c',
+    'quarantine.c',
+    'rtree.c',
+    'stats.c',
+    'tcache.c',
+    'tsd.c',
+    'util.c',
+]
+
+# Only OSX needs the zone allocation implementation,
+# but only if replace-malloc is not enabled.
+if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
+    CSRCS += [
+        'zone.c',
+    ]

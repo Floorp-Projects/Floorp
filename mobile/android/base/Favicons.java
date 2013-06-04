@@ -139,6 +139,12 @@ public class Favicons {
     }
 
     public Bitmap getFaviconFromMemCache(String pageUrl) {
+        // If for some reason the key is null, simply return null
+        // and avoid an exception on the mem cache (see bug 813546)
+        if (pageUrl == null) {
+            return null;
+        }
+
         return mFaviconsCache.get(pageUrl);
     }
 
