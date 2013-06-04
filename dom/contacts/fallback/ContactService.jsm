@@ -29,7 +29,8 @@ let ContactService = {
     this._messages = ["Contacts:Find", "Contacts:GetAll", "Contacts:GetAll:SendNow",
                       "Contacts:Clear", "Contact:Save",
                       "Contact:Remove", "Contacts:RegisterForMessages",
-                      "child-process-shutdown", "Contacts:GetRevision"];
+                      "child-process-shutdown", "Contacts:GetRevision",
+                      "Contacts:GetCount"];
     this._children = [];
     this._cursors = {};
     this._messages.forEach(function(msgName) {
@@ -180,6 +181,19 @@ let ContactService = {
             mm.sendAsyncMessage("Contacts:Revision", {
               requestID: msg.requestID,
               revision: revision
+            });
+          }
+        );
+        break;
+      case "Contacts:GetCount":
+        if (!this.assertPermission(aMessage, "contacts-read")) {
+          return null;
+        }
+        this._db.getCount(
+          function(count) {
+            mm.sendAsyncMessage("Contacts:Count", {
+              requestID: msg.requestID,
+              count: count
             });
           }
         );

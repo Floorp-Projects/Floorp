@@ -727,7 +727,16 @@ ContactDB.prototype = {
     this.newTxn("readonly", REVISION_STORE, function (txn, store) {
       store.get(REVISION_KEY).onsuccess = function (e) {
         aSuccessCb(e.target.result);
-      }
+      };
+    });
+  },
+
+  getCount: function CDB_getCount(aSuccessCb) {
+    if (DEBUG) debug("getCount");
+    this.newTxn("readonly", STORE_NAME, function (txn, store) {
+      store.count().onsuccess = function (e) {
+        aSuccessCb(e.target.result);
+      };
     });
   },
 
