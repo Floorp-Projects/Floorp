@@ -81,6 +81,7 @@ cp ${tmp_dir}/LICENSE ${test262_dir}
 # pass -- see the comment at the end of this script.)
 cp -r ${tmp_dir}/test/suite/ch06 ${test262_dir}/ch06
 cp -r ${tmp_dir}/test/suite/ch10 ${test262_dir}/ch10
+cp -r ${tmp_dir}/test/suite/ch13 ${test262_dir}/ch13
 
 # The test402 tests are in test/suite/intl402/.  For now there are no
 # "bestPractice" tests to omit.  The remaining tests are in chNN directories,

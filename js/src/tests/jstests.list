@@ -49,6 +49,7 @@ skip script test262/intl402/ch12/12.1/12.1.1_a.js # bug 854320
 
 # These tests are disabled because jstest doesn't understand @negative (without
 # a pattern) yet.
+skip script test262/ch13/13.0/S13_A7_T3.js
 
 # These tests are disabled because jstest doesn't understand @negative with a
 # pattern yet.
@@ -58,3 +59,12 @@ skip script test262/ch10/10.1/10.1.1/10.1.1-8gs.js
 skip script test262/ch10/10.4/10.4.2/10.4.2.1-1gs.js
 skip script test262/ch10/10.5/10.5-1gs.js
 skip script test262/ch10/10.6/10.6-2gs.js
+skip script test262/ch13/13.0/13.0_4-5gs.js
+skip script test262/ch13/13.0/13.0_4-17gs.js
+skip script test262/ch13/13.1/13.1-1gs.js
+skip script test262/ch13/13.1/13.1-4gs.js
+skip script test262/ch13/13.1/13.1-5gs.js
+skip script test262/ch13/13.1/13.1-8gs.js
+skip script test262/ch13/13.1/13.1-13gs.js
+skip script test262/ch13/13.2/13.2-19-b-3gs.js
+
