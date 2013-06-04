@@ -2339,7 +2339,7 @@ Parser<FullParseHandler>::moduleDecl()
         return NULL;
     JS_ALWAYS_TRUE(tokenStream.matchToken(TOK_STRING));
     RootedAtom atom(context, tokenStream.currentToken().atom());
-    Module *module = js_NewModule(context, atom);
+    Module *module = Module::create(context, atom);
     if (!module)
         return NULL;
     ModuleBox *modulebox = newModuleBox(module, pc);
