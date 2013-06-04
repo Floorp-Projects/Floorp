@@ -91,7 +91,6 @@ MOCHITEST_FILES = \
 		test_load_source.html \
 		test_loop.html \
 		test_metadata.html \
-		test_mozLoadFrom.html \
 		test_no_load_event.html \
 		test_networkState.html \
 		test_new_audio.html \
