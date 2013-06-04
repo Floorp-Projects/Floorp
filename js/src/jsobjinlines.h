@@ -23,7 +23,6 @@
 #include "jstypedarray.h"
 #include "jswrapper.h"
 
-#include "builtin/Iterator-inl.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
