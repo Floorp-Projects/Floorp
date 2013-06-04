@@ -19,6 +19,7 @@ EXTRA_JS_MODULES = \
   gonk/WbxmlPduHelper.jsm \
   gonk/SiPduHelper.jsm \
   gonk/SlPduHelper.jsm \
+  gonk/WapPushManager.js \
   $(NULL)
 endif
 
