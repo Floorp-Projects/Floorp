@@ -33,12 +33,17 @@ const EXPECTED_REFLOWS = [
     "onxbltransitionend@chrome://browser/content/tabbrowser.xml|"
 ];
 
+const PREF_PRELOAD = "browser.newtab.preload";
+
 /*
  * This test ensures that there are no unexpected
  * uninterruptible reflows when opening new tabs.
  */
 function test() {
   waitForExplicitFinish();
+
+  Services.prefs.setBoolPref(PREF_PRELOAD, false);
+  registerCleanupFunction(() => Services.prefs.clearUserPref(PREF_PRELOAD));
 
   // Add a reflow observer and open a new tab.
   docShell.addWeakReflowObserver(observer);
