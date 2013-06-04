@@ -47,9 +47,11 @@ function removeCustomToolbars() {
 }
 
 function resetCustomization() {
-  CustomizableUI.reset();
   if (document.documentElement.hasAttribute("customizing")) {
+    window.gCustomizeMode.reset();
     window.gCustomizeMode.exit();
+  } else {
+    CustomizableUI.reset();
   }
 }
 
@@ -87,15 +89,36 @@ function simulateItemDrag(toDrag, target) {
 }
 
 function endCustomizing() {
-  let deferred = Promise.defer();
-  function onCustomizationEnds(ev) {
+  let deferredEndCustomizing = Promise.defer();
+  function onCustomizationEnds() {
     window.gNavToolbox.removeEventListener("aftercustomization", onCustomizationEnds);
-    deferred.resolve(ev);
+    deferredEndCustomizing.resolve();
   }
   window.gNavToolbox.addEventListener("aftercustomization", onCustomizationEnds);
   window.gCustomizeMode.exit();
-  return deferred.promise;
+
+  let deferredLoadNewTab = Promise.defer();
+
+  //XXXgijs so some tests depend on this tab being about:blank. Make it so.
+  let newTabBrowser = window.gBrowser.selectedBrowser;
+  newTabBrowser.stop();
+
+  // If we stop early enough, this might actually be about:blank.
+  if (newTabBrowser.contentDocument.location.href == "about:blank") {
+    return deferredEndCustomizing.promise;
+  }
+
+  // Otherwise, make it be about:blank, and wait for that to be done.
+  function onNewTabLoaded(e) {
+    newTabBrowser.removeEventListener("load", onNewTabLoaded, true);
+    deferredLoadNewTab.resolve();
+  }
+  newTabBrowser.addEventListener("load", onNewTabLoaded, true);
+  newTabBrowser.contentDocument.location.replace("about:blank");
+
+  return Promise.all(deferredEndCustomizing.promise, deferredLoadNewTab.promise);
 }
+
 function startCustomizing() {
   let deferred = Promise.defer();
   function onCustomizing() {
