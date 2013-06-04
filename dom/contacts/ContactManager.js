@@ -205,6 +205,39 @@ const CONTACT_CONTRACTID = "@mozilla.org/contact;1";
 const CONTACT_CID        = Components.ID("{72a5ee28-81d8-4af8-90b3-ae935396cc66}");
 const nsIDOMContact      = Components.interfaces.nsIDOMContact;
 
+function checkBlobArray(aBlob) {
+  if (Array.isArray(aBlob)) {
+    for (let i = 0; i < aBlob.length; i++) {
+      if (typeof aBlob != 'object') {
+        return null;
+      }
+      if (!(aBlob[i] instanceof Components.interfaces.nsIDOMBlob)) {
+        return null;
+      }
+    }
+    return aBlob;
+  }
+  return null;
+}
+
+function isVanillaObj(aObj) {
+  return Object.prototype.toString.call(aObj) == "[object Object]";
+}
+
+function validateArrayField(data, createCb) {
+  if (data) {
+    data = Array.isArray(data) ? data : [data];
+    let filtered = [];
+    for (let obj of data) {
+      if (obj && isVanillaObj(obj)) {
+        filtered.push(createCb(obj));
+      }
+    }
+    return filtered;
+  }
+  return undefined;
+}
+
 function Contact() { };
 
 Contact.prototype = {
@@ -235,120 +268,220 @@ Contact.prototype = {
                       genderIdentity: 'rw'
                      },
 
+  set name(aName) {
+    this._name = sanitizeStringArray(aName);
+  },
+
+  get name() {
+    return this._name;
+  },
+
+  set honorificPrefix(aHonorificPrefix) {
+    this._honorificPrefix = sanitizeStringArray(aHonorificPrefix);
+  },
+
+  get honorificPrefix() {
+    return this._honorificPrefix;
+  },
+
+  set givenName(aGivenName) {
+    this._givenName = sanitizeStringArray(aGivenName);
+  },
+
+  get givenName() {
+    return this._givenName;
+  },
+
+  set additionalName(aAdditionalName) {
+    this._additionalName = sanitizeStringArray(aAdditionalName);
+  },
+
+  get additionalName() {
+    return this._additionalName;
+  },
+
+  set familyName(aFamilyName) {
+    this._familyName = sanitizeStringArray(aFamilyName);
+  },
+
+  get familyName() {
+    return this._familyName;
+  },
+
+  set honorificSuffix(aHonorificSuffix) {
+    this._honorificSuffix = sanitizeStringArray(aHonorificSuffix);
+  },
+
+  get honorificSuffix() {
+    return this._honorificSuffix;
+  },
+
+  set nickname(aNickname) {
+    this._nickname = sanitizeStringArray(aNickname);
+  },
+
+  get nickname() {
+    return this._nickname;
+  },
+
+  set photo(aPhoto) {
+    this._photo = checkBlobArray(aPhoto);
+  },
+
+  get photo() {
+    return this._photo;
+  },
+
+  set category(aCategory) {
+    this._category = sanitizeStringArray(aCategory);
+  },
+
+  get category() {
+    return this._category;
+  },
+
+  set email(aEmail) {
+    this._email = validateArrayField(aEmail, function(email) {
+      return new ContactField(email.type, email.value, email.pref);
+    });
+  },
+
+  get email() {
+    return this._email;
+  },
+
+  set adr(aAdr) {
+    this._adr = validateArrayField(aAdr, function(adr) {
+      return new ContactAddress(adr.type, adr.streetAddress, adr.locality,
+                                adr.region, adr.postalCode, adr.countryName,
+                                adr.pref);
+    });
+  },
+
+  get adr() {
+    return this._adr;
+  },
+
+  set tel(aTel) {
+    this._tel = validateArrayField(aTel, function(tel) {
+      return new ContactTelField(tel.type, tel.value, tel.carrier, tel.pref);
+    });
+  },
+
+  get tel() {
+    return this._tel;
+  },
+
+  set impp(aImpp) {
+    this._impp = validateArrayField(aImpp, function(impp) {
+      return new ContactField(impp.type, impp.value, impp.pref);
+    });
+  },
+
+  get impp() {
+    return this._impp;
+  },
+
+  set url(aUrl) {
+    this._url = validateArrayField(aUrl, function(url) {
+      return new ContactField(url.type, url.value, url.pref);
+    });
+  },
+
+  get url() {
+    return this._url;
+  },
+
+  set org(aOrg) {
+    this._org = sanitizeStringArray(aOrg);
+  },
+
+  get org() {
+    return this._org;
+  },
+
+  set jobTitle(aJobTitle) {
+    this._jobTitle = sanitizeStringArray(aJobTitle);
+  },
+
+  get jobTitle() {
+    return this._jobTitle;
+  },
+
+  set note(aNote) {
+    this._note = sanitizeStringArray(aNote);
+  },
+
+  get note() {
+    return this._note;
+  },
+
+  set bday(aBday) {
+    if (aBday !== undefined && aBday !== null) {
+      this._bday = new Date(aBday);
+    }
+  },
+
+  get bday() {
+    return this._bday;
+  },
+
+  set anniversary(aAnniversary) {
+    if (aAnniversary !== undefined && aAnniversary !== null) {
+      this._anniversary = new Date(aAnniversary);
+    }
+  },
+
+  get anniversary() {
+    return this._anniversary;
+  },
+
+  set sex(aSex) {
+    if (aSex !== "undefined") {
+      this._sex = aSex;
+    } else {
+      this._sex = null;
+    }
+  },
+
+  get sex() {
+    return this._sex;
+  },
+
+  set genderIdentity(aGenderIdentity) {
+    if (aGenderIdentity !== "undefined") {
+      this._genderIdentity = aGenderIdentity;
+    } else {
+      this._genderIdentity = null;
+    }
+  },
+
+  get genderIdentity() {
+    return this._genderIdentity;
+  },
+
   init: function init(aProp) {
-    function _checkBlobArray(aBlob) {
-      if (Array.isArray(aBlob)) {
-        for (let i = 0; i < aBlob.length; i++) {
-          if (typeof aBlob != 'object') {
-            return null;
-          }
-          if (!(aBlob[i] instanceof Components.interfaces.nsIDOMBlob)) {
-            return null;
-          }
-        }
-        return aBlob;
-      }
-      return null;
-    }
-
-    function _isVanillaObj(aObj) {
-      return Object.prototype.toString.call(aObj) == "[object Object]";
-    }
-
-    let _create = sanitizeStringArray;
-
-    this.name =            _create(aProp.name);
-    this.honorificPrefix = _create(aProp.honorificPrefix);
-    this.givenName =       _create(aProp.givenName);
-    this.additionalName =  _create(aProp.additionalName);
-    this.familyName =      _create(aProp.familyName);
-    this.honorificSuffix = _create(aProp.honorificSuffix);
-    this.nickname =        _create(aProp.nickname);
-
-    if (aProp.email) {
-      aProp.email = Array.isArray(aProp.email) ? aProp.email : [aProp.email];
-      this.email = new Array();
-      for (let email of aProp.email) {
-        if (_isVanillaObj(email)) {
-          this.email.push(new ContactField(email.type, email.value, email.pref));
-        } else if (DEBUG) {
-          debug("email field is not a ContactField and was ignored.");
-        }
-      }
-    } else if (DEBUG) {
-      this.email = null;
-    }
-
-    this.photo =           _checkBlobArray(aProp.photo);
-    this.category =        _create(aProp.category);
-
-    if (aProp.adr) {
-      aProp.adr = Array.isArray(aProp.adr) ? aProp.adr : [aProp.adr];
-      this.adr = new Array();
-      for (let adr of aProp.adr) {
-        if (_isVanillaObj(adr)) {
-          this.adr.push(new ContactAddress(adr.type, adr.streetAddress, adr.locality,
-                                           adr.region, adr.postalCode, adr.countryName,
-                                           adr.pref));
-        } else if (DEBUG) {
-          debug("adr field is not a ContactAddress and was ignored.");
-        }
-      }
-    } else {
-      this.adr = null;
-    }
-
-    if (aProp.tel) {
-      aProp.tel = Array.isArray(aProp.tel) ? aProp.tel : [aProp.tel];
-      this.tel = new Array();
-      for (let tel of aProp.tel) {
-        if (_isVanillaObj(tel)) {
-          this.tel.push(new ContactTelField(tel.type, tel.value, tel.carrier,
-                                            tel.pref));
-        } else if (DEBUG) {
-          debug("tel field is not a ContactTelField and was ignored.");
-        }
-      }
-    } else {
-      this.tel = null;
-    }
-
-    this.org =             _create(aProp.org);
-    this.jobTitle =        _create(aProp.jobTitle);
-    this.bday =            (aProp.bday == undefined || aProp.bday == null) ? null : new Date(aProp.bday);
-    this.note =            _create(aProp.note);
-
-    if (aProp.impp) {
-      aProp.impp = Array.isArray(aProp.impp) ? aProp.impp : [aProp.impp];
-      this.impp = new Array();
-      for (let impp of aProp.impp) {
-        if (_isVanillaObj(impp)) {
-          this.impp.push(new ContactField(impp.type, impp.value, impp.pref));
-        } else if (DEBUG) {
-          debug("impp field is not a ContactField and was ignored.");
-        }
-      }
-    } else {
-      this.impp = null;
-    }
-
-    if (aProp.url) {
-      aProp.url = Array.isArray(aProp.url) ? aProp.url : [aProp.url];
-      this.url = new Array();
-      for (let url of aProp.url) {
-        if (_isVanillaObj(url)) {
-          this.url.push(new ContactField(url.type, url.value, url.pref));
-        } else if (DEBUG) {
-          debug("url field is not a ContactField and was ignored.");
-        }
-      }
-    } else {
-      this.url = null;
-    }
-
-    this.anniversary =     (aProp.anniversary == undefined || aProp.anniversary == null) ? null : new Date(aProp.anniversary);
-    this.sex =             (aProp.sex != "undefined") ? aProp.sex : null;
-    this.genderIdentity =  (aProp.genderIdentity != "undefined") ? aProp.genderIdentity : null;
+    this.name =            aProp.name;
+    this.honorificPrefix = aProp.honorificPrefix;
+    this.givenName =       aProp.givenName;
+    this.additionalName =  aProp.additionalName;
+    this.familyName =      aProp.familyName;
+    this.honorificSuffix = aProp.honorificSuffix;
+    this.nickname =        aProp.nickname;
+    this.email =           aProp.email;
+    this.photo =           aProp.photo;
+    this.url =             aProp.url;
+    this.category =        aProp.category;
+    this.adr =             aProp.adr;
+    this.tel =             aProp.tel;
+    this.org =             aProp.org;
+    this.jobTitle =        aProp.jobTitle;
+    this.bday =            aProp.bday;
+    this.note =            aProp.note;
+    this.impp =            aProp.impp;
+    this.anniversary =     aProp.anniversary;
+    this.sex =             aProp.sex;
+    this.genderIdentity =  aProp.genderIdentity;
   },
 
   get published () {
