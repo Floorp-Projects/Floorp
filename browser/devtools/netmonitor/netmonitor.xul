@@ -82,18 +82,13 @@
           </hbox>
           <hbox id="requests-menu-waterfall-header-box"
                 class="requests-menu-header requests-menu-waterfall"
-                align="center"
-                flex="1">
-            <button id="requests-menu-waterfall-button"
-                    class="requests-menu-header-button requests-menu-waterfall"
-                    onclick="NetMonitorView.RequestsMenu.sortBy('waterfall')"
-                    pack="start"
-                    flex="1">
-              <label id="requests-menu-waterfall-label"
-                     value="&netmonitorUI.toolbar.waterfall;"/>
-            </button>
+                align="center">
+            <label id="requests-menu-waterfall-label"
+                   class="plain requests-menu-waterfall"
+                   value="&netmonitorUI.toolbar.waterfall;"/>
           </hbox>
         </hbox>
+        <spacer id="toolbar-spacer" flex="1"/>
         <toolbarbutton id="details-pane-toggle"
                        class="devtools-toolbarbutton"
                        tooltiptext="&netmonitorUI.panesButton.tooltip;"

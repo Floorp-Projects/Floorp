@@ -415,7 +415,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    * Sorts all network requests in this container by a specified detail.
    *
    * @param string aType
-   *        Either null, "status", "method", "file", "domain", "type", "size" or "waterfall".
+   *        Either null, "status", "method", "file", "domain", "type" or "size".
    */
   sortBy: function(aType) {
     let target = $("#requests-menu-" + aType + "-button");
@@ -442,17 +442,12 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       }
     }
 
-    // Sort by timing. Set the header attributes so that clicking on the
-    // header reverses the sort direction.
+    // Sort by timing.
     if (!target || !direction) {
-      aType = "waterfall";
-      target = $("#requests-menu-waterfall-button");
-      target.setAttribute("sorted", direction = "ascending");
-      target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedAsc"));
+      this.sortContents(this._byTiming);
     }
-
     // Sort by whatever was requested.
-    switch (aType) {
+    else switch (aType) {
       case "status":
         if (direction == "ascending") {
           this.sortContents(this._byStatus);
@@ -493,13 +488,6 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
           this.sortContents(this._bySize);
         } else {
           this.sortContents((a, b) => !this._bySize(a, b));
-        }
-        break;
-      case "waterfall":
-        if (direction == "ascending") {
-          this.sortContents(this._byTiming);
-        } else {
-          this.sortContents((a, b) => !this._byTiming(a, b));
         }
         break;
     }
@@ -936,7 +924,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    *        The current waterfall scale.
    */
   _showWaterfallDivisionLabels: function(aScale) {
-    let container = $("#requests-menu-waterfall-button");
+    let container = $("#requests-menu-waterfall-header-box");
     let availableWidth = this._waterfallWidth - REQUESTS_WATERFALL_SAFE_BOUNDS;
 
     // Nuke all existing labels.
