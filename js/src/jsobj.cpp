@@ -7,7 +7,7 @@
 /*
  * JS object implementation.
  */
-#include "jsobjinlines.h"
+#include "jsobj.h"
 
 #include <stdlib.h>
 #include <string.h>
