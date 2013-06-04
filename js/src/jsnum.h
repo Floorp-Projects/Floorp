@@ -133,23 +133,20 @@ GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base
 
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 JS_ALWAYS_INLINE bool
-ToNumber(JSContext *cx, Value *vp)
+ToNumber(JSContext *cx, JS::MutableHandleValue vp)
 {
 #ifdef DEBUG
-    {
-        SkipRoot skip(cx, vp);
-        MaybeCheckStackRoots(cx);
-    }
+    MaybeCheckStackRoots(cx);
 #endif
 
-    if (vp->isNumber())
+    if (vp.isNumber())
         return true;
     double d;
-    extern bool ToNumberSlow(JSContext *cx, js::Value v, double *dp);
-    if (!ToNumberSlow(cx, *vp, &d))
+    extern bool ToNumberSlow(JSContext *cx, Value v, double *dp);
+    if (!ToNumberSlow(cx, vp, &d))
         return false;
 
-    vp->setNumber(d);
+    vp.setNumber(d);
     return true;
 }
 

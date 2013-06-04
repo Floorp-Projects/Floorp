@@ -2351,7 +2351,7 @@ DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, Mu
 {
     FallbackICSpew(cx, stub, "ToNumber");
     ret.set(arg);
-    return ToNumber(cx, ret.address());
+    return ToNumber(cx, ret);
 }
 
 typedef bool (*DoToNumberFallbackFn)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
