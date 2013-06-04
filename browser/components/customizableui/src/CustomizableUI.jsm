@@ -15,6 +15,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
+XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
+  const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
+  return Services.strings.createBundle(kUrl);
+});
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -727,11 +731,12 @@ let CustomizableUIInternal = {
         node.setAttribute("disabled", true);
       }
       node.setAttribute("removable", aWidget.removable);
-      node.setAttribute("label", aWidget.name);
-      node.setAttribute("tooltiptext", aWidget.description);
+      node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
+      node.setAttribute("tooltiptext", this.getLocalizedProperty(aWidget, "tooltiptext"));
       //XXXunf Need to hook this up to a <key> element or something.
-      if (aWidget.shortcut) {
-        node.setAttribute("acceltext", aWidget.shortcut);
+      let shortcut = this.getLocalizedProperty(aWidget, "shortcut");
+      if (shortcut) {
+        node.setAttribute("acceltext", shortcut);
       }
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
@@ -767,6 +772,30 @@ let CustomizableUIInternal = {
 
     aWidget.instances.set(aDocument, node);
     return node;
+  },
+
+  getLocalizedProperty: function(aWidget, aProp, aFormatArgs, aDef) {
+    if (typeof aWidget == "string") {
+      aWidget = gPalette.get(aWidget);
+    }
+    if (!aWidget) {
+      throw new Error("getLocalizedProperty was passed a non-widget to work with.");
+    }
+    if (typeof aWidget[aProp] == "string") {
+      return aWidget[aProp];
+    }
+    let def = aDef || "";
+    let name = aWidget.id + "." + aProp;
+    try {
+      if (Array.isArray(aFormatArgs) && aFormatArgs.length) {
+        return gWidgetsBundle.formatStringFromName(name, aFormatArgs,
+          aFormatArgs.length) || def;
+      }
+      return gWidgetsBundle.GetStringFromName(name) || def;
+    } catch(ex) {
+      ERROR("Could not localize property '" + name + "'.");
+    }
+    return def;
   },
 
   handleWidgetClick: function(aWidget, aNode, aEvent) {
@@ -1257,15 +1286,17 @@ let CustomizableUIInternal = {
       return null;
     }
 
-    const kReqStringProps = ["id", "name"];
+    const kReqStringProps = ["id"];
     for (let prop of kReqStringProps) {
       if (typeof aData[prop] != "string") {
+        ERROR("Missing required property '" + prop + "' in normalizeWidget: "
+              + aData.id);
         return null;
       }
       widget[prop] = aData[prop];
     }
 
-    const kOptStringProps = ["description", "shortcut"];
+    const kOptStringProps = ["name", "tooltiptext", "shortcut"];
     for (let prop of kOptStringProps) {
       if (typeof aData[prop] == "string") {
         widget[prop] = aData[prop];
@@ -1687,6 +1718,10 @@ this.CustomizableUI = {
   },
   get inDefaultState() {
     return CustomizableUIInternal.inDefaultState;
+  },
+  getLocalizedProperty: function(aWidget, aProp, aFormatArgs, aDef) {
+    return CustomizableUIInternal.getLocalizedProperty(aWidget, aProp,
+      aFormatArgs, aDef);
   }
 };
 Object.freeze(this.CustomizableUI);
