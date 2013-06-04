@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(61e5729c-100f-436e-bc20-b7706ec40229)]
+[scriptable, builtinclass, uuid(ae82dac0-d1a0-11e2-8b8b-0800200c9a66)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -114,6 +114,37 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'IllegalSIMorME', or 'GenericFailure'
    */
   nsIDOMDOMRequest selectNetworkAutomatically();
+
+  /**
+   * Set roaming preference
+   *
+   * @param mode
+   *        DOMString indicates the desired roaming preference.
+   *        Possible values: 'home', 'affiliated', or 'any'.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', 'InvalidParameter', or 'GenericFailure'
+   *
+   * TODO: param "mode" should be a WebIDL enum when this interface is converted
+   *       to WebIDL
+   */
+  nsIDOMDOMRequest setRoamingPreference(in DOMString mode);
+
+  /**
+   * Query current roaming preference
+   *
+   * If successful, the request's onsuccess will be called. And the request's
+   * result will be a string indicating the current roaming preference.
+   * The value will be either 'home', 'affiliated', or 'any'.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest getRoamingPreference();
 
   /**
    * Send a MMI message.
