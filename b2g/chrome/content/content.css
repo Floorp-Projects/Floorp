@@ -61,7 +61,6 @@ xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
 }
 
 xul|thumb {
-  -moz-appearance: none !important;
   background-color: rgba(0, 0, 0, 0.4) !important;
   -moz-border-top-colors: none !important;
   -moz-border-bottom-colors: none !important;
@@ -76,30 +75,30 @@ xul|thumb {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
 }
 
-html select:not([size]):not([multiple]) > xul|scrollbar,
-html select[size="1"] > xul|scrollbar,
-html select:not([size]):not([multiple]) xul|scrollbarbutton,
-html select[size="1"] xul|scrollbarbutton {
+select:not([size]):not([multiple]) > xul|scrollbar,
+select[size="1"] > xul|scrollbar,
+select:not([size]):not([multiple]) xul|scrollbarbutton,
+select[size="1"] xul|scrollbarbutton {
   display: block;
   margin-left: 0;
   min-width: 16px;
 }
 
 /* Override inverse OS themes */
-html select,
-html textarea,
-html button,
-html xul|button,
-html * > input:not([type="image"]) {
+select,
+textarea,
+button,
+xul|button,
+* > input:not([type="image"]) {
   -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
   border-radius: 3px;
 }
 
-html select[size],
-html select[multiple],
-html select[size][multiple],
-html textarea,
-html * > input:not([type="image"]) {
+select[size],
+select[multiple],
+select[size][multiple],
+textarea,
+* > input:not([type="image"]) {
   border-style: solid;
   border-color: #7d7d7d;
   color: #414141;
@@ -107,70 +106,70 @@ html * > input:not([type="image"]) {
 }
 
 /* Selects are handled by the form helper, see bug 685197 */
-html select option, html select optgroup {
+select option, select optgroup {
   pointer-events: none;
 }
 
-html select:not([size]):not([multiple]),
-html select[size="0"],
-html select[size="1"],
-html * > input[type="button"],
-html * > input[type="submit"],
-html * > input[type="reset"],
-html button {
+select:not([size]):not([multiple]),
+select[size="0"],
+select[size="1"],
+* > input[type="button"],
+* > input[type="submit"],
+* > input[type="reset"],
+button {
   border-style: solid;
   border-color: #7d7d7d;
   color: #414141;
   background: white linear-gradient(rgba(255,255,255,0.2) 0, rgba(215,215,215,0.5) 18px, rgba(115,115,115,0.5) 100%);
 }
 
-html input[type="checkbox"] {
+input[type="checkbox"] {
   background: white linear-gradient(rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 2px, rgba(255,255,255,0.2) 6px);
 }
 
-html input[type="radio"] {
+input[type="radio"] {
   background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(195,195,195,0.5) 5px, rgba(115,115,115,0.5) 100%);
 }
 
-html select {
+select {
   border-width: 1px;
   padding: 1px;
 }
 
-html select:not([size]):not([multiple]),
-html select[size="0"],
-html select[size="1"] {
+select:not([size]):not([multiple]),
+select[size="0"],
+select[size="1"] {
   padding: 0 1px 0 1px;
 }
 
-html * > input:not([type="image"]) {
+* > input:not([type="image"]) {
   border-width: 1px;
   padding: 1px;
 }
 
-html textarea {
+textarea {
   resize: none;
   border-width: 1px;
   padding: 2px 1px 2px 1px;
 }
 
-html input[type="button"],
-html input[type="submit"],
-html input[type="reset"],
-html button {
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+button {
   border-width: 1px;
   padding: 0 7px 0 7px;
 }
 
-html input[type="radio"],
-html input[type="checkbox"] {
+input[type="radio"],
+input[type="checkbox"] {
   max-width: 14px;
   max-height: 14px;
   border: 1px solid #a7a7a7 !important;
   padding: 2px 1px 2px 1px;
 }
 
-html select > button {
+select > button {
   border-width: 0px !important;
   margin: 0px !important;
   padding: 0px !important;
@@ -188,54 +187,54 @@ html select > button {
   font-size: inherit;
 }
 
-html select[size]:focus,
-html select[multiple]:focus,
-html select[size][multiple]:focus,
-html textarea:focus,
-html input[type="file"]:focus > input[type="text"],
-html * > input:not([type="image"]):focus {
+select[size]:focus,
+select[multiple]:focus,
+select[size][multiple]:focus,
+textarea:focus,
+input[type="file"]:focus > input[type="text"],
+* > input:not([type="image"]):focus {
   outline: 0px !important;
   border-style: solid;
   border-color: rgb(94,128,153);
   background: white linear-gradient(rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 3px, rgba(255,255,255,0.2) 16px);
 }
 
-html select:not([size]):not([multiple]):focus,
-html select[size="0"]:focus,
-html select[size="1"]:focus,
-html input[type="button"]:focus,
-html input[type="submit"]:focus,
-html input[type="reset"]:focus,
-html button:focus {
+select:not([size]):not([multiple]):focus,
+select[size="0"]:focus,
+select[size="1"]:focus,
+input[type="button"]:focus,
+input[type="submit"]:focus,
+input[type="reset"]:focus,
+button:focus {
   outline: 0px !important;
   border-style: solid;
   border-color: rgb(94,128,153);
   background: white linear-gradient(rgba(255,255,255,0.2) 0, rgba(198,225,256,0.2) 18px, rgba(27,113,177,0.5) 100%);
 }
 
-html input[type="checkbox"]:focus,
-html input[type="radio"]:focus {
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
   border-color: #99c6e0 !important;
 }
 
-html input[type="checkbox"]:focus {
+input[type="checkbox"]:focus {
   background: white linear-gradient(rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 2px, rgba(255,255,255,0.2) 6px);
 }
 
-html input[type="radio"]:focus {
+input[type="radio"]:focus {
   background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(198,225,246,0.2) 5px, rgba(27,113,177,0.5) 100%);
 }
 
 /* we need to be specific for selects because the above rules are specific too */
-html textarea[disabled],
-html select[size][disabled],
-html select[multiple][disabled],
-html select[size][multiple][disabled],
-html select:not([size]):not([multiple])[disabled],
-html select[size="0"][disabled],
-html select[size="1"][disabled],
-html button[disabled],
-html * > input:not([type="image"])[disabled] {
+textarea[disabled],
+select[size][disabled],
+select[multiple][disabled],
+select[size][multiple][disabled],
+select:not([size]):not([multiple])[disabled],
+select[size="0"][disabled],
+select[size="1"][disabled],
+button[disabled],
+* > input:not([type="image"])[disabled] {
   color: rgba(0,0,0,0.3);
   border-color: rgba(125,125,125,0.4);
   border-style: solid;
@@ -243,44 +242,44 @@ html * > input:not([type="image"])[disabled] {
   background: transparent linear-gradient(rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
 }
 
-html select:not([size]):not([multiple])[disabled],
-html select[size="0"][disabled],
-html select[size="1"][disabled] {
+select:not([size]):not([multiple])[disabled],
+select[size="0"][disabled],
+select[size="1"][disabled] {
   background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
-html input[type="button"][disabled],
-html input[type="submit"][disabled],
-html input[type="reset"][disabled],
-html button[disabled="true"] {
+input[type="button"][disabled],
+input[type="submit"][disabled],
+input[type="reset"][disabled],
+button[disabled="true"] {
   padding: 0 7px 0 7px;
   background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
-html input[type="radio"][disabled],
-html input[type="radio"][disabled]:active,
-html input[type="radio"][disabled]:hover,
-html input[type="radio"][disabled]:hover:active,
-html input[type="checkbox"][disabled],
-html input[type="checkbox"][disabled]:active,
-html input[type="checkbox"][disabled]:hover,
-html input[type="checkbox"][disabled]:hover:active {
+input[type="radio"][disabled],
+input[type="radio"][disabled]:active,
+input[type="radio"][disabled]:hover,
+input[type="radio"][disabled]:hover:active,
+input[type="checkbox"][disabled],
+input[type="checkbox"][disabled]:active,
+input[type="checkbox"][disabled]:hover,
+input[type="checkbox"][disabled]:hover:active {
   border:1px solid rgba(125,125,125,0.4) !important;
 }
 
-html select[disabled] > button {
+select[disabled] > button {
   opacity: 0.6;
   padding: 1px 7px 1px 7px;
 }
 
-html *:-moz-any-link:active,
-html *[role=button]:active,
-html button:active,
-html input:active,
-html option:active,
-html select:active,
-html label:active,
-html textarea:active {
+*:-moz-any-link:active,
+*[role=button]:active,
+button:active,
+input:active,
+option:active,
+select:active,
+label:active,
+textarea:active {
   background-color: rgba(141, 184, 216, 0.5);
 }
 
