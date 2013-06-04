@@ -120,7 +120,7 @@ let ContactService = {
               throw e;
             }
           }.bind(this),
-          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { errorMsg: aErrorMsg }); },
+          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.cursorId, errorMsg: aErrorMsg }); },
           msg.findOptions, msg.cursorId);
         break;
       case "Contacts:GetAll:SendNow":
