@@ -394,6 +394,13 @@ this.AlarmService = {
     }
 
     aNewAlarm['timezoneOffset'] = this._currentTimezoneOffset;
+    let aNewAlarmTime = this._getAlarmTime(aNewAlarm);
+    if (aNewAlarmTime <= Date.now()) {
+      debug("Adding a alarm that has past time.");
+      this._debugCurrentAlarm();
+      aErrorCb("InvalidStateError");
+      return;
+    }
 
     this._db.add(
       aNewAlarm,
@@ -417,7 +424,6 @@ this.AlarmService = {
         // If the new alarm is earlier than the current alarm, swap them and
         // push the previous alarm back to queue.
         let alarmQueue = this._alarmQueue;
-        let aNewAlarmTime = this._getAlarmTime(aNewAlarm);
         let currentAlarmTime = this._getAlarmTime(this._currentAlarm);
         if (aNewAlarmTime < currentAlarmTime) {
           alarmQueue.unshift(this._currentAlarm);
