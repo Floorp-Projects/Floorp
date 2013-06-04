@@ -394,11 +394,6 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
       return NS_OK;
     }
 
-    if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
-      gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
-    else
-      gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
-
     if (renderMode == SVGAutoRenderState::CLIP_MASK) {
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
       DrawCharacters(&iter, gfx, gfxFont::GLYPH_FILL);
