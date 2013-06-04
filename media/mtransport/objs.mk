@@ -79,5 +79,11 @@ MTRANSPORT_LCPPSRCS = \
   transportlayerprsock.cpp \
   $(NULL)
 
+ifdef MOZ_B2G_RIL
+MTRANSPORT_LCPPSRCS += \
+  gonk_addrs.cpp \
+  $(NULL)
+endif
+
 MTRANSPORT_CPPSRCS = $(addprefix $(topsrcdir)/media/mtransport/, $(MTRANSPORT_LCPPSRCS))
 
