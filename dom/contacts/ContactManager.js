@@ -513,7 +513,7 @@ Contact.prototype = {
 // ContactManager
 
 const CONTACTMANAGER_CONTRACTID = "@mozilla.org/contactManager;1";
-const CONTACTMANAGER_CID        = Components.ID("{7bfb6481-f946-4254-afc5-d7fe9f5c45a3}");
+const CONTACTMANAGER_CID        = Components.ID("{8beb3a66-d70a-4111-b216-b8e995ad3aff}");
 const nsIDOMContactManager      = Components.interfaces.nsIDOMContactManager;
 
 function ContactManager()
@@ -658,6 +658,13 @@ ContactManager.prototype = {
           Services.DOMRequest.fireSuccess(req, msg.revision);
         }
         break;
+      case "Contacts:Count":
+        if (DEBUG) debug("count: " + msg.count);
+        req = this.getRequest(msg.requestID);
+        if (req) {
+          Services.DOMRequest.fireSuccess(req, msg.count);
+        }
+        break;
       default:
         if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
@@ -678,6 +685,7 @@ ContactManager.prototype = {
       case "find":
       case "listen":
       case "revision":
+      case "count":
         access = "read";
         break;
       default:
@@ -867,6 +875,23 @@ ContactManager.prototype = {
     return request;
   },
 
+  getCount: function() {
+    let request = this.createRequest();
+
+    let allowCallback = function() {
+      cpmm.sendAsyncMessage("Contacts:GetCount", {
+        requestID: this.getRequestId(request)
+      });
+    }.bind(this);
+
+    let cancelCallback = function() {
+      Services.DOMRequest.fireError(request);
+    };
+
+    this.askPermission("count", request, allowCallback, cancelCallback);
+    return request;
+  },
+
   init: function(aWindow) {
     this.initHelper(aWindow, ["Contacts:Find:Return:OK", "Contacts:Find:Return:KO",
                               "Contacts:Clear:Return:OK", "Contacts:Clear:Return:KO",
@@ -874,8 +899,8 @@ ContactManager.prototype = {
                               "Contact:Remove:Return:OK", "Contact:Remove:Return:KO",
                               "Contact:Changed",
                               "PermissionPromptHelper:AskPermission:OK",
-                              "Contacts:GetAll:Next",
-                              "Contacts:Revision"]);
+                              "Contacts:GetAll:Next", "Contacts:Revision",
+                              "Contacts:Count"]);
   },
 
   // Called from DOMRequestIpcHelper
