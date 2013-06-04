@@ -22,7 +22,7 @@ template <typename K, typename V, size_t InlineElems>
 class InlineMap
 {
   public:
-    typedef HashMap<K, V, DefaultHasher<K>, TempAllocPolicy> WordMap;
+    typedef HashMap<K, V, DefaultHasher<K>, SystemAllocPolicy> WordMap;
 
     struct InlineElem
     {
@@ -79,8 +79,8 @@ class InlineMap
     }
 
   public:
-    explicit InlineMap(JSContext *cx)
-      : inlNext(0), inlCount(0), map(cx) {
+    explicit InlineMap()
+      : inlNext(0), inlCount(0) {
         checkStaticInvariants(); /* Force the template to instantiate the static invariants. */
     }
 

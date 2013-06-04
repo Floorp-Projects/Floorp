@@ -331,14 +331,6 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
 
     friend void AutoGCRooter::trace(JSTracer *trc);
 
-    /*
-     * Initialize a parser. The compiler owns the arena pool "tops-of-stack"
-     * space above the current JSContext.tempLifoAlloc mark. This means you
-     * cannot allocate from tempLifoAlloc and save the pointer beyond the next
-     * Parser destructor invocation.
-     */
-    bool init();
-
     const char *getFilename() const { return tokenStream.getFilename(); }
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
 
