@@ -404,7 +404,7 @@ HTMLTextFieldAccessible::NativeState()
 
   // Expose autocomplete state if it has associated autocomplete list.
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::list))
-    return state | states::SUPPORTS_AUTOCOMPLETION;
+    return state | states::SUPPORTS_AUTOCOMPLETION | states::HASPOPUP;
 
   // No parent can mean a fake widget created for XUL textbox. If accessible
   // is unattached from tree then we don't care.
