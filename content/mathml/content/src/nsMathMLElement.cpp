@@ -226,7 +226,7 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   nsIAtom* tag = Tag();
   if (tag == nsGkAtoms::ms_ || tag == nsGkAtoms::mi_ ||
       tag == nsGkAtoms::mn_ || tag == nsGkAtoms::mo_ ||
-      tag == nsGkAtoms::mtext_)
+      tag == nsGkAtoms::mtext_ || tag == nsGkAtoms::mspace_)
     return FindAttributeDependence(aAttribute, tokenMap);
   if (tag == nsGkAtoms::mstyle_ ||
       tag == nsGkAtoms::math)

@@ -111,6 +111,11 @@
     testStates("autocomplete-tel", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-email", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-search", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // haspopup
+    testStates("autocomplete-list", STATE_HASPOPUP);
+
     SimpleTest.finish();
   }
 
@@ -123,42 +128,47 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=559275"
      title="map attribute required to STATE_REQUIRED">
-    Mozilla Bug 559275
+    Bug 559275
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=389238"
      title="Support disabled state on fieldset">
-    Mozilla Bug 389238
+    Bug 389238
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=599163"
      title="check disabled state instead of attribute">
-    Mozilla Bug 599163
+    Bug 599163
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
      title="Expose intrinsic invalid state to accessibility API">
-    Mozilla Bug 601205
+    Bug 601205
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
      title="Expose intrinsic invalid state to accessibility API">
-    Mozilla Bug 601205
+    Bug 601205
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=559766"
      title="Add accessibility support for @list on HTML input and for HTML datalist">
-    Mozilla Bug 559766
+    Bug 559766
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
      title="File input control should be propogate states to descendants">
-    Mozilla Bug 699017
+    Bug 699017
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=733382"
      title="Editable state bit should be present on readonly inputs">
-    Mozilla Bug 733382
+    Bug 733382
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=878590"
+     title="HTML5 datalist is not conveyed by haspopup property">
+    Bug 878590
   </a>
 
   <p id="display"></p>

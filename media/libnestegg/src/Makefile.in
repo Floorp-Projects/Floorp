@@ -16,7 +16,7 @@ ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
 
-CSRCS		= \
+DISABLED_CSRCS		= \
 		nestegg.c \
 		halloc.c \
 		$(NULL)
