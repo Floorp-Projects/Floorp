@@ -1254,6 +1254,8 @@ AccessibleWrap::get_states(AccessibleStates *aStates)
     *aStates |= IA2_STATE_TRANSIENT;
   if (state & states::VERTICAL)
     *aStates |= IA2_STATE_VERTICAL;
+  if (state & states::CHECKED)
+    *aStates |= IA2_STATE_CHECKABLE;
 
   return S_OK;
 
