@@ -89,7 +89,8 @@ public class GeckoActionProvider extends ActionProvider {
         PackageManager packageManager = mContext.getPackageManager();
 
         // Populate the sub-menu with a sub set of the activities.
-        for (int i = 0; i < dataModel.getActivityCount(); i++) {
+        final int count = dataModel.getActivityCount();
+        for (int i = 0; i < count; i++) {
             ResolveInfo activity = dataModel.getActivity(i);
             subMenu.add(0, i, i, activity.loadLabel(packageManager))
                 .setIcon(activity.loadIcon(packageManager))
