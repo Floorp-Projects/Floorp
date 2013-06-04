@@ -61,6 +61,8 @@
 #include "builtin/RegExp.h"
 #include "builtin/ParallelArray.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
+#include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "ion/AsmJS.h"
