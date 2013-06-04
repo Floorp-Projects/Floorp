@@ -54,7 +54,6 @@ EXTRA_JS_MODULES = \
   ril/mms_consts.js \
   ril/MmsPduHelper.jsm \
   ril/wap_consts.js \
-  ril/WapPushManager.js \
   ril/WspPduHelper.jsm \
   $(NULL)
 endif
