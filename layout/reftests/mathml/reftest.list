@@ -123,3 +123,4 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == number-size-1.xhtml number-size-1-ref.xhtml
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
+!= menclose-1.html menclose-1-ref.html
