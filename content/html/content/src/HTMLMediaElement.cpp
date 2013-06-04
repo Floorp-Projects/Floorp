@@ -1210,52 +1210,6 @@ nsresult HTMLMediaElement::LoadWithChannel(nsIChannel* aChannel,
   return NS_OK;
 }
 
-void
-HTMLMediaElement::MozLoadFrom(HTMLMediaElement& aOther, ErrorResult& aRv)
-{
-  // Make sure we don't reenter during synchronous abort events.
-  if (mIsRunningLoadMethod) {
-    return;
-  }
-
-  mIsRunningLoadMethod = true;
-  AbortExistingLoads();
-  mIsRunningLoadMethod = false;
-
-  if (!aOther.mDecoder) {
-    return;
-  }
-
-  ChangeDelayLoadStatus(true);
-
-  mLoadingSrc = aOther.mLoadingSrc;
-  aRv = InitializeDecoderAsClone(aOther.mDecoder);
-  if (aRv.Failed()) {
-    ChangeDelayLoadStatus(false);
-    return;
-  }
-
-  SetPlaybackRate(mDefaultPlaybackRate);
-  DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
-}
-
-NS_IMETHODIMP HTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
-{
-  NS_ENSURE_ARG_POINTER(aOther);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aOther);
-  HTMLMediaElement* other = static_cast<HTMLMediaElement*>(content.get());
-
-  if (!other) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  MozLoadFrom(*other, rv);
-
-  return rv.ErrorCode();
-}
-
 /* readonly attribute unsigned short readyState; */
 NS_IMETHODIMP HTMLMediaElement::GetReadyState(uint16_t* aReadyState)
 {
