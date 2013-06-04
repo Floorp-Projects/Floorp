@@ -896,6 +896,16 @@ JSScript::destroyScriptCounts(FreeOp *fop)
 }
 
 void
+ScriptSourceObject::setSource(ScriptSource *source)
+{
+    if (source)
+        source->incref();
+    if (this->source())
+        this->source()->decref();
+    setReservedSlot(SOURCE_SLOT, PrivateValue(source));
+}
+
+void
 ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 {
     // ScriptSource::setSource automatically takes care of the refcount

@@ -109,6 +109,7 @@ class ContextStack;
 class ScriptFrameIter;
 
 class Proxy;
+class JS_FRIEND_API(AutoEnterPolicy);
 class JS_FRIEND_API(BaseProxyHandler);
 class JS_FRIEND_API(Wrapper);
 class JS_FRIEND_API(CrossCompartmentWrapper);

@@ -611,8 +611,6 @@ namespace gc {
 class MarkingValidator;
 } // namespace gc
 
-class JS_FRIEND_API(AutoEnterPolicy);
-
 typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
 
 } // namespace js
