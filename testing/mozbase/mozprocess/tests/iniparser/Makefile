@@ -27,7 +27,7 @@ ifeq ($(UNAME), Darwin)
     AR	    = ar
     ARFLAGS = rcv
     SHLD = libtool
-    CFLAGS  = -v -arch i386 -fPIC -Wall -ansi -pedantic
+    CFLAGS  = -v -arch i386 -isysroot /Developer/SDKs/MacOSX10.6.sdk -fPIC -Wall -ansi -pedantic
     LDFLAGS = -arch_only i386
 endif
 ifeq ($(WIN32), 1)

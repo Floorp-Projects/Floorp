@@ -11,16 +11,17 @@ try:
 except IOError:
     description = None
 
-PACKAGE_VERSION = '1.6'
+PACKAGE_VERSION = '1.4'
 
-deps = ['mozinfo >= 0.4',
+deps = ['mozinfo == 0.4',
         'mozfile'
        ]
 
 setup(name='mozInstall',
       version=PACKAGE_VERSION,
-      description="package for installing and uninstalling Mozilla applications",
-      long_description="see http://mozbase.readthedocs.org/",
+      description="This is a utility package for installing and uninstalling "
+                  "Mozilla applications on various platforms.",
+      long_description=description,
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=['Environment :: Console',
                    'Intended Audience :: Developers',
@@ -39,14 +40,10 @@ setup(name='mozInstall',
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,
-      # we have to generate two more executables for those systems that cannot run as Administrator
-      # and the filename containing "install" triggers the UAC
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]
       mozinstall = mozinstall:install_cli
       mozuninstall = mozinstall:uninstall_cli
-      moz_add_to_system = mozinstall:install_cli
-      moz_remove_from_system = mozinstall:uninstall_cli
       """,
       )
