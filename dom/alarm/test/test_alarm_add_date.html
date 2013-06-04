@@ -57,11 +57,11 @@
     domRequest.onsuccess = function(e) {
       navigator.mozAlarms.remove(e.target.result);
 
-      ok(false, "Should not be able to add alarm for already past date.");
+      ok(true, "Should be able to add alarm for already past date, which should fire immediately.");
       testNull();
     };
     domRequest.onerror = function(e) {
-      ok(true, "Can't use past date when adding new alarm.");
+      ok(false, "Unable to add alarm for yesterday.");
 
       // Errors as it should, on to the next test
       testNull();
@@ -81,7 +81,7 @@
     }
     domRequest.onsuccess = function(e) {
       // Null should not be valid
-      ok(false, "Null should not be accepted as input for `respectTimezone` param.");
+      ok(false, "Null should not be accepted as input for `date` param.");
       SimpleTest.finish();
     };
     domRequest.onerror = function(e) {
