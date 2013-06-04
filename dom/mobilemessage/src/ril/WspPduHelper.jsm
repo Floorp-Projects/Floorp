@@ -867,8 +867,8 @@ this.UintVar = {
 /**
  * This encoding is used for token values, which have no well-known binary
  * encoding, or when the assigned number of the well-known encoding is small
- * enough to fit into Short-Integer. We change Extension-Media from 
- * NullTerminatedTexts to TextString because of Bug 823816. 
+ * enough to fit into Short-Integer. We change Extension-Media from
+ * NullTerminatedTexts to TextString because of Bug 823816.
  *
  *   Constrained-encoding = Extension-Media | Short-integer
  *   Extension-Media = TextString
@@ -2797,6 +2797,7 @@ this.OMNA_PUSH_APPLICATION_IDS = (function () {
     ids[urn] = ids[number] = entry;
   }
 
+  add("x-wap-application:wml.ua", 0x02);
   add("x-wap-application:mms.ua", 0x04);
 
   return ids;

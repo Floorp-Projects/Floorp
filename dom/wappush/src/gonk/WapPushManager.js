@@ -14,6 +14,21 @@ Cu.import("resource://gre/modules/WspPduHelper.jsm", this);
 const DEBUG = false; // set to true to see debug messages
 
 /**
+ * WAP Push decoders
+ */
+XPCOMUtils.defineLazyGetter(this, "SI", function () {
+  let SI = {};
+  Cu.import("resource://gre/modules/SiPduHelper.jsm", SI);
+  return SI;
+});
+
+XPCOMUtils.defineLazyGetter(this, "SL", function () {
+  let SL = {};
+  Cu.import("resource://gre/modules/SlPduHelper.jsm", SL);
+  return SL;
+});
+
+/**
  * Helpers for WAP PDU processing.
  */
 this.WapPushManager = {
@@ -41,14 +56,47 @@ this.WapPushManager = {
       return;
     }
 
+    // MMS
     if (appid == "x-wap-application:mms.ua") {
       let mmsService = Cc["@mozilla.org/mms/rilmmsservice;1"]
                        .getService(Ci.nsIMmsService);
       mmsService.QueryInterface(Ci.nsIWapPushApplication)
                 .receiveWapPush(data.array, data.array.length, data.offset, options);
-    } else {
-      debug("No WAP Push application registered for " + appid);
+      return;
     }
+
+    /**
+    * Non-MMS, handled according to content type
+    *
+    * WAP Type            content-type                              x-wap-application-id
+    * MMS                 "application/vnd.wap.mms-message"         "x-wap-application:mms.ua"
+    * SI                  "text/vnd.wap.si"                         "x-wap-application:wml.ua"
+    * SI(WBXML)           "application/vnd.wap.sic"                 "x-wap-application:wml.ua"
+    * SL                  "text/vnd.wap.sl"                         "x-wap-application:wml.ua"
+    * SL(WBXML)           "application/vnd.wap.slc"                 "x-wap-application:wml.ua"
+    * Provisioning        "text/vnd.wap.connectivity-xml"           "x-wap-application:wml.ua"
+    * Provisioning(WBXML) "application/vnd.wap.connectivity-wbxml"  "x-wap-application:wml.ua"
+    *
+    * @see http://technical.openmobilealliance.org/tech/omna/omna-wsp-content-type.aspx
+    */
+    let contentType = options.headers["content-type"].media;
+    let msg = { contentType: contentType };
+
+    if (contentType === "text/vnd.wap.si" ||
+        contentType === "application/vnd.wap.sic") {
+      SI.PduHelper.parse(data, contentType, msg);
+    } else if (contentType === "text/vnd.wap.sl" ||
+               contentType === "application/vnd.wap.slc") {
+      SL.PduHelper.parse(data, contentType, msg);
+    } else if (contentType === "text/vnd.wap.connectivity-xml" ||
+               contentType === "application/vnd.wap.connectivity-wbxml") {
+      // TODO: Bug 869291 - Support Receiving WAP-Push-CP
+    } else {
+      // Unsupported type, provide raw data.
+      msg.content = data.array;
+    }
+
+    // TODO: Bug 853782 - Notify receiving of WAP Push messages
   },
 
   /**
