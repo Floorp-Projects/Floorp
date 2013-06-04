@@ -54,9 +54,6 @@
   height: 1px;
   background-color: ThreeDShadow;
 }
-#navigator-toolbox[tabsontop=false]::after {
-  visibility: collapse;
-}
 
 #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
   -moz-appearance: none;
@@ -95,9 +92,9 @@
 }
 %endif
 
-#nav-bar[tabsontop=true],
-#nav-bar[tabsontop=true][collapsed=true] + toolbar,
-#nav-bar[tabsontop=true][collapsed=true] + #customToolbars + #PersonalToolbar {
+#nav-bar,
+#nav-bar[collapsed=true] + toolbar,
+#nav-bar[collapsed=true] + #customToolbars + #PersonalToolbar {
   background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
   margin-top: -1px; /* Move up 1px into the TabsToolbar */
@@ -1528,8 +1525,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding: 0;
 }
 
-#TabsToolbar:not(:-moz-lwtheme),
-#TabsToolbar[tabsontop=false] {
+#TabsToolbar:not(:-moz-lwtheme) {
   background-image: linear-gradient(to top, @toolbarShadowColor@ 2px, rgba(0,0,0,.05) 2px, transparent 50%);
 }
 

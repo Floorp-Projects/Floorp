@@ -949,7 +949,6 @@ var gBrowserInit = {
 
     // Misc. inits.
     CombinedStopReload.init();
-    TabsOnTop.init();
     gPrivateBrowsingUI.init();
     TabsInTitlebar.init();
     retrieveToolbarIconsizesFromTheme();
@@ -1301,8 +1300,6 @@ var gBrowserInit = {
     }
 
     BookmarkingUI.uninit();
-
-    TabsOnTop.uninit();
 
     TabsInTitlebar.uninit();
 
@@ -4324,57 +4321,6 @@ function setToolbarVisibility(toolbar, isVisible) {
 #ifdef CAN_DRAW_IN_TITLEBAR
   updateTitlebarDisplay();
 #endif
-}
-
-var TabsOnTop = {
-  init: function TabsOnTop_init() {
-    Services.prefs.addObserver(this._prefName, this, false);
-
-    // Only show the toggle UI if the user disabled tabs on top.
-    if (Services.prefs.getBoolPref(this._prefName)) {
-      for (let item of document.querySelectorAll("menuitem[command=cmd_ToggleTabsOnTop]"))
-        item.parentNode.removeChild(item);
-    }
-  },
-
-  uninit: function TabsOnTop_uninit() {
-    Services.prefs.removeObserver(this._prefName, this);
-  },
-
-  toggle: function () {
-    this.enabled = !Services.prefs.getBoolPref(this._prefName);
-  },
-
-  syncUI: function () {
-    let userEnabled = Services.prefs.getBoolPref(this._prefName);
-    let enabled = userEnabled && gBrowser.tabContainer.visible;
-
-    document.getElementById("cmd_ToggleTabsOnTop")
-            .setAttribute("checked", userEnabled);
-
-    document.documentElement.setAttribute("tabsontop", enabled);
-    document.getElementById("navigator-toolbox").setAttribute("tabsontop", enabled);
-    document.getElementById("TabsToolbar").setAttribute("tabsontop", enabled);
-    document.getElementById("nav-bar").setAttribute("tabsontop", enabled);
-    gBrowser.tabContainer.setAttribute("tabsontop", enabled);
-    TabsInTitlebar.allowedBy("tabs-on-top", enabled);
-  },
-
-  get enabled () {
-    return gNavToolbox.getAttribute("tabsontop") == "true";
-  },
-
-  set enabled (val) {
-    Services.prefs.setBoolPref(this._prefName, !!val);
-    return val;
-  },
-
-  observe: function (subject, topic, data) {
-    if (topic == "nsPref:changed")
-      this.syncUI();
-  },
-
-  _prefName: "browser.tabs.onTop"
 }
 
 var TabsInTitlebar = {
