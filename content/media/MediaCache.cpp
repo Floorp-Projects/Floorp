@@ -36,11 +36,17 @@ PRLogModuleInfo* gMediaCacheLog;
 // they don't monopolize the cache.
 static const double NONSEEKABLE_READAHEAD_MAX = 0.5;
 
-// Assume that any replaying or backward seeking will happen
-// this far in the future (in seconds). This is a random guess/estimate
-// penalty to account for the possibility that we might not replay at
-// all.
-static const uint32_t REPLAY_DELAY = 30;
+// Data N seconds before the current playback position is given the same priority
+// as data REPLAY_PENALTY_FACTOR*N seconds ahead of the current playback
+// position. REPLAY_PENALTY_FACTOR is greater than 1 to reflect that
+// data in the past is less likely to be played again than data in the future.
+// We want to give data just behind the current playback position reasonably
+// high priority in case codecs need to retrieve that data (e.g. because
+// tracks haven't been muxed well or are being decoded at uneven rates).
+// 1/REPLAY_PENALTY_FACTOR as much data will be kept behind the
+// current playback position as will be kept ahead of the current playback
+// position.
+static const uint32_t REPLAY_PENALTY_FACTOR = 3;
 
 // When looking for a reusable block, scan forward this many blocks
 // from the desired "best" block location to look for free blocks,
@@ -932,15 +938,20 @@ MediaCache::PredictNextUse(TimeStamp aNow, int32_t aBlock)
       // that the time until the next use is the time since the last use.
       prediction = aNow - bo->mLastUseTime;
       break;
-    case PLAYED_BLOCK:
+    case PLAYED_BLOCK: {
       // This block should be managed in LRU mode, and we should impose
       // a "replay delay" to reflect the likelihood of replay happening
       NS_ASSERTION(static_cast<int64_t>(bo->mStreamBlock)*BLOCK_SIZE <
                    bo->mStream->mStreamOffset,
                    "Played block after the current stream position?");
-      prediction = aNow - bo->mLastUseTime +
-        TimeDuration::FromSeconds(REPLAY_DELAY);
+      int64_t bytesBehind =
+        bo->mStream->mStreamOffset - static_cast<int64_t>(bo->mStreamBlock)*BLOCK_SIZE;
+      int64_t millisecondsBehind =
+        bytesBehind*1000/bo->mStream->mPlaybackBytesPerSecond;
+      prediction = TimeDuration::FromMilliseconds(
+          NS_MIN<int64_t>(millisecondsBehind*REPLAY_PENALTY_FACTOR, INT32_MAX));
       break;
+    }
     case READAHEAD_BLOCK: {
       int64_t bytesAhead =
         static_cast<int64_t>(bo->mStreamBlock)*BLOCK_SIZE - bo->mStream->mStreamOffset;
