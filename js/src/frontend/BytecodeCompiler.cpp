@@ -7,6 +7,7 @@
 #include "frontend/BytecodeCompiler.h"
 
 #include "jsprobes.h"
+#include "jsscript.h"
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
