@@ -241,6 +241,15 @@ function checkRevision(revision, msg, then) {
   revReq.onerror = onFailure;
 }
 
+function checkCount(count, msg, then) {
+  var request = navigator.mozContacts.getCount();
+  request.onsuccess = function(e) {
+    is(e.target.result, count, msg);
+    then();
+  };
+  request.onerror = onFailure;
+}
+
 var mozContacts = window.navigator.mozContacts;
 ok(mozContacts, "mozContacts exists");
 ok("mozContact" in window, "mozContact exists");
@@ -257,7 +266,9 @@ var steps = [
       req = mozContacts.clear();
       req.onsuccess = function () {
         ok(true, "Deleted the database");
-        checkRevision(1, "Revision was incremented on clear", next);
+        checkCount(0, "No contacts after clear", function() {
+          checkRevision(1, "Revision was incremented on clear", next);
+        });
       };
       req.onerror = onFailure;
     });
@@ -279,7 +290,9 @@ var steps = [
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
       sample_id1 = createResult1.id;
-      checkRevision(2, "Revision was incremented on save", next);
+      checkCount(1, "1 contact after adding empty contact", function() {
+        checkRevision(2, "Revision was incremented on save", next);
+      });
     };
     req.onerror = onFailure;
   },
@@ -990,7 +1003,7 @@ var steps = [
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
       ok(createResult1.name == properties1.name, "Same Name");
-      next();
+      checkCount(20, "20 contacts in DB", next);
     };
     req.onerror = onFailure;
   },
