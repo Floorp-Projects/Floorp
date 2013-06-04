@@ -990,7 +990,7 @@ nsLookAndFeel::Init()
     g_object_unref(menu);
 #else
     GdkRGBA color;
-    GtkStyleContext *style
+    GtkStyleContext *style;
 
     GtkWidgetPath *path = gtk_widget_path_new();
     gtk_widget_path_append_type(path, GTK_TYPE_WINDOW);
@@ -1016,7 +1016,7 @@ nsLookAndFeel::Init()
     GtkWidget *textView = gtk_text_view_new();
     style = gtk_widget_get_style_context(textView);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
-    sMozFieldBackground = GDK_RGBA_TO_NS_RGB(color);
+    sMozFieldBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozFieldText = GDK_RGBA_TO_NS_RGBA(color);
     gtk_widget_destroy(textView);

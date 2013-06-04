@@ -401,7 +401,6 @@ load 770381-1.html
 load 772306.html
 load 788360.html
 load 793848.html
-test-pref(font.size.inflation.minTwips,120) load 794693.html
 load 795646.html
 load 802902.html
 skip-if(!gtk2Widget) load 813372-1.html # bug 873083

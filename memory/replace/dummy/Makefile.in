@@ -13,6 +13,6 @@ LIBRARY_NAME = replace_malloc
 FORCE_SHARED_LIB = 1
 NO_DIST_INSTALL = 1
 
-CSRCS = dummy_replace_malloc.c
+DISABLED_CSRCS = dummy_replace_malloc.c
 
 include $(topsrcdir)/config/rules.mk
