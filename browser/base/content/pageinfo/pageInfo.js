@@ -1013,7 +1013,7 @@ function makePreview(row)
     else if (item instanceof HTMLVideoElement && isProtocolAllowed) {
       newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
       newImage.id = "thepreviewimage";
-      newImage.mozLoadFrom(item);
+      newImage.src = url;
       newImage.controls = true;
       width = physWidth = item.videoWidth;
       height = physHeight = item.videoHeight;
