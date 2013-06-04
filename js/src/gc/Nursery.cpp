@@ -49,7 +49,6 @@ js::Nursery::init()
     return true;
 }
 
-void
 js::Nursery::~Nursery()
 {
     if (start())
