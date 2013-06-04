@@ -250,7 +250,7 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                  const NetAddr& selfAddr,
                                  const NetAddr& peerAddr)
 {
-  LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
+  LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
 
   if (useResponseHead && !mCanceled)
     mResponseHead = new nsHttpResponseHead(responseHead);
@@ -350,7 +350,7 @@ HttpChannelChild::OnTransportAndData(const nsresult& status,
                                      const uint64_t& offset,
                                      const uint32_t& count)
 {
-  LOG(("HttpChannelChild::OnTransportAndData [this=%x]\n", this));
+  LOG(("HttpChannelChild::OnTransportAndData [this=%p]\n", this));
 
   if (mCanceled)
     return;
@@ -439,7 +439,7 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 void
 HttpChannelChild::OnStopRequest(const nsresult& statusCode)
 {
-  LOG(("HttpChannelChild::OnStopRequest [this=%x status=%u]\n",
+  LOG(("HttpChannelChild::OnStopRequest [this=%p status=%x]\n",
            this, statusCode));
 
   mIsPending = false;
@@ -829,7 +829,7 @@ NS_IMETHODIMP
 HttpChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
                                         nsISupports *aContext)
 {
-  LOG(("HttpChannelChild::FinishRedirectSetup [this=%x]\n", this));
+  LOG(("HttpChannelChild::FinishRedirectSetup [this=%p]\n", this));
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
@@ -973,7 +973,7 @@ HttpChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)
 NS_IMETHODIMP
 HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 {
-  LOG(("HttpChannelChild::AsyncOpen [this=%x uri=%s]\n", this, mSpec.get()));
+  LOG(("HttpChannelChild::AsyncOpen [this=%p uri=%s]\n", this, mSpec.get()));
 
   if (mCanceled)
     return mStatus;

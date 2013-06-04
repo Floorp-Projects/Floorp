@@ -142,7 +142,7 @@ HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
 
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
-  LOG(("HttpChannelParent RecvAsyncOpen [this=%x uri=%s]\n",
+  LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s]\n",
        this, uriSpec.get()));
 
   nsresult rv;
@@ -398,7 +398,7 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
 NS_IMETHODIMP
 HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
-  LOG(("HttpChannelParent::OnStartRequest [this=%x]\n", this));
+  LOG(("HttpChannelParent::OnStartRequest [this=%p]\n", this));
 
   nsHttpChannel *chan = static_cast<nsHttpChannel *>(aRequest);
   nsHttpResponseHead *responseHead = chan->GetResponseHead();
@@ -465,7 +465,7 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
                                  nsISupports *aContext,
                                  nsresult aStatusCode)
 {
-  LOG(("HttpChannelParent::OnStopRequest: [this=%x status=%ul]\n",
+  LOG(("HttpChannelParent::OnStopRequest: [this=%p status=%x]\n",
        this, aStatusCode));
 
   if (mIPCClosed || !SendOnStopRequest(aStatusCode))
@@ -484,7 +484,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
                                    uint64_t aOffset,
                                    uint32_t aCount)
 {
-  LOG(("HttpChannelParent::OnDataAvailable [this=%x]\n", this));
+  LOG(("HttpChannelParent::OnDataAvailable [this=%p]\n", this));
 
   nsCString data;
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);

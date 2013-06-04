@@ -53,7 +53,7 @@ nsAsyncStreamCopier::IsComplete(nsresult *status)
 void
 nsAsyncStreamCopier::Complete(nsresult status)
 {
-    LOG(("nsAsyncStreamCopier::Complete [this=%x status=%x]\n", this, status));
+    LOG(("nsAsyncStreamCopier::Complete [this=%p status=%x]\n", this, status));
 
     nsCOMPtr<nsIRequestObserver> observer;
     nsCOMPtr<nsISupports> ctx;
@@ -217,7 +217,7 @@ nsAsyncStreamCopier::Init(nsIInputStream *source,
 NS_IMETHODIMP
 nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver *observer, nsISupports *ctx)
 {
-    LOG(("nsAsyncStreamCopier::AsyncCopy [this=%x observer=%x]\n", this, observer));
+    LOG(("nsAsyncStreamCopier::AsyncCopy [this=%p observer=%x]\n", this, observer));
 
     NS_ASSERTION(mSource && mSink, "not initialized");
     nsresult rv;
