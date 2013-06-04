@@ -137,6 +137,14 @@ function onFailure() {
 }
 
 function checkStr(str1, str2, msg) {
+  if (str1 ^ str2) {
+    ok(false, "Expected both strings to be either present or absent");
+    return;
+  }
+  is(str1, str2, msg);
+}
+
+function checkStrArray(str1, str2, msg) {
   // comparing /[null(,null)+]/ and undefined should pass
   function nonNull(e) {
     return e != null;
@@ -150,88 +158,71 @@ function checkStr(str1, str2, msg) {
 }
 
 function checkAddress(adr1, adr2) {
-  checkStr(adr1.type, adr2.type, "Same type");
-  checkStr(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
-  checkStr(adr1.locality, adr2.locality, "Same locality");
-  checkStr(adr1.region, adr2.region, "Same region");
-  checkStr(adr1.postalCode, adr2.postalCode, "Same postalCode");
-  checkStr(adr1.countryName, adr2.countryName, "Same countryName");
+  if (adr1 ^ adr2) {
+    ok(false, "Expected both adrs to be either present or absent");
+    return;
+  }
+  dump("adr1: " + adr1 + ", adr2: " + adr2 + "\n");
+  checkStrArray(adr1.type, adr2.type, "Same type");
+  checkStrArray(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
+  checkStrArray(adr1.locality, adr2.locality, "Same locality");
+  checkStrArray(adr1.region, adr2.region, "Same region");
+  checkStrArray(adr1.postalCode, adr2.postalCode, "Same postalCode");
+  checkStrArray(adr1.countryName, adr2.countryName, "Same countryName");
   is(adr1.pref, adr2.pref, "Same pref");
 }
 
 function checkTel(tel1, tel2) {
-  checkStr(tel1.type, tel2.type, "Same type");
-  checkStr(tel1.value, tel2.value, "Same value");
-  checkStr(tel1.carrier, tel2.carrier, "Same carrier");
+  if (tel1 ^ tel2) {
+    ok(false, "Expected both tels to be either present or absent");
+    return;
+  }
+  checkStrArray(tel1.type, tel2.type, "Same type");
+  checkStrArray(tel1.value, tel2.value, "Same value");
+  checkStrArray(tel1.carrier, tel2.carrier, "Same carrier");
   is(tel1.pref, tel2.pref, "Same pref");
 }
 
 function checkField(field1, field2) {
-  checkStr(field1.type, field2.type, "Same type");
-  checkStr(field1.value, field2.value, "Same value");
+  if (field1 ^ field2) {
+    ok(false, "Expected both fields to be either present or absent");
+    return;
+  }
+  checkStrArray(field1.type, field2.type, "Same type");
+  checkStrArray(field1.value, field2.value, "Same value");
   is(field1.pref, field2.pref, "Same pref");
 }
 
 function checkContacts(contact1, contact2) {
-  checkStr(contact1.name, contact2.name, "Same name");
-  checkStr(contact1.honorificPrefix, contact2.honorificPrefix, "Same honorificPrefix");
-  checkStr(contact1.givenName, contact2.givenName, "Same givenName");
-  checkStr(contact1.additionalName, contact2.additionalName, "Same additionalName");
-  checkStr(contact1.familyName, contact2.familyName, "Same familyName");
-  checkStr(contact1.honorificSuffix, contact2.honorificSuffix, "Same honorificSuffix");
-  checkStr(contact1.nickname, contact2.nickname, "Same nickname");
-  checkStr(contact1.category, contact2.category, "Same category");
-  checkStr(contact1.org, contact2.org, "Same org");
-  checkStr(contact1.jobTitle, contact2.jobTitle, "Same jobTitle");
+  checkStrArray(contact1.name, contact2.name, "Same name");
+  checkStrArray(contact1.honorificPrefix, contact2.honorificPrefix, "Same honorificPrefix");
+  checkStrArray(contact1.givenName, contact2.givenName, "Same givenName");
+  checkStrArray(contact1.additionalName, contact2.additionalName, "Same additionalName");
+  checkStrArray(contact1.familyName, contact2.familyName, "Same familyName");
+  checkStrArray(contact1.honorificSuffix, contact2.honorificSuffix, "Same honorificSuffix");
+  checkStrArray(contact1.nickname, contact2.nickname, "Same nickname");
+  checkStrArray(contact1.category, contact2.category, "Same category");
+  checkStrArray(contact1.org, contact2.org, "Same org");
+  checkStrArray(contact1.jobTitle, contact2.jobTitle, "Same jobTitle");
   is(contact1.bday ? contact1.bday.valueOf() : null, contact2.bday ? contact2.bday.valueOf() : null, "Same birthday");
-  checkStr(contact1.note, contact2.note, "Same note");
+  checkStrArray(contact1.note, contact2.note, "Same note");
   is(contact1.anniversary ? contact1.anniversary.valueOf() : null , contact2.anniversary ? contact2.anniversary.valueOf() : null, "Same anniversary");
-  is(contact1.sex, contact2.sex, "Same sex");
-  is(contact1.genderIdentity, contact2.genderIdentity, "Same genderIdentity");
+  checkStr(contact1.sex, contact2.sex, "Same sex");
+  checkStr(contact1.genderIdentity, contact2.genderIdentity, "Same genderIdentity");
 
   for (var i in contact1.email) {
-    if (contact1.email) {
-      ok(contact2.email != null, "conatct2.email exists");
-    }
-    if (contact2.email) {
-      ok(contact1.email != null, "conatct1.email exists");
-    }
     checkField(contact1.email[i], contact2.email[i]);
   }
   for (var i in contact1.adr) {
-    if (contact1.adr) {
-      ok(contact2.adr != null, "conatct2.adr exists");
-    }
-    if (contact2.adr) {
-      ok(contact1.adr != null, "conatct1.adr exists");
-    }
     checkAddress(contact1.adr[i], contact2.adr[i]);
   }
   for (var i in contact1.tel) {
-    if (contact1.tel) {
-      ok(contact2.tel != null, "conatct2.tel exists");
-    }
-    if (contact2.tel) {
-      ok(contact1.tel != null, "conatct1.tel exists");
-    }
     checkTel(contact1.tel[i], contact2.tel[i]);
   }
   for (var i in contact1.url) {
-    if (contact1.url) {
-      ok(contact2.url != null, "conatct2.url exists");
-    }
-    if (contact2.url) {
-      ok(contact1.url != null, "conatct1.url exists");
-    }
     checkField(contact1.url[i], contact2.url[i]);
   }
   for (var i in contact1.impp) {
-    if (contact1.impp) {
-      ok(contact2.impp != null, "conatct2.impp exists");
-    }
-    if (contact2.impp) {
-      ok(contact1.impp != null, "conatct1.impp exists");
-    }
     checkField(contact1.impp[i], contact2.impp[i]);
   }
 }
@@ -250,6 +241,15 @@ function checkRevision(revision, msg, then) {
   revReq.onerror = onFailure;
 }
 
+function checkCount(count, msg, then) {
+  var request = navigator.mozContacts.getCount();
+  request.onsuccess = function(e) {
+    is(e.target.result, count, msg);
+    then();
+  };
+  request.onerror = onFailure;
+}
+
 var mozContacts = window.navigator.mozContacts;
 ok(mozContacts, "mozContacts exists");
 ok("mozContact" in window, "mozContact exists");
@@ -266,7 +266,9 @@ var steps = [
       req = mozContacts.clear();
       req.onsuccess = function () {
         ok(true, "Deleted the database");
-        checkRevision(1, "Revision was incremented on clear", next);
+        checkCount(0, "No contacts after clear", function() {
+          checkRevision(1, "Revision was incremented on clear", next);
+        });
       };
       req.onerror = onFailure;
     });
@@ -288,7 +290,9 @@ var steps = [
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
       sample_id1 = createResult1.id;
-      checkRevision(2, "Revision was incremented on save", next);
+      checkCount(1, "1 contact after adding empty contact", function() {
+        checkRevision(2, "Revision was incremented on save", next);
+      });
     };
     req.onerror = onFailure;
   },
@@ -331,7 +335,7 @@ var steps = [
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
       sample_id1 = createResult1.id;
-      checkContacts(properties1, createResult1);
+      checkContacts(createResult1, properties1);
     };
     req.onerror = onFailure;
   },
@@ -498,7 +502,7 @@ var steps = [
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
       sample_id1 = createResult1.id;
-      checkContacts(properties1, createResult1);
+      checkContacts(createResult1, properties1);
       next();
     };
     req.onerror = onFailure;
@@ -999,7 +1003,7 @@ var steps = [
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
       ok(createResult1.name == properties1.name, "Same Name");
-      next();
+      checkCount(20, "20 contacts in DB", next);
     };
     req.onerror = onFailure;
   },
@@ -1091,7 +1095,7 @@ var steps = [
     req = mozContacts.save(cloned);
     req.onsuccess = function () {
       ok(cloned.id, "The contact now has an ID.");
-      ok(cloned.email.value == "new email!", "Same Email");
+      ok(cloned.email[0].value == "new email!", "Same Email");
       ok(createResult1.email != cloned.email, "Clone has different email");
       ok(cloned.givenName == "Tom", "New Name");
       next();
@@ -1255,7 +1259,7 @@ var steps = [
       var req2 = mozContacts.find(options);
       req2.onsuccess = function() {
         is(req2.result.length, 1, "1 Entry");
-        checkStr(req2.result.givenName, "customTest", "same name");
+        checkStrArray(req2.result.givenName, "customTest", "same name");
         ok(req2.result.yyy === undefined, "custom property undefined");
         next();
       }
@@ -1430,6 +1434,23 @@ var steps = [
     }
     req.onerror = onFailure;
   },
+  function() {
+    ok(true, "Test setting array properties to scalar values")
+    const DOMStrings = ["name","honorificPrefix","givenName","additionalName",
+                        "familyName", "honorificSuffix","nickname","category",
+                        "org","jobTitle","note"];
+    const FIELDS = ["email","url","adr","tel","impp"];
+    createResult1 = new mozContact();
+    for (var prop of DOMStrings) {
+      createResult1[prop] = "foo";
+      ok(Array.isArray(createResult1[prop]), prop + " is array");
+    }
+    for (var prop of FIELDS) {
+      createResult1[prop] = {type: "foo"};
+      ok(Array.isArray(createResult1[prop]), prop + " is array");
+    }
+    next();
+  },
   function () {
     ok(true, "all done!\n");
     clearTemps();
@@ -1445,11 +1466,11 @@ function next() {
     return;
   }
   try {
-    steps[index]();
+    var i = index++;
+    steps[i]();
   } catch(ex) {
     ok(false, "Caught exception", ex);
   }
-  index += 1;
 }
 
 SimpleTest.waitForExplicitFinish();
