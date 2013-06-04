@@ -6,3 +6,6 @@
 
 MODULE = 'memory'
 
+CSRCS += [
+    'dummy_replace_malloc.c',
+]

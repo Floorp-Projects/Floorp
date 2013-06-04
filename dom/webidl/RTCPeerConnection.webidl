@@ -37,12 +37,18 @@ enum RTCIceConnectionState {
 };
 
 dictionary RTCDataChannelInit {
-  boolean outOfOrderAllowed;
-  unsigned short maxRetransmitTime;
-  unsigned short maxRetransmitNum;
-  DOMString protocol;
-  boolean preset;
-  unsigned short stream;
+  boolean         ordered = true;
+  unsigned short? maxRetransmitTime = null;
+  unsigned short? maxRetransmits = null;
+  DOMString       protocol = "";
+  boolean         negotiated = false; // spec currently says 'true'; we disagree
+  unsigned short? id = null;
+
+  // these are deprecated due to renaming in the spec, but still supported for Fx22
+  boolean outOfOrderAllowed; // now ordered, and the default changes to keep behavior the same
+  unsigned short maxRetransmitNum; // now maxRetransmits
+  boolean preset; // now negotiated
+  unsigned short stream; // now id
 };
 
 interface RTCDataChannel;

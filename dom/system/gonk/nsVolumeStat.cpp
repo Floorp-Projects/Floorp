@@ -12,9 +12,7 @@ NS_IMPL_ISUPPORTS1(nsVolumeStat, nsIVolumeStat)
 
 nsVolumeStat::nsVolumeStat(const nsAString& aPath)
 {
-  nsCString utf8Path = NS_ConvertUTF16toUTF8(aPath);
-
-  if (statfs(utf8Path.get(), &mStat) != 0) {
+  if (statfs(NS_ConvertUTF16toUTF8(aPath).get(), &mStat) != 0) {
     memset(&mStat, 0, sizeof(mStat));
   }
 }

@@ -236,6 +236,7 @@ MOCHITEST_FILES_A = \
 		test_meta_viewport4.html \
 		test_meta_viewport5.html \
 		test_meta_viewport6.html \
+			viewport_helpers.js \
 		test_mutationobservers.html \
 		mutationobserver_dialog.html \
 		test_bug744830.html \

@@ -46,5 +46,7 @@ partial interface DataChannel
 {
   readonly attribute DOMString protocol;
   readonly attribute boolean ordered;
-  readonly attribute unsigned short stream;
+  readonly attribute unsigned short id;
+  // this is deprecated due to renaming in the spec, but still supported for Fx22
+  readonly attribute unsigned short stream; // now id
 };

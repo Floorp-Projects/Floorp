@@ -167,12 +167,6 @@ nsMathMLmoFrame::ProcessTextData()
   mFlags |= allFlags & NS_MATHML_OPERATOR_ACCENT;
   mFlags |= allFlags & NS_MATHML_OPERATOR_MOVABLELIMITS;
 
-  bool isMutable =
-    NS_MATHML_OPERATOR_IS_STRETCHY(allFlags) ||
-    NS_MATHML_OPERATOR_IS_LARGEOP(allFlags);
-  if (isMutable)
-    mFlags |= NS_MATHML_OPERATOR_MUTABLE;
-
   // see if this is an operator that should be centered to cater for 
   // fonts that are not math-aware
   if (1 == length) {
@@ -187,12 +181,19 @@ nsMathMLmoFrame::ProcessTextData()
 
   // cache the operator
   mMathMLChar.SetData(presContext, data);
-  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar, isMutable);
 
   // cache the native direction -- beware of bug 133429...
   // mEmbellishData.direction must always retain our native direction, whereas
   // mMathMLChar.GetStretchDirection() may change later, when Stretch() is called
   mEmbellishData.direction = mMathMLChar.GetStretchDirection();
+
+  bool isMutable =
+    NS_MATHML_OPERATOR_IS_LARGEOP(allFlags) ||
+    (mEmbellishData.direction != NS_STRETCH_DIRECTION_UNSUPPORTED);
+  if (isMutable)
+    mFlags |= NS_MATHML_OPERATOR_MUTABLE;
+
+  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar, isMutable);
 }
 
 // get our 'form' and lookup in the Operator Dictionary to fetch 
