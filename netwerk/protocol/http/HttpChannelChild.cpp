@@ -38,9 +38,10 @@ HttpChannelChild::HttpChannelChild()
   , mSendResumeAt(false)
   , mIPCOpen(false)
   , mKeptAlive(false)
-  , ALLOW_THIS_IN_INITIALIZER_LIST(mEventQ(static_cast<nsIHttpChannel*>(this)))
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
+
+  mEventQ = new ChannelEventQueue(static_cast<nsIHttpChannel*>(this));
 }
 
 HttpChannelChild::~HttpChannelChild()
@@ -141,8 +142,8 @@ bool
 HttpChannelChild::RecvAssociateApplicationCache(const nsCString &groupID,
                                                 const nsCString &clientID)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new AssociateApplicationCacheEvent(this, groupID, clientID));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new AssociateApplicationCacheEvent(this, groupID, clientID));
   } else {
     AssociateApplicationCache(groupID, clientID);
   }
@@ -222,8 +223,8 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const NetAddr& selfAddr,
                                      const NetAddr& peerAddr)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new StartRequestEvent(this, responseHead, useResponseHead,
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new StartRequestEvent(this, responseHead, useResponseHead,
                                           requestHeaders, isFromCache,
                                           cacheEntryAvailable,
                                           cacheExpirationTime, cachedCharset,
@@ -331,8 +332,8 @@ HttpChannelChild::RecvOnTransportAndData(const nsresult& status,
                                          const uint64_t& offset,
                                          const uint32_t& count)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new TransportAndDataEvent(this, status, progress,
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new TransportAndDataEvent(this, status, progress,
                                               progressMax, data, offset,
                                               count));
   } else {
@@ -427,8 +428,8 @@ class StopRequestEvent : public ChannelEvent
 bool
 HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new StopRequestEvent(this, statusCode));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new StopRequestEvent(this, statusCode));
   } else {
     OnStopRequest(statusCode);
   }
@@ -491,8 +492,8 @@ bool
 HttpChannelChild::RecvOnProgress(const uint64_t& progress,
                                  const uint64_t& progressMax)
 {
-  if (mEventQ.ShouldEnqueue())  {
-    mEventQ.Enqueue(new ProgressEvent(this, progress, progressMax));
+  if (mEventQ->ShouldEnqueue())  {
+    mEventQ->Enqueue(new ProgressEvent(this, progress, progressMax));
   } else {
     OnProgress(progress, progressMax);
   }
@@ -544,8 +545,8 @@ class StatusEvent : public ChannelEvent
 bool
 HttpChannelChild::RecvOnStatus(const nsresult& status)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new StatusEvent(this, status));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new StatusEvent(this, status));
   } else {
     OnStatus(status);
   }
@@ -594,8 +595,8 @@ class FailedAsyncOpenEvent : public ChannelEvent
 bool
 HttpChannelChild::RecvFailedAsyncOpen(const nsresult& status)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new FailedAsyncOpenEvent(this, status));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new FailedAsyncOpenEvent(this, status));
   } else {
     FailedAsyncOpen(status);
   }
@@ -641,8 +642,8 @@ class DeleteSelfEvent : public ChannelEvent
 bool
 HttpChannelChild::RecvDeleteSelf()
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new DeleteSelfEvent(this));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new DeleteSelfEvent(this));
   } else {
     DeleteSelf();
   }
@@ -688,8 +689,8 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& newChannelId,
                                      const uint32_t& redirectFlags,
                                      const nsHttpResponseHead& responseHead)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new Redirect1Event(this, newChannelId, newUri,
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new Redirect1Event(this, newChannelId, newUri,
                                        redirectFlags, responseHead));
   } else {
     Redirect1Begin(newChannelId, newUri, redirectFlags, responseHead);
@@ -763,8 +764,8 @@ class Redirect3Event : public ChannelEvent
 bool
 HttpChannelChild::RecvRedirect3Complete()
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new Redirect3Event(this));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new Redirect3Event(this));
   } else {
     Redirect3Complete();
   }
@@ -931,22 +932,10 @@ HttpChannelChild::Suspend()
   NS_ENSURE_TRUE(RemoteChannelExists(), NS_ERROR_NOT_AVAILABLE);
   if (!mSuspendCount++) {
     SendSuspend();
-    mEventQ.Suspend();
   }
+  mEventQ->Suspend();
+
   return NS_OK;
-}
-
-void
-HttpChannelChild::CompleteResume()
-{
-  if (mCallOnResume) {
-    (this->*mCallOnResume)();
-    mCallOnResume = 0;
-  }
-
-  // Don't resume event queue until now, else queued events could get
-  // flushed/called before mCallOnResume, which needs to run first.
-  mEventQ.Resume();
 }
 
 NS_IMETHODIMP
@@ -959,8 +948,13 @@ HttpChannelChild::Resume()
 
   if (!--mSuspendCount) {
     SendResume();
-    rv = AsyncCall(&HttpChannelChild::CompleteResume);
+    if (mCallOnResume) {
+      AsyncCall(mCallOnResume);
+      mCallOnResume = nullptr;
+    }
   }
+  mEventQ->Resume();
+
   return rv;
 }
 
