@@ -41,9 +41,9 @@ WyciwygChannelChild::WyciwygChannelChild()
   , mState(WCC_NEW)
   , mIPCOpen(false)
   , mSentAppData(false)
-  , ALLOW_THIS_IN_INITIALIZER_LIST(mEventQ(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this)))
 {
   LOG(("Creating WyciwygChannelChild @%x\n", this));
+  mEventQ = new ChannelEventQueue(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this));
 }
 
 WyciwygChannelChild::~WyciwygChannelChild()
@@ -117,8 +117,8 @@ WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
                                         const nsCString& charset,
                                         const nsCString& securityInfo)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygStartRequestEvent(this, statusCode,
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygStartRequestEvent(this, statusCode,
                                                  contentLength, source,
                                                  charset, securityInfo));
   } else {
@@ -172,8 +172,8 @@ bool
 WyciwygChannelChild::RecvOnDataAvailable(const nsCString& data,
                                          const uint64_t& offset)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygDataAvailableEvent(this, data, offset));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygDataAvailableEvent(this, data, offset));
   } else {
     OnDataAvailable(data, offset);
   }
@@ -233,8 +233,8 @@ private:
 bool
 WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygStopRequestEvent(this, statusCode));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygStopRequestEvent(this, statusCode));
   } else {
     OnStopRequest(statusCode);
   }
@@ -290,8 +290,8 @@ class WyciwygCancelEvent : public ChannelEvent
 bool
 WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygCancelEvent(this, statusCode));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygCancelEvent(this, statusCode));
   } else {
     CancelEarly(statusCode);
   }

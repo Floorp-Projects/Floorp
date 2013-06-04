@@ -30,7 +30,6 @@ namespace net {
 
 FTPChannelChild::FTPChannelChild(nsIURI* uri)
 : mIPCOpen(false)
-, ALLOW_THIS_IN_INITIALIZER_LIST(mEventQ(static_cast<nsIFTPChannel*>(this)))
 , mCanceled(false)
 , mSuspendCount(0)
 , mIsPending(false)
@@ -42,6 +41,7 @@ FTPChannelChild::FTPChannelChild(nsIURI* uri)
   // grab a reference to the handler to ensure that it doesn't go away.
   NS_ADDREF(gFtpHandler);
   SetURI(uri);
+  mEventQ = new ChannelEventQueue(static_cast<nsIFTPChannel*>(this));
 }
 
 FTPChannelChild::~FTPChannelChild()
@@ -242,9 +242,9 @@ FTPChannelChild::RecvOnStartRequest(const int64_t& aContentLength,
                                     const nsCString& aEntityID,
                                     const URIParams& aURI)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new FTPStartRequestEvent(this, aContentLength, aContentType,
-                                             aLastModified, aEntityID, aURI));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new FTPStartRequestEvent(this, aContentLength, aContentType,
+                                              aLastModified, aEntityID, aURI));
   } else {
     DoOnStartRequest(aContentLength, aContentType, aLastModified,
                      aEntityID, aURI);
@@ -296,8 +296,8 @@ FTPChannelChild::RecvOnDataAvailable(const nsCString& data,
                                      const uint64_t& offset,
                                      const uint32_t& count)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new FTPDataAvailableEvent(this, data, offset, count));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new FTPDataAvailableEvent(this, data, offset, count));
   } else {
     DoOnDataAvailable(data, offset, count);
   }
@@ -351,8 +351,8 @@ class FTPStopRequestEvent : public ChannelEvent
 bool
 FTPChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new FTPStopRequestEvent(this, statusCode));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new FTPStopRequestEvent(this, statusCode));
   } else {
     DoOnStopRequest(statusCode);
   }
@@ -399,8 +399,8 @@ class FTPFailedAsyncOpenEvent : public ChannelEvent
 bool
 FTPChannelChild::RecvFailedAsyncOpen(const nsresult& statusCode)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new FTPFailedAsyncOpenEvent(this, statusCode));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new FTPFailedAsyncOpenEvent(this, statusCode));
   } else {
     DoFailedAsyncOpen(statusCode);
   }
@@ -443,8 +443,8 @@ class FTPDeleteSelfEvent : public ChannelEvent
 bool
 FTPChannelChild::RecvDeleteSelf()
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new FTPDeleteSelfEvent(this));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new FTPDeleteSelfEvent(this));
   } else {
     DoDeleteSelf();
   }
@@ -477,30 +477,10 @@ FTPChannelChild::Suspend()
   NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
   if (!mSuspendCount++) {
     SendSuspend();
-    mEventQ.Suspend();
   }
+  mEventQ->Suspend();
+
   return NS_OK;
-}
-
-nsresult
-FTPChannelChild::AsyncCall(void (FTPChannelChild::*funcPtr)(),
-                           nsRunnableMethod<FTPChannelChild> **retval)
-{
-  nsresult rv;
-
-  nsRefPtr<nsRunnableMethod<FTPChannelChild> > event = NS_NewRunnableMethod(this, funcPtr);
-  rv = NS_DispatchToCurrentThread(event);
-  if (NS_SUCCEEDED(rv) && retval) {
-    *retval = event;
-  }
-
-  return rv;
-}
-
-void
-FTPChannelChild::CompleteResume()
-{
-  mEventQ.Resume();
 }
 
 NS_IMETHODIMP
@@ -510,8 +490,9 @@ FTPChannelChild::Resume()
 
   if (!--mSuspendCount) {
     SendResume();
-    AsyncCall(&FTPChannelChild::CompleteResume);
   }
+  mEventQ->Resume();
+
   return NS_OK;
 }
 
