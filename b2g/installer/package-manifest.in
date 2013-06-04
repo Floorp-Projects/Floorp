@@ -170,6 +170,7 @@
 @BINPATH@/components/dom_system_gonk.xpt
 @BINPATH@/components/dom_icc.xpt
 @BINPATH@/components/dom_cellbroadcast.xpt
+@BINPATH@/components/dom_wappush.xpt
 #endif
 #ifdef MOZ_B2G_FM
 @BINPATH@/components/dom_fm.xpt
@@ -599,7 +600,7 @@
 #endif
 
 ; [Layout Engine Resources]
-; Style Sheets, Graphics and other Resources used by the layout engine. 
+; Style Sheets, Graphics and other Resources used by the layout engine.
 @BINPATH@/res/EditorOverride.css
 @BINPATH@/res/contenteditable.css
 @BINPATH@/res/designmode.css
