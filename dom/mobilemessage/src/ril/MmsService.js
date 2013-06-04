@@ -1526,10 +1526,17 @@ MmsService.prototype = {
       let wish = aMessageRecord.headers["x-mms-delivery-report"];
       let responseNotify = function responseNotify(mmsStatus, retrievedMsg) {
         // If the mmsStatus is still MMS_PDU_STATUS_DEFERRED after retry,
-        // we should not store it into database.
+        // we should not store it into database and update its delivery
+        // status to 'error'.
         if (MMS.MMS_PDU_STATUS_RETRIEVED !== mmsStatus) {
           if (DEBUG) debug("RetrieveMessage fail after retry.");
-          aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+          gMobileMessageDatabaseService.setMessageDelivery(aMessageId,
+                                                           null,
+                                                           null,
+                                                           DELIVERY_STATUS_ERROR,
+                                                           function () {
+            aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+          });
           return;
         }
         // In OMA-TS-MMS_ENC-V1_3, Table 5 in page 25. This header field
