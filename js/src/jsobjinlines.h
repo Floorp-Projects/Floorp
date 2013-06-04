@@ -325,20 +325,6 @@ JSObject::getRawSlots()
     return slots;
 }
 
-inline const js::Value &
-JSObject::getReservedSlot(uint32_t index) const
-{
-    JS_ASSERT(index < JSSLOT_FREE(getClass()));
-    return getSlot(index);
-}
-
-inline js::HeapSlot &
-JSObject::getReservedSlotRef(uint32_t index)
-{
-    JS_ASSERT(index < JSSLOT_FREE(getClass()));
-    return getSlotRef(index);
-}
-
 inline void
 JSObject::setReservedSlot(uint32_t index, const js::Value &v)
 {
