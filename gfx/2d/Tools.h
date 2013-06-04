@@ -110,7 +110,7 @@ struct AlignedArray
   MOZ_ALWAYS_INLINE void Realloc(size_t aSize)
   {
     delete [] mStorage;
-    mStorage = new T[aSize + (alignment - 1)];
+    mStorage = new (std::nothrow) T[aSize + (alignment - 1)];
     if (uintptr_t(mStorage) % alignment) {
       // Our storage does not start at a <alignment>-byte boundary. Make sure mData does!
       mPtr = (uint32_t*)(uintptr_t(mStorage) +
