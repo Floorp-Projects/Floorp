@@ -57,11 +57,11 @@
     domRequest.onsuccess = function(e) {
       navigator.mozAlarms.remove(e.target.result);
 
-      ok(true, "Should be able to add alarm for already past date, which should fire immediately.");
+      ok(false, "Should not be able to add alarm for already past date.");
       testNull();
     };
     domRequest.onerror = function(e) {
-      ok(false, "Unable to add alarm for yesterday.");
+      ok(true, "Can't use past date when adding new alarm.");
 
       // Errors as it should, on to the next test
       testNull();
