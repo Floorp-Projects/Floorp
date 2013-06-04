@@ -46,7 +46,6 @@
 
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
-#include "vm/RegExpStatics-inl.h"
 #include "vm/String-inl.h"
 
 /* static */ inline bool
