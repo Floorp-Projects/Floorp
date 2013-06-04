@@ -57,9 +57,7 @@ class AsyncCompositionManager MOZ_FINAL : public RefCounted<AsyncCompositionMana
   friend class AutoResolveRefLayers;
 public:
   AsyncCompositionManager(LayerManagerComposite* aManager)
-    : mXScale(1.0)
-    , mYScale(1.0)
-    , mLayerManager(aManager)
+    : mLayerManager(aManager)
     , mIsFirstPaint(false)
     , mLayersUpdated(false)
     , mReadyForCompose(true)
@@ -108,8 +106,6 @@ public:
   // particular document.
   bool IsFirstPaint() { return mIsFirstPaint; }
 
-  void SetTransformation(float aScale, const nsIntPoint& aScrollOffset);
-
 private:
   void TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform);
   // Return true if an AsyncPanZoomController content transform was
@@ -118,27 +114,27 @@ private:
   bool ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame, Layer* aLayer,
                                         bool* aWantNextFrame);
 
-  void SetFirstPaintViewport(const nsIntPoint& aOffset,
+  void SetFirstPaintViewport(const LayerIntPoint& aOffset,
                              float aZoom,
-                             const nsIntRect& aPageRect,
-                             const gfx::Rect& aCssPageRect);
-  void SetPageRect(const gfx::Rect& aCssPageRect);
-  void SyncViewportInfo(const nsIntRect& aDisplayPort,
+                             const LayerIntRect& aPageRect,
+                             const CSSRect& aCssPageRect);
+  void SetPageRect(const CSSRect& aCssPageRect);
+  void SyncViewportInfo(const LayerIntRect& aDisplayPort,
                         float aDisplayResolution,
                         bool aLayersUpdated,
-                        nsIntPoint& aScrollOffset,
+                        ScreenPoint& aScrollOffset,
                         float& aScaleX, float& aScaleY,
                         gfx::Margin& aFixedLayerMargins,
-                        gfx::Point& aOffset);
+                        ScreenPoint& aOffset);
   void SyncFrameMetrics(const gfx::Point& aScrollOffset,
                         float aZoom,
-                        const gfx::Rect& aCssPageRect,
+                        const CSSRect& aCssPageRect,
                         bool aLayersUpdated,
                         const gfx::Rect& aDisplayPort,
                         float aDisplayResolution,
                         bool aIsFirstPaint,
                         gfx::Margin& aFixedLayerMargins,
-                        gfx::Point& aOffset);
+                        ScreenPoint& aOffset);
 
   /**
    * Recursively applies the given translation to all top-level fixed position
@@ -167,10 +163,7 @@ private:
   void DetachRefLayers();
 
   TargetConfig mTargetConfig;
-  float mXScale;
-  float mYScale;
-  nsIntPoint mScrollOffset;
-  nsIntRect mContentRect;
+  LayerIntRect mContentRect;
 
   nsRefPtr<LayerManagerComposite> mLayerManager;
   // When this flag is set, the next composition will be the first for a

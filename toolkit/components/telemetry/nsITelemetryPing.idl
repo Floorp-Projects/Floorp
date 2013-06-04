@@ -7,7 +7,7 @@
 
 interface nsIFile;
 
-[scriptable, uuid(37fb32f5-d5ed-45e3-8feb-fa085935e732)]
+[scriptable, uuid(32fbb784-a20c-49aa-9db9-9a0da1c2f7d8)]
 interface nsITelemetryPing : nsIObserver {
   /**
    * Return the current telemetry payload.
@@ -58,4 +58,9 @@ interface nsITelemetryPing : nsIObserver {
    * @param aSync - Use sync reads.
    */
   void testLoadHistograms(in nsIFile aFile, in boolean aSync);
+
+  /**
+   * Return the path component of the current submission URL.
+   */
+  AString submissionPath();
 };

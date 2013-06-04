@@ -116,7 +116,7 @@ public:
       if (!mBuffer.SetLength(aNumberOfChannels)) {
         return false;
       }
-      const int32_t numFrames = NS_lround(mMaxDelay) * aSampleRate;
+      const int32_t numFrames = ceil(mMaxDelay * aSampleRate);
       for (uint32_t channel = 0; channel < aNumberOfChannels; ++channel) {
         if (!mBuffer[channel].SetLength(numFrames)) {
           return false;
@@ -173,7 +173,7 @@ public:
     AllocateAudioBlock(numChannels, aOutput);
 
     double delayTime = 0;
-    float computedDelay[WEBAUDIO_BLOCK_SIZE];
+    double computedDelay[WEBAUDIO_BLOCK_SIZE];
     // Use a smoothing range of 20ms
     const double smoothingRate = WebAudioUtils::ComputeSmoothingRate(0.02, aStream->SampleRate());
 

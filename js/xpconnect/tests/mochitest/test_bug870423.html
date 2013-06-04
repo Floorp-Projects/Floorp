@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=870423
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 870423</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for cross-scope instanceof. **/
+  SimpleTest.waitForExplicitFinish();
+
+  function go() {
+    var sowin = $('soifr').contentWindow;
+    var xowin = $('xoifr').contentWindow;
+
+    check(window, sowin, 'HTMLBodyElement', function(win) { return win.document.body; });
+    check(window, sowin, 'HTMLDocument', function(win) { return win.document; });
+    check(window, sowin, 'Window', function(win) { return win; });
+    check(window, sowin, 'Location', function(win) { return win.location; });
+
+    todo(xowin instanceof Window, "Cross-origin instanceof should work");
+    todo(xowin.location instanceof Location, "Cross-origin instanceof should work");
+
+    SimpleTest.finish();
+  }
+
+  function check(win1, win2, constructorName, getInstance) {
+    ok(getInstance(win1) instanceof win2[constructorName],
+       "Cross-Scope instanceof works: " + constructorName + ", " + win1.location + ", " + win2.location);
+    ok(getInstance(win2) instanceof win1[constructorName],
+       "Cross-Scope instanceof works: " + constructorName + ", " + win2.location + ", " + win1.location);
+  }
+
+  </script>
+</head>
+<body onload="go();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=870423">Mozilla Bug 870423</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<iframe id="soifr" src="file_empty.html"></iframe>
+<iframe id="xoifr" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>

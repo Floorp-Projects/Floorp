@@ -633,7 +633,14 @@ falling back to not using job objects for managing child processes"""
           Note that this does not manage any state, save any output etc,
           it immediately kills the process.
         """
-        return self.proc.kill()
+        try:
+            return self.proc.kill()
+        except AttributeError:
+            # Try to print a relevant error message.
+            if not self.proc:
+                print >> sys.stderr, "Unable to kill Process because call to ProcessHandler constructor failed."
+            else:
+                raise
 
     def readWithTimeout(self, f, timeout):
         """

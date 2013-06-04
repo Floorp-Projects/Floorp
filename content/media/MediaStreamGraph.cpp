@@ -144,6 +144,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
     finished = aStream->mUpdateFinished;
     for (int32_t i = aStream->mUpdateTracks.Length() - 1; i >= 0; --i) {
       SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
+      aStream->ApplyTrackDisabling(data->mID, data->mData);
       for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
         MediaStreamListener* l = aStream->mListeners[j];
         TrackTicks offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
@@ -806,6 +807,20 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
   }
 }
 
+static void
+SetImageToBlackPixel(PlanarYCbCrImage* aImage)
+{
+  uint8_t blackPixel[] = { 0x10, 0x80, 0x80 };
+
+  PlanarYCbCrImage::Data data;
+  data.mYChannel = blackPixel;
+  data.mCbChannel = blackPixel + 1;
+  data.mCrChannel = blackPixel + 2;
+  data.mYStride = data.mCbCrStride = 1;
+  data.mPicSize = data.mYSize = data.mCbCrSize = gfxIntSize(1, 1);
+  aImage->SetData(data);
+}
+
 void
 MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 {
@@ -847,8 +862,23 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
       TimeDuration::FromMilliseconds(double(startTime - mCurrentTime));
   for (uint32_t i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
     VideoFrameContainer* output = aStream->mVideoOutputs[i];
-    output->SetCurrentFrame(frame->GetIntrinsicSize(), frame->GetImage(),
-                            targetTime);
+
+    if (frame->GetForceBlack()) {
+      static const ImageFormat formats[1] = { PLANAR_YCBCR };
+      nsRefPtr<Image> image =
+        output->GetImageContainer()->CreateImage(formats, 1);
+      if (image) {
+        // Sets the image to a single black pixel, which will be scaled to fill
+        // the rendered size.
+        SetImageToBlackPixel(static_cast<PlanarYCbCrImage*>(image.get()));
+      }
+      output->SetCurrentFrame(frame->GetIntrinsicSize(), image,
+                              targetTime);
+    } else {
+      output->SetCurrentFrame(frame->GetIntrinsicSize(), frame->GetImage(),
+                              targetTime);
+    }
+
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
@@ -1245,10 +1275,17 @@ private:
 class CreateMessage : public ControlMessage {
 public:
   CreateMessage(MediaStream* aStream) : ControlMessage(aStream) {}
-  virtual void Run()
+  virtual void Run() MOZ_OVERRIDE
   {
     mStream->GraphImpl()->AddStream(mStream);
     mStream->Init();
+  }
+  virtual void RunDuringShutdown() MOZ_OVERRIDE
+  {
+    // Make sure to run this message during shutdown too, to make sure
+    // that we balance the number of streams registered with the graph
+    // as they're destroyed during shutdown.
+    Run();
   }
 };
 
@@ -1406,7 +1443,8 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     // This should only happen during forced shutdown.
     aMessage->RunDuringShutdown();
     delete aMessage;
-    if (IsEmpty()) {
+    if (IsEmpty() &&
+        mLifecycleState >= LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION) {
       if (gGraph == this) {
         gGraph = nullptr;
       }
@@ -1706,6 +1744,63 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
   // removed.
   if (!IsDestroyed()) {
     GraphImpl()->AppendMessage(new Message(this, aListener));
+  }
+}
+
+void
+MediaStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled)
+{
+  if (aEnabled) {
+    mDisabledTrackIDs.RemoveElement(aTrackID);
+  } else {
+    if (!mDisabledTrackIDs.Contains(aTrackID)) {
+      mDisabledTrackIDs.AppendElement(aTrackID);
+    }
+  }
+}
+
+void
+MediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(MediaStream* aStream, TrackID aTrackID, bool aEnabled) :
+      ControlMessage(aStream), mTrackID(aTrackID), mEnabled(aEnabled) {}
+    virtual void Run()
+    {
+      mStream->SetTrackEnabledImpl(mTrackID, mEnabled);
+    }
+    TrackID mTrackID;
+    bool mEnabled;
+  };
+  GraphImpl()->AppendMessage(new Message(this, aTrackID, aEnabled));
+}
+
+void
+MediaStream::ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment)
+{
+  if (!mDisabledTrackIDs.Contains(aTrackID)) {
+    return;
+  }
+
+  switch (aSegment->GetType()) {
+  case MediaSegment::AUDIO: {
+    TrackTicks duration = aSegment->GetDuration();
+    aSegment->Clear();
+    aSegment->AppendNullData(duration);
+    break;
+  }
+  case MediaSegment::VIDEO: {
+    for (VideoSegment::ChunkIterator i(*static_cast<VideoSegment*>(aSegment));
+         !i.IsEnded(); i.Next()) {
+      VideoChunk& chunk = *i;
+      chunk.SetForceBlack(true);
+    }
+    break;
+  }
+  default:
+    MOZ_NOT_REACHED("Unknown track type");
+    break;
   }
 }
 

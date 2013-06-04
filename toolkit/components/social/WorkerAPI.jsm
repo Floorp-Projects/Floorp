@@ -78,7 +78,7 @@ WorkerAPI.prototype = {
                               data: results});
     },
     'social.request-chat': function(data) {
-      openChatWindow(null, this._provider, data, null, "minimized");
+      openChatWindow(null, this._provider, data);
     },
     'social.notification-create': function(data) {
       if (!Services.prefs.getBoolPref("social.toast-notifications.enabled"))

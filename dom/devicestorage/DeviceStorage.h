@@ -22,6 +22,14 @@
 #define DEVICESTORAGE_APPS       "apps"
 #define DEVICESTORAGE_SDCARD     "sdcard"
 
+namespace mozilla {
+namespace dom {
+class DeviceStorageEnumerationParameters;
+class DOMCursor;
+class DOMRequest;
+} // namespace dom
+} // namespace mozilla
+
 class DeviceStorageFile MOZ_FINAL
   : public nsISupports {
 public:
@@ -132,6 +140,11 @@ class nsDOMDeviceStorage MOZ_FINAL
   , public nsIDOMDeviceStorage
   , public nsIObserver
 {
+  typedef mozilla::ErrorResult ErrorResult;
+  typedef mozilla::dom::DeviceStorageEnumerationParameters
+    EnumerationParameters;
+  typedef mozilla::dom::DOMCursor DOMCursor;
+  typedef mozilla::dom::DOMRequest DOMRequest;
 public:
   typedef nsTArray<nsString> VolumeNameArray;
 
@@ -144,11 +157,11 @@ public:
                                 nsIDOMEventListener* aListener,
                                 bool aUseCapture,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+                                ErrorResult& aRv) MOZ_OVERRIDE;
   virtual void RemoveEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
                                    bool aUseCapture,
-                                   mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+                                   ErrorResult& aRv) MOZ_OVERRIDE;
 
   nsDOMDeviceStorage();
 
@@ -160,6 +173,58 @@ public:
   bool IsAvailable();
 
   void SetRootDirectoryForType(const nsAString& aType, const nsAString& aVolName);
+
+  // WebIDL
+  nsPIDOMWindow*
+  GetParentObject() const
+  {
+    return GetOwner();
+  }
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  IMPL_EVENT_HANDLER(change)
+
+  already_AddRefed<DOMRequest>
+  Add(nsIDOMBlob* aBlob, ErrorResult& aRv);
+  already_AddRefed<DOMRequest>
+  AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath, ErrorResult& aRv);
+
+  already_AddRefed<DOMRequest>
+  Get(const nsAString& aPath, ErrorResult& aRv)
+  {
+    return GetInternal(aPath, false, aRv);
+  }
+  already_AddRefed<DOMRequest>
+  GetEditable(const nsAString& aPath, ErrorResult& aRv)
+  {
+    return GetInternal(aPath, true, aRv);
+  }
+  already_AddRefed<DOMRequest>
+  Delete(const nsAString& aPath, ErrorResult& aRv);
+
+  already_AddRefed<DOMCursor>
+  Enumerate(const EnumerationParameters& aOptions, ErrorResult& aRv)
+  {
+    return Enumerate(NullString(), aOptions, aRv);
+  }
+  already_AddRefed<DOMCursor>
+  Enumerate(const nsAString& aPath, const EnumerationParameters& aOptions,
+            ErrorResult& aRv);
+  already_AddRefed<DOMCursor>
+  EnumerateEditable(const EnumerationParameters& aOptions, ErrorResult& aRv)
+  {
+    return EnumerateEditable(NullString(), aOptions, aRv);
+  }
+  already_AddRefed<DOMCursor>
+  EnumerateEditable(const nsAString& aPath,
+                    const EnumerationParameters& aOptions, ErrorResult& aRv);
+
+  already_AddRefed<DOMRequest> FreeSpace(ErrorResult& aRv);
+  already_AddRefed<DOMRequest> UsedSpace(ErrorResult& aRv);
+  already_AddRefed<DOMRequest> Available(ErrorResult& aRv);
+
+  // Uses XPCOM GetStorageName
 
   static void CreateDeviceStorageFor(nsPIDOMWindow* aWin,
                                      const nsAString& aType,
@@ -182,26 +247,21 @@ public:
 private:
   ~nsDOMDeviceStorage();
 
-  nsresult GetInternal(const JS::Value & aName,
-                       JSContext* aCx,
-                       nsIDOMDOMRequest** aRetval,
-                       bool aEditable);
+  already_AddRefed<DOMRequest>
+  GetInternal(const nsAString& aPath, bool aEditable, ErrorResult& aRv);
 
-  nsresult GetInternal(nsPIDOMWindow* aWin,
-                       const nsAString& aPath,
-                       mozilla::dom::DOMRequest* aRequest,
-                       bool aEditable);
+  void
+  GetInternal(nsPIDOMWindow* aWin, const nsAString& aPath, DOMRequest* aRequest,
+              bool aEditable);
 
-  nsresult DeleteInternal(nsPIDOMWindow* aWin,
-                          const nsAString& aPath,
-                          mozilla::dom::DOMRequest* aRequest);
+  void
+  DeleteInternal(nsPIDOMWindow* aWin, const nsAString& aPath,
+                 DOMRequest* aRequest);
 
-  nsresult EnumerateInternal(const JS::Value& aName,
-                             const JS::Value& aOptions,
-                             JSContext* aCx,
-                             uint8_t aArgc,
-                             bool aEditable,
-                             nsIDOMDOMCursor** aRetval);
+  already_AddRefed<DOMCursor>
+  EnumerateInternal(const nsAString& aName,
+                    const EnumerationParameters& aOptions, bool aEditable,
+                    ErrorResult& aRv);
 
   nsString mStorageType;
   nsCOMPtr<nsIFile> mRootDirectory;

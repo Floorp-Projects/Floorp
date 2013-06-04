@@ -21,9 +21,6 @@
           src="../events.js" />
 
   <script type="application/javascript">
-
-    SimpleTest.expectAssertions(0, 1);
-
     function getColorBtn(aBtnObj)
     {
       var colorpicker = aBtnObj.colorpicker;

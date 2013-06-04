@@ -1054,6 +1054,7 @@ public:
     nsLoadGroupConnectionInfo();
 private:
     int32_t       mBlockingTransactionCount; // signed for PR_ATOMIC_*
+    nsAutoPtr<mozilla::net::SpdyPushCache3> mSpdyCache3;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
@@ -1084,6 +1085,20 @@ nsLoadGroupConnectionInfo::RemoveBlockingTransaction(uint32_t *_retval)
     NS_ENSURE_ARG_POINTER(_retval);
     *_retval =
         static_cast<uint32_t>(PR_ATOMIC_DECREMENT(&mBlockingTransactionCount));
+    return NS_OK;
+}
+
+/* [noscript] attribute SpdyPushCache3Ptr spdyPushCache3; */
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::GetSpdyPushCache3(mozilla::net::SpdyPushCache3 **aSpdyPushCache3)
+{
+    *aSpdyPushCache3 = mSpdyCache3.get();
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::SetSpdyPushCache3(mozilla::net::SpdyPushCache3 *aSpdyPushCache3)
+{
+    mSpdyCache3 = aSpdyPushCache3;
     return NS_OK;
 }
 

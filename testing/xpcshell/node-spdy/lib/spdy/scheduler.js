@@ -1,7 +1,3 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 var scheduler = exports;
 
 //
@@ -11,7 +7,7 @@ var scheduler = exports;
 //
 function Scheduler(connection) {
   this.connection = connection;
-  this.priorities = [[], [], [], []];
+  this.priorities = [[], [], [], [], [], [], [], []];
   this._tickListener = null;
 }
 
@@ -44,10 +40,10 @@ Scheduler.prototype.tick = function tick() {
     var priorities = self.priorities;
 
     self._tickListener = null;
-    self.priorities = [[], [], [], []];
+    self.priorities = [[], [], [], [], [], [], [], []];
 
     // Run all priorities
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < 8; i++) {
       for (var j = 0; j < priorities[i].length; j++) {
         self.connection.write(
           priorities[i][j]

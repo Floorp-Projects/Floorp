@@ -9,29 +9,41 @@
 
 #include "nsConsoleMessage.h"
 #include "nsReadableUtils.h"
+#include "jsapi.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleMessage, nsIConsoleMessage)
 
-nsConsoleMessage::nsConsoleMessage() 
+nsConsoleMessage::nsConsoleMessage()
+    :  mMessage(),
+       mTimeStamp(0)
 {
 }
 
-nsConsoleMessage::nsConsoleMessage(const PRUnichar *message) 
+nsConsoleMessage::nsConsoleMessage(const PRUnichar *message)
 {
-	mMessage.Assign(message);
+  mTimeStamp = JS_Now() / 1000;
+  mMessage.Assign(message);
 }
 
 NS_IMETHODIMP
-nsConsoleMessage::GetMessageMoz(PRUnichar **result) {
-    *result = ToNewUnicode(mMessage);
+nsConsoleMessage::GetMessageMoz(PRUnichar **result)
+{
+  *result = ToNewUnicode(mMessage);
 
-    return NS_OK;
+  return NS_OK;
 }
 
-//  NS_IMETHODIMP
-//  nsConsoleMessage::Init(const PRUnichar *message) {
-//      nsAutoString newMessage(message);
-//      mMessage = ToNewUnicode(newMessage);
-//      return NS_OK;
-//  }
+NS_IMETHODIMP
+nsConsoleMessage::GetTimeStamp(int64_t *aTimeStamp)
+{
+  *aTimeStamp = mTimeStamp;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsConsoleMessage::ToString(nsACString& /*UTF8*/ aResult)
+{
+  CopyUTF16toUTF8(mMessage, aResult);
+
+  return NS_OK;
+}

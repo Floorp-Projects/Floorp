@@ -297,9 +297,7 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
             return rc;
     } else {
         nsresult rv;
-        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        if (!xpc)
-            return NS_ERROR_FAILURE;
+        nsXPConnect* xpc = nsXPConnect::XPConnect();
         rv = xpc->GetCurrentJSStack(&mLocation);
         if (NS_FAILED(rv))
             return rv;
@@ -400,11 +398,7 @@ nsXPCException::NewException(const char *aMessage,
             location = aLocation;
             NS_ADDREF(location);
         } else {
-            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-            if (!xpc) {
-                NS_RELEASE(e);
-                return NS_ERROR_FAILURE;
-            }
+            nsXPConnect* xpc = nsXPConnect::XPConnect();
             rv = xpc->GetCurrentJSStack(&location);
             if (NS_FAILED(rv)) {
                 NS_RELEASE(e);

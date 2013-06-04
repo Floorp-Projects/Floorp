@@ -331,7 +331,8 @@ appbar {
   bottom: 0;
   width: 100%;
   transform: translateY(100%);
-  transition: transform @metro_animation_duration@ @metro_animation_easing@;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@,
+              bottom @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
 }
 
@@ -356,7 +357,7 @@ appbar > toolbar > toolbarbutton[disabled] {
   visibility: collapse;
 }
 
-#appbar[startpage],
+#navbar[startpage],
 appbar[visible] {
   transform: none;
 }
@@ -394,25 +395,6 @@ appbar > toolbar > toolbarbutton:active {
 }
 
 /* Page-Specific */
-#zoomout-button {
-  -moz-image-region: rect(0px, 120px, 40px, 80px) !important;
-}
-#zoomout-button:hover {
-  -moz-image-region: rect(40px, 120px, 80px, 80px) !important;
-}
-#zoomout-button:active {
-  -moz-image-region: rect(80px, 120px, 120px, 80px) !important;
-}
-
-#zoomin-button {
-  -moz-image-region: rect(0px, 160px, 40px, 120px) !important;
-}
-#zoomin-button:hover {
-  -moz-image-region: rect(40px, 160px, 80px, 120px) !important;
-}
-#zoomin-button:active {
-  -moz-image-region: rect(80px, 160px, 120px, 120px) !important;
-}
 
 #pin-button {
   -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
@@ -559,6 +541,12 @@ flyoutpanel > settings:first-child {
 
 #about-policy-label {
  margin-top: 24pt;
+}
+
+#currentChannel {
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
 }
 
 /* Preferences flyout */
@@ -733,6 +721,14 @@ setting[type="radio"] > vbox {
   transition-timing-function: ease-in-out;
 }
 
+#browsers browser {
+  transition: padding-bottom @metro_animation_duration@ @metro_animation_easing@;
+}
+
+#browsers[findbar] browser {
+  padding-bottom: @findbar_height@;
+}
+
 /* Panel UI ---------------------------------------------------------------- */
 
 #panel-container {
@@ -881,6 +877,7 @@ setting[type="radio"] > vbox {
   background-position: left 6px center;
 }
 
+#stack[keyboardVisible] > .overlay-button,
 #stack[fullscreen] > .overlay-button,
 #appbar[visible] ~ .overlay-button,
 .overlay-button[disabled] {
@@ -888,6 +885,8 @@ setting[type="radio"] > vbox {
   visibility: collapse;
 }
 
+#stack[keyboardVisible] > #overlay-back:-moz-locale-dir(ltr),
+#stack[keyboardVisible] > #overlay-plus:-moz-locale-dir(rtl),
 #stack[fullscreen] > #overlay-back:-moz-locale-dir(ltr),
 #stack[fullscreen] > #overlay-plus:-moz-locale-dir(rtl),
 #appbar[visible] ~ #overlay-back:-moz-locale-dir(ltr),
@@ -897,6 +896,8 @@ setting[type="radio"] > vbox {
   transform: translateX(-60px);
 }
 
+#stack[keyboardVisible] > #overlay-plus:-moz-locale-dir(ltr),
+#stack[keyboardVisible] > #overlay-back:-moz-locale-dir(rtl),
 #stack[fullscreen] > #overlay-plus:-moz-locale-dir(ltr),
 #stack[fullscreen] > #overlay-back:-moz-locale-dir(rtl),
 #appbar[visible] ~ #overlay-plus:-moz-locale-dir(ltr),

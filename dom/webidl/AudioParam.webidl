@@ -34,6 +34,7 @@ interface AudioParam {
     void setValueCurveAtTime(Float32Array values, double startTime, double duration);
 
     // Cancels all scheduled parameter changes with times greater than or equal to startTime. 
+    [Throws]
     void cancelScheduledValues(double startTime);
 
 };

@@ -193,13 +193,13 @@ ParserResults.pkl: $(globalgen_dependencies)
 	# BindingGen.py but we're typically running in the export phase, which
 	# is before anyone has bothered creating .deps.
 	$(MKDIR) -p .deps
-        # Pass our long lists through files to try to avoid blowing
-        # out the command line
+	# Pass our long lists through files to try to avoid blowing
+	# out the command line
 	echo $(all_webidl_files) > .all-webidl-file-list
 	echo $? > .changed-dependency-list
 	# BindingGen.py will examine the changed dependency list to figure out
 	# what it really needs to regenerate.
-	$PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
     $(PLY_INCLUDE) -I$(srcdir)/parser \
     $(srcdir)/BindingGen.py \
     $(srcdir)/Bindings.conf \

@@ -145,6 +145,7 @@ MOCHITEST_FILES	= \
 		test_resize_move_windows.html \
 		test_bug862540.html \
 		test_bug857555.html \
+		test_bug876098.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

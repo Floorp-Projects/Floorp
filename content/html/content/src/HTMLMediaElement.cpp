@@ -1210,52 +1210,6 @@ nsresult HTMLMediaElement::LoadWithChannel(nsIChannel* aChannel,
   return NS_OK;
 }
 
-void
-HTMLMediaElement::MozLoadFrom(HTMLMediaElement& aOther, ErrorResult& aRv)
-{
-  // Make sure we don't reenter during synchronous abort events.
-  if (mIsRunningLoadMethod) {
-    return;
-  }
-
-  mIsRunningLoadMethod = true;
-  AbortExistingLoads();
-  mIsRunningLoadMethod = false;
-
-  if (!aOther.mDecoder) {
-    return;
-  }
-
-  ChangeDelayLoadStatus(true);
-
-  mLoadingSrc = aOther.mLoadingSrc;
-  aRv = InitializeDecoderAsClone(aOther.mDecoder);
-  if (aRv.Failed()) {
-    ChangeDelayLoadStatus(false);
-    return;
-  }
-
-  SetPlaybackRate(mDefaultPlaybackRate);
-  DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
-}
-
-NS_IMETHODIMP HTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
-{
-  NS_ENSURE_ARG_POINTER(aOther);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aOther);
-  HTMLMediaElement* other = static_cast<HTMLMediaElement*>(content.get());
-
-  if (!other) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  MozLoadFrom(*other, rv);
-
-  return rv.ErrorCode();
-}
-
 /* readonly attribute unsigned short readyState; */
 NS_IMETHODIMP HTMLMediaElement::GetReadyState(uint16_t* aReadyState)
 {
@@ -1987,6 +1941,8 @@ HTMLMediaElement::~HTMLMediaElement()
   if (mAudioStream) {
     mAudioStream->Shutdown();
   }
+
+  WakeLockRelease();
 }
 
 void
@@ -2106,7 +2062,8 @@ NS_IMETHODIMP HTMLMediaElement::Play()
 }
 
 HTMLMediaElement::WakeLockBoolWrapper&
-HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val) {
+HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val)
+{
   if (mValue == val) {
     return *this;
   }
@@ -2114,6 +2071,13 @@ HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val) {
   mValue = val;
   UpdateWakeLock();
   return *this;
+}
+
+HTMLMediaElement::WakeLockBoolWrapper::~WakeLockBoolWrapper()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+  }
 }
 
 void
@@ -2133,10 +2097,30 @@ HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
   bool playing = (!mValue && mCanPlay);
 
   if (playing) {
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
     mOuter->WakeLockCreate();
-  } else {
-    mOuter->WakeLockRelease();
+  } else if (!mTimer) {
+    // Don't release the wake lock immediately; instead, release it after a
+    // grace period.
+    int timeout = Preferences::GetInt("media.wakelock_timeout", 2000);
+    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mTimer) {
+      mTimer->InitWithFuncCallback(TimerCallback, this, timeout,
+                                   nsITimer::TYPE_ONE_SHOT);
+    }
   }
+}
+
+void
+HTMLMediaElement::WakeLockBoolWrapper::TimerCallback(nsITimer* aTimer,
+                                                     void* aClosure)
+{
+  WakeLockBoolWrapper* wakeLock = static_cast<WakeLockBoolWrapper*>(aClosure);
+  wakeLock->mOuter->WakeLockRelease();
+  wakeLock->mTimer = nullptr;
 }
 
 void

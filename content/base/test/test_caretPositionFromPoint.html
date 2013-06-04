@@ -19,24 +19,14 @@
       font-family: Ahem;
       padding: 10px;
       border: 8px solid black;
-      width: 600px;
+      width: 450px;
     }
 
-    #dp {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      left: 0px;
-      top: 0px;
-      background-color: orange;
+    #test5 {
+      height: 100px;
     }
   </style>
 <script>
-  function displayPoint(aX, aY) {
-    document.getElementById('dp').style['left'] = aX + "px";
-    document.getElementById('dp').style['top'] = aY + "px";
-  }
-
   function convertEmToPx(aEm) {
     // Assumes our base font size is 16px = 12pt = 1.0em.
     var pxPerEm = 16.0 / 1.0;
@@ -45,6 +35,11 @@
 
   function checkOffsetsFromPoint(aX, aY, aExpected, aElementName='no-name') {
     var cp = document.caretPositionFromPoint(aX, aY);
+    if (!cp) {
+      ok(false, 'caretPositionFromPoint returned null for point: (' + aX + ', ' + aY + ')');
+      return;
+    }
+
     ok(aExpected == cp.offset, 'expected offset at (' + aX + ', ' + aY + ') [' + aElementName + ']: ' + aExpected + ', got: ' + cp.offset);
   }
 
@@ -87,7 +82,15 @@
     var nullCp4 = document.caretPositionFromPoint(0, 9000);
     ok(!nullCp4, "caret position with x > viewport height should be null");
 
-    // Check the first and last characters of the marquee.
+    // Check a point within the bottom whitespace of the input.
+    var test5Element = document.getElementById('test5');
+    var test5Rect = test5Element.getBoundingClientRect();
+    var test5x = test5Rect.left + 5;
+    var test5y = test5Rect.bottom - 10;
+
+    todo(false, "test5Rect: (" + test5Rect.top + ", " + test5Rect.left + ", " + test5Rect.width + ", " + test5Rect.height + ")");
+    checkOffsetsFromPoint(test5x, test5y, 0, 'test5');
+
     SimpleTest.finish();
   }
 
@@ -95,11 +98,11 @@
 </script>
 </head>
 <body onload="doTesting();">
-<div id="dp"></div>
 <div id="a" contenteditable><span id="test1">abc, abc, abc</span><br>
 <span id="test2" style="color: blue;">abc, abc, abc</span><br>
 <textarea id="test3">abc</textarea><input id="test4" value="abcdef"><br><br>
 <marquee>marquee</marquee>
 </div>
+<input id="test5" value="The rabbit-hole went straight on like a tunnel for some way, and then dipped suddenly down, so suddenly that Alice had not a moment to think about stopping herself before she found herself falling down a very deep well. Either the well was very deep, or she fell very slowly, for she had plenty of time as she went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out what she was coming to, but it was too dark to see anything; then she looked at the sides of the well, and noticed that they were filled with cupboards and book-shelves; here and there she saw maps and pictures hung upon pegs. She took down a jar from one of the shelves as she passed; it was labelled `ORANGE MARMALADE', but to her great disappointment it was empty: she did not like to drop the jar for fear of killing somebody, so managed to put it into one of the cupboards as she fell past it." type="text">
 </body>
 </html>

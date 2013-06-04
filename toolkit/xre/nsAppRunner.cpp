@@ -2610,73 +2610,52 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     g_free(theme_name);
   }
 
-  // gdk_display_close was broken prior to gtk+-2.10.0.
-  // (http://bugzilla.gnome.org/show_bug.cgi?id=85715)
-  // gdk_display_manager_set_default_display (gdk_display_manager_get(), NULL)
-  // was also broken.
-  if (gtk_check_version(2,10,0) != NULL) {
-#ifdef MOZ_X11
-    // Version check failed - broken gdk_display_close.
-    //
-    // Let the gdk structures leak but at least close the Display,
-    // assuming that gdk will not use it again.
-    Display* dpy = GDK_DISPLAY_XDISPLAY(display);
-    if (!theme_is_qt)
-      XCloseDisplay(dpy);
-#else
-    gdk_display_close(display);
-#endif /* MOZ_X11 */
-  }
-  else {
 #if CLEANUP_MEMORY
-    // Get a (new) Pango context that holds a reference to the fontmap that
-    // GTK has been using.  gdk_pango_context_get() must be called while GTK
-    // has a default display.
-    PangoContext *pangoContext = gdk_pango_context_get();
+  // Get a (new) Pango context that holds a reference to the fontmap that
+  // GTK has been using.  gdk_pango_context_get() must be called while GTK
+  // has a default display.
+  PangoContext *pangoContext = gdk_pango_context_get();
 #endif
 
-    bool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
+  bool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
 
-    if (!buggyCairoShutdown) {
-      // We should shut down GDK before we shut down libraries it depends on
-      // like Pango and cairo. But if cairo shutdown is buggy, we should
-      // shut down cairo first otherwise it may crash because of dangling
-      // references to Display objects (see bug 469831).
-      if (!theme_is_qt)
-        gdk_display_close(display);
-    }
+  if (!buggyCairoShutdown) {
+    // We should shut down GDK before we shut down libraries it depends on
+    // like Pango and cairo. But if cairo shutdown is buggy, we should
+    // shut down cairo first otherwise it may crash because of dangling
+    // references to Display objects (see bug 469831).
+    if (!theme_is_qt)
+      gdk_display_close(display);
+  }
 
 #if CLEANUP_MEMORY
-    // This doesn't take a reference.
-    PangoFontMap *fontmap = pango_context_get_font_map(pangoContext);
-    // Do some shutdown of the fontmap, which releases the fonts, clearing a
-    // bunch of circular references from the fontmap through the fonts back to
-    // itself.  The shutdown that this does is much less than what's done by
-    // the fontmap's finalize, though.
-    if (PANGO_IS_FC_FONT_MAP(fontmap))
-        pango_fc_font_map_shutdown(PANGO_FC_FONT_MAP(fontmap));
-    g_object_unref(pangoContext);
-    // PangoCairo still holds a reference to the fontmap.
-    // Now that we have finished with GTK and Pango, we could unref fontmap,
-    // which would allow us to call FcFini, but removing what is really
-    // Pango's ref feels a bit evil.  Pango-1.22 will have support for
-    // pango_cairo_font_map_set_default(NULL), which would release the
-    // reference on the old fontmap.
+  // This doesn't take a reference.
+  PangoFontMap *fontmap = pango_context_get_font_map(pangoContext);
+  // Do some shutdown of the fontmap, which releases the fonts, clearing a
+  // bunch of circular references from the fontmap through the fonts back to
+  // itself.  The shutdown that this does is much less than what's done by
+  // the fontmap's finalize, though.
+  if (PANGO_IS_FC_FONT_MAP(fontmap))
+      pango_fc_font_map_shutdown(PANGO_FC_FONT_MAP(fontmap));
+  g_object_unref(pangoContext);
+  // PangoCairo still holds a reference to the fontmap.
+  // Now that we have finished with GTK and Pango, we could unref fontmap,
+  // which would allow us to call FcFini, but removing what is really
+  // Pango's ref feels a bit evil.  Pango-1.22 will have support for
+  // pango_cairo_font_map_set_default(NULL), which would release the
+  // reference on the old fontmap.
 
-#if GTK_CHECK_VERSION(2,8,0)
-    // cairo_debug_reset_static_data() is prototyped through cairo.h included
-    // by gtk.h.
+  // cairo_debug_reset_static_data() is prototyped through cairo.h included
+  // by gtk.h.
 #ifdef cairo_debug_reset_static_data
 #error "Looks like we're including Mozilla's cairo instead of system cairo"
 #endif
-    cairo_debug_reset_static_data();
-#endif // 2.8.0
+  cairo_debug_reset_static_data();
 #endif // CLEANUP_MEMORY
 
-    if (buggyCairoShutdown) {
-      if (!theme_is_qt)
-        gdk_display_close(display);
-    }
+  if (buggyCairoShutdown) {
+    if (!theme_is_qt)
+      gdk_display_close(display);
   }
 }
 #endif // MOZ_WIDGET_GTK2
@@ -3885,7 +3864,8 @@ XREMain::XRE_mainRun()
 int
 XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
-  GeckoProfilerInitRAII profilerGuard;
+  char aLocal;
+  GeckoProfilerInitRAII profilerGuard(&aLocal);
   PROFILER_LABEL("Startup", "XRE_Main");
 
   nsresult rv = NS_OK;
@@ -4080,7 +4060,8 @@ public:
 int
 XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
 {
-  GeckoProfilerInitRAII profilerGuard;
+  char aLocal;
+  GeckoProfilerInitRAII profilerGuard(&aLocal);
   PROFILER_LABEL("Startup", "XRE_Main");
 
   nsresult rv = NS_OK;

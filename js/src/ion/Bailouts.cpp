@@ -6,7 +6,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsinterp.h"
 #include "Bailouts.h"
 #include "SnapshotReader.h"
 #include "Ion.h"
@@ -15,6 +14,7 @@
 #include "jsinfer.h"
 #include "jsanalyze.h"
 #include "jsinferinlines.h"
+#include "vm/Interpreter.h"
 #include "IonFrames-inl.h"
 #include "BaselineJIT.h"
 
@@ -158,7 +158,8 @@ ion::CheckFrequentBailouts(JSContext *cx, JSScript *script)
     // we compile this script LICM will be disabled.
 
     if (script->hasIonScript() &&
-        script->ionScript()->numBailouts() >= js_IonOptions.frequentBailoutThreshold)
+        script->ionScript()->numBailouts() >= js_IonOptions.frequentBailoutThreshold &&
+        !script->hadFrequentBailouts)
     {
         script->hadFrequentBailouts = true;
 

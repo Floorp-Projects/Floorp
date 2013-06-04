@@ -48,12 +48,12 @@
         {
           ID: "menuitem",
           actionName: "click",
-          events: ALL_EVENTS
+          events: XUL_EVENTS
         },
         {
           ID: "button",
           actionName: "press",
-          events: ALL_EVENTS
+          events: XUL_EVENTS
         },
         {
           ID: "buttonmenu",

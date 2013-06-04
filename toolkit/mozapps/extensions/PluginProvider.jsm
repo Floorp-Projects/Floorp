@@ -402,9 +402,19 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 
   this.__defineGetter__("pluginMimeTypes", function() {
     let types = [];
-    for (let tag of aTags)
-      for (let type of tag.getMimeTypes({}))
+    for (let tag of aTags) {
+      let mimeTypes = tag.getMimeTypes({});
+      let mimeDescriptions = tag.getMimeDescriptions({});
+      let extensions = tag.getExtensions({});
+      for (let i = 0; i < mimeTypes.length; i++) {
+        let type = {};
+        type.type = mimeTypes[i];
+        type.description = mimeDescriptions[i];
+        type.suffixes = extensions[i];
+
         types.push(type);
+      }
+    }
     return types;
   });
 
@@ -422,18 +432,23 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     let path = aTags[0].fullpath;
     // Plugins inside the application directory are in the application scope
     let dir = Services.dirsvc.get("APlugns", Ci.nsIFile);
-    if (path.substring(0, dir.path.length) == dir.path)
+    if (path.startsWith(dir.path))
       return AddonManager.SCOPE_APPLICATION;
 
     // Plugins inside the profile directory are in the profile scope
     dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    if (path.substring(0, dir.path.length) == dir.path)
+    if (path.startsWith(dir.path))
       return AddonManager.SCOPE_PROFILE;
 
-    // Plugins anywhere else in the user's home are in the user scope
-    dir = Services.dirsvc.get("Home", Ci.nsIFile);
-    if (path.substring(0, dir.path.length) == dir.path)
-      return AddonManager.SCOPE_USER;
+    // Plugins anywhere else in the user's home are in the user scope,
+    // but not all platforms have a home directory.
+    try {
+      dir = Services.dirsvc.get("Home", Ci.nsIFile);
+      if (path.startsWith(dir.path))
+        return AddonManager.SCOPE_USER;
+    } catch (e if (e.result && e.result == Components.results.NS_ERROR_FAILURE)) {
+      // Do nothing: missing "Home".
+    }
 
     // Any other locations are system scope
     return AddonManager.SCOPE_SYSTEM;

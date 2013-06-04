@@ -1,0 +1,30 @@
+<script>
+var Context0= new AudioContext()
+var BufferSource0=Context0.createBufferSource();
+
+BufferSource0.loop=true;
+
+BufferSource0.buffer=function(){
+	var channels=3; 
+	var length=97252;
+	var Buffer=Context0.createBuffer(channels,length,Context0.sampleRate);
+	for(var y=0;y<channels;y++){
+		var bufferData= Buffer.getChannelData(y);
+		for (var i = 0; i < length; ++i) { bufferData[i] = 1;}
+	};
+	return Buffer;
+}();
+
+BufferSource0.playbackRate.cancelScheduledValues(0.4);
+
+BufferSource0.loopEnd=5e-324;
+
+BufferSource0.buffer=function(){
+	var length=26590;
+	var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+	var bufferData= Buffer.getChannelData(0);
+	for (var i = 0; i < length; ++i) { bufferData[i] = 1};
+	return Buffer;
+}();
+
+</script>

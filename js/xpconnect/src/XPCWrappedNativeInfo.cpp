@@ -8,7 +8,10 @@
 
 #include "xpcprivate.h"
 
+#include "mozilla/XPTInterfaceInfoManager.h"
+
 using namespace JS;
+using namespace mozilla;
 
 /***************************************************************************/
 
@@ -130,7 +133,7 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
         return iface;
 
     nsCOMPtr<nsIInterfaceInfo> info;
-    ccx.GetXPConnect()->GetInfoForIID(iid, getter_AddRefs(info));
+    XPTInterfaceInfoManager::GetSingleton()->GetInfoForIID(iid, getter_AddRefs(info));
     if (!info)
         return nullptr;
 
@@ -203,7 +206,7 @@ XPCNativeInterface*
 XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const char* name)
 {
     nsCOMPtr<nsIInterfaceInfo> info;
-    ccx.GetXPConnect()->GetInfoForName(name, getter_AddRefs(info));
+    XPTInterfaceInfoManager::GetSingleton()->GetInfoForName(name, getter_AddRefs(info));
     return info ? GetNewOrUsed(ccx, info) : nullptr;
 }
 

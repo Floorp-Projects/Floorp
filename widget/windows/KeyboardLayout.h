@@ -7,8 +7,11 @@
 #define KeyboardLayout_h__
 
 #include "nscore.h"
+#include "nsAutoPtr.h"
 #include "nsEvent.h"
 #include "nsString.h"
+#include "nsWindowBase.h"
+#include "nsWindowDefs.h"
 #include <windows.h>
 
 #define NS_NUM_OF_KEYS          68
@@ -32,11 +35,22 @@
 #define VK_OEM_102              0xE2
 #define VK_OEM_CLEAR            0xFE
 
-class nsWindow;
+class nsIIdleServiceInternal;
 struct nsModifierKeyState;
 
 namespace mozilla {
 namespace widget {
+
+static const uint32_t sModifierKeyMap[][3] = {
+  { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0 },
+  { nsIWidget::NUM_LOCK,  VK_NUMLOCK, 0 },
+  { nsIWidget::SHIFT_L,   VK_SHIFT,   VK_LSHIFT },
+  { nsIWidget::SHIFT_R,   VK_SHIFT,   VK_RSHIFT },
+  { nsIWidget::CTRL_L,    VK_CONTROL, VK_LCONTROL },
+  { nsIWidget::CTRL_R,    VK_CONTROL, VK_RCONTROL },
+  { nsIWidget::ALT_L,     VK_MENU,    VK_LMENU },
+  { nsIWidget::ALT_R,     VK_MENU,    VK_RMENU }
+};
 
 class KeyboardLayout;
 
@@ -138,6 +152,7 @@ struct UniCharsAndModifiers
    */
   void Append(PRUnichar aUniChar, Modifiers aModifiers);
   void Clear() { mLength = 0; }
+  bool IsEmpty() const { return !mLength; }
 
   void FillModifiers(Modifiers aModifiers);
 
@@ -272,43 +287,71 @@ public:
   UniCharsAndModifiers GetUniChars(ShiftState aShiftState) const;
 };
 
-class NativeKey {
+class MOZ_STACK_CLASS NativeKey
+{
+  friend class KeyboardLayout;
+
 public:
-  NativeKey() :
-    mDOMKeyCode(0), mKeyNameIndex(KEY_NAME_INDEX_Unidentified),
-    mMessage(0), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0),
-    mScanCode(0), mIsExtended(false)
+  struct FakeCharMsg
   {
-  }
+    UINT mCharCode;
+    UINT mScanCode;
+    bool mIsDeadKey;
 
-  NativeKey(const KeyboardLayout& aKeyboardLayout,
-            nsWindow* aWindow,
-            const MSG& aKeyOrCharMessage);
+    MSG GetCharMsg(HWND aWnd) const
+    {
+      MSG msg;
+      msg.hwnd = aWnd;
+      msg.message = mIsDeadKey ? WM_DEADCHAR : WM_CHAR;
+      msg.wParam = static_cast<WPARAM>(mCharCode);
+      msg.lParam = static_cast<LPARAM>(mScanCode);
+      msg.time = 0;
+      msg.pt.x = msg.pt.y = 0;
+      return msg;
+    }
+  };
 
-  uint32_t GetDOMKeyCode() const { return mDOMKeyCode; }
-  KeyNameIndex GetKeyNameIndex() const { return mKeyNameIndex; }
-  const UniCharsAndModifiers& GetCommittedCharsAndModifiers() const
-  {
-    return mCommittedCharsAndModifiers;
-  }
+  NativeKey(nsWindowBase* aWidget,
+            const MSG& aKeyOrCharMessage,
+            const ModifierKeyState& aModKeyState,
+            const FakeCharMsg* aFakeCharMsg = nullptr);
 
-  // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
-  uint32_t GetKeyLocation() const;
-  UINT GetMessage() const { return mMessage; }
-  bool IsKeyDownMessage() const
-  {
-    return (mMessage == WM_KEYDOWN || mMessage == WM_SYSKEYDOWN);
-  }
-  WORD GetScanCode() const { return mScanCode; }
-  uint8_t GetVirtualKeyCode() const { return mVirtualKeyCode; }
-  uint8_t GetOriginalVirtualKeyCode() const { return mOriginalVirtualKeyCode; }
+  /**
+   * Handle WM_KEYDOWN message or WM_SYSKEYDOWN message.  The instance must be
+   * initialized with WM_KEYDOWN or WM_SYSKEYDOWN.
+   * Returns true if dispatched keydown event or keypress event is consumed.
+   * Otherwise, false.
+   */
+  bool HandleKeyDownMessage(bool* aEventDispatched = nullptr) const;
+
+  /**
+   * Handles WM_CHAR message or WM_SYSCHAR message.  The instance must be
+   * initialized with WM_KEYDOWN, WM_SYSKEYDOWN or them.
+   * Returns true if dispatched keypress event is consumed.  Otherwise, false.
+   */
+  bool HandleCharMessage(const MSG& aCharMsg,
+                         bool* aEventDispatched = nullptr,
+                         const EventFlags* aExtraFlags = nullptr) const;
+
+  /**
+   * Handles keyup message.  Returns true if the event is consumed.
+   * Otherwise, false.
+   */
+  bool HandleKeyUpMessage(bool* aEventDispatched = nullptr) const;
 
 private:
+  nsRefPtr<nsWindowBase> mWidget;
+  HKL mKeyboardLayout;
+  MSG mMsg;
+  // mCharMsg stores WM_*CHAR message following WM_*KEYDOWN message.
+  // If mMsg isn't WM_*KEYDOWN message or WM_*KEYDOWN but there is no following
+  // WM_*CHAR message, the message member is 0.
+  MSG mCharMsg;
+
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
 
-  // The message which the instance was initialized with.
-  UINT mMessage;
+  ModifierKeyState mModKeyState;
 
   // mVirtualKeyCode distinguishes left key or right key of modifier key.
   uint8_t mVirtualKeyCode;
@@ -324,14 +367,124 @@ private:
 
   WORD    mScanCode;
   bool    mIsExtended;
+  bool    mIsDeadKey;
+  // mIsPrintableKey is true if the key may be a printable key without
+  // any modifier keys.  Otherwise, false.
+  // Please note that the event may not cause any text input even if this
+  // is true.  E.g., it might be dead key state or Ctrl key may be pressed.
+  bool    mIsPrintableKey;
+  bool    mIsFakeCharMsg;
+
+  NativeKey()
+  {
+    MOZ_NOT_REACHED("The default constructor of NativeKey isn't available");
+  }
 
   UINT GetScanCodeWithExtendedFlag() const;
 
-  friend class KeyboardLayout;
+  // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
+  uint32_t GetKeyLocation() const;
+
+  /**
+   * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
+   * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
+   * returns true, the caller needs to be careful for processing the messages.
+   */
+  bool IsIMEDoingKakuteiUndo() const;
+
+  /*
+   * Dispatches a plugin event after the specified message is removed.
+   */
+  void RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg) const;
+
+  bool IsKeyDownMessage() const
+  {
+    return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+  }
+  bool IsFollowedByCharMessage() const
+  {
+    MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+    return (mCharMsg.message != 0);
+  }
+  const MSG& RemoveFollowingCharMessage() const;
+
+  /**
+   * Wraps MapVirtualKeyEx() with MAPVK_VSC_TO_VK.
+   */
+  uint8_t ComputeVirtualKeyCodeFromScanCode() const;
+
+  /**
+   * Wraps MapVirtualKeyEx() with MAPVK_VSC_TO_VK_EX.
+   */
+  uint8_t ComputeVirtualKeyCodeFromScanCodeEx() const;
+
+  /**
+   * Wraps MapVirtualKeyEx() with MAPVK_VSC_TO_VK and MAPVK_VK_TO_CHAR.
+   */
+  PRUnichar ComputeUnicharFromScanCode() const;
+
+  /**
+   * Initializes the aKeyEvent with the information stored in the instance.
+   */
+  void InitKeyEvent(nsKeyEvent& aKeyEvent,
+                    const ModifierKeyState& aModKeyState) const;
+  void InitKeyEvent(nsKeyEvent& aKeyEvent) const
+  {
+    InitKeyEvent(aKeyEvent, mModKeyState);
+  }
+
+  /**
+   * Dispatches the key event.  Returns true if the event is consumed.
+   * Otherwise, false.
+   */
+  bool DispatchKeyEvent(nsKeyEvent& aKeyEvent,
+                        const MSG* aMsgSentToPlugin = nullptr) const;
+
+  /**
+   * DispatchKeyPressEventsWithKeyboardLayout() dispatches keypress event(s)
+   * with the information provided by KeyboardLayout class.
+   */
+  bool DispatchKeyPressEventsWithKeyboardLayout(
+                        const EventFlags& aExtraFlags) const;
+
+  /**
+   * Dispatches keypress events after removing WM_*CHAR messages for the
+   * WM_*KEYDOWN message.
+   * Returns true if the dispatched keypress event is consumed.  Otherwise,
+   * false.
+   */
+  bool DispatchKeyPressEventsAndDiscardsCharMessages(
+                        const EventFlags& aExtraFlags) const;
+
+  /**
+   * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
+   * for following WM_*CHAR message.
+   * Returns true if the event is consumed.  Otherwise, false.
+   */
+  bool DispatchKeyPressEventForFollowingCharMessage(
+                        const EventFlags& aExtraFlags) const;
+
+  /**
+   * Checkes whether the key event down message is handled without following
+   * WM_CHAR messages.  For example, if following WM_CHAR message indicates
+   * control character input, the WM_CHAR message is unclear whether it's
+   * caused by a printable key with Ctrl or just a function key such as Enter
+   * or Backspace.
+   */
+  bool NeedsToHandleWithoutFollowingCharMessages() const;
 };
 
 class KeyboardLayout
 {
+  friend class NativeKey;
+
+private:
+  KeyboardLayout();
+  ~KeyboardLayout();
+
+  static KeyboardLayout* sInstance;
+  static nsIIdleServiceInternal* sIdleService;
+
   struct DeadKeyTableListEntry
   {
     DeadKeyTableListEntry* next;
@@ -339,12 +492,14 @@ class KeyboardLayout
   };
 
   HKL mKeyboardLayout;
-  HKL mPendingKeyboardLayout;
 
   VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
   int32_t mActiveDeadKey;                 // -1 = no active dead-key
   VirtualKey::ShiftState mDeadKeyShiftState;
+
+  bool mIsOverridden : 1;
+  bool mIsPendingToRestoreKeyboardLayout : 1;
 
   static inline int32_t GetKeyIndex(uint8_t aVirtualKey);
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
@@ -363,9 +518,25 @@ class KeyboardLayout
                                       uint32_t aEntries);
   void ReleaseDeadKeyTables();
 
+  /**
+   * Loads the specified keyboard layout. This method always clear the dead key
+   * state.
+   */
+  void LoadLayout(HKL aLayout);
+
+  /**
+   * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or
+   * WM_KEYUP.  This method is stateful.  This saves current dead key state at
+   * WM_KEYDOWN.  Additionally, computes current inputted character(s) and set
+   * them to the aNativeKey.
+   */
+  void InitNativeKey(NativeKey& aNativeKey,
+                     const ModifierKeyState& aModKeyState);
+
 public:
-  KeyboardLayout();
-  ~KeyboardLayout();
+  static KeyboardLayout* GetInstance();
+  static void Shutdown();
+  static void NotifyIdleServiceOfUserActivity();
 
   static bool IsPrintableCharKey(uint8_t aVirtualKey);
 
@@ -385,19 +556,34 @@ public:
                          const ModifierKeyState& aModKeyState) const;
 
   /**
-   * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or
-   * WM_KEYUP.  This method is stateful.  This saves current dead key state at
-   * WM_KEYDOWN.  Additionally, computes current inputted character(s) and set
-   * them to the aNativeKey.
+   * OnLayoutChange() must be called before the first keydown message is
+   * received.  LoadLayout() changes the keyboard state, that causes breaking
+   * dead key state.  Therefore, we need to load the layout before the first
+   * keydown message.
    */
-  void InitNativeKey(NativeKey& aNativeKey,
-                     const ModifierKeyState& aModKeyState);
+  void OnLayoutChange(HKL aKeyboardLayout)
+  {
+    MOZ_ASSERT(!mIsOverridden);
+    LoadLayout(aKeyboardLayout);
+  }
 
   /**
-   * LoadLayout() loads the keyboard layout.  If aLoadLater is true,
-   * it will be done when OnKeyDown() is called.
+   * OverrideLayout() loads the specified keyboard layout.
    */
-  void LoadLayout(HKL aLayout, bool aLoadLater = false);
+  void OverrideLayout(HKL aLayout)
+  {
+    mIsOverridden = true;
+    LoadLayout(aLayout);
+  }
+
+  /**
+   * RestoreLayout() loads the current keyboard layout of the thread.
+   */
+  void RestoreLayout()
+  {
+    mIsOverridden = false;
+    mIsPendingToRestoreKeyboardLayout = true;
+  }
 
   uint32_t ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const;
 
@@ -409,8 +595,102 @@ public:
 
   HKL GetLayout() const
   {
-    return mPendingKeyboardLayout ? mPendingKeyboardLayout : mKeyboardLayout;
+    return mIsPendingToRestoreKeyboardLayout ? ::GetKeyboardLayout(0) :
+                                               mKeyboardLayout;
   }
+
+  /**
+   * This wraps MapVirtualKeyEx() API with MAPVK_VK_TO_VSC.
+   */
+  WORD ComputeScanCodeForVirtualKeyCode(uint8_t aVirtualKeyCode) const;
+
+  /**
+   * Implementation of nsIWidget::SynthesizeNativeKeyEvent().
+   */
+  nsresult SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
+                                    int32_t aNativeKeyboardLayout,
+                                    int32_t aNativeKeyCode,
+                                    uint32_t aModifierFlags,
+                                    const nsAString& aCharacters,
+                                    const nsAString& aUnmodifiedCharacters);
+};
+
+class RedirectedKeyDownMessageManager
+{
+public:
+  /*
+   * If a window receives WM_KEYDOWN message or WM_SYSKEYDOWM message which is
+   * a redirected message, NativeKey::DispatchKeyDownAndKeyPressEvent()
+   * prevents to dispatch NS_KEY_DOWN event because it has been dispatched
+   * before the message was redirected.  However, in some cases, WM_*KEYDOWN
+   * message handler may not handle actually.  Then, the message handler needs
+   * to forget the redirected message and remove WM_CHAR message or WM_SYSCHAR
+   * message for the redirected keydown message.  AutoFlusher class is a helper
+   * class for doing it.  This must be created in the stack.
+   */
+  class MOZ_STACK_CLASS AutoFlusher MOZ_FINAL
+  {
+  public:
+    AutoFlusher(nsWindowBase* aWidget, const MSG &aMsg) :
+      mCancel(!RedirectedKeyDownMessageManager::IsRedirectedMessage(aMsg)),
+      mWidget(aWidget), mMsg(aMsg)
+    {
+    }
+
+    ~AutoFlusher()
+    {
+      if (mCancel) {
+        return;
+      }
+      // Prevent unnecessary keypress event
+      if (!mWidget->Destroyed()) {
+        RedirectedKeyDownMessageManager::RemoveNextCharMessage(mMsg.hwnd);
+      }
+      // Foreget the redirected message
+      RedirectedKeyDownMessageManager::Forget();
+    }
+
+    void Cancel() { mCancel = true; }
+
+  private:
+    bool mCancel;
+    nsRefPtr<nsWindowBase> mWidget;
+    const MSG &mMsg;
+  };
+
+  static void WillRedirect(const MSG& aMsg, bool aDefualtPrevented)
+  {
+    sRedirectedKeyDownMsg = aMsg;
+    sDefaultPreventedOfRedirectedMsg = aDefualtPrevented;
+  }
+
+  static void Forget()
+  {
+    sRedirectedKeyDownMsg.message = WM_NULL;
+  }
+
+  static void PreventDefault() { sDefaultPreventedOfRedirectedMsg = true; }
+  static bool DefaultPrevented() { return sDefaultPreventedOfRedirectedMsg; }
+
+  static bool IsRedirectedMessage(const MSG& aMsg);
+
+  /**
+   * RemoveNextCharMessage() should be called by WM_KEYDOWN or WM_SYSKEYDOWM
+   * message handler.  If there is no WM_(SYS)CHAR message for it, this
+   * method does nothing.
+   * NOTE: WM_(SYS)CHAR message is posted by TranslateMessage() API which is
+   * called in message loop.  So, WM_(SYS)KEYDOWN message should have
+   * WM_(SYS)CHAR message in the queue if the keydown event causes character
+   * input.
+   */
+  static void RemoveNextCharMessage(HWND aWnd);
+
+private:
+  // sRedirectedKeyDownMsg is WM_KEYDOWN message or WM_SYSKEYDOWN message which
+  // is reirected with SendInput() API by
+  // widget::NativeKey::DispatchKeyDownAndKeyPressEvent()
+  static MSG sRedirectedKeyDownMsg;
+  static bool sDefaultPreventedOfRedirectedMsg;
 };
 
 } // namespace widget

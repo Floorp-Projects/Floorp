@@ -9,19 +9,16 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jscntxt.h"
-#include "jsstr.h"
+#include "jsapi.h"
+
+#include "vm/String.h"
 
 namespace js {
 
-/*
- * NB: This class must only be used on the stack.
- */
-class JSONParser : private AutoGCRooter
+class MOZ_STACK_CLASS JSONParser : private AutoGCRooter
 {
   public:
     enum ErrorHandling { RaiseError, NoError };
-    enum ParsingMode { StrictJSON, LegacyJSON };
 
   private:
     /* Data members */
@@ -32,7 +29,6 @@ class JSONParser : private AutoGCRooter
 
     Value v;
 
-    const ParsingMode parsingMode;
     const ErrorHandling errorHandling;
 
     enum Token { String, Number, True, False, Null,
@@ -113,20 +109,13 @@ class JSONParser : private AutoGCRooter
   public:
     /* Public API */
 
-    /*
-     * Create a parser for the provided JSON data.  The parser will accept
-     * certain legacy, non-JSON syntax if decodingMode is LegacyJSON.
-     * Description of this syntax is deliberately omitted: new code should only
-     * use strict JSON parsing.
-     */
+    /* Create a parser for the provided JSON data. */
     JSONParser(JSContext *cx, JS::StableCharPtr data, size_t length,
-               ParsingMode parsingMode = StrictJSON,
                ErrorHandling errorHandling = RaiseError)
       : AutoGCRooter(cx, JSONPARSER),
         cx(cx),
         current(data),
         end((data + length).get(), data.get(), length),
-        parsingMode(parsingMode),
         errorHandling(errorHandling),
         stack(cx),
         freeElements(cx),
@@ -150,23 +139,23 @@ class JSONParser : private AutoGCRooter
      * otherwise return true and set *vp to |undefined|.  (JSON syntax can't
      * represent |undefined|, so the JSON data couldn't have specified it.)
      */
-    bool parse(js::MutableHandleValue vp);
+    bool parse(MutableHandleValue vp);
 
   private:
-    js::Value numberValue() const {
+    Value numberValue() const {
         JS_ASSERT(lastToken == Number);
         JS_ASSERT(v.isNumber());
         return v;
     }
 
-    js::Value stringValue() const {
+    Value stringValue() const {
         JS_ASSERT(lastToken == String);
         JS_ASSERT(v.isString());
         return v;
     }
 
     JSAtom *atomValue() const {
-        js::Value strval = stringValue();
+        Value strval = stringValue();
         return &strval.toString()->asAtom();
     }
 
@@ -180,7 +169,7 @@ class JSONParser : private AutoGCRooter
     }
 
     Token stringToken(JSString *str) {
-        this->v = js::StringValue(str);
+        this->v = StringValue(str);
 #ifdef DEBUG
         lastToken = String;
 #endif
@@ -188,7 +177,7 @@ class JSONParser : private AutoGCRooter
     }
 
     Token numberToken(double d) {
-        this->v = js::NumberValue(d);
+        this->v = NumberValue(d);
 #ifdef DEBUG
         lastToken = Number;
 #endif

@@ -1,7 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
-Components.utils.import("resource://gre/modules/Services.jsm");
 
 var gSTSService = Cc["@mozilla.org/stsservice;1"]
                   .getService(Ci.nsIStrictTransportSecurityService);

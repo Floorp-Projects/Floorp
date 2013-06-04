@@ -12,7 +12,7 @@
 #include "mozilla/HashFunctions.h"
 #include "vm/GlobalObject.h"
 
-#include "jsinterpinlines.h"
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 
@@ -177,7 +177,7 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript,
             if (cp == end) {
                 bool isArray = (chars[0] == '[');
                 JSONParser parser(cx, isArray ? chars : chars + 1U, isArray ? length : length - 2,
-                                  JSONParser::StrictJSON, JSONParser::NoError);
+                                  JSONParser::NoError);
                 RootedValue tmp(cx);
                 if (!parser.parse(&tmp))
                     return EvalJSON_Failure;
@@ -189,6 +189,30 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript,
         }
     }
     return EvalJSON_NotJSON;
+}
+
+static void
+MarkFunctionsWithinEvalScript(JSScript *script)
+{
+    // Mark top level functions in an eval script as being within an eval and,
+    // if applicable, inside a with statement.
+
+    if (!script->hasObjects())
+        return;
+
+    ObjectArray *objects = script->objects();
+    size_t start = script->innerObjectsStart();
+
+    for (size_t i = start; i < objects->length; i++) {
+        JSObject *obj = objects->vector[i];
+        if (obj->isFunction()) {
+            JSFunction *fun = obj->toFunction();
+            if (fun->hasScript())
+                fun->nonLazyScript()->directlyInsideEval = true;
+            else if (fun->isInterpretedLazy())
+                fun->lazyScript()->setDirectlyInsideEval();
+        }
+    }
 }
 
 // Define subset of ExecuteType so that casting performs the injection.
@@ -295,6 +319,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         if (!compiled)
             return false;
 
+        MarkFunctionsWithinEvalScript(compiled);
+
         esg.setNewScript(compiled);
     }
 
@@ -356,6 +382,8 @@ js::DirectEvalFromIon(JSContext *cx,
                                                      chars.get(), length, stableStr, staticLevel);
         if (!compiled)
             return false;
+
+        MarkFunctionsWithinEvalScript(compiled);
 
         esg.setNewScript(compiled);
     }

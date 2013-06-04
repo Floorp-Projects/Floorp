@@ -9,6 +9,7 @@
 #include "BaseRect.h"
 #include "BaseMargin.h"
 #include "Point.h"
+#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {
@@ -24,45 +25,80 @@ struct Margin :
     : Super(aTop, aRight, aBottom, aLeft) {}
 };
 
-struct IntRect :
-    public BaseRect<int32_t, IntRect, IntPoint, IntSize, Margin> {
-    typedef BaseRect<int32_t, IntRect, IntPoint, mozilla::gfx::IntSize, Margin> Super;
+template<class units>
+struct IntRectTyped :
+    public BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, Margin>,
+    public units {
+    typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, Margin> Super;
 
-    IntRect() : Super() {}
-    IntRect(IntPoint aPos, mozilla::gfx::IntSize aSize) :
+    IntRectTyped() : Super() {}
+    IntRectTyped(IntPointTyped<units> aPos, IntSizeTyped<units> aSize) :
         Super(aPos, aSize) {}
-    IntRect(int32_t _x, int32_t _y, int32_t _width, int32_t _height) :
+    IntRectTyped(int32_t _x, int32_t _y, int32_t _width, int32_t _height) :
         Super(_x, _y, _width, _height) {}
 
     // Rounding isn't meaningful on an integer rectangle.
     void Round() {}
     void RoundIn() {}
     void RoundOut() {}
+
+    // XXX When all of the code is ported, the following functions to convert to and from
+    // unknown types should be removed.
+
+    static IntRectTyped<units> FromUnknownRect(const IntRectTyped<UnknownUnits>& rect) {
+        return IntRectTyped<units>(rect.x, rect.y, rect.width, rect.height);
+    }
+
+    IntRectTyped<UnknownUnits> ToUnknownRect() const {
+        return IntRectTyped<UnknownUnits>(this->x, this->y, this->width, this->height);
+    }
 };
+typedef IntRectTyped<UnknownUnits> IntRect;
 
-struct Rect :
-    public BaseRect<Float, Rect, Point, Size, Margin> {
-    typedef BaseRect<Float, Rect, Point, mozilla::gfx::Size, Margin> Super;
+template<class units>
+struct RectTyped :
+    public BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, Margin>,
+    public units {
+    typedef BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, Margin> Super;
 
-    Rect() : Super() {}
-    Rect(Point aPos, mozilla::gfx::Size aSize) :
+    RectTyped() : Super() {}
+    RectTyped(PointTyped<units> aPos, SizeTyped<units> aSize) :
         Super(aPos, aSize) {}
-    Rect(Float _x, Float _y, Float _width, Float _height) :
+    RectTyped(Float _x, Float _y, Float _width, Float _height) :
         Super(_x, _y, _width, _height) {}
-    explicit Rect(const IntRect& rect) :
+    explicit RectTyped(const IntRectTyped<units>& rect) :
         Super(float(rect.x), float(rect.y),
               float(rect.width), float(rect.height)) {}
 
-    GFX2D_API void NudgeToIntegers();
-
-    bool ToIntRect(IntRect *aOut) const
+    GFX2D_API void NudgeToIntegers()
     {
-      *aOut = IntRect(int32_t(X()), int32_t(Y()),
-                    int32_t(Width()), int32_t(Height()));
-      return Rect(Float(aOut->x), Float(aOut->y), 
-                  Float(aOut->width), Float(aOut->height)).IsEqualEdges(*this);
+      NudgeToInteger(&(this->x));
+      NudgeToInteger(&(this->y));
+      NudgeToInteger(&(this->width));
+      NudgeToInteger(&(this->height));
+    }
+
+    bool ToIntRect(IntRectTyped<units> *aOut) const
+    {
+      *aOut = IntRectTyped<units>(int32_t(this->X()), int32_t(this->Y()),
+                                  int32_t(this->Width()), int32_t(this->Height()));
+      return RectTyped<units>(Float(aOut->x), Float(aOut->y), 
+                              Float(aOut->width), Float(aOut->height))
+             .IsEqualEdges(*this);
+    }
+
+    // XXX When all of the code is ported, the following functions to convert to and from
+    // unknown types should be removed.
+
+    static RectTyped<units> FromUnknownRect(const RectTyped<UnknownUnits>& rect) {
+        return RectTyped<units>(rect.x, rect.y, rect.width, rect.height);
+    }
+
+    RectTyped<UnknownUnits> ToUnknownRect() const {
+        return RectTyped<UnknownUnits>(this->x, this->y, this->width, this->height);
     }
 };
+typedef RectTyped<UnknownUnits> Rect;
 
 }
 }

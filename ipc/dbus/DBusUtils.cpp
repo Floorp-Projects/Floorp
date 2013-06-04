@@ -17,6 +17,10 @@
 */
 
 #include "DBusUtils.h"
+#include "DBusThread.h"
+#include "nsThreadUtils.h"
+#include "mozilla/Monitor.h"
+#include "nsAutoPtr.h"
 #include <cstdio>
 #include <cstring>
 
@@ -48,85 +52,301 @@ log_and_free_dbus_error(DBusError* err, const char* function, DBusMessage* msg)
   dbus_error_free((err));
 }
 
-typedef struct {
-  DBusCallback user_cb;
-  void *user;
-} dbus_async_call_t;
-
-void dbus_func_args_async_callback(DBusPendingCall *call, void *data) {
-
-  dbus_async_call_t *req = (dbus_async_call_t *)data;
-  DBusMessage *msg;
-
-  /* This is guaranteed to be non-NULL, because this function is called only
-     when once the remote method invokation returns. */
-  msg = dbus_pending_call_steal_reply(call);
-
-  if (msg) {
-    if (req->user_cb) {
-      // The user may not deref the message object.
-      req->user_cb(msg, req->user);
-    }
-    dbus_message_unref(msg);
+class DBusConnectionSendRunnableBase : public nsRunnable
+{
+protected:
+  DBusConnectionSendRunnableBase(DBusConnection* aConnection,
+                                 DBusMessage* aMessage)
+  : mConnection(aConnection),
+    mMessage(aMessage)
+  {
+    MOZ_ASSERT(mConnection);
+    MOZ_ASSERT(mMessage);
   }
 
-  //dbus_message_unref(req->method);
-  dbus_pending_call_cancel(call);
-  dbus_pending_call_unref(call);
-  free(req);
+  virtual ~DBusConnectionSendRunnableBase()
+  { }
+
+  DBusConnection*   mConnection;
+  DBusMessageRefPtr mMessage;
+};
+
+class DBusConnectionSendSyncRunnable : public DBusConnectionSendRunnableBase
+{
+public:
+  bool WaitForCompletion()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    MonitorAutoLock autoLock(mCompletedMonitor);
+    while (!mCompleted) {
+      mCompletedMonitor.Wait();
+    }
+    return mSuccess;
+  }
+
+protected:
+  DBusConnectionSendSyncRunnable(DBusConnection* aConnection,
+                                 DBusMessage* aMessage)
+  : DBusConnectionSendRunnableBase(aConnection, aMessage),
+    mCompletedMonitor("DBusConnectionSendSyncRunnable.mCompleted"),
+    mCompleted(false),
+    mSuccess(false)
+  { }
+
+  virtual ~DBusConnectionSendSyncRunnable()
+  { }
+
+  // Call this function at the end of Run() to notify waiting
+  // threads.
+  void Completed(bool aSuccess)
+  {
+    MonitorAutoLock autoLock(mCompletedMonitor);
+    MOZ_ASSERT(!mCompleted);
+    mSuccess = aSuccess;
+    mCompleted = true;
+    mCompletedMonitor.Notify();
+  }
+
+private:
+  Monitor mCompletedMonitor;
+  bool    mCompleted;
+  bool    mSuccess;
+};
+
+//
+// Sends a message and returns the message's serial number to the
+// disaptching thread. Only run it in DBus thread.
+//
+class DBusConnectionSendRunnable : public DBusConnectionSendSyncRunnable
+{
+public:
+  DBusConnectionSendRunnable(DBusConnection* aConnection,
+                             DBusMessage* aMessage,
+                             dbus_uint32_t* aSerial)
+  : DBusConnectionSendSyncRunnable(aConnection, aMessage),
+    mSerial(aSerial)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    dbus_bool_t success = dbus_connection_send(mConnection, mMessage, mSerial);
+    Completed(success == TRUE);
+
+    NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
+
+    return NS_OK;
+  }
+
+protected:
+  ~DBusConnectionSendRunnable()
+  { }
+
+private:
+  dbus_uint32_t* mSerial;
+};
+
+dbus_bool_t
+dbus_func_send(DBusConnection* aConnection, dbus_uint32_t* aSerial,
+               DBusMessage* aMessage)
+{
+  nsRefPtr<DBusConnectionSendRunnable> t(
+    new DBusConnectionSendRunnable(aConnection, aMessage, aSerial));
+  MOZ_ASSERT(t);
+
+  nsresult rv = DispatchToDBusThread(t);
+
+  if (NS_FAILED(rv)) {
+    if (aMessage) {
+      dbus_message_unref(aMessage);
+    }
+    return FALSE;
+  }
+
+  if (aSerial && !t->WaitForCompletion()) {
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
-dbus_bool_t dbus_func_send_async(DBusConnection *conn,
-                                 DBusMessage *msg,
-                                 int timeout_ms,
-                                 void (*user_cb)(DBusMessage*,
-                                                 void*),
-                                 void *user) {
-  dbus_async_call_t *pending;
-  dbus_bool_t reply = FALSE;
-
-  // Freed at end of dbus_func_args_async_callback (becomes "req")
-  pending = (dbus_async_call_t *)malloc(sizeof(dbus_async_call_t));
-  DBusPendingCall *call;
-
-  pending->user_cb = user_cb;
-  pending->user = user;
-
-  reply = dbus_connection_send_with_reply(conn, msg,
-                                          &call,
-                                          timeout_ms);
-  /**
-   * dbus_connection_send_with_reply() may return TRUE but leave *pending_return
-   * as NULL, we'd better to check both reply value and return DBusPendingCall.
-   */
-  if (!reply || !call) {
+static dbus_bool_t
+dbus_func_args_send_valist(DBusConnection* aConnection,
+                           dbus_uint32_t* aSerial,
+                           const char* aPath,
+                           const char* aInterface,
+                           const char* aFunction,
+                           int aFirstArgType,
+                           va_list aArgs)
+{
+  // Compose the command...
+  DBusMessage* message = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC,
+                                                      aPath,
+                                                      aInterface,
+                                                      aFunction);
+  if (!message) {
+    LOG("Could not allocate D-Bus message object!");
     goto done;
   }
 
-  /*
-   * Workaround bug 827888
-   *
-   * When we set the notify callback, the call might have already been
-   * completed. In this case the call never gets handled. To workaround
-   * the problem, we test if the call has been completed and if so, run
-   * the notify handler explicitly.
-   *
-   * To fix bug 827888, we'd need to do this atomically; or make dbus
-   * run the notifier function automatically if the call has been
-   * completed meanwhile.
-   */
-  if (dbus_pending_call_get_completed(call)) {
-    dbus_func_args_async_callback(call, pending);
-  } else {
-    dbus_pending_call_set_notify(call,
-                                 dbus_func_args_async_callback,
-                                 pending,
-                                 NULL);
+  // ... and append arguments.
+  if (!dbus_message_append_args_valist(message, aFirstArgType, aArgs)) {
+    LOG("Could not append argument to method call!");
+    goto done;
   }
 
+  return dbus_func_send(aConnection, aSerial, message);
+
 done:
-  if (msg) dbus_message_unref(msg);
-  return reply;
+  if (message) {
+    dbus_message_unref(message);
+  }
+  return FALSE;
+}
+
+dbus_bool_t
+dbus_func_args_send(DBusConnection* aConnection,
+                    dbus_uint32_t* aSerial,
+                    const char* aPath,
+                    const char* aInterface,
+                    const char* aFunction,
+                    int aFirstArgType, ...)
+{
+  va_list args;
+  va_start(args, aFirstArgType);
+
+  dbus_bool_t success = dbus_func_args_send_valist(aConnection,
+                                                   aSerial,
+                                                   aPath,
+                                                   aInterface,
+                                                   aFunction,
+                                                   aFirstArgType,
+                                                   args);
+  va_end(args);
+
+  return success;
+}
+
+//
+// Sends a message and executes a callback function for the reply. Only
+// run it in DBus thread.
+//
+class DBusConnectionSendWithReplyRunnable : public DBusConnectionSendRunnableBase
+{
+private:
+  class NotifyData
+  {
+  public:
+    NotifyData(void (*aCallback)(DBusMessage*, void*), void* aData)
+    : mCallback(aCallback),
+      mData(aData)
+    { }
+
+    void RunNotifyCallback(DBusMessage* aMessage)
+    {
+      if (mCallback) {
+        mCallback(aMessage, mData);
+      }
+    }
+
+  private:
+    void (*mCallback)(DBusMessage*, void*);
+    void*  mData;
+  };
+
+  // Callback function for DBus replies. Only run it in DBus thread.
+  //
+  static void Notify(DBusPendingCall* aCall, void* aData)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    nsAutoPtr<NotifyData> data(static_cast<NotifyData*>(aData));
+
+    // The reply can be non-null if the timeout
+    // has been reached.
+    DBusMessage* reply = dbus_pending_call_steal_reply(aCall);
+
+    if (reply) {
+      data->RunNotifyCallback(reply);
+      dbus_message_unref(reply);
+    }
+
+    dbus_pending_call_cancel(aCall);
+    dbus_pending_call_unref(aCall);
+  }
+
+public:
+  DBusConnectionSendWithReplyRunnable(DBusConnection* aConnection,
+                                      DBusMessage* aMessage,
+                                      int aTimeout,
+                                      void (*aCallback)(DBusMessage*, void*),
+                                      void* aData)
+  : DBusConnectionSendRunnableBase(aConnection, aMessage),
+    mCallback(aCallback),
+    mData(aData),
+    mTimeout(aTimeout)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    // Freed at end of Notify
+    nsAutoPtr<NotifyData> data(new NotifyData(mCallback, mData));
+    NS_ENSURE_TRUE(data, NS_ERROR_OUT_OF_MEMORY);
+
+    DBusPendingCall* call;
+
+    dbus_bool_t success = dbus_connection_send_with_reply(mConnection,
+                                                          mMessage,
+                                                          &call,
+                                                          mTimeout);
+    NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
+
+    success = dbus_pending_call_set_notify(call, Notify, data, nullptr);
+    NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
+
+    data.forget();
+    dbus_message_unref(mMessage);
+
+    return NS_OK;
+  };
+
+protected:
+  ~DBusConnectionSendWithReplyRunnable()
+  { }
+
+private:
+  void (*mCallback)(DBusMessage*, void*);
+  void*  mData;
+  int    mTimeout;
+};
+
+dbus_bool_t dbus_func_send_async(DBusConnection* conn,
+                                 DBusMessage* msg,
+                                 int timeout_ms,
+                                 void (*user_cb)(DBusMessage*,
+                                                 void*),
+                                 void* user)
+{
+  nsRefPtr<nsIRunnable> t(new DBusConnectionSendWithReplyRunnable(conn, msg,
+                                                                  timeout_ms,
+                                                                  user_cb,
+                                                                  user));
+  MOZ_ASSERT(t);
+
+  nsresult rv = DispatchToDBusThread(t);
+
+  if (NS_FAILED(rv)) {
+    if (msg) {
+      dbus_message_unref(msg);
+    }
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static dbus_bool_t dbus_func_args_async_valist(DBusConnection *conn,
@@ -139,7 +359,7 @@ static dbus_bool_t dbus_func_args_async_valist(DBusConnection *conn,
                                                const char *func,
                                                int first_arg_type,
                                                va_list args) {
-  DBusMessage *msg = NULL;  
+  DBusMessage *msg = NULL;
   /* Compose the command */
   msg = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC, path, ifc, func);
 
@@ -182,33 +402,147 @@ dbus_bool_t dbus_func_args_async(DBusConnection *conn,
   return ret;
 }
 
+//
+// Sends a message and allows the dispatching thread to wait for the
+// reply. Only run it in DBus thread.
+//
+class DBusConnectionSendAndBlockRunnable : public DBusConnectionSendSyncRunnable
+{
+private:
+  static void Notify(DBusPendingCall* aCall, void* aData)
+  {
+    DBusConnectionSendAndBlockRunnable* runnable(
+        static_cast<DBusConnectionSendAndBlockRunnable*>(aData));
+
+    runnable->mReply = dbus_pending_call_steal_reply(aCall);
+
+    bool success = !!runnable->mReply;
+
+    if (runnable->mError) {
+      success = success && !dbus_error_is_set(runnable->mError);
+
+      if (!dbus_set_error_from_message(runnable->mError, runnable->mReply)) {
+        dbus_error_init(runnable->mError);
+      }
+    }
+
+    dbus_pending_call_cancel(aCall);
+    dbus_pending_call_unref(aCall);
+
+    runnable->Completed(success);
+  }
+
+public:
+  DBusConnectionSendAndBlockRunnable(DBusConnection* aConnection,
+                                     DBusMessage* aMessage,
+                                     int aTimeout,
+                                     DBusError* aError)
+  : DBusConnectionSendSyncRunnable(aConnection, aMessage),
+    mError(aError),
+    mReply(nullptr),
+    mTimeout(aTimeout)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    DBusPendingCall* call = nullptr;
+
+    dbus_bool_t success = dbus_connection_send_with_reply(mConnection,
+                                                          mMessage,
+                                                          &call,
+                                                          mTimeout);
+    if (!success) {
+      if (mError) {
+        if (!call) {
+          dbus_set_error(mError, DBUS_ERROR_DISCONNECTED, "Connection is closed");
+        } else {
+          dbus_error_init(mError);
+        }
+      }
+      goto done;
+    }
+
+    success = dbus_pending_call_set_notify(call, Notify, this, nullptr);
+
+  done:
+    dbus_message_unref(mMessage);
+
+    if (!success) {
+      Completed(false);
+      NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
+    }
+
+    return NS_OK;
+  }
+
+  DBusMessage* GetReply()
+  {
+    return mReply;
+  }
+
+protected:
+  ~DBusConnectionSendAndBlockRunnable()
+  { }
+
+private:
+  DBusError*   mError;
+  DBusMessage* mReply;
+  int          mTimeout;
+};
+
+dbus_bool_t
+dbus_func_send_and_block(DBusConnection* aConnection,
+                         int aTimeout,
+                         DBusMessage** aReply,
+                         DBusError* aError,
+                         DBusMessage* aMessage)
+{
+  nsRefPtr<DBusConnectionSendAndBlockRunnable> t(
+    new DBusConnectionSendAndBlockRunnable(aConnection, aMessage,
+                                           aTimeout, aError));
+  MOZ_ASSERT(t);
+
+  nsresult rv = DispatchToDBusThread(t);
+
+  if (NS_FAILED(rv)) {
+    if (aMessage) {
+      dbus_message_unref(aMessage);
+    }
+    return FALSE;
+  }
+
+  if (!t->WaitForCompletion()) {
+    return FALSE;
+  }
+
+  if (aReply) {
+    *aReply = t->GetReply();
+  }
+
+  return TRUE;
+}
+
 // If err is NULL, then any errors will be LOG'd, and free'd and the reply
 // will be NULL.
 // If err is not NULL, then it is assumed that dbus_error_init was already
 // called, and error's will be returned to the caller without logging. The
 // return value is NULL iff an error was set. The client must free the error if
 // set.
-DBusMessage * dbus_func_args_timeout_valist(DBusConnection *conn,
-                                            int timeout_ms,
-                                            DBusError *err,
-                                            const char *path,
-                                            const char *ifc,
-                                            const char *func,
-                                            int first_arg_type,
-                                            va_list args) {
-  
-  DBusMessage *msg = NULL, *reply = NULL;
-  bool return_error = (err != NULL);
-
-  if (!return_error) {
-    err = (DBusError*)malloc(sizeof(DBusError));
-    dbus_error_init(err);
-  }
-
+DBusMessage* dbus_func_args_timeout_valist(DBusConnection* conn,
+                                           int timeout_ms,
+                                           DBusError* err,
+                                           const char* path,
+                                           const char* ifc,
+                                           const char* func,
+                                           int first_arg_type,
+                                           va_list args)
+{
   /* Compose the command */
-  msg = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC, path, ifc, func);
+  DBusMessage* msg = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC, path, ifc, func);
 
-  if (msg == NULL) {
+  if (!msg) {
     LOG("Could not allocate D-Bus message object!");
     goto done;
   }
@@ -219,18 +553,15 @@ DBusMessage * dbus_func_args_timeout_valist(DBusConnection *conn,
     goto done;
   }
 
-  /* Make the call. */
-  reply = dbus_connection_send_with_reply_and_block(conn, msg, timeout_ms, err);
-  if (!return_error && dbus_error_is_set(err)) {
-    LOG_AND_FREE_DBUS_ERROR_WITH_MSG(err, msg);
-  }
+  DBusMessage* reply;
+
+  return dbus_func_send_and_block(conn, timeout_ms, &reply, err, msg) ? reply : nullptr;
 
 done:
-  if (!return_error) {
-    free(err);
+  if (msg) {
+    dbus_message_unref(msg);
   }
-  if (msg) dbus_message_unref(msg);
-  return reply;
+  return nullptr;
 }
 
 DBusMessage * dbus_func_args_timeout(DBusConnection *conn,
@@ -284,7 +615,7 @@ DBusMessage * dbus_func_args_error(DBusConnection *conn,
   return ret;
 }
 
-int dbus_returns_int32(DBusMessage *reply) 
+int dbus_returns_int32(DBusMessage *reply)
 {
   DBusError err;
   int32_t ret = -1;

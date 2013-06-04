@@ -1477,7 +1477,7 @@
                 // This call to adjustTabstrip is redundant but needed so that
                 // when opening a second tab, the first tab's close buttons
                 // appears immediately rather than when the transition ends.
-                if (this.tabContainer.childNodes.length == 2)
+                if (this.tabs.length - this._removingTabs.length == 2)
                   this.tabContainer.adjustTabstrip();
               }.bind(this));
             }
@@ -1617,6 +1617,13 @@
             this._blurTab(aTab);
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
+
+            if (this.tabs.length - this._removingTabs.length == 1) {
+              // The second tab just got closed and we will end up with a single
+              // one. Remove the first tab's close button immediately (if needed)
+              // rather than after the tabclose animation ends.
+              this.tabContainer.adjustTabstrip();
+            }
 
             setTimeout(function (tab, tabbrowser) {
               if (tab.parentNode &&
@@ -3163,6 +3170,8 @@
 
       <method name="adjustTabstrip">
         <body><![CDATA[
+          let numTabs = this.childNodes.length -
+                        this.tabbrowser._removingTabs.length;
           // modes for tabstrip
           // 0 - button on active tab only
           // 1 - close buttons on all tabs
@@ -3170,17 +3179,27 @@
           // 3 - close button at the end of the tabstrip
           switch (this.mCloseButtons) {
           case 0:
-            if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
+            if (numTabs == 1 && this._closeWindowWithLastTab)
               this.setAttribute("closebuttons", "hidden");
             else
               this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            if (this.childNodes.length == 1) {
+            if (numTabs == 1) {
               if (this._closeWindowWithLastTab)
                 this.setAttribute("closebuttons", "hidden");
               else
                 this.setAttribute("closebuttons", "alltabs");
+            } else if (numTabs == 2) {
+              // This is an optimization to avoid layout flushes by calling
+              // getBoundingClientRect() when we just opened a second tab. In
+              // this case it's highly unlikely that the tab width is smaller
+              // than mTabClipWidth and the tab close button obscures too much
+              // of the tab's label. In the edge case of the window being too
+              // narrow (or if tabClipWidth has been set to a way higher value),
+              // we'll correct the 'closebuttons' attribute after the tabopen
+              // animation has finished.
+              this.setAttribute("closebuttons", "alltabs");
             } else {
               let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)

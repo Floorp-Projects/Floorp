@@ -24,7 +24,7 @@ class SourceSurface;
  * purpose is for storing read-only images and using it as a source surface,
  * but it can also be drawn to.
  */
-class THEBES_API gfxImageSurface : public gfxASurface {
+class gfxImageSurface : public gfxASurface {
 public:
     /**
      * Construct an image surface around an existing buffer of image data.
@@ -143,7 +143,7 @@ protected:
     long mStride;
 };
 
-class THEBES_API gfxSubimageSurface : public gfxImageSurface {
+class gfxSubimageSurface : public gfxImageSurface {
 protected:
     friend class gfxImageSurface;
     gfxSubimageSurface(gfxImageSurface* aParent,

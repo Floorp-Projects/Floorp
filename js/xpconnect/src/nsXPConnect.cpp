@@ -23,7 +23,6 @@
 #include "nsJSEnvironment.h"
 #include "nsThreadUtils.h"
 #include "nsDOMJSUtils.h"
-#include "nsContentUtils.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
@@ -138,48 +137,29 @@ nsXPConnect::~nsXPConnect()
 }
 
 // static
-nsXPConnect*
-nsXPConnect::GetXPConnect()
-{
-    // Do a release-mode assert that we're not doing anything significant in
-    // XPConnect off the main thread. If you're an extension developer hitting
-    // this, you need to change your code. See bug 716167.
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-        MOZ_CRASH();
-
-    if (!gSelf) {
-        if (gOnceAliveNowDead)
-            return nullptr;
-        gSelf = new nsXPConnect();
-        if (!gSelf)
-            return nullptr;
-
-        if (!gSelf->mRuntime) {
-            NS_RUNTIMEABORT("Couldn't create XPCJSRuntime.");
-        }
-
-        // Initial extra ref to keep the singleton alive
-        // balanced by explicit call to ReleaseXPConnectSingleton()
-        NS_ADDREF(gSelf);
-
-        // Set XPConnect as the main thread observer.
-        //
-        // The cycle collector sometimes calls GetXPConnect, but it should never
-        // be the one that initializes gSelf.
-        MOZ_ASSERT(NS_IsMainThread());
-        if (NS_FAILED(nsThread::SetMainThreadObserver(gSelf))) {
-            NS_RELEASE(gSelf);
-            // Fall through to returning null
-        }
+void
+    nsXPConnect::InitStatics()
+    {
+    gSelf = new nsXPConnect();
+    gOnceAliveNowDead = false;
+    if (!gSelf->mRuntime) {
+        NS_RUNTIMEABORT("Couldn't create XPCJSRuntime.");
     }
-    return gSelf;
+
+    // Initial extra ref to keep the singleton alive
+    // balanced by explicit call to ReleaseXPConnectSingleton()
+    NS_ADDREF(gSelf);
+
+    // Set XPConnect as the main thread observer.
+    if (NS_FAILED(nsThread::SetMainThreadObserver(gSelf))) {
+        MOZ_CRASH();
+    }
 }
 
-// static
 nsXPConnect*
 nsXPConnect::GetSingleton()
 {
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     NS_IF_ADDREF(xpc);
     return xpc;
 }
@@ -231,8 +211,7 @@ nsXPConnect::ReleaseXPConnectSingleton()
 XPCJSRuntime*
 nsXPConnect::GetRuntimeInstance()
 {
-    nsXPConnect* xpc = GetXPConnect();
-    NS_ASSERTION(xpc, "Must not be called if XPC failed to initialize");
+    nsXPConnect* xpc = XPConnect();
     return xpc->GetRuntime();
 }
 
@@ -723,6 +702,7 @@ DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
                 "Object",
                 "String",
                 "Script",
+                "LazyScript",
                 "IonCode",
                 "Shape",
                 "BaseShape",
@@ -1134,7 +1114,6 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
     JSAutoCompartment ac(lccx.GetJSContext(), aScope);
-    lccx.SetScopeForNewJSObjects(aScope);
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
@@ -1329,9 +1308,8 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         return nullptr;
     }
 
-    nsISupports* supports = nullptr;
-    mozilla::dom::UnwrapDOMObjectToISupports(aJSObj, supports);
-    nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
+    nsCOMPtr<nsISupports> canonical =
+        do_QueryInterface(mozilla::dom::UnwrapDOMObjectToISupports(aJSObj));
     return canonical;
 }
 
@@ -1853,7 +1831,7 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
         return NS_ERROR_FAILURE;
     XPCLazyCallContext lccx(ccx);
 
-    ccx.SetScopeForNewJSObjects(scope);
+    MOZ_ASSERT(js::IsObjectInContextCompartment(scope, ctx));
 
     nsresult rv = NS_OK;
     if (!XPCVariant::VariantDataToJS(lccx, value, &rv, _retval)) {
@@ -2053,7 +2031,7 @@ NS_EXPORT_(void)
 xpc_ActivateDebugMode()
 {
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    nsXPConnect::GetXPConnect()->SetDebugModeWhenPossible(true, true);
+    nsXPConnect::XPConnect()->SetDebugModeWhenPossible(true, true);
     nsXPConnect::CheckForDebugMode(rt->GetJSRuntime());
 }
 
@@ -2078,7 +2056,7 @@ bool
 PushJSContext(JSContext *aCx)
 {
     // JSD mumbo jumbo.
-    nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+    nsXPConnect *xpc = nsXPConnect::XPConnect();
     JSRuntime *rt = XPCJSRuntime::Get()->GetJSRuntime();
     if (xpc::gDebugMode != xpc::gDesiredDebugMode) {
         if (!xpc::gDesiredDebugMode) {
@@ -2253,11 +2231,7 @@ void
 DumpJSHeap(FILE* file)
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Must dump GC heap on main thread.");
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if (!xpc) {
-        NS_ERROR("Failed to get nsXPConnect instance!");
-        return;
-    }
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     js::DumpHeapComplete(xpc->GetRuntime()->GetJSRuntime(), file);
 }
 

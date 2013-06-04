@@ -178,6 +178,10 @@
         <spacer id="requests-menu-spacer-end"
                 class="requests-menu-footer-spacer"
                 flex="100"/>
+        <label id="request-menu-network-summary"
+               class="plain requests-menu-footer-label"
+               flex="1"
+               crop="end"/>
       </hbox>
     </vbox>
 

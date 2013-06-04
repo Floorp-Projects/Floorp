@@ -266,6 +266,8 @@ class BaseShape : public js::gc::Cell
   private:
     Class               *clasp;         /* Class of referring object. */
     HeapPtrObject       parent;         /* Parent of referring object. */
+    HeapPtrObject       metadata;       /* Optional holder of metadata about
+                                         * the referring object. */
     JSCompartment       *compartment_;  /* Compartment shape belongs to. */
     uint32_t            flags;          /* Vector of above flags. */
     uint32_t            slotSpan_;      /* Object slot span for BaseShapes at
@@ -289,18 +291,16 @@ class BaseShape : public js::gc::Cell
     /* For owned BaseShapes, the shape's shape table. */
     ShapeTable       *table_;
 
-#if JS_BITS_PER_WORD == 32
-    void             *padding;
-#endif
-
     BaseShape(const BaseShape &base) MOZ_DELETE;
 
   public:
     void finalize(FreeOp *fop);
 
-    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags);
-    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags,
-                     uint8_t attrs, PropertyOp rawGetter, StrictPropertyOp rawSetter);
+    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, JSObject *metadata,
+                     uint32_t objectFlags);
+    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, JSObject *metadata,
+                     uint32_t objectFlags, uint8_t attrs,
+                     PropertyOp rawGetter, StrictPropertyOp rawSetter);
     inline BaseShape(const StackBaseShape &base);
 
     /* Not defined: BaseShapes must not be stack allocated. */
@@ -317,6 +317,7 @@ class BaseShape : public js::gc::Cell
     inline void setOwned(UnownedBaseShape *unowned);
 
     JSObject *getObjectParent() const { return parent; }
+    JSObject *getObjectMetadata() const { return metadata; }
     uint32_t getObjectFlags() const { return flags & OBJECT_FLAG_MASK; }
 
     bool hasGetterObject() const { return !!(flags & HAS_GETTER_OBJECT); }
@@ -396,6 +397,7 @@ struct StackBaseShape
     uint32_t flags;
     Class *clasp;
     JSObject *parent;
+    JSObject *metadata;
     PropertyOp rawGetter;
     StrictPropertyOp rawSetter;
     JSCompartment *compartment;
@@ -404,15 +406,18 @@ struct StackBaseShape
       : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
         clasp(base->clasp),
         parent(base->parent),
+        metadata(base->metadata),
         rawGetter(NULL),
         rawSetter(NULL),
         compartment(base->compartment())
     {}
 
-    StackBaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags)
+    StackBaseShape(JSCompartment *comp, Class *clasp,
+                   JSObject *parent, JSObject *metadata, uint32_t objectFlags)
       : flags(objectFlags),
         clasp(clasp),
         parent(parent),
+        metadata(metadata),
         rawGetter(NULL),
         rawSetter(NULL),
         compartment(comp)
@@ -591,8 +596,10 @@ class Shape : public js::gc::Cell
 
     Class *getObjectClass() const { return base()->clasp; }
     JSObject *getObjectParent() const { return base()->parent; }
+    JSObject *getObjectMetadata() const { return base()->metadata; }
 
     static Shape *setObjectParent(JSContext *cx, JSObject *obj, TaggedProto proto, Shape *last);
+    static Shape *setObjectMetadata(JSContext *cx, JSObject *metadata, TaggedProto proto, Shape *last);
     static Shape *setObjectFlag(JSContext *cx, BaseShape::Flag flag, TaggedProto proto, Shape *last);
 
     uint32_t getObjectFlags() const { return base()->getObjectFlags(); }
@@ -899,9 +906,9 @@ struct EmptyShape : public js::Shape
      * Lookup an initial shape matching the given parameters, creating an empty
      * shape if none was found.
      */
-    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
+    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSObject *metadata,
                                   JSObject *parent, size_t nfixed, uint32_t objectFlags = 0);
-    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
+    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSObject *metadata,
                                   JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
 
     /*
@@ -936,12 +943,13 @@ struct InitialShapeEntry
         Class *clasp;
         TaggedProto proto;
         JSObject *parent;
+        JSObject *metadata;
         uint32_t nfixed;
         uint32_t baseFlags;
-        Lookup(Class *clasp, TaggedProto proto, JSObject *parent, uint32_t nfixed,
-               uint32_t baseFlags)
-            : clasp(clasp), proto(proto), parent(parent),
-              nfixed(nfixed), baseFlags(baseFlags)
+        Lookup(Class *clasp, TaggedProto proto, JSObject *parent, JSObject *metadata,
+               uint32_t nfixed, uint32_t baseFlags)
+          : clasp(clasp), proto(proto), parent(parent), metadata(metadata),
+            nfixed(nfixed), baseFlags(baseFlags)
         {}
     };
 

@@ -16,6 +16,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
@@ -216,8 +217,9 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         int height = 0;
 
         try {
-            left = (int) (rect.getDouble("x") * zoom - viewportMetrics.viewportRectLeft);
-            top = (int) (rect.getDouble("y") * zoom - viewportMetrics.viewportRectTop);
+            PointF offset = viewportMetrics.getMarginOffset();
+            left = (int) (rect.getDouble("x") * zoom - viewportMetrics.viewportRectLeft + offset.x);
+            top = (int) (rect.getDouble("y") * zoom - viewportMetrics.viewportRectTop + offset.y);
             width = (int) (rect.getDouble("w") * zoom);
             height = (int) (rect.getDouble("h") * zoom);
         } catch (JSONException e) {

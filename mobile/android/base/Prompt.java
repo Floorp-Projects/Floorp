@@ -105,186 +105,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
     }
 
-    private static String formatDateString(String dateFormat, Calendar calendar) {
-        return new SimpleDateFormat(dateFormat).format(calendar.getTime());
-    }
-
-    private class PromptInput {
-        private final JSONObject mJSONInput;
-
-        private final String mLabel;
-        private final String mType;
-        private final String mId;
-        private final String mHint;
-        private final boolean mAutofocus;
-        private final String mValue;
-
-        private View mView;
-
-        public PromptInput(JSONObject aJSONInput) {
-            mJSONInput = aJSONInput;
-            mLabel = getSafeString(aJSONInput, "label");
-            mType = getSafeString(aJSONInput, "type");
-            String id = getSafeString(aJSONInput, "id");
-            mId = TextUtils.isEmpty(id) ? mType : id;
-            mHint = getSafeString(aJSONInput, "hint");
-            mValue = getSafeString(aJSONInput, "value");
-            mAutofocus = getSafeBool(aJSONInput, "autofocus");
-        }
-
-        public View getView() throws UnsupportedOperationException {
-            if (mType.equals("checkbox")) {
-                CheckBox checkbox = new CheckBox(mContext);
-                checkbox.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-                checkbox.setText(mLabel);
-                checkbox.setChecked(getSafeBool(mJSONInput, "checked"));
-                mView = (View)checkbox;
-            } else if (mType.equals("date")) {
-                try {
-                    DateTimePicker input = new DateTimePicker(mContext, "yyyy-MM-dd", mValue,
-                                                              DateTimePicker.PickersState.DATE);
-                    input.toggleCalendar(true);
-                    mView = (View)input;
-                } catch (UnsupportedOperationException ex) {
-                    // We can't use our custom version of the DatePicker widget because the sdk is too old.
-                    // But we can fallback on the native one.
-                    DatePicker input = new DatePicker(mContext);
-                    try {
-                        if (!TextUtils.isEmpty(mValue)) {
-                            GregorianCalendar calendar = new GregorianCalendar();
-                            calendar.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(mValue));
-                            input.updateDate(calendar.get(Calendar.YEAR),
-                                             calendar.get(Calendar.MONTH),
-                                             calendar.get(Calendar.DAY_OF_MONTH));
-                        }
-                    } catch (Exception e) {
-                        Log.e(LOGTAG, "error parsing format string: " + e);
-                    }
-                    mView = (View)input;
-                }
-            } else if (mType.equals("week")) {
-                DateTimePicker input = new DateTimePicker(mContext, "yyyy-'W'ww", mValue,
-                                                          DateTimePicker.PickersState.WEEK);
-                mView = (View)input;
-            } else if (mType.equals("time")) {
-                TimePicker input = new TimePicker(mContext);
-                input.setIs24HourView(DateFormat.is24HourFormat(mContext));
-
-                GregorianCalendar calendar = new GregorianCalendar();
-                if (!TextUtils.isEmpty(mValue)) {
-                    try {
-                        calendar.setTime(new SimpleDateFormat("kk:mm").parse(mValue));
-                    } catch (Exception e) { }
-                }
-                input.setCurrentHour(calendar.get(GregorianCalendar.HOUR_OF_DAY));
-                input.setCurrentMinute(calendar.get(GregorianCalendar.MINUTE));
-                mView = (View)input;
-            } else if (mType.equals("datetime-local") || mType.equals("datetime")) {
-                DateTimePicker input = new DateTimePicker(mContext, "yyyy-MM-dd kk:mm", mValue,
-                                                          DateTimePicker.PickersState.DATETIME);
-                input.toggleCalendar(true);
-                mView = (View)input;
-            } else if (mType.equals("month")) {
-                DateTimePicker input = new DateTimePicker(mContext, "yyyy-MM", mValue,
-                                                          DateTimePicker.PickersState.MONTH);
-                mView = (View)input;
-            } else if (mType.equals("textbox") || mType.equals("password")) {
-                EditText input = new EditText(mContext);
-                int inputtype = InputType.TYPE_CLASS_TEXT;
-                if (mType.equals("password")) {
-                    inputtype |= InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
-                }
-                input.setInputType(inputtype);
-                input.setText(mValue);
-
-                if (!TextUtils.isEmpty(mHint)) {
-                    input.setHint(mHint);
-                }
-
-                if (mAutofocus) {
-                    input.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                        @Override
-                        public void onFocusChange(View v, boolean hasFocus) {
-                            if (hasFocus) {
-                                ((InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(v, 0);
-                            }
-                        }
-                    });
-                    input.requestFocus();
-                }
-
-                mView = (View)input;
-            } else if (mType.equals("menulist")) {
-                Spinner spinner = new Spinner(mContext);
-                try {
-                    String[] listitems = getStringArray(mJSONInput, "values");
-                    if (listitems.length > 0) {
-                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.simple_dropdown_item_1line, listitems);
-                        spinner.setAdapter(adapter);
-                        int selectedIndex = getSafeInt(mJSONInput, "selected");
-                        spinner.setSelection(selectedIndex);
-                    }
-                } catch(Exception ex) { }
-                mView = (View)spinner;
-            } else if (mType.equals("label")) {
-                // not really an input, but a way to add labels and such to the dialog
-                TextView view = new TextView(mContext);
-                view.setText(Html.fromHtml(mLabel));
-                mView = view;
-            }
-            return mView;
-        }
-
-        public String getId() {
-            return mId;
-        }
-
-        public String getValue() {
-            if (mType.equals("checkbox")) {
-                CheckBox checkbox = (CheckBox)mView;
-                return checkbox.isChecked() ? "true" : "false";
-            } else if (mType.equals("textbox") || mType.equals("password")) {
-                EditText edit = (EditText)mView;
-                return edit.getText().toString();
-            } else if (mType.equals("menulist")) {
-                Spinner spinner = (Spinner)mView;
-                return Integer.toString(spinner.getSelectedItemPosition());
-            } else if (mType.equals("time")) {
-                TimePicker tp = (TimePicker)mView;
-                GregorianCalendar calendar =
-                    new GregorianCalendar(0,0,0,tp.getCurrentHour(),tp.getCurrentMinute());
-                return formatDateString("kk:mm",calendar);
-            } else if (mType.equals("label")) {
-                return "";
-            } else if (android.os.Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
-                // We can't use the custom DateTimePicker with a sdk older than 11.
-                // Fallback on the native DatePicker.
-                DatePicker dp = (DatePicker)mView;
-                GregorianCalendar calendar =
-                    new GregorianCalendar(dp.getYear(),dp.getMonth(),dp.getDayOfMonth());
-                return formatDateString("yyyy-MM-dd",calendar);
-            } else {
-                DateTimePicker dp = (DateTimePicker)mView;
-                GregorianCalendar calendar = new GregorianCalendar();
-                calendar.setTimeInMillis(dp.getTimeInMillis());
-                if (mType.equals("date")) {
-                    return formatDateString("yyyy-MM-dd",calendar);
-                } else if (mType.equals("week")) {
-                    return formatDateString("yyyy-'W'ww",calendar);
-                } else if (mType.equals("datetime-local")) {
-                    return formatDateString("yyyy-MM-dd kk:mm",calendar);
-                } else if (mType.equals("datetime")) {
-                    calendar.set(GregorianCalendar.ZONE_OFFSET,0);
-                    calendar.setTimeInMillis(dp.getTimeInMillis());
-                    return formatDateString("yyyy-MM-dd kk:mm",calendar);
-                } else if (mType.equals("month")) {
-                    return formatDateString("yyyy-MM",calendar);
-                }
-            }
-            return "";
-        }
-    }
-
     private View applyInputStyle(View view) {
         view.setPadding(mInputPaddingSize, 0, mInputPaddingSize, 0);
         return view;
@@ -348,7 +168,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         } else if (length == 1) {
             try {
                 ScrollView view = new ScrollView(mContext);
-                view.addView(mInputs[0].getView());
+                view.addView(mInputs[0].getView(mContext));
                 builder.setView(applyInputStyle(view));
             } catch(UnsupportedOperationException ex) {
                 // We cannot display these input widgets with this sdk version,
@@ -363,7 +183,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
                 LinearLayout linearLayout = new LinearLayout(mContext);
                 linearLayout.setOrientation(LinearLayout.VERTICAL);
                 for (int i = 0; i < length; i++) {
-                    View content = mInputs[i].getView();
+                    View content = mInputs[i].getView(mContext);
                     linearLayout.addView(content);
                 }
                 ScrollView view = new ScrollView(mContext);
@@ -486,13 +306,13 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         mInputs = new PromptInput[inputs.length()];
         for (int i = 0; i < mInputs.length; i++) {
             try {
-                mInputs[i] = new PromptInput(inputs.getJSONObject(i));
+                mInputs[i] = PromptInput.getInput(inputs.getJSONObject(i));
             } catch(Exception ex) { }
         }
 
         PromptListItem[] menuitems = getListItemArray(geckoObject, "listitems");
         mSelected = getBooleanArray(geckoObject, "selected");
-        boolean multiple = getSafeBool(geckoObject, "multiple");
+        boolean multiple = geckoObject.optBoolean("multiple");
         show(title, text, menuitems, multiple);
     }
 
@@ -528,7 +348,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
     }
 
-    private String[] getStringArray(JSONObject aObject, String aName) {
+    public static String[] getStringArray(JSONObject aObject, String aName) {
         JSONArray items = getSafeArray(aObject, aName);
         int length = items.length();
         String[] list = new String[length];
@@ -540,7 +360,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         return list;
     }
 
-    private boolean[] getBooleanArray(JSONObject aObject, String aName) {
+    private static boolean[] getBooleanArray(JSONObject aObject, String aName) {
         JSONArray items = new JSONArray();
         try {
             items = aObject.getJSONArray(aName);

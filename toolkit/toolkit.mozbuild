@@ -233,7 +233,6 @@ if CONFIG['ENABLE_MARIONETTE']:
 
 if CONFIG['ENABLE_TESTS']:
     add_tier_dir('platform', [
-        'testing/config',
         'testing/mochitest',
         'testing/xpcshell',
         'testing/tools/screenshot',

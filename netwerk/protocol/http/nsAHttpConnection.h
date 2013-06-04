@@ -47,6 +47,10 @@ public:
     virtual nsresult ResumeSend() = 0;
     virtual nsresult ResumeRecv() = 0;
 
+    // called by a transaction to force a "read from network" iteration
+    // even if not scheduled by socket associated with connection
+    virtual nsresult ForceRecv() = 0;
+
     // After a connection has had ResumeSend() called by a transaction,
     // and it is ready to write to the network it may need to know the
     // transaction that has data to write. This is only an issue for
@@ -174,6 +178,12 @@ public:
         if (!(fwdObject))                  \
             return NS_ERROR_FAILURE;       \
         return (fwdObject)->ResumeRecv();  \
+    }                                      \
+    nsresult ForceRecv()                   \
+    {                                      \
+        if (!(fwdObject))                  \
+            return NS_ERROR_FAILURE;       \
+        return (fwdObject)->ForceRecv();   \
     }                                      \
     nsISocketTransport *Transport()        \
     {                                      \

@@ -257,7 +257,7 @@ public:
    * Declare an offset to use when rendering layers. This will be ignored when
    * rendering to a target instead of the screen.
    */
-  virtual void SetScreenRenderOffset(const gfx::Point& aOffset) = 0;
+  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) = 0;
 
   /**
    * Tell the compositor to actually draw a quad. What to do draw and how it is

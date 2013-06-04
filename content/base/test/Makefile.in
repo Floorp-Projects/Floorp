@@ -236,6 +236,7 @@ MOCHITEST_FILES_A = \
 		test_meta_viewport4.html \
 		test_meta_viewport5.html \
 		test_meta_viewport6.html \
+			viewport_helpers.js \
 		test_mutationobservers.html \
 		mutationobserver_dialog.html \
 		test_bug744830.html \
@@ -629,6 +630,7 @@ MOCHITEST_FILES_C= \
 		test_bug868999.html \
 		test_bug869000.html \
 		test_bug869002.html \
+		test_bug876282.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec

@@ -4,9 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-interface nsIDOMMimeType;
 
-[scriptable, uuid(87b4fcfc-417b-47f6-9c79-dfeb5e5a4840)]
+[scriptable, uuid(00ea1f72-a57a-49bb-ac57-478902d9228b)]
 interface nsIPluginTag : nsISupports
 {
   // enabledState is stored as one of the following as an integer in prefs,
@@ -20,11 +19,17 @@ interface nsIPluginTag : nsISupports
   readonly attribute AUTF8String fullpath;
   readonly attribute AUTF8String version;
   readonly attribute AUTF8String name;
-           attribute boolean  blocklisted;
-  readonly attribute boolean  disabled;
-  readonly attribute boolean  clicktoplay;
+           attribute boolean blocklisted;
+  readonly attribute boolean disabled;
+  readonly attribute boolean clicktoplay;
            attribute unsigned long enabledState;
 
   void getMimeTypes([optional] out unsigned long aCount,
-                    [retval, array, size_is(aCount)] out nsIDOMMimeType aResults);
+                    [retval, array, size_is(aCount)] out wstring aResults);
+  void getMimeDescriptions([optional] out unsigned long aCount,
+                           [retval, array, size_is(aCount)]
+                           out wstring aResults);
+  void getExtensions([optional] out unsigned long aCount,
+                     [retval, array, size_is(aCount)]
+                     out wstring aResults);
 };

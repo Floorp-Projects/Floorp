@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
+Cu.import("resource:///modules/devtools/ProfilerController.jsm");
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
@@ -27,9 +28,11 @@ this.DevTools = function DevTools() {
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
+  this._teardown = this._teardown.bind(this);
 
   EventEmitter.decorate(this);
 
+  Services.obs.addObserver(this._teardown, "devtools-unloaded", false);
   Services.obs.addObserver(this.destroy, "quit-application", false);
 }
 
@@ -272,6 +275,7 @@ DevTools.prototype = {
    */
   destroy: function() {
     Services.obs.removeObserver(this.destroy, "quit-application");
+    Services.obs.removeObserver(this._teardown, "devtools-unloaded");
 
     for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
@@ -420,6 +424,9 @@ let gDevToolsBrowser = {
     let allDefs = gDevTools.getToolDefinitionArray();
     let prevDef;
     for (let def of allDefs) {
+      if (def.id == "options") {
+        continue;
+      }
       if (def === toolDefinition) {
         break;
       }
@@ -622,6 +629,25 @@ let gDevToolsBrowser = {
   },
 
   /**
+   * Connects to the SPS profiler when the developer tools are open.
+   */
+  _connectToProfiler: function DT_connectToProfiler() {
+    for (let win of gDevToolsBrowser._trackedBrowserWindows) {
+      if (devtools.TargetFactory.isKnownTab(win.gBrowser.selectedTab)) {
+        let target = devtools.TargetFactory.forTab(win.gBrowser.selectedTab);
+        if (gDevTools._toolboxes.has(target)) {
+          target.makeRemote().then(() => {
+            let profiler = new ProfilerController(target);
+            profiler.connect();
+          }).then(null, Cu.reportError);
+
+          return;
+        }
+      }
+    }
+  },
+
+  /**
    * Remove the menuitem for a tool to all open browser windows.
    *
    * @param {string} toolId
@@ -694,6 +720,7 @@ let gDevToolsBrowser = {
    * All browser windows have been closed, tidy up remaining objects.
    */
   destroy: function() {
+    gDevTools.off("toolbox-ready", gDevToolsBrowser._connectToProfiler);
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
   },
 }
@@ -712,9 +739,10 @@ gDevTools.on("tool-unregistered", function(ev, toolId) {
 });
 
 gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);
+gDevTools.on("toolbox-ready", gDevToolsBrowser._connectToProfiler);
 gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
 
 // Load the browser devtools main module as the loader's main module.
-devtools.main("devtools/main");
+devtools.main("main");

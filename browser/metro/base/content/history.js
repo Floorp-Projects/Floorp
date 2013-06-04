@@ -7,7 +7,7 @@
 function HistoryView(aSet, aLimit, aFilterUnpinned) {
   this._set = aSet;
   this._set.controller = this;
-  this._inBatch = false;
+  this._inBatch = 0;
 
   this._limit = aLimit;
   this._filterUnpinned = aFilterUnpinned;
@@ -30,6 +30,7 @@ HistoryView.prototype = {
   },
 
   populateGrid: function populateGrid(aRefresh) {
+    this._inBatch++; // always batch up grid updates to avoid redundant arrangeItems calls
     let query = this._navHistoryService.getNewQuery();
     let options = this._navHistoryService.getNewQueryOptions();
     options.excludeQueries = true;
@@ -83,6 +84,9 @@ HistoryView.prototype = {
     }
 
     rootNode.containerOpen = false;
+    this._set.arrangeItems();
+    if (this._inBatch > 0)
+      this._inBatch--;
   },
 
   destruct: function destruct() {
@@ -113,7 +117,9 @@ HistoryView.prototype = {
   removeHistory: function (aUri) {
     let items = this._set.getItemsByUrl(aUri);
     for (let item of items)
-      this._set.removeItem(item, this._inBatch);
+      this._set.removeItem(item, true);
+    if (!this._inBatch)
+      this._set.arrangeItems();
   },
 
   doActionOnSelectedTiles: function bv_doActionOnSelectedTiles(aActionName, aEvent) {
@@ -207,12 +213,15 @@ HistoryView.prototype = {
 
   onBeginUpdateBatch: function() {
     // Avoid heavy grid redraws while a batch is in process
-    this._inBatch = true;
+    this._inBatch++;
   },
 
   onEndUpdateBatch: function() {
-    this._inBatch = false;
     this.populateGrid(true);
+    if (this._inBatch > 0) {
+      this._inBatch--;
+      this._set.arrangeItems();
+    }
   },
 
   onVisit: function(aURI, aVisitID, aTime, aSessionID,

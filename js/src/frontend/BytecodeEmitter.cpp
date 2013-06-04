@@ -92,7 +92,7 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
                                  Parser<FullParseHandler> *parser, SharedContext *sc,
                                  HandleScript script, bool insideEval, HandleScript evalCaller,
-                                 bool hasGlobalScope, uint32_t lineNum, bool selfHostingMode)
+                                 bool hasGlobalScope, uint32_t lineNum, EmitterMode emitterMode)
   : sc(sc),
     parent(parent),
     script(sc->context, script),
@@ -117,7 +117,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     emittingRunOnceLambda(false),
     insideEval(insideEval),
     hasGlobalScope(hasGlobalScope),
-    selfHostingMode(selfHostingMode)
+    emitterMode(emitterMode)
 {
     JS_ASSERT_IF(evalCaller, insideEval);
 }
@@ -828,23 +828,24 @@ ClonedBlockDepth(BytecodeEmitter *bce)
     return clonedBlockDepth;
 }
 
-static uint16_t
-AliasedNameToSlot(HandleScript script, PropertyName *name)
+static bool
+LookupAliasedName(HandleScript script, PropertyName *name, uint16_t *pslot)
 {
     /*
      * Beware: BindingIter may contain more than one Binding for a given name
      * (in the case of |function f(x,x) {}|) but only one will be aliased.
      */
     unsigned slot = CallObject::RESERVED_SLOTS;
-    for (BindingIter bi(script); ; bi++) {
+    for (BindingIter bi(script); !bi.done(); bi++) {
         if (bi->aliased()) {
-            if (bi->name() == name)
-                return slot;
+            if (bi->name() == name) {
+                *pslot = slot;
+                return true;
+            }
             slot++;
         }
     }
-
-    return 0;
+    return false;
 }
 
 static bool
@@ -876,13 +877,13 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
     ScopeCoordinate sc;
     if (IsArgOp(pn->getOp())) {
         sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
-        sc.slot = AliasedNameToSlot(bceOfDef->script, pn->name());
+        JS_ALWAYS_TRUE(LookupAliasedName(bceOfDef->script, pn->name(), &sc.slot));
     } else {
         JS_ASSERT(IsLocalOp(pn->getOp()) || pn->isKind(PNK_FUNCTION));
         unsigned local = pn->pn_cookie.slot();
         if (local < bceOfDef->script->bindings.numVars()) {
             sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
-            sc.slot = AliasedNameToSlot(bceOfDef->script, pn->name());
+            JS_ALWAYS_TRUE(LookupAliasedName(bceOfDef->script, pn->name(), &sc.slot));
         } else {
             unsigned depth = local - bceOfDef->script->bindings.numVars();
             StaticBlockObject *b = bceOfDef->blockChain;
@@ -903,8 +904,16 @@ static bool
 EmitVarOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(pn->isKind(PNK_FUNCTION) || pn->isKind(PNK_NAME));
-    JS_ASSERT_IF(pn->isKind(PNK_NAME), IsArgOp(op) || IsLocalOp(op));
     JS_ASSERT(!pn->pn_cookie.isFree());
+
+    if (IsAliasedVarOp(op)) {
+        ScopeCoordinate sc;
+        sc.hops = pn->pn_cookie.level();
+        sc.slot = pn->pn_cookie.slot();
+        return EmitAliasedVarOp(cx, op, sc, bce);
+    }
+
+    JS_ASSERT_IF(pn->isKind(PNK_NAME), IsArgOp(op) || IsLocalOp(op));
 
     if (!bce->isAliasedName(pn)) {
         JS_ASSERT(pn->isUsed() || pn->isDefn());
@@ -936,14 +945,24 @@ static bool
 EmitVarIncDec(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
 {
     JSOp op = pn->pn_kid->getOp();
-    JS_ASSERT(IsLocalOp(op) || IsArgOp(op));
+    JS_ASSERT(IsArgOp(op) || IsLocalOp(op) || IsAliasedVarOp(op));
     JS_ASSERT(pn->pn_kid->isKind(PNK_NAME));
     JS_ASSERT(!pn->pn_kid->pn_cookie.isFree());
 
     bool post;
     JSOp binop = GetIncDecInfo(pn->getKind(), &post);
-    JSOp getOp = IsLocalOp(op) ? JSOP_GETLOCAL : JSOP_GETARG;
-    JSOp setOp = IsLocalOp(op) ? JSOP_SETLOCAL : JSOP_SETARG;
+
+    JSOp getOp, setOp;
+    if (IsLocalOp(op)) {
+        getOp = JSOP_GETLOCAL;
+        setOp = JSOP_SETLOCAL;
+    } else if (IsArgOp(op)) {
+        getOp = JSOP_GETARG;
+        setOp = JSOP_SETARG;
+    } else {
+        getOp = JSOP_GETALIASEDVAR;
+        setOp = JSOP_SETALIASEDVAR;
+    }
 
     if (!EmitVarOp(cx, pn->pn_kid, getOp, bce))              // V
         return false;
@@ -1077,42 +1096,101 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 }
 
 /*
- * Try to convert a *NAME op to a *GNAME op, which optimizes access to
- * globals. Return true if a conversion was made.
- *
- * Don't convert to *GNAME ops within strict-mode eval, since access
- * to a "global" might merely be to a binding local to that eval:
- *
- *   "use strict";
- *   var x = "global";
- *   eval('var x = "eval"; eval("x");'); // 'eval', not 'global'
- *
- * Outside eval code, access to an undeclared global is a strict mode error:
- *
- *   "use strict";
- *   function foo()
- *   {
- *     undeclared = 17; // throws ReferenceError
- *   }
- *   foo();
- *
- * In self-hosting mode, JSOP_*NAME is unconditionally converted to
- * JSOP_*INTRINSIC. This causes lookups to be redirected to the special
- * intrinsics holder in the global object, into which any missing values are
- * cloned lazily upon first access.
+ * Try to convert a *NAME op with a free name to a more specialized GNAME,
+ * INTRINSIC or ALIASEDVAR op, which optimize accesses on that name.
+ * Return true if a conversion was made.
  */
 static bool
-TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
+TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
 {
-    if (bce->selfHostingMode) {
-        switch (*op) {
-          case JSOP_NAME:     *op = JSOP_GETINTRINSIC; break;
-          case JSOP_SETNAME:  *op = JSOP_SETINTRINSIC; break;
+    /*
+     * In self-hosting mode, JSOP_*NAME is unconditionally converted to
+     * JSOP_*INTRINSIC. This causes lookups to be redirected to the special
+     * intrinsics holder in the global object, into which any missing values are
+     * cloned lazily upon first access.
+     */
+    if (bce->emitterMode == BytecodeEmitter::SelfHosting) {
+        JSOp op;
+        switch (pn->getOp()) {
+          case JSOP_NAME:     op = JSOP_GETINTRINSIC; break;
+          case JSOP_SETNAME:  op = JSOP_SETINTRINSIC; break;
           /* Other *NAME ops aren't (yet) supported in self-hosted code. */
           default: JS_NOT_REACHED("intrinsic");
         }
+        pn->setOp(op);
         return true;
     }
+
+    /*
+     * When parsing inner functions lazily, parse nodes for outer functions no
+     * longer exist and only the function's scope chain is available for
+     * resolving upvar accesses within the inner function.
+     */
+    if (bce->emitterMode == BytecodeEmitter::LazyFunction) {
+        size_t hops = 0;
+        FunctionBox *funbox = bce->sc->asFunctionBox();
+        if (funbox->hasExtensibleScope())
+            return false;
+        if (funbox->function()->atom() == pn->pn_atom)
+            return false;
+        if (funbox->function()->isHeavyweight()) {
+            hops++;
+            if (funbox->function()->isNamedLambda())
+                hops++;
+        }
+        if (bce->script->directlyInsideEval)
+            return false;
+        RootedObject outerScope(bce->sc->context, bce->script->enclosingStaticScope());
+        for (StaticScopeIter ssi(bce->sc->context, outerScope); !ssi.done(); ssi++) {
+            if (ssi.type() != StaticScopeIter::FUNCTION) {
+                if (ssi.hasDynamicScopeObject())
+                    hops++;
+                continue;
+            }
+            RootedScript script(bce->sc->context, ssi.funScript());
+            if (script->function()->atom() == pn->pn_atom)
+                return false;
+            if (ssi.hasDynamicScopeObject()) {
+                uint16_t slot;
+                if (LookupAliasedName(script, pn->pn_atom->asPropertyName(), &slot)) {
+                    JSOp op;
+                    switch (pn->getOp()) {
+                      case JSOP_NAME:     op = JSOP_GETALIASEDVAR; break;
+                      case JSOP_SETNAME:  op = JSOP_SETALIASEDVAR; break;
+                      default: return false;
+                    }
+                    pn->setOp(op);
+                    JS_ALWAYS_TRUE(pn->pn_cookie.set(bce->sc->context, hops, slot));
+                    return true;
+                }
+                hops++;
+            }
+
+            if (script->funHasExtensibleScope || script->directlyInsideEval)
+                return false;
+        }
+    }
+
+    /*
+     * Try to convert free names in global scope to GNAME opcodes.
+     *
+     * This conversion is not made if we are in strict mode. In eval code nested
+     * within (strict mode) eval code, access to an undeclared "global" might
+     * merely be to a binding local to that outer eval:
+     *
+     *   "use strict";
+     *   var x = "global";
+     *   eval('var x = "eval"; eval("x");'); // 'eval', not 'global'
+     *
+     * Outside eval code, access to an undeclared global is a strict mode error:
+     *
+     *   "use strict";
+     *   function foo()
+     *   {
+     *     undeclared = 17; // throws ReferenceError
+     *   }
+     *   foo();
+     */
     if (bce->script->compileAndGo &&
         bce->hasGlobalScope &&
         !(bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->mightAliasLocals()) &&
@@ -1121,16 +1199,19 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
     {
         // If you change anything here, you might also need to change
         // js::ReportIfUndeclaredVarAssignment.
-        switch (*op) {
-          case JSOP_NAME:     *op = JSOP_GETGNAME; break;
-          case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
+        JSOp op;
+        switch (pn->getOp()) {
+          case JSOP_NAME:     op = JSOP_GETGNAME; break;
+          case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
           case JSOP_SETCONST:
             /* Not supported. */
             return false;
           default: JS_NOT_REACHED("gname");
         }
+        pn->setOp(op);
         return true;
     }
+
     return false;
 }
 
@@ -1225,8 +1306,7 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * If this is an eval in the global scope, then unbound variables
              * must be globals, so try to use GNAME ops.
              */
-            if (!caller->functionOrCallerFunction() && TryConvertToGname(bce, pn, &op)) {
-                pn->setOp(op);
+            if (!caller->functionOrCallerFunction() && TryConvertFreeName(bce, pn)) {
                 pn->pn_dflags |= PND_BOUND;
                 return true;
             }
@@ -1239,12 +1319,10 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
 
         /* Optimize accesses to undeclared globals. */
-        if (!TryConvertToGname(bce, pn, &op))
+        if (!TryConvertFreeName(bce, pn))
             return true;
 
-        pn->setOp(op);
         pn->pn_dflags |= PND_BOUND;
-
         return true;
     }
 
@@ -1394,7 +1472,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!BindNameToSlotHelper(cx, bce, pn))
         return false;
 
-    if (bce->selfHostingMode && !pn->isBound()) {
+    if (bce->emitterMode == BytecodeEmitter::SelfHosting && !pn->isBound()) {
         bce->reportError(pn, JSMSG_SELFHOSTED_UNBOUND_NAME);
         return false;
     }
@@ -1720,6 +1798,9 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
             break;
           case JSOP_GETLOCAL:
             op = JSOP_CALLLOCAL;
+            break;
+          case JSOP_GETALIASEDVAR:
+            op = JSOP_CALLALIASEDVAR;
             break;
           default:
             JS_ASSERT(op == JSOP_CALLEE);
@@ -2459,7 +2540,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         if (bce->script->varIsAliased(varIndex)) {
             ScopeCoordinate sc;
             sc.hops = 0;
-            sc.slot = AliasedNameToSlot(bce->script, cx->names().arguments);
+            JS_ALWAYS_TRUE(LookupAliasedName(bce->script, cx->names().arguments, &sc.slot));
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
@@ -2474,6 +2555,22 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
     if (funbox->isGenerator()) {
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_GENERATOR) < 0)
+            return false;
+        bce->switchToMain();
+    }
+
+    /*
+     * Emit a prologue for run-once scripts which will deoptimize JIT code if
+     * the script ends up running multiple times via foo.caller related
+     * shenanigans.
+     */
+    bool runOnce = bce->parent &&
+        bce->parent->emittingRunOnceLambda &&
+        !funbox->argumentsHasLocalBinding() &&
+        !funbox->isGenerator();
+    if (runOnce) {
+        bce->switchToProlog();
+        if (!Emit1(cx, bce, JSOP_RUNONCE) < 0)
             return false;
         bce->switchToMain();
     }
@@ -2495,31 +2592,15 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
      * If this function is only expected to run once, mark the script so that
      * initializers created within it may be given more precise types.
      */
-    if (bce->parent && bce->parent->emittingRunOnceLambda)
+    if (runOnce) {
         bce->script->treatAsRunOnce = true;
-
-    /*
-     * Mark as singletons any function which will only be executed once, or
-     * which is inner to a lambda we only expect to run once. In the latter
-     * case, if the lambda runs multiple times then CloneFunctionObject will
-     * make a deep clone of its contents.
-     */
-    bool singleton =
-        cx->typeInferenceEnabled() &&
-        bce->script->compileAndGo &&
-        bce->parent &&
-        (bce->parent->checkSingletonContext() ||
-         (!bce->parent->isInLoop() &&
-          bce->parent->parent &&
-          bce->parent->parent->emittingRunOnceLambda));
+        JS_ASSERT(!bce->script->hasRunOnce);
+    }
 
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
     RootedFunction fun(cx, bce->script->function());
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!fun->hasScript());
     fun->setScript(bce->script);
-    if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
-        return false;
 
     bce->tellDebuggerAboutCompiledScript(cx);
 
@@ -2694,6 +2775,24 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
           case JSOP_SETLOCAL:
           case JSOP_SETARG:
             if (!EmitVarOp(cx, pn, pn->getOp(), bce))
+                return false;
+            if (Emit1(cx, bce, JSOP_POP) < 0)
+                return false;
+            break;
+
+          case JSOP_CALL:
+          case JSOP_EVAL:
+          case JSOP_FUNCALL:
+          case JSOP_FUNAPPLY:
+            JS_ASSERT(pn->pn_xflags & PNX_SETCALL);
+            if (!EmitTree(cx, bce, pn))
+                return false;
+
+            /*
+             * We just emitted JSOP_SETCALL which will always throw.
+             * Pop the call return value and the RHS.
+             */
+            if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
@@ -3217,10 +3316,11 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         break;
 #endif
       case PNK_CALL:
+        JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
         if (!EmitTree(cx, bce, lhs))
             return false;
-        JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
-        offset += 2;
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
         break;
       default:
         JS_ASSERT(0);
@@ -3256,7 +3356,13 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
                 if (!EmitAtomOp(cx, lhs, JSOP_GETINTRINSIC, bce))
                     return false;
             } else {
-                JSOp op = lhs->isOp(JSOP_SETARG) ? JSOP_GETARG : JSOP_GETLOCAL;
+                JSOp op;
+                switch (lhs->getOp()) {
+                  case JSOP_SETARG: op = JSOP_GETARG; break;
+                  case JSOP_SETLOCAL: op = JSOP_GETLOCAL; break;
+                  case JSOP_SETALIASEDVAR: op = JSOP_GETALIASEDVAR; break;
+                  default: JS_NOT_REACHED("Bad op");
+                }
                 if (!EmitVarOp(cx, lhs, op, bce))
                     return false;
             }
@@ -3270,10 +3376,19 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             break;
           }
           case PNK_ELEM:
-          case PNK_CALL:
             if (Emit1(cx, bce, JSOP_DUP2) < 0)
                 return false;
             if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
+                return false;
+            break;
+          case PNK_CALL:
+            /*
+             * We just emitted a JSOP_SETCALL (which will always throw) and
+             * popped the call's return value. Push a random value to make sure
+             * the stack depth is correct.
+             */
+            JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
+            if (Emit1(cx, bce, JSOP_NULL) < 0)
                 return false;
             break;
           default:;
@@ -3320,7 +3435,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             }
             break;
         }
-        if (lhs->isOp(JSOP_SETARG) || lhs->isOp(JSOP_SETLOCAL)) {
+        if (lhs->isOp(JSOP_SETARG) || lhs->isOp(JSOP_SETLOCAL) || lhs->isOp(JSOP_SETALIASEDVAR)) {
             if (!EmitVarOp(cx, lhs, lhs->getOp(), bce))
                 return false;
         } else {
@@ -3332,8 +3447,11 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         if (!EmitIndexOp(cx, lhs->getOp(), atomIndex, bce))
             return false;
         break;
-      case PNK_ELEM:
       case PNK_CALL:
+        /* Do nothing. The JSOP_SETCALL we emitted will always throw. */
+        JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
+        break;
+      case PNK_ELEM:
         if (Emit1(cx, bce, JSOP_SETELEM) < 0)
             return false;
         break;
@@ -4333,20 +4451,49 @@ EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 static JS_NEVER_INLINE bool
 EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    RootedFunction fun(cx, pn->pn_funbox->function());
+    FunctionBox *funbox = pn->pn_funbox;
+    RootedFunction fun(cx, funbox->function());
     if (fun->isNative()) {
         JS_ASSERT(IsAsmJSModuleNative(fun->native()));
         return true;
     }
-    if (fun->hasScript()) {
+    JS_ASSERT_IF(fun->isInterpretedLazy(), fun->lazyScript());
+
+    /*
+     * Set the EMITTEDFUNCTION flag in function definitions once they have been
+     * emitted. Function definitions that need hoisting to the top of the
+     * function will be seen by EmitFunc in two places.
+     */
+    if (pn->pn_dflags & PND_EMITTEDFUNCTION) {
+        JS_ASSERT_IF(fun->hasScript(), fun->nonLazyScript());
         JS_ASSERT(pn->functionIsHoisted());
         JS_ASSERT(bce->sc->isFunctionBox());
         return true;
     }
 
-    {
+    pn->pn_dflags |= PND_EMITTEDFUNCTION;
+
+    /*
+     * Mark as singletons any function which will only be executed once, or
+     * which is inner to a lambda we only expect to run once. In the latter
+     * case, if the lambda runs multiple times then CloneFunctionObject will
+     * make a deep clone of its contents.
+     */
+    bool singleton =
+        cx->typeInferenceEnabled() &&
+        bce->script->compileAndGo &&
+        (bce->checkSingletonContext() ||
+         (!bce->isInLoop() &&
+          bce->parent &&
+          bce->parent->emittingRunOnceLambda));
+    if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
+        return false;
+
+    if (fun->isInterpretedLazy()) {
+        if (!fun->lazyScript()->parent())
+            fun->lazyScript()->initParent(bce->script);
+    } else {
         SharedContext *outersc = bce->sc;
-        FunctionBox *funbox = pn->pn_funbox;
 
         if (outersc->isFunctionBox() && outersc->asFunctionBox()->mightAliasLocals())
             funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
@@ -4402,7 +4549,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
             BytecodeEmitter bce2(bce, bce->parser, funbox, script, bce->insideEval,
                                  bce->evalCaller, bce->hasGlobalScope, lineNum,
-                                 bce->selfHostingMode);
+                                 bce->emitterMode);
             if (!bce2.init())
                 return false;
 
@@ -4841,7 +4988,8 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ParseNode *pn2 = pn->pn_head;
     switch (pn2->getKind()) {
       case PNK_NAME:
-        if (bce->selfHostingMode && pn2->name() == cx->names().callFunction)
+        if (bce->emitterMode == BytecodeEmitter::SelfHosting &&
+            pn2->name() == cx->names().callFunction)
         {
             /*
              * Special-casing of callFunction to emit bytecode that directly
@@ -5050,9 +5198,8 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         break;
       case PNK_CALL:
+        JS_ASSERT(pn2->pn_xflags & PNX_SETCALL);
         if (!EmitTree(cx, bce, pn2))
-            return false;
-        if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
         break;
       default:
@@ -5065,6 +5212,7 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         switch (op) {
           case JSOP_SETLOCAL:
           case JSOP_SETARG:
+          case JSOP_SETALIASEDVAR:
           case JSOP_SETNAME:
           case JSOP_SETGNAME:
             maySet = true;
@@ -5252,15 +5400,22 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
 
         JSOp op = pn2->getOp();
-        if (op == JSOP_GETTER || op == JSOP_SETTER) {
+        JS_ASSERT(op == JSOP_INITPROP ||
+                  op == JSOP_INITPROP_GETTER ||
+                  op == JSOP_INITPROP_SETTER);
+
+        if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
             obj = NULL;
-            if (Emit1(cx, bce, op) < 0)
-                return false;
-        }
 
         if (pn3->isKind(PNK_NUMBER)) {
             obj = NULL;
-            if (Emit1(cx, bce, JSOP_INITELEM) < 0)
+            switch (op) {
+              case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
+              case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
+              case JSOP_INITPROP_SETTER: op = JSOP_INITELEM_SETTER; break;
+              default: JS_NOT_REACHED("Invalid op");
+            }
+            if (Emit1(cx, bce, op) < 0)
                 return false;
         } else {
             JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
@@ -5274,7 +5429,6 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              */
             if (pn3->pn_atom == cx->names().proto)
                 obj = NULL;
-            op = JSOP_INITPROP;
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
@@ -5440,6 +5594,9 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
             return false;
         if (Emit1(cx, bce, JSOP_STRICTEQ) < 0)
+            return false;
+        // Emit source note to enable ion compilation.
+        if (NewSrcNote(cx, bce, SRC_IF) < 0)
             return false;
         ptrdiff_t jump = EmitJump(cx, bce, JSOP_IFEQ, 0);
         if (jump < 0)

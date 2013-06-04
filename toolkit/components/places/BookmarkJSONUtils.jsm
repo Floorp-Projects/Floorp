@@ -528,8 +528,8 @@ BookmarkExporter.prototype = {
                                              false).root;
 
     // Serialize to JSON and write to stream.
-    BookmarkNode.serializeAsJSONToOutputStream(root, streamProxy, false, false,
-                                               excludeItems);
+    yield BookmarkNode.serializeAsJSONToOutputStream(root, streamProxy, false, false,
+                                                     excludeItems);
     root.containerOpen = false;
   }
 }
@@ -552,75 +552,80 @@ let BookmarkNode = {
    *          Converts folder shortcuts into actual folders.
    * @param   aExcludeItems
    *          An array of item ids that should not be written to the backup.
+   * @returns Task promise
    */
   serializeAsJSONToOutputStream: function BN_serializeAsJSONToOutputStream(
     aNode, aStream, aIsUICommand, aResolveShortcuts, aExcludeItems) {
 
-    // Serialize to stream
-    let array = [];
-    if (this._appendConvertedNode(aNode, null, array, aIsUICommand,
-                                  aResolveShortcuts, aExcludeItems)) {
-      let json = JSON.stringify(array[0]);
-      aStream.write(json, json.length);
-    } else {
-      throw Cr.NS_ERROR_UNEXPECTED;
-    }
+    return Task.spawn(function() {
+      // Serialize to stream
+      let array = [];
+      if (yield this._appendConvertedNode(aNode, null, array, aIsUICommand,
+                                          aResolveShortcuts, aExcludeItems)) {
+        let json = JSON.stringify(array[0]);
+        aStream.write(json, json.length);
+      } else {
+        throw Cr.NS_ERROR_UNEXPECTED;
+      }
+    }.bind(this));                                  
   },
 
   _appendConvertedNode: function BN__appendConvertedNode(
     bNode, aIndex, aArray, aIsUICommand, aResolveShortcuts, aExcludeItems) {
-    let node = {};
+    return Task.spawn(function() {
+      let node = {};
 
-    // Set index in order received
-    // XXX handy shortcut, but are there cases where we don't want
-    // to export using the sorting provided by the query?
-    if (aIndex)
-      node.index = aIndex;
+      // Set index in order received
+      // XXX handy shortcut, but are there cases where we don't want
+      // to export using the sorting provided by the query?
+      if (aIndex)
+        node.index = aIndex;
 
-    this._addGenericProperties(bNode, node, aResolveShortcuts);
+      this._addGenericProperties(bNode, node, aResolveShortcuts);
 
-    let parent = bNode.parent;
-    let grandParent = parent ? parent.parent : null;
+      let parent = bNode.parent;
+      let grandParent = parent ? parent.parent : null;
 
-    if (PlacesUtils.nodeIsURI(bNode)) {
-      // Tag root accept only folder nodes
-      if (parent && parent.itemId == PlacesUtils.tagsFolderId)
-        return false;
+      if (PlacesUtils.nodeIsURI(bNode)) {
+        // Tag root accept only folder nodes
+        if (parent && parent.itemId == PlacesUtils.tagsFolderId)
+          throw new Task.Result(false);
 
-      // Check for url validity, since we can't halt while writing a backup.
-      // This will throw if we try to serialize an invalid url and it does
-      // not make sense saving a wrong or corrupt uri node.
-      try {
-        NetUtil.newURI(bNode.uri);
-      } catch (ex) {
-        return false;
+        // Check for url validity, since we can't halt while writing a backup.
+        // This will throw if we try to serialize an invalid url and it does
+        // not make sense saving a wrong or corrupt uri node.
+        try {
+          NetUtil.newURI(bNode.uri);
+        } catch (ex) {
+          throw new Task.Result(false);
+        }
+
+        yield this._addURIProperties(bNode, node, aIsUICommand);
+      } else if (PlacesUtils.nodeIsContainer(bNode)) {
+        // Tag containers accept only uri nodes
+        if (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId)
+          throw new Task.Result(false);
+
+        this._addContainerProperties(bNode, node, aIsUICommand,
+                                     aResolveShortcuts);
+      } else if (PlacesUtils.nodeIsSeparator(bNode)) {
+        // Tag root accept only folder nodes
+        // Tag containers accept only uri nodes
+        if ((parent && parent.itemId == PlacesUtils.tagsFolderId) ||
+            (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId))
+          throw new Task.Result(false);
+
+        this._addSeparatorProperties(bNode, node);
       }
 
-      this._addURIProperties(bNode, node, aIsUICommand);
-    } else if (PlacesUtils.nodeIsContainer(bNode)) {
-      // Tag containers accept only uri nodes
-      if (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId)
-        return false;
+      if (!node.feedURI && node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
+        throw new Task.Result(yield this._appendConvertedComplexNode(node, bNode, aArray, aIsUICommand,
+                                                                     aResolveShortcuts, aExcludeItems));
+      }
 
-      this._addContainerProperties(bNode, node, aIsUICommand,
-                                   aResolveShortcuts);
-    } else if (PlacesUtils.nodeIsSeparator(bNode)) {
-      // Tag root accept only folder nodes
-      // Tag containers accept only uri nodes
-      if ((parent && parent.itemId == PlacesUtils.tagsFolderId) ||
-          (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId))
-        return false;
-
-      this._addSeparatorProperties(bNode, node);
-    }
-
-    if (!node.feedURI && node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
-      return this._appendConvertedComplexNode(node, bNode, aArray, aIsUICommand,
-                                              aResolveShortcuts, aExcludeItems);
-    }
-
-    aArray.push(node);
-    return true;
+      aArray.push(node);
+      throw new Task.Result(true);
+    }.bind(this));                                   
   },
 
   _addGenericProperties: function BN__addGenericProperties(
@@ -664,24 +669,26 @@ let BookmarkNode = {
 
   _addURIProperties: function BN__addURIProperties(
     aPlacesNode, aJSNode, aIsUICommand) {
-    aJSNode.type = PlacesUtils.TYPE_X_MOZ_PLACE;
-    aJSNode.uri = aPlacesNode.uri;
-    if (aJSNode.id && aJSNode.id != -1) {
-      // Harvest bookmark-specific properties
-      let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(aJSNode.id);
-      if (keyword)
-        aJSNode.keyword = keyword;
-    }
+    return Task.spawn(function() {
+      aJSNode.type = PlacesUtils.TYPE_X_MOZ_PLACE;
+      aJSNode.uri = aPlacesNode.uri;
+      if (aJSNode.id && aJSNode.id != -1) {
+        // Harvest bookmark-specific properties
+        let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(aJSNode.id);
+        if (keyword)
+          aJSNode.keyword = keyword;
+      }
 
-    let tags = aIsUICommand ? aPlacesNode.tags : null;
-    if (tags)
-      aJSNode.tags = tags;
+      let tags = aIsUICommand ? aPlacesNode.tags : null;
+      if (tags)
+        aJSNode.tags = tags;
 
-    // Last character-set
-    let uri = NetUtil.newURI(aPlacesNode.uri);
-    let lastCharset = PlacesUtils.history.getCharsetForURI(uri);
-    if (lastCharset)
-      aJSNode.charset = lastCharset;
+      // Last character-set
+      let uri = NetUtil.newURI(aPlacesNode.uri);
+      let lastCharset = yield PlacesUtils.getCharsetForURI(uri)
+      if (lastCharset)
+        aJSNode.charset = lastCharset;
+    });
   },
 
   _addSeparatorProperties: function BN__addSeparatorProperties(
@@ -727,32 +734,34 @@ let BookmarkNode = {
   _appendConvertedComplexNode: function BN__appendConvertedComplexNode(
     aNode, aSourceNode, aArray, aIsUICommand, aResolveShortcuts,
     aExcludeItems) {
-    let repr = {};
+    return Task.spawn(function() {
+      let repr = {};
 
-    for (let [name, value] in Iterator(aNode))
-      repr[name] = value;
+      for (let [name, value] in Iterator(aNode))
+        repr[name] = value;
 
-    // Write child nodes
-    let children = repr.children = [];
-    if (!aNode.livemark) {
-      PlacesUtils.asContainer(aSourceNode);
-      let wasOpen = aSourceNode.containerOpen;
-      if (!wasOpen)
-        aSourceNode.containerOpen = true;
-      let cc = aSourceNode.childCount;
-      for (let i = 0; i < cc; ++i) {
-        let childNode = aSourceNode.getChild(i);
-        if (aExcludeItems && aExcludeItems.indexOf(childNode.itemId) != -1)
-          continue;
-        this._appendConvertedNode(aSourceNode.getChild(i), i, children,
-                                  aIsUICommand, aResolveShortcuts,
-                                  aExcludeItems);
+      // Write child nodes
+      let children = repr.children = [];
+      if (!aNode.livemark) {
+        PlacesUtils.asContainer(aSourceNode);
+        let wasOpen = aSourceNode.containerOpen;
+        if (!wasOpen)
+          aSourceNode.containerOpen = true;
+        let cc = aSourceNode.childCount;
+        for (let i = 0; i < cc; ++i) {
+          let childNode = aSourceNode.getChild(i);
+          if (aExcludeItems && aExcludeItems.indexOf(childNode.itemId) != -1)
+            continue;
+          yield this._appendConvertedNode(aSourceNode.getChild(i), i, children,
+                                          aIsUICommand, aResolveShortcuts,
+                                          aExcludeItems);
+        }
+        if (!wasOpen)
+          aSourceNode.containerOpen = false;
       }
-      if (!wasOpen)
-        aSourceNode.containerOpen = false;
-    }
 
-    aArray.push(repr);
-    return true;
+      aArray.push(repr);
+      throw new Task.Result(true);
+    }.bind(this));
   }
 }

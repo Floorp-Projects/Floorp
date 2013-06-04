@@ -132,7 +132,7 @@ nsresult TimeZoneSettingObserver::SetTimeZone(const JS::Value &aValue, JSContext
     ERR("Failed to convert JS value to nsCString");
     return NS_ERROR_FAILURE;
   }
-  nsCString newTimezone = NS_ConvertUTF16toUTF8(valueStr);
+  NS_ConvertUTF16toUTF8 newTimezone(valueStr);
 
   // Set the timezone only when the system timezone is not identical.
   nsCString curTimezone = hal::GetTimezone();
@@ -172,7 +172,7 @@ TimeZoneSettingObserver::Observe(nsISupports *aSubject,
 
   // Parse the JSON value.
   nsDependentString dataStr(aData);
-  JS::Value val;
+  JS::Rooted<JS::Value> val(cx);
   if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
       !val.isObject()) {
     return NS_OK;

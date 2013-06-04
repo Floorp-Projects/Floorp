@@ -50,8 +50,10 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.Window;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AlphaAnimation;
+import android.view.animation.Interpolator;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -160,6 +162,7 @@ public class BrowserToolbar implements TextWatcher,
     private int mFaviconSize;
 
     private PropertyAnimator mVisibilityAnimator;
+    private static final Interpolator sButtonsInterpolator = new AccelerateInterpolator();
 
     private static final int TABS_CONTRACTED = 1;
     private static final int TABS_EXPANDED = 2;
@@ -497,6 +500,10 @@ public class BrowserToolbar implements TextWatcher,
             }
         });
 
+        if (Build.VERSION.SDK_INT >= 16) {
+            mShadow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        }
+
         mHandler = new Handler();
 
         float slideWidth = mActivity.getResources().getDimension(R.dimen.browser_toolbar_lock_width);
@@ -671,10 +678,8 @@ public class BrowserToolbar implements TextWatcher,
                     updateTitle();
                 }
                 break;
-            case RESTORED:
-                updateTabCount(Tabs.getInstance().getDisplayCount());
-                break;
             case SELECTED:
+                updateTabCount(Tabs.getInstance().getDisplayCount());
                 mSwitchingTabs = true;
                 // fall through
             case LOCATION_CHANGE:
@@ -686,7 +691,7 @@ public class BrowserToolbar implements TextWatcher,
                 break;
             case CLOSED:
             case ADDED:
-                updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
+                updateTabCount(Tabs.getInstance().getDisplayCount());
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     updateBackButton(tab.canDoBack());
                     updateForwardButton(tab.canDoForward());
@@ -903,7 +908,14 @@ public class BrowserToolbar implements TextWatcher,
             return;
         }
 
-        mTabsCounter.setCurrentText(String.valueOf(count));
+        // Set TabCounter based on visibility
+        if (isVisible() && ViewHelper.getAlpha(mTabsCounter) != 0) {
+            mTabsCounter.setCountWithAnimation(count);
+        } else {
+            mTabsCounter.setCount(count);
+        }
+
+        // Update A11y information
         mTabs.setContentDescription((count > 1) ?
                                     mActivity.getString(R.string.num_tabs, count) :
                                     mActivity.getString(R.string.one_tab));
@@ -936,19 +948,20 @@ public class BrowserToolbar implements TextWatcher,
         setSiteSecurityVisibility(mShowSiteSecurity && !isLoading);
 
         // Handle the readerMode image and visibility: We show the reader mode button if 1) you can
-        // enter reader mode for current page or 2) if you're already in reader mode and can exit back,
+        // enter reader mode for current page or 2) if you're already in reader mode,
         // in which case we show the reader mode "close" (reader_active) icon.
-        boolean exitableReaderMode = false;
+        boolean inReaderMode = false;
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null)
-            exitableReaderMode = ReaderModeUtils.isAboutReader(tab.getURL()) && tab.canDoBack();
-        mReader.setImageResource(exitableReaderMode ? R.drawable.reader_active : R.drawable.reader);
-        mReader.setVisibility(!isLoading && (mShowReader || exitableReaderMode) ? View.VISIBLE : View.GONE);
+            inReaderMode = ReaderModeUtils.isAboutReader(tab.getURL());
+        mReader.setImageResource(inReaderMode ? R.drawable.reader_active : R.drawable.reader);
+
+        mReader.setVisibility(!isLoading && (mShowReader || inReaderMode) ? View.VISIBLE : View.GONE);
 
         // We want title to fill the whole space available for it when there are icons
         // being shown on the right side of the toolbar as the icons already have some
         // padding in them. This is just to avoid wasting space when icons are shown.
-        mTitle.setPadding(0, 0, (!isLoading && !(mShowReader || exitableReaderMode) ? mTitlePadding : 0), 0);
+        mTitle.setPadding(0, 0, (!isLoading && !(mShowReader || inReaderMode) ? mTitlePadding : 0), 0);
 
         updateFocusOrder();
     }
@@ -1100,8 +1113,23 @@ public class BrowserToolbar implements TextWatcher,
         mLayout.requestFocusFromTouch();
     }
 
-    public void prepareTabsAnimation(boolean tabsAreShown) {
+    public void prepareTabsAnimation(PropertyAnimator animator, boolean tabsAreShown) {
         if (!tabsAreShown) {
+            PropertyAnimator buttonsAnimator =
+                    new PropertyAnimator(animator.getDuration(), sButtonsInterpolator);
+
+            buttonsAnimator.attach(mTabsCounter,
+                                   PropertyAnimator.Property.ALPHA,
+                                   1.0f);
+
+            if (mHasSoftMenuButton && !HardwareUtils.isTablet()) {
+                buttonsAnimator.attach(mMenuIcon,
+                                       PropertyAnimator.Property.ALPHA,
+                                       1.0f);
+            }
+
+            buttonsAnimator.start();
+
             return;
         }
 
@@ -1457,7 +1485,7 @@ public class BrowserToolbar implements TextWatcher,
 
                 ViewGroup.MarginLayoutParams layoutParams =
                     (ViewGroup.MarginLayoutParams)mForward.getLayoutParams();
-                layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? mForward.getWidth() / 2 : 0);
+                layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? width : 0);
                 ViewHelper.setTranslationX(mForward, 0);
 
                 mUrlDisplayContainer.requestLayout();

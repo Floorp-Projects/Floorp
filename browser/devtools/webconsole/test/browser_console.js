@@ -9,6 +9,15 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test()
 {
+  let oldFunction = HUDConsoleUI.toggleBrowserConsole;
+  let functionExecuted = false;
+  HUDConsoleUI.toggleBrowserConsole = () => functionExecuted = true;
+  EventUtils.synthesizeKey("j", { accelKey: true, shiftKey: true }, content);
+
+  ok(functionExecuted,
+     "toggleBrowserConsole() was executed by the Ctrl-Shift-J key shortcut");
+
+  HUDConsoleUI.toggleBrowserConsole = oldFunction;
   HUDConsoleUI.toggleBrowserConsole().then(consoleOpened);
 }
 

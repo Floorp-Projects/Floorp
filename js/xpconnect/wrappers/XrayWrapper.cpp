@@ -872,9 +872,9 @@ WrapURI(JSContext *cx, nsIURI *uri, MutableHandleValue vp)
 {
     RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
     nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, uri, nullptr,
-                                                           &NS_GET_IID(nsIURI), true,
-                                                           vp.address(), nullptr);
+        nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, scope, uri, nullptr,
+                                                    &NS_GET_IID(nsIURI), true,
+                                                    vp.address(), nullptr);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -911,9 +911,9 @@ nodePrincipal_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHa
 
     RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
     nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nullptr,
-                                                           &NS_GET_IID(nsIPrincipal), true,
-                                                           vp.address(), nullptr);
+        nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nullptr,
+                                                    &NS_GET_IID(nsIPrincipal), true,
+                                                    vp.address(), nullptr);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -1210,12 +1210,8 @@ DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
     if (!existingDesc.obj())
         return true;
 
-    RootedObject obj(cx, getTargetObject(wrapper));
-    if (!js::IsProxy(obj))
-        return true;
-
-    *defined = true;
-    return js::GetProxyHandler(obj)->defineProperty(cx, wrapper, id, desc);
+    JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
+    return XrayDefineProperty(cx, wrapper, obj, id, desc, defined);
 }
 
 bool
@@ -1282,8 +1278,8 @@ DOMXrayTraits::construct(JSContext *cx, HandleObject wrapper,
 void
 DOMXrayTraits::preserveWrapper(JSObject *target)
 {
-    nsISupports *identity;
-    if (!mozilla::dom::UnwrapDOMObjectToISupports(target, identity))
+    nsISupports *identity = mozilla::dom::UnwrapDOMObjectToISupports(target);
+    if (!identity)
         return;
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(identity, &cache);
@@ -1889,6 +1885,20 @@ XrayWrapper<Base, Traits>::construct(JSContext *cx, HandleObject wrapper, const 
     return Traits::construct(cx, wrapper, args, Base::singleton);
 }
 
+template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::defaultValue(JSContext *cx, HandleObject wrapper,
+                                        JSType hint, MutableHandleValue vp)
+{
+    // Even if this isn't a security wrapper, Xray semantics dictate that we
+    // run the DefaultValue algorithm directly on the Xray wrapper.
+    //
+    // NB: We don't have to worry about things with special [[DefaultValue]]
+    // behavior like Date because we'll never have an XrayWrapper to them.
+    return js::DefaultValue(cx, wrapper, hint, vp);
+}
+
+
 /*
  * The Permissive / Security variants should be used depending on whether the
  * compartment of the wrapper is guranteed to subsume the compartment of the
@@ -1931,15 +1941,13 @@ do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper)
     if (IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper)) {
         RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
         if (GetXrayType(target) == XrayForDOMObject) {
-            if (!UnwrapDOMObjectToISupports(target, nativeSupports)) {
-                nativeSupports = nullptr;
-            }
+            nativeSupports = UnwrapDOMObjectToISupports(target);
         } else {
             XPCWrappedNative *wn = GetWrappedNative(target);
             nativeSupports = wn->Native();
         }
     } else {
-        nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nsIXPConnect *xpc = nsXPConnect::XPConnect();
         nativeSupports = xpc->GetNativeOfWrapper(cx, wrapper);
     }
 

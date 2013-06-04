@@ -111,7 +111,9 @@ FENNEC_JAVA_FILES = \
   GeckoJavaSampler.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
+  GeckoView.java \
   health/BrowserHealthRecorder.java \
+  health/BrowserHealthReporter.java \
   InputMethods.java \
   JavaAddonManager.java \
   LightweightTheme.java \
@@ -130,6 +132,7 @@ FENNEC_JAVA_FILES = \
   PrivateTab.java \
   ProfileMigrator.java \
   Prompt.java \
+  PromptInput.java \
   PromptService.java \
   Restarter.java \
   SearchEngine.java \
@@ -306,11 +309,16 @@ endif
 MOZ_APP_BUILDID=$(shell cat $(DEPTH)/config/buildid)
 
 ifeq (,$(ANDROID_VERSION_CODE))
+ifeq ($(CPU_ARCH),arm)
 ifeq ($(MIN_CPU_VERSION),7)
 ANDROID_VERSION_CODE=$(shell cat $(DEPTH)/config/buildid | cut -c1-10)
 else
 # decrement the version code by 1 for armv6 builds so armv7 builds will win any compatability ties
 ANDROID_VERSION_CODE=$(shell echo $$((`cat $(DEPTH)/config/buildid | cut -c1-10` - 1)))
+endif
+else #not arm, so x86
+# increment the version code by 1 for x86 builds so they are offered to x86 phones that have arm emulators
+ANDROID_VERSION_CODE=$(shell echo $$((`cat $(DEPTH)/config/buildid | cut -c1-10` + 1)))
 endif
 endif
 

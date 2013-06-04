@@ -1,0 +1,11 @@
+<script>
+o1 = new window.AudioContext();
+o4 = o1.createDelay(0.4468);
+o6 = o1.createPanner();
+o7 = (function() {var buf = o1.createBuffer(1, 1000, o1.sampleRate);for(var j=0; j<1; ++j) {for(var i=0; i<1000; ++i) {buf.getChannelData(j)[i] = Math.sin(i * (-15));}}return buf;})();
+o8 = o1.createBufferSource();
+o8.buffer = o7;
+o8.connect(o6);
+o6.connect(o4)
+o4.delayTime.setValueAtTime(0.6019893103749466289898, 0.26)
+</script>

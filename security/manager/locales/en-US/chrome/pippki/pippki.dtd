@@ -46,10 +46,6 @@
 <!ENTITY downloadCert.viewCert.text "Examine CA certificate">
 <!ENTITY downloadCert.viewPolicy.text "Examine CA policies and procedures">
 
-<!-- Certificate Exists in database -->
-<!ENTITY caCertExists.title "Certificate Exists">
-<!ENTITY caCertExists.message "The Certificate already exists.">
-
 <!-- Strings for the SSL client auth ask dialog -->
 <!ENTITY clientAuthAsk.title "User Identification Request">
 <!ENTITY clientAuthAsk.message1 "This site has requested that you identify yourself with a certificate:">

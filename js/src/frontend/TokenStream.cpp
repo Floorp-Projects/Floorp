@@ -158,6 +158,22 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
     }
 }
 
+JS_ALWAYS_INLINE void
+TokenStream::SourceCoords::fill(const TokenStream::SourceCoords &other)
+{
+    JS_ASSERT(lineStartOffsets_.back() == MAX_PTR);
+    JS_ASSERT(other.lineStartOffsets_.back() == MAX_PTR);
+
+    if (lineStartOffsets_.length() >= other.lineStartOffsets_.length())
+        return;
+
+    uint32_t sentinelIndex = lineStartOffsets_.length() - 1;
+    lineStartOffsets_[sentinelIndex] = other.lineStartOffsets_[sentinelIndex];
+
+    for (size_t i = sentinelIndex + 1; i < other.lineStartOffsets_.length(); i++)
+        (void)lineStartOffsets_.append(other.lineStartOffsets_[i]);
+}
+
 JS_ALWAYS_INLINE uint32_t
 TokenStream::SourceCoords::lineIndexOf(uint32_t offset) const
 {
@@ -251,9 +267,9 @@ TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
     lookahead(),
     lineno(options.lineno),
     flags(),
-    linebase(base),
+    linebase(base - options.column),
     prevLinebase(NULL),
-    userbuf(cx, base, length),
+    userbuf(cx, base - options.column, length + options.column), // See comment below
     filename(options.filename),
     sourceMap(NULL),
     listenerTSData(),
@@ -268,6 +284,12 @@ TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
     linebaseSkip(cx, &linebase),
     prevLinebaseSkip(cx, &prevLinebase)
 {
+    // Column numbers are computed as offsets from the current line's base, so the
+    // initial line's base must be included in the buffer. linebase and userbuf
+    // were adjusted above, and if we are starting tokenization part way through
+    // this line then adjust the next character.
+    userbuf.setAddressOfNextRawChar(base);
+
     if (originPrincipals)
         JS_HoldPrincipals(originPrincipals);
 
@@ -502,6 +524,19 @@ TokenStream::TokenBuf::findEOLMax(const jschar *p, size_t max)
 }
 
 void
+TokenStream::advance(size_t position)
+{
+    const jschar *end = userbuf.base() + position;
+    while (userbuf.addressOfNextRawChar() < end)
+        getChar();
+
+    Token *cur = &tokens[cursor];
+    cur->pos.begin = userbuf.addressOfNextRawChar() - userbuf.base();
+    cur->type = TOK_ERROR;
+    lookahead = 0;
+}
+
+void
 TokenStream::tell(Position *pos)
 {
     pos->buf = userbuf.addressOfNextRawChar();
@@ -528,6 +563,13 @@ TokenStream::seek(const Position &pos)
     tokens[cursor] = pos.currentToken;
     for (unsigned i = 0; i < lookahead; i++)
         tokens[(cursor + 1 + i) & ntokensMask] = pos.lookaheadTokens[i];
+}
+
+void
+TokenStream::seek(const Position &pos, const TokenStream &other)
+{
+    srcCoords.fill(other.srcCoords);
+    seek(pos);
 }
 
 void

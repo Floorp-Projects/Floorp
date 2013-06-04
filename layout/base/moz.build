@@ -42,6 +42,7 @@ EXPORTS += [
     'FrameLayerBuilder.h',
     'FramePropertyTable.h',
     'StackArena.h',
+    'Units.h',
     'nsArenaMemoryStats.h',
     'nsBidi.h',
     'nsBidiPresUtils.h',

@@ -1,6 +1,6 @@
 {
   "name": "spdy",
-  "version": "1.2.0",
+  "version": "1.8.8",
   "description": "Implementation of the SPDY protocol on node.js.",
   "keywords": [
     "spdy"
@@ -17,17 +17,22 @@
   "author": "Fedor Indutny <fedor.indutny@gmail.com>",
   "contributors": [
     "Chris Storm <github@eeecooks.com>",
-    "François de Metz <francois@2metz.fr>"
+    "François de Metz <francois@2metz.fr>",
+    "Ilya Grigorik <ilya@igvita.com>",
+    "Roberto Peon",
+    "Tatsuhiro Tsujikawa",
+    "Jesse Cravens <jesse.cravens@gmail.com>"
   ],
   "dependencies": {},
   "devDependencies": {
-    "mocha": "~ 0.10.1"
+    "mocha": "1.3.x"
   },
   "scripts": {
     "test": "mocha --ui tdd --growl --reporter spec test/unit/*-test.js"
   },
   "engines": [
-    "node ~ 0.7.0"
+    "node >= 0.7.0"
   ],
-  "main": "./lib/spdy"
+  "main": "./lib/spdy",
+  "optionalDependencies": {}
 }

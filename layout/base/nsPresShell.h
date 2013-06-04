@@ -78,11 +78,11 @@ public:
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
   virtual mozilla::Selection* GetCurrentSelection(SelectionType aType) MOZ_OVERRIDE;
 
-  NS_IMETHOD SetDisplaySelection(int16_t aToggle);
-  NS_IMETHOD GetDisplaySelection(int16_t *aToggle);
+  NS_IMETHOD SetDisplaySelection(int16_t aToggle) MOZ_OVERRIDE;
+  NS_IMETHOD GetDisplaySelection(int16_t *aToggle) MOZ_OVERRIDE;
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion,
-                                     int16_t aFlags);
-  NS_IMETHOD RepaintSelection(SelectionType aType);
+                                     int16_t aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD RepaintSelection(SelectionType aType) MOZ_OVERRIDE;
 
   virtual NS_HIDDEN_(void) BeginObservingDocument() MOZ_OVERRIDE;
   virtual NS_HIDDEN_(void) EndObservingDocument() MOZ_OVERRIDE;
@@ -150,7 +150,7 @@ public:
   virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent) MOZ_OVERRIDE;
 
 
-  virtual nsresult ReconstructFrames(void);
+  virtual nsresult ReconstructFrames(void) MOZ_OVERRIDE;
   virtual void Freeze() MOZ_OVERRIDE;
   virtual void Thaw() MOZ_OVERRIDE;
   virtual void FireOrClearDelayedEvents(bool aFireEvents) MOZ_OVERRIDE;
@@ -204,36 +204,36 @@ public:
   // caret handling
   virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() const MOZ_OVERRIDE;
   virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition() MOZ_OVERRIDE;
-  NS_IMETHOD SetCaretEnabled(bool aInEnable);
-  NS_IMETHOD SetCaretReadOnly(bool aReadOnly);
-  NS_IMETHOD GetCaretEnabled(bool *aOutEnabled);
-  NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility);
-  NS_IMETHOD GetCaretVisible(bool *_retval);
+  NS_IMETHOD SetCaretEnabled(bool aInEnable) MOZ_OVERRIDE;
+  NS_IMETHOD SetCaretReadOnly(bool aReadOnly) MOZ_OVERRIDE;
+  NS_IMETHOD GetCaretEnabled(bool *aOutEnabled) MOZ_OVERRIDE;
+  NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility) MOZ_OVERRIDE;
+  NS_IMETHOD GetCaretVisible(bool *_retval) MOZ_OVERRIDE;
   virtual void SetCaret(nsCaret *aNewCaret) MOZ_OVERRIDE;
   virtual void RestoreCaret() MOZ_OVERRIDE;
 
   NS_IMETHOD SetSelectionFlags(int16_t aInEnable) MOZ_OVERRIDE;
-  NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable);
+  NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable) MOZ_OVERRIDE;
 
   // nsISelectionController
 
-  NS_IMETHOD CharacterMove(bool aForward, bool aExtend);
-  NS_IMETHOD CharacterExtendForDelete();
-  NS_IMETHOD CharacterExtendForBackspace();
-  NS_IMETHOD WordMove(bool aForward, bool aExtend);
-  NS_IMETHOD WordExtendForDelete(bool aForward);
-  NS_IMETHOD LineMove(bool aForward, bool aExtend);
-  NS_IMETHOD IntraLineMove(bool aForward, bool aExtend);
-  NS_IMETHOD PageMove(bool aForward, bool aExtend);
-  NS_IMETHOD ScrollPage(bool aForward);
-  NS_IMETHOD ScrollLine(bool aForward);
-  NS_IMETHOD ScrollCharacter(bool aRight);
-  NS_IMETHOD CompleteScroll(bool aForward);
-  NS_IMETHOD CompleteMove(bool aForward, bool aExtend);
-  NS_IMETHOD SelectAll();
-  NS_IMETHOD CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool *_retval);
+  NS_IMETHOD CharacterMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
+  NS_IMETHOD CharacterExtendForDelete() MOZ_OVERRIDE;
+  NS_IMETHOD CharacterExtendForBackspace() MOZ_OVERRIDE;
+  NS_IMETHOD WordMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
+  NS_IMETHOD WordExtendForDelete(bool aForward) MOZ_OVERRIDE;
+  NS_IMETHOD LineMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
+  NS_IMETHOD IntraLineMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
+  NS_IMETHOD PageMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
+  NS_IMETHOD ScrollPage(bool aForward) MOZ_OVERRIDE;
+  NS_IMETHOD ScrollLine(bool aForward) MOZ_OVERRIDE;
+  NS_IMETHOD ScrollCharacter(bool aRight) MOZ_OVERRIDE;
+  NS_IMETHOD CompleteScroll(bool aForward) MOZ_OVERRIDE;
+  NS_IMETHOD CompleteMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
+  NS_IMETHOD SelectAll() MOZ_OVERRIDE;
+  NS_IMETHOD CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool *_retval) MOZ_OVERRIDE;
   virtual nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
-                                          int16_t aEndOffset, bool* aRetval);
+                                          int16_t aEndOffset, bool* aRetval) MOZ_OVERRIDE;
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
@@ -260,7 +260,7 @@ public:
   NS_DECL_NSIOBSERVER
 
 #ifdef MOZ_REFLOW_PERF
-  virtual NS_HIDDEN_(void) DumpReflows();
+  virtual NS_HIDDEN_(void) DumpReflows() MOZ_OVERRIDE;
   virtual NS_HIDDEN_(void) CountReflows(const char * aName, nsIFrame * aFrame) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(void) PaintCount(const char * aName,
                                       nsRenderingContext* aRenderingContext,
@@ -701,6 +701,8 @@ protected:
 
   nscolor GetDefaultBackgroundColorToDraw();
 
+  DOMHighResTimeStamp GetPerformanceNow();
+
   // The callback for the mPaintSuppressionTimer timer.
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
 
@@ -782,6 +784,9 @@ protected:
   // posted messages are processed before other messages when the modal
   // moving/sizing loop is running, see bug 491700 for details.
   nsCOMPtr<nsITimer>        mReflowContinueTimer;
+
+  // The `performance.now()` value when we last started to process reflows.
+  DOMHighResTimeStamp       mLastReflowStart;
 
   // Information needed to properly handle scrolling content into view if the
   // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is

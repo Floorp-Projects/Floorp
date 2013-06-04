@@ -16,7 +16,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIProfileSaveEvent.h"
 
-#include <iostream>
+#include <ostream>
 #include <fstream>
 
 #ifdef XP_WIN

@@ -8,6 +8,7 @@
 #ifndef NS_SMILCSSPROPERTY_H_
 #define NS_SMILCSSPROPERTY_H_
 
+#include "mozilla/Attributes.h"
 #include "nsISMILAttr.h"
 #include "nsIAtom.h"
 #include "nsCSSProperty.h"
@@ -38,10 +39,10 @@ public:
   virtual nsresult ValueFromString(const nsAString& aStr,
                                    const mozilla::dom::SVGAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
-                                   bool& aPreventCachingOfSandwich) const;
-  virtual nsSMILValue GetBaseValue() const;
-  virtual nsresult    SetAnimValue(const nsSMILValue& aValue);
-  virtual void        ClearAnimValue();
+                                   bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
+  virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
+  virtual nsresult    SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+  virtual void        ClearAnimValue() MOZ_OVERRIDE;
 
   /**
    * Utility method - returns true if the given property is supported for

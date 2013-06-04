@@ -18,7 +18,7 @@ ClientTiledThebesLayer::ClientTiledThebesLayer(ClientLayerManager* const aManage
   , mContentClient()
 {
   MOZ_COUNT_CTOR(ClientTiledThebesLayer);
-  mPaintData.mLastScrollOffset = gfx::Point(0, 0);
+  mPaintData.mLastScrollOffset = CSSPoint(0, 0);
   mPaintData.mFirstPaint = true;
 }
 

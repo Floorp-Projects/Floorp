@@ -12,6 +12,10 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
           src="../events.js"></script>
   <script type="application/javascript"
           src="../actions.js"></script>
@@ -49,7 +53,18 @@
           ID: "radio",
           actionName: "select",
           events: CLICK_EVENTS
+        },
+        {
+          ID: "textarea",
+          actionName: "activate",
+          events: FOCUS_EVENT
+        },
+        {
+          ID: "textinput",
+          actionName: "activate",
+          events: FOCUS_EVENT
         }
+
       ];
       document.getElementById("checkbox_mixed").indeterminate = true;
 
@@ -86,5 +101,9 @@
   <fieldset>
     <input id="radio" type="radio">Radio</input>
   </fieldset>
+
+  <textarea id="textarea" placeholder="What's happening?"></textarea>
+
+  <input id="textinput" type="text">
 </body>
 </html>

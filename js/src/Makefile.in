@@ -68,10 +68,7 @@ VPATH		+= \
 ###############################################
 # BEGIN enable non-releasable features
 #
-ifeq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
-DEFINES += -DENABLE_TYPEDARRAY_MOVE
-endif
-ifeq (,$(filter aurora beta release esr,$(MOZ_UPDATE_CHANNEL)))
+ifdef NIGHTLY_BUILD
 DEFINES += -DENABLE_PARALLEL_JS
 endif
 
@@ -155,15 +152,6 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
-endif
-
-# for compiler bug (http://support.microsoft.com/kb/982107) for MSVC x64
-ifdef _MSC_VER
-ifneq (,$(filter 1400 1500,$(_MSC_VER)))
-ifeq ($(OS_TEST),x86_64)
-ASFILES += jswin64.asm
-endif
-endif
 endif
 
 include $(topsrcdir)/config/config.mk

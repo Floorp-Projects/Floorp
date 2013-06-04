@@ -87,7 +87,7 @@ public:
                          nsString& aResult);
                          
   void PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect, uint32_t aFlags);
   
   virtual bool IsEmpty() MOZ_OVERRIDE;
   virtual bool IsSelfEmpty() MOZ_OVERRIDE;

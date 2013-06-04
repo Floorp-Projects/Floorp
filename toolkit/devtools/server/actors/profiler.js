@@ -4,7 +4,12 @@
 
 "use strict";
 
-var connCount = 0;
+var startedProfilers = 0;
+var startTime = 0;
+
+function getCurrentTime() {
+  return (new Date()).getTime() - startTime;
+}
 
 /**
  * Creates a ProfilerActor. ProfilerActor provides remote access to the
@@ -15,7 +20,6 @@ function ProfilerActor(aConnection)
   this._profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
   this._started = false;
   this._observedEvents = [];
-  connCount += 1;
 }
 
 ProfilerActor.prototype = {
@@ -26,29 +30,36 @@ ProfilerActor.prototype = {
       Services.obs.removeObserver(this, event);
     }
 
-    // We stop the profiler only after the last client is
-    // disconnected. Otherwise there's a problem where
+    this.stopProfiler();
+    this._profiler = null;
+  },
+
+  stopProfiler: function() {
+    // We stop the profiler only after the last client has
+    // stopped profiling. Otherwise there's a problem where
     // we stop the profiler as soon as you close the devtools
     // panel in one tab even though there might be other
     // profiler instances running in other tabs.
-
-    connCount -= 1;
-    if (connCount <= 0 && this._profiler && this._started) {
+    if (!this._started) {
+      return;
+    }
+    this._started = false;
+    startedProfilers -= 1;
+    if (startedProfilers <= 0) {
       this._profiler.StopProfiler();
     }
-
-    this._profiler = null;
   },
 
   onStartProfiler: function(aRequest) {
     this._profiler.StartProfiler(aRequest.entries, aRequest.interval,
                            aRequest.features, aRequest.features.length);
     this._started = true;
+    startedProfilers += 1;
+    startTime = (new Date()).getTime();
     return { "msg": "profiler started" }
   },
   onStopProfiler: function(aRequest) {
-    this._profiler.StopProfiler();
-    this._started = false;
+    this.stopProfiler();
     return { "msg": "profiler stopped" }
   },
   onGetProfileStr: function(aRequest) {
@@ -57,11 +68,12 @@ ProfilerActor.prototype = {
   },
   onGetProfile: function(aRequest) {
     var profile = this._profiler.getProfileData();
-    return { "profile": profile }
+    return { "profile": profile, "currentTime": getCurrentTime() }
   },
   onIsActive: function(aRequest) {
     var isActive = this._profiler.IsActive();
-    return { "isActive": isActive }
+    var currentTime = isActive ? getCurrentTime() : null;
+    return { "isActive": isActive, "currentTime": currentTime }
   },
   onGetResponsivenessTimes: function(aRequest) {
     var times = this._profiler.GetResponsivenessTimes({});
@@ -128,11 +140,62 @@ ProfilerActor.prototype = {
     aSubject = (aSubject && aSubject.wrappedJSObject) || aSubject;
     aData    = (aData    && aData.wrappedJSObject)    || aData;
 
-    this.conn.send({ from: this.actorID,
-                     type: "eventNotification",
-                     event: aTopic,
-                     subject: JSON.parse(JSON.stringify(aSubject, cycleBreaker)),
-                     data:    JSON.parse(JSON.stringify(aData,    cycleBreaker)) });
+    let subj = JSON.parse(JSON.stringify(aSubject, cycleBreaker));
+    let data = JSON.parse(JSON.stringify(aData,    cycleBreaker));
+
+    let send = (extra) => {
+      data = data || {};
+
+      if (extra)
+        data.extra = extra;
+
+      this.conn.send({
+        from:    this.actorID,
+        type:    "eventNotification",
+        event:   aTopic,
+        subject: subj,
+        data:    data
+      });
+    }
+
+    if (aTopic !== "console-api-profiler")
+      return void send();
+
+    // If the event was generated from console.profile or
+    // console.profileEnd we need to start the profiler
+    // right away and only then notify our client. Otherwise,
+    // we'll lose precious samples.
+
+    let name = subj.arguments[0];
+
+    if (subj.action === "profile") {
+      let resp = this.onIsActive();
+
+      if (resp.isActive) {
+        return void send({
+          name: name,
+          currentTime: resp.currentTime,
+          action: "profile"
+        });
+      }
+
+      this.onStartProfiler({
+        entries: 1000000,
+        interval: 1,
+        features: ["js"]
+      });
+
+      return void send({ currentTime: 0, action: "profile", name: name });
+    }
+
+    if (subj.action === "profileEnd") {
+      let resp = this.onGetProfile();
+      resp.action = "profileEnd";
+      resp.name = name;
+      send(resp);
+    }
+
+    return undefined; // Otherwise xpcshell tests fail.
   }, "ProfilerActor.prototype.observe"),
 };
 

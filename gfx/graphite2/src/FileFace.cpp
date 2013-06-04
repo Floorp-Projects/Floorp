@@ -78,7 +78,7 @@ const void *FileFace::get_table_fn(const void* appFaceHandle, unsigned int name,
     if (appFaceHandle == 0)     return 0;
     const FileFace & file_face = *static_cast<const FileFace *>(appFaceHandle);
 
-    char *tbl;
+    void *tbl;
     size_t tbl_offset, tbl_len;
     if (!TtfUtil::GetTableInfo(name, file_face._header_tbl, file_face._table_dir, tbl_offset, tbl_len))
         return 0;
@@ -87,7 +87,7 @@ const void *FileFace::get_table_fn(const void* appFaceHandle, unsigned int name,
             || fseek(file_face._file, tbl_offset, SEEK_SET) != 0)
         return 0;
 
-    tbl = gralloc<char>(tbl_len);
+    tbl = malloc(tbl_len);
     if (fread(tbl, 1, tbl_len, file_face._file) != tbl_len)
     {
         free(tbl);

@@ -391,8 +391,8 @@
  *   error to use it, or an array of such objects, as the type of a new
  *   expression (unless placement new is being used). If a member of another
  *   class uses this class, or if another class inherits from this class, then
- *   it is considered to be a stack class as well, although this attribute need
- *   not be provided in such cases.
+ *   it is considered to be a non-heap class as well, although this attribute
+ *   need not be provided in such cases.
  */
 #ifdef MOZ_CLANG_PLUGIN
 # define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))

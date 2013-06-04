@@ -30,7 +30,7 @@
 
 #define GR2_VERSION_MAJOR   1
 #define GR2_VERSION_MINOR   2
-#define GR2_VERSION_BUGFIX  0
+#define GR2_VERSION_BUGFIX  2
 
 #ifdef __cplusplus
 extern "C"

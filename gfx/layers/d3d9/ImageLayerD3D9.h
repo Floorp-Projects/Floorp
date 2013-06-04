@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace layers {
 
-class THEBES_API ImageLayerD3D9 : public ImageLayer,
-                                  public LayerD3D9
+class ImageLayerD3D9 : public ImageLayer,
+                       public LayerD3D9
 {
 public:
   ImageLayerD3D9(LayerManagerD3D9 *aManager)
@@ -36,7 +36,7 @@ private:
   IDirect3DTexture9* GetTexture(Image *aImage, bool& aHasAlpha);
 };
 
-class THEBES_API ImageD3D9
+class ImageD3D9
 {
 public:
   virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;

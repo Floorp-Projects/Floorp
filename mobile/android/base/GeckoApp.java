@@ -11,9 +11,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.gfx.PluginLayer;
-import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
@@ -45,7 +43,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.graphics.PointF;
 import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -108,7 +105,7 @@ abstract public class GeckoApp
     implements GeckoEventListener, SensorEventListener, LocationListener,
                            Tabs.OnTabsChangedListener, GeckoEventResponder,
                            GeckoMenu.Callback, GeckoMenu.MenuPresenter,
-                           TouchEventInterceptor, ContextGetter, GeckoAppShell.GeckoInterface
+                           ContextGetter, GeckoAppShell.GeckoInterface
 {
     private static final String LOGTAG = "GeckoApp";
 
@@ -172,7 +169,6 @@ abstract public class GeckoApp
 
     private String mPrivateBrowsingSession;
 
-    private PointF mInitialTouchPoint = null;
     private volatile BrowserHealthRecorder mHealthRecorder = null;
 
     abstract public int getLayout();
@@ -408,8 +404,8 @@ abstract public class GeckoApp
  
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Custom Menu should be opened when hardware menu key is pressed.
-        if (Build.VERSION.SDK_INT >= 11 && keyCode == KeyEvent.KEYCODE_MENU) {
+        // Handle hardware menu key presses separately so that we can show a custom menu in some cases.
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
             openOptionsMenu();
             return true;
         }
@@ -500,7 +496,7 @@ abstract public class GeckoApp
                 showReadingList();
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
-                connectGeckoLayerClient();
+                geckoConnected();
             } else if (event.equals("ToggleChrome:Hide")) {
                 toggleChrome(false);
             } else if (event.equals("ToggleChrome:Show")) {
@@ -1458,7 +1454,7 @@ abstract public class GeckoApp
             Tab selectedTab = Tabs.getInstance().getSelectedTab();
             if (selectedTab != null)
                 Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
-            connectGeckoLayerClient();
+            geckoConnected();
             GeckoAppShell.setLayerClient(mLayerView.getLayerClient());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
         }
@@ -1860,13 +1856,14 @@ abstract public class GeckoApp
                 SmsManager.getInstance().shutdown();
         }
 
+        if (mHealthRecorder != null) {
+            mHealthRecorder.close();
+            mHealthRecorder = null;
+        }
+
         super.onDestroy();
 
         Tabs.unregisterOnTabsChangedListener(this);
-        if (mHealthRecorder != null) {
-            mHealthRecorder.close(GeckoAppShell.getEventDispatcher());
-            mHealthRecorder = null;
-        }
     }
 
     protected void registerEventListener(String event) {
@@ -2190,44 +2187,11 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
     }
 
-    protected void connectGeckoLayerClient() {
-        mLayerView.getLayerClient().notifyGeckoReady();
-
-        mLayerView.addTouchInterceptor(this);
+    protected void geckoConnected() {
+        mLayerView.geckoConnected();
     }
 
     public void setAccessibilityEnabled(boolean enabled) {
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onTouch(View view, MotionEvent event) {
-        if (event == null)
-            return true;
-
-        int action = event.getActionMasked();
-        PointF point = new PointF(event.getX(), event.getY());
-        if (action == MotionEvent.ACTION_DOWN) {
-            mInitialTouchPoint = point;
-        }
-
-        if (mInitialTouchPoint != null && action == MotionEvent.ACTION_MOVE) {
-            if (PointUtils.subtract(point, mInitialTouchPoint).length() <
-                PanZoomController.PAN_THRESHOLD) {
-                // Don't send the touchmove event if if the users finger hasn't moved far.
-                // Necessary for Google Maps to work correctly. See bug 771099.
-                return true;
-            } else {
-                mInitialTouchPoint = null;
-            }
-        }
-
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event, false));
-        return true;
     }
 
     public static class MainLayout extends RelativeLayout {
