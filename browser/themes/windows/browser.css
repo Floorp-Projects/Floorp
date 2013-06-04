@@ -717,6 +717,18 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0, 198px, 18px, 180px);
 }
 
+#cut-button {
+  -moz-image-region: rect(0, 216px, 18px, 198px);
+}
+
+#copy-button {
+  -moz-image-region: rect(0, 234px, 18px, 216px);
+}
+
+#paste-button {
+  -moz-image-region: rect(0, 252px, 18px, 234px);
+}
+
 #fullscreen-button {
   -moz-image-region: rect(0, 270px, 18px, 252px);
 }

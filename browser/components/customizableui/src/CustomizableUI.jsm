@@ -108,6 +108,7 @@ let CustomizableUIInternal = {
       anchor: "PanelUI-menu-button",
       type: CustomizableUI.TYPE_MENU_PANEL,
       defaultPlacements: [
+        "edit-controls",
         "zoom-controls",
         "new-window-button",
         "privatebrowsing-button",
