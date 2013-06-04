@@ -903,14 +903,7 @@ RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
   // being gtk based, sometimes we'll get signals/reply coming in on the main
   // thread. There's not a lot we can do about that for the time being and it
   // (technically) shouldn't hurt anything. However, on gonk, die.
-
-  // Due to the fact introducing workaround in Bug 827888, the callback for a
-  // message gets executed immediately. The proper fix is in bug 830290, but
-  // it's a intrusive change, it is better to remove assertion here since it
-  // would not hurt anything.
-  // Tracking bug 830290 for intrusive solution.
-
-  // MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!NS_IsMainThread());
 #endif
   nsRefPtr<BluetoothReplyRunnable> replyRunnable =
     dont_AddRef(static_cast< BluetoothReplyRunnable* >(aBluetoothReplyRunnable));
