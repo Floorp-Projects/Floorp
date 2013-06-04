@@ -34,11 +34,7 @@ public class TwoLinePageRow extends LinearLayout {
     }
 
     public TwoLinePageRow(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public TwoLinePageRow(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+        super(context, attrs);
 
         setGravity(Gravity.CENTER_VERTICAL);
 
