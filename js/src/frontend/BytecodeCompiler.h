@@ -7,7 +7,8 @@
 #ifndef BytecodeCompiler_h__
 #define BytecodeCompiler_h__
 
-#include "frontend/Parser.h"
+#include "jsapi.h"
+#include "jsprvtd.h"
 
 namespace js {
 namespace frontend {
