@@ -16,17 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 
-let gDebug = false;
-try {
-  gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
-} catch (e) {}
-
-function LOG(aMsg) {
-  if (gDebug) {
-    Services.console.logStringMessage("[CustomizableWidgets] " + aMsg);
-  }
-}
-function ERROR(aMsg) Cu.reportError("[CustomizableWidgets] " + aMsg);
+let gModuleName = "[CustomizableWidgets]";
+#include logging.js
 
 const CustomizableWidgets = [{
     id: "history-panelmenu",
@@ -84,7 +75,7 @@ const CustomizableWidgets = [{
                 item.setAttribute("image", "moz-anno:favicon:" + icon);
               fragment.appendChild(item);
             } catch (e) {
-              Cu.reportError("Error while showing history subview: " + e);
+              ERROR("Error while showing history subview: " + e);
             }
           }
           items.appendChild(fragment);
