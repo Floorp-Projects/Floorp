@@ -83,7 +83,7 @@ public:
     mCopyTarget = aTarget;
   }
   
-  virtual void SetScreenRenderOffset(const gfx::Point& aOffset) MOZ_OVERRIDE {
+  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) MOZ_OVERRIDE {
   }
 
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) { }

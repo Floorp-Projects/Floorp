@@ -21,7 +21,7 @@ class gfxASurface;
  * Usage is pretty much exactly like the Java class, so see
  * the Android documentation for details.
  */
-class THEBES_API nsSurfaceTexture {
+class nsSurfaceTexture {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsSurfaceTexture)
 
 public:

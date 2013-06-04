@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLLinkElement_h
 #define mozilla_dom_HTMLLinkElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsILink.h"
@@ -48,25 +49,25 @@ public:
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
   // nsILink
-  NS_IMETHOD    LinkAdded();
-  NS_IMETHOD    LinkRemoved();
+  NS_IMETHOD    LinkAdded() MOZ_OVERRIDE;
+  NS_IMETHOD    LinkRemoved() MOZ_OVERRIDE;
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   // nsINode
-  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              bool aNullParent = true) MOZ_OVERRIDE;
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -74,20 +75,20 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           bool aNotify) MOZ_OVERRIDE;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
-  virtual bool IsLink(nsIURI** aURI) const;
-  virtual nsLinkState GetLinkState() const;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const;
+                             bool aNotify) MOZ_OVERRIDE;
+  virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
+  virtual nsLinkState GetLinkState() const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIURI> GetHrefURI() const MOZ_OVERRIDE;
 
   // Element
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult);
-  virtual void GetLinkTarget(nsAString& aTarget);
-  virtual nsEventStates IntrinsicState() const;
+                              nsAttrValue& aResult) MOZ_OVERRIDE;
+  virtual void GetLinkTarget(nsAString& aTarget) MOZ_OVERRIDE;
+  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
@@ -142,17 +143,17 @@ public:
 
 protected:
   // nsStyleLinkElement
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline);
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) MOZ_OVERRIDE;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
                                  bool* aIsScoped,
-                                 bool* aIsAlternate);
+                                 bool* aIsAlternate) MOZ_OVERRIDE;
   virtual CORSMode GetCORSMode() const;
 protected:
   // nsGenericHTMLElement
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
+  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
 };
 
 } // namespace dom

@@ -61,7 +61,7 @@ public:
 
     void SetRoot(TestNode* aRoot) { mRoot = aRoot; }
 
-    void GetQueryNode(nsIDOMNode** aQueryNode)
+    void GetQueryNode(nsIDOMNode** aQueryNode) MOZ_OVERRIDE
     {
        *aQueryNode = mQueryNode;
        NS_IF_ADDREF(*aQueryNode);
@@ -86,14 +86,14 @@ public:
     void UseCachedResults(nsISimpleEnumerator** aResults);
 
     // clear the cached results
-    void ClearCachedResults()
+    void ClearCachedResults() MOZ_OVERRIDE
     {
         mCachedResults = nullptr;
     }
 
-    nsXULTemplateQueryProcessorRDF* Processor() { return mProcessor; }
+    nsXULTemplateQueryProcessorRDF* Processor() MOZ_OVERRIDE { return mProcessor; }
 
-    nsIAtom* GetMemberVariable() { return mMemberVariable; }
+    nsIAtom* GetMemberVariable() MOZ_OVERRIDE { return mMemberVariable; }
 
     bool IsSimple() { return mSimple; }
 

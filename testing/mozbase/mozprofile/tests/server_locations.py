@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mozfile
 import os
 import shutil
 import tempfile
@@ -46,7 +47,7 @@ http://example.org:80           privileged
         self.assertEqual(location.options, options)
 
     def create_temp_file(self, contents):
-        f = tempfile.NamedTemporaryFile()
+        f = mozfile.NamedTemporaryFile()
         f.write(contents)
         f.flush()
         return f
@@ -140,7 +141,7 @@ http://example.org:80           privileged
         self.assertEqual(len(c.last_locations), 1)
         self.compare_location(c.last_locations[0], 'http', 'a.b.c', '80',
                               ['privileged'])
-        
+
         # read a second file, which should generate a callback with both
         # locations.
         f = self.create_temp_file(self.locations_no_primary)

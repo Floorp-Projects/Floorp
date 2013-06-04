@@ -145,6 +145,10 @@ public:
   }
   bool IsLowPrecision() const { return mResolution < 1; }
 
+  typedef Tile* Iterator;
+  Iterator TilesBegin() { return mRetainedTiles.Elements(); }
+  Iterator TilesEnd() { return mRetainedTiles.Elements() + mRetainedTiles.Length(); }
+
 protected:
   // The implementor should call Update() to change
   // the new valid region. This implementation will call

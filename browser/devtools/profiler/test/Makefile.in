@@ -19,12 +19,17 @@ MOCHITEST_BROWSER_TESTS = \
 		browser_profiler_controller.js \
 		browser_profiler_bug_830664_multiple_profiles.js \
 		browser_profiler_bug_855244_multiple_tabs.js \
+		browser_profiler_console_api.js \
+		browser_profiler_console_api_named.js \
+		browser_profiler_console_api_mixed.js \
+		browser_profiler_console_api_content.js \
 		head.js \
 		$(NULL)
 
 MOCHITEST_BROWSER_PAGES = \
 		mock_profiler_bug_834878_page.html \
 		mock_profiler_bug_834878_script.js \
+		mock_console_api.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES

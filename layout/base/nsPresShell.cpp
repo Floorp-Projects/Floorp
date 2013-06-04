@@ -123,7 +123,9 @@
 #include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
 
+#include "nsPerformance.h"
 #include "nsRefreshDriver.h"
+#include "nsDOMNavigationTiming.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -7651,6 +7653,8 @@ PresShell::WillDoReflow()
   mPresContext->FlushUserFontSet();
 
   mFrameConstructor->BeginUpdate();
+
+  mLastReflowStart = GetPerformanceNow();
 }
 
 void
@@ -7659,6 +7663,16 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
   mFrameConstructor->EndUpdate();
   
   HandlePostedReflowCallbacks(aInterruptible);
+
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (container) {
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+    if (docShell) {
+      DOMHighResTimeStamp now = GetPerformanceNow();
+      docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
+    }
+  }
+
   if (sSynthMouseMove) {
     SynthesizeMouseMove(false);
   }
@@ -7672,6 +7686,23 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
   if (!aWasInterrupted) {
     ClearReflowOnZoomPending();
   }
+}
+
+DOMHighResTimeStamp
+PresShell::GetPerformanceNow()
+{
+  DOMHighResTimeStamp now = 0;
+  nsPIDOMWindow* window = mDocument->GetInnerWindow();
+
+  if (window) {
+    nsPerformance* perf = window->GetPerformance();
+
+    if (perf) {
+      now = perf->Now();
+    }
+  }
+
+  return now;
 }
 
 static PLDHashOperator

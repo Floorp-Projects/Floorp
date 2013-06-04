@@ -16,6 +16,7 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
+Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 const DB_NAME = "contacts";
 const DB_VERSION = 11;
@@ -726,7 +727,16 @@ ContactDB.prototype = {
     this.newTxn("readonly", REVISION_STORE, function (txn, store) {
       store.get(REVISION_KEY).onsuccess = function (e) {
         aSuccessCb(e.target.result);
-      }
+      };
+    });
+  },
+
+  getCount: function CDB_getCount(aSuccessCb) {
+    if (DEBUG) debug("getCount");
+    this.newTxn("readonly", STORE_NAME, function (txn, store) {
+      store.count().onsuccess = function (e) {
+        aSuccessCb(e.target.result);
+      };
     });
   },
 
@@ -739,28 +749,35 @@ ContactDB.prototype = {
     if (!aFindOptions)
       return;
     if (aFindOptions.sortBy != "undefined") {
+      const sortOrder = aFindOptions.sortOrder;
+      const sortBy = aFindOptions.sortBy == "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
+
       aResults.sort(function (a, b) {
         let x, y;
         let result = 0;
-        let sortOrder = aFindOptions.sortOrder;
-        let sortBy = aFindOptions.sortBy == "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
         let xIndex = 0;
         let yIndex = 0;
 
         do {
           while (xIndex < sortBy.length && !x) {
-            x = a.properties[sortBy[xIndex]] && a.properties[sortBy[xIndex]][0] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
+            x = a.properties[sortBy[xIndex]];
+            if (x) {
+              x = x.join("").toLowerCase();
+            }
             xIndex++;
           }
           if (!x) {
-            return sortOrder == 'descending' ? 1 : -1;
+            return sortOrder == "descending" ? 1 : -1;
           }
           while (yIndex < sortBy.length && !y) {
-            y = b.properties[sortBy[yIndex]] && b.properties[sortBy[yIndex]][0] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
+            y = b.properties[sortBy[yIndex]];
+            if (y) {
+              y = y.join("").toLowerCase();
+            }
             yIndex++;
           }
           if (!y) {
-            return sortOrder == 'ascending' ? 1 : -1;
+            return sortOrder == "ascending" ? 1 : -1;
           }
 
           result = x.localeCompare(y);
@@ -768,7 +785,7 @@ ContactDB.prototype = {
           y = null;
         } while (result == 0);
 
-        return sortOrder == 'ascending' ? result : -result;
+        return sortOrder == "ascending" ? result : -result;
       });
     }
     if (aFindOptions.filterLimit && aFindOptions.filterLimit != 0) {
@@ -793,7 +810,8 @@ ContactDB.prototype = {
     if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp);
     let self = this;
     this.newTxn("readonly", STORE_NAME, function (txn, store) {
-      if (aOptions && (["equals", "contains", "match"].indexOf(aOptions.filterOp) >= 0)) {
+      let filterOps = ["equals", "contains", "match", "startsWith"];
+      if (aOptions && (filterOps.indexOf(aOptions.filterOp) >= 0)) {
         self._findWithIndex(txn, store, aOptions);
       } else {
         self._findAll(txn, store, aOptions);
@@ -839,7 +857,8 @@ ContactDB.prototype = {
         let index = store.index(key);
         let filterValue = options.filterValue;
         if (key == "tel") {
-          filterValue = PhoneNumberUtils.normalize(filterValue);
+          filterValue = PhoneNumberUtils.normalize(filterValue,
+                                                   /*numbersOnly*/ true);
         }
         request = index.mozGetAll(filterValue, limit);
       } else if (options.filterOp == "match") {
@@ -850,13 +869,19 @@ ContactDB.prototype = {
         }
 
         let index = store.index("telMatch");
-        let normalized = PhoneNumberUtils.normalize(options.filterValue)
+        let normalized = PhoneNumberUtils.normalize(options.filterValue,
+                                                    /*numbersOnly*/ true);
         request = index.mozGetAll(normalized, limit);
       } else {
+        // XXX: "contains" should be handled separately, this is "startsWith"
+        if (options.filterOp === 'contains' && key !== 'tel') {
+          console.warn("ContactDB: 'contains' only works for 'tel'. " +
+                       "Falling back to 'startsWith'.");
+        }
         // not case sensitive
         let tmp = options.filterValue.toString().toLowerCase();
-        if (key === 'tel') {
-          tmp = PhoneNumberUtils.normalize(tmp);
+        if (key === "tel") {
+          tmp = PhoneNumberUtils.normalize(tmp, /*numbersOnly*/ true);
         }
         let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
         let index = store.index(key + "LowerCase");

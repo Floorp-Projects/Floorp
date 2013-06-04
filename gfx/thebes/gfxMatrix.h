@@ -31,7 +31,7 @@
  *           \ tx ty 1 /   \         1          /
  *
  */
-struct THEBES_API gfxMatrix {
+struct gfxMatrix {
     double xx; double yx;
     double xy; double yy;
     double x0; double y0;

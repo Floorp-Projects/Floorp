@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_SVGStyleElement_h
 #define mozilla_dom_SVGStyleElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsSVGElement.h"
 #include "nsStyleLinkElement.h"
 #include "nsStubMutationObserver.h"
@@ -87,13 +88,13 @@ protected:
   }
 
   // nsStyleLinkElement overrides
-  already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline);
+  already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) MOZ_OVERRIDE;
 
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
                          bool* aIsScoped,
-                         bool* aIsAlternate);
+                         bool* aIsAlternate) MOZ_OVERRIDE;
   virtual CORSMode GetCORSMode() const MOZ_OVERRIDE;
 
   /**

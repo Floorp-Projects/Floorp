@@ -37,6 +37,7 @@ using namespace graphite2;
 const void * bmp_subtable(const Face::Table & cmap)
 {
     const void * stbl;
+    if (!cmap.size()) return 0;
     if (TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 3, 1, cmap.size()))
      || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 3, cmap.size()))
      || TtfUtil::CheckCmapSubtable4(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 2, cmap.size()))
@@ -49,6 +50,7 @@ const void * bmp_subtable(const Face::Table & cmap)
 const void * smp_subtable(const Face::Table & cmap)
 {
     const void * stbl;
+    if (!cmap.size()) return 0;
     if (TtfUtil::CheckCmapSubtable12(stbl = TtfUtil::FindCmapSubtable(cmap, 3, 10, cmap.size()))
      || TtfUtil::CheckCmapSubtable12(stbl = TtfUtil::FindCmapSubtable(cmap, 0, 4, cmap.size())))
         return stbl;
@@ -109,6 +111,7 @@ CachedCmap::CachedCmap(const Face & face)
 
 CachedCmap::~CachedCmap() throw()
 {
+    if (!m_blocks) return;
     unsigned int numBlocks = (m_isBmpOnly)? 0x100 : 0x1100;
     for (unsigned int i = 0; i < numBlocks; i++)
     	free(m_blocks[i]);

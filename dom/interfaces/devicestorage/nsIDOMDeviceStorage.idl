@@ -11,37 +11,28 @@ interface nsIDOMDeviceStorageChangeEvent;
 interface nsIDOMEventListener;
 interface nsIFile;
 
-[scriptable, uuid(be690a9b-f0b4-4cde-a505-0b442abe2109), builtinclass]
+[scriptable, uuid(7c1b2305-0f14-4c07-8a8a-359eeb850068), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
     nsIDOMDOMRequest add(in nsIDOMBlob aBlob);
     nsIDOMDOMRequest addNamed(in nsIDOMBlob aBlob, in DOMString aName);
 
-    [implicit_jscontext]
-    nsIDOMDOMRequest get(in jsval aName);
-
-    [implicit_jscontext]
-    nsIDOMDOMRequest getEditable(in jsval aName);
-
-    [implicit_jscontext]
-    nsIDOMDOMRequest delete(in jsval aName);
-
-    [optional_argc, implicit_jscontext]
-    nsIDOMDOMCursor enumerate([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
-
-    [optional_argc, implicit_jscontext]
-    nsIDOMDOMCursor enumerateEditable([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
+    nsIDOMDOMRequest get([Null(Stringify)] in DOMString aName);
+    nsIDOMDOMRequest getEditable([Null(Stringify)] in DOMString aName);
+    nsIDOMDOMRequest delete([Null(Stringify)] in DOMString aName);
 
     nsIDOMDOMRequest freeSpace();
-
     nsIDOMDOMRequest usedSpace();
-
     nsIDOMDOMRequest available();
 
     // Note that the storageName is just a name (like sdcard), and doesn't
     // include any path information.
     readonly attribute DOMString storageName;
+
+    // Determines if this storage area is the one which will be used by default
+    // for storing new files.
+    readonly attribute bool default;
 
     [noscript] nsIFile getRootDirectoryForFile(in DOMString aName);
 };

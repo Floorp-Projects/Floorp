@@ -27,18 +27,24 @@ class MinorCollectionTracer;
 namespace ion {
 class CodeGenerator;
 class MacroAssembler;
+class ICStubCompiler;
+class BaselineCompiler;
 }
 
 class Nursery
 {
   public:
+    const static int NumNurseryChunks = 8;
+    const static int LastNurseryChunk = NumNurseryChunks - 1;
     const static size_t Alignment = gc::ChunkSize;
-    const static size_t NurserySize = gc::ChunkSize;
-    const static size_t NurseryMask = NurserySize - 1;
+    const static size_t NurserySize = gc::ChunkSize * NumNurseryChunks;
 
     explicit Nursery(JSRuntime *rt)
       : runtime_(rt),
-        position_(0)
+        position_(0),
+        currentEnd_(0),
+        currentChunk_(0),
+        numActiveChunks_(0)
     {}
     ~Nursery();
 
@@ -48,7 +54,7 @@ class Nursery
 
     template <typename T>
     JS_ALWAYS_INLINE bool isInside(const T *p) const {
-        return uintptr_t(p) >= start() && uintptr_t(p) < end();
+        return uintptr_t(p) >= start() && uintptr_t(p) < heapEnd();
     }
 
     /*
@@ -89,12 +95,21 @@ class Nursery
     /*
      * The start and end pointers are stored under the runtime so that we can
      * inline the isInsideNursery check into embedder code. Use the start()
-     * and end() functions to access these values.
+     * and heapEnd() functions to access these values.
      */
     JSRuntime *runtime_;
 
     /* Pointer to the first unallocated byte in the nursery. */
     uintptr_t position_;
+
+    /* Pointer to the last byte of space in the current chunk. */
+    uintptr_t currentEnd_;
+
+    /* The index of the chunk that is currently being allocated from. */
+    int currentChunk_;
+
+    /* The index after the last chunk that we will allocate from. */
+    int numActiveChunks_;
 
     /*
      * The set of externally malloced slots potentially kept live by objects
@@ -123,16 +138,19 @@ class Nursery
     const static size_t MaxNurserySlots = 100;
 
     /* The amount of space in the mapped nursery available to allocations. */
-    const static size_t NurseryUsableSize = NurserySize - sizeof(JSRuntime *);
+    const static size_t NurseryChunkUsableSize = gc::ChunkSize - sizeof(JSRuntime *);
 
-    struct Layout {
-        char data[NurseryUsableSize];
+    struct NurseryChunkLayout {
+        char data[NurseryChunkUsableSize];
         JSRuntime *runtime;
+        uintptr_t start() { return uintptr_t(&data); }
+        uintptr_t end() { return uintptr_t(&runtime); }
     };
-    Layout &asLayout() {
-        JS_STATIC_ASSERT(sizeof(Layout) == NurserySize);
+    NurseryChunkLayout &chunk(int index) const {
+        JS_STATIC_ASSERT(sizeof(NurseryChunkLayout) == gc::ChunkSize);
+        JS_ASSERT(index < NumNurseryChunks);
         JS_ASSERT(start());
-        return *reinterpret_cast<Layout *>(start());
+        return reinterpret_cast<NurseryChunkLayout *>(start())[index];
     }
 
     JS_ALWAYS_INLINE uintptr_t start() const {
@@ -140,13 +158,32 @@ class Nursery
         return ((JS::shadow::Runtime *)runtime_)->gcNurseryStart_;
     }
 
-    JS_ALWAYS_INLINE uintptr_t end() const {
+    JS_ALWAYS_INLINE uintptr_t heapEnd() const {
         JS_ASSERT(runtime_);
         return ((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
     }
+
+    JS_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
+        JS_ASSERT(chunkno < NumNurseryChunks);
+        JS_ASSERT(chunkno < numActiveChunks_);
+        currentChunk_ = chunkno;
+        position_ = chunk(chunkno).start();
+        currentEnd_ = chunk(chunkno).end();
+    }
+
+    JS_ALWAYS_INLINE uintptr_t allocationEnd() const {
+        JS_ASSERT(numActiveChunks_ > 0);
+        return chunk(numActiveChunks_ - 1).end();
+    }
+
+    JS_ALWAYS_INLINE uintptr_t currentEnd() const {
+        JS_ASSERT(runtime_);
+        JS_ASSERT(currentEnd_ == chunk(currentChunk_).end());
+        return currentEnd_;
+    }
     void *addressOfCurrentEnd() const {
         JS_ASSERT(runtime_);
-        return (void*)&((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
+        return (void *)&currentEnd_;
     }
 
     uintptr_t position() const { return position_; }
@@ -165,9 +202,9 @@ class Nursery
      * |dst| in Tenured.
      */
     void *moveToTenured(gc::MinorCollectionTracer *trc, JSObject *src);
-    void moveObjectToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
-    void moveElementsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
-    void moveSlotsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
+    size_t moveObjectToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
+    size_t moveElementsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
+    size_t moveSlotsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
 
     /* Handle fallback marking. See the comment in MarkStoreBuffer. */
     void markFallback(gc::Cell *cell);
@@ -182,6 +219,10 @@ class Nursery
      */
     void sweep(FreeOp *fop);
 
+    /* Change the allocable space provided by the nursery. */
+    void growAllocableSpace();
+    void shrinkAllocableSpace();
+
     static void MinorGCCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind);
     static void MinorFallbackMarkingCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind);
     static void MinorFallbackFixupCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind);
@@ -189,6 +230,8 @@ class Nursery
     friend class gc::MinorCollectionTracer;
     friend class ion::CodeGenerator;
     friend class ion::MacroAssembler;
+    friend class ion::ICStubCompiler;
+    friend class ion::BaselineCompiler;
 };
 
 } /* namespace js */

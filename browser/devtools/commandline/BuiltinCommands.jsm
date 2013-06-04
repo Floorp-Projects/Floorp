@@ -1499,7 +1499,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
     ],
     returnType: "string",
     exec: function(args, context) {
-      return OS.File.exists(args.srcdir + "/CLOBBER").then(function(exists) {
+      let clobber = OS.Path.join(args.srcdir, "CLOBBER");
+      return OS.File.exists(clobber).then(function(exists) {
         if (exists) {
           let str = Cc["@mozilla.org/supports-string;1"]
                     .createInstance(Ci.nsISupportsString);

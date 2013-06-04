@@ -13,9 +13,9 @@ interface nsIScriptGlobalObject;
 [ptr] native JSContext(JSContext);
 
 /**
- * Encode and decode JSON text.
+ * Don't use this!  Use JSON.parse and JSON.stringify directly.
  */
-[scriptable, uuid(43845d58-1054-47fb-8be3-970b3f7bd7ea)]
+[scriptable, uuid(083aebb0-7790-43b2-ae81-9e404e626236)]
 interface nsIJSON : nsISupports
 {
   /**
@@ -54,29 +54,4 @@ interface nsIJSON : nsISupports
 
   // Make sure you GCroot the result of this function before using it.
   [noscript] jsval    decodeToJSVal(in AString str, in JSContext cx);
-
-
-  /*
-   * Decode a JSON string, but also accept some strings in non-JSON format, as
-   * the decoding methods here did previously before tightening.
-   *
-   * This method is provided only as a temporary transition path for users of
-   * the old code who depended on the ability to decode leniently; new users
-   * should use JSON.parse.
-   *
-   * This method must only be called from script.
-   *
-   * @param str the string to parse
-   */
-  [implicit_jscontext]
-  jsval legacyDecode(in AString str);
-
-  /* Identical to legacyDecode, but decode the contents of stream. */
-  [implicit_jscontext]
-  jsval legacyDecodeFromStream(in nsIInputStream stream,
-                               in long contentLength);
-
-  /* Identical to legacyDecode, but decode into a jsval. */
-  // Make sure you GCroot the result of this function before using it.
-  [noscript] jsval    legacyDecodeToJSVal(in AString str, in JSContext cx);
 };

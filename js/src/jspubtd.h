@@ -150,9 +150,10 @@ typedef enum {
     JSTRACE_SCRIPT,
 
     /*
-     * Trace kinds internal to the engine. The embedding can only them if it
-     * implements JSTraceCallback.
+     * Trace kinds internal to the engine. The embedding can only see them if
+     * it implements JSTraceCallback.
      */
+    JSTRACE_LAZY_SCRIPT,
     JSTRACE_IONCODE,
     JSTRACE_SHAPE,
     JSTRACE_BASE_SHAPE,

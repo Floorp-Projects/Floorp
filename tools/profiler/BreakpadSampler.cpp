@@ -7,7 +7,7 @@
 #include <string>
 #include <stdio.h>
 #include <errno.h>
-#include <iostream>
+#include <ostream>
 #include <fstream>
 #include <sstream>
 #if defined(ANDROID)

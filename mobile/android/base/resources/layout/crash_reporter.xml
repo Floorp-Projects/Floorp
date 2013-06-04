@@ -40,7 +40,7 @@
                       android:checked="true"
                       android:textColor="@color/primary_text"
                       android:layout_marginBottom="10dp"
-                      android:text="@string/crash_send_report_message2"/>
+                      android:text="@string/crash_send_report_message3"/>
 
             <EditText android:id="@+id/comment"
                       style="@style/CrashReporter.EditText"
@@ -69,7 +69,7 @@
                       android:textColor="@color/primary_text"
                       android:textAppearance="@style/TextAppearance"
                       android:layout_marginBottom="10dp"
-                      android:text="@string/crash_allow_contact"/>
+                      android:text="@string/crash_allow_contact2"/>
 
             <org.mozilla.gecko.ClickableWhenDisabledEditText
                     android:id="@+id/email"

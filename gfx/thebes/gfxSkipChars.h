@@ -35,7 +35,7 @@
  * mCharCount is the sum of counts of all skipped and kept characters, i.e.,
  * the length of the original string.
  */
-class THEBES_API gfxSkipCharsBuilder {
+class gfxSkipCharsBuilder {
 public:
     gfxSkipCharsBuilder() :
         mCharCount(0), mRunCharCount(0), mRunSkipped(false), mInErrorState(false)
@@ -93,7 +93,7 @@ private:
  * 
  * A freshly-created gfxSkipChars means "all chars kept".
  */
-class THEBES_API gfxSkipChars {
+class gfxSkipChars {
 public:
     gfxSkipChars() : mListLength(0), mCharCount(0) {}
   
@@ -180,7 +180,7 @@ private:
  * the skipped-characters offset is the offset of the next unskipped character,
  * or the skipped-characters string length if there is no next unskipped character.
  */
-class THEBES_API gfxSkipCharsIterator {
+class gfxSkipCharsIterator {
 public:
     /**
      * @param aOriginalStringToSkipCharsOffset add this to all incoming and

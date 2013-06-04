@@ -242,16 +242,12 @@ class MarionetteTestRunner(object):
 
     def start_httpd(self):
         host = moznetwork.get_ip()
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(("",0))
-        port = s.getsockname()[1]
-        s.close()
-        self.baseurl = 'http://%s:%d/' % (host, port)
-        self.logger.info('running webserver on %s' % self.baseurl)
         self.httpd = MozHttpd(host=host,
-                              port=port,
+                              port=0,
                               docroot=os.path.join(os.path.dirname(__file__), 'www'))
         self.httpd.start()
+        self.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
+        self.logger.info('running webserver on %s' % self.baseurl)
 
     def start_marionette(self):
         assert(self.baseurl is not None)

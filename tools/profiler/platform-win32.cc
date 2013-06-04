@@ -32,6 +32,7 @@
 #include "platform.h"
 #include "TableTicker.h"
 #include "ProfileEntry.h"
+#include "UnwinderThread2.h"
 
 class PlatformData : public Malloced {
  public:
@@ -261,7 +262,9 @@ void OS::Sleep(int milliseconds) {
   ::Sleep(milliseconds);
 }
 
-bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread)
+bool Sampler::RegisterCurrentThread(const char* aName,
+                                    PseudoStack* aPseudoStack,
+                                    bool aIsMainThread, void* stackTop)
 {
   if (!Sampler::sRegisteredThreadsMutex)
     return false;
@@ -288,6 +291,8 @@ bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack
   }
 
   sRegisteredThreads->push_back(info);
+
+  uwt__register_thread_for_profiling(stackTop);
   return true;
 }
 

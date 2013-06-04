@@ -3569,5 +3569,9 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has the developer toolbar been active (seconds)"
+  },
+  "BROWSER_IS_USER_DEFAULT": {
+    "kind": "boolean",
+    "description": "The result of the startup default desktop browser check."
   }
 }

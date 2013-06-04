@@ -68,8 +68,11 @@ class JSFunction : public JSObject
                                                  use the accessor! */
         } n;
         struct Scripted {
-            JSScript    *script_; /* interpreted bytecode descriptor or null;
-                                     use the accessor! */
+            union {
+                JSScript *script_; /* interpreted bytecode descriptor or null;
+                                      use the accessor! */
+                js::LazyScript *lazy_; /* lazily compiled script, or NULL */
+            } s;
             JSObject    *env_;    /* environment for new activations;
                                      use the accessor! */
         } i;
@@ -80,6 +83,12 @@ class JSFunction : public JSObject
 
   public:
 
+    bool isHeavyweight() {
+        /* The heavyweight flag is not set until the script is parsed. */
+        JS_ASSERT(!isInterpretedLazy());
+        return flags & HEAVYWEIGHT;
+    }
+
     /* A function can be classified as either native (C++) or interpreted (JS): */
     bool isInterpreted()            const { return flags & (INTERPRETED | INTERPRETED_LAZY); }
     bool isNative()                 const { return !isInterpreted(); }
@@ -88,10 +97,9 @@ class JSFunction : public JSObject
     bool isNativeConstructor()      const { return flags & NATIVE_CTOR; }
 
     /* Possible attributes of an interpreted function: */
-    bool isHeavyweight()            const { return flags & HEAVYWEIGHT; }
     bool isFunctionPrototype()      const { return flags & IS_FUN_PROTO; }
     bool isInterpretedLazy()        const { return flags & INTERPRETED_LAZY; }
-    bool hasScript()                const { return isInterpreted() && u.i.script_; }
+    bool hasScript()                const { return flags & INTERPRETED; }
     bool isExprClosure()            const { return flags & EXPR_CLOSURE; }
     bool hasGuessedAtom()           const { return flags & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags & LAMBDA; }
@@ -206,7 +214,7 @@ class JSFunction : public JSObject
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
-    bool initializeLazyScript(JSContext *cx);
+    static bool createScriptForLazilyInterpretedFunction(JSContext *cx, js::HandleFunction fun);
 
     JSScript *getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
@@ -214,12 +222,13 @@ class JSFunction : public JSObject
         if (isInterpretedLazy()) {
             JS::RootedFunction self(cx, this);
             js::MaybeCheckStackRoots(cx);
-            if (!self->initializeLazyScript(cx))
+            if (!createScriptForLazilyInterpretedFunction(cx, self))
                 return NULL;
-            return self->u.i.script_;
+            JS_ASSERT(self->hasScript());
+            return self->u.i.s.script_;
         }
         JS_ASSERT(hasScript());
-        return u.i.script_;
+        return u.i.s.script_;
     }
 
     static bool maybeGetOrCreateScript(JSContext *cx, js::HandleFunction fun,
@@ -235,20 +244,35 @@ class JSFunction : public JSObject
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
-        return JS::HandleScript::fromMarkedLocation(&u.i.script_);
+        return JS::HandleScript::fromMarkedLocation(&u.i.s.script_);
     }
 
     JSScript *maybeNonLazyScript() const {
-        return isInterpreted() ? nonLazyScript() : NULL;
+        return hasScript() ? nonLazyScript() : NULL;
     }
 
     js::HeapPtrScript &mutableScript() {
         JS_ASSERT(isInterpreted());
-        return *(js::HeapPtrScript *)&u.i.script_;
+        return *(js::HeapPtrScript *)&u.i.s.script_;
+    }
+
+    // A lazily interpreted function will have an associated LazyScript if the
+    // script has not yet been parsed. For functions whose scripts are lazily
+    // cloned from self hosted code, there is no LazyScript.
+
+    js::LazyScript *lazyScript() const {
+        JS_ASSERT(isInterpretedLazy() && u.i.s.lazy_);
+        return u.i.s.lazy_;
+    }
+
+    js::LazyScript *lazyScriptOrNull() const {
+        JS_ASSERT(isInterpretedLazy());
+        return u.i.s.lazy_;
     }
 
     inline void setScript(JSScript *script_);
     inline void initScript(JSScript *script_);
+    inline void initLazyScript(js::LazyScript *script);
 
     JSNative native() const {
         JS_ASSERT(isNative());
@@ -264,7 +288,7 @@ class JSFunction : public JSObject
     inline void setJitInfo(const JSJitInfo *data);
 
     static unsigned offsetOfNativeOrScript() {
-        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.script_));
+        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.s.script_));
         JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, nativeOrScript));
         return offsetof(JSFunction, u.nativeOrScript);
     }

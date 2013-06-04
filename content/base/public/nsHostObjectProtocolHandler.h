@@ -5,6 +5,7 @@
 #ifndef nsHostObjectProtocolHandler_h
 #define nsHostObjectProtocolHandler_h
 
+#include "mozilla/Attributes.h"
 #include "nsIProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
@@ -25,11 +26,11 @@ public:
 
   // nsIProtocolHandler methods, except for GetScheme which is only defined
   // in subclasses.
-  NS_IMETHOD GetDefaultPort(int32_t *aDefaultPort);
-  NS_IMETHOD GetProtocolFlags(uint32_t *aProtocolFlags);
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char * aOriginCharset, nsIURI *aBaseURI, nsIURI * *_retval);
-  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel * *_retval);
-  NS_IMETHOD AllowPort(int32_t port, const char * scheme, bool *_retval);
+  NS_IMETHOD GetDefaultPort(int32_t *aDefaultPort) MOZ_OVERRIDE;
+  NS_IMETHOD GetProtocolFlags(uint32_t *aProtocolFlags) MOZ_OVERRIDE;
+  NS_IMETHOD NewURI(const nsACString & aSpec, const char * aOriginCharset, nsIURI *aBaseURI, nsIURI * *_retval) MOZ_OVERRIDE;
+  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel * *_retval) MOZ_OVERRIDE;
+  NS_IMETHOD AllowPort(int32_t port, const char * scheme, bool *_retval) MOZ_OVERRIDE;
 
   // Methods for managing uri->object mapping
   // AddDataEntry creates the URI with the given scheme and returns it in aUri
@@ -45,13 +46,13 @@ public:
 class nsBlobProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:
-  NS_IMETHOD GetScheme(nsACString &result);
+  NS_IMETHOD GetScheme(nsACString &result) MOZ_OVERRIDE;
 };
 
 class nsMediaStreamProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:
-  NS_IMETHOD GetScheme(nsACString &result);
+  NS_IMETHOD GetScheme(nsACString &result) MOZ_OVERRIDE;
 };
 
 inline bool IsBlobURI(nsIURI* aUri)

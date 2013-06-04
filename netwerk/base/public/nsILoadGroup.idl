@@ -80,11 +80,18 @@ interface nsILoadGroup : nsIRequest
     readonly attribute nsILoadGroupConnectionInfo connectionInfo;
 };
 
+%{C++
+#include "mozilla/net/PSpdyPush3.h"
+%}
+
+[ptr] native SpdyPushCache3Ptr(mozilla::net::SpdyPushCache3);
+
 /**
  * Used to maintain state about the connections of a load group and
  * how they interact with blocking items like HEAD css/js loads.
  */
-[uuid(d1f9f18e-3d85-473a-ad58-a2367d7cdb2a)]
+
+[uuid(5361f30e-f968-437c-8f41-69d2756a6022)]
 interface nsILoadGroupConnectionInfo : nsISupports
 {
     /**
@@ -104,4 +111,11 @@ interface nsILoadGroupConnectionInfo : nsISupports
      * blockers.
      */
     unsigned long removeBlockingTransaction();
+
+    /* reading this attribute gives out weak pointers to the push
+     * cache. The nsILoadGroupConnectionInfo implemenation owns the cache
+     * and will destroy it when overwritten or when the load group
+    *  ends.
+    */
+    [noscript]  attribute SpdyPushCache3Ptr spdyPushCache3;
 };

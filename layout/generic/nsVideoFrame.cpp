@@ -17,6 +17,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsDisplayList.h"
+#include "nsGenericHTMLElement.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsPresContext.h"
@@ -111,6 +112,8 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     mCaptionDiv = NS_NewHTMLDivElement(nodeInfo.forget());
     NS_ENSURE_TRUE(mCaptionDiv, NS_ERROR_OUT_OF_MEMORY);
+    nsGenericHTMLElement* div = static_cast<nsGenericHTMLElement*>(mCaptionDiv.get());
+    div->SetClassName(NS_LITERAL_STRING("caption-box"));
 
     if (!aElements.AppendElement(mCaptionDiv))
       return NS_ERROR_OUT_OF_MEMORY;
@@ -234,6 +237,20 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   return result.forget();
 }
 
+class DispatchResizeToControls : public nsRunnable
+{
+public:
+  DispatchResizeToControls(nsIContent* aContent)
+    : mContent(aContent) {}
+  NS_IMETHOD Run() {
+    nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,
+                                         NS_LITERAL_STRING("resizevideocontrols"),
+                                         false, false);
+    return NS_OK;
+  }
+  nsCOMPtr<nsIContent> mContent;
+};
+
 NS_IMETHODIMP
 nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
@@ -307,12 +324,17 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
     } else if (child->GetContent() == mVideoControls) {
       // Reflow the video controls frame.
       nsBoxLayoutState boxState(PresContext(), aReflowState.rendContext);
+      nsSize size = child->GetSize();
       nsBoxFrame::LayoutChildAt(boxState,
                                 child,
                                 nsRect(mBorderPadding.left,
                                        mBorderPadding.top,
                                        aReflowState.ComputedWidth(),
                                        aReflowState.ComputedHeight()));
+      if (child->GetSize() != size) {
+        nsRefPtr<nsRunnable> event = new DispatchResizeToControls(child->GetContent());
+        nsContentUtils::AddScriptRunner(event);
+      }
     } else if (child->GetContent() == mCaptionDiv) {
       // Reflow to caption div
       nsHTMLReflowMetrics kidDesiredSize;

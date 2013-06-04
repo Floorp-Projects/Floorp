@@ -73,15 +73,17 @@
          <item name="android:dividerHeight">1dp</item>
     </style>
 
-    <!-- Spinner Item -->
-    <style name="SpinnerItem" parent="@android:style/Widget.Holo.Light.TextView.SpinnerItem">
-         <item name="android:textColor">#FFFFFFFF</item>
-         <item name="android:textSize">18sp</item>
-    </style>
-
     <!-- Spinner DropDown Item -->
     <style name="SpinnerDropDownItem" parent="@android:style/Widget.Holo.DropDownItem.Spinner">
          <item name="android:textColor">#FF222222</item>
+    </style>
+
+    <style name="Widget.Spinner" parent="android:style/Widget.Holo.Light.Spinner">
+        <item name="android:minWidth">@dimen/doorhanger_input_width</item>
+    </style>
+
+    <style name="Widget.TextView.SpinnerItem" parent="android:style/Widget.Holo.Light.TextView.SpinnerItem">
+        <item name="android:textColor">#FF000000</item>
     </style>
 
 </resources>

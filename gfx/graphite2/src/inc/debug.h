@@ -52,10 +52,13 @@ struct objectid
 	objectid(const Segment * const p) throw();
 };
 
+
 json & operator << (json & j, const Position &) throw();
 json & operator << (json & j, const CharInfo &) throw();
 json & operator << (json & j, const dslot &) throw();
 json & operator << (json & j, const objectid &) throw();
+json & operator << (json & j, const telemetry &) throw();
+
 
 
 inline

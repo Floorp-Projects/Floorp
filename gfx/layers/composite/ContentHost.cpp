@@ -207,6 +207,35 @@ ContentHostBase::SetCompositor(Compositor* aCompositor)
   }
 }
 
+void
+ContentHostBase::Dump(FILE* aFile,
+                      const char* aPrefix,
+                      bool aDumpHtml)
+{
+  if (!aFile) {
+    aFile = stderr;
+  }
+  if (aDumpHtml) {
+    fprintf(aFile, "<ul>");
+  }
+  if (mTextureHost) {
+    fprintf(aFile, "%s", aPrefix);
+    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Front buffer: ");
+    DumpTextureHost(aFile, mTextureHost);
+    fprintf(aFile, aDumpHtml ? "> Front buffer </a></li> " : " ");
+  }
+  if (mTextureHostOnWhite) {
+    fprintf(aFile, "%s", aPrefix);
+    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "TextureHost on white: ");
+    DumpTextureHost(aFile, mTextureHostOnWhite);
+    fprintf(aFile, aDumpHtml ? "> Front buffer on white </a> </li> " : " ");
+  }
+  if (aDumpHtml) {
+    fprintf(aFile, "</ul>");
+  }
+
+}
+
 ContentHostSingleBuffered::~ContentHostSingleBuffered()
 {
   DestroyTextures();
@@ -434,9 +463,9 @@ ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
 }
 
 void
-ContentHostIncremental::EnsureTextureHost(ISurfaceAllocator* aAllocator,
-                                          const TextureInfo& aTextureInfo,
-                                          const nsIntRect& aBufferRect)
+ContentHostIncremental::EnsureTextureHostIncremental(ISurfaceAllocator* aAllocator,
+                                                     const TextureInfo& aTextureInfo,
+                                                     const nsIntRect& aBufferRect)
 {
   mUpdateList.AppendElement(new TextureCreationRequest(aTextureInfo,
                                                        aBufferRect));
@@ -694,6 +723,35 @@ ContentHostDoubleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
 }
 #endif
 
+void
+ContentHostDoubleBuffered::Dump(FILE* aFile,
+                                const char* aPrefix,
+                                bool aDumpHtml)
+{
+  ContentHostBase::Dump(aFile, aPrefix, aDumpHtml);
+  if (!aFile) {
+    aFile = stderr;
+  }
+  if (aDumpHtml) {
+    fprintf(aFile, "<ul>");
+  }
+  if (mBackHost) {
+    fprintf(aFile, "%s", aPrefix);
+    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Back buffer: ");
+    DumpTextureHost(aFile, mBackHost);
+    fprintf(aFile, aDumpHtml ? " >Back buffer</a></li>" : " ");
+  }
+  if (mBackHostOnWhite) {
+    fprintf(aFile, "%s", aPrefix);
+    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Back buffer on white: ");
+    DumpTextureHost(aFile, mBackHostOnWhite);
+    fprintf(aFile, aDumpHtml ? " >Back buffer on white</a> </li>" : " ");
+  }
+  if (aDumpHtml) {
+    fprintf(aFile, "</ul>");
+  }
+
+}
 
 } // namespace
 } // namespace

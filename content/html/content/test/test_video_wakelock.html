@@ -20,8 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868943
 
 /** Test for Bug 868943 **/
 
-SpecialPowers.addPermission("power", true, document);
-
 function testVideoPlayPause() {
   var lockState = true;
   var count = 0;
@@ -32,6 +30,15 @@ function testVideoPlayPause() {
   video.src = "wakelock.ogv";
   content.appendChild(video);
 
+  var startDate;
+  video.addEventListener('progress', function() {
+    startDate = new Date();
+
+    // The next step is to unlock the resource.
+    lockState = false;
+    video.pause();
+  });
+
   navigator.mozPower.addWakeLockListener(function testVideoPlayPauseListener(topic, state) {
     is(topic, "screen", "Video element locked the target == screen");
     var locked = state == "locked-foreground" ||
@@ -40,11 +47,10 @@ function testVideoPlayPause() {
     is(locked, lockState, "Video element locked the screen - paused");
     count++;
 
-    if (count == 1) {
-      // The next step is to unlock the resource.
-      lockState = false;
-      video.pause();
-    } else if (count == 2) {
+    if (count == 2) {
+      var diffDate = (new Date() - startDate);
+      ok(diffDate > 200, "There was at least 200 milliseconds between the stop and the wakelock release");
+
       content.removeChild(video);
       navigator.mozPower.removeWakeLockListener(testVideoPlayPauseListener);
       runTests();
@@ -64,6 +70,11 @@ function testVideoPlay() {
   video.src = "wakelock.ogv";
   content.appendChild(video);
 
+  var startDate;
+  video.addEventListener('progress', function() {
+    startDate = new Date();
+  });
+
   navigator.mozPower.addWakeLockListener(function testVideoPlayListener(topic, state) {
     is(topic, "screen", "Video element locked the target == screen");
     var locked = state == "locked-foreground" ||
@@ -76,6 +87,9 @@ function testVideoPlay() {
       // The next step is to unlock the resource.
       lockState = false;
     } else if (count == 2) {
+      var diffDate = (new Date() - startDate);
+      ok(diffDate > 200, "There was at least milliseconds between the stop and the wakelock release");
+
       content.removeChild(video);
       navigator.mozPower.removeWakeLockListener(testVideoPlayListener);
       runTests();
@@ -96,8 +110,10 @@ function runTests() {
   test();
 };
 
+SpecialPowers.addPermission("power", true, document);
+SpecialPowers.pushPrefEnv({"set": [["media.wakelock_timeout", 500]]}, runTests);
+
 SimpleTest.waitForExplicitFinish();
-runTests();
 
 </script>
 </pre>

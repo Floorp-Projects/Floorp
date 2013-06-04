@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<div>
+<div id="image" style="width: 256px; height: 256px; background-image: url('image_rgrg-256x256-animated.gif');" class="reftest-no-paint"></div>
+</div>
+<script type="application/javascript">
+
+function doTest() {
+  document.body.style.background = "black";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

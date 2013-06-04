@@ -125,6 +125,15 @@ def check_for_crashes(dump_directory, symbols_path,
             if dump_save_path is None:
                 dump_save_path = os.environ.get('MINIDUMP_SAVE_PATH', None)
             if dump_save_path:
+                # This code did not previously create the directory,
+                # so there may be a file hanging out with its name.
+                if os.path.isfile(dump_save_path):
+                    os.unlink(dump_save_path)
+                if not os.path.isdir(dump_save_path):
+                    try:
+                        os.makedirs(dump_save_path)
+                    except OSError:
+                        pass
                 shutil.move(d, dump_save_path)
                 log.info("Saved dump as %s", os.path.join(dump_save_path,
                                                           os.path.basename(d)))

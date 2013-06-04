@@ -26,7 +26,9 @@ interface nsISSLSocketControl : nsISupports {
        tunnel during the SSL handshake. The NPNList is the list
        of offered client side protocols. setNPNList() needs to
        be called before any data is read or written (including the
-       handshake to be setup correctly. */
+       handshake to be setup correctly. The server determines the
+       priority when multiple matches occur, but if there is no overlap
+       the first protocol in the list is used. */
 
     [noscript] void setNPNList(in nsCStringTArrayRef aNPNList);
 

@@ -141,6 +141,10 @@ fails-if(cocoaWidget) fails-if(winWidget) HTTP(..) != underline-offset-change-1-
 HTTP(..) != 534352-1-extra-cmap-sentinel.html 534352-1-extra-cmap-sentinel-ref.html
 HTTP(..) == bug533251.html bug533251-ref.html
 
+# Bug 875287
+HTTP(..) == font-familiy-whitespace-1.html font-familiy-whitespace-1-ref.html
+HTTP(..) != font-familiy-whitespace-1.html font-familiy-whitespace-1-notref.html
+
 skip-if(B2G) fails-if(Android) HTTP(..) == ivs-1.html ivs-1-ref.html # bug 773482
 
 skip-if(B2G) HTTP(..) == missing-names.html missing-names-ref.html # bug 773482

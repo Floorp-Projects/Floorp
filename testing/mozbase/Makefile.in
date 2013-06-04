@@ -12,8 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 # Harness packages from the srcdir;
-# python packages to be installed IN INSTALLATION ORDER.
-# Packages later in the list can depend only on packages earlier in the list.
 MOZBASE_PACKAGES = \
   manifestdestiny \
   mozcrash \
@@ -26,7 +24,7 @@ MOZBASE_PACKAGES = \
   mozprofile \
   mozrunner \
   mozdevice \
-  mozcrash \
+  moznetwork \
   $(NULL)
 
 MOZBASE_EXTRAS = \

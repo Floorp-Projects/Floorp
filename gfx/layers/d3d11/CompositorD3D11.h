@@ -74,7 +74,7 @@ public:
    * Declare an offset to use when rendering layers. This will be ignored when
    * rendering to a target instead of the screen.
    */
-  virtual void SetScreenRenderOffset(const gfx::Point& aOffset) MOZ_OVERRIDE {
+  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) MOZ_OVERRIDE {
     if (aOffset.x || aOffset.y) {
       NS_RUNTIMEABORT("SetScreenRenderOffset not supported by CompositorD3D11.");
     }

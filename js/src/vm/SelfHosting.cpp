@@ -6,7 +6,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsinterp.h"
 #include "jsobj.h"
 #include "jsfriendapi.h"
 
@@ -15,6 +14,7 @@
 #include "gc/Marking.h"
 
 #include "vm/ForkJoin.h"
+#include "vm/Interpreter.h"
 #include "vm/ThreadPool.h"
 
 #include "jsfuninlines.h"
@@ -517,6 +517,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
     CompileOptions options(cx);
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);
+    options.setCanLazilyParse(false);
     options.setSourcePolicy(CompileOptions::NO_SOURCE);
     options.setVersion(JSVERSION_LATEST);
 

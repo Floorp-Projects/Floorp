@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsinterp.h"
 #include "ParallelFunctions.h"
 #include "IonSpewer.h"
 
-#include "jsinterpinlines.h"
+#include "vm/Interpreter.h"
+
 #include "jscompartmentinlines.h"
+
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 using namespace ion;
@@ -467,6 +469,8 @@ ion::InitRestParameter(ForkJoinSlice *slice, uint32_t length, Value *rest,
     JS_ASSERT(res->isArray());
     JS_ASSERT(!res->getDenseInitializedLength());
     JS_ASSERT(res->type() == templateObj->type());
+    // See note in visitRest in ParallelArrayAnalysis.
+    JS_ASSERT(res->type()->unknownProperties());
 
     if (length) {
         JSObject::EnsureDenseResult edr =

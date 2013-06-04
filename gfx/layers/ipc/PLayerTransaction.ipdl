@@ -54,6 +54,9 @@ parent:
   sync Update(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint)
     returns (EditReply[] reply);
 
+  sync GetOpacity(PLayer layer) returns (float opacity);
+  sync GetTransform(PLayer layer) returns (gfx3DMatrix transform);
+
   // We don't need to send a sync transaction if
   // no transaction operate require a swap.
   async UpdateNoSwap(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint);

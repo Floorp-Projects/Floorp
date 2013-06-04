@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- Testcase for whether we honor "-moz-box-ordinal-group" on
+     absolutely-positioned elements within a -moz-box. Specifically,
+     we test whether it affects their paint-order (as it should, since
+     it reorders the frame tree).
+-->
+<html>
+<head>
+  <style>
+    #container { display: -moz-box; }
+    #lowOrdinal {
+      position: absolute;
+      -moz-box-ordinal-group: 5;
+      background: red;
+      height: 100px; width: 100px;
+    }
+    #highOrdinal {
+      position: absolute;
+      -moz-box-ordinal-group: 10;
+      background: lime;
+      height: 100px; width: 100px;
+    }
+    #noOrdinal {
+      position: absolute;
+      background: orange;
+      height: 100px; width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="highOrdinal"></div>
+    <div id="lowOrdinal"></div>
+    <div id="noOrdinal"></div>
+  </div>
+</body>
+</html>

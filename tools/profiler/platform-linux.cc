@@ -65,6 +65,7 @@
 #include "ProfileEntry.h"
 #include "nsThreadUtils.h"
 #include "TableTicker.h"
+#include "UnwinderThread2.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -358,7 +359,9 @@ void Sampler::Stop() {
   }
 }
 
-bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread)
+bool Sampler::RegisterCurrentThread(const char* aName,
+                                    PseudoStack* aPseudoStack,
+                                    bool aIsMainThread, void* stackTop)
 {
   if (!Sampler::sRegisteredThreadsMutex)
     return false;
@@ -385,6 +388,8 @@ bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack
   }
 
   sRegisteredThreads->push_back(info);
+
+  uwt__register_thread_for_profiling(stackTop);
   return true;
 }
 
@@ -405,6 +410,8 @@ void Sampler::UnregisterCurrentThread()
       break;
     }
   }
+
+  uwt__unregister_thread_for_profiling();
 }
 
 #ifdef ANDROID

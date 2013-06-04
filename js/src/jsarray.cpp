@@ -17,7 +17,6 @@
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
-#include "jsinterp.h"
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -26,17 +25,18 @@
 #include "ds/Sort.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
+#include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
 #include "vm/ArgumentsObject-inl.h"
+#include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
@@ -130,19 +130,6 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
     }
 
     return false;
-}
-
-Shape *
-js::GetDenseArrayShape(JSContext *cx, HandleObject globalObj)
-{
-    JS_ASSERT(globalObj);
-
-    JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
-    if (!proto)
-        return NULL;
-
-    return EmptyShape::getInitialShape(cx, &ArrayClass, proto, proto->getParent(),
-                                       gc::FINALIZE_OBJECT0);
 }
 
 bool
@@ -2821,7 +2808,8 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     if (!type)
         return NULL;
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayClass, TaggedProto(proto), proto->getParent(),
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayClass, TaggedProto(proto),
+                                                      proto->getParent(), NewObjectMetadata(cx),
                                                       gc::FINALIZE_OBJECT0));
 
     RootedObject arrayProto(cx, JSObject::createArray(cx, gc::FINALIZE_OBJECT4, gc::TenuredHeap, shape, type, 0));
@@ -2890,6 +2878,7 @@ NewArray(JSContext *cx, uint32_t length, JSObject *protoArg, NewObjectKind newKi
 
     NewObjectCache::EntryIndex entry = -1;
     if (newKind == GenericObject &&
+        !cx->compartment->objectMetadataCallback &&
         cache.lookupGlobal(&ArrayClass, cx->global(), allocKind, &entry))
     {
         RootedObject obj(cx, cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &ArrayClass)));
@@ -2919,7 +2908,7 @@ NewArray(JSContext *cx, uint32_t length, JSObject *protoArg, NewObjectKind newKi
      * See JSObject::createArray.
      */
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayClass, TaggedProto(proto),
-                                                      cx->global(), gc::FINALIZE_OBJECT0));
+                                                      cx->global(), NewObjectMetadata(cx), gc::FINALIZE_OBJECT0));
     if (!shape)
         return NULL;
 

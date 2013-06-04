@@ -442,7 +442,7 @@ stage-b2g: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/b2g/test/b2g-unittest-requirements.txt $(PKG_STAGE)/b2g
 
 stage-config: make-stage-dir
-	$(MAKE) -C $(DEPTH)/testing/config stage-package
+	$(NSINSTALL) $(topsrcdir)/testing/config/mozharness_config.py $(PKG_STAGE)/config
 
 stage-mochitest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package

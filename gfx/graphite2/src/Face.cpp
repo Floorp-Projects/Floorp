@@ -78,6 +78,9 @@ float Face::default_glyph_advance(const void* font_ptr, gr_uint16 glyphid)
 
 bool Face::readGlyphs(uint32 faceOptions)
 {
+#ifdef GRAPHITE2_TELEMETRY
+    telemetry::category _glyph_cat(tele.glyph);
+#endif
     if (faceOptions & gr_face_cacheCmap)
     	m_cmap = new CachedCmap(*this);
     else
@@ -98,6 +101,9 @@ bool Face::readGlyphs(uint32 faceOptions)
 
 bool Face::readGraphite(const Table & silf)
 {
+#ifdef GRAPHITE2_TELEMETRY
+    telemetry::category _silf_cat(tele.silf);
+#endif
     const byte * p = silf;
     if (!p) return false;
 
@@ -145,7 +151,8 @@ bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
 #endif
 
     bool res = aSilf->runGraphite(seg, 0, aSilf->justificationPass());
-    res &= aSilf->runGraphite(seg, aSilf->positionPass(), aSilf->numPasses());
+    if (res)
+        res = aSilf->runGraphite(seg, aSilf->positionPass(), aSilf->numPasses());
 
 #if !defined GRAPHITE2_NTRACING
 	if (dbgout)

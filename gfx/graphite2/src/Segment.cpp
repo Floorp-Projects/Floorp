@@ -52,6 +52,7 @@ Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int tex
   m_bufSize(numchars + 10),
   m_numGlyphs(numchars),
   m_numCharinfo(numchars),
+  m_passBits(m_silf->aPassBits() ? -1 : 0),
   m_defaultOriginal(0),
   m_dir(textDir)
 {
@@ -128,6 +129,7 @@ void Segment::append(const Segment &other)
     m_numGlyphs += other.m_numGlyphs;
     m_advance = m_advance + other.m_advance;
     m_bbox = m_bbox.widen(bbox);
+    m_passBits &= other.passBits();
 }
 #endif // GRAPHITE2_NSEGCACHE
 
@@ -150,6 +152,9 @@ void Segment::appendSlot(int id, int cid, int gid, int iFeats, size_t coffset)
     aSlot->prev(m_last);
     m_last = aSlot;
     if (!m_first) m_first = aSlot;
+    if (theGlyph && m_silf->aPassBits())
+        m_passBits &= theGlyph->attrs()[m_silf->aPassBits()] 
+                    | (m_silf->numPasses() > 16 ? (theGlyph->attrs()[m_silf->aPassBits() + 1] << 16) : 0);
 }
 
 Slot *Segment::newSlot()
@@ -185,6 +190,13 @@ void Segment::freeSlot(Slot *aSlot)
 {
     if (m_last == aSlot) m_last = aSlot->prev();
     if (m_first == aSlot) m_first = aSlot->next();
+    if (aSlot->attachedTo())
+        aSlot->attachedTo()->removeChild(aSlot);
+    while (aSlot->firstChild())
+    {
+        aSlot->firstChild()->attachTo(NULL);
+        aSlot->removeChild(aSlot->firstChild());
+    }
     // reset the slot incase it is reused
     ::new (aSlot) Slot;
     memset(aSlot->userAttrs(), 0, m_silf->numUser() * sizeof(int16));

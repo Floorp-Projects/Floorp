@@ -14,7 +14,7 @@ interface MediaStreamTrack {
     readonly    attribute DOMString             kind;
     readonly    attribute DOMString             id;
     readonly    attribute DOMString             label;
-//                attribute boolean               enabled;
+                attribute boolean               enabled;
 //    readonly    attribute MediaStreamTrackState readyState;
 //    readonly    attribute SourceTypeEnum        sourceType;
 //    readonly    attribute DOMString             sourceId;

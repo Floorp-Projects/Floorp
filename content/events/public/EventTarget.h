@@ -14,6 +14,7 @@
 #include "nsIAtom.h"
 
 class nsDOMEvent;
+class nsIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -63,6 +64,11 @@ public:
   // Note, for an event 'foo' aType will be 'onfoo'.
   virtual void EventListenerAdded(nsIAtom* aType) {}
   virtual void EventListenerRemoved(nsIAtom* aType) {}
+
+  // Returns an outer window that corresponds to the inner window this event
+  // target is associated with.  Will return null if the inner window is not the
+  // current inner or if there is no window around at all.
+  virtual nsIDOMWindow* GetOwnerGlobal() = 0;
 
 protected:
   EventHandlerNonNull* GetEventHandler(nsIAtom* aType);

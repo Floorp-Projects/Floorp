@@ -131,6 +131,8 @@ public:
 
   virtual bool Lock() MOZ_OVERRIDE;
 
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+
   // textureSource
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE
   {
@@ -272,7 +274,6 @@ public:
     {
       return mTexImage->GetWrapMode();
     }
-
   };
 
   // TextureSource implementation
@@ -295,6 +296,8 @@ public:
     }
     return mYTexture->GetSize();
   }
+
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "YCbCrTextureHostOGL"; }
@@ -380,6 +383,8 @@ public:
 
   virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE;
 
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "SharedTextureHostOGL"; }
 #endif
@@ -463,6 +468,8 @@ public:
              gfxASurface::CONTENT_COLOR;
   }
 
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "SurfaceStreamHostOGL"; }
 #endif
@@ -523,6 +530,8 @@ public:
   virtual void SwapTexturesImpl(const SurfaceDescriptor& aImage,
                                 nsIntRegion* aRegion = nullptr)
   { MOZ_ASSERT(false, "Tiles should not use this path"); }
+
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "TiledTextureHostOGL"; }
@@ -606,6 +615,8 @@ public:
   }
 
   bool IsValid() const MOZ_OVERRIDE;
+
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "GrallocTextureHostOGL"; }

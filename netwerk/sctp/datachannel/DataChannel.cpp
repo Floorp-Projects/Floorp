@@ -218,33 +218,45 @@ DataChannelConnection::Destroy()
   CloseAll();
 
   MutexAutoLock lock(mLock);
-  if (mSocket && mSocket != mMasterSocket)
-    usrsctp_close(mSocket);
-  if (mMasterSocket)
-    usrsctp_close(mMasterSocket);
+  // If we had a pending reset, we aren't waiting for it - clear the list so
+  // we can deregister this DataChannelConnection without leaking.
+  ClearResets();
 
+  MOZ_ASSERT(mSTS);
+  ASSERT_WEBRTC(NS_IsMainThread());
+  // Finish Destroy on STS thread to avoid bug 876167 - once that's fixed,
+  // the usrsctp_close() calls can move back here (and just proxy the
+  // disconnect_all())
+  RUN_ON_THREAD(mSTS, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
+                                   &DataChannelConnection::DestroyOnSTS,
+                                   mSocket, mMasterSocket),
+                NS_DISPATCH_NORMAL);
+
+  // These will be released on STS
   mSocket = nullptr;
   mMasterSocket = nullptr; // also a flag that we've Destroyed this connection
 
+  // Must do this in Destroy() since we may then delete this object
   if (mUsingDtls) {
     usrsctp_deregister_address(static_cast<void *>(this));
     LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
   }
+
   // We can't get any more new callbacks from the SCTP library
   // All existing callbacks have refs to DataChannelConnection
 
   // nsDOMDataChannel objects have refs to DataChannels that have refs to us
+}
 
-  if (mTransportFlow) {
-    MOZ_ASSERT(mSTS);
-    ASSERT_WEBRTC(NS_IsMainThread());
-    RUN_ON_THREAD(mSTS, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
-                                     &DataChannelConnection::disconnect_all),
-                  NS_DISPATCH_NORMAL);
-    // don't release mTransportFlow until we are destroyed in case
-    // runnables are in flight.  We may well have packets to send as the
-    // SCTP lib may have sent a shutdown.
-  }
+void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
+                                         struct socket *aSocket)
+{
+  if (aSocket && aSocket != aMasterSocket)
+    usrsctp_close(aSocket);
+  if (aMasterSocket)
+    usrsctp_close(aMasterSocket);
+
+  disconnect_all();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(DataChannelConnection,
@@ -1355,6 +1367,7 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
     break;
   case SCTP_COMM_LOST:
     LOG(("Association change: SCTP_COMM_LOST"));
+    // This association is toast, so also close all the channels -- from mainthread!
     NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
                               DataChannelOnMessageAvailable::ON_DISCONNECTED,
                               this));
@@ -1534,6 +1547,25 @@ DataChannelConnection::HandleSendFailedEvent(const struct sctp_send_failed_event
 }
 
 void
+DataChannelConnection::ClearResets()
+{
+  // Clear all pending resets
+  if (!mStreamsResetting.IsEmpty()) {
+    LOG(("Clearing resets for %d streams", mStreamsResetting.Length()));
+  }
+
+  for (int32_t i = 0; i < mStreamsResetting.Length(); ++i) {
+    nsRefPtr<DataChannel> channel;
+    channel = FindChannelByStream(mStreamsResetting[i]);
+    if (channel) {
+      LOG(("Forgetting channel %u (%p) with pending reset",channel->mStream, channel.get()));
+      mStreams[channel->mStream] = nullptr;
+    }
+  }
+  mStreamsResetting.Clear();
+}
+
+void
 DataChannelConnection::ResetOutgoingStream(uint16_t streamOut)
 {
   uint32_t i;
@@ -1574,6 +1606,11 @@ DataChannelConnection::SendOutgoingStreamReset()
   }
   if (usrsctp_setsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_RESET_STREAMS, srs, (socklen_t)len) < 0) {
     LOG(("***failed: setsockopt RESET, errno %d", errno));
+    // if errno == EALREADY, this is normal - we can't send another reset
+    // with one pending.
+    // When we get an incoming reset (which may be a response to our
+    // outstanding one), see if we have any pending outgoing resets and
+    // send them
   } else {
     mStreamsResetting.Clear();
   }
@@ -1627,27 +1664,13 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
           LOG(("Can't find incoming channel %d",i));
         }
       }
-
-      if (strrst->strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN) {
-        channel = FindChannelByStream(strrst->strreset_stream_list[i]);
-        if (channel) {
-          LOG(("Outgoing: Connection %p channel %p  stream: %u closed",
-               (void *) this, (void *) channel.get(), channel->mStream));
-
-          ASSERT_WEBRTC(channel->mState == CLOSING);
-          if (channel->mState == CLOSING) {
-            mStreams[channel->mStream] = nullptr;
-            LOG(("Disconnected DataChannel %p from connection %p (refcnt will be %u)",
-                 (void *) channel.get(), (void *) channel->mConnection.get(),
-                 (uint32_t) channel->mConnection->mRefCnt-1));
-            channel->Destroy();
-            // At this point when we leave here, the object is a zombie held alive only by the DOM object
-          }
-        } else {
-          LOG(("Can't find outgoing channel %d",i));
-        }
-      }
     }
+  }
+
+  // In case we failed to send a RESET due to having one outstanding, process any pending resets now:
+  if (!mStreamsResetting.IsEmpty()) {
+    LOG(("Sending %d pending resets", mStreamsResetting.Length()));
+    SendOutgoingStreamReset();
   }
 }
 
@@ -1907,7 +1930,7 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
       stream = FindFreeStream(); // may be INVALID_STREAM if we need more
     }
     if (stream == INVALID_STREAM || stream >= mStreams.Length()) {
-      // RequestMoreStreams() limits to MAX_NUM_STREAMS -- allocate extra streams 
+      // RequestMoreStreams() limits to MAX_NUM_STREAMS -- allocate extra streams
       // to avoid going back immediately for more if the ask to N, N+1, etc
       int32_t more_needed = (stream == INVALID_STREAM) ? 16 :
                             (stream-((int32_t)mStreams.Length())) + 16;
@@ -2232,6 +2255,11 @@ DataChannelConnection::CloseInt(DataChannel *aChannel)
   // re-test since it may have closed before the lock was grabbed
   if (aChannel->mState == CLOSED || aChannel->mState == CLOSING) {
     LOG(("Channel already closing/closed (%u)", aChannel->mState));
+    if (mState == CLOSED && channel->mStream != INVALID_STREAM) {
+      // called from CloseAll()
+      // we're not going to hang around waiting any more
+      mStreams[channel->mStream] = nullptr;
+    }
     return;
   }
   aChannel->mBufferedData.Clear();
@@ -2255,7 +2283,7 @@ DataChannelConnection::CloseInt(DataChannel *aChannel)
 
 void DataChannelConnection::CloseAll()
 {
-  LOG(("Closing all channels"));
+  LOG(("Closing all channels (connection %p)", (void*) this));
   // Don't need to lock here
 
   // Make sure no more channels will be opened

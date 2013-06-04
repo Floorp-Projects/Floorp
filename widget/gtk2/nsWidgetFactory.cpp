@@ -139,7 +139,7 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
       Preferences::GetBool("ui.allow_platform_file_picker", true);
 
   nsCOMPtr<nsIFilePicker> picker;
-  if (allowPlatformPicker && gtk_check_version(2,6,3) == NULL) {
+  if (allowPlatformPicker) {
       picker = new nsFilePicker;
   } else {
     picker = do_CreateInstance(kXULFilePickerCID);

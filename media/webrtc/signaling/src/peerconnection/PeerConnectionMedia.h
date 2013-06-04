@@ -205,10 +205,10 @@ class RemoteSourceStreamInfo {
 
 RemoteSourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
                        PeerConnectionMedia *aParent)
-    : mMediaStream(aMediaStream),
+    : mTrackTypeHints(0),
+      mMediaStream(aMediaStream),
       mPipelines(),
-      mParent(aParent),
-      mTrackTypeHints(0) {
+      mParent(aParent) {
       MOZ_ASSERT(mMediaStream);
     }
 

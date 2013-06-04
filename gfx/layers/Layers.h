@@ -78,7 +78,7 @@ struct EffectMask;
 /**
  * Base class for userdata objects attached to layers and layer managers.
  */
-class THEBES_API LayerUserData {
+class LayerUserData {
 public:
   virtual ~LayerUserData() {}
 };
@@ -137,7 +137,7 @@ static void LayerManagerUserDataDestroy(void *data)
  * Layers are refcounted. The layer manager holds a reference to the
  * root layer, and each container layer holds a reference to its children.
  */
-class THEBES_API LayerManager {
+class LayerManager {
   NS_INLINE_DECL_REFCOUNTING(LayerManager)
 
 public:
@@ -589,7 +589,7 @@ struct AnimData {
  * A Layer represents anything that can be rendered onto a destination
  * surface.
  */
-class THEBES_API Layer {
+class Layer {
   NS_INLINE_DECL_REFCOUNTING(Layer)
 
 public:
@@ -917,6 +917,12 @@ public:
   const gfx3DMatrix GetLocalTransform();
 
   /**
+   * Returns the local opacity for this layer: either mOpacity or,
+   * for shadow layers, GetShadowOpacity()
+   */
+  const float GetLocalOpacity();
+
+  /**
    * DRAWING PHASE ONLY
    *
    * Apply pending changes to layers before drawing them, if those
@@ -1171,12 +1177,6 @@ protected:
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   /**
-   * Returns the local opacity for this layer: either mOpacity or,
-   * for shadow layers, GetShadowOpacity()
-   */
-  const float GetLocalOpacity();
-
-  /**
    * We can snap layer transforms for two reasons:
    * 1) To avoid unnecessary resampling when a transform is a translation
    * by a non-integer number of pixels.
@@ -1271,7 +1271,7 @@ protected:
  * Currently the contents of a ThebesLayer are in the device output color
  * space.
  */
-class THEBES_API ThebesLayer : public Layer {
+class ThebesLayer : public Layer {
 public:
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1369,7 +1369,7 @@ protected:
  * A Layer which other layers render into. It holds references to its
  * children.
  */
-class THEBES_API ContainerLayer : public Layer {
+class ContainerLayer : public Layer {
 public:
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1540,7 +1540,7 @@ protected:
  * can fill any area that contains the visible region, so if you need to
  * restrict the area filled, set a clip region on this layer.
  */
-class THEBES_API ColorLayer : public Layer {
+class ColorLayer : public Layer {
 public:
   virtual ColorLayer* AsColorLayer() { return this; }
 
@@ -1590,7 +1590,7 @@ protected:
  * After Initialize is called, the underlying canvas Surface/GLContext
  * must not be modified during a layer transaction.
  */
-class THEBES_API CanvasLayer : public Layer {
+class CanvasLayer : public Layer {
 public:
   struct Data {
     Data()
@@ -1763,7 +1763,7 @@ private:
  * Clients will usually want to Connect/Clear() on each transaction to
  * avoid difficulties managing memory across multiple layer subtrees.
  */
-class THEBES_API RefLayer : public ContainerLayer {
+class RefLayer : public ContainerLayer {
   friend class LayerManager;
 
 private:

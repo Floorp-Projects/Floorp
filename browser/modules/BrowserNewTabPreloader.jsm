@@ -62,7 +62,10 @@ this.BrowserNewTabPreloader = {
   newTab: function Preloader_newTab(aTab) {
     let win = aTab.ownerDocument.defaultView;
     if (win.gBrowser) {
-      let {boxObject: {width, height}} = win.gBrowser;
+      let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils);
+
+      let {width, height} = utils.getBoundsWithoutFlushing(win.gBrowser);
       let hiddenBrowser = HiddenBrowsers.get(width, height)
       if (hiddenBrowser) {
         return hiddenBrowser.swapWithNewTab(aTab);
@@ -169,10 +172,10 @@ let HiddenBrowsers = {
   },
 
   uninit: function () {
-    this._topics.forEach(t => Services.obs.removeObserver(this, t, false));
-    this._updateTimer = clearTimer(this._updateTimer);
-
     if (this._browsers) {
+      this._topics.forEach(t => Services.obs.removeObserver(this, t, false));
+      this._updateTimer = clearTimer(this._updateTimer);
+
       for (let [key, browser] of this._browsers) {
         browser.destroy();
       }

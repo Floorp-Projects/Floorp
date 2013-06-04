@@ -11,6 +11,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
+import android.graphics.Rect;
+import android.os.Build;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
@@ -18,19 +21,29 @@ import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private static final String LOGTAG = "GeckoDoorHanger";
 
-    private GeckoApp mActivity;
     // The popup that holds this doorhanger
     private DoorHangerPopup mPopup;
     private LinearLayout mChoicesLayout;
     private TextView mTextView;
+    private List<PromptInput> mInputs;
+
+    private static int sInputPadding = -1;
+    private static int sSpinnerTextColor = -1;
+    private static int sSpinnerTextSize = -1;
 
     // LayoutParams used for adding button layouts
     static private LayoutParams mLayoutParams;
@@ -48,13 +61,22 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private boolean mPersistWhileVisible = false;
     private long mTimeout = 0;
 
-    DoorHanger(GeckoApp aActivity, DoorHangerPopup aPopup, int aTabId, String aValue) {
-        super(aActivity);
+    DoorHanger(Context context, DoorHangerPopup popup, int tabId, String value) {
+        super(context);
 
-        mActivity = aActivity;
-        mPopup = aPopup;
-        mTabId = aTabId;
-        mValue = aValue;
+        mPopup = popup;
+        mTabId = tabId;
+        mValue = value;
+
+        if (sInputPadding == -1) {
+            sInputPadding = getResources().getDimensionPixelSize(R.dimen.doorhanger_padding_spinners);
+        }
+        if (sSpinnerTextColor == -1) {
+            sSpinnerTextColor = getResources().getColor(R.color.text_color_primary_disable_only);
+        }
+        if (sSpinnerTextSize == -1) {
+            sSpinnerTextSize = getResources().getDimensionPixelSize(R.dimen.doorhanger_spinner_textsize);
+        }
     }
  
     int getTabId() {
@@ -77,7 +99,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     void init(String message, JSONArray buttons, JSONObject options) {
         setOrientation(VERTICAL);
 
-        LayoutInflater.from(mActivity).inflate(R.layout.doorhanger, this);
+        LayoutInflater.from(getContext()).inflate(R.layout.doorhanger, this);
         setVisibility(View.GONE);
 
         mTextView = (TextView) findViewById(R.id.doorhanger_title);
@@ -114,13 +136,13 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
                                              LayoutParams.FILL_PARENT,
                                              1.0f);
 
-        Button button = (Button) LayoutInflater.from(mActivity).inflate(R.layout.doorhanger_button, null);
+        Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
         button.setText(aText);
         button.setTag(Integer.toString(aCallback));
         button.setOnClickListener(this);
 
         if (mChoicesLayout.getChildCount() > 0) {
-            Divider divider = new Divider(mActivity, null);
+            Divider divider = new Divider(getContext(), null);
             divider.setOrientation(Divider.Orientation.VERTICAL);
             divider.setBackgroundColor(0xFFD1D5DA);
             mChoicesLayout.addView(divider);
@@ -138,6 +160,14 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             // If the checkbox is being used, pass its value
             if (mCheckBox != null)
                 response.put("checked", mCheckBox.isChecked());
+
+            if (mInputs != null) {
+                JSONObject inputs = new JSONObject();
+                for (PromptInput input : mInputs) {
+                    inputs.put(input.getId(), input.getValue());
+                }
+                response.put("inputs", inputs);
+            }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error creating onClick response", e);
         }
@@ -151,7 +181,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         mPopup.updatePopup();
     }
 
-    private void setOptions(JSONObject options) {
+    private void setOptions(final JSONObject options) {
         try {
             mPersistence = options.getInt("persistence");
         } catch (JSONException e) { }
@@ -186,12 +216,83 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
             mTextView.setMovementMethod(LinkMovementMethod.getInstance());
         } catch (JSONException e) { }
 
+        final JSONArray inputs = options.optJSONArray("inputs");
+        if (inputs != null) {
+            mInputs = new ArrayList<PromptInput>();
+
+            final ViewGroup group = (ViewGroup) findViewById(R.id.doorhanger_inputs);
+            group.setVisibility(VISIBLE);
+
+            for (int i = 0; i < inputs.length(); i++) {
+                try {
+                    PromptInput input = PromptInput.getInput(inputs.getJSONObject(i));
+                    mInputs.add(input);
+
+                    View v = input.getView(getContext());
+                    styleInput(input, v);
+                    group.addView(v);
+                } catch(JSONException ex) { }
+            }
+        }
+
         try {
             String checkBoxText = options.getString("checkbox");
             mCheckBox = (CheckBox) findViewById(R.id.doorhanger_checkbox);
             mCheckBox.setText(checkBoxText);
             mCheckBox.setVisibility(VISIBLE);
         } catch (JSONException e) { }
+    }
+
+    private void styleInput(PromptInput input, View view) {
+        if (input instanceof PromptInput.MenulistInput) {
+            styleSpinner(input, view);
+        } else {
+            // add some top and bottom padding to separate inputs
+            view.setPadding(0, sInputPadding,
+                            0, sInputPadding);
+        }
+    }
+
+    private void styleSpinner(PromptInput input, View view) {
+        PromptInput.MenulistInput spinInput = (PromptInput.MenulistInput) input;
+
+        /* Spinners have some intrinsic padding. To force the spinner's text to line up with
+         * the doorhanger text, we have to take that padding into account.
+         * 
+         * |-----A-------| <-- Normal doorhanger message
+         * |-B-|---C+D---| <-- (optional) Spinner Label
+         * |-B-|-C-|--D--| <-- Spinner
+         *
+         * A - Desired padding (sInputPadding)
+         * B - Final padding applied to input element (sInputPadding - rect.left - textPadding).
+         * C - Spinner background drawable padding (rect.left).
+         * D - Spinner inner TextView padding (textPadding).
+         */
+
+        // First get the padding of the selected view inside the spinner. Since the spinner
+        // hasn't been shown yet, we get this view directly from the adapter.
+        Spinner spinner = spinInput.spinner;
+        SpinnerAdapter adapter = spinner.getAdapter();
+        View dropView = adapter.getView(0, null, spinner);
+        int textPadding = 0;
+        if (dropView != null) {
+            textPadding = dropView.getPaddingLeft();
+        }
+
+        // Then get the intrinsic padding built into the background image of the spinner.
+        Rect rect = new Rect();
+        spinner.getBackground().getPadding(rect);
+
+        // Set the difference in padding to the spinner view to align it with doorhanger text.
+        view.setPadding(sInputPadding - rect.left - textPadding, 0, rect.right, sInputPadding);
+
+        if (spinInput.textView != null) {
+            spinInput.textView.setTextColor(sSpinnerTextColor);
+            spinInput.textView.setTextSize(sSpinnerTextSize);
+
+            // If this spinner has a label, offset it to also be aligned with the doorhanger text.
+            spinInput.textView.setPadding(rect.left + textPadding, 0, 0, 0);
+        }
     }
 
     // This method checks with persistence and timeout options to see if

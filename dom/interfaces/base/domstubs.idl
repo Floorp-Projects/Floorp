@@ -12,6 +12,7 @@ class nsWrapperCache;
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
 
 typedef unsigned long long DOMTimeStamp;
+typedef double DOMHighResTimeStamp;
 
 // Core
 interface nsIDOMAttr;
@@ -47,7 +48,6 @@ interface nsIDOMPlugin;
 interface nsIDOMPluginArray;
 interface nsIDOMMimeType;
 interface nsIDOMMimeTypeArray;
-interface nsIDOMBarProp;
 interface nsIDOMNavigator;
 interface nsIDOMScreen;
 interface nsIDOMHistory;

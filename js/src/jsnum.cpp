@@ -174,6 +174,24 @@ ComputeAccurateBinaryBaseInteger(const jschar *start, const jschar *end, int bas
     return value;
 }
 
+double
+js::ParseDecimalNumber(const JS::TwoByteChars chars)
+{
+    MOZ_ASSERT(chars.length() > 0);
+    uint64_t dec = 0;
+    RangedPtr<jschar> s = chars.start(), end = chars.end();
+    do {
+        jschar c = *s;
+        MOZ_ASSERT('0' <= c && c <= '9');
+        uint8_t digit = c - '0';
+        uint64_t next = dec * 10 + digit;
+        MOZ_ASSERT(next < DOUBLE_INTEGRAL_PRECISION_LIMIT,
+                   "next value won't be an integrally-precise double");
+        dec = next;
+    } while (++s < end);
+    return static_cast<double>(dec);
+}
+
 bool
 js::GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base,
                      const jschar **endp, double *dp)

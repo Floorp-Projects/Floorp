@@ -42,7 +42,7 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
 
 const char** mozilla_sampler_get_features();
 
-void mozilla_sampler_init();
+void mozilla_sampler_init(void* stackTop);
 
 void mozilla_sampler_shutdown();
 
@@ -58,7 +58,7 @@ void mozilla_sampler_lock();
 void mozilla_sampler_unlock();
 
 // Register/unregister threads with the profiler
-bool mozilla_sampler_register_thread(const char* name);
+bool mozilla_sampler_register_thread(const char* name, void* stackTop);
 void mozilla_sampler_unregister_thread();
 
 double mozilla_sampler_time();

@@ -616,19 +616,18 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
       // something went wrong, move on to next
       NS_WARNING("RasterImage::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
+      mAnim->currentAnimationFrameTime = GetCurrentImgFrameEndTime();
       mAnim->currentAnimationFrameIndex = nextFrameIndex;
-      mAnim->currentAnimationFrameTime = mAnim->currentAnimationFrameTime +
-                                         TimeDuration::FromMilliseconds(timeout);
       return false;
     }
 
     nextFrame->SetCompositingFailed(false);
   }
 
+  mAnim->currentAnimationFrameTime = GetCurrentImgFrameEndTime();
+
   // Set currentAnimationFrameIndex at the last possible moment
   mAnim->currentAnimationFrameIndex = nextFrameIndex;
-  mAnim->currentAnimationFrameTime = mAnim->currentAnimationFrameTime +
-                                     TimeDuration::FromMilliseconds(timeout);
 
   return true;
 }
@@ -3504,15 +3503,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
 
       wasSize = decoder->IsSizeDecode();
 
-      // We need to shut down the decoder first, in order to ensure all
-      // decoding routines have been finished.
-      rv = image->ShutdownDecoder(aIntent);
-      if (NS_FAILED(rv)) {
-        image->DoError();
-      }
-
       // Do some telemetry if this isn't a size decode.
-      if (request && !decoder->IsSizeDecode()) {
+      if (request && !wasSize) {
         Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
                               int32_t(request->mDecodeTime.ToMicroseconds()));
 
@@ -3524,6 +3516,13 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
                                  (1024 * request->mDecodeTime.ToSeconds()));
           Telemetry::Accumulate(id, KBps);
         }
+      }
+
+      // We need to shut down the decoder first, in order to ensure all
+      // decoding routines have been finished.
+      rv = image->ShutdownDecoder(aIntent);
+      if (NS_FAILED(rv)) {
+        image->DoError();
       }
     }
   }

@@ -428,6 +428,14 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
     return false;
   }
 
+  /* Ensure the availability of all pages within the mapping if on-demand
+   * decompression is disabled (MOZ_LINKER_ONDEMAND=0). */
+  const char *ondemand = getenv("MOZ_LINKER_ONDEMAND");
+  if (ondemand && !strncmp(ondemand, "0", 2 /* Including '\0' */)) {
+    for (Addr off = 0; off < pt_load->p_filesz; off += PAGE_SIZE) {
+      mappable->ensure(reinterpret_cast<char *>(mapped) + off);
+    }
+  }
   /* When p_memsz is greater than p_filesz, we need to have nulled out memory
    * after p_filesz and before p_memsz.
    * Mappable::mmap already guarantees that after p_filesz and up to the end

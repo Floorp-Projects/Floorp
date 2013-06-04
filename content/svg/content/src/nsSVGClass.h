@@ -66,12 +66,12 @@ public:
     nsSVGClass* mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(nsAString& aResult)
+    NS_IMETHOD GetBaseVal(nsAString& aResult) MOZ_OVERRIDE
       { mVal->GetBaseValue(aResult, mSVGElement); return NS_OK; }
-    NS_IMETHOD SetBaseVal(const nsAString& aValue)
+    NS_IMETHOD SetBaseVal(const nsAString& aValue) MOZ_OVERRIDE
       { mVal->SetBaseValue(aValue, mSVGElement, true); return NS_OK; }
 
-    NS_IMETHOD GetAnimVal(nsAString& aResult);
+    NS_IMETHOD GetAnimVal(nsAString& aResult) MOZ_OVERRIDE;
   };
   struct SMILString : public nsISMILAttr
   {
@@ -89,10 +89,10 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const mozilla::dom::SVGAnimationElement *aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const;
-    virtual nsSMILValue GetBaseValue() const;
-    virtual void ClearAnimValue();
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
+                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
+    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
+    virtual void ClearAnimValue() MOZ_OVERRIDE;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
   };
 };
 #endif //__NS_SVGCLASS_H__

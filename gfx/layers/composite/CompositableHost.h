@@ -150,9 +150,9 @@ public:
    * don't have a single surface for the texture contents, and we
    * need to allocate our own one to be updated later.
    */
-  virtual void EnsureTextureHost(ISurfaceAllocator* aAllocator,
-                                 const TextureInfo& aTextureInfo,
-                                 const nsIntRect& aBufferRect)
+  virtual void EnsureTextureHostIncremental(ISurfaceAllocator* aAllocator,
+                                            const TextureInfo& aTextureInfo,
+                                            const nsIntRect& aBufferRect)
   {
     MOZ_ASSERT(false, "should be implemented or not used");
   }
@@ -193,6 +193,15 @@ public:
     SetLayer(nullptr);
     SetCompositor(nullptr);
   }
+
+  virtual void Dump(FILE* aFile=NULL,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) { }
+  static void DumpTextureHost(FILE* aFile, TextureHost* aTexture);
+
+#ifdef MOZ_DUMP_PAINTING
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() { return nullptr; }
+#endif
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }

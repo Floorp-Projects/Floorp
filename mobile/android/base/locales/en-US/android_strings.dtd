@@ -16,11 +16,11 @@
 
 <!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
 <!ENTITY  crash_message2 "&brandShortName; had a problem and crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
-<!ENTITY  crash_send_report_message2 "Tell Mozilla about this crash so they can fix it">
+<!ENTITY  crash_send_report_message3 "Tell &vendorShortName; about this crash so they can fix it">
 <!ENTITY  crash_include_url2 "Include the address of the page I was on">
 <!ENTITY  crash_sorry "We\'re sorry">
 <!ENTITY  crash_comment "Add a comment (comments are publicly visible)">
-<!ENTITY  crash_allow_contact "Allow Mozilla to contact me about this report">
+<!ENTITY  crash_allow_contact2 "Allow &vendorShortName; to contact me about this report">
 <!ENTITY  crash_email "Your email">
 <!ENTITY  crash_closing_alert "Exit without sending a crash report?">
 <!ENTITY  sending_crash_report "Sending crash report\u2026">

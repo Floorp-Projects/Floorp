@@ -37,10 +37,10 @@ enum DirCode {  // Hungarian: dirc
         R          =  2,   // right-to-left, strong - R
         AL         =  3,   // Arabic letter, right-to-left, strong, AR
         EN         =  4,   // European number, left-to-right, weak - EN
-        ES         =  5,   // European separator, left-to-right, weak - ES
+        EUS        =  5,   // European separator, left-to-right, weak - ES
         ET         =  6,   // European number terminator, left-to-right, weak - ET
         AN         =  7,   // Arabic number, left-to-right, weak - AN
-        CS         =  8,   // Common number separator, left-to-right, weak - CS
+        CUS        =  8,   // Common number separator, left-to-right, weak - CS
         WS         =  9,   // white space, neutral - WS
         BN         = 10,   // boundary neutral - BN
 

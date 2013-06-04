@@ -33,7 +33,6 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -41,17 +40,18 @@
 
 #include "builtin/RegExp.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 #include "jsautooplen.h"        // generated headers last
 
+#include "vm/Interpreter-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/StringObject-inl.h"
@@ -570,6 +570,59 @@ ValueToIntegerRange(JSContext *cx, const Value &v, int32_t *out)
     return true;
 }
 
+static JSString *
+DoSubstr(JSContext *cx, JSString *str, size_t begin, size_t len)
+{
+    /*
+     * Optimization for one level deep ropes.
+     * This is common for the following pattern:
+     *
+     * while() {
+     *   text = text.substr(0, x) + "bla" + text.substr(x)
+     *   test.charCodeAt(x + 1)
+     * }
+     */
+    if (str->isRope()) {
+        JSRope *rope = &str->asRope();
+
+        /* Substring is totally in leftChild of rope. */
+        if (begin + len <= rope->leftChild()->length()) {
+            str = rope->leftChild();
+            return js_NewDependentString(cx, str, begin, len);
+        }
+
+        /* Substring is totally in rightChild of rope. */
+        if (begin >= rope->leftChild()->length()) {
+            str = rope->rightChild();
+            begin -= rope->leftChild()->length();
+            return js_NewDependentString(cx, str, begin, len);
+        }
+
+        /*
+         * Requested substring is partly in the left and partly in right child.
+         * Create a rope of substrings for both childs.
+         */
+        JS_ASSERT (begin < rope->leftChild()->length() &&
+                   begin + len > rope->leftChild()->length());
+
+        size_t lhsLength = rope->leftChild()->length() - begin;
+        size_t rhsLength = begin + len - rope->leftChild()->length();
+
+        RootedString lhs(cx, js_NewDependentString(cx, rope->leftChild(),
+                                                   begin, lhsLength));
+        if (!lhs)
+            return NULL;
+
+        RootedString rhs(cx, js_NewDependentString(cx, rope->rightChild(), 0, rhsLength));
+        if (!rhs)
+            return NULL;
+
+        return JSRope::new_<CanGC>(cx, lhs, rhs, len);
+    }
+
+    return js_NewDependentString(cx, str, begin, len);
+}
+
 static JSBool
 str_substring(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -620,7 +673,7 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
             }
         }
 
-        str = js_NewDependentString(cx, str, size_t(begin), size_t(end - begin));
+        str = DoSubstr(cx, str, size_t(begin), size_t(end - begin));
         if (!str)
             return false;
     }
@@ -859,12 +912,10 @@ js_str_charCodeAt(JSContext *cx, unsigned argc, Value *vp)
         i = size_t(d);
     }
 
-    const jschar *chars;
-    chars = str->getChars(cx);
-    if (!chars)
+    jschar c;
+    if (!str->getChar(cx, i, &c))
         return false;
-
-    args.rval().setInt32(chars[i]);
+    args.rval().setInt32(c);
     return true;
 
 out_of_range:
@@ -1693,77 +1744,87 @@ class StringRegExpGuard
 };
 
 static bool
-DoMatchLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearStr,
-             RegExpShared &re, MutableHandleValue rval)
+DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearString*> input,
+             RegExpShared &re)
 {
-    size_t charsLen = linearStr->length();
+    size_t charsLen = input->length();
+    const jschar *chars = input->chars();
+
     size_t i = 0;
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    RegExpRunStatus status = re.execute(cx, linearStr->getChars(cx), charsLen, &i, matches);
+    RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
     if (status == RegExpRunStatus_Error)
         return false;
 
-    /* Emulate ExecuteRegExpLegacy() behavior. */
     if (status == RegExpRunStatus_Success_NotFound) {
-        rval.setNull();
+        args.rval().setNull();
         return true;
     }
 
-    res->updateFromMatchPairs(cx, linearStr, matches);
-    return CreateRegExpMatchResult(cx, linearStr, matches, rval);
+    res->updateFromMatchPairs(cx, input, matches);
+
+    RootedValue rval(cx);
+    if (!CreateRegExpMatchResult(cx, input, chars, charsLen, matches, &rval))
+        return false;
+
+    args.rval().set(rval);
+    return true;
 }
 
 static bool
-BuildGlobalMatchArray(JSContext *cx, HandleString matchesInput, const MatchPair &pair, size_t count,
-                      MutableHandleObject array)
+DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearString*> input,
+              RegExpShared &re)
 {
-    JS_ASSERT(count <= JSID_INT_MAX);  /* by max string length */
-    JS_ASSERT(pair.check());
+    size_t charsLen = input->length();
+    const jschar *chars = input->chars();
 
-    if (!array)
-        array.set(NewDenseEmptyArray(cx));
-    if (!array)
-        return false;
+    AutoValueVector elements(cx);
 
-    JSString *str = js_NewDependentString(cx, matchesInput, pair.start, pair.length());
-    if (!str)
-        return false;
+    MatchPair match;
+    size_t i = 0; /* Index used for iterating through the string. */
+    size_t lastMatch = 0; /* Index of last successful match. */
 
-    RootedValue v(cx);
-    v.setString(str);
-    return JSObject::defineElement(cx, array, count, v);
-}
-
-static bool
-DoMatchGlobal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearPtr, RegExpShared &re,
-              MutableHandleObject array)
-{
-    size_t charsLen = linearPtr->length();
-
-    size_t prevMatch = 0;
-    bool isMatchFound = false;
-    for (size_t count = 0, i = 0, curMatch = 0; i <= charsLen; ++count) {
+    /* Accumulate results for each match. */
+    while (i <= charsLen) {
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
 
-        MatchPair match;
-        RegExpRunStatus status = re.executeMatchOnly(cx, linearPtr->chars(), charsLen, &i, match);
+        size_t i_orig = i;
+
+        RegExpRunStatus status = re.executeMatchOnly(cx, chars, charsLen, &i, match);
         if (status == RegExpRunStatus_Error)
             return false;
-
         if (status == RegExpRunStatus_Success_NotFound)
             break;
 
-        isMatchFound = true;
-        prevMatch = curMatch;
-        curMatch = i;
-        if (!BuildGlobalMatchArray(cx, linearPtr, match, count, array))
+        lastMatch = i_orig;
+
+        /* Extract the matched substring, root it, and remember it for later. */
+        JSLinearString *str = js_NewDependentString(cx, input, match.start, match.length());
+        if (!str)
             return false;
+        if (!elements.append(StringValue(str)))
+            return false;
+
         if (match.isEmpty())
             ++i;
     }
-    if (isMatchFound)
-        res->updateLazily(cx, linearPtr, &re, prevMatch);
+
+    /* If unmatched, return null. */
+    if (elements.empty()) {
+        args.rval().setNull();
+        return true;
+    }
+
+    /* The last successful match updates the RegExpStatics. */
+    res->updateLazily(cx, input, &re, lastMatch);
+
+    /* Copy the rooted vector into the array object. */
+    JSObject *array = NewDenseCopiedArray(cx, elements.length(), elements.begin());
+    if (!array)
+        return false;
+
+    args.rval().setObject(*array);
     return true;
 }
 
@@ -1822,18 +1883,9 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (!linearStr)
         return false;
 
-    if (g.regExp().global()) {
-        RootedObject array(cx);
-        if (!DoMatchGlobal(cx, res, linearStr, g.regExp(), &array))
-            return false;
-        args.rval().setObjectOrNull(array);
-    } else {
-        RootedValue rval(cx);
-        if (!DoMatchLocal(cx, res, linearStr, g.regExp(), &rval))
-            return false;
-        args.rval().set(rval);
-    }
-    return true;
+    if (g.regExp().global())
+        return DoMatchGlobal(cx, args, res, linearStr, g.regExp());
+    return DoMatchLocal(cx, args, res, linearStr, g.regExp());
 }
 
 JSBool
@@ -3108,7 +3160,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
             len = length - begin;
         }
 
-        str = js_NewDependentString(cx, str, size_t(begin), size_t(len));
+        str = DoSubstr(cx, str, size_t(begin), size_t(len));
         if (!str)
             return false;
     }

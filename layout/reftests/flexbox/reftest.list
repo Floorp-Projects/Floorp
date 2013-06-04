@@ -138,6 +138,7 @@ fails == flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml # bug 85
 # Tests for the order in which we paint flex items
 == flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
 == flexbox-paint-ordering-2.xhtml flexbox-paint-ordering-2-ref.xhtml
+fails == flexbox-paint-ordering-3.html  flexbox-paint-ordering-3-ref.html # bug 874718
 
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
 == flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml

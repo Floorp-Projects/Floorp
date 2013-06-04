@@ -153,13 +153,6 @@ private:
    * Returns the rule (constant of ETextEquivRule) for a given role.
    */
   static uint32_t GetRoleRule(mozilla::a11y::roles::Role aRole);
-
-  /**
-   * The accessible for which we are computing a text equivalent. It is useful
-   * for bailing out during recursive text computation, or for special cases
-   * like step f. of the ARIA implementation guide.
-   */
-  static nsRefPtr<Accessible> gInitiatorAcc;
 };
 
 #endif

@@ -168,13 +168,32 @@ SkipScopeParent(JSObject *parent)
     return parent;
 }
 
+inline bool
+CanReuseFunctionForClone(JSContext *cx, HandleFunction fun)
+{
+    if (!fun->hasSingletonType())
+        return false;
+    if (fun->isInterpretedLazy()) {
+        LazyScript *lazy = fun->lazyScript();
+        if (lazy->hasBeenCloned())
+            return false;
+        lazy->setHasBeenCloned();
+    } else {
+        JSScript *script = fun->nonLazyScript();
+        if (script->hasBeenCloned)
+            return false;
+        script->hasBeenCloned = true;
+    }
+    return true;
+}
+
 inline JSFunction *
 CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObject parent,
                                   NewObjectKind newKind = GenericObject)
 {
     /*
      * For attempts to clone functions at a function definition opcode,
-     * don't perform the clone if the function has singleton type. This
+     * try to avoid the the clone if the function has singleton type. This
      * was called pessimistically, and we need to preserve the type's
      * property that if it is singleton there is only a single object
      * with its type in existence.
@@ -184,16 +203,12 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
      * cases, fall through to CloneFunctionObject, which will deep clone
      * the function's script.
      */
-    if (fun->hasSingletonType()) {
-        RootedScript script(cx, fun->getOrCreateScript(cx));
-        if (!script->hasBeenCloned) {
-            script->hasBeenCloned = true;
-            Rooted<JSObject*> obj(cx, SkipScopeParent(parent));
-            if (!JSObject::setParent(cx, fun, obj))
-                return NULL;
-            fun->setEnvironment(parent);
-            return fun;
-        }
+    if (CanReuseFunctionForClone(cx, fun)) {
+        RootedObject obj(cx, SkipScopeParent(parent));
+        if (!JSObject::setParent(cx, fun, obj))
+            return NULL;
+        fun->setEnvironment(parent);
+        return fun;
     }
 
     // These intermediate variables are needed to avoid link errors on some
@@ -220,6 +235,17 @@ JSFunction::initScript(JSScript *script_)
 {
     JS_ASSERT(isInterpreted());
     mutableScript().init(script_);
+}
+
+inline void
+JSFunction::initLazyScript(js::LazyScript *lazy)
+{
+    JS_ASSERT(isInterpreted());
+
+    flags &= ~INTERPRETED;
+    flags |= INTERPRETED_LAZY;
+
+    u.i.s.lazy_ = lazy;
 }
 
 inline JSObject *

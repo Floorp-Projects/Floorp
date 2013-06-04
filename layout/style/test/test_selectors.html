@@ -628,6 +628,19 @@ function run() {
     test_parseable(":nth-child( -/**/2/**/n/**/ +/**/4 )");
     test_parseable(":nth-child(+1/**/n-1)");
     test_parseable(":nth-child(1/**/n-1)");
+    // bug 876570
+    test_balanced_unparseable(":nth-child(+2n-)");
+    test_balanced_unparseable(":nth-child(+n-)");
+    test_balanced_unparseable(":nth-child(-2n-)");
+    test_balanced_unparseable(":nth-child(-n-)");
+    test_balanced_unparseable(":nth-child(2n-)");
+    test_balanced_unparseable(":nth-child(n-)");
+    test_balanced_unparseable(":nth-child(+2n+)");
+    test_balanced_unparseable(":nth-child(+n+)");
+    test_balanced_unparseable(":nth-child(-2n+)");
+    test_balanced_unparseable(":nth-child(-n+)");
+    test_balanced_unparseable(":nth-child(2n+)");
+    test_balanced_unparseable(":nth-child(n+)");
 
     // exercise the an+b matching logic particularly hard for
     // :nth-child() (since we know we use the same code for all 4)

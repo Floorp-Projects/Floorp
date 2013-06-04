@@ -93,11 +93,7 @@ nsScreenGtk :: Init (GdkWindow *aRootWindow)
   int format_returned;
   int length_returned;
 
-#if GTK_CHECK_VERSION(2,0,0)
   GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
-#else
-  GdkAtom cardinal_atom = (GdkAtom) XA_CARDINAL;
-#endif
 
   gdk_error_trap_push();
 

@@ -57,6 +57,17 @@ void log_and_free_dbus_error(DBusError* err,
                              const char* function,
                              DBusMessage* msg = NULL);
 
+dbus_bool_t dbus_func_send(DBusConnection *aConnection,
+                           dbus_uint32_t *aSerial,
+                           DBusMessage *aMessage);
+
+dbus_bool_t dbus_func_args_send(DBusConnection *aConnection,
+                                dbus_uint32_t *aSerial,
+                                const char *aPath,
+                                const char *aInterface,
+                                const char *aFunction,
+                                int aFirstArgType, ...);
+
 dbus_bool_t dbus_func_send_async(DBusConnection* conn,
                                  DBusMessage* msg,
                                  int timeout_ms,
@@ -72,6 +83,12 @@ dbus_bool_t dbus_func_args_async(DBusConnection* conn,
                                  const char* func,
                                  int first_arg_type,
                                  ...);
+
+dbus_bool_t dbus_func_send_and_block(DBusConnection* aConnection,
+                                     int aTimeout,
+                                     DBusMessage** aReply,
+                                     DBusError* aError,
+                                     DBusMessage* aMessage);
 
 DBusMessage*  dbus_func_args(DBusConnection* conn,
                              const char* path,

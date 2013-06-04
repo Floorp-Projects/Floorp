@@ -425,7 +425,6 @@ load 655462-1.html
 load 656130-1.html
 load 656130-2.html
 load 660416.html
-load 660451-1.html
 load 665853.html
 load text-overflow-form-elements.html
 load text-overflow-iframe.html
@@ -447,6 +446,7 @@ load 700031.xhtml
 load 718516.html
 load 723108.html
 load 724978.xhtml
+load 730559.html
 load first-letter-638937.html
 load first-letter-638937-2.html
 load 734777.html
@@ -496,3 +496,4 @@ test-pref(layout.css.flexbox.enabled,true) load 854263-1.html
 test-pref(layout.css.flexbox.enabled,true) load 862947-1.html
 needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
 test-pref(layout.css.flexbox.enabled,true) load 866547-1.html
+asserts(1-4) test-pref(layout.css.flexbox.enabled,true) load 876074-1.html # bug 876749

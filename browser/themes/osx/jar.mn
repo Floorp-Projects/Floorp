@@ -201,7 +201,7 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-top-selected-active@2x.png         (tabbrowser/tab-top-selected-active@2x.png)
   skin/classic/browser/tabbrowser/tab-overflow-border.png                (tabbrowser/tab-overflow-border.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
-  skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator.png)
+  skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
   skin/classic/browser/tabview/close.png                    (tabview/close.png)
   skin/classic/browser/tabview/edit-light.png               (tabview/edit-light.png)
   skin/classic/browser/tabview/search.png                   (tabview/search.png)
