@@ -422,24 +422,15 @@ Parser<ParseHandler>::Parser(JSContext *cx, const CompileOptions &options,
     // XXX bug 678037 always disable syntax parsing for now.
     handler.disableSyntaxParser();
 
-    cx->activeCompilations++;
+    cx->runtime->activeCompilations++;
 
     // The Mozilla specific 'strict' option adds extra warnings which are not
     // generated if functions are parsed lazily. Note that the standard
     // "use strict" does not inhibit lazy parsing.
     if (context->hasStrictOption())
         handler.disableSyntaxParser();
-}
 
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::init()
-{
-    if (!context->ensureParseMapPool())
-        return false;
-
-    tempPoolMark = context->tempLifoAlloc().mark();
-    return true;
+    tempPoolMark = cx->tempLifoAlloc().mark();
 }
 
 template <typename ParseHandler>
@@ -447,7 +438,7 @@ Parser<ParseHandler>::~Parser()
 {
     JSContext *cx = context;
     cx->tempLifoAlloc().release(tempPoolMark);
-    cx->activeCompilations--;
+    cx->runtime->activeCompilations--;
 
     /*
      * The parser can allocate enormous amounts of memory for large functions.
@@ -6720,7 +6711,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
          * A map from property names we've seen thus far to a mask of property
          * assignment types, stored and retrieved with ALE_SET_INDEX/ALE_INDEX.
          */
-        AtomIndexMap seen(context);
+        AtomIndexMap seen;
 
         enum AssignmentType {
             GET     = 0x1,
