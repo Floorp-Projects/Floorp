@@ -2577,8 +2577,8 @@ PurgeRuntime(JSRuntime *rt)
     rt->sourceDataCache.purge();
     rt->evalCache.clear();
 
-    for (ContextIter acx(rt); !acx.done(); acx.next())
-        acx->purge();
+    if (!rt->activeCompilations)
+        rt->parseMapPool.purgeAll();
 }
 
 static bool

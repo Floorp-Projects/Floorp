@@ -131,8 +131,6 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 
     Parser<FullParseHandler> parser(cx, options, chars, length, /* foldConstants = */ true,
                                     options.canLazilyParse ? &syntaxParser.ref() : NULL, NULL);
-    if (!parser.init())
-        return NULL;
     parser.sct = sct;
 
     GlobalSharedContext globalsc(cx, scopeChain, StrictModeFromContext(cx));
@@ -329,8 +327,6 @@ frontend::CompileLazyFunction(JSContext *cx, HandleFunction fun, LazyScript *laz
 
     Parser<FullParseHandler> parser(cx, options, chars, length,
                                     /* foldConstants = */ true, NULL, lazy);
-    if (!parser.init())
-        return false;
 
     RootedObject enclosingScope(cx, lazy->parent()->function());
 
@@ -402,8 +398,6 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
     Parser<FullParseHandler> parser(cx, options, chars, length, /* foldConstants = */ true,
                                     options.canLazilyParse ? &syntaxParser.ref() : NULL, NULL);
-    if (!parser.init())
-        return false;
     parser.sct = &sct;
 
     JS_ASSERT(fun);

@@ -3072,8 +3072,6 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     options.setCanLazilyParse(false);
     Parser<FullParseHandler> parser(cx, options, chars.get(), length,
                                     /* foldConstants = */ false, NULL, NULL);
-    if (!parser.init())
-        return JS_FALSE;
 
     serialize.setParser(&parser);
 
