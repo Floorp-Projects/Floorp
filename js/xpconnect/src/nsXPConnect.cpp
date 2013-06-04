@@ -1981,18 +1981,7 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt)
     if (!NS_IsMainThread())
         MOZ_CRASH();
 
-    // We really want to use an AutoSafeJSContext here. Unfortunately, that
-    // pushes, and this function is called during the pushing procedure, so
-    // doing that would result in infinite recursion.
-    //
-    // The only thing we need this cx for is the call to
-    // JS_SetDebugModeForAllCompartments, and the worst _that_ function seems
-    // to do is to report an error in one case. So it's probably ok to just use
-    // the SafeJSContext without pushing for now, especially since both JSD and
-    // cx pushing are not long for this earth.
-    JSContext *unpushedCx = XPCJSRuntime::Get()->GetJSContextStack()
-                                               ->GetSafeJSContext();
-
+    AutoSafeJSContext cx;
     JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
 
     nsresult rv;
@@ -2002,7 +1991,7 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt)
         goto fail;
     }
 
-    if (!JS_SetDebugModeForAllCompartments(unpushedCx, gDesiredDebugMode))
+    if (!JS_SetDebugModeForAllCompartments(cx, gDesiredDebugMode))
         goto fail;
 
     if (gDesiredDebugMode) {
