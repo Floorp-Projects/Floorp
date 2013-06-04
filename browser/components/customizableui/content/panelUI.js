@@ -22,8 +22,7 @@ const PanelUI = {
       multiView: "PanelUI-multiView",
       helpView: "PanelUI-help",
       menuButton: "PanelUI-menu-button",
-      panel: "PanelUI-popup",
-      zoomResetButton: "PanelUI-zoomReset-btn"
+      panel: "PanelUI-popup"
     };
   },
 
@@ -42,12 +41,6 @@ const PanelUI = {
       this.panel.addEventListener(event, this);
     }
 
-    // Register ourselves with the service so we know when the zoom prefs change.
-    Services.obs.addObserver(this, "browser-fullZoom:zoomChange", false);
-    Services.obs.addObserver(this, "browser-fullZoom:zoomReset", false);
-
-    this._updateZoomResetButton();
-
     this.helpView.addEventListener("ViewShowing", this._onHelpViewShow, false);
     this.helpView.addEventListener("ViewHiding", this._onHelpViewHide, false);
   },
@@ -58,8 +51,6 @@ const PanelUI = {
     }
     this.helpView.removeEventListener("ViewShowing", this._onHelpViewShow);
     this.helpView.removeEventListener("ViewHiding", this._onHelpViewHide);
-    Services.obs.removeObserver(this, "browser-fullZoom:zoomChange");
-    Services.obs.removeObserver(this, "browser-fullZoom:zoomReset");
   },
 
   /**
@@ -116,13 +107,6 @@ const PanelUI = {
         break;
       }
     }
-  },
-
-  /**
-   * nsIObserver implementation, responding to zoom pref changes
-   */
-  observe: function (aSubject, aTopic, aData) {
-    this._updateZoomResetButton();
   },
 
   /**
@@ -211,11 +195,6 @@ const PanelUI = {
   _updatePanelButton: function() {
     this.menuButton.open = this.panel.state == "open" ||
                            this.panel.state == "showing";
-  },
-
-  _updateZoomResetButton: function() {
-    this.zoomResetButton.setAttribute("label", gNavigatorBundle
-      .getFormattedString("zoomReset.label", [Math.floor(ZoomManager.zoom * 100)]));
   },
 
   _onWidgetPanelCommand: function(aEvent) {

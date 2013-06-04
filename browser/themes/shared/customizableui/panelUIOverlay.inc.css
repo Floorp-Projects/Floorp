@@ -52,13 +52,30 @@
   font-size: 10px;
 }
 
-.PanelUI-pageControls {
+#PanelUI-contents #wrapper-zoom-controls {
+  margin-left: -1em;
+  margin-right: -1em;
+  width: calc(100% + 2em);
+}
+
+#PanelUI-contents #zoom-controls,
+#PanelUI-pageControls {
   padding: 1em 0 0;
+}
+
+#PanelUI-contents #zoom-controls {
+  -moz-margin-start: -1em;
+  -moz-box-align: stretch;
+  width: calc(100% + 2em);
+}
+
+#PanelUI-contents #wrapper-zoom-controls #zoom-controls {
+  -moz-margin-start: 0;
 }
 
 .PanelUI-footer,
 .PanelUI-editControls,
-.PanelUI-zoomControls,
+#PanelUI-contents #zoom-controls,
 #PanelUI-contents,
 .PanelUI-footer,
 .panel-mainview:not([panelid="PanelUI-popup"]) {
@@ -92,11 +109,8 @@ panelview:not([mainview]) .toolbarbutton-text,
   display: block;
 }
 
-.PanelUI-pageControls toolbarbutton {
-  min-width: 7em;
-}
-
-.PanelUI-pageControls toolbarbutton > .toolbarbutton-icon {
+#PanelUI-pageControls toolbarbutton > .toolbarbutton-icon,
+#PanelUI-contents #zoom-controls toolbarbutton > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
@@ -112,8 +126,30 @@ panelview:not([mainview]) .toolbarbutton-text,
   list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons.png);
 }
 
+#PanelUI-contents #zoom-controls toolbarbutton,
+#PanelUI-pageControls toolbarbutton {
+  -moz-box-orient: horizontal;
+  min-width: 7em;
+}
+
+#customization-palette #zoom-controls toolbarbutton,
+#PanelUI-contents #zoom-controls toolbarbutton {
+  max-width: none;
+  max-height: none;
+  height: auto;
+}
+
+#customization-palette #zoom-reset-button {
+  display: none;
+}
+
+#customization-palette #zoom-controls toolbarbutton {
+  min-width: 1em;
+}
+
 /* These smaller icons have different styling between the panel and the toolbar,
    hence not referencing toolbar.png for these icons. */
+#PanelUI-contents #zoom-controls toolbarbutton,
 .panel-combined-button {
   list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons.png);
 }
@@ -124,17 +160,23 @@ panelview:not([mainview]) .toolbarbutton-text,
   min-height: calc(8em / 3);
   margin: calc(5em / 12);
 }
+ 
+#PanelUI-contents #zoom-controls toolbarbutton > .toolbarbutton-icon {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
 
 .PanelUI-editControls #PanelUI-copy-btn,
-.PanelUI-zoomControls #PanelUI-zoomReset-btn {
+#PanelUI-contents #zoom-controls #zoom-reset-button {
   border-left: none;
   border-right: none;
   border-radius: 0;
 }
 
-#PanelUI-zoomIn-btn .toolbarbutton-text,
-#PanelUI-zoomOut-btn .toolbarbutton-text,
-#PanelUI-zoomReset-btn .toolbarbutton-icon {
+#PanelUI-contents #zoom-in-button .toolbarbutton-text,
+#PanelUI-contents #zoom-out-button .toolbarbutton-text,
+#PanelUI-contents #zoom-reset-button .toolbarbutton-icon {
   display: none;
 }
 
@@ -179,7 +221,8 @@ panelview toolbarbutton,
 
 panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#PanelUI-mainView .PanelUI-pageControls toolbarbutton,
+#PanelUI-pageControls toolbarbutton,
+#PanelUI-contents #zoom-controls toolbarbutton,
 .customizationmode-button,
 #PanelUI-mainView #PanelUI-customize-btn {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
@@ -342,16 +385,37 @@ toolbarbutton.panel-multiview-anchor {
   -moz-image-region: rect(0 48px 16px 32px);
 }
 
-#PanelUI-zoomOut-btn {
+#PanelUI-contents #zoom-out-button {
   -moz-image-region: rect(0 64px 16px 48px);
 }
 
-#PanelUI-zoomReset-btn {
+#PanelUI-contents #zoom-reset-button {
   list-style-image: none;
 }
 
-#PanelUI-zoomIn-btn {
+#PanelUI-contents #zoom-in-button {
   -moz-image-region: rect(0 80px 16px 64px);
+}
+
+#PanelUI-contents #zoom-out-button {
+  -moz-margin-end: none;
+}
+
+#PanelUI-contents #zoom-in-button {
+  -moz-border-start: 1px solid;
+  -moz-margin-start: none;
+}
+
+#PanelUI-contents #zoom-out-button:-moz-locale-dir(ltr),
+#PanelUI-contents #zoom-in-button:-moz-locale-dir(rtl) {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+#PanelUI-contents #zoom-out-button:-moz-locale-dir(rtl),
+#PanelUI-contents #zoom-in-button:-moz-locale-dir(ltr) {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
 }
 
 /* These icons are missing from Toolbar.png, so this is a temporary

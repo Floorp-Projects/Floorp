@@ -19,6 +19,17 @@ const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 let gModuleName = "[CustomizableWidgets]";
 #include logging.js
 
+function setAttributes(aNode, aAttrs) {
+  for (let [name, value] of Iterator(aAttrs)) {
+    if (!value) {
+      if (aNode.hasAttribute(name))
+        aNode.removeAttribute(name);
+    } else {
+      aNode.setAttribute(name, value);
+    }
+  }
+}
+
 const CustomizableWidgets = [{
     id: "history-panelmenu",
     type: "view",
@@ -236,5 +247,130 @@ const CustomizableWidgets = [{
       if (win && typeof win.openPreferences == "function") {
         win.openPreferences();
       }
+    }
+  }, {
+    id: "zoom-controls",
+    name: "Zoom Controls",
+    type: "custom",
+    removable: true,
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
+    onBuild: function(aDocument) {
+      let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
+      let noautoclose = inPanel ? "true" : null;
+      let flex = inPanel ? "1" : null;
+      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+      let buttons = [{
+        id: "zoom-out-button",
+        noautoclose: noautoclose,
+        command: "cmd_fullZoomReduce",
+        flex: flex,
+        class: cls,
+        label: "Zoom out",
+        tooltiptext: "Zoom out"
+      }, {
+        id: "zoom-reset-button",
+        noautoclose: noautoclose,
+        command: "cmd_fullZoomReset",
+        flex: flex,
+        class: cls,
+        tooltiptext: "Reset Zoom"
+      }, {
+        id: "zoom-in-button",
+        noautoclose: noautoclose,
+        command: "cmd_fullZoomEnlarge",
+        flex: flex,
+        class: cls,
+        label: "Zoom in",
+        tooltiptext: "Zoom in"
+      }];
+
+      let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
+      node.setAttribute("id", "zoom-controls");
+      node.setAttribute("title", "Zoom Controls");
+      if (inPanel)
+        node.setAttribute("flex", "1");
+      node.classList.add("chromeclass-toolbar-additional");
+
+      buttons.forEach(function(aButton) {
+        let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+        setAttributes(btnNode, aButton);
+        node.appendChild(btnNode);
+      });
+
+      // The middle node is the 'Reset Zoom' button.
+      let zoomResetButton = node.childNodes[1];
+      let window = aDocument.defaultView;
+      function updateZoomResetButton() {
+        zoomResetButton.setAttribute("label", window.gNavigatorBundle
+          .getFormattedString("zoomReset.label", [Math.floor(window.ZoomManager.zoom * 100)]));
+      };
+
+      // Register ourselves with the service so we know when the zoom prefs change.
+      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomChange", false);
+      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomReset", false);
+
+      updateZoomResetButton();
+      if (!inPanel)
+        zoomResetButton.setAttribute("hidden", "true");
+
+      function updateWidgetStyle(aInPanel) {
+        let attrs = {
+          noautoclose: aInPanel ? "true" : null,
+          flex: aInPanel ? "1" : null,
+          class: aInPanel ? "panel-combined-button" : "toolbarbutton-1"
+        };
+        for (let i = 0, l = node.childNodes.length; i < l; ++i) {
+          setAttributes(node.childNodes[i], attrs);
+        }
+        zoomResetButton.setAttribute("hidden", aInPanel ? "false" : "true");
+        if (aInPanel)
+          node.setAttribute("flex", "1");
+        else if (node.hasAttribute("flex"))
+          node.removeAttribute("flex");
+      }
+
+      let listener = {
+        onWidgetAdded: function(aWidgetId, aArea, aPosition) {
+          if (aWidgetId != this.id)
+            return;
+
+          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+        }.bind(this),
+
+        onWidgetRemoved: function(aWidgetId, aPrevArea) {
+          if (aWidgetId != this.id)
+            return;
+
+          // When a widget is demoted to the palette ('removed'), it's visual
+          // style should change.
+          updateWidgetStyle(false);
+          zoomResetButton.setAttribute("hidden", "true");
+        }.bind(this),
+
+        onWidgetReset: function(aWidgetId) {
+          if (aWidgetId != this.id)
+            return;
+          updateWidgetStyle(this.currentArea == CustomizableUI.AREA_PANEL);
+        }.bind(this),
+
+        onWidgetMoved: function(aWidgetId, aArea) {
+          if (aWidgetId != this.id)
+            return;
+          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+        }.bind(this),
+
+        onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
+          if (aWidgetId != this.id || aDoc != aDocument)
+            return;
+
+          CustomizableUI.removeListener(listener);
+          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomChange");
+          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomReset");
+        }.bind(this)
+      };
+      CustomizableUI.addListener(listener);
+
+      return node;
     }
   }];
