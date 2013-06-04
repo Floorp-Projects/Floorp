@@ -182,23 +182,11 @@ function unexpectedCallbackAndFinish(error) {
   return function(aObj) {
     var where = error.fileName + ":" + error.lineNumber;
     if (aObj && aObj.name && aObj.message) {
-      ok(false, "Unexpected callback/event from " + where + " with name = '" +
+      ok(false, "Unexpected error callback from " + where + " with name = '" +
                 aObj.name + "', message = '" + aObj.message + "'");
     } else {
-      ok(false, "Unexpected callback/event from " + where + " with " + aObj);
+      ok(false, "Unexpected error callback from " + where + " with " + aObj);
     }
     SimpleTest.finish();
-  }
-}
-
-/**
- * Generates a callback function suitable for putting int a success
- * callback in circumstances where success is unexpected. The callback,
- * if activated, will kill off the test gracefully.
- */
-
-function unexpectedSuccessCallbackAndFinish(error, reason) {
-  return function() {
-    unexpectedCallbackAndFinish(error)(message);
   }
 }
