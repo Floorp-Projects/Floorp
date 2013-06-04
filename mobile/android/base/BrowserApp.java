@@ -1542,9 +1542,16 @@ abstract public class BrowserApp extends GeckoApp
         if (Build.VERSION.SDK_INT >= 14) {
             GeckoActionProvider provider = (GeckoActionProvider) share.getActionProvider();
             if (provider != null) {
-                Intent shareIntent = GeckoAppShell.getShareIntent(this, url,
-                                                                  "text/plain", tab.getDisplayTitle());
-                provider.setIntent(shareIntent);
+                Intent shareIntent = provider.getIntent();
+
+                if (shareIntent == null) {
+                    shareIntent = GeckoAppShell.getShareIntent(this, url,
+                                                               "text/plain", tab.getDisplayTitle());
+                    provider.setIntent(shareIntent);
+                } else {
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+                    shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
+                }
             }
         }
 

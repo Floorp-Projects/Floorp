@@ -101,6 +101,11 @@ public class GeckoActionProvider extends ActionProvider {
         mHistoryFileName = historyFile;
     }
 
+    public Intent getIntent() {
+        ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
+        return dataModel.getIntent();
+    }
+
     public void setIntent(Intent intent) {
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
         dataModel.setIntent(intent);
