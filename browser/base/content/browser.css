@@ -117,14 +117,6 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
-#toolbar-menubar {
-  -moz-box-ordinal-group: 5;
-}
-
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
-  -moz-box-ordinal-group: 50;
-}
-
 toolbar[overflowable] > .customization-target {
   overflow: hidden;
 }
@@ -132,14 +124,6 @@ toolbar[overflowable] > .customization-target {
 toolbar[customizing][overflowable] > .overflow-button,
 toolbar[overflowable]:not([overflowing]) > .overflow-button {
   display: none;
-}
-
-#TabsToolbar {
-  -moz-box-ordinal-group: 100;
-}
-
-#TabsToolbar[tabsontop="true"] {
-  -moz-box-ordinal-group: 10;
 }
 
 %ifdef CAN_DRAW_IN_TITLEBAR
