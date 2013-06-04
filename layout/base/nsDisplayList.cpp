@@ -1588,7 +1588,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
     }
   }
 
-  mBounds = GetBoundsInternal();
+  mBounds = GetBoundsInternal(aBuilder);
 }
 
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage()
@@ -2196,7 +2196,7 @@ nsDisplayBackgroundImage::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 }
 
 nsRect
-nsDisplayBackgroundImage::GetBoundsInternal() {
+nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
   nsPresContext* presContext = mFrame->PresContext();
 
   if (mIsThemed) {
@@ -2224,7 +2224,9 @@ nsDisplayBackgroundImage::GetBoundsInternal() {
   }
   const nsStyleBackground::Layer& layer = mBackgroundStyle->mLayers[mLayer];
   return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
-                                                borderBox, clipRect, *mBackgroundStyle, layer);
+                                                borderBox, clipRect,
+                                                *mBackgroundStyle, layer,
+                                                aBuilder->GetBackgroundPaintFlags());
 }
 
 uint32_t
