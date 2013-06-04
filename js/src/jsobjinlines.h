@@ -7,8 +7,6 @@
 #ifndef jsobjinlines_h___
 #define jsobjinlines_h___
 
-#include "jsobj.h"
-
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsbool.h"
@@ -17,6 +15,7 @@
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
+#include "jsobj.h"
 #include "jsprobes.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
@@ -41,6 +40,7 @@
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
+#include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 
