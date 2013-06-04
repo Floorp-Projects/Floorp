@@ -143,6 +143,19 @@
 
       testHeaderCells(headerInfoMap);
 
+      //////////////////////////////////////////////////////////////////////////
+      // @headers points to table cells
+
+      headerInfoMap = [
+        {
+          cell: "table6_cell",
+          rowHeaderCells: [ "table6_rh" ],
+          columnHeaderCells: [ "table6_ch" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
       SimpleTest.finish();
     }
 
@@ -154,7 +167,14 @@
 <body>
   <a target="_blank"
      title="implement IAccessibleTable2"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">Mozilla Bug 512424</a>
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=512424">
+    Bug 512424
+  </a>
+  <a target="_blank"
+     title="Table headers not associated when header is a td element with no scope"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=704465">
+    Bug 704465
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -242,6 +262,17 @@
     <tr>
       <th id="table5_rh">rowheader</th>
       <td id="table5_cell">cell</td>
+    </tr>
+  </table>
+
+  <table id="table6">
+    <tr>
+      <td>empty cell</th>
+      <td id="table6_ch">colheader</td>
+    </tr>
+    <tr>
+      <td id="table6_rh">rowheader</th>
+      <td id="table6_cell" headers="table6_ch table6_rh">cell</td>
     </tr>
   </table>
 </body>

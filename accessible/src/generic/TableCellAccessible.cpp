@@ -47,7 +47,7 @@ TableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells)
   if (!table)
     return;
 
-  // Move to the left to find row header cells
+  // Move up to find column header cells
   for (uint32_t curRowIdx = rowIdx - 1; curRowIdx < rowIdx; curRowIdx--) {
     Accessible* cell = table->CellAt(curRowIdx, colIdx);
     if (!cell)
