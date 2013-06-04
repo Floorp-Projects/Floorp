@@ -1892,6 +1892,13 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
     nsDOMMutationObserver::HandleMutations();
 
     PopJSContext();
+
+    // If the cx stack is empty, that means we're at the an un-nested event
+    // loop. This is a good time to make changes to debug mode.
+    if (XPCJSRuntime::Get()->GetJSContextStack()->Count() == 0) {
+        MOZ_ASSERT(mEventDepth == 0);
+        CheckForDebugMode(XPCJSRuntime::Get()->GetJSRuntime());
+    }
     return NS_OK;
 }
 
@@ -2055,28 +2062,6 @@ namespace xpc {
 bool
 PushJSContext(JSContext *aCx)
 {
-    // JSD mumbo jumbo.
-    nsXPConnect *xpc = nsXPConnect::XPConnect();
-    JSRuntime *rt = XPCJSRuntime::Get()->GetJSRuntime();
-    if (xpc::gDebugMode != xpc::gDesiredDebugMode) {
-        if (!xpc::gDesiredDebugMode) {
-            /* Turn off debug mode immediately, even if JS code is currently
-               running. */
-            xpc->CheckForDebugMode(rt);
-        } else {
-            bool runningJS = false;
-            XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
-            for (uint32_t i = 0; i < stack->Count(); ++i) {
-                JSContext *cx = (*stack->GetStack())[i].cx;
-                if (cx && js::IsContextRunningJS(cx)) {
-                    runningJS = true;
-                    break;
-                }
-            }
-            if (!runningJS)
-                xpc->CheckForDebugMode(rt);
-        }
-    }
     return XPCJSRuntime::Get()->GetJSContextStack()->Push(aCx);
 }
 
