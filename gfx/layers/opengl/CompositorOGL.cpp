@@ -234,9 +234,11 @@ CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mFrameInProgress(false)
   , mDestroyed(false)
-  , mTextures({0, 0, 0})
 {
   MOZ_COUNT_CTOR(CompositorOGL);
+  mTextures[0] = 0;
+  mTextures[1] = 0;
+  mTextures[2] = 0;
   sBackend = LAYERS_OPENGL;
 }
 
