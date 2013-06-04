@@ -197,7 +197,7 @@ nsHttpTransaction::Init(uint32_t caps,
                           "net::http::transaction");
     nsresult rv;
 
-    LOG(("nsHttpTransaction::Init [this=%x caps=%x]\n", this, caps));
+    LOG(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
 
     MOZ_ASSERT(cinfo);
     MOZ_ASSERT(requestHead);
@@ -214,7 +214,7 @@ nsHttpTransaction::Init(uint32_t caps,
         mChannel = do_QueryInterface(eventsink);
         LOG(("nsHttpTransaction::Init() " \
              "mActivityDistributor is active " \
-             "this=%x", this));
+             "this=%p", this));
     } else {
         // there is no observer, so don't use it
         activityDistributorActive = false;
@@ -440,7 +440,7 @@ void
 nsHttpTransaction::OnTransportStatus(nsITransport* transport,
                                      nsresult status, uint64_t progress)
 {
-    LOG(("nsHttpTransaction::OnSocketStatus [this=%x status=%x progress=%llu]\n",
+    LOG(("nsHttpTransaction::OnSocketStatus [this=%p status=%x progress=%llu]\n",
         this, status, progress));
 
     if (TimingEnabled()) {
@@ -687,7 +687,7 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
 void
 nsHttpTransaction::Close(nsresult reason)
 {
-    LOG(("nsHttpTransaction::Close [this=%x reason=%x]\n", this, reason));
+    LOG(("nsHttpTransaction::Close [this=%p reason=%x]\n", this, reason));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -1239,7 +1239,7 @@ nsHttpTransaction::ParseHead(char *buf,
 nsresult
 nsHttpTransaction::HandleContentStart()
 {
-    LOG(("nsHttpTransaction::HandleContentStart [this=%x]\n", this));
+    LOG(("nsHttpTransaction::HandleContentStart [this=%p]\n", this));
 
     if (mResponseHead) {
 #if defined(PR_LOGGING)
@@ -1352,7 +1352,7 @@ nsHttpTransaction::HandleContent(char *buf,
 {
     nsresult rv;
 
-    LOG(("nsHttpTransaction::HandleContent [this=%x count=%u]\n", this, count));
+    LOG(("nsHttpTransaction::HandleContent [this=%p count=%u]\n", this, count));
 
     *contentRead = 0;
     *contentRemaining = 0;
@@ -1424,7 +1424,7 @@ nsHttpTransaction::HandleContent(char *buf,
         */
     }
 
-    LOG(("nsHttpTransaction::HandleContent [this=%x count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
+    LOG(("nsHttpTransaction::HandleContent [this=%p count=%u read=%u mContentRead=%lld mContentLength=%lld]\n",
         this, count, *contentRead, mContentRead, mContentLength));
 
     // Check the size of chunked responses. If we exceed the max pipeline size
@@ -1466,7 +1466,7 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
 {
     nsresult rv;
 
-    LOG(("nsHttpTransaction::ProcessData [this=%x count=%u]\n", this, count));
+    LOG(("nsHttpTransaction::ProcessData [this=%p count=%u]\n", this, count));
 
     *countRead = 0;
 
@@ -1628,7 +1628,7 @@ private:
 void
 nsHttpTransaction::DeleteSelfOnConsumerThread()
 {
-    LOG(("nsHttpTransaction::DeleteSelfOnConsumerThread [this=%x]\n", this));
+    LOG(("nsHttpTransaction::DeleteSelfOnConsumerThread [this=%p]\n", this));
 
     bool val;
     if (!mConsumerTarget ||

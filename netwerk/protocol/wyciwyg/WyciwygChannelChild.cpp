@@ -134,7 +134,7 @@ WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
                                     const nsCString& charset,
                                     const nsCString& securityInfo)
 {
-  LOG(("WyciwygChannelChild::RecvOnStartRequest [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::RecvOnStartRequest [this=%p]\n", this));
 
   mState = WCC_ONSTART;
 
@@ -184,7 +184,7 @@ void
 WyciwygChannelChild::OnDataAvailable(const nsCString& data,
                                      const uint64_t& offset)
 {
-  LOG(("WyciwygChannelChild::RecvOnDataAvailable [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::RecvOnDataAvailable [this=%p]\n", this));
 
   if (mCanceled)
     return;
@@ -244,7 +244,7 @@ WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 void
 WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
 {
-  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%x status=%u]\n",
+  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%p status=%u]\n",
            this, statusCode));
 
   { // We need to ensure that all IPDL message dispatching occurs
@@ -300,7 +300,7 @@ WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
 
 void WyciwygChannelChild::CancelEarly(const nsresult& statusCode)
 {
-  LOG(("WyciwygChannelChild::CancelEarly [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::CancelEarly [this=%p]\n", this));
   
   if (mCanceled)
     return;
@@ -583,7 +583,7 @@ GetTabChild(nsIChannel* aChannel)
 NS_IMETHODIMP
 WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
-  LOG(("WyciwygChannelChild::AsyncOpen [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::AsyncOpen [this=%p]\n", this));
 
   // The only places creating wyciwyg: channels should be
   // HTMLDocument::OpenCommon and session history.  Both should be setting an
