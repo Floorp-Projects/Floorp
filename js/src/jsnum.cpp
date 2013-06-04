@@ -37,14 +37,13 @@
 #include "jsdtoa.h"
 #include "jsobj.h"
 #include "jsstr.h"
-
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
-
+#include "jsstrinlines.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
 

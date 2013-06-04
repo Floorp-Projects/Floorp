@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsapi.h"
@@ -56,6 +57,7 @@
 
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject-inl.h"
+#include "vm/RegExpStatics-inl.h"
 
 using namespace js;
 using namespace js::gc;
