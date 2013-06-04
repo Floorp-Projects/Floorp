@@ -28,10 +28,12 @@
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
 
+#include "jsanalyzeinlines.h"
 #include "jsatominlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/Stack-inl.h"
