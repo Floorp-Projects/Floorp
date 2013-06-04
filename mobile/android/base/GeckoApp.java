@@ -49,7 +49,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.location.Location;
 import android.location.LocationListener;
+import android.net.wifi.ScanResult;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -101,13 +103,18 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -2258,8 +2265,37 @@ abstract public class GeckoApp
         return tm.getPhoneType();
     }
 
+
+    // copied from http://code.google.com/p/sensor-data-collection-library/source/browse/src/main/java/TextFileSensorLog.java#223,
+    // which is apache licensed
+    private static final Set<Character> AD_HOC_HEX_VALUES =
+      new HashSet<Character>(Arrays.asList('2','6', 'a', 'e', 'A', 'E'));
+    private static final String OPTOUT_SSID_SUFFIX = "_nomap";
+
+    private static boolean shouldLog(final ScanResult sr) {
+        // We filter out any ad-hoc devices.  Ad-hoc devices are identified by having a
+        // 2,6,a or e in the second nybble.
+        // See http://en.wikipedia.org/wiki/MAC_address -- ad hoc networks
+        // have the last two bits of the second nybble set to 10.
+        // Only apply this test if we have exactly 17 character long BSSID which should
+        // be the case.
+        final char secondNybble = sr.BSSID.length() == 17 ? sr.BSSID.charAt(1) : ' ';
+
+        if(AD_HOC_HEX_VALUES.contains(secondNybble)) {
+            return false;
+
+        } else if (sr.SSID != null && sr.SSID.endsWith(OPTOUT_SSID_SUFFIX)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
     private void collectAndReportLocInfo(Location location) {
         final JSONObject locInfo = new JSONObject();
+        WifiManager wm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        wm.startScan();
         try {
             JSONArray cellInfo = new JSONArray();
             int radioType = getCellInfo(cellInfo);
@@ -2274,8 +2310,35 @@ abstract public class GeckoApp
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
             locInfo.put("time", df.format(new Date(location.getTime())));
             locInfo.put("cell", cellInfo);
-        } catch(JSONException jsonex) {}
 
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+
+            JSONArray wifiInfo = new JSONArray();
+            List<ScanResult> aps = wm.getScanResults();
+            for (ScanResult ap : aps) {
+                if (!shouldLog(ap))
+                    continue;
+                StringBuilder sb = new StringBuilder();
+                try {
+                    byte[] result = digest.digest((ap.BSSID + ap.SSID).getBytes("UTF-8"));
+                    for (byte b : result) sb.append(String.format("%02X", b));
+
+                    JSONObject obj = new JSONObject();
+
+                    obj.put("key", sb.toString());
+                    obj.put("frequency", ap.frequency);
+                    obj.put("signal", ap.level);
+                    wifiInfo.put(obj);
+                } catch (UnsupportedEncodingException uee) {
+                    Log.w(LOGTAG, "can't encode the key", uee);
+                }
+            }
+            locInfo.put("wifi", wifiInfo);
+        } catch (JSONException jsonex) {
+            Log.w(LOGTAG, "json exception", jsonex);
+        } catch (NoSuchAlgorithmException nsae) {
+            Log.w(LOGTAG, "can't creat a SHA1", nsae);
+        }
         ThreadUtils.postToBackgroundThread(new Runnable() {
             public void run() {
                 try {
@@ -2293,14 +2356,14 @@ abstract public class GeckoApp
                         out.write(bytes);
                         out.flush();
                     } catch (JSONException jsonex) {
-                        Log.e("GeckoCell", "error wrapping data as a batch", jsonex);
+                        Log.e(LOGTAG, "error wrapping data as a batch", jsonex);
                     } catch (IOException ioex) {
-                        Log.e("GeckoCell", "error submitting data", ioex);
+                        Log.e(LOGTAG, "error submitting data", ioex);
                     } finally {
                         urlConnection.disconnect();
                     }
                 } catch (IOException ioex) {
-                    Log.e("GeckoCell", "error submitting data", ioex);
+                    Log.e(LOGTAG, "error submitting data", ioex);
                 }
             }
         });
