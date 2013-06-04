@@ -84,6 +84,7 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 != stretchy-1.html stretchy-1-ref.html
 == math-as-mstyle-1.xhtml math-as-mstyle-1-ref.xhtml
+== mspace-1.html mspace-1-ref.html
 == mpadded-1.html mpadded-1-ref.html
 == mpadded-2.html mpadded-2-ref.html
 == mpadded-3.html mpadded-3-ref.html
