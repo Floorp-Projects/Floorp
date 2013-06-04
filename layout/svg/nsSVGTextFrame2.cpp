@@ -2779,11 +2779,6 @@ SVGTextDrawPathCallbacks::HandleTextGeometry()
 {
   if (mRenderMode != SVGAutoRenderState::NORMAL) {
     // We're in a clip path.
-    if (mFrame->StyleSVG()->mClipRule == NS_STYLE_FILL_RULE_EVENODD)
-      gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
-    else
-      gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
-
     if (mRenderMode == SVGAutoRenderState::CLIP_MASK) {
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
       gfx->Fill();
@@ -4816,7 +4811,6 @@ nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
   // non-1 opacity.
   if (!(style->mFill.mType == eStyleSVGPaintType_None ||
         (style->mFill.mType == eStyleSVGPaintType_Color &&
-         style->mFillRule == NS_STYLE_FILL_RULE_NONZERO &&
          style->mFillOpacity == 1))) {
     return true;
   }
