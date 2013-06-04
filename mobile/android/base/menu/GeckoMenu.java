@@ -11,6 +11,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
+import android.view.ActionProvider;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -257,10 +258,12 @@ public class GeckoMenu extends ListView
             if (menuItem.getItemId() == id) {
                 return menuItem;
             } else if (menuItem.hasSubMenu()) {
-                SubMenu subMenu = menuItem.getSubMenu();
-                MenuItem item = subMenu.findItem(id);
-                if (item != null)
-                    return item;
+                if (menuItem.getActionProvider() == null) {
+                    SubMenu subMenu = menuItem.getSubMenu();
+                    MenuItem item = subMenu.findItem(id);
+                    if (item != null)
+                        return item;
+                }
             }
         }
         return null;
@@ -390,6 +393,14 @@ public class GeckoMenu extends ListView
 
             return mCallback.onMenuItemSelected(item);
         } else {
+            // Refresh the submenu for the provider.
+            ActionProvider provider = item.getActionProvider();
+            if (provider != null) {
+                GeckoSubMenu subMenu = new GeckoSubMenu(mContext, null);
+                provider.onPrepareSubMenu(subMenu);
+                ((GeckoMenuItem) item).setSubMenu(subMenu);
+            }
+
             // Show the submenu.
             if (mMenuPresenter != null)
                 mMenuPresenter.showMenu((GeckoSubMenu) item.getSubMenu());
