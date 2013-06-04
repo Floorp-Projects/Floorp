@@ -22,7 +22,7 @@ DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
                        const InfallibleTArray<uint8_t>& aBuffer,
                        JS::MutableHandle<JS::Value> aVal)
 {
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  mozilla::AutoSafeJSContext cx;
   JSAutoCompartment ac(cx, aObj);
 
   JS::Rooted<JSObject*> obj(cx, JS_NewArrayBuffer(cx, aBuffer.Length()));

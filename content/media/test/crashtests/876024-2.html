@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  var bufferSource = AudioContext().createScriptProcessor().context.createBufferSource();
+  bufferSource.noteGrainOn(0, 0, 0);
+  bufferSource.noteOff(562949953421313);
+}
+
+</script></head>
+
+<body onload="boom();"></body>
+</html>

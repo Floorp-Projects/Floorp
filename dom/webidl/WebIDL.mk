@@ -23,6 +23,7 @@ webidl_files = \
   AudioParam.webidl \
   AudioStreamTrack.webidl \
   AudioProcessingEvent.webidl \
+  BarProp.webidl \
   BatteryManager.webidl \
   BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
@@ -189,6 +190,7 @@ webidl_files = \
   NotifyPaintEvent.webidl \
   OfflineAudioCompletionEvent.webidl \
   OfflineAudioContext.webidl \
+  OfflineResourceList.webidl \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
@@ -338,6 +340,7 @@ webidl_files = \
   USSDReceivedEvent.webidl \
   VideoStreamTrack.webidl \
   WaveShaperNode.webidl \
+  WaveTable.webidl \
   Window.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \

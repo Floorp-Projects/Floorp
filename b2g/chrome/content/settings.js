@@ -199,12 +199,15 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
   // Get the hardware info and firmware revision from device properties.
   let hardware_info = null;
   let firmware_revision = null;
+  let product_model = null;
 #ifdef MOZ_WIDGET_GONK
     hardware_info = libcutils.property_get('ro.hardware');
     firmware_revision = libcutils.property_get('ro.firmware_revision');
+    product_model = libcutils.property_get('ro.product.model');
 #endif
   lock.set('deviceinfo.hardware', hardware_info, null, null);
   lock.set('deviceinfo.firmware_revision', firmware_revision, null, null);
+  lock.set('deviceinfo.product_model', product_model, null, null);
 })();
 
 // =================== Debugger ====================
@@ -290,4 +293,16 @@ SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
 // ================ Updates ================
 SettingsListener.observe('app.update.interval', 86400, function(value) {
   Services.prefs.setIntPref('app.update.interval', value);
+});
+
+// ================ Debug ================
+// XXX could factor out into a settings->pref map.
+SettingsListener.observe("debug.fps.enabled", false, function(value) {
+  Services.prefs.setBoolPref("layers.acceleration.draw-fps", value);
+});
+SettingsListener.observe("debug.paint-flashing.enabled", false, function(value) {
+  Services.prefs.setBoolPref("nglayout.debug.paint_flashing", value);
+});
+SettingsListener.observe("layers.draw-borders", false, function(value) {
+  Services.prefs.setBoolPref("layers.draw-borders", value);
 });

@@ -91,6 +91,7 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
       gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
     int32_t stride = gfxASurface::FormatStrideForWidth(format, aSize.width);
     uint8_t *data = new uint8_t[stride * aSize.height];
+    memset(data, 0, stride * aSize.height);
 
     *aBuffer = MemoryImage((uintptr_t)data, aSize, stride, format);
     return true;

@@ -13,7 +13,6 @@ pippki.jar:
 *   content/pippki/certerror.xul             (content/certerror.xul)
     content/pippki/downloadcert.js           (content/downloadcert.js)
     content/pippki/downloadcert.xul          (content/downloadcert.xul)
-    content/pippki/cacertexists.xul          (content/cacertexists.xul)
     content/pippki/certManager.js            (content/certManager.js)
     content/pippki/certManager.xul           (content/certManager.xul)
     content/pippki/CAOverlay.xul             (content/CAOverlay.xul)

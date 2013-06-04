@@ -38,6 +38,7 @@ EXPORTS.mozilla.dom += [
     'PannerNode.h',
     'ScriptProcessorNode.h',
     'WaveShaperNode.h',
+    'WaveTable.h',
 ]
 
 CPP_SOURCES += [
@@ -63,6 +64,7 @@ CPP_SOURCES += [
     'ScriptProcessorNode.cpp',
     'ThreeDPoint.cpp',
     'WaveShaperNode.cpp',
+    'WaveTable.cpp',
     'WebAudioUtils.cpp',
 ]
 

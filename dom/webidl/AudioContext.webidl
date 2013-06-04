@@ -61,6 +61,9 @@ interface AudioContext : EventTarget {
     [Creator]
     DynamicsCompressorNode createDynamicsCompressor();
 
+    [Creator, Throws]
+    WaveTable createWaveTable(Float32Array real, Float32Array imag);
+
 };
 
 /*

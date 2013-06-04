@@ -312,6 +312,8 @@ PeerConnectionImpl::PeerConnectionImpl()
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
+  CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %p",
+             __FUNCTION__, (void *) this);
 }
 
 PeerConnectionImpl::~PeerConnectionImpl()
@@ -324,7 +326,8 @@ PeerConnectionImpl::~PeerConnectionImpl()
     CSFLogError(logTag, "PeerConnectionCtx is already gone. Ignoring...");
   }
 
-  CSFLogInfo(logTag, "%s: PeerConnectionImpl destructor invoked", __FUNCTION__);
+  CSFLogInfo(logTag, "%s: PeerConnectionImpl destructor invoked for %p",
+             __FUNCTION__, (void *) this);
   CloseInt();
 
 #ifdef MOZILLA_INTERNAL_API
@@ -696,6 +699,8 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;
   }
+  CSFLogDebug(logTag,"%s DataChannelConnection %p attached to %p",
+              __FUNCTION__, (void*) mDataConnection.get(), (void *) this);
 #endif
   return NS_OK;
 }
@@ -1240,7 +1245,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close()
 {
-  CSFLogDebug(logTag, "%s", __FUNCTION__);
+  CSFLogDebug(logTag, "%s: for %p", __FUNCTION__, (void *) this);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt();
@@ -1253,12 +1258,14 @@ PeerConnectionImpl::CloseInt()
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   if (mCall) {
-    CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl; "
-                       "ending call", __FUNCTION__);
+    CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %p; "
+               "ending call", __FUNCTION__, (void *) this);
     mCall->endCall();
   }
 #ifdef MOZILLA_INTERNAL_API
   if (mDataConnection) {
+    CSFLogInfo(logTag, "%s: Destroying DataChannelConnection %p for %p",
+               __FUNCTION__, (void *) mDataConnection.get(), (void *) this);
     mDataConnection->Destroy();
     mDataConnection = nullptr; // it may not go away until the runnables are dead
   }
@@ -1486,18 +1493,24 @@ static nsresult
 GetStreams(JSContext* cx, PeerConnectionImpl* peerConnection,
            MediaStreamList::StreamType type, JS::Value* streams)
 {
-  nsAutoPtr<MediaStreamList> list(new MediaStreamList(peerConnection, type));
+  nsRefPtr<MediaStreamList> list(new MediaStreamList(peerConnection, type));
 
-  bool tookOwnership = false;
-  JSObject* obj = list->WrapObject(cx, &tookOwnership);
-  if (!tookOwnership) {
+  nsCOMPtr<nsIScriptGlobalObject> global =
+    do_QueryInterface(peerConnection->GetWindow());
+  JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
+  if (!scope) {
     streams->setNull();
     return NS_ERROR_FAILURE;
   }
 
-  // Transfer ownership to the binding.
+  JSAutoCompartment ac(cx, scope);
+  JSObject* obj = list->WrapObject(cx, scope);
+  if (!obj) {
+    streams->setNull();
+    return NS_ERROR_FAILURE;
+  }
+
   streams->setObject(*obj);
-  list.forget();
   return NS_OK;
 }
 #endif

@@ -74,33 +74,33 @@ NS_IMPL_ISUPPORTS1(DOMMimeTypeImpl, nsIDOMMimeType)
 /* nsPluginTag */
 
 nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
-: mName(aPluginTag->mName),
-mDescription(aPluginTag->mDescription),
-mMimeTypes(aPluginTag->mMimeTypes),
-mMimeDescriptions(aPluginTag->mMimeDescriptions),
-mExtensions(aPluginTag->mExtensions),
-mLibrary(nullptr),
-mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
-mIsFlashPlugin(aPluginTag->mIsFlashPlugin),
-mFileName(aPluginTag->mFileName),
-mFullPath(aPluginTag->mFullPath),
-mVersion(aPluginTag->mVersion),
-mLastModifiedTime(0),
-mNiceFileName()
+  : mName(aPluginTag->mName),
+    mDescription(aPluginTag->mDescription),
+    mMimeTypes(aPluginTag->mMimeTypes),
+    mMimeDescriptions(aPluginTag->mMimeDescriptions),
+    mExtensions(aPluginTag->mExtensions),
+    mLibrary(nullptr),
+    mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
+    mIsFlashPlugin(aPluginTag->mIsFlashPlugin),
+    mFileName(aPluginTag->mFileName),
+    mFullPath(aPluginTag->mFullPath),
+    mVersion(aPluginTag->mVersion),
+    mLastModifiedTime(0),
+    mNiceFileName()
 {
 }
 
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
-: mName(aPluginInfo->fName),
-mDescription(aPluginInfo->fDescription),
-mLibrary(nullptr),
-mIsJavaPlugin(false),
-mIsFlashPlugin(false),
-mFileName(aPluginInfo->fFileName),
-mFullPath(aPluginInfo->fFullPath),
-mVersion(aPluginInfo->fVersion),
-mLastModifiedTime(0),
-mNiceFileName()
+  : mName(aPluginInfo->fName),
+    mDescription(aPluginInfo->fDescription),
+    mLibrary(nullptr),
+    mIsJavaPlugin(false),
+    mIsFlashPlugin(false),
+    mFileName(aPluginInfo->fFileName),
+    mFullPath(aPluginInfo->fFullPath),
+    mVersion(aPluginInfo->fVersion),
+    mLastModifiedTime(0),
+    mNiceFileName()
 {
   InitMime(aPluginInfo->fMimeTypeArray,
            aPluginInfo->fMimeDescriptionArray,
@@ -120,18 +120,19 @@ nsPluginTag::nsPluginTag(const char* aName,
                          int32_t aVariants,
                          int64_t aLastModifiedTime,
                          bool aArgsAreUTF8)
-: mName(aName),
-mDescription(aDescription),
-mLibrary(nullptr),
-mIsJavaPlugin(false),
-mIsFlashPlugin(false),
-mFileName(aFileName),
-mFullPath(aFullPath),
-mVersion(aVersion),
-mLastModifiedTime(aLastModifiedTime),
-mNiceFileName()
+  : mName(aName),
+    mDescription(aDescription),
+    mLibrary(nullptr),
+    mIsJavaPlugin(false),
+    mIsFlashPlugin(false),
+    mFileName(aFileName),
+    mFullPath(aFullPath),
+    mVersion(aVersion),
+    mLastModifiedTime(aLastModifiedTime),
+    mNiceFileName()
 {
-  InitMime(aMimeTypes, aMimeDescriptions, aExtensions, static_cast<uint32_t>(aVariants));
+  InitMime(aMimeTypes, aMimeDescriptions, aExtensions,
+           static_cast<uint32_t>(aVariants));
   if (!aArgsAreUTF8)
     EnsureMembersAreUTF8();
 }
@@ -431,19 +432,51 @@ nsPluginTag::SetPluginState(PluginState state)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetMimeTypes(uint32_t* aCount, nsIDOMMimeType*** aResults)
+nsPluginTag::GetMimeTypes(uint32_t* aCount, PRUnichar*** aResults)
 {
   uint32_t count = mMimeTypes.Length();
-  *aResults = static_cast<nsIDOMMimeType**>
+  *aResults = static_cast<PRUnichar**>
                          (nsMemory::Alloc(count * sizeof(**aResults)));
   if (!*aResults)
     return NS_ERROR_OUT_OF_MEMORY;
   *aCount = count;
 
   for (uint32_t i = 0; i < count; i++) {
-    nsIDOMMimeType* mimeType = new DOMMimeTypeImpl(this, i);
-    (*aResults)[i] = mimeType;
-    NS_ADDREF((*aResults)[i]);
+    (*aResults)[i] = ToNewUnicode(mMimeTypes[i]);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::GetMimeDescriptions(uint32_t* aCount, PRUnichar*** aResults)
+{
+  uint32_t count = mMimeDescriptions.Length();
+  *aResults = static_cast<PRUnichar**>
+                         (nsMemory::Alloc(count * sizeof(**aResults)));
+  if (!*aResults)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *aCount = count;
+
+  for (uint32_t i = 0; i < count; i++) {
+    (*aResults)[i] = ToNewUnicode(mMimeDescriptions[i]);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::GetExtensions(uint32_t* aCount, PRUnichar*** aResults)
+{
+  uint32_t count = mExtensions.Length();
+  *aResults = static_cast<PRUnichar**>
+                         (nsMemory::Alloc(count * sizeof(**aResults)));
+  if (!*aResults)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *aCount = count;
+
+  for (uint32_t i = 0; i < count; i++) {
+    (*aResults)[i] = ToNewUnicode(mExtensions[i]);
   }
 
   return NS_OK;

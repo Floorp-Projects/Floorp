@@ -169,7 +169,7 @@ public:
   NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
                                  nsIContent** aContent) MOZ_OVERRIDE;
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
-                        nsIFrame::Cursor& aCursor);
+                        nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
 
   NS_IMETHOD  GetPointFromOffset(int32_t                inOffset,
                                  nsPoint*               outPoint) MOZ_OVERRIDE;

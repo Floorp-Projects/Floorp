@@ -383,6 +383,13 @@ nsHttpConnection::SetupNPN(uint32_t caps)
                 return;
 
             nsTArray<nsCString> protocolArray;
+
+            // The first protocol is used as the fallback if none of the
+            // protocols supported overlap with the server's list.
+            // In the case of overlap, matching priority is driven by
+            // the order of the server's advertisement.
+            protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
+
             if (gHttpHandler->IsSpdyEnabled() &&
                 !(caps & NS_HTTP_DISALLOW_SPDY)) {
                 LOG(("nsHttpConnection::SetupNPN Allow SPDY NPN selection"));
@@ -394,7 +401,6 @@ nsHttpConnection::SetupNPN(uint32_t caps)
                         gHttpHandler->SpdyInfo()->VersionString[1]);
             }
 
-            protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
             if (NS_SUCCEEDED(ssl->SetNPNList(protocolArray))) {
                 LOG(("nsHttpConnection::Init Setting up SPDY Negotiation OK"));
                 mNPNComplete = false;
@@ -1088,6 +1094,35 @@ nsHttpConnection::ResumeRecv()
 
     NS_NOTREACHED("no socket input stream");
     return NS_ERROR_UNEXPECTED;
+}
+
+
+class nsHttpConnectionForceRecv : public nsRunnable
+{
+public:
+    nsHttpConnectionForceRecv(nsHttpConnection *aConn)
+        : mConn(aConn) {}
+
+    NS_IMETHOD Run()
+    {
+        MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+        if (!mConn->mSocketIn)
+            return NS_OK;
+        return mConn->OnInputStreamReady(mConn->mSocketIn);
+    }
+private:
+    nsRefPtr<nsHttpConnection> mConn;
+};
+
+// trigger an asynchronous read
+nsresult
+nsHttpConnection::ForceRecv()
+{
+    LOG(("nsHttpConnection::ForceRecv [this=%p]\n", this));
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+    return NS_DispatchToCurrentThread(new nsHttpConnectionForceRecv(this));
 }
 
 void

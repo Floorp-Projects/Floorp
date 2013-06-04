@@ -13,40 +13,66 @@
 namespace mozilla {
 namespace gfx {
 
-struct IntPoint :
-  public BasePoint<int32_t, IntPoint> {
-  typedef BasePoint<int32_t, IntPoint> Super;
+// This should only be used by the typedefs below.
+struct UnknownUnits {};
 
-  IntPoint() : Super() {}
-  IntPoint(int32_t aX, int32_t aY) : Super(aX, aY) {}
+template<class units>
+struct IntPointTyped :
+  public BasePoint< int32_t, IntPointTyped<units> >,
+  public units {
+  typedef BasePoint< int32_t, IntPointTyped<units> > Super;
+
+  IntPointTyped() : Super() {}
+  IntPointTyped(int32_t aX, int32_t aY) : Super(aX, aY) {}
 };
+typedef IntPointTyped<UnknownUnits> IntPoint;
 
-struct Point :
-  public BasePoint<Float, Point> {
-  typedef BasePoint<Float, Point> Super;
+template<class units>
+struct PointTyped :
+  public BasePoint< Float, PointTyped<units> >,
+  public units {
+  typedef BasePoint< Float, PointTyped<units> > Super;
 
-  Point() : Super() {}
-  Point(Float aX, Float aY) : Super(aX, aY) {}
-  Point(const IntPoint& point) : Super(float(point.x), float(point.y)) {}
+  PointTyped() : Super() {}
+  PointTyped(Float aX, Float aY) : Super(aX, aY) {}
+  PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
+
+  // XXX When all of the code is ported, the following functions to convert to and from
+  // unknown types should be removed.
+
+  static PointTyped<units> FromUnknownPoint(const PointTyped<UnknownUnits>& pt) {
+    return PointTyped<units>(pt.x, pt.y);
+  }
+
+  PointTyped<UnknownUnits> ToUnknownPoint() const {
+    return PointTyped<UnknownUnits>(this->x, this->y);
+  }
 };
+typedef PointTyped<UnknownUnits> Point;
 
-struct IntSize :
-  public BaseSize<int32_t, IntSize> {
-  typedef BaseSize<int32_t, IntSize> Super;
+template<class units>
+struct IntSizeTyped :
+  public BaseSize< int32_t, IntSizeTyped<units> >,
+  public units {
+  typedef BaseSize< int32_t, IntSizeTyped<units> > Super;
 
-  IntSize() : Super() {}
-  IntSize(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
+  IntSizeTyped() : Super() {}
+  IntSizeTyped(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
 };
+typedef IntSizeTyped<UnknownUnits> IntSize;
 
-struct Size :
-  public BaseSize<Float, Size> {
-  typedef BaseSize<Float, Size> Super;
+template<class units>
+struct SizeTyped :
+  public BaseSize< Float, SizeTyped<units> >,
+  public units {
+  typedef BaseSize< Float, SizeTyped<units> > Super;
 
-  Size() : Super() {}
-  Size(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
-  explicit Size(const IntSize& size) :
+  SizeTyped() : Super() {}
+  SizeTyped(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
+  explicit SizeTyped(const IntSizeTyped<units>& size) :
     Super(float(size.width), float(size.height)) {}
 };
+typedef SizeTyped<UnknownUnits> Size;
 
 }
 }

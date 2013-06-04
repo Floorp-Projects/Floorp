@@ -320,14 +320,6 @@ var shell = {
     IndexedDBPromptHelper.init();
     CaptivePortalLoginHelper.init();
 
-    // XXX could factor out into a settings->pref map.  Not worth it yet.
-    SettingsListener.observe("debug.fps.enabled", false, function(value) {
-      Services.prefs.setBoolPref("layers.acceleration.draw-fps", value);
-    });
-    SettingsListener.observe("debug.paint-flashing.enabled", false, function(value) {
-      Services.prefs.setBoolPref("nglayout.debug.paint_flashing", value);
-    });
-
     this.contentBrowser.src = homeURL;
     this.isHomeLoaded = false;
 
@@ -1009,6 +1001,8 @@ let RemoteDebugger = {
       DebuggerServer.init(this.prompt.bind(this));
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
 #ifndef MOZ_WIDGET_GONK
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
+      DebuggerServer.addGlobalActor(DebuggerServer.ChromeDebuggerActor, "chromeDebugger");
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
 #endif
@@ -1017,7 +1011,7 @@ let RemoteDebugger = {
       }
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
-      DebuggerServer.addActors('chrome://browser/content/dbg-webapps-actors.js');
+      DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     }
 
     let port = Services.prefs.getIntPref('devtools.debugger.remote-port') || 6000;

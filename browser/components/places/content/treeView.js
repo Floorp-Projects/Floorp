@@ -718,7 +718,13 @@ PlacesTreeView.prototype = {
     if (PlacesUtils.nodeIsSeparator(aNode) && this.isSorted())
       return;
 
-    let oldRow = this._getRowForNode(aNode, true);
+    // Note that at this point the node has already been moved by the backend,
+    // so we must give hints to _getRowForNode to get the old row position.
+    let oldParentRow = aOldParent == this._rootNode ?
+                         undefined : this._getRowForNode(aOldParent, true);
+    let oldRow = this._getRowForNode(aNode, true, oldParentRow, aOldIndex);
+    if (oldRow < 0)
+      throw Cr.NS_ERROR_UNEXPECTED;
 
     // If this node is a container it could take up more than one row.
     let count = this._countVisibleRowsForNodeAtRow(oldRow);

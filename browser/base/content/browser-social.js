@@ -42,12 +42,6 @@ SocialUI = {
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
 
-    // Called when we enter DOM full-screen mode.
-    window.addEventListener("mozfullscreenchange", function () {
-      SocialSidebar.update();
-      SocialChatBar.update();
-    });
-
     SocialChatBar.init();
     SocialMark.init();
     SocialShare.init();
@@ -379,7 +373,7 @@ SocialChatBar = {
       this.chatbar.removeAll();
       this.chatbar.hidden = command.hidden = true;
     } else {
-      this.chatbar.hidden = command.hidden = document.mozFullScreen;
+      this.chatbar.hidden = command.hidden = false;
     }
     command.setAttribute("disabled", command.hidden ? "true" : "false");
   },
@@ -407,7 +401,11 @@ function sizeSocialPanelToContent(panel, iframe) {
   let height = Math.max(computedHeight, PANEL_MIN_HEIGHT);
   let computedWidth = parseInt(cs.marginLeft) + body.offsetWidth + parseInt(cs.marginRight);
   let width = Math.max(computedWidth, PANEL_MIN_WIDTH);
-  panel.sizeTo(width, height);
+  iframe.style.width = width + "px";
+  iframe.style.height = height + "px";
+  // since we do not use panel.sizeTo, we need to adjust the arrow ourselves
+  if (panel.state == "open")
+    panel.adjustArrowPosition();
 }
 
 function DynamicResizeWatcher() {
@@ -446,8 +444,14 @@ SocialFlyout = {
     return document.getElementById("social-flyout-panel");
   },
 
+  get iframe() {
+    if (!this.panel.firstChild)
+      this._createFrame();
+    return this.panel.firstChild;
+  },
+
   dispatchPanelEvent: function(name) {
-    let doc = this.panel.firstChild.contentDocument;
+    let doc = this.iframe.contentDocument;
     let evt = doc.createEvent("CustomEvent");
     evt.initCustomEvent(name, true, true, {});
     doc.documentElement.dispatchEvent(evt);
@@ -468,13 +472,9 @@ SocialFlyout = {
   },
 
   setFlyoutErrorMessage: function SF_setFlyoutErrorMessage() {
-    let iframe = this.panel.firstChild;
-    if (!iframe)
-      return;
-
-    iframe.removeAttribute("src");
-    iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
-    sizeSocialPanelToContent(this.panel, iframe);
+    this.iframe.removeAttribute("src");
+    this.iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
+    sizeSocialPanelToContent(this.panel, this.iframe);
   },
 
   unload: function() {
@@ -490,7 +490,7 @@ SocialFlyout = {
 
   onShown: function(aEvent) {
     let panel = this.panel;
-    let iframe = panel.firstChild;
+    let iframe = this.iframe;
     this._dynamicResizer = new DynamicResizeWatcher();
     iframe.docShell.isActive = true;
     iframe.docShell.isAppTab = true;
@@ -514,8 +514,35 @@ SocialFlyout = {
   onHidden: function(aEvent) {
     this._dynamicResizer.stop();
     this._dynamicResizer = null;
-    this.panel.firstChild.docShell.isActive = false;
+    this.iframe.docShell.isActive = false;
     this.dispatchPanelEvent("socialFrameHide");
+  },
+
+  load: function(aURL, cb) {
+    if (!Social.provider)
+      return;
+
+    this.panel.hidden = false;
+    let iframe = this.iframe;
+    // same url with only ref difference does not cause a new load, so we
+    // want to go right to the callback
+    let src = iframe.contentDocument && iframe.contentDocument.documentURIObject;
+    if (!src || !src.equalsExceptRef(Services.io.newURI(aURL, null, null))) {
+      iframe.addEventListener("load", function documentLoaded() {
+        iframe.removeEventListener("load", documentLoaded, true);
+        cb();
+      }, true);
+      // Force a layout flush by calling .clientTop so
+      // that the docShell of this frame is created
+      iframe.clientTop;
+      Social.setErrorListener(iframe, SocialFlyout.setFlyoutErrorMessage.bind(SocialFlyout))
+      iframe.setAttribute("src", aURL);
+    } else {
+      // we still need to set the src to trigger the contents hashchange event
+      // for ref changes
+      iframe.setAttribute("src", aURL);
+      cb();
+    }
   },
 
   open: function(aURL, yOffset, aCallback) {
@@ -525,44 +552,24 @@ SocialFlyout = {
     if (!SocialUI.enabled)
       return;
     let panel = this.panel;
-    if (!panel.firstChild)
-      this._createFrame();
-    panel.hidden = false;
-    let iframe = panel.firstChild;
+    let iframe = this.iframe;
 
-    let src = iframe.getAttribute("src");
-    if (src != aURL) {
-      iframe.addEventListener("load", function documentLoaded() {
-        iframe.removeEventListener("load", documentLoaded, true);
-        if (aCallback) {
-          try {
-            aCallback(iframe.contentWindow);
-          } catch(e) {
-            Cu.reportError(e);
-          }
-        }
-      }, true);
-      iframe.setAttribute("src", aURL);
-    }
-    else if (aCallback) {
-      try {
-        aCallback(iframe.contentWindow);
-      } catch(e) {
-        Cu.reportError(e);
+    this.load(aURL, function() {
+      sizeSocialPanelToContent(panel, iframe);
+      let anchor = document.getElementById("social-sidebar-browser");
+      if (panel.state == "open") {
+        panel.moveToAnchor(anchor, "start_before", 0, yOffset, false);
+      } else {
+        panel.openPopup(anchor, "start_before", 0, yOffset, false, false);
       }
-    }
-
-    sizeSocialPanelToContent(panel, iframe);
-    let anchor = document.getElementById("social-sidebar-browser");
-    if (panel.state == "open") {
-      panel.moveToAnchor(anchor, "start_before", 0, yOffset, false);
-    } else {
-      panel.openPopup(anchor, "start_before", 0, yOffset, false, false);
-      // Force a layout flush by calling .clientTop so
-      // that the docShell of this frame is created
-      panel.firstChild.clientTop;
-      Social.setErrorListener(iframe, this.setFlyoutErrorMessage.bind(this))
-    }
+      if (aCallback) {
+        try {
+          aCallback(iframe.contentWindow);
+        } catch(e) {
+          Cu.reportError(e);
+        }
+      }
+    });
   }
 }
 

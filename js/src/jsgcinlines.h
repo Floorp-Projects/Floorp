@@ -591,6 +591,13 @@ js_NewGCScript(JSContext *cx)
                                                    sizeof(JSScript), js::gc::TenuredHeap);
 }
 
+inline js::LazyScript *
+js_NewGCLazyScript(JSContext *cx)
+{
+    return js::gc::NewGCThing<js::LazyScript, js::CanGC>(cx, js::gc::FINALIZE_LAZY_SCRIPT,
+                                                         sizeof(js::LazyScript), js::gc::TenuredHeap);
+}
+
 inline js::Shape *
 js_NewGCShape(JSContext *cx)
 {

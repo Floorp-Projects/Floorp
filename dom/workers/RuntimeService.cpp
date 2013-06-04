@@ -514,7 +514,8 @@ public:
 
     JSRuntime* rt = JS_GetRuntime(cx);
 
-    profiler_register_thread("WebWorker");
+    char aLocal;
+    profiler_register_thread("WebWorker", &aLocal);
 #ifdef MOZ_ENABLE_PROFILER_SPS
     if (PseudoStack* stack = mozilla_get_pseudo_stack())
       stack->sampleRuntime(rt);

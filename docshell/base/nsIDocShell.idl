@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "domstubs.idl"
 #include "nsIDocShellTreeItem.idl"
 #include "nsIAtom.idl"
 
@@ -39,8 +40,9 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
+interface nsIReflowObserver;
 
-[scriptable, builtinclass, uuid(2b192c9c-dea4-4696-a445-1bef7bc0db6d)]
+[scriptable, builtinclass, uuid(d15b07e0-c604-11e2-8bdc-651679957a39)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -597,12 +599,12 @@ interface nsIDocShell : nsIDocShellTreeItem
    *
    * XXX Could this be replaced by a boolean?
    */
-  attribute nsIAtom forcedCharset;
+  attribute ACString forcedCharset;
 
   /**
    * In a child docshell, this is the charset of the parent docshell
    */
-  attribute nsIAtom parentCharset;
+  attribute ACString parentCharset;
 
   /*
    * In a child docshell, this is the source of parentCharset
@@ -615,6 +617,30 @@ interface nsIDocShell : nsIDocShellTreeItem
    * private browsing status is changed. |obs| must support weak references.
    */
   void addWeakPrivacyTransitionObserver(in nsIPrivacyTransitionObserver obs);
+
+  /**
+   * Add an observer to the list of parties to be notified when reflows are
+   * occurring. |obs| must support weak references.
+   */
+  void addWeakReflowObserver(in nsIReflowObserver obs);
+
+  /**
+   * Remove an observer from the list of parties to be notified about reflows.
+   */
+  void removeWeakReflowObserver(in nsIReflowObserver obs);
+
+  /**
+   * Notify all attached observers that a reflow has just occurred.
+   *
+   * @param interruptible if true, the reflow was interruptible.
+   * @param start         timestamp when reflow started, in milliseconds since
+   *                      navigationStart (accurate to 1/1000 of a ms)
+   * @param end           timestamp when reflow ended, in milliseconds since
+   *                      navigationStart (accurate to 1/1000 of a ms)
+   */
+  [noscript] void notifyReflowObservers(in bool interruptible,
+                                        in DOMHighResTimeStamp start,
+                                        in DOMHighResTimeStamp end);
 
   /**
    * Returns true if this docshell corresponds to an <iframe mozbrowser>.

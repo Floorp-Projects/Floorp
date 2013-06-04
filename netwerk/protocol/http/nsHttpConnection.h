@@ -120,6 +120,9 @@ public:
     nsresult ResumeRecv();
     int64_t  MaxBytesRead() {return mMaxBytesRead;}
 
+    friend class nsHttpConnectionForceRecv;
+    nsresult ForceRecv();
+
     static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
                                     uint32_t, uint32_t, uint32_t *);
 

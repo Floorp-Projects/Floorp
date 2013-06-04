@@ -167,7 +167,7 @@ var tests = {
     });
   },
 
-  // Open a chat via the worker - it will open minimized and not have focus.
+  // Open a chat via the worker - it will open and not have focus.
   // Then open the same chat via a sidebar message - it will be restored but
   // should still not have grabbed focus.
   testNoFocusOnAutoRestore: function(next) {
@@ -176,7 +176,6 @@ var tests = {
     startTestAndWaitForSidebar(function(port) {
       openChatViaWorkerMessage(port, chatUrl, function() {
         is(chatbar.childElementCount, 1, "exactly 1 chat open");
-        ok(chatbar.firstElementChild.minimized, "chat is minimized");
         // bug 865086 opening minimized still sets the window as selected
         todo(chatbar.selectedChat != chatbar.firstElementChild, "chat is not selected");
         ok(isTabFocused(), "tab should be focused");

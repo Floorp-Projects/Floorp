@@ -8,6 +8,7 @@
 #include "nsIServiceManager.h"
 #include "nsNativeThemeColors.h"
 #include "nsStyleConsts.h"
+#include "nsCocoaFeatures.h"
 #include "gfxFont.h"
 
 #import <Cocoa/Cocoa.h>
@@ -352,7 +353,10 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = eScrollThumbStyle_Proportional;
       break;
     case eIntID_UseOverlayScrollbars:
-      aResult = UseOverlayScrollbars();
+      aResult = UseOverlayScrollbars() ? 1 : 0;
+      break;
+    case eIntID_AllowOverlayScrollbarsOverlap:
+      aResult = AllowOverlayScrollbarsOverlap() ? 1 : 0;
       break;
     case eIntID_TreeOpenDelay:
       aResult = 1000;
@@ -468,8 +472,13 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 
 bool nsLookAndFeel::UseOverlayScrollbars()
 {
-  return [NSScroller respondsToSelector:@selector(preferredScrollerStyle)] &&
-         [NSScroller preferredScrollerStyle] == mozNSScrollerStyleOverlay;
+  return ([NSScroller respondsToSelector:@selector(preferredScrollerStyle)] &&
+          [NSScroller preferredScrollerStyle] == mozNSScrollerStyleOverlay);
+}
+
+bool nsLookAndFeel::AllowOverlayScrollbarsOverlap()
+{
+  return (UseOverlayScrollbars() && nsCocoaFeatures::OnMountainLionOrLater());
 }
 
 // copied from gfxQuartzFontCache.mm, maybe should go in a Cocoa utils

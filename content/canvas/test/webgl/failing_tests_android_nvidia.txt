@@ -1,0 +1,8 @@
+# Failures for our Tegra 2 slaves.
+
+conformance/extensions/oes-standard-derivatives.html
+conformance/glsl/misc/shared.html
+conformance/misc/null-object-behaviour.html
+conformance/textures/texture-mips.html
+conformance/textures/texture-npot.html
+conformance/textures/texture-npot-video.html

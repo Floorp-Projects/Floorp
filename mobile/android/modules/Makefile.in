@@ -15,6 +15,7 @@ EXTRA_JS_MODULES = \
   OrderedBroadcast.jsm \
   Sanitizer.jsm \
   SharedPreferences.jsm \
+  Prompt.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -152,6 +152,9 @@ pref("media.cache_size", 512000);
 // Master HTML5 media volume scale.
 pref("media.volume_scale", "1.0");
 
+// Timeout for wakelock release
+pref("media.wakelock_timeout", 2000);
+
 #ifdef MOZ_WMF
 pref("media.windows-media-foundation.enabled", true);
 pref("media.windows-media-foundation.use-dxva", true);
@@ -1017,6 +1020,8 @@ pref("network.http.spdy.persistent-settings", false);
 pref("network.http.spdy.ping-threshold", 58);
 pref("network.http.spdy.ping-timeout", 8);
 pref("network.http.spdy.send-buffer-size", 131072);
+pref("network.http.spdy.allow-push", true);
+pref("network.http.spdy.push-allowance", 65536);
 
 pref("network.http.diagnostics", false);
 
@@ -4072,6 +4077,9 @@ pref("dom.event.handling-user-input-time-limit", 1000);
  
 //3D Transforms
 pref("layout.3d-transforms.enabled", true);
+
+// Whether we should layerize all animated images (if otherwise possible).
+pref("layout.animated-image-layers.enabled", false);
 
 pref("dom.vibrator.enabled", true);
 pref("dom.vibrator.max_vibrate_ms", 10000);

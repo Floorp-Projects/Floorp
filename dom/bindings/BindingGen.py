@@ -52,7 +52,20 @@ def main():
 
     if all(f.endswith("Binding") or f == "ParserResults.pkl" for f in changedDeps):
         toRegenerate = filter(lambda f: f.endswith("Binding"), changedDeps)
-        toRegenerate = map(lambda f: f[:-len("Binding")] + ".webidl", toRegenerate)
+        if len(toRegenerate) == 0 and len(changedDeps) == 1:
+            # Work around build system bug 874923: if we get here that means
+            # that changedDeps contained only one entry and it was
+            # "ParserResults.pkl".  That should never happen: if the
+            # ParserResults.pkl changes then either one of the globalgen files
+            # changed (in which case we wouldn't be in this "only
+            # ParserResults.pkl and *Binding changed" code) or some .webidl
+            # files changed (and then the corresponding *Binding files should
+            # show up in changedDeps).  Since clearly the build system is
+            # confused, just regenerate everything to be safe.
+            toRegenerate = allWebIDLFiles
+        else:
+            toRegenerate = map(lambda f: f[:-len("Binding")] + ".webidl",
+                               toRegenerate)
     else:
         toRegenerate = allWebIDLFiles
 

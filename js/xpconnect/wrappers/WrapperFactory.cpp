@@ -294,9 +294,9 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     // so we don't have to.
     RootedValue v(cx);
     nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, wrapScope, wn->Native(), nullptr,
-                                                           &NS_GET_IID(nsISupports), false,
-                                                           v.address(), getter_AddRefs(holder));
+        nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, wrapScope, wn->Native(), nullptr,
+                                                    &NS_GET_IID(nsISupports), false,
+                                                    v.address(), getter_AddRefs(holder));
     if (NS_SUCCEEDED(rv)) {
         obj = JSVAL_TO_OBJECT(v);
         NS_ASSERTION(IS_WN_WRAPPER(obj), "bad object");

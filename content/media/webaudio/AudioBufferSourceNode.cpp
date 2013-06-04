@@ -480,6 +480,12 @@ void
 AudioBufferSourceNode::Start(double aWhen, double aOffset,
                              const Optional<double>& aDuration, ErrorResult& aRv)
 {
+  if (!WebAudioUtils::IsTimeValid(aWhen) ||
+      (aDuration.WasPassed() && !WebAudioUtils::IsTimeValid(aDuration.Value()))) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
   if (mStartCalled) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -567,6 +573,11 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
 void
 AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv, bool aShuttingDown)
 {
+  if (!WebAudioUtils::IsTimeValid(aWhen)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
   if (!mStartCalled) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -667,6 +678,10 @@ AudioBufferSourceNode::SendLoopParametersToStream()
       SendInt32ParameterToStream(LOOPSTART, loopStartTicks);
       SendInt32ParameterToStream(LOOPEND, loopEndTicks);
       SendInt32ParameterToStream(LOOP, 1);
+    } else {
+      // Be explicit about looping not happening if the offsets make
+      // looping impossible.
+      SendInt32ParameterToStream(LOOP, 0);
     }
   } else if (!mLoop) {
     SendInt32ParameterToStream(LOOP, 0);

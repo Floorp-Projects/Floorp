@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.util.FloatUtils;
 
@@ -25,12 +26,12 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
     private static final String LOGTAG = "GeckoLayerMarginsAnimator";
     private static final float MS_PER_FRAME = 1000.0f / 60.0f;
     private static final long MARGIN_ANIMATION_DURATION = 250;
+    private static final String PREF_SHOW_MARGINS_THRESHOLD = "browser.ui.show-margins-threshold";
 
     /* This is the proportion of the viewport rect, minus maximum margins,
-     * that should be used to be able to expose margins. This does not apply
-     * for hiding margins.
+     * that needs to be travelled before margins will be exposed.
      */
-    private static final float SHOW_MARGINS_AREA = 0.25f;
+    private float SHOW_MARGINS_THRESHOLD = 0.20f;
 
     /* This rect stores the maximum value margins can grow to when scrolling */
     private final RectF mMaxMargins;
@@ -42,8 +43,11 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
     private final DecelerateInterpolator mInterpolator;
     /* The GeckoLayerClient whose margins will be animated */
     private final GeckoLayerClient mTarget;
-    /* The position of the first touch event */
-    private final PointF mTouchStartPosition;
+    /* The distance that has been scrolled since either the first touch event,
+     * or since the margins were last fully hidden */
+    private final PointF mTouchTravelDistance;
+    /* The ID of the prefs listener for the show-marginss threshold */
+    private Integer mPrefObserverId;
 
     public LayerMarginsAnimator(GeckoLayerClient aTarget, LayerView aView) {
         // Assign member variables from parameters
@@ -52,10 +56,30 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
         // Create other member variables
         mMaxMargins = new RectF();
         mInterpolator = new DecelerateInterpolator();
-        mTouchStartPosition = new PointF();
+        mTouchTravelDistance = new PointF();
+
+        // Listen to the dynamic toolbar pref
+        mPrefObserverId = PrefsHelper.getPref(PREF_SHOW_MARGINS_THRESHOLD, new PrefsHelper.PrefHandlerBase() {
+            @Override
+            public void prefValue(String pref, int value) {
+                SHOW_MARGINS_THRESHOLD = (float)value / 100.0f;
+            }
+
+            @Override
+            public boolean isObserver() {
+                return true;
+            }
+        });
 
         // Listen to touch events, for auto-pinning
         aView.addTouchInterceptor(this);
+    }
+
+    public void destroy() {
+        if (mPrefObserverId != null) {
+            PrefsHelper.removeObserver(mPrefObserverId);
+            mPrefObserverId = null;
+        }
     }
 
     /**
@@ -154,17 +178,16 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
      * aMargins are in/out parameters. In specifies the current margin size,
      * and out specifies the modified margin size. They are specified in the
      * order of start-margin, then end-margin.
-     * This function will also take into account what touch initiated this
-     * scroll and react accordingly. If a scroll was initiated from a point
-     * outisde of the active area of the viewport, margins can only be hidden
-     * and not shown.
+     * This function will also take into account how far the touch point has
+     * moved and react accordingly. If a touch point hasn't moved beyond a
+     * certain threshold, margins can only be hidden and not shown.
      * aNegativeOffset can be used if the remaining delta should be determined
      * by the end-margin instead of the start-margin (for example, in rtl
      * pages).
      */
     private float scrollMargin(float[] aMargins, float aDelta,
                                float aOverscrollStart, float aOverscrollEnd,
-                               float aTouchCoordinate,
+                               float aTouchTravelDistance,
                                float aViewportStart, float aViewportEnd,
                                float aPageStart, float aPageEnd,
                                float aMaxMarginStart, float aMaxMarginEnd,
@@ -172,23 +195,21 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
         float marginStart = aMargins[0];
         float marginEnd = aMargins[1];
         float viewportSize = aViewportEnd - aViewportStart;
-        float activeArea = viewportSize * SHOW_MARGINS_AREA;
+        float exposeThreshold = viewportSize * SHOW_MARGINS_THRESHOLD;
 
         if (aDelta >= 0) {
             float marginDelta = Math.max(0, aDelta - aOverscrollStart);
             aMargins[0] = marginStart - Math.min(marginDelta, marginStart);
-            if (aTouchCoordinate < viewportSize - activeArea) {
-                  // In the situation that the touch started outside of the
-                  // active area for exposing this margin, we only want the
-                  // margin to be exposed when reaching the extremity of the
-                  // page.
+            if (aTouchTravelDistance < exposeThreshold && marginEnd == 0) {
+                // We only want the margin to be newly exposed after the touch
+                // has moved a certain distance.
                 marginDelta = Math.max(0, marginDelta - (aPageEnd - aViewportEnd));
             }
             aMargins[1] = marginEnd + Math.min(marginDelta, aMaxMarginEnd - marginEnd);
         } else {
             float marginDelta = Math.max(0, -aDelta - aOverscrollEnd);
             aMargins[1] = marginEnd - Math.min(marginDelta, marginEnd);
-            if (aTouchCoordinate > activeArea) {
+            if (-aTouchTravelDistance < exposeThreshold && marginStart == 0) {
                 marginDelta = Math.max(0, marginDelta - (aViewportStart - aPageStart));
             }
             aMargins[0] = marginStart + Math.min(marginDelta, aMaxMarginStart - marginStart);
@@ -216,12 +237,22 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
 
         // Only alter margins if the toolbar isn't pinned
         if (!mMarginsPinned) {
+            // Reset the touch travel when changing direction
+            if ((aDx >= 0) != (mTouchTravelDistance.x >= 0)) {
+                mTouchTravelDistance.x = 0;
+            }
+            if ((aDy >= 0) != (mTouchTravelDistance.y >= 0)) {
+                mTouchTravelDistance.y = 0;
+            }
+
+            mTouchTravelDistance.offset(aDx, aDy);
             RectF overscroll = aMetrics.getOverscroll();
+
             // Only allow margins to scroll if the page can fill the viewport.
             if (aMetrics.getPageWidth() >= aMetrics.getWidth()) {
                 aDx = scrollMargin(newMarginsX, aDx,
                                    overscroll.left, overscroll.right,
-                                   mTouchStartPosition.x,
+                                   mTouchTravelDistance.x,
                                    aMetrics.viewportRectLeft, aMetrics.viewportRectRight,
                                    aMetrics.pageRectLeft, aMetrics.pageRectRight,
                                    mMaxMargins.left, mMaxMargins.right,
@@ -230,7 +261,7 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
             if (aMetrics.getPageHeight() >= aMetrics.getHeight()) {
                 aDy = scrollMargin(newMarginsY, aDy,
                                    overscroll.top, overscroll.bottom,
-                                   mTouchStartPosition.y,
+                                   mTouchTravelDistance.y,
                                    aMetrics.viewportRectTop, aMetrics.viewportRectBottom,
                                    aMetrics.pageRectTop, aMetrics.pageRectBottom,
                                    mMaxMargins.top, mMaxMargins.bottom,
@@ -252,7 +283,7 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
     public boolean onInterceptTouchEvent(View view, MotionEvent event) {
         int action = event.getActionMasked();
         if (action == MotionEvent.ACTION_DOWN && event.getPointerCount() == 1) {
-            mTouchStartPosition.set(event.getX(), event.getY());
+            mTouchTravelDistance.set(0.0f, 0.0f);
         }
 
         return false;

@@ -228,7 +228,9 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
         && numColumns > 0) {
       // This expression uses truncated rounding, which is what we
       // want
-      int32_t maxColumns = (availContentWidth + colGap)/(colGap + colWidth);
+      int32_t maxColumns =
+        std::min(nscoord(nsStyleColumn::kMaxColumnCount),
+                 (availContentWidth + colGap)/(colGap + colWidth));
       numColumns = std::max(1, std::min(numColumns, maxColumns));
     }
   } else if (numColumns > 0 && availContentWidth != NS_INTRINSICSIZE) {
@@ -254,6 +256,9 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
       // make sure to round down
       if (colGap + colWidth > 0) {
         numColumns = (availContentWidth + colGap)/(colGap + colWidth);
+        // The number of columns should never exceed kMaxColumnCount.
+        numColumns = std::min(nscoord(nsStyleColumn::kMaxColumnCount),
+                              numColumns);
       }
       if (numColumns <= 0) {
         numColumns = 1;

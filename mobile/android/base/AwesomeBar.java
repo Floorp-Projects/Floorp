@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -44,6 +45,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TabWidget;
 import android.widget.Toast;
+
+import org.json.JSONObject;
 
 import java.net.URLEncoder;
 
@@ -102,6 +105,7 @@ public class AwesomeBar extends GeckoActivity
                 resultIntent.putExtra(URL_KEY, text);
                 resultIntent.putExtra(TARGET_KEY, mTarget);
                 resultIntent.putExtra(SEARCH_KEY, engine.name);
+                recordSearch(engine.identifier, "barsuggest");
                 finishWithResult(resultIntent);
             }
 
@@ -384,6 +388,28 @@ public class AwesomeBar extends GeckoActivity
         finishWithResult(resultIntent);
     }
 
+    /**
+     * Record in Health Report that a search has occurred.
+     *
+     * @param identifier
+     *        a search identifier, such as "partnername". Can be null.
+     * @param where
+     *        where the search was initialized; one of the values in
+     *        {@link BrowserHealthRecorder#SEARCH_LOCATIONS}.
+     */
+    private static void recordSearch(String identifier, String where) {
+        Log.i(LOGTAG, "Recording search: " + identifier + ", " + where);
+        try {
+            JSONObject message = new JSONObject();
+            message.put("type", BrowserHealthRecorder.EVENT_SEARCH);
+            message.put("location", where);
+            message.put("identifier", identifier);
+            GeckoAppShell.getEventDispatcher().dispatchEvent(message);
+        } catch (Exception e) {
+            Log.w(LOGTAG, "Error recording search.", e);
+        }
+    }
+
     private void openUserEnteredAndFinish(final String url) {
         final int index = url.indexOf(' ');
 
@@ -410,6 +436,9 @@ public class AwesomeBar extends GeckoActivity
                 final String searchUrl = (keywordUrl != null)
                                        ? keywordUrl.replace("%s", URLEncoder.encode(keywordSearch))
                                        : url;
+                if (keywordUrl != null) {
+                    recordSearch(null, "barkeyword");
+                }
                 openUrlAndFinish(searchUrl, "", true);
             }
         });

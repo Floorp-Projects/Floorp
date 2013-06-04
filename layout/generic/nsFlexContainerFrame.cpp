@@ -12,6 +12,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
+#include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "prlog.h"
@@ -538,11 +539,17 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     return true;
   }
 
-  int32_t order1 = aFrame1->StylePosition()->mOrder;
-  int32_t order2 = aFrame2->StylePosition()->mOrder;
+  // If we've got a placeholder frame, use its out-of-flow frame's 'order' val.
+  {
+    nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
+    nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
 
-  if (order1 != order2) {
-    return order1 < order2;
+    int32_t order1 = aRealFrame1->StylePosition()->mOrder;
+    int32_t order2 = aRealFrame2->StylePosition()->mOrder;
+
+    if (order1 != order2) {
+      return order1 < order2;
+    }
   }
 
   // The "order" values are equal, so we need to fall back on DOM comparison.
@@ -603,8 +610,12 @@ IsOrderLEQ(nsIFrame* aFrame1,
   MOZ_ASSERT(aFrame1->IsFlexItem() && aFrame2->IsFlexItem(),
              "this method only intended for comparing flex items");
 
-  int32_t order1 = aFrame1->StylePosition()->mOrder;
-  int32_t order2 = aFrame2->StylePosition()->mOrder;
+  // If we've got a placeholder frame, use its out-of-flow frame's 'order' val.
+  nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
+  nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
+
+  int32_t order1 = aRealFrame1->StylePosition()->mOrder;
+  int32_t order2 = aRealFrame2->StylePosition()->mOrder;
 
   return order1 <= order2;
 }
@@ -1138,8 +1149,9 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
-  MOZ_ASSERT(nsLayoutUtils::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
-             "Frame list should've been sorted in reflow");
+  NS_ASSERTION(
+    nsLayoutUtils::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
+    "Child frames aren't sorted correctly");
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 

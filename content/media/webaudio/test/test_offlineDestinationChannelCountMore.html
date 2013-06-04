@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test OfflineAudioContext with a channel count less than the specified number</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+  var ctx = new OfflineAudioContext(6, 100, 22050);
+
+  var buf = ctx.createBuffer(2, 100, ctx.sampleRate);
+  for (var i = 0; i < 2; ++i) {
+    for (var j = 0; j < 100; ++j) {
+      buf.getChannelData(i)[j] = Math.sin(2 * Math.PI * 200 * j / ctx.sampleRate);
+    }
+  }
+  var emptyBuffer = ctx.createBuffer(1, 100, ctx.sampleRate);
+
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.start(0);
+  src.connect(ctx.destination);
+  ctx.destination.channelCountMode = "max";
+  ctx.startRendering();
+  ctx.oncomplete = function(e) {
+    is(e.renderedBuffer.numberOfChannels, 6, "Correct expected number of buffers");
+    compareBuffers(e.renderedBuffer.getChannelData(0), buf.getChannelData(0));
+    compareBuffers(e.renderedBuffer.getChannelData(1), buf.getChannelData(1));
+    for (var i = 2; i < 6; ++i) {
+      compareBuffers(e.renderedBuffer.getChannelData(i), emptyBuffer.getChannelData(0));
+    }
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  };
+});
+
+</script>
+</pre>
+</body>
+</html>

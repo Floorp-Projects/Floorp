@@ -649,7 +649,7 @@ enum gfxUserFontType {
     GFX_USERFONT_WOFF = 3
 };
 
-class THEBES_API gfxFontUtils {
+class gfxFontUtils {
 
 public:
     // these are public because gfxFont.cpp also looks into the name table

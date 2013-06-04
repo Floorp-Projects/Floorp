@@ -451,6 +451,8 @@ private:
     // the touch we're tracking.  That is, if touchend or a touchmove
     // that exceeds the gesture threshold doesn't happen.
     CancelableTask* mTapHoldTimer;
+    // Whether we have already received a FileDescriptor for the app package.
+    bool mAppPackageFileDescriptorRecved;
     // At present only 1 of these is really expected.
     nsAutoTArray<nsAutoPtr<CachedFileDescriptorInfo>, 1>
         mCachedFileDescriptorInfos;

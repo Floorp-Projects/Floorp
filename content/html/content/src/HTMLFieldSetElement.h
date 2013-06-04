@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLFieldSetElement_h
 #define mozilla_dom_HTMLFieldSetElement_h
 
+#include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLFieldSetElement.h"
 #include "nsIConstraintValidation.h"
@@ -46,21 +47,21 @@ public:
   NS_DECL_NSIDOMHTMLFIELDSETELEMENT
 
   // nsIContent
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
   virtual nsresult InsertChildAt(nsIContent* aChild, uint32_t aIndex,
-                                     bool aNotify);
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
+                                     bool aNotify) MOZ_OVERRIDE;
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
 
   // nsIFormControl
-  NS_IMETHOD_(uint32_t) GetType() const { return NS_FORM_FIELDSET; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
-  virtual bool IsDisabledForEvents(uint32_t aMessage);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return NS_FORM_FIELDSET; }
+  NS_IMETHOD Reset() MOZ_OVERRIDE;
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
+  virtual bool IsDisabledForEvents(uint32_t aMessage) MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   const nsIContent* GetFirstLegend() const { return mFirstLegend; }
 

@@ -9,7 +9,7 @@
 #include "mozilla/gfx/BasePoint4D.h"
 #include "gfxTypes.h"
 
-struct THEBES_API gfxPointH3D : public mozilla::gfx::BasePoint4D<float, gfxPointH3D> {
+struct gfxPointH3D : public mozilla::gfx::BasePoint4D<float, gfxPointH3D> {
     typedef mozilla::gfx::BasePoint4D<float, gfxPointH3D> Super;
 
     gfxPointH3D() : Super() {}

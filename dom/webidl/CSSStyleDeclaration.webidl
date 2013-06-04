@@ -22,10 +22,8 @@ interface CSSStyleDeclaration {
   [Throws]
   CSSValue? getPropertyCSSValue(DOMString property);
   DOMString getPropertyPriority(DOMString property);
-  // This would be nicer if it used a string default value of "".
-  // See bug 759622.
   [Throws]
-  void setProperty(DOMString property, DOMString value, [TreatNullAs=EmptyString] optional DOMString priority);
+  void setProperty(DOMString property, DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "");
   [Throws]
   DOMString removeProperty(DOMString property);
 

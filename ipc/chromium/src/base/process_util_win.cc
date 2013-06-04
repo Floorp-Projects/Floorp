@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// We need extended process and thread attribute support
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+
 #include "base/process_util.h"
 
 #include <windows.h>
@@ -13,6 +17,7 @@
 #include "base/logging.h"
 #include "base/scoped_handle_win.h"
 #include "base/scoped_ptr.h"
+#include "base/win_util.h"
 
 namespace {
 
@@ -21,6 +26,31 @@ const int PAGESIZE_KB = 4;
 
 // HeapSetInformation function pointer.
 typedef BOOL (WINAPI* HeapSetFn)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
+
+typedef BOOL (WINAPI * InitializeProcThreadAttributeListFn)(
+  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
+  DWORD dwAttributeCount,
+  DWORD dwFlags,
+  PSIZE_T lpSize
+);
+
+typedef BOOL (WINAPI * DeleteProcThreadAttributeListFn)(
+  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList
+);
+
+typedef BOOL (WINAPI * UpdateProcThreadAttributeFn)(
+  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
+  DWORD dwFlags,
+  DWORD_PTR Attribute,
+  PVOID lpValue,
+  SIZE_T cbSize,
+  PVOID lpPreviousValue,
+  PSIZE_T lpReturnSize
+);
+
+static InitializeProcThreadAttributeListFn InitializeProcThreadAttributeListPtr;
+static DeleteProcThreadAttributeListFn DeleteProcThreadAttributeListPtr;
+static UpdateProcThreadAttributeFn UpdateProcThreadAttributePtr;
 
 static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
@@ -152,17 +182,149 @@ ProcessId GetProcId(ProcessHandle process) {
   return 0;
 }
 
+// from sandbox_policy_base.cc in a later version of the chromium ipc code...
+bool IsInheritableHandle(HANDLE handle) {
+  if (!handle)
+    return false;
+  if (handle == INVALID_HANDLE_VALUE)
+    return false;
+  // File handles (FILE_TYPE_DISK) and pipe handles are known to be
+  // inheritable.  Console handles (FILE_TYPE_CHAR) are not
+  // inheritable via PROC_THREAD_ATTRIBUTE_HANDLE_LIST.
+  DWORD handle_type = GetFileType(handle);
+  return handle_type == FILE_TYPE_DISK || handle_type == FILE_TYPE_PIPE;
+}
+
+void LoadThreadAttributeFunctions() {
+  HMODULE kernel32 = GetModuleHandle(L"kernel32.dll");
+  InitializeProcThreadAttributeListPtr =
+    reinterpret_cast<InitializeProcThreadAttributeListFn>
+    (GetProcAddress(kernel32, "InitializeProcThreadAttributeList"));
+  DeleteProcThreadAttributeListPtr =
+    reinterpret_cast<DeleteProcThreadAttributeListFn>
+    (GetProcAddress(kernel32, "DeleteProcThreadAttributeList"));
+  UpdateProcThreadAttributePtr =
+    reinterpret_cast<UpdateProcThreadAttributeFn>
+    (GetProcAddress(kernel32, "UpdateProcThreadAttribute"));
+}
+
+// Creates and returns a "thread attribute list" to pass to the child process.
+// On return, is a pointer to a THREAD_ATTRIBUTE_LIST or NULL if either the
+// functions we need aren't available (eg, XP or earlier) or the functions we
+// need failed.
+// The result of this function must be passed to FreeThreadAttributeList.
+// Note that the pointer to the HANDLE array ends up embedded in the result of
+// this function and must stay alive until FreeThreadAttributeList is called,
+// hence it is passed in so the owner is the caller of this function.
+LPPROC_THREAD_ATTRIBUTE_LIST CreateThreadAttributeList(HANDLE *handlesToInherit,
+                                                       int handleCount) {
+  if (!InitializeProcThreadAttributeListPtr ||
+      !DeleteProcThreadAttributeListPtr ||
+      !UpdateProcThreadAttributePtr)
+    LoadThreadAttributeFunctions();
+  // shouldn't happen as we are only called for Vista+, but better safe than sorry...
+  if (!InitializeProcThreadAttributeListPtr ||
+      !DeleteProcThreadAttributeListPtr ||
+      !UpdateProcThreadAttributePtr)
+    return NULL;
+
+  SIZE_T threadAttrSize;
+  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
+
+  if (!(*InitializeProcThreadAttributeListPtr)(NULL, 1, 0, &threadAttrSize) &&
+      GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    goto fail;
+  lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>
+                              (malloc(threadAttrSize));
+  if (!lpAttributeList ||
+      !(*InitializeProcThreadAttributeListPtr)(lpAttributeList, 1, 0, &threadAttrSize))
+    goto fail;
+
+  if (!(*UpdateProcThreadAttributePtr)(lpAttributeList,
+                  0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+                  handlesToInherit,
+                  sizeof(handlesToInherit[0]) * handleCount,
+                  NULL, NULL)) {
+    (*DeleteProcThreadAttributeListPtr)(lpAttributeList);
+    goto fail;
+  }
+  return lpAttributeList;
+
+fail:
+  if (lpAttributeList)
+    free(lpAttributeList);
+  return NULL;
+}
+
+// Frees the data returned by CreateThreadAttributeList.
+void FreeThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList) {
+  // must be impossible to get a NULL DeleteProcThreadAttributeListPtr, as
+  // we already checked it existed when creating the data we are now freeing.
+  (*DeleteProcThreadAttributeListPtr)(lpAttributeList);
+  free(lpAttributeList);
+}
+
 bool LaunchApp(const std::wstring& cmdline,
                bool wait, bool start_hidden, ProcessHandle* process_handle) {
-  STARTUPINFO startup_info = {0};
+
+  // We want to inherit the std handles so dump() statements and assertion
+  // messages in the child process can be seen - but we *do not* want to
+  // blindly have all handles inherited.  Vista and later has a technique
+  // where only specified handles are inherited - so we use this technique if
+  // we can.  If that technique isn't available (or it fails), we just don't
+  // inherit anything.  This means that dump() etc isn't going to be seen on
+  // XP release builds, but that's OK (developers who really care can run a
+  // debug build on XP, where the processes are marked as "console" apps, so
+  // things work without these hoops)
+  DWORD dwCreationFlags = 0;
+  BOOL bInheritHandles = FALSE;
+  // We use a STARTUPINFOEX, but if we can't do the thread attribute thing, we
+  // just pass the size of a STARTUPINFO.
+  STARTUPINFOEX startup_info_ex;
+  ZeroMemory(&startup_info_ex, sizeof(startup_info_ex));
+  STARTUPINFO &startup_info = startup_info_ex.StartupInfo;
   startup_info.cb = sizeof(startup_info);
   startup_info.dwFlags = STARTF_USESHOWWINDOW;
   startup_info.wShowWindow = start_hidden ? SW_HIDE : SW_SHOW;
+
+  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList = NULL;
+  // Don't even bother trying pre-Vista...
+  if (win_util::GetWinVersion() >= win_util::WINVERSION_VISTA) {
+    // setup our handle array first - if we end up with no handles that can
+    // be inherited we can avoid trying to do the ThreadAttributeList dance...
+    HANDLE handlesToInherit[2];
+    int handleCount = 0;
+    HANDLE stdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE stdErr = ::GetStdHandle(STD_ERROR_HANDLE);
+
+    if (IsInheritableHandle(stdOut))
+      handlesToInherit[handleCount++] = stdOut;
+    if (stdErr != stdOut && IsInheritableHandle(stdErr))
+      handlesToInherit[handleCount++] = stdErr;
+
+    if (handleCount)
+      lpAttributeList = CreateThreadAttributeList(handlesToInherit, handleCount);
+  }
+
+  if (lpAttributeList) {
+    // it's safe to inherit handles, so arrange for that...
+    startup_info.cb = sizeof(startup_info_ex);
+    startup_info.dwFlags |= STARTF_USESTDHANDLES;
+    startup_info.hStdOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    startup_info.hStdError = ::GetStdHandle(STD_ERROR_HANDLE);
+    startup_info.hStdInput = INVALID_HANDLE_VALUE;
+    startup_info_ex.lpAttributeList = lpAttributeList;
+    dwCreationFlags |= EXTENDED_STARTUPINFO_PRESENT;
+    bInheritHandles = TRUE;
+  }
   PROCESS_INFORMATION process_info;
-  if (!CreateProcess(NULL,
+  BOOL createdOK = CreateProcess(NULL,
                      const_cast<wchar_t*>(cmdline.c_str()), NULL, NULL,
-                     FALSE, 0, NULL, NULL,
-                     &startup_info, &process_info))
+                     bInheritHandles, dwCreationFlags, NULL, NULL,
+                     &startup_info, &process_info);
+  if (lpAttributeList)
+    FreeThreadAttributeList(lpAttributeList);
+  if (!createdOK)
     return false;
 
   gProcessLog.print("==> process %d launched child process %d\n",

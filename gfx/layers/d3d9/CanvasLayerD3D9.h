@@ -14,7 +14,7 @@ namespace mozilla {
 namespace layers {
 
 
-class THEBES_API CanvasLayerD3D9 :
+class CanvasLayerD3D9 :
   public CanvasLayer,
   public LayerD3D9
 {

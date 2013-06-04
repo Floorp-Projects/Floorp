@@ -109,6 +109,7 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionJSRuntime.h"
+#include "nsCycleCollectorUtils.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -476,8 +477,17 @@ public:
     // non-interface implementation
 public:
     // These get non-addref'd pointers
-    static nsXPConnect*  GetXPConnect();
-    static nsXPConnect*  FastGetXPConnect() { return gSelf ? gSelf : GetXPConnect(); }
+    static nsXPConnect*  XPConnect()
+    {
+        // Do a release-mode assert that we're not doing anything significant in
+        // XPConnect off the main thread. If you're an extension developer hitting
+        // this, you need to change your code. See bug 716167.
+        if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
+            MOZ_CRASH();
+
+        return gSelf;
+    }
+
     static XPCJSRuntime* GetRuntimeInstance();
     XPCJSRuntime* GetRuntime() {return mRuntime;}
 
@@ -506,7 +516,7 @@ public:
     static nsXPConnect* GetSingleton();
 
     // Called by module code in dll startup
-    static void InitStatics() { gSelf = nullptr; gOnceAliveNowDead = false; }
+    static void InitStatics();
     // Called by module code on dll shutdown.
     static void ReleaseXPConnectSingleton();
 
@@ -644,10 +654,9 @@ class XPCJSRuntime
 {
 public:
     static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect);
-    static XPCJSRuntime* Get() { return nsXPConnect::GetXPConnect()->GetRuntime(); }
+    static XPCJSRuntime* Get() { return nsXPConnect::XPConnect()->GetRuntime(); }
 
     JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
-    nsXPConnect*   GetXPConnect() const {return mXPConnect;}
 
     XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
     void DestroyJSContextStack();
@@ -704,16 +713,6 @@ public:
      * until after the GC has run, for example for objects that we don't want to
      * destroy during the GC.
      */
-
-    // Called once before the deferred finalization starts. Should hand off the
-    // buffer with things to finalize in the return value.
-    typedef void* (*DeferredFinalizeStartFunction)();
-
-    // Called to finalize a number of objects. Slice is the number of objects
-    // to finalize, or if it's UINT32_MAX, all objects should be finalized.
-    // data is the pointer returned by DeferredFinalizeStartFunction.
-    // Return value indicates whether it finalized all objects in the buffer.
-    typedef bool (*DeferredFinalizeFunction)(uint32_t slice, void* data);
 
 private:
     struct DeferredFinalizeFunctions
@@ -912,7 +911,6 @@ private:
     jsid mStrIDs[IDX_TOTAL_COUNT];
     jsval mStrJSVals[IDX_TOTAL_COUNT];
 
-    nsXPConnect*             mXPConnect;
     JSRuntime*               mJSRuntime;
     XPCJSContextStack*       mJSContextStack;
     XPCCallContext*          mCallContext;
@@ -1060,7 +1058,7 @@ public:
                     return mSecurityManager;
             } else {
                 nsIXPCSecurityManager* mgr;
-                nsXPConnect* xpc = mRuntime->GetXPConnect();
+                nsXPConnect* xpc = nsXPConnect::XPConnect();
                 mgr = xpc->GetDefaultSecurityManager();
                 if (mgr && (flags & xpc->GetDefaultSecurityManagerFlags()))
                     return mgr;
@@ -1145,7 +1143,6 @@ public:
 
     inline JSBool                       IsValid() const ;
 
-    inline nsXPConnect*                 GetXPConnect() const ;
     inline XPCJSRuntime*                GetRuntime() const ;
     inline XPCContext*                  GetXPCContext() const ;
     inline JSContext*                   GetJSContext() const ;
@@ -1153,17 +1150,6 @@ public:
     inline XPCContext::LangType         GetCallerLanguage() const ;
     inline XPCContext::LangType         GetPrevCallerLanguage() const ;
     inline XPCCallContext*              GetPrevCallContext() const ;
-
-    /*
-     * The 'scope for new JSObjects' will be the scope for objects created when
-     * carrying out a JS/C++ call. This member is only available if HAVE_SCOPE.
-     * The object passed to the ccx constructor is used as the scope for new
-     * JSObjects. However, this object is also queried for a wrapper, so
-     * clients that don't want a wrapper (and thus pass NULL to the ccx
-     * constructor) need to manually call SetScopeForNewJSObjects.
-     */
-    inline JSObject*                    GetScopeForNewJSObjects() const ;
-    inline void                         SetScopeForNewJSObjects(JSObject *obj) ;
 
     inline JSObject*                    GetFlattenedJSObject() const ;
     inline nsISupports*                 GetIdentityObject() const ;
@@ -1250,7 +1236,6 @@ private:
         INIT_FAILED,
         SYSTEM_SHUTDOWN,
         HAVE_CONTEXT,
-        HAVE_SCOPE,
         HAVE_OBJECT,
         HAVE_NAME,
         HAVE_ARGS,
@@ -1282,7 +1267,6 @@ private:
 
     XPCCallContext*                 mPrevCallContext;
 
-    JS::RootedObject                mScopeForNewJSObjects;
     JS::RootedObject                mFlattenedJSObject;
     XPCWrappedNative*               mWrapper;
     XPCWrappedNativeTearOff*        mTearOff;
@@ -1364,22 +1348,6 @@ public:
         }
 
         return mCx;
-    }
-    JSObject *GetScopeForNewJSObjects() const
-    {
-        if (mCcx)
-            return mCcx->GetScopeForNewJSObjects();
-
-        return xpc_UnmarkGrayObject(mObj);
-    }
-    void SetScopeForNewJSObjects(JSObject *obj)
-    {
-        if (mCcx) {
-            mCcx->SetScopeForNewJSObjects(obj);
-            return;
-        }
-        NS_ABORT_IF_FALSE(!mObj, "already set!");
-        mObj = obj;
     }
     JSObject *GetFlattenedJSObject() const
     {

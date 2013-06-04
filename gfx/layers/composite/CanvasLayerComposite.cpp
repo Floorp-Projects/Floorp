@@ -11,6 +11,7 @@
 
 #include "CanvasLayerComposite.h"
 #include "ImageHost.h"
+#include "gfxUtils.h"
 #include "gfx2DGlue.h"
 
 using namespace mozilla;
@@ -60,6 +61,13 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
   }
 
   mCompositor->MakeCurrent();
+
+#ifdef MOZ_DUMP_PAINTING
+  if (gfxUtils::sDumpPainting) {
+    nsRefPtr<gfxImageSurface> surf = mImageHost->GetAsSurface();
+    WriteSnapshotToDumpFile(this, surf);
+  }
+#endif
 
   gfxPattern::GraphicsFilter filter = mFilter;
 #ifdef ANDROID

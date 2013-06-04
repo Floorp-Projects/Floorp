@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "gcli",
 XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/BuiltinCommands.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
+XPCOMUtils.defineLazyModuleGetter(this, "ConsoleServiceListener",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
@@ -444,8 +444,8 @@ DeveloperToolbar.prototype._initErrorsCount = function DT__initErrorsCount(aTab)
   }
 
   let window = aTab.linkedBrowser.contentWindow;
-  let listener = new PageErrorListener(window, {
-    onPageError: this._onPageError.bind(this, tabId),
+  let listener = new ConsoleServiceListener(window, {
+    onConsoleServiceMessage: this._onPageError.bind(this, tabId),
   });
   listener.init();
 

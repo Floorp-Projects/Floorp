@@ -11,7 +11,7 @@
 #error GL_CONTEXT_PROVIDER_NAME not defined
 #endif
 
-class THEBES_API GL_CONTEXT_PROVIDER_NAME
+class GL_CONTEXT_PROVIDER_NAME
 {
 public:
     typedef GLContext::ContextFlags ContextFlags;

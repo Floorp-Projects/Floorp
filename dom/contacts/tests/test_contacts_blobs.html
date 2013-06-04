@@ -182,7 +182,7 @@ var steps = [
   function () {
     ok(true, "Retrieving by substring");
     var options = {filterBy: ["givenName"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: properties1.givenName.substring(0,3)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -208,7 +208,7 @@ var steps = [
   function () {
     ok(true, "Retrieving by substring");
     var options = {filterBy: ["givenName"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: properties2.givenName.substring(0,3)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -247,7 +247,7 @@ var steps = [
   function () {
     ok(true, "Retrieving by substring");
     var options = {filterBy: ["givenName"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: "asdf"};
     req = mozContacts.find(options);
     req.onsuccess = function () {

@@ -192,6 +192,7 @@
                android:layout_height="2dp"
                android:layout_alignParentBottom="true"
                android:background="@drawable/url_bar_bg_shadow_repeat"
+               android:contentDescription="@null"
                android:visibility="gone"/>
 
 </org.mozilla.gecko.BrowserToolbarLayout>

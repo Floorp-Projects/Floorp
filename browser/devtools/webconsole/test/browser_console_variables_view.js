@@ -70,7 +70,7 @@ function onTestPropFound(aResults)
 function onFooObjFetchAfterUpdate(aEvent, aVar)
 {
   info("onFooObjFetchAfterUpdate");
-  let para = content.document.querySelector("p");
+  let para = content.wrappedJSObject.document.querySelector("p");
   let expectedValue = content.document.title + content.location + para;
 
   findVariableViewProperties(aVar, [
@@ -100,7 +100,7 @@ function onFooObjFetchAfterPropRename(aEvent, aVar)
 {
   info("onFooObjFetchAfterPropRename");
 
-  let para = content.document.querySelector("p");
+  let para = content.wrappedJSObject.document.querySelector("p");
   let expectedValue = content.document.title + content.location + para;
 
   // Check that the new value is in the variables view.
@@ -134,7 +134,7 @@ function onPropUpdateError(aEvent, aVar)
 {
   info("onPropUpdateError");
 
-  let para = content.document.querySelector("p");
+  let para = content.wrappedJSObject.document.querySelector("p");
   let expectedValue = content.document.title + content.location + para;
 
   // Make sure the property did not change.

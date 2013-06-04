@@ -1277,7 +1277,14 @@ public class GeckoAppShell
                 if (android.os.Build.VERSION.SDK_INT >= 11) {
                     android.content.ClipboardManager cm = (android.content.ClipboardManager)
                         context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    cm.setPrimaryClip(ClipData.newPlainText("Text", text));
+                    ClipData clip = ClipData.newPlainText("Text", text);
+                    try {
+                        cm.setPrimaryClip(clip);
+                    } catch (NullPointerException e) {
+                        // Bug 776223: This is a Samsung clipboard bug. setPrimaryClip() can throw
+                        // a NullPointerException if Samsung's /data/clipboard directory is full.
+                        // Fortunately, the text is still successfully copied to the clipboard.
+                    }
                 } else {
                     android.text.ClipboardManager cm = (android.text.ClipboardManager)
                         context.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -2460,28 +2467,14 @@ public class GeckoAppShell
         return true;
     }
 
-    static class AsyncResultHandler extends FilePickerResultHandler {
-        private long mId;
-        AsyncResultHandler(long id) {
-            super(null);
-            mId = id;
-        }
-
-        @Override
-        public void onActivityResult(int resultCode, Intent data) {
-            GeckoAppShell.notifyFilePickerResult(handleActivityResult(resultCode, data), mId);
-        }
-        
-    }
-
     static native void notifyFilePickerResult(String filePath, long id);
 
-    /* Called by JNI from AndroidBridge */
-    public static void showFilePickerAsync(String aMimeType, long id) {
-        if (getGeckoInterface() != null)
-            if (!sActivityHelper.showFilePicker(getGeckoInterface().getActivity(), aMimeType, new AsyncResultHandler(id))) {
-                GeckoAppShell.notifyFilePickerResult("", id);
+    public static void showFilePickerAsync(String aMimeType, final long id) {
+        sActivityHelper.showFilePickerAsync(getGeckoInterface().getActivity(), aMimeType, new ActivityHandlerHelper.FileResultHandler() {
+            public void gotFile(String filename) {
+                GeckoAppShell.notifyFilePickerResult(filename, id);
             }
+        });
     }
 
     public static void notifyWakeLockChanged(String topic, String state) {

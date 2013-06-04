@@ -13,7 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsIOutputStream.h"
 
-class THEBES_API gfxPDFSurface : public gfxASurface {
+class gfxPDFSurface : public gfxASurface {
 public:
     gfxPDFSurface(nsIOutputStream *aStream, const gfxSize& aSizeInPoints);
     virtual ~gfxPDFSurface();

@@ -22,7 +22,7 @@
 
 <body dir="&locale.dir;">
   <div id="aboutLogoContainer">
-    <a id="vendorURL" href="http://www.mozilla.org/">
+    <a id="vendorURL">
       <img src="about:logo" alt="&brandShortName;"/>
       <p id="version"></p>
     </a>
@@ -31,7 +31,7 @@
   <ul id="aboutPageList">
     <li>&about.credits.beforeLink;<a href="about:credits">&about.credits.linkTitle;</a>&about.credits.afterLink;</li>
     <li>&about.license.beforeTheLink;<a href="about:license">&about.license.linkTitle;</a>&about.license.afterTheLink;</li>
-    <li>&about.relnotes.beforeTheLink;<a id="releaseNotesURL" href="">&about.relnotes.linkTitle;</a>&about.relnotes.afterTheLink;</li>
+    <li hidden="true">&about.relnotes.beforeTheLink;<a id="releaseNotesURL">&about.relnotes.linkTitle;</a>&about.relnotes.afterTheLink;</li>
     <li>&about.buildconfig.beforeTheLink;<a href="about:buildconfig">&about.buildconfig.linkTitle;</a>&about.buildconfig.afterTheLink;</li>
     <script type="application/javascript">
       // get release notes and vendor URL from prefs
@@ -41,6 +41,7 @@
       if (releaseNotesURL != "about:blank") {
         var relnotes = document.getElementById("releaseNotesURL");
         relnotes.setAttribute("href", releaseNotesURL);
+        relnotes.parentNode.removeAttribute("hidden");
       }
 
       var vendorURL = formatter.formatURLPref("app.vendorURL");

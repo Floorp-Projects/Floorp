@@ -194,6 +194,9 @@ this.AccessFu = {
       case 'AccessFu:Input':
         this.Input.setEditState(aMessage.json);
         break;
+      case 'AccessFu:ActivateContextMenu':
+        this.Input.activateContextMenu(aMessage.json);
+        break;
     }
   },
 
@@ -232,12 +235,14 @@ this.AccessFu = {
     aMessageManager.addMessageListener('AccessFu:Present', this);
     aMessageManager.addMessageListener('AccessFu:Input', this);
     aMessageManager.addMessageListener('AccessFu:Ready', this);
+    aMessageManager.addMessageListener('AccessFu:ActivateContextMenu', this);
   },
 
   _removeMessageListeners: function _removeMessageListeners(aMessageManager) {
     aMessageManager.removeMessageListener('AccessFu:Present', this);
     aMessageManager.removeMessageListener('AccessFu:Input', this);
     aMessageManager.removeMessageListener('AccessFu:Ready', this);
+    aMessageManager.removeMessageListener('AccessFu:ActivateContextMenu', this);
   },
 
   _handleMessageManager: function _handleMessageManager(aMessageManager) {
@@ -532,6 +537,9 @@ var Input = {
       case 'doubletap1':
         this.activateCurrent();
         break;
+      case 'doubletaphold1':
+        this.sendContextMenuMessage();
+        break;
       case 'swiperight1':
         this.moveCursor('moveNext', 'Simple', 'gestures');
         break;
@@ -656,6 +664,17 @@ var Input = {
   activateCurrent: function activateCurrent() {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     mm.sendAsyncMessage('AccessFu:Activate', {});
+  },
+
+  sendContextMenuMessage: function sendContextMenuMessage() {
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage('AccessFu:ContextMenu', {});
+  },
+
+  activateContextMenu: function activateContextMenu(aMessage) {
+    if (Utils.MozBuildApp === 'mobile/android')
+      Services.obs.notifyObservers(null, 'Gesture:LongPress',
+                                   JSON.stringify({x: aMessage.x, y: aMessage.y}));
   },
 
   setEditState: function setEditState(aEditState) {

@@ -20,6 +20,13 @@ browserElementTestHelpers.addPermission();
 browserElementTestHelpers.enableProcessPriorityManager();
 
 function runTest() {
+  // To test bug 870480, run this test while holding the CPU and high-priority
+  // wake locks.  Without the fix for bug 870480, we won't set the priority of
+  // the child process if the main process holds these wake locks and the test
+  // will hang.
+  navigator.requestWakeLock('cpu');
+  navigator.requestWakeLock('high-priority');
+
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', true);
   iframe.setAttribute('mozapptype', 'critical');
@@ -86,8 +93,8 @@ function runTest() {
       [expectMozbrowserEvent(iframe, 'showmodalprompt').then(checkAlertInfo),
        expectPriorityChange(childID, priority).then(checkGracePeriod)]
     ).then(function(results) {
-      // expectMozbrowserEvent returns the function to call to unblock the
-      // alert.  It comes to us as the first element of the results array.
+      // checkAlertInfo returns the function to call to unblock the alert.
+      // It comes to us as the first element of the results array.
       results[0]();
     });
   }

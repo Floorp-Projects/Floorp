@@ -24,6 +24,7 @@ MOCHITEST_CHROME_FILES = \
     test_bug819670_getter_throws.html \
     test_object_actor_native_getters.html \
     test_object_actor_native_getters_lenient_this.html \
+    test_nsiconsolemessage.html \
     network_requests_iframe.html \
     data.json \
     data.json^headers^ \

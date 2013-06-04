@@ -114,6 +114,16 @@ function TestProperties(dial, currentRegion) {
   }
 }
 
+function AllEqual(list, currentRegion) {
+  var first = PhoneNumber.Parse(list.shift(), currentRegion);
+  ok(!!first, "first parses");
+  for (var index in list) {
+    var other = PhoneNumber.Parse(list[index], currentRegion);
+    ok(!!other, "other parses");
+    ok(first.internationalNumber == other.internationalNumber, "first and other match");
+  }
+}
+
 TestProperties("+0988782456");
 TestProperties("+33442020", "ES");
 TestProperties("+43987614", "ES");
@@ -318,6 +328,10 @@ Format("15955042864", "CN", "15955042864", "CN", "0159 5504 2864", "+86 159 5504
 Normalize("+ABC # * , 9 _ 1 _0", "+222#*,910");
 Normalize("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "22233344455566677778889999");
 Normalize("abcdefghijklmnopqrstuvwxyz", "22233344455566677778889999");
+
+// 8 and 9 digit numbers with area code in Brazil with collect call prefix (90)
+AllEqual(["01187654321","0411187654321","551187654321","90411187654321","+551187654321"],"BR");
+AllEqual(["011987654321","04111987654321","5511987654321","904111987654321","+5511987654321"],"BR");
 
 </script>
 </window>

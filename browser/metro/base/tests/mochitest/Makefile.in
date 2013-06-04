@@ -30,6 +30,8 @@ BROWSER_TESTS = \
   browser_tiles.js \
   browser_tilegrid.xul \
   browser_topsites.js \
+  browser_form_auto_complete.js \
+  browser_form_auto_complete.html \
   $(NULL)
 
 # disabled due to timeouts and lack of plugin support.

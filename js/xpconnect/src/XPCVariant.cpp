@@ -350,12 +350,11 @@ JSBool XPCVariant::InitializeData(JSContext* cx)
 
     // XXX This could be smarter and pick some more interesting iface.
 
-    nsXPConnect*  xpc;
+    nsXPConnect*  xpc = nsXPConnect::XPConnect();
     nsCOMPtr<nsISupports> wrapper;
     const nsIID& iid = NS_GET_IID(nsISupports);
 
-    return nullptr != (xpc = nsXPConnect::GetXPConnect()) &&
-           NS_SUCCEEDED(xpc->WrapJS(cx, jsobj,
+    return NS_SUCCEEDED(xpc->WrapJS(cx, jsobj,
                                     iid, getter_AddRefs(wrapper))) &&
            NS_SUCCEEDED(nsVariant::SetFromInterface(&mData, iid, wrapper));
 }
@@ -417,9 +416,6 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
     // We ASSUME that the variant implementation can do these conversions...
 
     nsID iid;
-
-    NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
-                      "bad scope for new JSObjects");
 
     switch (type) {
         case nsIDataType::VTYPE_INT8:

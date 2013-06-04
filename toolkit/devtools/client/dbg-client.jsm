@@ -175,12 +175,14 @@ const UnsolicitedNotifications = {
   "eventNotification": "eventNotification",
   "fileActivity": "fileActivity",
   "lastPrivateContextExited": "lastPrivateContextExited",
+  "logMessage": "logMessage",
   "networkEvent": "networkEvent",
   "networkEventUpdate": "networkEventUpdate",
   "newGlobal": "newGlobal",
   "newScript": "newScript",
   "newSource": "newSource",
   "tabDetached": "tabDetached",
+  "tabListChanged": "tabListChanged",
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
   "webappsEvent": "webappsEvent",
@@ -1435,6 +1437,10 @@ GripClient.prototype = {
   get _transport() { return this._client._transport; },
 
   valid: true,
+
+  get isFrozen() this._grip.frozen,
+  get isSealed() this._grip.sealed,
+  get isExtensible() this._grip.extensible,
 
   /**
    * Request the names of a function's formal parameters.

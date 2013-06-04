@@ -1,35 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-var utils = exports;
+var spdy = require('../spdy'),
+    utils = exports;
 
 var zlib = require('zlib'),
     Buffer = require('buffer').Buffer;
-
-// SPDY deflate/inflate dictionary
-var dictionary = new Buffer([
-  'optionsgetheadpostputdeletetraceacceptaccept-charsetaccept-encodingaccept-',
-  'languageauthorizationexpectfromhostif-modified-sinceif-matchif-none-matchi',
-  'f-rangeif-unmodifiedsincemax-forwardsproxy-authorizationrangerefererteuser',
-  '-agent10010120020120220320420520630030130230330430530630740040140240340440',
-  '5406407408409410411412413414415416417500501502503504505accept-rangesageeta',
-  'glocationproxy-authenticatepublicretry-afterservervarywarningwww-authentic',
-  'ateallowcontent-basecontent-encodingcache-controlconnectiondatetrailertran',
-  'sfer-encodingupgradeviawarningcontent-languagecontent-lengthcontent-locati',
-  'oncontent-md5content-rangecontent-typeetagexpireslast-modifiedset-cookieMo',
-  'ndayTuesdayWednesdayThursdayFridaySaturdaySundayJanFebMarAprMayJunJulAugSe',
-  'pOctNovDecchunkedtext/htmlimage/pngimage/jpgimage/gifapplication/xmlapplic',
-  'ation/xhtmltext/plainpublicmax-agecharset=iso-8859-1utf-8gzipdeflateHTTP/1',
-  '.1statusversionurl\x00'
-].join(''));
 
 //
 // ### function createDeflate ()
 // Creates deflate stream with SPDY dictionary
 //
-utils.createDeflate = function createDeflate() {
-  var deflate = zlib.createDeflate({ dictionary: dictionary, windowBits: 11 });
+utils.createDeflate = function createDeflate(version) {
+  var deflate = zlib.createDeflate({
+    dictionary: spdy.protocol[version].dictionary,
+    windowBits: 11
+  });
 
   // Define lock information early
   deflate.locked = false;
@@ -42,8 +25,11 @@ utils.createDeflate = function createDeflate() {
 // ### function createInflate ()
 // Creates inflate stream with SPDY dictionary
 //
-utils.createInflate = function createInflate() {
-  var inflate = zlib.createInflate({ dictionary: dictionary, windowBits: 15 });
+utils.createInflate = function createInflate(version) {
+  var inflate = zlib.createInflate({
+    dictionary: spdy.protocol[version].dictionary,
+    windowBits: 15
+  });
 
   // Define lock information early
   inflate.locked = false;
@@ -99,8 +85,14 @@ utils.zstream = function zstream(stream, buffer, callback) {
   stream.on('data', collect);
   stream.write(buffer);
 
+  stream.once('error', function(err) {
+    stream.removeAllListeners('data');
+    callback(err);
+  });
+
   stream.flush(function() {
     stream.removeAllListeners('data');
+    stream.removeAllListeners('error');
     stream._flush = flush;
 
     callback(null, chunks, total);
@@ -121,4 +113,3 @@ utils.zwrap = function zwrap(stream) {
     utils.zstream(stream, data, callback);
   };
 };
-

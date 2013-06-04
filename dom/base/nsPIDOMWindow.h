@@ -58,8 +58,8 @@ class AudioContext;
 }
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x7202842a, 0x0e24, 0x46dc, \
-  { 0xb2, 0x25, 0xd2, 0x9d, 0x28, 0xda, 0x87, 0xd8 } }
+{ 0xc7f20d00, 0xed38, 0x4d60, \
+ { 0x90, 0xf6, 0x3e, 0xde, 0x7b, 0x71, 0xc3, 0xb3 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -644,6 +644,22 @@ public:
                  const nsAString& aOptions, nsIDOMWindow **_retval) = 0;
 
   void AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
+
+  // Given an inner window, return its outer if the inner is the current inner.
+  // Otherwise (argument null or not an inner or not current) return null.
+  static nsPIDOMWindow* GetOuterFromCurrentInner(nsPIDOMWindow* aInner)
+  {
+    if (!aInner) {
+      return nullptr;
+    }
+
+    nsPIDOMWindow* outer = aInner->GetOuterWindow();
+    if (!outer || outer->GetCurrentInnerWindow() != aInner) {
+      return nullptr;
+    }
+
+    return outer;
+  }
 
   // WebIDL-ish APIs
   nsPerformance* GetPerformance();

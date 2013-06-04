@@ -16,9 +16,9 @@
 
 #include "vm/Shape.h"
 
-#include "jsinterpinlines.h"
-
 #include "IonFrames-inl.h"
+
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -98,7 +98,7 @@ IonCache::linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, IonCode 
 {
     Linker linker(masm);
     *code = linker.newCode(cx, JSC::ION_CODE);
-    if (!code)
+    if (!*code)
         return LINK_ERROR;
 
     if (ion->invalidated())
@@ -2055,6 +2055,11 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t o
 
     // If object has a non-default resolve hook, don't inline
     if (obj->getClass()->resolve != JS_ResolveStub)
+        return false;
+
+    // Likewise for a non-default addProperty hook, since we'll need
+    // to invoke it.
+    if (obj->getClass()->addProperty != JS_PropertyStub)
         return false;
 
     if (!obj->isExtensible() || !shape->writable())

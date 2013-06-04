@@ -94,6 +94,24 @@ nsView::~nsView()
   delete mDirtyRegion;
 }
 
+class DestroyWidgetRunnable : public nsRunnable {
+public:
+  NS_DECL_NSIRUNNABLE
+
+  explicit DestroyWidgetRunnable(nsIWidget* aWidget) : mWidget(aWidget) {}
+
+private:
+  nsCOMPtr<nsIWidget> mWidget;
+};
+
+NS_IMETHODIMP DestroyWidgetRunnable::Run()
+{
+  mWidget->Destroy();
+  mWidget = nullptr;
+  return NS_OK;
+}
+
+
 void nsView::DestroyWidget()
 {
   if (mWindow)
@@ -107,7 +125,11 @@ void nsView::DestroyWidget()
     }
     else {
       mWindow->SetWidgetListener(nullptr);
-      mWindow->Destroy();
+
+      nsCOMPtr<nsIRunnable> widgetDestroyer =
+        new DestroyWidgetRunnable(mWindow);
+
+      NS_DispatchToMainThread(widgetDestroyer);
     }
 
     NS_RELEASE(mWindow);

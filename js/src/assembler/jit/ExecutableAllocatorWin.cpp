@@ -28,19 +28,12 @@
 #if ENABLE_ASSEMBLER && WTF_OS_WINDOWS
 
 #include "jswin.h"
-#include "prmjtime.h"
 
-extern void random_setSeed(uint64_t *, uint64_t);
 extern uint64_t random_next(uint64_t *, int);
 
 namespace JSC {
 
 uint64_t ExecutableAllocator::rngSeed;
-
-void ExecutableAllocator::initSeed()
-{
-    random_setSeed(&rngSeed, (PRMJ_Now() / 1000) ^ int64_t(this));
-}
 
 size_t ExecutableAllocator::determinePageSize()
 {

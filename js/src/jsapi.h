@@ -3894,10 +3894,13 @@ struct JS_PUBLIC_API(CompileOptions) {
     bool utf8;
     const char *filename;
     unsigned lineno;
+    unsigned column;
+    HandleObject element;
     bool compileAndGo;
     bool forEval;
     bool noScriptRval;
     bool selfHostingMode;
+    bool canLazilyParse;
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -3912,10 +3915,13 @@ struct JS_PUBLIC_API(CompileOptions) {
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename = f; lineno = l; return *this;
     }
+    CompileOptions &setColumn(unsigned c) { column = c; return *this; }
+    CompileOptions &setElement(HandleObject e) { element = e; return *this; }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setForEval(bool eval) { forEval = eval; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
+    CompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 
@@ -4478,7 +4484,7 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
  * JSON.parse as specified by ES5.
  */
 JS_PUBLIC_API(JSBool)
-JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, jsval *vp);
+JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandle<JS::Value> vp);
 
 JS_PUBLIC_API(JSBool)
 JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval reviver,

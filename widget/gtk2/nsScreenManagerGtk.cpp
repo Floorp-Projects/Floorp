@@ -89,11 +89,7 @@ nsScreenManagerGtk :: EnsureInit()
   if (mCachedScreenArray.Count() > 0)
     return NS_OK;
 
-#if GTK_CHECK_VERSION(2,2,0)
   mRootWindow = gdk_get_default_root_window();
-#else
-  mRootWindow = GDK_ROOT_PARENT();
-#endif // GTK_CHECK_VERSION(2,2,0)
   g_object_ref(mRootWindow);
 
   // GDK_STRUCTURE_MASK ==> StructureNotifyMask, for ConfigureNotify

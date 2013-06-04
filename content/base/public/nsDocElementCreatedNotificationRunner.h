@@ -6,6 +6,7 @@
 #ifndef nsDocElementCreatedNotificationRunner_h
 #define nsDocElementCreatedNotificationRunner_h
 
+#include "mozilla/Attributes.h"
 #include "nsThreadUtils.h" /* nsRunnable */
 
 #include "nsContentSink.h"
@@ -20,7 +21,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     nsContentSink::NotifyDocElementCreated(mDoc);
     return NS_OK;

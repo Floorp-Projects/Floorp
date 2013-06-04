@@ -6,6 +6,7 @@
 #ifndef nsDOMUIEvent_h
 #define nsDOMUIEvent_h
 
+#include "mozilla/Attributes.h"
 #include "nsIDOMUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsLayoutUtils.h"
@@ -27,9 +28,9 @@ public:
   
   // Forward to nsDOMEvent
   NS_FORWARD_TO_NSDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION
-  NS_IMETHOD DuplicatePrivateData();
-  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
-  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter);
+  NS_IMETHOD DuplicatePrivateData() MOZ_OVERRIDE;
+  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;
 
   static nsIntPoint CalculateScreenPoint(nsPresContext* aPresContext,
                                          nsEvent* aEvent)

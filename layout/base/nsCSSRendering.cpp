@@ -3027,10 +3027,11 @@ nsCSSRendering::GetBackgroundLayerRect(nsPresContext* aPresContext,
                                        const nsRect& aBorderArea,
                                        const nsRect& aClipRect,
                                        const nsStyleBackground& aBackground,
-                                       const nsStyleBackground::Layer& aLayer)
+                                       const nsStyleBackground::Layer& aLayer,
+                                       uint32_t aFlags)
 {
   nsBackgroundLayerState state =
-      PrepareBackgroundLayer(aPresContext, aForFrame, 0, aBorderArea,
+      PrepareBackgroundLayer(aPresContext, aForFrame, aFlags, aBorderArea,
                              aClipRect, aBackground, aLayer);
   return state.mFillArea;
 }
@@ -4686,6 +4687,18 @@ nsImageRenderer::IsRasterImage()
   if (mType != eStyleImageType_Image || !mImageContainer)
     return false;
   return mImageContainer->GetType() == imgIContainer::TYPE_RASTER;
+}
+
+bool
+nsImageRenderer::IsAnimatedImage()
+{
+  if (mType != eStyleImageType_Image || !mImageContainer)
+    return false;
+  bool animated = false;
+  if (NS_SUCCEEDED(mImageContainer->GetAnimated(&animated)) && animated)
+    return true;
+
+  return false;
 }
 
 already_AddRefed<mozilla::layers::ImageContainer>

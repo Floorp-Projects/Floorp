@@ -5,12 +5,13 @@
 import sys
 from setuptools import setup
 
-PACKAGE_VERSION = '0.7'
+PACKAGE_VERSION = '0.9'
 
 # we only support python 2 right now
 assert sys.version_info[0] == 2
 
-deps = ["ManifestDestiny >= 0.5.4"]
+deps = ["ManifestDestiny >= 0.5.4",
+        "mozfile >= 0.6"]
 # version-dependent dependencies
 try:
     import json
@@ -37,12 +38,13 @@ setup(name='mozprofile',
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL 2.0',
       packages=['mozprofile'],
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,
+      tests_require=['mozhttpd', 'mozfile'],
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]

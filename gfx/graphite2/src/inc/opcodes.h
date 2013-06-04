@@ -443,7 +443,7 @@ STARTOP(push_glyph_attr_obs)
     const int           slot_ref   = int8(param[1]);
     slotref slot = slotat(slot_ref);
     if (slot)
-        push(seg.glyphAttr(slot->gid(), glyph_attr));
+        push(int32(seg.glyphAttr(slot->gid(), glyph_attr)));
 ENDOP
 
 STARTOP(push_glyph_metric)
@@ -477,7 +477,7 @@ STARTOP(push_att_to_gattr_obs)
     {
         slotref att = slot->attachedTo();
         if (att) slot = att;
-        push(seg.glyphAttr(slot->gid(), glyph_attr));
+        push(int32(seg.glyphAttr(slot->gid(), glyph_attr)));
     }
 ENDOP
 
@@ -491,7 +491,7 @@ STARTOP(push_att_to_glyph_metric)
     {
         slotref att = slot->attachedTo();
         if (att) slot = att;
-        push(seg.getGlyphMetric(slot, glyph_attr, attr_level));
+        push(int32(seg.getGlyphMetric(slot, glyph_attr, attr_level)));
     }
 ENDOP
 
@@ -616,7 +616,7 @@ STARTOP(push_glyph_attr)
     const int           slot_ref    = int8(param[2]);
     slotref slot = slotat(slot_ref);
     if (slot)
-        push(seg.glyphAttr(slot->gid(), glyph_attr));
+        push(int32(seg.glyphAttr(slot->gid(), glyph_attr)));
 ENDOP
 
 STARTOP(push_att_to_glyph_attr)
@@ -629,7 +629,7 @@ STARTOP(push_att_to_glyph_attr)
     {
         slotref att = slot->attachedTo();
         if (att) slot = att;
-        push(seg.glyphAttr(slot->gid(), glyph_attr));
+        push(int32(seg.glyphAttr(slot->gid(), glyph_attr)));
     }
 ENDOP
 

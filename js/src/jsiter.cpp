@@ -19,7 +19,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
@@ -28,6 +27,7 @@
 #include "ds/Sort.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/Shape.h"
 
 #include "jsinferinlines.h"
@@ -378,7 +378,7 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
             return NULL;
 
         Class *clasp = &PropertyIteratorObject::class_;
-        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, NULL, NULL,
+        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, NULL, NULL, NewObjectMetadata(cx),
                                                           ITERATOR_FINALIZE_KIND));
         if (!shape)
             return NULL;

@@ -102,7 +102,7 @@ struct ClearTypeParameterInfo {
     int32_t     enhancedContrast;
 };
 
-class THEBES_API gfxWindowsPlatform : public gfxPlatform {
+class gfxWindowsPlatform : public gfxPlatform {
 public:
     enum TextRenderingMode {
         TEXT_RENDERING_NO_CLEARTYPE,

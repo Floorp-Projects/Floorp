@@ -215,7 +215,7 @@ def _emit_manifest_at(location, relative, test_list, depth):
             _emit_manifest_at(fullpath, relpath, test_list, depth + 1)
         else:
             numTestFiles += 1
-            assert(len(test_list) == 1)
+            assert len(test_list) == 1
             line = _build_manifest_script_entry(k, test_list[0])
             manifest.append(line)
 
@@ -344,7 +344,10 @@ def load(location, xul_tester, reldir = ''):
 
     # Any file whose basename matches something in this set is ignored.
     EXCLUDED = set(('browser.js', 'shell.js', 'jsref.js', 'template.js',
-                    'user.js', 'js-test-driver-begin.js', 'js-test-driver-end.js'))
+                    'user.js', 'test262-browser.js', 'test262-shell.js',
+                    'test402-browser.js', 'test402-shell.js',
+                    'testBuiltInObject.js', 'testIntl.js',
+                    'js-test-driver-begin.js', 'js-test-driver-end.js'))
 
     manifestFile = os.path.join(location, 'jstests.list')
     externalManifestEntries = _parse_external_manifest(manifestFile, '')

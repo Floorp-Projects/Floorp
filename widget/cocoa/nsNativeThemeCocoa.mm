@@ -2679,7 +2679,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
 }
 
 static const int32_t kRegularScrollbarThumbMinSize = 26;
-static const int32_t kSmallScrollbarThumbMinSize = 19;
+static const int32_t kSmallScrollbarThumbMinSize = 26;
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
@@ -2846,11 +2846,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
         aResult->SizeTo(16, 16);
         break;
       }
-      // Intentional fallthrough to next case.
-    }
 
-    case NS_THEME_SCROLLBAR_NON_DISAPPEARING:
-    {
       // yeah, i know i'm cheating a little here, but i figure that it
       // really doesn't matter if the scrollbar is vertical or horizontal
       // and the width metric is a really good metric for every piece
@@ -2862,6 +2858,29 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       int32_t themeMetric = (scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
                             kThemeMetricSmallScrollBarWidth :
                             kThemeMetricScrollBarWidth;
+      SInt32 scrollbarWidth = 0;
+      ::GetThemeMetric(themeMetric, &scrollbarWidth);
+      aResult->SizeTo(scrollbarWidth, scrollbarWidth);
+      break;
+    }
+
+    case NS_THEME_SCROLLBAR_NON_DISAPPEARING:
+    {
+      int32_t themeMetric = kThemeMetricScrollBarWidth;
+
+      if (aFrame) {
+        nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
+        if (scrollbarFrame &&
+            scrollbarFrame->StyleDisplay()->mAppearance ==
+            NS_THEME_SCROLLBAR_SMALL) {
+          // XXX We're interested in the width of non-disappearing scrollbars
+          // to leave enough space for a dropmarker in non-native styled
+          // comboboxes (bug 869314). It isn't clear to me if comboboxes can
+          // ever have small scrollbars.
+          themeMetric = kThemeMetricSmallScrollBarWidth;
+        }
+      }
+
       SInt32 scrollbarWidth = 0;
       ::GetThemeMetric(themeMetric, &scrollbarWidth);
       aResult->SizeTo(scrollbarWidth, scrollbarWidth);

@@ -1609,10 +1609,9 @@ nsGfxScrollFrameInner::ScrollToCSSPixels(nsIntPoint aScrollPosition)
 }
 
 void
-nsGfxScrollFrameInner::ScrollToCSSPixelsApproximate(const Point& aScrollPosition)
+nsGfxScrollFrameInner::ScrollToCSSPixelsApproximate(const CSSPoint& aScrollPosition)
 {
-  nsPoint pt(nsPresContext::CSSPixelsToAppUnits(aScrollPosition.x),
-             nsPresContext::CSSPixelsToAppUnits(aScrollPosition.y));
+  nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
   nscoord halfRange = nsPresContext::CSSPixelsToAppUnits(1000);
   nsRect range(pt.x - halfRange, pt.y - halfRange, 2*halfRange - 1, 2*halfRange - 1);
   ScrollTo(pt, nsIScrollableFrame::INSTANT, &range);
@@ -3768,7 +3767,9 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer, false);
   }
 
-  AdjustOverlappingScrollbars(vRect, hRect);
+  if (!LookAndFeel::GetInt(LookAndFeel::eIntID_AllowOverlayScrollbarsOverlap)) {
+    AdjustOverlappingScrollbars(vRect, hRect);
+  }
   if (mVScrollbarBox) {
     nsBoxFrame::LayoutChildAt(aState, mVScrollbarBox, vRect);
   }

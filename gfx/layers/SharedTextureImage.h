@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace layers {
 
-class THEBES_API SharedTextureImage : public Image {
+class SharedTextureImage : public Image {
 public:
   struct Data {
     gl::SharedTextureHandle mHandle;

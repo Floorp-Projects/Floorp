@@ -117,13 +117,6 @@ nsCxPusher::Push(JSContext *cx)
 void
 nsCxPusher::DoPush(JSContext* cx)
 {
-  nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
-  if (!xpc) {
-    // If someone tries to push a cx when we don't have the relevant state,
-    // it's probably safest to just crash.
-    MOZ_CRASH();
-  }
-
   // NB: The GetDynamicScriptContext is historical and might not be sane.
   if (cx && nsJSUtils::GetDynamicScriptContext(cx) &&
       xpc::IsJSContextOnStack(cx))
@@ -171,7 +164,6 @@ nsCxPusher::Pop()
 
     return;
   }
-  MOZ_ASSERT(nsXPConnect::GetXPConnect());
 
   // Leave the request before popping.
   mAutoRequest.destroyIfConstructed();
@@ -184,7 +176,7 @@ nsCxPusher::Pop()
   MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
                                 js::GetEnterCompartmentDepth(mPushedContext));
   DebugOnly<JSContext*> stackTop;
-  MOZ_ASSERT(mPushedContext == nsXPConnect::GetXPConnect()->GetCurrentJSContext());
+  MOZ_ASSERT(mPushedContext == nsXPConnect::XPConnect()->GetCurrentJSContext());
   xpc::PopJSContext();
 
   if (!mScriptIsRunning && mScx) {
@@ -220,7 +212,7 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-  nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
+  nsXPConnect *xpc = nsXPConnect::XPConnect();
   if (!aSafe) {
     mCx = xpc->GetCurrentJSContext();
   }
@@ -243,7 +235,7 @@ AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMP
 
 AutoPushJSContext::AutoPushJSContext(JSContext *aCx) : mCx(aCx)
 {
-  if (mCx && mCx != nsXPConnect::GetXPConnect()->GetCurrentJSContext()) {
+  if (mCx && mCx != nsXPConnect::XPConnect()->GetCurrentJSContext()) {
     mPusher.Push(mCx);
   }
 }

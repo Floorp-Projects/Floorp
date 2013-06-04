@@ -44,7 +44,7 @@ public:
 
   nsresult Start(nsPrintObject* aPO);
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() MOZ_OVERRIDE;
 
   void Stop();
 

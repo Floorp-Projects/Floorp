@@ -451,118 +451,17 @@ nsSVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame *aFrame)
   return GetOuterSVGFrame(aFrame)->IsCallingReflowSVG();
 }
 
-void
-nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
-                             const nsRect *aBoundsSubArea, uint32_t aFlags)
+bool
+nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(nsIFrame* aFrame)
 {
-  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG) &&
-                    !(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
-                    "Passed bad frame!");
-
-  NS_ASSERTION(aDuringUpdate == OuterSVGIsCallingReflowSVG(aFrame),
-               "aDuringUpdate lies!");
-
-  // Rendering observers must be notified about changes to the frames that they
-  // are observing _before_ ReflowSVG is called on the SVG frame tree, so we
-  // only need to notify observers if we're not under an ReflowSVG call.
-  // In fact, it would actually be wrong to notify observers while under
-  // ReflowSVG because the observers will try to mark themselves as dirty
-  // and, since ReflowSVG would be in the process of _removeing_ dirty bits
-  // from frames, that would mess things up.
-  if (!aDuringUpdate) {
-    NS_ASSERTION(!OuterSVGIsCallingReflowSVG(aFrame),
-                 "Must not InvalidateRenderingObservers() under "
-                 "nsISVGChildFrame::ReflowSVG!");
-
-    nsSVGEffects::InvalidateRenderingObservers(aFrame);
-  }
-
-  // Must come after InvalidateRenderingObservers
-  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
-    return;
-  }
-
-  // XXXjwatt: can this come before InvalidateRenderingObservers?
-  if (aFrame->GetStateBits() &
-      (NS_FRAME_IS_DIRTY | NS_FRAME_FIRST_REFLOW)) {
-    // Nothing to do if we're already dirty, or if the outer-<svg>
-    // hasn't yet had its initial reflow.
-    return;
-  }
-
-  aFrame->InvalidateFrameSubtree();
-
-  if ((aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame ||
-      aFrame->GetType() == nsGkAtoms::svgGlyphFrame) &&
-      NS_SVGDisplayListPaintingEnabled()) {
-    return;
-  }
-
-  // Okay, so now we pass the area that needs to be invalidated up our parent
-  // chain, accounting for filter effects and transforms as we go, until we
-  // reach our nsSVGOuterSVGFrame where we can invalidate:
-
-  nsRect invalidArea;
-  if (aBoundsSubArea) {
-    invalidArea = *aBoundsSubArea;
-  } else {
-    invalidArea = aFrame->GetVisualOverflowRect();
-    // GetVisualOverflowRect() already includes filter effects and transforms,
-    // so advance to our parent before the loop below:
-    invalidArea += aFrame->GetPosition();
-    aFrame = aFrame->GetParent();
-  }
-
-  int32_t appUnitsPerCSSPx = aFrame->PresContext()->AppUnitsPerCSSPixel();
-
-  while (aFrame) {
-    if ((aFrame->GetStateBits() & NS_FRAME_IS_DIRTY)) {
-      // This ancestor frame has already been invalidated, so nothing to do.
-      return;
+  nsSVGOuterSVGFrame* outer = GetOuterSVGFrame(aFrame);
+  do {
+    if (outer->IsCallingReflowSVG()) {
+      return true;
     }
-    if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
-      break;
-    }
-    if (aFrame->GetType() == nsGkAtoms::svgInnerSVGFrame &&
-        aFrame->StyleDisplay()->IsScrollableOverflow()) {
-      // Clip rect to the viewport established by this inner-<svg>:
-      float x, y, width, height;
-      static_cast<SVGSVGElement*>(aFrame->GetContent())->
-        GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
-      if (width <= 0.0f || height <= 0.0f) {
-        return; // Nothing to invalidate
-      }
-      nsRect viewportRect =
-        nsLayoutUtils::RoundGfxRectToAppRect(gfxRect(0.0, 0.0, width, height),
-                                             appUnitsPerCSSPx);
-      invalidArea = invalidArea.Intersect(viewportRect);
-      if (invalidArea.IsEmpty()) {
-        return; // Nothing to invalidate
-      }
-    }
-    nsSVGFilterFrame *filterFrame = nsSVGEffects::GetFilterFrame(aFrame);
-    if (filterFrame) {
-      invalidArea =
-        filterFrame->GetPostFilterDirtyArea(aFrame, invalidArea);
-    }
-    if (aFrame->IsTransformed()) {
-      invalidArea =
-        nsDisplayTransform::TransformRect(invalidArea, aFrame, nsPoint(0, 0));
-    }
-    invalidArea += aFrame->GetPosition();
-    aFrame = aFrame->GetParent();
-  }
-
-  if (!aFrame) {
-    // We seem to be able to get here, even though SVG frames are never created
-    // without an ancestor nsSVGOuterSVGFrame. See bug 767996.
-    return;
-  }
-
-  NS_ASSERTION(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG,
-               "SVG frames must always have an nsSVGOuterSVGFrame ancestor!");
-
-  static_cast<nsSVGOuterSVGFrame*>(aFrame)->InvalidateSVG(invalidArea);
+    outer = GetOuterSVGFrame(outer->GetParent());
+  } while (outer);
+  return false;
 }
 
 void

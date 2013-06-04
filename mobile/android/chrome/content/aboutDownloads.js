@@ -149,9 +149,9 @@ let Downloads = {
     this._stepAddEntries(privateEntries, this._privateList, privateEntries.length);
 
     // Add non-private downloads
-    let normalEntries = this.getDownloads({ isPrivate: false });
-    this._stepAddEntries(normalEntries, this._normalList, 1);
-    ContextMenus.init();
+    let normalEntries = this.getDownloads({ isPrivate: false });    
+    this._stepAddEntries(normalEntries, this._normalList, 1, this._scrollToSelectedDownload.bind(this));    
+    ContextMenus.init();    
   },
 
   uninit: function dl_uninit() {
@@ -358,6 +358,7 @@ let Downloads = {
 
       let updatedState = this._getState(aStmt.row.state);
       // Try to get the attribute values from the statement
+
       return {
         guid: aStmt.row.guid,
         target: aStmt.row.name,
@@ -377,9 +378,14 @@ let Downloads = {
     }
   },
 
-  _stepAddEntries: function dv__stepAddEntries(aEntries, aList, aNumItems) {
-    if (aEntries.length == 0)
+  _stepAddEntries: function dv__stepAddEntries(aEntries, aList, aNumItems, aCallback) {
+    
+    if (aEntries.length == 0){
+      if (aCallback)
+        aCallback();
+
       return;
+    }
 
     let attrs = aEntries.shift();
     let item = this._createItem(downloadTemplate, attrs);
@@ -388,12 +394,12 @@ let Downloads = {
     // Add another item to the list if we should; otherwise, let the UI update
     // and continue later
     if (aNumItems > 1) {
-      this._stepAddEntries(aEntries, aList, aNumItems - 1);
+      this._stepAddEntries(aEntries, aList, aNumItems - 1, aCallback);
     } else {
       // Use a shorter delay for earlier downloads to display them faster
       let delay = Math.min(aList.itemCount * 10, 300);
       setTimeout(function () {
-        this._stepAddEntries(aEntries, aList, 5);
+        this._stepAddEntries(aEntries, aList, 5, aCallback);
       }.bind(this), delay);
     }
   },
@@ -551,6 +557,31 @@ let Downloads = {
     } catch (ex) {
       this.logError("_updateDownloadRow() " + ex, aDownload);
     }
+  },
+  
+  /**
+   * In case a specific downloadId was passed while opening, scrolls the list to 
+   * the given elemenet
+   */
+
+  _scrollToSelectedDownload : function dl_scrollToSelected() {
+    let spec = document.location.href;
+    let pos = spec.indexOf("?");
+    let query = "";
+    if (pos >= 0)
+      query = spec.substring(pos + 1);
+
+    // Just assume the query is "id=<id>"
+    let id = query.substring(3);
+    if (!id) {
+      return;
+    }    
+    downloadElement = this._getElementForDownload(id);
+    if (!downloadElement) {
+      return;
+    }
+
+    downloadElement.scrollIntoView();
   },
 
   /**

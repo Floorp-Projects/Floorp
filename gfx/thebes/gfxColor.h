@@ -107,7 +107,7 @@ gfxPackedPixel(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
  * XXX should this use doubles (instead of gfxFloat), for consistency with
  * cairo?
  */
-struct THEBES_API gfxRGBA {
+struct gfxRGBA {
     gfxFloat r, g, b, a;
 
     enum PackedColorType {

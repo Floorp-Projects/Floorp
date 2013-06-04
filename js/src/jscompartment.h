@@ -182,6 +182,8 @@ struct JSCompartment
 
     void                         *data;
 
+    js::ObjectMetadataCallback   objectMetadataCallback;
+
   private:
     js::WrapperMap               crossCompartmentWrappers;
 

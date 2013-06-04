@@ -6,6 +6,7 @@
 #ifndef nsHTMLFormElement_h__
 #define nsHTMLFormElement_h__
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
@@ -19,6 +20,13 @@
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsAsyncDOMEvent.h"
+
+// Including 'windows.h' will #define GetClassInfo to something else.
+#ifdef XP_WIN
+#ifdef GetClassInfo
+#undef GetClassInfo
+#endif
+#endif
 
 class nsFormControlList;
 class nsIMutableArray;
@@ -56,44 +64,44 @@ public:
 
   // nsIForm
   NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const;
-  NS_IMETHOD_(uint32_t) GetElementCount() const;
-  NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl);
-  NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
+  NS_IMETHOD_(uint32_t) GetElementCount() const MOZ_OVERRIDE;
+  NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const MOZ_OVERRIDE;
 
   // nsIRadioGroupContainer
   void SetCurrentRadioButton(const nsAString& aName,
-                             nsIDOMHTMLInputElement* aRadio);
-  nsIDOMHTMLInputElement* GetCurrentRadioButton(const nsAString& aName);
+                             nsIDOMHTMLInputElement* aRadio) MOZ_OVERRIDE;
+  nsIDOMHTMLInputElement* GetCurrentRadioButton(const nsAString& aName) MOZ_OVERRIDE;
   NS_IMETHOD GetNextRadioButton(const nsAString& aName,
                                 const bool aPrevious,
                                 nsIDOMHTMLInputElement*  aFocusedRadio,
-                                nsIDOMHTMLInputElement** aRadioOut);
+                                nsIDOMHTMLInputElement** aRadioOut) MOZ_OVERRIDE;
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent);
-  void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio);
-  void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio);
-  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const;
+                            bool aFlushContent) MOZ_OVERRIDE;
+  void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio) MOZ_OVERRIDE;
+  void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio) MOZ_OVERRIDE;
+  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const MOZ_OVERRIDE;
   virtual void RadioRequiredChanged(const nsAString& aName,
-                                    nsIFormControl* aRadio);
-  virtual bool GetValueMissingState(const nsAString& aName) const;
-  virtual void SetValueMissingState(const nsAString& aName, bool aValue);
+                                    nsIFormControl* aRadio) MOZ_OVERRIDE;
+  virtual bool GetValueMissingState(const nsAString& aName) const MOZ_OVERRIDE;
+  virtual void SetValueMissingState(const nsAString& aName, bool aValue) MOZ_OVERRIDE;
 
-  virtual nsEventStates IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult);
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult WillHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+                                nsAttrValue& aResult) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult WillHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
+                              bool aNullParent = true) MOZ_OVERRIDE;
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -101,9 +109,9 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           bool aNotify) MOZ_OVERRIDE;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
   /**
    * Forget all information about the current submission (and the fact that we
@@ -111,7 +119,7 @@ public:
    */
   void ForgetCurrentSubmission();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLFormElement,
                                                      nsGenericHTMLElement)
@@ -218,9 +226,9 @@ public:
    */
   bool CheckValidFormSubmission();
 
-  virtual nsXPCClassInfo* GetClassInfo();
+  virtual nsXPCClassInfo* GetClassInfo() MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   /**
    * Walk over the form elements and call SubmitNamesValues() on them to get
@@ -258,7 +266,7 @@ protected:
       : nsAsyncDOMEvent(aEventNode, aEventType, true, true)
     {}
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() MOZ_OVERRIDE
     {
       static_cast<nsHTMLFormElement*>(mEventNode.get())->EventHandled();
       return nsAsyncDOMEvent::Run();
@@ -276,7 +284,7 @@ protected:
       : mForm(aForm)
     {}
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() MOZ_OVERRIDE {
       mForm->HandleDefaultSubmitRemoval();
       return NS_OK;
     }

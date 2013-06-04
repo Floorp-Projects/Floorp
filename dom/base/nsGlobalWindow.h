@@ -94,7 +94,6 @@
 #define MIN_IDLE_NOTIFICATION_TIME_S 1
 
 class nsIContent;
-class nsIDOMBarProp;
 class nsIDocument;
 class nsPresContext;
 class nsIDOMCrypto;
@@ -102,7 +101,6 @@ class nsIDOMEvent;
 class nsIScrollableFrame;
 class nsIControllers;
 
-class nsBarProp;
 class nsLocation;
 class nsScreen;
 class nsHistory;
@@ -121,6 +119,7 @@ class nsWindowSizes;
 
 namespace mozilla {
 namespace dom {
+class BarProp;
 class Navigator;
 class URL;
 class SpeechSynthesis;
@@ -392,6 +391,14 @@ public:
                                 bool aUseCapture,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
                                 mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE
+  {
+    if (IsOuterWindow()) {
+      return this;
+    }
+
+    return GetOuterFromCurrentInner(this);
+  }
 
   // nsITouchEventReceiver
   NS_DECL_NSITOUCHEVENTRECEIVER
@@ -760,6 +767,8 @@ public:
   mozilla::dom::SpeechSynthesis* GetSpeechSynthesisInternal();
 #endif
 
+  mozilla::dom::BarProp* Scrollbars();
+
 protected:
   // Array of idle observers that are notified of idle events.
   nsTObserverArray<IdleObserverHolder> mIdleObservers;
@@ -789,7 +798,7 @@ protected:
   static bool sIdleObserversAPIFuzzTimeDisabled;
 
   friend class HashchangeCallback;
-  friend class nsBarProp;
+  friend class mozilla::dom::BarProp;
 
   // Object Management
   virtual ~nsGlobalWindow();
@@ -1169,12 +1178,12 @@ protected:
   nsRefPtr<Navigator>           mNavigator;
   nsRefPtr<nsScreen>            mScreen;
   nsRefPtr<nsDOMWindowList>     mFrames;
-  nsRefPtr<nsBarProp>           mMenubar;
-  nsRefPtr<nsBarProp>           mToolbar;
-  nsRefPtr<nsBarProp>           mLocationbar;
-  nsRefPtr<nsBarProp>           mPersonalbar;
-  nsRefPtr<nsBarProp>           mStatusbar;
-  nsRefPtr<nsBarProp>           mScrollbars;
+  nsRefPtr<mozilla::dom::BarProp> mMenubar;
+  nsRefPtr<mozilla::dom::BarProp> mToolbar;
+  nsRefPtr<mozilla::dom::BarProp> mLocationbar;
+  nsRefPtr<mozilla::dom::BarProp> mPersonalbar;
+  nsRefPtr<mozilla::dom::BarProp> mStatusbar;
+  nsRefPtr<mozilla::dom::BarProp> mScrollbars;
   nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;

@@ -33,14 +33,9 @@ public:
                     int32_t aStride,
                     SurfaceFormat aFormat);
 
-  /**
-   * If aOwner is nullptr, we make a copy of the pixel data in the bitmap, 
-   * otherwise we just reference this data until DrawTargetWillChange is called.
-   */
-  bool InitWithBitmap(const SkBitmap& aBitmap,
+  bool InitFromCanvas(SkCanvas* aCanvas,
                       SurfaceFormat aFormat,
                       DrawTargetSkia* aOwner);
-
 
   virtual unsigned char *GetData();
 

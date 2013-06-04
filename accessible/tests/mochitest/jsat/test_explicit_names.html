@@ -1,0 +1,166 @@
+<html>
+<head>
+  <title>[AccessFu] Trust explicitly associated names when speaking certain elements</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="utterance.js"></script>
+  <script type="application/javascript">
+
+    function doTest() {
+      // Test the following accOrElmOrID.
+      var tests = [{
+        accOrElmOrID: "anchor1",
+        expected: ["link", "title"]
+      }, {
+        accOrElmOrID: "anchor2",
+        expected: ["link", "This is a link"]
+      }, {
+        accOrElmOrID: "button1",
+        expected: ["button", "Press me"]
+      }, {
+        accOrElmOrID: "button2",
+        expected: ["button", "Press me"]
+      }, {
+        accOrElmOrID: "textarea1",
+        expected: ["text area", "Test Text Area", "This is the text area text."]
+      }, {
+        accOrElmOrID: "textarea2",
+        expected: ["text area", "This is the text area text."]
+      }, {
+        accOrElmOrID: "heading1",
+        expected: ["heading level 1", "Test heading", "This is the heading."]
+      }, {
+        accOrElmOrID: "heading2",
+        expected: ["heading level 1", "This is the heading."]
+      }, {
+        accOrElmOrID: "list",
+        expected: ["list 2 items", "Test List", "First item", "Top of the list",
+          "1.", "list one", "Last item", "2.", "list two"]
+      }, {
+        accOrElmOrID: "dlist",
+        expected: ["definition list 0.5 items", "Test Definition List",
+          "dd one"]
+      }, {
+        accOrElmOrID: "li_one",
+        expected: ["list 2 items", "Test List", "First item", "Top of the list"]
+      }, {
+        accOrElmOrID: "li_two",
+        expected: ["list 2 items", "Test List", "Last item", "2.", "list two"]
+      }, {
+        accOrElmOrID: "cell",
+        expected: ["table", "Fruits and vegetables", "List of Fruits",
+          "list 4 items","First item", "link", "Apples", "link", "Bananas",
+          "link", "Peaches", "Last item", "link", "Plums"]
+      }, {
+        accOrElmOrID: "app.net",
+        expected: ["list 2 items", "First item", "link", "star", "Last item",
+          "link", "repost"]
+      }, {
+        // Test pivot to list from li_one.
+        accOrElmOrID: "list",
+        oldAccOrElmOrID: "li_one",
+        expected: ["list 2 items", "Test List", "First item", "Top of the list",
+          "1.", "list one", "Last item", "2.", "list two"]
+      }, {
+        // Test pivot to li_one from list.
+        accOrElmOrID: "li_one",
+        oldAccOrElmOrID: "list",
+        expected: ["list 2 items", "Test List", "First item", "Top of the list"]
+      }, {
+        // Test pivot to "apples" link from the table cell.
+        accOrElmOrID: "apples",
+        oldAccOrElmOrID: "cell",
+        expected: ["List of Fruits", "list 4 items", "First item", "link",
+          "Apples"]
+      }, {
+        // Test pivot to the table cell from the "apples" link.
+        accOrElmOrID: "cell",
+        oldAccOrElmOrID: "apples",
+        expected: ["List of Fruits", "list 4 items", "First item", "link",
+          "Apples", "link", "Bananas", "link", "Peaches", "Last item", "link",
+          "Plums"]
+      }];
+
+      // Test various explicit names vs the utterance generated from subtrees.
+      tests.forEach(function run(test) {
+        testUtterance(test.expected, test.accOrElmOrID, test.oldAccOrElmOrID);
+      });
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <div id="root">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=845870"
+       title="[AccessFu] Trust explicitly associated names when speaking certain elements">
+       Mozilla Bug 845870
+       </a>
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+    <button id="button1" aria-label="Press me">This is not a name</button>
+    <button id="button2">
+      Press me
+    </button>
+    <a id="anchor1" href="#test" title="title"></a>
+    <a id="anchor2" href="#test">This is a link</a>
+    <textarea id="textarea1" title="Test Text Area" cols="80" rows="5">This is the text area text.</textarea>
+    <textarea id="textarea2" cols="80" rows="5">
+      This is the text area text.
+    </textarea>
+    <h1 id="heading1" title="Test heading">This is the heading.</h1>
+    <h1 id="heading2">
+      This is the heading.
+    </h1>
+    <ol id="list" title="Test List">
+      <li id="li_one" aria-label="Top of the list">list one</li>
+      <li id="li_two">list two</li>
+    </ol>
+    <dl id="dlist" title="Test Definition List">
+      <dd id="dd_one">dd one</dd>
+    </dl>
+    <table>
+      <caption>Fruits and vegetables</caption>
+      <tr>
+        <td id="cell" aria-label="List of Fruits">
+          <ul style="list-style-type: none;">
+            <li><a id="apples" href="#">Apples</a></li>
+            <li><a id="bananas" href="#">Bananas</a></li>
+            <li><a href="#">Peaches</a></li>
+            <li>
+              <a href="#">
+
+                Plums
+              </a>
+            </li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+    <!-- app.net -->
+    <ul id="app.net" class="unstyled ul-horizontal yui3-u fixed-right ta-right" style="list-style-type: none;">
+      <li class="yui3-u">
+        <a href="#star" data-starred="0" data-star-button="1" data-post-id="5098826">
+          <i aria-label="star" class="icon-star-empty"></i>
+        </a>
+      </li>
+      <li class="yui3-u repost">
+        <a href="#repost" title="repost" data-repost-button="1" data-reposted="0" data-post-id="5098826">
+          <i aria-label="repost" class="icon-repost"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+</body>
+</html>

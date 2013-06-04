@@ -7,6 +7,7 @@
 #ifndef nsDOMDataChannel_h
 #define nsDOMDataChannel_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/DataChannelBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/net/DataChannel.h"
@@ -71,24 +72,25 @@ public:
 
   // Uses XPIDL GetProtocol.
   bool Ordered() const;
-  uint16_t Stream() const;
+  uint16_t Id() const;
+  uint16_t Stream() const; // deprecated
 
   nsresult
   DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
 
   virtual nsresult
-  OnMessageAvailable(nsISupports* aContext, const nsACString& aMessage);
+  OnMessageAvailable(nsISupports* aContext, const nsACString& aMessage) MOZ_OVERRIDE;
 
   virtual nsresult
-  OnBinaryMessageAvailable(nsISupports* aContext, const nsACString& aMessage);
+  OnBinaryMessageAvailable(nsISupports* aContext, const nsACString& aMessage) MOZ_OVERRIDE;
 
   virtual nsresult OnSimpleEvent(nsISupports* aContext, const nsAString& aName);
 
   virtual nsresult
-  OnChannelConnected(nsISupports* aContext);
+  OnChannelConnected(nsISupports* aContext) MOZ_OVERRIDE;
 
   virtual nsresult
-  OnChannelClosed(nsISupports* aContext);
+  OnChannelClosed(nsISupports* aContext) MOZ_OVERRIDE;
 
   virtual void
   AppReady();

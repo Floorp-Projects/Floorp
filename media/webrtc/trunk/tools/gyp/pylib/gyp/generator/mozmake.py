@@ -374,14 +374,10 @@ class MakefileGenerator(object):
     else:
       # Maybe nothing?
       return False
-    if self.flavor == 'win':
-      top = self.relative_topsrcdir
-    else:
-      top = self.topsrcdir
-    WriteMakefile(output_file, data, build_file, depth, top,
+    WriteMakefile(output_file, data, build_file, depth, self.topsrcdir,
                   # we set srcdir up one directory, since the subdir
                   # doesn't actually exist in the source directory
-                  swapslashes(os.path.normpath(os.path.join(top, self.relative_srcdir, os.path.split(rel_path)[0]))),
+                  swapslashes(os.path.normpath(os.path.join(self.topsrcdir, self.relative_srcdir, os.path.split(rel_path)[0]))),
                   self.relative_srcdir,
                   self.common_mk_path)
     return True
@@ -437,16 +433,10 @@ def GenerateOutput(target_list, target_dicts, data, params):
   topdata = {'DIRS': generator.dirs}
   if generator.parallel_dirs:
     topdata['PARALLEL_DIRS'] = generator.parallel_dirs
-  if flavor == 'win':
-    top = relative_topsrcdir
-    src = srcdir
-  else:
-    top = topsrcdir
-    src = abs_srcdir
   WriteMakefile(makefile_path, topdata, params['build_files'][0],
                 depth,
-                swapslashes(top),
-                swapslashes(src),
+                swapslashes(topsrcdir),
+                swapslashes(abs_srcdir),
                 swapslashes(relative_srcdir),
                 common_mk_path)
   scriptname = "$(topsrcdir)/media/webrtc/trunk/tools/gyp/pylib/gyp/generator/mozmake.py"

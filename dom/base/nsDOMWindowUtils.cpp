@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/PLayerTransactionChild.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h"
@@ -75,6 +76,9 @@
 #include "nsIScriptError.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
+#include "FrameLayerBuilder.h"
+#include "nsDisplayList.h"
+#include "nsROCSSPrimitiveValue.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -1533,6 +1537,35 @@ nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
   *aWidth = nsPresContext::AppUnitsToIntCSSPixels(sizes.LeftRight());
   *aHeight = nsPresContext::AppUnitsToIntCSSPixels(sizes.TopBottom());
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
+                                           nsIDOMClientRect** aResult)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  nsresult rv;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsClientRect> rect = new nsClientRect(window);
+  nsIFrame* frame = content->GetPrimaryFrame();
+
+  if (frame) {
+    nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
+               nsLayoutUtils::GetContainingBlockForClientRect(frame),
+               nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+    rect->SetLayoutRect(r);
+  }
+
+  rect.forget(aResult);
   return NS_OK;
 }
 
@@ -3362,5 +3395,60 @@ nsDOMWindowUtils::RunBeforeNextEvent(nsIRunnable *runnable)
   }
 
   return appShell->RunBeforeNextEvent(runnable);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMNode* aNode,
+                                         const nsAString& aProperty,
+                                         nsAString& aResult)
+{
+  aResult.Truncate();
+  ErrorResult rv;
+  nsCOMPtr<Element> element = do_QueryInterface(aNode);
+  if (!element) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsRefPtr<nsROCSSPrimitiveValue> cssValue = nullptr;
+  nsIFrame* frame = element->GetPrimaryFrame();
+  if (frame && nsLayoutUtils::AreAsyncAnimationsEnabled()) {
+    if (aProperty.EqualsLiteral("opacity")) {
+      Layer* layer = FrameLayerBuilder::GetDedicatedLayer(frame, nsDisplayItem::TYPE_OPACITY);
+      if (layer) {
+        float value;
+        ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
+        if (forwarder) {
+          forwarder->GetShadowManager()->SendGetOpacity(layer->AsShadowableLayer()->GetShadow(), &value);
+          cssValue = new nsROCSSPrimitiveValue;
+          cssValue->SetNumber(value);
+        }
+      }
+    } else if (aProperty.EqualsLiteral("transform")) {
+      Layer* layer = FrameLayerBuilder::GetDedicatedLayer(frame, nsDisplayItem::TYPE_TRANSFORM);
+      if (layer) {
+        gfx3DMatrix matrix;
+        ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
+        if (forwarder) {
+          forwarder->GetShadowManager()->SendGetTransform(layer->AsShadowableLayer()->GetShadow(), &matrix);
+          cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);
+        }
+      }
+    }
+  }
+
+  if (cssValue) {
+    nsString text;
+    cssValue->GetCssText(text, rv);
+    aResult.Assign(text);
+    return rv.ErrorCode();
+  }
+
+  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(element);
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> style;
+  nsresult res = element->GetCurrentDoc()->GetWindow()->
+    GetComputedStyle(elem, aProperty, getter_AddRefs(style));
+  NS_ENSURE_SUCCESS(res, res);
+
+  return style->GetPropertyValue(aProperty, aResult);
 }
 
