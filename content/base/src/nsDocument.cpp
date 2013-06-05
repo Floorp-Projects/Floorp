@@ -1537,7 +1537,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTouch)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsITouchEventReceiver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIInlineEventHandlers)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocumentRegister)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIObserver)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
@@ -5073,32 +5072,6 @@ nsDocument::RegisterEnabled()
   static bool sPrefValue =
     Preferences::GetBool("dom.webcomponents.enabled", false);
   return sPrefValue;
-}
-
-NS_IMETHODIMP
-nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
-                     JSContext* aCx, uint8_t aOptionalArgc,
-                     jsval* aConstructor /* out param */)
-{
-  RootedDictionary<ElementRegistrationOptions> options(aCx);
-  if (aOptionalArgc > 0) {
-    JSAutoCompartment ac(aCx, GetWrapper());
-    JS::Rooted<JS::Value> opts(aCx, aOptions);
-    NS_ENSURE_TRUE(JS_WrapValue(aCx, opts.address()),
-                   NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(options.Init(aCx, opts),
-                   NS_ERROR_UNEXPECTED);
-  }
-
-  ErrorResult rv;
-  JSObject* object = Register(aCx, aName, options, rv);
-  if (rv.Failed()) {
-    return rv.ErrorCode();
-  }
-  NS_ENSURE_TRUE(object, NS_ERROR_UNEXPECTED);
-
-  *aConstructor = OBJECT_TO_JSVAL(object);
-  return NS_OK;
 }
 
 JSObject*
