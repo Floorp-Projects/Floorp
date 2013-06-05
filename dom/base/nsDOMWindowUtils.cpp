@@ -64,7 +64,6 @@
 #include "nsIIOService.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/indexedDB/FileInfo.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "GeckoProfiler.h"
@@ -2868,28 +2867,15 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName,
     indexedDB::IndexedDatabaseManager::Get();
 
   if (mgr) {
-    nsRefPtr<indexedDB::FileManager> fileManager =
-      mgr->GetFileManager(origin, aDatabaseName);
-
-    if (fileManager) {
-      nsRefPtr<indexedDB::FileInfo> fileInfo = fileManager->GetFileInfo(aId);
-
-      if (fileInfo) {
-        fileInfo->GetReferences(aRefCnt, aDBRefCnt, aSliceRefCnt);
-
-        if (*aRefCnt != -1) {
-          // We added an extra temp ref, so account for that accordingly.
-          (*aRefCnt)--;
-        }
-
-        *aResult = true;
-        return NS_OK;
-      }
-    }
+    rv = mgr->BlockAndGetFileReferences(origin, aDatabaseName, aId, aRefCnt,
+                                        aDBRefCnt, aSliceRefCnt, aResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
+    *aResult = false;
   }
 
-  *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
-  *aResult = false;
   return NS_OK;
 }
 
