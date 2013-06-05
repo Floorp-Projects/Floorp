@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_indexeddb_idbrequest_h__
 #define mozilla_dom_indexeddb_idbrequest_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIIDBRequest.h"
@@ -41,7 +42,7 @@ public:
                                       JSContext* aCallingCx);
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   nsISupports* Source()
   {
@@ -139,7 +140,7 @@ public:
   void SetTransaction(IDBTransaction* aTransaction);
 
   // nsIDOMEventTarget
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   DOMError* GetError(ErrorResult& aRv)
   {

@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
+#include "mozilla/Attributes.h"
 #include "Workers.h"
 
 #include "nsIContentSecurityPolicy.h"
@@ -133,7 +134,7 @@ protected:
   { }
 
   virtual bool
-  DispatchInternal();
+  DispatchInternal() MOZ_OVERRIDE;
 };
 
 class MainThreadSyncRunnable : public WorkerSyncRunnable
@@ -176,7 +177,7 @@ protected:
   { }
 
   virtual bool
-  DispatchInternal();
+  DispatchInternal() MOZ_OVERRIDE;
 };
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
