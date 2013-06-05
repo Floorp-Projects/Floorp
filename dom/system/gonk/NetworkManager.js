@@ -130,6 +130,13 @@ function isComplete(code) {
   return (type != NETD_COMMAND_PROCEEDING);
 }
 
+function defineLazyRegExp(obj, name, pattern) {
+  obj.__defineGetter__(name, function() {
+    delete obj[name];
+    return obj[name] = new RegExp(pattern);
+  });
+}
+
 /**
  * This component watches for network interfaces changing state and then
  * adjusts routes etc. accordingly.
@@ -216,6 +223,10 @@ function NetworkManager() {
   });
 
   ppmm.addMessageListener('NetworkInterfaceList:ListInterface', this);
+
+  // Used in resolveHostname().
+  defineLazyRegExp(this, "REGEXP_IPV4", "^\\d{1,3}(?:\\.\\d{1,3}){3}$");
+  defineLazyRegExp(this, "REGEXP_IPV6", "^[\\da-fA-F]{4}(?::[\\da-fA-F]{4}){7}$");
 }
 NetworkManager.prototype = {
   classID:   NETWORKMANAGER_CID,
@@ -611,17 +622,25 @@ NetworkManager.prototype = {
   resolveHostname: function resolveHostname(hosts) {
     let retval = [];
 
-    for(var i = 0; i < hosts.length; i++) {
-      let hostname = hosts[i].split('/')[2];
-      if (!hostname) {
+    for (let hostname of hosts) {
+      try {
+        let uri = Services.io.newURI(hostname, null, null);
+        hostname = uri.host;
+      } catch (e) {}
+
+      if (hostname.match(this.REGEXP_IPV4) ||
+          hostname.match(this.REGEXP_IPV6)) {
+        retval.push(hostname);
         continue;
       }
 
-      let hostnameIps = gDNSService.resolve(hostname, 0);
-      while (hostnameIps.hasMore()) {
-        retval.push(hostnameIps.getNextAddrAsString());
-        debug("Found IP at: " + JSON.stringify(retval));
-      }
+      try {
+        let hostnameIps = gDNSService.resolve(hostname, 0);
+        while (hostnameIps.hasMore()) {
+          retval.push(hostnameIps.getNextAddrAsString());
+          debug("Found IP at: " + JSON.stringify(retval));
+        }
+      } catch (e) {}
     }
 
     return retval;
