@@ -1005,7 +1005,6 @@ RES_COLOR = \
   res/color/abouthome_section_title.xml \
   res/color/awesome_bar_title.xml \
   res/color/awesome_bar_title_hint.xml \
-  res/color/menu_item_title.xml \
   res/color/primary_text.xml \
   res/color/primary_text_inverse.xml \
   res/color/secondary_text.xml \
