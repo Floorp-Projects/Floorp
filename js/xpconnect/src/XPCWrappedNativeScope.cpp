@@ -194,14 +194,14 @@ XPCWrappedNativeScope::GetComponentsJSObject(XPCCallContext& ccx)
         mComponents = new nsXPCComponents(this);
 
     AutoMarkingNativeInterfacePtr iface(ccx);
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(nsIXPCComponents));
+    iface = XPCNativeInterface::GetNewOrUsed(&NS_GET_IID(nsIXPCComponents));
     if (!iface)
         return nullptr;
 
     nsCOMPtr<nsIXPCComponents> cholder(mComponents);
     xpcObjectHelper helper(cholder);
     nsCOMPtr<XPCWrappedNative> wrapper;
-    XPCWrappedNative::GetNewOrUsed(ccx, helper, this, iface, getter_AddRefs(wrapper));
+    XPCWrappedNative::GetNewOrUsed(helper, this, iface, getter_AddRefs(wrapper));
     if (!wrapper)
         return nullptr;
 
@@ -359,14 +359,15 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 }
 
 JSObject *
-XPCWrappedNativeScope::GetPrototypeNoHelper(XPCCallContext& ccx)
+XPCWrappedNativeScope::GetPrototypeNoHelper()
 {
+    AutoJSContext cx;
     // We could create this prototype in our constructor, but all scopes
     // don't need one, so we save ourselves a bit of space if we
     // create these when they're needed.
     if (!mPrototypeNoHelper) {
-        mPrototypeNoHelper = JS_NewObject(ccx, js::Jsvalify(&XPC_WN_NoHelper_Proto_JSClass),
-                                          JS_GetObjectPrototype(ccx, mGlobalJSObject),
+        mPrototypeNoHelper = JS_NewObject(cx, js::Jsvalify(&XPC_WN_NoHelper_Proto_JSClass),
+                                          JS_GetObjectPrototype(cx, mGlobalJSObject),
                                           mGlobalJSObject);
 
         NS_ASSERTION(mPrototypeNoHelper,
