@@ -894,11 +894,11 @@ function emitMultiEvents(type, touch, touches) {
   let win = doc.defaultView;
   // touches that are in the same document
   let documentTouches = doc.createTouchList(touches.filter(function(t) {
-    return t.target.ownerDocument === doc;
+    return ((t.target.ownerDocument === doc) && (type != 'touchcancel'));
   }));
   // touches on the same target
   let targetTouches = doc.createTouchList(touches.filter(function(t) {
-    return t.target === target;
+    return ((t.target === target) && ((type != 'touchcancel') || (type != 'touchend')));
   }));
   // Create changed touches
   let changedTouches = doc.createTouchList(touch);
