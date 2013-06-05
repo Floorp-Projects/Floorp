@@ -14,8 +14,6 @@
 #include "nsString.h"
 #include "prprf.h"
 
-using namespace mozilla;
-
 enum DOM4ErrorTypeCodeMap {
   /* DOM4 errors from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
   IndexSizeError             = nsIDOMDOMException::INDEX_SIZE_ERR,
@@ -62,6 +60,23 @@ enum DOM4ErrorTypeCodeMap {
   LockedFileInactiveError = 0,
 };
 
+#define DOM4_MSG_DEF(name, message, nsresult) {(nsresult), name, #name, message},
+#define DOM_MSG_DEF(val, message) {(val), NS_ERROR_GET_CODE(val), #val, message},
+
+static struct ResultStruct
+{
+  nsresult mNSResult;
+  uint16_t mCode;
+  const char* mName;
+  const char* mMessage;
+} gDOMErrorMsgMap[] = {
+#include "domerr.msg"
+  {NS_OK, 0, nullptr, nullptr}   // sentinel to mark end of array
+};
+
+#undef DOM4_MSG_DEF
+#undef DOM_MSG_DEF
+
 static void
 NSResultToNameAndMessage(nsresult aNSResult,
                          const char** aName,
@@ -71,30 +86,17 @@ NSResultToNameAndMessage(nsresult aNSResult,
   *aName = nullptr;
   *aMessage = nullptr;
   *aCode = 0;
+  ResultStruct* result_struct = gDOMErrorMsgMap;
 
-#define DOM4_MSG_DEF(name, message, nsresult) {(nsresult), name, #name, message},
-#define DOM_MSG_DEF(val, message) {(val), NS_ERROR_GET_CODE(val), #val, message},
-
-  static const struct ResultStruct
-  {
-    nsresult mNSResult;
-    uint16_t mCode;
-    const char* mName;
-    const char* mMessage;
-  } sDOMErrorMsgMap[] = {
-#include "domerr.msg"
-  };
-
-#undef DOM4_MSG_DEF
-#undef DOM_MSG_DEF
-
-  for (uint32_t idx = 0; idx < ArrayLength(sDOMErrorMsgMap); idx++) {
-    if (aNSResult == sDOMErrorMsgMap[idx].mNSResult) {
-      *aName = sDOMErrorMsgMap[idx].mName;
-      *aMessage = sDOMErrorMsgMap[idx].mMessage;
-      *aCode = sDOMErrorMsgMap[idx].mCode;
+  while (result_struct->mName) {
+    if (aNSResult == result_struct->mNSResult) {
+      *aName = result_struct->mName;
+      *aMessage = result_struct->mMessage;
+      *aCode = result_struct->mCode;
       return;
     }
+
+    ++result_struct;
   }
 
   NS_WARNING("Huh, someone is throwing non-DOM errors using the DOM module!");

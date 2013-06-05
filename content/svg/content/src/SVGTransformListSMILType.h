@@ -81,12 +81,7 @@ class SVGTransformListSMILType : public nsISMILType
 {
 public:
   // Singleton for nsSMILValue objects to hold onto.
-  static SVGTransformListSMILType*
-  Singleton()
-  {
-    static SVGTransformListSMILType sSingleton;
-    return &sSingleton;
-  }
+  static SVGTransformListSMILType sSingleton;
 
 protected:
   // nsISMILType Methods
