@@ -2939,6 +2939,16 @@ nsComputedDOMStyle::DoGetVisibility()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetWritingMode()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleVisibility()->mWritingMode,
+                                   nsCSSProps::kWritingModeKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetDirection()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
@@ -5000,6 +5010,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(word_break,                    WordBreak),
     COMPUTED_STYLE_MAP_ENTRY(word_spacing,                  WordSpacing),
     COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap),
+    COMPUTED_STYLE_MAP_ENTRY(writing_mode,                  WritingMode),
     COMPUTED_STYLE_MAP_ENTRY(z_index,                       ZIndex),
 
     /* ******************************* *\

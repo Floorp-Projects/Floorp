@@ -23,20 +23,18 @@ badCertListener.prototype = {
   },
 
   QueryInterface: function(aIID) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (aIID.equals(Components.interfaces.nsIBadCertListener2) ||
-        aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
-        aIID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(SpecialPowers.Ci.nsIBadCertListener2) ||
+        aIID.equals(SpecialPowers.Ci.nsIInterfaceRequestor) ||
+        aIID.equals(SpecialPowers.Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
   },  
 
   testCert: function(cert1, expected)
   {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var certDumpTree1 = Components.classes["@mozilla.org/security/nsASN1Tree;1"]
-                       .createInstance(Components.interfaces.nsIASN1Tree);
+    var certDumpTree1 = SpecialPowers.Cc["@mozilla.org/security/nsASN1Tree;1"]
+                       .createInstance(SpecialPowers.Ci.nsIASN1Tree);
     certDumpTree1.loadASN1Structure(cert1.ASN1Structure);
     var value1 = certDumpTree1.getDisplayData(9);
     
@@ -44,8 +42,7 @@ badCertListener.prototype = {
   },
   
   notifyCertProblem: function(socketInfo, sslStatus, targetHost) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var cert = sslStatus.QueryInterface(Components.interfaces.nsISSLStatus)
+    var cert = sslStatus.QueryInterface(SpecialPowers.Ci.nsISSLStatus)
       .serverCert;
     this.testCert(cert, "CN = www.bank1.com\\00www.bad-guy.com\n");
 
@@ -63,6 +60,7 @@ function onWindowLoad()
 {
   var req = new XMLHttpRequest();
   var certListener = new badCertListener();
+  certListener = SpecialPowers.wrapCallbackObject(certListener);
   try
   {
     req.open("GET", "https://www.bank1.com/", false);

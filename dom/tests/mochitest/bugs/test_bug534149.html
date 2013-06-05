@@ -43,20 +43,22 @@ is(i2outer, i1inner + 1, "Frame 2 comes right after frame 1");
 var innerWindowDestroyID;
 var outerWindowDestroyID;
 
-function outerObserver(id) {
-  outerWindowDestroyID =
-    SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
-}
-function innerObserver(id) {
+var outerObserver = {
+  observe: function(id) {
+    outerWindowDestroyID =
+      SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+  }
+};
+var innerObserver = {
+  observe: function(id) {
   innerWindowDestroyID =
    SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
-}
+  }
+};
 
 function removeFrame(iframe) {
-  var obsSvc = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-                         .getService(SpecialPowers.Ci.nsIObserverService);
-  obsSvc.addObserver(outerObserver, "outer-window-destroyed", false);
-  obsSvc.addObserver(innerObserver, "inner-window-destroyed", false);
+  SpecialPowers.addObserver(outerObserver, "outer-window-destroyed", false);
+  SpecialPowers.addObserver(innerObserver, "inner-window-destroyed", false);
 
   iframe.parentNode.removeChild(iframe);
 }
@@ -66,10 +68,8 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.executeSoon(function() {
   is(innerWindowDestroyID, i1inner, "inner window of frame 1 should be destroyed");
   is(outerWindowDestroyID, i1outer, "outer window of frame 1 should be destroyed");
-  var obsSvc = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-                         .getService(SpecialPowers.Ci.nsIObserverService);
-  obsSvc.removeObserver(outerObserver, "outer-window-destroyed");
-  obsSvc.removeObserver(innerObserver, "inner-window-destroyed");
+  SpecialPowers.removeObserver(outerObserver, "outer-window-destroyed");
+  SpecialPowers.removeObserver(innerObserver, "inner-window-destroyed");
   SimpleTest.finish();
 });
   

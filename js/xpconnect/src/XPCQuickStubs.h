@@ -372,8 +372,7 @@ castNative(JSContext *cx,
            const nsIID &iid,
            void **ppThis,
            nsISupports **ppThisRef,
-           jsval *vp,
-           XPCLazyCallContext *lccx);
+           jsval *vp);
 
 /**
  * Search @a obj and its prototype chain for an XPCOM object that implements
@@ -398,7 +397,6 @@ xpc_qsUnwrapThis(JSContext *cx,
                  T **ppThis,
                  nsISupports **pThisRef,
                  jsval *pThisVal,
-                 XPCLazyCallContext *lccx,
                  bool failureFatal = true)
 {
     XPCWrappedNative *wrapper;
@@ -407,8 +405,7 @@ xpc_qsUnwrapThis(JSContext *cx,
     nsresult rv = getWrapper(cx, obj, &wrapper, current.address(), &tearoff);
     if (NS_SUCCEEDED(rv))
         rv = castNative(cx, wrapper, current, tearoff, NS_GET_TEMPLATE_IID(T),
-                        reinterpret_cast<void **>(ppThis), pThisRef, pThisVal,
-                        lccx);
+                        reinterpret_cast<void **>(ppThis), pThisRef, pThisVal);
 
     if (failureFatal)
         return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
@@ -426,7 +423,6 @@ castNativeFromWrapper(JSContext *cx,
                       int32_t protoDepth,
                       nsISupports **pRef,
                       jsval *pVal,
-                      XPCLazyCallContext *lccx,
                       nsresult *rv);
 
 JSBool
@@ -504,8 +500,7 @@ castNativeArgFromWrapper(JSContext *cx,
     if (!src)
         return nullptr;
 
-    return castNativeFromWrapper(cx, src, bit, protoID, protoDepth, pArgRef, vp,
-                                 nullptr, rv);
+    return castNativeFromWrapper(cx, src, bit, protoID, protoDepth, pArgRef, vp, rv);
 }
 
 inline nsWrapperCache*
@@ -531,7 +526,7 @@ xpc_qsGetWrapperCache(void *p)
  * only if p is the identity pointer.
  */
 JSBool
-xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx,
+xpc_qsXPCOMObjectToJsval(JSContext *aCx,
                          qsObjectHelper &aHelper,
                          const nsIID *iid,
                          XPCNativeInterface **iface,
@@ -541,7 +536,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx,
  * Convert a variant to jsval. Return true on success.
  */
 JSBool
-xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
+xpc_qsVariantToJsval(JSContext *cx,
                      nsIVariant *p,
                      jsval *rval);
 

@@ -1399,7 +1399,7 @@ XrayToString(JSContext *cx, unsigned argc, jsval *vp)
 
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative *wn = XPCWrappedNativeXrayTraits::getWN(wrapper);
-    char *wrapperStr = wn->ToString(ccx);
+    char *wrapperStr = wn->ToString();
     if (!wrapperStr) {
         JS_ReportOutOfMemory(cx);
         return false;

@@ -59,7 +59,7 @@ HttpChannelParentListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aCo
   if (!mActiveChannel)
     return NS_ERROR_UNEXPECTED;
 
-  LOG(("HttpChannelParentListener::OnStartRequest [this=%x]\n", this));
+  LOG(("HttpChannelParentListener::OnStartRequest [this=%p]\n", this));
   return mActiveChannel->OnStartRequest(aRequest, aContext);
 }
 
@@ -71,7 +71,7 @@ HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest,
   if (!mActiveChannel)
     return NS_ERROR_UNEXPECTED;
 
-  LOG(("HttpChannelParentListener::OnStopRequest: [this=%x status=%ul]\n",
+  LOG(("HttpChannelParentListener::OnStopRequest: [this=%p status=%ul]\n",
        this, aStatusCode));
   nsresult rv = mActiveChannel->OnStopRequest(aRequest, aContext, aStatusCode);
 
@@ -93,7 +93,7 @@ HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest,
   if (!mActiveChannel)
     return NS_ERROR_UNEXPECTED;
 
-  LOG(("HttpChannelParentListener::OnDataAvailable [this=%x]\n", this));
+  LOG(("HttpChannelParentListener::OnDataAvailable [this=%p]\n", this));
   return mActiveChannel->OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
 }
 

@@ -61,6 +61,8 @@
 #include "builtin/RegExp.h"
 #include "builtin/ParallelArray.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
+#include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "ion/AsmJS.h"
@@ -877,6 +879,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #endif
     mathCache_(NULL),
     dtoaState(NULL),
+    activeCompilations(0),
     trustedPrincipals_(NULL),
     wrapObjectCallback(TransparentObjectWrapper),
     sameCompartmentWrapObjectCallback(NULL),
@@ -5437,19 +5440,16 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
         options.setCompileAndGo(false);
         Parser<frontend::FullParseHandler> parser(cx, options, chars, length,
                                                   /* foldConstants = */ true, NULL, NULL);
-        if (parser.init()) {
-            older = JS_SetErrorReporter(cx, NULL);
-            if (!parser.parse(obj) &&
-                parser.tokenStream.isUnexpectedEOF()) {
-                /*
-                 * We ran into an error. If it was because we ran out of
-                 * source, we return false so our caller knows to try to
-                 * collect more buffered source.
-                 */
-                result = JS_FALSE;
-            }
-            JS_SetErrorReporter(cx, older);
+        older = JS_SetErrorReporter(cx, NULL);
+        if (!parser.parse(obj) && parser.tokenStream.isUnexpectedEOF()) {
+            /*
+             * We ran into an error. If it was because we ran out of
+             * source, we return false so our caller knows to try to
+             * collect more buffered source.
+             */
+            result = JS_FALSE;
         }
+        JS_SetErrorReporter(cx, older);
     }
     js_free(chars);
     JS_RestoreExceptionState(cx, exnState);

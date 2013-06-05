@@ -50,8 +50,10 @@
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 
+#include "builtin/Iterator-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
+#include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
 

@@ -50,7 +50,10 @@ let gPage = {
    * Updates the whole page and the grid when the storage has changed.
    */
   update: function Page_update() {
-    gGrid.refresh();
+    // The grid might not be ready yet as we initialize it asynchronously.
+    if (gGrid.ready) {
+      gGrid.refresh();
+    }
   },
 
   /**

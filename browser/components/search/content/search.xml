@@ -456,17 +456,6 @@
               where = "tab";
           }
 
-          // Save the current value in the form history
-          if (textValue && !PrivateBrowsingUtils.isWindowPrivate(window)) {
-            this.FormHistory.update(
-              { op : "bump",
-                fieldname : textBox.getAttribute("autocompletesearchparam"),
-                value : textValue },
-              { handleError : function(aError) {
-                  Components.utils.reportError("Saving search to form history failed: " + aError.message);
-              }});
-          }
-
           this.doSearch(textValue, where);
         ]]></body>
       </method>
@@ -475,6 +464,19 @@
         <parameter name="aData"/>
         <parameter name="aWhere"/>
         <body><![CDATA[
+          var textBox = this._textbox;
+        
+          // Save the current value in the form history
+          if (aData && !PrivateBrowsingUtils.isWindowPrivate(window)) {
+            this.FormHistory.update(
+              { op : "bump",
+                fieldname : textBox.getAttribute("autocompletesearchparam"),
+                value : aData },
+              { handleError : function(aError) {
+                  Components.utils.reportError("Saving search to form history failed: " + aError.message);
+              }});
+          }
+          
           // null parameter below specifies HTML response for search
           var submission = this.currentEngine.getSubmission(aData);
           BrowserSearch.recordSearchInHealthReport(this.currentEngine.name, "searchbar");

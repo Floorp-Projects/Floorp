@@ -99,7 +99,7 @@ private:
 
   bool mIPCOpen;
   bool mSentAppData;
-  ChannelEventQueue mEventQ;
+  nsRefPtr<ChannelEventQueue> mEventQ;
 
   friend class WyciwygStartRequestEvent;
   friend class WyciwygDataAvailableEvent;

@@ -197,6 +197,21 @@ function promiseIsURIVisited(aURI, aExpectedValue) {
   return deferred.promise;
 }
 
+function whenNewTabLoaded(aWindow, aCallback) {
+  aWindow.BrowserOpenTab();
+
+  let browser = aWindow.gBrowser.selectedBrowser;
+  if (browser.contentDocument.readyState === "complete") {
+    aCallback();
+    return;
+  }
+
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    aCallback();
+  }, true);
+}
+
 function addVisits(aPlaceInfo, aCallback) {
   let places = [];
   if (aPlaceInfo instanceof Ci.nsIURI) {

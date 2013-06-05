@@ -302,7 +302,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     nsresult rv;
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    LOG(("nsHttpConnection::Activate [this=%x trans=%x caps=%x]\n",
+    LOG(("nsHttpConnection::Activate [this=%p trans=%x caps=%x]\n",
          this, trans, caps));
 
     mPriority = pri;
@@ -465,7 +465,7 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
 void
 nsHttpConnection::Close(nsresult reason)
 {
-    LOG(("nsHttpConnection::Close [this=%x reason=%x]\n", this, reason));
+    LOG(("nsHttpConnection::Close [this=%p reason=%x]\n", this, reason));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -507,7 +507,7 @@ nsHttpConnection::Close(nsresult reason)
 nsresult
 nsHttpConnection::ProxyStartSSL()
 {
-    LOG(("nsHttpConnection::ProxyStartSSL [this=%x]\n", this));
+    LOG(("nsHttpConnection::ProxyStartSSL [this=%p]\n", this));
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     nsCOMPtr<nsISupports> securityInfo;
@@ -1161,7 +1161,7 @@ nsHttpConnection::EndIdleMonitoring()
 void
 nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
-    LOG(("nsHttpConnection::CloseTransaction[this=%x trans=%x reason=%x]\n",
+    LOG(("nsHttpConnection::CloseTransaction[this=%p trans=%x reason=%x]\n",
         this, trans, reason));
 
     MOZ_ASSERT(trans == mTransaction, "wrong transaction");
@@ -1365,7 +1365,7 @@ nsHttpConnection::OnWriteSegment(char *buf,
 nsresult
 nsHttpConnection::OnSocketReadable()
 {
-    LOG(("nsHttpConnection::OnSocketReadable [this=%x]\n", this));
+    LOG(("nsHttpConnection::OnSocketReadable [this=%p]\n", this));
 
     PRIntervalTime now = PR_IntervalNow();
     PRIntervalTime delta = now - mLastReadTime;
@@ -1473,7 +1473,7 @@ nsHttpConnection::SetupProxyConnect()
 {
     const char *val;
 
-    LOG(("nsHttpConnection::SetupProxyConnect [this=%x]\n", this));
+    LOG(("nsHttpConnection::SetupProxyConnect [this=%p]\n", this));
 
     NS_ENSURE_TRUE(!mProxyConnectStream, NS_ERROR_ALREADY_INITIALIZED);
     MOZ_ASSERT(!mUsingSpdyVersion,

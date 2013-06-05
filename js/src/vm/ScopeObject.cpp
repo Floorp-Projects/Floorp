@@ -222,7 +222,8 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
 CallObject *
 CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee)
 {
-    CallObject *callobj = CallObject::createTemplateObject(cx, script, gc::DefaultHeap);
+    gc::InitialHeap heap = script->treatAsRunOnce ? gc::TenuredHeap : gc::DefaultHeap;
+    CallObject *callobj = CallObject::createTemplateObject(cx, script, heap);
     if (!callobj)
         return NULL;
 

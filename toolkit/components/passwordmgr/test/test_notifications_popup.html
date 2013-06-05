@@ -145,7 +145,7 @@ function checkTest() {
         ok(login.timeLastUsed == login.timePasswordChanged, "timeUsed == timeChanged");
 
         // cleanup
-        observerService.removeObserver(PasswordMgrObserver, "passwordmgr-storage-changed");
+        SpecialPowers.removeObserver(PasswordMgrObserver, "passwordmgr-storage-changed");
         popupNotifications.panel.removeEventListener("popupshown", checkTest, false);
 
         login2.password = "pass2";
@@ -182,10 +182,7 @@ var login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888",
 var login2 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
                              "notifyu2", "notifyp2", "user", "pass");
 
-var observerService = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
-
-observerService.addObserver(PasswordMgrObserver, "passwordmgr-storage-changed", false);
+SpecialPowers.addObserver(PasswordMgrObserver, "passwordmgr-storage-changed", false);
 
 // popupNotifications (not *popup*) is a constant, per-tab container. So, we
 // only need to fetch it once.

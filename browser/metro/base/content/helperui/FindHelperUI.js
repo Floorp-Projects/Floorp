@@ -115,8 +115,10 @@ var FindHelperUI = {
     this._textbox.select();
     this._textbox.focus();
     this._open = true;
-    Elements.browsers.setAttribute("findbar", true);
-    setTimeout(() => this._container.setAttribute("showing", true), 0);
+    setTimeout(() => {
+      Elements.browsers.setAttribute("findbar", true);
+      this._container.setAttribute("showing", true)
+    }, 0);
 
     // Prevent the view to scroll automatically while searching
     Browser.selectedBrowser.scrollSync = false;

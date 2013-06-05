@@ -407,7 +407,9 @@ SurfaceStreamHostOGL::Lock()
   gfxImageSurface* toUpload = nullptr;
   switch (sharedSurf->Type()) {
     case SharedSurfaceType::GLTextureShare: {
-      mTextureHandle = SharedSurface_GLTexture::Cast(sharedSurf)->Texture();
+      SharedSurface_GLTexture* glTexSurf = SharedSurface_GLTexture::Cast(sharedSurf);
+      glTexSurf->SetConsumerGL(mGL);
+      mTextureHandle = glTexSurf->Texture();
       MOZ_ASSERT(mTextureHandle);
       mShaderProgram = sharedSurf->HasAlpha() ? RGBALayerProgramType
                                               : RGBXLayerProgramType;

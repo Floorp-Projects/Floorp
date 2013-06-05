@@ -1105,6 +1105,38 @@ public class GeckoAppShell
     }
 
     /**
+     * Given a URI, a MIME type, and a title,
+     * produce a share intent which can be used to query all activities
+     * than can open the specified URI.
+     *
+     * @param context a <code>Context</code> instance.
+     * @param targetURI the string spec of the URI to open.
+     * @param mimeType an optional MIME type string.
+     * @param title the title to use in <code>ACTION_SEND</code> intents.
+     * @return an <code>Intent</code>, or <code>null</code> if none could be
+     *         produced.
+     */
+    static Intent getShareIntent(final Context context,
+                                 final String targetURI,
+                                 final String mimeType,
+                                 final String title) {
+        Intent shareIntent = getIntentForActionString(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+
+        // Note that EXTRA_TITLE is intended to be used for share dialog
+        // titles. Common usage (e.g., Pocket) suggests that it's sometimes
+        // interpreted as an alternate to EXTRA_SUBJECT, so we include it.
+        shareIntent.putExtra(Intent.EXTRA_TITLE, title);
+
+        if (mimeType != null && mimeType.length() > 0) {
+            shareIntent.setType(mimeType);
+        }
+
+        return shareIntent;
+    }
+
+    /**
      * Given a URI, a MIME type, an Android intent "action", and a title,
      * produce an intent which can be used to start an activity to open
      * the specified URI.
@@ -1125,19 +1157,7 @@ public class GeckoAppShell
                                    final String title) {
 
         if (action.equalsIgnoreCase(Intent.ACTION_SEND)) {
-            Intent shareIntent = getIntentForActionString(action);
-            shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
-
-            // Note that EXTRA_TITLE is intended to be used for share dialog
-            // titles. Common usage (e.g., Pocket) suggests that it's sometimes
-            // interpreted as an alternate to EXTRA_SUBJECT, so we include it.
-            shareIntent.putExtra(Intent.EXTRA_TITLE, title);
-
-            if (mimeType != null && mimeType.length() > 0) {
-                shareIntent.setType(mimeType);
-            }
-
+            Intent shareIntent = getShareIntent(context, targetURI, mimeType, title);
             return Intent.createChooser(shareIntent,
                                         context.getResources().getString(R.string.share_title)); 
         }
@@ -2021,6 +2041,11 @@ public class GeckoAppShell
         sContextGetter = cg;
     }
 
+    public interface AppStateListener {
+        public void onPause();
+        public void onResume();
+    }
+
     public interface GeckoInterface {
         public GeckoProfile getProfile();
         public LayerView getLayerView();
@@ -2035,6 +2060,8 @@ public class GeckoAppShell
         public void removePluginView(final View view, final boolean isFullScreen);
         public void enableCameraView();
         public void disableCameraView();
+        public void addAppStateListener(AppStateListener listener);
+        public void removeAppStateListener(AppStateListener listener);
         public SurfaceView getCameraView();
         public void notifyWakeLockChanged(String topic, String state);
         public FormAssistPopup getFormAssistPopup();

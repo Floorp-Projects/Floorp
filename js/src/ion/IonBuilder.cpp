@@ -19,6 +19,7 @@
 
 #include "CompileInfo-inl.h"
 #include "ExecutionModeInlines.h"
+#include "jsanalyzeinlines.h"
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 

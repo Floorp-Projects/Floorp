@@ -24,7 +24,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#include "frontend/BytecodeEmitter.h"
+#include "frontend/SourceNotes.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
