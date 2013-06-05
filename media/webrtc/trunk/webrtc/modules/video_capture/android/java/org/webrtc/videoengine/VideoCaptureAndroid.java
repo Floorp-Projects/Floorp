@@ -214,8 +214,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         return res;
     }
 
-    public int StopCapture() {
-        Log.d(TAG, "StopCapture");
+    public int DetachCamera() {
         try {
             previewBufferLock.lock();
             isCaptureRunning = false;
@@ -224,12 +223,16 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             camera.setPreviewCallbackWithBuffer(null);
         }
         catch (Exception ex) {
-            Log.e(TAG, "Failed to stop camera");
+            Log.e(TAG, "Failed to stop camera: " + ex.getMessage());
             return -1;
         }
-
-        isCaptureStarted = false;
         return 0;
+    }
+
+    public int StopCapture() {
+        Log.d(TAG, "StopCapture");
+        isCaptureStarted = false;
+        return DetachCamera();
     }
 
     native void ProvideCameraFrame(byte[] data, int length, long captureObject);
@@ -314,5 +317,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d(TAG, "VideoCaptureAndroid::surfaceDestroyed");
         isSurfaceReady = false;
+        DetachCamera();
     }
 }
