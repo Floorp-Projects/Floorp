@@ -247,8 +247,11 @@ FoldConstants<FullParseHandler>(JSContext *cx, ParseNode **pnp,
 
     switch (pn->getArity()) {
       case PN_CODE:
-        if (pn->pn_funbox->useAsmOrInsideUseAsm() && cx->hasOption(JSOPTION_ASMJS))
+        if (pn->isKind(PNK_FUNCTION) &&
+            pn->pn_funbox->useAsmOrInsideUseAsm() && cx->hasOption(JSOPTION_ASMJS))
+        {
             return true;
+        }
         if (pn->getKind() == PNK_MODULE) {
             if (!FoldConstants(cx, &pn->pn_body, parser))
                 return false;

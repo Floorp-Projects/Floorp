@@ -316,7 +316,7 @@ class NameResolver
             resolve(cur->pn_kid3, prefix);
             break;
           case PN_CODE:
-            JS_ASSERT(cur->isKind(PNK_FUNCTION));
+            JS_ASSERT(cur->isKind(PNK_MODULE) || cur->isKind(PNK_FUNCTION));
             resolve(cur->pn_body, prefix);
             break;
           case PN_LIST:
