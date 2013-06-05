@@ -850,13 +850,8 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     else:
         unwrapFatalArg = "false"
 
-    if not isSetter and isInterfaceType(member.realtype):
-        f.write("    XPCLazyCallContext lccx(JS_CALLER, cx, obj);\n")
-        f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
-                "&selfref.ptr, %s, &lccx, %s))\n" % (pthisval, unwrapFatalArg))
-    else:
-        f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
-                "&selfref.ptr, %s, nullptr, %s))\n" % (pthisval, unwrapFatalArg))
+    f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
+            "&selfref.ptr, %s, %s))\n" % (pthisval, unwrapFatalArg))
     f.write("        return JS_FALSE;\n")
 
     if not unwrapThisFailureFatal:
