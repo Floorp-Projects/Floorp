@@ -2041,6 +2041,11 @@ public class GeckoAppShell
         sContextGetter = cg;
     }
 
+    public interface AppStateListener {
+        public void onPause();
+        public void onResume();
+    }
+
     public interface GeckoInterface {
         public GeckoProfile getProfile();
         public LayerView getLayerView();
@@ -2055,6 +2060,8 @@ public class GeckoAppShell
         public void removePluginView(final View view, final boolean isFullScreen);
         public void enableCameraView();
         public void disableCameraView();
+        public void addAppStateListener(AppStateListener listener);
+        public void removeAppStateListener(AppStateListener listener);
         public SurfaceView getCameraView();
         public void notifyWakeLockChanged(String topic, String state);
         public FormAssistPopup getFormAssistPopup();
