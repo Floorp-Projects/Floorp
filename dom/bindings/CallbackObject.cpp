@@ -191,14 +191,9 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
   JS::Rooted<JSObject*> callback(cx, aCallback->Callback());
 
   JSAutoCompartment ac(cx, callback);
-  XPCCallContext ccx(NATIVE_CALLER, cx);
-  if (!ccx.IsValid()) {
-    return nullptr;
-  }
-
   nsRefPtr<nsXPCWrappedJS> wrappedJS;
   nsresult rv =
-    nsXPCWrappedJS::GetNewOrUsed(ccx, callback, aIID,
+    nsXPCWrappedJS::GetNewOrUsed(callback, aIID,
                                  nullptr, getter_AddRefs(wrappedJS));
   if (NS_FAILED(rv) || !wrappedJS) {
     return nullptr;
