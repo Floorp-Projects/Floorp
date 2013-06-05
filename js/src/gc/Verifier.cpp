@@ -59,40 +59,12 @@ struct Rooter {
     ThingRootKind kind;
 };
 
-// Temporarily mark a region of memory as defined for valgrind's purposes, so
-// that we don't get false positive warnings due to examining or poisoning
-// undefined memory that happens to look like gcthing pointers. The advantage
-// of using this RAII class over an unconditional VALGRIND_MAKE_MEM_DEFINED is
-// that it is reverted to undefined afterwards, so that true uses of undefined
-// memory will not be suppressed.
-template <typename T>
-struct AutoMarkDefinedForValgrind {
-    static const unsigned int VALGRIND_RUNNING_AND_REQUEST_SUCCESSFUL = 1;
-
-    T *ptr_;
-    bool active;
-    uint8_t defined[sizeof(T)];
-    AutoMarkDefinedForValgrind(T *ptr)
-        : ptr_(ptr), active(true)
-    {
-        // The 'v bits' are Valgrind's representation of whether a valid is defined
-        active = (VALGRIND_GET_VBITS(ptr_, defined, sizeof(T)) ==
-                  VALGRIND_RUNNING_AND_REQUEST_SUCCESSFUL);
-        VALGRIND_MAKE_MEM_DEFINED(ptr_, sizeof(T));
-    }
-    ~AutoMarkDefinedForValgrind() {
-        if (active)
-            (void) VALGRIND_SET_VBITS(ptr_, defined, sizeof(T));
-    }
-};
-
 static void
 CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
 {
     /* Mark memory as defined for valgrind, as in MarkWordConservatively. */
 #ifdef MOZ_VALGRIND
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
-    AutoMarkDefinedForValgrind<uintptr_t> define(w);
 #endif
 
     void *thing = GetAddressableGCThing(rt, *w);
