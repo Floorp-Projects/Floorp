@@ -415,9 +415,9 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    * Sorts all network requests in this container by a specified detail.
    *
    * @param string aType
-   *        Either null, "status", "method", "file", "domain", "type" or "size".
+   *        Either "status", "method", "file", "domain", "type", "size" or "waterfall".
    */
-  sortBy: function(aType) {
+  sortBy: function(aType = "waterfall") {
     let target = $("#requests-menu-" + aType + "-button");
     let headers = document.querySelectorAll(".requests-menu-header-button");
 
@@ -430,24 +430,17 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
     let direction = "";
     if (target) {
-      if (!target.hasAttribute("sorted")) {
-        target.setAttribute("sorted", direction = "ascending");
-        target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedAsc"));
-      } else if (target.getAttribute("sorted") == "ascending") {
+      if (target.getAttribute("sorted") == "ascending") {
         target.setAttribute("sorted", direction = "descending");
         target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedDesc"));
       } else {
-        target.removeAttribute("sorted");
-        target.removeAttribute("tooltiptext");
+        target.setAttribute("sorted", direction = "ascending");
+        target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedAsc"));
       }
     }
 
-    // Sort by timing.
-    if (!target || !direction) {
-      this.sortContents(this._byTiming);
-    }
     // Sort by whatever was requested.
-    else switch (aType) {
+    switch (aType) {
       case "status":
         if (direction == "ascending") {
           this.sortContents(this._byStatus);
@@ -488,6 +481,13 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
           this.sortContents(this._bySize);
         } else {
           this.sortContents((a, b) => !this._bySize(a, b));
+        }
+        break;
+      case "waterfall":
+        if (direction == "ascending") {
+          this.sortContents(this._byTiming);
+        } else {
+          this.sortContents((a, b) => !this._byTiming(a, b));
         }
         break;
     }
@@ -924,7 +924,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    *        The current waterfall scale.
    */
   _showWaterfallDivisionLabels: function(aScale) {
-    let container = $("#requests-menu-waterfall-header-box");
+    let container = $("#requests-menu-waterfall-button");
     let availableWidth = this._waterfallWidth - REQUESTS_WATERFALL_SAFE_BOUNDS;
 
     // Nuke all existing labels.

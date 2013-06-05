@@ -14,7 +14,7 @@ function test() {
     gDevTools.showToolbox(target).then(testSelectTool);
   }, true);
 
-  content.location = "data:text/html,test for dynamically registering and unregistering tools";
+  content.location = "data:text/html;charset=utf8,test for dynamically registering and unregistering tools";
 }
 
 function testSelectTool(aToolbox) {
@@ -95,15 +95,18 @@ function checkTools() {
 function toggleTools() {
   if (index < prefNodes.length) {
     gDevTools.once("tool-unregistered", checkUnregistered);
-    EventUtils.synthesizeMouseAtCenter(prefNodes[index], {}, panelWin);
+    let node = prefNodes[index];
+    node.scrollIntoView();
+    EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
   }
   else if (index < 2*prefNodes.length) {
     gDevTools.once("tool-registered", checkRegistered);
-    EventUtils.synthesizeMouseAtCenter(prefNodes[index - prefNodes.length], {}, panelWin);
+    let node = prefNodes[index - prefNodes.length];
+    node.scrollIntoView();
+    EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
   }
   else {
     cleanup();
-    return;
   }
 }
 
