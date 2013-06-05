@@ -8,6 +8,7 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/EventHandlerBinding.h"
+#include "nsJSUtils.h"
 
 #include "jsapi.h"
 #include "EventTarget.h"
@@ -91,69 +92,43 @@ public:
   static WorkerPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName);
 
+  static JSObject*
+  Create(JSContext* aCx, WorkerPrivate* aParentObj, const nsAString& aScriptURL,
+         bool aIsChromeWorker, bool aIsSharedWorker,
+         const nsAString& aSharedWorkerName);
+
 protected:
   static bool
-  ConstructInternal(JSContext* aCx, unsigned aArgc, jsval* aVp,
-                    bool aIsChromeWorker, const JSClass* aClass)
+  ConstructInternal(JSContext* aCx, JS::CallArgs aArgs, bool aIsChromeWorker)
   {
-    if (!aArgc) {
+    if (!aArgs.length()) {
       JS_ReportError(aCx, "Constructor requires at least one argument!");
       return false;
     }
 
-    JS::Rooted<JSString*> scriptURL(aCx, JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]));
-    if (!scriptURL) {
+    nsDependentJSString scriptURL;
+    if (!scriptURL.init(aCx, aArgs[0])) {
       return false;
     }
 
-    jsval priv = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(aCx, aVp)),
-                                               CONSTRUCTOR_SLOT_PARENT);
+    JS::Rooted<JS::Value> priv(aCx,
+      js::GetFunctionNativeReserved(&aArgs.callee(), CONSTRUCTOR_SLOT_PARENT));
 
-    RuntimeService* runtimeService;
     WorkerPrivate* parent;
-
-    if (JSVAL_IS_VOID(priv)) {
-      runtimeService = RuntimeService::GetOrCreateService();
-      if (!runtimeService) {
-        JS_ReportError(aCx, "Failed to create runtime service!");
-        return false;
-      }
+    if (priv.isUndefined()) {
       parent = NULL;
-    }
-    else {
-      runtimeService = RuntimeService::GetService();
-      parent = static_cast<WorkerPrivate*>(JSVAL_TO_PRIVATE(priv));
+    } else {
+      parent = static_cast<WorkerPrivate*>(priv.get().toPrivate());
       parent->AssertIsOnWorkerThread();
     }
 
-    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, aClass, nullptr, nullptr));
+    JS::Rooted<JSObject*> obj(aCx,
+      Create(aCx, parent, scriptURL, aIsChromeWorker, false, EmptyString()));
     if (!obj) {
       return false;
     }
 
-    // Ensure that the DOM_OBJECT_SLOT always has a PrivateValue set, as this
-    // will be accessed in the Trace() method if WorkerPrivate::Create()
-    // triggers a GC.
-    js::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
-
-    nsRefPtr<WorkerPrivate> worker =
-      WorkerPrivate::Create(aCx, obj, parent, scriptURL, aIsChromeWorker);
-    if (!worker) {
-      return false;
-    }
-
-    // Worker now owned by the JS object.
-    NS_ADDREF(worker.get());
-    js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(worker));
-
-    if (!runtimeService->RegisterWorker(aCx, worker)) {
-      return false;
-    }
-
-    // Worker now also owned by its thread.
-    NS_ADDREF(worker.get());
-
-    JS_SET_RVAL(aCx, aVp, OBJECT_TO_JSVAL(obj));
+    aArgs.rval().setObject(*obj);
     return true;
   }
 
@@ -281,9 +256,10 @@ private:
   }
 
   static bool
-  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
   {
-    return ConstructInternal(aCx, aArgc, aVp, false, Class());
+    JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+    return ConstructInternal(aCx, args, false);
   }
 
   static void
@@ -489,9 +465,10 @@ private:
   }
 
   static bool
-  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
   {
-    return ConstructInternal(aCx, aArgc, aVp, true, Class());
+    JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+    return ConstructInternal(aCx, args, true);
   }
 
   static void
@@ -572,6 +549,63 @@ Worker::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                        Class()->name, aFunctionName, classPtr->name);
   return NULL;
+}
+
+JSObject*
+Worker::Create(JSContext* aCx, WorkerPrivate* aParent,
+               const nsAString& aScriptURL, bool aIsChromeWorker,
+               bool aIsSharedWorker, const nsAString& aSharedWorkerName)
+{
+  MOZ_ASSERT_IF(aIsSharedWorker, !aSharedWorkerName.IsVoid());
+  MOZ_ASSERT_IF(!aIsSharedWorker, aSharedWorkerName.IsEmpty());
+
+  RuntimeService* runtimeService;
+  if (aParent) {
+    runtimeService = RuntimeService::GetService();
+    NS_ASSERTION(runtimeService, "Null runtime service!");
+  }
+  else {
+    runtimeService = RuntimeService::GetOrCreateService();
+    if (!runtimeService) {
+      JS_ReportError(aCx, "Failed to create runtime service!");
+      return nullptr;
+    }
+  }
+
+  const JSClass* classPtr = aIsChromeWorker ? ChromeWorker::Class() : Class();
+
+  JS::Rooted<JSObject*> obj(aCx,
+    JS_NewObject(aCx, const_cast<JSClass*>(classPtr), nullptr, nullptr));
+  if (!obj) {
+    return nullptr;
+  }
+
+  // Ensure that the DOM_OBJECT_SLOT always has a PrivateValue set, as this will
+  // be accessed in the Trace() method if WorkerPrivate::Create() triggers a GC.
+  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+
+  nsRefPtr<WorkerPrivate> worker =
+    WorkerPrivate::Create(aCx, obj, aParent, aScriptURL, aIsChromeWorker,
+                          aIsSharedWorker, aSharedWorkerName);
+  if (!worker) {
+    // It'd be better if we could avoid allocating the JSObject until after we
+    // make sure we have a WorkerPrivate, but failing that we should at least
+    // make sure that the DOM_OBJECT_SLOT always has a PrivateValue.
+    return nullptr;
+  }
+
+  // Worker now owned by the JS object.
+  NS_ADDREF(worker.get());
+  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(worker));
+
+  if (!runtimeService->RegisterWorker(aCx, worker)) {
+    return nullptr;
+  }
+
+  // Worker now also owned by its thread.
+  NS_ADDREF(worker.get());
+
+  return obj;
 }
 
 } // anonymous namespace
