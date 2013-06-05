@@ -1045,7 +1045,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
     // else...
 
     nsXPCWrappedJS* wrapper;
-    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(cx, src, *iid, aOuter, &wrapper);
+    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, aOuter, &wrapper);
     if (pErr)
         *pErr = rv;
     if (NS_SUCCEEDED(rv) && wrapper) {
@@ -1203,7 +1203,7 @@ XPCConvert::JSValToXPCException(jsval sArg,
                 // lets try to build a wrapper around the JSObject
                 nsXPCWrappedJS* jswrapper;
                 nsresult rv =
-                    nsXPCWrappedJS::GetNewOrUsed(cx, obj, NS_GET_IID(nsIException),
+                    nsXPCWrappedJS::GetNewOrUsed(obj, NS_GET_IID(nsIException),
                                                  nullptr, &jswrapper);
                 if (NS_FAILED(rv))
                     return rv;

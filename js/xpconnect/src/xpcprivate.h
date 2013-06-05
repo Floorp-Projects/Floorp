@@ -3059,8 +3059,7 @@ public:
     */
 
     static nsresult
-    GetNewOrUsed(JSContext* cx,
-                 JSObject* aJSObj,
+    GetNewOrUsed(JSObject* aJSObj,
                  REFNSIID aIID,
                  nsISupports* aOuter,
                  nsXPCWrappedJS** wrapper);
