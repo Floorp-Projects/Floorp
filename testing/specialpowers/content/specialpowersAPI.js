@@ -1269,18 +1269,6 @@ SpecialPowersAPI.prototype = {
       addCategoryEntry(category, entry, value, persists, replace);
   },
 
-  getNodePrincipal: function(aNode) {
-      return aNode.nodePrincipal;
-  },
-
-  getNodeBaseURIObject: function(aNode) {
-      return aNode.baseURIObject;
-  },
-
-  getDocumentURIObject: function(aDocument) {
-      return aDocument.documentURIObject;
-  },
-
   copyString: function(str, doc) {
     Components.classes["@mozilla.org/widget/clipboardhelper;1"].
       getService(Components.interfaces.nsIClipboardHelper).
