@@ -94,7 +94,7 @@ public:
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
 #ifdef USE_SKIA_GPU
-  void InitWithFBO(unsigned int aFBOID, SkRefPtr<GrContext> aGrContext, const IntSize &aSize, SurfaceFormat aFormat);
+  void InitWithFBO(unsigned int aFBOID, GrContext* aGrContext, const IntSize &aSize, SurfaceFormat aFormat);
 #endif
   
   operator std::string() const {
@@ -113,10 +113,6 @@ private:
   IntSize mSize;
   SkRefPtr<SkCanvas> mCanvas;
   std::vector<SourceSurfaceSkia*> mSnapshots;
-
-#ifdef USE_SKIA_GPU
-  SkRefPtr<GrContext> mGrContext;
-#endif
 };
 
 }
