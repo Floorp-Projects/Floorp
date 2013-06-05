@@ -22,9 +22,9 @@
 skip-if(B2G) == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin-ref.html
 skip-if(B2G) == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin-ref.html
 skip-if(B2G) HTTP(..) == CSS21-t100301.xhtml CSS21-t100301-ref.xhtml
-random-if(bug685516||B2G) == CSS21-t100303.xhtml CSS21-t100303-ref.xhtml
-random-if(bug685516||B2G) == CSS21-t100303-simple.xhtml CSS21-t100303-ref.xhtml
-random-if(bug685516||B2G) == CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align-ref.xhtml
+random-if(B2G) == CSS21-t100303.xhtml CSS21-t100303-ref.xhtml
+random-if(B2G) == CSS21-t100303-simple.xhtml CSS21-t100303-ref.xhtml
+random-if(B2G) == CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align-ref.xhtml
 == clip-auto.html clip-auto-ref.html
 == clip-rect-auto.html clip-rect-auto-ref.html
 == width-rounding.html width-rounding-ref.html
