@@ -205,7 +205,7 @@ WasIncrementalGC(JSRuntime *rt);
 
 class ObjectPtr
 {
-    JSObject *value;
+    Heap<JSObject *> value;
 
   public:
     ObjectPtr() : value(NULL) {}
@@ -240,7 +240,7 @@ class ObjectPtr
     }
 
     void trace(JSTracer *trc, const char *name) {
-        JS_CallObjectTracer(trc, &value, name);
+        JS_CallHeapObjectTracer(trc, &value, name);
     }
 
     JSObject &operator*() const { return *value; }
