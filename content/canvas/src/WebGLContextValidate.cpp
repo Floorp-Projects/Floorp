@@ -65,6 +65,18 @@ WebGLProgram::UpdateInfo()
         }
     }
 
+    if (!mUniformInfoMap) {
+        mUniformInfoMap = new CStringToUniformInfoMap;
+        mUniformInfoMap->Init();
+        for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
+            for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
+	        const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
+	        const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
+	        mUniformInfoMap->Put(uniform.mapped, info);
+            }
+        }
+    }
+
     return true;
 }
 
