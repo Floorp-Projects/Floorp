@@ -151,7 +151,7 @@ nsSMILCSSValueType::Destroy(nsSMILValue& aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<ValueWrapper*>(aValue.mU.mPtr);
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = &nsSMILNullType::sSingleton;
 }
 
 nsresult

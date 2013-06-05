@@ -9,7 +9,6 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
-#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
@@ -113,7 +112,7 @@ class nsGeolocationService MOZ_FINAL : public nsIGeolocationUpdate, public nsIOb
 public:
 
   static already_AddRefed<nsGeolocationService> GetGeolocationService();
-  static mozilla::StaticRefPtr<nsGeolocationService> sService;
+  static nsRefPtr<nsGeolocationService> sService;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGEOLOCATIONUPDATE

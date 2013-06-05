@@ -92,7 +92,7 @@ nsSVGClass::SMILString::ValueFromString(const nsAString& aStr,
                                         nsSMILValue& aValue,
                                         bool& aPreventCachingOfSandwich) const
 {
-  nsSMILValue val(SMILStringType::Singleton());
+  nsSMILValue val(&SMILStringType::sSingleton);
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
   aValue.Swap(val);
@@ -103,7 +103,7 @@ nsSVGClass::SMILString::ValueFromString(const nsAString& aStr,
 nsSMILValue
 nsSVGClass::SMILString::GetBaseValue() const
 {
-  nsSMILValue val(SMILStringType::Singleton());
+  nsSMILValue val(&SMILStringType::sSingleton);
   mSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                        *static_cast<nsAString*>(val.mU.mPtr));
   return val;
@@ -121,9 +121,9 @@ nsSVGClass::SMILString::ClearAnimValue()
 nsresult
 nsSVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue)
 {
-  NS_ASSERTION(aValue.mType == SMILStringType::Singleton(),
+  NS_ASSERTION(aValue.mType == &SMILStringType::sSingleton,
                "Unexpected type to assign animated value");
-  if (aValue.mType == SMILStringType::Singleton()) {
+  if (aValue.mType == &SMILStringType::sSingleton) {
     mVal->SetAnimValue(*static_cast<nsAString*>(aValue.mU.mPtr), mSVGElement);
   }
   return NS_OK;

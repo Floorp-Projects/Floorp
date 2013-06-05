@@ -29,12 +29,7 @@ public:
                                double aUnitDistance,
                                nsSMILValue& aResult) const MOZ_OVERRIDE;
 
-  static SMILIntegerType*
-  Singleton()
-  {
-    static SMILIntegerType sSingleton;
-    return &sSingleton;
-  }
+  static SMILIntegerType sSingleton;
 
 private:
   SMILIntegerType() {}

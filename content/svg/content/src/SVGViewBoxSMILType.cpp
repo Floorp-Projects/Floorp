@@ -28,7 +28,7 @@ SVGViewBoxSMILType::Destroy(nsSMILValue& aValue) const
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
   delete static_cast<nsSVGViewBoxRect*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = &nsSMILNullType::sSingleton;
 }
 
 nsresult

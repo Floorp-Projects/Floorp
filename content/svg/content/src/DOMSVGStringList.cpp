@@ -18,14 +18,8 @@ namespace mozilla {
 
 using namespace dom;
 
-static inline
-nsSVGAttrTearoffTable<SVGStringList, DOMSVGStringList>&
-SVGStringListTearoffTable()
-{
-  static nsSVGAttrTearoffTable<SVGStringList, DOMSVGStringList>
-    sSVGStringListTearoffTable;
-  return sSVGStringListTearoffTable;
-}
+static nsSVGAttrTearoffTable<SVGStringList, DOMSVGStringList>
+  sSVGStringListTearoffTable;
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGStringList, mElement)
 
@@ -44,12 +38,12 @@ DOMSVGStringList::GetDOMWrapper(SVGStringList *aList,
                                 uint8_t aAttrEnum)
 {
   nsRefPtr<DOMSVGStringList> wrapper =
-    SVGStringListTearoffTable().GetTearoff(aList);
+    sSVGStringListTearoffTable.GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGStringList(aElement, 
                                    aIsConditionalProcessingAttribute,
                                    aAttrEnum);
-    SVGStringListTearoffTable().AddTearoff(aList, wrapper);
+    sSVGStringListTearoffTable.AddTearoff(aList, wrapper);
   }
   return wrapper.forget();
 }
@@ -57,7 +51,7 @@ DOMSVGStringList::GetDOMWrapper(SVGStringList *aList,
 DOMSVGStringList::~DOMSVGStringList()
 {
   // Script no longer has any references to us.
-  SVGStringListTearoffTable().RemoveTearoff(&InternalList());
+  sSVGStringListTearoffTable.RemoveTearoff(&InternalList());
 }
 
 /* virtual */ JSObject*

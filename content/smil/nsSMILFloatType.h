@@ -13,12 +13,7 @@ class nsSMILFloatType : public nsISMILType
 {
 public:
   // Singleton for nsSMILValue objects to hold onto.
-  static nsSMILFloatType*
-  Singleton()
-  {
-    static nsSMILFloatType sSingleton;
-    return &sSingleton;
-  }
+  static nsSMILFloatType sSingleton;
 
 protected:
   // nsISMILType Methods

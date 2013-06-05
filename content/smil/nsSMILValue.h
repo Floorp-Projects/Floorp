@@ -21,7 +21,7 @@
 class nsSMILValue
 {
 public:
-  nsSMILValue() : mU(), mType(nsSMILNullType::Singleton()) { }
+  nsSMILValue() : mU(), mType(&nsSMILNullType::sSingleton) { }
   explicit nsSMILValue(const nsISMILType* aType);
   nsSMILValue(const nsSMILValue& aVal);
 
@@ -41,7 +41,7 @@ public:
 
   bool IsNull() const
   {
-    return (mType == nsSMILNullType::Singleton());
+    return (mType == &nsSMILNullType::sSingleton);
   }
 
   // Swaps the member data (mU & mPtr) of |this| with |aOther|

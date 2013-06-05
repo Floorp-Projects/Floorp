@@ -938,7 +938,7 @@ nsGeolocationService::StopDevice()
                        NS_LITERAL_STRING("shutdown").get());
 }
 
-StaticRefPtr<nsGeolocationService> nsGeolocationService::sService;
+nsRefPtr<nsGeolocationService> nsGeolocationService::sService;
 
 already_AddRefed<nsGeolocationService>
 nsGeolocationService::GetGeolocationService()

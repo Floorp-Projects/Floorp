@@ -197,7 +197,7 @@ nsSVGNumber2::SMILNumber::ValueFromString(const nsAString& aStr,
     return rv;
   }
 
-  nsSMILValue val(nsSMILFloatType::Singleton());
+  nsSMILValue val(&nsSMILFloatType::sSingleton);
   val.mU.mDouble = value;
   aValue = val;
   aPreventCachingOfSandwich = false;
@@ -208,7 +208,7 @@ nsSVGNumber2::SMILNumber::ValueFromString(const nsAString& aStr,
 nsSMILValue
 nsSVGNumber2::SMILNumber::GetBaseValue() const
 {
-  nsSMILValue val(nsSMILFloatType::Singleton());
+  nsSMILValue val(&nsSMILFloatType::sSingleton);
   val.mU.mDouble = mVal->mBaseVal;
   return val;
 }
@@ -226,9 +226,9 @@ nsSVGNumber2::SMILNumber::ClearAnimValue()
 nsresult
 nsSVGNumber2::SMILNumber::SetAnimValue(const nsSMILValue& aValue)
 {
-  NS_ASSERTION(aValue.mType == nsSMILFloatType::Singleton(),
+  NS_ASSERTION(aValue.mType == &nsSMILFloatType::sSingleton,
                "Unexpected type to assign animated value");
-  if (aValue.mType == nsSMILFloatType::Singleton()) {
+  if (aValue.mType == &nsSMILFloatType::sSingleton) {
     mVal->SetAnimValue(float(aValue.mU.mDouble), mSVGElement);
   }
   return NS_OK;
