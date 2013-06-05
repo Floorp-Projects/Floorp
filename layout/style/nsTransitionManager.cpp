@@ -693,6 +693,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   bool haveCurrentTransition = false;
   uint32_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
+  const ElementPropertyTransition *oldPT = nullptr;
   if (aElementTransitions) {
     nsTArray<ElementPropertyTransition> &pts =
       aElementTransitions->mPropertyTransitions;
@@ -700,6 +701,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       if (pts[i].mProperty == aProperty) {
         haveCurrentTransition = true;
         currentIndex = i;
+        oldPT = &aElementTransitions->mPropertyTransitions[currentIndex];
         break;
       }
     }
@@ -750,10 +752,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   // We need to check two things if we have a currently running
   // transition for this property.
   if (haveCurrentTransition) {
-    const ElementPropertyTransition &oldPT =
-      aElementTransitions->mPropertyTransitions[currentIndex];
-
-    if (oldPT.mEndValue == pt.mEndValue) {
+    if (oldPT->mEndValue == pt.mEndValue) {
       // If we got a style change that changed the value to the endpoint
       // of the currently running transition, we don't want to interrupt
       // its timing function.
@@ -763,13 +762,13 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
     // If the new transition reverses the old one, we'll need to handle
     // the timing differently.
-    if (!oldPT.IsRemovedSentinel() &&
-        oldPT.mStartForReversingTest == pt.mEndValue) {
+    if (!oldPT->IsRemovedSentinel() &&
+        oldPT->mStartForReversingTest == pt.mEndValue) {
       // Compute the appropriate negative transition-delay such that right
       // now we'd end up at the current position.
       double valuePortion =
-        oldPT.ValuePortionFor(mostRecentRefresh) * oldPT.mReversePortion +
-        (1.0 - oldPT.mReversePortion);
+        oldPT->ValuePortionFor(mostRecentRefresh) * oldPT->mReversePortion +
+        (1.0 - oldPT->mReversePortion);
       // A timing function with negative y1 (or y2!) might make
       // valuePortion negative.  In this case, we still want to apply our
       // reversing logic based on relative distances, not make duration
@@ -792,7 +791,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
       duration *= valuePortion;
 
-      pt.mStartForReversingTest = oldPT.mEndValue;
+      pt.mStartForReversingTest = oldPT->mEndValue;
       pt.mReversePortion = valuePortion;
     }
   }
