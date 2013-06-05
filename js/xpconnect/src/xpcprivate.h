@@ -1173,16 +1173,10 @@ private:
     XPCCallContext(const XPCCallContext& r); // not implemented
     XPCCallContext& operator= (const XPCCallContext& r); // not implemented
 
-    enum WrapperInitOptions {
-        WRAPPER_PASSED_TO_CONSTRUCTOR,
-        INIT_SHOULD_LOOKUP_WRAPPER
-    };
-
     void Init(XPCContext::LangType callerLanguage,
               JSBool callBeginRequest,
               JS::HandleObject obj,
               JS::HandleObject funobj,
-              WrapperInitOptions wrapperInitOptions,
               JS::HandleId name,
               unsigned argc,
               jsval *argv,
