@@ -56,24 +56,6 @@ namespace {
 
 static const char kDefaultRuntimeScriptFilename[] = "xpcshell.js";
 
-class FullTrustSecMan : public nsIScriptSecurityManager
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCSECURITYMANAGER
-    NS_DECL_NSISCRIPTSECURITYMANAGER
-
-    FullTrustSecMan() { }
-    virtual ~FullTrustSecMan() { }
-
-    void SetSystemPrincipal(nsIPrincipal *aPrincipal) {
-        mSystemPrincipal = aPrincipal;
-    }
-
-private:
-    nsCOMPtr<nsIPrincipal> mSystemPrincipal;
-};
-
 class XPCShellDirProvider : public nsIDirectoryServiceProvider
 {
 public:
@@ -638,216 +620,6 @@ ProcessFile(JSContext *cx,
 
 } /* anonymous namespace */
 
-NS_INTERFACE_MAP_BEGIN(FullTrustSecMan)
-    NS_INTERFACE_MAP_ENTRY(nsIXPCSecurityManager)
-    NS_INTERFACE_MAP_ENTRY(nsIScriptSecurityManager)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCSecurityManager)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(FullTrustSecMan)
-NS_IMPL_RELEASE(FullTrustSecMan)
-
-NS_IMETHODIMP
-FullTrustSecMan::CanCreateWrapper(JSContext * aJSContext,
-                                  const nsIID & aIID,
-                                  nsISupports *aObj,
-                                  nsIClassInfo *aClassInfo,
-                                  void * *aPolicy)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanCreateInstance(JSContext * aJSContext,
-                                   const nsCID & aCID)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanGetService(JSContext * aJSContext,
-                               const nsCID & aCID)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanAccess(uint32_t aAction,
-                           nsAXPCNativeCallContext *aCallContext,
-                           JSContext * aJSContext,
-                           JSObject * aJSObject,
-                           nsISupports *aObj,
-                           nsIClassInfo *aClassInfo,
-                           jsid aName,
-                           void * *aPolicy)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
-                                     JSObject * aJSObject,
-                                     const char *aClassName,
-                                     jsid aProperty,
-                                     uint32_t aAction)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURIFromScript(JSContext * cx,
-                                        nsIURI *uri)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
-                                           nsIURI *uri,
-                                           uint32_t flags)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
-                                              const nsACString & uri,
-                                              uint32_t flags)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CheckFunctionAccess(JSContext * cx,
-                                     void * funObj,
-                                     void * targetObj)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CanExecuteScripts(JSContext * cx,
-                                   nsIPrincipal *principal,
-                                   bool *_retval)
-{
-    *_retval = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetSubjectPrincipal(nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetSystemPrincipal(nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetSimpleCodebasePrincipal(nsIURI *aURI,
-                                            nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetNoAppCodebasePrincipal(nsIURI *aURI,
-                                           nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetAppCodebasePrincipal(nsIURI *aURI,
-                                         uint32_t aAppId,
-                                         bool aInMozBrowser,
-                                         nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetDocShellCodebasePrincipal(nsIURI *aURI,
-                                              nsIDocShell* aDocShell,
-                                              nsIPrincipal **_retval)
-{
-    return GetSimpleCodebasePrincipal(aURI, _retval);
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetObjectPrincipal(JSContext * cx,
-                                    JSObject * obj,
-                                    nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::SubjectPrincipalIsSystem(bool *_retval)
-{
-    *_retval = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CheckSameOrigin(JSContext * aJSContext,
-                                 nsIURI *aTargetURI)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI,
-                                    nsIURI *aTargetURI,
-                                    bool reportError)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetChannelPrincipal(nsIChannel *aChannel,
-                                     nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::IsSystemPrincipal(nsIPrincipal *aPrincipal,
-                                   bool *_retval)
-{
-    *_retval = aPrincipal == mSystemPrincipal;
-    return NS_OK;
-}
-
-NS_IMETHODIMP_(nsIPrincipal *)
-FullTrustSecMan::GetCxSubjectPrincipal(JSContext *cx)
-{
-    return mSystemPrincipal;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetExtendedOrigin(nsIURI* aURI, uint32_t aAppId,
-                                   bool aInMozBrowser,
-                                   nsACString& aExtendedOrigin)
-{
-  aExtendedOrigin.Truncate();
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(nsrefcnt)
 XPCShellDirProvider::AddRef()
 {
@@ -985,11 +757,7 @@ XPCShellEnvironment::Init()
         return false;
     }
 
-    nsRefPtr<FullTrustSecMan> secman(new FullTrustSecMan());
-    xpc->SetSecurityManagerForJSContext(cx, secman, 0xFFFF);
-
     nsCOMPtr<nsIPrincipal> principal;
-
     nsCOMPtr<nsIScriptSecurityManager> securityManager =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && securityManager) {
@@ -1000,7 +768,6 @@ XPCShellEnvironment::Init()
             // fetch the JS principals and stick in a global
             mJSPrincipals = nsJSPrincipals::get(principal);
             JS_HoldPrincipals(mJSPrincipals);
-            secman->SetSystemPrincipal(principal);
         }
     } else {
         fprintf(stderr, "+++ Failed to get ScriptSecurityManager service, running without principals");
