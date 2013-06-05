@@ -759,39 +759,41 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
-  if (haveCurrentTransition) {
-    if (!oldPT->IsRemovedSentinel() &&
-        oldPT->mStartForReversingTest == pt.mEndValue) {
-      // Compute the appropriate negative transition-delay such that right
-      // now we'd end up at the current position.
-      double valuePortion =
-        oldPT->ValuePortionFor(mostRecentRefresh) * oldPT->mReversePortion +
-        (1.0 - oldPT->mReversePortion);
-      // A timing function with negative y1 (or y2!) might make
-      // valuePortion negative.  In this case, we still want to apply our
-      // reversing logic based on relative distances, not make duration
-      // negative.
-      if (valuePortion < 0.0)
-        valuePortion = -valuePortion;
-      // A timing function with y2 (or y1!) greater than one might
-      // advance past its terminal value.  It's probably a good idea to
-      // clamp valuePortion to be at most one to preserve the invariant
-      // that a transition will complete within at most its specified
-      // time.
-      if (valuePortion > 1.0)
-        valuePortion = 1.0;
-
-      // Negative delays are essentially part of the transition
-      // function, so reduce them along with the duration, but don't
-      // reduce positive delays.
-      if (delay < 0.0f)
-        delay *= valuePortion;
-
-      duration *= valuePortion;
-
-      pt.mStartForReversingTest = oldPT->mEndValue;
-      pt.mReversePortion = valuePortion;
+  if (haveCurrentTransition &&
+      !oldPT->IsRemovedSentinel() &&
+      oldPT->mStartForReversingTest == pt.mEndValue) {
+    // Compute the appropriate negative transition-delay such that right
+    // now we'd end up at the current position.
+    double valuePortion =
+      oldPT->ValuePortionFor(mostRecentRefresh) * oldPT->mReversePortion +
+      (1.0 - oldPT->mReversePortion);
+    // A timing function with negative y1 (or y2!) might make
+    // valuePortion negative.  In this case, we still want to apply our
+    // reversing logic based on relative distances, not make duration
+    // negative.
+    if (valuePortion < 0.0) {
+      valuePortion = -valuePortion;
     }
+    // A timing function with y2 (or y1!) greater than one might
+    // advance past its terminal value.  It's probably a good idea to
+    // clamp valuePortion to be at most one to preserve the invariant
+    // that a transition will complete within at most its specified
+    // time.
+    if (valuePortion > 1.0) {
+      valuePortion = 1.0;
+    }
+
+    // Negative delays are essentially part of the transition
+    // function, so reduce them along with the duration, but don't
+    // reduce positive delays.
+    if (delay < 0.0f) {
+      delay *= valuePortion;
+    }
+
+    duration *= valuePortion;
+
+    pt.mStartForReversingTest = oldPT->mEndValue;
+    pt.mReversePortion = valuePortion;
   }
 
   pt.mProperty = aProperty;
