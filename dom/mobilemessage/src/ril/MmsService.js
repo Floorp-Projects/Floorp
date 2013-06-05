@@ -179,6 +179,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
 
       try {
         this.mmsc = Services.prefs.getCharPref("ril.mms.mmsc");
+        if (this.mmsc.endsWith("/")) {
+          this.mmsc = this.mmsc.substr(0, this.mmsc.length - 1);
+        }
         this.proxy = Services.prefs.getCharPref("ril.mms.mmsproxy");
         this.port = Services.prefs.getIntPref("ril.mms.mmsport");
         this.updateProxyInfo();
@@ -320,6 +323,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
             switch (data) {
               case "ril.mms.mmsc":
                 this.mmsc = Services.prefs.getCharPref("ril.mms.mmsc");
+                if (this.mmsc.endsWith("/")) {
+                  this.mmsc = this.mmsc.substr(0, this.mmsc.length - 1);
+                }
                 break;
               case "ril.mms.mmsproxy":
                 this.proxy = Services.prefs.getCharPref("ril.mms.mmsproxy");
