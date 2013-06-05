@@ -610,7 +610,7 @@ pref("hal.processPriorityManager.gonk.LowCPUNice", 18);
 // this too high, then we'll send out a memory pressure event every Z seconds
 // (see below), even while we have processes that we would happily kill in
 // order to free up memory.
-pref("hal.processPriorityManager.gonk.notifyLowMemUnderMB", 10);
+pref("hal.processPriorityManager.gonk.notifyLowMemUnderMB", 14);
 
 // We wait this long before polling the memory-pressure fd after seeing one
 // memory pressure event.  (When we're not under memory pressure, we sit
