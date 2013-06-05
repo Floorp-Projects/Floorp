@@ -1994,8 +1994,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
             }
         }
 
-        nsIXPCSecurityManager* sm;
-           sm = ccx.GetXPCContext()->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_WRAPPER);
+        nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
         if (sm && NS_FAILED(sm->
                             CanCreateWrapper(ccx, *iid, identity,
                                              GetClassInfo(), GetSecurityInfoAddr()))) {
@@ -2224,8 +2223,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             return false;
     }
 
-    nsIXPCSecurityManager* sm =
-        xpcc->GetAppropriateSecurityManager(secFlag);
+    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->CanAccess(secAction, &ccx, ccx,
                                       ccx.GetFlattenedJSObject(),
                                       ccx.GetWrapper()->GetIdentityObject(),
