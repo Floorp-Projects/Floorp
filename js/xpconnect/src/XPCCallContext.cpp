@@ -277,7 +277,7 @@ XPCCallContext::CanCallNow()
         return NS_ERROR_UNEXPECTED;
 
     if (!mTearOff) {
-        mTearOff = mWrapper->FindTearOff(*this, mInterface, false, &rv);
+        mTearOff = mWrapper->FindTearOff(mInterface, false, &rv);
         if (!mTearOff || mTearOff->GetInterface() != mInterface) {
             mTearOff = nullptr;
             return NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED;

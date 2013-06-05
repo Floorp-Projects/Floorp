@@ -1052,7 +1052,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     MOZ_ASSERT(helper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
     nsRefPtr<XPCWrappedNative> wrappedGlobal;
     nsresult rv =
-        XPCWrappedNative::WrapNewGlobal(ccx, helper, aPrincipal,
+        XPCWrappedNative::WrapNewGlobal(helper, aPrincipal,
                                         aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES,
                                         zoneSpec,
                                         getter_AddRefs(wrappedGlobal));
@@ -1338,14 +1338,13 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     AutoMarkingNativeInterfacePtr iface(ccx);
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, &aIID);
+    iface = XPCNativeInterface::GetNewOrUsed(&aIID);
     if (!iface)
         return NS_ERROR_FAILURE;
 
     XPCWrappedNative* wrapper;
 
-    nsresult rv = XPCWrappedNative::GetUsedOnly(ccx, aCOMObj, scope, iface,
-                                                &wrapper);
+    nsresult rv = XPCWrappedNative::GetUsedOnly(aCOMObj, scope, iface, &wrapper);
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
     *_retval = static_cast<nsIXPConnectWrappedNative*>(wrapper);
@@ -1375,8 +1374,7 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
 
     RootedObject newParent(ccx, aNewParent);
     return XPCWrappedNative::
-        ReparentWrapperIfFound(ccx, scope, scope2, newParent,
-                               aCOMObj);
+        ReparentWrapperIfFound(scope, scope2, newParent, aCOMObj);
 }
 
 static JSDHashOperator
@@ -1420,7 +1418,7 @@ nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScopeArg)
 
     // Now that we have the wrappers, reparent them to the new scope.
     for (uint32_t i = 0, stop = wrappersToMove.Length(); i < stop; ++i) {
-        nsresult rv = wrappersToMove[i]->RescueOrphans(ccx);
+        nsresult rv = wrappersToMove[i]->RescueOrphans();
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1547,7 +1545,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                  "Bad return value from xpc_CreateSandboxObject()!");
 
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(rval)) {
-        *_retval = XPCJSObjectHolder::newHolder(ccx, JSVAL_TO_OBJECT(rval));
+        *_retval = XPCJSObjectHolder::newHolder(JSVAL_TO_OBJECT(rval));
         NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
         NS_ADDREF(*_retval);
@@ -1596,13 +1594,12 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, sciProto);
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
-    proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, &sciProto);
+    proto = XPCWrappedNativeProto::GetNewOrUsed(scope, aClassInfo, &sciProto);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     nsIXPConnectJSObjectHolder* holder;
-    *_retval = holder = XPCJSObjectHolder::newHolder(ccx,
-                                                     proto->GetJSProtoObject());
+    *_retval = holder = XPCJSObjectHolder::newHolder(proto->GetJSProtoObject());
     if (!holder)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -2063,7 +2060,7 @@ nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObjectArg,
 {
     RootedObject aObject(aJSContext, aObjectArg);
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(ccx, aObject);
+    XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(aObject);
     if (!objHolder)
         return NS_ERROR_OUT_OF_MEMORY;
 

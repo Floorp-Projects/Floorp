@@ -266,8 +266,7 @@ static void DEBUG_TrackShutdownWrapper(XPCWrappedNative* wrapper)
 
 /***************************************************************************/
 static nsresult
-FinishCreate(XPCCallContext& ccx,
-             XPCWrappedNativeScope* Scope,
+FinishCreate(XPCWrappedNativeScope* Scope,
              XPCNativeInterface* Interface,
              nsWrapperCache *cache,
              XPCWrappedNative* inWrapper,
@@ -284,11 +283,12 @@ FinishCreate(XPCCallContext& ccx,
 // JS object, which are the very things we need to create here. So we special-
 // case the logic and do some things in a different order.
 nsresult
-XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelper,
+XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
                                 nsIPrincipal *principal, bool initStandardClasses,
                                 ZoneSpecifier zoneSpec,
                                 XPCWrappedNative **wrappedGlobal)
 {
+    AutoJSContext cx;
     nsISupports *identity = nativeHelper.GetCanonical();
 
     // The object should specify that it's meant to be global.
@@ -307,8 +307,7 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
 
     // ...and then ScriptableInfo. We need all this stuff now because it's going
     // to tell us the JSClass of the object we're going to create.
-    AutoMarkingNativeScriptableInfoPtr
-        si(ccx, XPCNativeScriptableInfo::Construct(ccx, &sciWrapper));
+    AutoMarkingNativeScriptableInfoPtr si(cx, XPCNativeScriptableInfo::Construct(&sciWrapper));
     MOZ_ASSERT(si.get());
 
     // Finally, we get to the JSClass.
@@ -316,23 +315,22 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     // Create the global.
-    RootedObject global(ccx, xpc::CreateGlobalObject(ccx, clasp, principal, zoneSpec));
+    RootedObject global(cx, xpc::CreateGlobalObject(cx, clasp, principal, zoneSpec));
     if (!global)
         return NS_ERROR_FAILURE;
     XPCWrappedNativeScope *scope = GetCompartmentPrivate(global)->scope;
 
     // Immediately enter the global's compartment, so that everything else we
     // create ends up there.
-    JSAutoCompartment ac(ccx, global);
+    JSAutoCompartment ac(cx, global);
 
     // If requested, initialize the standard classes on the global.
-    if (initStandardClasses && ! JS_InitStandardClasses(ccx, global))
+    if (initStandardClasses && ! JS_InitStandardClasses(cx, global))
         return NS_ERROR_FAILURE;
 
     // Make a proto.
     XPCWrappedNativeProto *proto =
-        XPCWrappedNativeProto::GetNewOrUsed(ccx,
-                                            scope,
+        XPCWrappedNativeProto::GetNewOrUsed(scope,
                                             nativeHelper.GetClassInfo(), &sciProto,
                                             UNKNOWN_OFFSETS, /* callPostCreatePrototype = */ false);
     if (!proto)
@@ -341,7 +339,7 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
 
     // Set up the prototype on the global.
     MOZ_ASSERT(proto->GetJSProtoObject());
-    bool success = JS_SplicePrototype(ccx, global, proto->GetJSProtoObject());
+    bool success = JS_SplicePrototype(cx, global, proto->GetJSProtoObject());
     if (!success)
         return NS_ERROR_FAILURE;
 
@@ -380,13 +378,13 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
     // happen somewhere after wrapper initialization but before the wrapper is
     // added to the hashtable in FinishCreate(). It's not clear if that can
     // happen here, but let's just be safe for now.
-    AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
+    AutoMarkingWrappedNativePtr wrapperMarker(cx, wrapper);
 
     // Call the common Init finish routine. This mainly just does an AddRef
     // on behalf of XPConnect (the corresponding Release is in the finalizer
     // hook), but it does some other miscellaneous things too, so we don't
     // inline it.
-    success = wrapper->FinishInit(ccx);
+    success = wrapper->FinishInit();
     MOZ_ASSERT(success);
 
     // Go through some extra work to find the tearoff. This is kind of silly
@@ -394,28 +392,28 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
     // of QI-ing mIdentity to different interfaces, and we don't need that
     // since we're dealing with nsISupports. But lots of code expects tearoffs
     // to exist for everything, so we just follow along.
-    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(nsISupports));
+    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(&NS_GET_IID(nsISupports));
     MOZ_ASSERT(iface);
     nsresult status;
-    success = wrapper->FindTearOff(ccx, iface, false, &status);
+    success = wrapper->FindTearOff(iface, false, &status);
     if (!success)
         return status;
 
     // Call the common creation finish routine. This does all of the bookkeeping
     // like inserting the wrapper into the wrapper map and setting up the wrapper
     // cache.
-    return FinishCreate(ccx, scope, iface, nativeHelper.GetWrapperCache(),
+    return FinishCreate(scope, iface, nativeHelper.GetWrapperCache(),
                         wrapper, wrappedGlobal);
 }
 
 // static
 nsresult
-XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
-                               xpcObjectHelper& helper,
+XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
                                XPCWrappedNativeScope* Scope,
                                XPCNativeInterface* Interface,
                                XPCWrappedNative** resultWrapper)
 {
+    AutoJSContext cx;
     nsWrapperCache *cache = helper.GetWrapperCache();
 
     NS_ASSERTION(!cache || !cache->GetWrapperPreserveColor(),
@@ -449,7 +447,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     if (wrapper) {
         if (Interface &&
-            !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
+            !wrapper->FindTearOff(Interface, false, &rv)) {
             NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
             return rv;
         }
@@ -494,9 +492,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         isClassInfo ? sci :
         GatherScriptableCreateInfo(identity, info, sciProto, sci);
 
-    RootedObject parent(ccx, Scope->GetGlobalJSObject());
+    RootedObject parent(cx, Scope->GetGlobalJSObject());
 
-    RootedValue newParentVal(ccx, NullValue());
+    RootedValue newParentVal(cx, NullValue());
     JSBool needsSOW = false;
     JSBool needsCOW = false;
 
@@ -506,8 +504,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         // PreCreate may touch dead compartments.
         js::AutoMaybeTouchDeadZones agc(parent);
 
-        RootedObject plannedParent(ccx, parent);
-        nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
+        RootedObject plannedParent(cx, parent);
+        nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, cx,
                                                           parent, parent.address());
         if (NS_FAILED(rv))
             return rv;
@@ -519,12 +517,12 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
                      "Xray wrapper being used to parent XPCWrappedNative?");
 
-        ac.construct(ccx, parent);
+        ac.construct(static_cast<JSContext*>(cx), parent);
 
         if (parent != plannedParent) {
             XPCWrappedNativeScope* betterScope = GetObjectScope(parent);
             if (betterScope != Scope)
-                return GetNewOrUsed(ccx, helper, betterScope, Interface, resultWrapper);
+                return GetNewOrUsed(helper, betterScope, Interface, resultWrapper);
 
             newParentVal = OBJECT_TO_JSVAL(parent);
         }
@@ -534,10 +532,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         // interesting path (the DOM code tends to make this happen sometimes).
 
         if (cache) {
-            RootedObject cached(ccx, cache->GetWrapper());
+            RootedObject cached(cx, cache->GetWrapper());
             if (cached) {
                 if (IS_SLIM_WRAPPER_OBJECT(cached)) {
-                    if (NS_FAILED(XPCWrappedNative::Morph(ccx, cached,
+                    if (NS_FAILED(XPCWrappedNative::Morph(cached,
                           Interface, cache, getter_AddRefs(wrapper))))
                         return NS_ERROR_FAILURE;
                 } else {
@@ -551,7 +549,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         }
 
         if (wrapper) {
-            if (Interface && !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
+            if (Interface && !wrapper->FindTearOff(Interface, false, &rv)) {
                 NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
                 return rv;
             }
@@ -559,7 +557,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             return NS_OK;
         }
     } else {
-        ac.construct(ccx, parent);
+        ac.construct(static_cast<JSContext*>(cx), parent);
 
         nsISupports *Object = helper.Object();
         if (nsXPCWrappedJSClass::IsWrappedJS(Object)) {
@@ -571,7 +569,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         }
     }
 
-    AutoMarkingWrappedNativeProtoPtr proto(ccx);
+    AutoMarkingWrappedNativeProtoPtr proto(cx);
 
     // If there is ClassInfo (and we are not building a wrapper for the
     // nsIClassInfo interface) then we use a wrapper that needs a prototype.
@@ -580,7 +578,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // wrapper is actually created, but before JS code can see it.
 
     if (info && !isClassInfo) {
-        proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, Scope, info, &sciProto);
+        proto = XPCWrappedNativeProto::GetNewOrUsed(Scope, info, &sciProto);
         if (!proto)
             return NS_ERROR_FAILURE;
 
@@ -588,12 +586,12 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
         wrapper = new XPCWrappedNative(helper.forgetCanonical(), proto);
     } else {
-        AutoMarkingNativeInterfacePtr iface(ccx, Interface);
+        AutoMarkingNativeInterfacePtr iface(cx, Interface);
         if (!iface)
-            iface = XPCNativeInterface::GetISupports(ccx);
+            iface = XPCNativeInterface::GetISupports();
 
-        AutoMarkingNativeSetPtr set(ccx);
-        set = XPCNativeSet::GetNewOrUsed(ccx, nullptr, iface, 0);
+        AutoMarkingNativeSetPtr set(cx);
+        set = XPCNativeSet::GetNewOrUsed(nullptr, iface, 0);
 
         if (!set)
             return NS_ERROR_FAILURE;
@@ -611,12 +609,12 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // after we have Init'd the wrapper but *before* we add it to the hashtable.
     // This would cause the mSet to get collected and we'd later crash. I've
     // *seen* this happen.
-    AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
+    AutoMarkingWrappedNativePtr wrapperMarker(cx, wrapper);
 
-    if (!wrapper->Init(ccx, parent, &sciWrapper))
+    if (!wrapper->Init(parent, &sciWrapper))
         return NS_ERROR_FAILURE;
 
-    if (Interface && !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
+    if (Interface && !wrapper->FindTearOff(Interface, false, &rv)) {
         NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
         return rv;
     }
@@ -626,22 +624,22 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     if (needsCOW)
         wrapper->SetNeedsCOW();
 
-    return FinishCreate(ccx, Scope, Interface, cache, wrapper, resultWrapper);
+    return FinishCreate(Scope, Interface, cache, wrapper, resultWrapper);
 }
 
 static nsresult
-FinishCreate(XPCCallContext& ccx,
-             XPCWrappedNativeScope* Scope,
+FinishCreate(XPCWrappedNativeScope* Scope,
              XPCNativeInterface* Interface,
              nsWrapperCache *cache,
              XPCWrappedNative* inWrapper,
              XPCWrappedNative** resultWrapper)
 {
+    AutoJSContext cx;
     MOZ_ASSERT(inWrapper);
 
 #if DEBUG_xpc_leaks
     {
-        char* s = wrapper->ToString(ccx);
+        char* s = wrapper->ToString();
         NS_ASSERTION(wrapper->IsValid(), "eh?");
         printf("Created wrapped native %s, flat JSObject is %p\n",
                s, (void*)wrapper->GetFlatJSObjectNoMark());
@@ -680,7 +678,7 @@ FinishCreate(XPCCallContext& ccx,
         // All is well. Call PostCreate as necessary.
         XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
         if (si && si->GetFlags().WantPostCreate()) {
-            nsresult rv = si->GetCallback()->PostCreate(wrapper, ccx, flat);
+            nsresult rv = si->GetCallback()->PostCreate(wrapper, cx, flat);
             if (NS_FAILED(rv)) {
                 // PostCreate failed and that's Very Bad. We'll remove it from
                 // the map and mark it as invalid, but the PostCreate function
@@ -718,12 +716,12 @@ FinishCreate(XPCCallContext& ccx,
 
 // static
 nsresult
-XPCWrappedNative::Morph(XPCCallContext& ccx,
-                        HandleObject existingJSObject,
+XPCWrappedNative::Morph(HandleObject existingJSObject,
                         XPCNativeInterface* Interface,
                         nsWrapperCache *cache,
                         XPCWrappedNative** resultWrapper)
 {
+    AutoJSContext cx;
     NS_ASSERTION(IS_SLIM_WRAPPER(existingJSObject),
                  "Trying to morph a JSObject that's not a slim wrapper?");
 
@@ -762,37 +760,37 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
     // after we have Init'd the wrapper but *before* we add it to the hashtable.
     // This would cause the mSet to get collected and we'd later crash. I've
     // *seen* this happen.
-    AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
+    AutoMarkingWrappedNativePtr wrapperMarker(cx, wrapper);
 
-    JSAutoCompartment ac(ccx, existingJSObject);
-    if (!wrapper->Init(ccx, existingJSObject))
+    JSAutoCompartment ac(cx, existingJSObject);
+    if (!wrapper->Init(existingJSObject))
         return NS_ERROR_FAILURE;
 
     nsresult rv;
-    if (Interface && !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
+    if (Interface && !wrapper->FindTearOff(Interface, false, &rv)) {
         NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
         return rv;
     }
 
-    return FinishCreate(ccx, wrapper->GetScope(), Interface, cache, wrapper, resultWrapper);
+    return FinishCreate(wrapper->GetScope(), Interface, cache, wrapper, resultWrapper);
 }
 
 // static
 nsresult
-XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
-                              nsISupports* Object,
+XPCWrappedNative::GetUsedOnly(nsISupports* Object,
                               XPCWrappedNativeScope* Scope,
                               XPCNativeInterface* Interface,
                               XPCWrappedNative** resultWrapper)
 {
+    AutoJSContext cx;
     NS_ASSERTION(Object, "XPCWrappedNative::GetUsedOnly was called with a null Object");
 
     XPCWrappedNative* wrapper;
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(Object, &cache);
     if (cache) {
-        RootedObject flat(ccx, cache->GetWrapper());
-        if (flat && IS_SLIM_WRAPPER_OBJECT(flat) && !MorphSlimWrapper(ccx, flat))
+        RootedObject flat(cx, cache->GetWrapper());
+        if (flat && IS_SLIM_WRAPPER_OBJECT(flat) && !MorphSlimWrapper(cx, flat))
            return NS_ERROR_FAILURE;
 
         wrapper = flat ?
@@ -826,7 +824,7 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
     }
 
     nsresult rv;
-    if (Interface && !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
+    if (Interface && !wrapper->FindTearOff(Interface, false, &rv)) {
         NS_RELEASE(wrapper);
         NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
         return rv;
@@ -1077,9 +1075,10 @@ static uint32_t sMorphedSlimWrappers;
 #endif
 
 JSBool
-XPCWrappedNative::Init(XPCCallContext& ccx, HandleObject parent,
+XPCWrappedNative::Init(HandleObject parent,
                        const XPCNativeScriptableCreateInfo* sci)
 {
+    AutoJSContext cx;
     // setup our scriptable info...
 
     if (sci->GetCallback()) {
@@ -1090,7 +1089,7 @@ XPCWrappedNative::Init(XPCCallContext& ccx, HandleObject parent,
         }
         if (!mScriptableInfo) {
             mScriptableInfo =
-                XPCNativeScriptableInfo::Construct(ccx, sci);
+                XPCNativeScriptableInfo::Construct(sci);
 
             if (!mScriptableInfo)
                 return false;
@@ -1119,23 +1118,23 @@ XPCWrappedNative::Init(XPCCallContext& ccx, HandleObject parent,
 
     JSObject* protoJSObject = HasProto() ?
                                 GetProto()->GetJSProtoObject() :
-                                GetScope()->GetPrototypeNoHelper(ccx);
+                                GetScope()->GetPrototypeNoHelper();
 
     if (!protoJSObject) {
         return false;
     }
 
-    mFlatJSObject = JS_NewObject(ccx, jsclazz, protoJSObject, parent);
+    mFlatJSObject = JS_NewObject(cx, jsclazz, protoJSObject, parent);
     if (!mFlatJSObject)
         return false;
 
     JS_SetPrivate(mFlatJSObject, this);
 
-    return FinishInit(ccx);
+    return FinishInit();
 }
 
 JSBool
-XPCWrappedNative::Init(XPCCallContext &ccx, JSObject *existingJSObject)
+XPCWrappedNative::Init(JSObject *existingJSObject)
 {
     // Set up the private to point to the WN.
     JS_SetPrivate(existingJSObject, this);
@@ -1150,12 +1149,14 @@ XPCWrappedNative::Init(XPCCallContext &ccx, JSObject *existingJSObject)
               ++sMorphedSlimWrappers, mFlatJSObject,
               static_cast<nsISupports*>(xpc_GetJSPrivate(mFlatJSObject))));
 
-    return FinishInit(ccx);
+    return FinishInit();
 }
 
 JSBool
-XPCWrappedNative::FinishInit(XPCCallContext &ccx)
+XPCWrappedNative::FinishInit()
 {
+    AutoJSContext cx;
+
     // For all WNs, we want to make sure that the multislot starts out as null.
     // This happens explicitly when morphing a slim wrapper, but we need to
     // make sure it happens in the other cases too.
@@ -1168,13 +1169,13 @@ XPCWrappedNative::FinishInit(XPCCallContext &ccx)
     NS_ADDREF(this);
 
     if (mScriptableInfo && mScriptableInfo->GetFlags().WantCreate() &&
-        NS_FAILED(mScriptableInfo->GetCallback()->Create(this, ccx,
+        NS_FAILED(mScriptableInfo->GetCallback()->Create(this, cx,
                                                          mFlatJSObject))) {
         return false;
     }
 
     // A hack for bug 517665, increase the probability for GC.
-    JS_updateMallocCounter(ccx.GetJSContext(), 2 * sizeof(XPCWrappedNative));
+    JS_updateMallocCounter(cx, 2 * sizeof(XPCWrappedNative));
 
     return true;
 }
@@ -1403,14 +1404,13 @@ private:
 
 // static
 nsresult
-XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
-                                         XPCWrappedNativeScope* aOldScope,
+XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
                                          XPCWrappedNativeScope* aNewScope,
                                          HandleObject aNewParent,
                                          nsISupports* aCOMObj)
 {
-    XPCNativeInterface* iface =
-        XPCNativeInterface::GetISupports(ccx);
+    AutoJSContext cx;
+    XPCNativeInterface* iface = XPCNativeInterface::GetISupports();
 
     if (!iface)
         return NS_ERROR_FAILURE;
@@ -1418,7 +1418,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     nsresult rv;
 
     nsRefPtr<XPCWrappedNative> wrapper;
-    RootedObject flat(ccx);
+    RootedObject flat(cx);
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(aCOMObj, &cache);
     if (cache) {
@@ -1429,7 +1429,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                          "Incorrect scope passed");
         }
     } else {
-        rv = XPCWrappedNative::GetUsedOnly(ccx, aCOMObj, aOldScope, iface,
+        rv = XPCWrappedNative::GetUsedOnly(aCOMObj, aOldScope, iface,
                                            getter_AddRefs(wrapper));
         if (NS_FAILED(rv))
             return rv;
@@ -1450,12 +1450,12 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         return NS_ERROR_FAILURE;
     }
 
-    JSAutoCompartment ac(ccx, aNewScope->GetGlobalJSObject());
+    JSAutoCompartment ac(cx, aNewScope->GetGlobalJSObject());
 
     if (aOldScope != aNewScope) {
         // Oh, so now we need to move the wrapper to a different scope.
-        AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
-        AutoMarkingWrappedNativeProtoPtr newProto(ccx);
+        AutoMarkingWrappedNativeProtoPtr oldProto(cx);
+        AutoMarkingWrappedNativeProtoPtr newProto(cx);
 
         // Cross-scope means cross-compartment.
         MOZ_ASSERT(js::GetObjectCompartment(aOldScope->GetGlobalJSObject()) !=
@@ -1472,7 +1472,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             XPCNativeScriptableInfo *info = oldProto->GetScriptableInfo();
             XPCNativeScriptableCreateInfo ci(*info);
             newProto =
-                XPCWrappedNativeProto::GetNewOrUsed(ccx, aNewScope,
+                XPCWrappedNativeProto::GetNewOrUsed(aNewScope,
                                                     oldProto->GetClassInfo(),
                                                     &ci, oldProto->GetOffsetsMasked());
             if (!newProto) {
@@ -1488,9 +1488,9 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             // ending up with two reflectors pointing to the same WN. Other than
             // that, the objects we create will just go away if we return early.
 
-            RootedObject newobj(ccx, JS_CloneObject(ccx, flat,
-                                                    newProto->GetJSProtoObject(),
-                                                    aNewParent));
+            RootedObject newobj(cx, JS_CloneObject(cx, flat,
+                                                   newProto->GetJSProtoObject(),
+                                                   aNewParent));
             if (!newobj)
                 return NS_ERROR_FAILURE;
 
@@ -1501,20 +1501,20 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             // |newobj| will be set to NULL. |flat| will go away soon, because
             // we swap it with another object during the transplant and let that
             // object die.
-            RootedObject propertyHolder(ccx);
+            RootedObject propertyHolder(cx);
             {
-                AutoClonePrivateGuard cloneGuard(ccx, flat, newobj);
+                AutoClonePrivateGuard cloneGuard(cx, flat, newobj);
 
-                propertyHolder = JS_NewObjectWithGivenProto(ccx, NULL, NULL, aNewParent);
+                propertyHolder = JS_NewObjectWithGivenProto(cx, NULL, NULL, aNewParent);
                 if (!propertyHolder)
                     return NS_ERROR_OUT_OF_MEMORY;
-                if (!JS_CopyPropertiesFrom(ccx, propertyHolder, flat))
+                if (!JS_CopyPropertiesFrom(cx, propertyHolder, flat))
                     return NS_ERROR_FAILURE;
 
                 // Expandos from other compartments are attached to the target JS object.
                 // Copy them over, and let the old ones die a natural death.
                 SetWNExpandoChain(newobj, nullptr);
-                if (!XrayUtils::CloneExpandoChain(ccx, newobj, flat))
+                if (!XrayUtils::CloneExpandoChain(cx, newobj, flat))
                     return NS_ERROR_FAILURE;
 
                 // We've set up |newobj|, so we make it own the WN by nulling out
@@ -1530,8 +1530,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             // that the object might have. This forces us to take the 'WithWrapper' path
             // while transplanting that handles this stuff correctly.
             {
-                JSAutoCompartment innerAC(ccx, aOldScope->GetGlobalJSObject());
-                if (!wrapper->GetSameCompartmentSecurityWrapper(ccx))
+                JSAutoCompartment innerAC(cx, aOldScope->GetGlobalJSObject());
+                if (!wrapper->GetSameCompartmentSecurityWrapper(cx))
                     return NS_ERROR_FAILURE;
             }
 
@@ -1578,12 +1578,12 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             if (ww) {
                 JSObject *newwrapper;
                 MOZ_ASSERT(wrapper->NeedsSOW(), "weird wrapper wrapper");
-                newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
+                newwrapper = xpc::WrapperFactory::WrapSOWObject(cx, newobj);
                 if (!newwrapper)
                     MOZ_CRASH();
 
                 // Ok, now we do the special object-plus-wrapper transplant.
-                ww = xpc::TransplantObjectWithWrapper(ccx, flat, ww, newobj,
+                ww = xpc::TransplantObjectWithWrapper(cx, flat, ww, newobj,
                                                       newwrapper);
                 if (!ww)
                     MOZ_CRASH();
@@ -1591,7 +1591,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 flat = newobj;
                 wrapper->SetWrapper(ww);
             } else {
-                flat = xpc::TransplantObject(ccx, flat, newobj);
+                flat = xpc::TransplantObject(cx, flat, newobj);
                 if (!flat)
                     MOZ_CRASH();
             }
@@ -1603,30 +1603,30 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 cache->SetWrapper(flat);
                 cache->SetPreservingWrapper(preserving);
             }
-            if (!JS_CopyPropertiesFrom(ccx, flat, propertyHolder))
+            if (!JS_CopyPropertiesFrom(cx, flat, propertyHolder))
                 MOZ_CRASH();
         } else {
             SetSlimWrapperProto(flat, newProto.get());
-            if (!JS_SetPrototype(ccx, flat, newProto->GetJSProtoObject()))
+            if (!JS_SetPrototype(cx, flat, newProto->GetJSProtoObject()))
                 MOZ_CRASH(); // this is bad, very bad
         }
 
         // Call the scriptable hook to indicate that we transplanted.
         XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
         if (si->GetFlags().WantPostCreate())
-            (void) si->GetCallback()->PostTransplant(wrapper, ccx, flat);
+            (void) si->GetCallback()->PostTransplant(wrapper, cx, flat);
     }
 
     // Now we can just fix up the parent and return the wrapper
 
     if (aNewParent) {
-        if (!JS_SetParent(ccx, flat, aNewParent))
+        if (!JS_SetParent(cx, flat, aNewParent))
             MOZ_CRASH();
 
         JSObject *nw;
         if (wrapper &&
             (nw = wrapper->GetWrapper()) &&
-            !JS_SetParent(ccx, nw, JS_GetGlobalForObject(ccx, aNewParent))) {
+            !JS_SetParent(cx, nw, JS_GetGlobalForObject(cx, aNewParent))) {
             MOZ_CRASH();
         }
     }
@@ -1651,8 +1651,9 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 // See bug 751995 for more information.
 
 static nsresult
-RescueOrphans(XPCCallContext& ccx, HandleObject obj)
+RescueOrphans(HandleObject obj)
 {
+    AutoJSContext cx;
     //
     // Even if we're not an orphan at the moment, one of our ancestors might
     // be. If so, we need to recursively rescue up the parent chain.
@@ -1665,7 +1666,7 @@ RescueOrphans(XPCCallContext& ccx, HandleObject obj)
     // NB: We pass stopAtOuter=false during the unwrap because Location objects
     // are parented to outer window proxies.
     nsresult rv;
-    RootedObject parentObj(ccx, js::GetObjectParent(obj));
+    RootedObject parentObj(cx, js::GetObjectParent(obj));
     if (!parentObj)
         return NS_OK; // Global object. We're done.
     parentObj = js::UncheckedUnwrap(parentObj, /* stopAtOuter = */ false);
@@ -1685,25 +1686,25 @@ RescueOrphans(XPCCallContext& ccx, HandleObject obj)
         if (isWN) {
             XPCWrappedNative *wn =
                 static_cast<XPCWrappedNative*>(js::GetObjectPrivate(obj));
-            rv = wn->GetScriptableInfo()->GetCallback()->PreCreate(wn->GetIdentityObject(), ccx,
+            rv = wn->GetScriptableInfo()->GetCallback()->PreCreate(wn->GetIdentityObject(), cx,
                                                                    wn->GetScope()->GetGlobalJSObject(),
                                                                    parentObj.address());
             NS_ENSURE_SUCCESS(rv, rv);
         } else {
             MOZ_ASSERT(IsDOMObject(obj));
             const DOMClass* domClass = GetDOMClass(obj);
-            parentObj = domClass->mGetParent(ccx, obj);
+            parentObj = domClass->mGetParent(cx, obj);
         }
     }
 
     // Morph any slim wrappers, lest they confuse us.
     if (IS_SLIM_WRAPPER(parentObj)) {
-        bool ok = MorphSlimWrapper(ccx, parentObj);
+        bool ok = MorphSlimWrapper(cx, parentObj);
         NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     }
 
     // Recursively fix up orphans on the parent chain.
-    rv = RescueOrphans(ccx, parentObj);
+    rv = RescueOrphans(parentObj);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now that we know our parent is in the right place, determine if we've
@@ -1713,15 +1714,15 @@ RescueOrphans(XPCCallContext& ccx, HandleObject obj)
 
     // We've been orphaned. Find where our parent went, and follow it.
     if (isWN) {
-        RootedObject realParent(ccx, js::UncheckedUnwrap(parentObj));
+        RootedObject realParent(cx, js::UncheckedUnwrap(parentObj));
         XPCWrappedNative *wn =
             static_cast<XPCWrappedNative*>(js::GetObjectPrivate(obj));
-        return wn->ReparentWrapperIfFound(ccx, GetObjectScope(parentObj),
+        return wn->ReparentWrapperIfFound(GetObjectScope(parentObj),
                                           GetObjectScope(realParent),
                                           realParent, wn->GetIdentityObject());
     }
 
-    return ReparentWrapper(ccx, obj);
+    return ReparentWrapper(cx, obj);
 }
 
 // Recursively fix up orphans on the parent chain of a wrapper. Note that this
@@ -1729,20 +1730,22 @@ RescueOrphans(XPCCallContext& ccx, HandleObject obj)
 // might be an orphan and fixing the parent causes this wrapper to become an
 // orphan.
 nsresult
-XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
+XPCWrappedNative::RescueOrphans()
 {
-    RootedObject flatJSObject(ccx, mFlatJSObject);
-    return ::RescueOrphans(ccx, flatJSObject);
+    AutoJSContext cx;
+    RootedObject flatJSObject(cx, mFlatJSObject);
+    return ::RescueOrphans(flatJSObject);
 }
 
 JSBool
-XPCWrappedNative::ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface)
+XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 {
+    AutoJSContext cx;
     // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
     if (!mSet->HasInterface(aInterface)) {
-        AutoMarkingNativeSetPtr newSet(ccx);
-        newSet = XPCNativeSet::GetNewOrUsed(ccx, mSet, aInterface,
+        AutoMarkingNativeSetPtr newSet(cx);
+        newSet = XPCNativeSet::GetNewOrUsed(mSet, aInterface,
                                             mSet->GetInterfaceCount());
         if (!newSet)
             return false;
@@ -1755,8 +1758,7 @@ XPCWrappedNative::ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface)
 }
 
 XPCWrappedNativeTearOff*
-XPCWrappedNative::LocateTearOff(XPCCallContext& ccx,
-                                XPCNativeInterface* aInterface)
+XPCWrappedNative::LocateTearOff(XPCNativeInterface* aInterface)
 {
     XPCAutoLock al(GetLock()); // hold the lock throughout
 
@@ -1778,11 +1780,11 @@ XPCWrappedNative::LocateTearOff(XPCCallContext& ccx,
 }
 
 XPCWrappedNativeTearOff*
-XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
-                              XPCNativeInterface* aInterface,
+XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
                               JSBool needJSObject /* = false */,
                               nsresult* pError /* = nullptr */)
 {
+    AutoJSContext cx;
     XPCAutoLock al(GetLock()); // hold the lock throughout
 
     nsresult rv = NS_OK;
@@ -1802,8 +1804,8 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
              to++) {
             if (to->GetInterface() == aInterface) {
                 if (needJSObject && !to->GetJSObjectPreserveColor()) {
-                    AutoMarkingWrappedNativeTearOffPtr tearoff(ccx, to);
-                    JSBool ok = InitTearOffJSObject(ccx, to);
+                    AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
+                    JSBool ok = InitTearOffJSObject(to);
                     // During shutdown, we don't sweep tearoffs.  So make sure
                     // to unmark manually in case the auto-marker marked us.
                     // We shouldn't ever be getting here _during_ our
@@ -1836,8 +1838,8 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
 
     {
         // Scope keeps |tearoff| from leaking across the return_result: label
-        AutoMarkingWrappedNativeTearOffPtr tearoff(ccx, to);
-        rv = InitTearOff(ccx, to, aInterface, needJSObject);
+        AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
+        rv = InitTearOff(to, aInterface, needJSObject);
         // During shutdown, we don't sweep tearoffs.  So make sure to unmark
         // manually in case the auto-marker marked us.  We shouldn't ever be
         // getting here _during_ our Mark/Sweep cycle, so this should be safe.
@@ -1854,11 +1856,12 @@ return_result:
 }
 
 nsresult
-XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
-                              XPCWrappedNativeTearOff* aTearOff,
+XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
                               XPCNativeInterface* aInterface,
                               JSBool needJSObject)
 {
+    AutoJSContext cx;
+
     // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
     // Determine if the object really does this interface...
@@ -1917,7 +1920,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
         nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(obj));
         if (wrappedJS) {
-            RootedObject jso(ccx, wrappedJS->GetJSObject());
+            RootedObject jso(cx, wrappedJS->GetJSObject());
             if (jso == mFlatJSObject) {
                 // The implementing JSObject is the same as ours! Just say OK
                 // without actually extending the set.
@@ -1981,10 +1984,10 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
             nsXPCWrappedJSClass* clazz;
             if (iid->Equals(NS_GET_IID(nsIPropertyBag)) && jso &&
-                NS_SUCCEEDED(nsXPCWrappedJSClass::GetNewOrUsed(ccx,*iid,&clazz))&&
+                NS_SUCCEEDED(nsXPCWrappedJSClass::GetNewOrUsed(cx,*iid,&clazz))&&
                 clazz) {
-                RootedObject answer(ccx,
-                    clazz->CallQueryInterfaceOnJSObject(ccx, jso, *iid));
+                RootedObject answer(cx,
+                    clazz->CallQueryInterfaceOnJSObject(cx, jso, *iid));
                 NS_RELEASE(clazz);
                 if (!answer) {
                     NS_RELEASE(obj);
@@ -1996,7 +1999,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
         nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
         if (sm && NS_FAILED(sm->
-                            CanCreateWrapper(ccx, *iid, identity,
+                            CanCreateWrapper(cx, *iid, identity,
                                              GetClassInfo(), GetSecurityInfoAddr()))) {
             // the security manager vetoed. It should have set an exception.
             NS_RELEASE(obj);
@@ -2011,7 +2014,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
     // because we unlocked and called out in the interim and the result of the
     // previous call might not be correct anymore.
 
-    if (!mSet->HasInterface(aInterface) && !ExtendSet(ccx, aInterface)) {
+    if (!mSet->HasInterface(aInterface) && !ExtendSet(aInterface)) {
         NS_RELEASE(obj);
         aTearOff->SetInterface(nullptr);
         return NS_ERROR_NO_INTERFACE;
@@ -2019,20 +2022,21 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
     aTearOff->SetInterface(aInterface);
     aTearOff->SetNative(obj);
-    if (needJSObject && !InitTearOffJSObject(ccx, aTearOff))
+    if (needJSObject && !InitTearOffJSObject(aTearOff))
         return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }
 
 JSBool
-XPCWrappedNative::InitTearOffJSObject(XPCCallContext& ccx,
-                                      XPCWrappedNativeTearOff* to)
+XPCWrappedNative::InitTearOffJSObject(XPCWrappedNativeTearOff* to)
 {
+    AutoJSContext cx;
+
     // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
-    JSObject* obj = JS_NewObject(ccx, Jsvalify(&XPC_WN_Tearoff_JSClass),
-                                 JS_GetObjectPrototype(ccx, mFlatJSObject),
+    JSObject* obj = JS_NewObject(cx, Jsvalify(&XPC_WN_Tearoff_JSClass),
+                                 JS_GetObjectPrototype(cx, mFlatJSObject),
                                  mFlatJSObject);
     if (!obj)
         return false;
@@ -3038,13 +3042,8 @@ NS_IMETHODIMP XPCWrappedNative::FinishInitForWrappedGlobal()
     MOZ_ASSERT(mScriptableInfo->GetFlags().IsGlobalObject());
     MOZ_ASSERT(HasProto());
 
-    // Build a CCX.
-    XPCCallContext ccx(NATIVE_CALLER);
-    if (!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
     // Call PostCreateProrotype.
-    bool success = GetProto()->CallPostCreatePrototype(ccx);
+    bool success = GetProto()->CallPostCreatePrototype();
     if (!success)
         return NS_ERROR_FAILURE;
 
@@ -3099,8 +3098,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
 /***************************************************************************/
 
 char*
-XPCWrappedNative::ToString(XPCCallContext& ccx,
-                           XPCWrappedNativeTearOff* to /* = nullptr */ ) const
+XPCWrappedNative::ToString(XPCWrappedNativeTearOff* to /* = nullptr */ ) const
 {
 #ifdef DEBUG
 #  define FMT_ADDR " @ 0x%p"
@@ -3130,7 +3128,7 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
         if (count == 1)
             name = JS_sprintf_append(name, "%s", array[0]->GetNameString());
         else if (count == 2 &&
-                 array[0] == XPCNativeInterface::GetISupports(ccx)) {
+                 array[0] == XPCNativeInterface::GetISupports()) {
             name = JS_sprintf_append(name, "%s", array[1]->GetNameString());
         } else {
             for (uint16_t i = 0; i < count; i++) {
@@ -3531,10 +3529,10 @@ XPCJSObjectHolder::GetJSObject()
     return mJSObj;
 }
 
-XPCJSObjectHolder::XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj)
+XPCJSObjectHolder::XPCJSObjectHolder(JSObject* obj)
     : mJSObj(obj)
 {
-    ccx.GetRuntime()->AddObjectHolderRoot(this);
+    XPCJSRuntime::Get()->AddObjectHolderRoot(this);
 }
 
 XPCJSObjectHolder::~XPCJSObjectHolder()
@@ -3559,13 +3557,13 @@ XPCJSObjectHolder::GetTraceName(JSTracer* trc, char *buf, size_t bufsize)
 
 // static
 XPCJSObjectHolder*
-XPCJSObjectHolder::newHolder(XPCCallContext& ccx, JSObject* obj)
+XPCJSObjectHolder::newHolder(JSObject* obj)
 {
     if (!obj) {
         NS_ERROR("bad param");
         return nullptr;
     }
-    return new XPCJSObjectHolder(ccx, obj);
+    return new XPCJSObjectHolder(obj);
 }
 
 JSBool
@@ -3574,13 +3572,11 @@ MorphSlimWrapper(JSContext *cx, HandleObject obj)
     SLIM_LOG(("***** morphing from MorphSlimToWrapper (%p, %p)\n",
               obj, static_cast<nsISupports*>(xpc_GetJSPrivate(obj))));
 
-    XPCCallContext ccx(JS_CALLER, cx);
-
     nsISupports* object = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     nsWrapperCache *cache = nullptr;
     CallQueryInterface(object, &cache);
     nsRefPtr<XPCWrappedNative> wn;
-    nsresult rv = XPCWrappedNative::Morph(ccx, obj, nullptr, cache,
+    nsresult rv = XPCWrappedNative::Morph(obj, nullptr, cache,
                                           getter_AddRefs(wn));
     return NS_SUCCEEDED(rv);
 }
@@ -3590,15 +3586,15 @@ static uint32_t sSlimWrappers;
 #endif
 
 JSBool
-ConstructSlimWrapper(XPCCallContext &ccx,
-                     xpcObjectHelper &aHelper,
+ConstructSlimWrapper(xpcObjectHelper &aHelper,
                      XPCWrappedNativeScope* xpcScope, MutableHandleValue rval)
 {
+    AutoJSContext cx;
     nsISupports *identityObj = aHelper.GetCanonical();
     nsXPCClassInfo *classInfoHelper = aHelper.GetXPCClassInfo();
 
     if (!classInfoHelper) {
-        SLIM_LOG_NOT_CREATED(ccx, identityObj, "No classinfo helper");
+        SLIM_LOG_NOT_CREATED(cx, identityObj, "No classinfo helper");
         return false;
     }
 
@@ -3607,9 +3603,9 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     NS_ASSERTION(flags.DontAskInstanceForScriptable(),
                  "Not supported for cached wrappers!");
 
-    RootedObject parent(ccx, xpcScope->GetGlobalJSObject());
+    RootedObject parent(cx, xpcScope->GetGlobalJSObject());
     if (!flags.WantPreCreate()) {
-        SLIM_LOG_NOT_CREATED(ccx, identityObj,
+        SLIM_LOG_NOT_CREATED(cx, identityObj,
                              "scriptable helper has no PreCreate hook");
 
         return false;
@@ -3618,26 +3614,26 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     // PreCreate may touch dead compartments.
     js::AutoMaybeTouchDeadZones agc(parent);
 
-    RootedObject plannedParent(ccx, parent);
-    nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, parent.address());
+    RootedObject plannedParent(cx, parent);
+    nsresult rv = classInfoHelper->PreCreate(identityObj, cx, parent, parent.address());
     if (rv != NS_SUCCESS_ALLOW_SLIM_WRAPPERS) {
-        SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
+        SLIM_LOG_NOT_CREATED(cx, identityObj, "PreCreate hook refused");
 
         return false;
     }
 
-    if (!js::IsObjectInContextCompartment(parent, ccx.GetJSContext())) {
-        SLIM_LOG_NOT_CREATED(ccx, identityObj, "wrong compartment");
+    if (!js::IsObjectInContextCompartment(parent, cx)) {
+        SLIM_LOG_NOT_CREATED(cx, identityObj, "wrong compartment");
 
         return false;
     }
 
-    JSAutoCompartment ac(ccx, parent);
+    JSAutoCompartment ac(cx, parent);
 
     if (parent != plannedParent) {
         XPCWrappedNativeScope *newXpcScope = GetObjectScope(parent);
         if (newXpcScope != xpcScope) {
-            SLIM_LOG_NOT_CREATED(ccx, identityObj, "crossing origins");
+            SLIM_LOG_NOT_CREATED(cx, identityObj, "crossing origins");
 
             return false;
         }
@@ -3657,9 +3653,8 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     XPCNativeScriptableCreateInfo
         sciProto(aHelper.forgetXPCClassInfo(), flags, interfacesBitmap);
 
-    AutoMarkingWrappedNativeProtoPtr xpcproto(ccx);
-    xpcproto = XPCWrappedNativeProto::GetNewOrUsed(ccx, xpcScope,
-                                                   classInfoHelper, &sciProto);
+    AutoMarkingWrappedNativeProtoPtr xpcproto(cx);
+    xpcproto = XPCWrappedNativeProto::GetNewOrUsed(xpcScope, classInfoHelper, &sciProto);
     if (!xpcproto)
         return false;
 
@@ -3670,7 +3665,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     if (!jsclazz)
         return false;
 
-    wrapper = JS_NewObject(ccx, jsclazz, xpcproto->GetJSProtoObject(), parent);
+    wrapper = JS_NewObject(cx, jsclazz, xpcproto->GetJSProtoObject(), parent);
     if (!wrapper)
         return false;
 

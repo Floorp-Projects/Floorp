@@ -763,7 +763,7 @@ CreateHolderIfNeeded(XPCCallContext& ccx, HandleObject obj, jsval* d,
                      nsIXPConnectJSObjectHolder** dest)
 {
     if (dest) {
-        XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(ccx, obj);
+        XPCJSObjectHolder* objHolder = XPCJSObjectHolder::newHolder(obj);
         if (!objHolder)
             return false;
 
@@ -860,12 +860,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // If we're not handing this wrapper to an nsIXPConnectJSObjectHolder, and
     // the object supports slim wrappers, try to create one here.
     if (tryConstructSlimWrapper) {
-        XPCCallContext &ccx = lccx.GetXPCCallContext();
-        if (!ccx.IsValid())
-            return false;
-
         RootedValue slim(cx);
-        if (ConstructSlimWrapper(ccx, aHelper, xpcscope, &slim)) {
+        if (ConstructSlimWrapper(aHelper, xpcscope, &slim)) {
             *d = slim;
             return true;
         }
@@ -895,7 +891,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             iface = *Interface;
 
         if (!iface) {
-            iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+            iface = XPCNativeInterface::GetNewOrUsed(iid);
             if (!iface)
                 return false;
 
@@ -911,7 +907,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     XPCWrappedNative* wrapper;
     nsRefPtr<XPCWrappedNative> strongWrapper;
     if (!flat) {
-        rv = XPCWrappedNative::GetNewOrUsed(ccx, aHelper, xpcscope, iface,
+        rv = XPCWrappedNative::GetNewOrUsed(aHelper, xpcscope, iface,
                                             getter_AddRefs(strongWrapper));
 
         wrapper = strongWrapper;
@@ -927,7 +923,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         // a valid XPCCallContext because we checked when calling Init on
         // iface.
         if (iface)
-            wrapper->FindTearOff(ccx, iface, false, &rv);
+            wrapper->FindTearOff(iface, false, &rv);
         else
             rv = NS_OK;
     } else {
@@ -938,7 +934,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                   "(%p)\n",
                   static_cast<nsISupports*>(xpc_GetJSPrivate(flat))));
 
-        rv = XPCWrappedNative::Morph(ccx, flat, iface, cache,
+        rv = XPCWrappedNative::Morph(flat, iface, cache,
                                      getter_AddRefs(strongWrapper));
         wrapper = strongWrapper;
     }
@@ -977,7 +973,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             *dest = strongWrapper.forget().get();
         } else {
             nsRefPtr<XPCJSObjectHolder> objHolder =
-                XPCJSObjectHolder::newHolder(ccx, flat);
+                XPCJSObjectHolder::newHolder(flat);
             if (!objHolder)
                 return false;
 
