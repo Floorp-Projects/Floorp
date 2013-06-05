@@ -64,7 +64,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
 
         RootedValue resultVal(ccx);
 
-        if (!XPCConvert::NativeData2JS(ccx, resultVal.address(), &v.val, v.type,
+        if (!XPCConvert::NativeData2JS(resultVal.address(), &v.val, v.type,
                                        nullptr, nullptr))
             return false;
 

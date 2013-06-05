@@ -333,7 +333,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
            // Note that this always takes the T_INTERFACE path through
            // JSData2Native, so the value passed for useAllocator
            // doesn't really matter. We pass true for consistency.
-           XPCConvert::JSData2Native(ccx, aResult, val, type, true,
+           XPCConvert::JSData2Native(aResult, val, type, true,
                                      &NS_GET_IID(nsIVariant), pErr);
 }
 
@@ -816,7 +816,7 @@ xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
         return;
 
     nsCOMPtr<nsIException> e;
-    XPCConvert::JSErrorToXPCException(ccx, message, nullptr, nullptr, report,
+    XPCConvert::JSErrorToXPCException(message, nullptr, nullptr, report,
                                       getter_AddRefs(e));
     if (e)
         ccx.GetXPCContext()->SetException(e);
@@ -967,7 +967,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     /* JS might throw an expection whether the reporter was called or not */
     if (is_js_exception) {
         if (!xpc_exception)
-            XPCConvert::JSValToXPCException(ccx, js_exception, anInterfaceName,
+            XPCConvert::JSValToXPCException(js_exception, anInterfaceName,
                                             aPropertyName,
                                             getter_AddRefs(xpc_exception));
 
@@ -1240,7 +1240,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                 xpcObjectHelper helper(newThis);
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(
-                                      ccx, v.address(), nullptr, helper, nullptr,
+                                      v.address(), nullptr, helper, nullptr,
                                       nullptr, false, nullptr);
                                 if (!ok) {
                                     goto pre_call_clean_up;
@@ -1328,19 +1328,19 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
             if (isArray) {
                 XPCLazyCallContext lccx(ccx);
-                if (!XPCConvert::NativeArray2JS(lccx, val.address(),
+                if (!XPCConvert::NativeArray2JS(val.address(),
                                                 (const void**)&pv->val,
                                                 datum_type, &param_iid,
                                                 array_count, nullptr))
                     goto pre_call_clean_up;
             } else if (isSizedString) {
-                if (!XPCConvert::NativeStringWithSize2JS(ccx, val.address(),
+                if (!XPCConvert::NativeStringWithSize2JS(val.address(),
                                                          (const void*)&pv->val,
                                                          datum_type,
                                                          array_count, nullptr))
                     goto pre_call_clean_up;
             } else {
-                if (!XPCConvert::NativeData2JS(ccx, val.address(), &pv->val, type,
+                if (!XPCConvert::NativeData2JS(val.address(), &pv->val, type,
                                                &param_iid, nullptr))
                     goto pre_call_clean_up;
             }
@@ -1517,7 +1517,7 @@ pre_call_clean_up:
                 break;
         }
 
-        if (!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
+        if (!XPCConvert::JSData2Native(&pv->val, val, type,
                                        !param.IsDipper(), &param_iid, nullptr))
             break;
     }
@@ -1576,18 +1576,17 @@ pre_call_clean_up:
 
             if (isArray) {
                 if (array_count &&
-                    !XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
+                    !XPCConvert::JSArray2Native((void**)&pv->val, val,
                                                 array_count, datum_type,
                                                 &param_iid, nullptr))
                     break;
             } else if (isSizedString) {
-                if (!XPCConvert::JSStringWithSize2Native(ccx,
-                                                         (void*)&pv->val, val,
+                if (!XPCConvert::JSStringWithSize2Native((void*)&pv->val, val,
                                                          array_count, datum_type,
                                                          nullptr))
                     break;
             } else {
-                if (!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
+                if (!XPCConvert::JSData2Native(&pv->val, val, type,
                                                true, &param_iid,
                                                nullptr))
                     break;
