@@ -29,6 +29,8 @@ const { defer, resolve, reject, all } = Promise;
 
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
 
+loadSubScript.call(this, "resource://gre/modules/devtools/DevToolsUtils.js");
+
 function dumpn(str) {
   if (wantLogging) {
     dump("DBG-SERVER: " + str + "\n");
