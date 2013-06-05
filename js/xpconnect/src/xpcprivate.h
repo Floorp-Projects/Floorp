@@ -1173,15 +1173,6 @@ private:
     XPCCallContext(const XPCCallContext& r); // not implemented
     XPCCallContext& operator= (const XPCCallContext& r); // not implemented
 
-    void Init(XPCContext::LangType callerLanguage,
-              JSBool callBeginRequest,
-              JS::HandleObject obj,
-              JS::HandleObject funobj,
-              JS::HandleId name,
-              unsigned argc,
-              jsval *argv,
-              jsval *rval);
-
     XPCWrappedNative* UnwrapThisIfAllowed(JS::HandleObject obj, JS::HandleObject fun,
                                           unsigned argc);
 

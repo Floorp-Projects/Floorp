@@ -16,6 +16,8 @@ using namespace mozilla;
 using namespace xpc;
 using namespace JS;
 
+#define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
+
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSContext* cx       /* = GetDefaultJSContext() */,
                                HandleObject obj    /* = nullptr               */,
@@ -37,42 +39,9 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mName(cx)
 {
     MOZ_ASSERT(cx);
-    Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj, name,
-         argc, argv, rval);
-}
+    bool callBeginRequest = callerLanguage == NATIVE_CALLER;
 
-#define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
-
-// static
-JSContext *
-XPCCallContext::GetDefaultJSContext()
-{
-    // This is slightly questionable. If called without an explicit
-    // JSContext (generally a call to a wrappedJS) we will use the JSContext
-    // on the top of the JSContext stack - if there is one - *before*
-    // falling back on the safe JSContext.
-    // This is good AND bad because it makes calls from JS -> native -> JS
-    // have JS stack 'continuity' for purposes of stack traces etc.
-    // Note: this *is* what the pre-XPCCallContext xpconnect did too.
-
-    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-    JSContext *topJSContext = stack->Peek();
-
-    return topJSContext ? topJSContext : stack->GetSafeJSContext();
-}
-
-void
-XPCCallContext::Init(XPCContext::LangType callerLanguage,
-                     JSBool callBeginRequest,
-                     HandleObject obj,
-                     HandleObject funobj,
-                     HandleId name,
-                     unsigned argc,
-                     jsval *argv,
-                     jsval *rval)
-{
     NS_ASSERTION(mJSContext, "No JSContext supplied to XPCCallContext");
-
     if (!mXPC)
         return;
 
@@ -158,6 +127,24 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
         SetArgsAndResultPtr(argc, argv, rval);
 
     CHECK_STATE(HAVE_OBJECT);
+}
+
+// static
+JSContext *
+XPCCallContext::GetDefaultJSContext()
+{
+    // This is slightly questionable. If called without an explicit
+    // JSContext (generally a call to a wrappedJS) we will use the JSContext
+    // on the top of the JSContext stack - if there is one - *before*
+    // falling back on the safe JSContext.
+    // This is good AND bad because it makes calls from JS -> native -> JS
+    // have JS stack 'continuity' for purposes of stack traces etc.
+    // Note: this *is* what the pre-XPCCallContext xpconnect did too.
+
+    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
+    JSContext *topJSContext = stack->Peek();
+
+    return topJSContext ? topJSContext : stack->GetSafeJSContext();
 }
 
 void
