@@ -1134,10 +1134,15 @@ protected:
     int mDrawCallsSinceLastFlush;
 
     int mAlreadyGeneratedWarnings;
+    int mMaxWarnings;
     bool mAlreadyWarnedAboutFakeVertexAttrib0;
 
     bool ShouldGenerateWarnings() const {
-        return mAlreadyGeneratedWarnings < 32;
+        if (mMaxWarnings == -1) {
+            return true;
+        }
+
+        return mAlreadyGeneratedWarnings < mMaxWarnings;
     }
 
     uint64_t mLastUseIndex;
