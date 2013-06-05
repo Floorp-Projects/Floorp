@@ -40,33 +40,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
          INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
 }
 
-XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
-                               JSContext* cx,
-                               JSBool callBeginRequest,
-                               HandleObject obj,
-                               HandleObject flattenedJSObject,
-                               XPCWrappedNative* wrapper,
-                               XPCWrappedNativeTearOff* tearOff)
-    :   mState(INIT_FAILED),
-        mXPC(nsXPConnect::XPConnect()),
-        mXPCContext(nullptr),
-        mJSContext(cx),
-        mContextPopRequired(false),
-        mDestroyJSContextInDestructor(false),
-        mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(cx, flattenedJSObject),
-        mWrapper(wrapper),
-        mTearOff(tearOff),
-        mName(cx)
-{
-    MOZ_ASSERT(cx);
-    Init(callerLanguage, callBeginRequest, obj, NullPtr(),
-         WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOIDHANDLE, NO_ARGS,
-         nullptr, nullptr);
-}
-
 #define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
-
 
 // static
 JSContext *
@@ -437,18 +411,6 @@ XPCCallContext::GetLanguage(uint16_t *aResult)
   *aResult = GetCallerLanguage();
   return NS_OK;
 }
-
-#ifdef DEBUG
-// static
-void
-XPCLazyCallContext::AssertContextIsTopOfStack(JSContext* cx)
-{
-    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-
-    JSContext *topJSContext = stack->Peek();
-    NS_ASSERTION(cx == topJSContext, "wrong context on XPCJSContextStack!");
-}
-#endif
 
 XPCWrappedNative*
 XPCCallContext::UnwrapThisIfAllowed(HandleObject obj, HandleObject fun, unsigned argc)
