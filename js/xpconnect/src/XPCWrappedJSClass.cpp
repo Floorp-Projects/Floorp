@@ -1327,7 +1327,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
             }
 
             if (isArray) {
-                XPCLazyCallContext lccx(ccx);
                 if (!XPCConvert::NativeArray2JS(val.address(),
                                                 (const void**)&pv->val,
                                                 datum_type, &param_iid,
