@@ -27,11 +27,7 @@ public:
   { }
 
   virtual ~FileInfo()
-  {
-#ifdef DEBUG
-    NS_ASSERTION(NS_IsMainThread(), "File info destroyed on wrong thread!");
-#endif
-  }
+  { }
 
   static
   FileInfo* Create(FileManager* aFileManager, int64_t aId);

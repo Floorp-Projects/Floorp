@@ -334,7 +334,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
                                     uint64_t* aVersion,
                                     ObjectStoreInfoArray& aObjectStores)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnIOThread();
   NS_ASSERTION(aConnection, "Null pointer!");
 
   aObjectStores.Clear();
