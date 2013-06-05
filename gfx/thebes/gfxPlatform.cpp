@@ -831,20 +831,21 @@ RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForFBO(unsigned int aFBOID, mozilla::gl::GLContext* aGLContext, const IntSize& aSize, SurfaceFormat aFormat)
 {
   NS_ASSERTION(mPreferredCanvasBackend, "No backend.");
-  RefPtr<DrawTarget> target = nullptr;
 #ifdef USE_SKIA_GPU
   if (mPreferredCanvasBackend == BACKEND_SKIA) {
     static uint8_t sGrContextKey;
-    GrGLInterface* grInterface = CreateGrInterfaceFromGLContext(aGLContext);
-    SkRefPtr<GrContext> ctx = GrContext::Create(kOpenGL_Shaders_GrEngine, (GrPlatform3DContext)grInterface);
+    GrContext* ctx = reinterpret_cast<GrContext*>(aGLContext->GetUserData(&sGrContextKey));
+    if (!ctx) {
+      GrGLInterface* grInterface = CreateGrInterfaceFromGLContext(aGLContext);
+      ctx = GrContext::Create(kOpenGL_Shaders_GrEngine, (GrPlatform3DContext)grInterface);
+      aGLContext->SetUserData(&sGrContextKey, ctx);
+    }
 
-    // Unfortunately Factory can't depend on GLContext, so it needs to be passed a
-    // GrContext instead. 
-    target = Factory::CreateSkiaDrawTargetForFBO(aFBOID, ctx, aSize, aFormat);
-    // Finally, lose our ref to ctx as we are passing ownership to DrawTargetSkia
+    // Unfortunately Factory can't depend on GLContext, so it needs to be passed a GrContext instead
+    return Factory::CreateSkiaDrawTargetForFBO(aFBOID, ctx, aSize, aFormat);
   }
 #endif
-  return target;
+  return nullptr;
 }
 
 /* static */ BackendType
