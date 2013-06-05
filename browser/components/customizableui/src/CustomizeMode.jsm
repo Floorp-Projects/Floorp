@@ -129,6 +129,7 @@ CustomizeMode.prototype = {
     this._wrapToolbarItems();
     this.populatePalette();
 
+    window.PanelUI.mainView.addEventListener("contextmenu", this, true);
     this.visiblePalette.addEventListener("dragstart", this, true);
     this.visiblePalette.addEventListener("dragover", this, true);
     this.visiblePalette.addEventListener("dragexit", this, true);
@@ -161,6 +162,7 @@ CustomizeMode.prototype = {
     this._removePanelCustomizationPlaceholders();
     this.depopulatePalette();
 
+    this.window.PanelUI.mainView.removeEventListener("contextmenu", this, true);
     this.visiblePalette.removeEventListener("dragstart", this, true);
     this.visiblePalette.removeEventListener("dragover", this, true);
     this.visiblePalette.removeEventListener("dragexit", this, true);
@@ -247,6 +249,14 @@ CustomizeMode.prototype = {
     let evt = this.document.createEvent("CustomEvent");
     evt.initCustomEvent(aEventType, true, true, {changed: this._changed});
     let result = this.window.gNavToolbox.dispatchEvent(evt);
+  },
+
+  addToToolbar: function(aNode) {
+    CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_NAVBAR);
+  },
+
+  removeFromPanel: function(aNode) {
+    CustomizableUI.removeWidgetFromArea(aNode.id);
   },
 
   populatePalette: function() {
@@ -503,6 +513,10 @@ CustomizeMode.prototype = {
 
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
+      case "contextmenu":
+        aEvent.preventDefault();
+        aEvent.stopPropagation();
+        break;
       case "dragstart":
         this._onDragStart(aEvent);
         break;
