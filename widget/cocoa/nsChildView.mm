@@ -4600,6 +4600,10 @@ static int32_t RoundUp(double aDouble)
     mouseEvent->buttons |= nsMouseEvent::e5thButtonFlag;
   }
 
+  if ([aMouseEvent subtype] == NSTabletPointEventSubtype) {
+    mouseEvent->pressure = [aMouseEvent pressure];
+  }
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
