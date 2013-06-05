@@ -2633,6 +2633,21 @@ CodeGenerator::visitNewSlots(LNewSlots *lir)
     return true;
 }
 
+bool CodeGenerator::visitAtan2D(LAtan2D *lir)
+{
+    Register temp = ToRegister(lir->temp());
+    FloatRegister y = ToFloatRegister(lir->y());
+    FloatRegister x = ToFloatRegister(lir->x());
+
+    masm.setupUnalignedABICall(2, temp);
+    masm.passABIArg(y);
+    masm.passABIArg(x);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaAtan2), MacroAssembler::DOUBLE);
+
+    JS_ASSERT(ToFloatRegister(lir->output()) == ReturnFloatReg);
+    return true;
+}
+
 bool
 CodeGenerator::visitNewParallelArray(LNewParallelArray *lir)
 {
