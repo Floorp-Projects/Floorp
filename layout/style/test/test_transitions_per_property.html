@@ -30,13 +30,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
 <div style="height: 50px; width: 300px; font-size: 20px; line-height: 20px">
 
 <div id="display">
-
 </div>
+
+<div id="transformTest" style="height:100px; width:200px; background-color:blue;">
+</div>
+
 </div>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 435441 **/
+
+SimpleTest.waitForExplicitFinish();
 
 function has_num(str)
 {
@@ -255,7 +260,10 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 }
 
 var div = document.getElementById("display");
+var transformDiv = document.getElementById("transformTest");
 var cs = getComputedStyle(div, "");
+var transformCs = getComputedStyle(transformDiv, "");
+var winUtils = SpecialPowers.getDOMWindowUtils(window);
 
 function computeMatrix(v) {
   div.style.setProperty("transform", v, "");
@@ -268,6 +276,7 @@ is(c_rot_15.substring(0,6), "matrix", "should compute to matrix value");
 var c_rot_60 = computeMatrix("rotate(60deg)");
 is(c_rot_60.substring(0,6), "matrix", "should compute to matrix value");
 
+var transformTestIndex = 0;
 var transformTests = [
   // rotate
   { start: 'none', end: 'rotate(60deg)',
@@ -361,7 +370,8 @@ var transformTests = [
   { start: 'translateY(-40%)', end: 'none',
     expected_uncomputed: 'translateY(-30%)',
     expected: 'matrix(1, 0, 0, 1, 0, -15)',
-    round_error_ok: true },
+    round_error_ok: true,
+    big_omta_round_error: true },
   { start: 'none', end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
     expected_uncomputed: 'rotate(22.5deg) translate(5%, 5%) rotate(-22.5deg)',
     round_error_ok: true },
@@ -384,10 +394,12 @@ var transformTests = [
   { start: 'translateX(20%)', /* 60px */
     end: 'translateX(calc(10% + 1em))', /* 30px + 20px = 50px */
     expected_uncomputed: 'translateX(calc(17.5% + 0.25em))',
-    expected: 'matrix(1, 0, 0, 1, 57.5, 0)' },
+    expected: 'matrix(1, 0, 0, 1, 57.5, 0)',
+    big_omta_round_error: true },
   { start: 'translate(calc(0.75 * 3em + 1.5 * 10%), calc(0.5 * 5em + 0.5 * 8%))', /* 90px, 52px */
     end: 'rotate(90deg) translateY(20%) rotate(90deg) translateY(calc(10% + 0.5em)) rotate(180deg)', /* -10px, -15px */
-    expected: 'matrix(1, 0, 0, 1, 65, 35.25)' },
+    expected: 'matrix(1, 0, 0, 1, 65, 35.25)',
+    big_omta_round_error: true },
 
   // scale
   { start: 'scale(2)', end: 'none',
@@ -1670,6 +1682,62 @@ function test_transform_transition(prop) {
   }
 
   // FIXME: should perhaps test that no clamping occurs
+
+  // These tests check the computed value 2/3 of the way through the transition
+  transformDiv.style.setProperty("transition-duration", "300s", "");
+  transformDiv.style.setProperty("transition-timing-function", "linear", "");
+  window.requestAnimationFrame(nextAsyncTransformTest);
+}
+
+function nextAsyncTransformTest()
+{
+  var test = transformTests[transformTestIndex];
+
+  if (transformTestIndex >= transformTests.length) {
+    transformDiv.style.removeProperty("transition");
+    SimpleTest.finish();
+    return;
+  }
+
+  if (test.requires_3d && !transform3D_enabled()) {
+    transformTestIndex++;
+    window.requestAnimationFrame(nextAsyncTransformTest);
+    return;
+  }
+
+  transformDiv.style.setProperty("transition-property", "none", "");
+  transformDiv.style.setProperty("transform", test.start, "");
+  transformCs.getPropertyValue("transform");
+  transformDiv.style.setProperty("transition-property", "transform", "");
+  transformDiv.style.setProperty("transform", test.end, "");
+  transformCs.getPropertyValue("transform");
+
+  window.requestAnimationFrame(checkAsyncTransformTest);
+}
+
+function checkAsyncTransformTest() {
+  function s(matrix) {
+    return matrix.replace(/^\w*\(/, '').replace(')','').split(/\s*,\s*/);
+  }
+  winUtils.advanceTimeAndRefresh(200000);
+  var test = transformTests[transformTestIndex];
+  var async_transform = winUtils.getOMTAOrComputedStyle(transformDiv, "transform");
+  var computed_transform = transformCs.getPropertyValue("transform");
+  var async_split = s(async_transform);
+  var cs_split = s(computed_transform);
+  var pass = true;
+  for (var j = 0; j < 16; ++j) {
+    var epsilon = test.big_omta_round_error ? 0.1 : 0.0001;
+    if (Math.abs(Number(async_split[j]) - Number(cs_split[j])) > epsilon) {
+      pass = false;
+    }
+  }
+  ok(pass,
+     "interpolation of transitions: " + test.start + " to " + test.end +
+     ": OMTA - " + async_transform + ", computed style - " + computed_transform);
+  transformTestIndex++;
+  winUtils.restoreNormalRefresh();
+  window.requestAnimationFrame(nextAsyncTransformTest);
 }
 
 </script>
