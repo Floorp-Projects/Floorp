@@ -83,3 +83,8 @@
 % easing function and duration for animations match winJS showPanel method
 %define metro_animation_duration 550ms
 %define metro_animation_easing cubic-bezier(0.1, 0.9, 0.2, 1)
+
+% this is meant to be slower than the system keyboard such
+% that the bars slide up after the keyboard is in place.
+%define appbar_keyboard_slideup_duration 750ms
+
