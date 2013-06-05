@@ -82,6 +82,7 @@ webidl_files = \
   FileReader.webidl \
   FileReaderSync.webidl \
   FileRequest.webidl \
+  FocusEvent.webidl \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
