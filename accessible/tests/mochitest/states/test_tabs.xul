@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tabbox hierarchy tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTest()
+    {
+      testStates("tab1", 0, EXT_STATE_PINNED);
+      testStates("tab2", 0, 0, 0, EXT_STATE_PINNED);
+      testStates("tab3", 0, 0, 0, EXT_STATE_PINNED);
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=577727"
+         title="Make pinned tabs distinguishable from other tabs for accessibility">
+        Mozilla Bug 577727
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tabbox>
+        <tabs id="tabs">
+          <tab id="tab1" label="tab1" pinned="true"/>
+          <tab id="tab2" label="tab2" pinned="false"/>
+          <tab id="tab3" label="tab3"/>
+        </tabs>
+        <tabpanels id="tabpanels">
+          <tabpanel/>
+          <tabpanel/>
+        </tabpanels>
+      </tabbox>
+    </vbox>
+  </hbox>
+
+</window>
+

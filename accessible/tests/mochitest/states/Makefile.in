@@ -30,6 +30,7 @@ MOCHITEST_A11Y_FILES =\
 		test_selects.html \
 		test_stale.html \
 		test_textbox.xul \
+		test_tabs.xul \
 		test_tree.xul \
 		test_visibility.html \
 		test_visibility.xul \
