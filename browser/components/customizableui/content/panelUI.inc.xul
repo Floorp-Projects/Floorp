@@ -9,7 +9,7 @@
        consumeoutsideclicks="true"
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
-    <panelview id="PanelUI-mainView" flex="1">
+    <panelview id="PanelUI-mainView" flex="1" contextmenu="customizationPanelContextMenu">
       <vbox id="PanelUI-contents" type="grid"/>
 
       <vbox id="PanelUI-mainView-spring" flex="1"/>
@@ -45,6 +45,26 @@
       <vbox id="PanelUI-helpItems"/>
     </panelview>
   </panelmultiview>
+  <popupset id="customizationContextMenus">
+    <menupopup id="customizationContextMenu">
+      <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+                accesskey="&customizeMenu.addToToolbar.accesskey;"
+                label="&customizeMenu.addToToolbar.label;"/>
+      <menuitem oncommand="gCustomizeMode.removeFromPanel(document.popupNode)"
+                accesskey="&customizeMenu.removeFromMenu.accesskey;"
+                label="&customizeMenu.removeFromMenu.label;"/>
+      <menuseparator/>
+      <menuitem command="cmd_CustomizeToolbars"
+                accesskey="&viewCustomizeToolbar.accesskey;"
+                label="&viewCustomizeToolbar.label;"/>
+    </menupopup>
+
+    <menupopup id="customizationPanelContextMenu">
+      <menuitem command="cmd_CustomizeToolbars"
+                accesskey="&customizeMenu.addMoreItems.accesskey;"
+                label="&customizeMenu.addMoreItems.label;"/>
+    </menupopup>
+  </popupset>
 </panel>
 
 <panel id="widget-overflow"
