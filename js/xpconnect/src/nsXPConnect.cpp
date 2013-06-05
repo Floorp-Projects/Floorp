@@ -1117,7 +1117,7 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
-    if (!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, helper, aIID,
+    if (!XPCConvert::NativeInterface2JSObject(aVal, aHolder, helper, aIID,
                                               nullptr, aAllowWrapping, &rv))
         return rv;
 
@@ -1200,7 +1200,7 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     JSAutoCompartment ac(ccx, aJSObj);
 
     nsresult rv = NS_ERROR_UNEXPECTED;
-    if (!XPCConvert::JSObject2NativeInterface(ccx, result, aJSObj,
+    if (!XPCConvert::JSObject2NativeInterface(result, aJSObj,
                                               &aIID, nullptr, &rv))
         return rv;
     return NS_OK;
@@ -1246,7 +1246,7 @@ nsXPConnect::WrapJSAggregatedToNative(nsISupports *aOuter,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     nsresult rv;
-    if (!XPCConvert::JSObject2NativeInterface(ccx, result, aJSObj,
+    if (!XPCConvert::JSObject2NativeInterface(result, aJSObj,
                                               &aIID, aOuter, &rv))
         return rv;
     return NS_OK;
@@ -1771,7 +1771,7 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, ctx));
 
     nsresult rv = NS_OK;
-    if (!XPCVariant::VariantDataToJS(lccx, value, &rv, _retval)) {
+    if (!XPCVariant::VariantDataToJS(value, &rv, _retval)) {
         if (NS_FAILED(rv))
             return rv;
 

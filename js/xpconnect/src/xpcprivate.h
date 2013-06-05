@@ -3199,19 +3199,11 @@ public:
      * @param pErr [out] relevant error code, if any.
      */
 
-    static JSBool NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
-                                const nsXPTType& type, const nsID* iid,
-                                nsresult* pErr)
-    {
-        XPCLazyCallContext lccx(ccx);
-        return NativeData2JS(lccx, d, s, type, iid, pErr);
-    }
-
-    static JSBool NativeData2JS(XPCLazyCallContext& lccx, jsval* d,
+    static JSBool NativeData2JS(jsval* d,
                                 const void* s, const nsXPTType& type,
                                 const nsID* iid, nsresult* pErr);
 
-    static JSBool JSData2Native(JSContext* cx, void* d, JS::HandleValue s,
+    static JSBool JSData2Native(void* d, JS::HandleValue s,
                                 const nsXPTType& type,
                                 JSBool useAllocator, const nsID* iid,
                                 nsresult* pErr);
@@ -3232,21 +3224,7 @@ public:
      * @param src_is_identity optional performance hint. Set to true only
      *                        if src is the identity pointer.
      */
-    static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
-                                           jsval* d,
-                                           nsIXPConnectJSObjectHolder** dest,
-                                           xpcObjectHelper& aHelper,
-                                           const nsID* iid,
-                                           XPCNativeInterface** Interface,
-                                           bool allowNativeWrapper,
-                                           nsresult* pErr)
-    {
-        XPCLazyCallContext lccx(ccx);
-        return NativeInterface2JSObject(lccx, d, dest, aHelper, iid, Interface,
-                                        allowNativeWrapper, pErr);
-    }
-    static JSBool NativeInterface2JSObject(XPCLazyCallContext& lccx,
-                                           jsval* d,
+    static JSBool NativeInterface2JSObject(jsval* d,
                                            nsIXPConnectJSObjectHolder** dest,
                                            xpcObjectHelper& aHelper,
                                            const nsID* iid,
@@ -3254,12 +3232,10 @@ public:
                                            bool allowNativeWrapper,
                                            nsresult* pErr);
 
-    static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
-                                                 void** dest, JSObject* src,
+    static JSBool GetNativeInterfaceFromJSObject(void** dest, JSObject* src,
                                                  const nsID* iid,
                                                  nsresult* pErr);
-    static JSBool JSObject2NativeInterface(JSContext* cx,
-                                           void** dest, JS::HandleObject src,
+    static JSBool JSObject2NativeInterface(void** dest, JS::HandleObject src,
                                            const nsID* iid,
                                            nsISupports* aOuter,
                                            nsresult* pErr);
@@ -3268,7 +3244,6 @@ public:
     /**
      * Convert a native array into a jsval.
      *
-     * @param ccx the context for the whole procedure
      * @param d [out] the resulting jsval
      * @param s the native array we're working with
      * @param type the type of objects in the array
@@ -3277,12 +3252,11 @@ public:
      * @param scope the default scope to put on the new JSObjects' parent chain
      * @param pErr [out] relevant error code, if any.
      */
-    static JSBool NativeArray2JS(XPCLazyCallContext& ccx,
-                                 jsval* d, const void** s,
+    static JSBool NativeArray2JS(jsval* d, const void** s,
                                  const nsXPTType& type, const nsID* iid,
                                  uint32_t count, nsresult* pErr);
 
-    static JSBool JSArray2Native(JSContext* cx, void** d, jsval s,
+    static JSBool JSArray2Native(void** d, jsval s,
                                  uint32_t count, const nsXPTType& type,
                                  const nsID* iid, nsresult* pErr);
 
@@ -3292,24 +3266,21 @@ public:
                                       const nsXPTType& type,
                                       nsresult* pErr);
 
-    static JSBool NativeStringWithSize2JS(JSContext* cx,
-                                          jsval* d, const void* s,
+    static JSBool NativeStringWithSize2JS(jsval* d, const void* s,
                                           const nsXPTType& type,
                                           uint32_t count,
                                           nsresult* pErr);
 
-    static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
+    static JSBool JSStringWithSize2Native(void* d, jsval s,
                                           uint32_t count, const nsXPTType& type,
                                           nsresult* pErr);
 
-    static nsresult JSValToXPCException(XPCCallContext& ccx,
-                                        jsval s,
+    static nsresult JSValToXPCException(jsval s,
                                         const char* ifaceName,
                                         const char* methodName,
                                         nsIException** exception);
 
-    static nsresult JSErrorToXPCException(XPCCallContext& ccx,
-                                          const char* message,
+    static nsresult JSErrorToXPCException(const char* message,
                                           const char* ifaceName,
                                           const char* methodName,
                                           const JSErrorReport* report,
@@ -3950,8 +3921,7 @@ public:
      * @param pErr [out] relevant error code, if any.
      * @param pJSVal [out] the resulting jsval.
      */
-    static JSBool VariantDataToJS(XPCLazyCallContext& lccx,
-                                  nsIVariant* variant,
+    static JSBool VariantDataToJS(nsIVariant* variant,
                                   nsresult* pErr, jsval* pJSVal);
 
     bool IsPurple()
