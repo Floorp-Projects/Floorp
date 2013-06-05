@@ -382,6 +382,8 @@ var FullZoom = {
    *                            when done.
    */
   _applySettingToPref: function FullZoom__applySettingToPref(suppressZoomChange, callback) {
+    Services.obs.notifyObservers(null, "browser-fullZoom:zoomChange", "");
+
     if (!this.siteSpecific ||
         gInPrintPreviewMode ||
         content.document.mozSyntheticDocument) {
@@ -410,6 +412,8 @@ var FullZoom = {
    * @param callback  Optional.  If given, it's asynchronously called when done.
    */
   _removePref: function FullZoom__removePref(callback) {
+    Services.obs.notifyObservers(null, "browser-fullZoom:zoomReset", "");
+
     if (content.document.mozSyntheticDocument) {
       this._executeSoon(callback);
       return;
