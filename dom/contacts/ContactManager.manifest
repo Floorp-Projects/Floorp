@@ -20,6 +20,6 @@ component {72a5ee28-81d8-4af8-90b3-ae935396cc66} ContactManager.js
 contract @mozilla.org/contact;1 {72a5ee28-81d8-4af8-90b3-ae935396cc66}
 category JavaScript-global-constructor mozContact @mozilla.org/contact;1
 
-component {7bfb6481-f946-4254-afc5-d7fe9f5c45a3} ContactManager.js
-contract @mozilla.org/contactManager;1 {7bfb6481-f946-4254-afc5-d7fe9f5c45a3}
+component {8beb3a66-d70a-4111-b216-b8e995ad3aff} ContactManager.js
+contract @mozilla.org/contactManager;1 {8beb3a66-d70a-4111-b216-b8e995ad3aff}
 category JavaScript-navigator-property mozContacts @mozilla.org/contactManager;1

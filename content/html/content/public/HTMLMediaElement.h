@@ -502,8 +502,6 @@ public:
 
   JSObject* MozGetMetadata(JSContext* aCx, ErrorResult& aRv);
 
-  void MozLoadFrom(HTMLMediaElement& aOther, ErrorResult& aRv);
-
   double MozFragmentEnd();
 
   // XPCOM GetMozAudioChannelType() is OK

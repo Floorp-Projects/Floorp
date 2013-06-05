@@ -15,7 +15,7 @@
 
 #include "builtin/Eval.h"
 
-#include "jsinterpinlines.h"
+#include "vm/Interpreter-inl.h"
 
 namespace js {
 namespace ion {
@@ -648,7 +648,7 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Reg
     Label skipBarrier;
     Label isTenured;
     masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.start()), &isTenured);
-    masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.end()), &skipBarrier);
+    masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.heapEnd()), &skipBarrier);
     masm.bind(&isTenured);
 
     // void PostWriteBarrier(JSRuntime *rt, JSObject *obj);

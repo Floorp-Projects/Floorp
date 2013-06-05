@@ -2010,7 +2010,7 @@ protected:
   bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aClipRect,
                                   gfxRect* aDestRect);
-  nsRect GetBoundsInternal();
+  nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder);
 
   void PaintInternal(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
@@ -2030,8 +2030,6 @@ protected:
   bool mIsThemed;
   /* true if this item represents the bottom-most background layer */
   bool mIsBottommostLayer;
-  /* true if this image is known to be animated */
-  bool mIsAnimated;
 };
 
 class nsDisplayBackgroundColor : public nsDisplayItem

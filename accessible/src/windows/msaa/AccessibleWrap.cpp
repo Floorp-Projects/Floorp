@@ -919,6 +919,9 @@ AccessibleWrap::accNavigate(
     case NAVRELATION_DESCRIPTION_FOR:
       xpRelation = nsIAccessibleRelation::RELATION_DESCRIPTION_FOR;
       break;
+    case NAVRELATION_NODE_PARENT_OF:
+      xpRelation = nsIAccessibleRelation::RELATION_NODE_PARENT_OF;
+      break;
 
     default:
       return E_INVALIDARG;
@@ -1251,6 +1254,8 @@ AccessibleWrap::get_states(AccessibleStates *aStates)
     *aStates |= IA2_STATE_TRANSIENT;
   if (state & states::VERTICAL)
     *aStates |= IA2_STATE_VERTICAL;
+  if (state & states::CHECKED)
+    *aStates |= IA2_STATE_CHECKABLE;
 
   return S_OK;
 

@@ -17,7 +17,7 @@ ifeq ($(OS_ARCH),WINNT)
 VISIBILITY_FLAGS	=
 endif
 
-CSRCS		= \
+DISABLED_CSRCS		= \
 		jcomapi.c \
 		jdapimin.c \
 		jdapistd.c \
@@ -52,7 +52,7 @@ CSRCS		= \
 		$(NULL)
 
 # These files enable support for writing JPEGs
-CSRCS		+= \
+DISABLED_CSRCS		+= \
 		jcapimin.c \
 		jcapistd.c \
 		jccoefct.c \
@@ -81,16 +81,16 @@ endif
 
 # No SIMD support?
 ifeq (,$(LIBJPEG_TURBO_X86_ASM)$(LIBJPEG_TURBO_X64_ASM)$(LIBJPEG_TURBO_ARM_ASM))
-  CSRCS += jsimd_none.c
+  DISABLED_CSRCS += jsimd_none.c
 endif
 
 ifeq (1,$(LIBJPEG_TURBO_ARM_ASM))
-  CSRCS += simd/jsimd_arm.c
+  DISABLED_CSRCS += simd/jsimd_arm.c
   SSRCS += simd/jsimd_arm_neon.S
 endif
 
 ifeq (1,$(LIBJPEG_TURBO_X64_ASM))
-  CSRCS   += simd/jsimd_x86_64.c
+  DISABLED_CSRCS   += simd/jsimd_x86_64.c
   DISABLED_ASFILES += \
 	simd/jccolss2-64.asm \
 	simd/jcgrass2-64.asm \
@@ -111,7 +111,7 @@ ifeq (1,$(LIBJPEG_TURBO_X64_ASM))
 endif
 
 ifeq (1,$(LIBJPEG_TURBO_X86_ASM))
-  CSRCS   +=simd/jsimd_i386.c
+  DISABLED_CSRCS   +=simd/jsimd_i386.c
   DISABLED_ASFILES += \
 	simd/jccolmmx.asm \
 	simd/jccolss2.asm \

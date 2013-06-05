@@ -27,18 +27,15 @@ function test()
           is(aResponse.pong, "pong", "Actor should respond to requests.");
 
           // Make sure that lazily-created actors are created only once.
-          let connections = Object.keys(DebuggerServer._connections);
-          info(connections.length + " connections are established.");
-          let connPrefix = connections[connections.length - 1];
-          ok(DebuggerServer._connections[connPrefix],
-             connPrefix + " is a valid connection.");
+          let conn = transport._serverConnection;
           // First we look for the pool of global actors.
-          let extraPools = DebuggerServer._connections[connPrefix]._extraPools;
+          let extraPools = conn._extraPools;
+
           let globalPool;
           for (let pool of extraPools) {
             if (Object.keys(pool._actors).some(function(elem) {
               // Tab actors are in the global pool.
-              let re = new RegExp(connPrefix + "tab", "g");
+              let re = new RegExp(conn._prefix + "tab", "g");
               return elem.match(re) !== null;
             })) {
               globalPool = pool;
@@ -46,7 +43,7 @@ function test()
             }
           }
           // Then we look if the global pool contains only one test actor.
-          let actorPrefix = connPrefix + "testone";
+          let actorPrefix = conn._prefix + "testone";
           let actors = Object.keys(globalPool._actors).join();
           info("Global actors: " + actors);
           isnot(actors.indexOf(actorPrefix), -1, "The test actor exists in the pool.");

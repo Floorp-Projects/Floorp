@@ -228,6 +228,16 @@ static bool Launch()
 
   Log(L"Harness process id: %d", GetCurrentProcessId());
 
+  // If provided, validate the firefox path passed in.
+  int binLen = wcslen(kFirefoxExe);
+  if (sFirefoxPath.GetLength() && sFirefoxPath.Right(binLen) != kFirefoxExe) {
+    Log(L"firefoxpath is missing a valid bin name! Assuming '%s'.", kFirefoxExe);
+    if (sFirefoxPath.Right(1) != L"\\") {
+      sFirefoxPath += L"\\";
+    }
+    sFirefoxPath += kFirefoxExe;
+  }
+
   // Because we can't pass command line args, we store params in a
   // tests.ini file in dist/bin which the browser picks up on launch.
   CStringA testFilePath;
@@ -254,8 +264,18 @@ static bool Launch()
     *slash = '\0'; // no trailing slash
     testFilePath = path;
     testFilePath += "\\";
+    sFirefoxPath = testFilePath;
+    sFirefoxPath += kFirefoxExe;
     testFilePath += kMetroTestFile;
   }
+
+  // Make sure the firefox bin exists
+  if (GetFileAttributesW(sFirefoxPath) == INVALID_FILE_ATTRIBUTES) {
+    Fail(L"Invalid bin path: '%s'", sFirefoxPath);
+    return false;
+  }
+
+  Log(L"Using bin path: '%s'", sFirefoxPath);
 
   Log(L"Writing out tests.ini to: '%s'", CStringW(testFilePath));
   HANDLE hTestFile = CreateFileA(testFilePath, GENERIC_WRITE,
@@ -269,7 +289,13 @@ static bool Launch()
 
   DeleteTestFileHelper dtf(testFilePath);
 
-  CStringA asciiParams = sAppParams;
+  // nsAppRunner expects the first param to be the bin path, just like a
+  // normal startup. So prepend our bin path to our param string we write.
+  CStringA asciiParams = sFirefoxPath;
+  asciiParams += " ";
+  asciiParams += sAppParams;
+  asciiParams.Trim();
+  Log(L"Browser command line args: '%s'", CString(asciiParams));
   if (!WriteFile(hTestFile, asciiParams, asciiParams.GetLength(), NULL, 0)) {
     CloseHandle(hTestFile);
     Fail(L"WriteFile errorno=%d", GetLastError());
@@ -350,12 +376,7 @@ int wmain(int argc, WCHAR* argv[])
     sAppParams.Append(L" ");
   }
   sAppParams.Trim();
-  if (sFirefoxPath.GetLength()) {
-    Log(L"firefoxpath: '%s'", sFirefoxPath);
-  }
-  Log(L"args: '%s'", sAppParams);
   Launch();
-
   CoUninitialize();
   return 0;
 }

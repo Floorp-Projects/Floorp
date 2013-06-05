@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<title>Test for Bug 876831</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=876831">Mozilla Bug 876831</a>
+<p id="display"</p>
+
+<!--
+  Test that the frame tree will be reflowed after a DOM mutation
+  and just before an SVG DOM method does its work.
+  -->
+
+<svg>
+  <text>ab</text>
+</svg>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+var text = document.querySelector("text");
+
+var length = text.getComputedTextLength();
+ok(length > 0, "text.getComputedTextLength() > 0");
+
+text.firstChild.nodeValue += "cd";
+ok(text.getComputedTextLength() > length, "text.getComputedTextLength() changes directly after DOM mutation");
+
+text.removeChild(text.firstChild);
+is(text.getComputedTextLength(), 0, "text.getComputedTextLength() == 0 after removing child");
+</script>
+</pre>

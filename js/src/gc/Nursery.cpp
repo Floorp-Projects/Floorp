@@ -9,6 +9,7 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jsutil.h"
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
@@ -37,10 +38,13 @@ js::Nursery::enable()
         return false;
 
     JSRuntime *rt = runtime();
-    rt->gcNurseryStart_ = position_ = uintptr_t(heap);
-    rt->gcNurseryEnd_ = start() + NurseryUsableSize;
-    asLayout().runtime = rt;
-    JS_POISON(asLayout().data, FreshNursery, sizeof(asLayout().data));
+    rt->gcNurseryStart_ = uintptr_t(heap);
+    rt->gcNurseryEnd_ = chunk(LastNurseryChunk).end();
+    numActiveChunks_ = 1;
+    setCurrentChunk(0);
+    JS_POISON(heap, FreshNursery, NurserySize);
+    for (int i = 0; i < NumNurseryChunks; ++i)
+        chunk(i).runtime = rt;
 
     JS_ASSERT(isEnabled());
     return true;
@@ -55,7 +59,8 @@ js::Nursery::disable()
     hugeSlots.finish();
     JS_ASSERT(start());
     UnmapPages((void *)start(), NurserySize);
-    runtime()->gcNurseryStart_ = runtime()->gcNurseryEnd_ = position_ = 0;
+    runtime()->gcNurseryStart_ = runtime()->gcNurseryEnd_ = position_ = currentEnd_ = 0;
+    currentChunk_ = numActiveChunks_ = 0;
 }
 
 js::Nursery::~Nursery()
@@ -70,8 +75,11 @@ js::Nursery::allocate(size_t size)
     JS_ASSERT(position() % ThingAlignment == 0);
     JS_ASSERT(!runtime()->isHeapBusy());
 
-    if (position() + size > end())
-        return NULL;
+    if (position() + size > currentEnd()) {
+        if (currentChunk_ + 1 == numActiveChunks_)
+            return NULL;
+        setCurrentChunk(currentChunk_ + 1);
+    }
 
     void *thing = (void *)position();
     position_ = position() + size;
@@ -172,6 +180,9 @@ class MinorCollectionTracer : public JSTracer
     Nursery *nursery;
     AutoTraceSession session;
 
+    /* Amount of data moved to the tenured generation during collection. */
+    size_t tenuredSize;
+
     /*
      * This list is threaded through the Nursery using the space from already
      * moved things. The list is used to fix up the moved things and to find
@@ -195,6 +206,7 @@ class MinorCollectionTracer : public JSTracer
       : JSTracer(),
         nursery(nursery),
         session(rt, MinorCollecting),
+        tenuredSize(0),
         head(NULL),
         tail(&head),
         savedNeedsBarrier(rt->needsBarrier()),
@@ -270,7 +282,7 @@ js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
     if (!dst)
         MOZ_CRASH();
 
-    moveObjectToTenured(dst, src, dstKind);
+    trc->tenuredSize += moveObjectToTenured(dst, src, dstKind);
 
     RelocationOverlay *overlay = reinterpret_cast<RelocationOverlay *>(src);
     overlay->forwardTo(dst);
@@ -279,10 +291,11 @@ js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
     return static_cast<void *>(dst);
 }
 
-void
+size_t
 js::Nursery::moveObjectToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
 {
     size_t srcSize = Arena::thingSize(dstKind);
+    size_t tenuredSize = srcSize;
 
     /*
      * Arrays do not necessarily have the same AllocKind between src and dst.
@@ -293,37 +306,40 @@ js::Nursery::moveObjectToTenured(JSObject *dst, JSObject *src, AllocKind dstKind
         srcSize = sizeof(ObjectImpl);
 
     js_memcpy(dst, src, srcSize);
-    moveSlotsToTenured(dst, src, dstKind);
-    moveElementsToTenured(dst, src, dstKind);
+    tenuredSize += moveSlotsToTenured(dst, src, dstKind);
+    tenuredSize += moveElementsToTenured(dst, src, dstKind);
 
     /* The shape's list head may point into the old object. */
     if (&src->shape_ == dst->shape_->listp)
         dst->shape_->listp = &dst->shape_;
+
+    return tenuredSize;
 }
 
-void
+size_t
 js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
 {
     /* Fixed slots have already been copied over. */
     if (!src->hasDynamicSlots())
-        return;
+        return 0;
 
     if (!isInside(src->slots)) {
         hugeSlots.remove(src->slots);
-        return;
+        return 0;
     }
 
     Allocator *alloc = &src->zone()->allocator;
     size_t count = src->numDynamicSlots();
     dst->slots = alloc->pod_malloc<HeapSlot>(count);
     PodCopy(dst->slots, src->slots, count);
+    return count * sizeof(HeapSlot);
 }
 
-void
+size_t
 js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
 {
     if (src->hasEmptyElements())
-        return;
+        return 0;
 
     Allocator *alloc = &src->zone()->allocator;
     ObjectElements *srcHeader = src->getElementsHeader();
@@ -333,7 +349,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     if (!isInside(srcHeader)) {
         JS_ASSERT(src->elements == dst->elements);
         hugeSlots.remove(reinterpret_cast<HeapSlot*>(srcHeader));
-        return;
+        return 0;
     }
 
     /* ArrayBuffer stores byte-length, not Value count. */
@@ -349,7 +365,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         }
         js_memcpy(dstHeader, srcHeader, nbytes);
         dst->elements = dstHeader->elements();
-        return;
+        return src->hasDynamicElements() ? nbytes : 0;
     }
 
     size_t nslots = ObjectElements::VALUES_PER_HEADER + srcHeader->capacity;
@@ -359,7 +375,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         dst->setFixedElements();
         dstHeader = dst->getElementsHeader();
         js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
-        return;
+        return nslots * sizeof(HeapSlot);
     }
 
     size_t nbytes = nslots * sizeof(HeapValue);
@@ -368,6 +384,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         MOZ_CRASH();
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
     dst->elements = dstHeader->elements();
+    return nslots * sizeof(HeapSlot);
 }
 
 static bool
@@ -392,7 +409,7 @@ js::Nursery::markFallback(Cell *cell)
 {
     JS_ASSERT(uintptr_t(cell) >= start());
     size_t offset = uintptr_t(cell) - start();
-    JS_ASSERT(offset < end() - start());
+    JS_ASSERT(offset < heapEnd() - start());
     JS_ASSERT(offset % ThingAlignment == 0);
     fallbackBitmap.set(offset / ThingAlignment);
 }
@@ -503,6 +520,13 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
         JS_TraceChildren(&trc, obj, MapAllocToTraceKind(obj->tenuredGetAllocKind()));
     }
 
+    /* Resize the nursery. */
+    double promotionRate = trc.tenuredSize / double(allocationEnd() - start());
+    if (promotionRate > 0.5)
+        growAllocableSpace();
+    else if (promotionRate < 0.1)
+        shrinkAllocableSpace();
+
     /* Sweep. */
     sweep(rt->defaultFreeOp());
     rt->gcStoreBuffer.clear();
@@ -524,9 +548,25 @@ js::Nursery::sweep(FreeOp *fop)
         fop->free_(r.front());
     hugeSlots.clear();
 
+#ifdef DEBUG
     JS_POISON((void *)start(), SweptNursery, NurserySize - sizeof(JSRuntime *));
+    for (int i = 0; i < NumNurseryChunks; ++i)
+        chunk(i).runtime = runtime();
+#endif
 
-    position_ = start();
+    setCurrentChunk(0);
+}
+
+void
+js::Nursery::growAllocableSpace()
+{
+    numActiveChunks_ = Min(numActiveChunks_ * 2, NumNurseryChunks);
+}
+
+void
+js::Nursery::shrinkAllocableSpace()
+{
+    numActiveChunks_ = Max(numActiveChunks_ - 1, 1);
 }
 
 #endif /* JSGC_GENERATIONAL */

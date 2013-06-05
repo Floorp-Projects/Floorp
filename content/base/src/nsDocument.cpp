@@ -6892,7 +6892,12 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     }
     // Now convert the scale into device pixels per CSS pixel.
     nsIWidget *widget = nsContentUtils::WidgetForDocument(this);
+#ifdef MOZ_WIDGET_ANDROID
+    // Temporarily use special Android code until bug 803207 is fixed
     double pixelRatio = widget ? nsContentUtils::GetDevicePixelsPerMetaViewportPixel(widget) : 1.0;
+#else
+    double pixelRatio = widget ? widget->GetDefaultScale() : 1.0;
+#endif
     float scaleFloat = mScaleFloat * pixelRatio;
     float scaleMinFloat= mScaleMinFloat * pixelRatio;
     float scaleMaxFloat = mScaleMaxFloat * pixelRatio;
@@ -9403,7 +9408,11 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
       if (firstChild) {
         anonNode = firstChild;
       }
-      offset = nsContentUtils::GetAdjustedOffsetInTextControl(ptFrame, offset);
+
+      if (textArea) {
+        offset = nsContentUtils::GetAdjustedOffsetInTextControl(ptFrame, offset);
+      }
+
       node = nonanon;
     } else {
       node = nullptr;

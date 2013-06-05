@@ -3126,6 +3126,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     session_data_t      *sess_data_p = NULL;
     char                *local_sdp = NULL;
     uint32_t            local_sdp_len = 0;
+    boolean             has_stream = FALSE;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -3169,6 +3170,19 @@ fsmdef_ev_createoffer (sm_event_t *event) {
        gsmsdp_process_cap_constraints(dcb, msg->data.session.constraints);
        fsmdef_free_constraints(msg->data.session.constraints);
        msg->data.session.constraints = 0;
+    }
+
+    if (dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled ||
+        dcb->media_cap_tbl->cap[CC_AUDIO_1].enabled ||
+        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled) {
+      has_stream = TRUE;
+    }
+
+    if (!has_stream) {
+      ui_create_offer(evCreateOfferError, line, call_id,
+          dcb->caller_id.call_instance_id, strlib_empty(),
+          PC_INVALID_STATE, "Cannot create SDP without any streams.");
+      return SM_RC_END;
     }
 
     vcm_res = vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);

@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIDOMEventTarget;
 interface nsIRunnable;
 
-[scriptable, uuid(dba80826-6251-4947-bf2a-a3873b9ec764)]
+[scriptable, uuid(a806d366-cc52-11e2-bc9a-ba3212c84021)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -657,6 +657,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
    */
   void getScrollbarSize(in boolean aFlushLayout, out long aWidth, out long aHeight);
+
+  /**
+   * Returns the given element's bounds without flushing pending layout changes.
+   */
+  nsIDOMClientRect getBoundsWithoutFlushing(in nsIDOMElement aElement);
 
   /**
    * Returns the bounds of the window's currently loaded document. This will

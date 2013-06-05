@@ -11,11 +11,17 @@
  */
 
 enum PanningModelType {
+  // Hack: Use numbers to support alternate enum values
+  "0", "1",
+
   "equalpower",
   "HRTF"
 };
 
 enum DistanceModelType {
+  // Hack: Use numbers to support alternate enum values
+  "0", "1", "2",
+
   "linear",
   "inverse",
   "exponential"
@@ -43,5 +49,19 @@ interface PannerNode : AudioNode {
     attribute double coneOuterAngle;
     attribute double coneOuterGain;
 
+};
+
+/*
+ * The origin of this IDL file is
+ * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
+ */
+[PrefControlled]
+partial interface PannerNode {
+    const unsigned short EQUALPOWER = 0;
+    const unsigned short HRTF = 1;
+
+    const unsigned short LINEAR_DISTANCE = 0;
+    const unsigned short INVERSE_DISTANCE = 1;
+    const unsigned short EXPONENTIAL_DISTANCE = 2;
 };
 
