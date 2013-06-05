@@ -339,9 +339,10 @@ SharedSurface_GLTexture::~SharedSurface_GLTexture()
 void
 SharedSurface_GLTexture::Fence()
 {
+    MutexAutoLock lock(mMutex);
     mGL->MakeCurrent();
 
-    if (mGL->IsExtensionSupported(GLContext::ARB_sync)) {
+    if (mConsGL && mGL->IsExtensionSupported(GLContext::ARB_sync)) {
         if (mSync) {
             mGL->fDeleteSync(mSync);
             mSync = 0;
@@ -361,10 +362,13 @@ SharedSurface_GLTexture::Fence()
 bool
 SharedSurface_GLTexture::WaitSync()
 {
+    MutexAutoLock lock(mMutex);
     if (!mSync) {
         // We must have used glFinish instead of glFenceSync.
         return true;
     }
+
+    MOZ_ASSERT(mConsGL, "Did you forget to call a deferred `SetConsumerGL()`?");
     mConsGL->MakeCurrent();
     MOZ_ASSERT(mConsGL->IsExtensionSupported(GLContext::ARB_sync));
 
@@ -375,6 +379,14 @@ SharedSurface_GLTexture::WaitSync()
     mSync = 0;
 
     return true;
+}
+
+void
+SharedSurface_GLTexture::SetConsumerGL(GLContext* consGL)
+{
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(consGL);
+    mConsGL = consGL;
 }
 
 } /* namespace gfx */

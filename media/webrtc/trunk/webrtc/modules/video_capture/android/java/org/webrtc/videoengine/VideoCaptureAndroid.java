@@ -30,6 +30,7 @@ import android.view.SurfaceHolder.Callback;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoAppShell.AppStateListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
 public class VideoCaptureAndroid implements PreviewCallback, Callback {
@@ -64,9 +65,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     private int mCaptureHeight = -1;
     private int mCaptureFPS = -1;
 
+    private AppStateListener mAppStateListener = null;
+
     public static
     void DeleteVideoCaptureAndroid(VideoCaptureAndroid captureAndroid) {
         Log.d(TAG, "DeleteVideoCaptureAndroid");
+
+        GeckoAppShell.getGeckoInterface().removeAppStateListener(captureAndroid.mAppStateListener);
 
         captureAndroid.StopCapture();
         captureAndroid.camera.release();
@@ -99,23 +104,50 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         currentDevice = in_device;
 
         try {
-	  GeckoAppShell.getGeckoInterface().getCameraView().getHolder().addCallback(this);
+            GeckoAppShell.getGeckoInterface().getCameraView().getHolder().addCallback(this);
             ThreadUtils.getUiHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         GeckoAppShell.getGeckoInterface().enableCameraView();
                     } catch (Exception e) {
-                        Log.e(TAG, 
+                        Log.e(TAG,
                               "VideoCaptureAndroid enableCameraView exception: "
                                + e.getLocalizedMessage());
                     }
                 }
             });
-	} catch (Exception ex) {
-	  Log.e(TAG, "VideoCaptureAndroid constructor exception: " +
-                ex.getLocalizedMessage());
-	}
+        } catch (Exception ex) {
+            Log.e(TAG, "VideoCaptureAndroid constructor exception: " +
+                  ex.getLocalizedMessage());
+        }
+
+        mAppStateListener = new AppStateListener() {
+            @Override
+            public void onPause() {
+                StopCapture();
+                camera.release();
+                camera = null;
+            }
+            @Override
+            public void onResume() {
+                try {
+                    if(android.os.Build.VERSION.SDK_INT>8) {
+                        camera = Camera.open(cameraId);
+                    } else {
+                        camera = Camera.open();
+                    }
+                } catch (Exception ex) {
+                    Log.e(TAG, "Error reopening to the camera: " + ex.getMessage());
+                }
+                captureLock.lock();
+                isCaptureStarted = true;
+                tryStartCapture(mCaptureWidth, mCaptureHeight, mCaptureFPS);
+                captureLock.unlock();
+            }
+        };
+
+        GeckoAppShell.getGeckoInterface().addAppStateListener(mAppStateListener);
     }
 
     public int GetRotateAmount() {
@@ -214,22 +246,26 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         return res;
     }
 
-    public int StopCapture() {
-        Log.d(TAG, "StopCapture");
+    public int DetachCamera() {
         try {
             previewBufferLock.lock();
             isCaptureRunning = false;
             previewBufferLock.unlock();
-            camera.stopPreview();
-            camera.setPreviewCallbackWithBuffer(null);
-        }
-        catch (Exception ex) {
-            Log.e(TAG, "Failed to stop camera");
+            if (camera != null) {
+                camera.setPreviewCallbackWithBuffer(null);
+                camera.stopPreview();
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, "Failed to stop camera: " + ex.getMessage());
             return -1;
         }
-
-        isCaptureStarted = false;
         return 0;
+    }
+
+    public int StopCapture() {
+        Log.d(TAG, "StopCapture");
+        isCaptureStarted = false;
+        return DetachCamera();
     }
 
     native void ProvideCameraFrame(byte[] data, int length, long captureObject);
@@ -314,5 +350,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d(TAG, "VideoCaptureAndroid::surfaceDestroyed");
         isSurfaceReady = false;
+        DetachCamera();
     }
 }

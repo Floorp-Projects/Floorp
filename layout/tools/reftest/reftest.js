@@ -675,7 +675,6 @@ function BuildConditionSandbox(aURL) {
     // Tests shouldn't care about this except for when they need to
     // crash the content process
     sandbox.browserIsRemote = gBrowserIsRemote;
-    sandbox.bug685516 = sandbox.browserIsRemote && sandbox.Android;
 
     // Distinguish the Fennecs:
     sandbox.xulFennec    = sandbox.Android &&  sandbox.browserIsRemote;

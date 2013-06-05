@@ -55,7 +55,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void OnServerClose(const uint16_t& aCode, const nsCString& aReason);
   void AsyncOpenFailed();  
 
-  ChannelEventQueue mEventQ;
+  nsRefPtr<ChannelEventQueue> mEventQ;
   bool mIPCOpen;
 
   friend class StartEvent;

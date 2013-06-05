@@ -34,8 +34,6 @@ const backgroundPageThumbsContent = {
       removeEventListener("load", this._onLoad, true);
       delete this._onLoad;
 
-      // The viewport is always reset to a small size after load, so resize it.
-      this._sizeViewport();
       let canvas = PageThumbs._createCanvas(content);
       PageThumbs._captureToCanvas(content, canvas);
 
@@ -55,19 +53,6 @@ const backgroundPageThumbsContent = {
     addEventListener("load", this._onLoad, true);
     this._webNav.loadURI(msg.json.url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                          null, null, null);
-  },
-
-  _sizeViewport: function () {
-    let width = {};
-    let height = {};
-    Cc["@mozilla.org/gfx/screenmanager;1"].
-      getService(Ci.nsIScreenManager).
-      primaryScreen.
-      GetRect({}, {}, width, height);
-    content.
-      QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils).
-      setCSSViewport(width.value, height.value);
   },
 };
 

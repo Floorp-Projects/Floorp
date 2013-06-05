@@ -312,7 +312,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     // give the destination object the union of the two native sets. We try
     // to do this cleverly in the common case to avoid too much overhead.
     XPCWrappedNative *newwn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
-    XPCNativeSet *unionSet = XPCNativeSet::GetNewOrUsed(ccx, newwn->GetSet(),
+    XPCNativeSet *unionSet = XPCNativeSet::GetNewOrUsed(newwn->GetSet(),
                                                         wn->GetSet(), false);
     if (!unionSet)
         return nullptr;

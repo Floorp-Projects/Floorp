@@ -127,18 +127,18 @@ NS_IMPL_ISUPPORTS2(TestProvider,
 TestProvider::TestProvider(char *data)
 {
     NS_NewByteArrayInputStream(getter_AddRefs(mData), data, strlen(data));
-    LOG(("Constructing TestProvider [this=%x]\n", this));
+    LOG(("Constructing TestProvider [this=%p]\n", this));
 }
 
 TestProvider::~TestProvider()
 {
-    LOG(("Destroying TestProvider [this=%x]\n", this));
+    LOG(("Destroying TestProvider [this=%p]\n", this));
 }
 
 NS_IMETHODIMP
 TestProvider::OnStartRequest(nsIRequest* request, nsISupports* context)
 {
-    LOG(("TestProvider::OnStartRequest [this=%x]\n", this));
+    LOG(("TestProvider::OnStartRequest [this=%p]\n", this));
     return NS_OK;
 }
 

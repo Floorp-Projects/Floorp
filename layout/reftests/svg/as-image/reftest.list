@@ -18,7 +18,7 @@ skip-if(B2G) == background-simple-1.html  lime100x100-ref.html # bug 773482
 
 # Tests with -moz-image-rect()
 skip-if(B2G) == background-image-rect-1svg.html  lime100x100-ref.html # bug 773482
-random-if(bug685516) == background-image-rect-1png.html  lime100x100-ref.html
+== background-image-rect-1png.html  lime100x100-ref.html
 == background-image-rect-2.html     lime100x100-ref.html
 
 # Test for border-image

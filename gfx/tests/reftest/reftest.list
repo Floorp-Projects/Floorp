@@ -1,4 +1,4 @@
 # 468496-1 will also detect bugs in video drivers.
 == 468496-1.html 468496-1-ref.html
-random-if(bug685516) == 611498-1.html 611498-ref.html
+== 611498-1.html 611498-ref.html
 skip-if(B2G) == 709477-1.html 709477-1-ref.html # bug 773482

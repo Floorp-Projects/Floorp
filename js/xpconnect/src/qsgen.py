@@ -689,7 +689,7 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
         # else fall through; this type isn't supported yet
     elif isInterfaceType(type):
         if isVariantType(type):
-            f.write("    return xpc_qsVariantToJsval(lccx, result, %s);\n"
+            f.write("    return xpc_qsVariantToJsval(cx, result, %s);\n"
                     % jsvalPtr)
             return
         else:
@@ -703,7 +703,7 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
                     "    }\n"
                     "    // After this point do not use 'result'!\n"
                     "    qsObjectHelper helper(result, cache);\n"
-                    "    return xpc_qsXPCOMObjectToJsval(lccx, "
+                    "    return xpc_qsXPCOMObjectToJsval(cx, "
                     "helper, &NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
                     % (jsvalPtr, jsvalPtr, type.name, type.name, jsvalPtr))
             return
@@ -850,13 +850,8 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     else:
         unwrapFatalArg = "false"
 
-    if not isSetter and isInterfaceType(member.realtype):
-        f.write("    XPCLazyCallContext lccx(JS_CALLER, cx, obj);\n")
-        f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
-                "&selfref.ptr, %s, &lccx, %s))\n" % (pthisval, unwrapFatalArg))
-    else:
-        f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
-                "&selfref.ptr, %s, nullptr, %s))\n" % (pthisval, unwrapFatalArg))
+    f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
+            "&selfref.ptr, %s, %s))\n" % (pthisval, unwrapFatalArg))
     f.write("        return JS_FALSE;\n")
 
     if not unwrapThisFailureFatal:

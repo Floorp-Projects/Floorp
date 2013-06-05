@@ -1,16 +1,16 @@
 # GIF tests 
 
 # tests for bug 519589
-random-if(bug685516) == 1bit-255-trans.gif 1bit-255-trans.png
-random-if(bug685516) == in-colormap-trans.gif in-colormap-trans.png
-random-if(bug685516) == out-of-colormap-trans.gif out-of-colormap-trans.png
+== 1bit-255-trans.gif 1bit-255-trans.png
+== in-colormap-trans.gif in-colormap-trans.png
+== out-of-colormap-trans.gif out-of-colormap-trans.png
 
 # a GIF file that uses the comment extension
-random-if(bug685516) == comment.gif comment.png
+== comment.gif comment.png
 
 # a GIF file with a background smaller than the size of the canvas
-random-if(bug685516) == small-background-size.gif small-background-size-ref.gif
-random-if(bug685516) == small-background-size-2.gif small-background-size-2-ref.gif
+== small-background-size.gif small-background-size-ref.gif
+== small-background-size-2.gif small-background-size-2-ref.gif
 
 # a transparent gif that disposes previous frames with clear; we must properly
 # clear each frame to pass.
@@ -41,4 +41,4 @@ skip-if(B2G) random-if(Android) == test_bug641198.html animation2a-finalframe.gi
 # won't be in the text of the contents themselves. --$(boundary)\r\n means
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
-skip-if(B2G) random-if(bug685516) HTTP == webcam.html blue.gif # bug 773482
+skip-if(B2G) HTTP == webcam.html blue.gif # bug 773482

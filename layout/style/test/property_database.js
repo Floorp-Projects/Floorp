@@ -4257,6 +4257,22 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 	gCSSProperties["display"].other_values.push("inline-flex");
 }
 
+if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
+	var verticalTextProperties = {
+		"writing-mode": {
+			domProp: "writingMode",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "horizontal-tb" ],
+			other_values: [ "vertical-lr", "vertical-rl" ],
+			invalid_values: [ "10px", "30%", "justify", "auto", "1em" ]
+		}
+	};
+	for (var prop in verticalTextProperties) {
+		gCSSProperties[prop] = verticalTextProperties[prop];
+	}
+}
+
 if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 	var fontFeatureProperties = {
 		"font-kerning": {

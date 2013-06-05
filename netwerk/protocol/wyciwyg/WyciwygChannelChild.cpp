@@ -41,9 +41,9 @@ WyciwygChannelChild::WyciwygChannelChild()
   , mState(WCC_NEW)
   , mIPCOpen(false)
   , mSentAppData(false)
-  , ALLOW_THIS_IN_INITIALIZER_LIST(mEventQ(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this)))
 {
   LOG(("Creating WyciwygChannelChild @%x\n", this));
+  mEventQ = new ChannelEventQueue(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this));
 }
 
 WyciwygChannelChild::~WyciwygChannelChild()
@@ -117,8 +117,8 @@ WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
                                         const nsCString& charset,
                                         const nsCString& securityInfo)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygStartRequestEvent(this, statusCode,
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygStartRequestEvent(this, statusCode,
                                                  contentLength, source,
                                                  charset, securityInfo));
   } else {
@@ -134,7 +134,7 @@ WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
                                     const nsCString& charset,
                                     const nsCString& securityInfo)
 {
-  LOG(("WyciwygChannelChild::RecvOnStartRequest [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::RecvOnStartRequest [this=%p]\n", this));
 
   mState = WCC_ONSTART;
 
@@ -172,8 +172,8 @@ bool
 WyciwygChannelChild::RecvOnDataAvailable(const nsCString& data,
                                          const uint64_t& offset)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygDataAvailableEvent(this, data, offset));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygDataAvailableEvent(this, data, offset));
   } else {
     OnDataAvailable(data, offset);
   }
@@ -184,7 +184,7 @@ void
 WyciwygChannelChild::OnDataAvailable(const nsCString& data,
                                      const uint64_t& offset)
 {
-  LOG(("WyciwygChannelChild::RecvOnDataAvailable [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::RecvOnDataAvailable [this=%p]\n", this));
 
   if (mCanceled)
     return;
@@ -233,8 +233,8 @@ private:
 bool
 WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygStopRequestEvent(this, statusCode));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygStopRequestEvent(this, statusCode));
   } else {
     OnStopRequest(statusCode);
   }
@@ -244,7 +244,7 @@ WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 void
 WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
 {
-  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%x status=%u]\n",
+  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%p status=%u]\n",
            this, statusCode));
 
   { // We need to ensure that all IPDL message dispatching occurs
@@ -290,8 +290,8 @@ class WyciwygCancelEvent : public ChannelEvent
 bool
 WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
 {
-  if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new WyciwygCancelEvent(this, statusCode));
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new WyciwygCancelEvent(this, statusCode));
   } else {
     CancelEarly(statusCode);
   }
@@ -300,7 +300,7 @@ WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
 
 void WyciwygChannelChild::CancelEarly(const nsresult& statusCode)
 {
-  LOG(("WyciwygChannelChild::CancelEarly [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::CancelEarly [this=%p]\n", this));
   
   if (mCanceled)
     return;
@@ -583,7 +583,7 @@ GetTabChild(nsIChannel* aChannel)
 NS_IMETHODIMP
 WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
-  LOG(("WyciwygChannelChild::AsyncOpen [this=%x]\n", this));
+  LOG(("WyciwygChannelChild::AsyncOpen [this=%p]\n", this));
 
   // The only places creating wyciwyg: channels should be
   // HTMLDocument::OpenCommon and session history.  Both should be setting an

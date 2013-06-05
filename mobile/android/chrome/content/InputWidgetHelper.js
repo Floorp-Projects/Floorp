@@ -23,44 +23,41 @@ var InputWidgetHelper = {
 
   show: function(aElement) {
     let type = aElement.getAttribute('type');
-    let msg = {
-      type: "Prompt:Show",
+    let p = new Prompt({
+      window: aElement.ownerDocument.defaultView,
       title: Strings.browser.GetStringFromName("inputWidgetHelper." + aElement.getAttribute('type')),
       buttons: [
         Strings.browser.GetStringFromName("inputWidgetHelper.set"),
         Strings.browser.GetStringFromName("inputWidgetHelper.clear"),
         Strings.browser.GetStringFromName("inputWidgetHelper.cancel")
       ],
-      inputs: [
-        { type: type, value: aElement.value }
-      ]
-    };
-
-    let data = JSON.parse(sendMessageToJava(msg));
-
-    let changed = false;
-    if (data.button == -1) {
-      // This type is not supported with this android version.
-      return;
-    }
-    if (data.button == 1) {
-      // The user cleared the value.
-      if (aElement.value != "") {
-        aElement.value = "";
-        changed = true;
+    }).addDatePicker({
+      value: aElement.value,
+      type: type,
+    }).show((function(data) {
+      let changed = false;
+      if (data.button == -1) {
+        // This type is not supported with this android version.
+        return;
       }
-    } else if (data.button == 0) {
-      // Commit the new value.
-      if (aElement.value != data[type]) {
-        aElement.value = data[type];
-        changed = true;
+      if (data.button == 1) {
+        // The user cleared the value.
+        if (aElement.value != "") {
+          aElement.value = "";
+          changed = true;
+        }
+      } else if (data.button == 0) {
+        // Commit the new value.
+        if (aElement.value != data[type]) {
+          aElement.value = data[type + "0"];
+          changed = true;
+        }
       }
-    }
-    // Else the user canceled the input.
+      // Else the user canceled the input.
 
-    if (changed)
-      this.fireOnChange(aElement);
-
+      if (changed)
+        this.fireOnChange(aElement);
+    }).bind(this));
   },
 
   _isValidInput: function(aElement) {

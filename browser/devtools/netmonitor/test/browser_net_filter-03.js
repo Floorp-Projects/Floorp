@@ -68,9 +68,8 @@ function test() {
     });
 
     function resetSorting() {
-      for (let i = 0; i < 3; i++) {
-        EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
-      }
+      EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
+      EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
     }
 
     function testButtons(aFilterType) {

@@ -3205,42 +3205,6 @@ nsSVGTextFrame2::MutationObserver::AttributeChanged(
   }
 }
 
-NS_IMETHODIMP
-nsSVGTextFrame2::Reflow(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
-                        nsReflowStatus&          aStatus)
-{
-  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
-                    "Should not have been called");
-
-  // Only InvalidateAndScheduleReflowSVG marks us with NS_FRAME_IS_DIRTY,
-  // so if that bit is still set we still have a resize pending. If we hit
-  // this assertion, then we should get the presShell to skip reflow roots
-  // that have a dirty parent since a reflow is going to come via the
-  // reflow root's parent anyway.
-  NS_ASSERTION(!(GetStateBits() & NS_FRAME_IS_DIRTY),
-               "Reflowing while a resize is pending is wasteful");
-
-  // ReflowSVG makes sure mRect is up to date before we're called.
-
-  NS_ASSERTION(!aReflowState.parentReflowState,
-               "should only get reflow from being reflow root");
-  NS_ASSERTION(aReflowState.ComputedWidth() == GetSize().width &&
-               aReflowState.ComputedHeight() == GetSize().height,
-               "reflow roots should be reflowed at existing size and "
-               "svg.css should ensure we have no padding/border/margin");
-
-  DoReflow();
-
-  aDesiredSize.width = aReflowState.ComputedWidth();
-  aDesiredSize.height = aReflowState.ComputedHeight();
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-  aStatus = NS_FRAME_COMPLETE;
-
-  return NS_OK;
-}
-
 void
 nsSVGTextFrame2::FindCloserFrameForSelection(
                                  nsPoint aPoint,

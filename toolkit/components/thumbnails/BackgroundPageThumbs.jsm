@@ -129,6 +129,19 @@ const BackgroundPageThumbs = {
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.setAttribute("privatebrowsing", "true");
+
+    // Size the browser.  Setting the width and height attributes doesn't
+    // work -- the resulting thumbnails are blank and transparent -- but
+    // setting the style does.
+    let width = {};
+    let height = {};
+    Cc["@mozilla.org/gfx/screenmanager;1"].
+      getService(Ci.nsIScreenManager).
+      primaryScreen.
+      GetRectDisplayPix({}, {}, width, height);
+    browser.style.width = width.value + "px";
+    browser.style.height = height.value + "px";
+
     this._parentWin.document.documentElement.appendChild(browser);
 
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);

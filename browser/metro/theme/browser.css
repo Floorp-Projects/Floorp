@@ -662,8 +662,10 @@ setting[type="radio"] > vbox {
   display: -moz-box;
 }
 
-#start-scrollbox {
-  overflow: hidden;
+#start-scrollbox[input="precise"] {
+  overflow-x: scroll;
+  /* Move scrollbar above toolbar, discount padding added by .meta in #start-container */
+  margin-bottom: calc(@toolbar_height@ - @metro_spacing_normal@);
 }
 
 /* if autocomplete is set, hide both start pages,
@@ -987,6 +989,10 @@ setting[type="radio"] > vbox {
   min-height: @scroller_thickness@;
   height: @scroller_thickness@;
   min-width: @scroller_minimum@;
+}
+
+#browsers[input="imprecise"] browser {
+  overflow: hidden;
 }
 
 /* Text selection handles */

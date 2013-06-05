@@ -42,6 +42,7 @@
     <dimen name="doorhanger_padding_spinners">10dp</dimen>
 
     <dimen name="flow_layout_spacing">6dp</dimen>
+    <dimen name="menu_item_action_icon">80dp</dimen>
     <dimen name="menu_item_icon">21dp</dimen>
     <dimen name="menu_item_state_icon">18dp</dimen>
     <dimen name="menu_item_row_height">44dp</dimen>

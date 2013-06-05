@@ -98,7 +98,7 @@ nsresult
 nsHttpResponseHead::Parse(char *block)
 {
 
-    LOG(("nsHttpResponseHead::Parse [this=%x]\n", this));
+    LOG(("nsHttpResponseHead::Parse [this=%p]\n", this));
 
     // this command works on a buffer as prepared by Flatten, as such it is
     // not very forgiving ;-)
@@ -223,7 +223,7 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
     *result = 0;
 
     if (NS_FAILED(GetDateValue(&dateValue))) {
-        LOG(("nsHttpResponseHead::ComputeCurrentAge [this=%x] "
+        LOG(("nsHttpResponseHead::ComputeCurrentAge [this=%p] "
              "Date response header not set!\n", this));
         // Assume we have a fast connection and that our clock
         // is in sync with the server.
@@ -409,7 +409,7 @@ nsHttpResponseHead::ExpiresInPast() const
 nsresult
 nsHttpResponseHead::UpdateHeaders(const nsHttpHeaderArray &headers)
 {
-    LOG(("nsHttpResponseHead::UpdateHeaders [this=%x]\n", this));
+    LOG(("nsHttpResponseHead::UpdateHeaders [this=%p]\n", this));
 
     uint32_t i, count = headers.Count();
     for (i=0; i<count; ++i) {

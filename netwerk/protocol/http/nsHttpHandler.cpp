@@ -202,7 +202,7 @@ nsHttpHandler::nsHttpHandler()
     gHttpLog = PR_NewLogModule("nsHttp");
 #endif
 
-    LOG(("Creating nsHttpHandler [this=%x].\n", this));
+    LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
     MOZ_ASSERT(!gHttpHandler, "HTTP handler already created!");
     gHttpHandler = this;
@@ -210,7 +210,7 @@ nsHttpHandler::nsHttpHandler()
 
 nsHttpHandler::~nsHttpHandler()
 {
-    LOG(("Deleting nsHttpHandler [this=%x]\n", this));
+    LOG(("Deleting nsHttpHandler [this=%p]\n", this));
 
     // make sure the connection manager is shutdown
     if (mConnMgr) {

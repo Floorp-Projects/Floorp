@@ -71,6 +71,10 @@ struct VMFunction
     // Contains properties about the first 16 arguments.
     uint32_t argumentProperties;
 
+    // Which arguments should be passed in float register on platforms that
+    // have them.
+    uint32_t argumentPassedInFloatRegs;
+
     // The outparam may be any Type_*, and must be the final argument to the
     // function, if not Void. outParam != Void implies that the return type
     // has a boolean failure mode.
@@ -100,6 +104,9 @@ struct VMFunction
     // arguments of the VM wrapper.
     uint64_t argumentRootTypes;
 
+    // The root type of the out param if outParam == Type_Handle.
+    RootType outParamRootType;
+
     // Does this function take a ForkJoinSlice * or a JSContext *?
     ExecutionMode executionMode;
 
@@ -123,6 +130,10 @@ struct VMFunction
 
     RootType argRootType(uint32_t explicitArg) const {
         return RootType((argumentRootTypes >> (3 * explicitArg)) & 7);
+    }
+
+    bool argPassedInFloatReg(uint32_t explicitArg) const {
+        return ((argumentPassedInFloatRegs >> explicitArg) & 1) == 1;
     }
 
     // Return the stack size consumed by explicit arguments.
@@ -174,8 +185,10 @@ struct VMFunction
       : wrapped(NULL),
         explicitArgs(0),
         argumentProperties(0),
+        argumentPassedInFloatRegs(0),
         outParam(Type_Void),
         returnType(Type_Void),
+        outParamRootType(RootNone),
         executionMode(SequentialExecution),
         extraValuesToPop(0)
     {
@@ -183,14 +196,17 @@ struct VMFunction
 
 
     VMFunction(void *wrapped, uint32_t explicitArgs, uint32_t argumentProperties,
-               uint64_t argRootTypes, DataType outParam, DataType returnType,
+               uint32_t argumentPassedInFloatRegs, uint64_t argRootTypes,
+               DataType outParam, RootType outParamRootType, DataType returnType,
                ExecutionMode executionMode, uint32_t extraValuesToPop = 0)
       : wrapped(wrapped),
         explicitArgs(explicitArgs),
         argumentProperties(argumentProperties),
+        argumentPassedInFloatRegs(argumentPassedInFloatRegs),
         outParam(outParam),
         returnType(returnType),
         argumentRootTypes(argRootTypes),
+        outParamRootType(outParamRootType),
         executionMode(executionMode),
         extraValuesToPop(extraValuesToPop)
     {
@@ -269,6 +285,15 @@ template <> struct TypeToArgProperties<HandleTypeObject> {
     static const uint32_t result = TypeToArgProperties<types::TypeObject *>::result | VMFunction::ByRef;
 };
 
+// Convert argument type to whether or not it should be passed in a float
+// register on platforms that have them, like x64.
+template <class T> struct TypeToPassInFloatReg {
+    static const uint32_t result = 0;
+};
+template <> struct TypeToPassInFloatReg<double> {
+    static const uint32_t result = 1;
+};
+
 // Convert argument types to root types used by the gc, see MarkIonExitFrame.
 template <class T> struct TypeToRootType {
     static const uint32_t result = VMFunction::RootNone;
@@ -305,6 +330,19 @@ template <> struct OutParamToDataType<uint32_t *> { static const DataType result
 template <> struct OutParamToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
 template <> struct OutParamToDataType<MutableHandleObject> { static const DataType result = Type_Handle; };
 
+template <class> struct OutParamToRootType {
+    static const VMFunction::RootType result = VMFunction::RootNone;
+};
+template <> struct OutParamToRootType<MutableHandleValue> {
+    static const VMFunction::RootType result = VMFunction::RootValue;
+};
+template <> struct OutParamToRootType<MutableHandleObject> {
+    static const VMFunction::RootType result = VMFunction::RootObject;
+};
+template <> struct OutParamToRootType<MutableHandleString> {
+    static const VMFunction::RootType result = VMFunction::RootString;
+};
+
 template <class> struct MatchContext { };
 template <> struct MatchContext<JSContext *> {
     static const ExecutionMode execMode = SequentialExecution;
@@ -322,8 +360,10 @@ template <> struct MatchContext<ForkJoinSlice *> {
 
 #define COMPUTE_INDEX(NbArg) NbArg
 #define COMPUTE_OUTPARAM_RESULT(NbArg) OutParamToDataType<A ## NbArg>::result
+#define COMPUTE_OUTPARAM_ROOT(NbArg) OutParamToRootType<A ## NbArg>::result
 #define COMPUTE_ARG_PROP(NbArg) (TypeToArgProperties<A ## NbArg>::result << (2 * (NbArg - 1)))
 #define COMPUTE_ARG_ROOT(NbArg) (uint64_t(TypeToRootType<A ## NbArg>::result) << (3 * (NbArg - 1)))
+#define COMPUTE_ARG_FLOAT(NbArg) (TypeToPassInFloatReg<A ## NbArg>::result) << (NbArg - 1)
 #define SEP_OR(_) |
 #define NOTHING(_)
 
@@ -337,6 +377,9 @@ template <> struct MatchContext<ForkJoinSlice *> {
     static inline DataType outParam() {                                                 \
         return ForEachNb(NOTHING, NOTHING, COMPUTE_OUTPARAM_RESULT);                    \
     }                                                                                   \
+    static inline RootType outParamRootType() {                                         \
+        return ForEachNb(NOTHING, NOTHING, COMPUTE_OUTPARAM_ROOT);                      \
+    }                                                                                   \
     static inline size_t NbArgs() {                                                     \
         return ForEachNb(NOTHING, NOTHING, COMPUTE_INDEX);                              \
     }                                                                                   \
@@ -346,13 +389,17 @@ template <> struct MatchContext<ForkJoinSlice *> {
     static inline uint32_t argumentProperties() {                                       \
         return ForEachNb(COMPUTE_ARG_PROP, SEP_OR, NOTHING);                            \
     }                                                                                   \
+    static inline uint32_t argumentPassedInFloatRegs() {                                \
+        return ForEachNb(COMPUTE_ARG_FLOAT, SEP_OR, NOTHING);                           \
+    }                                                                                   \
     static inline uint64_t argumentRootTypes() {                                        \
         return ForEachNb(COMPUTE_ARG_ROOT, SEP_OR, NOTHING);                            \
     }                                                                                   \
     FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))                     \
         : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
-                     argumentProperties(),argumentRootTypes(),                          \
-                     outParam(), returnType(), executionMode(),                         \
+                     argumentProperties(), argumentPassedInFloatRegs(),                 \
+                     argumentRootTypes(), outParam(), outParamRootType(),               \
+                     returnType(), executionMode(),                                     \
                      extraValuesToPop.numValues)                                        \
     { }
 
@@ -374,10 +421,16 @@ struct FunctionInfo<R (*)(Context)> : public VMFunction {
     static inline DataType outParam() {
         return Type_Void;
     }
+    static inline RootType outParamRootType() {
+        return RootNone;
+    }
     static inline size_t explicitArgs() {
         return 0;
     }
     static inline uint32_t argumentProperties() {
+        return 0;
+    }
+    static inline uint32_t argumentPassedInFloatRegs() {
         return 0;
     }
     static inline uint64_t argumentRootTypes() {
@@ -385,8 +438,9 @@ struct FunctionInfo<R (*)(Context)> : public VMFunction {
     }
     FunctionInfo(pf fun)
       : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
-                   argumentProperties(), argumentRootTypes(),
-                   outParam(), returnType(), executionMode())
+                   argumentProperties(), argumentPassedInFloatRegs(),
+                   argumentRootTypes(), outParam(), outParamRootType(),
+                   returnType(), executionMode())
     { }
 };
 
@@ -439,7 +493,9 @@ template <class R, class Context, class A1, class A2, class A3, class A4, class 
 
 #undef COMPUTE_INDEX
 #undef COMPUTE_OUTPARAM_RESULT
+#undef COMPUTE_OUTPARAM_ROOT
 #undef COMPUTE_ARG_PROP
+#undef COMPUTE_ARG_FLOAT
 #undef SEP_OR
 #undef NOTHING
 

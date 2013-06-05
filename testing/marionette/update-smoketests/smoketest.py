@@ -18,8 +18,8 @@ marionette_client_dir = os.path.join(marionette_dir, 'client', 'marionette')
 
 def find_b2g():
     sys.path.append(marionette_client_dir)
-    from b2ginstance import B2GInstance
-    return B2GInstance()
+    from b2gbuild import B2GBuild
+    return B2GBuild()
 
 class DictObject(dict):
     def __getattr__(self, item):

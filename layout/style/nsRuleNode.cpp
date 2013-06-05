@@ -5243,6 +5243,12 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
               SETDSC_ENUMERATED, parentVisibility->mPointerEvents,
               NS_STYLE_POINTER_EVENTS_AUTO, 0, 0, 0, 0);
 
+  // writing-mode: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForWritingMode(), visibility->mWritingMode,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentVisibility->mWritingMode,
+              NS_STYLE_WRITING_MODE_HORIZONTAL_TB, 0, 0, 0, 0);
+
   COMPUTE_END_INHERITED(Visibility, visibility)
 }
 
