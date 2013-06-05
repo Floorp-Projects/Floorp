@@ -43,6 +43,8 @@
 namespace JSC {
 
 inline bool CAN_SIGN_EXTEND_8_32(int32_t value) { return value == (int32_t)(signed char)value; }
+inline bool CAN_ZERO_EXTEND_8_32(int32_t value) { return value == (int32_t)(unsigned char)value; }
+inline bool CAN_ZERO_EXTEND_32_64(int32_t value) { return value >= 0; }
 
 namespace X86Registers {
     typedef enum {
@@ -1091,6 +1093,11 @@ public:
 
     void cmpl_ir(int imm, RegisterID dst)
     {
+        if (imm == 0) {
+            testl_rr(dst, dst);
+            return;
+        }
+
         spew("cmpl       $0x%x, %s", imm, nameIReg(4, dst));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, GROUP1_OP_CMP, dst);
@@ -1178,6 +1185,11 @@ public:
 
     void cmpq_ir(int imm, RegisterID dst)
     {
+        if (imm == 0) {
+            testq_rr(dst, dst);
+            return;
+        }
+
         spew("cmpq       $%d, %s",
              imm, nameIReg(8, dst));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
@@ -1270,6 +1282,15 @@ public:
     
     void testl_i32r(int imm, RegisterID dst)
     {
+#if WTF_CPU_X86_64
+        // If the mask fits in an 8-bit immediate, we can use testb with an
+        // 8-bit subreg. This could be extended to handle x86-32 too, but it
+        // would require a check to see if the register supports 8-bit subregs.
+        if (CAN_ZERO_EXTEND_8_32(imm)) {
+            testb_i8r(imm, dst);
+            return;
+        }
+#endif
         spew("testl      $0x%x, %s",
              imm, nameIReg(dst));
         m_formatter.oneByteOp(OP_GROUP3_EvIz, GROUP3_OP_TEST, dst);
@@ -1313,10 +1334,14 @@ public:
 
     void testq_i32r(int imm, RegisterID dst)
     {
-        spew("testq      $0x%x, %s",
-             imm, nameIReg(dst));
-        m_formatter.oneByteOp64(OP_GROUP3_EvIz, GROUP3_OP_TEST, dst);
-        m_formatter.immediate32(imm);
+        if (CAN_ZERO_EXTEND_32_64(imm)) {
+            testl_i32r(imm, dst);
+        } else {
+            spew("testq      $0x%x, %s",
+                 imm, nameIReg(dst));
+            m_formatter.oneByteOp64(OP_GROUP3_EvIz, GROUP3_OP_TEST, dst);
+            m_formatter.immediate32(imm);
+        }
     }
 
     void testq_i32m(int imm, int offset, RegisterID base)
