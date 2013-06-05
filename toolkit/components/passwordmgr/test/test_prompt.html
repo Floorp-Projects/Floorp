@@ -133,7 +133,7 @@ proxyChannelListener.prototype = {
   onStopRequest: function(request, context, status) { }
 };
 
-var resolveCallback = {
+var resolveCallback = SpecialPowers.wrapCallbackObject({
   QueryInterface : function (iid) {
     const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
@@ -154,9 +154,9 @@ var resolveCallback = {
     // have valid ProxyInfo, but we use OnStartRequest during startup()
     // for simplicity.
     proxyChannel = ioService.newChannel(proxiedHost, null, null);
-    proxyChannel.asyncOpen(new proxyChannelListener(), null);
+    proxyChannel.asyncOpen(SpecialPowers.wrapCallbackObject(new proxyChannelListener()), null);
   }
-};
+});
 
 function startup() {
   //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
@@ -173,7 +173,7 @@ function addNotificationCallback(cb) {
   storageObserver.notificationCallbacks.push(cb);
 }
 
-var storageObserver = {
+var storageObserver = SpecialPowers.wrapCallbackObject({
   notificationCallbacks: [],
 
   QueryInterface : function (iid) {
@@ -229,7 +229,7 @@ var storageObserver = {
       ok(false, "OBSERVER FAILED: " + e);
     }
   }
-};
+});
 
 var observerService = Cc["@mozilla.org/observer-service;1"].
                       getService(Ci.nsIObserverService);
