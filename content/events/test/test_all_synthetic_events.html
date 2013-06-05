@@ -135,6 +135,10 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
+  ErrorEvent:                                { create: function (aName, aProps) {
+                                                         return new ErrorEvent(aName, aProps);
+                                                       },
+  },
   ElementReplaceEvent:                       { create: function (aName, aProps) {
                                                          return new ElementReplaceEvent(aName, aProps);
                                                        },

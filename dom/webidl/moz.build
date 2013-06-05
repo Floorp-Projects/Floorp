@@ -16,6 +16,7 @@ PREPROCESSED_WEBIDL_FILES = [
 ]
 
 WEBIDL_FILES = [
+    'AbstractWorker.webidl',
     'AnalyserNode.webidl',
     'AnimationEvent.webidl',
     'ArchiveReader.webidl',
@@ -366,6 +367,7 @@ WEBIDL_FILES = [
     'ScriptProcessorNode.webidl',
     'ScrollAreaEvent.webidl',
     'SettingsManager.webidl',
+    'SharedWorker.webidl',
     'SimpleGestureEvent.webidl',
     'SourceBuffer.webidl',
     'SourceBufferList.webidl',
@@ -406,6 +408,7 @@ WEBIDL_FILES = [
     'WifiOptions.webidl',
     'Window.webidl',
     'WorkerLocation.webidl',
+    'WorkerMessagePort.webidl',
     'WorkerNavigator.webidl',
     'XMLDocument.webidl',
     'XMLHttpRequest.webidl',
@@ -537,6 +540,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'DeviceLightEvent.webidl',
     'DeviceProximityEvent.webidl',
+    'ErrorEvent.webidl',
     'MediaStreamEvent.webidl',
     'MozInterAppMessageEvent.webidl',
     'RTCDataChannelEvent.webidl',
@@ -550,5 +554,4 @@ if CONFIG['MOZ_GAMEPAD']:
         'GamepadButtonEvent.webidl',
         'GamepadEvent.webidl',
     ]
-
 

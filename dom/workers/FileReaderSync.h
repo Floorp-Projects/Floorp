@@ -10,9 +10,6 @@
 #include "Workers.h"
 
 #include "nsICharsetDetectionObserver.h"
-#include "nsString.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/FileReaderSyncBinding.h"
 
 class nsIInputStream;
 class nsIDOMBlob;
@@ -39,10 +36,7 @@ public:
   static already_AddRefed<FileReaderSync>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
-  {
-    return FileReaderSyncBinding_workers::Wrap(aCx, aScope, this);
-  }
+  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aScope);
 
   NS_DECL_ISUPPORTS
 
