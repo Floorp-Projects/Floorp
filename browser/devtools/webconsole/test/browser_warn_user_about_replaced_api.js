@@ -9,6 +9,10 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 function test() {
   waitForExplicitFinish();
 
+  const PREF = "devtools.webconsole.persistlog";
+  Services.prefs.setBoolPref(PREF, true);
+  registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
+
   // First test that the warning does not appear on a page that doesn't override
   // the window.console object.
   addTab(TEST_URI);

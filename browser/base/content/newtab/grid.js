@@ -30,6 +30,9 @@ let gGrid = {
    */
   get sites() [cell.site for each (cell in this.cells)],
 
+  // Tells whether the grid has already been initialized.
+  get ready() !!this._node,
+
   /**
    * Initializes the grid.
    * @param aSelector The query selector of the grid.
