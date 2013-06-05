@@ -2457,7 +2457,7 @@ CallMethodHelper::GatherAndConvertResults()
         nsresult err;
         if (isArray) {
             XPCLazyCallContext lccx(mCallContext);
-            if (!XPCConvert::NativeArray2JS(lccx, v.address(), (const void**)&dp->val,
+            if (!XPCConvert::NativeArray2JS(v.address(), (const void**)&dp->val,
                                             datum_type, &param_iid,
                                             array_count, &err)) {
                 // XXX need exception scheme for arrays to indicate bad element
@@ -2465,7 +2465,7 @@ CallMethodHelper::GatherAndConvertResults()
                 return false;
             }
         } else if (isSizedString) {
-            if (!XPCConvert::NativeStringWithSize2JS(mCallContext, v.address(),
+            if (!XPCConvert::NativeStringWithSize2JS(v.address(),
                                                      (const void*)&dp->val,
                                                      datum_type,
                                                      array_count, &err)) {
@@ -2473,7 +2473,7 @@ CallMethodHelper::GatherAndConvertResults()
                 return false;
             }
         } else {
-            if (!XPCConvert::NativeData2JS(mCallContext, v.address(), &dp->val, datum_type,
+            if (!XPCConvert::NativeData2JS(v.address(), &dp->val, datum_type,
                                            &param_iid, &err)) {
                 ThrowBadParam(err, i, mCallContext);
                 return false;
@@ -2536,7 +2536,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
     RootedValue v(mCallContext, NullValue());
     nsresult err;
     JSBool success =
-        XPCConvert::NativeData2JS(mCallContext, v.address(), &qiresult,
+        XPCConvert::NativeData2JS(v.address(), &qiresult,
                                   nsXPTType::T_INTERFACE_IS,
                                   iid, &err);
     NS_IF_RELEASE(qiresult);
@@ -2701,8 +2701,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     }
 
     nsresult err;
-    if (!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
-                                   true, &param_iid, &err)) {
+    if (!XPCConvert::JSData2Native(&dp->val, src, type, true, &param_iid, &err)) {
         ThrowBadParam(err, i, mCallContext);
         return false;
     }
@@ -2806,7 +2805,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
 
         if (isArray) {
             if (array_count &&
-                !XPCConvert::JSArray2Native(mCallContext, (void**)&dp->val, src,
+                !XPCConvert::JSArray2Native((void**)&dp->val, src,
                                             array_count, datum_type, &param_iid,
                                             &err)) {
                 // XXX need exception scheme for arrays to indicate bad element
@@ -2815,8 +2814,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
             }
         } else // if (isSizedString)
         {
-            if (!XPCConvert::JSStringWithSize2Native(mCallContext,
-                                                     (void*)&dp->val,
+            if (!XPCConvert::JSStringWithSize2Native((void*)&dp->val,
                                                      src, array_count,
                                                      datum_type, &err)) {
                 ThrowBadParam(err, i, mCallContext);
@@ -2824,8 +2822,8 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
             }
         }
     } else {
-        if (!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
-                                       true, &param_iid, &err)) {
+        if (!XPCConvert::JSData2Native(&dp->val, src, type, true,
+                                       &param_iid, &err)) {
             ThrowBadParam(err, i, mCallContext);
             return false;
         }

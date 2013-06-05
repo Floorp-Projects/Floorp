@@ -911,7 +911,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper &aHelper,
     JSContext *cx = lccx.GetJSContext();
 
     nsresult rv;
-    if (!XPCConvert::NativeInterface2JSObject(lccx, rval, nullptr,
+    if (!XPCConvert::NativeInterface2JSObject(rval, nullptr,
                                               aHelper, iid, iface,
                                               true, &rv)) {
         // I can't tell if NativeInterface2JSObject throws JS exceptions
@@ -941,7 +941,7 @@ xpc_qsVariantToJsval(XPCLazyCallContext &lccx,
     // Error handling is in XPCWrappedNative::CallMethod.
     if (p) {
         nsresult rv;
-        JSBool ok = XPCVariant::VariantDataToJS(lccx, p, &rv, rval);
+        JSBool ok = XPCVariant::VariantDataToJS(p, &rv, rval);
         if (!ok)
             xpc_qsThrow(lccx.GetJSContext(), rv);
         return ok;
