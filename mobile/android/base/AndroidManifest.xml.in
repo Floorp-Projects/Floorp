@@ -49,7 +49,7 @@
 #ifdef MOZ_ANDROID_BEAM
     <!-- Android Beam support -->
     <uses-permission android:name="android.permission.NFC"/>
-    <uses-feature android:name="android.hardware.nfc"/>
+    <uses-feature android:name="android.hardware.nfc" android:required="false"/>
 #endif
 
 #ifdef MOZ_WEBRTC
