@@ -16,16 +16,10 @@ fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-
 # This one fails on windows R (but not Ru, strangely). On Windows R, the
 # single-line <label> flex item has a different background size in test vs. ref
 fuzzy-if(B2G,10,3) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
-# XXXdholbert This test needs the flexbox pref to be enabled _at startup time_
-# (when we parse ua.css) in order to pass -- so it'll fail (only in release
-# builds) until we enable the flexbox pref in those builds in bug 841876:
-random == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
+== flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
 == flexbox-align-self-horiz-1-block.xhtml  flexbox-align-self-horiz-1-ref.xhtml
-# XXXdholbert This test needs the flexbox pref to be enabled _at startup time_
-# (when we parse ua.css) in order to pass -- so it'll fail (in release builds)
-# until we enable the flexbox pref in those builds in bug 841876:
-random == flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref.xhtml
+== flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref.xhtml
 == flexbox-align-self-horiz-2.xhtml  flexbox-align-self-horiz-2-ref.xhtml
 == flexbox-align-self-horiz-3.xhtml  flexbox-align-self-horiz-3-ref.xhtml
 == flexbox-align-self-horiz-4.xhtml  flexbox-align-self-horiz-4-ref.xhtml
