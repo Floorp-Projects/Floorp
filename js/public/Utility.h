@@ -210,27 +210,43 @@ __BitScanReverse32(unsigned int val)
 unsigned char _BitScanForward64(unsigned long * Index, unsigned __int64 Mask);
 unsigned char _BitScanReverse64(unsigned long * Index, unsigned __int64 Mask);
 # pragma intrinsic(_BitScanForward64,_BitScanReverse64)
+#endif
 
 __forceinline static int
 __BitScanForward64(unsigned __int64 val)
 {
+#if defined(_M_AMD64) || defined(_M_X64)
     unsigned long idx;
 
     _BitScanForward64(&idx, val);
     return (int)idx;
+#else
+    uint32_t lo = (uint32_t)val;
+    uint32_t hi = (uint32_t)(val >> 32);
+    return lo != 0 ?
+           js_bitscan_ctz32(lo) :
+           32 + js_bitscan_ctz32(hi);
+#endif
 }
 __forceinline static int
 __BitScanReverse64(unsigned __int64 val)
 {
+#if defined(_M_AMD64) || defined(_M_X64)
     unsigned long idx;
 
     _BitScanReverse64(&idx, val);
     return (int)(63-idx);
+#else
+    uint32_t lo = (uint32_t)val;
+    uint32_t hi = (uint32_t)(val >> 32);
+    return hi != 0 ?
+           js_bitscan_clz32(hi) :
+           32 + js_bitscan_clz32(lo);
+#endif
 }
 # define js_bitscan_ctz64(val)  __BitScanForward64(val)
 # define js_bitscan_clz64(val)  __BitScanReverse64(val)
 # define JS_HAS_BUILTIN_BITSCAN64
-#endif
 #elif MOZ_IS_GCC
 
 #if MOZ_GCC_VERSION_AT_LEAST(3, 4, 0)
@@ -246,14 +262,16 @@ __BitScanReverse64(unsigned __int64 val)
 #endif
 
 #if defined(USE_BUILTIN_CTZ)
+
+JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(uint32_t));
 # define js_bitscan_ctz32(val)  __builtin_ctz(val)
 # define js_bitscan_clz32(val)  __builtin_clz(val)
 # define JS_HAS_BUILTIN_BITSCAN32
-# if (JS_BYTES_PER_WORD == 8)
-#  define js_bitscan_ctz64(val)  __builtin_ctzll(val)
-#  define js_bitscan_clz64(val)  __builtin_clzll(val)
-#  define JS_HAS_BUILTIN_BITSCAN64
-# endif
+
+JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(uint64_t));
+# define js_bitscan_ctz64(val)  __builtin_ctzll(val)
+# define js_bitscan_clz64(val)  __builtin_clzll(val)
+# define JS_HAS_BUILTIN_BITSCAN64
 
 # undef USE_BUILTIN_CTZ
 
