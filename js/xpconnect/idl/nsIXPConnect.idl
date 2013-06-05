@@ -291,7 +291,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(4d292c29-9d18-403b-b98e-2056e550a3b4)]
+[uuid(8c85f21e-c28b-4a78-89cf-f5682d0c357a)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -440,23 +440,12 @@ interface nsIXPConnect : nsISupports
     getNativeOfWrapper(in JSContextPtr aJSContext,
                        in JSObjectPtr  aJSObj);
 
-    void setSecurityManagerForJSContext(in JSContextPtr aJSContext,
-                                        in nsIXPCSecurityManager aManager,
-                                        in uint16_t flags);
-
-    void getSecurityManagerForJSContext(in JSContextPtr aJSContext,
-                                        out nsIXPCSecurityManager aManager,
-                                        out uint16_t flags);
-
     /**
     * The security manager to use when the current JSContext has no security
     * manager.
     */
     void setDefaultSecurityManager(in nsIXPCSecurityManager aManager,
                                    in uint16_t flags);
-
-    void getDefaultSecurityManager(out nsIXPCSecurityManager aManager,
-                                   out uint16_t flags);
 
     nsIStackFrame
     createStackFrameLocation(in uint32_t       aLanguage,

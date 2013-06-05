@@ -1594,7 +1594,6 @@ main(int argc, char **argv, char **envp)
         }
 
         nsCOMPtr<nsIPrincipal> systemprincipal;
-
         // Fetch the system principal and store it away in a global, to use for
         // script compilation in Load() and ProcessFile() (including interactive
         // eval loop)
