@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_file_domarchivefile_h__
 #define mozilla_dom_file_domarchivefile_h__
 
+#include "mozilla/Attributes.h"
 #include "nsDOMFile.h"
 
 #include "ArchiveReader.h"
@@ -57,7 +58,7 @@ public:
   }
 
   // Overrides:
-  NS_IMETHOD GetInternalStream(nsIInputStream**);
+  NS_IMETHOD GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ArchiveZipFile, nsDOMFileCC)
@@ -65,7 +66,7 @@ public:
 protected:
   virtual already_AddRefed<nsIDOMBlob> CreateSlice(uint64_t aStart,
                                                    uint64_t aLength,
-                                                   const nsAString& aContentType);
+                                                   const nsAString& aContentType) MOZ_OVERRIDE;
 
 private: // Data
   ZipCentral mCentral;

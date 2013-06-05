@@ -18,7 +18,9 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
+import android.view.inputmethod.InputMethodManager;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import java.io.File;
@@ -472,6 +474,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
     }
 
+    // Used to perform clicks on pop-up buttons without having to close the virtual keyboard
+    public void clickOnButton(String label) {
+        final Button button = mSolo.getButton(label);
+        try {
+            runTestOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    button.performClick();
+                }
+            });
+       } catch (Throwable throwable) {
+           mAsserter.ok(false, "Unable to click the button","Was unable to click button ");
+       }
+    }
+
+    // Used to hide/show the virtual keyboard
+    public void toggleVKB() {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+    }
+
     protected boolean isBookmark(String[] bookmarks, String aValue) {
         for (int i = 0; i < bookmarks.length; i++) {
             if (bookmarks[i].equals(aValue))
@@ -673,7 +696,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mActions.sendKeys(addedText);
         mSolo.clickOnText("OK");
         waitForText("Bookmark updated");
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+        toggleVKB(); // close the VKB
     }
 
     public boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
@@ -689,22 +712,16 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mSolo.clickOnText("Edit");
         waitForText("Edit Bookmark");
 
-        // If the OS is not Gingerbread the vkb will be opened so we need to close it in order to press the "Cancel" button
-        // XXX: This is not true on all devices, but is true on our current automation test machines...
-        if (!(mDevice.version.equals("2.x"))) {
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
-        }
-
         // Check if the new text was added
         if (mSolo.searchText(addedText)) {
-            mSolo.clickOnText("Cancel");
+            clickOnButton("Cancel");
             waitForText("about:home");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+            toggleVKB(); // close the VKB
             return true;
         } else {
-            mSolo.clickOnText("Cancel");
+            clickOnButton("Cancel");
             waitForText("about:home");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+            toggleVKB(); // close the VKB
             return false;
         }
     }

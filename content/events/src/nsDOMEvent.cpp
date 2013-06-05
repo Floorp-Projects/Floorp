@@ -161,6 +161,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
       case NS_MUTATION_EVENT:
         static_cast<nsMutationEvent*>(tmp->mEvent)->mRelatedNode = nullptr;
         break;
+      case NS_FOCUS_EVENT:
+        static_cast<nsFocusEvent*>(tmp->mEvent)->relatedTarget = nullptr;
+        break;
       default:
         break;
     }
@@ -202,6 +205,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
         cb.NoteXPCOMChild(
           static_cast<nsMutationEvent*>(tmp->mEvent)->mRelatedNode);
+        break;
+      case NS_FOCUS_EVENT:
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
+        cb.NoteXPCOMChild(
+          static_cast<nsFocusEvent*>(tmp->mEvent)->relatedTarget);
         break;
       default:
         break;

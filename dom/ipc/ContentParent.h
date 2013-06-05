@@ -111,10 +111,10 @@ public:
      * MessageManagerCallback methods that we override.
      */
     virtual bool DoSendAsyncMessage(const nsAString& aMessage,
-                                    const mozilla::dom::StructuredCloneData& aData);
-    virtual bool CheckPermission(const nsAString& aPermission);
-    virtual bool CheckManifestURL(const nsAString& aManifestURL);
-    virtual bool CheckAppHasPermission(const nsAString& aPermission);
+                                    const mozilla::dom::StructuredCloneData& aData) MOZ_OVERRIDE;
+    virtual bool CheckPermission(const nsAString& aPermission) MOZ_OVERRIDE;
+    virtual bool CheckManifestURL(const nsAString& aManifestURL) MOZ_OVERRIDE;
+    virtual bool CheckAppHasPermission(const nsAString& aPermission) MOZ_OVERRIDE;
 
     /** Notify that a tab is beginning its destruction sequence. */
     void NotifyTabDestroying(PBrowserParent* aTab);
@@ -167,7 +167,7 @@ public:
     void FriendlyName(nsAString& aName);
 
 protected:
-    void OnChannelConnected(int32_t pid);
+    void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:

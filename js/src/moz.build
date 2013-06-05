@@ -156,7 +156,6 @@ CPP_SOURCES += [
     'jsgc.cpp',
     'jsinfer.cpp',
     'jsiter.cpp',
-    'jslog2.cpp',
     'jsmath.cpp',
     'jsmemorymetrics.cpp',
     'jsnativestack.cpp',

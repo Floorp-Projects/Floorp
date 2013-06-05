@@ -160,20 +160,33 @@ var ContentAreaObserver = {
     this.styles["viewable-width"].width = newWidth + "px";
     this.styles["viewable-width"].maxWidth = newWidth + "px";
 
-    // Adjust the app and find bar position above the soft keyboard
-    let navBar = document.getElementById("navbar");
-    let contextAppBar = document.getElementById("contextappbar");
-    let findBar = document.getElementById("content-navigator");
-    let keyboardHeight = MetroUtils.keyboardHeight;
-    navBar.style.bottom = keyboardHeight + "px";
-    contextAppBar.style.bottom = keyboardHeight + "px";
-    findBar.style.bottom = keyboardHeight + "px";
+    this.updateAppBarPosition();
 
     // Update the back/tab button states. If the keyboard is up
     // these are hidden.
     BrowserUI._updateButtons();
 
     this._disatchBrowserEvent("ViewableSizeChanged");
+  },
+
+  updateAppBarPosition: function updateAppBarPosition(aForceDown) {
+    // Adjust the app and find bar position above the soft keyboard
+    let navBar = document.getElementById("navbar");
+    let contextAppBar = document.getElementById("contextappbar");
+    let findBar = document.getElementById("content-navigator");
+    let keyboardHeight = aForceDown ? 0 : MetroUtils.keyboardHeight;
+    navBar.style.bottom = keyboardHeight + "px";
+    contextAppBar.style.bottom = keyboardHeight + "px";
+    findBar.style.bottom = keyboardHeight + "px";
+  },
+
+  /*
+   * Called by BrowserUI right before we blur the nav bar edit. We use
+   * this to get a head start on shuffling app bars around before the
+   * soft keyboard transitions down.
+   */
+  navBarWillBlur: function navBarWillBlur() {
+    this.updateAppBarPosition(true);
   },
 
   onBrowserCreated: function onBrowserCreated(aBrowser) {

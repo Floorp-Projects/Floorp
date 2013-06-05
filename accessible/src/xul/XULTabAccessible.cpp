@@ -83,13 +83,19 @@ XULTabAccessible::NativeState()
   // get focus and disable status from base class
   uint64_t state = AccessibleWrap::NativeState();
 
-  // Check whether the tab is selected
+  // Check whether the tab is selected and/or pinned
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mContent));
   if (tab) {
     bool selected = false;
     if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
       state |= states::SELECTED;
+
+    if (mContent && mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::pinned) &&
+        mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::pinned,
+                              nsGkAtoms::_true, eCaseMatters))
+      state |= states::PINNED;
   }
+
   return state;
 }
 

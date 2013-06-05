@@ -162,6 +162,8 @@ public class SUTAgentAndroid extends Activity
 
         DoCommand dc = new DoCommand(getApplication());
 
+        dc.FixDataLocalPermissions();
+
         // Get configuration settings from "ini" file
         File dir = getFilesDir();
         File iniFile = new File(dir, "SUTAgent.ini");

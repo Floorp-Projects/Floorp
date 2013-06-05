@@ -25,6 +25,8 @@ The following nsIAccessible states aren't translated, just ignored:
                          Supported via ATK_ROLE_PASSWORD_TEXT
   STATE_HASPOPUP:        Object displays a pop-up menu or window when invoked.
                          No ATK equivalent.  The nsIAccessible state is not currently supported.
+  STATE_PINNED:          The object is pinned, usually indicating it is fixed in place and has permanence.
+                         No ATK equivalent.  The nsIAccessible state is not currently supported.
 
 The following ATK states are not supported:
   ATK_STATE_ARMED:       No clear use case, used briefly when button is activated
@@ -108,5 +110,6 @@ static const AtkStateMap gAtkStateMap[] = {                     // Cross Platfor
   { ATK_STATE_ENABLED,                        kMapDirectly },   // states::ENABLED                 = 1 << 44
   { ATK_STATE_SENSITIVE,                      kMapDirectly },   // states::SENSITIVE               = 1 << 45
   { ATK_STATE_EXPANDABLE,                     kMapDirectly },   // states::EXPANDABLE              = 1 << 46
-  { kNone,                                    kNoSuchState },   //                                 = 1 << 47
+  { kNone,                                    kMapDirectly },   // states::PINNED                  = 1 << 47
+  { kNone,                                    kNoSuchState },   //                                 = 1 << 48
 };

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_indexeddb_idbtransaction_h__
 #define mozilla_dom_indexeddb_idbtransaction_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "mozIStorageConnection.h"
@@ -98,7 +99,7 @@ public:
   }
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   void OnNewRequest();
   void OnRequestFinished();
