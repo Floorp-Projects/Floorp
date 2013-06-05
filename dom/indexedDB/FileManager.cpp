@@ -385,11 +385,22 @@ FileManager::InitDirectory(nsIFile* aDirectory,
 nsresult
 FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
 {
-  uint64_t usage = 0;
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  bool exists;
+  nsresult rv = aDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    *aUsage = 0;
+    return NS_OK;
+  }
 
   nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  uint64_t usage = 0;
 
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {

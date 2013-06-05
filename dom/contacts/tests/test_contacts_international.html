@@ -99,7 +99,7 @@ var steps = [
   function () {
     ok(true, "Searching for local number");
     var options = {filterBy: ["tel"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: number1.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -113,7 +113,7 @@ var steps = [
   function () {
     ok(true, "Searching for international number");
     var options = {filterBy: ["tel"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: number1.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -171,7 +171,7 @@ var steps = [
   function () {
     ok(true, "Searching for local number");
     var options = {filterBy: ["tel"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: number1.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -183,7 +183,7 @@ var steps = [
   function () {
     ok(true, "Searching for local number");
     var options = {filterBy: ["tel"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: number1.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -195,7 +195,7 @@ var steps = [
   function () {
     ok(true, "Searching for local number");
     var options = {filterBy: ["tel"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: number2.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -209,7 +209,7 @@ var steps = [
   function () {
     ok(true, "Searching for local number");
     var options = {filterBy: ["tel"],
-                   filterOp: "contains",
+                   filterOp: "startsWith",
                    filterValue: number2.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {

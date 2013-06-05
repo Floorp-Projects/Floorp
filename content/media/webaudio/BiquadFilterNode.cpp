@@ -63,6 +63,9 @@ void SetParamsOnBiquad(WebCore::Biquad& aBiquad,
   case BiquadFilterType::Allpass:
     aBiquad.setAllpassParams(normalizedFrequency, aQ);
     break;
+  default:
+    NS_NOTREACHED("We should never see the alternate names here");
+    break;
   }
 }
 
@@ -198,6 +201,21 @@ BiquadFilterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 BiquadFilterNode::SetType(BiquadFilterType aType)
 {
+  // Handle the alternate enum values
+  switch (aType) {
+  case BiquadFilterType::_0: aType = BiquadFilterType::Lowpass; break;
+  case BiquadFilterType::_1: aType = BiquadFilterType::Highpass; break;
+  case BiquadFilterType::_2: aType = BiquadFilterType::Bandpass; break;
+  case BiquadFilterType::_3: aType = BiquadFilterType::Lowshelf; break;
+  case BiquadFilterType::_4: aType = BiquadFilterType::Highshelf; break;
+  case BiquadFilterType::_5: aType = BiquadFilterType::Peaking; break;
+  case BiquadFilterType::_6: aType = BiquadFilterType::Notch; break;
+  case BiquadFilterType::_7: aType = BiquadFilterType::Allpass; break;
+  default:
+    // Shut up the compiler warning
+    break;
+  }
+
   mType = aType;
   SendInt32ParameterToStream(BiquadFilterNodeEngine::TYPE,
                              static_cast<int32_t>(aType));

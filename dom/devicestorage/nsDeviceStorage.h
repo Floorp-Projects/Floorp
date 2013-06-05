@@ -103,9 +103,6 @@ public:
     mIOThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
   }
 
-  nsresult GetUsedSizeForType(const nsAString& aStorageType,
-                              const nsAString& aStorageName,
-                              uint64_t* usedSize);
   nsresult AccumUsedSizes(const nsAString& aStorageName,
                           uint64_t* aPictureSize, uint64_t* aVideosSize,
                           uint64_t* aMusicSize, uint64_t* aTotalSize);
@@ -122,6 +119,7 @@ private:
   public:
     bool mDirty;
     nsString mStorageName;
+    int64_t  mFreeBytes;
     uint64_t mPicturesUsedSize;
     uint64_t mVideosUsedSize;
     uint64_t mMusicUsedSize;

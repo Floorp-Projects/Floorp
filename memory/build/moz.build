@@ -16,3 +16,17 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
         'malloc_decls.h',
         'replace_malloc.h',
     ]
+CSRCS += [
+    'jemalloc_config.c',
+    'mozmemory_wrap.c',
+]
+
+if CONFIG['MOZ_JEMALLOC3']:
+    CSRCS += [
+        'mozjemalloc_compat.c',
+    ]
+
+if CONFIG['MOZ_REPLACE_MALLOC']:
+    CSRCS += [
+        'replace_malloc.c',
+    ]

@@ -11,7 +11,7 @@ interface nsIDOMDeviceStorageChangeEvent;
 interface nsIDOMEventListener;
 interface nsIFile;
 
-[scriptable, uuid(7cef14d4-d767-4da7-a18e-32c5e009a8e4), builtinclass]
+[scriptable, uuid(7c1b2305-0f14-4c07-8a8a-359eeb850068), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
@@ -29,6 +29,10 @@ interface nsIDOMDeviceStorage : nsIDOMEventTarget
     // Note that the storageName is just a name (like sdcard), and doesn't
     // include any path information.
     readonly attribute DOMString storageName;
+
+    // Determines if this storage area is the one which will be used by default
+    // for storing new files.
+    readonly attribute bool default;
 
     [noscript] nsIFile getRootDirectoryForFile(in DOMString aName);
 };

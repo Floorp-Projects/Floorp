@@ -172,8 +172,8 @@ public:
   float GetPageEnd();
 
   virtual float GetPointOffset(const CSSPoint& aPoint) = 0;
-  virtual float GetRectLength(const gfx::Rect& aRect) = 0;
-  virtual float GetRectOffset(const gfx::Rect& aRect) = 0;
+  virtual float GetRectLength(const CSSRect& aRect) = 0;
+  virtual float GetRectOffset(const CSSRect& aRect) = 0;
 
 protected:
   int32_t mPos;
@@ -193,16 +193,16 @@ class AxisX : public Axis {
 public:
   AxisX(AsyncPanZoomController* mAsyncPanZoomController);
   virtual float GetPointOffset(const CSSPoint& aPoint);
-  virtual float GetRectLength(const gfx::Rect& aRect);
-  virtual float GetRectOffset(const gfx::Rect& aRect);
+  virtual float GetRectLength(const CSSRect& aRect);
+  virtual float GetRectOffset(const CSSRect& aRect);
 };
 
 class AxisY : public Axis {
 public:
   AxisY(AsyncPanZoomController* mAsyncPanZoomController);
   virtual float GetPointOffset(const CSSPoint& aPoint);
-  virtual float GetRectLength(const gfx::Rect& aRect);
-  virtual float GetRectOffset(const gfx::Rect& aRect);
+  virtual float GetRectLength(const CSSRect& aRect);
+  virtual float GetRectOffset(const CSSRect& aRect);
 };
 
 }

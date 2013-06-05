@@ -152,16 +152,21 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 
 # dynamic document changes
 == dynamic-font-size.svg dynamic-font-size-ref.svg
+== dynamic-font-size-2.svg dynamic-font-size-2-ref.svg
+== dynamic-font-size-3.svg dynamic-font-size-3-ref.svg
+== dynamic-font-size-4.svg dynamic-font-size-4-ref.svg
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline-ref.svg
 == dynamic-multiple-x.svg dynamic-multiple-x-ref.svg
 
 # text and masks
 HTTP(../..) == mask-applied.svg mask-applied-ref.svg
-# HTTP(../..) == mask-content.svg mask-content-ref.svg  # fails due to invalidation problem - bug 873806
+HTTP(../..) == mask-content.svg mask-content-ref.svg
+HTTP(../..) == mask-content-2.svg mask-content-2-ref.svg
 
 # text and clipPaths
 HTTP(../..) == clipPath-applied.svg clipPath-applied-ref.svg
-# HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg  # fails due to invalidation problem - bug 873806
+HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg
+HTTP(../..) == clipPath-content-2.svg clipPath-content-2-ref.svg
 
 # text and patterns
 fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content-ref.svg

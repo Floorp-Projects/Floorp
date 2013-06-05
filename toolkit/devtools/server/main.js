@@ -267,10 +267,28 @@ var DebuggerServer = {
     let serverTransport = new LocalDebuggerTransport;
     let clientTransport = new LocalDebuggerTransport(serverTransport);
     serverTransport.other = clientTransport;
-    this._onConnection(serverTransport);
+    let connection = this._onConnection(serverTransport);
+
+    // I'm putting this here because I trust you.
+    //
+    // There are times, when using a local connection, when you're going
+    // to be tempted to just get direct access to the server.  Resist that
+    // temptation!  If you succumb to that temptation, you will make the
+    // fine developers that work on Fennec and Firefox OS sad.  They're
+    // professionals, they'll try to act like they understand, but deep
+    // down you'll know that you hurt them.
+    //
+    // This reference allows you to give in to that temptation.  There are
+    // times this makes sense: tests, for example, and while porting a
+    // previously local-only codebase to the remote protocol.
+    //
+    // But every time you use this, you will feel the shame of having
+    // used a property that starts with a '_'.
+    clientTransport._serverConnection = connection;
 
     return clientTransport;
   },
+
 
   // nsIServerSocketListener implementation
 
@@ -318,6 +336,8 @@ var DebuggerServer = {
     conn.addActor(conn.rootActor);
     aTransport.send(conn.rootActor.sayHello());
     aTransport.ready();
+
+    return conn;
   },
 
   /**

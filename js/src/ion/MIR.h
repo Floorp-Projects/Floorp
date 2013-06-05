@@ -404,6 +404,7 @@ class MDefinition : public MNode
     types::StackTypeSet *resultTypeSet() const {
         return resultTypeSet_;
     }
+    bool emptyResultTypeSet() const;
 
     bool mightBeType(MIRType type) const {
         JS_ASSERT(type != MIRType_Value);

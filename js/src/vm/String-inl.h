@@ -404,10 +404,10 @@ inline JSLinearString *
 js::StaticStrings::getUnitStringForElement(JSContext *cx, JSString *str, size_t index)
 {
     JS_ASSERT(index < str->length());
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
+
+    jschar c;
+    if (!str->getChar(cx, index, &c))
         return NULL;
-    jschar c = chars[index];
     if (c < UNIT_STATIC_LIMIT)
         return getUnit(c);
     return js_NewDependentString(cx, str, index, 1);
