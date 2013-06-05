@@ -905,6 +905,8 @@ SpecialPowersAPI.prototype = {
   },
 
   addObserver: function(obs, notification, weak) {
+    if (typeof obs == 'object' && obs.observe.name != 'SpecialPowersCallbackWrapper')
+      obs.observe = wrapCallback(obs.observe);
     var obsvc = Cc['@mozilla.org/observer-service;1']
                    .getService(Ci.nsIObserverService);
     obsvc.addObserver(obs, notification, weak);
