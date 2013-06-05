@@ -1,22 +1,22 @@
 # PngSuite - Image filtering
 
 # f00n0g08 - grayscale, no interlacing, filter-type 0
-random-if(bug685516) == f00n0g08.png f00n0g08.html
+== f00n0g08.png f00n0g08.html
 # f00n2c08 - color, no interlacing, filter-type 0
-random-if(bug685516) == f00n2c08.png f00n2c08.html
+== f00n2c08.png f00n2c08.html
 # f01n0g08 - grayscale, no interlacing, filter-type 1
-random-if(bug685516) == f01n0g08.png f01n0g08.html
+== f01n0g08.png f01n0g08.html
 # f01n2c08 - color, no interlacing, filter-type 1
-random-if(bug685516) == f01n2c08.png f01n2c08.html
+== f01n2c08.png f01n2c08.html
 # f02n0g08 - grayscale, no interlacing, filter-type 2
-random-if(bug685516) == f02n0g08.png f02n0g08.html
+== f02n0g08.png f02n0g08.html
 # f02n2c08 - color, no interlacing, filter-type 2
-random-if(bug685516) == f02n2c08.png f02n2c08.html
+== f02n2c08.png f02n2c08.html
 # f03n0g08 - grayscale, no interlacing, filter-type 3
-random-if(bug685516) == f03n0g08.png f03n0g08.html
+== f03n0g08.png f03n0g08.html
 # f03n2c08 - color, no interlacing, filter-type 3
-random-if(bug685516) == f03n2c08.png f03n2c08.html
+== f03n2c08.png f03n2c08.html
 # f04n0g08 - grayscale, no interlacing, filter-type 4
-random-if(bug685516) == f04n0g08.png f04n0g08.html
+== f04n0g08.png f04n0g08.html
 # f04n2c08 - color, no interlacing, filter-type 4 
-random-if(bug685516) == f04n2c08.png f04n2c08.html
+== f04n2c08.png f04n2c08.html
