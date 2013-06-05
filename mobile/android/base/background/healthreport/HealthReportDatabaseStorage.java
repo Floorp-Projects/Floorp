@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.json.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields.FieldSpec;
 
@@ -215,7 +216,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
                                                  int mode,
                                                  SQLiteDatabase.CursorFactory factory) {
         final File path = getDatabasePath(name);
-        Logger.info(LOG_TAG, "Opening database through absolute path " + path.getAbsolutePath());
+        Logger.pii(LOG_TAG, "Opening database through absolute path " + path.getAbsolutePath());
         return SQLiteDatabase.openOrCreateDatabase(path, null);
       }
     }
@@ -233,7 +234,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
           CURRENT_VERSION);
 
       if (CAN_USE_ABSOLUTE_DB_PATH) {
-        Logger.info(LOG_TAG, "Opening: " + getAbsolutePath(profileDirectory, name));
+        Logger.pii(LOG_TAG, "Opening: " + getAbsolutePath(profileDirectory, name));
       }
     }
 
@@ -1035,6 +1036,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   }
 
   @Override
+  public void recordDailyLast(int env, int day, int field, JSONObject value) {
+    this.recordDailyLast(env, day, field, value == null ? "null" : value.toString(), EVENTS_TEXTUAL);
+  }
+
+  @Override
   public void recordDailyLast(int env, int day, int field, String value) {
     this.recordDailyLast(env, day, field, value, EVENTS_TEXTUAL);
   }
@@ -1058,6 +1064,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     final SQLiteDatabase db = this.helper.getWritableDatabase();
     putValue(v, value);
     db.insert(table, null, v);
+  }
+
+  @Override
+  public void recordDailyDiscrete(int env, int day, int field, JSONObject value) {
+    this.recordDailyDiscrete(env, day, field, value == null ? "null" : value.toString(), EVENTS_TEXTUAL);
   }
 
   @Override
