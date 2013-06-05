@@ -1889,10 +1889,8 @@ var NativeWindow = {
               icon: item.icon,
               label: item.label,
               id: id,
-              isGroup: false,
-              inGroup: false,
               disabled: item.disabled,
-              isParent: item instanceof Ci.nsIDOMHTMLMenuElement
+              parent: item instanceof Ci.nsIDOMHTMLMenuElement
             }
           }
         };
@@ -2017,36 +2015,36 @@ var NativeWindow = {
       if (itemArray.length == 0)
         return;
 
-      let msg = {
-        type: "Prompt:Show",
-        title: title,
-        listitems: itemArray
-      };
-      let data = JSON.parse(sendMessageToJava(msg));
-      if (data.button == -1) {
-        // prompt was cancelled
-        return;
-      }
-
-      let selectedId = itemArray[data.button].id;
-      let selectedItem = this._getMenuItemForId(selectedId);
-
-      this.menuitems = null;
-      if (selectedItem && selectedItem.callback) {
-        if (selectedItem.matches) {
-          // for menuitems added using the native UI, pass the dom element that matched that item to the callback
-          while (aTarget) {
-            if (selectedItem.matches(aTarget, aX, aY)) {
-              selectedItem.callback.call(selectedItem, aTarget, aX, aY);
-              break;
-            }
-            aTarget = aTarget.parentNode;
-          }
-        } else {
-          // if this was added using the html5 context menu api, just click on the context menu item
-          selectedItem.callback.call(selectedItem, aTarget, aX, aY);
+      let prompt = new Prompt({
+        window: aTarget.ownerDocument.defaultView,
+        title: title
+      }).setSingleChoiceItems(itemArray)
+      .show((function(data) {
+        if (data.button == -1) {
+          // prompt was cancelled
+          return;
         }
-      }
+
+        let selectedId = itemArray[data.button].id;
+        let selectedItem = this._getMenuItemForId(selectedId);
+
+        this.menuitems = null;
+        if (selectedItem && selectedItem.callback) {
+          if (selectedItem.matches) {
+            // for menuitems added using the native UI, pass the dom element that matched that item to the callback
+            while (aTarget) {
+              if (selectedItem.matches(aTarget, aX, aY)) {
+                selectedItem.callback.call(selectedItem, aTarget, aX, aY);
+                break;
+              }
+              aTarget = aTarget.parentNode;
+            }
+          } else {
+            // if this was added using the html5 context menu api, just click on the context menu item
+            selectedItem.callback.call(selectedItem, aTarget, aX, aY);
+          }
+        }
+      }).bind(this));
     },
 
     handleEvent: function(aEvent) {
