@@ -235,7 +235,7 @@ public class GLController {
     }
 
     private String getEGLError() {
-        return "Error " + mEGL.eglGetError();
+        return "Error " + (mEGL == null ? "(no mEGL)" : mEGL.eglGetError());
     }
 
     void resumeCompositor(int width, int height) {

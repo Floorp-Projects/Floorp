@@ -36,8 +36,8 @@ public:
   NS_DECL_NSIOBSERVER
 
   // nsIDOMScriptObjectFactory
-  NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID);
-  NS_IMETHOD_(nsISupports *) GetExternalClassInfoInstance(const nsAString& aName);
+  NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID) MOZ_OVERRIDE;
+  NS_IMETHOD_(nsISupports *) GetExternalClassInfoInstance(const nsAString& aName) MOZ_OVERRIDE;
 
   NS_IMETHOD RegisterDOMClassInfo(const char *aName,
                                   nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
@@ -45,7 +45,7 @@ public:
                                   const nsIID **aInterfaces,
                                   uint32_t aScriptableFlags,
                                   bool aHasClassInterface,
-                                  const nsCID *aConstructorCID);
+                                  const nsCID *aConstructorCID) MOZ_OVERRIDE;
 };
 
 class nsDOMExceptionProvider MOZ_FINAL : public nsIExceptionProvider

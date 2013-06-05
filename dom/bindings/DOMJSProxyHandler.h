@@ -137,9 +137,6 @@ FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, JS::Value v, b
   FillPropertyDescriptor(desc, obj, readonly);
 }
 
-JSObject*
-EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj);
-
 } // namespace dom
 } // namespace mozilla
 

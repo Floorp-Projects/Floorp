@@ -540,7 +540,11 @@ var BrowserUI = {
   },
 
   blurNavBar: function blurNavBar() {
-    this._edit.blur();
+    if (this._edit.focused) {
+      this._edit.blur();
+      return true;
+    }
+    return false;
   },
 
   // If the user types in the address bar, cancel pending
@@ -1494,7 +1498,11 @@ var StartUI = {
   onClick: function onClick(aEvent) {
     // If someone clicks / taps in empty grid space, take away
     // focus from the nav bar edit so the soft keyboard will hide.
-    BrowserUI.blurNavBar();
+    if (BrowserUI.blurNavBar()) {
+      // Advanced notice to CAO, so we can shuffle the nav bar in advance
+      // of the keyboard transition.
+      ContentAreaObserver.navBarWillBlur();
+    }
   },
 
   handleEvent: function handleEvent(aEvent) {

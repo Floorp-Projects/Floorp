@@ -38,6 +38,7 @@ CPP_SOURCES += [
     'nsDOMDragEvent.cpp',
     'nsDOMEvent.cpp',
     'nsDOMEventTargetHelper.cpp',
+    'nsDOMFocusEvent.cpp',
     'nsDOMKeyboardEvent.cpp',
     'nsDOMMessageEvent.cpp',
     'nsDOMMouseEvent.cpp',

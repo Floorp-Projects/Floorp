@@ -1057,26 +1057,43 @@ function multiAction(msg) {
  */
 function goUrl(msg) {
   let command_id = msg.json.command_id;
+
+  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  let start = new Date().getTime();
+  let end = null;
+  function checkLoad(){
+    end = new Date().getTime();
+    let errorRegex = /about:.+(error)|(blocked)\?/;
+    let elapse = end - start;
+    if (msg.json.pageTimeout == null || elapse <= msg.json.pageTimeout){
+      if (curWindow.document.readyState == "complete"){
+        sendOk(command_id);
+        checkTimer.cancel();
+      }
+      else if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)){
+        sendError("Error loading page", 13, null, command_id);
+      }
+      else{
+        checkTimer.cancel();
+        checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+      }
+    }
+    else{
+      sendError("Error loading page, timed out", 21, null, command_id);
+    }
+  }
   // Prevent DOMContentLoaded events from frames from invoking this code,
   // unless the event is coming from the frame associated with the current
   // window (i.e., someone has used switch_to_frame).
   let onDOMContentLoaded = function onDOMContentLoaded(event){
-    if (msg.json.pageTimeout != null){
-      checkTimer.cancel();
-    }
     if (!event.originalTarget.defaultView.frameElement ||
       event.originalTarget.defaultView.frameElement == curWindow.frameElement) {
-      removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-      let errorRegex = /about:.+(error)|(blocked)\?/;
-      if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)) {
-        sendError("Error loading page", 13, null, command_id);
-        return;
-      }
-      sendOk(command_id);
+      checkLoad();
     }
   };
+
   function timerFunc(){
-    sendError("Error loading page", 13, null, command_id);
+    sendError("Error loading page, timed out", 21, null, command_id);
     removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
   }
   if (msg.json.pageTimeout != null){

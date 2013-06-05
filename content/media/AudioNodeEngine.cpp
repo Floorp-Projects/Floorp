@@ -113,12 +113,12 @@ AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
 
   if (aIsOnTheLeft) {
     for (i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
-      *aOutputL++ = *aInputL++ + *aInputR * aGainL;
+      *aOutputL++ = *aInputL++ + *aInputR++ * aGainL;
       *aOutputR++ = *aInputR++ * aGainR;
     }
   } else {
     for (i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
-      *aOutputL++ = *aInputL * aGainL;
+      *aOutputL++ = *aInputL++ * aGainL;
       *aOutputR++ = *aInputR++ + *aInputL++ * aGainR;
     }
   }

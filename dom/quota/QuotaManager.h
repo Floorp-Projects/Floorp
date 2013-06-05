@@ -196,7 +196,7 @@ public:
                             nsIFile** aDirectory);
 
   void
-  UninitializeOriginsByPattern(const nsACString& aPattern);
+  OriginClearCompleted(const nsACString& aPattern);
 
   nsIThread*
   IOThread()
@@ -292,6 +292,16 @@ private:
 
   nsresult
   MaybeUpgradeOriginDirectory(nsIFile* aDirectory);
+
+  void
+  ReleaseIOThreadObjects()
+  {
+    AssertIsOnIOThread();
+
+    for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
+      mClients[index]->ReleaseIOThreadObjects();
+    }
+  }
 
   static void
   GetOriginPatternString(uint32_t aAppId,

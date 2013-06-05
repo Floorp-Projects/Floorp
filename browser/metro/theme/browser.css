@@ -331,8 +331,7 @@ appbar {
   bottom: 0;
   width: 100%;
   transform: translateY(100%);
-  transition: transform @metro_animation_duration@ @metro_animation_easing@,
-              bottom @metro_animation_duration@ @metro_animation_easing@;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
 }
 
@@ -360,6 +359,13 @@ appbar > toolbar > toolbarbutton[disabled] {
 #navbar[startpage],
 appbar[visible] {
   transform: none;
+}
+
+#stack[keyboardVisible] > appbar {
+  /* Slow the bottom up transition since it's impossible to match the system's
+     soft keyboard movement. */
+  transition: transform @metro_animation_duration@ @metro_animation_easing@,
+              bottom @appbar_keyboard_slideup_duration@ @metro_animation_easing@;
 }
 
 appbar > toolbar > toolbarbutton {

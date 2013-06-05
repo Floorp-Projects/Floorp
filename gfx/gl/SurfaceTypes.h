@@ -12,6 +12,10 @@
 #include <cstring>
 
 namespace mozilla {
+namespace layers {
+class ISurfaceAllocator;
+}
+
 namespace gfx {
 
 typedef uintptr_t SurfaceStreamHandle;
@@ -24,6 +28,10 @@ struct SurfaceCaps
     bool depth, stencil;
     bool antialias;
     bool preserve;
+
+    // The surface allocator that we want to create this
+    // for.  May be null.
+    layers::ISurfaceAllocator* surfaceAllocator;
 
     SurfaceCaps() {
         Clear();

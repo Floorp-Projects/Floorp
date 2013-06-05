@@ -48,7 +48,7 @@ public:
                                   JS::Handle<JSObject*> aScopeObject,
                                   JS::CompileOptions &aOptions,
                                   bool aCoerceToString,
-                                  JS::Value* aRetValue);
+                                  JS::Value* aRetValue) MOZ_OVERRIDE;
 
   virtual nsresult CompileScript(const PRUnichar* aText,
                                  int32_t aTextLength,
@@ -57,46 +57,46 @@ public:
                                  uint32_t aLineNo,
                                  uint32_t aVersion,
                                  JS::MutableHandle<JSScript*> aScriptObject,
-                                 bool aSaveSource = false);
+                                 bool aSaveSource = false) MOZ_OVERRIDE;
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
-                                 JSObject* aScopeObject);
+                                 JSObject* aScopeObject) MOZ_OVERRIDE;
 
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JS::Handle<JSObject*> aScope,
                                             JS::Handle<JSObject*> aHandler,
-                                            JS::MutableHandle<JSObject*> aBoundHandler);
+                                            JS::MutableHandle<JSObject*> aBoundHandler) MOZ_OVERRIDE;
 
-  virtual nsIScriptGlobalObject *GetGlobalObject();
+  virtual nsIScriptGlobalObject *GetGlobalObject() MOZ_OVERRIDE;
   inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
 
-  virtual JSContext* GetNativeContext();
-  virtual JSObject* GetNativeGlobal();
-  virtual nsresult InitContext();
-  virtual bool IsContextInitialized();
+  virtual JSContext* GetNativeContext() MOZ_OVERRIDE;
+  virtual JSObject* GetNativeGlobal() MOZ_OVERRIDE;
+  virtual nsresult InitContext() MOZ_OVERRIDE;
+  virtual bool IsContextInitialized() MOZ_OVERRIDE;
 
-  virtual void ScriptEvaluated(bool aTerminated);
-  virtual bool GetScriptsEnabled();
-  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
+  virtual void ScriptEvaluated(bool aTerminated) MOZ_OVERRIDE;
+  virtual bool GetScriptsEnabled() MOZ_OVERRIDE;
+  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts) MOZ_OVERRIDE;
 
-  virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, nsISupports* aVal);
+  virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, nsISupports* aVal) MOZ_OVERRIDE;
 
-  virtual bool GetProcessingScriptTag();
-  virtual void SetProcessingScriptTag(bool aResult);
+  virtual bool GetProcessingScriptTag() MOZ_OVERRIDE;
+  virtual void SetProcessingScriptTag(bool aResult) MOZ_OVERRIDE;
 
-  virtual bool GetExecutingScript();
+  virtual bool GetExecutingScript() MOZ_OVERRIDE;
 
-  virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj);
+  virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) MOZ_OVERRIDE;
 
-  virtual void WillInitializeContext();
-  virtual void DidInitializeContext();
+  virtual void WillInitializeContext() MOZ_OVERRIDE;
+  virtual void DidInitializeContext() MOZ_OVERRIDE;
 
   virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                             JS::Handle<JSScript*> aScriptObject);
+                             JS::Handle<JSScript*> aScriptObject) MOZ_OVERRIDE;
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                               JS::MutableHandle<JSScript*> aResult);
+                               JS::MutableHandle<JSScript*> aResult) MOZ_OVERRIDE;
 
-  virtual void EnterModalState();
-  virtual void LeaveModalState();
+  virtual void EnterModalState() MOZ_OVERRIDE;
+  virtual void LeaveModalState() MOZ_OVERRIDE;
 
   NS_DECL_NSIXPCSCRIPTNOTIFY
 
@@ -144,7 +144,7 @@ public:
   // Calling LikelyShortLivingObjectCreated() makes a GC more likely.
   static void LikelyShortLivingObjectCreated();
 
-  virtual void GC(JS::gcreason::Reason aReason);
+  virtual void GC(JS::gcreason::Reason aReason) MOZ_OVERRIDE;
 
   static uint32_t CleanupsSinceLastGC();
 
@@ -223,7 +223,7 @@ public:
 
   virtual already_AddRefed<nsIScriptContext>
   CreateContext(bool aGCOnDestruction,
-                nsIScriptGlobalObject* aGlobalObject);
+                nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
 
   static void Startup();
   static void Shutdown();

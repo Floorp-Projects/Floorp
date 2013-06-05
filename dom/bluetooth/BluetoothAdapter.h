@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_bluetooth_bluetoothadapter_h__
 #define mozilla_dom_bluetooth_bluetoothadapter_h__
 
+#include "mozilla/Attributes.h"
 #include "BluetoothCommon.h"
 #include "BluetoothPropertyContainer.h"
 #include "nsCOMPtr.h"
@@ -48,7 +49,7 @@ public:
   }
 
   void Unroot();
-  virtual void SetPropertyByValue(const BluetoothNamedValue& aValue);  
+  virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;  
 private:
 
   BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
