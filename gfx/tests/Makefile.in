@@ -44,12 +44,6 @@ MOCHITEST_FILES = $(addprefix mochitest/, \
 #CPPSRCS		= $(CPP_DISABLED_UNIT_TESTS)
 #SIMPLE_PROGRAMS	= $(CPP_DISABLED_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 #
-#ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-#CMMSRCS		= gfxTestCocoaHelper.mm
-#HELPER_OBJS	= gfxTestCocoaHelper.$(OBJ_SUFFIX)
-#EXTRA_DEPS	+= gfxTestCocoaHelper.$(OBJ_SUFFIX)
-#endif
-#
 #LIBS		= \
 #		$(HELPER_OBJS) \
 #		$(call EXPAND_LIBNAME_PATH,thebes,../thebes) \
