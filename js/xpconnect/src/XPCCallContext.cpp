@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,8 +37,8 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mName(cx)
 {
     MOZ_ASSERT(cx);
-    Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
-         INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
+    Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj, name,
+         argc, argv, rval);
 }
 
 #define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
@@ -65,7 +66,6 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
                      JSBool callBeginRequest,
                      HandleObject obj,
                      HandleObject funobj,
-                     WrapperInitOptions wrapperInitOptions,
                      HandleId name,
                      unsigned argc,
                      jsval *argv,
@@ -116,40 +116,39 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     mState = HAVE_OBJECT;
 
     mTearOff = nullptr;
-    if (wrapperInitOptions == INIT_SHOULD_LOOKUP_WRAPPER) {
-        // If the object is a security wrapper, GetWrappedNativeOfJSObject can't
-        // handle it. Do special handling here to make cross-origin Xrays work.
-        JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
-        if (!unwrapped) {
-            mWrapper = UnwrapThisIfAllowed(obj, funobj, argc);
-            if (!mWrapper) {
-                JS_ReportError(mJSContext, "Permission denied to call method on |this|");
-                mState = INIT_FAILED;
-                return;
-            }
-        } else {
-            js::Class *clasp = js::GetObjectClass(unwrapped);
-            if (IS_WRAPPER_CLASS(clasp)) {
-                if (IS_SLIM_WRAPPER_OBJECT(unwrapped))
-                    mFlattenedJSObject = unwrapped;
-                else
-                    mWrapper = XPCWrappedNative::Get(unwrapped);
-            } else if (IS_TEAROFF_CLASS(clasp)) {
-                mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
-                mWrapper = XPCWrappedNative::Get(js::GetObjectParent(unwrapped));
-            }
-        }
-        if (mWrapper) {
-            mFlattenedJSObject = mWrapper->GetFlatJSObject();
 
-            if (mTearOff)
-                mScriptableInfo = nullptr;
-            else
-                mScriptableInfo = mWrapper->GetScriptableInfo();
-        } else {
-            NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
-                              "should have a slim wrapper");
+    // If the object is a security wrapper, GetWrappedNativeOfJSObject can't
+    // handle it. Do special handling here to make cross-origin Xrays work.
+    JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+    if (!unwrapped) {
+        mWrapper = UnwrapThisIfAllowed(obj, funobj, argc);
+        if (!mWrapper) {
+            JS_ReportError(mJSContext, "Permission denied to call method on |this|");
+            mState = INIT_FAILED;
+            return;
         }
+    } else {
+        js::Class *clasp = js::GetObjectClass(unwrapped);
+        if (IS_WRAPPER_CLASS(clasp)) {
+            if (IS_SLIM_WRAPPER_OBJECT(unwrapped))
+                mFlattenedJSObject = unwrapped;
+            else
+                mWrapper = XPCWrappedNative::Get(unwrapped);
+        } else if (IS_TEAROFF_CLASS(clasp)) {
+            mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
+            mWrapper = XPCWrappedNative::Get(js::GetObjectParent(unwrapped));
+        }
+    }
+    if (mWrapper) {
+        mFlattenedJSObject = mWrapper->GetFlatJSObject();
+
+        if (mTearOff)
+            mScriptableInfo = nullptr;
+        else
+            mScriptableInfo = mWrapper->GetScriptableInfo();
+    } else {
+        NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
+                          "should have a slim wrapper");
     }
 
     if (!JSID_IS_VOID(name))
