@@ -115,19 +115,19 @@ function runTests() {
   l2 = document.getElementById("testlevel2");
   l3 = document.getElementById("testlevel3");
   var textnode = l3.firstChild;
-  var chain = SpecialPowers.unwrap(els.getEventTargetChainFor(textnode, {}));
+  var chain = els.getEventTargetChainFor(textnode, {});
   ok(chain.length > 3, "Too short event target chain.");
-  is(chain[0], textnode, "Wrong chain item (1)");
-  is(chain[1], l3, "Wrong chain item (2)");
-  is(chain[2], l2, "Wrong chain item (3)");
-  is(chain[3], root, "Wrong chain item (4)");
+  ok(SpecialPowers.compare(chain[0], textnode), "Wrong chain item (1)");
+  ok(SpecialPowers.compare(chain[1], l3), "Wrong chain item (2)");
+  ok(SpecialPowers.compare(chain[2], l2), "Wrong chain item (3)");
+  ok(SpecialPowers.compare(chain[3], root), "Wrong chain item (4)");
 
   var hasDocumentInChain = false;
   var hasWindowInChain = false;
   for (var i = 0; i < chain.length; ++i) {
-    if (chain[i] == document) {
+    if (SpecialPowers.compare(chain[i], document)) {
       hasDocumentInChain = true;
-    } else if (chain[i] == window) {
+    } else if (SpecialPowers.compare(chain[i], window)) {
       hasWindowInChain = true;
     }
   }
