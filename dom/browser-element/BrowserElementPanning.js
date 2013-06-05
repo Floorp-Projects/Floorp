@@ -372,10 +372,13 @@ const ContentPanning = {
     let isScrolling = false;
     let oldX, oldY, newX, newY;
     let win, doc, htmlNode, bodyNode;
-    let xScrollable = content.scrollWidth > content.clientWidth;
-    let yScrollable = content.scrollHeight > content.clientHeight;
+    let xScrollable;
+    let yScrollable;
 
     function doScroll(node, delta) {
+      // recalculate scrolling direction
+      xScrollable = node.scrollWidth > node.clientWidth;
+      yScrollable = node.scrollHeight > node.clientHeight;
       if (node instanceof Ci.nsIDOMHTMLElement) {
         newX = oldX = node.scrollLeft, newY = oldY = node.scrollTop;
         if (xScrollable) {
