@@ -14,15 +14,12 @@ function runTest() {
 
   var gotFirstPaint = false;
   var gotFirstLocationChange = false;
-  var secondTestPage = 'file_browserElement_FirstPaint.html';
   iframe.addEventListener('mozbrowserfirstpaint', function(e) {
     ok(!gotFirstPaint, "Got only one first paint.");
     gotFirstPaint = true;
 
-    is(e.detail.backgroundColor, "transparent", "Got the expected background color.");
-
     if (gotFirstLocationChange) {
-      iframe.src = secondTestPage;
+      iframe.src = browserElementTestHelpers.emptyPage1 + '?2';
     }
   });
 
@@ -30,11 +27,10 @@ function runTest() {
     if (e.detail == browserElementTestHelpers.emptyPage1) {
       gotFirstLocationChange = true;
       if (gotFirstPaint) {
-        iframe.src = secondTestPage;
+        iframe.src = browserElementTestHelpers.emptyPage1 + '?2';
       }
     }
-    else if (e.detail == secondTestPage) {
-      is(e.detail.backgroundColor, "rgb(0,255,0)", "Got the expected background color.");
+    else if (e.detail.endsWith('?2')) {
       SimpleTest.finish();
     }
   });
