@@ -589,10 +589,8 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
         this->stack = &thingGCRooters[kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
-# ifdef JSGC_ROOT_ANALYSIS
-        this->scanned = false;
+
         JS_ASSERT(!js::RootMethods<T>::poisoned(ptr));
-# endif
 #endif
     }
 
