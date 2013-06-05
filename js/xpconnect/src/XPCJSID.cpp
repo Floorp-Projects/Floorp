@@ -402,7 +402,7 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     const nsIID* iid;
     mInfo->GetIIDShared(&iid);
 
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+    iface = XPCNativeInterface::GetNewOrUsed(iid);
 
     if (!iface)
         return NS_OK;
@@ -437,7 +437,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
     const nsIID* iid;
     mInfo->GetIIDShared(&iid);
 
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+    iface = XPCNativeInterface::GetNewOrUsed(iid);
 
     if (!iface)
         return NS_OK;
@@ -557,10 +557,10 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         XPCCallContext ccx(JS_CALLER, cx);
 
         AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+        iface = XPCNativeInterface::GetNewOrUsed(iid);
 
         nsresult findResult = NS_OK;
-        if (iface && other_wrapper->FindTearOff(ccx, iface, false, &findResult))
+        if (iface && other_wrapper->FindTearOff(iface, false, &findResult))
             *bp = true;
         if (NS_FAILED(findResult) && findResult != NS_ERROR_NO_INTERFACE)
             rv = findResult;
