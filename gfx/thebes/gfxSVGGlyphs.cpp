@@ -403,40 +403,65 @@ gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
     mGlyphIdMap.Put(glyphId, aGlyphElement);
 }
 
+// Get the Unicode character at index aPos in the string, and update aPos to
+// point to the next char (i.e. advance by one or two, depending whether we
+// found a surrogate pair).
+// This will assert (and return junk) if the string is not well-formed UTF16.
+// However, this is only used to process an attribute that comes from the
+// SVG-glyph XML document, and is not exposed to modification via the DOM,
+// so it must be well-formed UTF16 data (no unpaired surrogate codepoints)
+// unless our Unicode handling is seriously broken.
+static uint32_t
+NextUSV(const nsAString& aString, uint32_t& aPos)
+{
+    mozilla::DebugOnly<uint32_t> len = aString.Length();
+    NS_ASSERTION(aPos < len, "already at end of string");
+
+    uint32_t c1 = aString[aPos++];
+    if (NS_IS_HIGH_SURROGATE(c1)) {
+        NS_ASSERTION(aPos < len, "trailing high surrogate");
+        uint32_t c2 = aString[aPos++];
+        NS_ASSERTION(NS_IS_LOW_SURROGATE(c2), "isolated high surrogate");
+        return SURROGATE_TO_UCS4(c1, c2);
+    }
+
+    NS_ASSERTION(!NS_IS_LOW_SURROGATE(c1), "isolated low surrogate");
+    return c1;
+}
+
 void
-gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement, hb_blob_t *aCmapTable)
+gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement,
+                                      hb_blob_t *aCmapTable)
 {
     nsAutoString glyphChar;
-    if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::glyphchar, glyphChar)) {
+    if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::glyphchar,
+                                glyphChar)) {
         return;
     }
 
-    uint32_t varSelector;
-
-    // XXX jfkthame
-    // This will not handle surrogate pairs properly!
-    switch (glyphChar.Length()) {
-        case 0:
-            NS_WARNING("glyphchar is empty");
-            return;
-        case 1:
-            varSelector = 0;
-            break;
-        case 2:
-            if (gfxFontUtils::IsVarSelector(glyphChar.CharAt(1))) {
-                varSelector = glyphChar.CharAt(1);
-                break;
-            }
-        default:
-            NS_WARNING("glyphchar contains more than one character");
-            return;
+    uint32_t charCode, varSelector = 0, len = glyphChar.Length(), index = 0;
+    if (!len) {
+        NS_WARNING("glyphchar is empty");
+        return;
     }
 
-    uint32_t len;
+    charCode = NextUSV(glyphChar, index);
+    if (index < len) {
+        varSelector = NextUSV(glyphChar, index);
+        if (!gfxFontUtils::IsVarSelector(varSelector)) {
+            NS_WARNING("glyphchar contains more than one character");
+            return;
+        }
+    }
+
+    if (index < len) {
+        NS_WARNING("glyphchar contains more than one character");
+        return;
+    }
+
     const uint8_t *data = (const uint8_t*)hb_blob_get_data(aCmapTable, &len);
-    uint32_t glyphId = gfxFontUtils::MapCharToGlyph(data, len,
-                                                    glyphChar.CharAt(0),
-                                                    varSelector);
+    uint32_t glyphId =
+        gfxFontUtils::MapCharToGlyph(data, len, charCode, varSelector);
 
     if (glyphId) {
         mGlyphIdMap.Put(glyphId, aGlyphElement);
