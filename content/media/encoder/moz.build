@@ -8,10 +8,12 @@ MODULE = 'content'
 
 EXPORTS += [
     'ContainerWriter.h',
+    'MediaEncoder.h',
     'TrackEncoder.h',
 ]
 
 CPP_SOURCES += [
+    'MediaEncoder.cpp',
     'TrackEncoder.cpp',
 ]
 
