@@ -15,6 +15,9 @@ function test(obj) {
     testcase(obj, Set.prototype.add, 12);
     testcase(obj, Set.prototype.delete, 12);
     testcase(obj, Set.prototype.clear);
+    testcase(obj, Set.prototype.keys);
+    testcase(obj, Set.prototype.values);
+    testcase(obj, Set.prototype.entries);
     testcase(obj, Set_size_getter);
 }
 
