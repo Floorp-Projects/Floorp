@@ -16,12 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix>&
-SVGMatrixTearoffTable()
-{
-  static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix> sSVGMatrixTearoffTable;
-  return sSVGMatrixTearoffTable;
-}
+static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix> sSVGMatrixTearoffTable;
 
 //----------------------------------------------------------------------
 
@@ -41,7 +36,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SVGTransform)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
   SVGMatrix* matrix =
-    SVGMatrixTearoffTable().GetTearoff(tmp);
+    sSVGMatrixTearoffTable.GetTearoff(tmp);
   CycleCollectionNoteChild(cb, matrix, "matrix");
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -109,9 +104,9 @@ SVGTransform::SVGTransform(const nsSVGTransform &aTransform)
 
 SVGTransform::~SVGTransform()
 {
-  SVGMatrix* matrix = SVGMatrixTearoffTable().GetTearoff(this);
+  SVGMatrix* matrix = sSVGMatrixTearoffTable.GetTearoff(this);
   if (matrix) {
-    SVGMatrixTearoffTable().RemoveTearoff(this);
+    sSVGMatrixTearoffTable.RemoveTearoff(this);
     NS_RELEASE(matrix);
   }
   // Our mList's weak ref to us must be nulled out when we die. If GC has
@@ -132,10 +127,10 @@ SVGMatrix*
 SVGTransform::Matrix()
 {
   SVGMatrix* wrapper =
-    SVGMatrixTearoffTable().GetTearoff(this);
+    sSVGMatrixTearoffTable.GetTearoff(this);
   if (!wrapper) {
     NS_ADDREF(wrapper = new SVGMatrix(*this));
-    SVGMatrixTearoffTable().AddTearoff(this, wrapper);
+    sSVGMatrixTearoffTable.AddTearoff(this, wrapper);
   }
   return wrapper;
 }

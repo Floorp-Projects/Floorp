@@ -166,7 +166,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
 
     while (mapping && mapping->mKey) {
       if (valAtom == *(mapping->mKey)) {
-        nsSMILValue val(SMILEnumType::Singleton());
+        nsSMILValue val(&SMILEnumType::sSingleton);
         val.mU.mUint = mapping->mVal;
         aValue = val;
         aPreventCachingOfSandwich = false;
@@ -184,7 +184,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
 nsSMILValue
 nsSVGEnum::SMILEnum::GetBaseValue() const
 {
-  nsSMILValue val(SMILEnumType::Singleton());
+  nsSMILValue val(&SMILEnumType::sSingleton);
   val.mU.mUint = mVal->mBaseVal;
   return val;
 }
@@ -202,9 +202,9 @@ nsSVGEnum::SMILEnum::ClearAnimValue()
 nsresult
 nsSVGEnum::SMILEnum::SetAnimValue(const nsSMILValue& aValue)
 {
-  NS_ASSERTION(aValue.mType == SMILEnumType::Singleton(),
+  NS_ASSERTION(aValue.mType == &SMILEnumType::sSingleton,
                "Unexpected type to assign animated value");
-  if (aValue.mType == SMILEnumType::Singleton()) {
+  if (aValue.mType == &SMILEnumType::sSingleton) {
     NS_ABORT_IF_FALSE(aValue.mU.mUint <= USHRT_MAX,
                       "Very large enumerated value - too big for uint16_t");
     mVal->SetAnimValue(uint16_t(aValue.mU.mUint), mSVGElement);

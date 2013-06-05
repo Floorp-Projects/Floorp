@@ -321,7 +321,7 @@ SMILPreserveAspectRatio::ValueFromString(const nsAString& aStr,
   nsresult res = ToPreserveAspectRatio(aStr, &par);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsSMILValue val(SMILEnumType::Singleton());
+  nsSMILValue val(&SMILEnumType::sSingleton);
   val.mU.mUint = PackPreserveAspectRatio(par);
   aValue = val;
   aPreventCachingOfSandwich = false;
@@ -331,7 +331,7 @@ SMILPreserveAspectRatio::ValueFromString(const nsAString& aStr,
 nsSMILValue
 SMILPreserveAspectRatio::GetBaseValue() const
 {
-  nsSMILValue val(SMILEnumType::Singleton());
+  nsSMILValue val(&SMILEnumType::sSingleton);
   val.mU.mUint = PackPreserveAspectRatio(mVal->GetBaseValue());
   return val;
 }
@@ -349,9 +349,9 @@ SMILPreserveAspectRatio::ClearAnimValue()
 nsresult
 SMILPreserveAspectRatio::SetAnimValue(const nsSMILValue& aValue)
 {
-  NS_ASSERTION(aValue.mType == SMILEnumType::Singleton(),
+  NS_ASSERTION(aValue.mType == &SMILEnumType::sSingleton,
                "Unexpected type to assign animated value");
-  if (aValue.mType == SMILEnumType::Singleton()) {
+  if (aValue.mType == &SMILEnumType::sSingleton) {
     mVal->SetAnimValue(aValue.mU.mUint, mSVGElement);
   }
   return NS_OK;

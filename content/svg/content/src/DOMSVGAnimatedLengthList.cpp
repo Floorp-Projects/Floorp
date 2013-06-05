@@ -16,14 +16,8 @@
 
 namespace mozilla {
 
-static inline
-nsSVGAttrTearoffTable<SVGAnimatedLengthList, DOMSVGAnimatedLengthList>&
-SVGAnimatedLengthListTearoffTable()
-{
-  static nsSVGAttrTearoffTable<SVGAnimatedLengthList, DOMSVGAnimatedLengthList>
-    sSVGAnimatedLengthListTearoffTable;
-  return sSVGAnimatedLengthListTearoffTable;
-}
+static nsSVGAttrTearoffTable<SVGAnimatedLengthList, DOMSVGAnimatedLengthList>
+  sSVGAnimatedLengthListTearoffTable;
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedLengthList, mElement)
 
@@ -68,10 +62,10 @@ DOMSVGAnimatedLengthList::GetDOMWrapper(SVGAnimatedLengthList *aList,
                                         uint8_t aAxis)
 {
   nsRefPtr<DOMSVGAnimatedLengthList> wrapper =
-    SVGAnimatedLengthListTearoffTable().GetTearoff(aList);
+    sSVGAnimatedLengthListTearoffTable.GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGAnimatedLengthList(aElement, aAttrEnum, aAxis);
-    SVGAnimatedLengthListTearoffTable().AddTearoff(aList, wrapper);
+    sSVGAnimatedLengthListTearoffTable.AddTearoff(aList, wrapper);
   }
   return wrapper.forget();
 }
@@ -79,14 +73,14 @@ DOMSVGAnimatedLengthList::GetDOMWrapper(SVGAnimatedLengthList *aList,
 /* static */ DOMSVGAnimatedLengthList*
 DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(SVGAnimatedLengthList *aList)
 {
-  return SVGAnimatedLengthListTearoffTable().GetTearoff(aList);
+  return sSVGAnimatedLengthListTearoffTable.GetTearoff(aList);
 }
 
 DOMSVGAnimatedLengthList::~DOMSVGAnimatedLengthList()
 {
   // Script no longer has any references to us, to our base/animVal objects, or
   // to any of their list items.
-  SVGAnimatedLengthListTearoffTable().RemoveTearoff(&InternalAList());
+  sSVGAnimatedLengthListTearoffTable.RemoveTearoff(&InternalAList());
 }
 
 void

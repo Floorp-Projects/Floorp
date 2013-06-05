@@ -10,6 +10,8 @@
 
 namespace mozilla {
 
+/*static*/ SMILStringType SMILStringType::sSingleton;
+
 void
 SMILStringType::Init(nsSMILValue& aValue) const
 {
@@ -24,7 +26,7 @@ SMILStringType::Destroy(nsSMILValue& aValue) const
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
   delete static_cast<nsAString*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
-  aValue.mType = nsSMILNullType::Singleton();
+  aValue.mType = &nsSMILNullType::sSingleton;
 }
 
 nsresult
