@@ -59,17 +59,7 @@
   -moz-appearance: none;
   padding: 0;
   border: none;
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
   -moz-user-focus: normal;
-}
-
-#newtab-undo-close-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-#newtab-undo-close-button:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 #newtab-undo-close-button > .toolbarbutton-text {

@@ -4290,7 +4290,7 @@
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
                              xbl:inherits="fadein,pinned,selected"
-                             class="tab-close-button"/>
+                             class="tab-close-button close-icon"/>
         </xul:hbox>
       </xul:stack>
     </content>
