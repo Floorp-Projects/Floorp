@@ -899,7 +899,7 @@ xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval)
 }
 
 JSBool
-xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper &aHelper,
+xpc_qsXPCOMObjectToJsval(JSContext *cx, qsObjectHelper &aHelper,
                          const nsIID *iid, XPCNativeInterface **iface,
                          jsval *rval)
 {
@@ -907,8 +907,6 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper &aHelper,
 
     // From the T_INTERFACE case in XPCConvert::NativeData2JS.
     // This is one of the slowest things quick stubs do.
-
-    JSContext *cx = lccx.GetJSContext();
 
     nsresult rv;
     if (!XPCConvert::NativeInterface2JSObject(rval, nullptr,
@@ -933,7 +931,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper &aHelper,
 }
 
 JSBool
-xpc_qsVariantToJsval(XPCLazyCallContext &lccx,
+xpc_qsVariantToJsval(JSContext *aCx,
                      nsIVariant *p,
                      jsval *rval)
 {
@@ -943,7 +941,7 @@ xpc_qsVariantToJsval(XPCLazyCallContext &lccx,
         nsresult rv;
         JSBool ok = XPCVariant::VariantDataToJS(p, &rv, rval);
         if (!ok)
-            xpc_qsThrow(lccx.GetJSContext(), rv);
+            xpc_qsThrow(aCx, rv);
         return ok;
     }
     *rval = JSVAL_NULL;
