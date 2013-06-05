@@ -1433,12 +1433,7 @@ nsGlobalWindow::FreeInnerObjects()
   NotifyDOMWindowDestroyed(this);
 
   // Kill all of the workers for this window.
-  // We push a cx so that exceptions get reported in the right DOM Window.
-  {
-    nsIScriptContext *scx = GetContextInternal();
-    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-    mozilla::dom::workers::CancelWorkersForWindow(cx, this);
-  }
+  mozilla::dom::workers::CancelWorkersForWindow(this);
 
   // Close all offline storages for this window.
   quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
@@ -11253,12 +11248,7 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
     DisableGamepadUpdates();
 
     // Suspend all of the workers for this window.
-    // We push a cx so that exceptions get reported in the right DOM Window.
-    {
-      nsIScriptContext *scx = GetContextInternal();
-      AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-      mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
-    }
+    mozilla::dom::workers::SuspendWorkersForWindow(this);
 
     TimeStamp now = TimeStamp::Now();
     for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
@@ -11347,10 +11337,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
     }
 
     // Resume all of the workers for this window.
-    // We push a cx so that exceptions get reported in the right DOM Window.
-    nsIScriptContext *scx = GetContextInternal();
-    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-    mozilla::dom::workers::ResumeWorkersForWindow(scx, this);
+    mozilla::dom::workers::ResumeWorkersForWindow(this);
 
     // Restore all of the timeouts, using the stored time remaining
     // (stored in timeout->mTimeRemaining).
@@ -12143,4 +12130,3 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 #undef BEFOREUNLOAD_EVENT
 #undef ERROR_EVENT
 #undef EVENT
-
