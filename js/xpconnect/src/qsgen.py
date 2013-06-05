@@ -689,7 +689,7 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
         # else fall through; this type isn't supported yet
     elif isInterfaceType(type):
         if isVariantType(type):
-            f.write("    return xpc_qsVariantToJsval(lccx, result, %s);\n"
+            f.write("    return xpc_qsVariantToJsval(cx, result, %s);\n"
                     % jsvalPtr)
             return
         else:
@@ -703,7 +703,7 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
                     "    }\n"
                     "    // After this point do not use 'result'!\n"
                     "    qsObjectHelper helper(result, cache);\n"
-                    "    return xpc_qsXPCOMObjectToJsval(lccx, "
+                    "    return xpc_qsXPCOMObjectToJsval(cx, "
                     "helper, &NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
                     % (jsvalPtr, jsvalPtr, type.name, type.name, jsvalPtr))
             return
