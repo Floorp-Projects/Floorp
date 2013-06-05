@@ -18,7 +18,7 @@ function startCallbackTimer() {
 }
 
 
-var observer = {
+var observer = SpecialPowers.wrapCallbackObject({
     QueryInterface : function (iid) {
         const interfaces = [Ci.nsIObserver,
                             Ci.nsISupports, Ci.nsISupportsWeakReference];
@@ -35,7 +35,7 @@ var observer = {
         else
             startCallbackTimer(); // try again in a bit
     }
-};
+});
 
 function getDialogDoc() {
   // Find the <browser> which contains notifyWindow, by looking

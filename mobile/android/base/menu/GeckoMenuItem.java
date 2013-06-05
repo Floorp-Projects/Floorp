@@ -4,9 +4,12 @@
 
 package org.mozilla.gecko.menu;
 
+import org.mozilla.gecko.widget.GeckoActionProvider;
+
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.ActionProvider;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -53,6 +56,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     private boolean mEnabled;
     private Drawable mIcon;
     private int mIconRes;
+    private ActionProvider mActionProvider;
     private GeckoMenu mMenu;
     private GeckoSubMenu mSubMenu;
     private MenuItem.OnMenuItemClickListener mMenuItemClickListener;
@@ -91,11 +95,17 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public ActionProvider getActionProvider() {
-        return null;
+        return mActionProvider;
     }
 
     @Override
     public View getActionView() {
+        if (mActionProvider != null && mActionProvider instanceof GeckoActionProvider) {
+            final View view = ((GeckoActionProvider) mActionProvider).getView(this);
+            view.setOnClickListener(this);
+            return view;
+        }
+
         return null;
     }
 
@@ -132,6 +142,9 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
     }
 
     public View getLayout() {
+        if (mActionProvider != null)
+            return getActionView();
+
         return mLayout.getView();
     }
 
@@ -171,6 +184,9 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public boolean hasSubMenu() {
+        if (mActionProvider != null)
+            return mActionProvider.hasSubMenu();
+
         return (mSubMenu != null);
     }
 
@@ -201,6 +217,17 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public MenuItem setActionProvider(ActionProvider actionProvider) {
+        mActionProvider = actionProvider;
+        if (mActionProvider != null && mActionProvider instanceof GeckoActionProvider) {
+            GeckoActionProvider provider = (GeckoActionProvider) mActionProvider;
+            provider.setOnTargetSelectedListener(new GeckoActionProvider.OnTargetSelectedListener() {
+                @Override
+                public void onTargetSelected() {
+                    mMenu.close();
+                }
+            });
+        }
+
         return this;
     }
 
@@ -325,7 +352,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     public MenuItem setSubMenu(GeckoSubMenu subMenu) {
         mSubMenu = subMenu;
-        mLayout.setSubMenuIndicator(subMenu != null);
+        mLayout.setSubMenuIndicator(mActionProvider == null && subMenu != null);
         return this;
     }
 

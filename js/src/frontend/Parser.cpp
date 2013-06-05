@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsapi.h"
@@ -56,6 +57,7 @@
 
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject-inl.h"
+#include "vm/RegExpStatics-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -420,24 +422,15 @@ Parser<ParseHandler>::Parser(JSContext *cx, const CompileOptions &options,
     // XXX bug 678037 always disable syntax parsing for now.
     handler.disableSyntaxParser();
 
-    cx->activeCompilations++;
+    cx->runtime->activeCompilations++;
 
     // The Mozilla specific 'strict' option adds extra warnings which are not
     // generated if functions are parsed lazily. Note that the standard
     // "use strict" does not inhibit lazy parsing.
     if (context->hasStrictOption())
         handler.disableSyntaxParser();
-}
 
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::init()
-{
-    if (!context->ensureParseMapPool())
-        return false;
-
-    tempPoolMark = context->tempLifoAlloc().mark();
-    return true;
+    tempPoolMark = cx->tempLifoAlloc().mark();
 }
 
 template <typename ParseHandler>
@@ -445,7 +438,7 @@ Parser<ParseHandler>::~Parser()
 {
     JSContext *cx = context;
     cx->tempLifoAlloc().release(tempPoolMark);
-    cx->activeCompilations--;
+    cx->runtime->activeCompilations--;
 
     /*
      * The parser can allocate enormous amounts of memory for large functions.
@@ -2339,7 +2332,7 @@ Parser<FullParseHandler>::moduleDecl()
         return NULL;
     JS_ALWAYS_TRUE(tokenStream.matchToken(TOK_STRING));
     RootedAtom atom(context, tokenStream.currentToken().atom());
-    Module *module = js_NewModule(context, atom);
+    Module *module = Module::create(context, atom);
     if (!module)
         return NULL;
     ModuleBox *modulebox = newModuleBox(module, pc);
@@ -2763,6 +2756,51 @@ PopStatementPC(JSContext *cx, ParseContext<ParseHandler> *pc)
         ForEachLetDef(cx, pc, blockObj, PopLetDecl<ParseHandler>());
         blockObj->resetPrevBlockChainFromParser();
     }
+}
+
+/*
+ * The function LexicalLookup searches a static binding for the given name in
+ * the stack of statements enclosing the statement currently being parsed. Each
+ * statement that introduces a new scope has a corresponding scope object, on
+ * which the bindings for that scope are stored. LexicalLookup either returns
+ * the innermost statement which has a scope object containing a binding with
+ * the given name, or NULL.
+ */
+template <class ContextT>
+typename ContextT::StmtInfo *
+LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::StmtInfo *stmt)
+{
+    RootedId id(ct->sc->context, AtomToId(atom));
+
+    if (!stmt)
+        stmt = ct->topScopeStmt;
+    for (; stmt; stmt = stmt->downScope) {
+        /*
+         * With-statements introduce dynamic bindings. Since dynamic bindings
+         * can potentially override any static bindings introduced by statements
+         * further up the stack, we have to abort the search.
+         */
+        if (stmt->type == STMT_WITH)
+            break;
+
+        // Skip statements that do not introduce a new scope
+        if (!stmt->isBlockScope)
+            continue;
+
+        StaticBlockObject &blockObj = *stmt->blockObj;
+        Shape *shape = blockObj.nativeLookup(ct->sc->context, id);
+        if (shape) {
+            JS_ASSERT(shape->hasShortID());
+
+            if (slotp)
+                *slotp = blockObj.stackDepth() + shape->shortid();
+            return stmt;
+        }
+    }
+
+    if (slotp)
+        *slotp = -1;
+    return stmt;
 }
 
 template <typename ParseHandler>
@@ -6673,7 +6711,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
          * A map from property names we've seen thus far to a mask of property
          * assignment types, stored and retrieved with ALE_SET_INDEX/ALE_INDEX.
          */
-        AtomIndexMap seen(context);
+        AtomIndexMap seen;
 
         enum AssignmentType {
             GET     = 0x1,

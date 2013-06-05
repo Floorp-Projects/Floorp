@@ -10,11 +10,11 @@
 
 @media not print {
   .overflowing {
-    cursor: -moz-zoom-out;
+    cursor: zoom-out;
   }
 
   .shrinkToFit {
-    cursor: -moz-zoom-in;
+    cursor: zoom-in;
   }
 }
 

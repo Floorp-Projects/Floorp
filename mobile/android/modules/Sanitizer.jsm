@@ -5,8 +5,13 @@
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
+let Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
+                                  "resource://gre/modules/FormHistory.jsm");
 
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
@@ -49,8 +54,16 @@ function Sanitizer() {}
 Sanitizer.prototype = {
   clearItem: function (aItemName)
   {
-    if (this.items[aItemName].canClear)
-      this.items[aItemName].clear();
+    let item = this.items[aItemName];
+    let canClear = item.canClear;
+    if (typeof canClear == "function") {
+      canClear(function clearCallback(aCanClear) {
+        if (aCanClear)
+          item.clear();
+      });
+    } else if (canClear) {
+      item.clear();
+    }
   },
 
   items: {
@@ -171,14 +184,18 @@ Sanitizer.prototype = {
           }
         }
 
-        var formHistory = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-        formHistory.removeAllEntries();
+        FormHistory.update({ op: "remove" });
       },
 
-      get canClear()
+      canClear: function (aCallback)
       {
-        var formHistory = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-        return formHistory.hasEntries;
+        let count = 0;
+        let countDone = {
+          handleResult: function(aResult) { count = aResult; },
+          handleError: function(aError) { Cu.reportError(aError); },
+          handleCompletion: function(aReason) { aCallback(aReason == 0 && count > 0); }
+        };
+        FormHistory.count({}, countDone);
       }
     },
 

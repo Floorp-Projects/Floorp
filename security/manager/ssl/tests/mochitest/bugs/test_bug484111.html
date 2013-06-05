@@ -46,6 +46,7 @@ function onWindowLoad()
 {
   var req = new XMLHttpRequest();
   var certListener = new badCertListener();
+  certListener = SpecialPowers.wrapCallbackObject(certListener);
   try
   {
     req.open("GET", "https://www.bank2.com/", false);

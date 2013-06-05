@@ -42,7 +42,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
         } else {
           // [Basic Layers, OMTC] WebGL layer init.
           // Well, this *should* work...
-          factory = new SurfaceFactory_GLTexture(mGLContext, mGLContext, screen->Caps());
+          factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, screen->Caps());
         }
       }
     }

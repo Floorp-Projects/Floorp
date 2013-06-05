@@ -10,12 +10,10 @@
 #include "mozilla/Util.h"
 
 #include "RegExpObject.h"
-#include "RegExpStatics.h"
 
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
-#include "RegExpStatics-inl.h"
 #include "String-inl.h"
 
 inline js::RegExpObject &

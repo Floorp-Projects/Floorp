@@ -19,9 +19,9 @@
   background-color: @metro_orange@;
 }
 
-#content-navigator[type] {
+#content-navigator[showing] {
   transform: none;
- }
+}
 
 #content-navigator > .previous-button,
 #content-navigator > .next-button,

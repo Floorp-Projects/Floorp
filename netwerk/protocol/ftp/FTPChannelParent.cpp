@@ -73,7 +73,7 @@ FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
 #ifdef DEBUG
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
-  LOG(("FTPChannelParent RecvAsyncOpen [this=%x uri=%s]\n",
+  LOG(("FTPChannelParent RecvAsyncOpen [this=%p uri=%s]\n",
        this, uriSpec.get()));
 #endif
 
@@ -164,7 +164,7 @@ FTPChannelParent::RecvResume()
 NS_IMETHODIMP
 FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
-  LOG(("FTPChannelParent::OnStartRequest [this=%x]\n", this));
+  LOG(("FTPChannelParent::OnStartRequest [this=%p]\n", this));
 
   nsFtpChannel* chan = static_cast<nsFtpChannel*>(aRequest);
   int64_t contentLength;
@@ -192,7 +192,7 @@ FTPChannelParent::OnStopRequest(nsIRequest* aRequest,
                                 nsISupports* aContext,
                                 nsresult aStatusCode)
 {
-  LOG(("FTPChannelParent::OnStopRequest: [this=%x status=%ul]\n",
+  LOG(("FTPChannelParent::OnStopRequest: [this=%p status=%ul]\n",
        this, aStatusCode));
 
   if (mIPCClosed || !SendOnStopRequest(aStatusCode)) {
@@ -213,7 +213,7 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
                                   uint64_t aOffset,
                                   uint32_t aCount)
 {
-  LOG(("FTPChannelParent::OnDataAvailable [this=%x]\n", this));
+  LOG(("FTPChannelParent::OnDataAvailable [this=%p]\n", this));
   
   nsCString data;
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);

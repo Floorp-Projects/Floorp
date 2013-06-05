@@ -100,15 +100,10 @@ protected:
   friend class FTPDeleteSelfEvent;
 
 private:
-  // Called asynchronously from Resume: continues any pending calls into client.
-  void CompleteResume();
-  nsresult AsyncCall(void (FTPChannelChild::*funcPtr)(),
-                     nsRunnableMethod<FTPChannelChild> **retval = nullptr);
-
   nsCOMPtr<nsIInputStream> mUploadStream;
 
   bool mIPCOpen;
-  ChannelEventQueue mEventQ;
+  nsRefPtr<ChannelEventQueue> mEventQ;
   bool mCanceled;
   uint32_t mSuspendCount;
   bool mIsPending;

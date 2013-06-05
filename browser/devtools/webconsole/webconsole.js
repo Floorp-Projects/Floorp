@@ -178,6 +178,7 @@ const MIN_FONT_SIZE = 10;
 const MAX_LONG_STRING_LENGTH = 200000;
 
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
+const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per target*
@@ -369,6 +370,20 @@ WebConsoleFrame.prototype = {
         this._saveRequestAndResponseBodies = newValue;
       }
     }.bind(this));
+  },
+
+  _persistLog: null,
+
+  /**
+   * Getter for the persistent logging preference. This value is cached per
+   * instance to avoid reading the pref too often.
+   * @type boolean
+   */
+  get persistLog() {
+    if (this._persistLog === null) {
+      this._persistLog = Services.prefs.getBoolPref(PREF_PERSISTLOG);
+    }
+    return this._persistLog;
   },
 
   /**
@@ -4903,6 +4918,10 @@ WebConsoleConnectionProxy.prototype = {
   {
     if (!this.owner) {
       return;
+    }
+
+    if (aEvent == "will-navigate" && !this.owner.persistLog) {
+      this.owner.jsterm.clearOutput();
     }
 
     if (aPacket.url) {

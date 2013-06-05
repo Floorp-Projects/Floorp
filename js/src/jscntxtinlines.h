@@ -520,15 +520,6 @@ JSContext::setPendingException(js::Value v) {
     js::assertSameCompartment(this, v);
 }
 
-inline bool
-JSContext::ensureParseMapPool()
-{
-    if (parseMapPool_)
-        return true;
-    parseMapPool_ = js_new<js::frontend::ParseMapPool>(this);
-    return parseMapPool_;
-}
-
 inline js::PropertyTree&
 JSContext::propertyTree()
 {

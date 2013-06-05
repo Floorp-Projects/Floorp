@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +15,8 @@
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
+
+#define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
 
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSContext* cx       /* = GetDefaultJSContext() */,
@@ -36,69 +39,9 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mName(cx)
 {
     MOZ_ASSERT(cx);
-    Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
-         INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
-}
+    bool callBeginRequest = callerLanguage == NATIVE_CALLER;
 
-XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
-                               JSContext* cx,
-                               JSBool callBeginRequest,
-                               HandleObject obj,
-                               HandleObject flattenedJSObject,
-                               XPCWrappedNative* wrapper,
-                               XPCWrappedNativeTearOff* tearOff)
-    :   mState(INIT_FAILED),
-        mXPC(nsXPConnect::XPConnect()),
-        mXPCContext(nullptr),
-        mJSContext(cx),
-        mContextPopRequired(false),
-        mDestroyJSContextInDestructor(false),
-        mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(cx, flattenedJSObject),
-        mWrapper(wrapper),
-        mTearOff(tearOff),
-        mName(cx)
-{
-    MOZ_ASSERT(cx);
-    Init(callerLanguage, callBeginRequest, obj, NullPtr(),
-         WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOIDHANDLE, NO_ARGS,
-         nullptr, nullptr);
-}
-
-#define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
-
-
-// static
-JSContext *
-XPCCallContext::GetDefaultJSContext()
-{
-    // This is slightly questionable. If called without an explicit
-    // JSContext (generally a call to a wrappedJS) we will use the JSContext
-    // on the top of the JSContext stack - if there is one - *before*
-    // falling back on the safe JSContext.
-    // This is good AND bad because it makes calls from JS -> native -> JS
-    // have JS stack 'continuity' for purposes of stack traces etc.
-    // Note: this *is* what the pre-XPCCallContext xpconnect did too.
-
-    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-    JSContext *topJSContext = stack->Peek();
-
-    return topJSContext ? topJSContext : stack->GetSafeJSContext();
-}
-
-void
-XPCCallContext::Init(XPCContext::LangType callerLanguage,
-                     JSBool callBeginRequest,
-                     HandleObject obj,
-                     HandleObject funobj,
-                     WrapperInitOptions wrapperInitOptions,
-                     HandleId name,
-                     unsigned argc,
-                     jsval *argv,
-                     jsval *rval)
-{
     NS_ASSERTION(mJSContext, "No JSContext supplied to XPCCallContext");
-
     if (!mXPC)
         return;
 
@@ -142,40 +85,39 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     mState = HAVE_OBJECT;
 
     mTearOff = nullptr;
-    if (wrapperInitOptions == INIT_SHOULD_LOOKUP_WRAPPER) {
-        // If the object is a security wrapper, GetWrappedNativeOfJSObject can't
-        // handle it. Do special handling here to make cross-origin Xrays work.
-        JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
-        if (!unwrapped) {
-            mWrapper = UnwrapThisIfAllowed(obj, funobj, argc);
-            if (!mWrapper) {
-                JS_ReportError(mJSContext, "Permission denied to call method on |this|");
-                mState = INIT_FAILED;
-                return;
-            }
-        } else {
-            js::Class *clasp = js::GetObjectClass(unwrapped);
-            if (IS_WRAPPER_CLASS(clasp)) {
-                if (IS_SLIM_WRAPPER_OBJECT(unwrapped))
-                    mFlattenedJSObject = unwrapped;
-                else
-                    mWrapper = XPCWrappedNative::Get(unwrapped);
-            } else if (IS_TEAROFF_CLASS(clasp)) {
-                mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
-                mWrapper = XPCWrappedNative::Get(js::GetObjectParent(unwrapped));
-            }
-        }
-        if (mWrapper) {
-            mFlattenedJSObject = mWrapper->GetFlatJSObject();
 
-            if (mTearOff)
-                mScriptableInfo = nullptr;
-            else
-                mScriptableInfo = mWrapper->GetScriptableInfo();
-        } else {
-            NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
-                              "should have a slim wrapper");
+    // If the object is a security wrapper, GetWrappedNativeOfJSObject can't
+    // handle it. Do special handling here to make cross-origin Xrays work.
+    JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+    if (!unwrapped) {
+        mWrapper = UnwrapThisIfAllowed(obj, funobj, argc);
+        if (!mWrapper) {
+            JS_ReportError(mJSContext, "Permission denied to call method on |this|");
+            mState = INIT_FAILED;
+            return;
         }
+    } else {
+        js::Class *clasp = js::GetObjectClass(unwrapped);
+        if (IS_WRAPPER_CLASS(clasp)) {
+            if (IS_SLIM_WRAPPER_OBJECT(unwrapped))
+                mFlattenedJSObject = unwrapped;
+            else
+                mWrapper = XPCWrappedNative::Get(unwrapped);
+        } else if (IS_TEAROFF_CLASS(clasp)) {
+            mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
+            mWrapper = XPCWrappedNative::Get(js::GetObjectParent(unwrapped));
+        }
+    }
+    if (mWrapper) {
+        mFlattenedJSObject = mWrapper->GetFlatJSObject();
+
+        if (mTearOff)
+            mScriptableInfo = nullptr;
+        else
+            mScriptableInfo = mWrapper->GetScriptableInfo();
+    } else {
+        NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
+                          "should have a slim wrapper");
     }
 
     if (!JSID_IS_VOID(name))
@@ -185,6 +127,24 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
         SetArgsAndResultPtr(argc, argv, rval);
 
     CHECK_STATE(HAVE_OBJECT);
+}
+
+// static
+JSContext *
+XPCCallContext::GetDefaultJSContext()
+{
+    // This is slightly questionable. If called without an explicit
+    // JSContext (generally a call to a wrappedJS) we will use the JSContext
+    // on the top of the JSContext stack - if there is one - *before*
+    // falling back on the safe JSContext.
+    // This is good AND bad because it makes calls from JS -> native -> JS
+    // have JS stack 'continuity' for purposes of stack traces etc.
+    // Note: this *is* what the pre-XPCCallContext xpconnect did too.
+
+    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
+    JSContext *topJSContext = stack->Peek();
+
+    return topJSContext ? topJSContext : stack->GetSafeJSContext();
 }
 
 void
@@ -277,7 +237,7 @@ XPCCallContext::CanCallNow()
         return NS_ERROR_UNEXPECTED;
 
     if (!mTearOff) {
-        mTearOff = mWrapper->FindTearOff(*this, mInterface, false, &rv);
+        mTearOff = mWrapper->FindTearOff(mInterface, false, &rv);
         if (!mTearOff || mTearOff->GetInterface() != mInterface) {
             mTearOff = nullptr;
             return NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED;
@@ -437,18 +397,6 @@ XPCCallContext::GetLanguage(uint16_t *aResult)
   *aResult = GetCallerLanguage();
   return NS_OK;
 }
-
-#ifdef DEBUG
-// static
-void
-XPCLazyCallContext::AssertContextIsTopOfStack(JSContext* cx)
-{
-    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-
-    JSContext *topJSContext = stack->Peek();
-    NS_ASSERTION(cx == topJSContext, "wrong context on XPCJSContextStack!");
-}
-#endif
 
 XPCWrappedNative*
 XPCCallContext::UnwrapThisIfAllowed(HandleObject obj, HandleObject fun, unsigned argc)

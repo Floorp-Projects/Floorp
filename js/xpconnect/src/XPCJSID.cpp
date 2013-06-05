@@ -402,7 +402,7 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     const nsIID* iid;
     mInfo->GetIIDShared(&iid);
 
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+    iface = XPCNativeInterface::GetNewOrUsed(iid);
 
     if (!iface)
         return NS_OK;
@@ -437,7 +437,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
     const nsIID* iid;
     mInfo->GetIIDShared(&iid);
 
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+    iface = XPCNativeInterface::GetNewOrUsed(iid);
 
     if (!iface)
         return NS_OK;
@@ -557,10 +557,10 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         XPCCallContext ccx(JS_CALLER, cx);
 
         AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+        iface = XPCNativeInterface::GetNewOrUsed(iid);
 
         nsresult findResult = NS_OK;
-        if (iface && other_wrapper->FindTearOff(ccx, iface, false, &findResult))
+        if (iface && other_wrapper->FindTearOff(iface, false, &findResult))
             *bp = true;
         if (NS_FAILED(findResult) && findResult != NS_ERROR_NO_INTERFACE)
             rv = findResult;
@@ -740,11 +740,7 @@ nsJSCID::CreateInstance(const JS::Value& iidval, JSContext* cx,
         return NS_ERROR_UNEXPECTED;
     }
 
-    // Do the security check if necessary
-    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
-
-    nsIXPCSecurityManager* sm;
-    sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID()))) {
         NS_ERROR("how are we not being called from chrome here?");
         return NS_OK;
@@ -787,11 +783,8 @@ nsJSCID::GetService(const JS::Value& iidval, JSContext* cx,
         return NS_ERROR_UNEXPECTED;
     }
 
-    // Do the security check if necessary
-    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
-
     nsIXPCSecurityManager* sm;
-    sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_GET_SERVICE);
+    sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID()))) {
         NS_ASSERTION(JS_IsExceptionPending(cx),
                      "security manager vetoed GetService without setting exception");

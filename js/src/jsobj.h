@@ -261,6 +261,8 @@ class WithObject;
 
 }  /* namespace js */
 
+#define JSSLOT_FREE(clasp)  JSCLASS_RESERVED_SLOTS(clasp)
+
 /*
  * The public interface for an object.
  *
@@ -422,8 +424,16 @@ class JSObject : public js::ObjectImpl
     static inline void nativeSetSlotWithType(JSContext *cx, js::HandleObject, js::Shape *shape,
                                              const js::Value &value);
 
-    inline const js::Value &getReservedSlot(uint32_t index) const;
-    inline js::HeapSlot &getReservedSlotRef(uint32_t index);
+    inline const js::Value &getReservedSlot(uint32_t index) const {
+        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        return getSlot(index);
+    }
+
+    inline js::HeapSlot &getReservedSlotRef(uint32_t index) {
+        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        return getSlotRef(index);
+    }
+
     inline void initReservedSlot(uint32_t index, const js::Value &v);
     inline void setReservedSlot(uint32_t index, const js::Value &v);
 
@@ -1082,8 +1092,6 @@ struct JSObject_Slots4 : JSObject { js::Value fslots[4]; };
 struct JSObject_Slots8 : JSObject { js::Value fslots[8]; };
 struct JSObject_Slots12 : JSObject { js::Value fslots[12]; };
 struct JSObject_Slots16 : JSObject { js::Value fslots[16]; };
-
-#define JSSLOT_FREE(clasp)  JSCLASS_RESERVED_SLOTS(clasp)
 
 class JSValueArray {
   public:

@@ -4,13 +4,13 @@
 # versions look identical, so they share a common HTML reference file.
 
 # s01i3p01 - 1x1 paletted file, interlaced
-random-if(bug685516) == s01i3p01.png s01_3p01.html
+== s01i3p01.png s01_3p01.html
 # s01n3p01 - 1x1 paletted file, no interlacing
-random-if(bug685516) == s01n3p01.png s01_3p01.html
+== s01n3p01.png s01_3p01.html
 # s02i3p01 - 2x2 paletted file, interlaced
-random-if(bug685516) == s02i3p01.png s02_3p01.html
+== s02i3p01.png s02_3p01.html
 # s02n3p01 - 2x2 paletted file, no interlacing
-random-if(bug685516) == s02n3p01.png s02_3p01.html
+== s02n3p01.png s02_3p01.html
 # s03i3p01 - 3x3 paletted file, interlaced
 fails-if(Android) == s03i3p01.png s03_3p01.html
 # s03n3p01 - 3x3 paletted file, no interlacing
