@@ -531,7 +531,7 @@ xpc_qsGetWrapperCache(void *p)
  * only if p is the identity pointer.
  */
 JSBool
-xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx,
+xpc_qsXPCOMObjectToJsval(JSContext *aCx,
                          qsObjectHelper &aHelper,
                          const nsIID *iid,
                          XPCNativeInterface **iface,
@@ -541,7 +541,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx,
  * Convert a variant to jsval. Return true on success.
  */
 JSBool
-xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
+xpc_qsVariantToJsval(JSContext *cx,
                      nsIVariant *p,
                      jsval *rval);
 
