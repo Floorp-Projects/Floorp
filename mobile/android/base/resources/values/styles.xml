@@ -71,6 +71,28 @@
 
     <style name="Widget.TextView.SpinnerItem" parent="android:style/Widget.TextView.SpinnerItem"/>
 
+    <style name="Widget.MenuItemActionBar">
+        <item name="android:padding">@dimen/browser_toolbar_button_padding</item>
+        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="Widget.MenuItemActionView">
+        <item name="android:divider">@drawable/divider_vertical</item>
+        <item name="android:showDividers">middle</item>
+        <item name="android:dividerPadding">8dip</item>
+    </style>
+
+    <style name="Widget.MenuItemDefault">
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+        <item name="android:drawablePadding">6dip</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAppearance">@style/TextAppearance</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">middle</item>
+    </style>
+
     <!--
         TextAppearance
         Note: Gecko uses light theme as default, while Android uses dark.
@@ -438,13 +460,6 @@
     <style name="PopupAnimation">
         <item name="@android:windowEnterAnimation">@anim/popup_show</item>
         <item name="@android:windowExitAnimation">@anim/popup_hide</item>
-    </style>
-
-    <style name="MenuItemDefault">
-          <item name="android:textSize">16sp</item>
-          <item name="android:textColor">@color/menu_item_title</item>
-          <item name="android:singleLine">true</item>
-          <item name="android:ellipsize">middle</item>
     </style>
 
 </resources>

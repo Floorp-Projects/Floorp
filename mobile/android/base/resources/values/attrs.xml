@@ -5,6 +5,20 @@
 
 <resources>
 
+    <!-- Theme level attributes -->
+    <declare-styleable name="GeckoTheme">
+
+        <!-- Style for MenuItemActionBar -->
+        <attr name="menuItemActionBarStyle" format="reference"/>
+
+        <!-- Style for MenuItemActionView -->
+        <attr name="menuItemActionViewStyle" format="reference"/>
+
+        <!-- Style for MenuItemDefault -->
+        <attr name="menuItemDefaultStyle" format="reference"/>
+
+    </declare-styleable>
+
     <declare-styleable name="AboutHomeSection">
         <attr name="title" format="string"/>
         <attr name="subtitle" format="string"/>

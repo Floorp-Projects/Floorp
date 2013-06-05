@@ -44,6 +44,9 @@
         <item name="android:listViewStyle">@style/Widget.ListView</item>
         <item name="android:spinnerStyle">@style/Widget.Spinner</item>
         <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
+        <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
+        <item name="menuItemActionViewStyle">@style/Widget.MenuItemActionView</item>
+        <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
     </style>
 
 </resources>
