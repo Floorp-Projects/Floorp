@@ -81,7 +81,7 @@ public:
     , mCameraThread(aCameraThread)
   { }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() MOZ_OVERRIDE;
 
 protected:
   uint32_t mCameraId;

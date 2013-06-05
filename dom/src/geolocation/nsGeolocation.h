@@ -83,8 +83,8 @@ class nsGeolocationRequest
 
   ~nsGeolocationRequest();
 
-  bool Recv__delete__(const bool& allow);
-  void IPDLRelease() { Release(); }
+  virtual bool Recv__delete__(const bool& allow) MOZ_OVERRIDE;
+  virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
 
   int32_t WatchId() { return mWatchId; }
  private:

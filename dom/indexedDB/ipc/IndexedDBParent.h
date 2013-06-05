@@ -97,7 +97,7 @@ public:
   }
 
   NS_IMETHOD
-  HandleEvent(nsIDOMEvent* aEvent)
+  HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
   {
     return mActor ? mActor->HandleEvent(aEvent) : NS_OK;
   }

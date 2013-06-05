@@ -6,6 +6,7 @@
 #ifndef nsJSProtocolHandler_h___
 #define nsJSProtocolHandler_h___
 
+#include "mozilla/Attributes.h"
 #include "nsIProtocolHandler.h"
 #include "nsITextToSubURI.h"
 #include "nsIURI.h"
@@ -78,21 +79,21 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIURI overrides
-    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode);
+    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode) MOZ_OVERRIDE;
 
     // nsISerializable overrides
-    NS_IMETHOD Read(nsIObjectInputStream* aStream);
-    NS_IMETHOD Write(nsIObjectOutputStream* aStream);
+    NS_IMETHOD Read(nsIObjectInputStream* aStream) MOZ_OVERRIDE;
+    NS_IMETHOD Write(nsIObjectOutputStream* aStream) MOZ_OVERRIDE;
 
     // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
     // nsISerializable impl works right.
-    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc);
+    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc) MOZ_OVERRIDE;
     //NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr );
 
 protected:
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
-                                    bool* result);
+                                    bool* result) MOZ_OVERRIDE;
 private:
     nsCOMPtr<nsIURI> mBaseURI;
 };

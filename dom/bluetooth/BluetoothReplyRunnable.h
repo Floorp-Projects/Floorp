@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_bluetooth_bluetoothreplyrunnable_h__
 #define mozilla_dom_bluetooth_bluetoothreplyrunnable_h__
 
+#include "mozilla/Attributes.h"
 #include "BluetoothCommon.h"
 #include "nsThreadUtils.h"
 #include "jsapi.h"
@@ -58,7 +59,7 @@ public:
  ~BluetoothVoidReplyRunnable();
 
 protected:
-  virtual bool ParseSuccessfulReply(JS::Value* aValue)
+  virtual bool ParseSuccessfulReply(JS::Value* aValue) MOZ_OVERRIDE
   {
     *aValue = JSVAL_VOID;
     return true;
