@@ -641,6 +641,8 @@ public:
     DeleteTextures();
   }
 
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+
 private:
   gl::GLContext* gl() const;
 
