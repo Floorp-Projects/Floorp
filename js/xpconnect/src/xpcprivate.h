@@ -1577,7 +1577,7 @@ public:
     MarkAllWrappedNativesAndProtos();
 
     static nsresult
-    ClearAllWrappedNativeSecurityPolicies(XPCCallContext& ccx);
+    ClearAllWrappedNativeSecurityPolicies();
 
 #ifdef DEBUG
     static void
