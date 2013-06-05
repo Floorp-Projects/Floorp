@@ -43,6 +43,8 @@ importScripts("ril_consts.js", "systemlibs.js");
 // set to true in ril_consts.js to see debug messages
 let DEBUG = DEBUG_WORKER;
 
+let GLOBAL = this;
+
 const INT32_MAX   = 2147483647;
 const UINT8_SIZE  = 1;
 const UINT16_SIZE = 2;
@@ -4147,6 +4149,7 @@ let RIL = {
    */
   _mergeAllCellBroadcastConfigs: function _mergeAllCellBroadcastConfigs() {
     if (!("CBMI" in this.cellBroadcastConfigs)
+        || !("CBMID" in this.cellBroadcastConfigs)
         || !("CBMIR" in this.cellBroadcastConfigs)
         || !("MMI" in this.cellBroadcastConfigs)) {
       if (DEBUG) {
@@ -9741,6 +9744,7 @@ let ICCFileHelper = {
       case ICC_EF_SST:
       case ICC_EF_PHASE:
       case ICC_EF_CBMI:
+      case ICC_EF_CBMID:
       case ICC_EF_CBMIR:
       case ICC_EF_OPL:
       case ICC_EF_PNN:
@@ -9763,6 +9767,7 @@ let ICCFileHelper = {
       case ICC_EF_SPN:
       case ICC_EF_SPDI:
       case ICC_EF_CBMI:
+      case ICC_EF_CBMID:
       case ICC_EF_CBMIR:
       case ICC_EF_OPL:
       case ICC_EF_PNN:
@@ -10263,6 +10268,11 @@ let ICCRecordHelper = {
       } else {
         RIL.cellBroadcastConfigs.CBMI = null;
       }
+      if (ICCUtilsHelper.isICCServiceAvailable("DATA_DOWNLOAD_SMS_CB")) {
+        this.readCBMID();
+      } else {
+        RIL.cellBroadcastConfigs.CBMID = null;
+      }
       if (ICCUtilsHelper.isICCServiceAvailable("CBMIR")) {
         this.readCBMIR();
       } else {
@@ -10735,12 +10745,7 @@ let ICCRecordHelper = {
                                    callback: callback.bind(this)});
   },
 
-  /**
-   * Read EFcbmi (Cell Broadcast Message Identifier selection)
-   *
-   * @see 3GPP TS 31.102 v110.02.0 section 4.2.14 EFcbmi
-   */
-  readCBMI: function readCBMI() {
+  _readCbmiHelper: function _readCbmiHelper(which) {
     function callback() {
       let strLength = Buf.readUint32();
 
@@ -10759,29 +10764,51 @@ let ICCRecordHelper = {
         }
       }
       if (DEBUG) {
-        debug("CBMI: " + JSON.stringify(list));
+        debug(which + ": " + JSON.stringify(list));
       }
 
       Buf.readStringDelimiter(strLength);
 
-      RIL.cellBroadcastConfigs.CBMI = list;
+      RIL.cellBroadcastConfigs[which] = list;
       RIL._mergeAllCellBroadcastConfigs();
     }
 
     function onerror() {
-      RIL.cellBroadcastConfigs.CBMI = null;
+      RIL.cellBroadcastConfigs[which] = null;
       RIL._mergeAllCellBroadcastConfigs();
     }
 
-    ICCIOHelper.loadTransparentEF({fileId: ICC_EF_CBMI,
+    let fileId = GLOBAL["ICC_EF_" + which];
+    ICCIOHelper.loadTransparentEF({fileId: fileId,
                                    callback: callback.bind(this),
                                    onerror: onerror.bind(this)});
+  },
+
+  /**
+   * Read EFcbmi (Cell Broadcast Message Identifier selection)
+   *
+   * @see 3GPP TS 31.102 v110.02.0 section 4.2.14 EFcbmi
+   * @see 3GPP TS 51.011 v5.0.0 section 10.3.13 EFcbmi
+   */
+  readCBMI: function readCBMI() {
+    this._readCbmiHelper("CBMI");
+  },
+
+  /**
+   * Read EFcbmid (Cell Broadcast Message Identifier for Data Download)
+   *
+   * @see 3GPP TS 31.102 v110.02.0 section 4.2.20 EFcbmid
+   * @see 3GPP TS 51.011 v5.0.0 section 10.3.26 EFcbmid
+   */
+  readCBMID: function readCBMID() {
+    this._readCbmiHelper("CBMID");
   },
 
   /**
    * Read EFcbmir (Cell Broadcast Message Identifier Range selection)
    *
    * @see 3GPP TS 31.102 v110.02.0 section 4.2.22 EFcbmir
+   * @see 3GPP TS 51.011 v5.0.0 section 10.3.28 EFcbmir
    */
   readCBMIR: function readCBMIR() {
     function callback() {

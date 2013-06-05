@@ -430,6 +430,7 @@ this.ICC_EF_SMS    = 0x6f3c;
 this.ICC_EF_MSISDN = 0x6f40;
 this.ICC_EF_CBMI   = 0x6f45;
 this.ICC_EF_SPN    = 0x6f46;
+this.ICC_EF_CBMID  = 0x6f48;
 this.ICC_EF_SDN    = 0x6f49;
 this.ICC_EF_EXT1   = 0x6f4a;
 this.ICC_EF_EXT2   = 0x6f4b;
@@ -1073,6 +1074,7 @@ this.GECKO_ICC_SERVICES = {
     CBMI: 14,
     SPN: 17,
     SDN: 18,
+    DATA_DOWNLOAD_SMS_CB: 25,
     DATA_DOWNLOAD_SMS_PP: 26,
     CBMIR: 30,
     BDN: 31,
@@ -1088,6 +1090,7 @@ this.GECKO_ICC_SERVICES = {
     CBMIR: 16,
     SPN: 19,
     DATA_DOWNLOAD_SMS_PP: 28,
+    DATA_DOWNLOAD_SMS_CB: 29,
     PNN: 45,
     OPL: 46,
     SPDI: 51
