@@ -399,7 +399,8 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
  * In JS, an RTCConfiguration looks like this:
  *
  * { "iceServers": [ { url:"stun:23.21.150.121" },
- *                   { url:"turn:turn.example.org", credential:"mypass", "username"} ] }
+ *                   { url:"turn:turn.example.org?transport=udp",
+ *                     username: "jib", credential:"mypass"} ] }
  *
  * This function converts an already-validated jsval that looks like the above
  * into an IceConfiguration object.
@@ -449,6 +450,13 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
       nsAutoCString path;
       rv = url->GetPath(path);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Tolerate '?transport=udp' by stripping it.
+      int32_t questionmark = path.FindChar('?');
+      if (questionmark >= 0) {
+        path.SetLength(questionmark);
+      }
+
       rv = net_GetAuthURLParser()->ParseAuthority(path.get(), path.Length(),
                                                   nullptr,  nullptr,
                                                   nullptr,  nullptr,
