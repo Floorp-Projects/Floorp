@@ -94,6 +94,42 @@ this.BookmarkJSONUtils = Object.freeze({
       }
     }, Ci.nsIThread.DISPATCH_NORMAL);
     return deferred.promise;
+  },
+
+  /**
+   * Serializes the given node (and all its descendents) as JSON
+   * and writes the serialization to the given output stream.
+   *
+   * @param   aNode
+   *          An nsINavHistoryResultNode
+   * @param   aStream
+   *          An nsIOutputStream. NOTE: it only uses the write(str, len)
+   *          method of nsIOutputStream. The caller is responsible for
+   *          closing the stream.
+   * @param   aIsUICommand
+   *          Boolean - If true, modifies serialization so that each node self-contained.
+   *          For Example, tags are serialized inline with each bookmark.
+   * @param   aResolveShortcuts
+   *          Converts folder shortcuts into actual folders.
+   * @param   aExcludeItems
+   *          An array of item ids that should not be written to the backup.
+   * @return {Promise}
+   * @resolves When node have been serialized and wrote to output stream.
+   * @rejects JavaScript exception.
+   */
+  serializeNodeAsJSONToOutputStream: function BJU_serializeNodeAsJSONToOutputStream(
+    aNode, aStream, aIsUICommand, aResolveShortcuts, aExcludeItems) {
+    let deferred = Promise.defer();
+    Services.tm.mainThread.dispatch(function() {
+      try {
+        BookmarkNode.serializeAsJSONToOutputStream(
+          aNode, aStream, aIsUICommand, aResolveShortcuts, aExcludeItems);
+        deferred.resolve();
+      } catch (ex) {
+        deferred.reject(ex);
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+    return deferred.promise;
   }
 });
 

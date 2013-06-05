@@ -5582,7 +5582,7 @@ def getEnumValueName(value):
     if re.match("[^\x20-\x7E]", value):
         raise SyntaxError('Enum value "' + value + '" contains non-ASCII characters')
     if re.match("^[0-9]", value):
-        raise SyntaxError('Enum value "' + value + '" starts with a digit')
+        return '_' + value
     value = re.sub(r'[^0-9A-Za-z_]', '_', value)
     if re.match("^_[A-Z]|__", value):
         raise SyntaxError('Enum value "' + value + '" is reserved by the C++ spec')

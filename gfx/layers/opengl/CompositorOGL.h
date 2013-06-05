@@ -93,7 +93,7 @@ public:
    */
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) MOZ_OVERRIDE;
 
-  virtual void SetScreenRenderOffset(const gfx::Point& aOffset) MOZ_OVERRIDE {
+  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) MOZ_OVERRIDE {
     mRenderOffset = aOffset;
   }
 
@@ -148,7 +148,7 @@ private:
   /** The size of the surface we are rendering to */
   nsIntSize mSurfaceSize;
 
-  gfx::Point mRenderOffset;
+  ScreenPoint mRenderOffset;
 
   /** Helper-class used by Initialize **/
   class ReadDrawFPSPref MOZ_FINAL : public nsRunnable {

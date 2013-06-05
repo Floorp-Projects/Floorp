@@ -156,6 +156,20 @@ function activateCurrent(aMessage) {
     activateAccessible(vc.position);
 }
 
+function activateContextMenu(aMessage) {
+  function sendContextMenuCoordinates(aAccessible) {
+    let objX = {}, objY = {}, objW = {}, objH = {};
+    aAccessible.getBounds(objX, objY, objW, objH);
+    let x = objX.value + objW.value / 2;
+    let y = objY.value + objH.value / 2;
+    sendAsyncMessage('AccessFu:ActivateContextMenu', {x: x, y: y});
+  }
+
+  let vc = Utils.getVirtualCursor(content.document);
+  if (!forwardMessage(vc, aMessage))
+    sendContextMenuCoordinates(vc.position);
+}
+
 function scroll(aMessage) {
   let vc = Utils.getVirtualCursor(content.document);
 
@@ -248,6 +262,7 @@ addMessageListener(
 
     addMessageListener('AccessFu:VirtualCursor', virtualCursorControl);
     addMessageListener('AccessFu:Activate', activateCurrent);
+    addMessageListener('AccessFu:ContextMenu', activateContextMenu);
     addMessageListener('AccessFu:Scroll', scroll);
 
     if (!eventManager) {
@@ -263,6 +278,7 @@ addMessageListener(
 
     removeMessageListener('AccessFu:VirtualCursor', virtualCursorControl);
     removeMessageListener('AccessFu:Activate', activateCurrent);
+    removeMessageListener('AccessFu:ContextMenu', activateContextMenu);
     removeMessageListener('AccessFu:Scroll', scroll);
 
     eventManager.stop();

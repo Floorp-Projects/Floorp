@@ -3,7 +3,7 @@ random-if(bug685516) == background-common-usage-percent.html background-common-u
 random-if(bug685516) == background-common-usage-pixel.html background-common-usage-ref.html
 random-if(bug685516) == background-draw-nothing-empty-rect.html background-draw-nothing-ref.html
 random-if(bug685516) == background-draw-nothing-invalid-syntax.html background-draw-nothing-ref.html
-random-if(bug685516) asserts(0-2) == background-draw-nothing-malformed-images.html background-draw-nothing-ref.html # Bug 576419
+random-if(bug685516) asserts(0-4) == background-draw-nothing-malformed-images.html background-draw-nothing-ref.html # Bug 576419
 random-if(bug685516) == background-monster-rect.html background-monster-rect-ref.html
 random-if(bug685516) == background-over-size-rect.html background-over-size-rect-ref.html
 random-if(bug685516) == background-test-parser.html background-test-parser-ref.html

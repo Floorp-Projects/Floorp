@@ -47,6 +47,17 @@ addLoadEvent(function() {
   is(panner.channelCountMode, "clamped-max", "Correct channelCountMode for the panner node");
   is(panner.channelInterpretation, "speakers", "Correct channelCountInterpretation for the panner node");
 
+  panner.panningModel = panner.EQUALPOWER;
+  is(panner.panningModel, "equalpower", "Correct alternate panningModel enum value");
+  panner.panningModel = panner.HRTF;
+  is(panner.panningModel, "HRTF", "Correct alternate panningModel enum value");
+  panner.distanceModel = panner.LINEAR_DISTANCE;
+  is(panner.distanceModel, "linear", "Correct alternate distanceModel enum value");
+  panner.distanceModel = panner.INVERSE_DISTANCE;
+  is(panner.distanceModel, "inverse", "Correct alternate distanceModel enum value");
+  panner.distanceModel = panner.EXPONENTIAL_DISTANCE;
+  is(panner.distanceModel, "exponential", "Correct alternate distanceModel enum value");
+
   panner.setPosition(1, 1, 1);
   panner.setOrientation(1, 1, 1);
   panner.setVelocity(1, 1, 1);
