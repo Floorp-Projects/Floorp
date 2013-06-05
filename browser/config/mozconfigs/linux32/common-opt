@@ -1,13 +1,7 @@
-ac_add_options --enable-update-packaging
-ac_add_options --enable-codesighs
+# This file is sourced by nightly, beta, and release mozconfigs.
 
-# Options for rpm versions of mozconfigs
-PREFIX=/usr
-LIBDIR=${PREFIX}/lib
-ac_add_options --with-app-name=mozilla-nightly
-ac_add_options --disable-updater
-ac_add_options --prefix=$PREFIX
-ac_add_options --libdir=$LIBDIR
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
 
 . $topsrcdir/build/unix/mozconfig.linux32
 
@@ -19,10 +13,8 @@ export MOZILLA_OFFICIAL=1
 
 export MOZ_TELEMETRY_REPORTING=1
 
-#Use ccache
-ac_add_options --with-ccache=/usr/bin/ccache
-
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
 
-. "$topsrcdir/build/mozconfig.common.override"
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
