@@ -1,0 +1,251 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for SharedWorker</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+      <script class="testbody" type="text/javascript;version=1.7">
+        "use strict";
+
+        const swPref = "dom.workers.sharedWorkers.enabled";
+
+        const basePath =
+          location.pathname.substring(0,
+                                      location.pathname.lastIndexOf("/") + 1);
+        const baseURL = location.origin + basePath;
+
+        const frameRelativeURL = "multi_sharedWorker_frame.html";
+        const frameAbsoluteURL = baseURL + frameRelativeURL;
+        const workerAbsoluteURL =
+          baseURL + "multi_sharedWorker_sharedWorker.js";
+
+        const storedData = "0123456789abcdefghijklmnopqrstuvwxyz";
+        const errorMessage = "Error: Expected";
+        const errorLineno = 34;
+
+        let testGenerator = (function() {
+          SimpleTest.waitForExplicitFinish();
+
+          ok(!("SharedWorker" in window), "No SharedWorker without pref set");
+          ok(!("WorkerMessagePort" in window),
+             "No WorkerMessagePort without pref set");
+
+          SpecialPowers.pushPrefEnv({ set: [[swPref, true]] }, sendToGenerator);
+          yield undefined;
+
+          window.addEventListener("message", function(event) {
+            if (typeof(event.data) == "string") {
+              info(event.data);
+            } else {
+              sendToGenerator(event);
+            }
+          });
+
+          let frame1 = document.getElementById("frame1");
+          frame1.src = frameRelativeURL;
+          frame1.onload = sendToGenerator;
+
+          yield undefined;
+
+          frame1 = frame1.contentWindow;
+
+          let frame2 = document.getElementById("frame2");
+          frame2.src = frameAbsoluteURL;
+          frame2.onload = sendToGenerator;
+
+          yield undefined;
+
+          frame2 = frame2.contentWindow;
+
+          let data = {
+            command: "start"
+          };
+
+          frame1.postMessage(data, "*");
+          frame2.postMessage(data, "*");
+
+          let event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame1, "First window got the event");
+          is(event.data.type, "connect", "Got a connect message");
+
+          data = {
+            command: "retrieve"
+          };
+          frame1.postMessage(data, "*");
+
+          event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame1, "First window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, undefined, "No data stored yet");
+
+          frame2.postMessage(data, "*");
+
+          event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame2, "Second window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, undefined, "No data stored yet");
+
+          data = {
+            command: "store",
+            data: storedData
+          };
+          frame2.postMessage(data, "*");
+
+          data = {
+            command: "retrieve"
+          };
+          frame1.postMessage(data, "*");
+
+          event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame1, "First window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, storedData, "Got stored data");
+
+          // This will generate two MessageEvents, one for each window.
+          let sawFrame1Error = false;
+          let sawFrame2Error = false;
+
+          data = {
+            command: "error"
+          };
+          frame1.postMessage(data, "*");
+
+          // First event.
+          event = yield undefined;
+
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.data.type, "worker-error", "Got an error message");
+          is(event.data.message, errorMessage, "Got correct error message");
+          is(event.data.filename, workerAbsoluteURL, "Got correct filename");
+          is(event.data.lineno, errorLineno, "Got correct lineno");
+          if (event.source == frame1) {
+            is(sawFrame1Error, false, "Haven't seen error for frame1 yet");
+            sawFrame1Error = true;
+          } else if (event.source == frame2) {
+            is(sawFrame2Error, false, "Haven't seen error for frame1 yet");
+            sawFrame2Error = true;
+          } else {
+            ok(false, "Saw error from unknown window");
+          }
+
+          // Second event
+          event = yield undefined;
+
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.data.type, "worker-error", "Got an error message");
+          is(event.data.message, errorMessage, "Got correct error message");
+          is(event.data.filename, workerAbsoluteURL, "Got correct filename");
+          is(event.data.lineno, errorLineno, "Got correct lineno");
+          if (event.source == frame1) {
+            is(sawFrame1Error, false, "Haven't seen error for frame1 yet");
+            sawFrame1Error = true;
+          } else if (event.source == frame2) {
+            is(sawFrame2Error, false, "Haven't seen error for frame1 yet");
+            sawFrame2Error = true;
+          } else {
+            ok(false, "Saw error from unknown window");
+          }
+
+          is(sawFrame1Error, true, "Saw error for frame1");
+          is(sawFrame2Error, true, "Saw error for frame2");
+
+          // This will generate two MessageEvents, one for each window.
+          sawFrame1Error = false;
+          sawFrame2Error = false;
+
+          data = {
+            command: "error"
+          };
+          frame1.postMessage(data, "*");
+
+          // First event.
+          event = yield undefined;
+
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.data.type, "error", "Got an error message");
+          is(event.data.message, errorMessage, "Got correct error message");
+          is(event.data.filename, workerAbsoluteURL, "Got correct filename");
+          is(event.data.lineno, errorLineno, "Got correct lineno");
+          is(event.data.isErrorEvent, true, "Frame got an ErrorEvent");
+          if (event.source == frame1) {
+            is(sawFrame1Error, false, "Haven't seen error for frame1 yet");
+            sawFrame1Error = true;
+          } else if (event.source == frame2) {
+            is(sawFrame2Error, false, "Haven't seen error for frame1 yet");
+            sawFrame2Error = true;
+          } else {
+            ok(false, "Saw error from unknown window");
+          }
+
+          // Second event
+          event = yield undefined;
+
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.data.type, "error", "Got an error message");
+          is(event.data.message, errorMessage, "Got correct error message");
+          is(event.data.filename, workerAbsoluteURL, "Got correct filename");
+          is(event.data.lineno, errorLineno, "Got correct lineno");
+          is(event.data.isErrorEvent, true, "Frame got an ErrorEvent");
+          if (event.source == frame1) {
+            is(sawFrame1Error, false, "Haven't seen error for frame1 yet");
+            sawFrame1Error = true;
+          } else if (event.source == frame2) {
+            is(sawFrame2Error, false, "Haven't seen error for frame1 yet");
+            sawFrame2Error = true;
+          } else {
+            ok(false, "Saw error from unknown window");
+          }
+
+          is(sawFrame1Error, true, "Saw error for frame1");
+          is(sawFrame2Error, true, "Saw error for frame2");
+
+          // Try a shared worker in a different origin.
+          frame1 = document.getElementById("frame1");
+          frame1.src = "http://example.org" + basePath + frameRelativeURL;
+          frame1.onload = sendToGenerator;
+          yield undefined;
+
+          frame1 = frame1.contentWindow;
+
+          data = {
+            command: "retrieve"
+          };
+          frame1.postMessage(data, "*");
+
+          event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame1, "First window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, undefined, "No data stored yet");
+
+          frame2.postMessage(data, "*");
+
+          event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame2, "First window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, storedData, "Got stored data");
+
+          window.removeEventListener("message", sendToGenerator);
+
+          SimpleTest.finish();
+          yield undefined;
+        })();
+
+        let sendToGenerator = testGenerator.send.bind(testGenerator);
+
+      </script>
+  </head>
+  <body onload="testGenerator.next();">
+    <iframe id="frame1"></iframe>
+    <iframe id="frame2"></iframe>
+  </body>
+</html>

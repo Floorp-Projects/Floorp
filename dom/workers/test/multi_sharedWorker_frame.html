@@ -1,0 +1,52 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for SharedWorker</title>
+  </head>
+  <body>
+    <script type="text/javascript;version=1.7">
+"use strict";
+
+function debug(message) {
+  if (typeof(message) != "string") {
+    throw new Error("debug() only accepts strings!");
+  }
+  parent.postMessage(message, "*");
+}
+
+let worker;
+
+window.addEventListener("message", function(event) {
+  if (!worker) {
+    worker = new SharedWorker("multi_sharedWorker_sharedWorker.js",
+                              "FrameWorker");
+    worker.onerror = function(event) {
+      debug("Worker error: " + event.message);
+      event.preventDefault();
+
+      let data = {
+        type: "error",
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        isErrorEvent: event instanceof ErrorEvent
+      };
+      parent.postMessage(data, "*");
+    };
+
+    worker.port.onmessage = function(event) {
+      debug("Worker message: " + JSON.stringify(event.data));
+      parent.postMessage(event.data, "*");
+    };
+  }
+
+  debug("Posting message: " + JSON.stringify(event.data));
+  worker.port.postMessage(event.data);
+});
+    </script>
+  </body>
+</html>

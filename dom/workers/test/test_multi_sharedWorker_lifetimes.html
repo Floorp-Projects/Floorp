@@ -1,0 +1,151 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for SharedWorker</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+      <script class="testbody" type="text/javascript;version=1.7">
+        "use strict";
+
+        const swPref = "dom.workers.sharedWorkers.enabled";
+        const bfCachePref = "browser.sessionhistory.cache_subframes";
+
+        const frameRelativeURL = "multi_sharedWorker_frame.html";
+        const storedData = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+        let testGenerator = (function() {
+          SimpleTest.waitForExplicitFinish();
+
+          ok(!("SharedWorker" in window), "No SharedWorker without pref set");
+          ok(!("WorkerMessagePort" in window),
+             "No WorkerMessagePort without pref set");
+
+          SpecialPowers.pushPrefEnv({ set: [[swPref, true]] }, sendToGenerator);
+          yield undefined;
+
+          window.addEventListener("message", function(event) {
+            if (typeof(event.data) == "string") {
+              info(event.data);
+            } else {
+              sendToGenerator(event);
+            }
+          });
+
+          let frame = document.getElementById("frame");
+          frame.src = frameRelativeURL;
+          frame.onload = sendToGenerator;
+
+          yield undefined;
+
+          frame = frame.contentWindow;
+          frame.postMessage({ command: "retrieve" }, "*");
+
+          let event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame, "Correct window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, undefined, "No data stored yet");
+
+          frame.postMessage({ command: "store", data: storedData }, "*");
+          frame.postMessage({ command: "retrieve" }, "*");
+
+          event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame, "Correct window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, storedData, "Got stored data");
+
+          // Navigate when the bfcache is disabled.
+          info("Navigating to about:blank");
+          let frame = document.getElementById("frame");
+          frame.onload = sendToGenerator;
+          frame.src = "about:blank";
+          frame.contentWindow.document.body.offsetTop;
+
+          yield undefined;
+
+          info("Navigating to " + frameRelativeURL);
+          frame.src = frameRelativeURL;
+          frame.contentWindow.document.body.offsetTop;
+
+          yield undefined;
+
+          frame = frame.contentWindow;
+          frame.postMessage({ command: "retrieve" }, "*");
+
+          let event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame, "Correct window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, undefined, "No data stored");
+
+          frame.postMessage({ command: "store", data: storedData }, "*");
+          frame.postMessage({ command: "retrieve" }, "*");
+
+          event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame, "Correct window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, storedData, "Got stored data");
+
+          info("Enabling '" + bfCachePref + "' pref");
+          SpecialPowers.pushPrefEnv({ set: [[bfCachePref, true]] },
+                                    sendToGenerator);
+          yield undefined;
+
+          // Navigate when the bfcache is enabled.
+          let frame = document.getElementById("frame");
+          frame.onload = sendToGenerator;
+
+          info("Navigating to about:blank");
+          frame.src = "about:blank";
+          frame.contentWindow.document.body.offsetTop;
+
+          yield undefined;
+
+          for (let i = 0; i < 3; i++) {
+            info("Running GC");
+            SpecialPowers.gc();
+
+            info("Waiting the event queue to clear");
+            SpecialPowers.executeSoon(sendToGenerator);
+            yield undefined;
+          }
+
+          info("Navigating to " + frameRelativeURL);
+          frame.src = frameRelativeURL;
+          frame.contentWindow.document.body.offsetTop;
+
+          yield undefined;
+
+          frame = frame.contentWindow;
+          frame.postMessage({ command: "retrieve" }, "*");
+
+          let event = yield undefined;
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          is(event.source, frame, "Correct window got the event");
+          is(event.data.type, "result", "Got a result message");
+          is(event.data.data, storedData, "Still have data stored");
+
+          info("Resetting '" + bfCachePref + "' pref");
+          SpecialPowers.popPrefEnv(sendToGenerator);
+          yield undefined;
+
+          window.removeEventListener("message", sendToGenerator);
+
+          SimpleTest.finish();
+          yield undefined;
+        })();
+
+        let sendToGenerator = testGenerator.send.bind(testGenerator);
+
+      </script>
+  </head>
+  <body onload="testGenerator.next();">
+    <iframe id="frame"></iframe>
+  </body>
+</html>
