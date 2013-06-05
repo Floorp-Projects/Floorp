@@ -192,10 +192,7 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
     // It is a double wrapped object. Figure out if the caller
     // is allowed to see it.
 
-    nsIXPCSecurityManager* sm;
-    XPCContext* xpcc = ccx.GetXPCContext();
-
-    sm = xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_GET_PROPERTY);
+    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
     if (sm) {
         AutoMarkingNativeInterfacePtr iface(ccx);
         iface = XPCNativeInterface::

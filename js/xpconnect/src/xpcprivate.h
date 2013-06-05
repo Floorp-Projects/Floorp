@@ -1048,24 +1048,6 @@ public:
     void SetSecurityManagerFlags(uint16_t f)
         {mSecurityManagerFlags = f;}
 
-    nsIXPCSecurityManager* GetAppropriateSecurityManager(uint16_t flags) const
-        {
-            NS_ASSERTION(CallerTypeIsKnown(),"missing caller type set somewhere");
-            if (!CallerTypeIsJavaScript())
-                return nullptr;
-            if (mSecurityManager) {
-                if (flags & mSecurityManagerFlags)
-                    return mSecurityManager;
-            } else {
-                nsIXPCSecurityManager* mgr;
-                nsXPConnect* xpc = nsXPConnect::XPConnect();
-                mgr = xpc->GetDefaultSecurityManager();
-                if (mgr && (flags & xpc->GetDefaultSecurityManagerFlags()))
-                    return mgr;
-            }
-            return nullptr;
-        }
-
     void DebugDump(int16_t depth);
     void AddScope(PRCList *scope) { PR_INSERT_AFTER(scope, &mScopes); }
     void RemoveScope(PRCList *scope) { PR_REMOVE_LINK(scope); }

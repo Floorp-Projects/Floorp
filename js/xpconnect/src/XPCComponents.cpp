@@ -1578,12 +1578,9 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     if (!ccx.IsValid())
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
-    XPCContext* xpcc = ccx.GetXPCContext();
-
     // Do the security check if necessary
 
-    nsIXPCSecurityManager* sm =
-            xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->CanCreateInstance(cx, nsJSID::GetCID()))) {
         // the security manager vetoed. It should have set an exception.
         *_retval = false;
@@ -1949,12 +1946,10 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    XPCContext* xpcc = ccx.GetXPCContext();
 
     // Do the security check if necessary
 
-    nsIXPCSecurityManager* sm =
-            xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+    nsIXPCSecurityManager* sm = xpc->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->CanCreateInstance(cx, nsXPCException::GetCID()))) {
         // the security manager vetoed. It should have set an exception.
         *_retval = false;
@@ -2458,17 +2453,15 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    XPCContext* xpcc = ccx.GetXPCContext();
     XPCWrappedNativeScope* scope = GetObjectScope(obj);
     nsXPCComponents* comp;
 
-    if (!xpc || !xpcc || !scope || !(comp = scope->GetComponents()))
+    if (!xpc || !scope || !(comp = scope->GetComponents()))
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
     // Do the security check if necessary
 
-    nsIXPCSecurityManager* sm =
-            xpcc->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+    nsIXPCSecurityManager* sm = xpc->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->CanCreateInstance(cx, nsXPCConstructor::GetCID()))) {
         // the security manager vetoed. It should have set an exception.
         *_retval = false;
