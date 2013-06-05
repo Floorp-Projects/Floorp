@@ -9,7 +9,10 @@
             android:id="@+id/menu_item"
             android:layout_width="0dip"
             android:layout_height="fill_parent"
-            android:layout_weight="1.0"/>
+            android:layout_weight="1.0"
+            android:background="@drawable/action_bar_button"
+            android:clickable="true"
+            android:focusable="true"/>
 
     <ImageButton android:id="@+id/action_button"
                  android:layout_width="@dimen/menu_item_action_icon"
