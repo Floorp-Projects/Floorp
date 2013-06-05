@@ -3962,6 +3962,7 @@ pref("webgl.default-no-alpha", false);
 pref("webgl.force-layers-readback", false);
 pref("webgl.lose-context-on-heap-minimize", false);
 pref("webgl.can-lose-context-in-foreground", true);
+pref("webgl.max-warnings-per-context", 32);
 
 // Stagefright prefs
 pref("stagefright.force-enabled", false);
