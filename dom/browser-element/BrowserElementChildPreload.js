@@ -187,9 +187,7 @@ BrowserElementChild.prototype = {
 
     // Registers a MozAfterPaint handler for the very first paint.
     this._addMozAfterPaintHandler(function () {
-      let bgColor = content.getComputedStyle(content.document.body)
-                           .getPropertyValue('background-color');
-      sendAsyncMsg('firstpaint', {backgroundColor: bgColor});
+      sendAsyncMsg('firstpaint');
     });
 
     let self = this;
