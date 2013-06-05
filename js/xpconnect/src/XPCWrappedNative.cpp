@@ -2456,7 +2456,6 @@ CallMethodHelper::GatherAndConvertResults()
 
         nsresult err;
         if (isArray) {
-            XPCLazyCallContext lccx(mCallContext);
             if (!XPCConvert::NativeArray2JS(v.address(), (const void**)&dp->val,
                                             datum_type, &param_iid,
                                             array_count, &err)) {
