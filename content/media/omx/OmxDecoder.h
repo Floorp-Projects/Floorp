@@ -27,7 +27,7 @@ class VideoGraphicBuffer : public GraphicBufferLocked {
   public:
     VideoGraphicBuffer(const android::wp<android::OmxDecoder> aOmxDecoder,
                        android::MediaBuffer *aBuffer,
-                       SurfaceDescriptor *aDescriptor);
+                       SurfaceDescriptor& aDescriptor);
     ~VideoGraphicBuffer();
     void Unlock();
 };

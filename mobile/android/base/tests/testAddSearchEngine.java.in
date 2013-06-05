@@ -51,12 +51,7 @@ public class testAddSearchEngine extends BaseTest {
         // Add the search engine
         mSolo.clickOnText("Add Search Engine");
         waitForText("Cancel");
-        if (mDevice.type.equals("tablet")) {
-            // On tablets, the vkb is opened when the popup is triggered so we need to close it in order to click the OK button
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-            waitForText("OK"); // Make sure the OK button is visible
-        }
-        mSolo.clickOnButton("OK");
+        clickOnButton("OK");
         mAsserter.ok(!mSolo.searchText("Add Search Engine"), "Adding the search engine", "The add search engine pop-up has been closed");
 
         // Check that the number of search results has increased

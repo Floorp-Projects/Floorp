@@ -7,6 +7,7 @@
 #ifndef dom_plugins_PluginProcessParent_h
 #define dom_plugins_PluginProcessParent_h 1
 
+#include "mozilla/Attributes.h"
 #include "base/basictypes.h"
 
 #include "base/file_path.h"
@@ -35,7 +36,7 @@ public:
 
     void Delete();
 
-    virtual bool CanShutdown()
+    virtual bool CanShutdown() MOZ_OVERRIDE
     {
         return true;
     }

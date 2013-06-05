@@ -39,18 +39,15 @@ this.webrtcUI = {
     let activeStreams = [];
     for (let i = 0; i < count; i++) {
       let contentWindow = contentWindowSupportsArray.GetElementAt(i);
-      let browserWindow = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIWebNavigation)
-                                       .QueryInterface(Ci.nsIDocShell)
-                                       .chromeEventHandler.ownerDocument.defaultView;
+      let browser = getBrowserForWindow(contentWindow);
+      let browserWindow = browser.ownerDocument.defaultView;
       let tab = browserWindow.gBrowser &&
                 browserWindow.gBrowser._getTabForContentWindow(contentWindow.top);
-      if (tab) {
-        activeStreams.push({
-          uri: contentWindow.location.href,
-          tab: tab
-        });
-      }
+      activeStreams.push({
+        uri: contentWindow.location.href,
+        tab: tab,
+        browser: browser
+      });
     }
     return activeStreams;
   }
@@ -212,8 +209,8 @@ function updateIndicators() {
   while (e.hasMoreElements())
     e.getNext().WebrtcIndicator.updateButton();
 
-  for (let {tab: tab} of webrtcUI.activeStreams)
-    showBrowserSpecificIndicator(tab.linkedBrowser);
+  for (let {browser: browser} of webrtcUI.activeStreams)
+    showBrowserSpecificIndicator(browser);
 }
 
 function showBrowserSpecificIndicator(aBrowser) {

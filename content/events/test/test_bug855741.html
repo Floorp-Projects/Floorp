@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=855741
+-->
+<head>
+  <title>Test for Bug 855741</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<input type="text" id="testTarget"  value="focus">
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 855741 **/
+function testFocusEvent(event) {
+  ok(('relatedTarget' in event), 'FocusEvent.relatedTarget exists');
+
+  if (event.construct_test == true) {
+    ok(event.relatedTarget == $("content"), 'FocusEvent.relatedTarget is ' + $("content").id);
+  }
+}
+
+function testUIEvent(event) {
+  ok((event.detail == 0),
+     'UIEvent.detail should be 0 in ' + event.target.value + ' event');
+
+  ok((event.defaultView == null),
+     'UIEvent.defaultView should be null in ' + event.target.value + ' event');
+}
+
+function testEventType(event, type) {
+  ok((event.type == type), 'Event.type match: ' + type);
+}
+
+function eventhandle(event) {
+  testFocusEvent(event);
+  testUIEvent(event);
+  testEventType(event, event.target.value);
+
+  if (event.target.value == 'blur') {
+    event.target.value = 'focus';
+  } else {
+    event.target.value = 'blur';
+  }
+}
+
+//
+// event handler:
+//
+$("testTarget").addEventListener("focus", eventhandle, true);
+$("testTarget").addEventListener("blur", eventhandle, true);
+
+//
+// FocusEvent structure test
+//
+$("testTarget").focus();
+$("testTarget").blur();
+
+//
+// Focus/Blur constructor test
+//
+var focus_event = new FocusEvent("focus",
+                                 {bubbles: true,
+                                  cancelable: true,
+                                  relatedTarget: $("content")});
+focus_event.construct_test = true;
+
+var blur_event = new FocusEvent("blur",
+                                {bubbles: true,
+                                 cancelable: true,
+                                 relatedTarget: $("content")});
+blur_event.construct_test = true;
+
+// create cycle referece for leak test
+$("content").foo_focus = focus_event;
+$("content").foo_blur = blur_event;
+
+$("testTarget").dispatchEvent(focus_event);
+$("testTarget").dispatchEvent(blur_event);
+
+</script>
+</pre>
+</body>
+</html>

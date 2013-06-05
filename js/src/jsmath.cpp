@@ -232,7 +232,7 @@ js::ecmaAtan2(double x, double y)
 
 #if defined(SOLARIS) && defined(__GNUC__)
     if (x == 0) {
-        if (MOZ_DOUBLE_IS_NEGZERO(y))
+        if (IsNegativeZero(y))
             return js_copysign(M_PI, x);
         if (y == 0)
             return x;

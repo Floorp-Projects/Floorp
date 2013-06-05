@@ -17,7 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 496923 removed a directory which the non-regenerated js/src/tests/Makefile will still request.
-
-Alternative to clobber is to run ./config.status from the objdir and to
-touch the CLOBBER file in the objdir.
+Bug 875929 removed a file from js/src/moz.build and apparently the build system didn't notice.

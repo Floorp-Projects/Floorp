@@ -29,6 +29,8 @@
 #include "mozilla/layers/ContentClient.h"
 #include "ISurfaceAllocator.h"
 
+#include "nsTraceRefcntImpl.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::gl;
 using namespace mozilla::dom;

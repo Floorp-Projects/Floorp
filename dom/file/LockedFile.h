@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_file_lockedfile_h__
 #define mozilla_dom_file_lockedfile_h__
 
+#include "mozilla/Attributes.h"
 #include "FileCommon.h"
 
 #include "nsIDOMLockedFile.h"
@@ -65,7 +66,7 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   nsresult
   CreateParallelStream(nsISupports** aStream);

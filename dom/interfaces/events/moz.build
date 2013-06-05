@@ -25,6 +25,7 @@ XPIDL_SOURCES += [
     'nsIDOMEvent.idl',
     'nsIDOMEventListener.idl',
     'nsIDOMEventTarget.idl',
+    'nsIDOMFocusEvent.idl',
     'nsIDOMGamepadAxisMoveEvent.idl',
     'nsIDOMGamepadButtonEvent.idl',
     'nsIDOMGamepadEvent.idl',
