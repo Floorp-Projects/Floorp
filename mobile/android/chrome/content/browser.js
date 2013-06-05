@@ -3906,8 +3906,6 @@ var BrowserEventHandler = {
     BrowserApp.deck.addEventListener("touchstart", this, true);
     BrowserApp.deck.addEventListener("click", InputWidgetHelper, true);
     BrowserApp.deck.addEventListener("click", SelectHelper, true);
-    document.addEventListener("MozMagnifyGestureStart", this, true);
-    document.addEventListener("MozMagnifyGestureUpdate", this, true);
     document.addEventListener("MozMagnifyGesture", this, true);
 
     Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
@@ -3936,9 +3934,9 @@ var BrowserEventHandler = {
         this._handleTouchStart(aEvent);
         break;
       case 'MozMagnifyGesture':
-      case 'MozMagnifyGestureUpdate':
-      case 'MozMagnifyGestureStart':
-        this.observe(this, aEvent.type, JSON.stringify({x: aEvent.screenX, y: aEvent.screenY}));
+        this.observe(this, aEvent.type,
+                     JSON.stringify({x: aEvent.screenX, y: aEvent.screenY,
+                                     zoomDelta: aEvent.delta}));
         break;
     }
   },
@@ -4105,9 +4103,8 @@ var BrowserEventHandler = {
         this.onDoubleTap(aData);
         break;
 
-      case "MozMagnifyGestureStart":
-      case "MozMagnifyGestureUpdate":
-        this.onPinch(aData);
+      case "MozMagnifyGesture":
+        this.onPinchFinish(aData);
         break;
 
       default:
@@ -4280,17 +4277,18 @@ var BrowserEventHandler = {
     BrowserApp.selectedTab._mReflozPoint = null;
    },
 
-   onPinch: function(aData) {
-     // We only want to do this if reflow-on-zoom is enabled.
-     if (BrowserEventHandler.mReflozPref &&
-         !BrowserApp.selectedTab._mReflozPoint) {
-       let data = JSON.parse(aData);
-       let zoomPointX = data.x;
-       let zoomPointY = data.y;
+   onPinchFinish: function(aData) {
+     let data = {};
+     try {
+       data = JSON.parse(aData);
+     } catch(ex) {
+       console.log(ex);
+       return;
+     }
 
-       BrowserApp.selectedTab._mReflozPoint = { x: zoomPointX, y: zoomPointY,
-         range: BrowserApp.selectedBrowser.contentDocument.caretPositionFromPoint(zoomPointX, zoomPointY) };
-         BrowserApp.selectedTab.probablyNeedRefloz = true;
+     if (BrowserEventHandler.mReflozPref &&
+         data.zoomDelta < 0.0) {
+       BrowserEventHandler.resetMaxLineBoxWidth();
      }
    },
 
