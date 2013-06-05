@@ -189,7 +189,7 @@ function ResponsiveUI(aWindow, aTab)
 
 ResponsiveUI.prototype = {
   _transitionsEnabled: true,
-  _floatingScrollbars: true,
+  _floatingScrollbars: Services.appinfo.OS != "Darwin",
   get transitionsEnabled() this._transitionsEnabled,
   set transitionsEnabled(aValue) {
     this._transitionsEnabled = aValue;
