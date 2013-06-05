@@ -103,6 +103,7 @@ MOCHITEST_FILES = \
 		test_addEventListenerExtraArg.html \
 		test_focus_disabled.html \
 		test_bug847597.html \
+		test_bug855741.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
