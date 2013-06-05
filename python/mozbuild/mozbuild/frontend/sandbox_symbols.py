@@ -66,6 +66,12 @@ VARIABLES = {
         This variable contains a list of files to invoke the assembler on.
         """),
 
+    'CMMSRCS': (StrictOrderingOnAppendList, list, [],
+        """Sources to compile with the Objective C/C++ compiler.
+
+        This variable contains a list of objective-C++ sources to compile.
+        """),
+
     'CSRCS': (StrictOrderingOnAppendList, list, [],
         """C code source files.
 
