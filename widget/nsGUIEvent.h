@@ -1552,20 +1552,6 @@ public:
   };
 };
 
-class nsFocusEvent : public nsEvent
-{
-public:
-  nsFocusEvent(bool isTrusted, uint32_t msg)
-    : nsEvent(isTrusted, msg, NS_FOCUS_EVENT),
-      fromRaise(false),
-      isRefocus(false)
-  {
-  }
-
-  bool fromRaise;
-  bool isRefocus;
-};
-
 class nsSelectionEvent : public nsGUIEvent
 {
 private:
@@ -1718,16 +1704,34 @@ public:
 /**
  * DOM UIEvent
  */
-class nsUIEvent : public nsEvent
+class nsUIEvent : public nsGUIEvent
 {
 public:
   nsUIEvent(bool isTrusted, uint32_t msg, int32_t d)
-    : nsEvent(isTrusted, msg, NS_UI_EVENT),
+    : nsGUIEvent(isTrusted, msg, nullptr, NS_UI_EVENT),
       detail(d)
   {
   }
 
   int32_t detail;
+};
+
+class nsFocusEvent : public nsUIEvent
+{
+public:
+  nsFocusEvent(bool isTrusted, uint32_t msg)
+    : nsUIEvent(isTrusted, msg, 0),
+      fromRaise(false),
+      isRefocus(false)
+  {
+    eventStructType = NS_FOCUS_EVENT;
+  }
+
+  /// The possible related target
+  nsCOMPtr<mozilla::dom::EventTarget> relatedTarget;
+
+  bool fromRaise;
+  bool isRefocus;
 };
 
 /**

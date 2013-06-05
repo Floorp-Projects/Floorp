@@ -280,6 +280,11 @@ NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                     nsPresContext* aPresContext,
                     class nsInputEvent* aEvent);
 nsresult
+NS_NewDOMFocusEvent(nsIDOMEvent** aInstancePtrResult,
+                    mozilla::dom::EventTarget* aOwner,
+                    nsPresContext* aPresContext,
+                    class nsFocusEvent* aEvent);
+nsresult
 NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
