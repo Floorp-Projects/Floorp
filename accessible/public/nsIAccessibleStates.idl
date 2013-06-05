@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(7fe1ee90-edaa-43f1-9f3b-071099b51f08)]
+[scriptable, uuid(f1e0fbb7-fde4-4519-9383-2bcbee428513)]
 interface nsIAccessibleStates : nsISupports
 {
   /**
@@ -71,5 +71,6 @@ interface nsIAccessibleStates : nsISupports
   const unsigned long  EXT_STATE_ENABLED                 = 0x00002000;  // A widget that is not unavailable
   const unsigned long  EXT_STATE_SENSITIVE               = 0x00004000;  // Same as ENABLED for now
   const unsigned long  EXT_STATE_EXPANDABLE              = 0x00008000;  // If COLLAPSED or EXPANDED
+  const unsigned long  EXT_STATE_PINNED                  = 0x00010000;  // Indicates object is pinned.
 };
 
