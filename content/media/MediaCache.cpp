@@ -949,7 +949,7 @@ MediaCache::PredictNextUse(TimeStamp aNow, int32_t aBlock)
       int64_t millisecondsBehind =
         bytesBehind*1000/bo->mStream->mPlaybackBytesPerSecond;
       prediction = TimeDuration::FromMilliseconds(
-          NS_MIN<int64_t>(millisecondsBehind*REPLAY_PENALTY_FACTOR, INT32_MAX));
+          std::min<int64_t>(millisecondsBehind*REPLAY_PENALTY_FACTOR, INT32_MAX));
       break;
     }
     case READAHEAD_BLOCK: {
