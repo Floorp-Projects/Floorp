@@ -24,6 +24,10 @@ const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const kSpecialWidgetPfx = "customizableui-special-";
 
+const kCustomizationContextMenu = "customizationContextMenu";
+const kContextMenuBackup        = "customization-old-context";
+
+
 const kPrefCustomizationState        = "browser.uiCustomization.state";
 const kPrefCustomizationAutoAdd      = "browser.uiCustomization.autoAdd";
 const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
@@ -316,6 +320,8 @@ let CustomizableUIInternal = {
           aArea == CustomizableUI.AREA_PANEL) {
         this.ensureButtonClosesPanel(node);
       }
+      this.ensureButtonContextMenu(node, aArea == CustomizableUI.AREA_PANEL);
+
       this.insertWidgetBefore(node, currentNode, container, aArea);
       this._addParentFlex(node);
       if (gResetting)
@@ -368,6 +374,25 @@ let CustomizableUIInternal = {
 
     aNode.addEventListener("mouseup", this.maybeAutoHidePanel, false);
     aNode.addEventListener("keypress", this.maybeAutoHidePanel, false);
+  },
+
+  ensureButtonContextMenu: function(aNode, ourContextMenu) {
+    if (ourContextMenu) {
+      let currentCtxt = aNode.getAttribute("context");
+      // Need to save widget's own context menu if we're replacing it:
+      if (currentCtxt && currentCtxt != kCustomizationContextMenu) {
+        aNode.setAttribute(kContextMenuBackup, currentCtxt);
+      }
+      aNode.setAttribute("context", kCustomizationContextMenu);
+    } else if (aNode.getAttribute("context") == kCustomizationContextMenu) {
+      let oldCtxt = aNode.getAttribute(kContextMenuBackup);
+      if (oldCtxt) {
+        aNode.setAttribute("context", oldCtxt);
+        aNode.removeAttribute(kContextMenuBackup);
+      } else {
+        aNode.removeAttribute("context");
+      }
+    }
   },
 
   getWidgetProvider: function(aWidgetId) {
@@ -430,6 +455,7 @@ let CustomizableUIInternal = {
       if (!btn.hasAttribute("noautoclose")) {
         this.ensureButtonClosesPanel(btn);
       }
+      this.ensureButtonContextMenu(btn, true);
     }
 
     aPanel.toolbox = document.getElementById("navigator-toolbox");
@@ -466,6 +492,8 @@ let CustomizableUIInternal = {
           aArea == CustomizableUI.AREA_PANEL) {
         this.ensureButtonClosesPanel(widgetNode);
       }
+
+      this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
 
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
