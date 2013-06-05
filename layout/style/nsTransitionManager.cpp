@@ -707,22 +707,30 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     }
   }
 
+  // If we got a style change that changed the value to the endpoint
+  // of the currently running transition, we don't want to interrupt
+  // its timing function.
+  // This needs to be before the !shouldAnimate && haveCurrentTransition
+  // case below because we might be close enough to the end of the
+  // transition that the current value rounds to the final value.  In
+  // this case, we'll end up with shouldAnimate as false (because
+  // there's no value change), but we need to return early here rather
+  // than cancel the running transition because shouldAnimate is false!
+  if (haveCurrentTransition && haveValues && oldPT->mEndValue == pt.mEndValue) {
+    // WalkTransitionRule already called RestyleForAnimation.
+    return;
+  }
+
   nsPresContext *presContext = aNewStyleContext->PresContext();
 
   if (!shouldAnimate) {
     nsTArray<ElementPropertyTransition> &pts =
       aElementTransitions->mPropertyTransitions;
-    if (haveCurrentTransition &&
-        (!haveValues || pts[currentIndex].mEndValue != pt.mEndValue)) {
+    if (haveCurrentTransition) {
       // We're in the middle of a transition, but just got a
       // non-transition style change changing to exactly the
       // current in-progress value.   (This is quite easy to cause
       // using 'transition-delay'.)
-      //
-      // We also check that this current in-progress value is different
-      // from the end value; we don't want to cancel a transition that
-      // is almost done (and whose current value rounds to its end
-      // value) just because we got an unrelated style change.
       pts.RemoveElementAt(currentIndex);
       aElementTransitions->UpdateAnimationGeneration(mPresContext);
 
@@ -749,19 +757,9 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   pt.mStartForReversingTest = pt.mStartValue;
   pt.mReversePortion = 1.0;
 
-  // We need to check two things if we have a currently running
-  // transition for this property.
+  // If the new transition reverses an existing one, we'll need to
+  // handle the timing differently.
   if (haveCurrentTransition) {
-    if (oldPT->mEndValue == pt.mEndValue) {
-      // If we got a style change that changed the value to the endpoint
-      // of the currently running transition, we don't want to interrupt
-      // its timing function.
-      // WalkTransitionRule already called RestyleForAnimation.
-      return;
-    }
-
-    // If the new transition reverses the old one, we'll need to handle
-    // the timing differently.
     if (!oldPT->IsRemovedSentinel() &&
         oldPT->mStartForReversingTest == pt.mEndValue) {
       // Compute the appropriate negative transition-delay such that right
