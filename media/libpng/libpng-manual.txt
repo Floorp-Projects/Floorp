@@ -1,6 +1,6 @@
 Libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.5.15 - March 28, 2013
+ libpng version 1.5.16 - May 23, 2013
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2013 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ Libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.5.15 - March 28, 2013
+ libpng versions 0.97, January 1998, through 1.5.16 - May 23, 2013
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2013 Glenn Randers-Pehrson
 
@@ -31,9 +31,7 @@ Libpng-manual.txt - A description on how to use and modify libpng
 I. Introduction
 
 This file describes how to use and modify the PNG reference library
-(known as libpng) for your own use.  There are five sections to this
-file: introduction, structures, reading, writing, and modification and
-configuration notes for various special platforms.  In addition to this
+(known as libpng) for your own use.  In addition to this
 file, example.c is a good starting point for using the library, as
 it is heavily commented and should include everything most people
 will need.  We assume that libpng is already installed; see the
@@ -3037,13 +3035,45 @@ from PNG time to an RFC 1123 format string.
 
 Writing unknown chunks
 
-You can use the png_set_unknown_chunks function to queue up chunks
-for writing.  You give it a chunk name, raw data, and a size; that's
-all there is to it.  The chunks will be written by the next following
-png_write_info_before_PLTE, png_write_info, or png_write_end function.
-Any chunks previously read into the info structure's unknown-chunk
-list will also be written out in a sequence that satisfies the PNG
-specification's ordering rules.
+You can use the png_set_unknown_chunks function to queue up private chunks
+for writing.  You give it a chunk name, location, raw data, and a size.  You
+also must use png_set_keep_unknown_chunks() to ensure that libpng will
+handle them.  That's all there is to it.  The chunks will be written by the
+next following png_write_info_before_PLTE, png_write_info, or png_write_end
+function, depending upon the specified location.  Any chunks previously
+read into the info structure's unknown-chunk list will also be written out
+in a sequence that satisfies the PNG specification's ordering rules.
+
+Here is an example of writing two private chunks, prVt and miNE:
+
+    #ifdef PNG_WRITE_UNKNOWN_CHUNKS_SUPPORTED
+    /* Set unknown chunk data */
+    png_unknown_chunk unk_chunk[2];
+    strcpy((char *) unk_chunk[0].name, "prVt";
+    unk_chunk[0].data = (unsigned char *) "PRIVATE DATA";
+    unk_chunk[0].size = strlen(unk_chunk[0].data)+1;
+    unk_chunk[0].location = PNG_HAVE_IHDR;
+    strcpy((char *) unk_chunk[1].name, "miNE";
+    unk_chunk[1].data = (unsigned char *) "MY CHUNK DATA";
+    unk_chunk[1].size = strlen(unk_chunk[0].data)+1;
+    unk_chunk[1].location = PNG_AFTER_IDAT;
+    png_set_unknown_chunks(write_ptr, write_info_ptr,
+        unk_chunk, 2);
+    /* Needed because miNE is not safe-to-copy */
+    png_set_keep_unknown_chunks(png, PNG_HANDLE_CHUNK_ALWAYS,
+       (png_bytep) "miNE", 1);
+    /* Deal with unknown chunk location bug in 1.5.x and earlier */
+    png_set_unknown_chunk_location(png, info, 0, PNG_HAVE_IHDR);
+    png_set_unknown_chunk_location(png, info, 1, PNG_AFTER_IDAT);
+    # if PNG_LIBPNG_VER < 10500
+      /* PNG_AFTER_IDAT writes two copies of the chunk prior to libpng-1.5.0,
+       * one before IDAT and another after IDAT, so don't use it; only use
+       * PNG_HAVE_IHDR location.  This call resets the location previously
+       * set by assignment and png_set_unknown_chunk_location() for chunk 1.
+       */
+      png_set_unknown_chunk_location(png, info, 1, PNG_HAVE_IHDR);
+    # endif
+    #endif
 
 The high-level write interface
 
@@ -4493,11 +4523,11 @@ control.  The git repository was built from old libpng-x.y.z.tar.gz files
 going back to version 0.70.  You can access the git repository (read only)
 at
 
-    git://libpng.git.sourceforge.net/gitroot/libpng
+    git://git.code.sf.net/p/libpng/code
 
-or you can browse it via "gitweb" at
+or you can browse it with a web browser by selecting the "code" button at
 
-    http://libpng.git.sourceforge.net/git/gitweb.cgi?p=libpng
+    https://sourceforge.net/projects/libpng/
 
 Patches can be sent to glennrp at users.sourceforge.net or to
 png-mng-implement at lists.sourceforge.net or you can upload them to
@@ -4625,13 +4655,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIV. Y2K Compliance in libpng
 
-March 28, 2013
+May 23, 2013
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.5.15 are Y2K compliant.  It is my belief that earlier
+upward through 1.5.16 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer that
