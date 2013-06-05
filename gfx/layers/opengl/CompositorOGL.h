@@ -134,6 +134,13 @@ public:
            gl::RGBARectLayerProgramType : gl::RGBALayerProgramType;
   }
 
+  /**
+   * The compositor provides with temporary textures for use with direct
+   * textruing like gralloc texture.
+   * Doing so lets us use gralloc the way it has been designed to be used
+   * (see https://wiki.mozilla.org/Platform/GFX/Gralloc)
+   */
+  GLuint GetTemporaryTexture(GLenum aUnit);
 private:
   /** 
    * Context target, nullptr when drawing directly to our swap chain.
@@ -319,6 +326,9 @@ private:
   bool mDestroyed;
 
   nsAutoPtr<FPSState> mFPS;
+  // Textures used for direct texturing of buffers like gralloc.
+  // The index of the texture in this array must correspond to the texture unit.
+  GLuint mTextures[3];
   static bool sDrawFPS;
   static bool sFrameCounter;
 };

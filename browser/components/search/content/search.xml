@@ -539,11 +539,88 @@
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation implements="nsIObserver">
       <constructor><![CDATA[
+        const kXULNS =
+          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
         if (document.getBindingParent(this).parentNode.parentNode.localName ==
             "toolbarpaletteitem")
           return;
 
-        this.initialize();
+        // Initialize fields
+        this._stringBundle = document.getBindingParent(this)._stringBundle;
+        this._prefBranch =
+                  Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+        this._suggestEnabled =
+            this._prefBranch.getBoolPref("browser.search.suggest.enabled");
+
+        if (this._prefBranch.getBoolPref("browser.urlbar.clickSelectsAll"))
+          this.setAttribute("clickSelectsAll", true);
+
+        // Add items to context menu and attach controller to handle them
+        var textBox = document.getAnonymousElementByAttribute(this,
+                                              "anonid", "textbox-input-box");
+        var cxmenu = document.getAnonymousElementByAttribute(textBox,
+                                          "anonid", "input-box-contextmenu");
+        var pasteAndSearch;
+        cxmenu.addEventListener("popupshowing", function() {
+          if (!pasteAndSearch)
+            return;
+          var controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
+          var enabled = controller.isCommandEnabled("cmd_paste");
+          if (enabled)
+            pasteAndSearch.removeAttribute("disabled");
+          else
+            pasteAndSearch.setAttribute("disabled", "true");
+        }, false);
+
+        var element, label, akey;
+
+        element = document.createElementNS(kXULNS, "menuseparator");
+        cxmenu.appendChild(element);
+
+        var insertLocation = cxmenu.firstChild;
+        while (insertLocation.nextSibling &&
+               insertLocation.getAttribute("cmd") != "cmd_paste")
+          insertLocation = insertLocation.nextSibling;
+        if (insertLocation) {
+          element = document.createElementNS(kXULNS, "menuitem");
+          label = this._stringBundle.getString("cmd_pasteAndSearch");
+          element.setAttribute("label", label);
+          element.setAttribute("anonid", "paste-and-search");
+          element.setAttribute("oncommand",
+              "BrowserSearch.searchBar.select(); goDoCommand('cmd_paste'); BrowserSearch.searchBar.handleSearchCommand();");
+          cxmenu.insertBefore(element, insertLocation.nextSibling);
+          pasteAndSearch = element;
+        }
+
+        element = document.createElementNS(kXULNS, "menuitem");
+        label = this._stringBundle.getString("cmd_clearHistory");
+        akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
+        element.setAttribute("label", label);
+        element.setAttribute("accesskey", akey);
+        element.setAttribute("cmd", "cmd_clearhistory");
+        cxmenu.appendChild(element);
+
+        element = document.createElementNS(kXULNS, "menuitem");
+        label = this._stringBundle.getString("cmd_showSuggestions");
+        akey = this._stringBundle.getString("cmd_showSuggestions_accesskey");
+        element.setAttribute("anonid", "toggle-suggest-item");
+        element.setAttribute("label", label);
+        element.setAttribute("accesskey", akey);
+        element.setAttribute("cmd", "cmd_togglesuggest");
+        element.setAttribute("type", "checkbox");
+        element.setAttribute("checked", this._suggestEnabled);
+        element.setAttribute("autocheck", "false");
+        this._suggestMenuItem = element;
+        cxmenu.appendChild(element);
+
+        this.controllers.appendController(this.searchbarController);
+
+        // Add observer for suggest preference
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+        prefs.addObserver("browser.search.suggest.enabled", this, false);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -562,88 +639,6 @@
       <field name="_prefBranch"/>
       <field name="_suggestMenuItem"/>
       <field name="_suggestEnabled"/>
-
-      <method name="initialize">
-        <body><![CDATA[
-          const kXULNS =
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          // Initialize fields
-          this._stringBundle = document.getBindingParent(this)._stringBundle;
-          this._prefBranch =
-                    Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch);
-          this._suggestEnabled =
-              this._prefBranch.getBoolPref("browser.search.suggest.enabled");
-
-          if (this._prefBranch.getBoolPref("browser.urlbar.clickSelectsAll"))
-            this.setAttribute("clickSelectsAll", true);
-
-          // Add items to context menu and attach controller to handle them
-          var textBox = document.getAnonymousElementByAttribute(this,
-                                                "anonid", "textbox-input-box");
-          var cxmenu = document.getAnonymousElementByAttribute(textBox,
-                                            "anonid", "input-box-contextmenu");
-          var pasteAndSearch;
-          cxmenu.addEventListener("popupshowing", function() {
-            if (!pasteAndSearch)
-              return;
-            var controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
-            var enabled = controller.isCommandEnabled("cmd_paste");
-            if (enabled)
-              pasteAndSearch.removeAttribute("disabled");
-            else
-              pasteAndSearch.setAttribute("disabled", "true");
-          }, false);
-
-          var element, label, akey;
-
-          element = document.createElementNS(kXULNS, "menuseparator");
-          cxmenu.appendChild(element);
-
-          var insertLocation = cxmenu.firstChild;
-          while (insertLocation.nextSibling &&
-                 insertLocation.getAttribute("cmd") != "cmd_paste")
-            insertLocation = insertLocation.nextSibling;
-          if (insertLocation) {
-            element = document.createElementNS(kXULNS, "menuitem");
-            label = this._stringBundle.getString("cmd_pasteAndSearch");
-            element.setAttribute("label", label);
-            element.setAttribute("anonid", "paste-and-search");
-            element.setAttribute("oncommand",
-                "BrowserSearch.searchBar.select(); goDoCommand('cmd_paste'); BrowserSearch.searchBar.handleSearchCommand();");
-            cxmenu.insertBefore(element, insertLocation.nextSibling);
-            pasteAndSearch = element;
-          }
-
-          element = document.createElementNS(kXULNS, "menuitem");
-          label = this._stringBundle.getString("cmd_clearHistory");
-          akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
-          element.setAttribute("label", label);
-          element.setAttribute("accesskey", akey);
-          element.setAttribute("cmd", "cmd_clearhistory");
-          cxmenu.appendChild(element);
-
-          element = document.createElementNS(kXULNS, "menuitem");
-          label = this._stringBundle.getString("cmd_showSuggestions");
-          akey = this._stringBundle.getString("cmd_showSuggestions_accesskey");
-          element.setAttribute("anonid", "toggle-suggest-item");
-          element.setAttribute("label", label);
-          element.setAttribute("accesskey", akey);
-          element.setAttribute("cmd", "cmd_togglesuggest");
-          element.setAttribute("type", "checkbox");
-          element.setAttribute("checked", this._suggestEnabled);
-          element.setAttribute("autocheck", "false");
-          this._suggestMenuItem = element;
-          cxmenu.appendChild(element);
-
-          this.controllers.appendController(this.searchbarController);
-
-          // Add observer for suggest preference
-          var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch);
-          prefs.addObserver("browser.search.suggest.enabled", this, false);
-        ]]></body>
-      </method>
 
       <!--
         This overrides the searchParam property in autocomplete.xml.  We're
