@@ -21,3 +21,5 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    fails == svg-glyph-mask.sv
 # test for a non-BMP character in the glyphchar attribute (bug 875629)
 pref(gfx.font_rendering.opentype_svg.enabled,true)  != cat_face-bmp.html cat_face-notref.html
 pref(gfx.font_rendering.opentype_svg.enabled,true)  == cat_face.html cat_face-bmp.html
+# test for a variation sequence involving a Plane-1 char and Plane-14 variation selector (bug 875629)
+pref(gfx.font_rendering.opentype_svg.enabled,true)  == two_cats-var.html two_cats-ref.html
