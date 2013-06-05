@@ -1529,7 +1529,7 @@ public:
 
     // Returns the JS object reflection of the Components object.
     JSObject*
-    GetComponentsJSObject(XPCCallContext& ccx);
+    GetComponentsJSObject();
 
     JSObject*
     GetGlobalJSObject() const
@@ -3558,8 +3558,7 @@ public:
 
 public:
     static JSBool
-    AttachComponentsObject(XPCCallContext& ccx,
-                           XPCWrappedNativeScope* aScope);
+    AttachComponentsObject(JSContext* aCx, XPCWrappedNativeScope* aScope);
 
     void SystemIsBeingShutDown() {ClearMembers();}
 

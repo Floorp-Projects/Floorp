@@ -906,7 +906,7 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
 
     scope->RemoveWrappedNativeProtos();
 
-    if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, globalJSObj))
+    if (!XPCNativeWrapper::AttachNewConstructorObject(aJSContext, globalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     return NS_OK;
@@ -1065,10 +1065,10 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
-        if (!nsXPCComponents::AttachComponentsObject(ccx, wrappedGlobal->GetScope()))
+        if (!nsXPCComponents::AttachComponentsObject(aJSContext, wrappedGlobal->GetScope()))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, global))
+        if (!XPCNativeWrapper::AttachNewConstructorObject(aJSContext, global))
             return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 

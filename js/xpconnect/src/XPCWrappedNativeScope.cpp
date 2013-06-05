@@ -188,12 +188,13 @@ XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope *scope)
 }
 
 JSObject*
-XPCWrappedNativeScope::GetComponentsJSObject(XPCCallContext& ccx)
+XPCWrappedNativeScope::GetComponentsJSObject()
 {
+    AutoJSContext cx;
     if (!mComponents)
         mComponents = new nsXPCComponents(this);
 
-    AutoMarkingNativeInterfacePtr iface(ccx);
+    AutoMarkingNativeInterfacePtr iface(cx);
     iface = XPCNativeInterface::GetNewOrUsed(&NS_GET_IID(nsIXPCComponents));
     if (!iface)
         return nullptr;
@@ -207,8 +208,8 @@ XPCWrappedNativeScope::GetComponentsJSObject(XPCCallContext& ccx)
 
     // The call to wrap() here is necessary even though the object is same-
     // compartment, because it applies our security wrapper.
-    JS::RootedObject obj(ccx, wrapper->GetFlatJSObject());
-    if (!JS_WrapObject(ccx, obj.address()))
+    JS::RootedObject obj(cx, wrapper->GetFlatJSObject());
+    if (!JS_WrapObject(cx, obj.address()))
         return nullptr;
     return obj;
 }
