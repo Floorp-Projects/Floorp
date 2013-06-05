@@ -42,7 +42,7 @@ class PatchInfo:
             ported from mozilla/tools/update-packaging/common.sh's
             make_add_instruction.
         """
-        m = re.match("((?:|.*/)distribution/extensions)/", filename):
+        m = re.match("((?:|.*/)distribution/extensions)/", filename)
         if m:
             # Directory immediately following extensions is used for the test
             testdir = m.group(1)
@@ -63,7 +63,7 @@ class PatchInfo:
             This was ported from
             mozilla/tools/update-packaging/common.sh's make_patch_instruction.
         """
-        m = re.match("((?:|.*/)distribution/extensions)/", filename):
+        m = re.match("((?:|.*/)distribution/extensions)/", filename)
         if m:
             testdir = m.group(1)
             self.manifestv1.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
