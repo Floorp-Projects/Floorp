@@ -1177,15 +1177,15 @@ js_AddNativeProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                      JSPropertyOp getter, JSStrictPropertyOp setter, uint32_t slot,
                      unsigned attrs, unsigned flags, int shortid);
 
-extern JSBool
-js_DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                     const JS::Value &descriptor, JSBool *bp);
-
-extern JSBool
-js_DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                     const js::PropertyDescriptor &descriptor, JSBool *bp);
-
 namespace js {
+
+extern JSBool
+DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                  JS::HandleValue descriptor, JSBool *bp);
+
+extern JSBool
+DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                  const js::PropertyDescriptor &descriptor, JSBool *bp);
 
 /*
  * The NewObjectKind allows an allocation site to specify the type properties
