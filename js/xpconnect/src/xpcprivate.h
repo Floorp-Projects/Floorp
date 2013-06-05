@@ -1038,16 +1038,6 @@ public:
     nsresult GetPendingResult() {return mPendingResult;}
     void SetPendingResult(nsresult rc) {mPendingResult = rc;}
 
-    nsIXPCSecurityManager* GetSecurityManager() const
-        {return mSecurityManager;}
-    void SetSecurityManager(nsIXPCSecurityManager* aSecurityManager)
-        {mSecurityManager = aSecurityManager;}
-
-    uint16_t GetSecurityManagerFlags() const
-        {return mSecurityManagerFlags;}
-    void SetSecurityManagerFlags(uint16_t f)
-        {mSecurityManagerFlags = f;}
-
     void DebugDump(int16_t depth);
     void AddScope(PRCList *scope) { PR_INSERT_AFTER(scope, &mScopes); }
     void RemoveScope(PRCList *scope) { PR_REMOVE_LINK(scope); }
@@ -1065,10 +1055,8 @@ private:
     JSContext*  mJSContext;
     nsresult mLastResult;
     nsresult mPendingResult;
-    nsIXPCSecurityManager* mSecurityManager;
     nsIException* mException;
     LangType mCallingLangType;
-    uint16_t mSecurityManagerFlags;
 
     // A linked list of scopes to notify when we are destroyed.
     PRCList mScopes;
