@@ -1427,52 +1427,6 @@ nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScopeArg)
     return NS_OK;
 }
 
-/* void setSecurityManagerForJSContext (in JSContextPtr aJSContext, in nsIXPCSecurityManager aManager, in uint16_t flags); */
-NS_IMETHODIMP
-nsXPConnect::SetSecurityManagerForJSContext(JSContext * aJSContext,
-                                            nsIXPCSecurityManager *aManager,
-                                            uint16_t flags)
-{
-    NS_ASSERTION(aJSContext, "bad param");
-
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if (!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    XPCContext* xpcc = ccx.GetXPCContext();
-
-    NS_IF_ADDREF(aManager);
-    nsIXPCSecurityManager* oldManager = xpcc->GetSecurityManager();
-    NS_IF_RELEASE(oldManager);
-
-    xpcc->SetSecurityManager(aManager);
-    xpcc->SetSecurityManagerFlags(flags);
-    return NS_OK;
-}
-
-/* void getSecurityManagerForJSContext (in JSContextPtr aJSContext, out nsIXPCSecurityManager aManager, out uint16_t flags); */
-NS_IMETHODIMP
-nsXPConnect::GetSecurityManagerForJSContext(JSContext * aJSContext,
-                                            nsIXPCSecurityManager **aManager,
-                                            uint16_t *flags)
-{
-    NS_ASSERTION(aJSContext, "bad param");
-    NS_ASSERTION(aManager, "bad param");
-    NS_ASSERTION(flags, "bad param");
-
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if (!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    XPCContext* xpcc = ccx.GetXPCContext();
-
-    nsIXPCSecurityManager* manager = xpcc->GetSecurityManager();
-    NS_IF_ADDREF(manager);
-    *aManager = manager;
-    *flags = xpcc->GetSecurityManagerFlags();
-    return NS_OK;
-}
-
 /* void setDefaultSecurityManager (in nsIXPCSecurityManager aManager, in uint16_t flags); */
 NS_IMETHODIMP
 nsXPConnect::SetDefaultSecurityManager(nsIXPCSecurityManager *aManager,
@@ -1490,20 +1444,6 @@ nsXPConnect::SetDefaultSecurityManager(nsIXPCSecurityManager *aManager,
     // script securityt manager.
     gScriptSecurityManager = ssm;
 
-    return NS_OK;
-}
-
-/* void getDefaultSecurityManager (out nsIXPCSecurityManager aManager, out uint16_t flags); */
-NS_IMETHODIMP
-nsXPConnect::GetDefaultSecurityManager(nsIXPCSecurityManager **aManager,
-                                       uint16_t *flags)
-{
-    NS_ASSERTION(aManager, "bad param");
-    NS_ASSERTION(flags, "bad param");
-
-    NS_IF_ADDREF(mDefaultSecurityManager);
-    *aManager = mDefaultSecurityManager;
-    *flags = mDefaultSecurityManagerFlags;
     return NS_OK;
 }
 
