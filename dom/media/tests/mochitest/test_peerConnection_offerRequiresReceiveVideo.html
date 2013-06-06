@@ -14,22 +14,9 @@
     title: "Simple offer media constraint test with video"
   });
 
-  var steps = [
-   [
-      "CHECK_MEDIA_FLOW_NOT_PRESENT",
-      function (test) {
-        test.pcLocal.checkMediaFlowNotPresent();
-        test.pcRemote.checkMediaFlowNotPresent();
-        test.next();
-      }
-    ]
-  ];
-
   runTest(function() {
     var test = new PeerConnectionTest();
     test.setOfferConstraints({ mandatory: { OfferToReceiveVideo: true } });
-    test.chain.removeAfter('PC_REMOTE_CHECK_MEDIA_STREAMS');
-    test.chain.append(steps);
     test.run();
   });
 </script>
