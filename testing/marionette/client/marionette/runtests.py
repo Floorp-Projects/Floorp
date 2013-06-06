@@ -19,6 +19,7 @@ import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
 from mozhttpd import MozHttpd
+from telnetlib import Telnet
 
 from marionette import Marionette
 from marionette_test import MarionetteJSTestCase, MarionetteTestCase
@@ -266,7 +267,12 @@ class MarionetteTestRunner(object):
                                          timeout=self.timeout)
         elif self.address:
             host, port = self.address.split(':')
-            if self.emulator:
+            try:
+		#establish a telnet connection so we can vertify the data come back
+		tlconnection = Telnet(host, port)
+	    except:
+		raise Exception("could not connect to given marionette host/port")
+	    if self.emulator:
                 self.marionette = Marionette.getMarionetteOrExit(
                                              host=host, port=int(port),
                                              connectToRunningEmulator=True,
