@@ -2243,10 +2243,6 @@ abstract public class GeckoApp
         }
     }
 
-    public LayerView getLayerView() {
-        return mLayerView;
-    }
-
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
 
     // Accelerometer.
