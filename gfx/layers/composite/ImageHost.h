@@ -40,6 +40,7 @@ protected:
 class ImageHostSingle : public ImageHost
 {
 public:
+  using CompositableHost::EnsureTextureHost;
   ImageHostSingle(const TextureInfo& aTextureInfo)
     : ImageHost(aTextureInfo)
     , mTextureHost(nullptr)
