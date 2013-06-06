@@ -20,28 +20,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338427
 
 /** Test for Bug 338427 **/
 function init() {
+    Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+
     var textarea = document.getElementById("editor");
     var editor = textarea.editor;
     var spellchecker = editor.getInlineSpellChecker(true);
     spellchecker.enableRealTimeSpell = true;
-
-    var list = {}, count = {};
-    spellchecker.spellChecker.GetDictionaryList(list, count);
-    if (count.value === 0) {
-        return; // no dictionary, no test possible
-    }
-    var lang = list.value[0];
-    spellchecker.spellChecker.SetCurrentDictionary(lang);
-
-    textarea.addEventListener("focus", function() {
-        var dictionary = "";
-        try {
-            dictionary = spellchecker.spellChecker.GetCurrentDictionary();
-        } catch(e) {}
-        is(dictionary, lang, "Unexpected spell check dictionary");
-        SimpleTest.finish();
-    }, false);
     textarea.focus();
+
+    onSpellCheck(textarea, function () {
+        var list = {}, count = {};
+        spellchecker.spellChecker.GetDictionaryList(list, count);
+        ok(count.value > 0, "At least one dictionary should be present");
+
+        var lang = list.value[0];
+        spellchecker.spellChecker.SetCurrentDictionary(lang);
+
+        onSpellCheck(textarea, function () {
+            try {
+                var dictionary =
+                    spellchecker.spellChecker.GetCurrentDictionary();
+            } catch(e) {}
+            is(dictionary, lang, "Unexpected spell check dictionary");
+            SimpleTest.finish();
+        });
+    });
 }
 
 SimpleTest.waitForExplicitFinish();

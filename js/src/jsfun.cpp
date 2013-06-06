@@ -1345,7 +1345,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
         size_t args_length = 0;
         for (unsigned i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
-            arg = ToString<CanGC>(cx, args[i]);
+            arg = ToString<CanGC>(cx, args.handleAt(i));
             if (!arg)
                 return false;
             args[i].setString(arg);
@@ -1465,7 +1465,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
     if (!args.length())
         str = cx->runtime->emptyString;
     else
-        str = ToString<CanGC>(cx, args[args.length() - 1]);
+        str = ToString<CanGC>(cx, args.handleAt(args.length() - 1));
     if (!str)
         return false;
     JSLinearString *linear = str->ensureLinear(cx);

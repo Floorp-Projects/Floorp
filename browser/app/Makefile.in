@@ -177,13 +177,10 @@ endif
 
 MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/config/buildid)
 
-libs-preqs = \
-  $(call mkdir_deps,$(dist_dest)/Contents/MacOS) \
-  $(call mkdir_deps,$(dist_dest)/Contents/Resources/$(AB).lproj) \
-  $(NULL)
-
 .PHONY: repackage
-libs repackage:: $(PROGRAM) $(libs-preqs)
+libs repackage:: $(PROGRAM)
+	$(MKDIR) -p $(dist_dest)/Contents/MacOS
+	$(MKDIR) -p $(dist_dest)/Contents/Resources/$(AB).lproj
 	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
 	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/Contents/Resources/$(AB).lproj
 	sed -e "s/%APP_VERSION%/$(MOZ_APP_VERSION)/" -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" -e "s/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/" -e "s/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist

@@ -212,33 +212,33 @@ js::math_atan(JSContext *cx, unsigned argc, Value *vp)
 }
 
 double
-js::ecmaAtan2(double x, double y)
+js::ecmaAtan2(double y, double x)
 {
 #if defined(_MSC_VER)
     /*
      * MSVC's atan2 does not yield the result demanded by ECMA when both x
      * and y are infinite.
      * - The result is a multiple of pi/4.
-     * - The sign of x determines the sign of the result.
-     * - The sign of y determines the multiplicator, 1 or 3.
+     * - The sign of y determines the sign of the result.
+     * - The sign of x determines the multiplicator, 1 or 3.
      */
-    if (IsInfinite(x) && IsInfinite(y)) {
-        double z = js_copysign(M_PI / 4, x);
-        if (y < 0)
+    if (IsInfinite(y) && IsInfinite(x)) {
+        double z = js_copysign(M_PI / 4, y);
+        if (x < 0)
             z *= 3;
         return z;
     }
 #endif
 
 #if defined(SOLARIS) && defined(__GNUC__)
-    if (x == 0) {
-        if (IsNegativeZero(y))
-            return js_copysign(M_PI, x);
-        if (y == 0)
-            return x;
+    if (y == 0) {
+        if (IsNegativeZero(x))
+            return js_copysign(M_PI, y);
+        if (x == 0)
+            return y;
     }
 #endif
-    return atan2(x, y);
+    return atan2(y, x);
 }
 
 JSBool

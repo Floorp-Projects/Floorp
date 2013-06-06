@@ -409,36 +409,6 @@ nsHttpConnection::SetupNPN(uint32_t caps)
     }
 }
 
-void
-nsHttpConnection::HandleAlternateProtocol(nsHttpResponseHead *responseHead)
-{
-    // Look for the Alternate-Protocol header. Alternate-Protocol is
-    // essentially a way to rediect future transactions from http to
-    // spdy.
-    //
-
-    if (!gHttpHandler->IsSpdyEnabled() || mUsingSpdyVersion)
-        return;
-
-    const char *val = responseHead->PeekHeader(nsHttp::Alternate_Protocol);
-    if (!val)
-        return;
-
-    // The spec allows redirections to any port, but due to concerns over
-    // silently redirecting to stealth ports we only allow port 443
-    //
-    // Alternate-Protocol: 5678:somethingelse, 443:npn-spdy/2
-
-    uint8_t alternateProtocolVersion;
-    if (NS_SUCCEEDED(gHttpHandler->SpdyInfo()->
-                     GetAlternateProtocolVersionIndex(val,
-                                                      &alternateProtocolVersion))) {
-         LOG(("Connection %p Transaction %p found Alternate-Protocol "
-             "header %s", this, mTransaction.get(), val));
-        gHttpHandler->ConnMgr()->ReportSpdyAlternateProtocol(this);
-    }
-}
-
 nsresult
 nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
                                  int32_t priority)
@@ -843,9 +813,6 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
 
     if (!foundKeepAliveMax && mRemainingConnectionUses && !mUsingSpdyVersion)
         --mRemainingConnectionUses;
-
-    if (!mProxyConnectStream)
-        HandleAlternateProtocol(responseHead);
 
     // If we're doing a proxy connect, we need to check whether or not
     // it was successful.  If so, we have to reset the transaction and step-up

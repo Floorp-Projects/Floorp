@@ -42,6 +42,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathRound(callInfo);
     if (native == js_math_sqrt)
         return inlineMathSqrt(callInfo);
+    if (native == math_atan2)
+        return inlineMathAtan2(callInfo);
     if (native == js_math_max)
         return inlineMathMinMax(callInfo, true /* max */);
     if (native == js_math_min)
@@ -585,6 +587,32 @@ IonBuilder::inlineMathSqrt(CallInfo &callInfo)
     MSqrt *sqrt = MSqrt::New(callInfo.getArg(0));
     current->add(sqrt);
     current->push(sqrt);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathAtan2(CallInfo &callInfo)
+{
+    if (callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 2)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Double)
+        return InliningStatus_NotInlined;
+
+    MIRType argType0 = callInfo.getArg(0)->type();
+    MIRType argType1 = callInfo.getArg(1)->type();
+
+    if (!IsNumberType(argType0) || !IsNumberType(argType1))
+        return InliningStatus_NotInlined;
+
+    callInfo.unwrapArgs();
+
+    MAtan2 *atan2 = MAtan2::New(callInfo.getArg(0), callInfo.getArg(1));
+    current->add(atan2);
+    current->push(atan2);
     return InliningStatus_Inlined;
 }
 

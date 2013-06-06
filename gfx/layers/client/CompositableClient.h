@@ -20,6 +20,7 @@ class ImageBridgeChild;
 class ShadowableLayer;
 class CompositableForwarder;
 class CompositableChild;
+class SurfaceDescriptor;
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,

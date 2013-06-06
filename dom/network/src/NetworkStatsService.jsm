@@ -322,13 +322,16 @@ this.NetworkStatsService = {
 
     // Request stats to NetworkManager, which will get stats from netd, passing
     // 'networkStatsAvailable' as a callback.
-    if (!networkManager.getNetworkInterfaceStats(connectionType, this.networkStatsAvailable.bind(this, callback))) {
+    if (!networkManager.getNetworkInterfaceStats(connectionType,
+                                                 this.networkStatsAvailable
+                                                     .bind(this, callback))) {
       if (DEBUG) {
-        debug("There is no interface registered for network type " + this._connectionTypes[connectionType]);
+        debug("There is no interface registered for network type " +
+              this._connectionTypes[connectionType]);
       }
 
-      // Interface is not registered (up), so stats are 0.
-      this.networkStatsAvailable(callback, true, connectionType, 0, 0, new Date());
+      // Interface is not registered (up), so nothing to do.
+      callback(true, "OK");
     }
   },
 

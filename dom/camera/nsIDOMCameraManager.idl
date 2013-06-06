@@ -36,11 +36,6 @@ dictionary CameraPosition {
     double timestamp;
 };
 
-/* Select a camera to use. */
-dictionary CameraSelector {
-    DOMString camera = "back";
-};
-
 [scriptable, uuid(177472c9-f83d-48b5-8782-03b43b27f25d)]
 interface nsICameraCapabilities : nsISupports
 {
@@ -377,22 +372,4 @@ interface nsICameraControl : nsISupports
 interface nsICameraGetCameraCallback : nsISupports
 {
     void handleEvent(in nsICameraControl camera);
-};
-
-[scriptable, uuid(f01aabcd-b822-423a-b077-3d0748296428)]
-interface nsIDOMCameraManager : nsISupports
-{
-    /* get a camera instance; options will be used to specify which
-       camera to get from the list returned by getListOfCameras(), e.g.:
-        {
-            camera: "front"
-        }
-    */
-    [implicit_jscontext]
-    void getCamera([optional] in jsval aOptions, in nsICameraGetCameraCallback onSuccess, [optional] in nsICameraErrorCallback onError);
-
-    /* return an array of camera identifiers, e.g.
-        [ "front", "back" ]
-    */
-    void getListOfCameras([optional] out unsigned long aCount, [retval, array, size_is(aCount)] out string aCameras);
 };

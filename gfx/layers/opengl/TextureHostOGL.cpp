@@ -856,6 +856,17 @@ GrallocTextureHostOGL::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* 
   RegisterTextureHostAtGrallocBufferActor(this, *mBuffer);
 }
 
+LayerRenderState
+GrallocTextureHostOGL::GetRenderState()
+{
+  if (mBuffer && IsSurfaceDescriptorValid(*mBuffer)) {
+    return LayerRenderState(mGraphicBuffer.get(),
+                            mBuffer->get_SurfaceDescriptorGralloc().size(),
+                            mFlags & NeedsYFlip ? LAYER_RENDER_STATE_Y_FLIPPED : 0);
+  }
+
+  return LayerRenderState();
+}
 #endif // MOZ_WIDGET_GONK
 
 already_AddRefed<gfxImageSurface>
