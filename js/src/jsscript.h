@@ -635,9 +635,7 @@ class JSScript : public js::gc::Cell
 
     js::ScriptSource *scriptSource() const;
 
-    js::ScriptSourceObject *sourceObject() const {
-        return &sourceObject_->asScriptSource();;
-    }
+    js::ScriptSourceObject *sourceObject() const;
 
     void setSourceObject(js::ScriptSourceObject *sourceObject);
 
@@ -1098,10 +1096,7 @@ class ScriptSourceObject : public JSObject {
     static void finalize(FreeOp *fop, JSObject *obj);
     static ScriptSourceObject *create(JSContext *cx, ScriptSource *source);
 
-    ScriptSource *source() {
-        return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
-    }
-
+    inline ScriptSource *source();
     void setSource(ScriptSource *source);
 
   private:
@@ -1433,13 +1428,6 @@ struct ScriptAndCounts
 };
 
 } /* namespace js */
-
-inline js::ScriptSourceObject &
-JSObject::asScriptSource()
-{
-    JS_ASSERT(isScriptSource());
-    return *static_cast<js::ScriptSourceObject *>(this);
-}
 
 extern jssrcnote *
 js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc);
