@@ -3823,13 +3823,11 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
 }
 
 #main-window[privatebrowsingmode=temporary] {
-  background-position: top right 40px;
+  background-position: top right 20px;
 }
 
-#main-window[privatebrowsingmode=temporary][inFullscreen] {
-  background-position: top right 10px;
-}
-
+/* Note that the caption and fullscreen buttons stay in the same position for LTR and RTL but we
+   move the private browsing indicator to the left in RTL. */
 #main-window[privatebrowsingmode=temporary]:-moz-locale-dir(rtl) {
   background-position: top left 70px;
 }
@@ -3838,22 +3836,29 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
   background-position: top left 10px;
 }
 
+#main-window[privatebrowsingmode=temporary][inFullscreen] .titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(ltr) {
+  /* Override display:none for .titlebar-placeholder in fullscreen so we can have consistent
+     position and padding for the private browsing indicator. */
+  display: -moz-box;
+}
+
 #main-window[privatebrowsingmode=temporary]:-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
 }
 
+#main-window[privatebrowsingmode=temporary] #TabsToolbar {
+  -moz-padding-end: 46px;
+}
+
 @media (-moz-mac-lion-theme) {
-  #main-window[privatebrowsingmode=temporary][inFullscreen] #TabsToolbar {
-    -moz-padding-end: 50px;
+  #main-window[privatebrowsingmode=temporary] #TabsToolbar:-moz-locale-dir(ltr) {
+    -moz-padding-end: 36px;
   }
 }
 
 @media not all and (-moz-mac-lion-theme) {
+  /* There is no OS fullscreen button prior to Lion so the PB indicator can move closer. */
   #main-window[privatebrowsingmode=temporary] {
     background-position: top right 10px;
-  }
-
-  #main-window[privatebrowsingmode=temporary][inFullscreen] #window-controls {
-    -moz-padding-end: 50px;
   }
 }
