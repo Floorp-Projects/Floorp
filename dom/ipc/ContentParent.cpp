@@ -1052,8 +1052,6 @@ ContentParent::ContentParent(mozIApplication* aApp,
     // be true.
     MOZ_ASSERT(!!aApp + aIsForBrowser + aIsForPreallocated <= 1);
 
-    mGeo = do_CreateInstance("@mozilla.org/geolocation;1");
-
     // Insert ourselves into the global linked list of ContentParent objects.
     sContentParents.insertBack(this);
 
@@ -2370,17 +2368,18 @@ ContentParent::RecvFilePathUpdateNotify(const nsString& aType,
     return true;
 }
 
-int32_t
-ContentParent::AddGeolocationListener(bool highAccuracy)
+static int32_t
+AddGeolocationListener(nsIDOMGeoPositionCallback* watcher, bool highAccuracy)
 {
-  if (!mGeo) {
+  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+  if (!geo) {
     return -1;
   }
 
   GeoPositionOptions* options = new GeoPositionOptions();
   options->enableHighAccuracy = highAccuracy;
   int32_t retval = 1;
-  mGeo->WatchPosition(this, nullptr, options, &retval);
+  geo->WatchPosition(watcher, nullptr, options, &retval);
   return retval;
 }
 
@@ -2438,7 +2437,7 @@ ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
   // To ensure no geolocation updates are skipped, we always force the
   // creation of a new listener.
   RecvRemoveGeolocationListener();
-  mGeolocationWatchID = AddGeolocationListener(aHighAccuracy);
+  mGeolocationWatchID = AddGeolocationListener(this, aHighAccuracy);
   return true;
 }
 
@@ -2446,10 +2445,11 @@ bool
 ContentParent::RecvRemoveGeolocationListener()
 {
   if (mGeolocationWatchID != -1) {
-    if (!mGeo) {
+    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+    if (!geo) {
       return true;
     }
-    mGeo->ClearWatch(mGeolocationWatchID);
+    geo->ClearWatch(mGeolocationWatchID);
     mGeolocationWatchID = -1;
   }
   return true;
@@ -2462,7 +2462,7 @@ ContentParent::RecvSetGeolocationHigherAccuracy(const bool& aEnable)
   // so this check allows us to forgo securing privileges.
   if (mGeolocationWatchID != -1) {
     RecvRemoveGeolocationListener();
-    mGeolocationWatchID = AddGeolocationListener(aEnable);
+    mGeolocationWatchID = AddGeolocationListener(this, aEnable);
   }
   return true;
 }
