@@ -2433,7 +2433,8 @@ class JSToNativeConversionInfo():
           ${declName} replaced by the declaration's name
           ${haveValue} replaced by an expression that evaluates to a boolean
                        for whether we have a JS::Value.  Only used when
-                       defaultValue is not None.
+                       defaultValue is not None or when True is passed for
+                       checkForValue to instantiateJSToNativeConversion.
 
         declType: A CGThing representing the native C++ type we're converting
                   to.  This is allowed to be None if the conversion code is
@@ -3197,7 +3198,10 @@ for (uint32_t i = 0; i < length; ++i) {
         treatAs = {
             "Default": "eStringify",
             "EmptyString": "eEmpty",
-            "Null": "eNull"
+            "Null": "eNull",
+            # For Missing it doesn't matter what we use here, since we'll never
+            # call ConvertJSValueToString on undefined in that case.
+            "Missing": "eStringify"
         }
         if type.nullable():
             # For nullable strings null becomes a null string.
@@ -3207,8 +3211,6 @@ for (uint32_t i = 0; i < length; ++i) {
             if treatUndefinedAs == "Default":
                 treatUndefinedAs = "Null"
         nullBehavior = treatAs[treatNullAs]
-        if treatUndefinedAs == "Missing":
-            raise TypeError("We don't support [TreatUndefinedAs=Missing]")
         undefinedBehavior = treatAs[treatUndefinedAs]
 
         def getConversionCode(varName):
@@ -3559,22 +3561,21 @@ for (uint32_t i = 0; i < length; ++i) {
     return JSToNativeConversionInfo(template, declType=declType,
                                     dealWithOptional=isOptional)
 
-def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
+def instantiateJSToNativeConversion(info, replacements, checkForValue=False):
     """
     Take a JSToNativeConversionInfo as returned by getJSToNativeConversionInfo
     and a set of replacements as required by the strings in such an object, and
     generate code to convert into stack C++ types.
 
-    If argcAndIndex is not None it must be a dict that can be used to
-    replace ${argc} and ${index}, where ${index} is the index of this
-    argument (0-based) and ${argc} is the total number of arguments.
+    If checkForValue is True, then the conversion will get wrapped in
+    a check for ${haveValue}.
     """
     (templateBody, declType, holderType, dealWithOptional) = (
         info.template, info.declType, info.holderType, info.dealWithOptional)
 
-    if dealWithOptional and argcAndIndex is None:
+    if dealWithOptional and not checkForValue:
         raise TypeError("Have to deal with optional things, but don't know how")
-    if argcAndIndex is not None and declType is None:
+    if checkForValue and declType is None:
         raise TypeError("Need to predeclare optional things, so they will be "
                         "outside the check for big enough arg count!");
 
@@ -3623,7 +3624,7 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
             string.Template(templateBody).substitute(replacements)
             )
 
-    if argcAndIndex is not None:
+    if checkForValue:
         if dealWithOptional:
             declConstruct = CGIndenter(
                 CGGeneric("%s.Construct(%s);" %
@@ -3644,8 +3645,8 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
 
         conversion = CGList(
             [CGGeneric(
-                    string.Template("if (${index} < ${argc}) {").substitute(
-                        argcAndIndex
+                    string.Template("if (${haveValue}) {").substitute(
+                        replacements
                         )),
              declConstruct,
              holderConstruct,
@@ -3710,9 +3711,12 @@ class CGArgumentConverter(CGThing):
         self.replacementVariables["valMutableHandle"] = (
             "JS::MutableHandle<JS::Value>::fromMarkedLocation(%s)" %
             self.replacementVariables["valPtr"])
-        if argument.defaultValue:
-            self.replacementVariables["haveValue"] = string.Template(
-                "${index} < ${argc}").substitute(replacer)
+        haveValueCheck = string.Template("${index} < ${argc}").substitute(replacer)
+        if argument.treatUndefinedAs == "Missing":
+            haveValueCheck = (haveValueCheck +
+                              (" && !%s.isUndefined()" %
+                               self.replacementVariables["valHandle"]))
+        self.replacementVariables["haveValue"] = haveValueCheck
         self.descriptorProvider = descriptorProvider
         if self.argument.optional and not self.argument.defaultValue:
             self.argcAndIndex = replacer
@@ -3742,7 +3746,7 @@ class CGArgumentConverter(CGThing):
             return instantiateJSToNativeConversion(
                 typeConversion,
                 self.replacementVariables,
-                self.argcAndIndex).define()
+                self.argcAndIndex is not None).define()
 
         # Variadic arguments get turned into a sequence.
         if typeConversion.dealWithOptional:
@@ -4706,6 +4710,15 @@ class CGMethodCall(CGThing):
                 self.cgRoot.prepend(
                     CGWrapper(CGIndenter(CGGeneric(code)), pre="\n", post="\n"))
             return
+
+        # We don't handle [TreatUndefinedAs=Missing] arguments in overload
+        # resolution yet.
+        for (_, sigArgs) in signatures:
+            for arg in sigArgs:
+                if arg.treatUndefinedAs == "Missing":
+                    raise TypeError("No support for [TreatUndefinedAs=Missing] "
+                                    "handling in overload resolution yet: %s" %
+                                    arg.location)
 
         # Need to find the right overload
         maxArgCount = method.maxArgCount
