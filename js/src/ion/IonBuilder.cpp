@@ -4133,7 +4133,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
             JS_ASSERT(current == inlineBlock);
             // Undo operations
             inlineInfo.unwrapArgs();
-            inlineBlock->entryResumePoint()->replaceOperand(funIndex, callInfo.fun());
+            inlineBlock->entryResumePoint()->discardOperand(funIndex);
             inlineBlock->rewriteSlot(funIndex, callInfo.fun());
             inlineBlock->discard(funcDef);
             graph().removeBlock(inlineBlock);
