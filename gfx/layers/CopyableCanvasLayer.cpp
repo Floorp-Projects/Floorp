@@ -61,14 +61,7 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
 
   if (mDrawTarget) {
     mDrawTarget->Flush();
-    if (mDrawTarget->GetType() == BACKEND_COREGRAPHICS_ACCELERATED) {
-      // We have an accelerated CG context which has changed, unlike a bitmap surface
-      // where we can alias the bits on initializing the mDrawTarget, we need to readback
-      // and copy the accelerated surface each frame. We want to support this for quick
-      // thumbnail but if we're going to be doing this every frame it likely is better
-      // to use a non accelerated (bitmap) canvas.
-      mSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
-    }
+    mSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
   }
 
   if (!mGLContext && aDestSurface) {
