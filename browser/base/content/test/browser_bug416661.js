@@ -2,7 +2,7 @@ var tabElm, zoomLevel;
 function start_test_prefNotSet() {
   Task.spawn(function () {
     is(ZoomManager.zoom, 1, "initial zoom level should be 1");
-    yield FullZoomHelper.enlarge();
+    FullZoom.enlarge();
 
     //capture the zoom level to test later
     zoomLevel = ZoomManager.zoom;
@@ -15,20 +15,19 @@ function start_test_prefNotSet() {
 function continue_test_prefNotSet () {
   Task.spawn(function () {
     is(ZoomManager.zoom, 1, "zoom level pref should not apply to an image");
-    yield FullZoomHelper.reset();
+    FullZoom.reset();
 
     yield FullZoomHelper.load(gBrowser.selectedTab, "http://mochi.test:8888/browser/browser/base/content/test/zoom_test.html");
   }).then(end_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
 }
 
 function end_test_prefNotSet() {
-  Task.spawn(function () {
-    is(ZoomManager.zoom, zoomLevel, "the zoom level should have persisted");
+  is(ZoomManager.zoom, zoomLevel, "the zoom level should have persisted");
 
-    // Reset the zoom so that other tests have a fresh zoom level
-    yield FullZoomHelper.reset();
-    gBrowser.removeCurrentTab();
-  }).then(finish, FullZoomHelper.failAndContinue(finish));
+  // Reset the zoom so that other tests have a fresh zoom level
+  FullZoom.reset();
+  gBrowser.removeCurrentTab();
+  finish();
 }
 
 function test() {

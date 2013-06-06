@@ -82,4 +82,15 @@ let tests = [
     do_check_throws(function () cps.removeByName("foo", null, "bogus"));
     yield true;
   },
+
+  function invalidateCache() {
+    yield set("a.com", "foo", 1);
+    yield set("b.com", "foo", 2);
+    getCachedOK(["a.com", "foo"], true, 1);
+    getCachedOK(["b.com", "foo"], true, 2);
+    cps.removeByName("foo", null, makeCallback());
+    getCachedOK(["a.com", "foo"], false);
+    getCachedOK(["b.com", "foo"], false);
+    yield;
+  },
 ];
