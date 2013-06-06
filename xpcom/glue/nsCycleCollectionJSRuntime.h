@@ -9,6 +9,7 @@
 
 class nsCycleCollectionParticipant;
 class nsCycleCollectionNoteRootCallback;
+class nsScriptObjectTracer;
 
 // Various methods the cycle collector needs to deal with Javascript.
 struct nsCycleCollectionJSRuntime
@@ -51,7 +52,12 @@ struct nsCycleCollectionJSRuntime
    */
   virtual nsCycleCollectionParticipant *GetParticipant() = 0;
 
+  virtual void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer) = 0;
+  virtual void RemoveJSHolder(void* aHolder) = 0;
+
 #ifdef DEBUG
+  virtual bool TestJSHolder(void* aHolder) = 0;
+
   virtual void SetObjectToUnlink(void* aObject) = 0;
   virtual void AssertNoObjectsToTrace(void* aPossibleJSHolder) = 0;
 #endif

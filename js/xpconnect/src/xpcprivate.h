@@ -491,7 +491,11 @@ public:
     static XPCJSRuntime* GetRuntimeInstance();
     XPCJSRuntime* GetRuntime() {return mRuntime;}
 
+    void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer) MOZ_OVERRIDE;
+    void RemoveJSHolder(void* aHolder) MOZ_OVERRIDE;
+
 #ifdef DEBUG
+    bool TestJSHolder(void* aHolder) MOZ_OVERRIDE;
     void SetObjectToUnlink(void* aObject);
     void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
@@ -800,8 +804,8 @@ public:
 
     void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
     void RemoveJSHolder(void* aHolder);
-    bool TestJSHolder(void* aHolder);
 #ifdef DEBUG
+    bool TestJSHolder(void* aHolder);
     void SetObjectToUnlink(void* aObject) { mObjectToUnlink = aObject; }
     void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
