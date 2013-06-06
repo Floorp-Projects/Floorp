@@ -3580,6 +3580,11 @@ LookupPropertyWithFlagsInline(JSContext *cx,
                               typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                               typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
+    /* NB: The logic of this procedure is implicitly reflected in IonBuilder.cpp's
+     *     |CanEffectlesslyCallLookupGenericOnObject| logic.
+     *     If this changes, please remember to update the logic there as well.
+     */
+
     /* Search scopes starting with obj and following the prototype link. */
     typename MaybeRooted<JSObject*, allowGC>::RootType current(cx, obj);
 
@@ -3657,6 +3662,10 @@ baseops::LookupProperty(JSContext *cx,
                         typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                         typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
+    /* NB: The logic of this procedure is implicitly reflected in IonBuilder.cpp's
+     *     |CanEffectlesslyCallLookupGenericOnObject| logic.
+     *     If this changes, please remember to update the logic there as well.
+     */
     return LookupPropertyWithFlagsInline<allowGC>(cx, obj, id, cx->resolveFlags, objp, propp);
 }
 
