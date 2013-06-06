@@ -11,5 +11,9 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
+EXTRA_JS_MODULES = \
+  AsyncSpellCheckTestHelper.jsm \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 

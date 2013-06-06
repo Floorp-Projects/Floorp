@@ -57,7 +57,6 @@ VPATH += \
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
-DEFINES += -DSK_USE_POSIX_THREADS=1
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
@@ -66,9 +65,12 @@ endif
 
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
+ifeq (Linux,$(OS_TARGET))
+DEFINES += -DSK_USE_POSIX_THREADS=1
+endif
 endif
 
-ifeq (Linux,$(OS_TARGET))
+ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk cocoa))
 DEFINES += -DSK_USE_POSIX_THREADS=1
 endif
 

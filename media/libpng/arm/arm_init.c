@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2013 Glenn Randers-Pehrson
  * Written by Mans Rullgard, 2011.
- * Last changed in libpng 1.5.15 [March 28, 2013]
+ * Last changed in libpng 1.5.16 [May 23, 2013]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -216,4 +216,4 @@ png_init_filter_functions_neon(png_structp pp, unsigned int bpp)
           png_read_filter_row_paeth4_neon;
    }
 }
-#endif /* FILTER_OPTIMIZATIONS && __arm__ && __ARM_NEON__ */
+#endif /* PNG_ARM_NEON_SUPPORTED */

@@ -17,25 +17,26 @@ class Task(object):
         self.out = []
         self.err = []
 
-def spawn_test(test):
+def spawn_test(test, passthrough = False):
     """Spawn one child, return a task struct."""
-    (rout, wout) = os.pipe()
-    (rerr, werr) = os.pipe()
+    if not passthrough:
+        (rout, wout) = os.pipe()
+        (rerr, werr) = os.pipe()
 
-    rv = os.fork()
+        rv = os.fork()
 
-    # Parent.
-    if rv:
-        os.close(wout)
-        os.close(werr)
-        return Task(test, rv, rout, rerr)
+        # Parent.
+        if rv:
+            os.close(wout)
+            os.close(werr)
+            return Task(test, rv, rout, rerr)
 
-    # Child.
-    os.close(rout)
-    os.close(rerr)
+        # Child.
+        os.close(rout)
+        os.close(rerr)
 
-    os.dup2(wout, 1)
-    os.dup2(werr, 2)
+        os.dup2(wout, 1)
+        os.dup2(werr, 2)
 
     cmd = test.get_command(test.js_cmd_prefix)
     os.execvp(cmd[0], cmd)
@@ -188,7 +189,7 @@ def run_all_tests(tests, results, options):
 
     while len(tests) or len(tasks):
         while len(tests) and len(tasks) < options.worker_count:
-            tasks.append(spawn_test(tests.pop()))
+            tasks.append(spawn_test(tests.pop(), options.passthrough))
 
         timeout = get_max_wait(tasks, results, options.timeout)
         read_input(tasks, timeout)

@@ -54,10 +54,10 @@ ImageLayerComposite::Disconnect()
 LayerRenderState
 ImageLayerComposite::GetRenderState()
 {
-  if (!mImageHost) {
-    return LayerRenderState();
+  if (mImageHost) {
+    return mImageHost->GetRenderState();
   }
-  return mImageHost->GetRenderState();
+  return LayerRenderState();
 }
 
 Layer*

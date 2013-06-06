@@ -1059,6 +1059,19 @@ LIRGenerator::visitSqrt(MSqrt *ins)
 }
 
 bool
+LIRGenerator::visitAtan2(MAtan2 *ins)
+{
+    MDefinition *y = ins->y();
+    JS_ASSERT(y->type() == MIRType_Double);
+
+    MDefinition *x = ins->x();
+    JS_ASSERT(x->type() == MIRType_Double);
+
+    LAtan2D *lir = new LAtan2D(useRegisterAtStart(y), useRegisterAtStart(x), tempFixed(CallTempReg0));
+    return defineReturn(lir, ins);
+}
+
+bool
 LIRGenerator::visitPow(MPow *ins)
 {
     MDefinition *input = ins->input();
