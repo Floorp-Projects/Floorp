@@ -54,7 +54,6 @@
 #include "nsCPrefetchService.h"
 #include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsCycleCollector.h"
 #include "nsDataHashtable.h"
 #include "nsDocShellCID.h"
 #include "nsDOMCID.h"
@@ -4326,22 +4325,27 @@ void
 nsContentUtils::HoldJSObjects(void* aScriptObjectHolder,
                               nsScriptObjectTracer* aTracer)
 {
-  cyclecollector::AddJSHolder(aScriptObjectHolder, aTracer);
+  MOZ_ASSERT(sXPConnect, "Tried to HoldJSObjects when there was no XPConnect");
+  if (sXPConnect) {
+    sXPConnect->AddJSHolder(aScriptObjectHolder, aTracer);
+  }
 }
 
 /* static */
 void
 nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 {
-  cyclecollector::RemoveJSHolder(aScriptObjectHolder);
+  if (sXPConnect) {
+    sXPConnect->RemoveJSHolder(aScriptObjectHolder);
+  }
 }
 
 #ifdef DEBUG
 /* static */
 bool
-nsContentUtils::AreJSObjectsHeld(void* aScriptObjectHolder)
+nsContentUtils::AreJSObjectsHeld(void* aScriptHolder)
 {
-  return cyclecollector::TestJSHolder(aScriptObjectHolder);
+  return sXPConnect->TestJSHolder(aScriptHolder);
 }
 #endif
 
