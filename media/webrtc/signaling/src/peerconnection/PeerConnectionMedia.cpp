@@ -396,8 +396,7 @@ PeerConnectionMedia::AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo,
 nsresult
 PeerConnectionMedia::AddRemoteStreamHint(int aIndex, bool aIsVideo)
 {
-  if (aIndex < 0 ||
-      static_cast<unsigned int>(aIndex) >= mRemoteSourceStreams.Length()) {
+  if (aIndex >= mRemoteSourceStreams.Length()) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 

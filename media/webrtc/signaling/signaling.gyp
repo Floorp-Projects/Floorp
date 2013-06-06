@@ -387,7 +387,6 @@
         './src/sipcc/core/includes/dns_utils.h',
         './src/sipcc/core/includes/dtmf.h',
         './src/sipcc/core/includes/embedded.h',
-        './src/sipcc/core/includes/fsmdef_states.h',
         './src/sipcc/core/includes/intelpentiumtypes.h',
         './src/sipcc/core/includes/kpml_common_util.h',
         './src/sipcc/core/includes/kpmlmap.h',

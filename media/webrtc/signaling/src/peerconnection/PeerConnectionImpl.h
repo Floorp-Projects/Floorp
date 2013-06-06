@@ -133,18 +133,6 @@ public:
     kClosed
   };
 
-  /* Must match constants in IPeerConnection.idl */
-  /* Must also be int the same order as in fsmdef_states.h */
-  enum SignalingState {
-    kSignalingInvalid            = 0,
-    kSignalingStable             = 1,
-    kSignalingHaveLocalOffer     = 2,
-    kSignalingHaveRemoteOffer    = 3,
-    kSignalingHaveLocalPranswer  = 4,
-    kSignalingHaveRemotePranswer = 5,
-    kSignalingClosed             = 6
-  };
-
   enum SipccState {
     kIdle,
     kStarting,
@@ -280,9 +268,6 @@ public:
   // Called to retreive the list of parsing errors.
   const std::vector<std::string> &GetSdpParseErrors();
 
-  // Sets the RTC Signaling State
-  void SetSignalingState_m(SignalingState aSignalingState);
-
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
@@ -330,7 +315,6 @@ private:
   // The call
   CSF::CC_CallPtr mCall;
   ReadyState mReadyState;
-  SignalingState mSignalingState;
 
   // ICE State
   IceState mIceState;

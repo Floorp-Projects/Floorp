@@ -129,9 +129,7 @@ public:
         mReason(aInfo->getStatus()),
         mSdpStr(),
         mCallState(aInfo->getCallState()),
-        mFsmState(aInfo->getFsmState()),
-        mStateStr(aInfo->callStateToString(mCallState)),
-        mFsmStateStr(aInfo->fsmStateToString(mFsmState)) {
+        mStateStr(aInfo->callStateToString(mCallState)) {
     if (mCallState == REMOTESTREAMADD) {
       MediaStreamTable *streams = NULL;
       streams = aInfo->getMediaStreams();
@@ -175,8 +173,7 @@ public:
   NS_IMETHOD Run() {
 
     CSFLogInfo(logTag, "PeerConnectionObserverDispatch processing "
-               "mCallState = %d (%s), mFsmState = %d (%s)",
-               mCallState, mStateStr.c_str(), mFsmState, mFsmStateStr.c_str());
+                       "mCallState = %d (%s)", mCallState, mStateStr.c_str());
 
     if (mCallState == SETLOCALDESCERROR || mCallState == SETREMOTEDESCERROR) {
       const std::vector<std::string> &errors = mPC->GetSdpParseErrors();
@@ -193,23 +190,6 @@ public:
     if (mReason.length()) {
       CSFLogInfo(logTag, "Message contains error: %d: %s",
                  mCode, mReason.c_str());
-    }
-
-    /*
-     * While the fsm_states_t (FSM_DEF_*) constants are a proper superset
-     * of SignalingState, and the order in which the SignalingState values
-     * appear matches the order they appear in fsm_states_t, their underlying
-     * numeric representation is different. Hence, we need to perform an
-     * offset calculation to map from one to the other.
-     */
-
-    if (mFsmState >= FSMDEF_S_STABLE && mFsmState <= FSMDEF_S_CLOSED) {
-      int offset = FSMDEF_S_STABLE - PeerConnectionImpl::kSignalingStable;
-      mPC->SetSignalingState_m(
-        static_cast<PeerConnectionImpl::SignalingState>(mFsmState - offset));
-    } else {
-      CSFLogError(logTag, ": **** UNHANDLED SIGNALING STATE : %d (%s)",
-                  mFsmState, mFsmStateStr.c_str());
     }
 
     switch (mCallState) {
@@ -310,9 +290,7 @@ private:
   std::string mReason;
   std::string mSdpStr;
   cc_call_state_t mCallState;
-  fsmdef_states_t mFsmState;
   std::string mStateStr;
-  std::string mFsmStateStr;
   nsRefPtr<RemoteSourceStreamInfo> mRemoteStream;
 };
 
@@ -322,7 +300,6 @@ PeerConnectionImpl::PeerConnectionImpl()
 : mRole(kRoleUnknown)
   , mCall(NULL)
   , mReadyState(kNew)
-  , mSignalingState(kSignalingStable)
   , mIceState(kIceGathering)
   , mPCObserver(NULL)
   , mWindow(NULL)
@@ -1233,16 +1210,6 @@ PeerConnectionImpl::GetReadyState(uint32_t* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetSignalingState(uint32_t* aState)
-{
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aState);
-
-  *aState = mSignalingState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PeerConnectionImpl::GetSipccState(uint32_t* aState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -1406,22 +1373,6 @@ PeerConnectionImpl::ChangeReadyState(PeerConnectionImpl::ReadyState aReadyState)
                                       // static_cast needed to work around old Android NDK r5c compiler
                                       static_cast<int>(IPeerConnectionObserver::kReadyState)),
     NS_DISPATCH_NORMAL);
-}
-
-void
-PeerConnectionImpl::SetSignalingState_m(SignalingState aSignalingState)
-{
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  if (mSignalingState == aSignalingState) {
-    return;
-  }
-
-  mSignalingState = aSignalingState;
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
-  if (!pco) {
-    return;
-  }
-  pco->OnStateChange(IPeerConnectionObserver::kSignalingState);
 }
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
