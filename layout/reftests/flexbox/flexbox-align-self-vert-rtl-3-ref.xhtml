@@ -24,32 +24,39 @@
         width: 50px;
       }
 
-      .flexbox > * {
-        clear: both;
-      }
-
       /* Classes for each of the various align-self values */
       .flex-start {
         background: lime;
-        width: -moz-max-content;
+        float: right;
       }
       .flex-end {
         background: orange;
         float: left;
-        width: -moz-max-content;
+      }
+      <!-- We center shrinkwrapped text by putting it into an inline-block, and
+           then wrapping that inline-block in a helper-div that has
+           "text-align:center" set. For this to work, the parent has to be at
+           least as wide as the centered content inside of it, so we make it
+           large with a negative margin such that its center aligns with the
+           4px-wide container's center. -->
+      .centerParent {
+        text-align: center;
+        width: 100px;
+        margin-right: -48px;
       }
       .center {
         background: lightblue;
-        margin: auto;
-        width: -moz-max-content;
+        display: inline-block;
+        text-align: right; /* Keep parent's centering from tweaking my text */
       }
       .baseline {
         background: teal;
-        width: -moz-max-content;
+        float: right;
       }
       .stretch {
         background: pink;
       }
+      .clearFloats { clear: both }
    </style>
   </head>
   <body>
@@ -58,20 +65,15 @@
       <div class="flex-start big">a b</div>
       <div class="flex-end">end</div>
       <div class="flex-end big">a b</div>
-      <!-- We're using auto margins as references for "align-self:center", but
-           auto margins only work if we've got extra space available, and we
-           don't have extra space available in this case.  So, we create a
-           wide wrapper-div that _will_ have space available.  We position
-           that wrapper-div using a negative margin, so that centering in it
-           is equivalent to centering in our reference for the flex container.
-        -->
-      <div style="width: 100px; margin-right: -48px">
+      <div class="centerParent clearFloats">
         <div class="center">center</div>
+      </div>
+      <div class="centerParent">
         <div class="center big">a b</div>
       </div>
       <div class="baseline">base</div>
       <div class="baseline big">abc</div>
-      <div class="stretch">stretch</div>
+      <div class="stretch clearFloats">stretch</div>
       <div class="stretch big">a b</div>
     </div>
   </body>

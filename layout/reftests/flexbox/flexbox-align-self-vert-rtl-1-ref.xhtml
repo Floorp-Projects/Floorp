@@ -30,21 +30,19 @@
       /* Classes for each of the various align-self values */
       .flex-start {
         background: lime;
-        width: -moz-max-content;
+        float: right;
       }
       .flex-end {
         background: orange;
         float: left;
-        width: -moz-max-content;
       }
       .center {
         background: lightblue;
         margin: auto;
-        width: -moz-max-content;
       }
       .baseline {
         background: teal;
-        width: -moz-max-content;
+        float: right;
       }
       .stretch {
         background: pink;
@@ -53,26 +51,29 @@
       .auto {
         background: yellow;
         margin: auto;
-        width: -moz-max-content;
       }
       .unspecified {
         background: lightgreen;
         margin: auto;
-        width: -moz-max-content;
       }
       .initial {
         background: aqua;
         margin: auto;
-        width: -moz-max-content;
       }
       .inherit {
         background: violet;
         float: left;
-        width: -moz-max-content;
       }
-      .hack {
+
+      <!-- We center shrinkwrapped text by putting it into an inline-block, and
+           then wrapping that inline-block in a helper-div that has
+           "text-align:center" set. -->
+      .centerParent {
+        text-align: center;
+      }
+      .centerParent > * {
         display: inline-block;
-        width: 100px;
+        text-align: left; /* Keep parent's centering from tweaking my text */
       }
    </style>
   </head>
@@ -82,22 +83,23 @@
       <div class="flex-start big">a b c d e f</div>
       <div class="flex-end">end</div>
       <div class="flex-end big">a b c d e f</div>
-      <div class="center">center</div>
+      <div class="centerParent">
+        <div class="center">center</div>
+      </div>
       <div class="center big">a b c d e f</div>
       <div class="baseline">base</div>
       <div class="baseline big">abc</div>
       <div class="stretch">stretch</div>
       <div class="stretch big">a b c d e f</div>
-      <div class="auto">auto</div>
-      <!-- This particular text ("unspec") appears to trigger a slight
-           difference in behavior between the testcase's & reference case's
-           centering techniques - the "s" ends up being shifted by ~1px.
-           (Probably because the length of the text is a fractional amount of
-           pixels, or something like that.) To hack around that, we add a
-           fixed-width wrapper-div - we should be able to center _that_
-           consistently. -->
-      <div class="unspecified"><div class="hack">unspec</div></div>
-      <div class="initial">initial</div>
+      <div class="centerParent">
+        <div class="auto">auto</div>
+      </div>
+      <div class="centerParent">
+        <div class="unspecified">unspec</div>
+      </div>
+      <div class="centerParent">
+        <div class="initial">initial</div>
+      </div>
       <div class="inherit">inherit</div>
       <!-- Since that last div is floated right, the container doesn't include
            its height by default. So we add some invisible hacky text (of the
