@@ -441,6 +441,10 @@ class MDefinition : public MNode
     // Number of uses of this instruction.
     size_t useCount() const;
 
+    // Number of uses of this instruction.
+    // (only counting MDefinitions, ignoring MResumePoints)
+    size_t defUseCount() const;
+
     bool hasUses() const {
         return !uses_.empty();
     }
@@ -3061,6 +3065,45 @@ class MSqrt
     TypePolicy *typePolicy() {
         return this;
     }
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+// Inline implementation of atan2 (arctangent of y/x).
+class MAtan2
+  : public MBinaryInstruction,
+    public MixPolicy<DoublePolicy<0>, DoublePolicy<1> >
+{
+    MAtan2(MDefinition *y, MDefinition *x)
+      : MBinaryInstruction(y, x)
+    {
+        setResultType(MIRType_Double);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Atan2)
+    static MAtan2 *New(MDefinition *y, MDefinition *x) {
+        return new MAtan2(y, x);
+    }
+
+    MDefinition *y() const {
+        return getOperand(0);
+    }
+
+    MDefinition *x() const {
+        return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }

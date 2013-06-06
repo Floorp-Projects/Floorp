@@ -441,6 +441,7 @@ gssapi/gssapi_generic.h
 gssapi/gssapi.h
 gssapi.h
 gtk/gtk.h
+gtk/gtkx.h
 gtk/gtkprinter.h
 gtk/gtkprintjob.h
 gtk/gtkprintunixdialog.h

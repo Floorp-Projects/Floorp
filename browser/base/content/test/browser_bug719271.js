@@ -27,7 +27,7 @@ function zoomTab1() {
     FullZoomHelper.zoomTest(gTab1, 1, "Initial zoom of tab 1 should be 1");
     FullZoomHelper.zoomTest(gTab2, 1, "Initial zoom of tab 2 should be 1");
 
-    yield FullZoomHelper.enlarge();
+    FullZoom.enlarge();
     gLevel1 = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab1));
 
     ok(gLevel1 > 1, "New zoom for tab 1 should be greater than 1");
@@ -43,7 +43,7 @@ function zoomTab2() {
   Task.spawn(function () {
     is(gBrowser.selectedTab, gTab2, "Tab 2 is selected");
 
-    yield FullZoomHelper.reduce();
+    FullZoom.reduce();
     let gLevel2 = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab2));
 
     ok(gLevel2 < 1, "New zoom for tab 2 should be less than 1");
@@ -80,10 +80,10 @@ function finishTest() {
     finishTestStarted = true;
 
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
-    yield FullZoomHelper.reset();
+    FullZoom.reset();
     gBrowser.removeTab(gTab1);
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab2);
-    yield FullZoomHelper.reset();
+    FullZoom.reset();
     gBrowser.removeTab(gTab2);
   }).then(finish, FullZoomHelper.failAndContinue(finish));
 }

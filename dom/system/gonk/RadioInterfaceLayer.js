@@ -53,6 +53,7 @@ const kSmsDeliveryErrorObserverTopic     = "sms-delivery-error";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
+const kScreenStateChangedTopic           = "screen-state-changed";
 const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
 const kTimeNitzAvailable                 = "time.nitz.available";
 const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
@@ -350,6 +351,7 @@ function RadioInterfaceLayer() {
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
   Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
   Services.obs.addObserver(this, kSysClockChangeObserverTopic, false);
+  Services.obs.addObserver(this, kScreenStateChangedTopic, false);
 
   this._sentSmsEnvelopes = {};
 
@@ -1962,11 +1964,16 @@ RadioInterfaceLayer.prototype = {
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
         Services.obs.removeObserver(this, kSysClockChangeObserverTopic);
+        Services.obs.removeObserver(this, kScreenStateChangedTopic);
         break;
       case kSysClockChangeObserverTopic:
         if (this._lastNitzMessage) {
           this._lastNitzMessage.receiveTimeInMS += parseInt(data, 10);
         }
+        break;
+      case kScreenStateChangedTopic:
+        debug("Received a screen-state-changed event: " + JSON.stringify(data));
+        this.setScreenState(data);
         break;
     }
   },
@@ -2189,6 +2196,14 @@ RadioInterfaceLayer.prototype = {
   getAvailableNetworks: function getAvailableNetworks(requestId) {
     this.worker.postMessage({rilMessageType: "getAvailableNetworks",
                              requestId: requestId});
+  },
+
+  setScreenState: function setScreenState(state) {
+    debug("setScreenState: " + JSON.stringify(state));
+    this.worker.postMessage({
+      rilMessageType: "setScreenState",
+      on: (state === "on")
+    });
   },
 
   sendMMI: function sendMMI(message) {

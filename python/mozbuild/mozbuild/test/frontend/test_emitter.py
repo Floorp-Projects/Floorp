@@ -126,8 +126,10 @@ class TestEmitterBasic(unittest.TestCase):
 
         wanted = dict(
             ASFILES=['fans.asm', 'tans.s'],
+            CMMSRCS=['fans.mm', 'tans.mm'],
             CSRCS=['fans.c', 'tans.c'],
             DEFINES=['-Dfans', '-Dtans'],
+            EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
             XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],
             XPIDL_MODULE='module_name',

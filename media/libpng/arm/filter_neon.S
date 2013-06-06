@@ -1,9 +1,9 @@
 
 /* filter_neon.S - NEON optimised filter functions
  *
- * Copyright (c) 2011 Glenn Randers-Pehrson
+ * Copyright (c) 2013 Glenn Randers-Pehrson
  * Written by Mans Rullgard, 2011.
- * Last changed in libpng 1.5.7 [December 15, 2011]
+ * Last changed in libpng 1.5.16 [May 23, 2013]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -11,16 +11,16 @@
  */
 
 /* This is required to get the symbol renames, which are #defines, and also
- * includes the value of PNG_FILTER_OPTIMIZATIONS.
+ * includes the definition (or not) of PNG_ARM_NEON_SUPPORTED.
  */
 #define PNG_VERSION_INFO_ONLY
 #include "../pngpriv.h"
 
-#if defined(PNG_FILTER_OPTIMIZATIONS) && defined(__arm__) && \
-   defined(__ARM_NEON__)
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits /* mark stack as non-executable */
 #endif
+
+#ifdef PNG_ARM_NEON_SUPPORTED
 
 #ifdef __ELF__
 #   define ELF
@@ -232,4 +232,4 @@ func    png_read_filter_row_paeth3_neon, export=1
 
         pop             {r4,pc}
 endfunc
-#endif /* FILTER_OPTIMIZATIONS && __arm__ && __ARM_NEON__ */
+#endif /* PNG_ARM_NEON_SUPPORTED */

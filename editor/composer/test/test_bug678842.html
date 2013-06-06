@@ -27,30 +27,33 @@ var content = document.getElementById('content');
 var firstLoad = true;
 
 var loadListener = function(evt) {
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
   var doc = evt.target.contentDocument;
   var elem = doc.getElementById('textarea');
   var editor = elem.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
-  var spellchecker = inlineSpellChecker.spellChecker;
-  var currentDictonary = "";
-  try {
-    currentDictonary = spellchecker.GetCurrentDictionary();
-  } catch(e) {}
 
-  if (!currentDictonary) {
-    spellchecker.SetCurrentDictionary('en-US');
-  }
+  onSpellCheck(elem, function () {
+    var spellchecker = inlineSpellChecker.spellChecker;
+    try {
+      var currentDictonary = spellchecker.GetCurrentDictionary();
+    } catch(e) {}
 
-  if (firstLoad) {
-    firstLoad = false;
-    is (currentDictonary, "", "unexpected lang " + currentDictonary);
-    content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug678842_subframe.html?firstload=false';
-  } else {
-    is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
-    content.removeEventListener('load', loadListener, false);
-    SimpleTest.finish();
-  }
+    if (!currentDictonary) {
+      spellchecker.SetCurrentDictionary('en-US');
+    }
+
+    if (firstLoad) {
+      firstLoad = false;
+      is (currentDictonary, "", "unexpected lang " + currentDictonary);
+      content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug678842_subframe.html?firstload=false';
+    } else {
+      is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
+      content.removeEventListener('load', loadListener, false);
+      SimpleTest.finish();
+    }
+  });
 }
 
 content.addEventListener('load', loadListener, false);

@@ -505,8 +505,10 @@ CodeGeneratorX86::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArra
 {
     if (ool->dest().isFloat())
         masm.movsd(&js_NaN, ool->dest().fpu());
-    else
-        masm.movl(Imm32(0), ool->dest().gpr());
+    else {
+        Register destReg = ool->dest().gpr();
+        masm.xorl(destReg, destReg);
+    }
     masm.jmp(ool->rejoin());
     return true;
 }

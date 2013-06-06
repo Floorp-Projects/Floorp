@@ -19,6 +19,7 @@ import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
 from mozhttpd import MozHttpd
+from telnetlib import Telnet
 
 from marionette import Marionette
 from marionette_test import MarionetteJSTestCase, MarionetteTestCase
@@ -266,7 +267,12 @@ class MarionetteTestRunner(object):
                                          timeout=self.timeout)
         elif self.address:
             host, port = self.address.split(':')
-            if self.emulator:
+            try:
+		#establish a telnet connection so we can vertify the data come back
+		tlconnection = Telnet(host, port)
+	    except:
+		raise Exception("could not connect to given marionette host/port")
+	    if self.emulator:
                 self.marionette = Marionette.getMarionetteOrExit(
                                              host=host, port=int(port),
                                              connectToRunningEmulator=True,
@@ -640,7 +646,7 @@ class MarionetteTestOptions(OptionParser):
         self.add_option('--timeout',
                         dest='timeout',
                         type=int,
-                        help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10ms for script timeout')
+                        help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10000ms for script timeout')
 
     def verify_usage(self, options, tests):
         if not tests:
