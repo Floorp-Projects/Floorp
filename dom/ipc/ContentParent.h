@@ -26,7 +26,6 @@
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
-#include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "PermissionMessageUtils.h"
@@ -36,7 +35,6 @@
 class mozIApplication;
 class nsConsoleService;
 class nsIDOMBlob;
-class nsIDOMGeoGeolocation;
 
 namespace mozilla {
 
@@ -177,12 +175,10 @@ private:
     static nsTArray<ContentParent*>* sNonAppContentParents;
     static nsTArray<ContentParent*>* sPrivateContent;
     static LinkedList<ContentParent> sContentParents;
-    nsCOMPtr<nsIDOMGeoGeolocation> mGeo;
 
     static void JoinProcessesIOThread(const nsTArray<ContentParent*>* aProcesses,
                                       Monitor* aMonitor, bool* aDone);
 
-    int32_t AddGeolocationListener(bool highAccuracy);
     // Take the preallocated process and transform it into a "real" app process,
     // for the specified manifest URL.  If there is no preallocated process (or
     // if it's dead), this returns false.
