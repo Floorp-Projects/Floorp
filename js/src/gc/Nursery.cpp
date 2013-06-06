@@ -62,6 +62,7 @@ js::Nursery::enable()
         return;
     JS_ASSERT(position_ == start());
     numActiveChunks_ = 1;
+    setCurrentChunk(0);
 }
 
 void
@@ -71,6 +72,7 @@ js::Nursery::disable()
         return;
     JS_ASSERT(position_ == start());
     numActiveChunks_ = 0;
+    currentEnd_ = 0;
 }
 
 void *
