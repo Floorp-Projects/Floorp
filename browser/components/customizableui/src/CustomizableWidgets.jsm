@@ -39,11 +39,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onViewShowing: function(aEvent) {
       // Populate our list of history
       const kMaxResults = 15;
@@ -107,11 +102,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onCommand: function(e) {
       if (e.target && e.target.ownerDocument && e.target.ownerDocument.defaultView) {
         let win = e.target.ownerDocument.defaultView;
@@ -125,11 +115,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -143,11 +128,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -161,11 +141,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onCommand: function(aEvent) {
       let win = aEvent.target
                 && aEvent.target.ownerDocument
@@ -179,11 +154,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -197,11 +167,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -215,11 +180,6 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
