@@ -98,6 +98,12 @@ VARIABLES = {
         delimiters.
         """),
 
+    'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list, [],
+        """Additional component files to distribute.
+
+       This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
+        """),
+
     'PARALLEL_DIRS': (list, list, [],
         """A parallel version of DIRS.
 

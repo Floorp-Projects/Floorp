@@ -18,16 +18,14 @@ int32_t XPCWrappedNativeProto::gDEBUG_LiveProtoCount = 0;
 XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
                                              nsIClassInfo* ClassInfo,
                                              uint32_t ClassInfoFlags,
-                                             XPCNativeSet* Set,
-                                             QITableEntry* offsets)
+                                             XPCNativeSet* Set)
     : mScope(Scope),
       mJSProtoObject(nullptr),
       mClassInfo(ClassInfo),
       mClassInfoFlags(ClassInfoFlags),
       mSet(Set),
       mSecurityInfo(nullptr),
-      mScriptableInfo(nullptr),
-      mOffsets(offsets)
+      mScriptableInfo(nullptr)
 {
     // This native object lives as long as its associated JSObject - killed
     // by finalization of the JSObject (or explicitly if Init fails).
@@ -177,7 +175,6 @@ XPCWrappedNativeProto*
 XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
                                     nsIClassInfo* classInfo,
                                     const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
-                                    QITableEntry* offsets,
                                     bool callPostCreatePrototype)
 {
     AutoJSContext cx;
@@ -207,7 +204,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
     if (!set)
         return nullptr;
 
-    proto = new XPCWrappedNativeProto(scope, classInfo, ciFlags, set, offsets);
+    proto = new XPCWrappedNativeProto(scope, classInfo, ciFlags, set);
 
     if (!proto || !proto->Init(scriptableCreateInfo, callPostCreatePrototype)) {
         delete proto.get();

@@ -425,11 +425,11 @@ private:
 };
 
 #define NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE                               \
-    rv = FragmentOrElement::QueryInterface(aIID, aInstancePtr);                \
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
-    NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+    rv = FragmentOrElement::QueryInterface(aIID, aInstancePtr);               \
+    NS_INTERFACE_TABLE_TO_MAP_SEGUE
 
 #define NS_ELEMENT_INTERFACE_MAP_END                                          \
     {                                                                         \

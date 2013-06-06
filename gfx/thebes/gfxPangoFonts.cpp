@@ -5,9 +5,6 @@
 
 #include "mozilla/Util.h"
 
-#define PANGO_ENABLE_BACKEND
-#define PANGO_ENABLE_ENGINE
-
 #include "prtypes.h"
 #include "prlink.h"
 #include "gfxTypes.h"
@@ -38,9 +35,6 @@
 
 #include <fontconfig/fcfreetype.h>
 #include <pango/pango.h>
-#include <pango/pangocairo.h>
-#include <pango/pango-modules.h>
-#include <pango/pangofc-fontmap.h>
 
 #include FT_TRUETYPE_TABLES_H
 
@@ -53,62 +47,14 @@
 using namespace mozilla;
 using namespace mozilla::unicode;
 
-#define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
-
-#ifndef PANGO_VERSION_CHECK
-#define PANGO_VERSION_CHECK(x,y,z) 0
-#endif
-#ifndef PANGO_GLYPH_UNKNOWN_FLAG
-#define PANGO_GLYPH_UNKNOWN_FLAG ((PangoGlyph)0x10000000)
-#endif
-#ifndef PANGO_GLYPH_EMPTY
-#define PANGO_GLYPH_EMPTY           ((PangoGlyph)0)
-#endif
-// For g a PangoGlyph,
-#define IS_MISSING_GLYPH(g) ((g) & PANGO_GLYPH_UNKNOWN_FLAG)
-#define IS_EMPTY_GLYPH(g) ((g) == PANGO_GLYPH_EMPTY)
-
 #define PRINTING_FC_PROPERTY "gfx.printing"
-
-struct gfxPangoFcFont;
-
-// Same as pango_units_from_double from Pango 1.16 (but not in older versions)
-int moz_pango_units_from_double(double d) {
-    return NS_lround(d * FLOAT_PANGO_SCALE);
-}
 
 static PangoLanguage *GuessPangoLanguage(nsIAtom *aLanguage);
 
 static cairo_scaled_font_t *
 CreateScaledFont(FcPattern *aPattern, cairo_font_face_t *aFace);
-static void SetMissingGlyphs(gfxShapedText *aShapedText, const gchar *aUTF8,
-                             uint32_t aUTF8Length, uint32_t *aUTF16Offset,
-                             gfxFont *aFont);
-
-static PangoFontMap *gPangoFontMap;
-static PangoFontMap *GetPangoFontMap();
-static bool gUseFontMapProperty;
 
 static FT_Library gFTLibrary;
-
-template <class T>
-class gfxGObjectRefTraits : public nsPointerRefTraits<T> {
-public:
-    static void Release(T *aPtr) { g_object_unref(aPtr); }
-    static void AddRef(T *aPtr) { g_object_ref(aPtr); }
-};
-
-template <>
-class nsAutoRefTraits<PangoFont> : public gfxGObjectRefTraits<PangoFont> { };
-
-template <>
-class nsAutoRefTraits<PangoCoverage>
-    : public nsPointerRefTraits<PangoCoverage> {
-public:
-    static void Release(PangoCoverage *aPtr) { pango_coverage_unref(aPtr); }
-    static void AddRef(PangoCoverage *aPtr) { pango_coverage_ref(aPtr); }
-};
-
 
 // FC_FAMILYLANG and FC_FULLNAME were introduced in fontconfig-2.2.97
 // and so fontconfig-2.3.0 (2005).
@@ -159,9 +105,6 @@ public:
         return mPatterns;
     }
 
-    bool ShouldUseHarfBuzz(int32_t aRunScript);
-    void SkipHarfBuzz() { mSkipHarfBuzz = true; }
-
     static gfxFcFontEntry *LookupFontEntry(cairo_font_face_t *aFace)
     {
         return static_cast<gfxFcFontEntry*>
@@ -186,18 +129,13 @@ public:
 
 protected:
     gfxFcFontEntry(const nsAString& aName)
-        : gfxFontEntry(aName),
-          mSkipHarfBuzz(false), mSkipGraphiteCheck(false)
+        : gfxFontEntry(aName)
     {
     }
-
-    virtual void CheckForGraphiteTables();
 
     // One pattern is the common case and some subclasses rely on successful
     // addition of the first element to the array.
     AutoFallibleTArray<nsCountedRef<FcPattern>,1> mPatterns;
-    bool mSkipHarfBuzz;
-    bool mSkipGraphiteCheck;
 
     static cairo_user_data_key_t sFontEntryKey;
 };
@@ -226,76 +164,6 @@ gfxFcFontEntry::RealFaceName()
     }
     // fall back to gfxFontEntry implementation (only works for sfnt fonts)
     return gfxFontEntry::RealFaceName();
-}
-
-void
-gfxFcFontEntry::CheckForGraphiteTables()
-{
-    FcChar8 *capability;
-    mHasGraphiteTables =
-        !mPatterns.IsEmpty() &&
-        FcPatternGetString(mPatterns[0],
-                           FC_CAPABILITY, 0, &capability) == FcResultMatch &&
-        FcStrStr(capability, gfxFontconfigUtils::ToFcChar8("ttable:Silf"));
-}
-
-bool
-gfxFcFontEntry::ShouldUseHarfBuzz(int32_t aRunScript) {
-    if (mSkipHarfBuzz ||
-        !gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aRunScript))
-    {
-        return false;
-    }
-
-    if (mSkipGraphiteCheck) {
-        return true;
-    }
-
-    // Check whether to fall back to Pango for Graphite shaping.
-    // pango-graphite checks for ttable:Silf.
-    FcChar8 *capability;
-    // FontEntries used at shaping have only one pattern.
-    if (mPatterns.IsEmpty() ||
-        FcPatternGetString(mPatterns[0],
-                           FC_CAPABILITY, 0, &capability) == FcResultNoMatch ||
-        !FcStrStr(capability, gfxFontconfigUtils::ToFcChar8("ttable:Silf")))
-    {
-        mSkipGraphiteCheck = true;
-        return true;
-    }
-
-    // Mimicing gfxHarfBuzzShaper::ShapeText
-    hb_script_t script = (aRunScript <= MOZ_SCRIPT_INHERITED) ?
-        HB_SCRIPT_LATIN :
-        hb_script_t(GetScriptTagForCode(aRunScript));
-
-    // Prefer HarfBuzz if the font also has support for OpenType shaping of
-    // this script.
-    const FcChar8 otCapTemplate[] = "otlayout:XXXX";
-    FcChar8 otCap[NS_ARRAY_LENGTH(otCapTemplate)];
-    memcpy(otCap, otCapTemplate, ArrayLength(otCapTemplate));
-    // Subtract 5, for 4 characters and NUL. 
-    const uint32_t scriptOffset = ArrayLength(otCapTemplate) - 5;
-
-    hb_tag_t tags[2];
-    hb_ot_tags_from_script(script, &tags[0], &tags[1]);
-    for (int i = 0; i < 2; ++i) {
-        hb_tag_t scriptTag = tags[i];
-        if (scriptTag == HB_TAG('D','F','L','T')) { // e.g. HB_SCRIPT_UNKNOWN
-            continue;
-        }
-
-        // FcChar8 is unsigned so truncates appropriately.
-        otCap[scriptOffset + 0] = scriptTag >> 24;
-        otCap[scriptOffset + 1] = scriptTag >> 16;
-        otCap[scriptOffset + 2] = scriptTag >> 8;
-        otCap[scriptOffset + 3] = scriptTag;
-        if (FcStrStr(capability, otCap)) {
-            return true;
-        }
-    }
-
-    return false; // use Pango for Graphite
 }
 
 /**
@@ -589,11 +457,6 @@ public:
     // Returns true on success
     bool SetCairoFace(cairo_font_face_t *aFace);
 
-    // Returns a PangoCoverage owned by the FontEntry.  The caller must add a
-    // reference if it wishes to keep the PangoCoverage longer than the
-    // lifetime of the FontEntry.
-    PangoCoverage *GetPangoCoverage();
-
     virtual hb_blob_t* GetFontTable(uint32_t aTableTag) MOZ_OVERRIDE;
 
 protected:
@@ -605,11 +468,6 @@ protected:
     const uint8_t* mFontData;
 
     FT_Face mFace;
-
-    // mPangoCoverage is the charset property of the pattern translated to a
-    // format that Pango understands.  A reference is kept here so that it can
-    // be shared by multiple PangoFonts (of different sizes).
-    nsAutoRef<PangoCoverage> mPangoCoverage;
 };
 
 // A property for recording gfxDownloadedFcFontEntrys on FcPatterns.
@@ -769,48 +627,6 @@ bool gfxDownloadedFcFontEntry::SetCairoFace(cairo_font_face_t *aFace)
     return true;
 }
 
-static PangoCoverage *NewPangoCoverage(FcPattern *aFont)
-{
-    // This uses g_slice_alloc which will abort on OOM rather than return NULL.
-    PangoCoverage *coverage = pango_coverage_new();
-
-    FcCharSet *charset;
-    if (FcPatternGetCharSet(aFont, FC_CHARSET, 0, &charset) != FcResultMatch)
-        return coverage; // empty
-
-    FcChar32 base;
-    FcChar32 map[FC_CHARSET_MAP_SIZE];
-    FcChar32 next;
-    for (base = FcCharSetFirstPage(charset, map, &next);
-         base != FC_CHARSET_DONE;
-         base = FcCharSetNextPage(charset, map, &next)) {
-        for (uint32_t i = 0; i < FC_CHARSET_MAP_SIZE; ++i) {
-            uint32_t offset = 0;
-            FcChar32 bitmap = map[i];
-            for (; bitmap; bitmap >>= 1) {
-                if (bitmap & 1) {
-                    pango_coverage_set(coverage, base + offset,
-                                       PANGO_COVERAGE_EXACT);
-                }
-                ++offset;
-            }
-            base += 32;
-        }
-    }
-    return coverage;
-}
-
-PangoCoverage *
-gfxDownloadedFcFontEntry::GetPangoCoverage()
-{
-    NS_ASSERTION(mPatterns.Length() != 0,
-                 "Can't get coverage without a pattern!");
-    if (!mPangoCoverage) {
-        mPangoCoverage.own(NewPangoCoverage(mPatterns[0]));
-    }
-    return mPangoCoverage;
-}
-
 static int
 DirEntryCmp(const void* aKey, const void* aItem)
 {
@@ -854,14 +670,6 @@ public:
     GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern,
                   const gfxFontStyle *aFontStyle);
 
-    // The PangoFont returned is owned by the gfxFcFont
-    PangoFont *GetPangoFont() {
-        if (!mPangoFont) {
-            MakePangoFont();
-        }
-        return mPangoFont;
-    }
-
 protected:
     virtual bool ShapeText(gfxContext      *aContext,
                            const PRUnichar *aText,
@@ -881,361 +689,9 @@ private:
     gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,
               const gfxFontStyle *aFontStyle);
 
-    void MakePangoFont();
-
-    PangoFont *mPangoFont;
-
     // key for locating a gfxFcFont corresponding to a cairo_scaled_font
     static cairo_user_data_key_t sGfxFontKey;
 };
-
-/**
- * gfxPangoFcFont:
- *
- * An implementation of PangoFcFont that wraps a gfxFont so that it can be
- * passed to PangoRenderFc shapers.
- *
- * Many of these will be created for pango_itemize, but most will only be
- * tested for coverage of individual characters (and sometimes not even that).
- * Therefore the gfxFont is only constructed if and when needed.
- */
-
-#define GFX_TYPE_PANGO_FC_FONT              (gfx_pango_fc_font_get_type())
-#define GFX_PANGO_FC_FONT(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), GFX_TYPE_PANGO_FC_FONT, gfxPangoFcFont))
-#define GFX_IS_PANGO_FC_FONT(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), GFX_TYPE_PANGO_FC_FONT))
-
-/* static */
-GType gfx_pango_fc_font_get_type (void);
-
-#define GFX_PANGO_FC_FONT_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GFX_TYPE_PANGO_FC_FONT, gfxPangoFcFontClass))
-#define GFX_IS_PANGO_FC_FONT_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GFX_TYPE_PANGO_FC_FONT))
-#define GFX_PANGO_FC_FONT_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GFX_TYPE_PANGO_FC_FONT, gfxPangoFcFontClass))
-
-// This struct is POD so that it can be used as a GObject.
-struct gfxPangoFcFont {
-    PangoFcFont parent_instance;
-
-    PangoCoverage *mCoverage;
-    gfxFcFont *mGfxFont;
-
-    // The caller promises to ensure that |aGfxFont| remains valid until the
-    // new gfxPangoFcFont is destroyed.  See PangoFontToggleNotify.
-    //
-    // The gfxPangoFcFont holds a reference to |aFontPattern|.
-    // Providing one of fontconfig's font patterns uses much less memory than
-    // using a fully resolved pattern, because fontconfig's font patterns are
-    // shared and will exist anyway.
-    static nsReturnRef<PangoFont>
-    NewFont(gfxFcFont *aGfxFont, FcPattern *aFontPattern);
-
-    gfxFcFont *GfxFont() { return mGfxFont; }
-
-    cairo_scaled_font_t *CairoFont()
-    {
-        return GfxFont()->CairoScaledFont();
-    }
-
-private:
-    void SetFontMap();
-};
-
-struct gfxPangoFcFontClass {
-    PangoFcFontClass parent_class;
-};
-
-G_DEFINE_TYPE (gfxPangoFcFont, gfx_pango_fc_font, PANGO_TYPE_FC_FONT)
-
-/* static */ nsReturnRef<PangoFont>
-gfxPangoFcFont::NewFont(gfxFcFont *aGfxFont, FcPattern *aFontPattern)
-{
-    // The font pattern is needed for pango_fc_font_finalize.
-    gfxPangoFcFont *font = static_cast<gfxPangoFcFont*>
-        (g_object_new(GFX_TYPE_PANGO_FC_FONT, "pattern", aFontPattern, NULL));
-
-    font->mGfxFont = aGfxFont;
-    font->SetFontMap();
-
-    PangoFcFont *fc_font = &font->parent_instance;
-    cairo_scaled_font_t *scaled_font = aGfxFont->CairoScaledFont();
-    // Normally the is_hinted field of PangoFcFont is set based on the
-    // FC_HINTING property on the pattern at construction, but this property
-    // is not on an unresolved aFontPattern.  is_hinted is used by
-    // pango_fc_font_kern_glyphs, which is sometimes used by
-    // pango_ot_buffer_output.
-    cairo_font_options_t *options = cairo_font_options_create();
-    cairo_scaled_font_get_font_options(scaled_font, options);
-    cairo_hint_style_t hint_style = cairo_font_options_get_hint_style(options);
-    cairo_font_options_destroy(options);
-    fc_font->is_hinted = hint_style != CAIRO_HINT_STYLE_NONE;
-
-    // is_transformed does not appear to be used anywhere but looks
-    // like it should be set.
-    cairo_matrix_t matrix;
-    cairo_scaled_font_get_font_matrix(scaled_font, &matrix);
-    fc_font->is_transformed = (matrix.xy != 0.0 || matrix.yx != 0.0 ||
-                               matrix.xx != matrix.yy);
-
-    return nsReturnRef<PangoFont>(PANGO_FONT(font));
-}
-
-void
-gfxPangoFcFont::SetFontMap()
-{
-    // PangoFcFont::get_coverage wants a PangoFcFontMap.  (PangoFcFontMap
-    // would usually set this after calling PangoFcFontMap::create_font()
-    // or new_font().)
-    PangoFontMap *fontmap = GetPangoFontMap();
-    // In Pango-1.24.4, we can use the "fontmap" property; by setting the
-    // property, the PangoFcFont base class manages the pointer (as a weak
-    // reference).
-    PangoFcFont *fc_font = &parent_instance;
-    if (gUseFontMapProperty) {
-        g_object_set(this, "fontmap", fontmap, NULL);
-    } else {
-        // In Pango versions up to 1.20.5, the parent class will decrement
-        // the reference count of the fontmap during shutdown() or
-        // finalize() of the font.  In Pango versions from 1.22.0 this no
-        // longer happens, so we'll end up leaking the (singleton)
-        // fontmap.
-        fc_font->fontmap = fontmap;
-        g_object_ref(fc_font->fontmap);
-    }
-}
-
-static void
-gfx_pango_fc_font_init(gfxPangoFcFont *font)
-{
-}
-
-static void
-gfx_pango_fc_font_finalize(GObject *object)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(object);
-
-    if (self->mCoverage)
-        pango_coverage_unref(self->mCoverage);
-
-    G_OBJECT_CLASS(gfx_pango_fc_font_parent_class)->finalize(object);
-}
-
-static PangoCoverage *
-gfx_pango_fc_font_get_coverage(PangoFont *font, PangoLanguage *lang)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-
-    // The coverage is requested often enough that it is worth holding a
-    // reference on the font.
-    if (!self->mCoverage) {
-        FcPattern *pattern = self->parent_instance.font_pattern;
-        gfxDownloadedFcFontEntry *downloadedFontEntry =
-            GetDownloadedFontEntry(pattern);
-        // The parent class implementation requires the font pattern to have
-        // a file and caches results against that filename.  This is not
-        // suitable for web fonts.
-        if (!downloadedFontEntry) {
-            self->mCoverage =
-                PANGO_FONT_CLASS(gfx_pango_fc_font_parent_class)->
-                get_coverage(font, lang);
-        } else {
-            self->mCoverage =
-                pango_coverage_ref(downloadedFontEntry->GetPangoCoverage());
-        }
-    }
-
-    return pango_coverage_ref(self->mCoverage);
-}
-
-static int32_t
-GetDPI()
-{
-#if defined(MOZ_WIDGET_GTK)
-    return gfxPlatformGtk::GetDPI();
-#elif defined(MOZ_WIDGET_QT)
-    return gfxQtPlatform::GetDPI();
-#else
-    return 96;
-#endif
-}
-
-static PangoFontDescription *
-gfx_pango_fc_font_describe(PangoFont *font)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    PangoFcFont *fcFont = &self->parent_instance;
-    PangoFontDescription *result =
-        pango_font_description_copy(fcFont->description);
-
-    gfxFcFont *gfxFont = self->GfxFont();
-    if (gfxFont) {
-        double pixelsize = gfxFont->GetStyle()->size;
-        double dpi = GetDPI();
-        gint size = moz_pango_units_from_double(pixelsize * dpi / 72.0);
-        pango_font_description_set_size(result, size);
-    }
-    return result;
-}
-
-static PangoFontDescription *
-gfx_pango_fc_font_describe_absolute(PangoFont *font)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    PangoFcFont *fcFont = &self->parent_instance;
-    PangoFontDescription *result =
-        pango_font_description_copy(fcFont->description);
-
-    gfxFcFont *gfxFont = self->GfxFont();
-    if (gfxFont) {
-        double size = gfxFont->GetStyle()->size * PANGO_SCALE;
-        pango_font_description_set_absolute_size(result, size);
-    }
-    return result;
-}
-
-static void
-gfx_pango_fc_font_get_glyph_extents(PangoFont *font, PangoGlyph glyph,
-                                    PangoRectangle *ink_rect,
-                                    PangoRectangle *logical_rect)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    gfxFcFont *gfxFont = self->GfxFont();
-
-    if (IS_MISSING_GLYPH(glyph)) {
-        const gfxFont::Metrics& metrics = gfxFont->GetMetrics();
-
-        PangoRectangle rect;
-        rect.x = 0;
-        rect.y = moz_pango_units_from_double(-metrics.maxAscent);
-        rect.width = moz_pango_units_from_double(metrics.aveCharWidth);
-        rect.height = moz_pango_units_from_double(metrics.maxHeight);
-        if (ink_rect) {
-            *ink_rect = rect;
-        }
-        if (logical_rect) {
-            *logical_rect = rect;
-        }
-        return;
-    }
-
-    if (logical_rect) {
-        // logical_rect.width is possibly used by pango_ot_buffer_output (used
-        // by many shapers) and used by fallback_engine_shape (possibly used
-        // by pango_shape and pango_itemize when no glyphs are found).  I
-        // doubt the other fields will be used but we won't have any way to
-        // detecting if they are so we'd better set them.
-        const gfxFont::Metrics& metrics = gfxFont->GetMetrics();
-        logical_rect->y = moz_pango_units_from_double(-metrics.maxAscent);
-        logical_rect->height = moz_pango_units_from_double(metrics.maxHeight);
-    }
-
-    cairo_text_extents_t extents;
-    if (IS_EMPTY_GLYPH(glyph)) {
-        new (&extents) cairo_text_extents_t(); // zero
-    } else {
-        gfxFont->GetGlyphExtents(glyph, &extents);
-    }
-
-    if (ink_rect) {
-        ink_rect->x = moz_pango_units_from_double(extents.x_bearing);
-        ink_rect->y = moz_pango_units_from_double(extents.y_bearing);
-        ink_rect->width = moz_pango_units_from_double(extents.width);
-        ink_rect->height = moz_pango_units_from_double(extents.height);
-    }
-    if (logical_rect) {
-        logical_rect->x = 0;
-        logical_rect->width = moz_pango_units_from_double(extents.x_advance);
-    }
-}
-
-static PangoFontMetrics *
-gfx_pango_fc_font_get_metrics(PangoFont *font, PangoLanguage *language)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-
-    // This uses g_slice_alloc which will abort on OOM rather than return NULL.
-    PangoFontMetrics *result = pango_font_metrics_new();
-
-    gfxFcFont *gfxFont = self->GfxFont();
-    if (gfxFont) {
-        const gfxFont::Metrics& metrics = gfxFont->GetMetrics();
-
-        result->ascent = moz_pango_units_from_double(metrics.maxAscent);
-        result->descent = moz_pango_units_from_double(metrics.maxDescent);
-        result->approximate_char_width =
-            moz_pango_units_from_double(metrics.aveCharWidth);
-        result->approximate_digit_width =
-            moz_pango_units_from_double(metrics.zeroOrAveCharWidth);
-        result->underline_position =
-            moz_pango_units_from_double(metrics.underlineOffset);
-        result->underline_thickness =
-            moz_pango_units_from_double(metrics.underlineSize);
-        result->strikethrough_position =
-            moz_pango_units_from_double(metrics.strikeoutOffset);
-        result->strikethrough_thickness =
-            moz_pango_units_from_double(metrics.strikeoutSize);
-    }
-    return result;
-}
-
-static FT_Face
-gfx_pango_fc_font_lock_face(PangoFcFont *font)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    return cairo_ft_scaled_font_lock_face(self->CairoFont());
-}
-
-static void
-gfx_pango_fc_font_unlock_face(PangoFcFont *font)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    cairo_ft_scaled_font_unlock_face(self->CairoFont());
-}
-
-static guint
-gfx_pango_fc_font_get_glyph(PangoFcFont *font, gunichar wc)
-{
-    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    gfxFcFont *gfxFont = self->GfxFont();
-    return gfxFont->GetGlyph(wc);
-}
-
-typedef int (*PangoVersionFunction)();
-
-static void
-gfx_pango_fc_font_class_init (gfxPangoFcFontClass *klass)
-{
-    GObjectClass *object_class = G_OBJECT_CLASS (klass);
-    PangoFontClass *font_class = PANGO_FONT_CLASS (klass);
-    PangoFcFontClass *fc_font_class = PANGO_FC_FONT_CLASS (klass);
-
-    object_class->finalize = gfx_pango_fc_font_finalize;
-
-    font_class->get_coverage = gfx_pango_fc_font_get_coverage;
-    // describe is called on errors in pango_shape.
-    font_class->describe = gfx_pango_fc_font_describe;
-    font_class->get_glyph_extents = gfx_pango_fc_font_get_glyph_extents;
-    // get_metrics and describe_absolute are not likely to be used but
-    //   implemented because the class makes them available.
-    font_class->get_metrics = gfx_pango_fc_font_get_metrics;
-    font_class->describe_absolute = gfx_pango_fc_font_describe_absolute;
-    // font_class->find_shaper,get_font_map are inherited from PangoFcFontClass
-
-    // fc_font_class->has_char is inherited
-    fc_font_class->lock_face = gfx_pango_fc_font_lock_face;
-    fc_font_class->unlock_face = gfx_pango_fc_font_unlock_face;
-    fc_font_class->get_glyph = gfx_pango_fc_font_get_glyph;
-
-    // The "fontmap" property on PangoFcFont was introduced for Pango-1.24.0
-    // but versions prior to Pango-1.24.4 leaked weak pointers for every font,
-    // which would causes crashes when shutting down the FontMap.  For the
-    // early Pango-1.24.x versions we're better off setting the fontmap member
-    // ourselves, which will not create weak pointers to leak, and instead
-    // we'll leak the FontMap on shutdown.  pango_version() and
-    // PANGO_VERSION_ENCODE require Pango-1.16.
-    PangoVersionFunction pango_version =
-        reinterpret_cast<PangoVersionFunction>
-        (FindFunctionSymbol("pango_version"));
-    gUseFontMapProperty = pango_version && (*pango_version)() >= 12404;
-}
 
 /**
  * gfxFcFontSet:
@@ -1290,7 +746,6 @@ private:
         explicit FontEntry(FcPattern *aPattern) : mPattern(aPattern) {}
         nsCountedRef<FcPattern> mPattern;
         nsRefPtr<gfxFcFont> mFont;
-        nsCountedRef<PangoFont> mPangoFont;
     };
 
     struct LangSupportEntry {
@@ -1765,87 +1220,6 @@ gfxFcFontSet::GetFontPatternAt(uint32_t i)
     return mFonts[i].mPattern;
 }
 
-/**
- * gfxPangoFontMap: An implementation of a PangoFontMap.
- *
- * This is a PangoFcFontMap for gfxPangoFcFont.  It will only ever be used if
- * some day pango_cairo_font_map_get_default() does not return a
- * PangoFcFontMap.
- */
-
-#define GFX_TYPE_PANGO_FONT_MAP              (gfx_pango_font_map_get_type())
-#define GFX_PANGO_FONT_MAP(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), GFX_TYPE_PANGO_FONT_MAP, gfxPangoFontMap))
-#define GFX_IS_PANGO_FONT_MAP(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), GFX_TYPE_PANGO_FONT_MAP))
-
-GType gfx_pango_font_map_get_type (void);
-
-#define GFX_PANGO_FONT_MAP_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GFX_TYPE_PANGO_FONT_MAP, gfxPangoFontMapClass))
-#define GFX_IS_PANGO_FONT_MAP_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GFX_TYPE_PANGO_FONT_MAP))
-#define GFX_PANGO_FONT_MAP_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GFX_TYPE_PANGO_FONT_MAP, gfxPangoFontMapClass))
-
-// Do not instantiate this class directly, but use NewFontMap.
-// This struct is POD so that it can be used as a GObject.
-struct gfxPangoFontMap {
-    PangoFcFontMap parent_instance;
-
-    static PangoFontMap *
-    NewFontMap()
-    {
-        gfxPangoFontMap *fontmap = static_cast<gfxPangoFontMap *>
-            (g_object_new(GFX_TYPE_PANGO_FONT_MAP, NULL));
-
-        return PANGO_FONT_MAP(fontmap);
-    }
-};
-
-struct gfxPangoFontMapClass {
-    PangoFcFontMapClass parent_class;
-};
-
-G_DEFINE_TYPE (gfxPangoFontMap, gfx_pango_font_map, PANGO_TYPE_FC_FONT_MAP)
-
-static void
-gfx_pango_font_map_init(gfxPangoFontMap *fontset)
-{
-}
-
-static PangoFcFont *
-gfx_pango_font_map_new_font(PangoFcFontMap *fontmap,
-                            FcPattern *pattern)
-{
-    // new_font is not likely to be used, but the class makes the method
-    // available and shapers have access to the class through the font.  Not
-    // bothering to make an effort here because this will only ever be used if
-    // pango_cairo_font_map_get_default() does not return a PangoFcFontMap and
-    // a shaper tried to create a different font from the one it was provided.
-    // Only a basic implementation is provided that simply refuses to
-    // create a new font.  PangoFcFontMap allows NULL return values here.
-    return NULL;
-}
-
-static void
-gfx_pango_font_map_class_init(gfxPangoFontMapClass *klass)
-{
-    // inherit GObjectClass::finalize from parent as this class adds no data.
-
-    // inherit PangoFontMap::load_font (which is not likely to be used)
-    //   from PangoFcFontMap
-    // inherit PangoFontMap::list_families (which is not likely to be used)
-    //   from PangoFcFontMap
-    // inherit PangoFontMap::load_fontset (which is not likely to be used)
-    //   from PangoFcFontMap
-    // inherit PangoFontMap::shape_engine_type from PangoFcFontMap
-
-    PangoFcFontMapClass *fcfontmap_class = PANGO_FC_FONT_MAP_CLASS (klass);
-    // default_substitute is not required.
-    // The API for create_font changed between Pango 1.22 and 1.24 so new_font
-    // is provided instead.
-    fcfontmap_class->new_font = gfx_pango_font_map_new_font;
-    // get_resolution is not required.
-    // context_key_* virtual functions are only necessary if we want to
-    // dynamically respond to changes in the screen cairo_font_options_t.
-}
-
 #ifdef MOZ_WIDGET_GTK
 static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
 #endif
@@ -2256,48 +1630,14 @@ cairo_user_data_key_t gfxFcFont::sGfxFontKey;
 gfxFcFont::gfxFcFont(cairo_scaled_font_t *aCairoFont,
                      gfxFcFontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
-    : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle),
-      mPangoFont()
+    : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
 {
     cairo_scaled_font_set_user_data(mScaledFont, &sGfxFontKey, this, NULL);
-}
-
-// The gfxFcFont keeps (only) a toggle_ref on mPangoFont.
-// While mPangoFont has other references, a reference to the
-// gfxFcFont is held.  While mPangoFont has no other references, the reference
-// to the gfxFcFont is removed.
-static void
-PangoFontToggleNotify(gpointer data, GObject* object, gboolean is_last_ref)
-{
-    gfxFcFont *font = static_cast<gfxFcFont*>(data);
-    if (is_last_ref) { // gfxFcFont has last ref to PangoFont
-        NS_RELEASE(font);
-    } else {
-        NS_ADDREF(font);
-    }
-}
-
-void
-gfxFcFont::MakePangoFont()
-{
-    // Switch from a normal reference to a toggle_ref.
-    gfxFcFontEntry *fe = static_cast<gfxFcFontEntry*>(mFontEntry.get());
-    nsAutoRef<PangoFont> pangoFont
-        (gfxPangoFcFont::NewFont(this, fe->GetPatterns()[0]));
-    mPangoFont = pangoFont;
-    g_object_add_toggle_ref(G_OBJECT(mPangoFont), PangoFontToggleNotify, this);
-    // This self-reference gets removed when the normal reference to the
-    // PangoFont is removed as the nsAutoRef goes out of scope.
-    NS_ADDREF(this);
 }
 
 gfxFcFont::~gfxFcFont()
 {
     cairo_scaled_font_set_user_data(mScaledFont, &sGfxFontKey, NULL, NULL);
-    if (mPangoFont) {
-        g_object_remove_toggle_ref(G_OBJECT(mPangoFont),
-                                   PangoFontToggleNotify, this);
-    }
 }
 
 bool
@@ -2309,8 +1649,6 @@ gfxFcFont::ShapeText(gfxContext      *aContext,
                      gfxShapedText   *aShapedText,
                      bool             aPreferPlatformShaping)
 {
-    gfxFcFontEntry *fontEntry = static_cast<gfxFcFontEntry*>(GetFontEntry());
-
     bool ok = false;
 
     if (FontCanSupportGraphite()) {
@@ -2323,7 +1661,7 @@ gfxFcFont::ShapeText(gfxContext      *aContext,
         }
     }
 
-    if (!ok && fontEntry->ShouldUseHarfBuzz(aScript)) {
+    if (!ok) {
         if (!mHarfBuzzShaper) {
             gfxFT2LockedFace face(this);
             mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
@@ -2332,16 +1670,6 @@ gfxFcFont::ShapeText(gfxContext      *aContext,
         }
         ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
                                         aScript, aShapedText);
-        if (!ok) {
-            // Wrong font type for HarfBuzz
-            fontEntry->SkipHarfBuzz();
-            mHarfBuzzShaper = nullptr;
-        }
-    }
-
-    if (!ok) {
-        ok = InitGlyphRunWithPango(aText, aOffset, aLength, aScript,
-                                   aShapedText);
     }
 
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
@@ -2354,11 +1682,6 @@ gfxFcFont::ShapeText(gfxContext      *aContext,
 /* static */ void
 gfxPangoFontGroup::Shutdown()
 {
-    if (gPangoFontMap) {
-        g_object_unref(gPangoFontMap);
-        gPangoFontMap = NULL;
-    }
-
     // Resetting gFTLibrary in case this is wanted again after a
     // cairo_debug_reset_static_data.
     gFTLibrary = NULL;
@@ -2567,27 +1890,6 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern,
 
     nsRefPtr<gfxFcFont> retval(static_cast<gfxFcFont*>(font.get()));
     return retval.forget();
-}
-
-static PangoFontMap *
-GetPangoFontMap()
-{
-    if (!gPangoFontMap) {
-        // This is the same FontMap used by GDK, so that the same
-        // PangoCoverage cache is shared.
-        gPangoFontMap = pango_cairo_font_map_get_default();
-
-        if (PANGO_IS_FC_FONT_MAP(gPangoFontMap)) {
-            g_object_ref(gPangoFontMap);
-        } else {
-            // Future proofing: We need a PangoFcFontMap for gfxPangoFcFont.
-            // pango_cairo_font_map_get_default() is expected to return a
-            // PangoFcFontMap on Linux systems, but, just in case this ever
-            // changes, we provide our own basic implementation.
-            gPangoFontMap = gfxPangoFontMap::NewFontMap();
-        }
-    }
-    return gPangoFontMap;
 }
 
 gfxFcFontSet *
@@ -2831,440 +2133,6 @@ CreateScaledFont(FcPattern *aPattern, cairo_font_face_t *aFace)
     NS_ASSERTION(cairo_scaled_font_status(scaledFont) == CAIRO_STATUS_SUCCESS,
                  "Failed to create scaled font");
     return scaledFont;
-}
-
-static int32_t
-ConvertPangoToAppUnits(int32_t aCoordinate, uint32_t aAppUnitsPerDevUnit)
-{
-    int64_t v = (int64_t(aCoordinate)*aAppUnitsPerDevUnit + PANGO_SCALE/2)/PANGO_SCALE;
-    return int32_t(v);
-}
-
-/**
- * Given a run of Pango glyphs that should be treated as a single
- * cluster/ligature, store them in the textrun at the appropriate character
- * and set the other characters involved to be ligature/cluster continuations
- * as appropriate.
- */ 
-static nsresult
-SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, uint32_t aGlyphCount,
-                           gfxShapedText *aShapedText,
-                           const gchar *aUTF8, uint32_t aUTF8Length,
-                           uint32_t *aUTF16Offset,
-                           PangoGlyphUnit aOverrideSpaceWidth)
-{
-    uint32_t utf16Offset = *aUTF16Offset;
-    uint32_t limit = aShapedText->GetLength();
-    const uint32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
-    gfxShapedText::CompressedGlyph *charGlyphs =
-        aShapedText->GetCharacterGlyphs();
-    bool atClusterStart = charGlyphs[utf16Offset].IsClusterStart();
-
-    // Override the width of a space, but only for spaces that aren't
-    // clustered with something else (like a freestanding diacritical mark)
-    PangoGlyphUnit width = aGlyphs[0].geometry.width;
-    if (aOverrideSpaceWidth && aUTF8[0] == ' ' &&
-        (utf16Offset + 1 == limit || atClusterStart)) {
-        width = aOverrideSpaceWidth;
-    }
-    int32_t advance = ConvertPangoToAppUnits(width, appUnitsPerDevUnit);
-
-    gfxShapedText::CompressedGlyph g;
-    // See if we fit in the compressed area.
-    if (aGlyphCount == 1 && advance >= 0 && atClusterStart &&
-        aGlyphs[0].geometry.x_offset == 0 &&
-        aGlyphs[0].geometry.y_offset == 0 &&
-        !IS_EMPTY_GLYPH(aGlyphs[0].glyph) &&
-        gfxShapedText::CompressedGlyph::IsSimpleAdvance(advance) &&
-        gfxShapedText::CompressedGlyph::IsSimpleGlyphID(aGlyphs[0].glyph)) {
-        charGlyphs[utf16Offset].SetSimpleGlyph(advance, aGlyphs[0].glyph);
-    } else {
-        nsAutoTArray<gfxShapedText::DetailedGlyph,10> detailedGlyphs;
-        if (!detailedGlyphs.AppendElements(aGlyphCount))
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        int32_t direction = aShapedText->IsRightToLeft() ? -1 : 1;
-        uint32_t pangoIndex = direction > 0 ? 0 : aGlyphCount - 1;
-        uint32_t detailedIndex = 0;
-        for (uint32_t i = 0; i < aGlyphCount; ++i) {
-            const PangoGlyphInfo &glyph = aGlyphs[pangoIndex];
-            pangoIndex += direction;
-            // The zero width characters return empty glyph ID at
-            // shaping; we should skip these.
-            if (IS_EMPTY_GLYPH(glyph.glyph))
-                continue;
-
-            gfxShapedText::DetailedGlyph *details = &detailedGlyphs[detailedIndex];
-            ++detailedIndex;
-
-            details->mGlyphID = glyph.glyph;
-            NS_ASSERTION(details->mGlyphID == glyph.glyph,
-                         "Seriously weird glyph ID detected!");
-            details->mAdvance =
-                ConvertPangoToAppUnits(glyph.geometry.width,
-                                       appUnitsPerDevUnit);
-            details->mXOffset =
-                float(glyph.geometry.x_offset)*appUnitsPerDevUnit/PANGO_SCALE;
-            details->mYOffset =
-                float(glyph.geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
-        }
-        g.SetComplex(atClusterStart, true, detailedIndex);
-        aShapedText->SetGlyphs(utf16Offset, g, detailedGlyphs.Elements());
-    }
-
-    // Check for ligatures and set *aUTF16Offset.
-    const gchar *p = aUTF8;
-    const gchar *end = aUTF8 + aUTF8Length;
-    while (1) {
-        // Skip the CompressedGlyph that we have added, but check if the
-        // character was supposed to be ignored. If it's supposed to be ignored,
-        // overwrite the textrun entry with an invisible missing-glyph.
-        gunichar ch = g_utf8_get_char(p);
-        NS_ASSERTION(!IS_SURROGATE(ch), "surrogates should not appear in UTF8");
-        if (ch >= 0x10000) {
-            // Skip surrogate
-            ++utf16Offset;
-        }
-        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(PRUnichar(ch)),
-                     "Invalid character detected");
-        ++utf16Offset;
-
-        // We produced this UTF8 so we don't need to worry about malformed stuff
-        p = g_utf8_next_char(p);
-        if (p >= end)
-            break;
-
-        if (utf16Offset >= limit) {
-            NS_ERROR("Someone has added too many glyphs!");
-            return NS_ERROR_FAILURE;
-        }
-
-        gfxShapedText::CompressedGlyph &g = charGlyphs[utf16Offset];
-        NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
-        g.SetComplex(g.IsClusterStart(), false, 0);
-    }
-    *aUTF16Offset = utf16Offset;
-    return NS_OK;
-}
-
-static nsresult
-SetGlyphs(gfxShapedText *aShapedText, const gchar *aUTF8, uint32_t aUTF8Length,
-          uint32_t *aUTF16Offset, PangoGlyphString *aGlyphs,
-          PangoGlyphUnit aOverrideSpaceWidth,
-          gfxFont *aFont)
-{
-    gint numGlyphs = aGlyphs->num_glyphs;
-    PangoGlyphInfo *glyphs = aGlyphs->glyphs;
-    const gint *logClusters = aGlyphs->log_clusters;
-    // We cannot make any assumptions about the order of glyph clusters
-    // provided by pango_shape (see 375864), so we work through the UTF8 text
-    // and process the glyph clusters in logical order.
-
-    // logGlyphs is like an inverse of logClusters.  For each UTF8 byte:
-    //   >= 0 indicates that the byte is first in a cluster and
-    //        gives the position of the starting glyph for the cluster.
-    //     -1 indicates that the byte does not start a cluster.
-    nsAutoTArray<gint,2000> logGlyphs;
-    if (!logGlyphs.AppendElements(aUTF8Length + 1))
-        return NS_ERROR_OUT_OF_MEMORY;
-    uint32_t utf8Index = 0;
-    for(; utf8Index < aUTF8Length; ++utf8Index)
-        logGlyphs[utf8Index] = -1;
-    logGlyphs[aUTF8Length] = numGlyphs;
-
-    gint lastCluster = -1; // != utf8Index
-    for (gint glyphIndex = 0; glyphIndex < numGlyphs; ++glyphIndex) {
-        gint thisCluster = logClusters[glyphIndex];
-        if (thisCluster != lastCluster) {
-            lastCluster = thisCluster;
-            NS_ASSERTION(0 <= thisCluster && thisCluster < gint(aUTF8Length),
-                         "garbage from pango_shape - this is bad");
-            logGlyphs[thisCluster] = glyphIndex;
-        }
-    }
-
-    uint32_t utf16Offset = *aUTF16Offset;
-    uint32_t limit = aShapedText->GetLength();
-    utf8Index = 0;
-    // The next glyph cluster in logical order. 
-    gint nextGlyphClusterStart = logGlyphs[utf8Index];
-    NS_ASSERTION(nextGlyphClusterStart >= 0, "No glyphs! - NUL in string?");
-    while (utf8Index < aUTF8Length) {
-        if (utf16Offset >= limit) {
-          NS_ERROR("Someone has added too many glyphs!");
-          return NS_ERROR_FAILURE;
-        }
-        gint glyphClusterStart = nextGlyphClusterStart;
-        // Find the utf8 text associated with this glyph cluster.
-        uint32_t clusterUTF8Start = utf8Index;
-        // Check whether we are consistent with pango_break data.
-        NS_WARN_IF_FALSE(aShapedText->IsClusterStart(utf16Offset),
-                         "Glyph cluster not aligned on character cluster.");
-        do {
-            ++utf8Index;
-            nextGlyphClusterStart = logGlyphs[utf8Index];
-        } while (nextGlyphClusterStart < 0);
-        const gchar *clusterUTF8 = &aUTF8[clusterUTF8Start];
-        uint32_t clusterUTF8Length = utf8Index - clusterUTF8Start;
-
-        bool haveMissingGlyph = false;
-        gint glyphIndex = glyphClusterStart;
-
-        // It's now unncecessary to do NUL handling here.
-        do {
-            if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
-                // Does pango ever provide more than one glyph in the
-                // cluster if there is a missing glyph?
-                // behdad: yes
-                haveMissingGlyph = true;
-            }
-            glyphIndex++;
-        } while (glyphIndex < numGlyphs && 
-                 logClusters[glyphIndex] == gint(clusterUTF8Start));
-
-        nsresult rv;
-        if (haveMissingGlyph) {
-            SetMissingGlyphs(aShapedText, clusterUTF8, clusterUTF8Length,
-                             &utf16Offset, aFont);
-        } else {
-            rv = SetGlyphsForCharacterGroup(&glyphs[glyphClusterStart],
-                                            glyphIndex - glyphClusterStart,
-                                            aShapedText,
-                                            clusterUTF8, clusterUTF8Length,
-                                            &utf16Offset, aOverrideSpaceWidth);
-            NS_ENSURE_SUCCESS(rv,rv);
-        }
-    }
-    *aUTF16Offset = utf16Offset;
-    return NS_OK;
-}
-
-static void
-SetMissingGlyphs(gfxShapedText *aShapedText, const gchar *aUTF8,
-                 uint32_t aUTF8Length, uint32_t *aUTF16Offset,
-                 gfxFont *aFont)
-{
-    uint32_t utf16Offset = *aUTF16Offset;
-    uint32_t limit = aShapedText->GetLength();
-    for (uint32_t index = 0; index < aUTF8Length;) {
-        if (utf16Offset >= limit) {
-            NS_ERROR("Someone has added too many glyphs!");
-            break;
-        }
-        gunichar ch = g_utf8_get_char(aUTF8 + index);
-        aShapedText->SetMissingGlyph(utf16Offset, ch, aFont);
-
-        ++utf16Offset;
-        NS_ASSERTION(!IS_SURROGATE(ch), "surrogates should not appear in UTF8");
-        if (ch >= 0x10000)
-            ++utf16Offset;
-        // We produced this UTF8 so we don't need to worry about malformed stuff
-        index = g_utf8_next_char(aUTF8 + index) - aUTF8;
-    }
-
-    *aUTF16Offset = utf16Offset;
-}
-
-static void
-InitGlyphRunWithPangoAnalysis(gfxShapedText *aShapedText,
-                              uint32_t aOffset, uint32_t aLength,
-                              const gchar *aUTF8, uint32_t aUTF8Length,
-                              PangoAnalysis *aAnalysis,
-                              PangoGlyphUnit aOverrideSpaceWidth,
-                              gfxFont *aFont)
-{
-    uint32_t utf16Offset = aOffset;
-    PangoGlyphString *glyphString = pango_glyph_string_new();
-
-    const gchar *p = aUTF8;
-    const gchar *end = p + aUTF8Length;
-    while (p < end) {
-        NS_ASSERTION(utf16Offset < aOffset + aLength,
-                     "overrun expected range of aShapedText");
-        if (*p == 0) {
-            aShapedText->SetMissingGlyph(utf16Offset, 0, aFont);
-            ++p;
-            ++utf16Offset;
-            continue;
-        }
-
-        // It's necessary to loop over pango_shape as it treats
-        // NULs as string terminators
-        const gchar *text = p;
-        do {
-            ++p;
-        } while(p < end && *p != 0);
-        gint len = p - text;
-
-        pango_shape(text, len, aAnalysis, glyphString);
-        SetGlyphs(aShapedText, text, len, &utf16Offset, glyphString,
-                  aOverrideSpaceWidth, aFont);
-    }
-
-    pango_glyph_string_free(glyphString);
-}
-
-// PangoAnalysis is part of Pango's ABI but over time extra fields have been
-// inserted into padding.  This union is used so that the code here can be
-// compiled against older Pango versions but run against newer versions.
-typedef union {
-    PangoAnalysis pango;
-    // This struct matches PangoAnalysis from Pango version
-    // 1.16.5 to 1.28.1 (at least).
-    struct {
-        PangoEngineShape *shape_engine;
-        PangoEngineLang  *lang_engine;
-        PangoFont *font;
-        guint8 level;
-        guint8 gravity; /* PangoGravity */
-        guint8 flags;
-        guint8 script; /* PangoScript */
-        PangoLanguage *language;
-        GSList *extra_attrs;
-    } local;
-} PangoAnalysisUnion;
-
-bool
-gfxFcFont::InitGlyphRunWithPango(const PRUnichar *aString,
-                                 uint32_t         aOffset,
-                                 uint32_t         aLength,
-                                 int32_t          aScript,
-                                 gfxShapedText   *aShapedText)
-{
-    const PangoScript script = static_cast<PangoScript>(aScript);
-    NS_ConvertUTF16toUTF8 utf8(aString, aLength);
-
-    PangoFont *font = GetPangoFont();
-
-    hb_language_t languageOverride = NULL;
-    if (GetStyle()->languageOverride) {
-        languageOverride =
-            hb_ot_tag_to_language(GetStyle()->languageOverride);
-    } else if (GetFontEntry()->mLanguageOverride) {
-        languageOverride =
-            hb_ot_tag_to_language(GetFontEntry()->mLanguageOverride);
-    }
-
-    PangoLanguage *language;
-    if (languageOverride) {
-        language =
-            pango_language_from_string(hb_language_to_string(languageOverride));
-    } else {
-#if 0 // FIXME ??
-        language = fontGroup->GetPangoLanguage();
-#endif
-        // FIXME: should probably cache this in the gfxFcFont
-        language = GuessPangoLanguage(GetStyle()->language);
-
-        // The language that we have here is often not as good an indicator for
-        // the run as the script.  This is not so important for the PangoMaps
-        // here as all the default Pango shape and lang engines are selected
-        // by script only (not language) anyway, but may be important in the
-        // PangoAnalysis as the shaper sometimes accesses language-specific
-        // tables.
-        PangoLanguage *scriptLang;
-        if ((!language ||
-             !pango_language_includes_script(language, script)) &&
-            (scriptLang = pango_script_get_sample_language(script))) {
-            language = scriptLang;
-        }
-    }
-
-    static GQuark engineLangId =
-        g_quark_from_static_string(PANGO_ENGINE_TYPE_LANG);
-    static GQuark renderNoneId =
-        g_quark_from_static_string(PANGO_RENDER_TYPE_NONE);
-    PangoMap *langMap = pango_find_map(language, engineLangId, renderNoneId);
-
-    static GQuark engineShapeId =
-        g_quark_from_static_string(PANGO_ENGINE_TYPE_SHAPE);
-    static GQuark renderFcId =
-        g_quark_from_static_string(PANGO_RENDER_TYPE_FC);
-    PangoMap *shapeMap = pango_find_map(language, engineShapeId, renderFcId);
-    if (!shapeMap) {
-        return false;
-    }
-
-    // The preferred shape engine for language and script
-    PangoEngineShape *shapeEngine =
-        PANGO_ENGINE_SHAPE(pango_map_get_engine(shapeMap, script));
-    if (!shapeEngine) {
-        return false;
-    }
-
-    PangoEngineShapeClass *shapeClass = static_cast<PangoEngineShapeClass*>
-        (g_type_class_peek(PANGO_TYPE_ENGINE_SHAPE));
-
-    // The |covers| method in the PangoEngineShape base class, which is the
-    // method used by Pango shapers, merely copies the fontconfig coverage map
-    // to a PangoCoverage and checks that the character is supported.  We've
-    // already checked for character support, so we can avoid this copy for
-    // these shapers.
-    //
-    // With SIL Graphite shapers, however, |covers| also checks that the font
-    // is a Graphite font.  (bug 397860)
-    if (!shapeClass ||
-        PANGO_ENGINE_SHAPE_GET_CLASS(shapeEngine)->covers != shapeClass->covers)
-    {
-        GSList *exact_engines;
-        GSList *fallback_engines;
-        pango_map_get_engines(shapeMap, script,
-                              &exact_engines, &fallback_engines);
-
-        GSList *engines = g_slist_concat(exact_engines, fallback_engines);
-        for (GSList *link = engines; link; link = link->next) {
-            PangoEngineShape *engine = PANGO_ENGINE_SHAPE(link->data);
-            PangoCoverageLevel (*covers)(PangoEngineShape*, PangoFont*,
-                                         PangoLanguage*, gunichar) =
-                PANGO_ENGINE_SHAPE_GET_CLASS(shapeEngine)->covers;
-
-            if ((shapeClass && covers == shapeClass->covers) ||
-                covers(engine, font, language, ' ') != PANGO_COVERAGE_NONE)
-            {
-                shapeEngine = engine;
-                break;
-            }
-        }
-        g_slist_free(engines); // Frees exact and fallback links
-    }
-
-    PangoAnalysisUnion analysis;
-    memset(&analysis, 0, sizeof(analysis));
-
-    // For pango_shape
-    analysis.local.shape_engine = shapeEngine;
-    // For pango_break
-    analysis.local.lang_engine =
-        PANGO_ENGINE_LANG(pango_map_get_engine(langMap, script));
-
-    analysis.local.font = font;
-    analysis.local.level = aShapedText->IsRightToLeft() ? 1 : 0;
-    // gravity and flags are used in Pango 1.14.10 and newer.
-    //
-    // PANGO_GRAVITY_SOUTH is what we want for upright horizontal text.  The
-    // constant is not available when compiling with older Pango versions, but
-    // is zero so the zero memset initialization is sufficient.
-    //
-    // Pango uses non-zero flags for vertical gravities only
-    // (up to version 1.28 at least), so using zero is fine for flags too.
-#if 0
-    analysis.local.gravity = PANGO_GRAVITY_SOUTH;
-    analysis.local.flags = 0;
-#endif
-    // Only used in Pango 1.16.5 and newer.
-    analysis.local.script = script;
-
-    analysis.local.language = language;
-    // Non-font attributes.  Not used here.
-    analysis.local.extra_attrs = NULL;
-
-    PangoGlyphUnit spaceWidth =
-        moz_pango_units_from_double(GetMetrics().spaceWidth);
-
-    InitGlyphRunWithPangoAnalysis(aShapedText, aOffset, aLength,
-                                  utf8.get(), utf8.Length(),
-                                  &analysis.pango, spaceWidth, this);
-    return true;
 }
 
 /* static */

@@ -67,11 +67,6 @@ public:
   // string was known.
   nsresult GetNPNVersionIndex(const nsACString &npnString, uint8_t *result);
 
-  // lookup a version enum based on an alternate protocol string. returns NS_OK
-  // if string was known and corresponding protocol is enabled.
-  nsresult GetAlternateProtocolVersionIndex(const char *val,
-                                            uint8_t *result);
-
   enum {
     SPDY_VERSION_2 = 2,
     SPDY_VERSION_3 = 3
@@ -79,7 +74,6 @@ public:
 
   uint8_t   Version[2];
   nsCString VersionString[2];
-  nsCString AlternateProtocolString[2];
 };
 
 }} // namespace mozilla::net
