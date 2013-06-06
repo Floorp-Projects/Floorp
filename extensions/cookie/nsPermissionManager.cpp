@@ -1018,6 +1018,63 @@ nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
   return CommonTestPermission(aPrincipal, aType, aPermission, false, true);
 }
 
+NS_IMETHODIMP
+nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
+                                         const char* aType,
+                                         bool aExactHostMatch,
+                                         nsIPermission** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_ARG_POINTER(aType);
+
+  *aResult = nullptr;
+
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return NS_OK;
+  }
+
+  nsAutoCString host;
+  nsresult rv = GetHostForPrincipal(aPrincipal, host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int32_t typeIndex = GetTypeIndex(aType, false);
+  // If type == -1, the type isn't known,
+  // so just return NS_OK
+  if (typeIndex == -1) return NS_OK;
+
+  uint32_t appId;
+  rv = aPrincipal->GetAppId(&appId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isInBrowserElement;
+  rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PermissionHashKey* entry = GetPermissionHashKey(host, appId, isInBrowserElement,
+                                                  typeIndex, aExactHostMatch);
+  if (!entry) {
+    return NS_OK;
+  }
+
+  // We don't call GetPermission(typeIndex) because that returns a fake
+  // UNKNOWN_ACTION entry if there is no match.
+  int32_t idx = entry->GetPermissionIndex(typeIndex);
+  if (-1 == idx) {
+    return NS_OK;
+  }
+
+  PermissionEntry& perm = entry->GetPermissions()[idx];
+  nsCOMPtr<nsIPermission> r = new nsPermission(entry->GetKey()->mHost,
+                                               entry->GetKey()->mAppId,
+                                               entry->GetKey()->mIsInBrowserElement,
+                                               mTypeArray.ElementAt(perm.mType),
+                                               perm.mPermission,
+                                               perm.mExpireType,
+                                               perm.mExpireTime);
+  r.forget(aResult);
+  return NS_OK;
+}
+
 nsresult
 nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
                                           const char *aType,
