@@ -225,6 +225,7 @@ this.DebuggerClient = function DebuggerClient(aTransport)
   ]);
 
   this.request = this.request.bind(this);
+  this.localTransport = (this._transport instanceof LocalDebuggerTransport);
 
   /*
    * As the first thing on the connection, expect a greeting packet from
@@ -601,6 +602,14 @@ DebuggerClient.prototype = {
         return;
       }
 
+      // If we have a registered Front for this actor, let it handle the packet
+      // and skip all the rest of this unpleasantness.
+      let front = this.getActor(aPacket.from);
+      if (front) {
+        front.onPacket(aPacket);
+        return;
+      }
+
       let onResponse;
       // See if we have a handler function waiting for a reply from this
       // actor. (Don't count unsolicited notifications or pauses as
@@ -654,6 +663,36 @@ DebuggerClient.prototype = {
   onClosed: function DC_onClosed(aStatus) {
     this.notify("closed");
   },
+
+  /**
+   * Actor lifetime management, echos the server's actor pools.
+   */
+  __pools: null,
+  get _pools() {
+    if (this.__pools) {
+      return this.__pools;
+    }
+    this.__pools = new Set();
+    return this.__pools;
+  },
+
+  addActorPool: function(pool) {
+    this._pools.add(pool);
+  },
+  removeActorPool: function(pool) {
+    this._pools.delete(pool);
+  },
+  getActor: function(actorID) {
+    let pool = this.poolFor(actorID);
+    return pool ? pool.get(actorID) : null;
+  },
+
+  poolFor: function(actorID) {
+    for (let pool of this._pools) {
+      if (pool.has(actorID)) return pool;
+    }
+    return null;
+  }
 }
 
 eventSource(DebuggerClient.prototype);
