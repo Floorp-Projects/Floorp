@@ -12,6 +12,8 @@ DEFINES = ['-Dbar', '-Dfoo']
 
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
 
+HOST_CSRCS = ['bar.c', 'foo.c']
+
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
 CSRCS += ['bar.c', 'foo.c']
