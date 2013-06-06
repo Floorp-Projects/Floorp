@@ -32,27 +32,31 @@
       /* Classes for each of the various align-self values */
       .flex-start {
         background: lime;
-        width: -moz-max-content;
         float: left;
       }
       .flex-end {
         background: orange;
-        width: -moz-max-content;
         float: right;
+      }
+      <!-- We center shrinkwrapped text by putting it into an inline-block, and
+           then wrapping that inline-block in a helper-div that has
+           "text-align:center" set. -->
+      .centerParent {
+        text-align: center;
       }
       .center {
         background: lightblue;
-        width: -moz-max-content;
-        float: left;
+        display: inline-block;
+        text-align: left; /* Keep parent's centering from tweaking my text */
       }
       .baseline {
         background: teal;
-        width: -moz-max-content;
+        float: left;
       }
       .stretch {
         background: pink;
-        width: auto;
       }
+      .clearFloats { clear: both }
    </style>
   </head>
   <body>
@@ -61,31 +65,23 @@
       <div class="flex-start big">a b c d e f</div>
       <div class="flex-end">end</div>
       <div class="flex-end big">a b c d e f</div>
-      <div style="margin: auto; width: -moz-max-content">
+      <div class="clearFloats"></div>
+      <div class="centerParent">
         <div class="center">center</div>
       </div>
-      <div style="margin: auto; width: -moz-max-content">
+      <div class="centerParent">
         <div class="center big">a b c d e f</div>
       </div>
     </div>
-    <!-- NOTE: I'm not using floats in this flex container, since floating
-         makes it harder to emulate the "stretch" behavior.
-         (We need to use width: auto - not width:100% - because we need to
-         allow space for our margins/borders/padding. And width:auto doesn't do
-         what we want if we're floated.)
-
-         However, since our children aren't floated, their adjacent vertical
-         margins will collapse by default (which doesn't match what happens in
-         the testcase, since margins don't collapse in a flexbox).  So, we
-         compensate for that by bumping up the margin-top value on every
-         collapsed top-margin to "4px", which is the total amount of vertical
-         margin we're expecting between consecutive flex items in the testcase.
-         (4px = 3px margin-bottom + 1px margin-top)
-      -->
     <div class="flexbox">
       <div class="baseline">base</div>
-      <div class="baseline big" style="margin-top: 4px">abc</div>
-      <div class="stretch" style="margin-top: 4px">stretch</div>
+      <div class="baseline big">abc</div>
+      <div class="clearFloats"></div>
+      <div class="stretch">stretch</div>
+      <!-- Force a 3px + 1px = 4px margin between this and the previous div
+           (to thwart the effects of margin-collapsing). This is the only
+           place we need this hack, because everywhere else in this test
+           we use floats or inline-blocks, whose margins don't collapse. -->
       <div class="stretch big" style="margin-top: 4px">a b c d e f</div>
     </div>
   </body>

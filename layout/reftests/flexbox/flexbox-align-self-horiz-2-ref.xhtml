@@ -12,9 +12,10 @@
       .flexbox {
         border: 1px dashed blue;
         height: 200px;
-        width: -moz-fit-content;
+        display: inline-block;
         font-size: 10px;
         line-height: 10px;
+        vertical-align: top;
       }
 
       .flexbox > div {  float: left }
@@ -61,6 +62,7 @@
       <div class="center" style="top: 86px">center</div>
       <div class="center big" style="top: 41px">a b c d e f</div>
     </div>
+    <br/>
     <div class="flexbox">
       <!-- We use inline-blocks inside of a wrapper-block as references for the
            baseline-aligned flex items, since inline-blocks get
@@ -68,7 +70,7 @@
            manually here since the "flexbox > div" child-selector doesn't
            handle these guys (since they're grandchildren).
         -->
-      <div style="width: -moz-fit-content;">
+      <div>
         <div class="baseline"
              style="display: inline-block">base</div
        ><div class="baseline big"
