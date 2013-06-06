@@ -19,6 +19,7 @@ const ENVIRONMENT_CONTRACTID = "@mozilla.org/process/environment;1";
 const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
 
 CU.import("resource://gre/modules/Timer.jsm");
+CU.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
 
 var gBrowserIsRemote;
 var gHaveCanvasSnapshot = false;
@@ -251,12 +252,15 @@ const STATE_WAITING_TO_FIRE_INVALIDATE_EVENT = 0;
 // When reftest-wait has been removed from the root element, we can move to the
 // next state.
 const STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL = 1;
+// When spell checking is done on all spell-checked elements, we can move to the
+// next state.
+const STATE_WAITING_FOR_SPELL_CHECKS = 2;
 // When all MozAfterPaint events and all explicit paint waits are flushed, we're
 // done and can move to the COMPLETED state.
-const STATE_WAITING_TO_FINISH = 2;
-const STATE_COMPLETED = 3;
+const STATE_WAITING_TO_FINISH = 3;
+const STATE_COMPLETED = 4;
 
-function WaitForTestEnd(contentRootElement, inPrintMode) {
+function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
     var stopAfterPaintReceived = false;
     var currentDoc = content.document;
     var state = STATE_WAITING_TO_FIRE_INVALIDATE_EVENT;
@@ -398,6 +402,20 @@ function WaitForTestEnd(contentRootElement, inPrintMode) {
                 LogInfo("MakeProgress: waiting for reftest-wait to be removed");
                 return;
             }
+
+            // Try next state
+            state = STATE_WAITING_FOR_SPELL_CHECKS;
+            MakeProgress();
+            return;
+
+        case STATE_WAITING_FOR_SPELL_CHECKS:
+            LogInfo("MakeProgress: STATE_WAITING_FOR_SPELL_CHECKS");
+            if (numPendingSpellChecks) {
+                gFailureReason = "timed out waiting for spell checks to end";
+                LogInfo("MakeProgress: waiting for spell checks to end");
+                return;
+            }
+
             state = STATE_WAITING_TO_FINISH;
             if (!inPrintMode && doPrintMode(contentRootElement)) {
                 LogInfo("MakeProgress: setting up print mode");
@@ -450,6 +468,21 @@ function WaitForTestEnd(contentRootElement, inPrintMode) {
     gExplicitPendingPaintsCompleteHook = ExplicitPaintsCompleteListener;
     gTimeoutHook = RemoveListeners;
 
+    // Listen for spell checks on spell-checked elements.
+    var numPendingSpellChecks = spellCheckedElements.length;
+    function decNumPendingSpellChecks() {
+        --numPendingSpellChecks;
+        MakeProgress();
+    }
+    for (let editable of spellCheckedElements) {
+        try {
+            onSpellCheck(editable, decNumPendingSpellChecks);
+        } catch (err) {
+            // The element may not have an editor, so ignore it.
+            setTimeout(decNumPendingSpellChecks, 0);
+        }
+    }
+
     // Take a full snapshot now that all our listeners are set up. This
     // ensures it's impossible for us to miss updates between taking the snapshot
     // and adding our listeners.
@@ -476,6 +509,19 @@ function OnDocumentLoad(event)
         return;
     }
 
+    // Collect all editable, spell-checked elements.  It may be the case that
+    // not all the elements that match this selector will be spell checked: for
+    // example, a textarea without a spellcheck attribute may have a parent with
+    // spellcheck=false, or script may set spellcheck=false on an element whose
+    // markup sets it to true.  But that's OK since onSpellCheck detects the
+    // absence of spell checking, too.
+    var querySelector =
+        '*[class~="spell-checked"],' +
+        'textarea:not([spellcheck="false"]),' +
+        'input[spellcheck]:-moz-any([spellcheck=""],[spellcheck="true"]),' +
+        '*[contenteditable]:-moz-any([contenteditable=""],[contenteditable="true"])';
+    var spellCheckedElements = currentDoc.querySelectorAll(querySelector);
+
     var contentRootElement = currentDoc ? currentDoc.documentElement : null;
     currentDoc = null;
     setupZoom(contentRootElement);
@@ -501,7 +547,7 @@ function OnDocumentLoad(event)
             !painted) {
             LogInfo("AfterOnLoadScripts belatedly entering WaitForTestEnd");
             // Go into reftest-wait mode belatedly.
-            WaitForTestEnd(contentRootElement, inPrintMode);
+            WaitForTestEnd(contentRootElement, inPrintMode, []);
         } else {
             CheckForProcessCrashExpectation();
             RecordResult();
@@ -509,12 +555,13 @@ function OnDocumentLoad(event)
     }
 
     if (shouldWaitForReftestWaitRemoval(contentRootElement) ||
-        shouldWaitForExplicitPaintWaiters()) {
+        shouldWaitForExplicitPaintWaiters() ||
+        spellCheckedElements.length) {
         // Go into reftest-wait mode immediately after painting has been
         // unsuppressed, after the onload event has finished dispatching.
         gFailureReason = "timed out waiting for test to complete (trying to get into WaitForTestEnd)";
         LogInfo("OnDocumentLoad triggering WaitForTestEnd");
-        setTimeout(function () { WaitForTestEnd(contentRootElement, inPrintMode); }, 0);
+        setTimeout(function () { WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements); }, 0);
     } else {
         if (doPrintMode(contentRootElement)) {
             LogInfo("OnDocumentLoad setting up print mode");
