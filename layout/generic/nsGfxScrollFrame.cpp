@@ -1553,25 +1553,12 @@ nsGfxScrollFrameInner::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp 
   if (self->mAsyncScroll->mIsSmoothScroll) {
     if (!self->mAsyncScroll->IsFinished(aTime)) {
       nsPoint destination = self->mAsyncScroll->PositionAt(aTime);
-      nsPoint start = self->mAsyncScroll->mStartPos;
-      // Allow this scroll operation to land on any pixel boundary in the
-      // right direction (as well as anywhere in the final allowed range,
-      // since we don't want intermediate steps to be more constrained than the
-      // final step!).
-      static const int veryLargeDistance = nscoord_MAX/4;
-      nsRect unlimitedRange(0, 0, veryLargeDistance, veryLargeDistance);
-      if (destination.x < start.x) {
-        unlimitedRange.x = -veryLargeDistance;
-      } else if (destination.x == start.x) {
-        unlimitedRange.width = 0;
-      }
-      if (destination.y < start.y) {
-        unlimitedRange.y = -veryLargeDistance;
-      } else if (destination.y == start.y) {
-        unlimitedRange.height = 0;
-      }
-      self->ScrollToImpl(destination,
-                         (unlimitedRange + destination).UnionEdges(range));
+      // Allow this scroll operation to land on any pixel boundary between the
+      // current position and the final allowed range.  (We don't want
+      // intermediate steps to be more constrained than the final step!)
+      nsRect intermediateRange =
+        nsRect(self->GetScrollPosition(), nsSize()).UnionEdges(range);
+      self->ScrollToImpl(destination, intermediateRange);
       return;
     }
   }
