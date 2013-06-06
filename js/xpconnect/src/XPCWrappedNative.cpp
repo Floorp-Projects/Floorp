@@ -2206,20 +2206,16 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
     // set up the method index and do the security check if needed
 
-    uint32_t secFlag;
     uint32_t secAction;
 
     switch (mode) {
         case CALL_METHOD:
-            secFlag   = nsIXPCSecurityManager::HOOK_CALL_METHOD;
             secAction = nsIXPCSecurityManager::ACCESS_CALL_METHOD;
             break;
         case CALL_GETTER:
-            secFlag   = nsIXPCSecurityManager::HOOK_GET_PROPERTY;
             secAction = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
             break;
         case CALL_SETTER:
-            secFlag   = nsIXPCSecurityManager::HOOK_SET_PROPERTY;
             secAction = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
             break;
         default:
