@@ -119,6 +119,7 @@ var DebuggerServer = {
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
+  LONG_STRING_READ_LENGTH: 1000,
 
   /**
    * A handler function that prompts the user to accept or decline the incoming
@@ -609,6 +610,13 @@ ActorPool.prototype = {
   },
 
   /**
+   * Match the api expected by the protocol library.
+   */
+  unmanage: function(aActor) {
+    return this.removeActor(aActor);
+  },
+
+  /**
    * Run all actor cleanups.
    */
   cleanup: function AP_cleanup() {
@@ -703,6 +711,13 @@ DebuggerServerConnection.prototype = {
   },
 
   /**
+   * Match the api expected by the protocol library.
+   */
+  unmanage: function(aActor) {
+    return this.removeActor(aActor);
+  },
+
+  /**
    * Look up an actor implementation for an actorID.  Will search
    * all the actor pools registered with the connection.
    *
@@ -710,20 +725,28 @@ DebuggerServerConnection.prototype = {
    *        Actor ID to look up.
    */
   getActor: function DSC_getActor(aActorID) {
-    if (this._actorPool.has(aActorID)) {
-      return this._actorPool.get(aActorID);
-    }
-
-    for each (let pool in this._extraPools) {
-      if (pool.has(aActorID)) {
-        return pool.get(aActorID);
-      }
+    let pool = this.poolFor(aActorID);
+    if (pool) {
+      return pool.get(aActorID);
     }
 
     if (aActorID === "root") {
       return this.rootActor;
     }
 
+    return null;
+  },
+
+  poolFor: function DSC_actorPool(aActorID) {
+    if (this._actorPool && this._actorPool.has(aActorID)) {
+      return this._actorPool;
+    }
+
+    for (let pool of this._extraPools) {
+      if (pool.has(aActorID)) {
+        return pool;
+      }
+    }
     return null;
   },
 
@@ -777,11 +800,14 @@ DebuggerServerConnection.prototype = {
     // Dispatch the request to the actor.
     if (actor.requestTypes && actor.requestTypes[aPacket.type]) {
       try {
-        ret = actor.requestTypes[aPacket.type].bind(actor)(aPacket);
+        this.currentPacket = aPacket;
+        ret = actor.requestTypes[aPacket.type].bind(actor)(aPacket, this);
       } catch(e) {
         this.transport.send(this._unknownError(
           "error occurred while processing '" + aPacket.type,
           e));
+      } finally {
+        delete this.currentPacket;
       }
     } else {
       ret = { error: "unrecognizedPacketType",
