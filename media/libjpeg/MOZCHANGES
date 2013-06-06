@@ -58,6 +58,10 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
     $ hg addremove
 
+== June 4, 2013 (libjpeg-turbo v1.3.0 r988 2013-05-25) ==
+
+* Updated to v1.3.0 release.
+
 == December 12, 2012 ==
 
 * Replace the runtime computed jpeg_nbits_table with constants in
