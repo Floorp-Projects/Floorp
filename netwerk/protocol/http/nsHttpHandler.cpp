@@ -181,7 +181,6 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyV2(true)
     , mSpdyV3(true)
     , mCoalesceSpdy(true)
-    , mUseAlternateProtocol(false)
     , mSpdyPersistentSettings(false)
     , mAllowSpdyPush(true)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
@@ -1115,13 +1114,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.coalesce-hostnames"), &cVar);
         if (NS_SUCCEEDED(rv))
             mCoalesceSpdy = cVar;
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("spdy.use-alternate-protocol"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.use-alternate-protocol"),
-                                &cVar);
-        if (NS_SUCCEEDED(rv))
-            mUseAlternateProtocol = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.persistent-settings"))) {
