@@ -68,10 +68,6 @@
         background: violet;
         align-self: inherit;
       }
-      .hack {
-        display: inline-block;
-        width: 100px;
-      }
    </style>
   </head>
   <body>
@@ -87,14 +83,7 @@
       <div class="stretch">stretch</div>
       <div class="stretch big">a b c d e f</div>
       <div class="auto">auto</div>
-      <!-- This particular text ("unspec") appears to trigger a slight
-           difference in behavior between the testcase's & reference case's
-           centering techniques - the "s" ends up being shifted by ~1px.
-           (Probably because the length of the text is a fractional amount of
-           pixels, or something like that.) To hack around that, we add a
-           fixed-width wrapper-div - we should be able to center _that_
-           consistently. -->
-      <div class="unspecified"><div class="hack">unspec</div></div>
+      <div class="unspecified">unspec</div>
       <div class="initial">initial</div>
       <div class="inherit">inherit</div>
     </div>
