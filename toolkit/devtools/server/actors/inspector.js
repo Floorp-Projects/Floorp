@@ -111,8 +111,11 @@ var NodeActor = protocol.ActorClass({
 
   // Returns the JSON representation of this object over the wire.
   form: function(detail) {
+    let parentNode = this.walker.parentNode(this);
+
     let form = {
       actor: this.actorID,
+      parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
       namespaceURI: this.namespaceURI,
       nodeName: this.rawNode.nodeName,
@@ -264,6 +267,25 @@ let NodeFront = protocol.FrontClass(NodeActor, {
 });
 
 /**
+ * Returned from any call that might return a node that isn't connected to root by
+ * nodes the child has seen, such as querySelector.
+ */
+types.addDictType("disconnectedNode", {
+  // The actual node to return
+  node: "domnode",
+
+  // Nodes that are needed to connect the node to a node the client has already seen
+  newNodes: "array:domnode"
+});
+
+types.addDictType("disconnectedNodeArray", {
+  // The actual node list to return
+  nodes: "array:domnode",
+
+  // Nodes that are needed to connect those nodes to the root.
+  newNodes: "array:domnode"
+});
+/**
  * Server side of a node list as returned by querySelectorAll()
  */
 var NodeListActor = exports.NodeListActor = protocol.ActorClass({
@@ -306,24 +328,36 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClass({
    * Get a single node from the node list.
    */
   item: method(function(index) {
-    return this.walker._ref(this.nodeList[index]);
+    let node = this.walker._ref(this.nodeList[index]);
+    let newNodes = [node for (node of this.walker.ensurePathToRoot(node))];
+    return {
+      node: node,
+      newNodes: newNodes
+    }
   }, {
     request: { item: Arg(0) },
-    response: { node: RetVal("domnode") }
+    response: RetVal("disconnectedNode")
   }),
 
   /**
    * Get a range of the items from the node list.
    */
   items: method(function(start=0, end=this.nodeList.length) {
-    return [this.walker._ref(item)
-            for (item of Array.prototype.slice.call(this.nodeList, start, end))];
+    let items = [this.walker._ref(item) for (item of Array.prototype.slice.call(this.nodeList, start, end))];
+    let newNodes = new Set();
+    for (let item of items) {
+      this.walker.ensurePathToRoot(item, newNodes);
+    }
+    return {
+      nodes: items,
+      newNodes: [node for (node of newNodes)]
+    }
   }, {
     request: {
       start: Arg(0, "number", { optional: true }),
       end: Arg(1, "number", { optional: true })
     },
-    response: { nodes: RetVal("array:domnode") }
+    response: { nodes: RetVal("disconnectedNodeArray") }
   }),
 
   release: method(function() {}, { release: true })
@@ -348,7 +382,23 @@ var NodeListFront = exports.NodeLIstFront = protocol.FrontClass(NodeListActor, {
   // Update the object given a form representation off the wire.
   form: function(json) {
     this.length = json.length;
-  }
+  },
+
+  item: protocol.custom(function(index) {
+    return this._item(index).then(response => {
+      return response.node;
+    });
+  }, {
+    impl: "_item"
+  }),
+
+  items: protocol.custom(function(start, end) {
+    return this._items(start, end).then(response => {
+      return response.nodes;
+    });
+  }, {
+    impl: "_items"
+  })
 });
 
 // Some common request/response templates for the dom walker
@@ -389,16 +439,20 @@ var WalkerActor = protocol.ActorClass({
    */
   initialize: function(conn, document, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
-
     this._doc = document;
     this._refMap = new Map();
+
+    // Ensure that the root document node actor is ready and
+    // managed.
+    this.rootNode = this.document();
+    this.manage(this.rootNode);
   },
 
   // Returns the JSON representation of this object over the wire.
   form: function() {
     return {
       actor: this.actorID,
-      root: this.document().form()
+      root: this.rootNode.form()
     }
   },
 
@@ -486,6 +540,38 @@ var WalkerActor = protocol.ActorClass({
       nodes: RetVal("array:domnode")
     },
   }),
+
+  parentNode: function(node) {
+    let walker = documentWalker(node.rawNode);
+    let parent = walker.parentNode();
+    if (parent) {
+      return this._ref(parent);
+    }
+    return null;
+  },
+
+  /**
+   * Add any nodes between `node` and the walker's root node that have not
+   * yet been seen by the client.
+   */
+  ensurePathToRoot: function(node, newParents=new Set()) {
+    if (!node) {
+      return newParents;
+    }
+    let walker = documentWalker(node.rawNode);
+    let cur;
+    while ((cur = walker.parentNode())) {
+      let parent = this._refMap.get(cur);
+      if (!parent) {
+        // This parent didn't exist, so hasn't been seen by the client yet.
+        newParents.add(this._ref(cur));
+      } else {
+        // This parent did exist, so the client knows about it.
+        return newParents;
+      }
+    }
+    return newParents;
+  },
 
   /**
    * Return children of the given node.  By default this method will return
@@ -690,15 +776,24 @@ var WalkerActor = protocol.ActorClass({
    */
   querySelector: method(function(baseNode, selector) {
     let node = baseNode.rawNode.querySelector(selector);
-    return node ? this._ref(node) : null;
+
+    if (!node) {
+      return {
+      }
+    };
+
+    let node = this._ref(node);
+    let newParents = this.ensurePathToRoot(node);
+    return {
+      node: node,
+      newNodes: [parent for (parent of newParents)]
+    }
   }, {
     request: {
       node: Arg(0, "domnode"),
       selector: Arg(1)
     },
-    response: {
-      node: RetVal("domnode", { optional: true })
-    }
+    response: RetVal("disconnectedNode")
   }),
 
   /**
@@ -738,6 +833,14 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     this.actorID = json.actorID;
     this.rootNode = types.getType("domnode").read(json.root, this);
   },
+
+  querySelector: protocol.custom(function(queryNode, selector) {
+    return this._querySelector(queryNode, selector).then(response => {
+      return response.node;
+    });
+  }, {
+    impl: "_querySelector"
+  }),
 
   // XXX hack during transition to remote inspector: get a proper NodeFront
   // for a given local node.  Only works locally.
