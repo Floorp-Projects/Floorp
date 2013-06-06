@@ -211,20 +211,7 @@ class XDRState {
     bool codeFunction(JS::MutableHandleObject objp);
     bool codeScript(MutableHandleScript scriptp);
 
-    void initScriptPrincipals(JSScript *script) {
-        JS_ASSERT(mode == XDR_DECODE);
-
-        /* The origin principals must be normalized at this point. */
-        JS_ASSERT_IF(principals, originPrincipals);
-        JS_ASSERT(!script->originPrincipals);
-        if (principals)
-            JS_ASSERT(script->principals() == principals);
-
-        if (originPrincipals) {
-            script->originPrincipals = originPrincipals;
-            JS_HoldPrincipals(originPrincipals);
-        }
-    }
+    void initScriptPrincipals(JSScript *script);
 };
 
 class XDREncoder : public XDRState<XDR_ENCODE> {

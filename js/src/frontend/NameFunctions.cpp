@@ -8,9 +8,12 @@
 
 #include "jsfun.h"
 #include "jsprf.h"
+
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
+
+#include "jsfuninlines.h"
 
 #include "vm/String-inl.h"
 #include "vm/StringBuffer.h"

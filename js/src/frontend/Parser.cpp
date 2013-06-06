@@ -48,6 +48,7 @@
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"

@@ -42,9 +42,9 @@
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jsinferinlines.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
+
 #include "builtin/Iterator-inl.h"
 #include "ion/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"

@@ -20,6 +20,8 @@
 
 #include "jsgcinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
+
 namespace js {
 
 inline void
@@ -86,14 +88,6 @@ NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKi
 }
 
 inline void
-NewObjectCache::fillProto(EntryIndex entry, Class *clasp, js::TaggedProto proto, gc::AllocKind kind, JSObject *obj)
-{
-    JS_ASSERT_IF(proto.isObject(), !proto.toObject()->isGlobal());
-    JS_ASSERT(obj->getTaggedProto() == proto);
-    return fill(entry, clasp, proto.raw(), kind, obj);
-}
-
-inline void
 NewObjectCache::fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj)
 {
     //JS_ASSERT(global == obj->getGlobal());
@@ -105,6 +99,16 @@ NewObjectCache::fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *
 {
     JS_ASSERT(obj->type() == type);
     return fill(entry, clasp, type, kind, obj);
+}
+
+inline void
+NewObjectCache::copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind)
+{
+    js_memcpy(dst, src, gc::Arena::thingSize(kind));
+#ifdef JSGC_GENERATIONAL
+    Shape::writeBarrierPost(dst->shape_, &dst->shape_);
+    types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
+#endif
 }
 
 inline JSObject *
@@ -248,15 +252,8 @@ class CompartmentChecker
             check(script->compartment());
     }
 
-    void check(StackFrame *fp) {
-        if (fp)
-            check(fp->scopeChain());
-    }
-
-    void check(AbstractFramePtr frame) {
-        if (frame)
-            check(frame.scopeChain());
-    }
+    void check(StackFrame *fp);
+    void check(AbstractFramePtr frame);
 };
 #endif /* JS_CRASH_DIAGNOSTICS */
 
@@ -465,18 +462,6 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
 
 }  /* namespace js */
 
-inline JSVersion
-JSContext::findVersion() const
-{
-    if (hasVersionOverride)
-        return versionOverride;
-
-    if (JSScript *script = stack.currentScript(NULL, js::ContextStack::ALLOW_CROSS_COMPARTMENT))
-        return script->getVersion();
-
-    return defaultVersion;
-}
-
 inline bool
 JSContext::canSetDefaultVersion() const
 {
@@ -587,20 +572,6 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
 
     if (throwing)
         wrapPendingException();
-}
-
-inline JS::Zone *
-JSContext::zone() const
-{
-    JS_ASSERT_IF(!compartment(), !zone_);
-    JS_ASSERT_IF(compartment(), compartment()->zone() == zone_);
-    return zone_;
-}
-
-inline void
-JSContext::updateMallocCounter(size_t nbytes)
-{
-    runtime()->updateMallocCounter(zone(), nbytes);
 }
 
 inline void
