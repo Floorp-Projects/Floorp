@@ -22,24 +22,40 @@ if (!DebuggerServer.initialized) {
   });
 }
 
+var gAttachCleanups = [];
+
+SimpleTest.registerCleanupFunction(function() {
+  for (let cleanup of gAttachCleanups) {
+    cleanup();
+  }
+});
+
 /**
  * Open a tab, load the url, wait for it to signal its readiness,
  * find the tab with the debugger server, and call the callback.
+ *
+ * Returns a function which can be called to close the opened ta
+ * and disconnect its debugger client.
  */
 function attachURL(url, callback) {
   var win = window.open(url, "_blank");
+  var client = null;
 
-  SimpleTest.registerCleanupFunction(function() {
-    win.close();
-  });
+  let cleanup = () => {
+    if (client) {
+      client.close();
+      client = null;
+    }
+    if (win) {
+      win.close();
+      win = null;
+    }
+  };
+  gAttachCleanups.push(cleanup);
 
   window.addEventListener("message", function loadListener(event) {
     if (event.data === "ready") {
-      let client = new DebuggerClient(DebuggerServer.connectPipe());
-      SimpleTest.registerCleanupFunction(function() {
-        client.close();
-      });
-
+      client = new DebuggerClient(DebuggerServer.connectPipe());
       client.connect((applicationType, traits) => {
         client.listTabs(response => {
           for (let tab of response.tabs) {
@@ -58,6 +74,8 @@ function attachURL(url, callback) {
       });
     }
   }, false);
+
+  return cleanup;
 }
 
 function sortOwnershipChildren(children) {
@@ -90,7 +108,10 @@ function serverOwnershipTree(walker) {
   let serverConnection = walker.conn._transport._serverConnection;
   let serverWalker = serverConnection.getActor(walker.actorID);
 
-  return serverOwnershipSubtree(serverWalker, serverWalker.rootDoc)
+  return {
+    root: serverOwnershipSubtree(serverWalker, serverWalker.rootDoc ),
+    orphaned: [serverOwnershipSubtree(serverWalker, o.rawNode) for (o of serverWalker._orphaned)]
+  };
 }
 
 function clientOwnershipSubtree(node) {
@@ -101,7 +122,10 @@ function clientOwnershipSubtree(node) {
 }
 
 function clientOwnershipTree(walker) {
-  return clientOwnershipSubtree(walker.rootNode);
+  return {
+    root: clientOwnershipSubtree(walker.rootNode),
+    orphaned: [clientOwnershipSubtree(o) for (o of walker._orphaned)]
+  }
 }
 
 function ownershipTreeSize(tree) {
@@ -117,7 +141,7 @@ function assertOwnershipTrees(walker) {
   let clientTree = clientOwnershipTree(walker);
   is(JSON.stringify(clientTree, null, ' '), JSON.stringify(serverTree, null, ' '), "Server and client ownership trees should match.");
 
-  return ownershipTreeSize(clientTree);
+  return ownershipTreeSize(clientTree.root);
 }
 
 // Verify that an actorID is inaccessible both from the client library and the server.
