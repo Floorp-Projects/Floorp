@@ -50,6 +50,58 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
                         "initSpecialConnection");
 
+var gRegisteredModules = Object.create(null);
+
+/**
+ * The ModuleAPI object is passed to modules loaded using the
+ * DebuggerServer.registerModule() API.  Modules can use this
+ * object to register actor factories.
+ * Factories registered through the module API will be removed
+ * when the module is unregistered or when the server is
+ * destroyed.
+ */
+function ModuleAPI() {
+  let activeTabActors = new Set();
+  let activeGlobalActors = new Set();
+
+  return {
+    // See DebuggerServer.addGlobalActor for a description.
+    addGlobalActor: function(factory, name) {
+      DebuggerServer.addGlobalActor(factory, name);
+      activeGlobalActors.add(factory);
+    },
+    // See DebuggerServer.removeGlobalActor for a description.
+    removeGlobalActor: function(factory) {
+      DebuggerServer.removeGlobalActor(factory);
+      activeGlobalActors.delete(factory);
+    },
+
+    // See DebuggerServer.addTabActor for a description.
+    addTabActor: function(factory, name) {
+      DebuggerServer.addTabActor(factory, name);
+      activeTabActors.add(factory);
+    },
+    // See DebuggerServer.removeTabActor for a description.
+    removeTabActor: function(factory) {
+      DebuggerServer.removeTabActor(factory);
+      activeTabActors.delete(factory);
+    },
+
+    // Destroy the module API object, unregistering any
+    // factories registered by the module.
+    destroy: function() {
+      for (let factory of activeTabActors) {
+        DebuggerServer.removeTabActor(factory);
+      }
+      activeTabActors = null;
+      for (let factory of activeGlobalActors) {
+        DebuggerServer.removeGlobalActor(factory);
+      }
+      activeGlobalActors = null;
+    }
+  }
+};
+
 /***
  * Public API
  */
@@ -159,6 +211,13 @@ var DebuggerServer = {
     for (let connID of Object.getOwnPropertyNames(this._connections)) {
       this._connections[connID].close();
     }
+
+    for (let id of Object.getOwnPropertyNames(gRegisteredModules)) {
+      let mod = gRegisteredModules[id];
+      mod.module.unregister(mod.api);
+    }
+    gRegisteredModules = {};
+
     this.closeListener();
     this.globalActorFactories = {};
     this.tabActorFactories = {};
@@ -178,6 +237,45 @@ var DebuggerServer = {
    */
   addActors: function DS_addActors(aURL) {
     loadSubScript.call(this, aURL);
+  },
+
+  /**
+   * Register a CommonJS module with the debugger server.
+   * @param id string
+   *    The ID of a CommonJS module.  This module must export
+   *    'register' and 'unregister' functions.
+   */
+  registerModule: function(id) {
+    if (id in gRegisteredModules) {
+      throw new Error("Tried to register a module twice: " + id + "\n");
+    }
+
+    let moduleAPI = ModuleAPI();
+
+    let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    let mod = devtools.require(id);
+    mod.register(moduleAPI);
+    gRegisteredModules[id] = { module: mod, api: moduleAPI };
+  },
+
+  /**
+   * Returns true if a module id has been registered.
+   */
+  isModuleRegistered: function(id) {
+    return (id in gRegisteredModules);
+  },
+
+  /**
+   * Unregister a previously-loaded CommonJS module from the debugger server.
+   */
+  unregisterModule: function(id) {
+    let mod = gRegisteredModules[id];
+    if (!mod) {
+      throw new Error("Tried to unregister a module that was not previously registered.");
+    }
+    mod.module.unregister(mod.api);
+    mod.api.destroy();
+    delete gRegisteredModules[id];
   },
 
   /**
