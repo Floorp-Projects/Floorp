@@ -18,9 +18,10 @@ Cu.import("resource://gre/modules/NetworkStatsDB.jsm");
 const NET_NETWORKSTATSSERVICE_CONTRACTID = "@mozilla.org/network/netstatsservice;1";
 const NET_NETWORKSTATSSERVICE_CID = Components.ID("{18725604-e9ac-488a-8aa0-2471e7f6c0a4}");
 
-const TOPIC_INTERFACE_REGISTERED = "network-interface-registered";
-const NETWORK_TYPE_WIFI = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
-const NETWORK_TYPE_MOBILE = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
+const TOPIC_INTERFACE_REGISTERED   = "network-interface-registered";
+const TOPIC_INTERFACE_UNREGISTERED = "network-interface-unregistered";
+const NET_TYPE_WIFI = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
+const NET_TYPE_MOBILE = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
                                    "@mozilla.org/dom/indexeddb/manager;1",
@@ -44,13 +45,17 @@ this.NetworkStatsService = {
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     Services.obs.addObserver(this, TOPIC_INTERFACE_REGISTERED, false);
+    Services.obs.addObserver(this, TOPIC_INTERFACE_UNREGISTERED, false);
     Services.obs.addObserver(this, "profile-after-change", false);
 
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     this._connectionTypes = Object.create(null);
-    this._connectionTypes[NETWORK_TYPE_WIFI] = "wifi";
-    this._connectionTypes[NETWORK_TYPE_MOBILE] = "mobile";
+    this._connectionTypes[NET_TYPE_WIFI] = { name: "wifi",
+                                             network: Object.create(null) };
+    this._connectionTypes[NET_TYPE_MOBILE] = { name: "mobile",
+                                               network: Object.create(null) };
+
 
     this.messages = ["NetworkStats:Get",
                      "NetworkStats:Clear",
@@ -95,7 +100,7 @@ this.NetworkStatsService = {
         // This message is sync.
         let types = [];
         for (let i in this._connectionTypes) {
-          types.push(this._connectionTypes[i]);
+          types.push(this._connectionTypes[i].name);
         }
         return types;
       case "NetworkStats:SampleRate":
@@ -110,14 +115,18 @@ this.NetworkStatsService = {
   observe: function observe(subject, topic, data) {
     switch (topic) {
       case TOPIC_INTERFACE_REGISTERED:
+      case TOPIC_INTERFACE_UNREGISTERED:
         // If new interface is registered (notified from NetworkManager),
         // the stats are updated for the new interface without waiting to
         // complete the updating period
         let network = subject.QueryInterface(Ci.nsINetworkInterface);
         if (DEBUG) {
-          debug("Network " + network.name + " of type " + network.type + " registered");
+          debug("Network " + network.name + " of type " + network.type + " status change");
         }
-        this.updateStats(network.type);
+        if (this._connectionTypes[network.type]) {
+          this._connectionTypes[network.type].network = network;
+          this.updateStats(network.type);
+        }
         break;
       case "xpcom-shutdown":
         if (DEBUG) {
@@ -130,6 +139,9 @@ this.NetworkStatsService = {
 
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, "profile-after-change");
+        Services.obs.removeObserver(this, TOPIC_INTERFACE_REGISTERED);
+        Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
+
         this.timer.cancel();
         this.timer = null;
 
@@ -172,7 +184,7 @@ this.NetworkStatsService = {
       }
 
       for (let i in this._connectionTypes) {
-        if (this._connectionTypes[i] == options.connectionType) {
+        if (this._connectionTypes[i].name == options.connectionType) {
           this._db.find(function onStatsFound(error, result) {
             mm.sendAsyncMessage("NetworkStats:Get:Return",
                                 { id: msg.id, error: error, result: result });
@@ -308,10 +320,6 @@ this.NetworkStatsService = {
   },
 
   update: function update(connectionType, callback) {
-    if (DEBUG) {
-      debug("Update stats for " + this._connectionTypes[connectionType]);
-    }
-
     // Check if connection type is valid.
     if (!this._connectionTypes[connectionType]) {
       if (callback) {
@@ -320,25 +328,27 @@ this.NetworkStatsService = {
       return;
     }
 
+    if (DEBUG) {
+      debug("Update stats for " + this._connectionTypes[connectionType].name);
+    }
+
     // Request stats to NetworkManager, which will get stats from netd, passing
     // 'networkStatsAvailable' as a callback.
-    if (!networkManager.getNetworkInterfaceStats(connectionType,
-                                                 this.networkStatsAvailable
-                                                     .bind(this, callback))) {
-      if (DEBUG) {
-        debug("There is no interface registered for network type " +
-              this._connectionTypes[connectionType]);
-      }
-
-      // Interface is not registered (up), so nothing to do.
-      callback(true, "OK");
+    let networkName = this._connectionTypes[connectionType].network.name;
+    if (networkName) {
+      networkManager.getNetworkInterfaceStats(networkName,
+                this.networkStatsAvailable.bind(this, callback, connectionType));
+      return;
+    }
+    if (callback) {
+      callback(true, "ok");
     }
   },
 
   /*
    * Callback of request stats. Store stats in database.
    */
-  networkStatsAvailable: function networkStatsAvailable(callback, result, connType, rxBytes, txBytes, date) {
+  networkStatsAvailable: function networkStatsAvailable(callback, connType, result, rxBytes, txBytes, date) {
     if (!result) {
       if (callback) {
         callback(false, "Netd IPC error");
@@ -346,7 +356,7 @@ this.NetworkStatsService = {
       return;
     }
 
-    let stats = { connectionType: this._connectionTypes[connType],
+    let stats = { connectionType: this._connectionTypes[connType].name,
                   date:           date,
                   rxBytes:        txBytes,
                   txBytes:        rxBytes};
