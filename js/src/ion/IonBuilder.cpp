@@ -5254,13 +5254,15 @@ IonBuilder::jsop_initelem_array()
 }
 
 static bool
-CanEffectlesslyCallLookupGenericOnObject(JSObject *obj)
+CanEffectlesslyCallLookupGenericOnObject(JSContext *cx, JSObject *obj, jsid id)
 {
     while (obj) {
         if (!obj->isNative())
             return false;
-        if (obj->getClass()->ops.lookupProperty)
+        if (obj->getClass()->ops.lookupGeneric)
             return false;
+        if (obj->nativeLookup(cx, id))
+            return true;
         if (obj->getClass()->resolve != JS_ResolveStub)
             return false;
         obj = obj->getProto();
@@ -5276,12 +5278,12 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
 
     RootedObject templateObject(cx, obj->toNewObject()->templateObject());
 
-    if (!CanEffectlesslyCallLookupGenericOnObject(templateObject))
-        return abort("INITPROP template object is special");
-
     RootedObject holder(cx);
     RootedShape shape(cx);
     RootedId id(cx, NameToId(name));
+    if (!CanEffectlesslyCallLookupGenericOnObject(cx, templateObject, id))
+        return abort("INITPROP template object is special");
+
     bool res = LookupPropertyWithFlags(cx, templateObject, id,
                                        0, &holder, &shape);
     if (!res)
@@ -5667,7 +5669,7 @@ TestSingletonProperty(JSContext *cx, HandleObject obj, JSObject *singleton,
     if (id != types::IdToTypeId(id))
         return true;
 
-    if (!CanEffectlesslyCallLookupGenericOnObject(obj))
+    if (!CanEffectlesslyCallLookupGenericOnObject(cx, obj, id))
         return true;
 
     RootedObject holder(cx);
@@ -7145,7 +7147,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
 
         // Turns out that we need to check for a property lookup op, else we
         // will end up calling it mid-compilation.
-        if (!CanEffectlesslyCallLookupGenericOnObject(curObj))
+        if (!CanEffectlesslyCallLookupGenericOnObject(cx, curObj, id))
             return true;
 
         RootedObject proto(cx);

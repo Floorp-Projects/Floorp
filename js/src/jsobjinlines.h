@@ -1096,6 +1096,10 @@ JSObject::hasShapeTable() const
 JSObject::lookupGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
                         js::MutableHandleObject objp, js::MutableHandleShape propp)
 {
+    /* NB: The logic of lookupGeneric is implicitly reflected in IonBuilder.cpp's
+     *     |CanEffectlesslyCallLookupGenericOnObject| logic.
+     *     If this changes, please remember to update the logic there as well.
+     */
     js::LookupGenericOp op = obj->getOps()->lookupGeneric;
     if (op)
         return op(cx, obj, id, objp, propp);
