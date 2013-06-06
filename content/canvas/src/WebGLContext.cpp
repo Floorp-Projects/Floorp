@@ -621,6 +621,7 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, uint32_t aFl
     if (surf->CairoStatus() != 0)
         return NS_ERROR_FAILURE;
 
+    gl->MakeCurrent();
     gl->ReadScreenIntoImageSurface(surf);
 
     bool srcPremultAlpha = mOptions.premultipliedAlpha;
