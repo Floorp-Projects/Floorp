@@ -32,10 +32,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451286
   <script class="testbody" type="application/javascript">
     <![CDATA[
 
-      // We trigger assertions that happen during the GC of our parent
-      // window.
-      SimpleTest.expectAssertions(0, 5); // bug 683159, bug 849394
-
       // To be called by the window we open.
       function parentFinish() {
         // This is called with JS code from the window we open on the
