@@ -46,11 +46,9 @@ SpdyInformation::SpdyInformation()
   // list the preferred version first
   Version[0] = SPDY_VERSION_3;
   VersionString[0] = NS_LITERAL_CSTRING("spdy/3");
-  AlternateProtocolString[0] = NS_LITERAL_CSTRING("443:npn-spdy/3");
 
   Version[1] = SPDY_VERSION_2;
   VersionString[1] = NS_LITERAL_CSTRING("spdy/2");
-  AlternateProtocolString[1] = NS_LITERAL_CSTRING("443:npn-spdy/2");
 }
 
 bool
@@ -76,27 +74,6 @@ SpdyInformation::GetNPNVersionIndex(const nsACString &npnString,
   if (npnString.Equals(VersionString[0]))
     *result = Version[0];
   else if (npnString.Equals(VersionString[1]))
-    *result = Version[1];
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-nsresult
-SpdyInformation::GetAlternateProtocolVersionIndex(const char *val,
-                                                  uint8_t *result)
-{
-  if (!val || !val[0])
-    return NS_ERROR_FAILURE;
-
-  if (ProtocolEnabled(0) && nsHttp::FindToken(val,
-                                              AlternateProtocolString[0].get(),
-                                              HTTP_HEADER_VALUE_SEPS))
-    *result = Version[0];
-  else if (ProtocolEnabled(1) && nsHttp::FindToken(val,
-                                                   AlternateProtocolString[1].get(),
-                                                   HTTP_HEADER_VALUE_SEPS))
     *result = Version[1];
   else
     return NS_ERROR_FAILURE;
