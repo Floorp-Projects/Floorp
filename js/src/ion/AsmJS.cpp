@@ -2572,7 +2572,14 @@ SkipUseAsmDirective(ModuleCompiler &m, ParseNode **stmtIter)
     if (StringAtom(expr) != m.cx()->names().useAsm)
         return m.fail(firstStatement, "\"use asm\" precludes other directives");
 
-    *stmtIter = NextNode(firstStatement);
+    *stmtIter = NextNonEmptyStatement(firstStatement);
+    if (*stmtIter
+        && IsExpressionStatement(*stmtIter)
+        && ExpressionStatementExpr(*stmtIter)->isKind(PNK_STRING))
+    {
+        return m.fail(*stmtIter, "\"use asm\" precludes other directives");
+    }
+
     return true;
 }
 
