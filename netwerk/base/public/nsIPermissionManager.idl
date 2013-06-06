@@ -55,7 +55,8 @@ interface nsIPermissionManager : nsISupports
   /**
    * Predefined expiration types for permissions.  Permissions can be permanent
    * (never expire), expire at the end of the session, or expire at a specified
-   * time.
+   * time. Permissions that expire at the end of a session may also have a
+   * specified expiration time.
    */
   const uint32_t EXPIRE_NEVER = 0;
   const uint32_t EXPIRE_SESSION = 1;
