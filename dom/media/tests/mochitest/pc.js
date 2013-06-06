@@ -295,118 +295,20 @@ var commandsPeerConnection = [
     }
   ],
   [
-    'PC_LOCAL_CHECK_MEDIA_STREAMS',
+    'PC_LOCAL_CHECK_MEDIA',
     function (test) {
-      test.pcLocal.checkMediaStreams(test.pcRemote.constraints);
+      test.pcLocal.checkMedia(test.pcRemote.constraints);
       test.next();
     }
   ],
   [
-    'PC_REMOTE_CHECK_MEDIA_STREAMS',
+    'PC_REMOTE_CHECK_MEDIA',
     function (test) {
-      test.pcRemote.checkMediaStreams(test.pcLocal.constraints);
+      test.pcRemote.checkMedia(test.pcLocal.constraints);
       test.next();
-    }
-  ],
-  [
-    'PC_LOCAL_CHECK_MEDIA_FLOW_PRESENT',
-    function (test) {
-      test.pcLocal.checkMediaFlowPresent(function () {
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT',
-    function (test) {
-      test.pcRemote.checkMediaFlowPresent(function () {
-        test.next();
-      });
     }
   ]
 ];
-
-/**
- * This class provides a state checker for media elements which store
- * a media stream to check for media attribute state and events fired.
- * When constructed by a caller, an object instance is created with
- * a media element, event state checkers for canplaythrough, timeupdate, and
- * time changing on the media element and stream.
- *
- * @param {HTMLMediaElement} element the media element being analyzed
- */
-function MediaElementChecker(element) {
-  this.element = element;
-  this.canPlayThroughFired = false;
-  this.timeUpdateFired = false;
-  this.timePassed = false;
-
-  var self = this;
-  var elementId = self.element.getAttribute('id');
-
-  // When canplaythrough fires, we track that it's fired and remove the
-  // event listener.
-  var canPlayThroughCallback = function() {
-    info('canplaythrough fired for media element ' + elementId);
-    self.canPlayThroughFired = true;
-    self.element.removeEventListener('canplaythrough', canPlayThroughCallback,
-                                     false);
-  };
-
-  // When timeupdate fires, we track that it's fired and check if time
-  // has passed on the media stream and media element.
-  var timeUpdateCallback = function() {
-    self.timeUpdateFired = true;
-    info('timeupdate fired for media element ' + elementId);
-
-    // If time has passed, then track that and remove the timeupdate event
-    // listener.
-    if(element.mozSrcObject && element.mozSrcObject.currentTime > 0 &&
-       element.currentTime > 0) {
-      info('time passed for media element ' + elementId);
-      self.timePassed = true;
-      self.element.removeEventListener('timeupdate', timeUpdateCallback,
-                                       false);
-    }
-  };
-
-  element.addEventListener('canplaythrough', canPlayThroughCallback, false);
-  element.addEventListener('timeupdate', timeUpdateCallback, false);
-}
-
-MediaElementChecker.prototype = {
-
-  /**
-   * Waits until the canplaythrough & timeupdate events to fire along with
-   * ensuring time has passed on the stream and media element.
-   *
-   * @param {Function} onSuccess the success callback when media flow is
-   *                             established
-   */
-  waitForMediaFlow : function MEC_WaitForMediaFlow(onSuccess) {
-    var self = this;
-    var elementId = self.element.getAttribute('id');
-    info('Analyzing element: ' + elementId);
-
-    if(self.canPlayThroughFired && self.timeUpdateFired && self.timePassed) {
-      ok(true, 'Media flowing for ' + elementId);
-      onSuccess();
-    } else {
-      setTimeout(function() {
-        self.waitForMediaFlow(onSuccess);
-      }, 100);
-    }
-  },
-
-  /**
-   * Checks if there is no media flow present by checking that the ready
-   * state of the media element is HAVE_METADATA.
-   */
-  checkForNoMediaFlow : function MEC_CheckForNoMediaFlow() {
-    ok(this.element.readyState === HTMLMediaElement.HAVE_METADATA,
-       'Media element has a ready state of HAVE_METADATA');
-  }
-};
 
 /**
  * This class handles tests for peer connections.
@@ -509,20 +411,14 @@ function PeerConnectionWrapper(label, configuration) {
   this.constraints = [ ];
   this.offerConstraints = {};
   this.streams = [ ];
-  this.mediaCheckers = [ ];
-
-  this.onaddstream = unexpectedEventAndFinish(this.label, 'onaddstream');
 
   info("Creating new PeerConnectionWrapper: " + this.label);
   this._pc = new mozRTCPeerConnection(this.configuration);
 
   var self = this;
   this._pc.onaddstream = function (event) {
-    info(this.label + ': onaddstream event fired');
-
-    self.onaddstream(event.stream);
-    self.onaddstream = unexpectedEventAndFinish(this.label,
-      'onaddstream');
+    // Bug 834835: Assume type is video until we get get{Audio,Video}Tracks.
+    self.attachMedia(event.stream, 'video', 'remote');
   };
 }
 
@@ -586,7 +482,6 @@ PeerConnectionWrapper.prototype = {
     }
 
     var element = createMediaElement(type, this._label + '_' + side);
-    this.mediaCheckers.push(new MediaElementChecker(element));
     element.mozSrcObject = stream;
     element.play();
   },
@@ -677,8 +572,7 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Sets the remote description on the peer connection object & waits
-   * for a resulting onaddstream callback to fire.
+   * Sets the remote description and automatically handles the failure case.
    *
    * @param {object} desc
    *        mozRTCSessionDescription for the remote description request
@@ -687,80 +581,25 @@ PeerConnectionWrapper.prototype = {
    */
   setRemoteDescription : function PCW_setRemoteDescription(desc, onSuccess) {
     var self = this;
-    var onAddStreamFired = false;
-    var setRemoteDescriptionFinished = false;
-
-    // Fires onSuccess when both onaddstream and setRemoteDescription
-    // have finished.
-    function isFinished() {
-      if(onAddStreamFired && setRemoteDescriptionFinished) {
-        onSuccess();
-      }
-    }
-
-    // Sets up the provided stream in a media element when onaddstream fires.
-    this.onaddstream = function(stream) {
-      // bug 834835: Assume type is video until we get media tracks
-      self.attachMedia(stream, 'video', 'remote');
-      onAddStreamFired = true;
-      isFinished();
-    };
-
     this._pc.setRemoteDescription(desc, function () {
       info("Successfully set remote description for " + self.label);
-      setRemoteDescriptionFinished = true;
-      isFinished();
+      onSuccess();
     }, unexpectedCallbackAndFinish(new Error));
   },
 
   /**
-   * Checks that we are getting the media streams we expect.
+   * Checks that we are getting the media we expect.
    *
    * @param {object} constraintsRemote
    *        The media constraints of the remote peer connection object
    */
-  checkMediaStreams : function PCW_checkMediaStreams(constraintsRemote) {
+  checkMedia : function PCW_checkMedia(constraintsRemote) {
     is(this._pc.localStreams.length, this.constraints.length,
        this.label + ' has ' + this.constraints.length + ' local streams');
 
     // TODO: change this when multiple incoming streams are allowed.
     is(this._pc.remoteStreams.length, 1,
        this.label + ' has ' + 1 + ' remote streams');
-  },
-
-  /**
-   * Check that media flow is present on all media elements involved in this
-   * test by waiting for confirmation that media flow is present.
-   *
-   * @param {Function} onSuccess the success callback when media flow
-   *                             is confirmed on all media elements
-   */
-  checkMediaFlowPresent : function PCW_checkMediaFlowPresent(onSuccess) {
-    var self = this;
-
-    function _checkMediaFlowPresent(index, onSuccess) {
-      if(index >= self.mediaCheckers.length) {
-        onSuccess();
-      } else {
-        var mediaChecker = self.mediaCheckers[index];
-        mediaChecker.waitForMediaFlow(function() {
-          _checkMediaFlowPresent(index + 1, onSuccess);
-        });
-      }
-    }
-
-    _checkMediaFlowPresent(0, onSuccess);
-  },
-
-  /**
-   * Checks that media flow is not present on all media elements involved in
-   * this test by ensuring that the ready state is either HAVE_NOTHING or
-   * HAVE_METADATA.
-   */
-  checkMediaFlowNotPresent : function PCW_checkMediaFlowNotPresent() {
-    for(var mediaChecker of this.mediaCheckers) {
-      mediaChecker.checkForNoMediaFlow();
-    }
   },
 
   /**
