@@ -4510,11 +4510,13 @@ class MLoadElement
 {
     bool needsHoleCheck_;
     bool loadDoubles_;
+    bool knownImmutable_; // load of data that is known to be immutable
 
-    MLoadElement(MDefinition *elements, MDefinition *index, bool needsHoleCheck, bool loadDoubles)
+    MLoadElement(MDefinition *elements, MDefinition *index, bool needsHoleCheck, bool loadDoubles, bool knownImmutable)
       : MBinaryInstruction(elements, index),
         needsHoleCheck_(needsHoleCheck),
-        loadDoubles_(loadDoubles)
+        loadDoubles_(loadDoubles),
+        knownImmutable_(knownImmutable)
     {
         setResultType(MIRType_Value);
         setMovable();
@@ -4526,8 +4528,10 @@ class MLoadElement
     INSTRUCTION_HEADER(LoadElement)
 
     static MLoadElement *New(MDefinition *elements, MDefinition *index,
-                             bool needsHoleCheck, bool loadDoubles) {
-        return new MLoadElement(elements, index, needsHoleCheck, loadDoubles);
+                             bool needsHoleCheck, bool loadDoubles,
+                             bool knownImmutable) {
+        return new MLoadElement(elements, index, needsHoleCheck, loadDoubles,
+                                knownImmutable);
     }
 
     TypePolicy *typePolicy() {
@@ -4549,6 +4553,9 @@ class MLoadElement
         return needsHoleCheck();
     }
     AliasSet getAliasSet() const {
+        if (knownImmutable_)
+            return AliasSet::None();
+
         return AliasSet::Load(AliasSet::Element);
     }
 };

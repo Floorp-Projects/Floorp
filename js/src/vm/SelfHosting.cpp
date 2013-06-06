@@ -341,15 +341,26 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
 /*
  * UnsafeSetElement(arr0, idx0, elem0, ..., arrN, idxN, elemN): For
  * each set of (arr, idx, elem) arguments that are passed, performs
- * the assignment |arr[idx] = elem|. |arr| must be either a dense array
+ * the assignment `arr[idx] = elem`. `arr` must be either a dense array
  * or a typed array.
  *
- * If |arr| is a dense array, the index must be an int32 less than the
- * initialized length of |arr|. Use |%EnsureDenseResultArrayElements|
- * to ensure that the initialized length is long enough.
+ * If `arr` is a dense array, the index must be an int32 less than the
+ * initialized length of `arr`. Use `NewDenseAllocatedArray` to ensure
+ * that the initialized length is long enough.
  *
- * If |arr| is a typed array, the index must be an int32 less than the
- * length of |arr|.
+ * If `arr` is a typed array, the index must be an int32 less than the
+ * length of `arr`.
+ *
+ * The reason that `UnsafeSetElement` takes multiple
+ * array/index/element triples is not for convenience but rather for
+ * semantic reasons: there are a few places in the parallel code where
+ * correctness relies on the fact that *all of the assignments occur
+ * or none of them*. This occurs in operations like reduce or fold
+ * which mutate the same data in place. That is, we do not want to
+ * bail out or interrupt in between the individual assignments. To
+ * convey this notion, we place all the assignments together into one
+ * `UnsafeSetElement` call. It is preferable to use multiple calls if
+ * it is not important that the assignments occur all-or-nothing.
  */
 JSBool
 js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
@@ -380,7 +391,6 @@ js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
         } else {
             JS_ASSERT(idx < TypedArray::length(arrobj));
             RootedValue tmp(cx, args[elemi]);
-            // XXX: Always non-strict.
             if (!JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false))
                 return false;
         }
@@ -388,6 +398,46 @@ js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().setUndefined();
     return true;
+}
+
+/*
+ * UnsafeGetElement(arr, idx)=elem:
+ *
+ * Loads an element from an array.  Requires that `arr` be a dense
+ * array and `idx` be in bounds.  In ion compiled code, no bounds
+ * check will be emitted.
+ */
+JSBool
+js::intrinsic_UnsafeGetElement(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    const uint32_t arri = 0;
+    const uint32_t idxi = 1;
+
+    JS_ASSERT(args[arri].isObject());
+    JS_ASSERT(args[idxi].isInt32());
+
+    RootedObject arrobj(cx, &args[arri].toObject());
+    uint32_t idx = args[idxi].toInt32();
+
+    JS_ASSERT(args[arri].toObject().isNative());
+    JS_ASSERT(idx < arrobj->getDenseInitializedLength());
+    args.rval().set(arrobj->getDenseElement(idx));
+    return true;
+}
+
+/*
+ * UnsafeGetImmutableElement(arr, idx)=elem:
+ *
+ * Same as `UnsafeGetElement(arr, idx)`, except that the array is
+ * known by the self-hosting code to be immutable. Therefore, ion
+ * compilation can reorder this load freely with respect to stores.
+ */
+JSBool
+js::intrinsic_UnsafeGetImmutableElement(JSContext *cx, unsigned argc, Value *vp)
+{
+    return intrinsic_UnsafeGetElement(cx, argc, vp);
 }
 
 /*
@@ -468,6 +518,8 @@ const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewParallelArray",     intrinsic_NewParallelArray,     3,0),
     JS_FN("NewDenseArray",        intrinsic_NewDenseArray,        1,0),
     JS_FN("UnsafeSetElement",     intrinsic_UnsafeSetElement,     3,0),
+    JS_FN("UnsafeGetElement",     intrinsic_UnsafeGetElement, 2,0),
+    JS_FN("UnsafeGetImmutableElement", intrinsic_UnsafeGetImmutableElement, 2,0),
     JS_FN("ShouldForceSequential", intrinsic_ShouldForceSequential, 0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
 
