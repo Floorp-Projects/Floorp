@@ -38,6 +38,7 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+#include "js/Date.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -46,8 +47,6 @@
 #include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
-
-#include "js/Date.h"
 
 using namespace js;
 using namespace js::types;

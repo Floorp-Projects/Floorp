@@ -422,7 +422,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     inline bool observesNewScript() const;
     inline bool observesNewGlobalObject() const;
     inline bool observesGlobal(GlobalObject *global) const;
-    inline bool observesFrame(AbstractFramePtr frame) const;
+    bool observesFrame(AbstractFramePtr frame) const;
     bool observesScript(JSScript *script) const;
 
     /*

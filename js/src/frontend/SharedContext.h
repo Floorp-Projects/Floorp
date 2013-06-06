@@ -184,9 +184,9 @@ class GlobalSharedContext : public SharedContext
     JSObject *scopeChain() const { return scopeChain_; }
 };
 
-
-class ModuleBox : public ObjectBox, public SharedContext {
-public:
+class ModuleBox : public ObjectBox, public SharedContext
+{
+  public:
     Bindings bindings;
 
     ModuleBox(JSContext *cx, ObjectBox *traceListHead, Module *module,

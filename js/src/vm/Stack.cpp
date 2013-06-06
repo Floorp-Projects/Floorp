@@ -4,22 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "vm/Stack.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
 #include "jsopcode.h"
+
 #include "gc/Marking.h"
 #ifdef JS_ION
 #include "ion/BaselineFrame.h"
 #include "ion/IonFrames.h"
 #include "ion/IonCompartment.h"
 #endif
-#include "vm/Stack.h"
 #include "vm/ForkJoin.h"
 
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
+
 #include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/Probes-inl.h"
@@ -1824,6 +1826,19 @@ AbstractFramePtr::evalPrevScopeChain(JSContext *cx) const
         ++iter;
     ++iter;
     return iter.scopeChain();
+}
+
+bool
+AbstractFramePtr::hasPushedSPSFrame() const
+{
+    if (isStackFrame())
+        return asStackFrame()->hasPushedSPSFrame();
+#ifdef JS_ION
+    return asBaselineFrame()->hasPushedSPSFrame();
+#else
+    JS_NOT_REACHED("Invalid frame");
+    return false;
+#endif
 }
 
 #ifdef DEBUG

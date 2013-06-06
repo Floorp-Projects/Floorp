@@ -11,7 +11,6 @@
 #include "ion/AsmJS.h"
 #include "ion/AsmJSModule.h"
 
-#include "jsobjinlines.h"
 #include "frontend/ParseNode-inl.h"
 
 using namespace js;
