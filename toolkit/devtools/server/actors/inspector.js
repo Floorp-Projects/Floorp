@@ -25,11 +25,20 @@
  *   - Given a node, you can ask for children, siblings, and parents.
  *   - You can issue querySelector and querySelectorAll requests to find
  *     other elements.
+ *   - Requests that return arbitrary nodes from the tree (like querySelector
+ *     and querySelectorAll) will also return any nodes the client hasn't
+ *     seen in order to have a complete set of parents.
  *
  * Once you have a NodeFront, you should be able to answer a few questions
  * without further round trips, like the node's name, namespace/tagName,
  * attributes, etc.  Other questions (like a text node's full nodeValue)
  * might require another round trip.
+ *
+ * The protocol guarantees that the client will always know the parent of
+ * any node that is returned by the server.  This means that some requests
+ * (like querySelector) will include the extra nodes needed to satisfy this
+ * requirement.  The client keeps track of this parent relationship, so the
+ * node fronts form a tree that is a subset of the actual DOM tree.
  */
 
 const {Cc, Ci, Cu} = require("chrome");
@@ -176,17 +185,50 @@ var NodeActor = protocol.ActorClass({
 
 /**
  * Client side of the node actor.
+ *
+ * Node fronts are strored in a tree that mirrors the DOM tree on the
+ * server, but with a few key differences:
+ *  - Not all children will be necessary loaded for each node.
+ *  - The order of children isn't guaranteed to be the same as the DOM.
+ * Children are stored in a doubly-linked list, to make addition/removal
+ * and traversal quick.
+ *
+ * Due to the order/incompleteness of the child list, it is safe to use
+ * the parent node from clients, but the `children` request should be used
+ * to traverse children.
  */
 let NodeFront = protocol.FrontClass(NodeActor, {
-  initialize: function(conn, form) {
-    protocol.Front.prototype.initialize.call(this, conn, form);
+  initialize: function(conn, form, detail, ctx) {
+    this._parent = null; // The parent node
+    this._child = null;  // The first child of this node.
+    this._next = null;   // The next sibling of this node.
+    this._prev = null;   // The previous sibling of this node.
+    protocol.Front.prototype.initialize.call(this, conn, form, detail, ctx);
+  },
+
+  destroy: function() {
+    // Disconnect this item and from the ownership tree and destroy
+    // all of its children.
+    this.reparent(null);
+    for (let child of this.treeChildren()) {
+      child.destroy();
+    }
+    protocol.Front.prototype.destroy.call(this);
   },
 
   // Update the object given a form representation off the wire.
-  form: function(form) {
+  form: function(form, detail, ctx) {
     // Shallow copy of the form.  We could just store a reference, but
     // eventually we'll want to update some of the data.
     this._form = object.merge(form);
+
+    if (form.parent) {
+      // Get the owner actor for this actor (the walker), and find the
+      // parent node of this actor from it, creating a standin node if
+      // necessary.
+      let parentNodeFront = ctx.marshallPool().ensureParentFront(form.parent);
+      this.reparent(parentNodeFront);
+    }
   },
 
   // Some accessors to make NodeFront feel more like an nsIDOMNode
@@ -247,6 +289,50 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   _getAttribute: function(name) {
     this._cacheAttributes();
     return this._attrMap[name] || undefined;
+  },
+
+  /**
+   * Set this node's parent.  Note that the children saved in
+   * this tree are unordered and incomplete, so shouldn't be used
+   * instead of a `children` request.
+   */
+  reparent: function(parent) {
+    if (this._parent === parent) {
+      return;
+    }
+
+    if (this._parent && this._parent._child === this) {
+      this._parent._child = this._next;
+    }
+    if (this._prev) {
+      this._prev._next = this._next;
+    }
+    if (this._next) {
+      this._next._prev = this._prev;
+    }
+    this._next = null;
+    this._prev = null;
+    this._parent = parent;
+    if (!parent) {
+      // Subtree is disconnected, we're done
+      return;
+    }
+    this._next = parent._child;
+    if (this._next) {
+      this._next._prev = this;
+    }
+    parent._child = this;
+  },
+
+  /**
+   * Return all the known children of this node.
+   */
+  treeChildren: function() {
+    let ret = [];
+    for (let child = this._child; child != null; child = child._next) {
+      ret.push(child);
+    }
+    return ret;
   },
 
   /**
@@ -439,7 +525,7 @@ var WalkerActor = protocol.ActorClass({
    */
   initialize: function(conn, document, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this._doc = document;
+    this.rootDoc = document;
     this._refMap = new Map();
 
     // Ensure that the root document node actor is ready and
@@ -462,10 +548,17 @@ var WalkerActor = protocol.ActorClass({
 
   destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
-    this._doc = null;
+    this.rootDoc = null;
   },
 
   release: method(function() {}, { release: true }),
+
+  unmanage: function(actor) {
+    if (actor instanceof NodeActor) {
+      this._refMap.delete(actor.rawNode);
+    }
+    protocol.Actor.prototype.unmanage.call(this, actor);
+  },
 
   _ref: function(node) {
     let actor = this._refMap.get(node);
@@ -488,7 +581,7 @@ var WalkerActor = protocol.ActorClass({
    *        return the root.
    */
   document: method(function(node) {
-    let doc = node ? nodeDocument(node.rawNode) : this._doc;
+    let doc = node ? nodeDocument(node.rawNode) : this.rootDoc;
     return this._ref(doc);
   }, {
     request: { node: Arg(0, "domnode", {optional: true}) },
@@ -503,7 +596,7 @@ var WalkerActor = protocol.ActorClass({
    *        to use the root document.
    */
   documentElement: method(function(node) {
-    let elt = node ? nodeDocument(node.rawNode).documentElement : this._doc.documentElement;
+    let elt = node ? nodeDocument(node.rawNode).documentElement : this.rootDoc.documentElement;
     return this._ref(elt);
   }, {
     request: { node: Arg(0, "domnode", {optional: true}) },
@@ -549,6 +642,26 @@ var WalkerActor = protocol.ActorClass({
     }
     return null;
   },
+
+  /**
+   * Release actors for a node and all child nodes.
+   */
+  releaseNode: method(function(node) {
+    let walker = documentWalker(node.rawNode);
+
+    let child = walker.firstChild();
+    while (child) {
+      let childActor = this._refMap.get(child);
+      if (childActor) {
+        this.releaseNode(childActor);
+      }
+      child = walker.nextSibling();
+    }
+
+    node.destroy();
+  }, {
+    request: { node: Arg(0, "domnode") }
+  }),
 
   /**
    * Add any nodes between `node` and the walker's root node that have not
@@ -834,6 +947,33 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     this.rootNode = types.getType("domnode").read(json.root, this);
   },
 
+  /**
+   * When reading an actor form off the wire, we want to hook it up to its
+   * parent front.  The protocol guarantees that the parent will be seen
+   * by the client in either a previous or the current request.
+   * So if we've already seen this parent return it, otherwise create
+   * a bare-bones standin node.  The standin node will be updated
+   * with a real form by the end of the deserialization.
+   */
+  ensureParentFront: function(id) {
+    let front = this.get(id);
+    if (front) {
+      return front;
+    }
+
+    return types.getType("domnode").read({ actor: id }, this, "standin");
+  },
+
+  releaseNode: protocol.custom(function(node) {
+    // NodeFront.destroy will destroy children in the ownership tree too,
+    // mimicking what the server will do here.
+    let actorID = node.actorID;
+    node.destroy();
+    return this._releaseNode({ actorID: actorID });
+  }, {
+    impl: "_releaseNode"
+  }),
+
   querySelector: protocol.custom(function(queryNode, selector) {
     return this._querySelector(queryNode, selector).then(response => {
       return response.node;
@@ -905,6 +1045,9 @@ var InspectorFront = exports.InspectorFront = protocol.FrontClass(InspectorActor
 function documentWalker(node, whatToShow=Ci.nsIDOMNodeFilter.SHOW_ALL) {
   return new DocumentWalker(node, whatToShow, whitespaceTextFilter, false);
 }
+
+// Exported for test purposes.
+exports._documentWalker = documentWalker;
 
 function nodeDocument(node) {
   return node.ownerDocument || (node.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE ? node : null);
