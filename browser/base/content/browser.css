@@ -696,8 +696,3 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 *:-moz-full-screen-ancestor #social-sidebar-box:not(:-moz-full-screen-ancestor) {
   display: none;
 }
-
-#customization-reset-button[hidden="true"] {
-  display: -moz-box;
-  visibility: hidden;
-}

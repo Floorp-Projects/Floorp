@@ -241,7 +241,7 @@ panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):
 }
 
 panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
-.customizationmode-button:hover:active,
+.customizationmode-button:not([disabled]):hover:active,
 #widget-overflow-list > toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
