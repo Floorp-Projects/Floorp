@@ -206,7 +206,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
             sValidationMessageHeight = (int) (res.getDimension(R.dimen.validation_message_height));
         }
 
-        ImmutableViewportMetrics viewportMetrics = GeckoAppShell.getGeckoInterface().getLayerView().getViewportMetrics();
+        ImmutableViewportMetrics viewportMetrics = GeckoAppShell.getLayerView().getViewportMetrics();
         float zoom = viewportMetrics.zoomFactor;
 
         // These values correspond to the input box for which we want to

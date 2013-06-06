@@ -153,7 +153,7 @@ public class GeckoAccessibility {
         } else {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
-            final LayerView view = GeckoAppShell.getGeckoInterface().getLayerView();
+            final LayerView view = GeckoAppShell.getLayerView();
             if (view == null)
                 return;
 
