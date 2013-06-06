@@ -847,7 +847,7 @@ AccessibleWrap::accNavigate(
   VariantInit(pvarEndUpAt);
 
   Accessible* navAccessible = nullptr;
-  uint32_t xpRelation = 0;
+  int32_t xpRelation = -1;
 
   switch(navDir) {
     case NAVDIR_FIRSTCHILD:
@@ -929,7 +929,7 @@ AccessibleWrap::accNavigate(
 
   pvarEndUpAt->vt = VT_EMPTY;
 
-  if (xpRelation) {
+  if (xpRelation >= 0) {
     Relation rel = RelationByType(xpRelation);
     navAccessible = rel.Next();
   }
