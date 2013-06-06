@@ -1330,7 +1330,6 @@ let CustomizableUIInternal = {
       allowedAreas: [],
       shortcut: null,
       description: null,
-      icons: {}
     };
 
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
@@ -1375,15 +1374,6 @@ let CustomizableUIInternal = {
     }
 
     widget.disabled = aData.disabled === true;
-
-    if (typeof aData.icons == "object") {
-      let sizes = Object.keys(aData.icons);
-      for (let size of sizes) {
-        if (size == parseInt(size, 10)) {
-          widget.icons[size] = aData.icons[size];
-        }
-      }
-    }
 
     widget.onClick = typeof aData.onClick == "function" ? aData.onClick : null;
 
