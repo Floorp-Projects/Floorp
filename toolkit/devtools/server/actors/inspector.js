@@ -48,6 +48,7 @@ const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const promise = require("sdk/core/promise");
 const object = require("sdk/util/object");
+const events = require("sdk/event/core");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -207,6 +208,12 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   },
 
   destroy: function() {
+    // If an observer was added on this node, shut it down.
+    if (this.observer) {
+      this._observer.disconnect();
+      this._observer = null;
+    }
+
     // Disconnect this item and from the ownership tree and destroy
     // all of its children.
     this.reparent(null);
@@ -221,6 +228,7 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     // Shallow copy of the form.  We could just store a reference, but
     // eventually we'll want to update some of the data.
     this._form = object.merge(form);
+    this._form.attrs = this._form.attrs ? this._form.attrs.slice() : [];
 
     if (form.parent) {
       // Get the owner actor for this actor (the walker), and find the
@@ -228,6 +236,46 @@ let NodeFront = protocol.FrontClass(NodeActor, {
       // necessary.
       let parentNodeFront = ctx.marshallPool().ensureParentFront(form.parent);
       this.reparent(parentNodeFront);
+    }
+  },
+
+  /**
+   * Process a mutation entry as returned from the walker's `getMutations`
+   * request.  Only tries to handle changes of the node's contents
+   * themselves (character data and attribute changes), the walker itself
+   * will keep the ownership tree up to date.
+   */
+  updateMutation: function(change) {
+    if (change.type === "attributes") {
+      // We'll need to lazily reparse the attributes after this change.
+      this._attrMap = undefined;
+
+      // Update any already-existing attributes.
+      let found = false;
+      for (let i = 0; i < this.attributes.length; i++) {
+        let attr = this.attributes[i];
+        if (attr.name == change.attributeName &&
+            attr.namespace == change.attributeNamespace) {
+          if (change.newValue !== null) {
+            attr.value = change.newValue;
+          } else {
+            this.attributes.splice(i, 1);
+          }
+          found = true;
+          break;
+        }
+      }
+      // This is a new attribute.
+      if (!found)  {
+        this.attributes.push({
+          name: change.attributeName,
+          namespace: change.attributeNamespace,
+          value: change.newValue
+        });
+      }
+    } else if (change.type === "characterData") {
+      this._form.shortValue = change.newValue;
+      this._form.incompleteValue = change.incompleteValue;
     }
   },
 
@@ -264,7 +312,7 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     return (name in this._attrMap);
   },
 
-  get attributes() this._form.attrs || [],
+  get attributes() this._form.attrs,
 
   getNodeValue: protocol.custom(function() {
     if (!this.incompleteValue) {
@@ -371,6 +419,9 @@ types.addDictType("disconnectedNodeArray", {
   // Nodes that are needed to connect those nodes to the root.
   newNodes: "array:domnode"
 });
+
+types.addDictType("dommutation", {});
+
 /**
  * Server side of a node list as returned by querySelectorAll()
  */
@@ -518,6 +569,12 @@ let traversalMethod = {
 var WalkerActor = protocol.ActorClass({
   typeName: "domwalker",
 
+  events: {
+    "new-mutations" : {
+      type: "newMutations"
+    }
+  },
+
   /**
    * Create the WalkerActor
    * @param DebuggerServerConnection conn
@@ -527,11 +584,13 @@ var WalkerActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
     this.rootDoc = document;
     this._refMap = new Map();
+    this._pendingMutations = [];
+
+    this.onMutations = this.onMutations.bind(this);
 
     // Ensure that the root document node actor is ready and
     // managed.
     this.rootNode = this.document();
-    this.manage(this.rootNode);
   },
 
   // Returns the JSON representation of this object over the wire.
@@ -570,7 +629,27 @@ var WalkerActor = protocol.ActorClass({
     // it an actorID.
     this.manage(actor);
     this._refMap.set(node, actor);
+
+    if (node.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
+      this._watchDocument(actor);
+    }
     return actor;
+  },
+
+  /**
+   * Watch the given document node for mutations using the DOM observer
+   * API.
+   */
+  _watchDocument: function(actor) {
+    let node = actor.rawNode;
+    // Create the observer on the node's actor.  The node will make sure
+    // the observer is cleaned up when the actor is released.
+    actor.observer = actor.rawNode.defaultView.MutationObserver(this.onMutations);
+    actor.observer.observe(node, {
+      attributes: true,
+      characterData: true,
+      subtree: true
+    });
   },
 
   /**
@@ -926,7 +1005,83 @@ var WalkerActor = protocol.ActorClass({
     response: {
       list: RetVal("domnodelist")
     }
-  })
+  }),
+
+  /**
+   * Get any pending mutation records.  Must be called by the client after
+   * the `new-mutations` notification is received.  Returns an array of
+   * mutation records.
+   *
+   * Mutation records have a basic structure:
+   *
+   * {
+   *   type: attributes|characterData,
+   *   target: <domnode actor ID>,
+   * }
+   *
+   * And additional attributes based on the mutation type:
+   * `attributes` type:
+   *   attributeName: <string> - the attribute that changed
+   *   attributeNamespace: <string> - the attribute's namespace URI, if any.
+   *   newValue: <string> - The new value of the attribute, if any.
+   *
+   * `characterData` type:
+   *   newValue: <string> - the new shortValue for the node
+   *   [incompleteValue: true] - True if the shortValue was truncated.
+   *
+   */
+  getMutations: method(function() {
+    let pending = this._pendingMutations || [];
+    this._pendingMutations = [];
+    return pending;
+  }, {
+    request: {},
+    response: {
+      mutations: RetVal("array:dommutation")
+    }
+  }),
+
+  /**
+   * Handles mutations from the DOM mutation observer API.
+   *
+   * @param array[MutationRecord] mutations
+   *    See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationRecord
+   */
+  onMutations: function(mutations) {
+    // We only send the `new-mutations` notification once, until the client
+    // fetches mutations with the `getMutations` packet.
+    let needEvent = this._pendingMutations.length === 0;
+
+    for (let change of mutations) {
+      let targetActor = this._refMap.get(change.target);
+      if (!targetActor) {
+        continue;
+      }
+      let targetNode = change.target;
+      let mutation = {
+        type: change.type,
+        target: targetActor.actorID,
+      }
+
+      if (mutation.type === "attributes") {
+        mutation.attributeName = change.attributeName;
+        mutation.attributeNamespace = change.attributeNamespace || undefined;
+        mutation.newValue = targetNode.getAttribute(mutation.attributeName);
+      } else if (mutation.type === "characterData") {
+        if (targetNode.nodeValue.length > gValueSummaryLength) {
+          mutation.newValue = targetNode.nodeValue.substring(0, gValueSummaryLength);
+          mutation.incompleteValue = true;
+        } else {
+          mutation.newValue = targetNode.nodeValue;
+        }
+      }
+      this._pendingMutations.push(mutation);
+    }
+    if (needEvent) {
+      events.emit(this, "new-mutations");
+    }
+  }
+
 });
 
 /**
@@ -952,7 +1107,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
    * parent front.  The protocol guarantees that the parent will be seen
    * by the client in either a previous or the current request.
    * So if we've already seen this parent return it, otherwise create
-   * a bare-bones standin node.  The standin node will be updated
+   * a bare-bones stand-in node.  The stand-in node will be updated
    * with a real form by the end of the deserialization.
    */
   ensureParentFront: function(id) {
@@ -980,6 +1135,41 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     });
   }, {
     impl: "_querySelector"
+  }),
+
+  /**
+   * Get any unprocessed mutation records and process them.
+   */
+  getMutations: protocol.custom(function() {
+    return this._getMutations().then(mutations => {
+      let emitMutations = [];
+      for (let change of mutations) {
+        // The target is only an actorID, get the associated front.
+        let targetID = change.target;
+        let targetFront = this.get(targetID);
+        if (!targetFront) {
+          console.error("Got a mutation for an unexpected actor: " + targetID);
+          continue;
+        }
+        targetFront.updateMutation(change);
+
+        // Emit the mutation as received, except update the target to
+        // piont at the front rather than a bare actorID.
+        emitMutations.push(object.merge(change, { target: targetFront }));
+      }
+      events.emit(this, "mutations", emitMutations);
+    });
+  }, {
+    impl: "_getMutations"
+  }),
+
+  /**
+   * Handle the `new-mutations` notification by fetching the
+   * available mutation records.
+   */
+  onMutations: protocol.preEvent("new-mutations", function() {
+    // Fetch and process the mutations.
+    this.getMutations().then(null, console.error);
   }),
 
   // XXX hack during transition to remote inspector: get a proper NodeFront
