@@ -301,14 +301,15 @@ DOMCI_NODE_DATA(HTMLFormElement, nsHTMLFormElement)
 
 // QueryInterface implementation for nsHTMLFormElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLFormElement,
-                                   nsIDOMHTMLFormElement,
-                                   nsIForm,
-                                   nsIWebProgressListener,
-                                   nsIRadioGroupContainer)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFormElement,
-                                               nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFormElement)
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLFormElement,
+                                nsIDOMHTMLFormElement,
+                                nsIForm,
+                                nsIWebProgressListener,
+                                nsIRadioGroupContainer)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLFormElement)
+NS_ELEMENT_INTERFACE_MAP_END
 
 
 // nsIDOMHTMLFormElement

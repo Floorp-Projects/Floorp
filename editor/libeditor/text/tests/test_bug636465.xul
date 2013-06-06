@@ -30,42 +30,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=636465
   SimpleTest.waitForExplicitFinish();
 
   function runTest() {
+    Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
     var x = document.getElementById("x");
     x.focus();
-    setTimeout(function(){
+    onSpellCheck(x, function () {
       x.blur();
-      setTimeout(function(){
-        var spellCheckTrue = snapshotWindow(window);
-        x.setAttribute("spellcheck", "false");
-        setTimeout(function(){
-          setTimeout(function(){
-            var spellCheckFalse = snapshotWindow(window);
-            x.setAttribute("spellcheck", "true");
-            x.focus();
-            setTimeout(function(){
-              x.blur();
-              setTimeout(function(){
-                var spellCheckTrueAgain = snapshotWindow(window);
-                x.removeAttribute("spellcheck");
-                setTimeout(function(){
-                  setTimeout(function(){
-                    var spellCheckNone = snapshotWindow(window);
-                    var after = snapshotWindow(window);
-                    ok(compareSnapshots(spellCheckTrue, spellCheckFalse, false)[0],
-                       "Setting the spellcheck attribute to false should work");
-                    ok(compareSnapshots(spellCheckTrue, spellCheckTrueAgain, true)[0],
-                       "Setting the spellcheck attribute back to true should work");
-                    ok(compareSnapshots(spellCheckNone, spellCheckFalse, true)[0],
-                       "Unsetting the spellcheck attribute should work");
-                    SimpleTest.finish();
-                  },0);
-                },0);
-              },0);
-            },0);
-          },0);
-        },0);
-      },0);
-    },0);
+      var spellCheckTrue = snapshotWindow(window);
+      x.setAttribute("spellcheck", "false");
+      var spellCheckFalse = snapshotWindow(window);
+      x.setAttribute("spellcheck", "true");
+      x.focus();
+      onSpellCheck(x, function () {
+        x.blur();
+        var spellCheckTrueAgain = snapshotWindow(window);
+        x.removeAttribute("spellcheck");
+        var spellCheckNone = snapshotWindow(window);
+        var after = snapshotWindow(window);
+        ok(compareSnapshots(spellCheckTrue, spellCheckFalse, false)[0],
+           "Setting the spellcheck attribute to false should work");
+        ok(compareSnapshots(spellCheckTrue, spellCheckTrueAgain, true)[0],
+           "Setting the spellcheck attribute back to true should work");
+        ok(compareSnapshots(spellCheckNone, spellCheckFalse, true)[0],
+           "Unsetting the spellcheck attribute should work");
+        SimpleTest.finish();
+      });
+    });
   }
 ]]>
 </script>

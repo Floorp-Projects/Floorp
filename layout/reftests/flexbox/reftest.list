@@ -28,7 +28,7 @@ fuzzy-if(B2G,10,3) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.x
 == flexbox-align-self-vert-2.xhtml  flexbox-align-self-vert-2-ref.xhtml
 == flexbox-align-self-vert-3.xhtml  flexbox-align-self-vert-3-ref.xhtml
 == flexbox-align-self-vert-4.xhtml  flexbox-align-self-vert-4-ref.xhtml
-== flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-self-vert-rtl-1-ref.xhtml
+fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-self-vert-rtl-1-ref.xhtml
 == flexbox-align-self-vert-rtl-2.xhtml  flexbox-align-self-vert-rtl-2-ref.xhtml
 == flexbox-align-self-vert-rtl-3.xhtml  flexbox-align-self-vert-rtl-3-ref.xhtml
 == flexbox-align-self-vert-rtl-4.xhtml  flexbox-align-self-vert-rtl-4-ref.xhtml

@@ -121,7 +121,7 @@ intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() > 0) {
         // try to dump the informative string
-        JSString *str = ToString<CanGC>(cx, args[0]);
+        JSString *str = ToString<CanGC>(cx, args.handleAt(0));
         if (str) {
             const jschar *chars = str->getChars(cx);
             if (chars) {

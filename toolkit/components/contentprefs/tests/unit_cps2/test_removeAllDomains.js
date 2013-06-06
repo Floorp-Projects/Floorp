@@ -70,4 +70,18 @@ let tests = [
     do_check_throws(function () cps.removeAllDomains(null, "bogus"));
     yield true;
   },
+
+  function invalidateCache() {
+    yield set("a.com", "foo", 1);
+    yield set("b.com", "bar", 2);
+    yield setGlobal("baz", 3);
+    getCachedOK(["a.com", "foo"], true, 1);
+    getCachedOK(["b.com", "bar"], true, 2);
+    getCachedGlobalOK(["baz"], true, 3);
+    cps.removeAllDomains(null, makeCallback());
+    getCachedOK(["a.com", "foo"], false);
+    getCachedOK(["b.com", "bar"], false);
+    getCachedGlobalOK(["baz"], true, 3);
+    yield;
+  },
 ];

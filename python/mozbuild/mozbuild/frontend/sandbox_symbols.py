@@ -66,6 +66,12 @@ VARIABLES = {
         This variable contains a list of files to invoke the assembler on.
         """),
 
+    'CMMSRCS': (StrictOrderingOnAppendList, list, [],
+        """Sources to compile with the Objective C/C++ compiler.
+
+        This variable contains a list of objective-C++ sources to compile.
+        """),
+
     'CSRCS': (StrictOrderingOnAppendList, list, [],
         """C code source files.
 
@@ -90,6 +96,12 @@ VARIABLES = {
         Values are relative paths. They can be multiple directory levels
         above or below. Use ".." for parent directories and "/" for path
         delimiters.
+        """),
+
+    'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list, [],
+        """Additional component files to distribute.
+
+       This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
         """),
 
     'PARALLEL_DIRS': (list, list, [],

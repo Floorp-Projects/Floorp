@@ -21,10 +21,11 @@ Browser context menu tests.
 /** Test for Login Manager: multiple login autocomplete. **/
 
 SpecialPowers.Cu.import("resource://gre/modules/InlineSpellChecker.jsm", window);
+SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
 
 const Ci = SpecialPowers.Ci;
 
-function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
+function openContextMenuFor(element, shiftkey, waitForSpellCheck) {
     // Context menu should be closed before we open it again.
     is(SpecialPowers.wrap(contextMenu).state, "closed", "checking if popup is closed");
 
@@ -39,8 +40,9 @@ function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
       var eventDetails = { type : "contextmenu", button : 2, shiftKey : shiftkey };
       synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
     }
-    if (shouldWaitForFocus)
-      SimpleTest.executeSoon(actuallyOpenContextMenuFor);
+
+    if (waitForSpellCheck)
+      onSpellCheck(element, actuallyOpenContextMenuFor);
     else
       actuallyOpenContextMenuFor();
 }
@@ -608,7 +610,7 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         contextMenu.ownerDocument.getElementById("spell-undo-add-to-dictionary").doCommand(); // Undo add to dictionary
         closeContextMenu();
-        openContextMenuFor(contenteditable);
+        openContextMenuFor(contenteditable, false, true);
         break;
 
     case 18:
@@ -633,7 +635,7 @@ function runTest(testNum) {
                          ].concat(inspectItems));
 
         closeContextMenu();
-        openContextMenuFor(inputspell); // Invoke context menu for next test.
+        openContextMenuFor(inputspell, false, true); // Invoke context menu for next test.
         break;
 
     case 19:

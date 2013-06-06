@@ -73,6 +73,7 @@ MOCHITEST_ROBOCOP_FILES := \
   $(wildcard $(TESTPATH)/*.sjs) \
   $(wildcard $(TESTPATH)/test*.js) \
   $(wildcard $(TESTPATH)/robocop*.js) \
+  $(wildcard $(TESTPATH)/*.xml) \
   $(NULL)
 
 GARBAGE += \

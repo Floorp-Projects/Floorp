@@ -594,6 +594,14 @@ nsMediaFeatures::features[] = {
         GetSystemMetric
     },
 
+    {
+        &nsGkAtoms::_moz_physical_home_button,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::physical_home_button },
+        GetSystemMetric
+    },
+
     // Internal -moz-is-glyph media feature: applies only inside SVG glyphs.
     // Internal because it is really only useful in the user agent anyway
     //  and therefore not worth standardizing.

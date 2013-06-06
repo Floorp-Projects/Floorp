@@ -858,7 +858,13 @@ ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
     // Ensure that if there is a constant, then it is in rhs.
     // In addition, since clobbering binary operations clobber the left
     // operand, prefer a non-constant lhs operand with no further uses.
-    if (lhs->isConstant() || (!rhs->isConstant() && rhs->useCount() == 1)) {
+
+    if (rhs->isConstant())
+        return;
+
+    if (lhs->isConstant() ||
+        (lhs->defUseCount() == 1 && rhs->defUseCount() != 1))
+    {
         *rhsp = lhs;
         *lhsp = rhs;
     }
@@ -1056,6 +1062,19 @@ LIRGenerator::visitSqrt(MSqrt *ins)
     JS_ASSERT(num->type() == MIRType_Double);
     LSqrtD *lir = new LSqrtD(useRegisterAtStart(num));
     return defineReuseInput(lir, ins, 0);
+}
+
+bool
+LIRGenerator::visitAtan2(MAtan2 *ins)
+{
+    MDefinition *y = ins->y();
+    JS_ASSERT(y->type() == MIRType_Double);
+
+    MDefinition *x = ins->x();
+    JS_ASSERT(x->type() == MIRType_Double);
+
+    LAtan2D *lir = new LAtan2D(useRegisterAtStart(y), useRegisterAtStart(x), tempFixed(CallTempReg0));
+    return defineReturn(lir, ins);
 }
 
 bool
