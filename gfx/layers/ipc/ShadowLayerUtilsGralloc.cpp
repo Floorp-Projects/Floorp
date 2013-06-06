@@ -159,11 +159,8 @@ BytesPerPixelForPixelFormat(android::PixelFormat aFormat)
   case PIXEL_FORMAT_RGB_565:
   case PIXEL_FORMAT_RGBA_5551:
   case PIXEL_FORMAT_RGBA_4444:
-  case PIXEL_FORMAT_LA_88:
     return 2;
-  case PIXEL_FORMAT_L_8:
   case PIXEL_FORMAT_A_8:
-  case PIXEL_FORMAT_RGB_332:
     return 1;
   default:
     MOZ_NOT_REACHED("Unknown gralloc pixel format");
