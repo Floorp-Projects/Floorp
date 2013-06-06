@@ -12,15 +12,6 @@
 namespace MPAPI {
 
 struct VideoPlane {
-  VideoPlane() :
-    mData(nullptr),
-    mStride(0),
-    mWidth(0),
-    mHeight(0),
-    mOffset(0),
-    mSkip(0)
-  {}
-
   void *mData;
   int32_t mStride;
   int32_t mWidth;
@@ -42,18 +33,6 @@ struct VideoFrame {
   VideoPlane Cb;
   VideoPlane Cr;
   nsRefPtr<mozilla::layers::GraphicBufferLocked> mGraphicBuffer;
-
-  VideoFrame() :
-    mTimeUs(0),
-    mEndTimeUs(0),
-    mKeyFrame(false),
-    mShouldSkip(false),
-    mData(nullptr),
-    mSize(0),
-    mStride(0),
-    mSliceHeight(0),
-    mRotation(0)
-  {}
 
   void Set(int64_t aTimeUs, bool aKeyFrame,
            void *aData, size_t aSize, int32_t aStride, int32_t aSliceHeight, int32_t aRotation,
