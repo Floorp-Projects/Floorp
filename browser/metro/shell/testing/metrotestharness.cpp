@@ -218,12 +218,11 @@ static bool Launch()
   // Hand off focus rights if the terminal has focus to the out-of-process
   // activation server (explorer.exe). Without this the metro interface
   // won't launch.
-  if (GetForegroundWindow() == GetConsoleWindow()) {
-    hr = CoAllowSetForegroundWindow(activateMgr, NULL);
-    if (FAILED(hr)) {
-      Fail(L"CoAllowSetForegroundWindow result %X", hr);
-      return false;
-    }
+  hr = CoAllowSetForegroundWindow(activateMgr, NULL);
+  if (FAILED(hr)) {
+    // Log but don't fail. This has happened on vms with certain terminals run by
+    // QA during mozmill testing.
+    Log(L"Windows focus rights hand off failed (HRESULT=0x%X). Ignoring.", hr);
   }
 
   Log(L"Harness process id: %d", GetCurrentProcessId());
