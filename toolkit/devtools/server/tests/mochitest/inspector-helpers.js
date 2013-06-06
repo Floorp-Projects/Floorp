@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 
+const {_documentWalker} = devtools.require("devtools/server/actors/inspector");
+
 if (!DebuggerServer.initialized) {
   DebuggerServer.init(() => true);
   DebuggerServer.addBrowserActors();
@@ -58,6 +60,65 @@ function attachURL(url, callback) {
   }, false);
 }
 
+function sortOwnershipChildren(children) {
+  return children.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function serverOwnershipSubtree(walker, node) {
+  let actor = walker._refMap.get(node);
+  if (!actor) {
+    return undefined;
+  }
+
+  let children = [];
+  let docwalker = _documentWalker(node);
+  let child = docwalker.firstChild();
+  while (child) {
+    let item = serverOwnershipSubtree(walker, child);
+    if (item) {
+      children.push(item);
+    }
+    child = docwalker.nextSibling();
+  }
+  return {
+    name: actor.actorID,
+    children: sortOwnershipChildren(children)
+  }
+}
+
+function serverOwnershipTree(walker) {
+  let serverConnection = walker.conn._transport._serverConnection;
+  let serverWalker = serverConnection.getActor(walker.actorID);
+
+  return serverOwnershipSubtree(serverWalker, serverWalker.rootDoc)
+}
+
+function clientOwnershipSubtree(node) {
+  return {
+    name: node.actorID,
+    children: sortOwnershipChildren([clientOwnershipSubtree(child) for (child of node.treeChildren())])
+  }
+}
+
+function clientOwnershipTree(walker) {
+  return clientOwnershipSubtree(walker.rootNode);
+}
+
+function ownershipTreeSize(tree) {
+  let size = 1;
+  for (let child of tree.children) {
+    size += ownershipTreeSize(child);
+  }
+  return size;
+}
+
+function assertOwnershipTrees(walker) {
+  let serverTree = serverOwnershipTree(walker);
+  let clientTree = clientOwnershipTree(walker);
+  is(JSON.stringify(clientTree, null, ' '), JSON.stringify(serverTree, null, ' '), "Server and client ownership trees should match.");
+
+  return ownershipTreeSize(clientTree);
+}
 
 // Verify that an actorID is inaccessible both from the client library and the server.
 function checkMissing(client, actorID) {

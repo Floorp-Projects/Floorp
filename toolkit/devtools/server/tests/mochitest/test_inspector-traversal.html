@@ -26,6 +26,9 @@ var gClient = null;
 var gWalker = null;
 var checkActorIDs = [];
 
+function assertOwnership() {
+  assertOwnershipTrees(gWalker);
+}
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
@@ -46,15 +49,18 @@ addTest(function testWalkerRoot() {
   promiseDone(gWalker.document().then(root => {
     ok(root === gWalker.rootNode, "Re-fetching the document node should match the root document node.");
     checkActorIDs.push(root.actorID);
+    assertOwnership();
   }).then(runNextTest));
 });
 
 addTest(function testQuerySelector() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#longlist").then(node => {
     is(node.getAttribute("data-test"), "exists", "should have found the right node");
+    assertOwnership();
   }).then(() => {
     return gWalker.querySelector(gWalker.rootNode, "unknownqueryselector").then(node => {
       ok(!node, "Should not find a node here.");
+      assertOwnership();
     });
   }).then(runNextTest));
 });
@@ -66,15 +72,21 @@ addTest(function testQuerySelectors() {
   promiseDone(gWalker.querySelectorAll(gWalker.rootNode, "#longlist div").then(list => {
     nodeList = list;
     is(nodeList.length, 26, "Expect 26 div children.");
+    assertOwnership();
     return nodeList.item(0);
   }).then(node => {
     firstNode = node;
     checkActorIDs.push(node.actorID);
     is(node.id, "a", "First child should be a");
+    assertOwnership();
     return nodeList.items();
   }).then(nodes => {
     is(nodes.length, 26, "Expect 26 nodes");
     is(nodes[0], firstNode, "First node should be reused.");
+    ok(nodes[0]._parent, "Parent node should be set.");
+    ok(nodes[0]._next || nodes[0]._prev, "Siblings should be set.");
+    ok(nodes[25]._next || nodes[25]._prev, "Siblings of " + nodes[25] + " should be set.");
+    assertOwnership();
     return nodeList.items(-1);
   }).then(nodes => {
     is(nodes.length, 1, "Expect 1 node")
@@ -82,9 +94,11 @@ addTest(function testQuerySelectors() {
     checkActorIDs.push(nodes[0].actorID);
     // Save the node list ID so we can ensure it was destroyed.
     nodeListID = nodeList.actorID;
+    assertOwnership();
     return nodeList.release();
   }).then(() => {
     ok(!nodeList.actorID, "Actor should have been destroyed.");
+    assertOwnership();
     return checkMissing(gClient, nodeListID);
   }).then(runNextTest));
 });
@@ -101,11 +115,13 @@ function nodeArrayChecker(first, last, ids) {
       responseIds += node.id;
     }
     is(responseIds, ids, "Correct nodes were returned.");
+    assertOwnership();
   }
 }
 
 addTest(function testNoChildren() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#empty").then(empty => {
+    assertOwnership();
     return gWalker.children(empty).then(nodeArrayChecker(true, true, ""));
   }).then(runNextTest));
 });
@@ -116,14 +132,18 @@ addTest(function testLongListTraversal() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#longlist").then(node => {
     longList = node;
     // First call with no options, expect all children.
+    assertOwnership();
     return gWalker.children(longList).then(response => {
       nodeArrayChecker(true, true, "abcdefghijklmnopqrstuvwxyz")(response);
       allChildren = response.nodes;
+      assertOwnership();
     });
   }).then(() => {
     // maxNodes should limit us to the first 5 nodes.
+    assertOwnership();
     return gWalker.children(longList, { maxNodes: 5 }).then(nodeArrayChecker(true, false, 'abcde'));
   }).then(() => {
+    assertOwnership();
     // maxNodes with the second item centered should still give us the first 5 nodes.
     return gWalker.children(longList, { maxNodes: 5, center: allChildren[1] }).then(
       nodeArrayChecker(true, false, 'abcde')
