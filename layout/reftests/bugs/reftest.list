@@ -1570,7 +1570,7 @@ skip-if(B2G) fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Window
 == 582037-1b.html 582037-1-ref.html
 skip-if(B2G) == 582037-2a.html 582037-2-ref.html
 skip-if(B2G) == 582037-2b.html 582037-2-ref.html
-asserts(0-13) == 582146-1.html about:blank
+asserts(1-2) == 582146-1.html about:blank
 skip-if(B2G) == 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html

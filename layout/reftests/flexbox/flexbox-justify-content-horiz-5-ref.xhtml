@@ -6,10 +6,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <style>
-      div.flexbox {
-        margin-bottom: 2px;
-        line-height: 0;
-      }
+      body { line-height: 0; }
+
       div.flexbox > * {
         display: inline-block;
       }
@@ -28,10 +26,11 @@
         width: 100px;
         background: orange;
       }
+      .centerParent {
+        text-align: center;
+      }
       .center {
-        width: -moz-max-content;
-        margin-left: auto;
-        margin-right: auto;
+        display: inline-block;
       }
     </style>
   </head>
@@ -72,14 +71,20 @@
     <div style="clear:right;"></div>
 
     <!-- center -->
-    <div class="flexbox center">
-      <div class="a"/>
+    <div class="centerParent">
+      <div class="flexbox center">
+        <div class="a"/>
+      </div>
     </div>
-    <div class="flexbox center">
-      <div class="a"/><div class="b"/>
+    <div class="centerParent">
+      <div class="flexbox center">
+        <div class="a"/><div class="b"/>
+      </div>
     </div>
-    <div class="flexbox center">
-      <div class="a"/><div class="b"/><div class="c"/>
+    <div class="centerParent">
+      <div class="flexbox center">
+        <div class="a"/><div class="b"/><div class="c"/>
+      </div>
     </div>
 
     <!-- space-between -->
@@ -95,19 +100,22 @@
       <!-- Use fixed-size margins to subtract space for "a" and "c", and then
            use auto margins to center 'b' within the remaining space -->
       <div style="display: block; margin-left: 10px; margin-right: 100px">
-        <div class="b center"/>
+        <div class="b" style="margin: auto"/>
       </div>
     </div>
 
     <!-- space-around -->
-    <div class="flexbox center">
-      <div class="a"/>
+    <!-- Center "a" here just as we did above in the "center" case. -->
+    <div class="centerParent">
+      <div class="flexbox center">
+        <div class="a"/>
+      </div>
     </div>
-    <!-- For these, we use a flex container with invisible flexible items
+    <!-- For the rest, we'll use a flex container with invisible flexible items
          instead of packing space. That's simpler than trying to hack up
-         a width-independent reference case for "justify-content:space-around".
+         a width-independent reference case for "justify-content: space-around".
          (There are other reftests to ensure that basic flex container
-         behavior is correct, so it's safe to rely on that.) -->
+         behavior is correct, so it's safe to rely on it here.) -->
     <div class="flexbox" style="display: flex">
       <div style="flex: 0.5"/>
       <div class="a"/>

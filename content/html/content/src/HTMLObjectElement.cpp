@@ -80,23 +80,22 @@ NS_IMPL_ADDREF_INHERITED(HTMLObjectElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLObjectElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLObjectElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(HTMLObjectElement)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIDOMHTMLObjectElement)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, imgINotificationObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIRequestObserver)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIStreamListener)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIFrameLoaderOwner)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIObjectLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIImageLoadingContent)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, imgIOnloadBlocker)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIInterfaceRequestor)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIChannelEventSink)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIConstraintValidation)
-    NS_INTERFACE_TABLE_ENTRY(HTMLObjectElement, nsIDOMGetSVGDocument)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLObjectElement,
-                                               nsGenericHTMLFormElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED12(HTMLObjectElement,
+                                 nsIDOMHTMLObjectElement,
+                                 imgINotificationObserver,
+                                 nsIRequestObserver,
+                                 nsIStreamListener,
+                                 nsIFrameLoaderOwner,
+                                 nsIObjectLoadingContent,
+                                 nsIImageLoadingContent,
+                                 imgIOnloadBlocker,
+                                 nsIInterfaceRequestor,
+                                 nsIChannelEventSink,
+                                 nsIConstraintValidation,
+                                 nsIDOMGetSVGDocument)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
 

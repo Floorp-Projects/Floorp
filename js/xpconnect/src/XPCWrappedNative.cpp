@@ -332,10 +332,9 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
     XPCWrappedNativeProto *proto =
         XPCWrappedNativeProto::GetNewOrUsed(scope,
                                             nativeHelper.GetClassInfo(), &sciProto,
-                                            UNKNOWN_OFFSETS, /* callPostCreatePrototype = */ false);
+                                            /* callPostCreatePrototype = */ false);
     if (!proto)
         return NS_ERROR_FAILURE;
-    proto->CacheOffsets(identity);
 
     // Set up the prototype on the global.
     MOZ_ASSERT(proto->GetJSProtoObject());
@@ -581,8 +580,6 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         proto = XPCWrappedNativeProto::GetNewOrUsed(Scope, info, &sciProto);
         if (!proto)
             return NS_ERROR_FAILURE;
-
-        proto->CacheOffsets(identity);
 
         wrapper = new XPCWrappedNative(helper.forgetCanonical(), proto);
     } else {
@@ -1474,7 +1471,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
             newProto =
                 XPCWrappedNativeProto::GetNewOrUsed(aNewScope,
                                                     oldProto->GetClassInfo(),
-                                                    &ci, oldProto->GetOffsetsMasked());
+                                                    &ci);
             if (!newProto) {
                 return NS_ERROR_FAILURE;
             }
@@ -2206,20 +2203,16 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
     // set up the method index and do the security check if needed
 
-    uint32_t secFlag;
     uint32_t secAction;
 
     switch (mode) {
         case CALL_METHOD:
-            secFlag   = nsIXPCSecurityManager::HOOK_CALL_METHOD;
             secAction = nsIXPCSecurityManager::ACCESS_CALL_METHOD;
             break;
         case CALL_GETTER:
-            secFlag   = nsIXPCSecurityManager::HOOK_GET_PROPERTY;
             secAction = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
             break;
         case CALL_SETTER:
-            secFlag   = nsIXPCSecurityManager::HOOK_SET_PROPERTY;
             secAction = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
             break;
         default:
@@ -3654,8 +3647,6 @@ ConstructSlimWrapper(xpcObjectHelper &aHelper,
     xpcproto = XPCWrappedNativeProto::GetNewOrUsed(xpcScope, classInfoHelper, &sciProto);
     if (!xpcproto)
         return false;
-
-    xpcproto->CacheOffsets(identityObj);
 
     XPCNativeScriptableInfo* si = xpcproto->GetScriptableInfo();
     JSClass* jsclazz = si->GetSlimJSClass();
