@@ -44,10 +44,6 @@ CustomizeMode.prototype = {
   _dragOverItem: null,
   _customizing: false,
 
-  get resetButton() {
-    return this.document.getElementById("customization-reset-button");
-  },
-
   get panelUIContents() {
     return this.document.getElementById("PanelUI-contents");
   },
@@ -136,7 +132,7 @@ CustomizeMode.prototype = {
     this.visiblePalette.addEventListener("drop", this, true);
     this.visiblePalette.addEventListener("dragend", this, true);
 
-    this.resetButton.hidden = CustomizableUI.inDefaultState;
+    this._updateResetButton();
 
     let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true]):not([collapsed=true])");
     for (let toolbar of customizableToolbars)
@@ -483,7 +479,7 @@ CustomizeMode.prototype = {
       document.persist(toolbar.id, "currentset");
     }
 
-    this.resetButton.hidden = CustomizableUI.inDefaultState;
+    this._updateResetButton();
     this._showPanelCustomizationPlaceholders();
   },
 
@@ -507,8 +503,13 @@ CustomizeMode.prototype = {
 
   _onUIChange: function() {
     this._changed = true;
-    this.resetButton.hidden = CustomizableUI.inDefaultState;
+    this._updateResetButton();
     this.dispatchToolboxEvent("customizationchange");
+  },
+
+  _updateResetButton: function() {
+    let btn = this.document.getElementById("customization-reset-button");
+    btn.disabled = CustomizableUI.inDefaultState;
   },
 
   handleEvent: function(aEvent) {
