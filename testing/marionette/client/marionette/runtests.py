@@ -640,7 +640,7 @@ class MarionetteTestOptions(OptionParser):
         self.add_option('--timeout',
                         dest='timeout',
                         type=int,
-                        help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10ms for script timeout')
+                        help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10000ms for script timeout')
 
     def verify_usage(self, options, tests):
         if not tests:
