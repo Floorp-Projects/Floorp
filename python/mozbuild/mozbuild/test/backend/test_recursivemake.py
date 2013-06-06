@@ -154,6 +154,10 @@ class TestRecursiveMakeBackend(BackendTester):
                 'DEFINES += -Dbar',
                 'DEFINES += -Dfoo',
             ],
+            'EXTRA_COMPONENTS': [
+                'EXTRA_COMPONENTS += bar.js',
+                'EXTRA_COMPONENTS += foo.js',
+            ],
             'SIMPLE_PROGRAMS': [
                 'SIMPLE_PROGRAMS += bar.x',
                 'SIMPLE_PROGRAMS += foo.x',

@@ -10,6 +10,7 @@ ASFILES = ['bar.s', 'foo.asm']
 
 DEFINES = ['-Dbar', '-Dfoo']
 
+EXTRA_COMPONENTS = ['bar.js', 'foo.js']
 
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
