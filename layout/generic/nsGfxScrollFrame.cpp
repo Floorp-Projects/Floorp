@@ -2309,8 +2309,8 @@ nsRect
 nsGfxScrollFrameInner::GetScrollRange(nscoord aWidth, nscoord aHeight) const
 {
   nsRect range = GetScrolledRect();
-  range.width -= aWidth;
-  range.height -= aHeight;
+  range.width = std::max(range.width - aWidth, 0);
+  range.height = std::max(range.height - aHeight, 0);
   return range;
 }
 
@@ -3898,10 +3898,12 @@ nsGfxScrollFrameInner::GetScrolledRect() const
     GetScrolledRectInternal(mScrolledFrame->GetScrollableOverflowRect(),
                             mScrollPort.Size());
 
-  NS_ASSERTION(result.width >= mScrollPort.width,
-               "Scrolled rect smaller than scrollport?");
-  NS_ASSERTION(result.height >= mScrollPort.height,
-               "Scrolled rect smaller than scrollport?");
+  if (result.width < mScrollPort.width) {
+    NS_WARNING("Scrolled rect smaller than scrollport?");
+  }
+  if (result.height < mScrollPort.height) {
+    NS_WARNING("Scrolled rect smaller than scrollport?");
+  }
   return result;
 }
 
