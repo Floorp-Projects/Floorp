@@ -240,6 +240,13 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   },
 
   /**
+   * Returns the parent NodeFront for this NodeFront.
+   */
+  parentNode: function() {
+    return this._parent;
+  },
+
+  /**
    * Process a mutation entry as returned from the walker's `getMutations`
    * request.  Only tries to handle changes of the node's contents
    * themselves (character data and attribute changes), the walker itself
@@ -586,6 +593,11 @@ var WalkerActor = protocol.ActorClass({
     this._refMap = new Map();
     this._pendingMutations = [];
 
+    // Nodes which have been removed from the client's known
+    // ownership tree are considered "orphaned", and stored in
+    // this set.
+    this._orphaned = new Set();
+
     this.onMutations = this.onMutations.bind(this);
 
     // Ensure that the root document node actor is ready and
@@ -648,6 +660,7 @@ var WalkerActor = protocol.ActorClass({
     actor.observer.observe(node, {
       attributes: true,
       characterData: true,
+      childList: true,
       subtree: true
     });
   },
@@ -1015,11 +1028,12 @@ var WalkerActor = protocol.ActorClass({
    * Mutation records have a basic structure:
    *
    * {
-   *   type: attributes|characterData,
+   *   type: attributes|characterData|childList,
    *   target: <domnode actor ID>,
    * }
    *
    * And additional attributes based on the mutation type:
+   *
    * `attributes` type:
    *   attributeName: <string> - the attribute that changed
    *   attributeNamespace: <string> - the attribute's namespace URI, if any.
@@ -1029,6 +1043,25 @@ var WalkerActor = protocol.ActorClass({
    *   newValue: <string> - the new shortValue for the node
    *   [incompleteValue: true] - True if the shortValue was truncated.
    *
+   * `childList` type is returned when the set of children for a node
+   * has changed.  Includes extra data, which can be used by the client to
+   * maintain its ownership subtree.
+   *
+   *   added: array of <domnode actor ID> - The list of actors *previously
+   *     seen by the client* that were added to the target node.
+   *   removed: array of <domnode actor ID> The list of actors *previously
+   *     seen by the client* that were removed from the target node.
+   *
+   * Actors that are included in a MutationRecord's `removed` but
+   * not in an `added` have been removed from the client's ownership
+   * tree (either by being moved under a node the client has seen yet
+   * or by being removed from the tree entirely), and is considered
+   * 'orphaned'.
+   *
+   * Keep in mind that if a node that the client hasn't seen is moved
+   * into or out of the target node, it will not be included in the
+   * removedNodes and addedNodes list, so if the client is interested
+   * in the new set of children it needs to issue a `children` request.
    */
   getMutations: method(function() {
     let pending = this._pendingMutations || [];
@@ -1074,6 +1107,39 @@ var WalkerActor = protocol.ActorClass({
         } else {
           mutation.newValue = targetNode.nodeValue;
         }
+      } else if (mutation.type === "childList") {
+        // Get the list of removed and added actors that the client has seen
+        // so that it can keep its ownership tree up to date.
+        let removedActors = [];
+        let addedActors = [];
+        for (let removed of change.removedNodes) {
+          let removedActor = this._refMap.get(removed);
+          if (!removedActor) {
+            // If the client never encountered this actor we don't need to
+            // mention that it was removed.
+            continue;
+          }
+          // While removed from the tree, nodes are saved as orphaned.
+          this._orphaned.add(removedActor);
+          removedActors.push(removedActor.actorID);
+        }
+        for (let added of change.addedNodes) {
+          let addedActor = this._refMap.get(added);
+          if (!addedActor) {
+            // If the client never encounted this actor we don't need to tell
+            // it about its addition for ownership tree purposes - if the
+            // client wants to see the new nodes it can ask for children.
+            continue;
+          }
+          // The actor is reconnected to the ownership tree, unorphan
+          // it and let the client know so that its ownership tree is up
+          // to date.
+          this._orphaned.delete(addedActor);
+          addedActors.push(addedActor.actorID);
+        }
+        mutation.numChildren = change.target.childNodes.length;
+        mutation.removed = removedActors;
+        mutation.added = addedActors;
       }
       this._pendingMutations.push(mutation);
     }
@@ -1090,6 +1156,7 @@ var WalkerActor = protocol.ActorClass({
 var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
+    this._orphaned = new Set();
   },
 
   destroy: function() {
@@ -1151,11 +1218,50 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
           console.error("Got a mutation for an unexpected actor: " + targetID);
           continue;
         }
-        targetFront.updateMutation(change);
 
-        // Emit the mutation as received, except update the target to
-        // piont at the front rather than a bare actorID.
-        emitMutations.push(object.merge(change, { target: targetFront }));
+        let emittedMutation = object.merge(change, { target: targetFront });
+
+        if (change.type === "childList") {
+          // Update the ownership tree according to the mutation record.
+          let addedFronts = [];
+          let removedFronts = [];
+          for (let removed of change.removed) {
+            let removedFront = this.get(removed);
+            if (!removedFront) {
+              console.error("Got a removal of an actor we didn't know about: " + removed);
+              continue;
+            }
+            // Remove from the ownership tree
+            removedFront.reparent(null);
+
+            // This node is orphaned unless we get it in the 'added' list
+            // eventually.
+            this._orphaned.add(removedFront);
+            removedFronts.push(removedFront);
+          }
+          for (let added of change.added) {
+            let addedFront = this.get(added);
+            if (!addedFront) {
+              console.error("Got an addition of an actor we didn't know about: " + added);
+              continue;
+            }
+            addedFront.reparent(targetFront)
+
+            // The actor is reconnected to the ownership tree, unorphan
+            // it.
+            this._orphaned.delete(addedFront);
+            addedFronts.push(addedFront);
+          }
+          // Before passing to users, replace the added and removed actor
+          // ids with front in the mutation record.
+          emittedMutation.added = addedFronts;
+          emittedMutation.removed = removedFronts;
+          targetFront._form.numChildren = change.numChildren;
+        } else {
+          targetFront.updateMutation(change);
+        }
+
+        emitMutations.push(emittedMutation);
       }
       events.emit(this, "mutations", emitMutations);
     });
