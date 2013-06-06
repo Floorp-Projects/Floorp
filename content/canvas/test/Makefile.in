@@ -111,6 +111,7 @@ MOCHITEST_FILES = \
 	test_drawImage_document_domain.html \
   test_mozDashOffset.html \
 	file_drawImage_document_domain.html \
+	test_windingRuleUndefined.html \
 	$(NULL)
 
 ifneq (1_Linux,$(MOZ_SUITE)_$(OS_ARCH))
