@@ -665,6 +665,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
     err.report.filename = filename;
     err.report.originPrincipals = originPrincipals;
     err.report.lineno = srcCoords.lineNum(offset);
+    err.report.column = srcCoords.columnIndex(offset);
 
     err.argumentsType = (flags & JSREPORT_UC) ? ArgumentsAreUnicode : ArgumentsAreASCII;
 

@@ -126,7 +126,7 @@ namespace js {
  */
 template <AllowGC allowGC>
 extern JSString *
-ToStringSlow(JSContext *cx, const Value &v);
+ToStringSlow(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType arg);
 
 /*
  * Convert the given value to a string.  This method includes an inline
@@ -135,7 +135,7 @@ ToStringSlow(JSContext *cx, const Value &v);
  */
 template <AllowGC allowGC>
 static JS_ALWAYS_INLINE JSString *
-ToString(JSContext *cx, const js::Value &v)
+ToString(JSContext *cx, JS::HandleValue v)
 {
 #ifdef DEBUG
     if (allowGC) {

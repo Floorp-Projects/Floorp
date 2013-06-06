@@ -1148,10 +1148,6 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
     png_uint_16 delay_num, png_uint_16 delay_den,
     png_byte dispose_op, png_byte blend_op)
 {
-    if (width + x_offset > png_ptr->first_frame_width ||
-        height + y_offset > png_ptr->first_frame_height)
-        png_error(png_ptr, "dimensions of a frame are greater than"
-                           "the ones in IHDR");
     if (width > PNG_UINT_31_MAX)
         png_error(png_ptr, "invalid width in fcTL (> 2^31-1)");
     if (height > PNG_UINT_31_MAX)
@@ -1160,6 +1156,10 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
         png_error(png_ptr, "invalid x_offset in fcTL (> 2^31-1)");
     if (y_offset > PNG_UINT_31_MAX)
         png_error(png_ptr, "invalid y_offset in fcTL (> 2^31-1)");
+    if (width + x_offset > png_ptr->first_frame_width ||
+        height + y_offset > png_ptr->first_frame_height)
+        png_error(png_ptr, "dimensions of a frame in fcTL are greater than"
+                           "those in IHDR");
 
     if (dispose_op != PNG_DISPOSE_OP_NONE &&
         dispose_op != PNG_DISPOSE_OP_BACKGROUND &&

@@ -3,9 +3,102 @@
 
 skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list # Intl is not enabled in all builds
 
+##################################################
+# Test262 tests skipped due to SpiderMonkey bugs #
+##################################################
+
+# These tests all make assumptions about global-object property enumeration
+# behavior, but because of bug 866222 these assumptions don't hold in the
+# browser.
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T1.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T2.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T3.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T4.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T5.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T6.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T7.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T8.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T9.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T10.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.1_T11.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T1.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T2.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T3.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T4.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T5.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T6.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T7.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T8.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T9.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T10.js
+skip-if(!xulRuntime.shell) script test262/ch10/10.4/10.4.2/S10.4.2_A1.2_T11.js
+
+skip script test262/ch10/10.4/10.4.3/10.4.3-1-104.js # bug 603201
+skip script test262/ch10/10.4/10.4.3/10.4.3-1-106.js # bug 603201
+
 skip script test262/intl402/ch10/10.1/10.1.1_a.js # bug 854320
 skip script test262/intl402/ch10/10.1/10.1.1_13.js # bug 853704
 skip script test262/intl402/ch10/10.1/10.1.1_19_c.js # bug 853704
 skip script test262/intl402/ch11/11.1/11.1.1_a.js # bug 854320
 skip script test262/intl402/ch11/11.3/11.3.2_TRP.js # bug 853706
 skip script test262/intl402/ch12/12.1/12.1.1_a.js # bug 854320
+
+#######################################################################
+# Tests disabled due to jstest limitations wrt imported test262 tests #
+#######################################################################
+
+# These tests are disabled because jstest doesn't understand @negative (without
+# a pattern) yet.
+skip script test262/ch11/11.1/11.1.1/S11.1.1_A1.js
+skip script test262/ch11/11.2/11.2.4/S11.2.4_A1.3_T1.js
+skip script test262/ch11/11.3/11.3.1/11.3.1-2-1gs.js
+skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T1.js
+skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T2.js
+skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T3.js
+skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T4.js
+skip script test262/ch11/11.3/11.3.1/S11.3.1_A2.1_T3.js
+skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T1.js
+skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T2.js
+skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T3.js
+skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T4.js
+skip script test262/ch11/11.3/11.3.2/S11.3.2_A2.1_T3.js
+skip script test262/ch11/11.4/11.4.1/11.4.1-5-a-5gs.js
+skip script test262/ch11/11.4/11.4.2/S11.4.2_A2_T2.js
+skip script test262/ch11/11.4/11.4.4/S11.4.4_A2.1_T3.js
+skip script test262/ch11/11.4/11.4.5/S11.4.5_A2.1_T3.js
+skip script test262/ch11/11.13/11.13.1/S11.13.1_A2.1_T3.js
+skip script test262/ch11/11.13/11.13.2/11.13.2-6-1gs.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T1.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T2.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T3.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T4.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T5.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T6.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T7.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T8.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T9.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T10.js
+skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T11.js
+skip script test262/ch13/13.0/S13_A7_T3.js
+
+# These tests are disabled because jstest doesn't understand @negative with a
+# pattern yet.
+skip script test262/ch10/10.1/10.1.1/10.1.1-2gs.js
+skip script test262/ch10/10.1/10.1.1/10.1.1-5gs.js
+skip script test262/ch10/10.1/10.1.1/10.1.1-8gs.js
+skip script test262/ch10/10.4/10.4.2/10.4.2.1-1gs.js
+skip script test262/ch10/10.5/10.5-1gs.js
+skip script test262/ch10/10.6/10.6-2gs.js
+skip script test262/ch11/11.1/11.1.5/11.1.5-1gs.js
+skip script test262/ch11/11.1/11.1.5/11.1.5-2gs.js
+skip script test262/ch11/11.4/11.4.5/11.4.5-2-2gs.js
+skip script test262/ch11/11.13/11.13.1/11.13.1-4-28gs.js
+skip script test262/ch11/11.13/11.13.1/11.13.1-4-29gs.js
+skip script test262/ch13/13.0/13.0_4-5gs.js
+skip script test262/ch13/13.0/13.0_4-17gs.js
+skip script test262/ch13/13.1/13.1-1gs.js
+skip script test262/ch13/13.1/13.1-4gs.js
+skip script test262/ch13/13.1/13.1-5gs.js
+skip script test262/ch13/13.1/13.1-8gs.js
+skip script test262/ch13/13.1/13.1-13gs.js
+skip script test262/ch13/13.2/13.2-19-b-3gs.js

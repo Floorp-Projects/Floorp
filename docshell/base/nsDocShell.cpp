@@ -4247,9 +4247,9 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                   cssClass.AssignLiteral("badStsCert");
                   //measuring STS separately allows us to measure click through
                   //rates easily
-                  bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_STS;
+                  bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP_STS;
                 } else {
-                  bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT;
+                  bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP;
                 }
 
 
@@ -4265,7 +4265,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                 if (alternateErrorPage)
                     errorPage.Assign(alternateErrorPage);
 
-                if (errorPage.EqualsIgnoreCase("certerror")) 
+                if (!IsFrame() && errorPage.EqualsIgnoreCase("certerror")) 
                     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI, bucketId);
 
             } else {

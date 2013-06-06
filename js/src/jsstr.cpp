@@ -76,12 +76,11 @@ ArgToRootedString(JSContext *cx, CallArgs &args, unsigned argno)
     if (argno >= args.length())
         return cx->names().undefined;
 
-    Value &arg = args[argno];
-    JSString *str = ToString<CanGC>(cx, arg);
+    JSString *str = ToString<CanGC>(cx, args.handleAt(argno));
     if (!str)
         return NULL;
 
-    arg = StringValue(str);
+    args[argno] = StringValue(str);
     return str->ensureLinear(cx);
 }
 
@@ -826,8 +825,7 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    Value thatValue = args.length() > 0 ? args[0] : UndefinedValue();
-    RootedString thatStr(cx, ToString<CanGC>(cx, thatValue));
+    RootedString thatStr(cx, ToString<CanGC>(cx, args.handleOrUndefinedAt(0)));
     if (!thatStr)
         return false;
 
@@ -1720,7 +1718,7 @@ class StringRegExpGuard
         /* Build RegExp from pattern string. */
         RootedString opt(cx);
         if (optarg < args.length()) {
-            opt = ToString<CanGC>(cx, args[optarg]);
+            opt = ToString<CanGC>(cx, args.handleAt(optarg));
             if (!opt)
                 return false;
         } else {
@@ -3181,10 +3179,10 @@ str_concat(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     for (unsigned i = 0; i < args.length(); i++) {
-        JSString *argStr = ToString<NoGC>(cx, args[i]);
+        JSString *argStr = ToString<NoGC>(cx, args.handleAt(i));
         if (!argStr) {
             RootedString strRoot(cx, str);
-            argStr = ToString<CanGC>(cx, args[i]);
+            argStr = ToString<CanGC>(cx, args.handleAt(i));
             if (!argStr)
                 return false;
             str = strRoot;
@@ -3508,7 +3506,7 @@ js_String(JSContext *cx, unsigned argc, Value *vp)
 
     RootedString str(cx);
     if (args.length() > 0) {
-        str = ToString<CanGC>(cx, args[0]);
+        str = ToString<CanGC>(cx, args.handleAt(0));
         if (!str)
             return false;
     } else {
@@ -3744,8 +3742,9 @@ template JSFlatString *
 js_NewStringCopyZ<NoGC>(JSContext *cx, const char *s);
 
 const char *
-js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool asSource)
+js_ValueToPrintable(JSContext *cx, const Value &vArg, JSAutoByteString *bytes, bool asSource)
 {
+    RootedValue v(cx, vArg);
     JSString *str;
     if (asSource)
         str = ValueToSource(cx, v);
@@ -3761,7 +3760,7 @@ js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool
 
 template <AllowGC allowGC>
 JSString *
-js::ToStringSlow(JSContext *cx, const Value &arg)
+js::ToStringSlow(JSContext *cx, typename MaybeRooted<Value, allowGC>::HandleType arg)
 {
     /* As with ToObjectSlow, callers must verify that |arg| isn't a string. */
     JS_ASSERT(!arg.isString());
@@ -3794,10 +3793,10 @@ js::ToStringSlow(JSContext *cx, const Value &arg)
 }
 
 template JSString *
-js::ToStringSlow<CanGC>(JSContext *cx, const Value &arg);
+js::ToStringSlow<CanGC>(JSContext *cx, HandleValue arg);
 
 template JSString *
-js::ToStringSlow<NoGC>(JSContext *cx, const Value &arg);
+js::ToStringSlow<NoGC>(JSContext *cx, Value arg);
 
 JSString *
 js::ValueToSource(JSContext *cx, const Value &v)
@@ -3817,7 +3816,8 @@ js::ValueToSource(JSContext *cx, const Value &v)
 
             return js_NewStringCopyN<CanGC>(cx, js_negzero_ucNstr, 2);
         }
-        return ToString<CanGC>(cx, v);
+        RootedValue vRoot(cx, v);
+        return ToString<CanGC>(cx, vRoot);
     }
 
     RootedValue rval(cx, NullValue());

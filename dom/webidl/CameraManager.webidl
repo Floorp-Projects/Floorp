@@ -1,4 +1,5 @@
 /* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -46,3 +47,29 @@ dictionary CameraPictureOptions {
 };
 
 // If we start using CameraPictureOptions here, remove it from DummyBinding.
+
+interface GetCameraCallback;
+interface CameraErrorCallback;
+
+/* Select a camera to use. */
+dictionary CameraSelector {
+    DOMString camera = "back";
+};
+
+interface CameraManager {
+    /* get a camera instance; options will be used to specify which
+       camera to get from the list returned by getListOfCameras(), e.g.:
+        {
+            camera: "front"
+        }
+    */
+  [Throws]
+  void getCamera(CameraSelector options, GetCameraCallback callback,
+                 optional CameraErrorCallback errorCallback);
+
+  /* return an array of camera   identifiers, e.g.
+     [ "front", "back" ]
+   */
+  [Throws]
+  sequence<DOMString> getListOfCameras();
+};
