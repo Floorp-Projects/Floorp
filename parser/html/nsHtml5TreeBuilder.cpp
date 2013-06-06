@@ -595,7 +595,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           case NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR:
           case NS_HTML5TREE_BUILDER_DD_OR_DT:
           case NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL:
-          case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
+          case NS_HTML5TREE_BUILDER_EMBED:
+          case NS_HTML5TREE_BUILDER_IMG:
           case NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6:
           case NS_HTML5TREE_BUILDER_HEAD:
           case NS_HTML5TREE_BUILDER_HR:
@@ -967,7 +968,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           case NS_HTML5TREE_BUILDER_TABLE:
           case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
           case NS_HTML5TREE_BUILDER_BR:
-          case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
+          case NS_HTML5TREE_BUILDER_EMBED:
+          case NS_HTML5TREE_BUILDER_IMG:
           case NS_HTML5TREE_BUILDER_INPUT:
           case NS_HTML5TREE_BUILDER_KEYGEN:
           case NS_HTML5TREE_BUILDER_HR:
@@ -1176,7 +1178,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_BR:
-            case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
+            case NS_HTML5TREE_BUILDER_EMBED:
             case NS_HTML5TREE_BUILDER_AREA_OR_WBR: {
               reconstructTheActiveFormattingElements();
             }
@@ -1201,6 +1203,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               elementName = nsHtml5ElementName::ELT_IMG;
               NS_HTML5_CONTINUE(starttagloop);
             }
+            case NS_HTML5TREE_BUILDER_IMG:
             case NS_HTML5TREE_BUILDER_KEYGEN:
             case NS_HTML5TREE_BUILDER_INPUT: {
               reconstructTheActiveFormattingElements();
@@ -2620,7 +2623,8 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           case NS_HTML5TREE_BUILDER_MENUITEM:
 #endif
           case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK:
-          case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
+          case NS_HTML5TREE_BUILDER_EMBED:
+          case NS_HTML5TREE_BUILDER_IMG:
           case NS_HTML5TREE_BUILDER_IMAGE:
           case NS_HTML5TREE_BUILDER_INPUT:
           case NS_HTML5TREE_BUILDER_KEYGEN:
