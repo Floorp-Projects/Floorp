@@ -1,4 +1,4 @@
-<!DOCTYPE HTML><html><head>
+<!DOCTYPE HTML><html class="reftest-wait"><head>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
@@ -19,12 +19,16 @@ x
   sel.addRange(range);
   p.parentNode.focus();
 
-  sendKey('DOWN');  // now after "1"
-  sendKey('DOWN');  // now below the P element
-  sendKey('UP');    // now before the "1"
-  sendKey('UP');    // now before the "A"
-  sendKey('UP');    // now before the "A"
-  sendKey('UP');    // now before the "A"
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
+  onSpellCheck(p.parentNode, function () {
+    sendKey('DOWN');  // now after "1"
+    sendKey('DOWN');  // now below the P element
+    sendKey('UP');    // now before the "1"
+    sendKey('UP');    // now before the "A"
+    sendKey('UP');    // now before the "A"
+    sendKey('UP');    // now before the "A"
+    document.documentElement.classList.remove("reftest-wait");
+  });
 </script>
 </body>
 </html>
