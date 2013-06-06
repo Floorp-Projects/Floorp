@@ -27,6 +27,7 @@
 #include "jstypes.h"
 #include "jsprf.h"
 #include "jsatom.h"
+#include "jscompartment.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -52,7 +53,6 @@
 #include "yarr/BumpPointerAllocator.h"
 
 #include "jscntxtinlines.h"
-#include "jscompartment.h"
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -1464,6 +1464,18 @@ JSContext::mark(JSTracer *trc)
     MarkValueRoot(trc, &iterValue, "iterValue");
 }
 
+JSVersion
+JSContext::findVersion() const
+{
+    if (hasVersionOverride)
+        return versionOverride;
+
+    if (JSScript *script = stack.currentScript(NULL, js::ContextStack::ALLOW_CROSS_COMPARTMENT))
+        return script->getVersion();
+
+    return defaultVersion;
+}
+
 #if defined JS_THREADSAFE && defined DEBUG
 
 JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
@@ -1481,3 +1493,18 @@ JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
 }
 
 #endif
+
+#ifdef JS_CRASH_DIAGNOSTICS
+void CompartmentChecker::check(StackFrame *fp)
+{
+    if (fp)
+        check(fp->scopeChain());
+}
+
+void CompartmentChecker::check(AbstractFramePtr frame)
+{
+    if (frame)
+        check(frame.scopeChain());
+}
+#endif
+

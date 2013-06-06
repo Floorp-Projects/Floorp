@@ -357,7 +357,7 @@ class NewObjectCache
     inline JSObject *newObjectFromHit(JSContext *cx, EntryIndex entry, js::gc::InitialHeap heap);
 
     /* Fill an entry after a cache miss. */
-    inline void fillProto(EntryIndex entry, Class *clasp, js::TaggedProto proto, gc::AllocKind kind, JSObject *obj);
+    void fillProto(EntryIndex entry, Class *clasp, js::TaggedProto proto, gc::AllocKind kind, JSObject *obj);
     inline void fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj);
     inline void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj);
 
@@ -1529,7 +1529,11 @@ struct JSContext : js::ContextFriendFields,
     JSRuntime *runtime() const { return runtime_; }
     JSCompartment *compartment() const { return compartment_; }
 
-    inline JS::Zone *zone() const;
+    inline JS::Zone *zone() const {
+        JS_ASSERT_IF(!compartment(), !zone_);
+        JS_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
+        return zone_;
+    }
     js::PerThreadData &mainThread() { return runtime()->mainThread; }
 
   private:
@@ -1695,7 +1699,7 @@ struct JSContext : js::ContextFriendFields,
      *
      * Note: if this ever shows up in a profile, just add caching!
      */
-    inline JSVersion findVersion() const;
+    JSVersion findVersion() const;
 
     void setOptions(unsigned opts) {
         JS_ASSERT((opts & JSOPTION_MASK) == opts);
@@ -1762,7 +1766,9 @@ struct JSContext : js::ContextFriendFields,
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime()->onOutOfMemory(p, nbytes, this);
     }
-    void updateMallocCounter(size_t nbytes);
+    void updateMallocCounter(size_t nbytes) {
+        runtime()->updateMallocCounter(zone(), nbytes);
+    }
     void reportAllocationOverflow() {
         js_ReportAllocationOverflow(this);
     }

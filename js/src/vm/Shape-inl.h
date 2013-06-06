@@ -22,9 +22,9 @@
 #include "vm/ScopeObject.h"
 #include "vm/StringObject.h"
 
+#include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
 
 #include "vm/ScopeObject-inl.h"
 

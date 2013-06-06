@@ -21,8 +21,8 @@
 #include "js/Vector.h"
 
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+
 #include "gc/FindSCCs-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
