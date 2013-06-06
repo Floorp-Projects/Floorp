@@ -241,6 +241,16 @@ MDefinition::useCount() const
     return count;
 }
 
+size_t
+MDefinition::defUseCount() const
+{
+    size_t count = 0;
+    for (MUseIterator i(uses_.begin()); i != uses_.end(); i++)
+        if ((*i)->consumer()->isDefinition())
+            count++;
+    return count;
+}
+
 MUseIterator
 MDefinition::removeUse(MUseIterator use)
 {

@@ -858,7 +858,13 @@ ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
     // Ensure that if there is a constant, then it is in rhs.
     // In addition, since clobbering binary operations clobber the left
     // operand, prefer a non-constant lhs operand with no further uses.
-    if (lhs->isConstant() || (!rhs->isConstant() && rhs->useCount() == 1)) {
+
+    if (rhs->isConstant())
+        return;
+
+    if (lhs->isConstant() ||
+        (lhs->defUseCount() == 1 && rhs->defUseCount() != 1))
+    {
         *rhsp = lhs;
         *lhsp = rhs;
     }

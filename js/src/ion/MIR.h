@@ -441,6 +441,10 @@ class MDefinition : public MNode
     // Number of uses of this instruction.
     size_t useCount() const;
 
+    // Number of uses of this instruction.
+    // (only counting MDefinitions, ignoring MResumePoints)
+    size_t defUseCount() const;
+
     bool hasUses() const {
         return !uses_.empty();
     }

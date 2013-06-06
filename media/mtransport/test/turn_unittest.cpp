@@ -345,7 +345,15 @@ int main(int argc, char **argv)
         "environment variables to run this test\n");
     return 0;
   }
-
+  {
+    nr_transport_addr addr;
+    if (nr_ip4_str_port_to_transport_addr(g_turn_server.c_str(), 3478,
+                                          IPPROTO_UDP, &addr)) {
+      printf("Invalid TURN_SERVER_ADDRESS \"%s\". Only IP numbers supported.\n",
+             g_turn_server.c_str());
+      return 0;
+    }
+  }
   test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();

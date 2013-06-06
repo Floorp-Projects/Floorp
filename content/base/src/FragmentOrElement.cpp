@@ -126,8 +126,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
-
 int32_t nsIContent::sTabFocusModel = eTabFocus_any;
 bool nsIContent::sTabFocusModelAppliesToXUL = false;
 uint32_t nsMutationGuard::sMutationCount = 0;

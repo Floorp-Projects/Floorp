@@ -290,7 +290,23 @@ xShmUnmap(sqlite3_file *pFile, int delFlag){
   rc = p->pReal->pMethods->xShmUnmap(p->pReal, delFlag);
   return rc;
 }
- 
+
+int
+xFetch(sqlite3_file *pFile, sqlite3_int64 iOff, int iAmt, void **pp)
+{
+  telemetry_file *p = (telemetry_file *)pFile;
+  MOZ_ASSERT(p->pReal->pMethods->iVersion >= 3);
+  return p->pReal->pMethods->xFetch(p->pReal, iOff, iAmt, pp);
+}
+
+int
+xUnfetch(sqlite3_file *pFile, sqlite3_int64 iOff, void *pResOut)
+{
+  telemetry_file *p = (telemetry_file *)pFile;
+  MOZ_ASSERT(p->pReal->pMethods->iVersion >= 3);
+  return p->pReal->pMethods->xUnfetch(p->pReal, iOff, pResOut);
+}
+
 int
 xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
           int flags, int *pOutFlags)
@@ -337,7 +353,10 @@ xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
     sqlite3_io_methods *pNew = new sqlite3_io_methods;
     const sqlite3_io_methods *pSub = p->pReal->pMethods;
     memset(pNew, 0, sizeof(*pNew));
-    pNew->iVersion = pSub->iVersion;
+    // If you update this version number, you must add appropriate IO methods
+    // for any methods added in the version change.
+    pNew->iVersion = 3;
+    MOZ_ASSERT(pNew->iVersion >= pSub->iVersion);
     pNew->xClose = xClose;
     pNew->xRead = xRead;
     pNew->xWrite = xWrite;
@@ -350,12 +369,19 @@ xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
     pNew->xFileControl = xFileControl;
     pNew->xSectorSize = xSectorSize;
     pNew->xDeviceCharacteristics = xDeviceCharacteristics;
-    if( pNew->iVersion>=2 ){
-      pNew->xShmMap = pSub->xShmMap ? xShmMap : 0;
-      pNew->xShmLock = pSub->xShmLock ? xShmLock : 0;
-      pNew->xShmBarrier = pSub->xShmBarrier ? xShmBarrier : 0;
-      pNew->xShmUnmap = pSub->xShmUnmap ? xShmUnmap : 0;
-    }
+    // Methods added in version 2.
+    pNew->xShmMap = pSub->xShmMap ? xShmMap : 0;
+    pNew->xShmLock = pSub->xShmLock ? xShmLock : 0;
+    pNew->xShmBarrier = pSub->xShmBarrier ? xShmBarrier : 0;
+    pNew->xShmUnmap = pSub->xShmUnmap ? xShmUnmap : 0;
+    // Methods added in version 3.
+    // SQLite 3.7.17 calls these methods without checking for NULL first,
+    // so we always define them.  Verify that we're not going to call
+    // NULL pointers, though.
+    MOZ_ASSERT(pSub->xFetch);
+    pNew->xFetch = xFetch;
+    MOZ_ASSERT(pSub->xUnfetch);
+    pNew->xUnfetch = xUnfetch;
     pFile->pMethods = pNew;
   }
   return rc;
@@ -499,8 +525,9 @@ sqlite3_vfs* ConstructTelemetryVFS()
 
   sqlite3_vfs *tvfs = new ::sqlite3_vfs;
   memset(tvfs, 0, sizeof(::sqlite3_vfs));
+  // If you update this version number, you must add appropriate VFS methods
+  // for any methods added in the version change.
   tvfs->iVersion = 3;
-  // If the SQLite VFS version is updated, this shim must be updated as well.
   MOZ_ASSERT(vfs->iVersion == tvfs->iVersion);
   tvfs->szOsFile = sizeof(telemetry_file) - sizeof(sqlite3_file) + vfs->szOsFile;
   tvfs->mxPathname = vfs->mxPathname;
@@ -518,9 +545,9 @@ sqlite3_vfs* ConstructTelemetryVFS()
   tvfs->xSleep = xSleep;
   tvfs->xCurrentTime = xCurrentTime;
   tvfs->xGetLastError = xGetLastError;
-  // Added in version 2.
+  // Methods added in version 2.
   tvfs->xCurrentTimeInt64 = xCurrentTimeInt64;
-  // Added in version 3.
+  // Methods added in version 3.
   tvfs->xSetSystemCall = xSetSystemCall;
   tvfs->xGetSystemCall = xGetSystemCall;
   tvfs->xNextSystemCall = xNextSystemCall;

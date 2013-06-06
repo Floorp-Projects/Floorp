@@ -7,6 +7,11 @@
     This testcase checks that, for any widgets that have a single valid size
     (and hence refuse to flex), we don't stretch them in the cross-axis,
     despite the "align-self: stretch" property.
+
+    These widgets can be allowed to be resized on some platforms but not others.
+    We'll account for that by giving them height: 100% in the reference case,
+    so that if they're allowed to stretch, then they'll stretch in both the
+    reference case and the testcase.
 -->
 <html>
 <head>
@@ -14,7 +19,6 @@
     div.flexbox {
       display: flex;
       background: lightgray;
-      width: -moz-max-content;
       float: left;
       height: 60px;
       margin-right: 10px;
@@ -22,9 +26,9 @@
     div.flexbox > * {
       outline: 1px dashed black;
       margin: 0;
-      align-self: stretch;
       vertical-align: top;
       height: auto;
+      align-self: stretch;
     }
     br { clear: left; }
   </style>
