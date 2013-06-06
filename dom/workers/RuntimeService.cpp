@@ -650,7 +650,7 @@ SuspendWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow)
 }
 
 void
-ResumeWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow)
+ResumeWorkersForWindow(nsIScriptContext* aCx, nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
   RuntimeService* runtime = RuntimeService::GetService();
@@ -1321,7 +1321,7 @@ RuntimeService::SuspendWorkersForWindow(JSContext* aCx,
 }
 
 void
-RuntimeService::ResumeWorkersForWindow(JSContext* aCx,
+RuntimeService::ResumeWorkersForWindow(nsIScriptContext* aCx,
                                        nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
@@ -1331,7 +1331,7 @@ RuntimeService::ResumeWorkersForWindow(JSContext* aCx,
 
   if (!workers.IsEmpty()) {
     for (uint32_t index = 0; index < workers.Length(); index++) {
-      if (!workers[index]->Resume(aCx)) {
+      if (!workers[index]->SynchronizeAndResume(aCx)) {
         NS_WARNING("Failed to cancel worker!");
       }
     }
