@@ -647,7 +647,7 @@ CodeGeneratorX86Shared::visitAsmJSDivOrMod(LAsmJSDivOrMod *ins)
     masm.testl(rhs, rhs);
     Label notzero;
     masm.j(Assembler::NonZero, &notzero);
-    masm.movl(Imm32(0), output);
+    masm.xorl(output, output);
     masm.jmp(&afterDiv);
     masm.bind(&notzero);
 
