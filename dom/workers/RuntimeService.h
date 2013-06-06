@@ -120,7 +120,7 @@ public:
   SuspendWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow);
 
   void
-  ResumeWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow);
+  ResumeWorkersForWindow(nsIScriptContext* aCx, nsPIDOMWindow* aWindow);
 
   const nsACString&
   GetDetectorName() const

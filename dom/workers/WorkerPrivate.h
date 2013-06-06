@@ -109,7 +109,7 @@ protected:
 
   void NotifyScriptExecutedIfNeeded() const;
 
-private:
+public:
   NS_DECL_NSIRUNNABLE
 };
 
@@ -348,8 +348,11 @@ public:
   bool
   Suspend(JSContext* aCx);
 
-  bool
+  void
   Resume(JSContext* aCx);
+
+  bool
+  SynchronizeAndResume(nsIScriptContext* aCx);
 
   virtual void
   _trace(JSTracer* aTrc) MOZ_OVERRIDE;
