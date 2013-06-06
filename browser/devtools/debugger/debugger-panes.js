@@ -55,6 +55,8 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
     this._cbTextbox.addEventListener("input", this._onConditionalTextboxInput, false);
     this._cbTextbox.addEventListener("keypress", this._onConditionalTextboxKeyPress, false);
 
+    this.autoFocusOnSelection = false;
+
     // Show an empty label by default.
     this.empty();
   },
