@@ -1,6 +1,2 @@
 This directory contains patches that were added locally
 on top of the NSS release.
-
-revert-bug-808217.patch: Revert the patch for bug 808217 because it
-broke the "B2G Arm opt", "B2G Arm debug", and "Android 2.2 Armv6 opt"
-build bots. See bug 874261.

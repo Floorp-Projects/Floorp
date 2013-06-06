@@ -23,7 +23,9 @@ interface TestExampleInterface {
   void passByte(byte arg);
   byte receiveByte();
   void passOptionalByte(optional byte arg);
+  void passOptionalUndefinedMissingByte([TreatUndefinedAs=Missing] optional byte arg);
   void passOptionalByteWithDefault(optional byte arg = 0);
+  void passOptionalUndefinedMissingByteWithDefault([TreatUndefinedAs=Missing] optional byte arg = 0);
   void passNullableByte(byte? arg);
   void passOptionalNullableByte(optional byte? arg);
   void passVariadicByte(byte... arg);
@@ -266,7 +268,9 @@ interface TestExampleInterface {
   void passString(DOMString arg);
   void passNullableString(DOMString? arg);
   void passOptionalString(optional DOMString arg);
+  void passOptionalUndefinedMissingString([TreatUndefinedAs=Missing] optional DOMString arg);
   void passOptionalStringWithDefaultValue(optional DOMString arg = "abc");
+  void passOptionalUndefinedMissingStringWithDefaultValue([TreatUndefinedAs=Missing] optional DOMString arg = "abc");
   void passOptionalNullableString(optional DOMString? arg);
   void passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
   void passVariadicString(DOMString... arg);

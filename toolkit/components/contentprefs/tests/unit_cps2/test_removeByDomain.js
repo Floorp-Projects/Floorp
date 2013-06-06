@@ -159,4 +159,38 @@ let tests = [
     do_check_throws(function () cps.removeAllGlobals(null, "bogus"));
     yield true;
   },
+
+  function removeByDomain_invalidateCache() {
+    yield set("a.com", "foo", 1);
+    yield set("a.com", "bar", 2);
+    getCachedOK(["a.com", "foo"], true, 1);
+    getCachedOK(["a.com", "bar"], true, 2);
+    cps.removeByDomain("a.com", null, makeCallback());
+    getCachedOK(["a.com", "foo"], false);
+    getCachedOK(["a.com", "bar"], false);
+    yield;
+  },
+
+  function removeBySubdomain_invalidateCache() {
+    yield set("a.com", "foo", 1);
+    yield set("b.a.com", "foo", 2);
+    getCachedSubdomainsOK(["a.com", "foo"], [
+      ["a.com", 1],
+      ["b.a.com", 2],
+    ]);
+    cps.removeBySubdomain("a.com", null, makeCallback());
+    getCachedSubdomainsOK(["a.com", "foo"], []);
+    yield;
+  },
+
+  function removeAllGlobals_invalidateCache() {
+    yield setGlobal("foo", 1);
+    yield setGlobal("bar", 2);
+    getCachedGlobalOK(["foo"], true, 1);
+    getCachedGlobalOK(["bar"], true, 2);
+    cps.removeAllGlobals(null, makeCallback());
+    getCachedGlobalOK(["foo"], false);
+    getCachedGlobalOK(["bar"], false);
+    yield;
+  },
 ];

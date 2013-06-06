@@ -1146,6 +1146,7 @@ function StartCurrentTest()
         DoneTests();
     }
     else {
+        gDumpLog("REFTEST TEST-START | " + gURLs[0].prettyPath + "\n");
         var currentTest = gTotalTests - gURLs.length;
         gContainingWindow.document.title = "reftest: " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)";
@@ -1243,7 +1244,7 @@ function StartCurrentURI(aState)
         gContainingWindow.setTimeout(RecordResult, 0);
     } else {
         var currentTest = gTotalTests - gURLs.length;
-        gDumpLog("REFTEST TEST-START | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
+        gDumpLog("REFTEST TEST-LOAD | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)\n");
         LogInfo("START " + gCurrentURL);
         var type = gURLs[0].type
@@ -1712,6 +1713,8 @@ function DoAssertionCheck(numAsserts)
                  expectedAssertions + "\n");
         }
     }
+
+    gDumpLog("REFTEST TEST-END | " + gURLs[0].prettyPath + "\n");
 
     // And start the next test.
     gURLs.shift();

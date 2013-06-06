@@ -1092,7 +1092,8 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         RootedObject obj2(cx);
                         RootedShape prop(cx);
                         RootedId id(cx);
-                        if (!ValueToId<CanGC>(cx, StringValue(*idp), &id))
+                        RootedValue idv(cx, StringValue(*idp));
+                        if (!ValueToId<CanGC>(cx, idv, &id))
                             return false;
                         if (!JSObject::lookupGeneric(cx, proto, id, &obj2, &prop))
                             return false;
@@ -1223,7 +1224,8 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     if (ni) {
         JS_ASSERT(!ni->isKeyIter());
         RootedId id(cx);
-        if (!ValueToId<CanGC>(cx, StringValue(*ni->current()), &id))
+        RootedValue current(cx, StringValue(*ni->current()));
+        if (!ValueToId<CanGC>(cx, current, &id))
             return false;
         ni->incCursor();
         RootedObject obj(cx, ni->obj);

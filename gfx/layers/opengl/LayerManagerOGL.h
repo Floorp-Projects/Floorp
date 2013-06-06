@@ -450,8 +450,6 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
-  virtual LayerRenderState GetRenderState() { return LayerRenderState(); }
-
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset) = 0;
 

@@ -40,7 +40,10 @@ function startTests()
   textbox.focus();
   testNum = 0;
   
-  SimpleTest.executeSoon( function() {  bringUpContextMenu(textbox); });
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+  onSpellCheck(textbox, function () {
+    bringUpContextMenu(textbox);
+  });
 }
 
 function runContextMenuTest()
@@ -65,7 +68,9 @@ function runContextMenuTest()
         contextMenu.hidePopup();
         testNum++;
         
-        SimpleTest.executeSoon( function() {bringUpContextMenu(textbox); }); // Bring up the menu again to invoke the next test
+        onSpellCheck(textbox, function () {
+          bringUpContextMenu(textbox);
+        });
         break;
         
       case 1: // "Undo Add to Dictionary" button
@@ -78,7 +83,9 @@ function runContextMenuTest()
         undoAddDict.doCommand();
         
         contextMenu.hidePopup();
-        SimpleTest.finish();
+        onSpellCheck(textbox, function () {
+          SimpleTest.finish();
+        });
         break;
     }
   });

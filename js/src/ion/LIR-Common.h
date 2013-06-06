@@ -2065,6 +2065,33 @@ class LSqrtD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LAtan2D : public LCallInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(Atan2D)
+    LAtan2D(const LAllocation &y, const LAllocation &x, const LDefinition &temp) {
+        setOperand(0, y);
+        setOperand(1, x);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *y() {
+        return getOperand(0);
+    }
+
+    const LAllocation *x() {
+        return getOperand(1);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Double raised to an integer power.
 class LPowI : public LCallInstructionHelper<1, 2, 1>
 {
