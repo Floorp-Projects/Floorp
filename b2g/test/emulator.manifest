@@ -1,6 +1,6 @@
 [{
-"size": "746441603",
-"digest": "199236aefecc1657cdc1b791ec38c8184557ab9249aff9c63a74abf73edc1dc0ea36b19b558f34ca3b14f8a511b10bcf37408b19701929522b4dc22dbaddcbe9",
+"size": 677339898,
+"digest": "af1d883664bf4f02637060855d76026cceffd28a796ab3d65e16f1b0b6d1a8d5bb634388152ba63ecbfa2fbb1bd59317c0cfd508e163eaf950923b6b999369bc",
 "algorithm": "sha512",
 "filename": "emulator.zip"
 }]
