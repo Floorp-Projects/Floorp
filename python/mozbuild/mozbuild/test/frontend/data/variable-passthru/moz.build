@@ -10,6 +10,8 @@ ASFILES += ['fans.asm', 'tans.s']
 
 DEFINES=['-Dfans', '-Dtans']
 
+EXTRA_COMPONENTS=['fans.js', 'tans.js']
+
 SIMPLE_PROGRAMS += ['fans.x', 'tans.x']
 
 CSRCS += ['fans.c', 'tans.c']

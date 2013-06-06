@@ -351,14 +351,10 @@ NS_IMPL_RELEASE_INHERITED(XULDocument, XMLDocument)
 
 // QueryInterface implementation for XULDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULDocument)
-    NS_DOCUMENT_INTERFACE_TABLE_BEGIN(XULDocument)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsIXULDocument)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsIDOMXULDocument)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsIStreamLoaderObserver)
-      NS_INTERFACE_TABLE_ENTRY(XULDocument, nsICSSLoaderObserver)
-    NS_OFFSET_AND_INTERFACE_TABLE_END
-    NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END_INHERITING(XMLDocument)
+    NS_INTERFACE_TABLE_INHERITED4(XULDocument, nsIXULDocument,
+                                  nsIDOMXULDocument, nsIStreamLoaderObserver,
+                                  nsICSSLoaderObserver)
+NS_INTERFACE_TABLE_TAIL_INHERITING(XMLDocument)
 
 
 //----------------------------------------------------------------------

@@ -84,16 +84,8 @@ this.BookmarkJSONUtils = Object.freeze({
    */
   importJSONNode: function BJU_importJSONNode(aData, aContainer, aIndex,
                                               aGrandParentId) {
-    let deferred = Promise.defer();
-    Services.tm.mainThread.dispatch(function() {
-      try {
-        let importer = new BookmarkImporter();
-        deferred.resolve(importer.importJSONNode(aData, aContainer, aIndex, aGrandParentId));
-      } catch (ex) {
-        deferred.reject(ex);
-      }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
-    return deferred.promise;
+    let importer = new BookmarkImporter();
+    return importer.importJSONNode(aData, aContainer, aIndex, aGrandParentId);
   },
 
   /**
@@ -276,62 +268,61 @@ BookmarkImporter.prototype = {
           let searchIds = [];
           let folderIdMap = [];
 
-          batch.nodes.forEach(function(node) {
-            if (!node.children || node.children.length == 0)
-              return; // Nothing to restore for this root
+          Task.spawn(function() {
+            for (let node of batch.nodes) {
+              if (!node.children || node.children.length == 0)
+                continue; // Nothing to restore for this root
 
-            if (node.root) {
-              let container = PlacesUtils.placesRootId; // Default to places root
-              switch (node.root) {
-                case "bookmarksMenuFolder":
-                  container = PlacesUtils.bookmarksMenuFolderId;
-                  break;
-                case "tagsFolder":
-                  container = PlacesUtils.tagsFolderId;
-                  break;
-                case "unfiledBookmarksFolder":
-                  container = PlacesUtils.unfiledBookmarksFolderId;
-                  break;
-                case "toolbarFolder":
-                  container = PlacesUtils.toolbarFolderId;
-                  break;
-              }
-
-              // Insert the data into the db
-              node.children.forEach(function(child) {
-                let index = child.index;
-                let [folders, searches] =
-                  this.importJSONNode(child, container, index, 0);
-                for (let i = 0; i < folders.length; i++) {
-                  if (folders[i])
-                    folderIdMap[i] = folders[i];
+              if (node.root) {
+                let container = PlacesUtils.placesRootId; // Default to places root
+                switch (node.root) {
+                  case "bookmarksMenuFolder":
+                    container = PlacesUtils.bookmarksMenuFolderId;
+                    break;
+                  case "tagsFolder":
+                    container = PlacesUtils.tagsFolderId;
+                    break;
+                  case "unfiledBookmarksFolder":
+                    container = PlacesUtils.unfiledBookmarksFolderId;
+                    break;
+                  case "toolbarFolder":
+                    container = PlacesUtils.toolbarFolderId;
+                    break;
                 }
-                searchIds = searchIds.concat(searches);
-              }.bind(this));
-            } else {
-              this.importJSONNode(
-                node, PlacesUtils.placesRootId, node.index, 0);
-            }
-          }.bind(this));
 
-          // Fixup imported place: uris that contain folders
-          searchIds.forEach(function(aId) {
-            let oldURI = PlacesUtils.bookmarks.getBookmarkURI(aId);
-            let uri = fixupQuery(oldURI, folderIdMap);
-            if (!uri.equals(oldURI)) {
-              PlacesUtils.bookmarks.changeBookmarkURI(aId, uri);
+                // Insert the data into the db
+                for (let child of node.children) {
+                  let index = child.index;
+                  let [folders, searches] =
+                    yield this.importJSONNode(child, container, index, 0);
+                  for (let i = 0; i < folders.length; i++) {
+                    if (folders[i])
+                      folderIdMap[i] = folders[i];
+                  }
+                  searchIds = searchIds.concat(searches);
+                }
+              } else {
+                yield this.importJSONNode(
+                  node, PlacesUtils.placesRootId, node.index, 0);
+              }
             }
-          });
 
-          Services.tm.mainThread.dispatch(function() {
+            // Fixup imported place: uris that contain folders
+            searchIds.forEach(function(aId) {
+              let oldURI = PlacesUtils.bookmarks.getBookmarkURI(aId);
+              let uri = fixupQuery(oldURI, folderIdMap);
+              if (!uri.equals(oldURI)) {
+                PlacesUtils.bookmarks.changeBookmarkURI(aId, uri);
+              }
+            });
+
             deferred.resolve();
-          }, Ci.nsIThread.DISPATCH_NORMAL);
+          }.bind(this));
         }.bind(this)
       };
 
       PlacesUtils.bookmarks.runInBatchMode(batch, null);
     }
-
     return deferred.promise;
   },
 
@@ -350,135 +341,138 @@ BookmarkImporter.prototype = {
    */
   importJSONNode: function BI_importJSONNode(aData, aContainer, aIndex,
                                              aGrandParentId) {
-    let folderIdMap = [];
-    let searchIds = [];
-    let id = -1;
-    switch (aData.type) {
-      case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
-        if (aContainer == PlacesUtils.tagsFolderId) {
-          // Node is a tag
-          if (aData.children) {
-            aData.children.forEach(function(aChild) {
-              try {
-                PlacesUtils.tagging.tagURI(
-                  NetUtil.newURI(aChild.uri), [aData.title]);
-              } catch (ex) {
-                // Invalid tag child, skip it
-              }
-            });
-            return [folderIdMap, searchIds];
-          }
-        } else if (aData.livemark && aData.annos) {
-          // Node is a livemark
-          let feedURI = null;
-          let siteURI = null;
-          aData.annos = aData.annos.filter(function(aAnno) {
-            switch (aAnno.name) {
-              case PlacesUtils.LMANNO_FEEDURI:
-                feedURI = NetUtil.newURI(aAnno.value);
-                return false;
-              case PlacesUtils.LMANNO_SITEURI:
-                siteURI = NetUtil.newURI(aAnno.value);
-                return false;
-              default:
-                return true;
+    return Task.spawn(function() {
+      let folderIdMap = [];
+      let searchIds = [];
+      let id = -1;
+      switch (aData.type) {
+        case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
+          if (aContainer == PlacesUtils.tagsFolderId) {
+            // Node is a tag
+            if (aData.children) {
+              aData.children.forEach(function(aChild) {
+                try {
+                  PlacesUtils.tagging.tagURI(
+                    NetUtil.newURI(aChild.uri), [aData.title]);
+                } catch (ex) {
+                  // Invalid tag child, skip it
+                }
+              });
+              throw new Task.Result([folderIdMap, searchIds]);
             }
-          });
-
-          if (feedURI) {
-            PlacesUtils.livemarks.addLivemark({
-              title: aData.title,
-              feedURI: feedURI,
-              parentId: aContainer,
-              index: aIndex,
-              lastModified: aData.lastModified,
-              siteURI: siteURI
-            }, function(aStatus, aLivemark) {
-              if (Components.isSuccessCode(aStatus)) {
-                let id = aLivemark.id;
-                if (aData.dateAdded)
-                  PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
-                if (aData.annos && aData.annos.length)
-                  PlacesUtils.setAnnotationsForItem(id, aData.annos);
+          } else if (aData.livemark && aData.annos) {
+            // Node is a livemark
+            let feedURI = null;
+            let siteURI = null;
+            aData.annos = aData.annos.filter(function(aAnno) {
+              switch (aAnno.name) {
+                case PlacesUtils.LMANNO_FEEDURI:
+                  feedURI = NetUtil.newURI(aAnno.value);
+                  return false;
+                case PlacesUtils.LMANNO_SITEURI:
+                  siteURI = NetUtil.newURI(aAnno.value);
+                  return false;
+                default:
+                  return true;
               }
             });
-          }
-        } else {
-          id =
-            PlacesUtils.bookmarks.createFolder(aContainer, aData.title, aIndex);
-          folderIdMap[aData.id] = id;
-          // Process children
-          if (aData.children) {
-            aData.children.forEach(function(aChild, aIndex) {
-              let [folders, searches] =
-                this.importJSONNode(aChild, id, aIndex, aContainer);
-              for (let i = 0; i < folders.length; i++) {
-                if (folders[i])
-                  folderIdMap[i] = folders[i];
+
+            if (feedURI) {
+              PlacesUtils.livemarks.addLivemark({
+                title: aData.title,
+                feedURI: feedURI,
+                parentId: aContainer,
+                index: aIndex,
+                lastModified: aData.lastModified,
+                siteURI: siteURI
+              }, function(aStatus, aLivemark) {
+                if (Components.isSuccessCode(aStatus)) {
+                  let id = aLivemark.id;
+                  if (aData.dateAdded)
+                    PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
+                  if (aData.annos && aData.annos.length)
+                    PlacesUtils.setAnnotationsForItem(id, aData.annos);
+                }
+              });
+            }
+          } else {
+            id = PlacesUtils.bookmarks.createFolder(
+                   aContainer, aData.title, aIndex);
+            folderIdMap[aData.id] = id;
+            // Process children
+            if (aData.children) {
+              for (let i = 0; i < aData.children.length; i++) {
+                let child = aData.children[i];
+                let [folders, searches] =
+                  yield this.importJSONNode(child, id, i, aContainer);
+                for (let j = 0; j < folders.length; j++) {
+                  if (folders[j])
+                    folderIdMap[j] = folders[j];
+                }
+                searchIds = searchIds.concat(searches);
               }
-              searchIds = searchIds.concat(searches);
-            }.bind(this));
+            }
           }
-        }
-        break;
-      case PlacesUtils.TYPE_X_MOZ_PLACE:
-        id = PlacesUtils.bookmarks.insertBookmark(
-               aContainer, NetUtil.newURI(aData.uri), aIndex, aData.title);
-        if (aData.keyword)
-          PlacesUtils.bookmarks.setKeywordForBookmark(id, aData.keyword);
-        if (aData.tags) {
-          let tags = aData.tags.split(", ");
-          if (tags.length)
-            PlacesUtils.tagging.tagURI(NetUtil.newURI(aData.uri), tags);
-        }
-        if (aData.charset) {
-          PlacesUtils.history.setCharsetForURI(
-            NetUtil.newURI(aData.uri), aData.charset);
-        }
-        if (aData.uri.substr(0, 6) == "place:")
-          searchIds.push(id);
-        if (aData.icon) {
-          try {
-            // Create a fake faviconURI to use (FIXME: bug 523932)
-            let faviconURI = NetUtil.newURI("fake-favicon-uri:" + aData.uri);
-            PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-              faviconURI, aData.icon, 0);
-            PlacesUtils.favicons.setAndFetchFaviconForPage(
-              NetUtil.newURI(aData.uri), faviconURI, false,
-              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
-          } catch (ex) {
-            Components.utils.reportError("Failed to import favicon data:" + ex);
+          break;
+        case PlacesUtils.TYPE_X_MOZ_PLACE:
+          id = PlacesUtils.bookmarks.insertBookmark(
+                 aContainer, NetUtil.newURI(aData.uri), aIndex, aData.title);
+          if (aData.keyword)
+            PlacesUtils.bookmarks.setKeywordForBookmark(id, aData.keyword);
+          if (aData.tags) {
+            let tags = aData.tags.split(", ");
+            if (tags.length)
+              PlacesUtils.tagging.tagURI(NetUtil.newURI(aData.uri), tags);
           }
-        }
-        if (aData.iconUri) {
-          try {
-            PlacesUtils.favicons.setAndFetchFaviconForPage(
-              NetUtil.newURI(aData.uri), NetUtil.newURI(aData.iconUri), false,
-              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
-          } catch (ex) {
-            Components.utils.reportError("Failed to import favicon URI:" + ex);
+          if (aData.charset) {
+            yield PlacesUtils.setCharsetForURI(
+              NetUtil.newURI(aData.uri), aData.charset);
           }
-        }
-        break;
-      case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
-        id = PlacesUtils.bookmarks.insertSeparator(aContainer, aIndex);
-        break;
-      default:
-        // Unknown node type
-    }
+          if (aData.uri.substr(0, 6) == "place:")
+            searchIds.push(id);
+          if (aData.icon) {
+            try {
+              // Create a fake faviconURI to use (FIXME: bug 523932)
+              let faviconURI = NetUtil.newURI("fake-favicon-uri:" + aData.uri);
+              PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+                faviconURI, aData.icon, 0);
+              PlacesUtils.favicons.setAndFetchFaviconForPage(
+                NetUtil.newURI(aData.uri), faviconURI, false,
+                PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+            } catch (ex) {
+              Components.utils.reportError("Failed to import favicon data:" + ex);
+            }
+          }
+          if (aData.iconUri) {
+            try {
+              PlacesUtils.favicons.setAndFetchFaviconForPage(
+                NetUtil.newURI(aData.uri), NetUtil.newURI(aData.iconUri), false,
+                PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+            } catch (ex) {
+              Components.utils.reportError("Failed to import favicon URI:" + ex);
+            }
+          }
+          break;
+        case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
+          id = PlacesUtils.bookmarks.insertSeparator(aContainer, aIndex);
+          break;
+        default:
+          // Unknown node type
+      }
 
-    // Set generic properties, valid for all nodes
-    if (id != -1 && aContainer != PlacesUtils.tagsFolderId &&
-        aGrandParentId != PlacesUtils.tagsFolderId) {
-      if (aData.dateAdded)
-        PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
-      if (aData.lastModified)
-        PlacesUtils.bookmarks.setItemLastModified(id, aData.lastModified);
-      if (aData.annos && aData.annos.length)
-        PlacesUtils.setAnnotationsForItem(id, aData.annos);
-    }
+      // Set generic properties, valid for all nodes
+      if (id != -1 && aContainer != PlacesUtils.tagsFolderId &&
+          aGrandParentId != PlacesUtils.tagsFolderId) {
+        if (aData.dateAdded)
+          PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
+        if (aData.lastModified)
+          PlacesUtils.bookmarks.setItemLastModified(id, aData.lastModified);
+        if (aData.annos && aData.annos.length)
+          PlacesUtils.setAnnotationsForItem(id, aData.annos);
+      }
 
-    return [folderIdMap, searchIds];
+      throw new Task.Result([folderIdMap, searchIds]);
+    }.bind(this));
   }
 }
 
