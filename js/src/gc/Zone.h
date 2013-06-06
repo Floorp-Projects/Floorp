@@ -311,6 +311,9 @@ struct Zone : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS::Zone>
     js::types::TypeZone types;
 
     void sweep(js::FreeOp *fop, bool releaseTypes);
+
+  private:
+    void sweepBreakpoints(js::FreeOp *fop);
 };
 
 } /* namespace JS */
