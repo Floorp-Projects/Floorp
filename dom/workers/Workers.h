@@ -24,6 +24,7 @@
 
 #define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
+class nsIScriptContext;
 class nsPIDOMWindow;
 
 BEGIN_WORKERS_NAMESPACE
@@ -54,7 +55,7 @@ void
 SuspendWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow);
 
 void
-ResumeWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow);
+ResumeWorkersForWindow(nsIScriptContext* aCx, nsPIDOMWindow* aWindow);
 
 class WorkerTask {
 public:

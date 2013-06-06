@@ -77,6 +77,7 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+using mozilla::AutoPushJSContext;
 using mozilla::AutoSafeJSContext;
 
 USING_WORKERS_NAMESPACE
@@ -1403,6 +1404,33 @@ public:
   }
 };
 
+class SynchronizeAndResumeRunnable : public nsRunnable
+{
+protected:
+  WorkerPrivate* mWorkerPrivate;
+  nsCOMPtr<nsIScriptContext> mCx;
+
+public:
+  SynchronizeAndResumeRunnable(WorkerPrivate* aWorkerPrivate,
+                               nsIScriptContext* aCx)
+  : mWorkerPrivate(aWorkerPrivate), mCx(aCx)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+    AutoPushJSContext cx(mCx ? mCx->GetNativeContext() :
+                         nsContentUtils::GetSafeJSContext());
+    JSAutoRequest ar(cx);
+    mWorkerPrivate->Resume(cx);
+
+    return NS_OK;
+  }
+};
+
 class WorkerJSRuntimeStats : public JS::RuntimeStats
 {
   const nsACString& mRtPath;
@@ -1959,7 +1987,7 @@ WorkerPrivateParent<Derived>::Suspend(JSContext* aCx)
 }
 
 template <class Derived>
-bool
+void
 WorkerPrivateParent<Derived>::Resume(JSContext* aCx)
 {
   AssertIsOnParentThread();
@@ -1971,11 +1999,11 @@ WorkerPrivateParent<Derived>::Resume(JSContext* aCx)
     MutexAutoLock lock(mMutex);
 
     if (mParentStatus >= Terminating) {
-      return true;
+      return;
     }
   }
 
-  // Dispatch queued runnables before waking up the worker, otherwise the worker
+  // Execute queued runnables before waking up the worker, otherwise the worker
   // could post new messages before we run those that have been queued.
   if (!mQueuedRunnables.IsEmpty()) {
     AssertIsOnMainThread();
@@ -1985,19 +2013,31 @@ WorkerPrivateParent<Derived>::Resume(JSContext* aCx)
 
     for (uint32_t index = 0; index < runnables.Length(); index++) {
       nsRefPtr<WorkerRunnable>& runnable = runnables[index];
-      if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
-        NS_WARNING("Failed to dispatch queued runnable!");
-      }
+      runnable->Run();
     }
   }
 
   nsRefPtr<ResumeRunnable> runnable =
     new ResumeRunnable(ParentAsWorkerPrivate());
-  if (!runnable->Dispatch(aCx)) {
-    return false;
-  }
+  runnable->Dispatch(aCx);
+}
 
-  return true;
+template <class Derived>
+bool
+WorkerPrivateParent<Derived>::SynchronizeAndResume(nsIScriptContext* aCx)
+{
+  AssertIsOnParentThread();
+  NS_ASSERTION(mParentSuspended, "Not yet suspended!");
+
+  // NB: There may be pending unqueued messages.  If we resume here we will
+  // execute those messages out of order.  Instead we post an event to the
+  // end of the event queue, allowing all of the outstanding messages to be
+  // queued up in order on the worker.  Then and only then we execute all of
+  // the messages.
+
+  nsRefPtr<SynchronizeAndResumeRunnable> runnable =
+    new SynchronizeAndResumeRunnable(ParentAsWorkerPrivate(), aCx);
+  return NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable));
 }
 
 template <class Derived>
