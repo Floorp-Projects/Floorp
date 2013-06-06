@@ -9,21 +9,14 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
-  Components.utils.import("resource://gre/modules/AddonManager.jsm");
-  return AddonManager;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "AddonRepository", function() {
-  Components.utils.import("resource://gre/modules/AddonRepository.jsm");
-  return AddonRepository;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
+                                  "resource://gre/modules/AddonRepository.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Components.utils.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
-
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 function getPref(func, preference, defaultValue) {
   try {
