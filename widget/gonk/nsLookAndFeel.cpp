@@ -17,6 +17,7 @@
 #include "nsLookAndFeel.h"
 #include "nsStyleConsts.h"
 #include "gfxFont.h"
+#include "cutils/properties.h"
 
 static const PRUnichar UNICODE_BULLET = 0x2022;
 
@@ -365,6 +366,13 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         case eIntID_ScrollbarButtonAutoRepeatBehavior:
             aResult = 0;
             break;
+
+        case eIntID_PhysicalHomeButton: {
+            char propValue[PROPERTY_VALUE_MAX];
+            property_get("ro.moz.has_home_button", propValue, "1");
+            aResult = atoi(propValue);
+            break;
+        }
 
         default:
             aResult = 0;
