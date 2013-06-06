@@ -325,51 +325,6 @@ function shouldAdjustPathsOnMac() {
 }
 
 /**
- * This function copies the entire process directory over to a new one which we
- * can write to, so that we can test under Windows which holds locks on opened
- * files.
- */
-function adjustPathsOnWindows() {
-  // We copy the entire GRE directory into another location so that xpcshell
-  // running doesn't prevent the updater from moving stuff around.
-  let tmpDir = do_get_profile();
-  tmpDir.append("ExecutableDir.tmp");
-  tmpDir.createUnique(tmpDir.DIRECTORY_TYPE, 0755);
-  let procDir = getCurrentProcessDir();
-  copyDirRecursive(procDir, tmpDir, "bin");
-  let newDir = tmpDir.clone();
-  newDir.append("bin");
-  gWindowsBinDir = newDir;
-  logTestInfo("Using this new bin directory: " + gWindowsBinDir.path);
-  // Note that this directory will be deleted as part of the xpcshell teardown,
-  // so we don't need to remove it explicitly.
-
-  // We need to make NS_GRE_DIR point to the new bindir, since
-  // nsUpdateProcessor::ProcessUpdate uses NS_GRE_DIR to construct the
-  // destination path name which would be passed to updater.exe.
-  let dirProvider = {
-    getFile: function DP_getFile(prop, persistent) {
-      persistent.value = true;
-      if (prop == NS_GRE_DIR)
-        return getAppDir();
-      return null;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(AUS_Ci.nsIDirectoryServiceProvider) ||
-          iid.equals(AUS_Ci.nsISupports))
-        return this;
-      throw AUS_Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  let ds = Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService);
-  ds.QueryInterface(AUS_Ci.nsIProperties).undefine(NS_GRE_DIR);
-  ds.registerProvider(dirProvider);
-  do_register_cleanup(function() {
-    ds.unregisterProvider(dirProvider);
-  });
-}
-
-/**
  * Gets the directory where the update adds / removes the files contained in the
  * update.
  *
