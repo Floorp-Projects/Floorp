@@ -385,18 +385,14 @@ GLScreenBuffer::Swap(const gfxIntSize& size)
 {
     SharedSurface* nextSurf = mStream->SwapProducer(mFactory, size);
     if (!nextSurf) {
-        SurfaceFactory_GL* basicFactory =
-            new SurfaceFactory_Basic(mGL, mFactory->Caps());
-        nextSurf = mStream->SwapProducer(basicFactory, size);
-        if (!nextSurf) {
-            delete basicFactory;
-            return false;
-        }
+        SurfaceFactory_Basic basicFactory(mGL, mFactory->Caps());
+        nextSurf = mStream->SwapProducer(&basicFactory, size);
+        if (!nextSurf)
+          return false;
 
-        // Swap out the apparently defective old factory.
-        delete mFactory;
-        mFactory = basicFactory;
+        NS_WARNING("SwapProd failed for sophisticated Factory type, fell back to Basic.");
     }
+    MOZ_ASSERT(nextSurf);
 
     Attach(nextSurf, size);
 
