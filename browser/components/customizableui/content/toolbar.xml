@@ -99,7 +99,9 @@
           if (id)
             this._customizationTarget = document.getElementById(id);
 
-          if (!this._customizationTarget)
+          if (this._customizationTarget)
+            this._customizationTarget.insertItem = this.insertItem.bind(this);
+          else
             this._customizationTarget = this;
 
           return this._customizationTarget;
