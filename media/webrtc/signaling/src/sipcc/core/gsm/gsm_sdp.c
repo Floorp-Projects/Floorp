@@ -4749,7 +4749,7 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
                            TODO(adam@nostrum.com): Figure out how to notify
                            when streams gain tracks */
                         ui_on_remote_stream_added(evOnRemoteStreamAdd,
-                            fcb_p->state, dcb_p->line, dcb_p->call_id,
+                            dcb_p->line, dcb_p->call_id,
                             dcb_p->caller_id.call_instance_id,
                             dcb_p->remote_media_stream_tbl->streams[j]);
 
