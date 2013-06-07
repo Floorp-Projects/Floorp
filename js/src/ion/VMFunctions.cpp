@@ -570,6 +570,11 @@ FilterArguments(JSContext *cx, JSString *str)
 void
 PostWriteBarrier(JSRuntime *rt, JSObject *obj)
 {
+#ifdef JS_GC_ZEAL
+    /* The jitcode version of IsInsideNursery does not know about the verifier. */
+    if (rt->gcVerifyPostData && rt->gcVerifierNursery.isInside(obj))
+        return;
+#endif
     JS_ASSERT(!IsInsideNursery(rt, obj));
     rt->gcStoreBuffer.putWholeObject(obj);
 }
