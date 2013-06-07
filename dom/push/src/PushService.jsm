@@ -1151,6 +1151,12 @@ this.PushService = {
     }
 
     this._db.getByPushEndpoint(aPageRecord.pushEndpoint, function(record) {
+      // If the endpoint didn't exist, let's just fail.
+      if (record === undefined) {
+        fail("NotFoundError");
+        return;
+      }
+
       // Non-owner tried to unregister, say success, but don't do anything.
       if (record.manifestURL !== aPageRecord.manifestURL) {
         aMessageManager.sendAsyncMessage("PushService:Unregister:OK", {
