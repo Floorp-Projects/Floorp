@@ -529,10 +529,12 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
-    nsCOMPtr<nsIContentViewer> viewer;
-    webContainer->GetContentViewer(getter_AddRefs(viewer));
-    if (viewer && viewer->GetDocument() && viewer->GetDocument()->IsShowing()) {
-      viewer->GetDocument()->OnPageHide(false, nullptr);
+    if (aIsPrintPreview) {
+      nsCOMPtr<nsIContentViewer> viewer;
+      webContainer->GetContentViewer(getter_AddRefs(viewer));
+      if (viewer && viewer->GetDocument() && viewer->GetDocument()->IsShowing()) {
+        viewer->GetDocument()->OnPageHide(false, nullptr);
+      }
     }
 
     nsAutoScriptBlocker scriptBlocker;
