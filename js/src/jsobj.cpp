@@ -1144,11 +1144,6 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
 
         JS_ASSERT(obj->lastProperty()->slotSpan() == last->slotSpan());
         JS_ALWAYS_TRUE(setLastProperty(cx, obj, last));
-
-        // Ordinarily ArraySetLength handles this, but we're going behind its
-        // back right now, so we must do this manually.
-        if (it == FREEZE && obj->isArray())
-            obj->getElementsHeader()->setNonwritableArrayLength();
     } else {
         RootedId id(cx);
         for (size_t i = 0; i < props.length(); i++) {
@@ -1169,6 +1164,18 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
                 return false;
         }
     }
+
+    // Ordinarily ArraySetLength handles this, but we're going behind its back
+    // right now, so we must do this manually.  Neither the custom property
+    // tree mutations nor the setGenericAttributes call in the above code will
+    // do this for us.
+    //
+    // ArraySetLength also implements the capacity <= length invariant for
+    // arrays with non-writable length.  We don't need to do anything special
+    // for that, because capacity was zeroed out by preventExtensions.  (See
+    // the assertion before the if-else above.)
+    if (it == FREEZE && obj->isArray())
+        obj->getElementsHeader()->setNonwritableArrayLength();
 
     return true;
 }
