@@ -3821,11 +3821,7 @@ Parser<FullParseHandler>::forStatement()
          * any, else NULL. Note that the "declaration with initializer" case
          * rewrites the loop-head, moving the decl and setting pn1 to NULL.
          */
-        pn2 = NULL;
         if (forDecl) {
-            /* Tell EmitVariables that pn1 is part of a for/in. */
-            pn1->pn_xflags |= PNX_FORINVAR;
-
             pn2 = pn1->pn_head;
             if ((pn2->isKind(PNK_NAME) && pn2->maybeExpr())
 #if JS_HAS_DESTRUCTURING
@@ -3852,14 +3848,12 @@ Parser<FullParseHandler>::forStatement()
                     return null();
 
                 /*
-                 * All of 'var x = i' is hoisted above 'for (x in o)',
-                 * so clear PNX_FORINVAR.
+                 * All of 'var x = i' is hoisted above 'for (x in o)'.
                  *
                  * Request JSOP_POP here since the var is for a simple
                  * name (it is not a destructuring binding's left-hand
                  * side) and it has an initializer.
                  */
-                pn1->pn_xflags &= ~PNX_FORINVAR;
                 pn1->pn_xflags |= PNX_POPVAR;
                 pn1 = NULL;
 
@@ -6061,7 +6055,6 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
         vars->pn_pos = pn3->pn_pos;
         vars->makeEmpty();
         vars->append(pn3);
-        vars->pn_xflags |= PNX_FORINVAR;
 
         /* Definitions can't be passed directly to EmitAssignment as lhs. */
         pn3 = cloneLeftHandSide(pn3);

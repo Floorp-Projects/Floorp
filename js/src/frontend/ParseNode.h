@@ -245,7 +245,7 @@ enum ParseNodeKind {
  *                          pn_right: body
  * PNK_FORIN    ternary     pn_kid1:  PNK_VAR to left of 'in', or NULL
  *                            its pn_xflags may have PNX_POPVAR
- *                            and PNX_FORINVAR bits set
+ *                            bit set
  *                          pn_kid2: PNK_NAME or destructuring expr
  *                            to left of 'in'; if pn_kid1, then this
  *                            is a clone of pn_kid1->pn_head
@@ -642,21 +642,19 @@ struct ParseNode {
 #define PNX_CANTFOLD    0x02            /* PNK_ADD list has unfoldable term */
 #define PNX_POPVAR      0x04            /* PNK_VAR or PNK_CONST last result
                                            needs popping */
-#define PNX_FORINVAR    0x08            /* PNK_VAR is left kid of PNK_FORIN node
-                                           which is left kid of PNK_FOR */
-#define PNX_GROUPINIT   0x10            /* var [a, b] = [c, d]; unit list */
-#define PNX_FUNCDEFS    0x20            /* contains top-level function statements */
-#define PNX_SETCALL     0x40            /* call expression in lvalue context */
-#define PNX_DESTRUCT    0x80            /* destructuring special cases:
+#define PNX_GROUPINIT   0x08            /* var [a, b] = [c, d]; unit list */
+#define PNX_FUNCDEFS    0x10            /* contains top-level function statements */
+#define PNX_SETCALL     0x20            /* call expression in lvalue context */
+#define PNX_DESTRUCT    0x40            /* destructuring special cases:
                                            1. shorthand syntax used, at present
                                               object destructuring ({x,y}) only;
                                            2. code evaluating destructuring
                                               arguments occurs before function
                                               body */
-#define PNX_SPECIALARRAYINIT 0x100      /* one or more of
+#define PNX_SPECIALARRAYINIT 0x80       /* one or more of
                                            1. array initialiser has holes
                                            2. array initializer has spread node */
-#define PNX_NONCONST   0x200            /* initialiser has non-constants */
+#define PNX_NONCONST   0x100            /* initialiser has non-constants */
 
     unsigned frameLevel() const {
         JS_ASSERT(pn_arity == PN_CODE || pn_arity == PN_NAME);
