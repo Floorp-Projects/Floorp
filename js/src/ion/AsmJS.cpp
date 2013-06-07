@@ -277,10 +277,16 @@ FunctionStatementList(ParseNode *fn)
 }
 
 static inline ParseNode *
-FunctionLastStatementOrNull(ParseNode *fn)
+FunctionLastReturnStatementOrNull(ParseNode *fn)
 {
-    ParseNode *list = FunctionStatementList(fn);
-    return list->pn_count == 0 ? NULL : list->last();
+    ParseNode *listIter = ListHead(FunctionStatementList(fn));
+    ParseNode *lastReturn = NULL;
+    while (listIter) {
+        if (listIter->isKind(PNK_RETURN))
+            lastReturn = listIter;
+        listIter = listIter->pn_next;
+    }
+    return lastReturn;
 }
 
 static inline bool
@@ -2861,7 +2867,7 @@ CheckArguments(ModuleCompiler &m, ParseNode *fn, MIRTypeVector *argTypes, ParseN
 static bool
 CheckReturnType(ModuleCompiler &m, ParseNode *fn, RetType *returnType)
 {
-    ParseNode *stmt = FunctionLastStatementOrNull(fn);
+    ParseNode *stmt = FunctionLastReturnStatementOrNull(fn);
     if (!stmt || !stmt->isKind(PNK_RETURN) || !UnaryKid(stmt)) {
         *returnType = RetType::Void;
         return true;
