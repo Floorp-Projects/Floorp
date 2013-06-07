@@ -219,12 +219,6 @@ HTMLAreaElement::SetPing(const nsAString& aValue)
   return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, true);
 }
 
-nsLinkState
-HTMLAreaElement::GetLinkState() const
-{
-  return Link::GetLinkState();
-}
-
 already_AddRefed<nsIURI>
 HTMLAreaElement::GetHrefURI() const
 {
