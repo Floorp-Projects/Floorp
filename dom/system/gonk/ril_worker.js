@@ -747,6 +747,11 @@ let RIL = {
   preferredNetworkType: null,
 
   /**
+   * Global Cell Broadcast switch.
+   */
+  cellBroadcastDisabled: false,
+
+  /**
    * Parsed Cell Broadcast search lists.
    * cellBroadcastConfigs.MMI should be preserved over rild reset.
    */
@@ -890,6 +895,7 @@ let RIL = {
     this.cellBroadcastConfigs = {
       MMI: cbmmi || null
     };
+    this.mergedCellBroadcastConfig = null;
   },
 
   get muted() {
@@ -1898,6 +1904,19 @@ let RIL = {
     Buf.sendParcel();
   },
 
+  setCellBroadcastDisabled: function setCellBroadcastDisabled(options) {
+    this.cellBroadcastDisabled = options.disabled;
+
+    // If |this.mergedCellBroadcastConfig| is null, either we haven't finished
+    // reading required SIM files, or no any channel is ever configured.  In
+    // the former case, we'll call |this.updateCellBroadcastConfig()| later
+    // with correct configs; in the latter case, we don't bother resetting CB
+    // to disabled again.
+    if (this.mergedCellBroadcastConfig) {
+      this.updateCellBroadcastConfig();
+    }
+  },
+
   setCellBroadcastSearchList: function setCellBroadcastSearchList(options) {
     try {
       let str = options.searchListStr;
@@ -1915,8 +1934,9 @@ let RIL = {
   },
 
   updateCellBroadcastConfig: function updateCellBroadcastConfig() {
-    let activate = (this.mergedCellBroadcastConfig != null)
-                   && (this.mergedCellBroadcastConfig.length > 0);
+    let activate = !this.cellBroadcastDisabled &&
+                   (this.mergedCellBroadcastConfig != null) &&
+                   (this.mergedCellBroadcastConfig.length > 0);
     if (activate) {
       this.setGsmSmsBroadcastConfig(this.mergedCellBroadcastConfig);
     } else {
@@ -4340,6 +4360,7 @@ let RIL = {
   setInitialOptions: function setInitialOptions(options) {
     DEBUG = DEBUG_WORKER || options.debug;
     CLIENT_ID = options.clientId;
+    this.cellBroadcastDisabled = options.cellBroadcastDisabled;
   }
 };
 
