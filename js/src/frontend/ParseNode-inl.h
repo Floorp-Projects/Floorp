@@ -7,8 +7,8 @@
 #ifndef ParseNode_inl_h__
 #define ParseNode_inl_h__
 
-#include "frontend/Parser.h"
 #include "frontend/ParseNode.h"
+#include "frontend/SharedContext.h"
 
 namespace js {
 namespace frontend {
@@ -42,17 +42,6 @@ ParseNode::atom() const
 {
     JS_ASSERT(isKind(PNK_MODULE) || isKind(PNK_STRING));
     return isKind(PNK_MODULE) ? pn_modulebox->module()->atom() : pn_atom;
-}
-
-inline void
-NameNode::initCommon(ParseContext<FullParseHandler> *pc)
-{
-    pn_expr = NULL;
-    pn_cookie.makeFree();
-    pn_dflags = (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
-                ? PND_BLOCKCHILD
-                : 0;
-    pn_blockid = pc->blockid();
 }
 
 } /* namespace frontend */

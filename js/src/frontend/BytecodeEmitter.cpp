@@ -8,6 +8,8 @@
  * JS bytecode generation.
  */
 
+#include "frontend/BytecodeEmitter-inl.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
@@ -31,7 +33,6 @@
 #include "jsautooplen.h"        // generated headers last
 
 #include "ds/LifoAlloc.h"
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "ion/AsmJS.h"

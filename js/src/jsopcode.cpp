@@ -28,8 +28,8 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/TokenStream.h"
+#include "frontend/BytecodeCompiler.h"
+#include "frontend/SourceNotes.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"

@@ -15,8 +15,6 @@
 #include "jsscript.h"
 #include "jspubtd.h"
 
-#include "frontend/BytecodeCompiler.h"
-#include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
@@ -184,7 +182,7 @@ struct BytecodeEmitter
 
     void tellDebuggerAboutCompiledScript(JSContext *cx);
 
-    TokenStream *tokenStream() { return &parser->tokenStream; }
+    inline TokenStream *tokenStream();
 
     BytecodeVector &code() const { return current->code; }
     jsbytecode *code(ptrdiff_t offset) const { return current->code.begin() + offset; }

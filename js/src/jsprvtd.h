@@ -147,6 +147,7 @@ namespace frontend {
 
 struct BytecodeEmitter;
 struct Definition;
+class FullParseHandler;
 class FunctionBox;
 class ObjectBox;
 struct Token;

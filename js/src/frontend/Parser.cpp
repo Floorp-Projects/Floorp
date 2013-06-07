@@ -39,9 +39,9 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
-#include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "vm/Interpreter.h"
@@ -597,6 +597,12 @@ Parser<ParseHandler>::trace(JSTracer *trc)
     traceListHead->trace(trc);
 }
 
+void
+MarkParser(JSTracer *trc, AutoGCRooter *parser)
+{
+    static_cast<Parser<FullParseHandler> *>(parser)->trace(trc);
+}
+
 /*
  * Parse a top-level JS script.
  */
@@ -830,10 +836,7 @@ Parser<ParseHandler>::checkStrictBinding(HandlePropertyName name, Node pn)
     if (!pc->sc->needStrictChecks())
         return true;
 
-    if (name == context->names().eval ||
-        name == context->names().arguments ||
-        FindKeyword(name->charsZ(), name->length()))
-    {
+    if (name == context->names().eval || name == context->names().arguments || IsKeyword(name)) {
         JSAutoByteString bytes;
         if (!js_AtomToPrintableString(context, name, &bytes))
             return false;

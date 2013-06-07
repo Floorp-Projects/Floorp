@@ -16,7 +16,7 @@
 #include "jswatchpoint.h"
 
 #include "builtin/MapObject.h"
-#include "frontend/Parser.h"
+#include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
@@ -388,7 +388,7 @@ AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag_) {
       case PARSER:
-        static_cast<frontend::Parser<frontend::FullParseHandler> *>(this)->trace(trc);
+        frontend::MarkParser(trc, this);
         return;
 
       case IDARRAY: {

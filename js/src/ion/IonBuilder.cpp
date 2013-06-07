@@ -4,18 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ion/IonBuilder.h"
+
 #include "mozilla/DebugOnly.h"
 
-#include "IonAnalysis.h"
-#include "IonBuilder.h"
-#include "Lowering.h"
-#include "MIRGraph.h"
-#include "Ion.h"
-#include "IonAnalysis.h"
-#include "IonSpewer.h"
-#include "BaselineInspector.h"
 #include "builtin/Eval.h"
-#include "frontend/BytecodeEmitter.h"
+#include "frontend/SourceNotes.h"
+#include "ion/BaselineInspector.h"
+#include "ion/Ion.h"
+#include "ion/IonAnalysis.h"
+#include "ion/IonAnalysis.h"
+#include "ion/IonSpewer.h"
+#include "ion/Lowering.h"
+#include "ion/MIRGraph.h"
 
 #include "CompileInfo-inl.h"
 #include "ExecutionModeInlines.h"
