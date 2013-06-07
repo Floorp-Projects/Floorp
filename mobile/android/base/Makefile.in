@@ -27,6 +27,7 @@ MOZGLUE_PP_JAVA_FILES := \
 UTIL_JAVA_FILES := \
   util/ActivityResultHandler.java \
   util/ActivityResultHandlerMap.java \
+  util/Clipboard.java \
   util/EventDispatcher.java \
   util/FloatUtils.java \
   util/GamepadUtils.java \
