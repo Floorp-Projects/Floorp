@@ -7,6 +7,7 @@
 #ifndef jsion_cpu_arm_assembler_h__
 #define jsion_cpu_arm_assembler_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Util.h"
 
@@ -26,44 +27,44 @@ namespace ion {
 // clearer than bl r14).  HOWEVER, this register can
 // easily be a gpr when it is not busy holding the return
 // address.
-static const Register r0  = { Registers::r0 };
-static const Register r1  = { Registers::r1 };
-static const Register r2  = { Registers::r2 };
-static const Register r3  = { Registers::r3 };
-static const Register r4  = { Registers::r4 };
-static const Register r5  = { Registers::r5 };
-static const Register r6  = { Registers::r6 };
-static const Register r7  = { Registers::r7 };
-static const Register r8  = { Registers::r8 };
-static const Register r9  = { Registers::r9 };
-static const Register r10 = { Registers::r10 };
-static const Register r11 = { Registers::r11 };
-static const Register r12 = { Registers::ip };
-static const Register ip  = { Registers::ip };
-static const Register sp  = { Registers::sp };
-static const Register r14 = { Registers::lr };
-static const Register lr  = { Registers::lr };
-static const Register pc  = { Registers::pc };
+static const MOZ_CONSTEXPR Register r0  = { Registers::r0 };
+static const MOZ_CONSTEXPR Register r1  = { Registers::r1 };
+static const MOZ_CONSTEXPR Register r2  = { Registers::r2 };
+static const MOZ_CONSTEXPR Register r3  = { Registers::r3 };
+static const MOZ_CONSTEXPR Register r4  = { Registers::r4 };
+static const MOZ_CONSTEXPR Register r5  = { Registers::r5 };
+static const MOZ_CONSTEXPR Register r6  = { Registers::r6 };
+static const MOZ_CONSTEXPR Register r7  = { Registers::r7 };
+static const MOZ_CONSTEXPR Register r8  = { Registers::r8 };
+static const MOZ_CONSTEXPR Register r9  = { Registers::r9 };
+static const MOZ_CONSTEXPR Register r10 = { Registers::r10 };
+static const MOZ_CONSTEXPR Register r11 = { Registers::r11 };
+static const MOZ_CONSTEXPR Register r12 = { Registers::ip };
+static const MOZ_CONSTEXPR Register ip  = { Registers::ip };
+static const MOZ_CONSTEXPR Register sp  = { Registers::sp };
+static const MOZ_CONSTEXPR Register r14 = { Registers::lr };
+static const MOZ_CONSTEXPR Register lr  = { Registers::lr };
+static const MOZ_CONSTEXPR Register pc  = { Registers::pc };
 
-static const Register ScratchRegister = {Registers::ip};
+static const MOZ_CONSTEXPR Register ScratchRegister = {Registers::ip};
 
-static const Register OsrFrameReg = r3;
-static const Register ArgumentsRectifierReg = r8;
-static const Register CallTempReg0 = r5;
-static const Register CallTempReg1 = r6;
-static const Register CallTempReg2 = r7;
-static const Register CallTempReg3 = r8;
-static const Register CallTempReg4 = r0;
-static const Register CallTempReg5 = r1;
-static const Register CallTempReg6 = r2;
+static const MOZ_CONSTEXPR Register OsrFrameReg = r3;
+static const MOZ_CONSTEXPR Register ArgumentsRectifierReg = r8;
+static const MOZ_CONSTEXPR Register CallTempReg0 = r5;
+static const MOZ_CONSTEXPR Register CallTempReg1 = r6;
+static const MOZ_CONSTEXPR Register CallTempReg2 = r7;
+static const MOZ_CONSTEXPR Register CallTempReg3 = r8;
+static const MOZ_CONSTEXPR Register CallTempReg4 = r0;
+static const MOZ_CONSTEXPR Register CallTempReg5 = r1;
+static const MOZ_CONSTEXPR Register CallTempReg6 = r2;
 
-static const Register IntArgReg0 = r0;
-static const Register IntArgReg1 = r1;
-static const Register IntArgReg2 = r2;
-static const Register IntArgReg3 = r3;
-static const Register GlobalReg = r10;
-static const Register HeapReg = r11;
-static const Register CallTempNonArgRegs[] = { r5, r6, r7, r8 };
+static const MOZ_CONSTEXPR Register IntArgReg0 = r0;
+static const MOZ_CONSTEXPR Register IntArgReg1 = r1;
+static const MOZ_CONSTEXPR Register IntArgReg2 = r2;
+static const MOZ_CONSTEXPR Register IntArgReg3 = r3;
+static const MOZ_CONSTEXPR Register GlobalReg = r10;
+static const MOZ_CONSTEXPR Register HeapReg = r11;
+static const MOZ_CONSTEXPR Register CallTempNonArgRegs[] = { r5, r6, r7, r8 };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 class ABIArgGenerator
@@ -87,37 +88,37 @@ class ABIArgGenerator
 
 };
 
-static const Register PreBarrierReg = r1;
+static const MOZ_CONSTEXPR Register PreBarrierReg = r1;
 
-static const Register InvalidReg = { Registers::invalid_reg };
-static const FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };
+static const MOZ_CONSTEXPR Register InvalidReg = { Registers::invalid_reg };
+static const MOZ_CONSTEXPR FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };
 
-static const Register JSReturnReg_Type = r3;
-static const Register JSReturnReg_Data = r2;
-static const Register StackPointer = sp;
-static const Register FramePointer = InvalidReg;
-static const Register ReturnReg = r0;
-static const FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
-static const FloatRegister ScratchFloatReg = { FloatRegisters::d1 };
+static const MOZ_CONSTEXPR Register JSReturnReg_Type = r3;
+static const MOZ_CONSTEXPR Register JSReturnReg_Data = r2;
+static const MOZ_CONSTEXPR Register StackPointer = sp;
+static const MOZ_CONSTEXPR Register FramePointer = InvalidReg;
+static const MOZ_CONSTEXPR Register ReturnReg = r0;
+static const MOZ_CONSTEXPR FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
+static const MOZ_CONSTEXPR FloatRegister ScratchFloatReg = { FloatRegisters::d1 };
 
-static const FloatRegister NANReg = { FloatRegisters::d15 };
+static const MOZ_CONSTEXPR FloatRegister NANReg = { FloatRegisters::d15 };
 
-static const FloatRegister d0  = {FloatRegisters::d0};
-static const FloatRegister d1  = {FloatRegisters::d1};
-static const FloatRegister d2  = {FloatRegisters::d2};
-static const FloatRegister d3  = {FloatRegisters::d3};
-static const FloatRegister d4  = {FloatRegisters::d4};
-static const FloatRegister d5  = {FloatRegisters::d5};
-static const FloatRegister d6  = {FloatRegisters::d6};
-static const FloatRegister d7  = {FloatRegisters::d7};
-static const FloatRegister d8  = {FloatRegisters::d8};
-static const FloatRegister d9  = {FloatRegisters::d9};
-static const FloatRegister d10 = {FloatRegisters::d10};
-static const FloatRegister d11 = {FloatRegisters::d11};
-static const FloatRegister d12 = {FloatRegisters::d12};
-static const FloatRegister d13 = {FloatRegisters::d13};
-static const FloatRegister d14 = {FloatRegisters::d14};
-static const FloatRegister d15 = {FloatRegisters::d15};
+static const MOZ_CONSTEXPR FloatRegister d0  = {FloatRegisters::d0};
+static const MOZ_CONSTEXPR FloatRegister d1  = {FloatRegisters::d1};
+static const MOZ_CONSTEXPR FloatRegister d2  = {FloatRegisters::d2};
+static const MOZ_CONSTEXPR FloatRegister d3  = {FloatRegisters::d3};
+static const MOZ_CONSTEXPR FloatRegister d4  = {FloatRegisters::d4};
+static const MOZ_CONSTEXPR FloatRegister d5  = {FloatRegisters::d5};
+static const MOZ_CONSTEXPR FloatRegister d6  = {FloatRegisters::d6};
+static const MOZ_CONSTEXPR FloatRegister d7  = {FloatRegisters::d7};
+static const MOZ_CONSTEXPR FloatRegister d8  = {FloatRegisters::d8};
+static const MOZ_CONSTEXPR FloatRegister d9  = {FloatRegisters::d9};
+static const MOZ_CONSTEXPR FloatRegister d10 = {FloatRegisters::d10};
+static const MOZ_CONSTEXPR FloatRegister d11 = {FloatRegisters::d11};
+static const MOZ_CONSTEXPR FloatRegister d12 = {FloatRegisters::d12};
+static const MOZ_CONSTEXPR FloatRegister d13 = {FloatRegisters::d13};
+static const MOZ_CONSTEXPR FloatRegister d14 = {FloatRegisters::d14};
+static const MOZ_CONSTEXPR FloatRegister d15 = {FloatRegisters::d15};
 
 // For maximal awesomeness, 8 should be sufficent.
 // ldrd/strd (dual-register load/store) operate in a single cycle
