@@ -1911,9 +1911,7 @@ DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool l
                 RootedFunction f(cx, obj->toFunction());
                 RootedScript script(cx);
                 JSFunction::maybeGetOrCreateScript(cx, f, &script);
-                if (!script)
-                    Sprint(sp, "[native code]\n");
-                else if (!DisassembleScript(cx, script, fun, lines, recursive, sp))
+                if (!DisassembleScript(cx, script, fun, lines, recursive, sp))
                     return false;
             }
         }
