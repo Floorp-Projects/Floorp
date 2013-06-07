@@ -69,7 +69,6 @@ MOCHITEST_FILES = \
 		file_browserElement_XFrameOptionsAllowFrom.html \
 		file_browserElement_XFrameOptionsAllowFrom.sjs \
 		browserElement_FirstPaint.js \
-		file_browserElement_FirstPaint.html \
 		test_browserElement_inproc_FirstPaint.html \
 		browserElement_NextPaint.js \
 		test_browserElement_inproc_NextPaint.html \
