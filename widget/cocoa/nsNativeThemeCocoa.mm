@@ -2766,9 +2766,11 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
     }
 
     case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON: {
-      // This value is hardcoded because it's needed before we can measure the
-      // position and size of the fullscreen button.
-      aResult->SizeTo(20, 0);
+      if ([NativeWindowForFrame(aFrame) respondsToSelector:@selector(toggleFullScreen:)]) {
+        // This value is hardcoded because it's needed before we can measure the
+        // position and size of the fullscreen button.
+        aResult->SizeTo(20, 0);
+      }
       break;
     }
 
