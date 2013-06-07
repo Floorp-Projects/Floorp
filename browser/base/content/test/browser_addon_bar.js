@@ -13,9 +13,8 @@ function test() {
   function onTopMenuShown(event) {
     ok(1, "top menu popupshown listener called");
     event.currentTarget.removeEventListener("popupshown", arguments.callee, false);
-    // open the customize or toolbars menu
-    toolbarMenu = document.getElementById("appmenu_customizeMenu") ||
-                      document.getElementById("viewToolbarsMenu").firstElementChild;
+    // open the toolbars menu
+    toolbarMenu = document.getElementById("viewToolbarsMenu").firstElementChild;
     toolbarMenu.addEventListener("popupshown", onToolbarMenuShown, false);
     toolbarMenu.addEventListener("popuphidden", onToolbarMenuHidden, false);
     toolbarMenu.openPopup();
@@ -54,9 +53,8 @@ function test() {
     topMenu.hidePopup();
   }
 
-  // open the appmenu or view menu
-  topMenu = document.getElementById("appmenu-popup") ||
-            document.getElementById("menu_viewPopup");
+  // open the view menu
+  topMenu = document.getElementById("menu_viewPopup");
   topMenu.addEventListener("popupshown", onTopMenuShown, false);
   topMenu.addEventListener("popuphidden", onTopMenuHidden, false);
   topMenu.openPopup();
