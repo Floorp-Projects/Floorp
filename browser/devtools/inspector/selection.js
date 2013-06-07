@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cu} = require("chrome");
+const {Cu, Ci} = require("chrome");
 let EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * API
  *
- *   new Selection(node=null, track={attributes,detached});
+ *   new Selection(walker=null, node=null, track={attributes,detached});
  *   destroy()
  *   node (readonly)
  *   setNode(node, origin="unknown")
@@ -53,19 +53,22 @@ let EventEmitter = require("devtools/shared/event-emitter");
  * @param node Inner node.
  *    Can be null. Can be (un)set in the future via the "node" property;
  * @param trackAttribute Tell if events should be fired when the attributes of
- *    the ndoe change.
+ *    the node change.
  *
  */
-function Selection(node=null, track={attributes:true,detached:true}) {
+function Selection(walker, node=null, track={attributes:true,detached:true}) {
   EventEmitter.decorate(this);
+
   this._onMutations = this._onMutations.bind(this);
   this.track = track;
+  this.setWalker(walker);
   this.setNode(node);
 }
 
 exports.Selection = Selection;
 
 Selection.prototype = {
+  _walker: null,
   _node: null,
 
   _onMutations: function(mutations) {
@@ -86,60 +89,41 @@ Selection.prototype = {
 
     if (attributeChange)
       this.emit("attribute-changed");
-    if (detached)
-      this.emit("detached", parentNode);
-  },
-
-  _attachEvents: function SN__attachEvents() {
-    if (!this.window || !this.isNode() || !this.track) {
-      return;
+    if (detached) {
+      this.emit("detached", parentNode ? parentNode.rawNode() : null);
+      this.emit("detached-front", parentNode);
     }
-
-    if (this.track.attributes) {
-      this._nodeObserver = new this.window.MutationObserver(this._onMutations);
-      this._nodeObserver.observe(this.node, {attributes: true});
-    }
-
-    if (this.track.detached) {
-      this._docObserver = new this.window.MutationObserver(this._onMutations);
-      this._docObserver.observe(this.document.documentElement, {childList: true, subtree: true});
-    }
-  },
-
-  _detachEvents: function SN__detachEvents() {
-    // `disconnect` fail if node's document has
-    // been deleted.
-    try {
-      if (this._nodeObserver)
-        this._nodeObserver.disconnect();
-    } catch(e) {}
-    try {
-      if (this._docObserver)
-        this._docObserver.disconnect();
-    } catch(e) {}
   },
 
   destroy: function SN_destroy() {
-    this._detachEvents();
     this.setNode(null);
+    this.setWalker(null);
   },
 
-  setNode: function SN_setNode(value, reason="unknown") {
-    this.reason = reason;
-    if (value !== this._node) {
-      this.emit("before-new-node", value, reason);
-      let previousNode = this._node;
-      this._detachEvents();
-      this._node = value;
-      this._attachEvents();
-      this.emit("new-node", previousNode, this.reason);
+  setWalker: function(walker) {
+    if (this._walker) {
+      this._walker.off("mutations", this._onMutations);
+    }
+    this._walker = walker;
+    if (this._walker) {
+      this._walker.on("mutations", this._onMutations);
     }
   },
 
+  // Not remote-safe
+  setNode: function SN_setNode(value, reason="unknown") {
+    if (value) {
+      value = this._walker.frontForRawNode(value);
+    }
+    this.setNodeFront(value, reason);
+  },
+
+  // Not remote-safe
   get node() {
     return this._node;
   },
 
+  // Not remote-safe
   get window() {
     if (this.isNode()) {
       return this.node.ownerDocument.defaultView;
@@ -147,6 +131,7 @@ Selection.prototype = {
     return null;
   },
 
+  // Not remote-safe
   get document() {
     if (this.isNode()) {
       return this.node.ownerDocument;
@@ -154,28 +139,79 @@ Selection.prototype = {
     return null;
   },
 
+  setNodeFront: function(value, reason="unknown") {
+    this.reason = reason;
+    if (value !== this._nodeFront) {
+      let rawValue = value ? value.rawNode() : value;
+      this.emit("before-new-node", rawValue, reason);
+      this.emit("before-new-node-front", value, reason);
+      let previousNode = this._node;
+      let previousFront = this._nodeFront;
+      this._node = rawValue;
+      this._nodeFront = value;
+      this.emit("new-node", previousNode, this.reason);
+      this.emit("new-node-front", value, this.reason);
+    }
+  },
+
+  get documentFront() {
+    return this._walker.document(this._nodeFront);
+  },
+
+  get nodeFront() {
+    return this._nodeFront;
+  },
+
   isRoot: function SN_isRootNode() {
     return this.isNode() &&
            this.isConnected() &&
-           this.node.ownerDocument.documentElement === this.node;
+           this._nodeFront.isDocumentElement;
   },
 
   isNode: function SN_isNode() {
-    return (this.node &&
-            !Cu.isDeadWrapper(this.node) &&
-            this.node.ownerDocument &&
-            this.node.ownerDocument.defaultView &&
-            this.node instanceof this.node.ownerDocument.defaultView.Node);
+    if (!this._nodeFront) {
+      return false;
+    }
+
+    // As long as tools are still accessing node.rawNode(),
+    // this needs to stay here.
+    if (this._node && Cu.isDeadWrapper(this._node)) {
+      return false;
+    }
+
+    return true;
+  },
+
+  isLocal: function SN_nsLocal() {
+    return !!this._node;
   },
 
   isConnected: function SN_isConnected() {
-    try {
-      let doc = this.document;
-      return doc && doc.defaultView && doc.documentElement.contains(this.node);
-    } catch (e) {
-      // "can't access dead object" error
+    let node = this._nodeFront;
+    if (!node || !node.actorID) {
       return false;
     }
+
+    // As long as there are still tools going around
+    // accessing node.rawNode, this needs to stay.
+    let rawNode = node.rawNode();
+    if (rawNode) {
+      try {
+        let doc = this.document;
+        return (doc && doc.defaultView && doc.documentElement.contains(rawNode));
+      } catch (e) {
+        // "can't access dead object" error
+        return false;
+      }
+    }
+
+    while(node) {
+      if (node === this._walker.rootNode) {
+        return true;
+      }
+      node = node.parentNode();
+    };
+    return false;
   },
 
   isHTMLNode: function SN_isHTMLNode() {
@@ -186,50 +222,50 @@ Selection.prototype = {
   // Node type
 
   isElementNode: function SN_isElementNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.ELEMENT_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ELEMENT_NODE;
   },
 
   isAttributeNode: function SN_isAttributeNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.ATTRIBUTE_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ATTRIBUTE_NODE;
   },
 
   isTextNode: function SN_isTextNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.TEXT_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.TEXT_NODE;
   },
 
   isCDATANode: function SN_isCDATANode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.CDATA_SECTION_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.CDATA_SECTION_NODE;
   },
 
   isEntityRefNode: function SN_isEntityRefNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.ENTITY_REFERENCE_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_REFERENCE_NODE;
   },
 
   isEntityNode: function SN_isEntityNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.ENTITY_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_NODE;
   },
 
   isProcessingInstructionNode: function SN_isProcessingInstructionNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.PROCESSING_INSTRUCTION_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
   },
 
   isCommentNode: function SN_isCommentNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.PROCESSING_INSTRUCTION_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
   },
 
   isDocumentNode: function SN_isDocumentNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.DOCUMENT_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE;
   },
 
   isDocumentTypeNode: function SN_isDocumentTypeNode() {
-    return this.isNode() && this.node.nodeType ==this.window. Node.DOCUMENT_TYPE_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE;
   },
 
   isDocumentFragmentNode: function SN_isDocumentFragmentNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.DOCUMENT_FRAGMENT_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
   },
 
   isNotationNode: function SN_isNotationNode() {
-    return this.isNode() && this.node.nodeType == this.window.Node.NOTATION_NODE;
+    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.NOTATION_NODE;
   },
 }

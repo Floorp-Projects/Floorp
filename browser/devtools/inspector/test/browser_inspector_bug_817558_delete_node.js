@@ -34,9 +34,10 @@ function test()
     let tmp = {};
     Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tmp);
     ok(!tmp.LayoutHelpers.isNodeConnected(node), "Node considered as disconnected.");
-    executeSoon(function() {
-      is(inspector.selection.node, parentNode, "parent of selection got selected");
 
+    // Wait for the selection to process the mutation
+    inspector.walker.on("mutations", () => {
+      is(inspector.selection.node, parentNode, "parent of selection got selected");
       finishUp();
     });
   }
