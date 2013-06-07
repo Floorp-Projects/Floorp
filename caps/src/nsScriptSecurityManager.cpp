@@ -2510,8 +2510,7 @@ nsScriptSecurityManager::GetScriptSecurityManager()
         }
  
         rv = nsXPConnect::XPConnect()->
-            SetDefaultSecurityManager(ssManager,
-                                      nsIXPCSecurityManager::HOOK_ALL);
+            SetDefaultSecurityManager(ssManager);
         if (NS_FAILED(rv)) {
             NS_WARNING("Failed to install xpconnect security manager!");
             return nullptr;
