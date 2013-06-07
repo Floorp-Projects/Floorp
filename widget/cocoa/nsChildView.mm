@@ -2230,7 +2230,8 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
     return;
   }
 
-  if (!mCornerMaskImage) {
+  if (!mCornerMaskImage ||
+      mCornerMaskImage->GetSize().width != mDevPixelCornerRadius) {
     mCornerMaskImage =
       aManager->gl()->CreateTextureImage(nsIntSize(mDevPixelCornerRadius,
                                                    mDevPixelCornerRadius),
