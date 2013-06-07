@@ -60,11 +60,8 @@ SystemWorkerManager *gInstance = nullptr;
 
 class ConnectWorkerToRIL : public WorkerTask
 {
-  const unsigned long mClientId;
-
 public:
-  ConnectWorkerToRIL(unsigned long aClientId)
-    : mClientId(aClientId)
+  ConnectWorkerToRIL()
   { }
 
   virtual bool RunTask(JSContext *aCx);
@@ -156,11 +153,6 @@ ConnectWorkerToRIL::RunTask(JSContext *aCx)
   NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
   NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
   JSObject *workerGlobal = JS_GetGlobalForScopeChain(aCx);
-
-  if (!JS_DefineProperty(aCx, workerGlobal, "CLIENT_ID",
-                         INT_TO_JSVAL(mClientId), nullptr, nullptr, 0)) {
-    return false;
-  }
 
   return !!JS_DefineFunction(aCx, workerGlobal, "postRILMessage", PostToRIL, 1,
                              0);
@@ -496,7 +488,7 @@ SystemWorkerManager::RegisterRilWorker(unsigned int aClientId,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL(aClientId);
+  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
   if (!wctd->PostTask(connection)) {
     NS_WARNING("Failed to connect worker to ril");
     return NS_ERROR_UNEXPECTED;

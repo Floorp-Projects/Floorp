@@ -223,6 +223,8 @@ XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
 
 
 function RadioInterfaceLayer() {
+  this.clientId = 0;
+
   this.dataNetworkInterface = new RILNetworkInterface(this, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
   this.mmsNetworkInterface = new RILNetworkInterface(this, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS);
   this.suplNetworkInterface = new RILNetworkInterface(this, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL);
@@ -231,6 +233,13 @@ function RadioInterfaceLayer() {
   this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
   this.worker.onerror = this.onerror.bind(this);
   this.worker.onmessage = this.onmessage.bind(this);
+
+  // Pass initial options to ril_worker.
+  this.worker.postMessage({
+    rilMessageType: "setInitialOptions",
+    debug: debugPref,
+    clientId: this.clientId,
+  });
 
   this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
@@ -360,11 +369,7 @@ function RadioInterfaceLayer() {
 
   this._targetMessageQueue = [];
 
-  // pass debug pref to ril_worker
-  this.worker.postMessage({rilMessageType: "setDebugEnabled",
-                           enabled: debugPref});
-
-  gSystemWorkerManager.registerRilWorker(0, this.worker);
+  gSystemWorkerManager.registerRilWorker(this.clientId, this.worker);
 }
 RadioInterfaceLayer.prototype = {
 
