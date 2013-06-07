@@ -7,7 +7,6 @@
 #ifndef Shape_inl_h__
 #define Shape_inl_h__
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsarray.h"
@@ -21,7 +20,6 @@
 #include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ScopeObject.h"
-#include "vm/Shape-inl.h"
 #include "vm/StringObject.h"
 
 #include "jscntxtinlines.h"

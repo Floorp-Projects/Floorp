@@ -1292,12 +1292,6 @@ JSObject::getSpecialAttributes(JSContext *cx, js::HandleObject obj,
 }
 
 inline bool
-js::ObjectImpl::isProxy() const
-{
-    return js::IsProxy(const_cast<JSObject*>(this->asObjectPtr()));
-}
-
-inline bool
 JSObject::isCrossCompartmentWrapper() const
 {
     return js::IsCrossCompartmentWrapper(const_cast<JSObject*>(this));

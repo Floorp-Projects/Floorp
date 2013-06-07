@@ -21,6 +21,7 @@
 #include "gc/Memory.h"
 #include "gc/Statistics.h"
 
+#include "jscntxtinlines.h"
 #include "gc/Barrier-inl.h"
 
 using namespace js;
