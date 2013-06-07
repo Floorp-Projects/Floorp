@@ -13,14 +13,11 @@
 #include "ion/AsmJS.h"
 #include "vm/GlobalObject.h"
 
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-#include "frontend/ParseNode-inl.h"
 #include "frontend/Parser-inl.h"
 #include "frontend/SharedContext-inl.h"
-#include "vm/Probes-inl.h"
 
 using namespace js;
 using namespace js::frontend;

@@ -14,7 +14,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "jsapi.h"
@@ -32,7 +31,6 @@
 #include "jspropertycache.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsversion.h"
 #include "builtin/Eval.h"
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"

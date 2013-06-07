@@ -14,31 +14,22 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#ifdef HAVE_MEMORY_H
-#include <memory.h>
-#endif
 #include <string.h>
 
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsscript.h"
-#include "jsautooplen.h"        // generated headers last
 
-#include "ds/LifoAlloc.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "ion/AsmJS.h"
 #include "vm/Debugger.h"
-#include "vm/RegExpObject.h"
-#include "vm/Shape.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -47,7 +38,6 @@
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
 #include "frontend/SharedContext-inl.h"
-#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::gc;

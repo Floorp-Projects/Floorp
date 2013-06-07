@@ -31,8 +31,6 @@
 
 #if ENABLE_ASSEMBLER
 
-#include "prmjtime.h"
-
 namespace JSC {
 
 size_t ExecutableAllocator::pageSize = 0;

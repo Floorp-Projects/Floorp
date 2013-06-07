@@ -12,6 +12,8 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
+#include "jsiter.h"
+
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
 #include "vm/Interpreter.h"
