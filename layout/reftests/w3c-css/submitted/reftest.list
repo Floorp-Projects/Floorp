@@ -19,6 +19,9 @@ include css21/reftest.list
 # Conditional Rules Level 3
 include conditional3/reftest.list
 
+# Flexible Box Layout Module
+include flexbox/reftest.list
+
 # Fonts Level 3
 # include fonts3/reftest.list
 
