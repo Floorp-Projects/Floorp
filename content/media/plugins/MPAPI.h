@@ -27,7 +27,7 @@ public:
 
 struct VideoPlane {
   VideoPlane() :
-    mData(nullptr),
+    mData(0),
     mStride(0),
     mWidth(0),
     mHeight(0),
@@ -58,7 +58,7 @@ struct VideoFrame {
   VideoFrame() :
     mTimeUs(0),
     mKeyFrame(false),
-    mData(nullptr),
+    mData(0),
     mSize(0),
     mStride(0),
     mSliceHeight(0),
