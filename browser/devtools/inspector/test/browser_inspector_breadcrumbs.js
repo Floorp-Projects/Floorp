@@ -55,6 +55,7 @@ function test()
     executeSoon(function() {
       performTest();
       cursor++;
+
       if (cursor >= nodes.length) {
         inspector.selection.off("new-node", nodeSelected);
         finishUp();

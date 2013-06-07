@@ -1058,6 +1058,7 @@ pref("devtools.toolbox.sideEnabled", true);
 pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.activeSidebar", "ruleview");
 pref("devtools.inspector.markupPreview", false);
+pref("devtools.inspector.remote", false);
 
 // Enable the Layout View
 pref("devtools.layoutview.enabled", true);

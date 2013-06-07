@@ -5,6 +5,13 @@
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cc = Components.classes;
+
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+SimpleTest.registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.debugger.log");
+});
+
+
 let tempScope = {};
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
