@@ -3866,7 +3866,7 @@ CheckMultiply(FunctionCompiler &f, ParseNode *star, MDefinition **def, Type *typ
         if (!IsValidIntMultiplyConstant(lhs) && !IsValidIntMultiplyConstant(rhs))
             return f.fail(star, "one arg to int multiply must be a small (-2^20, 2^20) int literal");
         *def = f.mul(lhsDef, rhsDef, MIRType_Int32, MMul::Integer);
-        *type = Type::Signed;
+        *type = Type::Intish;
         return true;
     }
 
