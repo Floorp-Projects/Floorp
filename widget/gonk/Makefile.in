@@ -43,6 +43,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/content/events/src \
 	-I$(topsrcdir)/gfx/skia/include/core \
 	-I$(topsrcdir)/gfx/skia/include/config \
+	-I$(topsrcdir)/content/media/omx/mediaresourcemanager \
 	-I$(srcdir) \
 	$(NULL)
 
