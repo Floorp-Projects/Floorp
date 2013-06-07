@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=878037
+-->
+<head>
+  <title>Test for Bug 878037</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=878037">Mozilla Bug 878037</a>
+<p id="display"></p>
+<div>
+  <!-- transparent-animation.gif from the gif reftests. -->
+  <img id="animated" src="data:image/gif;base64,R0lGODlhZABkAIABAP8AAP///yH5BAkBAAEALAAAAABLAGQAAAK8jI+py+0Po5y02ouz3rz7D4biSJbmiabqyrbuC8fyTNf2jef6zvf+DwwKh8Si8YhMKpchgPMJjUqnVOipis1ir9qul+sNV8HistVkTj/JajG7/UXDy+95tm4fy/NdPF/q93dWIqgVWAhwWKgoyPjnyAeZJ2lHOWcJh9mmqcaZ5mkGSreHOCXqRloadRrGGkeoapoa6+TaN0tra4gbq3vHq+q7BVwqrMeEnKy8zNzs/AwdLT1NXW19jZ1tUgAAIfkECQEAAQAsAAAAADQAZAAAArCMj6nL7Q+jnLTai7PevPsPhuJIluaJpurKtu4Lx/JM1/aN5/rO9/7vAAiHxKLxiCRCkswmc+mMSqHSapJqzSof2u4Q67WCw1MuOTs+N9Pqq7kdZcON8vk2aF+/88g6358HaCc4Rwhn2IaopnjGSOYYBukl2UWpZYm2x0enuXnX4NnXGQqAKTYaalqlWoZH+snwWsQah+pJ64Sr5ypbCvQLHCw8TFxsfIycrLzM3PxQAAAh+QQJAQABACwAAAAAGwBkAAACUIyPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gTE8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvdrfYnH5LL5jE6r16sCADs=">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 878037**/
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var img = document.getElementById("animated");
+  var content =  img.QueryInterface(Components.interfaces.nsIImageLoadingContent);
+
+  var request = content.getRequest(Components.interfaces.nsIImageLoadingContent.CURRENT_REQUEST);
+
+  var staticReq = request.getStaticRequest();
+  var clone = staticReq.clone(null);
+
+  ok(true, "hooray, we didn't crash!");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

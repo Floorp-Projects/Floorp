@@ -1008,35 +1008,35 @@ js::GetDOMCallbacks(JSRuntime *rt)
     return rt->DOMcallbacks;
 }
 
-static void *gListBaseHandlerFamily = NULL;
-static uint32_t gListBaseExpandoSlot = 0;
-static ListBaseShadowsCheck gListBaseShadowsCheck;
+static void *gDOMProxyHandlerFamily = NULL;
+static uint32_t gDOMProxyExpandoSlot = 0;
+static DOMProxyShadowsCheck gDOMProxyShadowsCheck;
 
 JS_FRIEND_API(void)
-js::SetListBaseInformation(void *listBaseHandlerFamily, uint32_t listBaseExpandoSlot,
-                           ListBaseShadowsCheck listBaseShadowsCheck)
+js::SetDOMProxyInformation(void *domProxyHandlerFamily, uint32_t domProxyExpandoSlot,
+                           DOMProxyShadowsCheck domProxyShadowsCheck)
 {
-    gListBaseHandlerFamily = listBaseHandlerFamily;
-    gListBaseExpandoSlot = listBaseExpandoSlot;
-    gListBaseShadowsCheck = listBaseShadowsCheck;
+    gDOMProxyHandlerFamily = domProxyHandlerFamily;
+    gDOMProxyExpandoSlot = domProxyExpandoSlot;
+    gDOMProxyShadowsCheck = domProxyShadowsCheck;
 }
 
 void *
-js::GetListBaseHandlerFamily()
+js::GetDOMProxyHandlerFamily()
 {
-    return gListBaseHandlerFamily;
+    return gDOMProxyHandlerFamily;
 }
 
 uint32_t
-js::GetListBaseExpandoSlot()
+js::GetDOMProxyExpandoSlot()
 {
-    return gListBaseExpandoSlot;
+    return gDOMProxyExpandoSlot;
 }
 
-ListBaseShadowsCheck
-js::GetListBaseShadowsCheck()
+DOMProxyShadowsCheck
+js::GetDOMProxyShadowsCheck()
 {
-    return gListBaseShadowsCheck;
+    return gDOMProxyShadowsCheck;
 }
 
 JS_FRIEND_API(void)

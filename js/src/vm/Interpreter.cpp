@@ -16,13 +16,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "jstypes.h"
-#include "jsprf.h"
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -30,31 +28,27 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprf.h"
 #include "jspropertycache.h"
 #include "jsscript.h"
 #include "jsstr.h"
-
+#include "jsversion.h"
 #include "builtin/Eval.h"
+#include "ion/BaselineJIT.h"
+#include "ion/Ion.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
-
-#include "ion/Ion.h"
-#include "ion/BaselineJIT.h"
-
-#ifdef JS_ION
-#include "ion/IonFrames-inl.h"
-#endif
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
-#include "jsprobes.h"
 #include "jsscriptinlines.h"
-
 #include "builtin/Iterator-inl.h"
+#include "ion/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 
 #include "jsautooplen.h"

@@ -8,6 +8,8 @@
  * JS bytecode generation.
  */
 
+#include "frontend/BytecodeEmitter-inl.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
@@ -31,7 +33,6 @@
 #include "jsautooplen.h"        // generated headers last
 
 #include "ds/LifoAlloc.h"
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "ion/AsmJS.h"
@@ -6026,6 +6027,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_NOP:
         JS_ASSERT(pn->getArity() == PN_NULLARY);
         break;
+
+      case PNK_MODULE:
+        // TODO: Add emitter support for modules
+        bce->reportError(NULL, JSMSG_SYNTAX_ERROR);
+        return false;
 
       default:
         JS_ASSERT(0);
