@@ -40,8 +40,12 @@
 # include "arm/Lowering-arm.h"
 #endif
 #include "gc/Marking.h"
+
+#include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
+
+#include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
 #include "ion/IonFrames-inl.h"
 #include "ion/CompilerRoot.h"

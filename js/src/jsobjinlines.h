@@ -9,43 +9,16 @@
 
 #include "jsobj.h"
 
-#include "jsapi.h"
-#include "jsarray.h"
-#include "jsbool.h"
-#include "jscntxt.h"
-#include "jsfun.h"
-#include "jsiter.h"
-#include "jslock.h"
-#include "jsnum.h"
-#include "jspropertytree.h"
-#include "jsproxy.h"
-#include "jsstr.h"
-#include "jstypedarray.h"
 #include "jswrapper.h"
 
-#include "builtin/Module.h"
-#include "gc/Barrier.h"
-#include "gc/Marking.h"
-#include "js/MemoryMetrics.h"
-#include "js/RootingAPI.h"
-#include "js/TemplateLib.h"
-#include "vm/BooleanObject.h"
-#include "vm/GlobalObject.h"
-#include "vm/Shape.h"
 #include "vm/NumberObject.h"
 #include "vm/Probes.h"
-#include "vm/RegExpStatics.h"
 #include "vm/StringObject.h"
 
 #include "jsatominlines.h"
-#include "jscompartmentinlines.h"
 #include "jsfuninlines.h"
-#include "jsgcinlines.h"
-#include "jsinferinlines.h"
-#include "gc/Barrier-inl.h"
+
 #include "vm/ObjectImpl-inl.h"
-#include "vm/Shape-inl.h"
-#include "vm/String-inl.h"
 
 /* static */ inline bool
 JSObject::enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,

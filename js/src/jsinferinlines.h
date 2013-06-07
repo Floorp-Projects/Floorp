@@ -22,6 +22,8 @@
 #include "vm/GlobalObject.h"
 
 #include "jsanalyzeinlines.h"
+
+#include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
 
 #ifndef jsinferinlines_h___
