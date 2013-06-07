@@ -16,23 +16,6 @@ class EncodingUtils
 public:
 
   /**
-   * Implements decode algorithm's step 1 & 2 from Encoding spec.
-   * http://encoding.spec.whatwg.org/#decode
-   * The returned name may not be lowercased due to compatibility with
-   * our internal implementations.
-   *
-   * @param     aData, incoming byte stream of data.
-   * @param     aLength, incoming byte stream length.
-   * @param     aRetval, outgoing encoding corresponding to valid data
-   *            byte order mark.
-   * @return    offset after the BOM bytes in byte stream
-   *            where the actual data starts.
-   */
-  static uint32_t IdentifyDataOffset(const char* aData,
-                                     const uint32_t aLength,
-                                     nsACString& aRetval);
-
-  /**
    * Implements get an encoding algorithm from Encoding spec.
    * http://encoding.spec.whatwg.org/#concept-encoding-get
    * Given a label, this function returns the corresponding encoding or a

@@ -330,12 +330,6 @@ HTMLAnchorElement::SetPing(const nsAString& aValue)
   return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, true);
 }
 
-nsLinkState
-HTMLAnchorElement::GetLinkState() const
-{
-  return Link::GetLinkState();
-}
-
 already_AddRefed<nsIURI>
 HTMLAnchorElement::GetHrefURI() const
 {
