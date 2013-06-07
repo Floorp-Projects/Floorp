@@ -1,4 +1,4 @@
 {
-    "repo": "http://hg.mozilla.org/integration/gaia-central/",
-    "revision": "8c7dcb64cafd"
+    "repo_path": "/integration/gaia-central",
+    "revision": "3f5bb84585fc"
 }
