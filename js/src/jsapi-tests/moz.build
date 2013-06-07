@@ -59,6 +59,7 @@ CPP_SOURCES += [
     'testSetProperty.cpp',
     'testSourcePolicy.cpp',
     'testStringBuffer.cpp',
+    'testToIntWidth.cpp',
     'testTrap.cpp',
     'testTypedArrays.cpp',
     'testUTF8.cpp',
