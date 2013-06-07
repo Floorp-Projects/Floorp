@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
-import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -102,7 +101,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.concurrent.SynchronousQueue;
 
 public class GeckoAppShell
 {
@@ -1229,85 +1227,6 @@ public class GeckoAppShell
         intent.setData(pruned);
 
         return intent;
-    }
-
-    /* On some devices, access to the clipboard service needs to happen
-     * on a thread with a looper, so this function requires a looper is
-     * present on the thread. */
-    private static String getClipboardTextImpl() {
-        Context context = getContext();
-        if (android.os.Build.VERSION.SDK_INT >= 11) {
-            android.content.ClipboardManager cm = (android.content.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm.hasPrimaryClip()) {
-                ClipData clip = cm.getPrimaryClip();
-                if (clip != null) {
-                    ClipData.Item item = clip.getItemAt(0);
-                    return item.coerceToText(context).toString();
-                }
-            }
-        } else {
-            android.text.ClipboardManager cm = (android.text.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm.hasText()) {
-                return cm.getText().toString();
-            }
-        }
-        return null;
-    }
-
-    private static SynchronousQueue<String> sClipboardQueue = new SynchronousQueue<String>();
-
-    static String getClipboardText() {
-        // If we're on the UI thread or the background thread, we have a looper on the thread
-        // and can just call this directly. For any other threads, post the call to the
-        // background thread.
-
-        if (ThreadUtils.isOnUiThread() || ThreadUtils.isOnBackgroundThread()) {
-            return getClipboardTextImpl();
-        }
-
-        ThreadUtils.postToBackgroundThread(new Runnable() { 
-            @Override
-            public void run() {
-                String text = getClipboardTextImpl();
-                try {
-                    sClipboardQueue.put(text != null ? text : "");
-                } catch (InterruptedException ie) {}
-            }
-        });
-        try {
-            return sClipboardQueue.take();
-        } catch (InterruptedException ie) {
-            return "";
-        }
-    }
-
-    static void setClipboardText(String copiedText) {
-        // Copy an empty string instead of null to avoid clipboard crashes.
-        // AndroidBridge::EmptyClipboard() passes null to clear the clipboard's current contents.
-        final String text = (copiedText != null) ? copiedText : "";
-
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                Context context = getContext();
-                if (android.os.Build.VERSION.SDK_INT >= 11) {
-                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    ClipData clip = ClipData.newPlainText("Text", text);
-                    try {
-                        cm.setPrimaryClip(clip);
-                    } catch (NullPointerException e) {
-                        // Bug 776223: This is a Samsung clipboard bug. setPrimaryClip() can throw
-                        // a NullPointerException if Samsung's /data/clipboard directory is full.
-                        // Fortunately, the text is still successfully copied to the clipboard.
-                    }
-                } else {
-                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                        context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    cm.setText(text);
-                }
-            }
-        });
     }
 
     public static void setNotificationClient(NotificationClient client) {

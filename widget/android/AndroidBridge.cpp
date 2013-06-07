@@ -123,8 +123,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetMimeTypeFromExtensions = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
     jGetExtensionFromMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
-    jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
-    jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
     jShowAlertNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jShowFilePickerForExtensions = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showFilePickerForExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
     jShowFilePickerForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showFilePickerForMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
@@ -241,6 +239,10 @@ AndroidBridge::Init(JNIEnv *jEnv,
     }
 
     jGetContext = (jmethodID)jEnv->GetStaticMethodID(jGeckoAppShellClass, "getContext", "()Landroid/content/Context;");
+
+    jClipboardClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/util/Clipboard"));
+    jClipboardGetText = (jmethodID) jEnv->GetStaticMethodID(jClipboardClass, "getText", "()Ljava/lang/String;");
+    jClipboardSetText = (jmethodID) jEnv->GetStaticMethodID(jClipboardClass, "setText", "(Ljava/lang/CharSequence;)V");
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -632,8 +634,8 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 
     AutoLocalJNIFrame jniFrame(env);
     jstring jstrType = static_cast<jstring>(
-        env->CallStaticObjectMethod(mGeckoAppShellClass,
-                                    jGetClipboardText));
+        env->CallStaticObjectMethod(jClipboardClass,
+                                    jClipboardGetText));
     if (jniFrame.CheckForException() || !jstrType)
         return false;
 
@@ -653,7 +655,7 @@ AndroidBridge::SetClipboardText(const nsAString& aText)
 
     AutoLocalJNIFrame jniFrame(env);
     jstring jstr = NewJavaString(&jniFrame, aText);
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jSetClipboardText, jstr);
+    env->CallStaticVoidMethod(jClipboardClass, jClipboardSetText, jstr);
 }
 
 bool
@@ -667,8 +669,8 @@ AndroidBridge::ClipboardHasText()
 
     AutoLocalJNIFrame jniFrame(env);
     jstring jstrType = static_cast<jstring>(
-        env->CallStaticObjectMethod(mGeckoAppShellClass,
-                                    jGetClipboardText));
+        env->CallStaticObjectMethod(jClipboardClass,
+                                    jClipboardGetText));
     if (jniFrame.CheckForException() || !jstrType)
         return false;
 
@@ -685,7 +687,7 @@ AndroidBridge::EmptyClipboard()
         return;
 
     AutoLocalJNIFrame jniFrame(env, 0);
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jSetClipboardText, nullptr);
+    env->CallStaticVoidMethod(jClipboardClass, jClipboardSetText, nullptr);
 }
 
 void
