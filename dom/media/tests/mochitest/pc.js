@@ -247,9 +247,18 @@ var commandsPeerConnection = [
     }
   ],
   [
+    'PC_CHECK_INITIAL_SIGNALINGSTATE',
+    function (test) {
+      is(test.pcLocal.signalingState,"stable", "Initial local signalingState is stable");
+      is(test.pcRemote.signalingState,"stable", "Initial remote signalingState is stable");
+      test.next();
+    }
+  ],
+  [
     'PC_LOCAL_CREATE_OFFER',
     function (test) {
       test.pcLocal.createOffer(function () {
+        is(test.pcLocal.signalingState, "stable", "Local create offer does not change signaling state");
         test.next();
       });
     }
@@ -257,23 +266,24 @@ var commandsPeerConnection = [
   [
     'PC_LOCAL_SET_LOCAL_DESCRIPTION',
     function (test) {
-      test.pcLocal.setLocalDescription(test.pcLocal._last_offer, function () {
-        test.next();
-      });
+      test.expectStateChange(test.pcLocal, "have-local-offer", test);
+      test.pcLocal.setLocalDescription(test.pcLocal._last_offer,
+        test.checkStateInCallback(test.pcLocal, "have-local-offer", test));
     }
   ],
   [
     'PC_REMOTE_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.pcRemote.setRemoteDescription(test.pcLocal._last_offer, function () {
-        test.next();
-      });
+      test.expectStateChange(test.pcRemote, "have-remote-offer", test);
+      test.pcRemote.setRemoteDescription(test.pcLocal._last_offer,
+        test.checkStateInCallback(test.pcRemote, "have-remote-offer", test));
     }
   ],
   [
     'PC_REMOTE_CREATE_ANSWER',
     function (test) {
       test.pcRemote.createAnswer(function () {
+        is(test.pcRemote.signalingState, "have-remote-offer", "Remote create offer does not change signaling state");
         test.next();
       });
     }
@@ -281,17 +291,17 @@ var commandsPeerConnection = [
   [
     'PC_LOCAL_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.pcLocal.setRemoteDescription(test.pcRemote._last_answer, function () {
-        test.next();
-      });
+      test.expectStateChange(test.pcLocal, "stable", test);
+      test.pcLocal.setRemoteDescription(test.pcRemote._last_answer,
+        test.checkStateInCallback(test.pcLocal, "stable", test));
     }
   ],
   [
     'PC_REMOTE_SET_LOCAL_DESCRIPTION',
     function (test) {
-      test.pcRemote.setLocalDescription(test.pcRemote._last_answer, function () {
-        test.next();
-      });
+      test.expectStateChange(test.pcRemote, "stable", test);
+      test.pcRemote.setLocalDescription(test.pcRemote._last_answer,
+        test.checkStateInCallback(test.pcRemote, "stable", test));
     }
   ],
   [
@@ -394,6 +404,64 @@ PeerConnectionTest.prototype.teardown = function PCT_teardown() {
   SimpleTest.finish();
 };
 
+/**
+ * Sets up the "onsignalingstatechange" handler for the indicated peerconnection
+ * as a one-shot test. If the test.commandSuccess flag is set when the event
+ * happens, then the next test in the command chain is triggered. After
+ * running, this sets the event handler so that it will fail the test if
+ * it fires again before we expect it. This is intended to be used in
+ * conjunction with checkStateInCallback, below.
+ *
+ * @param {pcw} PeerConnectionWrapper
+ *        The peer connection to expect a state change on
+ * @param {state} string
+ *        The state that we expect to change to
+ * @param {test} PeerConnectionTest
+ *        The test strucure currently in use.
+ */
+PeerConnectionTest.prototype.expectStateChange =
+function PCT_expectStateChange(pcw, state, test) {
+  pcw.signalingChangeEvent = false;
+  pcw._pc.onsignalingstatechange = function() {
+    pcw._pc.onsignalingstatechange = unexpectedCallbackAndFinish(new Error);
+    is(pcw._pc.signalingState, state, pcw.label + ": State is " + state + " in onsignalingstatechange");
+    pcw.signalingChangeEvent = true;
+    if (pcw.commandSuccess) {
+      test.next();
+    } else {
+      info("Waiting for success callback...");
+    }
+  };
+}
+
+/**
+ * Returns a function, suitable for use as a success callback, that
+ * checks the signaling state of the PC; and, if the signalingstatechange
+ * event has already fired, moves on to the next test case. This is
+ * intended to be used in conjunction with expectStateChange, above.
+ *
+ * @param {pcw} PeerConnectionWrapper
+ *        The peer connection to expect a state change on
+ * @param {state} string
+ *        The state that we expect to change to
+ * @param {test} PeerConnectionTest
+ *        The test strucure currently in use.
+ */
+
+PeerConnectionTest.prototype.checkStateInCallback =
+function PCT_checkStateInCallback(pcw, state, test) {
+  pcw.commandSuccess = false;
+  return function() {
+    pcw.commandSuccess = true;
+    is(pcw.signalingState, state, pcw.label + ": State is " + state + " in success callback");
+    if (pcw.signalingChangeEvent) {
+      test.next();
+    } else {
+      info("Waiting for signalingstatechange event...");
+    }
+  };
+}
+
 
 /**
  * This class handles acts as a wrapper around a PeerConnection instance.
@@ -420,6 +488,9 @@ function PeerConnectionWrapper(label, configuration) {
     // Bug 834835: Assume type is video until we get get{Audio,Video}Tracks.
     self.attachMedia(event.stream, 'video', 'remote');
   };
+
+  // Make sure no signaling state changes are fired until we expect them to
+  this._pc.onsignalingstatechange = unexpectedCallbackAndFinish(new Error);
 }
 
 PeerConnectionWrapper.prototype = {
@@ -460,6 +531,15 @@ PeerConnectionWrapper.prototype = {
    */
   set remoteDescription(desc) {
     this._pc.remoteDescription = desc;
+  },
+
+  /**
+   * Returns the remote signaling state.
+   *
+   * @returns {object} The local description
+   */
+  get signalingState() {
+    return this._pc.signalingState;
   },
 
   /**
@@ -572,6 +652,25 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
+   * Tries to set the local description and expect failure. Automatically
+   * causes the test case to fail if the call succeeds.
+   *
+   * @param {object} desc
+   *        mozRTCSessionDescription for the local description request
+   * @param {function} onFailure
+   *        Callback to execute if the call fails.
+   */
+  setLocalDescriptionAndFail : function PCW_setLocalDescriptionAndFail(desc, onFailure) {
+    var self = this;
+    this._pc.setLocalDescription(desc,
+      unexpectedSuccessCallbackAndFinish(new Error, "setLocalDescription should have failed."),
+      function (err) {
+        info("As expected, failed to set the local description for " + self.label);
+        onFailure(err);
+    });
+  },
+
+  /**
    * Sets the remote description and automatically handles the failure case.
    *
    * @param {object} desc
@@ -585,6 +684,62 @@ PeerConnectionWrapper.prototype = {
       info("Successfully set remote description for " + self.label);
       onSuccess();
     }, unexpectedCallbackAndFinish(new Error));
+  },
+
+  /**
+   * Tries to set the remote description and expect failure. Automatically
+   * causes the test case to fail if the call succeeds.
+   *
+   * @param {object} desc
+   *        mozRTCSessionDescription for the remote description request
+   * @param {function} onFailure
+   *        Callback to execute if the call fails.
+   */
+  setRemoteDescriptionAndFail : function PCW_setRemoteDescriptionAndFail(desc, onFailure) {
+    var self = this;
+    this._pc.setRemoteDescription(desc,
+      unexpectedSuccessCallbackAndFinish(new Error, "setRemoteDescription should have failed."),
+      function (err) {
+        info("As expected, failed to set the remote description for " + self.label);
+        onFailure(err);
+    });
+  },
+
+  /**
+   * Adds an ICE candidate and automatically handles the failure case.
+   *
+   * @param {object} candidate
+   *        SDP candidate
+   * @param {function} onSuccess
+   *        Callback to execute if the local description was set successfully
+   */
+  addIceCandidate : function PCW_addIceCandidate(candidate, onSuccess) {
+    var self = this;
+
+    this._pc.addIceCandidate(candidate, function () {
+      info("Successfully added an ICE candidate to " + self.label);
+      onSuccess();
+    }, unexpectedCallbackAndFinish(new Error));
+  },
+
+  /**
+   * Tries to add an ICE candidate and expects failure. Automatically
+   * causes the test case to fail if the call succeeds.
+   *
+   * @param {object} candidate
+   *        SDP candidate
+   * @param {function} onFailure
+   *        Callback to execute if the call fails.
+   */
+  addIceCandidateAndFail : function PCW_addIceCandidateAndFail(candidate, onFailure) {
+    var self = this;
+
+    this._pc.addIceCandidate(candidate,
+      unexpectedSuccessCallbackAndFinish(new Error, "addIceCandidate should have failed."),
+      function (err) {
+        info("As expected, failed to add an ICE candidate to " + self.label);
+        onFailure(err);
+    }) ;
   },
 
   /**

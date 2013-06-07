@@ -881,6 +881,8 @@ function getMessageElementText(aElement)
  *            message.
  *            - objects: boolean, set to |true| if you expect inspectable
  *            objects in the message.
+ *            - source: object that can hold one property: url. This is used to
+ *            match the source URL of the message.
  * @return object
  *         A Promise object is returned once the messages you want are found.
  *         The promise is resolved with the array of rule objects you give in
@@ -981,7 +983,7 @@ function waitForMessages(aOptions)
   {
     let elemText = getMessageElementText(aElement);
     let time = aRule.consoleTimeEnd;
-    let regex = new RegExp(time + ": \\d+ms");
+    let regex = new RegExp(time + ": -?\\d+ms");
 
     if (!checkText(regex, elemText)) {
       return false;
@@ -1013,6 +1015,16 @@ function waitForMessages(aOptions)
     return true;
   }
 
+  function checkSource(aRule, aElement)
+  {
+    let location = aElement.querySelector(".webconsole-location");
+    if (!location) {
+      return false;
+    }
+
+    return checkText(aRule.source.url, location.getAttribute("title"));
+  }
+
   function checkMessage(aRule, aElement)
   {
     let elemText = getMessageElementText(aElement);
@@ -1038,6 +1050,10 @@ function waitForMessages(aOptions)
     }
 
     if (aRule.consoleDir && !checkConsoleDir(aRule, aElement)) {
+      return false;
+    }
+
+    if (aRule.source && !checkSource(aRule, aElement)) {
       return false;
     }
 

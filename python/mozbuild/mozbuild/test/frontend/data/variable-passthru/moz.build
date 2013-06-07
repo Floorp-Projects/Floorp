@@ -12,6 +12,8 @@ DEFINES=['-Dfans', '-Dtans']
 
 EXTRA_COMPONENTS=['fans.js', 'tans.js']
 
+HOST_CSRCS += ['fans.c', 'tans.c']
+
 SIMPLE_PROGRAMS += ['fans.x', 'tans.x']
 
 CSRCS += ['fans.c', 'tans.c']

@@ -5,7 +5,7 @@
 
 const { setTimeout } = require('sdk/timers');
 const utils = require('sdk/lang/functional');
-const { invoke, defer, partial, compose, memoize, once, delay, wrap } = utils;
+const { invoke, defer, partial, compose, memoize, once, delay, wrap, curry } = utils;
 const { LoaderWithHookedConsole } = require('sdk/test/loader');
 
 exports['test forwardApply'] = function(assert) {
@@ -44,20 +44,15 @@ exports['test partial function'] = function(assert) {
   assert.equal(foo.sum8and4(), 17, 'partial both arguments works');
 };
 
-exports['test curry function'] = function(assert) {
-  let { loader, messages } = LoaderWithHookedConsole(module);
-  let { curry } = loader.require('sdk/lang/functional');
+exports["test curry defined numeber of arguments"] = function(assert) {
+  var sum = curry(function(a, b, c) {
+    return a + b + c;
+  });
 
-  function sum(b, c) this.a + b + c;
-
-  let foo = { a : 5 };
-
-  foo.sum7 = curry(sum, 7);
-
-  assert.equal(messages.length, 1, "only one error is dispatched");
-  assert.ok(messages[0].msg.indexOf('curry is deprecated') > -1);
-
-  loader.unload();
+  assert.equal(sum(2, 2, 1), 5, "sum(2, 2, 1) => 5");
+  assert.equal(sum(2, 4)(1), 7, "sum(2, 4)(1) => 7");
+  assert.equal(sum(2)(4, 2), 8, "sum(2)(4, 2) => 8");
+  assert.equal(sum(2)(4)(3), 9, "sum(2)(4)(3) => 9");
 };
 
 exports['test compose'] = function(assert) {

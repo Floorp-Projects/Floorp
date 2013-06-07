@@ -67,3 +67,8 @@ CPP_SOURCES += [
     'nsExceptionHandler.cpp',
 ]
 
+
+if CONFIG['OS_ARCH'] == 'Darwin':
+    CMMSRCS += [
+        'mac_utils.mm',
+    ]

@@ -13,11 +13,9 @@
 #include "jscompartment.h"
 
 #include "vm/Stack.h"
-#ifdef JS_ION
 #include "ion/BaselineFrame.h"
 #include "ion/BaselineFrame-inl.h"
 #include "ion/IonFrameIterator-inl.h"
-#endif
 #include "jsscriptinlines.h"
 
 #include "ArgumentsObject-inl.h"

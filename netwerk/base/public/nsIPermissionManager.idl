@@ -35,8 +35,9 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIPrincipal;
 interface nsIDOMWindow;
+interface nsIPermission;
 
-[scriptable, uuid(b38c982d-30bc-463f-9afc-0ca339eac03c)]
+[scriptable, uuid(f75e0a32-04cd-4ed4-ad2d-d08ca92bb98e)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -54,7 +55,8 @@ interface nsIPermissionManager : nsISupports
   /**
    * Predefined expiration types for permissions.  Permissions can be permanent
    * (never expire), expire at the end of the session, or expire at a specified
-   * time.
+   * time. Permissions that expire at the end of a session may also have a
+   * specified expiration time.
    */
   const uint32_t EXPIRE_NEVER = 0;
   const uint32_t EXPIRE_SESSION = 1;
@@ -185,6 +187,23 @@ interface nsIPermissionManager : nsISupports
    */
   uint32_t testExactPermanentPermission(in nsIPrincipal principal,
                                         in string type);
+
+  /**
+   * Get the permission object associated with the given principal and action.
+   * @param principal The principal
+   * @param type      A case-sensitive ASCII string identifying the consumer
+   * @param exactHost If true, only the specific host will be matched,
+   *                  @see testExactPermission. If false, subdomains will
+   *                  also be searched, @see testPermission.
+   * @returns The matching permission object, or null if no matching object
+   *          was found. No matching object is equivalent to UNKNOWN_ACTION.
+   * @note Clients in general should prefer the test* methods unless they
+   *       need to know the specific stored details.
+   * @note This method will always return null for the system principal.
+   */
+  nsIPermission getPermissionObject(in nsIPrincipal principal,
+                                    in string type,
+                                    in boolean exactHost);
 
    /**
     * Increment or decrement our "refcount" of an app id.

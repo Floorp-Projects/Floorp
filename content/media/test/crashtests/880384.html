@@ -1,0 +1,8 @@
+<script>
+o1 = new window.AudioContext(3, 256, 44100);
+o2 = o1.createBufferSource();
+o3 = o1.createConvolver();
+o3.normalize = false;
+o3.buffer = function(){var buffer = o1.createBuffer(2, 1051, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<1051; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}();
+o3.buffer = function(){var buffer = o1.createBuffer(2, 1112, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<1112; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}();
+</script>

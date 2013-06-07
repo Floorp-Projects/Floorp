@@ -47,3 +47,8 @@ else:
             'stabs_to_module.cc',
             'stabs_reader.cc',
         ]
+
+if CONFIG['OS_ARCH'] == 'Darwin':
+    CMMSRCS += [
+        'mac/dump_syms.mm',
+    ]

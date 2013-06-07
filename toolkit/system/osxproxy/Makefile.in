@@ -16,7 +16,7 @@ IS_COMPONENT    = 1
 MODULE_NAME     = nsOSXProxyModule
 LIBXUL_LIBRARY  = 1
 
-CMMSRCS = \
+DISABLED_CMMSRCS = \
         nsOSXSystemProxySettings.mm \
         $(NULL)
 

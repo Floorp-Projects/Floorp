@@ -16,7 +16,6 @@
 #include "jswrapper.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeEmitter.h"
 #include "gc/Marking.h"
 #include "ion/BaselineJIT.h"
 #include "js/Vector.h"
@@ -403,6 +402,13 @@ Debugger::init(JSContext *cx)
     if (!ok)
         js_ReportOutOfMemory(cx);
     return ok;
+}
+
+Debugger *
+Debugger::fromJSObject(JSObject *obj)
+{
+    JS_ASSERT(js::GetObjectClass(obj) == &jsclass);
+    return (Debugger *) obj->getPrivate();
 }
 
 JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) == unsigned(JSSLOT_DEBUGSCRIPT_OWNER));
@@ -1370,15 +1376,6 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
 
 /*** Debugger JSObjects **************************************************************************/
 
-/* static */ bool
-Debugger::isDebugWrapper(JSObject *o)
-{
-    Class *c = o->getClass();
-    return c == &DebuggerObject_class ||
-           c == &DebuggerEnv_class ||
-           c == &DebuggerScript_class;
-}
-
 void
 Debugger::markKeysInCompartment(JSTracer *tracer)
 {
@@ -1607,7 +1604,7 @@ Debugger::sweepAll(FreeOp *fop)
         }
     }
 
-    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
+    for (gc::GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
         /* For each debuggee being GC'd, detach it from all its debuggers. */
         GlobalObjectSet &debuggees = comp->getDebuggees();
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
@@ -3369,6 +3366,12 @@ DebuggerScript_getLineOffsets(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().setObject(*result);
     return true;
+}
+
+bool
+Debugger::observesFrame(AbstractFramePtr frame) const
+{
+    return observesGlobal(&frame.script()->global());
 }
 
 bool

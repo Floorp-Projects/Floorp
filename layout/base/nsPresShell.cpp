@@ -5582,16 +5582,8 @@ PresShell::Paint(nsView*        aViewToPaint,
   }
 
   if (frame) {
-    // Defer invalidates that are triggered during painting, and discard
-    // invalidates of areas that are already being repainted.
-    // The layer system can trigger invalidates during painting
-    // (see FrameLayerBuilder).
-    frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
-
     // We can paint directly into the widget using its layer manager.
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor, flags);
-
-    frame->EndDeferringInvalidatesForDisplayRoot();
     return;
   }
 

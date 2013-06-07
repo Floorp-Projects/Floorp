@@ -17,7 +17,7 @@
 #include "jsscript.h"
 #include "jswin.h"
 
-#include "frontend/FoldConstants.h"
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
@@ -329,7 +329,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
            LazyScript *lazyOuterFunction);
     ~Parser();
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void js::frontend::MarkParser(JSTracer *trc, AutoGCRooter *parser);
 
     const char *getFilename() const { return tokenStream.getFilename(); }
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
