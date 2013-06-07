@@ -405,6 +405,13 @@ Debugger::init(JSContext *cx)
     return ok;
 }
 
+Debugger *
+Debugger::fromJSObject(JSObject *obj)
+{
+    JS_ASSERT(js::GetObjectClass(obj) == &jsclass);
+    return (Debugger *) obj->getPrivate();
+}
+
 JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) == unsigned(JSSLOT_DEBUGSCRIPT_OWNER));
 JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) == unsigned(JSSLOT_DEBUGSOURCE_OWNER));
 JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) == unsigned(JSSLOT_DEBUGOBJECT_OWNER));
@@ -3360,6 +3367,12 @@ DebuggerScript_getLineOffsets(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().setObject(*result);
     return true;
+}
+
+bool
+Debugger::observesFrame(AbstractFramePtr frame) const
+{
+    return observesGlobal(&frame.script()->global());
 }
 
 bool
