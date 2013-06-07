@@ -163,9 +163,9 @@ BytesPerPixelForPixelFormat(android::PixelFormat aFormat)
   case PIXEL_FORMAT_A_8:
     return 1;
   default:
-    MOZ_NOT_REACHED("Unknown gralloc pixel format");
+    return 0;
   }
-  return gfxASurface::ImageFormatARGB32;
+  return 0;
 }
 
 static android::PixelFormat
