@@ -13,7 +13,7 @@ let EventEmitter = require("devtools/shared/event-emitter");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 
 loader.lazyGetter(this, "MarkupView", () => require("devtools/markupview/markup-view").MarkupView);
-loader.lazyGetter(this, "Selection", () => require ("devtools/inspector/selection").Selection);
+loader.lazyGetter(this, "Selection", () => require("devtools/inspector/selection").Selection);
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/inspector/breadcrumbs").HTMLBreadcrumbs);
 loader.lazyGetter(this, "Highlighter", () => require("devtools/inspector/highlighter").Highlighter);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/framework/sidebar").ToolSidebar);
@@ -44,6 +44,20 @@ InspectorPanel.prototype = {
    * open is effectively an asynchronous constructor
    */
   open: function InspectorPanel_open() {
+    return this.target.makeRemote().then(() => {
+      return this.target.inspector.getWalker();
+    }).then(walker => {
+      if (this._destroyPromise) {
+        walker.release().then(null, console.error);
+      }
+      this.walker = walker;
+      return this._getDefaultNodeForSelection();
+    }).then(defaultSelection => {
+      return this._deferredOpen(defaultSelection);
+    }).then(null, console.error);
+  },
+
+  _deferredOpen: function(defaultSelection) {
     let deferred = Promise.defer();
 
     this.onNavigatedAway = this.onNavigatedAway.bind(this);
@@ -57,13 +71,13 @@ InspectorPanel.prototype = {
     this.nodemenu.addEventListener("popuphiding", this._resetNodeMenu, true);
 
     // Create an empty selection
-    this._selection = new Selection();
+    this._selection = new Selection(this.walker);
     this.onNewSelection = this.onNewSelection.bind(this);
-    this.selection.on("new-node", this.onNewSelection);
+    this.selection.on("new-node-front", this.onNewSelection);
     this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
     this.selection.on("before-new-node", this.onBeforeNewSelection);
     this.onDetached = this.onDetached.bind(this);
-    this.selection.on("detached", this.onDetached);
+    this.selection.on("detached-front", this.onDetached);
 
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
@@ -121,13 +135,7 @@ InspectorPanel.prototype = {
       this.isReady = true;
 
       // All the components are initialized. Let's select a node.
-      if (this.target.isLocalTab) {
-        this._selection.setNode(
-            this._getDefaultNodeForSelection(this.browser.contentDocument));
-      } else if (this.target.window) {
-        this._selection.setNode(
-            this._getDefaultNodeForSelection(this.target.window.document));
-      }
+      this._selection.setNodeFront(defaultSelection);
 
       if (this.highlighter) {
         this.highlighter.unlock();
@@ -146,13 +154,17 @@ InspectorPanel.prototype = {
   },
 
   /**
-   * Select node for default selection
+   * Return a promise that will resolve to the default node for selection.
    */
-  _getDefaultNodeForSelection : function(document) {
+  _getDefaultNodeForSelection : function() {
     // if available set body node as default selected node
     // else set documentElement
-    var defaultNode = document.body || document.documentElement;
-    return defaultNode;
+    return this.walker.querySelector(this.walker.rootNode, "body").then(front => {
+      if (front) {
+        return front;
+      }
+      return this.walker.documentElement(this.walker.rootNode);
+    });
   },
 
   /**
@@ -262,35 +274,34 @@ InspectorPanel.prototype = {
    */
   onNavigatedAway: function InspectorPanel_onNavigatedAway(event, payload) {
     let newWindow = payload._navPayload || payload;
-    this.selection.setNode(null);
+    this.walker.release().then(null, console.error);
+    this.walker = null;
+    this.selection.setNodeFront(null);
+    this.selection.setWalker(null);
     this._destroyMarkup();
     this.isDirty = false;
 
-    let onDOMReady = function() {
-      newWindow.removeEventListener("DOMContentLoaded", onDOMReady, true);
-
-      if (this._destroyed) {
+    this.target.inspector.getWalker().then(walker => {
+      if (this._destroyPromise) {
+        walker.release().then(null, console.error);
         return;
       }
 
-      if (!this.selection.node) {
-        let defaultNode = this._getDefaultNodeForSelection(newWindow.document);
-        this.selection.setNode(defaultNode, "navigateaway");
-      }
-      this._initMarkup();
+      this.walker = walker;
+      this.selection.setWalker(walker);
+      this._getDefaultNodeForSelection().then(defaultNode => {
+        if (this._destroyPromise) {
+          return;
+        }
+        this.selection.setNodeFront(defaultNode, "navigateaway");
 
-      this.once("markuploaded", () => {
-        this.markup.expandNode(this.selection.node);
+        this._initMarkup();
+        this.once("markuploaded", () => {
+          this.markup.expandNode(this.selection.node);
+          this.setupSearchBox();
+        });
       });
-
-      this.setupSearchBox();
-    }.bind(this);
-
-    if (newWindow.document.readyState == "loading") {
-      newWindow.addEventListener("DOMContentLoaded", onDOMReady, true);
-    } else {
-      onDOMReady();
-    }
+    });
   },
 
   /**
@@ -317,17 +328,22 @@ InspectorPanel.prototype = {
   onDetached: function InspectorPanel_onDetached(event, parentNode) {
     this.cancelLayoutChange();
     this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
-    this.selection.setNode(parentNode, "detached");
+    this.selection.setNodeFront(parentNode, "detached");
   },
 
   /**
    * Destroy the inspector.
    */
   destroy: function InspectorPanel__destroy() {
-    if (this._destroyed) {
-      return Promise.resolve(null);
+    if (this._destroyPromise) {
+      return this._destroyPromise;
     }
-    this._destroyed = true;
+    if (this.walker) {
+      this._destroyPromise = this.walker.release().then(null, console.error);
+      delete this.walker;
+    } else {
+      this._destroyPromise = Promise.resolve(null);
+    }
 
     this.cancelLayoutChange();
 
@@ -358,9 +374,9 @@ InspectorPanel.prototype = {
     this.nodemenu.removeEventListener("popuphiding", this._resetNodeMenu, true);
     this.breadcrumbs.destroy();
     this.searchSuggestions.destroy();
-    this.selection.off("new-node", this.onNewSelection);
+    this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
-    this.selection.off("detached", this.onDetached);
+    this.selection.off("detached-front", this.onDetached);
     this._destroyMarkup();
     this._selection.destroy();
     this._selection = null;
@@ -374,7 +390,7 @@ InspectorPanel.prototype = {
     this.nodemenu = null;
     this.highlighter = null;
 
-    return Promise.resolve(null);
+    return this._destroyPromise;
   },
 
   /**
@@ -534,6 +550,9 @@ InspectorPanel.prototype = {
    */
   toggleHighlighter: function InspectorPanel_toggleHighlighter(event)
   {
+    if (!this.highlighter) {
+      return;
+    }
     if (event.type == "mouseover") {
       this.highlighter.hide();
     }
