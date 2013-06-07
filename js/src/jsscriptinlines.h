@@ -84,27 +84,10 @@ SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 
 } // namespace js
 
-inline const char *
-JSScript::filename() const
-{
-    return scriptSource()->filename();
-}
-
 inline void
 JSScript::setFunction(JSFunction *fun)
 {
     function_ = fun;
-}
-
-inline js::ScriptSource *
-JSScript::scriptSource() const
-{
-    return sourceObject()->source();
-}
-
-inline js::ScriptSourceObject *
-JSScript::sourceObject() const {
-    return &sourceObject_->asScriptSource();
 }
 
 inline JSFunction *
@@ -224,18 +207,6 @@ JSScript::setOriginalFunctionObject(JSObject *fun) {
     JS_ASSERT(isCallsiteClone);
     JS_ASSERT(fun->isFunction());
     enclosingScopeOrOriginalFunction_ = fun;
-}
-
-inline js::ScriptSource *
-js::ScriptSourceObject::source() {
-    return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
-}
-
-inline js::ScriptSourceObject &
-JSObject::asScriptSource()
-{
-    JS_ASSERT(isScriptSource());
-    return *static_cast<js::ScriptSourceObject *>(this);
 }
 
 #endif /* jsscriptinlines_h___ */
