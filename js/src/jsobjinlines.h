@@ -23,6 +23,7 @@
 #include "jstypedarray.h"
 #include "jswrapper.h"
 
+#include "builtin/Module.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
@@ -926,6 +927,13 @@ JSObject::asScriptSource()
 {
     JS_ASSERT(isScriptSource());
     return *static_cast<js::ScriptSourceObject *>(this);
+}
+
+inline js::Module &
+JSObject::asModule()
+{
+    JS_ASSERT(isModule());
+    return *static_cast<js::Module *>(this);
 }
 
 inline bool
