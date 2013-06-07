@@ -26,6 +26,12 @@ let console = tempScope.console;
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
+SimpleTest.registerCleanupFunction(() => {
+  console.error("Here we are\n")
+  let {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+  console.error("DebuggerServer open connections: " + Object.getOwnPropertyNames(DebuggerServer._connections).length);
+});
+
 function openInspector(callback)
 {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -38,6 +44,12 @@ function getActiveInspector()
 {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.getToolbox(target).getPanel("inspector");
+}
+
+function getNodeFront(node)
+{
+  let inspector = getActiveInspector();
+  return inspector.walker.frontForRawNode(node);
 }
 
 function isHighlighting()

@@ -75,7 +75,7 @@ InspectorPanel.prototype = {
     this.onNewSelection = this.onNewSelection.bind(this);
     this.selection.on("new-node-front", this.onNewSelection);
     this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
-    this.selection.on("before-new-node", this.onBeforeNewSelection);
+    this.selection.on("before-new-node-front", this.onBeforeNewSelection);
     this.onDetached = this.onDetached.bind(this);
     this.selection.on("detached-front", this.onDetached);
 
@@ -309,6 +309,69 @@ InspectorPanel.prototype = {
    */
   onNewSelection: function InspectorPanel_onNewSelection() {
     this.cancelLayoutChange();
+
+    // Wait for all the known tools to finish updating and then let the
+    // client know.
+    let selection = this.selection.nodeFront;
+    let selfUpdate = this.updating("inspector-panel");
+    Services.tm.mainThread.dispatch(() => {
+      try {
+        selfUpdate(selection);
+      } catch(ex) {
+        console.error(ex);
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  /**
+   * Delay the "inspector-updated" notification while a tool
+   * is updating itself.  Returns a function that must be
+   * invoked when the tool is done updating with the node
+   * that the tool is viewing.
+   */
+  updating: function(name) {
+    if (this._updateProgress && this._updateProgress.node != this.selection.nodeFront) {
+      this.cancelUpdate();
+    }
+
+    if (!this._updateProgress) {
+      // Start an update in progress.
+      var self = this;
+      this._updateProgress = {
+        node: this.selection.nodeFront,
+        outstanding: new Set(),
+        checkDone: function() {
+          if (this !== self._updateProgress) {
+            return;
+          }
+          if (this.node !== self.selection.nodeFront) {
+            self.cancelUpdate();
+            return;
+          }
+          if (this.outstanding.size !== 0) {
+            return;
+          }
+
+          self._updateProgress = null;
+          self.emit("inspector-updated");
+        },
+      }
+    }
+
+    let progress = this._updateProgress;
+    let done = function() {
+      progress.outstanding.delete(done);
+      progress.checkDone();
+    };
+    progress.outstanding.add(done);
+    return done;
+  },
+
+  /**
+   * Cancel notification of inspector updates.
+   */
+  cancelUpdate: function() {
+    this._updateProgress = null;
   },
 
   /**
@@ -345,6 +408,7 @@ InspectorPanel.prototype = {
       this._destroyPromise = Promise.resolve(null);
     }
 
+    this.cancelUpdate();
     this.cancelLayoutChange();
 
     if (this.browser) {
@@ -376,6 +440,7 @@ InspectorPanel.prototype = {
     this.searchSuggestions.destroy();
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
+    this.selection.off("before-new-node-front", this.onBeforeNewSelection);
     this.selection.off("detached-front", this.onDetached);
     this._destroyMarkup();
     this._selection.destroy();
@@ -517,7 +582,7 @@ InspectorPanel.prototype = {
     if (this.selection.isElementNode()) {
       if (DOMUtils.hasPseudoClassLock(this.selection.node, aPseudo)) {
         this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
-          DOMUtils.removePseudoClassLock(crumb.node, aPseudo);
+          DOMUtils.removePseudoClassLock(crumb.node.rawNode(), aPseudo);
         });
       } else {
         let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
@@ -538,7 +603,7 @@ InspectorPanel.prototype = {
   clearPseudoClasses: function InspectorPanel_clearPseudoClasses() {
     this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
       try {
-        DOMUtils.clearPseudoClassLocks(crumb.node);
+        DOMUtils.clearPseudoClassLocks(crumb.node.rawNode());
       } catch(e) {
        // Ignore dead nodes after navigation.
       }
