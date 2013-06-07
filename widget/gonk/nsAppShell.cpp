@@ -30,7 +30,6 @@
 
 #include "base/basictypes.h"
 #include "nscore.h"
-#include "MediaResourceManagerService.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Mutex.h"
@@ -639,10 +638,6 @@ nsAppShell::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     InitGonkMemoryPressureMonitoring();
-
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-      android::MediaResourceManagerService::instantiate();
-    }
 
     nsCOMPtr<nsIObserverService> obsServ = GetObserverService();
     if (obsServ) {
