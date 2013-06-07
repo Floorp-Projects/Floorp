@@ -4612,6 +4612,22 @@ static int32_t RoundUp(double aDouble)
     mouseEvent->buttons |= nsMouseEvent::e5thButtonFlag;
   }
 
+  switch ([aMouseEvent type]) {
+    case NSLeftMouseDown:
+    case NSLeftMouseUp:
+    case NSLeftMouseDragged:
+    case NSRightMouseDown:
+    case NSRightMouseUp:
+    case NSRightMouseDragged:
+    case NSOtherMouseDown:
+    case NSOtherMouseUp:
+    case NSOtherMouseDragged:
+      if ([aMouseEvent subtype] == NSTabletPointEventSubtype) {
+        mouseEvent->pressure = [aMouseEvent pressure];
+      }
+      break;
+  }
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
