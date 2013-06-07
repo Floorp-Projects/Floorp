@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=533840
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 533840</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=533840">Mozilla Bug 533840</a>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  /* Test for Bug 533840 */
+
+var manager = new MediaTestManager;
+
+function onloadstart(event) {
+  var video = event.target;
+  video.parentNode.removeChild(video);
+  ok(video.paused, "Media should be paused.");
+  // wait a bit to check we won't receive the a "play" event.
+  setTimeout(function() {
+    video.removeEventListener("loadstart", onloadstart);
+    video.src = "";
+    manager.finished(video.token);
+  }, 3000);
+}
+
+function onplay(event) {
+  ok(false, "Should not receive a play event.");
+}
+
+function startTest(test, token) {
+  var video = document.createElement('video');
+  video.token = token;
+  manager.started(token);
+  video.src = test.name;
+  video.preload = "auto";
+  video.autoplay = true;
+  video.addEventListener("loadstart", onloadstart);
+  video.addEventListener("play", onplay);
+  SimpleTest.waitForExplicitFinish();
+  document.body.appendChild(video);
+}
+
+manager.runTests(gProgressTests, startTest);
+</script>
+</pre>
+</body>
+</html>
+
