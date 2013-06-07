@@ -29,17 +29,14 @@ public:
 
   NS_IMETHOD SetPrivate(bool aPrivate)
   {
-      // Make sure that we don't have a load group or a load context
+      // Make sure that we don't have a load context
       // This is a fatal error in debug builds, and a runtime error in release
       // builds.
-      nsILoadGroup* loadGroup = static_cast<Channel*>(this)->mLoadGroup;
       nsCOMPtr<nsILoadContext> loadContext;
-      if (!loadGroup) {
-        NS_QueryNotificationCallbacks(static_cast<Channel*>(this), loadContext);
-      }
-      MOZ_ASSERT(!loadGroup && !loadContext);
-      if (loadGroup || loadContext) {
-        return NS_ERROR_FAILURE;
+      NS_QueryNotificationCallbacks(static_cast<Channel*>(this), loadContext);
+      MOZ_ASSERT(!loadContext);
+      if (loadContext) {
+          return NS_ERROR_FAILURE;
       }
 
       mPrivateBrowsingOverriden = true;
