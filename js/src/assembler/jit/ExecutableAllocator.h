@@ -30,10 +30,8 @@
 #include <limits>
 
 #include "jsalloc.h"
-#include "jsapi.h"
-#include "jsprvtd.h"
 
-#include "assembler/wtf/Assertions.h"
+#include "assembler/wtf/Platform.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 

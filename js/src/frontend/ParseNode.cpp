@@ -8,10 +8,6 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 
-#include "jsscriptinlines.h"
-
-#include "frontend/ParseMaps-inl.h"
-#include "frontend/ParseNode-inl.h"
 #include "frontend/Parser-inl.h"
 
 using namespace js;

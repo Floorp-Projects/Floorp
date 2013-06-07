@@ -5,20 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
-#include "jscompartment.h"
-
-#include "vm/ForkJoin.h"
-#include "vm/Monitor.h"
-#include "gc/Marking.h"
-#include "ion/BaselineJIT.h"
-
-#ifdef JS_ION
-#  include "ion/ParallelArrayAnalysis.h"
-#endif
 
 #ifdef JS_THREADSAFE
 #  include "prthread.h"
 #  include "prprf.h"
+#endif
+
+#include "vm/ForkJoin.h"
+
+#if defined(JS_THREADSAFE)
+#include "ion/BaselineJIT.h"
+#include "vm/Monitor.h"
 #endif
 
 #if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
@@ -27,11 +24,6 @@
 #  include "ion/MIRGraph.h"
 #  include "ion/IonCompartment.h"
 #endif // DEBUG && THREADSAFE && ION
-
-// For extracting stack extent for each thread.
-#include "jsnativestack.h"
-
-#include "jsinferinlines.h"
 
 #include "vm/Interpreter-inl.h"
 
