@@ -17,7 +17,7 @@ var FullScreen = {
       enterFS = !enterFS;
 
     // Toggle the View:FullScreen command, which controls elements like the
-    // fullscreen menuitem, menubars, and the appmenu.
+    // fullscreen menuitem, and menubars.
     let fullscreenCommand = document.getElementById("View:FullScreen");
     if (enterFS) {
       fullscreenCommand.setAttribute("checked", enterFS);
@@ -571,11 +571,9 @@ var FullScreen = {
       document.documentElement.setAttribute("inFullscreen", true);
     }
 
-    // In tabs-on-top mode, move window controls to the tab bar,
-    // and in tabs-on-bottom mode, move them back to the navigation toolbar.
     var fullscreenctls = document.getElementById("window-controls");
     var navbar = document.getElementById("nav-bar");
-    var ctlsOnTabbar = window.toolbar.visible && (navbar.collapsed || TabsOnTop.enabled);
+    var ctlsOnTabbar = window.toolbar.visible;
     if (fullscreenctls.parentNode == navbar && ctlsOnTabbar) {
       fullscreenctls.removeAttribute("flex");
       document.getElementById("TabsToolbar").appendChild(fullscreenctls);
