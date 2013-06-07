@@ -7,7 +7,7 @@
 /* General utilities used throughout devtools. */
 
 /* Turn the error e into a string, without fail. */
-function safeErrorString(aError) {
+this.safeErrorString = function safeErrorString(aError) {
   try {
     var s = aError.toString();
     if (typeof s === "string")
@@ -20,7 +20,7 @@ function safeErrorString(aError) {
 /**
  * Report that |aWho| threw an exception, |aException|.
  */
-function reportException(aWho, aException) {
+this.reportException = function reportException(aWho, aException) {
   let msg = aWho + " threw an exception: " + safeErrorString(aException);
   if (aException.stack) {
     msg += "\nCall stack:\n" + aException.stack;
@@ -52,7 +52,7 @@ function reportException(aWho, aException) {
  * (SpiderMonkey does generate good names for anonymous functions, but we
  * don't have a way to get at them from JavaScript at the moment.)
  */
-function makeInfallible(aHandler, aName) {
+this.makeInfallible = function makeInfallible(aHandler, aName) {
   if (!aName)
     aName = aHandler.name;
 
