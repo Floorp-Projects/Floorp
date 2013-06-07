@@ -3359,6 +3359,9 @@ nsIContent* HTMLMediaElement::GetNextSource()
   if (!mSourcePointer) {
     // First time this has been run, create a selection to cover children.
     mSourcePointer = new nsRange(this);
+    // If this media element is removed from the DOM, don't gravitate the
+    // range up to its ancestor, leave it attached to the media element.
+    mSourcePointer->SetEnableGravitationOnElementRemoval(false);
 
     rv = mSourcePointer->SelectNodeContents(thisDomNode);
     if (NS_FAILED(rv)) return nullptr;
