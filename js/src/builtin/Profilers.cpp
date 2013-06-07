@@ -11,9 +11,9 @@
 #include "Profilers.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsprobes.h"
 
 #include "jscntxtinlines.h"
+#include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 
 #ifdef MOZ_CALLGRIND

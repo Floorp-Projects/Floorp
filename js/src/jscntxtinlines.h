@@ -8,14 +8,14 @@
 #define jscntxtinlines_h___
 
 #include "jscntxt.h"
+
 #include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsprobes.h"
 #include "jsgc.h"
-
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
 #include "vm/Interpreter.h"
+#include "vm/Probes.h"
 #include "vm/RegExpObject.h"
 
 #include "jsgcinlines.h"

@@ -4,26 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Ion.h"
 #include "IonFrames.h"
+
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jsfun.h"
-#include "BaselineFrame.h"
-#include "BaselineIC.h"
-#include "BaselineJIT.h"
-#include "IonCompartment.h"
-#include "IonFrames-inl.h"
-#include "IonFrameIterator-inl.h"
-#include "Safepoints.h"
-#include "IonSpewer.h"
-#include "IonMacroAssembler.h"
-#include "PcScriptCache.h"
-#include "PcScriptCache-inl.h"
 #include "gc/Marking.h"
-#include "SnapshotReader.h"
-#include "Safepoints.h"
-#include "VMFunctions.h"
+#include "ion/BaselineFrame.h"
+#include "ion/BaselineIC.h"
+#include "ion/BaselineJIT.h"
+#include "ion/Ion.h"
+#include "ion/IonCompartment.h"
+#include "ion/IonMacroAssembler.h"
+#include "ion/IonSpewer.h"
+#include "ion/PcScriptCache.h"
+#include "ion/Safepoints.h"
+#include "ion/SnapshotReader.h"
+#include "ion/VMFunctions.h"
+
+#include "ion/IonFrameIterator-inl.h"
+#include "ion/IonFrames-inl.h"
+#include "ion/PcScriptCache-inl.h"
+#include "vm/Probes-inl.h"
 
 namespace js {
 namespace ion {

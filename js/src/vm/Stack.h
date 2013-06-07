@@ -9,9 +9,7 @@
 
 #include "jsfun.h"
 #include "jsscript.h"
-#ifdef JS_ION
 #include "ion/IonFrameIterator.h"
-#endif
 #include "jsautooplen.h"
 
 struct JSContext;
