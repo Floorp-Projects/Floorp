@@ -107,7 +107,7 @@ public class GeckoMenu extends ListView
                                          LayoutParams.FILL_PARENT));
 
         // Attach an adapter.
-        mAdapter = new MenuItemsAdapter(context);
+        mAdapter = new MenuItemsAdapter();
         setAdapter(mAdapter);
         setOnItemClickListener(this);
 
@@ -482,7 +482,7 @@ public class GeckoMenu extends ListView
 
         private List<GeckoMenuItem> mItems;
 
-        public MenuItemsAdapter(Context context) {
+        public MenuItemsAdapter() {
             mItems = new ArrayList<GeckoMenuItem>();
         }
 
