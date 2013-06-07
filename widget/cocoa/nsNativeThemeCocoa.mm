@@ -362,7 +362,10 @@ static int32_t WindowButtonsReservedWidth(nsIFrame* aFrame)
 {
   NSWindow* window = NativeWindowForFrame(aFrame);
   if (!window) {
-    return 61; // fallback value
+    // Return fallback values.
+    if (!nsCocoaFeatures::OnLionOrLater())
+      return 64;
+    return 61;
   }
 
   NSRect buttonBox = NSZeroRect;
