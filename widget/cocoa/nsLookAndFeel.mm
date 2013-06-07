@@ -353,7 +353,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = eScrollThumbStyle_Proportional;
       break;
     case eIntID_UseOverlayScrollbars:
-      aResult = UseOverlayScrollbars() ? 1 : 0;
+      aResult = SystemWantsOverlayScrollbars() ? 1 : 0;
       break;
     case eIntID_AllowOverlayScrollbarsOverlap:
       aResult = AllowOverlayScrollbarsOverlap() ? 1 : 0;
@@ -471,6 +471,11 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 }
 
 bool nsLookAndFeel::UseOverlayScrollbars()
+{
+  return GetInt(eIntID_UseOverlayScrollbars) != 0;
+}
+
+bool nsLookAndFeel::SystemWantsOverlayScrollbars()
 {
   return ([NSScroller respondsToSelector:@selector(preferredScrollerStyle)] &&
           [NSScroller preferredScrollerStyle] == mozNSScrollerStyleOverlay);
