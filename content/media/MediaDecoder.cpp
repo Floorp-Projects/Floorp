@@ -112,11 +112,47 @@ public:
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(MediaDecoder, nsIObserver)
 
+void MediaDecoder::SetDormantIfNecessary(bool aDormant)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  if (!mDecoderStateMachine || !mDecoderStateMachine->IsDormantNeeded() || (mPlayState == PLAY_STATE_SHUTDOWN)) {
+    return;
+  }
+
+  if (mIsDormant == aDormant) {
+    // no change to dormant state
+    return;
+  }
+
+  if(aDormant) {
+    // enter dormant state
+    StopProgress();
+    DestroyDecodedStream();
+    mDecoderStateMachine->SetDormant(true);
+
+    mRequestedSeekTime = mCurrentTime;
+    if (mPlayState == PLAY_STATE_PLAYING){
+      mNextState = PLAY_STATE_PLAYING;
+    } else {
+      mNextState = PLAY_STATE_PAUSED;
+    }
+    mNextState = mPlayState;
+    mIsDormant = aDormant;
+    ChangeState(PLAY_STATE_LOADING);
+  } else if ((aDormant != true) && (mPlayState == PLAY_STATE_LOADING)) {
+    // exit dormant state
+    // just trigger to state machine.
+    mDecoderStateMachine->SetDormant(false);
+  }
+}
+
 void MediaDecoder::Pause()
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  if (mPlayState == PLAY_STATE_SEEKING || mPlayState == PLAY_STATE_ENDED) {
+  if (mPlayState == PLAY_STATE_LOADING || mPlayState == PLAY_STATE_SEEKING || mPlayState == PLAY_STATE_ENDED) {
     mNextState = PLAY_STATE_PAUSED;
     return;
   }
@@ -333,6 +369,8 @@ MediaDecoder::MediaDecoder() :
   mTransportSeekable(true),
   mMediaSeekable(true),
   mReentrantMonitor("media.decoder"),
+  mIsMetadataLoaded(false),
+  mIsDormant(false),
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
   mCalledResourceLoaded(false),
@@ -519,7 +557,7 @@ nsresult MediaDecoder::Play()
   NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
   nsresult res = ScheduleStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
-  if (mPlayState == PLAY_STATE_SEEKING) {
+  if (mPlayState == PLAY_STATE_LOADING || mPlayState == PLAY_STATE_SEEKING) {
     mNextState = PLAY_STATE_PLAYING;
     return NS_OK;
   }
@@ -619,7 +657,7 @@ nsresult MediaDecoder::Seek(double aTime)
   // If we are already in the seeking state, then setting mRequestedSeekTime
   // above will result in the new seek occurring when the current seek
   // completes.
-  if (mPlayState != PLAY_STATE_SEEKING) {
+  if (mPlayState != PLAY_STATE_LOADING && mPlayState != PLAY_STATE_SEEKING) {
     bool paused = false;
     if (mOwner) {
       paused = mOwner->GetPaused();
@@ -703,7 +741,9 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
+    if (!mIsMetadataLoaded) {
+      mOwner->MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
+    }
   }
 
   if (!mCalledResourceLoaded) {
@@ -720,7 +760,9 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
   bool notifyResourceIsLoaded = !mCalledResourceLoaded &&
                                 IsDataCachedToEndOfResource();
   if (mOwner) {
-    mOwner->FirstFrameLoaded(notifyResourceIsLoaded);
+    if (!mIsMetadataLoaded) {
+      mOwner->FirstFrameLoaded(notifyResourceIsLoaded);
+    }
   }
 
   // This can run cache callbacks.
@@ -746,6 +788,8 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
   // Run NotifySuspendedStatusChanged now to give us a chance to notice
   // that autoplay should run.
   NotifySuspendedStatusChanged();
+
+  mIsMetadataLoaded = true;
 }
 
 void MediaDecoder::ResourceLoaded()
@@ -1160,6 +1204,11 @@ void MediaDecoder::ChangeState(PlayState aState)
       break;
     }
   }
+
+  if (aState!= PLAY_STATE_LOADING) {
+    mIsDormant = false;
+  }
+
   GetReentrantMonitor().NotifyAll();
 }
 

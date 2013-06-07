@@ -3244,6 +3244,11 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
   nsIDocument* ownerDoc = OwnerDoc();
+
+  if (mDecoder) {
+    mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
+  }
+
   // SetVisibilityState will update mMuted with MUTED_BY_AUDIO_CHANNEL via the
   // CanPlayChanged callback.
   if (UseAudioChannelService() && mPlayingThroughTheAudioChannel &&
