@@ -1944,7 +1944,8 @@ let RIL = {
   setGsmSmsBroadcastActivation: function setGsmSmsBroadcastActivation(activate) {
     Buf.newParcel(REQUEST_GSM_SMS_BROADCAST_ACTIVATION);
     Buf.writeUint32(1);
-    Buf.writeUint32(activate ? 1 : 0);
+    // See hardware/ril/include/telephony/ril.h, 0 - Activate, 1 - Turn off.
+    Buf.writeUint32(activate ? 0 : 1);
     Buf.sendParcel();
   },
 
