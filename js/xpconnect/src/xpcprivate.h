@@ -507,9 +507,6 @@ public:
         return mDefaultSecurityManager;
     }
 
-    uint16_t GetDefaultSecurityManagerFlags() const
-        {return mDefaultSecurityManagerFlags;}
-
     // This returns an AddRef'd pointer. It does not do this with an 'out' param
     // only because this form is required by the generic module macro:
     // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
@@ -571,7 +568,6 @@ private:
 
     XPCJSRuntime*            mRuntime;
     nsIXPCSecurityManager*   mDefaultSecurityManager;
-    uint16_t                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
 
     // nsIThreadInternal doesn't remember which observers it called
