@@ -6,3 +6,6 @@
 
 MODULE = 'osxproxy'
 
+CMMSRCS += [
+    'nsOSXSystemProxySettings.mm',
+]

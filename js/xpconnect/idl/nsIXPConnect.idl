@@ -291,7 +291,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(8c85f21e-c28b-4a78-89cf-f5682d0c357a)]
+[uuid(2950bc62-ba03-4465-9685-a0eec9e188c2)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -444,8 +444,7 @@ interface nsIXPConnect : nsISupports
     * The security manager to use when the current JSContext has no security
     * manager.
     */
-    void setDefaultSecurityManager(in nsIXPCSecurityManager aManager,
-                                   in uint16_t flags);
+    void setDefaultSecurityManager(in nsIXPCSecurityManager aManager);
 
     nsIStackFrame
     createStackFrameLocation(in uint32_t       aLanguage,
