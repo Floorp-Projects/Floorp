@@ -85,11 +85,6 @@ using mozilla::IsNegative;
 // after range analysis is performed. The remaining compiler phases do not ever
 // encounter beta nodes.
 
-RangeAnalysis::RangeAnalysis(MIRGraph &graph)
-  : graph_(graph)
-{
-}
-
 static bool
 IsDominatedUse(MBasicBlock *block, MUse *use)
 {

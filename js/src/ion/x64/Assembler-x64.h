@@ -15,39 +15,39 @@
 namespace js {
 namespace ion {
 
-static const Register rax = { JSC::X86Registers::eax };
-static const Register rbx = { JSC::X86Registers::ebx };
-static const Register rcx = { JSC::X86Registers::ecx };
-static const Register rdx = { JSC::X86Registers::edx };
-static const Register rsi = { JSC::X86Registers::esi };
-static const Register rdi = { JSC::X86Registers::edi };
-static const Register rbp = { JSC::X86Registers::ebp };
-static const Register r8  = { JSC::X86Registers::r8  };
-static const Register r9  = { JSC::X86Registers::r9  };
-static const Register r10 = { JSC::X86Registers::r10 };
-static const Register r11 = { JSC::X86Registers::r11 };
-static const Register r12 = { JSC::X86Registers::r12 };
-static const Register r13 = { JSC::X86Registers::r13 };
-static const Register r14 = { JSC::X86Registers::r14 };
-static const Register r15 = { JSC::X86Registers::r15 };
-static const Register rsp = { JSC::X86Registers::esp };
+static const MOZ_CONSTEXPR Register rax = { JSC::X86Registers::eax };
+static const MOZ_CONSTEXPR Register rbx = { JSC::X86Registers::ebx };
+static const MOZ_CONSTEXPR Register rcx = { JSC::X86Registers::ecx };
+static const MOZ_CONSTEXPR Register rdx = { JSC::X86Registers::edx };
+static const MOZ_CONSTEXPR Register rsi = { JSC::X86Registers::esi };
+static const MOZ_CONSTEXPR Register rdi = { JSC::X86Registers::edi };
+static const MOZ_CONSTEXPR Register rbp = { JSC::X86Registers::ebp };
+static const MOZ_CONSTEXPR Register r8  = { JSC::X86Registers::r8  };
+static const MOZ_CONSTEXPR Register r9  = { JSC::X86Registers::r9  };
+static const MOZ_CONSTEXPR Register r10 = { JSC::X86Registers::r10 };
+static const MOZ_CONSTEXPR Register r11 = { JSC::X86Registers::r11 };
+static const MOZ_CONSTEXPR Register r12 = { JSC::X86Registers::r12 };
+static const MOZ_CONSTEXPR Register r13 = { JSC::X86Registers::r13 };
+static const MOZ_CONSTEXPR Register r14 = { JSC::X86Registers::r14 };
+static const MOZ_CONSTEXPR Register r15 = { JSC::X86Registers::r15 };
+static const MOZ_CONSTEXPR Register rsp = { JSC::X86Registers::esp };
 
-static const FloatRegister xmm0 = { JSC::X86Registers::xmm0 };
-static const FloatRegister xmm1 = { JSC::X86Registers::xmm1 };
-static const FloatRegister xmm2 = { JSC::X86Registers::xmm2 };
-static const FloatRegister xmm3 = { JSC::X86Registers::xmm3 };
-static const FloatRegister xmm4 = { JSC::X86Registers::xmm4 };
-static const FloatRegister xmm5 = { JSC::X86Registers::xmm5 };
-static const FloatRegister xmm6 = { JSC::X86Registers::xmm6 };
-static const FloatRegister xmm7 = { JSC::X86Registers::xmm7 };
-static const FloatRegister xmm8 = { JSC::X86Registers::xmm8 };
-static const FloatRegister xmm9 = { JSC::X86Registers::xmm9 };
-static const FloatRegister xmm10 = { JSC::X86Registers::xmm10 };
-static const FloatRegister xmm11 = { JSC::X86Registers::xmm11 };
-static const FloatRegister xmm12 = { JSC::X86Registers::xmm12 };
-static const FloatRegister xmm13 = { JSC::X86Registers::xmm13 };
-static const FloatRegister xmm14 = { JSC::X86Registers::xmm14 };
-static const FloatRegister xmm15 = { JSC::X86Registers::xmm15 };
+static const MOZ_CONSTEXPR FloatRegister xmm0 = { JSC::X86Registers::xmm0 };
+static const MOZ_CONSTEXPR FloatRegister xmm1 = { JSC::X86Registers::xmm1 };
+static const MOZ_CONSTEXPR FloatRegister xmm2 = { JSC::X86Registers::xmm2 };
+static const MOZ_CONSTEXPR FloatRegister xmm3 = { JSC::X86Registers::xmm3 };
+static const MOZ_CONSTEXPR FloatRegister xmm4 = { JSC::X86Registers::xmm4 };
+static const MOZ_CONSTEXPR FloatRegister xmm5 = { JSC::X86Registers::xmm5 };
+static const MOZ_CONSTEXPR FloatRegister xmm6 = { JSC::X86Registers::xmm6 };
+static const MOZ_CONSTEXPR FloatRegister xmm7 = { JSC::X86Registers::xmm7 };
+static const MOZ_CONSTEXPR FloatRegister xmm8 = { JSC::X86Registers::xmm8 };
+static const MOZ_CONSTEXPR FloatRegister xmm9 = { JSC::X86Registers::xmm9 };
+static const MOZ_CONSTEXPR FloatRegister xmm10 = { JSC::X86Registers::xmm10 };
+static const MOZ_CONSTEXPR FloatRegister xmm11 = { JSC::X86Registers::xmm11 };
+static const MOZ_CONSTEXPR FloatRegister xmm12 = { JSC::X86Registers::xmm12 };
+static const MOZ_CONSTEXPR FloatRegister xmm13 = { JSC::X86Registers::xmm13 };
+static const MOZ_CONSTEXPR FloatRegister xmm14 = { JSC::X86Registers::xmm14 };
+static const MOZ_CONSTEXPR FloatRegister xmm15 = { JSC::X86Registers::xmm15 };
 
 // X86-common synonyms.
 static const Register eax = rax;
@@ -59,74 +59,74 @@ static const Register edi = rdi;
 static const Register ebp = rbp;
 static const Register esp = rsp;
 
-static const Register InvalidReg = { JSC::X86Registers::invalid_reg };
-static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
+static const MOZ_CONSTEXPR Register InvalidReg = { JSC::X86Registers::invalid_reg };
+static const MOZ_CONSTEXPR FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
 static const Register StackPointer = rsp;
 static const Register FramePointer = rbp;
-static const Register JSReturnReg = rcx;
+static const MOZ_CONSTEXPR Register JSReturnReg = rcx;
 // Avoid, except for assertions.
-static const Register JSReturnReg_Type = JSReturnReg;
-static const Register JSReturnReg_Data = JSReturnReg;
+static const MOZ_CONSTEXPR Register JSReturnReg_Type = JSReturnReg;
+static const MOZ_CONSTEXPR Register JSReturnReg_Data = JSReturnReg;
 
-static const Register ReturnReg = rax;
-static const Register ScratchReg = r11;
-static const Register HeapReg = r15;
-static const FloatRegister ReturnFloatReg = xmm0;
-static const FloatRegister ScratchFloatReg = xmm15;
+static const MOZ_CONSTEXPR Register ReturnReg = rax;
+static const MOZ_CONSTEXPR Register ScratchReg = r11;
+static const MOZ_CONSTEXPR Register HeapReg = r15;
+static const MOZ_CONSTEXPR FloatRegister ReturnFloatReg = xmm0;
+static const MOZ_CONSTEXPR FloatRegister ScratchFloatReg = xmm15;
 
-static const Register ArgumentsRectifierReg = r8;
-static const Register CallTempReg0 = rax;
-static const Register CallTempReg1 = rdi;
-static const Register CallTempReg2 = rbx;
-static const Register CallTempReg3 = rcx;
-static const Register CallTempReg4 = rsi;
-static const Register CallTempReg5 = rdx;
-static const Register CallTempReg6 = rbp;
+static const MOZ_CONSTEXPR Register ArgumentsRectifierReg = r8;
+static const MOZ_CONSTEXPR Register CallTempReg0 = rax;
+static const MOZ_CONSTEXPR Register CallTempReg1 = rdi;
+static const MOZ_CONSTEXPR Register CallTempReg2 = rbx;
+static const MOZ_CONSTEXPR Register CallTempReg3 = rcx;
+static const MOZ_CONSTEXPR Register CallTempReg4 = rsi;
+static const MOZ_CONSTEXPR Register CallTempReg5 = rdx;
+static const MOZ_CONSTEXPR Register CallTempReg6 = rbp;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
-static const Register IntArgReg0 = rcx;
-static const Register IntArgReg1 = rdx;
-static const Register IntArgReg2 = r8;
-static const Register IntArgReg3 = r9;
-static const uint32_t NumIntArgRegs = 4;
-static const Register IntArgRegs[NumIntArgRegs] = { rcx, rdx, r8, r9 };
+static const MOZ_CONSTEXPR Register IntArgReg0 = rcx;
+static constMOZ_CONSTEXPRconstexpr Register IntArgReg1 = rdx;
+static const MOZ_CONSTEXPR Register IntArgReg2 = r8;
+static const MOZ_CONSTEXPR Register IntArgReg3 = r9;
+static constMOZ_CONSTEXPRuint32_t NumIntArgRegs = 4;
+static const MOZ_CONSTEXPR Register IntArgRegs[NumIntArgRegs] = { rcx, rdx, r8, r9 };
 
-static const Register CallTempNonArgRegs[] = { rax, rdi, rbx, rsi };
+static const MOZ_CONSTEXPR Register CallTempNonArgRegs[] = { rax, rdi, rbx, rsi };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
-static const FloatRegister FloatArgReg0 = xmm0;
-static const FloatRegister FloatArgReg1 = xmm1;
-static const FloatRegister FloatArgReg2 = xmm2;
-static const FloatRegister FloatArgReg3 = xmm3;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg0 = xmm0;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg1 = xmm1;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg2 = xmm2;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg3 = xmm3;
 static const uint32_t NumFloatArgRegs = 4;
 static const FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3 };
 #else
-static const Register IntArgReg0 = rdi;
-static const Register IntArgReg1 = rsi;
-static const Register IntArgReg2 = rdx;
-static const Register IntArgReg3 = rcx;
-static const Register IntArgReg4 = r8;
-static const Register IntArgReg5 = r9;
-static const uint32_t NumIntArgRegs = 6;
-static const Register IntArgRegs[NumIntArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
+static const MOZ_CONSTEXPR Register IntArgReg0 = rdi;
+static const MOZ_CONSTEXPR Register IntArgReg1 = rsi;
+static const MOZ_CONSTEXPR Register IntArgReg2 = rdx;
+static const MOZ_CONSTEXPR Register IntArgReg3 = rcx;
+static const MOZ_CONSTEXPR Register IntArgReg4 = r8;
+static const MOZ_CONSTEXPR Register IntArgReg5 = r9;
+static const MOZ_CONSTEXPR uint32_t NumIntArgRegs = 6;
+static const MOZ_CONSTEXPR Register IntArgRegs[NumIntArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
 
-static const Register CallTempNonArgRegs[] = { rax, rbx };
+static const MOZ_CONSTEXPR Register CallTempNonArgRegs[] = { rax, rbx };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
-static const FloatRegister FloatArgReg0 = xmm0;
-static const FloatRegister FloatArgReg1 = xmm1;
-static const FloatRegister FloatArgReg2 = xmm2;
-static const FloatRegister FloatArgReg3 = xmm3;
-static const FloatRegister FloatArgReg4 = xmm4;
-static const FloatRegister FloatArgReg5 = xmm5;
-static const FloatRegister FloatArgReg6 = xmm6;
-static const FloatRegister FloatArgReg7 = xmm7;
-static const uint32_t NumFloatArgRegs = 8;
-static const FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7 };
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg0 = xmm0;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg1 = xmm1;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg2 = xmm2;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg3 = xmm3;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg4 = xmm4;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg5 = xmm5;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg6 = xmm6;
+static const MOZ_CONSTEXPR FloatRegister FloatArgReg7 = xmm7;
+static const MOZ_CONSTEXPR uint32_t NumFloatArgRegs = 8;
+static const MOZ_CONSTEXPR FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7 };
 #endif
 
 class ABIArgGenerator
@@ -152,9 +152,9 @@ class ABIArgGenerator
     static const Register NonVolatileReg;
 };
 
-static const Register OsrFrameReg = IntArgReg3;
+static const MOZ_CONSTEXPR Register OsrFrameReg = IntArgReg3;
 
-static const Register PreBarrierReg = rdx;
+static const MOZ_CONSTEXPR Register PreBarrierReg = rdx;
 
 // GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
 // jitted code.
@@ -265,7 +265,7 @@ namespace js {
 namespace ion {
 
 // Return operand from a JS -> JS call.
-static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
+static const MOZ_CONSTEXPR ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
 
 class Assembler : public AssemblerX86Shared
 {
