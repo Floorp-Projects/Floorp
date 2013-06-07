@@ -318,6 +318,15 @@ nsFrameLoader::LoadFrame()
   src.Trim(" \t\n\r");
 
   if (src.IsEmpty()) {
+    // If the frame is a XUL element and has the attribute 'nodefaultsrc=true'
+    // then we will not use 'about:blank' as fallback but return early without
+    // starting a load if no 'src' attribute is given (or it's empty).
+    if (mOwnerContent->IsXUL() &&
+        mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::nodefaultsrc,
+                                   nsGkAtoms::_true, eCaseMatters)) {
+      return NS_OK;
+    }
+
     src.AssignLiteral("about:blank");
   }
 
