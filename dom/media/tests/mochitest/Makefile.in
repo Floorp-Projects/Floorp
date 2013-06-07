@@ -35,6 +35,13 @@ MOCHITEST_FILES = \
   test_peerConnection_offerRequiresReceiveVideo.html \
   test_peerConnection_offerRequiresReceiveVideoAudio.html \
   test_peerConnection_throwInCallbacks.html \
+  test_peerConnection_setLocalAnswerInStable.html \
+  test_peerConnection_setRemoteAnswerInStable.html \
+  test_peerConnection_setLocalAnswerInHaveLocalOffer.html \
+  test_peerConnection_setRemoteOfferInHaveLocalOffer.html \
+  test_peerConnection_setLocalOfferInHaveRemoteOffer.html \
+  test_peerConnection_setRemoteAnswerInHaveRemoteOffer.html \
+  test_peerConnection_addCandidateInHaveLocalOffer.html \
   test_peerConnection_bug822674.html \
   test_peerConnection_bug825703.html \
   test_peerConnection_bug827843.html \

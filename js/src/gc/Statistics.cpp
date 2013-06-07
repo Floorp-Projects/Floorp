@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gc/Statistics.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -14,14 +16,13 @@
 #include "jscrashformat.h"
 #include "jscrashreport.h"
 #include "jsprf.h"
-#include "jsprobes.h"
 #include "jsutil.h"
 #include "prmjtime.h"
-
 #include "gc/Memory.h"
-#include "gc/Statistics.h"
 
+#include "jscntxtinlines.h"
 #include "gc/Barrier-inl.h"
+#include "vm/Probes-inl.h"
 
 using namespace js;
 using namespace js::gcstats;

@@ -39,7 +39,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-CMMSRCS += \
+DISABLED_CMMSRCS += \
   mac/dump_syms.mm
 endif
 

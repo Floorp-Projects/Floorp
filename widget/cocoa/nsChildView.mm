@@ -2230,7 +2230,8 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
     return;
   }
 
-  if (!mCornerMaskImage) {
+  if (!mCornerMaskImage ||
+      mCornerMaskImage->GetSize().width != mDevPixelCornerRadius) {
     mCornerMaskImage =
       aManager->gl()->CreateTextureImage(nsIntSize(mDevPixelCornerRadius,
                                                    mDevPixelCornerRadius),
@@ -4091,7 +4092,18 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // This might destroy our widget (and null out mGeckoChild).
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
+  bool defaultPrevented = mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // Check to see if we are double-clicking in the titlebar.
+  CGFloat locationInTitlebar = [[self window] frame].size.height - [theEvent locationInWindow].y;
+  if (!defaultPrevented && [theEvent clickCount] == 2 &&
+      [[self window] isMovableByWindowBackground] &&
+      [self shouldMinimizeOnTitlebarDoubleClick] &&
+      [[self window] isKindOfClass:[ToolbarWindow class]] &&
+      (locationInTitlebar < [(ToolbarWindow*)[self window] titlebarHeight] ||
+       locationInTitlebar < [(ToolbarWindow*)[self window] unifiedToolbarHeight])) {
+    [[self window] miniaturize:self];
+  }
 
   // If our mouse-up event's location is over some other object (as might
   // happen if it came at the end of a dragging operation), also send our
@@ -4600,6 +4612,22 @@ static int32_t RoundUp(double aDouble)
     mouseEvent->buttons |= nsMouseEvent::e5thButtonFlag;
   }
 
+  switch ([aMouseEvent type]) {
+    case NSLeftMouseDown:
+    case NSLeftMouseUp:
+    case NSLeftMouseDragged:
+    case NSRightMouseDown:
+    case NSRightMouseUp:
+    case NSRightMouseDragged:
+    case NSOtherMouseDown:
+    case NSOtherMouseUp:
+    case NSOtherMouseDragged:
+      if ([aMouseEvent subtype] == NSTabletPointEventSubtype) {
+        mouseEvent->pressure = [aMouseEvent pressure];
+      }
+      break;
+  }
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -4679,6 +4707,17 @@ static int32_t RoundUp(double aDouble)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NO);
   return mTextInputHandler->HasMarkedText();
+}
+
+- (BOOL)shouldMinimizeOnTitlebarDoubleClick
+{
+  NSString *MDAppleMiniaturizeOnDoubleClickKey =
+                                      @"AppleMiniaturizeOnDoubleClick";
+  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  bool shouldMinimize = [[userDefaults
+          objectForKey:MDAppleMiniaturizeOnDoubleClickKey] boolValue];
+
+  return shouldMinimize;
 }
 
 - (NSInteger) conversationIdentifier

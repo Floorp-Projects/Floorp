@@ -2572,7 +2572,14 @@ SkipUseAsmDirective(ModuleCompiler &m, ParseNode **stmtIter)
     if (StringAtom(expr) != m.cx()->names().useAsm)
         return m.fail(firstStatement, "\"use asm\" precludes other directives");
 
-    *stmtIter = NextNode(firstStatement);
+    *stmtIter = NextNonEmptyStatement(firstStatement);
+    if (*stmtIter
+        && IsExpressionStatement(*stmtIter)
+        && ExpressionStatementExpr(*stmtIter)->isKind(PNK_STRING))
+    {
+        return m.fail(*stmtIter, "\"use asm\" precludes other directives");
+    }
+
     return true;
 }
 
@@ -3978,7 +3985,7 @@ CheckComparison(FunctionCompiler &f, ParseNode *comp, MDefinition **def, Type *t
         return false;
 
     if ((lhsType.isSigned() && rhsType.isSigned()) || (lhsType.isUnsigned() && rhsType.isUnsigned())) {
-        MCompare::CompareType compareType = lhsType.isUnsigned()
+        MCompare::CompareType compareType = (lhsType.isUnsigned() && rhsType.isUnsigned())
                                             ? MCompare::Compare_UInt32
                                             : MCompare::Compare_Int32;
         *def = f.compare(lhsDef, rhsDef, comp->getOp(), compareType);

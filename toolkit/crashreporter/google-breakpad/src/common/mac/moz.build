@@ -17,3 +17,6 @@ CPP_SOURCES += [
     'string_utilities.cc',
 ]
 
+CMMSRCS += [
+    'MachIPC.mm',
+]

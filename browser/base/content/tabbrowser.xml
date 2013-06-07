@@ -1380,6 +1380,12 @@
             t._tPos = position;
             this.tabContainer._setPositionalAttributes();
 
+            // Prevent the superfluous initial load of a blank document
+            // if we're going to load something other than about:blank.
+            if (!uriIsAboutBlank) {
+              b.setAttribute("nodefaultsrc", "true");
+            }
+
             // NB: this appendChild call causes us to run constructors for the
             // browser element, which fires off a bunch of notifications. Some
             // of those notifications can cause code to run that inspects our
@@ -1388,13 +1394,6 @@
             this.mPanelContainer.appendChild(notificationbox);
 
             this.tabContainer.updateVisibility();
-
-            if (!uriIsAboutBlank) {
-              // Stop the existing about:blank load.  Otherwise, if aURI
-              // doesn't stop in-progress loads on its own, we'll get into
-              // trouble with multiple parallel loads running at once.
-              b.stop();
-            }
 
             // wire up a progress listener for the new browser object.
             var tabListener = this.mTabProgressListener(t, b, uriIsAboutBlank);

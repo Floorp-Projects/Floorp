@@ -7,10 +7,12 @@ html {
 }
 
 body {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  padding: 20px;
   transition-property: background-color, color;
   transition-duration: 0.4s;
+  max-width: 35em;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .light {
