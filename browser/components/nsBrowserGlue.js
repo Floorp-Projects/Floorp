@@ -1179,7 +1179,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 14;
+    const UI_VERSION = 15;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1369,7 +1369,7 @@ BrowserGlue.prototype = {
       catch (ex) {}
     }
 
-    if (currentUIVersion < 13) {
+    if (currentUIVersion < 14) {
       // Migrate users from text or text&icons mode to icons mode.
       let toolbarResources = [this._rdf.GetResource(BROWSER_DOCURL + "navigator-toolbox"),
                               this._rdf.GetResource(BROWSER_DOCURL + "nav-bar"),
@@ -1388,7 +1388,7 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 14) {
+    if (currentUIVersion < 15) {
       let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
       let collapsedResource = this._rdf.GetResource("collapsed");
       let isCollapsed = this._getPersist(toolbarResource, collapsedResource);
