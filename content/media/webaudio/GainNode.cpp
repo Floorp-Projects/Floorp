@@ -7,7 +7,9 @@
 #include "GainNode.h"
 #include "mozilla/dom/GainNodeBinding.h"
 #include "AudioNodeEngine.h"
-#include "GainProcessor.h"
+#include "AudioNodeStream.h"
+#include "AudioDestinationNode.h"
+#include "WebAudioUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,14 +23,21 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(GainNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(GainNode, AudioNode)
 
-class GainNodeEngine : public AudioNodeEngine,
-                       public GainProcessor
+class GainNodeEngine : public AudioNodeEngine
 {
 public:
   GainNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
     : AudioNodeEngine(aNode)
-    , GainProcessor(aDestination)
+    , mSource(nullptr)
+    , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
+    // Keep the default value in sync with the default value in GainNode::GainNode.
+    , mGain(1.f)
   {
+  }
+
+  void SetSourceStream(AudioNodeStream* aSource)
+  {
+    mSource = aSource;
   }
 
   enum Parameters {
@@ -40,7 +49,9 @@ public:
   {
     switch (aIndex) {
     case GAIN:
-      SetGainParameter(aValue);
+      MOZ_ASSERT(mSource && mDestination);
+      mGain = aValue;
+      WebAudioUtils::ConvertAudioParamToTicks(mGain, mSource, mDestination);
       break;
     default:
       NS_ERROR("Bad GainNodeEngine TimelineParameter");
@@ -57,18 +68,37 @@ public:
     if (aInput.IsNull()) {
       // If input is silent, so is the output
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+    } else if (mGain.HasSimpleValue()) {
+      // Optimize the case where we only have a single value set as the volume
+      *aOutput = aInput;
+      aOutput->mVolume *= mGain.GetValue();
     } else {
-      if (mGain.HasSimpleValue()) {
-        // Copy the input chunk to the output chunk, since we will only be
-        // changing the mVolume member.
-        *aOutput = aInput;
-      } else {
-        // Create a new output chunk to avoid modifying the input chunk.
-        AllocateAudioBlock(aInput.mChannelData.Length(), aOutput);
+      // First, compute a vector of gains for each track tick based on the
+      // timeline at hand, and then for each channel, multiply the values
+      // in the buffer with the gain vector.
+      AllocateAudioBlock(aInput.mChannelData.Length(), aOutput);
+
+      // Compute the gain values for the duration of the input AudioChunk
+      // XXX we need to add a method to AudioEventTimeline to compute this buffer directly.
+      float computedGain[WEBAUDIO_BLOCK_SIZE];
+      for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
+        TrackTicks tick = aStream->GetCurrentPosition();
+        computedGain[counter] = mGain.GetValueAtTime(tick, counter) * aInput.mVolume;
       }
-      ProcessGain(aStream, aInput.mVolume, aInput.mChannelData, aOutput);
+
+      // Apply the gain to the output buffer
+      for (size_t channel = 0; channel < aOutput->mChannelData.Length(); ++channel) {
+        const float* inputBuffer = static_cast<const float*> (aInput.mChannelData[channel]);
+        float* buffer = static_cast<float*> (const_cast<void*>
+                          (aOutput->mChannelData[channel]));
+        AudioBlockCopyChannelWithScale(inputBuffer, computedGain, buffer);
+      }
     }
   }
+
+  AudioNodeStream* mSource;
+  AudioNodeStream* mDestination;
+  AudioParamTimeline mGain;
 };
 
 GainNode::GainNode(AudioContext* aContext)
