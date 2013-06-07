@@ -132,7 +132,6 @@ class TiledContentHost : public ContentHost,
                          public TiledLayerComposer
 {
 public:
-  using CompositableHost::EnsureTextureHost;
   TiledContentHost(const TextureInfo& aTextureInfo)
     : ContentHost(aTextureInfo)
     , mPendingUpload(false)

@@ -139,7 +139,6 @@ protected:
 class ContentHostDoubleBuffered : public ContentHostBase
 {
 public:
-  using CompositableHost::EnsureTextureHost;
   ContentHostDoubleBuffered(const TextureInfo& aTextureInfo)
     : ContentHostBase(aTextureInfo)
   {}
@@ -182,7 +181,6 @@ protected:
 class ContentHostSingleBuffered : public ContentHostBase
 {
 public:
-  using CompositableHost::EnsureTextureHost;
   ContentHostSingleBuffered(const TextureInfo& aTextureInfo)
     : ContentHostBase(aTextureInfo)
   {}
@@ -219,7 +217,6 @@ public:
 class ContentHostIncremental : public ContentHostBase
 {
 public:
-  using CompositableHost::EnsureTextureHost;
   ContentHostIncremental(const TextureInfo& aTextureInfo)
     : ContentHostBase(aTextureInfo)
     , mDeAllocator(nullptr)
