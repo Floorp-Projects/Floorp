@@ -18,6 +18,8 @@
 
 #include "jsobjinlines.h"
 
+#include "gc/Barrier-inl.h"
+
 using namespace js;
 
 using mozilla::DoubleIsInt32;
