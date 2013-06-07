@@ -1457,9 +1457,11 @@ nsGlobalWindow::FreeInnerObjects()
 
   // Kill all of the workers for this window.
   // We push a cx so that exceptions get reported in the right DOM Window.
-  nsIScriptContext *scx = GetContextInternal();
-  AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-  mozilla::dom::workers::CancelWorkersForWindow(cx, this);
+  {
+    nsIScriptContext *scx = GetContextInternal();
+    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
+    mozilla::dom::workers::CancelWorkersForWindow(cx, this);
+  }
 
   // Close all offline storages for this window.
   quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
@@ -10939,10 +10941,12 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
     DisableGamepadUpdates();
 
     // Suspend all of the workers for this window.
-  // We push a cx so that exceptions get reported in the right DOM Window.
-    nsIScriptContext *scx = GetContextInternal();
-    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-    mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
+    // We push a cx so that exceptions get reported in the right DOM Window.
+    {
+      nsIScriptContext *scx = GetContextInternal();
+      AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
+      mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
+    }
 
     TimeStamp now = TimeStamp::Now();
     for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
@@ -11034,7 +11038,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
     // We push a cx so that exceptions get reported in the right DOM Window.
     nsIScriptContext *scx = GetContextInternal();
     AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-    mozilla::dom::workers::ResumeWorkersForWindow(cx, this);
+    mozilla::dom::workers::ResumeWorkersForWindow(scx, this);
 
     // Restore all of the timeouts, using the stored time remaining
     // (stored in timeout->mTimeRemaining).

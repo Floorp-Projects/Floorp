@@ -311,7 +311,7 @@ public class GeckoEvent {
             event.mPoints = new Point[1];
 
             PointF geckoPoint = new PointF(pt.x, pt.y);
-            geckoPoint = GeckoAppShell.getGeckoInterface().getLayerView().convertViewPointToLayerPoint(geckoPoint);
+            geckoPoint = GeckoAppShell.getLayerView().convertViewPointToLayerPoint(geckoPoint);
 
             if (geckoPoint == null) {
                 // This could happen if Gecko isn't ready yet.

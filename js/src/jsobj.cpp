@@ -7,7 +7,7 @@
 /*
  * JS object implementation.
  */
-#include "jsobj.h"
+#include "jsobjinlines.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +26,6 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsprobes.h"
 #include "jsprototypes.h"
 #include "jsproxy.h"
 #include "jsscript.h"
@@ -34,8 +33,7 @@
 #include "jsdbgapi.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
-
-#include "frontend/TokenStream.h"
+#include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "ion/BaselineJIT.h"
 #include "js/MemoryMetrics.h"
@@ -49,10 +47,10 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
-
 #include "builtin/Iterator-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
+#include "vm/Probes-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
@@ -3580,6 +3578,11 @@ LookupPropertyWithFlagsInline(JSContext *cx,
                               typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                               typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
+    /* NB: The logic of this procedure is implicitly reflected in IonBuilder.cpp's
+     *     |CanEffectlesslyCallLookupGenericOnObject| logic.
+     *     If this changes, please remember to update the logic there as well.
+     */
+
     /* Search scopes starting with obj and following the prototype link. */
     typename MaybeRooted<JSObject*, allowGC>::RootType current(cx, obj);
 
@@ -3657,6 +3660,10 @@ baseops::LookupProperty(JSContext *cx,
                         typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                         typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
+    /* NB: The logic of this procedure is implicitly reflected in IonBuilder.cpp's
+     *     |CanEffectlesslyCallLookupGenericOnObject| logic.
+     *     If this changes, please remember to update the logic there as well.
+     */
     return LookupPropertyWithFlagsInline<allowGC>(cx, obj, id, cx->resolveFlags, objp, propp);
 }
 
