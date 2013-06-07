@@ -22,7 +22,7 @@ const WM = Cc['@mozilla.org/appshell/window-mediator;1'].
 const BROWSER = 'navigator:browser',
       URI_BROWSER = 'chrome://browser/content/browser.xul',
       NAME = '_blank',
-      FEATURES = 'chrome,all,dialog=no';
+      FEATURES = 'chrome,all,dialog=no,non-private';
 
 function isWindowPrivate(win) {
   if (!win)
@@ -243,9 +243,21 @@ function openDialog(options) {
   options = options || {};
 
   let features = options.features || FEATURES;
-  if (!!options.private &&
-      !array.has(features.toLowerCase().split(','), 'private')) {
-    features = features.split(',').concat('private').join(',');
+  let featureAry = features.toLowerCase().split(',');
+
+  if (!!options.private) {
+    // add private flag if private window is desired
+    if (!array.has(featureAry, 'private')) {
+      featureAry.push('private');
+    }
+
+    // remove the non-private flag ig a private window is desired
+    let nonPrivateIndex = featureAry.indexOf('non-private');
+    if (nonPrivateIndex >= 0) {
+      featureAry.splice(nonPrivateIndex, 1);
+    }
+
+    features = featureAry.join(',');
   }
 
   let browser = getMostRecentBrowserWindow();
