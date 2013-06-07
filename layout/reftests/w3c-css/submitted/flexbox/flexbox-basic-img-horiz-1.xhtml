@@ -10,19 +10,17 @@
   <head>
     <style>
       div.flexbox {
-        height: 200px;
+        width: 200px;
         background: lightgreen;
         display: flex;
         justify-content: space-between;
-        flex-direction: column;
-        float: left;
-        margin-right: 10px;
-        font: 8px monospace;
+        margin-bottom: 5px;
+        line-height: 8px;
       }
       img {
-        width: 20px;
-        height: 10px;
-        min-height: 0;
+        min-width: 0;
+        width: 10px;
+        height: 20px;
         border: 1px dotted green;
       }
     </style>
@@ -31,12 +29,12 @@
 
     <!-- A) One flex item -->
     <div class="flexbox">
-      <img src="solidblue.png"/>
+      <img src="support/solidblue.png"/>
     </div>
 
     <!-- B) Text and an img (ensure they aren't merged into one flex item) -->
     <div class="flexbox">
-      a b <img src="solidblue.png"/>
+      some words <img src="support/solidblue.png"/>
     </div>
 
     <!-- C) Two img elements, getting stretched by different ratios, from 0.
@@ -48,8 +46,8 @@
          1st element gets 3/8 of space: 3/8 * 196px = 73.5px
       -->
     <div class="flexbox">
-      <img src="solidblue.png" style="flex: 5"/>
-      <img src="solidblue.png" style="flex: 3"/>
+      <img src="support/solidblue.png" style="flex: 5"/>
+      <img src="support/solidblue.png" style="flex: 3"/>
     </div>
 
     <!-- D) Two img elements, getting stretched by different ratios, from
@@ -60,8 +58,8 @@
          1st element gets 3/5 of space: 13px + 3/5 * 150px = 103px
       -->
     <div class="flexbox">
-      <img src="solidblue.png" style="height: 33px; flex: 2 auto"/>
-      <img src="solidblue.png" style="height: 13px; flex: 3 auto"/>
+      <img src="support/solidblue.png" style="width: 33px; flex: 2 auto"/>
+      <img src="support/solidblue.png" style="width: 13px; flex: 3 auto"/>
     </div>
 
     <!-- E) Two flex items, getting shrunk by different amounts.
@@ -75,26 +73,26 @@
          2nd element gets 300/900 of space: 100 + 300/900 * -54 = 82px
       -->
     <div class="flexbox">
-      <img src="solidblue.png" style="height: 150px; flex: 1 4 auto"/>
-      <img src="solidblue.png" style="height: 100px; flex: 1 3 auto"/>
+      <img src="support/solidblue.png" style="width: 150px; flex: 1 4 auto"/>
+      <img src="support/solidblue.png" style="width: 100px; flex: 1 3 auto"/>
     </div>
 
-    <!-- F) Making sure we don't grow past max-height -->
-    <!-- Same as (D), except we've added a max-height on the second element.
+    <!-- F) Making sure we don't grow past max-width -->
+    <!-- Same as (D), except we've added a max-width on the second element.
       -->
     <div class="flexbox">
-      <img src="solidblue.png" style="height: 33px; flex: 2 auto"/>
-      <img src="solidblue.png"
-           style="height: 13px; max-height: 90px; flex: 3 auto"/>
+      <img src="support/solidblue.png" style="width: 33px; flex: 2 auto"/>
+      <img src="support/solidblue.png"
+           style="width: 13px; max-width: 90px; flex: 3 auto"/>
     </div>
 
-    <!-- G) Making sure we grow at least as large as min-height -->
-    <!-- Same as (C), except we've added a min-height on the second element.
+    <!-- G) Making sure we grow at least as large as min-width -->
+    <!-- Same as (C), except we've added a min-width on the second element.
       -->
     <div class="flexbox">
-      <img src="solidblue.png" style="height: 33px; flex: 2 auto"/>
-      <img src="solidblue.png"
-           style="height: 13px; min-height: 150px; flex: 3 auto"/>
+      <img src="support/solidblue.png" style="width: 33px; flex: 2 auto"/>
+      <img src="support/solidblue.png"
+           style="width: 13px; min-width: 150px; flex: 3 auto"/>
     </div>
 
   </body>
