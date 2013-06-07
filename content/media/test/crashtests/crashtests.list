@@ -42,3 +42,4 @@ load 880129.html
 skip-if(B2G) load 880202.html # load failed, bug 833371 for B2G
 load 880342-1.html
 load 880342-2.html
+load 880384.html
