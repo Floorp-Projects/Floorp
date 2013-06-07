@@ -1,0 +1,20 @@
+# This file is sourced by nightly, beta, and release mozconfigs.
+
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+
+. $topsrcdir/build/unix/mozconfig.linux32
+
+# Avoid dependency on libstdc++ 4.5
+ac_add_options --enable-stdcxx-compat
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+export MOZ_TELEMETRY_REPORTING=1
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1

@@ -9,7 +9,6 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "IonBuilder.h"
-#include "frontend/BytecodeEmitter.h"
 #include "jsscriptinlines.h"
 
 using namespace js;

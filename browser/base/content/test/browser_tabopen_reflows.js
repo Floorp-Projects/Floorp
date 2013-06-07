@@ -8,10 +8,6 @@ XPCOMUtils.defineLazyGetter(this, "docShell", () => {
 });
 
 const EXPECTED_REFLOWS = [
-  // b.stop() call in tabbrowser.addTab()
-  "stop@chrome://global/content/bindings/browser.xml|" +
-    "addTab@chrome://browser/content/tabbrowser.xml|",
-
   // tabbrowser.adjustTabstrip() call after tabopen animation has finished
   "adjustTabstrip@chrome://browser/content/tabbrowser.xml|" +
     "_handleNewTab@chrome://browser/content/tabbrowser.xml|" +
@@ -30,7 +26,20 @@ const EXPECTED_REFLOWS = [
   "get_scrollPosition@chrome://global/content/bindings/scrollbox.xml|" +
     "_fillTrailingGap@chrome://browser/content/tabbrowser.xml|" +
     "_handleNewTab@chrome://browser/content/tabbrowser.xml|" +
-    "onxbltransitionend@chrome://browser/content/tabbrowser.xml|"
+    "onxbltransitionend@chrome://browser/content/tabbrowser.xml|",
+
+  // The TabView iframe causes reflows in the parent document.
+  "iQClass_height@chrome://browser/content/tabview.js|" +
+    "GroupItem_getContentBounds@chrome://browser/content/tabview.js|" +
+    "GroupItem_shouldStack@chrome://browser/content/tabview.js|" +
+    "GroupItem_arrange@chrome://browser/content/tabview.js|" +
+    "GroupItem_add@chrome://browser/content/tabview.js|" +
+    "GroupItems_newTab@chrome://browser/content/tabview.js|" +
+    "TabItem__reconnect@chrome://browser/content/tabview.js|" +
+    "TabItem@chrome://browser/content/tabview.js|" +
+    "TabItems_link@chrome://browser/content/tabview.js|" +
+    "@chrome://browser/content/tabview.js|" +
+    "addTab@chrome://browser/content/tabbrowser.xml|"
 ];
 
 const PREF_PRELOAD = "browser.newtab.preload";

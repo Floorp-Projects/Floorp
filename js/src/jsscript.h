@@ -278,7 +278,128 @@ typedef HashMap<JSScript *,
                 DefaultHasher<JSScript *>,
                 SystemAllocPolicy> DebugScriptMap;
 
-struct ScriptSource;
+struct ScriptSource
+{
+    friend class SourceCompressorThread;
+  private:
+    union {
+        // Before setSourceCopy or setSource are successfully called, this union
+        // has a NULL pointer. When the script source is ready,
+        // compressedLength_ != 0 implies compressed holds the compressed data;
+        // otherwise, source holds the uncompressed source. There is a special
+        // pointer |emptySource| for source code for length 0.
+        //
+        // The only function allowed to malloc, realloc, or free the pointers in
+        // this union is adjustDataSize(). Don't do it elsewhere.
+        jschar *source;
+        unsigned char *compressed;
+    } data;
+    uint32_t refs;
+    uint32_t length_;
+    uint32_t compressedLength_;
+    char *filename_;
+    jschar *sourceMap_;
+
+    // True if we can call JSRuntime::sourceHook to load the source on
+    // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
+    // possible to get source at all.
+    bool sourceRetrievable_:1;
+    bool argumentsNotIncluded_:1;
+    bool ready_:1;
+
+  public:
+    ScriptSource()
+      : refs(0),
+        length_(0),
+        compressedLength_(0),
+        filename_(NULL),
+        sourceMap_(NULL),
+        sourceRetrievable_(false),
+        argumentsNotIncluded_(false),
+        ready_(true)
+    {
+        data.source = NULL;
+    }
+    void incref() { refs++; }
+    void decref() {
+        JS_ASSERT(refs != 0);
+        if (--refs == 0)
+            destroy();
+    }
+    bool setSourceCopy(JSContext *cx,
+                       const jschar *src,
+                       uint32_t length,
+                       bool argumentsNotIncluded,
+                       SourceCompressionToken *tok);
+    void setSource(const jschar *src, uint32_t length);
+    bool ready() const { return ready_; }
+    void setSourceRetrievable() { sourceRetrievable_ = true; }
+    bool sourceRetrievable() const { return sourceRetrievable_; }
+    bool hasSourceData() const { return !!data.source || !ready(); }
+    uint32_t length() const {
+        JS_ASSERT(hasSourceData());
+        return length_;
+    }
+    bool argumentsNotIncluded() const {
+        JS_ASSERT(hasSourceData());
+        return argumentsNotIncluded_;
+    }
+    const jschar *chars(JSContext *cx);
+    JSStableString *substring(JSContext *cx, uint32_t start, uint32_t stop);
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
+
+    // XDR handling
+    template <XDRMode mode>
+    bool performXDR(XDRState<mode> *xdr);
+
+    bool setFilename(JSContext *cx, const char *filename);
+    const char *filename() const {
+        return filename_;
+    }
+
+    // Source maps
+    bool setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *filename);
+    const jschar *sourceMap();
+    bool hasSourceMap() const { return sourceMap_ != NULL; }
+
+  private:
+    void destroy();
+    bool compressed() const { return compressedLength_ != 0; }
+    size_t computedSizeOfData() const {
+        return compressed() ? compressedLength_ : sizeof(jschar) * length_;
+    }
+    bool adjustDataSize(size_t nbytes);
+};
+
+class ScriptSourceHolder
+{
+    ScriptSource *ss;
+  public:
+    explicit ScriptSourceHolder(ScriptSource *ss)
+      : ss(ss)
+    {
+        ss->incref();
+    }
+    ~ScriptSourceHolder()
+    {
+        ss->decref();
+    }
+};
+
+class ScriptSourceObject : public JSObject {
+  public:
+    static void finalize(FreeOp *fop, JSObject *obj);
+    static ScriptSourceObject *create(JSContext *cx, ScriptSource *source);
+
+    ScriptSource *source() {
+        return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
+    }
+
+    void setSource(ScriptSource *source);
+
+  private:
+    static const uint32_t SOURCE_SLOT = 0;
+};
 
 } /* namespace js */
 
@@ -624,7 +745,7 @@ class JSScript : public js::gc::Cell
      * NULL for global and eval scripts.
      */
     JSFunction *function() const { return function_; }
-    void setFunction(JSFunction *fun);
+    inline void setFunction(JSFunction *fun);
 
     JSFunction *originalFunction() const;
     void setOriginalFunctionObject(JSObject *fun);
@@ -633,15 +754,9 @@ class JSScript : public js::gc::Cell
 
     static bool loadSource(JSContext *cx, js::HandleScript scr, bool *worked);
 
-    js::ScriptSource *scriptSource() const;
-
-    js::ScriptSourceObject *sourceObject() const {
-        return &sourceObject_->asScriptSource();;
-    }
-
-    void setSourceObject(js::ScriptSourceObject *sourceObject);
-
-    inline const char *filename() const;
+    js::ScriptSourceObject *sourceObject() const;
+    js::ScriptSource *scriptSource() const { return sourceObject()->source(); }
+    const char *filename() const { return scriptSource()->filename(); }
 
   public:
 
@@ -985,128 +1100,6 @@ class AliasedFormalIter
 
 struct SourceCompressionToken;
 
-struct ScriptSource
-{
-    friend class SourceCompressorThread;
-  private:
-    union {
-        // Before setSourceCopy or setSource are successfully called, this union
-        // has a NULL pointer. When the script source is ready,
-        // compressedLength_ != 0 implies compressed holds the compressed data;
-        // otherwise, source holds the uncompressed source. There is a special
-        // pointer |emptySource| for source code for length 0.
-        //
-        // The only function allowed to malloc, realloc, or free the pointers in
-        // this union is adjustDataSize(). Don't do it elsewhere.
-        jschar *source;
-        unsigned char *compressed;
-    } data;
-    uint32_t refs;
-    uint32_t length_;
-    uint32_t compressedLength_;
-    char *filename_;
-    jschar *sourceMap_;
-
-    // True if we can call JSRuntime::sourceHook to load the source on
-    // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
-    // possible to get source at all.
-    bool sourceRetrievable_:1;
-    bool argumentsNotIncluded_:1;
-    bool ready_:1;
-
-  public:
-    ScriptSource()
-      : refs(0),
-        length_(0),
-        compressedLength_(0),
-        filename_(NULL),
-        sourceMap_(NULL),
-        sourceRetrievable_(false),
-        argumentsNotIncluded_(false),
-        ready_(true)
-    {
-        data.source = NULL;
-    }
-    void incref() { refs++; }
-    void decref() {
-        JS_ASSERT(refs != 0);
-        if (--refs == 0)
-            destroy();
-    }
-    bool setSourceCopy(JSContext *cx,
-                       const jschar *src,
-                       uint32_t length,
-                       bool argumentsNotIncluded,
-                       SourceCompressionToken *tok);
-    void setSource(const jschar *src, uint32_t length);
-    bool ready() const { return ready_; }
-    void setSourceRetrievable() { sourceRetrievable_ = true; }
-    bool sourceRetrievable() const { return sourceRetrievable_; }
-    bool hasSourceData() const { return !!data.source || !ready(); }
-    uint32_t length() const {
-        JS_ASSERT(hasSourceData());
-        return length_;
-    }
-    bool argumentsNotIncluded() const {
-        JS_ASSERT(hasSourceData());
-        return argumentsNotIncluded_;
-    }
-    const jschar *chars(JSContext *cx);
-    JSStableString *substring(JSContext *cx, uint32_t start, uint32_t stop);
-    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
-
-    // XDR handling
-    template <XDRMode mode>
-    bool performXDR(XDRState<mode> *xdr);
-
-    bool setFilename(JSContext *cx, const char *filename);
-    const char *filename() const {
-        return filename_;
-    }
-
-    // Source maps
-    bool setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *filename);
-    const jschar *sourceMap();
-    bool hasSourceMap() const { return sourceMap_ != NULL; }
-
-  private:
-    void destroy();
-    bool compressed() const { return compressedLength_ != 0; }
-    size_t computedSizeOfData() const {
-        return compressed() ? compressedLength_ : sizeof(jschar) * length_;
-    }
-    bool adjustDataSize(size_t nbytes);
-};
-
-class ScriptSourceHolder
-{
-    ScriptSource *ss;
-  public:
-    explicit ScriptSourceHolder(ScriptSource *ss)
-      : ss(ss)
-    {
-        ss->incref();
-    }
-    ~ScriptSourceHolder()
-    {
-        ss->decref();
-    }
-};
-
-class ScriptSourceObject : public JSObject {
-  public:
-    static void finalize(FreeOp *fop, JSObject *obj);
-    static ScriptSourceObject *create(JSContext *cx, ScriptSource *source);
-
-    ScriptSource *source() {
-        return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
-    }
-
-    void setSource(ScriptSource *source);
-
-  private:
-    static const uint32_t SOURCE_SLOT = 0;
-};
 
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
@@ -1433,13 +1426,6 @@ struct ScriptAndCounts
 };
 
 } /* namespace js */
-
-inline js::ScriptSourceObject &
-JSObject::asScriptSource()
-{
-    JS_ASSERT(isScriptSource());
-    return *static_cast<js::ScriptSourceObject *>(this);
-}
 
 extern jssrcnote *
 js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc);

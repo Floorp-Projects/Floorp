@@ -104,6 +104,12 @@ VARIABLES = {
        This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
         """),
 
+    'HOST_CSRCS': (StrictOrderingOnAppendList, list, [],
+        """C source files to compile with the host compiler.
+
+        This variable contains a list of C source files to compile.
+        """),
+
     'PARALLEL_DIRS': (list, list, [],
         """A parallel version of DIRS.
 

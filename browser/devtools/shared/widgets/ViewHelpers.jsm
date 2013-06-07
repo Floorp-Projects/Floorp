@@ -587,7 +587,7 @@ MenuContainer.prototype = {
 
   /**
    * Prepares an item to be added to this container. This allows for a large
-   * number of items to be batched up before alphabetically sorted and added.
+   * number of items to be batched up before being sorted and added.
    *
    * If the "staged" flag is not set to true, the item will be immediately
    * inserted at the correct position in this container, so that all the items
@@ -625,13 +625,13 @@ MenuContainer.prototype = {
 
     // Batch the item to be added later.
     if (aOptions.staged) {
-      // Commit operations will ignore any specified index.
+      // An ulterior commit operation will ignore any specified index.
       delete aOptions.index;
       return void this._stagedItems.push({ item: item, options: aOptions });
     }
     // Find the target position in this container and insert the item there.
     if (!("index" in aOptions)) {
-      return this._insertItemAt(this._findExpectedIndex(item), item, aOptions);
+      return this._insertItemAt(this._findExpectedIndexFor(item), item, aOptions);
     }
     // Insert the item at the specified index. If negative or out of bounds,
     // the item will be simply appended.
@@ -669,14 +669,13 @@ MenuContainer.prototype = {
    *         True if a selected item was available, false otherwise.
    */
   refresh: function() {
-    let selectedValue = this.selectedValue;
-    if (!selectedValue) {
+    let selectedItem = this.selectedItem;
+    if (!selectedItem) {
       return false;
     }
-    let entangledLabel = this.getItemByValue(selectedValue)._label;
     this._container.removeAttribute("notice");
-    this._container.setAttribute("label", entangledLabel);
-    this._container.setAttribute("tooltiptext", selectedValue);
+    this._container.setAttribute("label", selectedItem._label);
+    this._container.setAttribute("tooltiptext", selectedItem._value);
     return true;
   },
 
@@ -946,7 +945,13 @@ MenuContainer.prototype = {
     let targetElement = aItem ? aItem._target : null;
     let prevElement = this._container.selectedItem;
 
-    // Prevent selecting the same item again, so return early.
+    // Make sure the currently selected item's target element is also focused.
+    if (this.autoFocusOnSelection && targetElement) {
+      targetElement.focus();
+    }
+
+    // Prevent selecting the same item again and avoid dispatching
+    // a redundant selection event, so return early.
     if (targetElement == prevElement) {
       return;
     }
@@ -980,6 +985,42 @@ MenuContainer.prototype = {
    */
   set selectedValue(aValue)
     this.selectedItem = this._itemsByValue.get(aValue),
+
+  /**
+   * Focus this container the first time an element is inserted?
+   *
+   * If this flag is set to true, then when the first item is inserted in
+   * this container (and thus it's the only item available), its corresponding
+   * target element is focused as well.
+   */
+  autoFocusOnFirstItem: true,
+
+  /**
+   * Focus on selection?
+   *
+   * If this flag is set to true, then whenever an item is selected in
+   * this container (e.g. via the selectedIndex or selectedItem setters),
+   * its corresponding target element is focused as well.
+   *
+   * You can disable this flag, for example, to maintain a certain node
+   * focused but visually indicate a different selection in this container.
+   */
+  autoFocusOnSelection: true,
+
+  /**
+   * Focus on input (e.g. mouse click)?
+   *
+   * If this flag is set to true, then whenever an item receives user input in
+   * this container, its corresponding target element is focused as well.
+   */
+  autoFocusOnInput: true,
+
+  /**
+   * The number of elements in this container to jump when Page Up or Page Down
+   * keys are pressed. If falsy, then the page size will be based on the
+   * number of visible items in the container.
+   */
+  pageSize: 0,
 
   /**
    * Focuses the first visible item in this container.
@@ -1323,7 +1364,7 @@ MenuContainer.prototype = {
    * @return number
    *         The expected item index.
    */
-  _findExpectedIndex: function(aItem) {
+  _findExpectedIndexFor: function(aItem) {
     let itemCount = this.itemCount;
 
     for (let i = 0; i < itemCount; i++) {
@@ -1366,6 +1407,9 @@ MenuContainer.prototype = {
     // Handle any additional options after entangling the item.
     if (!this._currentFilterPredicate(aItem)) {
       aItem._target.hidden = true;
+    }
+    if (this.autoFocusOnFirstItem && this._itemsByElement.size == 1) {
+      aItem._target.focus();
     }
     if (aOptions.attributes) {
       aItem.setAttributes(aOptions.attributes, aItem._target);
@@ -1425,13 +1469,6 @@ MenuContainer.prototype = {
   },
 
   /**
-   * The number of elements in this container to jump when Page Up or Page Down
-   * keys are pressed. If falsy, then the page size will be based on the
-   * number of visible items in the container.
-   */
-  pageSize: 0,
-
-  /**
    * The keyPress event listener for this container.
    * @param string aName
    * @param KeyboardEvent aEvent
@@ -1442,9 +1479,11 @@ MenuContainer.prototype = {
 
     switch (aEvent.keyCode) {
       case aEvent.DOM_VK_UP:
+      case aEvent.DOM_VK_LEFT:
         this.focusPrevItem();
         return;
       case aEvent.DOM_VK_DOWN:
+      case aEvent.DOM_VK_RIGHT:
         this.focusNextItem();
         return;
       case aEvent.DOM_VK_PAGE_UP:
@@ -1472,10 +1511,13 @@ MenuContainer.prototype = {
       // Only allow left-click to trigger this event.
       return;
     }
+
     let item = this.getItemForElement(aEvent.target);
     if (item) {
       // The container is not empty and we clicked on an actual item.
       this.selectedItem = item;
+      // Make sure the current event's target element is also focused.
+      this.autoFocusOnInput && item._target.focus();
     }
   },
 
