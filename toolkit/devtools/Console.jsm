@@ -22,7 +22,10 @@
 
 this.EXPORTED_SYMBOLS = [ "console" ];
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
@@ -453,7 +456,8 @@ function createMultiLineDumper(aLevel) {
 function sendConsoleAPIMessage(aLevel, aFrame, aArgs, aOptions = {})
 {
   let consoleEvent = {
-    ID: aFrame.filename,
+    ID: "jsm",
+    innerID: aFrame.filename,
     level: aLevel,
     filename: aFrame.filename,
     lineNumber: aFrame.lineNumber,
@@ -487,6 +491,7 @@ function sendConsoleAPIMessage(aLevel, aFrame, aArgs, aOptions = {})
   }
 
   Services.obs.notifyObservers(consoleEvent, "console-api-log-event", null);
+  ConsoleAPIStorage.recordEvent("jsm", consoleEvent);
 }
 
 /**
