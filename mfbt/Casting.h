@@ -15,6 +15,27 @@
 
 namespace mozilla {
 
+/**
+ * Return a value of type |To|, containing the underlying bit pattern of |from|.
+ *
+ * |To| and |From| must be types of the same size; be careful of cross-platform
+ * size differences, or this might fail to compile on some but not all
+ * platforms.
+ */
+template<typename To, typename From>
+inline To
+BitwiseCast(const From from)
+{
+  MOZ_STATIC_ASSERT(sizeof(From) == sizeof(To),
+                    "To and From must have the same size");
+  union {
+    From from;
+    To to;
+  } u;
+  u.from = from;
+  return u.to;
+}
+
 namespace detail {
 
 enum ToSignedness { ToIsSigned, ToIsUnsigned };
