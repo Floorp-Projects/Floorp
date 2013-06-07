@@ -14,6 +14,8 @@ EXTRA_COMPONENTS = ['bar.js', 'foo.js']
 
 HOST_CSRCS = ['bar.c', 'foo.c']
 
+HOST_LIBRARY_NAME = 'host_bar'
+
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
 CSRCS += ['bar.c', 'foo.c']

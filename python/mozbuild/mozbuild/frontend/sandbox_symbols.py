@@ -119,6 +119,10 @@ VARIABLES = {
         likely go away.
         """),
 
+    'HOST_LIBRARY_NAME': (unicode, unicode, "",
+        """Name of target library generated when cross compiling.
+        """),
+
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 
