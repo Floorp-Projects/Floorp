@@ -9,7 +9,7 @@ function kernel(n) {
 }
 
 function testMap() {
-  var p = new ParallelArray(range(0, 2048));
+  var p = new ParallelArray(range(0, minItemsTestingThreshold));
   assertParallelExecWillBail(
     m => p.map(kernel, m));
 }
