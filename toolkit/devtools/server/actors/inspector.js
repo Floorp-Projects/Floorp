@@ -1118,12 +1118,22 @@ var WalkerActor = protocol.ActorClass({
    * removedNodes and addedNodes list, so if the client is interested
    * in the new set of children it needs to issue a `children` request.
    */
-  getMutations: method(function() {
+  getMutations: method(function(options={}) {
     let pending = this._pendingMutations || [];
     this._pendingMutations = [];
+
+    if (options.cleanup) {
+      for (let node of this._orphaned) {
+        this.releaseNode(node);
+      }
+      this._orphaned = new Set();
+    }
+
     return pending;
   }, {
-    request: {},
+    request: {
+      cleanup: Option(0)
+    },
     response: {
       mutations: RetVal("array:dommutation")
     }
@@ -1245,6 +1255,9 @@ var WalkerActor = protocol.ActorClass({
  * Client side of the DOM walker.
  */
 var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
+  // Set to true if cleanup should be requested after every mutation list.
+  autoCleanup: true,
+
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._orphaned = new Set();
@@ -1298,8 +1311,8 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   /**
    * Get any unprocessed mutation records and process them.
    */
-  getMutations: protocol.custom(function() {
-    return this._getMutations().then(mutations => {
+  getMutations: protocol.custom(function(options={}) {
+    return this._getMutations(options).then(mutations => {
       let emitMutations = [];
       for (let change of mutations) {
         // The target is only an actorID, get the associated front.
@@ -1368,6 +1381,14 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
 
         emitMutations.push(emittedMutation);
       }
+
+      if (options.cleanup) {
+        for (let node of this._orphaned) {
+          node.destroy();
+        }
+        this._orphaned = new Set();
+      }
+
       events.emit(this, "mutations", emitMutations);
     });
   }, {
@@ -1380,7 +1401,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
    */
   onMutations: protocol.preEvent("new-mutations", function() {
     // Fetch and process the mutations.
-    this.getMutations().then(null, console.error);
+    this.getMutations({cleanup: this.autoCleanup}).then(null, console.error);
   }),
 
   // XXX hack during transition to remote inspector: get a proper NodeFront
