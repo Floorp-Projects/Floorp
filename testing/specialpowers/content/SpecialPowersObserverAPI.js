@@ -16,7 +16,7 @@ SpecialPowersException.prototype.toString = function() {
   return this.name + ': "' + this.message + '"';
 };
 
-this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
+function SpecialPowersObserverAPI() {
   this._crashDumpDir = null;
   this._processCrashObserversRegistered = false;
 }
