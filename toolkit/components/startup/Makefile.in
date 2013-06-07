@@ -15,7 +15,7 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CMMSRCS += nsUserInfoMac.mm
+DISABLE_CMMSRCS += nsUserInfoMac.mm
 endif
 
 include $(topsrcdir)/config/rules.mk
