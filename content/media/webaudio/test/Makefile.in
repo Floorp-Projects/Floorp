@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
   webaudio.js \
+  layouttest-glue.js \
   test_bug808374.html \
   test_bug827541.html \
   test_bug839753.html \
@@ -67,6 +68,7 @@ MOCHITEST_FILES := \
   test_offlineDestinationChannelCountLess.html \
   test_offlineDestinationChannelCountMore.html \
   test_pannerNode.html \
+  test_pannerNode_equalPower.html \
   test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \
   test_scriptProcessorNodeZeroInputOutput.html \
