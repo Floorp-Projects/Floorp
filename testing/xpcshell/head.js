@@ -544,23 +544,7 @@ function _do_check_neq(left, right, stack, todo) {
 
   var text = _wrap_with_quotes_if_necessary(left) + " != " +
              _wrap_with_quotes_if_necessary(right);
-  if (left == right) {
-    if (!todo) {
-      do_throw(text, stack);
-    } else {
-      ++_todoChecks;
-      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text +"\n");
-    }
-  } else {
-    if (!todo) {
-      ++_passedChecks;
-      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
-            stack.lineNumber + "] " + text + "\n");
-    } else {
-      do_throw_todo(text, stack);
-    }
-  }
+  do_report_result(left != right, text, stack, todo);
 }
 
 function do_check_neq(left, right, stack) {
