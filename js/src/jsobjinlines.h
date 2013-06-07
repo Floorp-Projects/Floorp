@@ -17,7 +17,6 @@
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
-#include "jsprobes.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
 #include "jsstr.h"
@@ -34,6 +33,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Shape.h"
 #include "vm/NumberObject.h"
+#include "vm/Probes.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringObject.h"
 
@@ -42,9 +42,7 @@
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
-
 #include "gc/Barrier-inl.h"
-
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/String-inl.h"

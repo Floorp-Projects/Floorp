@@ -17,9 +17,7 @@
 #include "jstypedarray.h"
 
 #include "builtin/ParallelArray.h"
-#ifdef JS_ION
 #include "ion/IonFrames.h"
-#endif
 #include "js/RootingAPI.h"
 #include "vm/GlobalObject.h"
 

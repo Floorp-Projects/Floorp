@@ -7,13 +7,12 @@
 #ifndef String_inl_h__
 #define String_inl_h__
 
+#include "vm/String.h"
+
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jsprobes.h"
-
 #include "gc/Marking.h"
-#include "String.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
