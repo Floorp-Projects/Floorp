@@ -1,7 +1,7 @@
 load(libdir + "parallelarray-helpers.js");
 
 function testClosureCreationAndInvocation() {
-  var a = range(0, 64);
+  var a = range(0, minItemsTestingThreshold);
   var p = new ParallelArray(a);
   function makeaddv(v) {
     var u = v - 1;
