@@ -157,7 +157,7 @@ public class testShareLink extends BaseTest {
         ArrayList<String> displayedOptions = new ArrayList();
         ListView shareMenu = getDisplayedShareList();
         for (int i = 0; i < shareMenu.getAdapter().getCount();i++) {
-             View shareItem = shareMenu.getAdapter().getView(i, null, null);
+             View shareItem = shareMenu.getAdapter().getView(i, null, shareMenu);
              if (shareItem instanceof android.widget.TextView) {
                  displayedOptions.add(((android.widget.TextView)shareItem).getText().toString());
              }
