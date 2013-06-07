@@ -4,7 +4,7 @@
 
 marionette.jar:
 % content marionette %content/
-  content/marionette-server.js      (marionette-server.js)
+  content/marionette-actors.js      (marionette-actors.js)
   content/marionette-listener.js    (marionette-listener.js)
   content/marionette-elements.js    (marionette-elements.js)
   content/marionette-sendkeys.js    (marionette-sendkeys.js)
