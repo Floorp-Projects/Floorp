@@ -1,0 +1,8 @@
+<script>
+try { o1 = new window.AudioContext(2, 10, 1019159); } catch(e) { }
+try { o2 = o1.createBufferSource(); } catch(e) { }
+try { o3 = o1.createConvolver(); } catch(e) { }
+try { o3.buffer = function(){var buffer = o1.createBuffer(2, 741, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<741; i++) {buffer.getChannelData(c)[i] = 1;}}return buffer;}(); } catch(e) { }
+try { o2.buffer = function(){var buffer = o1.createBuffer(2, 120, 42419);for(var c=0; c<2; c++) {for(var i=0; i<120; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}() } catch(e) { }
+try { o3.buffer = function(){var buffer = o1.createBuffer(1, 1620, o1.sampleRate);for(var c=0; c<1; c++) {for(var i=0; i<1620; i++) {buffer.getChannelData(c)[i] = -1;}}return buffer;}(); } catch(e) { }
+</script>

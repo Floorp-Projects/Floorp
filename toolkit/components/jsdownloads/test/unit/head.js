@@ -44,6 +44,10 @@ const ServerSocket = Components.Constructor(
                                 "@mozilla.org/network/server-socket;1",
                                 "nsIServerSocket",
                                 "init");
+const BinaryOutputStream = Components.Constructor(
+                                      "@mozilla.org/binaryoutputstream;1",
+                                      "nsIBinaryOutputStream",
+                                      "setOutputStream")
 
 const HTTP_SERVER_PORT = 4444;
 const HTTP_BASE = "http://localhost:" + HTTP_SERVER_PORT;
@@ -64,8 +68,21 @@ const TEST_INTERRUPTIBLE_PATH = "/interruptible.txt";
 const TEST_INTERRUPTIBLE_URI = NetUtil.newURI(HTTP_BASE +
                                               TEST_INTERRUPTIBLE_PATH);
 
+const TEST_INTERRUPTIBLE_GZIP_PATH = "/interruptible_gzip.txt";
+const TEST_INTERRUPTIBLE_GZIP_URI = NetUtil.newURI(HTTP_BASE +
+                                                   TEST_INTERRUPTIBLE_GZIP_PATH);
+
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 const TEST_DATA_SHORT = "This test string is downloaded.";
+// Generate using gzipCompressString in TelemetryPing.js.
+const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
+ 31,139,8,0,0,0,0,0,0,3,11,201,200,44,86,40,73,45,46,81,40,46,41,202,204
+];
+const TEST_DATA_SHORT_GZIP_ENCODED_SECOND = [
+  75,87,0,114,83,242,203,243,114,242,19,83,82,83,244,0,151,222,109,43,31,0,0,0
+];
+const TEST_DATA_SHORT_GZIP_ENCODED =
+  TEST_DATA_SHORT_GZIP_ENCODED_FIRST.concat(TEST_DATA_SHORT_GZIP_ENCODED_SECOND);
 
 /**
  * All the tests are implemented with add_task, this starts them automatically.
@@ -351,4 +368,20 @@ add_task(function test_common_initialize()
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
     }, function secondPart(aRequest, aResponse) { });
+
+
+  registerInterruptibleHandler(TEST_INTERRUPTIBLE_GZIP_PATH,
+    function firstPart(aRequest, aResponse) {
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.setHeader("Content-Encoding", "gzip", false);
+      aResponse.setHeader("Content-Length", "" + TEST_DATA_SHORT_GZIP_ENCODED.length);
+
+      let bos =  new BinaryOutputStream(aResponse.bodyOutputStream);
+      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_FIRST,
+                         TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length);
+    }, function secondPart(aRequest, aResponse) {
+      let bos =  new BinaryOutputStream(aResponse.bodyOutputStream);
+      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_SECOND,
+                         TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length);
+    });
 });
