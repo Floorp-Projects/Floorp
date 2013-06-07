@@ -3842,21 +3842,38 @@ toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""]):-moz-l
   min-width: 300px;
 }
 
-.social-share-frame {
-  border-top-left-radius: none;
-  border-bottom-left-radius: none;
+.social-share-frame:-moz-locale-dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   border-top-right-radius: inherit;
   border-bottom-right-radius: inherit;
 }
 
-#social-share-panel > .social-share-toolbar {
+.social-share-frame:-moz-locale-dir(rtl) {
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#social-share-panel > .social-share-toolbar:-moz-locale-dir(ltr) {
   border-top-left-radius: inherit;
   border-bottom-left-radius: inherit;
 }
 
-#social-share-provider-buttons {
+#social-share-panel > .social-share-toolbar:-moz-locale-dir(rtl) {
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+#social-share-provider-buttons:-moz-locale-dir(ltr) {
   border-top-left-radius: inherit;
   border-bottom-left-radius: inherit;
+}
+
+#social-share-provider-buttons:-moz-locale-dir(rtl) {
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 
 /* === end of social toolbar provider menu === */
