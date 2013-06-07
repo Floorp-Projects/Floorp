@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const hiddenFrames = require("sdk/frame/hidden-frame");
-const xulApp = require("sdk/system/xul-app");
-
-const USE_JS_PROXIES = !xulApp.versionInRange(xulApp.platformVersion,
-                                              "17.0a2", "*");
 
 const { Loader } = require('sdk/test/loader');
 
@@ -55,14 +51,9 @@ function createProxyTest(html, callback) {
 }
 
 function createWorker(assert, xrayWindow, contentScript, done) {
-  // We have to use Sandboxed loader in order to get access to the private
-  // unlock key `PRIVATE_KEY`. This key should not be used anywhere else.
-  // See `PRIVATE_KEY` definition in worker.js
   let loader = Loader(module);
   let Worker = loader.require("sdk/content/worker").Worker;
-  let key = loader.sandbox("sdk/content/worker").PRIVATE_KEY;
   let worker = Worker({
-    exposeUnlockKey : USE_JS_PROXIES ? key : null,
     window: xrayWindow,
     contentScript: [
       'new ' + function () {
@@ -131,22 +122,6 @@ exports["test Create Proxy Test With Events"] = createProxyTest("", function (he
 
 });
 
-if (USE_JS_PROXIES) {
-  // Verify that the attribute `exposeUnlockKey`, that allow this test
-  // to identify proxies, works correctly.
-  // See `PRIVATE_KEY` definition in worker.js
-  exports["test Key Access"] = createProxyTest("", function(helper) {
-
-    helper.createWorker(
-      'new ' + function ContentScriptScope() {
-        assert("UNWRAP_ACCESS_KEY" in window, "have access to `UNWRAP_ACCESS_KEY`");
-        done();
-      }
-    );
-
-  });
-}
-
 // Bug 714778: There was some issue around `toString` functions
 //             that ended up being shared between content scripts
 exports["test Shared To String Proxies"] = createProxyTest("", function(helper) {
@@ -158,10 +133,7 @@ exports["test Shared To String Proxies"] = createProxyTest("", function(helper) 
       // It only applies to JS proxies, there isn't any such issue with xrays.
       //document.location.toString = function foo() {};
       document.location.toString.foo = "bar";
-      if ('UNWRAP_ACCESS_KEY' in window)
-        assert(!("foo" in document.location.toString), "document.location.toString can't be modified");
-      else
-        assert("foo" in document.location.toString, "document.location.toString can be modified");
+      assert("foo" in document.location.toString, "document.location.toString can be modified");
       assert(document.location.toString() == "data:text/html;charset=utf-8,",
              "First document.location.toString()");
       self.postMessage("next");
@@ -190,17 +162,11 @@ exports["test postMessage"] = createProxyTest(html, function (helper, assert) {
   ifWindow.addEventListener("message", function listener(event) {
     ifWindow.removeEventListener("message", listener, false);
     // As we are in system principal, event is an XrayWrapper
-    if (USE_JS_PROXIES) {
-      assert.equal(event.source, ifWindow,
-                       "event.source is the iframe window");
-    }
-    else {
-      // JS proxies had different behavior than xrays, xrays use current
-      // compartments when calling postMessage method. Whereas js proxies
-      // was using postMessage method compartment, not the caller one.
-      assert.equal(event.source, helper.xrayWindow,
-                       "event.source is the top window");
-    }
+    // xrays use current compartments when calling postMessage method.
+    // Whereas js proxies was using postMessage method compartment,
+    // not the caller one.
+    assert.equal(event.source, helper.xrayWindow,
+                 "event.source is the top window");
     assert.equal(event.origin, "null", "origin is null");
 
     assert.equal(event.data, "{\"foo\":\"bar\\n \\\"escaped\\\".\"}",
@@ -234,8 +200,6 @@ exports["test Object Listener"] = createProxyTest(html, function (helper) {
           assert(this === myClickListener, "`this` is the original object");
           assert(!this.called, "called only once");
           this.called = true;
-          if ('UNWRAP_ACCESS_KEY' in window)
-            assert(event.valueOf() !== event.valueOf(UNWRAP_ACCESS_KEY), "event is wrapped");
           assert(event.target, input, "event.target is the wrapped window");
           done();
         }
@@ -262,8 +226,6 @@ exports["test Object Listener 2"] = createProxyTest("", function (helper) {
           assert(this == myMessageListener, "`this` is the original object");
           assert(!this.called, "called only once");
           this.called = true;
-          if ('UNWRAP_ACCESS_KEY' in window)
-            assert(event.valueOf() !== event.valueOf(UNWRAP_ACCESS_KEY), "event is wrapped");
           assert(event.target == document.defaultView, "event.target is the wrapped window");
           assert(event.source == document.defaultView, "event.source is the wrapped window");
           assert(event.origin == "null", "origin is null");
@@ -454,8 +416,6 @@ exports["test Auto Unwrap Custom Attributes"] = createProxyTest("", function (he
       // Setting a custom object to a proxy attribute is not wrapped when we get it afterward
       let object = {custom: true, enumerable: false};
       body.customAttribute = object;
-      if ('UNWRAP_ACCESS_KEY' in window)
-        assert(body.customAttribute.valueOf() === body.customAttribute.valueOf(UNWRAP_ACCESS_KEY), "custom JS attributes are not wrapped");
       assert(object === body.customAttribute, "custom JS attributes are not wrapped");
       done();
     }
@@ -587,14 +547,7 @@ exports["test Collections 2"] = createProxyTest(html, function (helper) {
       for(let i in body.childNodes) {
         count++;
       }
-      // JS proxies were broken, we can iterate over some other items:
-      // length, item and iterator
-      let expectedCount;
-      if ('UNWRAP_ACCESS_KEY' in window)
-        expectedCount = 3;
-      else
-        expectedCount = 6;
-      assert(count == expectedCount, "body.childNodes is iterable");
+      assert(count == 6, "body.childNodes is iterable");
       done();
     }
   );
@@ -603,19 +556,6 @@ exports["test Collections 2"] = createProxyTest(html, function (helper) {
 
 exports["test valueOf"] = createProxyTest("", function (helper) {
 
-  if (USE_JS_PROXIES) {
-    helper.createWorker(
-      'new ' + function ContentScriptScope() {
-        // Check internal use of valueOf() for JS proxies API
-        assert(/\[object Window.*\]/.test(window.valueOf().toString()),
-               "proxy.valueOf() returns the wrapped version");
-        assert(/\[object Window.*\]/.test(window.valueOf({}).toString()),
-               "proxy.valueOf({}) returns the wrapped version");
-        done();
-      }
-    );
-  }
-  else {
     helper.createWorker(
       'new ' + function ContentScriptScope() {
         // Bug 787013: Until this bug is fixed, we are missing some methods
@@ -625,7 +565,6 @@ exports["test valueOf"] = createProxyTest("", function (helper) {
         done();
       }
     );
-  }
 
 });
 
@@ -744,8 +683,6 @@ exports["test Listeners"] = createProxyTest(html, function (helper) {
         addEventListenerCalled = true;
 
         assert(!event.target.ownerDocument.defaultView.documentGlobal, "event object is still wrapped and doesn't expose document globals");
-        if ('UNWRAP_ACCESS_KEY' in window)
-          assert("__isWrappedProxy" in event.target, "event object is a proxy");
 
         let input2 = document.getElementById("input2");
 
@@ -756,8 +693,6 @@ exports["test Listeners"] = createProxyTest(html, function (helper) {
           expandoCalled = true;
 
           assert(!event.target.ownerDocument.defaultView.documentGlobal, "event object is still wrapped and doesn't expose document globals");
-          if ('UNWRAP_ACCESS_KEY' in window)
-            assert("__isWrappedProxy" in event.target, "event object is a proxy");
 
           setTimeout(function () {
             input.click();
@@ -801,30 +736,6 @@ exports["testGlobalScope"] = createProxyTest("", function (helper) {
   );
 
 });
-
-if (USE_JS_PROXIES) {
-  // Bug 671016: Typed arrays should not be proxified
-  exports["test Typed ArraysX"] = createProxyTest("", function (helper) {
-
-    helper.createWorker(
-      'new ' + function ContentScriptScope() {
-        let canvas = document.createElement("canvas");
-        let context = canvas.getContext("2d");
-        let imageData = context.getImageData(0,0, 1, 1);
-        let unwrappedData;
-        if ('UNWRAP_ACCESS_KEY' in window)
-          unwrappedData = imageData.valueOf(UNWRAP_ACCESS_KEY).data
-        else
-          unwrappedData = imageData.wrappedJSObject.data;
-        let data = imageData.data;
-        dump(unwrappedData+" === "+data+"\n");
-        assert(unwrappedData === data, "Typed array isn't proxified")
-        done();
-      }
-    );
-
-  });
-}
 
 // Bug 715755: proxy code throw an exception on COW
 // Create an http server in order to simulate real cross domain documents

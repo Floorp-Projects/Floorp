@@ -175,6 +175,18 @@ exports.testValidateMapWithMissingKey = function (test) {
   assertObjsEqual(test, val, { });
 };
 
+exports.testValidateMapWithMissingKeyAndThrown = function (test) {
+  let val = apiUtils.validateOptions({}, {
+    bar: {
+      map: function(v) { throw "bar" }
+    },
+    baz: {
+      map: function(v) "foo"
+    }
+  });
+  assertObjsEqual(test, val, { baz: "foo" });
+};
+
 exports.testAddIterator = function testAddIterator(test) {
   let obj = {};
   let keys = ["foo", "bar", "baz"];

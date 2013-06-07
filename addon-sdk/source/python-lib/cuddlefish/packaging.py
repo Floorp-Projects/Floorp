@@ -113,6 +113,12 @@ def resolve_dirs(pkg_cfg, dirnames):
 def resolve_dir(pkg_cfg, dirname):
     return os.path.join(pkg_cfg.root_dir, dirname)
 
+def validate_permissions(perms):
+    if (perms.get('cross-domain-content') and
+        not isinstance(perms.get('cross-domain-content'), list)):
+        raise ValueError("Error: `cross-domain-content` permissions in \
+ package.json file must be an array of strings:\n  %s" % perms)
+
 def get_metadata(pkg_cfg, deps):
     metadata = Bunch()
     for pkg_name in deps:
@@ -120,6 +126,8 @@ def get_metadata(pkg_cfg, deps):
         metadata[pkg_name] = Bunch()
         for prop in METADATA_PROPS:
             if cfg.get(prop):
+                if prop == 'permissions':
+                    validate_permissions(cfg[prop])
                 metadata[pkg_name][prop] = cfg[prop]
     return metadata
 
