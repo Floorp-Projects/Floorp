@@ -94,6 +94,10 @@ MarkUserDataHandler(void* aNode, nsIAtom* aKey, void* aValue, void* aData)
 static void
 MarkMessageManagers()
 {
+  // The global message manager only exists in the root process.
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return;
+  }
   nsCOMPtr<nsIMessageBroadcaster> strongGlobalMM =
     do_GetService("@mozilla.org/globalmessagemanager;1");
   if (!strongGlobalMM) {
