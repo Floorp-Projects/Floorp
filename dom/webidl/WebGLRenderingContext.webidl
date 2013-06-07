@@ -32,7 +32,10 @@ typedef unrestricted float GLfloat;
 typedef unrestricted float GLclampf;  
 
 dictionary WebGLContextAttributes {
-    boolean alpha = true;
+    // boolean alpha = true;
+    // We deviate from the spec here.
+    // If alpha isn't specified, we rely on a pref ("webgl.default-no-alpha")
+    boolean alpha;
     boolean depth = true;
     boolean stencil = false;
     boolean antialias = true;
