@@ -33,11 +33,4 @@ class Module : public JSObject {
 
 } // namespace js
 
-inline js::Module &
-JSObject::asModule()
-{
-    JS_ASSERT(isModule());
-    return *static_cast<js::Module *>(this);
-}
-
 #endif // Module_h___
