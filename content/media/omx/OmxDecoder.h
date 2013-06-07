@@ -12,7 +12,6 @@
 #include "MPAPI.h"
 #include "MediaResource.h"
 #include "AbstractMediaDecoder.h"
-#include "OMXCodecProxy.h"
 
 namespace android {
 class OmxDecoder;
@@ -73,7 +72,7 @@ private:
   MediaStreamSource &operator=(const MediaStreamSource &);
 };
 
-class OmxDecoder : public OMXCodecProxy::EventListener {
+class OmxDecoder : public RefBase {
   typedef MPAPI::AudioFrame AudioFrame;
   typedef MPAPI::VideoFrame VideoFrame;
   typedef mozilla::MediaResource MediaResource;
@@ -94,7 +93,7 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   sp<GonkNativeWindow> mNativeWindow;
   sp<GonkNativeWindowClient> mNativeWindowClient;
   sp<MediaSource> mVideoTrack;
-  sp<OMXCodecProxy> mVideoSource;
+  sp<MediaSource> mVideoSource;
   sp<MediaSource> mAudioTrack;
   sp<MediaSource> mAudioSource;
   int32_t mVideoWidth;
@@ -163,15 +162,7 @@ public:
   OmxDecoder(MediaResource *aResource, AbstractMediaDecoder *aDecoder);
   ~OmxDecoder();
 
-  // MediaResourceManagerClient::EventListener
-  virtual void statusChanged();
-
   bool Init();
-  bool TryLoad();
-  bool IsDormantNeeded();
-  bool IsWaitingMediaResources();
-  bool AllocateMediaResources();
-  void ReleaseMediaResources();
   bool SetVideoFormat();
   bool SetAudioFormat();
 
