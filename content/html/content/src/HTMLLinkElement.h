@@ -79,7 +79,6 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) MOZ_OVERRIDE;
   virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
-  virtual nsLinkState GetLinkState() const MOZ_OVERRIDE;
   virtual already_AddRefed<nsIURI> GetHrefURI() const MOZ_OVERRIDE;
 
   // Element

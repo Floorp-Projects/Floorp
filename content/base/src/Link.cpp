@@ -43,14 +43,6 @@ Link::ElementHasHref() const
         || (!mElement->IsHTML() && mElement->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)));
 }
 
-nsLinkState
-Link::GetLinkState() const
-{
-  NS_ASSERTION(mRegistered,
-               "Getting the link state of an unregistered Link!");
-  return nsLinkState(mLinkState);
-}
-
 void
 Link::SetLinkState(nsLinkState aState)
 {
