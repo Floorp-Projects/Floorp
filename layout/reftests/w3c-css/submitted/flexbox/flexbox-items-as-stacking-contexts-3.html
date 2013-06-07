@@ -8,9 +8,11 @@
      inside of one flex item should be able to iterleave between pieces of
      content in another flex item, if we set appropriately interleaving
      "z-index" values. -->
+<!-- This was resolved by the CSSWG in April 2013:
+     http://krijnhoetmer.nl/irc-logs/css/20130403#l-455 -->
 <html>
 <head>
-  <title>CSS Test: {TODO: INSERT TITLE}</title>
+  <title>CSS Test: Testing that flex items paint as pseudo-stacking contexts, instead of full stacking contexts ('z-index' should let descendants interleave)</title>
   <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
   <link rel="help" href="http://dev.w3.org/csswg/css-flexbox/">
   <link rel="match" href="flexbox-items-as-stacking-contexts-3-ref.html">
