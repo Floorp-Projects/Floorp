@@ -54,6 +54,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_reload-preferred-script.js \
 	browser_dbg_pane-collapse.js \
 	browser_dbg_panesize-inner.js \
+	browser_dbg_breadcrumbs-access.js \
 	browser_dbg_stack-01.js \
 	browser_dbg_stack-02.js \
 	browser_dbg_stack-03.js \

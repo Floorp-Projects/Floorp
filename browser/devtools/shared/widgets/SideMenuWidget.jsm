@@ -79,14 +79,6 @@ SideMenuWidget.prototype = {
   sortedGroups: true,
 
   /**
-   * Specifies if when an item is selected in this container (via the
-   * selectedItem setter), that respective item should be focused as well.
-   * You can enable this flag, for example, to maintain a certain node
-   * selected but visually indicate a different selection in this container.
-   */
-  preventFocusOnSelection: false,
-
-  /**
    * Specifies if this container should try to keep the selected item visible.
    * (For example, when new items are added the selection is brought into view).
    */
@@ -141,9 +133,6 @@ SideMenuWidget.prototype = {
 
     if (this.maintainSelectionVisible) {
       this.ensureSelectionIsVisible({ withGroup: true, delayed: true });
-    }
-    if (this._orderedMenuElementsArray.length == 1) {
-      this._list.focus();
     }
     if (maintainScrollAtBottom) {
       this._list.scrollTop = this._list.scrollHeight;
@@ -226,7 +215,6 @@ SideMenuWidget.prototype = {
         node.classList.add("selected");
         node.parentNode.classList.add("selected");
         this._selectedItem = node;
-        !this.preventFocusOnSelection && node.focus();
       } else {
         node.classList.remove("selected");
         node.parentNode.classList.remove("selected");
