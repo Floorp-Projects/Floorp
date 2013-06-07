@@ -7,15 +7,32 @@
 
 function test()
 {
+  let storage = Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", {}).ConsoleAPIStorage;
+  storage.clearEvents();
+
+  let console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
+  console.log("bug861338-log-cached");
+
   HUDConsoleUI.toggleBrowserConsole().then(consoleOpened);
   let hud = null;
 
   function consoleOpened(aHud)
   {
     hud = aHud;
-    hud.jsterm.clearOutput(true);
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "cached console.log message",
+        text: "bug861338-log-cached",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      }],
+    }).then(onCachedMessage);
+  }
 
-    let console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
+  function onCachedMessage()
+  {
+    hud.jsterm.clearOutput(true);
 
     console.time("foobarTimer");
     let foobar = { bug851231prop: "bug851231value" };
@@ -69,7 +86,7 @@ function test()
           name: "console.trace output",
           consoleTrace: {
             file: "browser_console_consolejsm_output.js",
-            fn: "consoleOpened",
+            fn: "onCachedMessage",
           },
         },
         {
