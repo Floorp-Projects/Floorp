@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- Testcase for how we compute the baseline of a horizontal flex container
+     with one flex item. This is the main-axis baseline. The spec says this
+     about this case:
+       ...if the flex container has at least one flex item, and its
+       first flex item has a baseline parallel to the flex
+       container's main axis, the flex container's main-axis
+       baseline is that baseline.
+-->
+<html>
+<head>
+  <title>CSS Test: Testing the baseline of a horizontal flex container with one flex item</title>
+  <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+  <link rel="help" href="http://www.w3.org/TR/css3-flexbox/#flex-baselines">
+  <link rel="match" href="flexbox-baseline-single-item-1-ref.html">
+  <meta charset="utf-8">
+  <style>
+    .flexContainer {
+      display: inline-flex;
+      height: 16px;
+      width: 16px;
+      background: purple;
+      border: 0px dotted black;
+      /* (Elements that want a border will set their border-width.) */
+    }
+  </style>
+</head>
+<body>
+  A
+  <div class="flexContainer">a</div>
+  <div class="flexContainer" style="padding-bottom: 20px">a</div>
+  <div class="flexContainer" style="padding: 10px">a</div>
+  <div class="flexContainer" style="border-width: 3px">a</div>
+  <div class="flexContainer" style="border-bottom-width: 4px">a</div>
+</body>
+</html>

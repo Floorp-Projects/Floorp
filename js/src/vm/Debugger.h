@@ -402,7 +402,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void sweepAll(FreeOp *fop);
     static void detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
-    static bool isDebugWrapper(JSObject *o);
     static void findCompartmentEdges(JS::Zone *v, gc::ComponentFinder<JS::Zone> &finder);
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, AbstractFramePtr frame,
@@ -629,13 +628,6 @@ Debugger::toJSObjectRef()
     return object;
 }
 
-Debugger *
-Debugger::fromJSObject(JSObject *obj)
-{
-    JS_ASSERT(js::GetObjectClass(obj) == &jsclass);
-    return (Debugger *) obj->getPrivate();
-}
-
 bool
 Debugger::observesEnterFrame() const
 {
@@ -660,29 +652,12 @@ Debugger::observesGlobal(GlobalObject *global) const
     return debuggees.has(global);
 }
 
-bool
-Debugger::observesFrame(AbstractFramePtr frame) const
-{
-    return observesGlobal(&frame.script()->global());
-}
-
 JSTrapStatus
 Debugger::onEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp)
 {
     if (cx->compartment->getDebuggees().empty())
         return JSTRAP_CONTINUE;
     return slowPathOnEnterFrame(cx, frame, vp);
-}
-
-bool
-Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
-{
-    /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
-    bool evalTraps = frame.isEvalFrame() &&
-                     frame.script()->hasAnyBreakpointsOrStepMode();
-    if (!cx->compartment->getDebuggees().empty() || evalTraps)
-        ok = slowPathOnLeaveFrame(cx, frame, ok);
-    return ok;
 }
 
 JSTrapStatus

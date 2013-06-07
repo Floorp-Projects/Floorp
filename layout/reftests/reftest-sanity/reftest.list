@@ -155,3 +155,6 @@ fuzzy-if(true,1,250000) == fuzzy.html fuzzy-ref.html
 fuzzy-if(false,2,1) == fuzzy-ref.html fuzzy-ref.html
 # When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
 fails fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
+
+# Test that reftest-no-paint fails correctly
+fails == reftest-no-paint.html reftest-no-paint-ref.html

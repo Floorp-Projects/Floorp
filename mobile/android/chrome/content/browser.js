@@ -21,47 +21,31 @@ Cu.import('resource://gre/modules/Payment.jsm');
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
 #endif
 
-XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
-  Cu.import("resource://gre/modules/PluralForm.jsm");
-  return PluralForm;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function() {
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-  return DebuggerServer;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
+                                  "resource://gre/modules/devtools/dbg-server.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 #ifdef MOZ_SAFE_BROWSING
-XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
-  let tmp = {};
- Cu.import("resource://gre/modules/SafeBrowsing.jsm", tmp);
-  return tmp.SafeBrowsing;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
+                                  "resource://gre/modules/SafeBrowsing.jsm");
 #endif
 
-XPCOMUtils.defineLazyGetter(this, "PrivateBrowsingUtils", function() {
-  Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-  return PrivateBrowsingUtils;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
-  Cu.import("resource://gre/modules/Sanitizer.jsm");
-  return Sanitizer;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "Sanitizer",
+                                  "resource://gre/modules/Sanitizer.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "Prompt", function() {
-  let temp = {};
-  Cu.import("resource://gre/modules/Prompt.jsm", temp);
-  return temp.Prompt;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
+                                  "resource://gre/modules/Prompt.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
@@ -213,10 +197,8 @@ XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   return ContentAreaUtils;
 });
 
-XPCOMUtils.defineLazyGetter(this, "Rect", function() {
-  Cu.import("resource://gre/modules/Geometry.jsm");
-  return Rect;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "Rect",
+                                  "resource://gre/modules/Geometry.jsm");
 
 function resolveGeckoURI(aURI) {
   if (aURI.startsWith("chrome://")) {
