@@ -529,6 +529,39 @@ RasterImage::Init(const char* aMimeType,
   return NS_OK;
 }
 
+uint32_t
+RasterImage::GetSingleLoopTime() const
+{
+  if (!mAnim) {
+    return 0;
+  }
+
+  // If we aren't done decoding, we don't know the image's full play time.
+  if (!mHasBeenDecoded) {
+    return 0;
+  }
+
+  // If we're not looping, a single loop time has no meaning
+  if (mLoopCount == 0) {
+    return 0;
+  }
+
+  uint32_t looptime = 0;
+  for (uint32_t i = 0; i < mFrames.Length(); ++i) {
+    int32_t timeout = mFrames[i]->GetTimeout();
+    if (timeout > 0) {
+      looptime += static_cast<uint32_t>(timeout);
+    } else {
+      // If we have a frame that never times out, we're probably in an error
+      // case, but let's handle it more gracefully.
+      NS_WARNING("Negative frame timeout - how did this happen?");
+      return 0;
+    }
+  }
+
+  return looptime;
+}
+
 bool
 RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
 {
@@ -625,6 +658,19 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
   }
 
   mAnim->currentAnimationFrameTime = GetCurrentImgFrameEndTime();
+
+  // If we can get closer to the current time by a multiple of the image's loop
+  // time, we should.
+  uint32_t loopTime = GetSingleLoopTime();
+  if (loopTime > 0) {
+    TimeDuration delay = aTime - mAnim->currentAnimationFrameTime;
+    if (delay.ToMilliseconds() > loopTime) {
+      // Explicitly use integer division to get the floor of the number of
+      // loops.
+      uint32_t loops = static_cast<uint32_t>(delay.ToMilliseconds()) / loopTime;
+      mAnim->currentAnimationFrameTime += TimeDuration::FromMilliseconds(loops * loopTime);
+    }
+  }
 
   // Set currentAnimationFrameIndex at the last possible moment
   mAnim->currentAnimationFrameIndex = nextFrameIndex;
