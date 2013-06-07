@@ -25,8 +25,9 @@ var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                        .getService(Components.interfaces.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
 
+
 /* XPCOM gunk */
-this.SpecialPowersObserver = function SpecialPowersObserver() {
+function SpecialPowersObserver() {
   this._isFrameScriptLoaded = false;
   this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
                          getService(Ci.nsIMessageBroadcaster);
