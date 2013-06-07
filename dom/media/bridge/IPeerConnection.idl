@@ -32,6 +32,7 @@ interface IPeerConnectionObserver : nsISupports
   const long kIceState = 0x2;
   const long kSdpState = 0x3;
   const long kSipccState = 0x4;
+  const long kSignalingState = 0x5;
 
   /* JSEP callbacks */
   void onCreateOfferSuccess(in string offer);
@@ -91,6 +92,15 @@ interface IPeerConnection : nsISupports
   const long kClosing = 3;
   const long kClosed = 4;
 
+  /* RTCSignalingState from WebRTC spec */
+  const long kSignalingInvalid            = 0;
+  const long kSignalingStable             = 1;
+  const long kSignalingHaveLocalOffer     = 2;
+  const long kSignalingHaveRemoteOffer    = 3;
+  const long kSignalingHaveLocalPranswer  = 4;
+  const long kSignalingHaveRemotePranswer = 5;
+  const long kSignalingClosed             = 6;
+
   /* for 'type' in DataChannelInit dictionary */
   const unsigned short kDataChannelReliable = 0;
   const unsigned short kDataChannelPartialReliableRexmit = 1;
@@ -144,6 +154,7 @@ interface IPeerConnection : nsISupports
 
   readonly attribute unsigned long iceState;
   readonly attribute unsigned long readyState;
+  readonly attribute unsigned long signalingState;
   readonly attribute unsigned long sipccState;
 
   /* Data channels */

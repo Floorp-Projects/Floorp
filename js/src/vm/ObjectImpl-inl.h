@@ -228,6 +228,12 @@ js::ObjectImpl::isNative() const
     return lastProperty()->isNative();
 }
 
+inline bool
+js::ObjectImpl::isProxy() const
+{
+    return js::IsProxy(const_cast<JSObject*>(this->asObjectPtr()));
+}
+
 inline js::HeapSlot &
 js::ObjectImpl::nativeGetSlotRef(uint32_t slot)
 {

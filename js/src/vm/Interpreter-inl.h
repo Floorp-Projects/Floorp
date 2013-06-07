@@ -13,11 +13,11 @@
 #include "jsinfer.h"
 #include "jslibmath.h"
 #include "jsnum.h"
-#include "jsprobes.h"
 #include "jsstr.h"
-
-#include "vm/Interpreter.h"
+#include "ion/Ion.h"
+#include "ion/IonCompartment.h"
 #include "vm/ForkJoin.h"
+#include "vm/Interpreter.h"
 
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
@@ -25,12 +25,6 @@
 #include "jsopcodeinlines.h"
 #include "jspropertycacheinlines.h"
 #include "jstypedarrayinlines.h"
-
-#ifdef JS_ION
-#include "ion/Ion.h"
-#include "ion/IonCompartment.h"
-#endif
-
 #include "vm/GlobalObject-inl.h"
 #include "vm/Stack-inl.h"
 

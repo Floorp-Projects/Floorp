@@ -1294,6 +1294,7 @@ abstract public class GeckoApp
             LayerView layerView = (LayerView) findViewById(R.id.layer_view);
             layerView.initializeView(GeckoAppShell.getEventDispatcher());
             mLayerView = layerView;
+            GeckoAppShell.setLayerView(layerView);
             // bind the GeckoEditable instance to the new LayerView
             GeckoAppShell.notifyIMEContext(GeckoEditableListener.IME_STATE_DISABLED, "", "", "");
         }
@@ -2240,10 +2241,6 @@ abstract public class GeckoApp
         if (!GeckoAppShell.sActivityHelper.handleActivityResult(requestCode, resultCode, data)) {
             super.onActivityResult(requestCode, resultCode, data);
         }
-    }
-
-    public LayerView getLayerView() {
-        return mLayerView;
     }
 
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }

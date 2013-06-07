@@ -444,7 +444,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
               var elements = getNoPaintElements(contentRootElement);
               for (var i = 0; i < elements.length; ++i) {
                   if (windowUtils().checkAndClearPaintedState(elements[i])) {
-                      LogError("REFTEST TEST-UNEXPECTED-FAIL | element marked as reftest-no-paint got repainted!");
+                      SendFailedNoPaint();
                   }
               }
             }
@@ -782,6 +782,11 @@ function SendException(what)
 function SendFailedLoad(why)
 {
     sendAsyncMessage("reftest:FailedLoad", { why: why });
+}
+
+function SendFailedNoPaint()
+{
+    sendAsyncMessage("reftest:FailedNoPaint");
 }
 
 function SendEnableAsyncScroll()

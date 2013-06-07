@@ -117,10 +117,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     public void show(String aTitle, String aText, PromptListItem[] aMenuList, boolean aMultipleSelection) {
         ThreadUtils.assertOnUiThread();
 
-        // treat actions that show a dialog as if preventDefault by content to prevent panning
-        if (mContext instanceof GeckoApp) {
-            ((GeckoApp)mContext).getLayerView().abortPanning();
-        }
+        GeckoAppShell.getLayerView().abortPanning();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         if (!TextUtils.isEmpty(aTitle)) {
