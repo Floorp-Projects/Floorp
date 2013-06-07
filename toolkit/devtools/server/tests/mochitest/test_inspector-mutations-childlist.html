@@ -89,6 +89,7 @@ function mutationTest(testSpec) {
   return function() {
     setup(() => {
       promiseDone(loadSelectors(testSpec.load || ["html"]).then(() => {
+        gWalker.autoCleanup = !!testSpec.autoCleanup;
         if (testSpec.preCheck) {
           testSpec.preCheck();
         }
@@ -122,6 +123,7 @@ function mutationTest(testSpec) {
 
 // Verify that our dummy mutation works.
 addTest(mutationTest({
+  autoCleanup: false,
   postCheck: function(mutations) {
     is(mutations.length, 0, "Dummy mutation is filtered out.");
   }
@@ -130,6 +132,7 @@ addTest(mutationTest({
 // Test a simple move to a different location in the sibling list for the same
 // parent.
 addTest(mutationTest({
+  autoCleanup: false,
   load: ["#longlist div"],
   moves: [
     ["#a", "#longlist"]
@@ -150,6 +153,7 @@ addTest(mutationTest({
 
 // Test a move to another location that is within our ownership tree.
 addTest(mutationTest({
+  autoCleanup: false,
   load: ["#longlist div", "#longlist-sibling"],
   moves: [
     ["#a", "#longlist-sibling"]
@@ -171,6 +175,7 @@ addTest(mutationTest({
 // Move an unseen node with a seen parent into our ownership tree - should generate a
 // childList pair with no adds or removes.
 addTest(mutationTest({
+  autoCleanup: false,
   load: ["#longlist"],
   moves: [
     ["#longlist-sibling", "#longlist"]
@@ -189,6 +194,7 @@ addTest(mutationTest({
 // Move an unseen node with an unseen parent into our ownership tree.  Should only
 // generate one childList mutation with no adds or removes.
 addTest(mutationTest({
+  autoCleanup: false,
   load: ["#longlist div"],
   moves: [
     ["#longlist-sibling-firstchild", "#longlist"]
@@ -203,6 +209,7 @@ addTest(mutationTest({
 
 // Move a node between unseen nodes, should generate no mutations.
 addTest(mutationTest({
+  autoCleanup: false,
   load: ["html"],
   moves: [
     ["#longlist-sibling", "#longlist"]
@@ -212,8 +219,9 @@ addTest(mutationTest({
   }
 }));
 
-// Orphan a node.
+// Orphan a node and don't clean it up
 addTest(mutationTest({
+  autoCleanup: false,
   load: ["#longlist div"],
   moves: [
     ["#longlist", null]
@@ -229,8 +237,26 @@ addTest(mutationTest({
   }
 }));
 
+// Orphan a node, and do clean it up.
+addTest(mutationTest({
+  autoCleanup: true,
+  load: ["#longlist div"],
+  moves: [
+    ["#longlist", null]
+  ],
+  postCheck: function(mutations) {
+    is(mutations.length, 1, "Should generate one mutation.");
+    let change = mutations[0];
+    is(change.type, "childList", "Should be a childList.");
+    is(change.removed.length, 1, "Should have removed a child.");
+    let ownership = clientOwnershipTree(gWalker);
+    is(ownership.orphaned.length, 0, "Should have no orphaned subtrees.");
+  }
+}));
+
 // Orphan a node by moving it into the tree but out of our visible subtree.
 addTest(mutationTest({
+  autoCleanup: false,
   load: ["#longlist div"],
   moves: [
     ["#longlist", "#longlist-sibling"]
@@ -245,6 +271,24 @@ addTest(mutationTest({
     is(ownershipTreeSize(ownership.orphaned[0]), 27, "Should have orphaned longlist and 26 children.");
   }
 }));
+
+// Orphan a node by moving it into the tree but out of our visible subtree, and clean it up.
+addTest(mutationTest({
+  autoCleanup: true,
+  load: ["#longlist div"],
+  moves: [
+    ["#longlist", "#longlist-sibling"]
+  ],
+  postCheck: function(mutations) {
+    is(mutations.length, 1, "Should generate one mutation.");
+    let change = mutations[0];
+    is(change.type, "childList", "Should be a childList.");
+    is(change.removed.length, 1, "Should have removed a child.");
+    let ownership = clientOwnershipTree(gWalker);
+    is(ownership.orphaned.length, 0, "Should have no orphaned subtrees.");
+  }
+}));
+
 
 addTest(function cleanup() {
   delete gInspectee;
