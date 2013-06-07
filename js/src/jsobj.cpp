@@ -26,7 +26,6 @@
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsprobes.h"
 #include "jsprototypes.h"
 #include "jsproxy.h"
 #include "jsscript.h"
@@ -34,7 +33,6 @@
 #include "jsdbgapi.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
-
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "ion/BaselineJIT.h"
@@ -49,10 +47,10 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
-
 #include "builtin/Iterator-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
+#include "vm/Probes-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"

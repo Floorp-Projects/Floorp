@@ -608,7 +608,7 @@ ifdef MOZ_ETW
 ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
 	$(MC) -um -mof $^
 
-jsprobes.$(OBJ_SUFFIX): ETWProvider.h
+Probes.$(OBJ_SUFFIX): ETWProvider.h
 
 ETWProvider.res: ETWProvider.rc
 	$(RC) -r -i "$(SDKDIR)Include" $^
@@ -629,7 +629,7 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
 
 # We can't automatically generate dependencies on auto-generated headers;
 # we have to list them explicitly.
-$(addsuffix .$(OBJ_SUFFIX),jsprobes jsinterp jsobj): $(CURDIR)/javascript-trace.h
+$(addsuffix .$(OBJ_SUFFIX),Probes jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
 ifdef HAVE_LINUX_PERF_EVENT_H
