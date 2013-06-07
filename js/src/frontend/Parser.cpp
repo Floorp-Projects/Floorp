@@ -6541,13 +6541,6 @@ Parser<FullParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag
     if (!reobj)
         return NULL;
 
-    if (!compileAndGo) {
-        if (!JSObject::clearParent(context, reobj))
-            return NULL;
-        if (!JSObject::clearType(context, reobj))
-            return NULL;
-    }
-
     pn->pn_objbox = newObjectBox(reobj);
     if (!pn->pn_objbox)
         return NULL;
