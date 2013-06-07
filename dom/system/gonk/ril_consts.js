@@ -2554,5 +2554,42 @@ this.PDU_CDMA_MSG_CODING_IS_91_TYPE_SMS_FULL = 0x83;
 this.PDU_CDMA_MSG_CODING_IS_91_TYPE_CLI = 0x84;
 this.PDU_CDMA_MSG_CODING_IS_91_TYPE_SMS = 0x85;
 
+/**
+ * The table for MCC which the length of MNC is 3
+ *
+ * This table is built from below links.
+ * - http://www.itu.int/pub/T-SP-E.212B-2013
+ * - http://en.wikipedia.org/wiki/Mobile_Network_Code
+ */
+this.MCC_TABLE_FOR_MNC_LENGTH_IS_3 = [
+  "302",  // Canada
+  "310",  // United States of America
+  "311",  // United States of America
+  "312",  // United States of America
+  "313",  // United States of America
+  "316",  // United States of America
+  "330",  // Puerto Rico
+  "334",  // Mexico
+  "338",  // Jamaica
+  "342",  // Barbados
+  "344",  // Antigua and Barbuda
+  "346",  // Cayman Islands
+  "348",  // British Virgin Islands
+  "350",  // Bermuda
+  "352",  // Grenada
+  "354",  // Montserrat
+  "356",  // Saint Kitts and Nevis
+  "358",  // Saint Lucia
+  "360",  // Saint Vincent and the Grenadines
+  "365",  // Anguilla
+  "366",  // Dominica
+  "376",  // Turks and Caicos Islands
+  "405",  // India
+  "708",  // Honduras
+  "722",  // Argentina
+  "732",  // Colombia
+  "750"   // Falkland Islands (Malvinas)
+];
+
 // Allow this file to be imported via Components.utils.import().
 this.EXPORTED_SYMBOLS = Object.keys(this);
