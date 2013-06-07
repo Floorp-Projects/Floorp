@@ -111,6 +111,7 @@ MOCHITEST_CHROME_FILES = imgutils.js \
                 test_synchronized_animation.html \
                 animated1.gif \
                 animated2.gif \
+                test_staticClone.html \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

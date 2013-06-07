@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 875929 removed a file from js/src/moz.build and apparently the build system didn't notice.
+Bug 879831 needed to clobber for the removal of jsprobes.cpp

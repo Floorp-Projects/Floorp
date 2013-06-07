@@ -348,10 +348,9 @@ function StackFramesView() {
 
   this._framesCache = new Map(); // Can't use a WeakMap because keys are numbers.
   this._onStackframeRemoved = this._onStackframeRemoved.bind(this);
-  this._onClick = this._onClick.bind(this);
+  this._onSelect = this._onSelect.bind(this);
   this._onScroll = this._onScroll.bind(this);
   this._afterScroll = this._afterScroll.bind(this);
-  this._selectFrame = this._selectFrame.bind(this);
 }
 
 create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
@@ -370,9 +369,12 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
     document.getElementById("debuggerCommands").appendChild(commandset);
 
     this.node = new BreadcrumbsWidget(document.getElementById("stackframes"));
-    this.node.addEventListener("mousedown", this._onClick, false);
+    this.node.addEventListener("select", this._onSelect, false);
     this.node.addEventListener("scroll", this._onScroll, true);
     window.addEventListener("resize", this._onScroll, true);
+
+    this.autoFocusOnFirstItem = false;
+    this.autoFocusOnSelection = false;
   },
 
   /**
@@ -381,7 +383,7 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
   destroy: function() {
     dumpn("Destroying the StackFramesView");
 
-    this.node.removeEventListener("mousedown", this._onClick, false);
+    this.node.removeEventListener("select", this._onSelect, false);
     this.node.removeEventListener("scroll", this._onScroll, true);
     window.removeEventListener("resize", this._onScroll, true);
   },
@@ -423,21 +425,11 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
   },
 
   /**
-   * Highlights a frame in this stackframes container.
-   *
+   * Selects the frame at the specified depth in this container.
    * @param number aDepth
-   *        The frame depth specified by the debugger controller.
    */
-  highlightFrame: function(aDepth) {
-    let selectedItem = this.selectedItem = this._framesCache.get(aDepth);
-
-    for (let item in this) {
-      if (item != selectedItem) {
-        item.attachment.popup.menuitem.removeAttribute("checked");
-      } else {
-        item.attachment.popup.menuitem.setAttribute("checked", "");
-      }
-    }
+  set selectedDepth(aDepth) {
+    this.selectedItem = this._framesCache.get(aDepth);
   },
 
   /**
@@ -511,7 +503,7 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
 
     let command = document.createElement("command");
     command.id = commandId;
-    command.addEventListener("command", this._selectFrame.bind(this, aDepth), false);
+    command.addEventListener("command", () => this.selectedDepth = aDepth, false);
 
     let menuitem = document.createElement("menuitem");
     menuitem.id = menuitemId;
@@ -572,17 +564,21 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
   },
 
   /**
-   * The click listener for the stackframes container.
+   * The select listener for the stackframes container.
    */
-  _onClick: function(e) {
-    if (e && e.button != 0) {
-      // Only allow left-click to trigger this event.
-      return;
-    }
-    let item = this.getItemForElement(e.target);
-    if (item) {
-      // The container is not empty and we clicked on an actual item.
-      this._selectFrame(item.attachment.depth);
+  _onSelect: function(e) {
+    let stackframeItem = this.selectedItem;
+    if (stackframeItem) {
+      // The container is not empty and an actual item was selected.
+      gStackFrames.selectFrame(stackframeItem.attachment.depth);
+
+      for (let otherItem in this) {
+        if (otherItem != stackframeItem) {
+          otherItem.attachment.popup.menuitem.removeAttribute("checked");
+        } else {
+          otherItem.attachment.popup.menuitem.setAttribute("checked", "");
+        }
+      }
     }
   },
 
@@ -615,16 +611,6 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
       // Loads more stack frames from the debugger server cache.
       DebuggerController.StackFrames.addMoreFrames();
     }
-  },
-
-  /**
-   * Requests selection of a frame from the controller.
-   *
-   * @param number aDepth
-   *        The depth of the frame in the stack.
-   */
-  _selectFrame: function(aDepth) {
-    DebuggerController.StackFrames.selectFrame(aDepth);
   },
 
   _framesCache: null,

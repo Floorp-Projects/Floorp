@@ -9,6 +9,7 @@
 #include "phone_types.h"
 #include "string_lib.h"
 #include "vcm.h"
+#include "fsm.h"
 #include "ccapi.h"
 
 #include "sessionConstants.h"
@@ -180,6 +181,7 @@ void ui_update_media_interface_change(line_t line, callid_t call_id, group_call_
 /* WebRTC upcalls for PeerConnectionImpl */
 
 void ui_create_offer(call_events event,
+                     fsmdef_states_t new_state,
                      line_t nLine,
                      callid_t nCallID,
                      uint16_t call_instance_id,
@@ -188,6 +190,7 @@ void ui_create_offer(call_events event,
                      const char *format, ...);
 
 void ui_create_answer(call_events event,
+                      fsmdef_states_t new_state,
                       line_t nLine,
                       callid_t nCallID,
                       uint16_t call_instance_id,
@@ -196,6 +199,7 @@ void ui_create_answer(call_events event,
                       const char *format, ...);
 
 void ui_set_local_description(call_events event,
+                              fsmdef_states_t new_state,
                               line_t nLine,
                               callid_t nCallID,
                               uint16_t call_instance_id,
@@ -204,6 +208,7 @@ void ui_set_local_description(call_events event,
                               const char *format, ...);
 
 void ui_set_remote_description(call_events event,
+                               fsmdef_states_t new_state,
                                line_t nLine,
                                callid_t nCallID,
                                uint16_t call_instance_id,
@@ -212,6 +217,7 @@ void ui_set_remote_description(call_events event,
                                const char *format, ...);
 
 void ui_update_local_description(call_events event,
+                                 fsmdef_states_t new_state,
                                  line_t nLine,
                                  callid_t nCallID,
                                  uint16_t call_instance_id,
@@ -220,6 +226,7 @@ void ui_update_local_description(call_events event,
                                  const char *format, ...);
 
 void ui_ice_candidate_add(call_events event,
+                          fsmdef_states_t new_state,
                           line_t nLine,
                           callid_t nCallID,
                           uint16_t call_instance_id,
@@ -228,6 +235,7 @@ void ui_ice_candidate_add(call_events event,
                           const char *format, ...);
 
 void ui_on_remote_stream_added(call_events event,
+                               fsmdef_states_t new_state,
                                line_t nLine,
                                callid_t nCallID,
                                uint16_t call_instance_id,

@@ -35,10 +35,10 @@ function test() {
 }
 
 function load(aTab, aUrl, aCallback) {
-  aTab.linkedBrowser.addEventListener("pageshow", function onpageshow(aEvent) {
-    aEvent.currentTarget.removeEventListener("pageshow", onpageshow, false);
+  aTab.linkedBrowser.addEventListener("load", function onload(aEvent) {
+    aEvent.currentTarget.removeEventListener("load", onload, true);
     waitForFocus(aCallback, content);
-  }, false);
+  }, true);
   aTab.linkedBrowser.loadURI(aUrl);
 }
 

@@ -4,10 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPermission.h"
+#include "nsIClassInfoImpl.h"
 
 // nsPermission Implementation
 
-NS_IMPL_ISUPPORTS1(nsPermission, nsIPermission)
+NS_IMPL_CLASSINFO(nsPermission, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS1_CI(nsPermission, nsIPermission)
 
 nsPermission::nsPermission(const nsACString &aHost,
                            uint32_t aAppId,
