@@ -44,8 +44,6 @@ public class AboutHome extends Fragment {
     private RemoteTabsSection mRemoteTabsSection;
     private TopSitesView mTopSitesView;
 
-    private static final String STATE_TOP_PADDING = "top_padding";
-
     public interface UriLoadListener {
         public void onAboutHomeUriLoad(String uriSpec);
     }
@@ -63,10 +61,6 @@ public class AboutHome extends Fragment {
         super.onCreate(savedInstanceState);
 
         mLightweightTheme = ((GeckoApplication) getActivity().getApplication()).getLightweightTheme();
-
-        if (savedInstanceState != null) {
-            mTopPadding = savedInstanceState.getInt(STATE_TOP_PADDING, 0);
-        }
     }
 
     @Override
@@ -257,9 +251,7 @@ public class AboutHome extends Fragment {
         mTopPadding = topPadding;
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_TOP_PADDING, mTopPadding);
+    public int getTopPadding() {
+        return mTopPadding;
     }
 }

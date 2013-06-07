@@ -87,6 +87,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
 
+    private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
 
     public static BrowserToolbar mBrowserToolbar;
@@ -437,6 +438,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (savedInstanceState != null) {
             mDynamicToolbarEnabled = savedInstanceState.getBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED);
+            mAboutHome.setTopPadding(savedInstanceState.getInt(STATE_ABOUT_HOME_TOP_PADDING));
         }
 
         // Listen to the dynamic toolbar pref
@@ -1135,6 +1137,7 @@ abstract public class BrowserApp extends GeckoApp
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
+        outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mAboutHome.getTopPadding());
     }
 
     /* Favicon methods */
