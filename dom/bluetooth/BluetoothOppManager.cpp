@@ -27,6 +27,7 @@
 #include "nsIInputStream.h"
 #include "nsIMIMEService.h"
 #include "nsIOutputStream.h"
+#include "nsIVolumeService.h"
 #include "nsNetUtil.h"
 
 #define TARGET_SUBDIR "Download/Bluetooth/"
@@ -451,6 +452,15 @@ BluetoothOppManager::AfterOppConnected()
   mAbortFlag = false;
   mWaitingForConfirmationFlag = true;
   AfterFirstPut();
+  // Get a mount lock to prevent the sdcard from being shared with
+  // the PC while we're doing a OPP file transfer. After OPP transcation
+  // were done, the mount lock will be freed.
+  if (!AcquireSdcardMountLock()) {
+    // If we fail to get a mount lock, abort this transaction
+    // Directly sending disconnect-request is better than abort-request
+    NS_WARNING("BluetoothOPPManager couldn't get a mount lock!");
+    Disconnect();
+  }
 }
 
 void
@@ -482,6 +492,11 @@ BluetoothOppManager::AfterOppDisconnected()
   if (mReadFileThread) {
     mReadFileThread->Shutdown();
     mReadFileThread = nullptr;
+  }
+  // Release the Mount lock if file transfer completed
+  if (mMountLock) {
+    // The mount lock will be implicitly unlocked
+    mMountLock = nullptr;
   }
 }
 
@@ -1493,3 +1508,15 @@ BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
   }
 }
 
+bool
+BluetoothOppManager::AcquireSdcardMountLock()
+{
+  nsCOMPtr<nsIVolumeService> volumeSrv =
+    do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(volumeSrv, false);
+  nsresult rv;
+  rv = volumeSrv->CreateMountLock(NS_LITERAL_STRING("sdcard"),
+                                  getter_AddRefs(mMountLock));
+  NS_ENSURE_SUCCESS(rv, false);
+  return true;
+}
