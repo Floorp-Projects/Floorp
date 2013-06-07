@@ -354,9 +354,7 @@ let DebuggerView = {
     }
     // If the requested source exists, display it and update.
     else if (this.Sources.containsValue(aUrl) && !aFlags.noSwitch) {
-      this.Sources.node.preventFocusOnSelection = true;
       this.Sources.selectedValue = aUrl;
-      this.Sources.node.preventFocusOnSelection = false;
       set(aLine);
     }
     // Dumb request, invalidate the caret position and debug location.

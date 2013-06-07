@@ -3131,7 +3131,9 @@ this.DOMApplicationRegistry = {
       } catch(e) { }
     });
     // Send back an answer to the child.
-    ppmm.broadcastAsyncMessage("Webapps:ClearBrowserData:Return", msg);
+    if (msg) {
+      ppmm.broadcastAsyncMessage("Webapps:ClearBrowserData:Return", msg);
+    }
   },
 
   registerBrowserElementParentForApp: function(bep, appId) {

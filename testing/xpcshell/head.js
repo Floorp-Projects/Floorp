@@ -392,6 +392,9 @@ function _load_files(aFiles) {
   aFiles.forEach(loadTailFile);
 }
 
+function _wrap_with_quotes_if_necessary(val) {
+  return typeof val == "string" ? '"' + val + '"' : val;
+}
 
 /************** Functions to be used from the tests **************/
 
@@ -400,6 +403,7 @@ function _load_files(aFiles) {
  */
 function do_print(msg) {
   var caller_stack = Components.stack.caller;
+  msg = _wrap_with_quotes_if_necessary(msg);
   _dump("TEST-INFO | " + caller_stack.filename + " | " + msg + "\n");
 }
 
@@ -538,24 +542,9 @@ function _do_check_neq(left, right, stack, todo) {
   if (!stack)
     stack = Components.stack.caller;
 
-  var text = left + " != " + right;
-  if (left == right) {
-    if (!todo) {
-      do_throw(text, stack);
-    } else {
-      ++_todoChecks;
-      _dump("TEST-KNOWN-FAIL | " + stack.filename + " | [" + stack.name +
-            " : " + stack.lineNumber + "] " + text +"\n");
-    }
-  } else {
-    if (!todo) {
-      ++_passedChecks;
-      _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
-            stack.lineNumber + "] " + text + "\n");
-    } else {
-      do_throw_todo(text, stack);
-    }
-  }
+  var text = _wrap_with_quotes_if_necessary(left) + " != " +
+             _wrap_with_quotes_if_necessary(right);
+  do_report_result(left != right, text, stack, todo);
 }
 
 function do_check_neq(left, right, stack) {
@@ -596,7 +585,8 @@ function _do_check_eq(left, right, stack, todo) {
   if (!stack)
     stack = Components.stack.caller;
 
-  var text = left + " == " + right;
+  var text = _wrap_with_quotes_if_necessary(left) + " == " +
+             _wrap_with_quotes_if_necessary(right);
   do_report_result(left == right, text, stack, todo);
 }
 

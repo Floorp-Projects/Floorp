@@ -432,14 +432,22 @@ var FullZoom = {
    *                 currently selected browser is used.
    */
   _getState: function FullZoom__getState(browser) {
-    let browser = browser || gBrowser.selectedBrowser;
-    return { uri: browser.currentURI, token: this._zoomChangeToken };
+    browser = browser || gBrowser.selectedBrowser;
+    return {
+      // Due to async content pref service callbacks, this method can get called
+      // after the window has closed, so gBrowser.selectedBrowser may be null.
+      uri: browser ? browser.currentURI : null,
+      token: this._zoomChangeToken,
+     };
   },
 
   /**
    * Returns true if the given state is current.
    */
   _isStateCurrent: function FullZoom__isStateCurrent(state) {
+    // If either state has no URI, then the given state can't be current.
+    // currState.uri will be null when this method is called after the window
+    // has closed, which can happen due to async content pref service callbacks.
     let currState = this._getState();
     return currState.token === state.token &&
            currState.uri && state.uri &&

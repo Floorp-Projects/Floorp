@@ -287,12 +287,25 @@ exports.testTabClose = function(test) {
     tabs.on('ready', function onReady(tab) {
       tabs.removeListener('ready', onReady);
       test.assertEqual(tabs.activeTab.url, tab.url, "tab is now the active tab");
+      let secondOnCloseCalled = false;
       tab.close(function() {
         closeBrowserWindow(window, function() {
+          test.assert(secondOnCloseCalled,
+            "The immediate second call to tab.close gots its callback fired");
           test.assertNotEqual(tabs.activeTab.url, url, "tab is no longer the active tab");
           test.done()
         });
       });
+
+      // Bug 699450: Multiple calls to tab should not throw
+      try {
+        tab.close(function () {
+          secondOnCloseCalled = true;
+        });
+      }
+      catch(e) {
+        test.fail("second call to tab.close() thrown an exception: " + e);
+      }
       test.assertNotEqual(tabs.activeTab.url, url, "tab is no longer the active tab");
     });
 
@@ -439,8 +452,46 @@ exports.testOpenInNewWindow = function(test) {
         test.assertEqual(tab.url, url, "URL of the new tab matches");
         test.assertEqual(newWindow.content.location, url, "URL of new tab in new window matches");
         test.assertEqual(tabs.activeTab.url, url, "URL of activeTab matches");
-        for (var i in cache) cache[i] = null;
+        for (let i in cache) cache[i] = null;
         wt.unload();
+        closeBrowserWindow(newWindow, function() {
+          closeBrowserWindow(window, function() test.done());
+        });
+      }
+    });
+  });
+};
+
+// Test tab.open inNewWindow + onOpen combination
+exports.testOpenInNewWindowOnOpen = function(test) {
+  test.waitUntilDone();
+  let tabs = require("sdk/tabs");
+
+  openBrowserWindow(function(window, browser) {
+    let cache = [];
+    let windowUtils = require("sdk/deprecated/window-utils");
+    let wt = new windowUtils.WindowTracker({
+      onTrack: function(win) {
+        cache.push(win);
+      },
+      onUntrack: function(win) {
+        cache.splice(cache.indexOf(win), 1)
+      }
+    });
+    let startWindowCount = cache.length;
+
+    let url = "data:text/html;charset=utf-8,newwindow";
+    tabs.open({
+      url: url,
+      inNewWindow: true,
+      onOpen: function(tab) {
+        let newWindow = cache[cache.length - 1];
+        test.assertEqual(cache.length, startWindowCount + 1, "a new window was opened");
+        test.assertEqual(activeWindow, newWindow, "new window is active");
+
+        for (let i in cache) cache[i] = null;
+        wt.unload();
+
         closeBrowserWindow(newWindow, function() {
           closeBrowserWindow(window, function() test.done());
         });

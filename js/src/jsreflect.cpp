@@ -1787,17 +1787,6 @@ ASTSerializer::variableDeclaration(ParseNode *pn, bool let, MutableHandleValue d
     VarDeclKind kind = let ? VARDECL_LET : VARDECL_VAR;
 
     NodeVector dtors(cx);
-
-    /* In a for-in context, variable declarations contain just a single pattern. */
-    if (pn->pn_xflags & PNX_FORINVAR) {
-        RootedValue patt(cx), child(cx);
-        RootedValue nullVal(cx, NullValue());
-        return pattern(pn->pn_head, &kind, &patt) &&
-               builder.variableDeclarator(patt, nullVal, &pn->pn_head->pn_pos, &child) &&
-               dtors.append(child) &&
-               builder.variableDeclaration(dtors, kind, &pn->pn_pos, dst);
-    }
-
     if (!dtors.reserve(pn->pn_count))
         return false;
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
@@ -1806,16 +1795,12 @@ ASTSerializer::variableDeclaration(ParseNode *pn, bool let, MutableHandleValue d
             return false;
         dtors.infallibleAppend(child);
     }
-
     return builder.variableDeclaration(dtors, kind, &pn->pn_pos, dst);
 }
 
 bool
 ASTSerializer::variableDeclarator(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst)
 {
-    /* A destructuring declarator is always a PNK_ASSIGN. */
-    JS_ASSERT(pn->isKind(PNK_NAME) || pn->isKind(PNK_ASSIGN));
-
     ParseNode *pnleft;
     ParseNode *pnright;
 
@@ -1823,12 +1808,15 @@ ASTSerializer::variableDeclarator(ParseNode *pn, VarDeclKind *pkind, MutableHand
         pnleft = pn;
         pnright = pn->isUsed() ? NULL : pn->pn_expr;
         JS_ASSERT_IF(pnright, pn->pn_pos.encloses(pnright->pn_pos));
-    } else {
-        JS_ASSERT(pn->isKind(PNK_ASSIGN));
+    } else if (pn->isKind(PNK_ASSIGN)) {
         pnleft = pn->pn_left;
         pnright = pn->pn_right;
         JS_ASSERT(pn->pn_pos.encloses(pnleft->pn_pos));
         JS_ASSERT(pn->pn_pos.encloses(pnright->pn_pos));
+    } else {
+        /* This happens for a destructuring declarator in a for-in/of loop. */
+        pnleft = pn;
+        pnright = NULL;
     }
 
     RootedValue left(cx), right(cx);

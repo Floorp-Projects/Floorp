@@ -9,6 +9,7 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,8 +30,6 @@ class TextSelection extends Layer implements GeckoEventListener {
     private float mViewTop;
     private float mViewZoom;
 
-    private GeckoApp mActivity;
-
     TextSelection(TextSelectionHandle startHandle,
                   TextSelectionHandle middleHandle,
                   TextSelectionHandle endHandle,
@@ -40,7 +39,6 @@ class TextSelection extends Layer implements GeckoEventListener {
         mMiddleHandle = middleHandle;
         mEndHandle = endHandle;
         mEventDispatcher = eventDispatcher;
-        mActivity = activity;
 
         // Only register listeners if we have valid start/middle/end handles
         if (mStartHandle == null || mMiddleHandle == null || mEndHandle == null) {
@@ -70,7 +68,7 @@ class TextSelection extends Layer implements GeckoEventListener {
 
     @Override
     public void handleMessage(final String event, final JSONObject message) {
-        mActivity.runOnUiThread(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -84,12 +82,12 @@ class TextSelection extends Layer implements GeckoEventListener {
                         mViewLeft = 0.0f;
                         mViewTop = 0.0f;
                         mViewZoom = 0.0f;
-                        LayerView layerView = mActivity.getLayerView();
+                        LayerView layerView = GeckoAppShell.getLayerView();
                         if (layerView != null) {
                             layerView.addLayer(TextSelection.this);
                         }
                     } else if (event.equals("TextSelection:HideHandles")) {
-                        LayerView layerView = mActivity.getLayerView();
+                        LayerView layerView = GeckoAppShell.getLayerView();
                         if (layerView != null) {
                             layerView.removeLayer(TextSelection.this);
                         }
@@ -135,7 +133,7 @@ class TextSelection extends Layer implements GeckoEventListener {
         mViewTop = viewTop;
         mViewZoom = viewZoom;
 
-        mActivity.runOnUiThread(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 mStartHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);

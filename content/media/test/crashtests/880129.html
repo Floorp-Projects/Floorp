@@ -1,0 +1,9 @@
+<script>
+try { o1 = new window.AudioContext(3, 2, 44100); } catch(e) { }
+try { o6 = o1.createBufferSource(); } catch(e) { }
+try { o15 = o1.createAnalyser(); } catch(e) { }
+try { o15.fftSize = 32; } catch(e) { }
+try { o6.connect(o15,0,0) } catch(e) { }
+try { o27 = o1.createPanner(); } catch(e) { }
+try { o6.buffer = function(){var buffer = o1.createBuffer(2, 1148, o1.sampleRate);for(var c=0; c<2; c++) {for(var i=0; i<1148; i++) {buffer.getChannelData(c)[i] = 0;}}return buffer;}() } catch(e) { }
+</script>

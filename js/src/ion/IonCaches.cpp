@@ -422,17 +422,17 @@ IonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
 }
 
 static bool
-IsCacheableListBase(JSObject *obj)
+IsCacheableDOMProxy(JSObject *obj)
 {
     if (!obj->isProxy())
         return false;
 
     BaseProxyHandler *handler = GetProxyHandler(obj);
 
-    if (handler->family() != GetListBaseHandlerFamily())
+    if (handler->family() != GetDOMProxyHandlerFamily())
         return false;
 
-    if (obj->numFixedSlots() <= GetListBaseExpandoSlot())
+    if (obj->numFixedSlots() <= GetDOMProxyExpandoSlot())
         return false;
 
     return true;
@@ -452,7 +452,7 @@ GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSOb
         masm.branchPtr(Assembler::NotEqual, proto, ImmGCPtr(obj->getProto()), failures);
     }
 
-    JSObject *pobj = IsCacheableListBase(obj)
+    JSObject *pobj = IsCacheableDOMProxy(obj)
                      ? obj->getTaggedProto().toObjectOrNull()
                      : obj->getProto();
     if (!pobj)
@@ -477,7 +477,7 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
          * chain and must check for null proto. The prototype chain can be
          * altered during the lookupProperty call.
          */
-        JSObject *proto = IsCacheableListBase(obj)
+        JSObject *proto = IsCacheableDOMProxy(obj)
                      ? obj->getTaggedProto().toObjectOrNull()
                      : obj->getProto();
         if (!proto || !proto->isNative())
@@ -514,7 +514,7 @@ IsCacheableNoProperty(JSObject *obj, JSObject *holder, Shape *shape, jsbytecode 
         return false;
 
     // Don't generate missing property ICs if we skipped a non-native object, as
-    // lookups may extend beyond the prototype chain (e.g.  for ListBase
+    // lookups may extend beyond the prototype chain (e.g.  for DOMProxy
     // proxies).
     JSObject *obj2 = obj;
     while (obj2) {
@@ -625,20 +625,20 @@ EmitLoadSlot(MacroAssembler &masm, JSObject *holder, Shape *shape, Register hold
 }
 
 static void
-GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
+GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
                        PropertyName *name, Register object, Label *stubFailure,
                        bool skipExpandoCheck = false)
 {
-    MOZ_ASSERT(IsCacheableListBase(obj));
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
     // Guard the following:
-    //      1. The object is a ListBase.
+    //      1. The object is a DOMProxy.
     //      2. The object does not have expando properties, or has an expando
     //          which is known to not have the desired property.
     Address handlerAddr(object, JSObject::getFixedSlotOffset(JSSLOT_PROXY_HANDLER));
-    Address expandoSlotAddr(object, JSObject::getFixedSlotOffset(GetListBaseExpandoSlot()));
+    Address expandoSlotAddr(object, JSObject::getFixedSlotOffset(GetDOMProxyExpandoSlot()));
 
-    // Check that object is a ListBase.
+    // Check that object is a DOMProxy.
     masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, ImmWord(GetProxyHandler(obj)), stubFailure);
 
     if (skipExpandoCheck)
@@ -646,26 +646,26 @@ GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
 
     // For the remaining code, we need to reserve some registers to load a value.
     // This is ugly, but unvaoidable.
-    RegisterSet listBaseRegSet(RegisterSet::All());
-    listBaseRegSet.take(AnyRegister(object));
-    ValueOperand tempVal = listBaseRegSet.takeValueOperand();
+    RegisterSet domProxyRegSet(RegisterSet::All());
+    domProxyRegSet.take(AnyRegister(object));
+    ValueOperand tempVal = domProxyRegSet.takeValueOperand();
     masm.pushValue(tempVal);
 
-    Label failListBaseCheck;
-    Label listBaseOk;
+    Label failDOMProxyCheck;
+    Label domProxyOk;
 
-    Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
+    Value expandoVal = obj->getFixedSlot(GetDOMProxyExpandoSlot());
     masm.loadValue(expandoSlotAddr, tempVal);
 
     if (!expandoVal.isObject() && !expandoVal.isUndefined()) {
-        masm.branchTestValue(Assembler::NotEqual, tempVal, expandoVal, &failListBaseCheck);
+        masm.branchTestValue(Assembler::NotEqual, tempVal, expandoVal, &failDOMProxyCheck);
 
         ExpandoAndGeneration *expandoAndGeneration = (ExpandoAndGeneration*)expandoVal.toPrivate();
         masm.movePtr(ImmWord(expandoAndGeneration), tempVal.scratchReg());
 
         masm.branch32(Assembler::NotEqual, Address(tempVal.scratchReg(), sizeof(Value)),
                                                    Imm32(expandoAndGeneration->generation),
-                                                   &failListBaseCheck);
+                                                   &failDOMProxyCheck);
 
         expandoVal = expandoAndGeneration->expando;
         masm.loadValue(Address(tempVal.scratchReg(), 0), tempVal);
@@ -673,28 +673,28 @@ GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
 
     // If the incoming object does not have an expando object then we're sure we're not
     // shadowing.
-    masm.branchTestUndefined(Assembler::Equal, tempVal, &listBaseOk);
+    masm.branchTestUndefined(Assembler::Equal, tempVal, &domProxyOk);
 
     if (expandoVal.isObject()) {
         JS_ASSERT(!expandoVal.toObject().nativeContains(cx, name));
 
         // Reference object has an expando object that doesn't define the name. Check that
         // the incoming object has an expando object with the same shape.
-        masm.branchTestObject(Assembler::NotEqual, tempVal, &failListBaseCheck);
+        masm.branchTestObject(Assembler::NotEqual, tempVal, &failDOMProxyCheck);
         masm.extractObject(tempVal, tempVal.scratchReg());
         masm.branchPtr(Assembler::Equal,
                        Address(tempVal.scratchReg(), JSObject::offsetOfShape()),
                        ImmGCPtr(expandoVal.toObject().lastProperty()),
-                       &listBaseOk);
+                       &domProxyOk);
     }
 
     // Failure case: restore the tempVal registers and jump to failures.
-    masm.bind(&failListBaseCheck);
+    masm.bind(&failDOMProxyCheck);
     masm.popValue(tempVal);
     masm.jump(stubFailure);
 
     // Success case: restore the tempval and proceed.
-    masm.bind(&listBaseOk);
+    masm.bind(&domProxyOk);
     masm.popValue(tempVal);
 }
 
@@ -720,11 +720,11 @@ GenerateReadSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
                                    ImmGCPtr(obj->lastProperty()),
                                    failures);
 
-    bool isCacheableListBase = IsCacheableListBase(obj);
-    Label listBaseFailures;
-    if (isCacheableListBase) {
+    bool isCacheableDOMProxy = IsCacheableDOMProxy(obj);
+    Label domProxyFailures;
+    if (isCacheableDOMProxy) {
         JS_ASSERT(multipleFailureJumps);
-        GenerateListBaseChecks(cx, masm, obj, name, object, &listBaseFailures);
+        GenerateDOMProxyChecks(cx, masm, obj, name, object, &domProxyFailures);
     }
 
     // If we need a scratch register, use either an output register or the
@@ -815,8 +815,8 @@ GenerateReadSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
         masm.bind(&prototypeFailures);
         if (restoreScratch)
             masm.pop(scratchReg);
-        if (isCacheableListBase)
-            masm.bind(&listBaseFailures);
+        if (isCacheableDOMProxy)
+            masm.bind(&domProxyFailures);
         masm.bind(failures);
     }
 
@@ -837,8 +837,8 @@ GenerateCallGetter(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &
     masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &stubFailure);
 
-    if (IsCacheableListBase(obj))
-        GenerateListBaseChecks(cx, masm, obj, name, object, &stubFailure);
+    if (IsCacheableDOMProxy(obj))
+        GenerateDOMProxyChecks(cx, masm, obj, name, object, &stubFailure);
 
     JS_ASSERT(output.hasValue());
     Register scratchReg = output.valueReg().scratchReg();
@@ -1021,11 +1021,11 @@ GetPropertyIC::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSOb
 }
 
 bool
-GetPropertyIC::attachListBaseShadowed(JSContext *cx, IonScript *ion, JSObject *obj,
+GetPropertyIC::attachDOMProxyShadowed(JSContext *cx, IonScript *ion, JSObject *obj,
                                       void *returnAddr)
 {
     JS_ASSERT(!idempotent());
-    JS_ASSERT(IsCacheableListBase(obj));
+    JS_ASSERT(IsCacheableDOMProxy(obj));
     JS_ASSERT(output().hasValue());
 
     Label failures;
@@ -1040,8 +1040,8 @@ GetPropertyIC::attachListBaseShadowed(JSContext *cx, IonScript *ion, JSObject *o
                                    ImmGCPtr(obj->lastProperty()),
                                    &failures);
 
-    // Make sure object is a ListBase proxy
-    GenerateListBaseChecks(cx, masm, obj, name(), object(), &failures,
+    // Make sure object is a DOMProxy proxy
+    GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures,
                            /*skipExpandoCheck=*/true);
 
     // saveLive()
@@ -1379,16 +1379,16 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
     JS_ASSERT(cache.canAttachStub());
 
     RootedObject checkObj(cx, obj);
-    if (IsCacheableListBase(obj)) {
+    if (IsCacheableDOMProxy(obj)) {
         RootedId id(cx, NameToId(name));
-        ListBaseShadowsResult shadows = GetListBaseShadowsCheck()(cx, obj, id);
+        DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
         if (shadows == ShadowCheckFailed)
             return false;
         if (shadows == Shadows) {
             if (cache.idempotent() || !cache.output().hasValue())
                 return true;
             *isCacheable = true;
-            return cache.attachListBaseShadowed(cx, ion, obj, returnAddr);
+            return cache.attachDOMProxyShadowed(cx, ion, obj, returnAddr);
         }
         if (shadows == DoesntShadowUnique)
             // We reset the cache to clear out an existing IC for this object
