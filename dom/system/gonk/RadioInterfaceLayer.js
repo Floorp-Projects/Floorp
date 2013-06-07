@@ -961,10 +961,7 @@ RadioInterfaceLayer.prototype = {
     voiceInfo.connected = newInfo.connected;
     voiceInfo.roaming = newInfo.roaming;
     voiceInfo.emergencyCallsOnly = newInfo.emergencyCallsOnly;
-    // Unlike the data registration info, the voice info typically contains
-    // no (useful) radio tech information, so we have to manually set
-    // this here. (TODO GSM only for now, see bug 726098.)
-    voiceInfo.type = "gsm";
+    voiceInfo.type = newInfo.type;
 
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
