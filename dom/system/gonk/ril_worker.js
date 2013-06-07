@@ -42,7 +42,7 @@ importScripts("ril_consts.js", "systemlibs.js");
 
 // set to true in ril_consts.js to see debug messages
 let DEBUG = DEBUG_WORKER;
-
+let CLIENT_ID = -1;
 let GLOBAL = this;
 
 const INT32_MAX   = 2147483647;
@@ -4337,8 +4337,9 @@ let RIL = {
     }
   },
 
-  setDebugEnabled: function setDebugEnabled(options) {
-    DEBUG = DEBUG_WORKER || options.enabled;
+  setInitialOptions: function setInitialOptions(options) {
+    DEBUG = DEBUG_WORKER || options.debug;
+    CLIENT_ID = options.clientId;
   }
 };
 
