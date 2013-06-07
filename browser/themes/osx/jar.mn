@@ -212,7 +212,6 @@ browser.jar:
   skin/classic/browser/devtools/dark-theme.css              (devtools/dark-theme.css)
   skin/classic/browser/devtools/light-theme.css             (devtools/light-theme.css)
   skin/classic/browser/devtools/widgets.css                 (devtools/widgets.css)
-  skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
   skin/classic/browser/devtools/commandline.png             (devtools/commandline.png)
   skin/classic/browser/devtools/command-paintflashing.png   (devtools/command-paintflashing.png)
   skin/classic/browser/devtools/command-responsivemode.png  (devtools/command-responsivemode.png)
