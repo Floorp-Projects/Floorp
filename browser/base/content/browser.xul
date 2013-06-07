@@ -668,9 +668,6 @@
                      hidden="true"
                      tooltiptext="&pageReportIcon.tooltip;"
                      onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
-              <image id="star-button"
-                     class="urlbar-icon"
-                     onclick="BookmarkingUI.onCommand(event);"/>
               <image id="go-button"
                      class="urlbar-icon"
                      tooltiptext="&goEndCap.tooltip;"
@@ -877,13 +874,14 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class"
                      removable="true"
-                     type="menu"
+                     type="menu-button"
                      label="&bookmarksMenuButton.label;"
                      tooltiptext="&bookmarksMenuButton.tooltip;"
                      ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
                      ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                      ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
-                     ondrop="PlacesMenuDNDHandler.onDrop(event);">
+                     ondrop="PlacesMenuDNDHandler.onDrop(event);"
+                     oncommand="BookmarkingUI.onCommand(event);">
         <menupopup id="BMB_bookmarksPopup"
                    placespopup="true"
                    context="placesContext"
@@ -906,13 +904,6 @@
                     command="Browser:ShowAllBookmarks"
                     key="manBookmarkKb"/>
           <menuseparator/>
-          <menuitem id="BMB_bookmarkThisPage"
-#ifndef XP_MACOSX
-                    class="menuitem-iconic"
-#endif
-                    label="&bookmarkThisPageCmd.label;"
-                    command="Browser:AddBookmarkAs"
-                    key="addBookmarkAsKb"/>
           <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
                     class="menuitem-iconic"
