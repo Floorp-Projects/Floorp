@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 784519 causes mystery Android build failures and mochi/crashtest failures
+Bug 879831 needed to clobber for the removal of jsprobes.cpp
