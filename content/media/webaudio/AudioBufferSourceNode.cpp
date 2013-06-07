@@ -8,8 +8,9 @@
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
 #include "nsMathUtils.h"
 #include "AudioNodeEngine.h"
+#include "AudioNodeStream.h"
+#include "AudioDestinationNode.h"
 #include "PannerNode.h"
-#include "GainProcessor.h"
 #include "speex/speex_resampler.h"
 #include <limits>
 
@@ -19,7 +20,6 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBufferSourceNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaybackRate)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGain)
   if (tmp->Context()) {
     // AudioNode's Unlink implementation disconnects us from the graph
     // too, but we need to do this right here to make sure that
@@ -33,7 +33,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioBufferSourceNode, AudioNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBuffer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlaybackRate)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGain)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioBufferSourceNode)
@@ -42,20 +41,19 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(AudioBufferSourceNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioNode)
 
-class AudioBufferSourceNodeEngine : public AudioNodeEngine,
-                                    public GainProcessor
+class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
 public:
   explicit AudioBufferSourceNodeEngine(AudioNode* aNode,
                                        AudioDestinationNode* aDestination) :
     AudioNodeEngine(aNode),
-    GainProcessor(aDestination),
     mStart(0), mStop(TRACK_TICKS_MAX),
     mResampler(nullptr),
     mOffset(0), mDuration(0),
     mLoopStart(0), mLoopEnd(0),
     mBufferSampleRate(0), mPosition(0), mChannels(0), mPlaybackRate(1.0f),
     mDopplerShift(1.0f),
+    mDestination(static_cast<AudioNodeStream*>(aDestination->Stream())),
     mPlaybackRateTimeline(1.0f), mLoop(false)
   {}
 
@@ -83,9 +81,6 @@ public:
         mResampler = nullptr;
       }
       WebAudioUtils::ConvertAudioParamToTicks(mPlaybackRateTimeline, nullptr, mDestination);
-      break;
-    case AudioBufferSourceNode::GAIN:
-      SetGainParameter(aValue);
       break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
@@ -401,21 +396,6 @@ public:
       }
     }
 
-    // Process the gain on the AudioBufferSourceNode
-    if (!aOutput->IsNull()) {
-      if (!mGain.HasSimpleValue() &&
-          aOutput->mBuffer == mBuffer) {
-        // If we have borrowed out buffer, make sure to allocate a new one in case
-        // the gain value is not a simple value.
-        nsTArray<const void*> oldChannels;
-        oldChannels.AppendElements(aOutput->mChannelData);
-        AllocateAudioBlock(channels, aOutput);
-        ProcessGain(aStream, 1.0f, oldChannels, aOutput);
-      } else {
-        ProcessGain(aStream, 1.0f, aOutput->mChannelData, aOutput);
-      }
-    }
-
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (currentPosition >= mStop ||
@@ -437,6 +417,7 @@ public:
   uint32_t mChannels;
   float mPlaybackRate;
   float mDopplerShift;
+  AudioNodeStream* mDestination;
   AudioParamTimeline mPlaybackRateTimeline;
   bool mLoop;
 };
@@ -451,15 +432,13 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mOffset(0.0)
   , mDuration(std::numeric_limits<double>::min())
   , mPlaybackRate(new AudioParam(this, SendPlaybackRateToStream, 1.0f))
-  , mGain(new AudioParam(this, SendGainToStream, 1.0f))
   , mLoop(false)
   , mStartCalled(false)
   , mStopped(false)
 {
-  AudioBufferSourceNodeEngine* engine =
-      new AudioBufferSourceNodeEngine(this, aContext->Destination());
-  mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
-  engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+  mStream = aContext->Graph()->CreateAudioNodeStream(
+      new AudioBufferSourceNodeEngine(this, aContext->Destination()),
+      MediaStreamGraph::INTERNAL_STREAM);
   mStream->AddMainThreadListener(this);
 }
 
@@ -640,13 +619,6 @@ AudioBufferSourceNode::SendPlaybackRateToStream(AudioNode* aNode)
 {
   AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
   SendTimelineParameterToStream(This, PLAYBACKRATE, *This->mPlaybackRate);
-}
-
-void
-AudioBufferSourceNode::SendGainToStream(AudioNode* aNode)
-{
-  AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
-  SendTimelineParameterToStream(This, GAIN, *This->mGain);
 }
 
 void
