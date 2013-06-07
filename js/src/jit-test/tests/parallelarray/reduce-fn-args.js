@@ -2,7 +2,7 @@ load(libdir + "parallelarray-helpers.js");
 
 function testReduce() {
   // Test reduce elemental fun args
-  var N = 64;
+  var N = minItemsTestingThreshold;
   var p = new ParallelArray(range(1, N+1));
   var r = p.reduce(function (a, b) {
     assertEq(a >= 1 && a <= N, true);
