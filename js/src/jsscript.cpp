@@ -781,6 +781,12 @@ template bool
 js::XDRScript(XDRState<XDR_DECODE> *, HandleObject, HandleScript, HandleFunction,
               MutableHandleScript);
 
+js::ScriptSourceObject *
+JSScript::sourceObject() const
+{
+    return &sourceObject_->asScriptSource();
+}
+
 bool
 JSScript::initScriptCounts(JSContext *cx)
 {
@@ -1156,12 +1162,6 @@ ScriptSource::adjustDataSize(size_t nbytes)
         js_free(data.compressed);
     data.compressed = static_cast<unsigned char *>(buf);
     return !!data.compressed;
-}
-
-void
-JSScript::setSourceObject(js::ScriptSourceObject *sourceObject)
-{
-    sourceObject_ = sourceObject;
 }
 
 /* static */ bool
@@ -1723,7 +1723,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     }
     script->staticLevel = uint16_t(staticLevel);
 
-    script->setSourceObject(sourceObject);
+    script->sourceObject_ = sourceObject;
     script->sourceStart = bufStart;
     script->sourceEnd = bufEnd;
 

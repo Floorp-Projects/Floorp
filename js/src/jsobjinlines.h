@@ -921,6 +921,13 @@ JSObject::asString()
     return *static_cast<js::StringObject *>(this);
 }
 
+inline js::ScriptSourceObject &
+JSObject::asScriptSource()
+{
+    JS_ASSERT(isScriptSource());
+    return *static_cast<js::ScriptSourceObject *>(this);
+}
+
 inline bool
 JSObject::isDebugScope() const
 {
