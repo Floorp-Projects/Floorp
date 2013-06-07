@@ -7,9 +7,10 @@
 #ifndef NumericConversions_h___
 #define NumericConversions_h___
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
-
-#include "jscpucfg.h"
+#include "mozilla/TypeTraits.h"
 
 #include <math.h>
 
@@ -20,136 +21,112 @@ namespace js {
 
 namespace detail {
 
-union DoublePun {
-    struct {
-#if defined(IS_LITTLE_ENDIAN)
-        uint32_t lo, hi;
-#else
-        uint32_t hi, lo;
-#endif
-    } s;
-    uint64_t u64;
-    double d;
-};
+/*
+ * Convert a double value to ResultType (an unsigned integral type) using
+ * ECMAScript-style semantics (that is, in like manner to how ECMAScript's
+ * ToInt32 converts to int32_t).
+ *
+ *   If d is infinite or NaN, return 0.
+ *   Otherwise compute d2 = sign(d) * floor(abs(d)), and return the ResultType
+ *   value congruent to d2 mod 2**(bit width of ResultType).
+ *
+ * The algorithm below is inspired by that found in
+ * <http://trac.webkit.org/changeset/67825/trunk/JavaScriptCore/runtime/JSValue.cpp>
+ * but has been generalized to all integer widths.
+ */
+template<typename ResultType>
+inline ResultType
+ToUintWidth(double d)
+{
+    MOZ_STATIC_ASSERT(mozilla::IsUnsigned<ResultType>::value,
+                      "ResultType must be an unsigned type");
 
-} /* namespace detail */
+    uint64_t bits = mozilla::BitwiseCast<uint64_t>(d);
 
-/* Numeric Conversion base. Round doubles to Ints according to ECMA or WEBIDL standards. */
-template<size_t width, typename ResultType>
+    // Extract the exponent component.  (Be careful here!  It's not technically
+    // the exponent in NaN, infinities, and subnormals.)
+    int_fast16_t exp =
+        int_fast16_t((bits & mozilla::DoubleExponentBits) >> mozilla::DoubleExponentShift) -
+        int_fast16_t(mozilla::DoubleExponentBias);
+
+    // If the exponent's less than zero, abs(d) < 1, so the result is 0.  (This
+    // also handles subnormals.)
+    if (exp < 0)
+        return 0;
+
+    uint_fast16_t exponent = mozilla::SafeCast<uint_fast16_t>(exp);
+
+    // If the exponent is greater than or equal to the bits of precision of a
+    // double plus ResultType's width, the number is either infinite, NaN, or
+    // too large to have lower-order bits in the congruent value.  (Example:
+    // 2**84 is exactly representable as a double.  The next exact double is
+    // 2**84 + 2**32.  Thus if ResultType is int32_t, an exponent >= 84 implies
+    // floor(abs(d)) == 0 mod 2**32.)  Return 0 in all these cases.
+    const size_t ResultWidth = CHAR_BIT * sizeof(ResultType);
+    if (exponent >= mozilla::DoubleExponentShift + ResultWidth)
+        return 0;
+
+    // The significand contains the bits that will determine the final result.
+    // Shift those bits left or right, according to the exponent, to their
+    // locations in the unsigned binary representation of floor(abs(d)).
+    MOZ_STATIC_ASSERT(sizeof(ResultType) <= sizeof(uint64_t),
+                      "Left-shifting below would lose upper bits");
+    ResultType result = (exponent > mozilla::DoubleExponentShift)
+                        ? ResultType(bits << (exponent - mozilla::DoubleExponentShift))
+                        : ResultType(bits >> (mozilla::DoubleExponentShift - exponent));
+
+    // Two further complications remain.  First, |result| may contain bogus
+    // sign/exponent bits.  Second, IEEE-754 numbers' significands (excluding
+    // subnormals, but we already handled those) have an implicit leading 1
+    // which may affect the final result.
+    //
+    // It may appear that there's complexity here depending on how ResultWidth
+    // and DoubleExponentShift relate, but it turns out there's not.
+    //
+    // Assume ResultWidth < DoubleExponentShift:
+    //   Only right-shifts leave bogus bits in |result|.  For this to happen,
+    //   we must right-shift by > |DoubleExponentShift - ResultWidth|, implying
+    //   |exponent < ResultWidth|.
+    //   The implicit leading bit only matters if it appears in the final
+    //   result -- if |2**exponent mod 2**ResultWidth != 0|.  This implies
+    //   |exponent < ResultWidth|.
+    // Otherwise assume ResultWidth >= DoubleExponentShift:
+    //   Any left-shift less than |ResultWidth - DoubleExponentShift| leaves
+    //   bogus bits in |result|.  This implies |exponent < ResultWidth|.  Any
+    //   right-shift less than |ResultWidth| does too, which implies
+    //   |DoubleExponentShift - ResultWidth < exponent|.  By assumption, then,
+    //   |exponent| is negative, but we excluded that above.  So bogus bits
+    //   need only |exponent < ResultWidth|.
+    //   The implicit leading bit matters identically to the other case, so
+    //   again, |exponent < ResultWidth|.
+    if (exponent < ResultWidth) {
+        ResultType implicitOne = ResultType(1) << exponent;
+        result &= implicitOne - 1; // remove bogus bits
+        result += implicitOne; // add the implicit bit
+    }
+
+    // Compute the congruent value in the signed range.
+    return (bits & mozilla::DoubleSignBit) ? ~result + 1 : result;
+}
+
+template<typename ResultType>
 inline ResultType
 ToIntWidth(double d)
 {
-#if defined(__i386__) || defined(__i386) || defined(__x86_64__) || \
-    defined(_M_IX86) || defined(_M_X64)
-    detail::DoublePun du, duh, twoWidth;
-    uint32_t di_h, u_tmp, expon, shift_amount;
-    int32_t mask32;
+    MOZ_STATIC_ASSERT(mozilla::IsSigned<ResultType>::value,
+                      "ResultType must be a signed type");
 
-    /*
-     * Algorithm Outline
-     *  Step 1. If d is NaN, +/-Inf or |d|>=2^(width + 52) or |d|<1, then return 0
-     *          All of this is implemented based on an exponent comparison,
-     *          since anything with a higher exponent is either not finite, or
-     *          going to round to 0..
-     *  Step 2. If |d|<2^(width - 1), then return (int)d
-     *          The cast to integer (conversion in RZ mode) returns the correct result.
-     *  Step 3. If |d|>=2^width, d:=fmod(d, 2^width) is taken  -- but without a call
-     *  Step 4. If |d|>=2^(width - 1), then the fractional bits are cleared before
-     *          applying the correction by 2^width:  d - sign(d)*2^width
-     *  Step 5. Return (int)d
-     */
+    const ResultType MaxValue = (1ULL << (CHAR_BIT * sizeof(ResultType) - 1)) - 1;
+    const ResultType MinValue = -MaxValue - 1;
 
-    du.d = d;
-    di_h = du.s.hi;
-
-    u_tmp = (di_h & 0x7ff00000) - 0x3ff00000;
-    if (u_tmp >= ((width + 52) << 20)) {
-        // d is Nan, +/-Inf or +/-0, or |d|>=2^(width+52) or |d|<1, in which case result=0
-        // If we need to shift by more than (width + 52), there are no data bits
-        // to preserve, and the mod will turn out 0.
-        return 0;
-    }
-
-    if (u_tmp < ((width - 1) << 20)) {
-        // |d|<2^(width - 1)
-        return ResultType(d);
-    }
-
-    if (u_tmp > ((width - 1) << 20)) {
-        // |d|>=2^width
-        // Throw away multiples of 2^width.
-        //
-        // That is, compute du.d = the value in (-2^width, 2^width)
-        // that has the same sign as d and is equal to d modulo 2^width.
-        //
-        // This can't be done simply by masking away bits of du because
-        // the implicit one-bit of the mantissa is one of the ones we want to
-        // eliminate. So instead we compute duh.d = the appropriate multiple
-        // of 2^width, which *can* be computed by masking, and then we
-        // subtract that from du.d.
-        expon = u_tmp >> 20;
-        shift_amount = expon - (width - 11);
-        mask32 = 0x80000000;
-        if (shift_amount < 32) {
-            // Shift only affects top word.
-            mask32 >>= shift_amount;
-            duh.s.hi = du.s.hi & mask32;
-            duh.s.lo = 0;
-        } else {
-            // Top word all 1s, shift affects bottom word.
-            mask32 >>= (shift_amount-32);
-            duh.s.hi = du.s.hi;
-            duh.s.lo = du.s.lo & mask32;
-        }
-        du.d -= duh.d;
-    }
-
-    di_h = du.s.hi;
-
-    // Eliminate fractional bits
-    u_tmp = (di_h & 0x7ff00000);
-    if (u_tmp >= (0x3ff00000 + ((width - 1) << 20))) {
-        // |d|>=2^(width - 1)
-        expon = u_tmp >> 20;
-
-        // Same idea as before, except save everything non-fractional.
-        shift_amount = expon - (0x3ff - 11);
-        mask32 = 0x80000000;
-        if (shift_amount < 32) {
-            // Top word only
-            mask32 >>= shift_amount;
-            du.s.hi &= mask32;
-            du.s.lo = 0;
-        } else {
-            // Bottom word. Top word all 1s.
-            mask32 >>= (shift_amount-32);
-            du.s.lo &= mask32;
-        }
-        // Apply step 4's 2^width correction.
-        twoWidth.s.hi = (0x3ff00000 + (width << 20)) ^ (du.s.hi & 0x80000000);
-        twoWidth.s.lo = 0;
-        du.d -= twoWidth.d;
-    }
-
-    return ResultType(du.d);
-#else
-    double twoWidth, twoWidthMin1;
-
-    if (!mozilla::IsFinite(d))
-        return 0;
-
-    /* FIXME: This relies on undefined behavior; see bug 667739. */
-    ResultType i = (ResultType) d;
-    if ((double) i == d)
-        return ResultType(i);
-
-    twoWidth = width == 32 ? 4294967296.0 : 18446744073709551616.0;
-    twoWidthMin1 = width == 32 ? 2147483648.0 : 9223372036854775808.0;
-    d = fmod(d, twoWidth);
-    d = (d >= 0) ? floor(d) : ceil(d) + twoWidth;
-    return (ResultType) (d >= twoWidthMin1 ? d - twoWidth : d);
-#endif
+    typedef typename mozilla::MakeUnsigned<ResultType>::Type UnsignedResult;
+    UnsignedResult u = ToUintWidth<UnsignedResult>(d);
+    if (u <= UnsignedResult(MaxValue))
+        return static_cast<ResultType>(u);
+    return (MinValue + static_cast<ResultType>(u - MaxValue)) - 1;
 }
+
+} /* namespace detail */
 
 /* ES5 9.5 ToInt32 (specialized for doubles). */
 inline int32_t
@@ -277,7 +254,7 @@ ToInt32(double d)
         );
     return i;
 #else
-    return ToIntWidth<32, int32_t>(d);
+    return detail::ToIntWidth<int32_t>(d);
 #endif
 }
 
@@ -285,21 +262,21 @@ ToInt32(double d)
 inline uint32_t
 ToUint32(double d)
 {
-    return uint32_t(ToInt32(d));
+    return detail::ToUintWidth<uint32_t>(d);
 }
 
 /* WEBIDL 4.2.10 */
 inline int64_t
 ToInt64(double d)
 {
-    return ToIntWidth<64, int64_t>(d);
+    return detail::ToIntWidth<int64_t>(d);
 }
 
 /* WEBIDL 4.2.11 */
 inline uint64_t
 ToUint64(double d)
 {
-    return uint64_t(ToInt64(d));
+    return detail::ToUintWidth<uint64_t>(d);
 }
 
 /* ES5 9.4 ToInteger (specialized for doubles). */
