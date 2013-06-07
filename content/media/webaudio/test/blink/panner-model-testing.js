@@ -1,4 +1,4 @@
-var sampleRate = 44100.0;
+var sampleRate = 48000.0;
 
 var numberOfChannels = 1;
 
@@ -191,7 +191,7 @@ function checkResult(event) {
         testFailed("Left channel gain values are incorrect.  Max error = " + maxErrorL + " at time " + time[maxErrorIndexL] + " (threshold = " + maxAllowedError + ")");
         success = false;
     }
-    
+
     if (maxErrorR <= maxAllowedError) {
         testPassed("Right channel gain values are correct.");
     } else {
