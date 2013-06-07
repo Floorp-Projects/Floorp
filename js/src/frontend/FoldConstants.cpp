@@ -111,7 +111,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
  */
 static bool
 FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
-                  ParseNode *pn, Parser<FullParseHandler> *parser)
+                  ParseNode *pn)
 {
     double d, d2;
     int32_t i, j;
@@ -623,11 +623,11 @@ FoldConstants<FullParseHandler>(JSContext *cx, ParseNode **pnp,
 
                 pn2 = pn1->pn_next;
                 pn3 = pn2->pn_next;
-                if (!FoldBinaryNumeric(cx, op, pn1, pn2, pn, parser))
+                if (!FoldBinaryNumeric(cx, op, pn1, pn2, pn))
                     return false;
                 while ((pn2 = pn3) != NULL) {
                     pn3 = pn2->pn_next;
-                    if (!FoldBinaryNumeric(cx, op, pn, pn2, pn, parser))
+                    if (!FoldBinaryNumeric(cx, op, pn, pn2, pn))
                         return false;
                 }
             }
@@ -638,7 +638,7 @@ FoldConstants<FullParseHandler>(JSContext *cx, ParseNode **pnp,
                 return false;
             }
             if (pn1->isKind(PNK_NUMBER) && pn2->isKind(PNK_NUMBER)) {
-                if (!FoldBinaryNumeric(cx, pn->getOp(), pn1, pn2, pn, parser))
+                if (!FoldBinaryNumeric(cx, pn->getOp(), pn1, pn2, pn))
                     return false;
             }
         }
