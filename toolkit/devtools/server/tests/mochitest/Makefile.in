@@ -16,6 +16,7 @@ MOCHITEST_CHROME_FILES	= \
 	inspector-traversal-data.html \
 	test_inspector-mutations-attr.html \
 	test_inspector-mutations-childlist.html \
+	test_inspector-mutations-frameload.html \
 	test_inspector-mutations-value.html \
 	test_inspector-release.html \
 	test_inspector-traversal.html \
