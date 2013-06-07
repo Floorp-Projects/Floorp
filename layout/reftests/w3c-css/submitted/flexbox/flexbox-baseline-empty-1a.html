@@ -3,11 +3,11 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<!-- Testcase for how we compute the baseline of a vertical flex container
-     with no flex items. This is the cross-axis baseline. The spec says this
+<!-- Testcase for how we compute the baseline of a horizontal flex container
+     with no flex items. This is the main-axis baseline. The spec says this
      about this case:
 
-       ...the flex container's cross-axis baseline is synthesized
+       The flex container's main-axis baseline is synthesized
        from ... the flex container's content box.
 
      I'm taking that to mean the baseline is the bottom of the content box.
@@ -15,14 +15,13 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="ahem.css" />
+  <link rel="stylesheet" type="text/css" href="support/ahem.css" />
   <style>
     body {
       font: 20px Ahem;
     }
     .flexContainer {
       display: inline-flex;
-      flex-direction: column;
       height: 16px;
       width: 16px;
       background: purple;
