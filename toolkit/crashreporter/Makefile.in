@@ -14,7 +14,7 @@ LIBRARY_NAME = exception_handler_s
 MSVC_ENABLE_PGO := 1
 
 ifeq ($(OS_ARCH),Darwin)
-CMMSRCS = mac_utils.mm
+DISABLED_CMMSRCS = mac_utils.mm
 endif
 
 ifeq ($(OS_ARCH),Linux)

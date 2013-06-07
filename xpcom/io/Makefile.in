@@ -23,7 +23,7 @@ endif
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CMMSRCS		+= \
+DISABLED_CMMSRCS		+= \
 		CocoaFileUtils.mm \
 		$(NULL)
 endif
