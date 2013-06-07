@@ -46,17 +46,12 @@ interface nsIFileCallback : nsISupports {
   void receive(in nsIDOMBlob file);
 };
 
-[scriptable, uuid(11feba7e-73d5-49fc-a368-c3ef16ef4fc1)]
+[scriptable, uuid(350fddae-4476-4dcd-bccf-9c9c356354a6)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute unsigned long width;
   attribute unsigned long height;
   attribute boolean mozOpaque;
-
-  [implicit_jscontext]
-  nsISupports getContext(in DOMString contextId,
-                         [optional] in jsval contextOptions);
-
 
   // Valid calls are:
   //  toDataURL();              -- defaults to image/png
