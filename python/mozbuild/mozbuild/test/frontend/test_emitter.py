@@ -131,6 +131,7 @@ class TestEmitterBasic(unittest.TestCase):
             DEFINES=['-Dfans', '-Dtans'],
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             HOST_CSRCS=['fans.c', 'tans.c'],
+            HOST_LIBRARY_NAME='host_fans',
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
             XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],
             XPIDL_MODULE='module_name',
