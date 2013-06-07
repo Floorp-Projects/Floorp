@@ -16,7 +16,7 @@
 
 #include "builtin/ParallelArray.h"
 
-#include "frontend/TokenStream.h"
+#include "frontend/BytecodeCompiler.h"
 
 #include "jsboolinlines.h"
 
@@ -536,7 +536,7 @@ GetDynamicName(JSContext *cx, JSObject *scopeChain, JSString *str, Value *vp)
         }
     }
 
-    if (!frontend::IsIdentifier(atom) || frontend::FindKeyword(atom->chars(), atom->length())) {
+    if (!frontend::IsIdentifier(atom) || frontend::IsKeyword(atom)) {
         vp->setUndefined();
         return;
     }

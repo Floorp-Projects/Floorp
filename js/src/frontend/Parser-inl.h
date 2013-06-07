@@ -7,6 +7,7 @@
 #ifndef Parser_inl_h__
 #define Parser_inl_h__
 
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 
 #include "frontend/SharedContext-inl.h"
@@ -104,10 +105,7 @@ CheckStrictBinding(JSContext *cx, ParseHandler *handler, ParseContext<ParseHandl
     if (!pc->sc->needStrictChecks())
         return true;
 
-    if (name == cx->names().eval ||
-        name == cx->names().arguments ||
-        FindKeyword(name->charsZ(), name->length()))
-    {
+    if (name == cx->names().eval || name == cx->names().arguments || IsKeyword(name)) {
         JSAutoByteString bytes;
         if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;

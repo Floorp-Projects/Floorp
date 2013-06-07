@@ -33,7 +33,7 @@
 #include "jsdbgapi.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
-#include "frontend/TokenStream.h"
+#include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "ion/BaselineJIT.h"
 #include "js/MemoryMetrics.h"
