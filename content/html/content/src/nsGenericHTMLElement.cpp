@@ -2808,7 +2808,7 @@ nsGenericHTMLElement::Focus(ErrorResult& aError)
 void
 nsGenericHTMLElement::Click()
 {
-  if (HasFlag(NODE_HANDLING_CLICK))
+  if (HandlingClick())
     return;
 
   // Strong in case the event kills it
@@ -2823,7 +2823,7 @@ nsGenericHTMLElement::Click()
     }
   }
 
-  SetFlags(NODE_HANDLING_CLICK);
+  SetHandlingClick();
 
   // Click() is never called from native code, but it may be
   // called from chrome JS. Mark this event trusted if Click()
@@ -2834,7 +2834,7 @@ nsGenericHTMLElement::Click()
 
   nsEventDispatcher::Dispatch(this, context, &event);
 
-  UnsetFlags(NODE_HANDLING_CLICK);
+  ClearHandlingClick();
 }
 
 bool
