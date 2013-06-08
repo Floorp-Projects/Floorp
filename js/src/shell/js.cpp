@@ -451,8 +451,7 @@ ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
 
     int lineno = 1;
     bool hitEOF = false;
-    char *buffer = NULL;
-    size_t size = 0;           /* assign here to avoid warnings */
+
     do {
         /*
          * Accumulate lines until we get a 'compilable unit' - one that either
@@ -461,7 +460,8 @@ ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
          * coincides with the end of a line.
          */
         int startline = lineno;
-        size_t len = 0; /* initialize to avoid warnings */
+        typedef Vector<char, 32, ContextAllocPolicy> CharBuffer;
+        CharBuffer buffer(cx);
         do {
             ScheduleWatchdog(cx->runtime, -1);
             gTimedOut = false;
@@ -471,58 +471,34 @@ ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
             if (!line) {
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
-                    free(buffer);
                     return;
                 }
                 hitEOF = true;
                 break;
             }
-            if (!buffer) {
-                buffer = line;
-                len = strlen(buffer);
-                size = len + 1;
-            } else {
-                /*
-                 * len + 1 is required to store '\n' in the end of line.
-                 */
-                size_t newlen = strlen(line) + (len ? len + 1 : 0);
-                if (newlen + 1 > size) {
-                    size = newlen + 1 > size * 2 ? newlen + 1 : size * 2;
-                    char *newBuf = (char *) realloc(buffer, size);
-                    if (!newBuf) {
-                        free(buffer);
-                        free(line);
-                        JS_ReportOutOfMemory(cx);
-                        return;
-                    }
-                    buffer = newBuf;
-                }
-                char *current = buffer + len;
-                if (startline != lineno)
-                    *current++ = '\n';
-                strcpy(current, line);
-                len = newlen;
-                free(line);
-            }
+
+            if (!buffer.append(line, strlen(line)) || !buffer.append('\n'))
+                return;
+
             lineno++;
             if (!ScheduleWatchdog(cx->runtime, gTimeoutInterval)) {
                 hitEOF = true;
                 break;
             }
-        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
+        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer.begin(), buffer.length()));
 
-        if (hitEOF && !buffer)
+        if (hitEOF && buffer.empty())
             break;
 
         size_t uc_len;
-        if (!InflateUTF8StringToBuffer(cx, buffer, len, NULL, &uc_len)) {
+        if (!InflateUTF8StringToBuffer(cx, buffer.begin(), buffer.length(), NULL, &uc_len)) {
             JS_ReportError(cx, "Invalid UTF-8 in input");
             gExitCode = EXITCODE_RUNTIME_ERROR;
             return;
         }
 
         jschar *uc_buffer = (jschar*)malloc(uc_len * sizeof(jschar));
-        InflateUTF8StringToBuffer(cx, buffer, len, uc_buffer, &uc_len);
+        InflateUTF8StringToBuffer(cx, buffer.begin(), buffer.length(), uc_buffer, &uc_len);
 
         /* Clear any pending exception from previous failed compiles. */
         JS_ClearPendingException(cx);
@@ -553,11 +529,9 @@ ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
                 }
             }
         }
-        *buffer = '\0';
         free(uc_buffer);
     } while (!hitEOF && !gQuitting);
 
-    free(buffer);
     fprintf(gOutFile, "\n");
 }
 
