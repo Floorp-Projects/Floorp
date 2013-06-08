@@ -404,7 +404,7 @@ SkipUTF8BOM(FILE* file)
 }
 
 static void
-Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
+ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
 {
     bool ok, hitEOF;
     RootedScript script(cx);
@@ -416,66 +416,8 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
     size_t uc_len;
     int lineno;
     int startline;
-    FILE *file;
     uint32_t oldopts;
 
-    RootedObject obj(cx, obj_);
-
-    if (forceTTY || !filename || strcmp(filename, "-") == 0) {
-        file = stdin;
-    } else {
-        file = fopen(filename, "r");
-        if (!file) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                                 JSSMSG_CANT_OPEN, filename, strerror(errno));
-            gExitCode = EXITCODE_FILE_NOT_FOUND;
-            return;
-        }
-    }
-
-    SetContextOptions(cx);
-
-    if (!forceTTY && !isatty(fileno(file)))
-    {
-        SkipUTF8BOM(file);
-
-        /*
-         * It's not interactive - just execute it.  Support the UNIX #! shell
-         * hack, and gobble the first line if it starts with '#'.
-         */
-        int ch = fgetc(file);
-        if (ch == '#') {
-            while((ch = fgetc(file)) != EOF) {
-                if (ch == '\n' || ch == '\r')
-                    break;
-            }
-        }
-        ungetc(ch, file);
-
-        int64_t t1 = PRMJ_Now();
-        oldopts = JS_GetOptions(cx);
-        gGotError = false;
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        CompileOptions options(cx);
-        options.setUTF8(true)
-               .setFileAndLine(filename, 1);
-        script = JS::Compile(cx, obj, options, file);
-        JS_SetOptions(cx, oldopts);
-        JS_ASSERT_IF(!script, gGotError);
-        if (script && !compileOnly) {
-            if (!JS_ExecuteScript(cx, obj, script, NULL)) {
-                if (!gQuitting && !gTimedOut)
-                    gExitCode = EXITCODE_RUNTIME_ERROR;
-            }
-            int64_t t2 = PRMJ_Now() - t1;
-            if (printTiming)
-                printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
-        }
-
-        goto cleanup;
-    }
-
-    /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
     hitEOF = false;
     buffer = NULL;
@@ -499,7 +441,7 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
                     free(buffer);
-                    goto cleanup;
+                    return;
                 }
                 hitEOF = true;
                 break;
@@ -520,7 +462,7 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
                         free(buffer);
                         free(line);
                         JS_ReportOutOfMemory(cx);
-                        goto cleanup;
+                        return;
                     }
                     buffer = newBuf;
                 }
@@ -585,10 +527,82 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
 
     free(buffer);
     fprintf(gOutFile, "\n");
-cleanup:
-    if (file != stdin)
-        fclose(file);
-    return;
+}
+
+class AutoCloseInputFile
+{
+  private:
+    FILE *f_;
+  public:
+    explicit AutoCloseInputFile(FILE *f) : f_(f) {}
+    ~AutoCloseInputFile() {
+        if (f_ && f_ != stdin)
+            fclose(f_);
+    }
+};
+
+static void
+Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
+{
+    RootedObject obj(cx, obj_);
+
+    FILE *file;
+    if (forceTTY || !filename || strcmp(filename, "-") == 0) {
+        file = stdin;
+    } else {
+        file = fopen(filename, "r");
+        if (!file) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_CANT_OPEN, filename, strerror(errno));
+            gExitCode = EXITCODE_FILE_NOT_FOUND;
+            return;
+        }
+    }
+    AutoCloseInputFile autoClose(file);
+
+    SetContextOptions(cx);
+
+    if (!forceTTY && !isatty(fileno(file))) {
+        SkipUTF8BOM(file);
+
+        /*
+         * It's not interactive - just execute it.  Support the UNIX #! shell
+         * hack, and gobble the first line if it starts with '#'.
+         */
+        int ch = fgetc(file);
+        if (ch == '#') {
+            while ((ch = fgetc(file)) != EOF) {
+                if (ch == '\n' || ch == '\r')
+                    break;
+            }
+        }
+        ungetc(ch, file);
+
+        int64_t t1 = PRMJ_Now();
+        uint32_t oldopts = JS_GetOptions(cx);
+        gGotError = false;
+        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
+        CompileOptions options(cx);
+        options.setUTF8(true)
+               .setFileAndLine(filename, 1);
+
+        RootedScript script(cx);
+        script = JS::Compile(cx, obj, options, file);
+        JS_SetOptions(cx, oldopts);
+        JS_ASSERT_IF(!script, gGotError);
+        if (script && !compileOnly) {
+            if (!JS_ExecuteScript(cx, obj, script, NULL)) {
+                if (!gQuitting && !gTimedOut)
+                    gExitCode = EXITCODE_RUNTIME_ERROR;
+            }
+            int64_t t2 = PRMJ_Now() - t1;
+            if (printTiming)
+                printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
+        }
+    } else {
+        // It's an interactive filehandle; drop into read-eval-print loop.
+        ReadEvalPrintLoop(cx, obj, file, compileOnly);
+    }
 }
 
 /*
