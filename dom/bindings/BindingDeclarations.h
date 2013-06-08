@@ -562,7 +562,7 @@ public:
   // callers should do it as needed.
   bool SetTimeStamp(JSContext* cx, JSObject* obj);
 
-  bool ToDateObject(JSContext* cx, JS::Value* vp) const;
+  bool ToDateObject(JSContext* cx, JS::MutableHandle<JS::Value> rval) const;
 
 private:
   double mMsecSinceEpoch;
