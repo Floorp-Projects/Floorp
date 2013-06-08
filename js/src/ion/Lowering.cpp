@@ -377,16 +377,15 @@ LIRGenerator::visitCall(MCall *call)
     // Call DOM functions.
     if (call->isDOMFunction()) {
         JS_ASSERT(target && target->isNative());
-        Register cxReg, objReg, privReg, argcReg, valueReg;
+        Register cxReg, objReg, privReg, argsReg;
         GetTempRegForIntArg(0, 0, &cxReg);
         GetTempRegForIntArg(1, 0, &objReg);
         GetTempRegForIntArg(2, 0, &privReg);
-        GetTempRegForIntArg(3, 0, &argcReg);
-        mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(4, 0, &valueReg);
-        MOZ_ASSERT(ok, "How can we not have five temp registers?");
+        mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &argsReg);
+        MOZ_ASSERT(ok, "How can we not have four temp registers?");
         LCallDOMNative *lir = new LCallDOMNative(argslot, tempFixed(cxReg),
                                                  tempFixed(objReg), tempFixed(privReg),
-                                                 tempFixed(argcReg), tempFixed(valueReg));
+                                                 tempFixed(argsReg));
         return (defineReturn(lir, call) && assignSafepoint(lir, call));
     }
 

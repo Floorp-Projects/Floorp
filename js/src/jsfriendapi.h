@@ -1501,6 +1501,14 @@ class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUse
         return Base::hasDefined(i);
     }
 
+    static size_t offsetOfArgv() {
+        return offsetof(JSJitMethodCallArgs, argv_);
+    }
+
+    static size_t offsetOfArgc() {
+        return offsetof(JSJitMethodCallArgs, argc_);
+    }
+
     // Add get() as needed
 };
 
@@ -1511,13 +1519,13 @@ class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUse
  */
 typedef bool
 (* JSJitGetterOp)(JSContext *cx, JSHandleObject thisObj,
-                  void *specializedThis, JS::Value *vp);
+                  void *specializedThis, JSJitGetterCallArgs args);
 typedef bool
 (* JSJitSetterOp)(JSContext *cx, JSHandleObject thisObj,
-                  void *specializedThis, JS::Value *vp);
+                  void *specializedThis, JSJitSetterCallArgs args);
 typedef bool
 (* JSJitMethodOp)(JSContext *cx, JSHandleObject thisObj,
-                  void *specializedThis, unsigned argc, JS::Value *vp);
+                  void *specializedThis, const JSJitMethodCallArgs& args);
 
 struct JSJitInfo {
     enum OpType {

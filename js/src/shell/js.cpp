@@ -4555,16 +4555,16 @@ static JSClass *GetDomClass();
 #endif
 
 static bool
-dom_get_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *vp)
+dom_get_x(JSContext* cx, JSHandleObject obj, void *self, JSJitGetterCallArgs args)
 {
     JS_ASSERT(JS_GetClass(obj) == GetDomClass());
     JS_ASSERT(self == (void *)0x1234);
-    JS_SET_RVAL(cx, vp, JS_NumberValue(double(3.14)));
+    args.rval().set(JS_NumberValue(double(3.14)));
     return true;
 }
 
 static bool
-dom_set_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *argv)
+dom_set_x(JSContext* cx, JSHandleObject obj, void *self, JSJitSetterCallArgs args)
 {
     JS_ASSERT(JS_GetClass(obj) == GetDomClass());
     JS_ASSERT(self == (void *)0x1234);
@@ -4572,14 +4572,13 @@ dom_set_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *argv)
 }
 
 static bool
-dom_doFoo(JSContext* cx, JSHandleObject obj, void *self, unsigned argc, JS::Value *vp)
+dom_doFoo(JSContext* cx, JSHandleObject obj, void *self, const JSJitMethodCallArgs& args)
 {
     JS_ASSERT(JS_GetClass(obj) == GetDomClass());
     JS_ASSERT(self == (void *)0x1234);
 
-    /* Just return argc. */
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(argc);
+    /* Just return args.length(). */
+    args.rval().setInt32(args.length());
     return true;
 }
 
@@ -4651,12 +4650,13 @@ static JSClass *GetDomClass() {
 static JSBool
 dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
     if (JS_GetClass(obj) != &dom_class) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().set(UndefinedValue());
         return true;
     }
 
@@ -4665,12 +4665,13 @@ dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
     MOZ_ASSERT(info->type == JSJitInfo::Getter);
     JSJitGetterOp getter = info->getter;
-    return getter(cx, obj, val.toPrivate(), vp);
+    return getter(cx, obj, val.toPrivate(), JSJitGetterCallArgs(args));
 }
 
 static JSBool
 dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
@@ -4678,31 +4679,31 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
     JS_ASSERT(argc == 1);
 
     if (JS_GetClass(obj) != &dom_class) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().set(UndefinedValue());
         return true;
     }
 
-    JS::Value* argv = JS_ARGV(cx, vp);
     JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
     MOZ_ASSERT(info->type == JSJitInfo::Setter);
     JSJitSetterOp setter = info->setter;
-    if (!setter(cx, obj, val.toPrivate(), argv))
+    if (!setter(cx, obj, val.toPrivate(), JSJitSetterCallArgs(args)))
         return false;
-    JS_SET_RVAL(cx, vp, UndefinedValue());
+    args.rval().set(UndefinedValue());
     return true;
 }
 
 static JSBool
 dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
     if (JS_GetClass(obj) != &dom_class) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().set(UndefinedValue());
         return true;
     }
 
@@ -4711,7 +4712,7 @@ dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
     MOZ_ASSERT(info->type == JSJitInfo::Method);
     JSJitMethodOp method = info->method;
-    return method(cx, obj, val.toPrivate(), argc, vp);
+    return method(cx, obj, val.toPrivate(), JSJitMethodCallArgs(args));
 }
 
 static void
