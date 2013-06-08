@@ -2324,7 +2324,7 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
     JSAutoCompartment ac(cx, wrapper);
     // XXXbz Should we call the (slightly misnamed, really) WrapNativeParent
     // here?
-    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, val.address())) {
+    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, &val)) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
     }
