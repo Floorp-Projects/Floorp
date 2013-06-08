@@ -8,6 +8,7 @@
 
 #include "BluetoothA2dpManager.h"
 
+#include "BluetoothCommon.h"
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
@@ -18,7 +19,6 @@
 #include "nsIAudioManager.h"
 #include "nsIObserverService.h"
 
-#define BLUETOOTH_A2DP_STATUS_CHANGED "bluetooth-a2dp-status-changed"
 
 using namespace mozilla;
 USING_BLUETOOTH_NAMESPACE
