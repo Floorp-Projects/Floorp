@@ -1480,6 +1480,8 @@ class JSJitSetterCallArgs : protected JS::MutableHandleValue
     // Add get() or maybe hasDefined() as needed
 };
 
+struct JSJitMethodCallArgsTraits;
+
 /*
  * A class, expected to be passed by reference, which represents the CallArgs
  * for a JSJitMethodOp.
@@ -1488,6 +1490,7 @@ class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUse
 {
   private:
     typedef JS::detail::CallArgsBase<JS::detail::NoUsedRval> Base;
+    friend struct JSJitMethodCallArgsTraits;
 
   public:
     explicit JSJitMethodCallArgs(const JS::CallArgs& args) {
@@ -1509,15 +1512,13 @@ class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUse
         return Base::hasDefined(i);
     }
 
-    static size_t offsetOfArgv() {
-        return offsetof(JSJitMethodCallArgs, argv_);
-    }
-
-    static size_t offsetOfArgc() {
-        return offsetof(JSJitMethodCallArgs, argc_);
-    }
-
     // Add get() as needed
+};
+
+struct JSJitMethodCallArgsTraits
+{
+    static const size_t offsetOfArgv = offsetof(JSJitMethodCallArgs, argv_);
+    static const size_t offsetOfArgc = offsetof(JSJitMethodCallArgs, argc_);
 };
 
 /*
