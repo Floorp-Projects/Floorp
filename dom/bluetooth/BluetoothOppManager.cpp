@@ -86,7 +86,7 @@ static const uint32_t kUpdateProgressBase = 50 * 1024;
  */
 static const uint32_t kPutRequestHeaderSize = 6;
 
-StaticAutoPtr<BluetoothOppManager> sInstance;
+StaticRefPtr<BluetoothOppManager> sInstance;
 
 /*
  * FIXME / Bug 806749
@@ -1507,6 +1507,8 @@ BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
     Listen();
   }
 }
+
+NS_IMPL_ISUPPORTS0(BluetoothOppManager)
 
 bool
 BluetoothOppManager::AcquireSdcardMountLock()
