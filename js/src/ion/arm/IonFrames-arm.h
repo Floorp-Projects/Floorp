@@ -438,7 +438,7 @@ class IonDOMExitFrameLayout
     IonExitFrameLayout exit_;
     JSObject *thisObj;
 
-    // We need to split the Value in 2 field of 32 bits, otherwise the C++
+    // We need to split the Value in 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
@@ -472,7 +472,10 @@ class IonDOMMethodExitFrameLayout
     Value *argv_;
     uintptr_t argc_;
 
-    Value CalleeResult_;
+    // We need to split the Value in 2 fields of 32 bits, otherwise the C++
+    // compiler may add some padding between the fields.
+    uint32_t loCalleeResult_;
+    uint32_t hiCalleeResult_;
 
   public:
     static inline size_t Size() {
@@ -480,7 +483,7 @@ class IonDOMMethodExitFrameLayout
     }
 
     static size_t offsetOfResult() {
-        return offsetof(IonDOMMethodExitFrameLayout, CalleeResult_);
+        return offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_);
     }
     static size_t offsetOfArgcFromArgv() {
         return offsetof(IonDOMMethodExitFrameLayout, argc_) -
@@ -488,9 +491,9 @@ class IonDOMMethodExitFrameLayout
     }
     inline Value *vp() {
         // The code in visitCallDOMNative depends on this static assert holding
-        JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, CalleeResult_) ==
+        JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_) ==
                          (offsetof(IonDOMMethodExitFrameLayout, argc_) + sizeof(uintptr_t)));
-        return &CalleeResult_;
+        return reinterpret_cast<Value*>(&loCalleeResult_);
     }
     inline JSObject **thisObjAddress() {
         return &thisObj_;
