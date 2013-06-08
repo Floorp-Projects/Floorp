@@ -2426,8 +2426,7 @@ class JSToNativeConversionInfo():
         template: A string representing the conversion code.  This will have
                   template substitution performed on it as follows:
 
-          ${val} replaced by an expression for the JS::Value in question
-          ${valHandle} is a handle to the JS::Value in question
+          ${val} is a handle to the JS::Value in question
           ${mutableVal} is a mutable handle to the JS::Value in question
           ${holderName} replaced by the holder's name, if any
           ${declName} replaced by the declaration's name
@@ -2457,12 +2456,12 @@ class JSToNativeConversionInfo():
 
         declArgs: If not None, the arguments to pass to the ${declName}
                   constructor.  These will have template substitution performed
-                  on them so you can use things like ${valHandle}.  This is a
+                  on them so you can use things like ${val}.  This is a
                   single string, not a list of strings.
 
         holderArgs: If not None, the arguments to pass to the ${holderName}
                     constructor.  These will have template substitution
-                    performed on them so you can use things like ${valHandle}.
+                    performed on them so you can use things like ${val}.
                     This is a single string, not a list of strings.
 
         ${declName} must be in scope before the code from 'template' is entered.
@@ -2659,7 +2658,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     isMember == "Dictionary")
             # We'll get traced by the sequence or dictionary tracer
             declType = CGGeneric("JSObject*")
-        templateBody = "${declName} = &${valHandle}.toObject();"
+        templateBody = "${declName} = &${val}.toObject();"
         setToNullCode = "${declName} = nullptr;"
         template = wrapObjectTemplate(templateBody, type, setToNullCode,
                                       failureCode)
@@ -2757,8 +2756,7 @@ for (uint32_t i = 0; i < length; ++i) {
         templateBody += CGIndenter(CGGeneric(
                 string.Template(elementInfo.template).substitute(
                     {
-                        "val" : "temp",
-                        "valHandle": "temp",
+                        "val": "temp",
                         "mutableVal": "&temp",
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
@@ -2811,7 +2809,7 @@ for (uint32_t i = 0; i < length; ++i) {
                     name = memberType.inner.identifier.name
                 else:
                     name = memberType.name
-                interfaceObject.append(CGGeneric("(failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext" % (unionArgumentObj, name)))
+                interfaceObject.append(CGGeneric("(failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext" % (unionArgumentObj, name)))
                 names.append(name)
             interfaceObject = CGWrapper(CGList(interfaceObject, " ||\n"), pre="done = ", post=";\n", reindent=True)
         else:
@@ -2822,7 +2820,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(arrayObjectMemberTypes) == 1
             memberType = arrayObjectMemberTypes[0]
             name = memberType.name
-            arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             arrayObject = CGIfWrapper(arrayObject, "IsArrayLike(cx, argObj)")
             names.append(name)
         else:
@@ -2845,7 +2843,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(callbackMemberTypes) == 1
             memberType = callbackMemberTypes[0]
             name = memberType.name
-            callbackObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            callbackObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             names.append(name)
         else:
             callbackObject = None
@@ -2889,8 +2887,8 @@ for (uint32_t i = 0; i < length; ++i) {
 
             if any([arrayObject, dateObject, callbackObject, dictionaryObject,
                     object]):
-                templateBody.prepend(CGGeneric("JS::Rooted<JSObject*> argObj(cx, &${valHandle}.toObject());"))
-            templateBody = CGIfWrapper(templateBody, "${valHandle}.isObject()")
+                templateBody.prepend(CGGeneric("JS::Rooted<JSObject*> argObj(cx, &${val}.toObject());"))
+            templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
         else:
             templateBody = CGGeneric()
 
@@ -2904,7 +2902,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 name = memberType.inner.identifier.name
             else:
                 name = memberType.name
-            other = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            other = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             names.append(name)
             if hasObjectTypes:
                 other = CGWrapper(CGIndenter(other), "{\n", post="\n}")
@@ -3068,7 +3066,7 @@ for (uint32_t i = 0; i < length; ++i) {
                     codeOnFailure=failureCode))
             templateBody += (
                 "{ // Scope for callbackObj\n"
-                "  JS::Rooted<JSObject*> callbackObj(cx, &${valHandle}.toObject());\n" +
+                "  JS::Rooted<JSObject*> callbackObj(cx, &${val}.toObject());\n" +
                 CGIndenter(CGGeneric(callbackConversion)).define() +
                 "\n}")
         elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
@@ -3214,7 +3212,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         def getConversionCode(varName):
             conversionCode = (
-                "if (!ConvertJSValueToString(cx, ${valHandle}, ${mutableVal}, %s, %s, %s)) {\n"
+                "if (!ConvertJSValueToString(cx, ${val}, ${mutableVal}, %s, %s, %s)) {\n"
                 "%s\n"
                 "}" % (nullBehavior, undefinedBehavior, varName,
                        exceptionCodeIndented.define()))
@@ -3330,7 +3328,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                             "workers; need to sort out rooting"
                                             "issues")
             declType = CGGeneric("JS::Rooted<JSObject*>")
-            conversion = "  ${declName} = &${valHandle}.toObject();\n"
+            conversion = "  ${declName} = &${val}.toObject();\n"
             declArgs = "cx"
         else:
             name = type.unroll().identifier.name
@@ -3425,9 +3423,9 @@ for (uint32_t i = 0; i < length; ++i) {
         if (not isNullOrUndefined and not isDefinitelyObject and
             defaultValue is not None):
             assert(isinstance(defaultValue, IDLNullValue))
-            val = "(${haveValue}) ? ${valHandle} : JS::NullHandleValue"
+            val = "(${haveValue}) ? ${val} : JS::NullHandleValue"
         else:
-            val = "${valHandle}"
+            val = "${val}"
 
         if failureCode is not None:
             assert isDefinitelyObject
@@ -3435,7 +3433,7 @@ for (uint32_t i = 0; i < length; ++i) {
             # a dictionary, and return failureCode if not.
             template = CGIfWrapper(
                 CGGeneric(failureCode),
-                "!IsObjectValueConvertibleToDictionary(cx, ${valHandle})").define() + "\n\n"
+                "!IsObjectValueConvertibleToDictionary(cx, ${val})").define() + "\n\n"
         else:
             template = ""
 
@@ -3512,7 +3510,7 @@ for (uint32_t i = 0; i < length; ++i) {
         template = (
             "if (%s) {\n"
             "  ${declName}.SetNull();\n"
-            "} else if (!ValueToPrimitive<%s, %s>(cx, ${valHandle}, &%s)) {\n"
+            "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "%s\n"
             "}" % (nullCondition, typeName, conversionBehavior,
                    writeLoc, exceptionCodeIndented.define()))
@@ -3522,7 +3520,7 @@ for (uint32_t i = 0; i < length; ++i) {
         writeLoc = "${declName}"
         readLoc = writeLoc
         template = (
-            "if (!ValueToPrimitive<%s, %s>(cx, ${valHandle}, &%s)) {\n"
+            "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "%s\n"
             "}" % (typeName, conversionBehavior, writeLoc,
                    exceptionCodeIndented.define()))
@@ -3701,7 +3699,6 @@ class CGArgumentConverter(CGThing):
         self.replacementVariables["val"] = string.Template(
             "args.handleAt(${index})"
             ).substitute(replacer)
-        self.replacementVariables["valHandle"] = self.replacementVariables["val"]
         self.replacementVariables["mutableVal"] = self.replacementVariables["val"]
         if argument.treatUndefinedAs == "Missing":
             haveValueCheck = "args.hasDefined(${index})"
@@ -3773,7 +3770,6 @@ class CGArgumentConverter(CGThing):
                 string.Template(typeConversion.template).substitute(
                     {
                         "val" : val,
-                        "valHandle" : val,
                         "mutableVal" : val,
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
@@ -4814,7 +4810,6 @@ class CGMethodCall(CGThing):
                         "declName" : "arg%d" % distinguishingIndex,
                         "holderName" : ("arg%d" % distinguishingIndex) + "_holder",
                         "val" : distinguishingArg,
-                        "valHandle" : distinguishingArg,
                         "mutableVal" : distinguishingArg,
                         "obj" : "obj"
                         })
@@ -5726,7 +5721,6 @@ return true;"""
         jsConversion = string.Template(conversionInfo.template).substitute(
             {
                 "val": "value",
-                "valHandle": "value",
                 "mutableVal": "pvalue",
                 "declName": "SetAs" + name + "()",
                 "holderName": "m" + name + "Holder",
@@ -6584,8 +6578,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
             templateValues = {
                 "declName": argument.identifier.name,
                 "holderName": argument.identifier.name + "_holder",
-                "val": "desc->value",
-                "valHandle" : "JS::Handle<JS::Value>::fromMarkedLocation(&desc->value)",
+                "val" : "JS::Handle<JS::Value>::fromMarkedLocation(&desc->value)",
                 "mutableVal" : "JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)",
                 "obj": "obj"
             }
@@ -7792,7 +7785,6 @@ class CGDictionary(CGThing):
     def getMemberConversion(self, memberInfo):
         (member, conversionInfo) = memberInfo
         replacements = { "val": "temp",
-                         "valHandle": "temp",
                          "mutableVal": "&temp",
                          "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
@@ -9413,7 +9405,6 @@ class CallbackMember(CGNativeMember):
     def getResultConversion(self):
         replacements = {
             "val": "rval",
-            "valHandle": "rval",
             "mutableVal": "&rval",
             "holderName" : "rvalHolder",
             "declName" : "rvalDecl",
