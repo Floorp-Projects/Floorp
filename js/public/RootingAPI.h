@@ -579,6 +579,11 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
         return ptr;
     }
 
+    void set(T value) {
+        JS_ASSERT(!js::RootMethods<T>::poisoned(value));
+        ptr = value;
+    }
+
     bool operator!=(const T &other) { return ptr != other; }
     bool operator==(const T &other) { return ptr == other; }
 
