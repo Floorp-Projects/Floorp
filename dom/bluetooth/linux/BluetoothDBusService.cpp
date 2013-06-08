@@ -60,10 +60,11 @@ using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
 #define B2G_AGENT_CAPABILITIES "DisplayYesNo"
-#define DBUS_MANAGER_IFACE BLUEZ_DBUS_BASE_IFC ".Manager"
-#define DBUS_ADAPTER_IFACE BLUEZ_DBUS_BASE_IFC ".Adapter"
-#define DBUS_DEVICE_IFACE BLUEZ_DBUS_BASE_IFC ".Device"
-#define DBUS_AGENT_IFACE BLUEZ_DBUS_BASE_IFC ".Agent"
+#define DBUS_MANAGER_IFACE BLUEZ_DBUS_BASE_IFC  ".Manager"
+#define DBUS_ADAPTER_IFACE BLUEZ_DBUS_BASE_IFC  ".Adapter"
+#define DBUS_DEVICE_IFACE BLUEZ_DBUS_BASE_IFC   ".Device"
+#define DBUS_AGENT_IFACE BLUEZ_DBUS_BASE_IFC    ".Agent"
+#define DBUS_SINK_IFACE BLUEZ_DBUS_BASE_IFC     ".AudioSink"
 #define BLUEZ_DBUS_BASE_PATH      "/org/bluez"
 #define BLUEZ_DBUS_BASE_IFC       "org.bluez"
 #define BLUEZ_ERROR_IFC           "org.bluez.Error"
@@ -148,6 +149,7 @@ static nsString sAdapterPath;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
+typedef void (*SinkCallback)(DBusMessage*, void*);
 
 class RemoveDeviceTask : public nsRunnable {
 public:
@@ -220,7 +222,8 @@ GetPairedDevicesFilter(const BluetoothValue& aValue)
   return false;
 }
 
-class SendDiscoveryTask : public nsRunnable {
+class SendDiscoveryTask : public nsRunnable
+{
 public:
   SendDiscoveryTask(const char* aMessageName,
                     BluetoothReplyRunnable* aRunnable)
@@ -257,8 +260,8 @@ private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
-class DistributeBluetoothSignalTask : public nsRunnable {
-  BluetoothSignal mSignal;
+class DistributeBluetoothSignalTask : public nsRunnable
+{
 public:
   DistributeBluetoothSignalTask(const BluetoothSignal& aSignal) :
     mSignal(aSignal)
@@ -277,9 +280,13 @@ public:
     bs->DistributeSignal(mSignal);
     return NS_OK;
   }
+
+private:
+  BluetoothSignal mSignal;
 };
 
-class PrepareAdapterTask : public nsRunnable {
+class PrepareAdapterTask : public nsRunnable
+{
 public:
   PrepareAdapterTask(const nsAString& aPath) :
     mPath(aPath)
@@ -894,7 +901,7 @@ public:
   }
 };
 
-void
+static void
 RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
                 UnpackFunc aFunc)
 {
@@ -916,7 +923,7 @@ RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
   DispatchBluetoothReply(replyRunnable, v, replyError);
 }
 
-void
+static void
 GetObjectPathCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 {
   if (sIsPairing) {
@@ -926,7 +933,7 @@ GetObjectPathCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
   }
 }
 
-void
+static void
 UnpackVoidMessage(DBusMessage* aMsg, DBusError* aErr, BluetoothValue& aValue,
                   nsAString& aErrorStr)
 {
@@ -940,27 +947,57 @@ UnpackVoidMessage(DBusMessage* aMsg, DBusError* aErr, BluetoothValue& aValue,
       LOG_AND_FREE_DBUS_ERROR(&err);
     }
   }
-  // XXXbent Need to figure out something better than this here.
-  if (aErrorStr.IsEmpty()) {
-    aValue = true;
-  }
+  aValue = aErrorStr.IsEmpty();
 }
 
-void
+static void
 GetVoidCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 {
   RunDBusCallback(aMsg, aBluetoothReplyRunnable,
                   UnpackVoidMessage);
 }
 
-void
+static void
 GetIntCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 {
   RunDBusCallback(aMsg, aBluetoothReplyRunnable,
                   UnpackIntMessage);
 }
 
-bool
+#ifdef DEBUG
+static void
+CheckForSinkError(bool aConnect, DBusMessage* aMsg, void *aParam)
+{
+  BluetoothValue v;
+  nsAutoString replyError;
+  UnpackVoidMessage(aMsg, nullptr, v, replyError);
+  if (!v.get_bool()) {
+    if (aConnect) {
+      BT_WARNING("Failed to connect sink.");
+      return;
+    }
+    BT_WARNING("Failed to disconnect sink.");
+  }
+}
+#endif
+
+static void
+SinkConnectCallback(DBusMessage* aMsg, void* aParam)
+{
+#ifdef DEBUG
+  CheckForSinkError(true, aMsg, aParam);
+#endif
+}
+
+static void
+SinkDisconnectCallback(DBusMessage* aMsg, void* aParam)
+{
+#ifdef DEBUG
+  CheckForSinkError(false, aMsg, aParam);
+#endif
+}
+
+static bool
 IsDeviceConnectedTypeBoolean()
 {
 #if defined(MOZ_WIDGET_GONK)
@@ -977,38 +1014,13 @@ IsDeviceConnectedTypeBoolean()
 #endif
 }
 
-void
-CopyProperties(Properties* inProp, Properties* outProp, int aPropertyTypeLen)
-{
-  int i;
-
-  for (i = 0; i < aPropertyTypeLen; i++) {
-    outProp[i].name = inProp[i].name;
-    outProp[i].type = inProp[i].type;
-  }
-}
-
-int
-GetPropertyIndex(Properties* prop, const char* propertyName,
-                 int aPropertyTypeLen)
-{
-  int i;
-
-  for (i = 0; i < aPropertyTypeLen; i++) {
-    if (!strncmp(propertyName, prop[i].name, strlen(propertyName))) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-bool
+static bool
 HasAudioService(uint32_t aCodValue)
 {
   return ((aCodValue & 0x200000) == 0x200000);
 }
 
-bool
+static bool
 ContainsIcon(const InfallibleTArray<BluetoothNamedValue>& aProperties)
 {
   for (uint8_t i = 0; i < aProperties.Length(); i++) {
@@ -1019,7 +1031,7 @@ ContainsIcon(const InfallibleTArray<BluetoothNamedValue>& aProperties)
   return false;
 }
 
-bool
+static bool
 GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
             int aPropertyTypeLen, int* aPropIndex,
             InfallibleTArray<BluetoothNamedValue>& aProperties)
@@ -1145,7 +1157,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   return true;
 }
 
-void
+static void
 ParseProperties(DBusMessageIter* aIter,
                 BluetoothValue& aValue,
                 nsAString& aErrorStr,
@@ -1176,7 +1188,7 @@ ParseProperties(DBusMessageIter* aIter,
   aValue = props;
 }
 
-void
+static void
 UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                         BluetoothValue& aValue, nsAString& aErrorStr,
                         Properties* aPropertyTypes,
@@ -1194,7 +1206,7 @@ UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
   }
 }
 
-void
+static void
 UnpackAdapterPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                                BluetoothValue& aValue,
                                nsAString& aErrorStr)
@@ -1204,7 +1216,7 @@ UnpackAdapterPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                           ArrayLength(sAdapterProperties));
 }
 
-void
+static void
 UnpackDevicePropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                               BluetoothValue& aValue,
                               nsAString& aErrorStr)
@@ -1214,7 +1226,7 @@ UnpackDevicePropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                           ArrayLength(sDeviceProperties));
 }
 
-void
+static void
 UnpackManagerPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                                BluetoothValue& aValue,
                                nsAString& aErrorStr)
@@ -1224,21 +1236,21 @@ UnpackManagerPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                           ArrayLength(sManagerProperties));
 }
 
-void
+static void
 GetManagerPropertiesCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 {
   RunDBusCallback(aMsg, aBluetoothReplyRunnable,
                   UnpackManagerPropertiesMessage);
 }
 
-void
+static void
 GetAdapterPropertiesCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 {
   RunDBusCallback(aMsg, aBluetoothReplyRunnable,
                   UnpackAdapterPropertiesMessage);
 }
 
-void
+static void
 GetDevicePropertiesCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 {
   RunDBusCallback(aMsg, aBluetoothReplyRunnable,
@@ -1256,7 +1268,7 @@ MOZ_STATIC_ASSERT(
   sizeof(sBluetoothDBusPropCallbacks) == sizeof(sBluetoothDBusIfaces),
   "DBus Property callback array and DBus interface array must be same size");
 
-void
+static void
 ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
                     nsAString& aErrorStr, Properties* aPropertyTypes,
                     const int aPropertyTypeLen)
@@ -1281,7 +1293,7 @@ ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
   aValue = props;
 }
 
-bool
+static bool
 GetPropertiesInternal(const nsAString& aPath,
                       const char* aIface,
                       BluetoothValue& aValue)
@@ -1323,8 +1335,7 @@ GetPropertiesInternal(const nsAString& aPath,
 
 // Called by dbus during WaitForAndDispatchEventNative()
 // This function is called on the IOThread
-static
-DBusHandlerResult
+static DBusHandlerResult
 EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Shouldn't be called from Main Thread!");
@@ -1824,6 +1835,39 @@ BluetoothDBusService::SendDiscoveryMessage(const char* aMessageName,
 }
 
 nsresult
+BluetoothDBusService::SendSinkMessage(const nsAString& aDeviceAddress,
+                                      const nsAString& aMessage)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mConnection);
+
+  NS_ENSURE_TRUE(IsReady(), NS_ERROR_FAILURE);
+
+  SinkCallback callback;
+  if (aMessage.EqualsLiteral("Connect")) {
+    callback = SinkConnectCallback;
+  } else if (aMessage.EqualsLiteral("Disconnect")) {
+    callback = SinkDisconnectCallback;
+  } else {
+    BT_WARNING("Unknown sink message");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsString objectPath = GetObjectPathFromAddress(sAdapterPath, aDeviceAddress);
+  bool ret = dbus_func_args_async(mConnection,
+                                  -1,
+                                  callback,
+                                  nullptr,
+                                  NS_ConvertUTF16toUTF8(objectPath).get(),
+                                  DBUS_SINK_IFACE,
+                                  NS_ConvertUTF16toUTF8(aMessage).get(),
+                                  DBUS_TYPE_INVALID);
+
+  NS_ENSURE_TRUE(ret, NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+nsresult
 BluetoothDBusService::StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable)
 {
   return SendDiscoveryMessage("StopDiscovery", aRunnable);
@@ -2181,7 +2225,7 @@ BluetoothDBusService::GetDevicePath(const nsAString& aAdapterPath,
   return true;
 }
 
-int
+static int
 GetDeviceServiceChannel(const nsAString& aObjectPath,
                         const nsAString& aPattern,
                         int aAttributeId)

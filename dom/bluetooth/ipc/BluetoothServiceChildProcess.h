@@ -152,6 +152,10 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual nsresult
+  SendSinkMessage(const nsAString& aDeviceAddresses,
+                  const nsAString& aMessage) MOZ_OVERRIDE;
+
 protected:
   BluetoothServiceChildProcess();
   virtual ~BluetoothServiceChildProcess();
