@@ -9132,18 +9132,6 @@ if test -n "$ARM_ARCH"; then
     fi
 fi
 
-# Keep libcubeb and audio_device backends in sync
-if test -n "$MOZ_ALSA"; then
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_alsa_audio=1"
-else
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_alsa_audio=0"
-fi
-if test -n "$MOZ_PULSEAUDIO"; then
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_pulse_audio=1"
-else
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_pulse_audio=0"
-fi
-
 # Don't try to compile ssse3/sse4.1 code if toolchain doesn't support
 if test -z "$HAVE_TOOLCHAIN_SUPPORT_SSSE3" || test -z "$HAVE_TOOLCHAIN_SUPPORT_MSSE4_1"; then
   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D yuv_disable_asm=1"
