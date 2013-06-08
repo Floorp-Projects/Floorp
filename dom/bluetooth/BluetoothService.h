@@ -283,6 +283,10 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual nsresult
+  SendSinkMessage(const nsAString& aDeviceAddresses,
+                  const nsAString& aMessage) = 0;
+
   bool
   IsEnabled() const
   {
