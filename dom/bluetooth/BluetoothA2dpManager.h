@@ -39,6 +39,8 @@ private:
   bool Init();
   void Cleanup();
 
+  void HandleSinkStateChanged(SinkState aState);
+
   bool mConnected;
   bool mPlaying;
   nsString mDeviceAddress;

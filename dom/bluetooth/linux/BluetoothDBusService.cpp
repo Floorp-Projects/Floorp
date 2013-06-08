@@ -18,6 +18,7 @@
 
 #include "base/basictypes.h"
 #include "BluetoothDBusService.h"
+#include "BluetoothA2dpManager.h"
 #include "BluetoothHfpManager.h"
 #include "BluetoothOppManager.h"
 #include "BluetoothReplyRunnable.h"
@@ -114,6 +115,12 @@ static Properties sAdapterProperties[] = {
 
 static Properties sManagerProperties[] = {
   {"Adapters", DBUS_TYPE_ARRAY},
+};
+
+static Properties sSinkProperties[] = {
+  {"State", DBUS_TYPE_STRING},
+  {"Connected", DBUS_TYPE_BOOLEAN},
+  {"Playing", DBUS_TYPE_BOOLEAN}
 };
 
 static const char* sBluetoothDBusIfaces[] =
@@ -342,6 +349,35 @@ public:
       NS_WARNING("Get device properties failed");
       return NS_ERROR_FAILURE;
     }
+    return NS_OK;
+  }
+
+private:
+  BluetoothSignal mSignal;
+};
+
+class SinkPropertyChangedHandler : public nsRunnable
+{
+public:
+  SinkPropertyChangedHandler(const BluetoothSignal& aSignal)
+    : mSignal(aSignal)
+  {
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mSignal.name().EqualsLiteral("PropertyChanged"));
+    MOZ_ASSERT(mSignal.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+    // Replace object path with device address
+    nsString address = GetAddressFromObjectPath(mSignal.path());
+    mSignal.path() = address;
+
+    BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+    NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
+    a2dp->HandleSinkPropertyChanged(mSignal);
     return NS_OK;
   }
 
@@ -1531,6 +1567,13 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         errorStr,
                         sManagerProperties,
                         ArrayLength(sManagerProperties));
+  } else if (dbus_message_is_signal(aMsg, DBUS_SINK_IFACE,
+                                    "PropertyChanged")) {
+    ParsePropertyChange(aMsg,
+                        v,
+                        errorStr,
+                        sSinkProperties,
+                        ArrayLength(sSinkProperties));
   } else {
     nsAutoCString signalStr;
     signalStr += dbus_message_get_member(aMsg);
@@ -1545,9 +1588,14 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   }
 
   BluetoothSignal signal(signalName, signalPath, v);
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+  nsRefPtr<nsRunnable> task;
+  if (signalInterface.EqualsLiteral(DBUS_SINK_IFACE)) {
+    task = new SinkPropertyChangedHandler(signal);
+  } else {
+    task = new DistributeBluetoothSignalTask(signal);
+  }
+
+  if (NS_FAILED(NS_DispatchToMainThread(task))) {
     NS_WARNING("Failed to dispatch to main thread!");
   }
 
