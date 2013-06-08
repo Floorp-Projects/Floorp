@@ -1303,7 +1303,7 @@ WrapStyle(JSContext* cx, JSObject* objArg,
     case CanvasRenderingContext2D::CMG_STYLE_GRADIENT:
     {
       JS::Rooted<JSObject*> obj(cx, objArg);
-      ok = dom::WrapObject(cx, obj, supports, v.address());
+      ok = dom::WrapObject(cx, obj, supports, &v);
       break;
     }
     default:

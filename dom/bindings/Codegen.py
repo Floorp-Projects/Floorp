@@ -1126,7 +1126,7 @@ class CGConstructNavigatorObject(CGAbstractMethod):
     return nullptr;
   }
   JS::Rooted<JS::Value> v(aCx);
-  if (!WrapNewBindingObject(aCx, aObj, result, v.address())) {
+  if (!WrapNewBindingObject(aCx, aObj, result, &v)) {
     MOZ_ASSERT(JS_IsExceptionPending(aCx));
     return nullptr;
   }
@@ -3799,7 +3799,16 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     the 'break' will exit).
 
     The resulting string should be used with string.Template.  It
-    needs the following keys when substituting: jsvalPtr/jsvalRef/obj.
+    needs the following keys when substituting:
+
+      jsvalHandle: something that can be passed to methods taking a
+                   JS::MutableHandle<JS::Value>.  This can be a
+                   JS::MutableHandle<JS::Value> or a JS::Rooted<JS::Value>*.
+      jsvalRef: something that can have .address() called on it to get a
+                JS::Value* and .set() called on it to set it to a JS::Value.
+                This can be a JS::MutableHandle<JS::Value> or a
+                JS::Rooted<JS::Value>.
+      obj: a JS::Handle<JSObject*>.
 
     Returns (templateString, infallibility of conversion template)
     """
@@ -3818,11 +3827,11 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         if not callWrapValue:
             tail = successCode
         else:
-            tail = ("if (!MaybeWrapValue(cx, ${jsvalPtr})) {\n" +
+            tail = ("if (!MaybeWrapValue(cx, ${jsvalHandle})) {\n" +
                     ("%s\n" % exceptionCodeIndented.define()) +
                     "}\n" +
                     successCode)
-        return ("${jsvalRef} = %s;\n" +
+        return ("${jsvalRef}.set(%s);\n" +
                 tail) % (value)
 
     def wrapAndSetPtr(wrapCall, failureCode=None):
@@ -3869,7 +3878,7 @@ if (%s.IsNull()) {
                 'result' :  "%s[%s]" % (result, index),
                 'successCode': "break;",
                 'jsvalRef': "tmp",
-                'jsvalPtr': "tmp.address()",
+                'jsvalHandle': "&tmp",
                 'isCreator': isCreator,
                 'exceptionCode': exceptionCode,
                 'obj': "returnArray"
@@ -3925,7 +3934,7 @@ if (!returnArray) {
                     wrapMethod = "WrapNewBindingNonWrapperCachedOwnedObject"
                 else:
                     wrapMethod = "WrapNewBindingNonWrapperCachedObject"
-            wrap = "%s(cx, ${obj}, %s, ${jsvalPtr})" % (wrapMethod, result)
+            wrap = "%s(cx, ${obj}, %s, ${jsvalHandle})" % (wrapMethod, result)
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
                 # if they already threw an exception.
@@ -3937,13 +3946,13 @@ if (!returnArray) {
                                     "fallback won't work correctly" %
                                     descriptor.interface.identifier.name)
                 # Try old-style wrapping for bindings which might be XPConnect impls.
-                failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalPtr})" % result)
+                failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalHandle})" % result)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
             else:
                 getIID = ""
-            wrap = "WrapObject(cx, ${obj}, %s, %s${jsvalPtr})" % (result, getIID)
+            wrap = "WrapObject(cx, ${obj}, %s, %s${jsvalHandle})" % (result, getIID)
             failed = None
 
         wrappingCode += wrapAndSetPtr(wrap, failed)
@@ -3951,9 +3960,9 @@ if (!returnArray) {
 
     if type.isString():
         if type.nullable():
-            return (wrapAndSetPtr("xpc::StringToJsval(cx, %s, ${jsvalPtr})" % result), False)
+            return (wrapAndSetPtr("xpc::StringToJsval(cx, %s, ${jsvalRef}.address())" % result), False)
         else:
-            return (wrapAndSetPtr("xpc::NonVoidStringToJsval(cx, %s, ${jsvalPtr})" % result), False)
+            return (wrapAndSetPtr("xpc::NonVoidStringToJsval(cx, %s, ${jsvalRef}.address())" % result), False)
 
     if type.isEnum():
         if type.nullable():
@@ -4022,7 +4031,7 @@ if (!returnArray) {
         else:
             prefix = "%s."
         return (wrapAndSetPtr((prefix % result) +
-                              "ToJSVal(cx, ${obj}, ${jsvalPtr})"), False)
+                              "ToJSVal(cx, ${obj}, ${jsvalHandle})"), False)
 
     if not (type.isPrimitive() or type.isDictionary() or type.isDate()):
         raise TypeError("Need to learn to wrap %s" % type)
@@ -4036,11 +4045,11 @@ if (!returnArray) {
                 "}\n" + recTemplate, recInfal)
 
     if type.isDictionary():
-        return (wrapAndSetPtr("%s.ToObject(cx, ${obj}, ${jsvalPtr})" % result),
+        return (wrapAndSetPtr("%s.ToObject(cx, ${obj}, ${jsvalHandle})" % result),
                 False)
 
     if type.isDate():
-        return (wrapAndSetPtr("%s.ToDateObject(cx, ${jsvalPtr})" % result),
+        return (wrapAndSetPtr("%s.ToDateObject(cx, ${jsvalHandle})" % result),
                 False)
 
     tag = type.tag()
@@ -4070,10 +4079,13 @@ def wrapForType(type, descriptorProvider, templateValues):
     Reflect a C++ value of IDL type "type" into JS.  TemplateValues is a dict
     that should contain:
 
-      * 'jsvalRef': a C++ reference to the jsval in which to store the result of
-                    the conversion
-      * 'jsvalPtr': a C++ pointer to the jsval in which to store the result of
-                    the conversion
+      * 'jsvalRef': something that can have .address() called on it to get a
+                    JS::Value* and .set() called on it to set it to a JS::Value.
+                    This can be a JS::MutableHandle<JS::Value> or a
+                    JS::Rooted<JS::Value>.
+      * 'jsvalHandle': something that can be passed to methods taking a
+                       JS::MutableHandle<JS::Value>.  This can be a
+                       JS::MutableHandle<JS::Value> or a JS::Rooted<JS::Value>*.
       * 'obj' (optional): the name of the variable that contains the JSObject to
                           use as a scope when wrapping, if not supplied 'obj'
                           will be used as the name
@@ -4571,8 +4583,8 @@ if (global.Failed()) {
                    # values or something
                    self.descriptor.workers)
 
-        resultTemplateValues = { 'jsvalRef': '*args.rval().address()',
-                                 'jsvalPtr': 'args.rval().address()',
+        resultTemplateValues = { 'jsvalRef': 'args.rval()',
+                                 'jsvalHandle': 'args.rval()',
                                  'isCreator': isCreator}
         try:
             return wrapForType(self.returnType, self.descriptor,
@@ -5821,7 +5833,8 @@ ${callDestructors}
 
 ${methods}
 
-  bool ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj, JS::Value* vp) const;
+  bool ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj,
+               JS::MutableHandle<JS::Value> rval) const;
 
 private:
   friend class ${structName}Argument;
@@ -5856,7 +5869,7 @@ ${destructors}
         if self.type.hasNullableType:
             conversionsToJS.append("    case eNull:\n"
                                    "    {\n"
-                                   "      *vp = JS::NullValue();\n"
+                                   "      rval.set(JS::NullValue());\n"
                                    "      return true;\n"
                                    "    }")
         conversionsToJS.extend(
@@ -5864,7 +5877,8 @@ ${destructors}
                 zip(templateVars, self.type.flatMemberTypes)))
 
         return string.Template("""bool
-${structName}::ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj, JS::Value* vp) const
+${structName}::ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj,
+                       JS::MutableHandle<JS::Value> rval) const
 {
   switch (mType) {
 ${doConversionsToJS}
@@ -5893,8 +5907,8 @@ ${doConversionsToJS}
         wrapCode = wrapForType(
             type, self.descriptorProvider,
             {
-                "jsvalRef": "*vp",
-                "jsvalPtr": "vp",
+                "jsvalRef": "rval",
+                "jsvalHandle": "rval",
                 "obj": "scopeObj",
                 "result": val,
                 "objectCanBeNonNull": True
@@ -6771,7 +6785,8 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             setOrIndexedGet += "int32_t index = GetArrayIndexFromId(cx, id);\n"
             readonly = toStringBool(indexedSetter is None)
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
-            templateValues = {'jsvalRef': 'desc->value', 'jsvalPtr': '&desc->value',
+            templateValues = {'jsvalRef': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
+                              'jsvalHandle': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
                               'obj': 'proxy', 'successCode': fillDescriptor}
             get = ("if (IsArrayIndex(index)) {\n" +
                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define() + "\n" +
@@ -6838,7 +6853,8 @@ MOZ_ASSERT_IF(desc->obj, desc->obj == ${holder});"""
         if self.descriptor.supportsNamedProperties():
             readonly = toStringBool(self.descriptor.operations['NamedSetter'] is None)
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
-            templateValues = {'jsvalRef': 'desc->value', 'jsvalPtr': '&desc->value',
+            templateValues = {'jsvalRef': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
+                              'jsvalHandle': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
                               'obj': 'proxy', 'successCode': fillDescriptor}
             condition = "!HasPropertyOnPrototype(cx, proxy, this, id)"
             if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
@@ -7169,7 +7185,7 @@ if (expando) {
   }
 }"""
 
-        templateValues = {'jsvalRef': '*vp.address()', 'jsvalPtr': 'vp.address()', 'obj': 'proxy'}
+        templateValues = {'jsvalRef': 'vp', 'jsvalHandle': 'vp', 'obj': 'proxy'}
 
         if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
@@ -7254,7 +7270,7 @@ class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
     def getBody(self):
         successCode = ("*present = found;\n"
                        "return true;")
-        templateValues = {'jsvalRef': '*vp.address()', 'jsvalPtr': 'vp.address()',
+        templateValues = {'jsvalRef': 'vp', 'jsvalHandle': 'vp',
                           'obj': 'proxy', 'successCode': successCode}
         if self.descriptor.supportsIndexedProperties():
             get = (CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
@@ -7649,10 +7665,10 @@ class CGDictionary(CGThing):
         if self.dictionary.parent:
             body += (
                 "// Per spec, we define the parent's members first\n"
-                "if (!%s::ToObject(cx, parentObject, vp)) {\n"
+                "if (!%s::ToObject(cx, parentObject, rval)) {\n"
                 "  return false;\n"
                 "}\n"
-                "JS::Rooted<JSObject*> obj(cx, &vp->toObject());\n"
+                "JS::Rooted<JSObject*> obj(cx, &rval.toObject());\n"
                 "\n") % self.makeClassName(self.dictionary.parent)
         else:
             body += (
@@ -7660,7 +7676,7 @@ class CGDictionary(CGThing):
                 "if (!obj) {\n"
                 "  return false;\n"
                 "}\n"
-                "*vp = JS::ObjectValue(*obj);\n"
+                "rval.set(JS::ObjectValue(*obj));\n"
                 "\n")
 
         body += "\n\n".join(self.getMemberDefinition(m).define()
@@ -7670,7 +7686,7 @@ class CGDictionary(CGThing):
         return ClassMethod("ToObject", "bool", [
             Argument('JSContext*', 'cx'),
             Argument('JS::Handle<JSObject*>', 'parentObject'),
-            Argument('JS::Value*', 'vp'),
+            Argument('JS::MutableHandle<JS::Value>', 'rval'),
         ], const=True, body=body)
 
     def initIdsMethod(self):
@@ -7875,7 +7891,7 @@ class CGDictionary(CGThing):
                                  "}\n"
                                  "break;" % propDef),
                 'jsvalRef': "temp",
-                'jsvalPtr': "temp.address()",
+                'jsvalHandle': "&temp",
                 'isCreator': False,
                 'obj': "parentObject"
             })
@@ -8996,7 +9012,7 @@ class CGJSImplMethod(CGNativeMember):
   nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
   JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
   JS::Rooted<JS::Value> wrappedVal(cx);
-  if (!WrapNewBindingObject(cx, scopeObj, impl, wrappedVal.address())) {
+  if (!WrapNewBindingObject(cx, scopeObj, impl, &wrappedVal)) {
     MOZ_ASSERT(JS_IsExceptionPending(cx));
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -9474,8 +9490,8 @@ class CallbackMember(CGNativeMember):
             {
                 'result' : result,
                 'successCode' : "continue;" if arg.variadic else "break;",
-                'jsvalRef' : "argv[%s]" % jsvalIndex,
-                'jsvalPtr' : "&argv[%s]" % jsvalIndex,
+                'jsvalRef' : "argv.handleAt(%s)" % jsvalIndex,
+                'jsvalHandle' : "argv.handleAt(%s)" % jsvalIndex,
                 # XXXbz we don't have anything better to use for 'obj',
                 # really...  It's OK to use CallbackPreserveColor because
                 # CallSetup already handled the unmark-gray bits for us.
