@@ -40,6 +40,7 @@ public:
   virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
                                    const nsAString& aServiceUuid,
                                    int aChannel) MOZ_OVERRIDE;
+  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE;
   virtual void GetAddress(nsAString& aDeviceAddress) MOZ_OVERRIDE;
 
 private:

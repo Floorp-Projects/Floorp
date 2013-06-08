@@ -31,7 +31,6 @@
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
 #define MOBILE_CONNECTION_ICCINFO_CHANGED "mobile-connection-iccinfo-changed"
 #define MOBILE_CONNECTION_VOICE_CHANGED "mobile-connection-voice-changed"
-#define BLUETOOTH_SCO_STATUS_CHANGED "bluetooth-sco-status-changed"
 
 /**
  * BRSF bitmask of AG supported features. See 4.34.1 "Bluetooth Defined AT
