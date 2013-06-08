@@ -2427,7 +2427,6 @@ class JSToNativeConversionInfo():
                   template substitution performed on it as follows:
 
           ${val} replaced by an expression for the JS::Value in question
-          ${valPtr} is a pointer to the JS::Value in question
           ${valHandle} is a handle to the JS::Value in question
           ${valMutableHandle} is a mutable handle to the JS::Value in question
           ${holderName} replaced by the holder's name, if any
@@ -2759,7 +2758,6 @@ for (uint32_t i = 0; i < length; ++i) {
                 string.Template(elementInfo.template).substitute(
                     {
                         "val" : "temp",
-                        "valPtr": "temp.address()",
                         "valHandle": "temp",
                         "valMutableHandle": "&temp",
                         "declName" : "slot",
@@ -2813,7 +2811,7 @@ for (uint32_t i = 0; i < length; ++i) {
                     name = memberType.inner.identifier.name
                 else:
                     name = memberType.name
-                interfaceObject.append(CGGeneric("(failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valPtr}, tryNext)) || !tryNext" % (unionArgumentObj, name)))
+                interfaceObject.append(CGGeneric("(failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext" % (unionArgumentObj, name)))
                 names.append(name)
             interfaceObject = CGWrapper(CGList(interfaceObject, " ||\n"), pre="done = ", post=";\n", reindent=True)
         else:
@@ -2824,7 +2822,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(arrayObjectMemberTypes) == 1
             memberType = arrayObjectMemberTypes[0]
             name = memberType.name
-            arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valPtr}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             arrayObject = CGIfWrapper(arrayObject, "IsArrayLike(cx, argObj)")
             names.append(name)
         else:
@@ -2835,7 +2833,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(dateObjectMemberTypes) == 1
             memberType = dateObjectMemberTypes[0]
             name = memberType.name
-            dateObject = CGGeneric("%s.SetTo%s(cx, ${val}, ${valPtr});\n"
+            dateObject = CGGeneric("%s.SetTo%s(cx, ${val}, ${valMutableHandle});\n"
                                    "done = true;" % (unionArgumentObj, name))
             dateObject = CGIfWrapper(dateObject, "JS_ObjectIsDate(cx, argObj)");
             names.append(name)
@@ -2847,7 +2845,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(callbackMemberTypes) == 1
             memberType = callbackMemberTypes[0]
             name = memberType.name
-            callbackObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valPtr}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            callbackObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             names.append(name)
         else:
             callbackObject = None
@@ -2906,7 +2904,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 name = memberType.inner.identifier.name
             else:
                 name = memberType.name
-            other = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valPtr}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            other = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             names.append(name)
             if hasObjectTypes:
                 other = CGWrapper(CGIndenter(other), "{\n", post="\n}")
@@ -3703,8 +3701,6 @@ class CGArgumentConverter(CGThing):
         self.replacementVariables["val"] = string.Template(
             "args.handleAt(${index})"
             ).substitute(replacer)
-        self.replacementVariables["valPtr"] = (
-            self.replacementVariables["val"] + ".address()")
         self.replacementVariables["valHandle"] = self.replacementVariables["val"]
         self.replacementVariables["valMutableHandle"] = self.replacementVariables["val"]
         if argument.treatUndefinedAs == "Missing":
@@ -3777,7 +3773,6 @@ class CGArgumentConverter(CGThing):
                 string.Template(typeConversion.template).substitute(
                     {
                         "val" : val,
-                        "valPtr": val + ".address()",
                         "valHandle" : val,
                         "valMutableHandle" : val,
                         "declName" : "slot",
@@ -5732,8 +5727,7 @@ return true;"""
             {
                 "val": "value",
                 "valHandle": "value",
-                "valMutableHandle": "JS::MutableHandle<JS::Value>::fromMarkedLocation(pvalue)",
-                "valPtr": "pvalue",
+                "valMutableHandle": "pvalue",
                 "declName": "SetAs" + name + "()",
                 "holderName": "m" + name + "Holder",
                 }
@@ -5742,7 +5736,7 @@ return true;"""
                                  post="\n"
                                       "return true;")
         setter = CGWrapper(CGIndenter(jsConversion),
-                           pre="bool TrySetTo" + name + "(JSContext* cx, JS::Handle<JS::Value> value, JS::Value* pvalue, bool& tryNext)\n"
+                           pre="bool TrySetTo" + name + "(JSContext* cx, JS::Handle<JS::Value> value, JS::MutableHandle<JS::Value> pvalue, bool& tryNext)\n"
                                "{\n"
                                "  tryNext = false;\n",
                            post="\n"
@@ -6591,7 +6585,6 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                 "declName": argument.identifier.name,
                 "holderName": argument.identifier.name + "_holder",
                 "val": "desc->value",
-                "valPtr": "&desc->value",
                 "valHandle" : "JS::Handle<JS::Value>::fromMarkedLocation(&desc->value)",
                 "valMutableHandle" : "JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)",
                 "obj": "obj"
@@ -7799,7 +7792,6 @@ class CGDictionary(CGThing):
     def getMemberConversion(self, memberInfo):
         (member, conversionInfo) = memberInfo
         replacements = { "val": "temp",
-                         "valPtr": "temp.address()",
                          "valHandle": "temp",
                          "valMutableHandle": "&temp",
                          "declName": self.makeMemberName(member.identifier.name),
@@ -9421,7 +9413,6 @@ class CallbackMember(CGNativeMember):
     def getResultConversion(self):
         replacements = {
             "val": "rval",
-            "valPtr": "rval.address()",
             "valHandle": "rval",
             "valMutableHandle": "&rval",
             "holderName" : "rvalHolder",
