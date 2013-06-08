@@ -404,6 +404,45 @@ SkipUTF8BOM(FILE* file)
 }
 
 static void
+RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, bool compileOnly)
+{
+    SkipUTF8BOM(file);
+
+    // To support the UNIX #! shell hack, gobble the first line if it starts
+    // with '#'.
+    int ch = fgetc(file);
+    if (ch == '#') {
+        while ((ch = fgetc(file)) != EOF) {
+            if (ch == '\n' || ch == '\r')
+                break;
+        }
+    }
+    ungetc(ch, file);
+
+    int64_t t1 = PRMJ_Now();
+    uint32_t oldopts = JS_GetOptions(cx);
+    gGotError = false;
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
+    CompileOptions options(cx);
+    options.setUTF8(true)
+        .setFileAndLine(filename, 1);
+
+    RootedScript script(cx);
+    script = JS::Compile(cx, obj, options, file);
+    JS_SetOptions(cx, oldopts);
+    JS_ASSERT_IF(!script, gGotError);
+    if (script && !compileOnly) {
+        if (!JS_ExecuteScript(cx, obj, script, NULL)) {
+            if (!gQuitting && !gTimedOut)
+                gExitCode = EXITCODE_RUNTIME_ERROR;
+        }
+        int64_t t2 = PRMJ_Now() - t1;
+        if (printTiming)
+            printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
+    }
+}
+
+static void
 ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
 {
     bool ok, hitEOF;
@@ -563,42 +602,8 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
     SetContextOptions(cx);
 
     if (!forceTTY && !isatty(fileno(file))) {
-        SkipUTF8BOM(file);
-
-        /*
-         * It's not interactive - just execute it.  Support the UNIX #! shell
-         * hack, and gobble the first line if it starts with '#'.
-         */
-        int ch = fgetc(file);
-        if (ch == '#') {
-            while ((ch = fgetc(file)) != EOF) {
-                if (ch == '\n' || ch == '\r')
-                    break;
-            }
-        }
-        ungetc(ch, file);
-
-        int64_t t1 = PRMJ_Now();
-        uint32_t oldopts = JS_GetOptions(cx);
-        gGotError = false;
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        CompileOptions options(cx);
-        options.setUTF8(true)
-               .setFileAndLine(filename, 1);
-
-        RootedScript script(cx);
-        script = JS::Compile(cx, obj, options, file);
-        JS_SetOptions(cx, oldopts);
-        JS_ASSERT_IF(!script, gGotError);
-        if (script && !compileOnly) {
-            if (!JS_ExecuteScript(cx, obj, script, NULL)) {
-                if (!gQuitting && !gTimedOut)
-                    gExitCode = EXITCODE_RUNTIME_ERROR;
-            }
-            int64_t t2 = PRMJ_Now() - t1;
-            if (printTiming)
-                printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
-        }
+        // It's not interactive - just execute it.
+        RunFile(cx, obj, filename, file, compileOnly);
     } else {
         // It's an interactive filehandle; drop into read-eval-print loop.
         ReadEvalPrintLoop(cx, obj, file, compileOnly);
