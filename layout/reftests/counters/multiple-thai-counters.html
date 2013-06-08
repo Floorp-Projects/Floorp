@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<style>
+  span {
+    counter-reset: item;
+    counter-increment: item;
+  }
+  span span span::before {
+    content: counters(item, ".", -moz-thai);
+    content: counters(item, ".", thai);
+  }
+</style>
+<span><span><span></span></span></span>
