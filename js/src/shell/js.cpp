@@ -442,13 +442,45 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
     }
 }
 
-static void
-ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
+static bool
+EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t length,
+             int lineno, bool compileOnly, FILE *out)
 {
+    // Eval.
+    JS::CompileOptions options(cx);
+    options.utf8 = true;
+    options.compileAndGo = true;
+    options.filename = "typein";
+    options.lineno = lineno;
     RootedScript script(cx);
+    script = JS::Compile(cx, global, options, bytes, length);
+    if (!script)
+        return false;
+    if (compileOnly)
+        return true;
     RootedValue result(cx);
-    RootedString str(cx);
+    if (!JS_ExecuteScript(cx, global, script, result.address()))
+        return false;
 
+    if (!result.isUndefined()) {
+        // Print.
+        RootedString str(cx);
+        str = JS_ValueToSource(cx, result);
+        if (!str)
+            return false;
+
+        char *utf8chars = JSStringToUTF8(cx, str);
+        if (!utf8chars)
+            return false;
+        fprintf(out, "%s\n", utf8chars);
+        JS_free(cx, utf8chars);
+    }
+    return true;
+}
+
+static void
+ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, bool compileOnly)
+{
     int lineno = 1;
     bool hitEOF = false;
 
@@ -467,7 +499,7 @@ ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
             gTimedOut = false;
             errno = 0;
 
-            char *line = GetLine(file, startline == lineno ? "js> " : "");
+            char *line = GetLine(in, startline == lineno ? "js> " : "");
             if (!line) {
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
@@ -485,54 +517,20 @@ ReadEvalPrintLoop(JSContext *cx, JSObject *obj, FILE *file, bool compileOnly)
                 hitEOF = true;
                 break;
             }
-        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer.begin(), buffer.length()));
+        } while (!JS_BufferIsCompilableUnit(cx, global, buffer.begin(), buffer.length()));
 
         if (hitEOF && buffer.empty())
             break;
 
-        size_t uc_len;
-        if (!InflateUTF8StringToBuffer(cx, buffer.begin(), buffer.length(), NULL, &uc_len)) {
-            JS_ReportError(cx, "Invalid UTF-8 in input");
-            gExitCode = EXITCODE_RUNTIME_ERROR;
-            return;
+        if (!EvalAndPrint(cx, global, buffer.begin(), buffer.length(), startline, compileOnly,
+                          out))
+        {
+            // Catch the error, report it, and keep going.
+            JS_ReportPendingException(cx);
         }
-
-        jschar *uc_buffer = (jschar*)malloc(uc_len * sizeof(jschar));
-        InflateUTF8StringToBuffer(cx, buffer.begin(), buffer.length(), uc_buffer, &uc_len);
-
-        /* Clear any pending exception from previous failed compiles. */
-        JS_ClearPendingException(cx);
-
-        /* Even though we're interactive, we have a compile-n-go opportunity. */
-        uint32_t oldopts = JS_GetOptions(cx);
-        gGotError = false;
-        if (!compileOnly)
-            JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        script = JS_CompileUCScript(cx, obj, uc_buffer, uc_len, "typein", startline);
-        if (!compileOnly)
-            JS_SetOptions(cx, oldopts);
-
-        JS_ASSERT_IF(!script, gGotError);
-
-        if (script && !compileOnly) {
-            bool ok = JS_ExecuteScript(cx, obj, script, result.address());
-            if (ok && !JSVAL_IS_VOID(result)) {
-                str = JS_ValueToSource(cx, result);
-                ok = !!str;
-                if (ok) {
-                    char *utf8chars = JSStringToUTF8(cx, str);
-                    ok = !!utf8chars;
-                    if (ok) {
-                        fprintf(gOutFile, "%s\n", utf8chars);
-                        JS_free(cx, utf8chars);
-                    }
-                }
-            }
-        }
-        free(uc_buffer);
     } while (!hitEOF && !gQuitting);
 
-    fprintf(gOutFile, "\n");
+    fprintf(out, "\n");
 }
 
 class AutoCloseInputFile
@@ -573,7 +571,7 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
         RunFile(cx, obj, filename, file, compileOnly);
     } else {
         // It's an interactive filehandle; drop into read-eval-print loop.
-        ReadEvalPrintLoop(cx, obj, file, compileOnly);
+        ReadEvalPrintLoop(cx, obj, file, gOutFile, compileOnly);
     }
 }
 
