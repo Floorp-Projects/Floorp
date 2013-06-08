@@ -2428,7 +2428,7 @@ class JSToNativeConversionInfo():
 
           ${val} replaced by an expression for the JS::Value in question
           ${valHandle} is a handle to the JS::Value in question
-          ${valMutableHandle} is a mutable handle to the JS::Value in question
+          ${mutableVal} is a mutable handle to the JS::Value in question
           ${holderName} replaced by the holder's name, if any
           ${declName} replaced by the declaration's name
           ${haveValue} replaced by an expression that evaluates to a boolean
@@ -2759,7 +2759,7 @@ for (uint32_t i = 0; i < length; ++i) {
                     {
                         "val" : "temp",
                         "valHandle": "temp",
-                        "valMutableHandle": "&temp",
+                        "mutableVal": "&temp",
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
                         # interfaces, which use an internal holder for the
@@ -2811,7 +2811,7 @@ for (uint32_t i = 0; i < length; ++i) {
                     name = memberType.inner.identifier.name
                 else:
                     name = memberType.name
-                interfaceObject.append(CGGeneric("(failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext" % (unionArgumentObj, name)))
+                interfaceObject.append(CGGeneric("(failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext" % (unionArgumentObj, name)))
                 names.append(name)
             interfaceObject = CGWrapper(CGList(interfaceObject, " ||\n"), pre="done = ", post=";\n", reindent=True)
         else:
@@ -2822,7 +2822,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(arrayObjectMemberTypes) == 1
             memberType = arrayObjectMemberTypes[0]
             name = memberType.name
-            arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             arrayObject = CGIfWrapper(arrayObject, "IsArrayLike(cx, argObj)")
             names.append(name)
         else:
@@ -2833,7 +2833,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(dateObjectMemberTypes) == 1
             memberType = dateObjectMemberTypes[0]
             name = memberType.name
-            dateObject = CGGeneric("%s.SetTo%s(cx, ${val}, ${valMutableHandle});\n"
+            dateObject = CGGeneric("%s.SetTo%s(cx, ${val}, ${mutableVal});\n"
                                    "done = true;" % (unionArgumentObj, name))
             dateObject = CGIfWrapper(dateObject, "JS_ObjectIsDate(cx, argObj)");
             names.append(name)
@@ -2845,7 +2845,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(callbackMemberTypes) == 1
             memberType = callbackMemberTypes[0]
             name = memberType.name
-            callbackObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            callbackObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             names.append(name)
         else:
             callbackObject = None
@@ -2904,7 +2904,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 name = memberType.inner.identifier.name
             else:
                 name = memberType.name
-            other = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${valMutableHandle}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            other = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${valHandle}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
             names.append(name)
             if hasObjectTypes:
                 other = CGWrapper(CGIndenter(other), "{\n", post="\n}")
@@ -3214,7 +3214,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         def getConversionCode(varName):
             conversionCode = (
-                "if (!ConvertJSValueToString(cx, ${valHandle}, ${valMutableHandle}, %s, %s, %s)) {\n"
+                "if (!ConvertJSValueToString(cx, ${valHandle}, ${mutableVal}, %s, %s, %s)) {\n"
                 "%s\n"
                 "}" % (nullBehavior, undefinedBehavior, varName,
                        exceptionCodeIndented.define()))
@@ -3702,7 +3702,7 @@ class CGArgumentConverter(CGThing):
             "args.handleAt(${index})"
             ).substitute(replacer)
         self.replacementVariables["valHandle"] = self.replacementVariables["val"]
-        self.replacementVariables["valMutableHandle"] = self.replacementVariables["val"]
+        self.replacementVariables["mutableVal"] = self.replacementVariables["val"]
         if argument.treatUndefinedAs == "Missing":
             haveValueCheck = "args.hasDefined(${index})"
         else:
@@ -3774,7 +3774,7 @@ class CGArgumentConverter(CGThing):
                     {
                         "val" : val,
                         "valHandle" : val,
-                        "valMutableHandle" : val,
+                        "mutableVal" : val,
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
                         # interfaces, which use an internal holder for the
@@ -4815,7 +4815,7 @@ class CGMethodCall(CGThing):
                         "holderName" : ("arg%d" % distinguishingIndex) + "_holder",
                         "val" : distinguishingArg,
                         "valHandle" : distinguishingArg,
-                        "valMutableHandle" : distinguishingArg,
+                        "mutableVal" : distinguishingArg,
                         "obj" : "obj"
                         })
                 caseBody.append(CGIndenter(testCode, indent));
@@ -5727,7 +5727,7 @@ return true;"""
             {
                 "val": "value",
                 "valHandle": "value",
-                "valMutableHandle": "pvalue",
+                "mutableVal": "pvalue",
                 "declName": "SetAs" + name + "()",
                 "holderName": "m" + name + "Holder",
                 }
@@ -6586,7 +6586,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                 "holderName": argument.identifier.name + "_holder",
                 "val": "desc->value",
                 "valHandle" : "JS::Handle<JS::Value>::fromMarkedLocation(&desc->value)",
-                "valMutableHandle" : "JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)",
+                "mutableVal" : "JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)",
                 "obj": "obj"
             }
             self.cgRoot.prepend(instantiateJSToNativeConversion(info, templateValues))
@@ -7793,7 +7793,7 @@ class CGDictionary(CGThing):
         (member, conversionInfo) = memberInfo
         replacements = { "val": "temp",
                          "valHandle": "temp",
-                         "valMutableHandle": "&temp",
+                         "mutableVal": "&temp",
                          "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
                          # it's scoped down to the conversion so we can just use
@@ -9414,7 +9414,7 @@ class CallbackMember(CGNativeMember):
         replacements = {
             "val": "rval",
             "valHandle": "rval",
-            "valMutableHandle": "&rval",
+            "mutableVal": "&rval",
             "holderName" : "rvalHolder",
             "declName" : "rvalDecl",
             # We actually want to pass in a null scope object here, because
