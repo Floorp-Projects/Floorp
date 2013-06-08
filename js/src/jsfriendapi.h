@@ -369,7 +369,8 @@ struct Function {
 };
 
 struct Atom {
-    size_t _;
+    static const size_t LENGTH_SHIFT = 4;
+    size_t lengthAndFlags;
     const jschar *chars;
 };
 
@@ -541,6 +542,13 @@ inline const jschar *
 GetAtomChars(JSAtom *atom)
 {
     return reinterpret_cast<shadow::Atom *>(atom)->chars;
+}
+
+inline size_t
+GetAtomLength(JSAtom *atom)
+{
+    using shadow::Atom;
+    return reinterpret_cast<Atom*>(atom)->lengthAndFlags >> Atom::LENGTH_SHIFT;
 }
 
 inline JSLinearString *
