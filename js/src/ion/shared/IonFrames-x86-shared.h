@@ -427,6 +427,8 @@ class IonDOMExitFrameLayout
     }
 };
 
+struct IonDOMMethodExitFrameLayoutTraits;
+
 class IonDOMMethodExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
@@ -443,6 +445,8 @@ class IonDOMMethodExitFrameLayout
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
 
+    friend struct IonDOMMethodExitFrameLayoutTraits;
+
   public:
     static inline size_t Size() {
         return sizeof(IonDOMMethodExitFrameLayout);
@@ -450,10 +454,6 @@ class IonDOMMethodExitFrameLayout
 
     static size_t offsetOfResult() {
         return offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_);
-    }
-    static size_t offsetOfArgcFromArgv() {
-        return offsetof(IonDOMMethodExitFrameLayout, argc_) -
-            offsetof(IonDOMMethodExitFrameLayout, argv_);
     }
 
     inline Value *vp() {
@@ -467,6 +467,12 @@ class IonDOMMethodExitFrameLayout
     inline uintptr_t argc() {
         return argc_;
     }
+};
+
+struct IonDOMMethodExitFrameLayoutTraits {
+    static const size_t offsetOfArgcFromArgv =
+        offsetof(IonDOMMethodExitFrameLayout, argc_) -
+        offsetof(IonDOMMethodExitFrameLayout, argv_);
 };
 
 class IonOsrFrameLayout : public IonJSFrameLayout

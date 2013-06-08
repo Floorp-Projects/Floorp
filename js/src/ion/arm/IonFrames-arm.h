@@ -462,6 +462,8 @@ class IonDOMExitFrameLayout
     }
 };
 
+struct IonDOMMethodExitFrameLayoutTraits;
+
 class IonDOMMethodExitFrameLayout
 {
     IonExitFooterFrame footer_;
@@ -477,6 +479,8 @@ class IonDOMMethodExitFrameLayout
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
 
+    friend struct IonDOMMethodExitFrameLayoutTraits;
+
   public:
     static inline size_t Size() {
         return sizeof(IonDOMMethodExitFrameLayout);
@@ -485,10 +489,7 @@ class IonDOMMethodExitFrameLayout
     static size_t offsetOfResult() {
         return offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_);
     }
-    static size_t offsetOfArgcFromArgv() {
-        return offsetof(IonDOMMethodExitFrameLayout, argc_) -
-            offsetof(IonDOMMethodExitFrameLayout, argv_);
-    }
+
     inline Value *vp() {
         // The code in visitCallDOMNative depends on this static assert holding
         JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_) ==
@@ -501,6 +502,12 @@ class IonDOMMethodExitFrameLayout
     inline uintptr_t argc() {
         return argc_;
     }
+};
+
+struct IonDOMMethodExitFrameLayoutTraits {
+    static const size_t offsetOfArgcFromArgv =
+        offsetof(IonDOMMethodExitFrameLayout, argc_) -
+        offsetof(IonDOMMethodExitFrameLayout, argv_);
 };
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.

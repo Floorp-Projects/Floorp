@@ -1423,9 +1423,9 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     // Now compute the argv value.  Since StackPointer is pointing to &vp[0] and
     // argv is &vp[2] we just need to add 2*sizeof(Value) to the current
     // StackPointer.
-    JS_STATIC_ASSERT(JSJitMethodCallArgs::offsetOfArgv() == 0);
-    JS_STATIC_ASSERT(JSJitMethodCallArgs::offsetOfArgc() ==
-                     IonDOMMethodExitFrameLayout::offsetOfArgcFromArgv());
+    JS_STATIC_ASSERT(JSJitMethodCallArgsTraits::offsetOfArgv == 0);
+    JS_STATIC_ASSERT(JSJitMethodCallArgsTraits::offsetOfArgc ==
+                     IonDOMMethodExitFrameLayoutTraits::offsetOfArgcFromArgv);
     masm.computeEffectiveAddress(Address(StackPointer, 2 * sizeof(Value)), argArgs);
 
     // GetReservedSlot(obj, DOM_OBJECT_SLOT).toPrivate()
