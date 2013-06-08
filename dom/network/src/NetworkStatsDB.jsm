@@ -71,16 +71,16 @@ NetworkStatsDB.prototype = {
     }
   },
 
-  convertDate: function convertDate(aDate) {
+  normalizeDate: function normalizeDate(aDate) {
     // Convert to UTC according to timezone and
     // filter timestamp to get SAMPLE_RATE precission
-    let timestamp = aDate.getTime() - aDate.getTimezoneOffset() * 60 * 1000;
+    let timestamp = aDate.getTime() - (new Date()).getTimezoneOffset() * 60 * 1000;
     timestamp = Math.floor(timestamp / SAMPLE_RATE) * SAMPLE_RATE;
     return timestamp;
   },
 
   saveStats: function saveStats(stats, aResultCb) {
-    let timestamp = this.convertDate(stats.date);
+    let timestamp = this.normalizeDate(stats.date);
 
     stats = {connectionType: stats.connectionType,
              timestamp:      timestamp,
@@ -234,8 +234,9 @@ NetworkStatsDB.prototype = {
   },
 
   find: function find(aResultCb, aOptions) {
-    let start = this.convertDate(aOptions.start);
-    let end = this.convertDate(aOptions.end);
+    let offset = (new Date()).getTimezoneOffset() * 60 * 1000;
+    let start = this.normalizeDate(aOptions.start);
+    let end = this.normalizeDate(aOptions.end);
 
     if (DEBUG) {
       debug("Find: connectionType:" + aOptions.connectionType + " start: " + start + " end: " + end);
@@ -259,14 +260,14 @@ NetworkStatsDB.prototype = {
         if (cursor){
           data.push({ rxBytes: cursor.value.rxBytes,
                       txBytes: cursor.value.txBytes,
-                      date: new Date(cursor.value.timestamp) });
+                      date: new Date(cursor.value.timestamp + offset) });
           cursor.continue();
           return;
         }
 
         // When requested samples (start / end) are not in the range of now and
         // now - VALUES_MAX_LENGTH, fill with empty samples.
-        this.fillResultSamples(start, end, data);
+        this.fillResultSamples(start + offset, end + offset, data);
 
         txn.result.connectionType = aOptions.connectionType;
         txn.result.start = aOptions.start;
@@ -277,8 +278,9 @@ NetworkStatsDB.prototype = {
   },
 
   findAll: function findAll(aResultCb, aOptions) {
-    let start = this.convertDate(aOptions.start);
-    let end = this.convertDate(aOptions.end);
+    let offset = (new Date()).getTimezoneOffset() * 60 * 1000;
+    let start = this.normalizeDate(aOptions.start);
+    let end = this.normalizeDate(aOptions.end);
 
     if (DEBUG) {
       debug("FindAll: start: " + start + " end: " + end + "\n");
@@ -299,20 +301,21 @@ NetworkStatsDB.prototype = {
       let request = store.index("timestamp").openCursor(range).onsuccess = function(event) {
         var cursor = event.target.result;
         if (cursor) {
-          if (data.length > 0 && data[data.length - 1].date.getTime() == cursor.value.timestamp) {
+          if (data.length > 0 &&
+              data[data.length - 1].date.getTime() == cursor.value.timestamp + offset) {
             // Time is the same, so add values.
             data[data.length - 1].rxBytes += cursor.value.rxBytes;
             data[data.length - 1].txBytes += cursor.value.txBytes;
           } else {
             data.push({ rxBytes: cursor.value.rxBytes,
                         txBytes: cursor.value.txBytes,
-                        date: new Date(cursor.value.timestamp) });
+                        date: new Date(cursor.value.timestamp + offset) });
           }
           cursor.continue();
           return;
         }
 
-        this.fillResultSamples(start, end, data);
+        this.fillResultSamples(start + offset, end + offset, data);
 
         txn.result.connectionType = aOptions.connectionType;
         txn.result.start = aOptions.start;
