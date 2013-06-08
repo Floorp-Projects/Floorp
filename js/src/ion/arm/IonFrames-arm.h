@@ -469,6 +469,7 @@ class IonDOMMethodExitFrameLayout
     // This must be the last thing pushed, so as to stay common with
     // IonDOMExitFrameLayout.
     JSObject *thisObj_;
+    Value *argv_;
     uintptr_t argc_;
 
     Value CalleeResult_;
@@ -481,7 +482,12 @@ class IonDOMMethodExitFrameLayout
     static size_t offsetOfResult() {
         return offsetof(IonDOMMethodExitFrameLayout, CalleeResult_);
     }
+    static size_t offsetOfArgcFromArgv() {
+        return offsetof(IonDOMMethodExitFrameLayout, argc_) -
+            offsetof(IonDOMMethodExitFrameLayout, argv_);
+    }
     inline Value *vp() {
+        // The code in visitCallDOMNative depends on this static assert holding
         JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, CalleeResult_) ==
                          (offsetof(IonDOMMethodExitFrameLayout, argc_) + sizeof(uintptr_t)));
         return &CalleeResult_;

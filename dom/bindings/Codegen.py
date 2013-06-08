@@ -1076,6 +1076,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
 
     def generate_code(self):
         preamble = """
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 """
         name = self._ctor.identifier.name
@@ -3679,11 +3680,11 @@ def convertConstIDLValueToJSVal(value):
 
 class CGArgumentConverter(CGThing):
     """
-    A class that takes an IDL argument object, its index in the
-    argument list, and the argv and argc strings and generates code to
-    unwrap the argument to the right native type.
+    A class that takes an IDL argument object and its index in the
+    argument list and generates code to unwrap the argument to the
+    right native type.
     """
-    def __init__(self, argument, index, argv, argc, descriptorProvider,
+    def __init__(self, argument, index, descriptorProvider,
                  invalidEnumValueFatal=True, lenientFloatCode=None,
                  allowTreatNonCallableAsNull=False):
         CGThing.__init__(self)
@@ -3692,8 +3693,7 @@ class CGArgumentConverter(CGThing):
 
         replacer = {
             "index" : index,
-            "argc" : argc,
-            "argv" : argv
+            "argc" : "args.length()"
             }
         self.replacementVariables = {
             "declName" : "arg%d" % index,
@@ -3701,21 +3701,17 @@ class CGArgumentConverter(CGThing):
             "obj" : "obj"
             }
         self.replacementVariables["val"] = string.Template(
-            "${argv}[${index}]"
+            "args.handleAt(${index})"
             ).substitute(replacer)
         self.replacementVariables["valPtr"] = (
-            "&" + self.replacementVariables["val"])
-        self.replacementVariables["valHandle"] = (
-            "JS::Handle<JS::Value>::fromMarkedLocation(%s)" %
-            self.replacementVariables["valPtr"])
-        self.replacementVariables["valMutableHandle"] = (
-            "JS::MutableHandle<JS::Value>::fromMarkedLocation(%s)" %
-            self.replacementVariables["valPtr"])
-        haveValueCheck = string.Template("${index} < ${argc}").substitute(replacer)
+            self.replacementVariables["val"] + ".address()")
+        self.replacementVariables["valHandle"] = self.replacementVariables["val"]
+        self.replacementVariables["valMutableHandle"] = self.replacementVariables["val"]
         if argument.treatUndefinedAs == "Missing":
-            haveValueCheck = (haveValueCheck +
-                              (" && !%s.isUndefined()" %
-                               self.replacementVariables["valHandle"]))
+            haveValueCheck = "args.hasDefined(${index})"
+        else:
+            haveValueCheck = "${index} < args.length()"
+        haveValueCheck = string.Template(haveValueCheck).substitute(replacer)
         self.replacementVariables["haveValue"] = haveValueCheck
         self.descriptorProvider = descriptorProvider
         if self.argument.optional and not self.argument.defaultValue:
@@ -3776,16 +3772,14 @@ class CGArgumentConverter(CGThing):
     ${elemType}& slot = *${declName}.AppendElement();
 """).substitute(replacer)
 
-        val = string.Template("${argv}[variadicArg]").substitute(replacer)
+        val = string.Template("args.handleAt(variadicArg)").substitute(replacer)
         variadicConversion += CGIndenter(CGGeneric(
                 string.Template(typeConversion.template).substitute(
                     {
                         "val" : val,
-                        "valPtr": "&" + val,
-                        "valHandle" : ("JS::Handle<JS::Value>::fromMarkedLocation(&%s)" %
-                                       val),
-                        "valMutableHandle" : ("JS::MutableHandle<JS::Value>::fromMarkedLocation(&%s)" %
-                                              val),
+                        "valPtr": val + ".address()",
+                        "valHandle" : val,
+                        "valMutableHandle" : val,
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
                         # interfaces, which use an internal holder for the
@@ -4491,17 +4485,13 @@ class CGPerSignatureCall(CGThing):
                                                                    setter=setter)
         self.arguments = arguments
         self.argCount = len(arguments)
-        if self.argCount > argConversionStartsAt:
-            # Insert our argv in there
-            cgThings = [CGGeneric(self.getArgvDecl())]
-        else:
-            cgThings = []
+        cgThings = []
         lenientFloatCode = None
         if idlNode.getExtendedAttribute('LenientFloat') is not None:
             if setter:
                 lenientFloatCode = "return true;"
             elif idlNode.isMethod():
-                lenientFloatCode = ("*vp = JSVAL_VOID;\n"
+                lenientFloatCode = ("args.rval().set(JSVAL_VOID);\n"
                                     "return true;")
 
         argsPre = []
@@ -4534,8 +4524,7 @@ if (global.Failed()) {
             # Pass in our thisVal
             argsPre.append("args.thisv()")
 
-        cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
-                                             self.getArgc(), self.descriptor,
+        cgThings.extend([CGArgumentConverter(arguments[i], i, self.descriptor,
                                              invalidEnumValueFatal=not setter,
                                              allowTreatNonCallableAsNull=setter,
                                              lenientFloatCode=lenientFloatCode) for
@@ -4572,12 +4561,6 @@ if (global.Failed()) {
                     static))
         self.cgRoot = CGList(cgThings, "\n")
 
-    def getArgv(self):
-        return "argv" if self.argCount > 0 else ""
-    def getArgvDecl(self):
-        return "\nJS::Value* argv = JS_ARGV(cx, vp);\n"
-    def getArgc(self):
-        return "argc"
     def getArguments(self):
         return [(a, "arg" + str(i)) for (i, a) in enumerate(self.arguments)]
 
@@ -4597,7 +4580,8 @@ if (global.Failed()) {
                    # values or something
                    self.descriptor.workers)
 
-        resultTemplateValues = { 'jsvalRef': '*vp', 'jsvalPtr': 'vp',
+        resultTemplateValues = { 'jsvalRef': '*args.rval().address()',
+                                 'jsvalPtr': 'args.rval().address()',
                                  'isCreator': isCreator}
         try:
             return wrapForType(self.returnType, self.descriptor,
@@ -4704,7 +4688,7 @@ class CGMethodCall(CGThing):
 
             if requiredArgs > 0:
                 code = (
-                    "if (argc < %d) {\n"
+                    "if (args.length() < %d) {\n"
                     "  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, %s);\n"
                     "}" % (requiredArgs, methodName))
                 self.cgRoot.prepend(
@@ -4792,14 +4776,12 @@ class CGMethodCall(CGThing):
             # Doesn't matter which of the possible signatures we use, since
             # they all have the same types up to that point; just use
             # possibleSignatures[0]
-            caseBody = [CGGeneric("JS::Value* argv_start = JS_ARGV(cx, vp);")]
-            caseBody.extend([ CGArgumentConverter(possibleSignatures[0][1][i],
-                                                  i, "argv_start", "argc",
-                                                  descriptor) for i in
-                              range(0, distinguishingIndex) ])
+            caseBody = [ CGArgumentConverter(possibleSignatures[0][1][i],
+                                             i, descriptor) for i in
+                         range(0, distinguishingIndex) ]
 
             # Select the right overload from our set.
-            distinguishingArg = "argv_start[%d]" % distinguishingIndex
+            distinguishingArg = "args.handleAt(%d)" % distinguishingIndex
 
             def pickFirstSignature(condition, filterLambda):
                 sigs = filter(filterLambda, possibleSignatures)
@@ -4837,10 +4819,8 @@ class CGMethodCall(CGThing):
                         "declName" : "arg%d" % distinguishingIndex,
                         "holderName" : ("arg%d" % distinguishingIndex) + "_holder",
                         "val" : distinguishingArg,
-                        "valHandle" : ("JS::Handle<JS::Value>::fromMarkedLocation(&%s)" %
-                                       distinguishingArg),
-                        "valMutableHandle" : ("JS::MutableHandle<JS::Value>::fromMarkedLocation(&%s)" %
-                                       distinguishingArg),
+                        "valHandle" : distinguishingArg,
+                        "valMutableHandle" : distinguishingArg,
                         "obj" : "obj"
                         })
                 caseBody.append(CGIndenter(testCode, indent));
@@ -4967,7 +4947,7 @@ class CGMethodCall(CGThing):
 
         overloadCGThings = []
         overloadCGThings.append(
-            CGGeneric("unsigned argcount = std::min(argc, %du);" %
+            CGGeneric("unsigned argcount = std::min(args.length(), %du);" %
                       maxArgCount))
         overloadCGThings.append(
             CGSwitch("argcount",
@@ -5023,11 +5003,6 @@ class CGSetterCall(CGPerSignatureCall):
     def wrap_return_value(self):
         # We have no return value
         return "\nreturn true;"
-    def getArgc(self):
-        return "1"
-    def getArgvDecl(self):
-        # We just get our stuff from our last arg no matter what
-        return ""
 
 class CGAbstractBindingMethod(CGAbstractStaticMethod):
     """
@@ -5038,7 +5013,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     CGThing which is already properly indented.
     """
     def __init__(self, descriptor, name, args, unwrapFailureCode=None,
-                 getThisObj="&args.computeThis(cx).toObject()",
+                 getThisObj="args.computeThis(cx).toObjectOrNull()",
                  callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
@@ -5079,15 +5054,17 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
     function to do the rest of the work.  This function should return a
     CGThing which is already properly indented.
     """
-    def __init__(self, descriptor, name, args):
+    def __init__(self, descriptor, name):
+        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
     def definition_body(self):
-        unwrap = CGGeneric("""JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+        unwrap = CGGeneric("""JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+JS::RootedObject obj(cx, args.computeThis(cx).toObjectOrNull());
 if (!obj) {
   return false;
-}
-""")
+}""")
         return CGList([ CGIndenter(unwrap),
                         self.generate_code() ], "\n\n").define()
 
@@ -5111,7 +5088,7 @@ class CGGenericMethod(CGAbstractBindingMethod):
             "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
             "MOZ_ASSERT(info->type == JSJitInfo::Method);\n"
             "JSJitMethodOp method = info->method;\n"
-            "return method(cx, obj, self, argc, vp);"))
+            "return method(cx, obj, self, JSJitMethodCallArgs(args));"))
 
 class CGSpecializedMethod(CGAbstractStaticMethod):
     """
@@ -5123,7 +5100,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         name = CppKeywords.checkMethodName(method.identifier.name)
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
-                Argument('unsigned', 'argc'), Argument('JS::Value*', 'vp')]
+                Argument('const JSJitMethodCallArgs&', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
 
     def definition_body(self):
@@ -5211,9 +5188,7 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
     def __init__(self, descriptor, method):
         self.method = method
         name = method.identifier.name
-        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        CGAbstractStaticBindingMethod.__init__(self, descriptor, name, args)
+        CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
@@ -5234,7 +5209,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
                 "if (!ReportLenientThisUnwrappingFailure(cx, obj)) {\n"
                 "  return false;\n"
                 "}\n"
-                "JS_SET_RVAL(cx, vp, JS::UndefinedValue());\n"
+                "args.rval().set(JS::UndefinedValue());\n"
                 "return true;")
         else:
             name = "genericGetter"
@@ -5247,7 +5222,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
             "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
             "MOZ_ASSERT(info->type == JSJitInfo::Getter);\n"
             "JSJitGetterOp getter = info->getter;\n"
-            "return getter(cx, obj, self, vp);"))
+            "return getter(cx, obj, self, JSJitGetterCallArgs(args));"))
 
 class CGSpecializedGetter(CGAbstractStaticMethod):
     """
@@ -5260,7 +5235,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         args = [ Argument('JSContext*', 'cx'),
                  Argument('JSHandleObject', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
-                 Argument('JS::Value*', 'vp') ]
+                 Argument('JSJitGetterCallArgs', 'args') ]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
     def definition_body(self):
@@ -5290,9 +5265,7 @@ class CGStaticGetter(CGAbstractStaticBindingMethod):
     def __init__(self, descriptor, attr):
         self.attr = attr
         name = 'get_' + attr.identifier.name
-        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        CGAbstractStaticBindingMethod.__init__(self, descriptor, name, args)
+        CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
@@ -5314,7 +5287,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
                 "if (!ReportLenientThisUnwrappingFailure(cx, obj)) {\n"
                 "  return false;\n"
                 "}\n"
-                "JS_SET_RVAL(cx, vp, JS::UndefinedValue());\n"
+                "args.rval().set(JS::UndefinedValue());\n"
                 "return true;")
         else:
             name = "genericSetter"
@@ -5324,17 +5297,16 @@ class CGGenericSetter(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-                "if (argc == 0) {\n"
+                "if (args.length() == 0) {\n"
                 '  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s attribute setter");\n'
                 "}\n"
-                "JS::Value* argv = JS_ARGV(cx, vp);\n"
                 "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
                 "MOZ_ASSERT(info->type == JSJitInfo::Setter);\n"
                 "JSJitSetterOp setter = info->setter;\n"
-                "if (!setter(cx, obj, self, argv)) {\n"
+                "if (!setter(cx, obj, self, JSJitSetterCallArgs(args))) {\n"
                 "  return false;\n"
                 "}\n"
-                "*vp = JSVAL_VOID;\n"
+                "args.rval().set(JSVAL_VOID);\n"
                 "return true;" % self.descriptor.interface.identifier.name))
 
 class CGSpecializedSetter(CGAbstractStaticMethod):
@@ -5348,7 +5320,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         args = [ Argument('JSContext*', 'cx'),
                  Argument('JSHandleObject', 'obj'),
                  Argument('%s*' % descriptor.nativeType, 'self'),
-                 Argument('JS::Value*', 'argv')]
+                 Argument('JSJitSetterCallArgs', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
     def definition_body(self):
@@ -5369,21 +5341,17 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
     def __init__(self, descriptor, attr):
         self.attr = attr
         name = 'set_' + attr.identifier.name
-        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        CGAbstractStaticBindingMethod.__init__(self, descriptor, name, args)
+        CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
                                                         self.attr)
-        argv = CGGeneric("""JS::Value* argv = JS_ARGV(cx, vp);
-JS::Rooted<JS::Value> undef(cx, JS::UndefinedValue());
-if (argc == 0) {
-  argv = undef.address();
-}""")
+        checkForArg = CGGeneric("""if (args.length() == 0) {
+  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s setter");
+}""" % self.attr.identifier.name)
         call = CGSetterCall(self.attr.type, nativeName, self.descriptor,
                             self.attr)
-        return CGIndenter(CGList([ argv, call ], "\n"))
+        return CGIndenter(CGList([ checkForArg, call ], "\n"))
 
 class CGSpecializedForwardingSetter(CGSpecializedSetter):
     """
@@ -5408,7 +5376,7 @@ if (!v.isObject()) {
   return ThrowErrorMessage(cx, MSG_NOT_OBJECT);
 }
 
-return JS_SetProperty(cx, &v.toObject(), "%s", argv);""" % (attrName, forwardToAttrName))).define()
+return JS_SetProperty(cx, &v.toObject(), "%s", args.handleAt(0).address());""" % (attrName, forwardToAttrName))).define()
 
 def memberIsCreator(member):
     return member.getExtendedAttribute("Creator") is not None
