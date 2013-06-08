@@ -213,6 +213,13 @@ nsDOMIdentity.prototype = {
     opts.siteName = aOptions.siteName || undefined;
     opts.siteLogo = aOptions.siteLogo || undefined;
 
+    opts.oncancel = function get_oncancel() {
+      if (aCallback) {
+        aCallback(null);
+        aCallback = null;
+      }
+    };
+
     if (checkDeprecated(aOptions, "silent")) {
       // Silent has been deprecated, do nothing. Placing the check here
       // prevents the callback from being called twice, once with null and
@@ -228,12 +235,6 @@ nsDOMIdentity.prototype = {
     var self = this;
     this.watch({
       _internal: true,
-      oncancel: function get_oncancel() {
-        if (aCallback) {
-          aCallback(null);
-          aCallback = null;
-        }
-      },
       onlogin: function get_onlogin(assertion, internalParams) {
         if (assertion && aCallback && internalParams && !internalParams.silent) {
           aCallback(assertion);
