@@ -10,16 +10,6 @@
 #include "xpcpublic.h"
 #include "jsapi.h"
 
-// We want to encode 3 bits into mWrapperPtrBits, so anything we store in it
-// needs to be aligned on 8 byte boundaries.
-// JS arenas are aligned on 4k boundaries and padded so that the array of
-// JSObjects ends on the end of the arena. If the size of a JSObject is a
-// multiple of 8 then the start of every JSObject in an arena should be aligned
-// on 8 byte boundaries.
-MOZ_STATIC_ASSERT(sizeof(js::shadow::Object) % 8 == 0 && sizeof(JS::Value) == 8,
-                  "We want to rely on JSObject being aligned on 8 byte "
-                  "boundaries.");
-
 inline JSObject*
 nsWrapperCache::GetWrapper() const
 {
@@ -58,9 +48,9 @@ nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
 }
 
 inline void
-nsWrapperCache::TraceJSObjectFromBits(JSTracer* aTrc, const char* aName)
+nsWrapperCache::TraceWrapperJSObject(JSTracer* aTrc, const char* aName)
 {
-  JS_CallMaskedObjectTracer(aTrc, &mWrapperPtrBits, kWrapperBitMask, aName);
+  JS_CallObjectTracer(aTrc, &mWrapper, aName);
 }
 
 #endif /* nsWrapperCache_h___ */
