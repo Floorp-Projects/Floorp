@@ -16,6 +16,7 @@ const kPlaceholderClass = "panel-customization-placeholder";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
+Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let gModuleName = "[CustomizeMode]";
@@ -75,6 +76,10 @@ CustomizeMode.prototype = {
       this.window.switchToTabHavingURI(kAboutURI, true);
       return;
     }
+
+    // Disable lightweight themes while in customization mode since
+    // they don't have large enough images to pad the full browser window.
+    LightweightThemeManager.temporarilyToggleTheme(false);
 
     this.dispatchToolboxEvent("beforecustomization");
 
@@ -228,6 +233,7 @@ CustomizeMode.prototype = {
     deck.addEventListener("transitionend", function customizeTransitionEnd() {
       deck.removeEventListener("transitionend", customizeTransitionEnd);
       self.dispatchToolboxEvent("aftercustomization");
+      LightweightThemeManager.temporarilyToggleTheme(true);
     });
     documentElement.removeAttribute("customizing");
 
