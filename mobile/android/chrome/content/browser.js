@@ -5108,6 +5108,7 @@ let HealthReportStatusListener = {
   MILLISECONDS_PER_DAY: 24 * 60 * 60 * 1000,
 
   COPY_FIELDS: [
+    "blocklistState",
     "userDisabled",
     "appDisabled",
     "version",
