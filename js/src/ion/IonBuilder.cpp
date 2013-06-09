@@ -216,8 +216,6 @@ IonBuilder::canEnterInlinedFunction(JSFunction *target)
     if (!targetType || targetType->unknownProperties())
         return false;
 
-    // TI calls ObjectStateChange to trigger invalidation of the caller.
-    types::HeapTypeSet::WatchObjectStateChange(cx, targetType);
     return true;
 }
 
@@ -3597,6 +3595,13 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
                                   targetScript->filename(), targetScript->lineno);
         return false;
     }
+
+    JS_ASSERT(!target->hasLazyType());
+    types::TypeObject *targetType = target->getType(cx);
+    JS_ASSERT(targetType && !targetType->unknownProperties());
+
+    // TI calls ObjectStateChange to trigger invalidation of the caller.
+    types::HeapTypeSet::WatchObjectStateChange(cx, targetType);
 
     return true;
 }
