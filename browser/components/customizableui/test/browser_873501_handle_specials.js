@@ -27,39 +27,52 @@ let gTests = [
       // Try moving the downloads button to this new toolbar, between the two springs:
       CustomizableUI.addWidgetToArea("downloads-button", kToolbarName, 1);
       assertAreaPlacements(kToolbarName, [springId, "downloads-button", spring2Id]);
-    }
+    },
+    teardown: removeCustomToolbars
   },
   {
     desc: "Add separators around the downloads button.",
     run: function() {
-      CustomizableUI.addWidgetToArea("separator", kToolbarName, 1);
-      CustomizableUI.addWidgetToArea("separator", kToolbarName, 3);
-      assertAreaPlacements(kToolbarName,
-                           [/customizableui-special-spring\d+/,
-                            /customizableui-special-separator\d+/,
-                            "downloads-button",
-                            /customizableui-special-separator\d+/,
-                            /customizableui-special-spring\d+/]);
-      let [,separator1Id,,separator2Id,] = getAreaWidgetIds(kToolbarName);
-      isnot(separator1Id, separator2Id, "Separator ids shouldn't be equal.");
-    }
+      createToolbarWithPlacements(kToolbarName, ["separator"]);
+      ok(document.getElementById(kToolbarName), "Toolbar should be created.");
+
+      // Check it's there with a generated ID:
+      assertAreaPlacements(kToolbarName, [/customizableui-special-separator\d+/]);
+      let [separatorId] = getAreaWidgetIds(kToolbarName);
+
+      CustomizableUI.addWidgetToArea("separator", kToolbarName);
+      assertAreaPlacements(kToolbarName, [separatorId,
+                                          /customizableui-special-separator\d+/]);
+      let [, separator2Id] = getAreaWidgetIds(kToolbarName);
+
+      isnot(separatorId, separator2Id, "Separator ids shouldn't be equal.");
+
+      CustomizableUI.addWidgetToArea("downloads-button", kToolbarName, 1);
+      assertAreaPlacements(kToolbarName, [separatorId, "downloads-button", separator2Id]);
+    },
+    teardown: removeCustomToolbars
   },
   {
     desc: "Add spacers around the downloads button.",
     run: function() {
-      CustomizableUI.addWidgetToArea("spacer", kToolbarName, 2);
-      CustomizableUI.addWidgetToArea("spacer", kToolbarName, 4);
-      assertAreaPlacements(kToolbarName,
-                           [/customizableui-special-spring\d+/,
-                            /customizableui-special-separator\d+/,
-                            /customizableui-special-spacer\d+/,
-                            "downloads-button",
-                            /customizableui-special-spacer\d+/,
-                            /customizableui-special-separator\d+/,
-                            /customizableui-special-spring\d+/]);
-      let [,,spacer1Id,,spacer2Id,,] = getAreaWidgetIds(kToolbarName);
-      isnot(spacer1Id, spacer2Id, "Spacer ids shouldn't be equal.");
-    }
+      createToolbarWithPlacements(kToolbarName, ["spacer"]);
+      ok(document.getElementById(kToolbarName), "Toolbar should be created.");
+
+      // Check it's there with a generated ID:
+      assertAreaPlacements(kToolbarName, [/customizableui-special-spacer\d+/]);
+      let [spacerId] = getAreaWidgetIds(kToolbarName);
+
+      CustomizableUI.addWidgetToArea("spacer", kToolbarName);
+      assertAreaPlacements(kToolbarName, [spacerId,
+                                          /customizableui-special-spacer\d+/]);
+      let [, spacer2Id] = getAreaWidgetIds(kToolbarName);
+
+      isnot(spacerId, spacer2Id, "Spacer ids shouldn't be equal.");
+
+      CustomizableUI.addWidgetToArea("downloads-button", kToolbarName, 1);
+      assertAreaPlacements(kToolbarName, [spacerId, "downloads-button", spacer2Id]);
+    },
+    teardown: removeCustomToolbars
   }
 ];
 
