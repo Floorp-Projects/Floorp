@@ -16,7 +16,7 @@ CPP_SOURCES += [
     'nsXRemoteService.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+if CONFIG['MOZ_ENABLE_GTK']:
     CPP_SOURCES += [
         'nsGTKRemoteService.cpp',
     ]

@@ -49,7 +49,7 @@ LIBS += \
 LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 
 ifdef MOZ_PLATFORM_MAEMO
 # Maemo's libcurl doesn't ship with a set of CA certificates,
@@ -64,8 +64,8 @@ LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)
-OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
-OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
+OS_CXXFLAGS += $(TK_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
+OS_LIBS += $(TK_LIBS) $(MOZ_GTHREAD_LIBS)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
