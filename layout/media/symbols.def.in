@@ -110,6 +110,7 @@ speex_resampler_strerror
 #ifdef MOZ_CUBEB
 cubeb_destroy
 cubeb_init
+cubeb_get_max_channel_count
 cubeb_stream_destroy
 cubeb_stream_get_position
 cubeb_stream_init
