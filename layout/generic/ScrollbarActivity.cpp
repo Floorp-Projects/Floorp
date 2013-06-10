@@ -40,7 +40,9 @@ ScrollbarActivity::ActivityStarted()
 {
   mNestedActivityCounter++;
   CancelFadeBeginTimer();
-  SetIsFading(false);
+  if (!SetIsFading(false)) {
+    return;
+  }
   UnregisterFromRefreshDriver();
   StartListeningForEvents();
   SetIsActive(true);
@@ -220,7 +222,9 @@ ScrollbarActivity::BeginFade()
 
   CancelFadeBeginTimer();
   mFadeBeginTime = TimeStamp::Now();
-  SetIsFading(true);
+  if (!SetIsFading(true)) {
+    return;
+  }
   RegisterWithRefreshDriver();
 
   NS_ASSERTION(mIsActive, "only fade while scrollbars are visible");
@@ -233,7 +237,9 @@ ScrollbarActivity::EndFade()
   NS_ASSERTION(mIsActive, "still need to be active at this point");
   NS_ASSERTION(!IsActivityOngoing(), "why wasn't the fade end timer cancelled when scrollbar activity started?");
 
-  SetIsFading(false);
+  if (!SetIsFading(false)) {
+    return;
+  }
   SetIsActive(false);
   UnregisterFromRefreshDriver();
   StopListeningForEvents();
@@ -340,18 +346,27 @@ UnsetOpacityOnElement(nsIContent* aContent)
   }
 }
 
-void
+bool
 ScrollbarActivity::SetIsFading(bool aNewFading)
 {
   if (mIsFading == aNewFading)
-    return;
+    return true;
 
   mIsFading = aNewFading;
   if (!mIsFading) {
     mFadeBeginTime = TimeStamp();
+    // 'this' may be getting destroyed during UnsetOpacityOnElement calls.
+    nsWeakFrame weakFrame((do_QueryFrame(mScrollableFrame)));
     UnsetOpacityOnElement(GetHorizontalScrollbar());
+    if (!weakFrame.IsAlive()) {
+      return false;
+    }
     UnsetOpacityOnElement(GetVerticalScrollbar());
+    if (!weakFrame.IsAlive()) {
+      return false;
+    }
   }
+  return true;
 }
 
 void
