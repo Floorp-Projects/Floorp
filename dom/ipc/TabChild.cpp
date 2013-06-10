@@ -1550,7 +1550,7 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 bool
-TabChild::RecvHandleDoubleTap(const nsIntPoint& aPoint)
+TabChild::RecvHandleDoubleTap(const CSSIntPoint& aPoint)
 {
     if (!mCx || !mTabChildGlobal) {
         return true;
@@ -1567,7 +1567,7 @@ TabChild::RecvHandleDoubleTap(const nsIntPoint& aPoint)
 }
 
 bool
-TabChild::RecvHandleSingleTap(const nsIntPoint& aPoint)
+TabChild::RecvHandleSingleTap(const CSSIntPoint& aPoint)
 {
   if (!mCx || !mTabChildGlobal) {
     return true;
@@ -1581,7 +1581,7 @@ TabChild::RecvHandleSingleTap(const nsIntPoint& aPoint)
 }
 
 bool
-TabChild::RecvHandleLongTap(const nsIntPoint& aPoint)
+TabChild::RecvHandleLongTap(const CSSIntPoint& aPoint)
 {
   if (!mCx || !mTabChildGlobal) {
     return true;

@@ -653,11 +653,11 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
     MonitorAutoLock monitor(mMonitor);
 
     gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
-    gfx::Point point = WidgetSpaceToCompensatedViewportSpace(
-      gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
-      resolution);
-    mGeckoContentController->HandleLongTap(nsIntPoint(NS_lround(point.x),
-                                                      NS_lround(point.y)));
+    CSSPoint point = CSSPoint::FromUnknownPoint(
+      WidgetSpaceToCompensatedViewportSpace(
+        gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
+        resolution));
+    mGeckoContentController->HandleLongTap(CSSIntPoint::RoundToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
@@ -672,11 +672,11 @@ nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput
     MonitorAutoLock monitor(mMonitor);
 
     gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
-    gfx::Point point = WidgetSpaceToCompensatedViewportSpace(
-      gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
-      resolution);
-    mGeckoContentController->HandleSingleTap(nsIntPoint(NS_lround(point.x),
-                                                        NS_lround(point.y)));
+    CSSPoint point = CSSPoint::FromUnknownPoint(
+      WidgetSpaceToCompensatedViewportSpace(
+        gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
+        resolution));
+    mGeckoContentController->HandleSingleTap(CSSIntPoint::RoundToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
@@ -688,11 +688,11 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
 
     if (mAllowZoom) {
       gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
-      gfx::Point point = WidgetSpaceToCompensatedViewportSpace(
-        gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
-        resolution);
-      mGeckoContentController->HandleDoubleTap(nsIntPoint(NS_lround(point.x),
-                                                          NS_lround(point.y)));
+      CSSPoint point = CSSPoint::FromUnknownPoint(
+        WidgetSpaceToCompensatedViewportSpace(
+          gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
+          resolution));
+      mGeckoContentController->HandleDoubleTap(CSSIntPoint::RoundToInt(point));
     }
 
     return nsEventStatus_eConsumeNoDefault;

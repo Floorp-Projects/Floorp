@@ -2796,7 +2796,7 @@ AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrame
 }
 
 void
-AndroidBridge::HandleDoubleTap(const nsIntPoint& aPoint)
+AndroidBridge::HandleDoubleTap(const CSSIntPoint& aPoint)
 {
     nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
@@ -2804,7 +2804,7 @@ AndroidBridge::HandleDoubleTap(const nsIntPoint& aPoint)
 }
 
 void
-AndroidBridge::HandleSingleTap(const nsIntPoint& aPoint)
+AndroidBridge::HandleSingleTap(const CSSIntPoint& aPoint)
 {
     nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
@@ -2812,7 +2812,7 @@ AndroidBridge::HandleSingleTap(const nsIntPoint& aPoint)
 }
 
 void
-AndroidBridge::HandleLongTap(const nsIntPoint& aPoint)
+AndroidBridge::HandleLongTap(const CSSIntPoint& aPoint)
 {
     nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
