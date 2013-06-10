@@ -304,8 +304,8 @@ toolbarbutton.panel-multiview-anchor {
   -moz-image-region: rect(32px 96px 64px 64px);
 }
 
-#PanelUI-contents[type="grid"] #bookmarks-menu-button > .toolbarbutton-menu-dropmarker,
-#customization-palette #bookmarks-menu-button > .toolbarbutton-menu-dropmarker {
+#PanelUI-contents[type="grid"] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker,
+#customization-palette #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker {
   display: none;
 }
 
