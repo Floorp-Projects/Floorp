@@ -342,7 +342,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
 
   if (audiotrack_version_is_froyo(ctx)) {
     ctx->klass.ctor_froyo(stm->instance,
-                          params->stream_type,
+                          stm->params.stream_type,
                           stm->params.rate,
                           AUDIO_FORMAT_PCM_16_BIT,
                           channels,
@@ -353,7 +353,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
                           0);
   } else {
     ctx->klass.ctor(stm->instance,
-                    params->stream_type,
+                    stm->params.stream_type,
                     stm->params.rate,
                     AUDIO_FORMAT_PCM_16_BIT,
                     channels,
