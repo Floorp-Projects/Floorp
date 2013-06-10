@@ -61,7 +61,7 @@ struct AtkStateMap {
 };
 
 
-// Map array from cross platform roles to  ATK roles
+// Map array from cross platform states to ATK states
 static const AtkStateMap gAtkStateMap[] = {                     // Cross Platform States
   { kNone,                                    kMapOpposite },   // states::UNAVAILABLE             = 1 << 0
   { ATK_STATE_SELECTED,                       kMapDirectly },   // states::SELECTED                = 1 << 1
