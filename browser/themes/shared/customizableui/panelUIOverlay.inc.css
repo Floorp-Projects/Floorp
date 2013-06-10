@@ -263,13 +263,6 @@ panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active)
   height: 16px;
 }
 
-@media (min-resolution: 2dppx) {
-  #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
-    width: 32px;
-    height: 32px;
-  }
-}
-
 .PanelUI-footer.panel-multiview-anchor,
 .PanelUI-footer.panel-multiview-anchor > #PanelUI-help-btn,
 toolbarbutton.panel-multiview-anchor {
