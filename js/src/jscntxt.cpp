@@ -1081,7 +1081,7 @@ js_InvokeOperationCallback(JSContext *cx)
      */
     JS_ATOMIC_SET(&rt->interrupt, 0);
 
-    /* IonMonkey sets its stack limit to NULL to trigger operaton callbacks. */
+    /* IonMonkey sets its stack limit to UINTPTR_MAX to trigger operaton callbacks. */
     rt->resetIonStackLimit();
 
     if (rt->gcIsNeeded)
