@@ -635,10 +635,6 @@ struct GCGraph
     }
 };
 
-// XXX Would be nice to have an nsHashSet<KeyType> API that has
-// Add/Remove/Has rather than PutEntry/RemoveEntry/GetEntry.
-typedef nsTHashtable<nsPtrHashKey<const void> > PointerSet;
-
 static nsISupports *
 CanonicalizeXPCOMParticipant(nsISupports *in)
 {
