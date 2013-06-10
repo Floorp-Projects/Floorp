@@ -972,22 +972,20 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
 };
 
 // Generates a hardcoded callsite for a known, DOM-native target.
-class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 5>
+class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
 {
   public:
     LIR_HEADER(CallDOMNative)
 
     LCallDOMNative(uint32_t argslot,
                    const LDefinition &argJSContext, const LDefinition &argObj,
-                   const LDefinition &argPrivate, const LDefinition &argArgc,
-                   const LDefinition &argVp)
+                   const LDefinition &argPrivate, const LDefinition &argArgs)
       : JSCallHelper(argslot)
     {
         setTemp(0, argJSContext);
         setTemp(1, argObj);
         setTemp(2, argPrivate);
-        setTemp(3, argArgc);
-        setTemp(4, argVp);
+        setTemp(3, argArgs);
     }
 
     const LAllocation *getArgJSContext() {
@@ -999,11 +997,8 @@ class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 5>
     const LAllocation *getArgPrivate() {
         return getTemp(2)->output();
     }
-    const LAllocation *getArgArgc() {
+    const LAllocation *getArgArgs() {
         return getTemp(3)->output();
-    }
-    const LAllocation *getArgVp() {
-        return getTemp(4)->output();
     }
 };
 

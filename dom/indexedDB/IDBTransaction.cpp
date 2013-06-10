@@ -85,8 +85,6 @@ NS_IMETHODIMP_(nsrefcnt) StartTransactionRunnable::Release()
 
 NS_IMPL_QUERY_INTERFACE1(StartTransactionRunnable, nsIRunnable)
 
-StartTransactionRunnable gStartTransactionRunnable;
-
 } // anonymous namespace
 
 
@@ -128,7 +126,8 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
       TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
       NS_ENSURE_TRUE(pool, nullptr);
 
-      pool->Dispatch(transaction, &gStartTransactionRunnable, false, nullptr);
+      static StartTransactionRunnable sStartTransactionRunnable;
+      pool->Dispatch(transaction, &sStartTransactionRunnable, false, nullptr);
     }
   }
   else if (!aIsVersionChangeTransactionChild) {

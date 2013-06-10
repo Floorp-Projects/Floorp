@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
   webaudio.js \
+  layouttest-glue.js \
   test_bug808374.html \
   test_bug827541.html \
   test_bug839753.html \
@@ -39,8 +40,6 @@ MOCHITEST_FILES := \
   test_audioParamTimelineDestinationOffset.html \
   test_audioBufferSourceNode.html \
   test_audioBufferSourceNodeEnded.html \
-  test_audioBufferSourceNodeGain.html \
-  test_audioBufferSourceNodeGainInLoop.html \
   test_audioBufferSourceNodeLazyLoopParam.html \
   test_audioBufferSourceNodeLoop.html \
   test_audioBufferSourceNodeLoopStartEnd.html \
@@ -56,7 +55,6 @@ MOCHITEST_FILES := \
   test_delayNode.html \
   test_delayNodeSmallMaxDelay.html \
   test_delayNodeWithGain.html \
-  test_delayNodeWithGainAlternate.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
   test_gainNodeInLoop.html \
@@ -67,6 +65,7 @@ MOCHITEST_FILES := \
   test_offlineDestinationChannelCountLess.html \
   test_offlineDestinationChannelCountMore.html \
   test_pannerNode.html \
+  test_pannerNode_equalPower.html \
   test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \
   test_scriptProcessorNodeZeroInputOutput.html \

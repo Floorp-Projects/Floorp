@@ -1396,17 +1396,18 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     const Register argJSContext = ToRegister(call->getArgJSContext());
     const Register argObj       = ToRegister(call->getArgObj());
     const Register argPrivate   = ToRegister(call->getArgPrivate());
-    const Register argArgc      = ToRegister(call->getArgArgc());
-    const Register argVp        = ToRegister(call->getArgVp());
+    const Register argArgs      = ToRegister(call->getArgArgs());
 
     DebugOnly<uint32_t> initialStack = masm.framePushed();
 
     masm.checkStackAlignment();
 
     // DOM methods have the signature:
-    //  bool (*)(JSContext *, HandleObject, void *private, unsigned argc, Value *vp)
-    // Where vp[0] is space for an outparam and the callee, vp[1] is |this|, and vp[2] onward
-    // are the function arguments.
+    //  bool (*)(JSContext *, HandleObject, void *private, const JSJitMethodCallArgs& args)
+    // Where args is initialized from an argc and a vp, vp[0] is space for an
+    // outparam and the callee, vp[1] is |this|, and vp[2] onward are the
+    // function arguments.  Note that args stores the argv, not the vp, and
+    // argv == vp + 2.
 
     // Nestle the stack up against the pushed arguments, leaving StackPointer at
     // &vp[1]
@@ -1416,17 +1417,27 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     JS_ASSERT(obj == argObj);
 
     // Push a Value containing the callee object: natives are allowed to access their callee before
-    // setitng the return value. The StackPointer is moved to &vp[0].
+    // setitng the return value. After this the StackPointer points to &vp[0].
     masm.Push(ObjectValue(*target));
-    masm.movePtr(StackPointer, argVp);
+
+    // Now compute the argv value.  Since StackPointer is pointing to &vp[0] and
+    // argv is &vp[2] we just need to add 2*sizeof(Value) to the current
+    // StackPointer.
+    JS_STATIC_ASSERT(JSJitMethodCallArgsTraits::offsetOfArgv == 0);
+    JS_STATIC_ASSERT(JSJitMethodCallArgsTraits::offsetOfArgc ==
+                     IonDOMMethodExitFrameLayoutTraits::offsetOfArgcFromArgv);
+    masm.computeEffectiveAddress(Address(StackPointer, 2 * sizeof(Value)), argArgs);
 
     // GetReservedSlot(obj, DOM_OBJECT_SLOT).toPrivate()
     masm.loadPrivate(Address(obj, JSObject::getFixedSlotOffset(0)), argPrivate);
 
-    // Load argc from the call instruction.
-    masm.move32(Imm32(call->numStackArgs()), argArgc);
-    // Push argument into what will become the IonExitFrame
-    masm.Push(argArgc);
+    // Push argc from the call instruction into what will become the IonExitFrame
+    masm.Push(Imm32(call->numStackArgs()));
+
+    // Push our argv onto the stack
+    masm.Push(argArgs);
+    // And store our JSJitMethodCallArgs* in argArgs.
+    masm.movePtr(StackPointer, argArgs);
 
     // Push |this| object for passing HandleObject. We push after argc to
     // maintain the same sp-relative location of the object pointer with other
@@ -1444,15 +1455,14 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
         return false;
 
     // Construct and execute call.
-    masm.setupUnalignedABICall(5, argJSContext);
+    masm.setupUnalignedABICall(4, argJSContext);
 
     masm.loadJSContext(argJSContext);
 
     masm.passABIArg(argJSContext);
     masm.passABIArg(argObj);
     masm.passABIArg(argPrivate);
-    masm.passABIArg(argArgc);
-    masm.passABIArg(argVp);
+    masm.passABIArg(argArgs);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->jitInfo()->method));
 
     if (target->jitInfo()->isInfallible) {
@@ -6566,6 +6576,9 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     // Make space for the outparam.  Pre-initialize it to UndefinedValue so we
     // can trace it at GC time.
     masm.Push(UndefinedValue());
+    // We pass the pointer to our out param as an instance of
+    // JSJitGetterCallArgs, since on the binary level it's the same thing.
+    JS_STATIC_ASSERT(sizeof(JSJitGetterCallArgs) == sizeof(Value*));
     masm.movePtr(StackPointer, ValueReg);
 
     masm.Push(ObjectReg);
@@ -6632,6 +6645,9 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     // Push the argument. Rooting will happen at GC time.
     ValueOperand argVal = ToValue(ins, LSetDOMProperty::Value);
     masm.Push(argVal);
+    // We pass the pointer to our out param as an instance of
+    // JSJitGetterCallArgs, since on the binary level it's the same thing.
+    JS_STATIC_ASSERT(sizeof(JSJitSetterCallArgs) == sizeof(Value*));
     masm.movePtr(StackPointer, ValueReg);
 
     masm.Push(ObjectReg);

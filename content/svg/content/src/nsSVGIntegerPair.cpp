@@ -224,7 +224,7 @@ nsSVGIntegerPair::SMILIntegerPair::ValueFromString(const nsAString& aStr,
     return rv;
   }
 
-  nsSMILValue val(&SVGIntegerPairSMILType::sSingleton);
+  nsSMILValue val(SVGIntegerPairSMILType::Singleton());
   val.mU.mIntPair[0] = values[0];
   val.mU.mIntPair[1] = values[1];
   aValue = val;
@@ -236,7 +236,7 @@ nsSVGIntegerPair::SMILIntegerPair::ValueFromString(const nsAString& aStr,
 nsSMILValue
 nsSVGIntegerPair::SMILIntegerPair::GetBaseValue() const
 {
-  nsSMILValue val(&SVGIntegerPairSMILType::sSingleton);
+  nsSMILValue val(SVGIntegerPairSMILType::Singleton());
   val.mU.mIntPair[0] = mVal->mBaseVal[0];
   val.mU.mIntPair[1] = mVal->mBaseVal[1];
   return val;
@@ -256,9 +256,9 @@ nsSVGIntegerPair::SMILIntegerPair::ClearAnimValue()
 nsresult
 nsSVGIntegerPair::SMILIntegerPair::SetAnimValue(const nsSMILValue& aValue)
 {
-  NS_ASSERTION(aValue.mType == &SVGIntegerPairSMILType::sSingleton,
+  NS_ASSERTION(aValue.mType == SVGIntegerPairSMILType::Singleton(),
                "Unexpected type to assign animated value");
-  if (aValue.mType == &SVGIntegerPairSMILType::sSingleton) {
+  if (aValue.mType == SVGIntegerPairSMILType::Singleton()) {
     mVal->SetAnimValue(aValue.mU.mIntPair, mSVGElement);
   }
   return NS_OK;

@@ -19,7 +19,6 @@
 
 class gfxContext;
 class gfxASurface;
-class nsIPropertyBag;
 class nsDisplayListBuilder;
 
 namespace mozilla {
@@ -110,9 +109,7 @@ public:
   // Redraw the dirty rectangle of this canvas.
   NS_IMETHOD Redraw(const gfxRect &dirty) = 0;
 
-  // Passes a generic nsIPropertyBag options argument, along with the
-  // previous one, if any.  Optional.
-  NS_IMETHOD SetContextOptions(nsIPropertyBag *aNewOptions) { return NS_OK; }
+  NS_IMETHOD SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions) { return NS_OK; }
 
   //
   // shmem support

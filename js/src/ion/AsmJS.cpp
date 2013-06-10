@@ -277,10 +277,16 @@ FunctionStatementList(ParseNode *fn)
 }
 
 static inline ParseNode *
-FunctionLastStatementOrNull(ParseNode *fn)
+FunctionLastReturnStatementOrNull(ParseNode *fn)
 {
-    ParseNode *list = FunctionStatementList(fn);
-    return list->pn_count == 0 ? NULL : list->last();
+    ParseNode *listIter = ListHead(FunctionStatementList(fn));
+    ParseNode *lastReturn = NULL;
+    while (listIter) {
+        if (listIter->isKind(PNK_RETURN))
+            lastReturn = listIter;
+        listIter = listIter->pn_next;
+    }
+    return lastReturn;
 }
 
 static inline bool
@@ -2861,7 +2867,7 @@ CheckArguments(ModuleCompiler &m, ParseNode *fn, MIRTypeVector *argTypes, ParseN
 static bool
 CheckReturnType(ModuleCompiler &m, ParseNode *fn, RetType *returnType)
 {
-    ParseNode *stmt = FunctionLastStatementOrNull(fn);
+    ParseNode *stmt = FunctionLastReturnStatementOrNull(fn);
     if (!stmt || !stmt->isKind(PNK_RETURN) || !UnaryKid(stmt)) {
         *returnType = RetType::Void;
         return true;
@@ -3860,7 +3866,7 @@ CheckMultiply(FunctionCompiler &f, ParseNode *star, MDefinition **def, Type *typ
         if (!IsValidIntMultiplyConstant(lhs) && !IsValidIntMultiplyConstant(rhs))
             return f.fail(star, "one arg to int multiply must be a small (-2^20, 2^20) int literal");
         *def = f.mul(lhsDef, rhsDef, MIRType_Int32, MMul::Integer);
-        *type = Type::Signed;
+        *type = Type::Intish;
         return true;
     }
 
@@ -4591,7 +4597,7 @@ CheckVariableDecls(ModuleCompiler &m, FunctionCompiler::LocalMap *locals, ParseN
 {
     ParseNode *stmt = *stmtIter;
 
-    for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNode(stmt)) {
+    for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNonEmptyStatement(stmt)) {
         for (ParseNode *var = VarListHead(stmt); var; var = NextNode(var)) {
             if (!CheckVariableDecl(m, var, locals))
                 return false;

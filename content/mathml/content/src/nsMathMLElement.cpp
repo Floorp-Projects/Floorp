@@ -938,12 +938,6 @@ nsMathMLElement::GetLinkTarget(nsAString& aTarget)
   }
 }
 
-nsLinkState
-nsMathMLElement::GetLinkState() const
-{
-  return Link::GetLinkState();
-}
-
 already_AddRefed<nsIURI>
 nsMathMLElement::GetHrefURI() const
 {

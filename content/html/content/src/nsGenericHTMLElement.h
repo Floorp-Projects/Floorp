@@ -1063,8 +1063,7 @@ enum {
 // same time, so if it becomes an issue we can probably merge them into the
 // same bit.  --bz
 
-// Make sure we have enough space for those bits
-PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
+ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 
 #undef FORM_ELEMENT_FLAG_BIT
 

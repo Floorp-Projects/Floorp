@@ -15,6 +15,7 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.health.BrowserHealthReporter;
 import org.mozilla.gecko.menu.GeckoMenu;
+import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -87,6 +88,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
 
+    private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
 
     public static BrowserToolbar mBrowserToolbar;
@@ -437,6 +439,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (savedInstanceState != null) {
             mDynamicToolbarEnabled = savedInstanceState.getBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED);
+            mAboutHome.setTopPadding(savedInstanceState.getInt(STATE_ABOUT_HOME_TOP_PADDING));
         }
 
         // Listen to the dynamic toolbar pref
@@ -508,7 +511,7 @@ abstract public class BrowserApp extends GeckoApp
     public boolean onContextItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.pasteandgo: {
-                String text = GeckoAppShell.getClipboardText();
+                String text = Clipboard.getText();
                 if (!TextUtils.isEmpty(text)) {
                     Tabs.getInstance().loadUrl(text);
                 }
@@ -519,7 +522,7 @@ abstract public class BrowserApp extends GeckoApp
                 return true;
             }
             case R.id.paste: {
-                String text = GeckoAppShell.getClipboardText();
+                String text = Clipboard.getText();
                 if (!TextUtils.isEmpty(text)) {
                     showAwesomebar(AwesomeBar.Target.CURRENT_TAB, text);
                 }
@@ -547,7 +550,7 @@ abstract public class BrowserApp extends GeckoApp
                 if (tab != null) {
                     String url = tab.getURL();
                     if (url != null) {
-                        GeckoAppShell.setClipboardText(url);
+                        Clipboard.setText(url);
                     }
                 }
                 return true;
@@ -1135,6 +1138,7 @@ abstract public class BrowserApp extends GeckoApp
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
+        outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mAboutHome.getTopPadding());
     }
 
     /* Favicon methods */

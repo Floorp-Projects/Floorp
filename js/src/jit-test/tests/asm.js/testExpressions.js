@@ -9,6 +9,8 @@ assertAsmTypeFail(USE_ASM + "function f() { var i=0.0,j=0; return (i*j)|0 } retu
 assertAsmTypeFail(USE_ASM + "function f() { var i=0,j=0; return (i*j)|0 } return f");
 assertAsmTypeFail(USE_ASM + "function f() { var i=0; return (i*1048576)|0 } return f");
 assertAsmTypeFail(USE_ASM + "function f() { var i=0; return (i*-1048576)|0 } return f");
+assertAsmTypeFail(USE_ASM + "function f() { var i=0,j=0; return (i + (j*4))|0 } return f");
+assertAsmTypeFail(USE_ASM + "function f() { var two30 = 1073741824; return (((two30 * 524288 * 16) + 1) & 1)|0 } return f");
 assertAsmTypeFail(USE_ASM + "function f() { var i=0,j=0.0; return (i/j)|0 } return f");
 assertAsmTypeFail(USE_ASM + "function f() { var i=0.0,j=0; return (i/j)|0 } return f");
 assertAsmTypeFail(USE_ASM + "function f() { var i=1,j=1; return (i/j)|0 } return f");
