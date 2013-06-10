@@ -435,7 +435,7 @@ GetRegionArea(const nsIntRegion& aRegion)
 
 #ifdef MOZ_ANDROID_OMTC
 static float
-GetDisplayportCoverage(const gfx::Rect& aDisplayPort,
+GetDisplayportCoverage(const CSSRect& aDisplayPort,
                        const gfx3DMatrix& aTransformToScreen,
                        const nsIntRect& aScreenRect)
 {

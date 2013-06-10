@@ -41,11 +41,22 @@ struct LayerPixel {
                                           NS_lround(pt.y * resolutionY));
   }
 
+  static gfx::IntRectTyped<LayerPixel> RoundToInt(const gfx::RectTyped<LayerPixel>& rect) {
+    return gfx::IntRectTyped<LayerPixel>(NS_lround(rect.x),
+                                         NS_lround(rect.y),
+                                         NS_lround(rect.width),
+                                         NS_lround(rect.height));
+  }
+
+  static gfx::RectTyped<LayerPixel> FromCSSRect(const CSSRect& rect, float resolutionX, float resolutionY) {
+    return gfx::RectTyped<LayerPixel>(rect.x * resolutionX,
+                                      rect.y * resolutionY,
+                                      rect.width * resolutionX,
+                                      rect.height * resolutionY);
+  }
+
   static gfx::IntRectTyped<LayerPixel> FromCSSRectRounded(const CSSRect& rect, float resolutionX, float resolutionY) {
-    return gfx::IntRectTyped<LayerPixel>(NS_lround(rect.x * resolutionX),
-                                         NS_lround(rect.y * resolutionY),
-                                         NS_lround(rect.width * resolutionX),
-                                         NS_lround(rect.height * resolutionY));
+    return RoundToInt(FromCSSRect(rect, resolutionX, resolutionY));
   }
 
   static gfx::IntRectTyped<LayerPixel> FromCSSRectRoundOut(const CSSRect& rect, gfxFloat resolution) {
@@ -67,6 +78,7 @@ struct LayerPixel {
   }
 };
 
+typedef gfx::PointTyped<LayerPixel> LayerPoint;
 typedef gfx::IntPointTyped<LayerPixel> LayerIntPoint;
 typedef gfx::IntSizeTyped<LayerPixel> LayerIntSize;
 typedef gfx::RectTyped<LayerPixel> LayerRect;

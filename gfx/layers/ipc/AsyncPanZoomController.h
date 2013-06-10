@@ -223,7 +223,7 @@ public:
    * checkerboard immediately. This includes a bunch of logic, including
    * algorithms to bias painting in the direction of the velocity.
    */
-  static const gfx::Rect CalculatePendingDisplayPort(
+  static const CSSRect CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
     const gfx::Point& aVelocity,
     const gfx::Point& aAcceleration,

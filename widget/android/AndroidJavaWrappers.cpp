@@ -923,7 +923,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const LayerIntRect& aDisplayPort, floa
 
 void
 AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
-                                          bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
+                                          bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
                                           bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     NS_ASSERTION(!isNull(), "SyncFrameMetrics called on null layer client!");
@@ -934,15 +934,14 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float
     AutoLocalJNIFrame jniFrame(env);
 
     // convert the displayport rect from scroll-relative CSS pixels to document-relative device pixels
-    int dpX = NS_lround((aDisplayPort.x * aDisplayResolution) + aScrollOffset.x);
-    int dpY = NS_lround((aDisplayPort.y * aDisplayResolution) + aScrollOffset.y);
-    int dpW = NS_lround(aDisplayPort.width * aDisplayResolution);
-    int dpH = NS_lround(aDisplayPort.height * aDisplayResolution);
+    LayerRect dpUnrounded = LayerRect::FromCSSRect(aDisplayPort, aDisplayResolution, aDisplayResolution);
+    dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset);
+    LayerIntRect dp = LayerRect::RoundToInt(dpUnrounded);
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncFrameMetricsMethod,
             aScrollOffset.x, aScrollOffset.y, aZoom,
             aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost(),
-            aLayersUpdated, dpX, dpY, dpW, dpH, aDisplayResolution,
+            aLayersUpdated, dp.x, dp.y, dp.width, dp.height, aDisplayResolution,
             aIsFirstPaint);
 
     if (jniFrame.CheckForException())
@@ -959,7 +958,7 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float
 
 bool
 AndroidGeckoLayerClient::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
-                                                   const gfx::Rect& aDisplayPort,
+                                                   const LayerRect& aDisplayPort,
                                                    float aDisplayResolution,
                                                    bool aDrawingCritical,
                                                    gfx::Rect& aViewport,

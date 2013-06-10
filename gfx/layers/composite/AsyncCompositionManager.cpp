@@ -351,12 +351,12 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 
     const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
     const FrameMetrics& metrics = container->GetFrameMetrics();
-    gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
-                                      metrics.mDisplayPort : metrics.mCriticalDisplayPort);
+    CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
+                        metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     ScreenPoint offset(0, 0);
     SyncFrameMetrics(scrollOffset, treeTransform.mScale.width, metrics.mScrollableRect,
-                     mLayersUpdated, displayPortLayersPixels, 1 / rootTransform.GetXScale(),
+                     mLayersUpdated, displayPort, 1 / rootTransform.GetXScale(),
                      mIsFirstPaint, fixedLayerMargins, offset);
 
     mIsFirstPaint = false;
@@ -425,14 +425,12 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   // We synchronise the viewport information with Java after sending the above
   // notifications, so that Java can take these into account in its response.
   // Calculate the absolute display port to send to Java
-  LayerIntRect displayPort = LayerIntRect::FromCSSRectRounded(
-    CSSRect::FromUnknownRect(metrics.mCriticalDisplayPort.IsEmpty()
-                             ? metrics.mDisplayPort
-                             : metrics.mCriticalDisplayPort),
-    layerPixelRatioX, layerPixelRatioY);
-
-  displayPort.x += scrollOffsetLayerPixels.x;
-  displayPort.y += scrollOffsetLayerPixels.y;
+  LayerIntRect displayPort =
+    LayerIntRect::FromCSSRectRounded(metrics.mCriticalDisplayPort.IsEmpty()
+                                       ? metrics.mDisplayPort
+                                       : metrics.mCriticalDisplayPort,
+                                     layerPixelRatioX, layerPixelRatioY);
+  displayPort += scrollOffsetLayerPixels;
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
   ScreenPoint offset(0, 0);
@@ -595,7 +593,7 @@ AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aScrollOffset,
                                           float aZoom,
                                           const CSSRect& aCssPageRect,
                                           bool aLayersUpdated,
-                                          const gfx::Rect& aDisplayPort,
+                                          const CSSRect& aDisplayPort,
                                           float aDisplayResolution,
                                           bool aIsFirstPaint,
                                           gfx::Margin& aFixedLayerMargins,

@@ -155,7 +155,7 @@ public:
   //
   // This is only valid on the root layer. Nested iframes do not have a
   // displayport set on them. See bug 775452.
-  gfx::Rect mDisplayPort;
+  CSSRect mDisplayPort;
 
   // If non-empty, the area of a frame's contents that is considered critical
   // to paint. Area outside of this area (i.e. area inside mDisplayPort, but
@@ -163,7 +163,7 @@ public:
   // painted with lower precision, or not painted at all.
   //
   // The same restrictions for mDisplayPort apply here.
-  gfx::Rect mCriticalDisplayPort;
+  CSSRect mCriticalDisplayPort;
 
   // The CSS viewport, which is the dimensions we're using to constrain the
   // <html> element of this frame, relative to the top-left of the layer. Note
