@@ -5309,7 +5309,7 @@ CodeGenerator::link()
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());
 #ifdef JSGC_GENERATIONAL
-    cx->runtime->gcStoreBuffer.putGeneric(IonScriptRefs(script));
+    cx->runtime()->gcStoreBuffer.putGeneric(IonScriptRefs(script));
 #endif
     JS_ASSERT(graph.mir().numScripts() > 0);
     ionScript->copyScriptEntries(graph.mir().scripts());
