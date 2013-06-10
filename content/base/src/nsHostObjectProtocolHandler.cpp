@@ -29,21 +29,8 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
                                           nsIPrincipal* aPrincipal,
                                           nsACString& aUri)
 {
-  nsresult rv;
-  nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  nsresult rv = GenerateURIString(aScheme, aUri);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsID id;
-  rv = uuidgen->GenerateUUIDInPlace(&id);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char chars[NSID_LENGTH];
-  id.ToProvidedString(chars);
-
-  aUri += aScheme;
-  aUri += NS_LITERAL_CSTRING(":");
-  aUri += Substring(chars + 1, chars + NSID_LENGTH - 2);
 
   if (!gDataTable) {
     gDataTable = new nsClassHashtable<nsCStringHashKey, DataInfo>;
@@ -69,6 +56,29 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri)
       gDataTable = nullptr;
     }
   }
+}
+
+nsresult
+nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
+                                               nsACString& aUri)
+{
+  nsresult rv;
+  nsCOMPtr<nsIUUIDGenerator> uuidgen =
+    do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsID id;
+  rv = uuidgen->GenerateUUIDInPlace(&id);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  char chars[NSID_LENGTH];
+  id.ToProvidedString(chars);
+
+  aUri += aScheme;
+  aUri += NS_LITERAL_CSTRING(":");
+  aUri += Substring(chars + 1, chars + NSID_LENGTH - 2);
+
+  return NS_OK;
 }
 
 nsIPrincipal*
@@ -276,6 +286,13 @@ nsMediaSourceProtocolHandler::GetScheme(nsACString &result)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFontTableProtocolHandler::GetScheme(nsACString &result)
+{
+  result.AssignLiteral(FONTTABLEURI_SCHEME);
+  return NS_OK;
+}
+
 nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 {
@@ -305,6 +322,39 @@ NS_GetStreamForMediaStreamURI(nsIURI* aURI, nsIDOMMediaStream** aStream)
 
   *aStream = stream;
   NS_ADDREF(*aStream);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
+                                   const char *aCharset,
+                                   nsIURI *aBaseURI,
+                                   nsIURI **aResult)
+{
+  nsRefPtr<nsIURI> uri;
+
+  // Either you got here via a ref or a fonttable: uri
+  if (aSpec.Length() && aSpec.CharAt(0) == '#') {
+    nsresult rv = aBaseURI->CloneIgnoringRef(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    uri->SetRef(aSpec);
+  } else {
+    // Relative URIs (other than #ref) are not meaningful within the
+    // fonttable: scheme.
+    // If aSpec is a relative URI -other- than a bare #ref,
+    // this will leave uri empty, and we'll return a failure code below.
+    uri = new nsSimpleURI();
+    uri->SetSpec(aSpec);
+  }
+
+  bool schemeIs;
+  if (NS_FAILED(uri->SchemeIs(FONTTABLEURI_SCHEME, &schemeIs)) || !schemeIs) {
+    NS_WARNING("Non-fonttable spec in nsFontTableProtocolHander");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  uri.forget(aResult);
   return NS_OK;
 }
 

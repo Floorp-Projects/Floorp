@@ -57,6 +57,8 @@ private:
     nsCOMPtr<nsIPresShell> mPresShell;
 
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
+
+    nsAutoCString mSVGGlyphsDocumentURI;
 };
 
 /**
