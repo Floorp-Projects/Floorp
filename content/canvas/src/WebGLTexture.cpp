@@ -328,6 +328,25 @@ WebGLTexture::NeedFakeBlack() {
             }
         }
 
+        if (ImageInfoAt(0).mType == LOCAL_GL_FLOAT)
+        {
+            if (mMinFilter == LOCAL_GL_LINEAR ||
+                mMinFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR ||
+                mMinFilter == LOCAL_GL_LINEAR_MIPMAP_NEAREST ||
+                mMinFilter == LOCAL_GL_NEAREST_MIPMAP_LINEAR)
+            {
+                mContext->GenerateWarning("%s is a texture with a linear minification filter "
+                                          "that is not compatible with gl.FLOAT", msg_rendering_as_black);
+                mFakeBlackStatus = DoNeedFakeBlack;
+            }
+            else if (mMagFilter == LOCAL_GL_LINEAR)
+            {
+                mContext->GenerateWarning("%s is a texture with a linear magnification filter "
+                                          "that is not compatible with gl.FLOAT", msg_rendering_as_black);
+                mFakeBlackStatus = DoNeedFakeBlack;
+            }
+        }
+
         // we have exhausted all cases where we do need fakeblack, so if the status is still unknown,
         // that means that we do NOT need it.
         if (mFakeBlackStatus == DontKnowIfNeedFakeBlack)
