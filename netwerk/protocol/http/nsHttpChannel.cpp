@@ -4404,20 +4404,6 @@ nsHttpChannel::BeginConnect()
     LOG(("nsHttpChannel::BeginConnect [this=%p]\n", this));
     nsresult rv;
 
-    // notify "http-on-modify-request" observers
-    CallOnModifyRequestObservers();
-
-    // Check to see if we should redirect this channel elsewhere by
-    // nsIHttpChannel.redirectTo API request
-    if (mAPIRedirectToURI) {
-        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
-    }
-
-    // If mTimingEnabled flag is not set after OnModifyRequest() then
-    // clear the already recorded AsyncOpen value for consistency.
-    if (!mTimingEnabled)
-        mAsyncOpenTime = TimeStamp();
-
     // Construct connection info object
     nsAutoCString host;
     int32_t port = -1;
@@ -4455,6 +4441,20 @@ nsHttpChannel::BeginConnect()
 
     // check to see if authorization headers should be included
     mAuthProvider->AddAuthorizationHeaders();
+
+    // notify "http-on-modify-request" observers
+    CallOnModifyRequestObservers();
+
+    // Check to see if we should redirect this channel elsewhere by
+    // nsIHttpChannel.redirectTo API request
+    if (mAPIRedirectToURI) {
+        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+    }
+
+    // If mTimingEnabled flag is not set after OnModifyRequest() then
+    // clear the already recorded AsyncOpen value for consistency.
+    if (!mTimingEnabled)
+        mAsyncOpenTime = TimeStamp();
 
     // when proxying only use the pipeline bit if ProxyPipelining() allows it.
     if (!mConnectionInfo->UsingConnect() && mConnectionInfo->UsingHttpProxy()) {
