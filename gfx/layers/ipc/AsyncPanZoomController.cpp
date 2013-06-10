@@ -900,7 +900,7 @@ bool AsyncPanZoomController::EnlargeDisplayPortAlongAxis(float aSkateSizeMultipl
   return false;
 }
 
-const gfx::Rect AsyncPanZoomController::CalculatePendingDisplayPort(
+const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   const FrameMetrics& aFrameMetrics,
   const gfx::Point& aVelocity,
   const gfx::Point& aAcceleration,
@@ -917,7 +917,7 @@ const gfx::Rect AsyncPanZoomController::CalculatePendingDisplayPort(
   gfxSize resolution = CalculateResolution(aFrameMetrics);
   CSSIntRect compositionBounds = LayerIntRect::ToCSSIntRectRoundIn(
     aFrameMetrics.mCompositionBounds, resolution);
-  gfx::Rect scrollableRect = aFrameMetrics.mScrollableRect.ToUnknownRect();
+  CSSRect scrollableRect = aFrameMetrics.mScrollableRect;
 
   // Ensure the scrollableRect is at least as big as the compositionBounds
   // because the scrollableRect can be smaller if the content is not large
@@ -938,9 +938,9 @@ const gfx::Rect AsyncPanZoomController::CalculatePendingDisplayPort(
 
   CSSPoint scrollOffset = aFrameMetrics.mScrollOffset;
 
-  gfx::Rect displayPort(0, 0,
-                        compositionBounds.width * gXStationarySizeMultiplier,
-                        compositionBounds.height * gYStationarySizeMultiplier);
+  CSSRect displayPort = CSSRect(compositionBounds);
+  displayPort.MoveTo(0, 0);
+  displayPort.Scale(gXStationarySizeMultiplier, gYStationarySizeMultiplier);
 
   // If there's motion along an axis of movement, and it's above a threshold,
   // then we want to paint a larger area in the direction of that motion so that
@@ -981,12 +981,8 @@ const gfx::Rect AsyncPanZoomController::CalculatePendingDisplayPort(
     scrollOffset.y = scrollableRect.y;
   }
 
-  gfx::Rect shiftedDisplayPort = displayPort;
-  shiftedDisplayPort.MoveBy(scrollOffset.x, scrollOffset.y);
-  displayPort = scrollableRect.ClampRect(shiftedDisplayPort);
-  displayPort.MoveBy(-scrollOffset.x, -scrollOffset.y);
-
-  return displayPort;
+  CSSRect shiftedDisplayPort = displayPort + scrollOffset;
+  return scrollableRect.ClampRect(shiftedDisplayPort) - scrollOffset;
 }
 
 /*static*/ gfxSize
@@ -1048,16 +1044,12 @@ void AsyncPanZoomController::RequestContentRepaint() {
                                 GetAccelerationVector(),
                                 estimatedPaintDuration);
 
-  CSSPoint oldScrollOffset = mLastPaintRequestMetrics.mScrollOffset,
-           newScrollOffset = mFrameMetrics.mScrollOffset;
-
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
-  gfx::Rect oldDisplayPort = mLastPaintRequestMetrics.mDisplayPort;
-  gfx::Rect newDisplayPort = mFrameMetrics.mDisplayPort;
-
-  oldDisplayPort.MoveBy(oldScrollOffset.x, oldScrollOffset.y);
-  newDisplayPort.MoveBy(newScrollOffset.x, newScrollOffset.y);
+  CSSRect oldDisplayPort = mLastPaintRequestMetrics.mDisplayPort
+                         + mLastPaintRequestMetrics.mScrollOffset;
+  CSSRect newDisplayPort = mFrameMetrics.mDisplayPort
+                         + mFrameMetrics.mScrollOffset;
 
   if (fabsf(oldDisplayPort.x - newDisplayPort.x) < EPSILON &&
       fabsf(oldDisplayPort.y - newDisplayPort.y) < EPSILON &&
