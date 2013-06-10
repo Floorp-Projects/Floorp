@@ -427,6 +427,7 @@ audiotrack_stream_get_position(cubeb_stream * stream, uint64_t * position)
 static struct cubeb_ops const audiotrack_ops = {
   .init = audiotrack_init,
   .get_backend_id = audiotrack_get_backend_id,
+  .get_max_channel_count = audiotrack_get_max_channel_count,
   .destroy = audiotrack_destroy,
   .stream_init = audiotrack_stream_init,
   .stream_destroy = audiotrack_stream_destroy,
