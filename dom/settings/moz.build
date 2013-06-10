@@ -12,3 +12,9 @@ EXTRA_COMPONENTS += [
     'SettingsService.js',
     'SettingsService.manifest',
 ]
+
+EXTRA_JS_MODULES += [
+    'SettingsChangeNotifier.jsm',
+    'SettingsDB.jsm',
+    'SettingsQueue.jsm',
+]

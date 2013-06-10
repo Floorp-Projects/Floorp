@@ -31,3 +31,8 @@ EXTRA_COMPONENTS += [
     'AlarmsManager.js',
     'AlarmsManager.manifest',
 ]
+
+EXTRA_JS_MODULES += [
+    'AlarmDB.jsm',
+    'AlarmService.jsm',
+]
