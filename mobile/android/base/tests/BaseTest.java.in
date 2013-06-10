@@ -173,19 +173,15 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             mAsserter.ok(clicked != false, "checking that awesome bar clicked", "awesome bar was clicked");
             return null;
         }
-        // Wait for click to take effect before waiting for activity
-        // (otherwise we sometimes get the previous activity).
-        // Previously, waitForIdleSync was used here but it was found
-        // to hang very occasionally.
-        mSolo.sleep(2000);
-        Activity activity = inst.waitForMonitor(monitor);
+        inst.waitForMonitor(monitor);
         // Give the activity time to render itself and initialize views 
         // before continuing, so that views are created before access
         // attempts are made. Again, waitForIdleSync was used here
         // previously, but replaced with a sleep to avoid hangs.
         // TODO: Investigate and document why these pauses are required.
         mSolo.sleep(2000);
-        return activity;
+
+        return mSolo.getCurrentActivity();
     }
 
     /**
