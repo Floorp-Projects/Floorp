@@ -29,9 +29,11 @@
 #ifndef ReverbAccumulationBuffer_h
 #define ReverbAccumulationBuffer_h
 
-#include "core/platform/audio/AudioArray.h"
+#include "nsTArray.h"
 
 namespace WebCore {
+
+typedef nsTArray<float> AudioFloatArray;
 
 // ReverbAccumulationBuffer is a circular delay buffer with one client reading from it and multiple clients
 // writing/accumulating to it at different delay offsets from the read position.  The read operation will zero the memory

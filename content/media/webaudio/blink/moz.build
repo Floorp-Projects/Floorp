@@ -8,8 +8,15 @@ MODULE = 'content'
 
 CPP_SOURCES += [
     'Biquad.cpp',
+    'DirectConvolver.cpp',
     'DynamicsCompressor.cpp',
     'DynamicsCompressorKernel.cpp',
+    'FFTConvolver.cpp',
+    'Reverb.cpp',
+    'ReverbAccumulationBuffer.cpp',
+    'ReverbConvolver.cpp',
+    'ReverbConvolverStage.cpp',
+    'ReverbInputBuffer.cpp',
     'ZeroPole.cpp',
 ]
 
