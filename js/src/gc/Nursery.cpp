@@ -497,6 +497,9 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     JS_AbortIfWrongThread(rt);
 
+    if (rt->mainThread.suppressGC)
+        return;
+
     if (!isEnabled())
         return;
 

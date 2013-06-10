@@ -87,6 +87,7 @@ SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 inline void
 JSScript::setFunction(JSFunction *fun)
 {
+    JS_ASSERT(fun->isTenured());
     function_ = fun;
 }
 
