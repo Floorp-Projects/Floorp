@@ -390,6 +390,7 @@ var FullZoom = {
    * prefs store.
    */
   _applyZoomToPref: function FullZoom__applyZoomToPref() {
+    Services.obs.notifyObservers(null, "browser-fullZoom:zoomChange", "");
     if (!this.siteSpecific ||
         gInPrintPreviewMode ||
         content.document.mozSyntheticDocument)
@@ -407,6 +408,7 @@ var FullZoom = {
    * Removes from the content prefs store the zoom level of the current browser.
    */
   _removePref: function FullZoom__removePref() {
+        Services.obs.notifyObservers(null, "browser-fullZoom:zoomReset", "");
     if (content.document.mozSyntheticDocument)
       return;
     let ctxt = this._loadContextFromWindow(gBrowser.contentWindow);
@@ -416,6 +418,7 @@ var FullZoom = {
       }.bind(this),
     });
   },
+
 
   //**************************************************************************//
   // Utilities
