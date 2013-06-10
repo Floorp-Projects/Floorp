@@ -111,6 +111,14 @@ void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                     float aOutput[WEBAUDIO_BLOCK_SIZE]);
 
 /**
+ * Vector complex multiplication on arbitrary sized buffers.
+ */
+void BufferComplexMultiply(const float* aInput,
+                           const float* aScale,
+                           float* aOutput,
+                           uint32_t aSize);
+
+/**
  * In place gain. aScale == 1.0f should be optimized.
  */
 void AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
