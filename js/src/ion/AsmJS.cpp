@@ -838,7 +838,7 @@ TypedArrayLoadType(ArrayBufferView::ViewType viewType)
 
 enum ArrayStoreEnum {
     ArrayStore_Intish,
-    ArrayStore_Double
+    ArrayStore_Doublish
 };
 
 static ArrayStoreEnum
@@ -854,11 +854,11 @@ TypedArrayStoreType(ArrayBufferView::ViewType viewType)
         return ArrayStore_Intish;
       case ArrayBufferView::TYPE_FLOAT32:
       case ArrayBufferView::TYPE_FLOAT64:
-        return ArrayStore_Double;
+        return ArrayStore_Doublish;
       default:;
     }
     JS_NOT_REACHED("Unexpected array type");
-    return ArrayStore_Double;
+    return ArrayStore_Doublish;
 }
 
 /*****************************************************************************/
@@ -3249,9 +3249,9 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
         if (!rhsType.isIntish())
             return f.failf(lhs, "%s is not a subtype of intish", rhsType.toChars());
         break;
-      case ArrayStore_Double:
-        if (rhsType != Type::Double)
-            return f.failf(lhs, "%s is not double", rhsType.toChars());
+      case ArrayStore_Doublish:
+        if (!rhsType.isDoublish())
+            return f.failf(lhs, "%s is not a subtype of doublish", rhsType.toChars());
         break;
     }
 
