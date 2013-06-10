@@ -878,7 +878,7 @@ class MOZ_STACK_CLASS TokenStream
     bool matchUnicodeEscapeIdStart(int32_t *c);
     bool matchUnicodeEscapeIdent(int32_t *c);
     bool peekChars(int n, jschar *cp);
-    bool getAtSourceMappingURL(bool isMultiline);
+    bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
 
     // |expect| cannot be an EOL char.
     bool matchChar(int32_t expect) {
