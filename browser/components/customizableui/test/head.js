@@ -33,7 +33,7 @@ function createToolbarWithPlacements(id, placements) {
   tb.setAttribute("customizable", "true");
   document.getElementById("customToolbars").appendChild(tb);
   CustomizableUI.registerArea(id, {
-    type: CustomizableUI.TYPE_TOOLBAR,
+    type: CustomizableUI.AREATYPE_TOOLBAR,
     defaultPlacements: placements
   });
 }
@@ -71,6 +71,17 @@ function assertAreaPlacements(areaId, expectedPlacements) {
     } else {
       ok(false, "Unknown type of expected placement passed to " +
                 " assertAreaPlacements. Is your test broken?");
+    }
+  }
+}
+
+function assertSetsEqual(aSetA, aSetB) {
+  if (aSetA.size != aSetB.size)
+    ok(false, "Sets were not equal in size.");
+
+  for (let item of aSetA) {
+    if (!aSetB.has(item)) {
+      ok(false, "Left set contained " + item + " which was not in right set.");
     }
   }
 }
@@ -128,6 +139,20 @@ function startCustomizing() {
   window.gNavToolbox.addEventListener("customizationready", onCustomizing);
   window.gCustomizeMode.enter();
   return deferred.promise;
+}
+
+function createToolbarItem(aProperties) {
+  let node = document.createElement("toolbaritem");
+  for (let attribute in aProperties) {
+    node.setAttribute(attribute, aProperties[attribute]);
+  }
+  return node;
+}
+
+function addToPalette(...aNodes) {
+  for (let node of aNodes) {
+    gNavToolbox.palette.appendChild(node);
+  }
 }
 
 function testRunner(testAry) {

@@ -38,7 +38,8 @@ const CustomizableWidgets = [{
     viewId: "PanelUI-history",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onViewShowing: function(aEvent) {
       // Populate our list of history
       const kMaxResults = 15;
@@ -101,7 +102,8 @@ const CustomizableWidgets = [{
     id: "privatebrowsing-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onCommand: function(e) {
       if (e.target && e.target.ownerDocument && e.target.ownerDocument.defaultView) {
         let win = e.target.ownerDocument.defaultView;
@@ -114,7 +116,8 @@ const CustomizableWidgets = [{
     id: "save-page-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -127,7 +130,8 @@ const CustomizableWidgets = [{
     id: "find-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -140,7 +144,8 @@ const CustomizableWidgets = [{
     id: "open-file-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onCommand: function(aEvent) {
       let win = aEvent.target
                 && aEvent.target.ownerDocument
@@ -153,7 +158,8 @@ const CustomizableWidgets = [{
     id: "developer-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -166,7 +172,8 @@ const CustomizableWidgets = [{
     id: "add-ons-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -179,7 +186,8 @@ const CustomizableWidgets = [{
     id: "preferences-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -193,7 +201,8 @@ const CustomizableWidgets = [{
     type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let noautoclose = inPanel ? "true" : null;
@@ -318,7 +327,8 @@ const CustomizableWidgets = [{
     type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
+    allowedAreaTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                       CustomizableUI.AREATYPE_TOOLBAR],
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let flex = inPanel ? "1" : null;
@@ -417,7 +427,8 @@ const CustomizableWidgets = [{
     viewId: "PanelUI-feeds",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
+    allowedAreasTypes: [CustomizableUI.AREATYPE_MENU_PANEL,
+                        CustomizableUI.AREATYPE_TOOLBAR],
     onClick: function(aEvent) {
       let win = aEvent.target.ownerDocument.defaultView;
       let feeds = win.gBrowser.selectedBrowser.feeds;
