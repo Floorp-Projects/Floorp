@@ -901,8 +901,7 @@ class GeckoInputConnection
                                               typeHint.equalsIgnoreCase("month") ||
                                               typeHint.equalsIgnoreCase("week") ||
                                               typeHint.equalsIgnoreCase("datetime-local"))))) {
-            mIMEState = IME_STATE_DISABLED;
-            return;
+            state = IME_STATE_DISABLED;
         }
 
         // mIMEState and the mIME*Hint fields should only be changed by notifyIMEContext,
