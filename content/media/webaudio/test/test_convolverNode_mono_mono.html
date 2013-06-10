@@ -2,10 +2,12 @@
 
 <html>
 <head>
-<link rel="stylesheet" href="../fast/js/resources/js-test-style.css"/>
-<script type="text/javascript" src="resources/audio-testing.js"></script>
-<script src="../fast/js/resources/js-test-pre.js"></script>
-<script src="resources/convolution-testing.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="webaudio.js"></script>
+<script type="text/javascript" src="layouttest-glue.js"></script>
+<script type="text/javascript" src="blink/audio-testing.js"></script>
+<script type="text/javascript" src="blink/convolution-testing.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
 <body>
@@ -15,6 +17,7 @@
 
 <script>
 description("Tests ConvolverNode processing a mono channel with mono impulse response.");
+SimpleTest.waitForExplicitFinish();
 
 // To test the convolver, we convolve two square pulses together to
 // produce a triangular pulse.  To verify the result is correct we
@@ -27,22 +30,24 @@ description("Tests ConvolverNode processing a mono channel with mono impulse res
 // the result should be exactly zero because the inputs are exactly
 // zero.
 function runTest() {
+    SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
     if (window.testRunner) {
         testRunner.dumpAsText();
         testRunner.waitUntilDone();
     }
-    
+
     window.jsTestIsAsync = true;
-        
+
     // Create offline audio context.
-    var context = new webkitOfflineAudioContext(2, sampleRate * renderLengthSeconds, sampleRate);
+    var context = new OfflineAudioContext(2, sampleRate * renderLengthSeconds, sampleRate);
 
     var squarePulse = createSquarePulseBuffer(context, pulseLengthFrames);
     var trianglePulse = createTrianglePulseBuffer(context, 2 * pulseLengthFrames);
-    
+
     var bufferSource = context.createBufferSource();
     bufferSource.buffer = squarePulse;
-    
+
     var convolver = context.createConvolver();
     convolver.normalize = false;
     convolver.buffer = squarePulse;
@@ -51,9 +56,14 @@ function runTest() {
     convolver.connect(context.destination);
 
     bufferSource.noteOn(0);
-    
+
     context.oncomplete = checkConvolvedResult(trianglePulse);
     context.startRendering();
+}
+
+function finishJSTest() {
+  SpecialPowers.clearUserPref("media.webaudio.enabled");
+  SimpleTest.finish();
 }
 
 runTest();
