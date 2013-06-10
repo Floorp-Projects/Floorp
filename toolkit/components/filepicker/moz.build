@@ -13,4 +13,6 @@ if CONFIG['MOZ_XUL'] and \
         CPP_SOURCES += [
             'nsFileView.cpp',
         ]
-
+        EXTRA_COMPONENTS += [
+            'nsFilePicker.js',
+        ]

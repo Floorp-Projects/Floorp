@@ -710,7 +710,7 @@ public class AwesomeBar extends GeckoActivity
                 break;
             }
             case R.id.remove_bookmark: {
-                (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
+                (new UiAsyncTask<Void, Void, Integer>(ThreadUtils.getBackgroundHandler()) {
                     private boolean mInReadingList;
 
                     @Override
@@ -719,18 +719,25 @@ public class AwesomeBar extends GeckoActivity
                     }
 
                     @Override
-                    public Void doInBackground(Void... params) {
+                    public Integer doInBackground(Void... params) {
                         BrowserDB.removeBookmark(getContentResolver(), id);
-                        return null;
+                        Integer count = mInReadingList ?
+                            BrowserDB.getReadingListCount(getContentResolver()) : 0;
+
+                        return count;
                     }
 
                     @Override
-                    public void onPostExecute(Void result) {
+                    public void onPostExecute(Integer aCount) {
                         int messageId = R.string.bookmark_removed;
                         if (mInReadingList) {
                             messageId = R.string.reading_list_removed;
 
                             GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", url);
+                            GeckoAppShell.sendEventToGecko(e);
+
+                            // Delete from Awesomebar context menu can alter reading list bookmark count
+                            e = GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(aCount));
                             GeckoAppShell.sendEventToGecko(e);
                         }
 

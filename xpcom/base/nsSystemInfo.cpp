@@ -116,7 +116,7 @@ nsSystemInfo::Init()
     }
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
+#if defined(MOZ_WIDGET_GTK)
     // This must be done here because NSPR can only separate OS's when compiled, not libraries.
     char* gtkver = PR_smprintf("GTK %u.%u.%u", gtk_major_version, gtk_minor_version, gtk_micro_version);
     if (gtkver) {

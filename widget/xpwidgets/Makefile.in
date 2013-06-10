@@ -27,8 +27,18 @@ ifdef MOZ_ENABLE_D3D10_LAYER
 DEFINES		+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
+ifneq (,$(filter gtk3,$(MOZ_WIDGET_TOOLKIT)))
+# gtk3 shares includes with gtk2
 LOCAL_INCLUDES	+= \
-		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
+		-I$(srcdir)/../gtk2 \
+		$(NULL)
+else
+LOCAL_INCLUDES	+= \
+ 		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
+		$(NULL)
+endif
+
+LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../shared \
 		-I$(topsrcdir)/layout/base \
 		-I$(topsrcdir)/layout/forms \

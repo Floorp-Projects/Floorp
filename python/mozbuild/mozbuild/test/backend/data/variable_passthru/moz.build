@@ -21,3 +21,5 @@ SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 CSRCS += ['bar.c', 'foo.c']
 
 CMMSRCS = ['bar.mm', 'foo.mm']
+
+SSRCS = ['bar.S', 'foo.S']

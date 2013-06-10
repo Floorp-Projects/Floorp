@@ -37,7 +37,7 @@ function test_cached_original_sources()
   let { code, map } = node.toStringWithSourceMap({
     file: "abc.js"
   });
-  code += "//@ sourceMappingURL=data:text/json;base64," + btoa(map.toString());
+  code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());
 
 
   Components.utils.evalInSandbox(code, gDebuggee, "1.8",

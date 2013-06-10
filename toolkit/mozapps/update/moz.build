@@ -33,3 +33,12 @@ if CONFIG['MOZ_UPDATER']:
 
 MODULE = 'update'
 
+EXTRA_COMPONENTS += [
+    'nsUpdateTimerManager.js',
+    'nsUpdateTimerManager.manifest',
+]
+
+if CONFIG['MOZ_UPDATER']:
+    EXTRA_COMPONENTS += [
+        'nsUpdateService.manifest',
+    ]

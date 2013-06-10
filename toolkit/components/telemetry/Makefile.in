@@ -26,7 +26,7 @@ EXTRA_PP_COMPONENTS = \
   TelemetryPing.js \
   $(NULL)
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   TelemetryPing.manifest \
   $(NULL)
 

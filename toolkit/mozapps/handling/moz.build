@@ -6,3 +6,7 @@
 
 MODULE = 'contentDispatchChooser'
 
+EXTRA_COMPONENTS += [
+    'nsContentDispatchChooser.js',
+    'nsContentDispatchChooser.manifest',
+]

@@ -58,6 +58,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StrictMode;
+import android.provider.ContactsContract;
 
 import android.telephony.CellLocation;
 import android.telephony.NeighboringCellInfo;
@@ -672,6 +673,19 @@ abstract public class GeckoApp
                 } else {
                     mPrivateBrowsingSession = message.getString("session");
                 }
+            } else if (event.equals("Contact:Add")) {                
+                if (!message.isNull("email")) {
+                    Uri contactUri = Uri.parse(message.getString("email"));       
+                    Intent i = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT, contactUri);
+                    startActivity(i);
+                } else if (!message.isNull("phone")) {
+                    Uri contactUri = Uri.parse(message.getString("phone"));       
+                    Intent i = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT, contactUri);
+                    startActivity(i);
+                } else {
+                    // something went wrong.
+                    Log.e(LOGTAG, "Received Contact:Add message with no email nor phone number");
+                }                
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1421,6 +1435,7 @@ abstract public class GeckoApp
 
         //register for events
         registerEventListener("log");
+        registerEventListener("Reader:ListCountRequest");
         registerEventListener("Reader:Added");
         registerEventListener("Reader:Removed");
         registerEventListener("Reader:Share");
@@ -1457,6 +1472,7 @@ abstract public class GeckoApp
         registerEventListener("Update:Download");
         registerEventListener("Update:Install");
         registerEventListener("PrivateBrowsing:Data");
+        registerEventListener("Contact:Add");
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -1902,6 +1918,7 @@ abstract public class GeckoApp
     public void onDestroy()
     {
         unregisterEventListener("log");
+        unregisterEventListener("Reader:ListCountRequest");
         unregisterEventListener("Reader:Added");
         unregisterEventListener("Reader:Removed");
         unregisterEventListener("Reader:Share");
@@ -1938,6 +1955,7 @@ abstract public class GeckoApp
         unregisterEventListener("Update:Download");
         unregisterEventListener("Update:Install");
         unregisterEventListener("PrivateBrowsing:Data");
+        unregisterEventListener("Contact:Add");
 
         deleteTempFiles();
 

@@ -537,7 +537,6 @@ class JSScript : public js::gc::Cell
     bool            hasBeenCloned:1;  /* script has been reused for a clone. */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
-    bool            uninlineable:1;   /* script is considered uninlineable by analysis */
 
     /* Set for functions defined at the top level within an 'eval' script. */
     bool directlyInsideEval:1;

@@ -225,12 +225,9 @@ BuildListForLayer(Layer* aLayer,
     // Calculate rect for this layer based on aTransform.
     nsRect bounds;
     {
+      bounds = CSSRect::ToAppUnits(metrics->mViewport);
       nscoord auPerDevPixel = aSubdocFrame->PresContext()->AppUnitsPerDevPixel();
-      gfx::Rect viewport = metrics->mViewport;
-      bounds = nsIntRect(viewport.x, viewport.y,
-                         viewport.width, viewport.height).ToAppUnits(auPerDevPixel);
       ApplyTransform(bounds, tmpTransform, auPerDevPixel);
-
     }
 
     aShadowTree.AppendToTop(
@@ -411,9 +408,12 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
       view->mParentScaleY = aAccConfigYScale;
     }
 
+    // I don't know what units mViewportSize is in, hence use ToUnknownRect
+    // here to mark the current frontier in type info propagation
+    gfx::Rect viewport = metrics.mViewport.ToUnknownRect();
     view->mViewportSize = nsSize(
-      NSIntPixelsToAppUnits(metrics.mViewport.width, auPerDevPixel) * aXScale,
-      NSIntPixelsToAppUnits(metrics.mViewport.height, auPerDevPixel) * aYScale);
+      NSIntPixelsToAppUnits(viewport.width, auPerDevPixel) * aXScale,
+      NSIntPixelsToAppUnits(viewport.height, auPerDevPixel) * aYScale);
     view->mContentSize = nsSize(
       NSIntPixelsToAppUnits(metrics.mContentRect.width, auPerDevPixel) * aXScale,
       NSIntPixelsToAppUnits(metrics.mContentRect.height, auPerDevPixel) * aYScale);
@@ -499,7 +499,7 @@ public:
                         aFrameMetrics));
   }
 
-  virtual void HandleDoubleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -516,7 +516,7 @@ public:
     }
   }
 
-  virtual void HandleSingleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -533,7 +533,7 @@ public:
     }
   }
 
-  virtual void HandleLongTap(const nsIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -552,8 +552,8 @@ public:
 
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
-  virtual void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect,
-                                       const gfx::Size& aContentSize) MOZ_OVERRIDE
+  virtual void SendAsyncScrollDOMEvent(const CSSRect& aContentRect,
+                                       const CSSSize& aContentSize) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       mUILoop->PostTask(

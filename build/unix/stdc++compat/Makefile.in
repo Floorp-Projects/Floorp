@@ -10,7 +10,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= stdc++compat
-HOST_LIBRARY_NAME = host_stdc++compat
+DISABLED_HOST_LIBRARY_NAME = host_stdc++compat
 FORCE_STATIC_LIB= 1
 STL_FLAGS =
 NO_EXPAND_LIBS = 1

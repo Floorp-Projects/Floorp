@@ -10,7 +10,7 @@ toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit in ('os2', 'cocoa', 'qt', 'android', 'gonk'):
     DIRS += [toolkit]
-if toolkit in ('qt', 'android', 'gonk', 'gtk2'):
+if toolkit in ('qt', 'android', 'gonk', 'gtk2', 'gtk3'):
     EXPORTS += ['nsIPrintDialogService.h']
 
 if toolkit == 'windows':
@@ -54,7 +54,7 @@ TEST_TOOL_DIRS += ['tests']
 # multiple implementations of widget can be built on the same
 # source tree.
 #
-if CONFIG['MOZ_ENABLE_GTK2']:
+if CONFIG['MOZ_ENABLE_GTK']:
     DIRS += ['gtk2']
 
     if CONFIG['MOZ_X11']:
