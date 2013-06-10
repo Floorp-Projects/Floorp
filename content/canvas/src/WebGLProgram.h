@@ -7,7 +7,6 @@
 #define WEBGLPROGRAM_H_
 
 #include "WebGLObjectModel.h"
-#include "WebGLShader.h"
 
 #include "nsWrapperCache.h"
 
@@ -15,6 +14,9 @@
 #include "mozilla/CheckedInt.h"
 
 namespace mozilla {
+
+class WebGLShader;
+class WebGLUniformInfo;
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> CStringMap;
 typedef nsDataHashtable<nsCStringHashKey, WebGLUniformInfo> CStringToUniformInfoMap;

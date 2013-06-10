@@ -5,6 +5,15 @@
 
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
+#include "WebGLBuffer.h"
+#include "WebGLVertexAttribData.h"
+#include "WebGLShader.h"
+#include "WebGLProgram.h"
+#include "WebGLUniformLocation.h"
+#include "WebGLFramebuffer.h"
+#include "WebGLRenderbuffer.h"
+#include "WebGLShaderPrecisionFormat.h"
+#include "WebGLTexture.h"
 
 #include "nsString.h"
 #include "nsDebug.h"
@@ -45,6 +54,10 @@ static const int MAX_DRAW_CALLS_SINCE_FLUSH = 100;
 //  WebGL API
 //
 
+inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
+    return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()
+                             : static_cast<const WebGLRectangleObject*>(this);
+}
 
 void
 WebGLContext::ActiveTexture(WebGLenum texture)
