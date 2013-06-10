@@ -46,6 +46,7 @@ class AudioListener;
 class BiquadFilterNode;
 class ChannelMergerNode;
 class ChannelSplitterNode;
+class ConvolverNode;
 class DelayNode;
 class DynamicsCompressorNode;
 class GainNode;
@@ -166,6 +167,9 @@ public:
 
   already_AddRefed<PannerNode>
   CreatePanner();
+
+  already_AddRefed<ConvolverNode>
+  CreateConvolver();
 
   already_AddRefed<ChannelSplitterNode>
   CreateChannelSplitter(uint32_t aNumberOfOutputs, ErrorResult& aRv);
