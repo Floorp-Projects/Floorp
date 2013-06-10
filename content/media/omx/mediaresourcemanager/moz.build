@@ -6,15 +6,11 @@
 
 MODULE = 'content'
 
-EXPORTS += [
-    'MediaOmxDecoder.h',
-    'MediaOmxReader.h',
-]
-
 CPP_SOURCES += [
-    'MediaOmxDecoder.cpp',
-    'MediaOmxReader.cpp',
-    'OmxDecoder.cpp',
-    'OMXCodecProxy.cpp',
+    'IMediaResourceManagerClient.cpp',
+    'IMediaResourceManagerDeathNotifier.cpp',
+    'IMediaResourceManagerService.cpp',
+    'MediaResourceManagerClient.cpp',
+    'MediaResourceManagerService.cpp',
 ]
 
