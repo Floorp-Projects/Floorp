@@ -398,9 +398,6 @@ class GeckoInputConnection
         }
         mBatchSelectionChanged = false;
         mBatchTextChanged = false;
-        mUpdateRequest = null;
-
-        mCurrentInputMethod = "";
 
         // Do not reset mIMEState here; see comments in notifyIMEContext
     }
@@ -921,6 +918,10 @@ class GeckoInputConnection
         mIMETypeHint = (typeHint == null) ? "" : typeHint;
         mIMEModeHint = (modeHint == null) ? "" : modeHint;
         mIMEActionHint = (actionHint == null) ? "" : actionHint;
+
+        // These fields are reset here and will be updated when restartInput is called below
+        mUpdateRequest = null;
+        mCurrentInputMethod = "";
 
         View v = getView();
         if (v == null || !v.hasFocus()) {
