@@ -42,7 +42,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     CPP_SOURCES += [
         'nsNativeAppSupportOS2.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+elif CONFIG['MOZ_ENABLE_GTK']:
     CPP_SOURCES += [
         'nsNativeAppSupportUnix.cpp',
     ]

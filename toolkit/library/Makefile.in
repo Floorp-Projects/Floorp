@@ -186,7 +186,7 @@ COMPONENT_LIBS += \
   $(NULL)
 
 ifdef MOZ_XUL
-ifdef MOZ_ENABLE_GTK2
+ifdef MOZ_ENABLE_GTK
 COMPONENT_LIBS += \
   unixproxy \
   $(NULL)
@@ -269,6 +269,10 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
+ifdef MOZ_ENABLE_GTK3
+COMPONENT_LIBS += widget_gtk3
+endif
+
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
 endif
@@ -280,7 +284,7 @@ endif
 endif
 
 # Platform-specific icon channel stuff - supported mostly-everywhere
-ifneq (,$(filter windows os2 mac cocoa gtk2 qt android,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2 mac cocoa gtk2 gtk3 qt android,$(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
@@ -530,8 +534,9 @@ ifdef MOZ_ENABLE_DBUS
 EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
-ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) -lgthread-2.0
+ifdef MOZ_WIDGET_GTK
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(XT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
 

@@ -38,7 +38,7 @@ endif
 
 endif
 
-ifneq ($(MOZ_ENABLE_GTK2),)
+ifdef MOZ_WIDGET_GTK
 OS_CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS)
 endif
@@ -75,7 +75,7 @@ WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 WIN32_EXE_LDFLAGS += -DELAYLOAD:wsock32.dll -DELAYLOAD:crypt32.dll
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 libs:: updater.png
 	$(NSINSTALL) -D $(DIST)/bin/icons
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
@@ -111,4 +111,3 @@ ifneq (,$(filter nightly aurora nightly-elm nightly-profiling nightly-oak,$(MOZ_
 RCFLAGS += -DMAR_SIGNING_AURORA_NIGHTLY=1
 endif
 endif
-

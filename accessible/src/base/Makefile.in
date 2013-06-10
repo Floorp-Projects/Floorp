@@ -28,9 +28,11 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../../../layout/svg \
   -I$(srcdir)/../../../layout/xul/base/src \
   -I$(srcdir)/../../../layout/xul/tree/ \
+  -I$(srcdir)/../../../ipc/chromium/src \
   $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_ENABLE_GTK
+CXXFLAGS        += $(MOZ_CAIRO_CFLAGS)
 LOCAL_INCLUDES += \
   -I$(srcdir)/../atk \
   $(NULL)
