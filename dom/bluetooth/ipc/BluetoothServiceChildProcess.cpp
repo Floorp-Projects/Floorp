@@ -103,14 +103,6 @@ BluetoothServiceChildProcess::GetDefaultAdapterPathInternal(
 }
 
 nsresult
-BluetoothServiceChildProcess::GetDevicePropertiesInternal(
-                                                 const BluetoothSignal& aSignal)
-{
-  MOZ_NOT_REACHED("Should never be called from child");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
 BluetoothServiceChildProcess::GetConnectedDevicePropertiesInternal(
                                               uint16_t aProfileId,
                                               BluetoothReplyRunnable* aRunnable)
@@ -275,13 +267,6 @@ BluetoothServiceChildProcess::SetAuthorizationInternal(
                 DenyAuthorizationRequest(nsString(aDeviceAddress)));
   }
   return true;
-}
-
-nsresult
-BluetoothServiceChildProcess::PrepareAdapterInternal()
-{
-  MOZ_NOT_REACHED("Should never be called from child");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void

@@ -159,16 +159,6 @@ public:
   StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
-   * Fetches the propertes for the specified device
-   *
-   * @param aSignal BluetoothSignal to be distrubuted after retrieving device properties
-   *
-   * @return NS_OK on function run, NS_ERROR_FAILURE otherwise
-   */
-  virtual nsresult
-  GetDevicePropertiesInternal(const BluetoothSignal& aSignal) = 0;
-
-  /**
    * Set a property for the specified object
    *
    * @param aPropName Name of the property
@@ -246,9 +236,6 @@ public:
   SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow,
                            BluetoothReplyRunnable* aRunnable) = 0;
 
-  virtual nsresult
-  PrepareAdapterInternal() = 0;
-
   virtual void
   Connect(const nsAString& aDeviceAddress,
           uint16_t aProfileId,
@@ -298,6 +285,9 @@ public:
 
   void
   RemoveObserverFromTable(const nsAString& key);
+
+  void
+  DispatchToCommandThread(nsRunnable* aRunnable);
 
 protected:
   BluetoothService()
