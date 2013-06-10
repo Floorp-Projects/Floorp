@@ -173,6 +173,20 @@ class LPointer : public LInstructionHelper<1, 0, 0>
     }
 };
 
+// Constant double.
+class LDouble : public LInstructionHelper<1, 0, 0>
+{
+    double d_;
+  public:
+    LIR_HEADER(Double);
+
+    LDouble(double d) : d_(d)
+    { }
+    double getDouble() const {
+        return d_;
+    }
+};
+
 // A constant Value.
 class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
 {

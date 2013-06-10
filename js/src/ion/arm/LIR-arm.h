@@ -69,20 +69,6 @@ class LUnboxDouble : public LInstructionHelper<1, 2, 0>
     }
 };
 
-// Constant double.
-class LDouble : public LInstructionHelper<1, 0, 0>
-{
-    double d_;
-  public:
-    LIR_HEADER(Double);
-
-    LDouble(double d) : d_(d)
-    { }
-    double getDouble() const {
-        return d_;
-    }
-};
-
 // Convert a 32-bit unsigned integer to a double.
 class LUInt32ToDouble : public LInstructionHelper<1, 1, 0>
 {
