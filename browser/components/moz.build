@@ -36,3 +36,6 @@ XPIDL_MODULE = 'browsercompsbase'
 
 MODULE = 'browsercomps'
 
+EXTRA_COMPONENTS += [
+    'BrowserComponents.manifest',
+]

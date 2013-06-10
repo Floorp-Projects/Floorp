@@ -10,3 +10,8 @@ CPP_SOURCES += [
     'nsFeedSniffer.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'BrowserFeeds.manifest',
+    'FeedConverter.js',
+    'WebContentConverter.js',
+]
