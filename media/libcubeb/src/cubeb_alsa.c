@@ -895,6 +895,42 @@ alsa_stream_destroy(cubeb_stream * stm)
 }
 
 static int
+alsa_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
+{
+  int rv;
+  cubeb_stream * stm;
+  snd_pcm_hw_params_t* hw_params;
+  cubeb_stream_params params;
+  params.rate = 44100;
+  params.format = CUBEB_SAMPLE_FLOAT32NE;
+  params.channels = 2;
+
+  snd_pcm_hw_params_alloca(&hw_params);
+
+  assert(ctx);
+
+  rv = alsa_stream_init(ctx, &stm, "", params, 100, NULL, NULL, NULL);
+  if (rv != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  rv = snd_pcm_hw_params_any(stm->pcm, hw_params);
+  if (rv < 0) {
+    return CUBEB_ERROR;
+  }
+
+  rv = snd_pcm_hw_params_get_channels_max(hw_params, max_channels);
+  if (rv < 0) {
+    return CUBEB_ERROR;
+  }
+
+  alsa_stream_destroy(stm);
+
+  return CUBEB_OK;
+}
+
+
+static int
 alsa_stream_start(cubeb_stream * stm)
 {
   cubeb * ctx;
@@ -976,6 +1012,7 @@ alsa_stream_get_position(cubeb_stream * stm, uint64_t * position)
 static struct cubeb_ops const alsa_ops = {
   .init = alsa_init,
   .get_backend_id = alsa_get_backend_id,
+  .get_max_channel_count = alsa_get_max_channel_count,
   .destroy = alsa_destroy,
   .stream_init = alsa_stream_init,
   .stream_destroy = alsa_stream_destroy,
