@@ -332,6 +332,12 @@ public:
   // called.
   virtual nsresult Play();
 
+  // Set/Unset dormant state if necessary.
+  // Dormant state is a state to free all scarce media resources
+  //  (like hw video codec), did not decoding and stay dormant.
+  // It is used to share scarece media resources in system.
+  virtual void SetDormantIfNecessary(bool aDormant);
+
   // Pause video playback.
   virtual void Pause();
   // Adjust the speed of the playback, optionally with pitch correction,
@@ -999,6 +1005,10 @@ public:
   // can be read on any thread while holding the monitor, or on the main thread
   // without holding the monitor.
   nsAutoPtr<DecodedStreamData> mDecodedStream;
+
+  // True if this decoder is in dormant state.
+  // Should be true only when PlayState is PLAY_STATE_LOADING.
+  bool mIsDormant;
 
   // Set to one of the valid play states.
   // This can only be changed on the main thread while holding the decoder
