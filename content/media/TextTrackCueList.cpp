@@ -25,12 +25,12 @@ TextTrackCueList::TextTrackCueList(nsISupports* aParent) : mParent(aParent)
 }
 
 void
-TextTrackCueList::Update(double time)
+TextTrackCueList::Update(double aTime)
 {
   const uint32_t length = mList.Length();
   for (uint32_t i = 0; i < length; i++) {
-    if (time > mList[i]->StartTime() && time < mList[i]->EndTime()) {
-      mList[i]->DisplayCue();
+    if (aTime > mList[i]->StartTime() && aTime < mList[i]->EndTime()) {
+      mList[i]->RenderCue();
     }
   }
 }
