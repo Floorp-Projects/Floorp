@@ -14,6 +14,7 @@
 #include "nsRect.h"
 #include "nsIThreadManager.h"
 #include "nsThreadUtils.h"
+#include "prtime.h"
 
 using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;
@@ -161,6 +162,9 @@ static const int64_t USECS_PER_S = 1000000;
 
 // Number of microseconds per millisecond.
 static const int64_t USECS_PER_MS = 1000;
+
+// Converts seconds to milliseconds.
+#define SECONDS_TO_MS(s) ((s) / PR_MSEC_PER_SEC)
 
 // The maximum height and width of the video. Used for
 // sanitizing the memory allocation of the RGB buffer.
