@@ -246,6 +246,18 @@ function run() {
         }
     }
 
+    function test_parseable_via_api(selector)
+    {
+        var threw = false;
+        try {
+          // Test that a selector is parseable when followed by EOF.
+          ifdoc.body.mozMatchesSelector(selector);
+        } catch(ex) {
+          threw = true;
+        }
+        ok(!threw, "selector '" + selector + "' was parsed");
+    }
+
     function test_balanced_unparseable(selector)
     {
         var zi1 = ++gCounter;
@@ -1159,8 +1171,11 @@ function run() {
     test_balanced_unparseable("p #, p");
     test_balanced_unparseable("p # , p");
 
-    // Test that a backslash alone is not treated as an escape.
-    test_unparseable_via_api("#\\");
+    // Test that a backslash alone at EOF outside of a string is treated
+    // as U+FFFD.
+    test_parseable_via_api("#a\\");
+    test_parseable_via_api("#\\");
+    test_parseable_via_api("\\");
 
     // Test that newline escapes are only supported in strings.
     test_balanced_unparseable("di\\\nv");
