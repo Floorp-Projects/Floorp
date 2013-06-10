@@ -1176,7 +1176,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     }
 
     scrollOffset = gfxPoint(mFrameMetrics.mScrollOffset.x, mFrameMetrics.mScrollOffset.y);
-    mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset.ToUnknownPoint();
+    mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset;
   }
 
   // Cancel the mAsyncScrollTimeoutTask because we will fire a
@@ -1493,13 +1493,11 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
     return;
   }
 
-  gfx::Rect contentRect;
-  gfx::Size scrollableSize;
+  CSSRect contentRect;
+  CSSSize scrollableSize;
   {
-    scrollableSize = gfx::Size(mFrameMetrics.mScrollableRect.width,
-                               mFrameMetrics.mScrollableRect.height);
-    contentRect = AsyncPanZoomController::CalculateCompositedRectInCssPixels(mFrameMetrics)
-        .ToUnknownRect();
+    scrollableSize = mFrameMetrics.mScrollableRect.Size();
+    contentRect = AsyncPanZoomController::CalculateCompositedRectInCssPixels(mFrameMetrics);
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 

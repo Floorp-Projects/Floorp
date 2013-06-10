@@ -568,11 +568,11 @@ private:
   // The last time and offset we fire the mozbrowserasyncscroll event when
   // compositor has sampled the content transform for this frame.
   TimeStamp mLastAsyncScrollTime;
-  gfx::Point mLastAsyncScrollOffset;
+  CSSPoint mLastAsyncScrollOffset;
 
   // The current offset drawn on the screen, it may not be sent since we have
   // throttling policy for mozbrowserasyncscroll event.
-  gfx::Point mCurrentAsyncScrollOffset;
+  CSSPoint mCurrentAsyncScrollOffset;
 
   // The delay task triggered by the throttling mozbrowserasyncscroll event
   // ensures the last mozbrowserasyncscroll event is always been fired.
