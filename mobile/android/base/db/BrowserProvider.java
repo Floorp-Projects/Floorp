@@ -2148,17 +2148,6 @@ public class BrowserProvider extends ContentProvider {
     public boolean onCreate() {
         debug("Creating BrowserProvider");
 
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                // Kick this off early. It is synchronized so that other callers will wait
-                try {
-                    GeckoProfile.get(getContext()).getDir();
-                } catch (Exception ex) {
-                    Log.e(LOGTAG, "Error getting profile dir", ex);
-                }
-            }
-        });
         synchronized (this) {
             mContext = getContext();
             mDatabasePerProfile = new HashMap<String, DatabaseHelper>();
