@@ -102,7 +102,7 @@ LIRGenerator::visitTableSwitch(MTableSwitch *tableswitch)
 bool
 LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
-    LCheckOverRecursed *lir = new LCheckOverRecursed(temp());
+    LCheckOverRecursed *lir = new LCheckOverRecursed();
 
     if (!add(lir))
         return false;

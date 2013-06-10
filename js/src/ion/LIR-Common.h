@@ -544,18 +544,13 @@ class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
     }
 };
 
-class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
+class LCheckOverRecursed : public LInstructionHelper<0, 0, 0>
 {
   public:
     LIR_HEADER(CheckOverRecursed)
 
-    LCheckOverRecursed(const LDefinition &limitreg) {
-        setTemp(0, limitreg);
-    }
-
-    const LAllocation *limitTemp() {
-        return getTemp(0)->output();
-    }
+    LCheckOverRecursed()
+    { }
 };
 
 class LParCheckOverRecursed : public LInstructionHelper<0, 1, 1>
