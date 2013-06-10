@@ -15,6 +15,11 @@ namespace mozilla {
  * The pixels that content authors use to specify sizes in.
  */
 struct CSSPixel {
+  static gfx::IntPointTyped<CSSPixel> RoundToInt(const gfx::PointTyped<CSSPixel>& aPoint) {
+    return gfx::IntPointTyped<CSSPixel>(NS_lround(aPoint.x),
+                                        NS_lround(aPoint.y));
+  }
+
   static gfx::PointTyped<CSSPixel> FromAppUnits(const nsPoint& aPoint) {
     return gfx::PointTyped<CSSPixel>(NSAppUnitsToFloatPixels(aPoint.x, float(nsDeviceContext::AppUnitsPerCSSPixel())),
                                      NSAppUnitsToFloatPixels(aPoint.y, float(nsDeviceContext::AppUnitsPerCSSPixel())));
@@ -41,6 +46,7 @@ struct CSSPixel {
 };
 
 typedef gfx::PointTyped<CSSPixel> CSSPoint;
+typedef gfx::IntPointTyped<CSSPixel> CSSIntPoint;
 typedef gfx::SizeTyped<CSSPixel> CSSSize;
 typedef gfx::RectTyped<CSSPixel> CSSRect;
 typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
