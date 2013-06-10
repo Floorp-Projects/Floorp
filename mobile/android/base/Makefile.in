@@ -221,6 +221,7 @@ FENNEC_JAVA_FILES = \
   home/BookmarkFolderView.java \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
+  home/FadedTextView.java \
   home/TwoLinePageRow.java \
   menu/GeckoMenu.java \
   menu/GeckoMenuInflater.java \

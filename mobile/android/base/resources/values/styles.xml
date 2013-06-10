@@ -76,7 +76,7 @@
     <style name="Widget.TwoLinePageRow.Title">
         <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLinePageRow.Title</item>
         <item name="android:singleLine">true</item>
-        <item name="android:ellipsize">middle</item>
+        <item name="android:ellipsize">none</item>
     </style>
 
     <style name="Widget.TwoLinePageRow.Url">
