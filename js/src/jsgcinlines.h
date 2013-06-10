@@ -473,8 +473,8 @@ template <typename T, AllowGC allowGC>
 inline T *
 TryNewNurseryGCThing(JSContext *cx, size_t thingSize)
 {
-    JS_ASSERT(!IsAtomsCompartment(cx->compartment));
-    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(!IsAtomsCompartment(cx->compartment()));
+    JSRuntime *rt = cx->runtime();
     Nursery &nursery = rt->gcNursery;
     T *t = static_cast<T *>(nursery.allocate(thingSize));
     if (t)
@@ -539,11 +539,11 @@ NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
                  t->arenaHeader()->allocatedDuringIncremental);
 
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
-    if (cx->runtime->gcVerifyPostData &&
-        ShouldNurseryAllocate(cx->runtime->gcVerifierNursery, kind, heap))
+    if (cx->runtime()->gcVerifyPostData &&
+        ShouldNurseryAllocate(cx->runtime()->gcVerifierNursery, kind, heap))
     {
-        JS_ASSERT(!IsAtomsCompartment(cx->compartment));
-        cx->runtime->gcVerifierNursery.insertPointer(t);
+        JS_ASSERT(!IsAtomsCompartment(cx->compartment()));
+        cx->runtime()->gcVerifierNursery.insertPointer(t);
     }
 #endif
 
