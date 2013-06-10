@@ -19,7 +19,7 @@ DEFINES += \
 	-DMOZ_MACBUNDLE_NAME=$(MOZ_MACBUNDLE_NAME) \
 	$(NULL)
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   BrowserFeeds.manifest \
 	FeedConverter.js \
 	WebContentConverter.js \

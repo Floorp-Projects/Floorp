@@ -6,3 +6,6 @@
 
 MODULE = 'fuel'
 
+EXTRA_COMPONENTS += [
+    'fuelApplication.manifest',
+]

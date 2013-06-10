@@ -10,7 +10,7 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsSessionStore.manifest \
   nsSessionStore.js \
   nsSessionStartup.js \
