@@ -66,3 +66,11 @@ if CONFIG['ENABLE_TESTS']:
 CPP_SOURCES += [
     'SystemWorkerManager.cpp',
 ]
+
+EXTRA_JS_MODULES += [
+    'net_worker.js',
+    'ril_consts.js',
+    'ril_worker.js',
+    'systemlibs.js',
+]
+

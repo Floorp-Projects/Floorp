@@ -23,6 +23,10 @@ if CONFIG['MOZ_B2G_RIL']:
     CPP_SOURCES += [
         'MobileConnection.cpp',
     ]
+    EXTRA_JS_MODULES = [
+        'NetworkStatsDB.jsm',
+        'NetworkStatsService.jsm',
+    ]
 
 EXTRA_COMPONENTS += [
     'TCPSocket.js',
