@@ -258,6 +258,8 @@ enum ParallelBailoutCause {
     ParallelBailoutUnsupported,
     ParallelBailoutUnsupportedStringComparison,
     ParallelBailoutUnsupportedSparseArray,
+    ParallelBailoutRequestedGC,
+    ParallelBailoutRequestedZoneGC,
 };
 
 struct ParallelBailoutTrace {
