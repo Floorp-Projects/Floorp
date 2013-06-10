@@ -258,15 +258,15 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, const AsmJSModule &module)
     profiler_(NULL),
     resumePC_(NULL)
 {
-    if (cx->runtime->spsProfiler.enabled()) {
-        profiler_ = &cx->runtime->spsProfiler;
+    if (cx->runtime()->spsProfiler.enabled()) {
+        profiler_ = &cx->runtime()->spsProfiler;
         profiler_->enterNative("asm.js code", this);
     }
 
-    prev_ = cx_->runtime->mainThread.asmJSActivationStack_;
+    prev_ = cx_->runtime()->mainThread.asmJSActivationStack_;
 
-    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime);
-    cx_->runtime->mainThread.asmJSActivationStack_ = this;
+    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime());
+    cx_->runtime()->mainThread.asmJSActivationStack_ = this;
 
     (void) errorRejoinSP_;  // squelch GCC warning
 }
@@ -276,10 +276,10 @@ AsmJSActivation::~AsmJSActivation()
     if (profiler_)
         profiler_->exitNative();
 
-    JS_ASSERT(cx_->runtime->mainThread.asmJSActivationStack_ == this);
+    JS_ASSERT(cx_->runtime()->mainThread.asmJSActivationStack_ == this);
 
-    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime);
-    cx_->runtime->mainThread.asmJSActivationStack_ = prev_;
+    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime());
+    cx_->runtime()->mainThread.asmJSActivationStack_ = prev_;
 }
 
 static const unsigned ASM_MODULE_SLOT = 0;

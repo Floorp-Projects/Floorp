@@ -232,7 +232,7 @@ inline bool
 RegExpStatics::createPendingInput(JSContext *cx, MutableHandleValue out)
 {
     /* Lazy evaluation need not be resolved to return the input. */
-    out.setString(pendingInput ? pendingInput.get() : cx->runtime->emptyString);
+    out.setString(pendingInput ? pendingInput.get() : cx->runtime()->emptyString);
     return true;
 }
 
@@ -249,7 +249,7 @@ RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum,
     if (matches.empty() || checkPair >= matches.pairCount() ||
         (checkWhich ? matches[checkPair].limit : matches[checkPair].start) < 0)
     {
-        out.setString(cx->runtime->emptyString);
+        out.setString(cx->runtime()->emptyString);
         return true;
     }
     const MatchPair &pair = matches[pairNum];
@@ -271,12 +271,12 @@ RegExpStatics::createLastParen(JSContext *cx, MutableHandleValue out)
         return false;
 
     if (matches.empty() || matches.pairCount() == 1) {
-        out.setString(cx->runtime->emptyString);
+        out.setString(cx->runtime()->emptyString);
         return true;
     }
     const MatchPair &pair = matches[matches.pairCount() - 1];
     if (pair.start == -1) {
-        out.setString(cx->runtime->emptyString);
+        out.setString(cx->runtime()->emptyString);
         return true;
     }
     JS_ASSERT(pair.start >= 0 && pair.limit >= 0);
@@ -292,7 +292,7 @@ RegExpStatics::createParen(JSContext *cx, size_t pairNum, MutableHandleValue out
         return false;
 
     if (matches.empty() || pairNum >= matches.pairCount()) {
-        out.setString(cx->runtime->emptyString);
+        out.setString(cx->runtime()->emptyString);
         return true;
     }
     return makeMatch(cx, pairNum * 2, pairNum, out);
@@ -305,7 +305,7 @@ RegExpStatics::createLeftContext(JSContext *cx, MutableHandleValue out)
         return false;
 
     if (matches.empty()) {
-        out.setString(cx->runtime->emptyString);
+        out.setString(cx->runtime()->emptyString);
         return true;
     }
     if (matches[0].start < 0) {
@@ -322,7 +322,7 @@ RegExpStatics::createRightContext(JSContext *cx, MutableHandleValue out)
         return false;
 
     if (matches.empty()) {
-        out.setString(cx->runtime->emptyString);
+        out.setString(cx->runtime()->emptyString);
         return true;
     }
     if (matches[0].limit < 0) {

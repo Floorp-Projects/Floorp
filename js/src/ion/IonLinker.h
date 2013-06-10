@@ -69,7 +69,7 @@ class Linker
     }
 
     IonCode *newCode(JSContext *cx, JSC::CodeKind kind) {
-        return newCode(cx, cx->compartment->ionCompartment(), kind);
+        return newCode(cx, cx->compartment()->ionCompartment(), kind);
     }
 };
 

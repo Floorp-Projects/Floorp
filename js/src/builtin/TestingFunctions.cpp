@@ -203,19 +203,19 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     }
 
 #ifndef JS_MORE_DETERMINISTIC
-    size_t preBytes = cx->runtime->gcBytes;
+    size_t preBytes = cx->runtime()->gcBytes;
 #endif
 
     if (compartment)
-        PrepareForDebugGC(cx->runtime);
+        PrepareForDebugGC(cx->runtime());
     else
-        PrepareForFullGC(cx->runtime);
-    GCForReason(cx->runtime, gcreason::API);
+        PrepareForFullGC(cx->runtime());
+    GCForReason(cx->runtime(), gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
     JS_snprintf(buf, sizeof(buf), "before %lu, after %lu\n",
-                (unsigned long)preBytes, (unsigned long)cx->runtime->gcBytes);
+                (unsigned long)preBytes, (unsigned long)cx->runtime()->gcBytes);
 #endif
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
@@ -268,7 +268,7 @@ GCParameter(JSContext *cx, unsigned argc, jsval *vp)
     JSGCParamKey param = paramMap[paramIndex].param;
 
     if (argc == 1) {
-        uint32_t value = JS_GetGCParameter(cx->runtime, param);
+        uint32_t value = JS_GetGCParameter(cx->runtime(), param);
         vp[0] = JS_NumberValue(value);
         return true;
     }
@@ -289,7 +289,7 @@ GCParameter(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     if (param == JSGC_MAX_BYTES) {
-        uint32_t gcBytes = JS_GetGCParameter(cx->runtime, JSGC_BYTES);
+        uint32_t gcBytes = JS_GetGCParameter(cx->runtime(), JSGC_BYTES);
         if (value < gcBytes) {
             JS_ReportError(cx,
                            "attempt to set maxBytes to the value less than the current "
@@ -299,7 +299,7 @@ GCParameter(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    JS_SetGCParameter(cx->runtime, param, value);
+    JS_SetGCParameter(cx->runtime(), param, value);
     *vp = JSVAL_VOID;
     return true;
 }
@@ -355,7 +355,7 @@ GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
     }
 
-    cx->runtime->alwaysPreserveCode = true;
+    cx->runtime()->alwaysPreserveCode = true;
 
     *vp = JSVAL_VOID;
     return JS_TRUE;
@@ -414,7 +414,7 @@ ScheduleGC(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 SelectForGC(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
 
     for (unsigned i = 0; i < argc; i++) {
         Value arg(JS_ARGV(cx, vp)[i]);
@@ -438,7 +438,7 @@ VerifyPreBarriers(JSContext *cx, unsigned argc, jsval *vp)
         ReportUsageError(cx, callee, "Too many arguments");
         return JS_FALSE;
     }
-    gc::VerifyBarriers(cx->runtime, gc::PreBarrierVerifier);
+    gc::VerifyBarriers(cx->runtime(), gc::PreBarrierVerifier);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -451,7 +451,7 @@ VerifyPostBarriers(JSContext *cx, unsigned argc, jsval *vp)
         ReportUsageError(cx, callee, "Too many arguments");
         return JS_FALSE;
     }
-    gc::VerifyBarriers(cx->runtime, gc::PostBarrierVerifier);
+    gc::VerifyBarriers(cx->runtime(), gc::PostBarrierVerifier);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -468,7 +468,7 @@ GCState(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     const char *state;
-    gc::State globalState = cx->runtime->gcIncrementalState;
+    gc::State globalState = cx->runtime()->gcIncrementalState;
     if (globalState == gc::NO_INCREMENTAL)
         state = "none";
     else if (globalState == gc::MARK)
@@ -522,7 +522,7 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
         limit = false;
     }
 
-    GCDebugSlice(cx->runtime, limit, budget);
+    GCDebugSlice(cx->runtime(), limit, budget);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -850,9 +850,9 @@ EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
     static ProfileEntry stack[1000];
     static uint32_t stack_size = 0;
 
-    SetRuntimeProfilingStack(cx->runtime, stack, &stack_size, 1000);
-    cx->runtime->spsProfiler.enableSlowAssertions(args[0].toBoolean());
-    cx->runtime->spsProfiler.enable(true);
+    SetRuntimeProfilingStack(cx->runtime(), stack, &stack_size, 1000);
+    cx->runtime()->spsProfiler.enableSlowAssertions(args[0].toBoolean());
+    cx->runtime()->spsProfiler.enable(true);
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
@@ -861,8 +861,8 @@ EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 {
-    if (cx->runtime->spsProfiler.installed())
-        cx->runtime->spsProfiler.enable(false);
+    if (cx->runtime()->spsProfiler.installed())
+        cx->runtime()->spsProfiler.enable(false);
     return true;
 }
 
@@ -878,7 +878,7 @@ DisplayName(JSContext *cx, unsigned argc, jsval *vp)
 
     JSFunction *fun = args[0].toObject().toFunction();
     JSString *str = fun->displayAtom();
-    vp->setString(str == NULL ? cx->runtime->emptyString : str);
+    vp->setString(str == NULL ? cx->runtime()->emptyString : str);
     return true;
 }
 

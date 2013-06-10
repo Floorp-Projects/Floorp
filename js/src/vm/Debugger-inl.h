@@ -17,7 +17,7 @@ js::Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
     bool evalTraps = frame.isEvalFrame() &&
                      frame.script()->hasAnyBreakpointsOrStepMode();
-    if (!cx->compartment->getDebuggees().empty() || evalTraps)
+    if (!cx->compartment()->getDebuggees().empty() || evalTraps)
         ok = slowPathOnLeaveFrame(cx, frame, ok);
     return ok;
 }

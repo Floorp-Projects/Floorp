@@ -403,7 +403,7 @@ str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
     int32_t slot = JSID_TO_INT(id);
     if ((size_t)slot < str->length()) {
-        JSString *str1 = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(slot));
+        JSString *str1 = cx->runtime()->staticStrings.getUnitStringForElement(cx, str, size_t(slot));
         if (!str1)
             return false;
         RootedValue value(cx, StringValue(str1));
@@ -733,13 +733,13 @@ str_toLocaleLowerCase(JSContext *cx, unsigned argc, Value *vp)
      * Forcefully ignore the first (or any) argument and return toLowerCase(),
      * ECMA has reserved that argument, presumably for defining the locale.
      */
-    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToLowerCase) {
+    if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeToLowerCase) {
         RootedString str(cx, ThisToStringForStringProto(cx, args));
         if (!str)
             return false;
 
         RootedValue result(cx);
-        if (!cx->runtime->localeCallbacks->localeToLowerCase(cx, str, &result))
+        if (!cx->runtime()->localeCallbacks->localeToLowerCase(cx, str, &result))
             return false;
 
         args.rval().set(result);
@@ -800,13 +800,13 @@ str_toLocaleUpperCase(JSContext *cx, unsigned argc, Value *vp)
      * Forcefully ignore the first (or any) argument and return toUpperCase(),
      * ECMA has reserved that argument, presumably for defining the locale.
      */
-    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToUpperCase) {
+    if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeToUpperCase) {
         RootedString str(cx, ThisToStringForStringProto(cx, args));
         if (!str)
             return false;
 
         RootedValue result(cx);
-        if (!cx->runtime->localeCallbacks->localeToUpperCase(cx, str, &result))
+        if (!cx->runtime()->localeCallbacks->localeToUpperCase(cx, str, &result))
             return false;
 
         args.rval().set(result);
@@ -829,9 +829,9 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
     if (!thatStr)
         return false;
 
-    if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeCompare) {
+    if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeCompare) {
         RootedValue result(cx);
-        if (!cx->runtime->localeCallbacks->localeCompare(cx, str, thatStr, &result))
+        if (!cx->runtime()->localeCallbacks->localeCompare(cx, str, thatStr, &result))
             return false;
 
         args.rval().set(result);
@@ -873,14 +873,14 @@ js_str_charAt(JSContext *cx, unsigned argc, Value *vp)
         i = size_t(d);
     }
 
-    str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, i);
+    str = cx->runtime()->staticStrings.getUnitStringForElement(cx, str, i);
     if (!str)
         return false;
     args.rval().setString(str);
     return true;
 
   out_of_range:
-    args.rval().setString(cx->runtime->emptyString);
+    args.rval().setString(cx->runtime()->emptyString);
     return true;
 }
 
@@ -1651,7 +1651,7 @@ class StringRegExpGuard
                 return false;
         } else {
             if (convertVoid && !args.hasDefined(0)) {
-                fm.patstr = cx->runtime->emptyString;
+                fm.patstr = cx->runtime()->emptyString;
                 return true;
             }
 
@@ -1735,7 +1735,7 @@ class StringRegExpGuard
         }
         JS_ASSERT(patstr);
 
-        return cx->compartment->regExps.get(cx, patstr, opt, &re_);
+        return cx->compartment()->regExps.get(cx, patstr, opt, &re_);
     }
 
     RegExpShared &regExp() { return *re_; }
@@ -2566,7 +2566,7 @@ str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExp
 
     /* Handle the empty string before calling .begin(). */
     if (ranges.empty()) {
-        args.rval().setString(cx->runtime->emptyString);
+        args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
 
@@ -3134,7 +3134,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         if (begin >= length) {
-            args.rval().setString(cx->runtime->emptyString);
+            args.rval().setString(cx->runtime()->emptyString);
             return true;
         }
         if (begin < 0) {
@@ -3148,7 +3148,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
                 return false;
 
             if (len <= 0) {
-                args.rval().setString(cx->runtime->emptyString);
+                args.rval().setString(cx->runtime()->emptyString);
                 return true;
             }
 
@@ -3215,10 +3215,10 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
         if (begin <= end) {
             size_t length = end - begin;
             if (length == 0) {
-                str = cx->runtime->emptyString;
+                str = cx->runtime()->emptyString;
             } else {
                 str = (length == 1)
-                      ? cx->runtime->staticStrings.getUnitStringForElement(cx, str, begin)
+                      ? cx->runtime()->staticStrings.getUnitStringForElement(cx, str, begin)
                       : js_NewDependentString(cx, str, begin, length);
                 if (!str)
                     return false;
@@ -3510,7 +3510,7 @@ js_String(JSContext *cx, unsigned argc, Value *vp)
         if (!str)
             return false;
     } else {
-        str = cx->runtime->emptyString;
+        str = cx->runtime()->emptyString;
     }
 
     if (IsConstructing(args)) {
@@ -3536,7 +3536,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
         if (!ToUint16(cx, args[0], &code))
             return JS_FALSE;
         if (StaticStrings::hasUnit(code)) {
-            args.rval().setString(cx->runtime->staticStrings.getUnit(code));
+            args.rval().setString(cx->runtime()->staticStrings.getUnit(code));
             return JS_TRUE;
         }
         args[0].setInt32(code);
@@ -3590,7 +3590,7 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
 
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    Rooted<JSString*> empty(cx, cx->runtime->emptyString);
+    Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
     RootedObject proto(cx, global->createBlankPrototype(cx, &StringClass));
     if (!proto || !proto->asString().init(cx, empty))
         return NULL;
@@ -3640,7 +3640,7 @@ JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t length)
 {
     if (length == 0)
-        return cx->runtime->emptyString;
+        return cx->runtime()->emptyString;
 
     JSLinearString *base = baseArg->ensureLinear(cx);
     if (!base)
@@ -3651,7 +3651,7 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
 
     const jschar *chars = base->chars() + start;
 
-    if (JSLinearString *staticStr = cx->runtime->staticStrings.lookup(chars, length))
+    if (JSLinearString *staticStr = cx->runtime()->staticStrings.lookup(chars, length))
         return staticStr;
 
     return JSDependentString::new_(cx, base, chars, length);
@@ -4344,7 +4344,7 @@ Encode(JSContext *cx, Handle<JSLinearString*> str, const jschar *unescapedSet,
 
     size_t length = str->length();
     if (length == 0) {
-        rval.setString(cx->runtime->emptyString);
+        rval.setString(cx->runtime()->emptyString);
         return true;
     }
 
@@ -4402,7 +4402,7 @@ Decode(JSContext *cx, Handle<JSLinearString*> str, const jschar *reservedSet, Mu
 {
     size_t length = str->length();
     if (length == 0) {
-        rval.setString(cx->runtime->emptyString);
+        rval.setString(cx->runtime()->emptyString);
         return true;
     }
 

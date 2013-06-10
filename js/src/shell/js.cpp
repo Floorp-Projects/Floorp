@@ -495,7 +495,7 @@ ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, 
         typedef Vector<char, 32, ContextAllocPolicy> CharBuffer;
         CharBuffer buffer(cx);
         do {
-            ScheduleWatchdog(cx->runtime, -1);
+            ScheduleWatchdog(cx->runtime(), -1);
             gTimedOut = false;
             errno = 0;
 
@@ -513,7 +513,7 @@ ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, 
                 return;
 
             lineno++;
-            if (!ScheduleWatchdog(cx->runtime, gTimeoutInterval)) {
+            if (!ScheduleWatchdog(cx->runtime(), gTimeoutInterval)) {
                 hitEOF = true;
                 break;
             }
@@ -1605,7 +1605,7 @@ SetDebuggerHandler(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    JS_SetDebuggerHandler(cx->runtime, DebuggerAndThrowHandler, str);
+    JS_SetDebuggerHandler(cx->runtime(), DebuggerAndThrowHandler, str);
     args.rval().setUndefined();
     return true;
 }
@@ -1625,7 +1625,7 @@ SetThrowHook(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    JS_SetThrowHook(cx->runtime, DebuggerAndThrowHandler, str);
+    JS_SetThrowHook(cx->runtime(), DebuggerAndThrowHandler, str);
     args.rval().setUndefined();
     return true;
 }
@@ -2326,7 +2326,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
             funobj = JS_GetFunctionObject(fun);
         }
     }
-    if (funobj->compartment() != cx->compartment) {
+    if (funobj->compartment() != cx->compartment()) {
         JSFunction *fun = funobj->toFunction();
         if (fun->hasScript() && fun->nonLazyScript()->compileAndGo) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
@@ -2502,7 +2502,7 @@ NewSandbox(JSContext *cx, bool lazy)
             return NULL;
     }
 
-    if (!cx->compartment->wrap(cx, obj.address()))
+    if (!cx->compartment()->wrap(cx, obj.address()))
         return NULL;
     return obj;
 }
@@ -2570,7 +2570,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    if (!cx->compartment->wrap(cx, &rval))
+    if (!cx->compartment()->wrap(cx, &rval))
         return false;
 
     JS_SET_RVAL(cx, vp, rval);
@@ -3033,7 +3033,7 @@ SetTimeoutValue(JSContext *cx, double t)
         return false;
     }
     gTimeoutInterval = t;
-    if (!ScheduleWatchdog(cx->runtime, t)) {
+    if (!ScheduleWatchdog(cx->runtime(), t)) {
         JS_ReportError(cx, "Failed to create the watchdog");
         return false;
     }
@@ -3210,7 +3210,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     if (!succeeded && !parser.hadAbortedSyntaxParse()) {
         // If no exception is posted, either there was an OOM or a language
         // feature unhandled by the syntax parser was encountered.
-        JS_ASSERT(cx->runtime->hadOutOfMemory);
+        JS_ASSERT(cx->runtime()->hadOutOfMemory);
         return false;
     }
 
@@ -3356,7 +3356,7 @@ DecompileThisScript(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
     if (!JS_DescribeScriptedCaller(cx, script.address(), NULL)) {
-        args.rval().setString(cx->runtime->emptyString);
+        args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
     JSString *result = JS_DecompileScript(cx, script, "test", 0);
@@ -3372,7 +3372,7 @@ ThisFilename(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
     if (!JS_DescribeScriptedCaller(cx, script.address(), NULL) || !script->filename()) {
-        args.rval().setString(cx->runtime->emptyString);
+        args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
     JSString *filename = JS_NewStringCopyZ(cx, script->filename());
@@ -3557,7 +3557,7 @@ GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
     if (!srcAtom)
         return false;
     RootedPropertyName srcName(cx, srcAtom->asPropertyName());
-    return cx->runtime->cloneSelfHostedValue(cx, srcName, args.rval());
+    return cx->runtime()->cloneSelfHostedValue(cx, srcName, args.rval());
 }
 
 static JSFunctionSpecWithHelp shell_functions[] = {
@@ -4861,7 +4861,7 @@ NewGlobalObject(JSContext *cx, JSObject *sameZoneAs)
         static js::DOMCallbacks DOMcallbacks = {
             InstanceClassHasProtoAtDepth
         };
-        SetDOMCallbacks(cx->runtime, &DOMcallbacks);
+        SetDOMCallbacks(cx->runtime(), &DOMcallbacks);
 
         RootedObject domProto(cx, JS_InitClass(cx, glob, NULL, &dom_class, dom_constructor, 0,
                                                dom_props, dom_methods, NULL, NULL));
@@ -4950,7 +4950,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 #ifdef JS_THREADSAFE
     int32_t threadCount = op->getIntOption("thread-count");
     if (threadCount >= 0)
-        cx->runtime->requestHelperThreadCount(threadCount);
+        cx->runtime()->requestHelperThreadCount(threadCount);
 #endif /* JS_THREADSAFE */
 
 #if defined(JS_ION)
@@ -5061,7 +5061,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 #ifdef JS_THREADSAFE
     if (const char *str = op->getStringOption("ion-parallel-compile")) {
         if (strcmp(str, "on") == 0) {
-            if (cx->runtime->helperThreadCount() == 0) {
+            if (cx->runtime()->helperThreadCount() == 0) {
                 fprintf(stderr, "Parallel compilation not available without helper threads");
                 return EXIT_FAILURE;
             }

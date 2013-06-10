@@ -1156,7 +1156,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool init() {
-        if (!cx_->compartment->ensureIonCompartmentExists(cx_))
+        if (!cx_->compartment()->ensureIonCompartmentExists(cx_))
             return false;
 
         if (!globals_.init() || !exits_.init())
@@ -1460,7 +1460,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         size_t allocedBytes = totalBytes + gc::PageSize;
 
         // Allocate the slab of memory.
-        JSC::ExecutableAllocator *execAlloc = cx_->compartment->ionCompartment()->execAlloc();
+        JSC::ExecutableAllocator *execAlloc = cx_->compartment()->ionCompartment()->execAlloc();
         JSC::ExecutablePool *pool;
         uint8_t *unalignedBytes = (uint8_t*)execAlloc->alloc(allocedBytes, &pool, JSC::ASMJS_CODE);
         if (!unalignedBytes)
@@ -4632,7 +4632,7 @@ CheckFunctionBody(ModuleCompiler &m, ModuleCompiler::Func &func, LifoAlloc &lifo
 
     // Force Ion allocations to occur in the LifoAlloc while in scope.
     TempAllocator *tempAlloc = lifo.new_<TempAllocator>(&lifo);
-    IonContext icx(m.cx()->compartment, tempAlloc);
+    IonContext icx(m.cx()->compartment(), tempAlloc);
 
     // Allocate objects required for MIR generation.
     // Memory for the objects is provided by the LifoAlloc argument,
@@ -4640,7 +4640,7 @@ CheckFunctionBody(ModuleCompiler &m, ModuleCompiler::Func &func, LifoAlloc &lifo
     MIRGraph *graph = lifo.new_<MIRGraph>(tempAlloc);
     CompileInfo *info = lifo.new_<CompileInfo>(locals.count(),
                                                SequentialExecution);
-    MIRGenerator *mirGen = lifo.new_<MIRGenerator>(m.cx()->compartment, tempAlloc, graph, info);
+    MIRGenerator *mirGen = lifo.new_<MIRGenerator>(m.cx()->compartment(), tempAlloc, graph, info);
     JS_ASSERT(tempAlloc && graph && info && mirGen);
 
     FunctionCompiler f(m, func, Move(locals), mirGen);
@@ -4719,7 +4719,7 @@ CheckFunctionBodiesSequential(ModuleCompiler &m)
 
         IonSpewNewFunction(&mirGen->graph(), NullPtr());
 
-        IonContext icx(m.cx()->compartment, &mirGen->temp());
+        IonContext icx(m.cx()->compartment(), &mirGen->temp());
 
         if (!OptimizeMIR(mirGen))
             return m.fail(func.fn(), "internal compiler failure (probably out of memory)");
@@ -4755,7 +4755,7 @@ struct ParallelGroupState
 static AsmJSParallelTask *
 GetFinishedCompilation(ModuleCompiler &m, ParallelGroupState &group)
 {
-    AutoLockWorkerThreadState lock(m.cx()->runtime);
+    AutoLockWorkerThreadState lock(m.cx()->runtime());
 
     while (!group.state.asmJSWorkerFailed()) {
         if (!group.state.asmJSFinishedList.empty()) {
@@ -4860,7 +4860,7 @@ CancelOutstandingJobs(ModuleCompiler &m, ParallelGroupState &group)
     if (!group.outstandingJobs)
         return;
 
-    AutoLockWorkerThreadState lock(m.cx()->runtime);
+    AutoLockWorkerThreadState lock(m.cx()->runtime());
 
     // From the compiling tasks, eliminate those waiting for worker assignation.
     group.outstandingJobs -= group.state.asmJSWorklist.length();
@@ -4894,7 +4894,7 @@ static bool
 CheckFunctionBodiesParallel(ModuleCompiler &m)
 {
     // Saturate all worker threads plus the main thread.
-    WorkerThreadState &state = *m.cx()->runtime->workerThreadState;
+    WorkerThreadState &state = *m.cx()->runtime()->workerThreadState;
     size_t numParallelJobs = state.numThreads + 1;
 
     // Allocate scoped AsmJSParallelTask objects. Each contains a unique
@@ -5760,16 +5760,16 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
     if (!cx->hasOption(JSOPTION_ASMJS))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
 
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
 
 #ifdef JS_ASMJS
-    if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime))
+    if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime()))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
 # ifdef JS_PARALLEL_COMPILATION
     if (OffThreadCompilationEnabled(cx)) {
-        if (!EnsureParallelCompilationInitialized(cx->runtime))
+        if (!EnsureParallelCompilationInitialized(cx->runtime()))
             return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Failed compilation thread initialization");
     }
 # endif
@@ -5811,7 +5811,7 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 
 #ifdef JS_ASMJS
     bool available = JSC::MacroAssembler().supportsFloatingPoint() &&
-                     !cx->compartment->debugMode() &&
+                     !cx->compartment()->debugMode() &&
                      cx->hasOption(JSOPTION_ASMJS);
 #else
     bool available = false;

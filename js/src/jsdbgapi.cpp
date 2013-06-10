@@ -50,13 +50,13 @@ using mozilla::PodZero;
 JS_PUBLIC_API(JSBool)
 JS_GetDebugMode(JSContext *cx)
 {
-    return cx->compartment->debugMode();
+    return cx->compartment()->debugMode();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetDebugMode(JSContext *cx, JSBool debug)
 {
-    return JS_SetDebugModeForCompartment(cx, cx->compartment, debug);
+    return JS_SetDebugModeForCompartment(cx, cx->compartment(), debug);
 }
 
 JS_PUBLIC_API(void)
@@ -80,13 +80,13 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 
     if (!frame.script()->selfHosted) {
         if (frame.isFramePushedByExecute()) {
-            if (JSInterpreterHook hook = cx->runtime->debugHooks.executeHook)
+            if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
                 frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
-                                       true, 0, cx->runtime->debugHooks.executeHookData));
+                                       true, 0, cx->runtime()->debugHooks.executeHookData));
         } else {
-            if (JSInterpreterHook hook = cx->runtime->debugHooks.callHook)
+            if (JSInterpreterHook hook = cx->runtime()->debugHooks.callHook)
                 frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
-                                       true, 0, cx->runtime->debugHooks.callHookData));
+                                       true, 0, cx->runtime()->debugHooks.callHookData));
         }
     }
 
@@ -119,10 +119,10 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
     // We don't add hook data for self-hosted scripts, so we don't need to check for them, here.
     if (void *hookData = frame.maybeHookData()) {
         if (frame.isFramePushedByExecute()) {
-            if (JSInterpreterHook hook = cx->runtime->debugHooks.executeHook)
+            if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
                 hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame), false, &ok, hookData);
         } else {
-            if (JSInterpreterHook hook = cx->runtime->debugHooks.callHook)
+            if (JSInterpreterHook hook = cx->runtime()->debugHooks.callHook)
                 hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame), false, &ok, hookData);
         }
     }
@@ -133,18 +133,18 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
 JSTrapStatus
 js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
-    JS_ASSERT(cx->compartment->debugMode());
+    JS_ASSERT(cx->compartment()->debugMode());
 
-    if (!cx->runtime->debugHooks.throwHook && cx->compartment->getDebuggees().empty())
+    if (!cx->runtime()->debugHooks.throwHook && cx->compartment()->getDebuggees().empty())
         return JSTRAP_CONTINUE;
 
     /* Call debugger throw hook if set. */
     RootedValue rval(cx);
     JSTrapStatus status = Debugger::onExceptionUnwind(cx, &rval);
     if (status == JSTRAP_CONTINUE) {
-        if (JSThrowHook handler = cx->runtime->debugHooks.throwHook) {
+        if (JSThrowHook handler = cx->runtime()->debugHooks.throwHook) {
             RootedScript script(cx, frame.script());
-            status = handler(cx, script, pc, rval.address(), cx->runtime->debugHooks.throwHookData);
+            status = handler(cx, script, pc, rval.address(), cx->runtime()->debugHooks.throwHookData);
         }
     }
 
@@ -175,9 +175,9 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForAllCompartments(JSContext *cx, JSBool debug)
 {
-    AutoDebugModeGC dmgc(cx->runtime);
+    AutoDebugModeGC dmgc(cx->runtime());
 
-    for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+    for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
         // Ignore special compartments (atoms, JSD compartments)
         if (c->principals) {
             if (!c->setDebugModeFromC(cx, !!debug, dmgc))
@@ -190,7 +190,7 @@ JS_SetDebugModeForAllCompartments(JSContext *cx, JSBool debug)
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 {
-    AutoDebugModeGC dmgc(cx->runtime);
+    AutoDebugModeGC dmgc(cx->runtime());
     return comp->setDebugModeFromC(cx, !!debug, dmgc);
 }
 
@@ -235,7 +235,7 @@ JS_SetTrap(JSContext *cx, JSScript *scriptArg, jsbytecode *pc, JSTrapHandler han
     BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc);
     if (!site)
         return false;
-    site->setTrap(cx->runtime->defaultFreeOp(), handler, closure);
+    site->setTrap(cx->runtime()->defaultFreeOp(), handler, closure);
     return true;
 }
 
@@ -244,7 +244,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
     if (BreakpointSite *site = script->getBreakpointSite(pc)) {
-        site->clearTrap(cx->runtime->defaultFreeOp(), handlerp, closurep);
+        site->clearTrap(cx->runtime()->defaultFreeOp(), handlerp, closurep);
     } else {
         if (handlerp)
             *handlerp = NULL;
@@ -256,13 +256,13 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
-    script->clearTraps(cx->runtime->defaultFreeOp());
+    script->clearTraps(cx->runtime()->defaultFreeOp());
 }
 
 JS_PUBLIC_API(void)
 JS_ClearAllTrapsForCompartment(JSContext *cx)
 {
-    cx->compartment->clearTraps(cx->runtime->defaultFreeOp());
+    cx->compartment()->clearTraps(cx->runtime()->defaultFreeOp());
 }
 
 JS_PUBLIC_API(JSBool)
@@ -339,14 +339,14 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
 
     types::MarkTypePropertyConfigured(cx, obj, propid);
 
-    WatchpointMap *wpmap = cx->compartment->watchpointMap;
+    WatchpointMap *wpmap = cx->compartment()->watchpointMap;
     if (!wpmap) {
-        wpmap = cx->runtime->new_<WatchpointMap>();
+        wpmap = cx->runtime()->new_<WatchpointMap>();
         if (!wpmap || !wpmap->init()) {
             js_ReportOutOfMemory(cx);
             return false;
         }
-        cx->compartment->watchpointMap = wpmap;
+        cx->compartment()->watchpointMap = wpmap;
     }
     return wpmap->watch(cx, obj, propid, handler, closure);
 }
@@ -357,7 +357,7 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 {
     assertSameCompartment(cx, obj, id);
 
-    if (WatchpointMap *wpmap = cx->compartment->watchpointMap)
+    if (WatchpointMap *wpmap = cx->compartment()->watchpointMap)
         wpmap->unwatch(obj, id, handlerp, closurep);
     return true;
 }
@@ -367,7 +367,7 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
 
-    if (WatchpointMap *wpmap = cx->compartment->watchpointMap)
+    if (WatchpointMap *wpmap = cx->compartment()->watchpointMap)
         wpmap->unwatchObject(obj);
     return true;
 }
@@ -375,7 +375,7 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSBool)
 JS_ClearAllWatchPoints(JSContext *cx)
 {
-    if (JSCompartment *comp = cx->compartment) {
+    if (JSCompartment *comp = cx->compartment()) {
         if (WatchpointMap *wpmap = comp->watchpointMap)
             wpmap->clear();
     }
@@ -765,10 +765,10 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 
     pd = pda->array;
     for (i = 0; i < pda->length; i++) {
-        js_RemoveRoot(cx->runtime, &pd[i].id);
-        js_RemoveRoot(cx->runtime, &pd[i].value);
+        js_RemoveRoot(cx->runtime(), &pd[i].id);
+        js_RemoveRoot(cx->runtime(), &pd[i].value);
         if (pd[i].flags & JSPD_ALIAS)
-            js_RemoveRoot(cx->runtime, &pd[i].alias);
+            js_RemoveRoot(cx->runtime(), &pd[i].alias);
     }
     js_free(pd);
     pda->array = NULL;
@@ -892,7 +892,7 @@ JS_PUBLIC_API(void)
 JS_DumpCompartmentBytecode(JSContext *cx)
 {
     ScriptsToDump scripts;
-    IterateScripts(cx->runtime, cx->compartment, &scripts, DumpBytecodeScriptCallback);
+    IterateScripts(cx->runtime(), cx->compartment(), &scripts, DumpBytecodeScriptCallback);
 
     for (size_t i = 0; i < scripts.length(); i++) {
         if (scripts[i]->enclosingScriptsCompiledSuccessfully())
@@ -905,7 +905,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 {
     for (CellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if (script->compartment() != cx->compartment)
+        if (script->compartment() != cx->compartment())
             continue;
 
         if (script->hasScriptCounts && script->enclosingScriptsCompiledSuccessfully())
@@ -916,7 +916,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
     for (unsigned thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
         for (CellIter i(cx->zone(), (AllocKind) thingKind); !i.done(); i.next()) {
             JSObject *obj = i.get<JSObject>();
-            if (obj->compartment() != cx->compartment)
+            if (obj->compartment() != cx->compartment())
                 continue;
 
             if (IsAsmJSModuleObject(obj)) {

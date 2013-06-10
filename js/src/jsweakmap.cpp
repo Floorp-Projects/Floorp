@@ -267,8 +267,8 @@ TryPreserveReflector(JSContext *cx, HandleObject obj)
         (obj->getClass()->flags & JSCLASS_IS_DOMJSCLASS) ||
         (obj->isProxy() && GetProxyHandler(obj)->family() == GetDOMProxyHandlerFamily()))
     {
-        JS_ASSERT(cx->runtime->preserveWrapperCallback);
-        if (!cx->runtime->preserveWrapperCallback(cx, obj)) {
+        JS_ASSERT(cx->runtime()->preserveWrapperCallback);
+        if (!cx->runtime()->preserveWrapperCallback(cx, obj)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_WEAKMAP_KEY);
             return false;
         }
@@ -320,7 +320,7 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         JS_ReportOutOfMemory(cx);
         return false;
     }
-    HashTableWriteBarrierPost(cx->runtime, map, key.get());
+    HashTableWriteBarrierPost(cx->runtime(), map, key.get());
 
     args.rval().setUndefined();
     return true;

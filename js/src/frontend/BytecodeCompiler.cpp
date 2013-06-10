@@ -314,7 +314,7 @@ frontend::CompileLazyFunction(JSContext *cx, HandleFunction fun, LazyScript *laz
                               const jschar *chars, size_t length)
 {
     CompileOptions options(cx);
-    options.setPrincipals(cx->compartment->principals)
+    options.setPrincipals(cx->compartment()->principals)
            .setOriginPrincipals(lazy->parent()->originPrincipals)
            .setVersion(lazy->parent()->getVersion())
            .setFileAndLine(lazy->parent()->filename(), lazy->lineno())

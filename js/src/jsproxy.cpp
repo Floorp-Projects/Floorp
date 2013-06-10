@@ -71,8 +71,8 @@ js::AutoEnterPolicy::recordEnter(JSContext *cx, HandleObject proxy, HandleId id)
         context = cx;
         enteredProxy.construct(proxy);
         enteredId.construct(id);
-        prev = cx->runtime->enteredPolicy;
-        cx->runtime->enteredPolicy = this;
+        prev = cx->runtime()->enteredPolicy;
+        cx->runtime()->enteredPolicy = this;
     }
 }
 
@@ -80,8 +80,8 @@ void
 js::AutoEnterPolicy::recordLeave()
 {
     if (!enteredProxy.empty()) {
-        JS_ASSERT(context->runtime->enteredPolicy == this);
-        context->runtime->enteredPolicy = prev;
+        JS_ASSERT(context->runtime()->enteredPolicy == this);
+        context->runtime()->enteredPolicy = prev;
     }
 }
 
@@ -89,9 +89,9 @@ JS_FRIEND_API(void)
 js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id)
 {
     MOZ_ASSERT(proxy->isProxy());
-    MOZ_ASSERT(cx->runtime->enteredPolicy);
-    MOZ_ASSERT(cx->runtime->enteredPolicy->enteredProxy.ref().get() == proxy);
-    MOZ_ASSERT(cx->runtime->enteredPolicy->enteredId.ref().get() == id);
+    MOZ_ASSERT(cx->runtime()->enteredPolicy);
+    MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredProxy.ref().get() == proxy);
+    MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredId.ref().get() == id);
 }
 #endif
 
@@ -1175,7 +1175,7 @@ NormalizePropertyDescriptor(JSContext *cx, MutableHandleValue vp, bool complete 
         RootedId id(cx, props[i]);
         if (JSID_IS_ATOM(id)) {
             JSAtom *atom = JSID_TO_ATOM(id);
-            const JSAtomState &atomState = cx->runtime->atomState;
+            const JSAtomState &atomState = cx->runtime()->atomState;
             if (atom == atomState.value || atom == atomState.writable ||
                 atom == atomState.get || atom == atomState.set ||
                 atom == atomState.enumerable || atom == atomState.configurable)
@@ -3247,8 +3247,8 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tagge
     Rooted<TaggedProto> proto(cx, proto_);
     RootedObject parent(cx, parent_);
 
-    JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
-    JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
+    JS_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
+    JS_ASSERT_IF(parent, cx->compartment() == parent->compartment());
     Class *clasp;
     if (callable)
         clasp = &FunctionProxyClass;
@@ -3297,8 +3297,8 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, JSObj
     RootedObject call(cx, call_);
     RootedObject construct(cx, construct_);
 
-    JS_ASSERT_IF(construct, cx->compartment == construct->compartment());
-    JS_ASSERT_IF(call && cx->compartment != call->compartment(), priv == ObjectValue(*call));
+    JS_ASSERT_IF(construct, cx->compartment() == construct->compartment());
+    JS_ASSERT_IF(call && cx->compartment() != call->compartment(), priv == ObjectValue(*call));
 
     JSObject *proxy = NewProxyObject(cx, handler, priv, TaggedProto(proto_), parent_,
                                      call || construct ? ProxyIsCallable : ProxyNotCallable);

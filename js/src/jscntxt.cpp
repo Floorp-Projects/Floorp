@@ -167,7 +167,7 @@ JSC::ExecutableAllocator *
 JSRuntime::createExecutableAllocator(JSContext *cx)
 {
     JS_ASSERT(!execAlloc_);
-    JS_ASSERT(cx->runtime == this);
+    JS_ASSERT(cx->runtime() == this);
 
     JSC::AllocationBehavior randomize =
         jitHardening ? JSC::AllocationCanRandomize : JSC::AllocationDeterministic;
@@ -181,7 +181,7 @@ WTF::BumpPointerAllocator *
 JSRuntime::createBumpPointerAllocator(JSContext *cx)
 {
     JS_ASSERT(!bumpAlloc_);
-    JS_ASSERT(cx->runtime == this);
+    JS_ASSERT(cx->runtime() == this);
 
     bumpAlloc_ = js_new<WTF::BumpPointerAllocator>();
     if (!bumpAlloc_)
@@ -193,7 +193,7 @@ MathCache *
 JSRuntime::createMathCache(JSContext *cx)
 {
     JS_ASSERT(!mathCache_);
-    JS_ASSERT(cx->runtime == this);
+    JS_ASSERT(cx->runtime() == this);
 
     MathCache *newMathCache = js_new<MathCache>();
     if (!newMathCache) {
@@ -229,7 +229,7 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     typedef CallsiteCloneKey Key;
     typedef CallsiteCloneTable Table;
 
-    Table &table = cx->compartment->callsiteClones;
+    Table &table = cx->compartment()->callsiteClones;
     if (!table.initialized() && !table.init())
         return NULL;
 
@@ -333,7 +333,7 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
 void
 js::DestroyContext(JSContext *cx, DestroyContextMode mode)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
     JS_AbortIfWrongThread(rt);
 
 #ifdef JS_THREADSAFE
@@ -429,7 +429,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
     if (!JS_IsRunning(cx) ||
         !js_ErrorToException(cx, message, reportp, callback, userRef)) {
         js_ReportErrorAgain(cx, message, reportp);
-    } else if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook) {
+    } else if (JSDebugErrorHook hook = cx->runtime()->debugHooks.debugErrorHook) {
         /*
          * If we've already chewed up all the C stack, don't call into the
          * error reporter since this may trigger an infinite recursion where
@@ -440,7 +440,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
             return;
 
         if (cx->errorReporter)
-            hook(cx, message, reportp, cx->runtime->debugHooks.debugErrorHookData);
+            hook(cx, message, reportp, cx->runtime()->debugHooks.debugErrorHookData);
     }
 }
 
@@ -476,7 +476,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 void
 js_ReportOutOfMemory(JSContext *cx)
 {
-    cx->runtime->hadOutOfMemory = true;
+    cx->runtime()->hadOutOfMemory = true;
 
     if (JS_IsRunning(cx)) {
         cx->setPendingException(StringValue(cx->names().outOfMemory));
@@ -961,8 +961,8 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
      * sending the error on to the regular ErrorReporter.
      */
     if (onError) {
-        JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook;
-        if (hook && !hook(cx, message, reportp, cx->runtime->debugHooks.debugErrorHookData))
+        JSDebugErrorHook hook = cx->runtime()->debugHooks.debugErrorHook;
+        if (hook && !hook(cx, message, reportp, cx->runtime()->debugHooks.debugErrorHookData))
             onError = NULL;
     }
     if (onError)
@@ -1071,7 +1071,7 @@ js_InvokeOperationCallback(JSContext *cx)
 {
     JS_ASSERT_REQUEST_DEPTH(cx);
 
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
     JS_ASSERT(rt->interrupt != 0);
 
     /*
@@ -1113,7 +1113,7 @@ JSBool
 js_HandleExecutionInterrupt(JSContext *cx)
 {
     JSBool result = JS_TRUE;
-    if (cx->runtime->interrupt)
+    if (cx->runtime()->interrupt)
         result = js_InvokeOperationCallback(cx) && result;
     return result;
 }
@@ -1223,7 +1223,7 @@ JSContext::wrapPendingException()
 {
     RootedValue value(this, getPendingException());
     clearPendingException();
-    if (compartment->wrap(this, &value))
+    if (compartment()->wrap(this, &value))
         setPendingException(value);
 }
 
@@ -1248,7 +1248,7 @@ JSContext::leaveGenerator(JSGenerator *gen)
 bool
 JSContext::runningWithTrustedPrincipals() const
 {
-    return !compartment || compartment->principals == runtime->trustedPrincipals();
+    return !compartment() || compartment()->principals == runtime()->trustedPrincipals();
 }
 
 bool
@@ -1257,7 +1257,7 @@ JSContext::saveFrameChain()
     if (!stack.saveFrameChain())
         return false;
 
-    if (!savedFrameChains_.append(SavedFrameChain(compartment, enterCompartmentDepth_))) {
+    if (!savedFrameChains_.append(SavedFrameChain(compartment(), enterCompartmentDepth_))) {
         stack.restoreFrameChain();
         return false;
     }
@@ -1463,15 +1463,15 @@ JSContext::mark(JSTracer *trc)
 JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
     : cx(cx)
 {
-    JS_ASSERT(cx->runtime->requestDepth || cx->runtime->isHeapBusy());
-    cx->runtime->assertValidThread();
-    cx->runtime->checkRequestDepth++;
+    JS_ASSERT(cx->runtime()->requestDepth || cx->runtime()->isHeapBusy());
+    cx->runtime()->assertValidThread();
+    cx->runtime()->checkRequestDepth++;
 }
 
 JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
 {
-    JS_ASSERT(cx->runtime->checkRequestDepth != 0);
-    cx->runtime->checkRequestDepth--;
+    JS_ASSERT(cx->runtime()->checkRequestDepth != 0);
+    cx->runtime()->checkRequestDepth--;
 }
 
 #endif

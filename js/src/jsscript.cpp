@@ -118,7 +118,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
             return false;
 #endif
 
-        StackBaseShape base(cx->compartment, &CallClass, cx->global(), NULL,
+        StackBaseShape base(cx->compartment(), &CallClass, cx->global(), NULL,
                             BaseShape::VAROBJ | BaseShape::DELEGATE);
 
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
@@ -844,7 +844,7 @@ JSScript::initScriptCounts(JSContext *cx)
 
     /* Enable interrupts in any interpreter frames running on this script. */
     InterpreterFrames *frames;
-    for (frames = cx->runtime->interpreterFrames; frames; frames = frames->older)
+    for (frames = cx->runtime()->interpreterFrames; frames; frames = frames->older)
         frames->enableInterruptsIfRunning(this);
 
     return true;
@@ -1127,7 +1127,7 @@ SourceCompressorThread::waitOnCompression(SourceCompressionToken *userTok)
 
     // Update memory accounting.
     if (!saveTok->oom)
-        saveTok->cx->runtime->updateMallocCounter(NULL, saveTok->ss->computedSizeOfData());
+        saveTok->cx->runtime()->updateMallocCounter(NULL, saveTok->ss->computedSizeOfData());
 
     saveTok->ss = NULL;
     saveTok->chars = NULL;
@@ -1169,11 +1169,11 @@ JSScript::loadSource(JSContext *cx, HandleScript script, bool *worked)
 {
     JS_ASSERT(!script->scriptSource()->hasSourceData());
     *worked = false;
-    if (!cx->runtime->sourceHook || !script->scriptSource()->sourceRetrievable())
+    if (!cx->runtime()->sourceHook || !script->scriptSource()->sourceRetrievable())
         return true;
     jschar *src = NULL;
     uint32_t length;
-    if (!cx->runtime->sourceHook(cx, script, &src, &length))
+    if (!cx->runtime()->sourceHook(cx, script, &src, &length))
         return false;
     if (!src)
         return true;
@@ -1231,11 +1231,11 @@ ScriptSource::chars(JSContext *cx)
 #endif
 #ifdef JS_THREADSAFE
     if (!ready())
-        return cx->runtime->sourceCompressorThread.currentChars();
+        return cx->runtime()->sourceCompressorThread.currentChars();
 #endif
 #ifdef USE_ZLIB
     if (compressed()) {
-        cached = cx->runtime->sourceDataCache.lookup(this);
+        cached = cx->runtime()->sourceDataCache.lookup(this);
         if (!cached) {
             const size_t nbytes = sizeof(jschar) * (length_ + 1);
             jschar *decompressed = static_cast<jschar *>(cx->malloc_(nbytes));
@@ -1253,7 +1253,7 @@ ScriptSource::chars(JSContext *cx)
                 js_free(decompressed);
                 return NULL;
             }
-            cx->runtime->sourceDataCache.put(this, cached);
+            cx->runtime()->sourceDataCache.put(this, cached);
         }
         return cached->chars().get();
     }
@@ -1285,10 +1285,10 @@ ScriptSource::setSourceCopy(JSContext *cx, const jschar *src, uint32_t length,
     argumentsNotIncluded_ = argumentsNotIncluded;
 
 #ifdef JS_THREADSAFE
-    if (tok && cx->runtime->useHelperThreads()) {
+    if (tok && cx->runtime()->useHelperThreads()) {
         tok->ss = this;
         tok->chars = src;
-        cx->runtime->sourceCompressorThread.compress(tok);
+        cx->runtime()->sourceCompressorThread.compress(tok);
     } else
 #endif
     {
@@ -1315,7 +1315,7 @@ SourceCompressionToken::complete()
     JS_ASSERT_IF(!ss, !chars);
 #ifdef JS_THREADSAFE
     if (active()) {
-        cx->runtime->sourceCompressorThread.waitOnCompression(this);
+        cx->runtime()->sourceCompressorThread.waitOnCompression(this);
         JS_ASSERT(!active());
     }
     if (oom) {
@@ -1331,7 +1331,7 @@ SourceCompressionToken::abort()
 {
     JS_ASSERT(active());
 #ifdef JS_THREADSAFE
-    cx->runtime->sourceCompressorThread.abort(this);
+    cx->runtime()->sourceCompressorThread.abort(this);
 #endif
 }
 
@@ -1512,7 +1512,7 @@ js::SaveSharedScriptData(JSContext *cx, Handle<JSScript *> script, SharedScriptD
     ASSERT(script != NULL);
     ASSERT(ssd != NULL);
 
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
     ScriptBytecodeHasher::Lookup l(ssd);
 
     ScriptDataTable::AddPtr p = rt->scriptDataTable.lookupForAdd(l);
@@ -1697,11 +1697,11 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
 
     script->enclosingScopeOrOriginalFunction_ = enclosingScope;
     script->savedCallerFun = savedCallerFun;
-    script->compartment_ = cx->compartment;
+    script->compartment_ = cx->compartment();
 
     /* Establish invariant: principals implies originPrincipals. */
     if (options.principals) {
-        JS_ASSERT(options.principals == cx->compartment->principals);
+        JS_ASSERT(options.principals == cx->compartment()->principals);
         script->originPrincipals
             = options.originPrincipals ? options.originPrincipals : options.principals;
         JS_HoldPrincipals(script->originPrincipals);
@@ -2001,10 +2001,10 @@ js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
         return;
 
     JS_ASSERT(!script->isActiveEval);
-    if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
-        AutoKeepAtoms keep(cx->runtime);
+    if (JSNewScriptHook hook = cx->runtime()->debugHooks.newScriptHook) {
+        AutoKeepAtoms keep(cx->runtime());
         hook(cx, script->filename(), script->lineno, script, fun,
-             cx->runtime->debugHooks.newScriptHookData);
+             cx->runtime()->debugHooks.newScriptHookData);
     }
 }
 
@@ -2064,7 +2064,7 @@ GSNCache::purge()
 jssrcnote *
 js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    GSNCache *cache = &cx->runtime->gsnCache;
+    GSNCache *cache = &cx->runtime()->gsnCache;
     cx = NULL;  // nulling |cx| ensures GC can't be triggered, so |JSScript *script| is safe
 
     size_t target = pc - script->code;
@@ -2366,7 +2366,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
     CompileOptions options(cx);
-    options.setPrincipals(cx->compartment->principals)
+    options.setPrincipals(cx->compartment()->principals)
            .setOriginPrincipals(src->originPrincipals)
            .setCompileAndGo(src->compileAndGo)
            .setSelfHostingMode(src->selfHosted)
@@ -2463,7 +2463,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
     RootedScript script(cx, clone->nonLazyScript());
     JS_ASSERT(script);
     JS_ASSERT(script->compartment() == original->compartment());
-    JS_ASSERT_IF(script->compartment() != cx->compartment,
+    JS_ASSERT_IF(script->compartment() != cx->compartment(),
                  !script->enclosingStaticScope());
 
     RootedObject scope(cx, script->enclosingStaticScope());
@@ -2563,7 +2563,7 @@ JSScript::ensureHasDebugScript(JSContext *cx)
      * debug state is destroyed.
      */
     InterpreterFrames *frames;
-    for (frames = cx->runtime->interpreterFrames; frames; frames = frames->older)
+    for (frames = cx->runtime()->interpreterFrames; frames; frames = frames->older)
         frames->enableInterruptsIfRunning(this);
 
     return true;
@@ -2589,7 +2589,7 @@ JSScript::tryNewStepMode(JSContext *cx, uint32_t newValue)
 
     if (!prior != !newValue) {
         /* Step mode has been enabled or disabled. Alert the methodjit. */
-        recompileForStepMode(cx->runtime->defaultFreeOp());
+        recompileForStepMode(cx->runtime()->defaultFreeOp());
 
         if (!stepModeEnabled() && !debug->numSites)
             js_free(releaseDebugScript());
@@ -2615,7 +2615,7 @@ JSScript::changeStepModeCount(JSContext *cx, int delta)
         return false;
 
     assertSameCompartment(cx, this);
-    JS_ASSERT_IF(delta > 0, cx->compartment->debugMode());
+    JS_ASSERT_IF(delta > 0, cx->compartment()->debugMode());
 
     DebugScript *debug = debugScript();
     uint32_t count = debug->stepMode & stepCountMask;
@@ -2637,7 +2637,7 @@ JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc)
     BreakpointSite *&site = debug->breakpoints[pc - code];
 
     if (!site) {
-        site = cx->runtime->new_<BreakpointSite>(this, pc);
+        site = cx->runtime()->new_<BreakpointSite>(this, pc);
         if (!site) {
             js_ReportOutOfMemory(cx);
             return NULL;
@@ -2885,7 +2885,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
      *    assumption of !script->needsArgsObj();
      *  - type inference data for the script assuming script->needsArgsObj
      */
-    for (AllFramesIter i(cx->runtime); !i.done(); ++i) {
+    for (AllFramesIter i(cx->runtime()); !i.done(); ++i) {
         /*
          * We cannot reliably create an arguments object for Ion activations of
          * this script.  To maintain the invariant that "script->needsArgsObj

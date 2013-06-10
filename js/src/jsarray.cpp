@@ -824,7 +824,7 @@ array_toSource_impl(JSContext *cx, CallArgs args)
         /* Get element's character string. */
         JSString *str;
         if (hole) {
-            str = cx->runtime->emptyString;
+            str = cx->runtime()->emptyString;
         } else {
             str = ValueToSource(cx, elt);
             if (!str)
@@ -2886,11 +2886,11 @@ NewArray(JSContext *cx, uint32_t length, JSObject *protoArg, NewObjectKind newKi
     JS_ASSERT(CanBeFinalizedInBackground(allocKind, &ArrayClass));
     allocKind = GetBackgroundAllocKind(allocKind);
 
-    NewObjectCache &cache = cx->runtime->newObjectCache;
+    NewObjectCache &cache = cx->runtime()->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
     if (newKind == GenericObject &&
-        !cx->compartment->objectMetadataCallback &&
+        !cx->compartment()->objectMetadataCallback &&
         cache.lookupGlobal(&ArrayClass, cx->global(), allocKind, &entry))
     {
         RootedObject obj(cx, cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &ArrayClass)));

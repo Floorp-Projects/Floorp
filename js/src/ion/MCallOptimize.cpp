@@ -147,7 +147,7 @@ IonBuilder::inlineMathFunction(CallInfo &callInfo, MMathFunction::Function funct
 
     callInfo.unwrapArgs();
 
-    MathCache *cache = cx->runtime->getMathCache(cx);
+    MathCache *cache = cx->runtime()->getMathCache(cx);
     if (!cache)
         return InliningStatus_Error;
 
@@ -811,7 +811,7 @@ IonBuilder::inlineStringObject(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    RootedString emptyString(cx, cx->runtime->emptyString);
+    RootedString emptyString(cx, cx->runtime()->emptyString);
     RootedObject templateObj(cx, StringObject::create(cx, emptyString, TenuredObject));
     if (!templateObj)
         return InliningStatus_Error;

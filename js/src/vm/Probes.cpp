@@ -27,7 +27,7 @@ bool Probes::ProfilingActive = true;
 Probes::JITReportGranularity
 Probes::JITGranularityRequested(JSContext *cx)
 {
-    if (cx->runtime->spsProfiler.enabled())
+    if (cx->runtime()->spsProfiler.enabled())
         return JITREPORT_GRANULARITY_LINE;
     return JITREPORT_GRANULARITY_NONE;
 }

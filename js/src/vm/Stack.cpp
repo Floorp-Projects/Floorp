@@ -138,7 +138,7 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
             HeapValue::writeBarrierPost(*dst, dst);
     }
 
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         DebugScopes::onGeneratorFrameChange(otherfp, this, cx);
 }
 
@@ -351,7 +351,7 @@ StackFrame::epilogue(JSContext *cx)
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {
             JS_ASSERT_IF(hasCallObj(), scopeChain()->asCall().isForEval());
-            if (cx->compartment->debugMode())
+            if (cx->compartment()->debugMode())
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
             if (isDebuggerFrame())
@@ -384,7 +384,7 @@ StackFrame::epilogue(JSContext *cx)
     else
         AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         DebugScopes::onPopCall(this, cx);
 
     if (isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
@@ -418,7 +418,7 @@ StackFrame::popBlock(JSContext *cx)
 {
     JS_ASSERT(hasBlockChain());
 
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         DebugScopes::onPopBlock(cx, this);
 
     if (blockChain_->needsClone()) {
@@ -432,7 +432,7 @@ StackFrame::popBlock(JSContext *cx)
 void
 StackFrame::popWith(JSContext *cx)
 {
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         DebugScopes::onPopWith(this);
 
     JS_ASSERT(scopeChain()->isWith());
@@ -661,8 +661,8 @@ StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from,
 {
     assertInvariants();
 
-    JSCompartment *dest = cx->compartment;
-    bool trusted = dest->principals == cx->runtime->trustedPrincipals();
+    JSCompartment *dest = cx->compartment();
+    bool trusted = dest->principals == cx->runtime()->trustedPrincipals();
     Value *end = trusted ? trustedEnd_ : defaultEnd_;
 
     /*
@@ -771,7 +771,7 @@ StackSpace::containsSlow(StackFrame *fp)
 {
     if (!seg_)
         return false;
-    for (AllFramesIter i(seg_->cx()->runtime); !i.done(); ++i) {
+    for (AllFramesIter i(seg_->cx()->runtime()); !i.done(); ++i) {
         /*
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.
@@ -789,7 +789,7 @@ StackSpace::containsSlow(StackFrame *fp)
 
 ContextStack::ContextStack(JSContext *cx)
   : seg_(NULL),
-    space_(&cx->runtime->stackSpace),
+    space_(&cx->runtime()->stackSpace),
     cx_(cx)
 {}
 
@@ -945,14 +945,14 @@ ContextStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Value &
     AbstractFramePtr prev = NullFramePtr();
     if (evalInFrame) {
         /* First, find the right segment. */
-        AllFramesIter frameIter(cx->runtime);
+        AllFramesIter frameIter(cx->runtime());
         while (frameIter.isIonOptimizedJS() || frameIter.abstractFramePtr() != evalInFrame)
             ++frameIter;
         JS_ASSERT(frameIter.abstractFramePtr() == evalInFrame);
 
         StackSegment &seg = *frameIter.seg();
 
-        ScriptFrameIter iter(cx->runtime, seg);
+        ScriptFrameIter iter(cx->runtime(), seg);
         /* Debug-mode currently disables Ion compilation. */
         JS_ASSERT_IF(evalInFrame.isStackFrame(), !evalInFrame.asStackFrame()->runningInIon());
         JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIonOptimizedJS());
@@ -1279,7 +1279,7 @@ ScriptFrameIter::Data::Data(const ScriptFrameIter::Data &other)
 }
 
 ScriptFrameIter::ScriptFrameIter(JSContext *cx, SavedOption savedOption)
-  : data_(cx, &cx->runtime->mainThread, savedOption)
+  : data_(cx, &cx->runtime()->mainThread, savedOption)
 #ifdef JS_ION
     , ionInlineFrames_(cx, (js::ion::IonFrameIterator*) NULL)
 #endif

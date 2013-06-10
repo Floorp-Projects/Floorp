@@ -52,7 +52,7 @@ BaselineFrame::popBlock(JSContext *cx)
 {
     JS_ASSERT(hasBlockChain());
 
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         DebugScopes::onPopBlock(cx, this);
 
     if (blockChain_->needsClone()) {

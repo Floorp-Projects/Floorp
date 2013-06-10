@@ -184,7 +184,7 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
 JSString *
 js_BooleanToString(JSContext *cx, JSBool b)
 {
-    return b ? cx->runtime->atomState.true_ : cx->runtime->atomState.false_;
+    return b ? cx->runtime()->atomState.true_ : cx->runtime()->atomState.false_;
 }
 
 JS_PUBLIC_API(bool)
@@ -203,7 +203,7 @@ js::BooleanGetPrimitiveValueSlow(JSContext *cx, HandleObject obj, Value *vp)
     InvokeArgsGuard ag;
     if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
         return false;
-    ag.setCallee(cx->compartment->maybeGlobal()->booleanValueOf());
+    ag.setCallee(cx->compartment()->maybeGlobal()->booleanValueOf());
     ag.setThis(ObjectValue(*obj));
     if (!Invoke(cx, ag))
         return false;

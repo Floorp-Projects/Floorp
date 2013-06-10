@@ -204,7 +204,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 {
     if (args.length() == 0) {
         RegExpStatics *res = cx->regExpStatics();
-        Rooted<JSAtom*> empty(cx, cx->runtime->emptyString);
+        Rooted<JSAtom*> empty(cx, cx->runtime()->emptyString);
         RegExpObject *reobj = builder.build(empty, res->getFlags());
         if (!reobj)
             return false;
@@ -263,7 +263,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 
     RootedAtom source(cx);
     if (sourceValue.isUndefined()) {
-        source = cx->runtime->emptyString;
+        source = cx->runtime()->emptyString;
     } else {
         /* Coerce to string and compile. */
         JSString *str = ToString<CanGC>(cx, sourceValue);

@@ -484,7 +484,7 @@ ReferenceFinder::addReferrer(jsval referrerArg, Path *path)
 {
     RootedValue referrer(context, referrerArg);
 
-    if (!context->compartment->wrap(context, &referrer))
+    if (!context->compartment()->wrap(context, &referrer))
         return false;
 
     ScopedJSFreePtr<char> pathName(path->computeName(context));
