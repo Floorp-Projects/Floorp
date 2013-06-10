@@ -104,6 +104,13 @@ VARIABLES = {
        This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
         """),
 
+    'EXTRA_JS_MODULES': (StrictOrderingOnAppendList, list, [],
+        """Additional JavaScript files to distribute.
+
+        This variable contains a list of files to copy into JS_MODULES_PATH,
+        which is $(FINAL_TARGET)/modules by default.
+        """),
+
     'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
         """Javascript XPCOM files.
 
@@ -128,6 +135,13 @@ VARIABLES = {
 
     'HOST_LIBRARY_NAME': (unicode, unicode, "",
         """Name of target library generated when cross compiling.
+        """),
+
+    'JS_MODULES_PATH': (unicode, unicode, "",
+        """Path to install EXTRA_JS_MODULES.
+
+        EXTRA_JS_MODULES files are copied to this path, which defaults to
+        $(FINAL_TARGET)/modules if unspecified.
         """),
 
     'LIBRARY_NAME': (unicode, unicode, "",
