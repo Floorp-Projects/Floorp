@@ -89,6 +89,7 @@ class TreeMetadataEmitter(object):
             HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
             MODULE='MODULE',
             SIMPLE_PROGRAMS='SIMPLE_PROGRAMS',
+            SSRCS='SSRCS',
             XPIDL_FLAGS='XPIDL_FLAGS',
             XPIDL_MODULE='XPIDL_MODULE',
             XPIDLSRCS='XPIDL_SOURCES',
