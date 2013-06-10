@@ -857,7 +857,7 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
     if (lref.isString() && IsDefinitelyIndex(rref, &index)) {
         JSString *str = lref.toString();
         if (index < str->length()) {
-            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, index);
+            str = cx->runtime()->staticStrings.getUnitStringForElement(cx, str, index);
             if (!str)
                 return false;
             res.setString(str);

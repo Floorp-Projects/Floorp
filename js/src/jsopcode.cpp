@@ -462,7 +462,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
         return true;
     }
 
-    if (cx->runtime->isHeapBusy() || cx->runtime->noGCOrAllocationCheck) {
+    if (cx->runtime()->isHeapBusy() || cx->runtime()->noGCOrAllocationCheck) {
         char *source = JS_sprintf_append(NULL, "<value>");
         if (!source)
             return false;
@@ -600,7 +600,7 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
 
       case JOF_OBJECT: {
         /* Don't call obj.toSource if analysis/inference is active. */
-        if (cx->compartment->activeAnalysis) {
+        if (cx->compartment()->activeAnalysis) {
             Sprint(sp, " object");
             break;
         }
@@ -2057,7 +2057,7 @@ js::IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
 JS_FRIEND_API(size_t)
 js::GetPCCountScriptCount(JSContext *cx)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
 
     if (!rt->scriptAndCountsVector)
         return 0;
@@ -2094,7 +2094,7 @@ AppendArrayJSONProperties(JSContext *cx, StringBuffer &buf,
 JS_FRIEND_API(JSString *)
 js::GetPCCountScriptSummary(JSContext *cx, size_t index)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
 
     if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
@@ -2357,7 +2357,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
 JS_FRIEND_API(JSString *)
 js::GetPCCountScriptContents(JSContext *cx, size_t index)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
 
     if (!rt->scriptAndCountsVector || index >= rt->scriptAndCountsVector->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);

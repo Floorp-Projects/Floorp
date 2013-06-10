@@ -226,20 +226,20 @@ GatherRooters(Vector<Rooter, 0, SystemAllocPolicy> &rooters,
 void
 JS::CheckStackRoots(JSContext *cx)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
 
     if (rt->gcZeal_ != ZealStackRootingValue)
         return;
 
     // GCs can't happen when analysis/inference/compilation are active.
-    if (cx->compartment->activeAnalysis)
+    if (cx->compartment()->activeAnalysis)
         return;
 
     if (rt->mainThread.suppressGC)
         return;
 
     // Can switch to the atoms compartment during analysis.
-    if (IsAtomsCompartment(cx->compartment)) {
+    if (IsAtomsCompartment(cx->compartment())) {
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
             if (c.get()->activeAnalysis)
                 return;
@@ -852,8 +852,8 @@ MaybeVerifyPostBarriers(JSRuntime *rt, bool always)
 void
 js::gc::MaybeVerifyBarriers(JSContext *cx, bool always)
 {
-    MaybeVerifyPreBarriers(cx->runtime, always);
-    MaybeVerifyPostBarriers(cx->runtime, always);
+    MaybeVerifyPreBarriers(cx->runtime(), always);
+    MaybeVerifyPostBarriers(cx->runtime(), always);
 }
 
 void

@@ -521,7 +521,7 @@ class AutoDetectInvalidation
 
     ~AutoDetectInvalidation() {
         if (!disabled_ && ionScript_->invalidated())
-            cx_->runtime->setIonReturnOverride(*rval_);
+            cx_->runtime()->setIonReturnOverride(*rval_);
     }
 };
 

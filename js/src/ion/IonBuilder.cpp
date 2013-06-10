@@ -36,9 +36,9 @@ using mozilla::DebugOnly;
 IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
                        BaselineInspector *inspector, CompileInfo *info, AbstractFramePtr fp,
                        size_t inliningDepth, uint32_t loopDepth)
-  : MIRGenerator(cx->compartment, temp, graph, info),
+  : MIRGenerator(cx->compartment(), temp, graph, info),
     backgroundCodegen_(NULL),
-    recompileInfo(cx->compartment->types.compiledInfo),
+    recompileInfo(cx->compartment()->types.compiledInfo),
     cx(cx),
     fp(fp),
     abortReason_(AbortReason_Disable),
@@ -4742,7 +4742,7 @@ TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func,
     // property, we can bake in a call to the bottom half of the DOM
     // accessor
     DOMInstanceClassMatchesProto instanceChecker =
-        GetDOMCallbacks(cx->runtime)->instanceClassMatchesProto;
+        GetDOMCallbacks(cx->runtime())->instanceClassMatchesProto;
 
     const JSJitInfo *jinfo = func->jitInfo();
     if (jinfo->type != opType)
@@ -5933,9 +5933,9 @@ IonBuilder::getStaticName(HandleObject staticObject, HandlePropertyName name, bo
         if (name == cx->names().undefined)
             return pushConstant(UndefinedValue());
         if (name == cx->names().NaN)
-            return pushConstant(cx->runtime->NaNValue);
+            return pushConstant(cx->runtime()->NaNValue);
         if (name == cx->names().Infinity)
-            return pushConstant(cx->runtime->positiveInfinityValue);
+            return pushConstant(cx->runtime()->positiveInfinityValue);
     }
 
     RootedId id(cx, NameToId(name));

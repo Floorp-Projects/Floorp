@@ -411,7 +411,7 @@ class js::AutoDebugModeGC
 inline bool
 JSContext::typeInferenceEnabled() const
 {
-    return compartment->zone()->types.inferenceEnabled;
+    return compartment()->zone()->types.inferenceEnabled;
 }
 
 inline js::Handle<js::GlobalObject*>
@@ -423,7 +423,7 @@ JSContext::global() const
      * barrier on it. Once the compartment is popped, the handle is no longer
      * safe to use.
      */
-    return js::Handle<js::GlobalObject*>::fromMarkedLocation(compartment->global_.unsafeGet());
+    return js::Handle<js::GlobalObject*>::fromMarkedLocation(compartment()->global_.unsafeGet());
 }
 
 namespace js {
@@ -433,13 +433,13 @@ class AssertCompartmentUnchanged
   public:
     AssertCompartmentUnchanged(JSContext *cx
                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), oldCompartment(cx->compartment)
+      : cx(cx), oldCompartment(cx->compartment())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~AssertCompartmentUnchanged() {
-        JS_ASSERT(cx->compartment == oldCompartment);
+        JS_ASSERT(cx->compartment() == oldCompartment);
     }
 
   protected:

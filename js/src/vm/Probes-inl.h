@@ -56,7 +56,7 @@ Probes::enterScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
     cx->doFunctionCallback(maybeFun, script, 1);
 #endif
 
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
     if (rt->spsProfiler.enabled()) {
         rt->spsProfiler.enter(cx, script, maybeFun);
         JS_ASSERT_IF(!fp->isGeneratorFrame(), !fp->hasPushedSPSFrame());
@@ -80,7 +80,7 @@ Probes::exitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
     cx->doFunctionCallback(maybeFun, script, 0);
 #endif
 
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
     /*
      * Coming from IonMonkey, the fp might not be known (fp == NULL), but
      * IonMonkey will only call exitScript() when absolutely necessary, so it is

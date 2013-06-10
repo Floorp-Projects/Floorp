@@ -43,14 +43,14 @@ bool
 js::StartOffThreadAsmJSCompile(JSContext *cx, AsmJSParallelTask *asmData)
 {
     // Threads already initialized by the AsmJS compiler.
-    JS_ASSERT(cx->runtime->workerThreadState);
+    JS_ASSERT(cx->runtime()->workerThreadState);
     JS_ASSERT(asmData->mir);
     JS_ASSERT(asmData->lir == NULL);
 
-    WorkerThreadState &state = *cx->runtime->workerThreadState;
+    WorkerThreadState &state = *cx->runtime()->workerThreadState;
     JS_ASSERT(state.numThreads);
 
-    AutoLockWorkerThreadState lock(cx->runtime);
+    AutoLockWorkerThreadState lock(cx->runtime());
 
     // Don't append this task if another failed.
     if (state.asmJSWorkerFailed())
@@ -66,11 +66,11 @@ js::StartOffThreadAsmJSCompile(JSContext *cx, AsmJSParallelTask *asmData)
 bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
     if (!EnsureParallelCompilationInitialized(rt))
         return false;
 
-    WorkerThreadState &state = *cx->runtime->workerThreadState;
+    WorkerThreadState &state = *cx->runtime()->workerThreadState;
     JS_ASSERT(state.numThreads);
 
     AutoLockWorkerThreadState lock(rt);

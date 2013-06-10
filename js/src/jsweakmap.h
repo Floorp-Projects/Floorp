@@ -134,7 +134,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     typedef typename Base::Range Range;
 
     explicit WeakMap(JSContext *cx, JSObject *memOf=NULL)
-        : Base(cx), WeakMapBase(memOf, cx->compartment) { }
+        : Base(cx), WeakMapBase(memOf, cx->compartment()) { }
 
   private:
     bool markValue(JSTracer *trc, Value *x) {

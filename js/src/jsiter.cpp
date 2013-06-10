@@ -373,7 +373,7 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx, cx->compartment->getNewType(cx, &PropertyIteratorObject::class_, NULL));
+        RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &PropertyIteratorObject::class_, NULL));
         if (!type)
             return NULL;
 
@@ -451,7 +451,7 @@ RegisterEnumerator(JSContext *cx, PropertyIteratorObject *iterobj, NativeIterato
 {
     /* Register non-escaping native enumerators (for-in) with the current context. */
     if (ni->flags & JSITER_ENUMERATE) {
-        ni->link(cx->compartment->enumerators);
+        ni->link(cx->compartment()->enumerators);
 
         JS_ASSERT(!(ni->flags & JSITER_ACTIVE));
         ni->flags |= JSITER_ACTIVE;
@@ -610,7 +610,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
              * objects here, as they are not inserted into the cache and
              * will result in a miss.
              */
-            PropertyIteratorObject *last = cx->runtime->nativeIterCache.last;
+            PropertyIteratorObject *last = cx->runtime()->nativeIterCache.last;
             if (last) {
                 NativeIterator *lastni = last->getNativeIterator();
                 if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
@@ -657,7 +657,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
                 } while (pobj);
             }
 
-            PropertyIteratorObject *iterobj = cx->runtime->nativeIterCache.get(key);
+            PropertyIteratorObject *iterobj = cx->runtime()->nativeIterCache.get(key);
             if (iterobj) {
                 NativeIterator *ni = iterobj->getNativeIterator();
                 if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
@@ -669,7 +669,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
                     UpdateNativeIterator(ni, obj);
                     RegisterEnumerator(cx, iterobj, ni);
                     if (shapes.length() == 2)
-                        cx->runtime->nativeIterCache.last = iterobj;
+                        cx->runtime()->nativeIterCache.last = iterobj;
                     return true;
                 }
             }
@@ -708,10 +708,10 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
 
     /* Cache the iterator object if possible. */
     if (shapes.length())
-        cx->runtime->nativeIterCache.set(key, iterobj);
+        cx->runtime()->nativeIterCache.set(key, iterobj);
 
     if (shapes.length() == 2)
-        cx->runtime->nativeIterCache.last = iterobj;
+        cx->runtime()->nativeIterCache.last = iterobj;
     return true;
 }
 
@@ -913,7 +913,7 @@ ElementIteratorObject::next_impl(JSContext *cx, CallArgs args)
     // Get target[i].
     JS_ASSERT(i + 1 > i);
     if (target.isString()) {
-        JSString *c = cx->runtime->staticStrings.getUnitStringForElement(cx, target.toString(), i);
+        JSString *c = cx->runtime()->staticStrings.getUnitStringForElement(cx, target.toString(), i);
         if (!c)
             goto close;
         args.rval().setString(c);
@@ -1069,7 +1069,7 @@ template<typename StringPredicate>
 static bool
 SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate predicate)
 {
-    NativeIterator *enumeratorList = cx->compartment->enumerators;
+    NativeIterator *enumeratorList = cx->compartment()->enumerators;
     NativeIterator *ni = enumeratorList->next();
 
     while (ni != enumeratorList) {

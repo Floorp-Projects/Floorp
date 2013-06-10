@@ -241,13 +241,13 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
 JS_FRIEND_API(JSBool)
 JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
 {
-    return cx->compartment->wrap(cx, desc);
+    return cx->compartment()->wrap(cx, desc);
 }
 
 JS_FRIEND_API(JSBool)
 JS_WrapAutoIdVector(JSContext *cx, js::AutoIdVector &props)
 {
-    return cx->compartment->wrap(cx, props);
+    return cx->compartment()->wrap(cx, props);
 }
 
 JS_FRIEND_API(void)
@@ -272,7 +272,7 @@ JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *objArg, const JSFunctionSpecWithHelp *fs)
 {
     RootedObject obj(cx, objArg);
-    JS_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    JS_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -302,7 +302,7 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *objArg, const JSFunctionSpec
 
 AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
                                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), oldCompartment(cx->compartment)
+  : cx(cx), oldCompartment(cx->compartment())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     cx->setCompartment(newCompartment);
@@ -310,7 +310,7 @@ AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSCompartment *newCo
 
 AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSHandleObject target
                                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), oldCompartment(cx->compartment)
+  : cx(cx), oldCompartment(cx->compartment())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     cx->setCompartment(target->compartment());
@@ -385,7 +385,7 @@ js::GetObjectSlotSpan(JSObject *obj)
 JS_FRIEND_API(bool)
 js::IsObjectInContextCompartment(JSObject *obj, const JSContext *cx)
 {
-    return obj->compartment() == cx->compartment;
+    return obj->compartment() == cx->compartment();
 }
 
 JS_FRIEND_API(bool)
@@ -418,7 +418,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *objArg, const char *name
                                unsigned nargs, unsigned attrs)
 {
     RootedObject obj(cx, objArg);
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -433,7 +433,7 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
                             JSObject *parentArg, const char *name)
 {
     RootedObject parent(cx, parentArg);
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
@@ -456,7 +456,7 @@ js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, 
 {
     RootedObject parent(cx, parentArg);
     JS_ASSERT(JSID_IS_STRING(id));
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
@@ -744,23 +744,23 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
 JS_FRIEND_API(const JSStructuredCloneCallbacks *)
 js::GetContextStructuredCloneCallbacks(JSContext *cx)
 {
-    return cx->runtime->structuredCloneCallbacks;
+    return cx->runtime()->structuredCloneCallbacks;
 }
 
 JS_FRIEND_API(bool)
 js::CanCallContextDebugHandler(JSContext *cx)
 {
-    return !!cx->runtime->debugHooks.debuggerHandler;
+    return !!cx->runtime()->debugHooks.debuggerHandler;
 }
 
 JS_FRIEND_API(JSTrapStatus)
 js::CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
 {
-    if (!cx->runtime->debugHooks.debuggerHandler)
+    if (!cx->runtime()->debugHooks.debuggerHandler)
         return JSTRAP_RETURN;
 
-    return cx->runtime->debugHooks.debuggerHandler(cx, script, bc, rval,
-                                                   cx->runtime->debugHooks.debuggerHandlerData);
+    return cx->runtime()->debugHooks.debuggerHandler(cx, script, bc, rval,
+                                                   cx->runtime()->debugHooks.debuggerHandlerData);
 }
 
 #ifdef JS_THREADSAFE
@@ -888,7 +888,7 @@ JS::IsIncrementalBarrierNeeded(JSRuntime *rt)
 JS_FRIEND_API(bool)
 JS::IsIncrementalBarrierNeeded(JSContext *cx)
 {
-    return IsIncrementalBarrierNeeded(cx->runtime);
+    return IsIncrementalBarrierNeeded(cx->runtime());
 }
 
 JS_FRIEND_API(void)
@@ -1049,7 +1049,7 @@ js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext *cx,
                                                            js::CTypesActivityType beginType,
                                                            js::CTypesActivityType endType
                                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : cx(cx), callback(cx->runtime->ctypesActivityCallback), endType(endType)
+  : cx(cx), callback(cx->runtime()->ctypesActivityCallback), endType(endType)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
@@ -1062,9 +1062,9 @@ js::SetObjectMetadataCallback(JSContext *cx, ObjectMetadataCallback callback)
 {
     // Clear any jitcode in the runtime, which behaves differently depending on
     // whether there is a creation callback.
-    ReleaseAllJITCode(cx->runtime->defaultFreeOp());
+    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
 
-    cx->compartment->objectMetadataCallback = callback;
+    cx->compartment()->objectMetadataCallback = callback;
 }
 
 JS_FRIEND_API(bool)
@@ -1085,7 +1085,7 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    JS_ASSERT(cx->runtime->heapState == js::Idle);
+    JS_ASSERT(cx->runtime()->heapState == js::Idle);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, descriptor.value);
     if (descriptor.attrs & JSPROP_GETTER)

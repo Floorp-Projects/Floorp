@@ -1174,7 +1174,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-    ValueMap *map = cx->new_<ValueMap>(cx->runtime);
+    ValueMap *map = cx->new_<ValueMap>(cx->runtime());
     if (!map)
         return false;
     if (!map->init()) {
@@ -1208,7 +1208,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 js_ReportOutOfMemory(cx);
                 return false;
             }
-            WriteBarrierPost(cx->runtime, map, hkey);
+            WriteBarrierPost(cx->runtime(), map, hkey);
         }
         if (!iter.close())
             return false;
@@ -1307,7 +1307,7 @@ MapObject::set_impl(JSContext *cx, CallArgs args)
         js_ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime, &map, key);
+    WriteBarrierPost(cx->runtime(), &map, key);
     args.rval().setUndefined();
     return true;
 }
@@ -1670,7 +1670,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-    ValueSet *set = cx->new_<ValueSet>(cx->runtime);
+    ValueSet *set = cx->new_<ValueSet>(cx->runtime());
     if (!set)
         return false;
     if (!set->init()) {
@@ -1690,7 +1690,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 js_ReportOutOfMemory(cx);
                 return false;
             }
-            WriteBarrierPost(cx->runtime, set, key);
+            WriteBarrierPost(cx->runtime(), set, key);
         }
         if (!iter.close())
             return false;
@@ -1761,7 +1761,7 @@ SetObject::add_impl(JSContext *cx, CallArgs args)
         js_ReportOutOfMemory(cx);
         return false;
     }
-    WriteBarrierPost(cx->runtime, &set, key);
+    WriteBarrierPost(cx->runtime(), &set, key);
     args.rval().setUndefined();
     return true;
 }

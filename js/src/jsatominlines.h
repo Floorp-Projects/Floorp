@@ -184,7 +184,7 @@ TypeName(JSType type, JSRuntime *rt)
 inline Handle<PropertyName*>
 TypeName(JSType type, JSContext *cx)
 {
-    return TypeName(type, cx->runtime);
+    return TypeName(type, cx->runtime());
 }
 
 inline Handle<PropertyName*>
@@ -195,7 +195,7 @@ ClassName(JSProtoKey key, JSContext *cx)
                      JSProto_LIMIT * sizeof(FixedHeapPtr<PropertyName>) <=
                      sizeof(JSAtomState));
     JS_STATIC_ASSERT(JSProto_Null == 0);
-    return (&cx->runtime->atomState.Null)[key];
+    return (&cx->runtime()->atomState.Null)[key];
 }
 
 } // namespace js

@@ -88,7 +88,7 @@ JSCompartment::init(JSContext *cx)
      * (unless they also create tons of iframes, which seems unlikely).
      */
     if (cx)
-        cx->runtime->dateTimeInfo.updateTimeZoneAdjustment();
+        cx->runtime()->dateTimeInfo.updateTimeZoneAdjustment();
 
     activeAnalysis = false;
 
@@ -118,9 +118,9 @@ JSRuntime::createIonRuntime(JSContext *cx)
         js_delete(ionRuntime_);
         ionRuntime_ = NULL;
 
-        if (cx->runtime->atomsCompartment->ionCompartment_) {
-            js_delete(cx->runtime->atomsCompartment->ionCompartment_);
-            cx->runtime->atomsCompartment->ionCompartment_ = NULL;
+        if (cx->runtime()->atomsCompartment->ionCompartment_) {
+            js_delete(cx->runtime()->atomsCompartment->ionCompartment_);
+            cx->runtime()->atomsCompartment->ionCompartment_ = NULL;
         }
 
         return NULL;
@@ -136,7 +136,7 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
     if (ionCompartment_)
         return true;
 
-    IonRuntime *ionRuntime = cx->runtime->getIonRuntime(cx);
+    IonRuntime *ionRuntime = cx->runtime()->getIonRuntime(cx);
     if (!ionRuntime)
         return false;
 
@@ -159,13 +159,13 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 static bool
 WrapForSameCompartment(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 {
-    JS_ASSERT(cx->compartment == obj->compartment());
-    if (!cx->runtime->sameCompartmentWrapObjectCallback) {
+    JS_ASSERT(cx->compartment() == obj->compartment());
+    if (!cx->runtime()->sameCompartmentWrapObjectCallback) {
         vp.setObject(*obj);
         return true;
     }
 
-    JSObject *wrapped = cx->runtime->sameCompartmentWrapObjectCallback(cx, obj);
+    JSObject *wrapped = cx->runtime()->sameCompartmentWrapObjectCallback(cx, obj);
     if (!wrapped)
         return false;
     vp.setObject(*wrapped);
@@ -187,8 +187,8 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
 bool
 JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingArg)
 {
-    JS_ASSERT(cx->compartment == this);
-    JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment);
+    JS_ASSERT(cx->compartment() == this);
+    JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
     JS_ASSERT_IF(existingArg, vp.isObject());
     JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
 
@@ -211,7 +211,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
 
         /* If the string is an atom, we don't have to copy. */
         if (str->isAtom()) {
-            JS_ASSERT(str->zone() == cx->runtime->atomsCompartment->zone());
+            JS_ASSERT(str->zone() == cx->runtime()->atomsCompartment->zone());
             return true;
         }
     }
@@ -242,8 +242,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         if (obj->compartment() == this)
             return WrapForSameCompartment(cx, obj, vp);
 
-        if (cx->runtime->preWrapObjectCallback) {
-            obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
+        if (cx->runtime()->preWrapObjectCallback) {
+            obj = cx->runtime()->preWrapObjectCallback(cx, global, obj, flags);
             if (!obj)
                 return false;
         }
@@ -321,7 +321,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
      * to the object.
      */
     RootedObject wrapper(cx);
-    wrapper = cx->runtime->wrapObjectCallback(cx, existing, obj, proto, global, flags);
+    wrapper = cx->runtime()->wrapObjectCallback(cx, existing, obj, proto, global, flags);
     if (!wrapper)
         return false;
 
@@ -641,7 +641,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeGC &dmgc)
     debugModeBits = (debugModeBits & ~unsigned(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
     if (enabledBefore != enabledAfter) {
-        updateForDebugMode(cx->runtime->defaultFreeOp(), dmgc);
+        updateForDebugMode(cx->runtime()->defaultFreeOp(), dmgc);
         if (!enabledAfter)
             DebugScopes::onCompartmentLeaveDebugMode(this);
     }
@@ -652,7 +652,7 @@ void
 JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
 {
     for (ContextIter acx(rt); !acx.done(); acx.next()) {
-        if (acx->compartment == this)
+        if (acx->compartment() == this)
             acx->updateJITEnabled();
     }
 
@@ -681,7 +681,7 @@ JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
 bool
 JSCompartment::addDebuggee(JSContext *cx, js::GlobalObject *global)
 {
-    AutoDebugModeGC dmgc(cx->runtime);
+    AutoDebugModeGC dmgc(cx->runtime());
     return addDebuggee(cx, global, dmgc);
 }
 
@@ -697,7 +697,7 @@ JSCompartment::addDebuggee(JSContext *cx,
     }
     debugModeBits |= DebugFromJS;
     if (!wasEnabled) {
-        updateForDebugMode(cx->runtime->defaultFreeOp(), dmgc);
+        updateForDebugMode(cx->runtime()->defaultFreeOp(), dmgc);
     }
     return true;
 }

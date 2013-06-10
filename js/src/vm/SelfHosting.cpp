@@ -420,7 +420,7 @@ js::intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef JS_THREADSAFE
-    args.rval().setBoolean(cx->runtime->parallelWarmup ||
+    args.rval().setBoolean(cx->runtime()->parallelWarmup ||
                            InParallelSection());
 #else
     args.rval().setBoolean(true);
@@ -437,7 +437,7 @@ intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    const char *locale = cx->runtime->getDefaultLocale();
+    const char *locale = cx->runtime()->getDefaultLocale();
     if (!locale) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEFAULT_LOCALE_ERROR);
         return false;
@@ -614,7 +614,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
     if (srcObj->isFunction()) {
         if (srcObj->toFunction()->isWrappable()) {
             clone = srcObj;
-            if (!cx->compartment->wrap(cx, clone.address()))
+            if (!cx->compartment()->wrap(cx, clone.address()))
                 return NULL;
         } else {
             RootedFunction fun(cx, srcObj->toFunction());
@@ -743,5 +743,5 @@ JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, Handle<PropertyName*> n
         return true;
     }
 
-    return cx->compartment->wrap(cx, funVal);
+    return cx->compartment()->wrap(cx, funVal);
 }

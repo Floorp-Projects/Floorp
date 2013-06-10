@@ -6518,7 +6518,7 @@ CData::GetRuntime(JSContext* cx, unsigned argc, jsval* vp)
     return JS_FALSE;
   }
 
-  void* data = static_cast<void*>(cx->runtime);
+  void* data = static_cast<void*>(cx->runtime());
   JSObject* result = CData::Create(cx, targetType, NullPtr(), &data, true);
   if (!result)
     return JS_FALSE;

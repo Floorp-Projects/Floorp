@@ -79,7 +79,7 @@ RegExpStatics::executeLazy(JSContext *cx)
 
     /* Retrieve or create the RegExpShared in this compartment. */
     RegExpGuard g(cx);
-    if (!cx->compartment->regExps.get(cx, lazySource, lazyFlags, &g))
+    if (!cx->compartment()->regExps.get(cx, lazySource, lazyFlags, &g))
         return false;
 
     /*

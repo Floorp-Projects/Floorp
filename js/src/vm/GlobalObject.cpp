@@ -174,7 +174,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 {
     Rooted<GlobalObject*> self(cx, this);
 
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     JS_ASSERT(isNative());
 
     cx->setDefaultCompartmentObjectIfUnset(self);
@@ -377,7 +377,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     self->setThrowTypeError(throwTypeError);
 
     RootedObject intrinsicsHolder(cx);
-    if (cx->runtime->isSelfHostingGlobal(self)) {
+    if (cx->runtime()->isSelfHostingGlobal(self)) {
         intrinsicsHolder = self;
     } else {
         intrinsicsHolder = NewObjectWithClassProto(cx, &ObjectClass, NULL, self, TenuredObject);
@@ -426,7 +426,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
 
     Rooted<GlobalObject *> global(cx, &obj->asGlobal());
 
-    cx->compartment->initGlobal(*global);
+    cx->compartment()->initGlobal(*global);
 
     if (!global->setVarObj(cx))
         return NULL;
@@ -489,7 +489,7 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx, Handle<GlobalObject*> globa
          * If there are callbacks, make sure that the CSP callback is installed
          * and that it permits runtime code generation, then cache the result.
          */
-        JSCSPEvalChecker allows = cx->runtime->securityCallbacks->contentSecurityPolicyAllows;
+        JSCSPEvalChecker allows = cx->runtime()->securityCallbacks->contentSecurityPolicyAllows;
         Value boolValue = BooleanValue(!allows || allows(cx));
         v.set(global, HeapSlot::Slot, RUNTIME_CODEGEN_ENABLED, boolValue);
     }
@@ -618,7 +618,7 @@ GlobalObject::addDebugger(JSContext *cx, Handle<GlobalObject*> global, Debugger 
     if (debuggers->empty() && !global->compartment()->addDebuggee(cx, global))
         return false;
     if (!debuggers->append(dbg)) {
-        global->compartment()->removeDebuggee(cx->runtime->defaultFreeOp(), global);
+        global->compartment()->removeDebuggee(cx->runtime()->defaultFreeOp(), global);
         return false;
     }
     return true;

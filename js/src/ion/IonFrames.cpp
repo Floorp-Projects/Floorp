@@ -364,7 +364,7 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
     jsbytecode *pc;
     frame.baselineScriptAndPc(script.address(), &pc);
 
-    if (cx->isExceptionPending() && cx->compartment->debugMode()) {
+    if (cx->isExceptionPending() && cx->compartment()->debugMode()) {
         BaselineFrame *baselineFrame = frame.baselineFrame();
         JSTrapStatus status = DebugExceptionUnwind(cx, baselineFrame, pc);
         switch (status) {
@@ -462,8 +462,8 @@ HandleException(ResumeFromException *rfe)
     // This may happen if a callVM function causes an invalidation (setting the
     // override), and then fails, bypassing the bailout handlers that would
     // otherwise clear the return override.
-    if (cx->runtime->hasIonReturnOverride())
-        cx->runtime->takeIonReturnOverride();
+    if (cx->runtime()->hasIonReturnOverride())
+        cx->runtime()->takeIonReturnOverride();
 
     IonFrameIterator iter(cx->mainThread().ionTop);
     while (!iter.isEntry()) {
@@ -486,7 +486,7 @@ HandleException(ResumeFromException *rfe)
 
             IonScript *ionScript = NULL;
             if (iter.checkInvalidation(&ionScript))
-                ionScript->decref(cx->runtime->defaultFreeOp());
+                ionScript->decref(cx->runtime()->defaultFreeOp());
 
         } else if (iter.isBaselineJS()) {
             // It's invalid to call DebugEpilogue twice for the same frame.
@@ -504,7 +504,7 @@ HandleException(ResumeFromException *rfe)
             // it doesn't try to pop the SPS frame again.
             iter.baselineFrame()->unsetPushedSPSFrame();
  
-            if (cx->compartment->debugMode() && !calledDebugEpilogue) {
+            if (cx->compartment()->debugMode() && !calledDebugEpilogue) {
                 // If DebugEpilogue returns |true|, we have to perform a forced
                 // return, e.g. return frame->returnValue() to the caller.
                 BaselineFrame *frame = iter.baselineFrame();
@@ -1023,7 +1023,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     JS_ASSERT(cx->fp()->beginsIonActivation());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
 
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = cx->runtime();
 
     // Recover the return address.
     IonFrameIterator it(rt->mainThread.ionTop);

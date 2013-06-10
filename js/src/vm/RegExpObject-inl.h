@@ -123,7 +123,7 @@ RegExpToShared(JSContext *cx, HandleObject obj, RegExpGuard *g)
 inline void
 RegExpShared::prepareForUse(JSContext *cx)
 {
-    gcNumberWhenUsed = cx->runtime->gcNumber;
+    gcNumberWhenUsed = cx->runtime()->gcNumber;
 }
 
 RegExpGuard::RegExpGuard(JSContext *cx)

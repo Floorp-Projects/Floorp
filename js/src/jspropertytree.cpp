@@ -60,7 +60,7 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
     JS_ASSERT(!parent->inDictionary());
     JS_ASSERT(!child->parent);
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(cx->compartment == compartment);
+    JS_ASSERT(cx->compartment() == compartment);
     JS_ASSERT(child->compartment() == parent->compartment());
 
     KidsPointer *kidp = &parent->kids;

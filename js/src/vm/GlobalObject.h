@@ -385,7 +385,7 @@ class GlobalObject : public JSObject
         RootedId id(cx, NameToId(name));
         if (HasDataProperty(cx, holder, id, value.address()))
             return true;
-        if (!cx->runtime->cloneSelfHostedValue(cx, name, value))
+        if (!cx->runtime()->cloneSelfHostedValue(cx, name, value))
             return false;
         mozilla::DebugOnly<bool> ok = JS_DefinePropertyById(cx, holder, id, value, NULL, NULL, 0);
         JS_ASSERT(ok);

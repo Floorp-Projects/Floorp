@@ -210,7 +210,7 @@ GlobalObject::setIntrinsicValue(JSContext *cx, PropertyName *name, HandleValue v
 {
 #ifdef DEBUG
     RootedObject self(cx, this);
-    JS_ASSERT(cx->runtime->isSelfHostingGlobal(self));
+    JS_ASSERT(cx->runtime()->isSelfHostingGlobal(self));
 #endif
     RootedObject holder(cx, intrinsicsHolder());
     RootedValue valCopy(cx, value);

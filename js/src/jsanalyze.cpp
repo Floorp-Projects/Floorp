@@ -100,7 +100,7 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
 void
 ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment->activeAnalysis);
+    JS_ASSERT(cx->compartment()->activeAnalysis);
     JS_ASSERT(!ranBytecode());
     LifoAlloc &alloc = cx->analysisLifoAlloc();
 
@@ -146,13 +146,13 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
      * If the script is in debug mode, JS_SetFrameReturnValue can be called at
      * any safe point.
      */
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         usesReturnValue_ = true;
 
     bool heavyweight = script_->function() && script_->function()->isHeavyweight();
 
     isIonInlineable = true;
-    if (heavyweight || cx->compartment->debugMode())
+    if (heavyweight || cx->compartment()->debugMode())
         isIonInlineable = false;
 
     modifiesArguments_ = false;
@@ -589,7 +589,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 void
 ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment->activeAnalysis && !ranLifetimes() && !failed());
+    JS_ASSERT(cx->compartment()->activeAnalysis && !ranLifetimes() && !failed());
 
     if (!ranBytecode()) {
         analyzeBytecode(cx);
@@ -1078,7 +1078,7 @@ ScriptAnalysis::ensureVariable(LifetimeVariable &var, unsigned until)
 void
 ScriptAnalysis::analyzeSSA(JSContext *cx)
 {
-    JS_ASSERT(cx->compartment->activeAnalysis && !ranSSA() && !failed());
+    JS_ASSERT(cx->compartment()->activeAnalysis && !ranSSA() && !failed());
 
     if (!ranLifetimes()) {
         analyzeLifetimes(cx);
@@ -1764,7 +1764,7 @@ ScriptAnalysis::needsArgsObj(JSContext *cx, SeenVector &seen, const SSAValue &v)
             return false;
     }
     if (!seen.append(v)) {
-        cx->compartment->types.setPendingNukeTypes(cx);
+        cx->compartment()->types.setPendingNukeTypes(cx);
         return true;
     }
 
@@ -1827,7 +1827,7 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
      * Always construct arguments objects when in debug mode and for generator
      * scripts (generators can be suspended when speculation fails).
      */
-    if (cx->compartment->debugMode() || script_->isGenerator)
+    if (cx->compartment()->debugMode() || script_->isGenerator)
         return true;
 
     /*

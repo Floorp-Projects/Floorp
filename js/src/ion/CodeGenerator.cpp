@@ -2355,7 +2355,7 @@ CodeGenerator::maybeCreateScriptCounts()
     CompileInfo *outerInfo = &gen->info();
     JSScript *script = outerInfo->script();
 
-    if (cx->runtime->profilingScripts) {
+    if (cx->runtime()->profilingScripts) {
         if (script && !script->hasScriptCounts && !script->initScriptCounts(cx))
             return NULL;
     } else if (!script) {
@@ -5234,7 +5234,7 @@ CodeGenerator::link()
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
     // will trickle to ion::Compile() and return Method_Skipped.
-    if (cx->compartment->types.compiledInfo.compilerOutput(cx)->isInvalidated())
+    if (cx->compartment()->types.compiledInfo.compilerOutput(cx)->isInvalidated())
         return true;
 
     // List of possible scripts that this graph may call. Currently this is

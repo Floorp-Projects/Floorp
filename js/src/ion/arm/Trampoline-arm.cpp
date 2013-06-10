@@ -87,7 +87,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     JS_ASSERT(OsrFrameReg == reg_frame);
 
     MacroAssembler masm(cx);
-    AutoFlushCache afc("GenerateEnterJIT", cx->runtime->ionRuntime());
+    AutoFlushCache afc("GenerateEnterJIT", cx->runtime()->ionRuntime());
     Assembler *aasm = &masm;
 
     // Save non-volatile registers. These must be saved by the trampoline,
@@ -745,7 +745,7 @@ IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     MacroAssembler masm(cx);
 
     RegisterSet save;
-    if (cx->runtime->jitSupportsFloatingPoint) {
+    if (cx->runtime()->jitSupportsFloatingPoint) {
         save = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
                            FloatRegisterSet(FloatRegisters::VolatileMask));
     } else {
@@ -755,7 +755,7 @@ IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.PushRegsInMask(save);
 
     JS_ASSERT(PreBarrierReg == r1);
-    masm.movePtr(ImmWord(cx->runtime), r0);
+    masm.movePtr(ImmWord(cx->runtime()), r0);
 
     masm.setupUnalignedABICall(2, r2);
     masm.passABIArg(r0);
@@ -795,7 +795,7 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.movePtr(ImmWord((void *)NULL), BaselineStubReg);
     EmitEnterStubFrame(masm, scratch2);
 
-    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCompartment *ion = cx->compartment()->ionCompartment();
     IonCode *code = ion->getVMWrapper(HandleDebugTrapInfo);
     if (!code)
         return NULL;
