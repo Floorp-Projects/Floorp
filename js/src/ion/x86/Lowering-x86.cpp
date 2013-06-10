@@ -126,14 +126,6 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorX86::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
-{
-    ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, use(rhs));
-    return defineReuseInput(ins, mir, 0);
-}
-
-bool
 LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 {
     LPhi *type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
