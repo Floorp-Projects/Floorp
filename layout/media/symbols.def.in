@@ -582,4 +582,5 @@ webvtt_finish_parsing
 webvtt_parse_chunk
 webvtt_ref_node
 webvtt_release_node
+webvtt_strerror
 webvtt_string_text
