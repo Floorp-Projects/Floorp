@@ -191,7 +191,7 @@ public:
   //
   // This is valid for any layer, but is always relative to this frame and
   // not any parents, regardless of parent transforms.
-  mozilla::CSSPoint mScrollOffset;
+  CSSPoint mScrollOffset;
 
   // A unique ID assigned to each scrollable frame (unless this is
   // ROOT_SCROLL_ID, in which case it is not unique).
@@ -208,7 +208,7 @@ public:
   // window.scrollTo().
   //
   // This is valid on any layer unless it has no content.
-  mozilla::CSSRect mScrollableRect;
+  CSSRect mScrollableRect;
 
   // ---------------------------------------------------------------------------
   // The following metrics are dimensionless.
