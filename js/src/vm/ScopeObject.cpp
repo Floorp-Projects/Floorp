@@ -137,7 +137,7 @@ js::ScopeCoordinateName(JSContext *cx, JSScript *script, jsbytecode *pc)
 
     /* Beware nameless destructuring formal. */
     if (!JSID_IS_ATOM(id))
-        return cx->runtime->atomState.empty;
+        return cx->runtime()->atomState.empty;
     return JSID_TO_ATOM(id)->asPropertyName();
 }
 
@@ -198,7 +198,7 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
     RootedShape shape(cx, script->bindings.callObjShape());
     JS_ASSERT(shape->getObjectClass() == &CallClass);
 
-    RootedTypeObject type(cx, cx->compartment->getNewType(cx, &CallClass, NULL));
+    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &CallClass, NULL));
     if (!type)
         return NULL;
 
@@ -328,7 +328,7 @@ Class js::DeclEnvClass = {
 DeclEnvObject *
 DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap)
 {
-    RootedTypeObject type(cx, cx->compartment->getNewType(cx, &DeclEnvClass, NULL));
+    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &DeclEnvClass, NULL));
     if (!type)
         return NULL;
 
@@ -705,7 +705,7 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 StaticBlockObject *
 StaticBlockObject::create(JSContext *cx)
 {
-    RootedTypeObject type(cx, cx->compartment->getNewType(cx, &BlockClass, NULL));
+    RootedTypeObject type(cx, cx->compartment()->getNewType(cx, &BlockClass, NULL));
     if (!type)
         return NULL;
 
@@ -810,7 +810,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, Handl
                 return false;
 
             /* The empty string indicates an int id. */
-            RootedId id(cx, atom != cx->runtime->emptyString
+            RootedId id(cx, atom != cx->runtime()->emptyString
                             ? AtomToId(atom)
                             : INT_TO_JSID(i));
 
@@ -855,7 +855,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, Handl
             /* The empty string indicates an int id. */
             atom = JSID_IS_ATOM(propid)
                    ? JSID_TO_ATOM(propid)
-                   : cx->runtime->emptyString;
+                   : cx->runtime()->emptyString;
             if (!XDRAtom(xdr, &atom))
                 return false;
 
@@ -1079,7 +1079,7 @@ ScopeIter::settle()
             type_ = Call;
             hasScopeObject_ = false;
         }
-    } else if (frame_.isNonStrictDirectEvalFrame() && cur_ == frame_.evalPrevScopeChain(cx->runtime)) {
+    } else if (frame_.isNonStrictDirectEvalFrame() && cur_ == frame_.evalPrevScopeChain(cx->runtime())) {
         if (block_) {
             JS_ASSERT(!block_->needsClone());
             type_ = Block;
@@ -1091,7 +1091,7 @@ ScopeIter::settle()
         JS_ASSERT(cur_ == frame_.fun()->environment());
         frame_ = NullFramePtr();
     } else if (frame_.isStrictEvalFrame() && !frame_.hasCallObj()) {
-        JS_ASSERT(cur_ == frame_.evalPrevScopeChain(cx->runtime));
+        JS_ASSERT(cur_ == frame_.evalPrevScopeChain(cx->runtime()));
         frame_ = NullFramePtr();
     } else if (cur_->isWith()) {
         JS_ASSERT_IF(frame_.isFunctionFrame(), frame_.fun()->isHeavyweight());
@@ -1527,7 +1527,7 @@ DebugScopeProxy DebugScopeProxy::singleton;
 /* static */ DebugScopeObject *
 DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosing)
 {
-    JS_ASSERT(scope.compartment() == cx->compartment);
+    JS_ASSERT(scope.compartment() == cx->compartment());
     RootedValue priv(cx, ObjectValue(scope));
     JSObject *obj = NewProxyObject(cx, &DebugScopeProxy::singleton, priv,
                                    NULL /* proto */, &scope.global(), ProxyNotCallable);
@@ -1664,13 +1664,13 @@ DebugScopes::sweep(JSRuntime *rt)
 static bool
 CanUseDebugScopeMaps(JSContext *cx)
 {
-    return cx->compartment->debugMode();
+    return cx->compartment()->debugMode();
 }
 
 DebugScopes *
 DebugScopes::ensureCompartmentData(JSContext *cx)
 {
-    JSCompartment *c = cx->compartment;
+    JSCompartment *c = cx->compartment();
     if (c->debugScopes)
         return c->debugScopes;
 
@@ -1700,8 +1700,8 @@ DebugScopes::hasDebugScope(JSContext *cx, ScopeObject &scope)
 bool
 DebugScopes::addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope)
 {
-    JS_ASSERT(cx->compartment == scope.compartment());
-    JS_ASSERT(cx->compartment == debugScope.compartment());
+    JS_ASSERT(cx->compartment() == scope.compartment());
+    JS_ASSERT(cx->compartment() == debugScope.compartment());
 
     if (!CanUseDebugScopeMaps(cx))
         return true;
@@ -1716,7 +1716,7 @@ DebugScopes::addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &
         return false;
     }
 
-    HashTableWriteBarrierPost(cx->runtime, &scopes->proxiedScopes, &scope);
+    HashTableWriteBarrierPost(cx->runtime(), &scopes->proxiedScopes, &scope);
     return true;
 }
 
@@ -1725,7 +1725,7 @@ DebugScopes::hasDebugScope(JSContext *cx, const ScopeIter &si)
 {
     JS_ASSERT(!si.hasScopeObject());
 
-    DebugScopes *scopes = cx->compartment->debugScopes;
+    DebugScopes *scopes = cx->compartment()->debugScopes;
     if (!scopes)
         return NULL;
 
@@ -1740,7 +1740,7 @@ bool
 DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject &debugScope)
 {
     JS_ASSERT(!si.hasScopeObject());
-    JS_ASSERT(cx->compartment == debugScope.compartment());
+    JS_ASSERT(cx->compartment() == debugScope.compartment());
 
     if (!CanUseDebugScopeMaps(cx))
         return true;
@@ -1760,7 +1760,7 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
         js_ReportOutOfMemory(cx);
         return false;
     }
-    HashTableWriteBarrierPost(cx->runtime, &scopes->liveScopes, &debugScope.scope());
+    HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
 
     return true;
 }
@@ -1771,7 +1771,7 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext *cx)
     JS_ASSERT(!frame.isYielding());
     assertSameCompartment(cx, frame);
 
-    DebugScopes *scopes = cx->compartment->debugScopes;
+    DebugScopes *scopes = cx->compartment()->debugScopes;
     if (!scopes)
         return;
 
@@ -1849,7 +1849,7 @@ DebugScopes::onPopBlock(JSContext *cx, AbstractFramePtr frame)
 {
     assertSameCompartment(cx, frame);
 
-    DebugScopes *scopes = cx->compartment->debugScopes;
+    DebugScopes *scopes = cx->compartment()->debugScopes;
     if (!scopes)
         return;
 
@@ -1908,17 +1908,17 @@ DebugScopes::onGeneratorFrameChange(AbstractFramePtr from, AbstractFramePtr to, 
              * scope while it is suspended, we can find its frame (which would
              * otherwise not be found by AllFramesIter).
              */
-            JS_ASSERT(toIter.scope().compartment() == cx->compartment);
+            JS_ASSERT(toIter.scope().compartment() == cx->compartment());
             LiveScopeMap::AddPtr livePtr = scopes->liveScopes.lookupForAdd(&toIter.scope());
             if (livePtr) {
                 livePtr->value = to;
             } else {
                 scopes->liveScopes.add(livePtr, &toIter.scope(), to);  // OOM here?
-                HashTableWriteBarrierPost(cx->runtime, &scopes->liveScopes, &toIter.scope());
+                HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &toIter.scope());
             }
         } else {
             ScopeIter si(toIter, from, cx);
-            JS_ASSERT(si.frame().scopeChain()->compartment() == cx->compartment);
+            JS_ASSERT(si.frame().scopeChain()->compartment() == cx->compartment());
             if (MissingScopeMap::Ptr p = scopes->missingScopes.lookup(si)) {
                 DebugScopeObject &debugScope = *p->value;
                 scopes->liveScopes.lookup(&debugScope.scope())->value = to;
@@ -1956,7 +1956,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
      * to date' bit for fp->prev() in fp, simply popping fp effectively clears
      * the flag for us, at exactly the time when execution resumes fp->prev().
      */
-    for (AllFramesIter i(cx->runtime); !i.done(); ++i) {
+    for (AllFramesIter i(cx->runtime()); !i.done(); ++i) {
         /*
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.
@@ -1965,18 +1965,18 @@ DebugScopes::updateLiveScopes(JSContext *cx)
             continue;
 
         AbstractFramePtr frame = i.abstractFramePtr();
-        if (frame.scopeChain()->compartment() != cx->compartment)
+        if (frame.scopeChain()->compartment() != cx->compartment())
             continue;
 
         for (ScopeIter si(frame, cx); !si.done(); ++si) {
             if (si.hasScopeObject()) {
-                JS_ASSERT(si.scope().compartment() == cx->compartment);
+                JS_ASSERT(si.scope().compartment() == cx->compartment());
                 DebugScopes *scopes = ensureCompartmentData(cx);
                 if (!scopes)
                     return false;
                 if (!scopes->liveScopes.put(&si.scope(), frame))
                     return false;
-                HashTableWriteBarrierPost(cx->runtime, &scopes->liveScopes, &si.scope());
+                HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &si.scope());
             }
         }
 
@@ -2161,7 +2161,7 @@ JSObject *
 js::GetDebugScopeForFunction(JSContext *cx, HandleFunction fun)
 {
     assertSameCompartment(cx, fun);
-    JS_ASSERT(cx->compartment->debugMode());
+    JS_ASSERT(cx->compartment()->debugMode());
     if (!DebugScopes::updateLiveScopes(cx))
         return NULL;
     return GetDebugScope(cx, *fun->environment());

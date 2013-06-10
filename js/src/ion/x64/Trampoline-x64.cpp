@@ -647,7 +647,7 @@ IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.PushRegsInMask(regs);
 
     JS_ASSERT(PreBarrierReg == rdx);
-    masm.mov(ImmWord(cx->runtime), rcx);
+    masm.mov(ImmWord(cx->runtime()), rcx);
 
     masm.setupUnalignedABICall(2, rax);
     masm.passABIArg(rcx);
@@ -691,7 +691,7 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.movePtr(ImmWord((void *)NULL), BaselineStubReg);
     EmitEnterStubFrame(masm, scratch3);
 
-    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCompartment *ion = cx->compartment()->ionCompartment();
     IonCode *code = ion->getVMWrapper(HandleDebugTrapInfo);
     if (!code)
         return NULL;

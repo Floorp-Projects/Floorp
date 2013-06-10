@@ -27,7 +27,7 @@ class RopeBuilder {
 
   public:
     RopeBuilder(JSContext *cx)
-      : cx(cx), res(cx, cx->runtime->emptyString)
+      : cx(cx), res(cx, cx->runtime()->emptyString)
     {}
 
     inline bool append(HandleString str) {

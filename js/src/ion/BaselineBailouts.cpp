@@ -503,7 +503,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // If SPS Profiler is enabled, mark the frame as having pushed an SPS entry.
     // This may be wrong for the last frame of ArgumentCheck bailout, but
     // that will be fixed later.
-    if (cx->runtime->spsProfiler.enabled() && ionScript->hasSPSInstrumentation()) {
+    if (cx->runtime()->spsProfiler.enabled() && ionScript->hasSPSInstrumentation()) {
         IonSpew(IonSpew_BaselineBailouts, "      Setting SPS flag on frame!");
         flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
     }
@@ -615,11 +615,11 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         // If coming from an invalidation bailout, and this is the topmost
         // value, and a value override has been specified, don't read from the
         // iterator. Otherwise, we risk using a garbage value.
-        if (!iter.moreFrames() && i == exprStackSlots - 1 && cx->runtime->hasIonReturnOverride()) {
+        if (!iter.moreFrames() && i == exprStackSlots - 1 && cx->runtime()->hasIonReturnOverride()) {
             JS_ASSERT(invalidate);
             iter.skip();
             IonSpew(IonSpew_BaselineBailouts, "      [Return Override]");
-            v = cx->runtime->takeIonReturnOverride();
+            v = cx->runtime()->takeIonReturnOverride();
         } else {
             v = iter.read();
         }
@@ -793,16 +793,16 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 //          Ion would already have pushed an SPS entry for this frame.
                 //          The pc for this entry would be set to NULL.
                 //          Make sure it's set to script->pc.
-                if (cx->runtime->spsProfiler.enabled()) {
+                if (cx->runtime()->spsProfiler.enabled()) {
                     if (caller && bailoutKind == Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts, "      Setting PCidx on innermost "
                                 "inlined frame's parent's SPS entry (%s:%d) (pcIdx=%d)!",
                                 caller->filename(), caller->lineno, callerPC - caller->code);
-                        cx->runtime->spsProfiler.updatePC(caller, callerPC);
+                        cx->runtime()->spsProfiler.updatePC(caller, callerPC);
                     } else if (bailoutKind != Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts,
                                 "      Popping SPS entry for innermost inlined frame's SPS entry");
-                        cx->runtime->spsProfiler.exit(cx, script, fun);
+                        cx->runtime()->spsProfiler.exit(cx, script, fun);
                     }
                 }
             } else {
@@ -911,7 +911,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         return false;
 
     // Push return address into ICCall_Scripted stub, immediately after the call.
-    void *baselineCallReturnAddr = cx->compartment->ionCompartment()->baselineCallReturnAddr();
+    void *baselineCallReturnAddr = cx->compartment()->ionCompartment()->baselineCallReturnAddr();
     JS_ASSERT(baselineCallReturnAddr);
     if (!builder.writePtr(baselineCallReturnAddr, "ReturnAddr"))
         return false;
@@ -990,7 +990,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Push return address into the ArgumentsRectifier code, immediately after the ioncode
     // call.
-    void *rectReturnAddr = cx->compartment->ionCompartment()->getArgumentsRectifierReturnAddr();
+    void *rectReturnAddr = cx->compartment()->ionCompartment()->getArgumentsRectifierReturnAddr();
     JS_ASSERT(rectReturnAddr);
     if (!builder.writePtr(rectReturnAddr, "ReturnAddr"))
         return false;

@@ -131,7 +131,7 @@ PropDesc::wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappe
 {
     MOZ_ASSERT(!isUndefined());
 
-    JSCompartment *comp = cx->compartment;
+    JSCompartment *comp = cx->compartment();
 
     *wrappedId = id;
     if (!comp->wrapId(cx, wrappedId))

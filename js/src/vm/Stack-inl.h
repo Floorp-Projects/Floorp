@@ -345,14 +345,14 @@ ContextStack::currentScript(jsbytecode **ppc,
     if (fp->beginsIonActivation()) {
         JSScript *script = NULL;
         ion::GetPcScript(cx_, &script, ppc);
-        if (!allowCrossCompartment && script->compartment() != cx_->compartment)
+        if (!allowCrossCompartment && script->compartment() != cx_->compartment())
             return NULL;
         return script;
     }
 #endif
 
     JSScript *script = fp->script();
-    if (!allowCrossCompartment && script->compartment() != cx_->compartment)
+    if (!allowCrossCompartment && script->compartment() != cx_->compartment())
         return NULL;
 
     if (ppc)

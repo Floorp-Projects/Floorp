@@ -111,7 +111,7 @@ inline JSObject *
 NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::InitialHeap heap)
 {
     // The new object cache does not account for metadata attached via callbacks.
-    JS_ASSERT(!cx->compartment->objectMetadataCallback);
+    JS_ASSERT(!cx->compartment()->objectMetadataCallback);
 
     JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
     Entry *entry = &entries[entry_];
@@ -153,7 +153,7 @@ class CompartmentChecker
 
   public:
     explicit CompartmentChecker(JSContext *cx)
-      : context(cx), compartment(cx->compartment)
+      : context(cx), compartment(cx->compartment())
     {}
 
     /*
@@ -179,7 +179,7 @@ class CompartmentChecker
     }
 
     void check(JSCompartment *c) {
-        if (c && c != context->runtime->atomsCompartment) {
+        if (c && c != context->runtime()->atomsCompartment) {
             if (!compartment)
                 compartment = c;
             else if (c != compartment)
@@ -265,8 +265,8 @@ class CompartmentChecker
  * depends on other objects not having been swept yet.
  */
 #define START_ASSERT_SAME_COMPARTMENT()                                       \
-    JS_ASSERT(cx->compartment->zone() == cx->zone());                         \
-    if (cx->runtime->isHeapBusy())                                            \
+    JS_ASSERT(cx->compartment()->zone() == cx->zone());                       \
+    if (cx->runtime()->isHeapBusy())                                          \
         return;                                                               \
     CompartmentChecker c(cx)
 
@@ -505,7 +505,7 @@ JSContext::maybeOverrideVersion(JSVersion newVersion)
 inline js::LifoAlloc &
 JSContext::analysisLifoAlloc()
 {
-    return compartment->analysisLifoAlloc;
+    return compartment()->analysisLifoAlloc;
 }
 
 inline js::LifoAlloc &
@@ -525,7 +525,7 @@ JSContext::setPendingException(js::Value v) {
 inline js::PropertyTree&
 JSContext::propertyTree()
 {
-    return compartment->propertyTree;
+    return compartment()->propertyTree;
 }
 
 inline void
@@ -570,7 +570,7 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
     JS_ASSERT(hasEnteredCompartment());
     enterCompartmentDepth_--;
 
-    compartment->leave();
+    compartment()->leave();
 
     /*
      * Before we entered the current compartment, 'compartment' was
@@ -592,21 +592,21 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
 inline JS::Zone *
 JSContext::zone() const
 {
-    JS_ASSERT_IF(!compartment, !zone_);
-    JS_ASSERT_IF(compartment, compartment->zone() == zone_);
+    JS_ASSERT_IF(!compartment(), !zone_);
+    JS_ASSERT_IF(compartment(), compartment()->zone() == zone_);
     return zone_;
 }
 
 inline void
 JSContext::updateMallocCounter(size_t nbytes)
 {
-    runtime->updateMallocCounter(zone(), nbytes);
+    runtime()->updateMallocCounter(zone(), nbytes);
 }
 
 inline void
 JSContext::setCompartment(JSCompartment *comp)
 {
-    compartment = comp;
+    compartment_ = comp;
     zone_ = comp ? comp->zone() : NULL;
 }
 

@@ -318,7 +318,7 @@ js::RunScript(JSContext *cx, StackFrame *fp)
     } check(cx);
 #endif
 
-    SPSEntryMarker marker(cx->runtime);
+    SPSEntryMarker marker(cx->runtime());
 
 #ifdef JS_ION
     if (ion::IsEnabled(cx)) {
@@ -356,7 +356,7 @@ bool
 js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
     JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
-    JS_ASSERT(!cx->compartment->activeAnalysis);
+    JS_ASSERT(!cx->compartment()->activeAnalysis);
 
     /* We should never enter a new script while cx->iterValue is live. */
     JS_ASSERT(cx->iterValue.isMagic(JS_NO_ITER_VALUE));
@@ -900,13 +900,13 @@ inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs,
                                             const InterruptEnablerBase &enabler)
   : context(cx), regs(regs), enabler(enabler)
 {
-    older = cx->runtime->interpreterFrames;
-    cx->runtime->interpreterFrames = this;
+    older = cx->runtime()->interpreterFrames;
+    cx->runtime()->interpreterFrames = this;
 }
 
 inline InterpreterFrames::~InterpreterFrames()
 {
-    context->runtime->interpreterFrames = older;
+    context->runtime()->interpreterFrames = older;
 }
 
 #if defined(DEBUG) && !defined(JS_THREADSAFE) && !defined(JSGC_ROOT_ANALYSIS)
@@ -917,7 +917,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start,
     jsbytecode *pc;
     JSScript *script = cx->stack.currentScript(&pc);
 
-    uint64_t sample = cx->runtime->gcNumber;
+    uint64_t sample = cx->runtime()->gcNumber;
 
     PropertyName *name = GetNameFromBytecode(cx, script, pc, JSOp(*pc));
     JSObject *pobj;
@@ -928,7 +928,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start,
         JS_ASSERT(entry->prop == prop);
     }
 
-    JS_ASSERT(cx->runtime->gcNumber == sample);
+    JS_ASSERT(cx->runtime()->gcNumber == sample);
 }
 #endif /* DEBUG && !JS_THREADSAFE */
 
@@ -994,7 +994,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
     if (interpMode == JSINTERP_NORMAL)
         gc::MaybeVerifyBarriers(cx, true);
 
-    JS_ASSERT(!cx->compartment->activeAnalysis);
+    JS_ASSERT(!cx->compartment()->activeAnalysis);
 
 #define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->hasScriptCounts, switchMask == -1)
 
@@ -1043,7 +1043,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
      */
 #define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (cx->runtime->interrupt && !js_HandleExecutionInterrupt(cx))       \
+        if (cx->runtime()->interrupt && !js_HandleExecutionInterrupt(cx))       \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -1076,7 +1076,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
     InterpreterFrames interpreterFrame(cx, &regs, interrupts);
 
     /* Copy in hot values that change infrequently. */
-    JSRuntime *const rt = cx->runtime;
+    JSRuntime *const rt = cx->runtime();
     RootedScript script(cx);
     SET_SCRIPT(regs.fp()->script());
 
@@ -1136,7 +1136,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
         } else {
             Probes::enterScript(cx, script, script->function(), fp);
         }
-        if (cx->compartment->debugMode()) {
+        if (cx->compartment()->debugMode()) {
             JSTrapStatus status = ScriptDebugPrologue(cx, fp);
             switch (status) {
               case JSTRAP_CONTINUE:
@@ -1174,7 +1174,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
     int32_t len;
     len = 0;
 
-    if (rt->profilingScripts || cx->runtime->debugHooks.interruptHook)
+    if (rt->profilingScripts || cx->runtime()->debugHooks.interruptHook)
         interrupts.enable();
 
     DO_NEXT_OP(len);
@@ -1199,7 +1199,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
     {
         bool moreInterrupts = false;
 
-        if (cx->runtime->profilingScripts) {
+        if (cx->runtime()->profilingScripts) {
             if (!script->hasScriptCounts)
                 script->initScriptCounts(cx);
             moreInterrupts = true;
@@ -1211,12 +1211,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
             moreInterrupts = true;
         }
 
-        JSInterruptHook hook = cx->runtime->debugHooks.interruptHook;
+        JSInterruptHook hook = cx->runtime()->debugHooks.interruptHook;
         if (hook || script->stepModeEnabled()) {
             RootedValue rval(cx);
             JSTrapStatus status = JSTRAP_CONTINUE;
             if (hook)
-                status = hook(cx, script, regs.pc, rval.address(), cx->runtime->debugHooks.interruptHookData);
+                status = hook(cx, script, regs.pc, rval.address(), cx->runtime()->debugHooks.interruptHookData);
             if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
                 status = Debugger::onSingleStep(cx, &rval);
             switch (status) {
@@ -1420,7 +1420,7 @@ BEGIN_CASE(JSOP_STOP)
     if (entryFrame != regs.fp())
   inline_return:
     {
-        if (cx->compartment->debugMode())
+        if (cx->compartment()->debugMode())
             interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
 
         if (!regs.fp()->isYielding())
@@ -2176,7 +2176,7 @@ BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_FUNCALL)
 {
     if (regs.fp()->hasPushedSPSFrame())
-        cx->runtime->spsProfiler.updatePC(script, regs.pc);
+        cx->runtime()->spsProfiler.updatePC(script, regs.pc);
     JS_ASSERT(regs.stackDepth() >= 2 + GET_ARGC(regs.pc));
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
 
@@ -2260,7 +2260,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     if (!regs.fp()->prologue(cx))
         goto error;
-    if (cx->compartment->debugMode()) {
+    if (cx->compartment()->debugMode()) {
         switch (ScriptDebugPrologue(cx, regs.fp())) {
           case JSTRAP_CONTINUE:
             break;
@@ -2890,8 +2890,8 @@ BEGIN_CASE(JSOP_DEBUGGER)
 {
     JSTrapStatus st = JSTRAP_CONTINUE;
     RootedValue rval(cx);
-    if (JSDebuggerHandler handler = cx->runtime->debugHooks.debuggerHandler)
-        st = handler(cx, script, regs.pc, rval.address(), cx->runtime->debugHooks.debuggerHandlerData);
+    if (JSDebuggerHandler handler = cx->runtime()->debugHooks.debuggerHandler)
+        st = handler(cx, script, regs.pc, rval.address(), cx->runtime()->debugHooks.debuggerHandlerData);
     if (st == JSTRAP_CONTINUE)
         st = Debugger::onDebuggerStatement(cx, &rval);
     switch (st) {
@@ -3024,7 +3024,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
-        if (cx->compartment->debugMode()) {
+        if (cx->compartment()->debugMode()) {
             JSTrapStatus status = DebugExceptionUnwind(cx, regs.fp(), regs.pc);
             switch (status) {
               case JSTRAP_ERROR:
@@ -3128,7 +3128,7 @@ END_CASE(JSOP_ARRAYPUSH)
         goto inline_return;
 
   exit:
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
     if (!regs.fp()->isYielding())
         regs.fp()->epilogue(cx);
@@ -3340,7 +3340,7 @@ js::GetAndClearException(JSContext *cx, MutableHandleValue res)
 {
     // Check the interrupt flag to allow interrupting deeply nested exception
     // handling.
-    if (cx->runtime->interrupt && !js_HandleExecutionInterrupt(cx))
+    if (cx->runtime()->interrupt && !js_HandleExecutionInterrupt(cx))
         return false;
 
     res.set(cx->getPendingException());

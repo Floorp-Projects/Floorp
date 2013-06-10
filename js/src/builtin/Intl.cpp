@@ -2049,7 +2049,7 @@ js_InitIntlClass(JSContext *cx, HandleObject obj)
     // Skip initialization of the Intl constructors during initialization of the
     // self-hosting global as we may get here before self-hosted code is compiled,
     // and no core code refers to the Intl classes.
-    if (!cx->runtime->isSelfHostingGlobal(cx->global())) {
+    if (!cx->runtime()->isSelfHostingGlobal(cx->global())) {
         if (!InitCollatorClass(cx, Intl, global))
             return NULL;
         if (!InitNumberFormatClass(cx, Intl, global))

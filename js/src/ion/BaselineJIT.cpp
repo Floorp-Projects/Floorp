@@ -73,7 +73,7 @@ CheckFrame(StackFrame *fp)
 static bool
 IsJSDEnabled(JSContext *cx)
 {
-    return cx->compartment->debugMode() && cx->runtime->debugHooks.callHook;
+    return cx->compartment()->debugMode() && cx->runtime()->debugHooks.callHook;
 }
 
 static IonExecStatus
@@ -83,7 +83,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
     JS_ASSERT(ion::IsBaselineEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
 
-    EnterIonCode enter = cx->compartment->ionCompartment()->enterBaselineJIT();
+    EnterIonCode enter = cx->compartment()->ionCompartment()->enterBaselineJIT();
 
     // maxArgc is the maximum of arguments between the number of actual
     // arguments and the number of formal arguments. It accounts for |this|.
@@ -128,14 +128,14 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
         uint32_t numStackValues = osr ? fp->script()->nfixed + cx->regs().stackDepth() : 0;
         JS_ASSERT_IF(osr, !IsJSDEnabled(cx));
 
-        AutoFlushInhibitor afi(cx->compartment->ionCompartment());
+        AutoFlushInhibitor afi(cx->compartment()->ionCompartment());
         // Single transition point from Interpreter to Baseline.
         enter(jitcode, maxArgc, maxArgv, osr ? fp : NULL, calleeToken, scopeChain, numStackValues,
               result.address());
     }
 
     JS_ASSERT(fp == cx->fp());
-    JS_ASSERT(!cx->runtime->hasIonReturnOverride());
+    JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
 
     // The trampoline wrote the return value but did not set the HAS_RVAL flag.
     fp->setReturnValue(result);
@@ -145,7 +145,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
         fp->setReturnValue(ObjectValue(fp->constructorThis()));
 
     // Release temporary buffer used for OSR into Ion.
-    cx->runtime->getIonRuntime(cx)->freeOsrTempData();
+    cx->runtime()->getIonRuntime(cx)->freeOsrTempData();
 
     JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
     return result.isMagic() ? IonExec_Error : IonExec_Ok;
@@ -170,7 +170,7 @@ ion::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 
     // Skip debug breakpoint/trap handler, the interpreter already handled it
     // for the current op.
-    if (cx->compartment->debugMode())
+    if (cx->compartment()->debugMode())
         jitcode += MacroAssembler::ToggledCallSize();
 
     return EnterBaseline(cx, fp, jitcode, /* osr = */true);
@@ -194,7 +194,7 @@ BaselineCompile(JSContext *cx, HandleScript script)
     if (!compiler.init())
         return Method_Error;
 
-    AutoFlushCache afc("BaselineJIT", cx->runtime->ionRuntime());
+    AutoFlushCache afc("BaselineJIT", cx->runtime()->ionRuntime());
     MethodStatus status = compiler.compile();
 
     JS_ASSERT_IF(status == Method_Compiled, script->hasBaselineScript());
@@ -233,7 +233,7 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     if (!CheckFrame(fp))
         return Method_CantCompile;
 
-    if (!cx->compartment->ensureIonCompartmentExists(cx))
+    if (!cx->compartment()->ensureIonCompartmentExists(cx))
         return Method_Error;
 
     if (script->hasBaselineScript())

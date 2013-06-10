@@ -96,13 +96,13 @@ class EvalScriptGuard
 
     ~EvalScriptGuard() {
         if (script_) {
-            CallDestroyScriptHook(cx_->runtime->defaultFreeOp(), script_);
+            CallDestroyScriptHook(cx_->runtime()->defaultFreeOp(), script_);
             script_->isActiveEval = false;
             script_->isCachedEval = true;
             EvalCacheEntry cacheEntry = {script_, lookup_.callerScript, lookup_.pc};
             lookup_.str = lookupStr_;
             if (lookup_.str && IsEvalCacheCandidate(script_))
-                cx_->runtime->evalCache.relookupOrAdd(p_, lookup_, cacheEntry);
+                cx_->runtime()->evalCache.relookupOrAdd(p_, lookup_, cacheEntry);
         }
     }
 
@@ -113,10 +113,10 @@ class EvalScriptGuard
         lookup_.callerScript = callerScript;
         lookup_.version = cx_->findVersion();
         lookup_.pc = pc;
-        p_ = cx_->runtime->evalCache.lookupForAdd(lookup_);
+        p_ = cx_->runtime()->evalCache.lookupForAdd(lookup_);
         if (p_) {
             script_ = p_->script;
-            cx_->runtime->evalCache.remove(p_);
+            cx_->runtime()->evalCache.remove(p_);
             CallNewScriptHook(cx_, script_, NullPtr());
             script_->isCachedEval = false;
             script_->isActiveEval = true;
@@ -360,7 +360,7 @@ js::DirectEvalFromIon(JSContext *cx,
     EvalScriptGuard esg(cx);
 
     // Ion will not perform cross compartment direct eval calls.
-    JSPrincipals *principals = cx->compartment->principals;
+    JSPrincipals *principals = cx->compartment()->principals;
 
     esg.lookupInEvalCache(stableStr, callerScript, pc);
 

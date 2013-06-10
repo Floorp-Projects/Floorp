@@ -21,7 +21,7 @@ PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, JSObject *pobj, Shape *shape)
 {
     JS_ASSERT(this == &cx->propertyCache());
-    JS_ASSERT(!cx->runtime->isHeapBusy());
+    JS_ASSERT(!cx->runtime()->isHeapBusy());
 
     /*
      * Don't cache entries on indexed properties. Indexes can be added or

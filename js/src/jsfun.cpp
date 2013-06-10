@@ -123,7 +123,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         else
             vp.set(iter.calleev());
 
-        if (!cx->compartment->wrap(cx, vp))
+        if (!cx->compartment()->wrap(cx, vp))
             return false;
 
         /*
@@ -181,7 +181,7 @@ fun_enumerate(JSContext *cx, HandleObject obj)
 
     for (unsigned i = 0; i < ArrayLength(poisonPillProps); i++) {
         const uint16_t offset = poisonPillProps[i];
-        id = NameToId(OFFSET_TO_NAME(cx->runtime, offset));
+        id = NameToId(OFFSET_TO_NAME(cx->runtime(), offset));
         if (!JSObject::hasProperty(cx, obj, id, &found, 0))
             return false;
     }
@@ -278,7 +278,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             uint16_t ndefaults = fun->hasScript() ? fun->nonLazyScript()->ndefaults : 0;
             v.setInt32(fun->nargs - ndefaults - fun->hasRest());
         } else {
-            v.setString(fun->atom() == NULL ?  cx->runtime->emptyString : fun->atom());
+            v.setString(fun->atom() == NULL ?  cx->runtime()->emptyString : fun->atom());
         }
 
         if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
@@ -292,7 +292,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     for (unsigned i = 0; i < ArrayLength(poisonPillProps); i++) {
         const uint16_t offset = poisonPillProps[i];
 
-        if (JSID_IS_ATOM(id, OFFSET_TO_NAME(cx->runtime, offset))) {
+        if (JSID_IS_ATOM(id, OFFSET_TO_NAME(cx->runtime(), offset))) {
             JS_ASSERT(!IsInternalFunctionObject(fun));
 
             PropertyOp getter;
@@ -518,7 +518,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     CompileOptions options(cx);
     options.setFileAndLine("internal-findBody", 0)
            .setVersion(fun->nonLazyScript()->getVersion());
-    AutoKeepAtoms keepAtoms(cx->runtime);
+    AutoKeepAtoms keepAtoms(cx->runtime());
     TokenStream ts(cx, options, chars.get(), length, NULL, keepAtoms);
     int nest = 0;
     bool onward = true;
@@ -1107,7 +1107,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
     if (!funAtom)
         return false;
     Rooted<PropertyName *> funName(cx, funAtom->asPropertyName());
-    return cx->runtime->cloneSelfHostedFunctionScript(cx, funName, fun);
+    return cx->runtime()->cloneSelfHostedFunctionScript(cx, funName, fun);
 }
 
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */
@@ -1293,7 +1293,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    AutoKeepAtoms keepAtoms(cx->runtime);
+    AutoKeepAtoms keepAtoms(cx->runtime());
     AutoNameVector formals(cx);
 
     bool hasRest = false;
@@ -1443,7 +1443,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
 
     RootedString str(cx);
     if (!args.length())
-        str = cx->runtime->emptyString;
+        str = cx->runtime()->emptyString;
     else
         str = ToString<CanGC>(cx, args.handleAt(args.length() - 1));
     if (!str)
@@ -1537,7 +1537,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
     JS_ASSERT(parent);
     JS_ASSERT(!fun->isBoundFunction());
 
-    bool useSameScript = cx->compartment == fun->compartment() &&
+    bool useSameScript = cx->compartment() == fun->compartment() &&
                          !fun->hasSingletonType() &&
                          !types::UseNewTypeForClone(fun);
 
@@ -1567,7 +1567,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
 
     if (allocKind == JSFunction::ExtendedFinalizeKind) {
         clone->flags |= JSFunction::EXTENDED;
-        if (fun->isExtended() && fun->compartment() == cx->compartment) {
+        if (fun->isExtended() && fun->compartment() == cx->compartment()) {
             for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++)
                 clone->initExtendedSlot(i, fun->getExtendedSlot(i));
         } else {

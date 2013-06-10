@@ -520,7 +520,7 @@ ICUpdatedStub::initUpdatingChain(JSContext *cx, ICStubSpace *space)
 IonCode *
 ICStubCompiler::getStubCode()
 {
-    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCompartment *ion = cx->compartment()->ionCompartment();
 
     // Check for existing cached stubcode.
     uint32_t stubKey = getKey();
@@ -534,7 +534,7 @@ ICStubCompiler::getStubCode()
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
 
-    AutoFlushCache afc("ICStubCompiler::getStubCode", cx->runtime->ionRuntime());
+    AutoFlushCache afc("ICStubCompiler::getStubCode", cx->runtime()->ionRuntime());
     if (!generateStubCode(masm))
         return NULL;
     Linker linker(masm);
@@ -562,7 +562,7 @@ ICStubCompiler::getStubCode()
 bool
 ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCompartment *ion = cx->compartment()->ionCompartment();
     IonCode *code = ion->getVMWrapper(fun);
     if (!code)
         return false;
@@ -575,7 +575,7 @@ ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCompartment *ion = cx->compartment()->ionCompartment();
     IonCode *code = ion->getVMWrapper(fun);
     if (!code)
         return false;
@@ -587,7 +587,7 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm, uint32_t objectOffset)
 {
-    IonCompartment *ion = cx->compartment->ionCompartment();
+    IonCompartment *ion = cx->compartment()->ionCompartment();
     IonCode *code = ion->getVMWrapper(DoTypeUpdateFallbackInfo);
     if (!code)
         return false;
@@ -635,7 +635,7 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
                       skip);
 
     // Check if profiling is enabled
-    uint32_t *enabledAddr = cx->runtime->spsProfiler.addressOfEnabled();
+    uint32_t *enabledAddr = cx->runtime()->spsProfiler.addressOfEnabled();
     masm.branch32(Assembler::Equal, AbsoluteAddress(enabledAddr), Imm32(0), skip);
 }
 
@@ -644,7 +644,7 @@ inline bool
 ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Register scratch,
                                          GeneralRegisterSet saveRegs)
 {
-    Nursery &nursery = cx->runtime->gcNursery;
+    Nursery &nursery = cx->runtime()->gcNursery;
 
     Label skipBarrier;
     Label isTenured;
@@ -659,7 +659,7 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Reg
     saveRegs = GeneralRegisterSet::Intersect(saveRegs, GeneralRegisterSet::Volatile());
     masm.PushRegsInMask(saveRegs);
     masm.setupUnalignedABICall(2, scratch);
-    masm.movePtr(ImmWord(cx->runtime), scratch);
+    masm.movePtr(ImmWord(cx->runtime()), scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(obj);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PostWriteBarrier));
@@ -801,7 +801,7 @@ PrepareOsrTempData(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     size_t totalSpace = AlignBytes(stackFrameSpace, sizeof(Value)) +
                         AlignBytes(ionOsrTempDataSpace, sizeof(Value));
 
-    IonOsrTempData *info = (IonOsrTempData *)cx->runtime->getIonRuntime(cx)->allocateOsrTempData(totalSpace);
+    IonOsrTempData *info = (IonOsrTempData *)cx->runtime()->getIonRuntime(cx)->allocateOsrTempData(totalSpace);
     if (!info)
         return NULL;
 
@@ -993,11 +993,11 @@ DoProfilerFallback(JSContext *cx, BaselineFrame *frame, ICProfiler_Fallback *stu
 
     FallbackICSpew(cx, stub, "Profiler");
 
-    SPSProfiler *profiler = &cx->runtime->spsProfiler;
+    SPSProfiler *profiler = &cx->runtime()->spsProfiler;
 
     // Manually enter SPS this time.
     JS_ASSERT(profiler->enabled());
-    if (!cx->runtime->spsProfiler.enter(cx, script, func))
+    if (!cx->runtime()->spsProfiler.enter(cx, script, func))
         return false;
     frame->setPushedSPSFrame();
 
@@ -1052,14 +1052,14 @@ ICProfiler_PushFunction::Compiler::generateStubCode(MacroAssembler &masm)
     // Profiling should be enabled if we ever reach here.
 #ifdef DEBUG
     Label spsEnabled;
-    uint32_t *enabledAddr = cx->runtime->spsProfiler.addressOfEnabled();
+    uint32_t *enabledAddr = cx->runtime()->spsProfiler.addressOfEnabled();
     masm.branch32(Assembler::NotEqual, AbsoluteAddress(enabledAddr), Imm32(0), &spsEnabled);
     masm.breakpoint();
     masm.bind(&spsEnabled);
 #endif
 
     // Push SPS entry.
-    masm.spsPushFrame(&cx->runtime->spsProfiler,
+    masm.spsPushFrame(&cx->runtime()->spsProfiler,
                       Address(BaselineStubReg, ICProfiler_PushFunction::offsetOfStr()),
                       Address(BaselineStubReg, ICProfiler_PushFunction::offsetOfScript()),
                       scratch,
@@ -1722,7 +1722,7 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub,
         return true;
     }
 
-    if (!cx->runtime->jitSupportsFloatingPoint && (lhs.isNumber() || rhs.isNumber()))
+    if (!cx->runtime()->jitSupportsFloatingPoint && (lhs.isNumber() || rhs.isNumber()))
         return true;
 
     if (lhs.isNumber() && rhs.isNumber()) {
@@ -2133,7 +2133,7 @@ DoToBoolFallback(JSContext *cx, BaselineFrame *frame, ICToBool_Fallback *stub, H
         return true;
     }
 
-    if (arg.isDouble() && cx->runtime->jitSupportsFloatingPoint) {
+    if (arg.isDouble() && cx->runtime()->jitSupportsFloatingPoint) {
         IonSpew(IonSpew_BaselineIC, "  Generating ToBool(Double) stub.");
         ICToBool_Double::Compiler compiler(cx);
         ICStub *doubleStub = compiler.getStub(compiler.getStubSpace(script));
@@ -2519,7 +2519,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     JS_ASSERT(ret.isNumber());
 
     if (lhs.isDouble() || rhs.isDouble() || ret.isDouble()) {
-        if (!cx->runtime->jitSupportsFloatingPoint)
+        if (!cx->runtime()->jitSupportsFloatingPoint)
             return true;
 
         switch (op) {
@@ -2981,7 +2981,7 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
 
     if (val.isNumber() && res.isNumber() &&
         op == JSOP_NEG &&
-        cx->runtime->jitSupportsFloatingPoint)
+        cx->runtime()->jitSupportsFloatingPoint)
     {
         IonSpew(IonSpew_BaselineIC, "  Generating %s(Number => Number) stub", js_CodeName[op]);
         // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
@@ -3569,7 +3569,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     if (obj->isTypedArray() && rhs.isInt32() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
-        if (!cx->runtime->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
             return true;
 
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
@@ -3773,7 +3773,7 @@ ICGetElem_String::Compiler::generateStubCode(MacroAssembler &masm)
                   &failure);
 
     // Load static string.
-    masm.movePtr(ImmWord(&cx->compartment->rt->staticStrings.unitStaticTable), str);
+    masm.movePtr(ImmWord(&cx->compartment()->rt->staticStrings.unitStaticTable), str);
     masm.loadPtr(BaseIndex(str, scratchReg, ScalePointer), str);
 
     // Return.
@@ -4235,7 +4235,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
     }
 
     if (obj->isTypedArray() && index.isInt32() && rhs.isNumber()) {
-        if (!cx->runtime->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
             return true;
 
         uint32_t len = TypedArray::length(obj);
@@ -4391,7 +4391,7 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
                       &dontConvertDoubles);
     // Note that double arrays are only created by IonMonkey, so if we have no
     // floating-point support Ion is disabled and there should be no double arrays.
-    if (cx->runtime->jitSupportsFloatingPoint)
+    if (cx->runtime()->jitSupportsFloatingPoint)
         masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &dontConvertDoubles);
     else
         masm.breakpoint();
@@ -4579,7 +4579,7 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
                       &dontConvertDoubles);
     // Note that double arrays are only created by IonMonkey, so if we have no
     // floating-point support Ion is disabled and there should be no double arrays.
-    if (cx->runtime->jitSupportsFloatingPoint)
+    if (cx->runtime()->jitSupportsFloatingPoint)
         masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &dontConvertDoubles);
     else
         masm.breakpoint();
@@ -4675,7 +4675,7 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
         // If the value is a double, clamp to uint8 and jump back.
         // Else, jump to failure.
         masm.bind(&notInt32);
-        if (cx->runtime->jitSupportsFloatingPoint) {
+        if (cx->runtime()->jitSupportsFloatingPoint) {
             masm.branchTestDouble(Assembler::NotEqual, value, &failure);
             masm.unboxDouble(value, FloatReg0);
             masm.clampDoubleToUint8(FloatReg0, secondScratch);
@@ -4697,7 +4697,7 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
         // Else, jump to failure.
         Label failureRestoreRegs;
         masm.bind(&notInt32);
-        if (cx->runtime->jitSupportsFloatingPoint) {
+        if (cx->runtime()->jitSupportsFloatingPoint) {
             masm.branchTestDouble(Assembler::NotEqual, value, &failure);
             masm.unboxDouble(value, FloatReg0);
             masm.branchTruncateDouble(FloatReg0, secondScratch, &failureRestoreRegs);
@@ -5715,7 +5715,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != code);
 
         IonCode *argumentsRectifier =
-            cx->compartment->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -5741,7 +5741,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
 
         // Update profiling entry before leaving function.
         masm.load32(Address(BaselineStubReg, ICGetProp_CallScripted::offsetOfPCOffset()), pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
     }
@@ -5829,7 +5829,7 @@ ICGetProp_CallNative::Compiler::generateStubCode(MacroAssembler &masm)
 
         // Update profiling entry before leaving function.
         masm.load32(Address(BaselineStubReg, ICGetProp_CallNative::offsetOfPCOffset()), pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
         regs.add(scratch);
@@ -5917,7 +5917,7 @@ ICGetPropCallDOMProxyNativeCompiler::generateStubCode(MacroAssembler &masm,
         // Update profiling entry before leaving function.
         masm.load32(Address(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfPCOffset()),
                     pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
         regs.add(scratch);
@@ -6064,7 +6064,7 @@ ICGetProp_DOMProxyShadowed::Compiler::generateStubCode(MacroAssembler &masm)
 
         // Update profiling entry before leaving function.
         masm.load32(Address(BaselineStubReg, ICGetProp_DOMProxyShadowed::offsetOfPCOffset()), pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
         regs.add(scratch);
@@ -6615,7 +6615,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != code);
 
         IonCode *argumentsRectifier =
-            cx->compartment->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -6641,7 +6641,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
 
         // Update profiling entry before leaving function.
         masm.load32(Address(BaselineStubReg, ICSetProp_CallScripted::offsetOfPCOffset()), pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
     }
@@ -6739,7 +6739,7 @@ ICSetProp_CallNative::Compiler::generateStubCode(MacroAssembler &masm)
 
         // Update profiling entry before leaving function.
         masm.load32(Address(BaselineStubReg, ICSetProp_CallNative::offsetOfPCOffset()), pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
         regs.add(scratch);
@@ -6974,8 +6974,8 @@ DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub, uint3
         return false;
 
     // Maybe update PC in profiler entry before leaving this script by call.
-    if (cx->runtime->spsProfiler.enabled() && frame->hasPushedSPSFrame())
-        cx->runtime->spsProfiler.updatePC(script, pc);
+    if (cx->runtime()->spsProfiler.enabled() && frame->hasPushedSPSFrame())
+        cx->runtime()->spsProfiler.updatePC(script, pc);
 
     if (!MaybeCloneFunctionAtCallsite(cx, &callee, script, pc))
         return false;
@@ -7205,7 +7205,7 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<Ion
 {
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
-    cx->compartment->ionCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
+    cx->compartment()->ionCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
@@ -7371,7 +7371,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
         IonCode *argumentsRectifier =
-            cx->compartment->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -7400,7 +7400,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
             masm.load32(Address(BaselineStubReg, ICCall_Scripted::offsetOfPCOffset()), pcIdx);
         else
             masm.load32(Address(BaselineStubReg, ICCall_AnyScripted::offsetOfPCOffset()), pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
     }
@@ -7523,7 +7523,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
         guardProfilingEnabled(masm, scratch, &skipProfilerUpdate);
 
         masm.load32(Address(BaselineStubReg, ICCall_Native::offsetOfPCOffset()), pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
     }
@@ -7630,7 +7630,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
         IonCode *argumentsRectifier =
-            cx->compartment->ionCompartment()->getArgumentsRectifier(SequentialExecution);
+            cx->compartment()->ionCompartment()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), target);
         masm.loadPtr(Address(target, IonCode::offsetOfCode()), target);
@@ -7650,7 +7650,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
 
         masm.load32(Address(BaselineStubReg, ICCall_ScriptedApplyArguments::offsetOfPCOffset()),
                     pcIdx);
-        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);
     }
@@ -7704,7 +7704,7 @@ ICTableSwitch::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&notInt32);
 
     masm.branchTestDouble(Assembler::NotEqual, R0, &outOfRange);
-    if (cx->runtime->jitSupportsFloatingPoint) {
+    if (cx->runtime()->jitSupportsFloatingPoint) {
         masm.unboxDouble(R0, FloatReg0);
 
         // N.B. -0 === 0, so convert -0 to a 0 int32.

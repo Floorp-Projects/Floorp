@@ -155,7 +155,7 @@ ExecuteSequentially(JSContext *cx, HandleValue funVal, bool *complete)
         args.setThis(UndefinedValue());
         args[0].setInt32(i);
         args[1].setInt32(numSlices);
-        args[2].setBoolean(!!cx->runtime->parallelWarmup);
+        args[2].setBoolean(!!cx->runtime()->parallelWarmup);
         if (!fig.invoke(cx))
             return false;
         allComplete = allComplete & args.rval().toBoolean();
@@ -373,7 +373,7 @@ class ForkJoinShared : public TaskExecutor, public Monitor
     // Requests that computation abort.
     void setAbortFlag(bool fatal);
 
-    JSRuntime *runtime() { return cx_->runtime; }
+    JSRuntime *runtime() { return cx_->runtime(); }
 
     JSContext *acquireContext() { PR_Lock(cxLock_); return cx_; }
     void releaseContext() { PR_Unlock(cxLock_); }
@@ -1040,7 +1040,7 @@ js::ParallelDo::warmupExecution(ExecutionStatus *status)
 
     Spew(SpewOps, "Executing warmup.");
 
-    AutoEnterWarmup warmup(cx_->runtime);
+    AutoEnterWarmup warmup(cx_->runtime());
     RootedValue funVal(cx_, ObjectValue(*fun_));
     bool complete;
     if (!ExecuteSequentially(cx_, funVal, &complete)) {
@@ -1079,14 +1079,14 @@ class AutoEnterParallelSection
         // a minor GC to ensure no cross-generation pointers get
         // created:
 
-        if (JS::IsIncrementalGCInProgress(cx->runtime)) {
-            JS::PrepareForIncrementalGC(cx->runtime);
-            JS::FinishIncrementalGC(cx->runtime, JS::gcreason::API);
+        if (JS::IsIncrementalGCInProgress(cx->runtime())) {
+            JS::PrepareForIncrementalGC(cx->runtime());
+            JS::FinishIncrementalGC(cx->runtime(), JS::gcreason::API);
         }
 
-        MinorGC(cx->runtime, JS::gcreason::API);
+        MinorGC(cx->runtime(), JS::gcreason::API);
 
-        cx->runtime->gcHelperThread.waitBackgroundSweepEnd();
+        cx->runtime()->gcHelperThread.waitBackgroundSweepEnd();
     }
 
     ~AutoEnterParallelSection() {
@@ -1107,7 +1107,7 @@ js::ParallelDo::parallelExecution(ExecutionStatus *status)
 
     AutoEnterParallelSection enter(cx_);
 
-    ThreadPool *threadPool = &cx_->runtime->threadPool;
+    ThreadPool *threadPool = &cx_->runtime()->threadPool;
     uint32_t numSlices = ForkJoinSlices(cx_);
 
     RootedObject rootedFun(cx_, fun_);
@@ -1268,7 +1268,7 @@ ForkJoinShared::init()
         return false;
 
     for (unsigned i = 0; i < numSlices_; i++) {
-        Allocator *allocator = cx_->runtime->new_<Allocator>(cx_->zone());
+        Allocator *allocator = cx_->runtime()->new_<Allocator>(cx_->zone());
         if (!allocator)
             return false;
 
@@ -1298,7 +1298,7 @@ ForkJoinShared::execute()
     // Sometimes a GC request occurs *just before* we enter into the
     // parallel section.  Rather than enter into the parallel section
     // and then abort, we just check here and abort early.
-    if (cx_->runtime->interrupt)
+    if (cx_->runtime()->interrupt)
         return TP_RETRY_SEQUENTIALLY;
 
     AutoLockMonitor lock(*this);
@@ -1332,13 +1332,13 @@ ForkJoinShared::execute()
 void
 ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
 {
-    JSCompartment *comp = cx_->compartment;
+    JSCompartment *comp = cx_->compartment();
     for (unsigned i = 0; i < numSlices_; i++)
         comp->adoptWorkerAllocator(allocators_[i]);
 
     if (gcRequested_) {
         if (!gcZone_)
-            TriggerGC(cx_->runtime, gcReason_);
+            TriggerGC(cx_->runtime(), gcReason_);
         else
             TriggerZoneGC(gcZone_, gcReason_);
         gcRequested_ = false;
@@ -1351,7 +1351,7 @@ ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
 {
     JS_ASSERT(workerId < numSlices_ - 1);
 
-    PerThreadData thisThread(cx_->runtime);
+    PerThreadData thisThread(cx_->runtime());
     TlsPerThreadData.set(&thisThread);
     // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
     // lock has not been initialized in these cases.
@@ -1391,7 +1391,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
 
     // Make a new IonContext for the slice, which is needed if we need to
     // re-enter the VM.
-    IonContext icx(cx_->compartment, NULL);
+    IonContext icx(cx_->compartment(), NULL);
 
     JS_ASSERT(slice.bailoutRecord->topScript == NULL);
 
@@ -1408,7 +1408,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
                                       NULL, NULL, NULL);
         setAbortFlag(false);
     } else {
-        ParallelIonInvoke<3> fii(cx_->compartment, callee, 3);
+        ParallelIonInvoke<3> fii(cx_->compartment(), callee, 3);
 
         fii.args[0] = Int32Value(slice.sliceId);
         fii.args[1] = Int32Value(slice.numSlices);
@@ -1426,19 +1426,19 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
 bool
 ForkJoinShared::check(ForkJoinSlice &slice)
 {
-    JS_ASSERT(cx_->runtime->interrupt);
+    JS_ASSERT(cx_->runtime()->interrupt);
 
     if (abort_)
         return false;
 
     if (slice.isMainThread()) {
-        JS_ASSERT(!cx_->runtime->gcIsNeeded);
+        JS_ASSERT(!cx_->runtime()->gcIsNeeded);
 
-        if (cx_->runtime->interrupt) {
+        if (cx_->runtime()->interrupt) {
             // The GC Needed flag should not be set during parallel
             // execution.  Instead, one of the requestGC() or
             // requestZoneGC() methods should be invoked.
-            JS_ASSERT(!cx_->runtime->gcIsNeeded);
+            JS_ASSERT(!cx_->runtime()->gcIsNeeded);
 
             // If interrupt is requested, bring worker threads to a halt,
             // service the interrupt, then let them start back up again.
@@ -1489,7 +1489,7 @@ ForkJoinShared::initiateRendezvous(ForkJoinSlice &slice)
 
     JS_ASSERT(slice.isMainThread());
     JS_ASSERT(!rendezvous_ && blocked_ == 0);
-    JS_ASSERT(cx_->runtime->interrupt);
+    JS_ASSERT(cx_->runtime()->interrupt);
 
     AutoLockMonitor lock(*this);
 
@@ -1545,7 +1545,7 @@ ForkJoinShared::setAbortFlag(bool fatal)
     abort_ = true;
     fatal_ = fatal_ || fatal;
 
-    cx_->runtime->triggerOperationCallback();
+    cx_->runtime()->triggerOperationCallback();
 }
 
 void
@@ -1657,7 +1657,7 @@ uint32_t
 js::ForkJoinSlices(JSContext *cx)
 {
     // Parallel workers plus this main thread.
-    return cx->runtime->threadPool.numWorkers() + 1;
+    return cx->runtime()->threadPool.numWorkers() + 1;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2061,7 +2061,7 @@ js::ParallelTestsShouldPass(JSContext *cx)
            ion::IsBaselineEnabled(cx) &&
            !ion::js_IonOptions.eagerCompilation &&
            ion::js_IonOptions.baselineUsesBeforeCompile != 0 &&
-           cx->runtime->gcZeal() == 0;
+           cx->runtime()->gcZeal() == 0;
 }
 
 #endif // JS_THREADSAFE && JS_ION
