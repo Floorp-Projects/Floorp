@@ -31,6 +31,8 @@ let AboutReader = function(doc, win) {
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
   Services.obs.addObserver(this, "Reader:Add", false);
   Services.obs.addObserver(this, "Reader:Remove", false);
+  Services.obs.addObserver(this, "Reader:ListCountReturn", false);
+  Services.obs.addObserver(this, "Reader:ListCountUpdated", false);
 
   this._article = null;
 
@@ -120,6 +122,11 @@ let AboutReader = function(doc, win) {
   this._isReadingListItem = (queryArgs.readingList == "1");
   this._updateToggleButton();
 
+  // Track status of reader toolbar list button
+  this._readingListCount = 0;
+  this._updateListButton();
+  this._requestReadingListCount();
+
   let url = queryArgs.url;
   let tabId = queryArgs.tabId;
   if (tabId) {
@@ -202,6 +209,16 @@ AboutReader.prototype = {
         }
         break;
       }
+
+      case "Reader:ListCountReturn":
+      case "Reader:ListCountUpdated":  {
+        let count = parseInt(aData);
+        if (this._readingListCount != count) {
+          this._readingListCount = count;
+          this._updateListButton();
+        }
+        break;
+      }
     }
   },
 
@@ -238,6 +255,8 @@ AboutReader.prototype = {
       case "unload":
         Services.obs.removeObserver(this, "Reader:Add");
         Services.obs.removeObserver(this, "Reader:Remove");
+        Services.obs.removeObserver(this, "Reader:ListCountReturn");
+        Services.obs.removeObserver(this, "Reader:ListCountUpdated");
         break;
     }
   },
@@ -250,6 +269,20 @@ AboutReader.prototype = {
     } else {
       classes.remove("on");
     }
+  },
+
+  _updateListButton: function Reader_updateListButton() {
+    let classes = this._doc.getElementById("list-button").classList;
+
+    if (this._readingListCount > 0) {
+      classes.add("on");
+    } else {
+      classes.remove("on");
+    }
+  },
+
+  _requestReadingListCount: function Reader_requestReadingListCount() {
+    gChromeWin.sendMessageToJava({ type: "Reader:ListCountRequest" });
   },
 
   _onReaderToggle: function Reader_onToggle() {
@@ -291,7 +324,7 @@ AboutReader.prototype = {
   },
 
   _onList: function Reader_onList() {
-    if (!this._article)
+    if (!this._article || this._readingListCount == 0)
       return;
 
     gChromeWin.sendMessageToJava({ type: "Reader:GoToReadingList" });
