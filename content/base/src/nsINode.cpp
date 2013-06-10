@@ -637,6 +637,7 @@ nsresult
 nsINode::SetUserData(const nsAString &aKey, nsIVariant *aData,
                      nsIDOMUserDataHandler *aHandler, nsIVariant **aResult)
 {
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eGetSetUserData);
   *aResult = nullptr;
 
   nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
@@ -705,6 +706,18 @@ nsINode::SetUserData(JSContext* aCx, const nsAString& aKey,
   aError = nsContentUtils::XPConnect()->VariantToJS(aCx, GetWrapper(), oldData,
                                                     result.address());
   return result;
+}
+
+nsIVariant*
+nsINode::GetUserData(const nsAString& aKey)
+{
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eGetSetUserData);
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return nullptr;
+  }
+
+  return static_cast<nsIVariant*>(GetProperty(DOM_USER_DATA, key));
 }
 
 JS::Value
