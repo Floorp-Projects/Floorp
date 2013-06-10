@@ -255,7 +255,7 @@ ThebesLayerComposite::GetCompositionBounds()
       gfx::Point scrollOffset =
         gfx::Point((metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width) / scaleX,
                    (metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height) / scaleY);
-      const nsIntPoint& contentOrigin = nsIntPoint(
+      const nsIntPoint contentOrigin(
         metrics.mContentRect.x - NS_lround(scrollOffset.x),
         metrics.mContentRect.y - NS_lround(scrollOffset.y));
       gfxRect contentRect = gfxRect(contentOrigin.x, contentOrigin.y,
