@@ -3,7 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <org.mozilla.gecko.widget.FaviconView android:id="@+id/favicon"
                                           android:layout_width="@dimen/favicon_bg"
@@ -15,10 +16,12 @@
                   android:layout_height="wrap_content"
                   android:orientation="vertical">
 
-        <TextView android:id="@+id/title"
-                  style="@style/Widget.TwoLinePageRow.Title"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"/>
+        <org.mozilla.gecko.home.FadedTextView
+                android:id="@+id/title"
+                style="@style/Widget.TwoLinePageRow.Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                gecko:fadeWidth="30dp"/>
 
         <TextView android:id="@+id/url"
                   style="@style/Widget.TwoLinePageRow.Url"

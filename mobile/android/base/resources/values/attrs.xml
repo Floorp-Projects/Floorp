@@ -168,6 +168,10 @@
         <attr name="tabIndicatorColor" format="color"/>
     </declare-styleable>
 
+    <declare-styleable name="FadedTextView">
+        <attr name="fadeWidth" format="dimension"/>
+    </declare-styleable>
+
     <declare-styleable name="BookmarkFolderView">
         <attr name="state_open" format="boolean"/>
     </declare-styleable>

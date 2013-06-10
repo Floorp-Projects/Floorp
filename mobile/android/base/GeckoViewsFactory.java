@@ -6,6 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.home.BookmarkFolderView;
+import org.mozilla.gecko.home.FadedTextView;
 import org.mozilla.gecko.home.TwoLinePageRow;
 import org.mozilla.gecko.menu.MenuItemDefault;
 import org.mozilla.gecko.widget.AboutHomeView;
@@ -90,6 +91,7 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
             mFactoryMap.put("TextView", GeckoTextView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("FaviconView", FaviconView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("home.BookmarkFolderView", BookmarkFolderView.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("home.FadedTextView", FadedTextView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("home.TwoLinePageRow", TwoLinePageRow.class.getConstructor(arg1Class, arg2Class));
         } catch (NoSuchMethodException nsme) {
             Log.e(LOGTAG, "Unable to initialize views factory", nsme);
