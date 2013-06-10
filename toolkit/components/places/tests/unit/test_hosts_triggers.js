@@ -66,59 +66,39 @@ let urls = [{uri: NetUtil.newURI("http://visit1.mozilla.org"),
             },
            ];
 
-function VisitInfo(aTransitionType, aVisitTime)
-{
-  this.transitionType =
-    aTransitionType === undefined ? TRANSITION_LINK : aTransitionType;
-  this.visitDate = aVisitTime || Date.now() * 1000;
-}
-
 const NEW_URL = "http://different.mozilla.org/";
 
-function test_moz_hosts_update()
+add_task(function test_moz_hosts_update()
 {
   let places = [];
   urls.forEach(function(url) {
-    let place = {
-                  uri: url.uri,
+    let place = { uri: url.uri,
                   title: "test for " + url.url,
-                  visits: [
-                    new VisitInfo(url.typed ? TRANSITION_TYPED : undefined),
-                  ],
-    };
+                  transition: url.typed ? TRANSITION_TYPED : undefined };
     places.push(place);
   });
 
-  gHistory.updatePlaces(places, {
-    handleResult: function () {
-    },
-    handleError: function () {
-      do_throw("gHistory.updatePlaces() failed");
-    },
-    handleCompletion: function () {
-      do_check_true(isHostInMozHosts(urls[0].uri, urls[0].typed, urls[0].prefix));
-      do_check_true(isHostInMozHosts(urls[1].uri, urls[1].typed, urls[1].prefix));
-      do_check_true(isHostInMozHosts(urls[2].uri, urls[2].typed, urls[2].prefix));
-      run_next_test();
-    }
-  });
-}
+  yield promiseAddVisits(places);
 
-function test_remove_places()
+  do_check_true(isHostInMozHosts(urls[0].uri, urls[0].typed, urls[0].prefix));
+  do_check_true(isHostInMozHosts(urls[1].uri, urls[1].typed, urls[1].prefix));
+  do_check_true(isHostInMozHosts(urls[2].uri, urls[2].typed, urls[2].prefix));
+});
+
+add_task(function test_remove_places()
 {
   for (let idx in urls) {
     PlacesUtils.history.removePage(urls[idx].uri);
   }
 
-  promiseClearHistory().then(function (){
-    for (let idx in urls) {
-      do_check_false(isHostInMozHosts(urls[idx].uri, urls[idx].typed, urls[idx].prefix));
-    }
-    run_next_test();
-  });
-}
+  yield promiseClearHistory();
 
-function test_bookmark_changes()
+  for (let idx in urls) {
+    do_check_false(isHostInMozHosts(urls[idx].uri, urls[idx].typed, urls[idx].prefix));
+  }
+});
+
+add_task(function test_bookmark_changes()
 {
   let testUri = NetUtil.newURI("http://test.mozilla.org");
 
@@ -132,97 +112,109 @@ function test_bookmark_changes()
   // Change the hostname
   PlacesUtils.bookmarks.changeBookmarkURI(itemId, NetUtil.newURI(NEW_URL));
 
-  promiseClearHistory().then(function (){
-    let newUri = NetUtil.newURI(NEW_URL);
-    do_check_true(isHostInMozPlaces(newUri));
-    do_check_true(isHostInMozHosts(newUri, false, null));
-    do_check_false(isHostInMozHosts(NetUtil.newURI("http://test.mozilla.org"), false, null));
-    run_next_test();
-  });
-}
+  yield promiseClearHistory();
 
-function test_bookmark_removal()
+  let newUri = NetUtil.newURI(NEW_URL);
+  do_check_true(isHostInMozPlaces(newUri));
+  do_check_true(isHostInMozHosts(newUri, false, null));
+  do_check_false(isHostInMozHosts(NetUtil.newURI("http://test.mozilla.org"), false, null));
+});
+
+add_task(function test_bookmark_removal()
 {
   let itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId,
                                                     PlacesUtils.bookmarks.DEFAULT_INDEX);
   let newUri = NetUtil.newURI(NEW_URL);
   PlacesUtils.bookmarks.removeItem(itemId);
-  promiseClearHistory().then(function (){
-    do_check_false(isHostInMozHosts(newUri, false, null));
-    run_next_test();
-  });
-}
+  yield promiseClearHistory();
 
-function test_moz_hosts_typed_update()
+  do_check_false(isHostInMozHosts(newUri, false, null));
+});
+
+add_task(function test_moz_hosts_typed_update()
 {
   const TEST_URI = NetUtil.newURI("http://typed.mozilla.com");
   let places = [{ uri: TEST_URI
                 , title: "test for " + TEST_URI.spec
-                , visits: [ new VisitInfo(TRANSITION_LINK)
-                          , new VisitInfo(TRANSITION_TYPED)
-                          ]
+                },
+                { uri: TEST_URI
+                , title: "test for " + TEST_URI.spec
+                , transition: TRANSITION_TYPED
                 }];
 
-  gHistory.updatePlaces(places, {
-    handleResult: function () {
-    },
-    handleError: function () {
-      do_throw("gHistory.updatePlaces() failed");
-    },
-    handleCompletion: function () {
-      do_check_true(isHostInMozHosts(TEST_URI, true, null));
-      run_next_test();
-    }
-  });
-}
+  yield promiseAddVisits(places);
 
-function test_moz_hosts_www_remove()
+  do_check_true(isHostInMozHosts(TEST_URI, true, null));
+  yield promiseClearHistory();
+});
+
+add_task(function test_moz_hosts_www_remove()
 {
   function test_removal(aURIToRemove, aURIToKeep, aCallback) {
     let places = [{ uri: aURIToRemove
                   , title: "test for " + aURIToRemove.spec
-                  , visits: [ new VisitInfo() ]
+                  , transition: TRANSITION_TYPED
                   },
                   { uri: aURIToKeep
                   , title: "test for " + aURIToKeep.spec
-                  , visits: [ new VisitInfo() ]
+                  , transition: TRANSITION_TYPED
                   }];
 
-    gHistory.updatePlaces(places, {
-      handleResult: function () {
-      },
-      handleError: function () {
-        do_throw("gHistory.updatePlaces() failed");
-      },
-      handleCompletion: function () {
-        PlacesUtils.history.removePage(aURIToRemove);
-        let prefix = /www/.test(aURIToKeep.spec) ? "www." : null;
-        do_check_true(isHostInMozHosts(aURIToKeep, false, prefix));
-        promiseClearHistory().then(aCallback);
-      }
-    });
+    yield promiseAddVisits(places);
+    print("removing " + aURIToRemove.spec + " keeping " + aURIToKeep);
+    dump_table("moz_hosts");
+    dump_table("moz_places");
+    PlacesUtils.history.removePage(aURIToRemove);
+    let prefix = /www/.test(aURIToKeep.spec) ? "www." : null;
+    dump_table("moz_hosts");
+    dump_table("moz_places");
+    do_check_true(isHostInMozHosts(aURIToKeep, true, prefix));
   }
 
   const TEST_URI = NetUtil.newURI("http://rem.mozilla.com");
   const TEST_WWW_URI = NetUtil.newURI("http://www.rem.mozilla.com");
-  test_removal(TEST_URI, TEST_WWW_URI, function() {
-    test_removal(TEST_WWW_URI, TEST_URI, function() {
-      promiseClearHistory().then(run_next_test);
-    });
-  });
-}
+  yield test_removal(TEST_URI, TEST_WWW_URI);
+  yield test_removal(TEST_WWW_URI, TEST_URI);
+  yield promiseClearHistory();
+});
 
-////////////////////////////////////////////////////////////////////////////////
-//// Test Runner
+add_task(function test_moz_hosts_ftp_matchall()
+{
+  const TEST_URI_1 = NetUtil.newURI("ftp://www.mozilla.com/");
+  const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
 
-[
-  test_moz_hosts_update,
-  test_remove_places,
-  test_bookmark_changes,
-  test_bookmark_removal,
-  test_moz_hosts_typed_update,
-  test_moz_hosts_www_remove,
-].forEach(add_test);
+  yield promiseAddVisits([{ uri: TEST_URI_1, transition: TRANSITION_TYPED },
+                          { uri: TEST_URI_2, transition: TRANSITION_TYPED }]);
+
+  do_check_true(isHostInMozHosts(TEST_URI_1, true, "ftp://"));
+});
+
+add_task(function test_moz_hosts_ftp_not_matchall()
+{
+  const TEST_URI_1 = NetUtil.newURI("http://mozilla.com/");
+  const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
+
+  yield promiseAddVisits([{ uri: TEST_URI_1, transition: TRANSITION_TYPED },
+                          { uri: TEST_URI_2, transition: TRANSITION_TYPED }]);
+
+  do_check_true(isHostInMozHosts(TEST_URI_1, true, null));
+});
+
+add_task(function test_moz_hosts_update_2()
+{
+  // Check that updating trigger takes into account prefixes for different
+  // rev_hosts.
+  const TEST_URI_1 = NetUtil.newURI("https://www.google.it/");
+  const TEST_URI_2 = NetUtil.newURI("https://google.it/");
+  let places = [{ uri: TEST_URI_1
+                , transition: TRANSITION_TYPED
+                },
+                { uri: TEST_URI_2
+                }];
+  yield promiseAddVisits(places);
+
+  do_check_true(isHostInMozHosts(TEST_URI_1, true, "https://www."));
+});
 
 function run_test()
 {

@@ -2217,7 +2217,10 @@ History::VisitURI(nsIURI* aURI,
   else if (aFlags & IHistory::REDIRECT_PERMANENT) {
     transitionType = nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
   }
-  else if (recentFlags & nsNavHistory::RECENT_TYPED) {
+  else if ((recentFlags & nsNavHistory::RECENT_TYPED) &&
+           !(aFlags & IHistory::UNRECOVERABLE_ERROR)) {
+    // Don't mark error pages as typed, even if they were actually typed by
+    // the user.  This is useful to limit their score in autocomplete.
     transitionType = nsINavHistoryService::TRANSITION_TYPED;
   }
   else if (recentFlags & nsNavHistory::RECENT_BOOKMARKED) {
