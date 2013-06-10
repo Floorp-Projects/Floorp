@@ -7,6 +7,10 @@
 #include "WebGLObjectModel.h"
 #include "WebGLExtensions.h"
 #include "WebGLContextUtils.h"
+#include "WebGLBuffer.h"
+#include "WebGLVertexAttribData.h"
+#include "WebGLMemoryMultiReporterWrapper.h"
+#include "WebGLFramebuffer.h"
 
 #include "AccessCheck.h"
 #include "nsIConsoleService.h"

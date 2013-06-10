@@ -6,9 +6,9 @@
 #ifndef WEBGLEXTENSIONS_H_
 #define WEBGLEXTENSIONS_H_
 
-#include "WebGLContext.h"
-
 namespace mozilla {
+
+class WebGLContext;
 
 class WebGLExtensionBase
     : public nsISupports

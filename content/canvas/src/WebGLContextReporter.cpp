@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
+#include "WebGLMemoryMultiReporterWrapper.h"
 #include "nsIMemoryReporter.h"
 
 using namespace mozilla;
