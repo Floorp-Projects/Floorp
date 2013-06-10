@@ -50,6 +50,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   , mDestination(new AudioDestinationNode(this, aIsOffline,
                                           aNumberOfChannels,
                                           aLength, aSampleRate))
+  , mNumberOfChannels(aNumberOfChannels)
   , mIsOffline(aIsOffline)
 {
   // Actually play audio
@@ -395,6 +396,12 @@ void
 AudioContext::UpdatePannerSource()
 {
   mPannerNodes.EnumerateEntries(FindConnectedSourcesOn, nullptr);
+}
+
+uint32_t
+AudioContext::MaxChannelCount() const
+{
+  return mIsOffline ? mNumberOfChannels : AudioStream::MaxNumberOfChannels();
 }
 
 MediaStreamGraph*
