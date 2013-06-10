@@ -29,7 +29,7 @@
 #ifndef ReverbInputBuffer_h
 #define ReverbInputBuffer_h
 
-#include "core/platform/audio/AudioArray.h"
+#include "nsTArray.h"
 
 namespace WebCore {
 
@@ -55,7 +55,7 @@ public:
     void reset();
 
 private:
-    AudioFloatArray m_buffer;
+    nsTArray<float> m_buffer;
     size_t m_writeIndex;
 };
 

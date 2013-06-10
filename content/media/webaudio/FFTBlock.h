@@ -48,6 +48,16 @@ public:
                           mFFTSize / 2 + 1);
   }
 
+  void PerformPaddedFFT(const float* aData, size_t dataSize)
+  {
+    MOZ_ASSERT(dataSize <= FFTSize());
+    nsTArray<float> paddedData;
+    paddedData.SetLength(FFTSize());
+    PodCopy(paddedData.Elements(), aData, dataSize);
+    PodZero(paddedData.Elements() + dataSize, mFFTSize - dataSize);
+    PerformFFT(paddedData.Elements());
+  }
+
   void SetFFTSize(uint32_t aSize)
   {
     mFFTSize = aSize;
@@ -55,7 +65,7 @@ public:
     PodZero(mOutputBuffer.Elements(), aSize / 2 + 1);
   }
 
-  float FFTSize() const
+  uint32_t FFTSize() const
   {
     return mFFTSize;
   }

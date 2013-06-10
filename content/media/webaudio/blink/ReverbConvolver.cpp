@@ -26,18 +26,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#include "ReverbConvolver.h"
 
-#if ENABLE(WEB_AUDIO)
+using namespace mozilla;
 
-#include "core/platform/audio/ReverbConvolver.h"
-
-#include "core/platform/audio/AudioBus.h"
-#include "core/platform/audio/VectorMath.h"
+template<>
+struct RunnableMethodTraits<WebCore::ReverbConvolver>
+{
+  static void RetainCallee(WebCore::ReverbConvolver* obj) {}
+  static void ReleaseCallee(WebCore::ReverbConvolver* obj) {}
+};
 
 namespace WebCore {
-
-using namespace VectorMath;
 
 const int InputBufferSize = 8 * 16384;
 
@@ -53,20 +53,15 @@ const size_t RealtimeFrameLimit = 8192  + 4096; // ~278msec @ 44.1KHz
 const size_t MinFFTSize = 128;
 const size_t MaxRealtimeFFTSize = 2048;
 
-static void backgroundThreadEntry(void* threadData)
-{
-    ReverbConvolver* reverbConvolver = static_cast<ReverbConvolver*>(threadData);
-    reverbConvolver->backgroundThreadEntry();
-}
-
-ReverbConvolver::ReverbConvolver(AudioChannel* impulseResponse, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads)
-    : m_impulseResponseLength(impulseResponse->length())
-    , m_accumulationBuffer(impulseResponse->length() + renderSliceSize)
+ReverbConvolver::ReverbConvolver(const float* impulseResponseData, size_t impulseResponseLength, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads)
+    : m_impulseResponseLength(impulseResponseLength)
+    , m_accumulationBuffer(impulseResponseLength + renderSliceSize)
     , m_inputBuffer(InputBufferSize)
     , m_minFFTSize(MinFFTSize) // First stage will have this size - successive stages will double in size each time
     , m_maxFFTSize(maxFFTSize) // until we hit m_maxFFTSize
+    , m_backgroundThread("ConvolverWorker")
+    , m_backgroundThreadMonitor("ConvolverMonitor")
     , m_useBackgroundThreads(useBackgroundThreads)
-    , m_backgroundThread(0)
     , m_wantsToExit(false)
     , m_moreInputBuffered(false)
 {
@@ -80,8 +75,8 @@ ReverbConvolver::ReverbConvolver(AudioChannel* impulseResponse, size_t renderSli
     // Otherwise, assume we're being run from a command-line tool.
     bool hasRealtimeConstraint = useBackgroundThreads;
 
-    const float* response = impulseResponse->data();
-    size_t totalResponseLength = impulseResponse->length();
+    const float* response = impulseResponseData;
+    size_t totalResponseLength = impulseResponseLength;
 
     // The total latency is zero because the direct-convolution is used in the leading portion.
     size_t reverbTotalLatency = 0;
@@ -102,15 +97,15 @@ ReverbConvolver::ReverbConvolver(AudioChannel* impulseResponse, size_t renderSli
 
         bool useDirectConvolver = !stageOffset;
 
-        OwnPtr<ReverbConvolverStage> stage = adoptPtr(new ReverbConvolverStage(response, totalResponseLength, reverbTotalLatency, stageOffset, stageSize, fftSize, renderPhase, renderSliceSize, &m_accumulationBuffer, useDirectConvolver));
+        nsAutoPtr<ReverbConvolverStage> stage(new ReverbConvolverStage(response, totalResponseLength, reverbTotalLatency, stageOffset, stageSize, fftSize, renderPhase, renderSliceSize, &m_accumulationBuffer, useDirectConvolver));
 
         bool isBackgroundStage = false;
 
         if (this->useBackgroundThreads() && stageOffset > RealtimeFrameLimit) {
-            m_backgroundStages.append(stage.release());
+            m_backgroundStages.AppendElement(stage.forget());
             isBackgroundStage = true;
         } else
-            m_stages.append(stage.release());
+            m_stages.AppendElement(stage.forget());
 
         stageOffset += stageSize;
         ++i;
@@ -128,24 +123,27 @@ ReverbConvolver::ReverbConvolver(AudioChannel* impulseResponse, size_t renderSli
 
     // Start up background thread
     // FIXME: would be better to up the thread priority here.  It doesn't need to be real-time, but higher than the default...
-    if (this->useBackgroundThreads() && m_backgroundStages.size() > 0)
-        m_backgroundThread = createThread(WebCore::backgroundThreadEntry, this, "convolution background thread");
+    if (this->useBackgroundThreads() && m_backgroundStages.Length() > 0) {
+        m_backgroundThread.Start();
+        CancelableTask* task = NewRunnableMethod(this, &ReverbConvolver::backgroundThreadEntry);
+        m_backgroundThread.message_loop()->PostTask(FROM_HERE, task);
+    }
 }
 
 ReverbConvolver::~ReverbConvolver()
 {
     // Wait for background thread to stop
-    if (useBackgroundThreads() && m_backgroundThread) {
+    if (useBackgroundThreads() && m_backgroundThread.IsRunning()) {
         m_wantsToExit = true;
 
         // Wake up thread so it can return
         {
-            MutexLocker locker(m_backgroundThreadLock);
+            MonitorAutoLock locker(m_backgroundThreadMonitor);
             m_moreInputBuffered = true;
-            m_backgroundThreadCondition.signal();
+            locker.Notify();
         }
 
-        waitForThreadCompletion(m_backgroundThread);
+        m_backgroundThread.Stop();
     }
 }
 
@@ -153,11 +151,11 @@ void ReverbConvolver::backgroundThreadEntry()
 {
     while (!m_wantsToExit) {
         // Wait for realtime thread to give us more input
-        m_moreInputBuffered = false;        
+        m_moreInputBuffered = false;
         {
-            MutexLocker locker(m_backgroundThreadLock);
+            MonitorAutoLock locker(m_backgroundThreadMonitor);
             while (!m_moreInputBuffered && !m_wantsToExit)
-                m_backgroundThreadCondition.wait(m_backgroundThreadLock);
+                locker.Wait();
         }
 
         // Process all of the stages until their read indices reach the input buffer's write index
@@ -172,23 +170,25 @@ void ReverbConvolver::backgroundThreadEntry()
             const int SliceSize = MinFFTSize / 2;
 
             // Accumulate contributions from each stage
-            for (size_t i = 0; i < m_backgroundStages.size(); ++i)
+            for (size_t i = 0; i < m_backgroundStages.Length(); ++i)
                 m_backgroundStages[i]->processInBackground(this, SliceSize);
         }
     }
 }
 
-void ReverbConvolver::process(const AudioChannel* sourceChannel, AudioChannel* destinationChannel, size_t framesToProcess)
+void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChannelLength,
+                              float* destinationChannelData, size_t destinationChannelLength,
+                              size_t framesToProcess)
 {
-    bool isSafe = sourceChannel && destinationChannel && sourceChannel->length() >= framesToProcess && destinationChannel->length() >= framesToProcess;
-    ASSERT(isSafe);
+    bool isSafe = sourceChannelData && destinationChannelData && sourceChannelLength >= framesToProcess && destinationChannelLength >= framesToProcess;
+    MOZ_ASSERT(isSafe);
     if (!isSafe)
         return;
-        
-    const float* source = sourceChannel->data();
-    float* destination = destinationChannel->mutableData();
+
+    const float* source = sourceChannelData;
+    float* destination = destinationChannelData;
     bool isDataSafe = source && destination;
-    ASSERT(isDataSafe);
+    MOZ_ASSERT(isDataSafe);
     if (!isDataSafe)
         return;
 
@@ -196,32 +196,30 @@ void ReverbConvolver::process(const AudioChannel* sourceChannel, AudioChannel* d
     m_inputBuffer.write(source, framesToProcess);
 
     // Accumulate contributions from each stage
-    for (size_t i = 0; i < m_stages.size(); ++i)
+    for (size_t i = 0; i < m_stages.Length(); ++i)
         m_stages[i]->process(source, framesToProcess);
 
     // Finally read from accumulation buffer
     m_accumulationBuffer.readAndClear(destination, framesToProcess);
-        
+
     // Now that we've buffered more input, wake up our background thread.
-    
+
     // Not using a MutexLocker looks strange, but we use a tryLock() instead because this is run on the real-time
     // thread where it is a disaster for the lock to be contended (causes audio glitching).  It's OK if we fail to
     // signal from time to time, since we'll get to it the next time we're called.  We're called repeatedly
     // and frequently (around every 3ms).  The background thread is processing well into the future and has a considerable amount of 
     // leeway here...
-    if (m_backgroundThreadLock.tryLock()) {
-        m_moreInputBuffered = true;
-        m_backgroundThreadCondition.signal();
-        m_backgroundThreadLock.unlock();
-    }
+    MonitorAutoLock locker(m_backgroundThreadMonitor);
+    m_moreInputBuffered = true;
+    locker.Notify();
 }
 
 void ReverbConvolver::reset()
 {
-    for (size_t i = 0; i < m_stages.size(); ++i)
+    for (size_t i = 0; i < m_stages.Length(); ++i)
         m_stages[i]->reset();
 
-    for (size_t i = 0; i < m_backgroundStages.size(); ++i)
+    for (size_t i = 0; i < m_backgroundStages.Length(); ++i)
         m_backgroundStages[i]->reset();
 
     m_accumulationBuffer.reset();
@@ -234,5 +232,3 @@ size_t ReverbConvolver::latencyFrames() const
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)

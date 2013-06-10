@@ -17,6 +17,10 @@ EXPORTS += [
     'WebAudioUtils.h',
 ]
 
+EXPORTS.mozilla += [
+    'FFTBlock.h',
+]
+
 EXPORTS.mozilla.dom += [
     'AnalyserNode.h',
     'AudioBuffer.h',
