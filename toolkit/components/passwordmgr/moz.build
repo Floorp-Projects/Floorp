@@ -18,3 +18,11 @@ XPIDL_SOURCES += [
 
 MODULE = 'loginmgr'
 
+EXTRA_COMPONENTS += [
+    'crypto-SDR.js',
+    'nsLoginInfo.js',
+    'nsLoginManager.js',
+    'nsLoginManagerPrompter.js',
+    'passwordmgr.manifest',
+    'storage-Legacy.js',
+]

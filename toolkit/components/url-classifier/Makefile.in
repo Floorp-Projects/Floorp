@@ -21,7 +21,7 @@ LOCAL_INCLUDES = \
   $(SQLITE_CFLAGS) \
   $(NULL)
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsUrlClassifierHashCompleter.js \
   nsURLClassifier.manifest \
   $(NULL)

@@ -21,3 +21,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'feeds'
 
+EXTRA_COMPONENTS += [
+    'FeedProcessor.js',
+    'FeedProcessor.manifest',
+]

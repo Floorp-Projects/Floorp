@@ -9,7 +9,7 @@ VPATH     = @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsDefaultCLH.manifest \
   nsDefaultCLH.js \
   $(NULL)
