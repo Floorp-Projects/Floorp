@@ -994,8 +994,7 @@ let PlacesToolbarHelper = {
 //// BookmarkingUI
 
 /**
- * Handles the bookmarks star button in the URL bar, as well as the bookmark
- * menu button.
+ * Handles the bookmarks menu-button in the toolbar.
  */
 
 let BookmarkingUI = {
@@ -1007,18 +1006,22 @@ let BookmarkingUI = {
   },
 
   get star() {
-    if (!this._star) {
-      this._star = document.getElementById("star-button");
+    if (!this._star && this.button) {
+      this._star = document.getAnonymousElementByAttribute(this.button,
+                                                           "anonid",
+                                                           "button");
     }
     return this._star;
   },
 
   get anchor() {
-    if (this.star && isElementVisible(this.star)) {
+    if (!this._anchor && this.star && isElementVisible(this.star)) {
       // Anchor to the icon, so the panel looks more natural.
-      return this.star;
+      this._anchor = document.getAnonymousElementByAttribute(this.star,
+                                                             "class",
+                                                             "toolbarbutton-icon");
     }
-    return null;
+    return this._anchor;
   },
 
   STATUS_UPDATING: -1,
@@ -1027,9 +1030,9 @@ let BookmarkingUI = {
   get status() {
     if (this._pendingStmt)
       return this.STATUS_UPDATING;
-    return this.star &&
-           this.star.hasAttribute("starred") ? this.STATUS_STARRED
-                                             : this.STATUS_UNSTARRED;
+    return this.button &&
+           this.button.hasAttribute("starred") ? this.STATUS_STARRED
+                                               : this.STATUS_UNSTARRED;
   },
 
   get _starredTooltip()
@@ -1098,11 +1101,12 @@ let BookmarkingUI = {
 
     if (aState == "invalid") {
       this.star.setAttribute("disabled", "true");
-      this.star.removeAttribute("starred");
+      this.button.removeAttribute("starred");
     }
     else {
       this.star.removeAttribute("disabled");
     }
+    this._updateToolbarStyle();
   },
 
   _updateToolbarStyle: function BUI__updateToolbarStyle() {
@@ -1143,6 +1147,8 @@ let BookmarkingUI = {
 
   customizeDone: function BUI_customizeDone() {
     delete this._button;
+    delete this._star;
+    delete this._anchor;
     this.onToolbarVisibilityChange();
     this._updateToolbarStyle();
   },
@@ -1162,7 +1168,7 @@ let BookmarkingUI = {
   },
 
   updateStarState: function BUI_updateStarState() {
-    if (!this.star || (this._uri && gBrowser.currentURI.equals(this._uri))) {
+    if (!this.button || (this._uri && gBrowser.currentURI.equals(this._uri))) {
       return;
     }
 
@@ -1211,17 +1217,17 @@ let BookmarkingUI = {
   },
 
   _updateStar: function BUI__updateStar() {
-    if (!this.star) {
+    if (!this.button) {
       return;
     }
 
     if (this._itemIds.length > 0) {
-      this.star.setAttribute("starred", "true");
-      this.star.setAttribute("tooltiptext", this._starredTooltip);
+      this.button.setAttribute("starred", "true");
+      this.button.setAttribute("tooltiptext", this._starredTooltip);
     }
     else {
-      this.star.removeAttribute("starred");
-      this.star.setAttribute("tooltiptext", this._unstarredTooltip);
+      this.button.removeAttribute("starred");
+      this.button.setAttribute("tooltiptext", this._unstarredTooltip);
     }
   },
 
@@ -1238,6 +1244,10 @@ let BookmarkingUI = {
   // nsINavBookmarkObserver
   onItemAdded: function BUI_onItemAdded(aItemId, aParentId, aIndex, aItemType,
                                         aURI) {
+    if (!this.button) {
+      return;
+    }
+
     if (aURI && aURI.equals(this._uri)) {
       // If a new bookmark has been added to the tracked uri, register it.
       if (this._itemIds.indexOf(aItemId) == -1) {
@@ -1248,6 +1258,10 @@ let BookmarkingUI = {
   },
 
   onItemRemoved: function BUI_onItemRemoved(aItemId) {
+    if (!this.button) {
+      return;
+    }
+
     let index = this._itemIds.indexOf(aItemId);
     // If one of the tracked bookmarks has been removed, unregister it.
     if (index != -1) {
@@ -1258,6 +1272,10 @@ let BookmarkingUI = {
 
   onItemChanged: function BUI_onItemChanged(aItemId, aProperty,
                                             aIsAnnotationProperty, aNewValue) {
+    if (!this.button) {
+      return;
+    }
+
     if (aProperty == "uri") {
       let index = this._itemIds.indexOf(aItemId);
       // If the changed bookmark was tracked, check if it is now pointing to
