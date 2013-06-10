@@ -33,6 +33,7 @@
   margin-top: 3px;
 }
 
+#main-window[chromehidden~="menubar"][sizemode="normal"] #toolbar-menubar ~ #TabsToolbar,
 #main-window[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
   margin-top: 15px;
 }
