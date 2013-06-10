@@ -975,6 +975,9 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
         case OES_texture_float:
             return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float
                                                           : GLContext::ARB_texture_float);
+        case OES_texture_float_linear:
+            return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float_linear
+                                                          : GLContext::ARB_texture_float);
         case EXT_texture_filter_anisotropic:
             return gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
         case WEBGL_compressed_texture_s3tc:
@@ -1040,6 +1043,10 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     else if (CompareWebGLExtensionName(name, "OES_texture_float"))
     {
         ext = OES_texture_float;
+    }
+    else if (CompareWebGLExtensionName(name, "OES_texture_float_linear"))
+    {
+        ext = OES_texture_float_linear;
     }
     else if (CompareWebGLExtensionName(name, "OES_standard_derivatives"))
     {
@@ -1128,6 +1135,9 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
                 break;
             case OES_texture_float:
                 obj = new WebGLExtensionTextureFloat(this);
+                break;
+            case OES_texture_float_linear:
+                obj = new WebGLExtensionTextureFloatLinear(this);
                 break;
             default:
                 MOZ_ASSERT(false, "should not get there.");
@@ -1470,6 +1480,8 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
         arr.AppendElement(NS_LITERAL_STRING("OES_element_index_uint"));
     if (IsExtensionSupported(cx, OES_texture_float))
         arr.AppendElement(NS_LITERAL_STRING("OES_texture_float"));
+    if (IsExtensionSupported(cx, OES_texture_float_linear))
+        arr.AppendElement(NS_LITERAL_STRING("OES_texture_float_linear"));
     if (IsExtensionSupported(cx, OES_standard_derivatives))
         arr.AppendElement(NS_LITERAL_STRING("OES_standard_derivatives"));
     if (IsExtensionSupported(cx, EXT_texture_filter_anisotropic))

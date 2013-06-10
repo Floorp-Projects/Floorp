@@ -58,6 +58,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_pixel_buffer_object",
     "GL_ARB_ES2_compatibility",
     "GL_OES_texture_float",
+    "GL_OES_texture_float_linear",
     "GL_ARB_texture_float",
     "GL_EXT_unpack_subimage",
     "GL_OES_standard_derivatives",
