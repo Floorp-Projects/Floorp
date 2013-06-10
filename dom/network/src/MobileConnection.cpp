@@ -242,6 +242,38 @@ MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** request)
 }
 
 NS_IMETHODIMP
+MobileConnection::SetRoamingPreference(const nsAString& aMode, nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetRoamingPreference(GetOwner(), aMode, aDomRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetRoamingPreference(nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetRoamingPreference(GetOwner(), aDomRequest);
+}
+
+NS_IMETHODIMP
 MobileConnection::SendMMI(const nsAString& aMMIString,
                           nsIDOMDOMRequest** aRequest)
 {
