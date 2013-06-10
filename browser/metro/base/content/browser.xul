@@ -180,7 +180,7 @@
   <stack id="stack" flex="1">
     <!-- Page Area -->
     <vbox id="page">
-      <vbox id="tray" class="tray-toolbar" visible="true" observes="bcast_windowState" >
+      <vbox id="tray" class="tray-toolbar" observes="bcast_windowState" >
         <!-- Tabs -->
         <hbox id="tabs-container" observes="bcast_windowState">
           <box id="tabs" flex="1"
