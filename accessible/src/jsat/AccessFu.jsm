@@ -412,7 +412,7 @@ var Output = {
       {
         let highlightBox = this.highlightBox ? this.highlightBox.get() : null;
         if (highlightBox)
-          highlightBox.get().style.display = 'none';
+          highlightBox.style.display = 'none';
         break;
       }
       case 'showAnnouncement':
