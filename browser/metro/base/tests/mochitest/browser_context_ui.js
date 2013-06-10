@@ -13,27 +13,32 @@ gTests.push({
   desc: "Context UI on about:start",
   run: function testAboutStart() {
     yield addTab("about:start");
+
+    yield waitForCondition(function () {
+      return StartUI.isStartPageVisible;
+      });
+
     is(StartUI.isVisible, true, "Start UI is displayed on about:start");
-    is(ContextUI.isVisible, true, "Toolbar is displayed on about:start");
-    is(ContextUI.isExpanded, false, "Tab bar is not displayed initially");
+    is(ContextUI.isVisible, true, "Navbar is displayed on about:start");
+    is(ContextUI.isExpanded, false, "Tabbar is not displayed initially");
     is(Elements.navbar.isShowing, false, "Appbar is not displayed initially");
 
     // toggle on
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Toolbar is still visible after one swipe");
-    is(ContextUI.isExpanded, true, "Tab bar is visible after one swipe");
+    is(ContextUI.isVisible, true, "Navbar is still visible after one swipe");
+    is(ContextUI.isExpanded, true, "Tabbar is visible after one swipe");
     is(Elements.navbar.isShowing, true, "Appbar is visible after one swipe");
 
     // toggle off
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Toolbar is still visible after second swipe");
-    is(ContextUI.isExpanded, false, "Tab bar is hidden after second swipe");
+    is(ContextUI.isVisible, true, "Navbar is still visible after second swipe");
+    is(ContextUI.isExpanded, false, "Tabbar is hidden after second swipe");
     is(Elements.navbar.isShowing, false, "Appbar is hidden after second swipe");
 
     // sanity check - toggle on again
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Toolbar is still visible after third swipe");
-    is(ContextUI.isExpanded, true, "Tab bar is visible after third swipe");
+    is(ContextUI.isVisible, true, "Navbar is still visible after third swipe");
+    is(ContextUI.isExpanded, true, "Tabbar is visible after third swipe");
     is(Elements.navbar.isShowing, true, "Appbar is visible after third swipe");
 
     is(StartUI.isVisible, true, "Start UI is still visible");
@@ -46,18 +51,18 @@ gTests.push({
     yield addTab("about:");
     ContextUI.dismiss();
     is(StartUI.isVisible, false, "Start UI is not visible on about:");
-    is(ContextUI.isVisible, false, "Toolbar is not initially visible on about:");
-    is(ContextUI.isExpanded, false, "Tab bar is not initially visible on about:");
+    is(ContextUI.isVisible, false, "Navbar is not initially visible on about:");
+    is(ContextUI.isExpanded, false, "Tabbar is not initially visible on about:");
     is(Elements.navbar.isShowing, false, "Appbar is not initially visible on about on about::");
 
     doEdgeUIGesture();
-    is(ContextUI.isVisible, true, "Toolbar is visible after one swipe");
-    is(ContextUI.isExpanded, true, "Tab bar is visble after one swipe");
+    is(ContextUI.isVisible, true, "Navbar is visible after one swipe");
+    is(ContextUI.isExpanded, true, "Tabbar is visble after one swipe");
     is(Elements.navbar.isShowing, true, "Appbar is visible after one swipe");
 
     doEdgeUIGesture();
-    is(ContextUI.isVisible, false, "Toolbar is not visible after second swipe");
-    is(ContextUI.isExpanded, false, "Tab bar is not visible after second swipe");
+    is(ContextUI.isVisible, false, "Navbar is not visible after second swipe");
+    is(ContextUI.isExpanded, false, "Tabbar is not visible after second swipe");
     is(Elements.navbar.isShowing, false, "Appbar is hidden after second swipe");
 
     is(StartUI.isVisible, false, "Start UI is still not visible");
