@@ -21,3 +21,8 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXTRA_JS_MODULES += [
+    'libhardware_legacy.js',
+    'wifi_worker.js',
+]
+

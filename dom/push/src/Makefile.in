@@ -14,9 +14,5 @@ DISABLED_EXTRA_COMPONENTS = \
   Push.manifest \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  PushService.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

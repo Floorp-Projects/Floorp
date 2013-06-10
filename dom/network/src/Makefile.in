@@ -25,11 +25,6 @@ DISABLED_EXTRA_COMPONENTS += \
   NetworkStatsManager.manifest \
   NetworkStatsManager.js \
   $(NULL)
-
-EXTRA_JS_MODULES =   \
-  NetworkStatsService.jsm \
-  NetworkStatsDB.jsm \
-  $(NULL)
 endif
 
 include $(topsrcdir)/dom/dom-config.mk
