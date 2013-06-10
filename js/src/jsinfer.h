@@ -383,8 +383,9 @@ enum {
      */
     OBJECT_FLAG_LENGTH_OVERFLOW       = 0x00040000,
 
-    /* Whether any represented script is considered uninlineable in JM. */
-    OBJECT_FLAG_UNINLINEABLE          = 0x00080000,
+    /*
+     * UNUSED FLAG                    = 0x00080000,
+     */
 
     /* Whether any objects have been iterated over. */
     OBJECT_FLAG_ITERATED              = 0x00100000,

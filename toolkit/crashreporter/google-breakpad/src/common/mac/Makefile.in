@@ -10,7 +10,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= breakpad_mac_common_s
-HOST_LIBRARY_NAME = host_breakpad_mac_common_s
+DISABLED_HOST_LIBRARY_NAME = host_breakpad_mac_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 

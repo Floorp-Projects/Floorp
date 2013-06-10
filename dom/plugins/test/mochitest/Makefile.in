@@ -163,7 +163,7 @@ MOCHITEST_FILES += \
   $(NULL)
 endif
 
-ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+ifeq (,$(filter-out gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
 MOCHITEST_FILES += \
 		test_copyText.html \
 		test_crash_nested_loop.html \

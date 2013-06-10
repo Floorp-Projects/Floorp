@@ -397,13 +397,11 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
     const gfx3DMatrix& rootTransform = GetRoot()->GetTransform();
     float devPixelRatioX = 1 / rootTransform.GetXScale();
     float devPixelRatioY = 1 / rootTransform.GetYScale();
-    const gfx::Rect& metricsDisplayPort =
+    const CSSRect& metricsDisplayPort =
       (aDrawingCritical && !metrics.mCriticalDisplayPort.IsEmpty()) ?
         metrics.mCriticalDisplayPort : metrics.mDisplayPort;
-    gfx::Rect displayPort((metricsDisplayPort.x + metrics.mScrollOffset.x) * devPixelRatioX,
-                          (metricsDisplayPort.y + metrics.mScrollOffset.y) * devPixelRatioY,
-                          metricsDisplayPort.width * devPixelRatioX,
-                          metricsDisplayPort.height * devPixelRatioY);
+    LayerRect displayPort = LayerRect::FromCSSRect(metricsDisplayPort + metrics.mScrollOffset,
+                                                   devPixelRatioX, devPixelRatioY);
 
     return AndroidBridge::Bridge()->ProgressiveUpdateCallback(
       aHasPendingNewThebesContent, displayPort, devPixelRatioX, aDrawingCritical,

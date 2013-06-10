@@ -12,7 +12,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= bz2
-HOST_LIBRARY_NAME = hostbz2
+DISABLED_HOST_LIBRARY_NAME = hostbz2
 FORCE_STATIC_LIB= 1
 ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1

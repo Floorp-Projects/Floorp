@@ -30,7 +30,7 @@ EXTRA_PP_COMPONENTS = \
   extensions.manifest \
   $(NULL)
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   addonManager.js \
   amContentHandler.js \
   amWebInstallListener.js \

@@ -464,7 +464,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
                                          majorVersion,
                                          minorVersion);
   }
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
   nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
                                        gtk_major_version,
                                        gtk_minor_version);

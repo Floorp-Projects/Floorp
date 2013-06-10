@@ -44,13 +44,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('os2', 'cocoa', 'windows'):
         'nsBaseClipboard.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'os2', 'cocoa', 'windows',
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'os2', 'cocoa', 'windows',
                                     'android', 'gonk'):
     CPP_SOURCES += [
         'nsBaseFilePicker.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'windows', 'cocoa'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
     CPP_SOURCES += [
         'nsNativeTheme.cpp',
     ]

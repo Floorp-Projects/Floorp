@@ -67,6 +67,11 @@ let lastCoordinates = null;
 let isTap = false;
 // whether to send mouse event
 let mouseEventsOnly = false;
+
+Cu.import("resource://gre/modules/services-common/log4moz.js");
+let logger = Log4Moz.repository.getLogger("Marionette");
+logger.info("loaded marionette-listener.js");
+
 /**
  * Called when listener is first started up. 
  * The listener sends its unique window ID and its current URI to the actor.

@@ -21,7 +21,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'win_dirent.cpp',
     ]
 
-if CONFIG['MOZ_ENABLE_GTK2']:
+if CONFIG['MOZ_ENABLE_GTK']:
     have_progressui = 1
     CPP_SOURCES += [
         'progressui_gtk.cpp',

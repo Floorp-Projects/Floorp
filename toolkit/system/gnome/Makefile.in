@@ -33,5 +33,10 @@ CXXFLAGS += \
 	$(MOZ_GNOMEVFS_CFLAGS) \
 	$(MOZ_GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
-	$(MOZ_GTK2_CFLAGS) \
 	$(NULL)
+
+ifdef MOZ_ENABLE_GTK
+CXXFLAGS += \
+	$(TK_CFLAGS) \
+	$(NULL)
+endif

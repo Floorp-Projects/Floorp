@@ -51,6 +51,7 @@ using nsTouchEvent;
 using RemoteDOMEvent;
 using mozilla::dom::ScreenOrientation;
 using mozilla::layers::TextureFactoryIdentifier;
+using mozilla::CSSIntPoint;
 namespace mozilla {
 namespace dom {
 
@@ -307,21 +308,21 @@ child:
      * the scroll offset. This message is expected to round-trip back to
      * ZoomToRect() with a rect indicating where we should zoom to.
      */
-    HandleDoubleTap(nsIntPoint point);
+    HandleDoubleTap(CSSIntPoint point);
 
     /**
      * Requests handling of a single tap. |point| is in CSS pixels, relative to
      * the scroll offset. This message is expected to send a "mousedown" and
      * "mouseup" series of events at this point.
      */
-    HandleSingleTap(nsIntPoint point);
+    HandleSingleTap(CSSIntPoint point);
 
     /**
      * Requests handling of a long tap. |point| is in CSS pixels, relative to
      * the scroll offset. This message is expected to send a "contextmenu"
      * events at this point.
      */
-    HandleLongTap(nsIntPoint point);
+    HandleLongTap(CSSIntPoint point);
 
     /**
      * Sending an activate message moves focus to the child.

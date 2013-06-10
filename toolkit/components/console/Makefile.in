@@ -10,7 +10,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   jsconsole-clhandler.js \
   jsconsole-clhandler.manifest \
   $(NULL)

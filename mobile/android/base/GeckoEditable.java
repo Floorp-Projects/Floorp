@@ -141,7 +141,8 @@ final class GeckoEditable
 
         static Action newReplaceText(CharSequence text, int start, int end) {
             if (start < 0 || start > end) {
-                throw new IllegalArgumentException("invalid replace text offsets");
+                throw new IllegalArgumentException(
+                    "invalid replace text offsets: " + start + " to " + end);
             }
             final Action action = new Action(TYPE_REPLACE_TEXT);
             action.mSequence = text;
@@ -154,7 +155,8 @@ final class GeckoEditable
             // start == -1 when the start offset should remain the same
             // end == -1 when the end offset should remain the same
             if (start < -1 || end < -1) {
-                throw new IllegalArgumentException("invalid selection offsets");
+                throw new IllegalArgumentException(
+                    "invalid selection offsets: " + start + " to " + end);
             }
             final Action action = new Action(TYPE_SET_SELECTION);
             action.mStart = start;
@@ -164,7 +166,8 @@ final class GeckoEditable
 
         static Action newSetSpan(Object object, int start, int end, int flags) {
             if (start < 0 || start > end) {
-                throw new IllegalArgumentException("invalid span offsets");
+                throw new IllegalArgumentException(
+                    "invalid span offsets: " + start + " to " + end);
             }
             final Action action = new Action(TYPE_SET_SPAN);
             action.mSpanObject = object;
@@ -793,7 +796,8 @@ final class GeckoEditable
             Log.d(LOGTAG, "onSelectionChange(" + start + ", " + end + ")");
         }
         if (start < 0 || start > mText.length() || end < 0 || end > mText.length()) {
-            throw new IllegalArgumentException("invalid selection notification range");
+            throw new IllegalArgumentException("invalid selection notification range: " +
+                start + " to " + end + ", length: " + mText.length());
         }
         final int seqnoWhenPosted = ++mGeckoUpdateSeqno;
 
@@ -844,14 +848,16 @@ final class GeckoEditable
                           unboundedOldEnd + ", " + unboundedNewEnd + ")");
         }
         if (start < 0 || start > unboundedOldEnd) {
-            throw new IllegalArgumentException("invalid text notification range");
+            throw new IllegalArgumentException("invalid text notification range: " +
+                start + " to " + unboundedOldEnd);
         }
         /* For the "end" parameters, Gecko can pass in a large
            number to denote "end of the text". Fix that here */
         final int oldEnd = unboundedOldEnd > mText.length() ? mText.length() : unboundedOldEnd;
         // new end should always match text
         if (start != 0 && unboundedNewEnd != (start + text.length())) {
-            throw new IllegalArgumentException("newEnd does not match text");
+            throw new IllegalArgumentException("newEnd does not match text: " +
+                unboundedNewEnd + " vs " + (start + text.length()));
         }
         final int newEnd = start + text.length();
 
@@ -1087,7 +1093,8 @@ final class GeckoEditable
 
         CharSequence text = source;
         if (start < 0 || start > end || end > text.length()) {
-            throw new IllegalArgumentException("invalid replace offsets");
+            throw new IllegalArgumentException("invalid replace offsets: " +
+                start + " to " + end + ", length: " + text.length());
         }
         if (start != 0 || end != text.length()) {
             text = text.subSequence(start, end);

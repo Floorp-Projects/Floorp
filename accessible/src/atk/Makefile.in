@@ -18,8 +18,10 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS  	+= $(MOZ_GTK2_CFLAGS)
-CXXFLAGS  += $(MOZ_GTK2_CFLAGS)
+ifdef MOZ_ENABLE_GTK
+CFLAGS      += $(TK_CFLAGS)
+CXXFLAGS    += $(TK_CFLAGS)
+endif
 
 ifdef MOZ_ENABLE_DBUS
 CXXFLAGS += $(MOZ_DBUS_CFLAGS)

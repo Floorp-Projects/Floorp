@@ -11,7 +11,7 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   SystemMessageManager.js \
   SystemMessageInternal.js \
   SystemMessageManager.manifest \
