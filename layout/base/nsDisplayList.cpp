@@ -643,19 +643,10 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     NSAppUnitsToDoublePixels(aViewport.height, auPerDevPixel));
 
   if (aDisplayPort) {
-    metrics.mDisplayPort = mozilla::gfx::Rect(
-      NSAppUnitsToDoublePixels(aDisplayPort->x, auPerDevPixel),
-      NSAppUnitsToDoublePixels(aDisplayPort->y, auPerDevPixel),
-      NSAppUnitsToDoublePixels(aDisplayPort->width, auPerDevPixel),
-      NSAppUnitsToDoublePixels(aDisplayPort->height, auPerDevPixel));
-
-      if (aCriticalDisplayPort) {
-        metrics.mCriticalDisplayPort = mozilla::gfx::Rect(
-          NSAppUnitsToDoublePixels(aCriticalDisplayPort->x, auPerDevPixel),
-          NSAppUnitsToDoublePixels(aCriticalDisplayPort->y, auPerDevPixel),
-          NSAppUnitsToDoublePixels(aCriticalDisplayPort->width, auPerDevPixel),
-          NSAppUnitsToDoublePixels(aCriticalDisplayPort->height, auPerDevPixel));
-      }
+    metrics.mDisplayPort = CSSRect::FromAppUnits(*aDisplayPort);
+    if (aCriticalDisplayPort) {
+      metrics.mCriticalDisplayPort = CSSRect::FromAppUnits(*aCriticalDisplayPort);
+    }
   }
 
   nsIScrollableFrame* scrollableFrame = nullptr;

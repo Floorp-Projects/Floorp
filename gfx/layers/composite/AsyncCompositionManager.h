@@ -130,7 +130,7 @@ private:
                         float aZoom,
                         const CSSRect& aCssPageRect,
                         bool aLayersUpdated,
-                        const gfx::Rect& aDisplayPort,
+                        const CSSRect& aDisplayPort,
                         float aDisplayResolution,
                         bool aIsFirstPaint,
                         gfx::Margin& aFixedLayerMargins,

@@ -116,8 +116,9 @@ AppendToString(nsACString& s, const nsIntRect& r,
   return s += sfx;
 }
 
+template<class T>
 nsACString&
-AppendToString(nsACString& s, const Rect& r,
+AppendToString(nsACString& s, const RectTyped<T>& r,
                const char* pfx, const char* sfx)
 {
   s += pfx;

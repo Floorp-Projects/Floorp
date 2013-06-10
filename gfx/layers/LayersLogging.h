@@ -53,8 +53,9 @@ nsACString&
 AppendToString(nsACString& s, const nsIntRect& r,
                const char* pfx="", const char* sfx="");
 
+template<class T>
 nsACString&
-AppendToString(nsACString& s, const mozilla::gfx::Rect& r,
+AppendToString(nsACString& s, const mozilla::gfx::RectTyped<T>& r,
                const char* pfx="", const char* sfx="");
 
 nsACString&
