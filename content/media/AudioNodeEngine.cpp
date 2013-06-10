@@ -70,6 +70,24 @@ AudioBlockCopyChannelWithScale(const float* aInput,
 }
 
 void
+BufferComplexMultiply(const float* aInput,
+                      const float* aScale,
+                      float* aOutput,
+                      uint32_t aSize)
+{
+  for (uint32_t i = 0; i < aSize * 2; i += 2) {
+    float real1 = aInput[i];
+    float imag1 = aInput[i + 1];
+    float real2 = aScale[i];
+    float imag2 = aScale[i + 1];
+    float realResult = real1 * real2 - imag1 * imag2;
+    float imagResult = real1 * imag2 + imag1 * real2;
+    aOutput[i] = realResult;
+    aOutput[i + 1] = imagResult;
+  }
+}
+
+void
 AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                const float aScale[WEBAUDIO_BLOCK_SIZE],
                                float aOutput[WEBAUDIO_BLOCK_SIZE])
