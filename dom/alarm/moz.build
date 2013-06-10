@@ -27,3 +27,7 @@ CPP_SOURCES += [
     'AlarmHalService.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'AlarmsManager.js',
+    'AlarmsManager.manifest',
+]

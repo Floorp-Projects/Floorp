@@ -14,7 +14,7 @@ LIBRARY_NAME	= migration_s
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   ProfileMigrator.js \
   FirefoxProfileMigrator.js \
   $(NULL)
@@ -24,7 +24,7 @@ EXTRA_PP_COMPONENTS = \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_COMPONENTS += IEProfileMigrator.js \
+DISABLED_EXTRA_COMPONENTS += IEProfileMigrator.js \
                     $(NULL)
 
 EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \

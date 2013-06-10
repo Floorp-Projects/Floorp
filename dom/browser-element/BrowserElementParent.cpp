@@ -245,8 +245,8 @@ class DispatchAsyncScrollEventRunnable : public nsRunnable
 {
 public:
   DispatchAsyncScrollEventRunnable(TabParent* aTabParent,
-                                   const gfx::Rect& aContentRect,
-                                   const gfx::Size& aContentSize)
+                                   const CSSRect& aContentRect,
+                                   const CSSSize& aContentSize)
     : mTabParent(aTabParent)
     , mContentRect(aContentRect)
     , mContentSize(aContentSize)
@@ -256,8 +256,8 @@ public:
 
 private:
   nsRefPtr<TabParent> mTabParent;
-  const gfx::Rect mContentRect;
-  const gfx::Size mContentSize;
+  const CSSRect mContentRect;
+  const CSSSize mContentSize;
 };
 
 NS_IMETHODIMP DispatchAsyncScrollEventRunnable::Run()
@@ -277,8 +277,8 @@ NS_IMETHODIMP DispatchAsyncScrollEventRunnable::Run()
 
 bool
 BrowserElementParent::DispatchAsyncScrollEvent(TabParent* aTabParent,
-                                               const gfx::Rect& aContentRect,
-                                               const gfx::Size& aContentSize)
+                                               const CSSRect& aContentRect,
+                                               const CSSSize& aContentSize)
 {
   nsRefPtr<DispatchAsyncScrollEventRunnable> runnable =
     new DispatchAsyncScrollEventRunnable(aTabParent, aContentRect,

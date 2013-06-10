@@ -12,3 +12,4 @@ CPP_SOURCES += [
     'guid_creator.cc',
 ]
 
+HOST_LIBRARY_NAME = 'host_breakpad_solaris_common_s'

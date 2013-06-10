@@ -1039,11 +1039,11 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         cx = ancx.get();
     }
 
-    AutoSaveFrameChain asfc(cx);
-    if (saveFrameChain && !asfc.save())
-        return false;
-
     {
+        AutoSaveFrameChain asfc(cx);
+        if (saveFrameChain && !asfc.save())
+            return false;
+
         JSAutoCompartment ac(cx, global);
         uint32_t oldopts = JS_GetOptions(cx);
         uint32_t opts = oldopts & ~(JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);

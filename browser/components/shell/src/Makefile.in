@@ -32,7 +32,7 @@ endif
 endif
 endif
 
-EXTRA_COMPONENTS = nsSetDefaultBrowser.js nsSetDefaultBrowser.manifest
+DISABLED_EXTRA_COMPONENTS = nsSetDefaultBrowser.js nsSetDefaultBrowser.manifest
 
 include $(topsrcdir)/config/rules.mk
 

@@ -469,6 +469,26 @@ var BrowserApp = {
         NativeWindow.contextmenus._shareStringWithDefault(phoneNumber, title);
       });
 
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.addToContacts"),
+      NativeWindow.contextmenus.emailLinkContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        sendMessageToJava({
+          type: "Contact:Add",
+          email: url
+        });
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.addToContacts"),
+      NativeWindow.contextmenus.phoneNumberLinkContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        sendMessageToJava({
+          type: "Contact:Add",
+          phone: url
+        });
+      });
+
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.bookmarkLink"),
       NativeWindow.contextmenus.linkBookmarkableContext,
       function(aTarget) {

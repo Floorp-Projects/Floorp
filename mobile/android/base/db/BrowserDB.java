@@ -65,6 +65,8 @@ public class BrowserDB {
 
         public boolean isVisited(ContentResolver cr, String uri);
 
+        public int getReadingListCount(ContentResolver cr);
+
         public boolean isBookmark(ContentResolver cr, String uri);
 
         public boolean isReadingListItem(ContentResolver cr, String uri);
@@ -191,6 +193,10 @@ public class BrowserDB {
 
     public static boolean isVisited(ContentResolver cr, String uri) {
         return sDb.isVisited(cr, uri);
+    }
+
+    public static int getReadingListCount(ContentResolver cr) {
+        return sDb.getReadingListCount(cr);
     }
 
     public static boolean isBookmark(ContentResolver cr, String uri) {

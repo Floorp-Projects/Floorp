@@ -32,6 +32,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES	+= -D_IMPL_NS_COM
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-CXXFLAGS += $(MOZ_GTK2_CFLAGS)
+ifdef MOZ_WIDGET_GTK
+CXXFLAGS        += $(TK_CFLAGS)
 endif

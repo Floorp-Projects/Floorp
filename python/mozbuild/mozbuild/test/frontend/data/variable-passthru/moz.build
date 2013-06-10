@@ -21,3 +21,5 @@ SIMPLE_PROGRAMS += ['fans.x', 'tans.x']
 CSRCS += ['fans.c', 'tans.c']
 
 CMMSRCS = ['fans.mm', 'tans.mm']
+
+SSRCS = ['fans.S', 'tans.S']

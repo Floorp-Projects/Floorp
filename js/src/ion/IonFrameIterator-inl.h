@@ -26,13 +26,13 @@ SnapshotIterator::readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Va
     else
         skip();
 
+    // Skip slot for arguments object.
+    if (script->argumentsHasVarBinding())
+        skip();
+
     if (thisv)
         *thisv = read();
     else
-        skip();
-
-    // Skip slot for arguments object.
-    if (script->argumentsHasVarBinding())
         skip();
 
     unsigned i = 0;
@@ -158,6 +158,10 @@ InlineFrameIteratorMaybeGC<allowGC>::thisObject() const
 
     // scopeChain
     s.skip();
+
+    // Arguments object.
+    if (script()->argumentsHasVarBinding())
+        s.skip();
 
     // In strict modes, |this| may not be an object and thus may not be
     // readable which can either segv in read or trigger the assertion.

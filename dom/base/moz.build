@@ -97,3 +97,9 @@ CPP_SOURCES += [
     'nsWindowRoot.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'ConsoleAPI.js',
+    'ConsoleAPI.manifest',
+    'SiteSpecificUserAgent.js',
+    'SiteSpecificUserAgent.manifest',
+]

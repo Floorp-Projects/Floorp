@@ -205,9 +205,9 @@ public:
     virtual bool RecvShow(const nsIntSize& size);
     virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation);
     virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
-    virtual bool RecvHandleDoubleTap(const nsIntPoint& aPoint);
-    virtual bool RecvHandleSingleTap(const nsIntPoint& aPoint);
-    virtual bool RecvHandleLongTap(const nsIntPoint& aPoint);
+    virtual bool RecvHandleDoubleTap(const CSSIntPoint& aPoint);
+    virtual bool RecvHandleSingleTap(const CSSIntPoint& aPoint);
+    virtual bool RecvHandleLongTap(const CSSIntPoint& aPoint);
     virtual bool RecvActivate();
     virtual bool RecvDeactivate();
     virtual bool RecvMouseEvent(const nsString& aType,
@@ -384,7 +384,7 @@ private:
 
     // Wrapper for nsIDOMWindowUtils.setCSSViewport(). This updates some state
     // variables local to this class before setting it.
-    void SetCSSViewport(float aX, float aY);
+    void SetCSSViewport(const CSSSize& aSize);
 
     // Recalculates the display state, including the CSS
     // viewport. This should be called whenever we believe the

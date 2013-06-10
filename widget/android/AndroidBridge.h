@@ -194,7 +194,7 @@ public:
     void ContentDocumentChanged();
     bool IsContentDocumentDisplayed();
 
-    bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, gfx::Rect& aViewport, float& aScaleX, float& aScaleY);
+    bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, gfx::Rect& aViewport, float& aScaleX, float& aScaleY);
 
     void AcknowledgeEvent();
 
@@ -377,7 +377,7 @@ public:
                           ScreenPoint& aScrollOffset, float& aScaleX, float& aScaleY,
                           gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
     void SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
-                          bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
+                          bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
                           bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset);
 
     void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen);
@@ -596,10 +596,10 @@ public:
     jobject SetNativePanZoomController(jobject obj);
     // GeckoContentController methods
     void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
-    void HandleDoubleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
-    void HandleSingleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
-    void HandleLongTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
-    void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect, const gfx::Size& aScrollableSize) MOZ_OVERRIDE;
+    void HandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
+    void HandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
+    void HandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE;
+    void SendAsyncScrollDOMEvent(const CSSRect& aContentRect, const CSSSize& aScrollableSize) MOZ_OVERRIDE;
     void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
     int64_t RunDelayedTasks();
 };

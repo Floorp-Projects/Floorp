@@ -67,26 +67,6 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
     }
     RootedFunction fun(cx, obj->toFunction());
 
-    /*
-     * Mark the function's script as uninlineable, to expand any of its
-     * frames on the stack before we go looking for them. This allows the
-     * below walk to only check each explicit frame rather than needing to
-     * check any calls that were inlined.
-     */
-    if (fun->isInterpreted()) {
-        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
-            return false;
-        fun->nonLazyScript()->uninlineable = true;
-        MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
-
-        /* If we're a callsite clone, mark the original as unlineable also. */
-        if (fun->nonLazyScript()->isCallsiteClone) {
-            RootedFunction original(cx, fun->nonLazyScript()->originalFunction());
-            original->nonLazyScript()->uninlineable = true;
-            MarkTypeObjectFlags(cx, original, OBJECT_FLAG_UNINLINEABLE);
-        }
-    }
-
     /* Set to early to null in case of error */
     vp.setNull();
 
