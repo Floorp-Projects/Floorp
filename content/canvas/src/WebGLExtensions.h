@@ -140,6 +140,16 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionTextureFloatLinear
+    : public WebGLExtensionBase
+{
+public:
+    WebGLExtensionTextureFloatLinear(WebGLContext*);
+    virtual ~WebGLExtensionTextureFloatLinear();
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 } // namespace mozilla
 
 #endif // WEBGLEXTENSIONS_H_

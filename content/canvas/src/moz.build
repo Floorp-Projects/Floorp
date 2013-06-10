@@ -45,6 +45,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionStandardDerivatives.cpp',
         'WebGLExtensionTextureFilterAnisotropic.cpp',
         'WebGLExtensionTextureFloat.cpp',
+        'WebGLExtensionTextureFloatLinear.cpp',
         'WebGLFramebuffer.cpp',
         'WebGLObjectModel.cpp',
         'WebGLProgram.cpp',
