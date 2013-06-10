@@ -180,6 +180,14 @@ int cubeb_init(cubeb ** context, char const * context_name);
     @retval Read-only string identifying current backend. */
 char const * cubeb_get_backend_id(cubeb * context);
 
+/** Get the maximum possible number of channels.
+    @param context
+    @param max_channels The maximum number of channels.
+    @retval CUBEB_OK
+    @retval CUBEB_ERROR_INVALID_PARAMETER
+    @retval CUBEB_ERROR */
+int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels);
+
 /** Destroy an application context.
     @param context */
 void cubeb_destroy(cubeb * context);

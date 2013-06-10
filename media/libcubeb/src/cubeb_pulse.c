@@ -9,6 +9,7 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <pulse/pulseaudio.h>
+#include <string.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
@@ -22,6 +23,8 @@ MAKE_TYPEDEF(pa_context_new);
 MAKE_TYPEDEF(pa_context_rttime_new);
 MAKE_TYPEDEF(pa_context_set_state_callback);
 MAKE_TYPEDEF(pa_context_unref);
+MAKE_TYPEDEF(pa_context_get_sink_info_by_name);
+MAKE_TYPEDEF(pa_context_get_server_info);
 MAKE_TYPEDEF(pa_frame_size);
 MAKE_TYPEDEF(pa_operation_get_state);
 MAKE_TYPEDEF(pa_operation_unref);
@@ -61,11 +64,12 @@ struct cubeb {
   void * libpulse;
   pa_threaded_mainloop * mainloop;
   pa_context * context;
+  pa_sink_info * default_sink_info;
   int error;
 };
 
 struct cubeb_stream {
-  struct cubeb * context;
+  cubeb * context;
   pa_stream * stream;
   cubeb_data_callback data_callback;
   cubeb_state_callback state_callback;
@@ -80,6 +84,22 @@ enum cork_state {
   CORK = 1 << 0,
   NOTIFY = 1 << 1
 };
+
+static void
+sink_info_callback(pa_context * context, const pa_sink_info * info, int eol, void * u)
+ {
+  cubeb * ctx = u;
+   if (!eol) {
+    ctx->default_sink_info = malloc(sizeof(pa_sink_info));
+    memcpy(ctx->default_sink_info, info, sizeof(pa_sink_info));
+   }
+ }
+
+static void
+server_info_callback(pa_context * context, const pa_server_info * info, void * u)
+{
+  WRAP(pa_context_get_sink_info_by_name)(context, info->default_sink_name, sink_info_callback, u);
+}
 
 static void
 context_state_callback(pa_context * c, void * u)
@@ -275,6 +295,8 @@ pulse_init(cubeb ** context, char const * context_name)
   LOAD(pa_context_new);
   LOAD(pa_context_rttime_new);
   LOAD(pa_context_set_state_callback);
+  LOAD(pa_context_get_sink_info_by_name);
+  LOAD(pa_context_get_server_info);
   LOAD(pa_context_unref);
   LOAD(pa_frame_size);
   LOAD(pa_operation_get_state);
@@ -327,6 +349,7 @@ pulse_init(cubeb ** context, char const * context_name)
     pulse_destroy(ctx);
     return CUBEB_ERROR;
   }
+  WRAP(pa_context_get_server_info)(ctx->context, server_info_callback, ctx);
   WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
 
   *context = ctx;
@@ -338,6 +361,20 @@ static char const *
 pulse_get_backend_id(cubeb * ctx)
 {
   return "pulse";
+}
+
+static int
+pulse_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
+{
+  assert(ctx && max_channels);
+
+  while (!ctx->default_sink_info) {
+    WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
+  }
+
+  *max_channels = ctx->default_sink_info->channel_map.channels;
+
+  return CUBEB_OK;
 }
 
 static void
@@ -364,6 +401,9 @@ pulse_destroy(cubeb * ctx)
   }
 
   dlclose(ctx->libpulse);
+  if (ctx->default_sink_info) {
+    free(ctx->default_sink_info);
+  }
   free(ctx);
 }
 
@@ -523,6 +563,7 @@ pulse_stream_get_position(cubeb_stream * stm, uint64_t * position)
 static struct cubeb_ops const pulse_ops = {
   .init = pulse_init,
   .get_backend_id = pulse_get_backend_id,
+  .get_max_channel_count = pulse_get_max_channel_count,
   .destroy = pulse_destroy,
   .stream_init = pulse_stream_init,
   .stream_destroy = pulse_stream_destroy,
