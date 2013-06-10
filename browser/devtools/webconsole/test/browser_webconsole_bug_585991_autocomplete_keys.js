@@ -194,8 +194,12 @@ function testReturnKey()
 
       ok(!popup.isOpen, "popup is not open after VK_RETURN");
 
-      is(inputNode.value, "window.foobarBug585991.valueOf",
-         "completion was successful after VK_RETURN");
+      // modified by bug 873250
+      is(inputNode.value, "", "no completion after VK_RETURN");
+      isnot(jsterm.lastInputValue, "window.foobarBug585991.valueOf",
+        "lastInputValue is not window.foobarBug585991.valueOf");
+      EventUtils.synthesizeKey("VK_UP", {});
+      is(inputNode.value, jsterm.lastInputValue, "previous entry was lastInputNode")
 
       ok(!completeNode.value, "completeNode is empty");
 
