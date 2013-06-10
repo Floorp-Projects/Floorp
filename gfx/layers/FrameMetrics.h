@@ -174,7 +174,7 @@ public:
   // their own viewport, which will just be the size of the window of the
   // iframe. For layers that don't correspond to a document, this metric is
   // meaningless and invalid.
-  gfx::Rect mViewport;
+  CSSRect mViewport;
 
   // The position of the top-left of the CSS viewport, relative to the document
   // (or the document relative to the viewport, if that helps understand it).

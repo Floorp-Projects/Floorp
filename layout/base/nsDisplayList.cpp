@@ -635,13 +635,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   aRoot->SetVisibleRegion(nsIntRegion(visible));
 
   FrameMetrics metrics;
-
-  metrics.mViewport = mozilla::gfx::Rect(
-    NSAppUnitsToDoublePixels(aViewport.x, auPerDevPixel),
-    NSAppUnitsToDoublePixels(aViewport.y, auPerDevPixel),
-    NSAppUnitsToDoublePixels(aViewport.width, auPerDevPixel),
-    NSAppUnitsToDoublePixels(aViewport.height, auPerDevPixel));
-
+  metrics.mViewport = CSSRect::FromAppUnits(aViewport);
   if (aDisplayPort) {
     metrics.mDisplayPort = CSSRect::FromAppUnits(*aDisplayPort);
     if (aCriticalDisplayPort) {
