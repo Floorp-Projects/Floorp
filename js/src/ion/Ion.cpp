@@ -526,7 +526,7 @@ IonCode::writeBarrierPre(IonCode *code)
 void
 IonCode::writeBarrierPost(IonCode *code, void *addr)
 {
-#ifdef JSGC_INCREMENTAL
+#ifdef JSGC_GENERATIONAL
     // Nothing to do.
 #endif
 }
