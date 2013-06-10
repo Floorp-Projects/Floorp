@@ -52,6 +52,7 @@ MOCHITEST_FILES := \
   test_channelSplitterNode.html \
   test_channelSplitterNodeWithVolume.html \
   test_convolverNode.html \
+  test_convolverNode_mono_mono.html \
   test_currentTime.html \
   test_delayNode.html \
   test_delayNodeSmallMaxDelay.html \
