@@ -7,17 +7,13 @@
 #define WEBGLTEXTURE_H_
 
 #include "WebGLObjectModel.h"
-#include "WebGLRenderbuffer.h"
 
 #include "nsWrapperCache.h"
 
 #include "mozilla/LinkedList.h"
-#include "mozilla/CheckedInt.h"
 #include <algorithm>
 
 namespace mozilla {
-
-enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
 
 // Zero is not an integer power of two.
 inline bool is_pot_assuming_nonnegative(WebGLsizei x)
