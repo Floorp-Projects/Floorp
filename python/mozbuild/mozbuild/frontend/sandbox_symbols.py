@@ -129,6 +129,12 @@ VARIABLES = {
         A list of sources, one per program, to compile & link with libs into standalone programs.
         """),
 
+    'SSRCS': (StrictOrderingOnAppendList, list, [],
+        """Assembly source files.
+
+        This variable contains a list of files to invoke the assembler on.
+        """),
+
     'TOOL_DIRS': (list, list, [],
         """Like DIRS but for tools.
 

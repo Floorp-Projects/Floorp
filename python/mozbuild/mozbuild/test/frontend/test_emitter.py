@@ -133,6 +133,7 @@ class TestEmitterBasic(unittest.TestCase):
             HOST_CSRCS=['fans.c', 'tans.c'],
             HOST_LIBRARY_NAME='host_fans',
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
+            SSRCS=['fans.S', 'tans.S'],
             XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],
             XPIDL_MODULE='module_name',
             XPIDL_FLAGS=['-Idir1', '-Idir2', '-Idir3'],
