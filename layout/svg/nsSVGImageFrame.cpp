@@ -561,6 +561,7 @@ nsSVGImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect
     return NS_ERROR_FAILURE;
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+    mFrame->InvalidateFrame();
     nsSVGEffects::InvalidateRenderingObservers(mFrame);
     nsSVGUtils::ScheduleReflowSVG(mFrame);
   }
@@ -569,11 +570,13 @@ nsSVGImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect
     // No new dimensions, so we don't need to call
     // nsSVGUtils::InvalidateAndScheduleBoundsUpdate.
     nsSVGEffects::InvalidateRenderingObservers(mFrame);
+    mFrame->InvalidateFrame();
   }
 
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     // Called once the resource's dimensions have been obtained.
     aRequest->GetImage(getter_AddRefs(mFrame->mImageContainer));
+    mFrame->InvalidateFrame();
     nsSVGEffects::InvalidateRenderingObservers(mFrame);
     nsSVGUtils::ScheduleReflowSVG(mFrame);
   }
