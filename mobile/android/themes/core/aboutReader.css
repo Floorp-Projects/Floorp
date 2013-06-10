@@ -502,8 +502,12 @@ body {
   background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-mdpi.png');
 }
 
+.list-button.on {
+  background-image: url('chrome://browser/skin/images/reader-list-on-icon-mdpi.png');
+}
+
 .list-button {
-  background-image: url('chrome://browser/skin/images/reader-list-icon-mdpi.png');
+  background-image: url('chrome://browser/skin/images/reader-list-off-icon-mdpi.png');
 }
 
 .share-button {
@@ -535,8 +539,12 @@ body {
     background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-hdpi.png');
   }
 
+  .list-button.on {
+    background-image: url('chrome://browser/skin/images/reader-list-on-icon-hdpi.png');
+  }
+
   .list-button {
-    background-image: url('chrome://browser/skin/images/reader-list-icon-hdpi.png');
+    background-image: url('chrome://browser/skin/images/reader-list-off-icon-hdpi.png');
   }
 
   .share-button {
@@ -569,8 +577,12 @@ body {
     background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xhdpi.png');
   }
 
+  .list-button.on {
+    background-image: url('chrome://browser/skin/images/reader-list-on-icon-xhdpi.png');
+  }
+
   .list-button {
-    background-image: url('chrome://browser/skin/images/reader-list-icon-xhdpi.png');
+    background-image: url('chrome://browser/skin/images/reader-list-off-icon-xhdpi.png');
   }
 
   .share-button {
