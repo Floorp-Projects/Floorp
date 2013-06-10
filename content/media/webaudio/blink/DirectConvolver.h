@@ -29,11 +29,7 @@
 #ifndef DirectConvolver_h
 #define DirectConvolver_h
 
-#include "core/platform/audio/AudioArray.h"
-
-#if USE(WEBAUDIO_IPP)
-#include <ipps.h>
-#endif // USE(WEBAUDIO_IPP)
+#include "nsTArray.h"
 
 namespace WebCore {
 
@@ -41,17 +37,14 @@ class DirectConvolver {
 public:
     DirectConvolver(size_t inputBlockSize);
 
-    void process(AudioFloatArray* convolutionKernel, const float* sourceP, float* destP, size_t framesToProcess);
+    void process(const nsTArray<float>* convolutionKernel, const float* sourceP, float* destP, size_t framesToProcess);
 
     void reset();
 
 private:
     size_t m_inputBlockSize;
 
-#if USE(WEBAUDIO_IPP)
-    AudioFloatArray m_overlayBuffer;
-#endif // USE(WEBAUDIO_IPP)
-    AudioFloatArray m_buffer;
+    nsTArray<float> m_buffer;
 };
 
 } // namespace WebCore

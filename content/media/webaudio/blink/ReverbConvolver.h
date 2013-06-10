@@ -29,16 +29,19 @@
 #ifndef ReverbConvolver_h
 #define ReverbConvolver_h
 
-#include "core/platform/audio/AudioArray.h"
-#include "core/platform/audio/DirectConvolver.h"
-#include "core/platform/audio/FFTConvolver.h"
-#include "core/platform/audio/ReverbAccumulationBuffer.h"
-#include "core/platform/audio/ReverbConvolverStage.h"
-#include "core/platform/audio/ReverbInputBuffer.h"
-#include <wtf/OwnPtr.h>
-#include <wtf/RefCounted.h>
-#include <wtf/Threading.h>
-#include <wtf/Vector.h>
+#include "DirectConvolver.h"
+#include "FFTConvolver.h"
+#include "ReverbAccumulationBuffer.h"
+#include "ReverbConvolverStage.h"
+#include "ReverbInputBuffer.h"
+#include "nsAutoPtr.h"
+#include "nsTArray.h"
+#include "nsCOMPtr.h"
+#include "mozilla/Monitor.h"
+#ifdef LOG
+#undef LOG
+#endif
+#include "base/thread.h"
 
 namespace WebCore {
 
@@ -50,10 +53,12 @@ public:
     // For certain tweaky de-convolving applications the phase errors add up quickly and lead to non-sensical results with
     // larger FFT sizes and single-precision floats.  In these cases 2048 is a good size.
     // If not doing multi-threaded convolution, then should not go > 8192.
-    ReverbConvolver(AudioChannel* impulseResponse, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads);
+    ReverbConvolver(const float* impulseResponseData, size_t impulseResponseLength, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads);
     ~ReverbConvolver();
 
-    void process(const AudioChannel* sourceChannel, AudioChannel* destinationChannel, size_t framesToProcess);
+    void process(const float* sourceChannelData, size_t sourceChannelLength,
+                 float* destinationChannelData, size_t destinationChannelLength,
+                 size_t framesToProcess);
     void reset();
 
     size_t impulseResponseLength() const { return m_impulseResponseLength; }
@@ -65,8 +70,8 @@ public:
 
     size_t latencyFrames() const;
 private:
-    Vector<OwnPtr<ReverbConvolverStage> > m_stages;
-    Vector<OwnPtr<ReverbConvolverStage> > m_backgroundStages;
+    nsTArray<nsAutoPtr<ReverbConvolverStage> > m_stages;
+    nsTArray<nsAutoPtr<ReverbConvolverStage> > m_backgroundStages;
     size_t m_impulseResponseLength;
 
     ReverbAccumulationBuffer m_accumulationBuffer;
@@ -82,12 +87,11 @@ private:
     size_t m_maxRealtimeFFTSize;
 
     // Background thread and synchronization
+    base::Thread m_backgroundThread;
+    mozilla::Monitor m_backgroundThreadMonitor;
     bool m_useBackgroundThreads;
-    ThreadIdentifier m_backgroundThread;
     bool m_wantsToExit;
     bool m_moreInputBuffered;
-    mutable Mutex m_backgroundThreadLock;
-    mutable ThreadCondition m_backgroundThreadCondition;
 };
 
 } // namespace WebCore

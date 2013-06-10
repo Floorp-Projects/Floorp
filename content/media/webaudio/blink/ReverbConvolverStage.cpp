@@ -26,22 +26,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#include "ReverbConvolverStage.h"
 
-#if ENABLE(WEB_AUDIO)
+#include "ReverbAccumulationBuffer.h"
+#include "ReverbConvolver.h"
+#include "ReverbInputBuffer.h"
+#include "mozilla/PodOperations.h"
 
-#include "core/platform/audio/ReverbConvolverStage.h"
-
-#include "core/platform/audio/ReverbAccumulationBuffer.h"
-#include "core/platform/audio/ReverbConvolver.h"
-#include "core/platform/audio/ReverbInputBuffer.h"
-#include "core/platform/audio/VectorMath.h"
-#include <wtf/OwnPtr.h>
-#include <wtf/PassOwnPtr.h>
+using namespace mozilla;
 
 namespace WebCore {
-
-using namespace VectorMath;
 
 ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength,
                                            size_t fftSize, size_t renderPhase, size_t renderSliceSize, ReverbAccumulationBuffer* accumulationBuffer, bool directMode)
@@ -50,19 +44,20 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     , m_inputReadIndex(0)
     , m_directMode(directMode)
 {
-    ASSERT(impulseResponse);
-    ASSERT(accumulationBuffer);
+    MOZ_ASSERT(impulseResponse);
+    MOZ_ASSERT(accumulationBuffer);
 
     if (!m_directMode) {
-        m_fftKernel = adoptPtr(new FFTFrame(fftSize));
-        m_fftKernel->doPaddedFFT(impulseResponse + stageOffset, stageLength);
-        m_fftConvolver = adoptPtr(new FFTConvolver(fftSize));
+        m_fftKernel = new FFTBlock(fftSize);
+        m_fftKernel->PerformPaddedFFT(impulseResponse + stageOffset, stageLength);
+        m_fftConvolver = new FFTConvolver(fftSize);
     } else {
-        m_directKernel = adoptPtr(new AudioFloatArray(fftSize / 2));
-        m_directKernel->copyToRange(impulseResponse + stageOffset, 0, fftSize / 2);
-        m_directConvolver = adoptPtr(new DirectConvolver(renderSliceSize));
+        m_directKernel.SetLength(fftSize / 2);
+        PodCopy(m_directKernel.Elements(), impulseResponse + stageOffset, fftSize / 2);
+        m_directConvolver = new DirectConvolver(renderSliceSize);
     }
-    m_temporaryBuffer.allocate(renderSliceSize);
+    m_temporaryBuffer.SetLength(renderSliceSize);
+    PodZero(m_temporaryBuffer.Elements(), m_temporaryBuffer.Length());
 
     // The convolution stage at offset stageOffset needs to have a corresponding delay to cancel out the offset.
     size_t totalDelay = stageOffset + reverbTotalLatency;
@@ -70,7 +65,7 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     // But, the FFT convolution itself incurs fftSize / 2 latency, so subtract this out...
     size_t halfSize = fftSize / 2;
     if (!m_directMode) {
-        ASSERT(totalDelay >= halfSize);
+        MOZ_ASSERT(totalDelay >= halfSize);
         if (totalDelay >= halfSize)
             totalDelay -= halfSize;
     }
@@ -88,7 +83,8 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
 
     size_t delayBufferSize = m_preDelayLength < fftSize ? fftSize : m_preDelayLength;
     delayBufferSize = delayBufferSize < renderSliceSize ? renderSliceSize : delayBufferSize;
-    m_preDelayBuffer.allocate(delayBufferSize);
+    m_preDelayBuffer.SetLength(delayBufferSize);
+    PodZero(m_preDelayBuffer.Elements(), m_preDelayBuffer.Length());
 }
 
 void ReverbConvolverStage::processInBackground(ReverbConvolver* convolver, size_t framesToProcess)
@@ -100,7 +96,7 @@ void ReverbConvolverStage::processInBackground(ReverbConvolver* convolver, size_
 
 void ReverbConvolverStage::process(const float* source, size_t framesToProcess)
 {
-    ASSERT(source);
+    MOZ_ASSERT(source);
     if (!source)
         return;
     
@@ -112,26 +108,26 @@ void ReverbConvolverStage::process(const float* source, size_t framesToProcess)
     bool isTemporaryBufferSafe = false;
     if (m_preDelayLength > 0) {
         // Handles both the read case (call to process() ) and the write case (memcpy() )
-        bool isPreDelaySafe = m_preReadWriteIndex + framesToProcess <= m_preDelayBuffer.size();
-        ASSERT(isPreDelaySafe);
+        bool isPreDelaySafe = m_preReadWriteIndex + framesToProcess <= m_preDelayBuffer.Length();
+        MOZ_ASSERT(isPreDelaySafe);
         if (!isPreDelaySafe)
             return;
 
-        isTemporaryBufferSafe = framesToProcess <= m_temporaryBuffer.size();
+        isTemporaryBufferSafe = framesToProcess <= m_temporaryBuffer.Length();
 
-        preDelayedDestination = m_preDelayBuffer.data() + m_preReadWriteIndex;
+        preDelayedDestination = m_preDelayBuffer.Elements() + m_preReadWriteIndex;
         preDelayedSource = preDelayedDestination;
-        temporaryBuffer = m_temporaryBuffer.data();        
+        temporaryBuffer = m_temporaryBuffer.Elements();
     } else {
         // Zero delay
         preDelayedDestination = 0;
         preDelayedSource = source;
-        temporaryBuffer = m_preDelayBuffer.data();
+        temporaryBuffer = m_preDelayBuffer.Elements();
         
-        isTemporaryBufferSafe = framesToProcess <= m_preDelayBuffer.size();
+        isTemporaryBufferSafe = framesToProcess <= m_preDelayBuffer.Length();
     }
     
-    ASSERT(isTemporaryBufferSafe);
+    MOZ_ASSERT(isTemporaryBufferSafe);
     if (!isTemporaryBufferSafe)
         return;
 
@@ -144,9 +140,9 @@ void ReverbConvolverStage::process(const float* source, size_t framesToProcess)
         // An expensive FFT will happen every fftSize / 2 frames.
         // We process in-place here...
         if (!m_directMode)
-            m_fftConvolver->process(m_fftKernel.get(), preDelayedSource, temporaryBuffer, framesToProcess);
+            m_fftConvolver->process(m_fftKernel, preDelayedSource, temporaryBuffer, framesToProcess);
         else
-            m_directConvolver->process(m_directKernel.get(), preDelayedSource, temporaryBuffer, framesToProcess);
+            m_directConvolver->process(&m_directKernel, preDelayedSource, temporaryBuffer, framesToProcess);
 
         // Now accumulate into reverb's accumulation buffer.
         m_accumulationBuffer->accumulate(temporaryBuffer, framesToProcess, &m_accumulationReadIndex, m_postDelayLength);
@@ -157,7 +153,7 @@ void ReverbConvolverStage::process(const float* source, size_t framesToProcess)
         memcpy(preDelayedDestination, source, sizeof(float) * framesToProcess);
         m_preReadWriteIndex += framesToProcess;
 
-        ASSERT(m_preReadWriteIndex <= m_preDelayLength);
+        MOZ_ASSERT(m_preReadWriteIndex <= m_preDelayLength);
         if (m_preReadWriteIndex >= m_preDelayLength)
             m_preReadWriteIndex = 0;
     }
@@ -171,12 +167,10 @@ void ReverbConvolverStage::reset()
         m_fftConvolver->reset();
     else
         m_directConvolver->reset();
-    m_preDelayBuffer.zero();
+    PodZero(m_preDelayBuffer.Elements(), m_preDelayBuffer.Length());
     m_accumulationReadIndex = 0;
     m_inputReadIndex = 0;
     m_framesProcessed = 0;
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)

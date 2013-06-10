@@ -29,10 +29,13 @@
 #ifndef FFTConvolver_h
 #define FFTConvolver_h
 
-#include "core/platform/audio/AudioArray.h"
-#include "core/platform/audio/FFTFrame.h"
+#include "nsTArray.h"
+#include "mozilla/FFTBlock.h"
 
 namespace WebCore {
+
+typedef nsTArray<float> AudioFloatArray;
+using mozilla::FFTBlock;
 
 class FFTConvolver {
 public:
@@ -46,14 +49,14 @@ public:
     // The input to output latency is equal to fftSize / 2
     //
     // Processing in-place is allowed...
-    void process(FFTFrame* fftKernel, const float* sourceP, float* destP, size_t framesToProcess);
+    void process(FFTBlock* fftKernel, const float* sourceP, float* destP, size_t framesToProcess);
 
     void reset();
 
-    size_t fftSize() const { return m_frame.fftSize(); }
+    size_t fftSize() const { return m_frame.FFTSize(); }
 
 private:
-    FFTFrame m_frame;
+    FFTBlock m_frame;
 
     // Buffer input until we get fftSize / 2 samples then do an FFT
     size_t m_readWriteIndex;

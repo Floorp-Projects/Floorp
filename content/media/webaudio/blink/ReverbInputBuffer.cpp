@@ -26,32 +26,32 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#include "ReverbInputBuffer.h"
+#include "mozilla/PodOperations.h"
 
-#if ENABLE(WEB_AUDIO)
-
-#include "core/platform/audio/ReverbInputBuffer.h"
+using namespace mozilla;
 
 namespace WebCore {
 
 ReverbInputBuffer::ReverbInputBuffer(size_t length)
-    : m_buffer(length)
-    , m_writeIndex(0)
+    : m_writeIndex(0)
 {
+  m_buffer.SetLength(length);
+  PodZero(m_buffer.Elements(), length);
 }
 
 void ReverbInputBuffer::write(const float* sourceP, size_t numberOfFrames)
 {
-    size_t bufferLength = m_buffer.size();
+    size_t bufferLength = m_buffer.Length();
     bool isCopySafe = m_writeIndex + numberOfFrames <= bufferLength;
-    ASSERT(isCopySafe);
+    MOZ_ASSERT(isCopySafe);
     if (!isCopySafe)
         return;
-        
-    memcpy(m_buffer.data() + m_writeIndex, sourceP, sizeof(float) * numberOfFrames);
+
+    memcpy(m_buffer.Elements() + m_writeIndex, sourceP, sizeof(float) * numberOfFrames);
 
     m_writeIndex += numberOfFrames;
-    ASSERT(m_writeIndex <= bufferLength);
+    MOZ_ASSERT(m_writeIndex <= bufferLength);
 
     if (m_writeIndex >= bufferLength)
         m_writeIndex = 0;
@@ -59,17 +59,17 @@ void ReverbInputBuffer::write(const float* sourceP, size_t numberOfFrames)
 
 float* ReverbInputBuffer::directReadFrom(int* readIndex, size_t numberOfFrames)
 {
-    size_t bufferLength = m_buffer.size();
+    size_t bufferLength = m_buffer.Length();
     bool isPointerGood = readIndex && *readIndex >= 0 && *readIndex + numberOfFrames <= bufferLength;
-    ASSERT(isPointerGood);
+    MOZ_ASSERT(isPointerGood);
     if (!isPointerGood) {
         // Should never happen in practice but return pointer to start of buffer (avoid crash)
         if (readIndex)
             *readIndex = 0;
-        return m_buffer.data();
+        return m_buffer.Elements();
     }
-        
-    float* sourceP = m_buffer.data();
+
+    float* sourceP = m_buffer.Elements();
     float* p = sourceP + *readIndex;
 
     // Update readIndex
@@ -80,10 +80,8 @@ float* ReverbInputBuffer::directReadFrom(int* readIndex, size_t numberOfFrames)
 
 void ReverbInputBuffer::reset()
 {
-    m_buffer.zero();
+    PodZero(m_buffer.Elements(), m_buffer.Length());
     m_writeIndex = 0;
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)
