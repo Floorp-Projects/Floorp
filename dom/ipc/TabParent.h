@@ -175,9 +175,9 @@ public:
     void Show(const nsIntSize& size);
     void UpdateDimensions(const nsRect& rect, const nsIntSize& size);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
-    void HandleDoubleTap(const nsIntPoint& aPoint);
-    void HandleSingleTap(const nsIntPoint& aPoint);
-    void HandleLongTap(const nsIntPoint& aPoint);
+    void HandleDoubleTap(const CSSIntPoint& aPoint);
+    void HandleSingleTap(const CSSIntPoint& aPoint);
+    void HandleLongTap(const CSSIntPoint& aPoint);
     void Activate();
     void Deactivate();
 
