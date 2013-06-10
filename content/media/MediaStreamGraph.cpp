@@ -1494,6 +1494,13 @@ MediaStream::SetGraphImpl(MediaStreamGraphImpl* aGraph)
   mGraph = aGraph;
 }
 
+void
+MediaStream::SetGraphImpl(MediaStreamGraph* aGraph)
+{
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(aGraph);
+  SetGraphImpl(graph);
+}
+
 StreamTime
 MediaStream::GraphTimeToStreamTime(GraphTime aTime)
 {

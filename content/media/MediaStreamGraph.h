@@ -294,6 +294,7 @@ public:
    * Sets the graph that owns this stream.  Should only be called once.
    */
   void SetGraphImpl(MediaStreamGraphImpl* aGraph);
+  void SetGraphImpl(MediaStreamGraph* aGraph);
 
   // Control API.
   // Since a stream can be played multiple ways, we need to combine independent
@@ -302,20 +303,20 @@ public:
   // a single audio output stream is used; the volumes are combined.
   // Currently only the first enabled audio track is played.
   // XXX change this so all enabled audio tracks are mixed and played.
-  void AddAudioOutput(void* aKey);
-  void SetAudioOutputVolume(void* aKey, float aVolume);
-  void RemoveAudioOutput(void* aKey);
+  virtual void AddAudioOutput(void* aKey);
+  virtual void SetAudioOutputVolume(void* aKey, float aVolume);
+  virtual void RemoveAudioOutput(void* aKey);
   // Since a stream can be played multiple ways, we need to be able to
   // play to multiple VideoFrameContainers.
   // Only the first enabled video track is played.
-  void AddVideoOutput(VideoFrameContainer* aContainer);
-  void RemoveVideoOutput(VideoFrameContainer* aContainer);
+  virtual void AddVideoOutput(VideoFrameContainer* aContainer);
+  virtual void RemoveVideoOutput(VideoFrameContainer* aContainer);
   // Explicitly block. Useful for example if a media element is pausing
   // and we need to stop its stream emitting its buffered data.
-  void ChangeExplicitBlockerCount(int32_t aDelta);
+  virtual void ChangeExplicitBlockerCount(int32_t aDelta);
   // Events will be dispatched by calling methods of aListener.
-  void AddListener(MediaStreamListener* aListener);
-  void RemoveListener(MediaStreamListener* aListener);
+  virtual void AddListener(MediaStreamListener* aListener);
+  virtual void RemoveListener(MediaStreamListener* aListener);
   // A disabled track has video replaced by black, and audio replaced by
   // silence.
   void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
