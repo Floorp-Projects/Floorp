@@ -868,6 +868,7 @@ protected:
         OES_element_index_uint,
         OES_standard_derivatives,
         OES_texture_float,
+        OES_texture_float_linear,
         WEBGL_compressed_texture_atc,
         WEBGL_compressed_texture_pvrtc,
         WEBGL_compressed_texture_s3tc,
