@@ -94,6 +94,16 @@ assertEq(f(0, 1.3), 1.3);
 assertEq(f(4088, 2.5), 2.5);
 assertEq(f(4096, 3.8), NaN);
 
+var i32 = new Int32Array(4096);
+i32[0] = 42;
+asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { i32[1] = i32[0] }; return f'), this, null, i32.buffer)();
+assertEq(i32[1], 42);
+
+var f64 = new Float64Array(4096);
+f64[0] = 42;
+asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { f64[1] = f64[0] }; return f'), this, null, f64.buffer)();
+assertEq(f64[1], 42);
+
 var i32 = new Int32Array(4096/4);
 i32[0] = 13;
 i32[1] = 0xfffeeee;
