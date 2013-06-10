@@ -19,23 +19,28 @@ namespace mozilla {
 class FFTBlock {
 public:
   explicit FFTBlock(uint32_t aFFTSize)
-    : mFFTSize(aFFTSize)
+    : mFFT(nullptr)
+    , mIFFT(nullptr)
+    , mFFTSize(aFFTSize)
   {
     mOutputBuffer.SetLength(aFFTSize / 2 + 1);
     PodZero(mOutputBuffer.Elements(), aFFTSize / 2 + 1);
   }
+  ~FFTBlock()
+  {
+    free(mFFT);
+    free(mIFFT);
+  }
 
   void PerformFFT(const float* aData)
   {
-    kiss_fftr_cfg fft = kiss_fftr_alloc(mFFTSize, 0, nullptr, nullptr);
-    kiss_fftr(fft, aData, mOutputBuffer.Elements());
-    free(fft);
+    EnsureFFT();
+    kiss_fftr(mFFT, aData, mOutputBuffer.Elements());
   }
-  void PerformInverseFFT(float* aData) const
+  void PerformInverseFFT(float* aData)
   {
-    kiss_fftr_cfg fft = kiss_fftr_alloc(mFFTSize, 1, nullptr, nullptr);
-    kiss_fftri(fft, mOutputBuffer.Elements(), aData);
-    free(fft);
+    EnsureIFFT();
+    kiss_fftri(mIFFT, mOutputBuffer.Elements(), aData);
     for (uint32_t i = 0; i < mFFTSize; ++i) {
       aData[i] /= mFFTSize;
     }
@@ -63,6 +68,7 @@ public:
     mFFTSize = aSize;
     mOutputBuffer.SetLength(aSize / 2 + 1);
     PodZero(mOutputBuffer.Elements(), aSize / 2 + 1);
+    mFFT = mIFFT = nullptr;
   }
 
   uint32_t FFTSize() const
@@ -79,6 +85,21 @@ public:
   }
 
 private:
+  void EnsureFFT()
+  {
+    if (!mFFT) {
+      mFFT = kiss_fftr_alloc(mFFTSize, 0, nullptr, nullptr);
+    }
+  }
+  void EnsureIFFT()
+  {
+    if (!mIFFT) {
+      mIFFT = kiss_fftr_alloc(mFFTSize, 1, nullptr, nullptr);
+    }
+  }
+
+private:
+  kiss_fftr_cfg mFFT, mIFFT;
   nsTArray<kiss_fft_cpx> mOutputBuffer;
   uint32_t mFFTSize;
 };
