@@ -27,3 +27,7 @@ CPP_SOURCES += [
     'MediaManager.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'PeerConnection.js',
+    'PeerConnection.manifest',
+]

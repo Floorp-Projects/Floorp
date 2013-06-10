@@ -53,3 +53,18 @@ if CONFIG['MOZ_PLACES']:
 
 MODULE = 'places'
 
+
+if CONFIG['MOZ_PLACES']:
+    EXTRA_COMPONENTS += [
+        'ColorAnalyzer.js',
+        'PlacesCategoriesStarter.js',
+        'nsLivemarkService.js',
+        'nsPlacesExpiration.js',
+        'nsTaggingService.js',
+        'toolkitplaces.manifest',
+    ]
+    if CONFIG['MOZ_XUL']:
+        EXTRA_COMPONENTS += [
+            'nsPlacesAutoComplete.js',
+            'nsPlacesAutoComplete.manifest',
+        ]

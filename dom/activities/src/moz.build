@@ -14,3 +14,10 @@ CPP_SOURCES += [
     'Activity.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'Activities.manifest',
+    'ActivityOptions.js',
+    'ActivityProxy.js',
+    'ActivityRequestHandler.js',
+    'ActivityWrapper.js',
+]

@@ -9,7 +9,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsUpdateTimerManager.js \
   nsUpdateTimerManager.manifest \
   $(NULL)
@@ -21,7 +21,7 @@ EXTRA_PP_COMPONENTS += \
   nsUpdateServiceStub.js \
   $(NULL)
 
-EXTRA_COMPONENTS += \
+DISABLED_EXTRA_COMPONENTS += \
   nsUpdateService.manifest \
   $(NULL)
 

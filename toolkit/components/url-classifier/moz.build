@@ -31,3 +31,7 @@ CPP_SOURCES += [
     'nsUrlClassifierUtils.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'nsURLClassifier.manifest',
+    'nsUrlClassifierHashCompleter.js',
+]

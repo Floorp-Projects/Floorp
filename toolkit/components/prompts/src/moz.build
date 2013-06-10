@@ -6,3 +6,7 @@
 
 MODULE = 'prompter'
 
+EXTRA_COMPONENTS += [
+    'nsPrompter.js',
+    'nsPrompter.manifest',
+]

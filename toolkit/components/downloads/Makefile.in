@@ -20,7 +20,7 @@ include $(topsrcdir)/config/config.mk
 ifndef MOZ_SUITE
 # XXX - Until Suite builds off XULRunner we can't guarantee our implementation
 # of nsIDownloadManagerUI overrides toolkit's.
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsDownloadManagerUI.js \
   nsDownloadManagerUI.manifest \
   $(NULL)
