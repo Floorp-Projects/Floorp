@@ -552,8 +552,8 @@ public:
 
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
-  virtual void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect,
-                                       const gfx::Size& aContentSize) MOZ_OVERRIDE
+  virtual void SendAsyncScrollDOMEvent(const CSSRect& aContentRect,
+                                       const CSSSize& aContentSize) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       mUILoop->PostTask(

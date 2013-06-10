@@ -8,6 +8,7 @@
 #include "nsAString.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
+#include "Units.h"
 
 class nsIDOMWindow;
 class nsIURI;
@@ -106,8 +107,8 @@ public:
    */
   static bool
   DispatchAsyncScrollEvent(dom::TabParent* aTabParent,
-                           const gfx::Rect& aContentRect,
-                           const gfx::Size& aContentSize);
+                           const CSSRect& aContentRect,
+                           const CSSSize& aContentSize);
 };
 
 } // namespace mozilla

@@ -599,7 +599,7 @@ public:
     void HandleDoubleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
     void HandleSingleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
     void HandleLongTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
-    void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect, const gfx::Size& aScrollableSize) MOZ_OVERRIDE;
+    void SendAsyncScrollDOMEvent(const CSSRect& aContentRect, const CSSSize& aScrollableSize) MOZ_OVERRIDE;
     void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
     int64_t RunDelayedTasks();
 };
