@@ -11,7 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= breakpad_linux_common_s
 ifdef MOZ_CRASHREPORTER
-HOST_LIBRARY_NAME = host_breakpad_linux_common_s
+DISABLED_HOST_LIBRARY_NAME = host_breakpad_linux_common_s
 endif
 
 LOCAL_INCLUDES = \
