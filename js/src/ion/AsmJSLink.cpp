@@ -389,7 +389,8 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     const jschar *chars = src->chars().get();
 
     RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED,
-                                       cx->global(), name));
+                                       cx->global(), name, JSFunction::FinalizeKind,
+                                       TenuredObject));
     if (!fun)
         return false;
 
