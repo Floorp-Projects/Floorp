@@ -1137,7 +1137,10 @@ var ContextUI = {
    * Context UI state getters & setters
    */
 
-  get isVisible() { return Elements.tray.hasAttribute("visible"); },
+  get isVisible() {
+    return (Elements.navbar.hasAttribute("visible") ||
+            Elements.navbar.hasAttribute("startpage"));
+  },
   get isExpanded() { return Elements.tray.hasAttribute("expanded"); },
   get isExpandable() { return this._expandable; },
 
@@ -1173,11 +1176,6 @@ var ContextUI = {
       this._setIsExpanded(true);
       shown = true;
     }
-    if (!this.isVisible) {
-      // show the navbar
-      this._setIsVisible(true);
-      shown = true;
-    }
     if (!Elements.navbar.isShowing) {
       // show the navbar
       Elements.navbar.show();
@@ -1194,13 +1192,12 @@ var ContextUI = {
   // Display the nav bar
   displayNavbar: function displayNavbar() {
     this._clearDelayedTimeout();
-    this._setIsVisible(true, true);
+    Elements.navbar.show();
   },
 
   // Display the toolbar and tabs
   displayTabs: function displayTabs() {
     this._clearDelayedTimeout();
-    this._setIsVisible(true, true);
     this._setIsExpanded(true, true);
   },
 
@@ -1225,10 +1222,6 @@ var ContextUI = {
     let dismissed = false;
     if (this.isExpanded) {
       this._setIsExpanded(false);
-      dismissed = true;
-    }
-    if (this.isVisible && !StartUI.isStartURI()) {
-      this._setIsVisible(false);
       dismissed = true;
     }
     if (Elements.navbar.isShowing) {
@@ -1268,24 +1261,6 @@ var ContextUI = {
   /*******************************************
    * Internal tray state setters
    */
-
-  // url bar state
-  _setIsVisible: function _setIsVisible(aFlag, setSilently) {
-    if (this.isVisible == aFlag)
-      return;
-
-    if (aFlag)
-      Elements.tray.setAttribute("visible", "true");
-    else
-      Elements.tray.removeAttribute("visible");
-
-    if (!aFlag) {
-      content.focus();
-    }
-
-    if (!setSilently)
-      this._fire(aFlag ? "MozContextUIShow" : "MozContextUIDismiss");
-  },
 
   // tab tray state
   _setIsExpanded: function _setIsExpanded(aFlag, setSilently) {
