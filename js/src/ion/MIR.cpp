@@ -859,7 +859,14 @@ MBitNot::infer()
 static inline bool
 IsConstant(MDefinition *def, double v)
 {
-    return def->isConstant() && def->toConstant()->value().toNumber() == v;
+    if (!def->isConstant())
+        return false;
+
+    // Compare as bits to avoid conflating, e.g., -0 and 0.
+    mozilla::detail::DoublePun lhs, rhs;
+    lhs.d = def->toConstant()->value().toNumber();
+    rhs.d = v;
+    return lhs.u == rhs.u;
 }
 
 MDefinition *
