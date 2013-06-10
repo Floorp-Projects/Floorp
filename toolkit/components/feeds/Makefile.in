@@ -15,7 +15,7 @@ MOZILLA_INTERNAL_API = 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-EXTRA_COMPONENTS = FeedProcessor.js FeedProcessor.manifest
+DISABLED_EXTRA_COMPONENTS = FeedProcessor.js FeedProcessor.manifest
 
 include $(topsrcdir)/config/rules.mk
 

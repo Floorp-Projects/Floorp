@@ -19,3 +19,9 @@ CPP_SOURCES += [
     'nsFormFillController.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'FormHistoryStartup.js',
+    'nsFormAutoComplete.js',
+    'nsInputListAutoComplete.js',
+    'satchel.manifest',
+]

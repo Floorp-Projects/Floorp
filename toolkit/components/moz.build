@@ -72,3 +72,8 @@ if CONFIG['MOZ_CAPTIVEDETECT']:
     PARALLEL_DIRS += ['captivedetect']
 
 DIRS += ['build']
+
+EXTRA_COMPONENTS += [
+    'nsDefaultCLH.js',
+    'nsDefaultCLH.manifest',
+]

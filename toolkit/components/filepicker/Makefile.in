@@ -18,7 +18,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = nsFileViewModule
 LIBXUL_LIBRARY = 1
-EXTRA_COMPONENTS = nsFilePicker.js
+DISABLED_EXTRA_COMPONENTS = nsFilePicker.js
 EXTRA_PP_COMPONENTS = nsFilePicker.manifest
 endif
 endif

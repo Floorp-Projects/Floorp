@@ -19,7 +19,7 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../build \
   $(NULL)
 
-EXTRA_COMPONENTS = \
+DISABLED_EXTRA_COMPONENTS = \
   nsFormAutoComplete.js \
   FormHistoryStartup.js \
   nsInputListAutoComplete.js \
