@@ -133,6 +133,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_moz_device_pixel_ratio.html \
 		test_namespace_rule.html \
 		test_of_type_selectors.xhtml \
+		test_parse_eof.html \
 		test_parse_ident.html \
 		test_parse_rule.html \
 		test_parse_url.html \
