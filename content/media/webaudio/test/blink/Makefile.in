@@ -11,8 +11,9 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  panner-model-testing.js \
   audio-testing.js \
+  convolution-testing.js \
+  panner-model-testing.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
