@@ -728,6 +728,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 22 uses schema version 22.
 
+      if (currentSchemaVersion < 23) {
+        rv = MigrateV23Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 24 uses schema version 23.
+
       // Schema Upgrades must add migration code here.
 
       rv = UpdateBookmarkRootTitles();
@@ -1864,19 +1871,6 @@ Database::MigrateV21Up()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Update prefixes.
-  nsCOMPtr<mozIStorageAsyncStatement> updatePrefixesStmt;
-  rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_hosts SET prefix = ( "
-      HOSTS_PREFIX_PRIORITY_FRAGMENT
-    ") "
-  ), getter_AddRefs(updatePrefixesStmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = updatePrefixesStmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -1890,6 +1884,26 @@ Database::MigrateV22Up()
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "UPDATE moz_historyvisits SET session = 0"
   ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
+nsresult
+Database::MigrateV23Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Recalculate hosts prefixes.
+  nsCOMPtr<mozIStorageAsyncStatement> updatePrefixesStmt;
+  nsresult rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_hosts SET prefix = ( " HOSTS_PREFIX_PRIORITY_FRAGMENT ") "
+  ), getter_AddRefs(updatePrefixesStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = updatePrefixesStmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
