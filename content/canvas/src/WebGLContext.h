@@ -69,8 +69,6 @@
 #define MINVALUE_GL_MAX_RENDERBUFFER_SIZE             1024  // Different from the spec, which sets it to 1 on page 164
 #define MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS  8     // Page 164
 
-class nsIPropertyBag;
-
 namespace mozilla {
 
 class WebGLMemoryPressureObserver;
@@ -219,7 +217,8 @@ public:
         { return nullptr; }
 
     NS_IMETHOD SetIsOpaque(bool b) MOZ_OVERRIDE { return NS_OK; };
-    NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions) MOZ_OVERRIDE;
+    NS_IMETHOD SetContextOptions(JSContext* aCx,
+                                 JS::Handle<JS::Value> aOptions) MOZ_OVERRIDE;
 
     NS_IMETHOD SetIsIPC(bool b) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }

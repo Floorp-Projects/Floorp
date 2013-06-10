@@ -529,12 +529,10 @@
 @BINPATH@/components/PeerConnection.manifest
 #endif
 
-#ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/MarionetteComponents.manifest
 @BINPATH@/components/marionettecomponent.js
-#endif
 
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechsynth.xpt

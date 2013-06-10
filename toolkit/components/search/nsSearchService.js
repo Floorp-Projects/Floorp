@@ -84,10 +84,6 @@ const SEARCH_TYPE_SHERLOCK       = Ci.nsISearchEngine.TYPE_SHERLOCK;
 const SEARCH_DATA_XML            = Ci.nsISearchEngine.DATA_XML;
 const SEARCH_DATA_TEXT           = Ci.nsISearchEngine.DATA_TEXT;
 
-// File extensions for search plugin description files
-const XML_FILE_EXT      = "xml";
-const SHERLOCK_FILE_EXT = "src";
-
 // Delay for lazy serialization (ms)
 const LAZY_SERIALIZE_DELAY = 100;
 
@@ -99,9 +95,6 @@ const CACHE_INVALIDATION_DELAY = 1000;
 const CACHE_VERSION = 7;
 
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
-
-// Supported extensions for Sherlock plugin icons
-const SHERLOCK_ICON_EXTENSIONS = [".gif", ".png", ".jpg", ".jpeg"];
 
 const NEW_LINES = /(\r\n|\r|\n)/;
 
@@ -718,7 +711,7 @@ function getBoolPref(aName, aDefault) {
  *          unique sanitized name.
  */
 function getSanitizedFile(aName) {
-  var fileName = sanitizeName(aName) + "." + XML_FILE_EXT;
+  var fileName = sanitizeName(aName) + ".xml";
   var file = getDir(NS_APP_USER_SEARCH_DIR);
   file.append(fileName);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
@@ -1195,17 +1188,8 @@ Engine.prototype = {
 
         this._data = doc.documentElement;
         break;
-      case SEARCH_DATA_TEXT:
-        var binaryInStream = Cc["@mozilla.org/binaryinputstream;1"].
-                             createInstance(Ci.nsIBinaryInputStream);
-        binaryInStream.setInputStream(fileInStream);
-
-        var bytes = binaryInStream.readByteArray(binaryInStream.available());
-        this._data = bytes;
-
-        break;
       default:
-        ERROR("Bogus engine _dataType: \"" + this._dataType + "\"",
+        ERROR("Unsuppored engine _dataType in _initFromFile: \"" + this._dataType + "\"",
               Cr.NS_ERROR_UNEXPECTED);
     }
     fileInStream.close();
@@ -2964,45 +2948,18 @@ SearchService.prototype = {
       var fileExtension = fileURL.fileExtension.toLowerCase();
       var isWritable = isInProfile && file.isWritable();
 
-      var dataType;
-      switch (fileExtension) {
-        case XML_FILE_EXT:
-          dataType = SEARCH_DATA_XML;
-          break;
-        case SHERLOCK_FILE_EXT:
-          dataType = SEARCH_DATA_TEXT;
-          break;
-        default:
-          // Not an engine
-          continue;
+      if (fileExtension != "xml") {
+        // Not an engine
+        continue;
       }
 
       var addedEngine = null;
       try {
-        addedEngine = new Engine(file, dataType, !isWritable);
+        addedEngine = new Engine(file, SEARCH_DATA_XML, !isWritable);
         addedEngine._initFromFile();
       } catch (ex) {
         LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
         continue;
-      }
-
-      if (fileExtension == SHERLOCK_FILE_EXT) {
-        if (isWritable) {
-          try {
-            this._convertSherlockFile(addedEngine, fileURL.fileBaseName);
-          } catch (ex) {
-            LOG("_loadEnginesFromDir: Failed to convert: " + fileURL.path + "\n" + ex + "\n" + ex.stack);
-            // The engine couldn't be converted, mark it as read-only
-            addedEngine._readOnly = true;
-          }
-        }
-
-        // If the engine still doesn't have an icon, see if we can find one
-        if (!addedEngine._iconURI) {
-          var icon = this._findSherlockIcon(file, fileURL.fileBaseName);
-          if (icon)
-            addedEngine._iconURI = NetUtil.ioService.newFileURI(icon);
-        }
       }
 
       this._addEngineToStore(addedEngine);
@@ -3195,118 +3152,6 @@ SearchService.prototype = {
                                        return a.name.localeCompare(b.name);
                                      });
     return this.__sortedEngines = this.__sortedEngines.concat(alphaEngines);
-  },
-
-  /**
-   * Converts a Sherlock file and its icon into the custom XML format used by
-   * the Search Service. Saves the engine's icon (if present) into the XML as a
-   * data: URI and changes the extension of the source file from ".src" to
-   * ".xml". The engine data is then written to the file as XML.
-   * @param aEngine
-   *        The Engine object that needs to be converted.
-   * @param aBaseName
-   *        The basename of the Sherlock file.
-   *          Example: "foo" for file "foo.src".
-   *
-   * @throws NS_ERROR_FAILURE if the file could not be converted.
-   *
-   * @see nsIURL::fileBaseName
-   */
-  _convertSherlockFile: function SRCH_SVC_convertSherlock(aEngine, aBaseName) {
-    ENSURE_WARN(aEngine._file, "can't convert an engine with no file",
-                Cr.NS_ERROR_UNEXPECTED);
-
-    var oldSherlockFile = aEngine._file;
-
-    // Back up the old file
-    try {
-      var backupDir = oldSherlockFile.parent;
-      backupDir.append("searchplugins-backup");
-
-      if (!backupDir.exists())
-        backupDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
-      oldSherlockFile.copyTo(backupDir, null);
-    } catch (ex) {
-      // Just bail. Engines that can't be backed up won't be converted, but
-      // engines that aren't converted are loaded as readonly.
-      FAIL("_convertSherlockFile: Couldn't back up " + oldSherlockFile.path +
-           ":\n" + ex, Cr.NS_ERROR_FAILURE);
-    }
-
-    // Rename the file, but don't clobber existing files
-    var newXMLFile = oldSherlockFile.parent.clone();
-    newXMLFile.append(aBaseName + "." + XML_FILE_EXT);
-
-    if (newXMLFile.exists()) {
-      // There is an existing file with this name, create a unique file
-      newXMLFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
-    }
-
-    // Rename the .src file to .xml
-    oldSherlockFile.moveTo(null, newXMLFile.leafName);
-
-    aEngine._file = newXMLFile;
-
-    // Write the converted engine to disk
-    aEngine._serializeToFile();
-
-    // Update the engine's _type.
-    aEngine._type = SEARCH_TYPE_MOZSEARCH;
-
-    // See if it has a corresponding icon
-    try {
-      var icon = this._findSherlockIcon(aEngine._file, aBaseName);
-      if (icon && icon.fileSize < MAX_ICON_SIZE) {
-        // Use this as the engine's icon
-        var bStream = Cc["@mozilla.org/binaryinputstream;1"].
-                        createInstance(Ci.nsIBinaryInputStream);
-        var fileInStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                           createInstance(Ci.nsIFileInputStream);
-
-        fileInStream.init(icon, MODE_RDONLY, PERMS_FILE, 0);
-        bStream.setInputStream(fileInStream);
-
-        var bytes = [];
-        while (bStream.available() != 0)
-          bytes = bytes.concat(bStream.readByteArray(bStream.available()));
-        bStream.close();
-
-        // Convert the byte array to a base64-encoded string
-        var str = btoa(String.fromCharCode.apply(null, bytes));
-
-        aEngine._iconURI = makeURI(ICON_DATAURL_PREFIX + str);
-        LOG("_importSherlockEngine: Set sherlock iconURI to: \"" +
-            aEngine._iconURL + "\"");
-
-        // Write the engine to disk to save changes
-        aEngine._serializeToFile();
-
-        // Delete the icon now that we're sure everything's been saved
-        icon.remove(false);
-      }
-    } catch (ex) { LOG("_convertSherlockFile: Error setting icon:\n" + ex); }
-  },
-
-  /**
-   * Finds an icon associated to a given Sherlock file. Searches the provided
-   * file's parent directory looking for files with the same base name and one
-   * of the file extensions in SHERLOCK_ICON_EXTENSIONS.
-   * @param aEngineFile
-   *        The Sherlock plugin file.
-   * @param aBaseName
-   *        The basename of the Sherlock file.
-   *          Example: "foo" for file "foo.src".
-   * @see nsIURL::fileBaseName
-   */
-  _findSherlockIcon: function SRCH_SVC_findSherlock(aEngineFile, aBaseName) {
-    for (var i = 0; i < SHERLOCK_ICON_EXTENSIONS.length; i++) {
-      var icon = aEngineFile.parent.clone();
-      icon.append(aBaseName + SHERLOCK_ICON_EXTENSIONS[i]);
-      if (icon.exists() && icon.isFile())
-        return icon;
-    }
-    return null;
   },
 
   /**

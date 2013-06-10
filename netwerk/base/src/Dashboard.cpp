@@ -92,7 +92,7 @@ Dashboard::GetSockets()
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
+    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
         mSock.cb = nullptr;
         mSock.data.Clear();
         return NS_ERROR_FAILURE;
@@ -198,7 +198,7 @@ Dashboard::GetHttpConnections()
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
+    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
         mHttp.cb = nullptr;
         mHttp.data.Clear();
         return NS_ERROR_FAILURE;
@@ -337,7 +337,7 @@ Dashboard::GetWebSocketConnections()
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
+    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
         mWs.cb = nullptr;
         mWs.data.Clear();
         return NS_ERROR_FAILURE;
@@ -425,7 +425,7 @@ Dashboard::GetDNSCacheEntries()
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
+    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
         mDns.cb = nullptr;
         mDns.data.Clear();
         return NS_ERROR_FAILURE;

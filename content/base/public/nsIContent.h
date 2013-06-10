@@ -633,17 +633,6 @@ public:
   virtual bool IsLink(nsIURI** aURI) const = 0;
 
   /**
-   * Get the cached state of the link.  If the state is unknown, 
-   * return eLinkState_Unknown.
-   *
-   * @return The cached link state of the link.
-   */
-  virtual nsLinkState GetLinkState() const
-  {
-    return eLinkState_NotLink;
-  }
-
-  /**
     * Get a pointer to the full href URI (fully resolved and canonicalized,
     * since it's an nsIURI object) for link elements.
     *

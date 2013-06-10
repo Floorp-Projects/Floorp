@@ -1015,6 +1015,8 @@ NS_IMETHODIMP
 mozInlineSpellChecker::IgnoreWords(const PRUnichar **aWordsToIgnore,
                                    uint32_t aCount)
 {
+  NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
+
   // add each word to the ignore list and then recheck the document
   for (uint32_t index = 0; index < aCount; index++)
     mSpellCheck->IgnoreWordAllOccurrences(aWordsToIgnore[index]);
@@ -1412,6 +1414,8 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
                                              bool* aDoneChecking)
 {
   *aDoneChecking = true;
+
+  NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
 
   // get the editor for SkipSpellCheckForNode, this may fail in reasonable
   // circumstances since the editor could have gone away

@@ -2101,7 +2101,7 @@ static bool SelectorMatches(Element* aElement,
         if (aTreeMatchContext.mForStyling &&
             statesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER)) {
           // Mark the element as having :hover-dependent style
-          aElement->SetFlags(NODE_HAS_RELEVANT_HOVER_RULES);
+          aElement->SetHasRelevantHoverRules();
         }
         if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(statesToCheck)) {
           if (aDependence)
@@ -2492,14 +2492,14 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
           states.HasAtLeastOneOfStates(aData->mStateMask) &&
           // We can optimize away testing selectors that only involve :hover, a
           // namespace, and a tag name against nodes that don't have the
-          // NODE_HAS_RELEVANT_HOVER_RULES flag: such a selector didn't match
+          // NodeHasRelevantHoverRules flag: such a selector didn't match
           // the tag name or namespace the first time around (since the :hover
-          // didn't set the NODE_HAS_RELEVANT_HOVER_RULES flag), so it won't
+          // didn't set the NodeHasRelevantHoverRules flag), so it won't
           // match it now.  Check for our selector only having :hover states, or
           // the element having the hover rules flag, or the selector having
           // some sort of non-namespace, non-tagname data in it.
           (states != NS_EVENT_STATE_HOVER ||
-           aData->mElement->HasFlag(NODE_HAS_RELEVANT_HOVER_RULES) ||
+           aData->mElement->HasRelevantHoverRules() ||
            selector->mIDList || selector->mClassList ||
            // We generally expect an mPseudoClassList, since we have a :hover.
            // The question is whether we have anything else in there.
