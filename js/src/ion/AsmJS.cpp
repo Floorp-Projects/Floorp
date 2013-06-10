@@ -359,7 +359,8 @@ class Type
         Signed,
         Unsigned,
         Intish,
-        Void
+        Void,
+        Unknown
     };
 
   private:
@@ -416,6 +417,7 @@ class Type
           case Intish:
             return MIRType_Int32;
           case Void:
+          case Unknown:
             return MIRType_None;
         }
         JS_NOT_REACHED("Invalid Type");
@@ -432,6 +434,7 @@ class Type
           case Unsigned:  return "unsigned";
           case Intish:    return "intish";
           case Void:      return "void";
+          case Unknown:   return "unknown";
         }
         JS_NOT_REACHED("Invalid Type");
         return "";
@@ -626,6 +629,16 @@ class Use
         }
         JS_NOT_REACHED("unexpected use type");
         return Type::Void;
+    }
+    Type toFFIReturnType() const {
+        switch (which_) {
+          case NoCoercion: return Type::Unknown;
+          case ToInt32: return Type::Intish;
+          case ToNumber: return Type::Doublish;
+          case AddOrSub: return Type::Unknown;
+        }
+        JS_NOT_REACHED("unexpected use type");
+        return Type::Unknown;
     }
     MIRType toMIRType() const {
         switch (which_) {
@@ -3542,7 +3555,7 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, Use us
     if (!f.ffiCall(exitIndex, args, use.toMIRType(), def))
         return false;
 
-    *type = use.toReturnType();
+    *type = use.toFFIReturnType();
     return true;
 }
 
