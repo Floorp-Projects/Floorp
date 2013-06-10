@@ -22,7 +22,7 @@ LIBS +=		\
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 export PERSONAL_MAILCAP=$(call core_abspath,$(srcdir))/mailcap
 endif
 
