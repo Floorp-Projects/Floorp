@@ -225,12 +225,9 @@ BuildListForLayer(Layer* aLayer,
     // Calculate rect for this layer based on aTransform.
     nsRect bounds;
     {
+      bounds = CSSRect::ToAppUnits(metrics->mViewport);
       nscoord auPerDevPixel = aSubdocFrame->PresContext()->AppUnitsPerDevPixel();
-      gfx::Rect viewport = metrics->mViewport;
-      bounds = nsIntRect(viewport.x, viewport.y,
-                         viewport.width, viewport.height).ToAppUnits(auPerDevPixel);
       ApplyTransform(bounds, tmpTransform, auPerDevPixel);
-
     }
 
     aShadowTree.AppendToTop(
@@ -411,9 +408,12 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
       view->mParentScaleY = aAccConfigYScale;
     }
 
+    // I don't know what units mViewportSize is in, hence use ToUnknownRect
+    // here to mark the current frontier in type info propagation
+    gfx::Rect viewport = metrics.mViewport.ToUnknownRect();
     view->mViewportSize = nsSize(
-      NSIntPixelsToAppUnits(metrics.mViewport.width, auPerDevPixel) * aXScale,
-      NSIntPixelsToAppUnits(metrics.mViewport.height, auPerDevPixel) * aYScale);
+      NSIntPixelsToAppUnits(viewport.width, auPerDevPixel) * aXScale,
+      NSIntPixelsToAppUnits(viewport.height, auPerDevPixel) * aYScale);
     view->mContentSize = nsSize(
       NSIntPixelsToAppUnits(metrics.mContentRect.width, auPerDevPixel) * aXScale,
       NSIntPixelsToAppUnits(metrics.mContentRect.height, auPerDevPixel) * aYScale);
