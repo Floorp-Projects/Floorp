@@ -80,14 +80,6 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
 }
 
 bool
-LIRGeneratorX64::lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
-{
-    ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, use(rhs));
-    return defineReuseInput(ins, mir, 0);
-}
-
-bool
 LIRGeneratorX64::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 {
     return defineTypedPhi(phi, lirIndex);
