@@ -384,7 +384,7 @@ private:
 
     // Wrapper for nsIDOMWindowUtils.setCSSViewport(). This updates some state
     // variables local to this class before setting it.
-    void SetCSSViewport(float aX, float aY);
+    void SetCSSViewport(const CSSSize& aSize);
 
     // Recalculates the display state, including the CSS
     // viewport. This should be called whenever we believe the

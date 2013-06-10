@@ -29,9 +29,17 @@ struct CSSPixel {
                                     NSAppUnitsToFloatPixels(rect.width, float(nsDeviceContext::AppUnitsPerCSSPixel())),
                                     NSAppUnitsToFloatPixels(rect.height, float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
+
+  static nsRect ToAppUnits(const gfx::RectTyped<CSSPixel>& aRect) {
+    return nsRect(NSFloatPixelsToAppUnits(aRect.x, float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSFloatPixelsToAppUnits(aRect.y, float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSFloatPixelsToAppUnits(aRect.width, float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSFloatPixelsToAppUnits(aRect.height, float(nsDeviceContext::AppUnitsPerCSSPixel())));
+  }
 };
 
 typedef gfx::PointTyped<CSSPixel> CSSPoint;
+typedef gfx::SizeTyped<CSSPixel> CSSSize;
 typedef gfx::RectTyped<CSSPixel> CSSRect;
 typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
 

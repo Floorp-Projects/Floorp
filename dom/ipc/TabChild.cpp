@@ -98,7 +98,7 @@ using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
-static const nsIntSize kDefaultViewportSize(980, 480);
+static const CSSSize kDefaultViewportSize(980, 480);
 
 static const char CANCEL_DEFAULT_PAN_ZOOM[] = "cancel-default-pan-zoom";
 static const char BROWSER_ZOOM_TO_RECT[] = "browser-zoom-to-rect";
@@ -341,15 +341,13 @@ TabChild::Observe(nsISupports *aSubject,
         // Reset CSS viewport and zoom to default on new page, then
         // calculate them properly using the actual metadata from the
         // page.
-        SetCSSViewport(kDefaultViewportSize.width, kDefaultViewportSize.height);
+        SetCSSViewport(kDefaultViewportSize);
 
         // Calculate a really simple resolution that we probably won't
         // be keeping, as well as putting the scroll offset back to
         // the top-left of the page.
         mLastMetrics.mZoom = gfxSize(1.0, 1.0);
-        mLastMetrics.mViewport =
-            gfx::Rect(0, 0,
-                      kDefaultViewportSize.width, kDefaultViewportSize.height);
+        mLastMetrics.mViewport = CSSRect(CSSPoint(), kDefaultViewportSize);
         // I don't know what units mInnerSize is in, hence FromUnknownRect
         mLastMetrics.mCompositionBounds = LayerIntRect::FromUnknownRect(
           gfx::IntRect(0, 0, mInnerSize.width, mInnerSize.height));
@@ -471,13 +469,13 @@ TabChild::OnSecurityChange(nsIWebProgress* aWebProgress,
 }
 
 void
-TabChild::SetCSSViewport(float aWidth, float aHeight)
+TabChild::SetCSSViewport(const CSSSize& aSize)
 {
-  mOldViewportWidth = aWidth;
+  mOldViewportWidth = aSize.width;
 
   if (mContentDocumentIsDisplayed) {
     nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
-    utils->SetCSSViewport(aWidth, aHeight);
+    utils->SetCSSViewport(aSize.width, aSize.height);
   }
 }
 
@@ -502,8 +500,7 @@ TabChild::HandlePossibleViewportChange()
 
   float screenW = mInnerSize.width;
   float screenH = mInnerSize.height;
-  float viewportW = viewportInfo.GetWidth();
-  float viewportH = viewportInfo.GetHeight();
+  CSSSize viewport(viewportInfo.GetWidth(), viewportInfo.GetHeight());
 
   // We're not being displayed in any way; don't bother doing anything because
   // that will just confuse future adjustments.
@@ -517,12 +514,11 @@ TabChild::HandlePossibleViewportChange()
   // we have to call SetCSSViewport twice - once to set the width, and the
   // second time to figure out the height based on the layout at that width.
   float oldBrowserWidth = mOldViewportWidth;
-  mLastMetrics.mViewport.width = viewportW;
-  mLastMetrics.mViewport.height = viewportH;
+  mLastMetrics.mViewport.SizeTo(viewport);
   if (!oldBrowserWidth) {
     oldBrowserWidth = kDefaultViewportSize.width;
   }
-  SetCSSViewport(viewportW, viewportH);
+  SetCSSViewport(viewport);
 
   // If this page has not been painted yet, then this must be getting run
   // because a meta-viewport element was added (via the DOMMetaAdded handler).
@@ -553,24 +549,26 @@ TabChild::HandlePossibleViewportChange()
     bodyHeight = bodyDOMElement->ScrollHeight();
   }
 
-  float pageWidth, pageHeight;
+  CSSSize pageSize;
   if (htmlDOMElement || bodyDOMElement) {
-    pageWidth = std::max(htmlWidth, bodyWidth);
-    pageHeight = std::max(htmlHeight, bodyHeight);
+    pageSize = CSSSize(std::max(htmlWidth, bodyWidth),
+                       std::max(htmlHeight, bodyHeight));
   } else {
     // For non-HTML content (e.g. SVG), just assume page size == viewport size.
-    pageWidth = viewportW;
-    pageHeight = viewportH;
+    pageSize = viewport;
   }
-  NS_ENSURE_TRUE_VOID(pageWidth); // (return early rather than divide by 0)
+  if (!pageSize.width) {
+    // Return early rather than divide by 0.
+    return;
+  }
 
-  minScale = mInnerSize.width / pageWidth;
+  minScale = mInnerSize.width / pageSize.width;
   minScale = clamped((double)minScale, viewportInfo.GetMinZoom(),
                      viewportInfo.GetMaxZoom());
   NS_ENSURE_TRUE_VOID(minScale); // (return early rather than divide by 0)
 
-  viewportH = std::max(viewportH, screenH / minScale);
-  SetCSSViewport(viewportW, viewportH);
+  viewport.height = std::max(viewport.height, screenH / minScale);
+  SetCSSViewport(viewport);
 
   // This change to the zoom accounts for all types of changes I can conceive:
   // 1. screen size changes, CSS viewport does not (pages with no meta viewport
@@ -590,8 +588,8 @@ TabChild::HandlePossibleViewportChange()
   }
 
   FrameMetrics metrics(mLastMetrics);
-  metrics.mViewport = gfx::Rect(0.0f, 0.0f, viewportW, viewportH);
-  metrics.mScrollableRect = CSSRect(0.0f, 0.0f, pageWidth, pageHeight);
+  metrics.mViewport = CSSRect(CSSPoint(), viewport);
+  metrics.mScrollableRect = CSSRect(CSSPoint(), pageSize);
   // I don't know what units mInnerSize is in, hence FromUnknownRect
   metrics.mCompositionBounds = LayerIntRect::FromUnknownRect(
     gfx::IntRect(0, 0, mInnerSize.width, mInnerSize.height));
