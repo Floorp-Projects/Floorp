@@ -57,7 +57,7 @@ function test_simple_source_map()
     sourceRoot: "http://example.com/www/js/"
   });
 
-  code += "//@ sourceMappingURL=data:text/json;base64," + btoa(map.toString());
+  code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());
 
   Components.utils.evalInSandbox(code, gDebuggee, "1.8",
                                  "http://example.com/www/js/abc.js", 1);

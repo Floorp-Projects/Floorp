@@ -41,7 +41,7 @@ function test_absolute_source_map()
   });
 
   code = readFile("sourcemapped.js")
-    + "\n//@ sourceMappingURL=" + getFileUrl("source-map-data/sourcemapped.map");
+    + "\n//# sourceMappingURL=" + getFileUrl("source-map-data/sourcemapped.map");
 
   Components.utils.evalInSandbox(code, gDebuggee, "1.8",
                                  getFileUrl("sourcemapped.js"), 1);
