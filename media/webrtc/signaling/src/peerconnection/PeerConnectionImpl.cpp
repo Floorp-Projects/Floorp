@@ -335,8 +335,8 @@ PeerConnectionImpl::PeerConnectionImpl()
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
-  CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %p",
-             __FUNCTION__, (void *) this);
+  CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %s",
+             __FUNCTION__, mHandle.c_str());
 }
 
 PeerConnectionImpl::~PeerConnectionImpl()
@@ -349,8 +349,8 @@ PeerConnectionImpl::~PeerConnectionImpl()
     CSFLogError(logTag, "PeerConnectionCtx is already gone. Ignoring...");
   }
 
-  CSFLogInfo(logTag, "%s: PeerConnectionImpl destructor invoked for %p",
-             __FUNCTION__, (void *) this);
+  CSFLogInfo(logTag, "%s: PeerConnectionImpl destructor invoked for %s",
+             __FUNCTION__, mHandle.c_str());
   CloseInt();
 
 #ifdef MOZILLA_INTERNAL_API
@@ -731,8 +731,8 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;
   }
-  CSFLogDebug(logTag,"%s DataChannelConnection %p attached to %p",
-              __FUNCTION__, (void*) mDataConnection.get(), (void *) this);
+  CSFLogDebug(logTag,"%s DataChannelConnection %p attached to %s",
+              __FUNCTION__, (void*) mDataConnection.get(), mHandle.c_str());
 #endif
   return NS_OK;
 }
@@ -1287,7 +1287,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close()
 {
-  CSFLogDebug(logTag, "%s: for %p", __FUNCTION__, (void *) this);
+  CSFLogDebug(logTag, "%s: for %s", __FUNCTION__, mHandle.c_str());
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt();
@@ -1300,14 +1300,14 @@ PeerConnectionImpl::CloseInt()
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   if (mCall) {
-    CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %p; "
-               "ending call", __FUNCTION__, (void *) this);
+    CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
+               "ending call", __FUNCTION__, mHandle.c_str());
     mCall->endCall();
   }
 #ifdef MOZILLA_INTERNAL_API
   if (mDataConnection) {
-    CSFLogInfo(logTag, "%s: Destroying DataChannelConnection %p for %p",
-               __FUNCTION__, (void *) mDataConnection.get(), (void *) this);
+    CSFLogInfo(logTag, "%s: Destroying DataChannelConnection %p for %s",
+               __FUNCTION__, (void *) mDataConnection.get(), mHandle.c_str());
     mDataConnection->Destroy();
     mDataConnection = nullptr; // it may not go away until the runnables are dead
   }
