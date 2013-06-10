@@ -234,11 +234,16 @@ ContainerRender(Container* aContainer,
     aContainer->gl()->PushViewportRect();
     framebufferRect -= childOffset;
     if (!aManager->CompositingDisabled()) {
-      aManager->CreateFBOWithTexture(framebufferRect,
-                                     mode,
-                                     aPreviousFrameBuffer,
-                                     &frameBuffer,
-                                     &containerSurface);
+      if (!aManager->CreateFBOWithTexture(framebufferRect,
+                                          mode,
+                                          aPreviousFrameBuffer,
+                                          &frameBuffer,
+                                          &containerSurface)) {
+        aContainer->gl()->PopViewportRect();
+        aContainer->gl()->PopScissorRect();
+        aContainer->gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
+        return;
+      }
     }
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
