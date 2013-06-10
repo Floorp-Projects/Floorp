@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Util.h"
 
 #include <stdlib.h>
@@ -43,6 +44,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
+using mozilla::Abs;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::IsNaN;
@@ -1291,19 +1293,6 @@ NumDigitsBase10(uint32_t n)
     return t - (n < powersOf10[t]) + 1;
 }
 
-static JS_ALWAYS_INLINE uint32_t
-NegateNegativeInt32(int32_t i)
-{
-    /*
-     * We cannot simply return '-i' because this is undefined for INT32_MIN.
-     * 2s complement does actually give us what we want, however.  That is,
-     * ~0x80000000 + 1 = 0x80000000 which is correct when interpreted as a
-     * uint32_t. To avoid undefined behavior, we write out 2s complement
-     * explicitly and rely on the peephole optimizer to generate 'neg'.
-     */
-    return ~uint32_t(i) + 1;
-}
-
 inline bool
 CompareLexicographicInt32(JSContext *cx, const Value &a, const Value &b, bool *lessOrEqualp)
 {
@@ -1324,14 +1313,8 @@ CompareLexicographicInt32(JSContext *cx, const Value &a, const Value &b, bool *l
     } else if ((aint >= 0) && (bint < 0)) {
         *lessOrEqualp = false;
     } else {
-        uint32_t auint, buint;
-        if (aint >= 0) {
-            auint = aint;
-            buint = bint;
-        } else {
-            auint = NegateNegativeInt32(aint);
-            buint = NegateNegativeInt32(bint);
-        }
+        uint32_t auint = Abs(aint);
+        uint32_t buint = Abs(bint);
 
         /*
          *  ... get number of digits of both integers.
