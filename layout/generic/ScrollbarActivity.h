@@ -100,7 +100,7 @@ protected:
                                bool* aStoredHoverState);
 
   void SetIsActive(bool aNewActive);
-  void SetIsFading(bool aNewFading);
+  bool SetIsFading(bool aNewFading); // returns false if 'this' was destroyed
 
   void BeginFade();
   void EndFade();
@@ -114,7 +114,7 @@ protected:
   void RegisterWithRefreshDriver();
   void UnregisterFromRefreshDriver();
 
-  void UpdateOpacity(TimeStamp aTime);
+  bool UpdateOpacity(TimeStamp aTime); // returns false if 'this' was destroyed
   void HoveredScrollbar(nsIContent* aScrollbar);
 
   nsRefreshDriver* GetRefreshDriver();

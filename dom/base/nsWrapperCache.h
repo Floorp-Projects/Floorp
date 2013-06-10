@@ -65,7 +65,7 @@ class nsWrapperCache
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_WRAPPERCACHE_IID)
 
-  nsWrapperCache() : mWrapperPtrBits(0)
+  nsWrapperCache() : mWrapper(nullptr), mFlags(0)
   {
   }
   ~nsWrapperCache()
@@ -94,7 +94,7 @@ public:
    */
   JSObject* GetWrapperPreserveColor() const
   {
-    return GetJSObjectFromBits();
+    return GetWrapperJSObject();
   }
 
   void SetWrapper(JSObject* aWrapper)
@@ -102,7 +102,7 @@ public:
     MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
     MOZ_ASSERT(aWrapper, "Use ClearWrapper!");
 
-    SetWrapperBits(aWrapper);
+    SetWrapperJSObject(aWrapper);
   }
 
   /**
@@ -113,24 +113,24 @@ public:
   {
     MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
 
-    SetWrapperBits(NULL);
+    SetWrapperJSObject(nullptr);
   }
 
   bool PreservingWrapper()
   {
-    return (mWrapperPtrBits & WRAPPER_BIT_PRESERVED) != 0;
+    return HasWrapperFlag(WRAPPER_BIT_PRESERVED);
   }
 
   void SetIsDOMBinding()
   {
-    MOZ_ASSERT(!mWrapperPtrBits,
+    MOZ_ASSERT(!mWrapper && !GetWrapperFlags(),
                "This flag should be set before creating any wrappers.");
-    mWrapperPtrBits = WRAPPER_IS_DOM_BINDING;
+    SetWrapperFlags(WRAPPER_IS_DOM_BINDING);
   }
 
   bool IsDOMBinding() const
   {
-    return (mWrapperPtrBits & WRAPPER_IS_DOM_BINDING) != 0;
+    return HasWrapperFlag(WRAPPER_IS_DOM_BINDING);
   }
 
   void SetHasSystemOnlyWrapper()
@@ -139,19 +139,19 @@ public:
                "This flag should be set after wrapper creation.");
     MOZ_ASSERT(IsDOMBinding(),
                "This flag should only be set for DOM bindings.");
-    mWrapperPtrBits |= WRAPPER_HAS_SOW;
+    SetWrapperFlags(WRAPPER_HAS_SOW);
   }
 
   bool HasSystemOnlyWrapper() const
   {
-    return (mWrapperPtrBits & WRAPPER_HAS_SOW) != 0;
+    return HasWrapperFlag(WRAPPER_HAS_SOW);
   }
 
   /**
    * Wrap the object corresponding to this wrapper cache. If non-null is
    * returned, the object has already been stored in the wrapper cache.
    */
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
   {
     MOZ_ASSERT(!IsDOMBinding(), "Someone forgot to override WrapObject");
     return nullptr;
@@ -172,37 +172,84 @@ public:
   void SetPreservingWrapper(bool aPreserve)
   {
     if(aPreserve) {
-      mWrapperPtrBits |= WRAPPER_BIT_PRESERVED;
+      SetWrapperFlags(WRAPPER_BIT_PRESERVED);
     }
     else {
-      mWrapperPtrBits &= ~WRAPPER_BIT_PRESERVED;
+      UnsetWrapperFlags(WRAPPER_BIT_PRESERVED);
     }
   }
 
   void TraceWrapper(const TraceCallbacks& aCallbacks, void* aClosure)
   {
-    if (PreservingWrapper()) {
-      JSObject *wrapper = GetWrapperPreserveColor();
-      if (wrapper) {
-        uintptr_t flags = mWrapperPtrBits & kWrapperBitMask;
-        aCallbacks.Trace(&wrapper, "Preserved wrapper", aClosure);
-        mWrapperPtrBits = reinterpret_cast<uintptr_t>(wrapper) | flags;
-      }
+    if (PreservingWrapper() && mWrapper) {
+        aCallbacks.Trace(&mWrapper, "Preserved wrapper", aClosure);
     }
   }
 
-private:
-  JSObject *GetJSObjectFromBits() const
+  /* 
+   * The following methods for getting and manipulating flags allow the unused
+   * bits of mFlags to be used by derived classes.
+   */
+
+  uint32_t GetFlags() const
   {
-    return reinterpret_cast<JSObject*>(mWrapperPtrBits & ~kWrapperBitMask);
-  }
-  void SetWrapperBits(void *aWrapper)
-  {
-    mWrapperPtrBits = reinterpret_cast<uintptr_t>(aWrapper) |
-                      (mWrapperPtrBits & WRAPPER_IS_DOM_BINDING);
+    return mFlags & ~kWrapperFlagsMask;
   }
 
-  void TraceJSObjectFromBits(JSTracer *aTrc, const char *aName);
+  bool HasFlag(uint32_t aFlag) const
+  {
+    MOZ_ASSERT((aFlag & kWrapperFlagsMask) == 0, "Bad flag mask");
+    return !!(mFlags & aFlag);
+  }
+
+  void SetFlags(uint32_t aFlagsToSet)
+  {
+    MOZ_ASSERT((aFlagsToSet & kWrapperFlagsMask) == 0, "Bad flag mask");
+    mFlags |= aFlagsToSet;
+  }
+
+  void UnsetFlags(uint32_t aFlagsToUnset)
+  {
+    MOZ_ASSERT((aFlagsToUnset & kWrapperFlagsMask) == 0, "Bad flag mask");
+    mFlags &= ~aFlagsToUnset;
+  }
+
+private:
+  JSObject *GetWrapperJSObject() const
+  {
+    return mWrapper;
+  }
+
+  void SetWrapperJSObject(JSObject* aWrapper)
+  {
+    mWrapper = aWrapper;
+    UnsetWrapperFlags(kWrapperFlagsMask & ~WRAPPER_IS_DOM_BINDING);
+  }
+
+  void TraceWrapperJSObject(JSTracer* aTrc, const char* aName);
+
+  uint32_t GetWrapperFlags() const
+  {
+    return mFlags & kWrapperFlagsMask;
+  }
+
+  bool HasWrapperFlag(uint32_t aFlag) const
+  {
+    MOZ_ASSERT((aFlag & ~kWrapperFlagsMask) == 0, "Bad wrapper flag bits");
+    return !!(mFlags & aFlag);
+  }
+
+  void SetWrapperFlags(uint32_t aFlagsToSet)
+  {
+    MOZ_ASSERT((aFlagsToSet & ~kWrapperFlagsMask) == 0, "Bad wrapper flag bits");
+    mFlags |= aFlagsToSet;
+  }
+
+  void UnsetWrapperFlags(uint32_t aFlagsToUnset)
+  {
+    MOZ_ASSERT((aFlagsToUnset & ~kWrapperFlagsMask) == 0, "Bad wrapper flag bits");
+    mFlags &= ~aFlagsToUnset;
+  }
 
   /**
    * If this bit is set then we're preserving the wrapper, which in effect ties
@@ -230,11 +277,14 @@ private:
    */
   enum { WRAPPER_HAS_SOW = 1 << 2 };
 
-  enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING |
-                            WRAPPER_HAS_SOW) };
+  enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING |
+                              WRAPPER_HAS_SOW) };
 
-  uintptr_t mWrapperPtrBits;
+  JSObject* mWrapper;
+  uint32_t  mFlags;
 };
+
+enum { WRAPPER_CACHE_FLAGS_BITS_USED = 3 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
 

@@ -16,8 +16,14 @@
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<SVGAnimatedNumberList, DOMSVGAnimatedNumberList>
-  sSVGAnimatedNumberListTearoffTable;
+  static inline
+nsSVGAttrTearoffTable<SVGAnimatedNumberList, DOMSVGAnimatedNumberList>&
+SVGAnimatedNumberListTearoffTable()
+{
+  static nsSVGAttrTearoffTable<SVGAnimatedNumberList, DOMSVGAnimatedNumberList>
+    sSVGAnimatedNumberListTearoffTable;
+  return sSVGAnimatedNumberListTearoffTable;
+}
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedNumberList, mElement)
 
@@ -61,10 +67,10 @@ DOMSVGAnimatedNumberList::GetDOMWrapper(SVGAnimatedNumberList *aList,
                                         uint8_t aAttrEnum)
 {
   nsRefPtr<DOMSVGAnimatedNumberList> wrapper =
-    sSVGAnimatedNumberListTearoffTable.GetTearoff(aList);
+    SVGAnimatedNumberListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGAnimatedNumberList(aElement, aAttrEnum);
-    sSVGAnimatedNumberListTearoffTable.AddTearoff(aList, wrapper);
+    SVGAnimatedNumberListTearoffTable().AddTearoff(aList, wrapper);
   }
   return wrapper.forget();
 }
@@ -72,14 +78,14 @@ DOMSVGAnimatedNumberList::GetDOMWrapper(SVGAnimatedNumberList *aList,
 /* static */ DOMSVGAnimatedNumberList*
 DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(SVGAnimatedNumberList *aList)
 {
-  return sSVGAnimatedNumberListTearoffTable.GetTearoff(aList);
+  return SVGAnimatedNumberListTearoffTable().GetTearoff(aList);
 }
 
 DOMSVGAnimatedNumberList::~DOMSVGAnimatedNumberList()
 {
   // Script no longer has any references to us, to our base/animVal objects, or
   // to any of their list items.
-  sSVGAnimatedNumberListTearoffTable.RemoveTearoff(&InternalAList());
+  SVGAnimatedNumberListTearoffTable().RemoveTearoff(&InternalAList());
 }
 
 void

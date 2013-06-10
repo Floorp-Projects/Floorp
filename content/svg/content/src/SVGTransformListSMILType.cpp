@@ -12,8 +12,6 @@
 
 using namespace mozilla;
 
-/*static*/ SVGTransformListSMILType SVGTransformListSMILType::sSingleton;
-
 typedef FallibleTArray<SVGTransformSMILData> TransformArray;
 
 //----------------------------------------------------------------------
@@ -36,7 +34,7 @@ SVGTransformListSMILType::Destroy(nsSMILValue& aValue) const
   TransformArray* params = static_cast<TransformArray*>(aValue.mU.mPtr);
   delete params;
   aValue.mU.mPtr = nullptr;
-  aValue.mType = &nsSMILNullType::sSingleton;
+  aValue.mType = nsSMILNullType::Singleton();
 }
 
 nsresult
@@ -321,7 +319,7 @@ SVGTransformListSMILType::AppendTransform(
   const SVGTransformSMILData& aTransform,
   nsSMILValue& aValue)
 {
-  NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
+  NS_PRECONDITION(aValue.mType == Singleton(), "Unexpected SMIL value type");
 
   TransformArray& transforms = *static_cast<TransformArray*>(aValue.mU.mPtr);
   return transforms.AppendElement(aTransform) ?
@@ -333,7 +331,7 @@ bool
 SVGTransformListSMILType::AppendTransforms(const SVGTransformList& aList,
                                            nsSMILValue& aValue)
 {
-  NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
+  NS_PRECONDITION(aValue.mType == Singleton(), "Unexpected SMIL value type");
 
   TransformArray& transforms = *static_cast<TransformArray*>(aValue.mU.mPtr);
 
@@ -353,7 +351,7 @@ bool
 SVGTransformListSMILType::GetTransforms(const nsSMILValue& aValue,
                                         FallibleTArray<nsSVGTransform>& aTransforms)
 {
-  NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
+  NS_PRECONDITION(aValue.mType == Singleton(), "Unexpected SMIL value type");
 
   const TransformArray& smilTransforms =
     *static_cast<const TransformArray*>(aValue.mU.mPtr);

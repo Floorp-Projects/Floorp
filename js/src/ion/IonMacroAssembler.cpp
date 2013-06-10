@@ -77,6 +77,8 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,
         branchTestString(Equal, tag, matched);
     if (types->hasType(types::Type::NullType()))
         branchTestNull(Equal, tag, matched);
+    if (types->hasType(types::Type::MagicArgType()))
+        branchTestMagic(Equal, tag, matched);
 
     if (types->hasType(types::Type::AnyObjectType())) {
         branchTestObject(Equal, tag, matched);

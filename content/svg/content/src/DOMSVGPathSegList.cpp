@@ -18,8 +18,14 @@
 
 namespace mozilla {
 
-static nsSVGAttrTearoffTable<void, DOMSVGPathSegList>
-  sSVGPathSegListTearoffTable;
+  static inline
+nsSVGAttrTearoffTable<void, DOMSVGPathSegList>&
+SVGPathSegListTearoffTable()
+{
+  static nsSVGAttrTearoffTable<void, DOMSVGPathSegList>
+    sSVGPathSegListTearoffTable;
+  return sSVGPathSegListTearoffTable;
+}
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPathSegList)
   // No unlinking of mElement, we'd need to null out the value pointer (the
@@ -49,10 +55,10 @@ DOMSVGPathSegList::GetDOMWrapper(void *aList,
                                  bool aIsAnimValList)
 {
   nsRefPtr<DOMSVGPathSegList> wrapper =
-    sSVGPathSegListTearoffTable.GetTearoff(aList);
+    SVGPathSegListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGPathSegList(aElement, aIsAnimValList);
-    sSVGPathSegListTearoffTable.AddTearoff(aList, wrapper);
+    SVGPathSegListTearoffTable().AddTearoff(aList, wrapper);
   }
   return wrapper.forget();
 }
@@ -60,7 +66,7 @@ DOMSVGPathSegList::GetDOMWrapper(void *aList,
 /* static */ DOMSVGPathSegList*
 DOMSVGPathSegList::GetDOMWrapperIfExists(void *aList)
 {
-  return sSVGPathSegListTearoffTable.GetTearoff(aList);
+  return SVGPathSegListTearoffTable().GetTearoff(aList);
 }
 
 DOMSVGPathSegList::~DOMSVGPathSegList()
@@ -70,7 +76,7 @@ DOMSVGPathSegList::~DOMSVGPathSegList()
   void *key = mIsAnimValList ?
     InternalAList().GetAnimValKey() :
     InternalAList().GetBaseValKey();
-  sSVGPathSegListTearoffTable.RemoveTearoff(key);
+  SVGPathSegListTearoffTable().RemoveTearoff(key);
 }
 
 JSObject*

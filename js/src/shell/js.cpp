@@ -404,23 +404,153 @@ SkipUTF8BOM(FILE* file)
 }
 
 static void
+RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, bool compileOnly)
+{
+    SkipUTF8BOM(file);
+
+    // To support the UNIX #! shell hack, gobble the first line if it starts
+    // with '#'.
+    int ch = fgetc(file);
+    if (ch == '#') {
+        while ((ch = fgetc(file)) != EOF) {
+            if (ch == '\n' || ch == '\r')
+                break;
+        }
+    }
+    ungetc(ch, file);
+
+    int64_t t1 = PRMJ_Now();
+    uint32_t oldopts = JS_GetOptions(cx);
+    gGotError = false;
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
+    CompileOptions options(cx);
+    options.setUTF8(true)
+        .setFileAndLine(filename, 1);
+
+    RootedScript script(cx);
+    script = JS::Compile(cx, obj, options, file);
+    JS_SetOptions(cx, oldopts);
+    JS_ASSERT_IF(!script, gGotError);
+    if (script && !compileOnly) {
+        if (!JS_ExecuteScript(cx, obj, script, NULL)) {
+            if (!gQuitting && !gTimedOut)
+                gExitCode = EXITCODE_RUNTIME_ERROR;
+        }
+        int64_t t2 = PRMJ_Now() - t1;
+        if (printTiming)
+            printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
+    }
+}
+
+static bool
+EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t length,
+             int lineno, bool compileOnly, FILE *out)
+{
+    // Eval.
+    JS::CompileOptions options(cx);
+    options.utf8 = true;
+    options.compileAndGo = true;
+    options.filename = "typein";
+    options.lineno = lineno;
+    RootedScript script(cx);
+    script = JS::Compile(cx, global, options, bytes, length);
+    if (!script)
+        return false;
+    if (compileOnly)
+        return true;
+    RootedValue result(cx);
+    if (!JS_ExecuteScript(cx, global, script, result.address()))
+        return false;
+
+    if (!result.isUndefined()) {
+        // Print.
+        RootedString str(cx);
+        str = JS_ValueToSource(cx, result);
+        if (!str)
+            return false;
+
+        char *utf8chars = JSStringToUTF8(cx, str);
+        if (!utf8chars)
+            return false;
+        fprintf(out, "%s\n", utf8chars);
+        JS_free(cx, utf8chars);
+    }
+    return true;
+}
+
+static void
+ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, bool compileOnly)
+{
+    int lineno = 1;
+    bool hitEOF = false;
+
+    do {
+        /*
+         * Accumulate lines until we get a 'compilable unit' - one that either
+         * generates an error (before running out of source) or that compiles
+         * cleanly.  This should be whenever we get a complete statement that
+         * coincides with the end of a line.
+         */
+        int startline = lineno;
+        typedef Vector<char, 32, ContextAllocPolicy> CharBuffer;
+        CharBuffer buffer(cx);
+        do {
+            ScheduleWatchdog(cx->runtime, -1);
+            gTimedOut = false;
+            errno = 0;
+
+            char *line = GetLine(in, startline == lineno ? "js> " : "");
+            if (!line) {
+                if (errno) {
+                    JS_ReportError(cx, strerror(errno));
+                    return;
+                }
+                hitEOF = true;
+                break;
+            }
+
+            if (!buffer.append(line, strlen(line)) || !buffer.append('\n'))
+                return;
+
+            lineno++;
+            if (!ScheduleWatchdog(cx->runtime, gTimeoutInterval)) {
+                hitEOF = true;
+                break;
+            }
+        } while (!JS_BufferIsCompilableUnit(cx, global, buffer.begin(), buffer.length()));
+
+        if (hitEOF && buffer.empty())
+            break;
+
+        if (!EvalAndPrint(cx, global, buffer.begin(), buffer.length(), startline, compileOnly,
+                          out))
+        {
+            // Catch the error, report it, and keep going.
+            JS_ReportPendingException(cx);
+        }
+    } while (!hitEOF && !gQuitting);
+
+    fprintf(out, "\n");
+}
+
+class AutoCloseInputFile
+{
+  private:
+    FILE *f_;
+  public:
+    explicit AutoCloseInputFile(FILE *f) : f_(f) {}
+    ~AutoCloseInputFile() {
+        if (f_ && f_ != stdin)
+            fclose(f_);
+    }
+};
+
+static void
 Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
 {
-    bool ok, hitEOF;
-    RootedScript script(cx);
-    RootedValue result(cx);
-    RootedString str(cx);
-    char *buffer;
-    size_t size;
-    jschar *uc_buffer;
-    size_t uc_len;
-    int lineno;
-    int startline;
-    FILE *file;
-    uint32_t oldopts;
-
     RootedObject obj(cx, obj_);
 
+    FILE *file;
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
     } else {
@@ -432,163 +562,17 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
             return;
         }
     }
+    AutoCloseInputFile autoClose(file);
 
     SetContextOptions(cx);
 
-    if (!forceTTY && !isatty(fileno(file)))
-    {
-        SkipUTF8BOM(file);
-
-        /*
-         * It's not interactive - just execute it.  Support the UNIX #! shell
-         * hack, and gobble the first line if it starts with '#'.
-         */
-        int ch = fgetc(file);
-        if (ch == '#') {
-            while((ch = fgetc(file)) != EOF) {
-                if (ch == '\n' || ch == '\r')
-                    break;
-            }
-        }
-        ungetc(ch, file);
-
-        int64_t t1 = PRMJ_Now();
-        oldopts = JS_GetOptions(cx);
-        gGotError = false;
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        CompileOptions options(cx);
-        options.setUTF8(true)
-               .setFileAndLine(filename, 1);
-        script = JS::Compile(cx, obj, options, file);
-        JS_SetOptions(cx, oldopts);
-        JS_ASSERT_IF(!script, gGotError);
-        if (script && !compileOnly) {
-            if (!JS_ExecuteScript(cx, obj, script, NULL)) {
-                if (!gQuitting && !gTimedOut)
-                    gExitCode = EXITCODE_RUNTIME_ERROR;
-            }
-            int64_t t2 = PRMJ_Now() - t1;
-            if (printTiming)
-                printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
-        }
-
-        goto cleanup;
+    if (!forceTTY && !isatty(fileno(file))) {
+        // It's not interactive - just execute it.
+        RunFile(cx, obj, filename, file, compileOnly);
+    } else {
+        // It's an interactive filehandle; drop into read-eval-print loop.
+        ReadEvalPrintLoop(cx, obj, file, gOutFile, compileOnly);
     }
-
-    /* It's an interactive filehandle; drop into read-eval-print loop. */
-    lineno = 1;
-    hitEOF = false;
-    buffer = NULL;
-    size = 0;           /* assign here to avoid warnings */
-    do {
-        /*
-         * Accumulate lines until we get a 'compilable unit' - one that either
-         * generates an error (before running out of source) or that compiles
-         * cleanly.  This should be whenever we get a complete statement that
-         * coincides with the end of a line.
-         */
-        startline = lineno;
-        size_t len = 0; /* initialize to avoid warnings */
-        do {
-            ScheduleWatchdog(cx->runtime, -1);
-            gTimedOut = false;
-            errno = 0;
-
-            char *line = GetLine(file, startline == lineno ? "js> " : "");
-            if (!line) {
-                if (errno) {
-                    JS_ReportError(cx, strerror(errno));
-                    free(buffer);
-                    goto cleanup;
-                }
-                hitEOF = true;
-                break;
-            }
-            if (!buffer) {
-                buffer = line;
-                len = strlen(buffer);
-                size = len + 1;
-            } else {
-                /*
-                 * len + 1 is required to store '\n' in the end of line.
-                 */
-                size_t newlen = strlen(line) + (len ? len + 1 : 0);
-                if (newlen + 1 > size) {
-                    size = newlen + 1 > size * 2 ? newlen + 1 : size * 2;
-                    char *newBuf = (char *) realloc(buffer, size);
-                    if (!newBuf) {
-                        free(buffer);
-                        free(line);
-                        JS_ReportOutOfMemory(cx);
-                        goto cleanup;
-                    }
-                    buffer = newBuf;
-                }
-                char *current = buffer + len;
-                if (startline != lineno)
-                    *current++ = '\n';
-                strcpy(current, line);
-                len = newlen;
-                free(line);
-            }
-            lineno++;
-            if (!ScheduleWatchdog(cx->runtime, gTimeoutInterval)) {
-                hitEOF = true;
-                break;
-            }
-        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
-
-        if (hitEOF && !buffer)
-            break;
-
-        if (!InflateUTF8StringToBuffer(cx, buffer, len, NULL, &uc_len)) {
-            JS_ReportError(cx, "Invalid UTF-8 in input");
-            gExitCode = EXITCODE_RUNTIME_ERROR;
-            return;
-        }
-
-        uc_buffer = (jschar*)malloc(uc_len * sizeof(jschar));
-        InflateUTF8StringToBuffer(cx, buffer, len, uc_buffer, &uc_len);
-
-        /* Clear any pending exception from previous failed compiles. */
-        JS_ClearPendingException(cx);
-
-        /* Even though we're interactive, we have a compile-n-go opportunity. */
-        oldopts = JS_GetOptions(cx);
-        gGotError = false;
-        if (!compileOnly)
-            JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        script = JS_CompileUCScript(cx, obj, uc_buffer, uc_len, "typein", startline);
-        if (!compileOnly)
-            JS_SetOptions(cx, oldopts);
-
-        JS_ASSERT_IF(!script, gGotError);
-
-        if (script && !compileOnly) {
-            ok = JS_ExecuteScript(cx, obj, script, result.address());
-            if (ok && !JSVAL_IS_VOID(result)) {
-                str = JS_ValueToSource(cx, result);
-                ok = !!str;
-                if (ok) {
-                    char *utf8chars = JSStringToUTF8(cx, str);
-                    ok = !!utf8chars;
-                    if (ok) {
-                        fprintf(gOutFile, "%s\n", utf8chars);
-                        JS_free(cx, utf8chars);
-                    }
-                }
-            }
-        }
-        *buffer = '\0';
-        free(uc_buffer);
-    } while (!hitEOF && !gQuitting);
-
-    free(buffer);
-    fprintf(gOutFile, "\n");
-cleanup:
-    if (file != stdin)
-        fclose(file);
-    return;
 }
 
 /*
@@ -1911,7 +1895,9 @@ DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool l
                 RootedFunction f(cx, obj->toFunction());
                 RootedScript script(cx);
                 JSFunction::maybeGetOrCreateScript(cx, f, &script);
-                if (!DisassembleScript(cx, script, fun, lines, recursive, sp))
+                if (!script)
+                    Sprint(sp, "[native code]\n");
+                else if (!DisassembleScript(cx, script, fun, lines, recursive, sp))
                     return false;
             }
         }
@@ -4553,16 +4539,16 @@ static JSClass *GetDomClass();
 #endif
 
 static bool
-dom_get_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *vp)
+dom_get_x(JSContext* cx, JSHandleObject obj, void *self, JSJitGetterCallArgs args)
 {
     JS_ASSERT(JS_GetClass(obj) == GetDomClass());
     JS_ASSERT(self == (void *)0x1234);
-    JS_SET_RVAL(cx, vp, JS_NumberValue(double(3.14)));
+    args.rval().set(JS_NumberValue(double(3.14)));
     return true;
 }
 
 static bool
-dom_set_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *argv)
+dom_set_x(JSContext* cx, JSHandleObject obj, void *self, JSJitSetterCallArgs args)
 {
     JS_ASSERT(JS_GetClass(obj) == GetDomClass());
     JS_ASSERT(self == (void *)0x1234);
@@ -4570,14 +4556,13 @@ dom_set_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *argv)
 }
 
 static bool
-dom_doFoo(JSContext* cx, JSHandleObject obj, void *self, unsigned argc, JS::Value *vp)
+dom_doFoo(JSContext* cx, JSHandleObject obj, void *self, const JSJitMethodCallArgs& args)
 {
     JS_ASSERT(JS_GetClass(obj) == GetDomClass());
     JS_ASSERT(self == (void *)0x1234);
 
-    /* Just return argc. */
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(argc);
+    /* Just return args.length(). */
+    args.rval().setInt32(args.length());
     return true;
 }
 
@@ -4649,12 +4634,13 @@ static JSClass *GetDomClass() {
 static JSBool
 dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
     if (JS_GetClass(obj) != &dom_class) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().set(UndefinedValue());
         return true;
     }
 
@@ -4663,12 +4649,13 @@ dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
     MOZ_ASSERT(info->type == JSJitInfo::Getter);
     JSJitGetterOp getter = info->getter;
-    return getter(cx, obj, val.toPrivate(), vp);
+    return getter(cx, obj, val.toPrivate(), JSJitGetterCallArgs(args));
 }
 
 static JSBool
 dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
@@ -4676,31 +4663,31 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
     JS_ASSERT(argc == 1);
 
     if (JS_GetClass(obj) != &dom_class) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().set(UndefinedValue());
         return true;
     }
 
-    JS::Value* argv = JS_ARGV(cx, vp);
     JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
     MOZ_ASSERT(info->type == JSJitInfo::Setter);
     JSJitSetterOp setter = info->setter;
-    if (!setter(cx, obj, val.toPrivate(), argv))
+    if (!setter(cx, obj, val.toPrivate(), JSJitSetterCallArgs(args)))
         return false;
-    JS_SET_RVAL(cx, vp, UndefinedValue());
+    args.rval().set(UndefinedValue());
     return true;
 }
 
 static JSBool
 dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
     if (JS_GetClass(obj) != &dom_class) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().set(UndefinedValue());
         return true;
     }
 
@@ -4709,7 +4696,7 @@ dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
     const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));
     MOZ_ASSERT(info->type == JSJitInfo::Method);
     JSJitMethodOp method = info->method;
-    return method(cx, obj, val.toPrivate(), argc, vp);
+    return method(cx, obj, val.toPrivate(), JSJitMethodCallArgs(args));
 }
 
 static void

@@ -437,10 +437,29 @@ bool GStreamerReader::DecodeAudioData()
       return false;
     }
 
+    /* Wait something to be decoded before return or continue */
     if (!mAudioSinkBufferCount) {
-      return true;
+      if(!mVideoSinkBufferCount) {
+        /* We have nothing decoded so it makes no sense to return to the state machine
+         * as it will call us back immediately, we'll return again and so on, wasting
+         * CPU cycles for no job done. So, block here until there is either video or
+         * audio data available 
+        */
+        mon.Wait();
+        if (!mAudioSinkBufferCount) {
+          /* There is still no audio data available, so either there is video data or 
+           * something else has happened (Eos, etc...). Return to the state machine
+           * to process it.
+           */
+          return true;
+        }
+      }
+      else {
+        return true;
+      }
     }
 
+    NotifyBytesConsumed();
     buffer = gst_app_sink_pull_buffer(mAudioAppSink);
     mAudioSinkBufferCount--;
   }
@@ -483,10 +502,29 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
       return false;
     }
 
+    /* Wait something to be decoded before return or continue */
     if (!mVideoSinkBufferCount) {
-      return true;
+      if (!mAudioSinkBufferCount) {
+        /* We have nothing decoded so it makes no sense to return to the state machine
+         * as it will call us back immediately, we'll return again and so on, wasting
+         * CPU cycles for no job done. So, block here until there is either video or
+         * audio data available 
+        */
+        mon.Wait();
+        if (!mVideoSinkBufferCount) {
+          /* There is still no video data available, so either there is audio data or 
+           * something else has happened (Eos, etc...). Return to the state machine
+           * to process it
+           */
+          return true;
+        }
+      }
+      else {
+        return true;
+      }
     }
 
+    NotifyBytesConsumed();
     mDecoder->NotifyDecodedFrames(0, 1);
 
     buffer = gst_app_sink_pull_buffer(mVideoAppSink);

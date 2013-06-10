@@ -56,8 +56,6 @@
             'YUV_DISABLE_ASM',
           ],
         }],
-      ],
-      'conditions': [
         ['build_with_mozilla==1', {
           'include_dirs': [
             '$(DEPTH)/dist/include',

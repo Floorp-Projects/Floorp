@@ -10,8 +10,6 @@
 
 namespace mozilla {
 
-/*static*/ SMILBoolType SMILBoolType::sSingleton;
-
 void
 SMILBoolType::Init(nsSMILValue& aValue) const
 {
@@ -25,7 +23,7 @@ SMILBoolType::Destroy(nsSMILValue& aValue) const
 {
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mBool = false;
-  aValue.mType = &nsSMILNullType::sSingleton;
+  aValue.mType = nsSMILNullType::Singleton();
 }
 
 nsresult

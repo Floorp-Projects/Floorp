@@ -87,7 +87,6 @@ public:
                                    int32_t* aNameSpaceID);
     static nsresult splitQName(const nsAString& aName, nsIAtom** aPrefix,
                                nsIAtom** aLocalName);
-    static const nsDependentSubstring getLocalPart(const nsAString& src);
 
     /*
      * Returns true if the given character is whitespace.

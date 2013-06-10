@@ -9132,8 +9132,8 @@ if test -n "$ARM_ARCH"; then
     fi
 fi
 
-# Don't try to compile sse4.1 code if toolchain doesn't support
-if test -z "$HAVE_TOOLCHAIN_SUPPORT_MSSE4_1"; then
+# Don't try to compile ssse3/sse4.1 code if toolchain doesn't support
+if test -z "$HAVE_TOOLCHAIN_SUPPORT_SSSE3" || test -z "$HAVE_TOOLCHAIN_SUPPORT_MSSE4_1"; then
   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D yuv_disable_asm=1"
 fi
 

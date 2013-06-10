@@ -2954,11 +2954,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       flags = Layer::CONTENT_OPAQUE;
     }
   }
-
-  if (aContainerFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    flags |= Layer::CONTENT_DISABLE_TRANSFORM_SNAPPING;
-  }
-
   containerLayer->SetContentFlags(flags);
 
   mContainerLayerGeneration = oldGeneration;
