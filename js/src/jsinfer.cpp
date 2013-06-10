@@ -3797,8 +3797,6 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 
     if (singleton) {
         /* Make sure flags are consistent with persistent object state. */
-        JS_ASSERT_IF(flags & OBJECT_FLAG_UNINLINEABLE,
-                     interpretedFunction->nonLazyScript()->uninlineable);
         JS_ASSERT_IF(flags & OBJECT_FLAG_ITERATED,
                      singleton->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON));
     }
@@ -3979,8 +3977,6 @@ TypeObject::print()
             printf(" packed");
         if (!hasAnyFlags(OBJECT_FLAG_LENGTH_OVERFLOW))
             printf(" noLengthOverflow");
-        if (hasAnyFlags(OBJECT_FLAG_UNINLINEABLE))
-            printf(" uninlineable");
         if (hasAnyFlags(OBJECT_FLAG_EMULATES_UNDEFINED))
             printf(" emulatesUndefined");
         if (hasAnyFlags(OBJECT_FLAG_ITERATED))
@@ -6082,11 +6078,8 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 
     type->singleton = obj;
 
-    if (obj->isFunction() && obj->toFunction()->isInterpreted()) {
+    if (obj->isFunction() && obj->toFunction()->isInterpreted())
         type->interpretedFunction = obj->toFunction();
-        if (type->interpretedFunction->nonLazyScript()->uninlineable)
-            type->flags |= OBJECT_FLAG_UNINLINEABLE;
-    }
 
     if (obj->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
         type->flags |= OBJECT_FLAG_ITERATED;
