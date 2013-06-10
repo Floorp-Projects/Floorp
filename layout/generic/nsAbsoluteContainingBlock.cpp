@@ -156,7 +156,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
       else {
         // Delete any continuations
         if (nextFrame) {
-          tracker.Finish(kidFrame);
+          nsOverflowContinuationTracker::AutoFinish fini(&tracker, kidFrame);
           static_cast<nsContainerFrame*>(nextFrame->GetParent())
             ->DeleteNextInFlowChild(aPresContext, nextFrame, true);
         }
