@@ -1589,15 +1589,18 @@ GetDefaultAdapterPath(BluetoothValue& aValue, nsString& aError)
                                             DBUS_MANAGER_IFACE,
                                             "DefaultAdapter",
                                             DBUS_TYPE_INVALID);
+
   UnpackObjectPathMessage(msg, &err, aValue, aError);
+
   if (msg) {
     dbus_message_unref(msg);
   }
+
   if (!aError.IsEmpty()) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
-  return NS_OK;
+  return true;
 }
 
 bool
@@ -1773,7 +1776,7 @@ public:
 
     BluetoothValue v;
     nsAutoString replyError;
-    if (GetDefaultAdapterPath(v, replyError)) {
+    if (!GetDefaultAdapterPath(v, replyError)) {
       DispatchBluetoothReply(mRunnable, v, replyError);
       return NS_ERROR_FAILURE;
     }
