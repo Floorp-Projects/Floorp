@@ -456,9 +456,10 @@ const CustomizableWidgets = [{
     },
     onCreated: function(node) {
       let win = node.ownerDocument.defaultView;
-      let selectedBrowser = win.gBrowser.selectedBrowser;
-      let feeds = selectedBrowser && selectedBrowser.feeds;
-      if (!feeds || !feeds.length) {
+      let browser = win.gBrowser.selectedBrowser;
+      let feeds = browser && browser.feeds && browser.feeds.length;
+      let contentURL = browser && browser.currentURI && browser.currentURI.spec;
+      if (contentURL != "about:customizing" && !feeds) {
         node.setAttribute("disabled", "true");
       }
     }
