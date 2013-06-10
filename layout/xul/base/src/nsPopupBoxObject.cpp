@@ -14,6 +14,7 @@
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
 #include "nsClientRect.h"
+#include "nsView.h"
 
 class nsPopupBoxObject : public nsBoxObject,
                          public nsIPopupBoxObject
