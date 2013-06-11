@@ -698,7 +698,7 @@ static const struct JSOption {
     const char  *name;
     uint32_t    flag;
 } js_options[] = {
-    {"strict",          JSOPTION_STRICT},
+    {"strict",          JSOPTION_EXTRA_WARNINGS},
     {"werror",          JSOPTION_WERROR},
     {"strict_mode",     JSOPTION_STRICT_MODE},
 };
@@ -1150,7 +1150,7 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
         case 'S':
             JS_ToggleOptions(cx, JSOPTION_WERROR);
         case 's':
-            JS_ToggleOptions(cx, JSOPTION_STRICT);
+            JS_ToggleOptions(cx, JSOPTION_EXTRA_WARNINGS);
             break;
         case 'I':
             JS_ToggleOptions(cx, JSOPTION_COMPILE_N_GO);
