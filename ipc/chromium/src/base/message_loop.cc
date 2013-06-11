@@ -20,7 +20,7 @@
 #include "base/message_pump_libevent.h"
 #endif
 #if defined(OS_LINUX) || defined(OS_BSD)
-#if defined(MOZ_WIDGET_GTK)
+#ifdef MOZ_WIDGET_GTK2
 #include "base/message_pump_glib.h"
 #endif
 #ifdef MOZ_WIDGET_QT

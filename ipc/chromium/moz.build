@@ -177,7 +177,7 @@ if os_linux:
         'process_util_linux.cc',
         'time_posix.cc',
     ]
-    if CONFIG['MOZ_WIDGET_GTK']:
+    if CONFIG['MOZ_ENABLE_GTK2']:
         CPP_SOURCES += [
             'message_pump_glib.cc',
         ]
@@ -193,7 +193,7 @@ if os_bsd:
         'process_util_bsd.cc',
         'time_posix.cc',
     ]
-    if CONFIG['MOZ_WIDGET_GTK']:
+    if CONFIG['MOZ_ENABLE_GTK2']:
         CPP_SOURCES += [
             'message_pump_glib.cc',
         ]

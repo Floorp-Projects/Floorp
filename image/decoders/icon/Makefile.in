@@ -17,7 +17,7 @@ LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-ifdef MOZ_WIDGET_GTK
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 PLATFORM = gtk
 endif
 
