@@ -75,24 +75,24 @@ this.UtteranceGenerator = {
       utterance.push.apply(utterance,
         UtteranceGenerator.genForObject(aAccessible));
     };
-    let roleString = Utils.AccRetrieval.getStringRole(aContext.accessible.role);
-    let nameRule = this.roleRuleMap[roleString] || 0;
+    let ignoreSubtree = function ignoreSubtree(aAccessible) {
+      let roleString = Utils.AccRetrieval.getStringRole(aAccessible.role);
+      let nameRule = UtteranceGenerator.roleRuleMap[roleString] || 0;
+      // Ignore subtree if the name is explicit and the role's name rule is the
+      // NAME_FROM_SUBTREE_RULE.
+      return (nameRule & NAME_FROM_SUBTREE_RULE) &&
+        (Utils.getAttributes(aAccessible)['explicit-name'] === 'true');
+    };
     let utteranceOrder = gUtteranceOrder.value || UTTERANCE_DESC_FIRST;
-    // Include subtree if the name is not explicit or the role's name rule is
-    // not the NAME_FROM_SUBTREE_RULE.
-    let includeSubtree = (Utils.getAttributes(aContext.accessible)[
-      'explicit-name'] !== 'true') || !(nameRule & NAME_FROM_SUBTREE_RULE);
 
     if (utteranceOrder === UTTERANCE_DESC_FIRST) {
       aContext.newAncestry.forEach(addUtterance);
       addUtterance(aContext.accessible);
-      if (includeSubtree) {
-        aContext.subtreePreorder.forEach(addUtterance);
-      }
+      [addUtterance(node) for
+        (node of aContext.subtreeGenerator(true, ignoreSubtree))];
     } else {
-      if (includeSubtree) {
-        aContext.subtreePostorder.forEach(addUtterance);
-      }
+      [addUtterance(node) for
+        (node of aContext.subtreeGenerator(false, ignoreSubtree))];
       addUtterance(aContext.accessible);
       aContext.newAncestry.reverse().forEach(addUtterance);
     }

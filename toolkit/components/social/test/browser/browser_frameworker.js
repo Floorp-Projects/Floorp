@@ -652,4 +652,17 @@ let tests = {
     worker.port.postMessage({topic: "ping"})
   },
 
+
+  testIndexedDB: function(cbnext) {
+    let worker = getFrameWorkerHandle("https://example.com/browser/toolkit/components/social/test/browser/worker_social.js", undefined, "testIndexedDB");
+    worker.port.onmessage = function(e) {
+      let m = e.data;
+      if (m.topic == "social.indexeddb-result") {
+        is(m.data.result, "ok", "created indexeddb");
+        worker.terminate();
+        cbnext();
+      }
+    }
+    worker.port.postMessage({topic: "test-indexeddb-create"})
+  },
 }
