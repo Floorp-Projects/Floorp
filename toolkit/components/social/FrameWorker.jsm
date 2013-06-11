@@ -136,7 +136,7 @@ FrameWorker.prototype = {
     let workerAPI = ['WebSocket', 'localStorage', 'atob', 'btoa',
                      'clearInterval', 'clearTimeout', 'dump',
                      'setInterval', 'setTimeout', 'XMLHttpRequest',
-                     'FileReader', 'Blob', 'EventSource',
+                     'FileReader', 'Blob', 'EventSource', 'indexedDB',
                      'location'];
     // Bug 798660 - XHR and WebSocket have issues in a sandbox and need
     // to be unwrapped to work

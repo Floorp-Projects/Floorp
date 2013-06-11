@@ -383,44 +383,41 @@ PivotContext.prototype = {
   /*
    * Traverse the accessible's subtree in pre or post order.
    * It only includes the accessible's visible chidren.
+   * Note: needSubtree is a function argument that can be used to determine
+   * whether aAccessible's subtree is required.
    */
-  _traverse: function _traverse(aAccessible, preorder) {
-    let list = [];
+  _traverse: function _traverse(aAccessible, aPreorder, aStop) {
+    if (aStop && aStop(aAccessible)) {
+      return;
+    }
     let child = aAccessible.firstChild;
     while (child) {
       let state = {};
       child.getState(state, {});
       if (!(state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE)) {
-        let traversed = _traverse(child, preorder);
-        // Prepend or append a child, based on traverse order.
-        traversed[preorder ? "unshift" : "push"](child);
-        list.push.apply(list, traversed);
+        if (aPreorder) {
+          yield child;
+          [yield node for (node of this._traverse(child, aPreorder, aStop))];
+        } else {
+          [yield node for (node of this._traverse(child, aPreorder, aStop))];
+          yield child;
+        }
       }
       child = child.nextSibling;
     }
-    return list;
   },
 
   /*
-   * This is a flattened list of the accessible's subtree in preorder.
+   * A subtree generator function, used to generate a flattened
+   * list of the accessible's subtree in pre or post order.
    * It only includes the accessible's visible chidren.
+   * @param {boolean} aPreorder A flag for traversal order. If true, traverse
+   * in preorder; if false, traverse in postorder.
+   * @param {function} aStop An optional function, indicating whether subtree
+   * traversal should stop.
    */
-  get subtreePreorder() {
-    if (!this._subtreePreOrder)
-      this._subtreePreOrder = this._traverse(this._accessible, true);
-
-    return this._subtreePreOrder;
-  },
-
-  /*
-   * This is a flattened list of the accessible's subtree in postorder.
-   * It only includes the accessible's visible chidren.
-   */
-  get subtreePostorder() {
-    if (!this._subtreePostOrder)
-      this._subtreePostOrder = this._traverse(this._accessible, false);
-
-    return this._subtreePostOrder;
+  subtreeGenerator: function subtreeGenerator(aPreorder, aStop) {
+    return this._traverse(this._accessible, aPreorder, aStop);
   },
 
   get bounds() {

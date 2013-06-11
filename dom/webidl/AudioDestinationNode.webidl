@@ -13,8 +13,7 @@
 [PrefControlled]
 interface AudioDestinationNode : AudioNode {
 
-    //readonly attribute unsigned long maxNumberOfChannels;
-    //attribute unsigned long numberOfChannels;
+    readonly attribute unsigned long maxChannelCount;
 
 };
 

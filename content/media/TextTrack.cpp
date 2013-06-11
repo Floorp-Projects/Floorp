@@ -46,9 +46,9 @@ TextTrack::TextTrack(nsISupports* aParent)
 }
 
 void
-TextTrack::Update(double time)
+TextTrack::Update(double aTime)
 {
-  mCueList->Update(time);
+  mCueList->Update(aTime);
 }
 
 JSObject*

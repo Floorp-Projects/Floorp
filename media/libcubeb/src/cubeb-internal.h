@@ -12,6 +12,7 @@
 struct cubeb_ops {
   int (* init)(cubeb ** context, char const * context_name);
   char const * (* get_backend_id)(cubeb * context);
+  int (* get_max_channel_count)(cubeb * context, uint32_t * max_channels);
   void (* destroy)(cubeb * context);
   int (* stream_init)(cubeb * context, cubeb_stream ** stream, char const * stream_name,
                       cubeb_stream_params stream_params, unsigned int latency,
