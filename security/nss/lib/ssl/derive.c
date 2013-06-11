@@ -764,7 +764,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 
 		ec_curve =
 		    ssl3_GetCurveWithECKeyStrength(
-					ssl3_GetSupportedECCurveMask(NULL),
+					ssl3_GetSupportedECCCurveMask(NULL),
 				  	requiredECCbits);
 		rv = ssl3_ECName2Params(NULL, ec_curve, &ecParams);
 		if (rv == SECFailure) {
