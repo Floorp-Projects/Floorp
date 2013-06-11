@@ -21,6 +21,7 @@ import android.database.ContentObserver;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -595,6 +596,21 @@ public class Tabs implements GeckoEventListener {
 
     private void registerEventListener(String event) {
         GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
+    }
+
+    /**
+     * Returns true if any of the tabs has the requested url.
+     * 
+     * @return true if the url is open currently, false otherwise.
+     */
+    public boolean hasUrl(String url) {
+        for (Tab tab : mOrder) {
+            if (TextUtils.equals(tab.getURL(), url)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
