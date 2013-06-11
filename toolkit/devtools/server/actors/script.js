@@ -716,8 +716,30 @@ ThreadActor.prototype = {
    * Get the script and source lists from the debugger.
    */
   _discoverScriptsAndSources: function TA__discoverScriptsAndSources() {
-    return all([this._addScript(s)
-                for (s of this.dbg.findScripts())]);
+    let promises = [];
+    let foundSourceMaps = false;
+    let scripts = this.dbg.findScripts();
+    for (let s of scripts) {
+      if (s.sourceMapURL && !foundSourceMaps) {
+        foundSourceMaps = true;
+        break;
+      }
+    }
+    if (this._options.useSourceMaps && foundSourceMaps) {
+      for (let s of scripts) {
+        promises.push(this._addScript(s));
+      }
+      return all(promises);
+    }
+    // When source maps are not enabled or not used in the page _addScript is
+    // synchronous, since it doesn't need to wait for fetching source maps, so
+    // resolves immediately. This eliminates a huge slowdown in script-heavy
+    // pages like G+ or chrome debugging, where the GC takes a long time to
+    // clean up after Promise.all.
+    for (let s of scripts) {
+      this._addScriptSync(s);
+    }
+    return resolve(null);
   },
 
   onSources: function TA_onSources(aRequest) {
@@ -1244,6 +1266,40 @@ ThreadActor.prototype = {
     // Ignore about:* pages for content debugging.
     if (aSourceUrl.indexOf("about:") == 0) {
       return false;
+    }
+    return true;
+  },
+
+  /**
+   * Add the provided script to the server cache synchronously, without checking
+   * for any declared source maps.
+   *
+   * @param aScript Debugger.Script
+   *        The source script that will be stored.
+   * @returns true, if the script was added; false otherwise.
+   */
+  _addScriptSync: function TA__addScriptSync(aScript) {
+    if (!this._allowSource(aScript.url)) {
+      return false;
+    }
+
+    this.sources.source(aScript.url);
+    // Set any stored breakpoints.
+    let existing = this._breakpointStore[aScript.url];
+    if (existing) {
+      let endLine = aScript.startLine + aScript.lineCount - 1;
+      // Iterate over the lines backwards, so that sliding breakpoints don't
+      // affect the loop.
+      for (let line = existing.length - 1; line >= 0; line--) {
+        let bp = existing[line];
+        // Only consider breakpoints that are not already associated with
+        // scripts, and limit search to the line numbers contained in the new
+        // script.
+        if (bp && !bp.actor.scripts.length &&
+            line >= aScript.startLine && line <= endLine) {
+          this._setBreakpoint(bp);
+        }
+      }
     }
     return true;
   },
