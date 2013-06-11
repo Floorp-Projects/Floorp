@@ -1583,10 +1583,14 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     this.getMutations({cleanup: this.autoCleanup}).then(null, console.error);
   }),
 
+  isLocal: function() {
+    return !!this.conn._transport._serverConnection;
+  },
+
   // XXX hack during transition to remote inspector: get a proper NodeFront
   // for a given local node.  Only works locally.
   frontForRawNode: function(rawNode){
-    if (!this.conn._transport._serverConnection) {
+    if (!this.isLocal()) {
       throw Error("Tried to use frontForRawNode on a remote connection.");
     }
     let walkerActor = this.conn._transport._serverConnection.getActor(this.actorID);
