@@ -483,7 +483,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
           cModel.Find("GT-P5100", true) != -1 ||
           cModel.Find("GT-P5110", true) != -1 ||
           cModel.Find("GT-P5113", true) != -1 ||
-          cManufacturer.Equals("Sony", nsCaseInsensitiveCStringComparator());
+          cManufacturer.Find("Sony", true) != -1;
 
         if (isBlocklisted) {
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
