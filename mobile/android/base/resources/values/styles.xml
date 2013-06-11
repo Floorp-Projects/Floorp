@@ -310,7 +310,7 @@
 
     <!-- Find bar -->
     <style name="FindBar">
-        <item name="android:background">#000000</item>
+        <item name="android:background">@color/background_tabs</item>
         <item name="android:paddingLeft">3dip</item>
         <item name="android:paddingRight">3dip</item>
         <item name="android:paddingTop">6dip</item>
