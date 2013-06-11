@@ -324,10 +324,6 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     nsresult rv = mFilePicker->GetDomfiles(getter_AddRefs(iter));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!iter) {
-      return NS_OK;
-    }
-
     nsCOMPtr<nsISupports> tmp;
     bool prefSaved = false;
     bool loop = true;
