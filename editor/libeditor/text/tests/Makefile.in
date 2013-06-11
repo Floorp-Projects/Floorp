@@ -37,9 +37,9 @@ MOCHITEST_FILES = \
 		test_dom_input_event_on_texteditor.html \
 		$(NULL)
 
-# disables the key handling test on gtk because gtk overrides some key events
+# disables the key handling test on gtk2 because gtk2 overrides some key events
 # on our editor, and the combinations depend on the system.
-ifdef MOZ_WIDGET_GTK
+ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOCHITEST_FILES += \
 		test_texteditor_keyevent_handling.html \
 		$(NULL)

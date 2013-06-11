@@ -12,7 +12,7 @@ CPP_SOURCES += [
     'nsSemanticUnitScanner.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_GTK']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
     CPP_SOURCES += [
         'nsPangoBreaker.cpp',
     ]
