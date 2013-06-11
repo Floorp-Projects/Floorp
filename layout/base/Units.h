@@ -126,9 +126,16 @@ typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
  * generally be represented in ScreenPixel units.
  */
 struct ScreenPixel {
+  static CSSPoint ToCSSPoint(const gfx::PointTyped<ScreenPixel>& aPoint, float aResolutionX, float aResolutionY) {
+    return CSSPoint(aPoint.x * aResolutionX,
+                    aPoint.y * aResolutionY);
+  }
 };
 
 typedef gfx::PointTyped<ScreenPixel> ScreenPoint;
+typedef gfx::IntPointTyped<ScreenPixel> ScreenIntPoint;
+typedef gfx::SizeTyped<ScreenPixel> ScreenSize;
+typedef gfx::IntSizeTyped<ScreenPixel> ScreenIntSize;
 
 };
 
