@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-  "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
@@ -114,15 +112,9 @@ let CustomizableUIInternal = {
     this._defineBuiltInWidgets();
     this.loadSavedState();
 
-    // Before we register these areas, we need to ensure at least one
-    // browser window is registered, otherwise, we won't be able to get
-    // a read on XUL widget attributes to determine if items are allowed
-    // in these areas, or if they're removable, etc.
-    this.registerBuildWindow(RecentWindow.getMostRecentBrowserWindow());
-
     this.registerArea(CustomizableUI.AREA_PANEL, {
       anchor: "PanelUI-menu-button",
-      type: CustomizableUI.AREATYPE_MENU_PANEL,
+      type: CustomizableUI.TYPE_MENU_PANEL,
       defaultPlacements: [
         "edit-controls",
         "zoom-controls",
@@ -139,7 +131,7 @@ let CustomizableUIInternal = {
     });
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
-      type: CustomizableUI.AREATYPE_TOOLBAR,
+      type: CustomizableUI.TYPE_TOOLBAR,
       overflowable: true,
       defaultPlacements: [
         "unified-back-forward-button",
@@ -156,14 +148,14 @@ let CustomizableUIInternal = {
     });
     this.registerArea(CustomizableUI.AREA_MENUBAR, {
       legacy: true,
-      type: CustomizableUI.AREATYPE_TOOLBAR,
+      type: CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: [
         "menubar-items",
       ]
     });
     this.registerArea(CustomizableUI.AREA_TABSTRIP, {
       legacy: true,
-      type: CustomizableUI.AREATYPE_TOOLBAR,
+      type: CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: [
         "tabbrowser-tabs",
         "new-tab-button",
@@ -173,7 +165,7 @@ let CustomizableUIInternal = {
     });
     this.registerArea(CustomizableUI.AREA_BOOKMARKS, {
       legacy: true,
-      type: CustomizableUI.AREATYPE_TOOLBAR,
+      type: CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: [
         "personal-bookmarks",
       ]
@@ -224,11 +216,6 @@ let CustomizableUIInternal = {
         props.set(key, aProperties[key]);
       }
     }
-
-    if (!props.has("type")) {
-      props.set("type", CustomizableUI.AREATYPE_TOOLBAR);
-    }
-
     gAreas.set(aName, props);
 
     if (props.get("legacy")) {
@@ -583,8 +570,7 @@ let CustomizableUIInternal = {
     let window = aNode.ownerDocument.defaultView;
     this.registerBuildWindow(window);
 
-    // Also register this build area's toolbox if it's not already
-    // in there.
+    // Also register this build area's toolbox.
     if (aNode.toolbox) {
       gBuildWindows.get(window).add(aNode.toolbox);
     }
@@ -598,8 +584,7 @@ let CustomizableUIInternal = {
 
   registerBuildWindow: function(aWindow) {
     if (!gBuildWindows.has(aWindow)) {
-      let toolboxes = aWindow.document.querySelectorAll("toolbox");
-      gBuildWindows.set(aWindow, new Set(toolboxes));
+      gBuildWindows.set(aWindow, new Set());
     }
 
     aWindow.addEventListener("unload", this, false);
@@ -722,7 +707,7 @@ let CustomizableUIInternal = {
       }
     }
 
-    let toolboxes = gBuildWindows.get(aWindow);
+   let toolboxes = gBuildWindows.get(aWindow);
     for (let toolbox of toolboxes) {
       if (toolbox.palette) {
         // Attempt to locate a node with a matching ID within
@@ -1342,7 +1327,7 @@ let CustomizableUIInternal = {
       currentArea: null,
       removable: false,
       defaultArea: null,
-      allowedAreaTypes: new Set([CustomizableUI.AREATYPE_TOOLBAR]),
+      allowedAreas: [],
       shortcut: null,
       description: null,
     };
@@ -1377,8 +1362,9 @@ let CustomizableUIInternal = {
       widget.defaultArea = aData.defaultArea;
     }
 
-    if (Array.isArray(aData.allowedAreaTypes)) {
-      widget.allowedAreaTypes = new Set(aData.allowedAreaTypes);
+    if (Array.isArray(aData.allowedAreas)) {
+      widget.allowedAreas =
+        [area for (area of aData.allowedAreas) if (gAreas.has(area))];
     }
 
     if ("type" in aData && gSupportedWidgetTypes.has(aData.type)) {
@@ -1637,28 +1623,12 @@ let CustomizableUIInternal = {
     return true;
   },
 
-  canWidgetMoveToArea: function(aWidgetId, aAreaId) {
-    let areaProps = gAreas.get(aAreaId);
-    if (!areaProps) {
-      return false;
-    }
-
-    let widget = this.wrapWidget(aWidgetId);
-    if (!widget.allowedAreaTypes.has(CustomizableUI.AREATYPE_ANY) &&
-        !widget.allowedAreaTypes.has(areaProps.get("type"))) {
-      LOG("Widget " + aWidgetId + " cannot go into " + aAreaId + " with type: "
-          + areaProps.get("type"));
-      return false;
-    }
-
+  canWidgetMoveToArea: function(aWidgetId, aArea) {
     let placement = this.getPlacementOfWidget(aWidgetId);
-    if (placement && placement.area != aAreaId &&
+    if (placement && placement.area != aArea &&
         !this.isWidgetRemovable(aWidgetId)) {
-      LOG("Widget " + aWidgetId + " is not removable, and so cannot move to "
-          + aAreaId);
       return false;
     }
-    LOG("Widget " + aWidgetId + " can move to " + aAreaId);
     return true;
   },
 
@@ -1724,9 +1694,9 @@ this.CustomizableUI = {
   get SOURCE_BUILTIN() "builtin",
   get SOURCE_EXTERNAL() "external",
 
-  get AREATYPE_ANY() "any",
-  get AREATYPE_MENU_PANEL() "menu-panel",
-  get AREATYPE_TOOLBAR() "toolbar",
+  get TYPE_BUTTON() "button",
+  get TYPE_MENU_PANEL() "menu-panel",
+  get TYPE_TOOLBAR() "toolbar",
 
   addListener: function(aListener) {
     CustomizableUIInternal.addListener(aListener);
@@ -1843,10 +1813,6 @@ function WidgetGroupWrapper(aWidget) {
 
   this.__defineGetter__("provider", function() CustomizableUI.PROVIDER_API);
 
-  this.__defineGetter__("allowedAreaTypes", function() {
-    return new ReadOnlySet(aWidget.allowedAreaTypes);
-  });
-
   this.__defineSetter__("disabled", function(aValue) {
     aValue = !!aValue;
     aWidget.disabled = aValue;
@@ -1854,7 +1820,7 @@ function WidgetGroupWrapper(aWidget) {
       instance.disabled = aValue;
     }
   });
-
+  
   this.forWindow = function WidgetGroupWrapper_forWindow(aWindow) {
     let instance = aWidget.instances.get(aWindow.document);
     if (!instance) {
@@ -1939,21 +1905,6 @@ function XULWidgetGroupWrapper(aWidgetId) {
   this.id = aWidgetId;
   this.type = "custom";
   this.provider = CustomizableUI.PROVIDER_XUL;
-
-  Object.defineProperty(this, "allowedAreaTypes", {
-    get: function() {
-      // Pick any of the build windows to look at.
-      let [window,] = [...gBuildWindows][0];
-      let [, node] = CustomizableUIInternal.getWidgetNode(aWidgetId, window);
-      let areaTypes = node.getAttribute("customizableui-areatypes");
-      // If a XUL node has not declared what areas it is compatible
-      // with, we'll assume it can only go into toolbars.
-      if (!areaTypes) {
-        areaTypes = CustomizableUI.AREATYPE_TOOLBAR;
-      }
-      return new ReadOnlySet(areaTypes.split(","));
-    }
-  });
 
   this.forWindow = function XULWidgetGroupWrapper_forWindow(aWindow) {
     let instance = aWindow.document.getElementById(aWidgetId);
@@ -2179,26 +2130,6 @@ OverflowableToolbar.prototype = {
 // When IDs contain special characters, we need to escape them for use with querySelector:
 function idToSelector(aId) {
   return "#" + aId.replace(/[ !"'#$%&\(\)*+\-,.\/:;<=>?@\[\\\]^`{|}~]/g, '\\$&');
-}
-
-function ReadOnlySet(aSettable) {
-  let internalSet = new Set(aSettable);
-
-  this.has = function(aValue) {
-    return internalSet.has(aValue);
-  };
-
-  this.iterator = function() {
-    return internalSet.iterator();
-  };
-
-  Object.defineProperty(this, "size", {
-    get: function() {
-      return internalSet.size;
-    }
-  });
-
-  Object.freeze(this);
 }
 
 CustomizableUIInternal.initialize();

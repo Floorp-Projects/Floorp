@@ -866,7 +866,6 @@
 
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
-                   customizableui-areatypes="menu-panel,toolbar"
                    flex="100" persist="width" removable="true" noautoclose="true">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
@@ -876,7 +875,6 @@
                      persist="class"
                      removable="true"
                      type="menu-button"
-                     customizableui-areatypes="menu-panel,toolbar"
                      label="&bookmarksMenuButton.label;"
                      tooltiptext="&bookmarksMenuButton.tooltip;"
                      ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
@@ -950,7 +948,6 @@
 
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class" removable="true"
-                     customizableui-areatypes="menu-panel,toolbar"
                      label="&homeButton.label;"
                      ondragover="homeButtonObserver.onDragOver(event)"
                      ondragenter="homeButtonObserver.onDragOver(event)"
@@ -960,7 +957,6 @@
                      aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     customizableui-areatypes="menu-panel,toolbar"
 #ifdef XP_MACOSX
                      command="cmd_print"
 #else
@@ -972,7 +968,6 @@
            during the customization of the toolbar, in the palette, and before
            the Downloads Indicator overlay is loaded. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     customizableui-areatypes="menu-panel,toolbar"
                      oncommand="DownloadsIndicatorView.onCommand(event);"
                      ondrop="DownloadsIndicatorView.onDrop(event);"
                      ondragover="DownloadsIndicatorView.onDragOver(event);"
@@ -981,7 +976,6 @@
                      tooltiptext="&downloads.tooltip;"/>
 
       <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     customizableui-areatypes="menu-panel,toolbar"
                      label="&newNavigatorCmd.label;"
                      command="key_newNavigator"
                      tooltiptext="&newWindowButton.tooltip;"
@@ -991,7 +985,6 @@
                      ondragexit="newWindowButtonObserver.onDragExit(event)"/>
 
       <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     customizableui-areatypes="menu-panel,toolbar"
                      observes="View:FullScreen"
                      type="checkbox"
                      label="&fullScreenCmd.label;"
@@ -1000,13 +993,11 @@
 #ifdef MOZ_SERVICES_SYNC
       <toolbarbutton id="sync-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     customizableui-areatypes="menu-panel,toolbar"
                      label="&syncToolbarButton.label;"
                      oncommand="gSyncUI.handleToolbarButton()"/>
 #endif
 
       <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     customizableui-areatypes="menu-panel,toolbar"
                      label="&tabGroupsButton.label;"
                      command="Browser:ToggleTabView"
                      tooltiptext="&tabGroupsButton.tooltip;"
