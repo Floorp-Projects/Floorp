@@ -81,8 +81,9 @@ public:
   {
     LayerRenderState result = mTextureHost->GetRenderState();
 
-    result.mFlags = (mBufferRotation != nsIntPoint()) ?
-                    LAYER_RENDER_STATE_BUFFER_ROTATION : 0;
+    if (mBufferRotation != nsIntPoint()) {
+      result.mFlags |= LAYER_RENDER_STATE_BUFFER_ROTATION;
+    }
     result.SetOffset(GetOriginOffset());
     return result;
   }

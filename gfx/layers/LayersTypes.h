@@ -66,7 +66,9 @@ enum MaskType {
 // by other surfaces we will need a more generic LayerRenderState.
 enum LayerRenderStateFlags {
   LAYER_RENDER_STATE_Y_FLIPPED = 1 << 0,
-  LAYER_RENDER_STATE_BUFFER_ROTATION = 1 << 1
+  LAYER_RENDER_STATE_BUFFER_ROTATION = 1 << 1,
+  // Notify Composer2D to swap the RB pixels of gralloc buffer
+  LAYER_RENDER_STATE_FORMAT_RB_SWAP = 1 << 2
 };
 
 // The 'ifdef MOZ_WIDGET_GONK' sadness here is because we don't want to include
@@ -93,6 +95,9 @@ struct LayerRenderState {
 
   bool BufferRotated() const
   { return mFlags & LAYER_RENDER_STATE_BUFFER_ROTATION; }
+
+  bool FormatRBSwapped() const
+  { return mFlags & LAYER_RENDER_STATE_FORMAT_RB_SWAP; }
 #endif
 
   void SetOffset(const nsIntPoint& aOffset)
