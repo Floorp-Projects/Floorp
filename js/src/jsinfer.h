@@ -1291,10 +1291,7 @@ struct CompilerOutput
     // but, for portability, bitfields are limited to bool, int, and
     // unsigned int.  You should really use the accessor below.
     unsigned kindInt : 2;
-    bool constructing : 1;
-    bool barriers : 1;
     bool pendingRecompilation : 1;
-    uint32_t chunkIndex:27;
 
     CompilerOutput();
 
@@ -1365,14 +1362,6 @@ struct TypeCompartment
     Vector<RecompileInfo> *pendingRecompiles;
 
     /*
-     * Number of recompilation events and inline frame expansions that have
-     * occurred in this compartment. If these change, code should not count on
-     * compiled code or the current stack being intact.
-     */
-    unsigned recompilations;
-    unsigned frameExpansions;
-
-    /*
      * Script currently being compiled. All constraints which look for type
      * changes inducing recompilation are keyed to this script. Note: script
      * compilation is not reentrant.
@@ -1433,7 +1422,7 @@ struct TypeCompartment
 
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
-    void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
+    void addPendingRecompile(JSContext *cx, JSScript *script);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32_t offset,
