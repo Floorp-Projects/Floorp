@@ -1075,6 +1075,11 @@ ContextStack::restoreFrameChain()
 
 /*****************************************************************************/
 
+/* MSVC PGO causes xpcshell startup crashes. */
+#if defined(_MSC_VER)
+# pragma optimize("g", off)
+#endif
+
 void
 ScriptFrameIter::popActivation()
 {
@@ -1803,6 +1808,10 @@ ScriptFrameIter::frameSlotValue(size_t index) const
     JS_NOT_REACHED("Unexpected state");
     return NullValue();
 }
+
+#if defined(_MSC_VER)
+# pragma optimize("", on)
+#endif
 
 /*****************************************************************************/
 
