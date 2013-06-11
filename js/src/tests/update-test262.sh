@@ -87,6 +87,7 @@ cp -r ${tmp_dir}/test/suite/ch10 ${test262_dir}/ch10
 cp -r ${tmp_dir}/test/suite/ch11 ${test262_dir}/ch11
 cp -r ${tmp_dir}/test/suite/ch12 ${test262_dir}/ch12
 cp -r ${tmp_dir}/test/suite/ch13 ${test262_dir}/ch13
+cp -r ${tmp_dir}/test/suite/ch14 ${test262_dir}/ch14
 
 # The test402 tests are in test/suite/intl402/.  For now there are no
 # "bestPractice" tests to omit.  The remaining tests are in chNN directories,
