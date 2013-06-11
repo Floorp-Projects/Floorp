@@ -1,0 +1,28 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  // This file tests if we create a shutdown leak.
+  document.getElementById("c").getContext("2d").fillText("x", 0, 0);
+  document.styleSheets[0].cssRules[0].style.whatever = "create an expando to preserve the wrapper";
+}
+
+</script>
+
+<style>
+
+@font-face {
+  font-family: missing;
+  src: local(missing);
+}
+
+</style>
+</head>
+
+<body onload="boom();">
+<canvas id="c"></canvas>
+</body>
+</html>
