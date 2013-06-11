@@ -726,6 +726,8 @@ WMFReader::DecodeAudioData()
       timestamp, duration, currentLength);
   #endif
 
+  NotifyBytesConsumed();
+
   return true;
 }
 
@@ -961,7 +963,18 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
     return false;
   }
 
+  NotifyBytesConsumed();
+
   return true;
+}
+
+void
+WMFReader::NotifyBytesConsumed()
+{
+  uint32_t bytesConsumed = mByteStream->GetAndResetBytesConsumedCount();
+  if (bytesConsumed > 0) {
+    mDecoder->NotifyBytesConsumed(bytesConsumed);
+  }
 }
 
 nsresult
