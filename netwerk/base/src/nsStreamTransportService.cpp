@@ -430,8 +430,6 @@ nsOutputStreamTransport::IsNonBlocking(bool *result)
 // nsStreamTransportService
 //-----------------------------------------------------------------------------
 
-bool nsStreamTransportService::sHasBeenShutdown = false;
-
 nsStreamTransportService::~nsStreamTransportService()
 {
     NS_ASSERTION(!mPool, "thread pool wasn't shutdown");
@@ -440,11 +438,6 @@ nsStreamTransportService::~nsStreamTransportService()
 nsresult
 nsStreamTransportService::Init()
 {
-    if (sHasBeenShutdown) {
-      // Prevent any attempt at resurrection
-      // (see bug 845190)
-      return NS_ERROR_NOT_AVAILABLE;
-    }
     mPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
     NS_ENSURE_STATE(mPool);
 
@@ -515,7 +508,7 @@ nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
                                   const PRUnichar *data)
 {
   NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
-  sHasBeenShutdown = true;
+
   if (mPool) {
     mPool->Shutdown();
     mPool = nullptr;
