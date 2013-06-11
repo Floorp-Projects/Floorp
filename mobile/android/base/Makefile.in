@@ -137,6 +137,7 @@ FENNEC_JAVA_FILES = \
   PromptService.java \
   Restarter.java \
   SearchEngine.java \
+  SearchEngineRow.java \
   sqlite/ByteBufferInputStream.java \
   sqlite/MatrixBlobCursor.java \
   sqlite/SQLiteBridge.java \
@@ -454,6 +455,7 @@ RES_LAYOUT = \
   res/layout/font_size_preference.xml \
   res/layout/gecko_app.xml \
   res/layout/home_item_row.xml \
+  res/layout/home_search_item_row.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
@@ -469,6 +471,7 @@ RES_LAYOUT = \
   res/layout/site_identity_popup.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
+  res/layout/search_engine_row.xml \
   res/layout/tabs_panel.xml \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel_header.xml \
