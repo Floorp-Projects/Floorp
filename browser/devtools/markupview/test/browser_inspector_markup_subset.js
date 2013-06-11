@@ -25,7 +25,7 @@ function test() {
 
   function assertChildren(expected)
   {
-    let container = markup.getContainer(doc.querySelector("body"));
+    let container = getContainerForRawNode(markup, doc.querySelector("body"));
     let found = [];
     for (let child of container.children.children) {
       if (child.classList.contains("more-nodes")) {
@@ -34,16 +34,24 @@ function test() {
         found += child.container.node.getAttribute("id");
       }
     }
-    is(expected, found, "Got the expected children.");
+    is(found, expected, "Got the expected children.");
   }
 
   function forceReload()
   {
-    let container = markup.getContainer(doc.querySelector("body"));
+    let container = getContainerForRawNode(markup, doc.querySelector("body"));
     container.childrenDirty = true;
   }
 
   let selections = [
+    {
+      desc: "Select the last item",
+      selector: "#z",
+      before: function() {},
+      after: function() {
+        assertChildren("*more*vwxyz");
+      }
+    },
     {
       desc: "Select the first item",
       selector: "#a",
@@ -97,18 +105,9 @@ function test() {
   function setupTest() {
     var target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-      toolbox.once("inspector-selected", function SE_selected(id, aInspector) {
-        inspector = aInspector;
-        markup = inspector.markup;
-        runNextSelection();
-      });
-    });
-  }
-
-  function runTests() {
-    inspector.selection.once("new-node", startTests);
-    executeSoon(function() {
-      inspector.selection.setNode(doc.body);
+      inspector = toolbox.getCurrentPanel();
+      markup = inspector.markup;
+      inspector.once("inspector-updated", runNextSelection);
     });
   }
 
@@ -121,7 +120,7 @@ function test() {
 
     info(selection.desc);
     selection.before();
-    inspector.selection.once("new-node", function() {
+    inspector.once("inspector-updated", function() {
       selection.after();
       runNextSelection();
     });
@@ -131,11 +130,13 @@ function test() {
   function clickMore() {
     info("Check that clicking more loads the whole thing.");
     // Make sure that clicking the "more" button loads all the nodes.
-    let container = markup.getContainer(doc.querySelector("body"));
+    let container = getContainerForRawNode(markup, doc.querySelector("body"));
     let button = container.elt.querySelector("button");
     button.click();
-    assertChildren("abcdefghijklmnopqrstuvwxyz");
-    finishUp();
+    markup._waitForChildren().then(() => {
+      assertChildren("abcdefghijklmnopqrstuvwxyz");
+      finishUp();
+    });
   }
 
   function finishUp() {
