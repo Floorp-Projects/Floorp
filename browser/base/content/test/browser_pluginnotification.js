@@ -475,8 +475,10 @@ function test13c() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 13c, Plugin should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 13c, Plugin should be disabled");
+
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "Test 13c, Plugin should not have visible overlay");
+  ok(overlay.style.visibility != "visible", "Test 13c, Plugin should have visible overlay");
 
   prepareTest(test13d, gHttpTestRoot + "plugin_two_types.html");
 }
@@ -491,14 +493,16 @@ function test13d() {
   var test = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(test, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "Test 13d, Test plugin should not have visible overlay");
+  ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
   ok(!objLoadingContent.activated, "Test 13d, Test plugin should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 13d, Test plugin should be disabled");
 
   var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
   var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtestA, "class", "mainBox");
   ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
   ok(!objLoadingContent.activated, "Test 13d, Second Test plugin (A) should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 13d, Test plugin should be disabled");
 
   var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
   var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -1164,8 +1168,9 @@ function test25c() {
   ok(secondtest, "Test 25c, Found second test plugin in page");
   var objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 25c, second test plugin should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 25c, second test plugin should be disabled");
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtest, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "Test 25c, second test plugin should not have visible overlay");
+  ok(overlay.style.visibility != "hidden", "Test 25c, second test plugin should have visible overlay");  
 
   Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-second-test"));
