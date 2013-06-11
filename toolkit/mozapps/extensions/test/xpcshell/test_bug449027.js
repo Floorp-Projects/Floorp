@@ -186,182 +186,48 @@ var ADDONS = [{
   toolkitBlocks: true
 }];
 
-var PLUGINS = [{
-  name: "test_bug449027_1",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: false,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_2",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_3",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_4",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: false,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_5",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: false,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_6",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_7",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_8",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_9",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_10",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_11",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_12",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_13",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_14",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: false,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_15",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_16",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_17",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: false,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_18",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: false,
-  toolkitBlocks: false
-}, {
-  name: "test_bug449027_19",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_20",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_21",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_22",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_23",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_24",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}, {
-  name: "test_bug449027_25",
-  version: "5",
-  blocklisted: false,
-  start: false,
-  appBlocks: true,
-  toolkitBlocks: true
-}];
+function MockPluginTag(name, version, start, appBlocks, toolkitBlocks)
+{
+  this.name = name;
+  this.version = version;
+  this.start = start;
+  this.appBlocks = appBlocks;
+  this.toolkitBlocks = toolkitBlocks;
+}
+Object.defineProperty(MockPluginTag.prototype, "blocklisted", {
+  get: function MockPluginTag_getBlocklisted() {
+    let bls = AM_Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsIBlocklistService);
+    return bls.getPluginBlocklistState(this) == bls.STATE_BLOCKED;
+  }
+});
+
+var PLUGINS = [
+  new MockPluginTag("test_bug449027_1", "5", false, false, false),
+  new MockPluginTag("test_bug449027_2", "5", false, true, false),
+  new MockPluginTag("test_bug449027_3", "5", false, true, false),
+  new MockPluginTag("test_bug449027_4", "5", false, false, false),
+  new MockPluginTag("test_bug449027_5", "5", false, false, false),
+  new MockPluginTag("test_bug449027_6", "5", false, true, false),
+  new MockPluginTag("test_bug449027_7", "5", false, true, false),
+  new MockPluginTag("test_bug449027_8", "5", false, true, false),
+  new MockPluginTag("test_bug449027_9", "5", false, true, false),
+  new MockPluginTag("test_bug449027_10", "5", false, true, false),
+  new MockPluginTag("test_bug449027_11", "5", false, true, false),
+  new MockPluginTag("test_bug449027_12", "5", false, true, false),
+  new MockPluginTag("test_bug449027_13", "5", false, true, false),
+  new MockPluginTag("test_bug449027_14", "5", false, false, false),
+  new MockPluginTag("test_bug449027_15", "5", false, true, true),
+  new MockPluginTag("test_bug449027_16", "5", false, true, true),
+  new MockPluginTag("test_bug449027_17", "5", false, false, false),
+  new MockPluginTag("test_bug449027_18", "5", false, false, false),
+  new MockPluginTag("test_bug449027_19", "5", false, true, true),
+  new MockPluginTag("test_bug449027_20", "5", false, true, true),
+  new MockPluginTag("test_bug449027_21", "5", false, true, true),
+  new MockPluginTag("test_bug449027_22", "5", false, true, true),
+  new MockPluginTag("test_bug449027_23", "5", false, true, true),
+  new MockPluginTag("test_bug449027_24", "5", false, true, true),
+  new MockPluginTag("test_bug449027_25", "5", false, true, true)
+];
 
 var gCallback = null;
 var gTestserver = null;

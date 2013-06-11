@@ -318,6 +318,7 @@ _BROWSER_FILES = \
                  blockPluginVulnerableUpdatable.xml \
                  blockPluginVulnerableNoUpdate.xml \
                  blockNoPlugins.xml \
+                 blockPluginHard.xml \
                  browser_utilityOverlay.js \
                  browser_bug676619.js \
                  download_page.html \

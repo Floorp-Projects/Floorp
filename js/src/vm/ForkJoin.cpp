@@ -936,6 +936,10 @@ BailoutExplanation(ParallelBailoutCause cause)
         return "unsupported string comparison";
       case ParallelBailoutUnsupportedSparseArray:
         return "unsupported sparse array";
+      case ParallelBailoutRequestedGC:
+        return "requested GC";
+      case ParallelBailoutRequestedZoneGC:
+        return "requested zone GC";
       default:
         return "no known reason";
     }
@@ -1445,6 +1449,8 @@ ForkJoinShared::check(ForkJoinSlice &slice)
             // AutoRendezvous autoRendezvous(slice);
             // if (!js_HandleExecutionInterrupt(cx_))
             //     return setAbortFlag(true);
+            slice.bailoutRecord->setCause(ParallelBailoutInterrupt,
+                                          NULL, NULL, NULL);
             setAbortFlag(false);
             return false;
         }
@@ -1641,6 +1647,8 @@ void
 ForkJoinSlice::requestGC(JS::gcreason::Reason reason)
 {
     shared->requestGC(reason);
+    bailoutRecord->setCause(ParallelBailoutRequestedGC,
+                            NULL, NULL, NULL);
     shared->setAbortFlag(false);
 }
 
@@ -1648,6 +1656,8 @@ void
 ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     shared->requestZoneGC(zone, reason);
+    bailoutRecord->setCause(ParallelBailoutRequestedZoneGC,
+                            NULL, NULL, NULL);
     shared->setAbortFlag(false);
 }
 

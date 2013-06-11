@@ -1074,7 +1074,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
   {
     WriteParam(aMsg, aParam.mScrollableRect);
     WriteParam(aMsg, aParam.mViewport);
-    WriteParam(aMsg, aParam.mContentRect);
     WriteParam(aMsg, aParam.mScrollOffset);
     WriteParam(aMsg, aParam.mDisplayPort);
     WriteParam(aMsg, aParam.mCriticalDisplayPort);
@@ -1091,7 +1090,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
   {
     return (ReadParam(aMsg, aIter, &aResult->mScrollableRect) &&
             ReadParam(aMsg, aIter, &aResult->mViewport) &&
-            ReadParam(aMsg, aIter, &aResult->mContentRect) &&
             ReadParam(aMsg, aIter, &aResult->mScrollOffset) &&
             ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
             ReadParam(aMsg, aIter, &aResult->mCriticalDisplayPort) &&

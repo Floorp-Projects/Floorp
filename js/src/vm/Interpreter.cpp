@@ -297,7 +297,6 @@ js::RunScript(JSContext *cx, StackFrame *fp)
     {
         ScriptFrameIter iter(cx);
         if (!iter.done()) {
-            ++iter;
             JSScript *script = iter.script();
             jsbytecode *pc = iter.pc();
             if (UseNewType(cx, script, pc))
@@ -1108,6 +1107,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
     if (!entryFrame)
         entryFrame = regs.fp();
 
+    InterpreterActivation activation(cx, entryFrame, regs);
+
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
         JS_ASSERT(size_t(regs.pc - script->code) <= script->length);
@@ -1433,7 +1434,7 @@ BEGIN_CASE(JSOP_STOP)
   jit_return:
 #endif
 
-        /* The results of lowered call/apply frames need to be shifted. */
+        activation.popFrame(regs.fp());
         cx->stack.popInlineFrame(regs);
         SET_SCRIPT(regs.fp()->script());
 
@@ -2225,6 +2226,8 @@ BEGIN_CASE(JSOP_FUNCALL)
     funScript = fun->nonLazyScript();
     if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
         goto error;
+
+    activation.pushFrame(regs.fp());
 
     if (newType)
         regs.fp()->setUseNewType();
@@ -3223,7 +3226,7 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
         // emit code for a bound arrow function (bug 851913).
         AbstractFramePtr frame = cx->fp();
 #ifdef JS_ION
-        if (cx->fp()->runningInIon())
+        if (cx->mainThread().currentlyRunningInJit())
             frame = ion::GetTopBaselineFrame(cx);
 #endif
 
@@ -3261,7 +3264,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
             return false;
     } else {
         JS_ASSERT(script->compileAndGo);
-        JS_ASSERT_IF(!cx->fp()->beginsIonActivation(),
+        JS_ASSERT_IF(cx->mainThread().currentlyRunningInInterpreter(),
                      cx->fp()->isGlobalFrame() || cx->fp()->isEvalInFunction());
     }
 

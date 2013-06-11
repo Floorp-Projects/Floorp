@@ -58,12 +58,16 @@ TabOpenListener.prototype = {
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
   registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     Services.prefs.clearUserPref("plugins.click_to_play");
     getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
     getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   });
   Services.prefs.setBoolPref("plugins.click_to_play", false);
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
+
   var plugin = getTestPlugin();
   plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
@@ -117,7 +121,6 @@ function test1() {
   var plugin = getTestPlugin();
   ok(plugin, "Should have a test plugin");
   plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-  plugin.blocklisted = false;
   prepareTest(test2, gTestRoot + "plugin_test.html");
 }
 
@@ -159,14 +162,19 @@ function test4(tab, win) {
 }
 
 function prepareTest5() {
+  info("prepareTest5");
   var plugin = getTestPlugin();
   plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-  plugin.blocklisted = true;
-  prepareTest(test5, gTestRoot + "plugin_test.html");
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
+    function() {
+      info("prepareTest5 callback");
+      prepareTest(test5, gTestRoot + "plugin_test.html");
+  });
 }
 
 // Tests a page with a blocked plugin in it.
 function test5() {
+  info("test5");
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 5, Should not have displayed the missing plugin notification");
   ok(notificationBox.getNotificationWithValue("blocked-plugins"), "Test 5, Should have displayed the blocked plugin notification");
@@ -204,11 +212,12 @@ function test7() {
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   var plugin = getTestPlugin();
-  plugin.blocklisted = false;
   plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
 
-  prepareTest(test8, gTestRoot + "plugin_test.html");
+  setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", function() {
+    prepareTest(test8, gTestRoot + "plugin_test.html");
+  });
 }
 
 // Tests a page with a working plugin that is click-to-play
@@ -466,8 +475,10 @@ function test13c() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 13c, Plugin should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 13c, Plugin should be disabled");
+
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "Test 13c, Plugin should not have visible overlay");
+  ok(overlay.style.visibility != "visible", "Test 13c, Plugin should have visible overlay");
 
   prepareTest(test13d, gHttpTestRoot + "plugin_two_types.html");
 }
@@ -482,14 +493,16 @@ function test13d() {
   var test = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(test, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "Test 13d, Test plugin should not have visible overlay");
+  ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
   ok(!objLoadingContent.activated, "Test 13d, Test plugin should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 13d, Test plugin should be disabled");
 
   var secondtestA = gTestBrowser.contentDocument.getElementById("secondtestA");
   var objLoadingContent = secondtestA.QueryInterface(Ci.nsIObjectLoadingContent);
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtestA, "class", "mainBox");
   ok(overlay.style.visibility != "hidden", "Test 13d, Test plugin should have visible overlay");
   ok(!objLoadingContent.activated, "Test 13d, Second Test plugin (A) should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 13d, Test plugin should be disabled");
 
   var secondtestB = gTestBrowser.contentDocument.getElementById("secondtestB");
   var objLoadingContent = secondtestB.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -533,7 +546,6 @@ function test14() {
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   var plugin = getTestPlugin();
-  plugin.blocklisted = false;
   plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   prepareTest(test15, gTestRoot + "plugin_alternate_content.html");
@@ -1156,8 +1168,9 @@ function test25c() {
   ok(secondtest, "Test 25c, Found second test plugin in page");
   var objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 25c, second test plugin should not be activated");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED, "Test 25c, second test plugin should be disabled");
   var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtest, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "Test 25c, second test plugin should not have visible overlay");
+  ok(overlay.style.visibility != "hidden", "Test 25c, second test plugin should have visible overlay");  
 
   Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-second-test"));
