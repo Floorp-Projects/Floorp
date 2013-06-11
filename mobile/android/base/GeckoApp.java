@@ -182,6 +182,9 @@ abstract public class GeckoApp
     protected FormAssistPopup mFormAssistPopup;
     protected TabsPanel mTabsPanel;
 
+    // Handles notification messages from javascript
+    protected NotificationHelper mNotificationHelper;
+
     protected LayerView mLayerView;
     private AbsoluteLayout mPluginContainer;
 
@@ -1242,6 +1245,7 @@ abstract public class GeckoApp
 
         // Set up tabs panel.
         mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
+        mNotificationHelper = new NotificationHelper(this);
 
         // Check if the last run was exited due to a normal kill while
         // we were in the background, or a more harsh kill while we were
