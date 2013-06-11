@@ -29,12 +29,13 @@ class GStreamerFormatHelper {
     bool CanHandleContainerCaps(GstCaps* aCaps);
     bool CanHandleCodecCaps(GstCaps* aCaps);
 
-   static void Shutdown();
+    static GstCaps* ConvertFormatsToCaps(const char* aMIMEType,
+                                         const nsAString* aCodecs);
+
+    static void Shutdown();
 
   private:
     GStreamerFormatHelper();
-    GstCaps* ConvertFormatsToCaps(const char* aMIMEType,
-                                  const nsAString* aCodecs);
     char* const *CodecListFromCaps(GstCaps* aCaps);
     bool HaveElementsToProcessCaps(GstCaps* aCaps);
     GList* GetFactories();
