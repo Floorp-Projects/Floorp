@@ -14,6 +14,7 @@
 #include "nsError.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
+#include "nsIDOMGetSVGDocument.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,6 +23,7 @@ class HTMLSharedObjectElement : public nsGenericHTMLElement
                               , public nsObjectLoadingContent
                               , public nsIDOMHTMLAppletElement
                               , public nsIDOMHTMLEmbedElement
+                              , public nsIDOMGetSVGDocument
 {
 public:
   HTMLSharedObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -53,6 +55,9 @@ public:
   NS_IMETHOD SetSrc(const nsAString &aSrc) MOZ_OVERRIDE;
   NS_IMETHOD GetType(nsAString &aType) MOZ_OVERRIDE;
   NS_IMETHOD SetType(const nsAString &aType) MOZ_OVERRIDE;
+
+  // nsIDOMGetSVGDocument
+  NS_DECL_NSIDOMGETSVGDOCUMENT
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,

@@ -37,8 +37,9 @@ NS_IMPL_RELEASE_INHERITED(HTMLIFrameElement, Element)
 // QueryInterface implementation for HTMLIFrameElement
 NS_INTERFACE_TABLE_HEAD(HTMLIFrameElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFrameElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLIFrameElement,
-                                nsIDOMHTMLIFrameElement)
+  NS_INTERFACE_TABLE_INHERITED2(HTMLIFrameElement,
+                                nsIDOMHTMLIFrameElement,
+                                nsIDOMGetSVGDocument)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
@@ -79,6 +80,12 @@ NS_IMETHODIMP
 HTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 {
   return nsGenericHTMLFrameElement::GetContentWindow(aContentWindow);
+}
+
+NS_IMETHODIMP
+HTMLIFrameElement::GetSVGDocument(nsIDOMDocument **aResult)
+{
+  return GetContentDocument(aResult);
 }
 
 bool

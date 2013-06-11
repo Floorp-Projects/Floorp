@@ -135,7 +135,7 @@ HTML_TAG("div", "Div");
 HTML_TAG("dl", "DList");
 HTML_TAG("dt", "");
 HTML_TAG("em", "");
-HTML_TAG("embed", "Embed", [], objectIfaces);
+HTML_TAG("embed", "Embed", [ "nsIDOMGetSVGDocument" ], objectIfaces);
 HTML_TAG("fieldset", "FieldSet");
 HTML_TAG("figcaption", "")
 HTML_TAG("figure", "")
@@ -156,7 +156,7 @@ HTML_TAG("hgroup", "")
 HTML_TAG("hr", "HR");
 HTML_TAG("html", "Html");
 HTML_TAG("i", "");
-HTML_TAG("iframe", "IFrame", [ "nsIDOMMozBrowserFrame" ],
+HTML_TAG("iframe", "IFrame", [ "nsIDOMGetSVGDocument", "nsIDOMMozBrowserFrame" ],
                              [ "nsIFrameLoaderOwner" ]);
 HTML_TAG("image", "");
 HTML_TAG("img", "Image", [ "nsIImageLoadingContent" ], []);
@@ -184,7 +184,7 @@ HTML_TAG("nobr", "");
 HTML_TAG("noembed", "");
 HTML_TAG("noframes", "");
 HTML_TAG("noscript", "");
-HTML_TAG("object", "Object", [],
+HTML_TAG("object", "Object", [ "nsIDOMGetSVGDocument" ],
                              objectIfaces.concat([ "nsIImageLoadingContent" ]));
 HTML_TAG("ol", "OList");
 HTML_TAG("optgroup", "OptGroup");
