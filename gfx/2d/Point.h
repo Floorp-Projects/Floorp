@@ -24,6 +24,17 @@ struct IntPointTyped :
 
   IntPointTyped() : Super() {}
   IntPointTyped(int32_t aX, int32_t aY) : Super(aX, aY) {}
+
+  // XXX When all of the code is ported, the following functions to convert to and from
+  // unknown types should be removed.
+
+  static IntPointTyped<units> FromUnknownPoint(const IntPointTyped<UnknownUnits>& aPoint) {
+    return IntPointTyped<units>(aPoint.x, aPoint.y);
+  }
+
+  IntPointTyped<UnknownUnits> ToUnknownPoint() const {
+    return IntPointTyped<UnknownUnits>(this->x, this->y);
+  }
 };
 typedef IntPointTyped<UnknownUnits> IntPoint;
 
@@ -40,8 +51,8 @@ struct PointTyped :
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
 
-  static PointTyped<units> FromUnknownPoint(const PointTyped<UnknownUnits>& pt) {
-    return PointTyped<units>(pt.x, pt.y);
+  static PointTyped<units> FromUnknownPoint(const PointTyped<UnknownUnits>& aPoint) {
+    return PointTyped<units>(aPoint.x, aPoint.y);
   }
 
   PointTyped<UnknownUnits> ToUnknownPoint() const {
@@ -58,6 +69,17 @@ struct IntSizeTyped :
 
   IntSizeTyped() : Super() {}
   IntSizeTyped(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
+
+  // XXX When all of the code is ported, the following functions to convert to and from
+  // unknown types should be removed.
+
+  static IntSizeTyped<units> FromUnknownSize(const IntSizeTyped<UnknownUnits>& aSize) {
+    return IntSizeTyped<units>(aSize.width, aSize.height);
+  }
+
+  IntSizeTyped<UnknownUnits> ToUnknownSize() const {
+    return IntSizeTyped<UnknownUnits>(this->width, this->height);
+  }
 };
 typedef IntSizeTyped<UnknownUnits> IntSize;
 
@@ -71,6 +93,17 @@ struct SizeTyped :
   SizeTyped(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
   explicit SizeTyped(const IntSizeTyped<units>& size) :
     Super(float(size.width), float(size.height)) {}
+
+  // XXX When all of the code is ported, the following functions to convert to and from
+  // unknown types should be removed.
+
+  static SizeTyped<units> FromUnknownSize(const SizeTyped<UnknownUnits>& aSize) {
+    return SizeTyped<units>(aSize.width, aSize.height);
+  }
+
+  SizeTyped<UnknownUnits> ToUnknownSize() const {
+    return SizeTyped<UnknownUnits>(this->width, this->height);
+  }
 };
 typedef SizeTyped<UnknownUnits> Size;
 
