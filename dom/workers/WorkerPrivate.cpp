@@ -753,8 +753,7 @@ public:
 
 class MessageEventRunnable : public WorkerRunnable
 {
-  uint64_t* mData;
-  size_t mDataByteCount;
+  JSAutoStructuredCloneBuffer mBuffer;
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
 
 public:
@@ -766,20 +765,13 @@ public:
                                                        UnchangedBusyCount,
                    SkipWhenClearing)
   {
-    aData.steal(&mData, &mDataByteCount);
-
+    mBuffer.swap(aData);
     mClonedObjects.SwapElements(aClonedObjects);
   }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    JSAutoStructuredCloneBuffer buffer;
-    buffer.adopt(mData, mDataByteCount);
-
-    mData = nullptr;
-    mDataByteCount = 0;
-
     bool mainRuntime;
     JS::Rooted<JSObject*> target(aCx);
     if (mTarget == ParentThread) {
@@ -796,7 +788,6 @@ public:
 
       if (aWorkerPrivate->IsSuspended()) {
         aWorkerPrivate->QueueRunnable(this);
-        buffer.steal(&mData, &mDataByteCount);
         return true;
       }
 
@@ -812,7 +803,7 @@ public:
     NS_ASSERTION(target, "This should never be null!");
 
     JS::Rooted<JSObject*> event(aCx,
-      CreateMessageEvent(aCx, buffer, mClonedObjects, mainRuntime));
+      CreateMessageEvent(aCx, mBuffer, mClonedObjects, mainRuntime));
     if (!event) {
       return false;
     }
