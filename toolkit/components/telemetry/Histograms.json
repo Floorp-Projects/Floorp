@@ -3312,6 +3312,30 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_BLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'blackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_BLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'blackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_UNBLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'ublackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_UNBLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'unblackbox' request to go round trip."
+  },
   "DEVTOOLS_OPTIONS_OPENED_BOOLEAN": {
     "kind": "boolean",
     "description": "How many times has the devtool's Options panel been opened?"
