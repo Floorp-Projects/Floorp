@@ -2043,7 +2043,7 @@ function nodeDocument(node) {
 function DocumentWalker(aNode, aShow, aFilter, aExpandEntityReferences)
 {
   let doc = nodeDocument(aNode);
-  this.walker = doc.createTreeWalker(nodeDocument(aNode),
+  this.walker = doc.createTreeWalker(doc,
     aShow, aFilter, aExpandEntityReferences);
   this.walker.currentNode = aNode;
   this.filter = aFilter;

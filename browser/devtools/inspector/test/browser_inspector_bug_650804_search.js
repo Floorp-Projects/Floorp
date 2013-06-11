@@ -68,6 +68,7 @@ function test()
   {
     inspector = aInspector;
     inspector.selection.setNode($("b1"));
+
     searchBox =
       inspector.panelWin.document.getElementById("inspector-searchbox");
 
@@ -95,15 +96,18 @@ function test()
     if (event.type == "keypress" && keypressStates.indexOf(state) == -1) {
       return;
     }
-    executeSoon(function() {
-      let [key, id, isValid] = keyStates[state];
-      info(inspector.selection.node.id + " is selected with text " +
-           inspector.searchBox.value);
-      is(inspector.selection.node, $(id),
-         "Correct node is selected for state " + state);
-      is(!searchBox.classList.contains("devtools-no-search-result"), isValid,
-         "Correct searchbox result state for state " + state);
-      checkStateAndMoveOn(state + 1);
+
+    inspector.searchSuggestions._lastQuery.then(() => {
+      executeSoon(() => {
+        let [key, id, isValid] = keyStates[state];
+        info(inspector.selection.node.id + " is selected with text " +
+             inspector.searchBox.value);
+        is(inspector.selection.node, $(id),
+           "Correct node is selected for state " + state);
+        is(!searchBox.classList.contains("devtools-no-search-result"), isValid,
+           "Correct searchbox result state for state " + state);
+        checkStateAndMoveOn(state + 1);
+      });
     });
   }
 
