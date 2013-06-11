@@ -14,6 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_CHROME_FILES	= \
 	inspector-helpers.js \
 	inspector-traversal-data.html \
+	test_inspector-changeattrs.html \
 	test_inspector-mutations-attr.html \
 	test_inspector-mutations-childlist.html \
 	test_inspector-mutations-frameload.html \
