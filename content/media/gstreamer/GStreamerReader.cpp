@@ -219,6 +219,14 @@ void GStreamerReader::PlayBinSourceSetup(GstAppSrc* aSource)
     LOG(PR_LOG_DEBUG, ("configuring push mode, len %lld", resourceLength));
     gst_app_src_set_stream_type(mSource, GST_APP_STREAM_TYPE_SEEKABLE);
   }
+
+  // Set the source MIME type to stop typefind trying every. single. format.
+  GstCaps *caps =
+    GStreamerFormatHelper::ConvertFormatsToCaps(mDecoder->GetResource()->GetContentType().get(),
+                                                nullptr);
+
+  gst_app_src_set_caps(aSource, caps);
+  gst_caps_unref(caps);
 }
 
 nsresult GStreamerReader::ReadMetadata(VideoInfo* aInfo,
@@ -369,7 +377,7 @@ nsresult GStreamerReader::CheckSupportedFormats()
               /* check for demuxers but ignore elements like id3demux */
               if (strstr (klass, "Demuxer") && !strstr(klass, "Metadata"))
                 unsupported = !GStreamerFormatHelper::Instance()->CanHandleContainerCaps(caps);
-              else if (strstr (klass, "Decoder"))
+              else if (strstr (klass, "Decoder") && !strstr(klass, "Generic"))
                 unsupported = !GStreamerFormatHelper::Instance()->CanHandleCodecCaps(caps);
 
               gst_caps_unref(caps);
