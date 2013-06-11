@@ -1566,8 +1566,13 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   }
 
   BluetoothSignal signal(signalName, signalPath, v);
-  nsRefPtr<DistributeBluetoothSignalTask> task
-    = new DistributeBluetoothSignalTask(signal);
+  nsRefPtr<nsRunnable> task;
+  if (signalInterface.EqualsLiteral(DBUS_SINK_IFACE)) {
+    task = new SinkPropertyChangedHandler(signal);
+  } else {
+    task = new DistributeBluetoothSignalTask(signal);
+  }
+
   NS_DispatchToMainThread(task);
 
   return DBUS_HANDLER_RESULT_HANDLED;
