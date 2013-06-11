@@ -9,14 +9,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_WIDGET_GTK
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 ifdef MOZ_X11
 
-LOCAL_INCLUDES = $(TK_CFLAGS)
-OS_LIBS = $(TK_LIBS) $(XSS_LIBS)
+LOCAL_INCLUDES = $(MOZ_GTK2_CFLAGS)
+OS_LIBS = $(MOZ_GTK2_LIBS) $(XSS_LIBS)
 
 endif # X11
-endif # GTK
+endif # GTK2
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 
