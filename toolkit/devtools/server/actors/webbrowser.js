@@ -23,8 +23,7 @@ function allAppShellDOMWindows(aWindowType)
 }
 
 /**
- * Return true if the top-level window |aWindow| is a "navigator:browser"
- * window.
+ * Retrieve the window type of the top-level window |aWindow|.
  */
 function appShellDOMWindowType(aWindow) {
   /* This is what nsIWindowMediator's enumerator checks. */
