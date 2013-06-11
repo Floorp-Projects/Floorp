@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
@@ -13,7 +15,7 @@ const STORAGE_MAX_EVENTS = 200;
 
 this.EXPORTED_SYMBOLS = ["ConsoleAPIStorage"];
 
-var _consoleStorage = {};
+var _consoleStorage = new Map();
 
 /**
  * The ConsoleAPIStorage is meant to cache window.console API calls for later
@@ -78,16 +80,14 @@ this.ConsoleAPIStorage = {
   getEvents: function CS_getEvents(aId)
   {
     if (aId != null) {
-      return (_consoleStorage[aId] || []).slice(0);
+      return (_consoleStorage.get(aId) || []).slice(0);
     }
 
-    let ids = [];
+    let result = [];
 
-    for each (let events in _consoleStorage) {
-      ids.push(events);
+    for (let [id, events] of _consoleStorage) {
+      result.push.apply(result, events);
     }
-
-    let result = [].concat.apply([], ids);
 
     return result.sort(function(a, b) {
       return a.timeStamp - b.timeStamp;
@@ -97,22 +97,19 @@ this.ConsoleAPIStorage = {
   /**
    * Record an event associated with the given window ID.
    *
-   * @param string aWindowID
-   *        The ID of the inner window for which the event occurred.
+   * @param string aId
+   *        The ID of the inner window for which the event occurred or "jsm" for
+   *        messages logged from JavaScript modules..
    * @param object aEvent
    *        A JavaScript object you want to store.
    */
-  recordEvent: function CS_recordEvent(aWindowID, aEvent)
+  recordEvent: function CS_recordEvent(aId, aEvent)
   {
-    let ID = parseInt(aWindowID);
-    if (isNaN(ID)) {
-      throw new Error("Invalid window ID argument");
+    if (!_consoleStorage.has(aId)) {
+      _consoleStorage.set(aId, []);
     }
 
-    if (!_consoleStorage[ID]) {
-      _consoleStorage[ID] = [];
-    }
-    let storage = _consoleStorage[ID];
+    let storage = _consoleStorage.get(aId);
     storage.push(aEvent);
 
     // truncate
@@ -120,7 +117,7 @@ this.ConsoleAPIStorage = {
       storage.shift();
     }
 
-    Services.obs.notifyObservers(aEvent, "console-storage-cache-event", ID);
+    Services.obs.notifyObservers(aEvent, "console-storage-cache-event", aId);
   },
 
   /**
@@ -134,10 +131,10 @@ this.ConsoleAPIStorage = {
   clearEvents: function CS_clearEvents(aId)
   {
     if (aId != null) {
-      delete _consoleStorage[aId];
+      _consoleStorage.delete(aId);
     }
     else {
-      _consoleStorage = {};
+      _consoleStorage.clear();
       Services.obs.notifyObservers(null, "console-storage-reset", null);
     }
   },
