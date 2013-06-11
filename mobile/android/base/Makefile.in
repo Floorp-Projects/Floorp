@@ -66,6 +66,7 @@ FENNEC_JAVA_FILES = \
   awesomebar/HistoryTab.java \
   BackButton.java \
   BrowserApp.java \
+  BrowserSearch.java \
   BrowserToolbar.java \
   BrowserToolbarBackground.java \
   BrowserToolbarLayout.java \
@@ -148,6 +149,7 @@ FENNEC_JAVA_FILES = \
   SetupScreen.java \
   ShapedButton.java \
   SharedPreferencesHelper.java \
+  SimpleCursorLoader.java \
   SiteIdentityPopup.java \
   SmsManager.java \
   SuggestClient.java \
