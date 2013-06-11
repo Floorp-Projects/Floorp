@@ -1377,7 +1377,7 @@ IonCompile(JSContext *cx, JSScript *script,
     AutoFlushCache afc("IonCompile");
 
     types::AutoEnterCompilation enterCompiler(cx, CompilerOutputKind(executionMode));
-    if (!enterCompiler.init(script, false, 0))
+    if (!enterCompiler.init(script))
         return AbortReason_Disable;
 
     AutoTempAllocatorRooter root(cx, temp);

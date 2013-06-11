@@ -27,10 +27,4 @@ private:
     ~nsStreamTransportService();
 
     nsCOMPtr<nsIThreadPool> mPool;
-
-    /**
-     * |true| if we have shutdown once already, in which
-     * case we should reject any attempt to resurrect.
-     */
-    static bool sHasBeenShutdown;
 };
