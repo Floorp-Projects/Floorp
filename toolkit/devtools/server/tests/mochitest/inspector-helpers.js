@@ -78,6 +78,18 @@ function attachURL(url, callback) {
   return cleanup;
 }
 
+function promiseOnce(target, event) {
+  let deferred = Promise.defer();
+  target.on(event, (...args) => {
+    if (args.length === 1) {
+      deferred.resolve(args[0]);
+    } else {
+      deferred.resolve(args);
+    }
+  });
+  return deferred.promise;
+}
+
 function sortOwnershipChildren(children) {
   return children.sort((a, b) => a.name.localeCompare(b.name));
 }
