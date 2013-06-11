@@ -369,6 +369,8 @@
     <!-- onclick addresses dom bug 835175, str in bug 832957 -->
     <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
 
+    <autoscroller class="autoscroller" id="autoscrollerid"/>
+
     <html:div id="overlay-back" class="overlay-button"
               observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>
     <html:div id="overlay-plus" class="overlay-button"
