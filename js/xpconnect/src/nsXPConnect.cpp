@@ -1788,13 +1788,15 @@ nsXPConnect::RemoveJSHolder(void* aHolder)
     mRuntime->RemoveJSHolder(aHolder);
 }
 
-#ifdef DEBUG
 bool
 nsXPConnect::TestJSHolder(void* aHolder)
 {
+#ifdef DEBUG
     return mRuntime->TestJSHolder(aHolder);
-}
+#else
+    return false;
 #endif
+}
 
 NS_IMETHODIMP
 nsXPConnect::SetReportAllJSExceptions(bool newval)

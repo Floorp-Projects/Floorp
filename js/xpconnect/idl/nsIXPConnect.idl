@@ -291,7 +291,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(4498aa26-62df-4a4f-8a45-7ddfd7f84834)]
+[uuid(2950bc62-ba03-4465-9685-a0eec9e188c2)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -559,6 +559,27 @@ interface nsIXPConnect : nsISupports
                                          in JSContextPtr cx,
                                          in JSObjectPtr sandbox,
                                          in boolean returnStringOnly);
+
+    /**
+     * Root JS objects held by aHolder.
+     * @param aHolder The object that hold the JS objects that should be rooted.
+     * @param aTrace The tracer for aHolder.
+     */
+    [noscript,notxpcom] void addJSHolder(in voidPtr aHolder,
+                                         in nsScriptObjectTracerPtr aTracer);
+
+    /**
+     * Stop rooting the JS objects held by aHolder.
+     * @param aHolder The object that hold the rooted JS objects.
+     */
+    [noscript,notxpcom] void removeJSHolder(in voidPtr aHolder);
+
+    /**
+     * Test to see if a JS holder is in our hashtable.
+     * Only available in debug builds.
+     * @param aHolder The object to test for.
+     */
+    [noscript,notxpcom] bool testJSHolder(in voidPtr aHolder);
 
     /**
      * Note aJSContext as a child to the cycle collector.
