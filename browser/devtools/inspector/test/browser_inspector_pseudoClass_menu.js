@@ -51,16 +51,24 @@ function test() {
   {
     menu.removeEventListener("popupshowing", testMenuItems, true);
 
-    for each (let pseudo in pseudos) {
+    var tryNext = () => {
+      if (pseudos.length === 0) {
+        finishUp();
+        return;
+      }
+      let pseudo = pseudos.shift();
+
       let menuitem = inspector.panelDoc.getElementById("node-menu-pseudo-" + pseudo);
       ok(menuitem, ":" + pseudo + " menuitem exists");
 
       menuitem.doCommand();
-
-      is(DOMUtils.hasPseudoClassLock(div, ":" + pseudo), true,
-        "pseudo-class lock has been applied");
+      inspector.selection.once("pseudoclass", () => {
+        is(DOMUtils.hasPseudoClassLock(div, ":" + pseudo), true,
+          "pseudo-class lock has been applied");
+        tryNext();
+      });
     }
-    finishUp();
+    tryNext();
   }
 
   function finishUp()
