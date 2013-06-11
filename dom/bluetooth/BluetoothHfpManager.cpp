@@ -1026,14 +1026,21 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_ENSURE_FALSE_VOID(gInShutdown);
-  NS_ENSURE_FALSE_VOID(mSocket);
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs || gInShutdown) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
+
+  if (mSocket) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_REACHED_CONNECTION_LIMIT));
+    return;
+  }
 
   mNeedsUpdatingSdpRecords = true;
   mIsHandsfree = aIsHandsfree;
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
 
   nsString uuid;
   if (aIsHandsfree) {

@@ -8,6 +8,8 @@
 #define mozilla_dom_bluetooth_bluetoothprofilemanagerbase_h__
 
 #define ERR_SERVICE_CHANNEL_NOT_FOUND "DeviceChannelRetrievalError"
+#define ERR_REACHED_CONNECTION_LIMIT "ReachedConnectionLimitError"
+#define ERR_NO_AVAILABLE_RESOURCE "NoAvailableResourceError"
 
 #include "BluetoothCommon.h"
 
