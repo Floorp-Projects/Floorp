@@ -72,6 +72,7 @@ MOCHITEST_FILES = \
 		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \
+		test_bug654550.html \
 		test_bug686942.html \
 		test_can_play_type.html \
 		test_can_play_type_mpeg.html \

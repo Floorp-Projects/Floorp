@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=654550
+-->
+
+<head>
+  <title>Test for Bug 654550</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=654550">Mozilla Bug 654550</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /* Test for Bug 654550 */
+
+  var manager = new MediaTestManager;
+
+  function checkStats(v, aShouldBeEnabled) {
+    if (aShouldBeEnabled) {
+      ok(v.mozParsedFrames != 0,
+         "At least one value should be different from 0 if stats are enabled");
+    } else {
+      ok(!v.mozParsedFrames,
+        "mozParsedFrames should be 0 if stats are disabled");
+      ok(!v.mozDecodedFrames,
+        "mozDecodedFrames should be 0 if stats are disabled");
+      ok(!v.mozPresentedFrames,
+        "mozPresentedFrames should be 0 if stats are disabled");
+      ok(!v.mozPaintedFrames,
+        "mozPaintedFrames should be 0 if stats are disabled");
+    }
+
+  }
+
+  function ontimeupdate(event) {
+    var v = event.target;
+    if (SpecialPowers.getBoolPref("media.video_stats.enabled")) {
+      checkStats(v, true);
+      SpecialPowers.setBoolPref("media.video_stats.enabled", false);
+    } else {
+      checkStats(v, false);
+      SpecialPowers.setBoolPref("media.video_stats.enabled", true);
+      v.removeEventListener("timeupdate", ontimeupdate);
+      SpecialPowers.clearUserPref("media.video_stats.enabled");
+      manager.finished(v.token);
+    }
+  }
+
+
+  function startTest(test, token) {
+    var v = document.createElement('video');
+    v.token = token;
+    v.src = test.name;
+    manager.started(token);
+    v.play();
+    SpecialPowers.setBoolPref("media.video_stats.enabled", true);
+    v.addEventListener("timeupdate", ontimeupdate);
+    SimpleTest.waitForExplicitFinish();
+  }
+
+  manager.runTests(gVideoTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

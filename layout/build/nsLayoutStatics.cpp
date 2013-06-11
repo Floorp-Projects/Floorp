@@ -116,6 +116,7 @@ using namespace mozilla::system;
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "nsIMEStateManager.h"
 #include "nsDocument.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 
 extern void NS_ShutdownEventTargetChainItemRecyclePool();
 
@@ -271,6 +272,8 @@ nsLayoutStatics::Initialize()
   nsApplicationCacheService::AppClearDataObserverInit();
 
   InitializeDateCacheCleaner();
+
+  HTMLVideoElement::Init();
 
   return NS_OK;
 }

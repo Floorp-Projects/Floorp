@@ -33,11 +33,14 @@
 #include "nsIPowerManagerService.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
+#include "mozilla/Preferences.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
 
 namespace mozilla {
 namespace dom {
+
+static bool sVideoStatsEnabled;
 
 NS_IMPL_ADDREF_INHERITED(HTMLVideoElement, HTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(HTMLVideoElement, HTMLMediaElement)
@@ -160,6 +163,9 @@ NS_IMPL_URI_ATTR(HTMLVideoElement, Poster, poster)
 uint32_t HTMLVideoElement::MozParsedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   return mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
 }
 
@@ -172,6 +178,9 @@ NS_IMETHODIMP HTMLVideoElement::GetMozParsedFrames(uint32_t *aMozParsedFrames)
 uint32_t HTMLVideoElement::MozDecodedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
 }
 
@@ -184,6 +193,9 @@ NS_IMETHODIMP HTMLVideoElement::GetMozDecodedFrames(uint32_t *aMozDecodedFrames)
 uint32_t HTMLVideoElement::MozPresentedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   return mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
 }
 
@@ -196,6 +208,9 @@ NS_IMETHODIMP HTMLVideoElement::GetMozPresentedFrames(uint32_t *aMozPresentedFra
 uint32_t HTMLVideoElement::MozPaintedFrames()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  if (!sVideoStatsEnabled) {
+    return 0;
+  }
   layers::ImageContainer* container = GetImageContainer();
   return container ? container->GetPaintCount() : 0;
 }
@@ -282,5 +297,10 @@ HTMLVideoElement::WakeLockUpdate()
   }
 }
 
+void
+HTMLVideoElement::Init()
+{
+  Preferences::AddBoolVarCache(&sVideoStatsEnabled, "media.video_stats.enabled");
+}
 } // namespace dom
 } // namespace mozilla
