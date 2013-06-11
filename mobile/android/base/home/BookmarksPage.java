@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -57,9 +58,23 @@ public class BookmarksPage extends Fragment {
     // Folder title for the currently shown list of bookmarks.
     private BookmarkFolderView mFolderView;
 
+    // On URL open listener
+    private OnUrlOpenListener mUrlOpenListener;
+
+    public BookmarksPage() {
+        mUrlOpenListener = null;
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+
+        try {
+            mUrlOpenListener = (OnUrlOpenListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement HomePager.OnUrlOpenListener");
+        }
 
         // Intialize the adapter.
         mCursorAdapter = new BookmarksListAdapter(getActivity());
@@ -68,6 +83,8 @@ public class BookmarksPage extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
+
+        mUrlOpenListener = null;
 
         // Can't use getters for adapter. It will create one if null.
         if (mCursorAdapter != null) {
@@ -206,7 +223,9 @@ public class BookmarksPage extends Fragment {
              } else {
                 // Otherwise, just open the URL
                 String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-                Tabs.getInstance().loadUrl(url);
+                if (mUrlOpenListener != null) {
+                    mUrlOpenListener.onUrlOpen(url);
+                }
              }
          }
 
