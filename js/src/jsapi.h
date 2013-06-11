@@ -1906,7 +1906,7 @@ JS_StringToVersion(const char *string);
  * JSOPTION_VAROBJFIX is recommended -- see the comments associated with the
  * prototypes for JS_ExecuteScript, JS_EvaluateScript, etc.
  */
-#define JSOPTION_STRICT         JS_BIT(0)       /* warn on dubious practice */
+#define JSOPTION_EXTRA_WARNINGS JS_BIT(0)       /* warn on dubious practices */
 #define JSOPTION_WERROR         JS_BIT(1)       /* convert warning to error */
 #define JSOPTION_VAROBJFIX      JS_BIT(2)       /* make JS_EvaluateScript use
                                                    the last object on its 'obj'
