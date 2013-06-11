@@ -74,6 +74,7 @@ abstract public class BrowserApp extends GeckoApp
                                             PropertyAnimator.PropertyAnimationListener,
                                             View.OnKeyListener,
                                             GeckoLayerClient.OnMetricsChangedListener,
+                                            BrowserSearch.OnUrlOpenListener,
                                             HomePager.OnUrlOpenListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
@@ -88,6 +89,10 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_DUPLICATE = 2;
 
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
+
+    private static final String BROWSER_SEARCH_TAG = "browser_search";
+    private BrowserSearch mBrowserSearch;
+    private View mBrowserSearchContainer;
 
     public static BrowserToolbar mBrowserToolbar;
     private HomePager mHomePager;
@@ -380,6 +385,13 @@ abstract public class BrowserApp extends GeckoApp
         });
 
         mHomePager = (HomePager) findViewById(R.id.home_pager);
+
+        mBrowserSearchContainer = findViewById(R.id.search_container);
+        mBrowserSearch = (BrowserSearch) getSupportFragmentManager().findFragmentByTag(BROWSER_SEARCH_TAG);
+        if (mBrowserSearch == null) {
+            mBrowserSearch = BrowserSearch.newInstance();
+            mBrowserSearch.setUserVisibleHint(false);
+        }
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
@@ -1125,6 +1137,8 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         Tabs.getInstance().loadUrl(url, flags);
+
+        hideBrowserSearch();
         mBrowserToolbar.cancelEdit();
     }
 
@@ -1207,6 +1221,7 @@ abstract public class BrowserApp extends GeckoApp
 
         final String url = mBrowserToolbar.commitEdit();
         animateHideHomePager();
+        hideBrowserSearch();
 
         int flags = Tabs.LOADURL_USER_ENTERED;
         if (target == EditingTarget.NEW_TAB) {
@@ -1225,12 +1240,18 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.cancelEdit();
         animateHideHomePager();
+        hideBrowserSearch();
 
         return true;
     }
 
     void filterEditingMode(String searchTerm, AutocompleteHandler handler) {
-        // FIXME: implement actual awesomebar search
+        if (TextUtils.isEmpty(searchTerm)) {
+            hideBrowserSearch();
+        } else {
+            showBrowserSearch();
+            mBrowserSearch.filter(searchTerm);
+        }
     }
 
     private void animateShowHomePager() {
@@ -1287,6 +1308,30 @@ abstract public class BrowserApp extends GeckoApp
 
         // Refresh toolbar height to possibly restore the toolbar padding
         refreshToolbarHeight();
+    }
+
+    private void showBrowserSearch() {
+        if (mBrowserSearch.getUserVisibleHint()) {
+            return;
+        }
+
+        mBrowserSearchContainer.setVisibility(View.VISIBLE);
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.search_container, mBrowserSearch, BROWSER_SEARCH_TAG).commitAllowingStateLoss();
+        mBrowserSearch.setUserVisibleHint(true);
+    }
+
+    private void hideBrowserSearch() {
+        if (!mBrowserSearch.getUserVisibleHint()) {
+            return;
+        }
+
+        mBrowserSearchContainer.setVisibility(View.INVISIBLE);
+
+        getSupportFragmentManager().beginTransaction()
+                .remove(mBrowserSearch).commitAllowingStateLoss();
+        mBrowserSearch.setUserVisibleHint(false);
     }
 
     private class HideTabsTouchListener implements TouchEventInterceptor {
@@ -1773,7 +1818,7 @@ abstract public class BrowserApp extends GeckoApp
         }).execute();
     }
 
-    // HomePager.OnUrlOpenListener
+    // (HomePager|BrowserSearch).OnUrlOpenListener
     @Override
     public void onUrlOpen(String url) {
         openUrl(url);

@@ -55,6 +55,14 @@
         <include layout="@layout/browser_toolbar"
                  android:layout_width="fill_parent"
                  android:layout_height="@dimen/browser_toolbar_height"/>
+
+        <FrameLayout android:id="@+id/search_container"
+                     android:layout_width="fill_parent"
+                     android:layout_height="fill_parent"
+                     android:layout_below="@id/browser_toolbar"
+                     android:background="@android:color/white"
+                     android:visibility="invisible"/>
+
     </view>
 
 </RelativeLayout>
