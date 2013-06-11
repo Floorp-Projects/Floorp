@@ -350,7 +350,7 @@ Parser<ParseHandler>::reportHelper(ParseReportKind kind, bool strict, uint32_t o
         result =
             tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
         break;
-      case ParseExtraWarning:
+      case ParseStrictWarning:
         result = tokenStream.reportStrictWarningErrorNumberVA(offset, errorNumber, args);
         break;
       case ParseStrictError:
@@ -424,10 +424,10 @@ Parser<ParseHandler>::Parser(JSContext *cx, const CompileOptions &options,
 
     cx->runtime()->activeCompilations++;
 
-    // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
-    // which are not generated if functions are parsed lazily. Note that the
-    // standard "use strict" does not inhibit lazy parsing.
-    if (context->hasExtraWarningsOption())
+    // The Mozilla specific 'strict' option adds extra warnings which are not
+    // generated if functions are parsed lazily. Note that the standard
+    // "use strict" does not inhibit lazy parsing.
+    if (context->hasStrictOption())
         handler.disableSyntaxParser();
 
     tempPoolMark = cx->tempLifoAlloc().mark();
@@ -792,7 +792,7 @@ Parser<ParseHandler>::checkFinalReturn(Node pn)
 {
     JS_ASSERT(pc->sc->isFunctionBox());
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
-           reportBadReturn(pn, ParseExtraWarning,
+           reportBadReturn(pn, ParseStrictWarning,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
 }
 
@@ -1060,7 +1060,7 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
     }
 
     /* Check for falling off the end of a function that returns a value. */
-    if (context->hasExtraWarningsOption() && pc->funHasReturnExpr && !checkFinalReturn(pn))
+    if (context->hasStrictOption() && pc->funHasReturnExpr && !checkFinalReturn(pn))
         return null();
 
     if (kind != Arrow) {
@@ -1716,10 +1716,10 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
             JS_ASSERT(!dn->isUsed());
             JS_ASSERT(dn->isDefn());
 
-            if (context->hasExtraWarningsOption() || dn->kind() == Definition::CONST) {
+            if (context->hasStrictOption() || dn->kind() == Definition::CONST) {
                 JSAutoByteString name;
                 ParseReportKind reporter = (dn->kind() != Definition::CONST)
-                                           ? ParseExtraWarning
+                                           ? ParseStrictWarning
                                            : ParseError;
                 if (!js_AtomToPrintableString(context, funName, &name) ||
                     !report(reporter, false, NULL, JSMSG_REDECLARED_VAR,
@@ -2610,7 +2610,7 @@ Parser<ParseHandler>::condition()
 
     /* Check for (a = b) and warn about possible (a == b) mistype. */
     if (handler.isOperationWithoutParens(pn, PNK_ASSIGN) &&
-        !report(ParseExtraWarning, false, null(), JSMSG_EQUAL_AS_ASSIGN))
+        !report(ParseStrictWarning, false, null(), JSMSG_EQUAL_AS_ASSIGN))
     {
         return null();
     }
@@ -2884,7 +2884,7 @@ Parser<ParseHandler>::bindVarOrConst(JSContext *cx, BindData<ParseHandler> *data
             parser->report(ParseError, false, pn, JSMSG_REDECLARED_PARAM, bytes.ptr());
             return false;
         }
-        if (!parser->report(ParseExtraWarning, false, pn, JSMSG_VAR_HIDES_ARG, bytes.ptr()))
+        if (!parser->report(ParseStrictWarning, false, pn, JSMSG_VAR_HIDES_ARG, bytes.ptr()))
             return false;
     } else {
         bool error = (isConstDecl ||
@@ -2892,12 +2892,12 @@ Parser<ParseHandler>::bindVarOrConst(JSContext *cx, BindData<ParseHandler> *data
                       (dn_kind == Definition::LET &&
                        (stmt->type != STMT_CATCH || OuterLet(pc, stmt, name))));
 
-        if (cx->hasExtraWarningsOption()
+        if (cx->hasStrictOption()
             ? data->op != JSOP_DEFVAR || dn_kind != Definition::VAR
             : error)
         {
             JSAutoByteString bytes;
-            ParseReportKind reporter = error ? ParseError : ParseExtraWarning;
+            ParseReportKind reporter = error ? ParseError : ParseStrictWarning;
             if (!js_AtomToPrintableString(cx, name, &bytes) ||
                 !parser->report(reporter, false, pn, JSMSG_REDECLARED_VAR,
                                 Definition::kindString(dn_kind), bytes.ptr()))
@@ -3288,8 +3288,8 @@ Parser<ParseHandler>::returnOrYield(bool useAssignExpr)
         return null();
     }
 
-    if (context->hasExtraWarningsOption() && pc->funHasReturnExpr && pc->funHasReturnVoid &&
-        !reportBadReturn(pn, ParseExtraWarning,
+    if (context->hasStrictOption() && pc->funHasReturnExpr && pc->funHasReturnVoid &&
+        !reportBadReturn(pn, ParseStrictWarning,
                          JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE))
     {
         return null();
@@ -4320,10 +4320,10 @@ Parser<ParseHandler>::withStatement()
     uint32_t begin = tokenStream.currentToken().pos.begin;
 
     // In most cases, we want the constructs forbidden in strict mode code to be
-    // a subset of those that JSOPTION_EXTRA_WARNINGS warns about, and we should
-    // use reportStrictModeError.  However, 'with' is the sole instance of a
+    // a subset of those that JSOPTION_STRICT warns about, and we should use
+    // reportStrictModeError.  However, 'with' is the sole instance of a
     // construct that is forbidden in strict mode code, but doesn't even merit a
-    // warning under JSOPTION_EXTRA_WARNINGS.  See
+    // warning under JSOPTION_STRICT.  See
     // https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
     if (pc->sc->strict && !report(ParseStrictError, true, null(), JSMSG_STRICT_CODE_WITH))
         return null();
@@ -4571,7 +4571,7 @@ Parser<ParseHandler>::statement()
             return null();
 
         if (handler.isEmptySemicolon(thenBranch) &&
-            !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
+            !report(ParseStrictWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
         {
             return null();
         }
