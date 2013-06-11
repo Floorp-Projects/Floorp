@@ -5362,7 +5362,8 @@ AC_SUBST(MOZ_WEBRTC_ASSERT_ALWAYS)
 AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
 
-dnl Use integers over floats for audio on B2G and Android
+dnl Use integers over floats for audio on B2G and Android, because audio
+dnl backends for those platforms don't support floats.
 if test "$OS_TARGET" = "Android"; then
     MOZ_SAMPLE_TYPE_S16=1
     AC_DEFINE(MOZ_SAMPLE_TYPE_S16)
