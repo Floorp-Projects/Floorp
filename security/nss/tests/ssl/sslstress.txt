@@ -36,9 +36,11 @@
 # ############################ ECC ciphers ############################
 #
    ECC      0      -c_:C009  -V_ssl3:_-c_100_-C_:C009_-N  Stress TLS  ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
+   ECC      0      -c_:C023  -V_ssl3:_-c_100_-C_:C023_-N  Stress TLS  ECDHE-ECDSA AES 128 CBC with SHA256 (no reuse)
    ECC      0      -c_:C004  -V_ssl3:_-c_100_-C_:C004_-N  Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (no reuse)
    ECC      0      -c_:C00E  -V_ssl3:_-c_100_-C_:C00E_-N  Stress TLS  ECDH-RSA    AES 128 CBC with SHA (no reuse)
    ECC      0      -c_:C013  -V_ssl3:_-c_1000_-C_:C013    Stress TLS  ECDHE-RSA   AES 128 CBC with SHA
+   ECC      0      -c_:C027  -V_ssl3:_-c_1000_-C_:C027    Stress TLS  ECDHE-RSA   AES 128 CBC with SHA256
    ECC      0   -c_:C004_-u  -V_ssl3:_-c_1000_-C_:C004_-u Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (session ticket)
 #
 # add client auth versions here...
