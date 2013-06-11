@@ -1028,6 +1028,18 @@ public class BrowserToolbar implements TextWatcher,
         }
     }
 
+    public void onEditSuggestion(String suggestion) {
+        if (!isEditing()) {
+            return;
+        }
+
+        mUrlEditText.setText(suggestion);
+        mUrlEditText.setSelection(mUrlEditText.getText().length());
+        mUrlEditText.requestFocus();
+
+        showSoftInput();
+    }
+
     private void setTitle(CharSequence title) {
         mTitle.setText(title);
         mLayout.setContentDescription(title != null ? title : mTitle.getHint());
