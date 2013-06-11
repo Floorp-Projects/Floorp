@@ -41,7 +41,7 @@
       }, {
         accOrElmOrID: "list",
         expected: ["list 2 items", "Test List", "First item", "Top of the list",
-          "1.", "list one", "Last item", "2.", "list two"]
+          "Last item", "2.", "list two"]
       }, {
         accOrElmOrID: "dlist",
         expected: ["definition list 0.5 items", "Test Definition List",
@@ -66,7 +66,7 @@
         accOrElmOrID: "list",
         oldAccOrElmOrID: "li_one",
         expected: ["list 2 items", "Test List", "First item", "Top of the list",
-          "1.", "list one", "Last item", "2.", "list two"]
+          "Last item", "2.", "list two"]
       }, {
         // Test pivot to li_one from list.
         accOrElmOrID: "li_one",
@@ -151,8 +151,8 @@
     <!-- app.net -->
     <ul id="app.net" class="unstyled ul-horizontal yui3-u fixed-right ta-right" style="list-style-type: none;">
       <li class="yui3-u">
-        <a href="#star" data-starred="0" data-star-button="1" data-post-id="5098826">
-          <i aria-label="star" class="icon-star-empty"></i>
+        <a href="#star" data-starred="0" data-star-button="1" data-post-id="5098826" aria-label="star">
+          Garbage
         </a>
       </li>
       <li class="yui3-u repost">

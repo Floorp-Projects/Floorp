@@ -52,7 +52,7 @@
   position: fixed;
 }
 
-#tray[visible][expanded]:not([viewstate="snapped"]) {
+#tray[expanded]:not([viewstate="snapped"]) {
   transform: none;
 }
 

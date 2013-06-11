@@ -505,6 +505,19 @@ winmm_stream_destroy(cubeb_stream * stm)
   free(stm);
 }
 
+int
+winmm_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
+{
+  MMRESULT rv;
+  LPWAVEOUTCAPS waveout_caps;
+  assert(ctx && max_channels);
+
+  /* We don't support more than two channels in this backend. */
+  *max_channels = 2;
+
+  return CUBEB_OK;
+}
+
 static int
 winmm_stream_start(cubeb_stream * stm)
 {
@@ -564,6 +577,7 @@ winmm_stream_get_position(cubeb_stream * stm, uint64_t * position)
 static struct cubeb_ops const winmm_ops = {
   /*.init =*/ winmm_init,
   /*.get_backend_id =*/ winmm_get_backend_id,
+  /*.get_max_channel_count=*/ winmm_get_max_channel_count,
   /*.destroy =*/ winmm_destroy,
   /*.stream_init =*/ winmm_stream_init,
   /*.stream_destroy =*/ winmm_stream_destroy,
