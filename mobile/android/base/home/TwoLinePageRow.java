@@ -7,19 +7,18 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -80,9 +79,7 @@ public class TwoLinePageRow extends LinearLayout {
         setTitle(TextUtils.isEmpty(title) ? url : title);
 
         // Update the url with "Switch to tab" if needed.
-        // FIXME: Bug 877469: Add back switch to tab functionality.
-        Integer tabId = null;
-        if (tabId != null) {
+        if (Tabs.getInstance().hasUrl(url)) {
             setUrl(R.string.switch_to_tab);
             setUrlIcon(R.drawable.ic_url_bar_tab);
         } else {
