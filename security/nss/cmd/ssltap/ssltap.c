@@ -1020,7 +1020,7 @@ void print_ssl3_handshake(unsigned char *recordBuf,
     case 15: PR_FPUTS("certificate_verify)\n"          ); break;
     case 16: PR_FPUTS("client_key_exchange)\n"         ); break;
     case 20: PR_FPUTS("finished)\n"                    ); break;
-    case 22: PR_FPUTS("certificate_status)\n"          ); break;
+    case 22: PR_FPUTS("certificate_status_request)\n"  ); break;
     default: PR_FPUTS("unknown)\n"                     ); break;
     }
 
@@ -1318,7 +1318,7 @@ void print_ssl3_handshake(unsigned char *recordBuf,
       }
       break;
 
-    case 22: /* certificate_status */
+    case 22: /*certificate_status_request*/
       {
         SECItem data;
         PRFileDesc *ofd;
