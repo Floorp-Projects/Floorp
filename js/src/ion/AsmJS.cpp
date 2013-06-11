@@ -3968,7 +3968,7 @@ CheckDivOrMod(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
             *type = Type::Intish;
         } else {
             *def = f.binary<MMod>(lhsDef, rhsDef, MIRType_Int32);
-            *type = Type::Intish;
+            *type = Type::Int;
         }
         return true;
     }
@@ -3979,7 +3979,7 @@ CheckDivOrMod(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
             *type = Type::Intish;
         } else {
             *def = f.binary<MAsmJSUMod>(lhsDef, rhsDef);
-            *type = Type::Intish;
+            *type = Type::Int;
         }
         return true;
     }
