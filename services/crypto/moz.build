@@ -9,3 +9,6 @@ TEST_DIRS += ['tests']
 
 MODULE = 'services-crypto'
 
+EXTRA_COMPONENTS += [
+    'cryptoComponents.manifest',
+]

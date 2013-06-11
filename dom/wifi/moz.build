@@ -21,6 +21,13 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXTRA_COMPONENTS += [
+    'DOMWifiManager.js',
+    'DOMWifiManager.manifest',
+    'WifiWorker.js',
+    'WifiWorker.manifest',
+]
+
 EXTRA_JS_MODULES += [
     'libhardware_legacy.js',
     'wifi_worker.js',
