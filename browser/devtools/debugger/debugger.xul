@@ -145,7 +145,8 @@
     <menupopup id="debuggerPrefsContextMenu"
                position="before_end"
                onpopupshowing="DebuggerView.Options._onPopupShowing()"
-               onpopuphiding="DebuggerView.Options._onPopupHiding()">
+               onpopuphiding="DebuggerView.Options._onPopupHiding()"
+               onpopuphidden="DebuggerView.Options._onPopupHidden()">
       <menuitem id="pause-on-exceptions"
                 type="checkbox"
                 label="&debuggerUI.pauseExceptions;"
