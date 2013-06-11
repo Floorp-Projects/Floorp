@@ -163,24 +163,73 @@ GstCaps* GStreamerFormatHelper::ConvertFormatsToCaps(const char* aMIMEType,
   return caps;
 }
 
+static gboolean FactoryFilter(GstPluginFeature *aFeature, gpointer)
+{
+  if (!GST_IS_ELEMENT_FACTORY(aFeature)) {
+    return FALSE;
+  }
+
+  // TODO _get_klass doesn't exist in 1.0
+  const gchar *className =
+    gst_element_factory_get_klass(GST_ELEMENT_FACTORY_CAST(aFeature));
+
+  if (!strstr(className, "Decoder") && !strstr(className, "Demux")) {
+    return FALSE;
+  }
+
+  return gst_plugin_feature_get_rank(aFeature) >= GST_RANK_MARGINAL;
+}
+
+/**
+ * Returns true if any |aFactory| caps intersect with |aCaps|
+ */
+static bool SupportsCaps(GstElementFactory *aFactory, GstCaps *aCaps)
+{
+  for (const GList *iter = gst_element_factory_get_static_pad_templates(aFactory); iter; iter = iter->next) {
+    GstStaticPadTemplate *templ = static_cast<GstStaticPadTemplate *>(iter->data);
+
+    if (templ->direction == GST_PAD_SRC) {
+      continue;
+    }
+
+    GstCaps *caps = gst_static_caps_get(&templ->static_caps);
+    if (!caps) {
+      continue;
+    }
+
+    if (gst_caps_can_intersect(gst_static_caps_get(&templ->static_caps), aCaps)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool GStreamerFormatHelper::HaveElementsToProcessCaps(GstCaps* aCaps) {
   NS_ASSERTION(sLoadOK, "GStreamer library not linked");
 
   GList* factories = GetFactories();
 
-  GList* list;
   /* here aCaps contains [containerCaps, [codecCaps1, [codecCaps2, ...]]] so process
    * caps structures individually as we want one element for _each_
    * structure */
   for (unsigned int i = 0; i < gst_caps_get_size(aCaps); i++) {
     GstStructure* s = gst_caps_get_structure(aCaps, i);
     GstCaps* caps = gst_caps_new_full(gst_structure_copy(s), nullptr);
-    list = gst_element_factory_list_filter (factories, caps, GST_PAD_SINK, FALSE);
-    gst_caps_unref(caps);
-    if (!list) {
+
+    bool found = false;
+    for (GList *elem = factories; elem; elem = elem->next) {
+      if (SupportsCaps(GST_ELEMENT_FACTORY_CAST(elem->data), caps)) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
       return false;
     }
-    g_list_free(list);
+
+    gst_caps_unref(caps);
   }
 
   return true;
@@ -206,9 +255,9 @@ GList* GStreamerFormatHelper::GetFactories() {
   uint32_t cookie = gst_default_registry_get_feature_list_cookie ();
   if (cookie != mCookie) {
     g_list_free(mFactories);
-    mFactories = gst_element_factory_list_get_elements
-        (GST_ELEMENT_FACTORY_TYPE_DEMUXER | GST_ELEMENT_FACTORY_TYPE_DECODER,
-         GST_RANK_MARGINAL);
+    mFactories =
+      gst_default_registry_feature_filter((GstPluginFeatureFilter)FactoryFilter,
+                                          false, nullptr);
     mCookie = cookie;
   }
 
