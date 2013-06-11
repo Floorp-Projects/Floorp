@@ -530,7 +530,7 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEve
   }
 
   SetState(PINCHING);
-  mLastZoomFocus = aEvent.mFocusPoint;
+  mLastZoomFocus = gfx::Point(aEvent.mFocusPoint.x, aEvent.mFocusPoint.y);
 
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -553,7 +553,7 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
 
     gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
     gfxFloat userZoom = mFrameMetrics.mZoom.width;
-    nsIntPoint focusPoint = aEvent.mFocusPoint;
+    gfx::Point focusPoint = gfx::Point(aEvent.mFocusPoint.x, aEvent.mFocusPoint.y);
     gfxFloat xFocusChange = (mLastZoomFocus.x - focusPoint.x) / resolution;
     gfxFloat yFocusChange = (mLastZoomFocus.y - focusPoint.y) / resolution;
     // If displacing by the change in focus point will take us off page bounds,
@@ -833,7 +833,7 @@ void AsyncPanZoomController::ScrollBy(const gfx::Point& aOffset) {
 }
 
 void AsyncPanZoomController::ScaleWithFocus(float aZoom,
-                                            const nsIntPoint& aFocus) {
+                                            const gfx::Point& aFocus) {
   float zoomFactor = aZoom / mFrameMetrics.mZoom.width;
   gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
 
