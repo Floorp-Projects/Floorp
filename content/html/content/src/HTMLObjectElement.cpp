@@ -15,7 +15,6 @@
 #include "nsIDocument.h"
 #include "nsIPluginDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMSVGDocument.h"
 #include "nsFormSubmission.h"
 #include "nsIObjectFrame.h"
 #include "nsNPAPIPluginInstance.h"
@@ -81,7 +80,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLObjectElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLObjectElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED12(HTMLObjectElement,
+  NS_INTERFACE_TABLE_INHERITED11(HTMLObjectElement,
                                  nsIDOMHTMLObjectElement,
                                  imgINotificationObserver,
                                  nsIRequestObserver,
@@ -92,8 +91,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLObjectElement)
                                  imgIOnloadBlocker,
                                  nsIInterfaceRequestor,
                                  nsIChannelEventSink,
-                                 nsIConstraintValidation,
-                                 nsIDOMGetSVGDocument)
+                                 nsIConstraintValidation)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_ELEMENT_INTERFACE_MAP_END
 
@@ -348,12 +346,6 @@ HTMLObjectElement::GetContentWindow()
   }
 
   return nullptr;
-}
-
-NS_IMETHODIMP
-HTMLObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
-{
-  return GetContentDocument(aResult);
 }
 
 bool
