@@ -83,6 +83,7 @@ cp -r ${tmp_dir}/test/suite/ch06 ${test262_dir}/ch06
 cp -r ${tmp_dir}/test/suite/ch09 ${test262_dir}/ch09
 cp -r ${tmp_dir}/test/suite/ch10 ${test262_dir}/ch10
 cp -r ${tmp_dir}/test/suite/ch11 ${test262_dir}/ch11
+cp -r ${tmp_dir}/test/suite/ch12 ${test262_dir}/ch12
 cp -r ${tmp_dir}/test/suite/ch13 ${test262_dir}/ch13
 
 # The test402 tests are in test/suite/intl402/.  For now there are no
