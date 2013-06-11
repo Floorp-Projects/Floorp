@@ -3941,8 +3941,8 @@ GetPropertyHelperInline(JSContext *cx,
                 return false;
             }
 
-            /* Don't warn if extra warnings not enabled or for random getprop operations. */
-            if (!cx->hasExtraWarningsOption() || (op != JSOP_GETPROP && op != JSOP_GETELEM))
+            /* Don't warn if not strict or for random getprop operations. */
+            if (!cx->hasStrictOption() || (op != JSOP_GETPROP && op != JSOP_GETELEM))
                 return true;
 
             /* Don't warn repeatedly for the same script. */
@@ -4162,9 +4162,8 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
         if (!script)
             return true;
 
-        // If the code is not strict and extra warnings aren't enabled, then no
-        // check is needed.
-        if (!script->strict && !cx->hasExtraWarningsOption())
+        /* If neither cx nor the code is strict, then no check is needed. */
+        if (!script->strict && !cx->hasStrictOption())
             return true;
     }
 
@@ -4186,9 +4185,8 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
         if (!script)
             return true;
 
-        // If the code is not strict and extra warnings aren't enabled, then no
-        // check is needed.
-        if (!script->strict && !cx->hasExtraWarningsOption())
+        /* If neither cx nor the code is strict, then no check is needed. */
+        if (!script->strict && !cx->hasStrictOption())
             return true;
 
         /*
@@ -4290,7 +4288,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
                 if (pd.attrs & JSPROP_READONLY) {
                     if (strict)
                         return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                    if (cx->hasExtraWarningsOption())
+                    if (cx->hasStrictOption())
                         return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                     return true;
                 }
@@ -4334,10 +4332,10 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
             JS_ASSERT(shape->isDataDescriptor());
 
             if (!shape->writable()) {
-                /* Error in strict mode code, warn with extra warnings options, otherwise do nothing. */
+                /* Error in strict mode code, warn with strict option, otherwise do nothing. */
                 if (strict)
                     return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                if (cx->hasExtraWarningsOption())
+                if (cx->hasStrictOption())
                     return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                 return JS_TRUE;
             }
@@ -4411,10 +4409,10 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
 
     if (!shape) {
         if (!obj->isExtensible()) {
-            /* Error in strict mode code, warn with extra warnings option, otherwise do nothing. */
+            /* Error in strict mode code, warn with strict option, otherwise do nothing. */
             if (strict)
                 return obj->reportNotExtensible(cx);
-            if (cx->hasExtraWarningsOption())
+            if (cx->hasStrictOption())
                 return obj->reportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
             return true;
         }

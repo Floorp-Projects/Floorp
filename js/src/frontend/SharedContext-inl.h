@@ -24,7 +24,7 @@ SharedContext::SharedContext(JSContext *cx, bool strict)
 inline bool
 SharedContext::needStrictChecks()
 {
-    return context->hasExtraWarningsOption() || strict;
+    return context->hasStrictOption() || strict;
 }
 
 inline GlobalSharedContext *
