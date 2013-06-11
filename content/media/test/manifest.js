@@ -16,6 +16,13 @@ var gSmallTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// Used by test_bug654550.html, for videoStats preference
+var gVideoTests = [
+  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
+  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
+  { name:"bogus.duh", type:"bogus/duh" }
+];
+
 // Used by test_progress to ensure we get the correct progress information
 // during resource download.
 var gProgressTests = [
