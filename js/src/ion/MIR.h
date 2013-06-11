@@ -6180,6 +6180,10 @@ class MFunctionEnvironment
     MDefinition *function() const {
         return getOperand(0);
     }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
 };
 
 // Loads the current js::ForkJoinSlice*.
