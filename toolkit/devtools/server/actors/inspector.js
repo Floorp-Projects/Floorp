@@ -207,6 +207,44 @@ var NodeActor = protocol.ActorClass({
     request: { value: Arg(0) },
     response: {}
   }),
+
+  /**
+   * Modify a node's attributes.  Passed an array of modifications
+   * similar in format to "attributes" mutations.
+   * {
+   *   attributeName: <string>
+   *   attributeNamespace: <optional string>
+   *   newValue: <optional string> - If null or undefined, the attribute
+   *     will be removed.
+   * }
+   *
+   * Returns when the modifications have been made.  Mutations will
+   * be queued for any changes made.
+   */
+  modifyAttributes: method(function(modifications) {
+    let rawNode = this.rawNode;
+    for (let change of modifications) {
+      if (change.newValue == null) {
+        if (change.attributeNamespace) {
+          rawNode.removeAttributeNS(change.attributeNamespace, change.attributeName);
+        } else {
+          rawNode.removeAttribute(change.attributeName);
+        }
+      } else {
+        if (change.attributeNamespace) {
+          rawNode.setAttributeNS(change.attributeNamespace, change.attributeName, change.newValue);
+        } else {
+          rawNode.setAttribute(change.attributeName, change.newValue);
+        }
+      }
+    }
+  }, {
+    request: {
+      modifications: Arg(0, "array:json")
+    },
+    response: {}
+  }),
+
 });
 
 /**
@@ -363,6 +401,13 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   }, {
     impl: "_getNodeValue"
   }),
+
+  /**
+   * Return a new AttributeModificationList for this node.
+   */
+  startModifyingAttributes: function() {
+    return AttributeModificationList(this);
+  },
 
   _cacheAttributes: function() {
     if (typeof(this._attrMap) != "undefined") {
@@ -1805,6 +1850,47 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     return returnNode;
   }
 });
+
+/**
+ * Convenience API for building a list of attribute modifications
+ * for the `modifyAttributes` request.
+ */
+var AttributeModificationList = Class({
+  initialize: function(node) {
+    this.node = node;
+    this.modifications = [];
+  },
+
+  apply: function() {
+    let ret = this.node.modifyAttributes(this.modifications);
+    return ret;
+  },
+
+  destroy: function() {
+    this.node = null;
+    this.modification = null;
+  },
+
+  setAttributeNS: function(ns, name, value) {
+    this.modifications.push({
+      attributeNamespace: ns,
+      attributeName: name,
+      newValue: value
+    });
+  },
+
+  setAttribute: function(name, value) {
+    this.setAttributeNS(undefined, name, value);
+  },
+
+  removeAttributeNS: function(ns, name) {
+    this.setAttributeNS(ns, name, undefined);
+  },
+
+  removeAttribute: function(name) {
+    this.setAttributeNS(undefined, name, undefined);
+  }
+})
 
 /**
  * Server side of the inspector actor, which is used to create
