@@ -392,3 +392,5 @@ skip script test262/ch13/13.1/13.1-5gs.js
 skip script test262/ch13/13.1/13.1-8gs.js
 skip script test262/ch13/13.1/13.1-13gs.js
 skip script test262/ch13/13.2/13.2-19-b-3gs.js
+skip script test262/ch14/14.1/14.1-4gs.js
+skip script test262/ch14/14.1/14.1-5gs.js
