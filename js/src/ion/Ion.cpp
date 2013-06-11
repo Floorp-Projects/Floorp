@@ -909,11 +909,10 @@ namespace ion {
 bool
 OptimizeMIR(MIRGenerator *mir)
 {
-    IonSpewPass("BuildSSA");
-    // Note: don't call AssertGraphCoherency before SplitCriticalEdges,
-    // the graph is not in RPO at this point.
-
     MIRGraph &graph = mir->graph();
+
+    IonSpewPass("BuildSSA");
+    AssertBasicGraphCoherency(graph);
 
     if (mir->shouldCancel("Start"))
         return false;
