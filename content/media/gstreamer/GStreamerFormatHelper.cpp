@@ -7,15 +7,22 @@
 #include "GStreamerFormatHelper.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsXPCOMStrings.h"
+#include "GStreamerLoader.h"
 
 #define ENTRY_FORMAT(entry) entry[0]
 #define ENTRY_CAPS(entry) entry[1]
 
+namespace mozilla {
+
 GStreamerFormatHelper* GStreamerFormatHelper::gInstance = nullptr;
+bool GStreamerFormatHelper::sLoadOK = false;
 
 GStreamerFormatHelper* GStreamerFormatHelper::Instance() {
   if (!gInstance) {
-    gst_init(nullptr, nullptr);
+    if ((sLoadOK = load_gstreamer())) {
+      gst_init(nullptr, nullptr);
+    }
+
     gInstance = new GStreamerFormatHelper();
   }
 
@@ -54,6 +61,10 @@ GStreamerFormatHelper::GStreamerFormatHelper()
   : mFactories(nullptr),
     mCookie(static_cast<uint32_t>(-1))
 {
+  if (!sLoadOK) {
+    return;
+  }
+
   mSupportedContainerCaps = gst_caps_new_empty();
   for (unsigned int i = 0; i < G_N_ELEMENTS(mContainers); i++) {
     const char* capsString = mContainers[i][1];
@@ -70,6 +81,10 @@ GStreamerFormatHelper::GStreamerFormatHelper()
 }
 
 GStreamerFormatHelper::~GStreamerFormatHelper() {
+  if (!sLoadOK) {
+    return;
+  }
+
   gst_caps_unref(mSupportedContainerCaps);
   gst_caps_unref(mSupportedCodecCaps);
 
@@ -79,6 +94,10 @@ GStreamerFormatHelper::~GStreamerFormatHelper() {
 
 bool GStreamerFormatHelper::CanHandleMediaType(const nsACString& aMIMEType,
                                                const nsAString* aCodecs) {
+  if (!sLoadOK) {
+    return false;
+  }
+
   const char *type;
   NS_CStringGetData(aMIMEType, &type, NULL);
 
@@ -95,6 +114,8 @@ bool GStreamerFormatHelper::CanHandleMediaType(const nsACString& aMIMEType,
 
 GstCaps* GStreamerFormatHelper::ConvertFormatsToCaps(const char* aMIMEType,
                                                      const nsAString* aCodecs) {
+  NS_ASSERTION(sLoadOK, "GStreamer library not linked");
+
   unsigned int i;
 
   /* convert aMIMEType to gst container caps */
@@ -143,6 +164,7 @@ GstCaps* GStreamerFormatHelper::ConvertFormatsToCaps(const char* aMIMEType,
 }
 
 bool GStreamerFormatHelper::HaveElementsToProcessCaps(GstCaps* aCaps) {
+  NS_ASSERTION(sLoadOK, "GStreamer library not linked");
 
   GList* factories = GetFactories();
 
@@ -166,15 +188,21 @@ bool GStreamerFormatHelper::HaveElementsToProcessCaps(GstCaps* aCaps) {
 
 bool GStreamerFormatHelper::CanHandleContainerCaps(GstCaps* aCaps)
 {
+  NS_ASSERTION(sLoadOK, "GStreamer library not linked");
+
   return gst_caps_can_intersect(aCaps, mSupportedContainerCaps);
 }
 
 bool GStreamerFormatHelper::CanHandleCodecCaps(GstCaps* aCaps)
 {
+  NS_ASSERTION(sLoadOK, "GStreamer library not linked");
+
   return gst_caps_can_intersect(aCaps, mSupportedCodecCaps);
 }
 
 GList* GStreamerFormatHelper::GetFactories() {
+  NS_ASSERTION(sLoadOK, "GStreamer library not linked");
+
   uint32_t cookie = gst_default_registry_get_feature_list_cookie ();
   if (cookie != mCookie) {
     g_list_free(mFactories);
@@ -186,3 +214,5 @@ GList* GStreamerFormatHelper::GetFactories() {
 
   return mFactories;
 }
+
+} // namespace mozilla
