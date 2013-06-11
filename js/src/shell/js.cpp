@@ -583,7 +583,7 @@ static const struct JSOption {
     const char  *name;
     uint32_t    flag;
 } js_options[] = {
-    {"strict",          JSOPTION_EXTRA_WARNINGS},
+    {"strict",          JSOPTION_STRICT},
     {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
     {"strict_mode",     JSOPTION_STRICT_MODE},
@@ -4934,7 +4934,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
         reportWarnings = JS_FALSE;
 
     if (op->getBoolOption('s'))
-        JS_ToggleOptions(cx, JSOPTION_EXTRA_WARNINGS);
+        JS_ToggleOptions(cx, JSOPTION_STRICT);
 
     if (op->getBoolOption('d')) {
         JS_SetRuntimeDebugMode(JS_GetRuntime(cx), true);

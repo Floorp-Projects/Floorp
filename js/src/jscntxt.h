@@ -1709,7 +1709,7 @@ struct JSContext : js::ContextFriendFields,
         return !!(options_ & opt);
     }
 
-    bool hasExtraWarningsOption() const { return hasOption(JSOPTION_EXTRA_WARNINGS); }
+    bool hasStrictOption() const { return hasOption(JSOPTION_STRICT); }
     bool hasWErrorOption() const { return hasOption(JSOPTION_WERROR); }
 
     js::LifoAlloc &tempLifoAlloc() { return runtime()->tempLifoAlloc; }

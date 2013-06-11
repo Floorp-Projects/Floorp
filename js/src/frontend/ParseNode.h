@@ -1319,7 +1319,7 @@ class ObjectBox {
 enum ParseReportKind {
     ParseError,
     ParseWarning,
-    ParseExtraWarning,
+    ParseStrictWarning,
     ParseStrictError
 };
 

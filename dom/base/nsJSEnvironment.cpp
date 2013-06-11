@@ -988,9 +988,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
   bool strict = Preferences::GetBool(js_strict_option_str);
   if (strict)
-    newDefaultJSOptions |= JSOPTION_EXTRA_WARNINGS;
+    newDefaultJSOptions |= JSOPTION_STRICT;
   else
-    newDefaultJSOptions &= ~JSOPTION_EXTRA_WARNINGS;
+    newDefaultJSOptions &= ~JSOPTION_STRICT;
 
   // The vanilla GetGlobalObject returns null if a global isn't set up on
   // the context yet. We can sometimes be call midway through context init,
@@ -1056,9 +1056,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   // In debug builds, warnings are enabled in chrome context if
   // javascript.options.strict.debug is true
   bool strictDebug = Preferences::GetBool(js_strict_debug_option_str);
-  if (strictDebug && (newDefaultJSOptions & JSOPTION_EXTRA_WARNINGS) == 0) {
+  if (strictDebug && (newDefaultJSOptions & JSOPTION_STRICT) == 0) {
     if (chromeWindow || !contentWindow)
-      newDefaultJSOptions |= JSOPTION_EXTRA_WARNINGS;
+      newDefaultJSOptions |= JSOPTION_STRICT;
   }
 #endif
 
