@@ -64,6 +64,14 @@ CPP_SOURCES += [
     'SmsServicesFactory.cpp',
 ]
 
+if CONFIG['MOZ_B2G_RIL']:
+    EXTRA_COMPONENTS += [
+        'gonk/MmsService.js',
+        'gonk/MmsService.manifest',
+        'gonk/MobileMessageDatabaseService.js',
+        'gonk/MobileMessageDatabaseService.manifest',
+    ]
+
 IPDL_SOURCES += [
     'ipc/PMobileMessageCursor.ipdl',
     'ipc/PSms.ipdl',

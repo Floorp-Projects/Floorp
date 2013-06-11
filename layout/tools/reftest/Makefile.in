@@ -10,10 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS= \
-		reftest-cmdline.js \
-		$(NULL)
-
 ifdef XPI_NAME
 NO_JS_MANIFEST = 1
 DIST_FILES = install.rdf
