@@ -17,7 +17,7 @@ FAIL_ON_WARNINGS = 1
 ifdef MOZ_ENABLE_GNOMEUI
 LOCAL_INCLUDES += $(MOZ_GNOMEUI_CFLAGS)
 else
-LOCAL_INCLUDES += $(MOZ_GTK2_CFLAGS)
+LOCAL_INCLUDES += $(TK_CFLAGS)
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
