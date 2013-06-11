@@ -84,7 +84,7 @@ function test() {
     var target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
       inspector = toolbox.getCurrentPanel();
-      startNavigation();
+      inspector.once("inspector-updated", startNavigation);
     });
   }
 
@@ -126,7 +126,7 @@ function test() {
         break;
     }
 
-    executeSoon(function BIMNT_newNode() {
+    inspector.markup._waitForChildren().then(() => executeSoon(function BIMNT_newNode() {
       let node = inspector.selection.node;
 
       if (className == "*comment*") {
@@ -140,7 +140,7 @@ function test() {
       }
 
       nextStep(cursor + 1);
-    });
+    }));
   }
 
   function finishUp() {

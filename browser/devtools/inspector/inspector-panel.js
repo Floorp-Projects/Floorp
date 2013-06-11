@@ -141,7 +141,7 @@ InspectorPanel.prototype = {
         this.highlighter.unlock();
       }
 
-      this.markup.expandNode(this.selection.node);
+      this.markup.expandNode(this.selection.nodeFront);
 
       this.emit("ready");
       deferred.resolve(this);
@@ -297,7 +297,7 @@ InspectorPanel.prototype = {
 
         this._initMarkup();
         this.once("markuploaded", () => {
-          this.markup.expandNode(this.selection.node);
+          this.markup.expandNode(this.selection.nodeFront);
           this.setupSearchBox();
         });
       });
@@ -668,17 +668,14 @@ InspectorPanel.prototype = {
       return;
     }
 
-    let toDelete = this.selection.node;
-
-    let parent = this.selection.node.parentNode;
-
     // If the markup panel is active, use the markup panel to delete
     // the node, making this an undoable action.
     if (this.markup) {
-      this.markup.deleteNode(toDelete);
+      this.markup.deleteNode(this.selection.nodeFront);
     } else {
       // remove the node from content
-      parent.removeChild(toDelete);
+      let parent = this.selection.node.parentNode;
+      parent.removeChild(this.selection.node);
     }
   },
 

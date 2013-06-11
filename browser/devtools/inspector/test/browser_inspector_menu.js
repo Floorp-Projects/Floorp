@@ -53,21 +53,23 @@ function test() {
   function checkElementMenuItems() {
     info("Checking context menu entries for p tag");
     inspector.selection.setNode(doc.querySelector("p"));
-    let tag = getMarkupTagNodeContaining("p");
+    inspector.once("inspector-updated", () => {
+      let tag = getMarkupTagNodeContaining("p");
 
-    // Right-click p tag
-    contextMenuClick(tag);
+      // Right-click p tag
+      contextMenuClick(tag);
 
-    checkEnabled("node-menu-copyinner");
-    checkEnabled("node-menu-copyouter");
-    checkEnabled("node-menu-copyuniqueselector");
-    checkEnabled("node-menu-delete");
+      checkEnabled("node-menu-copyinner");
+      checkEnabled("node-menu-copyouter");
+      checkEnabled("node-menu-copyuniqueselector");
+      checkEnabled("node-menu-delete");
 
-    for (let name of ["hover", "active", "focus"]) {
-      checkEnabled("node-menu-pseudo-" + name);
-    }
+      for (let name of ["hover", "active", "focus"]) {
+        checkEnabled("node-menu-pseudo-" + name);
+      }
 
-    testCopyInnerMenu();
+      testCopyInnerMenu();
+    });
   }
 
   function testCopyInnerMenu() {
