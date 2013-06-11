@@ -74,7 +74,7 @@ abstract public class BrowserApp extends GeckoApp
                                             PropertyAnimator.PropertyAnimationListener,
                                             View.OnKeyListener,
                                             GeckoLayerClient.OnMetricsChangedListener,
-                                            AboutHome.UriLoadListener,
+                                            HomePager.OnUrlOpenListener,
                                             AboutHome.LoadCompleteListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
@@ -1774,8 +1774,9 @@ abstract public class BrowserApp extends GeckoApp
         }).execute();
     }
 
+    // HomePager.OnUrlOpenListener
     @Override
-    public void onAboutHomeUriLoad(String url) {
+    public void onUrlOpen(String url) {
         openUrl(url);
     }
 
