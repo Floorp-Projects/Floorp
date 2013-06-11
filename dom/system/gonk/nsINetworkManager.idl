@@ -112,7 +112,7 @@ interface nsINetworkStatsCallback : nsISupports
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(4bee9633-47ed-47ae-b92b-3e0679087561)]
+[scriptable, uuid(24f8ede0-c862-11e2-8b8b-0800200c9a66)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -181,22 +181,20 @@ interface nsINetworkManager : nsISupports
   long overrideActive(in nsINetworkInterface network);
 
   /**
-   * Returns whether or not wifi tethering is currently enabled.
-   */
-  readonly attribute boolean wifiTetheringEnabled;
-
-  /**
    * Enable or disable Wifi Tethering
    *
    * @param enabled
    *        Boolean that indicates whether tethering should be enabled (true) or disabled (false).
    * @param network
    *        The Wifi network interface with at least name of network interface.
+   * @param config
+   *        The Wifi Tethering configuration from settings db.
    * @param callback
    *        Callback function used to report status to WifiManager.
    */
   void setWifiTethering(in boolean enabled,
                         in nsINetworkInterface networkInterface,
+                        in jsval config,
                         in nsIWifiTetheringCallback callback);
 
   /**
