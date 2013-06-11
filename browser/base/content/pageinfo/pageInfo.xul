@@ -37,6 +37,7 @@
   <stringbundleset id="pageinfobundleset">
     <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
     <stringbundle id="pkiBundle" src="chrome://pippki/locale/pippki.properties"/>
+    <stringbundle id="browserBundle" src="chrome://browser/locale/browser.properties"/>
   </stringbundleset>
 
   <commandset id="pageInfoCommandSet">
@@ -396,6 +397,7 @@
             <label class="permPluginTemplateLabel"/>
             <spacer flex="1"/>
             <radiogroup class="permPluginTemplateRadioGroup" orient="horizontal" command="cmd_pluginsToggle">
+              <radio class="permPluginTemplateRadioDefault" label="&permUseDefault;"/>
               <radio class="permPluginTemplateRadioAsk" label="&permAskAlways;"/>
               <radio class="permPluginTemplateRadioAllow" label="&permAllow;"/>
               <radio class="permPluginTemplateRadioBlock" label="&permBlock;"/>

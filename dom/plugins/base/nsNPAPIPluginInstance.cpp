@@ -1790,13 +1790,6 @@ nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
     return;
   }
 
-  bool isClickToPlay;
-  nsAutoCString mimeType(mMIMEType);
-  rv = pluginHost->IsPluginClickToPlayForType(mimeType, &isClickToPlay);
-  if (NS_FAILED(rv) || !isClickToPlay) {
-    return;
-  }
-
   nsPluginTag* pluginTag = pluginHost->TagForPlugin(mPlugin);
   if (!pluginTag ||
       !pluginTag->mIsJavaPlugin) {
@@ -1807,10 +1800,10 @@ nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
   bool haveCodeParam = false;
   bool isCodeParamEmpty = true;
 
-  for (uint16_t i = 0; i < paramCount; ++i) {
-    if (PL_strcasecmp(paramNames[i], "code") == 0) {
+  for (uint16_t i = paramCount; i > 0; --i) {
+    if (PL_strcasecmp(paramNames[i - 1], "code") == 0) {
       haveCodeParam = true;
-      if (strlen(paramValues[i]) > 0) {
+      if (strlen(paramValues[i - 1]) > 0) {
         isCodeParamEmpty = false;
       }
       break;

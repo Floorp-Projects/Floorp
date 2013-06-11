@@ -4,11 +4,14 @@
 <body onload="scriptPlugin()">
 <embed id="test" type="application/x-test"/>
 <script>
+  var gScriptingFinished = false;
   function scriptPlugin() {
     try {
       document.getElementById("test").getObjectValue();
     }
-    catch (e) {}
+    catch (e) {
+      setTimeout(function() { gScriptingFinished = true; }, 0);
+    }
   }
 </script>
 </body>
