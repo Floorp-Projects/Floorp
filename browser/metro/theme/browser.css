@@ -1013,3 +1013,30 @@ setting[type="radio"] > vbox {
   margin-left: -18px;
   pointer-events: auto;
 }
+
+/* :::::: autoscroll popup ::::: */
+
+.autoscroller {
+  height: 28px;
+  width: 28px;
+  border: none;
+  margin: -14px;
+  padding: 0;
+  background-image: url("chrome://browser/skin/images/autoscroll.png");
+  background-color: transparent;
+  position: fixed;
+  visibility: hidden;
+  background-repeat: no-repeat;
+  background-origin: padding-box;
+  background-clip: padding-box;
+  background-position: right top;
+  -moz-appearance: none;
+}
+
+.autoscroller[scrolldir="NS"] {
+  background-position: right center;
+}
+
+.autoscroller[scrolldir="EW"] {
+  background-position: right bottom;
+}
