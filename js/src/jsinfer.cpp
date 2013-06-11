@@ -2324,49 +2324,15 @@ StackTypeSet::propertyNeedsBarrier(JSContext *cx, jsid id)
     return false;
 }
 
-enum RecompileKind {
-    RECOMPILE_CHECK_MONITORED,
-    RECOMPILE_CHECK_BARRIERS,
-    RECOMPILE_NONE
-};
-
 /*
- * Whether all jitcode for a given pc was compiled with monitoring or barriers.
- * If we reanalyze the script after generating jitcode, new monitoring and
- * barriers will be added which may be duplicating information available when
- * the script was originally compiled, and which should not invalidate that
- * compilation.
- */
-static inline bool
-JITCodeHasCheck(JSScript *script, jsbytecode *pc, RecompileKind kind)
-{
-    if (kind == RECOMPILE_NONE)
-        return false;
-
-    if (script->hasAnyIonScript() ||
-        script->isIonCompilingOffThread() ||
-        script->isParallelIonCompilingOffThread())
-    {
-        return false;
-    }
-
-    return true;
-}
-
-/*
- * Force recompilation of any jitcode for script at pc, or of any other script
+ * Force recompilation of any jitcode for the script, or of any other script
  * which this script was inlined into.
  */
 static inline void
-AddPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc,
-                    RecompileKind kind = RECOMPILE_NONE)
+AddPendingRecompile(JSContext *cx, JSScript *script)
 {
-    /*
-     * Trigger recompilation of the script itself, if code was not previously
-     * compiled with the specified information.
-     */
-    if (!JITCodeHasCheck(script, pc, kind))
-        cx->compartment()->types.addPendingRecompile(cx, script, pc);
+    /* Trigger recompilation of the script itself. */
+    cx->compartment()->types.addPendingRecompile(cx, script);
 
     /*
      * Remind Ion not to save the compile code if generating type
@@ -2422,7 +2388,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
          * not disable it on future changes to the type set.
          */
         RootedScript script(cx, script_);
-        AddPendingRecompile(cx, script, NULL);
+        AddPendingRecompile(cx, script);
     }
 };
 
@@ -2793,17 +2759,8 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
     JS_ASSERT(!pending->empty());
 
 #ifdef JS_ION
-    for (unsigned i = 0; i < pending->length(); i++) {
-        CompilerOutput &co = *(*pending)[i].compilerOutput(*this);
-        switch (co.kind()) {
-          case CompilerOutput::Ion:
-          case CompilerOutput::ParallelIon:
-            break;
-        }
-    }
-
     ion::Invalidate(*this, fop, *pending);
-#endif /* JS_ION */
+#endif
 
     fop->delete_(pending);
 }
@@ -2915,7 +2872,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 }
 
 void
-TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc)
+TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(script);
     if (!constrainedOutputs)
@@ -2965,7 +2922,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32_t offse
 
     code.monitoredTypes = true;
 
-    AddPendingRecompile(cx, script, pc, RECOMPILE_CHECK_MONITORED);
+    AddPendingRecompile(cx, script);
 }
 
 void
@@ -3053,7 +3010,7 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
          * if any of the barriers is ever violated).
          */
         RootedScript script(cx, script_);
-        AddPendingRecompile(cx, script, const_cast<jsbytecode*>(pc), RECOMPILE_CHECK_BARRIERS);
+        AddPendingRecompile(cx, script);
     }
 
     /* Ignore duplicate barriers. */
@@ -3112,7 +3069,7 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
     if (!code.typeBarriers) {
         /* Trigger recompilation as for normal type barriers. */
         RootedScript script(cx, script_);
-        AddPendingRecompile(cx, script, const_cast<jsbytecode*>(pc), RECOMPILE_CHECK_BARRIERS);
+        AddPendingRecompile(cx, script);
     }
 
     InferSpew(ISpewOps, "singletonTypeBarrier: #%u:%05u: %sT%p%s %p %s",
@@ -3163,8 +3120,6 @@ TypeCompartment::print(JSContext *cx, bool force)
         printf("%u", typeCounts[count]);
     }
     printf(" (%u over)\n", typeCountOver);
-
-    printf("Recompilations: %u\n", recompilations);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -5549,7 +5504,7 @@ types::MarkIteratorUnknownSlow(JSContext *cx)
     result->next = script->types->dynamicList;
     script->types->dynamicList = result;
 
-    AddPendingRecompile(cx, script, NULL);
+    AddPendingRecompile(cx, script);
 
     if (!script->hasAnalysis() || !script->analysis()->ranInference())
         return;
@@ -5662,42 +5617,7 @@ types::TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type t
     result->next = script->types->dynamicList;
     script->types->dynamicList = result;
 
-    /*
-     * New type information normally requires all code in the entire script to
-     * be recompiled, as changes to types can flow through variables etc. into
-     * other chunks in the compiled script.
-     *
-     * We can do better than this, though, when we can prove the new type will
-     * only be visible at certain points in the script. Namely, for arithmetic
-     * operations which might produce doubles and are then passed to an
-     * expression that cancels out integer overflow, i.e.'OP & -1' or 'OP | 0',
-     * the new type will only affect OP and the bitwise operation.
-     *
-     * This can prevent a significant amount of recompilation in scripts which
-     * use these operations extensively, principally autotranslated code.
-     */
-
-    jsbytecode *ignorePC = pc + GetBytecodeLength(pc);
-    if (*ignorePC == JSOP_POP) {
-        /* Value is ignored. */
-    } else if (*ignorePC == JSOP_INT8 && GET_INT8(ignorePC) == -1) {
-        ignorePC += JSOP_INT8_LENGTH;
-        if (*ignorePC != JSOP_BITAND)
-            ignorePC = NULL;
-    } else if (*ignorePC == JSOP_ZERO) {
-        ignorePC += JSOP_ZERO_LENGTH;
-        if (*ignorePC != JSOP_BITOR)
-            ignorePC = NULL;
-    } else {
-        ignorePC = NULL;
-    }
-
-    if (ignorePC) {
-        AddPendingRecompile(cx, script, pc);
-        AddPendingRecompile(cx, script, ignorePC);
-    } else {
-        AddPendingRecompile(cx, script, NULL);
-    }
+    AddPendingRecompile(cx, script);
 
     if (script->hasAnalysis() && script->analysis()->ranInference()) {
         TypeSet *pushed = script->analysis()->pushedTypes(pc, 0);

@@ -92,10 +92,7 @@ namespace types {
 inline
 CompilerOutput::CompilerOutput()
   : script(NULL),
-    kindInt(Ion),
-    constructing(false),
-    barriers(false),
-    chunkIndex(false)
+    kindInt(Ion)
 {
 }
 
@@ -394,14 +391,11 @@ struct AutoEnterCompilation
         JS_ASSERT(info.outputIndex == RecompileInfo::NoCompilerRunning);
     }
 
-    bool init(JSScript *script, bool constructing, unsigned chunkIndex)
+    bool init(JSScript *script)
     {
         CompilerOutput co;
         co.script = script;
         co.setKind(kind);
-        co.constructing = constructing;
-        co.barriers = cx->zone()->compileBarriers();
-        co.chunkIndex = chunkIndex;
 
         // This flag is used to prevent adding the current compiled script in
         // the list of compiler output which should be invalided.  This is
