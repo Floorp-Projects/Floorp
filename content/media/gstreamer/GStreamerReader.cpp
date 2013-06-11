@@ -326,6 +326,8 @@ nsresult GStreamerReader::ReadMetadata(VideoInfo* aInfo,
           GST_TIME_ARGS (duration)));
     duration = GST_TIME_AS_USECONDS (duration);
     mDecoder->SetMediaDuration(duration);
+  } else {
+    mDecoder->SetMediaSeekable(false);
   }
 
   int n_video = 0, n_audio = 0;
