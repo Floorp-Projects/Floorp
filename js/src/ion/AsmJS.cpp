@@ -6111,7 +6111,7 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
     RootedPropertyName name(cx, FunctionName(fn));
     moduleFun.set(NewFunction(cx, NullPtr(), LinkAsmJS, FunctionNumFormals(fn),
                               JSFunction::NATIVE_FUN, NullPtr(), name,
-                              JSFunction::ExtendedFinalizeKind));
+                              JSFunction::ExtendedFinalizeKind, TenuredObject));
     if (!moduleFun)
         return false;
 
