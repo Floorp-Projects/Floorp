@@ -483,7 +483,7 @@ InspectorPanel.prototype = {
       let menu = this.panelDoc.getElementById("node-menu-pseudo-" + name);
 
       if (this.selection.isElementNode()) {
-        let checked = DOMUtils.hasPseudoClassLock(this.selection.node, ":" + name);
+        let checked = this.selection.nodeFront.hasPseudoClassLock(":" + name);
         menu.setAttribute("checked", checked);
         menu.removeAttribute("disabled");
       } else {
@@ -580,34 +580,24 @@ InspectorPanel.prototype = {
    */
   togglePseudoClass: function InspectorPanel_togglePseudoClass(aPseudo) {
     if (this.selection.isElementNode()) {
-      if (DOMUtils.hasPseudoClassLock(this.selection.node, aPseudo)) {
-        this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
-          DOMUtils.removePseudoClassLock(crumb.node.rawNode(), aPseudo);
-        });
-      } else {
-        let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
-        let node = this.selection.node;
-        do {
-          DOMUtils.addPseudoClassLock(node, aPseudo);
-          node = node.parentNode;
-        } while (hierarchical && node.parentNode)
+      let node = this.selection.nodeFront;
+      if (node.hasPseudoClassLock(aPseudo)) {
+        return this.walker.removePseudoClassLock(node, aPseudo, { parents: true });
       }
+
+      let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
+      return this.walker.addPseudoClassLock(node, aPseudo, { parents: hierarchical });
     }
-    this.selection.emit("pseudoclass");
-    this.breadcrumbs.scroll();
   },
 
   /**
    * Clear any pseudo-class locks applied to the current hierarchy.
    */
   clearPseudoClasses: function InspectorPanel_clearPseudoClasses() {
-    this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
-      try {
-        DOMUtils.clearPseudoClassLocks(crumb.node.rawNode());
-      } catch(e) {
-       // Ignore dead nodes after navigation.
-      }
-    });
+    if (!this.walker) {
+      return;
+    }
+    return this.walker.clearPseudoClassLocks().then(null, console.error);
   },
 
   /**
