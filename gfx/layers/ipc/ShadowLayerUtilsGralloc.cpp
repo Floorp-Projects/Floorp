@@ -25,6 +25,8 @@
 
 #include "GeckoProfiler.h"
 
+#include "cutils/properties.h"
+
 using namespace android;
 using namespace base;
 using namespace mozilla::layers;
@@ -343,6 +345,18 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
 {
+
+  // Check for Nexus S to disable gralloc. We only check for this on ICS or
+  // earlier, in hopes that JB will work.
+#ifdef ANDROID_VERSION <= 15
+  char propValue[PROPERTY_VALUE_MAX];
+  property_get("ro.product.device", propValue, "None");
+  if (strcmp("crespo",propValue) == 0) {
+    NS_WARNING("Nexus S has issues with gralloc, falling back to shmem");
+    return false;
+  }
+#endif
+
   // Some GL implementations fail to render gralloc textures with
   // width < 64.  There's not much point in gralloc'ing buffers that
   // small anyway, so fall back on shared memory plus a texture

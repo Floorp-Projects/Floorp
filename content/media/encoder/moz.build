@@ -7,16 +7,16 @@
 MODULE = 'content'
 
 EXPORTS += [
-    'OggCodecState.h',
-    'OggDecoder.h',
-    'OggReader.h',
-    'OggWriter.h',
+    'ContainerWriter.h',
+    'MediaEncoder.h',
+    'TrackEncoder.h',
 ]
 
 CPP_SOURCES += [
-    'OggCodecState.cpp',
-    'OggDecoder.cpp',
-    'OggReader.cpp',
-    'OggWriter.cpp',
+    'MediaEncoder.cpp',
+    'TrackEncoder.cpp',
 ]
 
+if CONFIG['MOZ_OPUS']:
+    EXPORTS += ['OpusTrackEncoder.h']
+    CPP_SOURCES += ['OpusTrackEncoder.cpp']

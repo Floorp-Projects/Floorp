@@ -57,9 +57,13 @@ ogg_page_granulepos
 ogg_page_serialno
 ogg_stream_check
 ogg_stream_clear
+ogg_stream_eos
+ogg_stream_flush
 ogg_stream_init
+ogg_stream_packetin
 ogg_stream_packetout
 ogg_stream_pagein
+ogg_stream_pageout
 ogg_stream_reset
 ogg_sync_buffer
 ogg_sync_clear
