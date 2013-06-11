@@ -14,6 +14,7 @@
 #include "VideoUtils.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/Preferences.h"
+#include "GStreamerLoader.h"
 
 namespace mozilla {
 
@@ -34,7 +35,7 @@ IsYV12Format(const VideoData::YCbCrBuffer::Plane& aYPlane,
              const VideoData::YCbCrBuffer::Plane& aCbPlane,
              const VideoData::YCbCrBuffer::Plane& aCrPlane);
 
-static const int MAX_CHANNELS = 4;
+static const unsigned int MAX_CHANNELS = 4;
 // Let the demuxer work in pull mode for short files
 static const int SHORT_FILE_SIZE = 1024 * 1024;
 // The default resource->Read() size when working in push mode
