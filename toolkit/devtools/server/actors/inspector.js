@@ -1301,6 +1301,34 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   /**
+   * Get a node's innerHTML property.
+   */
+  innerHTML: method(function(node) {
+    return LongStringActor(this.conn, node.rawNode.innerHTML);
+  }, {
+    request: {
+      node: Arg(0, "domnode")
+    },
+    response: {
+      value: RetVal("longstring")
+    }
+  }),
+
+  /**
+   * Get a node's outerHTML property.
+   */
+  outerHTML: method(function(node) {
+    return LongStringActor(this.conn, node.rawNode.outerHTML);
+  }, {
+    request: {
+      node: Arg(0, "domnode")
+    },
+    response: {
+      value: RetVal("longstring")
+    }
+  }),
+
+  /**
    * Get any pending mutation records.  Must be called by the client after
    * the `new-mutations` notification is received.  Returns an array of
    * mutation records.
