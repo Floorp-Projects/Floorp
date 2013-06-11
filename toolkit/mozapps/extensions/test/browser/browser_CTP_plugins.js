@@ -7,9 +7,34 @@ let gManagerWindow;
 let gTestPluginId;
 let gPluginBrowser;
 
+function updateBlocklist(aCallback) {
+  var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
+                          .getService(Ci.nsITimerCallback);
+  var observer = function() {
+    aCallback();
+    Services.obs.removeObserver(observer, "blocklist-updated");
+  };
+  Services.obs.addObserver(observer, "blocklist-updated", false);
+  blocklistNotifier.notify(null);
+}
+
+var _originalBlocklistURL = null;
+function setAndUpdateBlocklist(aURL, aCallback) {
+  if (!_originalBlocklistURL) {
+    _originalBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
+  }
+  Services.prefs.setCharPref("extensions.blocklist.url", aURL);
+  updateBlocklist(aCallback);
+}
+
+function resetBlocklist(aCallback) {
+  Services.prefs.setCharPref("extensions.blocklist.url", _originalBlocklistURL);
+}
+
 function test() {
   waitForExplicitFinish();
   Services.prefs.setBoolPref("plugins.click_to_play", true);
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
   let pluginTag = getTestPluginTag();
   pluginTag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   open_manager("addons://list/plugin", part1);
@@ -160,9 +185,13 @@ function part11() {
   gBrowser.removeCurrentTab();
 
   let pluginTag = getTestPluginTag();
-  pluginTag.blocklisted = true; // causes appDisabled to be set
-  close_manager(gManagerWindow, function() {
-    open_manager("addons://list/plugin", part12);
+
+// causes appDisabled to be set
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
+    function() {
+      close_manager(gManagerWindow, function() {
+      open_manager("addons://list/plugin", part12);
+    });
   });
 }
 
@@ -182,15 +211,17 @@ function part13() {
   let menu = gManagerWindow.document.getElementById("detail-state-menulist");
   is_element_hidden(menu, "part13: detail state menu should be hidden");
 
-  let pluginTag = getTestPluginTag();
-  pluginTag.blocklisted = false;
-  run_next_test();
+  setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", function() {
+    run_next_test();
+  });
 }
 
 function end_test() {
   Services.prefs.clearUserPref("plugins.click_to_play");
+  Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
   let pluginTag = getTestPluginTag();
   pluginTag.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+  resetBlocklist();
   close_manager(gManagerWindow, function() {
     finish();
   });
