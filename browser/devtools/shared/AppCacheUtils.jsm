@@ -408,7 +408,7 @@ ManifestParser.prototype = {
 
       if (text == "CACHE MANIFEST") {
         if (this.currentLine != 1) {
-          this._addError(this.currentLine, "cacheManifestOnlyFirstLine",
+          this._addError(this.currentLine, "cacheManifestOnlyFirstLine2",
                          this.currentLine);
         }
         continue;
@@ -445,7 +445,7 @@ ManifestParser.prototype = {
 
     if (text.indexOf("*") != -1) {
       if (this.currSection != "NETWORK" || text.length != 1) {
-        this._addError(this.currentLine, "asteriskInWrongSection",
+        this._addError(this.currentLine, "asteriskInWrongSection2",
                        this.currSection, this.currentLine);
         return;
       }
@@ -501,7 +501,7 @@ ManifestParser.prototype = {
     let [ namespace, fallback ] = split;
 
     if (namespace.indexOf("*") != -1) {
-      this._addError(this.currentLine, "fallbackAsterisk", this.currentLine);
+      this._addError(this.currentLine, "fallbackAsterisk2", this.currentLine);
     }
 
     if (/\s/.test(namespace)) {
