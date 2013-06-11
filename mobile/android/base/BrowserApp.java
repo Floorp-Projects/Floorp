@@ -1117,6 +1117,18 @@ abstract public class BrowserApp extends GeckoApp
         outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
     }
 
+    private void openUrl(String url) {
+        mBrowserToolbar.setProgressVisibility(true);
+
+        int flags = Tabs.LOADURL_NONE;
+        if (mBrowserToolbar.getEditingTarget() == EditingTarget.NEW_TAB) {
+            flags |= Tabs.LOADURL_NEW_TAB;
+        }
+
+        Tabs.getInstance().loadUrl(url, flags);
+        mBrowserToolbar.cancelEdit();
+    }
+
     /* Favicon methods */
     private void loadFavicon(final Tab tab) {
         maybeCancelFaviconLoad(tab);
@@ -1764,15 +1776,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onAboutHomeUriLoad(String url) {
-        mBrowserToolbar.setProgressVisibility(true);
-
-        int flags = Tabs.LOADURL_NONE;
-        if (mBrowserToolbar.getEditingTarget() == EditingTarget.NEW_TAB) {
-            flags |= Tabs.LOADURL_NEW_TAB;
-        }
-
-        Tabs.getInstance().loadUrl(url, flags);
-        mBrowserToolbar.cancelEdit();
+        openUrl(url);
     }
 
     @Override
