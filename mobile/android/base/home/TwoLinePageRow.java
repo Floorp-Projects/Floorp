@@ -44,6 +44,26 @@ public class TwoLinePageRow extends LinearLayout {
         mFavicon = (FaviconView) findViewById(R.id.favicon);
     }
 
+    private void setTitle(String title) {
+        mTitle.setText(title);
+    }
+
+    private void setUrl(String url) {
+        mUrl.setText(url);
+    }
+
+    private void setUrl(int stringId) {
+        mUrl.setText(stringId);
+    }
+
+    private void setUrlIcon(int resourceId) {
+        mUrl.setCompoundDrawablesWithIntrinsicBounds(resourceId, 0, 0, 0);
+    }
+
+    private void setFaviconWithUrl(Bitmap favicon, String url) {
+        mFavicon.updateImage(favicon, url);
+    }
+
     public void updateFromCursor(Cursor cursor) {
         if (cursor == null) {
             return;
@@ -57,21 +77,17 @@ public class TwoLinePageRow extends LinearLayout {
 
         // Use the URL instead of an empty title for consistency with the normal URL
         // bar view - this is the equivalent of getDisplayTitle() in Tab.java
-        if (TextUtils.isEmpty(title)) {
-            mTitle.setText(url);
-        } else {
-            mTitle.setText(title);
-        }
+        setTitle(TextUtils.isEmpty(title) ? url : title);
 
         // Update the url with "Switch to tab" if needed.
         // FIXME: Bug 877469: Add back switch to tab functionality.
         Integer tabId = null;
         if (tabId != null) {
-            mUrl.setText(R.string.switch_to_tab);
-            mUrl.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_url_bar_tab, 0, 0, 0);
+            setUrl(R.string.switch_to_tab);
+            setUrlIcon(R.drawable.ic_url_bar_tab);
         } else {
-            mUrl.setText(url);
-            mUrl.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+            setUrl(url);
+            setUrlIcon(0);
         }
 
         int faviconIndex = cursor.getColumnIndex(URLColumns.FAVICON);
@@ -86,7 +102,7 @@ public class TwoLinePageRow extends LinearLayout {
                 }
             }
 
-            mFavicon.updateImage(favicon, url);
+            setFaviconWithUrl(favicon, url);
         }
     }
 }
