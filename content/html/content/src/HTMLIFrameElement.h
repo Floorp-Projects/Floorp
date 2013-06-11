@@ -9,12 +9,14 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
+#include "nsIDOMGetSVGDocument.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLIFrameElement MOZ_FINAL : public nsGenericHTMLFrameElement
                                   , public nsIDOMHTMLIFrameElement
+                                  , public nsIDOMGetSVGDocument
 {
 public:
   HTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -37,6 +39,9 @@ public:
 
   // nsIDOMHTMLIFrameElement
   NS_DECL_NSIDOMHTMLIFRAMEELEMENT
+
+  // nsIDOMGetSVGDocument
+  NS_DECL_NSIDOMGETSVGDOCUMENT
 
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,

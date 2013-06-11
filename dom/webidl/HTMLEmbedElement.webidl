@@ -36,7 +36,7 @@ partial interface HTMLEmbedElement {
 };
 
 partial interface HTMLEmbedElement {
-  // GetSVGDocument
+  // nsIDOMGetSVGDocument
   Document? getSVGDocument();
 };
 
