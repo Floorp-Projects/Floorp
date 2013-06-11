@@ -36,7 +36,7 @@ void InterleaveAndConvertBuffer(const void** aSourceChannels,
  */
 void DownmixAndInterleave(const nsTArray<const void*>& aChannelData,
                           AudioSampleFormat aSourceFormat, int32_t aDuration,
-                          float aVolume, int32_t aOutputChannels,
+                          float aVolume, uint32_t aOutputChannels,
                           AudioDataValue* aOutput);
 
 /**
