@@ -17,6 +17,8 @@ MOCHITEST_FILES = \
 MOCHITEST_CHROME_FILES = \
     test_bug206691.xul \
     test_bug391728.html \
+    blockPluginHard.xml \
+    blockNoPlugins.xml \
     file_bug391728.html \
     file_bug391728_2.html \
     test_bug421622.xul \

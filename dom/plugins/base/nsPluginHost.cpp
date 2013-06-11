@@ -1967,16 +1967,10 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
                                                 EmptyString(), &state);
 
         if (NS_SUCCEEDED(rv)) {
-          // If the blocklist says so, block the plugin.
           // If the blocklist says it is risky and we have never seen this
           // plugin before, then disable it.
           // If the blocklist says this is an outdated plugin, warn about
           // outdated plugins.
-          // If the blocklist says the plugin is one of the click-to-play
-          // states, set the click-to-play flag.
-          if (state == nsIBlocklistService::STATE_BLOCKED) {
-             pluginTag->SetBlocklisted(true);
-          }
           if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore) {
              pluginTag->SetEnabledState(nsIPluginTag::STATE_DISABLED);
           }
