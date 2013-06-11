@@ -336,15 +336,15 @@ protected:
    * using the window which initiated the load....RetargetLoadNotifications
    * contains that information...
    */
-  void RetargetLoadNotifications(nsIRequest *request); 
+  void RetargetLoadNotifications(nsIRequest *request);
   /**
    * Once the user tells us how they want to dispose of the content
-   * create an nsITransfer so they know what's going on...
+   * create an nsITransfer so they know what's going on. If this fails, the
+   * caller MUST call Cancel.
    */
   nsresult CreateTransfer();
 
-
-  /* 
+  /*
    * The following two functions are part of the split of SaveToDisk
    * to make it async, and works as following:
    *
@@ -390,11 +390,6 @@ protected:
    */
   bool GetNeverAskFlagFromPref(const char * prefName, const char * aContentType);
 
-  /**
-   * Initialize an nsITransfer object for use as a progress object
-   */
-  nsresult InitializeDownload(nsITransfer*);
-  
   /**
    * Helper routine to ensure mSuggestedFileName is "correct";
    * this ensures that mTempFileExtension only contains an extension when it
