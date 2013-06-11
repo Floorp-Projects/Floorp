@@ -10,4 +10,16 @@ EXPORTS += [
     'bzlib.h',
 ]
 
+# Placeholder for CSRCS= conversion.
+csrcs = [
+    'blocksort.c',
+    'bzlib.c',
+    'compress.c',
+    'crctable.c',
+    'decompress.c',
+    'huffman.c',
+    'randtable.c',
+]
+
+HOST_CSRCS += csrcs
 HOST_LIBRARY_NAME = 'hostbz2'

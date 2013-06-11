@@ -31,3 +31,8 @@ EXPORTS.vpx += [
     'yv12extend.h',
 ]
 
+
+if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
+    HOST_CSRCS += [
+        'obj_int_extract.c',
+    ]

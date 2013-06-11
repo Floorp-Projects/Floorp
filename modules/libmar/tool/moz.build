@@ -9,8 +9,7 @@ MODULE = 'mar'
 if CONFIG['MOZ_ENABLE_SIGNMAR']:
     PROGRAM = 'signmar'
 
-# bug 875549: Temporarly break dep on HOST_CSRCS= so CSRCS can convert.
-host_csrcs = [
+CSRCS = [
     'mar.c',
 ]
-CSRCS += host_csrcs
+HOST_CSRCS += CSRCS
