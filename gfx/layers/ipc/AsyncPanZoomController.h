@@ -333,7 +333,7 @@ protected:
   /**
    * Scrolls the viewport by an X,Y offset.
    */
-  void ScrollBy(const gfx::Point& aOffset);
+  void ScrollBy(const CSSPoint& aOffset);
 
   /**
    * Scales the viewport by an amount (note that it multiplies this scale in to
