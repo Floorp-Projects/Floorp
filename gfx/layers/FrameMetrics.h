@@ -32,7 +32,6 @@ public:
 
   FrameMetrics()
     : mCompositionBounds(0, 0, 0, 0)
-    , mContentRect(0, 0, 0, 0)
     , mDisplayPort(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
     , mViewport(0, 0, 0, 0)
@@ -51,7 +50,6 @@ public:
   bool operator==(const FrameMetrics& aOther) const
   {
     return mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
-           mContentRect.IsEqualEdges(aOther.mContentRect) &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
            mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mViewport.IsEqualEdges(aOther.mViewport) &&
@@ -121,17 +119,6 @@ public:
   // This is only valid on the root layer. Nested iframes do not need this
   // metric as they do not have a displayport set. See bug 775452.
   LayerIntRect mCompositionBounds;
-
-  // |mScrollableRect|, stored in layer pixels. DECPRECATED, DO NOT USE.
-  //
-  // This is valid on any layer where |mScrollableRect| is, though it may be
-  // more lazily maintained than |mScrollableRect|. That is, when
-  // |mScrollableRect| is updated, this may lag. For this reason, it's better to
-  // use |mScrollableRect| for any control logic.
-  //
-  // FIXME/bug 785929: Is this really necessary? Can it not be calculated from
-  // |mScrollableRect| whenever it's needed?
-  LayerIntRect mContentRect;
 
   // ---------------------------------------------------------------------------
   // The following metrics are all in CSS pixels. They are not in any uniform

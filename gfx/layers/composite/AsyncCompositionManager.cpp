@@ -411,15 +411,14 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
     metrics.mScrollOffset, layerPixelRatioX, layerPixelRatioY);
 
   if (mIsFirstPaint) {
-    mContentRect = metrics.mContentRect;
+    mContentRect = metrics.mScrollableRect;
     SetFirstPaintViewport(scrollOffsetLayerPixels,
                           layerPixelRatioX,
-                          mContentRect,
-                          metrics.mScrollableRect);
+                          mContentRect);
     mIsFirstPaint = false;
-  } else if (!metrics.mContentRect.IsEqualEdges(mContentRect)) {
-    mContentRect = metrics.mContentRect;
-    SetPageRect(metrics.mScrollableRect);
+  } else if (!metrics.mScrollableRect.IsEqualEdges(mContentRect)) {
+    mContentRect = metrics.mScrollableRect;
+    SetPageRect(mContentRect);
   }
 
   // We synchronise the viewport information with Java after sending the above
@@ -470,26 +469,27 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   gfxPoint fixedOffset;
   gfxSize scaleDiff;
 
+  LayerRect content = LayerRect::FromCSSRect(mContentRect,
+                                             1 / aRootTransform.GetXScale(),
+                                             1 / aRootTransform.GetYScale());
   // If the contents can fit entirely within the widget area on a particular
-  // dimenson, we need to translate and scale so that the fixed layers remain
+  // dimension, we need to translate and scale so that the fixed layers remain
   // within the page boundaries.
-  if (mContentRect.width * tempScaleDiffX < metrics.mCompositionBounds.width) {
+  if (mContentRect.width * scaleX < metrics.mCompositionBounds.width) {
     fixedOffset.x = -metricsScrollOffset.x;
-    scaleDiff.width = std::min(1.0f, metrics.mCompositionBounds.width / (float)mContentRect.width);
+    scaleDiff.width = std::min(1.0f, metrics.mCompositionBounds.width / content.width);
   } else {
-    fixedOffset.x = clamped(scrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
-                       mContentRect.XMost() - metrics.mCompositionBounds.width / tempScaleDiffX) -
-               metricsScrollOffset.x;
+    fixedOffset.x = clamped(scrollOffset.x / tempScaleDiffX, content.x,
+        content.XMost() - metrics.mCompositionBounds.width / tempScaleDiffX) - metricsScrollOffset.x;
     scaleDiff.width = tempScaleDiffX;
   }
 
-  if (mContentRect.height * tempScaleDiffY < metrics.mCompositionBounds.height) {
+  if (mContentRect.height * scaleY < metrics.mCompositionBounds.height) {
     fixedOffset.y = -metricsScrollOffset.y;
-    scaleDiff.height = std::min(1.0f, metrics.mCompositionBounds.height / (float)mContentRect.height);
+    scaleDiff.height = std::min(1.0f, metrics.mCompositionBounds.height / content.height);
   } else {
-    fixedOffset.y = clamped(scrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
-                       mContentRect.YMost() - metrics.mCompositionBounds.height / tempScaleDiffY) -
-               metricsScrollOffset.y;
+    fixedOffset.y = clamped(scrollOffset.y / tempScaleDiffY, content.y,
+        content.YMost() - metrics.mCompositionBounds.height / tempScaleDiffY) - metricsScrollOffset.y;
     scaleDiff.height = tempScaleDiffY;
   }
 
@@ -552,11 +552,10 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 void
 AsyncCompositionManager::SetFirstPaintViewport(const LayerIntPoint& aOffset,
                                                float aZoom,
-                                               const LayerIntRect& aPageRect,
                                                const CSSRect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  AndroidBridge::Bridge()->SetFirstPaintViewport(aOffset, aZoom, aPageRect, aCssPageRect);
+  AndroidBridge::Bridge()->SetFirstPaintViewport(aOffset, aZoom, aCssPageRect);
 #endif
 }
 
