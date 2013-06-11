@@ -397,7 +397,7 @@ public class BookmarksPage extends Fragment {
 
             if (convertView == null) {
                 if (viewType == VIEW_TYPE_ITEM) {
-                    convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_item_row, null);
+                    convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.home_item_row, null);
                 } else {
                     convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_folder_row, null);
                 }
