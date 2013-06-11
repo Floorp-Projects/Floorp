@@ -822,7 +822,7 @@ SocialShare = {
     iframe.setAttribute("src", shareEndpoint);
 
     let navBar = document.getElementById("nav-bar");
-    let anchor = document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-icon");
+    let anchor = document.getAnonymousElementByAttribute(this.shareButton, "class", "toolbarbutton-icon");
     this.panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
     Social.setErrorListener(iframe, this.setErrorMessage.bind(this));
   },
