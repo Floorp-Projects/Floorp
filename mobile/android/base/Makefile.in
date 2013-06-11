@@ -443,7 +443,6 @@ RES_LAYOUT = \
   res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
   res/layout/bookmark_folder_row.xml \
-  res/layout/bookmark_item_row.xml \
   res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
   res/layout/doorhangerpopup.xml \
@@ -452,6 +451,7 @@ RES_LAYOUT = \
   res/layout/find_in_page_content.xml \
   res/layout/font_size_preference.xml \
   res/layout/gecko_app.xml \
+  res/layout/home_item_row.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
