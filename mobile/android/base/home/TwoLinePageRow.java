@@ -74,15 +74,19 @@ public class TwoLinePageRow extends LinearLayout {
             mUrl.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
 
-        byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
-        Bitmap favicon = null;
-        if (b != null) {
-            Bitmap bitmap = BitmapUtils.decodeByteArray(b);
-            if (bitmap != null) {
-                favicon = Favicons.getInstance().scaleImage(bitmap);
-            }
-        }
+        int faviconIndex = cursor.getColumnIndex(URLColumns.FAVICON);
+        if (faviconIndex != -1) {
+            byte[] b = cursor.getBlob(faviconIndex);
 
-        mFavicon.updateImage(favicon, url);
+            Bitmap favicon = null;
+            if (b != null) {
+                Bitmap bitmap = BitmapUtils.decodeByteArray(b);
+                if (bitmap != null) {
+                    favicon = Favicons.getInstance().scaleImage(bitmap);
+                }
+            }
+
+            mFavicon.updateImage(favicon, url);
+        }
     }
 }
