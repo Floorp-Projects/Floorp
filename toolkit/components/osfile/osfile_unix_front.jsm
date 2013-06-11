@@ -166,10 +166,6 @@
        throw_on_negative("flush", UnixFile.fsync(this.fd));
      };
 
-
-     // Constant used to normalize options.
-     const noOptions = {};
-
      // The default unix mode for opening (0600)
      const DEFAULT_UNIX_MODE = 384;
 
@@ -216,7 +212,7 @@
       * @return {File} A file object.
       * @throws {OS.File.Error} If the file could not be opened.
       */
-     File.open = function Unix_open(path, mode, options = noOptions) {
+     File.open = function Unix_open(path, mode, options = {}) {
        let omode = options.unixMode || DEFAULT_UNIX_MODE;
        let flags;
        if (options.unixFlags) {
@@ -287,7 +283,7 @@
       *   - {bool} ignoreAbsent If |true|, do not fail if the
       *     directory does not exist yet.
       */
-     File.removeEmptyDir = function removeEmptyDir(path, options = noOptions) {
+     File.removeEmptyDir = function removeEmptyDir(path, options = {}) {
        let result = UnixFile.rmdir(path);
        if (result == -1) {
          if (options.ignoreAbsent && ctypes.errno == Const.ENOENT) {
@@ -316,7 +312,7 @@
       * - {bool} ignoreExisting If |true|, do not fail if the
       * directory already exists.
       */
-     File.makeDir = function makeDir(path, options = noOptions) {
+     File.makeDir = function makeDir(path, options = {}) {
        let omode = options.unixMode || DEFAULT_UNIX_MODE_DIR;
        let result = UnixFile.mkdir(path, omode);
        if (result != -1 ||
@@ -383,7 +379,7 @@
        // This implementation uses |copyfile(3)|, from the BSD library.
        // Adding copying of hierarchies and/or attributes is just a flag
        // away.
-       File.copy = function copyfile(sourcePath, destPath, options = noOptions) {
+       File.copy = function copyfile(sourcePath, destPath, options = {}) {
          let flags = Const.COPYFILE_DATA;
          if (options.noOverwrite) {
            flags |= Const.COPYFILE_EXCL;
@@ -421,7 +417,7 @@
        let pump_buffer = null;
 
        // An implementation of |pump| using |read|/|write|
-       let pump_userland = function pump_userland(source, dest, options = noOptions) {
+       let pump_userland = function pump_userland(source, dest, options = {}) {
          let bufSize = options.bufSize || 4096;
          let nbytes = options.nbytes || Infinity;
          if (!pump_buffer || pump_buffer.length < bufSize) {
@@ -457,7 +453,7 @@
          const BUFSIZE = 1 << 17;
 
          // An implementation of |pump| using |splice| (for Linux/Android)
-         pump = function pump_splice(source, dest, options = noOptions) {
+         pump = function pump_splice(source, dest, options = {}) {
            let nbytes = options.nbytes || Infinity;
            let pipe = [];
            throw_on_negative("pump", UnixFile.pipe(pipe));
@@ -521,7 +517,7 @@
        // Implement |copy| using |pump|.
        // This implementation would require some work before being able to
        // copy directories
-       File.copy = function copy(sourcePath, destPath, options = noOptions) {
+       File.copy = function copy(sourcePath, destPath, options = {}) {
          let source, dest;
          let result;
          try {
@@ -546,7 +542,7 @@
 
      // Implement |move| using |rename| (wherever possible) or |copy|
      // (if files are on distinct devices).
-     File.move = function move(sourcePath, destPath, options = noOptions) {
+     File.move = function move(sourcePath, destPath, options = {}) {
        // An implementation using |rename| whenever possible or
        // |File.pump| when required, for other Unices.
        // It can move directories on one file system, not
@@ -795,7 +791,7 @@
       *
       * @return {File.Information}
       */
-     File.stat = function stat(path, options = noOptions) {
+     File.stat = function stat(path, options = {}) {
        if (options.unixNoFollowingLinks) {
          throw_on_negative("stat", UnixFile.lstat(path, gStatDataPtr));
        } else {
