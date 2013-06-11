@@ -224,18 +224,19 @@ InspectorPanel.prototype = {
     } else if (this.target.window) {
       searchDoc = this.target.window.document;
     } else {
-      return;
+      searchDoc = null;
     }
     // Initiate the selectors search object.
-    let setNodeFunction = function(node) {
-      this.selection.setNode(node, "selectorsearch");
+    let setNodeFunction = function(eventName, node) {
+      this.selection.setNodeFront(node, "selectorsearch");
     }.bind(this);
     if (this.searchSuggestions) {
       this.searchSuggestions.destroy();
       this.searchSuggestions = null;
     }
     this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
-    this.searchSuggestions = new SelectorSearch(searchDoc, this.searchBox, setNodeFunction);
+    this.searchSuggestions = new SelectorSearch(this, searchDoc, this.searchBox);
+    this.searchSuggestions.on("node-selected", setNodeFunction);
   },
 
   /**
