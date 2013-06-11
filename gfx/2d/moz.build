@@ -58,7 +58,7 @@ if CONFIG['MOZ_ENABLE_SKIA']:
         'image_operations.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
     CPP_SOURCES += [
         'ScaledFontFreetype.cpp',
     ]
