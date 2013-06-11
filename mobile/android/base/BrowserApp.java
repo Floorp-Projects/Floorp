@@ -74,8 +74,7 @@ abstract public class BrowserApp extends GeckoApp
                                             PropertyAnimator.PropertyAnimationListener,
                                             View.OnKeyListener,
                                             GeckoLayerClient.OnMetricsChangedListener,
-                                            HomePager.OnUrlOpenListener,
-                                            AboutHome.LoadCompleteListener {
+                                            HomePager.OnUrlOpenListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
@@ -1778,11 +1777,6 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onUrlOpen(String url) {
         openUrl(url);
-    }
-
-    @Override
-    public void onAboutHomeLoadComplete() {
-        mAboutHomeStartupTimer.stop();
     }
 
     @Override
