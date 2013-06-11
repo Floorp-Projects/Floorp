@@ -388,8 +388,7 @@ class MessageEvent : public Event
   static const JSFunctionSpec sFunctions[];
 
 protected:
-  uint64_t* mData;
-  size_t mDataByteCount;
+  JSAutoStructuredCloneBuffer mBuffer;
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
   bool mMainRuntime;
 
@@ -430,7 +429,7 @@ public:
     SetJSPrivateSafeish(obj, priv);
     InitMessageEventCommon(aCx, obj, priv, type, false, false, NULL, NULL, NULL,
                            true);
-    aData.steal(&priv->mData, &priv->mDataByteCount);
+    priv->mBuffer.swap(aData);
     priv->mClonedObjects.SwapElements(aClonedObjects);
 
     return obj;
@@ -438,7 +437,7 @@ public:
 
 protected:
   MessageEvent(bool aMainRuntime)
-  : mData(NULL), mDataByteCount(0), mMainRuntime(aMainRuntime)
+  : mMainRuntime(aMainRuntime)
   {
     MOZ_COUNT_CTOR(mozilla::dom::workers::MessageEvent);
   }
@@ -446,7 +445,6 @@ protected:
   virtual ~MessageEvent()
   {
     MOZ_COUNT_DTOR(mozilla::dom::workers::MessageEvent);
-    JS_ASSERT(!mData);
   }
 
   enum SLOT {
@@ -503,13 +501,7 @@ private:
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
     MessageEvent* priv = GetJSPrivateSafeish<MessageEvent>(aObj);
-    if (priv) {
-      JS_freeop(aFop, priv->mData);
-#ifdef DEBUG
-      priv->mData = NULL;
-#endif
-      delete priv;
-    }
+    delete priv;
   }
 
   static JSBool
@@ -528,12 +520,9 @@ private:
     }
 
     // Deserialize and save the data value if we can.
-    if (slot == SLOT_data && event->mData) {
+    if (slot == SLOT_data && event->mBuffer.data()) {
       JSAutoStructuredCloneBuffer buffer;
-      buffer.adopt(event->mData, event->mDataByteCount);
-
-      event->mData = NULL;
-      event->mDataByteCount = 0;
+      buffer.swap(event->mBuffer);
 
       // Release reference to objects that were AddRef'd for
       // cloning into worker when array goes out of scope.
