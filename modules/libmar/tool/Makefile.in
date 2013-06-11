@@ -40,7 +40,7 @@ HOST_CFLAGS += \
   $(DEFINES) \
   $(NULL)
 
-HOST_CSRCS = \
+DISABLED_HOST_CSRCS = \
   mar.c \
   $(NULL)
 DISABLED_CSRCS = $(HOST_CSRCS)
