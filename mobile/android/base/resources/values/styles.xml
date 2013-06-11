@@ -69,8 +69,6 @@
         <item name="android:minWidth">@dimen/doorhanger_input_width</item>
     </style>
 
-    <style name="Widget.TextView.SpinnerItem" parent="android:style/Widget.TextView.SpinnerItem"/>
-
     <style name="Widget.MenuItemActionBar">
         <item name="android:padding">@dimen/browser_toolbar_button_padding</item>
         <item name="android:background">@drawable/action_bar_button</item>
