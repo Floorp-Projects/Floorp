@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<Gecko.FaviconView android:id="@+id/suggestion_icon"
+	                   android:layout_width="@dimen/favicon_bg"
+	                   android:layout_height="@dimen/favicon_bg"
+	                   android:layout_marginLeft="6dip"
+	                   android:layout_marginRight="6dip"
+	                   android:layout_centerVertical="true"
+	                   android:minWidth="@dimen/favicon_bg"
+	                   android:minHeight="@dimen/favicon_bg"/>
+
+	<org.mozilla.gecko.FlowLayout android:id="@+id/suggestion_layout"
+	                              android:layout_toRightOf="@id/suggestion_icon"
+	                              android:layout_width="wrap_content"
+	                              android:layout_height="wrap_content">
+
+	    <include layout="@layout/awesomebar_suggestion_item"
+	             android:id="@+id/suggestion_user_entered"/>
+
+	</org.mozilla.gecko.FlowLayout>
+
+</merge>

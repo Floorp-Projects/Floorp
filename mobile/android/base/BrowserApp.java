@@ -74,6 +74,8 @@ abstract public class BrowserApp extends GeckoApp
                                             PropertyAnimator.PropertyAnimationListener,
                                             View.OnKeyListener,
                                             GeckoLayerClient.OnMetricsChangedListener,
+                                            BrowserSearch.OnSearchListener,
+                                            BrowserSearch.OnEditSuggestionListener,
                                             BrowserSearch.OnUrlOpenListener,
                                             HomePager.OnUrlOpenListener {
     private static final String LOGTAG = "GeckoBrowserApp";
@@ -1129,6 +1131,10 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openUrl(String url) {
+        openUrl(url, null);
+    }
+
+    private void openUrl(String url, String searchEngine) {
         mBrowserToolbar.setProgressVisibility(true);
 
         int flags = Tabs.LOADURL_NONE;
@@ -1136,7 +1142,7 @@ abstract public class BrowserApp extends GeckoApp
             flags |= Tabs.LOADURL_NEW_TAB;
         }
 
-        Tabs.getInstance().loadUrl(url, flags);
+        Tabs.getInstance().loadUrl(url, searchEngine, -1, flags);
 
         hideBrowserSearch();
         mBrowserToolbar.cancelEdit();
@@ -1822,6 +1828,18 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onUrlOpen(String url) {
         openUrl(url);
+    }
+
+    // BrowserSearch.OnSearchListener
+    @Override
+    public void onSearch(SearchEngine engine, String text) {
+        openUrl(text, engine.name);
+    }
+
+    // BrowserSearch.OnEditSuggestionListener
+    @Override
+    public void onEditSuggestion(String suggestion) {
+        mBrowserToolbar.onEditSuggestion(suggestion);
     }
 
     @Override
