@@ -46,14 +46,12 @@
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/Preferences.h"
 #include <os2im.h>
-
+#include <algorithm>    // std::max
 using namespace mozilla;
 using namespace mozilla::widget;
-
 //=============================================================================
 //  Macros
 //=============================================================================
-
 // Drag and Drop
 
 // d&d flags - actions that might cause problems during d&d
@@ -124,17 +122,16 @@ using namespace mozilla::widget;
 // make these methods seem more appropriate in context
 #define PM2NS_PARENT NS2PM_PARENT
 #define PM2NS NS2PM
-
 // used to identify plugin widgets (copied from nsPluginNativeWindowOS2.cpp)
 #define NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION \
                         "MozillaPluginWindowPropertyAssociation"
-
 // name of the window class used to clip plugins
 #define kClipWndClass   "nsClipWnd"
+// IME caret not exist
+#define NO_IME_CARET    (static_cast<ULONG>(-1))
 
 //-----------------------------------------------------------------------------
 // Debug
-
 #ifdef DEBUG_FOCUS
   #define DEBUGFOCUS(what) fprintf(stderr, "[%8x]  %8lx  (%02d)  "#what"\n", \
                                    (int)this, mWnd, mWindowIdentifier)
@@ -2460,50 +2457,35 @@ bool nsWindow::OnQueryConvertPos(MPARAM mp1, MRESULT& mresult)
   pCursorPos->xRight = pCursorPos->xLeft + caret.mReply.mRect.width;
   pCursorPos->yTop = pCursorPos->yBottom + caret.mReply.mRect.height;
   NS2PM(*pCursorPos);
-
   mresult = (MRESULT)QCP_CONVERT;
-
   return true;
 }
 bool nsWindow::ImeResultString(HIMI himi)
 {
-  PCHAR pBuf;
   ULONG ulBufLen;
-
   // Get a buffer size
   ulBufLen = 0;
   if (spfnImGetResultString(himi, IMR_RESULT_RESULTSTRING, NULL, &ulBufLen))
     return false;
+  nsAutoTArray<CHAR, 64> compositionStringA;
+  compositionStringA.SetCapacity(ulBufLen / sizeof(CHAR));
 
-  pBuf = new CHAR[ulBufLen];
-  if (!pBuf)
-    return false;
-
-  if (spfnImGetResultString(himi, IMR_RESULT_RESULTSTRING, pBuf,
-                            &ulBufLen)) {
-    delete pBuf;
-
+  if (spfnImGetResultString(himi, IMR_RESULT_RESULTSTRING,
+                            compositionStringA.Elements(), &ulBufLen)) {
     return false;
   }
-
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-
     nsCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
-
     mIsComposing = true;
   }
-
   nsAutoChar16Buffer outBuf;
   int32_t outBufLen;
-  MultiByteToWideChar(0, pBuf, ulBufLen, outBuf, outBufLen);
-
-  delete pBuf;
-
+  MultiByteToWideChar(0, compositionStringA.Elements(), ulBufLen,
+                      outBuf, outBufLen);
   nsAutoString compositionString(outBuf.Elements());
-
   if (mLastDispatchedCompositionString != compositionString) {
     nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
     InitEvent(update);
@@ -2523,50 +2505,59 @@ bool nsWindow::ImeResultString(HIMI himi)
   DispatchWindowEvent(&end);
   mIsComposing = false;
   mLastDispatchedCompositionString.Truncate();
-
   return true;
+}
+static uint32_t
+PlatformToNSAttr(uint8_t aAttr)
+{
+  switch (aAttr)
+  {
+    case CP_ATTR_INPUT_ERROR:
+    case CP_ATTR_INPUT:
+      return NS_TEXTRANGE_RAWINPUT;
+
+    case CP_ATTR_CONVERTED:
+      return NS_TEXTRANGE_CONVERTEDTEXT;
+
+    case CP_ATTR_TARGET_NOTCONVERTED:
+      return NS_TEXTRANGE_SELECTEDRAWTEXT;
+
+    case CP_ATTR_TARGET_CONVERTED:
+      return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+
+    default:
+      MOZ_NOT_REACHED("unknown attribute");
+      return NS_TEXTRANGE_RAWINPUT;
+  }
 }
 
 bool nsWindow::ImeConversionString(HIMI himi)
 {
-  PCHAR pBuf;
   ULONG ulBufLen;
-
   // Get a buffer size
   ulBufLen = 0;
   if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONSTRING, NULL,
                                 &ulBufLen))
     return false;
+  nsAutoTArray<CHAR, 64> compositionStringA;
+  compositionStringA.SetCapacity(ulBufLen / sizeof(CHAR));
 
-  pBuf = new CHAR[ulBufLen];
-  if (!pBuf)
-    return false;
-
-  if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONSTRING, pBuf,
-                                &ulBufLen)) {
-    delete pBuf;
-
+  if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONSTRING,
+                                compositionStringA.Elements(), &ulBufLen)) {
     return false;
   }
-
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-
     nsCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
-
     mIsComposing = true;
   }
-
   nsAutoChar16Buffer outBuf;
   int32_t outBufLen;
-  MultiByteToWideChar(0, pBuf, ulBufLen, outBuf, outBufLen);
-
-  delete pBuf;
-
+  MultiByteToWideChar(0, compositionStringA.Elements(), ulBufLen,
+                      outBuf, outBufLen);
   nsAutoString compositionString(outBuf.Elements());
-
   // Is a conversion string changed ?
   if (mLastDispatchedCompositionString != compositionString) {
     nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
@@ -2575,22 +2566,103 @@ bool nsWindow::ImeConversionString(HIMI himi)
     mLastDispatchedCompositionString = compositionString;
     DispatchWindowEvent(&update);
   }
-
   nsAutoTArray<nsTextRange, 4> textRanges;
-
   if (!compositionString.IsEmpty()) {
+    bool oneClause = false;
+
+    ulBufLen = 0;
+    if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONCLAUSE, 0,
+                                  &ulBufLen)) {
+      oneClause = true;  // Assume that there is only one clause
+    }
+
+    ULONG ulClauseCount = std::max(2UL, ulBufLen / sizeof(ULONG));
+    nsAutoTArray<ULONG, 4> clauseOffsets;
+    nsAutoTArray<UCHAR, 4> clauseAttr;
+    ULONG ulCursorPos;
+
+    clauseOffsets.SetCapacity(ulClauseCount);
+    clauseAttr.SetCapacity(ulClauseCount);
+
+    if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONCLAUSE,
+                                  clauseOffsets.Elements(), &ulBufLen)) {
+      oneClause = true;  // Assume that there is only one clause
+    }
+
+    // Korean IME does not provide clause and cursor infomation
+    // Or if getting a clause inforamtion was failed
+    if (ulBufLen == 0 && !oneClause) {
+      ulCursorPos = compositionString.Length();
+
+      oneClause = true;
+    } else {
+      while (!oneClause) {
+        ulBufLen = 0;
+        if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONATTR, 0,
+                                      &ulBufLen)) {
+          oneClause = true;
+          break;
+        }
+
+        nsAutoTArray<UCHAR, 64> attr;
+        attr.SetCapacity(ulBufLen / sizeof(UCHAR));
+
+        if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONATTR,
+                                      attr.Elements(), &ulBufLen)) {
+          oneClause = true;
+          break;
+        }
+
+        // Assume that all the conversion attribute in a clause are same
+        for (ULONG i = 0; i < ulClauseCount - 1; ++i) {
+          clauseAttr[i] = attr[clauseOffsets[i]];
+        }
+
+        // Convert ANSI string offsets to Unicode string offsets
+        clauseOffsets[0] = 0;
+        for (ULONG i = 1; i < ulClauseCount - 1; ++i) {
+          MultiByteToWideChar(0,
+                              compositionStringA.Elements(), clauseOffsets[i],
+                              outBuf, outBufLen);
+          clauseOffsets[i] = outBufLen;
+        }
+        break;
+      }
+
+      ulBufLen = sizeof(ULONG);
+      if (spfnImGetConversionString(himi, IMR_CONV_CURSORPOS, &ulCursorPos,
+                                    &ulBufLen)) {
+        ulCursorPos = NO_IME_CARET;
+      } else {
+        // Convert ANSI string position to Unicode string position
+        MultiByteToWideChar(0, compositionStringA.Elements(), ulCursorPos,
+                            outBuf, outBufLen);
+        ulCursorPos = outBufLen;
+      }
+    }
+
+    if (oneClause) {
+      ulClauseCount = 2;
+      clauseOffsets[0] = 0;
+      clauseOffsets[1] = compositionString.Length();
+      clauseAttr[0] = NS_TEXTRANGE_SELECTEDRAWTEXT;
+    }
+
     nsTextRange newRange;
-    newRange.mStartOffset = 0;
-    newRange.mEndOffset = compositionString.Length();
-    newRange.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
-    textRanges.AppendElement(newRange);
 
-    newRange.mStartOffset = compositionString.Length();
-    newRange.mEndOffset = newRange.mStartOffset;
-    newRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-    textRanges.AppendElement(newRange);
+    for (ULONG i = 0; i < ulClauseCount - 1; ++i) {
+      newRange.mStartOffset = clauseOffsets[i];
+      newRange.mEndOffset = clauseOffsets[i + 1];
+      newRange.mRangeType = PlatformToNSAttr(clauseAttr[i]);
+      textRanges.AppendElement(newRange);
+    }
+
+    if (ulCursorPos != NO_IME_CARET) {
+      newRange.mStartOffset = newRange.mEndOffset = ulCursorPos;
+      newRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+      textRanges.AppendElement(newRange);
+    }
   }
-
   nsTextEvent text(true, NS_TEXT_TEXT, this);
   InitEvent(text);
   text.theText = compositionString;

@@ -127,6 +127,9 @@ private:
 
   bool GetScrollToClick();
   nsIFrame* GetScrollbar();
+  bool ShouldScrollForEvent(nsGUIEvent* aEvent);
+  bool ShouldScrollToClickForEvent(nsGUIEvent* aEvent);
+  bool IsEventOverThumb(nsGUIEvent* aEvent);
 
   void PageUpDown(nscoord change);
   void SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewPos, bool aIsSmooth,

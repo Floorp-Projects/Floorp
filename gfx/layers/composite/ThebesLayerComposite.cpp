@@ -251,15 +251,17 @@ ThebesLayerComposite::GetCompositionBounds()
 
       // Get the content document bounds, in screen-space.
       const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
-      const LayerIntSize& contentSize = metrics.mContentRect.Size();
+      const LayerIntRect content = LayerIntRect::FromCSSRectRounded(metrics.mScrollableRect,
+                                                                    1 / scaleX,
+                                                                    1 / scaleY);
       gfx::Point scrollOffset =
         gfx::Point((metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width) / scaleX,
                    (metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height) / scaleY);
       const nsIntPoint contentOrigin(
-        metrics.mContentRect.x - NS_lround(scrollOffset.x),
-        metrics.mContentRect.y - NS_lround(scrollOffset.y));
+        content.x - NS_lround(scrollOffset.x),
+        content.y - NS_lround(scrollOffset.y));
       gfxRect contentRect = gfxRect(contentOrigin.x, contentOrigin.y,
-                                    contentSize.width, contentSize.height);
+                                    content.width, content.height);
       gfxRect contentBounds = scrollableLayer->GetEffectiveTransform().
         TransformBounds(contentRect);
 

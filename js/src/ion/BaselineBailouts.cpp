@@ -999,7 +999,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 }
 
 uint32_t
-ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIterator &iter,
+ion::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIterator &iter,
                           bool invalidate, BaselineBailoutInfo **bailoutInfo)
 {
     JS_ASSERT(bailoutInfo != NULL);
@@ -1214,7 +1214,10 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     // that script->needsArgsObj() implies frame->hasArgsObj().
     RootedScript innerScript(cx, NULL);
     RootedScript outerScript(cx, NULL);
-    IonFrameIterator iter(cx);
+
+    JS_ASSERT(cx->mainThread().currentlyRunningInJit());
+    IonFrameIterator iter(cx->mainThread().ionTop);
+
     uint32_t frameno = 0;
     while (frameno < numFrames) {
         JS_ASSERT(!iter.isOptimizedJS());

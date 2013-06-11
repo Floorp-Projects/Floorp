@@ -199,12 +199,6 @@ public:
   //
 
   /**
-   * Sets the CSS page rect, and calculates a new page rect based on the zoom
-   * level of the current metrics and the passed in CSS page rect.
-   */
-  void SetPageRect(const CSSRect& aCSSPageRect);
-
-  /**
    * Sets the DPI of the device for use within panning and zooming logic. It is
    * a platform responsibility to set this on initialization of this class and
    * whenever it changes.

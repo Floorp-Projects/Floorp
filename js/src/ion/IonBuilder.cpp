@@ -3409,6 +3409,16 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     RootedScript calleeScript(cx, target->nonLazyScript());
     BaselineInspector inspector(cx, target->nonLazyScript());
 
+    // Improve type information of |this| when not set.
+    if (callInfo.constructing() && !callInfo.thisArg()->resultTypeSet()) {
+        types::StackTypeSet *types = types::TypeScript::ThisTypes(calleeScript);
+        MTypeBarrier *barrier = MTypeBarrier::New(callInfo.thisArg(), cloneTypeSet(types), Bailout_Normal);
+        current->add(barrier);
+        MUnbox *unbox = MUnbox::New(barrier, MIRType_Object, MUnbox::Infallible);
+        current->add(unbox);
+        callInfo.setThis(unbox);
+    }
+
     // Start inlining.
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), target,

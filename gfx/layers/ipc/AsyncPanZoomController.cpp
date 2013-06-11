@@ -832,29 +832,12 @@ void AsyncPanZoomController::ScrollBy(const gfx::Point& aOffset) {
   mFrameMetrics = metrics;
 }
 
-void AsyncPanZoomController::SetPageRect(const CSSRect& aCSSPageRect) {
-  FrameMetrics metrics = mFrameMetrics;
-  gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
-
-  // The page rect is the css page rect scaled by the current zoom.
-  // Round the page rect so we don't get any truncation, then get the nsIntRect
-  // from this.
-  metrics.mContentRect = LayerRect::FromCSSRectRoundOut(aCSSPageRect, resolution, resolution);
-  metrics.mScrollableRect = aCSSPageRect;
-
-  mFrameMetrics = metrics;
-}
-
 void AsyncPanZoomController::ScaleWithFocus(float aZoom,
                                             const nsIntPoint& aFocus) {
   float zoomFactor = aZoom / mFrameMetrics.mZoom.width;
   gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
 
   SetZoomAndResolution(aZoom);
-
-  // Force a recalculation of the page rect based on the new zoom and the
-  // current CSS page rect (which is unchanged since it's not affected by zoom).
-  SetPageRect(mFrameMetrics.mScrollableRect);
 
   // If the new scale is very small, we risk multiplying in huge rounding
   // errors, so don't bother adjusting the scroll offset.
@@ -1272,12 +1255,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
 
     mFrameMetrics = aViewportFrame;
 
-    SetPageRect(mFrameMetrics.mScrollableRect);
-
     mState = NOTHING;
   } else if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aViewportFrame.mScrollableRect)) {
     mFrameMetrics.mScrollableRect = aViewportFrame.mScrollableRect;
-    SetPageRect(mFrameMetrics.mScrollableRect);
   }
 
   if (needContentRepaint) {
