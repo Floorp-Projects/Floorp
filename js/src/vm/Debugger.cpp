@@ -2029,20 +2029,17 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "getNewestFrame", args, dbg);
 
-    /*
-     * cx->fp() would return the topmost frame in the current context.
-     * Since there may be multiple contexts, use AllFramesIter instead.
-     */
-    for (AllFramesIter i(cx->runtime()); !i.done(); ++i) {
+    /* Since there may be multiple contexts, use AllFramesIter. */
+    for (AllFramesIter i(cx); !i.done(); ++i) {
         /*
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.
          */
-        if (i.isIonOptimizedJS())
+        if (i.isIon())
             continue;
         if (dbg->observesFrame(i.abstractFramePtr())) {
-            ScriptFrameIter iter(i.seg()->cx(), ScriptFrameIter::GO_THROUGH_SAVED);
-            while (iter.isIonOptimizedJS() || iter.abstractFramePtr() != i.abstractFramePtr())
+            ScriptFrameIter iter(i.activation()->cx(), ScriptFrameIter::GO_THROUGH_SAVED);
+            while (iter.isIon() || iter.abstractFramePtr() != i.abstractFramePtr())
                 ++iter;
             return dbg->getScriptFrame(cx, iter, args.rval());
         }
@@ -3855,7 +3852,7 @@ DebuggerFrame_getOlder(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
 
     for (++iter; !iter.done(); ++iter) {
-        if (iter.isIonOptimizedJS())
+        if (iter.isIon())
             continue;
         if (dbg->observesFrame(iter.abstractFramePtr()))
             return dbg->getScriptFrame(cx, iter, args.rval());

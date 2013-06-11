@@ -1012,6 +1012,11 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                     !strcmp(aPropertyName, "getInterface")) {
                     reportable = false;
                 }
+
+                // More special case, see bug 877760.
+                if (e_result == NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED) {
+                    reportable = false;
+                }
             }
 
             // Try to use the error reporter set on the context to handle this

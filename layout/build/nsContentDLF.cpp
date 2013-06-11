@@ -262,7 +262,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if(pluginHost &&
-     NS_SUCCEEDED(pluginHost->IsPluginEnabledForType(aContentType))) {
+     pluginHost->PluginExistsForType(aContentType)) {
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kPluginDocumentCID,
