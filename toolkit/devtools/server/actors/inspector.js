@@ -52,6 +52,8 @@ const events = require("sdk/event/core");
 const { Unknown } = require("sdk/platform/xpcom");
 const { Class } = require("sdk/core/heritage");
 
+const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
+
 Cu.import("resource://gre/modules/Services.jsm");
 
 exports.register = function(handle) {
@@ -138,7 +140,9 @@ var NodeActor = protocol.ActorClass({
       publicId: this.rawNode.publicId,
       systemId: this.rawNode.systemId,
 
-      attrs: this.writeAttrs()
+      attrs: this.writeAttrs(),
+
+      pseudoClassLocks: this.writePseudoClassLocks(),
     };
 
     if (this.rawNode.ownerDocument &&
@@ -166,6 +170,20 @@ var NodeActor = protocol.ActorClass({
     }
     return [{namespace: attr.namespace, name: attr.name, value: attr.value }
             for (attr of this.rawNode.attributes)];
+  },
+
+  writePseudoClassLocks: function() {
+    if (this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+      return undefined;
+    }
+    let ret = undefined;
+    for (let pseudo of PSEUDO_CLASSES) {
+      if (DOMUtils.hasPseudoClassLock(this.rawNode, pseudo)) {
+        ret = ret || [];
+        ret.push(pseudo);
+      }
+    }
+    return ret;
   },
 
   /**
@@ -289,6 +307,8 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     } else if (change.type === "characterData") {
       this._form.shortValue = change.newValue;
       this._form.incompleteValue = change.incompleteValue;
+    } else if (change.type === "pseudoClassLock") {
+      this._form.pseudoClassLocks = change.pseudoClassLocks;
     }
   },
 
@@ -328,6 +348,11 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   },
 
   get attributes() this._form.attrs,
+
+  get pseudoClassLocks() this._form.pseudoClassLocks || [],
+  hasPseudoClassLock: function(pseudo) {
+    return this.pseudoClassLocks.some(locked => locked === pseudo);
+  },
 
   getNodeValue: protocol.custom(function() {
     if (!this.incompleteValue) {
@@ -648,6 +673,7 @@ var WalkerActor = protocol.ActorClass({
     this.rootDoc = document;
     this._refMap = new Map();
     this._pendingMutations = [];
+    this._activePseudoClassLocks = new Set();
 
     // Nodes which have been removed from the client's known
     // ownership tree are considered "orphaned", and stored in
@@ -686,15 +712,21 @@ var WalkerActor = protocol.ActorClass({
   },
 
   destroy: function() {
-    protocol.Actor.prototype.destroy.call(this);
+    this.clearPseudoClassLocks();
+    this._activePseudoClassLocks = null;
     this.progressListener.destroy();
     this.rootDoc = null;
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   release: method(function() {}, { release: true }),
 
   unmanage: function(actor) {
     if (actor instanceof NodeActor) {
+      if (this._activePseudoClassLocks &&
+          this._activePseudoClassLocks.has(actor)) {
+        this.clearPsuedoClassLocks(actor);
+      }
       this._refMap.delete(actor.rawNode);
     }
     protocol.Actor.prototype.unmanage.call(this, actor);
@@ -1141,6 +1173,131 @@ var WalkerActor = protocol.ActorClass({
     response: {
       list: RetVal("domnodelist")
     }
+  }),
+
+  /**
+   * Add a pseudo-class lock to a node.
+   *
+   * @param NodeActor node
+   * @param string pseudo
+   *    A pseudoclass: ':hover', ':active', ':focus'
+   * @param options
+   *    Options object:
+   *    `parents`: True if the pseudo-class should be added
+   *      to parent nodes.
+   *
+   * @returns An empty packet.  A "pseudoClassLock" mutation will
+   *    be queued for any changed nodes.
+   */
+  addPseudoClassLock: method(function(node, pseudo, options={}) {
+    this._addPseudoClassLock(node, pseudo);
+
+    if (!options.parents) {
+      return;
+    }
+
+    let walker = documentWalker(node.rawNode);
+    let cur;
+    while ((cur = walker.parentNode())) {
+      let curNode = this._ref(cur);
+      this._addPseudoClassLock(curNode, pseudo);
+    }
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      pseudoClass: Arg(1),
+      parents: Option(2)
+    },
+    response: {}
+  }),
+
+  _queuePseudoClassMutation: function(node) {
+    this.queueMutation({
+      target: node.actorID,
+      type: "pseudoClassLock",
+      pseudoClassLocks: node.writePseudoClassLocks()
+    });
+  },
+
+  _addPseudoClassLock: function(node, pseudo) {
+    if (node.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+      return false;
+    }
+    DOMUtils.addPseudoClassLock(node.rawNode, pseudo);
+    this._activePseudoClassLocks.add(node);
+    this._queuePseudoClassMutation(node);
+    return true;
+  },
+
+  /**
+   * Remove a pseudo-class lock from a node.
+   *
+   * @param NodeActor node
+   * @param string pseudo
+   *    A pseudoclass: ':hover', ':active', ':focus'
+   * @param options
+   *    Options object:
+   *    `parents`: True if the pseudo-class should be removed
+   *      from parent nodes.
+   *
+   * @returns An empty response.  "pseudoClassLock" mutations
+   *    will be emitted for any changed nodes.
+   */
+  removePseudoClassLock: method(function(node, pseudo, options={}) {
+    this._removePseudoClassLock(node, pseudo);
+
+    if (!options.parents) {
+      return;
+    }
+
+    let walker = documentWalker(node.rawNode);
+    let cur;
+    while ((cur = walker.parentNode())) {
+      let curNode = this._ref(cur);
+      this._removePseudoClassLock(curNode, pseudo);
+    }
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      pseudoClass: Arg(1),
+      parents: Option(2)
+    },
+    response: {}
+  }),
+
+  _removePseudoClassLock: function(node, pseudo) {
+    if (node.rawNode.nodeType != Ci.nsIDOMNode.ELEMENT_NODE) {
+      return false;
+    }
+    DOMUtils.removePseudoClassLock(node.rawNode, pseudo);
+    if (!node.writePseudoClassLocks()) {
+      this._activePseudoClassLocks.delete(node);
+    }
+    this._queuePseudoClassMutation(node);
+    return true;
+  },
+
+  /**
+   * Clear all the pseudo-classes on a given node
+   * or all nodes.
+   */
+  clearPseudoClassLocks: method(function(node) {
+    if (node) {
+      DOMUtils.clearPseudoClassLocks(node.rawNode);
+      this._activePseudoClassLocks.delete(node);
+      this._queuePseudoClassMutation(node);
+    } else {
+      for (let locked of this._activePseudoClassLocks) {
+        DOMUtils.clearPseudoClassLocks(locked.rawNode);
+        this._activePseudoClassLocks.delete(locked);
+        this._queuePseudoClassMutation(locked);
+      }
+    }
+  }, {
+    request: {
+      node: Arg(0, "domnode", { optional: true }),
+    },
+    response: {}
   }),
 
   /**
