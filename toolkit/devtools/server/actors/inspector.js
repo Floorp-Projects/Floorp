@@ -567,7 +567,7 @@ let traversalMethod = {
     whatToShow: Option(1)
   },
   response: {
-    node: RetVal("domnode")
+    node: RetVal("domnode", {optional: true})
   }
 }
 
@@ -1035,7 +1035,8 @@ var WalkerActor = protocol.ActorClass({
    */
   nextSibling: method(function(node, options={}) {
     let walker = documentWalker(node.rawNode, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
-    return this._ref(walker.nextSibling());
+    let sibling = walker.nextSibling();
+    return sibling ? this._ref(sibling) : null;
   }, traversalMethod),
 
   /**
@@ -1049,7 +1050,8 @@ var WalkerActor = protocol.ActorClass({
    */
   previousSibling: method(function(node, options={}) {
     let walker = documentWalker(node.rawNode, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
-    return this._ref(walker.previousSibling());
+    let sibling = walker.previousSibling();
+    return sibling ? this._ref(sibling) : null;
   }, traversalMethod),
 
   /**
