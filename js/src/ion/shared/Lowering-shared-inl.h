@@ -406,6 +406,8 @@ VirtualRegisterOfPayload(MDefinition *mir)
         if (!inner->isConstant() && inner->type() != MIRType_Double)
             return inner->virtualRegister();
     }
+    if (mir->isTypeBarrier())
+        return VirtualRegisterOfPayload(mir->getOperand(0));
     return mir->virtualRegister() + VREG_DATA_OFFSET;
 }
 
