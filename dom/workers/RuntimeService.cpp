@@ -285,7 +285,7 @@ LoadJSContextOptions(const char* aPrefName, void* /* aClosure */)
   // Common options.
   uint32_t commonOptions = kRequiredJSContextOptions;
   if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict"))) {
-    commonOptions |= JSOPTION_STRICT;
+    commonOptions |= JSOPTION_EXTRA_WARNINGS;
   }
   if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror"))) {
     commonOptions |= JSOPTION_WERROR;
