@@ -709,6 +709,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL()
 : mCompositor(nullptr)
 , mTextureTarget(0)
 , mEGLImage(0)
+, mIsRBSwapped(false)
 {
 }
 
@@ -762,8 +763,10 @@ GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
 
   const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
   mGraphicBuffer = GrallocBufferActor::GetFrom(desc);
+  mIsRBSwapped = desc.isRBSwapped();
   mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat(),
-                                               desc.isRBSwapped());
+                                               mIsRBSwapped);
+
   mTextureTarget = TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
 
   DeleteTextures();
@@ -860,9 +863,25 @@ LayerRenderState
 GrallocTextureHostOGL::GetRenderState()
 {
   if (mBuffer && IsSurfaceDescriptorValid(*mBuffer)) {
+
+    uint32_t flags = mFlags & NeedsYFlip ? LAYER_RENDER_STATE_Y_FLIPPED : 0;
+
+    /*
+     * The 32 bit format of gralloc buffer is created as RGBA8888 or RGBX888 by default.
+     * For software rendering (non-GL rendering), the content is drawn with BGRA
+     * or BGRX. Therefore, we need to pass the RBSwapped flag for HW composer to swap format.
+     *
+     * For GL rendering content, the content format is RGBA or RGBX which is the same as
+     * the pixel format of gralloc buffer and no need for the RBSwapped flag.
+     */
+
+    if (mIsRBSwapped) {
+      flags |= LAYER_RENDER_STATE_FORMAT_RB_SWAP;
+    }
+
     return LayerRenderState(mGraphicBuffer.get(),
                             mBuffer->get_SurfaceDescriptorGralloc().size(),
-                            mFlags & NeedsYFlip ? LAYER_RENDER_STATE_Y_FLIPPED : 0);
+                            flags);
   }
 
   return LayerRenderState();
