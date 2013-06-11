@@ -39,5 +39,10 @@ CPP_SOURCES += [
     'txXSLTProcessor.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'txEXSLTRegExFunctions.js',
+    'txEXSLTRegExFunctions.manifest',
+]
+
 LIBRARY_NAME = 'txxslt_s'
 

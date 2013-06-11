@@ -10,10 +10,19 @@ DIRS += ['program']
 # on these files to generate C++ headers and .xpt typelib files.
 XPIDL_SOURCES += ['nsISample.idl']
 
+# MODULE specifies where header files from this Makefile are installed,
+# i.e. dist/include/xpcomsample
 MODULE = 'xpcomsample'
 
+# CPP_SOURCES specifies C++ files to be built into a library.
 CPP_SOURCES += [
     'nsSample.cpp',
     'nsSampleModule.cpp',
 ]
 
+# EXTRA_COMPONENTS installs components written JavaScript to
+# dist/bin/components
+EXTRA_COMPONENTS += [
+    'nsSample.js',
+    'nsSample.manifest',
+]
