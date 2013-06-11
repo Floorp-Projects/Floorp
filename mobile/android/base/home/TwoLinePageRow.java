@@ -103,6 +103,9 @@ public class TwoLinePageRow extends LinearLayout {
             }
 
             setFaviconWithUrl(favicon, url);
+        } else {
+            // If favicons is not on the cursor, try to fetch it from the memory cache
+            setFaviconWithUrl(Favicons.getInstance().getFaviconFromMemCache(url), url);
         }
     }
 }
