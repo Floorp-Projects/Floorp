@@ -34,14 +34,19 @@
                     tooltiptext="&options.enablePersistentLogging.tooltip;"
                     data-pref="devtools.webconsole.persistlog"/>
         </vbox>
-        <label value="&options.context.label;"/>
+        <label value="&options.context.advancedSettings;"/>
         <vbox id="context-options" class="options-groupbox">
-          <checkbox label="&options.enableChrome.label;"
+          <checkbox label="&options.enableChrome.label2;"
                     tooltiptext="&options.enableChrome.tooltip;"
                     data-pref="devtools.chrome.enabled"/>
-          <checkbox label="&options.enableRemote.label;"
+          <checkbox label="&options.enableRemote.label2;"
                     tooltiptext="&options.enableRemote.tooltip;"
                     data-pref="devtools.debugger.remote-enabled"/>
+          <checkbox id="devtools-disable-javascript"
+                    label="&options.disableJavaScript.label;"
+                    tooltiptext="&options.disableJavaScript.tooltip;"/>
+          <label value="&options.context.requiresRestart;"/>
+          <label value="&options.context.triggersPageRefresh;"/>
         </vbox>
       </vbox>
     </hbox>
