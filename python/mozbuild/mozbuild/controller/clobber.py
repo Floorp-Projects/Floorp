@@ -12,17 +12,23 @@ import sys
 from mozfile.mozfile import rmtree
 
 
+"""In order to display nicely in an 80 character wide terminal window,
+with mach's prepended timestamps,
+please keep printed messages under 70 characters wide when possible.
+"""
+
 CLOBBER_MESSAGE = '''
 ***
-* The CLOBBER file has been updated, indicating that an incremental build since
-* your last build will probably not work. A full/clobber build is required.
+* The CLOBBER file has been updated, indicating that an incremental
+* build since your last build will probably not work.
+* A full/clobber build is required.
 *
 * The reason for the clobber is:
 *
 {clobber_reason}
 *
-* Clobbering can be performed automatically. However, we didn't automatically
-* clobber this time because:
+* Clobbering can be performed automatically.
+* However, we didn't automatically clobber this time because:
 *
 *   {no_reason}
 *
@@ -30,8 +36,9 @@ CLOBBER_MESSAGE = '''
 *
 *  $ mach clobber
 *
-* If you know this clobber doesn't apply to you or you're feeling lucky - well
-* do ya? - you can ignore this clobber requirement by running:
+* If you know this clobber doesn't apply to you
+* or you're feeling lucky - well do ya? -
+* you can ignore this clobber requirement by running:
 *
 *  $ touch {clobber_file}
 *
@@ -127,8 +134,10 @@ class Clobberer(object):
         # can work in some scenarios, we take the conservative approach and
         # never try.
         if not allow_auto:
-            return True, False, self._message('Automatic clobbering is not '
-                'enabled (add "mk_add_options AUTOCLOBBER=1" to your mozconfig).')
+            return True, False, \
+                self._message('Automatic clobbering is not enabled\n'
+                              '*   (add "mk_add_options AUTOCLOBBER=1" to your '
+                              'mozconfig).')
 
         if cwd.startswith(self.topobjdir) and cwd != self.topobjdir:
             return True, False, self._message(
