@@ -616,11 +616,7 @@ public class BrowserToolbar implements TextWatcher,
         } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
              mUrlEditText.setText("");
              mUrlEditText.requestFocus();
-
-             InputMethodManager imm =
-                    (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-             imm.showSoftInput(mUrlEditText, InputMethodManager.SHOW_IMPLICIT);
-
+             showSoftInput();
              return true;
         } else if (isEditing()) {
             final int prevSelStart = mUrlEditText.getSelectionStart();
@@ -1176,14 +1172,17 @@ public class BrowserToolbar implements TextWatcher,
         mFilterListener = listener;
     }
 
+    private void showSoftInput() {
+        InputMethodManager imm =
+               (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(mUrlEditText, InputMethodManager.SHOW_IMPLICIT);
+    }
+
     private void showUrlEditContainer() {
         mUrlDisplayContainer.setVisibility(View.GONE);
         mUrlEditContainer.setVisibility(View.VISIBLE);
         mUrlEditText.requestFocus();
-
-        InputMethodManager imm =
-               (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(mUrlEditText, InputMethodManager.SHOW_IMPLICIT);
+        showSoftInput();
     }
 
     private void hideUrlEditContainer() {
