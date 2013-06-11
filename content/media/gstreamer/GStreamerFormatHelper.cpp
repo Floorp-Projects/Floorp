@@ -39,7 +39,7 @@ void GStreamerFormatHelper::Shutdown() {
 char const *const GStreamerFormatHelper::mContainers[6][2] = {
   {"video/mp4", "video/quicktime"},
   {"video/quicktime", "video/quicktime"},
-  {"audio/mp4", "audio/mpeg, mpegversion=(int)4"},
+  {"audio/mp4", "audio/x-m4a"},
   {"audio/x-m4a", "audio/x-m4a"},
   {"audio/mpeg", "audio/mpeg, mpegversion=(int)1"},
   {"audio/mp3", "audio/mpeg, mpegversion=(int)1"},
