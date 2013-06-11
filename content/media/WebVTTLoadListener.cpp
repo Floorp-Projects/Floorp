@@ -207,7 +207,7 @@ WebVTTLoadListener::OnParsedCue(webvtt_cue* aCue)
   mElement->mTrack->AddCue(*textTrackCue);
 }
 
-void
+int
 WebVTTLoadListener::OnReportError(uint32_t aLine, uint32_t aCol,
                                   webvtt_error aError)
 {
@@ -225,6 +225,19 @@ WebVTTLoadListener::OnReportError(uint32_t aLine, uint32_t aCol,
 
   LOG("error: %s(%d:%d) - %s\n", file.get(), aLine, aCol, error);
 #endif
+
+  switch(aError) {
+    // Errors which should result in dropped cues
+    // if the return value is negative:
+    case WEBVTT_MALFORMED_TIMESTAMP:
+      return -1;
+
+    // By default, we can safely ignore other errors
+    // or else parsing the document will be aborted regardless
+    // of the return value.
+    default:
+      return 0;
+  }
 }
 
 void WEBVTT_CALLBACK
@@ -240,8 +253,7 @@ WebVTTLoadListener::OnReportErrorWebVTTCallBack(void* aUserData, uint32_t aLine,
                                                 webvtt_error aError)
 {
   WebVTTLoadListener* self = static_cast<WebVTTLoadListener*>(aUserData);
-  self->OnReportError(aLine, aCol, aError);
-  return WEBVTT_SUCCESS;
+  return self->OnReportError(aLine, aCol, aError);
 }
 
 } // namespace dom
