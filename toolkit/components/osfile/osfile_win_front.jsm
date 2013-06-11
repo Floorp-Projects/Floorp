@@ -188,9 +188,6 @@
        throw_on_zero("flush", WinFile.FlushFileBuffers(this.fd));
      };
 
-     // Constant used to normalize options.
-     const noOptions = {};
-
      // The default sharing mode for opening files: files are not
      // locked against being reopened for reading/writing or against
      // being deleted by the same process or another process.
@@ -255,7 +252,7 @@
       * @return {File} A file object.
       * @throws {OS.File.Error} If the file could not be opened.
       */
-     File.open = function Win_open(path, mode = noOptions, options = noOptions) {
+     File.open = function Win_open(path, mode = {}, options = {}) {
        let share = options.winShare || DEFAULT_SHARE;
        let security = options.winSecurity || null;
        let flags = options.winFlags || DEFAULT_FLAGS;
@@ -347,7 +344,7 @@
       *   - {bool} ignoreAbsent If |true|, do not fail if the
       *     directory does not exist yet.
       */
-     File.removeEmptyDir = function removeEmptyDir(path, options = noOptions) {
+     File.removeEmptyDir = function removeEmptyDir(path, options = {}) {
        let result = WinFile.RemoveDirectory(path);
        if (!result) {
          if (options.ignoreAbsent &&
@@ -372,7 +369,7 @@
       * - {bool} ignoreExisting If |true|, do not fail if the
       * directory already exists.
       */
-     File.makeDir = function makeDir(path, options = noOptions) {
+     File.makeDir = function makeDir(path, options = {}) {
        let security = options.winSecurity || null;
        let result = WinFile.CreateDirectory(path, security);
        if (result ||
@@ -406,7 +403,7 @@
       * is unspecified. Metadata may or may not be copied with the file. The
       * behavior may not be the same across all platforms.
      */
-     File.copy = function copy(sourcePath, destPath, options = noOptions) {
+     File.copy = function copy(sourcePath, destPath, options = {}) {
        throw_on_zero("copy",
          WinFile.CopyFile(sourcePath, destPath, options.noOverwrite || false)
        );
@@ -438,7 +435,7 @@
       * is unspecified. Metadata may or may not be moved with the file. The
       * behavior may not be the same across all platforms.
       */
-     File.move = function move(sourcePath, destPath, options = noOptions) {
+     File.move = function move(sourcePath, destPath, options = {}) {
        let flags = 0;
        if (!options.noCopy) {
          flags = Const.MOVEFILE_COPY_ALLOWED;

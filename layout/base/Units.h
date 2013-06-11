@@ -83,12 +83,6 @@ struct LayerPixel {
     return RoundToInt(FromCSSRect(aRect, aResolutionX, aResolutionY));
   }
 
-  static gfx::IntRectTyped<LayerPixel> FromCSSRectRoundOut(const CSSRect& aRect, float aResolutionX, float aResolutionY) {
-    gfx::RectTyped<LayerPixel> scaled(aRect.x, aRect.y, aRect.width, aRect.height);
-    scaled.ScaleInverseRoundOut(aResolutionX, aResolutionY);
-    return gfx::IntRectTyped<LayerPixel>(scaled.x, scaled.y, scaled.width, scaled.height);
-  }
-
   static CSSIntRect ToCSSIntRectRoundIn(const gfx::IntRectTyped<LayerPixel>& aRect, float aResolutionX, float aResolutionY) {
     gfx::IntRectTyped<CSSPixel> ret(aRect.x, aRect.y, aRect.width, aRect.height);
     ret.ScaleInverseRoundIn(aResolutionX, aResolutionY);
