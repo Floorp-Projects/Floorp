@@ -1519,7 +1519,7 @@ static void luUpgradeMerge(enum usage_level ul, const char *command)
     FPS "%-20s \n%-20s Cert database directory to upgrade from\n",
         "   --source-dir certdir", "");
     FPS "%-20s \n%-20s Cert & Key database prefix of the upgrade database\n",
-        "   --source-prefix dbprefix", "");
+        "   --soruce-prefix dbprefix", "");
     FPS "%-20s \n%-20s Unique identifier for the upgrade database\n",
         "   --upgrade-id uniqueID", "");
     FPS "%-20s \n%-20s Name of the token while it is in upgrade state\n",

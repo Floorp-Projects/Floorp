@@ -88,8 +88,8 @@ ssl_init()
       ECC_STRING=""
   fi
 
-  CSHORT="-c ABCDEF:003B:003C:003D:0041:0084cdefgijklmnvyz"
-  CLONG="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014:C023:C027:003B:003C:003D:0041:0084cdefgijklmnvyz"
+  CSHORT="-c ABCDEF:0041:0084cdefgijklmnvyz"
+  CLONG="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014:0041:0084cdefgijklmnvyz"
 
   if [ "${OS_ARCH}" != "WINNT" ]; then
       ulimit -n 1000 # make sure we have enough file descriptors
@@ -304,9 +304,6 @@ ssl_cov()
           fi
           if [ "$testmax" = "TLS11" ]; then
               VMAX="tls1.1"
-          fi
-          if [ "$testmax" = "TLS12" ]; then
-              VMAX="tls1.2"
           fi
 
 # These five tests need an EC cert signed with RSA
