@@ -14,11 +14,11 @@ function theTest() {
 
   // run op once where it has to add doubles and strings,
   // just to pullute the typesets:
-  var jsarray0 = range(0, minItemsTestingThreshold);
+  var jsarray0 = range(0, 1024);
   jsarray0.map(op);
 
   // this version will never actually touch the strings:
-  var jsarray1 = range(0, minItemsTestingThreshold).map(i => i % 10);
+  var jsarray1 = range(0, 1024).map(i => i % 10);
   compareAgainstArray(jsarray1, "map", op);
 
   // but if we try against the original we get bailouts:

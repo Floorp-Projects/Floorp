@@ -6,7 +6,7 @@ load(libdir + "parallelarray-helpers.js");
 // equality but not loose equality.
 
 function theTest() {
-  var ints = range(0, minItemsTestingThreshold);
+  var ints = range(0, 1024);
   var doubles = ints.map(v => v + 0.1);
   var bools = ints.map(v => (v % 2) == 0);
   var strings = ints.map(v => String(v));

@@ -1,6 +1,6 @@
 load(libdir + "parallelarray-helpers.js");
 
-var SIZE = minItemsTestingThreshold;
+var SIZE = 4096;
 
 function testMap() {
   var q = {f: 22};

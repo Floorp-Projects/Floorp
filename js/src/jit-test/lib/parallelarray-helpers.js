@@ -26,7 +26,6 @@
 // (TODO: consider exposing numSlices via builtin/TestingFunctions.cpp)
 
 var minItemsTestingThreshold = 1024;
-var defaultStablizationAttempts = 5;
 
 // The standard sequence of modes to test.
 // First mode compiles for parallel exec.
@@ -157,41 +156,6 @@ function assertEqParallelArray(a, b) {
   } while (bump(iv));
 }
 
-// Helper for other functions. Iteratively attempts to compile and
-// then execute `opFunction` in mode `mode` until either it has tried
-// too many times or the execution succeeded. After each call, it will
-// invoke `cmpFunction` with the result to validate we are producing
-// correct output.
-//
-// Consider case where `mode` `par`: in that case, we are attempting
-// to compile-and-run in succession until we either succeed at getting
-// a complete run or we try too many times. This is useful because
-// sometimes it takes a couple iterations for TI to stabilize, and
-// using a loop with a threshold makes us less sensitive to
-// pertubations that occur in TI inference.
-function stabilize(opFunction, cmpFunction, mode, attempts) {
-  var failures = 0;
-  while (true) {
-    print("Attempting compile #", failures);
-    var result = opFunction({mode:"compile"});
-    cmpFunction(result);
-
-    try {
-      print("Attempting parallel run #", failures);
-      var result = opFunction({mode:mode});
-      cmpFunction(result);
-      break;
-    } catch (e) {
-      failures++;
-      if (failures > attempts) {
-        throw e; // doesn't seem to be reaching a fixed point!
-      } else {
-        print(e);
-      }
-    }
-  }
-}
-
 // Checks that whenever we execute this in parallel mode,
 // it bails out. `opFunction` should be a closure that takes a
 // mode parameter and performs some parallel array operation.
@@ -206,7 +170,8 @@ function stabilize(opFunction, cmpFunction, mode, attempts) {
 // where the `new ParallelArray(...)` is a stand-in
 // for some parallel array operation.
 function assertParallelExecWillBail(opFunction) {
-  stabilize(opFunction, function() {}, "bailout", defaultStablizationAttempts);
+  opFunction({mode:"compile"}); // get the script compiled
+  opFunction({mode:"bailout"}); // check that it bails when executed
 }
 
 // Checks that when we execute this in parallel mode,
@@ -214,7 +179,8 @@ function assertParallelExecWillBail(opFunction) {
 // return to parallel execution mode. `opFunction` is a closure
 // that expects a mode, just as in `assertParallelExecWillBail`.
 function assertParallelExecWillRecover(opFunction) {
-  stabilize(opFunction, function() {}, "recover", defaultStablizationAttempts);
+  opFunction({mode:"compile"}); // get the script compiled
+  opFunction({mode:"recover"}); // check that it bails when executed
 }
 
 // Checks that we will (eventually) be able to compile and exection
@@ -224,11 +190,27 @@ function assertParallelExecWillRecover(opFunction) {
 // `opFunction` with `compile` and then `par` mode until getting a
 // successful `par` run.  After enough tries, of course, we give up
 // and declare a test failure.
-function assertParallelExecSucceeds(opFunction,
-                                    cmpFunction,
-                                    attempts) {
-  attempts = attempts || defaultStablizationAttempts;
-  stabilize(opFunction, cmpFunction, "par", attempts);
+function assertParallelExecSucceeds(opFunction, cmpFunction) {
+  var failures = 0;
+  while (true) {
+    print("Attempting compile #", failures);
+    var result = opFunction({mode:"compile"});
+    cmpFunction(result);
+
+    try {
+      print("Attempting parallel run #", failures);
+      var result = opFunction({mode:"par"});
+      cmpFunction(result);
+      break;
+    } catch (e) {
+      failures++;
+      if (failures > 5) {
+        throw e; // doesn't seem to be reaching a fixed point!
+      } else {
+        print(e);
+      }
+    }
+  }
 
   print("Attempting sequential run");
   var result = opFunction({mode:"seq"});
@@ -285,7 +267,7 @@ function testScan(jsarray, func, cmpFunction) {
 // In this case, because scatter is so complex, we do not attempt
 // to compute the expected result and instead simply invoke
 // `cmpFunction(r)` with the result `r` of the scatter operation.
-function testScatter(opFunction, cmpFunction, attempts) {
+function testScatter(opFunction, cmpFunction) {
   var strategies = ["divide-scatter-version", "divide-output-range"];
   for (var i in strategies) {
     assertParallelExecSucceeds(
@@ -295,8 +277,7 @@ function testScatter(opFunction, cmpFunction, attempts) {
         print(JSON.stringify(m1));
         return opFunction(m1);
       },
-      cmpFunction,
-      attempts);
+      cmpFunction);
   }
 }
 
