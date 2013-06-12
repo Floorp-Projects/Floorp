@@ -9,6 +9,7 @@
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
 %define conditionalForwardWithUrlbarWidth 27
+%define spaceAboveTabbar 9px
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -44,6 +45,18 @@
   display: none;
 }
 
+.titlebar-placeholder[type="caption-buttons"],
+#titlebar-buttonbox {
+  margin-left: 7px;
+}
+
+@media (-moz-mac-lion-theme) {
+  .titlebar-placeholder[type="fullscreen-button"],
+  #titlebar-fullscreen-button {
+    margin-right: 7px;
+  }
+}
+
 /* Fullscreen and caption buttons don't move with RTL on OS X so override the automatic ordering. */
 .titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(ltr),
 .titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(rtl) {
@@ -52,10 +65,6 @@
 .titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(ltr),
 .titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(rtl) {
   -moz-box-ordinal-group: 0;
-}
-
-#titlebar {
-  padding-top: 9px;
 }
 
 #main-window[chromehidden~="toolbar"] > #titlebar {
@@ -2519,6 +2528,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
   box-shadow: @focusRingShadow@;
+}
+
+#titlebar {
+  padding-top: @spaceAboveTabbar@;
+  min-height: @tabHeight@;
 }
 
 #main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing],[customize-exiting],[tabsintitlebar])) #navigator-toolbox:not(:-moz-lwtheme)::before {

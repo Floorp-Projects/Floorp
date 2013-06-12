@@ -2382,6 +2382,19 @@ FindUnifiedToolbarBottom(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometr
   }
   return unifiedToolbarBottom;
 }
+ 
+static nsIntRect
+FindFirstRectOfType(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
+                    uint8_t aWidgetType)
+{
+  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
+    const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
+    if (g.mWidgetType == aWidgetType) {
+      return g.mRect;
+    }
+  }
+  return nsIntRect();
+}
 
 void
 nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
@@ -2389,6 +2402,7 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   if (![mView window] || ![[mView window] isKindOfClass:[ToolbarWindow class]])
     return;
 
+  // Update unified toolbar height.
   int32_t windowWidth = mBounds.width;
   int32_t titlebarBottom = FindTitlebarBottom(aThemeGeometries, windowWidth);
   int32_t unifiedToolbarBottom =
@@ -2400,6 +2414,12 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   int32_t contentOffset = drawsContentsIntoWindowFrame ? titlebarHeight : 0;
   int32_t devUnifiedHeight = titlebarHeight + unifiedToolbarBottom - contentOffset;
   [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
+
+  // Update titlebar control offsets.
+  nsIntRect windowButtonRect = FindFirstRectOfType(aThemeGeometries, NS_THEME_WINDOW_BUTTON_BOX);
+  [win placeWindowButtons:[mView convertRect:DevPixelsToCocoaPoints(windowButtonRect) toView:nil]];
+  nsIntRect fullScreenButtonRect = FindFirstRectOfType(aThemeGeometries, NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON);
+  [win placeFullScreenButton:[mView convertRect:DevPixelsToCocoaPoints(fullScreenButtonRect) toView:nil]];
 }
 
 TemporaryRef<gfx::DrawTarget>

@@ -118,6 +118,14 @@ class GLManager;
 // outside a call to -[NSView drawRect:].
 - (NSRect)_dirtyRect;
 
+// Undocumented method of one or more of NSFrameView's subclasses.  Called
+// when one or more of the titlebar buttons needs to be repositioned, to
+// disappear, or to reappear (say if the window's style changes).  If
+// 'redisplay' is true, the entire titlebar (the window's top 22 pixels) is
+// marked as needing redisplay.  This method has been present in the same
+// format since at least OS X 10.5.
+- (void)_tileTitlebarAndRedisplay:(BOOL)redisplay;
+
 @end
 
 // Support for pixel scroll deltas, not part of NSEvent.h
