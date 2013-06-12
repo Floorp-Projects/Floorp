@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// Services = object with smart getters for common XPCOM services
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 var gAppUpdater;
 var AboutPanelUI = {
   get _aboutVersionLabel() {
@@ -162,11 +165,21 @@ appUpdater.prototype =
 
   // true when updating is enabled.
   get updateEnabled() {
+    let updatesEnabled = true;
     try {
-      return Services.prefs.getBoolPref("app.update.enabled");
+      updatesEnabled = Services.prefs.getBoolPref("app.update.metro.enabled");
     }
     catch (e) { }
-    return true; // Firefox default is true
+    if (!updatesEnabled) {
+      return false;
+    }
+
+    try {
+      updatesEnabled = Services.prefs.getBoolPref("app.update.enabled")
+    }
+    catch (e) { }
+
+    return updatesEnabled;
   },
 
   // true when updating in background is enabled.
