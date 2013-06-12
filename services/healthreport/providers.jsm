@@ -611,7 +611,7 @@ SessionsProvider.prototype = Object.freeze({
     this._log.debug("The last recorded session was #" + lastRecordedSession);
 
     for (let [index, session] in Iterator(sessions)) {
-      if (index < lastRecordedSession) {
+      if (index <= lastRecordedSession) {
         this._log.warn("Already recorded session " + index + ". Did the last " +
                        "session crash or have an issue saving the prefs file?");
         continue;
