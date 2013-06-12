@@ -697,7 +697,7 @@ merge_object_instances (
     for (ci = instances, i = 0; *ci; ci++, i++) {
 	nssCryptokiObject *instance = nssCryptokiObject_Clone(*ci);
 	if (instance) {
-	    if (nssPKIObject_AddInstance(to, instance) == SECSuccess) {
+	    if (nssPKIObject_AddInstance(to, instance) == PR_SUCCESS) {
 		continue;
 	    }
 	    nssCryptokiObject_Destroy(instance);

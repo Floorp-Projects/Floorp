@@ -408,32 +408,6 @@ IonCompartment::getVMWrapper(const VMFunction &f)
     return p->value;
 }
 
-IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
-  : cx_(cx),
-    compartment_(cx->compartment()),
-    prev_(cx->mainThread().ionActivation),
-    entryfp_(fp),
-    prevIonTop_(cx->mainThread().ionTop),
-    prevIonJSContext_(cx->mainThread().ionJSContext),
-    prevpc_(NULL)
-{
-    if (fp)
-        fp->setRunningInIon();
-    cx->mainThread().ionJSContext = cx;
-    cx->mainThread().ionActivation = this;
-}
-
-IonActivation::~IonActivation()
-{
-    JS_ASSERT(cx_->mainThread().ionActivation == this);
-
-    if (entryfp_)
-        entryfp_->clearRunningInIon();
-    cx_->mainThread().ionActivation = prev();
-    cx_->mainThread().ionTop = prevIonTop_;
-    cx_->mainThread().ionJSContext = prevIonJSContext_;
-}
-
 IonCode *
 IonCode::New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool)
 {
@@ -935,11 +909,10 @@ namespace ion {
 bool
 OptimizeMIR(MIRGenerator *mir)
 {
-    IonSpewPass("BuildSSA");
-    // Note: don't call AssertGraphCoherency before SplitCriticalEdges,
-    // the graph is not in RPO at this point.
-
     MIRGraph &graph = mir->graph();
+
+    IonSpewPass("BuildSSA");
+    AssertBasicGraphCoherency(graph);
 
     if (mir->shouldCancel("Start"))
         return false;
@@ -1836,12 +1809,17 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, NULL);
-        IonActivation activation(cx, fp);
+        JitActivation activation(cx, fp->isConstructing());
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->compartment()->ionCompartment());
+
+        fp->setRunningInJit();
+
         // Single transition point from Interpreter to Ion.
         enter(jitcode, maxArgc, maxArgv, fp, calleeToken, /* scopeChain = */ NULL, 0,
               result.address());
+
+        fp->clearRunningInJit();
     }
 
     JS_ASSERT(fp == cx->fp());
@@ -1901,29 +1879,7 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(!ion->bailoutExpected());
 
-    bool clearCallingIntoIon = false;
-    StackFrame *fp = cx->fp();
-
-    // Two cases we have to handle:
-    //
-    // (1) fp does not begin an Ion activation. This works exactly
-    //     like invoking Ion from JM: entryfp is set to fp and fp
-    //     has the callingIntoIon flag set.
-    //
-    // (2) fp already begins another IonActivation, for instance:
-    //        JM -> Ion -> array_sort -> Ion
-    //     In this cas we use an IonActivation with entryfp == NULL
-    //     and prevpc != NULL.
-    IonActivation activation(cx, NULL);
-    if (!fp->beginsIonActivation()) {
-        fp->setCallingIntoIon();
-        clearCallingIntoIon = true;
-        activation.setEntryFp(fp);
-    } else {
-        JS_ASSERT(!activation.entryfp());
-    }
-
-    activation.setPrevPc(cx->regs().pc);
+    JitActivation activation(cx, /* firstFrameIsConstructing = */false);
 
     EnterIonCode enter = cx->compartment()->ionCompartment()->enterJIT();
     void *calleeToken = CalleeToToken(fun);
@@ -1932,13 +1888,9 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     JS_ASSERT(args.length() >= fun->nargs);
 
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
-    enter(jitcode, args.length() + 1, args.array() - 1, fp, calleeToken,
+    enter(jitcode, args.length() + 1, args.array() - 1, NULL, calleeToken,
           /* scopeChain = */ NULL, 0, result.address());
 
-    if (clearCallingIntoIon)
-        fp->clearCallingIntoIon();
-
-    JS_ASSERT(fp == cx->fp());
     JS_ASSERT(!cx->runtime()->hasIonReturnOverride());
 
     args.rval().set(result);
@@ -2083,12 +2035,12 @@ ion::InvalidateAll(FreeOp *fop, Zone *zone)
         FinishAllOffThreadCompilations(comp->ionCompartment());
     }
 
-    for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter) {
+    for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter.activation()->compartment()->zone() == zone) {
             IonContext ictx(zone->rt);
             AutoFlushCache afc("InvalidateAll", zone->rt->ionRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
-            InvalidateActivation(fop, iter.top(), true);
+            InvalidateActivation(fop, iter.jitTop(), true);
         }
     }
 }
@@ -2126,8 +2078,8 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
         return;
     }
 
-    for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter)
-        InvalidateActivation(fop, iter.top(), false);
+    for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter)
+        InvalidateActivation(fop, iter.jitTop(), false);
 
     // Drop the references added above. If a script was never active, its
     // IonScript will be immediately destroyed. Otherwise, it will be held live

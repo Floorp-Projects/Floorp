@@ -270,7 +270,7 @@ void HandleParallelFailure(ResumeFromException *rfe);
 
 void EnsureExitFrame(IonCommonFrameLayout *frame);
 
-void MarkIonActivations(JSRuntime *rt, JSTracer *trc);
+void MarkJitActivations(JSRuntime *rt, JSTracer *trc);
 void MarkIonCompilerRoots(JSTracer *trc);
 
 static inline uint32_t

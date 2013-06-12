@@ -1836,9 +1836,8 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
   }
 
   // Notify the transfer object that we are done if the user has chosen an
-  // action. If the user hasn't chosen an action and InitializeDownload hasn't
-  // been called, the progress listener (nsITransfer) will be notified in
-  // CreateTransfer.
+  // action. If the user hasn't chosen an action, the progress listener
+  // (nsITransfer) will be notified in CreateTransfer.
   if (mTransfer) {
     rv = NotifyTransfer();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1898,17 +1897,36 @@ NS_IMETHODIMP nsExternalAppHandler::GetSuggestedFileName(nsAString& aSuggestedFi
   return NS_OK;
 }
 
-nsresult nsExternalAppHandler::InitializeDownload(nsITransfer* aTransfer)
+nsresult nsExternalAppHandler::CreateTransfer()
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Must create transfer on main thread");
+  // We are back from the helper app dialog (where the user chooses to save or
+  // open), but we aren't done processing the load. in this case, throw up a
+  // progress dialog so the user can see what's going on.
+  // Also, release our reference to mDialog. We don't need it anymore, and we
+  // need to break the reference cycle.
+  mDialog = nullptr;
+  if (!mDialogProgressListener) {
+    NS_WARNING("The dialog should nullify the dialog progress listener");
+  }
   nsresult rv;
-  
+
+  // We must be able to create an nsITransfer object. If not, it doesn't matter
+  // much that we can't launch the helper application or save to disk. Work on
+  // a local copy rather than mTransfer until we know we succeeded, to make it
+  // clearer that this function is re-entrant.
+  nsCOMPtr<nsITransfer> transfer = do_CreateInstance(
+    NS_TRANSFER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Initialize the download
   nsCOMPtr<nsIURI> target;
   rv = NS_NewFileURI(getter_AddRefs(target), mFinalFileDestination);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
 
-  rv = aTransfer->Init(mSourceUrl, target, EmptyString(),
+  rv = transfer->Init(mSourceUrl, target, EmptyString(),
                        mMimeInfo, mTimeDownloadStarted, mTempFile, this,
                        channel && NS_UsePrivateBrowsing(channel));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1927,43 +1945,34 @@ nsresult nsExternalAppHandler::InitializeDownload(nsITransfer* aTransfer)
     }
   }
 
-  return rv;
-}
-
-nsresult nsExternalAppHandler::CreateTransfer()
-{
-  // We are back from the helper app dialog (where the user chooses to save or
-  // open), but we aren't done processing the load. in this case, throw up a
-  // progress dialog so the user can see what's going on.
-  // Also, release our reference to mDialog. We don't need it anymore, and we
-  // need to break the reference cycle.
-  mDialog = nullptr;
-  if (!mDialogProgressListener) {
-    NS_WARNING("The dialog should nullify the dialog progress listener");
+  // If we were cancelled since creating the transfer, just return. It is
+  // always ok to return NS_OK if we are cancelled. Callers of this function
+  // must call Cancel if CreateTransfer fails, but there's no need to cancel
+  // twice.
+  if (mCanceled) {
+    return NS_OK;
   }
-  nsresult rv;
-
-  // We must be able to create an nsITransfer object. If not, it doesn't matter
-  // much that we can't launch the helper application or save to disk.
-  mTransfer = do_CreateInstance(NS_TRANSFER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = InitializeDownload(mTransfer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mTransfer->OnStateChange(nullptr, mRequest,
+  rv = transfer->OnStateChange(nullptr, mRequest,
     nsIWebProgressListener::STATE_START |
     nsIWebProgressListener::STATE_IS_REQUEST |
     nsIWebProgressListener::STATE_IS_NETWORK, NS_OK);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // While we were bringing up the progress dialog, we actually finished
-  // processing the url. If that's the case then mStopRequestIssued will be
-  // true and OnSaveComplete has been called.
-  if (mStopRequestIssued && !mSaver) {
-    return NotifyTransfer();
+  if (mCanceled) {
+    return NS_OK;
   }
 
   mRequest = nullptr;
+  // Finally, save the transfer to mTransfer.
+  mTransfer = transfer;
+  transfer = nullptr;
+
+  // While we were bringing up the progress dialog, we actually finished
+  // processing the url. If that's the case then mStopRequestIssued will be
+  // true and OnSaveComplete has been called.
+  if (mStopRequestIssued && !mSaver && mTransfer) {
+    return NotifyTransfer();
+  }
 
   return rv;
 }
@@ -2094,7 +2103,12 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile * aNewFileLocation)
 
   // The helper app dialog has told us what to do and we have a final file
   // destination.
-  CreateTransfer();
+  rv = CreateTransfer();
+  // If we fail to create the transfer, Cancel.
+  if (NS_FAILED(rv)) {
+    Cancel(rv);
+    return rv;
+  }
 
   // now that the user has chosen the file location to save to, it's okay to fire the refresh tag
   // if there is one. We don't want to do this before the save as dialog goes away because this dialog
@@ -2173,7 +2187,10 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   {
     mFinalFileDestination = do_QueryInterface(fileToUse);
     // launch the progress window now that the user has picked the desired action.
-    CreateTransfer();
+    rv = CreateTransfer();
+    if (NS_FAILED(rv)) {
+      Cancel(rv);
+    }
   }
   else
   {
@@ -2219,7 +2236,7 @@ void nsExternalAppHandler::ProcessAnyRefreshTags()
    // Sometimes, when you download content that requires an external handler, there is
    // a refresh header associated with the download. This refresh header points to a page
    // the content provider wants the user to see after they download the content. How do we
-   // pass this refresh information back to the caller? For now, try to get the refresh URI 
+   // pass this refresh information back to the caller? For now, try to get the refresh URI
    // interface. If the window context where the request originated came from supports this
    // then we can force it to process the refresh information (if there is any) from this channel.
    if (mWindowContext && mOriginalChannel)

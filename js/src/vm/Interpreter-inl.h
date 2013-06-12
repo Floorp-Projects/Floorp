@@ -77,7 +77,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 inline bool
 ComputeThis(JSContext *cx, AbstractFramePtr frame)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), !frame.asStackFrame()->runningInIon());
+    JS_ASSERT_IF(frame.isStackFrame(), !frame.asStackFrame()->runningInJit());
     if (frame.thisValue().isObject())
         return true;
     RootedValue thisv(cx, frame.thisValue());
@@ -732,7 +732,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
 {
     do {
         // Don't call GetPcScript (needed for analysis) from inside Ion since it's expensive.
-        bool analyze = !cx->fp()->beginsIonActivation();
+        bool analyze = cx->mainThread().currentlyRunningInInterpreter();
 
         uint32_t index;
         if (IsDefinitelyIndex(rref, &index)) {
@@ -893,7 +893,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
             // that's ok, because optimized ion doesn't generate analysis info.  However,
             // baseline must generate this information, so it passes the script and pc in
             // as arguments.
-            if (script || !cx->fp()->beginsIonActivation()) {
+            if (script || cx->mainThread().currentlyRunningInInterpreter()) {
                 JS_ASSERT(!!script == !!pc);
                 if (!script)
                     types::TypeScript::GetPcScript(cx, script.address(), &pc);

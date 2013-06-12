@@ -77,7 +77,7 @@ endif
 
 ifneq (WINNT,$(OS_TARGET))
 ifdef MOZ_CRASHREPORTER
-HOST_CSRCS = $(CSRCS)
+DISABLED_HOST_CSRCS = $(CSRCS)
 endif
 endif
 

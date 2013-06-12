@@ -132,7 +132,7 @@ HTMLTrackElement::Track()
 void
 HTMLTrackElement::CreateTextTrack()
 {
-  DOMString label, srcLang;
+  nsString label, srcLang;
   GetSrclang(srcLang);
   GetLabel(label);
   mTrack = new TextTrack(OwnerDoc()->GetParentObject(), Kind(), label, srcLang);

@@ -48,6 +48,9 @@ bool
 BuildPhiReverseMapping(MIRGraph &graph);
 
 void
+AssertBasicGraphCoherency(MIRGraph &graph);
+
+void
 AssertGraphCoherency(MIRGraph &graph);
 
 void

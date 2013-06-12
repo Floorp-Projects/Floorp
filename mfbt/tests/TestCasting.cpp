@@ -6,7 +6,32 @@
 #include "mozilla/Casting.h"
 #include "mozilla/StandardInteger.h"
 
+using mozilla::BitwiseCast;
 using mozilla::detail::IsInBounds;
+
+template<typename Uint, typename Ulong, bool = (sizeof(Uint) == sizeof(Ulong))>
+struct UintUlongBitwiseCast;
+
+template<typename Uint, typename Ulong>
+struct UintUlongBitwiseCast<Uint, Ulong, true>
+{
+    static void test() {
+      MOZ_ASSERT(BitwiseCast<Ulong>(Uint(8675309)) == Ulong(8675309));
+    }
+};
+
+template<typename Uint, typename Ulong>
+struct UintUlongBitwiseCast<Uint, Ulong, false>
+{
+    static void test() { }
+};
+
+static void
+TestBitwiseCast()
+{
+  MOZ_ASSERT(BitwiseCast<int>(int(8675309)) == int(8675309));
+  UintUlongBitwiseCast<unsigned int, unsigned long>::test();
+}
 
 static void
 TestSameSize()
@@ -74,6 +99,8 @@ TestToSmallerSize()
 int
 main()
 {
+  TestBitwiseCast();
+
   TestSameSize();
   TestToBiggerSize();
   TestToSmallerSize();

@@ -64,12 +64,20 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::srclang, aSrclang);
   }
+  void GetSrclang(nsString& aSrclang) const
+  {
+    GetHTMLAttr(nsGkAtoms::srclang, aSrclang);
+  }
   void SetSrclang(const nsAString& aSrclang, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::srclang, aSrclang, aError);
   }
 
   void GetLabel(DOMString& aLabel) const
+  {
+    GetHTMLAttr(nsGkAtoms::label, aLabel);
+  }
+  void GetLabel(nsString& aLabel) const
   {
     GetHTMLAttr(nsGkAtoms::label, aLabel);
   }

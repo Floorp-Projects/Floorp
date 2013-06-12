@@ -4102,7 +4102,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
       [[self window] isKindOfClass:[ToolbarWindow class]] &&
       (locationInTitlebar < [(ToolbarWindow*)[self window] titlebarHeight] ||
        locationInTitlebar < [(ToolbarWindow*)[self window] unifiedToolbarHeight])) {
-    [[self window] miniaturize:self];
+
+    NSButton *minimizeButton = [[self window] standardWindowButton:NSWindowMiniaturizeButton];
+    [minimizeButton performClick:self];
   }
 
   // If our mouse-up event's location is over some other object (as might

@@ -5,11 +5,12 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.BitmapUtils;
+
 import android.app.PendingIntent;
 import android.content.Context;
 import android.net.Uri;
 
-import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NotificationHandler {
@@ -48,21 +49,8 @@ public class NotificationHandler {
         // Remove the old notification with the same ID, if any
         remove(notificationID);
 
-        int icon = R.drawable.ic_status_logo;
-
         Uri imageUri = Uri.parse(aImageUrl);
-        final String scheme = imageUri.getScheme();
-        if ("drawable".equals(scheme)) {
-            String resource = imageUri.getSchemeSpecificPart();
-            resource = resource.substring(resource.lastIndexOf('/') + 1);
-            try {
-                final Class<R.drawable> drawableClass = R.drawable.class;
-                final Field f = drawableClass.getField(resource);
-                icon = f.getInt(null);
-            } catch (final Exception e) {} // just means the resource doesn't exist
-            imageUri = null;
-        }
-
+        int icon = BitmapUtils.getResource(imageUri, R.drawable.ic_status_logo);
         final AlertNotification notification = new AlertNotification(mContext, notificationID,
                 icon, aAlertTitle, aAlertText, System.currentTimeMillis(), imageUri);
 

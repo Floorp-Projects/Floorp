@@ -1059,7 +1059,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
     RootedObject callObj(cx);
     AutoPropertyDescArray callProps(cx);
 
-    if (!iter.isIon() && (showArgs || showLocals)) {
+    if (!iter.isJit() && (showArgs || showLocals)) {
         JSAbstractFramePtr frame(Jsvalify(iter.abstractFramePtr()));
         callObj = frame.callObject(cx);
         if (callObj)

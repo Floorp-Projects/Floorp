@@ -32,7 +32,7 @@ include $(DEPTH)/config/autoconf.mk
 # This program is output to dist/host/bin because it is only needed by the
 # build system and is not intended to be included in Mozilla distributions.
 HOST_PROGRAM = mbsdiff$(BIN_SUFFIX)
-HOST_CSRCS = bsdiff.c
+DISABLED_HOST_CSRCS = bsdiff.c
 
 ifdef MOZ_NATIVE_BZ2
 HOST_LIBS += $(MOZ_BZ2_LIBS)

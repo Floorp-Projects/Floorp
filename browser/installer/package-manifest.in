@@ -226,7 +226,7 @@
 @BINPATH@/components/exthelper.xpt
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
-#ifdef MOZ_GTK2
+#ifdef MOZ_GTK
 @BINPATH@/components/filepicker.xpt
 #endif
 @BINPATH@/components/find.xpt
@@ -370,7 +370,7 @@
 @BINPATH@/components/crypto-SDR.js
 @BINPATH@/components/jsconsole-clhandler.manifest
 @BINPATH@/components/jsconsole-clhandler.js
-#ifdef MOZ_GTK2
+#ifdef MOZ_GTK
 @BINPATH@/components/nsFilePicker.manifest
 @BINPATH@/components/nsFilePicker.js
 #endif
@@ -570,7 +570,7 @@
 @BINPATH@/chrome/toolkit.manifest
 @BINPATH@/chrome/recording.manifest
 @BINPATH@/chrome/recording/*
-#ifdef MOZ_GTK2
+#ifdef MOZ_GTK
 @BINPATH@/browser/chrome/icons/default/default16.png
 @BINPATH@/browser/chrome/icons/default/default32.png
 @BINPATH@/browser/chrome/icons/default/default48.png
