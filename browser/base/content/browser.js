@@ -3296,15 +3296,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 }
 
 function BrowserToolboxCustomizeChange(aType) {
-  switch (aType) {
-    case "iconsize":
-    case "mode":
-      retrieveToolbarIconsizesFromTheme();
-      break;
-    default:
-      gHomeButton.updatePersonalToolbarStyle();
-      BookmarkingUI.customizeChange();
-  }
+  gHomeButton.updatePersonalToolbarStyle();
+  BookmarksMenuButton.customizeChange();
 }
 
 /**

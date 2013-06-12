@@ -517,15 +517,6 @@ var FullScreen = {
       // XXX don't interfere with previously collapsed toolbars
       if (el.getAttribute("fullscreentoolbar") == "true") {
         if (!aShow) {
-
-          var toolbarMode = el.getAttribute("mode");
-          if (toolbarMode != "text") {
-            el.setAttribute("saved-mode", toolbarMode);
-            el.setAttribute("saved-iconsize", el.getAttribute("iconsize"));
-            el.setAttribute("mode", "icons");
-            el.setAttribute("iconsize", "small");
-          }
-
           // Give the main nav bar and the tab bar the fullscreen context menu,
           // otherwise remove context menu to prevent breakage
           el.setAttribute("saved-context", el.getAttribute("context"));
@@ -539,18 +530,8 @@ var FullScreen = {
           el.setAttribute("inFullscreen", true);
         }
         else {
-          var restoreAttr = function restoreAttr(attrName) {
-            var savedAttr = "saved-" + attrName;
-            if (el.hasAttribute(savedAttr)) {
-              el.setAttribute(attrName, el.getAttribute(savedAttr));
-              el.removeAttribute(savedAttr);
-            }
-          }
-
-          restoreAttr("mode");
-          restoreAttr("iconsize");
-          restoreAttr("context");
-
+          el.setAttribute("context", el.getAttribute("saved-context"));
+          el.removeAttribute("saved-context");
           el.removeAttribute("inFullscreen");
         }
       } else {
