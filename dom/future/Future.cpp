@@ -126,6 +126,40 @@ Future::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
   return future.forget();
 }
 
+/* static */ already_AddRefed<Future>
+Future::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
+                JS::Handle<JS::Value> aValue, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  if (!window) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsRefPtr<Future> future = new Future(window);
+
+  Optional<JS::Handle<JS::Value> > value(aCx, aValue);
+  future->mResolver->Resolve(aCx, value);
+  return future.forget();
+}
+
+/* static */ already_AddRefed<Future>
+Future::Reject(const GlobalObject& aGlobal, JSContext* aCx,
+               JS::Handle<JS::Value> aValue, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  if (!window) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsRefPtr<Future> future = new Future(window);
+
+  Optional<JS::Handle<JS::Value> > value(aCx, aValue);
+  future->mResolver->Reject(aCx, value);
+  return future.forget();
+}
+
 already_AddRefed<Future>
 Future::Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback)
 {
