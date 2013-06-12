@@ -39,7 +39,7 @@ MOCHITEST_FILES = \
 		$(NULL)
 
 # test_contextmenu.html is disabled on Linux due to bug 513558
-ifdef MOZ_WIDGET_GTK
+ifndef MOZ_WIDGET_GTK
 MOCHITEST_FILES += \
 		audio.ogg \
 		test_contextmenu.html \
