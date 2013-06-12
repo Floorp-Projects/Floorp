@@ -314,6 +314,9 @@ WebGLContext::Invalidate()
 NS_IMETHODIMP
 WebGLContext::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
 {
+    if (aOptions.isNullOrUndefined() && mOptionsFrozen) {
+        return NS_OK;
+    }
     WebGLContextAttributes attributes;
     attributes.Init(aCx, aOptions);
 
