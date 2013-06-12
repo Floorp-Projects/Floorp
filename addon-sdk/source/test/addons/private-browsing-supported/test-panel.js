@@ -7,7 +7,7 @@ const { defer } = require('sdk/core/promise');
 const BROWSER = 'chrome://browser/content/browser.xul';
 
 exports.testRequirePanel = function(assert) {
-  require('panel');
+  require('sdk/panel');
   assert.ok('the panel module should not throw an error');
 };
 

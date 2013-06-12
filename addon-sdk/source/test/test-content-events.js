@@ -12,7 +12,7 @@ const { curry, identity, partial } = require("sdk/lang/functional");
 
 let when = curry(function(options, tab) {
   let type = options.type || options;
-  let capture = options.captuer || false;
+  let capture = options.capture || false;
   let target = getBrowserForTab(tab);
   let { promise, resolve } = defer();
 
@@ -42,8 +42,12 @@ exports["test multiple tabs"] = function(assert, done) {
   let { on, off } = loader.require("sdk/event/core");
   let actual = [];
   on(events, "data", function({type, target, timeStamp}) {
-    // ignore about:blank pages.
-    if (target.URL !== "about:blank") actual.push(type + " -> " + target.URL)
+    // ignore about:blank pages and *-document-global-created
+    // events that are not very consistent.
+    if (target.URL !== "about:blank" &&
+        type !== "chrome-document-global-created" &&
+        type !== "content-document-global-created")
+      actual.push(type + " -> " + target.URL)
   });
 
   let window =  getMostRecentBrowserWindow();
@@ -80,8 +84,12 @@ exports["test nested frames"] = function(assert, done) {
   let { on, off } = loader.require("sdk/event/core");
   let actual = [];
   on(events, "data", function({type, target, timeStamp}) {
-    // ignore about:blank pages.
-    if (target.URL !== "about:blank") actual.push(type + " -> " + target.URL)
+    // ignore about:blank pages and *-global-created
+    // events that are not very consistent.
+    if (target.URL !== "about:blank" &&
+       type !== "chrome-document-global-created" &&
+       type !== "content-document-global-created")
+      actual.push(type + " -> " + target.URL)
   });
 
   let window =  getMostRecentBrowserWindow();
@@ -93,7 +101,6 @@ exports["test nested frames"] = function(assert, done) {
     then(function() {
       assert.deepEqual(actual, [
         "document-element-inserted -> " + uri,
-        "content-document-global-created -> data:text/html,iframe",
         "DOMContentLoaded -> " + uri,
         "document-element-inserted -> data:text/html,iframe",
         "DOMContentLoaded -> data:text/html,iframe",

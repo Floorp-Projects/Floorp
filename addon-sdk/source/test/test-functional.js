@@ -5,7 +5,7 @@
 
 const { setTimeout } = require('sdk/timers');
 const utils = require('sdk/lang/functional');
-const { invoke, defer, partial, compose, memoize, once, delay, wrap, curry } = utils;
+const { invoke, defer, partial, compose, memoize, once, delay, wrap, curry, chain } = utils;
 const { LoaderWithHookedConsole } = require('sdk/test/loader');
 
 exports['test forwardApply'] = function(assert) {
@@ -178,6 +178,21 @@ exports['test once'] = function(assert) {
   target.update();
 
   assert.equal(target.state, 1, 'this was passed in and called only once');
+};
+
+exports['test chain'] = function (assert) {
+  let Player = function () { this.volume = 5; };
+  Player.prototype = {
+    setBand: chain(function (band) this.band = band),
+    incVolume: chain(function () this.volume++)
+  };
+  let player = new Player();
+  player
+    .setBand('Animals As Leaders')
+    .incVolume().incVolume().incVolume().incVolume().incVolume().incVolume();
+
+  assert.equal(player.band, 'Animals As Leaders', 'passes arguments into chained');
+  assert.equal(player.volume, 11, 'accepts no arguments in chain');
 };
 
 require('test').run(exports);

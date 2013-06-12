@@ -9,6 +9,7 @@ const { open: openPromise, close, focus, promise } = require('sdk/window/helpers
 const { isPrivate } = require('sdk/private-browsing');
 const { browserWindows: windows } = require('sdk/windows');
 const { defer } = require('sdk/core/promise');
+const tabs = require('sdk/tabs');
 
 // test openDialog() from window/utils with private option
 // test isActive state in pwpb case
@@ -90,7 +91,42 @@ exports.testIsPrivateOnWindowOpenFromPrivate = function(assert, done) {
       return promise;
     }).then(close).
        then(done, assert.fail);
-}
+};
+
+exports.testOpenTabWithPrivateWindow = function(assert, done) {
+  function start() {
+    openPromise(null, {
+      features: {
+        private: true,
+        toolbar: true
+      }
+    }).then(focus).then(function(window) {
+      let { promise, resolve } = defer();
+      assert.equal(isPrivate(window), true, 'the focused window is private');
+
+      tabs.open({
+        url: 'about:blank',
+        onOpen: function(tab) {
+          assert.equal(isPrivate(tab), false, 'the opened tab is not private');
+          // not closing this tab on purpose.. for now...
+          // we keep this tab open because we closed all windows
+          // and must keep a non-private window open at end of this test for next ones.
+          resolve(window);
+        }
+      });
+
+      return promise;
+    }).then(close).then(done, assert.fail);
+  }
+
+  (function closeWindows() {
+    if (windows.length > 0) {
+      return windows.activeWindow.close(closeWindows);
+    }
+    assert.pass('all pre test windows have been closed');
+    return start();
+  })()
+};
 
 exports.testIsPrivateOnWindowOff = function(assert, done) {
   windows.open({
