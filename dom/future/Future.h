@@ -54,6 +54,14 @@ public:
   Constructor(const GlobalObject& aGlobal, JSContext* aCx, FutureInit& aInit,
               ErrorResult& aRv);
 
+  static already_AddRefed<Future>
+  Resolve(const GlobalObject& aGlobal, JSContext* aCx,
+          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+
+  static already_AddRefed<Future>
+  Reject(const GlobalObject& aGlobal, JSContext* aCx,
+         JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+
   already_AddRefed<Future>
   Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback);
 
