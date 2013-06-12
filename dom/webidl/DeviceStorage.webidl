@@ -44,4 +44,8 @@ interface DeviceStorage : EventTarget {
   // Note that the storageName is just a name (like sdcard), and doesn't
   // include any path information.
   readonly attribute DOMString storageName;
+
+  // Determines if this storage area is the one which will be used by default
+  // for storing new files.
+  readonly attribute boolean default;
 };
