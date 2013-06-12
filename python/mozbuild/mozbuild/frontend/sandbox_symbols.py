@@ -104,6 +104,13 @@ VARIABLES = {
        This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
         """),
 
+    'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
+        """Javascript XPCOM files.
+
+       This variable contains a list of files to preprocess.  Generated
+       files will be installed in the /components directory of the distribution.
+        """),
+
     'HOST_CSRCS': (StrictOrderingOnAppendList, list, [],
         """C source files to compile with the host compiler.
 

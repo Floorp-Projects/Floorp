@@ -130,6 +130,7 @@ class TestEmitterBasic(unittest.TestCase):
             CSRCS=['fans.c', 'tans.c'],
             DEFINES=['-Dfans', '-Dtans'],
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
+            EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
             HOST_CSRCS=['fans.c', 'tans.c'],
             HOST_LIBRARY_NAME='host_fans',
             LIBRARY_NAME='lib_name',
