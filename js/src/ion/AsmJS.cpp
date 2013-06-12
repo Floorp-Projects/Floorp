@@ -29,8 +29,6 @@ using namespace js::ion;
 # include "jitprofiling.h"
 #endif
 
-#ifdef JS_ASMJS
-
 /*****************************************************************************/
 // ParseNode utilities
 
@@ -6062,8 +6060,6 @@ CheckModule(JSContext *cx, TokenStream &ts, ParseNode *fn, ScopedJSDeletePtr<Asm
     return m.finish(module);
 }
 
-#endif // defined(JS_ASMJS)
-
 static bool
 Warn(JSContext *cx, int code, const char *str = NULL)
 {
@@ -6088,7 +6084,6 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
     if (cx->compartment()->debugMode())
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
 
-#ifdef JS_ASMJS
     if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime()))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
@@ -6124,9 +6119,6 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
     SetAsmJSModuleObject(moduleFun, moduleObj);
 
     return Warn(cx, JSMSG_USE_ASM_TYPE_OK);
-#else
-    return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform not supported (yet)");
-#endif
 }
 
 JSBool
@@ -6134,13 +6126,9 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-#ifdef JS_ASMJS
     bool available = JSC::MacroAssembler().supportsFloatingPoint() &&
                      !cx->compartment()->debugMode() &&
                      cx->hasOption(JSOPTION_ASMJS);
-#else
-    bool available = false;
-#endif
 
     args.rval().set(BooleanValue(available));
     return true;
