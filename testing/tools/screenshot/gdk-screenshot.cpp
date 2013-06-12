@@ -58,7 +58,8 @@ int main(int argc, char** argv)
 {
   gdk_init(&argc, &argv);
 
-#ifdef HAVE_LIBXSS
+// TODO GTK3
+#if defined(HAVE_LIBXSS) && defined(MOZ_WIDGET_GTK2)
   int event_base, error_base;
   Bool have_xscreensaver =
     XScreenSaverQueryExtension(GDK_DISPLAY(), &event_base, &error_base);
@@ -124,11 +125,14 @@ int main(int argc, char** argv)
 #endif
 
   GdkWindow* window = gdk_get_default_root_window();
-  GdkPixbuf* screenshot = gdk_pixbuf_get_from_drawable(NULL, window, NULL,
-                                                       0, 0, 0, 0,
-                                                       gdk_screen_width(),
-                                                       gdk_screen_height());
-
+  GdkPixbuf* screenshot = NULL;
+// TODO GTK3
+#if defined(MOZ_WIDGET_GTK2)
+  screenshot = gdk_pixbuf_get_from_drawable(NULL, window, NULL,
+                                            0, 0, 0, 0,
+                                            gdk_screen_width(),
+                                            gdk_screen_height());
+#endif
   if (!screenshot) {
     fprintf(stderr, "%s: failed to create screenshot GdkPixbuf\n", argv[0]);
     return 1;

@@ -87,7 +87,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/content/mathml/content/src/$(LIB_PREFIX)gkcontentmathml_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter qt gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/dom/system/unix/$(LIB_PREFIX)domsystemunix_s.$(LIB_SUFFIX) \
 	$(NULL)
