@@ -5,8 +5,6 @@
 
 interface LockedFile;
 
-enum FileMode { "readonly", "readwrite" };
-
 interface FileHandle : EventTarget {
   readonly attribute DOMString name;
   readonly attribute DOMString type;

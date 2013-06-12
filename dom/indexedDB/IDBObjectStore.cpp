@@ -14,6 +14,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/FileHandleBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/quota/FileStreams.h"

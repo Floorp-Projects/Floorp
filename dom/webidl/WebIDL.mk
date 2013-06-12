@@ -80,6 +80,7 @@ webidl_files = \
   File.webidl \
   FileHandle.webidl \
   FileList.webidl \
+  FileMode.webidl \
   FileReader.webidl \
   FileReaderSync.webidl \
   FileRequest.webidl \
