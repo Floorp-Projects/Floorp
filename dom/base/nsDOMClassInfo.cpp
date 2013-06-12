@@ -892,7 +892,6 @@ jsid nsDOMClassInfo::sTop_id             = JSID_VOID;
 jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
 jsid nsDOMClassInfo::sFrames_id          = JSID_VOID;
 jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
-jsid nsDOMClassInfo::sAll_id             = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
 jsid nsDOMClassInfo::sOnload_id          = JSID_VOID;
@@ -1088,7 +1087,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sDocument_id,        cx, "document");
   SET_JSID_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSID_TO_STRING(sSelf_id,            cx, "self");
-  SET_JSID_TO_STRING(sAll_id,             cx, "all");
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
   SET_JSID_TO_STRING(sURL_id,             cx, "URL");
   SET_JSID_TO_STRING(sOnload_id,          cx, "onload");
@@ -2611,7 +2609,6 @@ nsDOMClassInfo::ShutDown()
   sDocument_id        = JSID_VOID;
   sFrames_id          = JSID_VOID;
   sSelf_id            = JSID_VOID;
-  sAll_id             = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
   sOnload_id          = JSID_VOID;
   sOnerror_id         = JSID_VOID;
@@ -2725,8 +2722,9 @@ ChildWindowGetter(JSContext *cx, JSHandleObject obj, JSHandleId id,
 static nsHTMLDocument*
 GetDocument(JSObject *obj)
 {
+  MOZ_ASSERT(js::GetObjectJSClass(obj) == &sHTMLDocumentAllClass);
   return static_cast<nsHTMLDocument*>(
-    static_cast<nsIHTMLDocument*>(::JS_GetPrivate(obj)));
+    static_cast<nsINode*>(JS_GetPrivate(obj)));
 }
 
 // static
@@ -5625,9 +5623,9 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 
-// HTMLDocument helper
+// HTMLAllCollection
 
-static JSClass sHTMLDocumentAllClass = {
+JSClass sHTMLDocumentAllClass = {
   "HTML document.all class",
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE |
   JSCLASS_EMULATES_UNDEFINED | JSCLASS_HAS_RESERVED_SLOTS(1),
@@ -5641,19 +5639,6 @@ static JSClass sHTMLDocumentAllClass = {
   nsHTMLDocumentSH::ReleaseDocument,
   nullptr,                                                  /* checkAccess */
   nsHTMLDocumentSH::CallToGetPropMapper
-};
-
-
-static JSClass sHTMLDocumentAllHelperClass = {
-  "HTML document.all helper class",
-  JSCLASS_NEW_RESOLVE,
-  JS_PropertyStub,                                         /* addProperty */
-  JS_DeletePropertyStub,                                   /* delProperty */
-  nsHTMLDocumentSH::DocumentAllHelperGetProperty,          /* getProperty */
-  JS_StrictPropertyStub,                                   /* setProperty */
-  JS_EnumerateStub,
-  (JSResolveOp)nsHTMLDocumentSH::DocumentAllHelperNewResolve,
-  JS_ConvertStub
 };
 
 
@@ -5860,13 +5845,10 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
   return ok;
 }
 
-// Finalize hook used by document related JS objects, but also by
-// sGlobalScopePolluterClass!
-
 void
 nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 {
-  nsIHTMLDocument *doc = static_cast<nsIHTMLDocument *>(JS_GetPrivate(obj));
+  nsIHTMLDocument* doc = GetDocument(obj);
   if (doc) {
     xpc::DeferredRelease(doc);
   }
@@ -5915,155 +5897,6 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
   return ::JS_GetUCProperty(cx, self, chars, length, vp);
 }
 
-
-static inline bool
-GetDocumentAllHelper(JSContext *cx, JS::Handle<JSObject*> aObj, JSObject **result)
-{
-  JS::Rooted<JSObject*> obj(cx, aObj);
-  while (obj && JS_GetClass(obj) != &sHTMLDocumentAllHelperClass) {
-    if (!::JS_GetPrototype(cx, obj, obj.address())) {
-      return false;
-    }
-  }
-
-  *result = obj;
-  return true;
-}
-
-JSBool
-nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj,
-                                               JSHandleId id, JSMutableHandleValue vp)
-{
-  if (nsDOMClassInfo::sAll_id != id) {
-    return JS_TRUE;
-  }
-
-  if (!vp.isObjectOrNull()) {
-    // First time through, create the collection, and set the
-    // document as its private nsISupports data.
-    nsresult rv;
-    nsCOMPtr<nsIHTMLDocument> doc = do_QueryWrapper(cx, obj, &rv);
-    if (NS_FAILED(rv)) {
-      xpc::Throw(cx, rv);
-      return JS_FALSE;
-    }
-
-    JS::Rooted<JSObject*> all(cx);
-    all = ::JS_NewObject(cx, &sHTMLDocumentAllClass, nullptr,
-                         ::JS_GetGlobalForObject(cx, obj));
-    if (!all) {
-      return JS_FALSE;
-    }
-
-    // Let the JSObject take over ownership of doc.
-    ::JS_SetPrivate(all, doc.forget().get());
-
-    vp.setObject(*all);
-  }
-
-  return JS_TRUE;
-}
-
-JSBool
-nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
-                                              JSHandleId id, unsigned flags,
-                                              JS::MutableHandle<JSObject*> objp)
-{
-  if (nsDOMClassInfo::sAll_id == id) {
-    // document.all is resolved for the first time. Define it.
-    JS::Rooted<JSObject*> helper(cx);
-    if (!GetDocumentAllHelper(cx, obj, helper.address())) {
-      return JS_FALSE;
-    }
-
-    if (helper) {
-      if (!::JS_DefineProperty(cx, helper, "all", JSVAL_VOID, nullptr, nullptr,
-                               JSPROP_ENUMERATE)) {
-        return JS_FALSE;
-      }
-
-      objp.set(helper);
-    }
-  }
-
-  return JS_TRUE;
-}
-
-
-static nsresult
-ResolveAll(JSContext* cx, nsIDocument* doc, JS::Handle<JSObject*> obj)
-{
-  JS::Rooted<JSObject*> proto(cx);
-  if (!::JS_GetPrototype(cx, obj, proto.address())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JS::Rooted<JSObject*> helper(cx);
-  if (!GetDocumentAllHelper(cx, proto, helper.address())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!::JS_GetPrototype(cx, helper ? helper : obj, proto.address())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Check if the property all is defined on obj's (or helper's
-  // if obj doesn't exist) prototype, if it is, don't expose our
-  // document.all helper.
-
-  JSBool hasAll = JS_FALSE;
-  if (proto && !JS_HasProperty(cx, proto, "all", &hasAll)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (hasAll && helper) {
-    // Our helper's prototype now has an "all" property, remove
-    // the helper out of the prototype chain to prevent
-    // shadowing of the now defined "all" property.
-    JS::Rooted<JSObject*> tmp(cx, obj), tmpProto(cx, tmp);
-
-    do {
-      tmp = tmpProto;
-      if (!::JS_GetPrototype(cx, tmp, tmpProto.address())) {
-        return NS_ERROR_UNEXPECTED;
-      }
-    } while (tmpProto != helper);
-
-    ::JS_SetPrototype(cx, tmp, proto);
-  }
-
-  // If we don't already have a helper and "all" isn't already defined on
-  // our prototype, create a helper.
-  if (!helper && !hasAll) {
-    if (!::JS_GetPrototype(cx, obj, proto.address())) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    helper = ::JS_NewObject(cx, &sHTMLDocumentAllHelperClass,
-                            proto,
-                            ::JS_GetGlobalForObject(cx, obj));
-
-    if (!helper) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Insert the helper into our prototype chain. helper's prototype
-    // is already obj's current prototype.
-    if (!::JS_SetPrototype(cx, obj, helper)) {
-      xpc::Throw(cx, NS_ERROR_UNEXPECTED);
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLDocumentSH::TryResolveAll(JSContext* cx, nsHTMLDocument* doc,
-                                JS::Handle<JSObject*> obj)
-{
-  JSAutoCompartment ac(cx, obj);
-  return ResolveAll(cx, doc, obj);
-}
 
 // HTMLFormElement helper
 
