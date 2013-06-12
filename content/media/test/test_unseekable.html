@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: unseekable</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/*
+
+Test that unseekable media can't be seeked. We load a media that shouldn't
+be seekable, and play through once. While playing through we repeatedly try
+to seek and check that nothing happens when we do. We also verify that the
+seekable ranges are empty.
+
+*/
+
+var manager = new MediaTestManager;
+
+var onseeking = function(event) {
+  var v = event.target;
+  v.actuallySeeked = true;
+};
+
+var onseeked = function(event) {
+  var v = event.target;
+  v.actuallySeeked = true;
+};
+
+var ontimeupdate = function(event) {
+  var v = event.target;
+
+  // Check that when we seek nothing happens.
+  var t = v.currentTime;
+  v.currentTime = v.currentTime /= 2;
+  ok(Math.abs(t - v.currentTime) < 0.01, "Current time shouldn't change when seeking in unseekable media: " + v.name);
+
+  // Check that the seekable ranges are empty.
+  is(v.seekable.length, 0, "Should have no seekable ranges in unseekable media: " + v.name);
+};
+
+var onended = function(event) {
+  var v = event.target;
+
+  // Remove the event listeners so that they can't run if there are any pending
+  // events.
+  v.removeEventListener("seeking", onseeking, false);
+  v.removeEventListener("seeked", onseeked, false);
+  v.removeEventListener("timeupdate", ontimeupdate, false);
+  v.removeEventListener("ended", onended, false);
+
+  v.src = "";
+  if (v.parentNode) {
+    v.parentNode.removeChild(v);
+  }
+
+  // Verify that none of the seeks we did in timeupdate actually seeked.
+  ok(!v.actuallySeeked, "Should not be able to seek in unseekable media: " + v.name);
+
+  manager.finished(v.token);
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  manager.started(token);
+  v.name = test.name;
+  v.src = test.name;
+  v.token = token;
+  v.autoplay = "true";
+  
+  v.actuallySeeked = false;
+  
+  v.addEventListener("seeking", onseeking, false);
+  v.addEventListener("seeked", onseeked, false);
+  v.addEventListener("timeupdate", ontimeupdate, false);
+  v.addEventListener("ended", onended, false);
+
+  document.body.appendChild(v);
+}
+
+function canPlay(candidates) {
+  var v = document.createElement("video");  
+  var resources = candidates.filter(function(x){return v.canPlayType(x.type);});
+  return (resources.length > 0);
+}
+
+if (canPlay(gUnseekableTests)) {
+  manager.runTests(gUnseekableTests, startTest);
+} else {
+  todo(false, "No files of supported format to test");
+}
+
+
+</script>
+</pre>
+</body>
+</html>
