@@ -291,7 +291,7 @@ jsd_DropValue(JSDContext* jsdc, JSDValue* jsdval)
 jsval
 jsd_GetValueWrappedJSVal(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = JSD_GetDefaultJSContext(jsdc);
+    AutoSafeJSContext cx;
     JS::RootedObject obj(cx);
     JS::RootedValue val(cx, jsdval->val);
     if (!JSVAL_IS_PRIMITIVE(val)) {
