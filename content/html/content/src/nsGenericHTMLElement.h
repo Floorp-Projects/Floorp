@@ -976,7 +976,7 @@ protected:
    * @note This method flushes pending notifications (Flush_Layout).
    * @param aRect the offset information [OUT]
    */
-  virtual mozilla::dom::Element* GetOffsetRect(nsRect& aRect);
+  mozilla::dom::Element* GetOffsetRect(nsRect& aRect);
 
   /**
    * Returns true if this is the current document's body element
