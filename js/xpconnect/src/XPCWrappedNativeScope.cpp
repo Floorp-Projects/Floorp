@@ -126,7 +126,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         mComponents(nullptr),
         mNext(nullptr),
         mGlobalJSObject(aGlobal),
-        mPrototypeNoHelper(nullptr),
         mIsXBLScope(false)
 {
     // add ourselves to the scopes list
@@ -286,40 +285,6 @@ bool AllowXBLScope(JSCompartment *c)
 }
 } /* namespace xpc */
 
-// Dummy JS class to let wrappers w/o an xpc prototype share
-// scopes. By doing this we avoid allocating a new scope for every
-// wrapper on creation of the wrapper, and most wrappers won't need
-// their own scope at all for the lifetime of the wrapper.
-// WRAPPER_SLOTS is key here (even though there's never anything
-// in the private data slot in these prototypes), as the number of
-// reserved slots in this class needs to match that of the wrappers
-// for the JS engine to share scopes.
-
-js::Class XPC_WN_NoHelper_Proto_JSClass = {
-    "XPC_WN_NoHelper_Proto_JSClass",// name;
-    WRAPPER_SLOTS,                  // flags;
-
-    /* Mandatory non-null function pointer members. */
-    JS_PropertyStub,                // addProperty;
-    JS_DeletePropertyStub,          // delProperty;
-    JS_PropertyStub,                // getProperty;
-    JS_StrictPropertyStub,          // setProperty;
-    JS_EnumerateStub,               // enumerate;
-    JS_ResolveStub,                 // resolve;
-    JS_ConvertStub,                 // convert;
-    nullptr,                         // finalize;
-
-    /* Optionally non-null members start here. */
-    nullptr,                         // checkAccess;
-    nullptr,                         // call;
-    nullptr,                         // construct;
-    nullptr,                         // hasInstance;
-    nullptr,                         // trace;
-
-    JS_NULL_CLASS_EXT,
-    XPC_WN_NoCall_ObjectOps
-};
-
 XPCWrappedNativeScope::~XPCWrappedNativeScope()
 {
     MOZ_COUNT_DTOR(XPCWrappedNativeScope);
@@ -357,27 +322,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     JSRuntime *rt = XPCJSRuntime::Get()->GetJSRuntime();
     mXBLScope.finalize(rt);
     mGlobalJSObject.finalize(rt);
-}
-
-JSObject *
-XPCWrappedNativeScope::GetPrototypeNoHelper()
-{
-    AutoJSContext cx;
-    // We could create this prototype in our constructor, but all scopes
-    // don't need one, so we save ourselves a bit of space if we
-    // create these when they're needed.
-    if (!mPrototypeNoHelper) {
-        mPrototypeNoHelper = JS_NewObject(cx, js::Jsvalify(&XPC_WN_NoHelper_Proto_JSClass),
-                                          JS_GetObjectPrototype(cx, mGlobalJSObject),
-                                          mGlobalJSObject);
-
-        NS_ASSERTION(mPrototypeNoHelper,
-                     "Failed to create prototype for wrappers w/o a helper");
-    } else {
-        xpc_UnmarkGrayObject(mPrototypeNoHelper);
-    }
-
-    return mPrototypeNoHelper;
 }
 
 static JSDHashOperator
@@ -483,9 +427,6 @@ XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* r
             cur->mNext = gDyingScopes;
             gDyingScopes = cur;
             cur = nullptr;
-        } else {
-            if (cur->mPrototypeNoHelper && JS_IsAboutToBeFinalized(&cur->mPrototypeNoHelper))
-                cur->mPrototypeNoHelper = nullptr;
         }
         if (cur)
             prev = cur;
@@ -739,10 +680,6 @@ WNProtoRemover(JSDHashTable *table, JSDHashEntryHdr *hdr,
 void
 XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 {
-    // Clear the no helper wrapper prototype object so that a new one
-    // gets created if needed.
-    mPrototypeNoHelper = nullptr;
-
     XPCAutoLock al(XPCJSRuntime::Get()->GetMapLock());
 
     mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
@@ -803,7 +740,6 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("mNext @ %x", mNext));
         XPC_LOG_ALWAYS(("mComponents @ %x", mComponents.get()));
         XPC_LOG_ALWAYS(("mGlobalJSObject @ %x", mGlobalJSObject.get()));
-        XPC_LOG_ALWAYS(("mPrototypeNoHelper @ %x", mPrototypeNoHelper));
 
         XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers(s)",         \
                         mWrappedNativeMap,                                    \
