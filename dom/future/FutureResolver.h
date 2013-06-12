@@ -22,6 +22,9 @@ class FutureResolver MOZ_FINAL : public nsISupports,
                                  public nsWrapperCache
 {
   friend class FutureResolverTask;
+  friend class WrapperFutureCallback;
+  friend class ResolveFutureCallback;
+  friend class RejectFutureCallback;
 
 private:
   enum FutureTaskSync {
