@@ -7,6 +7,7 @@
 #include "mozilla/dom/Future.h"
 #include "mozilla/dom/FutureBinding.h"
 #include "mozilla/dom/FutureResolver.h"
+#include "mozilla/Preferences.h"
 #include "FutureCallback.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
@@ -101,10 +102,18 @@ Future::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return FutureBinding::Wrap(aCx, aScope, this);
 }
 
+/* static */ bool
+Future::PrefEnabled()
+{
+  return Preferences::GetBool("dom.future.enabled", false);
+}
+
 /* static */ already_AddRefed<Future>
 Future::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
                     FutureInit& aInit, ErrorResult& aRv)
 {
+  MOZ_ASSERT(PrefEnabled());
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -130,6 +139,8 @@ Future::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
 Future::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
                 JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
+  MOZ_ASSERT(PrefEnabled());
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -147,6 +158,8 @@ Future::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
 Future::Reject(const GlobalObject& aGlobal, JSContext* aCx,
                JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
+  MOZ_ASSERT(PrefEnabled());
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
