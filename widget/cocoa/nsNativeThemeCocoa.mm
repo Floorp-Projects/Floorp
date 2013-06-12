@@ -361,14 +361,15 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
   return (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
 }
 
-static int32_t WindowButtonsReservedWidth(nsIFrame* aFrame)
+static NSSize
+WindowButtonsSize(nsIFrame* aFrame)
 {
   NSWindow* window = NativeWindowForFrame(aFrame);
   if (!window) {
     // Return fallback values.
     if (!nsCocoaFeatures::OnLionOrLater())
-      return 64;
-    return 61;
+      return NSMakeSize(57, 16);
+    return NSMakeSize(54, 16);
   }
 
   NSRect buttonBox = NSZeroRect;
@@ -384,7 +385,7 @@ static int32_t WindowButtonsReservedWidth(nsIFrame* aFrame)
   if (zoomButton) {
     buttonBox = NSUnionRect(buttonBox, [zoomButton frame]);
   }
-  return int32_t(NSMaxX(buttonBox));
+  return buttonBox.size;
 }
 
 static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
@@ -2775,7 +2776,9 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
     }
 
     case NS_THEME_WINDOW_BUTTON_BOX: {
-      aResult->SizeTo(WindowButtonsReservedWidth(aFrame), 0);
+      NSSize size = WindowButtonsSize(aFrame);
+      aResult->SizeTo(size.width, size.height);
+      *aIsOverridable = false;
       break;
     }
 
@@ -2783,8 +2786,9 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       if ([NativeWindowForFrame(aFrame) respondsToSelector:@selector(toggleFullScreen:)]) {
         // This value is hardcoded because it's needed before we can measure the
         // position and size of the fullscreen button.
-        aResult->SizeTo(20, 0);
+        aResult->SizeTo(16, 17);
       }
+      *aIsOverridable = false;
       break;
     }
 

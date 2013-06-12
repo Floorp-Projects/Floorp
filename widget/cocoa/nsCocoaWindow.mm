@@ -2520,13 +2520,94 @@ GetDPI(NSWindow* aWindow)
   return dpi * backingScale;
 }
 
+@interface NSView(FrameViewMethodSwizzling)
+- (NSPoint)FrameView__closeButtonOrigin;
+- (NSPoint)FrameView__fullScreenButtonOrigin;
+@end
+
+@implementation NSView(FrameViewMethodSwizzling)
+
+- (NSPoint)FrameView__closeButtonOrigin
+{
+  NSPoint defaultPosition = [self FrameView__closeButtonOrigin];
+  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
+    return [(ToolbarWindow*)[self window] windowButtonsPositionWithDefaultPosition:defaultPosition];
+  }
+  return defaultPosition;
+}
+
+- (NSPoint)FrameView__fullScreenButtonOrigin
+{
+  NSPoint defaultPosition = [self FrameView__fullScreenButtonOrigin];
+  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
+    return [(ToolbarWindow*)[self window] fullScreenButtonPositionWithDefaultPosition:defaultPosition];
+  }
+  return defaultPosition;
+}
+
+@end
+
+static NSMutableSet *gSwizzledFrameViewClasses = nil;
+
 @interface BaseWindow(Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
 - (void)updateContentViewSize;
+- (void)reflowTitlebarElements;
 @end
 
 @implementation BaseWindow
+
+// The frame of a window is implemented using undocumented NSView subclasses.
+// We offset the window buttons by overriding the methods _closeButtonOrigin
+// and _fullScreenButtonOrigin on these frame view classes. The class which is
+// used for a window is determined in the window's frameViewClassForStyleMask:
+// method, so this is where we make sure that we have swizzled the method on
+// all encountered classes.
++ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask
+{
+  Class frameViewClass = [super frameViewClassForStyleMask:styleMask];
+
+  if (!gSwizzledFrameViewClasses) {
+    gSwizzledFrameViewClasses = [[NSMutableSet setWithCapacity:3] retain];
+    if (!gSwizzledFrameViewClasses) {
+      return frameViewClass;
+    }
+  }
+
+  static IMP our_closeButtonOrigin =
+    class_getMethodImplementation([NSView class],
+                                  @selector(FrameView__closeButtonOrigin));
+  static IMP our_fullScreenButtonOrigin =
+    class_getMethodImplementation([NSView class],
+                                  @selector(FrameView__fullScreenButtonOrigin));
+
+  if (![gSwizzledFrameViewClasses containsObject:frameViewClass]) {
+    // Either of these methods might be implemented in both a subclass of
+    // NSFrameView and one of its own subclasses.  Which means that if we
+    // aren't careful we might end up swizzling the same method twice.
+    // Since method swizzling involves swapping pointers, this would break
+    // things.
+    IMP _closeButtonOrigin =
+      class_getMethodImplementation(frameViewClass,
+                                    @selector(_closeButtonOrigin));
+    if (_closeButtonOrigin && _closeButtonOrigin != our_closeButtonOrigin) {
+      nsToolkit::SwizzleMethods(frameViewClass, @selector(_closeButtonOrigin),
+                                @selector(FrameView__closeButtonOrigin));
+    }
+    IMP _fullScreenButtonOrigin =
+      class_getMethodImplementation(frameViewClass,
+                                    @selector(_fullScreenButtonOrigin));
+    if (_fullScreenButtonOrigin &&
+        _fullScreenButtonOrigin != our_fullScreenButtonOrigin) {
+      nsToolkit::SwizzleMethods(frameViewClass, @selector(_fullScreenButtonOrigin),
+                                @selector(FrameView__fullScreenButtonOrigin));
+    }
+    [gSwizzledFrameViewClasses addObject:frameViewClass];
+  }
+
+  return frameViewClass;
+}
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
@@ -2608,8 +2689,12 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState
 {
+  bool changed = (aState != mDrawsIntoWindowFrame);
   mDrawsIntoWindowFrame = aState;
-  [self updateContentViewSize];
+  if (changed) {
+    [self updateContentViewSize];
+    [self reflowTitlebarElements];
+  }
 }
 
 - (BOOL)drawsContentsIntoWindowFrame
@@ -2722,6 +2807,15 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 {
   NSRect rect = [self contentRectForFrameRect:[self frame]];
   [[self contentView] setFrameSize:rect.size];
+}
+
+// Possibly move the titlebar buttons.
+- (void)reflowTitlebarElements
+{
+  NSView *frameView = [[self contentView] superview];
+  if ([frameView respondsToSelector:@selector(_tileTitlebarAndRedisplay:)]) {
+    [frameView _tileTitlebarAndRedisplay:NO];
+  }
 }
 
 // Override methods that translate between content rect and frame rect.
@@ -2924,6 +3018,8 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     mBackgroundColor = [[NSColor whiteColor] retain];
 
     mUnifiedToolbarHeight = 22.0f;
+    mWindowButtonsRect = NSZeroRect;
+    mFullScreenButtonRect = NSZeroRect;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -3056,6 +3152,40 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     // we'll send a mouse move event with the correct new position.
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
   }
+}
+
+- (void)placeWindowButtons:(NSRect)aRect
+{
+  if (!NSEqualRects(mWindowButtonsRect, aRect)) {
+    mWindowButtonsRect = aRect;
+    [self reflowTitlebarElements];
+  }
+}
+
+- (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition
+{
+  if ([self drawsContentsIntoWindowFrame] && !NSIsEmptyRect(mWindowButtonsRect)) {
+    return NSMakePoint(std::max(mWindowButtonsRect.origin.x, aDefaultPosition.x),
+                       std::min(mWindowButtonsRect.origin.y, aDefaultPosition.y));
+  }
+  return aDefaultPosition;
+}
+
+- (void)placeFullScreenButton:(NSRect)aRect
+{
+  if (!NSEqualRects(mFullScreenButtonRect, aRect)) {
+    mFullScreenButtonRect = aRect;
+    [self reflowTitlebarElements];
+  }
+}
+
+- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
+{
+  if ([self drawsContentsIntoWindowFrame] && !NSIsEmptyRect(mFullScreenButtonRect)) {
+    return NSMakePoint(std::min(mFullScreenButtonRect.origin.x, aDefaultPosition.x),
+                       std::min(mFullScreenButtonRect.origin.y, aDefaultPosition.y));
+  }
+  return aDefaultPosition;
 }
 
 // Returning YES here makes the setShowsToolbarButton method work even though

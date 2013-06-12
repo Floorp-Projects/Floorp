@@ -125,6 +125,11 @@ typedef struct _nsCocoaWindowList {
 - (NSRect)contentRectForFrameRect:(NSRect)windowFrame styleMask:(NSUInteger)windowStyle;
 - (NSRect)frameRectForContentRect:(NSRect)windowContentRect styleMask:(NSUInteger)windowStyle;
 
+// Present since at least OS X 10.5.  The OS calls this method on NSWindow
+// (and its subclasses) to find out which NSFrameView subclass to instantiate
+// to create its "frame view".
++ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask;
+
 @end
 
 @interface PopupWindow : BaseWindow
@@ -192,6 +197,8 @@ typedef struct _nsCocoaWindowList {
   CGFloat mUnifiedToolbarHeight;
   NSColor *mBackgroundColor;
   NSView *mTitlebarView; // strong
+  NSRect mWindowButtonsRect;
+  NSRect mFullScreenButtonRect;
 }
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
@@ -202,6 +209,10 @@ typedef struct _nsCocoaWindowList {
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect;
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
+- (void)placeWindowButtons:(NSRect)aRect;
+- (void)placeFullScreenButton:(NSRect)aRect;
+- (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
+- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
 @end
 
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
