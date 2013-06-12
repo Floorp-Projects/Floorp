@@ -641,6 +641,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     }
   }
 
+  et->mStyleRule = nullptr;
+
   return coverRule.forget();
 }
 
@@ -724,13 +726,15 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   nsPresContext *presContext = aNewStyleContext->PresContext();
 
   if (!shouldAnimate) {
-    nsTArray<ElementPropertyTransition> &pts =
-      aElementTransitions->mPropertyTransitions;
     if (haveCurrentTransition) {
-      // We're in the middle of a transition, but just got a
-      // non-transition style change changing to exactly the
-      // current in-progress value.   (This is quite easy to cause
-      // using 'transition-delay'.)
+      // We're in the middle of a transition, and just got a non-transition
+      // style change to something that we can't animate.  This might happen
+      // because we got a non-transition style change changing to the current
+      // in-progress value (which is particularly easy to cause when we're
+      // currently in the 'transition-delay').  It also might happen because we
+      // just got a style change to a value that can't be interpolated.
+      nsTArray<ElementPropertyTransition> &pts =
+        aElementTransitions->mPropertyTransitions;
       pts.RemoveElementAt(currentIndex);
       aElementTransitions->UpdateAnimationGeneration(mPresContext);
 
