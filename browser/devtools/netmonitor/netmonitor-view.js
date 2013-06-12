@@ -1529,20 +1529,23 @@ NetworkDetailsView.prototype = {
    *
    * @param object aHeadersResponse
    *        The "requestHeaders" message received from the server.
-   * @param object aPostResponse
+   * @param object aPostDataResponse
    *        The "requestPostData" message received from the server.
    */
-  _setRequestPostParams: function(aHeadersResponse, aPostResponse) {
-    if (!aHeadersResponse || !aPostResponse) {
+  _setRequestPostParams: function(aHeadersResponse, aPostDataResponse) {
+    if (!aHeadersResponse || !aPostDataResponse) {
       return;
     }
-    let contentType = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
-    let text = aPostResponse.postData.text;
-
-    gNetwork.getString(text).then((aString) => {
+    gNetwork.getString(aPostDataResponse.postData.text).then((aString) => {
       // Handle query strings (poor man's forms, e.g. "?foo=bar&baz=42").
-      if (contentType.value.contains("x-www-form-urlencoded")) {
-        this._addParams(this._paramsFormData, aString);
+      let cType = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
+      let cString = cType ? cType.value : "";
+      if (cString.contains("x-www-form-urlencoded") ||
+          aString.contains("x-www-form-urlencoded")) {
+        let formDataGroups = aString.split(/\r\n|\n|\r/);
+        for (let group of formDataGroups) {
+          this._addParams(this._paramsFormData, group);
+        }
       }
       // Handle actual forms ("multipart/form-data" content type).
       else {
@@ -1572,6 +1575,10 @@ NetworkDetailsView.prototype = {
    *        A query string of params (e.g. "?foo=bar&baz=42").
    */
   _addParams: function(aName, aParams) {
+    // Make sure there's at least one param available.
+    if (!aParams || !aParams.contains("=")) {
+      return;
+    }
     // Turn the params string into an array containing { name: value } tuples.
     let paramsArray = aParams.replace(/^[?&]/, "").split("&").map((e) =>
       let (param = e.split("=")) {
