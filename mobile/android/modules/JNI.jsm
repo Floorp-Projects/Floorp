@@ -8,6 +8,10 @@
  *   let val = jni.callStaticIntMethod(cls, method, 3);
  *   // close the jni library when you are done
  *   jni.close();
+ *
+ * Note: the getters in this file are deleted and replaced with static
+ * values once computed, as in, for example
+ * http://code.activestate.com/recipes/577310-using-a-getter-for-a-one-time-calculation-of-a-jav/
  */
 this.EXPORTED_SYMBOLS = ["JNI"];
 
@@ -81,7 +85,7 @@ JNI.prototype = {
   },
 
   get _getStaticMethodID() {
-    delete this._getStatisMethodID;
+    delete this._getStaticMethodID;
     return this._getStaticMethodID = this.lib.declare("jsjni_GetStaticMethodID",
                                                       ctypes.default_abi,
                                                       this.types.jmethodID,
