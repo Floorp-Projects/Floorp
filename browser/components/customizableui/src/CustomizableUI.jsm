@@ -882,7 +882,8 @@ let CustomizableUIInternal = {
       return;
     }
 
-    if (aEvent.type == "mouseup" && aEvent.button != 0) {
+    if ((aEvent.type == "click" || aEvent.type == "mouseup") &&
+        aEvent.button != 0) {
       return;
     }
 
