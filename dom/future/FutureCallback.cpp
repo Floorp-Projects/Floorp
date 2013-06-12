@@ -70,7 +70,7 @@ ResolveFutureCallback::Call(const Optional<JS::Handle<JS::Value> >& aValue)
     ac.construct(cx, rooted);
   }
 
-  mResolver->Resolve(cx, aValue, FutureResolver::SyncTask);
+  mResolver->ResolveInternal(cx, aValue, FutureResolver::SyncTask);
 }
 
 // RejectFutureCallback
@@ -109,7 +109,7 @@ RejectFutureCallback::Call(const Optional<JS::Handle<JS::Value> >& aValue)
     ac.construct(cx, rooted);
   }
 
-  mResolver->Reject(cx, aValue, FutureResolver::SyncTask);
+  mResolver->RejectInternal(cx, aValue, FutureResolver::SyncTask);
 }
 
 // WrapperFutureCallback
@@ -162,13 +162,13 @@ WrapperFutureCallback::Call(const Optional<JS::Handle<JS::Value> >& aValue)
   if (rv.Failed() && rv.IsJSException()) {
     Optional<JS::Handle<JS::Value> > value(cx);
     rv.StealJSException(cx, &value.Value());
-    mNextResolver->Reject(cx, value, FutureResolver::SyncTask);
+    mNextResolver->RejectInternal(cx, value, FutureResolver::SyncTask);
     return;
   }
 
   // Otherwise, run resolver's resolve with value and the synchronous flag
   // set.
-  mNextResolver->Resolve(cx, value, FutureResolver::SyncTask);
+  mNextResolver->ResolveInternal(cx, value, FutureResolver::SyncTask);
 }
 
 // SimpleWrapperFutureCallback

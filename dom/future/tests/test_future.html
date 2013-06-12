@@ -287,6 +287,62 @@ function futureThenCatchOrderingReject() {
   });
 }
 
+function futureNestedFuture() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
+      r.resolve(42);
+    }));
+  }).then(function(value) {
+    is(value, 42, "Nested future is executed and then == 42");
+    runTest();
+  });
+}
+
+function futureNestedNestedFuture() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
+      r.resolve(42);
+    }).then(function(what) { return what+1; }));
+  }).then(function(value) {
+    is(value, 43, "Nested future is executed and then == 43");
+    runTest();
+  });
+}
+
+function futureWrongNestedFuture() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
+      r.resolve(42);
+    }));
+    resolver.reject(42);
+  }).then(function(value) {
+    is(value, 42, "Nested future is executed and then == 42");
+    runTest();
+  }, function(value) {
+     ok(false, "This is wrong");
+  });
+}
+
+function futureLoop() {
+  new Future(function(resolver) {
+    resolver.resolve(new Future(function(r) {
+      ok(true, "Nested future is executed");
+      r.resolve(new Future(function(r) {
+        ok(true, "Nested nested future is executed");
+        r.resolve(42);
+      }));
+    }));
+  }).then(function(value) {
+    is(value, 42, "Nested nested future is executed and then == 42");
+    runTest();
+  }, function(value) {
+     ok(false, "This is wrong");
+  });
+}
+
 var tests = [ futureResolve, futureReject,
               futureException, futureGC, futureAsync,
               futureDoubleDone, futureDoneException,
@@ -294,7 +350,9 @@ var tests = [ futureResolve, futureReject,
               futureRejectThenCatchDone2,
               futureRejectThenCatchExceptionDone,
               futureThenCatchOrderingResolve,
-              futureThenCatchOrderingReject
+              futureThenCatchOrderingReject,
+              futureNestedFuture, futureNestedNestedFuture,
+              futureWrongNestedFuture, futureLoop
             ];
 
 function runTest() {
