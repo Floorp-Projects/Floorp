@@ -64,8 +64,8 @@ JitterEstimateTest::GenerateFrameSample()
         else
             _counter++;
     }
-    int64_t jitter =  static_cast<int64_t>(_jitter.RandValue() + 1.0/_capacity * frameSize + 0.5);
-    _prevWallClock += static_cast<int64_t>(1000*increment + 0.5);
+    WebRtc_Word64 jitter =  static_cast<WebRtc_Word64>(_jitter.RandValue() + 1.0/_capacity * frameSize + 0.5);
+    _prevWallClock += static_cast<WebRtc_Word64>(1000*increment + 0.5);
     double rndValue = RandUniform();
     resent = (rndValue < _lossrate);
     //printf("rndValue = %f\n", rndValue);

@@ -78,17 +78,17 @@ public:
 
     virtual int GetSecondarySendCodec(int channel, CodecInst& codec);
 
+    static void ACMToExternalCodecRepresentation(CodecInst& toInst,
+                                                 const CodecInst& fromInst);
+
+    static void ExternalToACMCodecRepresentation(CodecInst& toInst,
+                                                 const CodecInst& fromInst);
+
 protected:
     VoECodecImpl(voe::SharedData* shared);
     virtual ~VoECodecImpl();
 
 private:
-    void ACMToExternalCodecRepresentation(CodecInst& toInst,
-                                          const CodecInst& fromInst);
-
-    void ExternalToACMCodecRepresentation(CodecInst& toInst,
-                                          const CodecInst& fromInst);
-
     voe::SharedData* _shared;
 };
 

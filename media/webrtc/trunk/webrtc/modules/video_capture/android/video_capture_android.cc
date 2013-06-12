@@ -23,7 +23,7 @@ namespace webrtc
 #if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
 // TODO(leozwang) These SetAndroidVM apis will be refactored, thus we only
 // keep and reference java vm.
-int32_t SetCaptureAndroidVM(void* javaVM, void* javaContext) {
+WebRtc_Word32 SetCaptureAndroidVM(void* javaVM, void* javaContext) {
   return videocapturemodule::VideoCaptureAndroid::SetAndroidObjects(
       javaVM,
       javaContext);
@@ -34,7 +34,7 @@ namespace videocapturemodule
 {
 
 VideoCaptureModule* VideoCaptureImpl::Create(
-    const int32_t id,
+    const WebRtc_Word32 id,
     const char* deviceUniqueIdUTF8) {
 
   RefCountImpl<videocapturemodule::VideoCaptureAndroid>* implementation =
@@ -65,8 +65,8 @@ jobject VideoCaptureAndroid::g_javaCmDevInfoObject = NULL;
 /*
  * Register references to Java Capture class.
  */
-int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
-                                               void* javaContext) {
+WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
+                                                     void* javaContext) {
 
   g_jvm = static_cast<JavaVM*> (javaVM);
 
@@ -105,20 +105,9 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
       return -1;
     }
 
-    jclass capabilityClassLocal = env->FindClass(
-        "org/webrtc/videoengine/CaptureCapabilityAndroid");
-    if (!capabilityClassLocal) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                   "%s: could not find java class", __FUNCTION__);
-      return -1;
-    }
-    jclass capabilityClassGlobal = reinterpret_cast<jclass>(env->NewGlobalRef(
-        capabilityClassLocal));
-    DeviceInfoAndroid::SetAndroidCaptureClasses(capabilityClassGlobal);
-
     // get java capture class type (note path to class packet)
     g_javaCmDevInfoClass = jsjni_GetGlobalClassRef(
-      AndroidJavaCaptureDeviceInfoClass); // "org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid"
+                 AndroidJavaCaptureDeviceInfoClass);
     if (!g_javaCmDevInfoClass) {
       WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: could not find java class", __FUNCTION__);
@@ -210,7 +199,7 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
   return 0;
 }
 
-int32_t VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
+WebRtc_Word32 VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
     JNIEnv*& env,
     jclass& javaCmDevInfoClass,
     jobject& javaCmDevInfoObject,
@@ -241,7 +230,7 @@ int32_t VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
 
 }
 
-int32_t VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(
+WebRtc_Word32 VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(
     bool attached) {
   if (attached && g_jvm->DetachCurrentThread() < 0) {
     WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
@@ -268,14 +257,14 @@ void JNICALL VideoCaptureAndroid::ProvideCameraFrame(JNIEnv * env,
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture,
                -1, "%s: IncomingFrame %d", __FUNCTION__,length);
   jbyte* cameraFrame= env->GetByteArrayElements(javaCameraFrame,NULL);
-  captureModule->IncomingFrame((uint8_t*) cameraFrame,
+  captureModule->IncomingFrame((WebRtc_UWord8*) cameraFrame,
                                length,captureModule->_frameInfo,0);
   env->ReleaseByteArrayElements(javaCameraFrame,cameraFrame,JNI_ABORT);
 }
 
 
 
-VideoCaptureAndroid::VideoCaptureAndroid(const int32_t id)
+VideoCaptureAndroid::VideoCaptureAndroid(const WebRtc_Word32 id)
     : VideoCaptureImpl(id), _capInfo(id), _javaCaptureObj(NULL),
       _captureStarted(false) {
   WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
@@ -288,8 +277,8 @@ VideoCaptureAndroid::VideoCaptureAndroid(const int32_t id)
 //  Initializes needed Java resources like the JNI interface to
 //  VideoCaptureAndroid.java
 // ----------------------------------------------------------------------------
-int32_t VideoCaptureAndroid::Init(const int32_t id,
-                                  const char* deviceUniqueIdUTF8) {
+WebRtc_Word32 VideoCaptureAndroid::Init(const WebRtc_Word32 id,
+                                        const char* deviceUniqueIdUTF8) {
   const int nameLength = strlen(deviceUniqueIdUTF8);
   if (nameLength >= kVideoCaptureUniqueNameLength) {
     return -1;
@@ -319,7 +308,6 @@ int32_t VideoCaptureAndroid::Init(const int32_t id,
   // get the JNI env for this thread
   JNIEnv *env;
   bool isAttached = false;
-  int32_t rotation = 0;
 
   // get the JNI env for this thread
   if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -455,15 +443,15 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
   }
 }
 
-int32_t VideoCaptureAndroid::StartCapture(
+WebRtc_Word32 VideoCaptureAndroid::StartCapture(
     const VideoCaptureCapability& capability) {
   CriticalSectionScoped cs(&_apiCs);
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                "%s: ", __FUNCTION__);
 
   bool isAttached = false;
-  int32_t result = 0;
-  int32_t rotation = 0;
+  WebRtc_Word32 result = 0;
+  WebRtc_Word32 rotation = 0;
   // get the JNI env for this thread
   JNIEnv *env;
   if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -558,13 +546,13 @@ int32_t VideoCaptureAndroid::StartCapture(
   return result;
 }
 
-int32_t VideoCaptureAndroid::StopCapture() {
+WebRtc_Word32 VideoCaptureAndroid::StopCapture() {
   CriticalSectionScoped cs(&_apiCs);
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                "%s: ", __FUNCTION__);
 
   bool isAttached = false;
-  int32_t result = 0;
+  WebRtc_Word32 result = 0;
   // get the JNI env for this thread
   JNIEnv *env = NULL;
   if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -618,7 +606,7 @@ bool VideoCaptureAndroid::CaptureStarted() {
   return _captureStarted;
 }
 
-int32_t VideoCaptureAndroid::CaptureSettings(
+WebRtc_Word32 VideoCaptureAndroid::CaptureSettings(
     VideoCaptureCapability& settings) {
   CriticalSectionScoped cs(&_apiCs);
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
@@ -627,7 +615,7 @@ int32_t VideoCaptureAndroid::CaptureSettings(
   return 0;
 }
 
-int32_t VideoCaptureAndroid::SetCaptureRotation(
+WebRtc_Word32 VideoCaptureAndroid::SetCaptureRotation(
     VideoCaptureRotation rotation) {
   CriticalSectionScoped cs(&_apiCs);
   if (VideoCaptureImpl::SetCaptureRotation(rotation) == 0) {

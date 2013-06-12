@@ -17,13 +17,13 @@
 
 #include "signal_processing_library.h"
 
-int WebRtcSpl_GetScalingSquare(int16_t *in_vector, int in_vector_length, int times)
+int WebRtcSpl_GetScalingSquare(WebRtc_Word16 *in_vector, int in_vector_length, int times)
 {
     int nbits = WebRtcSpl_GetSizeInBits(times);
     int i;
-    int16_t smax = -1;
-    int16_t sabs;
-    int16_t *sptr = in_vector;
+    WebRtc_Word16 smax = -1;
+    WebRtc_Word16 sabs;
+    WebRtc_Word16 *sptr = in_vector;
     int t;
     int looptimes = in_vector_length;
 

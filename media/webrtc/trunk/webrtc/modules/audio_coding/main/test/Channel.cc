@@ -19,18 +19,18 @@
 
 namespace webrtc {
 
-int32_t
+WebRtc_Word32
 Channel::SendData(
         const FrameType       frameType,
-        const uint8_t   payloadType,
-        const uint32_t  timeStamp,
-        const uint8_t*  payloadData,
-        const uint16_t  payloadSize,
+        const WebRtc_UWord8   payloadType,
+        const WebRtc_UWord32  timeStamp,
+        const WebRtc_UWord8*  payloadData,
+        const WebRtc_UWord16  payloadSize,
         const RTPFragmentationHeader* fragmentation)
 {
     WebRtcRTPHeader rtpInfo;
-    int32_t   status;
-    uint16_t  payloadDataSize = payloadSize;
+    WebRtc_Word32   status;
+    WebRtc_UWord16  payloadDataSize = payloadSize;
 
     rtpInfo.header.markerBit = false;
     rtpInfo.header.ssrc = 0;
@@ -60,10 +60,10 @@ Channel::SendData(
         {
             // only 0x80 if we have multiple blocks
             _payloadData[0] = 0x80 + fragmentation->fragmentationPlType[1];
-            uint32_t REDheader =  (((uint32_t)fragmentation->fragmentationTimeDiff[1]) << 10) + fragmentation->fragmentationLength[1];
-            _payloadData[1] = uint8_t((REDheader >> 16) & 0x000000FF);
-            _payloadData[2] = uint8_t((REDheader >> 8) & 0x000000FF);
-            _payloadData[3] = uint8_t(REDheader & 0x000000FF);
+            WebRtc_UWord32 REDheader =  (((WebRtc_UWord32)fragmentation->fragmentationTimeDiff[1]) << 10) + fragmentation->fragmentationLength[1];
+            _payloadData[1] = WebRtc_UWord8((REDheader >> 16) & 0x000000FF);
+            _payloadData[2] = WebRtc_UWord8((REDheader >> 8) & 0x000000FF);
+            _payloadData[3] = WebRtc_UWord8(REDheader & 0x000000FF);
 
             _payloadData[4] = fragmentation->fragmentationPlType[0];
             // copy the RED data
@@ -81,7 +81,7 @@ Channel::SendData(
             memcpy(_payloadData,
                 payloadData + fragmentation->fragmentationOffset[0],
                 fragmentation->fragmentationLength[0]);
-            payloadDataSize = uint16_t(fragmentation->fragmentationLength[0]);
+            payloadDataSize = WebRtc_UWord16(fragmentation->fragmentationLength[0]);
             rtpInfo.header.payloadType = fragmentation->fragmentationPlType[0];
         }
     }
@@ -108,7 +108,7 @@ Channel::SendData(
     _channelCritSect->Enter();
     if(_saveBitStream)
     {
-        //fwrite(payloadData, sizeof(uint8_t), payloadSize, _bitStreamFile);
+        //fwrite(payloadData, sizeof(WebRtc_UWord8), payloadSize, _bitStreamFile);
     }
 
     if(!_isStereo)
@@ -138,7 +138,7 @@ Channel::SendData(
 void
 Channel::CalcStatistics(
     WebRtcRTPHeader& rtpInfo,
-    uint16_t   payloadSize)
+    WebRtc_UWord16   payloadSize)
 {
     int n;
     if((rtpInfo.header.payloadType != _lastPayloadType) &&
@@ -175,8 +175,8 @@ Channel::CalcStatistics(
     {
         if(!currentPayloadStr->newPacket)
         {
-            uint32_t lastFrameSizeSample = (uint32_t)((uint32_t)rtpInfo.header.timestamp -
-                (uint32_t)currentPayloadStr->lastTimestamp);
+            WebRtc_UWord32 lastFrameSizeSample = (WebRtc_UWord32)((WebRtc_UWord32)rtpInfo.header.timestamp -
+                (WebRtc_UWord32)currentPayloadStr->lastTimestamp);
             assert(lastFrameSizeSample > 0);
             int k = 0;
             while((currentPayloadStr->frameSizeStats[k].frameSizeSample !=
@@ -187,7 +187,7 @@ Channel::CalcStatistics(
             }
             ACMTestFrameSizeStats* currentFrameSizeStats =
                 &(currentPayloadStr->frameSizeStats[k]);
-            currentFrameSizeStats->frameSizeSample = (int16_t)lastFrameSizeSample;
+            currentFrameSizeStats->frameSizeSample = (WebRtc_Word16)lastFrameSizeSample;
 
             // increment the number of encoded samples.
             currentFrameSizeStats->totalEncodedSamples +=
@@ -235,7 +235,7 @@ Channel::CalcStatistics(
     }
 }
 
-Channel::Channel(int16_t chID) :
+Channel::Channel(WebRtc_Word16 chID) :
 _receiverACM(NULL),
 _seqNo(0),
 _channelCritSect(CriticalSectionWrapper::CreateCriticalSection()),
@@ -315,7 +315,7 @@ Channel::ResetStats()
     _channelCritSect->Leave();
 }
 
-int16_t
+WebRtc_Word16
 Channel::Stats(CodecInst& codecInst, ACMTestPayloadStats& payloadStats)
 {
     _channelCritSect->Enter();
@@ -355,12 +355,12 @@ Channel::Stats(CodecInst& codecInst, ACMTestPayloadStats& payloadStats)
 }
 
 void
-Channel::Stats(uint32_t* numPackets)
+Channel::Stats(WebRtc_UWord32* numPackets)
 {
     _channelCritSect->Enter();
     int k;
     int n;
-    memset(numPackets, 0, MAX_NUM_PAYLOADS * sizeof(uint32_t));
+    memset(numPackets, 0, MAX_NUM_PAYLOADS * sizeof(WebRtc_UWord32));
     for(k = 0; k < MAX_NUM_PAYLOADS; k++)
     {
         if(_payloadStats[k].payloadType == -1)
@@ -382,20 +382,20 @@ Channel::Stats(uint32_t* numPackets)
 }
 
 void
-Channel::Stats(uint8_t* payloadType, uint32_t* payloadLenByte)
+Channel::Stats(WebRtc_UWord8* payloadType, WebRtc_UWord32* payloadLenByte)
 {
     _channelCritSect->Enter();
 
     int k;
     int n;
-    memset(payloadLenByte, 0, MAX_NUM_PAYLOADS * sizeof(uint32_t));
+    memset(payloadLenByte, 0, MAX_NUM_PAYLOADS * sizeof(WebRtc_UWord32));
     for(k = 0; k < MAX_NUM_PAYLOADS; k++)
     {
         if(_payloadStats[k].payloadType == -1)
         {
             break;
         }
-        payloadType[k] = (uint8_t)_payloadStats[k].payloadType;
+        payloadType[k] = (WebRtc_UWord8)_payloadStats[k].payloadType;
         payloadLenByte[k] = 0;
         for(n = 0; n < MAX_NUM_FRAMESIZES; n++)
         {
@@ -403,7 +403,7 @@ Channel::Stats(uint8_t* payloadType, uint32_t* payloadLenByte)
             {
                 break;
             }
-            payloadLenByte[k] += (uint16_t)
+            payloadLenByte[k] += (WebRtc_UWord16)
                 _payloadStats[k].frameSizeStats[n].totalPayloadLenByte;
         }
     }
@@ -453,10 +453,10 @@ Channel::PrintStats(CodecInst& codecInst)
 
 }
 
-uint32_t
+WebRtc_UWord32
 Channel::LastInTimestamp()
 {
-    uint32_t timestamp;
+    WebRtc_UWord32 timestamp;
     _channelCritSect->Enter();
     timestamp = _lastInTimestamp;
     _channelCritSect->Leave();
@@ -467,7 +467,7 @@ double
 Channel::BitRate()
 {
     double rate;
-    uint64_t currTime = TickTime::MillisecondTimestamp();
+    WebRtc_UWord64 currTime = TickTime::MillisecondTimestamp();
     _channelCritSect->Enter();
     rate =   ((double)_totalBytes * 8.0)/ (double)(currTime - _beginTime);
     _channelCritSect->Leave();

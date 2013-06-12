@@ -13,7 +13,7 @@
 
 namespace webrtc {
 
-DtmfInbandQueue::DtmfInbandQueue(const int32_t id):
+DtmfInbandQueue::DtmfInbandQueue(const WebRtc_Word32 id):
     _id(id),
     _DtmfCritsect(*CriticalSectionWrapper::CreateCriticalSection()),
     _nextEmptyIndex(0)
@@ -29,7 +29,9 @@ DtmfInbandQueue::~DtmfInbandQueue()
 }
 
 int
-DtmfInbandQueue::AddDtmf(uint8_t key, uint16_t len, uint8_t level)
+DtmfInbandQueue::AddDtmf(WebRtc_UWord8 key,
+                         WebRtc_UWord16 len,
+                         WebRtc_UWord8 level)
 {
     CriticalSectionScoped lock(&_DtmfCritsect);
 
@@ -39,7 +41,7 @@ DtmfInbandQueue::AddDtmf(uint8_t key, uint16_t len, uint8_t level)
                    "DtmfInbandQueue::AddDtmf() unable to add Dtmf tone");
         return -1;
     }
-    int32_t index = _nextEmptyIndex;
+    WebRtc_Word32 index = _nextEmptyIndex;
     _DtmfKey[index] = key;
     _DtmfLen[index] = len;
     _DtmfLevel[index] = level;
@@ -47,8 +49,8 @@ DtmfInbandQueue::AddDtmf(uint8_t key, uint16_t len, uint8_t level)
     return 0;
 }
 
-int8_t
-DtmfInbandQueue::NextDtmf(uint16_t* len, uint8_t* level)
+WebRtc_Word8
+DtmfInbandQueue::NextDtmf(WebRtc_UWord16* len, WebRtc_UWord8* level)
 {
     CriticalSectionScoped lock(&_DtmfCritsect);
 
@@ -56,16 +58,16 @@ DtmfInbandQueue::NextDtmf(uint16_t* len, uint8_t* level)
     {
         return -1;
     }
-    int8_t nextDtmf = _DtmfKey[0];
+    WebRtc_Word8 nextDtmf = _DtmfKey[0];
     *len=_DtmfLen[0];
     *level=_DtmfLevel[0];
 
     memmove(&(_DtmfKey[0]), &(_DtmfKey[1]),
-            _nextEmptyIndex*sizeof(uint8_t));
+            _nextEmptyIndex*sizeof(WebRtc_UWord8));
     memmove(&(_DtmfLen[0]), &(_DtmfLen[1]),
-            _nextEmptyIndex*sizeof(uint16_t));
+            _nextEmptyIndex*sizeof(WebRtc_UWord16));
     memmove(&(_DtmfLevel[0]), &(_DtmfLevel[1]),
-            _nextEmptyIndex*sizeof(uint8_t));
+            _nextEmptyIndex*sizeof(WebRtc_UWord8));
 
     _nextEmptyIndex--;
     return nextDtmf;

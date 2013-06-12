@@ -12,14 +12,13 @@
  * The core AEC algorithm, SSE2 version of speed-critical functions.
  */
 
-#include "webrtc/modules/audio_processing/aec/aec_core.h"
+#include "aec_core.h"
 
 #include <emmintrin.h>
 #include <math.h>
 #include <string.h>  // memset
 
-#include "webrtc/modules/audio_processing/aec/aec_core_internal.h"
-#include "webrtc/modules/audio_processing/aec/aec_rdft.h"
+#include "aec_rdft.h"
 
 __inline static float MulRe(float aRe, float aIm, float bRe, float bIm)
 {
@@ -31,7 +30,7 @@ __inline static float MulIm(float aRe, float aIm, float bRe, float bIm)
   return aRe * bIm + aIm * bRe;
 }
 
-static void FilterFarSSE2(AecCore* aec, float yf[2][PART_LEN1])
+static void FilterFarSSE2(aec_t *aec, float yf[2][PART_LEN1])
 {
   int i;
   for (i = 0; i < NR_PART; i++) {
@@ -72,7 +71,7 @@ static void FilterFarSSE2(AecCore* aec, float yf[2][PART_LEN1])
   }
 }
 
-static void ScaleErrorSignalSSE2(AecCore* aec, float ef[2][PART_LEN1])
+static void ScaleErrorSignalSSE2(aec_t *aec, float ef[2][PART_LEN1])
 {
   const __m128 k1e_10f = _mm_set1_ps(1e-10f);
   const __m128 kThresh = _mm_set1_ps(aec->errThresh);
@@ -128,7 +127,7 @@ static void ScaleErrorSignalSSE2(AecCore* aec, float ef[2][PART_LEN1])
   }
 }
 
-static void FilterAdaptationSSE2(AecCore* aec, float *fft, float ef[2][PART_LEN1]) {
+static void FilterAdaptationSSE2(aec_t *aec, float *fft, float ef[2][PART_LEN1]) {
   int i, j;
   for (i = 0; i < NR_PART; i++) {
     int xPos = (i + aec->xfBufBlockPos)*(PART_LEN1);
@@ -341,7 +340,7 @@ static __m128 mm_pow_ps(__m128 a, __m128 b)
 extern const float WebRtcAec_weightCurve[65];
 extern const float WebRtcAec_overDriveCurve[65];
 
-static void OverdriveAndSuppressSSE2(AecCore* aec, float hNl[PART_LEN1],
+static void OverdriveAndSuppressSSE2(aec_t *aec, float hNl[PART_LEN1],
                                      const float hNlFb,
                                      float efw[2][PART_LEN1]) {
   int i;

@@ -41,9 +41,6 @@ using namespace webrtc;
 /// ***** Objective-C. Similar to C++ destructor
 /// ***** Returns nothing
 - (void)dealloc {
-
-    [_captureDevicesInfo release];
-
     [super dealloc];
 }
 
@@ -55,8 +52,8 @@ using namespace webrtc;
 - (NSNumber*)displayCaptureSettingsDialogBoxWithDevice:(const char*)deviceUniqueIdUTF8
                     AndTitle:(const char*)dialogTitleUTF8
                     AndParentWindow:(void*) parentWindow
-                    AtX:(uint32_t)positionX
-                    AndY:(uint32_t) positionY
+                    AtX:(WebRtc_UWord32)positionX
+                    AndY:(WebRtc_UWord32) positionY
 {
     NSString* strTitle = [NSString stringWithFormat:@"%s", dialogTitleUTF8];
     NSString* strButton = @"Alright";
@@ -76,20 +73,20 @@ using namespace webrtc;
 }
 
 
-- (NSNumber*)getDeviceNamesFromIndex:(uint32_t)index
+- (NSNumber*)getDeviceNamesFromIndex:(WebRtc_UWord32)index
     DefaultName:(char*)deviceName
-    WithLength:(uint32_t)deviceNameLength
+    WithLength:(WebRtc_UWord32)deviceNameLength
     AndUniqueID:(char*)deviceUniqueID
-    WithLength:(uint32_t)deviceUniqueIDLength
+    WithLength:(WebRtc_UWord32)deviceUniqueIDLength
     AndProductID:(char*)deviceProductID
-    WithLength:(uint32_t)deviceProductIDLength
+    WithLength:(WebRtc_UWord32)deviceProductIDLength
 {
     if(NO == _OSSupportedInfo)
     {
         return [NSNumber numberWithInt:0];
     }
 
-    if(index >= (uint32_t)_captureDeviceCountInfo)
+    if(index >= (WebRtc_UWord32)_captureDeviceCountInfo)
     {
         return [NSNumber numberWithInt:-1];
     }

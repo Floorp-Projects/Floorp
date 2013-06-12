@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'bitrate_controller',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
@@ -30,8 +30,6 @@
         'send_side_bandwidth_estimation.cc',
         'send_side_bandwidth_estimation.h',
       ],
-      # TODO(jschuh): Bug 1348: fix size_t to int truncations.
-      'msvs_disabled_warnings': [ 4267, ],
     },
   ], # targets
 
@@ -55,3 +53,9 @@
   ], # conditions
 
 }
+
+# Local Variables:
+# tab-width:2
+# indent-tabs-mode:nil
+# End:
+# vim: set expandtab tabstop=2 shiftwidth=2

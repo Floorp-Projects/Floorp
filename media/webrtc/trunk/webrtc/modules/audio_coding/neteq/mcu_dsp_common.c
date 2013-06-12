@@ -29,17 +29,9 @@ int WebRtcNetEQ_DSPinit(MainInst_t *inst)
 }
 
 /* The DSP side will call this function to interrupt the MCU side */
-int WebRtcNetEQ_DSP2MCUinterrupt(MainInst_t *inst, int16_t *pw16_shared_mem)
+int WebRtcNetEQ_DSP2MCUinterrupt(MainInst_t *inst, WebRtc_Word16 *pw16_shared_mem)
 {
     inst->MCUinst.pw16_readAddress = pw16_shared_mem;
     inst->MCUinst.pw16_writeAddress = pw16_shared_mem;
     return WebRtcNetEQ_SignalMcu(&inst->MCUinst);
-}
-
-int WebRtcNetEQ_IsSyncPayload(const void* payload, int payload_len_bytes) {
-  if (payload_len_bytes != SYNC_PAYLOAD_LEN_BYTES ||
-      memcmp(payload, kSyncPayload, SYNC_PAYLOAD_LEN_BYTES) != 0) {
-    return 0;
-  }
-  return 1;
 }

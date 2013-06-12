@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'audio_device',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:resampler',
         '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',

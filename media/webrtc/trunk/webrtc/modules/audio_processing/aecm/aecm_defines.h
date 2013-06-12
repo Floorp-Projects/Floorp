@@ -13,11 +13,18 @@
 
 #define AECM_DYNAMIC_Q                 /* Turn on/off dynamic Q-domain. */
 
+/* #define AECM_SHORT                   For 32 sample partition length. */
+
 /* Algorithm parameters */
 #define FRAME_LEN       80             /* Total frame length, 10 ms. */
 
+#ifdef AECM_SHORT
+#define PART_LEN        32             /* Length of partition. */
+#define PART_LEN_SHIFT  6              /* Length of (PART_LEN * 2) in base 2. */
+#else
 #define PART_LEN        64             /* Length of partition. */
 #define PART_LEN_SHIFT  7              /* Length of (PART_LEN * 2) in base 2. */
+#endif
 
 #define PART_LEN1       (PART_LEN + 1)  /* Unique fft coefficients. */
 #define PART_LEN2       (PART_LEN << 1) /* Length of partition * 2. */
@@ -26,7 +33,11 @@
 #define MAX_DELAY       100
 
 /* Counter parameters */
+#ifdef AECM_SHORT
+#define CONV_LEN        1024         /* Convergence length used at startup. */
+#else
 #define CONV_LEN        512          /* Convergence length used at startup. */
+#endif
 #define CONV_LEN2       (CONV_LEN << 1) /* Used at startup. */
 
 /* Energy parameters */

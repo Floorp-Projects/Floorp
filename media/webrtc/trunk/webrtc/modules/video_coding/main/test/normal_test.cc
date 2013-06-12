@@ -8,38 +8,40 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/main/test/normal_test.h"
+#include "normal_test.h"
 
 #include <assert.h>
 #include <iostream>
 #include <sstream>
 #include <time.h>
 
-#include "webrtc/common_types.h"
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/video_coding/main/interface/video_coding.h"
-#include "webrtc/modules/video_coding/main/test/test_callbacks.h"
-#include "webrtc/modules/video_coding/main/test/test_macros.h"
-#include "webrtc/modules/video_coding/main/test/test_util.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/test/testsupport/metrics/video_metrics.h"
+#include "../source/event.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "common_types.h"
+#include "modules/video_coding/main/source/mock/fake_tick_time.h"
+#include "test_callbacks.h"
+#include "test_macros.h"
+#include "test_util.h"
+#include "trace.h"
+#include "testsupport/metrics/video_metrics.h"
 
 using namespace webrtc;
 
 int NormalTest::RunTest(const CmdArgs& args)
 {
-    SimulatedClock sim_clock(0);
-    SimulatedClock* clock = &sim_clock;
-    NullEventFactory event_factory;
+#if defined(EVENT_DEBUG)
+    printf("SIMULATION TIME\n");
+    FakeTickTime clock(0);
+#else
+    printf("REAL-TIME\n");
+    TickTimeBase clock;
+#endif
     Trace::CreateTrace();
     Trace::SetTraceFile(
         (test::OutputPath() + "VCMNormalTestTrace.txt").c_str());
     Trace::SetLevelFilter(webrtc::kTraceAll);
-    VideoCodingModule* vcm = VideoCodingModule::Create(1, clock,
-                                                       &event_factory);
-    NormalTest VCMNTest(vcm, clock);
+    VideoCodingModule* vcm = VideoCodingModule::Create(1, &clock);
+    NormalTest VCMNTest(vcm, &clock);
     VCMNTest.Perform(args);
     VideoCodingModule::Destroy(vcm);
     Trace::ReturnTrace();
@@ -70,14 +72,14 @@ void VCMNTEncodeCompleteCallback::RegisterTransportCallback(
 {
 }
 
-int32_t
+WebRtc_Word32
 VCMNTEncodeCompleteCallback::SendData(
         const FrameType frameType,
-        const uint8_t  payloadType,
-        const uint32_t timeStamp,
+        const WebRtc_UWord8  payloadType,
+        const WebRtc_UWord32 timeStamp,
         int64_t capture_time_ms,
-        const uint8_t* payloadData,
-        const uint32_t payloadSize,
+        const WebRtc_UWord8* payloadData,
+        const WebRtc_UWord32 payloadSize,
         const RTPFragmentationHeader& /*fragmentationHeader*/,
         const webrtc::RTPVideoHeader* videoHdr)
 
@@ -132,13 +134,13 @@ VCMNTEncodeCompleteCallback::RegisterReceiverVCM(VideoCodingModule *vcm)
   _VCMReceiver = vcm;
   return;
 }
- int32_t
+ WebRtc_Word32
 VCMNTEncodeCompleteCallback::EncodedBytes()
 {
   return _encodedBytes;
 }
 
-uint32_t
+WebRtc_UWord32
 VCMNTEncodeCompleteCallback::SkipCnt()
 {
   return _skipCnt;
@@ -150,7 +152,7 @@ VCMNTDecodeCompleCallback::~VCMNTDecodeCompleCallback()
   if (_decodedFile)
   fclose(_decodedFile);
 }
- int32_t
+ WebRtc_Word32
 VCMNTDecodeCompleCallback::FrameToRender(webrtc::I420VideoFrame& videoFrame)
 {
     if (videoFrame.width() != _currentWidth ||
@@ -173,7 +175,7 @@ VCMNTDecodeCompleCallback::FrameToRender(webrtc::I420VideoFrame& videoFrame)
     return VCM_OK;
 }
 
- int32_t
+ WebRtc_Word32
 VCMNTDecodeCompleCallback::DecodedBytes()
 {
   return _decodedBytes;
@@ -181,7 +183,7 @@ VCMNTDecodeCompleCallback::DecodedBytes()
 
  //VCM Normal Test Class implementation
 
-NormalTest::NormalTest(VideoCodingModule* vcm, Clock* clock)
+NormalTest::NormalTest(VideoCodingModule* vcm, TickTimeBase* clock)
 :
 _clock(clock),
 _vcm(vcm),
@@ -242,7 +244,7 @@ NormalTest::Setup(const CmdArgs& args)
             std::fstream::out | std::fstream::app);
 }
 
-int32_t
+WebRtc_Word32
 NormalTest::Perform(const CmdArgs& args)
 {
   Setup(args);
@@ -253,8 +255,8 @@ NormalTest::Perform(const CmdArgs& args)
   TEST(VideoCodingModule::Codec(_videoType, &_sendCodec) == VCM_OK);
   // should be later on changed via the API
   _sendCodec.startBitrate = (int)_bitRate;
-  _sendCodec.width = static_cast<uint16_t>(_width);
-  _sendCodec.height = static_cast<uint16_t>(_height);
+  _sendCodec.width = static_cast<WebRtc_UWord16>(_width);
+  _sendCodec.height = static_cast<WebRtc_UWord16>(_height);
   _sendCodec.maxFramerate = _frameRate;
   // will also set and init the desired codec
   TEST(_vcm->RegisterSendCodec(&_sendCodec, 4, 1400) == VCM_OK);
@@ -277,16 +279,18 @@ NormalTest::Perform(const CmdArgs& args)
   int size_uv = half_width * half_height;
   sourceFrame.CreateEmptyFrame(_width, _height,
                                _width, half_width, half_width);
-  uint8_t* tmpBuffer = new uint8_t[_lengthSourceFrame];
+  WebRtc_UWord8* tmpBuffer = new WebRtc_UWord8[_lengthSourceFrame];
   double startTime = clock()/(double)CLOCKS_PER_SEC;
-  _vcm->SetChannelParameters(static_cast<uint32_t>(1000 * _bitRate), 0, 0);
+  _vcm->SetChannelParameters((WebRtc_UWord32)_bitRate, 0, 0);
 
   SendStatsTest sendStats;
-  sendStats.set_framerate(static_cast<uint32_t>(_frameRate));
-  sendStats.set_bitrate(1000 * _bitRate);
+  sendStats.SetTargetFrameRate(static_cast<WebRtc_UWord32>(_frameRate));
   _vcm->RegisterSendStatisticsCallback(&sendStats);
 
   while (feof(_sourceFile) == 0) {
+#if !defined(EVENT_DEBUG)
+    WebRtc_Word64 processStartTime = _clock->MillisecondTimestamp();
+#endif
     TEST(fread(tmpBuffer, 1, _lengthSourceFrame, _sourceFile) > 0 ||
          feof(_sourceFile));
     _frameCnt++;
@@ -296,11 +300,11 @@ NormalTest::Perform(const CmdArgs& args)
                             _width, _height,
                             _width, half_width, half_width);
     _timeStamp +=
-        (uint32_t)(9e4 / static_cast<float>(_sendCodec.maxFramerate));
+        (WebRtc_UWord32)(9e4 / static_cast<float>(_sendCodec.maxFramerate));
     sourceFrame.set_timestamp(_timeStamp);
     _encodeTimes[int(sourceFrame.timestamp())] =
         clock()/(double)CLOCKS_PER_SEC;
-    int32_t ret = _vcm->AddVideoFrame(sourceFrame);
+    WebRtc_Word32 ret = _vcm->AddVideoFrame(sourceFrame);
     double encodeTime = clock()/(double)CLOCKS_PER_SEC -
                         _encodeTimes[int(sourceFrame.timestamp())];
     _totalEncodeTime += encodeTime;
@@ -323,10 +327,20 @@ NormalTest::Perform(const CmdArgs& args)
     {
         _vcm->Process();
     }
-    uint32_t framePeriod =
-        static_cast<uint32_t>(
+    WebRtc_UWord32 framePeriod =
+        static_cast<WebRtc_UWord32>(
             1000.0f / static_cast<float>(_sendCodec.maxFramerate) + 0.5f);
-    static_cast<SimulatedClock*>(_clock)->AdvanceTimeMilliseconds(framePeriod);
+
+#if defined(EVENT_DEBUG)
+    static_cast<FakeTickTime*>(_clock)->IncrementDebugClock(framePeriod);
+#else
+    WebRtc_Word64 timeSpent =
+        _clock->MillisecondTimestamp() - processStartTime;
+    if (timeSpent < framePeriod)
+    {
+      waitEvent->Wait(framePeriod - timeSpent);
+    }
+#endif
   }
   double endTime = clock()/(double)CLOCKS_PER_SEC;
   _testTotalTime = endTime - startTime;
@@ -340,7 +354,7 @@ NormalTest::Perform(const CmdArgs& args)
 }
 
 void
-NormalTest::FrameEncoded(uint32_t timeStamp)
+NormalTest::FrameEncoded(WebRtc_UWord32 timeStamp)
 {
   _encodeCompleteTime = clock()/(double)CLOCKS_PER_SEC;
   _encFrameCnt++;
@@ -349,7 +363,7 @@ NormalTest::FrameEncoded(uint32_t timeStamp)
 }
 
 void
-NormalTest::FrameDecoded(uint32_t timeStamp)
+NormalTest::FrameDecoded(WebRtc_UWord32 timeStamp)
 {
   _decodeCompleteTime = clock()/(double)CLOCKS_PER_SEC;
   _decFrameCnt++;

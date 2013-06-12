@@ -21,7 +21,7 @@
 
 namespace webrtc {
 
-VideoRenderWindowsImpl::VideoRenderWindowsImpl(const int32_t id,
+VideoRenderWindowsImpl::VideoRenderWindowsImpl(const WebRtc_Word32 id,
     const VideoRenderType videoRenderType, void* window, const bool fullscreen)
     : _id(id),
       _renderWindowsCritsect(*CriticalSectionWrapper::CreateCriticalSection()),
@@ -41,7 +41,7 @@ VideoRenderWindowsImpl::~VideoRenderWindowsImpl()
     }
 }
 
-int32_t VideoRenderWindowsImpl::Init()
+WebRtc_Word32 VideoRenderWindowsImpl::Init()
 {
     // Create the win renderer
     switch (_renderMethod)
@@ -72,14 +72,14 @@ int32_t VideoRenderWindowsImpl::Init()
         return -1;
 }
 
-int32_t VideoRenderWindowsImpl::ChangeUniqueId(const int32_t id)
+WebRtc_Word32 VideoRenderWindowsImpl::ChangeUniqueId(const WebRtc_Word32 id)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
     _id = id;
     return 0;
 }
 
-int32_t VideoRenderWindowsImpl::ChangeWindow(void* window)
+WebRtc_Word32 VideoRenderWindowsImpl::ChangeWindow(void* window)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
     if (!_ptrRendererWin)
@@ -93,8 +93,8 @@ int32_t VideoRenderWindowsImpl::ChangeWindow(void* window)
 }
 
 VideoRenderCallback*
-VideoRenderWindowsImpl::AddIncomingRenderStream(const uint32_t streamId,
-                                                const uint32_t zOrder,
+VideoRenderWindowsImpl::AddIncomingRenderStream(const WebRtc_UWord32 streamId,
+                                                const WebRtc_UWord32 zOrder,
                                                 const float left,
                                                 const float top,
                                                 const float right,
@@ -115,11 +115,11 @@ VideoRenderWindowsImpl::AddIncomingRenderStream(const uint32_t streamId,
     return renderCallback;
 }
 
-int32_t VideoRenderWindowsImpl::DeleteIncomingRenderStream(
-                                                                 const uint32_t streamId)
+WebRtc_Word32 VideoRenderWindowsImpl::DeleteIncomingRenderStream(
+                                                                 const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -130,9 +130,9 @@ int32_t VideoRenderWindowsImpl::DeleteIncomingRenderStream(
     return error;
 }
 
-int32_t VideoRenderWindowsImpl::GetIncomingRenderStreamProperties(
-                                                                        const uint32_t streamId,
-                                                                        uint32_t& zOrder,
+WebRtc_Word32 VideoRenderWindowsImpl::GetIncomingRenderStreamProperties(
+                                                                        const WebRtc_UWord32 streamId,
+                                                                        WebRtc_UWord32& zOrder,
                                                                         float& left,
                                                                         float& top,
                                                                         float& right,
@@ -145,7 +145,7 @@ int32_t VideoRenderWindowsImpl::GetIncomingRenderStreamProperties(
     right = 0;
     bottom = 0;
 
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -157,10 +157,10 @@ int32_t VideoRenderWindowsImpl::GetIncomingRenderStreamProperties(
     return error;
 }
 
-int32_t VideoRenderWindowsImpl::StartRender()
+WebRtc_Word32 VideoRenderWindowsImpl::StartRender()
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -171,10 +171,10 @@ int32_t VideoRenderWindowsImpl::StartRender()
     return error;
 }
 
-int32_t VideoRenderWindowsImpl::StopRender()
+WebRtc_Word32 VideoRenderWindowsImpl::StopRender()
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -209,9 +209,9 @@ bool VideoRenderWindowsImpl::FullScreen()
     return fullscreen;
 }
 
-int32_t VideoRenderWindowsImpl::GetGraphicsMemory(
-                                                        uint64_t& totalGraphicsMemory,
-                                                        uint64_t& availableGraphicsMemory) const
+WebRtc_Word32 VideoRenderWindowsImpl::GetGraphicsMemory(
+                                                        WebRtc_UWord64& totalGraphicsMemory,
+                                                        WebRtc_UWord64& availableGraphicsMemory) const
 {
     if (_ptrRendererWin)
     {
@@ -224,9 +224,9 @@ int32_t VideoRenderWindowsImpl::GetGraphicsMemory(
     return -1;
 }
 
-int32_t VideoRenderWindowsImpl::GetScreenResolution(
-                                                          uint32_t& screenWidth,
-                                                          uint32_t& screenHeight) const
+WebRtc_Word32 VideoRenderWindowsImpl::GetScreenResolution(
+                                                          WebRtc_UWord32& screenWidth,
+                                                          WebRtc_UWord32& screenHeight) const
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
     screenWidth = 0;
@@ -234,22 +234,22 @@ int32_t VideoRenderWindowsImpl::GetScreenResolution(
     return 0;
 }
 
-uint32_t VideoRenderWindowsImpl::RenderFrameRate(
-                                                       const uint32_t streamId)
+WebRtc_UWord32 VideoRenderWindowsImpl::RenderFrameRate(
+                                                       const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
     return 0;
 }
 
-int32_t VideoRenderWindowsImpl::SetStreamCropping(
-                                                        const uint32_t streamId,
+WebRtc_Word32 VideoRenderWindowsImpl::SetStreamCropping(
+                                                        const WebRtc_UWord32 streamId,
                                                         const float left,
                                                         const float top,
                                                         const float right,
                                                         const float bottom)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -261,8 +261,8 @@ int32_t VideoRenderWindowsImpl::SetStreamCropping(
     return error;
 }
 
-int32_t VideoRenderWindowsImpl::ConfigureRenderer(
-                                                        const uint32_t streamId,
+WebRtc_Word32 VideoRenderWindowsImpl::ConfigureRenderer(
+                                                        const WebRtc_UWord32 streamId,
                                                         const unsigned int zOrder,
                                                         const float left,
                                                         const float top,
@@ -270,7 +270,7 @@ int32_t VideoRenderWindowsImpl::ConfigureRenderer(
                                                         const float bottom)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -283,11 +283,11 @@ int32_t VideoRenderWindowsImpl::ConfigureRenderer(
     return error;
 }
 
-int32_t VideoRenderWindowsImpl::SetTransparentBackground(
+WebRtc_Word32 VideoRenderWindowsImpl::SetTransparentBackground(
                                                                const bool enable)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -298,19 +298,19 @@ int32_t VideoRenderWindowsImpl::SetTransparentBackground(
     return error;
 }
 
-int32_t VideoRenderWindowsImpl::SetText(
-                                              const uint8_t textId,
-                                              const uint8_t* text,
-                                              const int32_t textLength,
-                                              const uint32_t textColorRef,
-                                              const uint32_t backgroundColorRef,
+WebRtc_Word32 VideoRenderWindowsImpl::SetText(
+                                              const WebRtc_UWord8 textId,
+                                              const WebRtc_UWord8* text,
+                                              const WebRtc_Word32 textLength,
+                                              const WebRtc_UWord32 textColorRef,
+                                              const WebRtc_UWord32 backgroundColorRef,
                                               const float left,
                                               const float top,
                                               const float right,
                                               const float bottom)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }
@@ -323,14 +323,16 @@ int32_t VideoRenderWindowsImpl::SetText(
     return error;
 }
 
-int32_t VideoRenderWindowsImpl::SetBitmap(const void* bitMap,
-                                          const uint8_t pictureId,
-                                          const void* colorKey,
-                                          const float left, const float top,
-                                          const float right, const float bottom)
+WebRtc_Word32 VideoRenderWindowsImpl::SetBitmap(const void* bitMap,
+                                                const WebRtc_UWord8 pictureId,
+                                                const void* colorKey,
+                                                const float left,
+                                                const float top,
+                                                const float right,
+                                                const float bottom)
 {
     CriticalSectionScoped cs(&_renderWindowsCritsect);
-    int32_t error = -1;
+    WebRtc_Word32 error = -1;
     if (!_ptrRendererWin)
     {
     }

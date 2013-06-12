@@ -22,15 +22,15 @@ namespace videocapturemodule {
 // for supported platforms.
 class VideoCaptureMF : public VideoCaptureImpl {
  public:
-  explicit VideoCaptureMF(const int32_t id);
+  explicit VideoCaptureMF(const WebRtc_Word32 id);
 
-  int32_t Init(const int32_t id, const char* device_id);
+  WebRtc_Word32 Init(const WebRtc_Word32 id, const char* device_id);
 
   // Overrides from VideoCaptureImpl.
-  virtual int32_t StartCapture(const VideoCaptureCapability& capability);
-  virtual int32_t StopCapture();
+  virtual WebRtc_Word32 StartCapture(const VideoCaptureCapability& capability);
+  virtual WebRtc_Word32 StopCapture();
   virtual bool CaptureStarted();
-  virtual int32_t CaptureSettings(
+  virtual WebRtc_Word32 CaptureSettings(
       VideoCaptureCapability& settings);  // NOLINT
 
  protected:

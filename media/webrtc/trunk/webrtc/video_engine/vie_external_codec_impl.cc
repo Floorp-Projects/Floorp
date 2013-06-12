@@ -42,7 +42,7 @@ int ViEExternalCodecImpl::Release() {
   // Decrease ref count.
   (*this)--;
 
-  int32_t ref_count = GetCount();
+  WebRtc_Word32 ref_count = GetCount();
   if (ref_count < 0) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo, shared_data_->instance_id(),
                  "ViEExternalCodec release too many times");
@@ -67,8 +67,7 @@ ViEExternalCodecImpl::~ViEExternalCodecImpl() {
 
 int ViEExternalCodecImpl::RegisterExternalSendCodec(const int video_channel,
                                                     const unsigned char pl_type,
-                                                    VideoEncoder* encoder,
-                                                    bool internal_source) {
+                                                    VideoEncoder* encoder) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s channel %d pl_type %d encoder 0x%x", __FUNCTION__,
                video_channel, pl_type, encoder);
@@ -91,8 +90,7 @@ int ViEExternalCodecImpl::RegisterExternalSendCodec(const int video_channel,
     return -1;
   }
 
-  if (vie_encoder->RegisterExternalEncoder(encoder, pl_type, internal_source)
-          != 0) {
+  if (vie_encoder->RegisterExternalEncoder(encoder, pl_type) != 0) {
     shared_data_->SetLastError(kViECodecUnknownError);
     return -1;
   }

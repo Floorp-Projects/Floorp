@@ -43,22 +43,22 @@ enum WaveFormats
 // "WAVE" and ckSize is the chunk size (4 + n)
 struct WAVE_RIFF_header
 {
-    int8_t  ckID[4];
-    int32_t ckSize;
-    int8_t  wave_ckID[4];
+    WebRtc_Word8  ckID[4];
+    WebRtc_Word32 ckSize;
+    WebRtc_Word8  wave_ckID[4];
 };
 
 // First 8 byte of the format chunk. fmt_ckID should be "fmt ". fmt_ckSize is
 // the chunk size (16, 18 or 40 byte)
 struct WAVE_CHUNK_header
 {
-   int8_t  fmt_ckID[4];
-   int32_t fmt_ckSize;
+   WebRtc_Word8  fmt_ckID[4];
+   WebRtc_Word32 fmt_ckSize;
 };
 } // unnamed namespace
 
 namespace webrtc {
-ModuleFileUtility::ModuleFileUtility(const int32_t id)
+ModuleFileUtility::ModuleFileUtility(const WebRtc_Word32 id)
     : _wavFormatObj(),
       _dataSize(0),
       _readSizeBytes(0),
@@ -101,7 +101,7 @@ ModuleFileUtility::~ModuleFileUtility()
 }
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
-int32_t ModuleFileUtility::InitAviWriting(
+WebRtc_Word32 ModuleFileUtility::InitAviWriting(
     const char* filename,
     const CodecInst& audioCodecInst,
     const VideoCodec& videoCodecInst,
@@ -138,7 +138,7 @@ int32_t ModuleFileUtility::InitAviWriting(
     videoStreamHeader.dwRate                 = videoCodecInst.maxFramerate;
     videoStreamHeader.dwSuggestedBufferSize  = videoCodecInst.height *
         (videoCodecInst.width >> 1) * 3;
-    videoStreamHeader.dwQuality              = (uint32_t)-1;
+    videoStreamHeader.dwQuality              = (WebRtc_UWord32)-1;
     videoStreamHeader.dwSampleSize           = 0;
     videoStreamHeader.rcFrame.top            = 0;
     videoStreamHeader.rcFrame.bottom         = videoCodecInst.height;
@@ -183,7 +183,7 @@ int32_t ModuleFileUtility::InitAviWriting(
         {
             audioStreamHeader.dwSampleSize = 1;
             audioStreamHeader.dwRate       = 8000;
-            audioStreamHeader.dwQuality    = (uint32_t)-1;
+            audioStreamHeader.dwQuality    = (WebRtc_UWord32)-1;
             audioStreamHeader.dwSuggestedBufferSize = 80;
 
             waveFormatHeader.nAvgBytesPerSec = 8000;
@@ -196,7 +196,7 @@ int32_t ModuleFileUtility::InitAviWriting(
         {
             audioStreamHeader.dwSampleSize = 1;
             audioStreamHeader.dwRate       = 8000;
-            audioStreamHeader.dwQuality    = (uint32_t)-1;
+            audioStreamHeader.dwQuality    = (WebRtc_UWord32)-1;
             audioStreamHeader.dwSuggestedBufferSize = 80;
 
             waveFormatHeader.nAvgBytesPerSec = 8000;
@@ -209,7 +209,7 @@ int32_t ModuleFileUtility::InitAviWriting(
         {
             audioStreamHeader.dwSampleSize = 2;
             audioStreamHeader.dwRate       = audioCodecInst.plfreq;
-            audioStreamHeader.dwQuality    = (uint32_t)-1;
+            audioStreamHeader.dwQuality    = (WebRtc_UWord32)-1;
             audioStreamHeader.dwSuggestedBufferSize =
                 (audioCodecInst.plfreq/100) * 2;
 
@@ -244,14 +244,14 @@ int32_t ModuleFileUtility::InitAviWriting(
     return 0;
 }
 
-int32_t ModuleFileUtility::WriteAviAudioData(
-    const int8_t* buffer,
-    uint32_t bufferLengthInBytes)
+WebRtc_Word32 ModuleFileUtility::WriteAviAudioData(
+    const WebRtc_Word8* buffer,
+    WebRtc_UWord32 bufferLengthInBytes)
 {
     if( _aviOutFile != 0)
     {
         return _aviOutFile->WriteAudio(
-            reinterpret_cast<const uint8_t*>(buffer),
+            reinterpret_cast<const WebRtc_UWord8*>(buffer),
             bufferLengthInBytes);
     }
     else
@@ -261,14 +261,14 @@ int32_t ModuleFileUtility::WriteAviAudioData(
     }
 }
 
-int32_t ModuleFileUtility::WriteAviVideoData(
-        const int8_t* buffer,
-        uint32_t bufferLengthInBytes)
+WebRtc_Word32 ModuleFileUtility::WriteAviVideoData(
+        const WebRtc_Word8* buffer,
+        WebRtc_UWord32 bufferLengthInBytes)
 {
     if( _aviOutFile != 0)
     {
         return _aviOutFile->WriteVideo(
-            reinterpret_cast<const uint8_t*>(buffer),
+            reinterpret_cast<const WebRtc_UWord8*>(buffer),
             bufferLengthInBytes);
     }
     else
@@ -279,7 +279,7 @@ int32_t ModuleFileUtility::WriteAviVideoData(
 }
 
 
-int32_t ModuleFileUtility::CloseAviFile( )
+WebRtc_Word32 ModuleFileUtility::CloseAviFile( )
 {
     if( _reading && _aviAudioInFile)
     {
@@ -302,8 +302,8 @@ int32_t ModuleFileUtility::CloseAviFile( )
 }
 
 
-int32_t ModuleFileUtility::InitAviReading(const char* filename, bool videoOnly,
-                                          bool loop)
+WebRtc_Word32 ModuleFileUtility::InitAviReading(const char* filename,
+                                                bool videoOnly, bool loop)
 {
     _reading = false;
     delete _aviVideoInFile;
@@ -321,18 +321,18 @@ int32_t ModuleFileUtility::InitAviReading(const char* filename, bool videoOnly,
     AVISTREAMHEADER videoInStreamHeader;
     BITMAPINFOHEADER bitmapInfo;
     char codecConfigParameters[AviFile::CODEC_CONFIG_LENGTH] = {};
-    int32_t configLength = 0;
+    WebRtc_Word32 configLength = 0;
     if( _aviVideoInFile->GetVideoStreamInfo(videoInStreamHeader, bitmapInfo,
                                             codecConfigParameters,
                                             configLength) != 0)
     {
         return -1;
     }
-    _videoCodec.width = static_cast<uint16_t>(
+    _videoCodec.width = static_cast<WebRtc_UWord16>(
         videoInStreamHeader.rcFrame.right);
-    _videoCodec.height = static_cast<uint16_t>(
+    _videoCodec.height = static_cast<WebRtc_UWord16>(
         videoInStreamHeader.rcFrame.bottom);
-    _videoCodec.maxFramerate = static_cast<uint8_t>(
+    _videoCodec.maxFramerate = static_cast<WebRtc_UWord8>(
         videoInStreamHeader.dwRate);
 
     const size_t plnameLen = sizeof(_videoCodec.plName) / sizeof(char);
@@ -380,9 +380,9 @@ int32_t ModuleFileUtility::InitAviReading(const char* filename, bool videoOnly,
     return 0;
 }
 
-int32_t ModuleFileUtility::ReadAviAudioData(
-    int8_t*  outBuffer,
-    const uint32_t bufferLengthInBytes)
+WebRtc_Word32 ModuleFileUtility::ReadAviAudioData(
+    WebRtc_Word8*  outBuffer,
+    const WebRtc_UWord32 bufferLengthInBytes)
 {
     if(_aviAudioInFile == 0)
     {
@@ -390,9 +390,9 @@ int32_t ModuleFileUtility::ReadAviAudioData(
         return -1;
     }
 
-    int32_t length = bufferLengthInBytes;
+    WebRtc_Word32 length = bufferLengthInBytes;
     if(_aviAudioInFile->ReadAudio(
-        reinterpret_cast<uint8_t*>(outBuffer),
+        reinterpret_cast<WebRtc_UWord8*>(outBuffer),
         length) != 0)
     {
         return -1;
@@ -403,9 +403,9 @@ int32_t ModuleFileUtility::ReadAviAudioData(
     }
 }
 
-int32_t ModuleFileUtility::ReadAviVideoData(
-    int8_t* outBuffer,
-    const uint32_t bufferLengthInBytes)
+WebRtc_Word32 ModuleFileUtility::ReadAviVideoData(
+    WebRtc_Word8* outBuffer,
+    const WebRtc_UWord32 bufferLengthInBytes)
 {
     if(_aviVideoInFile == 0)
     {
@@ -413,9 +413,9 @@ int32_t ModuleFileUtility::ReadAviVideoData(
         return -1;
     }
 
-    int32_t length = bufferLengthInBytes;
+    WebRtc_Word32 length = bufferLengthInBytes;
     if( _aviVideoInFile->ReadVideo(
-        reinterpret_cast<uint8_t*>(outBuffer),
+        reinterpret_cast<WebRtc_UWord8*>(outBuffer),
         length) != 0)
     {
         return -1;
@@ -424,7 +424,7 @@ int32_t ModuleFileUtility::ReadAviVideoData(
     }
 }
 
-int32_t ModuleFileUtility::VideoCodecInst(VideoCodec& codecInst)
+WebRtc_Word32 ModuleFileUtility::VideoCodecInst(VideoCodec& codecInst)
 {
     WEBRTC_TRACE(kTraceStream, kTraceFile, _id,
                "ModuleFileUtility::CodecInst(codecInst= 0x%x)", &codecInst);
@@ -440,17 +440,17 @@ int32_t ModuleFileUtility::VideoCodecInst(VideoCodec& codecInst)
 }
 #endif
 
-int32_t ModuleFileUtility::ReadWavHeader(InStream& wav)
+WebRtc_Word32 ModuleFileUtility::ReadWavHeader(InStream& wav)
 {
     WAVE_RIFF_header RIFFheaderObj;
     WAVE_CHUNK_header CHUNKheaderObj;
     // TODO (hellner): tmpStr and tmpStr2 seems unnecessary here.
     char tmpStr[6] = "FOUR";
     unsigned char tmpStr2[4];
-    int32_t i, len;
+    WebRtc_Word32 i, len;
     bool dataFound = false;
     bool fmtFound = false;
-    int8_t dummyRead;
+    WebRtc_Word8 dummyRead;
 
 
     _dataSize = 0;
@@ -491,10 +491,10 @@ int32_t ModuleFileUtility::ReadWavHeader(InStream& wav)
     //                 in a subroutine.
     memcpy(tmpStr2, &CHUNKheaderObj.fmt_ckSize, 4);
     CHUNKheaderObj.fmt_ckSize =
-        (int32_t) ((uint32_t) tmpStr2[0] +
-                         (((uint32_t)tmpStr2[1])<<8) +
-                         (((uint32_t)tmpStr2[2])<<16) +
-                         (((uint32_t)tmpStr2[3])<<24));
+        (WebRtc_Word32) ((WebRtc_UWord32) tmpStr2[0] +
+                         (((WebRtc_UWord32)tmpStr2[1])<<8) +
+                         (((WebRtc_UWord32)tmpStr2[2])<<16) +
+                         (((WebRtc_UWord32)tmpStr2[3])<<24));
 
     memcpy(tmpStr, CHUNKheaderObj.fmt_ckID, 4);
 
@@ -506,36 +506,36 @@ int32_t ModuleFileUtility::ReadWavHeader(InStream& wav)
 
             memcpy(tmpStr2, &_wavFormatObj.formatTag, 2);
             _wavFormatObj.formatTag =
-                (WaveFormats) ((uint32_t)tmpStr2[0] +
-                               (((uint32_t)tmpStr2[1])<<8));
+                (WaveFormats) ((WebRtc_UWord32)tmpStr2[0] +
+                               (((WebRtc_UWord32)tmpStr2[1])<<8));
             memcpy(tmpStr2, &_wavFormatObj.nChannels, 2);
             _wavFormatObj.nChannels =
-                (int16_t) ((uint32_t)tmpStr2[0] +
-                                 (((uint32_t)tmpStr2[1])<<8));
+                (WebRtc_Word16) ((WebRtc_UWord32)tmpStr2[0] +
+                                 (((WebRtc_UWord32)tmpStr2[1])<<8));
             memcpy(tmpStr2, &_wavFormatObj.nSamplesPerSec, 4);
             _wavFormatObj.nSamplesPerSec =
-                (int32_t) ((uint32_t)tmpStr2[0] +
-                                 (((uint32_t)tmpStr2[1])<<8) +
-                                 (((uint32_t)tmpStr2[2])<<16) +
-                                 (((uint32_t)tmpStr2[3])<<24));
+                (WebRtc_Word32) ((WebRtc_UWord32)tmpStr2[0] +
+                                 (((WebRtc_UWord32)tmpStr2[1])<<8) +
+                                 (((WebRtc_UWord32)tmpStr2[2])<<16) +
+                                 (((WebRtc_UWord32)tmpStr2[3])<<24));
             memcpy(tmpStr2, &_wavFormatObj.nAvgBytesPerSec, 4);
             _wavFormatObj.nAvgBytesPerSec =
-                (int32_t) ((uint32_t)tmpStr2[0] +
-                                 (((uint32_t)tmpStr2[1])<<8) +
-                                 (((uint32_t)tmpStr2[2])<<16) +
-                                 (((uint32_t)tmpStr2[3])<<24));
+                (WebRtc_Word32) ((WebRtc_UWord32)tmpStr2[0] +
+                                 (((WebRtc_UWord32)tmpStr2[1])<<8) +
+                                 (((WebRtc_UWord32)tmpStr2[2])<<16) +
+                                 (((WebRtc_UWord32)tmpStr2[3])<<24));
             memcpy(tmpStr2, &_wavFormatObj.nBlockAlign, 2);
             _wavFormatObj.nBlockAlign =
-                (int16_t) ((uint32_t)tmpStr2[0] +
-                                 (((uint32_t)tmpStr2[1])<<8));
+                (WebRtc_Word16) ((WebRtc_UWord32)tmpStr2[0] +
+                                 (((WebRtc_UWord32)tmpStr2[1])<<8));
             memcpy(tmpStr2, &_wavFormatObj.nBitsPerSample, 2);
             _wavFormatObj.nBitsPerSample =
-                (int16_t) ((uint32_t)tmpStr2[0] +
-                                 (((uint32_t)tmpStr2[1])<<8));
+                (WebRtc_Word16) ((WebRtc_UWord32)tmpStr2[0] +
+                                 (((WebRtc_UWord32)tmpStr2[1])<<8));
 
             for (i = 0;
                  i < (CHUNKheaderObj.fmt_ckSize -
-                      (int32_t)sizeof(WAVE_FMTINFO_header));
+                      (WebRtc_Word32)sizeof(WAVE_FMTINFO_header));
                  i++)
             {
                 len = wav.Read(&dummyRead, 1);
@@ -572,10 +572,10 @@ int32_t ModuleFileUtility::ReadWavHeader(InStream& wav)
 
         memcpy(tmpStr2, &CHUNKheaderObj.fmt_ckSize, 4);
         CHUNKheaderObj.fmt_ckSize =
-            (int32_t) ((uint32_t)tmpStr2[0] +
-                             (((uint32_t)tmpStr2[1])<<8) +
-                             (((uint32_t)tmpStr2[2])<<16) +
-                             (((uint32_t)tmpStr2[3])<<24));
+            (WebRtc_Word32) ((WebRtc_UWord32)tmpStr2[0] +
+                             (((WebRtc_UWord32)tmpStr2[1])<<8) +
+                             (((WebRtc_UWord32)tmpStr2[2])<<16) +
+                             (((WebRtc_UWord32)tmpStr2[3])<<24));
 
         memcpy(tmpStr, CHUNKheaderObj.fmt_ckID, 4);
     }
@@ -637,10 +637,10 @@ int32_t ModuleFileUtility::ReadWavHeader(InStream& wav)
     return 0;
 }
 
-int32_t ModuleFileUtility::InitWavCodec(uint32_t samplesPerSec,
-                                        uint32_t channels,
-                                        uint32_t bitsPerSample,
-                                        uint32_t formatTag)
+WebRtc_Word32 ModuleFileUtility::InitWavCodec(WebRtc_UWord32 samplesPerSec,
+                                              WebRtc_UWord32 channels,
+                                              WebRtc_UWord32 bitsPerSample,
+                                              WebRtc_UWord32 formatTag)
 {
     codec_info_.pltype   = -1;
     codec_info_.plfreq   = samplesPerSec;
@@ -725,9 +725,9 @@ int32_t ModuleFileUtility::InitWavCodec(uint32_t samplesPerSec,
     return 0;
 }
 
-int32_t ModuleFileUtility::InitWavReading(InStream& wav,
-                                          const uint32_t start,
-                                          const uint32_t stop)
+WebRtc_Word32 ModuleFileUtility::InitWavReading(InStream& wav,
+                                                const WebRtc_UWord32 start,
+                                                const WebRtc_UWord32 stop)
 {
 
     _reading = false;
@@ -744,8 +744,8 @@ int32_t ModuleFileUtility::InitWavReading(InStream& wav,
 
     if(start > 0)
     {
-        uint8_t dummy[WAV_MAX_BUFFER_SIZE];
-        int32_t readLength;
+        WebRtc_UWord8 dummy[WAV_MAX_BUFFER_SIZE];
+        WebRtc_Word32 readLength;
         if(_readSizeBytes <= WAV_MAX_BUFFER_SIZE)
         {
             while (_playoutPositionMs < start)
@@ -784,10 +784,10 @@ int32_t ModuleFileUtility::InitWavReading(InStream& wav,
     return 0;
 }
 
-int32_t ModuleFileUtility::ReadWavDataAsMono(
+WebRtc_Word32 ModuleFileUtility::ReadWavDataAsMono(
     InStream& wav,
-    int8_t* outData,
-    const uint32_t bufferSize)
+    WebRtc_Word8* outData,
+    const WebRtc_UWord32 bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -800,9 +800,9 @@ int32_t ModuleFileUtility::ReadWavDataAsMono(
         bufferSize);
 
     // The number of bytes that should be read from file.
-    const uint32_t totalBytesNeeded = _readSizeBytes;
+    const WebRtc_UWord32 totalBytesNeeded = _readSizeBytes;
     // The number of bytes that will be written to outData.
-    const uint32_t bytesRequested = (codec_info_.channels == 2) ?
+    const WebRtc_UWord32 bytesRequested = (codec_info_.channels == 2) ?
         totalBytesNeeded >> 1 : totalBytesNeeded;
     if(bufferSize < bytesRequested)
     {
@@ -824,9 +824,9 @@ int32_t ModuleFileUtility::ReadWavDataAsMono(
         return -1;
     }
 
-    int32_t bytesRead = ReadWavData(
+    WebRtc_Word32 bytesRead = ReadWavData(
         wav,
-        (codec_info_.channels == 2) ? _tempData : (uint8_t*)outData,
+        (codec_info_.channels == 2) ? _tempData : (WebRtc_UWord8*)outData,
         totalBytesNeeded);
     if(bytesRead == 0)
     {
@@ -841,7 +841,7 @@ int32_t ModuleFileUtility::ReadWavDataAsMono(
     // Output data is should be mono.
     if(codec_info_.channels == 2)
     {
-        for (uint32_t i = 0; i < bytesRequested / _bytesPerSample; i++)
+        for (WebRtc_UWord32 i = 0; i < bytesRequested / _bytesPerSample; i++)
         {
             // Sample value is the average of left and right buffer rounded to
             // closest integer value. Note samples can be either 1 or 2 byte.
@@ -852,7 +852,7 @@ int32_t ModuleFileUtility::ReadWavDataAsMono(
             }
             else
             {
-                int16_t* sampleData = (int16_t*) _tempData;
+                WebRtc_Word16* sampleData = (WebRtc_Word16*) _tempData;
                 sampleData[i] = ((sampleData[2 * i] + sampleData[(2 * i) + 1] +
                                   1) >> 1);
             }
@@ -862,11 +862,11 @@ int32_t ModuleFileUtility::ReadWavDataAsMono(
     return bytesRequested;
 }
 
-int32_t ModuleFileUtility::ReadWavDataAsStereo(
+WebRtc_Word32 ModuleFileUtility::ReadWavDataAsStereo(
     InStream& wav,
-    int8_t* outDataLeft,
-    int8_t* outDataRight,
-    const uint32_t bufferSize)
+    WebRtc_Word8* outDataLeft,
+    WebRtc_Word8* outDataRight,
+    const WebRtc_UWord32 bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -903,10 +903,10 @@ int32_t ModuleFileUtility::ReadWavDataAsStereo(
     }
 
     // The number of bytes that should be read from file.
-    const uint32_t totalBytesNeeded = _readSizeBytes;
+    const WebRtc_UWord32 totalBytesNeeded = _readSizeBytes;
     // The number of bytes that will be written to the left and the right
     // buffers.
-    const uint32_t bytesRequested = totalBytesNeeded >> 1;
+    const WebRtc_UWord32 bytesRequested = totalBytesNeeded >> 1;
     if(bufferSize < bytesRequested)
     {
         WEBRTC_TRACE(kTraceError, kTraceFile, _id,
@@ -915,7 +915,7 @@ int32_t ModuleFileUtility::ReadWavDataAsStereo(
         return -1;
     }
 
-    int32_t bytesRead = ReadWavData(wav, _tempData, totalBytesNeeded);
+    WebRtc_Word32 bytesRead = ReadWavData(wav, _tempData, totalBytesNeeded);
     if(bytesRead <= 0)
     {
         WEBRTC_TRACE(kTraceError, kTraceFile, _id,
@@ -927,7 +927,7 @@ int32_t ModuleFileUtility::ReadWavDataAsStereo(
     // either 1 or 2 bytes
     if(_bytesPerSample == 1)
     {
-        for (uint32_t i = 0; i < bytesRequested; i++)
+        for (WebRtc_UWord32 i = 0; i < bytesRequested; i++)
         {
             outDataLeft[i]  = _tempData[2 * i];
             outDataRight[i] = _tempData[(2 * i) + 1];
@@ -935,14 +935,14 @@ int32_t ModuleFileUtility::ReadWavDataAsStereo(
     }
     else if(_bytesPerSample == 2)
     {
-        int16_t* sampleData = reinterpret_cast<int16_t*>(_tempData);
-        int16_t* outLeft = reinterpret_cast<int16_t*>(outDataLeft);
-        int16_t* outRight = reinterpret_cast<int16_t*>(
+        WebRtc_Word16* sampleData = reinterpret_cast<WebRtc_Word16*>(_tempData);
+        WebRtc_Word16* outLeft = reinterpret_cast<WebRtc_Word16*>(outDataLeft);
+        WebRtc_Word16* outRight = reinterpret_cast<WebRtc_Word16*>(
             outDataRight);
 
         // Bytes requested to samples requested.
-        uint32_t sampleCount = bytesRequested >> 1;
-        for (uint32_t i = 0; i < sampleCount; i++)
+        WebRtc_UWord32 sampleCount = bytesRequested >> 1;
+        for (WebRtc_UWord32 i = 0; i < sampleCount; i++)
         {
             outLeft[i] = sampleData[2 * i];
             outRight[i] = sampleData[(2 * i) + 1];
@@ -957,10 +957,10 @@ int32_t ModuleFileUtility::ReadWavDataAsStereo(
     return bytesRequested;
 }
 
-int32_t ModuleFileUtility::ReadWavData(
+WebRtc_Word32 ModuleFileUtility::ReadWavData(
     InStream& wav,
-    uint8_t* buffer,
-    const uint32_t dataLengthInBytes)
+    WebRtc_UWord8* buffer,
+    const WebRtc_UWord32 dataLengthInBytes)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -982,7 +982,7 @@ int32_t ModuleFileUtility::ReadWavData(
     // Make sure that a read won't return too few samples.
     // TODO (hellner): why not read the remaining bytes needed from the start
     //                 of the file?
-    if((_dataSize - _readPos) < (int32_t)dataLengthInBytes)
+    if((_dataSize - _readPos) < (WebRtc_Word32)dataLengthInBytes)
     {
         // Rewind() being -1 may be due to the file not supposed to be looped.
         if(wav.Rewind() == -1)
@@ -997,7 +997,7 @@ int32_t ModuleFileUtility::ReadWavData(
         }
     }
 
-    int32_t bytesRead = wav.Read(buffer, dataLengthInBytes);
+    WebRtc_Word32 bytesRead = wav.Read(buffer, dataLengthInBytes);
     if(bytesRead < 0)
     {
         _reading = false;
@@ -1007,7 +1007,7 @@ int32_t ModuleFileUtility::ReadWavData(
     // This should never happen due to earlier sanity checks.
     // TODO (hellner): change to an assert and fail here since this should
     //                 never happen...
-    if(bytesRead < (int32_t)dataLengthInBytes)
+    if(bytesRead < (WebRtc_Word32)dataLengthInBytes)
     {
         if((wav.Rewind() == -1) ||
             (InitWavReading(wav, _startPointInMs, _stopPointInMs) == -1))
@@ -1018,7 +1018,7 @@ int32_t ModuleFileUtility::ReadWavData(
         else
         {
             bytesRead = wav.Read(buffer, dataLengthInBytes);
-            if(bytesRead < (int32_t)dataLengthInBytes)
+            if(bytesRead < (WebRtc_Word32)dataLengthInBytes)
             {
                 _reading = false;
                 return -1;
@@ -1043,8 +1043,8 @@ int32_t ModuleFileUtility::ReadWavData(
     return bytesRead;
 }
 
-int32_t ModuleFileUtility::InitWavWriting(OutStream& wav,
-                                          const CodecInst& codecInst)
+WebRtc_Word32 ModuleFileUtility::InitWavWriting(OutStream& wav,
+                                                const CodecInst& codecInst)
 {
 
     if(set_codec_info(codecInst) != 0)
@@ -1054,7 +1054,7 @@ int32_t ModuleFileUtility::InitWavWriting(OutStream& wav,
         return -1;
     }
     _writing = false;
-    uint32_t channels = (codecInst.channels == 0) ?
+    WebRtc_UWord32 channels = (codecInst.channels == 0) ?
         1 : codecInst.channels;
 
     if(STR_CASE_CMP(codecInst.plname, "PCMU") == 0)
@@ -1094,9 +1094,9 @@ int32_t ModuleFileUtility::InitWavWriting(OutStream& wav,
     return 0;
 }
 
-int32_t ModuleFileUtility::WriteWavData(OutStream& out,
-                                        const int8_t*  buffer,
-                                        const uint32_t dataLength)
+WebRtc_Word32 ModuleFileUtility::WriteWavData(OutStream& out,
+                                              const WebRtc_Word8*  buffer,
+                                              const WebRtc_UWord32 dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -1123,39 +1123,39 @@ int32_t ModuleFileUtility::WriteWavData(OutStream& out,
 }
 
 
-int32_t ModuleFileUtility::WriteWavHeader(
+WebRtc_Word32 ModuleFileUtility::WriteWavHeader(
     OutStream& wav,
-    const uint32_t freq,
-    const uint32_t bytesPerSample,
-    const uint32_t channels,
-    const uint32_t format,
-    const uint32_t lengthInBytes)
+    const WebRtc_UWord32 freq,
+    const WebRtc_UWord32 bytesPerSample,
+    const WebRtc_UWord32 channels,
+    const WebRtc_UWord32 format,
+    const WebRtc_UWord32 lengthInBytes)
 {
 
     // Frame size in bytes for 10 ms of audio.
     // TODO (hellner): 44.1 kHz has 440 samples frame size. Doesn't seem to
     //                 be taken into consideration here!
-    int32_t frameSize = (freq / 100) * bytesPerSample * channels;
+    WebRtc_Word32 frameSize = (freq / 100) * bytesPerSample * channels;
 
     // Calculate the number of full frames that the wave file contain.
-    const int32_t dataLengthInBytes = frameSize *
+    const WebRtc_Word32 dataLengthInBytes = frameSize *
         (lengthInBytes / frameSize);
 
-    int8_t tmpStr[4];
-    int8_t tmpChar;
-    uint32_t tmpLong;
+    WebRtc_Word8 tmpStr[4];
+    WebRtc_Word8 tmpChar;
+    WebRtc_UWord32 tmpLong;
 
     memcpy(tmpStr, "RIFF", 4);
     wav.Write(tmpStr, 4);
 
     tmpLong = dataLengthInBytes + 36;
-    tmpChar = (int8_t)(tmpLong);
+    tmpChar = (WebRtc_Word8)(tmpLong);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 8);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 8);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 16);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 16);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 24);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 24);
     wav.Write(&tmpChar, 1);
 
     memcpy(tmpStr, "WAVE", 4);
@@ -1173,44 +1173,44 @@ int32_t ModuleFileUtility::WriteWavHeader(
     tmpChar = 0;
     wav.Write(&tmpChar, 1);
 
-    tmpChar = (int8_t)(format);
+    tmpChar = (WebRtc_Word8)(format);
     wav.Write(&tmpChar, 1);
     tmpChar = 0;
     wav.Write(&tmpChar, 1);
 
-    tmpChar = (int8_t)(channels);
+    tmpChar = (WebRtc_Word8)(channels);
     wav.Write(&tmpChar, 1);
     tmpChar = 0;
     wav.Write(&tmpChar, 1);
 
     tmpLong = freq;
-    tmpChar = (int8_t)(tmpLong);
+    tmpChar = (WebRtc_Word8)(tmpLong);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 8);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 8);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 16);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 16);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 24);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 24);
     wav.Write(&tmpChar, 1);
 
     // nAverageBytesPerSec = Sample rate * Bytes per sample * Channels
     tmpLong = bytesPerSample * freq * channels;
-    tmpChar = (int8_t)(tmpLong);
+    tmpChar = (WebRtc_Word8)(tmpLong);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 8);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 8);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 16);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 16);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 24);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 24);
     wav.Write(&tmpChar, 1);
 
     // nBlockAlign = Bytes per sample * Channels
-    tmpChar = (int8_t)(bytesPerSample * channels);
+    tmpChar = (WebRtc_Word8)(bytesPerSample * channels);
     wav.Write(&tmpChar, 1);
     tmpChar = 0;
     wav.Write(&tmpChar, 1);
 
-    tmpChar = (int8_t)(bytesPerSample*8);
+    tmpChar = (WebRtc_Word8)(bytesPerSample*8);
     wav.Write(&tmpChar, 1);
     tmpChar = 0;
     wav.Write(&tmpChar, 1);
@@ -1219,26 +1219,26 @@ int32_t ModuleFileUtility::WriteWavHeader(
     wav.Write(tmpStr, 4);
 
     tmpLong = dataLengthInBytes;
-    tmpChar = (int8_t)(tmpLong);
+    tmpChar = (WebRtc_Word8)(tmpLong);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 8);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 8);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 16);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 16);
     wav.Write(&tmpChar, 1);
-    tmpChar = (int8_t)(tmpLong >> 24);
+    tmpChar = (WebRtc_Word8)(tmpLong >> 24);
     wav.Write(&tmpChar, 1);
 
     return 0;
 }
 
-int32_t ModuleFileUtility::UpdateWavHeader(OutStream& wav)
+WebRtc_Word32 ModuleFileUtility::UpdateWavHeader(OutStream& wav)
 {
-    int32_t res = -1;
+    WebRtc_Word32 res = -1;
     if(wav.Rewind() == -1)
     {
         return -1;
     }
-    uint32_t channels = (codec_info_.channels == 0) ?
+    WebRtc_UWord32 channels = (codec_info_.channels == 0) ?
         1 : codec_info_.channels;
 
     if(STR_CASE_CMP(codec_info_.plname, "L16") == 0)
@@ -1260,11 +1260,11 @@ int32_t ModuleFileUtility::UpdateWavHeader(OutStream& wav)
 }
 
 
-int32_t ModuleFileUtility::InitPreEncodedReading(InStream& in,
-                                                 const CodecInst& cinst)
+WebRtc_Word32 ModuleFileUtility::InitPreEncodedReading(InStream& in,
+                                                       const CodecInst& cinst)
 {
 
-    uint8_t preEncodedID;
+    WebRtc_UWord8 preEncodedID;
     in.Read(&preEncodedID, 1);
 
     MediaFileUtility_CodecType codecType =
@@ -1287,10 +1287,10 @@ int32_t ModuleFileUtility::InitPreEncodedReading(InStream& in,
     return 0;
 }
 
-int32_t ModuleFileUtility::ReadPreEncodedData(
+WebRtc_Word32 ModuleFileUtility::ReadPreEncodedData(
     InStream& in,
-    int8_t* outData,
-    const uint32_t bufferSize)
+    WebRtc_Word8* outData,
+    const WebRtc_UWord32 bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -1307,10 +1307,10 @@ int32_t ModuleFileUtility::ReadPreEncodedData(
         WEBRTC_TRACE(kTraceError, kTraceFile, _id, "output buffer NULL");
     }
 
-    uint32_t frameLen;
-    uint8_t buf[64];
+    WebRtc_UWord32 frameLen;
+    WebRtc_UWord8 buf[64];
     // Each frame has a two byte header containing the frame length.
-    int32_t res = in.Read(buf, 2);
+    WebRtc_Word32 res = in.Read(buf, 2);
     if(res != 2)
     {
         if(!in.Rewind())
@@ -1338,7 +1338,7 @@ int32_t ModuleFileUtility::ReadPreEncodedData(
     return in.Read(outData, frameLen);
 }
 
-int32_t ModuleFileUtility::InitPreEncodedWriting(
+WebRtc_Word32 ModuleFileUtility::InitPreEncodedWriting(
     OutStream& out,
     const CodecInst& codecInst)
 {
@@ -1354,10 +1354,10 @@ int32_t ModuleFileUtility::InitPreEncodedWriting(
      return 0;
 }
 
-int32_t ModuleFileUtility::WritePreEncodedData(
+WebRtc_Word32 ModuleFileUtility::WritePreEncodedData(
     OutStream& out,
-    const int8_t*  buffer,
-    const uint32_t dataLength)
+    const WebRtc_Word8*  buffer,
+    const WebRtc_UWord32 dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -1374,10 +1374,10 @@ int32_t ModuleFileUtility::WritePreEncodedData(
         WEBRTC_TRACE(kTraceError, kTraceFile, _id,"buffer NULL");
     }
 
-    int32_t bytesWritten = 0;
+    WebRtc_Word32 bytesWritten = 0;
     // The first two bytes is the size of the frame.
-    int16_t lengthBuf;
-    lengthBuf = (int16_t)dataLength;
+    WebRtc_Word16 lengthBuf;
+    lengthBuf = (WebRtc_Word16)dataLength;
     if(!out.Write(&lengthBuf, 2))
     {
        return -1;
@@ -1392,10 +1392,10 @@ int32_t ModuleFileUtility::WritePreEncodedData(
     return bytesWritten;
 }
 
-int32_t ModuleFileUtility::InitCompressedReading(
+WebRtc_Word32 ModuleFileUtility::InitCompressedReading(
     InStream& in,
-    const uint32_t start,
-    const uint32_t stop)
+    const WebRtc_UWord32 start,
+    const WebRtc_UWord32 stop)
 {
     WEBRTC_TRACE(
         kTraceDebug,
@@ -1409,7 +1409,7 @@ int32_t ModuleFileUtility::InitCompressedReading(
 
 #if defined(WEBRTC_CODEC_AMR) || defined(WEBRTC_CODEC_AMRWB) || \
     defined(WEBRTC_CODEC_ILBC)
-    int16_t read_len = 0;
+    WebRtc_Word16 read_len = 0;
 #endif
     _codecId = kCodecNoCodec;
     _playoutPositionMs = 0;
@@ -1419,14 +1419,14 @@ int32_t ModuleFileUtility::InitCompressedReading(
     _stopPointInMs = stop;
 
 #ifdef WEBRTC_CODEC_AMR
-    int32_t AMRmode2bytes[9]={12,13,15,17,19,20,26,31,5};
+    WebRtc_Word32 AMRmode2bytes[9]={12,13,15,17,19,20,26,31,5};
 #endif
 #ifdef WEBRTC_CODEC_AMRWB
-    int32_t AMRWBmode2bytes[10]={17,23,32,36,40,46,50,58,60,6};
+    WebRtc_Word32 AMRWBmode2bytes[10]={17,23,32,36,40,46,50,58,60,6};
 #endif
 
     // Read the codec name
-    int32_t cnt = 0;
+    WebRtc_Word32 cnt = 0;
     char buf[64];
     do
     {
@@ -1451,7 +1451,7 @@ int32_t ModuleFileUtility::InitCompressedReading(
         codec_info_.plfreq = 8000;
         codec_info_.channels = 1;
 
-        int16_t mode = 0;
+        WebRtc_Word16 mode = 0;
         if(_startPointInMs > 0)
         {
             while (_playoutPositionMs <= _startPointInMs)
@@ -1495,7 +1495,7 @@ int32_t ModuleFileUtility::InitCompressedReading(
         codec_info_.plfreq = 16000;
         codec_info_.channels = 1;
 
-        int16_t mode = 0;
+        WebRtc_Word16 mode = 0;
         if(_startPointInMs > 0)
         {
             while (_playoutPositionMs <= _startPointInMs)
@@ -1591,9 +1591,9 @@ int32_t ModuleFileUtility::InitCompressedReading(
     return 0;
 }
 
-int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
-                                              int8_t* outData,
-                                              uint32_t bufferSize)
+WebRtc_Word32 ModuleFileUtility::ReadCompressedData(InStream& in,
+                                                    WebRtc_Word8* outData,
+                                                    WebRtc_UWord32 bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -1606,12 +1606,12 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
         bufferSize);
 
 #ifdef WEBRTC_CODEC_AMR
-    uint32_t AMRmode2bytes[9]={12,13,15,17,19,20,26,31,5};
+    WebRtc_UWord32 AMRmode2bytes[9]={12,13,15,17,19,20,26,31,5};
 #endif
 #ifdef WEBRTC_CODEC_AMRWB
-    uint32_t AMRWBmode2bytes[10]={17,23,32,36,40,46,50,58,60,6};
+    WebRtc_UWord32 AMRWBmode2bytes[10]={17,23,32,36,40,46,50,58,60,6};
 #endif
-    uint32_t bytesRead = 0;
+    WebRtc_UWord32 bytesRead = 0;
 
     if(! _reading)
     {
@@ -1622,7 +1622,7 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
 #ifdef WEBRTC_CODEC_AMR
     if(_codecId == kCodecAmr)
     {
-        int32_t res = in.Read(outData, 1);
+        WebRtc_Word32 res = in.Read(outData, 1);
         if(res != 1)
         {
             if(!in.Rewind())
@@ -1641,7 +1641,7 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
                 return -1;
             }
         }
-         const int16_t mode = (outData[0]>>3)&0xF;
+         const WebRtc_Word16 mode = (outData[0]>>3)&0xF;
         if((mode < 0) ||
            (mode > 8))
         {
@@ -1680,7 +1680,7 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
 #ifdef WEBRTC_CODEC_AMRWB
     if(_codecId == kCodecAmrWb)
     {
-        int32_t res = in.Read(outData, 1);
+        WebRtc_Word32 res = in.Read(outData, 1);
         if(res != 1)
         {
             if(!in.Rewind())
@@ -1699,7 +1699,7 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
                 return -1;
             }
         }
-         int16_t mode = (outData[0]>>3)&0xF;
+         WebRtc_Word16 mode = (outData[0]>>3)&0xF;
         if((mode < 0) ||
            (mode > 8))
         {
@@ -1736,7 +1736,7 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
     if((_codecId == kCodecIlbc20Ms) ||
         (_codecId == kCodecIlbc30Ms))
     {
-        uint32_t byteSize = 0;
+        WebRtc_UWord32 byteSize = 0;
          if(_codecId == kCodecIlbc30Ms)
         {
             byteSize = 50;
@@ -1798,7 +1798,7 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
     return bytesRead;
 }
 
-int32_t ModuleFileUtility::InitCompressedWriting(
+WebRtc_Word32 ModuleFileUtility::InitCompressedWriting(
     OutStream& out,
     const CodecInst& codecInst)
 {
@@ -1865,10 +1865,10 @@ int32_t ModuleFileUtility::InitCompressedWriting(
     return -1;
 }
 
-int32_t ModuleFileUtility::WriteCompressedData(
+WebRtc_Word32 ModuleFileUtility::WriteCompressedData(
     OutStream& out,
-    const int8_t* buffer,
-    const uint32_t dataLength)
+    const WebRtc_Word8* buffer,
+    const WebRtc_UWord32 dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -1892,10 +1892,10 @@ int32_t ModuleFileUtility::WriteCompressedData(
     return dataLength;
 }
 
-int32_t ModuleFileUtility::InitPCMReading(InStream& pcm,
-                                          const uint32_t start,
-                                          const uint32_t stop,
-                                          uint32_t freq)
+WebRtc_Word32 ModuleFileUtility::InitPCMReading(InStream& pcm,
+                                                const WebRtc_UWord32 start,
+                                                const WebRtc_UWord32 stop,
+                                                WebRtc_UWord32 freq)
 {
     WEBRTC_TRACE(
         kTraceInfo,
@@ -1908,8 +1908,8 @@ int32_t ModuleFileUtility::InitPCMReading(InStream& pcm,
         stop,
         freq);
 
-    int8_t dummy[320];
-    int32_t read_len;
+    WebRtc_Word8 dummy[320];
+    WebRtc_Word32 read_len;
 
     _playoutPositionMs = 0;
     _startPointInMs = start;
@@ -1968,9 +1968,9 @@ int32_t ModuleFileUtility::InitPCMReading(InStream& pcm,
     return 0;
 }
 
-int32_t ModuleFileUtility::ReadPCMData(InStream& pcm,
-                                       int8_t* outData,
-                                       uint32_t bufferSize)
+WebRtc_Word32 ModuleFileUtility::ReadPCMData(InStream& pcm,
+                                             WebRtc_Word8* outData,
+                                             WebRtc_UWord32 bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -1987,7 +1987,7 @@ int32_t ModuleFileUtility::ReadPCMData(InStream& pcm,
     }
 
     // Readsize for 10ms of audio data (2 bytes per sample).
-    uint32_t bytesRequested = 2 * codec_info_.plfreq / 100;
+    WebRtc_UWord32 bytesRequested = 2 * codec_info_.plfreq / 100;
     if(bufferSize <  bytesRequested)
     {
         WEBRTC_TRACE(kTraceError, kTraceFile, _id,
@@ -1996,7 +1996,7 @@ int32_t ModuleFileUtility::ReadPCMData(InStream& pcm,
         return -1;
     }
 
-    uint32_t bytesRead = pcm.Read(outData, bytesRequested);
+    WebRtc_UWord32 bytesRead = pcm.Read(outData, bytesRequested);
     if(bytesRead < bytesRequested)
     {
         if(pcm.Rewind() == -1)
@@ -2012,8 +2012,8 @@ int32_t ModuleFileUtility::ReadPCMData(InStream& pcm,
             }
             else
             {
-                int32_t rest = bytesRequested - bytesRead;
-                int32_t len = pcm.Read(&(outData[bytesRead]), rest);
+                WebRtc_Word32 rest = bytesRequested - bytesRead;
+                WebRtc_Word32 len = pcm.Read(&(outData[bytesRead]), rest);
                 if(len == rest)
                 {
                     bytesRead += len;
@@ -2053,7 +2053,8 @@ int32_t ModuleFileUtility::ReadPCMData(InStream& pcm,
     return bytesRead;
 }
 
-int32_t ModuleFileUtility::InitPCMWriting(OutStream& out, uint32_t freq)
+WebRtc_Word32 ModuleFileUtility::InitPCMWriting(OutStream& out,
+                                                WebRtc_UWord32 freq)
 {
 
     if(freq == 8000)
@@ -2102,9 +2103,9 @@ int32_t ModuleFileUtility::InitPCMWriting(OutStream& out, uint32_t freq)
     return 0;
 }
 
-int32_t ModuleFileUtility::WritePCMData(OutStream& out,
-                                        const int8_t*  buffer,
-                                        const uint32_t dataLength)
+WebRtc_Word32 ModuleFileUtility::WritePCMData(OutStream& out,
+                                              const WebRtc_Word8*  buffer,
+                                              const WebRtc_UWord32 dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
@@ -2129,7 +2130,7 @@ int32_t ModuleFileUtility::WritePCMData(OutStream& out,
     return dataLength;
 }
 
-int32_t ModuleFileUtility::codec_info(CodecInst& codecInst)
+WebRtc_Word32 ModuleFileUtility::codec_info(CodecInst& codecInst)
 {
     WEBRTC_TRACE(kTraceStream, kTraceFile, _id,
                  "ModuleFileUtility::codec_info(codecInst= 0x%x)", &codecInst);
@@ -2144,7 +2145,7 @@ int32_t ModuleFileUtility::codec_info(CodecInst& codecInst)
     return 0;
 }
 
-int32_t ModuleFileUtility::set_codec_info(const CodecInst& codecInst)
+WebRtc_Word32 ModuleFileUtility::set_codec_info(const CodecInst& codecInst)
 {
 
     _codecId = kCodecNoCodec;
@@ -2309,9 +2310,9 @@ int32_t ModuleFileUtility::set_codec_info(const CodecInst& codecInst)
     return 0;
 }
 
-int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
-                                          const FileFormats fileFormat,
-                                          const uint32_t freqInHz)
+WebRtc_Word32 ModuleFileUtility::FileDurationMs(const char* fileName,
+                                                const FileFormats  fileFormat,
+                                                const WebRtc_UWord32 freqInHz)
 {
 
     if(fileName == NULL)
@@ -2320,7 +2321,7 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
         return -1;
     }
 
-    int32_t time_in_ms = -1;
+    WebRtc_Word32 time_in_ms = -1;
     struct stat file_size;
     if(stat(fileName,&file_size) == -1)
     {
@@ -2360,21 +2361,21 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
         case kFileFormatPcm16kHzFile:
         {
             // 16 samples per ms. 2 bytes per sample.
-            int32_t denominator = 16*2;
+            WebRtc_Word32 denominator = 16*2;
             time_in_ms = (file_size.st_size)/denominator;
             break;
         }
         case kFileFormatPcm8kHzFile:
         {
             // 8 samples per ms. 2 bytes per sample.
-            int32_t denominator = 8*2;
+            WebRtc_Word32 denominator = 8*2;
             time_in_ms = (file_size.st_size)/denominator;
             break;
         }
         case kFileFormatCompressedFile:
         {
-            int32_t cnt = 0;
-            int32_t read_len = 0;
+            WebRtc_Word32 cnt = 0;
+            WebRtc_Word32 read_len = 0;
             char buf[64];
             do
             {
@@ -2396,14 +2397,14 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
 #ifdef WEBRTC_CODEC_AMR
             if(!strcmp("#!AMR\n", buf))
             {
-                uint8_t dummy;
+                WebRtc_UWord8 dummy;
                 read_len = inStreamObj->Read(&dummy, 1);
                 if(read_len != 1)
                 {
                     return -1;
                 }
 
-                int16_t AMRMode = (dummy>>3)&0xF;
+                WebRtc_Word16 AMRMode = (dummy>>3)&0xF;
 
                 // TODO (hellner): use tables instead of hardcoding like this!
                 //                 Additionally, this calculation does not
@@ -2458,7 +2459,7 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
 #ifdef WEBRTC_CODEC_AMRWB
             if(!strcmp("#!AMRWB\n", buf))
             {
-                uint8_t dummy;
+                WebRtc_UWord8 dummy;
                 read_len = inStreamObj->Read(&dummy, 1);
                 if(read_len != 1)
                 {
@@ -2466,7 +2467,7 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
                 }
 
                 // TODO (hellner): use tables instead of hardcoding like this!
-                int16_t AMRWBMode = (dummy>>3)&0xF;
+                WebRtc_Word16 AMRWBMode = (dummy>>3)&0xF;
                 switch(AMRWBMode)
                 {
                         // Mode 0: 6.6 kbit/sec -> 132 bits per 20 ms frame.
@@ -2545,7 +2546,7 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
     return time_in_ms;
 }
 
-uint32_t ModuleFileUtility::PlayoutPositionMs()
+WebRtc_UWord32 ModuleFileUtility::PlayoutPositionMs()
 {
     WEBRTC_TRACE(kTraceStream, kTraceFile, _id,
                "ModuleFileUtility::PlayoutPosition()");

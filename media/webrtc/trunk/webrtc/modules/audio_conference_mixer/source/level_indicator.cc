@@ -12,7 +12,7 @@
 
 namespace webrtc {
 // Array for adding smothing to level changes (ad-hoc).
-const uint32_t perm[] =
+const WebRtc_UWord32 perm[] =
     {0,1,2,3,4,4,5,5,5,5,6,6,6,6,6,7,7,7,7,8,8,8,9,9,9,9,9,9,9,9,9,9,9};
 
 LevelIndicator::LevelIndicator()
@@ -27,11 +27,11 @@ LevelIndicator::~LevelIndicator()
 }
 
 // Level is based on the highest absolute value for all samples.
-void LevelIndicator::ComputeLevel(const int16_t* speech,
-                                  const uint16_t nrOfSamples)
+void LevelIndicator::ComputeLevel(const WebRtc_Word16* speech,
+                                  const WebRtc_UWord16 nrOfSamples)
 {
-    int32_t min = 0;
-    for(uint32_t i = 0; i < nrOfSamples; i++)
+    WebRtc_Word32 min = 0;
+    for(WebRtc_UWord32 i = 0; i < nrOfSamples; i++)
     {
         if(_max < speech[i])
         {
@@ -52,7 +52,7 @@ void LevelIndicator::ComputeLevel(const int16_t* speech,
     if(_count == TICKS_BEFORE_CALCULATION)
     {
         // Highest sample value maps directly to a level.
-        int32_t position = _max / 1000;
+        WebRtc_Word32 position = _max / 1000;
         if ((position == 0) &&
             (_max > 250))
         {
@@ -68,7 +68,7 @@ void LevelIndicator::ComputeLevel(const int16_t* speech,
     }
 }
 
-int32_t LevelIndicator::GetLevel()
+WebRtc_Word32 LevelIndicator::GetLevel()
 {
     return _currentLevel;
 }

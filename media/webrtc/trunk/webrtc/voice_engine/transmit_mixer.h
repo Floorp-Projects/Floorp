@@ -40,36 +40,37 @@ class TransmitMixer : public MonitorObserver,
 
 {
 public:
-    static int32_t Create(TransmitMixer*& mixer, const uint32_t instanceId);
+    static WebRtc_Word32 Create(TransmitMixer*& mixer,
+                                const WebRtc_UWord32 instanceId);
 
     static void Destroy(TransmitMixer*& mixer);
 
-    int32_t SetEngineInformation(ProcessThread& processThread,
-                                 Statistics& engineStatistics,
-                                 ChannelManager& channelManager);
+    WebRtc_Word32 SetEngineInformation(ProcessThread& processThread,
+                                       Statistics& engineStatistics,
+                                       ChannelManager& channelManager);
 
-    int32_t SetAudioProcessingModule(
+    WebRtc_Word32 SetAudioProcessingModule(
         AudioProcessing* audioProcessingModule);
 
-    int32_t PrepareDemux(const void* audioSamples,
-                         const uint32_t nSamples,
-                         const uint8_t  nChannels,
-                         const uint32_t samplesPerSec,
-                         const uint16_t totalDelayMS,
-                         const int32_t  clockDrift,
-                         const uint16_t currentMicLevel);
+    WebRtc_Word32 PrepareDemux(const void* audioSamples,
+                               const WebRtc_UWord32 nSamples,
+                               const WebRtc_UWord8  nChannels,
+                               const WebRtc_UWord32 samplesPerSec,
+                               const WebRtc_UWord16 totalDelayMS,
+                               const WebRtc_Word32  clockDrift,
+                               const WebRtc_UWord16 currentMicLevel);
 
 
-    int32_t DemuxAndMix();
+    WebRtc_Word32 DemuxAndMix();
 
-    int32_t EncodeAndSend();
+    WebRtc_Word32 EncodeAndSend();
 
-    uint32_t CaptureLevel() const;
+    WebRtc_UWord32 CaptureLevel() const;
 
-    int32_t StopSend();
+    WebRtc_Word32 StopSend();
 
     // VoEDtmf
-    void UpdateMuteMicrophoneTime(const uint32_t lengthMs);
+    void UpdateMuteMicrophoneTime(const WebRtc_UWord32 lengthMs);
 
     // VoEExternalMedia
     int RegisterExternalMediaProcessing(VoEMediaProcess* object,
@@ -83,9 +84,9 @@ public:
 
     bool Mute() const;
 
-    int8_t AudioLevel() const;
+    WebRtc_Word8 AudioLevel() const;
 
-    int16_t AudioLevelFullRange() const;
+    WebRtc_Word16 AudioLevelFullRange() const;
 
     bool IsRecordingCall();
 
@@ -128,7 +129,7 @@ public:
 
     void SetMixWithMicStatus(bool mix);
 
-    int32_t RegisterVoiceEngineObserver(VoiceEngineObserver& observer);
+    WebRtc_Word32 RegisterVoiceEngineObserver(VoiceEngineObserver& observer);
 
     virtual ~TransmitMixer();
 
@@ -137,15 +138,15 @@ public:
 
 
     // FileCallback
-    void PlayNotification(const int32_t id,
-                          const uint32_t durationMs);
+    void PlayNotification(const WebRtc_Word32 id,
+                          const WebRtc_UWord32 durationMs);
 
-    void RecordNotification(const int32_t id,
-                            const uint32_t durationMs);
+    void RecordNotification(const WebRtc_Word32 id,
+                            const WebRtc_UWord32 durationMs);
 
-    void PlayFileEnded(const int32_t id);
+    void PlayFileEnded(const WebRtc_Word32 id);
 
-    void RecordFileEnded(const int32_t id);
+    void RecordFileEnded(const WebRtc_Word32 id);
 
 #ifdef WEBRTC_VOICE_ENGINE_TYPING_DETECTION
     // Typing detection
@@ -161,22 +162,22 @@ public:
   bool IsStereoChannelSwappingEnabled();
 
 private:
-    TransmitMixer(const uint32_t instanceId);
+    TransmitMixer(const WebRtc_UWord32 instanceId);
 
-    // Gets the maximum sample rate and number of channels over all currently
-    // sending codecs.
-    void GetSendCodecInfo(int* max_sample_rate, int* max_channels);
+    void CheckForSendCodecChanges();
 
     int GenerateAudioFrame(const int16_t audioSamples[],
                            int nSamples,
                            int nChannels,
                            int samplesPerSec);
-    int32_t RecordAudioToFile(const uint32_t mixingFrequency);
+    WebRtc_Word32 RecordAudioToFile(const WebRtc_UWord32 mixingFrequency);
 
-    int32_t MixOrReplaceAudioWithFile(
+    WebRtc_Word32 MixOrReplaceAudioWithFile(
         const int mixingFrequency);
 
-    void ProcessAudio(int delay_ms, int clock_drift, int current_mic_level);
+    WebRtc_Word32 APMProcessStream(const WebRtc_UWord16 totalDelayMS,
+                                   const WebRtc_Word32 clockDrift,
+                                   const WebRtc_UWord16 currentMicLevel);
 
 #ifdef WEBRTC_VOICE_ENGINE_TYPING_DETECTION
     int TypingDetection();
@@ -185,7 +186,7 @@ private:
     // uses
     Statistics* _engineStatisticsPtr;
     ChannelManager* _channelManagerPtr;
-    AudioProcessing* audioproc_;
+    AudioProcessing* _audioProcessingModulePtr;
     VoiceEngineObserver* _voiceEngineObserverPtr;
     ProcessThread* _processThreadPtr;
 
@@ -208,10 +209,10 @@ private:
     CriticalSectionWrapper& _callbackCritSect;
 
 #ifdef WEBRTC_VOICE_ENGINE_TYPING_DETECTION
-    int32_t _timeActive;
-    int32_t _timeSinceLastTyping;
-    int32_t _penaltyCounter;
-    bool _typingNoiseWarning;
+    WebRtc_Word32 _timeActive;
+    WebRtc_Word32 _timeSinceLastTyping;
+    WebRtc_Word32 _penaltyCounter;
+    WebRtc_UWord32 _typingNoiseWarning;
 
     // Tunable treshold values
     int _timeWindow; // nr of10ms slots accepted to count as a hit.
@@ -221,15 +222,17 @@ private:
     int _typeEventDelay; // How old typing events we allow
 
 #endif
-    bool _saturationWarning;
+    WebRtc_UWord32 _saturationWarning;
+    WebRtc_UWord32 _noiseWarning;
 
     int _instanceId;
     bool _mixFileWithMicrophone;
-    uint32_t _captureLevel;
+    WebRtc_UWord32 _captureLevel;
     VoEMediaProcess* external_postproc_ptr_;
     VoEMediaProcess* external_preproc_ptr_;
     bool _mute;
-    int32_t _remainingMuteMicTimeMs;
+    WebRtc_Word32 _remainingMuteMicTimeMs;
+    int _mixingFrequency;
     bool stereo_codec_;
     bool swap_stereo_channels_;
 };

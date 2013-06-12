@@ -29,8 +29,8 @@ int NETEQTEST_DummyRTPpacket::readFromFile(FILE *fp)
         return -1;
     }
 
-    uint16_t length, plen;
-    uint32_t offset;
+    WebRtc_UWord16 length, plen;
+    WebRtc_UWord32 offset;
 
     if (fread(&length, 2, 1, fp) == 0)
     {
@@ -52,10 +52,10 @@ int NETEQTEST_DummyRTPpacket::readFromFile(FILE *fp)
         return -1;
     }
     // Store in local variable until we have passed the reset below.
-    uint32_t receiveTime = ntohl(offset);
+    WebRtc_UWord32 receiveTime = ntohl(offset);
 
     // Use length here because a plen of 0 specifies rtcp.
-    length = (uint16_t) (length - _kRDHeaderLen);
+    length = (WebRtc_UWord16) (length - _kRDHeaderLen);
 
     // check buffer size
     if (_datagram && _memSize < length + 1)
@@ -66,7 +66,7 @@ int NETEQTEST_DummyRTPpacket::readFromFile(FILE *fp)
     if (!_datagram)
     {
         // Add one extra byte, to be able to fake a dummy payload of one byte.
-        _datagram = new uint8_t[length + 1];
+        _datagram = new WebRtc_UWord8[length + 1];
         _memSize = length + 1;
     }
     memset(_datagram, 0, length + 1);
@@ -154,8 +154,8 @@ int NETEQTEST_DummyRTPpacket::writeToFile(FILE *fp)
         return -1;
     }
 
-    uint16_t length, plen;
-    uint32_t offset;
+    WebRtc_UWord16 length, plen;
+    WebRtc_UWord32 offset;
 
     // length including RTPplay header
     length = htons(_datagramLen + _kRDHeaderLen);

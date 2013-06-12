@@ -8,51 +8,53 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+/**
+ * Runs "extended" integration tests.
+ */
+
 #include "gtest/gtest.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
-#include "webrtc/video_engine/test/auto_test/automated/legacy_fixture.h"
-#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "legacy_fixture.h"
+#include "vie_autotest.h"
 
 namespace {
 
-// TODO(phoglund): These tests are generally broken on mac.
-// http://code.google.com/p/webrtc/issues/detail?id=1268
-class DISABLED_ON_MAC(ViEApiIntegrationTest) : public LegacyFixture {
+class ViEApiIntegrationTest : public LegacyFixture {
 };
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsBaseTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, RunsBaseTestWithoutErrors) {
   tests_->ViEBaseAPITest();
 }
 
 // TODO(phoglund): Crashes on the v4l2loopback camera.
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest),
-       DISABLED_RunsCaptureTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, DISABLED_RunsCaptureTestWithoutErrors) {
   tests_->ViECaptureAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsCodecTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, RunsCodecTestWithoutErrors) {
   tests_->ViECodecAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest),
-       RunsEncryptionTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, RunsEncryptionTestWithoutErrors) {
   tests_->ViEEncryptionAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsFileTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, RunsFileTestWithoutErrors) {
   tests_->ViEFileAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest),
-       RunsImageProcessTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, RunsImageProcessTestWithoutErrors) {
   tests_->ViEImageProcessAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsRenderTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, RunsNetworkTestWithoutErrors) {
+  tests_->ViENetworkAPITest();
+}
+
+TEST_F(ViEApiIntegrationTest, RunsRenderTestWithoutErrors) {
   tests_->ViERenderAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsRtpRtcpTestWithoutErrors) {
+TEST_F(ViEApiIntegrationTest, RunsRtpRtcpTestWithoutErrors) {
   tests_->ViERtpRtcpAPITest();
 }
 

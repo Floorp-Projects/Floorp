@@ -57,7 +57,7 @@ int ViEFileImpl::Release() {
                "ViEFile::Release()");
   // Decrease ref count.
   (*this)--;
-  int32_t ref_count = GetCount();
+  WebRtc_Word32 ref_count = GetCount();
   if (ref_count < 0) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo, shared_data_->instance_id(),
                  "ViEFile release too many times");
@@ -96,7 +96,7 @@ int ViEFileImpl::StartPlayFile(const char* file_nameUTF8,
   }
 
   VoiceEngine* voice = shared_data_->channel_manager()->GetVoiceEngine();
-  const int32_t result = shared_data_->input_manager()->CreateFilePlayer(
+  const WebRtc_Word32 result = shared_data_->input_manager()->CreateFilePlayer(
       file_nameUTF8, loop, file_format, voice, file_id);
   if (result != 0) {
     shared_data_->SetLastError(result);
@@ -375,7 +375,7 @@ int ViEFileImpl::StartRecordOutgoingVideo(const int video_channel,
     return -1;
   }
 
-  int32_t ve_channel_id = -1;
+  WebRtc_Word32 ve_channel_id = -1;
   VoiceEngine* ve_ptr = NULL;
   if (audio_source != NO_AUDIO) {
     ViEChannel* vie_channel = cs.Channel(video_channel);
@@ -511,7 +511,7 @@ int ViEFileImpl::StartRecordIncomingVideo(const int video_channel,
     return -1;
   }
 
-  int32_t ve_channel_id = -1;
+  WebRtc_Word32 ve_channel_id = -1;
   VoiceEngine* ve_ptr = NULL;
   if (audio_source != NO_AUDIO) {
     ve_channel_id = vie_channel->VoiceChannel();
@@ -601,7 +601,8 @@ int ViEFileImpl::GetRenderSnapshot(const int video_channel,
   // Copy from VideoFrame class to ViEPicture struct.
   int buffer_length = CalcBufferSize(kI420, video_frame.width(),
                                      video_frame.height());
-  picture.data = static_cast<uint8_t*>(malloc(buffer_length * sizeof(uint8_t)));
+  picture.data = static_cast<WebRtc_UWord8*>(malloc(
+      buffer_length * sizeof(WebRtc_UWord8)));
   if (ExtractBuffer(video_frame, buffer_length, picture.data) < 0) {
     return -1;
   }
@@ -668,7 +669,8 @@ int ViEFileImpl::GetCaptureDeviceSnapshot(const int capture_id,
   // Copy from VideoFrame class to ViEPicture struct.
   int buffer_length = CalcBufferSize(kI420, video_frame.width(),
                                      video_frame.height());
-  picture.data = static_cast<uint8_t*>(malloc(buffer_length * sizeof(uint8_t)));
+  picture.data = static_cast<WebRtc_UWord8*>(malloc(
+      buffer_length * sizeof(WebRtc_UWord8)));
   if (ExtractBuffer(video_frame, buffer_length, picture.data) < 0) {
     return -1;
   }
@@ -785,7 +787,7 @@ int ViEFileImpl::SetRenderTimeoutImage(const int video_channel,
     shared_data_->SetLastError(kViEFileInvalidFile);
     return -1;
   }
-  int32_t timeout_time = timeout_ms;
+  WebRtc_Word32 timeout_time = timeout_ms;
   if (timeout_ms < kViEMinRenderTimeoutTimeMs) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
@@ -840,7 +842,7 @@ const unsigned int timeout_ms) {
     shared_data_->SetLastError(kViEFileInvalidCapture);
     return -1;
   }
-  int32_t timeout_time = timeout_ms;
+  WebRtc_Word32 timeout_time = timeout_ms;
   if (timeout_ms < kViEMinRenderTimeoutTimeMs) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
@@ -862,8 +864,8 @@ const unsigned int timeout_ms) {
   return 0;
 }
 
-int32_t ViEFileImpl::GetNextCapturedFrame(int32_t capture_id,
-                                          I420VideoFrame* video_frame) {
+WebRtc_Word32 ViEFileImpl::GetNextCapturedFrame(WebRtc_Word32 capture_id,
+                                                I420VideoFrame* video_frame) {
   ViEInputManagerScoped is(*(shared_data_->input_manager()));
   ViECapturer* capturer = is.Capture(capture_id);
   if (!capturer) {
@@ -943,7 +945,7 @@ bool ViECaptureSnapshot::GetSnapshot(unsigned int max_wait_time,
 void ViECaptureSnapshot::DeliverFrame(int id,
                                       I420VideoFrame* video_frame,
                                       int num_csrcs,
-const uint32_t CSRC[kRtpCsrcSize]) {
+const WebRtc_UWord32 CSRC[kRtpCsrcSize]) {
   CriticalSectionScoped cs(crit_.get());
   if (!video_frame_) {
     return;

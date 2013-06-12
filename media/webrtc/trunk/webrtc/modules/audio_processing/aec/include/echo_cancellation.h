@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AEC_INCLUDE_ECHO_CANCELLATION_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AEC_INCLUDE_ECHO_CANCELLATION_H_
 
-#include "webrtc/typedefs.h"
+#include "typedefs.h"
 
 // Errors
 #define AEC_UNSPECIFIED_ERROR           12000
@@ -35,18 +35,18 @@ enum {
 };
 
 typedef struct {
-    int16_t nlpMode;        // default kAecNlpModerate
-    int16_t skewMode;       // default kAecFalse
-    int16_t metricsMode;    // default kAecFalse
-    int delay_logging;      // default kAecFalse
+    WebRtc_Word16 nlpMode;        // default kAecNlpModerate
+    WebRtc_Word16 skewMode;       // default kAecFalse
+    WebRtc_Word16 metricsMode;    // default kAecFalse
+    int delay_logging;            // default kAecFalse
     //float realSkew;
 } AecConfig;
 
 typedef struct {
-  int instant;
-  int average;
-  int max;
-  int min;
+    WebRtc_Word16 instant;
+    WebRtc_Word16 average;
+    WebRtc_Word16 max;
+    WebRtc_Word16 min;
 } AecLevel;
 
 typedef struct {
@@ -55,8 +55,6 @@ typedef struct {
     AecLevel erle;
     AecLevel aNlp;
 } AecMetrics;
-
-struct AecCore;
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,10 +71,10 @@ extern "C" {
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t return               0: OK
- *                             -1: error
+ * WebRtc_Word32 return          0: OK
+ *                              -1: error
  */
-int32_t WebRtcAec_Create(void **aecInst);
+WebRtc_Word32 WebRtcAec_Create(void **aecInst);
 
 /*
  * This function releases the memory allocated by WebRtcAec_Create().
@@ -87,10 +85,10 @@ int32_t WebRtcAec_Create(void **aecInst);
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t      return          0: OK
- *                             -1: error
+ * WebRtc_Word32  return         0: OK
+ *                              -1: error
  */
-int32_t WebRtcAec_Free(void *aecInst);
+WebRtc_Word32 WebRtcAec_Free(void *aecInst);
 
 /*
  * Initializes an AEC instance.
@@ -98,15 +96,17 @@ int32_t WebRtcAec_Free(void *aecInst);
  * Inputs                       Description
  * -------------------------------------------------------------------
  * void           *aecInst      Pointer to the AEC instance
- * int32_t        sampFreq      Sampling frequency of data
- * int32_t        scSampFreq    Soundcard sampling frequency
+ * WebRtc_Word32  sampFreq      Sampling frequency of data
+ * WebRtc_Word32  scSampFreq    Soundcard sampling frequency
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t        return        0: OK
- *                             -1: error
+ * WebRtc_Word32 return          0: OK
+ *                              -1: error
  */
-int32_t WebRtcAec_Init(void *aecInst, int32_t sampFreq, int32_t scSampFreq);
+WebRtc_Word32 WebRtcAec_Init(void *aecInst,
+                             WebRtc_Word32 sampFreq,
+                             WebRtc_Word32 scSampFreq);
 
 /*
  * Inserts an 80 or 160 sample block of data into the farend buffer.
@@ -114,18 +114,18 @@ int32_t WebRtcAec_Init(void *aecInst, int32_t sampFreq, int32_t scSampFreq);
  * Inputs                       Description
  * -------------------------------------------------------------------
  * void           *aecInst      Pointer to the AEC instance
- * int16_t        *farend       In buffer containing one frame of
+ * WebRtc_Word16  *farend       In buffer containing one frame of
  *                              farend signal for L band
- * int16_t        nrOfSamples   Number of samples in farend buffer
+ * WebRtc_Word16  nrOfSamples   Number of samples in farend buffer
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t        return        0: OK
- *                             -1: error
+ * WebRtc_Word32  return         0: OK
+ *                              -1: error
  */
-int32_t WebRtcAec_BufferFarend(void *aecInst,
-                               const int16_t *farend,
-                               int16_t nrOfSamples);
+WebRtc_Word32 WebRtcAec_BufferFarend(void *aecInst,
+                                     const WebRtc_Word16 *farend,
+                                     WebRtc_Word16 nrOfSamples);
 
 /*
  * Runs the echo canceller on an 80 or 160 sample blocks of data.
@@ -133,82 +133,98 @@ int32_t WebRtcAec_BufferFarend(void *aecInst,
  * Inputs                       Description
  * -------------------------------------------------------------------
  * void          *aecInst       Pointer to the AEC instance
- * int16_t       *nearend       In buffer containing one frame of
+ * WebRtc_Word16 *nearend       In buffer containing one frame of
  *                              nearend+echo signal for L band
- * int16_t       *nearendH      In buffer containing one frame of
+ * WebRtc_Word16 *nearendH      In buffer containing one frame of
  *                              nearend+echo signal for H band
- * int16_t       nrOfSamples    Number of samples in nearend buffer
- * int16_t       msInSndCardBuf Delay estimate for sound card and
+ * WebRtc_Word16 nrOfSamples    Number of samples in nearend buffer
+ * WebRtc_Word16 msInSndCardBuf Delay estimate for sound card and
  *                              system buffers
- * int16_t       skew           Difference between number of samples played
+ * WebRtc_Word16 skew           Difference between number of samples played
  *                              and recorded at the soundcard (for clock skew
  *                              compensation)
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int16_t       *out           Out buffer, one frame of processed nearend
+ * WebRtc_Word16  *out          Out buffer, one frame of processed nearend
  *                              for L band
- * int16_t       *outH          Out buffer, one frame of processed nearend
+ * WebRtc_Word16  *outH         Out buffer, one frame of processed nearend
  *                              for H band
- * int32_t       return         0: OK
- *                             -1: error
+ * WebRtc_Word32  return         0: OK
+ *                              -1: error
  */
-int32_t WebRtcAec_Process(void *aecInst,
-                          const int16_t *nearend,
-                          const int16_t *nearendH,
-                          int16_t *out,
-                          int16_t *outH,
-                          int16_t nrOfSamples,
-                          int16_t msInSndCardBuf,
-                          int32_t skew);
+WebRtc_Word32 WebRtcAec_Process(void *aecInst,
+                                const WebRtc_Word16 *nearend,
+                                const WebRtc_Word16 *nearendH,
+                                WebRtc_Word16 *out,
+                                WebRtc_Word16 *outH,
+                                WebRtc_Word16 nrOfSamples,
+                                WebRtc_Word16 msInSndCardBuf,
+                                WebRtc_Word32 skew);
 
 /*
  * This function enables the user to set certain parameters on-the-fly.
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void           *handle       Pointer to the AEC instance
+ * void           *aecInst      Pointer to the AEC instance
  * AecConfig      config        Config instance that contains all
  *                              properties to be set
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int            return         0: OK
+ * WebRtc_Word32  return         0: OK
  *                              -1: error
  */
-int WebRtcAec_set_config(void* handle, AecConfig config);
+WebRtc_Word32 WebRtcAec_set_config(void *aecInst, AecConfig config);
+
+/*
+ * Gets the on-the-fly paramters.
+ *
+ * Inputs                       Description
+ * -------------------------------------------------------------------
+ * void           *aecInst      Pointer to the AEC instance
+ *
+ * Outputs                      Description
+ * -------------------------------------------------------------------
+ * AecConfig      *config       Pointer to the config instance that
+ *                              all properties will be written to
+ * WebRtc_Word32  return         0: OK
+ *                              -1: error
+ */
+WebRtc_Word32 WebRtcAec_get_config(void *aecInst, AecConfig *config);
 
 /*
  * Gets the current echo status of the nearend signal.
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void           *handle       Pointer to the AEC instance
+ * void           *aecInst      Pointer to the AEC instance
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int            *status       0: Almost certainly nearend single-talk
+ * WebRtc_Word16  *status       0: Almost certainly nearend single-talk
  *                              1: Might not be neared single-talk
- * int            return         0: OK
+ * WebRtc_Word32  return         0: OK
  *                              -1: error
  */
-int WebRtcAec_get_echo_status(void* handle, int* status);
+WebRtc_Word32 WebRtcAec_get_echo_status(void *aecInst, WebRtc_Word16 *status);
 
 /*
  * Gets the current echo metrics for the session.
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void           *handle       Pointer to the AEC instance
+ * void           *aecInst      Pointer to the AEC instance
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
  * AecMetrics     *metrics      Struct which will be filled out with the
  *                              current echo metrics.
- * int            return         0: OK
+ * WebRtc_Word32  return         0: OK
  *                              -1: error
  */
-int WebRtcAec_GetMetrics(void* handle, AecMetrics* metrics);
+WebRtc_Word32 WebRtcAec_GetMetrics(void *aecInst, AecMetrics *metrics);
 
 /*
  * Gets the current delay metrics for the session.
@@ -236,19 +252,9 @@ int WebRtcAec_GetDelayMetrics(void* handle, int* median, int* std);
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t        return        11000-11100: error code
+ * WebRtc_Word32  return        11000-11100: error code
  */
-int32_t WebRtcAec_get_error_code(void *aecInst);
-
-// Returns a pointer to the low level AEC handle.
-//
-// Input:
-//  - handle                    : Pointer to the AEC instance.
-//
-// Return value:
-//  - AecCore pointer           : NULL for error.
-//
-struct AecCore* WebRtcAec_aec_core(void* handle);
+WebRtc_Word32 WebRtcAec_get_error_code(void *aecInst);
 
 #ifdef __cplusplus
 }

@@ -39,10 +39,6 @@ class ViERTP_RTCPImpl
                             unsigned int& SSRC) const;  // NOLINT
   virtual int GetRemoteCSRCs(const int video_channel,
                              unsigned int CSRCs[kRtpCsrcSize]) const;
-  virtual int SetRtxSendPayloadType(const int video_channel,
-                                    const uint8_t payload_type);
-  virtual int SetRtxReceivePayloadType(const int video_channel,
-                                       const uint8_t payload_type);
   virtual int SetStartSequenceNumber(const int video_channel,
                                      uint16_t sequence_number);
   virtual int SetRTCPStatus(const int video_channel,
@@ -68,10 +64,6 @@ class ViERTP_RTCPImpl
   virtual int SetHybridNACKFECStatus(const int video_channel, const bool enable,
                                      const unsigned char payload_typeRED,
                                      const unsigned char payload_typeFEC);
-  virtual int SetSenderBufferingMode(int video_channel,
-                                     int target_delay_ms);
-  virtual int SetReceiverBufferingMode(int video_channel,
-                                       int target_delay_ms);
   virtual int SetKeyFrameRequestMethod(const int video_channel,
                                        const ViEKeyFrameRequestMethod method);
   virtual int SetTMMBRStatus(const int video_channel, const bool enable);

@@ -33,101 +33,100 @@ struct RtpPacket;
 class RTPSenderVideo
 {
 public:
-    RTPSenderVideo(const int32_t id, Clock* clock,
+    RTPSenderVideo(const WebRtc_Word32 id, RtpRtcpClock* clock,
                    RTPSenderInterface* rtpSender);
     virtual ~RTPSenderVideo();
 
     virtual RtpVideoCodecTypes VideoCodecType() const;
 
-    uint16_t FECPacketOverhead() const;
+    WebRtc_UWord16 FECPacketOverhead() const;
 
-    int32_t RegisterVideoPayload(
+    WebRtc_Word32 RegisterVideoPayload(
         const char payloadName[RTP_PAYLOAD_NAME_SIZE],
-        const int8_t payloadType,
-        const uint32_t maxBitRate,
+        const WebRtc_Word8 payloadType,
+        const WebRtc_UWord32 maxBitRate,
         ModuleRTPUtility::Payload*& payload);
 
-    int32_t SendVideo(const RtpVideoCodecTypes videoType,
-                      const FrameType frameType,
-                      const int8_t payloadType,
-                      const uint32_t captureTimeStamp,
-                      int64_t capture_time_ms,
-                      const uint8_t* payloadData,
-                      const uint32_t payloadSize,
-                      const RTPFragmentationHeader* fragmentation,
-                      VideoCodecInformation* codecInfo,
-                      const RTPVideoTypeHeader* rtpTypeHdr);
+    WebRtc_Word32 SendVideo(const RtpVideoCodecTypes videoType,
+                          const FrameType frameType,
+                          const WebRtc_Word8 payloadType,
+                          const uint32_t captureTimeStamp,
+                          int64_t capture_time_ms,
+                          const WebRtc_UWord8* payloadData,
+                          const WebRtc_UWord32 payloadSize,
+                          const RTPFragmentationHeader* fragmentation,
+                          VideoCodecInformation* codecInfo,
+                          const RTPVideoTypeHeader* rtpTypeHdr);
 
-    int32_t SendRTPIntraRequest();
+    WebRtc_Word32 SendRTPIntraRequest();
 
     void SetVideoCodecType(RtpVideoCodecTypes type);
 
     VideoCodecInformation* CodecInformationVideo();
 
-    void SetMaxConfiguredBitrateVideo(const uint32_t maxBitrate);
+    void SetMaxConfiguredBitrateVideo(const WebRtc_UWord32 maxBitrate);
 
-    uint32_t MaxConfiguredBitrateVideo() const;
+    WebRtc_UWord32 MaxConfiguredBitrateVideo() const;
 
     // FEC
-    int32_t SetGenericFECStatus(const bool enable,
-                                const uint8_t payloadTypeRED,
-                                const uint8_t payloadTypeFEC);
+    WebRtc_Word32 SetGenericFECStatus(const bool enable,
+                                    const WebRtc_UWord8 payloadTypeRED,
+                                    const WebRtc_UWord8 payloadTypeFEC);
 
-    int32_t GenericFECStatus(bool& enable,
-                             uint8_t& payloadTypeRED,
-                             uint8_t& payloadTypeFEC) const;
+    WebRtc_Word32 GenericFECStatus(bool& enable,
+                                 WebRtc_UWord8& payloadTypeRED,
+                                 WebRtc_UWord8& payloadTypeFEC) const;
 
-    int32_t SetFecParameters(const FecProtectionParams* delta_params,
-                             const FecProtectionParams* key_params);
+    WebRtc_Word32 SetFecParameters(const FecProtectionParams* delta_params,
+                                   const FecProtectionParams* key_params);
 
     void ProcessBitrate();
 
-    uint32_t VideoBitrateSent() const;
-    uint32_t FecOverheadRate() const;
+    WebRtc_UWord32 VideoBitrateSent() const;
+    WebRtc_UWord32 FecOverheadRate() const;
 
     int SelectiveRetransmissions() const;
     int SetSelectiveRetransmissions(uint8_t settings);
 
 protected:
-    virtual int32_t SendVideoPacket(uint8_t* dataBuffer,
-                                    const uint16_t payloadLength,
-                                    const uint16_t rtpHeaderLength,
-                                    const uint32_t capture_timestamp,
-                                    int64_t capture_time_ms,
-                                    StorageType storage,
-                                    bool protect);
+    virtual WebRtc_Word32 SendVideoPacket(WebRtc_UWord8* dataBuffer,
+                                          const WebRtc_UWord16 payloadLength,
+                                          const WebRtc_UWord16 rtpHeaderLength,
+                                          int64_t capture_time_ms,
+                                          StorageType storage,
+                                          bool protect);
 
 private:
-    int32_t SendGeneric(const FrameType frame_type,
-                        const int8_t payload_type,
-                        const uint32_t capture_timestamp,
+    WebRtc_Word32 SendGeneric(const WebRtc_Word8 payloadType,
+                            const uint32_t captureTimeStamp,
+                            int64_t capture_time_ms,
+                            const WebRtc_UWord8* payloadData,
+                            const WebRtc_UWord32 payloadSize);
+
+    WebRtc_Word32 SendVP8(const FrameType frameType,
+                        const WebRtc_Word8 payloadType,
+                        const uint32_t captureTimeStamp,
                         int64_t capture_time_ms,
-                        const uint8_t* payload, const uint32_t size);
-
-    int32_t SendVP8(const FrameType frameType,
-                    const int8_t payloadType,
-                    const uint32_t captureTimeStamp,
-                    int64_t capture_time_ms,
-                    const uint8_t* payloadData,
-                    const uint32_t payloadSize,
-                    const RTPFragmentationHeader* fragmentation,
-                    const RTPVideoTypeHeader* rtpTypeHdr);
+                        const WebRtc_UWord8* payloadData,
+                        const WebRtc_UWord32 payloadSize,
+                        const RTPFragmentationHeader* fragmentation,
+                        const RTPVideoTypeHeader* rtpTypeHdr);
 
 private:
-    int32_t             _id;
+    WebRtc_Word32             _id;
     RTPSenderInterface&        _rtpSender;
 
     CriticalSectionWrapper*   _sendVideoCritsect;
     RtpVideoCodecTypes  _videoType;
     VideoCodecInformation*  _videoCodecInformation;
-    uint32_t            _maxBitrate;
-    int32_t             _retransmissionSettings;
+    WebRtc_UWord32            _maxBitrate;
+    WebRtc_Word32             _retransmissionSettings;
 
     // FEC
     ForwardErrorCorrection  _fec;
     bool                    _fecEnabled;
-    int8_t              _payloadTypeRED;
-    int8_t              _payloadTypeFEC;
+    WebRtc_Word8              _payloadTypeRED;
+    WebRtc_Word8              _payloadTypeFEC;
     unsigned int              _numberFirstPartition;
     FecProtectionParams delta_fec_params_;
     FecProtectionParams key_fec_params_;

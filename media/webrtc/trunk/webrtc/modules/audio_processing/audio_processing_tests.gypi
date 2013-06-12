@@ -31,10 +31,8 @@
       ],
       'sources': [
         'aec/system_delay_unittest.cc',
-        'aec/echo_cancellation_unittest.cc',
         'test/unit_test.cc',
         'utility/delay_estimator_unittest.cc',
-        'utility/ring_buffer_unittest.cc',
       ],
     },
     {

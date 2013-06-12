@@ -20,7 +20,6 @@
 #include "system_wrappers/interface/event_wrapper.h"
 #include "system_wrappers/interface/thread_wrapper.h"
 #include "system_wrappers/interface/trace.h"
-#include "system_wrappers/interface/trace_event.h"
 #include "video_engine/include/vie_image_process.h"
 #include "video_engine/vie_defines.h"
 #include "video_engine/vie_encoder.h"
@@ -139,7 +138,7 @@ ViECapturer* ViECapturer::CreateViECapture(
   return capture;
 }
 
-int32_t ViECapturer::Init(VideoCaptureModule* capture_module) {
+WebRtc_Word32 ViECapturer::Init(VideoCaptureModule* capture_module) {
   assert(capture_module_ == NULL);
   capture_module_ = capture_module;
   capture_module_->RegisterCaptureDataCallback(*this);
@@ -155,7 +154,7 @@ ViECapturer* ViECapturer::CreateViECapture(
     int capture_id,
     int engine_id,
     const char* device_unique_idUTF8,
-    const uint32_t device_unique_idUTF8Length,
+    const WebRtc_UWord32 device_unique_idUTF8Length,
     ProcessThread& module_process_thread) {
   ViECapturer* capture = new ViECapturer(capture_id, engine_id,
                                          module_process_thread);
@@ -167,9 +166,9 @@ ViECapturer* ViECapturer::CreateViECapture(
   return capture;
 }
 
-int32_t ViECapturer::Init(
+WebRtc_Word32 ViECapturer::Init(
     const char* device_unique_idUTF8,
-    const uint32_t device_unique_idUTF8Length) {
+    const WebRtc_UWord32 device_unique_idUTF8Length) {
   assert(capture_module_ == NULL);
   if (device_unique_idUTF8 == NULL) {
     capture_module_  = VideoCaptureFactory::Create(
@@ -213,7 +212,7 @@ int ViECapturer::FrameCallbackChanged() {
   return 0;
 }
 
-int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
+WebRtc_Word32 ViECapturer::Start(const CaptureCapability& capture_capability) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_), "%s",
                __FUNCTION__);
   int width;
@@ -258,7 +257,7 @@ int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
   return capture_module_->StartCapture(capability);
 }
 
-int32_t ViECapturer::Stop() {
+WebRtc_Word32 ViECapturer::Stop() {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_), "%s",
                __FUNCTION__);
   requested_capability_ = CaptureCapability();
@@ -275,11 +274,11 @@ const char* ViECapturer::CurrentDeviceName() const {
   return capture_module_->CurrentDeviceName();
 }
 
-int32_t ViECapturer::SetCaptureDelay(int32_t delay_ms) {
+WebRtc_Word32 ViECapturer::SetCaptureDelay(WebRtc_Word32 delay_ms) {
   return capture_module_->SetCaptureDelay(delay_ms);
 }
 
-int32_t ViECapturer::SetRotateCapturedFrames(
+WebRtc_Word32 ViECapturer::SetRotateCapturedFrames(
   const RotateCapturedFrame rotation) {
   VideoCaptureRotation converted_rotation = kCameraRotate0;
   switch (rotation) {
@@ -345,7 +344,7 @@ int ViECapturer::IncomingFrameI420(const ViEVideoFrameI420& video_frame,
   return external_capture_module_->IncomingFrameI420(frame, capture_time);
 }
 
-void ViECapturer::OnIncomingCapturedFrame(const int32_t capture_id,
+void ViECapturer::OnIncomingCapturedFrame(const WebRtc_Word32 capture_id,
                                           I420VideoFrame& video_frame) {
   WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_id: %d)", __FUNCTION__, capture_id);
@@ -354,16 +353,12 @@ void ViECapturer::OnIncomingCapturedFrame(const int32_t capture_id,
   // is slightly off since it's being set when the frame has been received from
   // the camera, and not when the camera actually captured the frame.
   video_frame.set_render_time_ms(video_frame.render_time_ms() - FrameDelay());
-
-  TRACE_EVENT_INSTANT1("webrtc", "VC::OnIncomingCapturedFrame",
-                       "render_time", video_frame.render_time_ms());
-
   captured_frame_.SwapFrame(&video_frame);
   capture_event_.Set();
   return;
 }
 
-void ViECapturer::OnIncomingCapturedEncodedFrame(const int32_t capture_id,
+void ViECapturer::OnIncomingCapturedEncodedFrame(const WebRtc_Word32 capture_id,
                                                  VideoFrame& video_frame,
                                                  VideoCodecType codec_type) {
   WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, capture_id_),
@@ -373,10 +368,6 @@ void ViECapturer::OnIncomingCapturedEncodedFrame(const int32_t capture_id,
   // is slightly off since it's being set when the frame has been received from
   // the camera, and not when the camera actually captured the frame.
   video_frame.SetRenderTime(video_frame.RenderTimeMs() - FrameDelay());
-
-  TRACE_EVENT_INSTANT1("webrtc", "VC::OnIncomingCapturedEncodedFrame",
-                       "render_time", video_frame.RenderTimeMs());
-
   assert(codec_type != kVideoCodecUnknown);
   if (encoded_frame_.Length() != 0) {
     // The last encoded frame has not been sent yet. Need to wait.
@@ -397,8 +388,8 @@ void ViECapturer::OnIncomingCapturedEncodedFrame(const int32_t capture_id,
   return;
 }
 
-void ViECapturer::OnCaptureDelayChanged(const int32_t id,
-                                        const int32_t delay) {
+void ViECapturer::OnCaptureDelayChanged(const WebRtc_Word32 id,
+                                        const WebRtc_Word32 delay) {
   WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_id: %d) delay %d", __FUNCTION__, capture_id_,
                delay);
@@ -411,7 +402,7 @@ void ViECapturer::OnCaptureDelayChanged(const int32_t id,
   }
 }
 
-int32_t ViECapturer::RegisterEffectFilter(
+WebRtc_Word32 ViECapturer::RegisterEffectFilter(
     ViEEffectFilter* effect_filter) {
   CriticalSectionScoped cs(deliver_cs_.get());
 
@@ -440,7 +431,7 @@ int32_t ViECapturer::RegisterEffectFilter(
   return 0;
 }
 
-int32_t ViECapturer::IncImageProcRefCount() {
+WebRtc_Word32 ViECapturer::IncImageProcRefCount() {
   if (!image_proc_module_) {
     assert(image_proc_module_ref_counter_ == 0);
     image_proc_module_ = VideoProcessingModule::Create(
@@ -456,7 +447,7 @@ int32_t ViECapturer::IncImageProcRefCount() {
   return 0;
 }
 
-int32_t ViECapturer::DecImageProcRefCount() {
+WebRtc_Word32 ViECapturer::DecImageProcRefCount() {
   image_proc_module_ref_counter_--;
   if (image_proc_module_ref_counter_ == 0) {
     // Destroy module.
@@ -466,7 +457,7 @@ int32_t ViECapturer::DecImageProcRefCount() {
   return 0;
 }
 
-int32_t ViECapturer::EnableDenoising(bool enable) {
+WebRtc_Word32 ViECapturer::EnableDenoising(bool enable) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d, enable: %d)", __FUNCTION__,
                capture_id_, enable);
@@ -493,7 +484,7 @@ int32_t ViECapturer::EnableDenoising(bool enable) {
   return 0;
 }
 
-int32_t ViECapturer::EnableDeflickering(bool enable) {
+WebRtc_Word32 ViECapturer::EnableDeflickering(bool enable) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d, enable: %d)", __FUNCTION__,
                capture_id_, enable);
@@ -522,7 +513,7 @@ int32_t ViECapturer::EnableDeflickering(bool enable) {
   return 0;
 }
 
-int32_t ViECapturer::EnableBrightnessAlarm(bool enable) {
+WebRtc_Word32 ViECapturer::EnableBrightnessAlarm(bool enable) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d, enable: %d)", __FUNCTION__,
                capture_id_, enable);
@@ -605,7 +596,7 @@ void ViECapturer::DeliverI420Frame(I420VideoFrame* video_frame) {
   if (brightness_frame_stats_) {
     if (image_proc_module_->GetFrameStats(brightness_frame_stats_,
                                           *video_frame) == 0) {
-      int32_t brightness = image_proc_module_->BrightnessDetection(
+      WebRtc_Word32 brightness = image_proc_module_->BrightnessDetection(
           *video_frame, *brightness_frame_stats_);
 
       switch (brightness) {
@@ -643,7 +634,7 @@ void ViECapturer::DeliverCodedFrame(VideoFrame* video_frame) {
     EncodedImage encoded_image(video_frame->Buffer(), video_frame->Length(),
                                video_frame->Size());
     encoded_image._timeStamp =
-        90 * static_cast<uint32_t>(video_frame->RenderTimeMs());
+        90 * static_cast<WebRtc_UWord32>(video_frame->RenderTimeMs());
     encode_complete_callback_->Encoded(encoded_image);
   }
 
@@ -655,7 +646,7 @@ void ViECapturer::DeliverCodedFrame(VideoFrame* video_frame) {
     decode_buffer_.renderTimeMs = video_frame->RenderTimeMs();
     const int kMsToRtpTimestamp = 90;
     decode_buffer_.timeStamp = kMsToRtpTimestamp *
-        static_cast<uint32_t>(video_frame->RenderTimeMs());
+        static_cast<WebRtc_UWord32>(video_frame->RenderTimeMs());
     decode_buffer_.payloadType = codec_.plType;
     vcm_->DecodeFromStorage(decode_buffer_);
   }
@@ -691,9 +682,9 @@ bool ViECapturer::IsFrameCallbackRegistered(
   return ViEFrameProviderBase::IsFrameCallbackRegistered(callbackObject);
 }
 
-int32_t ViECapturer::PreEncodeToViEEncoder(const VideoCodec& codec,
-                                           ViEEncoder& vie_encoder,
-                                           int32_t vie_encoder_id) {
+WebRtc_Word32 ViECapturer::PreEncodeToViEEncoder(const VideoCodec& codec,
+                                                 ViEEncoder& vie_encoder,
+                                                 WebRtc_Word32 vie_encoder_id) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d)", __FUNCTION__, capture_id_);
   if (vie_encoder_ && &vie_encoder != vie_encoder_) {
@@ -717,7 +708,7 @@ int32_t ViECapturer::PreEncodeToViEEncoder(const VideoCodec& codec,
     vcm_ = VideoCodingModule::Create(capture_id_);
   }
 
-  if (vie_encoder.RegisterExternalEncoder(this, codec.plType, false) != 0) {
+  if (vie_encoder.RegisterExternalEncoder(this, codec.plType) != 0) {
     return -1;
   }
   if (vie_encoder.SetEncoder(codec) != 0) {
@@ -744,13 +735,14 @@ bool ViECapturer::CaptureCapabilityFixed() {
       requested_capability_.maxFPS != 0;
 }
 
-int32_t ViECapturer::Version(char* version, int32_t length) const {
+WebRtc_Word32 ViECapturer::Version(char* version,
+                                   WebRtc_Word32 length) const {
   return 0;
 }
 
-int32_t ViECapturer::InitEncode(const VideoCodec* codec_settings,
-                                int32_t number_of_cores,
-                                uint32_t max_payload_size) {
+WebRtc_Word32 ViECapturer::InitEncode(const VideoCodec* codec_settings,
+                                      WebRtc_Word32 number_of_cores,
+                                      WebRtc_UWord32 max_payload_size) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d)", __FUNCTION__, capture_id_);
 
@@ -776,7 +768,7 @@ int32_t ViECapturer::InitEncode(const VideoCodec* codec_settings,
   return capture_encoder_->ConfigureEncoder(*codec_settings, max_payload_size);
 }
 
-int32_t ViECapturer::Encode(
+WebRtc_Word32 ViECapturer::Encode(
     const I420VideoFrame& input_image,
     const CodecSpecificInfo* codec_specific_info,
     const std::vector<VideoFrameType>* frame_types) {
@@ -794,7 +786,7 @@ int32_t ViECapturer::Encode(
   return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
 }
 
-int32_t ViECapturer::RegisterEncodeCompleteCallback(
+WebRtc_Word32 ViECapturer::RegisterEncodeCompleteCallback(
     EncodedImageCallback* callback) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d)", __FUNCTION__, capture_id_);
@@ -807,7 +799,7 @@ int32_t ViECapturer::RegisterEncodeCompleteCallback(
   return 0;
 }
 
-int32_t ViECapturer::Release() {
+WebRtc_Word32 ViECapturer::Release() {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d)", __FUNCTION__, capture_id_);
   {
@@ -835,13 +827,14 @@ int32_t ViECapturer::Release() {
 
 // Should reset the capture device to the state it was in after the InitEncode
 // function. Current implementation do nothing.
-int32_t ViECapturer::Reset() {
+WebRtc_Word32 ViECapturer::Reset() {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d)", __FUNCTION__, capture_id_);
   return 0;
 }
 
-int32_t ViECapturer::SetChannelParameters(uint32_t packet_loss, int rtt) {
+WebRtc_Word32 ViECapturer::SetChannelParameters(WebRtc_UWord32 packet_loss,
+                                                int rtt) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d)", __FUNCTION__, capture_id_);
 
@@ -852,7 +845,8 @@ int32_t ViECapturer::SetChannelParameters(uint32_t packet_loss, int rtt) {
   return capture_encoder_->SetChannelParameters(packet_loss, rtt);
 }
 
-int32_t ViECapturer::SetRates(uint32_t new_bit_rate, uint32_t frame_rate) {
+WebRtc_Word32 ViECapturer::SetRates(WebRtc_UWord32 new_bit_rate,
+                                    WebRtc_UWord32 frame_rate) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, capture_id_),
                "%s(capture_device_id: %d)", __FUNCTION__, capture_id_);
 
@@ -863,7 +857,7 @@ int32_t ViECapturer::SetRates(uint32_t new_bit_rate, uint32_t frame_rate) {
   return capture_encoder_->SetRates(new_bit_rate, frame_rate);
 }
 
-int32_t ViECapturer::FrameToRender(
+WebRtc_Word32 ViECapturer::FrameToRender(
     I420VideoFrame& video_frame) {  //NOLINT
   deliver_cs_->Enter();
   DeliverI420Frame(&video_frame);
@@ -871,7 +865,7 @@ int32_t ViECapturer::FrameToRender(
   return 0;
 }
 
-int32_t ViECapturer::RegisterObserver(ViECaptureObserver* observer) {
+WebRtc_Word32 ViECapturer::RegisterObserver(ViECaptureObserver* observer) {
   if (observer_) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(engine_id_, capture_id_),
                  "%s Observer already registered", __FUNCTION__, capture_id_);
@@ -886,7 +880,7 @@ int32_t ViECapturer::RegisterObserver(ViECaptureObserver* observer) {
   return 0;
 }
 
-int32_t ViECapturer::DeRegisterObserver() {
+WebRtc_Word32 ViECapturer::DeRegisterObserver() {
   CriticalSectionScoped cs(observer_cs_.get());
   if (!observer_) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(engine_id_, capture_id_),
@@ -905,16 +899,16 @@ bool ViECapturer::IsObserverRegistered() {
   return observer_ != NULL;
 }
 
-void ViECapturer::OnCaptureFrameRate(const int32_t id,
-                                     const uint32_t frame_rate) {
+void ViECapturer::OnCaptureFrameRate(const WebRtc_Word32 id,
+                                     const WebRtc_UWord32 frame_rate) {
   WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, capture_id_),
                "OnCaptureFrameRate %d", frame_rate);
 
   CriticalSectionScoped cs(observer_cs_.get());
-  observer_->CapturedFrameRate(id_, static_cast<uint8_t>(frame_rate));
+  observer_->CapturedFrameRate(id_, (WebRtc_UWord8) frame_rate);
 }
 
-void ViECapturer::OnNoPictureAlarm(const int32_t id,
+void ViECapturer::OnNoPictureAlarm(const WebRtc_Word32 id,
                                    const VideoCaptureAlarm alarm) {
   WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, capture_id_),
                "OnNoPictureAlarm %d", alarm);

@@ -29,18 +29,19 @@ class CaptureSinkFilter;
 class VideoCaptureDS: public VideoCaptureImpl
 {
 public:
-    VideoCaptureDS(const int32_t id);
+    VideoCaptureDS(const WebRtc_Word32 id);
 
-    virtual int32_t Init(const int32_t id, const char* deviceUniqueIdUTF8);
+    virtual WebRtc_Word32 Init(const WebRtc_Word32 id,
+                               const char* deviceUniqueIdUTF8);
 
     /*************************************************************************
      *
      *   Start/Stop
      *
      *************************************************************************/
-    virtual int32_t
+    virtual WebRtc_Word32
         StartCapture(const VideoCaptureCapability& capability);
-    virtual int32_t StopCapture();
+    virtual WebRtc_Word32 StopCapture();
 
     /**************************************************************************
      *
@@ -49,16 +50,16 @@ public:
      **************************************************************************/
 
     virtual bool CaptureStarted();
-    virtual int32_t CaptureSettings(VideoCaptureCapability& settings);
+    virtual WebRtc_Word32 CaptureSettings(VideoCaptureCapability& settings);
 
 protected:
     virtual ~VideoCaptureDS();
 
     // Help functions
 
-    int32_t
+    WebRtc_Word32
         SetCameraOutput(const VideoCaptureCapability& requestedCapability);
-    int32_t DisconnectGraph();
+    WebRtc_Word32 DisconnectGraph();
     HRESULT VideoCaptureDS::ConnectDVCamera();
 
     DeviceInfoDS _dsInfo;

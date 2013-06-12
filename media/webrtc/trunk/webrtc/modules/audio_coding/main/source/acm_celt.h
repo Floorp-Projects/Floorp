@@ -33,12 +33,14 @@ class ACMCELT : public ACMGenericCodec {
   int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
 
  protected:
-  int16_t DecodeSafe(
+  WebRtc_Word16 DecodeSafe(
       uint8_t* /* bitstream */,
       int16_t /* bitstream_len_byte */,
       int16_t* /* audio */,
       int16_t* /* audio_samples */,
-      int8_t* /* speech_type */);
+      // TODO(leozwang): use int8_t here when WebRtc_Word8 is properly typed.
+      // http://code.google.com/p/webrtc/issues/detail?id=311
+      WebRtc_Word8* /* speech_type */);
 
   int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
                    const CodecInst& codec_inst);

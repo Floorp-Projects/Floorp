@@ -102,8 +102,8 @@ enum ViEErrors {
 
   // ViEEncryption.
   kViEEncryptionInvalidChannelId = 12700,  // Channel id does not exist.
-  kViEEncryptionInvalidSrtpParameter,      // DEPRECATED
-  kViEEncryptionSrtpNotSupported,          // DEPRECATED
+  kViEEncryptionInvalidSrtpParameter,      // EnableSRTPSend, EnableSRTPReceive-  Check the SRTP parameters.
+  kViEEncryptionSrtpNotSupported,          // This build does not support SRTP.
   kViEEncryptionUnknownError,              // An unknown error has occurred. Check the log file.
 
   // ViEImageProcess.

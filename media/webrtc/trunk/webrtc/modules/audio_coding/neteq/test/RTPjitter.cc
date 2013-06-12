@@ -35,7 +35,7 @@
 
 struct arr_time {
 	float time;
-	uint32_t ix;
+	WebRtc_UWord32 ix;
 };
 
 int filelen(FILE *fid)
@@ -64,8 +64,8 @@ int main(int argc, char* argv[])
 	char			firstline[FIRSTLINELEN];
 	unsigned char	*rtp_vec = NULL, **packet_ptr, *temp_packet;
 	const unsigned int kRtpDumpHeaderSize = 4 + 4 + 4 + 2 + 2;
-	uint16_t			len;
-	uint32_t			*offset;
+	WebRtc_UWord16			len;
+	WebRtc_UWord32			*offset;
 
 /* check number of parameters */
 	if (argc != 4) {
@@ -131,9 +131,9 @@ int main(int argc, char* argv[])
 	// read all RTP packets into vector
 	rtp_len=0;
 	Npack=0;
-	len=(uint16_t) fread(&rtp_vec[rtp_len], sizeof(unsigned char), 2, in_file); // read length of first packet
+	len=(WebRtc_UWord16) fread(&rtp_vec[rtp_len], sizeof(unsigned char), 2, in_file); // read length of first packet
 	while(len==2) {
-		len = ntohs(*((uint16_t *)(rtp_vec + rtp_len)));
+		len = ntohs(*((WebRtc_UWord16 *)(rtp_vec + rtp_len)));
 		rtp_len += 2;
 		if(fread(&rtp_vec[rtp_len], sizeof(unsigned char), len-2, in_file)!=(unsigned) (len-2)) {
 			fprintf(stderr,"Error: currupt packet length\n");
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 		}
 		rtp_len += len-2;
 		Npack++;
-		len=(uint16_t) fread(&rtp_vec[rtp_len], sizeof(unsigned char), 2, in_file); // read length of next packet
+		len=(WebRtc_UWord16) fread(&rtp_vec[rtp_len], sizeof(unsigned char), 2, in_file); // read length of next packet
 	}
 
 	packet_ptr = (unsigned char **) malloc(Npack*sizeof(unsigned char*));
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 	packet_ptr[0]=rtp_vec;
 	k=1;
 	while(k<Npack) {
-		len = ntohs(*((uint16_t *) packet_ptr[k-1]));
+		len = ntohs(*((WebRtc_UWord16 *) packet_ptr[k-1]));
 		packet_ptr[k]=packet_ptr[k-1]+len;
 		k++;
 	}
@@ -157,20 +157,20 @@ int main(int argc, char* argv[])
 	for(k=0; k<dat_len && k<Npack; k++) {
 		if(time_vec[k].time < FLT_MAX && time_vec[k].ix < Npack){ 
 			temp_packet = packet_ptr[time_vec[k].ix];
-			offset = (uint32_t *) (temp_packet+4);
+			offset = (WebRtc_UWord32 *) (temp_packet+4);
 			if ( time_vec[k].time >= 0 ) {
-				*offset = htonl((uint32_t) time_vec[k].time);
+				*offset = htonl((WebRtc_UWord32) time_vec[k].time);
 			}
 			else {
-				*offset = htonl((uint32_t) 0);
+				*offset = htonl((WebRtc_UWord32) 0);
 				fprintf(stderr, "Warning: negative receive time in dat file transformed to 0.\n");
 			}
 
 			// write packet to file
                         if (fwrite(temp_packet, sizeof(unsigned char),
-                                   ntohs(*((uint16_t*) temp_packet)),
+                                   ntohs(*((WebRtc_UWord16*) temp_packet)),
                                    out_file) !=
-                            ntohs(*((uint16_t*) temp_packet))) {
+                            ntohs(*((WebRtc_UWord16*) temp_packet))) {
                           return -1;
                         }
 		}

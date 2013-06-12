@@ -23,54 +23,54 @@
 
 /********************* AR Coefficient Tables ************************/
 /* cdf for quantized reflection coefficient 1 */
-extern const uint16_t WebRtcIsac_kQArRc1Cdf[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQArRc1Cdf[12];
 
 /* cdf for quantized reflection coefficient 2 */
-extern const uint16_t WebRtcIsac_kQArRc2Cdf[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQArRc2Cdf[12];
 
 /* cdf for quantized reflection coefficient 3 */
-extern const uint16_t WebRtcIsac_kQArRc3Cdf[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQArRc3Cdf[12];
 
 /* cdf for quantized reflection coefficient 4 */
-extern const uint16_t WebRtcIsac_kQArRc4Cdf[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQArRc4Cdf[12];
 
 /* cdf for quantized reflection coefficient 5 */
-extern const uint16_t WebRtcIsac_kQArRc5Cdf[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQArRc5Cdf[12];
 
 /* cdf for quantized reflection coefficient 6 */
-extern const uint16_t WebRtcIsac_kQArRc6Cdf[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQArRc6Cdf[12];
 
 /* quantization boundary levels for reflection coefficients */
-extern const int16_t WebRtcIsac_kQArBoundaryLevels[12];
+extern const WebRtc_Word16 WebRtcIsac_kQArBoundaryLevels[12];
 
 /* initial indices for AR reflection coefficient quantizer and cdf table search */
-extern const uint16_t WebRtcIsac_kQArRcInitIndex[AR_ORDER];
+extern const WebRtc_UWord16 WebRtcIsac_kQArRcInitIndex[AR_ORDER];
 
 /* pointers to AR cdf tables */
-extern const uint16_t *WebRtcIsac_kQArRcCdfPtr[AR_ORDER];
+extern const WebRtc_UWord16 *WebRtcIsac_kQArRcCdfPtr[AR_ORDER];
 
 /* pointers to AR representation levels tables */
-extern const int16_t *WebRtcIsac_kQArRcLevelsPtr[AR_ORDER];
+extern const WebRtc_Word16 *WebRtcIsac_kQArRcLevelsPtr[AR_ORDER];
 
 
 /******************** GAIN Coefficient Tables ***********************/
 /* cdf for Gain coefficient */
-extern const uint16_t WebRtcIsac_kQGainCdf[19];
+extern const WebRtc_UWord16 WebRtcIsac_kQGainCdf[19];
 
 /* representation levels for quantized Gain coefficient */
-extern const int32_t WebRtcIsac_kQGain2Levels[18];
+extern const WebRtc_Word32 WebRtcIsac_kQGain2Levels[18];
 
 /* squared quantization boundary levels for Gain coefficient */
-extern const int32_t WebRtcIsac_kQGain2BoundaryLevels[19];
+extern const WebRtc_Word32 WebRtcIsac_kQGain2BoundaryLevels[19];
 
 /* pointer to Gain cdf table */
-extern const uint16_t *WebRtcIsac_kQGainCdf_ptr[1];
+extern const WebRtc_UWord16 *WebRtcIsac_kQGainCdf_ptr[1];
 
 /* Gain initial index for gain quantizer and cdf table search */
-extern const uint16_t WebRtcIsac_kQGainInitIndex[1];
+extern const WebRtc_UWord16 WebRtcIsac_kQGainInitIndex[1];
 
 /************************* Cosine Tables ****************************/
 /* Cosine table */
-extern const int16_t WebRtcIsac_kCos[6][60];
+extern const WebRtc_Word16 WebRtcIsac_kCos[6][60];
 
 #endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_SPECTRUM_AR_MODEL_TABLES_H_ */

@@ -46,8 +46,8 @@ enum { kViECaptureDefaultFramerate = 30 };
 enum { kViECaptureMaxSnapshotWaitTimeMs = 500 };
 
 // ViECodec
-enum { kViEMaxCodecWidth = 4096 };
-enum { kViEMaxCodecHeight = 3072 };
+enum { kViEMaxCodecWidth = 4048 };
+enum { kViEMaxCodecHeight = 3040 };
 enum { kViEMaxCodecFramerate = 60 };
 enum { kViEMinCodecBitrate = 30 };
 
@@ -75,11 +75,7 @@ enum { kViEMinRenderTimeoutTimeMs = 33 };
 enum { kViEDefaultRenderDelayMs = 10 };
 
 // ViERTP_RTCP
-enum { kSendSidePacketHistorySize = 600 };
-
-// NACK
-enum { kMaxPacketAgeToNack = 450 };  // In sequence numbers.
-enum { kMaxNackListSize = 250 };
+enum { kNackHistorySize = 400 };
 
 // Id definitions
 enum {

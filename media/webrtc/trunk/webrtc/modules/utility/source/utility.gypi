@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'webrtc_utility',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         'audio_coding_module',
         '<(webrtc_root)/common_audio/common_audio.gyp:resampler',
@@ -86,3 +86,9 @@
     }], # include_tests
   ], # conditions
 }
+
+# Local Variables:
+# tab-width:2
+# indent-tabs-mode:nil
+# End:
+# vim: set expandtab tabstop=2 shiftwidth=2:

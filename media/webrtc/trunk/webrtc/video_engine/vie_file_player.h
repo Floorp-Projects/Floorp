@@ -84,12 +84,12 @@ class ViEFilePlayer
   }
 
   // Implements FileCallback.
-  virtual void PlayNotification(const int32_t /*id*/,
-                                const uint32_t /*notification_ms*/) {}
-  virtual void RecordNotification(const int32_t /*id*/,
-                                  const uint32_t /*notification_ms*/) {}
-  virtual void PlayFileEnded(const int32_t id);
-  virtual void RecordFileEnded(const int32_t /*id*/) {}
+  virtual void PlayNotification(const WebRtc_Word32 /*id*/,
+                                const WebRtc_UWord32 /*notification_ms*/) {}
+  virtual void RecordNotification(const WebRtc_Word32 /*id*/,
+                                  const WebRtc_UWord32 /*notification_ms*/) {}
+  virtual void PlayFileEnded(const WebRtc_Word32 id);
+  virtual void RecordFileEnded(const WebRtc_Word32 /*id*/) {}
 
  private:
   static const int kMaxDecodedAudioLength = 320;
@@ -120,7 +120,7 @@ class ViEFilePlayer
   // Thread for decoding video (and audio if no audio clients connected).
   ThreadWrapper* decode_thread_;
   EventWrapper* decode_event_;
-  int16_t decoded_audio_[kMaxDecodedAudioLength];
+  WebRtc_Word16 decoded_audio_[kMaxDecodedAudioLength];
   int decoded_audio_length_;
 
   // Trick - list containing VoE buffer reading this file. Used if multiple

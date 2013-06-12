@@ -21,13 +21,13 @@ class ACMDTMFDetection {
  public:
   ACMDTMFDetection();
   ~ACMDTMFDetection();
-  int16_t Enable(ACMCountries cpt = ACMDisableCountryDetection);
-  int16_t Disable();
-  int16_t Detect(const int16_t* in_audio_buff,
-                 const uint16_t in_buff_len_word16,
-                 const int32_t in_freq_hz,
-                 bool& tone_detected,
-                 int16_t& tone);
+  WebRtc_Word16 Enable(ACMCountries cpt = ACMDisableCountryDetection);
+  WebRtc_Word16 Disable();
+  WebRtc_Word16 Detect(const WebRtc_Word16* in_audio_buff,
+                       const WebRtc_UWord16 in_buff_len_word16,
+                       const WebRtc_Word32 in_freq_hz,
+                       bool& tone_detected,
+                       WebRtc_Word16& tone);
 
  private:
   ACMResampler resampler_;

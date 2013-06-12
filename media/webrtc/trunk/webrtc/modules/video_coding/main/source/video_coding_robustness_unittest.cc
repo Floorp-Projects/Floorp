@@ -8,13 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/video_coding/codecs/interface/mock/mock_video_codec_interface.h"
-#include "webrtc/modules/video_coding/main/interface/video_coding.h"
-#include "webrtc/modules/video_coding/main/interface/mock/mock_vcm_callbacks.h"
-#include "webrtc/modules/video_coding/main/test/test_util.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "modules/video_coding/codecs/interface/mock/mock_video_codec_interface.h"
+#include "modules/video_coding/main/interface/video_coding.h"
+#include "modules/video_coding/main/interface/mock/mock_vcm_callbacks.h"
+#include "modules/video_coding/main/source/mock/fake_tick_time.h"
 
 namespace webrtc {
 
@@ -33,14 +32,11 @@ class VCMRobustnessTest : public ::testing::Test {
   static const size_t kPayloadLen = 10;
 
   virtual void SetUp() {
-    clock_.reset(new SimulatedClock(0));
-    ASSERT_TRUE(clock_.get() != NULL);
-    vcm_ = VideoCodingModule::Create(0, clock_.get(), &event_factory_);
+    clock_ = new FakeTickTime(0);
+    ASSERT_TRUE(clock_ != NULL);
+    vcm_ = VideoCodingModule::Create(0, clock_);
     ASSERT_TRUE(vcm_ != NULL);
     ASSERT_EQ(0, vcm_->InitializeReceiver());
-    const size_t kMaxNackListSize = 250;
-    const int kMaxPacketAgeToNack = 450;
-    vcm_->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack);
     ASSERT_EQ(0, vcm_->RegisterFrameTypeCallback(&frame_type_callback_));
     ASSERT_EQ(0, vcm_->RegisterPacketRequestCallback(&request_callback_));
     ASSERT_EQ(VCM_OK, vcm_->Codec(kVideoCodecVP8, &video_codec_));
@@ -52,6 +48,7 @@ class VCMRobustnessTest : public ::testing::Test {
 
   virtual void TearDown() {
     VideoCodingModule::Destroy(vcm_);
+    delete clock_;
   }
 
   void InsertPacket(uint32_t timestamp,
@@ -80,8 +77,7 @@ class VCMRobustnessTest : public ::testing::Test {
   MockPacketRequestCallback request_callback_;
   NiceMock<MockVideoDecoder> decoder_;
   NiceMock<MockVideoDecoder> decoderCopy_;
-  scoped_ptr<SimulatedClock> clock_;
-  NullEventFactory event_factory_;
+  FakeTickTime* clock_;
 };
 
 TEST_F(VCMRobustnessTest, TestHardNack) {
@@ -116,21 +112,21 @@ TEST_F(VCMRobustnessTest, TestHardNack) {
   ASSERT_EQ(VCM_OK, vcm_->Decode(0));
   ASSERT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
 
-  clock_->AdvanceTimeMilliseconds(10);
+  clock_->IncrementDebugClock(10);
 
   ASSERT_EQ(VCM_OK, vcm_->Process());
 
   ASSERT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
 
   InsertPacket(6000, 8, false, true, kVideoFrameDelta);
-  clock_->AdvanceTimeMilliseconds(10);
+  clock_->IncrementDebugClock(10);
   ASSERT_EQ(VCM_OK, vcm_->Process());
 
   ASSERT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
 
   InsertPacket(6000, 6, true, false, kVideoFrameDelta);
   InsertPacket(6000, 7, false, false, kVideoFrameDelta);
-  clock_->AdvanceTimeMilliseconds(10);
+  clock_->IncrementDebugClock(10);
   ASSERT_EQ(VCM_OK, vcm_->Process());
 
   ASSERT_EQ(VCM_OK, vcm_->Decode(0));
@@ -153,7 +149,7 @@ TEST_F(VCMRobustnessTest, TestHardNackNoneDecoded) {
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
   ASSERT_EQ(VCM_OK, vcm_->Process());
 
-  clock_->AdvanceTimeMilliseconds(10);
+  clock_->IncrementDebugClock(10);
 
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
   ASSERT_EQ(VCM_OK, vcm_->Process());
@@ -221,13 +217,13 @@ TEST_F(VCMRobustnessTest, TestDualDecoder) {
   InsertPacket(0, 2, false, true, kVideoFrameKey);
   EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 0.
 
-  clock_->AdvanceTimeMilliseconds(33);
+  clock_->IncrementDebugClock(33);
   InsertPacket(3000, 3, true, false, kVideoFrameDelta);
   // Packet 4 missing
   InsertPacket(3000, 5, false, true, kVideoFrameDelta);
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
 
-  clock_->AdvanceTimeMilliseconds(33);
+  clock_->IncrementDebugClock(33);
   InsertPacket(6000, 6, true, false, kVideoFrameDelta);
   InsertPacket(6000, 7, false, false, kVideoFrameDelta);
   InsertPacket(6000, 8, false, true, kVideoFrameDelta);
@@ -236,7 +232,7 @@ TEST_F(VCMRobustnessTest, TestDualDecoder) {
                                        // Spawn a decoder copy.
   EXPECT_EQ(0, vcm_->DecodeDualFrame(0));  // Expect no dual decoder action.
 
-  clock_->AdvanceTimeMilliseconds(10);
+  clock_->IncrementDebugClock(10);
   EXPECT_EQ(VCM_OK, vcm_->Process());  // Generate NACK list.
 
   EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 6000 complete.
@@ -303,30 +299,98 @@ TEST_F(VCMRobustnessTest, TestModeNoneWithErrors) {
   EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 0.
   EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
 
-  clock_->AdvanceTimeMilliseconds(33);
+  clock_->IncrementDebugClock(33);
   InsertPacket(3000, 3, true, false, kVideoFrameDelta);
   // Packet 4 missing
   InsertPacket(3000, 5, false, true, kVideoFrameDelta);
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
   EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
 
-  clock_->AdvanceTimeMilliseconds(33);
+  clock_->IncrementDebugClock(33);
   InsertPacket(6000, 6, true, false, kVideoFrameDelta);
   InsertPacket(6000, 7, false, false, kVideoFrameDelta);
   InsertPacket(6000, 8, false, true, kVideoFrameDelta);
   EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 3000 incomplete.
   EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
 
-  clock_->AdvanceTimeMilliseconds(10);
+  clock_->IncrementDebugClock(10);
   EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 6000 complete.
   EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
 
-  clock_->AdvanceTimeMilliseconds(23);
+  clock_->IncrementDebugClock(23);
   InsertPacket(3000, 4, false, false, kVideoFrameDelta);
 
   InsertPacket(9000, 9, true, false, kVideoFrameDelta);
   InsertPacket(9000, 10, false, false, kVideoFrameDelta);
   InsertPacket(9000, 11, false, true, kVideoFrameDelta);
   EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 9000 complete.
+}
+
+TEST_F(VCMRobustnessTest, TestModeNoneWithoutErrors) {
+  Sequence s1;
+  EXPECT_CALL(decoder_, InitDecode(_, _)).Times(1);
+  EXPECT_CALL(decoder_, Release()).Times(1);
+  EXPECT_CALL(request_callback_, ResendPackets(_, 1))
+      .With(Args<0, 1>(ElementsAre(4)))
+      .Times(0);
+
+  EXPECT_CALL(decoder_, Copy())
+      .Times(0);
+  EXPECT_CALL(decoderCopy_, Copy())
+      .Times(0);
+
+  // Decode operations
+  EXPECT_CALL(decoder_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 0),
+                                     Field(&EncodedImage::_completeFrame,
+                                           true)),
+                               false, _, _, _))
+        .Times(1)
+        .InSequence(s1);
+  EXPECT_CALL(decoder_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 3000),
+                                     Field(&EncodedImage::_completeFrame,
+                                           false)),
+                               false, _, _, _))
+        .Times(1)
+        .InSequence(s1);
+  EXPECT_CALL(decoder_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 6000),
+                                     Field(&EncodedImage::_completeFrame,
+                                           true)),
+                               false, _, _, _))
+        .Times(1)
+        .InSequence(s1);
+  EXPECT_CALL(frame_type_callback_, RequestKeyFrame())
+        .Times(1);
+
+  ASSERT_EQ(VCM_OK, vcm_->SetReceiverRobustnessMode(
+      VideoCodingModule::kNone,
+      VideoCodingModule::kNoDecodeErrors));
+
+  InsertPacket(0, 0, true, false, kVideoFrameKey);
+  InsertPacket(0, 1, false, false, kVideoFrameKey);
+  InsertPacket(0, 2, false, true, kVideoFrameKey);
+  EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 0.
+  EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
+
+  clock_->IncrementDebugClock(33);
+  InsertPacket(3000, 3, true, false, kVideoFrameDelta);
+  // Packet 4 missing
+  InsertPacket(3000, 5, false, true, kVideoFrameDelta);
+  EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
+  EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
+
+  clock_->IncrementDebugClock(33);
+  InsertPacket(6000, 6, true, false, kVideoFrameDelta);
+  InsertPacket(6000, 7, false, false, kVideoFrameDelta);
+  InsertPacket(6000, 8, false, true, kVideoFrameDelta);
+  EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 3000 incomplete.
+                                       // Schedule key frame request.
+  EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
+
+  clock_->IncrementDebugClock(10);
+  EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 6000 complete.
+  EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect no NACK list.
+
+  clock_->IncrementDebugClock(500);    // Wait for the key request timer to set.
+  EXPECT_EQ(VCM_OK, vcm_->Process());  // Expect key frame request.
 }
 }  // namespace webrtc

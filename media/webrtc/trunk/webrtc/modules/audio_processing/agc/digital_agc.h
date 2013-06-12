@@ -24,26 +24,26 @@
 
 typedef struct
 {
-    int32_t downState[8];
-    int16_t HPstate;
-    int16_t counter;
-    int16_t logRatio; // log( P(active) / P(inactive) ) (Q10)
-    int16_t meanLongTerm; // Q10
-    int32_t varianceLongTerm; // Q8
-    int16_t stdLongTerm; // Q10
-    int16_t meanShortTerm; // Q10
-    int32_t varianceShortTerm; // Q8
-    int16_t stdShortTerm; // Q10
+    WebRtc_Word32 downState[8];
+    WebRtc_Word16 HPstate;
+    WebRtc_Word16 counter;
+    WebRtc_Word16 logRatio; // log( P(active) / P(inactive) ) (Q10)
+    WebRtc_Word16 meanLongTerm; // Q10
+    WebRtc_Word32 varianceLongTerm; // Q8
+    WebRtc_Word16 stdLongTerm; // Q10
+    WebRtc_Word16 meanShortTerm; // Q10
+    WebRtc_Word32 varianceShortTerm; // Q8
+    WebRtc_Word16 stdShortTerm; // Q10
 } AgcVad_t; // total = 54 bytes
 
 typedef struct
 {
-    int32_t capacitorSlow;
-    int32_t capacitorFast;
-    int32_t gain;
-    int32_t gainTable[32];
-    int16_t gatePrevious;
-    int16_t agcMode;
+    WebRtc_Word32 capacitorSlow;
+    WebRtc_Word32 capacitorFast;
+    WebRtc_Word32 gain;
+    WebRtc_Word32 gainTable[32];
+    WebRtc_Word16 gatePrevious;
+    WebRtc_Word16 agcMode;
     AgcVad_t      vadNearend;
     AgcVad_t      vadFarend;
 #ifdef AGC_DEBUG
@@ -52,27 +52,25 @@ typedef struct
 #endif
 } DigitalAgc_t;
 
-int32_t WebRtcAgc_InitDigital(DigitalAgc_t *digitalAgcInst, int16_t agcMode);
+WebRtc_Word32 WebRtcAgc_InitDigital(DigitalAgc_t *digitalAgcInst, WebRtc_Word16 agcMode);
 
-int32_t WebRtcAgc_ProcessDigital(DigitalAgc_t *digitalAgcInst,
-                                 const int16_t *inNear, const int16_t *inNear_H,
-                                 int16_t *out, int16_t *out_H, uint32_t FS,
-                                 int16_t lowLevelSignal);
+WebRtc_Word32 WebRtcAgc_ProcessDigital(DigitalAgc_t *digitalAgcInst, const WebRtc_Word16 *inNear,
+                             const WebRtc_Word16 *inNear_H, WebRtc_Word16 *out,
+                             WebRtc_Word16 *out_H, WebRtc_UWord32 FS,
+                             WebRtc_Word16 lowLevelSignal);
 
-int32_t WebRtcAgc_AddFarendToDigital(DigitalAgc_t *digitalAgcInst,
-                                     const int16_t *inFar,
-                                     int16_t nrSamples);
+WebRtc_Word32 WebRtcAgc_AddFarendToDigital(DigitalAgc_t *digitalAgcInst, const WebRtc_Word16 *inFar,
+                                 WebRtc_Word16 nrSamples);
 
 void WebRtcAgc_InitVad(AgcVad_t *vadInst);
 
-int16_t WebRtcAgc_ProcessVad(AgcVad_t *vadInst, // (i) VAD state
-                             const int16_t *in, // (i) Speech signal
-                             int16_t nrSamples); // (i) number of samples
+WebRtc_Word16 WebRtcAgc_ProcessVad(AgcVad_t *vadInst, // (i) VAD state
+                            const WebRtc_Word16 *in, // (i) Speech signal
+                            WebRtc_Word16 nrSamples); // (i) number of samples
 
-int32_t WebRtcAgc_CalculateGainTable(int32_t *gainTable, // Q16
-                                     int16_t compressionGaindB, // Q0 (in dB)
-                                     int16_t targetLevelDbfs,// Q0 (in dB)
-                                     uint8_t limiterEnable,
-                                     int16_t analogTarget);
+WebRtc_Word32 WebRtcAgc_CalculateGainTable(WebRtc_Word32 *gainTable, // Q16
+                                 WebRtc_Word16 compressionGaindB, // Q0 (in dB)
+                                 WebRtc_Word16 targetLevelDbfs,// Q0 (in dB)
+                                 WebRtc_UWord8 limiterEnable, WebRtc_Word16 analogTarget);
 
 #endif // WEBRTC_MODULES_AUDIO_PROCESSING_AGC_MAIN_SOURCE_ANALOG_AGC_H_

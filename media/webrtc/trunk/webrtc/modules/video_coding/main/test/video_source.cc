@@ -40,7 +40,7 @@ _frameRate(frameRate)
     GetWidthHeight(size);
 }
 
-VideoSource::VideoSource(std::string fileName, uint16_t width, uint16_t height,
+VideoSource::VideoSource(std::string fileName, WebRtc_UWord16 width, WebRtc_UWord16 height,
     float frameRate /*= 30*/, webrtc::VideoType type /*= webrtc::kI420*/)
 :
 _fileName(fileName),
@@ -55,7 +55,7 @@ _frameRate(frameRate)
     assert(frameRate > 0);
 }
 
-int32_t
+WebRtc_Word32
 VideoSource::GetFrameLength() const
 {
     return webrtc::CalcBufferSize(_type, _width, _height);

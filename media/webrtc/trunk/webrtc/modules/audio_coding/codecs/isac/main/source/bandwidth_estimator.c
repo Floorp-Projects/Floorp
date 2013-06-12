@@ -41,7 +41,7 @@ static const float kQRateTableSwb[24] =
 
 
 
-int32_t WebRtcIsac_InitBandwidthEstimator(
+WebRtc_Word32 WebRtcIsac_InitBandwidthEstimator(
     BwEstimatorstr*              bwest_str,
     enum IsacSamplingRate encoderSampRate,
     enum IsacSamplingRate decoderSampRate)
@@ -67,7 +67,7 @@ int32_t WebRtcIsac_InitBandwidthEstimator(
         bwest_str->prev_frame_length = INIT_FRAME_LEN_WB;
         bwest_str->rec_bw_inv        = 1.0f /
             (INIT_BN_EST_WB + INIT_HDR_RATE_WB);
-        bwest_str->rec_bw            = (int32_t)INIT_BN_EST_WB;
+        bwest_str->rec_bw            = (WebRtc_Word32)INIT_BN_EST_WB;
         bwest_str->rec_bw_avg_Q      = INIT_BN_EST_WB;
         bwest_str->rec_bw_avg        = INIT_BN_EST_WB + INIT_HDR_RATE_WB;
         bwest_str->rec_header_rate   = INIT_HDR_RATE_WB;
@@ -78,7 +78,7 @@ int32_t WebRtcIsac_InitBandwidthEstimator(
         bwest_str->prev_frame_length = INIT_FRAME_LEN_SWB;
         bwest_str->rec_bw_inv        = 1.0f /
             (INIT_BN_EST_SWB + INIT_HDR_RATE_SWB);
-        bwest_str->rec_bw            = (int32_t)INIT_BN_EST_SWB;
+        bwest_str->rec_bw            = (WebRtc_Word32)INIT_BN_EST_SWB;
         bwest_str->rec_bw_avg_Q      = INIT_BN_EST_SWB;
         bwest_str->rec_bw_avg        = INIT_BN_EST_SWB + INIT_HDR_RATE_SWB;
         bwest_str->rec_header_rate   = INIT_HDR_RATE_SWB;
@@ -131,14 +131,14 @@ int32_t WebRtcIsac_InitBandwidthEstimator(
 /* pksize        - size of packet in bytes, from NetEq                                               */
 /* Index         - integer (range 0...23) indicating bottle neck & jitter as estimated by other side */
 /* returns 0 if everything went fine, -1 otherwise                                                   */
-int16_t WebRtcIsac_UpdateBandwidthEstimator(
+WebRtc_Word16 WebRtcIsac_UpdateBandwidthEstimator(
     BwEstimatorstr *bwest_str,
-    const uint16_t rtp_number,
-    const int32_t  frame_length,
-    const uint32_t send_ts,
-    const uint32_t arr_ts,
-    const int32_t  pksize
-    /*,    const uint16_t Index*/)
+    const WebRtc_UWord16 rtp_number,
+    const WebRtc_Word32  frame_length,
+    const WebRtc_UWord32 send_ts,
+    const WebRtc_UWord32 arr_ts,
+    const WebRtc_Word32  pksize
+    /*,    const WebRtc_UWord16 Index*/)
 {
   float weight = 0.0f;
   float curr_bw_inv = 0.0f;
@@ -207,7 +207,7 @@ int16_t WebRtcIsac_UpdateBandwidthEstimator(
       // that strict -DH
     {
       /* if not been updated for a long time, reduce the BN estimate */
-      if((uint32_t)(arr_ts - bwest_str->last_update_ts) *
+      if((WebRtc_UWord32)(arr_ts - bwest_str->last_update_ts) *
          1000.0f / FS > 3000)
       {
         //how many frames should have been received since the last
@@ -222,7 +222,7 @@ int16_t WebRtcIsac_UpdateBandwidthEstimator(
            0.9)
         {
           float inv_bitrate = (float) pow( 0.99995,
-                                           (double)((uint32_t)(arr_ts -
+                                           (double)((WebRtc_UWord32)(arr_ts -
                                                                      bwest_str->last_reduction_ts)*1000.0f/FS) );
 
           if ( inv_bitrate )
@@ -303,7 +303,7 @@ int16_t WebRtcIsac_UpdateBandwidthEstimator(
       float averageLatencyMs = latencyMs / bwest_str->numConsecLatePkts;
       delay_correction_factor = frame_length / (frame_length + averageLatencyMs);
       immediate_set = 1;
-      bwest_str->inWaitLatePkts = (int16_t)((bwest_str->consecLatency/(FS/1000)) / 30);// + 150;
+      bwest_str->inWaitLatePkts = (WebRtc_Word16)((bwest_str->consecLatency/(FS/1000)) / 30);// + 150;
       bwest_str->start_wait_period = arr_ts;
     }
     ///////////////////////////////////////////////
@@ -466,17 +466,17 @@ int16_t WebRtcIsac_UpdateBandwidthEstimator(
   bwest_str->prev_rec_send_ts = send_ts;
 
   /* Replace bwest_str->rec_bw by the new value (atomic operation) */
-  bwest_str->rec_bw = (int32_t)(1.0f / bwest_str->rec_bw_inv -
+  bwest_str->rec_bw = (WebRtc_Word32)(1.0f / bwest_str->rec_bw_inv -
                                       bwest_str->rec_header_rate);
 
   if (immediate_set)
   {
-    bwest_str->rec_bw = (int32_t) (delay_correction_factor *
+    bwest_str->rec_bw = (WebRtc_Word32) (delay_correction_factor *
                                          (float) bwest_str->rec_bw);
 
-    if (bwest_str->rec_bw < (int32_t) MIN_ISAC_BW)
+    if (bwest_str->rec_bw < (WebRtc_Word32) MIN_ISAC_BW)
     {
-      bwest_str->rec_bw = (int32_t) MIN_ISAC_BW;
+      bwest_str->rec_bw = (WebRtc_Word32) MIN_ISAC_BW;
     }
 
     bwest_str->rec_bw_avg = bwest_str->rec_bw +
@@ -503,9 +503,9 @@ int16_t WebRtcIsac_UpdateBandwidthEstimator(
 /* This function updates the send bottle neck rate                                                   */
 /* Index         - integer (range 0...23) indicating bottle neck & jitter as estimated by other side */
 /* returns 0 if everything went fine, -1 otherwise                                                   */
-int16_t WebRtcIsac_UpdateUplinkBwImpl(
+WebRtc_Word16 WebRtcIsac_UpdateUplinkBwImpl(
     BwEstimatorstr*           bwest_str,
-    int16_t               index,
+    WebRtc_Word16               index,
     enum IsacSamplingRate encoderSamplingFreq)
 {
   if((index < 0) || (index > 23))
@@ -560,9 +560,9 @@ int16_t WebRtcIsac_UpdateUplinkBwImpl(
 
 // called when there is upper-band bit-stream to update jitter
 // statistics.
-int16_t WebRtcIsac_UpdateUplinkJitter(
+WebRtc_Word16 WebRtcIsac_UpdateUplinkJitter(
     BwEstimatorstr*              bwest_str,
-    int32_t                  index)
+    WebRtc_Word32                  index)
 {
   if((index < 0) || (index > 23))
   {
@@ -589,25 +589,25 @@ int16_t WebRtcIsac_UpdateUplinkJitter(
 
 // Returns the bandwidth/jitter estimation code (integer 0...23)
 // to put in the sending iSAC payload
-uint16_t
+WebRtc_UWord16
 WebRtcIsac_GetDownlinkBwJitIndexImpl(
     BwEstimatorstr*           bwest_str,
-    int16_t*              bottleneckIndex,
-    int16_t*              jitterInfo,
+    WebRtc_Word16*              bottleneckIndex,
+    WebRtc_Word16*              jitterInfo,
     enum IsacSamplingRate decoderSamplingFreq)
 {
   float MaxDelay;
-  //uint16_t MaxDelayBit;
+  //WebRtc_UWord16 MaxDelayBit;
 
   float rate;
   float r;
   float e1, e2;
   const float weight = 0.1f;
   const float* ptrQuantizationTable;
-  int16_t addJitterInfo;
-  int16_t minInd;
-  int16_t maxInd;
-  int16_t midInd;
+  WebRtc_Word16 addJitterInfo;
+  WebRtc_Word16 minInd;
+  WebRtc_Word16 maxInd;
+  WebRtc_Word16 midInd;
 
   /* Get Max Delay Bit */
   /* get unquantized max delay */
@@ -691,9 +691,9 @@ WebRtcIsac_GetDownlinkBwJitIndexImpl(
 
 
 /* get the bottle neck rate from far side to here, as estimated on this side */
-int32_t WebRtcIsac_GetDownlinkBandwidth( const BwEstimatorstr *bwest_str)
+WebRtc_Word32 WebRtcIsac_GetDownlinkBandwidth( const BwEstimatorstr *bwest_str)
 {
-  int32_t  rec_bw;
+  WebRtc_Word32  rec_bw;
   float   jitter_sign;
   float   bw_adjust;
 
@@ -705,7 +705,7 @@ int32_t WebRtcIsac_GetDownlinkBandwidth( const BwEstimatorstr *bwest_str)
   bw_adjust = 1.0f - jitter_sign * (0.15f + 0.15f * jitter_sign * jitter_sign);
 
   /* adjust Rate if jitter sign is mostly constant */
-  rec_bw = (int32_t)(bwest_str->rec_bw * bw_adjust);
+  rec_bw = (WebRtc_Word32)(bwest_str->rec_bw * bw_adjust);
 
   /* limit range of bottle neck rate */
   if (rec_bw < MIN_ISAC_BW)
@@ -720,12 +720,12 @@ int32_t WebRtcIsac_GetDownlinkBandwidth( const BwEstimatorstr *bwest_str)
 }
 
 /* Returns the max delay (in ms) */
-int32_t
+WebRtc_Word32
 WebRtcIsac_GetDownlinkMaxDelay(const BwEstimatorstr *bwest_str)
 {
-  int32_t rec_max_delay;
+  WebRtc_Word32 rec_max_delay;
 
-  rec_max_delay = (int32_t)(bwest_str->rec_max_delay);
+  rec_max_delay = (WebRtc_Word32)(bwest_str->rec_max_delay);
 
   /* limit range of jitter estimate */
   if (rec_max_delay < MIN_ISAC_MD)
@@ -743,7 +743,7 @@ WebRtcIsac_GetDownlinkMaxDelay(const BwEstimatorstr *bwest_str)
 void
 WebRtcIsac_GetUplinkBandwidth(
     const BwEstimatorstr* bwest_str,
-    int32_t*          bitRate)
+    WebRtc_Word32*          bitRate)
 {
   /* limit range of bottle neck rate */
   if (bwest_str->send_bw_avg < MIN_ISAC_BW)
@@ -756,18 +756,18 @@ WebRtcIsac_GetUplinkBandwidth(
   }
   else
   {
-    *bitRate = (int32_t)(bwest_str->send_bw_avg);
+    *bitRate = (WebRtc_Word32)(bwest_str->send_bw_avg);
   }
   return;
 }
 
 /* Returns the max delay value from the other side in ms */
-int32_t
+WebRtc_Word32
 WebRtcIsac_GetUplinkMaxDelay(const BwEstimatorstr *bwest_str)
 {
-  int32_t send_max_delay;
+  WebRtc_Word32 send_max_delay;
 
-  send_max_delay = (int32_t)(bwest_str->send_max_delay_avg);
+  send_max_delay = (WebRtc_Word32)(bwest_str->send_max_delay_avg);
 
   /* limit range of jitter estimate */
   if (send_max_delay < MIN_ISAC_MD)
@@ -793,7 +793,7 @@ int WebRtcIsac_GetMinBytes(
     const double       BottleNeck,    /* bottle neck rate; excl headers (bps) */
     const double       DelayBuildUp,  /* max delay from bottleneck buffering (ms) */
     enum ISACBandwidth bandwidth
-    /*,int16_t        frequentLargePackets*/)
+    /*,WebRtc_Word16        frequentLargePackets*/)
 {
   double MinRate = 0.0;
   int    MinBytes;

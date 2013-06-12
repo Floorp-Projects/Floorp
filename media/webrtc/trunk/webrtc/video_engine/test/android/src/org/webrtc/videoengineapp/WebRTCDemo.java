@@ -78,7 +78,7 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
     private SurfaceView svLocal = null;
 
     // channel number
-    private int channel = -1;
+    private int channel;
     private int cameraId;
     private int voiceChannel = -1;
 
@@ -87,7 +87,7 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
     private boolean voERunning = false;
 
     // debug
-    private boolean enableTrace = true;
+    private boolean enableTrace = false;
 
     // Constant
     private static final String TAG = "WEBRTC";
@@ -418,8 +418,6 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
                 vieAndroidAPI.StopReceive(channel);
                 vieAndroidAPI.StopSend(channel);
                 vieAndroidAPI.RemoveRemoteRenderer(channel);
-                vieAndroidAPI.ViE_DeleteChannel(channel);
-                channel = -1;
                 vieAndroidAPI.StopCamera(cameraId);
                 vieAndroidAPI.Terminate();
                 mLlRemoteSurface.removeView(remoteSurfaceView);
@@ -741,7 +739,7 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
 
         // Create channel
         voiceChannel = vieAndroidAPI.VoE_CreateChannel();
-        if (0 > voiceChannel) {
+        if (0 != voiceChannel) {
             Log.d(TAG, "VoE create channel failed");
             return -1;
         }

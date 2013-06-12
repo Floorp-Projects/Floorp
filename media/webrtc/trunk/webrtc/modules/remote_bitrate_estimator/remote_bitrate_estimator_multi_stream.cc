@@ -8,43 +8,38 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_multi_stream.h"
+#include "modules/remote_bitrate_estimator/remote_bitrate_estimator_multi_stream.h"
 
-#include "webrtc/modules/remote_bitrate_estimator/include/rtp_to_ntp.h"
-#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "modules/remote_bitrate_estimator/include/rtp_to_ntp.h"
+#include "modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.h"
+#include "system_wrappers/interface/tick_util.h"
 
 namespace webrtc {
 
 RemoteBitrateEstimator* RemoteBitrateEstimator::Create(
-    const OverUseDetectorOptions& options,
-    EstimationMode mode,
     RemoteBitrateObserver* observer,
-    Clock* clock) {
+    const OverUseDetectorOptions& options,
+    EstimationMode mode) {
   switch (mode) {
     case kMultiStreamEstimation:
-      return new RemoteBitrateEstimatorMultiStream(options, observer, clock);
+      return new RemoteBitrateEstimatorMultiStream(observer, options);
     case kSingleStreamEstimation:
-      return new RemoteBitrateEstimatorSingleStream(options, observer, clock);
+      return new RemoteBitrateEstimatorSingleStream(observer, options);
   }
   return NULL;
 }
 
 RemoteBitrateEstimatorMultiStream::RemoteBitrateEstimatorMultiStream(
-    const OverUseDetectorOptions& options,
     RemoteBitrateObserver* observer,
-    Clock* clock)
-    : clock_(clock),
-      remote_rate_(),
+    const OverUseDetectorOptions& options)
+    : remote_rate_(),
       overuse_detector_(options),
       incoming_bitrate_(),
       observer_(observer),
       streams_(),
       crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       initial_ssrc_(0),
-      multi_stream_(false),
-      last_process_time_(-1) {
+      multi_stream_(false) {
   assert(observer_);
 }
 
@@ -113,45 +108,16 @@ void RemoteBitrateEstimatorMultiStream::IncomingPacket(unsigned int ssrc,
   }
   overuse_detector_.Update(payload_size, timestamp_in_ms, rtp_timestamp,
                            arrival_time);
-  if (overuse_detector_.State() == kBwOverusing) {
-    unsigned int incoming_bitrate = incoming_bitrate_.BitRate(arrival_time);
-    if (prior_state != kBwOverusing ||
-        remote_rate_.TimeToReduceFurther(arrival_time, incoming_bitrate)) {
-      // The first overuse should immediately trigger a new estimate.
-      // We also have to update the estimate immediately if we are overusing
-      // and the target bitrate is too high compared to what we are receiving.
-      UpdateEstimate(arrival_time);
-    }
+  if (prior_state != kBwOverusing &&
+      overuse_detector_.State() == kBwOverusing) {
+    // The first overuse should immediately trigger a new estimate.
+    UpdateEstimate(1, arrival_time);
   }
 }
 
-int32_t RemoteBitrateEstimatorMultiStream::Process() {
-  if (TimeUntilNextProcess() > 0) {
-    return 0;
-  }
-  UpdateEstimate(clock_->TimeInMilliseconds());
-  last_process_time_ = clock_->TimeInMilliseconds();
-  return 0;
-}
-
-int32_t RemoteBitrateEstimatorMultiStream::TimeUntilNextProcess() {
-  if (last_process_time_ < 0) {
-    return 0;
-  }
-  return last_process_time_ + kProcessIntervalMs - clock_->TimeInMilliseconds();
-}
-
-void RemoteBitrateEstimatorMultiStream::UpdateEstimate(int64_t time_now) {
+void RemoteBitrateEstimatorMultiStream::UpdateEstimate(unsigned int ssrc,
+                                                       int64_t time_now) {
   CriticalSectionScoped cs(crit_sect_.get());
-  const int64_t time_of_last_received_packet =
-      overuse_detector_.time_of_last_received_packet();
-  if (time_of_last_received_packet >= 0 &&
-      time_now - time_of_last_received_packet > kStreamTimeOutMs) {
-    // This over-use detector hasn't received packets for |kStreamTimeOutMs|
-    // milliseconds and is considered stale.
-    remote_rate_.Reset();
-    return;
-  }
   const RateControlInput input(overuse_detector_.State(),
                                incoming_bitrate_.BitRate(time_now),
                                overuse_detector_.NoiseVar());
@@ -167,7 +133,7 @@ void RemoteBitrateEstimatorMultiStream::UpdateEstimate(int64_t time_now) {
   overuse_detector_.SetRateControlRegion(region);
 }
 
-void RemoteBitrateEstimatorMultiStream::OnRttUpdate(uint32_t rtt) {
+void RemoteBitrateEstimatorMultiStream::SetRtt(unsigned int rtt) {
   CriticalSectionScoped cs(crit_sect_.get());
   remote_rate_.SetRtt(rtt);
 }

@@ -29,11 +29,11 @@ typedef struct WebRtcG722EncInst    G722EncInst;
 typedef struct WebRtcG722DecInst    G722DecInst;
 
 /* function for reading audio data from PCM file */
-int readframe(int16_t *data, FILE *inp, int length)
+int readframe(WebRtc_Word16 *data, FILE *inp, int length)
 {
     short k, rlen, status = 0;
 
-    rlen = (short)fread(data, sizeof(int16_t), length, inp);
+    rlen = (short)fread(data, sizeof(WebRtc_Word16), length, inp);
     if (rlen < length) {
         for (k = rlen; k < length; k++)
             data[k] = 0;
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     FILE *inp, *outbitp, *outp;
 
     int framecnt, endfile;
-    int16_t framelength = 160;
+    WebRtc_Word16 framelength = 160;
     G722EncInst *G722enc_inst;
     G722DecInst *G722dec_inst;
     int err;
@@ -59,11 +59,11 @@ int main(int argc, char* argv[])
     double runtime = 0;
     double length_file;
 
-    int16_t stream_len = 0;
-    int16_t shortdata[960];
-    int16_t decoded[960];
-    int16_t streamdata[80*3];
-    int16_t speechType[1];
+    WebRtc_Word16 stream_len = 0;
+    WebRtc_Word16 shortdata[960];
+    WebRtc_Word16 decoded[960];
+    WebRtc_Word16 streamdata[80*3];
+    WebRtc_Word16 speechType[1];
 
     /* handling wrong input arguments in the command line */
     if (argc!=5)  {

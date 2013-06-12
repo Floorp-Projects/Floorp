@@ -23,14 +23,14 @@ public:
     ~LevelIndicator();
 
     // Updates the level.
-    void ComputeLevel(const int16_t* speech,
-                      const uint16_t nrOfSamples);
+    void ComputeLevel(const WebRtc_Word16* speech,
+                      const WebRtc_UWord16 nrOfSamples);
 
-    int32_t GetLevel();
+    WebRtc_Word32 GetLevel();
 private:
-    int32_t  _max;
-    uint32_t _count;
-    uint32_t _currentLevel;
+    WebRtc_Word32  _max;
+    WebRtc_UWord32 _count;
+    WebRtc_UWord32 _currentLevel;
 };
 } // namespace webrtc
 

@@ -26,22 +26,23 @@ class VideoProcessingModuleImpl : public VideoProcessingModule
 {
 public:
 
-    VideoProcessingModuleImpl(int32_t id);
+    VideoProcessingModuleImpl(WebRtc_Word32 id);
 
     virtual ~VideoProcessingModuleImpl();
 
-    int32_t Id() const;
+    WebRtc_Word32 Id() const;
 
-    virtual int32_t ChangeUniqueId(const int32_t id);
+    virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
 
     virtual void Reset();
 
-    virtual int32_t Deflickering(I420VideoFrame* frame, FrameStats* stats);
+    virtual WebRtc_Word32 Deflickering(I420VideoFrame* frame,
+                                       FrameStats* stats);
 
-    virtual int32_t Denoising(I420VideoFrame* frame);
+    virtual WebRtc_Word32 Denoising(I420VideoFrame* frame);
 
-    virtual int32_t BrightnessDetection(const I420VideoFrame& frame,
-                                        const FrameStats& stats);
+    virtual WebRtc_Word32 BrightnessDetection(const I420VideoFrame& frame,
+                                              const FrameStats& stats);
 
     //Frame pre-processor functions
 
@@ -54,29 +55,29 @@ public:
     virtual void EnableContentAnalysis(bool enable);
 
     //Set max frame rate
-    virtual int32_t SetMaxFrameRate(uint32_t maxFrameRate);
+    virtual WebRtc_Word32 SetMaxFrameRate(WebRtc_UWord32 maxFrameRate);
 
     // Set Target Resolution: frame rate and dimension
-    virtual int32_t SetTargetResolution(uint32_t width,
-                                        uint32_t height,
-                                        uint32_t frameRate);
+    virtual WebRtc_Word32 SetTargetResolution(WebRtc_UWord32 width,
+                                              WebRtc_UWord32 height,
+                                              WebRtc_UWord32 frameRate);
 
 
     // Get decimated values: frame rate/dimension
-    virtual uint32_t DecimatedFrameRate();
-    virtual uint32_t DecimatedWidth() const;
-    virtual uint32_t DecimatedHeight() const;
+    virtual WebRtc_UWord32 DecimatedFrameRate();
+    virtual WebRtc_UWord32 DecimatedWidth() const;
+    virtual WebRtc_UWord32 DecimatedHeight() const;
 
     // Preprocess:
     // Pre-process incoming frame: Sample when needed and compute content
     // metrics when enabled.
     // If no resampling takes place - processedFrame is set to NULL.
-    virtual int32_t PreprocessFrame(const I420VideoFrame& frame,
-                                    I420VideoFrame** processedFrame);
+    virtual WebRtc_Word32 PreprocessFrame(const I420VideoFrame& frame,
+                                          I420VideoFrame** processedFrame);
     virtual VideoContentMetrics* ContentMetrics() const;
 
 private:
-    int32_t              _id;
+    WebRtc_Word32              _id;
     CriticalSectionWrapper&    _mutex;
 
     VPMDeflickering            _deflickering;

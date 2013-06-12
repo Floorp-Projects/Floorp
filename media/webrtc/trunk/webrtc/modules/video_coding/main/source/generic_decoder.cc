@@ -10,15 +10,14 @@
 
 #include "video_coding.h"
 #include "trace.h"
-#include "trace_event.h"
 #include "generic_decoder.h"
 #include "internal_defines.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "tick_time_base.h"
 
 namespace webrtc {
 
 VCMDecodedFrameCallback::VCMDecodedFrameCallback(VCMTiming& timing,
-                                                 Clock* clock)
+                                                 TickTimeBase* clock)
 :
 _critSect(CriticalSectionWrapper::CreateCriticalSection()),
 _clock(clock),
@@ -41,7 +40,7 @@ void VCMDecodedFrameCallback::SetUserReceiveCallback(
     _receiveCallback = receiveCallback;
 }
 
-int32_t VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
+WebRtc_Word32 VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
 {
     // TODO(holmer): We should improve this so that we can handle multiple
     // callbacks from one call to Decode().
@@ -57,13 +56,13 @@ int32_t VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
     _timing.StopDecodeTimer(
         decodedImage.timestamp(),
         frameInfo->decodeStartTimeMs,
-        _clock->TimeInMilliseconds());
+        _clock->MillisecondTimestamp());
 
     if (_receiveCallback != NULL)
     {
         _frame.SwapFrame(&decodedImage);
         _frame.set_render_time_ms(frameInfo->renderTimeMs);
-        int32_t callbackReturn = _receiveCallback->FrameToRender(_frame);
+        WebRtc_Word32 callbackReturn = _receiveCallback->FrameToRender(_frame);
         if (callbackReturn < 0)
         {
             WEBRTC_TRACE(webrtc::kTraceDebug,
@@ -75,9 +74,9 @@ int32_t VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t
+WebRtc_Word32
 VCMDecodedFrameCallback::ReceivedDecodedReferenceFrame(
-    const uint64_t pictureId)
+    const WebRtc_UWord64 pictureId)
 {
     CriticalSectionScoped cs(_critSect);
     if (_receiveCallback != NULL)
@@ -87,25 +86,25 @@ VCMDecodedFrameCallback::ReceivedDecodedReferenceFrame(
     return -1;
 }
 
-int32_t
-VCMDecodedFrameCallback::ReceivedDecodedFrame(const uint64_t pictureId)
+WebRtc_Word32
+VCMDecodedFrameCallback::ReceivedDecodedFrame(const WebRtc_UWord64 pictureId)
 {
     _lastReceivedPictureID = pictureId;
     return 0;
 }
 
-uint64_t VCMDecodedFrameCallback::LastReceivedPictureID() const
+WebRtc_UWord64 VCMDecodedFrameCallback::LastReceivedPictureID() const
 {
     return _lastReceivedPictureID;
 }
 
-int32_t VCMDecodedFrameCallback::Map(uint32_t timestamp, VCMFrameInformation* frameInfo)
+WebRtc_Word32 VCMDecodedFrameCallback::Map(WebRtc_UWord32 timestamp, VCMFrameInformation* frameInfo)
 {
     CriticalSectionScoped cs(_critSect);
     return _timestampMap.Add(timestamp, frameInfo);
 }
 
-int32_t VCMDecodedFrameCallback::Pop(uint32_t timestamp)
+WebRtc_Word32 VCMDecodedFrameCallback::Pop(WebRtc_UWord32 timestamp)
 {
     CriticalSectionScoped cs(_critSect);
     if (_timestampMap.Pop(timestamp) == NULL)
@@ -115,7 +114,7 @@ int32_t VCMDecodedFrameCallback::Pop(uint32_t timestamp)
     return VCM_OK;
 }
 
-VCMGenericDecoder::VCMGenericDecoder(VideoDecoder& decoder, int32_t id, bool isExternal)
+VCMGenericDecoder::VCMGenericDecoder(VideoDecoder& decoder, WebRtc_Word32 id, bool isExternal)
 :
 _id(id),
 _callback(NULL),
@@ -133,8 +132,8 @@ VCMGenericDecoder::~VCMGenericDecoder()
 {
 }
 
-int32_t VCMGenericDecoder::InitDecode(const VideoCodec* settings,
-                                            int32_t numberOfCores,
+WebRtc_Word32 VCMGenericDecoder::InitDecode(const VideoCodec* settings,
+                                            WebRtc_Word32 numberOfCores,
                                             bool requireKeyFrame)
 {
     _requireKeyFrame = requireKeyFrame;
@@ -144,7 +143,7 @@ int32_t VCMGenericDecoder::InitDecode(const VideoCodec* settings,
     return _decoder.InitDecode(settings, numberOfCores);
 }
 
-int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame,
+WebRtc_Word32 VCMGenericDecoder::Decode(const VCMEncodedFrame& frame,
                                         int64_t nowMs)
 {
     if (_requireKeyFrame &&
@@ -166,7 +165,8 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame,
                  "Decoding timestamp %u", frame.TimeStamp());
 
     _nextFrameInfoIdx = (_nextFrameInfoIdx + 1) % kDecoderFrameMemoryLength;
-    int32_t ret = _decoder.Decode(frame.EncodedImage(),
+
+    WebRtc_Word32 ret = _decoder.Decode(frame.EncodedImage(),
                                         frame.MissingFrame(),
                                         frame.FragmentationHeader(),
                                         frame.CodecSpecific(),
@@ -190,25 +190,25 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame,
     return ret;
 }
 
-int32_t
+WebRtc_Word32
 VCMGenericDecoder::Release()
 {
     _keyFrameDecoded = false;
     return _decoder.Release();
 }
 
-int32_t VCMGenericDecoder::Reset()
+WebRtc_Word32 VCMGenericDecoder::Reset()
 {
     _keyFrameDecoded = false;
     return _decoder.Reset();
 }
 
-int32_t VCMGenericDecoder::SetCodecConfigParameters(const uint8_t* buffer, int32_t size)
+WebRtc_Word32 VCMGenericDecoder::SetCodecConfigParameters(const WebRtc_UWord8* buffer, WebRtc_Word32 size)
 {
     return _decoder.SetCodecConfigParameters(buffer, size);
 }
 
-int32_t VCMGenericDecoder::RegisterDecodeCompleteCallback(VCMDecodedFrameCallback* callback)
+WebRtc_Word32 VCMGenericDecoder::RegisterDecodeCompleteCallback(VCMDecodedFrameCallback* callback)
 {
     _callback = callback;
     return _decoder.RegisterDecodeCompleteCallback(callback);

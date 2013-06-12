@@ -13,37 +13,37 @@
 namespace webrtc {
 namespace videocapturemodule {
 
-DeviceInfoMF::DeviceInfoMF(const int32_t id) : DeviceInfoImpl(id) {
+DeviceInfoMF::DeviceInfoMF(const WebRtc_Word32 id) : DeviceInfoImpl(id) {
 }
 
 DeviceInfoMF::~DeviceInfoMF() {
 }
 
-int32_t DeviceInfoMF::Init() {
+WebRtc_Word32 DeviceInfoMF::Init() {
   return -1;
 }
 
-uint32_t DeviceInfoMF::NumberOfDevices() {
+WebRtc_UWord32 DeviceInfoMF::NumberOfDevices() {
   return 0;
 }
 
-int32_t DeviceInfoMF::GetDeviceName(
-    uint32_t deviceNumber,
+WebRtc_Word32 DeviceInfoMF::GetDeviceName(
+    WebRtc_UWord32 deviceNumber,
     char* deviceNameUTF8,
-    uint32_t deviceNameLength,
+    WebRtc_UWord32 deviceNameLength,
     char* deviceUniqueIdUTF8,
-    uint32_t deviceUniqueIdUTF8Length,
+    WebRtc_UWord32 deviceUniqueIdUTF8Length,
     char* productUniqueIdUTF8,
-    uint32_t productUniqueIdUTF8Length) {
+    WebRtc_UWord32 productUniqueIdUTF8Length) {
   return -1;
 }
 
-int32_t DeviceInfoMF::DisplayCaptureSettingsDialogBox(
+WebRtc_Word32 DeviceInfoMF::DisplayCaptureSettingsDialogBox(
     const char* deviceUniqueIdUTF8,
     const char* dialogTitleUTF8,
     void* parentWindow,
-    uint32_t positionX,
-    uint32_t positionY) {
+    WebRtc_UWord32 positionX,
+    WebRtc_UWord32 positionY) {
   return -1;
 }
 

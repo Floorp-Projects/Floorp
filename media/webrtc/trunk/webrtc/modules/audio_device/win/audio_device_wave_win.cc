@@ -45,7 +45,7 @@ namespace webrtc {
 //  AudioDeviceWindowsWave - ctor
 // ----------------------------------------------------------------------------
 
-AudioDeviceWindowsWave::AudioDeviceWindowsWave(const int32_t id) :
+AudioDeviceWindowsWave::AudioDeviceWindowsWave(const WebRtc_Word32 id) :
     _ptrAudioBuffer(NULL),
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _timeEvent(*EventWrapper::Create()),
@@ -189,7 +189,7 @@ void AudioDeviceWindowsWave::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer)
 //  ActiveAudioLayer
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::ActiveAudioLayer(AudioDeviceModule::AudioLayer& audioLayer) const
+WebRtc_Word32 AudioDeviceWindowsWave::ActiveAudioLayer(AudioDeviceModule::AudioLayer& audioLayer) const
 {
     audioLayer = AudioDeviceModule::kWindowsWaveAudio;
     return 0;
@@ -199,7 +199,7 @@ int32_t AudioDeviceWindowsWave::ActiveAudioLayer(AudioDeviceModule::AudioLayer& 
 //  Init
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::Init()
+WebRtc_Word32 AudioDeviceWindowsWave::Init()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -209,7 +209,7 @@ int32_t AudioDeviceWindowsWave::Init()
         return 0;
     }
 
-    const uint32_t nowTime(AudioDeviceUtility::GetTimeInMS());
+    const WebRtc_UWord32 nowTime(AudioDeviceUtility::GetTimeInMS());
 
     _recordedBytes = 0;
     _prevRecByteCheckTime = nowTime;
@@ -312,7 +312,7 @@ int32_t AudioDeviceWindowsWave::Init()
 //  Terminate
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::Terminate()
+WebRtc_Word32 AudioDeviceWindowsWave::Terminate()
 {
 
     if (!_initialized)
@@ -353,7 +353,7 @@ int32_t AudioDeviceWindowsWave::Terminate()
     _critSect.Enter();
     SetEvent(_hShutdownGetVolumeEvent);
     _critSect.Leave();
-    int32_t ret = WaitForSingleObject(_hGetCaptureVolumeThread, 2000);
+    WebRtc_Word32 ret = WaitForSingleObject(_hGetCaptureVolumeThread, 2000);
     if (ret != WAIT_OBJECT_0)
     {
         // the thread did not stop as it should
@@ -433,7 +433,7 @@ DWORD AudioDeviceWindowsWave::DoGetCaptureVolumeThread()
 
         if (AGC())
         {
-            uint32_t currentMicLevel = 0;
+            WebRtc_UWord32 currentMicLevel = 0;
             if (MicrophoneVolume(currentMicLevel) == 0)
             {
                 // This doesn't set the system volume, just stores it.
@@ -468,7 +468,7 @@ DWORD AudioDeviceWindowsWave::DoSetCaptureVolumeThread()
         }
 
         _critSect.Enter();
-        uint32_t newMicLevel = _newMicLevel;
+        WebRtc_UWord32 newMicLevel = _newMicLevel;
         _critSect.Leave();
 
         if (SetMicrophoneVolume(newMicLevel) == -1)
@@ -493,7 +493,7 @@ bool AudioDeviceWindowsWave::Initialized() const
 //  SpeakerIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SpeakerIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::SpeakerIsAvailable(bool& available)
 {
 
     // Enumerate all avaliable speakers and make an attempt to open up the
@@ -520,7 +520,7 @@ int32_t AudioDeviceWindowsWave::SpeakerIsAvailable(bool& available)
 //  InitSpeaker
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::InitSpeaker()
+WebRtc_Word32 AudioDeviceWindowsWave::InitSpeaker()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -558,7 +558,7 @@ int32_t AudioDeviceWindowsWave::InitSpeaker()
 //  MicrophoneIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneIsAvailable(bool& available)
 {
 
     // Enumerate all avaliable microphones and make an attempt to open up the
@@ -585,7 +585,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneIsAvailable(bool& available)
 //  InitMicrophone
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::InitMicrophone()
+WebRtc_Word32 AudioDeviceWindowsWave::InitMicrophone()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -616,7 +616,7 @@ int32_t AudioDeviceWindowsWave::InitMicrophone()
         }
     }
 
-    uint32_t maxVol = 0;
+    WebRtc_UWord32 maxVol = 0;
     if (_mixerManager.MaxMicrophoneVolume(maxVol) == -1)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
@@ -624,7 +624,7 @@ int32_t AudioDeviceWindowsWave::InitMicrophone()
     }
     _maxMicVolume = maxVol;
 
-    uint32_t minVol = 0;
+    WebRtc_UWord32 minVol = 0;
     if (_mixerManager.MinMicrophoneVolume(minVol) == -1)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
@@ -657,7 +657,7 @@ bool AudioDeviceWindowsWave::MicrophoneIsInitialized() const
 //  SpeakerVolumeIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SpeakerVolumeIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::SpeakerVolumeIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -688,7 +688,7 @@ int32_t AudioDeviceWindowsWave::SpeakerVolumeIsAvailable(bool& available)
 //  SetSpeakerVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetSpeakerVolume(uint32_t volume)
+WebRtc_Word32 AudioDeviceWindowsWave::SetSpeakerVolume(WebRtc_UWord32 volume)
 {
 
     return (_mixerManager.SetSpeakerVolume(volume));
@@ -698,10 +698,10 @@ int32_t AudioDeviceWindowsWave::SetSpeakerVolume(uint32_t volume)
 //  SpeakerVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SpeakerVolume(uint32_t& volume) const
+WebRtc_Word32 AudioDeviceWindowsWave::SpeakerVolume(WebRtc_UWord32& volume) const
 {
 
-    uint32_t level(0);
+    WebRtc_UWord32 level(0);
 
     if (_mixerManager.SpeakerVolume(level) == -1)
     {
@@ -729,7 +729,7 @@ int32_t AudioDeviceWindowsWave::SpeakerVolume(uint32_t& volume) const
 //    0x4000, 0x4FFF, and 0x43BE will all be truncated to 0x4000.
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetWaveOutVolume(uint16_t volumeLeft, uint16_t volumeRight)
+WebRtc_Word32 AudioDeviceWindowsWave::SetWaveOutVolume(WebRtc_UWord16 volumeLeft, WebRtc_UWord16 volumeRight)
 {
 
     MMRESULT res(0);
@@ -793,7 +793,7 @@ int32_t AudioDeviceWindowsWave::SetWaveOutVolume(uint16_t volumeLeft, uint16_t v
 //    control.
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::WaveOutVolume(uint16_t& volumeLeft, uint16_t& volumeRight) const
+WebRtc_Word32 AudioDeviceWindowsWave::WaveOutVolume(WebRtc_UWord16& volumeLeft, WebRtc_UWord16& volumeRight) const
 {
 
     MMRESULT res(0);
@@ -840,8 +840,8 @@ int32_t AudioDeviceWindowsWave::WaveOutVolume(uint16_t& volumeLeft, uint16_t& vo
     WORD wVolumeLeft = LOWORD(dwVolume);
     WORD wVolumeRight = HIWORD(dwVolume);
 
-    volumeLeft = static_cast<uint16_t> (wVolumeLeft);
-    volumeRight = static_cast<uint16_t> (wVolumeRight);
+    volumeLeft = static_cast<WebRtc_UWord16> (wVolumeLeft);
+    volumeRight = static_cast<WebRtc_UWord16> (wVolumeRight);
 
     return 0;
 }
@@ -850,10 +850,10 @@ int32_t AudioDeviceWindowsWave::WaveOutVolume(uint16_t& volumeLeft, uint16_t& vo
 //  MaxSpeakerVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MaxSpeakerVolume(uint32_t& maxVolume) const
+WebRtc_Word32 AudioDeviceWindowsWave::MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const
 {
 
-    uint32_t maxVol(0);
+    WebRtc_UWord32 maxVol(0);
 
     if (_mixerManager.MaxSpeakerVolume(maxVol) == -1)
     {
@@ -868,10 +868,10 @@ int32_t AudioDeviceWindowsWave::MaxSpeakerVolume(uint32_t& maxVolume) const
 //  MinSpeakerVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MinSpeakerVolume(uint32_t& minVolume) const
+WebRtc_Word32 AudioDeviceWindowsWave::MinSpeakerVolume(WebRtc_UWord32& minVolume) const
 {
 
-    uint32_t minVol(0);
+    WebRtc_UWord32 minVol(0);
 
     if (_mixerManager.MinSpeakerVolume(minVol) == -1)
     {
@@ -886,10 +886,10 @@ int32_t AudioDeviceWindowsWave::MinSpeakerVolume(uint32_t& minVolume) const
 //  SpeakerVolumeStepSize
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SpeakerVolumeStepSize(uint16_t& stepSize) const
+WebRtc_Word32 AudioDeviceWindowsWave::SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) const
 {
 
-    uint16_t delta(0);
+    WebRtc_UWord16 delta(0);
 
     if (_mixerManager.SpeakerVolumeStepSize(delta) == -1)
     {
@@ -904,7 +904,7 @@ int32_t AudioDeviceWindowsWave::SpeakerVolumeStepSize(uint16_t& stepSize) const
 //  SpeakerMuteIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SpeakerMuteIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::SpeakerMuteIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -937,7 +937,7 @@ int32_t AudioDeviceWindowsWave::SpeakerMuteIsAvailable(bool& available)
 //  SetSpeakerMute
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetSpeakerMute(bool enable)
+WebRtc_Word32 AudioDeviceWindowsWave::SetSpeakerMute(bool enable)
 {
     return (_mixerManager.SetSpeakerMute(enable));
 }
@@ -946,7 +946,7 @@ int32_t AudioDeviceWindowsWave::SetSpeakerMute(bool enable)
 //  SpeakerMute
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SpeakerMute(bool& enabled) const
+WebRtc_Word32 AudioDeviceWindowsWave::SpeakerMute(bool& enabled) const
 {
 
     bool muted(0);
@@ -964,7 +964,7 @@ int32_t AudioDeviceWindowsWave::SpeakerMute(bool& enabled) const
 //  MicrophoneMuteIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneMuteIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneMuteIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -997,7 +997,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneMuteIsAvailable(bool& available)
 //  SetMicrophoneMute
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetMicrophoneMute(bool enable)
+WebRtc_Word32 AudioDeviceWindowsWave::SetMicrophoneMute(bool enable)
 {
     return (_mixerManager.SetMicrophoneMute(enable));
 }
@@ -1006,7 +1006,7 @@ int32_t AudioDeviceWindowsWave::SetMicrophoneMute(bool enable)
 //  MicrophoneMute
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneMute(bool& enabled) const
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneMute(bool& enabled) const
 {
 
     bool muted(0);
@@ -1024,7 +1024,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneMute(bool& enabled) const
 //  MicrophoneBoostIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneBoostIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneBoostIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -1057,7 +1057,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneBoostIsAvailable(bool& available)
 //  SetMicrophoneBoost
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetMicrophoneBoost(bool enable)
+WebRtc_Word32 AudioDeviceWindowsWave::SetMicrophoneBoost(bool enable)
 {
 
     return (_mixerManager.SetMicrophoneBoost(enable));
@@ -1067,7 +1067,7 @@ int32_t AudioDeviceWindowsWave::SetMicrophoneBoost(bool enable)
 //  MicrophoneBoost
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneBoost(bool& enabled) const
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneBoost(bool& enabled) const
 {
 
     bool onOff(0);
@@ -1085,7 +1085,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneBoost(bool& enabled) const
 //  StereoRecordingIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StereoRecordingIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::StereoRecordingIsAvailable(bool& available)
 {
     available = true;
     return 0;
@@ -1095,7 +1095,7 @@ int32_t AudioDeviceWindowsWave::StereoRecordingIsAvailable(bool& available)
 //  SetStereoRecording
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetStereoRecording(bool enable)
+WebRtc_Word32 AudioDeviceWindowsWave::SetStereoRecording(bool enable)
 {
 
     if (enable)
@@ -1110,7 +1110,7 @@ int32_t AudioDeviceWindowsWave::SetStereoRecording(bool enable)
 //  StereoRecording
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StereoRecording(bool& enabled) const
+WebRtc_Word32 AudioDeviceWindowsWave::StereoRecording(bool& enabled) const
 {
 
     if (_recChannels == 2)
@@ -1125,7 +1125,7 @@ int32_t AudioDeviceWindowsWave::StereoRecording(bool& enabled) const
 //  StereoPlayoutIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StereoPlayoutIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::StereoPlayoutIsAvailable(bool& available)
 {
     available = true;
     return 0;
@@ -1154,7 +1154,7 @@ int32_t AudioDeviceWindowsWave::StereoPlayoutIsAvailable(bool& available)
 //  high-order byte of channel 1.
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetStereoPlayout(bool enable)
+WebRtc_Word32 AudioDeviceWindowsWave::SetStereoPlayout(bool enable)
 {
 
     if (enable)
@@ -1169,7 +1169,7 @@ int32_t AudioDeviceWindowsWave::SetStereoPlayout(bool enable)
 //  StereoPlayout
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StereoPlayout(bool& enabled) const
+WebRtc_Word32 AudioDeviceWindowsWave::StereoPlayout(bool& enabled) const
 {
 
     if (_playChannels == 2)
@@ -1184,7 +1184,7 @@ int32_t AudioDeviceWindowsWave::StereoPlayout(bool& enabled) const
 //  SetAGC
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetAGC(bool enable)
+WebRtc_Word32 AudioDeviceWindowsWave::SetAGC(bool enable)
 {
 
     _AGC = enable;
@@ -1205,7 +1205,7 @@ bool AudioDeviceWindowsWave::AGC() const
 //  MicrophoneVolumeIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneVolumeIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneVolumeIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -1236,7 +1236,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneVolumeIsAvailable(bool& available)
 //  SetMicrophoneVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetMicrophoneVolume(uint32_t volume)
+WebRtc_Word32 AudioDeviceWindowsWave::SetMicrophoneVolume(WebRtc_UWord32 volume)
 {
     return (_mixerManager.SetMicrophoneVolume(volume));
 }
@@ -1245,9 +1245,9 @@ int32_t AudioDeviceWindowsWave::SetMicrophoneVolume(uint32_t volume)
 //  MicrophoneVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneVolume(uint32_t& volume) const
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneVolume(WebRtc_UWord32& volume) const
 {
-    uint32_t level(0);
+    WebRtc_UWord32 level(0);
 
     if (_mixerManager.MicrophoneVolume(level) == -1)
     {
@@ -1263,7 +1263,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneVolume(uint32_t& volume) const
 //  MaxMicrophoneVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MaxMicrophoneVolume(uint32_t& maxVolume) const
+WebRtc_Word32 AudioDeviceWindowsWave::MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) const
 {
     // _maxMicVolume can be zero in AudioMixerManager::MaxMicrophoneVolume():
     // (1) API GetLineControl() returns failure at querying the max Mic level.
@@ -1283,7 +1283,7 @@ int32_t AudioDeviceWindowsWave::MaxMicrophoneVolume(uint32_t& maxVolume) const
 //  MinMicrophoneVolume
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MinMicrophoneVolume(uint32_t& minVolume) const
+WebRtc_Word32 AudioDeviceWindowsWave::MinMicrophoneVolume(WebRtc_UWord32& minVolume) const
 {
     minVolume = _minMicVolume;
     return 0;
@@ -1293,10 +1293,10 @@ int32_t AudioDeviceWindowsWave::MinMicrophoneVolume(uint32_t& minVolume) const
 //  MicrophoneVolumeStepSize
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MicrophoneVolumeStepSize(uint16_t& stepSize) const
+WebRtc_Word32 AudioDeviceWindowsWave::MicrophoneVolumeStepSize(WebRtc_UWord16& stepSize) const
 {
 
-    uint16_t delta(0);
+    WebRtc_UWord16 delta(0);
 
     if (_mixerManager.MicrophoneVolumeStepSize(delta) == -1)
     {
@@ -1311,7 +1311,7 @@ int32_t AudioDeviceWindowsWave::MicrophoneVolumeStepSize(uint16_t& stepSize) con
 //  PlayoutDevices
 // ----------------------------------------------------------------------------
 
-int16_t AudioDeviceWindowsWave::PlayoutDevices()
+WebRtc_Word16 AudioDeviceWindowsWave::PlayoutDevices()
 {
 
     return (waveOutGetNumDevs());
@@ -1321,7 +1321,7 @@ int16_t AudioDeviceWindowsWave::PlayoutDevices()
 //  SetPlayoutDevice I (II)
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetPlayoutDevice(uint16_t index)
+WebRtc_Word32 AudioDeviceWindowsWave::SetPlayoutDevice(WebRtc_UWord16 index)
 {
 
     if (_playIsInitialized)
@@ -1349,7 +1349,7 @@ int32_t AudioDeviceWindowsWave::SetPlayoutDevice(uint16_t index)
 //  SetPlayoutDevice II (II)
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetPlayoutDevice(AudioDeviceModule::WindowsDeviceType device)
+WebRtc_Word32 AudioDeviceWindowsWave::SetPlayoutDevice(AudioDeviceModule::WindowsDeviceType device)
 {
     if (_playIsInitialized)
     {
@@ -1374,17 +1374,17 @@ int32_t AudioDeviceWindowsWave::SetPlayoutDevice(AudioDeviceModule::WindowsDevic
 //  PlayoutDeviceName
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::PlayoutDeviceName(
-    uint16_t index,
+WebRtc_Word32 AudioDeviceWindowsWave::PlayoutDeviceName(
+    WebRtc_UWord16 index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize])
 {
 
-    uint16_t nDevices(PlayoutDevices());
+    WebRtc_UWord16 nDevices(PlayoutDevices());
 
     // Special fix for the case when the user asks for the name of the default device.
     //
-    if (index == (uint16_t)(-1))
+    if (index == (WebRtc_UWord16)(-1))
     {
         index = 0;
     }
@@ -1479,17 +1479,17 @@ int32_t AudioDeviceWindowsWave::PlayoutDeviceName(
 //  RecordingDeviceName
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::RecordingDeviceName(
-    uint16_t index,
+WebRtc_Word32 AudioDeviceWindowsWave::RecordingDeviceName(
+    WebRtc_UWord16 index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize])
 {
 
-    uint16_t nDevices(RecordingDevices());
+    WebRtc_UWord16 nDevices(RecordingDevices());
 
     // Special fix for the case when the user asks for the name of the default device.
     //
-    if (index == (uint16_t)(-1))
+    if (index == (WebRtc_UWord16)(-1))
     {
         index = 0;
     }
@@ -1584,7 +1584,7 @@ int32_t AudioDeviceWindowsWave::RecordingDeviceName(
 //  RecordingDevices
 // ----------------------------------------------------------------------------
 
-int16_t AudioDeviceWindowsWave::RecordingDevices()
+WebRtc_Word16 AudioDeviceWindowsWave::RecordingDevices()
 {
 
     return (waveInGetNumDevs());
@@ -1594,7 +1594,7 @@ int16_t AudioDeviceWindowsWave::RecordingDevices()
 //  SetRecordingDevice I (II)
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetRecordingDevice(uint16_t index)
+WebRtc_Word32 AudioDeviceWindowsWave::SetRecordingDevice(WebRtc_UWord16 index)
 {
 
     if (_recIsInitialized)
@@ -1622,7 +1622,7 @@ int32_t AudioDeviceWindowsWave::SetRecordingDevice(uint16_t index)
 //  SetRecordingDevice II (II)
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetRecordingDevice(AudioDeviceModule::WindowsDeviceType device)
+WebRtc_Word32 AudioDeviceWindowsWave::SetRecordingDevice(AudioDeviceModule::WindowsDeviceType device)
 {
     if (device == AudioDeviceModule::kDefaultDevice)
     {
@@ -1647,13 +1647,13 @@ int32_t AudioDeviceWindowsWave::SetRecordingDevice(AudioDeviceModule::WindowsDev
 //  PlayoutIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::PlayoutIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::PlayoutIsAvailable(bool& available)
 {
 
     available = false;
 
     // Try to initialize the playout side
-    int32_t res = InitPlayout();
+    WebRtc_Word32 res = InitPlayout();
 
     // Cancel effect of initialization
     StopPlayout();
@@ -1670,13 +1670,13 @@ int32_t AudioDeviceWindowsWave::PlayoutIsAvailable(bool& available)
 //  RecordingIsAvailable
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::RecordingIsAvailable(bool& available)
+WebRtc_Word32 AudioDeviceWindowsWave::RecordingIsAvailable(bool& available)
 {
 
     available = false;
 
     // Try to initialize the recording side
-    int32_t res = InitRecording();
+    WebRtc_Word32 res = InitRecording();
 
     // Cancel effect of initialization
     StopRecording();
@@ -1693,7 +1693,7 @@ int32_t AudioDeviceWindowsWave::RecordingIsAvailable(bool& available)
 //  InitPlayout
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::InitPlayout()
+WebRtc_Word32 AudioDeviceWindowsWave::InitPlayout()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -1830,7 +1830,7 @@ int32_t AudioDeviceWindowsWave::InitPlayout()
 
     // Prepare wave-out headers
     //
-    const uint8_t bytesPerSample = 2*_playChannels;
+    const WebRtc_UWord8 bytesPerSample = 2*_playChannels;
 
     for (int n = 0; n < N_BUFFERS_OUT; n++)
     {
@@ -1889,7 +1889,7 @@ int32_t AudioDeviceWindowsWave::InitPlayout()
 //  InitRecording
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::InitRecording()
+WebRtc_Word32 AudioDeviceWindowsWave::InitRecording()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -2040,7 +2040,7 @@ int32_t AudioDeviceWindowsWave::InitRecording()
 //  StartRecording
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StartRecording()
+WebRtc_Word32 AudioDeviceWindowsWave::StartRecording()
 {
 
     if (!_recIsInitialized)
@@ -2082,7 +2082,7 @@ int32_t AudioDeviceWindowsWave::StartRecording()
 //  StopRecording
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StopRecording()
+WebRtc_Word32 AudioDeviceWindowsWave::StopRecording()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -2191,7 +2191,7 @@ bool AudioDeviceWindowsWave::PlayoutIsInitialized() const
 //  StartPlayout
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StartPlayout()
+WebRtc_Word32 AudioDeviceWindowsWave::StartPlayout()
 {
 
     if (!_playIsInitialized)
@@ -2233,7 +2233,7 @@ int32_t AudioDeviceWindowsWave::StartPlayout()
 //  StopPlayout
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::StopPlayout()
+WebRtc_Word32 AudioDeviceWindowsWave::StopPlayout()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -2306,10 +2306,10 @@ int32_t AudioDeviceWindowsWave::StopPlayout()
 //  PlayoutDelay
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::PlayoutDelay(uint16_t& delayMS) const
+WebRtc_Word32 AudioDeviceWindowsWave::PlayoutDelay(WebRtc_UWord16& delayMS) const
 {
     CriticalSectionScoped lock(&_critSect);
-    delayMS = (uint16_t)_sndCardPlayDelay;
+    delayMS = (WebRtc_UWord16)_sndCardPlayDelay;
     return 0;
 }
 
@@ -2317,10 +2317,10 @@ int32_t AudioDeviceWindowsWave::PlayoutDelay(uint16_t& delayMS) const
 //  RecordingDelay
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::RecordingDelay(uint16_t& delayMS) const
+WebRtc_Word32 AudioDeviceWindowsWave::RecordingDelay(WebRtc_UWord16& delayMS) const
 {
     CriticalSectionScoped lock(&_critSect);
-    delayMS = (uint16_t)_sndCardRecDelay;
+    delayMS = (WebRtc_UWord16)_sndCardRecDelay;
     return 0;
 }
 
@@ -2336,7 +2336,7 @@ bool AudioDeviceWindowsWave::Playing() const
 //  SetPlayoutBuffer
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::SetPlayoutBuffer(const AudioDeviceModule::BufferType type, uint16_t sizeMS)
+WebRtc_Word32 AudioDeviceWindowsWave::SetPlayoutBuffer(const AudioDeviceModule::BufferType type, WebRtc_UWord16 sizeMS)
 {
     CriticalSectionScoped lock(&_critSect);
     _playBufType = type;
@@ -2351,7 +2351,7 @@ int32_t AudioDeviceWindowsWave::SetPlayoutBuffer(const AudioDeviceModule::Buffer
 //  PlayoutBuffer
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::PlayoutBuffer(AudioDeviceModule::BufferType& type, uint16_t& sizeMS) const
+WebRtc_Word32 AudioDeviceWindowsWave::PlayoutBuffer(AudioDeviceModule::BufferType& type, WebRtc_UWord16& sizeMS) const
 {
     CriticalSectionScoped lock(&_critSect);
     type = _playBufType;
@@ -2371,10 +2371,10 @@ int32_t AudioDeviceWindowsWave::PlayoutBuffer(AudioDeviceModule::BufferType& typ
 //  CPULoad
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::CPULoad(uint16_t& load) const
+WebRtc_Word32 AudioDeviceWindowsWave::CPULoad(WebRtc_UWord16& load) const
 {
 
-    load = static_cast<uint16_t>(100*_avgCPULoad);
+    load = static_cast<WebRtc_UWord16>(100*_avgCPULoad);
 
     return 0;
 }
@@ -2459,7 +2459,7 @@ void AudioDeviceWindowsWave::ClearRecordingError()
 //  InputSanityCheckAfterUnlockedPeriod
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::InputSanityCheckAfterUnlockedPeriod() const
+WebRtc_Word32 AudioDeviceWindowsWave::InputSanityCheckAfterUnlockedPeriod() const
 {
     if (_hWaveIn == NULL)
     {
@@ -2473,7 +2473,7 @@ int32_t AudioDeviceWindowsWave::InputSanityCheckAfterUnlockedPeriod() const
 //  OutputSanityCheckAfterUnlockedPeriod
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::OutputSanityCheckAfterUnlockedPeriod() const
+WebRtc_Word32 AudioDeviceWindowsWave::OutputSanityCheckAfterUnlockedPeriod() const
 {
     if (_hWaveOut == NULL)
     {
@@ -2487,10 +2487,10 @@ int32_t AudioDeviceWindowsWave::OutputSanityCheckAfterUnlockedPeriod() const
 //  EnumeratePlayoutDevices
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::EnumeratePlayoutDevices()
+WebRtc_Word32 AudioDeviceWindowsWave::EnumeratePlayoutDevices()
 {
 
-    uint16_t nDevices(PlayoutDevices());
+    WebRtc_UWord16 nDevices(PlayoutDevices());
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "===============================================================");
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "#output devices: %u", nDevices);
 
@@ -2539,10 +2539,10 @@ int32_t AudioDeviceWindowsWave::EnumeratePlayoutDevices()
 //  EnumerateRecordingDevices
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::EnumerateRecordingDevices()
+WebRtc_Word32 AudioDeviceWindowsWave::EnumerateRecordingDevices()
 {
 
-    uint16_t nDevices(RecordingDevices());
+    WebRtc_UWord16 nDevices(RecordingDevices());
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "===============================================================");
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "#input devices: %u", nDevices);
 
@@ -2664,7 +2664,7 @@ void AudioDeviceWindowsWave::TraceWaveOutError(MMRESULT error) const
 //  PrepareStartPlayout
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::PrepareStartPlayout()
+WebRtc_Word32 AudioDeviceWindowsWave::PrepareStartPlayout()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -2701,7 +2701,7 @@ int32_t AudioDeviceWindowsWave::PrepareStartPlayout()
 //  PrepareStartRecording
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::PrepareStartRecording()
+WebRtc_Word32 AudioDeviceWindowsWave::PrepareStartRecording()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -2733,7 +2733,7 @@ int32_t AudioDeviceWindowsWave::PrepareStartRecording()
 
     for (int n = 0; n < N_BUFFERS_IN; n++)
     {
-        const uint8_t nBytesPerSample = 2*_recChannels;
+        const WebRtc_UWord8 nBytesPerSample = 2*_recChannels;
 
         // set up the input wave header
         _waveHeaderIn[n].lpData          = reinterpret_cast<LPSTR>(&_recBuffer[n]);
@@ -2776,14 +2776,14 @@ int32_t AudioDeviceWindowsWave::PrepareStartRecording()
 //  GetPlayoutBufferDelay
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::GetPlayoutBufferDelay(uint32_t& writtenSamples, uint32_t& playedSamples)
+WebRtc_Word32 AudioDeviceWindowsWave::GetPlayoutBufferDelay(WebRtc_UWord32& writtenSamples, WebRtc_UWord32& playedSamples)
 {
     int i;
     int ms_Header;
     long playedDifference;
     int msecInPlayoutBuffer(0);   // #milliseconds of audio in the playout buffer
 
-    const uint16_t nSamplesPerMs = (uint16_t)(N_PLAY_SAMPLES_PER_SEC/1000);  // default is 48000/1000 = 48
+    const WebRtc_UWord16 nSamplesPerMs = (WebRtc_UWord16)(N_PLAY_SAMPLES_PER_SEC/1000);  // default is 48000/1000 = 48
 
     MMRESULT res;
     MMTIME mmtime;
@@ -3003,13 +3003,13 @@ int32_t AudioDeviceWindowsWave::GetPlayoutBufferDelay(uint32_t& writtenSamples, 
 //  GetRecordingBufferDelay
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::GetRecordingBufferDelay(uint32_t& readSamples, uint32_t& recSamples)
+WebRtc_Word32 AudioDeviceWindowsWave::GetRecordingBufferDelay(WebRtc_UWord32& readSamples, WebRtc_UWord32& recSamples)
 {
     long recDifference;
     MMTIME mmtime;
     MMRESULT mmr;
 
-    const uint16_t nSamplesPerMs = (uint16_t)(N_REC_SAMPLES_PER_SEC/1000);  // default is 48000/1000 = 48
+    const WebRtc_UWord16 nSamplesPerMs = (WebRtc_UWord16)(N_REC_SAMPLES_PER_SEC/1000);  // default is 48000/1000 = 48
 
     // Retrieve the current input position of the given waveform-audio input device
     //
@@ -3121,9 +3121,9 @@ bool AudioDeviceWindowsWave::ThreadFunc(void* pThis)
 
 bool AudioDeviceWindowsWave::ThreadProcess()
 {
-    uint32_t time(0);
-    uint32_t playDiff(0);
-    uint32_t recDiff(0);
+    WebRtc_UWord32 time(0);
+    WebRtc_UWord32 playDiff(0);
+    WebRtc_UWord32 recDiff(0);
 
     LONGLONG playTime(0);
     LONGLONG recTime(0);
@@ -3184,7 +3184,7 @@ bool AudioDeviceWindowsWave::ThreadProcess()
     }
 
     if (_playing &&
-        (playDiff > (uint32_t)(_dTcheckPlayBufDelay - 1)) ||
+        (playDiff > (WebRtc_UWord32)(_dTcheckPlayBufDelay - 1)) ||
         (playDiff < 0))
     {
         Lock();
@@ -3227,8 +3227,8 @@ bool AudioDeviceWindowsWave::ThreadProcess()
         Lock();
         if (_recording)
         {
-            int32_t nRecordedBytes(0);
-            uint16_t maxIter(10);
+            WebRtc_Word32 nRecordedBytes(0);
+            WebRtc_UWord16 maxIter(10);
 
             // Deliver all availiable recorded buffers and update the CPU load measurement.
             // We use a while loop here to compensate for the fact that the multi-media timer
@@ -3285,11 +3285,11 @@ bool AudioDeviceWindowsWave::ThreadProcess()
 //  RecProc
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
+WebRtc_Word32 AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
 {
     MMRESULT res;
-    uint32_t bufCount(0);
-    uint32_t nBytesRecorded(0);
+    WebRtc_UWord32 bufCount(0);
+    WebRtc_UWord32 nBytesRecorded(0);
 
     consumedTime = 0;
 
@@ -3302,8 +3302,8 @@ int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
     bufCount = _recBufCount;
 
     // take mono/stereo mode into account when deriving size of a full buffer
-    const uint16_t bytesPerSample = 2*_recChannels;
-    const uint32_t fullBufferSizeInBytes = bytesPerSample * REC_BUF_SIZE_IN_SAMPLES;
+    const WebRtc_UWord16 bytesPerSample = 2*_recChannels;
+    const WebRtc_UWord32 fullBufferSizeInBytes = bytesPerSample * REC_BUF_SIZE_IN_SAMPLES;
 
     // read number of recorded bytes for the given input-buffer
     nBytesRecorded = _waveHeaderIn[bufCount].dwBytesRecorded;
@@ -3311,14 +3311,14 @@ int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
     if (nBytesRecorded == fullBufferSizeInBytes ||
        (nBytesRecorded > 0))
     {
-        int32_t msecOnPlaySide;
-        int32_t msecOnRecordSide;
-        uint32_t writtenSamples;
-        uint32_t playedSamples;
-        uint32_t readSamples, recSamples;
+        WebRtc_Word32 msecOnPlaySide;
+        WebRtc_Word32 msecOnRecordSide;
+        WebRtc_UWord32 writtenSamples;
+        WebRtc_UWord32 playedSamples;
+        WebRtc_UWord32 readSamples, recSamples;
         bool send = true;
 
-        uint32_t nSamplesRecorded = (nBytesRecorded/bytesPerSample);  // divide by 2 or 4 depending on mono or stereo
+        WebRtc_UWord32 nSamplesRecorded = (nBytesRecorded/bytesPerSample);  // divide by 2 or 4 depending on mono or stereo
 
         if (nBytesRecorded == fullBufferSizeInBytes)
         {
@@ -3355,7 +3355,7 @@ int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
 
         // If we use the alternative playout delay method, skip the clock drift compensation
         // since it will be an unreliable estimate and might degrade AEC performance.
-        int32_t drift = (_useHeader > 0) ? 0 : GetClockDrift(playedSamples, recSamples);
+        WebRtc_Word32 drift = (_useHeader > 0) ? 0 : GetClockDrift(playedSamples, recSamples);
 
         _ptrAudioBuffer->SetVQEData(msecOnPlaySide, msecOnRecordSide, drift);
 
@@ -3385,7 +3385,7 @@ int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
 
         if (_AGC)
         {
-            uint32_t  newMicLevel = _ptrAudioBuffer->NewMicLevel();
+            WebRtc_UWord32  newMicLevel = _ptrAudioBuffer->NewMicLevel();
             if (newMicLevel != 0)
             {
                 // The VQE will only deliver non-zero microphone levels when a change is needed.
@@ -3474,10 +3474,10 @@ int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
 
 int AudioDeviceWindowsWave::PlayProc(LONGLONG& consumedTime)
 {
-    int32_t remTimeMS(0);
+    WebRtc_Word32 remTimeMS(0);
     int8_t playBuffer[4*PLAY_BUF_SIZE_IN_SAMPLES];
-    uint32_t writtenSamples(0);
-    uint32_t playedSamples(0);
+    WebRtc_UWord32 writtenSamples(0);
+    WebRtc_UWord32 playedSamples(0);
 
     LARGE_INTEGER t1;
     LARGE_INTEGER t2;
@@ -3492,7 +3492,7 @@ int AudioDeviceWindowsWave::PlayProc(LONGLONG& consumedTime)
     // The threshold can be adaptive or fixed. The adaptive scheme is updated
     // also for fixed mode but the updated threshold is not utilized.
     //
-    const uint16_t thresholdMS =
+    const WebRtc_UWord16 thresholdMS =
         (_playBufType == AudioDeviceModule::kAdaptiveBufferSize) ? _playBufDelay : _playBufDelayFixed;
 
     if (remTimeMS < thresholdMS + 9)
@@ -3559,7 +3559,7 @@ int AudioDeviceWindowsWave::PlayProc(LONGLONG& consumedTime)
         // Ensure that this callback is executed without taking the audio-thread lock.
         //
         UnLock();
-        uint32_t nSamples = _ptrAudioBuffer->RequestPlayoutData(PLAY_BUF_SIZE_IN_SAMPLES);
+        WebRtc_UWord32 nSamples = _ptrAudioBuffer->RequestPlayoutData(PLAY_BUF_SIZE_IN_SAMPLES);
         Lock();
 
         if (OutputSanityCheckAfterUnlockedPeriod() == -1)
@@ -3626,7 +3626,7 @@ int AudioDeviceWindowsWave::PlayProc(LONGLONG& consumedTime)
 //  Write
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::Write(int8_t* data, uint16_t nSamples)
+WebRtc_Word32 AudioDeviceWindowsWave::Write(int8_t* data, WebRtc_UWord16 nSamples)
 {
     if (_hWaveOut == NULL)
     {
@@ -3637,11 +3637,11 @@ int32_t AudioDeviceWindowsWave::Write(int8_t* data, uint16_t nSamples)
     {
         MMRESULT res;
 
-        const uint16_t bufCount(_playBufCount);
+        const WebRtc_UWord16 bufCount(_playBufCount);
 
         // Place data in the memory associated with _waveHeaderOut[bufCount]
         //
-        const int16_t nBytes = (2*_playChannels)*nSamples;
+        const WebRtc_Word16 nBytes = (2*_playChannels)*nSamples;
         memcpy(&_playBuffer[bufCount][0], &data[0], nBytes);
 
         // Send a data block to the given waveform-audio output device.
@@ -3684,7 +3684,7 @@ int32_t AudioDeviceWindowsWave::Write(int8_t* data, uint16_t nSamples)
 //    GetClockDrift
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::GetClockDrift(const uint32_t plSamp, const uint32_t rcSamp)
+WebRtc_Word32 AudioDeviceWindowsWave::GetClockDrift(const WebRtc_UWord32 plSamp, const WebRtc_UWord32 rcSamp)
 {
     int drift = 0;
     unsigned int plSampDiff = 0, rcSampDiff = 0;
@@ -3733,10 +3733,10 @@ int32_t AudioDeviceWindowsWave::GetClockDrift(const uint32_t plSamp, const uint3
 //  MonitorRecording
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::MonitorRecording(const uint32_t time)
+WebRtc_Word32 AudioDeviceWindowsWave::MonitorRecording(const WebRtc_UWord32 time)
 {
-    const uint16_t bytesPerSample = 2*_recChannels;
-    const uint32_t nRecordedSamples = _recordedBytes/bytesPerSample;
+    const WebRtc_UWord16 bytesPerSample = 2*_recChannels;
+    const WebRtc_UWord32 nRecordedSamples = _recordedBytes/bytesPerSample;
 
     if (nRecordedSamples > 5*N_REC_SAMPLES_PER_SEC)
     {
@@ -3785,9 +3785,9 @@ int32_t AudioDeviceWindowsWave::MonitorRecording(const uint32_t time)
 //  Restart timer if needed (they seem to be messed up after a hibernate).
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWave::RestartTimerIfNeeded(const uint32_t time)
+WebRtc_Word32 AudioDeviceWindowsWave::RestartTimerIfNeeded(const WebRtc_UWord32 time)
 {
-    const uint32_t diffMS = time - _prevTimerCheckTime;
+    const WebRtc_UWord32 diffMS = time - _prevTimerCheckTime;
     _prevTimerCheckTime = time;
 
     if (diffMS > 7)

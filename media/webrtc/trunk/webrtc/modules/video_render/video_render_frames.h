@@ -23,22 +23,22 @@ class VideoRenderFrames {
   ~VideoRenderFrames();
 
   // Add a frame to the render queue
-  int32_t AddFrame(I420VideoFrame* new_frame);
+  WebRtc_Word32 AddFrame(I420VideoFrame* new_frame);
 
   // Get a frame for rendering, if it's time to render.
   I420VideoFrame* FrameToRender();
 
   // Return an old frame
-  int32_t ReturnFrame(I420VideoFrame* old_frame);
+  WebRtc_Word32 ReturnFrame(I420VideoFrame* old_frame);
 
   // Releases all frames
-  int32_t ReleaseAllFrames();
+  WebRtc_Word32 ReleaseAllFrames();
 
   // Returns the number of ms to next frame to render
-  uint32_t TimeToNextFrameRelease();
+  WebRtc_UWord32 TimeToNextFrameRelease();
 
   // Sets estimates delay in renderer
-  int32_t SetRenderDelay(const uint32_t render_delay);
+  WebRtc_Word32 SetRenderDelay(const WebRtc_UWord32 render_delay);
 
  private:
   // 10 seconds for 30 fps.
@@ -54,7 +54,7 @@ class VideoRenderFrames {
   ListWrapper empty_frames_;
 
   // Estimated delay from a frame is released until it's rendered.
-  uint32_t render_delay_ms_;
+  WebRtc_UWord32 render_delay_ms_;
 };
 
 }  // namespace webrtc

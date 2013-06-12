@@ -24,11 +24,11 @@ extern "C"
 
 typedef struct
 {
-    uint8_t payloadType;
-    uint16_t sequenceNumber;
-    uint32_t timeStamp;
-    uint32_t SSRC;
-    uint8_t markerBit;
+    WebRtc_UWord8 payloadType;
+    WebRtc_UWord16 sequenceNumber;
+    WebRtc_UWord32 timeStamp;
+    WebRtc_UWord32 SSRC;
+    WebRtc_UWord8 markerBit;
 } WebRtcNetEQ_RTPInfo;
 
 /****************************************************************************
@@ -48,8 +48,8 @@ typedef struct
  *                            -1 - Error
  */
 int WebRtcNetEQ_RecInRTPStruct(void *inst, WebRtcNetEQ_RTPInfo *rtpInfo,
-                               const uint8_t *payloadPtr, int16_t payloadLenBytes,
-                               uint32_t timeRec);
+                               const WebRtc_UWord8 *payloadPtr, WebRtc_Word16 payloadLenBytes,
+                               WebRtc_UWord32 timeRec);
 
 /****************************************************************************
  * WebRtcNetEQ_GetMasterSlaveInfoSize(...)
@@ -86,9 +86,9 @@ int WebRtcNetEQ_GetMasterSlaveInfoSize();
  *						  -1 - Error
  */
 
-int WebRtcNetEQ_RecOutMasterSlave(void *inst, int16_t *pw16_outData,
-                                  int16_t *pw16_len, void *msInfo,
-                                  int16_t isMaster);
+int WebRtcNetEQ_RecOutMasterSlave(void *inst, WebRtc_Word16 *pw16_outData,
+                                  WebRtc_Word16 *pw16_len, void *msInfo,
+                                  WebRtc_Word16 isMaster);
 
 typedef struct
 {
@@ -117,46 +117,6 @@ typedef struct
  */
 int WebRtcNetEQ_GetNetworkStatistics(void *inst, WebRtcNetEQ_NetworkStatistics *stats);
 
-
-typedef struct {
-  /* Samples removed from background noise only segments. */
-  int accelerate_bgn_samples;
-
-  /* Samples removed from normal audio segments. */
-  int accelerate_normal_samples;
-
-  /* Number of samples synthesized during background noise only segments. */
-  int expand_bgn_sampels;
-
-  /* Number of samples synthesized during normal audio segments. */
-  int expand_normal_samples;
-
-  /* Number of samples synthesized during background noise only segments,
-   * in preemptive mode. */
-  int preemptive_expand_bgn_samples;
-
-  /* Number of samples synthesized during normal audio segments, in preemptive
-   * mode. */
-  int preemptive_expand_normal_samples;
-
-  /* Number of samples synthesized during background noise only segments,
-   * while merging. */
-  int merge_expand_bgn_samples;
-
-  /* Number of samples synthesized during normal audio segments, while
-   * merging. */
-  int merge_expand_normal_samples;
-} WebRtcNetEQ_ProcessingActivity;
-
-/*
- * Get the processing activities from NetEQ.
- * The statistics are reset after the query.
- * This API is meant to obtain processing activities in high granularity,
- * e.g. per RecOut() call.
- */
-void WebRtcNetEQ_GetProcessingActivity(void* inst,
-                                       WebRtcNetEQ_ProcessingActivity* stat);
-
 /*
  * Get the raw waiting times for decoded frames. The function writes the last
  * recorded waiting times (from frame arrival to frame decoding) to the memory
@@ -183,7 +143,7 @@ int WebRtcNetEQ_GetRawFrameWaitingTimes(void *inst,
 typedef int (*WebRtcNetEQ_VADInitFunction)(void *VAD_inst);
 typedef int (*WebRtcNetEQ_VADSetmodeFunction)(void *VAD_inst, int mode);
 typedef int (*WebRtcNetEQ_VADFunction)(void *VAD_inst, int fs,
-    int16_t *frame, int frameLen);
+    WebRtc_Word16 *frame, int frameLen);
 
 /****************************************************************************
  * WebRtcNetEQ_SetVADInstance(...)
@@ -250,8 +210,8 @@ int WebRtcNetEQ_SetVADMode(void *NetEQ_inst, int mode);
  *						  -1 - Error
  */
 
-int WebRtcNetEQ_RecOutNoDecode(void *inst, int16_t *pw16_outData,
-                               int16_t *pw16_len);
+int WebRtcNetEQ_RecOutNoDecode(void *inst, WebRtc_Word16 *pw16_outData,
+                               WebRtc_Word16 *pw16_len);
 
 /****************************************************************************
  * WebRtcNetEQ_FlushBuffers(...)
@@ -270,44 +230,6 @@ int WebRtcNetEQ_RecOutNoDecode(void *inst, int16_t *pw16_outData,
  */
 
 int WebRtcNetEQ_FlushBuffers(void *inst);
-
-/*****************************************************************************
- * void WebRtcNetEq_EnableAVSync(...)
- *
- * Enable AV-sync. If Enabled, NetEq will screen for sync payloads. For
- * each sync payload a silence frame is generated.
- *
- * Input:
- *    - inst          : NetEQ instance
- *    - enable        : non-zero to enable, otherwise disabled.
- *
- * Output:
- *    - inst          : Updated NetEQ instance
- *
- */
-
-void WebRtcNetEQ_EnableAVSync(void* inst, int enable);
-
-/****************************************************************************
- * WebRtcNetEQ_RecInSyncRTP(...)
- *
- * Insert a sync packet with the given RTP specification.
- *
- * Input:
- *    - inst              : NetEQ instance
- *    - rtpInfo           : Pointer to RTP info
- *    - receive_timestamp : Receive time (in timestamps of the used codec)
- *
- * Output:
- *    - inst              : Updated NetEQ instance
- *
- * Return value           : if succeeded it returns the number of bytes pushed
- *                          in, otherwise returns -1.
- */
-
-int WebRtcNetEQ_RecInSyncRTP(void* inst,
-                             WebRtcNetEQ_RTPInfo* rtp_info,
-                             uint32_t receive_timestamp);
 
 #ifdef __cplusplus
 }

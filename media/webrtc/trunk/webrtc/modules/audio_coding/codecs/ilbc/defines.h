@@ -118,53 +118,53 @@
 
 /* Struct for the bits */
 typedef struct iLBC_bits_t_ {
-  int16_t lsf[LSF_NSPLIT*LPC_N_MAX];
-  int16_t cb_index[CB_NSTAGES*(NASUB_MAX+1)];  /* First CB_NSTAGES values contains extra CB index */
-  int16_t gain_index[CB_NSTAGES*(NASUB_MAX+1)]; /* First CB_NSTAGES values contains extra CB gain */
-  int16_t idxForMax;
-  int16_t state_first;
-  int16_t idxVec[STATE_SHORT_LEN_30MS];
-  int16_t firstbits;
-  int16_t startIdx;
+  WebRtc_Word16 lsf[LSF_NSPLIT*LPC_N_MAX];
+  WebRtc_Word16 cb_index[CB_NSTAGES*(NASUB_MAX+1)];  /* First CB_NSTAGES values contains extra CB index */
+  WebRtc_Word16 gain_index[CB_NSTAGES*(NASUB_MAX+1)]; /* First CB_NSTAGES values contains extra CB gain */
+  WebRtc_Word16 idxForMax;
+  WebRtc_Word16 state_first;
+  WebRtc_Word16 idxVec[STATE_SHORT_LEN_30MS];
+  WebRtc_Word16 firstbits;
+  WebRtc_Word16 startIdx;
 } iLBC_bits;
 
 /* type definition encoder instance */
 typedef struct iLBC_Enc_Inst_t_ {
 
   /* flag for frame size mode */
-  int16_t mode;
+  WebRtc_Word16 mode;
 
   /* basic parameters for different frame sizes */
-  int16_t blockl;
-  int16_t nsub;
-  int16_t nasub;
-  int16_t no_of_bytes, no_of_words;
-  int16_t lpc_n;
-  int16_t state_short_len;
+  WebRtc_Word16 blockl;
+  WebRtc_Word16 nsub;
+  WebRtc_Word16 nasub;
+  WebRtc_Word16 no_of_bytes, no_of_words;
+  WebRtc_Word16 lpc_n;
+  WebRtc_Word16 state_short_len;
 
   /* analysis filter state */
-  int16_t anaMem[LPC_FILTERORDER];
+  WebRtc_Word16 anaMem[LPC_FILTERORDER];
 
   /* Fix-point old lsf parameters for interpolation */
-  int16_t lsfold[LPC_FILTERORDER];
-  int16_t lsfdeqold[LPC_FILTERORDER];
+  WebRtc_Word16 lsfold[LPC_FILTERORDER];
+  WebRtc_Word16 lsfdeqold[LPC_FILTERORDER];
 
   /* signal buffer for LP analysis */
-  int16_t lpc_buffer[LPC_LOOKBACK + BLOCKL_MAX];
+  WebRtc_Word16 lpc_buffer[LPC_LOOKBACK + BLOCKL_MAX];
 
   /* state of input HP filter */
-  int16_t hpimemx[2];
-  int16_t hpimemy[4];
+  WebRtc_Word16 hpimemx[2];
+  WebRtc_Word16 hpimemy[4];
 
 #ifdef SPLIT_10MS
-  int16_t weightdenumbuf[66];
-  int16_t past_samples[160];
-  uint16_t bytes[25];
-  int16_t section;
-  int16_t Nfor_flag;
-  int16_t Nback_flag;
-  int16_t start_pos;
-  int16_t diff;
+  WebRtc_Word16 weightdenumbuf[66];
+  WebRtc_Word16 past_samples[160];
+  WebRtc_UWord16 bytes[25];
+  WebRtc_Word16 section;
+  WebRtc_Word16 Nfor_flag;
+  WebRtc_Word16 Nback_flag;
+  WebRtc_Word16 start_pos;
+  WebRtc_Word16 diff;
 #endif
 
 } iLBC_Enc_Inst_t;
@@ -173,46 +173,46 @@ typedef struct iLBC_Enc_Inst_t_ {
 typedef struct iLBC_Dec_Inst_t_ {
 
   /* flag for frame size mode */
-  int16_t mode;
+  WebRtc_Word16 mode;
 
   /* basic parameters for different frame sizes */
-  int16_t blockl;
-  int16_t nsub;
-  int16_t nasub;
-  int16_t no_of_bytes, no_of_words;
-  int16_t lpc_n;
-  int16_t state_short_len;
+  WebRtc_Word16 blockl;
+  WebRtc_Word16 nsub;
+  WebRtc_Word16 nasub;
+  WebRtc_Word16 no_of_bytes, no_of_words;
+  WebRtc_Word16 lpc_n;
+  WebRtc_Word16 state_short_len;
 
   /* synthesis filter state */
-  int16_t syntMem[LPC_FILTERORDER];
+  WebRtc_Word16 syntMem[LPC_FILTERORDER];
 
   /* old LSF for interpolation */
-  int16_t lsfdeqold[LPC_FILTERORDER];
+  WebRtc_Word16 lsfdeqold[LPC_FILTERORDER];
 
   /* pitch lag estimated in enhancer and used in PLC */
   int last_lag;
 
   /* PLC state information */
   int consPLICount, prev_enh_pl;
-  int16_t perSquare;
+  WebRtc_Word16 perSquare;
 
-  int16_t prevScale, prevPLI;
-  int16_t prevLag, prevLpc[LPC_FILTERORDER+1];
-  int16_t prevResidual[NSUB_MAX*SUBL];
-  int16_t seed;
+  WebRtc_Word16 prevScale, prevPLI;
+  WebRtc_Word16 prevLag, prevLpc[LPC_FILTERORDER+1];
+  WebRtc_Word16 prevResidual[NSUB_MAX*SUBL];
+  WebRtc_Word16 seed;
 
   /* previous synthesis filter parameters */
 
-  int16_t old_syntdenum[(LPC_FILTERORDER + 1)*NSUB_MAX];
+  WebRtc_Word16 old_syntdenum[(LPC_FILTERORDER + 1)*NSUB_MAX];
 
   /* state of output HP filter */
-  int16_t hpimemx[2];
-  int16_t hpimemy[4];
+  WebRtc_Word16 hpimemx[2];
+  WebRtc_Word16 hpimemy[4];
 
   /* enhancer state information */
   int use_enhancer;
-  int16_t enh_buf[ENH_BUFL+ENH_BUFL_FILTEROVERHEAD];
-  int16_t enh_period[ENH_NBLOCKS_TOT];
+  WebRtc_Word16 enh_buf[ENH_BUFL+ENH_BUFL_FILTEROVERHEAD];
+  WebRtc_Word16 enh_period[ENH_NBLOCKS_TOT];
 
 } iLBC_Dec_Inst_t;
 

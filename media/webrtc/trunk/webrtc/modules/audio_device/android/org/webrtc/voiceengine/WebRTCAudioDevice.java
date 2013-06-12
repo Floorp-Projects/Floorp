@@ -61,10 +61,10 @@ class WebRTCAudioDevice {
     @SuppressWarnings("unused")
     private int InitRecording(int audioSource, int sampleRate) {
         // get the minimum buffer size that can be used
-        int minRecBufSize = AudioRecord.getMinBufferSize(
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT);
+        int minRecBufSize =
+                        AudioRecord.getMinBufferSize(sampleRate,
+                                        AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                                        AudioFormat.ENCODING_PCM_16BIT);
 
         // DoLog("min rec buf size is " + minRecBufSize);
 
@@ -83,7 +83,7 @@ class WebRTCAudioDevice {
             _audioRecord = new AudioRecord(
                             audioSource,
                             sampleRate,
-                            AudioFormat.CHANNEL_IN_MONO,
+                            AudioFormat.CHANNEL_CONFIGURATION_MONO,
                             AudioFormat.ENCODING_PCM_16BIT,
                             recBufSize);
 
@@ -127,7 +127,7 @@ class WebRTCAudioDevice {
         // get the minimum buffer size that can be used
         int minPlayBufSize = AudioTrack.getMinBufferSize(
             sampleRate,
-            AudioFormat.CHANNEL_OUT_MONO,
+            AudioFormat.CHANNEL_CONFIGURATION_MONO,
             AudioFormat.ENCODING_PCM_16BIT);
 
         // DoLog("min play buf size is " + minPlayBufSize);
@@ -149,7 +149,7 @@ class WebRTCAudioDevice {
             _audioTrack = new AudioTrack(
                             AudioManager.STREAM_VOICE_CALL,
                             sampleRate,
-                            AudioFormat.CHANNEL_OUT_MONO,
+                            AudioFormat.CHANNEL_CONFIGURATION_MONO,
                             AudioFormat.ENCODING_PCM_16BIT,
                             playBufSize, AudioTrack.MODE_STREAM);
         } catch (Exception e) {
@@ -388,7 +388,7 @@ class WebRTCAudioDevice {
             return -1;
         }
 
-        int apiLevel = android.os.Build.VERSION.SDK_INT;
+        int apiLevel = Integer.parseInt(android.os.Build.VERSION.SDK);
 
         if ((3 == apiLevel) || (4 == apiLevel)) {
             // 1.5 and 1.6 devices
@@ -464,7 +464,7 @@ class WebRTCAudioDevice {
     }
 
     private void SetAudioMode(boolean startCall) {
-        int apiLevel = android.os.Build.VERSION.SDK_INT;
+        int apiLevel = Integer.parseInt(android.os.Build.VERSION.SDK);
 
         if (_audioManager == null && _context != null) {
             _audioManager = (AudioManager)

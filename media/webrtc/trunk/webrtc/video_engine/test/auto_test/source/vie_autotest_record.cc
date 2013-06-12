@@ -17,22 +17,20 @@
 #include <stdio.h>
 #include <fstream>
 
-#include "webrtc/common_types.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
-#include "webrtc/test/channel_transport/include/channel_transport.h"
-#include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
-#include "webrtc/voice_engine/include/voe_base.h"
-#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
-#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
-#include "webrtc/video_engine/include/vie_base.h"
-#include "webrtc/video_engine/include/vie_capture.h"
-#include "webrtc/video_engine/include/vie_codec.h"
-#include "webrtc/video_engine/include/vie_file.h"
-#include "webrtc/video_engine/include/vie_network.h"
-#include "webrtc/video_engine/include/vie_render.h"
-#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
-#include "webrtc/voice_engine/include/voe_network.h"
-#include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
+#include "common_types.h"
+#include "video_engine/test/libvietest/include/tb_external_transport.h"
+#include "voice_engine/include/voe_base.h"
+#include "video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "video_engine/test/auto_test/interface/vie_autotest.h"
+#include "video_engine/include/vie_base.h"
+#include "video_engine/include/vie_capture.h"
+#include "video_engine/include/vie_codec.h"
+#include "video_engine/include/vie_file.h"
+#include "video_engine/include/vie_network.h"
+#include "video_engine/include/vie_render.h"
+#include "video_engine/include/vie_rtp_rtcp.h"
+#include "voice_engine/include/voe_rtp_rtcp.h"
+#include "system_wrappers/interface/tick_util.h"
 
 #define VCM_RED_PAYLOAD_TYPE            96
 #define VCM_ULPFEC_PAYLOAD_TYPE         97
@@ -141,8 +139,6 @@ int VideoEngineSampleRecordCode(void* window1, void* window2) {
   webrtc::VoECodec* voe_codec = webrtc::VoECodec::GetInterface(voe);
   webrtc::VoEAudioProcessing* voe_apm =
        webrtc::VoEAudioProcessing::GetInterface(voe);
-  webrtc::VoENetwork* voe_network =
-    webrtc::VoENetwork::GetInterface(voe);
 
   // Get the audio device for the call.
   memset(audio_capture_device_name, 0, KMaxUniqueIdLength);
@@ -151,24 +147,20 @@ int VideoEngineSampleRecordCode(void* window1, void* window2) {
                   audio_capture_device_index, audio_playbackDeviceName,
                   audio_playback_device_index);
 
+
   // Get the audio codec for the call.
   memset(static_cast<void*>(&audio_codec), 0, sizeof(audio_codec));
   GetAudioCodecRecord(voe_codec, audio_codec);
 
   audio_channel = voe_base->CreateChannel();
-
-  webrtc::scoped_ptr<webrtc::test::VoiceChannelTransport>
-      voice_channel_transport(
-          new webrtc::test::VoiceChannelTransport(voe_network, audio_channel));
-
-  voice_channel_transport->SetSendDestination(ipAddress, audio_tx_port);
-  voice_channel_transport->SetLocalReceiver(audio_rx_port);
-
-  voe_hardware->SetRecordingDevice(audio_capture_device_index);
-  voe_hardware->SetPlayoutDevice(audio_playback_device_index);
-  voe_codec->SetSendCodec(audio_channel, audio_codec);
-  voe_apm->SetAgcStatus(true, webrtc::kAgcDefault);
-  voe_apm->SetNsStatus(true, webrtc::kNsHighSuppression);
+  error = voe_base->SetSendDestination(audio_channel, audio_tx_port,
+                                        ipAddress);
+  error = voe_base->SetLocalReceiver(audio_channel, audio_rx_port);
+  error = voe_hardware->SetRecordingDevice(audio_capture_device_index);
+  error = voe_hardware->SetPlayoutDevice(audio_playback_device_index);
+  error = voe_codec->SetSendCodec(audio_channel, audio_codec);
+  error = voe_apm->SetAgcStatus(true, webrtc::kAgcDefault);
+  error = voe_apm->SetNsStatus(true, webrtc::kNsHighSuppression);
 
   //
   // List available capture devices, allocate and connect.
@@ -360,17 +352,18 @@ int VideoEngineSampleRecordCode(void* window1, void* window2) {
     printf("ERROR in ViENetwork::GetInterface\n");
     return -1;
   }
-  webrtc::test::VideoChannelTransport* video_channel_transport =
-      new webrtc::test::VideoChannelTransport(ptrViENetwork, videoChannel);
 
-  error = video_channel_transport->SetSendDestination(ipAddress, rtpPort);
+  // Setting External transport
+  TbExternalTransport extTransport(*(ptrViENetwork), videoChannel, NULL);
+  error = ptrViENetwork->SetLocalReceiver(videoChannel, rtpPort);
   if (error == -1) {
-    printf("ERROR in SetSendDestination\n");
+    printf("ERROR in ViENetwork::SetLocalReceiver\n");
     return -1;
   }
-  error = video_channel_transport->SetLocalReceiver(rtpPort);
+  error = ptrViENetwork->SetSendDestination(videoChannel,
+                                            ipAddress, rtpPort);
   if (error == -1) {
-    printf("ERROR in SetLocalReceiver\n");
+    printf("ERROR in ViENetwork::SetSendDestination\n");
     return -1;
   }
 
@@ -527,7 +520,6 @@ int VideoEngineSampleRecordCode(void* window1, void* window2) {
     printf("ERROR in ViEBase::DeleteChannel\n");
     return -1;
   }
-  delete video_channel_transport;
 
   int remainingInterfaces = 0;
   remainingInterfaces = ptrViECodec->Release();
@@ -540,6 +532,7 @@ int VideoEngineSampleRecordCode(void* window1, void* window2) {
     printf("ERROR: Could not release all interfaces\n");
     return -1;
   }
+
   bool deleted = webrtc::VideoEngine::Delete(ptrViE);
   if (deleted == false) {
     printf("ERROR in VideoEngine::Delete\n");
@@ -571,7 +564,7 @@ int ViEAutoTest::ViERecordCall() {
 }
 
 bool GetAudioCodecRecord(webrtc::VoECodec* voe_codec,
-                         webrtc::CodecInst& audio_codec) {
+                       webrtc::CodecInst& audio_codec) {
   int error = 0;
   int number_of_errors = 0;
   memset(&audio_codec, 0, sizeof(webrtc::CodecInst));

@@ -26,11 +26,11 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_DecoderInterpolateLsp(
-    int16_t *syntdenum,  /* (o) synthesis filter coefficients */
-    int16_t *weightdenum, /* (o) weighting denumerator
+    WebRtc_Word16 *syntdenum,  /* (o) synthesis filter coefficients */
+    WebRtc_Word16 *weightdenum, /* (o) weighting denumerator
                                    coefficients */
-    int16_t *lsfdeq,   /* (i) dequantized lsf coefficients */
-    int16_t length,   /* (i) length of lsf coefficient vector */
+    WebRtc_Word16 *lsfdeq,   /* (i) dequantized lsf coefficients */
+    WebRtc_Word16 length,   /* (i) length of lsf coefficient vector */
     iLBC_Dec_Inst_t *iLBCdec_inst
     /* (i) the decoder state structure */
                                           );

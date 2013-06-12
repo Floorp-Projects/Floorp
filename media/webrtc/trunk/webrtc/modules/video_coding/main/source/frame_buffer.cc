@@ -52,13 +52,13 @@ VCMFrameBuffer::SetPreviousFrameLoss()
     _sessionInfo.SetPreviousFrameLoss();
 }
 
-int32_t
+WebRtc_Word32
 VCMFrameBuffer::GetLowSeqNum() const
 {
     return _sessionInfo.LowSequenceNumber();
 }
 
-int32_t
+WebRtc_Word32
 VCMFrameBuffer::GetHighSeqNum() const
 {
     return _sessionInfo.HighSequenceNumber();
@@ -92,8 +92,8 @@ VCMFrameBuffer::IsSessionComplete() const
 
 // Insert packet
 VCMFrameBufferEnum
-VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
-                             bool enableDecodableState, uint32_t rttMS)
+VCMFrameBuffer::InsertPacket(const VCMPacket& packet, WebRtc_Word64 timeInMs,
+                             bool enableDecodableState, WebRtc_UWord32 rttMS)
 {
     if (_state == kStateDecoding)
     {
@@ -142,16 +142,16 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
         }
     }
 
-    uint32_t requiredSizeBytes = Length() + packet.sizeBytes +
+    WebRtc_UWord32 requiredSizeBytes = Length() + packet.sizeBytes +
                    (packet.insertStartCode ? kH264StartCodeLengthBytes : 0);
     if (requiredSizeBytes >= _size)
     {
-        const uint8_t* prevBuffer = _buffer;
-        const uint32_t increments = requiredSizeBytes /
+        const WebRtc_UWord8* prevBuffer = _buffer;
+        const WebRtc_UWord32 increments = requiredSizeBytes /
                                           kBufferIncStepSizeBytes +
                                         (requiredSizeBytes %
                                          kBufferIncStepSizeBytes > 0);
-        const uint32_t newSize = _size +
+        const WebRtc_UWord32 newSize = _size +
                                        increments * kBufferIncStepSizeBytes;
         if (newSize > kMaxJBFrameSizeBytes)
         {
@@ -178,7 +178,7 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
         return kDuplicatePacket;
     }
     // update length
-    _length = Length() + static_cast<uint32_t>(retVal);
+    _length = Length() + static_cast<WebRtc_UWord32>(retVal);
 
     _latestPacketTimeMs = timeInMs;
 
@@ -198,10 +198,25 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
     return kIncomplete;
 }
 
-int64_t
+WebRtc_Word64
 VCMFrameBuffer::LatestPacketTimeMs() const
 {
     return _latestPacketTimeMs;
+}
+
+// Build hard NACK list:Zero out all entries in list up to and including the
+// (first) entry equal to _lowSeqNum.
+int VCMFrameBuffer::BuildHardNackList(int* list, int num) {
+  if (_sessionInfo.BuildHardNackList(list, num) != 0) {
+   return -1;
+  }
+  return 0;
+}
+
+// Build selective NACK list: Create a soft (selective) list of entries to zero
+// out up to and including the (first) entry equal to _lowSeqNum.
+int VCMFrameBuffer::BuildSoftNackList(int* list, int num, int rttMs) {
+  return _sessionInfo.BuildSoftNackList(list, num, rttMs);
 }
 
 void
@@ -210,16 +225,10 @@ VCMFrameBuffer::IncrementNackCount()
     _nackCount++;
 }
 
-int16_t
+WebRtc_Word16
 VCMFrameBuffer::GetNackCount() const
 {
     return _nackCount;
-}
-
-bool
-VCMFrameBuffer::HaveFirstPacket() const
-{
-    return _sessionInfo.HaveFirstPacket();
 }
 
 bool
@@ -246,7 +255,7 @@ VCMFrameBuffer::Reset()
 void
 VCMFrameBuffer::MakeSessionDecodable()
 {
-    uint32_t retVal;
+    WebRtc_UWord32 retVal;
 #ifdef INDEPENDENT_PARTITIONS
     if (_codec != kVideoCodecVP8) {
         retVal = _sessionInfo.MakeDecodable();
@@ -326,7 +335,7 @@ VCMFrameBuffer::RestructureFrameInformation()
     _missingFrame = _sessionInfo.PreviousFrameLoss();
 }
 
-int32_t
+WebRtc_Word32
 VCMFrameBuffer::ExtractFromStorage(const EncodedVideoData& frameFromStorage)
 {
     _frameType = ConvertFrameType(frameFromStorage.frameType);
@@ -338,7 +347,7 @@ VCMFrameBuffer::ExtractFromStorage(const EncodedVideoData& frameFromStorage)
     _completeFrame = frameFromStorage.completeFrame;
     _renderTimeMs = frameFromStorage.renderTimeMs;
     _codec = frameFromStorage.codec;
-    const uint8_t *prevBuffer = _buffer;
+    const WebRtc_UWord8 *prevBuffer = _buffer;
     if (VerifyAndAllocate(frameFromStorage.payloadSize) < 0)
     {
         return VCM_MEMORY;
@@ -373,7 +382,7 @@ VCMFrameBuffer::GetState() const
 
 // Get current state of frame
 VCMFrameBufferStateEnum
-VCMFrameBuffer::GetState(uint32_t& timeStamp) const
+VCMFrameBuffer::GetState(WebRtc_UWord32& timeStamp) const
 {
     timeStamp = TimeStamp();
     return GetState();

@@ -48,12 +48,12 @@
 #define TRUE (!FALSE)
 #endif
 
-static __inline int16_t saturate(int32_t amp)
+static __inline WebRtc_Word16 saturate(WebRtc_Word32 amp)
 {
-    int16_t amp16;
+    WebRtc_Word16 amp16;
 
     /* Hopefully this is optimised for the common case - not clipping */
-    amp16 = (int16_t) amp;
+    amp16 = (WebRtc_Word16) amp;
     if (amp == amp16)
         return amp16;
     if (amp > WEBRTC_INT16_MAX)
@@ -191,10 +191,10 @@ int WebRtc_g722_encode_release(g722_encode_state_t *s)
  */
 //#define RUN_LIKE_REFERENCE_G722
 #ifdef RUN_LIKE_REFERENCE_G722
-int16_t limitValues (int16_t rl)
+WebRtc_Word16 limitValues (WebRtc_Word16 rl)
 {
 
-    int16_t yl;
+    WebRtc_Word16 yl;
 
     yl = (rl > 16383) ? 16383 : ((rl < -16384) ? -16384 : rl);
 
@@ -202,8 +202,8 @@ int16_t limitValues (int16_t rl)
 }
 #endif
 
-int WebRtc_g722_encode(g722_encode_state_t *s, uint8_t g722_data[],
-                       const int16_t amp[], int len)
+int WebRtc_g722_encode(g722_encode_state_t *s, WebRtc_UWord8 g722_data[],
+                       const WebRtc_Word16 amp[], int len)
 {
     static const int q6[32] =
     {
@@ -418,14 +418,14 @@ int WebRtc_g722_encode(g722_encode_state_t *s, uint8_t g722_data[],
             s->out_bits += s->bits_per_sample;
             if (s->out_bits >= 8)
             {
-                g722_data[g722_bytes++] = (uint8_t) (s->out_buffer & 0xFF);
+                g722_data[g722_bytes++] = (WebRtc_UWord8) (s->out_buffer & 0xFF);
                 s->out_bits -= 8;
                 s->out_buffer >>= 8;
             }
         }
         else
         {
-            g722_data[g722_bytes++] = (uint8_t) code;
+            g722_data[g722_bytes++] = (WebRtc_UWord8) code;
         }
     }
     return g722_bytes;

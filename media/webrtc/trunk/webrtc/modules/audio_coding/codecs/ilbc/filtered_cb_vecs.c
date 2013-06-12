@@ -26,11 +26,11 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_FilteredCbVecs(
-    int16_t *cbvectors, /* (o) Codebook vector for the higher section */
-    int16_t *CBmem,  /* (i) Codebook memory that is filtered to create a
+    WebRtc_Word16 *cbvectors, /* (o) Codebook vector for the higher section */
+    WebRtc_Word16 *CBmem,  /* (i) Codebook memory that is filtered to create a
                                            second CB section */
     int lMem,  /* (i) Length of codebook memory */
-    int16_t samples    /* (i) Number of samples to filter */
+    WebRtc_Word16 samples    /* (i) Number of samples to filter */
                                   ) {
 
   /* Set up the memory, start with zero state */
@@ -42,7 +42,7 @@ void WebRtcIlbcfix_FilteredCbVecs(
 
   WebRtcSpl_FilterMAFastQ12(
       CBmem+CB_HALFFILTERLEN+lMem-samples, cbvectors+lMem-samples,
-      (int16_t*)WebRtcIlbcfix_kCbFiltersRev, CB_FILTERLEN, samples);
+      (WebRtc_Word16*)WebRtcIlbcfix_kCbFiltersRev, CB_FILTERLEN, samples);
 
   return;
 }

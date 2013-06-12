@@ -132,7 +132,7 @@ void RunSortTest(webrtc::Type sortType, bool keySort)
     KeyType keyRef[DataLength];
     LotsOfData<KeyType> data[DataLength];
     LotsOfData<KeyType> dataRef[DataLength];
-    int32_t retVal = 0;
+    WebRtc_Word32 retVal = 0;
 
     if (keySort)
     {
@@ -235,7 +235,7 @@ void RunSortTest(webrtc::Type sortType, bool keySort)
 
     printf("Compliance test passed over %d iterations\n", NumOfTests);
 
-    int64_t executeTime = accTicks.Milliseconds();
+    WebRtc_Word64 executeTime = accTicks.Milliseconds();
     printf("Execute time: %.2f s\n\n", (float)executeTime / 1000);
 }
 
@@ -245,14 +245,14 @@ int main()
     srand(42);
     bool keySort = false;
     for (int i = 0; i < 2; i++) {
-        RunSortTest<int8_t>(webrtc::TYPE_Word8, keySort);
-        RunSortTest<uint8_t>(webrtc::TYPE_UWord8, keySort);
-        RunSortTest<int16_t>(webrtc::TYPE_Word16, keySort);
-        RunSortTest<uint16_t>(webrtc::TYPE_UWord16, keySort);
-        RunSortTest<int32_t>(webrtc::TYPE_Word32, keySort);
-        RunSortTest<uint32_t>(webrtc::TYPE_UWord32, keySort);
-        RunSortTest<int64_t>(webrtc::TYPE_Word64, keySort);
-        RunSortTest<uint64_t>(webrtc::TYPE_UWord64, keySort);
+        RunSortTest<WebRtc_Word8>(webrtc::TYPE_Word8, keySort);
+        RunSortTest<WebRtc_UWord8>(webrtc::TYPE_UWord8, keySort);
+        RunSortTest<WebRtc_Word16>(webrtc::TYPE_Word16, keySort);
+        RunSortTest<WebRtc_UWord16>(webrtc::TYPE_UWord16, keySort);
+        RunSortTest<WebRtc_Word32>(webrtc::TYPE_Word32, keySort);
+        RunSortTest<WebRtc_UWord32>(webrtc::TYPE_UWord32, keySort);
+        RunSortTest<WebRtc_Word64>(webrtc::TYPE_Word64, keySort);
+        RunSortTest<WebRtc_UWord64>(webrtc::TYPE_UWord64, keySort);
         RunSortTest<float>(webrtc::TYPE_Float32, keySort);
         RunSortTest<double>(webrtc::TYPE_Float64, keySort);
 

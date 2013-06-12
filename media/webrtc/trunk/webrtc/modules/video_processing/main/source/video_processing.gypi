@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'video_processing',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         'webrtc_utility',
         '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
@@ -62,7 +62,7 @@
       'targets': [
         {
           'target_name': 'video_processing_sse2',
-          'type': 'static_library',
+          'type': '<(library)',
           'sources': [
             'content_analysis_sse2.cc',
           ],

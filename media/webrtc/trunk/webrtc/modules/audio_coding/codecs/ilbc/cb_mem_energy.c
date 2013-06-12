@@ -27,18 +27,18 @@
  *----------------------------------------------------------------*/
 
 void WebRtcIlbcfix_CbMemEnergy(
-    int16_t range,
-    int16_t *CB,   /* (i) The CB memory (1:st section) */
-    int16_t *filteredCB,  /* (i) The filtered CB memory (2:nd section) */
-    int16_t lMem,   /* (i) Length of the CB memory */
-    int16_t lTarget,   /* (i) Length of the target vector */
-    int16_t *energyW16,  /* (o) Energy in the CB vectors */
-    int16_t *energyShifts, /* (o) Shift value of the energy */
-    int16_t scale,   /* (i) The scaling of all energy values */
-    int16_t base_size  /* (i) Index to where the energy values should be stored */
+    WebRtc_Word16 range,
+    WebRtc_Word16 *CB,   /* (i) The CB memory (1:st section) */
+    WebRtc_Word16 *filteredCB,  /* (i) The filtered CB memory (2:nd section) */
+    WebRtc_Word16 lMem,   /* (i) Length of the CB memory */
+    WebRtc_Word16 lTarget,   /* (i) Length of the target vector */
+    WebRtc_Word16 *energyW16,  /* (o) Energy in the CB vectors */
+    WebRtc_Word16 *energyShifts, /* (o) Shift value of the energy */
+    WebRtc_Word16 scale,   /* (i) The scaling of all energy values */
+    WebRtc_Word16 base_size  /* (i) Index to where the energy values should be stored */
                                ) {
-  int16_t *ppi, *ppo, *pp;
-  int32_t energy, tmp32;
+  WebRtc_Word16 *ppi, *ppo, *pp;
+  WebRtc_Word32 energy, tmp32;
 
   /* Compute the energy and store it in a vector. Also the
    * corresponding shift values are stored. The energy values
@@ -52,9 +52,9 @@ void WebRtcIlbcfix_CbMemEnergy(
   energy = WebRtcSpl_DotProductWithScale( pp, pp, lTarget, scale);
 
   /* Normalize the energy and store the number of shifts */
-  energyShifts[0] = (int16_t)WebRtcSpl_NormW32(energy);
+  energyShifts[0] = (WebRtc_Word16)WebRtcSpl_NormW32(energy);
   tmp32 = WEBRTC_SPL_LSHIFT_W32(energy, energyShifts[0]);
-  energyW16[0] = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp32, 16);
+  energyW16[0] = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmp32, 16);
 
   /* Compute the energy of the rest of the cb memory
    * by step wise adding and subtracting the next
@@ -68,9 +68,9 @@ void WebRtcIlbcfix_CbMemEnergy(
   energy = WebRtcSpl_DotProductWithScale( pp, pp, lTarget, scale);
 
   /* Normalize the energy and store the number of shifts */
-  energyShifts[base_size] = (int16_t)WebRtcSpl_NormW32(energy);
+  energyShifts[base_size] = (WebRtc_Word16)WebRtcSpl_NormW32(energy);
   tmp32 = WEBRTC_SPL_LSHIFT_W32(energy, energyShifts[base_size]);
-  energyW16[base_size] = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp32, 16);
+  energyW16[base_size] = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmp32, 16);
 
   ppi = filteredCB + lMem - 1 - lTarget;
   ppo = filteredCB + lMem - 1;

@@ -28,18 +28,18 @@ class ChannelManager: private ChannelManagerBase
     friend class ScopedChannel;
 
 public:
-    bool CreateChannel(int32_t& channelId);
+    bool CreateChannel(WebRtc_Word32& channelId);
 
-    int32_t DestroyChannel(const int32_t channelId);
+    WebRtc_Word32 DestroyChannel(const WebRtc_Word32 channelId);
 
-    int32_t MaxNumOfChannels() const;
+    WebRtc_Word32 MaxNumOfChannels() const;
 
-    int32_t NumOfChannels() const;
+    WebRtc_Word32 NumOfChannels() const;
 
-    void GetChannelIds(int32_t* channelsArray,
-                       int32_t& numOfChannels) const;
+    void GetChannelIds(WebRtc_Word32* channelsArray,
+                       WebRtc_Word32& numOfChannels) const;
 
-    ChannelManager(const uint32_t instanceId);
+    ChannelManager(const WebRtc_UWord32 instanceId);
 
     ~ChannelManager();
 
@@ -48,17 +48,17 @@ private:
 
     ChannelManager& operator=(const ChannelManager&);
 
-    Channel* GetChannel(const int32_t channelId) const;
+    Channel* GetChannel(const WebRtc_Word32 channelId) const;
 
     void GetChannels(MapWrapper& channels) const;
 
     void ReleaseChannel();
 
-    virtual void* NewItem(int32_t itemID);
+    virtual void* NewItem(WebRtc_Word32 itemID);
 
     virtual void DeleteItem(void* item);
 
-    uint32_t _instanceId;
+    WebRtc_UWord32 _instanceId;
 };
 
 class ScopedChannel
@@ -67,7 +67,7 @@ public:
     // Can only be created by the channel manager
     ScopedChannel(ChannelManager& chManager);
 
-    ScopedChannel(ChannelManager& chManager, int32_t channelId);
+    ScopedChannel(ChannelManager& chManager, WebRtc_Word32 channelId);
 
     Channel* ChannelPtr();
 

@@ -25,22 +25,18 @@ namespace webrtc {
 ChannelGroup::ChannelGroup(ProcessThread* process_thread,
                            const OverUseDetectorOptions& options,
                            RemoteBitrateEstimator::EstimationMode mode)
-    : remb_(new VieRemb()),
+    : remb_(new VieRemb(process_thread)),
       bitrate_controller_(BitrateController::CreateBitrateController()),
       call_stats_(new CallStats()),
-      remote_bitrate_estimator_(RemoteBitrateEstimator::Create(
-          options, mode, remb_.get(), Clock::GetRealTimeClock())),
+      remote_bitrate_estimator_(RemoteBitrateEstimator::Create(remb_.get(),
+                                                               options, mode)),
       encoder_state_feedback_(new EncoderStateFeedback()),
       process_thread_(process_thread) {
-  call_stats_->RegisterStatsObserver(remote_bitrate_estimator_.get());
   process_thread->RegisterModule(call_stats_.get());
-  process_thread->RegisterModule(remote_bitrate_estimator_.get());
 }
 
 ChannelGroup::~ChannelGroup() {
-  call_stats_->DeregisterStatsObserver(remote_bitrate_estimator_.get());
   process_thread_->DeRegisterModule(call_stats_.get());
-  process_thread_->DeRegisterModule(remote_bitrate_estimator_.get());
   assert(channels_.empty());
   assert(!remb_->InUse());
 }
@@ -77,14 +73,17 @@ EncoderStateFeedback* ChannelGroup::GetEncoderStateFeedback() {
   return encoder_state_feedback_.get();
 }
 
-bool ChannelGroup::SetChannelRembStatus(int channel_id, bool sender,
-                                        bool receiver, ViEChannel* channel) {
+bool ChannelGroup::SetChannelRembStatus(int channel_id,
+                                        bool sender,
+                                        bool receiver,
+                                        ViEChannel* channel,
+                                        ViEEncoder* encoder) {
   // Update the channel state.
   if (sender || receiver) {
     if (!channel->EnableRemb(true)) {
       return false;
     }
-  } else {
+  } else if (channel) {
     channel->EnableRemb(false);
   }
   // Update the REMB instance with necessary RTP modules.

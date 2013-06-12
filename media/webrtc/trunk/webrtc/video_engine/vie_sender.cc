@@ -45,7 +45,7 @@ int ViESender::RegisterExternalEncryption(Encryption* encryption) {
   if (external_encryption_) {
     return -1;
   }
-  encryption_buffer_ = new uint8_t[kViEMaxMtu];
+  encryption_buffer_ = new WebRtc_UWord8[kViEMaxMtu];
   if (encryption_buffer_ == NULL) {
     return -1;
   }

@@ -28,26 +28,26 @@ class MemoryPool
 {
 public:
     // Factory method, constructor disabled.
-    static int32_t CreateMemoryPool(MemoryPool*& memoryPool,
-                                    uint32_t initialPoolSize);
+    static WebRtc_Word32 CreateMemoryPool(MemoryPool*& memoryPool,
+                                          WebRtc_UWord32 initialPoolSize);
 
     // Try to delete the memory pool. Fail with return value -1 if there is
     // outstanding memory.
-    static int32_t DeleteMemoryPool(
+    static WebRtc_Word32 DeleteMemoryPool(
         MemoryPool*& memoryPool);
 
     // Get/return unused memory.
-    int32_t PopMemory(MemoryType*&  memory);
-    int32_t PushMemory(MemoryType*& memory);
+    WebRtc_Word32 PopMemory(MemoryType*&  memory);
+    WebRtc_Word32 PushMemory(MemoryType*& memory);
 private:
-    MemoryPool(int32_t initialPoolSize);
+    MemoryPool(WebRtc_Word32 initialPoolSize);
     ~MemoryPool();
 
     MemoryPoolImpl<MemoryType>* _ptrImpl;
 };
 
 template<class MemoryType>
-MemoryPool<MemoryType>::MemoryPool(int32_t initialPoolSize)
+MemoryPool<MemoryType>::MemoryPool(WebRtc_Word32 initialPoolSize)
 {
     _ptrImpl = new MemoryPoolImpl<MemoryType>(initialPoolSize);
 }
@@ -58,9 +58,9 @@ MemoryPool<MemoryType>::~MemoryPool()
     delete _ptrImpl;
 }
 
-template<class MemoryType> int32_t
+template<class MemoryType> WebRtc_Word32
 MemoryPool<MemoryType>::CreateMemoryPool(MemoryPool*&   memoryPool,
-                                         uint32_t initialPoolSize)
+                                         WebRtc_UWord32 initialPoolSize)
 {
     memoryPool = new MemoryPool(initialPoolSize);
     if(memoryPool == NULL)
@@ -83,7 +83,7 @@ MemoryPool<MemoryType>::CreateMemoryPool(MemoryPool*&   memoryPool,
 }
 
 template<class MemoryType>
-int32_t MemoryPool<MemoryType>::DeleteMemoryPool(MemoryPool*& memoryPool)
+WebRtc_Word32 MemoryPool<MemoryType>::DeleteMemoryPool(MemoryPool*& memoryPool)
 {
     if(memoryPool == NULL)
     {
@@ -103,13 +103,13 @@ int32_t MemoryPool<MemoryType>::DeleteMemoryPool(MemoryPool*& memoryPool)
 }
 
 template<class MemoryType>
-int32_t MemoryPool<MemoryType>::PopMemory(MemoryType*& memory)
+WebRtc_Word32 MemoryPool<MemoryType>::PopMemory(MemoryType*& memory)
 {
     return _ptrImpl->PopMemory(memory);
 }
 
 template<class MemoryType>
-int32_t MemoryPool<MemoryType>::PushMemory(MemoryType*& memory)
+WebRtc_Word32 MemoryPool<MemoryType>::PushMemory(MemoryType*& memory)
 {
     if(memory == NULL)
     {

@@ -17,7 +17,7 @@
 namespace webrtc {
 namespace VideoProcessing {
 
-int32_t Brighten(I420VideoFrame* frame, int delta) {
+WebRtc_Word32 Brighten(I420VideoFrame* frame, int delta) {
   assert(frame);
   if (frame->IsZeroSize()) {
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, -1,
@@ -39,10 +39,10 @@ int32_t Brighten(I420VideoFrame* frame, int delta) {
     lookUp[i] = ((((val < 0) ? 0 : val) > 255) ? 255 : val);
   }
 
-  uint8_t* tempPtr = frame->buffer(kYPlane);
+  WebRtc_UWord8* tempPtr = frame->buffer(kYPlane);
 
   for (int i = 0; i < numPixels; i++) {
-    *tempPtr = static_cast<uint8_t>(lookUp[*tempPtr]);
+    *tempPtr = static_cast<WebRtc_UWord8>(lookUp[*tempPtr]);
     tempPtr++;
   }
   return VPM_OK;

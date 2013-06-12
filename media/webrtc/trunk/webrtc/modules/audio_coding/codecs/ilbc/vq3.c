@@ -24,16 +24,16 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Vq3(
-    int16_t *Xq, /* quantized vector (Q13) */
-    int16_t *index,
-    int16_t *CB, /* codebook in Q13 */
-    int16_t *X,  /* vector to quantize (Q13) */
-    int16_t n_cb
+    WebRtc_Word16 *Xq, /* quantized vector (Q13) */
+    WebRtc_Word16 *index,
+    WebRtc_Word16 *CB, /* codebook in Q13 */
+    WebRtc_Word16 *X,  /* vector to quantize (Q13) */
+    WebRtc_Word16 n_cb
                        ){
-  int16_t i, j;
-  int16_t pos, minindex=0;
-  int16_t tmp;
-  int32_t dist, mindist;
+  WebRtc_Word16 i, j;
+  WebRtc_Word16 pos, minindex=0;
+  WebRtc_Word16 tmp;
+  WebRtc_Word32 dist, mindist;
 
   pos = 0;
   mindist = WEBRTC_SPL_WORD32_MAX; /* start value */

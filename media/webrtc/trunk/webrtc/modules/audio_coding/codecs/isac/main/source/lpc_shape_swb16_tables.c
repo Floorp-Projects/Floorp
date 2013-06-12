@@ -60,26 +60,26 @@ const double WebRtcIsac_kInterVecDecorrMatUb16
 * The following 16 vectors define CDF of 16 decorrelated LAR
 * coefficients.
 */
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub16[14] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub16[14] =
 {
      0,      2,     20,    159,   1034,   5688,  20892,  44653,
  59849,  64485,  65383,  65518,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec1Ub16[16] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec1Ub16[16] =
 {
      0,      1,      7,     43,    276,   1496,   6681,  21653,
  43891,  58859,  64022,  65248,  65489,  65529,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec2Ub16[18] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec2Ub16[18] =
 {
      0,      1,      9,     54,    238,    933,   3192,   9461,
  23226,  42146,  56138,  62413,  64623,  65300,  65473,  65521,
  65533,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec3Ub16[30] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec3Ub16[30] =
 {
      0,      2,      4,      8,     17,     36,     75,    155,
    329,    683,   1376,   2662,   5047,   9508,  17526,  29027,
@@ -87,27 +87,27 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec3Ub16[30] =
  65273,  65429,  65497,  65526,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec4Ub16[16] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec4Ub16[16] =
 {
      0,      1,     10,     63,    361,   1785,   7407,  22242,
  43337,  58125,  63729,  65181,  65472,  65527,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec5Ub16[17] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec5Ub16[17] =
 {
      0,      1,      7,     29,    134,    599,   2443,   8590,
  22962,  42635,  56911,  63060,  64940,  65408,  65513,  65531,
  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec6Ub16[21] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec6Ub16[21] =
 {
      0,      1,      5,     16,     57,    191,    611,   1808,
   4847,  11755,  24612,  40910,  53789,  60698,  63729,  64924,
  65346,  65486,  65523,  65532,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec7Ub16[36] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec7Ub16[36] =
 {
      0,      1,      4,     12,     25,     55,    104,    184,
    314,    539,    926,   1550,   2479,   3861,   5892,   8845,
@@ -116,21 +116,21 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec7Ub16[36] =
  65518,  65530,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec8Ub16[21] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec8Ub16[21] =
 {
      0,      1,      2,      7,     26,    103,    351,   1149,
   3583,  10204,  23846,  41711,  55361,  61917,  64382,  65186,
  65433,  65506,  65528,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub160[21] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub160[21] =
 {
      0,      6,     19,     63,    205,    638,   1799,   4784,
  11721,  24494,  40803,  53805,  60886,  63822,  64931,  65333,
  65472,  65517,  65530,  65533,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub161[28] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub161[28] =
 {
      0,      1,      3,     11,     31,     86,    221,    506,
   1101,   2296,   4486,   8477,  15356,  26079,  38941,  49952,
@@ -138,7 +138,7 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub161[28] =
  65526,  65532,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub162[55] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub162[55] =
 {
      0,      3,     12,     23,     42,     65,     89,    115,
    150,    195,    248,    327,    430,    580,    784,   1099,
@@ -149,7 +149,7 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub162[55] =
  65527,  65529,  65531,  65532,  65533,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub163[26] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub163[26] =
 {
      0,      2,      4,     10,     21,     48,    114,    280,
    701,   1765,   4555,  11270,  24267,  41213,  54285,  61003,
@@ -157,7 +157,7 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub163[26] =
  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub164[28] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub164[28] =
 {
      0,      1,      3,      6,     15,     36,     82,    196,
    453,   1087,   2557,   5923,  13016,  25366,  40449,  52582,
@@ -165,7 +165,7 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub164[28] =
  65529,  65533,  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub165[34] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub165[34] =
 {
      0,      2,      4,      8,     18,     35,     73,    146,
    279,    524,    980,   1789,   3235,   5784,  10040,  16998,
@@ -174,7 +174,7 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub165[34] =
  65534,  65535
 };
 
-const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub166[71] =
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeCdfVec01Ub166[71] =
 {
      0,      1,      2,      6,     13,     26,     55,     92,
    141,    191,    242,    296,    355,    429,    522,    636,
@@ -190,7 +190,7 @@ const uint16_t WebRtcIsac_kLpcShapeCdfVec01Ub166[71] =
 /*
 * An array of pointers to CDFs of decorrelated LARs
 */
-const uint16_t* WebRtcIsac_kLpcShapeCdfMatUb16
+const WebRtc_UWord16* WebRtcIsac_kLpcShapeCdfMatUb16
 [UB_LPC_ORDER * UB16_LPC_VEC_PER_FRAME] = {
      WebRtcIsac_kLpcShapeCdfVec01Ub16,
      WebRtcIsac_kLpcShapeCdfVec1Ub16,
@@ -224,7 +224,7 @@ const double WebRtcIsac_kLpcShapeLeftRecPointUb16
 /*
 * Number of reconstruction points of quantizers for LAR coefficients.
 */
-const int16_t WebRtcIsac_kLpcShapeNumRecPointUb16
+const WebRtc_Word16 WebRtcIsac_kLpcShapeNumRecPointUb16
 [UB_LPC_ORDER * UB16_LPC_VEC_PER_FRAME] =
 {
    13,    15,    17,    29,    15,    16,    20,    35,    20,
@@ -235,7 +235,7 @@ const int16_t WebRtcIsac_kLpcShapeNumRecPointUb16
 * Starting index for entropy decoder to search for the right interval,
 * one entry per LAR coefficient
 */
-const uint16_t WebRtcIsac_kLpcShapeEntropySearchUb16
+const WebRtc_UWord16 WebRtcIsac_kLpcShapeEntropySearchUb16
 [UB_LPC_ORDER * UB16_LPC_VEC_PER_FRAME] =
 {
     6,     7,     8,    14,     7,     8,    10,    17,    10,

@@ -18,9 +18,9 @@
 
 namespace webrtc {
 
-const int32_t KEventMaxWaitTimeMs = 200;
-const uint32_t kMinRenderDelayMs = 10;
-const uint32_t kMaxRenderDelayMs= 500;
+const WebRtc_Word32 KEventMaxWaitTimeMs = 200;
+const WebRtc_UWord32 kMinRenderDelayMs = 10;
+const WebRtc_UWord32 kMaxRenderDelayMs= 500;
 
 VideoRenderFrames::VideoRenderFrames()
     : incoming_frames_(),
@@ -31,8 +31,8 @@ VideoRenderFrames::~VideoRenderFrames() {
   ReleaseAllFrames();
 }
 
-int32_t VideoRenderFrames::AddFrame(I420VideoFrame* new_frame) {
-  const int64_t time_now = TickTime::MillisecondTimestamp();
+WebRtc_Word32 VideoRenderFrames::AddFrame(I420VideoFrame* new_frame) {
+  const WebRtc_Word64 time_now = TickTime::MillisecondTimestamp();
 
   if (new_frame->render_time_ms() + KOldRenderTimestampMS < time_now) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, -1,
@@ -119,7 +119,7 @@ I420VideoFrame* VideoRenderFrames::FrameToRender() {
   return render_frame;
 }
 
-int32_t VideoRenderFrames::ReturnFrame(I420VideoFrame* old_frame) {
+WebRtc_Word32 VideoRenderFrames::ReturnFrame(I420VideoFrame* old_frame) {
   old_frame->ResetSize();
   old_frame->set_timestamp(0);
   old_frame->set_render_time_ms(0);
@@ -127,7 +127,7 @@ int32_t VideoRenderFrames::ReturnFrame(I420VideoFrame* old_frame) {
   return 0;
 }
 
-int32_t VideoRenderFrames::ReleaseAllFrames() {
+WebRtc_Word32 VideoRenderFrames::ReleaseAllFrames() {
   while (!incoming_frames_.Empty()) {
     ListItem* item = incoming_frames_.First();
     if (item) {
@@ -149,8 +149,8 @@ int32_t VideoRenderFrames::ReleaseAllFrames() {
   return 0;
 }
 
-uint32_t VideoRenderFrames::TimeToNextFrameRelease() {
-  int64_t time_to_release = 0;
+WebRtc_UWord32 VideoRenderFrames::TimeToNextFrameRelease() {
+  WebRtc_Word64 time_to_release = 0;
   ListItem* item = incoming_frames_.First();
   if (item) {
     I420VideoFrame* oldest_frame =
@@ -163,11 +163,11 @@ uint32_t VideoRenderFrames::TimeToNextFrameRelease() {
   } else {
     time_to_release = KEventMaxWaitTimeMs;
   }
-  return static_cast<uint32_t>(time_to_release);
+  return static_cast<WebRtc_UWord32>(time_to_release);
 }
 
-int32_t VideoRenderFrames::SetRenderDelay(
-    const uint32_t render_delay) {
+WebRtc_Word32 VideoRenderFrames::SetRenderDelay(
+    const WebRtc_UWord32 render_delay) {
   if (render_delay < kMinRenderDelayMs ||
       render_delay > kMaxRenderDelayMs) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer,

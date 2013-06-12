@@ -446,93 +446,88 @@ void ViEAutoTest::ViENetworkAPITest()
 
 
 #if defined(_WIN32)
-        // These tests are disabled since they currently fail on Windows.
-        // Exact reason is unkown.
-        // See https://code.google.com/p/webrtc/issues/detail?id=1266.
-        // TODO(mflodman): remove these APIs?
+        // No socket
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_BESTEFFORT));
 
-        //// No socket
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_BESTEFFORT));
+        EXPECT_EQ(0, ViE.network->SetLocalReceiver(
+            tbChannel.videoChannel, 1234));
 
-        //EXPECT_EQ(0, ViE.network->SetLocalReceiver(
-        //    tbChannel.videoChannel, 1234));
+        // Sender not initialized
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_BESTEFFORT));
+        EXPECT_EQ(0, ViE.network->SetSendDestination(
+            tbChannel.videoChannel, "127.0.0.1", 12345));
 
-        //// Sender not initialized
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_BESTEFFORT));
-        //EXPECT_EQ(0, ViE.network->SetSendDestination(
-        //    tbChannel.videoChannel, "127.0.0.1", 12345));
+        // Try to set all non-supported service types
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_NOTRAFFIC));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_NETWORK_UNAVAILABLE));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_GENERAL_INFORMATION));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_NOCHANGE));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_NONCONFORMING));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_NOTRAFFIC));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_NETWORK_CONTROL));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICE_BESTEFFORT));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICE_CONTROLLEDLOAD));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICE_GUARANTEED));
+        EXPECT_NE(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICE_QUALITATIVE));
 
-        //// Try to set all non-supported service types
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_NOTRAFFIC));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_NETWORK_UNAVAILABLE));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_GENERAL_INFORMATION));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_NOCHANGE));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_NONCONFORMING));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_NOTRAFFIC));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_NETWORK_CONTROL));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICE_BESTEFFORT));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICE_CONTROLLEDLOAD));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICE_GUARANTEED));
-        //EXPECT_NE(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICE_QUALITATIVE));
+        // Loop through valid service settings
+        bool enabled = false;
+        int serviceType = 0;
+        int overrideDSCP = 0;
 
-        //// Loop through valid service settings
-        //bool enabled = false;
-        //int serviceType = 0;
-        //int overrideDSCP = 0;
+        EXPECT_EQ(0, ViE.network->GetSendGQoS(
+            tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
+        EXPECT_FALSE(enabled);
+        EXPECT_EQ(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_BESTEFFORT));
+        EXPECT_EQ(0, ViE.network->GetSendGQoS(
+            tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
+        EXPECT_TRUE(enabled);
+        EXPECT_EQ(SERVICETYPE_BESTEFFORT, serviceType);
+        EXPECT_FALSE(overrideDSCP);
 
-        //EXPECT_EQ(0, ViE.network->GetSendGQoS(
-        //    tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
-        //EXPECT_FALSE(enabled);
-        //EXPECT_EQ(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_BESTEFFORT));
-        //EXPECT_EQ(0, ViE.network->GetSendGQoS(
-        //    tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
-        //EXPECT_TRUE(enabled);
-        //EXPECT_EQ(SERVICETYPE_BESTEFFORT, serviceType);
-        //EXPECT_FALSE(overrideDSCP);
+        EXPECT_EQ(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_CONTROLLEDLOAD));
+        EXPECT_EQ(0, ViE.network->GetSendGQoS(
+            tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
+        EXPECT_TRUE(enabled);
+        EXPECT_EQ(SERVICETYPE_CONTROLLEDLOAD, serviceType);
+        EXPECT_FALSE(overrideDSCP);
 
-        //EXPECT_EQ(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_CONTROLLEDLOAD));
-        //EXPECT_EQ(0, ViE.network->GetSendGQoS(
-        //    tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
-        //EXPECT_TRUE(enabled);
-        //EXPECT_EQ(SERVICETYPE_CONTROLLEDLOAD, serviceType);
-        //EXPECT_FALSE(overrideDSCP);
+        EXPECT_EQ(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_GUARANTEED));
+        EXPECT_EQ(0, ViE.network->GetSendGQoS(
+            tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
+        EXPECT_TRUE(enabled);
+        EXPECT_EQ(SERVICETYPE_GUARANTEED, serviceType);
+        EXPECT_FALSE(overrideDSCP);
 
-        //EXPECT_EQ(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_GUARANTEED));
-        //EXPECT_EQ(0, ViE.network->GetSendGQoS(
-        //    tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
-        //EXPECT_TRUE(enabled);
-        //EXPECT_EQ(SERVICETYPE_GUARANTEED, serviceType);
-        //EXPECT_FALSE(overrideDSCP);
+        EXPECT_EQ(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, true, SERVICETYPE_QUALITATIVE));
+        EXPECT_EQ(0, ViE.network->GetSendGQoS(
+            tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
+        EXPECT_TRUE(enabled);
+        EXPECT_EQ(SERVICETYPE_QUALITATIVE, serviceType);
+        EXPECT_FALSE(overrideDSCP);
 
-        //EXPECT_EQ(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, true, SERVICETYPE_QUALITATIVE));
-        //EXPECT_EQ(0, ViE.network->GetSendGQoS(
-        //    tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
-        //EXPECT_TRUE(enabled);
-        //EXPECT_EQ(SERVICETYPE_QUALITATIVE, serviceType);
-        //EXPECT_FALSE(overrideDSCP);
-
-        //EXPECT_EQ(0, ViE.network->SetSendGQoS(
-        //    tbChannel.videoChannel, false, SERVICETYPE_QUALITATIVE));
-        //EXPECT_EQ(0, ViE.network->GetSendGQoS(
-        //    tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
-        //EXPECT_FALSE(enabled);
+        EXPECT_EQ(0, ViE.network->SetSendGQoS(
+            tbChannel.videoChannel, false, SERVICETYPE_QUALITATIVE));
+        EXPECT_EQ(0, ViE.network->GetSendGQoS(
+            tbChannel.videoChannel, enabled, serviceType, overrideDSCP));
+        EXPECT_FALSE(enabled);
 #endif
     }
     {

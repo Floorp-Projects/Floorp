@@ -18,18 +18,18 @@
 #include "signal_processing_library.h"
 
 // interpolation coefficients
-static const int16_t kCoefficients48To32[2][8] = {
+static const WebRtc_Word16 kCoefficients48To32[2][8] = {
         {778, -2050, 1087, 23285, 12903, -3783, 441, 222},
         {222, 441, -3783, 12903, 23285, 1087, -2050, 778}
 };
 
-static const int16_t kCoefficients32To24[3][8] = {
+static const WebRtc_Word16 kCoefficients32To24[3][8] = {
         {767, -2362, 2434, 24406, 10620, -3838, 721, 90},
         {386, -381, -2646, 19062, 19062, -2646, -381, 386},
         {90, 721, -3838, 10620, 24406, 2434, -2362, 767}
 };
 
-static const int16_t kCoefficients44To32[4][9] = {
+static const WebRtc_Word16 kCoefficients44To32[4][9] = {
         {117, -669, 2245, -6183, 26267, 13529, -3245, 845, -138},
         {-101, 612, -2283, 8532, 29790, -5138, 1789, -524, 91},
         {50, -292, 1016, -3064, 32010, 3933, -1147, 315, -53},
@@ -37,20 +37,20 @@ static const int16_t kCoefficients44To32[4][9] = {
 };
 
 //   Resampling ratio: 2/3
-// input:  int32_t (normalized, not saturated) :: size 3 * K
-// output: int32_t (shifted 15 positions to the left, + offset 16384) :: size 2 * K
+// input:  WebRtc_Word32 (normalized, not saturated) :: size 3 * K
+// output: WebRtc_Word32 (shifted 15 positions to the left, + offset 16384) :: size 2 * K
 //      K: number of blocks
 
-void WebRtcSpl_Resample48khzTo32khz(const int32_t *In, int32_t *Out,
-                                    const int32_t K)
+void WebRtcSpl_Resample48khzTo32khz(const WebRtc_Word32 *In, WebRtc_Word32 *Out,
+                                    const WebRtc_Word32 K)
 {
     /////////////////////////////////////////////////////////////
     // Filter operation:
     //
     // Perform resampling (3 input samples -> 2 output samples);
     // process in sub blocks of size 3 samples.
-    int32_t tmp;
-    int32_t m;
+    WebRtc_Word32 tmp;
+    WebRtc_Word32 m;
 
     for (m = 0; m < K; m++)
     {
@@ -83,20 +83,20 @@ void WebRtcSpl_Resample48khzTo32khz(const int32_t *In, int32_t *Out,
 }
 
 //   Resampling ratio: 3/4
-// input:  int32_t (normalized, not saturated) :: size 4 * K
-// output: int32_t (shifted 15 positions to the left, + offset 16384) :: size 3 * K
+// input:  WebRtc_Word32 (normalized, not saturated) :: size 4 * K
+// output: WebRtc_Word32 (shifted 15 positions to the left, + offset 16384) :: size 3 * K
 //      K: number of blocks
 
-void WebRtcSpl_Resample32khzTo24khz(const int32_t *In, int32_t *Out,
-                                    const int32_t K)
+void WebRtcSpl_Resample32khzTo24khz(const WebRtc_Word32 *In, WebRtc_Word32 *Out,
+                                    const WebRtc_Word32 K)
 {
     /////////////////////////////////////////////////////////////
     // Filter operation:
     //
     // Perform resampling (4 input samples -> 3 output samples);
     // process in sub blocks of size 4 samples.
-    int32_t m;
-    int32_t tmp;
+    WebRtc_Word32 m;
+    WebRtc_Word32 tmp;
 
     for (m = 0; m < K; m++)
     {
@@ -146,13 +146,13 @@ void WebRtcSpl_Resample32khzTo24khz(const int32_t *In, int32_t *Out,
 //
 
 // compute two inner-products and store them to output array
-static void WebRtcSpl_ResampDotProduct(const int32_t *in1, const int32_t *in2,
-                                       const int16_t *coef_ptr, int32_t *out1,
-                                       int32_t *out2)
+static void WebRtcSpl_ResampDotProduct(const WebRtc_Word32 *in1, const WebRtc_Word32 *in2,
+                               const WebRtc_Word16 *coef_ptr, WebRtc_Word32 *out1,
+                               WebRtc_Word32 *out2)
 {
-    int32_t tmp1 = 16384;
-    int32_t tmp2 = 16384;
-    int16_t coef;
+    WebRtc_Word32 tmp1 = 16384;
+    WebRtc_Word32 tmp2 = 16384;
+    WebRtc_Word16 coef;
 
     coef = coef_ptr[0];
     tmp1 += coef * in1[0];
@@ -192,27 +192,27 @@ static void WebRtcSpl_ResampDotProduct(const int32_t *in1, const int32_t *in2,
 }
 
 //   Resampling ratio: 8/11
-// input:  int32_t (normalized, not saturated) :: size 11 * K
-// output: int32_t (shifted 15 positions to the left, + offset 16384) :: size  8 * K
+// input:  WebRtc_Word32 (normalized, not saturated) :: size 11 * K
+// output: WebRtc_Word32 (shifted 15 positions to the left, + offset 16384) :: size  8 * K
 //      K: number of blocks
 
-void WebRtcSpl_Resample44khzTo32khz(const int32_t *In, int32_t *Out,
-                                    const int32_t K)
+void WebRtcSpl_Resample44khzTo32khz(const WebRtc_Word32 *In, WebRtc_Word32 *Out,
+                                    const WebRtc_Word32 K)
 {
     /////////////////////////////////////////////////////////////
     // Filter operation:
     //
     // Perform resampling (11 input samples -> 8 output samples);
     // process in sub blocks of size 11 samples.
-    int32_t tmp;
-    int32_t m;
+    WebRtc_Word32 tmp;
+    WebRtc_Word32 m;
 
     for (m = 0; m < K; m++)
     {
         tmp = 1 << 14;
 
         // first output sample
-        Out[0] = ((int32_t)In[3] << 15) + tmp;
+        Out[0] = ((WebRtc_Word32)In[3] << 15) + tmp;
 
         // sum and accumulate filter coefficients and input samples
         tmp += kCoefficients44To32[3][0] * In[5];

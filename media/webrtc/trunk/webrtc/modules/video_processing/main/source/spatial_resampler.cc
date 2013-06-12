@@ -28,9 +28,9 @@ VPMSimpleSpatialResampler::~VPMSimpleSpatialResampler()
 }
 
 
-int32_t
-VPMSimpleSpatialResampler::SetTargetFrameSize(int32_t width,
-                                              int32_t height)
+WebRtc_Word32
+VPMSimpleSpatialResampler::SetTargetFrameSize(WebRtc_Word32 width,
+                                              WebRtc_Word32 height)
 {
   if (_resamplingMode == kNoRescaling)  {
     return VPM_OK;
@@ -61,7 +61,7 @@ VPMSimpleSpatialResampler::Reset()
   _targetHeight = 0;
 }
 
-int32_t
+WebRtc_Word32
 VPMSimpleSpatialResampler::ResampleFrame(const I420VideoFrame& inFrame,
                                          I420VideoFrame* outFrame)
 {
@@ -96,21 +96,21 @@ VPMSimpleSpatialResampler::ResampleFrame(const I420VideoFrame& inFrame,
     return VPM_SCALE_ERROR;
 }
 
-int32_t
+WebRtc_Word32
 VPMSimpleSpatialResampler::TargetHeight()
 {
   return _targetHeight;
 }
 
-int32_t
+WebRtc_Word32
 VPMSimpleSpatialResampler::TargetWidth()
 {
   return _targetWidth;
 }
 
 bool
-VPMSimpleSpatialResampler::ApplyResample(int32_t width,
-                                         int32_t height)
+VPMSimpleSpatialResampler::ApplyResample(WebRtc_Word32 width,
+                                         WebRtc_Word32 height)
 {
   if ((width == _targetWidth && height == _targetHeight) ||
        _resamplingMode == kNoRescaling)

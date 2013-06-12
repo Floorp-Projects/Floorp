@@ -24,69 +24,69 @@
 
 /* high pass filters */
 
-extern const int16_t WebRtcIlbcfix_kHpInCoefs[];
-extern const int16_t WebRtcIlbcfix_kHpOutCoefs[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kHpInCoefs[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kHpOutCoefs[];
 
 /* Window for start state decision */
-extern const int16_t WebRtcIlbcfix_kStartSequenceEnrgWin[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kStartSequenceEnrgWin[];
 
 /* low pass filter used for downsampling */
-extern const int16_t WebRtcIlbcfix_kLpFiltCoefs[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLpFiltCoefs[];
 
 /* LPC analysis and quantization */
 
-extern const int16_t WebRtcIlbcfix_kLpcWin[];
-extern const int16_t WebRtcIlbcfix_kLpcAsymWin[];
-extern const int32_t WebRtcIlbcfix_kLpcLagWin[];
-extern const int16_t WebRtcIlbcfix_kLpcChirpSyntDenum[];
-extern const int16_t WebRtcIlbcfix_kLpcChirpWeightDenum[];
-extern const int16_t WebRtcIlbcfix_kLsfDimCb[];
-extern const int16_t WebRtcIlbcfix_kLsfSizeCb[];
-extern const int16_t WebRtcIlbcfix_kLsfCb[];
-extern const int16_t WebRtcIlbcfix_kLsfWeight20ms[];
-extern const int16_t WebRtcIlbcfix_kLsfWeight30ms[];
-extern const int16_t WebRtcIlbcfix_kLsfMean[];
-extern const int16_t WebRtcIlbcfix_kLspMean[];
-extern const int16_t WebRtcIlbcfix_kCos[];
-extern const int16_t WebRtcIlbcfix_kCosDerivative[];
-extern const int16_t WebRtcIlbcfix_kCosGrid[];
-extern const int16_t WebRtcIlbcfix_kAcosDerivative[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLpcWin[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLpcAsymWin[];
+extern const WebRtc_Word32 WebRtcIlbcfix_kLpcLagWin[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLpcChirpSyntDenum[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLpcChirpWeightDenum[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLsfDimCb[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLsfSizeCb[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLsfCb[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLsfWeight20ms[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLsfWeight30ms[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLsfMean[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kLspMean[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kCos[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kCosDerivative[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kCosGrid[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kAcosDerivative[];
 
 /* state quantization tables */
 
-extern const int16_t WebRtcIlbcfix_kStateSq3[];
-extern const int32_t WebRtcIlbcfix_kChooseFrgQuant[];
-extern const int16_t WebRtcIlbcfix_kScale[];
-extern const int16_t WebRtcIlbcfix_kFrgQuantMod[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kStateSq3[];
+extern const WebRtc_Word32 WebRtcIlbcfix_kChooseFrgQuant[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kScale[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kFrgQuantMod[];
 
 /* Ranges for search and filters at different subframes */
 
-extern const int16_t WebRtcIlbcfix_kSearchRange[5][CB_NSTAGES];
-extern const int16_t WebRtcIlbcfix_kFilterRange[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kSearchRange[5][CB_NSTAGES];
+extern const WebRtc_Word16 WebRtcIlbcfix_kFilterRange[];
 
 /* gain quantization tables */
 
-extern const int16_t WebRtcIlbcfix_kGainSq3[];
-extern const int16_t WebRtcIlbcfix_kGainSq4[];
-extern const int16_t WebRtcIlbcfix_kGainSq5[];
-extern const int16_t WebRtcIlbcfix_kGainSq5Sq[];
-extern const int16_t* const WebRtcIlbcfix_kGain[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kGainSq3[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kGainSq4[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kGainSq5[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kGainSq5Sq[];
+extern const WebRtc_Word16* const WebRtcIlbcfix_kGain[];
 
 /* adaptive codebook definitions */
 
-extern const int16_t WebRtcIlbcfix_kCbFiltersRev[];
-extern const int16_t WebRtcIlbcfix_kAlpha[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kCbFiltersRev[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kAlpha[];
 
 /* enhancer definitions */
 
-extern const int16_t WebRtcIlbcfix_kEnhPolyPhaser[ENH_UPS0][ENH_FLO_MULT2_PLUS1];
-extern const int16_t WebRtcIlbcfix_kEnhWt[];
-extern const int16_t WebRtcIlbcfix_kEnhPlocs[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kEnhPolyPhaser[ENH_UPS0][ENH_FLO_MULT2_PLUS1];
+extern const WebRtc_Word16 WebRtcIlbcfix_kEnhWt[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kEnhPlocs[];
 
 /* PLC tables */
 
-extern const int16_t WebRtcIlbcfix_kPlcPerSqr[];
-extern const int16_t WebRtcIlbcfix_kPlcPitchFact[];
-extern const int16_t WebRtcIlbcfix_kPlcPfSlope[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kPlcPerSqr[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kPlcPitchFact[];
+extern const WebRtc_Word16 WebRtcIlbcfix_kPlcPfSlope[];
 
 #endif

@@ -326,6 +326,9 @@ class ForwardErrorCorrection {
   // This function returns 2 when two or more packets are missing.
   static int NumCoveredPacketsMissing(const FecPacket* fec_packet);
 
+  static uint16_t LatestSequenceNumber(uint16_t first,
+                                       uint16_t second);
+
   static void DiscardFECPacket(FecPacket* fec_packet);
   static void DiscardOldPackets(RecoveredPacketList* recoveredPacketList);
   static uint16_t ParseSequenceNumber(uint8_t* packet);

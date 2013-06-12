@@ -24,59 +24,53 @@ class RemoteRateControl
 public:
     RemoteRateControl();
     ~RemoteRateControl();
-    int32_t SetConfiguredBitRates(uint32_t minBitRate,
-                                        uint32_t maxBitRate);
-    uint32_t LatestEstimate() const;
-    uint32_t UpdateBandwidthEstimate(int64_t nowMS);
+    WebRtc_Word32 SetConfiguredBitRates(WebRtc_UWord32 minBitRate,
+                                        WebRtc_UWord32 maxBitRate);
+    WebRtc_UWord32 LatestEstimate() const;
+    WebRtc_UWord32 UpdateBandwidthEstimate(WebRtc_Word64 nowMS);
     void SetRtt(unsigned int rtt);
     RateControlRegion Update(const RateControlInput* input,
-                             int64_t nowMS);
+                             WebRtc_Word64 nowMS);
     void Reset();
 
     // Returns true if there is a valid estimate of the incoming bitrate, false
     // otherwise.
     bool ValidEstimate() const;
-    // Returns true if the bitrate estimate hasn't been changed for more than
-    // an RTT, or if the incoming_bitrate is more than 5% above the current
-    // estimate. Should be used to decide if we should reduce the rate further
-    // when over-using.
-    bool TimeToReduceFurther(int64_t time_now,
-                             unsigned int incoming_bitrate) const;
 
 private:
-    uint32_t ChangeBitRate(uint32_t currentBitRate,
-                                 uint32_t incomingBitRate,
+    WebRtc_UWord32 ChangeBitRate(WebRtc_UWord32 currentBitRate,
+                                 WebRtc_UWord32 incomingBitRate,
                                  double delayFactor,
-                                 int64_t nowMS);
-    double RateIncreaseFactor(int64_t nowMs,
-                              int64_t lastMs,
-                              uint32_t reactionTimeMs,
+                                 WebRtc_Word64 nowMS);
+    double RateIncreaseFactor(WebRtc_Word64 nowMs,
+                              WebRtc_Word64 lastMs,
+                              WebRtc_UWord32 reactionTimeMs,
                               double noiseVar) const;
-    void UpdateChangePeriod(int64_t nowMs);
+    void UpdateChangePeriod(WebRtc_Word64 nowMs);
     void UpdateMaxBitRateEstimate(float incomingBitRateKbps);
-    void ChangeState(const RateControlInput& input, int64_t nowMs);
+    void ChangeState(const RateControlInput& input, WebRtc_Word64 nowMs);
     void ChangeState(RateControlState newState);
     void ChangeRegion(RateControlRegion region);
     static void StateStr(RateControlState state, char* str);
     static void StateStr(BandwidthUsage state, char* str);
 
-    uint32_t        _minConfiguredBitRate;
-    uint32_t        _maxConfiguredBitRate;
-    uint32_t        _currentBitRate;
-    uint32_t        _maxHoldRate;
+    WebRtc_UWord32        _minConfiguredBitRate;
+    WebRtc_UWord32        _maxConfiguredBitRate;
+    WebRtc_UWord32        _currentBitRate;
+    WebRtc_UWord32        _maxHoldRate;
     float               _avgMaxBitRate;
     float               _varMaxBitRate;
     RateControlState    _rcState;
     RateControlState    _cameFromState;
     RateControlRegion   _rcRegion;
-    int64_t         _lastBitRateChange;
+    WebRtc_Word64         _lastBitRateChange;
     RateControlInput    _currentInput;
     bool                _updated;
-    int64_t         _timeFirstIncomingEstimate;
+    WebRtc_Word64         _timeFirstIncomingEstimate;
     bool                _initializedBitRate;
 
     float               _avgChangePeriod;
-    int64_t         _lastChangeMs;
+    WebRtc_Word64         _lastChangeMs;
     float               _beta;
     unsigned int _rtt;
 #ifdef MATLAB

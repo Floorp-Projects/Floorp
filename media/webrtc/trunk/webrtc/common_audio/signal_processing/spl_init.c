@@ -31,8 +31,7 @@ ScaleAndAddVectorsWithRound WebRtcSpl_ScaleAndAddVectorsWithRound;
 RealForwardFFT WebRtcSpl_RealForwardFFT;
 RealInverseFFT WebRtcSpl_RealInverseFFT;
 
-#if (defined(WEBRTC_DETECT_ARM_NEON) || !defined(WEBRTC_ARCH_ARM_NEON)) && \
-     !defined(MIPS32_LE)
+#if defined(WEBRTC_DETECT_ARM_NEON) || !defined(WEBRTC_ARCH_ARM_NEON)
 /* Initialize function pointers to the generic C version. */
 static void InitPointersToC() {
   WebRtcSpl_MaxAbsValueW16 = WebRtcSpl_MaxAbsValueW16C;
@@ -68,28 +67,6 @@ static void InitPointersToNeon() {
 }
 #endif
 
-#if defined(MIPS32_LE)
-/* Initialize function pointers to the MIPS version. */
-static void InitPointersToMIPS() {
-  WebRtcSpl_MaxAbsValueW16 = WebRtcSpl_MaxAbsValueW16_mips;
-  WebRtcSpl_MaxValueW16 = WebRtcSpl_MaxValueW16_mips;
-  WebRtcSpl_MaxValueW32 = WebRtcSpl_MaxValueW32_mips;
-  WebRtcSpl_MinValueW16 = WebRtcSpl_MinValueW16_mips;
-  WebRtcSpl_MinValueW32 = WebRtcSpl_MinValueW32_mips;
-  WebRtcSpl_CrossCorrelation = WebRtcSpl_CrossCorrelationC;
-  WebRtcSpl_DownsampleFast = WebRtcSpl_DownsampleFastC;
-  WebRtcSpl_ScaleAndAddVectorsWithRound =
-      WebRtcSpl_ScaleAndAddVectorsWithRoundC;
-  WebRtcSpl_RealForwardFFT = WebRtcSpl_RealForwardFFTC;
-  WebRtcSpl_RealInverseFFT = WebRtcSpl_RealInverseFFTC;
-#if defined(MIPS_DSP_R1_LE)
-  WebRtcSpl_MaxAbsValueW32 = WebRtcSpl_MaxAbsValueW32_mips;
-#else
-  WebRtcSpl_MaxAbsValueW32 = WebRtcSpl_MaxAbsValueW32C;
-#endif
-}
-#endif
-
 static void InitFunctionPointers(void) {
 #if defined(WEBRTC_DETECT_ARM_NEON)
   if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
@@ -99,8 +76,6 @@ static void InitFunctionPointers(void) {
   }
 #elif defined(WEBRTC_ARCH_ARM_NEON)
   InitPointersToNeon();
-#elif defined(MIPS32_LE)
-  InitPointersToMIPS();
 #else
   InitPointersToC();
 #endif  /* WEBRTC_DETECT_ARM_NEON */
@@ -125,7 +100,7 @@ static void once(void (*func)(void)) {
    * InterlockedCompareExchangePointer) to avoid issues similar to
    * http://code.google.com/p/webm/issues/detail?id=467.
    */
-  static CRITICAL_SECTION lock = {(void *)((size_t)-1), -1, 0, 0, 0, 0};
+  static CRITICAL_SECTION lock = {(void *)-1, -1, 0, 0, 0, 0};
   static int done = 0;
 
   EnterCriticalSection(&lock);

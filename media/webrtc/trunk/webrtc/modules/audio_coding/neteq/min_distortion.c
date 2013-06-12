@@ -16,17 +16,17 @@
 
 #include "signal_processing_library.h"
 
-int16_t WebRtcNetEQ_MinDistortion(const int16_t *pw16_data,
-                                  int16_t w16_minLag, int16_t w16_maxLag,
-                                  int16_t len, int32_t *pw16_dist)
+WebRtc_Word16 WebRtcNetEQ_MinDistortion(const WebRtc_Word16 *pw16_data,
+                                        WebRtc_Word16 w16_minLag, WebRtc_Word16 w16_maxLag,
+                                        WebRtc_Word16 len, WebRtc_Word32 *pw16_dist)
 {
     int i, j;
-    const int16_t *pw16_data1;
-    const int16_t *pw16_data2;
-    int32_t w32_diff;
-    int32_t w32_sumdiff;
-    int16_t bestIndex = -1;
-    int32_t minDist = WEBRTC_SPL_WORD32_MAX;
+    const WebRtc_Word16 *pw16_data1;
+    const WebRtc_Word16 *pw16_data2;
+    WebRtc_Word32 w32_diff;
+    WebRtc_Word32 w32_sumdiff;
+    WebRtc_Word16 bestIndex = -1;
+    WebRtc_Word32 minDist = WEBRTC_SPL_WORD32_MAX;
 
     for (i = w16_minLag; i <= w16_maxLag; i++)
     {

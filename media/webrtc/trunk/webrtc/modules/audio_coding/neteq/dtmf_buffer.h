@@ -26,15 +26,15 @@
 
 typedef struct dtmf_inst_t_
 {
-    int16_t MaxPLCtime;
-    int16_t CurrentPLCtime;
-    int16_t EventQueue[MAX_DTMF_QUEUE_SIZE];
-    int16_t EventQueueVolume[MAX_DTMF_QUEUE_SIZE];
-    int16_t EventQueueEnded[MAX_DTMF_QUEUE_SIZE];
-    uint32_t EventQueueStartTime[MAX_DTMF_QUEUE_SIZE];
-    uint32_t EventQueueEndTime[MAX_DTMF_QUEUE_SIZE];
-    int16_t EventBufferSize;
-    int16_t framelen;
+    WebRtc_Word16 MaxPLCtime;
+    WebRtc_Word16 CurrentPLCtime;
+    WebRtc_Word16 EventQueue[MAX_DTMF_QUEUE_SIZE];
+    WebRtc_Word16 EventQueueVolume[MAX_DTMF_QUEUE_SIZE];
+    WebRtc_Word16 EventQueueEnded[MAX_DTMF_QUEUE_SIZE];
+    WebRtc_UWord32 EventQueueStartTime[MAX_DTMF_QUEUE_SIZE];
+    WebRtc_UWord32 EventQueueEndTime[MAX_DTMF_QUEUE_SIZE];
+    WebRtc_Word16 EventBufferSize;
+    WebRtc_Word16 framelen;
 } dtmf_inst_t;
 
 /****************************************************************************
@@ -51,8 +51,8 @@ typedef struct dtmf_inst_t_
  *                            -1 - Error
  */
 
-int16_t WebRtcNetEQ_DtmfDecoderInit(dtmf_inst_t *DTMFdec_inst, uint16_t fs,
-                                    int16_t MaxPLCtime);
+WebRtc_Word16 WebRtcNetEQ_DtmfDecoderInit(dtmf_inst_t *DTMFdec_inst, WebRtc_UWord16 fs,
+                                          WebRtc_Word16 MaxPLCtime);
 
 /****************************************************************************
  * WebRtcNetEQ_DtmfInsertEvent(...)
@@ -69,9 +69,9 @@ int16_t WebRtcNetEQ_DtmfDecoderInit(dtmf_inst_t *DTMFdec_inst, uint16_t fs,
  *                            -1 - Error
  */
 
-int16_t WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
-                                    const int16_t *encoded, int16_t len,
-                                    uint32_t timeStamp);
+WebRtc_Word16 WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
+                                          const WebRtc_Word16 *encoded, WebRtc_Word16 len,
+                                          WebRtc_UWord32 timeStamp);
 
 /****************************************************************************
  * WebRtcNetEQ_DtmfDecode(...)
@@ -92,8 +92,8 @@ int16_t WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
  *                            -1 - Error
  */
 
-int16_t WebRtcNetEQ_DtmfDecode(dtmf_inst_t *DTMFdec_inst, int16_t *event,
-                               int16_t *volume, uint32_t currTimeStamp);
+WebRtc_Word16 WebRtcNetEQ_DtmfDecode(dtmf_inst_t *DTMFdec_inst, WebRtc_Word16 *event,
+                                     WebRtc_Word16 *volume, WebRtc_UWord32 currTimeStamp);
 
 #endif    /* NETEQ_ATEVENT_DECODE */
 

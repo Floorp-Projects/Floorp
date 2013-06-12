@@ -18,19 +18,19 @@ int
 WebRtcIsac_EstimateBandwidth(
     BwEstimatorstr*           bwest_str,
     Bitstr*                   streamdata,
-    int32_t               packet_size,
-    uint16_t              rtp_seq_number,
-    uint32_t              send_ts,
-    uint32_t              arr_ts,
+    WebRtc_Word32               packet_size,
+    WebRtc_UWord16              rtp_seq_number,
+    WebRtc_UWord32              send_ts,
+    WebRtc_UWord32              arr_ts,
     enum IsacSamplingRate encoderSampRate,
     enum IsacSamplingRate decoderSampRate)
 {
-  int16_t  index;
-  int16_t  frame_samples;
-  uint32_t sendTimestampIn16kHz;
-  uint32_t arrivalTimestampIn16kHz;
-  uint32_t diffSendTime;
-  uint32_t diffArrivalTime;
+  WebRtc_Word16  index;
+  WebRtc_Word16  frame_samples;
+  WebRtc_UWord32 sendTimestampIn16kHz;
+  WebRtc_UWord32 arrivalTimestampIn16kHz;
+  WebRtc_UWord32 diffSendTime;
+  WebRtc_UWord32 diffArrivalTime;
   int err;
 
   /* decode framelength and BW estimation */
@@ -55,26 +55,26 @@ WebRtcIsac_EstimateBandwidth(
   // We like BWE to work at 16 kHz sampling rate,
   // therefore, we have to change the timestamps accordingly.
   // translate the send timestamp if required
-  diffSendTime = (uint32_t)((uint32_t)send_ts -
-                                  (uint32_t)bwest_str->senderTimestamp);
+  diffSendTime = (WebRtc_UWord32)((WebRtc_UWord32)send_ts -
+                                  (WebRtc_UWord32)bwest_str->senderTimestamp);
   bwest_str->senderTimestamp = send_ts;
 
-  diffArrivalTime = (uint32_t)((uint32_t)arr_ts -
-                                     (uint32_t)bwest_str->receiverTimestamp);
+  diffArrivalTime = (WebRtc_UWord32)((WebRtc_UWord32)arr_ts -
+                                     (WebRtc_UWord32)bwest_str->receiverTimestamp);
   bwest_str->receiverTimestamp = arr_ts;
 
   if(decoderSampRate == kIsacSuperWideband)
   {
-    diffArrivalTime = (uint32_t)diffArrivalTime >> 1;
-    diffSendTime = (uint32_t)diffSendTime >> 1;
+    diffArrivalTime = (WebRtc_UWord32)diffArrivalTime >> 1;
+    diffSendTime = (WebRtc_UWord32)diffSendTime >> 1;
   }
 
   // arrival timestamp in 16 kHz
-  arrivalTimestampIn16kHz = (uint32_t)((uint32_t)
-                                             bwest_str->prev_rec_arr_ts + (uint32_t)diffArrivalTime);
+  arrivalTimestampIn16kHz = (WebRtc_UWord32)((WebRtc_UWord32)
+                                             bwest_str->prev_rec_arr_ts + (WebRtc_UWord32)diffArrivalTime);
   // send timestamp in 16 kHz
-  sendTimestampIn16kHz = (uint32_t)((uint32_t)
-                                          bwest_str->prev_rec_send_ts + (uint32_t)diffSendTime);
+  sendTimestampIn16kHz = (WebRtc_UWord32)((WebRtc_UWord32)
+                                          bwest_str->prev_rec_send_ts + (WebRtc_UWord32)diffSendTime);
 
   err = WebRtcIsac_UpdateBandwidthEstimator(bwest_str, rtp_seq_number,
                                             (frame_samples * 1000) / FS, sendTimestampIn16kHz,

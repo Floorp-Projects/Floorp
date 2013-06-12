@@ -8,18 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/test/test_suite.h"
+#include "test/test_suite.h"
+#include "test/testsupport/fileutils.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/test/testsupport/trace_to_stderr.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace webrtc {
 namespace test {
 
-TestSuite::TestSuite(int argc, char** argv)
-    : trace_to_stderr_(NULL) {
+TestSuite::TestSuite(int argc, char** argv) {
   SetExecutablePath(argv[0]);
   testing::InitGoogleMock(&argc, argv);  // Runs InitGoogleTest() internally.
 }
@@ -35,12 +33,10 @@ int TestSuite::Run() {
 }
 
 void TestSuite::Initialize() {
-  // Create TraceToStderr here so the behavior can be overridden.
-  trace_to_stderr_.reset(new TraceToStderr);
+  // TODO(andrew): initialize singletons here (e.g. Trace).
 }
 
 void TestSuite::Shutdown() {
 }
-
 }  // namespace test
 }  // namespace webrtc

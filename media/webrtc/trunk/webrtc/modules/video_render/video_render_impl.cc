@@ -66,7 +66,7 @@
 namespace webrtc {
 
 VideoRender*
-VideoRender::CreateVideoRender(const int32_t id,
+VideoRender::CreateVideoRender(const WebRtc_Word32 id,
                                void* window,
                                const bool fullscreen,
                                const VideoRenderType videoRenderType/*=kRenderDefault*/)
@@ -90,7 +90,7 @@ void VideoRender::DestroyVideoRender(
 }
 
 ModuleVideoRenderImpl::ModuleVideoRenderImpl(
-                                             const int32_t id,
+                                             const WebRtc_Word32 id,
                                              const VideoRenderType videoRenderType,
                                              void* window,
                                              const bool fullscreen) :
@@ -310,7 +310,7 @@ ModuleVideoRenderImpl::~ModuleVideoRenderImpl()
     }
 }
 
-int32_t ModuleVideoRenderImpl::ChangeUniqueId(const int32_t id)
+WebRtc_Word32 ModuleVideoRenderImpl::ChangeUniqueId(const WebRtc_Word32 id)
 {
 
     CriticalSectionScoped cs(&_moduleCrit);
@@ -325,12 +325,12 @@ int32_t ModuleVideoRenderImpl::ChangeUniqueId(const int32_t id)
     return 0;
 }
 
-int32_t ModuleVideoRenderImpl::TimeUntilNextProcess()
+WebRtc_Word32 ModuleVideoRenderImpl::TimeUntilNextProcess()
 {
     // Not used
     return 50;
 }
-int32_t ModuleVideoRenderImpl::Process()
+WebRtc_Word32 ModuleVideoRenderImpl::Process()
 {
     // Not used
     return 0;
@@ -343,7 +343,7 @@ ModuleVideoRenderImpl::Window()
     return _ptrWindow;
 }
 
-int32_t ModuleVideoRenderImpl::ChangeWindow(void* window)
+WebRtc_Word32 ModuleVideoRenderImpl::ChangeWindow(void* window)
 {
 
     CriticalSectionScoped cs(&_moduleCrit);
@@ -398,14 +398,14 @@ int32_t ModuleVideoRenderImpl::ChangeWindow(void* window)
 #endif
 }
 
-int32_t ModuleVideoRenderImpl::Id()
+WebRtc_Word32 ModuleVideoRenderImpl::Id()
 {
     CriticalSectionScoped cs(&_moduleCrit);
     return _id;
 }
 
-uint32_t ModuleVideoRenderImpl::GetIncomingFrameRate(
-                                                           const uint32_t streamId)
+WebRtc_UWord32 ModuleVideoRenderImpl::GetIncomingFrameRate(
+                                                           const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -430,8 +430,8 @@ uint32_t ModuleVideoRenderImpl::GetIncomingFrameRate(
 }
 
 VideoRenderCallback*
-ModuleVideoRenderImpl::AddIncomingRenderStream(const uint32_t streamId,
-                                               const uint32_t zOrder,
+ModuleVideoRenderImpl::AddIncomingRenderStream(const WebRtc_UWord32 streamId,
+                                               const WebRtc_UWord32 zOrder,
                                                const float left,
                                                const float top,
                                                const float right,
@@ -494,8 +494,8 @@ ModuleVideoRenderImpl::AddIncomingRenderStream(const uint32_t streamId,
     return moduleCallback;
 }
 
-int32_t ModuleVideoRenderImpl::DeleteIncomingRenderStream(
-                                                                const uint32_t streamId)
+WebRtc_Word32 ModuleVideoRenderImpl::DeleteIncomingRenderStream(
+                                                                const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -524,8 +524,8 @@ int32_t ModuleVideoRenderImpl::DeleteIncomingRenderStream(
     return 0;
 }
 
-int32_t ModuleVideoRenderImpl::AddExternalRenderCallback(
-                                                               const uint32_t streamId,
+WebRtc_Word32 ModuleVideoRenderImpl::AddExternalRenderCallback(
+                                                               const WebRtc_UWord32 streamId,
                                                                VideoRenderCallback* renderObject)
 {
     CriticalSectionScoped cs(&_moduleCrit);
@@ -548,9 +548,9 @@ int32_t ModuleVideoRenderImpl::AddExternalRenderCallback(
     return ptrIncomingStream->SetExternalCallback(renderObject);
 }
 
-int32_t ModuleVideoRenderImpl::GetIncomingRenderStreamProperties(
-                                                                       const uint32_t streamId,
-                                                                       uint32_t& zOrder,
+WebRtc_Word32 ModuleVideoRenderImpl::GetIncomingRenderStreamProperties(
+                                                                       const WebRtc_UWord32 streamId,
+                                                                       WebRtc_UWord32& zOrder,
                                                                        float& left,
                                                                        float& top,
                                                                        float& right,
@@ -570,15 +570,15 @@ int32_t ModuleVideoRenderImpl::GetIncomingRenderStreamProperties(
                                                            bottom);
 }
 
-uint32_t ModuleVideoRenderImpl::GetNumIncomingRenderStreams() const
+WebRtc_UWord32 ModuleVideoRenderImpl::GetNumIncomingRenderStreams() const
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
-    return (uint32_t) _streamRenderMap.Size();
+    return (WebRtc_UWord32) _streamRenderMap.Size();
 }
 
 bool ModuleVideoRenderImpl::HasIncomingRenderStream(
-                                                    const uint32_t streamId) const
+                                                    const WebRtc_UWord32 streamId) const
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -590,14 +590,14 @@ bool ModuleVideoRenderImpl::HasIncomingRenderStream(
     return hasStream;
 }
 
-int32_t ModuleVideoRenderImpl::RegisterRawFrameCallback(
-                                                              const uint32_t streamId,
+WebRtc_Word32 ModuleVideoRenderImpl::RegisterRawFrameCallback(
+                                                              const WebRtc_UWord32 streamId,
                                                               VideoRenderCallback* callbackObj)
 {
     return -1;
 }
 
-int32_t ModuleVideoRenderImpl::StartRender(const uint32_t streamId)
+WebRtc_Word32 ModuleVideoRenderImpl::StartRender(const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -630,7 +630,7 @@ int32_t ModuleVideoRenderImpl::StartRender(const uint32_t streamId)
     return 0;
 }
 
-int32_t ModuleVideoRenderImpl::StopRender(const uint32_t streamId)
+WebRtc_Word32 ModuleVideoRenderImpl::StopRender(const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -658,11 +658,11 @@ int32_t ModuleVideoRenderImpl::StopRender(const uint32_t streamId)
     return 0;
 }
 
-int32_t ModuleVideoRenderImpl::ResetRender()
+WebRtc_Word32 ModuleVideoRenderImpl::ResetRender()
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
-    int32_t error = 0;
+    WebRtc_Word32 error = 0;
 
     // Loop through all incoming streams and stop them
     MapItem* item = _streamRenderMap.First();
@@ -704,9 +704,9 @@ bool ModuleVideoRenderImpl::IsFullScreen()
     return _ptrRenderer->FullScreen();
 }
 
-int32_t ModuleVideoRenderImpl::GetScreenResolution(
-                                                         uint32_t& screenWidth,
-                                                         uint32_t& screenHeight) const
+WebRtc_Word32 ModuleVideoRenderImpl::GetScreenResolution(
+                                                         WebRtc_UWord32& screenWidth,
+                                                         WebRtc_UWord32& screenHeight) const
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -719,8 +719,8 @@ int32_t ModuleVideoRenderImpl::GetScreenResolution(
     return _ptrRenderer->GetScreenResolution(screenWidth, screenHeight);
 }
 
-uint32_t ModuleVideoRenderImpl::RenderFrameRate(
-                                                      const uint32_t streamId)
+WebRtc_UWord32 ModuleVideoRenderImpl::RenderFrameRate(
+                                                      const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -733,8 +733,8 @@ uint32_t ModuleVideoRenderImpl::RenderFrameRate(
     return _ptrRenderer->RenderFrameRate(streamId);
 }
 
-int32_t ModuleVideoRenderImpl::SetStreamCropping(
-                                                       const uint32_t streamId,
+WebRtc_Word32 ModuleVideoRenderImpl::SetStreamCropping(
+                                                       const WebRtc_UWord32 streamId,
                                                        const float left,
                                                        const float top,
                                                        const float right,
@@ -751,7 +751,7 @@ int32_t ModuleVideoRenderImpl::SetStreamCropping(
     return _ptrRenderer->SetStreamCropping(streamId, left, top, right, bottom);
 }
 
-int32_t ModuleVideoRenderImpl::SetTransparentBackground(const bool enable)
+WebRtc_Word32 ModuleVideoRenderImpl::SetTransparentBackground(const bool enable)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -764,17 +764,18 @@ int32_t ModuleVideoRenderImpl::SetTransparentBackground(const bool enable)
     return _ptrRenderer->SetTransparentBackground(enable);
 }
 
-int32_t ModuleVideoRenderImpl::FullScreenRender(void* window, const bool enable)
+WebRtc_Word32 ModuleVideoRenderImpl::FullScreenRender(void* window,
+                                                      const bool enable)
 {
     return -1;
 }
 
-int32_t ModuleVideoRenderImpl::SetText(
-                                             const uint8_t textId,
-                                             const uint8_t* text,
-                                             const int32_t textLength,
-                                             const uint32_t textColorRef,
-                                             const uint32_t backgroundColorRef,
+WebRtc_Word32 ModuleVideoRenderImpl::SetText(
+                                             const WebRtc_UWord8 textId,
+                                             const WebRtc_UWord8* text,
+                                             const WebRtc_Word32 textLength,
+                                             const WebRtc_UWord32 textColorRef,
+                                             const WebRtc_UWord32 backgroundColorRef,
                                              const float left, const float top,
                                              const float right,
                                              const float bottom)
@@ -791,13 +792,13 @@ int32_t ModuleVideoRenderImpl::SetText(
                                  backgroundColorRef, left, top, right, bottom);
 }
 
-int32_t ModuleVideoRenderImpl::SetBitmap(const void* bitMap,
-                                         const uint8_t pictureId,
-                                         const void* colorKey,
-                                         const float left,
-                                         const float top,
-                                         const float right,
-                                         const float bottom)
+WebRtc_Word32 ModuleVideoRenderImpl::SetBitmap(const void* bitMap,
+                                               const WebRtc_UWord8 pictureId,
+                                               const void* colorKey,
+                                               const float left,
+                                               const float top,
+                                               const float right,
+                                               const float bottom)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -811,8 +812,8 @@ int32_t ModuleVideoRenderImpl::SetBitmap(const void* bitMap,
                                    right, bottom);
 }
 
-int32_t ModuleVideoRenderImpl::GetLastRenderedFrame(
-    const uint32_t streamId,
+WebRtc_Word32 ModuleVideoRenderImpl::GetLastRenderedFrame(
+    const WebRtc_UWord32 streamId,
     I420VideoFrame &frame) const
 {
     CriticalSectionScoped cs(&_moduleCrit);
@@ -844,8 +845,8 @@ int32_t ModuleVideoRenderImpl::GetLastRenderedFrame(
     return incomingStream->GetLastRenderedFrame(frame);
 }
 
-int32_t ModuleVideoRenderImpl::SetExpectedRenderDelay(
-    uint32_t stream_id, int32_t delay_ms) {
+WebRtc_Word32 ModuleVideoRenderImpl::SetExpectedRenderDelay(
+    WebRtc_UWord32 stream_id, WebRtc_Word32 delay_ms) {
   CriticalSectionScoped cs(&_moduleCrit);
 
   if (!_ptrRenderer) {
@@ -875,8 +876,8 @@ int32_t ModuleVideoRenderImpl::SetExpectedRenderDelay(
   return incoming_stream->SetExpectedRenderDelay(delay_ms);
 }
 
-int32_t ModuleVideoRenderImpl::ConfigureRenderer(
-                                                       const uint32_t streamId,
+WebRtc_Word32 ModuleVideoRenderImpl::ConfigureRenderer(
+                                                       const WebRtc_UWord32 streamId,
                                                        const unsigned int zOrder,
                                                        const float left,
                                                        const float top,
@@ -895,8 +896,8 @@ int32_t ModuleVideoRenderImpl::ConfigureRenderer(
                                            bottom);
 }
 
-int32_t ModuleVideoRenderImpl::SetStartImage(
-    const uint32_t streamId,
+WebRtc_Word32 ModuleVideoRenderImpl::SetStartImage(
+    const WebRtc_UWord32 streamId,
     const I420VideoFrame& videoFrame)
 {
     CriticalSectionScoped cs(&_moduleCrit);
@@ -929,10 +930,10 @@ int32_t ModuleVideoRenderImpl::SetStartImage(
 
 }
 
-int32_t ModuleVideoRenderImpl::SetTimeoutImage(
-    const uint32_t streamId,
+WebRtc_Word32 ModuleVideoRenderImpl::SetTimeoutImage(
+    const WebRtc_UWord32 streamId,
     const I420VideoFrame& videoFrame,
-    const uint32_t timeout)
+    const WebRtc_UWord32 timeout)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 
@@ -963,10 +964,10 @@ int32_t ModuleVideoRenderImpl::SetTimeoutImage(
     return incomingStream->SetTimeoutImage(videoFrame, timeout);
 }
 
-int32_t ModuleVideoRenderImpl::MirrorRenderStream(const int renderId,
-                                                  const bool enable,
-                                                  const bool mirrorXAxis,
-                                                  const bool mirrorYAxis)
+WebRtc_Word32 ModuleVideoRenderImpl::MirrorRenderStream(const int renderId,
+                                                        const bool enable,
+                                                        const bool mirrorXAxis,
+                                                        const bool mirrorYAxis)
 {
     CriticalSectionScoped cs(&_moduleCrit);
 

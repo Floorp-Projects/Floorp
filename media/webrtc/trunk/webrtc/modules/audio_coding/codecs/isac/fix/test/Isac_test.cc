@@ -25,9 +25,9 @@ ISACFIX_MainStruct *ISACfix_inst;
 
 
 typedef struct {
-	uint32_t arrival_time;            /* samples */
-	uint32_t sample_count;            /* samples */
-	uint16_t rtp_number;
+	WebRtc_UWord32 arrival_time;            /* samples */
+	WebRtc_UWord32 sample_count;            /* samples */
+	WebRtc_UWord16 rtp_number;
 } BottleNeckModel;
 
 void get_arrival_time(int current_framesamples,   /* samples */
@@ -60,18 +60,18 @@ int main(int argc, char* argv[]){
 
 	/* Parameters */
 	FILE *pInFile, *pOutFile, *pChcFile; 
-	int8_t inFile[40];
-	int8_t outFile[40];
-	int8_t chcFile[40];
-	int8_t codec[10];
-	int16_t bitrt, spType, size;
-	uint16_t frameLen;
-	int16_t sigOut[1000], sigIn[1000]; 
-	uint16_t bitStream[500]; /* double to 32 kbps for 60 ms */
+	WebRtc_Word8 inFile[40];
+	WebRtc_Word8 outFile[40];
+	WebRtc_Word8 chcFile[40];
+	WebRtc_Word8 codec[10];
+	WebRtc_Word16 bitrt, spType, size;
+	WebRtc_UWord16 frameLen;
+	WebRtc_Word16 sigOut[1000], sigIn[1000]; 
+	WebRtc_UWord16 bitStream[500]; /* double to 32 kbps for 60 ms */
 
-	int16_t chc, ok;
+	WebRtc_Word16 chc, ok;
 	int noOfCalls, cdlen;
-	int16_t noOfLostFrames;
+	WebRtc_Word16 noOfLostFrames;
 	int err, errtype;
 
 	BottleNeckModel       BN_data;
@@ -170,12 +170,12 @@ int main(int argc, char* argv[]){
 				exit(EXIT_FAILURE);
 			}
 		/* loop over frame */
-		while (fread(sigIn,sizeof(int16_t),frameLen,pInFile) == frameLen) {
+		while (fread(sigIn,sizeof(WebRtc_Word16),frameLen,pInFile) == frameLen) {
 			
 			noOfCalls=0;
 			cdlen=0;
 			while (cdlen<=0) {
-				cdlen=WebRtcIsacfix_Encode(ISACfix_inst,&sigIn[noOfCalls*160],(int16_t*)bitStream);
+				cdlen=WebRtcIsacfix_Encode(ISACfix_inst,&sigIn[noOfCalls*160],(WebRtc_Word16*)bitStream);
 				if(cdlen==-1){
 					errtype=WebRtcIsacfix_GetErrorCode(ISACfix_inst);
 					printf("\n\nError in encoder: %d.\n\n", errtype);
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]){
 	
 	
 			if(_stricmp("none", chcFile)){
-				if (fread(&chc,sizeof(int16_t),1,pChcFile)!=1) /* packet may be lost */
+				if (fread(&chc,sizeof(WebRtc_Word16),1,pChcFile)!=1) /* packet may be lost */
 					break;
 			} else {
 				chc = 1; /* packets never lost */

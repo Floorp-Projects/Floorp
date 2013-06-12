@@ -22,7 +22,7 @@
 
 #ifdef NETEQ_ATEVENT_DECODE
 
-int16_t WebRtcNetEQ_DtmfRemoveEvent(dtmf_inst_t *DTMFdec_inst)
+WebRtc_Word16 WebRtcNetEQ_DtmfRemoveEvent(dtmf_inst_t *DTMFdec_inst)
 {
 
     int i;
@@ -44,8 +44,8 @@ int16_t WebRtcNetEQ_DtmfRemoveEvent(dtmf_inst_t *DTMFdec_inst)
     return 0;
 }
 
-int16_t WebRtcNetEQ_DtmfDecoderInit(dtmf_inst_t *DTMFdec_inst, uint16_t fs,
-                                    int16_t MaxPLCtime)
+WebRtc_Word16 WebRtcNetEQ_DtmfDecoderInit(dtmf_inst_t *DTMFdec_inst, WebRtc_UWord16 fs,
+                                          WebRtc_Word16 MaxPLCtime)
 {
     int i;
     if (((fs != 8000) && (fs != 16000) && (fs != 32000) && (fs != 48000)) || (MaxPLCtime < 0))
@@ -76,18 +76,18 @@ int16_t WebRtcNetEQ_DtmfDecoderInit(dtmf_inst_t *DTMFdec_inst, uint16_t fs,
     return 0;
 }
 
-int16_t WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
-                                    const int16_t *encoded, int16_t len,
-                                    uint32_t timeStamp)
+WebRtc_Word16 WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
+                                          const WebRtc_Word16 *encoded, WebRtc_Word16 len,
+                                          WebRtc_UWord32 timeStamp)
 {
 
     int i;
-    int16_t value;
-    const int16_t *EventStart;
-    int16_t endEvent;
-    int16_t Volume;
-    int16_t Duration;
-    int16_t position = -1;
+    WebRtc_Word16 value;
+    const WebRtc_Word16 *EventStart;
+    WebRtc_Word16 endEvent;
+    WebRtc_Word16 Volume;
+    WebRtc_Word16 Duration;
+    WebRtc_Word16 position = -1;
 
     /* Extract event */
     if (len == 4)
@@ -102,8 +102,8 @@ int16_t WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
         value = ((*EventStart) & 0xFF);
         endEvent = ((*EventStart) & 0x8000) >> 15;
         Volume = ((*EventStart) & 0x3F00) >> 8;
-        Duration = (((((uint16_t) EventStart[1]) >> 8) & 0xFF)
-            | (((uint16_t) (EventStart[1] & 0xFF)) << 8));
+        Duration = (((((WebRtc_UWord16) EventStart[1]) >> 8) & 0xFF)
+            | (((WebRtc_UWord16) (EventStart[1] & 0xFF)) << 8));
 #endif
         /* Only events between 0-15 are supported (DTMF tones) */
         if ((value < 0) || (value > 15))
@@ -153,8 +153,8 @@ int16_t WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
     return DTMF_INSERT_ERROR;
 }
 
-int16_t WebRtcNetEQ_DtmfDecode(dtmf_inst_t *DTMFdec_inst, int16_t *event,
-                               int16_t *volume, uint32_t currTimeStamp)
+WebRtc_Word16 WebRtcNetEQ_DtmfDecode(dtmf_inst_t *DTMFdec_inst, WebRtc_Word16 *event,
+                                     WebRtc_Word16 *volume, WebRtc_UWord32 currTimeStamp)
 {
 
     if (DTMFdec_inst->EventBufferSize < 1) return 0; /* No events to play */
@@ -204,7 +204,7 @@ int16_t WebRtcNetEQ_DtmfDecode(dtmf_inst_t *DTMFdec_inst, int16_t *event,
         else
         {
             /* Less than frameLen to play and not end of event. */
-            DTMFdec_inst->CurrentPLCtime = (int16_t) (currTimeStamp
+            DTMFdec_inst->CurrentPLCtime = (WebRtc_Word16) (currTimeStamp
                 - DTMFdec_inst->EventQueueEndTime[0]);
 
             if ((DTMFdec_inst->CurrentPLCtime > DTMFdec_inst->MaxPLCtime)

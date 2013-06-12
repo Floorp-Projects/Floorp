@@ -17,7 +17,7 @@
 namespace webrtc {
 // RTCPParserV2 : currently read only
 
-RTCPUtility::RTCPParserV2::RTCPParserV2(const uint8_t* rtcpData,
+RTCPUtility::RTCPParserV2::RTCPParserV2(const WebRtc_UWord8* rtcpData,
                                         size_t rtcpDataLength,
                                         bool rtcpReducedSizeEnable)
     : _ptrRTCPDataBegin(rtcpData),
@@ -411,8 +411,8 @@ RTCPUtility::RTCPParserV2::EndCurrentBlock()
 }
 
 bool
-RTCPUtility::RTCPParseCommonHeader( const uint8_t* ptrDataBegin,
-                                    const uint8_t* ptrDataEnd,
+RTCPUtility::RTCPParseCommonHeader( const WebRtc_UWord8* ptrDataBegin,
+                                    const WebRtc_UWord8* ptrDataEnd,
                                     RTCPCommonHeader& parsedHeader)
 {
     if (!ptrDataBegin || !ptrDataEnd)
@@ -689,7 +689,7 @@ RTCPUtility::RTCPParserV2::ParseSDESChunk()
             return false;
         }
 
-        uint32_t SSRC = *_ptrRTCPData++ << 24;
+        WebRtc_UWord32 SSRC = *_ptrRTCPData++ << 24;
         SSRC += *_ptrRTCPData++ << 16;
         SSRC += *_ptrRTCPData++ << 8;
         SSRC += *_ptrRTCPData++;
@@ -717,7 +717,7 @@ RTCPUtility::RTCPParserV2::ParseSDESItem()
     size_t itemOctetsRead = 0;
     while (_ptrRTCPData < _ptrRTCPBlockEnd)
     {
-        const uint8_t tag = *_ptrRTCPData++;
+        const WebRtc_UWord8 tag = *_ptrRTCPData++;
         ++itemOctetsRead;
 
         if (tag == 0)
@@ -732,7 +732,7 @@ RTCPUtility::RTCPParserV2::ParseSDESItem()
 
         if (_ptrRTCPData < _ptrRTCPBlockEnd)
         {
-            const uint8_t len = *_ptrRTCPData++;
+            const WebRtc_UWord8 len = *_ptrRTCPData++;
             ++itemOctetsRead;
 
             if (tag == 1)
@@ -747,10 +747,10 @@ RTCPUtility::RTCPParserV2::ParseSDESItem()
                     EndCurrentBlock();
                     return false;
                 }
-                uint8_t i = 0;
+                WebRtc_UWord8 i = 0;
                 for (; i < len; ++i)
                 {
-                    const uint8_t c = _ptrRTCPData[i];
+                    const WebRtc_UWord8 c = _ptrRTCPData[i];
                     if ((c < ' ') || (c > '{') || (c == '%') || (c == '\\'))
                     {
                         // Illegal char
@@ -870,10 +870,10 @@ RTCPUtility::RTCPParserV2::ParseXRItem()
         return false;
     }
 
-    uint8_t blockType = *_ptrRTCPData++;
-    uint8_t typeSpecific = *_ptrRTCPData++;
+    WebRtc_UWord8 blockType = *_ptrRTCPData++;
+    WebRtc_UWord8 typeSpecific = *_ptrRTCPData++;
 
-    uint16_t blockLength = *_ptrRTCPData++ << 8;
+    WebRtc_UWord16 blockLength = *_ptrRTCPData++ << 8;
     blockLength = *_ptrRTCPData++;
 
     if(blockType == 7 && typeSpecific == 0)
@@ -985,12 +985,12 @@ RTCPUtility::RTCPParserV2::ParseFBCommon(const RTCPCommonHeader& header)
 
     _ptrRTCPData += 4; // Skip RTCP header
 
-    uint32_t senderSSRC = *_ptrRTCPData++ << 24;
+    WebRtc_UWord32 senderSSRC = *_ptrRTCPData++ << 24;
     senderSSRC += *_ptrRTCPData++ << 16;
     senderSSRC += *_ptrRTCPData++ << 8;
     senderSSRC += *_ptrRTCPData++;
 
-    uint32_t mediaSSRC = *_ptrRTCPData++ << 24;
+    WebRtc_UWord32 mediaSSRC = *_ptrRTCPData++ << 24;
     mediaSSRC += *_ptrRTCPData++ << 16;
     mediaSSRC += *_ptrRTCPData++ << 8;
     mediaSSRC += *_ptrRTCPData++;
@@ -1149,12 +1149,12 @@ RTCPUtility::RTCPParserV2::ParseRPSIItem()
 
     _packetType = kRtcpPsfbRpsiCode;
 
-    uint8_t paddingBits = *_ptrRTCPData++;
+    WebRtc_UWord8 paddingBits = *_ptrRTCPData++;
     _packet.RPSI.PayloadType = *_ptrRTCPData++;
 
     memcpy(_packet.RPSI.NativeBitString, _ptrRTCPData, length-2);
 
-    _packet.RPSI.NumberOfValidBits = uint16_t(length-2)*8 - paddingBits;
+    _packet.RPSI.NumberOfValidBits = WebRtc_UWord16(length-2)*8 - paddingBits;
     return true;
 }
 
@@ -1243,9 +1243,9 @@ RTCPUtility::RTCPParserV2::ParsePsfbREMBItem()
     }
 
     _packet.REMBItem.NumberOfSSRCs = *_ptrRTCPData++;
-    const uint8_t brExp = (_ptrRTCPData[0] >> 2) & 0x3F;
+    const WebRtc_UWord8 brExp = (_ptrRTCPData[0] >> 2) & 0x3F;
 
-    uint32_t brMantissa = (_ptrRTCPData[0] & 0x03) << 16;
+    WebRtc_UWord32 brMantissa = (_ptrRTCPData[0] & 0x03) << 16;
     brMantissa += (_ptrRTCPData[1] << 8);
     brMantissa += (_ptrRTCPData[2]);
 
@@ -1295,13 +1295,13 @@ RTCPUtility::RTCPParserV2::ParseTMMBRItem()
     _packet.TMMBRItem.SSRC += *_ptrRTCPData++ << 8;
     _packet.TMMBRItem.SSRC += *_ptrRTCPData++;
 
-    uint8_t mxtbrExp = (_ptrRTCPData[0] >> 2) & 0x3F;
+    WebRtc_UWord8 mxtbrExp = (_ptrRTCPData[0] >> 2) & 0x3F;
 
-    uint32_t mxtbrMantissa = (_ptrRTCPData[0] & 0x03) << 15;
+    WebRtc_UWord32 mxtbrMantissa = (_ptrRTCPData[0] & 0x03) << 15;
     mxtbrMantissa += (_ptrRTCPData[1] << 7);
     mxtbrMantissa += (_ptrRTCPData[2] >> 1) & 0x7F;
 
-    uint32_t measuredOH = (_ptrRTCPData[2] & 0x01) << 8;
+    WebRtc_UWord32 measuredOH = (_ptrRTCPData[2] & 0x01) << 8;
     measuredOH += _ptrRTCPData[3];
 
     _ptrRTCPData += 4; // Fwd read data
@@ -1334,13 +1334,13 @@ RTCPUtility::RTCPParserV2::ParseTMMBNItem()
     _packet.TMMBNItem.SSRC += *_ptrRTCPData++ << 8;
     _packet.TMMBNItem.SSRC += *_ptrRTCPData++;
 
-    uint8_t mxtbrExp = (_ptrRTCPData[0] >> 2) & 0x3F;
+    WebRtc_UWord8 mxtbrExp = (_ptrRTCPData[0] >> 2) & 0x3F;
 
-    uint32_t mxtbrMantissa = (_ptrRTCPData[0] & 0x03) << 15;
+    WebRtc_UWord32 mxtbrMantissa = (_ptrRTCPData[0] & 0x03) << 15;
     mxtbrMantissa += (_ptrRTCPData[1] << 7);
     mxtbrMantissa += (_ptrRTCPData[2] >> 1) & 0x7F;
 
-    uint32_t measuredOH = (_ptrRTCPData[2] & 0x01) << 8;
+    WebRtc_UWord32 measuredOH = (_ptrRTCPData[2] & 0x01) << 8;
     measuredOH += _ptrRTCPData[3];
 
     _ptrRTCPData += 4; // Fwd read data
@@ -1374,15 +1374,15 @@ RTCPUtility::RTCPParserV2::ParseSLIItem()
     }
     _packetType = kRtcpPsfbSliItemCode;
 
-    uint32_t buffer;
+    WebRtc_UWord32 buffer;
     buffer = *_ptrRTCPData++ << 24;
     buffer += *_ptrRTCPData++ << 16;
     buffer += *_ptrRTCPData++ << 8;
     buffer += *_ptrRTCPData++;
 
-    _packet.SLIItem.FirstMB = uint16_t((buffer>>19) & 0x1fff);
-    _packet.SLIItem.NumberOfMB = uint16_t((buffer>>6) & 0x1fff);
-    _packet.SLIItem.PictureId = uint8_t(buffer & 0x3f);
+    _packet.SLIItem.FirstMB = WebRtc_UWord16((buffer>>19) & 0x1fff);
+    _packet.SLIItem.NumberOfMB = WebRtc_UWord16((buffer>>6) & 0x1fff);
+    _packet.SLIItem.PictureId = WebRtc_UWord8(buffer & 0x3f);
 
     return true;
 }
@@ -1427,12 +1427,12 @@ RTCPUtility::RTCPParserV2::ParseAPP( const RTCPCommonHeader& header)
 
     _ptrRTCPData += 4; // Skip RTCP header
 
-    uint32_t senderSSRC = *_ptrRTCPData++ << 24;
+    WebRtc_UWord32 senderSSRC = *_ptrRTCPData++ << 24;
     senderSSRC += *_ptrRTCPData++ << 16;
     senderSSRC += *_ptrRTCPData++ << 8;
     senderSSRC += *_ptrRTCPData++;
 
-    uint32_t name = *_ptrRTCPData++ << 24;
+    WebRtc_UWord32 name = *_ptrRTCPData++ << 24;
     name += *_ptrRTCPData++ << 16;
     name += *_ptrRTCPData++ << 8;
     name += *_ptrRTCPData++;
@@ -1469,13 +1469,13 @@ RTCPUtility::RTCPParserV2::ParseAPPItem()
     }else
     {
         memcpy(_packet.APP.Data, _ptrRTCPData, length);
-        _packet.APP.Size = (uint16_t)length;
+        _packet.APP.Size = (WebRtc_UWord16)length;
         _ptrRTCPData += length;
     }
     return true;
 }
 
-RTCPUtility::RTCPPacketIterator::RTCPPacketIterator(uint8_t* rtcpData,
+RTCPUtility::RTCPPacketIterator::RTCPPacketIterator(WebRtc_UWord8* rtcpData,
                                                     size_t rtcpDataLength)
     : _ptrBegin(rtcpData),
       _ptrEnd(rtcpData + rtcpDataLength),

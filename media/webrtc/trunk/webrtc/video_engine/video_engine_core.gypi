@@ -7,10 +7,17 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'target_defaults': {
+    'conditions': [
+      ['include_video_engine_file_api==1', {
+        'defines': [ 'WEBRTC_VIDEO_ENGINE_FILE_API', ],
+      }],
+    ],
+  },
   'targets': [
     {
       'target_name': 'video_engine_core',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
 
         # common_video
@@ -19,6 +26,7 @@
         # ModulesShared
         '<(webrtc_root)/modules/modules.gyp:media_file',
         '<(webrtc_root)/modules/modules.gyp:rtp_rtcp',
+        '<(webrtc_root)/modules/modules.gyp:udp_transport',
         '<(webrtc_root)/modules/modules.gyp:webrtc_utility',
 
         # ModulesVideo
@@ -129,8 +137,6 @@
         'vie_sender.cc',
         'vie_sync_module.cc',
       ], # source
-      # TODO(jschuh): Bug 1348: fix size_t to int truncations.
-      'msvs_disabled_warnings': [ 4267, ],
     },
   ], # targets
   'conditions': [

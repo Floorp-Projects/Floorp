@@ -24,19 +24,19 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Lsf2Lsp(
-    int16_t *lsf, /* (i) lsf in Q13 values between 0 and pi */
-    int16_t *lsp, /* (o) lsp in Q15 values between -1 and 1 */
-    int16_t m  /* (i) number of coefficients */
+    WebRtc_Word16 *lsf, /* (i) lsf in Q13 values between 0 and pi */
+    WebRtc_Word16 *lsp, /* (o) lsp in Q15 values between -1 and 1 */
+    WebRtc_Word16 m  /* (i) number of coefficients */
                            ) {
-  int16_t i, k;
-  int16_t diff; /* difference, which is used for the
+  WebRtc_Word16 i, k;
+  WebRtc_Word16 diff; /* difference, which is used for the
                            linear approximation (Q8) */
-  int16_t freq; /* normalized frequency in Q15 (0..1) */
-  int32_t tmpW32;
+  WebRtc_Word16 freq; /* normalized frequency in Q15 (0..1) */
+  WebRtc_Word32 tmpW32;
 
   for(i=0; i<m; i++)
   {
-    freq = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(lsf[i], 20861, 15);
+    freq = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(lsf[i], 20861, 15);
     /* 20861: 1.0/(2.0*PI) in Q17 */
     /*
        Upper 8 bits give the index k and
@@ -54,7 +54,7 @@ void WebRtcIlbcfix_Lsf2Lsp(
 
     /* Calculate linear approximation */
     tmpW32 = WEBRTC_SPL_MUL_16_16(WebRtcIlbcfix_kCosDerivative[k], diff);
-    lsp[i] = WebRtcIlbcfix_kCos[k]+(int16_t)(WEBRTC_SPL_RSHIFT_W32(tmpW32, 12));
+    lsp[i] = WebRtcIlbcfix_kCos[k]+(WebRtc_Word16)(WEBRTC_SPL_RSHIFT_W32(tmpW32, 12));
   }
 
   return;

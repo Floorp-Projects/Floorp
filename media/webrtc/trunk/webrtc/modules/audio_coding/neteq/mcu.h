@@ -43,19 +43,19 @@ enum { kLenWaitingTimes = 100 };
 typedef struct
 {
 
-    int16_t current_Codec;
-    int16_t current_Payload;
-    uint32_t timeStamp; /* Next timestamp that should be played */
-    int16_t millisecondsPerCall;
-    uint16_t timestampsPerCall; /* Output chunk size */
-    uint16_t fs;
-    uint32_t ssrc; /* Current ssrc */
-    int16_t new_codec;
-    int16_t first_packet;
+    WebRtc_Word16 current_Codec;
+    WebRtc_Word16 current_Payload;
+    WebRtc_UWord32 timeStamp; /* Next timestamp that should be played */
+    WebRtc_Word16 millisecondsPerCall;
+    WebRtc_UWord16 timestampsPerCall; /* Output chunk size */
+    WebRtc_UWord16 fs;
+    WebRtc_UWord32 ssrc; /* Current ssrc */
+    WebRtc_Word16 new_codec;
+    WebRtc_Word16 first_packet;
 
     /* MCU/DSP Communication layer */
-    int16_t *pw16_readAddress;
-    int16_t *pw16_writeAddress;
+    WebRtc_Word16 *pw16_readAddress;
+    WebRtc_Word16 *pw16_writeAddress;
     void *main_inst;
 
     CodecDbInst_t codec_DB_inst; /* Information about all the codecs, i.e. which
@@ -71,29 +71,22 @@ typedef struct
     dtmf_inst_t DTMF_inst;
 #endif
     int NoOfExpandCalls;
-    int16_t AVT_PlayoutOn;
+    WebRtc_Word16 AVT_PlayoutOn;
     enum WebRtcNetEQPlayoutMode NetEqPlayoutMode;
 
-    int16_t one_desc; /* Number of times running on one desc */
+    WebRtc_Word16 one_desc; /* Number of times running on one desc */
 
-    uint32_t lostTS; /* Number of timestamps lost */
-    uint32_t lastReportTS; /* Timestamp elapsed since last report was given */
+    WebRtc_UWord32 lostTS; /* Number of timestamps lost */
+    WebRtc_UWord32 lastReportTS; /* Timestamp elapsed since last report was given */
 
     int waiting_times[kLenWaitingTimes];  /* Waiting time statistics storage. */
     int len_waiting_times;
     int next_waiting_time_index;
 
-    uint32_t externalTS;
-    uint32_t internalTS;
-    int16_t TSscalingInitialized;
+    WebRtc_UWord32 externalTS;
+    WebRtc_UWord32 internalTS;
+    WebRtc_Word16 TSscalingInitialized;
     enum TsScaling scalingFactor;
-
-    /* AV-sync enabled. In AV-sync NetEq screens packets for specific sync
-     * packets. Sync packets are not decoded by a decoder but generate all-zero
-     * signal with the same number of samples as previously decoded payload.
-     * Also in AV-sync mode the sample-size of a sync payload is reported as
-     * previous frame-size. */
-    int av_sync;
 
 #ifdef NETEQ_STEREO
     int usingStereo;
@@ -194,7 +187,7 @@ int WebRtcNetEQ_McuAddressInit(MCUInst_t *inst, void * Data2McuAddress,
  * Return value         :  0 - Ok
  *                        <0 - Error
  */
-int WebRtcNetEQ_McuSetFs(MCUInst_t *inst, uint16_t fs_hz);
+int WebRtcNetEQ_McuSetFs(MCUInst_t *inst, WebRtc_UWord16 fs_hz);
 
 /****************************************************************************
  * WebRtcNetEQ_SignalMcu(...)
@@ -203,7 +196,6 @@ int WebRtcNetEQ_McuSetFs(MCUInst_t *inst, uint16_t fs_hz);
  *
  * Input:
  *      - inst          : MCU instance
- *      - av_sync       : 1 if NetEQ is in AV-sync mode, otherwise 0.
  *
  * Return value         :  0 - Ok
  *                        <0 - Error
@@ -225,7 +217,7 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst);
  */
 
 int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacket,
-                              uint32_t uw32_timeRec);
+                              WebRtc_UWord32 uw32_timeRec);
 
 /****************************************************************************
  * WebRtcNetEQ_RecInInternal(...)
@@ -237,17 +229,12 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacket,
  *      - MCU_inst      : MCU instance
  *      - RTPpacket     : The RTP packet, parsed into NetEQ's internal RTP struct
  *      - uw32_timeRec  : Time stamp for the arrival of the packet (not RTP timestamp)
- *      - av_sync       : indicates if AV-sync is enabled, 1 enabled,
- *                        0 disabled.
  *
  * Return value         :  0 - Ok
  *                        -1 - Error
  */
-int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t* packet,
-                                      PacketBuf_t* Buffer_inst,
-                                      SplitInfo_t* split_inst,
-                                      int16_t* flushed,
-                                      int av_sync);
+int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t *packet, PacketBuf_t *Buffer_inst,
+                                      SplitInfo_t *split_inst, WebRtc_Word16 *flushed);
 
 /****************************************************************************
  * WebRtcNetEQ_GetTimestampScaling(...)
@@ -277,8 +264,8 @@ int WebRtcNetEQ_GetTimestampScaling(MCUInst_t *MCU_inst, int rtpPayloadType);
  * Return value         : Internal timestamp
  */
 
-uint32_t WebRtcNetEQ_ScaleTimestampExternalToInternal(const MCUInst_t *MCU_inst,
-                                                      uint32_t externalTS);
+WebRtc_UWord32 WebRtcNetEQ_ScaleTimestampExternalToInternal(const MCUInst_t *MCU_inst,
+                                                            WebRtc_UWord32 externalTS);
 
 /****************************************************************************
  * WebRtcNetEQ_ScaleTimestampInternalToExternal(...)
@@ -292,6 +279,6 @@ uint32_t WebRtcNetEQ_ScaleTimestampExternalToInternal(const MCUInst_t *MCU_inst,
  * Return value         : External timestamp
  */
 
-uint32_t WebRtcNetEQ_ScaleTimestampInternalToExternal(const MCUInst_t *MCU_inst,
-                                                      uint32_t internalTS);
+WebRtc_UWord32 WebRtcNetEQ_ScaleTimestampInternalToExternal(const MCUInst_t *MCU_inst,
+                                                            WebRtc_UWord32 internalTS);
 #endif

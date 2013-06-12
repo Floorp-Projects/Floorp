@@ -20,7 +20,7 @@ namespace webrtc {
 
 namespace voe {
 
-Statistics::Statistics(const uint32_t instanceId) :
+Statistics::Statistics(const WebRtc_UWord32 instanceId) :
     _critPtr(CriticalSectionWrapper::CreateCriticalSection()),
     _instanceId(instanceId),
     _lastError(0),
@@ -37,13 +37,13 @@ Statistics::~Statistics()
     }
 }
 
-int32_t Statistics::SetInitialized()
+WebRtc_Word32 Statistics::SetInitialized()
 {
     _isInitialized = true;
     return 0;
 }
 
-int32_t Statistics::SetUnInitialized()
+WebRtc_Word32 Statistics::SetUnInitialized()
 {
     _isInitialized = false;
     return 0;
@@ -54,15 +54,15 @@ bool Statistics::Initialized() const
     return _isInitialized;
 }
 
-int32_t Statistics::SetLastError(const int32_t error) const
+WebRtc_Word32 Statistics::SetLastError(const WebRtc_Word32 error) const
 {
     CriticalSectionScoped cs(_critPtr);
     _lastError = error;
     return 0;
 }
 
-int32_t Statistics::SetLastError(const int32_t error,
-                                 const TraceLevel level) const
+WebRtc_Word32 Statistics::SetLastError(const WebRtc_Word32 error,
+                                       const TraceLevel level) const
 {
     CriticalSectionScoped cs(_critPtr);
     _lastError = error;
@@ -72,8 +72,8 @@ int32_t Statistics::SetLastError(const int32_t error,
     return 0;
 }
 
-int32_t Statistics::SetLastError(
-    const int32_t error,
+WebRtc_Word32 Statistics::SetLastError(
+    const WebRtc_Word32 error,
     const TraceLevel level, const char* msg) const
 {
     CriticalSectionScoped cs(_critPtr);
@@ -86,7 +86,7 @@ int32_t Statistics::SetLastError(
     return 0;
 }
 
-int32_t Statistics::LastError() const
+WebRtc_Word32 Statistics::LastError() const
 {
     CriticalSectionScoped cs(_critPtr);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,-1),

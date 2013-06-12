@@ -26,11 +26,11 @@
 /* Bitstream struct for decoder */
 typedef struct Bitstreamstruct_dec {
 
-  uint16_t  *stream;          /* Pointer to bytestream to decode */
-  uint32_t  W_upper;          /* Upper boundary of interval W */
-  uint32_t  streamval;
-  uint16_t  stream_index;     /* Index to the current position in bytestream */
-  int16_t   full;             /* 0 - first byte in memory filled, second empty*/
+  WebRtc_UWord16  *stream;          /* Pointer to bytestream to decode */
+  WebRtc_UWord32  W_upper;          /* Upper boundary of interval W */
+  WebRtc_UWord32  streamval;
+  WebRtc_UWord16  stream_index;     /* Index to the current position in bytestream */
+  WebRtc_Word16   full;             /* 0 - first byte in memory filled, second empty*/
   /* 1 - both bytes are empty (we just filled the previous memory */
 
 } Bitstr_dec;
@@ -38,11 +38,11 @@ typedef struct Bitstreamstruct_dec {
 /* Bitstream struct for encoder */
 typedef struct Bitstreamstruct_enc {
 
-  uint16_t  stream[STREAM_MAXW16_60MS];   /* Vector for adding encoded bytestream */
-  uint32_t  W_upper;          /* Upper boundary of interval W */
-  uint32_t  streamval;
-  uint16_t  stream_index;     /* Index to the current position in bytestream */
-  int16_t   full;             /* 0 - first byte in memory filled, second empty*/
+  WebRtc_UWord16  stream[STREAM_MAXW16_60MS];   /* Vector for adding encoded bytestream */
+  WebRtc_UWord32  W_upper;          /* Upper boundary of interval W */
+  WebRtc_UWord32  streamval;
+  WebRtc_UWord16  stream_index;     /* Index to the current position in bytestream */
+  WebRtc_Word16   full;             /* 0 - first byte in memory filled, second empty*/
   /* 1 - both bytes are empty (we just filled the previous memory */
 
 } Bitstr_enc;
@@ -50,19 +50,19 @@ typedef struct Bitstreamstruct_enc {
 
 typedef struct {
 
-  int16_t DataBufferLoQ0[WINLEN];
-  int16_t DataBufferHiQ0[WINLEN];
+  WebRtc_Word16 DataBufferLoQ0[WINLEN];
+  WebRtc_Word16 DataBufferHiQ0[WINLEN];
 
-  int32_t CorrBufLoQQ[ORDERLO+1];
-  int32_t CorrBufHiQQ[ORDERHI+1];
+  WebRtc_Word32 CorrBufLoQQ[ORDERLO+1];
+  WebRtc_Word32 CorrBufHiQQ[ORDERHI+1];
 
-  int16_t CorrBufLoQdom[ORDERLO+1];
-  int16_t CorrBufHiQdom[ORDERHI+1];
+  WebRtc_Word16 CorrBufLoQdom[ORDERLO+1];
+  WebRtc_Word16 CorrBufHiQdom[ORDERHI+1];
 
-  int32_t PreStateLoGQ15[ORDERLO+1];
-  int32_t PreStateHiGQ15[ORDERHI+1];
+  WebRtc_Word32 PreStateLoGQ15[ORDERLO+1];
+  WebRtc_Word32 PreStateHiGQ15[ORDERHI+1];
 
-  uint32_t OldEnergy;
+  WebRtc_UWord32 OldEnergy;
 
 } MaskFiltstr_enc;
 
@@ -70,10 +70,10 @@ typedef struct {
 
 typedef struct {
 
-  int16_t PostStateLoGQ0[ORDERLO+1];
-  int16_t PostStateHiGQ0[ORDERHI+1];
+  WebRtc_Word16 PostStateLoGQ0[ORDERLO+1];
+  WebRtc_Word16 PostStateHiGQ0[ORDERHI+1];
 
-  uint32_t OldEnergy;
+  WebRtc_UWord32 OldEnergy;
 
 } MaskFiltstr_dec;
 
@@ -88,13 +88,13 @@ typedef struct {
 
   //state vectors for each of the two analysis filters
 
-  int32_t INSTAT1_fix[2*(QORDER-1)];
-  int32_t INSTAT2_fix[2*(QORDER-1)];
-  int16_t INLABUF1_fix[QLOOKAHEAD];
-  int16_t INLABUF2_fix[QLOOKAHEAD];
+  WebRtc_Word32 INSTAT1_fix[2*(QORDER-1)];
+  WebRtc_Word32 INSTAT2_fix[2*(QORDER-1)];
+  WebRtc_Word16 INLABUF1_fix[QLOOKAHEAD];
+  WebRtc_Word16 INLABUF2_fix[QLOOKAHEAD];
 
   /* High pass filter */
-  int32_t HPstates_fix[HPORDER];
+  WebRtc_Word32 HPstates_fix[HPORDER];
 
 } PreFiltBankstr;
 
@@ -102,13 +102,13 @@ typedef struct {
 typedef struct {
 
   //state vectors for each of the two analysis filters
-  int32_t STATE_0_LOWER_fix[2*POSTQORDER];
-  int32_t STATE_0_UPPER_fix[2*POSTQORDER];
+  WebRtc_Word32 STATE_0_LOWER_fix[2*POSTQORDER];
+  WebRtc_Word32 STATE_0_UPPER_fix[2*POSTQORDER];
 
   /* High pass filter */
 
-  int32_t HPstates1_fix[HPORDER];
-  int32_t HPstates2_fix[HPORDER];
+  WebRtc_Word32 HPstates1_fix[HPORDER];
+  WebRtc_Word32 HPstates2_fix[HPORDER];
 
 } PostFiltBankstr;
 
@@ -116,14 +116,14 @@ typedef struct {
 
 
   /* data buffer for pitch filter */
-  int16_t ubufQQ[PITCH_BUFFSIZE];
+  WebRtc_Word16 ubufQQ[PITCH_BUFFSIZE];
 
   /* low pass state vector */
-  int16_t ystateQQ[PITCH_DAMPORDER];
+  WebRtc_Word16 ystateQQ[PITCH_DAMPORDER];
 
   /* old lag and gain */
-  int16_t oldlagQ7;
-  int16_t oldgainQ12;
+  WebRtc_Word16 oldlagQ7;
+  WebRtc_Word16 oldgainQ12;
 
 } PitchFiltstr;
 
@@ -132,9 +132,9 @@ typedef struct {
 typedef struct {
 
   //for inital estimator
-  int16_t   dec_buffer16[PITCH_CORR_LEN2+PITCH_CORR_STEP2+PITCH_MAX_LAG/2-PITCH_FRAME_LEN/2+2];
-  int32_t   decimator_state32[2*ALLPASSSECTIONS+1];
-  int16_t   inbuf[QLOOKAHEAD];
+  WebRtc_Word16   dec_buffer16[PITCH_CORR_LEN2+PITCH_CORR_STEP2+PITCH_MAX_LAG/2-PITCH_FRAME_LEN/2+2];
+  WebRtc_Word32   decimator_state32[2*ALLPASSSECTIONS+1];
+  WebRtc_Word16   inbuf[QLOOKAHEAD];
 
   PitchFiltstr  PFstr_wght;
   PitchFiltstr  PFstr;
@@ -147,41 +147,41 @@ typedef struct {
   /* Parameters used in PLC to avoid re-computation       */
 
   /* --- residual signals --- */
-  int16_t prevPitchInvIn[FRAMESAMPLES/2];
-  int16_t prevPitchInvOut[PITCH_MAX_LAG + 10];            // [FRAMESAMPLES/2]; save 90
-  int32_t prevHP[PITCH_MAX_LAG + 10];                     // [FRAMESAMPLES/2]; save 90
+  WebRtc_Word16 prevPitchInvIn[FRAMESAMPLES/2];
+  WebRtc_Word16 prevPitchInvOut[PITCH_MAX_LAG + 10];            // [FRAMESAMPLES/2]; save 90
+  WebRtc_Word32 prevHP[PITCH_MAX_LAG + 10];                     // [FRAMESAMPLES/2]; save 90
 
 
-  int16_t decayCoeffPriodic; /* how much to supress a sample */
-  int16_t decayCoeffNoise;
-  int16_t used;       /* if PLC is used */
+  WebRtc_Word16 decayCoeffPriodic; /* how much to supress a sample */
+  WebRtc_Word16 decayCoeffNoise;
+  WebRtc_Word16 used;       /* if PLC is used */
 
 
-  int16_t *lastPitchLP;                                  // [FRAMESAMPLES/2]; saved 240;
+  WebRtc_Word16 *lastPitchLP;                                  // [FRAMESAMPLES/2]; saved 240;
 
 
   /* --- LPC side info --- */
-  int16_t lofilt_coefQ15[ ORDERLO ];
-  int16_t hifilt_coefQ15[ ORDERHI ];
-  int32_t gain_lo_hiQ17[2];
+  WebRtc_Word16 lofilt_coefQ15[ ORDERLO ];
+  WebRtc_Word16 hifilt_coefQ15[ ORDERHI ];
+  WebRtc_Word32 gain_lo_hiQ17[2];
 
   /* --- LTP side info --- */
-  int16_t AvgPitchGain_Q12;
-  int16_t lastPitchGain_Q12;
-  int16_t lastPitchLag_Q7;
+  WebRtc_Word16 AvgPitchGain_Q12;
+  WebRtc_Word16 lastPitchGain_Q12;
+  WebRtc_Word16 lastPitchLag_Q7;
 
   /* --- Add-overlap in recovery packet --- */
-  int16_t overlapLP[ RECOVERY_OVERLAP ];                 // [FRAMESAMPLES/2]; saved 160
+  WebRtc_Word16 overlapLP[ RECOVERY_OVERLAP ];                 // [FRAMESAMPLES/2]; saved 160
 
-  int16_t pitchCycles;
-  int16_t A;
-  int16_t B;
-  int16_t pitchIndex;
-  int16_t stretchLag;
-  int16_t *prevPitchLP;                                  // [ FRAMESAMPLES/2 ]; saved 240
-  int16_t seed;
+  WebRtc_Word16 pitchCycles;
+  WebRtc_Word16 A;
+  WebRtc_Word16 B;
+  WebRtc_Word16 pitchIndex;
+  WebRtc_Word16 stretchLag;
+  WebRtc_Word16 *prevPitchLP;                                  // [ FRAMESAMPLES/2 ]; saved 240
+  WebRtc_Word16 seed;
 
-  int16_t std;
+  WebRtc_Word16 std;
 } PLCstr;
 
 
@@ -189,60 +189,60 @@ typedef struct {
 /* Have instance of struct together with other iSAC structs */
 typedef struct {
 
-  int16_t   prevFrameSizeMs;      /* Previous frame size (in ms) */
-  uint16_t  prevRtpNumber;      /* Previous RTP timestamp from received packet */
+  WebRtc_Word16   prevFrameSizeMs;      /* Previous frame size (in ms) */
+  WebRtc_UWord16  prevRtpNumber;      /* Previous RTP timestamp from received packet */
   /* (in samples relative beginning)  */
-  uint32_t  prevSendTime;   /* Send time for previous packet, from RTP header */
-  uint32_t  prevArrivalTime;      /* Arrival time for previous packet (in ms using timeGetTime()) */
-  uint16_t  prevRtpRate;          /* rate of previous packet, derived from RTP timestamps (in bits/s) */
-  uint32_t  lastUpdate;           /* Time since the last update of the Bottle Neck estimate (in samples) */
-  uint32_t  lastReduction;        /* Time sinse the last reduction (in samples) */
-  int32_t   countUpdates;         /* How many times the estimate was update in the beginning */
+  WebRtc_UWord32  prevSendTime;   /* Send time for previous packet, from RTP header */
+  WebRtc_UWord32  prevArrivalTime;      /* Arrival time for previous packet (in ms using timeGetTime()) */
+  WebRtc_UWord16  prevRtpRate;          /* rate of previous packet, derived from RTP timestamps (in bits/s) */
+  WebRtc_UWord32  lastUpdate;           /* Time since the last update of the Bottle Neck estimate (in samples) */
+  WebRtc_UWord32  lastReduction;        /* Time sinse the last reduction (in samples) */
+  WebRtc_Word32   countUpdates;         /* How many times the estimate was update in the beginning */
 
   /* The estimated bottle neck rate from there to here (in bits/s)                */
-  uint32_t  recBw;
-  uint32_t  recBwInv;
-  uint32_t  recBwAvg;
-  uint32_t  recBwAvgQ;
+  WebRtc_UWord32  recBw;
+  WebRtc_UWord32  recBwInv;
+  WebRtc_UWord32  recBwAvg;
+  WebRtc_UWord32  recBwAvgQ;
 
-  uint32_t  minBwInv;
-  uint32_t  maxBwInv;
+  WebRtc_UWord32  minBwInv;
+  WebRtc_UWord32  maxBwInv;
 
   /* The estimated mean absolute jitter value, as seen on this side (in ms)       */
-  int32_t   recJitter;
-  int32_t   recJitterShortTerm;
-  int32_t   recJitterShortTermAbs;
-  int32_t   recMaxDelay;
-  int32_t   recMaxDelayAvgQ;
+  WebRtc_Word32   recJitter;
+  WebRtc_Word32   recJitterShortTerm;
+  WebRtc_Word32   recJitterShortTermAbs;
+  WebRtc_Word32   recMaxDelay;
+  WebRtc_Word32   recMaxDelayAvgQ;
 
 
-  int16_t   recHeaderRate;         /* (assumed) bitrate for headers (bps) */
+  WebRtc_Word16   recHeaderRate;         /* (assumed) bitrate for headers (bps) */
 
-  uint32_t  sendBwAvg;           /* The estimated bottle neck rate from here to there (in bits/s) */
-  int32_t   sendMaxDelayAvg;    /* The estimated mean absolute jitter value, as seen on the other siee (in ms)  */
+  WebRtc_UWord32  sendBwAvg;           /* The estimated bottle neck rate from here to there (in bits/s) */
+  WebRtc_Word32   sendMaxDelayAvg;    /* The estimated mean absolute jitter value, as seen on the other siee (in ms)  */
 
 
-  int16_t   countRecPkts;          /* number of packets received since last update */
-  int16_t   highSpeedRec;        /* flag for marking that a high speed network has been detected downstream */
+  WebRtc_Word16   countRecPkts;          /* number of packets received since last update */
+  WebRtc_Word16   highSpeedRec;        /* flag for marking that a high speed network has been detected downstream */
 
   /* number of consecutive pkts sent during which the bwe estimate has
      remained at a value greater than the downstream threshold for determining highspeed network */
-  int16_t   countHighSpeedRec;
+  WebRtc_Word16   countHighSpeedRec;
 
   /* flag indicating bwe should not adjust down immediately for very late pckts */
-  int16_t   inWaitPeriod;
+  WebRtc_Word16   inWaitPeriod;
 
   /* variable holding the time of the start of a window of time when
      bwe should not adjust down immediately for very late pckts */
-  uint32_t  startWaitPeriod;
+  WebRtc_UWord32  startWaitPeriod;
 
   /* number of consecutive pkts sent during which the bwe estimate has
      remained at a value greater than the upstream threshold for determining highspeed network */
-  int16_t   countHighSpeedSent;
+  WebRtc_Word16   countHighSpeedSent;
 
   /* flag indicated the desired number of packets over threshold rate have been sent and
      bwe will assume the connection is over broadband network */
-  int16_t   highSpeedSend;
+  WebRtc_Word16   highSpeedSend;
 
 
 
@@ -253,15 +253,15 @@ typedef struct {
 typedef struct {
 
   /* boolean, flags if previous packet exceeded B.N. */
-  int16_t    PrevExceed;
+  WebRtc_Word16    PrevExceed;
   /* ms */
-  int16_t    ExceedAgo;
+  WebRtc_Word16    ExceedAgo;
   /* packets left to send in current burst */
-  int16_t    BurstCounter;
+  WebRtc_Word16    BurstCounter;
   /* packets */
-  int16_t    InitCounter;
+  WebRtc_Word16    InitCounter;
   /* ms remaining in buffer when next packet will be sent */
-  int16_t    StillBuffered;
+  WebRtc_Word16    StillBuffered;
 
 } RateModel;
 
@@ -276,24 +276,24 @@ typedef struct {
   int     startIdx;
 
   /* Frame length in samples */
-  int16_t         framelength;
+  WebRtc_Word16         framelength;
 
   /* Pitch Gain */
-  int16_t   pitchGain_index[2];
+  WebRtc_Word16   pitchGain_index[2];
 
   /* Pitch Lag */
-  int32_t   meanGain[2];
-  int16_t   pitchIndex[PITCH_SUBFRAMES*2];
+  WebRtc_Word32   meanGain[2];
+  WebRtc_Word16   pitchIndex[PITCH_SUBFRAMES*2];
 
   /* LPC */
-  int32_t         LPCcoeffs_g[12*2]; /* KLT_ORDER_GAIN = 12 */
-  int16_t   LPCindex_s[108*2]; /* KLT_ORDER_SHAPE = 108 */
-  int16_t   LPCindex_g[12*2];  /* KLT_ORDER_GAIN = 12 */
+  WebRtc_Word32         LPCcoeffs_g[12*2]; /* KLT_ORDER_GAIN = 12 */
+  WebRtc_Word16   LPCindex_s[108*2]; /* KLT_ORDER_SHAPE = 108 */
+  WebRtc_Word16   LPCindex_g[12*2];  /* KLT_ORDER_GAIN = 12 */
 
   /* Encode Spec */
-  int16_t   fre[FRAMESAMPLES];
-  int16_t   fim[FRAMESAMPLES];
-  int16_t   AvgPitchGain[2];
+  WebRtc_Word16   fre[FRAMESAMPLES];
+  WebRtc_Word16   fim[FRAMESAMPLES];
+  WebRtc_Word16   AvgPitchGain[2];
 
   /* Used in adaptive mode only */
   int     minBytes;
@@ -309,29 +309,29 @@ typedef struct {
   PitchAnalysisStruct pitchanalysisstr_obj;
   RateModel           rate_data_obj;
 
-  int16_t         buffer_index;
-  int16_t         current_framesamples;
+  WebRtc_Word16         buffer_index;
+  WebRtc_Word16         current_framesamples;
 
-  int16_t      data_buffer_fix[FRAMESAMPLES]; // the size was MAX_FRAMESAMPLES
+  WebRtc_Word16      data_buffer_fix[FRAMESAMPLES]; // the size was MAX_FRAMESAMPLES
 
-  int16_t         frame_nb;
-  int16_t         BottleNeck;
-  int16_t         MaxDelay;
-  int16_t         new_framelength;
-  int16_t         s2nr;
-  uint16_t        MaxBits;
+  WebRtc_Word16         frame_nb;
+  WebRtc_Word16         BottleNeck;
+  WebRtc_Word16         MaxDelay;
+  WebRtc_Word16         new_framelength;
+  WebRtc_Word16         s2nr;
+  WebRtc_UWord16        MaxBits;
 
-  int16_t         bitstr_seed;
+  WebRtc_Word16         bitstr_seed;
 #ifdef WEBRTC_ISAC_FIX_NB_CALLS_ENABLED
   PostFiltBankstr     interpolatorstr_obj;
 #endif
 
   ISAC_SaveEncData_t *SaveEnc_ptr;
-  int16_t         payloadLimitBytes30; /* Maximum allowed number of bits for a 30 msec packet */
-  int16_t         payloadLimitBytes60; /* Maximum allowed number of bits for a 30 msec packet */
-  int16_t         maxPayloadBytes;     /* Maximum allowed number of bits for both 30 and 60 msec packet */
-  int16_t         maxRateInBytes;      /* Maximum allowed rate in bytes per 30 msec packet */
-  int16_t         enforceFrameSize;    /* If set iSAC will never change packet size */
+  WebRtc_Word16         payloadLimitBytes30; /* Maximum allowed number of bits for a 30 msec packet */
+  WebRtc_Word16         payloadLimitBytes60; /* Maximum allowed number of bits for a 30 msec packet */
+  WebRtc_Word16         maxPayloadBytes;     /* Maximum allowed number of bits for both 30 and 60 msec packet */
+  WebRtc_Word16         maxRateInBytes;      /* Maximum allowed rate in bytes per 30 msec packet */
+  WebRtc_Word16         enforceFrameSize;    /* If set iSAC will never change packet size */
 
 } ISACFIX_EncInst_t;
 
@@ -357,23 +357,23 @@ typedef struct {
   ISACFIX_EncInst_t ISACenc_obj;
   ISACFIX_DecInst_t ISACdec_obj;
   BwEstimatorstr     bwestimator_obj;
-  int16_t         CodingMode;       /* 0 = adaptive; 1 = instantaneous */
-  int16_t   errorcode;
-  int16_t   initflag;  /* 0 = nothing initiated; 1 = encoder or decoder */
+  WebRtc_Word16         CodingMode;       /* 0 = adaptive; 1 = instantaneous */
+  WebRtc_Word16   errorcode;
+  WebRtc_Word16   initflag;  /* 0 = nothing initiated; 1 = encoder or decoder */
   /* not initiated; 2 = all initiated */
 } ISACFIX_SubStruct;
 
 
 typedef struct {
-  int32_t   lpcGains[12];     /* 6 lower-band & 6 upper-band we may need to double it for 60*/
+  WebRtc_Word32   lpcGains[12];     /* 6 lower-band & 6 upper-band we may need to double it for 60*/
   /* */
-  uint32_t  W_upper;          /* Upper boundary of interval W */
-  uint32_t  streamval;
-  uint16_t  stream_index;     /* Index to the current position in bytestream */
-  int16_t   full;             /* 0 - first byte in memory filled, second empty*/
+  WebRtc_UWord32  W_upper;          /* Upper boundary of interval W */
+  WebRtc_UWord32  streamval;
+  WebRtc_UWord16  stream_index;     /* Index to the current position in bytestream */
+  WebRtc_Word16   full;             /* 0 - first byte in memory filled, second empty*/
   /* 1 - both bytes are empty (we just filled the previous memory */
-  uint16_t  beforeLastWord;
-  uint16_t  lastWord;
+  WebRtc_UWord16  beforeLastWord;
+  WebRtc_UWord16  lastWord;
 } transcode_obj;
 
 

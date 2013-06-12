@@ -35,7 +35,7 @@ namespace webrtc
 namespace videocapturemodule
 {
 
-VideoCaptureMacQTKit::VideoCaptureMacQTKit(const int32_t id) :
+VideoCaptureMacQTKit::VideoCaptureMacQTKit(const WebRtc_Word32 id) :
     VideoCaptureImpl(id),
     _captureDevice(NULL),
     _captureInfo(NULL),
@@ -70,14 +70,14 @@ VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
     }
 }
 
-int32_t VideoCaptureMacQTKit::Init(
-    const int32_t id, const char* iDeviceUniqueIdUTF8)
+WebRtc_Word32 VideoCaptureMacQTKit::Init(
+    const WebRtc_Word32 id, const char* iDeviceUniqueIdUTF8)
 {
     CriticalSectionScoped cs(&_apiCs);
 
 
-    const int32_t nameLength =
-        (int32_t) strlen((char*)iDeviceUniqueIdUTF8);
+    const WebRtc_Word32 nameLength =
+        (WebRtc_Word32) strlen((char*)iDeviceUniqueIdUTF8);
     if(nameLength>kVideoCaptureUniqueNameLength)
         return -1;
 
@@ -182,7 +182,7 @@ int32_t VideoCaptureMacQTKit::Init(
     return 0;
 }
 
-int32_t VideoCaptureMacQTKit::StartCapture(
+WebRtc_Word32 VideoCaptureMacQTKit::StartCapture(
     const VideoCaptureCapability& capability)
 {
 
@@ -209,7 +209,7 @@ int32_t VideoCaptureMacQTKit::StartCapture(
     return 0;
 }
 
-int32_t VideoCaptureMacQTKit::StopCapture()
+WebRtc_Word32 VideoCaptureMacQTKit::StopCapture()
 {
     nsAutoreleasePool localPool;
     [_captureDevice stopCapture];
@@ -223,7 +223,7 @@ bool VideoCaptureMacQTKit::CaptureStarted()
     return _isCapturing;
 }
 
-int32_t VideoCaptureMacQTKit::CaptureSettings(VideoCaptureCapability& settings)
+WebRtc_Word32 VideoCaptureMacQTKit::CaptureSettings(VideoCaptureCapability& settings)
 {
     settings.width = _captureWidth;
     settings.height = _captureHeight;

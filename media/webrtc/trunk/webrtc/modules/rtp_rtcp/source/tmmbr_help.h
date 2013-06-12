@@ -27,56 +27,56 @@ public:
     TMMBRSet();
     ~TMMBRSet();
 
-    void VerifyAndAllocateSet(uint32_t minimumSize);
-    void VerifyAndAllocateSetKeepingData(uint32_t minimumSize);
+    void VerifyAndAllocateSet(WebRtc_UWord32 minimumSize);
+    void VerifyAndAllocateSetKeepingData(WebRtc_UWord32 minimumSize);
     // Number of valid data items in set.
-    uint32_t lengthOfSet() const { return _lengthOfSet; }
+    WebRtc_UWord32 lengthOfSet() const { return _lengthOfSet; }
     // Presently allocated max size of set.
-    uint32_t sizeOfSet() const { return _sizeOfSet; }
+    WebRtc_UWord32 sizeOfSet() const { return _sizeOfSet; }
     void clearSet() {
       _lengthOfSet = 0;
     }
-    uint32_t Tmmbr(int i) const {
+    WebRtc_UWord32 Tmmbr(int i) const {
       return _data.at(i).tmmbr;
     }
-    uint32_t PacketOH(int i) const {
+    WebRtc_UWord32 PacketOH(int i) const {
       return _data.at(i).packet_oh;
     }
-    uint32_t Ssrc(int i) const {
+    WebRtc_UWord32 Ssrc(int i) const {
       return _data.at(i).ssrc;
     }
     void SetEntry(unsigned int i,
-                  uint32_t tmmbrSet,
-                  uint32_t packetOHSet,
-                  uint32_t ssrcSet);
+                  WebRtc_UWord32 tmmbrSet,
+                  WebRtc_UWord32 packetOHSet,
+                  WebRtc_UWord32 ssrcSet);
 
-    void AddEntry(uint32_t tmmbrSet,
-                  uint32_t packetOHSet,
-                  uint32_t ssrcSet);
+    void AddEntry(WebRtc_UWord32 tmmbrSet,
+                  WebRtc_UWord32 packetOHSet,
+                  WebRtc_UWord32 ssrcSet);
 
     // Remove one entry from table, and move all others down.
-    void RemoveEntry(uint32_t sourceIdx);
+    void RemoveEntry(WebRtc_UWord32 sourceIdx);
 
-    void SwapEntries(uint32_t firstIdx,
-                     uint32_t secondIdx);
+    void SwapEntries(WebRtc_UWord32 firstIdx,
+                     WebRtc_UWord32 secondIdx);
 
     // Set entry data to zero, but keep it in table.
-    void ClearEntry(uint32_t idx);
+    void ClearEntry(WebRtc_UWord32 idx);
 
  private:
     class SetElement {
       public:
         SetElement() : tmmbr(0), packet_oh(0), ssrc(0) {}
-        uint32_t tmmbr;
-        uint32_t packet_oh;
-        uint32_t ssrc;
+        WebRtc_UWord32 tmmbr;
+        WebRtc_UWord32 packet_oh;
+        WebRtc_UWord32 ssrc;
     };
 
     std::vector<SetElement> _data;
     // Number of places allocated.
-    uint32_t    _sizeOfSet;
+    WebRtc_UWord32    _sizeOfSet;
     // NUmber of places currently in use.
-    uint32_t    _lengthOfSet;
+    WebRtc_UWord32    _lengthOfSet;
 };
 
 class TMMBRHelp
@@ -89,21 +89,21 @@ public:
     TMMBRSet* CandidateSet();
     TMMBRSet* BoundingSetToSend();
 
-    TMMBRSet* VerifyAndAllocateCandidateSet(const uint32_t minimumSize);
-    int32_t FindTMMBRBoundingSet(TMMBRSet*& boundingSet);
-    int32_t SetTMMBRBoundingSetToSend(
+    TMMBRSet* VerifyAndAllocateCandidateSet(const WebRtc_UWord32 minimumSize);
+    WebRtc_Word32 FindTMMBRBoundingSet(TMMBRSet*& boundingSet);
+    WebRtc_Word32 SetTMMBRBoundingSetToSend(
         const TMMBRSet* boundingSetToSend,
-        const uint32_t maxBitrateKbit);
+        const WebRtc_UWord32 maxBitrateKbit);
 
-    bool IsOwner(const uint32_t ssrc, const uint32_t length) const;
+    bool IsOwner(const WebRtc_UWord32 ssrc, const WebRtc_UWord32 length) const;
 
-    bool CalcMinBitRate(uint32_t* minBitrateKbit) const;
+    bool CalcMinBitRate(WebRtc_UWord32* minBitrateKbit) const;
 
 protected:
-    TMMBRSet*   VerifyAndAllocateBoundingSet(uint32_t minimumSize);
-    int32_t VerifyAndAllocateBoundingSetToSend(uint32_t minimumSize);
+    TMMBRSet*   VerifyAndAllocateBoundingSet(WebRtc_UWord32 minimumSize);
+    WebRtc_Word32 VerifyAndAllocateBoundingSetToSend(WebRtc_UWord32 minimumSize);
 
-    int32_t FindTMMBRBoundingSet(int32_t numCandidates, TMMBRSet& candidateSet);
+    WebRtc_Word32 FindTMMBRBoundingSet(WebRtc_Word32 numCandidates, TMMBRSet& candidateSet);
 
 private:
     CriticalSectionWrapper* _criticalSection;

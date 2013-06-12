@@ -8,8 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/main/test/iSACTest.h"
-
 #include <cctype>
 #include <stdio.h>
 #include <string.h>
@@ -23,12 +21,12 @@
 #include <time.h>
 #endif 
 
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
-#include "webrtc/modules/audio_coding/main/test/utility.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/test/testsupport/fileutils.h"
+#include "event_wrapper.h"
+#include "iSACTest.h"
+#include "utility.h"
+#include "trace.h"
+#include "testsupport/fileutils.h"
+#include "tick_util.h"
 
 namespace webrtc {
 
@@ -47,7 +45,7 @@ void SetISACConfigDefault(
 }
 
 
-int16_t SetISAConfig(
+WebRtc_Word16 SetISAConfig(
     ACMTestISACConfig& isacConfig,
     AudioCodingModule* acm,
     int testMode)
@@ -57,7 +55,7 @@ int16_t SetISAConfig(
         (isacConfig.currentFrameSizeMsec != 0))
     {
         CodecInst sendCodec;
-        acm->SendCodec(&sendCodec);
+        acm->SendCodec(sendCodec);
         if(isacConfig.currentRateBitPerSec < 0)
         {
             sendCodec.rate = -1;
@@ -112,8 +110,8 @@ int16_t SetISAConfig(
         (isacConfig.initRateBitPerSec != 0))
     {
         CHECK_ERROR(acm->ConfigISACBandwidthEstimator(
-            (uint8_t)isacConfig.initFrameSizeInMsec,
-            (uint16_t)isacConfig.initRateBitPerSec, 
+            (WebRtc_UWord8)isacConfig.initFrameSizeInMsec,
+            (WebRtc_UWord16)isacConfig.initRateBitPerSec, 
             isacConfig.enforceFrameSize));
         if((isacConfig.initFrameSizeInMsec != 0) && (testMode != 0))
         {
@@ -146,7 +144,7 @@ ISACTest::~ISACTest()
 }
 
 
-int16_t
+WebRtc_Word16
 ISACTest::Setup()
 {
     int codecCntr;
@@ -157,7 +155,7 @@ ISACTest::Setup()
 
     for(codecCntr = 0; codecCntr < AudioCodingModule::NumberOfCodecs(); codecCntr++)
     {
-        AudioCodingModule::Codec(codecCntr, &codecParam);
+        AudioCodingModule::Codec(codecCntr, codecParam);
         if(!STR_CASE_CMP(codecParam.plname, "ISAC") && codecParam.plfreq == 16000)
         {
             memcpy(&_paramISAC16kHz, &codecParam, sizeof(CodecInst));
@@ -212,14 +210,14 @@ ISACTest::Setup()
         Run10ms();
     }
     CodecInst receiveCodec;
-    CHECK_ERROR(_acmA->ReceiveCodec(&receiveCodec));
+    CHECK_ERROR(_acmA->ReceiveCodec(receiveCodec));
     if(_testMode != 0)
     {
         printf("Side A Receive Codec\n");
         printf("%s %d\n", receiveCodec.plname, receiveCodec.plfreq);
     }
 
-    CHECK_ERROR(_acmB->ReceiveCodec(&receiveCodec));
+    CHECK_ERROR(_acmB->ReceiveCodec(receiveCodec));
     if(_testMode != 0)
     {
         printf("Side B Receive Codec\n");
@@ -245,7 +243,7 @@ ISACTest::Perform()
 
     Setup();
 
-    int16_t testNr = 0;
+    WebRtc_Word16 testNr = 0;
     ACMTestISACConfig wbISACConfig;
     ACMTestISACConfig swbISACConfig;
 
@@ -290,21 +288,21 @@ ISACTest::Perform()
     SetISACConfigDefault(swbISACConfig);
     testNr++;
     EncodeDecode(testNr, wbISACConfig, swbISACConfig);
-
+    
     int user_input;
     if((_testMode == 0) || (_testMode == 1))
     {
-        swbISACConfig.maxPayloadSizeByte = (uint16_t)200;
-        wbISACConfig.maxPayloadSizeByte = (uint16_t)200;
+        swbISACConfig.maxPayloadSizeByte = (WebRtc_UWord16)200;
+        wbISACConfig.maxPayloadSizeByte = (WebRtc_UWord16)200;
     }
     else
     {
         printf("Enter the max payload-size for side A: ");
         CHECK_ERROR(scanf("%d", &user_input));
-        swbISACConfig.maxPayloadSizeByte = (uint16_t)user_input;
+        swbISACConfig.maxPayloadSizeByte = (WebRtc_UWord16)user_input;
         printf("Enter the max payload-size for side B: ");
         CHECK_ERROR(scanf("%d", &user_input));
-        wbISACConfig.maxPayloadSizeByte = (uint16_t)user_input;
+        wbISACConfig.maxPayloadSizeByte = (WebRtc_UWord16)user_input;
     }
     testNr++;
     EncodeDecode(testNr, wbISACConfig, swbISACConfig);
@@ -316,17 +314,17 @@ ISACTest::Perform()
 
     if((_testMode == 0) || (_testMode == 1))
     {
-        swbISACConfig.maxRateBitPerSec = (uint32_t)48000;
-        wbISACConfig.maxRateBitPerSec = (uint32_t)48000;
+        swbISACConfig.maxRateBitPerSec = (WebRtc_UWord32)48000;
+        wbISACConfig.maxRateBitPerSec = (WebRtc_UWord32)48000;
     }
     else
     {
         printf("Enter the max rate for side A: ");
         CHECK_ERROR(scanf("%d", &user_input));
-        swbISACConfig.maxRateBitPerSec = (uint32_t)user_input;
+        swbISACConfig.maxRateBitPerSec = (WebRtc_UWord32)user_input;
         printf("Enter the max rate for side B: ");
         CHECK_ERROR(scanf("%d", &user_input));
-        wbISACConfig.maxRateBitPerSec = (uint32_t)user_input;
+        wbISACConfig.maxRateBitPerSec = (WebRtc_UWord32)user_input;
     }
  
     testNr++;
@@ -359,10 +357,10 @@ ISACTest::Run10ms()
     CHECK_ERROR(_acmA->Process());
     CHECK_ERROR(_acmB->Process());
 
-    CHECK_ERROR(_acmA->PlayoutData10Ms(32000, &audioFrame));
+    CHECK_ERROR(_acmA->PlayoutData10Ms(32000, audioFrame));
     _outFileA.Write10MsData(audioFrame);
 
-    CHECK_ERROR(_acmB->PlayoutData10Ms(32000, &audioFrame));
+    CHECK_ERROR(_acmB->PlayoutData10Ms(32000, audioFrame));
     _outFileB.Write10MsData(audioFrame);
 }
 
@@ -446,9 +444,9 @@ ISACTest::EncodeDecode(
         {
             myEvent->Wait(5000);
 
-            _acmA->SendCodec(&sendCodec);
+            _acmA->SendCodec(sendCodec);
             if(_testMode == 2) printf("[%d]  ", sendCodec.rate);
-            _acmB->SendCodec(&sendCodec);
+            _acmB->SendCodec(sendCodec);
             if(_testMode == 2) printf("[%d]  ", sendCodec.rate);
         }
     }

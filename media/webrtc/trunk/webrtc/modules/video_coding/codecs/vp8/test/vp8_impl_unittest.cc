@@ -170,7 +170,6 @@ TEST_F(TestVp8Impl, EncoderParameterTest) {
   codec_inst_.height = 1080;
   codec_inst_.maxFramerate = 30;
   codec_inst_.startBitrate = 300;
-  codec_inst_.qpMax = 56;
   codec_inst_.codecSpecific.VP8.complexity = kComplexityNormal;
   codec_inst_.codecSpecific.VP8.numberOfTemporalLayers = 1;
   // Calls before InitEncode().
@@ -199,7 +198,6 @@ TEST_F(TestVp8Impl, AlignedStrideEncodeDecode) {
   codec_inst_.maxFramerate = source.GetFrameRate();
   codec_inst_.startBitrate = 300;
   codec_inst_.maxBitrate = 4000;
-  codec_inst_.qpMax = 56;
   codec_inst_.width = source.GetWidth();
   codec_inst_.height = source.GetHeight();
   codec_inst_.codecSpecific.VP8.denoisingOn = true;

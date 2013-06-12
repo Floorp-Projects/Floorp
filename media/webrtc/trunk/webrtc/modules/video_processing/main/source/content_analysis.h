@@ -30,7 +30,7 @@ public:
     //  extractContentFeature
     // Inputs:         width, height
     // Return value:   0 if OK, negative value upon error
-    int32_t Initialize(int width, int height);
+    WebRtc_Word32 Initialize(int width, int height);
 
     // Extract content Feature - main function of ContentAnalysis
     // Input:           new frame
@@ -41,7 +41,7 @@ public:
 
     // Release all allocated memory
     // Output: 0 if OK, negative value upon error
-    int32_t Release();
+    WebRtc_Word32 Release();
 
 private:
 
@@ -49,26 +49,26 @@ private:
     VideoContentMetrics* ContentMetrics();
 
     // Normalized temporal difference metric: for motion magnitude
-    typedef int32_t (VPMContentAnalysis::*TemporalDiffMetricFunc)();
+    typedef WebRtc_Word32 (VPMContentAnalysis::*TemporalDiffMetricFunc)();
     TemporalDiffMetricFunc TemporalDiffMetric;
-    int32_t TemporalDiffMetric_C();
+    WebRtc_Word32 TemporalDiffMetric_C();
 
     // Motion metric method: call 2 metrics (magnitude and size)
-    int32_t ComputeMotionMetrics();
+    WebRtc_Word32 ComputeMotionMetrics();
 
     // Spatial metric method: computes the 3 frame-average spatial
     //  prediction errors (1x2,2x1,2x2)
-    typedef int32_t (VPMContentAnalysis::*ComputeSpatialMetricsFunc)();
+    typedef WebRtc_Word32 (VPMContentAnalysis::*ComputeSpatialMetricsFunc)();
     ComputeSpatialMetricsFunc ComputeSpatialMetrics;
-    int32_t ComputeSpatialMetrics_C();
+    WebRtc_Word32 ComputeSpatialMetrics_C();
 
 #if defined(WEBRTC_ARCH_X86_FAMILY)
-    int32_t ComputeSpatialMetrics_SSE2();
-    int32_t TemporalDiffMetric_SSE2();
+    WebRtc_Word32 ComputeSpatialMetrics_SSE2();
+    WebRtc_Word32 TemporalDiffMetric_SSE2();
 #endif
 
-    const uint8_t*       _origFrame;
-    uint8_t*             _prevFrame;
+    const WebRtc_UWord8*       _origFrame;
+    WebRtc_UWord8*             _prevFrame;
     int                        _width;
     int                        _height;
     int                        _skipNum;

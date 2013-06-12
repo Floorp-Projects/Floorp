@@ -17,13 +17,13 @@
 
 #include "signal_processing_library.h"
 
-void WebRtcSpl_AutoCorrToReflCoef(const int32_t *R, int use_order, int16_t *K)
+void WebRtcSpl_AutoCorrToReflCoef(G_CONST WebRtc_Word32 *R, int use_order, WebRtc_Word16 *K)
 {
     int i, n;
-    int16_t tmp;
-    const int32_t *rptr;
-    int32_t L_num, L_den;
-    int16_t *acfptr, *pptr, *wptr, *p1ptr, *w1ptr, ACF[WEBRTC_SPL_MAX_LPC_ORDER],
+    WebRtc_Word16 tmp;
+    G_CONST WebRtc_Word32 *rptr;
+    WebRtc_Word32 L_num, L_den;
+    WebRtc_Word16 *acfptr, *pptr, *wptr, *p1ptr, *w1ptr, ACF[WEBRTC_SPL_MAX_LPC_ORDER],
             P[WEBRTC_SPL_MAX_LPC_ORDER], W[WEBRTC_SPL_MAX_LPC_ORDER];
 
     // Initialize loop and pointers.
@@ -36,13 +36,13 @@ void WebRtcSpl_AutoCorrToReflCoef(const int32_t *R, int use_order, int16_t *K)
 
     // First loop; n=0. Determine shifting.
     tmp = WebRtcSpl_NormW32(*R);
-    *acfptr = (int16_t)((*rptr++ << tmp) >> 16);
+    *acfptr = (WebRtc_Word16)((*rptr++ << tmp) >> 16);
     *pptr++ = *acfptr++;
 
     // Initialize ACF, P and W.
     for (i = 1; i <= use_order; i++)
     {
-        *acfptr = (int16_t)((*rptr++ << tmp) >> 16);
+        *acfptr = (WebRtc_Word16)((*rptr++ << tmp) >> 16);
         *wptr++ = *acfptr;
         *pptr++ = *acfptr++;
     }
@@ -87,15 +87,15 @@ void WebRtcSpl_AutoCorrToReflCoef(const int32_t *R, int use_order, int16_t *K)
         // Schur recursion.
         pptr = P;
         wptr = w1ptr;
-        tmp = (int16_t)(((int32_t)*p1ptr * (int32_t)*K + 16384) >> 15);
+        tmp = (WebRtc_Word16)(((WebRtc_Word32)*p1ptr * (WebRtc_Word32)*K + 16384) >> 15);
         *pptr = WEBRTC_SPL_ADD_SAT_W16( *pptr, tmp );
         pptr++;
         for (i = 1; i <= use_order - n; i++)
         {
-            tmp = (int16_t)(((int32_t)*wptr * (int32_t)*K + 16384) >> 15);
+            tmp = (WebRtc_Word16)(((WebRtc_Word32)*wptr * (WebRtc_Word32)*K + 16384) >> 15);
             *pptr = WEBRTC_SPL_ADD_SAT_W16( *(pptr+1), tmp );
             pptr++;
-            tmp = (int16_t)(((int32_t)*pptr * (int32_t)*K + 16384) >> 15);
+            tmp = (WebRtc_Word16)(((WebRtc_Word32)*pptr * (WebRtc_Word32)*K + 16384) >> 15);
             *wptr = WEBRTC_SPL_ADD_SAT_W16( *wptr, tmp );
             wptr++;
         }

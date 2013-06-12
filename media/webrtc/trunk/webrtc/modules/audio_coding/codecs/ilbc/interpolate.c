@@ -24,14 +24,14 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Interpolate(
-    int16_t *out, /* (o) output vector */
-    int16_t *in1, /* (i) first input vector */
-    int16_t *in2, /* (i) second input vector */
-    int16_t coef, /* (i) weight coefficient in Q14 */
-    int16_t length)  /* (i) number of sample is vectors */
+    WebRtc_Word16 *out, /* (o) output vector */
+    WebRtc_Word16 *in1, /* (i) first input vector */
+    WebRtc_Word16 *in2, /* (i) second input vector */
+    WebRtc_Word16 coef, /* (i) weight coefficient in Q14 */
+    WebRtc_Word16 length)  /* (i) number of sample is vectors */
 {
   int i;
-  int16_t invcoef;
+  WebRtc_Word16 invcoef;
 
   /*
     Performs the operation out[i] = in[i]*coef + (1-coef)*in2[i] (with rounding)
@@ -39,7 +39,7 @@ void WebRtcIlbcfix_Interpolate(
 
   invcoef = 16384 - coef; /* 16384 = 1.0 (Q14)*/
   for (i = 0; i < length; i++) {
-    out[i] = (int16_t) WEBRTC_SPL_RSHIFT_W32(
+    out[i] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(
         (WEBRTC_SPL_MUL_16_16(coef, in1[i]) + WEBRTC_SPL_MUL_16_16(invcoef, in2[i]))+8192,
         14);
   }

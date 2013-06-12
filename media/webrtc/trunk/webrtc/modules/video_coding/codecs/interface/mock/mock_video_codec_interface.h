@@ -21,56 +21,66 @@ namespace webrtc {
 
 class MockEncodedImageCallback : public EncodedImageCallback {
  public:
-  MOCK_METHOD3(Encoded, int32_t(EncodedImage& encodedImage,
-                                const CodecSpecificInfo* codecSpecificInfo,
-                                const RTPFragmentationHeader* fragmentation));
+  MOCK_METHOD3(Encoded,
+               WebRtc_Word32(EncodedImage& encodedImage,
+                             const CodecSpecificInfo* codecSpecificInfo,
+                             const RTPFragmentationHeader* fragmentation));
 };
 
 class MockVideoEncoder : public VideoEncoder {
  public:
-  MOCK_CONST_METHOD2(Version, int32_t(int8_t *version, int32_t length));
-  MOCK_METHOD3(InitEncode, int32_t(const VideoCodec* codecSettings,
-                                   int32_t numberOfCores,
-                                   uint32_t maxPayloadSize));
-  MOCK_METHOD3(Encode, int32_t(const I420VideoFrame& inputImage,
-                               const CodecSpecificInfo* codecSpecificInfo,
-                               const std::vector<VideoFrameType>* frame_types));
+  MOCK_CONST_METHOD2(Version,
+                     WebRtc_Word32(WebRtc_Word8 *version,
+                                   WebRtc_Word32 length));
+  MOCK_METHOD3(InitEncode,
+               WebRtc_Word32(const VideoCodec* codecSettings,
+                             WebRtc_Word32 numberOfCores,
+                             WebRtc_UWord32 maxPayloadSize));
+  MOCK_METHOD3(Encode,
+               WebRtc_Word32(const I420VideoFrame& inputImage,
+                             const CodecSpecificInfo* codecSpecificInfo,
+                             const std::vector<VideoFrameType>* frame_types));
   MOCK_METHOD1(RegisterEncodeCompleteCallback,
-               int32_t(EncodedImageCallback* callback));
-  MOCK_METHOD0(Release, int32_t());
-  MOCK_METHOD0(Reset, int32_t());
-  MOCK_METHOD2(SetChannelParameters, int32_t(uint32_t packetLoss, int rtt));
-  MOCK_METHOD2(SetRates, int32_t(uint32_t newBitRate, uint32_t frameRate));
-  MOCK_METHOD1(SetPeriodicKeyFrames, int32_t(bool enable));
+               WebRtc_Word32(EncodedImageCallback* callback));
+  MOCK_METHOD0(Release, WebRtc_Word32());
+  MOCK_METHOD0(Reset, WebRtc_Word32());
+  MOCK_METHOD2(SetChannelParameters, WebRtc_Word32(WebRtc_UWord32 packetLoss,
+                                                   int rtt));
+  MOCK_METHOD2(SetRates,
+               WebRtc_Word32(WebRtc_UWord32 newBitRate,
+                             WebRtc_UWord32 frameRate));
+  MOCK_METHOD1(SetPeriodicKeyFrames, WebRtc_Word32(bool enable));
   MOCK_METHOD2(CodecConfigParameters,
-               int32_t(uint8_t* /*buffer*/, int32_t));
+               WebRtc_Word32(WebRtc_UWord8* /*buffer*/, WebRtc_Word32));
 };
 
 class MockDecodedImageCallback : public DecodedImageCallback {
  public:
   MOCK_METHOD1(Decoded,
-               int32_t(I420VideoFrame& decodedImage));
+               WebRtc_Word32(I420VideoFrame& decodedImage));
   MOCK_METHOD1(ReceivedDecodedReferenceFrame,
-               int32_t(const uint64_t pictureId));
+               WebRtc_Word32(const WebRtc_UWord64 pictureId));
   MOCK_METHOD1(ReceivedDecodedFrame,
-               int32_t(const uint64_t pictureId));
+               WebRtc_Word32(const WebRtc_UWord64 pictureId));
 };
 
 class MockVideoDecoder : public VideoDecoder {
  public:
-  MOCK_METHOD2(InitDecode, int32_t(const VideoCodec* codecSettings,
-                                   int32_t numberOfCores));
-  MOCK_METHOD5(Decode, int32_t(const EncodedImage& inputImage,
-                               bool missingFrames,
-                               const RTPFragmentationHeader* fragmentation,
-                               const CodecSpecificInfo* codecSpecificInfo,
-                               int64_t renderTimeMs));
+  MOCK_METHOD2(InitDecode,
+      WebRtc_Word32(const VideoCodec* codecSettings,
+                    WebRtc_Word32 numberOfCores));
+  MOCK_METHOD5(Decode,
+               WebRtc_Word32(const EncodedImage& inputImage,
+                             bool missingFrames,
+                             const RTPFragmentationHeader* fragmentation,
+                             const CodecSpecificInfo* codecSpecificInfo,
+                             WebRtc_Word64 renderTimeMs));
   MOCK_METHOD1(RegisterDecodeCompleteCallback,
-               int32_t(DecodedImageCallback* callback));
-  MOCK_METHOD0(Release, int32_t());
-  MOCK_METHOD0(Reset, int32_t());
+               WebRtc_Word32(DecodedImageCallback* callback));
+  MOCK_METHOD0(Release, WebRtc_Word32());
+  MOCK_METHOD0(Reset, WebRtc_Word32());
   MOCK_METHOD2(SetCodecConfigParameters,
-               int32_t(const uint8_t* /*buffer*/, int32_t));
+               WebRtc_Word32(const WebRtc_UWord8* /*buffer*/, WebRtc_Word32));
   MOCK_METHOD0(Copy, VideoDecoder*());
 };
 

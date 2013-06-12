@@ -39,13 +39,13 @@
 #define KLT_ORDER_SHAPE    (LPC_SHAPE_ORDER * SUBFRAMES)
 
 /* cdf array for model indicator */
-extern const uint16_t WebRtcIsac_kQKltModelCdf[KLT_NUM_MODELS+1];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltModelCdf[KLT_NUM_MODELS+1];
 
 /* pointer to cdf array for model indicator */
-extern const uint16_t *WebRtcIsac_kQKltModelCdfPtr[1];
+extern const WebRtc_UWord16 *WebRtcIsac_kQKltModelCdfPtr[1];
 
 /* initial cdf index for decoder of model indicator */
-extern const uint16_t WebRtcIsac_kQKltModelInitIndex[1];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltModelInitIndex[1];
 
 /* offset to go from rounded value to quantization index */
 extern const short WebRtcIsac_kQKltQuantMinGain[12];
@@ -53,19 +53,19 @@ extern const short WebRtcIsac_kQKltQuantMinGain[12];
 extern const short WebRtcIsac_kQKltQuantMinShape[108];
 
 /* maximum quantization index */
-extern const uint16_t WebRtcIsac_kQKltMaxIndGain[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltMaxIndGain[12];
 
-extern const uint16_t WebRtcIsac_kQKltMaxIndShape[108];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltMaxIndShape[108];
 
 /* index offset */
-extern const uint16_t WebRtcIsac_kQKltOffsetGain[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltOffsetGain[12];
 
-extern const uint16_t WebRtcIsac_kQKltOffsetShape[108];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltOffsetShape[108];
 
 /* initial cdf index for KLT coefficients */
-extern const uint16_t WebRtcIsac_kQKltInitIndexGain[12];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltInitIndexGain[12];
 
-extern const uint16_t WebRtcIsac_kQKltInitIndexShape[108];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltInitIndexShape[108];
 
 /* quantizer representation levels */
 extern const double WebRtcIsac_kQKltLevelsGain[392];
@@ -73,14 +73,14 @@ extern const double WebRtcIsac_kQKltLevelsGain[392];
 extern const double WebRtcIsac_kQKltLevelsShape[578];
 
 /* cdf tables for quantizer indices */
-extern const uint16_t WebRtcIsac_kQKltCdfGain[404];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltCdfGain[404];
 
-extern const uint16_t WebRtcIsac_kQKltCdfShape[686];
+extern const WebRtc_UWord16 WebRtcIsac_kQKltCdfShape[686];
 
 /* pointers to cdf tables for quantizer indices */
-extern const uint16_t *WebRtcIsac_kQKltCdfPtrGain[12];
+extern const WebRtc_UWord16 *WebRtcIsac_kQKltCdfPtrGain[12];
 
-extern const uint16_t *WebRtcIsac_kQKltCdfPtrShape[108];
+extern const WebRtc_UWord16 *WebRtcIsac_kQKltCdfPtrShape[108];
 
 /* left KLT transforms */
 extern const double WebRtcIsac_kKltT1Gain[4];

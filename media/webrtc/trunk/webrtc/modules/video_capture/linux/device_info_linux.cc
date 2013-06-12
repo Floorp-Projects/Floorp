@@ -30,7 +30,7 @@ namespace webrtc
 namespace videocapturemodule
 {
 VideoCaptureModule::DeviceInfo*
-VideoCaptureImpl::CreateDeviceInfo(const int32_t id)
+VideoCaptureImpl::CreateDeviceInfo(const WebRtc_Word32 id)
 {
     videocapturemodule::DeviceInfoLinux *deviceInfo =
                     new videocapturemodule::DeviceInfoLinux(id);
@@ -42,12 +42,12 @@ VideoCaptureImpl::CreateDeviceInfo(const int32_t id)
     return deviceInfo;
 }
 
-DeviceInfoLinux::DeviceInfoLinux(const int32_t id)
+DeviceInfoLinux::DeviceInfoLinux(const WebRtc_Word32 id)
     : DeviceInfoImpl(id)
 {
 }
 
-int32_t DeviceInfoLinux::Init()
+WebRtc_Word32 DeviceInfoLinux::Init()
 {
     return 0;
 }
@@ -56,11 +56,11 @@ DeviceInfoLinux::~DeviceInfoLinux()
 {
 }
 
-uint32_t DeviceInfoLinux::NumberOfDevices()
+WebRtc_UWord32 DeviceInfoLinux::NumberOfDevices()
 {
     WEBRTC_TRACE(webrtc::kTraceApiCall, webrtc::kTraceVideoCapture, _id, "%s", __FUNCTION__);
 
-    uint32_t count = 0;
+    WebRtc_UWord32 count = 0;
     char device[20];
     int fd = -1;
 
@@ -78,19 +78,19 @@ uint32_t DeviceInfoLinux::NumberOfDevices()
     return count;
 }
 
-int32_t DeviceInfoLinux::GetDeviceName(
-                                         uint32_t deviceNumber,
+WebRtc_Word32 DeviceInfoLinux::GetDeviceName(
+                                         WebRtc_UWord32 deviceNumber,
                                          char* deviceNameUTF8,
-                                         uint32_t deviceNameLength,
+                                         WebRtc_UWord32 deviceNameLength,
                                          char* deviceUniqueIdUTF8,
-                                         uint32_t deviceUniqueIdUTF8Length,
+                                         WebRtc_UWord32 deviceUniqueIdUTF8Length,
                                          char* /*productUniqueIdUTF8*/,
-                                         uint32_t /*productUniqueIdUTF8Length*/)
+                                         WebRtc_UWord32 /*productUniqueIdUTF8Length*/)
 {
     WEBRTC_TRACE(webrtc::kTraceApiCall, webrtc::kTraceVideoCapture, _id, "%s", __FUNCTION__);
 
     // Travel through /dev/video [0-63]
-    uint32_t count = 0;
+    WebRtc_UWord32 count = 0;
     char device[20];
     int fd = -1;
     bool found = false;
@@ -170,7 +170,7 @@ int32_t DeviceInfoLinux::GetDeviceName(
     return 0;
 }
 
-int32_t DeviceInfoLinux::CreateCapabilityMap(
+WebRtc_Word32 DeviceInfoLinux::CreateCapabilityMap(
                                         const char* deviceUniqueIdUTF8)
 {
     int fd;
@@ -178,8 +178,8 @@ int32_t DeviceInfoLinux::CreateCapabilityMap(
     bool found = false;
     int device_index;
 
-    const int32_t deviceUniqueIdUTF8Length =
-                            (int32_t) strlen((char*) deviceUniqueIdUTF8);
+    const WebRtc_Word32 deviceUniqueIdUTF8Length =
+                            (WebRtc_Word32) strlen((char*) deviceUniqueIdUTF8);
     if (deviceUniqueIdUTF8Length > kVideoCaptureUniqueNameLength)
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id, "Device name too long");
@@ -188,7 +188,6 @@ int32_t DeviceInfoLinux::CreateCapabilityMap(
     WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
                "CreateCapabilityMap called for device %s", deviceUniqueIdUTF8);
 
-    /* detect /dev/video [0-63] entries */
     if (sscanf(deviceUniqueIdUTF8,"fake_%d",&device_index) == 1)
     {
         sprintf(device, "/dev/video%d", device_index);
@@ -262,7 +261,7 @@ bool DeviceInfoLinux::IsDeviceNameMatches(const char* name,
     return false;
 }
 
-int32_t DeviceInfoLinux::FillCapabilityMap(int fd)
+WebRtc_Word32 DeviceInfoLinux::FillCapabilityMap(int fd)
 {
 
     // set image format

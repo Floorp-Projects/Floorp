@@ -25,7 +25,7 @@ public:
     BWEStabilityTest(std::string testName, int rateKbps, int testDurationSeconds);
     virtual ~BWEStabilityTest();
 
-    virtual int Init(std::string ip, uint16_t port);
+    virtual int Init(std::string ip, WebRtc_UWord16 port);
     virtual void Report(std::fstream &log);
 
 protected:

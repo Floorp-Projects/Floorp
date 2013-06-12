@@ -26,8 +26,8 @@ VPMBrightnessDetection::~VPMBrightnessDetection()
 {
 }
 
-int32_t
-VPMBrightnessDetection::ChangeUniqueId(const int32_t id)
+WebRtc_Word32
+VPMBrightnessDetection::ChangeUniqueId(const WebRtc_Word32 id)
 {
     _id = id;
     return VPM_OK;
@@ -40,7 +40,7 @@ VPMBrightnessDetection::Reset()
     _frameCntDark = 0;
 }
 
-int32_t
+WebRtc_Word32
 VPMBrightnessDetection::ProcessFrame(const I420VideoFrame& frame,
                                      const VideoProcessingModule::FrameStats&
                                      stats)
@@ -61,12 +61,12 @@ VPMBrightnessDetection::ProcessFrame(const I420VideoFrame& frame,
         return VPM_PARAMETER_ERROR;
     }
 
-    const uint8_t frameCntAlarm = 2;
+    const WebRtc_UWord8 frameCntAlarm = 2;
 
     // Get proportion in lowest bins 
-    uint8_t lowTh = 20;
+    WebRtc_UWord8 lowTh = 20;
     float propLow = 0;
-    for (uint32_t i = 0; i < lowTh; i++)
+    for (WebRtc_UWord32 i = 0; i < lowTh; i++)
     {
         propLow += stats.hist[i];
     }
@@ -75,7 +75,7 @@ VPMBrightnessDetection::ProcessFrame(const I420VideoFrame& frame,
     // Get proportion in highest bins 
     unsigned char highTh = 230;
     float propHigh = 0;
-    for (uint32_t i = highTh; i < 256; i++)
+    for (WebRtc_UWord32 i = highTh; i < 256; i++)
     {
         propHigh += stats.hist[i];
     }
@@ -100,14 +100,14 @@ VPMBrightnessDetection::ProcessFrame(const I420VideoFrame& frame,
             stdY = sqrt(stdY / stats.numPixels);
 
             // Get percentiles
-            uint32_t sum = 0;
-            uint32_t medianY = 140;
-            uint32_t perc05 = 0;
-            uint32_t perc95 = 255;
+            WebRtc_UWord32 sum = 0;
+            WebRtc_UWord32 medianY = 140;
+            WebRtc_UWord32 perc05 = 0;
+            WebRtc_UWord32 perc95 = 255;
             float posPerc05 = stats.numPixels * 0.05f;
             float posMedian = stats.numPixels * 0.5f;
             float posPerc95 = stats.numPixels * 0.95f;
-            for (uint32_t i = 0; i < 256; i++)
+            for (WebRtc_UWord32 i = 0; i < 256; i++)
             {
                 sum += stats.hist[i];
 

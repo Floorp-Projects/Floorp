@@ -22,24 +22,25 @@ namespace videocapturemodule {
 
 class VideoCaptureAndroid : public VideoCaptureImpl {
  public:
-  static int32_t SetAndroidObjects(void* javaVM, void* javaContext);
-  static int32_t AttachAndUseAndroidDeviceInfoObjects(
+  static WebRtc_Word32 SetAndroidObjects(void* javaVM, void* javaContext);
+  static WebRtc_Word32 AttachAndUseAndroidDeviceInfoObjects(
       JNIEnv*& env,
       jclass& javaCmDevInfoClass,
       jobject& javaCmDevInfoObject,
       bool& attached);
-  static int32_t ReleaseAndroidDeviceInfoObjects(bool attached);
+  static WebRtc_Word32 ReleaseAndroidDeviceInfoObjects(bool attached);
 
-  VideoCaptureAndroid(const int32_t id);
-  virtual int32_t Init(const int32_t id, const char* deviceUniqueIdUTF8);
+  VideoCaptureAndroid(const WebRtc_Word32 id);
+  virtual WebRtc_Word32 Init(const WebRtc_Word32 id,
+                             const char* deviceUniqueIdUTF8);
 
 
-  virtual int32_t StartCapture(
+  virtual WebRtc_Word32 StartCapture(
       const VideoCaptureCapability& capability);
-  virtual int32_t StopCapture();
+  virtual WebRtc_Word32 StopCapture();
   virtual bool CaptureStarted();
-  virtual int32_t CaptureSettings(VideoCaptureCapability& settings);
-  virtual int32_t SetCaptureRotation(VideoCaptureRotation rotation);
+  virtual WebRtc_Word32 CaptureSettings(VideoCaptureCapability& settings);
+  virtual WebRtc_Word32 SetCaptureRotation(VideoCaptureRotation rotation);
 
  protected:
   virtual ~VideoCaptureAndroid();

@@ -18,9 +18,9 @@ namespace videocapturemodule
 
 struct DelayValue
 {
-    int32_t width;
-    int32_t height;
-    int32_t delay;
+    WebRtc_Word32 width;
+    WebRtc_Word32 height;
+    WebRtc_Word32 delay;
 };
 
 enum { NoOfDelayValues = 40 };

@@ -18,16 +18,15 @@
     'audio_coding/codecs/pcm16b/pcm16b.gypi',
     'audio_coding/main/source/audio_coding_module.gypi',
     'audio_coding/neteq/neteq.gypi',
-    'audio_coding/neteq4/neteq.gypi',
     'audio_conference_mixer/source/audio_conference_mixer.gypi',
     'audio_device/audio_device.gypi',
     'audio_processing/audio_processing.gypi',
     'bitrate_controller/bitrate_controller.gypi',
-    'desktop_capture/desktop_capture.gypi',
     'media_file/source/media_file.gypi',
     'pacing/pacing.gypi',
     'remote_bitrate_estimator/remote_bitrate_estimator.gypi',
     'rtp_rtcp/source/rtp_rtcp.gypi',
+    'udp_transport/source/udp_transport.gypi',
     'utility/source/utility.gypi',
     'video_coding/codecs/i420/main/source/i420.gypi',
     'video_coding/main/source/video_coding.gypi',
@@ -51,19 +50,6 @@
         'video_coding/codecs/tools/video_codecs_tools.gypi',
         'video_processing/main/test/vpm_tests.gypi',
       ], # includes
-      'targets': [
-        {
-          'target_name': 'modules_unittests',
-          'type': 'executable',
-          'dependencies': [
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(webrtc_root)/test/test.gyp:test_support_main',
-          ],
-          'sources': [
-            'module_common_types_unittest.cc',
-          ],
-        },
-      ],
     }], # include_tests
   ], # conditions
 }

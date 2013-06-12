@@ -19,9 +19,9 @@
 namespace webrtc {
 enum BandwidthUsage
 {
-    kBwNormal = 0,
-    kBwUnderusing = 1,
-    kBwOverusing = 2,
+    kBwNormal,
+    kBwOverusing,
+    kBwUnderusing
 };
 
 enum RateControlState
@@ -42,14 +42,14 @@ class RateControlInput
 {
 public:
     RateControlInput(BandwidthUsage bwState,
-                     uint32_t incomingBitRate,
+                     WebRtc_UWord32 incomingBitRate,
                      double noiseVar)
         : _bwState(bwState),
           _incomingBitRate(incomingBitRate),
           _noiseVar(noiseVar) {}
 
     BandwidthUsage  _bwState;
-    uint32_t      _incomingBitRate;
+    WebRtc_UWord32      _incomingBitRate;
     double              _noiseVar;
 };
 } //namespace webrtc

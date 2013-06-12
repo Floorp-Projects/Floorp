@@ -25,14 +25,14 @@
 
 
 const int maxFileLen = 200;
-uint8_t* dataFile[maxFileLen];
+WebRtc_UWord8* dataFile[maxFileLen];
 
 
 struct InputSet
 {
-    uint32_t TMMBR;
-    uint32_t packetOH;
-    uint32_t SSRC;
+    WebRtc_UWord32 TMMBR;
+    WebRtc_UWord32 packetOH;
+    WebRtc_UWord32 SSRC;
 };
 
 const InputSet set0   = {220,  80, 11111};  // bitRate, packetOH, ssrc
@@ -48,7 +48,7 @@ const InputSet set00  = {  0,  40, 66666};
 
 
 
-int32_t GetFile(char* fileName)
+WebRtc_Word32 GetFile(char* fileName)
 {
     if (!fileName[0])
     {
@@ -58,7 +58,7 @@ int32_t GetFile(char* fileName)
     FILE* openFile = fopen(fileName, "rb");
     assert(openFile != NULL);
     fseek(openFile, 0, SEEK_END);
-    int len = (int16_t)(ftell(openFile));
+    int len = (WebRtc_Word16)(ftell(openFile));
     rewind(openFile);
     assert(len > 0 && len < maxFileLen);
     fread(dataFile, 1, len, openFile);
@@ -77,7 +77,7 @@ public:
     }
     virtual int SendPacket(int channel, const void *data, int len)
     {
-        return _rtpRtcpModule->IncomingPacket((const uint8_t*)data, len);
+        return _rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)data, len);
     }
     virtual int SendRTCPPacket(int channel, const void *data, int len)
     {
@@ -92,10 +92,10 @@ public:
         }
 
         // Send in bitrate request
-        return _rtpRtcpModule->IncomingPacket((const uint8_t*)dataFile, len);
+        return _rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)dataFile, len);
     }
     RtpRtcp* _rtpRtcpModule;
-    uint32_t       _cnt;
+    WebRtc_UWord32       _cnt;
 };
 
 
@@ -109,7 +109,7 @@ public:
     }
     virtual int SendPacket(int channel, const void *data, int len)
     {
-        return _rtpRtcpModule->IncomingPacket((const uint8_t*)data, len);
+        return _rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)data, len);
     }
     virtual int SendRTCPPacket(int channel, const void *data, int len)
     {
@@ -127,11 +127,11 @@ public:
         }
 
         // Send in bitrate request*/
-        return _rtpRtcpModule->IncomingPacket((const uint8_t*)dataFile, len);
+        return _rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)dataFile, len);
     }
 
     RtpRtcp* _rtpRtcpModule;
-    uint32_t       _cnt;
+    WebRtc_UWord32       _cnt;
 };
 
 class TestRateControl : private RateControlDetector
@@ -148,16 +148,16 @@ public:
         //Test perfect conditions
         // But only one packet per frame
         SetLastUsedBitRate(500);
-        uint32_t rtpTs=1234*90;
-        uint32_t framePeriod=33; // In Ms
-        uint32_t rtpDelta=framePeriod*90;
-        uint32_t netWorkDelay=10;
-        uint32_t arrivalTime=rtpTs/90+netWorkDelay;
-        uint32_t newBitRate=0;
-        for(uint32_t k=0;k<10;k++)
+        WebRtc_UWord32 rtpTs=1234*90;
+        WebRtc_UWord32 framePeriod=33; // In Ms
+        WebRtc_UWord32 rtpDelta=framePeriod*90;
+        WebRtc_UWord32 netWorkDelay=10;
+        WebRtc_UWord32 arrivalTime=rtpTs/90+netWorkDelay;
+        WebRtc_UWord32 newBitRate=0;
+        for(WebRtc_UWord32 k=0;k<10;k++)
         {
             // Receive 10 packets
-            for(uint32_t i=0;i<10;i++)
+            for(WebRtc_UWord32 i=0;i<10;i++)
             {
                 NotifyNewArrivedPacket(rtpTs,arrivalTime);
                 rtpTs+=rtpDelta;
@@ -175,16 +175,16 @@ public:
         std::cout << "Test increasing RTT - No Receive timing changes" << std::endl;
         SetLastUsedBitRate(500);
 
-        for(uint32_t k=0;k<10;k++)
+        for(WebRtc_UWord32 k=0;k<10;k++)
         {
             // Receive 10 packets
-            for(uint32_t i=0;i<10;i++)
+            for(WebRtc_UWord32 i=0;i<10;i++)
             {
                 NotifyNewArrivedPacket(rtpTs,arrivalTime);
                 rtpTs+=rtpDelta;
                 arrivalTime=rtpTs/90+netWorkDelay;
             }
-            uint32_t rtt=2*netWorkDelay+k*20;
+            WebRtc_UWord32 rtt=2*netWorkDelay+k*20;
             newBitRate=RateControl(rtt);
             Sleep(10*framePeriod);
             SetLastUsedBitRate(newBitRate);
@@ -199,16 +199,16 @@ public:
         std::cout << "Test increasing RTT - Changed receive timing" << std::endl;
         SetLastUsedBitRate(500);
 
-        for(uint32_t k=0;k<10;k++)
+        for(WebRtc_UWord32 k=0;k<10;k++)
         {
             // Receive 10 packets
-            for(uint32_t i=0;i<10;i++)
+            for(WebRtc_UWord32 i=0;i<10;i++)
             {
                 NotifyNewArrivedPacket(rtpTs,arrivalTime);
                 rtpTs+=rtpDelta;
                 arrivalTime=rtpTs/90+netWorkDelay+i+(k*20);
             }
-            uint32_t rtt=2*netWorkDelay+k*20;
+            WebRtc_UWord32 rtt=2*netWorkDelay+k*20;
             newBitRate=RateControl(rtt);
             Sleep(10*framePeriod);
             SetLastUsedBitRate(newBitRate);
@@ -223,9 +223,9 @@ public:
 
 class NULLDataZink: public RtpData
 {
-    virtual int32_t OnReceivedPayloadData(const uint8_t* payloadData,
-        const uint16_t payloadSize,
-        const webrtc::WebRtcRTPHeader* rtpHeader)
+    virtual WebRtc_Word32 OnReceivedPayloadData(const WebRtc_UWord8* payloadData,
+                                                const WebRtc_UWord16 payloadSize,
+                                                const webrtc::WebRtcRTPHeader* rtpHeader)
     {
         return 0;
     };

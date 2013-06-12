@@ -22,7 +22,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_INCLUDE_VIE_RTP_RTCP_H_
 #define WEBRTC_VIDEO_ENGINE_INCLUDE_VIE_RTP_RTCP_H_
 
-#include "webrtc/common_types.h"
+#include "common_types.h"
 
 namespace webrtc {
 
@@ -133,14 +133,6 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   virtual int GetRemoteCSRCs(const int video_channel,
                              unsigned int CSRCs[kRtpCsrcSize]) const = 0;
 
-  // This sets a specific payload type for the RTX stream. Note that this
-  // doesn't enable RTX, SetLocalSSRC must still be called to enable RTX.
-  virtual int SetRtxSendPayloadType(const int video_channel,
-                                    const uint8_t payload_type) = 0;
-
-  virtual int SetRtxReceivePayloadType(const int video_channel,
-                                       const uint8_t payload_type) = 0;
-
   // This function enables manual initialization of the sequence number. The
   // start sequence number is normally a random number.
   virtual int SetStartSequenceNumber(const int video_channel,
@@ -207,16 +199,6 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
                                      const unsigned char payload_typeRED,
                                      const unsigned char payload_typeFEC) = 0;
 
-  // Sets send side support for delayed video buffering (actual delay will
-  // be exhibited on the receiver side).
-  // Target delay should be set to zero for real-time mode.
-  virtual int SetSenderBufferingMode(int video_channel,
-                                     int target_delay_ms) = 0;
-  // Sets receive side support for delayed video buffering. Target delay should
-  // be set to zero for real-time mode.
-  virtual int SetReceiverBufferingMode(int video_channel,
-                                       int target_delay_ms) = 0;
-
   // This function enables RTCP key frame requests.
   virtual int SetKeyFrameRequestMethod(
     const int video_channel, const ViEKeyFrameRequestMethod method) = 0;
@@ -249,6 +231,8 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   // Enables transmission smoothening, i.e. packets belonging to the same frame
   // will be sent over a longer period of time instead of sending them
   // back-to-back.
+  // NOTE: This is still experimental functionality.
+  // TODO(mflodman) Remove this note when BUG=818 is closed.
   virtual int SetTransmissionSmoothingStatus(int video_channel,
                                              bool enable) = 0;
 
@@ -293,8 +277,8 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
       unsigned int* estimated_bandwidth) const = 0;
 
   // This function gets the receive-side estimated bandwidth available for
-  // video, including overhead, in bits/s. |estimated_bandwidth| is 0 if there
-  // is no valid estimate.
+  // video, including overhead, in bits/s.
+  // Returns -1 when no valid estimate is available.
   virtual int GetEstimatedReceiveBandwidth(
       const int video_channel,
       unsigned int* estimated_bandwidth) const = 0;

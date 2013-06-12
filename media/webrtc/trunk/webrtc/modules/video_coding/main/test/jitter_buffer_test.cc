@@ -8,21 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/main/test/jitter_estimate_test.h"
-
 #include <math.h>
+#include <stdio.h>
 
-#include "webrtc/common_types.h"
-#include "webrtc/modules/video_coding/main/interface/video_coding.h"
-#include "webrtc/modules/video_coding/main/source/frame_buffer.h"
-#include "webrtc/modules/video_coding/main/source/inter_frame_delay.h"
-#include "webrtc/modules/video_coding/main/source/jitter_buffer.h"
-#include "webrtc/modules/video_coding/main/source/jitter_estimator.h"
-#include "webrtc/modules/video_coding/main/source/media_opt_util.h"
-#include "webrtc/modules/video_coding/main/source/packet.h"
-#include "webrtc/modules/video_coding/main/test/test_util.h"
-#include "webrtc/modules/video_coding/main/test/test_macros.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "common_types.h"
+#include "../source/event.h"
+#include "frame_buffer.h"
+#include "inter_frame_delay.h"
+#include "jitter_buffer.h"
+#include "jitter_estimate_test.h"
+#include "jitter_estimator.h"
+#include "media_opt_util.h"
+#include "modules/video_coding/main/source/tick_time_base.h"
+#include "packet.h"
+#include "test_util.h"
+#include "test_macros.h"
 
 // TODO(holmer): Get rid of this to conform with style guide.
 using namespace webrtc;
@@ -36,7 +36,7 @@ int CheckOutFrame(VCMEncodedFrame* frameOut, unsigned int size, bool startCode)
         return -1;
     }
 
-    const uint8_t* outData = frameOut->Buffer();
+    const WebRtc_UWord8* outData = frameOut->Buffer();
 
     unsigned int i = 0;
 
@@ -93,23 +93,26 @@ int CheckOutFrame(VCMEncodedFrame* frameOut, unsigned int size, bool startCode)
 
 int JitterBufferTest(CmdArgs& args)
 {
-    Clock* clock = Clock::GetRealTimeClock();
+    // Don't run these tests with debug event.
+#if defined(EVENT_DEBUG)
+    return -1;
+#endif
+    TickTimeBase clock;
 
     // Start test
-    uint16_t seqNum = 1234;
-    uint32_t timeStamp = 0;
+    WebRtc_UWord16 seqNum = 1234;
+    WebRtc_UWord32 timeStamp = 0;
     int size = 1400;
-    uint8_t data[1500];
+    WebRtc_UWord8 data[1500];
     VCMPacket packet(data, size, seqNum, timeStamp, true);
 
-    NullEventFactory event_factory;
-    VCMJitterBuffer jb(clock, &event_factory, -1, -1, true);
+    VCMJitterBuffer jb(&clock);
 
     seqNum = 1234;
     timeStamp = 123*90;
     FrameType incomingFrameType(kVideoFrameKey);
     VCMEncodedFrame* frameOut=NULL;
-    int64_t renderTimeMs = 0;
+    WebRtc_Word64 renderTimeMs = 0;
     packet.timestamp = timeStamp;
     packet.seqNum = seqNum;
 
@@ -136,13 +139,10 @@ int JitterBufferTest(CmdArgs& args)
     TEST(0 == jb.GetFrame(packet));
     TEST(-1 == jb.NextTimestamp(10, &incomingFrameType, &renderTimeMs));
     TEST(0 == jb.GetCompleteFrameForDecoding(10));
-    TEST(0 == jb.MaybeGetIncompleteFrameForDecoding());
+    TEST(0 == jb.GetFrameForDecoding());
 
     // Start
     jb.Start();
-
-    // Allow decoding with errors.
-    jb.DecodeWithErrors(true);
 
     // Get frame to use for this timestamp
     VCMEncodedFrame* frameIn = jb.GetFrame(packet);
@@ -719,6 +719,24 @@ int JitterBufferTest(CmdArgs& args)
     packet.insertStartCode = false;
     //printf("DONE H.264 insert start code test 2 packets\n");
 
+    //
+    // TEST statistics
+    //
+    WebRtc_UWord32 numDeltaFrames = 0;
+    WebRtc_UWord32 numKeyFrames = 0;
+    jb.FrameStatistics(&numDeltaFrames, &numKeyFrames);
+
+    TEST(numDeltaFrames == 8);
+    TEST(numKeyFrames == 1);
+
+    WebRtc_UWord32 frameRate;
+    WebRtc_UWord32 bitRate;
+    jb.IncomingRateStatistics(&frameRate, &bitRate);
+
+    // these depend on CPU speed works on a T61
+    TEST(frameRate > 30);
+    TEST(bitRate > 10000000);
+
 
     jb.Flush();
 
@@ -811,7 +829,7 @@ int JitterBufferTest(CmdArgs& args)
       TEST(kIncomplete == jb.InsertPacket(frameIn, packet));
 
       // Get the frame
-      frameOut = jb.MaybeGetIncompleteFrameForDecoding();
+      frameOut = jb.GetFrameForDecoding();
 
       // One of the packets has been discarded by the jitter buffer.
       // Last frame can't be extracted yet.
@@ -1571,8 +1589,8 @@ int JitterBufferTest(CmdArgs& args)
 
     loop = 0;
     seqNum = 65485;
-    uint32_t timeStampStart = timeStamp +  33*90;
-    uint32_t timeStampFirstKey = 0;
+    WebRtc_UWord32 timeStampStart = timeStamp +  33*90;
+    WebRtc_UWord32 timeStampFirstKey = 0;
     VCMEncodedFrame* ptrLastDeltaFrame = NULL;
     VCMEncodedFrame* ptrFirstKeyFrame = NULL;
     // insert MAX_NUMBER_OF_FRAMES frames
@@ -1668,7 +1686,7 @@ int JitterBufferTest(CmdArgs& args)
         packet.seqNum = seqNum;
         packet.timestamp = timeStamp;
         packet.frameType = kFrameEmpty;
-        VCMEncodedFrame* testFrame = jb.MaybeGetIncompleteFrameForDecoding();
+        VCMEncodedFrame* testFrame = jb.GetFrameForDecoding();
         // timestamp should bever be the last TS inserted
         if (testFrame != NULL)
         {
@@ -1747,7 +1765,7 @@ int JitterBufferTest(CmdArgs& args)
     // Get packet notification
     TEST(timeStamp == jb.NextTimestamp(10, &incomingFrameType,
                                        &renderTimeMs));
-    frameOut = jb.MaybeGetIncompleteFrameForDecoding();
+    frameOut = jb.GetFrameForDecoding();
 
     // We can decode everything from a NALU until a packet has been lost.
     // Thus we can decode the first packet of the first NALU and the second NALU
@@ -1813,7 +1831,7 @@ int JitterBufferTest(CmdArgs& args)
     // This packet should not be decoded because it is an incomplete NAL if it
     // is the last
 
-    frameOut = jb.MaybeGetIncompleteFrameForDecoding();
+    frameOut = jb.GetFrameForDecoding();
     // Only last NALU is complete
     TEST(CheckOutFrame(frameOut, insertedLength, false) == 0);
     jb.ReleaseFrame(frameOut);
@@ -1837,7 +1855,7 @@ int JitterBufferTest(CmdArgs& args)
 
     // Will be sent to the decoder, as a packet belonging to a subsequent frame
     // has arrived.
-    frameOut = jb.MaybeGetIncompleteFrameForDecoding();
+    frameOut = jb.GetFrameForDecoding();
 
 
     // Test that a frame can include an empty packet.
@@ -1883,7 +1901,7 @@ int JitterBufferTest(CmdArgs& args)
     TEST(frameIn = jb.GetFrame(packet));
     TEST(kFirstPacket == jb.InsertPacket(frameIn, packet));
 
-    frameOut = jb.MaybeGetIncompleteFrameForDecoding();
+    frameOut = jb.GetFrameForDecoding();
     TEST(frameOut == NULL);
 
     packet.seqNum += 2;
@@ -1892,7 +1910,7 @@ int JitterBufferTest(CmdArgs& args)
     TEST(frameIn = jb.GetFrame(packet));
     TEST(kFirstPacket == jb.InsertPacket(frameIn, packet));
 
-    frameOut = jb.MaybeGetIncompleteFrameForDecoding();
+    frameOut = jb.GetFrameForDecoding();
 
     TEST(frameOut != NULL);
     TEST(CheckOutFrame(frameOut, packet.sizeBytes, false) == 0);

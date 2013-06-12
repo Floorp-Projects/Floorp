@@ -38,8 +38,8 @@ public:
     webrtc::RtpRtcp&            _rtp;
     CmdArgs                     _args;
     FILE*                       _sourceFile;
-    int32_t               _frameCnt;
-    int32_t               _timestamp;
+    WebRtc_Word32               _frameCnt;
+    WebRtc_Word32               _timestamp;
 };
 
 // MT implementation of the RTPSendCompleteCallback (Transport)
@@ -47,7 +47,7 @@ class TransportCallback:public RTPSendCompleteCallback
 {
  public:
     // constructor input: (receive side) rtp module to send encoded data to
-    TransportCallback(Clock* clock, const char* filename = NULL);
+    TransportCallback(TickTimeBase* clock, const char* filename = NULL);
     virtual ~TransportCallback();
     // Add packets to list
     // Incorporate network conditions - delay and packet loss

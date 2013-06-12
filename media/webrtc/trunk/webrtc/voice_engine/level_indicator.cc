@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "critical_section_wrapper.h"
 #include "level_indicator.h"
 #include "module_common_types.h"
 #include "signal_processing_library.h"
@@ -17,47 +16,44 @@ namespace webrtc {
 
 namespace voe {
 
+
 // Number of bars on the indicator.
 // Note that the number of elements is specified because we are indexing it
 // in the range of 0-32
-const int8_t permutation[33] =
+const WebRtc_Word8 permutation[33] =
     {0,1,2,3,4,4,5,5,5,5,6,6,6,6,6,7,7,7,7,8,8,8,9,9,9,9,9,9,9,9,9,9,9};
 
 
 AudioLevel::AudioLevel() :
-    _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _absMax(0),
     _count(0),
     _currentLevel(0),
-    _currentLevelFullRange(0) {
-}
-
-AudioLevel::~AudioLevel() {
-    delete &_critSect;
-}
-
-void AudioLevel::Clear()
+    _currentLevelFullRange(0)
 {
-    CriticalSectionScoped cs(&_critSect);
+}
+
+AudioLevel::~AudioLevel()
+{
+}
+
+void
+AudioLevel::Clear()
+{
     _absMax = 0;
     _count = 0;
     _currentLevel = 0;
     _currentLevelFullRange = 0;
 }
 
-void AudioLevel::ComputeLevel(const AudioFrame& audioFrame)
+void
+AudioLevel::ComputeLevel(const AudioFrame& audioFrame)
 {
-    int16_t absValue(0);
+    WebRtc_Word16 absValue(0);
 
     // Check speech level (works for 2 channels as well)
     absValue = WebRtcSpl_MaxAbsValueW16(
         audioFrame.data_,
         audioFrame.samples_per_channel_*audioFrame.num_channels_);
-
-    // Protect member access using a lock since this method is called on a
-    // dedicated audio thread in the RecordedDataIsAvailable() callback.
-    CriticalSectionScoped cs(&_critSect);
-
     if (absValue > _absMax)
     _absMax = absValue;
 
@@ -68,10 +64,10 @@ void AudioLevel::ComputeLevel(const AudioFrame& audioFrame)
 
         _count = 0;
 
-        // Highest value for a int16_t is 0x7fff = 32767
+        // Highest value for a WebRtc_Word16 is 0x7fff = 32767
         // Divide with 1000 to get in the range of 0-32 which is the range of
         // the permutation vector
-        int32_t position = _absMax/1000;
+        WebRtc_Word32 position = _absMax/1000;
 
         // Make it less likely that the bar stays at position 0. I.e. only if
         // its in the range 0-250 (instead of 0-1000)
@@ -86,15 +82,15 @@ void AudioLevel::ComputeLevel(const AudioFrame& audioFrame)
     }
 }
 
-int8_t AudioLevel::Level() const
+WebRtc_Word8
+AudioLevel::Level() const
 {
-    CriticalSectionScoped cs(&_critSect);
     return _currentLevel;
 }
 
-int16_t AudioLevel::LevelFullRange() const
+WebRtc_Word16
+AudioLevel::LevelFullRange() const
 {
-    CriticalSectionScoped cs(&_critSect);
     return _currentLevelFullRange;
 }
 

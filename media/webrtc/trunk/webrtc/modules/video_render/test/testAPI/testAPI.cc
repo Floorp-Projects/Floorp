@@ -43,7 +43,7 @@
 using namespace webrtc;
 
 void GetTestVideoFrame(I420VideoFrame* frame,
-                       uint8_t startColor);
+                       WebRtc_UWord8 startColor);
 int TestSingleStream(VideoRender* renderModule);
 int TestFullscreenStream(VideoRender* &renderModule,
                          void* window,
@@ -261,8 +261,8 @@ public:
     {
     }
     ;
-    virtual int32_t RenderFrame(const uint32_t streamId,
-                                I420VideoFrame& videoFrame)
+    virtual WebRtc_Word32 RenderFrame(const WebRtc_UWord32 streamId,
+                                      I420VideoFrame& videoFrame)
     {
         _cnt++;
         if (_cnt % 100 == 0)
@@ -271,13 +271,13 @@ public:
         }
         return 0;
     }
-    int32_t _cnt;
+    WebRtc_Word32 _cnt;
 };
 
 void GetTestVideoFrame(I420VideoFrame* frame,
-                       uint8_t startColor) {
+                       WebRtc_UWord8 startColor) {
     // changing color
-    static uint8_t color = startColor;
+    static WebRtc_UWord8 color = startColor;
 
     memset(frame->buffer(kYPlane), color, frame->allocated_size(kYPlane));
     memset(frame->buffer(kUPlane), color, frame->allocated_size(kUPlane));
@@ -316,7 +316,7 @@ int TestSingleStream(VideoRender* renderModule) {
     I420VideoFrame videoFrame0;
     videoFrame0.CreateEmptyFrame(width, height, width, half_width, half_width);
 
-    const uint32_t renderDelayMs = 500;
+    const WebRtc_UWord32 renderDelayMs = 500;
 
     for (int i=0; i<TEST_FRAME_NUM; i++) {
         GetTestVideoFrame(&videoFrame0, TEST_STREAM0_START_COLOR);
@@ -374,7 +374,7 @@ int TestBitmapText(VideoRender* renderModule) {
                              0.3f);
 
     printf("Adding Text\n");
-    renderModule->SetText(1, (uint8_t*) "WebRtc Render Demo App", 20,
+    renderModule->SetText(1, (WebRtc_UWord8*) "WebRtc Render Demo App", 20,
                            RGB(255, 0, 0), RGB(0, 0, 0), 0.25f, 0.1f, 1.0f,
                            1.0f);
 
@@ -390,7 +390,7 @@ int TestBitmapText(VideoRender* renderModule) {
     I420VideoFrame videoFrame0;
     videoFrame0.CreateEmptyFrame(width, height, width, half_width, half_width);
 
-    const uint32_t renderDelayMs = 500;
+    const WebRtc_UWord32 renderDelayMs = 500;
 
     for (int i=0; i<TEST_FRAME_NUM; i++) {
         GetTestVideoFrame(&videoFrame0, TEST_STREAM0_START_COLOR);
@@ -463,7 +463,7 @@ int TestMultipleStreams(VideoRender* renderModule) {
     I420VideoFrame videoFrame3;
     videoFrame3.CreateEmptyFrame(width, height, width, half_width, half_width);
 
-    const uint32_t renderDelayMs = 500;
+    const WebRtc_UWord32 renderDelayMs = 500;
 
     // Render frames with the specified delay.
     for (int i=0; i<TEST_FRAME_NUM; i++) {
@@ -524,7 +524,7 @@ int TestExternalRender(VideoRender* renderModule) {
     I420VideoFrame videoFrame0;
     videoFrame0.CreateEmptyFrame(width, height, width, half_width, half_width);
 
-    const uint32_t renderDelayMs = 500;
+    const WebRtc_UWord32 renderDelayMs = 500;
     int frameCount = TEST_FRAME_NUM;
     for (int i=0; i<frameCount; i++) {
         videoFrame0.set_render_time_ms(TickTime::MillisecondTimestamp() +

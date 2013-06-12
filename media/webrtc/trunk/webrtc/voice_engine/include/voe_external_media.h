@@ -52,7 +52,7 @@ public:
     // If |isStereo| is true, audio10ms will contain 16-bit PCM data
     // samples in interleaved stereo format (L0,R0,L1,R1,...).
     virtual void Process(const int channel, const ProcessingTypes type,
-                         int16_t audio10ms[], const int length,
+                         WebRtc_Word16 audio10ms[], const int length,
                          const int samplingFreq, const bool isStereo) = 0;
 
 protected:
@@ -93,7 +93,7 @@ public:
     // this method should be called at as regular an interval as possible
     // with frames of corresponding size.
     virtual int ExternalRecordingInsertData(
-        const int16_t speechData10ms[], int lengthSamples,
+        const WebRtc_Word16 speechData10ms[], int lengthSamples,
         int samplingFreqHz, int current_delay_ms) = 0;
 
     // This function gets audio for an external playout sink.
@@ -102,7 +102,7 @@ public:
     // be 160, 320, 440 or 480 samples (for 16, 32, 44 or 48 kHz sampling
     // rates respectively).
     virtual int ExternalPlayoutGetData(
-        int16_t speechData10ms[], int samplingFreqHz,
+        WebRtc_Word16 speechData10ms[], int samplingFreqHz,
         int current_delay_ms, int& lengthSamples) = 0;
 
     // Pulls an audio frame from the specified |channel| for external mixing.

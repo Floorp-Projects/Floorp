@@ -20,7 +20,7 @@
 #endif
 
 namespace webrtc {
-AudioCoder::AudioCoder(uint32_t instanceID)
+AudioCoder::AudioCoder(WebRtc_UWord32 instanceID)
     : _acm(AudioCodingModule::Create(instanceID)),
       _receiveCodec(),
       _encodeTimestamp(0),
@@ -38,8 +38,8 @@ AudioCoder::~AudioCoder()
     AudioCodingModule::Destroy(_acm);
 }
 
-int32_t AudioCoder::SetEncodeCodec(const CodecInst& codecInst,
-                                   ACMAMRPackingFormat amrFormat)
+WebRtc_Word32 AudioCoder::SetEncodeCodec(const CodecInst& codecInst,
+					 ACMAMRPackingFormat amrFormat)
 {
     if(_acm->RegisterSendCodec((CodecInst&)codecInst) == -1)
     {
@@ -48,8 +48,8 @@ int32_t AudioCoder::SetEncodeCodec(const CodecInst& codecInst,
     return 0;
 }
 
-int32_t AudioCoder::SetDecodeCodec(const CodecInst& codecInst,
-                                   ACMAMRPackingFormat amrFormat)
+WebRtc_Word32 AudioCoder::SetDecodeCodec(const CodecInst& codecInst,
+					 ACMAMRPackingFormat amrFormat)
 {
     if(_acm->RegisterReceiveCodec((CodecInst&)codecInst) == -1)
     {
@@ -59,16 +59,16 @@ int32_t AudioCoder::SetDecodeCodec(const CodecInst& codecInst,
     return 0;
 }
 
-int32_t AudioCoder::Decode(AudioFrame& decodedAudio,
-                           uint32_t sampFreqHz,
-                           const int8_t*  incomingPayload,
-                           int32_t  payloadLength)
+WebRtc_Word32 AudioCoder::Decode(AudioFrame& decodedAudio,
+				 WebRtc_UWord32 sampFreqHz,
+				 const WebRtc_Word8*  incomingPayload,
+				 WebRtc_Word32  payloadLength)
 {
     if (payloadLength > 0)
     {
-        const uint8_t payloadType = _receiveCodec.pltype;
+        const WebRtc_UWord8 payloadType = _receiveCodec.pltype;
         _decodeTimestamp += _receiveCodec.pacsize;
-        if(_acm->IncomingPayload((const uint8_t*) incomingPayload,
+        if(_acm->IncomingPayload((const WebRtc_UWord8*) incomingPayload,
                                  payloadLength,
                                  payloadType,
                                  _decodeTimestamp) == -1)
@@ -76,23 +76,23 @@ int32_t AudioCoder::Decode(AudioFrame& decodedAudio,
             return -1;
         }
     }
-    return _acm->PlayoutData10Ms((uint16_t)sampFreqHz, &decodedAudio);
+    return _acm->PlayoutData10Ms((WebRtc_UWord16)sampFreqHz,
+				 (AudioFrame&)decodedAudio);
 }
 
-int32_t AudioCoder::PlayoutData(AudioFrame& decodedAudio,
-                                uint16_t& sampFreqHz)
+WebRtc_Word32 AudioCoder::PlayoutData(AudioFrame& decodedAudio,
+				      WebRtc_UWord16& sampFreqHz)
 {
-    return _acm->PlayoutData10Ms(sampFreqHz, &decodedAudio);
+    return _acm->PlayoutData10Ms(sampFreqHz, (AudioFrame&)decodedAudio);
 }
 
-int32_t AudioCoder::Encode(const AudioFrame& audio,
-                           int8_t* encodedData,
-                           uint32_t& encodedLengthInBytes)
+WebRtc_Word32 AudioCoder::Encode(const AudioFrame& audio,
+				 WebRtc_Word8* encodedData,
+				 WebRtc_UWord32& encodedLengthInBytes)
 {
     // Fake a timestamp in case audio doesn't contain a correct timestamp.
     // Make a local copy of the audio frame since audio is const
-    AudioFrame audioFrame;
-    audioFrame.CopyFrom(audio);
+    AudioFrame audioFrame = audio;
     audioFrame.timestamp_ = _encodeTimestamp;
     _encodeTimestamp += audioFrame.samples_per_channel_;
 
@@ -112,15 +112,15 @@ int32_t AudioCoder::Encode(const AudioFrame& audio,
     return 0;
 }
 
-int32_t AudioCoder::SendData(
+WebRtc_Word32 AudioCoder::SendData(
     FrameType /* frameType */,
-    uint8_t   /* payloadType */,
-    uint32_t  /* timeStamp */,
-    const uint8_t*  payloadData,
-    uint16_t  payloadSize,
+    WebRtc_UWord8   /* payloadType */,
+    WebRtc_UWord32  /* timeStamp */,
+    const WebRtc_UWord8*  payloadData,
+    WebRtc_UWord16  payloadSize,
     const RTPFragmentationHeader* /* fragmentation*/)
 {
-    memcpy(_encodedData,payloadData,sizeof(uint8_t) * payloadSize);
+    memcpy(_encodedData,payloadData,sizeof(WebRtc_UWord8) * payloadSize);
     _encodedLengthInBytes = payloadSize;
     return 0;
 }

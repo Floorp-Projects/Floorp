@@ -27,25 +27,25 @@ ACMResampler::~ACMResampler() {
   delete resampler_crit_sect_;
 }
 
-int16_t ACMResampler::Resample10Msec(const int16_t* in_audio,
-                                     int32_t in_freq_hz,
-                                     int16_t* out_audio,
-                                     int32_t out_freq_hz,
-                                     uint8_t num_audio_channels) {
+WebRtc_Word16 ACMResampler::Resample10Msec(const WebRtc_Word16* in_audio,
+                                           WebRtc_Word32 in_freq_hz,
+                                           WebRtc_Word16* out_audio,
+                                           WebRtc_Word32 out_freq_hz,
+                                           WebRtc_UWord8 num_audio_channels) {
   CriticalSectionScoped cs(resampler_crit_sect_);
 
   if (in_freq_hz == out_freq_hz) {
     size_t length = static_cast<size_t>(in_freq_hz * num_audio_channels / 100);
-    memcpy(out_audio, in_audio, length * sizeof(int16_t));
-    return static_cast<int16_t>(in_freq_hz / 100);
+    memcpy(out_audio, in_audio, length * sizeof(WebRtc_Word16));
+    return static_cast<WebRtc_Word16>(in_freq_hz / 100);
   }
 
   // |maxLen| is maximum number of samples for 10ms at 48kHz.
   int max_len = 480 * num_audio_channels;
-  int length_in = (int16_t)(in_freq_hz / 100) * num_audio_channels;
+  int length_in = (WebRtc_Word16)(in_freq_hz / 100) * num_audio_channels;
   int out_len;
 
-  int32_t ret;
+  WebRtc_Word32 ret;
   ResamplerType type;
   type = (num_audio_channels == 1) ? kResamplerSynchronous :
       kResamplerSynchronousStereo;
@@ -64,7 +64,7 @@ int16_t ACMResampler::Resample10Msec(const int16_t* in_audio,
     return -1;
   }
 
-  int16_t out_audio_len_smpl = (int16_t) out_len /
+  WebRtc_Word16 out_audio_len_smpl = (WebRtc_Word16) out_len /
       num_audio_channels;
 
   return out_audio_len_smpl;

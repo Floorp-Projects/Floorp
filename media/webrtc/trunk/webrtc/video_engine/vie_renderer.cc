@@ -17,11 +17,11 @@
 
 namespace webrtc {
 
-ViERenderer* ViERenderer::CreateViERenderer(const int32_t render_id,
-                                            const int32_t engine_id,
+ViERenderer* ViERenderer::CreateViERenderer(const WebRtc_Word32 render_id,
+                                            const WebRtc_Word32 engine_id,
                                             VideoRender& render_module,
                                             ViERenderManager& render_manager,
-                                            const uint32_t z_order,
+                                            const WebRtc_UWord32 z_order,
                                             const float left,
                                             const float top,
                                             const float right,
@@ -43,15 +43,15 @@ ViERenderer::~ViERenderer(void) {
     delete incoming_external_callback_;
 }
 
-int32_t ViERenderer::StartRender() {
+WebRtc_Word32 ViERenderer::StartRender() {
   return render_module_.StartRender(render_id_);
 }
-int32_t ViERenderer::StopRender() {
+WebRtc_Word32 ViERenderer::StopRender() {
   return render_module_.StopRender(render_id_);
 }
 
-int32_t ViERenderer::GetLastRenderedFrame(const int32_t renderID,
-                                          I420VideoFrame& video_frame) {
+WebRtc_Word32 ViERenderer::GetLastRenderedFrame(const WebRtc_Word32 renderID,
+                                                I420VideoFrame& video_frame) {
   return render_module_.GetLastRenderedFrame(renderID, video_frame);
 }
 
@@ -59,11 +59,11 @@ int ViERenderer::SetExpectedRenderDelay(int render_delay) {
   return render_module_.SetExpectedRenderDelay(render_id_, render_delay);
 }
 
-int32_t ViERenderer::ConfigureRenderer(const unsigned int z_order,
-                                       const float left,
-                                       const float top,
-                                       const float right,
-                                       const float bottom) {
+WebRtc_Word32 ViERenderer::ConfigureRenderer(const unsigned int z_order,
+                                             const float left,
+                                             const float top,
+                                             const float right,
+                                             const float bottom) {
   return render_module_.ConfigureRenderer(render_id_, z_order, left, top, right,
                                           bottom);
 }
@@ -72,27 +72,27 @@ VideoRender& ViERenderer::RenderModule() {
   return render_module_;
 }
 
-int32_t ViERenderer::EnableMirroring(const int32_t render_id,
-                                     const bool enable,
-                                     const bool mirror_xaxis,
-                                     const bool mirror_yaxis) {
+WebRtc_Word32 ViERenderer::EnableMirroring(const WebRtc_Word32 render_id,
+                                           const bool enable,
+                                           const bool mirror_xaxis,
+                                           const bool mirror_yaxis) {
   return render_module_.MirrorRenderStream(render_id, enable, mirror_xaxis,
                                            mirror_yaxis);
 }
 
-int32_t ViERenderer::SetTimeoutImage(const I420VideoFrame& timeout_image,
-                                     const int32_t timeout_value) {
+WebRtc_Word32 ViERenderer::SetTimeoutImage(const I420VideoFrame& timeout_image,
+                                           const WebRtc_Word32 timeout_value) {
   return render_module_.SetTimeoutImage(render_id_, timeout_image,
                                         timeout_value);
 }
 
-int32_t  ViERenderer::SetRenderStartImage(
+WebRtc_Word32  ViERenderer::SetRenderStartImage(
     const I420VideoFrame& start_image) {
   return render_module_.SetStartImage(render_id_, start_image);
 }
 
-int32_t ViERenderer::SetExternalRenderer(
-    const int32_t render_id,
+WebRtc_Word32 ViERenderer::SetExternalRenderer(
+    const WebRtc_Word32 render_id,
     RawVideoType video_input_format,
     ExternalRenderer* external_renderer) {
   if (!incoming_external_callback_)
@@ -104,8 +104,8 @@ int32_t ViERenderer::SetExternalRenderer(
                                                   incoming_external_callback_);
 }
 
-ViERenderer::ViERenderer(const int32_t render_id,
-                         const int32_t engine_id,
+ViERenderer::ViERenderer(const WebRtc_Word32 render_id,
+                         const WebRtc_Word32 engine_id,
                          VideoRender& render_module,
                          ViERenderManager& render_manager)
     : render_id_(render_id),
@@ -115,11 +115,11 @@ ViERenderer::ViERenderer(const int32_t render_id,
       incoming_external_callback_(new ViEExternalRendererImpl()) {
 }
 
-int32_t ViERenderer::Init(const uint32_t z_order,
-                          const float left,
-                          const float top,
-                          const float right,
-                          const float bottom) {
+WebRtc_Word32 ViERenderer::Init(const WebRtc_UWord32 z_order,
+                                const float left,
+                                const float top,
+                                const float right,
+                                const float bottom) {
   render_callback_ =
       static_cast<VideoRenderCallback*>(render_module_.AddIncomingRenderStream(
           render_id_, z_order, left, top, right, bottom));
@@ -133,7 +133,7 @@ int32_t ViERenderer::Init(const uint32_t z_order,
 void ViERenderer::DeliverFrame(int id,
                                I420VideoFrame* video_frame,
                                int num_csrcs,
-                               const uint32_t CSRC[kRtpCsrcSize]) {
+                               const WebRtc_UWord32 CSRC[kRtpCsrcSize]) {
   render_callback_->RenderFrame(render_id_, *video_frame);
 }
 
@@ -166,8 +166,8 @@ int ViEExternalRendererImpl::SetViEExternalRenderer(
   return 0;
 }
 
-int32_t ViEExternalRendererImpl::RenderFrame(
-    const uint32_t stream_id,
+WebRtc_Word32 ViEExternalRendererImpl::RenderFrame(
+    const WebRtc_UWord32 stream_id,
     I420VideoFrame&   video_frame) {
   VideoFrame* out_frame = converted_frame_.get();
 
@@ -203,10 +203,7 @@ int32_t ViEExternalRendererImpl::RenderFrame(
     case kVideoARGB4444:
     case kVideoARGB1555 :
       {
-        if (ConvertFromI420(video_frame, type, 0,
-                            converted_frame_->Buffer()) < 0)
-          return -1;
-        converted_frame_->SetLength(buffer_size);
+        ConvertFromI420(video_frame, type, 0, converted_frame_->Buffer());
       }
       break;
     case kVideoIYUV:

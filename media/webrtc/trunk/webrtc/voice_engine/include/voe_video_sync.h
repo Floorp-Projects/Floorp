@@ -33,7 +33,7 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_VIDEO_SYNC_H
 #define WEBRTC_VOICE_ENGINE_VOE_VIDEO_SYNC_H
 
-#include "webrtc/common_types.h"
+#include "common_types.h"
 
 namespace webrtc {
 
@@ -55,20 +55,14 @@ public:
     virtual int Release() = 0;
 
     // Gets the current sound card buffer size (playout delay).
-    virtual int GetPlayoutBufferSize(int& buffer_ms) = 0;
+    virtual int GetPlayoutBufferSize(int& bufferMs) = 0;
 
     // Sets an additional delay for the playout jitter buffer.
-    virtual int SetMinimumPlayoutDelay(int channel, int delay_ms) = 0;
+    virtual int SetMinimumPlayoutDelay(int channel, int delayMs) = 0;
 
-    // Sets an initial delay for the playout jitter buffer. The playout of the
-    // audio is delayed by |delay_ms| in millisecond.
-    virtual int SetInitialPlayoutDelay(int channel, int delay_ms) = 0;
-
-    // Gets the |jitter_buffer_delay_ms| (including the algorithmic delay), and
-    // the |playout_buffer_delay_ms| for a specified |channel|.
-    virtual int GetDelayEstimate(int channel,
-                                 int* jitter_buffer_delay_ms,
-                                 int* playout_buffer_delay_ms) = 0;
+    // Gets the sum of the algorithmic delay, jitter buffer delay, and the
+    // playout buffer delay for a specified |channel|.
+    virtual int GetDelayEstimate(int channel, int& delayMs) = 0;
 
     // Manual initialization of the RTP timestamp.
     virtual int SetInitTimestamp(int channel, unsigned int timestamp) = 0;

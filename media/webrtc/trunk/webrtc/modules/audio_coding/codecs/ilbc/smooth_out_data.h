@@ -25,11 +25,11 @@
  * help function to WebRtcIlbcfix_Smooth()
  *---------------------------------------------------------------*/
 
-int32_t WebRtcIlbcfix_Smooth_odata(
-    int16_t *odata,
-    int16_t *psseq,
-    int16_t *surround,
-    int16_t C);
+WebRtc_Word32 WebRtcIlbcfix_Smooth_odata(
+    WebRtc_Word16 *odata,
+    WebRtc_Word16 *psseq,
+    WebRtc_Word16 *surround,
+    WebRtc_Word16 C);
 
 
 #endif

@@ -21,7 +21,7 @@ PacketReader::PacketReader()
 
 PacketReader::~PacketReader() {}
 
-void PacketReader::InitializeReading(uint8_t* data,
+void PacketReader::InitializeReading(WebRtc_UWord8* data,
                                      int data_length_in_bytes,
                                      int packet_size_in_bytes) {
   assert(data);
@@ -34,7 +34,7 @@ void PacketReader::InitializeReading(uint8_t* data,
   initialized_ = true;
 }
 
-int PacketReader::NextPacket(uint8_t** packet_pointer) {
+int PacketReader::NextPacket(WebRtc_UWord8** packet_pointer) {
   if (!initialized_) {
     fprintf(stderr, "Attempting to use uninitialized PacketReader!\n");
     return -1;

@@ -42,7 +42,7 @@ ProcessThreadImpl::~ProcessThreadImpl()
     WEBRTC_TRACE(kTraceMemory, kTraceUtility, -1, "%s deleted", __FUNCTION__);
 }
 
-int32_t ProcessThreadImpl::Start()
+WebRtc_Word32 ProcessThreadImpl::Start()
 {
     CriticalSectionScoped lock(_critSectModules);
     if(_thread)
@@ -52,7 +52,7 @@ int32_t ProcessThreadImpl::Start()
     _thread = ThreadWrapper::CreateThread(Run, this, kNormalPriority,
                                           "ProcessThread");
     unsigned int id;
-    int32_t retVal = _thread->Start(id);
+    WebRtc_Word32 retVal = _thread->Start(id);
     if(retVal >= 0)
     {
         return 0;
@@ -62,7 +62,7 @@ int32_t ProcessThreadImpl::Start()
     return -1;
 }
 
-int32_t ProcessThreadImpl::Stop()
+WebRtc_Word32 ProcessThreadImpl::Stop()
 {
     _critSectModules->Enter();
     if(_thread)
@@ -87,13 +87,13 @@ int32_t ProcessThreadImpl::Stop()
     return 0;
 }
 
-int32_t ProcessThreadImpl::RegisterModule(const Module* module)
+WebRtc_Word32 ProcessThreadImpl::RegisterModule(const Module* module)
 {
     CriticalSectionScoped lock(_critSectModules);
 
     // Only allow module to be registered once.
     ListItem* item = _modules.First();
-    for(uint32_t i = 0; i < _modules.GetSize() && item; i++)
+    for(WebRtc_UWord32 i = 0; i < _modules.GetSize() && item; i++)
     {
         if(module == item->GetItem())
         {
@@ -113,12 +113,12 @@ int32_t ProcessThreadImpl::RegisterModule(const Module* module)
     return 0;
 }
 
-int32_t ProcessThreadImpl::DeRegisterModule(const Module* module)
+WebRtc_Word32 ProcessThreadImpl::DeRegisterModule(const Module* module)
 {
     CriticalSectionScoped lock(_critSectModules);
 
     ListItem* item = _modules.First();
-    for(uint32_t i = 0; i < _modules.GetSize() && item; i++)
+    for(WebRtc_UWord32 i = 0; i < _modules.GetSize() && item; i++)
     {
         if(module == item->GetItem())
         {
@@ -142,13 +142,13 @@ bool ProcessThreadImpl::Process()
 {
     // Wait for the module that should be called next, but don't block thread
     // longer than 100 ms.
-    int32_t minTimeToNext = 100;
+    WebRtc_Word32 minTimeToNext = 100;
     {
         CriticalSectionScoped lock(_critSectModules);
         ListItem* item = _modules.First();
-        for(uint32_t i = 0; i < _modules.GetSize() && item; i++)
+        for(WebRtc_UWord32 i = 0; i < _modules.GetSize() && item; i++)
         {
-            int32_t timeToNext =
+            WebRtc_Word32 timeToNext =
                 static_cast<Module*>(item->GetItem())->TimeUntilNextProcess();
             if(minTimeToNext > timeToNext)
             {
@@ -164,7 +164,6 @@ bool ProcessThreadImpl::Process()
         {
             return true;
         }
-        CriticalSectionScoped lock(_critSectModules);
         if(!_thread)
         {
             return false;
@@ -173,9 +172,9 @@ bool ProcessThreadImpl::Process()
     {
         CriticalSectionScoped lock(_critSectModules);
         ListItem* item = _modules.First();
-        for(uint32_t i = 0; i < _modules.GetSize() && item; i++)
+        for(WebRtc_UWord32 i = 0; i < _modules.GetSize() && item; i++)
         {
-            int32_t timeToNext =
+            WebRtc_Word32 timeToNext =
                 static_cast<Module*>(item->GetItem())->TimeUntilNextProcess();
             if(timeToNext < 1)
             {

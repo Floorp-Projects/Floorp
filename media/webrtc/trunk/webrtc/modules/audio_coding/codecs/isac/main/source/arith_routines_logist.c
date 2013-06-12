@@ -21,7 +21,7 @@
 
 
 
-static const int32_t kHistEdgesQ15[51] = {
+static const WebRtc_Word32 kHistEdgesQ15[51] = {
   -327680, -314573, -301466, -288359, -275252, -262144, -249037, -235930, -222823, -209716,
   -196608, -183501, -170394, -157287, -144180, -131072, -117965, -104858, -91751, -78644,
   -65536, -52429, -39322, -26215, -13108,  0,  13107,  26214,  39321,  52428,
@@ -49,10 +49,10 @@ static const int kCdfQ16[51] = {  /* Q16 */
 
 
 /* function to be converted to fixed point */
-static __inline uint32_t piecewise(int32_t xinQ15) {
+static __inline WebRtc_UWord32 piecewise(WebRtc_Word32 xinQ15) {
 
-  int32_t ind, qtmp1, qtmp2, qtmp3;
-  uint32_t tmpUW32;
+  WebRtc_Word32 ind, qtmp1, qtmp2, qtmp3;
+  WebRtc_UWord32 tmpUW32;
 
 
   qtmp2 = xinQ15;
@@ -79,17 +79,17 @@ static __inline uint32_t piecewise(int32_t xinQ15) {
 
 int WebRtcIsac_EncLogisticMulti2(
     Bitstr *streamdata,      /* in-/output struct containing bitstream */
-    int16_t *dataQ7,    /* input: data vector */
-    const uint16_t *envQ8, /* input: side info vector defining the width of the pdf */
+    WebRtc_Word16 *dataQ7,    /* input: data vector */
+    const WebRtc_UWord16 *envQ8, /* input: side info vector defining the width of the pdf */
     const int N,       /* input: data vector length / 2 */
-    const int16_t isSWB12kHz)
+    const WebRtc_Word16 isSWB12kHz)
 {
-  uint32_t W_lower, W_upper;
-  uint32_t W_upper_LSB, W_upper_MSB;
-  uint8_t *stream_ptr;
-  uint8_t *maxStreamPtr;
-  uint8_t *stream_ptr_carry;
-  uint32_t cdf_lo, cdf_hi;
+  WebRtc_UWord32 W_lower, W_upper;
+  WebRtc_UWord32 W_upper_LSB, W_upper_MSB;
+  WebRtc_UWord8 *stream_ptr;
+  WebRtc_UWord8 *maxStreamPtr;
+  WebRtc_UWord8 *stream_ptr_carry;
+  WebRtc_UWord32 cdf_lo, cdf_hi;
   int k;
 
   /* point to beginning of stream buffer */
@@ -149,7 +149,7 @@ int WebRtcIsac_EncLogisticMulti2(
     while ( !(W_upper & 0xFF000000) )      /* W_upper < 2^24 */
     {
       W_upper <<= 8;
-      *stream_ptr++ = (uint8_t) (streamdata->streamval >> 24);
+      *stream_ptr++ = (WebRtc_UWord8) (streamdata->streamval >> 24);
 
       if(stream_ptr > maxStreamPtr)
       {
@@ -169,20 +169,20 @@ int WebRtcIsac_EncLogisticMulti2(
 
 
 int WebRtcIsac_DecLogisticMulti2(
-    int16_t *dataQ7,       /* output: data vector */
+    WebRtc_Word16 *dataQ7,       /* output: data vector */
     Bitstr *streamdata,      /* in-/output struct containing bitstream */
-    const uint16_t *envQ8, /* input: side info vector defining the width of the pdf */
-    const int16_t *ditherQ7,/* input: dither vector */
+    const WebRtc_UWord16 *envQ8, /* input: side info vector defining the width of the pdf */
+    const WebRtc_Word16 *ditherQ7,/* input: dither vector */
     const int N,         /* input: data vector length */
-    const int16_t isSWB12kHz)
+    const WebRtc_Word16 isSWB12kHz)
 {
-  uint32_t    W_lower, W_upper;
-  uint32_t    W_tmp;
-  uint32_t    W_upper_LSB, W_upper_MSB;
-  uint32_t    streamval;
-  const uint8_t *stream_ptr;
-  uint32_t    cdf_tmp;
-  int16_t     candQ7;
+  WebRtc_UWord32    W_lower, W_upper;
+  WebRtc_UWord32    W_tmp;
+  WebRtc_UWord32    W_upper_LSB, W_upper_MSB;
+  WebRtc_UWord32    streamval;
+  const WebRtc_UWord8 *stream_ptr;
+  WebRtc_UWord32    cdf_tmp;
+  WebRtc_Word16     candQ7;
   int             k;
 
   stream_ptr = streamdata->stream + streamdata->stream_index;

@@ -18,7 +18,7 @@
  */
 int WebRtcIsac_EncTerminate(Bitstr *streamdata) /* in-/output struct containing bitstream */
 {
-  uint8_t *stream_ptr;
+  WebRtc_UWord8 *stream_ptr;
 
 
   /* point to the right place in the stream buffer */
@@ -37,7 +37,7 @@ int WebRtcIsac_EncTerminate(Bitstr *streamdata) /* in-/output struct containing 
       stream_ptr = streamdata->stream + streamdata->stream_index;
     }
     /* write remaining data to bitstream */
-    *stream_ptr++ = (uint8_t) (streamdata->streamval >> 24);
+    *stream_ptr++ = (WebRtc_UWord8) (streamdata->streamval >> 24);
   }
   else
   {
@@ -51,8 +51,8 @@ int WebRtcIsac_EncTerminate(Bitstr *streamdata) /* in-/output struct containing 
       stream_ptr = streamdata->stream + streamdata->stream_index;
     }
     /* write remaining data to bitstream */
-    *stream_ptr++ = (uint8_t) (streamdata->streamval >> 24);
-    *stream_ptr++ = (uint8_t) ((streamdata->streamval >> 16) & 0x00FF);
+    *stream_ptr++ = (WebRtc_UWord8) (streamdata->streamval >> 24);
+    *stream_ptr++ = (WebRtc_UWord8) ((streamdata->streamval >> 16) & 0x00FF);
   }
 
   /* calculate stream length */

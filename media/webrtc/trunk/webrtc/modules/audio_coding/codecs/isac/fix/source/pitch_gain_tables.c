@@ -21,7 +21,7 @@
 /********************* Pitch Filter Gain Coefficient Tables ************************/
 
 /* cdf for quantized pitch filter gains */
-const uint16_t WebRtcIsacfix_kPitchGainCdf[255] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchGainCdf[255] = {
   0,  2,  4,  6,  64,  901,  903,  905,  16954,  16956,
   16961,  17360,  17362,  17364,  17366,  17368,  17370,  17372,  17374,  17411,
   17514,  17516,  17583,  18790,  18796,  18802,  20760,  20777,  20782,  21722,
@@ -51,25 +51,25 @@ const uint16_t WebRtcIsacfix_kPitchGainCdf[255] = {
 };
 
 /* index limits and ranges */
-const int16_t WebRtcIsacfix_kLowerlimiGain[3] = {
+const WebRtc_Word16 WebRtcIsacfix_kLowerlimiGain[3] = {
   -7, -2, -1
 };
 
-const int16_t WebRtcIsacfix_kUpperlimitGain[3] = {
+const WebRtc_Word16 WebRtcIsacfix_kUpperlimitGain[3] = {
   0,  3,  1
 };
 
-const uint16_t WebRtcIsacfix_kMultsGain[2] = {
+const WebRtc_UWord16 WebRtcIsacfix_kMultsGain[2] = {
   18,  3
 };
 
 /* size of cdf table */
-const uint16_t WebRtcIsacfix_kCdfTableSizeGain[1] = {
+const WebRtc_UWord16 WebRtcIsacfix_kCdfTableSizeGain[1] = {
   256
 };
 
 /* mean values of pitch filter gains in FIXED point Q12 */
-const int16_t WebRtcIsacfix_kPitchGain1[144] = {
+const WebRtc_Word16 WebRtcIsacfix_kPitchGain1[144] = {
   843, 1092, 1336, 1222, 1405, 1656, 1500, 1815, 1843, 1838, 1839,
   1843, 1843, 1843, 1843, 1843,   1843, 1843, 814, 846, 1092, 1013,
   1174, 1383, 1391, 1511, 1584, 1734, 1753, 1843, 1843, 1843,   1843,
@@ -86,7 +86,7 @@ const int16_t WebRtcIsacfix_kPitchGain1[144] = {
   1265
 };
 
-const int16_t WebRtcIsacfix_kPitchGain2[144] = {
+const WebRtc_Word16 WebRtcIsacfix_kPitchGain2[144] = {
   1760, 1525, 1285, 1747, 1671, 1393, 1843, 1826, 1555, 1843, 1784,
   1606, 1843, 1843, 1711, 1843,   1843, 1814, 1389, 1275, 1040, 1564,
   1414, 1252, 1610, 1495, 1343, 1753, 1592, 1405, 1804, 1720,   1475,
@@ -103,7 +103,7 @@ const int16_t WebRtcIsacfix_kPitchGain2[144] = {
   87
 };
 
-const int16_t WebRtcIsacfix_kPitchGain3[144] = {
+const WebRtc_Word16 WebRtcIsacfix_kPitchGain3[144] = {
   1843, 1843, 1711, 1843, 1818, 1606, 1843, 1827, 1511, 1814, 1639,
   1393, 1760, 1525, 1285, 1656,   1419, 1176, 1835, 1718, 1475, 1841,
   1650, 1387, 1648, 1498, 1287, 1600, 1411, 1176, 1522, 1299,   1040,
@@ -121,7 +121,7 @@ const int16_t WebRtcIsacfix_kPitchGain3[144] = {
 };
 
 
-const int16_t WebRtcIsacfix_kPitchGain4[144] = {
+const WebRtc_Word16 WebRtcIsacfix_kPitchGain4[144] = {
   1843, 1843, 1843, 1843, 1841, 1843, 1500, 1821, 1843, 1222, 1434,
   1656, 843, 1092, 1336, 504,    757, 1007, 1843, 1843, 1843, 1838,
   1791, 1843, 1265, 1505, 1599, 965, 1219, 1425, 730, 821,    1092,
@@ -141,7 +141,7 @@ const int16_t WebRtcIsacfix_kPitchGain4[144] = {
 
 
 /* transform matrix in Q12*/
-const int16_t WebRtcIsacfix_kTransform[4][4] = {
+const WebRtc_Word16 WebRtcIsacfix_kTransform[4][4] = {
   { -2048, -2048, -2048, -2048 },
   {  2748,   916,  -916, -2748 },
   {  2048, -2048, -2048,  2048 },

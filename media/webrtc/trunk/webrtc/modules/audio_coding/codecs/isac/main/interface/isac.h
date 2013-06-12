@@ -39,7 +39,7 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_AssignSize(
+  WebRtc_Word16 WebRtcIsac_AssignSize(
       int* sizeinbytes);
 
 
@@ -58,7 +58,7 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_Assign(
+  WebRtc_Word16 WebRtcIsac_Assign(
       ISACStruct** ISAC_main_inst,
       void*        ISAC_inst_Addr);
 
@@ -76,7 +76,7 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_Create(
+  WebRtc_Word16 WebRtcIsac_Create(
       ISACStruct** ISAC_main_inst);
 
 
@@ -92,7 +92,7 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_Free(
+  WebRtc_Word16 WebRtcIsac_Free(
       ISACStruct* ISAC_main_inst);
 
 
@@ -115,9 +115,9 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_EncoderInit(
+  WebRtc_Word16 WebRtcIsac_EncoderInit(
       ISACStruct* ISAC_main_inst,
-      int16_t CodingMode);
+      WebRtc_Word16 CodingMode);
 
 
   /******************************************************************************
@@ -144,10 +144,10 @@ extern "C" {
    *                            : -1 - Error
    */
 
-  int16_t WebRtcIsac_Encode(
+  WebRtc_Word16 WebRtcIsac_Encode(
       ISACStruct*        ISAC_main_inst,
-      const int16_t* speechIn,
-      int16_t*       encoded);
+      const WebRtc_Word16* speechIn,
+      WebRtc_Word16*       encoded);
 
 
   /******************************************************************************
@@ -163,7 +163,7 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_DecoderInit(
+  WebRtc_Word16 WebRtcIsac_DecoderInit(
       ISACStruct* ISAC_main_inst);
 
 
@@ -185,13 +185,13 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_UpdateBwEstimate(
+  WebRtc_Word16 WebRtcIsac_UpdateBwEstimate(
       ISACStruct*         ISAC_main_inst,
-      const uint16_t* encoded,
-      int32_t         packet_size,
-      uint16_t        rtp_seq_number,
-      uint32_t        send_ts,
-      uint32_t        arr_ts);
+      const WebRtc_UWord16* encoded,
+      WebRtc_Word32         packet_size,
+      WebRtc_UWord16        rtp_seq_number,
+      WebRtc_UWord32        send_ts,
+      WebRtc_UWord32        arr_ts);
 
 
   /******************************************************************************
@@ -214,12 +214,12 @@ extern "C" {
    *                              -1 - Error.
    */
 
-  int16_t WebRtcIsac_Decode(
+  WebRtc_Word16 WebRtcIsac_Decode(
       ISACStruct*           ISAC_main_inst,
-      const uint16_t* encoded,
-      int16_t         len,
-      int16_t*        decoded,
-      int16_t*        speechType);
+      const WebRtc_UWord16* encoded,
+      WebRtc_Word16         len,
+      WebRtc_Word16*        decoded,
+      WebRtc_Word16*        speechType);
 
 
   /******************************************************************************
@@ -241,10 +241,10 @@ extern "C" {
    *                              -1 - Error
    */
 
-  int16_t WebRtcIsac_DecodePlc(
+  WebRtc_Word16 WebRtcIsac_DecodePlc(
       ISACStruct*  ISAC_main_inst,
-      int16_t* decoded,
-      int16_t  noOfLostFrames);
+      WebRtc_Word16* decoded,
+      WebRtc_Word16  noOfLostFrames);
 
 
   /******************************************************************************
@@ -266,10 +266,10 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_Control(
+  WebRtc_Word16 WebRtcIsac_Control(
       ISACStruct*   ISAC_main_inst,
-      int32_t rate,
-      int16_t framesize);
+      WebRtc_Word32 rate,
+      WebRtc_Word16 framesize);
 
 
   /******************************************************************************
@@ -297,11 +297,11 @@ extern "C" {
    *                             -1 - Error
    */
 
-  int16_t WebRtcIsac_ControlBwe(
+  WebRtc_Word16 WebRtcIsac_ControlBwe(
       ISACStruct* ISAC_main_inst,
-      int32_t rateBPS,
-      int16_t frameSizeMs,
-      int16_t enforceFrameSize);
+      WebRtc_Word32 rateBPS,
+      WebRtc_Word16 frameSizeMs,
+      WebRtc_Word16 enforceFrameSize);
 
 
   /******************************************************************************
@@ -317,10 +317,10 @@ extern "C" {
    *
    */
 
-  int16_t WebRtcIsac_ReadFrameLen(
+  WebRtc_Word16 WebRtcIsac_ReadFrameLen(
       ISACStruct*          ISAC_main_inst,
-      const int16_t* encoded,
-      int16_t*       frameLength);
+      const WebRtc_Word16* encoded,
+      WebRtc_Word16*       frameLength);
 
 
   /******************************************************************************
@@ -351,7 +351,7 @@ extern "C" {
    * Return value               : Error code
    */
 
-  int16_t WebRtcIsac_GetErrorCode(
+  WebRtc_Word16 WebRtcIsac_GetErrorCode(
       ISACStruct* ISAC_main_inst);
 
 
@@ -379,9 +379,9 @@ extern "C" {
    *                               0 bit-rates computed correctly.
    */
 
-  int16_t WebRtcIsac_GetUplinkBw(
+  WebRtc_Word16 WebRtcIsac_GetUplinkBw(
       ISACStruct*    ISAC_main_inst,
-      int32_t* bottleneck);
+      WebRtc_Word32* bottleneck);
 
 
   /******************************************************************************
@@ -419,9 +419,9 @@ extern "C" {
    *                             -1 if error happens
    */
 
-  int16_t WebRtcIsac_SetMaxPayloadSize(
+  WebRtc_Word16 WebRtcIsac_SetMaxPayloadSize(
       ISACStruct* ISAC_main_inst,
-      int16_t maxPayloadBytes);
+      WebRtc_Word16 maxPayloadBytes);
 
 
   /******************************************************************************
@@ -463,9 +463,9 @@ extern "C" {
    *                             -1 if error happens
    */
 
-  int16_t WebRtcIsac_SetMaxRate(
+  WebRtc_Word16 WebRtcIsac_SetMaxRate(
       ISACStruct* ISAC_main_inst,
-      int32_t maxRate);
+      WebRtc_Word32 maxRate);
 
 
   /******************************************************************************
@@ -479,7 +479,7 @@ extern "C" {
    *
    */
 
-  uint16_t WebRtcIsac_DecSampRate(ISACStruct* ISAC_main_inst);
+  WebRtc_UWord16 WebRtcIsac_DecSampRate(ISACStruct* ISAC_main_inst);
 
 
   /******************************************************************************
@@ -492,7 +492,7 @@ extern "C" {
    *
    */
 
-  uint16_t WebRtcIsac_EncSampRate(ISACStruct* ISAC_main_inst);
+  WebRtc_UWord16 WebRtcIsac_EncSampRate(ISACStruct* ISAC_main_inst);
 
 
   /******************************************************************************
@@ -509,8 +509,8 @@ extern "C" {
    *                             -1 if failed.
    */
 
-  int16_t WebRtcIsac_SetDecSampRate(ISACStruct* ISAC_main_inst,
-                                          uint16_t samp_rate_hz);
+  WebRtc_Word16 WebRtcIsac_SetDecSampRate(ISACStruct* ISAC_main_inst,
+                                          WebRtc_UWord16 samp_rate_hz);
 
 
   /******************************************************************************
@@ -529,8 +529,8 @@ extern "C" {
    *                             -1 if failed.
    */
 
-  int16_t WebRtcIsac_SetEncSampRate(ISACStruct* ISAC_main_inst,
-                                          uint16_t sample_rate_hz);
+  WebRtc_Word16 WebRtcIsac_SetEncSampRate(ISACStruct* ISAC_main_inst,
+                                          WebRtc_UWord16 sample_rate_hz);
 
 
 
@@ -557,7 +557,7 @@ extern "C" {
    *                              i.e. 10000 to 56000.
    *        - isRCU                       : if the new bit-stream is an RCU stream.
    *                              Note that the rate parameter always indicates
-   *                              the target rate of the main payload, regardless
+   *                              the target rate of the main paylaod, regardless
    *                              of 'isRCU' value.
    *
    * Output:
@@ -569,13 +569,13 @@ extern "C" {
    *                                 the struct since it is only allowed to read
    *                                 the struct.
    */
-  int16_t WebRtcIsac_GetNewBitStream(
+  WebRtc_Word16 WebRtcIsac_GetNewBitStream(
       ISACStruct*    ISAC_main_inst,
-      int16_t  bweIndex,
-      int16_t  jitterInfo,
-      int32_t  rate,
-      int16_t* encoded,
-      int16_t  isRCU);
+      WebRtc_Word16  bweIndex,
+      WebRtc_Word16  jitterInfo,
+      WebRtc_Word32  rate,
+      WebRtc_Word16* encoded,
+      WebRtc_Word16  isRCU);
 
 
 
@@ -593,10 +593,10 @@ extern "C" {
    *
    */
 
-  int16_t WebRtcIsac_GetDownLinkBwIndex(
+  WebRtc_Word16 WebRtcIsac_GetDownLinkBwIndex(
       ISACStruct*  ISAC_main_inst,
-      int16_t* bweIndex,
-      int16_t* jitterInfo);
+      WebRtc_Word16* bweIndex,
+      WebRtc_Word16* jitterInfo);
 
 
   /****************************************************************************
@@ -611,9 +611,9 @@ extern "C" {
    *
    */
 
-  int16_t WebRtcIsac_UpdateUplinkBw(
+  WebRtc_Word16 WebRtcIsac_UpdateUplinkBw(
       ISACStruct* ISAC_main_inst,
-      int16_t bweIndex);
+      WebRtc_Word16 bweIndex);
 
 
   /****************************************************************************
@@ -630,9 +630,9 @@ extern "C" {
    *
    */
 
-  int16_t WebRtcIsac_ReadBwIndex(
-      const int16_t* encoded,
-      int16_t*       bweIndex);
+  WebRtc_Word16 WebRtcIsac_ReadBwIndex(
+      const WebRtc_Word16* encoded,
+      WebRtc_Word16*       bweIndex);
 
 
 
@@ -652,7 +652,7 @@ extern "C" {
    *
    */
 
-  int16_t WebRtcIsac_GetNewFrameLen(
+  WebRtc_Word16 WebRtcIsac_GetNewFrameLen(
       ISACStruct* ISAC_main_inst);
 
 
@@ -677,9 +677,9 @@ extern "C" {
    *
    *
    */
-  int16_t WebRtcIsac_GetRedPayload(
+  WebRtc_Word16 WebRtcIsac_GetRedPayload(
       ISACStruct*    ISAC_main_inst,
-      int16_t* encoded);
+      WebRtc_Word16* encoded);
 
 
   /****************************************************************************
@@ -701,12 +701,12 @@ extern "C" {
    * Return value              : >0 - number of samples in decoded vector
    *                             -1 - Error
    */
-  int16_t WebRtcIsac_DecodeRcu(
+  WebRtc_Word16 WebRtcIsac_DecodeRcu(
       ISACStruct*           ISAC_main_inst,
-      const uint16_t* encoded,
-      int16_t         len,
-      int16_t*        decoded,
-      int16_t*        speechType);
+      const WebRtc_UWord16* encoded,
+      WebRtc_Word16         len,
+      WebRtc_Word16*        decoded,
+      WebRtc_Word16*        speechType);
 
 
 #if defined(__cplusplus)
