@@ -149,7 +149,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
                 suggestionItem = mSuggestionView.getChildAt(i + 1);
                 suggestionItem.setVisibility(View.VISIBLE);
             } else {
-                suggestionItem = mInflater.inflate(R.layout.awesomebar_suggestion_item, null);
+                suggestionItem = mInflater.inflate(R.layout.suggestion_item, null);
 
                 suggestionItem.setOnClickListener(mClickListener);
                 suggestionItem.setOnLongClickListener(mLongClickListener);
