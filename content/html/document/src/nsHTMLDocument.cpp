@@ -2310,8 +2310,7 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   nsISupports* supp = ResolveName(aName, &cache);
   if (!supp) {
     aFound = false;
-    if (GetCompatibilityMode() == eCompatibility_NavQuirks &&
-        aName.EqualsLiteral("all")) {
+    if (aName.EqualsLiteral("all")) {
       JS::Rooted<JSObject*> obj(cx, GetWrapper());
       rv = nsHTMLDocumentSH::TryResolveAll(cx, this, obj);
     }
