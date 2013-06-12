@@ -865,7 +865,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
 nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
-bool nsDOMClassInfo::sDisableDocumentAllSupport = false;
 
 
 jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
@@ -916,66 +915,6 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
   } while (proto);
 
   sObjectClass = js::GetObjectJSClass(obj);
-}
-
-static void
-PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
-{
-  nsCOMPtr<nsIStringBundleService> stringService =
-    mozilla::services::GetStringBundleService();
-  if (!stringService) {
-    return;
-  }
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  stringService->CreateBundle(kDOMStringBundleURL, getter_AddRefs(bundle));
-  if (!bundle) {
-    return;
-  }
-
-  nsXPIDLString msg;
-  bundle->GetStringFromName(NS_ConvertASCIItoUTF16(stringBundleProperty).get(),
-                            getter_Copies(msg));
-
-  if (msg.IsEmpty()) {
-    NS_ERROR("Failed to get strings from dom.properties!");
-    return;
-  }
-
-  nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  if (!consoleService) {
-    return;
-  }
-
-  nsCOMPtr<nsIScriptError> scriptError =
-    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-  if (!scriptError) {
-    return;
-  }
-
-  unsigned lineno = 0;
-  JSScript *script;
-  nsAutoString sourcefile;
-
-  if (JS_DescribeScriptedCaller(cx, &script, &lineno)) {
-    if (const char *filename = ::JS_GetScriptFilename(cx, script)) {
-      CopyUTF8toUTF16(nsDependentCString(filename), sourcefile);
-    }
-  }
-
-  nsresult rv = scriptError->InitWithWindowID(msg,
-                                              sourcefile,
-                                              EmptyString(),
-                                              lineno,
-                                              0, // column for error is not available
-                                              nsIScriptError::warningFlag,
-                                              "DOM:HTML",
-                                              nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
-
-  if (NS_SUCCEEDED(rv)) {
-    consoleService->LogMessage(scriptError);
-  }
 }
 
 static inline JSString *
@@ -2035,9 +1974,6 @@ nsDOMClassInfo::Init()
   }
 
   RegisterExternalClasses();
-
-  sDisableDocumentAllSupport =
-    Preferences::GetBool("browser.dom.document.all.disabled");
 
   // Register new DOM bindings
   mozilla::dom::Register(nameSpaceManager);
@@ -6099,9 +6035,6 @@ ResolveAll(JSContext* cx, nsIDocument* doc, JS::Handle<JSObject*> obj)
   // If we don't already have a helper and "all" isn't already defined on
   // our prototype, create a helper.
   if (!helper && !hasAll) {
-    // Print a warning so developers can stop using document.all
-    PrintWarningOnConsole(cx, "DocumentAllUsed");
-
     if (!::JS_GetPrototype(cx, obj, proto.address())) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -6128,9 +6061,6 @@ nsresult
 nsHTMLDocumentSH::TryResolveAll(JSContext* cx, nsHTMLDocument* doc,
                                 JS::Handle<JSObject*> obj)
 {
-  if (nsDOMClassInfo::sDisableDocumentAllSupport) {
-    return NS_OK;
-  }
   JSAutoCompartment ac(cx, obj);
   return ResolveAll(cx, doc, obj);
 }

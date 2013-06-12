@@ -189,7 +189,6 @@ protected:
   static nsresult DefineStaticJSVals(JSContext *cx);
 
   static bool sIsInitialized;
-  static bool sDisableDocumentAllSupport;
 
 public:
   static jsid sParent_id;
