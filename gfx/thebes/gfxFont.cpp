@@ -963,14 +963,13 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
             PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
 
             if (MOZ_UNLIKELY(log)) {
-                uint32_t charRange = gfxFontUtils::CharRangeBit(aMatchData->mCh);
                 uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
                 uint32_t script = GetScriptCode(aMatchData->mCh);
                 PR_LOG(log, PR_LOG_DEBUG,\
                        ("(textrun-systemfallback-fonts) char: u+%6.6x "
-                        "char-range: %d unicode-range: %d script: %d match: [%s]\n",
+                        "unicode-range: %d script: %d match: [%s]\n",
                         aMatchData->mCh,
-                        charRange, unicodeRange, script,
+                        unicodeRange, script,
                         NS_ConvertUTF16toUTF8(fe->Name()).get()));
             }
 #endif
