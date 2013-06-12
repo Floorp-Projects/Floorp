@@ -27,8 +27,7 @@ class WEBRTC_DLLEXPORT ViEExternalCodec {
 
   virtual int RegisterExternalSendCodec(const int video_channel,
                                         const unsigned char pl_type,
-                                        VideoEncoder* encoder,
-                                        bool internal_source) = 0;
+                                        VideoEncoder* encoder) = 0;
 
   virtual int DeRegisterExternalSendCodec(const int video_channel,
                                           const unsigned char pl_type) = 0;

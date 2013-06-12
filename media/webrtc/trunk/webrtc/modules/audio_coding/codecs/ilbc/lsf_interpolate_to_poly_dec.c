@@ -25,14 +25,14 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_LspInterpolate2PolyDec(
-    int16_t *a,   /* (o) lpc coefficients Q12 */
-    int16_t *lsf1,  /* (i) first set of lsf coefficients Q13 */
-    int16_t *lsf2,  /* (i) second set of lsf coefficients Q13 */
-    int16_t coef,  /* (i) weighting coefficient to use between
+    WebRtc_Word16 *a,   /* (o) lpc coefficients Q12 */
+    WebRtc_Word16 *lsf1,  /* (i) first set of lsf coefficients Q13 */
+    WebRtc_Word16 *lsf2,  /* (i) second set of lsf coefficients Q13 */
+    WebRtc_Word16 coef,  /* (i) weighting coefficient to use between
                                    lsf1 and lsf2 Q14 */
-    int16_t length  /* (i) length of coefficient vectors */
+    WebRtc_Word16 length  /* (i) length of coefficient vectors */
                                           ){
-  int16_t lsftmp[LPC_FILTERORDER];
+  WebRtc_Word16 lsftmp[LPC_FILTERORDER];
 
   /* interpolate LSF */
   WebRtcIlbcfix_Interpolate(lsftmp, lsf1, lsf2, coef, length);

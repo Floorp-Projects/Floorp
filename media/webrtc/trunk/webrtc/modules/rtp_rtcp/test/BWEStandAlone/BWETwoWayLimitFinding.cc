@@ -38,7 +38,7 @@ BWETwoWayLimitFinding::~BWETwoWayLimitFinding()
 }
 
 
-int BWETwoWayLimitFinding::Init(std::string ip, uint16_t port)
+int BWETwoWayLimitFinding::Init(std::string ip, WebRtc_UWord16 port)
 {
     // create the load generator object
     const int rtpSampleRate = 90000;
@@ -64,7 +64,7 @@ bool BWETwoWayLimitFinding::StoppingCriterionMaster()
         _forwLimitReached = true;
     }
 
-    int32_t revRateKbps = _sendrec->ReceiveBitrateKbps();
+    WebRtc_Word32 revRateKbps = _sendrec->ReceiveBitrateKbps();
     if (revRateKbps > (0.95 * _incomingAvailBWkbps))
     {
         _revLimitReached = true;

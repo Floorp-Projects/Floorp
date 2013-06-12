@@ -27,62 +27,60 @@ class ModuleRtpRtcpImpl;
 class RTCPReceiver : public TMMBRHelp
 {
 public:
-    RTCPReceiver(const int32_t id, Clock* clock,
+    RTCPReceiver(const WebRtc_Word32 id, RtpRtcpClock* clock,
                  ModuleRtpRtcpImpl* owner);
     virtual ~RTCPReceiver();
 
-    void ChangeUniqueId(const int32_t id);
+    void ChangeUniqueId(const WebRtc_Word32 id);
 
     RTCPMethod Status() const;
-    int32_t SetRTCPStatus(const RTCPMethod method);
+    WebRtc_Word32 SetRTCPStatus(const RTCPMethod method);
 
-    int64_t LastReceived();
-    int64_t LastReceivedReceiverReport() const;
+    WebRtc_Word64 LastReceived();
 
-    void SetSSRC( const uint32_t ssrc);
-    void SetRelaySSRC( const uint32_t ssrc);
-    int32_t SetRemoteSSRC( const uint32_t ssrc);
+    void SetSSRC( const WebRtc_UWord32 ssrc);
+    void SetRelaySSRC( const WebRtc_UWord32 ssrc);
+    WebRtc_Word32 SetRemoteSSRC( const WebRtc_UWord32 ssrc);
 
-    uint32_t RelaySSRC() const;
+    WebRtc_UWord32 RelaySSRC() const;
 
     void RegisterRtcpObservers(RtcpIntraFrameObserver* intra_frame_callback,
                                RtcpBandwidthObserver* bandwidth_callback,
                                RtcpFeedback* feedback_callback);
 
-    int32_t IncomingRTCPPacket(
-        RTCPHelp::RTCPPacketInformation& rtcpPacketInformation,
-        RTCPUtility::RTCPParserV2 *rtcpParser);
+    WebRtc_Word32 IncomingRTCPPacket(RTCPHelp::RTCPPacketInformation& rtcpPacketInformation,
+                                   RTCPUtility::RTCPParserV2 *rtcpParser);
 
     void TriggerCallbacksFromRTCPPacket(RTCPHelp::RTCPPacketInformation& rtcpPacketInformation);
 
     // get received cname
-    int32_t CNAME(const uint32_t remoteSSRC,
-                  char cName[RTCP_CNAME_SIZE]) const;
+    WebRtc_Word32 CNAME(const WebRtc_UWord32 remoteSSRC,
+                        char cName[RTCP_CNAME_SIZE]) const;
 
     // get received NTP
-    int32_t NTP(uint32_t *ReceivedNTPsecs,
-                uint32_t *ReceivedNTPfrac,
-                uint32_t *RTCPArrivalTimeSecs,
-                uint32_t *RTCPArrivalTimeFrac,
-                uint32_t *rtcp_timestamp) const;
+    WebRtc_Word32 NTP(WebRtc_UWord32 *ReceivedNTPsecs,
+                      WebRtc_UWord32 *ReceivedNTPfrac,
+                      WebRtc_UWord32 *RTCPArrivalTimeSecs,
+                      WebRtc_UWord32 *RTCPArrivalTimeFrac,
+                      WebRtc_UWord32 *rtcp_timestamp) const;
 
     // get rtt
-    int32_t RTT(const uint32_t remoteSSRC,
-                uint16_t* RTT,
-                uint16_t* avgRTT,
-                uint16_t* minRTT,
-                uint16_t* maxRTT) const;
+    WebRtc_Word32 RTT(const WebRtc_UWord32 remoteSSRC,
+                      WebRtc_UWord16* RTT,
+                      WebRtc_UWord16* avgRTT,
+                      WebRtc_UWord16* minRTT,
+                      WebRtc_UWord16* maxRTT) const;
 
-    uint16_t RTT() const;
+    WebRtc_UWord16 RTT() const;
 
-    int SetRTT(uint16_t rtt);
+    int SetRTT(WebRtc_UWord16 rtt);
 
-    int32_t ResetRTT(const uint32_t remoteSSRC);
+    WebRtc_Word32 ResetRTT(const WebRtc_UWord32 remoteSSRC);
 
-    int32_t SenderInfoReceived(RTCPSenderInfo* senderInfo) const;
+    WebRtc_Word32 SenderInfoReceived(RTCPSenderInfo* senderInfo) const;
 
     // get statistics
-    int32_t StatisticsReceived(
+    WebRtc_Word32 StatisticsReceived(
         std::vector<RTCPReportBlock>* receiveBlocks) const;
 
     // Returns true if we haven't received an RTCP RR for several RTCP
@@ -96,28 +94,28 @@ public:
     bool RtcpRrSequenceNumberTimeout(int64_t rtcp_interval_ms);
 
     // Get TMMBR
-    int32_t TMMBRReceived(const uint32_t size,
-                          const uint32_t accNumCandidates,
-                          TMMBRSet* candidateSet) const;
+    WebRtc_Word32 TMMBRReceived(const WebRtc_UWord32 size,
+                                const WebRtc_UWord32 accNumCandidates,
+                                TMMBRSet* candidateSet) const;
 
     bool UpdateRTCPReceiveInformationTimers();
 
-    int32_t BoundingSet(bool &tmmbrOwner, TMMBRSet* boundingSetRec);
+    WebRtc_Word32 BoundingSet(bool &tmmbrOwner, TMMBRSet* boundingSetRec);
 
-    int32_t UpdateTMMBR();
+    WebRtc_Word32 UpdateTMMBR();
 
-    int32_t SetPacketTimeout(const uint32_t timeoutMS);
+    WebRtc_Word32 SetPacketTimeout(const WebRtc_UWord32 timeoutMS);
     void PacketTimeout();
 
 protected:
-    RTCPHelp::RTCPReportBlockInformation* CreateReportBlockInformation(const uint32_t remoteSSRC);
-    RTCPHelp::RTCPReportBlockInformation* GetReportBlockInformation(const uint32_t remoteSSRC) const;
+    RTCPHelp::RTCPReportBlockInformation* CreateReportBlockInformation(const WebRtc_UWord32 remoteSSRC);
+    RTCPHelp::RTCPReportBlockInformation* GetReportBlockInformation(const WebRtc_UWord32 remoteSSRC) const;
 
-    RTCPUtility::RTCPCnameInformation* CreateCnameInformation(const uint32_t remoteSSRC);
-    RTCPUtility::RTCPCnameInformation* GetCnameInformation(const uint32_t remoteSSRC) const;
+    RTCPUtility::RTCPCnameInformation* CreateCnameInformation(const WebRtc_UWord32 remoteSSRC);
+    RTCPUtility::RTCPCnameInformation* GetCnameInformation(const WebRtc_UWord32 remoteSSRC) const;
 
-    RTCPHelp::RTCPReceiveInformation* CreateReceiveInformation(const uint32_t remoteSSRC);
-    RTCPHelp::RTCPReceiveInformation* GetReceiveInformation(const uint32_t remoteSSRC);
+    RTCPHelp::RTCPReceiveInformation* CreateReceiveInformation(const WebRtc_UWord32 remoteSSRC);
+    RTCPHelp::RTCPReceiveInformation* GetReceiveInformation(const WebRtc_UWord32 remoteSSRC);
 
     void UpdateReceiveInformation( RTCPHelp::RTCPReceiveInformation& receiveInformation);
 
@@ -126,8 +124,8 @@ protected:
 
     void HandleReportBlock(const RTCPUtility::RTCPPacket& rtcpPacket,
                            RTCPHelp::RTCPPacketInformation& rtcpPacketInformation,
-                           const uint32_t remoteSSRC,
-                           const uint8_t numberOfReportBlocks);
+                           const WebRtc_UWord32 remoteSSRC,
+                           const WebRtc_UWord8 numberOfReportBlocks);
 
     void HandleSDES(RTCPUtility::RTCPParserV2& rtcpParser);
 
@@ -174,7 +172,7 @@ protected:
     void HandleTMMBRItem(RTCPHelp::RTCPReceiveInformation& receiveInfo,
                          const RTCPUtility::RTCPPacket& rtcpPacket,
                          RTCPHelp::RTCPPacketInformation& rtcpPacketInformation,
-                         const uint32_t senderSSRC);
+                         const WebRtc_UWord32 senderSSRC);
 
     void HandleTMMBN(RTCPUtility::RTCPParserV2& rtcpParser,
                      RTCPHelp::RTCPPacketInformation& rtcpPacketInformation);
@@ -199,12 +197,10 @@ protected:
                        RTCPHelp::RTCPPacketInformation& rtcpPacketInformation);
 
  private:
-  typedef std::map<uint32_t, RTCPHelp::RTCPReceiveInformation*>
-      ReceivedInfoMap;
-  int32_t           _id;
-  Clock*                  _clock;
+  WebRtc_Word32           _id;
+  RtpRtcpClock&           _clock;
   RTCPMethod              _method;
-  int64_t           _lastReceived;
+  WebRtc_Word64           _lastReceived;
   ModuleRtpRtcpImpl&      _rtpRtcp;
 
   CriticalSectionWrapper* _criticalSectionFeedbacks;
@@ -213,23 +209,24 @@ protected:
   RtcpIntraFrameObserver* _cbRtcpIntraFrameObserver;
 
   CriticalSectionWrapper* _criticalSectionRTCPReceiver;
-  uint32_t          _SSRC;
-  uint32_t          _remoteSSRC;
+  WebRtc_UWord32          _SSRC;
+  WebRtc_UWord32          _remoteSSRC;
 
   // Received send report
   RTCPSenderInfo _remoteSenderInfo;
   // when did we receive the last send report
-  uint32_t _lastReceivedSRNTPsecs;
-  uint32_t _lastReceivedSRNTPfrac;
+  WebRtc_UWord32 _lastReceivedSRNTPsecs;
+  WebRtc_UWord32 _lastReceivedSRNTPfrac;
 
   // Received report blocks.
-  std::map<uint32_t, RTCPHelp::RTCPReportBlockInformation*>
+  std::map<WebRtc_UWord32, RTCPHelp::RTCPReportBlockInformation*>
       _receivedReportBlockMap;
-  ReceivedInfoMap _receivedInfoMap;
-  std::map<uint32_t, RTCPUtility::RTCPCnameInformation*>
+  std::map<WebRtc_UWord32, RTCPHelp::RTCPReceiveInformation*>
+      _receivedInfoMap;
+  std::map<WebRtc_UWord32, RTCPUtility::RTCPCnameInformation*>
       _receivedCnameMap;
 
-  uint32_t            _packetTimeOutMS;
+  WebRtc_UWord32            _packetTimeOutMS;
 
   // The last time we received an RTCP RR.
   int64_t _lastReceivedRrMs;
@@ -240,7 +237,7 @@ protected:
 
   // Externally set RTT. This value can only be used if there are no valid
   // RTT estimates.
-  uint16_t _rtt;
+  WebRtc_UWord16 _rtt;
 
 };
 } // namespace webrtc

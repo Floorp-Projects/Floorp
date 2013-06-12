@@ -30,16 +30,16 @@ class NETEQTEST_NetEQClass
 public:
     NETEQTEST_NetEQClass();
     NETEQTEST_NetEQClass(enum WebRtcNetEQDecoder *usedCodec, int noOfCodecs, 
-        uint16_t fs = 8000, WebRtcNetEQNetworkType nwType = kTCPLargeJitter);
+        WebRtc_UWord16 fs = 8000, WebRtcNetEQNetworkType nwType = kTCPLargeJitter);
     ~NETEQTEST_NetEQClass();
 
     int assign();
-    int init(uint16_t fs = 8000);
+    int init(WebRtc_UWord16 fs = 8000);
     int assignBuffer(enum WebRtcNetEQDecoder *usedCodec, int noOfCodecs, WebRtcNetEQNetworkType nwType = kTCPLargeJitter);
     int loadCodec(WebRtcNetEQ_CodecDef & codecInst);
     int recIn(NETEQTEST_RTPpacket & rtp);
-    int16_t recOut(int16_t *outData, void *msInfo = NULL, enum WebRtcNetEQOutputType *outputType = NULL);
-    uint32_t getSpeechTimeStamp();
+    WebRtc_Word16 recOut(WebRtc_Word16 *outData, void *msInfo = NULL, enum WebRtcNetEQOutputType *outputType = NULL);
+    WebRtc_UWord32 getSpeechTimeStamp();
     WebRtcNetEQOutputType getOutputType();
 
     void * instance() { return (_inst); };
@@ -66,8 +66,8 @@ public:
 
 private:
     void *          _inst;
-    int8_t *    _instMem;
-    int8_t *    _bufferMem;
+    WebRtc_Word8 *    _instMem;
+    WebRtc_Word8 *    _bufferMem;
     bool            _preparseRTP;
     int             _fsmult;
     bool            _isMaster;

@@ -22,13 +22,13 @@
 #include "defines.h"
 
 void WebRtcIlbcfix_HpOutput(
-    int16_t *signal,     /* (i/o) signal vector */
-    int16_t *ba,      /* (i)   B- and A-coefficients (2:nd order)
+    WebRtc_Word16 *signal,     /* (i/o) signal vector */
+    WebRtc_Word16 *ba,      /* (i)   B- and A-coefficients (2:nd order)
                                {b[0] b[1] b[2] -a[1] -a[2]} a[0]
                                is assumed to be 1.0 */
-    int16_t *y,      /* (i/o) Filter state yhi[n-1] ylow[n-1]
+    WebRtc_Word16 *y,      /* (i/o) Filter state yhi[n-1] ylow[n-1]
                               yhi[n-2] ylow[n-2] */
-    int16_t *x,      /* (i/o) Filter state x[n-1] x[n-2] */
-    int16_t len);      /* (i)   Number of samples to filter */
+    WebRtc_Word16 *x,      /* (i/o) Filter state x[n-1] x[n-2] */
+    WebRtc_Word16 len);      /* (i)   Number of samples to filter */
 
 #endif

@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "receiver_tests.h"
+#include "video_coding.h"
+#include "trace.h"
+#include "../source/event.h"
+#include "../source/internal_defines.h"
+#include "timing.h"
+#include "test_macros.h"
+#include "test_util.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
-
-#include "webrtc/modules/video_coding/main/interface/video_coding.h"
-#include "webrtc/modules/video_coding/main/source/internal_defines.h"
-#include "webrtc/modules/video_coding/main/source/timing.h"
-#include "webrtc/modules/video_coding/main/test/receiver_tests.h"
-#include "webrtc/modules/video_coding/main/test/test_macros.h"
-#include "webrtc/modules/video_coding/main/test/test_util.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/test/testsupport/fileutils.h"
 
 using namespace webrtc;
 
@@ -48,6 +48,11 @@ public:
 
 int ReceiverTimingTests(CmdArgs& args)
 {
+    // Make sure this test is never executed with simulated events.
+#if defined(EVENT_DEBUG)
+    return -1;
+#endif
+
     // Set up trace
     Trace::CreateTrace();
     Trace::SetTraceFile((test::OutputPath() + "receiverTestTrace.txt").c_str());
@@ -56,26 +61,26 @@ int ReceiverTimingTests(CmdArgs& args)
     // A static random seed
     srand(0);
 
-    Clock* clock = Clock::GetRealTimeClock();
-    VCMTiming timing(clock);
+    TickTimeBase clock;
+    VCMTiming timing(&clock);
     float clockInMs = 0.0;
-    uint32_t waitTime = 0;
-    uint32_t jitterDelayMs = 0;
-    uint32_t maxDecodeTimeMs = 0;
-    uint32_t timeStamp = 0;
+    WebRtc_UWord32 waitTime = 0;
+    WebRtc_UWord32 jitterDelayMs = 0;
+    WebRtc_UWord32 maxDecodeTimeMs = 0;
+    WebRtc_UWord32 timeStamp = 0;
 
-    timing.Reset(static_cast<int64_t>(clockInMs + 0.5));
+    timing.Reset(static_cast<WebRtc_Word64>(clockInMs + 0.5));
 
     timing.UpdateCurrentDelay(timeStamp);
 
-    timing.Reset(static_cast<int64_t>(clockInMs + 0.5));
+    timing.Reset(static_cast<WebRtc_Word64>(clockInMs + 0.5));
 
-    timing.IncomingTimestamp(timeStamp, static_cast<int64_t>(clockInMs + 0.5));
+    timing.IncomingTimestamp(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5));
     jitterDelayMs = 20;
     timing.SetRequiredDelay(jitterDelayMs);
     timing.UpdateCurrentDelay(timeStamp);
-    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5)),
-        static_cast<int64_t>(clockInMs + 0.5));
+    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5)),
+        static_cast<WebRtc_Word64>(clockInMs + 0.5));
     // First update initializes the render time. Since we have no decode delay
     // we get waitTime = renderTime - now - renderDelay = jitter
     TEST(waitTime == jitterDelayMs);
@@ -85,8 +90,8 @@ int ReceiverTimingTests(CmdArgs& args)
     clockInMs += 1000.0f;
     timing.SetRequiredDelay(jitterDelayMs);
     timing.UpdateCurrentDelay(timeStamp);
-    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5)),
-        static_cast<int64_t>(clockInMs + 0.5));
+    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5)),
+        static_cast<WebRtc_Word64>(clockInMs + 0.5));
     // Since we gradually increase the delay we only get
     // 100 ms every second.
     TEST(waitTime == jitterDelayMs - 10);
@@ -94,8 +99,8 @@ int ReceiverTimingTests(CmdArgs& args)
     timeStamp += 90000;
     clockInMs += 1000.0;
     timing.UpdateCurrentDelay(timeStamp);
-    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5)),
-        static_cast<int64_t>(clockInMs + 0.5));
+    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5)),
+        static_cast<WebRtc_Word64>(clockInMs + 0.5));
     TEST(waitTime == jitterDelayMs);
 
     // 300 incoming frames without jitter, verify that this gives the exact wait time
@@ -103,41 +108,41 @@ int ReceiverTimingTests(CmdArgs& args)
     {
         clockInMs += 1000.0f/30.0f;
         timeStamp += 3000;
-        timing.IncomingTimestamp(timeStamp, static_cast<int64_t>(clockInMs + 0.5));
+        timing.IncomingTimestamp(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5));
     }
     timing.UpdateCurrentDelay(timeStamp);
-    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5)),
-        static_cast<int64_t>(clockInMs + 0.5));
+    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5)),
+        static_cast<WebRtc_Word64>(clockInMs + 0.5));
     TEST(waitTime == jitterDelayMs);
 
     // Add decode time estimates
     for (int i=0; i < 10; i++)
     {
-        int64_t startTimeMs = static_cast<int64_t>(clockInMs + 0.5);
+        WebRtc_Word64 startTimeMs = static_cast<WebRtc_Word64>(clockInMs + 0.5);
         clockInMs += 10.0f;
-        timing.StopDecodeTimer(timeStamp, startTimeMs, static_cast<int64_t>(clockInMs + 0.5));
+        timing.StopDecodeTimer(timeStamp, startTimeMs, static_cast<WebRtc_Word64>(clockInMs + 0.5));
         timeStamp += 3000;
         clockInMs += 1000.0f/30.0f - 10.0f;
-        timing.IncomingTimestamp(timeStamp, static_cast<int64_t>(clockInMs + 0.5));
+        timing.IncomingTimestamp(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5));
     }
     maxDecodeTimeMs = 10;
     timing.SetRequiredDelay(jitterDelayMs);
     clockInMs += 1000.0f;
     timeStamp += 90000;
     timing.UpdateCurrentDelay(timeStamp);
-    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5)),
-        static_cast<int64_t>(clockInMs + 0.5));
+    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5)),
+        static_cast<WebRtc_Word64>(clockInMs + 0.5));
     TEST(waitTime == jitterDelayMs);
 
-    uint32_t totalDelay1 = timing.TargetVideoDelay();
-    uint32_t minTotalDelayMs = 200;
+    WebRtc_UWord32 totalDelay1 = timing.TargetVideoDelay();
+    WebRtc_UWord32 minTotalDelayMs = 200;
     timing.SetMinimumTotalDelay(minTotalDelayMs);
     clockInMs += 5000.0f;
     timeStamp += 5*90000;
     timing.UpdateCurrentDelay(timeStamp);
-    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5)),
-        static_cast<int64_t>(clockInMs + 0.5));
-    uint32_t totalDelay2 = timing.TargetVideoDelay();
+    waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5)),
+        static_cast<WebRtc_Word64>(clockInMs + 0.5));
+    WebRtc_UWord32 totalDelay2 = timing.TargetVideoDelay();
     // We should at least have minTotalDelayMs - decodeTime (10) - renderTime (10) to wait
     TEST(waitTime == minTotalDelayMs - maxDecodeTimeMs - 10);
     // The total video delay should not increase with the extra delay,
@@ -152,8 +157,8 @@ int ReceiverTimingTests(CmdArgs& args)
 
     // A sudden increase in timestamp of 2.1 seconds
     clockInMs += 1000.0f/30.0f;
-    timeStamp += static_cast<uint32_t>(2.1*90000 + 0.5);
-    int64_t ret = timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5));
+    timeStamp += static_cast<WebRtc_UWord32>(2.1*90000 + 0.5);
+    WebRtc_Word64 ret = timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5));
     TEST(ret == -1);
     timing.Reset();
 
@@ -165,9 +170,9 @@ int ReceiverTimingTests(CmdArgs& args)
     jitterDelayMs = 60;
     maxDecodeTimeMs = 10;
 
-    timeStamp = static_cast<uint32_t>(-10000); // To produce a wrap
+    timeStamp = static_cast<WebRtc_UWord32>(-10000); // To produce a wrap
     clockInMs = 10000.0f;
-    timing.Reset(static_cast<int64_t>(clockInMs + 0.5));
+    timing.Reset(static_cast<WebRtc_Word64>(clockInMs + 0.5));
 
     float noise = 0.0f;
     for (int i=0; i < 1400; i++)
@@ -190,23 +195,23 @@ int ReceiverTimingTests(CmdArgs& args)
             minTotalDelayMs = 0;
             timing.SetMinimumTotalDelay(minTotalDelayMs);
         }
-        int64_t startTimeMs = static_cast<int64_t>(clockInMs + 0.5);
+        WebRtc_Word64 startTimeMs = static_cast<WebRtc_Word64>(clockInMs + 0.5);
         noise = vcmFloatMin(vcmFloatMax(GaussDist::RandValue(0, 2), -10.0f), 30.0f);
         clockInMs += 10.0f;
-        timing.StopDecodeTimer(timeStamp, startTimeMs, static_cast<int64_t>(clockInMs + noise + 0.5));
+        timing.StopDecodeTimer(timeStamp, startTimeMs, static_cast<WebRtc_Word64>(clockInMs + noise + 0.5));
         timeStamp += 3000;
         clockInMs += 1000.0f/30.0f - 10.0f;
         noise = vcmFloatMin(vcmFloatMax(GaussDist::RandValue(0, 8), -15.0f), 15.0f);
-        timing.IncomingTimestamp(timeStamp, static_cast<int64_t>(clockInMs + noise + 0.5));
+        timing.IncomingTimestamp(timeStamp, static_cast<WebRtc_Word64>(clockInMs + noise + 0.5));
         timing.SetRequiredDelay(jitterDelayMs);
         timing.UpdateCurrentDelay(timeStamp);
-        waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5)),
-            static_cast<int64_t>(clockInMs + 0.5));
+        waitTime = timing.MaxWaitingTime(timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5)),
+            static_cast<WebRtc_Word64>(clockInMs + 0.5));
 
         WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding, -1,  "timeStamp=%u clock=%u maxWaitTime=%u", timeStamp,
-            static_cast<uint32_t>(clockInMs + 0.5), waitTime);
+            static_cast<WebRtc_UWord32>(clockInMs + 0.5), waitTime);
 
-        int64_t renderTimeMs = timing.RenderTimeMs(timeStamp, static_cast<int64_t>(clockInMs + 0.5));
+        WebRtc_Word64 renderTimeMs = timing.RenderTimeMs(timeStamp, static_cast<WebRtc_Word64>(clockInMs + 0.5));
 
         WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding, -1,
                    "timeStamp=%u renderTime=%u",

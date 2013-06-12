@@ -23,23 +23,23 @@
 /* header file for coding tables for the pitch filter side-info in the entropy coder */
 /********************* Pitch Filter Gain Coefficient Tables ************************/
 /* cdf for quantized pitch filter gains */
-extern const uint16_t WebRtcIsac_kQPitchGainCdf[255];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchGainCdf[255];
 
 /* index limits and ranges */
-extern const int16_t WebRtcIsac_kIndexLowerLimitGain[3];
+extern const WebRtc_Word16 WebRtcIsac_kIndexLowerLimitGain[3];
 
-extern const int16_t WebRtcIsac_kIndexUpperLimitGain[3];
-extern const uint16_t WebRtcIsac_kIndexMultsGain[2];
+extern const WebRtc_Word16 WebRtcIsac_kIndexUpperLimitGain[3];
+extern const WebRtc_UWord16 WebRtcIsac_kIndexMultsGain[2];
 
 /* mean values of pitch filter gains */
 //(Y)
-extern const int16_t WebRtcIsac_kQMeanGain1Q12[144];
-extern const int16_t WebRtcIsac_kQMeanGain2Q12[144];
-extern const int16_t WebRtcIsac_kQMeanGain3Q12[144];
-extern const int16_t WebRtcIsac_kQMeanGain4Q12[144];
+extern const WebRtc_Word16 WebRtcIsac_kQMeanGain1Q12[144];
+extern const WebRtc_Word16 WebRtcIsac_kQMeanGain2Q12[144];
+extern const WebRtc_Word16 WebRtcIsac_kQMeanGain3Q12[144];
+extern const WebRtc_Word16 WebRtcIsac_kQMeanGain4Q12[144];
 //(Y)
 
 /* size of cdf table */
-extern const uint16_t WebRtcIsac_kQCdfTableSizeGain[1];
+extern const WebRtc_UWord16 WebRtcIsac_kQCdfTableSizeGain[1];
 
 #endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_PITCH_GAIN_TABLES_H_ */

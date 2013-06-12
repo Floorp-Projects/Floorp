@@ -17,7 +17,6 @@ WEBRTC_LIBS = \
   $(call EXPAND_LIBNAME_PATH,vad,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_vad) \
   $(call EXPAND_LIBNAME_PATH,system_wrappers,$(DEPTH)/media/webrtc/trunk/webrtc/system_wrappers/source/system_wrappers_system_wrappers) \
   $(call EXPAND_LIBNAME_PATH,webrtc_video_coding,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_webrtc_video_coding) \
-  $(call EXPAND_LIBNAME_PATH,video_coding_utility,$(DEPTH)/media/webrtc/trunk/webrtc/modules/video_coding/utility/video_coding_utility_video_coding_utility) \
   $(call EXPAND_LIBNAME_PATH,webrtc_i420,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_webrtc_i420) \
   $(call EXPAND_LIBNAME_PATH,webrtc_vp8,$(DEPTH)/media/webrtc/trunk/webrtc/modules/video_coding/codecs/vp8/vp8_webrtc_vp8) \
   $(call EXPAND_LIBNAME_PATH,webrtc_opus,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_webrtc_opus) \
@@ -25,6 +24,7 @@ WEBRTC_LIBS = \
   $(call EXPAND_LIBNAME_PATH,video_engine_core,$(DEPTH)/media/webrtc/trunk/webrtc/video_engine/video_engine_video_engine_core) \
   $(call EXPAND_LIBNAME_PATH,media_file,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_media_file) \
   $(call EXPAND_LIBNAME_PATH,rtp_rtcp,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_rtp_rtcp) \
+  $(call EXPAND_LIBNAME_PATH,udp_transport,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_udp_transport) \
   $(call EXPAND_LIBNAME_PATH,bitrate_controller,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_bitrate_controller) \
   $(call EXPAND_LIBNAME_PATH,remote_bitrate_estimator,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_remote_bitrate_estimator) \
   $(call EXPAND_LIBNAME_PATH,paced_sender,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_paced_sender) \

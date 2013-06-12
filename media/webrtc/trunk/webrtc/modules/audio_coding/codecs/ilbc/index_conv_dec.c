@@ -19,7 +19,7 @@
 #include "defines.h"
 
 void WebRtcIlbcfix_IndexConvDec(
-    int16_t *index   /* (i/o) Codebook indexes */
+    WebRtc_Word16 *index   /* (i/o) Codebook indexes */
                                 ){
   int k;
 

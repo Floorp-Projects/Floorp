@@ -8,23 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/echo_control_mobile_impl.h"
+#include "echo_control_mobile_impl.h"
 
 #include <cassert>
 #include <cstring>
 
-#include "webrtc/modules/audio_processing/aecm/include/echo_control_mobile.h"
-#include "webrtc/modules/audio_processing/audio_processing_impl.h"
-#include "webrtc/modules/audio_processing/audio_buffer.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "critical_section_wrapper.h"
+#include "echo_control_mobile.h"
+
+#include "audio_processing_impl.h"
+#include "audio_buffer.h"
 
 namespace webrtc {
 
 typedef void Handle;
 
 namespace {
-int16_t MapSetting(EchoControlMobile::RoutingMode mode) {
+WebRtc_Word16 MapSetting(EchoControlMobile::RoutingMode mode) {
   switch (mode) {
     case EchoControlMobile::kQuietEarpieceOrHeadset:
       return 0;
@@ -95,7 +95,7 @@ int EchoControlMobileImpl::ProcessRenderAudio(const AudioBuffer* audio) {
       err = WebRtcAecm_BufferFarend(
           my_handle,
           audio->low_pass_split_data(j),
-          static_cast<int16_t>(audio->samples_per_split_channel()));
+          static_cast<WebRtc_Word16>(audio->samples_per_split_channel()));
 
       if (err != apm_->kNoError) {
         return GetHandleError(my_handle);  // TODO(ajm): warning possible?
@@ -127,8 +127,8 @@ int EchoControlMobileImpl::ProcessCaptureAudio(AudioBuffer* audio) {
   for (int i = 0; i < audio->num_channels(); i++) {
     // TODO(ajm): improve how this works, possibly inside AECM.
     //            This is kind of hacked up.
-    int16_t* noisy = audio->low_pass_reference(i);
-    int16_t* clean = audio->low_pass_split_data(i);
+    WebRtc_Word16* noisy = audio->low_pass_reference(i);
+    WebRtc_Word16* clean = audio->low_pass_split_data(i);
     if (noisy == NULL) {
       noisy = clean;
       clean = NULL;
@@ -140,7 +140,7 @@ int EchoControlMobileImpl::ProcessCaptureAudio(AudioBuffer* audio) {
           noisy,
           clean,
           audio->low_pass_split_data(i),
-          static_cast<int16_t>(audio->samples_per_split_channel()),
+          static_cast<WebRtc_Word16>(audio->samples_per_split_channel()),
           apm_->stream_delay_ms());
 
       if (err != apm_->kNoError) {
@@ -241,7 +241,7 @@ int EchoControlMobileImpl::Initialize() {
   }
 
   if (apm_->sample_rate_hz() == apm_->kSampleRate32kHz) {
-    LOG(LS_ERROR) << "AECM only supports 16 kHz or lower sample rates";
+    // AECM doesn't support super-wideband.
     return apm_->kBadSampleRateError;
   }
 

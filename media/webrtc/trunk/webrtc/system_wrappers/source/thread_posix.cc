@@ -49,6 +49,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>  // strncpy
+#include <time.h>    // nanosleep
 #include <unistd.h>
 #ifdef WEBRTC_LINUX
 #include <sys/types.h>
@@ -60,7 +61,6 @@
 
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
@@ -97,7 +97,8 @@ extern "C"
   }
 }
 
-ThreadWrapper* ThreadPosix::Create(ThreadRunFunction func, ThreadObj obj,
+ThreadWrapper* ThreadPosix::Create(ThreadRunFunction func,
+                                   ThreadObj obj,
                                    ThreadPriority prio,
                                    const char* thread_name) {
   ThreadPosix* ptr = new ThreadPosix(func, obj, prio, thread_name);
@@ -175,6 +176,9 @@ ThreadPosix::~ThreadPosix() {
 
 bool ThreadPosix::Start(unsigned int& thread_id)
 {
+  if (!run_function_) {
+    return false;
+  }
   int result = pthread_attr_setdetachstate(&attr_, PTHREAD_CREATE_DETACHED);
   // Set the stack stack size to 1M.
   result |= pthread_attr_setstacksize(&attr_, 1024 * 1024);
@@ -193,17 +197,15 @@ bool ThreadPosix::Start(unsigned int& thread_id)
   if (result != 0) {
     return false;
   }
-  {
-    CriticalSectionScoped cs(crit_state_);
-    dead_ = false;
-  }
 
   // Wait up to 10 seconds for the OS to call the callback function. Prevents
   // race condition if Stop() is called too quickly after start.
   if (kEventSignaled != event_->Wait(WEBRTC_EVENT_10_SEC)) {
     WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
                  "posix thread event never triggered");
+
     // Timed out. Something went wrong.
+    run_function_ = NULL;
     return true;
   }
 
@@ -291,8 +293,11 @@ bool ThreadPosix::Stop() {
 
   // TODO(hellner) why not use an event here?
   // Wait up to 10 seconds for the thread to terminate
-  for (int i = 0; i < 1000 && !dead; ++i) {
-    SleepMs(10);
+  for (int i = 0; i < 1000 && !dead; i++) {
+    timespec t;
+    t.tv_sec = 0;
+    t.tv_nsec = 10 * 1000 * 1000;
+    nanosleep(&t, NULL);
     {
       CriticalSectionScoped cs(crit_state_);
       dead = dead_;
@@ -309,6 +314,7 @@ void ThreadPosix::Run() {
   {
     CriticalSectionScoped cs(crit_state_);
     alive_ = true;
+    dead_  = false;
   }
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK))
   pid_ = GetThreadId();
@@ -327,15 +333,22 @@ void ThreadPosix::Run() {
                  "Thread without name started");
   }
   bool alive = true;
-  bool run = true;
-  while (alive) {
-    run = run_function_(obj_);
-    CriticalSectionScoped cs(crit_state_);
-    if (!run) {
-      alive_ = false;
+  do {
+    if (run_function_) {
+      if (!run_function_(obj_)) {
+        alive = false;
+      }
+    } else {
+      alive = false;
     }
-    alive = alive_;
-  }
+    {
+      CriticalSectionScoped cs(crit_state_);
+      if (!alive) {
+        alive_ = false;
+      }
+      alive = alive_;
+    }
+  } while (alive);
 
   if (set_thread_name_) {
     // Don't set the name for the trace thread because it may cause a

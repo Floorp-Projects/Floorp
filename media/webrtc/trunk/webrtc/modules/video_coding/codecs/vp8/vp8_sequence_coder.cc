@@ -80,7 +80,7 @@ int Vp8SequenceCoderDecodeCallback::Decoded(webrtc::I420VideoFrame& image) {
   return 0;
 }
 
-int SequenceCoder(webrtc::test::CommandLineParser& parser) {
+int SequenceCoder(webrtc::test::CommandLineParser parser) {
   int width = strtol((parser.GetFlag("w")).c_str(), NULL, 10);
   int height = strtol((parser.GetFlag("h")).c_str(), NULL, 10);
   int framerate = strtol((parser.GetFlag("f")).c_str(), NULL, 10);
@@ -144,7 +144,11 @@ int SequenceCoder(webrtc::test::CommandLineParser& parser) {
   unsigned int length = webrtc::CalcBufferSize(webrtc::kI420, width, height);
   webrtc::scoped_array<uint8_t> frame_buffer(new uint8_t[length]);
 
+  int half_height = (height + 1) / 2;
   int half_width = (width + 1) / 2;
+  int size_y = width * height;
+  int size_uv = half_width * half_height;
+
   // Set and register callbacks.
   Vp8SequenceCoderEncodeCallback encoder_callback(encoded_file);
   encoder->RegisterEncodeCompleteCallback(&encoder_callback);
@@ -155,15 +159,17 @@ int SequenceCoder(webrtc::test::CommandLineParser& parser) {
   int64_t starttime = webrtc::TickTime::MillisecondTimestamp();
   int frame_cnt = 1;
   int frames_processed = 0;
-  input_frame.CreateEmptyFrame(width, height, width, half_width, half_width);
   while (!feof(input_file) &&
       (num_frames == -1 || frames_processed < num_frames)) {
      if (fread(frame_buffer.get(), 1, length, input_file) != length)
       continue;
     if (frame_cnt >= start_frame) {
-      webrtc::ConvertToI420(webrtc::kI420, frame_buffer.get(), 0, 0,
-                            width, height, 0, webrtc::kRotateNone,
-                            &input_frame);
+      input_frame.CreateFrame(size_y, frame_buffer.get(),
+                                  size_uv, frame_buffer.get() + size_y,
+                                  size_uv, frame_buffer.get() + size_y +
+                                  size_uv,
+                                  width, height,
+                                  width, half_width, half_width);
       encoder->Encode(input_frame, NULL, NULL);
       decoder->Decode(encoder_callback.encoded_image(), false, NULL);
       ++frames_processed;

@@ -23,10 +23,6 @@
       'sources': [
         './fix/test/kenny.cc',
       ],
-      # Disable warnings to enable Win64 build, issue 1323.
-      'msvs_disabled_warnings': [
-        4267,  # size_t to int truncation.
-      ],
     },
   ],
 }

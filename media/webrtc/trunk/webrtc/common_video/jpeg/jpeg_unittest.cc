@@ -54,7 +54,7 @@ class JpegTest: public testing::Test {
     assert(open_file != NULL);
     size_t length = webrtc::test::GetFileSize(input_filename);
     EncodedImage* encoded_buffer = new EncodedImage();
-    encoded_buffer->_buffer = new uint8_t[length];
+    encoded_buffer->_buffer = new WebRtc_UWord8[length];
     encoded_buffer->_size = length;
     encoded_buffer->_length = length;
     if (fread(encoded_buffer->_buffer, 1, length, open_file) != length) {

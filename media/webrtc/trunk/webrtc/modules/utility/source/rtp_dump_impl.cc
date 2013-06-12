@@ -40,7 +40,7 @@
 
 namespace webrtc {
 const char RTPFILE_VERSION[] = "1.0";
-const uint32_t MAX_UWORD32 = 0xffffffff;
+const WebRtc_UWord32 MAX_UWORD32 = 0xffffffff;
 
 // This stucture is specified in the rtpdump documentation.
 // This struct corresponds to RD_packet_t in
@@ -49,11 +49,11 @@ typedef struct
 {
     // Length of packet, including this header (may be smaller than plen if not
     // whole packet recorded).
-    uint16_t length;
+    WebRtc_UWord16 length;
     // Actual header+payload length for RTP, 0 for RTCP.
-    uint16_t plen;
+    WebRtc_UWord16 plen;
     // Milliseconds since the start of recording.
-    uint32_t offset;
+    WebRtc_UWord32 offset;
 } rtpDumpPktHdr_t;
 
 RtpDump* RtpDump::CreateRtpDump()
@@ -87,7 +87,7 @@ RtpDumpImpl::~RtpDumpImpl()
     WEBRTC_TRACE(kTraceMemory, kTraceUtility, -1, "%s deleted", __FUNCTION__);
 }
 
-int32_t RtpDumpImpl::Start(const char* fileNameUTF8)
+WebRtc_Word32 RtpDumpImpl::Start(const char* fileNameUTF8)
 {
 
     if (fileNameUTF8 == NULL)
@@ -136,7 +136,7 @@ int32_t RtpDumpImpl::Start(const char* fileNameUTF8)
     return 0;
 }
 
-int32_t RtpDumpImpl::Stop()
+WebRtc_Word32 RtpDumpImpl::Stop()
 {
     CriticalSectionScoped lock(_critSect);
     _file.Flush();
@@ -150,7 +150,8 @@ bool RtpDumpImpl::IsActive() const
     return _file.Open();
 }
 
-int32_t RtpDumpImpl::DumpPacket(const uint8_t* packet, uint16_t packetLength)
+WebRtc_Word32 RtpDumpImpl::DumpPacket(const WebRtc_UWord8* packet,
+                                      WebRtc_UWord16 packetLength)
 {
     CriticalSectionScoped lock(_critSect);
     if (!IsActive())
@@ -173,7 +174,7 @@ int32_t RtpDumpImpl::DumpPacket(const uint8_t* packet, uint16_t packetLength)
     bool isRTCP = RTCP(packet);
 
     rtpDumpPktHdr_t hdr;
-    uint32_t offset;
+    WebRtc_UWord32 offset;
 
     // Offset is relative to when recording was started.
     offset = GetTimeInMS();
@@ -186,14 +187,14 @@ int32_t RtpDumpImpl::DumpPacket(const uint8_t* packet, uint16_t packetLength)
     }
     hdr.offset = RtpDumpHtonl(offset);
 
-    hdr.length = RtpDumpHtons((uint16_t)(packetLength + sizeof(hdr)));
+    hdr.length = RtpDumpHtons((WebRtc_UWord16)(packetLength + sizeof(hdr)));
     if (isRTCP)
     {
         hdr.plen = 0;
     }
     else
     {
-        hdr.plen = RtpDumpHtons((uint16_t)packetLength);
+        hdr.plen = RtpDumpHtons((WebRtc_UWord16)packetLength);
     }
 
     if (!_file.Write(&hdr, sizeof(hdr)))
@@ -212,9 +213,9 @@ int32_t RtpDumpImpl::DumpPacket(const uint8_t* packet, uint16_t packetLength)
     return 0;
 }
 
-bool RtpDumpImpl::RTCP(const uint8_t* packet) const
+bool RtpDumpImpl::RTCP(const WebRtc_UWord8* packet) const
 {
-    const uint8_t payloadType = packet[1];
+    const WebRtc_UWord8 payloadType = packet[1];
     bool is_rtcp = false;
 
     switch(payloadType)
@@ -233,7 +234,7 @@ bool RtpDumpImpl::RTCP(const uint8_t* packet) const
 }
 
 // TODO (hellner): why is TickUtil not used here?
-inline uint32_t RtpDumpImpl::GetTimeInMS() const
+inline WebRtc_UWord32 RtpDumpImpl::GetTimeInMS() const
 {
 #if defined(_WIN32)
     return timeGetTime();
@@ -252,7 +253,7 @@ inline uint32_t RtpDumpImpl::GetTimeInMS() const
 #endif
 }
 
-inline uint32_t RtpDumpImpl::RtpDumpHtonl(uint32_t x) const
+inline WebRtc_UWord32 RtpDumpImpl::RtpDumpHtonl(WebRtc_UWord32 x) const
 {
 #if defined(WEBRTC_BIG_ENDIAN)
     return x;
@@ -266,7 +267,7 @@ inline uint32_t RtpDumpImpl::RtpDumpHtonl(uint32_t x) const
 #endif
 }
 
-inline uint16_t RtpDumpImpl::RtpDumpHtons(uint16_t x) const
+inline WebRtc_UWord16 RtpDumpImpl::RtpDumpHtons(WebRtc_UWord16 x) const
 {
 #if defined(WEBRTC_BIG_ENDIAN)
     return x;

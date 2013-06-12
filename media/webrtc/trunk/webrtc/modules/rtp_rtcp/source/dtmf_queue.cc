@@ -27,8 +27,8 @@ DTMFqueue::~DTMFqueue()
     delete _DTMFCritsect;
 }
 
-int32_t
-DTMFqueue::AddDTMF(uint8_t key, uint16_t len, uint8_t level)
+WebRtc_Word32
+DTMFqueue::AddDTMF(WebRtc_UWord8 key, WebRtc_UWord16 len, WebRtc_UWord8 level)
 {
     CriticalSectionScoped lock(_DTMFCritsect);
 
@@ -36,7 +36,7 @@ DTMFqueue::AddDTMF(uint8_t key, uint16_t len, uint8_t level)
     {
         return -1;
     }
-    int32_t index = _nextEmptyIndex;
+    WebRtc_Word32 index = _nextEmptyIndex;
     _DTMFKey[index] = key;
     _DTMFLen[index] = len;
     _DTMFLevel[index] = level;
@@ -44,8 +44,8 @@ DTMFqueue::AddDTMF(uint8_t key, uint16_t len, uint8_t level)
     return 0;
 }
 
-int8_t
-DTMFqueue::NextDTMF(uint8_t* DTMFKey, uint16_t* len, uint8_t* level)
+WebRtc_Word8
+DTMFqueue::NextDTMF(WebRtc_UWord8* DTMFKey, WebRtc_UWord16* len, WebRtc_UWord8* level)
 {
     CriticalSectionScoped lock(_DTMFCritsect);
 
@@ -57,9 +57,9 @@ DTMFqueue::NextDTMF(uint8_t* DTMFKey, uint16_t* len, uint8_t* level)
     *len=_DTMFLen[0];
     *level=_DTMFLevel[0];
 
-    memmove(&(_DTMFKey[0]), &(_DTMFKey[1]), _nextEmptyIndex*sizeof(uint8_t));
-    memmove(&(_DTMFLen[0]), &(_DTMFLen[1]), _nextEmptyIndex*sizeof(uint16_t));
-    memmove(&(_DTMFLevel[0]), &(_DTMFLevel[1]), _nextEmptyIndex*sizeof(uint8_t));
+    memmove(&(_DTMFKey[0]), &(_DTMFKey[1]), _nextEmptyIndex*sizeof(WebRtc_UWord8));
+    memmove(&(_DTMFLen[0]), &(_DTMFLen[1]), _nextEmptyIndex*sizeof(WebRtc_UWord16));
+    memmove(&(_DTMFLevel[0]), &(_DTMFLevel[1]), _nextEmptyIndex*sizeof(WebRtc_UWord8));
 
     _nextEmptyIndex--;
     return 0;

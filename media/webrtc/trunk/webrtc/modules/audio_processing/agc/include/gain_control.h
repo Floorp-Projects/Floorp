@@ -39,9 +39,9 @@ enum
 
 typedef struct
 {
-    int16_t targetLevelDbfs;   // default 3 (-3 dBOv)
-    int16_t compressionGaindB; // default 9 dB
-    uint8_t limiterEnable;     // default kAgcTrue (on)
+    WebRtc_Word16 targetLevelDbfs;   // default 3 (-3 dBOv)
+    WebRtc_Word16 compressionGaindB; // default 9 dB
+    WebRtc_UWord8 limiterEnable;     // default kAgcTrue (on)
 } WebRtcAgc_config_t;
 
 #if defined(__cplusplus)
@@ -65,8 +65,8 @@ extern "C"
  *                          : -1 - Error
  */
 int WebRtcAgc_AddFarend(void* agcInst,
-                        const int16_t* inFar,
-                        int16_t samples);
+                        const WebRtc_Word16* inFar,
+                        WebRtc_Word16 samples);
 
 /*
  * This function processes a 10/20ms frame of microphone speech to determine
@@ -92,9 +92,9 @@ int WebRtcAgc_AddFarend(void* agcInst,
  *                          : -1 - Error
  */
 int WebRtcAgc_AddMic(void* agcInst,
-                     int16_t* inMic,
-                     int16_t* inMic_H,
-                     int16_t samples);
+                     WebRtc_Word16* inMic,
+                     WebRtc_Word16* inMic_H,
+                     WebRtc_Word16 samples);
 
 /*
  * This function replaces the analog microphone with a virtual one.
@@ -123,11 +123,11 @@ int WebRtcAgc_AddMic(void* agcInst,
  *                          : -1 - Error
  */
 int WebRtcAgc_VirtualMic(void* agcInst,
-                         int16_t* inMic,
-                         int16_t* inMic_H,
-                         int16_t samples,
-                         int32_t micLevelIn,
-                         int32_t* micLevelOut);
+                         WebRtc_Word16* inMic,
+                         WebRtc_Word16* inMic_H,
+                         WebRtc_Word16 samples,
+                         WebRtc_Word32 micLevelIn,
+                         WebRtc_Word32* micLevelOut);
 
 /*
  * This function processes a 10/20ms frame and adjusts (normalizes) the gain
@@ -168,15 +168,15 @@ int WebRtcAgc_VirtualMic(void* agcInst,
  *                          : -1 - Error
  */
 int WebRtcAgc_Process(void* agcInst,
-                      const int16_t* inNear,
-                      const int16_t* inNear_H,
-                      int16_t samples,
-                      int16_t* out,
-                      int16_t* out_H,
-                      int32_t inMicLevel,
-                      int32_t* outMicLevel,
-                      int16_t echo,
-                      uint8_t* saturationWarning);
+                      const WebRtc_Word16* inNear,
+                      const WebRtc_Word16* inNear_H,
+                      WebRtc_Word16 samples,
+                      WebRtc_Word16* out,
+                      WebRtc_Word16* out_H,
+                      WebRtc_Word32 inMicLevel,
+                      WebRtc_Word32* outMicLevel,
+                      WebRtc_Word16 echo,
+                      WebRtc_UWord8* saturationWarning);
 
 /*
  * This function sets the config parameters (targetLevelDbfs,
@@ -247,10 +247,10 @@ int WebRtcAgc_Free(void *agcInst);
  *                            -1 - Error
  */
 int WebRtcAgc_Init(void *agcInst,
-                   int32_t minLevel,
-                   int32_t maxLevel,
-                   int16_t agcMode,
-                   uint32_t fs);
+                   WebRtc_Word32 minLevel,
+                   WebRtc_Word32 maxLevel,
+                   WebRtc_Word16 agcMode,
+                   WebRtc_UWord32 fs);
 
 #if defined(__cplusplus)
 }

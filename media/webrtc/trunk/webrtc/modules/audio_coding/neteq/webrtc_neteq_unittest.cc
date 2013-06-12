@@ -12,8 +12,6 @@
  * This file includes unit tests for NetEQ.
  */
 
-#include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
-
 #include <stdlib.h>
 #include <string.h>  // memset
 
@@ -22,14 +20,15 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+
+#include "modules/audio_coding/neteq/interface/webrtc_neteq.h"
+#include "modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
+#include "modules/audio_coding/neteq/interface/webrtc_neteq_internal.h"
+#include "modules/audio_coding/neteq/test/NETEQTEST_CodecClass.h"
+#include "modules/audio_coding/neteq/test/NETEQTEST_NetEQClass.h"
+#include "modules/audio_coding/neteq/test/NETEQTEST_RTPpacket.h"
 #include "testsupport/fileutils.h"
-#include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
-#include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_internal.h"
-#include "webrtc/modules/audio_coding/neteq/test/NETEQTEST_CodecClass.h"
-#include "webrtc/modules/audio_coding/neteq/test/NETEQTEST_NetEQClass.h"
-#include "webrtc/modules/audio_coding/neteq/test/NETEQTEST_RTPpacket.h"
-#include "webrtc/modules/audio_coding/neteq4/tools/input_audio_file.h"
-#include "webrtc/typedefs.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -377,33 +376,33 @@ void NetEqDecodingTest::PopulateCng(int frame_index,
 
 TEST_F(NetEqDecodingTest, TestBitExactness) {
   const std::string kInputRtpFile = webrtc::test::ProjectRootPath() +
-      "resources/audio_coding/neteq_universal.rtp";
+      "resources/neteq_universal.rtp";
 #if defined(_MSC_VER) && (_MSC_VER >= 1700)
   // For Visual Studio 2012 and later, we will have to use the generic reference
   // file, rather than the windows-specific one.
   const std::string kInputRefFile = webrtc::test::ProjectRootPath() +
-      "resources/audio_coding/neteq_universal_ref.pcm";
+      "resources/neteq_universal_ref.pcm";
 #else
   const std::string kInputRefFile =
-      webrtc::test::ResourcePath("audio_coding/neteq_universal_ref", "pcm");
+      webrtc::test::ResourcePath("neteq_universal_ref", "pcm");
 #endif
   DecodeAndCompare(kInputRtpFile, kInputRefFile);
 }
 
 TEST_F(NetEqDecodingTest, TestNetworkStatistics) {
   const std::string kInputRtpFile = webrtc::test::ProjectRootPath() +
-      "resources/audio_coding/neteq_universal.rtp";
+      "resources/neteq_universal.rtp";
 #if defined(_MSC_VER) && (_MSC_VER >= 1700)
   // For Visual Studio 2012 and later, we will have to use the generic reference
   // file, rather than the windows-specific one.
   const std::string kNetworkStatRefFile = webrtc::test::ProjectRootPath() +
-      "resources/audio_coding/neteq_network_stats.dat";
+      "resources/neteq_network_stats.dat";
 #else
   const std::string kNetworkStatRefFile =
-      webrtc::test::ResourcePath("audio_coding/neteq_network_stats", "dat");
+      webrtc::test::ResourcePath("neteq_network_stats", "dat");
 #endif
   const std::string kRtcpStatRefFile =
-      webrtc::test::ResourcePath("audio_coding/neteq_rtcp_stats", "dat");
+      webrtc::test::ResourcePath("neteq_rtcp_stats", "dat");
   DecodeAndCheckStats(kInputRtpFile, kNetworkStatRefFile, kRtcpStatRefFile);
 }
 
@@ -650,47 +649,6 @@ TEST_F(NetEqDecodingTest, NoInputDataStereo) {
   delete dec;
   delete slave_inst;
   free(ms_info);
-}
-
-TEST_F(NetEqDecodingTest, TestExtraDelay) {
-  static const int kNumFrames = 120000;  // Needed for convergence.
-  int frame_index = 0;
-  static const int kFrameSizeSamples = 30 * 16;
-  static const int kPayloadBytes = kFrameSizeSamples * 2;
-  test::InputAudioFile input_file(
-      webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm"));
-  int16_t input[kFrameSizeSamples];
-  // Buffers of NetEq cannot accommodate larger delays for PCM16.
-  static const int kExtraDelayMs = 3200;
-  ASSERT_EQ(0, WebRtcNetEQ_SetExtraDelay(neteq_inst_->instance(),
-                                         kExtraDelayMs));
-  for (int i = 0; i < kNumFrames; ++i) {
-    ASSERT_TRUE(input_file.Read(kFrameSizeSamples, input));
-    WebRtcNetEQ_RTPInfo rtp_info;
-    PopulateRtpInfo(frame_index, frame_index * kFrameSizeSamples, &rtp_info);
-    uint8_t* payload = reinterpret_cast<uint8_t*>(input);
-    ASSERT_EQ(0,
-              WebRtcNetEQ_RecInRTPStruct(neteq_inst_->instance(),
-                                         &rtp_info,
-                                         payload,
-                                         kPayloadBytes, 0));
-    ++frame_index;
-    // Pull out data.
-    for (int j = 0; j < 3; ++j) {
-      ASSERT_TRUE(kBlockSize16kHz == neteq_inst_->recOut(out_data_));
-    }
-    if (i % 100 == 0) {
-      WebRtcNetEQ_NetworkStatistics network_stats;
-      ASSERT_EQ(0, WebRtcNetEQ_GetNetworkStatistics(neteq_inst_->instance(),
-                                                    &network_stats));
-      const int expected_lower_limit =
-          std::min(i * 0.083 - 210, 0.9 * network_stats.preferredBufferSize);
-      EXPECT_GE(network_stats.currentBufferSize, expected_lower_limit);
-      const int expected_upper_limit =
-          std::min(i * 0.083 + 255, 1.2 * network_stats.preferredBufferSize);
-      EXPECT_LE(network_stats.currentBufferSize, expected_upper_limit);
-    }
-  }
 }
 
 }  // namespace

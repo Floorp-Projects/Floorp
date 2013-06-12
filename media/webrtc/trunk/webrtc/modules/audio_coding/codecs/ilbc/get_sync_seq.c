@@ -26,31 +26,31 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_GetSyncSeq(
-    int16_t *idata,   /* (i) original data */
-    int16_t idatal,   /* (i) dimension of data */
-    int16_t centerStartPos, /* (i) where current block starts */
-    int16_t *period,   /* (i) rough-pitch-period array       (Q-2) */
-    int16_t *plocs,   /* (i) where periods of period array are taken (Q-2) */
-    int16_t periodl,   /* (i) dimension period array */
-    int16_t hl,    /* (i) 2*hl+1 is the number of sequences */
-    int16_t *surround  /* (i/o) The contribution from this sequence
+    WebRtc_Word16 *idata,   /* (i) original data */
+    WebRtc_Word16 idatal,   /* (i) dimension of data */
+    WebRtc_Word16 centerStartPos, /* (i) where current block starts */
+    WebRtc_Word16 *period,   /* (i) rough-pitch-period array       (Q-2) */
+    WebRtc_Word16 *plocs,   /* (i) where periods of period array are taken (Q-2) */
+    WebRtc_Word16 periodl,   /* (i) dimension period array */
+    WebRtc_Word16 hl,    /* (i) 2*hl+1 is the number of sequences */
+    WebRtc_Word16 *surround  /* (i/o) The contribution from this sequence
                                 summed with earlier contributions */
                               ){
-  int16_t i,centerEndPos,q;
+  WebRtc_Word16 i,centerEndPos,q;
   /* Stack based */
-  int16_t lagBlock[2*ENH_HL+1];
-  int16_t blockStartPos[2*ENH_HL+1]; /* Defines the position to search around (Q2) */
-  int16_t plocs2[ENH_PLOCSL];
+  WebRtc_Word16 lagBlock[2*ENH_HL+1];
+  WebRtc_Word16 blockStartPos[2*ENH_HL+1]; /* Defines the position to search around (Q2) */
+  WebRtc_Word16 plocs2[ENH_PLOCSL];
 
   centerEndPos=centerStartPos+ENH_BLOCKL-1;
 
   /* present (find predicted lag from this position) */
 
   WebRtcIlbcfix_NearestNeighbor(lagBlock+hl,plocs,
-                                (int16_t)WEBRTC_SPL_MUL_16_16(2, (centerStartPos+centerEndPos)),
+                                (WebRtc_Word16)WEBRTC_SPL_MUL_16_16(2, (centerStartPos+centerEndPos)),
                                 periodl);
 
-  blockStartPos[hl]=(int16_t)WEBRTC_SPL_MUL_16_16(4, centerStartPos);
+  blockStartPos[hl]=(WebRtc_Word16)WEBRTC_SPL_MUL_16_16(4, centerStartPos);
 
   /* past (find predicted position and perform a refined
      search to find the best sequence) */
@@ -59,10 +59,10 @@ void WebRtcIlbcfix_GetSyncSeq(
     blockStartPos[q]=blockStartPos[q+1]-period[lagBlock[q+1]];
 
     WebRtcIlbcfix_NearestNeighbor(lagBlock+q, plocs,
-                                  (int16_t)(blockStartPos[q] + (int16_t)WEBRTC_SPL_MUL_16_16(4, ENH_BLOCKL_HALF)-period[lagBlock[q+1]]),
+                                  (WebRtc_Word16)(blockStartPos[q] + (WebRtc_Word16)WEBRTC_SPL_MUL_16_16(4, ENH_BLOCKL_HALF)-period[lagBlock[q+1]]),
                                   periodl);
 
-    if((blockStartPos[q]-(int16_t)WEBRTC_SPL_MUL_16_16(4, ENH_OVERHANG))>=0) {
+    if((blockStartPos[q]-(WebRtc_Word16)WEBRTC_SPL_MUL_16_16(4, ENH_OVERHANG))>=0) {
 
       /* Find the best possible sequence in the 4 times upsampled
          domain around blockStartPos+q */
@@ -85,14 +85,14 @@ void WebRtcIlbcfix_GetSyncSeq(
   for(q=hl+1;q<=WEBRTC_SPL_MUL_16_16(2, hl);q++) {
 
     WebRtcIlbcfix_NearestNeighbor(lagBlock+q,plocs2,
-                                  (int16_t)(blockStartPos[q-1]+
-                                                  (int16_t)WEBRTC_SPL_MUL_16_16(4, ENH_BLOCKL_HALF)),periodl);
+                                  (WebRtc_Word16)(blockStartPos[q-1]+
+                                                  (WebRtc_Word16)WEBRTC_SPL_MUL_16_16(4, ENH_BLOCKL_HALF)),periodl);
 
     blockStartPos[q]=blockStartPos[q-1]+period[lagBlock[q]];
 
-    if( (blockStartPos[q]+(int16_t)WEBRTC_SPL_MUL_16_16(4, (ENH_BLOCKL+ENH_OVERHANG)))
+    if( (blockStartPos[q]+(WebRtc_Word16)WEBRTC_SPL_MUL_16_16(4, (ENH_BLOCKL+ENH_OVERHANG)))
         <
-        (int16_t)WEBRTC_SPL_MUL_16_16(4, idatal)) {
+        (WebRtc_Word16)WEBRTC_SPL_MUL_16_16(4, idatal)) {
 
       /* Find the best possible sequence in the 4 times upsampled
          domain around blockStartPos+q */

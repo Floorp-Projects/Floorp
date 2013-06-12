@@ -18,24 +18,24 @@
 
 #include "signal_processing_library.h"
 
-int WebRtcNetEQ_RTCPInit(WebRtcNetEQ_RTCP_t *RTCP_inst, uint16_t uw16_seqNo)
+int WebRtcNetEQ_RTCPInit(WebRtcNetEQ_RTCP_t *RTCP_inst, WebRtc_UWord16 uw16_seqNo)
 {
     /*
      * Initialize everything to zero and then set the start values for the RTP packet stream.
      */
-    WebRtcSpl_MemSetW16((int16_t*) RTCP_inst, 0,
-        sizeof(WebRtcNetEQ_RTCP_t) / sizeof(int16_t));
+    WebRtcSpl_MemSetW16((WebRtc_Word16*) RTCP_inst, 0,
+        sizeof(WebRtcNetEQ_RTCP_t) / sizeof(WebRtc_Word16));
     RTCP_inst->base_seq = uw16_seqNo;
     RTCP_inst->max_seq = uw16_seqNo;
     return 0;
 }
 
-int WebRtcNetEQ_RTCPUpdate(WebRtcNetEQ_RTCP_t *RTCP_inst, uint16_t uw16_seqNo,
-                           uint32_t uw32_timeStamp, uint32_t uw32_recTime)
+int WebRtcNetEQ_RTCPUpdate(WebRtcNetEQ_RTCP_t *RTCP_inst, WebRtc_UWord16 uw16_seqNo,
+                           WebRtc_UWord32 uw32_timeStamp, WebRtc_UWord32 uw32_recTime)
 {
-    int16_t w16_SeqDiff;
-    int32_t w32_TimeDiff;
-    int32_t w32_JitterDiff;
+    WebRtc_Word16 w16_SeqDiff;
+    WebRtc_Word32 w32_TimeDiff;
+    WebRtc_Word32 w32_JitterDiff;
 
     /*
      * Update number of received packets, and largest packet number received.
@@ -66,16 +66,16 @@ int WebRtcNetEQ_RTCPUpdate(WebRtcNetEQ_RTCP_t *RTCP_inst, uint16_t uw16_seqNo,
 }
 
 int WebRtcNetEQ_RTCPGetStats(WebRtcNetEQ_RTCP_t *RTCP_inst,
-                             uint16_t *puw16_fraction_lost,
-                             uint32_t *puw32_cum_lost, uint32_t *puw32_ext_max,
-                             uint32_t *puw32_jitter, int16_t doNotReset)
+                             WebRtc_UWord16 *puw16_fraction_lost,
+                             WebRtc_UWord32 *puw32_cum_lost, WebRtc_UWord32 *puw32_ext_max,
+                             WebRtc_UWord32 *puw32_jitter, WebRtc_Word16 doNotReset)
 {
-    uint32_t uw32_exp_nr, uw32_exp_interval, uw32_rec_interval;
-    int32_t w32_lost;
+    WebRtc_UWord32 uw32_exp_nr, uw32_exp_interval, uw32_rec_interval;
+    WebRtc_Word32 w32_lost;
 
     /* Extended highest sequence number received */
     *puw32_ext_max
-        = (uint32_t) WEBRTC_SPL_LSHIFT_W32((uint32_t)RTCP_inst->cycles, 16)
+        = (WebRtc_UWord32) WEBRTC_SPL_LSHIFT_W32((WebRtc_UWord32)RTCP_inst->cycles, 16)
             + RTCP_inst->max_seq;
 
     /*
@@ -91,7 +91,7 @@ int WebRtcNetEQ_RTCPGetStats(WebRtcNetEQ_RTCP_t *RTCP_inst,
     else if (uw32_exp_nr > RTCP_inst->received)
     {
         *puw32_cum_lost = uw32_exp_nr - RTCP_inst->received;
-        if (*puw32_cum_lost > (uint32_t) 0xFFFFFF)
+        if (*puw32_cum_lost > (WebRtc_UWord32) 0xFFFFFF)
         {
             *puw32_cum_lost = 0xFFFFFF;
         }
@@ -112,14 +112,14 @@ int WebRtcNetEQ_RTCPGetStats(WebRtcNetEQ_RTCP_t *RTCP_inst,
     {
         RTCP_inst->rec_prior = RTCP_inst->received;
     }
-    w32_lost = (int32_t) (uw32_exp_interval - uw32_rec_interval);
+    w32_lost = (WebRtc_Word32) (uw32_exp_interval - uw32_rec_interval);
     if (uw32_exp_interval == 0 || w32_lost <= 0 || RTCP_inst->received == 0)
     {
         *puw16_fraction_lost = 0;
     }
     else
     {
-        *puw16_fraction_lost = (uint16_t) (WEBRTC_SPL_LSHIFT_W32(w32_lost, 8)
+        *puw16_fraction_lost = (WebRtc_UWord16) (WEBRTC_SPL_LSHIFT_W32(w32_lost, 8)
             / uw32_exp_interval);
     }
     if (*puw16_fraction_lost > 0xFF)

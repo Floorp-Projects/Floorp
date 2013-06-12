@@ -19,12 +19,12 @@ namespace webrtc
 class AudioDeviceUtility
 {
 public:
-    static uint32_t GetTimeInMS();
+    static WebRtc_UWord32 GetTimeInMS();
 	static void WaitForKey();
     static bool StringCompare(const char* str1,
                               const char* str2,
-                              const uint32_t length);
-	virtual int32_t Init() = 0;
+                              const WebRtc_UWord32 length);
+	virtual WebRtc_Word32 Init() = 0;
 
 	virtual ~AudioDeviceUtility() {}
 };

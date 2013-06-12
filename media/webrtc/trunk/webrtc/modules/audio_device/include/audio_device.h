@@ -200,7 +200,7 @@ class AudioDeviceModule : public RefCountedModule {
 };
 
 AudioDeviceModule* CreateAudioDeviceModule(
-    int32_t id, AudioDeviceModule::AudioLayer audioLayer);
+    WebRtc_Word32 id, AudioDeviceModule::AudioLayer audioLayer);
 
 }  // namespace webrtc
 

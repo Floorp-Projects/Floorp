@@ -20,42 +20,42 @@
 
 #include "structs.h"
 
-void WebRtcIsacfix_PitchAnalysis(const int16_t *in,               /* PITCH_FRAME_LEN samples */
-                                 int16_t *outQ0,                  /* PITCH_FRAME_LEN+QLOOKAHEAD samples */
+void WebRtcIsacfix_PitchAnalysis(const WebRtc_Word16 *in,               /* PITCH_FRAME_LEN samples */
+                                 WebRtc_Word16 *outQ0,                  /* PITCH_FRAME_LEN+QLOOKAHEAD samples */
                                  PitchAnalysisStruct *State,
-                                 int16_t *lagsQ7,
-                                 int16_t *PitchGains_Q12);
+                                 WebRtc_Word16 *lagsQ7,
+                                 WebRtc_Word16 *PitchGains_Q12);
 
-void WebRtcIsacfix_InitialPitch(const int16_t *in,
+void WebRtcIsacfix_InitialPitch(const WebRtc_Word16 *in,
                                 PitchAnalysisStruct *State,
-                                int16_t *qlags);
+                                WebRtc_Word16 *qlags);
 
-void WebRtcIsacfix_PitchFilter(int16_t *indatFix,
-                               int16_t *outdatQQ,
+void WebRtcIsacfix_PitchFilter(WebRtc_Word16 *indatFix,
+                               WebRtc_Word16 *outdatQQ,
                                PitchFiltstr *pfp,
-                               int16_t *lagsQ7,
-                               int16_t *gainsQ12,
-                               int16_t type);
+                               WebRtc_Word16 *lagsQ7,
+                               WebRtc_Word16 *gainsQ12,
+                               WebRtc_Word16 type);
 
 void WebRtcIsacfix_PitchFilterCore(int loopNumber,
-                                   int16_t gain,
+                                   WebRtc_Word16 gain,
                                    int index,
-                                   int16_t sign,
-                                   int16_t* inputState,
-                                   int16_t* outputBuff2,
-                                   const int16_t* coefficient,
-                                   int16_t* inputBuf,
-                                   int16_t* outputBuf,
+                                   WebRtc_Word16 sign,
+                                   WebRtc_Word16* inputState,
+                                   WebRtc_Word16* outputBuff2,
+                                   const WebRtc_Word16* coefficient,
+                                   WebRtc_Word16* inputBuf,
+                                   WebRtc_Word16* outputBuf,
                                    int* index2);
 
-void WebRtcIsacfix_PitchFilterGains(const int16_t *indatQ0,
+void WebRtcIsacfix_PitchFilterGains(const WebRtc_Word16 *indatQ0,
                                     PitchFiltstr *pfp,
-                                    int16_t *lagsQ7,
-                                    int16_t *gainsQ12);
+                                    WebRtc_Word16 *lagsQ7,
+                                    WebRtc_Word16 *gainsQ12);
 
-void WebRtcIsacfix_DecimateAllpass32(const int16_t *in,
-                                     int32_t *state_in,        /* array of size: 2*ALLPASSSECTIONS+1 */
-                                     int16_t N,                   /* number of input samples */
-                                     int16_t *out);             /* array of size N/2 */
+void WebRtcIsacfix_DecimateAllpass32(const WebRtc_Word16 *in,
+                                     WebRtc_Word32 *state_in,        /* array of size: 2*ALLPASSSECTIONS+1 */
+                                     WebRtc_Word16 N,                   /* number of input samples */
+                                     WebRtc_Word16 *out);             /* array of size N/2 */
 
 #endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_PITCH_ESTIMATOR_H_ */

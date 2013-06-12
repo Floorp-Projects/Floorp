@@ -18,9 +18,7 @@
 #include "webrtc/modules/rtp_rtcp/source/bitrate.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_receiver_help.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_payload_registry.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -34,209 +32,237 @@ class RTPReceiverStrategy;
 
 class RTPReceiver : public Bitrate {
  public:
-  // Callbacks passed in here may not be NULL (use Null Object callbacks if you
-  // want callbacks to do nothing). This class takes ownership of the media
-  // receiver but nothing else.
-  RTPReceiver(const int32_t id,
-              Clock* clock,
+  RTPReceiver(const WebRtc_Word32 id,
+              const bool audio,
+              RtpRtcpClock* clock,
               ModuleRtpRtcpImpl* owner,
-              RtpAudioFeedback* incoming_audio_messages_callback,
-              RtpData* incoming_payload_callback,
-              RtpFeedback* incoming_messages_callback,
-              RTPReceiverStrategy* rtp_media_receiver,
-              RTPPayloadRegistry* rtp_payload_registry);
+              RtpAudioFeedback* incoming_messages_callback);
 
   virtual ~RTPReceiver();
 
   RtpVideoCodecTypes VideoCodecType() const;
-  uint32_t MaxConfiguredBitrate() const;
+  WebRtc_UWord32 MaxConfiguredBitrate() const;
 
-  int32_t SetPacketTimeout(const uint32_t timeout_ms);
+  WebRtc_Word32 SetPacketTimeout(const WebRtc_UWord32 timeout_ms);
   void PacketTimeout();
 
-  void ProcessDeadOrAlive(const bool RTCPalive, const int64_t now);
+  void ProcessDeadOrAlive(const bool RTCPalive, const WebRtc_Word64 now);
 
   void ProcessBitrate();
 
-  int32_t RegisterReceivePayload(
+  WebRtc_Word32 RegisterIncomingDataCallback(RtpData* incoming_data_callback);
+  WebRtc_Word32 RegisterIncomingRTPCallback(
+      RtpFeedback* incoming_messages_callback);
+
+  WebRtc_Word32 RegisterReceivePayload(
       const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-      const int8_t payload_type,
-      const uint32_t frequency,
-      const uint8_t channels,
-      const uint32_t rate);
+      const WebRtc_Word8 payload_type,
+      const WebRtc_UWord32 frequency,
+      const WebRtc_UWord8 channels,
+      const WebRtc_UWord32 rate);
 
-  int32_t DeRegisterReceivePayload(const int8_t payload_type);
+  WebRtc_Word32 DeRegisterReceivePayload(const WebRtc_Word8 payload_type);
 
-  int32_t ReceivePayloadType(
+  WebRtc_Word32 ReceivePayloadType(
       const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-      const uint32_t frequency,
-      const uint8_t channels,
-      const uint32_t rate,
-      int8_t* payload_type) const;
+      const WebRtc_UWord32 frequency,
+      const WebRtc_UWord8 channels,
+      const WebRtc_UWord32 rate,
+      WebRtc_Word8* payload_type) const;
 
-  int32_t IncomingRTPPacket(
+  WebRtc_Word32 ReceivePayload(const WebRtc_Word8 payload_type,
+                               char payload_name[RTP_PAYLOAD_NAME_SIZE],
+                               WebRtc_UWord32* frequency,
+                               WebRtc_UWord8* channels,
+                               WebRtc_UWord32* rate) const;
+
+  WebRtc_Word32 RemotePayload(char payload_name[RTP_PAYLOAD_NAME_SIZE],
+                              WebRtc_Word8* payload_type,
+                              WebRtc_UWord32* frequency,
+                              WebRtc_UWord8* channels) const;
+
+  WebRtc_Word32 IncomingRTPPacket(
       WebRtcRTPHeader* rtpheader,
-      const uint8_t* incoming_rtp_packet,
-      const uint16_t incoming_rtp_packet_length);
+      const WebRtc_UWord8* incoming_rtp_packet,
+      const WebRtc_UWord16 incoming_rtp_packet_length);
 
   NACKMethod NACK() const ;
 
   // Turn negative acknowledgement requests on/off.
-  int32_t SetNACKStatus(const NACKMethod method, int max_reordering_threshold);
+  WebRtc_Word32 SetNACKStatus(const NACKMethod method);
 
   // Returns the last received timestamp.
-  virtual uint32_t TimeStamp() const;
+  virtual WebRtc_UWord32 TimeStamp() const;
   int32_t LastReceivedTimeMs() const;
-  virtual uint16_t SequenceNumber() const;
+  virtual WebRtc_UWord16 SequenceNumber() const;
 
-  int32_t EstimatedRemoteTimeStamp(uint32_t& timestamp) const;
+  WebRtc_Word32 EstimatedRemoteTimeStamp(WebRtc_UWord32& timestamp) const;
 
-  uint32_t SSRC() const;
+  WebRtc_UWord32 SSRC() const;
 
-  int32_t CSRCs(uint32_t array_of_csrc[kRtpCsrcSize]) const;
+  WebRtc_Word32 CSRCs(WebRtc_UWord32 array_of_csrc[kRtpCsrcSize]) const;
 
-  int32_t Energy(uint8_t array_of_energy[kRtpCsrcSize]) const;
+  WebRtc_Word32 Energy(WebRtc_UWord8 array_of_energy[kRtpCsrcSize]) const;
 
   // Get the currently configured SSRC filter.
-  int32_t SSRCFilter(uint32_t& allowed_ssrc) const;
+  WebRtc_Word32 SSRCFilter(WebRtc_UWord32& allowed_ssrc) const;
 
   // Set a SSRC to be used as a filter for incoming RTP streams.
-  int32_t SetSSRCFilter(const bool enable, const uint32_t allowed_ssrc);
+  WebRtc_Word32 SetSSRCFilter(const bool enable,
+                              const WebRtc_UWord32 allowed_ssrc);
 
-  int32_t Statistics(uint8_t*  fraction_lost,
-                     uint32_t* cum_lost,
-                     uint32_t* ext_max,
-                     uint32_t* jitter,  // Will be moved from JB.
-                     uint32_t* max_jitter,
-                     uint32_t* jitter_transmission_time_offset,
-                     bool reset) const;
+  WebRtc_Word32 Statistics(WebRtc_UWord8*  fraction_lost,
+                           WebRtc_UWord32* cum_lost,
+                           WebRtc_UWord32* ext_max,
+                           WebRtc_UWord32* jitter,  // Will be moved from JB.
+                           WebRtc_UWord32* max_jitter,
+                           WebRtc_UWord32* jitter_transmission_time_offset,
+                           bool reset) const;
 
-  int32_t Statistics(uint8_t*  fraction_lost,
-                     uint32_t* cum_lost,
-                     uint32_t* ext_max,
-                     uint32_t* jitter,  // Will be moved from JB.
-                     uint32_t* max_jitter,
-                     uint32_t* jitter_transmission_time_offset,
-                     int32_t* missing,
-                     bool reset) const;
+  WebRtc_Word32 Statistics(WebRtc_UWord8*  fraction_lost,
+                           WebRtc_UWord32* cum_lost,
+                           WebRtc_UWord32* ext_max,
+                           WebRtc_UWord32* jitter,  // Will be moved from JB.
+                           WebRtc_UWord32* max_jitter,
+                           WebRtc_UWord32* jitter_transmission_time_offset,
+                           WebRtc_Word32* missing,
+                           bool reset) const;
 
-  int32_t DataCounters(uint32_t* bytes_received,
-                       uint32_t* packets_received) const;
+  WebRtc_Word32 DataCounters(WebRtc_UWord32* bytes_received,
+                             WebRtc_UWord32* packets_received) const;
 
-  int32_t ResetStatistics();
+  WebRtc_Word32 ResetStatistics();
 
-  int32_t ResetDataCounters();
+  WebRtc_Word32 ResetDataCounters();
 
-  uint16_t PacketOHReceived() const;
+  WebRtc_UWord16 PacketOHReceived() const;
 
-  uint32_t PacketCountReceived() const;
+  WebRtc_UWord32 PacketCountReceived() const;
 
-  uint32_t ByteCountReceived() const;
+  WebRtc_UWord32 ByteCountReceived() const;
 
-  int32_t RegisterRtpHeaderExtension(const RTPExtensionType type,
-                                     const uint8_t id);
+  WebRtc_Word32 RegisterRtpHeaderExtension(const RTPExtensionType type,
+                                           const WebRtc_UWord8 id);
 
-  int32_t DeregisterRtpHeaderExtension(const RTPExtensionType type);
+  WebRtc_Word32 DeregisterRtpHeaderExtension(const RTPExtensionType type);
 
   void GetHeaderExtensionMapCopy(RtpHeaderExtensionMap* map) const;
 
+  virtual WebRtc_UWord32 PayloadTypeToPayload(
+      const WebRtc_UWord8 payload_type,
+      ModuleRTPUtility::Payload*& payload) const;
+
   // RTX.
-  void SetRTXStatus(bool enable, uint32_t ssrc);
+  void SetRTXStatus(const bool enable, const WebRtc_UWord32 ssrc);
 
-  void RTXStatus(bool* enable, uint32_t* ssrc, int* payload_type) const;
+  void RTXStatus(bool* enable, WebRtc_UWord32* ssrc) const;
 
-  void SetRtxPayloadType(int payload_type);
+  RTPReceiverAudio* GetAudioReceiver() const {
+    return rtp_receiver_audio_;
+  }
 
-  virtual int8_t REDPayloadType() const;
+  virtual WebRtc_Word32 CallbackOfReceivedPayloadData(
+      const WebRtc_UWord8* payload_data,
+      const WebRtc_UWord16 payload_size,
+      const WebRtcRTPHeader* rtp_header);
+
+  virtual WebRtc_Word8 REDPayloadType() const;
 
   bool HaveNotReceivedPackets() const;
+ protected:
 
-  virtual bool RetransmitOfOldPacket(const uint16_t sequence_number,
-                                     const uint32_t rtp_time_stamp) const;
+  virtual bool RetransmitOfOldPacket(const WebRtc_UWord16 sequence_number,
+                                     const WebRtc_UWord32 rtp_time_stamp) const;
 
   void UpdateStatistics(const WebRtcRTPHeader* rtp_header,
-                        const uint16_t bytes,
+                        const WebRtc_UWord16 bytes,
                         const bool old_packet);
 
  private:
   // Returns whether RED is configured with payload_type.
-  bool REDPayloadType(const int8_t payload_type) const;
+  bool REDPayloadType(const WebRtc_Word8 payload_type) const;
 
-  bool InOrderPacket(const uint16_t sequence_number) const;
+  bool InOrderPacket(const WebRtc_UWord16 sequence_number) const;
 
   void CheckSSRCChanged(const WebRtcRTPHeader* rtp_header);
   void CheckCSRC(const WebRtcRTPHeader* rtp_header);
-  int32_t CheckPayloadChanged(const WebRtcRTPHeader* rtp_header,
-                              const int8_t first_payload_byte,
-                              bool& isRED,
-                              ModuleRTPUtility::PayloadUnion* payload);
+  WebRtc_Word32 CheckPayloadChanged(const WebRtcRTPHeader* rtp_header,
+                                    const WebRtc_Word8 first_payload_byte,
+                                    bool& isRED,
+                                    ModuleRTPUtility::PayloadUnion* payload);
 
-  void UpdateNACKBitRate(int32_t bytes, uint32_t now);
-  bool ProcessNACKBitRate(uint32_t now);
+  void UpdateNACKBitRate(WebRtc_Word32 bytes, WebRtc_UWord32 now);
+  bool ProcessNACKBitRate(WebRtc_UWord32 now);
 
-  RTPPayloadRegistry*             rtp_payload_registry_;
-  scoped_ptr<RTPReceiverStrategy> rtp_media_receiver_;
+ private:
+  RTPReceiverAudio*       rtp_receiver_audio_;
+  RTPReceiverVideo*       rtp_receiver_video_;
+  RTPReceiverStrategy*    rtp_media_receiver_;
 
-  int32_t           id_;
+  WebRtc_Word32           id_;
   ModuleRtpRtcpImpl&      rtp_rtcp_;
 
+  CriticalSectionWrapper* critical_section_cbs_;
   RtpFeedback*            cb_rtp_feedback_;
+  RtpData*                cb_rtp_data_;
 
   CriticalSectionWrapper* critical_section_rtp_receiver_;
-  mutable int64_t   last_receive_time_;
-  uint16_t          last_received_payload_length_;
+  mutable WebRtc_Word64   last_receive_time_;
+  WebRtc_UWord16          last_received_payload_length_;
+  WebRtc_Word8            last_received_payload_type_;
+  WebRtc_Word8            last_received_media_payload_type_;
 
-  uint32_t          packet_timeout_ms_;
+  WebRtc_UWord32          packet_timeout_ms_;
+  WebRtc_Word8            red_payload_type_;
 
-  RtpHeaderExtensionMap   rtp_header_extension_map_;
+  ModuleRTPUtility::PayloadTypeMap payload_type_map_;
+  RtpHeaderExtensionMap            rtp_header_extension_map_;
 
   // SSRCs.
-  uint32_t            ssrc_;
-  uint8_t             num_csrcs_;
-  uint32_t            current_remote_csrc_[kRtpCsrcSize];
-  uint8_t             num_energy_;
-  uint8_t             current_remote_energy_[kRtpCsrcSize];
+  WebRtc_UWord32            ssrc_;
+  WebRtc_UWord8             num_csrcs_;
+  WebRtc_UWord32            current_remote_csrc_[kRtpCsrcSize];
+  WebRtc_UWord8             num_energy_;
+  WebRtc_UWord8             current_remote_energy_[kRtpCsrcSize];
 
   bool                      use_ssrc_filter_;
-  uint32_t            ssrc_filter_;
+  WebRtc_UWord32            ssrc_filter_;
 
   // Stats on received RTP packets.
-  uint32_t            jitter_q4_;
-  mutable uint32_t    jitter_max_q4_;
-  mutable uint32_t    cumulative_loss_;
-  uint32_t            jitter_q4_transmission_time_offset_;
+  WebRtc_UWord32            jitter_q4_;
+  mutable WebRtc_UWord32    jitter_max_q4_;
+  mutable WebRtc_UWord32    cumulative_loss_;
+  WebRtc_UWord32            jitter_q4_transmission_time_offset_;
 
-  uint32_t            local_time_last_received_timestamp_;
+  WebRtc_UWord32            local_time_last_received_timestamp_;
   int64_t                   last_received_frame_time_ms_;
-  uint32_t            last_received_timestamp_;
-  uint16_t            last_received_sequence_number_;
-  int32_t             last_received_transmission_time_offset_;
-  uint16_t            received_seq_first_;
-  uint16_t            received_seq_max_;
-  uint16_t            received_seq_wraps_;
+  WebRtc_UWord32            last_received_timestamp_;
+  WebRtc_UWord16            last_received_sequence_number_;
+  WebRtc_Word32             last_received_transmission_time_offset_;
+  WebRtc_UWord16            received_seq_first_;
+  WebRtc_UWord16            received_seq_max_;
+  WebRtc_UWord16            received_seq_wraps_;
 
   // Current counter values.
-  uint16_t            received_packet_oh_;
-  uint32_t            received_byte_count_;
-  uint32_t            received_old_packet_count_;
-  uint32_t            received_inorder_packet_count_;
+  WebRtc_UWord16            received_packet_oh_;
+  WebRtc_UWord32            received_byte_count_;
+  WebRtc_UWord32            received_old_packet_count_;
+  WebRtc_UWord32            received_inorder_packet_count_;
 
   // Counter values when we sent the last report.
-  mutable uint32_t    last_report_inorder_packets_;
-  mutable uint32_t    last_report_old_packets_;
-  mutable uint16_t    last_report_seq_max_;
-  mutable uint8_t     last_report_fraction_lost_;
-  mutable uint32_t    last_report_cumulative_lost_;  // 24 bits valid.
-  mutable uint32_t    last_report_extended_high_seq_num_;
-  mutable uint32_t    last_report_jitter_;
-  mutable uint32_t    last_report_jitter_transmission_time_offset_;
+  mutable WebRtc_UWord32    last_report_inorder_packets_;
+  mutable WebRtc_UWord32    last_report_old_packets_;
+  mutable WebRtc_UWord16    last_report_seq_max_;
+  mutable WebRtc_UWord8     last_report_fraction_lost_;
+  mutable WebRtc_UWord32    last_report_cumulative_lost_;  // 24 bits valid.
+  mutable WebRtc_UWord32    last_report_extended_high_seq_num_;
+  mutable WebRtc_UWord32    last_report_jitter_;
+  mutable WebRtc_UWord32    last_report_jitter_transmission_time_offset_;
 
   NACKMethod nack_method_;
-  int max_reordering_threshold_;
 
   bool rtx_;
-  uint32_t ssrc_rtx_;
-  int payload_type_rtx_;
+  WebRtc_UWord32 ssrc_rtx_;
 };
 
 } // namespace webrtc

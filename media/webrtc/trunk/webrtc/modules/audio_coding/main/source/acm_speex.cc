@@ -26,7 +26,7 @@
 namespace webrtc {
 
 #ifndef WEBRTC_CODEC_SPEEX
-ACMSPEEX::ACMSPEEX(int16_t /* codec_id */)
+ACMSPEEX::ACMSPEEX(WebRtc_Word16 /* codec_id */)
     : encoder_inst_ptr_(NULL),
       decoder_inst_ptr_(NULL),
       compl_mode_(0),
@@ -41,40 +41,40 @@ ACMSPEEX::~ACMSPEEX() {
   return;
 }
 
-int16_t ACMSPEEX::InternalEncode(
-    uint8_t* /* bitstream */,
-    int16_t* /* bitstream_len_byte */) {
+WebRtc_Word16 ACMSPEEX::InternalEncode(
+    WebRtc_UWord8* /* bitstream */,
+    WebRtc_Word16* /* bitstream_len_byte */) {
   return -1;
 }
 
-int16_t ACMSPEEX::DecodeSafe(uint8_t* /* bitstream */,
-                             int16_t /* bitstream_len_byte */,
-                             int16_t* /* audio */,
-                             int16_t* /* audio_samples */,
-                             int8_t* /* speech_type */) {
+WebRtc_Word16 ACMSPEEX::DecodeSafe(WebRtc_UWord8* /* bitstream */,
+                                   WebRtc_Word16 /* bitstream_len_byte */,
+                                   WebRtc_Word16* /* audio */,
+                                   WebRtc_Word16* /* audio_samples */,
+                                   WebRtc_Word8* /* speech_type */) {
   return -1;
 }
 
-int16_t ACMSPEEX::EnableDTX() {
+WebRtc_Word16 ACMSPEEX::EnableDTX() {
   return -1;
 }
 
-int16_t ACMSPEEX::DisableDTX() {
+WebRtc_Word16 ACMSPEEX::DisableDTX() {
   return -1;
 }
 
-int16_t ACMSPEEX::InternalInitEncoder(
+WebRtc_Word16 ACMSPEEX::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-int16_t ACMSPEEX::InternalInitDecoder(
+WebRtc_Word16 ACMSPEEX::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-int32_t ACMSPEEX::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
-                           const CodecInst& /* codec_inst */) {
+WebRtc_Word32 ACMSPEEX::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
+                                 const CodecInst& /* codec_inst */) {
   return -1;
 }
 
@@ -82,7 +82,7 @@ ACMGenericCodec* ACMSPEEX::CreateInstance(void) {
   return NULL;
 }
 
-int16_t ACMSPEEX::InternalCreateEncoder() {
+WebRtc_Word16 ACMSPEEX::InternalCreateEncoder() {
   return -1;
 }
 
@@ -90,7 +90,7 @@ void ACMSPEEX::DestructEncoderSafe() {
   return;
 }
 
-int16_t ACMSPEEX::InternalCreateDecoder() {
+WebRtc_Word16 ACMSPEEX::InternalCreateDecoder() {
   return -1;
 }
 
@@ -98,7 +98,7 @@ void ACMSPEEX::DestructDecoderSafe() {
   return;
 }
 
-int16_t ACMSPEEX::SetBitRateSafe(const int32_t /* rate */) {
+WebRtc_Word16 ACMSPEEX::SetBitRateSafe(const WebRtc_Word32 /* rate */) {
   return -1;
 }
 
@@ -107,22 +107,22 @@ void ACMSPEEX::InternalDestructEncoderInst(void* /* ptr_inst */) {
 }
 
 #ifdef UNUSEDSPEEX
-int16_t ACMSPEEX::EnableVBR() {
+WebRtc_Word16 ACMSPEEX::EnableVBR() {
   return -1;
 }
 
-int16_t ACMSPEEX::DisableVBR() {
+WebRtc_Word16 ACMSPEEX::DisableVBR() {
   return -1;
 }
 
-int16_t ACMSPEEX::SetComplMode(int16_t mode) {
+WebRtc_Word16 ACMSPEEX::SetComplMode(WebRtc_Word16 mode) {
   return -1;
 }
 #endif
 
 #else  //===================== Actual Implementation =======================
 
-ACMSPEEX::ACMSPEEX(int16_t codec_id)
+ACMSPEEX::ACMSPEEX(WebRtc_Word16 codec_id)
     : encoder_inst_ptr_(NULL),
       decoder_inst_ptr_(NULL) {
   codec_id_ = codec_id;
@@ -165,11 +165,11 @@ ACMSPEEX::~ACMSPEEX() {
   return;
 }
 
-int16_t ACMSPEEX::InternalEncode(uint8_t* bitstream,
-                                 int16_t* bitstream_len_byte) {
-  int16_t status;
-  int16_t num_encoded_samples = 0;
-  int16_t n = 0;
+WebRtc_Word16 ACMSPEEX::InternalEncode(WebRtc_UWord8* bitstream,
+                                       WebRtc_Word16* bitstream_len_byte) {
+  WebRtc_Word16 status;
+  WebRtc_Word16 num_encoded_samples = 0;
+  WebRtc_Word16 n = 0;
 
   while (num_encoded_samples < frame_len_smpl_) {
     status = WebRtcSpeex_Encode(encoder_inst_ptr_,
@@ -196,25 +196,25 @@ int16_t ACMSPEEX::InternalEncode(uint8_t* bitstream,
       // This frame is detected as inactive. We need send whatever
       // encoded so far.
       *bitstream_len_byte = WebRtcSpeex_GetBitstream(encoder_inst_ptr_,
-                                                     (int16_t*)bitstream);
+                                                     (WebRtc_Word16*)bitstream);
       return *bitstream_len_byte;
     }
   }
 
   *bitstream_len_byte = WebRtcSpeex_GetBitstream(encoder_inst_ptr_,
-                                                 (int16_t*)bitstream);
+                                                 (WebRtc_Word16*)bitstream);
   return *bitstream_len_byte;
 }
 
-int16_t ACMSPEEX::DecodeSafe(uint8_t* /* bitstream */,
-                             int16_t /* bitstream_len_byte */,
-                             int16_t* /* audio */,
-                             int16_t* /* audio_samples */,
-                             int8_t* /* speech_type */) {
+WebRtc_Word16 ACMSPEEX::DecodeSafe(WebRtc_UWord8* /* bitstream */,
+                                   WebRtc_Word16 /* bitstream_len_byte */,
+                                   WebRtc_Word16* /* audio */,
+                                   WebRtc_Word16* /* audio_samples */,
+                                   WebRtc_Word8* /* speech_type */) {
   return 0;
 }
 
-int16_t ACMSPEEX::EnableDTX() {
+WebRtc_Word16 ACMSPEEX::EnableDTX() {
   if (dtx_enabled_) {
     return 0;
   } else if (encoder_exist_) {  // check if encoder exist
@@ -234,7 +234,7 @@ int16_t ACMSPEEX::EnableDTX() {
   return 0;
 }
 
-int16_t ACMSPEEX::DisableDTX() {
+WebRtc_Word16 ACMSPEEX::DisableDTX() {
   if (!dtx_enabled_) {
     return 0;
   } else if (encoder_exist_) {  // check if encoder exist
@@ -255,7 +255,7 @@ int16_t ACMSPEEX::DisableDTX() {
   return 0;
 }
 
-int16_t ACMSPEEX::InternalInitEncoder(
+WebRtc_Word16 ACMSPEEX::InternalInitEncoder(
     WebRtcACMCodecParams* codec_params) {
   // sanity check
   if (encoder_inst_ptr_ == NULL) {
@@ -264,7 +264,7 @@ int16_t ACMSPEEX::InternalInitEncoder(
     return -1;
   }
 
-  int16_t status = SetBitRateSafe((codec_params->codecInstant).rate);
+  WebRtc_Word16 status = SetBitRateSafe((codec_params->codecInstant).rate);
   status +=
       (WebRtcSpeex_EncoderInit(encoder_inst_ptr_, vbr_enabled_, compl_mode_,
                                ((codec_params->enable_dtx) ? 1 : 0)) < 0) ?
@@ -279,9 +279,9 @@ int16_t ACMSPEEX::InternalInitEncoder(
   }
 }
 
-int16_t ACMSPEEX::InternalInitDecoder(
+WebRtc_Word16 ACMSPEEX::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
-  int16_t status;
+  WebRtc_Word16 status;
 
   // sanity check
   if (decoder_inst_ptr_ == NULL) {
@@ -300,8 +300,8 @@ int16_t ACMSPEEX::InternalInitDecoder(
   }
 }
 
-int32_t ACMSPEEX::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                           const CodecInst& codec_inst) {
+WebRtc_Word32 ACMSPEEX::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                                 const CodecInst& codec_inst) {
   if (!decoder_initialized_) {
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, unique_id_,
                  "Error, Speex decoder is not initialized");
@@ -340,7 +340,7 @@ ACMGenericCodec* ACMSPEEX::CreateInstance(void) {
   return NULL;
 }
 
-int16_t ACMSPEEX::InternalCreateEncoder() {
+WebRtc_Word16 ACMSPEEX::InternalCreateEncoder() {
   return WebRtcSpeex_CreateEnc(&encoder_inst_ptr_, sampling_frequency_);
 }
 
@@ -355,7 +355,7 @@ void ACMSPEEX::DestructEncoderSafe() {
   encoding_rate_ = 0;
 }
 
-int16_t ACMSPEEX::InternalCreateDecoder() {
+WebRtc_Word16 ACMSPEEX::InternalCreateDecoder() {
   return WebRtcSpeex_CreateDec(&decoder_inst_ptr_, sampling_frequency_, 1);
 }
 
@@ -369,7 +369,7 @@ void ACMSPEEX::DestructDecoderSafe() {
   decoder_initialized_ = false;
 }
 
-int16_t ACMSPEEX::SetBitRateSafe(const int32_t rate) {
+WebRtc_Word16 ACMSPEEX::SetBitRateSafe(const WebRtc_Word32 rate) {
   // Check if changed rate
   if (rate == encoding_rate_) {
     return 0;
@@ -397,7 +397,7 @@ void ACMSPEEX::InternalDestructEncoderInst(void* ptr_inst) {
 
 // This API is currently not in use. If requested to be able to enable/disable
 // VBR an ACM API need to be added.
-int16_t ACMSPEEX::EnableVBR() {
+WebRtc_Word16 ACMSPEEX::EnableVBR() {
   if (vbr_enabled_) {
     return 0;
   } else if (encoder_exist_) {  // check if encoder exist
@@ -418,7 +418,7 @@ int16_t ACMSPEEX::EnableVBR() {
 
 // This API is currently not in use. If requested to be able to enable/disable
 // VBR an ACM API need to be added.
-int16_t ACMSPEEX::DisableVBR() {
+WebRtc_Word16 ACMSPEEX::DisableVBR() {
   if (!vbr_enabled_) {
     return 0;
   } else if (encoder_exist_) {  // check if encoder exist
@@ -440,7 +440,7 @@ int16_t ACMSPEEX::DisableVBR() {
 
 // This API is currently not in use. If requested to be able to set complexity
 // an ACM API need to be added.
-int16_t ACMSPEEX::SetComplMode(int16_t mode) {
+WebRtc_Word16 ACMSPEEX::SetComplMode(WebRtc_Word16 mode) {
   // Check if new mode
   if (mode == compl_mode_) {
     return 0;

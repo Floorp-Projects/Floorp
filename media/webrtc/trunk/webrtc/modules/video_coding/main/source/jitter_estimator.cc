@@ -20,9 +20,7 @@
 
 namespace webrtc {
 
-enum { kInitialMaxJitterEstimate = 0 };
-
-VCMJitterEstimator::VCMJitterEstimator(int32_t vcmId, int32_t receiverId) :
+VCMJitterEstimator::VCMJitterEstimator(WebRtc_Word32 vcmId, WebRtc_Word32 receiverId) :
 _vcmId(vcmId),
 _receiverId(receiverId),
 _phi(0.97),
@@ -35,9 +33,7 @@ _numStdDevFrameSizeOutlier(3),
 _noiseStdDevs(2.33), // ~Less than 1% chance
                      // (look up in normal distribution table)...
 _noiseStdDevOffset(30.0), // ...of getting 30 ms freezes
-_rttFilter(vcmId, receiverId),
-_jitterEstimateMode(kLastEstimate),
-_maxJitterEstimateMs(kInitialMaxJitterEstimate)
+_rttFilter(vcmId, receiverId)
 {
     Reset();
 }
@@ -66,8 +62,6 @@ VCMJitterEstimator::operator=(const VCMJitterEstimator& rhs)
         _startupCount = rhs._startupCount;
         _latestNackTimestamp = rhs._latestNackTimestamp;
         _nackCount = rhs._nackCount;
-        _jitterEstimateMode = rhs._jitterEstimateMode;
-        _maxJitterEstimateMs = rhs._maxJitterEstimateMs;
         _rttFilter = rhs._rttFilter;
     }
     return *this;
@@ -112,7 +106,7 @@ VCMJitterEstimator::ResetNackCount()
 
 // Updates the estimates with the new measurements
 void
-VCMJitterEstimator::UpdateEstimate(int64_t frameDelayMS, uint32_t frameSizeBytes,
+VCMJitterEstimator::UpdateEstimate(WebRtc_Word64 frameDelayMS, WebRtc_UWord32 frameSizeBytes,
                                             bool incompleteFrame /* = false */)
 {
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
@@ -233,8 +227,8 @@ VCMJitterEstimator::FrameNacked()
 // Updates Kalman estimate of the channel
 // The caller is expected to sanity check the inputs.
 void
-VCMJitterEstimator::KalmanEstimateChannel(int64_t frameDelayMS,
-                                          int32_t deltaFSBytes)
+VCMJitterEstimator::KalmanEstimateChannel(WebRtc_Word64 frameDelayMS,
+                                          WebRtc_Word32 deltaFSBytes)
 {
     double Mh[2];
     double hMh_sigma;
@@ -311,8 +305,8 @@ VCMJitterEstimator::KalmanEstimateChannel(int64_t frameDelayMS,
 // Calculate difference in delay between a sample and the
 // expected delay estimated by the Kalman filter
 double
-VCMJitterEstimator::DeviationFromExpectedDelay(int64_t frameDelayMS,
-                                               int32_t deltaFSBytes) const
+VCMJitterEstimator::DeviationFromExpectedDelay(WebRtc_Word64 frameDelayMS,
+                                               WebRtc_Word32 deltaFSBytes) const
 {
     return frameDelayMS - (_theta[0] * deltaFSBytes + _theta[1]);
 }
@@ -393,13 +387,13 @@ VCMJitterEstimator::PostProcessEstimate()
 }
 
 void
-VCMJitterEstimator::UpdateRtt(uint32_t rttMs)
+VCMJitterEstimator::UpdateRtt(WebRtc_UWord32 rttMs)
 {
     _rttFilter.Update(rttMs);
 }
 
 void
-VCMJitterEstimator::UpdateMaxFrameSize(uint32_t frameSizeBytes)
+VCMJitterEstimator::UpdateMaxFrameSize(WebRtc_UWord32 frameSizeBytes)
 {
     if (_maxFrameSize < frameSizeBytes)
     {
@@ -407,38 +401,21 @@ VCMJitterEstimator::UpdateMaxFrameSize(uint32_t frameSizeBytes)
     }
 }
 
-void VCMJitterEstimator::SetMaxJitterEstimate(uint32_t initial_delay_ms)
-{
-    if (initial_delay_ms > 0) {
-        _maxJitterEstimateMs = initial_delay_ms;
-        _jitterEstimateMode = kMaxEstimate;
-    } else {
-        _maxJitterEstimateMs = kInitialMaxJitterEstimate;
-        _jitterEstimateMode = kLastEstimate;
-    }
-}
-
 // Returns the current filtered estimate if available,
 // otherwise tries to calculate an estimate.
-int
+double
 VCMJitterEstimator::GetJitterEstimate(double rttMultiplier)
 {
-    double jitterMS = CalculateEstimate() + OPERATING_SYSTEM_JITTER;
+    double jitterMS = CalculateEstimate();
     if (_filterJitterEstimate > jitterMS)
     {
         jitterMS = _filterJitterEstimate;
     }
     if (_nackCount >= _nackLimit)
     {
-        jitterMS += _rttFilter.RttMs() * rttMultiplier;
+        return jitterMS + _rttFilter.RttMs() * rttMultiplier;
     }
-    int jitterMsInt = static_cast<uint32_t>(jitterMS + 0.5);
-    if (_jitterEstimateMode == kLastEstimate) {
-        return jitterMsInt;
-    } else {
-        _maxJitterEstimateMs = VCM_MAX(_maxJitterEstimateMs, jitterMsInt);
-        return _maxJitterEstimateMs;
-    }
+    return jitterMS;
 }
 
 }

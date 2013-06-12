@@ -9,15 +9,15 @@
  */
 
 #include "internal_defines.h"
+#include "modules/video_coding/main/source/tick_time_base.h"
 #include "timestamp_extrapolator.h"
 #include "trace.h"
-#include "webrtc/system_wrappers/interface/clock.h"
 
 namespace webrtc {
 
-VCMTimestampExtrapolator::VCMTimestampExtrapolator(Clock* clock,
-                                                   int32_t vcmId,
-                                                   int32_t id)
+VCMTimestampExtrapolator::VCMTimestampExtrapolator(TickTimeBase* clock,
+                                                   WebRtc_Word32 vcmId,
+                                                   WebRtc_Word32 id)
 :
 _rwLock(RWLockWrapper::CreateRWLock()),
 _vcmId(vcmId),
@@ -38,7 +38,7 @@ _accDrift(6600), // in timestamp ticks, i.e. 15 ms
 _accMaxError(7000),
 _P11(1e10)
 {
-    Reset(_clock->TimeInMilliseconds());
+    Reset(_clock->MillisecondTimestamp());
 }
 
 VCMTimestampExtrapolator::~VCMTimestampExtrapolator()
@@ -47,7 +47,7 @@ VCMTimestampExtrapolator::~VCMTimestampExtrapolator()
 }
 
 void
-VCMTimestampExtrapolator::Reset(const int64_t nowMs /* = -1 */)
+VCMTimestampExtrapolator::Reset(const WebRtc_Word64 nowMs /* = -1 */)
 {
     WriteLockScoped wl(*_rwLock);
     if (nowMs > -1)
@@ -56,7 +56,7 @@ VCMTimestampExtrapolator::Reset(const int64_t nowMs /* = -1 */)
     }
     else
     {
-        _startMs = _clock->TimeInMilliseconds();
+        _startMs = _clock->MillisecondTimestamp();
     }
     _prevMs = _startMs;
     _firstTimestamp = 0;
@@ -74,7 +74,7 @@ VCMTimestampExtrapolator::Reset(const int64_t nowMs /* = -1 */)
 }
 
 void
-VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
+VCMTimestampExtrapolator::Update(WebRtc_Word64 tMs, WebRtc_UWord32 ts90khz, bool trace)
 {
 
     _rwLock->AcquireLockExclusive();
@@ -94,9 +94,9 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
     // Remove offset to prevent badly scaled matrices
     tMs -= _startMs;
 
-    int32_t prevWrapArounds = _wrapArounds;
+    WebRtc_Word32 prevWrapArounds = _wrapArounds;
     CheckForWrapArounds(ts90khz);
-    int32_t wrapAroundsSincePrev = _wrapArounds - prevWrapArounds;
+    WebRtc_Word32 wrapAroundsSincePrev = _wrapArounds - prevWrapArounds;
 
     if (wrapAroundsSincePrev == 0 && ts90khz < _prevTs90khz)
     {
@@ -115,7 +115,7 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
     }
 
     // Compensate for wraparounds by changing the line offset
-    _w[1] = _w[1] - wrapAroundsSincePrev * ((static_cast<int64_t>(1)<<32) - 1);
+    _w[1] = _w[1] - wrapAroundsSincePrev * ((static_cast<WebRtc_Word64>(1)<<32) - 1);
 
     double residual = (static_cast<double>(ts90khz) - _firstTimestamp) - static_cast<double>(tMs) * _w[0] - _w[1];
     if (DelayChangeDetection(residual, trace) &&
@@ -156,38 +156,38 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
     _rwLock->ReleaseLockExclusive();
 }
 
-uint32_t
-VCMTimestampExtrapolator::ExtrapolateTimestamp(int64_t tMs) const
+WebRtc_UWord32
+VCMTimestampExtrapolator::ExtrapolateTimestamp(WebRtc_Word64 tMs) const
 {
     ReadLockScoped rl(*_rwLock);
-    uint32_t timestamp = 0;
+    WebRtc_UWord32 timestamp = 0;
     if (_packetCount == 0)
     {
         timestamp = 0;
     }
     else if (_packetCount < _startUpFilterDelayInPackets)
     {
-        timestamp = static_cast<uint32_t>(90.0 * (tMs - _prevMs) + _prevTs90khz + 0.5);
+        timestamp = static_cast<WebRtc_UWord32>(90.0 * (tMs - _prevMs) + _prevTs90khz + 0.5);
     }
     else
     {
-        timestamp = static_cast<uint32_t>(_w[0] * (tMs - _startMs) + _w[1] + _firstTimestamp + 0.5);
+        timestamp = static_cast<WebRtc_UWord32>(_w[0] * (tMs - _startMs) + _w[1] + _firstTimestamp + 0.5);
     }
     return timestamp;
 }
 
-int64_t
-VCMTimestampExtrapolator::ExtrapolateLocalTime(uint32_t timestamp90khz) const
+WebRtc_Word64
+VCMTimestampExtrapolator::ExtrapolateLocalTime(WebRtc_UWord32 timestamp90khz) const
 {
     ReadLockScoped rl(*_rwLock);
-    int64_t localTimeMs = 0;
+    WebRtc_Word64 localTimeMs = 0;
     if (_packetCount == 0)
     {
         localTimeMs = -1;
     }
     else if (_packetCount < _startUpFilterDelayInPackets)
     {
-        localTimeMs = _prevMs + static_cast<int64_t>(static_cast<double>(timestamp90khz - _prevTs90khz) / 90.0 + 0.5);
+        localTimeMs = _prevMs + static_cast<WebRtc_Word64>(static_cast<double>(timestamp90khz - _prevTs90khz) / 90.0 + 0.5);
     }
     else
     {
@@ -198,7 +198,7 @@ VCMTimestampExtrapolator::ExtrapolateLocalTime(uint32_t timestamp90khz) const
         else
         {
             double timestampDiff = static_cast<double>(timestamp90khz) - static_cast<double>(_firstTimestamp);
-            localTimeMs = static_cast<int64_t>(static_cast<double>(_startMs) + (timestampDiff - _w[1]) / _w[0] + 0.5);
+            localTimeMs = static_cast<WebRtc_Word64>(static_cast<double>(_startMs) + (timestampDiff - _w[1]) / _w[0] + 0.5);
         }
     }
     return localTimeMs;
@@ -207,7 +207,7 @@ VCMTimestampExtrapolator::ExtrapolateLocalTime(uint32_t timestamp90khz) const
 // Investigates if the timestamp clock has overflowed since the last timestamp and
 // keeps track of the number of wrap arounds since reset.
 void
-VCMTimestampExtrapolator::CheckForWrapArounds(uint32_t ts90khz)
+VCMTimestampExtrapolator::CheckForWrapArounds(WebRtc_UWord32 ts90khz)
 {
     if (_prevTs90khz == 0)
     {
@@ -219,7 +219,7 @@ VCMTimestampExtrapolator::CheckForWrapArounds(uint32_t ts90khz)
         // This difference will probably be less than -2^31 if we have had a wrap around
         // (e.g. timestamp = 1, _previousTimestamp = 2^32 - 1). Since it is casted to a Word32,
         // it should be positive.
-        if (static_cast<int32_t>(ts90khz - _prevTs90khz) > 0)
+        if (static_cast<WebRtc_Word32>(ts90khz - _prevTs90khz) > 0)
         {
             // Forward wrap around
             _wrapArounds++;
@@ -227,7 +227,7 @@ VCMTimestampExtrapolator::CheckForWrapArounds(uint32_t ts90khz)
     }
     // This difference will probably be less than -2^31 if we have had a backward wrap around.
     // Since it is casted to a Word32, it should be positive.
-    else if (static_cast<int32_t>(_prevTs90khz - ts90khz) > 0)
+    else if (static_cast<WebRtc_Word32>(_prevTs90khz - ts90khz) > 0)
     {
         // Backward wrap around
         _wrapArounds--;

@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/main/source/codec_database.h"
+#include "modules/video_coding/main/source/codec_database.h"
 
 #include <assert.h>
 
-#include "webrtc/engine_configurations.h"
+#include "engine_configurations.h"
 #ifdef VIDEOCODEC_I420
-#include "webrtc/modules/video_coding/codecs/i420/main/interface/i420.h"
+#include "modules/video_coding/codecs/i420/main/interface/i420.h"
 #endif
 #ifdef VIDEOCODEC_VP8
-#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
 #endif
-#include "webrtc/modules/video_coding/main/source/internal_defines.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "modules/video_coding/main/source/internal_defines.h"
+#include "system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -92,14 +92,12 @@ bool VCMCodecDataBase::Codec(int list_id,
       settings->width = VCM_DEFAULT_CODEC_WIDTH;
       settings->height = VCM_DEFAULT_CODEC_HEIGHT;
       settings->numberOfSimulcastStreams = 0;
-      settings->qpMax = 56;
       settings->codecSpecific.VP8.resilience = kResilientStream;
       settings->codecSpecific.VP8.numberOfTemporalLayers = 1;
       settings->codecSpecific.VP8.denoisingOn = true;
       settings->codecSpecific.VP8.errorConcealmentOn = false;
       settings->codecSpecific.VP8.automaticResizeOn = false;
       settings->codecSpecific.VP8.frameDroppingOn = true;
-      settings->codecSpecific.VP8.keyFrameInterval = 3000;
       return true;
     }
 #endif

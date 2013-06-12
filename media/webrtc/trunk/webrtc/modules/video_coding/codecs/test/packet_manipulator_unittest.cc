@@ -61,7 +61,7 @@ class PacketManipulatorTest: public PacketRelatedTest {
   void VerifyPacketLoss(int expected_nbr_packets_dropped,
                         int actual_nbr_packets_dropped,
                         int expected_packet_data_length,
-                        uint8_t* expected_packet_data,
+                        WebRtc_UWord8* expected_packet_data,
                         EncodedImage& actual_image) {
     EXPECT_EQ(expected_nbr_packets_dropped, actual_nbr_packets_dropped);
     EXPECT_EQ(expected_packet_data_length, static_cast<int>(image_._length));
@@ -121,8 +121,8 @@ TEST_F(PacketManipulatorTest, BurstDropNinePackets) {
   // Create a longer packet data structure (10 packets)
   const int kNbrPackets = 10;
   const int kDataLength = kPacketSizeInBytes * kNbrPackets;
-  uint8_t data[kDataLength];
-  uint8_t* data_pointer = data;
+  WebRtc_UWord8 data[kDataLength];
+  WebRtc_UWord8* data_pointer = data;
   // Fill with 0s, 1s and so on to be able to easily verify which were dropped:
   for (int i = 0; i < kNbrPackets; ++i) {
     memset(data_pointer + i * kPacketSizeInBytes, i, kPacketSizeInBytes);

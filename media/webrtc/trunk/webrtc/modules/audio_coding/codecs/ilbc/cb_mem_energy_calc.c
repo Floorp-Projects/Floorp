@@ -22,20 +22,20 @@
  * by step wise adding and subtracting the next
  * sample and the last sample respectively */
 void WebRtcIlbcfix_CbMemEnergyCalc(
-    int32_t energy,   /* (i) input start energy */
-    int16_t range,   /* (i) number of iterations */
-    int16_t *ppi,   /* (i) input pointer 1 */
-    int16_t *ppo,   /* (i) input pointer 2 */
-    int16_t *energyW16,  /* (o) Energy in the CB vectors */
-    int16_t *energyShifts, /* (o) Shift value of the energy */
-    int16_t scale,   /* (i) The scaling of all energy values */
-    int16_t base_size  /* (i) Index to where the energy values should be stored */
+    WebRtc_Word32 energy,   /* (i) input start energy */
+    WebRtc_Word16 range,   /* (i) number of iterations */
+    WebRtc_Word16 *ppi,   /* (i) input pointer 1 */
+    WebRtc_Word16 *ppo,   /* (i) input pointer 2 */
+    WebRtc_Word16 *energyW16,  /* (o) Energy in the CB vectors */
+    WebRtc_Word16 *energyShifts, /* (o) Shift value of the energy */
+    WebRtc_Word16 scale,   /* (i) The scaling of all energy values */
+    WebRtc_Word16 base_size  /* (i) Index to where the energy values should be stored */
                                    )
 {
-  int16_t j,shft;
-  int32_t tmp;
-  int16_t *eSh_ptr;
-  int16_t *eW16_ptr;
+  WebRtc_Word16 j,shft;
+  WebRtc_Word32 tmp;
+  WebRtc_Word16 *eSh_ptr;
+  WebRtc_Word16 *eW16_ptr;
 
 
   eSh_ptr  = &energyShifts[1+base_size];
@@ -53,13 +53,13 @@ void WebRtcIlbcfix_CbMemEnergyCalc(
     ppi--;
     ppo--;
 
-    /* Normalize the energy into a int16_t and store
+    /* Normalize the energy into a WebRtc_Word16 and store
        the number of shifts */
 
-    shft = (int16_t)WebRtcSpl_NormW32(energy);
+    shft = (WebRtc_Word16)WebRtcSpl_NormW32(energy);
     *eSh_ptr++ = shft;
 
     tmp = WEBRTC_SPL_LSHIFT_W32(energy, shft);
-    *eW16_ptr++ = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp, 16);
+    *eW16_ptr++ = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmp, 16);
   }
 }

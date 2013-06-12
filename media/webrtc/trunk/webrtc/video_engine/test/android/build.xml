@@ -221,7 +221,7 @@ Notice for all the files in this folder.
     <property name="sdk.dir" location="${env.ANDROID_SDK_ROOT}"/>
     <property name="sdk.version" value="${env.ANDROID_SDK_VERSION}"/>
 
-    <property name="target" value="android-17"/>
+    <property name="target" value="android-16"/>
 
     <!-- ******************************************************* -->
     <!-- **************** Overridable Properties *************** -->
@@ -739,7 +739,6 @@ Notice for all the files in this folder.
                 libraryPackagesOut="project.library.packages"
                 libraryManifestFilePathOut="project.library.manifest.file.path"
                 libraryResFolderPathOut="project.library.res.folder.path"
-                libraryRFilePathOut="project.library.r.file.path"
                 libraryBinAidlFolderPathOut="project.library.bin.aidl.folder.path"
                 libraryNativeFolderPathOut="project.library.native.folder.path"
                 jarLibraryPathOut="project.all.jars.path"
@@ -854,7 +853,6 @@ Notice for all the files in this folder.
                     rfolder="${gen.absolute.dir}"
                     nonConstantId="${android.library}"
                     libraryResFolderPathRefid="project.library.res.folder.path"
-                    libraryRFileRefid="project.library.r.file"
                     libraryPackagesRefid="project.library.packages"
                     ignoreAssets="${aapt.ignore.assets}"
                     proguardFile="${out.absolute.dir}/proguard.txt">
@@ -1108,7 +1106,6 @@ Notice for all the files in this folder.
                     resourcefilename="${resource.package.file.name}"
                     resourcefilter="${aapt.resource.filter}"
                     libraryResFolderPathRefid="project.library.res.folder.path"
-                    libraryRFileRefid="project.library.r.file"
                     libraryPackagesRefid="project.library.packages"
                     previousBuildType="${build.last.target}"
                     buildType="${build.target}"

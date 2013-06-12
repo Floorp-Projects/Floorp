@@ -28,7 +28,7 @@ MonitorModule::~MonitorModule()
     delete &_callbackCritSect;
 }
 
-int32_t 
+WebRtc_Word32 
 MonitorModule::RegisterObserver(MonitorObserver& observer)
 {
     CriticalSectionScoped lock(&_callbackCritSect);
@@ -40,7 +40,7 @@ MonitorModule::RegisterObserver(MonitorObserver& observer)
     return 0;
 }
 
-int32_t 
+WebRtc_Word32 
 MonitorModule::DeRegisterObserver()
 {
     CriticalSectionScoped lock(&_callbackCritSect);
@@ -52,30 +52,30 @@ MonitorModule::DeRegisterObserver()
     return 0;
 }
 
-int32_t 
+WebRtc_Word32 
 MonitorModule::Version(char* version,
-                       uint32_t& remainingBufferInBytes,
-                       uint32_t& position) const
+                       WebRtc_UWord32& remainingBufferInBytes,
+                       WebRtc_UWord32& position) const
 {
     return 0;
 }
    
-int32_t 
-MonitorModule::ChangeUniqueId(const int32_t id)
+WebRtc_Word32 
+MonitorModule::ChangeUniqueId(const WebRtc_Word32 id)
 {
     return 0;
 }
 
-int32_t 
+WebRtc_Word32 
 MonitorModule::TimeUntilNextProcess()
 {
-    uint32_t now = TickTime::MillisecondTimestamp();
-    int32_t timeToNext =
+    WebRtc_UWord32 now = TickTime::MillisecondTimestamp();
+    WebRtc_Word32 timeToNext =
         kAverageProcessUpdateTimeMs - (now - _lastProcessTime);
     return (timeToNext); 
 }
 
-int32_t 
+WebRtc_Word32 
 MonitorModule::Process()
 {
     _lastProcessTime = TickTime::MillisecondTimestamp();

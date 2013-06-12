@@ -8,16 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
-
 #include <algorithm>
 #include <vector>
+#include <gtest/gtest.h>
+
+#include "test_api.h"
+
+#include "common_types.h"
+#include "rtp_rtcp.h"
+#include "rtp_rtcp_defines.h"
 
 using namespace webrtc;
 
 class RtpRtcpAPITest : public ::testing::Test {
  protected:
-  RtpRtcpAPITest() : module(NULL), fake_clock(123456) {
+  RtpRtcpAPITest() {
     test_CSRC[0] = 1234;
     test_CSRC[1] = 2345;
     test_id = 123;
@@ -41,11 +46,11 @@ class RtpRtcpAPITest : public ::testing::Test {
 
   int test_id;
   RtpRtcp* module;
-  uint32_t test_ssrc;
-  uint32_t test_timestamp;
-  uint16_t test_sequence_number;
-  uint32_t test_CSRC[webrtc::kRtpCsrcSize];
-  SimulatedClock fake_clock;
+  WebRtc_UWord32 test_ssrc;
+  WebRtc_UWord32 test_timestamp;
+  WebRtc_UWord16 test_sequence_number;
+  WebRtc_UWord32 test_CSRC[webrtc::kRtpCsrcSize];
+  FakeRtpRtcpClock fake_clock;
 };
 
 TEST_F(RtpRtcpAPITest, Basic) {
@@ -80,7 +85,7 @@ TEST_F(RtpRtcpAPITest, SSRC) {
 
 TEST_F(RtpRtcpAPITest, CSRC) {
   EXPECT_EQ(0, module->SetCSRCs(test_CSRC, 2));
-  uint32_t testOfCSRC[webrtc::kRtpCsrcSize];
+  WebRtc_UWord32 testOfCSRC[webrtc::kRtpCsrcSize];
   EXPECT_EQ(2, module->CSRCs(testOfCSRC));
   EXPECT_EQ(test_CSRC[0], testOfCSRC[0]);
   EXPECT_EQ(test_CSRC[1], testOfCSRC[1]);
@@ -104,47 +109,6 @@ TEST_F(RtpRtcpAPITest, RTCP) {
   EXPECT_FALSE(module->TMMBR());
 
   EXPECT_EQ(kNackOff, module->NACK());
-  EXPECT_EQ(0, module->SetNACKStatus(kNackRtcp, 450));
+  EXPECT_EQ(0, module->SetNACKStatus(kNackRtcp));
   EXPECT_EQ(kNackRtcp, module->NACK());
-}
-
-TEST_F(RtpRtcpAPITest, RTXSender) {
-  unsigned int ssrc = 0;
-  RtxMode rtx_mode = kRtxOff;
-  const int kRtxPayloadType = 119;
-  int payload_type = -1;
-  EXPECT_EQ(0, module->SetRTXSendStatus(kRtxRetransmitted, true, 1));
-  module->SetRtxSendPayloadType(kRtxPayloadType);
-  EXPECT_EQ(0, module->RTXSendStatus(&rtx_mode, &ssrc, &payload_type));
-  EXPECT_EQ(kRtxRetransmitted, rtx_mode);
-  EXPECT_EQ(1u, ssrc);
-  EXPECT_EQ(kRtxPayloadType, payload_type);
-  rtx_mode = kRtxOff;
-  EXPECT_EQ(0, module->SetRTXSendStatus(kRtxOff, true, 0));
-  payload_type = -1;
-  module->SetRtxSendPayloadType(kRtxPayloadType);
-  EXPECT_EQ(0, module->RTXSendStatus(&rtx_mode, &ssrc, &payload_type));
-  EXPECT_EQ(kRtxOff, rtx_mode);
-  EXPECT_EQ(kRtxPayloadType ,payload_type);
-  EXPECT_EQ(0, module->SetRTXSendStatus(kRtxRetransmitted, false, 1));
-  EXPECT_EQ(0, module->RTXSendStatus(&rtx_mode, &ssrc, &payload_type));
-  EXPECT_EQ(kRtxRetransmitted, rtx_mode);
-  EXPECT_EQ(kRtxPayloadType ,payload_type);
-}
-
-TEST_F(RtpRtcpAPITest, RTXReceiver) {
-  bool enable = false;
-  unsigned int ssrc = 0;
-  const int kRtxPayloadType = 119;
-  int payload_type = -1;
-  EXPECT_EQ(0, module->SetRTXReceiveStatus(true, 1));
-  module->SetRtxReceivePayloadType(kRtxPayloadType);
-  EXPECT_EQ(0, module->RTXReceiveStatus(&enable, &ssrc, &payload_type));
-  EXPECT_TRUE(enable);
-  EXPECT_EQ(1u, ssrc);
-  EXPECT_EQ(kRtxPayloadType ,payload_type);
-  EXPECT_EQ(0, module->SetRTXReceiveStatus(false, 0));
-  EXPECT_EQ(0, module->RTXReceiveStatus(&enable, &ssrc, &payload_type));
-  EXPECT_FALSE(enable);
-  EXPECT_EQ(kRtxPayloadType ,payload_type);
 }

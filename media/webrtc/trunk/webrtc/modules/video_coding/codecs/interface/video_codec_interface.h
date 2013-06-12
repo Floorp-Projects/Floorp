@@ -31,16 +31,16 @@ class RTPFragmentationHeader; // forward declaration
 struct CodecSpecificInfoVP8
 {
     bool             hasReceivedSLI;
-    uint8_t    pictureIdSLI;
+    WebRtc_UWord8    pictureIdSLI;
     bool             hasReceivedRPSI;
-    uint64_t   pictureIdRPSI;
-    int16_t    pictureId;         // negative value to skip pictureId
+    WebRtc_UWord64   pictureIdRPSI;
+    WebRtc_Word16    pictureId;         // negative value to skip pictureId
     bool             nonReference;
-    uint8_t    simulcastIdx;
-    uint8_t    temporalIdx;
+    WebRtc_UWord8    simulcastIdx;
+    WebRtc_UWord8    temporalIdx;
     bool             layerSync;
     int              tl0PicIdx;         // Negative value to skip tl0PicIdx
-    int8_t     keyIdx;            // negative value to skip keyIdx
+    WebRtc_Word8     keyIdx;            // negative value to skip keyIdx
 };
 
 union CodecSpecificInfoUnion
@@ -71,7 +71,7 @@ public:
     //                                          should be dropped to keep bit rate or frame rate.
     //                                   = 0,   if OK.
     //                                   < 0,   on error.
-    virtual int32_t
+    virtual WebRtc_Word32
     Encoded(EncodedImage& encodedImage,
             const CodecSpecificInfo* codecSpecificInfo = NULL,
             const RTPFragmentationHeader* fragmentation = NULL) = 0;
@@ -91,7 +91,7 @@ public:
     //                                to have. Usually MTU - overhead.
     //
     // Return value                 : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t InitEncode(const VideoCodec* codecSettings, int32_t numberOfCores, uint32_t maxPayloadSize) = 0;
+    virtual WebRtc_Word32 InitEncode(const VideoCodec* codecSettings, WebRtc_Word32 numberOfCores, WebRtc_UWord32 maxPayloadSize) = 0;
 
     // Encode an I420 image (as a part of a video stream). The encoded image
     // will be returned to the user through the encode complete callback.
@@ -103,7 +103,7 @@ public:
     //
     // Return value                 : WEBRTC_VIDEO_CODEC_OK if OK, < 0
     //                                otherwise.
-    virtual int32_t Encode(
+    virtual WebRtc_Word32 Encode(
         const I420VideoFrame& inputImage,
         const CodecSpecificInfo* codecSpecificInfo,
         const std::vector<VideoFrameType>* frame_types) = 0;
@@ -114,12 +114,12 @@ public:
     //          - callback         : Callback object which handles encoded images.
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t RegisterEncodeCompleteCallback(EncodedImageCallback* callback) = 0;
+    virtual WebRtc_Word32 RegisterEncodeCompleteCallback(EncodedImageCallback* callback) = 0;
 
     // Free encoder memory.
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t Release() = 0;
+    virtual WebRtc_Word32 Release() = 0;
 
     // Inform the encoder about the packet loss and round trip time on the
     // network used to decide the best pattern and signaling.
@@ -129,7 +129,8 @@ public:
     //          - rtt              : Round-trip time in milliseconds
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t SetChannelParameters(uint32_t packetLoss, int rtt) = 0;
+    virtual WebRtc_Word32 SetChannelParameters(WebRtc_UWord32 packetLoss,
+                                               int rtt) = 0;
 
     // Inform the encoder about the new target bit rate.
     //
@@ -137,7 +138,7 @@ public:
     //          - frameRate        : The target frame rate
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t SetRates(uint32_t newBitRate, uint32_t frameRate) = 0;
+    virtual WebRtc_Word32 SetRates(WebRtc_UWord32 newBitRate, WebRtc_UWord32 frameRate) = 0;
 
     // Use this function to enable or disable periodic key frames. Can be useful for codecs
     // which have other ways of stopping error propagation.
@@ -145,7 +146,7 @@ public:
     //          - enable           : Enable or disable periodic key frames
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t SetPeriodicKeyFrames(bool enable) { return WEBRTC_VIDEO_CODEC_ERROR; }
+    virtual WebRtc_Word32 SetPeriodicKeyFrames(bool enable) { return WEBRTC_VIDEO_CODEC_ERROR; }
 
     // Codec configuration data to send out-of-band, i.e. in SIP call setup
     //
@@ -154,7 +155,7 @@ public:
     //          - size             : The size of the buffer in bytes
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t CodecConfigParameters(uint8_t* /*buffer*/, int32_t /*size*/) { return WEBRTC_VIDEO_CODEC_ERROR; }
+    virtual WebRtc_Word32 CodecConfigParameters(WebRtc_UWord8* /*buffer*/, WebRtc_Word32 /*size*/) { return WEBRTC_VIDEO_CODEC_ERROR; }
 };
 
 class DecodedImageCallback
@@ -168,11 +169,11 @@ public:
     //          - decodedImage         : The decoded image.
     //
     // Return value                    : 0 if OK, < 0 otherwise.
-    virtual int32_t Decoded(I420VideoFrame& decodedImage) = 0;
+    virtual WebRtc_Word32 Decoded(I420VideoFrame& decodedImage) = 0;
 
-    virtual int32_t ReceivedDecodedReferenceFrame(const uint64_t pictureId) {return -1;}
+    virtual WebRtc_Word32 ReceivedDecodedReferenceFrame(const WebRtc_UWord64 pictureId) {return -1;}
 
-    virtual int32_t ReceivedDecodedFrame(const uint64_t pictureId) {return -1;}
+    virtual WebRtc_Word32 ReceivedDecodedFrame(const WebRtc_UWord64 pictureId) {return -1;}
 };
 
 class VideoDecoder
@@ -187,7 +188,7 @@ public:
     //          - numberOfCores     : Number of cores available for the decoder
     //
     // Return value                 : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t InitDecode(const VideoCodec* codecSettings, int32_t numberOfCores) = 0;
+    virtual WebRtc_Word32 InitDecode(const VideoCodec* codecSettings, WebRtc_Word32 numberOfCores) = 0;
 
     // Decode encoded image (as a part of a video stream). The decoded image
     // will be returned to the user through the decode complete callback.
@@ -206,12 +207,12 @@ public:
     //                                used by decoders with internal rendering.
     //
     // Return value                 : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t
+    virtual WebRtc_Word32
     Decode(const EncodedImage& inputImage,
            bool missingFrames,
            const RTPFragmentationHeader* fragmentation,
            const CodecSpecificInfo* codecSpecificInfo = NULL,
-           int64_t renderTimeMs = -1) = 0;
+           WebRtc_Word64 renderTimeMs = -1) = 0;
 
     // Register an decode complete callback object.
     //
@@ -219,17 +220,17 @@ public:
     //          - callback         : Callback object which handles decoded images.
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t RegisterDecodeCompleteCallback(DecodedImageCallback* callback) = 0;
+    virtual WebRtc_Word32 RegisterDecodeCompleteCallback(DecodedImageCallback* callback) = 0;
 
     // Free decoder memory.
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t Release() = 0;
+    virtual WebRtc_Word32 Release() = 0;
 
     // Reset decoder state and prepare for a new call.
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t Reset() = 0;
+    virtual WebRtc_Word32 Reset() = 0;
 
     // Codec configuration data sent out-of-band, i.e. in SIP call setup
     //
@@ -239,7 +240,7 @@ public:
     //                               bytes
     //
     // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-    virtual int32_t SetCodecConfigParameters(const uint8_t* /*buffer*/, int32_t /*size*/) { return WEBRTC_VIDEO_CODEC_ERROR; }
+    virtual WebRtc_Word32 SetCodecConfigParameters(const WebRtc_UWord8* /*buffer*/, WebRtc_Word32 /*size*/) { return WEBRTC_VIDEO_CODEC_ERROR; }
 
     // Create a copy of the codec and its internal state.
     //

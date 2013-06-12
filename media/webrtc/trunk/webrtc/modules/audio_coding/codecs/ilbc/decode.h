@@ -26,11 +26,11 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_DecodeImpl(
-    int16_t *decblock,    /* (o) decoded signal block */
-    const uint16_t *bytes, /* (i) encoded signal bits */
+    WebRtc_Word16 *decblock,    /* (o) decoded signal block */
+    const WebRtc_UWord16 *bytes, /* (i) encoded signal bits */
     iLBC_Dec_Inst_t *iLBCdec_inst, /* (i/o) the decoder state
                                            structure */
-    int16_t mode      /* (i) 0: bad packet, PLC,
+    WebRtc_Word16 mode      /* (i) 0: bad packet, PLC,
                                                                    1: normal */
                            );
 

@@ -8,29 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/system_wrappers/interface/condition_variable_wrapper.h"
-
 #if defined(_WIN32)
 #include <windows.h>
-#include "webrtc/system_wrappers/source/condition_variable_event_win.h"
-#include "webrtc/system_wrappers/source/condition_variable_native_win.h"
+#include "condition_variable_win.h"
+#include "condition_variable_wrapper.h"
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 #include <pthread.h>
-#include "webrtc/system_wrappers/source/condition_variable_posix.h"
+#include "condition_variable_posix.h"
+#include "condition_variable_wrapper.h"
 #endif
 
 namespace webrtc {
 
 ConditionVariableWrapper* ConditionVariableWrapper::CreateConditionVariable() {
 #if defined(_WIN32)
-  // Try to create native condition variable implementation.
-  ConditionVariableWrapper* ret_val = ConditionVariableNativeWin::Create();
-  if (!ret_val) {
-    // Native condition variable implementation does not exist. Create generic
-    // condition variable based on events.
-    ret_val = new ConditionVariableEventWin();
-  }
-  return ret_val;
+  return new ConditionVariableWindows;
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
   return ConditionVariablePosix::Create();
 #else

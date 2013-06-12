@@ -18,7 +18,7 @@ class NormalTest : public CodecTest
 public:
     NormalTest();
     NormalTest(std::string name, std::string description, unsigned int testNo);
-    NormalTest(std::string name, std::string description, uint32_t bitRate, unsigned int testNo);
+    NormalTest(std::string name, std::string description, WebRtc_UWord32 bitRate, unsigned int testNo);
     virtual ~NormalTest() {};
     virtual void Perform();
 

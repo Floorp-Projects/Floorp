@@ -104,7 +104,6 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     TbExternalTransport myTransport(*(ViE.network), tbChannel.videoChannel,
                                     NULL);
 
-    ViE.network->DeregisterSendTransport(tbChannel.videoChannel);
     EXPECT_EQ(0, ViE.network->RegisterSendTransport(
         tbChannel.videoChannel, myTransport));
 
@@ -365,96 +364,6 @@ void ViEAutoTest::ViERtpRtcpStandardTest()
     // short above?
     // EXPECT_LT(inEndPos, outEndPos + 100);
 
-    EXPECT_EQ(0, ViE.base->StopReceive(tbChannel.videoChannel));
-
-    ViETest::Log("Testing Network Down...\n");
-
-    EXPECT_EQ(0, ViE.rtp_rtcp->SetNACKStatus(tbChannel.videoChannel, true));
-    EXPECT_EQ(0, ViE.rtp_rtcp->SetTransmissionSmoothingStatus(
-        tbChannel.videoChannel, true));
-    EXPECT_EQ(0, ViE.base->StartReceive(tbChannel.videoChannel));
-    EXPECT_EQ(0, ViE.base->StartSend(tbChannel.videoChannel));
-
-    // Real-time mode.
-    AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
-        tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
-        sentFecBitrate, sentNackBitrate));
-    if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(sentTotalBitrate, 0u);
-    }
-    // Simulate lost reception and verify that nothing is sent during that time.
-    ViE.network->SetNetworkTransmissionState(tbChannel.videoChannel, false);
-    ViETest::Log("Network Down...\n");
-    AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
-        tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
-        sentFecBitrate, sentNackBitrate));
-    if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_EQ(sentTotalBitrate, 0u);
-    }
-
-    // Network reception back. Video should now be sent.
-    ViE.network->SetNetworkTransmissionState(tbChannel.videoChannel, true);
-    ViETest::Log("Network Up...\n");
-    AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
-        tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
-        sentFecBitrate, sentNackBitrate));
-    if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(sentTotalBitrate, 0u);
-    }
-
-    // Buffering mode.
-    EXPECT_EQ(0, ViE.base->StopSend(tbChannel.videoChannel));
-    EXPECT_EQ(0, ViE.base->StopReceive(tbChannel.videoChannel));
-    ViE.rtp_rtcp->SetSenderBufferingMode(tbChannel.videoChannel,
-                                         kAutoTestSleepTimeMs / 2);
-    // Add extra delay to the receiver to make sure it doesn't flush due to
-    // too old packets being received (as the down-time introduced is longer
-    // than what we buffer at the sender).
-    ViE.rtp_rtcp->SetReceiverBufferingMode(tbChannel.videoChannel,
-                                           3 * kAutoTestSleepTimeMs / 2);
-    EXPECT_EQ(0, ViE.base->StartReceive(tbChannel.videoChannel));
-    EXPECT_EQ(0, ViE.base->StartSend(tbChannel.videoChannel));
-    AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
-        tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
-        sentFecBitrate, sentNackBitrate));
-    if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(sentTotalBitrate, 0u);
-    }
-    // Simulate lost reception and verify that nothing is sent during that time.
-    ViETest::Log("Network Down...\n");
-    ViE.network->SetNetworkTransmissionState(tbChannel.videoChannel, false);
-    AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
-        tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
-        sentFecBitrate, sentNackBitrate));
-// TODO(pwestin): This is incorrect due to the fact that we measure the bitrate
-//                before the pacer and not after.
-//
-//    if (FLAGS_include_timing_dependent_tests) {
-//      EXPECT_EQ(sentTotalBitrate, 0u);
-//    }
-    // Network reception back. Video should now be sent.
-    ViETest::Log("Network Up...\n");
-    ViE.network->SetNetworkTransmissionState(tbChannel.videoChannel, true);
-    AutoTestSleep(kAutoTestSleepTimeMs);
-    EXPECT_EQ(0, ViE.rtp_rtcp->GetBandwidthUsage(
-        tbChannel.videoChannel, sentTotalBitrate, sentVideoBitrate,
-        sentFecBitrate, sentNackBitrate));
-    if (FLAGS_include_timing_dependent_tests) {
-      EXPECT_GT(sentTotalBitrate, 0u);
-    }
-    // TODO(holmer): Verify that the decoded framerate doesn't decrease on an
-    // outage when in buffering mode. This isn't currently possible because we
-    // don't have an API to get decoded framerate.
-
-    EXPECT_EQ(0, ViE.base->StopSend(tbChannel.videoChannel));
-    EXPECT_EQ(0, ViE.base->StopReceive(tbChannel.videoChannel));
-
-
     // Deregister external transport
     EXPECT_EQ(0, ViE.network->DeregisterSendTransport(tbChannel.videoChannel));
 
@@ -482,7 +391,6 @@ void ViEAutoTest::ViERtpRtcpExtendedTest()
     TbExternalTransport myTransport(*(ViE.network), tbChannel.videoChannel,
                                     NULL);
 
-    EXPECT_EQ(0, ViE.network->DeregisterSendTransport(tbChannel.videoChannel));
     EXPECT_EQ(0, ViE.network->RegisterSendTransport(
         tbChannel.videoChannel, myTransport));
     EXPECT_EQ(0, ViE.base->StartReceive(tbChannel.videoChannel));
@@ -540,6 +448,8 @@ void ViEAutoTest::ViERtpRtcpAPITest()
     // is valid to call before creating channels.
     EXPECT_EQ(0, ViE.rtp_rtcp->SetBandwidthEstimationMode(
         webrtc::kViESingleStreamEstimation));
+    EXPECT_EQ(0, ViE.rtp_rtcp->SetBandwidthEstimationMode(
+        webrtc::kViEMultiStreamEstimation));
 
     // Create a video channel
     TbVideoChannel tbChannel(ViE, webrtc::kVideoCodecVP8);
@@ -753,7 +663,7 @@ void ViEAutoTest::ViERtpRtcpAPITest()
         tbChannel.videoChannel, true, 15));
     EXPECT_EQ(0, ViE.rtp_rtcp->SetReceiveTimestampOffsetStatus(
         tbChannel.videoChannel, true, 3));
-    EXPECT_EQ(0, ViE.rtp_rtcp->SetReceiveTimestampOffsetStatus(
+    EXPECT_EQ(-1, ViE.rtp_rtcp->SetReceiveTimestampOffsetStatus(
         tbChannel.videoChannel, true, 3));
     EXPECT_EQ(0, ViE.rtp_rtcp->SetReceiveTimestampOffsetStatus(
             tbChannel.videoChannel, false, 3));
@@ -776,60 +686,6 @@ void ViEAutoTest::ViERtpRtcpAPITest()
         tbChannel.videoChannel, false));
     EXPECT_EQ(0, ViE.rtp_rtcp->SetTransmissionSmoothingStatus(
         tbChannel.videoChannel, false));
-
-    // Buffering mode - sender side.
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetSenderBufferingMode(
-        invalid_channel_id, 0));
-    int invalid_delay = -1;
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetSenderBufferingMode(
-        tbChannel.videoChannel, invalid_delay));
-    invalid_delay = 15000;
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetSenderBufferingMode(
-        tbChannel.videoChannel, invalid_delay));
-    EXPECT_EQ(0, ViE.rtp_rtcp->SetSenderBufferingMode(
-        tbChannel.videoChannel, 5000));
-
-    // Buffering mode - receiver side.
-    // Run without VoE to verify it that does not crash, but return an error.
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetReceiverBufferingMode(
-        tbChannel.videoChannel, 0));
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetReceiverBufferingMode(
-        tbChannel.videoChannel, 2000));
-
-    // Set VoE (required to set up stream-sync).
-    webrtc::VoiceEngine* voice_engine = webrtc::VoiceEngine::Create();
-    EXPECT_TRUE(NULL != voice_engine);
-    webrtc::VoEBase* voe_base = webrtc::VoEBase::GetInterface(voice_engine);
-    EXPECT_TRUE(NULL != voe_base);
-    EXPECT_EQ(0, voe_base->Init());
-    int audio_channel = voe_base->CreateChannel();
-    EXPECT_NE(-1, audio_channel);
-    EXPECT_EQ(0, ViE.base->SetVoiceEngine(voice_engine));
-    EXPECT_EQ(0, ViE.base->ConnectAudioChannel(tbChannel.videoChannel,
-                                               audio_channel));
-
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetReceiverBufferingMode(
-        invalid_channel_id, 0));
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetReceiverBufferingMode(
-        tbChannel.videoChannel, invalid_delay));
-    invalid_delay = 15000;
-    EXPECT_EQ(-1, ViE.rtp_rtcp->SetReceiverBufferingMode(
-        tbChannel.videoChannel, invalid_delay));
-    EXPECT_EQ(0, ViE.rtp_rtcp->SetReceiverBufferingMode(
-        tbChannel.videoChannel, 5000));
-
-    // Real-time mode - sender side.
-    EXPECT_EQ(0, ViE.rtp_rtcp->SetSenderBufferingMode(
-        tbChannel.videoChannel, 0));
-    // Real-time mode - receiver side.
-    EXPECT_EQ(0, ViE.rtp_rtcp->SetReceiverBufferingMode(
-        tbChannel.videoChannel, 0));
-
-    EXPECT_EQ(0, ViE.base->DisconnectAudioChannel(tbChannel.videoChannel));
-    EXPECT_EQ(0, ViE.base->SetVoiceEngine(NULL));
-    EXPECT_EQ(0, voe_base->DeleteChannel(audio_channel));
-    voe_base->Release();
-    EXPECT_TRUE(webrtc::VoiceEngine::Delete(voice_engine));
 
     //***************************************************************
     //  Testing finished. Tear down Video Engine

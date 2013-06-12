@@ -41,14 +41,14 @@ struct ACMISACInst {
 
 // Tables for bandwidth estimates
 #define NR_ISAC_BANDWIDTHS 24
-static const int32_t kIsacRatesWb[NR_ISAC_BANDWIDTHS] = {
+static const WebRtc_Word32 kIsacRatesWb[NR_ISAC_BANDWIDTHS] = {
     10000, 11100, 12300, 13700, 15200, 16900,
     18800, 20900, 23300, 25900, 28700, 31900,
     10100, 11200, 12400, 13800, 15300, 17000,
     18900, 21000, 23400, 26000, 28800, 32000
 };
 
-static const int32_t kIsacRatesSwb[NR_ISAC_BANDWIDTHS] = {
+static const WebRtc_Word32 kIsacRatesSwb[NR_ISAC_BANDWIDTHS] = {
     10000, 11000, 12400, 13800, 15300, 17000,
     18900, 21000, 23200, 25400, 27600, 29800,
     32000, 34100, 36300, 38500, 40700, 42900,
@@ -57,7 +57,7 @@ static const int32_t kIsacRatesSwb[NR_ISAC_BANDWIDTHS] = {
 
 #if (!defined(WEBRTC_CODEC_ISAC) && !defined(WEBRTC_CODEC_ISACFX))
 
-ACMISAC::ACMISAC(int16_t /* codec_id */)
+ACMISAC::ACMISAC(WebRtc_Word16 /* codec_id */)
     : codec_inst_ptr_(NULL),
       is_enc_initialized_(false),
       isac_coding_mode_(CHANNEL_INDEPENDENT),
@@ -79,31 +79,31 @@ ACMGenericCodec* ACMISAC::CreateInstance(void) {
   return NULL;
 }
 
-int16_t ACMISAC::InternalEncode(
-    uint8_t* /* bitstream */,
-    int16_t* /* bitstream_len_byte */) {
+WebRtc_Word16 ACMISAC::InternalEncode(
+    WebRtc_UWord8* /* bitstream */,
+    WebRtc_Word16* /* bitstream_len_byte */) {
   return -1;
 }
 
-int16_t ACMISAC::DecodeSafe(uint8_t* /* bitstream */,
-                            int16_t /* bitstream_len_byte */,
-                            int16_t* /* audio */,
-                            int16_t* /* audio_samples */,
-                            int8_t* /* speech_type */) {
+WebRtc_Word16 ACMISAC::DecodeSafe(WebRtc_UWord8* /* bitstream */,
+                                  WebRtc_Word16 /* bitstream_len_byte */,
+                                  WebRtc_Word16* /* audio */,
+                                  WebRtc_Word16* /* audio_samples */,
+                                  WebRtc_Word8* /* speech_type */) {
   return 0;
 }
 
-int16_t ACMISAC::InternalInitEncoder(
+WebRtc_Word16 ACMISAC::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-int16_t ACMISAC::InternalInitDecoder(
+WebRtc_Word16 ACMISAC::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-int16_t ACMISAC::InternalCreateDecoder() {
+WebRtc_Word16 ACMISAC::InternalCreateDecoder() {
   return -1;
 }
 
@@ -111,7 +111,7 @@ void ACMISAC::DestructDecoderSafe() {
   return;
 }
 
-int16_t ACMISAC::InternalCreateEncoder() {
+WebRtc_Word16 ACMISAC::InternalCreateEncoder() {
   return -1;
 }
 
@@ -119,8 +119,8 @@ void ACMISAC::DestructEncoderSafe() {
   return;
 }
 
-int32_t ACMISAC::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
-                          const CodecInst& /* codec_inst */) {
+WebRtc_Word32 ACMISAC::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
+                                const CodecInst& /* codec_inst */) {
   return -1;
 }
 
@@ -128,69 +128,69 @@ void ACMISAC::InternalDestructEncoderInst(void* /* ptr_inst */) {
   return;
 }
 
-int16_t ACMISAC::DeliverCachedIsacData(
-    uint8_t* /* bitstream */,
-    int16_t* /* bitstream_len_byte */,
-    uint32_t* /* timestamp */,
+WebRtc_Word16 ACMISAC::DeliverCachedIsacData(
+    WebRtc_UWord8* /* bitstream */,
+    WebRtc_Word16* /* bitstream_len_byte */,
+    WebRtc_UWord32* /* timestamp */,
     WebRtcACMEncodingType* /* encoding_type */,
-    const uint16_t /* isac_rate */,
-    const uint8_t /* isac_bw_estimate */) {
+    const WebRtc_UWord16 /* isac_rate */,
+    const WebRtc_UWord8 /* isac_bw_estimate */) {
   return -1;
 }
 
-int16_t ACMISAC::Transcode(uint8_t* /* bitstream */,
-                           int16_t* /* bitstream_len_byte */,
-                           int16_t /* q_bwe */,
-                           int32_t /* scale */,
-                           bool /* is_red */) {
+WebRtc_Word16 ACMISAC::Transcode(WebRtc_UWord8* /* bitstream */,
+                                 WebRtc_Word16* /* bitstream_len_byte */,
+                                 WebRtc_Word16 /* q_bwe */,
+                                 WebRtc_Word32 /* scale */,
+                                 bool /* is_red */) {
   return -1;
 }
 
-int16_t ACMISAC::SetBitRateSafe(int32_t /* bit_rate */) {
+WebRtc_Word16 ACMISAC::SetBitRateSafe(WebRtc_Word32 /* bit_rate */) {
   return -1;
 }
 
-int32_t ACMISAC::GetEstimatedBandwidthSafe() {
+WebRtc_Word32 ACMISAC::GetEstimatedBandwidthSafe() {
   return -1;
 }
 
-int32_t ACMISAC::SetEstimatedBandwidthSafe(
-    int32_t /* estimated_bandwidth */) {
+WebRtc_Word32 ACMISAC::SetEstimatedBandwidthSafe(
+    WebRtc_Word32 /* estimated_bandwidth */) {
   return -1;
 }
 
-int32_t ACMISAC::GetRedPayloadSafe(uint8_t* /* red_payload */,
-                                   int16_t* /* payload_bytes */) {
+WebRtc_Word32 ACMISAC::GetRedPayloadSafe(WebRtc_UWord8* /* red_payload */,
+                                         WebRtc_Word16* /* payload_bytes */) {
   return -1;
 }
 
-int16_t ACMISAC::UpdateDecoderSampFreq(int16_t /* codec_id */) {
+WebRtc_Word16 ACMISAC::UpdateDecoderSampFreq(WebRtc_Word16 /* codec_id */) {
   return -1;
 }
 
-int16_t ACMISAC::UpdateEncoderSampFreq(
-    uint16_t /* encoder_samp_freq_hz */) {
+WebRtc_Word16 ACMISAC::UpdateEncoderSampFreq(
+    WebRtc_UWord16 /* encoder_samp_freq_hz */) {
   return -1;
 }
 
-int16_t ACMISAC::EncoderSampFreq(uint16_t& /* samp_freq_hz */) {
+WebRtc_Word16 ACMISAC::EncoderSampFreq(WebRtc_UWord16& /* samp_freq_hz */) {
   return -1;
 }
 
-int32_t ACMISAC::ConfigISACBandwidthEstimator(
-    const uint8_t /* init_frame_size_msec */,
-    const uint16_t /* init_rate_bit_per_sec */,
+WebRtc_Word32 ACMISAC::ConfigISACBandwidthEstimator(
+    const WebRtc_UWord8 /* init_frame_size_msec */,
+    const WebRtc_UWord16 /* init_rate_bit_per_sec */,
     const bool /* enforce_frame_size  */) {
   return -1;
 }
 
-int32_t ACMISAC::SetISACMaxPayloadSize(
-    const uint16_t /* max_payload_len_bytes */) {
+WebRtc_Word32 ACMISAC::SetISACMaxPayloadSize(
+    const WebRtc_UWord16 /* max_payload_len_bytes */) {
   return -1;
 }
 
-int32_t ACMISAC::SetISACMaxRate(
-    const uint32_t /* max_rate_bit_per_sec */) {
+WebRtc_Word32 ACMISAC::SetISACMaxRate(
+    const WebRtc_UWord32 /* max_rate_bit_per_sec */) {
   return -1;
 }
 
@@ -198,14 +198,14 @@ void ACMISAC::UpdateFrameLen() {
   return;
 }
 
-void ACMISAC::CurrentRate(int32_t& /*rate_bit_per_sec */) {
+void ACMISAC::CurrentRate(WebRtc_Word32& /*rate_bit_per_sec */) {
   return;
 }
 
 bool
 ACMISAC::DecoderParamsSafe(
     WebRtcACMCodecParams* /* dec_params */,
-    const uint8_t   /* payload_type */) {
+    const WebRtc_UWord8   /* payload_type */) {
   return false;
 }
 
@@ -215,11 +215,11 @@ ACMISAC::SaveDecoderParamSafe(
   return;
 }
 
-int16_t ACMISAC::REDPayloadISAC(
-    const int32_t /* isac_rate */,
-    const int16_t /* isac_bw_estimate */,
-    uint8_t* /* payload */,
-    int16_t* /* payload_len_bytes */) {
+WebRtc_Word16 ACMISAC::REDPayloadISAC(
+    const WebRtc_Word32 /* isac_rate */,
+    const WebRtc_Word16 /* isac_bw_estimate */,
+    WebRtc_UWord8* /* payload */,
+    WebRtc_Word16* /* payload_len_bytes */) {
   return -1;
 }
 
@@ -243,7 +243,7 @@ int16_t ACMISAC::REDPayloadISAC(
 
 #define ISAC_NUM_SUPPORTED_RATES 9
 
-static const uint16_t kIsacSuportedRates[ISAC_NUM_SUPPORTED_RATES] = {
+static const WebRtc_UWord16 kIsacSuportedRates[ISAC_NUM_SUPPORTED_RATES] = {
     32000,    30000,    26000,   23000,   21000,
     19000,    17000,   15000,    12000
 };
@@ -258,11 +258,11 @@ enum IsacSamplingRate {
   kIsacSuperWideband = 32
 };
 
-static float ACMISACFixTranscodingScale(uint16_t rate) {
+static float ACMISACFixTranscodingScale(WebRtc_UWord16 rate) {
   // find the scale for transcoding, the scale is rounded
   // downward
   float scale = -1;
-  for (int16_t n = 0; n < ISAC_NUM_SUPPORTED_RATES; n++) {
+  for (WebRtc_Word16 n = 0; n < ISAC_NUM_SUPPORTED_RATES; n++) {
     if (rate >= kIsacSuportedRates[n]) {
       scale = kIsacScale[n];
       break;
@@ -272,29 +272,29 @@ static float ACMISACFixTranscodingScale(uint16_t rate) {
 }
 
 static void ACMISACFixGetSendBitrate(ACM_ISAC_STRUCT* inst,
-                                     int32_t* bottleneck) {
+                                     WebRtc_Word32* bottleneck) {
   *bottleneck = WebRtcIsacfix_GetUplinkBw(inst);
 }
 
-static int16_t ACMISACFixGetNewBitstream(ACM_ISAC_STRUCT* inst,
-                                         int16_t bwe_index,
-                                         int16_t /* jitter_index */,
-                                         int32_t rate,
-                                         int16_t* bitstream,
+static WebRtc_Word16 ACMISACFixGetNewBitstream(ACM_ISAC_STRUCT* inst,
+                                               WebRtc_Word16 bwe_index,
+                                               WebRtc_Word16 /* jitter_index */,
+                                               WebRtc_Word32 rate,
+                                               WebRtc_Word16* bitstream,
                                                bool is_red) {
   if (is_red) {
     // RED not supported with iSACFIX
     return -1;
   }
-  float scale = ACMISACFixTranscodingScale((uint16_t) rate);
+  float scale = ACMISACFixTranscodingScale((WebRtc_UWord16) rate);
   return WebRtcIsacfix_GetNewBitStream(inst, bwe_index, scale, bitstream);
 }
 
-static int16_t ACMISACFixGetSendBWE(ACM_ISAC_STRUCT* inst,
-                                    int16_t* rate_index,
-                                    int16_t* /* dummy */) {
-  int16_t local_rate_index;
-  int16_t status = WebRtcIsacfix_GetDownLinkBwIndex(inst,
+static WebRtc_Word16 ACMISACFixGetSendBWE(ACM_ISAC_STRUCT* inst,
+                                          WebRtc_Word16* rate_index,
+                                          WebRtc_Word16* /* dummy */) {
+  WebRtc_Word16 local_rate_index;
+  WebRtc_Word16 status = WebRtcIsacfix_GetDownLinkBwIndex(inst,
                                                           &local_rate_index);
   if (status < 0) {
     return -1;
@@ -304,34 +304,34 @@ static int16_t ACMISACFixGetSendBWE(ACM_ISAC_STRUCT* inst,
   }
 }
 
-static int16_t ACMISACFixControlBWE(ACM_ISAC_STRUCT* inst,
-                                    int32_t rate_bps,
-                                    int16_t frame_size_ms,
-                                    int16_t enforce_frame_size) {
-  return WebRtcIsacfix_ControlBwe(inst, (int16_t) rate_bps, frame_size_ms,
+static WebRtc_Word16 ACMISACFixControlBWE(ACM_ISAC_STRUCT* inst,
+                                          WebRtc_Word32 rate_bps,
+                                          WebRtc_Word16 frame_size_ms,
+                                          WebRtc_Word16 enforce_frame_size) {
+  return WebRtcIsacfix_ControlBwe(inst, (WebRtc_Word16) rate_bps, frame_size_ms,
                                   enforce_frame_size);
 }
 
-static int16_t ACMISACFixControl(ACM_ISAC_STRUCT* inst,
-                                 int32_t rate_bps,
-                                 int16_t frame_size_ms) {
-  return WebRtcIsacfix_Control(inst, (int16_t) rate_bps, frame_size_ms);
+static WebRtc_Word16 ACMISACFixControl(ACM_ISAC_STRUCT* inst,
+                                       WebRtc_Word32 rate_bps,
+                                       WebRtc_Word16 frame_size_ms) {
+  return WebRtcIsacfix_Control(inst, (WebRtc_Word16) rate_bps, frame_size_ms);
 }
 
 // The following two function should have the same signature as their counter
 // part in iSAC floating-point, i.e. WebRtcIsac_EncSampRate &
 // WebRtcIsac_DecSampRate.
-static uint16_t ACMISACFixGetEncSampRate(ACM_ISAC_STRUCT* /* inst */) {
+static WebRtc_UWord16 ACMISACFixGetEncSampRate(ACM_ISAC_STRUCT* /* inst */) {
   return 16000;
 }
 
-static uint16_t ACMISACFixGetDecSampRate(ACM_ISAC_STRUCT* /* inst */) {
+static WebRtc_UWord16 ACMISACFixGetDecSampRate(ACM_ISAC_STRUCT* /* inst */) {
   return 16000;
 }
 
 #endif
 
-ACMISAC::ACMISAC(int16_t codec_id)
+ACMISAC::ACMISAC(WebRtc_Word16 codec_id)
     : is_enc_initialized_(false),
       isac_coding_mode_(CHANNEL_INDEPENDENT),
       enforce_frame_size_(false),
@@ -372,8 +372,8 @@ ACMGenericCodec* ACMISAC::CreateInstance(void) {
   return NULL;
 }
 
-int16_t ACMISAC::InternalEncode(uint8_t* bitstream,
-                               int16_t* bitstream_len_byte) {
+WebRtc_Word16 ACMISAC::InternalEncode(WebRtc_UWord8* bitstream,
+                                      WebRtc_Word16* bitstream_len_byte) {
   // ISAC takes 10ms audio everytime we call encoder, therefor,
   // it should be treated like codecs with 'basic coding block'
   // non-zero, and the following 'while-loop' should not be necessary.
@@ -396,7 +396,7 @@ int16_t ACMISAC::InternalEncode(uint8_t* bitstream,
     }
     *bitstream_len_byte = ACM_ISAC_ENCODE(codec_inst_ptr_->inst,
                                            &in_audio_[in_audio_ix_read_],
-                                           (int16_t*)bitstream);
+                                           (WebRtc_Word16*)bitstream);
     // increment the read index this tell the caller that how far
     // we have gone forward in reading the audio buffer
     in_audio_ix_read_ += samples_in_10ms_audio_;
@@ -417,15 +417,15 @@ int16_t ACMISAC::InternalEncode(uint8_t* bitstream,
   return *bitstream_len_byte;
 }
 
-int16_t ACMISAC::DecodeSafe(uint8_t* /* bitstream */,
-                            int16_t /* bitstream_len_byte */,
-                            int16_t* /* audio */,
-                            int16_t* /* audio_sample */,
-                            int8_t* /* speech_type */) {
+WebRtc_Word16 ACMISAC::DecodeSafe(WebRtc_UWord8* /* bitstream */,
+                                  WebRtc_Word16 /* bitstream_len_byte */,
+                                  WebRtc_Word16* /* audio */,
+                                  WebRtc_Word16* /* audio_sample */,
+                                  WebRtc_Word8* /* speech_type */) {
   return 0;
 }
 
-int16_t ACMISAC::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
+WebRtc_Word16 ACMISAC::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
   // if rate is set to -1 then iSAC has to be in adaptive mode
   if (codec_params->codec_inst.rate == -1) {
     isac_coding_mode_ = ADAPTIVE;
@@ -439,7 +439,7 @@ int16_t ACMISAC::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
   }
 
   // we need to set the encoder sampling frequency.
-  if (UpdateEncoderSampFreq((uint16_t) codec_params->codec_inst.plfreq)
+  if (UpdateEncoderSampFreq((WebRtc_UWord16) codec_params->codec_inst.plfreq)
       < 0) {
     return -1;
   }
@@ -465,7 +465,7 @@ int16_t ACMISAC::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
   return 0;
 }
 
-int16_t ACMISAC::InternalInitDecoder(WebRtcACMCodecParams* codec_params) {
+WebRtc_Word16 ACMISAC::InternalInitDecoder(WebRtcACMCodecParams* codec_params) {
   if (codec_inst_ptr_ == NULL) {
     return -1;
   }
@@ -496,11 +496,11 @@ int16_t ACMISAC::InternalInitDecoder(WebRtcACMCodecParams* codec_params) {
   return ACM_ISAC_DECODERINIT(codec_inst_ptr_->inst);
 }
 
-int16_t ACMISAC::InternalCreateDecoder() {
+WebRtc_Word16 ACMISAC::InternalCreateDecoder() {
   if (codec_inst_ptr_ == NULL) {
     return -1;
   }
-  int16_t status = ACM_ISAC_CREATE(&(codec_inst_ptr_->inst));
+  WebRtc_Word16 status = ACM_ISAC_CREATE(&(codec_inst_ptr_->inst));
 
   // specific to codecs with one instance for encoding and decoding
   encoder_initialized_ = false;
@@ -518,11 +518,11 @@ void ACMISAC::DestructDecoderSafe() {
   return;
 }
 
-int16_t ACMISAC::InternalCreateEncoder() {
+WebRtc_Word16 ACMISAC::InternalCreateEncoder() {
   if (codec_inst_ptr_ == NULL) {
     return -1;
   }
-  int16_t status = ACM_ISAC_CREATE(&(codec_inst_ptr_->inst));
+  WebRtc_Word16 status = ACM_ISAC_CREATE(&(codec_inst_ptr_->inst));
 
   // specific to codecs with one instance for encoding and decoding
   decoder_initialized_ = false;
@@ -540,8 +540,8 @@ void ACMISAC::DestructEncoderSafe() {
   return;
 }
 
-int32_t ACMISAC::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                          const CodecInst& codec_inst) {
+WebRtc_Word32 ACMISAC::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                                const CodecInst& codec_inst) {
   // Sanity checks
   if (codec_inst_ptr_ == NULL) {
     return -1;
@@ -588,12 +588,12 @@ void ACMISAC::InternalDestructEncoderInst(void* ptr_inst) {
   return;
 }
 
-int16_t ACMISAC::Transcode(uint8_t* bitstream,
-                           int16_t* bitstream_len_byte,
-                           int16_t q_bwe,
-                           int32_t rate,
-                           bool is_red) {
-  int16_t jitter_info = 0;
+WebRtc_Word16 ACMISAC::Transcode(WebRtc_UWord8* bitstream,
+                                 WebRtc_Word16* bitstream_len_byte,
+                                 WebRtc_Word16 q_bwe,
+                                 WebRtc_Word32 rate,
+                                 bool is_red) {
+  WebRtc_Word16 jitter_info = 0;
   // transcode from a higher rate to lower rate sanity check
   if (codec_inst_ptr_ == NULL) {
     return -1;
@@ -601,7 +601,7 @@ int16_t ACMISAC::Transcode(uint8_t* bitstream,
 
   *bitstream_len_byte = ACM_ISAC_GETNEWBITSTREAM(codec_inst_ptr_->inst, q_bwe,
                                                  jitter_info, rate,
-                                                 (int16_t*)bitstream,
+                                                 (WebRtc_Word16*)bitstream,
                                                  (is_red) ? 1 : 0);
 
   if (*bitstream_len_byte < 0) {
@@ -613,11 +613,11 @@ int16_t ACMISAC::Transcode(uint8_t* bitstream,
   }
 }
 
-int16_t ACMISAC::SetBitRateSafe(int32_t bit_rate) {
+WebRtc_Word16 ACMISAC::SetBitRateSafe(WebRtc_Word32 bit_rate) {
   if (codec_inst_ptr_ == NULL) {
     return -1;
   }
-  uint16_t encoder_samp_freq;
+  WebRtc_UWord16 encoder_samp_freq;
   EncoderSampFreq(encoder_samp_freq);
   bool reinit = false;
   // change the BN of iSAC
@@ -640,13 +640,13 @@ int16_t ACMISAC::SetBitRateSafe(int32_t bit_rate) {
       reinit = true;
     }
     // store the bottleneck
-    isac_current_bn_ = (uint16_t) bit_rate;
+    isac_current_bn_ = (WebRtc_UWord16) bit_rate;
   } else {
     // invlaid rate
     return -1;
   }
 
-  int16_t status = 0;
+  WebRtc_Word16 status = 0;
   if (reinit) {
     // initialize and check if it is successful
     if (ACM_ISAC_ENCODERINIT(codec_inst_ptr_->inst, isac_coding_mode_) < 0) {
@@ -671,9 +671,9 @@ int16_t ACMISAC::SetBitRateSafe(int32_t bit_rate) {
   return status;
 }
 
-int32_t ACMISAC::GetEstimatedBandwidthSafe() {
-  int16_t bandwidth_index = 0;
-  int16_t delay_index = 0;
+WebRtc_Word32 ACMISAC::GetEstimatedBandwidthSafe() {
+  WebRtc_Word16 bandwidth_index = 0;
+  WebRtc_Word16 delay_index = 0;
   int samp_rate;
 
   // Get bandwidth information
@@ -693,10 +693,10 @@ int32_t ACMISAC::GetEstimatedBandwidthSafe() {
   }
 }
 
-int32_t ACMISAC::SetEstimatedBandwidthSafe(
-    int32_t estimated_bandwidth) {
+WebRtc_Word32 ACMISAC::SetEstimatedBandwidthSafe(
+    WebRtc_Word32 estimated_bandwidth) {
   int samp_rate;
-  int16_t bandwidth_index;
+  WebRtc_Word16 bandwidth_index;
 
   // Check sample frequency and choose appropriate table
   samp_rate = ACM_ISAC_GETENCSAMPRATE(codec_inst_ptr_->inst);
@@ -734,14 +734,14 @@ int32_t ACMISAC::SetEstimatedBandwidthSafe(
   return 0;
 }
 
-int32_t ACMISAC::GetRedPayloadSafe(
+WebRtc_Word32 ACMISAC::GetRedPayloadSafe(
 #if (!defined(WEBRTC_CODEC_ISAC))
-    uint8_t* /* red_payload */, int16_t* /* payload_bytes */) {
+    WebRtc_UWord8* /* red_payload */, WebRtc_Word16* /* payload_bytes */) {
   return -1;
 #else
-    uint8_t* red_payload, int16_t* payload_bytes) {
-  int16_t bytes = WebRtcIsac_GetRedPayload(codec_inst_ptr_->inst,
-                                                 (int16_t*)red_payload);
+    WebRtc_UWord8* red_payload, WebRtc_Word16* payload_bytes) {
+  WebRtc_Word16 bytes = WebRtcIsac_GetRedPayload(codec_inst_ptr_->inst,
+                                                 (WebRtc_Word16*)red_payload);
   if (bytes < 0) {
     return -1;
   }
@@ -750,9 +750,9 @@ int32_t ACMISAC::GetRedPayloadSafe(
 #endif
 }
 
-int16_t ACMISAC::UpdateDecoderSampFreq(
+WebRtc_Word16 ACMISAC::UpdateDecoderSampFreq(
 #ifdef WEBRTC_CODEC_ISAC
-    int16_t codec_id) {
+    WebRtc_Word16 codec_id) {
     // The decoder supports only wideband and super-wideband.
   if (ACMCodecDB::kISAC == codec_id) {
     return WebRtcIsac_SetDecSampRate(codec_inst_ptr_->inst, 16000);
@@ -763,15 +763,15 @@ int16_t ACMISAC::UpdateDecoderSampFreq(
     return -1;
   }
 #else
-    int16_t /* codec_id */) {
+    WebRtc_Word16 /* codec_id */) {
   return 0;
 #endif
 }
 
-int16_t ACMISAC::UpdateEncoderSampFreq(
+WebRtc_Word16 ACMISAC::UpdateEncoderSampFreq(
 #ifdef WEBRTC_CODEC_ISAC
-    uint16_t encoder_samp_freq_hz) {
-  uint16_t current_samp_rate_hz;
+    WebRtc_UWord16 encoder_samp_freq_hz) {
+  WebRtc_UWord16 current_samp_rate_hz;
   EncoderSampFreq(current_samp_rate_hz);
 
   if (current_samp_rate_hz != encoder_samp_freq_hz) {
@@ -795,23 +795,23 @@ int16_t ACMISAC::UpdateEncoderSampFreq(
     }
   }
 #else
-    uint16_t /* codec_id */) {
+    WebRtc_UWord16 /* codec_id */) {
 #endif
   return 0;
 }
 
-int16_t ACMISAC::EncoderSampFreq(uint16_t& samp_freq_hz) {
+WebRtc_Word16 ACMISAC::EncoderSampFreq(WebRtc_UWord16& samp_freq_hz) {
   samp_freq_hz = ACM_ISAC_GETENCSAMPRATE(codec_inst_ptr_->inst);
   return 0;
 }
 
-int32_t ACMISAC::ConfigISACBandwidthEstimator(
-    const uint8_t init_frame_size_msec,
-    const uint16_t init_rate_bit_per_sec,
+WebRtc_Word32 ACMISAC::ConfigISACBandwidthEstimator(
+    const WebRtc_UWord8 init_frame_size_msec,
+    const WebRtc_UWord16 init_rate_bit_per_sec,
     const bool enforce_frame_size) {
-  int16_t status;
+  WebRtc_Word16 status;
   {
-    uint16_t samp_freq_hz;
+    WebRtc_UWord16 samp_freq_hz;
     EncoderSampFreq(samp_freq_hz);
     // TODO(turajs): at 32kHz we hardcode calling with 30ms and enforce
     // the frame-size otherwise we might get error. Revise if
@@ -836,14 +836,14 @@ int32_t ACMISAC::ConfigISACBandwidthEstimator(
   return 0;
 }
 
-int32_t ACMISAC::SetISACMaxPayloadSize(
-    const uint16_t max_payload_len_bytes) {
+WebRtc_Word32 ACMISAC::SetISACMaxPayloadSize(
+    const WebRtc_UWord16 max_payload_len_bytes) {
   return ACM_ISAC_SETMAXPAYLOADSIZE(codec_inst_ptr_->inst,
                                     max_payload_len_bytes);
 }
 
-int32_t ACMISAC::SetISACMaxRate(
-    const uint32_t max_rate_bit_per_sec) {
+WebRtc_Word32 ACMISAC::SetISACMaxRate(
+    const WebRtc_UWord32 max_rate_bit_per_sec) {
   return ACM_ISAC_SETMAXRATE(codec_inst_ptr_->inst, max_rate_bit_per_sec);
 }
 
@@ -852,14 +852,14 @@ void ACMISAC::UpdateFrameLen() {
   encoder_params_.codec_inst.pacsize = frame_len_smpl_;
 }
 
-void ACMISAC::CurrentRate(int32_t& rate_bit_per_sec) {
+void ACMISAC::CurrentRate(WebRtc_Word32& rate_bit_per_sec) {
   if (isac_coding_mode_ == ADAPTIVE) {
     ACM_ISAC_GETSENDBITRATE(codec_inst_ptr_->inst, &rate_bit_per_sec);
   }
 }
 
 bool ACMISAC::DecoderParamsSafe(WebRtcACMCodecParams* dec_params,
-                                const uint8_t payload_type) {
+                                const WebRtc_UWord8 payload_type) {
   if (decoder_initialized_) {
     if (payload_type == decoder_params_.codec_inst.pltype) {
       memcpy(dec_params, &decoder_params_, sizeof(WebRtcACMCodecParams));
@@ -883,11 +883,11 @@ void ACMISAC::SaveDecoderParamSafe(const WebRtcACMCodecParams* codec_params) {
   }
 }
 
-int16_t ACMISAC::REDPayloadISAC(const int32_t isac_rate,
-                                const int16_t isac_bw_estimate,
-                                uint8_t* payload,
-                                int16_t* payload_len_bytes) {
-  int16_t status;
+WebRtc_Word16 ACMISAC::REDPayloadISAC(const WebRtc_Word32 isac_rate,
+                                      const WebRtc_Word16 isac_bw_estimate,
+                                      WebRtc_UWord8* payload,
+                                      WebRtc_Word16* payload_len_bytes) {
+  WebRtc_Word16 status;
   ReadLockScoped rl(codec_wrapper_lock_);
   status = Transcode(payload, payload_len_bytes, isac_bw_estimate, isac_rate,
                      true);

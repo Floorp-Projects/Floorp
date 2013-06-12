@@ -22,13 +22,15 @@ class DtmfInbandQueue
 {
 public:
 
-    DtmfInbandQueue(const int32_t id);
+    DtmfInbandQueue(const WebRtc_Word32 id);
 
     virtual ~DtmfInbandQueue();
 
-    int AddDtmf(uint8_t DtmfKey, uint16_t len, uint8_t level);
+    int AddDtmf(WebRtc_UWord8 DtmfKey,
+                WebRtc_UWord16 len,
+                WebRtc_UWord8 level);
 
-    int8_t NextDtmf(uint16_t* len, uint8_t* level);
+    WebRtc_Word8 NextDtmf(WebRtc_UWord16* len, WebRtc_UWord8* level);
 
     bool PendingDtmf();
 
@@ -37,12 +39,12 @@ public:
 private:
     enum {kDtmfInbandMax = 20};
 
-    int32_t _id;
+    WebRtc_Word32 _id;
     CriticalSectionWrapper& _DtmfCritsect;
-    uint8_t _nextEmptyIndex;
-    uint8_t _DtmfKey[kDtmfInbandMax];
-    uint16_t _DtmfLen[kDtmfInbandMax];
-    uint8_t _DtmfLevel[kDtmfInbandMax];
+    WebRtc_UWord8 _nextEmptyIndex;
+    WebRtc_UWord8 _DtmfKey[kDtmfInbandMax];
+    WebRtc_UWord16 _DtmfLen[kDtmfInbandMax];
+    WebRtc_UWord8 _DtmfLevel[kDtmfInbandMax];
 };
 
 }   // namespace webrtc

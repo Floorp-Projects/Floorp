@@ -22,9 +22,9 @@ class QualityModesTest : public NormalTest
 {
 public:
     QualityModesTest(webrtc::VideoCodingModule* vcm,
-                     webrtc::Clock* clock);
+                     webrtc::TickTimeBase* clock);
     virtual ~QualityModesTest();
-    int32_t Perform(const CmdArgs& args);
+    WebRtc_Word32 Perform(const CmdArgs& args);
 
 private:
 
@@ -42,7 +42,7 @@ private:
     int                                 _nativeHeight;
     float                               _nativeFrameRate;
 
-    uint32_t                      _numFramesDroppedVPM;
+    WebRtc_UWord32                      _numFramesDroppedVPM;
     bool                                _flagSSIM;
     std::string                         filename_testvideo_;
     std::string                         fv_outfilename_;
@@ -61,24 +61,24 @@ public:
     virtual ~VCMQMDecodeCompleCallback();
     void SetUserReceiveCallback(webrtc::VCMReceiveCallback* receiveCallback);
     // will write decoded frame into file
-    int32_t FrameToRender(webrtc::I420VideoFrame& videoFrame);
-    int32_t DecodedBytes();
-    void SetOriginalFrameDimensions(int32_t width, int32_t height);
-    int32_t buildInterpolator();
+    WebRtc_Word32 FrameToRender(webrtc::I420VideoFrame& videoFrame);
+    WebRtc_Word32 DecodedBytes();
+    void SetOriginalFrameDimensions(WebRtc_Word32 width, WebRtc_Word32 height);
+    WebRtc_Word32 buildInterpolator();
     // Check if last frame is dropped, if so, repeat the last rendered frame.
     void WriteEnd(int input_tot_frame_count);
 
 private:
     FILE*                _decodedFile;
-    uint32_t       _decodedBytes;
+    WebRtc_UWord32       _decodedBytes;
    // QualityModesTest&  _test;
     int                  _origWidth;
     int                  _origHeight;
     int                  _decWidth;
     int                  _decHeight;
 //    VideoInterpolator* _interpolator;
-    uint8_t*       _decBuffer;
-    uint32_t       _frameCnt; // debug
+    WebRtc_UWord8*       _decBuffer;
+    WebRtc_UWord32       _frameCnt; // debug
     webrtc::I420VideoFrame last_frame_;
     int                  frame_rate_;
     int                  frames_cnt_since_drop_;
@@ -93,9 +93,9 @@ class QMTestVideoSettingsCallback : public webrtc::VCMQMSettingsCallback
 public:
     QMTestVideoSettingsCallback();
     // update VPM with QM settings
-    int32_t SetVideoQMSettings(const uint32_t frameRate,
-                                     const uint32_t width,
-                                     const uint32_t height);
+    WebRtc_Word32 SetVideoQMSettings(const WebRtc_UWord32 frameRate,
+                                     const WebRtc_UWord32 width,
+                                     const WebRtc_UWord32 height);
     // register VPM used by test
     void RegisterVPM(webrtc::VideoProcessingModule* vpm);
     void RegisterVCM(webrtc::VideoCodingModule* vcm);

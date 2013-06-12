@@ -29,7 +29,6 @@ namespace webrtc {
 ViEInputManager::ViEInputManager(const int engine_id)
     : engine_id_(engine_id),
       map_cs_(CriticalSectionWrapper::CreateCriticalSection()),
-      device_info_cs_(CriticalSectionWrapper::CreateCriticalSection()),
       vie_frame_provider_map_(),
       capture_device_info_(NULL),
       module_process_thread_(NULL) {
@@ -39,7 +38,8 @@ ViEInputManager::ViEInputManager(const int engine_id)
   for (int idx = 0; idx < kViEMaxCaptureDevices; idx++) {
     free_capture_device_id_[idx] = true;
   }
-
+  capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+      ViEModuleId(engine_id_));
   for (int idx = 0; idx < kViEMaxFilePlayers; idx++) {
     free_file_id_[idx] = true;
   }
@@ -71,25 +71,17 @@ void ViEInputManager::SetModuleProcessThread(
 int ViEInputManager::NumberOfCaptureDevices() {
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_), "%s",
                __FUNCTION__);
-  CriticalSectionScoped cs(device_info_cs_.get());
-  if (capture_device_info_ == NULL)
-    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
-        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   return capture_device_info_->NumberOfDevices();
 }
 
-int ViEInputManager::GetDeviceName(uint32_t device_number,
+int ViEInputManager::GetDeviceName(WebRtc_UWord32 device_number,
                                    char* device_nameUTF8,
-                                   uint32_t device_name_length,
+                                   WebRtc_UWord32 device_name_length,
                                    char* device_unique_idUTF8,
-                                   uint32_t device_unique_idUTF8Length) {
+                                   WebRtc_UWord32 device_unique_idUTF8Length) {
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_),
                "%s(device_number: %d)", __FUNCTION__, device_number);
-  CriticalSectionScoped cs(device_info_cs_.get());
-  if (capture_device_info_ == NULL)
-    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
-        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   return capture_device_info_->GetDeviceName(device_number, device_nameUTF8,
                                              device_name_length,
@@ -101,25 +93,17 @@ int ViEInputManager::NumberOfCaptureCapabilities(
   const char* device_unique_idUTF8) {
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_), "%s",
                __FUNCTION__);
-  CriticalSectionScoped cs(device_info_cs_.get());
-  if (capture_device_info_ == NULL)
-    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
-        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   return capture_device_info_->NumberOfCapabilities(device_unique_idUTF8);
 }
 
 int ViEInputManager::GetCaptureCapability(
     const char* device_unique_idUTF8,
-    const uint32_t device_capability_number,
+    const WebRtc_UWord32 device_capability_number,
     CaptureCapability& capability) {
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_),
                "%s(device_unique_idUTF8: %s, device_capability_number: %d)",
                __FUNCTION__, device_unique_idUTF8, device_capability_number);
-  CriticalSectionScoped cs(device_info_cs_.get());
-  if (capture_device_info_ == NULL)
-    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
-        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   VideoCaptureCapability module_capability;
   int result = capture_device_info_->GetCapability(device_unique_idUTF8,
@@ -144,10 +128,6 @@ int ViEInputManager::GetOrientation(const char* device_unique_idUTF8,
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_),
                "%s(device_unique_idUTF8: %s,)", __FUNCTION__,
                device_unique_idUTF8);
-  CriticalSectionScoped cs(device_info_cs_.get());
-  if (capture_device_info_ == NULL)
-    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
-        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   VideoCaptureRotation module_orientation;
   int result = capture_device_info_->GetOrientation(device_unique_idUTF8,
@@ -174,12 +154,8 @@ int ViEInputManager::DisplayCaptureSettingsDialogBox(
     const char* device_unique_idUTF8,
     const char* dialog_titleUTF8,
     void* parent_window,
-    uint32_t positionX,
-    uint32_t positionY) {
-  CriticalSectionScoped cs(device_info_cs_.get());
-  if (capture_device_info_ == NULL)
-    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
-        ViEModuleId(engine_id_));
+    WebRtc_UWord32 positionX,
+    WebRtc_UWord32 positionY) {
   assert(capture_device_info_);
   return capture_device_info_->DisplayCaptureSettingsDialogBox(
            device_unique_idUTF8, dialog_titleUTF8, parent_window, positionX,
@@ -188,7 +164,7 @@ int ViEInputManager::DisplayCaptureSettingsDialogBox(
 
 int ViEInputManager::CreateCaptureDevice(
     const char* device_unique_idUTF8,
-    const uint32_t device_unique_idUTF8Length,
+    const WebRtc_UWord32 device_unique_idUTF8Length,
     int& capture_id) {
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, ViEId(engine_id_),
                "%s(device_unique_id: %s)", __FUNCTION__, device_unique_idUTF8);
@@ -215,12 +191,7 @@ int ViEInputManager::CreateCaptureDevice(
 
   // Make sure the device name is valid.
   bool found_device = false;
-  CriticalSectionScoped cs_devinfo(device_info_cs_.get());
-  if (capture_device_info_ == NULL)
-    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
-        ViEModuleId(engine_id_));
-  assert(capture_device_info_);
-  for (uint32_t device_index = 0;
+  for (WebRtc_UWord32 device_index = 0;
        device_index < capture_device_info_->NumberOfDevices(); ++device_index) {
     if (device_unique_idUTF8Length > kVideoCaptureUniqueNameLength) {
       // User's string length is longer than the max.
@@ -335,7 +306,7 @@ int ViEInputManager::DestroyCaptureDevice(const int capture_id) {
                    __FUNCTION__, capture_id);
       return -1;
     }
-    uint32_t num_callbacks =
+    WebRtc_UWord32 num_callbacks =
         vie_capture->NumberOfRegisteredFrameCallbacks();
     if (num_callbacks > 0) {
       WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideo,

@@ -35,7 +35,7 @@ BWEStabilityTest::~BWEStabilityTest()
 }
 
 
-int BWEStabilityTest::Init(std::string ip, uint16_t port)
+int BWEStabilityTest::Init(std::string ip, WebRtc_UWord16 port)
 {
     // create the load generator object
     const int rtpSampleRate = 90000;

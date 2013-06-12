@@ -26,10 +26,10 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Interpolate(
-    int16_t *out, /* (o) output vector */
-    int16_t *in1, /* (i) first input vector */
-    int16_t *in2, /* (i) second input vector */
-    int16_t coef, /* (i) weight coefficient in Q14 */
-    int16_t length); /* (i) number of sample is vectors */
+    WebRtc_Word16 *out, /* (o) output vector */
+    WebRtc_Word16 *in1, /* (i) first input vector */
+    WebRtc_Word16 *in2, /* (i) second input vector */
+    WebRtc_Word16 coef, /* (i) weight coefficient in Q14 */
+    WebRtc_Word16 length); /* (i) number of sample is vectors */
 
 #endif

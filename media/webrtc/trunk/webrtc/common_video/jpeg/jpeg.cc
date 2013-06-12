@@ -66,7 +66,7 @@ JpegEncoder::~JpegEncoder()
 }
 
 
-int32_t
+WebRtc_Word32
 JpegEncoder::SetFileName(const char* fileName)
 {
     if (!fileName)
@@ -83,7 +83,7 @@ JpegEncoder::SetFileName(const char* fileName)
 }
 
 
-int32_t
+WebRtc_Word32
 JpegEncoder::Encode(const I420VideoFrame& inputImage)
 {
     if (inputImage.IsZeroSize())
@@ -148,14 +148,14 @@ JpegEncoder::Encode(const I420VideoFrame& inputImage)
     scoped_array<uint8_t> image_buffer(new uint8_t[length]);
     ExtractBuffer(inputImage, length, image_buffer.get());
     int height16 = (height + 15) & ~15;
-    uint8_t* imgPtr = image_buffer.get();
+    WebRtc_UWord8* imgPtr = image_buffer.get();
 
-    uint8_t* origImagePtr = NULL;
+    WebRtc_UWord8* origImagePtr = NULL;
     if (height16 != height)
     {
         // Copy image to an adequate size buffer
-        uint32_t requiredSize = CalcBufferSize(kI420, width, height16);
-        origImagePtr = new uint8_t[requiredSize];
+        WebRtc_UWord32 requiredSize = CalcBufferSize(kI420, width, height16);
+        origImagePtr = new WebRtc_UWord8[requiredSize];
         memset(origImagePtr, 0, requiredSize);
         memcpy(origImagePtr, image_buffer.get(), length);
         imgPtr = origImagePtr;

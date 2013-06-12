@@ -43,7 +43,7 @@ namespace webrtc {
         }                                                                \
     } while(0)
 
-AudioMixerManagerMac::AudioMixerManagerMac(const int32_t id) :
+AudioMixerManagerMac::AudioMixerManagerMac(const WebRtc_Word32 id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _inputDeviceID(kAudioObjectUnknown),
@@ -69,7 +69,7 @@ AudioMixerManagerMac::~AudioMixerManagerMac()
 //	                                PUBLIC METHODS
 // ============================================================================
 
-int32_t AudioMixerManagerMac::Close()
+WebRtc_Word32 AudioMixerManagerMac::Close()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -83,7 +83,7 @@ int32_t AudioMixerManagerMac::Close()
 
 }
 
-int32_t AudioMixerManagerMac::CloseSpeaker()
+WebRtc_Word32 AudioMixerManagerMac::CloseSpeaker()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -96,7 +96,7 @@ int32_t AudioMixerManagerMac::CloseSpeaker()
     return 0;
 }
 
-int32_t AudioMixerManagerMac::CloseMicrophone()
+WebRtc_Word32 AudioMixerManagerMac::CloseMicrophone()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -109,7 +109,7 @@ int32_t AudioMixerManagerMac::CloseMicrophone()
     return 0;
 }
 
-int32_t AudioMixerManagerMac::OpenSpeaker(AudioDeviceID deviceID)
+WebRtc_Word32 AudioMixerManagerMac::OpenSpeaker(AudioDeviceID deviceID)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerMac::OpenSpeaker(id=%d)", deviceID);
@@ -164,7 +164,7 @@ int32_t AudioMixerManagerMac::OpenSpeaker(AudioDeviceID deviceID)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::OpenMicrophone(AudioDeviceID deviceID)
+WebRtc_Word32 AudioMixerManagerMac::OpenMicrophone(AudioDeviceID deviceID)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerMac::OpenMicrophone(id=%d)", deviceID);
@@ -233,7 +233,7 @@ bool AudioMixerManagerMac::MicrophoneIsInitialized() const
     return (_inputDeviceID != kAudioObjectUnknown);
 }
 
-int32_t AudioMixerManagerMac::SetSpeakerVolume(uint32_t volume)
+WebRtc_Word32 AudioMixerManagerMac::SetSpeakerVolume(WebRtc_UWord32 volume)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerMac::SetSpeakerVolume(volume=%u)", volume);
@@ -299,7 +299,7 @@ int32_t AudioMixerManagerMac::SetSpeakerVolume(uint32_t volume)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SpeakerVolume(uint32_t& volume) const
+WebRtc_Word32 AudioMixerManagerMac::SpeakerVolume(WebRtc_UWord32& volume) const
 {
 
     if (_outputDeviceID == kAudioObjectUnknown)
@@ -329,7 +329,7 @@ int32_t AudioMixerManagerMac::SpeakerVolume(uint32_t& volume) const
                 &propertyAddress, 0, NULL, &size, &vol));
 
         // vol 0.0 to 1.0 -> convert to 0 - 255
-        volume = static_cast<uint32_t> (vol * 255 + 0.5);
+        volume = static_cast<WebRtc_UWord32> (vol * 255 + 0.5);
     } else
     {
         // Otherwise get the average volume across channels.
@@ -360,7 +360,7 @@ int32_t AudioMixerManagerMac::SpeakerVolume(uint32_t& volume) const
 
         assert(channels > 0);
         // vol 0.0 to 1.0 -> convert to 0 - 255
-        volume = static_cast<uint32_t> (255 * vol / channels + 0.5);
+        volume = static_cast<WebRtc_UWord32> (255 * vol / channels + 0.5);
     }
 
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
@@ -369,8 +369,8 @@ int32_t AudioMixerManagerMac::SpeakerVolume(uint32_t& volume) const
     return 0;
 }
 
-int32_t
-AudioMixerManagerMac::MaxSpeakerVolume(uint32_t& maxVolume) const
+WebRtc_Word32
+AudioMixerManagerMac::MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const
 {
 
     if (_outputDeviceID == kAudioObjectUnknown)
@@ -387,8 +387,8 @@ AudioMixerManagerMac::MaxSpeakerVolume(uint32_t& maxVolume) const
     return 0;
 }
 
-int32_t
-AudioMixerManagerMac::MinSpeakerVolume(uint32_t& minVolume) const
+WebRtc_Word32
+AudioMixerManagerMac::MinSpeakerVolume(WebRtc_UWord32& minVolume) const
 {
 
     if (_outputDeviceID == kAudioObjectUnknown)
@@ -405,8 +405,8 @@ AudioMixerManagerMac::MinSpeakerVolume(uint32_t& minVolume) const
     return 0;
 }
 
-int32_t
-AudioMixerManagerMac::SpeakerVolumeStepSize(uint16_t& stepSize) const
+WebRtc_Word32
+AudioMixerManagerMac::SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) const
 {
 
     if (_outputDeviceID == kAudioObjectUnknown)
@@ -423,7 +423,7 @@ AudioMixerManagerMac::SpeakerVolumeStepSize(uint16_t& stepSize) const
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SpeakerVolumeIsAvailable(bool& available)
+WebRtc_Word32 AudioMixerManagerMac::SpeakerVolumeIsAvailable(bool& available)
 {
     if (_outputDeviceID == kAudioObjectUnknown)
     {
@@ -469,7 +469,7 @@ int32_t AudioMixerManagerMac::SpeakerVolumeIsAvailable(bool& available)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SpeakerMuteIsAvailable(bool& available)
+WebRtc_Word32 AudioMixerManagerMac::SpeakerMuteIsAvailable(bool& available)
 {
     if (_outputDeviceID == kAudioObjectUnknown)
     {
@@ -514,7 +514,7 @@ int32_t AudioMixerManagerMac::SpeakerMuteIsAvailable(bool& available)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SetSpeakerMute(bool enable)
+WebRtc_Word32 AudioMixerManagerMac::SetSpeakerMute(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerMac::SetSpeakerMute(enable=%u)", enable);
@@ -575,7 +575,7 @@ int32_t AudioMixerManagerMac::SetSpeakerMute(bool enable)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SpeakerMute(bool& enabled) const
+WebRtc_Word32 AudioMixerManagerMac::SpeakerMute(bool& enabled) const
 {
 
     if (_outputDeviceID == kAudioObjectUnknown)
@@ -643,7 +643,7 @@ int32_t AudioMixerManagerMac::SpeakerMute(bool& enabled) const
     return 0;
 }
 
-int32_t AudioMixerManagerMac::StereoPlayoutIsAvailable(bool& available)
+WebRtc_Word32 AudioMixerManagerMac::StereoPlayoutIsAvailable(bool& available)
 {
     if (_outputDeviceID == kAudioObjectUnknown)
     {
@@ -656,7 +656,7 @@ int32_t AudioMixerManagerMac::StereoPlayoutIsAvailable(bool& available)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::StereoRecordingIsAvailable(bool& available)
+WebRtc_Word32 AudioMixerManagerMac::StereoRecordingIsAvailable(bool& available)
 {
     if (_inputDeviceID == kAudioObjectUnknown)
     {
@@ -669,7 +669,7 @@ int32_t AudioMixerManagerMac::StereoRecordingIsAvailable(bool& available)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::MicrophoneMuteIsAvailable(bool& available)
+WebRtc_Word32 AudioMixerManagerMac::MicrophoneMuteIsAvailable(bool& available)
 {
     if (_inputDeviceID == kAudioObjectUnknown)
     {
@@ -714,7 +714,7 @@ int32_t AudioMixerManagerMac::MicrophoneMuteIsAvailable(bool& available)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SetMicrophoneMute(bool enable)
+WebRtc_Word32 AudioMixerManagerMac::SetMicrophoneMute(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerMac::SetMicrophoneMute(enable=%u)", enable);
@@ -775,7 +775,7 @@ int32_t AudioMixerManagerMac::SetMicrophoneMute(bool enable)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::MicrophoneMute(bool& enabled) const
+WebRtc_Word32 AudioMixerManagerMac::MicrophoneMute(bool& enabled) const
 {
 
     if (_inputDeviceID == kAudioObjectUnknown)
@@ -844,7 +844,7 @@ int32_t AudioMixerManagerMac::MicrophoneMute(bool& enabled) const
     return 0;
 }
 
-int32_t AudioMixerManagerMac::MicrophoneBoostIsAvailable(bool& available)
+WebRtc_Word32 AudioMixerManagerMac::MicrophoneBoostIsAvailable(bool& available)
 {
     if (_inputDeviceID == kAudioObjectUnknown)
     {
@@ -858,7 +858,7 @@ int32_t AudioMixerManagerMac::MicrophoneBoostIsAvailable(bool& available)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SetMicrophoneBoost(bool enable)
+WebRtc_Word32 AudioMixerManagerMac::SetMicrophoneBoost(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerMac::SetMicrophoneBoost(enable=%u)", enable);
@@ -886,7 +886,7 @@ int32_t AudioMixerManagerMac::SetMicrophoneBoost(bool enable)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::MicrophoneBoost(bool& enabled) const
+WebRtc_Word32 AudioMixerManagerMac::MicrophoneBoost(bool& enabled) const
 {
 
     if (_inputDeviceID == kAudioObjectUnknown)
@@ -902,7 +902,7 @@ int32_t AudioMixerManagerMac::MicrophoneBoost(bool& enabled) const
     return 0;
 }
 
-int32_t AudioMixerManagerMac::MicrophoneVolumeIsAvailable(bool& available)
+WebRtc_Word32 AudioMixerManagerMac::MicrophoneVolumeIsAvailable(bool& available)
 {
     if (_inputDeviceID == kAudioObjectUnknown)
     {
@@ -948,7 +948,7 @@ int32_t AudioMixerManagerMac::MicrophoneVolumeIsAvailable(bool& available)
     return 0;
 }
 
-int32_t AudioMixerManagerMac::SetMicrophoneVolume(uint32_t volume)
+WebRtc_Word32 AudioMixerManagerMac::SetMicrophoneVolume(WebRtc_UWord32 volume)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerMac::SetMicrophoneVolume(volume=%u)", volume);
@@ -1014,8 +1014,8 @@ int32_t AudioMixerManagerMac::SetMicrophoneVolume(uint32_t volume)
     return 0;
 }
 
-int32_t
-AudioMixerManagerMac::MicrophoneVolume(uint32_t& volume) const
+WebRtc_Word32
+AudioMixerManagerMac::MicrophoneVolume(WebRtc_UWord32& volume) const
 {
 
     if (_inputDeviceID == kAudioObjectUnknown)
@@ -1045,7 +1045,7 @@ AudioMixerManagerMac::MicrophoneVolume(uint32_t& volume) const
                 &propertyAddress, 0, NULL, &size, &volFloat32));
 
         // vol 0.0 to 1.0 -> convert to 0 - 255
-        volume = static_cast<uint32_t> (volFloat32 * 255 + 0.5);
+        volume = static_cast<WebRtc_UWord32> (volFloat32 * 255 + 0.5);
     } else
     {
         // Otherwise get the average volume across channels.
@@ -1076,7 +1076,7 @@ AudioMixerManagerMac::MicrophoneVolume(uint32_t& volume) const
 
         assert(channels > 0);
         // vol 0.0 to 1.0 -> convert to 0 - 255
-        volume = static_cast<uint32_t> 
+        volume = static_cast<WebRtc_UWord32> 
             (255 * volFloat32 / channels + 0.5);
     }
 
@@ -1087,8 +1087,8 @@ AudioMixerManagerMac::MicrophoneVolume(uint32_t& volume) const
     return 0;
 }
 
-int32_t
-AudioMixerManagerMac::MaxMicrophoneVolume(uint32_t& maxVolume) const
+WebRtc_Word32
+AudioMixerManagerMac::MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) const
 {
 
     if (_inputDeviceID == kAudioObjectUnknown)
@@ -1105,8 +1105,8 @@ AudioMixerManagerMac::MaxMicrophoneVolume(uint32_t& maxVolume) const
     return 0;
 }
 
-int32_t
-AudioMixerManagerMac::MinMicrophoneVolume(uint32_t& minVolume) const
+WebRtc_Word32
+AudioMixerManagerMac::MinMicrophoneVolume(WebRtc_UWord32& minVolume) const
 {
 
     if (_inputDeviceID == kAudioObjectUnknown)
@@ -1123,8 +1123,8 @@ AudioMixerManagerMac::MinMicrophoneVolume(uint32_t& minVolume) const
     return 0;
 }
 
-int32_t
-AudioMixerManagerMac::MicrophoneVolumeStepSize(uint16_t& stepSize) const
+WebRtc_Word32
+AudioMixerManagerMac::MicrophoneVolumeStepSize(WebRtc_UWord16& stepSize) const
 {
 
     if (_inputDeviceID == kAudioObjectUnknown)
@@ -1148,7 +1148,7 @@ AudioMixerManagerMac::MicrophoneVolumeStepSize(uint16_t& stepSize) const
 // CoreAudio errors are best interpreted as four character strings.
 void AudioMixerManagerMac::logCAMsg(const TraceLevel level,
                                     const TraceModule module,
-                                    const int32_t id, const char *msg,
+                                    const WebRtc_Word32 id, const char *msg,
                                     const char *err)
 {
     assert(msg != NULL);

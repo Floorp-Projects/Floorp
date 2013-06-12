@@ -17,10 +17,9 @@
 #include <map>
 #include <utility>
 
-#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "system_wrappers/interface/constructor_magic.h"
+#include "system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -75,7 +74,7 @@ class RtpStream {
 
   typedef std::list<RtpPacket*> PacketList;
 
-  enum { kSendSideOffsetUs = 1000000 };
+  enum { kSendSideOffsetMs = 1000 };
 
   RtpStream(int fps, int bitrate_bps, unsigned int ssrc, unsigned int frequency,
       uint32_t timestamp_offset, int64_t rtcp_receive_time);
@@ -84,13 +83,13 @@ class RtpStream {
   // Generates a new frame for this stream. If called too soon after the
   // previous frame, no frame will be generated. The frame is split into
   // packets.
-  int64_t GenerateFrame(int64_t time_now_us, PacketList* packets);
+  int64_t GenerateFrame(double time_now, PacketList* packets);
 
   // The send-side time when the next frame can be generated.
   double next_rtp_time() const;
 
   // Generates an RTCP packet.
-  RtcpPacket* Rtcp(int64_t time_now_us);
+  RtcpPacket* Rtcp(double time_now);
 
   void set_bitrate_bps(int bitrate_bps);
 
@@ -102,14 +101,14 @@ class RtpStream {
                       const std::pair<unsigned int, RtpStream*>& right);
 
  private:
-  enum { kRtcpIntervalUs = 1000000 };
+  enum { kRtcpIntervalMs = 1000 };
 
   int fps_;
   int bitrate_bps_;
   unsigned int ssrc_;
   unsigned int frequency_;
-  int64_t next_rtp_time_;
-  int64_t next_rtcp_time_;
+  double next_rtp_time_;
+  double next_rtcp_time_;
   uint32_t rtp_timestamp_offset_;
   const double kNtpFracPerMs;
 
@@ -139,9 +138,9 @@ class StreamGenerator {
 
   // TODO(holmer): Break out the channel simulation part from this class to make
   // it possible to simulate different types of channels.
-  int64_t GenerateFrame(RtpStream::PacketList* packets, int64_t time_now_us);
+  double GenerateFrame(RtpStream::PacketList* packets, double time_now);
 
-  void Rtcps(RtcpList* rtcps, int64_t time_now_us) const;
+  void Rtcps(RtcpList* rtcps, double time_now) const;
 
  private:
   typedef std::map<unsigned int, RtpStream*> StreamMap;
@@ -149,7 +148,7 @@ class StreamGenerator {
   // Capacity of the simulated channel in bits per second.
   int capacity_;
   // The time when the last packet arrived.
-  int64_t prev_arrival_time_us_;
+  double prev_arrival_time_;
   // All streams being transmitted on this simulated channel.
   StreamMap streams_;
 
@@ -175,21 +174,19 @@ class RemoteBitrateEstimatorTest : public ::testing::Test {
   // target bitrate after the call to this function.
   bool GenerateAndProcessFrame(unsigned int ssrc, unsigned int bitrate_bps);
 
-  // Run the bandwidth estimator with a stream of |number_of_frames| frames, or
-  // until it reaches |target_bitrate|.
+  // Run the bandwidth estimator with a stream of |number_of_frames| frames.
   // Can for instance be used to run the estimator for some time to get it
   // into a steady state.
   unsigned int SteadyStateRun(unsigned int ssrc,
                               int number_of_frames,
                               unsigned int start_bitrate,
                               unsigned int min_bitrate,
-                              unsigned int max_bitrate,
-                              unsigned int target_bitrate);
+                              unsigned int max_bitrate);
 
   enum { kDefaultSsrc = 1 };
 
-  SimulatedClock clock_;  // Time at the receiver.
-  OverUseDetectorOptions overuse_detector_options_;
+  double time_now_;  // Current time at the receiver.
+  OverUseDetectorOptions over_use_detector_options_;
   scoped_ptr<RemoteBitrateEstimator> bitrate_estimator_;
   scoped_ptr<testing::TestBitrateObserver> bitrate_observer_;
   scoped_ptr<testing::StreamGenerator> stream_generator_;

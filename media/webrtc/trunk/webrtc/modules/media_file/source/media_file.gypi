@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'media_file',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         'webrtc_utility',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
@@ -38,8 +38,6 @@
         'media_file_utility.cc',
         'media_file_utility.h',
       ], # source
-      # TODO(jschuh): Bug 1348: fix size_t to int truncations.
-      'msvs_disabled_warnings': [ 4267, ],
     },
   ], # targets
   'conditions': [
@@ -61,3 +59,9 @@
     }], # include_tests
   ], # conditions
 }
+
+# Local Variables:
+# tab-width:2
+# indent-tabs-mode:nil
+# End:
+# vim: set expandtab tabstop=2 shiftwidth=2:

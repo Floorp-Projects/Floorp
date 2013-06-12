@@ -31,7 +31,9 @@
 #ifdef WEBRTC_VIDEO_ENGINE_IMAGE_PROCESS_API
 #include "video_engine/vie_image_process_impl.h"
 #endif
+#ifdef WEBRTC_VIDEO_ENGINE_NETWORK_API
 #include "video_engine/vie_network_impl.h"
+#endif
 #ifdef WEBRTC_VIDEO_ENGINE_RENDER_API
 #include "video_engine/vie_render_impl.h"
 #endif
@@ -61,7 +63,9 @@ class VideoEngineImpl
 #ifdef WEBRTC_VIDEO_ENGINE_IMAGE_PROCESS_API
       , public ViEImageProcessImpl
 #endif
+#ifdef WEBRTC_VIDEO_ENGINE_NETWORK_API
       , public ViENetworkImpl
+#endif
 #ifdef WEBRTC_VIDEO_ENGINE_RENDER_API
       , public ViERenderImpl
 #endif
@@ -90,7 +94,9 @@ class VideoEngineImpl
 #ifdef WEBRTC_VIDEO_ENGINE_IMAGE_PROCESS_API
         , ViEImageProcessImpl(ViEBaseImpl::shared_data())
 #endif
+#ifdef WEBRTC_VIDEO_ENGINE_NETWORK_API
         , ViENetworkImpl(ViEBaseImpl::shared_data())
+#endif
 #ifdef WEBRTC_VIDEO_ENGINE_RENDER_API
         , ViERenderImpl(ViEBaseImpl::shared_data())
 #endif

@@ -8,24 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/audio_processing_impl.h"
+#include "audio_processing_impl.h"
 
 #include <assert.h>
 
-#include "webrtc/modules/audio_processing/audio_buffer.h"
-#include "webrtc/modules/audio_processing/echo_cancellation_impl.h"
-#include "webrtc/modules/audio_processing/echo_control_mobile_impl.h"
-#include "webrtc/modules/audio_processing/gain_control_impl.h"
-#include "webrtc/modules/audio_processing/high_pass_filter_impl.h"
-#include "webrtc/modules/audio_processing/level_estimator_impl.h"
-#include "webrtc/modules/audio_processing/noise_suppression_impl.h"
-#include "webrtc/modules/audio_processing/processing_component.h"
-#include "webrtc/modules/audio_processing/splitting_filter.h"
-#include "webrtc/modules/audio_processing/voice_detection_impl.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "audio_buffer.h"
+#include "critical_section_wrapper.h"
+#include "echo_cancellation_impl.h"
+#include "echo_control_mobile_impl.h"
+#include "file_wrapper.h"
+#include "high_pass_filter_impl.h"
+#include "gain_control_impl.h"
+#include "level_estimator_impl.h"
+#include "module_common_types.h"
+#include "noise_suppression_impl.h"
+#include "processing_component.h"
+#include "splitting_filter.h"
+#include "voice_detection_impl.h"
 
 #ifdef WEBRTC_AUDIOPROC_DEBUG_DUMP
 // Files generated at build-time by the protobuf compiler.
@@ -38,6 +37,7 @@
 
 namespace webrtc {
 AudioProcessing* AudioProcessing::Create(int id) {
+
   AudioProcessingImpl* apm = new AudioProcessingImpl(id);
   if (apm->Initialize() != kNoError) {
     delete apm;
@@ -76,6 +76,7 @@ AudioProcessingImpl::AudioProcessingImpl(int id)
       num_reverse_channels_(1),
       num_input_channels_(1),
       num_output_channels_(1) {
+
   echo_cancellation_ = new EchoCancellationImpl(this);
   component_list_.push_back(echo_cancellation_);
 
@@ -191,10 +192,6 @@ int AudioProcessingImpl::set_sample_rate_hz(int rate) {
       rate != kSampleRate32kHz) {
     return kBadParameterError;
   }
-  if (echo_control_mobile_->is_enabled() && rate > kSampleRate16kHz) {
-    LOG(LS_ERROR) << "AECM only supports 16 kHz or lower sample rates";
-    return kUnsupportedComponentError;
-  }
 
   sample_rate_hz_ = rate;
   samples_per_channel_ = rate / 100;
@@ -209,7 +206,6 @@ int AudioProcessingImpl::set_sample_rate_hz(int rate) {
 }
 
 int AudioProcessingImpl::sample_rate_hz() const {
-  CriticalSectionScoped crit_scoped(crit_);
   return sample_rate_hz_;
 }
 
@@ -575,7 +571,7 @@ VoiceDetection* AudioProcessingImpl::voice_detection() const {
   return voice_detection_;
 }
 
-int32_t AudioProcessingImpl::ChangeUniqueId(const int32_t id) {
+WebRtc_Word32 AudioProcessingImpl::ChangeUniqueId(const WebRtc_Word32 id) {
   CriticalSectionScoped crit_scoped(crit_);
   id_ = id;
 

@@ -28,10 +28,10 @@
 typedef struct dtmf_tone_inst_t_
 {
 
-    int16_t reinit; /* non-zero if the oscillator model should
+    WebRtc_Word16 reinit; /* non-zero if the oscillator model should
      be reinitialized for next event */
-    int16_t oldOutputLow[2]; /* oscillator recursion history (low tone) */
-    int16_t oldOutputHigh[2]; /* oscillator recursion history (high tone) */
+    WebRtc_Word16 oldOutputLow[2]; /* oscillator recursion history (low tone) */
+    WebRtc_Word16 oldOutputHigh[2]; /* oscillator recursion history (high tone) */
 
     int lastDtmfSample; /* index to the first non-DTMF sample in the
      speech history, if non-negative */
@@ -59,12 +59,12 @@ typedef struct dtmf_tone_inst_t_
  *                      : <0 - Error
  */
 
-int16_t WebRtcNetEQ_DTMFGenerate(dtmf_tone_inst_t *DTMFdecInst,
-                int16_t value,
-                int16_t volume,
-                int16_t *signal,
-                uint16_t sampFreq,
-                int16_t frameLen
+WebRtc_Word16 WebRtcNetEQ_DTMFGenerate(dtmf_tone_inst_t *DTMFdecInst,
+                WebRtc_Word16 value,
+                WebRtc_Word16 volume,
+                WebRtc_Word16 *signal,
+                WebRtc_UWord16 sampFreq,
+                WebRtc_Word16 frameLen
 );
 
 #endif /* NETEQ_ATEVENT_DECODE */

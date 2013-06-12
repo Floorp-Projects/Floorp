@@ -101,10 +101,10 @@ class RtpRtcpTest : public AfterStreamingFixture {
     second_channel_ = voe_base_->CreateChannel();
     EXPECT_GE(second_channel_, 0);
 
-    transport_ = new LoopBackTransport(voe_network_);
-    EXPECT_EQ(0, voe_network_->RegisterExternalTransport(second_channel_,
-                                                         *transport_));
-
+    EXPECT_EQ(0, voe_base_->SetSendDestination(
+        second_channel_, 8002, "127.0.0.1"));
+    EXPECT_EQ(0, voe_base_->SetLocalReceiver(
+        second_channel_, 8002));
     EXPECT_EQ(0, voe_base_->StartReceive(second_channel_));
     EXPECT_EQ(0, voe_base_->StartPlayout(second_channel_));
     EXPECT_EQ(0, voe_rtp_rtcp_->SetLocalSSRC(second_channel_, 5678));
@@ -115,13 +115,10 @@ class RtpRtcpTest : public AfterStreamingFixture {
   }
 
   void TearDown() {
-    EXPECT_EQ(0, voe_network_->DeRegisterExternalTransport(second_channel_));
     voe_base_->DeleteChannel(second_channel_);
-    delete transport_;
   }
 
   int second_channel_;
-  LoopBackTransport* transport_;
 };
 
 void RtcpAppHandler::OnApplicationDataReceived(

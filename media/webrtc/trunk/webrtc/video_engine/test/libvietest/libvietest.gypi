@@ -9,7 +9,7 @@
   'targets': [
     {
       'target_name': 'libvietest',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
         '<(DEPTH)/testing/gtest.gyp:gtest',
@@ -50,10 +50,6 @@
         'testbed/tb_I420_codec.cc',
         'testbed/tb_interfaces.cc',
         'testbed/tb_video_channel.cc',
-      ],
-      # Disable warnings to enable Win64 build, issue 1323.
-      'msvs_disabled_warnings': [
-        4267,  # size_t to int truncation.
       ],
     },
   ],

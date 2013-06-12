@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/video_engine/test/auto_test/automated/legacy_fixture.h"
+#include "video_engine/test/auto_test/automated/legacy_fixture.h"
 
-#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "video_engine/test/auto_test/interface/vie_autotest.h"
 
 void LegacyFixture::SetUpTestCase() {
   TwoWindowsFixture::SetUpTestCase();

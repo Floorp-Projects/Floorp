@@ -16,7 +16,7 @@ namespace webrtc {
 namespace videocapturemodule {
 
 VideoCaptureModule* VideoCaptureImpl::Create(
-    const int32_t id,
+    const WebRtc_Word32 id,
     const char* deviceUniqueIdUTF8) {
   RefCountImpl<VideoCaptureImpl>* implementation =
       new RefCountImpl<VideoCaptureImpl>(id);

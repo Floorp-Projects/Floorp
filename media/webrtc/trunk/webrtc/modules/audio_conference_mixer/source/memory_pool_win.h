@@ -47,14 +47,14 @@ class MemoryPoolImpl
 {
 public:
     // MemoryPool functions.
-    int32_t PopMemory(MemoryType*&  memory);
-    int32_t PushMemory(MemoryType*& memory);
+    WebRtc_Word32 PopMemory(MemoryType*&  memory);
+    WebRtc_Word32 PushMemory(MemoryType*& memory);
 
-    MemoryPoolImpl(int32_t /*initialPoolSize*/);
+    MemoryPoolImpl(WebRtc_Word32 /*initialPoolSize*/);
     ~MemoryPoolImpl();
 
     // Atomic functions.
-    int32_t Terminate();
+    WebRtc_Word32 Terminate();
     bool Initialize();
 private:
     // Non-atomic function.
@@ -72,7 +72,7 @@ private:
 
 template<class MemoryType>
 MemoryPoolImpl<MemoryType>::MemoryPoolImpl(
-    int32_t /*initialPoolSize*/)
+    WebRtc_Word32 /*initialPoolSize*/)
     : _pListHead(NULL),
       _createdMemory(0),
       _outstandingMemory(0)
@@ -94,7 +94,7 @@ MemoryPoolImpl<MemoryType>::~MemoryPoolImpl()
 }
 
 template<class MemoryType>
-int32_t MemoryPoolImpl<MemoryType>::PopMemory(MemoryType*& memory)
+WebRtc_Word32 MemoryPoolImpl<MemoryType>::PopMemory(MemoryType*& memory)
 {
     PSLIST_ENTRY pListEntry = InterlockedPopEntrySList(_pListHead);
     if(pListEntry == NULL)
@@ -112,7 +112,7 @@ int32_t MemoryPoolImpl<MemoryType>::PopMemory(MemoryType*& memory)
 }
 
 template<class MemoryType>
-int32_t MemoryPoolImpl<MemoryType>::PushMemory(MemoryType*& memory)
+WebRtc_Word32 MemoryPoolImpl<MemoryType>::PushMemory(MemoryType*& memory)
 {
     if(memory == NULL)
     {
@@ -122,9 +122,9 @@ int32_t MemoryPoolImpl<MemoryType>::PushMemory(MemoryType*& memory)
     MemoryPoolItem<MemoryType>* item =
         ((MemoryPoolItemPayload<MemoryType>*)memory)->base;
 
-    const int32_t usedItems  = --_outstandingMemory;
-    const int32_t totalItems = _createdMemory.Value();
-    const int32_t freeItems  = totalItems - usedItems;
+    const WebRtc_Word32 usedItems  = --_outstandingMemory;
+    const WebRtc_Word32 totalItems = _createdMemory.Value();
+    const WebRtc_Word32 freeItems  = totalItems - usedItems;
     if(freeItems < 0)
     {
         assert(false);
@@ -157,9 +157,9 @@ bool MemoryPoolImpl<MemoryType>::Initialize()
 }
 
 template<class MemoryType>
-int32_t MemoryPoolImpl<MemoryType>::Terminate()
+WebRtc_Word32 MemoryPoolImpl<MemoryType>::Terminate()
 {
-    int32_t itemsFreed = 0;
+    WebRtc_Word32 itemsFreed = 0;
     PSLIST_ENTRY pListEntry = InterlockedPopEntrySList(_pListHead);
     while(pListEntry != NULL)
     {

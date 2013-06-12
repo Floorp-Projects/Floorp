@@ -31,40 +31,40 @@ namespace webrtc {
 
 int VCMGenericCodecTest(CmdArgs& args);
 
-class SimulatedClock;
+class FakeTickTime;
 
 class GenericCodecTest
 {
 public:
     GenericCodecTest(webrtc::VideoCodingModule* vcm,
-                     webrtc::SimulatedClock* clock);
+                     webrtc::FakeTickTime* clock);
     ~GenericCodecTest();
     static int RunTest(CmdArgs& args);
-    int32_t Perform(CmdArgs& args);
+    WebRtc_Word32 Perform(CmdArgs& args);
     float WaitForEncodedFrame() const;
 
 private:
     void Setup(CmdArgs& args);
     void Print();
-    int32_t TearDown();
+    WebRtc_Word32 TearDown();
     void IncrementDebugClock(float frameRate);
 
-    webrtc::SimulatedClock*              _clock;
+    webrtc::FakeTickTime*                _clock;
     webrtc::VideoCodingModule*           _vcm;
     webrtc::VideoCodec                   _sendCodec;
     webrtc::VideoCodec                   _receiveCodec;
     std::string                          _inname;
     std::string                          _outname;
     std::string                          _encodedName;
-    int32_t                        _sumEncBytes;
+    WebRtc_Word32                        _sumEncBytes;
     FILE*                                _sourceFile;
     FILE*                                _decodedFile;
     FILE*                                _encodedFile;
-    uint16_t                       _width;
-    uint16_t                       _height;
+    WebRtc_UWord16                       _width;
+    WebRtc_UWord16                       _height;
     float                                _frameRate;
-    uint32_t                       _lengthSourceFrame;
-    uint32_t                       _timeStamp;
+    WebRtc_UWord32                       _lengthSourceFrame;
+    WebRtc_UWord32                       _timeStamp;
     VCMDecodeCompleteCallback*           _decodeCallback;
     VCMEncodeCompleteCallback*           _encodeCompleteCallback;
 
@@ -77,32 +77,32 @@ public:
     RTPSendCallback_SizeTest() : _maxPayloadSize(0), _payloadSizeSum(0), _nPackets(0) {}
     virtual int SendPacket(int channel, const void *data, int len);
     virtual int SendRTCPPacket(int channel, const void *data, int len) {return 0;}
-    void SetMaxPayloadSize(uint32_t maxPayloadSize);
+    void SetMaxPayloadSize(WebRtc_UWord32 maxPayloadSize);
     void Reset();
     float AveragePayloadSize() const;
 private:
-    uint32_t         _maxPayloadSize;
-    uint32_t         _payloadSizeSum;
-    uint32_t         _nPackets;
+    WebRtc_UWord32         _maxPayloadSize;
+    WebRtc_UWord32         _payloadSizeSum;
+    WebRtc_UWord32         _nPackets;
 };
 
 class VCMEncComplete_KeyReqTest : public webrtc::VCMPacketizationCallback
 {
 public:
     VCMEncComplete_KeyReqTest(webrtc::VideoCodingModule &vcm) : _vcm(vcm), _seqNo(0), _timeStamp(0) {}
-    int32_t SendData(
+    WebRtc_Word32 SendData(
             const webrtc::FrameType frameType,
-            const uint8_t payloadType,
-            uint32_t timeStamp,
+            const WebRtc_UWord8 payloadType,
+            WebRtc_UWord32 timeStamp,
             int64_t capture_time_ms,
-            const uint8_t* payloadData,
-            const uint32_t payloadSize,
+            const WebRtc_UWord8* payloadData,
+            const WebRtc_UWord32 payloadSize,
             const webrtc::RTPFragmentationHeader& fragmentationHeader,
             const webrtc::RTPVideoHeader* videoHdr);
 private:
     webrtc::VideoCodingModule& _vcm;
-    uint16_t _seqNo;
-    uint32_t _timeStamp;
+    WebRtc_UWord16 _seqNo;
+    WebRtc_UWord32 _timeStamp;
 }; // end of VCMEncodeCompleteCallback
 
 }  // namespace webrtc

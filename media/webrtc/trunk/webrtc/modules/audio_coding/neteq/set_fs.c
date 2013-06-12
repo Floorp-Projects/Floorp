@@ -17,9 +17,9 @@
 #include "dtmf_buffer.h"
 #include "neteq_error_codes.h"
 
-int WebRtcNetEQ_McuSetFs(MCUInst_t *inst, uint16_t fs)
+int WebRtcNetEQ_McuSetFs(MCUInst_t *inst, WebRtc_UWord16 fs)
 {
-    int16_t ok = 0;
+    WebRtc_Word16 ok = 0;
 
     switch (fs)
     {

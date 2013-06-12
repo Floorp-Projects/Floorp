@@ -47,19 +47,19 @@
 
 - (NSNumber*)getCaptureDeviceCount;
 
-- (NSNumber*)getDeviceNamesFromIndex:(uint32_t)index
+- (NSNumber*)getDeviceNamesFromIndex:(WebRtc_UWord32)index
     DefaultName:(char*)deviceName
-    WithLength:(uint32_t)deviceNameLength
+    WithLength:(WebRtc_UWord32)deviceNameLength
     AndUniqueID:(char*)deviceUniqueID
-    WithLength:(uint32_t)deviceUniqueIDLength
+    WithLength:(WebRtc_UWord32)deviceUniqueIDLength
     AndProductID:(char*)deviceProductID
-    WithLength:(uint32_t)deviceProductIDLength;
+    WithLength:(WebRtc_UWord32)deviceProductIDLength;
 
 - (NSNumber*)displayCaptureSettingsDialogBoxWithDevice:
         (const char*)deviceUniqueIdUTF8
     AndTitle:(const char*)dialogTitleUTF8
-    AndParentWindow:(void*) parentWindow AtX:(uint32_t)positionX
-    AndY:(uint32_t) positionY;
+    AndParentWindow:(void*) parentWindow AtX:(WebRtc_UWord32)positionX
+    AndY:(WebRtc_UWord32) positionY;
 @end
 
 #endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_OBJC_H_

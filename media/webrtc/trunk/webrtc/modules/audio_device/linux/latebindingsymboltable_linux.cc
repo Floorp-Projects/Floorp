@@ -57,7 +57,7 @@ DllHandle InternalLoadDll(const char dll_name[]) {
 #endif
   if (handle == kInvalidDllHandle) {
     WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, -1,
-               "Can't load %s : %s", dll_name, GetDllError());
+               "Can't load %s : %d", dll_name, GetDllError());
   }
   return handle;
 }
@@ -66,7 +66,7 @@ void InternalUnloadDll(DllHandle handle) {
 #ifdef WEBRTC_LINUX
   if (dlclose(handle) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-               "%s", GetDllError());
+               "%d", GetDllError());
   }
 #else
 #error Not implemented

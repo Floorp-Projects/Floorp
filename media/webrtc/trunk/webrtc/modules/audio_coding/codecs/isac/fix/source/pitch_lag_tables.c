@@ -24,7 +24,7 @@
 /* tables for use with small pitch gain */
 
 /* cdf for quantized pitch filter lags */
-const uint16_t WebRtcIsacfix_kPitchLagCdf1Lo[127] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf1Lo[127] = {
   0,  134,  336,  549,  778,  998,  1264,  1512,  1777,  2070,
   2423,  2794,  3051,  3361,  3708,  3979,  4315,  4610,  4933,  5269,
   5575,  5896,  6155,  6480,  6816,  7129,  7477,  7764,  8061,  8358,
@@ -40,20 +40,20 @@ const uint16_t WebRtcIsacfix_kPitchLagCdf1Lo[127] = {
   65152,  65535,  65535,  65535,  65535,  65535,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf2Lo[20] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf2Lo[20] = {
   0,  429,  3558,  5861,  8558,  11639,  15210,  19502,  24773,  31983,
   42602,  48567,  52601,  55676,  58160,  60172,  61889,  63235,  65383,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf3Lo[2] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf3Lo[2] = {
   0,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf4Lo[10] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf4Lo[10] = {
   0,  2966,  6368,  11182,  19431,  37793,  48532,  55353,  60626,  65535
 };
 
-const uint16_t *WebRtcIsacfix_kPitchLagPtrLo[4] = {
+const WebRtc_UWord16 *WebRtcIsacfix_kPitchLagPtrLo[4] = {
   WebRtcIsacfix_kPitchLagCdf1Lo,
   WebRtcIsacfix_kPitchLagCdf2Lo,
   WebRtcIsacfix_kPitchLagCdf3Lo,
@@ -61,32 +61,32 @@ const uint16_t *WebRtcIsacfix_kPitchLagPtrLo[4] = {
 };
 
 /* size of first cdf table */
-const uint16_t WebRtcIsacfix_kPitchLagSizeLo[1] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagSizeLo[1] = {
   128
 };
 
 /* index limits and ranges */
-const int16_t WebRtcIsacfix_kLowerLimitLo[4] = {
+const WebRtc_Word16 WebRtcIsacfix_kLowerLimitLo[4] = {
   -140, -9,  0, -4
 };
 
-const int16_t WebRtcIsacfix_kUpperLimitLo[4] = {
+const WebRtc_Word16 WebRtcIsacfix_kUpperLimitLo[4] = {
   -20,  9,  0,  4
 };
 
 /* initial index for arithmetic decoder */
-const uint16_t WebRtcIsacfix_kInitIndLo[3] = {
+const WebRtc_UWord16 WebRtcIsacfix_kInitIndLo[3] = {
   10,  1,  5
 };
 
 /* mean values of pitch filter lags in Q10 */
 
-const int16_t WebRtcIsacfix_kMeanLag2Lo[19] = {
+const WebRtc_Word16 WebRtcIsacfix_kMeanLag2Lo[19] = {
   -17627, -16207, -14409, -12319, -10253, -8200, -6054, -3986, -1948, -19,
   1937, 3974, 6064, 8155, 10229, 12270, 14296, 16127, 17520
 };
 
-const int16_t WebRtcIsacfix_kMeanLag4Lo[9] = {
+const WebRtc_Word16 WebRtcIsacfix_kMeanLag4Lo[9] = {
   -7949, -6063, -4036, -1941, 38, 1977, 4060, 6059
 };
 
@@ -95,7 +95,7 @@ const int16_t WebRtcIsacfix_kMeanLag4Lo[9] = {
 /* tables for use with medium pitch gain */
 
 /* cdf for quantized pitch filter lags */
-const uint16_t WebRtcIsacfix_kPitchLagCdf1Mid[255] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf1Mid[255] = {
   0,  28,  61,  88,  121,  149,  233,  331,  475,  559,
   624,  661,  689,  712,  745,  791,  815,  843,  866,  922,
   959,  1024,  1061,  1117,  1178,  1238,  1280,  1350,  1453,  1513,
@@ -124,23 +124,23 @@ const uint16_t WebRtcIsacfix_kPitchLagCdf1Mid[255] = {
   65535,  65535,  65535,  65535,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf2Mid[36] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf2Mid[36] = {
   0,  71,  335,  581,  836,  1039,  1323,  1795,  2258,  2608,
   3005,  3591,  4243,  5344,  7163,  10583,  16848,  28078,  49448,  57007,
   60357,  61850,  62837,  63437,  63872,  64188,  64377,  64614,  64774,  64949,
   65039,  65115,  65223,  65360,  65474,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf3Mid[2] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf3Mid[2] = {
   0,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf4Mid[20] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf4Mid[20] = {
   0,  28,  246,  459,  667,  1045,  1523,  2337,  4337,  11347,
   44231,  56709,  60781,  62243,  63161,  63969,  64608,  65062,  65502,  65535
 };
 
-const uint16_t *WebRtcIsacfix_kPitchLagPtrMid[4] = {
+const WebRtc_UWord16 *WebRtcIsacfix_kPitchLagPtrMid[4] = {
   WebRtcIsacfix_kPitchLagCdf1Mid,
   WebRtcIsacfix_kPitchLagCdf2Mid,
   WebRtcIsacfix_kPitchLagCdf3Mid,
@@ -148,27 +148,27 @@ const uint16_t *WebRtcIsacfix_kPitchLagPtrMid[4] = {
 };
 
 /* size of first cdf table */
-const uint16_t WebRtcIsacfix_kPitchLagSizeMid[1] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagSizeMid[1] = {
   256
 };
 
 /* index limits and ranges */
-const int16_t WebRtcIsacfix_kLowerLimitMid[4] = {
+const WebRtc_Word16 WebRtcIsacfix_kLowerLimitMid[4] = {
   -280, -17,  0, -9
 };
 
-const int16_t WebRtcIsacfix_kUpperLimitMid[4] = {
+const WebRtc_Word16 WebRtcIsacfix_kUpperLimitMid[4] = {
   -40,  17,  0,  9
 };
 
 /* initial index for arithmetic decoder */
-const uint16_t WebRtcIsacfix_kInitIndMid[3] = {
+const WebRtc_UWord16 WebRtcIsacfix_kInitIndMid[3] = {
   18,  1,  10
 };
 
 /* mean values of pitch filter lags in Q10 */
 
-const int16_t WebRtcIsacfix_kMeanLag2Mid[35] = {
+const WebRtc_Word16 WebRtcIsacfix_kMeanLag2Mid[35] = {
   -17297, -16250, -15416, -14343, -13341, -12363, -11270,
   -10355, -9122, -8217, -7172, -6083, -5102, -4004, -3060,
   -1982, -952, -18, 935, 1976, 3040, 4032,
@@ -177,7 +177,7 @@ const int16_t WebRtcIsacfix_kMeanLag2Mid[35] = {
 };
 
 
-const int16_t WebRtcIsacfix_kMeanLag4Mid[19] = {
+const WebRtc_Word16 WebRtcIsacfix_kMeanLag4Mid[19] = {
   -8811, -8081, -7203, -6003, -5057, -4025, -2983, -1964,
   -891, 29, 921, 1920, 2988, 4064, 5187, 6079, 7173, 8074, 8849
 };
@@ -186,7 +186,7 @@ const int16_t WebRtcIsacfix_kMeanLag4Mid[19] = {
 /* tables for use with large pitch gain */
 
 /* cdf for quantized pitch filter lags */
-const uint16_t WebRtcIsacfix_kPitchLagCdf1Hi[511] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf1Hi[511] = {
   0,  7,  18,  33,  69,  105,  156,  228,  315,  612,
   680,  691,  709,  724,  735,  738,  742,  746,  749,  753,
   756,  760,  764,  774,  782,  785,  789,  796,  800,  803,
@@ -241,7 +241,7 @@ const uint16_t WebRtcIsacfix_kPitchLagCdf1Hi[511] = {
   65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf2Hi[68] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf2Hi[68] = {
   0,  7,  11,  22,  37,  52,  56,  59,  81,  85,
   89,  96,  115,  130,  137,  152,  170,  181,  193,  200,
   207,  233,  237,  259,  289,  318,  363,  433,  592,  992,
@@ -251,18 +251,18 @@ const uint16_t WebRtcIsacfix_kPitchLagCdf2Hi[68] = {
   65483,  65491,  65498,  65505,  65516,  65520,  65528,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf3Hi[2] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf3Hi[2] = {
   0,  65535
 };
 
-const uint16_t WebRtcIsacfix_kPitchLagCdf4Hi[35] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagCdf4Hi[35] = {
   0,  7,  19,  30,  41,  48,  63,  74,  82,  96,
   122,  152,  215,  330,  701,  2611,  10931,  48106,  61177,  64341,
   65112,  65238,  65309,  65338,  65364,  65379,  65401,  65427,  65453,
   65465,  65476,  65490,  65509,  65528,  65535
 };
 
-const uint16_t *WebRtcIsacfix_kPitchLagPtrHi[4] = {
+const WebRtc_UWord16 *WebRtcIsacfix_kPitchLagPtrHi[4] = {
   WebRtcIsacfix_kPitchLagCdf1Hi,
   WebRtcIsacfix_kPitchLagCdf2Hi,
   WebRtcIsacfix_kPitchLagCdf3Hi,
@@ -270,27 +270,27 @@ const uint16_t *WebRtcIsacfix_kPitchLagPtrHi[4] = {
 };
 
 /* size of first cdf table */
-const uint16_t WebRtcIsacfix_kPitchLagSizeHi[1] = {
+const WebRtc_UWord16 WebRtcIsacfix_kPitchLagSizeHi[1] = {
   512
 };
 
 /* index limits and ranges */
-const int16_t WebRtcIsacfix_kLowerLimitHi[4] = {
+const WebRtc_Word16 WebRtcIsacfix_kLowerLimitHi[4] = {
   -552, -34,  0, -16
 };
 
-const int16_t WebRtcIsacfix_kUpperLimitHi[4] = {
+const WebRtc_Word16 WebRtcIsacfix_kUpperLimitHi[4] = {
   -80,  32,  0,  17
 };
 
 /* initial index for arithmetic decoder */
-const uint16_t WebRtcIsacfix_kInitIndHi[3] = {
+const WebRtc_UWord16 WebRtcIsacfix_kInitIndHi[3] = {
   34,  1,  18
 };
 
 /* mean values of pitch filter lags */
 
-const int16_t WebRtcIsacfix_kMeanLag2Hi[67] = {
+const WebRtc_Word16 WebRtcIsacfix_kMeanLag2Hi[67] = {
   -17482, -16896, -16220, -15929, -15329, -14848, -14336, -13807, -13312, -12800, -12218, -11720,
   -11307, -10649, -10396, -9742, -9148, -8668, -8297, -7718, -7155, -6656, -6231, -5600, -5129,
   -4610, -4110, -3521, -3040, -2525, -2016, -1506, -995, -477, -5, 469, 991, 1510, 2025, 2526, 3079,
@@ -299,7 +299,7 @@ const int16_t WebRtcIsacfix_kMeanLag2Hi[67] = {
 };
 
 
-const int16_t WebRtcIsacfix_kMeanLag4Hi[34] = {
+const WebRtc_Word16 WebRtcIsacfix_kMeanLag4Hi[34] = {
   -8175, -7659, -7205, -6684, -6215, -5651, -5180, -4566, -4087, -3536, -3096,
   -2532, -1990, -1482, -959, -440, 11, 451, 954, 1492, 2020, 2562, 3059,
   3577, 4113, 4618, 5134, 5724, 6060, 6758, 7015, 7716, 8066, 8741

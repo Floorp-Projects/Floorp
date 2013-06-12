@@ -17,13 +17,13 @@
 
 #include "signal_processing_library.h"
 
-int32_t WebRtcSpl_Energy(int16_t* vector, int vector_length, int* scale_factor)
+WebRtc_Word32 WebRtcSpl_Energy(WebRtc_Word16* vector, int vector_length, int* scale_factor)
 {
-    int32_t en = 0;
+    WebRtc_Word32 en = 0;
     int i;
     int scaling = WebRtcSpl_GetScalingSquare(vector, vector_length, vector_length);
     int looptimes = vector_length;
-    int16_t *vectorptr = vector;
+    WebRtc_Word16 *vectorptr = vector;
 
     for (i = 0; i < looptimes; i++)
     {

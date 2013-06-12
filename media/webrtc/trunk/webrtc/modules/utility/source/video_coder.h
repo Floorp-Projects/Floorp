@@ -20,42 +20,43 @@ namespace webrtc {
 class VideoCoder : public VCMPacketizationCallback, public VCMReceiveCallback
 {
 public:
-    VideoCoder(uint32_t instanceID);
+    VideoCoder(WebRtc_UWord32 instanceID);
     ~VideoCoder();
 
-    int32_t ResetDecoder();
+    WebRtc_Word32 ResetDecoder();
 
-    int32_t SetEncodeCodec(VideoCodec& videoCodecInst,
-                           uint32_t numberOfCores,
-                           uint32_t maxPayloadSize);
+    WebRtc_Word32 SetEncodeCodec(VideoCodec& videoCodecInst,
+                                 WebRtc_UWord32 numberOfCores,
+                                 WebRtc_UWord32 maxPayloadSize);
 
 
     // Select the codec that should be used for decoding. videoCodecInst.plType
     // will be set to the codec's default payload type.
-    int32_t SetDecodeCodec(VideoCodec& videoCodecInst, int32_t numberOfCores);
+    WebRtc_Word32 SetDecodeCodec(VideoCodec& videoCodecInst,
+                                 WebRtc_Word32 numberOfCores);
 
-    int32_t Decode(I420VideoFrame& decodedVideo,
-                   const EncodedVideoData& encodedData);
+    WebRtc_Word32 Decode(I420VideoFrame& decodedVideo,
+                         const EncodedVideoData& encodedData);
 
-    int32_t Encode(const I420VideoFrame& videoFrame,
-                   EncodedVideoData& videoEncodedData);
+    WebRtc_Word32 Encode(const I420VideoFrame& videoFrame,
+                         EncodedVideoData& videoEncodedData);
 
-    int8_t DefaultPayloadType(const char* plName);
+    WebRtc_Word8 DefaultPayloadType(const char* plName);
 
 private:
     // VCMReceiveCallback function.
     // Note: called by VideoCodingModule when decoding finished.
-    int32_t FrameToRender(I420VideoFrame& videoFrame);
+    WebRtc_Word32 FrameToRender(I420VideoFrame& videoFrame);
 
     // VCMPacketizationCallback function.
     // Note: called by VideoCodingModule when encoding finished.
-    int32_t SendData(
+    WebRtc_Word32 SendData(
         FrameType /*frameType*/,
-        uint8_t /*payloadType*/,
-        uint32_t /*timeStamp*/,
+        WebRtc_UWord8 /*payloadType*/,
+        WebRtc_UWord32 /*timeStamp*/,
         int64_t capture_time_ms,
-        const uint8_t* payloadData,
-        uint32_t payloadSize,
+        const WebRtc_UWord8* payloadData,
+        WebRtc_UWord32 payloadSize,
         const RTPFragmentationHeader& /* fragmentationHeader*/,
         const RTPVideoHeader* rtpTypeHdr);
 

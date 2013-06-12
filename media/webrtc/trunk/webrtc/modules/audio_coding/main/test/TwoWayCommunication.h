@@ -27,9 +27,9 @@ public:
 
     void Perform();
 private:
-    uint8_t ChooseCodec(uint8_t* codecID_A, uint8_t* codecID_B);
-    int16_t SetUp();
-    int16_t SetUpAutotest();
+    WebRtc_UWord8 ChooseCodec(WebRtc_UWord8* codecID_A, WebRtc_UWord8* codecID_B);
+    WebRtc_Word16 SetUp();
+    WebRtc_Word16 SetUpAutotest();
 
     AudioCodingModule* _acmA;
     AudioCodingModule* _acmB;

@@ -34,10 +34,10 @@
 typedef struct
 {
 
-    int16_t position[NUM_TOTAL_CODECS];
-    int16_t nrOfCodecs;
+    WebRtc_Word16 position[NUM_TOTAL_CODECS];
+    WebRtc_Word16 nrOfCodecs;
 
-    int16_t payloadType[NUM_CODECS];
+    WebRtc_Word16 payloadType[NUM_CODECS];
     FuncDecode funcDecode[NUM_CODECS];
     FuncDecode funcDecodeRCU[NUM_CODECS];
     FuncDecodePLC funcDecodePLC[NUM_CODECS];
@@ -49,8 +49,8 @@ typedef struct
     FuncDurationEst funcDurationEst[NUM_CODECS];
     FuncGetErrorCode funcGetErrorCode[NUM_CODECS];
     void * codec_state[NUM_CODECS];
-    uint16_t codec_fs[NUM_CODECS];
-    int16_t CNGpayloadType[NUM_CNG_CODECS];
+    WebRtc_UWord16 codec_fs[NUM_CODECS];
+    WebRtc_Word16 CNGpayloadType[NUM_CNG_CODECS];
 
 } CodecDbInst_t;
 
@@ -58,8 +58,8 @@ typedef struct
 
 typedef struct
 {
-    int16_t deltaBytes;
-    int16_t deltaTime;
+    WebRtc_Word16 deltaBytes;
+    WebRtc_Word16 deltaTime;
 } SplitInfo_t;
 
 /*
@@ -71,13 +71,13 @@ int WebRtcNetEQ_DbReset(CodecDbInst_t *inst);
  * Adds a new codec to the database.
  */
 int WebRtcNetEQ_DbAdd(CodecDbInst_t *inst, enum WebRtcNetEQDecoder codec,
-                      int16_t payloadType, FuncDecode funcDecode,
+                      WebRtc_Word16 payloadType, FuncDecode funcDecode,
                       FuncDecode funcDecodeRCU, FuncDecodePLC funcDecodePLC,
                       FuncDecodeInit funcDecodeInit, FuncAddLatePkt funcAddLatePkt,
                       FuncGetMDinfo funcGetMDinfo, FuncGetPitchInfo funcGetPitch,
                       FuncUpdBWEst funcUpdBWEst, FuncDurationEst funcDurationEst,
                       FuncGetErrorCode funcGetErrorCode, void* codec_state,
-                      uint16_t codec_fs);
+                      WebRtc_UWord16 codec_fs);
 
 /*
  * Removes a codec from the database.
@@ -122,7 +122,7 @@ int WebRtcNetEQ_DbIsCNGPayload(const CodecDbInst_t *inst, int payloadType);
 /*
  * Return the sample rate for the codec with the given payload type, 0 if error.
  */
-uint16_t WebRtcNetEQ_DbGetSampleRate(CodecDbInst_t *inst, int payloadType);
+WebRtc_UWord16 WebRtcNetEQ_DbGetSampleRate(CodecDbInst_t *inst, int payloadType);
 
 #endif
 

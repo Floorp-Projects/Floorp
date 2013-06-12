@@ -25,11 +25,11 @@
  *  quantizer for the gain in the gain-shape coding of residual
  *---------------------------------------------------------------*/
 
-int16_t WebRtcIlbcfix_GainQuant( /* (o) quantized gain value */
-    int16_t gain, /* (i) gain value Q14 */
-    int16_t maxIn, /* (i) maximum of gain value Q14 */
-    int16_t stage, /* (i) The stage of the search */
-    int16_t *index /* (o) quantization index */
+WebRtc_Word16 WebRtcIlbcfix_GainQuant( /* (o) quantized gain value */
+    WebRtc_Word16 gain, /* (i) gain value Q14 */
+    WebRtc_Word16 maxIn, /* (i) maximum of gain value Q14 */
+    WebRtc_Word16 stage, /* (i) The stage of the search */
+    WebRtc_Word16 *index /* (o) quantization index */
                                        );
 
 #endif

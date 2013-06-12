@@ -54,13 +54,13 @@ public:
             memset(hist, 0, sizeof(hist));
         }
 
-        uint32_t hist[256];      /**< Histogram of frame */
-        uint32_t mean;           /**< Mean value of frame */
-        uint32_t sum;            /**< Sum of frame */
-        uint32_t numPixels;      /**< Number of pixels */
-        uint8_t  subSamplWidth;  /**< Subsampling rate of width in powers
+        WebRtc_UWord32 hist[256];      /**< Histogram of frame */
+        WebRtc_UWord32 mean;           /**< Mean value of frame */
+        WebRtc_UWord32 sum;            /**< Sum of frame */
+        WebRtc_UWord32 numPixels;      /**< Number of pixels */
+        WebRtc_UWord8  subSamplWidth;  /**< Subsampling rate of width in powers
                                             of 2 */
-        uint8_t  subSamplHeight; /**< Subsampling rate of height in powers
+        WebRtc_UWord8  subSamplHeight; /**< Subsampling rate of height in powers
                                             of 2 */
     };
 
@@ -82,7 +82,7 @@ public:
       
        \return Pointer to a VPM object.
     */
-    static VideoProcessingModule* Create(int32_t id);
+    static VideoProcessingModule* Create(WebRtc_Word32 id);
 
     /**
        Destroys a VPM object.
@@ -95,12 +95,12 @@ public:
     /**
        Not supported.
     */
-    virtual int32_t TimeUntilNextProcess() { return -1; }
+    virtual WebRtc_Word32 TimeUntilNextProcess() { return -1; }
 
     /**
        Not supported.
     */
-    virtual int32_t Process() { return -1; }
+    virtual WebRtc_Word32 Process() { return -1; }
 
     /**
        Resets all processing components to their initial states. This should be
@@ -120,8 +120,8 @@ public:
       
        \return 0 on success, -1 on failure.
     */
-    static int32_t GetFrameStats(FrameStats* stats,
-                                 const I420VideoFrame& frame);
+    static WebRtc_Word32 GetFrameStats(FrameStats* stats,
+                                       const I420VideoFrame& frame);
 
     /**
        Checks the validity of a FrameStats struct. Currently, valid implies only
@@ -149,7 +149,7 @@ public:
        \param[in,out] frame
            Pointer to the video frame.
     */
-    static int32_t ColorEnhancement(I420VideoFrame* frame);
+    static WebRtc_Word32 ColorEnhancement(I420VideoFrame* frame);
 
     /**
        Increases/decreases the luminance value.
@@ -163,7 +163,7 @@ public:
 
        \return 0 on success, -1 on failure.
     */
-    static int32_t Brighten(I420VideoFrame* frame, int delta);
+    static WebRtc_Word32 Brighten(I420VideoFrame* frame, int delta);
 
     /**
        Detects and removes camera flicker from a video stream. Every frame from
@@ -180,7 +180,8 @@ public:
       
        \return 0 on success, -1 on failure.
     */
-    virtual int32_t Deflickering(I420VideoFrame* frame, FrameStats* stats) = 0;
+    virtual WebRtc_Word32 Deflickering(I420VideoFrame* frame,
+                                       FrameStats* stats) = 0;
     
     /**
        Denoises a video frame. Every frame from the stream should be passed in.
@@ -191,7 +192,7 @@ public:
       
        \return The number of modified pixels on success, -1 on failure.
     */
-    virtual int32_t Denoising(I420VideoFrame* frame) = 0;
+    virtual WebRtc_Word32 Denoising(I420VideoFrame* frame) = 0;
     
     /**
        Detects if a video frame is excessively bright or dark. Returns a
@@ -206,8 +207,8 @@ public:
       
        \return A member of BrightnessWarning on success, -1 on error
     */
-    virtual int32_t BrightnessDetection(const I420VideoFrame& frame,
-                                        const FrameStats& stats) = 0;
+    virtual WebRtc_Word32 BrightnessDetection(const I420VideoFrame& frame,
+                                              const FrameStats& stats) = 0;
 
     /**
     The following functions refer to the pre-processor unit within VPM. The
@@ -237,9 +238,9 @@ public:
     \return VPM_OK on success, a negative value on error (see error codes)
 
     */
-    virtual int32_t SetTargetResolution(uint32_t width,
-                                        uint32_t height,
-                                        uint32_t frameRate) = 0;
+    virtual WebRtc_Word32 SetTargetResolution(WebRtc_UWord32 width,
+                                              WebRtc_UWord32 height,
+                                              WebRtc_UWord32 frameRate) = 0;
     
     /**
     Set max frame rate
@@ -247,22 +248,22 @@ public:
 
     \return VPM_OK on success, a negative value on error (see error codes)
     */
-    virtual int32_t SetMaxFrameRate(uint32_t maxFrameRate) = 0;
+    virtual WebRtc_Word32 SetMaxFrameRate(WebRtc_UWord32 maxFrameRate) = 0;
 
     /**
     Get decimated(target) frame rate
     */
-    virtual uint32_t DecimatedFrameRate() = 0;
+    virtual WebRtc_UWord32 DecimatedFrameRate() = 0;
 	
     /**
     Get decimated(target) frame width
     */
-    virtual uint32_t DecimatedWidth() const = 0;
+    virtual WebRtc_UWord32 DecimatedWidth() const = 0;
 
     /**
     Get decimated(target) frame height
     */
-    virtual uint32_t DecimatedHeight() const = 0 ;
+    virtual WebRtc_UWord32 DecimatedHeight() const = 0 ;
 
     /**
     Set the spatial resampling settings of the VPM: The resampler may either be
@@ -284,8 +285,8 @@ public:
     
     \return VPM_OK on success, a negative value on error (see error codes)
     */
-    virtual int32_t PreprocessFrame(const I420VideoFrame& frame,
-                                    I420VideoFrame** processedFrame) = 0;
+    virtual WebRtc_Word32 PreprocessFrame(const I420VideoFrame& frame,
+                                          I420VideoFrame** processedFrame) = 0;
 
     /**
     Return content metrics for the last processed frame

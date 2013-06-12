@@ -48,24 +48,18 @@ void SetSimulcastSettings(webrtc::VideoCodec* video_codec) {
   video_codec->simulcastStream[0].height = 180;
   video_codec->simulcastStream[0].numberOfTemporalLayers = 0;
   video_codec->simulcastStream[0].maxBitrate = 100;
-  video_codec->simulcastStream[0].targetBitrate = 100;
-  video_codec->simulcastStream[0].minBitrate = 0;
   video_codec->simulcastStream[0].qpMax = video_codec->qpMax;
 
   video_codec->simulcastStream[1].width = 640;
   video_codec->simulcastStream[1].height = 360;
   video_codec->simulcastStream[1].numberOfTemporalLayers = 0;
   video_codec->simulcastStream[1].maxBitrate = 500;
-  video_codec->simulcastStream[1].targetBitrate = 500;
-  video_codec->simulcastStream[1].minBitrate = 200;
   video_codec->simulcastStream[1].qpMax = video_codec->qpMax;
 
   video_codec->simulcastStream[2].width = 1280;
   video_codec->simulcastStream[2].height = 720;
   video_codec->simulcastStream[2].numberOfTemporalLayers = 0;
   video_codec->simulcastStream[2].maxBitrate = 1200;
-  video_codec->simulcastStream[2].targetBitrate = 1200;
-  video_codec->simulcastStream[2].minBitrate = 900;
   video_codec->simulcastStream[2].qpMax = video_codec->qpMax;
 }
 
@@ -75,14 +69,8 @@ void RuntimeSingleStreamSettings(webrtc::VideoCodec* video_codec) {
   video_codec->height = 800;
   video_codec->numberOfSimulcastStreams = kNumStreams;
   video_codec->simulcastStream[0].maxBitrate = 0;
-  video_codec->simulcastStream[0].targetBitrate = 0;
-  video_codec->simulcastStream[0].minBitrate = 0;
   video_codec->simulcastStream[1].maxBitrate = 0;
-  video_codec->simulcastStream[1].targetBitrate = 0;
-  video_codec->simulcastStream[1].minBitrate = 0;
   video_codec->simulcastStream[2].maxBitrate = 0;
-  video_codec->simulcastStream[2].targetBitrate = 0;
-  video_codec->simulcastStream[2].minBitrate = 0;
 }
 
 int VideoEngineSimulcastTest(void* window1, void* window2) {
@@ -146,8 +134,8 @@ int VideoEngineSimulcastTest(void* window1, void* window2) {
   }
 
   printf("Bandwidth estimation modes:\n");
-  printf("1. Single-stream bandwidth estimation\n");
-  printf("2. Multi-stream bandwidth estimation\n");
+  printf("1. Multi-stream bandwidth estimation\n");
+  printf("2. Single-stream bandwidth estimation\n");
   printf("Choose bandwidth estimation mode (default is 1): ");
   std::string str;
   std::getline(std::cin, str);
@@ -155,13 +143,13 @@ int VideoEngineSimulcastTest(void* window1, void* window2) {
   webrtc::BandwidthEstimationMode bwe_mode;
   switch (bwe_mode_choice) {
     case 1:
-      bwe_mode = webrtc::kViESingleStreamEstimation;
-      break;
-    case 2:
       bwe_mode = webrtc::kViEMultiStreamEstimation;
       break;
-    default:
+    case 2:
       bwe_mode = webrtc::kViESingleStreamEstimation;
+      break;
+    default:
+      bwe_mode = webrtc::kViEMultiStreamEstimation;
       break;
   }
 

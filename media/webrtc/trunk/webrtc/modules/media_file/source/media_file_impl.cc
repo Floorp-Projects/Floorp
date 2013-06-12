@@ -25,7 +25,7 @@
 #endif
 
 namespace webrtc {
-MediaFile* MediaFile::CreateMediaFile(const int32_t id)
+MediaFile* MediaFile::CreateMediaFile(const WebRtc_Word32 id)
 {
     return new MediaFileImpl(id);
 }
@@ -35,7 +35,7 @@ void MediaFile::DestroyMediaFile(MediaFile* module)
     delete static_cast<MediaFileImpl*>(module);
 }
 
-MediaFileImpl::MediaFileImpl(const int32_t id)
+MediaFileImpl::MediaFileImpl(const WebRtc_Word32 id)
     : _id(id),
       _crit(CriticalSectionWrapper::CreateCriticalSection()),
       _callbackCrit(CriticalSectionWrapper::CreateCriticalSection()),
@@ -92,13 +92,13 @@ MediaFileImpl::~MediaFileImpl()
     delete _callbackCrit;
 }
 
-int32_t MediaFileImpl::ChangeUniqueId(const int32_t id)
+WebRtc_Word32 MediaFileImpl::ChangeUniqueId(const WebRtc_Word32 id)
 {
     _id = id;
     return 0;
 }
 
-int32_t MediaFileImpl::TimeUntilNextProcess()
+WebRtc_Word32 MediaFileImpl::TimeUntilNextProcess()
 {
     WEBRTC_TRACE(
         kTraceWarning,
@@ -108,34 +108,35 @@ int32_t MediaFileImpl::TimeUntilNextProcess()
     return -1;
 }
 
-int32_t MediaFileImpl::Process()
+WebRtc_Word32 MediaFileImpl::Process()
 {
     WEBRTC_TRACE(kTraceWarning, kTraceFile, _id,
                  "Process: This method is not used by MediaFile class.");
     return -1;
 }
 
-int32_t MediaFileImpl::PlayoutAVIVideoData(
-    int8_t* buffer,
-    uint32_t& dataLengthInBytes)
+WebRtc_Word32 MediaFileImpl::PlayoutAVIVideoData(
+    WebRtc_Word8* buffer,
+    WebRtc_UWord32& dataLengthInBytes)
 {
     return PlayoutData( buffer, dataLengthInBytes, true);
 }
 
-int32_t MediaFileImpl::PlayoutAudioData(int8_t* buffer,
-                                        uint32_t& dataLengthInBytes)
+WebRtc_Word32 MediaFileImpl::PlayoutAudioData(WebRtc_Word8* buffer,
+                                WebRtc_UWord32& dataLengthInBytes)
 {
     return PlayoutData( buffer, dataLengthInBytes, false);
 }
 
-int32_t MediaFileImpl::PlayoutData(int8_t* buffer, uint32_t& dataLengthInBytes,
-                                   bool video)
+WebRtc_Word32 MediaFileImpl::PlayoutData(WebRtc_Word8* buffer,
+                                         WebRtc_UWord32& dataLengthInBytes,
+                                         bool video)
 {
     WEBRTC_TRACE(kTraceStream, kTraceFile, _id,
                "MediaFileImpl::PlayoutData(buffer= 0x%x, bufLen= %ld)",
                  buffer, dataLengthInBytes);
 
-    const uint32_t bufferLengthInBytes = dataLengthInBytes;
+    const WebRtc_UWord32 bufferLengthInBytes = dataLengthInBytes;
     dataLengthInBytes = 0;
 
     if(buffer == NULL || bufferLengthInBytes == 0)
@@ -145,7 +146,7 @@ int32_t MediaFileImpl::PlayoutData(int8_t* buffer, uint32_t& dataLengthInBytes,
         return -1;
     }
 
-    int32_t bytesRead = 0;
+    WebRtc_Word32 bytesRead = 0;
     {
         CriticalSectionScoped lock(_crit);
 
@@ -224,17 +225,17 @@ int32_t MediaFileImpl::PlayoutData(int8_t* buffer, uint32_t& dataLengthInBytes,
 
         if( bytesRead > 0)
         {
-            dataLengthInBytes =(uint32_t) bytesRead;
+            dataLengthInBytes =(WebRtc_UWord32) bytesRead;
         }
     }
     HandlePlayCallbacks(bytesRead);
     return 0;
 }
 
-void MediaFileImpl::HandlePlayCallbacks(int32_t bytesRead)
+void MediaFileImpl::HandlePlayCallbacks(WebRtc_Word32 bytesRead)
 {
     bool playEnded = false;
-    uint32_t callbackNotifyMs = 0;
+    WebRtc_UWord32 callbackNotifyMs = 0;
 
     if(bytesRead > 0)
     {
@@ -271,10 +272,10 @@ void MediaFileImpl::HandlePlayCallbacks(int32_t bytesRead)
     }
 }
 
-int32_t MediaFileImpl::PlayoutStereoData(
-    int8_t* bufferLeft,
-    int8_t* bufferRight,
-    uint32_t& dataLengthInBytes)
+WebRtc_Word32 MediaFileImpl::PlayoutStereoData(
+    WebRtc_Word8* bufferLeft,
+    WebRtc_Word8* bufferRight,
+    WebRtc_UWord32& dataLengthInBytes)
 {
     WEBRTC_TRACE(kTraceStream, kTraceFile, _id,
                  "MediaFileImpl::PlayoutStereoData(Left = 0x%x, Right = 0x%x,\
@@ -283,7 +284,7 @@ int32_t MediaFileImpl::PlayoutStereoData(
                  bufferRight,
                  dataLengthInBytes);
 
-    const uint32_t bufferLengthInBytes = dataLengthInBytes;
+    const WebRtc_UWord32 bufferLengthInBytes = dataLengthInBytes;
     dataLengthInBytes = 0;
 
     if(bufferLeft == NULL || bufferRight == NULL || bufferLengthInBytes == 0)
@@ -294,7 +295,7 @@ int32_t MediaFileImpl::PlayoutStereoData(
     }
 
     bool playEnded = false;
-    uint32_t callbackNotifyMs = 0;
+    WebRtc_UWord32 callbackNotifyMs = 0;
     {
         CriticalSectionScoped lock(_crit);
 
@@ -317,7 +318,7 @@ int32_t MediaFileImpl::PlayoutStereoData(
         }
 
         // Stereo playout only supported for WAV files.
-        int32_t bytesRead = 0;
+        WebRtc_Word32 bytesRead = 0;
         switch(_fileFormat)
         {
             case kFileFormatWavFile:
@@ -372,14 +373,14 @@ int32_t MediaFileImpl::PlayoutStereoData(
     return 0;
 }
 
-int32_t MediaFileImpl::StartPlayingAudioFile(
+WebRtc_Word32 MediaFileImpl::StartPlayingAudioFile(
     const char* fileName,
-    const uint32_t notificationTimeMs,
+    const WebRtc_UWord32 notificationTimeMs,
     const bool loop,
     const FileFormats format,
     const CodecInst* codecInst,
-    const uint32_t startPointMs,
-    const uint32_t stopPointMs)
+    const WebRtc_UWord32 startPointMs,
+    const WebRtc_UWord32 stopPointMs)
 {
     const bool videoOnly = false;
     return StartPlayingFile(fileName, notificationTimeMs, loop, videoOnly,
@@ -387,28 +388,28 @@ int32_t MediaFileImpl::StartPlayingAudioFile(
 }
 
 
-int32_t MediaFileImpl::StartPlayingVideoFile(const char* fileName,
-                                             const bool loop,
-                                             bool videoOnly,
-                                             const FileFormats format)
+WebRtc_Word32 MediaFileImpl::StartPlayingVideoFile(const char* fileName,
+                                                   const bool loop,
+                                                   bool videoOnly,
+                                                   const FileFormats format)
 {
 
-    const uint32_t notificationTimeMs = 0;
-    const uint32_t startPointMs       = 0;
-    const uint32_t stopPointMs        = 0;
+    const WebRtc_UWord32 notificationTimeMs = 0;
+    const WebRtc_UWord32 startPointMs       = 0;
+    const WebRtc_UWord32 stopPointMs        = 0;
     return StartPlayingFile(fileName, notificationTimeMs, loop, videoOnly,
                             format, 0, startPointMs, stopPointMs);
 }
 
-int32_t MediaFileImpl::StartPlayingFile(
+WebRtc_Word32 MediaFileImpl::StartPlayingFile(
     const char* fileName,
-    const uint32_t notificationTimeMs,
+    const WebRtc_UWord32 notificationTimeMs,
     const bool loop,
     bool videoOnly,
     const FileFormats format,
     const CodecInst* codecInst,
-    const uint32_t startPointMs,
-    const uint32_t stopPointMs)
+    const WebRtc_UWord32 startPointMs,
+    const WebRtc_UWord32 stopPointMs)
 {
 
     if(!ValidFileName(fileName))
@@ -477,27 +478,27 @@ int32_t MediaFileImpl::StartPlayingFile(
     return 0;
 }
 
-int32_t MediaFileImpl::StartPlayingAudioStream(
+WebRtc_Word32 MediaFileImpl::StartPlayingAudioStream(
     InStream& stream,
-    const uint32_t notificationTimeMs,
+    const WebRtc_UWord32 notificationTimeMs,
     const FileFormats format,
     const CodecInst* codecInst,
-    const uint32_t startPointMs,
-    const uint32_t stopPointMs)
+    const WebRtc_UWord32 startPointMs,
+    const WebRtc_UWord32 stopPointMs)
 {
     return StartPlayingStream(stream, 0, false, notificationTimeMs, format,
                               codecInst, startPointMs, stopPointMs);
 }
 
-int32_t MediaFileImpl::StartPlayingStream(
+WebRtc_Word32 MediaFileImpl::StartPlayingStream(
     InStream& stream,
     const char* filename,
     bool loop,
-    const uint32_t notificationTimeMs,
+    const WebRtc_UWord32 notificationTimeMs,
     const FileFormats format,
     const CodecInst*  codecInst,
-    const uint32_t startPointMs,
-    const uint32_t stopPointMs,
+    const WebRtc_UWord32 startPointMs,
+    const WebRtc_UWord32 stopPointMs,
     bool videoOnly)
 {
     if(!ValidFileFormat(format,codecInst))
@@ -654,7 +655,7 @@ int32_t MediaFileImpl::StartPlayingStream(
     return 0;
 }
 
-int32_t MediaFileImpl::StopPlaying()
+WebRtc_Word32 MediaFileImpl::StopPlaying()
 {
 
     CriticalSectionScoped lock(_crit);
@@ -696,23 +697,23 @@ bool MediaFileImpl::IsPlaying()
     return _playingActive;
 }
 
-int32_t MediaFileImpl::IncomingAudioData(
-    const int8_t*  buffer,
-    const uint32_t bufferLengthInBytes)
+WebRtc_Word32 MediaFileImpl::IncomingAudioData(
+    const WebRtc_Word8*  buffer,
+    const WebRtc_UWord32 bufferLengthInBytes)
 {
     return IncomingAudioVideoData( buffer, bufferLengthInBytes, false);
 }
 
-int32_t MediaFileImpl::IncomingAVIVideoData(
-    const int8_t*  buffer,
-    const uint32_t bufferLengthInBytes)
+WebRtc_Word32 MediaFileImpl::IncomingAVIVideoData(
+    const WebRtc_Word8*  buffer,
+    const WebRtc_UWord32 bufferLengthInBytes)
 {
     return IncomingAudioVideoData( buffer, bufferLengthInBytes, true);
 }
 
-int32_t MediaFileImpl::IncomingAudioVideoData(
-    const int8_t*  buffer,
-    const uint32_t bufferLengthInBytes,
+WebRtc_Word32 MediaFileImpl::IncomingAudioVideoData(
+    const WebRtc_Word8*  buffer,
+    const WebRtc_UWord32 bufferLengthInBytes,
     const bool video)
 {
     WEBRTC_TRACE(kTraceStream, kTraceFile, _id,
@@ -727,7 +728,7 @@ int32_t MediaFileImpl::IncomingAudioVideoData(
     }
 
     bool recordingEnded = false;
-    uint32_t callbackNotifyMs = 0;
+    WebRtc_UWord32 callbackNotifyMs = 0;
     {
         CriticalSectionScoped lock(_crit);
 
@@ -745,8 +746,8 @@ int32_t MediaFileImpl::IncomingAudioVideoData(
             return -1;
         }
 
-        int32_t bytesWritten = 0;
-        uint32_t samplesWritten = codec_info_.pacsize;
+        WebRtc_Word32 bytesWritten = 0;
+        WebRtc_UWord32 samplesWritten = codec_info_.pacsize;
         if(_ptrFileUtilityObj)
         {
             switch(_fileFormat)
@@ -762,7 +763,7 @@ int32_t MediaFileImpl::IncomingAudioVideoData(
                     // Sample size is 2 bytes.
                     if(bytesWritten > 0)
                     {
-                        samplesWritten = bytesWritten/sizeof(int16_t);
+                        samplesWritten = bytesWritten/sizeof(WebRtc_Word16);
                     }
                     break;
                 case kFileFormatCompressedFile:
@@ -778,7 +779,7 @@ int32_t MediaFileImpl::IncomingAudioVideoData(
                                                          "L16", 4) == 0)
                     {
                         // Sample size is 2 bytes.
-                        samplesWritten = bytesWritten/sizeof(int16_t);
+                        samplesWritten = bytesWritten/sizeof(WebRtc_Word16);
                     }
                     break;
                 case kFileFormatPreencodedFile:
@@ -830,7 +831,7 @@ int32_t MediaFileImpl::IncomingAudioVideoData(
                 callbackNotifyMs = _recordDurationMs;
             }
         }
-        if(bytesWritten < (int32_t)bufferLengthInBytes)
+        if(bytesWritten < (WebRtc_Word32)bufferLengthInBytes)
         {
             WEBRTC_TRACE(kTraceWarning, kTraceFile, _id,
                          "Failed to write all requested bytes!");
@@ -856,12 +857,12 @@ int32_t MediaFileImpl::IncomingAudioVideoData(
     return 0;
 }
 
-int32_t MediaFileImpl::StartRecordingAudioFile(
+WebRtc_Word32 MediaFileImpl::StartRecordingAudioFile(
     const char* fileName,
     const FileFormats format,
     const CodecInst& codecInst,
-    const uint32_t notificationTimeMs,
-    const uint32_t maxSizeBytes)
+    const WebRtc_UWord32 notificationTimeMs,
+    const WebRtc_UWord32 maxSizeBytes)
 {
     VideoCodec dummyCodecInst;
     return StartRecordingFile(fileName, format, codecInst, dummyCodecInst,
@@ -869,27 +870,27 @@ int32_t MediaFileImpl::StartRecordingAudioFile(
 }
 
 
-int32_t MediaFileImpl::StartRecordingVideoFile(
+WebRtc_Word32 MediaFileImpl::StartRecordingVideoFile(
     const char* fileName,
     const FileFormats format,
     const CodecInst& codecInst,
     const VideoCodec& videoCodecInst,
     bool videoOnly)
 {
-    const uint32_t notificationTimeMs = 0;
-    const uint32_t maxSizeBytes       = 0;
+    const WebRtc_UWord32 notificationTimeMs = 0;
+    const WebRtc_UWord32 maxSizeBytes       = 0;
 
     return StartRecordingFile(fileName, format, codecInst, videoCodecInst,
                               notificationTimeMs, maxSizeBytes, videoOnly);
 }
 
-int32_t MediaFileImpl::StartRecordingFile(
+WebRtc_Word32 MediaFileImpl::StartRecordingFile(
     const char* fileName,
     const FileFormats format,
     const CodecInst& codecInst,
     const VideoCodec& videoCodecInst,
-    const uint32_t notificationTimeMs,
-    const uint32_t maxSizeBytes,
+    const WebRtc_UWord32 notificationTimeMs,
+    const WebRtc_UWord32 maxSizeBytes,
     bool videoOnly)
 {
 
@@ -947,24 +948,24 @@ int32_t MediaFileImpl::StartRecordingFile(
     return 0;
 }
 
-int32_t MediaFileImpl::StartRecordingAudioStream(
+WebRtc_Word32 MediaFileImpl::StartRecordingAudioStream(
     OutStream& stream,
     const FileFormats format,
     const CodecInst& codecInst,
-    const uint32_t notificationTimeMs)
+    const WebRtc_UWord32 notificationTimeMs)
 {
     VideoCodec dummyCodecInst;
     return StartRecordingStream(stream, 0, format, codecInst, dummyCodecInst,
                                 notificationTimeMs);
 }
 
-int32_t MediaFileImpl::StartRecordingStream(
+WebRtc_Word32 MediaFileImpl::StartRecordingStream(
     OutStream& stream,
     const char* fileName,
     const FileFormats format,
     const CodecInst& codecInst,
     const VideoCodec& videoCodecInst,
-    const uint32_t notificationTimeMs,
+    const WebRtc_UWord32 notificationTimeMs,
     bool videoOnly)
 {
 
@@ -1127,7 +1128,7 @@ int32_t MediaFileImpl::StartRecordingStream(
     return 0;
 }
 
-int32_t MediaFileImpl::StopRecording()
+WebRtc_Word32 MediaFileImpl::StopRecording()
 {
 
     CriticalSectionScoped lock(_crit);
@@ -1184,7 +1185,7 @@ bool MediaFileImpl::IsRecording()
     return _recordingActive;
 }
 
-int32_t MediaFileImpl::RecordDurationMs(uint32_t& durationMs)
+WebRtc_Word32 MediaFileImpl::RecordDurationMs(WebRtc_UWord32& durationMs)
 {
 
     CriticalSectionScoped lock(_crit);
@@ -1204,7 +1205,7 @@ bool MediaFileImpl::IsStereo()
     return _isStereo;
 }
 
-int32_t MediaFileImpl::SetModuleFileCallback(FileCallback* callback)
+WebRtc_Word32 MediaFileImpl::SetModuleFileCallback(FileCallback* callback)
 {
 
     CriticalSectionScoped lock(_callbackCrit);
@@ -1213,10 +1214,10 @@ int32_t MediaFileImpl::SetModuleFileCallback(FileCallback* callback)
     return 0;
 }
 
-int32_t MediaFileImpl::FileDurationMs(const char* fileName,
-                                      uint32_t& durationMs,
-                                      const FileFormats format,
-                                      const uint32_t freqInHz)
+WebRtc_Word32 MediaFileImpl::FileDurationMs(const char* fileName,
+                                            WebRtc_UWord32& durationMs,
+                                            const FileFormats format,
+                                            const WebRtc_UWord32 freqInHz)
 {
 
     if(!ValidFileName(fileName))
@@ -1236,8 +1237,8 @@ int32_t MediaFileImpl::FileDurationMs(const char* fileName,
         return -1;
     }
 
-    const int32_t duration = utilityObj->FileDurationMs(fileName, format,
-                                                        freqInHz);
+    const WebRtc_Word32 duration = utilityObj->FileDurationMs(fileName, format,
+                                                              freqInHz);
     delete utilityObj;
     if(duration == -1)
     {
@@ -1249,7 +1250,7 @@ int32_t MediaFileImpl::FileDurationMs(const char* fileName,
     return 0;
 }
 
-int32_t MediaFileImpl::PlayoutPositionMs(uint32_t& positionMs) const
+WebRtc_Word32 MediaFileImpl::PlayoutPositionMs(WebRtc_UWord32& positionMs) const
 {
     CriticalSectionScoped lock(_crit);
     if(!_playingActive)
@@ -1261,7 +1262,7 @@ int32_t MediaFileImpl::PlayoutPositionMs(uint32_t& positionMs) const
     return 0;
 }
 
-int32_t MediaFileImpl::codec_info(CodecInst& codecInst) const
+WebRtc_Word32 MediaFileImpl::codec_info(CodecInst& codecInst) const
 {
     CriticalSectionScoped lock(_crit);
     if(!_playingActive && !_recordingActive)
@@ -1281,7 +1282,7 @@ int32_t MediaFileImpl::codec_info(CodecInst& codecInst) const
     return 0;
 }
 
-int32_t MediaFileImpl::VideoCodecInst(VideoCodec& codecInst) const
+WebRtc_Word32 MediaFileImpl::VideoCodecInst(VideoCodec& codecInst) const
 {
     CriticalSectionScoped lock(_crit);
     if(!_playingActive && !_recordingActive)
@@ -1336,8 +1337,8 @@ bool MediaFileImpl::ValidFileName(const char* fileName)
 }
 
 
-bool MediaFileImpl::ValidFilePositions(const uint32_t startPointMs,
-                                       const uint32_t stopPointMs)
+bool MediaFileImpl::ValidFilePositions(const WebRtc_UWord32 startPointMs,
+                                       const WebRtc_UWord32 stopPointMs)
 {
     if(startPointMs == 0 && stopPointMs == 0) // Default values
     {
@@ -1358,7 +1359,7 @@ bool MediaFileImpl::ValidFilePositions(const uint32_t startPointMs,
     return true;
 }
 
-bool MediaFileImpl::ValidFrequency(const uint32_t frequency)
+bool MediaFileImpl::ValidFrequency(const WebRtc_UWord32 frequency)
 {
     if((frequency == 8000) || (frequency == 16000)|| (frequency == 32000))
     {

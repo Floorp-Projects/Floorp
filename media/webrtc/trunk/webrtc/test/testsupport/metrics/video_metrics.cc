@@ -10,7 +10,7 @@
 
 #include "testsupport/metrics/video_metrics.h"
 
-#include <algorithm>  // min_element, max_element
+#include <algorithm> // min_element, max_element
 #include <cassert>
 #include <cstdio>
 
@@ -24,9 +24,9 @@ namespace test {
 double kMetricsPerfectPSNR = kPerfectPSNR;
 
 // Used for calculating min and max values.
-static bool LessForFrameResultValue(const FrameResult& s1,
-                                    const FrameResult& s2) {
-  return s1.value < s2.value;
+static bool LessForFrameResultValue (const FrameResult& s1,
+                                     const FrameResult& s2) {
+    return s1.value < s2.value;
 }
 
 enum VideoMetricsType { kPSNR, kSSIM, kBoth };
@@ -107,25 +107,28 @@ int CalculateMetrics(VideoMetricsType video_metrics_type,
   int frame_number = 0;
 
   // Read reference and test frames.
-  const size_t frame_length = 3 * width * height >> 1;
+  const int frame_length = 3 * width * height >> 1;
   I420VideoFrame ref_frame;
   I420VideoFrame test_frame;
   scoped_array<uint8_t> ref_buffer(new uint8_t[frame_length]);
   scoped_array<uint8_t> test_buffer(new uint8_t[frame_length]);
 
-  // Set decoded image parameters.
-  int half_width = (width + 1) / 2;
-  ref_frame.CreateEmptyFrame(width, height, width, half_width, half_width);
-  test_frame.CreateEmptyFrame(width, height, width, half_width, half_width);
+  int size_y = width * height;
+  int size_uv = ((width + 1 ) / 2) * ((height + 1) / 2);
 
-  size_t ref_bytes = fread(ref_buffer.get(), 1, frame_length, ref_fp);
-  size_t test_bytes = fread(test_buffer.get(), 1, frame_length, test_fp);
+  int ref_bytes = fread(ref_buffer.get(), 1, frame_length, ref_fp);
+  int test_bytes = fread(test_buffer.get(), 1, frame_length, test_fp);
   while (ref_bytes == frame_length && test_bytes == frame_length) {
-    // Converting from buffer to plane representation.
-    ConvertToI420(kI420, ref_buffer.get(), 0, 0, width, height, 0,
-                  kRotateNone, &ref_frame);
-    ConvertToI420(kI420, test_buffer.get(), 0, 0, width, height, 0,
-                  kRotateNone, &test_frame);
+    ref_frame.CreateFrame(size_y, ref_buffer.get(),
+                          size_uv, ref_buffer.get() + size_y,
+                          size_uv, ref_buffer.get() + size_y + size_uv,
+                          width, height,
+                          width, (width + 1) / 2, (width + 1) / 2);
+    test_frame.CreateFrame(size_y, test_buffer.get(),
+                           size_uv, test_buffer.get() + size_y,
+                           size_uv, test_buffer.get() + size_y + size_uv,
+                           width, height,
+                           width, (width + 1) / 2, (width + 1) / 2);
     switch (video_metrics_type) {
       case kPSNR:
         CalculateFrame(kPSNR, &ref_frame, &test_frame, frame_number,

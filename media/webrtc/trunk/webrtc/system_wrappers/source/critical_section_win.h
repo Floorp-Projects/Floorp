@@ -29,8 +29,7 @@ class CriticalSectionWindows : public CriticalSectionWrapper {
  private:
   CRITICAL_SECTION crit;
 
-  friend class ConditionVariableEventWin;
-  friend class ConditionVariableNativeWin;
+  friend class ConditionVariableWindows;
 };
 
 } // namespace webrtc

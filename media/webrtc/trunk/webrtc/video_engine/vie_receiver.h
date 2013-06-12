@@ -13,11 +13,12 @@
 
 #include <list>
 
-#include "webrtc/engine_configurations.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "webrtc/typedefs.h"
-#include "webrtc/video_engine/vie_defines.h"
+#include "engine_configurations.h"  // NOLINT
+#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "modules/udp_transport/interface/udp_transport.h"
+#include "system_wrappers/interface/scoped_ptr.h"
+#include "typedefs.h"  // NOLINT
+#include "video_engine/vie_defines.h"
 
 namespace webrtc {
 
@@ -28,7 +29,7 @@ class RtpDump;
 class RtpRtcp;
 class VideoCodingModule;
 
-class ViEReceiver : public RtpData {
+class ViEReceiver : public UdpTransportData, public RtpData {
  public:
   ViEReceiver(const int32_t channel_id, VideoCodingModule* module_vcm,
               RemoteBitrateEstimator* remote_bitrate_estimator);
@@ -44,30 +45,41 @@ class ViEReceiver : public RtpData {
   void StartReceive();
   void StopReceive();
 
+  void StartRTCPReceive();
+  void StopRTCPReceive();
+
   int StartRTPDump(const char file_nameUTF8[1024]);
   int StopRTPDump();
+
+  // Implements UdpTransportData.
+  virtual void IncomingRTPPacket(const WebRtc_Word8* rtp_packet,
+                                 const WebRtc_Word32 rtp_packet_length,
+                                 const char* from_ip,
+                                 const WebRtc_UWord16 from_port);
+  virtual void IncomingRTCPPacket(const WebRtc_Word8* rtcp_packet,
+                                  const WebRtc_Word32 rtcp_packet_length,
+                                  const char* from_ip,
+                                  const WebRtc_UWord16 from_port);
 
   // Receives packets from external transport.
   int ReceivedRTPPacket(const void* rtp_packet, int rtp_packet_length);
   int ReceivedRTCPPacket(const void* rtcp_packet, int rtcp_packet_length);
 
   // Implements RtpData.
-  virtual int32_t OnReceivedPayloadData(
-      const uint8_t* payload_data,
-      const uint16_t payload_size,
+  virtual WebRtc_Word32 OnReceivedPayloadData(
+      const WebRtc_UWord8* payload_data,
+      const WebRtc_UWord16 payload_size,
       const WebRtcRTPHeader* rtp_header);
 
-  void OnSendReportReceived(const int32_t id,
-                            const uint32_t senderSSRC,
+  void OnSendReportReceived(const WebRtc_Word32 id,
+                            const WebRtc_UWord32 senderSSRC,
                             uint32_t ntp_secs,
                             uint32_t ntp_frac,
                             uint32_t timestamp);
 
-  void EstimatedReceiveBandwidth(unsigned int* available_bandwidth) const;
-
  private:
-  int InsertRTPPacket(const int8_t* rtp_packet, int rtp_packet_length);
-  int InsertRTCPPacket(const int8_t* rtcp_packet, int rtcp_packet_length);
+  int InsertRTPPacket(const WebRtc_Word8* rtp_packet, int rtp_packet_length);
+  int InsertRTCPPacket(const WebRtc_Word8* rtcp_packet, int rtcp_packet_length);
 
   scoped_ptr<CriticalSectionWrapper> receive_cs_;
   const int32_t channel_id_;
@@ -77,9 +89,10 @@ class ViEReceiver : public RtpData {
   RemoteBitrateEstimator* remote_bitrate_estimator_;
 
   Encryption* external_decryption_;
-  uint8_t* decryption_buffer_;
+  WebRtc_UWord8* decryption_buffer_;
   RtpDump* rtp_dump_;
   bool receiving_;
+  bool receiving_rtcp_;
 };
 
 }  // namespace webrt

@@ -30,7 +30,7 @@ VoECallReport* VoECallReport::GetInterface(VoiceEngine* voiceEngine)
     {
         return NULL;
     }
-    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
+    VoiceEngineImpl* s = reinterpret_cast<VoiceEngineImpl*>(voiceEngine);
     s->AddRef();
     return s;
 #endif
@@ -100,13 +100,13 @@ int VoECallReportImpl::ResetCallReportStatistics(int channel)
     }
     else
     {
-        int32_t numOfChannels =
+        WebRtc_Word32 numOfChannels =
             _shared->channel_manager().NumOfChannels();
         if (numOfChannels <= 0)
         {
             return 0;
         }
-        int32_t* channelsArray = new int32_t[numOfChannels];
+        WebRtc_Word32* channelsArray = new WebRtc_Word32[numOfChannels];
         _shared->channel_manager().GetChannelIds(channelsArray, numOfChannels);
         for (int i = 0; i < numOfChannels; i++)
         {
@@ -333,12 +333,12 @@ int VoECallReportImpl::WriteReportToFile(const char* fileNameUTF8)
     _file.WriteText("\nNetwork Packet Round Trip Time (RTT)\n");
     _file.WriteText("------------------------------------\n\n");
 
-    int32_t numOfChannels = _shared->channel_manager().NumOfChannels();
+    WebRtc_Word32 numOfChannels = _shared->channel_manager().NumOfChannels();
     if (numOfChannels <= 0)
     {
         return 0;
     }
-    int32_t* channelsArray = new int32_t[numOfChannels];
+    WebRtc_Word32* channelsArray = new WebRtc_Word32[numOfChannels];
     _shared->channel_manager().GetChannelIds(channelsArray, numOfChannels);
     for (int ch = 0; ch < numOfChannels; ch++)
     {

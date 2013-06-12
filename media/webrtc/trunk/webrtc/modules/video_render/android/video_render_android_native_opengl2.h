@@ -24,17 +24,20 @@ class CriticalSectionWrapper;
 class AndroidNativeOpenGl2Channel: public AndroidStream {
  public:
   AndroidNativeOpenGl2Channel(
-      uint32_t streamId,
+      WebRtc_UWord32 streamId,
       JavaVM* jvm,
       VideoRenderAndroid& renderer,jobject javaRenderObj);
   ~AndroidNativeOpenGl2Channel();
 
-  int32_t Init(int32_t zOrder, const float left, const float top,
-               const float right, const float bottom);
+  WebRtc_Word32 Init(WebRtc_Word32 zOrder,
+                     const float left,
+                     const float top,
+                     const float right,
+                     const float bottom);
 
   //Implement VideoRenderCallback
-  virtual int32_t RenderFrame(
-      const uint32_t streamId,
+  virtual WebRtc_Word32 RenderFrame(
+      const WebRtc_UWord32 streamId,
       I420VideoFrame& videoFrame);
 
   //Implements AndroidStream
@@ -51,7 +54,7 @@ class AndroidNativeOpenGl2Channel: public AndroidStream {
 
   static void DrawNativeStatic(JNIEnv * env,jobject, jlong context);
   void DrawNative();
-  uint32_t _id;
+  WebRtc_UWord32 _id;
   CriticalSectionWrapper& _renderCritSect;
 
   I420VideoFrame _bufferToRender;
@@ -68,7 +71,7 @@ class AndroidNativeOpenGl2Channel: public AndroidStream {
 
 class AndroidNativeOpenGl2Renderer: private VideoRenderAndroid {
  public:
-  AndroidNativeOpenGl2Renderer(const int32_t id,
+  AndroidNativeOpenGl2Renderer(const WebRtc_Word32 id,
                                const VideoRenderType videoRenderType,
                                void* window,
                                const bool fullscreen);
@@ -76,10 +79,10 @@ class AndroidNativeOpenGl2Renderer: private VideoRenderAndroid {
   ~AndroidNativeOpenGl2Renderer();
   static bool UseOpenGL2(void* window);
 
-  int32_t Init();
+  WebRtc_Word32 Init();
   virtual AndroidStream* CreateAndroidRenderChannel(
-      int32_t streamId,
-      int32_t zOrder,
+      WebRtc_Word32 streamId,
+      WebRtc_Word32 zOrder,
       const float left,
       const float top,
       const float right,

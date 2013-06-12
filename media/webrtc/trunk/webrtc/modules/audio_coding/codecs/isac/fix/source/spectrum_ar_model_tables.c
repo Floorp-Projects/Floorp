@@ -22,84 +22,84 @@
 /********************* AR Coefficient Tables ************************/
 
 /* cdf for quantized reflection coefficient 1 */
-const uint16_t WebRtcIsacfix_kRc1Cdf[12] = {
+const WebRtc_UWord16 WebRtcIsacfix_kRc1Cdf[12] = {
   0,  2,  4,  129,  7707,  57485,  65495,  65527,  65529,  65531,
   65533,  65535
 };
 
 /* cdf for quantized reflection coefficient 2 */
-const uint16_t WebRtcIsacfix_kRc2Cdf[12] = {
+const WebRtc_UWord16 WebRtcIsacfix_kRc2Cdf[12] = {
   0,  2,  4,  7,  531,  25298,  64525,  65526,  65529,  65531,
   65533,  65535
 };
 
 /* cdf for quantized reflection coefficient 3 */
-const uint16_t WebRtcIsacfix_kRc3Cdf[12] = {
+const WebRtc_UWord16 WebRtcIsacfix_kRc3Cdf[12] = {
   0,  2,  4,  6,  620,  22898,  64843,  65527,  65529,  65531,
   65533,  65535
 };
 
 /* cdf for quantized reflection coefficient 4 */
-const uint16_t WebRtcIsacfix_kRc4Cdf[12] = {
+const WebRtc_UWord16 WebRtcIsacfix_kRc4Cdf[12] = {
   0,  2,  4,  6,  35,  10034,  60733,  65506,  65529,  65531,
   65533,  65535
 };
 
 /* cdf for quantized reflection coefficient 5 */
-const uint16_t WebRtcIsacfix_kRc5Cdf[12] = {
+const WebRtc_UWord16 WebRtcIsacfix_kRc5Cdf[12] = {
   0,  2,  4,  6,  36,  7567,  56727,  65385,  65529,  65531,
   65533,  65535
 };
 
 /* cdf for quantized reflection coefficient 6 */
-const uint16_t WebRtcIsacfix_kRc6Cdf[12] = {
+const WebRtc_UWord16 WebRtcIsacfix_kRc6Cdf[12] = {
   0,  2,  4,  6,  14,  6579,  57360,  65409,  65529,  65531,
   65533,  65535
 };
 
 /* representation levels for quantized reflection coefficient 1 */
-const int16_t WebRtcIsacfix_kRc1Levels[11] = {
+const WebRtc_Word16 WebRtcIsacfix_kRc1Levels[11] = {
   -32104, -29007, -23202, -15496, -9279, -2577, 5934, 17535, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 2 */
-const int16_t WebRtcIsacfix_kRc2Levels[11] = {
+const WebRtc_Word16 WebRtcIsacfix_kRc2Levels[11] = {
   -32104, -29503, -23494, -15261, -7309, -1399, 6158, 16381, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 3 */
-const int16_t WebRtcIsacfix_kRc3Levels[11] = {
+const WebRtc_Word16 WebRtcIsacfix_kRc3Levels[11] = {
   -32104, -29503, -23157, -15186, -7347, -1359, 5829, 17535, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 4 */
-const int16_t WebRtcIsacfix_kRc4Levels[11] = {
+const WebRtc_Word16 WebRtcIsacfix_kRc4Levels[11] = {
   -32104, -29503, -24512, -15362, -6665, -342, 6596, 14585, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 5 */
-const int16_t WebRtcIsacfix_kRc5Levels[11] = {
+const WebRtc_Word16 WebRtcIsacfix_kRc5Levels[11] = {
   -32104, -29503, -24512, -15005, -6564, -106, 7123, 14920, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 6 */
-const int16_t WebRtcIsacfix_kRc6Levels[11] = {
+const WebRtc_Word16 WebRtcIsacfix_kRc6Levels[11] = {
   -32104, -29503, -24512, -15096, -6656, -37, 7036, 14847, 24512, 29503, 32104
 };
 
 /* quantization boundary levels for reflection coefficients */
-const int16_t WebRtcIsacfix_kRcBound[12] = {
+const WebRtc_Word16 WebRtcIsacfix_kRcBound[12] = {
   -32768, -31441, -27566, -21458, -13612, -4663,
   4663, 13612, 21458, 27566, 31441, 32767
 };
 
 /* initial index for AR reflection coefficient quantizer and cdf table search */
-const uint16_t WebRtcIsacfix_kRcInitInd[6] = {
+const WebRtc_UWord16 WebRtcIsacfix_kRcInitInd[6] = {
   5,  5,  5,  5,  5,  5
 };
 
 /* pointers to AR cdf tables */
-const uint16_t *WebRtcIsacfix_kRcCdfPtr[AR_ORDER] = {
+const WebRtc_UWord16 *WebRtcIsacfix_kRcCdfPtr[AR_ORDER] = {
   WebRtcIsacfix_kRc1Cdf,
   WebRtcIsacfix_kRc2Cdf,
   WebRtcIsacfix_kRc3Cdf,
@@ -109,7 +109,7 @@ const uint16_t *WebRtcIsacfix_kRcCdfPtr[AR_ORDER] = {
 };
 
 /* pointers to AR representation levels tables */
-const int16_t *WebRtcIsacfix_kRcLevPtr[AR_ORDER] = {
+const WebRtc_Word16 *WebRtcIsacfix_kRcLevPtr[AR_ORDER] = {
   WebRtcIsacfix_kRc1Levels,
   WebRtcIsacfix_kRc2Levels,
   WebRtcIsacfix_kRc3Levels,
@@ -122,30 +122,30 @@ const int16_t *WebRtcIsacfix_kRcLevPtr[AR_ORDER] = {
 /******************** GAIN Coefficient Tables ***********************/
 
 /* cdf for Gain coefficient */
-const uint16_t WebRtcIsacfix_kGainCdf[19] = {
+const WebRtc_UWord16 WebRtcIsacfix_kGainCdf[19] = {
   0,  2,  4,  6,  8,  10,  12,  14,  16,  1172,
   11119,  29411,  51699,  64445,  65527,  65529,  65531,  65533,  65535
 };
 
 /* representation levels for quantized squared Gain coefficient */
-const int32_t WebRtcIsacfix_kGain2Lev[18] = {
+const WebRtc_Word32 WebRtcIsacfix_kGain2Lev[18] = {
   128, 128, 128, 128, 128, 215, 364, 709, 1268,
   1960, 3405, 6078, 11286, 17827, 51918, 134498, 487432, 2048000
 };
 
 /* quantization boundary levels for squared Gain coefficient */
-const int32_t WebRtcIsacfix_kGain2Bound[19] = {
+const WebRtc_Word32 WebRtcIsacfix_kGain2Bound[19] = {
   0, 21, 35, 59, 99, 166, 280, 475, 815, 1414,
   2495, 4505, 8397, 16405, 34431, 81359, 240497, 921600, 0x7FFFFFFF
 };
 
 /* pointers to Gain cdf table */
-const uint16_t *WebRtcIsacfix_kGainPtr[1] = {
+const WebRtc_UWord16 *WebRtcIsacfix_kGainPtr[1] = {
   WebRtcIsacfix_kGainCdf
 };
 
 /* gain initial index for gain quantizer and cdf table search */
-const uint16_t WebRtcIsacfix_kGainInitInd[1] = {
+const WebRtc_UWord16 WebRtcIsacfix_kGainInitInd[1] = {
   11
 };
 
@@ -153,7 +153,7 @@ const uint16_t WebRtcIsacfix_kGainInitInd[1] = {
 /************************* Cosine Tables ****************************/
 
 /* cosine table */
-const int16_t WebRtcIsacfix_kCos[6][60] = {
+const WebRtc_Word16 WebRtcIsacfix_kCos[6][60] = {
   { 512,   512,   511,   510,   508,   507,   505,   502,   499,   496,
         493,   489,   485,   480,   476,   470,   465,   459,   453,   447,
  440,   433,   426,   418,   410,   402,   394,   385,   376,   367,

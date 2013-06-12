@@ -14,6 +14,10 @@
 #ifndef WEBRTC_TYPEDEFS_H_
 #define WEBRTC_TYPEDEFS_H_
 
+// Reserved words definitions
+// TODO(andrew): Remove this.
+#define G_CONST const
+
 // For access to standard POSIXish features, use WEBRTC_POSIX instead of a
 // more specific macro.
 #if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX) || \
@@ -145,18 +149,5 @@ typedef uint8_t             WebRtc_UWord8;
 typedef uint16_t            WebRtc_UWord16;
 typedef uint32_t            WebRtc_UWord32;
 typedef uint64_t            WebRtc_UWord64;
-
-// Borrowed from Chromium's base/compiler_specific.h.
-// Annotate a virtual method indicating it must be overriding a virtual
-// method in the parent class.
-// Use like:
-//   virtual void foo() OVERRIDE;
-#if defined(_MSC_VER)
-#define OVERRIDE override
-#elif defined(__clang__)
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
 
 #endif  // WEBRTC_TYPEDEFS_H_

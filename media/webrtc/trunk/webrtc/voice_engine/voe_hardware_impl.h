@@ -17,6 +17,7 @@
 
 namespace webrtc
 {
+class CpuWrapper;
 
 class VoEHardwareImpl: public VoEHardware
 {
@@ -49,6 +50,8 @@ public:
 
     virtual int GetCPULoad(int& loadPercent);
 
+    virtual int GetSystemCPULoad(int& loadPercent);
+
     virtual int ResetAudioDevice();
 
     virtual int AudioDeviceControl(unsigned int par1,
@@ -72,6 +75,7 @@ protected:
     virtual ~VoEHardwareImpl();
 
 private:
+    CpuWrapper* _cpu;
     voe::SharedData* _shared;
 };
 

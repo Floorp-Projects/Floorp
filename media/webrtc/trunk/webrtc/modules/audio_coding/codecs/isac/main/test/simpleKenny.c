@@ -62,21 +62,21 @@ int main(int argc, char* argv[])
     unsigned long totalBitsRCU = 0;
     unsigned long totalsmpls =0;
 
-    int32_t   bottleneck = 39;
-    int16_t   frameSize = 30;           /* ms */
-    int16_t   codingMode = 1;
-    int16_t   shortdata[FRAMESAMPLES_SWB_10ms];
-    int16_t   decoded[MAX_FRAMESAMPLES_SWB];
-    //uint16_t  streamdata[1000];
-    int16_t   speechType[1];
-    int16_t   payloadLimit;
-    int32_t   rateLimit;
+    WebRtc_Word32   bottleneck = 39;
+    WebRtc_Word16   frameSize = 30;           /* ms */
+    WebRtc_Word16   codingMode = 1;
+    WebRtc_Word16   shortdata[FRAMESAMPLES_SWB_10ms];
+    WebRtc_Word16   decoded[MAX_FRAMESAMPLES_SWB];
+    //WebRtc_UWord16  streamdata[1000];
+    WebRtc_Word16   speechType[1];
+    WebRtc_Word16   payloadLimit;
+    WebRtc_Word32   rateLimit;
     ISACStruct*   ISAC_main_inst;
 
-    int16_t   stream_len = 0;
-    int16_t   declen;
-    int16_t   err;
-    int16_t   cur_framesmpls;
+    WebRtc_Word16   stream_len = 0;
+    WebRtc_Word16   declen;
+    WebRtc_Word16   err;
+    WebRtc_Word16   cur_framesmpls;
     int           endfile;
 #ifdef WIN32
     double        length_file;
@@ -95,17 +95,17 @@ int main(int argc, char* argv[])
     FILE*         averageFile;
     int           sampFreqKHz;
     int           samplesIn10Ms;
-    int16_t   maxStreamLen = 0;
+    WebRtc_Word16   maxStreamLen = 0;
     char          histFileName[500];
     char          averageFileName[500];
     unsigned int  hist[600];
     unsigned int  tmpSumStreamLen = 0;
     unsigned int  packetCntr = 0;
     unsigned int  lostPacketCntr = 0;
-    uint16_t  payload[600];
-    uint16_t  payloadRCU[600];
-    uint16_t  packetLossPercent = 0;
-    int16_t   rcuStreamLen = 0;
+    WebRtc_UWord16  payload[600];
+    WebRtc_UWord16  payloadRCU[600];
+    WebRtc_UWord16  packetLossPercent = 0;
+    WebRtc_Word16   rcuStreamLen = 0;
 	int onlyEncode;
 	int onlyDecode;
 
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
     sscanf(argv[1], "%s", inname);
     sscanf(argv[2], "%s", outname);
     codingMode = readSwitch(argc, argv, "-I");
-    sampFreqKHz = (int16_t)readParamInt(argc, argv, "-fs", 32);
+    sampFreqKHz = (WebRtc_Word16)readParamInt(argc, argv, "-fs", 32);
     if(readParamString(argc, argv, "-h", histFileName, 500) > 0)
     {
         histFile = fopen(histFileName, "a");
@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 valid values are 8 and 16.\n", sampFreqKHz);
         exit(-1);
     }
-    payloadLimit = (int16_t)readParamInt(argc, argv, "-plim", 400);
+    payloadLimit = (WebRtc_Word16)readParamInt(argc, argv, "-plim", 400);
     rateLimit = readParamInt(argc, argv, "-rlim", 106800);
 
     if ((inp = fopen(inname,"rb")) == NULL) {
@@ -279,7 +279,7 @@ valid values are 8 and 16.\n", sampFreqKHz);
     }
 
     //{
-    //    int32_t b1, b2;
+    //    WebRtc_Word32 b1, b2;
     //    FILE* fileID = fopen("GetBNTest.txt", "w");
     //    b2 = 32100;
     //    while(b2 <= 52000)
@@ -341,18 +341,18 @@ valid values are 8 and 16.\n", sampFreqKHz);
 
 		if(onlyDecode)
 		{
-			uint8_t auxUW8;
+			WebRtc_UWord8 auxUW8;
                         size_t auxSizet;
-			if(fread(&auxUW8, sizeof(uint8_t), 1, inp) < 1)
+			if(fread(&auxUW8, sizeof(WebRtc_UWord8), 1, inp) < 1)
 			{
 				break;
 			}
-			stream_len = ((uint8_t)auxUW8) << 8;
-			if(fread(&auxUW8, sizeof(uint8_t), 1, inp) < 1)
+			stream_len = ((WebRtc_UWord8)auxUW8) << 8;
+			if(fread(&auxUW8, sizeof(WebRtc_UWord8), 1, inp) < 1)
 			{
 				break;
 			}
-			stream_len |= (uint16_t)auxUW8;
+			stream_len |= (WebRtc_UWord16)auxUW8;
                         auxSizet = (size_t)stream_len;
                         if(fread(payload, 1, auxSizet, inp) < auxSizet)
 			{
@@ -374,7 +374,7 @@ valid values are 8 and 16.\n", sampFreqKHz);
 
 				//-------- iSAC encoding ---------
 				stream_len = WebRtcIsac_Encode(ISAC_main_inst, shortdata,
-					(int16_t*)payload);
+					(WebRtc_Word16*)payload);
 
 				if(stream_len < 0)
 				{
@@ -393,7 +393,7 @@ valid values are 8 and 16.\n", sampFreqKHz);
 				break;
 			}
 
-			rcuStreamLen = WebRtcIsac_GetRedPayload(ISAC_main_inst, (int16_t*)payloadRCU);
+			rcuStreamLen = WebRtcIsac_GetRedPayload(ISAC_main_inst, (WebRtc_Word16*)payloadRCU);
 
 			get_arrival_time(cur_framesmpls, stream_len, bottleneck, &packetData,
 				sampFreqKHz * 1000, sampFreqKHz * 1000);
@@ -430,14 +430,14 @@ valid values are 8 and 16.\n", sampFreqKHz);
 
 		if(onlyEncode)
 		{
-                  uint8_t auxUW8;
-                  auxUW8 = (uint8_t)(((stream_len & 0x7F00) >> 8) & 0xFF);
-                  if (fwrite(&auxUW8, sizeof(uint8_t), 1, outp) != 1) {
+                  WebRtc_UWord8 auxUW8;
+                  auxUW8 = (WebRtc_UWord8)(((stream_len & 0x7F00) >> 8) & 0xFF);
+                  if (fwrite(&auxUW8, sizeof(WebRtc_UWord8), 1, outp) != 1) {
                     return -1;
                   }
 
-                  auxUW8 = (uint8_t)(stream_len & 0xFF);
-                  if (fwrite(&auxUW8, sizeof(uint8_t), 1, outp) != 1) {
+                  auxUW8 = (WebRtc_UWord8)(stream_len & 0xFF);
+                  if (fwrite(&auxUW8, sizeof(WebRtc_UWord8), 1, outp) != 1) {
                     return -1;
                   }
                   if (fwrite(payload, 1, stream_len,
@@ -470,7 +470,7 @@ valid values are 8 and 16.\n", sampFreqKHz);
 			}
 
 			// Write decoded speech frame to file
-                        if (fwrite(decoded, sizeof(int16_t),
+                        if (fwrite(decoded, sizeof(WebRtc_Word16),
                                    declen, outp) != (size_t)declen) {
                           return -1;
                         }

@@ -21,7 +21,7 @@
 
 namespace webrtc {
 
-ACMPCMA::ACMPCMA(int16_t codec_id) {
+ACMPCMA::ACMPCMA(WebRtc_Word16 codec_id) {
   codec_id_ = codec_id;
 }
 
@@ -29,39 +29,39 @@ ACMPCMA::~ACMPCMA() {
   return;
 }
 
-int16_t ACMPCMA::InternalEncode(uint8_t* bitstream,
-                                int16_t* bitstream_len_byte) {
+WebRtc_Word16 ACMPCMA::InternalEncode(WebRtc_UWord8* bitstream,
+                                      WebRtc_Word16* bitstream_len_byte) {
   *bitstream_len_byte = WebRtcG711_EncodeA(NULL, &in_audio_[in_audio_ix_read_],
                                            frame_len_smpl_ * num_channels_,
-                                           (int16_t*) bitstream);
+                                           (WebRtc_Word16*) bitstream);
   // Increment the read index this tell the caller that how far
   // we have gone forward in reading the audio buffer.
   in_audio_ix_read_ += frame_len_smpl_ * num_channels_;
   return *bitstream_len_byte;
 }
 
-int16_t ACMPCMA::DecodeSafe(uint8_t* /* bitstream */,
-                            int16_t /* bitstream_len_byte */,
-                            int16_t* /* audio */,
-                            int16_t* /* audio_samples */,
-                            int8_t* /* speech_type */) {
+WebRtc_Word16 ACMPCMA::DecodeSafe(WebRtc_UWord8* /* bitstream */,
+                                  WebRtc_Word16 /* bitstream_len_byte */,
+                                  WebRtc_Word16* /* audio */,
+                                  WebRtc_Word16* /* audio_samples */,
+                                  WebRtc_Word8* /* speech_type */) {
   return 0;
 }
 
-int16_t ACMPCMA::InternalInitEncoder(
+WebRtc_Word16 ACMPCMA::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   // This codec does not need initialization, PCM has no instance.
   return 0;
 }
 
-int16_t ACMPCMA::InternalInitDecoder(
+WebRtc_Word16 ACMPCMA::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   // This codec does not need initialization, PCM has no instance.
   return 0;
 }
 
-int32_t ACMPCMA::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                          const CodecInst& codec_inst) {
+WebRtc_Word32 ACMPCMA::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                                const CodecInst& codec_inst) {
   // Fill up the structure by calling
   // "SET_CODEC_PAR" & "SET_PCMA_FUNCTION."
   // Then call NetEQ to add the codec to it's database.
@@ -80,12 +80,12 @@ ACMGenericCodec* ACMPCMA::CreateInstance(void) {
   return NULL;
 }
 
-int16_t ACMPCMA::InternalCreateEncoder() {
+WebRtc_Word16 ACMPCMA::InternalCreateEncoder() {
   // PCM has no instance.
   return 0;
 }
 
-int16_t ACMPCMA::InternalCreateDecoder() {
+WebRtc_Word16 ACMPCMA::InternalCreateDecoder() {
   // PCM has no instance.
   return 0;
 }

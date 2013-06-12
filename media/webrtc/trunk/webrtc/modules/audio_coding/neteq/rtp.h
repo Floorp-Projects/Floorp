@@ -21,14 +21,14 @@
 
 typedef struct
 {
-    uint16_t seqNumber;
-    uint32_t timeStamp;
-    uint32_t ssrc;
+    WebRtc_UWord16 seqNumber;
+    WebRtc_UWord32 timeStamp;
+    WebRtc_UWord32 ssrc;
     int payloadType;
-    const int16_t *payload;
-    int16_t payloadLen;
-    int16_t starts_byte1;
-    int16_t rcuPlCntr;
+    const WebRtc_Word16 *payload;
+    WebRtc_Word16 payloadLen;
+    WebRtc_Word16 starts_byte1;
+    WebRtc_Word16 rcuPlCntr;
 } RTPPacket_t;
 
 /****************************************************************************
@@ -47,7 +47,7 @@ typedef struct
  *						  -1 - Error
  */
 
-int WebRtcNetEQ_RTPPayloadInfo(int16_t* pw16_Datagram, int i_DatagramLen,
+int WebRtcNetEQ_RTPPayloadInfo(WebRtc_Word16* pw16_Datagram, int i_DatagramLen,
                                RTPPacket_t* RTPheader);
 
 /****************************************************************************

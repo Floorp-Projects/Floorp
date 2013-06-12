@@ -21,9 +21,9 @@ namespace voe
 {
 enum{kMaxTargetLen = 2*32*10}; // stereo 32KHz 10ms
 
-void Utility::MixWithSat(int16_t target[],
+void Utility::MixWithSat(WebRtc_Word16 target[],
                          int target_channel,
-                         const int16_t source[],
+                         const WebRtc_Word16 source[],
                          int source_channel,
                          int source_len)
 {
@@ -34,8 +34,8 @@ void Utility::MixWithSat(int16_t target[],
     if ((target_channel == 2) && (source_channel == 1))
     {
         // Convert source from mono to stereo.
-        int32_t left = 0;
-        int32_t right = 0;
+        WebRtc_Word32 left = 0;
+        WebRtc_Word32 right = 0;
         for (int i = 0; i < source_len; ++i) {
             left  = source[i] + target[i*2];
             right = source[i] + target[i*2 + 1];
@@ -46,7 +46,7 @@ void Utility::MixWithSat(int16_t target[],
     else if ((target_channel == 1) && (source_channel == 2))
     {
         // Convert source from stereo to mono.
-        int32_t temp = 0;
+        WebRtc_Word32 temp = 0;
         for (int i = 0; i < source_len/2; ++i) {
           temp = ((source[i*2] + source[i*2 + 1])>>1) + target[i];
           target[i] = WebRtcSpl_SatW32ToW16(temp);
@@ -54,7 +54,7 @@ void Utility::MixWithSat(int16_t target[],
     }
     else
     {
-        int32_t temp = 0;
+        WebRtc_Word32 temp = 0;
         for (int i = 0; i < source_len; ++i) {
           temp = source[i] + target[i];
           target[i] = WebRtcSpl_SatW32ToW16(temp);
@@ -62,11 +62,11 @@ void Utility::MixWithSat(int16_t target[],
     }
 }
 
-void Utility::MixSubtractWithSat(int16_t target[],
-                                 const int16_t source[],
-                                 uint16_t len)
+void Utility::MixSubtractWithSat(WebRtc_Word16 target[],
+                                 const WebRtc_Word16 source[],
+                                 WebRtc_UWord16 len)
 {
-    int32_t temp(0);
+    WebRtc_Word32 temp(0);
     for (int i = 0; i < len; i++)
     {
         temp = target[i] - source[i];
@@ -75,48 +75,48 @@ void Utility::MixSubtractWithSat(int16_t target[],
         else if (temp < -32768)
             target[i] = -32768;
         else
-            target[i] = (int16_t) temp;
+            target[i] = (WebRtc_Word16) temp;
     }
 }
 
-void Utility::MixAndScaleWithSat(int16_t target[],
-                                 const int16_t source[], float scale,
-                                 uint16_t len)
+void Utility::MixAndScaleWithSat(WebRtc_Word16 target[],
+                                 const WebRtc_Word16 source[], float scale,
+                                 WebRtc_UWord16 len)
 {
-    int32_t temp(0);
+    WebRtc_Word32 temp(0);
     for (int i = 0; i < len; i++)
     {
-        temp = (int32_t) (target[i] + scale * source[i]);
+        temp = (WebRtc_Word32) (target[i] + scale * source[i]);
         if (temp > 32767)
             target[i] = 32767;
         else if (temp < -32768)
             target[i] = -32768;
         else
-            target[i] = (int16_t) temp;
+            target[i] = (WebRtc_Word16) temp;
     }
 }
 
-void Utility::Scale(int16_t vector[], float scale, uint16_t len)
+void Utility::Scale(WebRtc_Word16 vector[], float scale, WebRtc_UWord16 len)
 {
     for (int i = 0; i < len; i++)
     {
-        vector[i] = (int16_t) (scale * vector[i]);
+        vector[i] = (WebRtc_Word16) (scale * vector[i]);
     }
 }
 
-void Utility::ScaleWithSat(int16_t vector[], float scale,
-                           uint16_t len)
+void Utility::ScaleWithSat(WebRtc_Word16 vector[], float scale,
+                           WebRtc_UWord16 len)
 {
-    int32_t temp(0);
+    WebRtc_Word32 temp(0);
     for (int i = 0; i < len; i++)
     {
-        temp = (int32_t) (scale * vector[i]);
+        temp = (WebRtc_Word32) (scale * vector[i]);
         if (temp > 32767)
             vector[i] = 32767;
         else if (temp < -32768)
             vector[i] = -32768;
         else
-            vector[i] = (int16_t) temp;
+            vector[i] = (WebRtc_Word16) temp;
     }
 }
 

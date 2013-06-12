@@ -21,29 +21,29 @@ namespace videocapturemodule
 class DeviceInfoLinux: public DeviceInfoImpl
 {
 public:
-    DeviceInfoLinux(const int32_t id);
+    DeviceInfoLinux(const WebRtc_Word32 id);
     virtual ~DeviceInfoLinux();
-    virtual uint32_t NumberOfDevices();
-    virtual int32_t GetDeviceName(
-        uint32_t deviceNumber,
+    virtual WebRtc_UWord32 NumberOfDevices();
+    virtual WebRtc_Word32 GetDeviceName(
+        WebRtc_UWord32 deviceNumber,
         char* deviceNameUTF8,
-        uint32_t deviceNameLength,
+        WebRtc_UWord32 deviceNameLength,
         char* deviceUniqueIdUTF8,
-        uint32_t deviceUniqueIdUTF8Length,
+        WebRtc_UWord32 deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8=0,
-        uint32_t productUniqueIdUTF8Length=0);
+        WebRtc_UWord32 productUniqueIdUTF8Length=0);
     /*
     * Fills the membervariable _captureCapabilities with capabilites for the given device name.
     */
-    virtual int32_t CreateCapabilityMap (const char* deviceUniqueIdUTF8);
-    virtual int32_t DisplayCaptureSettingsDialogBox(
+    virtual WebRtc_Word32 CreateCapabilityMap (const char* deviceUniqueIdUTF8);
+    virtual WebRtc_Word32 DisplayCaptureSettingsDialogBox(
         const char* /*deviceUniqueIdUTF8*/,
         const char* /*dialogTitleUTF8*/,
         void* /*parentWindow*/,
-        uint32_t /*positionX*/,
-        uint32_t /*positionY*/) { return -1;}
-    int32_t FillCapabilityMap(int fd);
-    int32_t Init();
+        WebRtc_UWord32 /*positionX*/,
+        WebRtc_UWord32 /*positionY*/) { return -1;}
+    WebRtc_Word32 FillCapabilityMap(int fd);
+    WebRtc_Word32 Init();
 private:
 
     bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);

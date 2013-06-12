@@ -24,11 +24,11 @@
 
 /* The output is in the same domain as the input */
 void WebRtcIlbcfix_BwExpand(
-    int16_t *out, /* (o) the bandwidth expanded lpc coefficients */
-    int16_t *in,  /* (i) the lpc coefficients before bandwidth
+    WebRtc_Word16 *out, /* (o) the bandwidth expanded lpc coefficients */
+    WebRtc_Word16 *in,  /* (i) the lpc coefficients before bandwidth
                                    expansion */
-    int16_t *coef, /* (i) the bandwidth expansion factor Q15 */
-    int16_t length /* (i) the length of lpc coefficient vectors */
+    WebRtc_Word16 *coef, /* (i) the bandwidth expansion factor Q15 */
+    WebRtc_Word16 length /* (i) the length of lpc coefficient vectors */
                             ) {
   int i;
 
@@ -37,6 +37,6 @@ void WebRtcIlbcfix_BwExpand(
     /* out[i] = coef[i] * in[i] with rounding.
        in[] and out[] are in Q12 and coef[] is in Q15
     */
-    out[i] = (int16_t)((WEBRTC_SPL_MUL_16_16(coef[i], in[i])+16384)>>15);
+    out[i] = (WebRtc_Word16)((WEBRTC_SPL_MUL_16_16(coef[i], in[i])+16384)>>15);
   }
 }

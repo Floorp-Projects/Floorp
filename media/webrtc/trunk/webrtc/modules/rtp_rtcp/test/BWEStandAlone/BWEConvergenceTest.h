@@ -25,7 +25,7 @@ public:
     BWEConvergenceTestUp(std::string testName, int startRateKbps, int availBWkbps);
     virtual ~BWEConvergenceTestUp();
 
-    virtual int Init(std::string ip, uint16_t port);
+    virtual int Init(std::string ip, WebRtc_UWord16 port);
 
 protected:
     virtual bool StoppingCriterionMaster();

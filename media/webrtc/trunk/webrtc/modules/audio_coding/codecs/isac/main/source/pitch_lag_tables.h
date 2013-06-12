@@ -25,22 +25,22 @@
 /* tables for use with small pitch gain */
 
 /* cdfs for quantized pitch lags */
-extern const uint16_t WebRtcIsac_kQPitchLagCdf1Lo[127];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf2Lo[20];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf3Lo[2];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf4Lo[10];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf1Lo[127];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf2Lo[20];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf3Lo[2];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf4Lo[10];
 
-extern const uint16_t *WebRtcIsac_kQPitchLagCdfPtrLo[4];
+extern const WebRtc_UWord16 *WebRtcIsac_kQPitchLagCdfPtrLo[4];
 
 /* size of first cdf table */
-extern const uint16_t WebRtcIsac_kQPitchLagCdfSizeLo[1];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdfSizeLo[1];
 
 /* index limits and ranges */
-extern const int16_t WebRtcIsac_kQIndexLowerLimitLagLo[4];
-extern const int16_t WebRtcIsac_kQIndexUpperLimitLagLo[4];
+extern const WebRtc_Word16 WebRtcIsac_kQIndexLowerLimitLagLo[4];
+extern const WebRtc_Word16 WebRtcIsac_kQIndexUpperLimitLagLo[4];
 
 /* initial index for arithmetic decoder */
-extern const uint16_t WebRtcIsac_kQInitIndexLagLo[3];
+extern const WebRtc_UWord16 WebRtcIsac_kQInitIndexLagLo[3];
 
 /* mean values of pitch filter lags */
 extern const double WebRtcIsac_kQMeanLag2Lo[19];
@@ -53,22 +53,22 @@ extern const double WebRtcIsac_kQPitchLagStepsizeLo;
 /* tables for use with medium pitch gain */
 
 /* cdfs for quantized pitch lags */
-extern const uint16_t WebRtcIsac_kQPitchLagCdf1Mid[255];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf2Mid[36];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf3Mid[2];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf4Mid[20];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf1Mid[255];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf2Mid[36];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf3Mid[2];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf4Mid[20];
 
-extern const uint16_t *WebRtcIsac_kQPitchLagCdfPtrMid[4];
+extern const WebRtc_UWord16 *WebRtcIsac_kQPitchLagCdfPtrMid[4];
 
 /* size of first cdf table */
-extern const uint16_t WebRtcIsac_kQPitchLagCdfSizeMid[1];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdfSizeMid[1];
 
 /* index limits and ranges */
-extern const int16_t WebRtcIsac_kQIndexLowerLimitLagMid[4];
-extern const int16_t WebRtcIsac_kQIndexUpperLimitLagMid[4];
+extern const WebRtc_Word16 WebRtcIsac_kQIndexLowerLimitLagMid[4];
+extern const WebRtc_Word16 WebRtcIsac_kQIndexUpperLimitLagMid[4];
 
 /* initial index for arithmetic decoder */
-extern const uint16_t WebRtcIsac_kQInitIndexLagMid[3];
+extern const WebRtc_UWord16 WebRtcIsac_kQInitIndexLagMid[3];
 
 /* mean values of pitch filter lags */
 extern const double WebRtcIsac_kQMeanLag2Mid[35];
@@ -81,22 +81,22 @@ extern const double WebRtcIsac_kQPitchLagStepsizeMid;
 /* tables for use with large pitch gain */
 
 /* cdfs for quantized pitch lags */
-extern const uint16_t WebRtcIsac_kQPitchLagCdf1Hi[511];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf2Hi[68];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf3Hi[2];
-extern const uint16_t WebRtcIsac_kQPitchLagCdf4Hi[35];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf1Hi[511];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf2Hi[68];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf3Hi[2];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdf4Hi[35];
 
-extern const uint16_t *WebRtcIsac_kQPitchLagCdfPtrHi[4];
+extern const WebRtc_UWord16 *WebRtcIsac_kQPitchLagCdfPtrHi[4];
 
 /* size of first cdf table */
-extern const uint16_t WebRtcIsac_kQPitchLagCdfSizeHi[1];
+extern const WebRtc_UWord16 WebRtcIsac_kQPitchLagCdfSizeHi[1];
 
 /* index limits and ranges */
-extern const int16_t WebRtcIsac_kQindexLowerLimitLagHi[4];
-extern const int16_t WebRtcIsac_kQindexUpperLimitLagHi[4];
+extern const WebRtc_Word16 WebRtcIsac_kQindexLowerLimitLagHi[4];
+extern const WebRtc_Word16 WebRtcIsac_kQindexUpperLimitLagHi[4];
 
 /* initial index for arithmetic decoder */
-extern const uint16_t WebRtcIsac_kQInitIndexLagHi[3];
+extern const WebRtc_UWord16 WebRtcIsac_kQInitIndexLagHi[3];
 
 /* mean values of pitch filter lags */
 extern const double WebRtcIsac_kQMeanLag2Hi[67];

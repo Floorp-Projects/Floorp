@@ -27,9 +27,9 @@ public:
     static SSRCDatabase* GetSSRCDatabase();
     static void ReturnSSRCDatabase();
 
-    uint32_t CreateSSRC();
-    int32_t RegisterSSRC(const uint32_t ssrc);
-    int32_t ReturnSSRC(const uint32_t ssrc);
+    WebRtc_UWord32 CreateSSRC();
+    WebRtc_Word32 RegisterSSRC(const WebRtc_UWord32 ssrc);
+    WebRtc_Word32 ReturnSSRC(const WebRtc_UWord32 ssrc);
 
 protected:
     SSRCDatabase();
@@ -44,15 +44,15 @@ private:
         CountOperation count_operation);
     static SSRCDatabase* StaticInstance(CountOperation count_operation);
 
-    uint32_t GenerateRandom();
+    WebRtc_UWord32 GenerateRandom();
 
 #ifdef WEBRTC_NO_STL
     int _numberOfSSRC;
     int _sizeOfSSRC;
 
-    uint32_t* _ssrcVector;
+    WebRtc_UWord32* _ssrcVector;
 #else
-    std::map<uint32_t, uint32_t>    _ssrcMap;
+    std::map<WebRtc_UWord32, WebRtc_UWord32>    _ssrcMap;
 #endif
 
     CriticalSectionWrapper* _critSect;

@@ -42,26 +42,26 @@ class ViEInputManager : private ViEManagerBase {
   int NumberOfCaptureDevices();
 
   // Gets name and id for a capture device.
-  int GetDeviceName(uint32_t device_number,
+  int GetDeviceName(WebRtc_UWord32 device_number,
                     char* device_nameUTF8,
-                    uint32_t device_name_length,
+                    WebRtc_UWord32 device_name_length,
                     char* device_unique_idUTF8,
-                    uint32_t device_unique_idUTF8Length);
+                    WebRtc_UWord32 device_unique_idUTF8Length);
 
   // Returns the number of capture capabilities for a specified device.
   int NumberOfCaptureCapabilities(const char* device_unique_idUTF8);
 
   // Gets a specific capability for a capture device.
   int GetCaptureCapability(const char* device_unique_idUTF8,
-                           const uint32_t device_capability_number,
+                           const WebRtc_UWord32 device_capability_number,
                            CaptureCapability& capability);
 
   // Show OS specific Capture settings.
   int DisplayCaptureSettingsDialogBox(const char* device_unique_idUTF8,
                                       const char* dialog_titleUTF8,
                                       void* parent_window,
-                                      uint32_t positionX,
-                                      uint32_t positionY);
+                                      WebRtc_UWord32 positionX,
+                                      WebRtc_UWord32 positionY);
   int GetOrientation(const char* device_unique_idUTF8,
                      RotateCapturedFrame& orientation);
 
@@ -69,7 +69,7 @@ class ViEInputManager : private ViEManagerBase {
   // a capture device id for the device.
   // Return zero on success, ViEError on failure.
   int CreateCaptureDevice(const char* device_unique_idUTF8,
-                          const uint32_t device_unique_idUTF8Length,
+                          const WebRtc_UWord32 device_unique_idUTF8Length,
                           int& capture_id);
   int CreateCaptureDevice(VideoCaptureModule* capture_module,
                           int& capture_id);
@@ -111,7 +111,6 @@ class ViEInputManager : private ViEManagerBase {
 
   int engine_id_;
   scoped_ptr<CriticalSectionWrapper> map_cs_;
-  scoped_ptr<CriticalSectionWrapper> device_info_cs_;
   MapWrapper vie_frame_provider_map_;
 
   // Capture devices.

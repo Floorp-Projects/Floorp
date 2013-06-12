@@ -37,10 +37,10 @@ enum VideoCaptureRotation
 
 struct VideoCaptureCapability
 {
-    int32_t width;
-    int32_t height;
-    int32_t maxFPS;
-    int32_t expectedCaptureDelay;
+    WebRtc_Word32 width;
+    WebRtc_Word32 height;
+    WebRtc_Word32 maxFPS;
+    WebRtc_Word32 expectedCaptureDelay;
     RawVideoType rawType;
     VideoCodecType codecType;
     bool interlaced;
@@ -117,13 +117,12 @@ struct VideoFrameI420
 class VideoCaptureExternal
 {
 public:
-    // |capture_time| must be specified in the NTP time format in milliseconds.
-    virtual int32_t IncomingFrame(uint8_t* videoFrame,
-                                  int32_t videoFrameLength,
-                                  const VideoCaptureCapability& frameInfo,
-                                  int64_t captureTime = 0) = 0;
-    virtual int32_t IncomingFrameI420(const VideoFrameI420& video_frame,
-                                      int64_t captureTime = 0) = 0;
+    virtual WebRtc_Word32 IncomingFrame(WebRtc_UWord8* videoFrame,
+                                        WebRtc_Word32 videoFrameLength,
+                                        const VideoCaptureCapability& frameInfo,
+                                        WebRtc_Word64 captureTime = 0) = 0;
+    virtual WebRtc_Word32 IncomingFrameI420(const VideoFrameI420& video_frame,
+                                            WebRtc_Word64 captureTime = 0) = 0;
 protected:
     ~VideoCaptureExternal() {}
 };
@@ -132,13 +131,13 @@ protected:
 class VideoCaptureDataCallback
 {
 public:
-    virtual void OnIncomingCapturedFrame(const int32_t id,
+    virtual void OnIncomingCapturedFrame(const WebRtc_Word32 id,
                                          I420VideoFrame& videoFrame) = 0;
-    virtual void OnIncomingCapturedEncodedFrame(const int32_t id,
+    virtual void OnIncomingCapturedEncodedFrame(const WebRtc_Word32 id,
                                                 VideoFrame& videoFrame,
                                                 VideoCodecType codecType) = 0;
-    virtual void OnCaptureDelayChanged(const int32_t id,
-                                       const int32_t delay) = 0;
+    virtual void OnCaptureDelayChanged(const WebRtc_Word32 id,
+                                       const WebRtc_Word32 delay) = 0;
 protected:
     virtual ~VideoCaptureDataCallback(){}
 };
@@ -146,9 +145,9 @@ protected:
 class VideoCaptureFeedBack
 {
 public:
-    virtual void OnCaptureFrameRate(const int32_t id,
-                                    const uint32_t frameRate) = 0;
-    virtual void OnNoPictureAlarm(const int32_t id,
+    virtual void OnCaptureFrameRate(const WebRtc_Word32 id,
+                                    const WebRtc_UWord32 frameRate) = 0;
+    virtual void OnNoPictureAlarm(const WebRtc_Word32 id,
                                   const VideoCaptureAlarm alarm) = 0;
 protected:
     virtual ~VideoCaptureFeedBack(){}

@@ -8,44 +8,51 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+/*
+ * This file includes unit tests for the bitrate estimator.
+ */
+
 #include <gtest/gtest.h>
 
-#include "webrtc/modules/remote_bitrate_estimator/bitrate_estimator.h"
+#include "typedefs.h"
+#include "bitrate_estimator.h"
 
 namespace {
 
 using webrtc::BitRateStats;
 
-class BitRateStatsTest : public ::testing::Test {
- protected:
-  BitRateStatsTest() {};
-  BitRateStats stats_;
+class BitRateStatsTest : public ::testing::Test
+{
+protected:
+    BitRateStatsTest() {};
+    BitRateStats bitRate;
 };
 
-TEST_F(BitRateStatsTest, TestStrictMode) {
-  int64_t now_ms = 0;
-  // Should be initialized to 0.
-  EXPECT_EQ(0u, stats_.BitRate(now_ms));
-  stats_.Update(1500, now_ms);
-  // Expecting 24 kbps given a 500 ms window with one 1500 bytes packet.
-  EXPECT_EQ(24000u, stats_.BitRate(now_ms));
-  stats_.Init();
-  // Expecting 0 after init.
-  EXPECT_EQ(0u, stats_.BitRate(now_ms));
-  for (int i = 0; i < 100000; ++i) {
-    if (now_ms % 10 == 0) {
-      stats_.Update(1500, now_ms);
+TEST_F(BitRateStatsTest, TestStrictMode)
+{
+    WebRtc_Word64 nowMs = 0;
+    // Should be initialized to 0.
+    EXPECT_EQ(0u, bitRate.BitRate(nowMs));
+    bitRate.Update(1500, nowMs);
+    // Expecting 24 kbps given a 500 ms window with one 1500 bytes packet.
+    EXPECT_EQ(24000u, bitRate.BitRate(nowMs));
+    bitRate.Init();
+    // Expecting 0 after init.
+    EXPECT_EQ(0u, bitRate.BitRate(nowMs));
+    for (int i = 0; i < 100000; ++i)
+    {
+        if (nowMs % 10 == 0)
+            bitRate.Update(1500, nowMs);
+        // Approximately 1200 kbps expected. Not exact since when packets
+        // are removed we will jump 10 ms to the next packet.
+        if (nowMs > 0 && nowMs % 500 == 0)
+            EXPECT_NEAR(1200000u, bitRate.BitRate(nowMs), 24000u);
+        nowMs += 1;
     }
-    // Approximately 1200 kbps expected. Not exact since when packets
-    // are removed we will jump 10 ms to the next packet.
-    if (now_ms > 0 && now_ms % 500 == 0) {
-      EXPECT_NEAR(1200000u, stats_.BitRate(now_ms), 24000u);
-    }
-    now_ms += 1;
-  }
-  now_ms += 500;
-  // The window is 2 seconds. If nothing has been received for that time
-  // the estimate should be 0.
-  EXPECT_EQ(0u, stats_.BitRate(now_ms));
+    nowMs += 500;
+    // The window is 2 seconds. If nothing has been received for that time
+    // the estimate should be 0.
+    EXPECT_EQ(0u, bitRate.BitRate(nowMs));
 }
-}  // namespace
+
+}

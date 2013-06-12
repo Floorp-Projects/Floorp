@@ -31,11 +31,11 @@ using namespace webrtc;
 class SendRecCB
 {
 public:
-    virtual void OnOnNetworkChanged(const uint32_t bitrateTarget,
-        const uint8_t fractionLost,
-        const uint16_t roundTripTimeMs,
-        const uint16_t bwEstimateKbitMin,
-        const uint16_t bwEstimateKbitMax) = 0;
+    virtual void OnOnNetworkChanged(const WebRtc_UWord32 bitrateTarget,
+        const WebRtc_UWord8 fractionLost,
+        const WebRtc_UWord16 roundTripTimeMs,
+        const WebRtc_UWord16 bwEstimateKbitMin,
+        const WebRtc_UWord16 bwEstimateKbitMax) = 0;
 
     virtual ~SendRecCB() {};
 };
@@ -51,99 +51,99 @@ public:
 
     void SetCallback (SendRecCB *cb) { _sendRecCB = cb; };
 
-    int32_t Start();
+    WebRtc_Word32 Start();
 
-    int32_t Stop();
+    WebRtc_Word32 Stop();
 
     bool ProcLoop();
 
     /////////////////////////////////////////////
     // Receiver methods
 
-    int32_t InitReceiver (const uint16_t rtpPort,
-                          const uint16_t rtcpPort = 0,
-                          const int8_t payloadType = 127);
+    WebRtc_Word32 InitReceiver (const WebRtc_UWord16 rtpPort,
+        const WebRtc_UWord16 rtcpPort = 0,
+        const WebRtc_Word8 payloadType = 127);
 
-    int32_t ReceiveBitrateKbps ();
+    WebRtc_Word32 ReceiveBitrateKbps ();
 
-    int32_t SetPacketTimeout(const uint32_t timeoutMS);
+    WebRtc_Word32 SetPacketTimeout(const WebRtc_UWord32 timeoutMS);
 
     bool timeOutTriggered () { return (_timeOut); };
 
     // Inherited from RtpFeedback
-    virtual int32_t OnInitializeDecoder(const int32_t id,
-                                        const int8_t payloadType,
-                                        const int8_t payloadName[RTP_PAYLOAD_NAME_SIZE],
-                                        const uint32_t frequency,
-                                        const uint8_t channels,
-                                        const uint32_t rate) { return(0);};
+    virtual WebRtc_Word32 OnInitializeDecoder(const WebRtc_Word32 id,
+                                            const WebRtc_Word8 payloadType,
+                                            const WebRtc_Word8 payloadName[RTP_PAYLOAD_NAME_SIZE],
+                                            const WebRtc_UWord32 frequency,
+                                            const WebRtc_UWord8 channels,
+                                            const WebRtc_UWord32 rate) { return(0);};
 
-    virtual void OnPacketTimeout(const int32_t id);
+    virtual void OnPacketTimeout(const WebRtc_Word32 id);
 
-    virtual void OnReceivedPacket(const int32_t id,
+    virtual void OnReceivedPacket(const WebRtc_Word32 id,
                                   const RtpRtcpPacketType packetType);
 
-    virtual void OnPeriodicDeadOrAlive(const int32_t id,
+    virtual void OnPeriodicDeadOrAlive(const WebRtc_Word32 id,
                                        const RTPAliveType alive) {};
 
-    virtual void OnIncomingSSRCChanged( const int32_t id,
-                                        const uint32_t SSRC) {};
+    virtual void OnIncomingSSRCChanged( const WebRtc_Word32 id,
+                                        const WebRtc_UWord32 SSRC) {};
 
-    virtual void OnIncomingCSRCChanged( const int32_t id,
-                                        const uint32_t CSRC,
+    virtual void OnIncomingCSRCChanged( const WebRtc_Word32 id,
+                                        const WebRtc_UWord32 CSRC,
                                         const bool added) {};
 
 
     // Inherited from RtpData
 
-    virtual int32_t OnReceivedPayloadData(const uint8_t* payloadData,
-                                          const uint16_t payloadSize,
-                                          const webrtc::WebRtcRTPHeader* rtpHeader);
+    virtual WebRtc_Word32 OnReceivedPayloadData(const WebRtc_UWord8* payloadData,
+                                                const WebRtc_UWord16 payloadSize,
+                                                const webrtc::WebRtcRTPHeader* rtpHeader);
 
 
     // Inherited from UdpTransportData
-    virtual void IncomingRTPPacket(const int8_t* incomingRtpPacket,
-        const int32_t rtpPacketLength,
-        const int8_t* fromIP,
-        const uint16_t fromPort);
+    virtual void IncomingRTPPacket(const WebRtc_Word8* incomingRtpPacket,
+        const WebRtc_Word32 rtpPacketLength,
+        const WebRtc_Word8* fromIP,
+        const WebRtc_UWord16 fromPort);
 
-    virtual void IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
-        const int32_t rtcpPacketLength,
-        const int8_t* fromIP,
-        const uint16_t fromPort);
+    virtual void IncomingRTCPPacket(const WebRtc_Word8* incomingRtcpPacket,
+        const WebRtc_Word32 rtcpPacketLength,
+        const WebRtc_Word8* fromIP,
+        const WebRtc_UWord16 fromPort);
 
 
 
     /////////////////////////////////
     // Sender methods
 
-    int32_t InitSender (const uint32_t startBitrateKbps,
-                        const int8_t* ipAddr,
-                        const uint16_t rtpPort,
-                        const uint16_t rtcpPort = 0,
-                        const int8_t payloadType = 127);
+    WebRtc_Word32 InitSender (const WebRtc_UWord32 startBitrateKbps,
+        const WebRtc_Word8* ipAddr,
+        const WebRtc_UWord16 rtpPort,
+        const WebRtc_UWord16 rtcpPort = 0,
+        const WebRtc_Word8 payloadType = 127);
 
-    int32_t SendOutgoingData(const uint32_t timeStamp,
-        const uint8_t* payloadData,
-        const uint32_t payloadSize,
+    WebRtc_Word32 SendOutgoingData(const WebRtc_UWord32 timeStamp,
+        const WebRtc_UWord8* payloadData,
+        const WebRtc_UWord32 payloadSize,
         const webrtc::FrameType frameType = webrtc::kVideoFrameDelta);
 
-    int32_t SetLoadGenerator(TestLoadGenerator *generator);
+    WebRtc_Word32 SetLoadGenerator(TestLoadGenerator *generator);
 
-    uint32_t BitrateSent() { return (_rtp->BitrateSent()); };
+    WebRtc_UWord32 BitrateSent() { return (_rtp->BitrateSent()); };
 
 
     // Inherited from RtpVideoFeedback
-    virtual void OnReceivedIntraFrameRequest(const int32_t id,
-        const uint8_t message = 0) {};
+    virtual void OnReceivedIntraFrameRequest(const WebRtc_Word32 id,
+        const WebRtc_UWord8 message = 0) {};
 
-    virtual void OnNetworkChanged(const int32_t id,
-                                  const uint32_t minBitrateBps,
-                                  const uint32_t maxBitrateBps,
-                                  const uint8_t fractionLost,
-                                  const uint16_t roundTripTimeMs,
-                                  const uint16_t bwEstimateKbitMin,
-                                  const uint16_t bwEstimateKbitMax);
+    virtual void OnNetworkChanged(const WebRtc_Word32 id,
+                                  const WebRtc_UWord32 minBitrateBps,
+                                  const WebRtc_UWord32 maxBitrateBps,
+                                  const WebRtc_UWord8 fractionLost,
+                                  const WebRtc_UWord16 roundTripTimeMs,
+                                  const WebRtc_UWord16 bwEstimateKbitMin,
+                                  const WebRtc_UWord16 bwEstimateKbitMax);
 
 private:
     RtpRtcp* _rtp;
@@ -152,14 +152,14 @@ private:
     webrtc::EventWrapper *_eventPtr;
     webrtc::ThreadWrapper* _procThread;
     bool _running;
-    int8_t _payloadType;
+    WebRtc_Word8 _payloadType;
     TestLoadGenerator* _loadGenerator;
     bool _isSender;
     bool _isReceiver;
     bool _timeOut;
     SendRecCB * _sendRecCB;
-    uint32_t _lastBytesReceived;
-    int64_t _lastTime;
+    WebRtc_UWord32 _lastBytesReceived;
+    WebRtc_Word64 _lastTime;
 
 };
 

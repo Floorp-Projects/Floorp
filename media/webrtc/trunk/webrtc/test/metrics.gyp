@@ -18,7 +18,7 @@
       # GYP generation would occur, because the libyuv.gypi unittest target
       # depends on test_support_main. See issue #160 for more info.
       'target_name': 'metrics',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',

@@ -17,11 +17,11 @@ namespace webrtc {
 
 class CpuInfo {
  public:
-  static uint32_t DetectNumberOfCores();
+  static WebRtc_UWord32 DetectNumberOfCores();
 
  private:
   CpuInfo() {}
-  static uint32_t number_of_cores_;
+  static WebRtc_UWord32 number_of_cores_;
 };
 
 } // namespace webrtc

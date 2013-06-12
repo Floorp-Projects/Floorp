@@ -14,7 +14,7 @@
 
 #include "webrtc_neteq_help_macros.h"
 
-NETEQTEST_Decoder::NETEQTEST_Decoder(enum WebRtcNetEQDecoder type, uint16_t fs, const char * name, uint8_t pt)
+NETEQTEST_Decoder::NETEQTEST_Decoder(enum WebRtcNetEQDecoder type, WebRtc_UWord16 fs, const char * name, WebRtc_UWord8 pt)
 :
 _decoder(NULL),
 _decoderType(type),
@@ -42,11 +42,11 @@ int NETEQTEST_Decoder::loadToNetEQ(NETEQTEST_NetEQClass & neteq, WebRtcNetEQ_Cod
 #ifdef CODEC_ISAC
 #include "isac.h"
 
-decoder_iSAC::decoder_iSAC(uint8_t pt) 
+decoder_iSAC::decoder_iSAC(WebRtc_UWord8 pt) 
 :
 NETEQTEST_Decoder(kDecoderISAC, 16000, "iSAC", pt)
 {
-    int16_t err = WebRtcIsac_Create((ISACStruct **) &_decoder);
+    WebRtc_Word16 err = WebRtcIsac_Create((ISACStruct **) &_decoder);
     if (err)
     {
         exit(EXIT_FAILURE);
@@ -79,11 +79,11 @@ int decoder_iSAC::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_ISAC_SWB
-decoder_iSACSWB::decoder_iSACSWB(uint8_t pt) 
+decoder_iSACSWB::decoder_iSACSWB(WebRtc_UWord8 pt) 
 :
 NETEQTEST_Decoder(kDecoderISACswb, 32000, "iSAC swb", pt)
 {
-    int16_t err = WebRtcIsac_Create((ISACStruct **) &_decoder);
+    WebRtc_Word16 err = WebRtcIsac_Create((ISACStruct **) &_decoder);
     if (err)
     {
         exit(EXIT_FAILURE);
@@ -114,9 +114,9 @@ int decoder_iSACSWB::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_ISAC_FB
-decoder_iSACFB::decoder_iSACFB(uint8_t pt)
+decoder_iSACFB::decoder_iSACFB(WebRtc_UWord8 pt)
     : NETEQTEST_Decoder(kDecoderISACfb, 32000, "iSAC fb", pt) {
-  int16_t err = WebRtcIsac_Create((ISACStruct **) &_decoder);
+  WebRtc_Word16 err = WebRtcIsac_Create((ISACStruct **) &_decoder);
   if (err) {
     exit(EXIT_FAILURE);
   }
@@ -143,7 +143,7 @@ int decoder_iSACFB::loadToNetEQ(NETEQTEST_NetEQClass & neteq){
 #ifdef CODEC_G711
 #include "g711_interface.h"
 
-decoder_PCMU::decoder_PCMU(uint8_t pt) 
+decoder_PCMU::decoder_PCMU(WebRtc_UWord8 pt) 
 :
 NETEQTEST_Decoder(kDecoderPCMu, 8000, "G.711-u", pt)
 {
@@ -160,7 +160,7 @@ int decoder_PCMU::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 
 }
 
-decoder_PCMA::decoder_PCMA(uint8_t pt) 
+decoder_PCMA::decoder_PCMA(WebRtc_UWord8 pt) 
 :
 NETEQTEST_Decoder(kDecoderPCMa, 8000, "G.711-A", pt)
 {
@@ -229,11 +229,11 @@ int decoder_PCM16B_SWB48::loadToNetEQ(NETEQTEST_NetEQClass &neteq)
 
 #ifdef CODEC_ILBC
 #include "ilbc.h"
-decoder_ILBC::decoder_ILBC(uint8_t pt)
+decoder_ILBC::decoder_ILBC(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderILBC, 8000, "iLBC", pt)
 {
-    int16_t err = WebRtcIlbcfix_DecoderCreate((iLBC_decinst_t **) &_decoder);
+    WebRtc_Word16 err = WebRtcIlbcfix_DecoderCreate((iLBC_decinst_t **) &_decoder);
     if (err)
     {
         exit(EXIT_FAILURE);
@@ -257,11 +257,11 @@ int decoder_ILBC::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 
 #ifdef CODEC_G729
 #include "G729Interface.h"
-decoder_G729::decoder_G729(uint8_t pt)
+decoder_G729::decoder_G729(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG729, 8000, "G.729", pt)
 {
-    int16_t err = WebRtcG729_CreateDec((G729_decinst_t **) &_decoder);
+    WebRtc_Word16 err = WebRtcG729_CreateDec((G729_decinst_t **) &_decoder);
     if (err)
     {
         exit(EXIT_FAILURE);
@@ -285,11 +285,11 @@ int decoder_G729::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 
 #ifdef CODEC_G729_1
 #include "G729_1Interface.h"
-decoder_G729_1::decoder_G729_1(uint8_t pt)
+decoder_G729_1::decoder_G729_1(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG729_1, 16000, "G.729.1", pt)
 {
-    int16_t err = WebRtcG7291_Create((G729_1_inst_t **) &_decoder);
+    WebRtc_Word16 err = WebRtcG7291_Create((G729_1_inst_t **) &_decoder);
     if (err)
     {
         exit(EXIT_FAILURE);
@@ -313,11 +313,11 @@ int decoder_G729_1::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 
 #ifdef CODEC_G722
 #include "g722_interface.h"
-decoder_G722::decoder_G722(uint8_t pt)
+decoder_G722::decoder_G722(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG722, 16000, "G.722", pt)
 {
-     int16_t err = WebRtcG722_CreateDecoder((G722DecInst **) &_decoder);
+     WebRtc_Word16 err = WebRtcG722_CreateDecoder((G722DecInst **) &_decoder);
      if (err)
      {
          exit(EXIT_FAILURE);
@@ -346,7 +346,7 @@ int decoder_G722::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_G722_1_16
-decoder_G722_1_16::decoder_G722_1_16(uint8_t pt)
+decoder_G722_1_16::decoder_G722_1_16(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG722_1_16, 16000, "G.722.1 (16 kbps)", pt)
 {
@@ -372,7 +372,7 @@ int decoder_G722_1_16::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_G722_1_24
-decoder_G722_1_24::decoder_G722_1_24(uint8_t pt)
+decoder_G722_1_24::decoder_G722_1_24(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG722_1_24, 16000, "G.722.1 (24 kbps)", pt)
 {
@@ -398,7 +398,7 @@ int decoder_G722_1_24::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_G722_1_32
-decoder_G722_1_32::decoder_G722_1_32(uint8_t pt)
+decoder_G722_1_32::decoder_G722_1_32(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG722_1_32, 16000, "G.722.1 (32 kbps)", pt)
 {
@@ -424,7 +424,7 @@ int decoder_G722_1_32::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_G722_1C_24
-decoder_G722_1C_24::decoder_G722_1C_24(uint8_t pt)
+decoder_G722_1C_24::decoder_G722_1C_24(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG722_1C_24, 32000, "G.722.1C (24 kbps)", pt)
 {
@@ -448,7 +448,7 @@ int decoder_G722_1C_24::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_G722_1C_32
-decoder_G722_1C_32::decoder_G722_1C_32(uint8_t pt)
+decoder_G722_1C_32::decoder_G722_1C_32(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG722_1C_32, 32000, "G.722.1C (32 kbps)", pt)
 {
@@ -472,7 +472,7 @@ int decoder_G722_1C_32::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #endif
 
 #ifdef CODEC_G722_1C_48
-decoder_G722_1C_48::decoder_G722_1C_48(uint8_t pt)
+decoder_G722_1C_48::decoder_G722_1C_48(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderG722_1C_48, 32000, "G.722.1C (48 kbps)", pt)
 {
@@ -498,7 +498,7 @@ int decoder_G722_1C_48::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #ifdef CODEC_AMR
 #include "AMRInterface.h"
 #include "AMRCreation.h"
-decoder_AMR::decoder_AMR(uint8_t pt)
+decoder_AMR::decoder_AMR(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderAMR, 8000, "AMR", pt)
 {
@@ -526,7 +526,7 @@ int decoder_AMR::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #ifdef CODEC_AMRWB
 #include "AMRWBInterface.h"
 #include "AMRWBCreation.h"
-decoder_AMRWB::decoder_AMRWB(uint8_t pt)
+decoder_AMRWB::decoder_AMRWB(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderAMRWB, 16000, "AMR wb", pt)
 {
@@ -554,7 +554,7 @@ int decoder_AMRWB::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #ifdef CODEC_GSMFR
 #include "GSMFRInterface.h"
 #include "GSMFRCreation.h"
-decoder_GSMFR::decoder_GSMFR(uint8_t pt)
+decoder_GSMFR::decoder_GSMFR(WebRtc_UWord8 pt)
 :
 NETEQTEST_Decoder(kDecoderGSMFR, 8000, "GSM-FR", pt)
 {
@@ -579,7 +579,7 @@ int decoder_GSMFR::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 
 #if (defined(CODEC_SPEEX_8) || defined (CODEC_SPEEX_16))
 #include "SpeexInterface.h"
-decoder_SPEEX::decoder_SPEEX(uint8_t pt, uint16_t fs)
+decoder_SPEEX::decoder_SPEEX(WebRtc_UWord8 pt, WebRtc_UWord16 fs)
 :
 NETEQTEST_Decoder(fs == 8000 ? kDecoderSPEEX_8 : kDecoderSPEEX_16, 
                   fs, "SPEEX", pt)
@@ -608,7 +608,7 @@ int decoder_SPEEX::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 
 #ifdef CODEC_CELT_32
 #include "celt_interface.h"
-decoder_CELT::decoder_CELT(uint8_t pt, uint16_t fs)
+decoder_CELT::decoder_CELT(WebRtc_UWord8 pt, WebRtc_UWord16 fs)
 :
 NETEQTEST_Decoder(kDecoderCELT_32, fs, "CELT", pt)
 {
@@ -630,7 +630,7 @@ int decoder_CELT::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
     return(NETEQTEST_Decoder::loadToNetEQ(neteq, codecInst));
 }
 
-decoder_CELTslave::decoder_CELTslave(uint8_t pt, uint16_t fs)
+decoder_CELTslave::decoder_CELTslave(WebRtc_UWord8 pt, WebRtc_UWord16 fs)
 :
 NETEQTEST_Decoder(kDecoderCELT_32, fs, "CELT", pt)
 {
@@ -677,7 +677,7 @@ int decoder_AVT::loadToNetEQ(NETEQTEST_NetEQClass & neteq)
 #if (defined(CODEC_CNGCODEC8) || defined(CODEC_CNGCODEC16) || \
     defined(CODEC_CNGCODEC32) || defined(CODEC_CNGCODEC48))
 #include "webrtc_cng.h"
-decoder_CNG::decoder_CNG(uint8_t pt, uint16_t fs)
+decoder_CNG::decoder_CNG(WebRtc_UWord8 pt, WebRtc_UWord16 fs)
 :
 NETEQTEST_Decoder(kDecoderCNG, fs, "CNG", pt)
 {

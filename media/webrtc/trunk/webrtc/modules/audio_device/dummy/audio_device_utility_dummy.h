@@ -21,10 +21,10 @@ class CriticalSectionWrapper;
 class AudioDeviceUtilityDummy: public AudioDeviceUtility
 {
 public:
-    AudioDeviceUtilityDummy(const int32_t id) {}
+    AudioDeviceUtilityDummy(const WebRtc_Word32 id) {}
     ~AudioDeviceUtilityDummy() {}
 
-    virtual int32_t Init() { return 0; }
+    virtual WebRtc_Word32 Init() { return 0; }
 };
 
 } // namespace webrtc

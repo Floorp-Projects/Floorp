@@ -49,9 +49,9 @@ class ViEFileCaptureDevice {
   std::FILE* input_file_;
   webrtc::CriticalSectionWrapper* mutex_;
 
-  uint32_t frame_length_;
-  uint32_t width_;
-  uint32_t height_;
+  WebRtc_UWord32 frame_length_;
+  WebRtc_UWord32 width_;
+  WebRtc_UWord32 height_;
 };
 
 #endif  // SRC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_HELPERS_VIE_FILE_CAPTURE_DEVICE_H_

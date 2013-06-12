@@ -21,24 +21,24 @@
 #include "augmented_cb_corr.h"
 
 void WebRtcIlbcfix_AugmentedCbCorr(
-    int16_t *target,   /* (i) Target vector */
-    int16_t *buffer,   /* (i) Memory buffer */
-    int16_t *interpSamples, /* (i) buffer with
+    WebRtc_Word16 *target,   /* (i) Target vector */
+    WebRtc_Word16 *buffer,   /* (i) Memory buffer */
+    WebRtc_Word16 *interpSamples, /* (i) buffer with
                                      interpolated samples */
-    int32_t *crossDot,  /* (o) The cross correlation between
+    WebRtc_Word32 *crossDot,  /* (o) The cross correlation between
                                  the target and the Augmented
                                  vector */
-    int16_t low,    /* (i) Lag to start from (typically
+    WebRtc_Word16 low,    /* (i) Lag to start from (typically
                              20) */
-    int16_t high,   /* (i) Lag to end at (typically 39) */
-    int16_t scale)   /* (i) Scale factor to use for
+    WebRtc_Word16 high,   /* (i) Lag to end at (typically 39) */
+    WebRtc_Word16 scale)   /* (i) Scale factor to use for
                               the crossDot */
 {
   int lagcount;
-  int16_t ilow;
-  int16_t *targetPtr;
-  int32_t *crossDotPtr;
-  int16_t *iSPtr=interpSamples;
+  WebRtc_Word16 ilow;
+  WebRtc_Word16 *targetPtr;
+  WebRtc_Word32 *crossDotPtr;
+  WebRtc_Word16 *iSPtr=interpSamples;
 
   /* Calculate the correlation between the target and the
      interpolated codebook. The correlation is calculated in
@@ -46,7 +46,7 @@ void WebRtcIlbcfix_AugmentedCbCorr(
   crossDotPtr=crossDot;
   for (lagcount=low; lagcount<=high; lagcount++) {
 
-    ilow = (int16_t) (lagcount-4);
+    ilow = (WebRtc_Word16) (lagcount-4);
 
     /* Compute dot product for the first (lagcount-4) samples */
     (*crossDotPtr) = WebRtcSpl_DotProductWithScale(target, buffer-lagcount, ilow, scale);

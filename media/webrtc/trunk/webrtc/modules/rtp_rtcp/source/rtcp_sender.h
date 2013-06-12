@@ -12,8 +12,6 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_SENDER_H_
 
 #include <map>
-#include <sstream>
-#include <string>
 
 #include "typedefs.h"
 #include "rtcp_utility.h"
@@ -28,179 +26,167 @@ namespace webrtc {
 
 class ModuleRtpRtcpImpl; 
 
-class NACKStringBuilder
-{
-public:
-    NACKStringBuilder();
-    void PushNACK(uint16_t nack);
-    std::string GetResult();
-
-private:
-    std::ostringstream _stream;
-    int _count;
-    uint16_t _prevNack;
-    bool _consecutive;
-};
-
 class RTCPSender
 {
 public:
-    RTCPSender(const int32_t id, const bool audio,
-               Clock* clock, ModuleRtpRtcpImpl* owner);
+    RTCPSender(const WebRtc_Word32 id, const bool audio,
+               RtpRtcpClock* clock, ModuleRtpRtcpImpl* owner);
     virtual ~RTCPSender();
 
-    void ChangeUniqueId(const int32_t id);
+    void ChangeUniqueId(const WebRtc_Word32 id);
 
-    int32_t Init();
+    WebRtc_Word32 Init();
 
-    int32_t RegisterSendTransport(Transport* outgoingTransport);
+    WebRtc_Word32 RegisterSendTransport(Transport* outgoingTransport);
 
     RTCPMethod Status() const;
-    int32_t SetRTCPStatus(const RTCPMethod method);
+    WebRtc_Word32 SetRTCPStatus(const RTCPMethod method);
 
     bool Sending() const;
-    int32_t SetSendingStatus(const bool enabled); // combine the functions
+    WebRtc_Word32 SetSendingStatus(const bool enabled); // combine the functions
 
-    int32_t SetNackStatus(const bool enable);
+    WebRtc_Word32 SetNackStatus(const bool enable);
 
     void SetStartTimestamp(uint32_t start_timestamp);
 
     void SetLastRtpTime(uint32_t rtp_timestamp,
                         int64_t capture_time_ms);
 
-    void SetSSRC( const uint32_t ssrc);
+    void SetSSRC( const WebRtc_UWord32 ssrc);
 
-    int32_t SetRemoteSSRC( const uint32_t ssrc);
+    WebRtc_Word32 SetRemoteSSRC( const WebRtc_UWord32 ssrc);
 
-    int32_t SetCameraDelay(const int32_t delayMS);
+    WebRtc_Word32 SetCameraDelay(const WebRtc_Word32 delayMS);
 
-    int32_t CNAME(char cName[RTCP_CNAME_SIZE]);
-    int32_t SetCNAME(const char cName[RTCP_CNAME_SIZE]);
+    WebRtc_Word32 CNAME(char cName[RTCP_CNAME_SIZE]);
+    WebRtc_Word32 SetCNAME(const char cName[RTCP_CNAME_SIZE]);
 
-    int32_t AddMixedCNAME(const uint32_t SSRC,
-                          const char cName[RTCP_CNAME_SIZE]);
+    WebRtc_Word32 AddMixedCNAME(const WebRtc_UWord32 SSRC,
+                                const char cName[RTCP_CNAME_SIZE]);
 
-    int32_t RemoveMixedCNAME(const uint32_t SSRC);
+    WebRtc_Word32 RemoveMixedCNAME(const WebRtc_UWord32 SSRC);
 
-    uint32_t SendTimeOfSendReport(const uint32_t sendReport);
+    WebRtc_UWord32 SendTimeOfSendReport(const WebRtc_UWord32 sendReport);
 
     bool TimeToSendRTCPReport(const bool sendKeyframeBeforeRTP = false) const;
 
-    uint32_t LastSendReport(uint32_t& lastRTCPTime);
+    WebRtc_UWord32 LastSendReport(WebRtc_UWord32& lastRTCPTime);
 
-    int32_t SendRTCP(const uint32_t rtcpPacketTypeFlags,
-                     const int32_t nackSize = 0,
-                     const uint16_t* nackList = 0,
-                     const bool repeat = false,
-                     const uint64_t pictureID = 0);
+    WebRtc_Word32 SendRTCP(const WebRtc_UWord32 rtcpPacketTypeFlags,
+                           const WebRtc_Word32 nackSize = 0,
+                           const WebRtc_UWord16* nackList = 0,
+                           const bool repeat = false,
+                           const WebRtc_UWord64 pictureID = 0);
 
-    int32_t AddReportBlock(const uint32_t SSRC,
-                           const RTCPReportBlock* receiveBlock);
+    WebRtc_Word32 AddReportBlock(const WebRtc_UWord32 SSRC,
+                                 const RTCPReportBlock* receiveBlock);
 
-    int32_t RemoveReportBlock(const uint32_t SSRC);
+    WebRtc_Word32 RemoveReportBlock(const WebRtc_UWord32 SSRC);
 
     /*
     *  REMB
     */
     bool REMB() const;
 
-    int32_t SetREMBStatus(const bool enable);
+    WebRtc_Word32 SetREMBStatus(const bool enable);
 
-    int32_t SetREMBData(const uint32_t bitrate,
-                        const uint8_t numberOfSSRC,
-                        const uint32_t* SSRC);
+    WebRtc_Word32 SetREMBData(const WebRtc_UWord32 bitrate,
+                              const WebRtc_UWord8 numberOfSSRC,
+                              const WebRtc_UWord32* SSRC);
 
     /*
     *   TMMBR
     */
     bool TMMBR() const;
 
-    int32_t SetTMMBRStatus(const bool enable);
+    WebRtc_Word32 SetTMMBRStatus(const bool enable);
 
-    int32_t SetTMMBN(const TMMBRSet* boundingSet,
-                     const uint32_t maxBitrateKbit);
+    WebRtc_Word32 SetTMMBN(const TMMBRSet* boundingSet,
+                           const WebRtc_UWord32 maxBitrateKbit);
 
     /*
     *   Extended jitter report
     */
     bool IJ() const;
 
-    int32_t SetIJStatus(const bool enable);
+    WebRtc_Word32 SetIJStatus(const bool enable);
 
     /*
     *
     */
 
-    int32_t SetApplicationSpecificData(const uint8_t subType,
-                                       const uint32_t name,
-                                       const uint8_t* data,
-                                       const uint16_t length);
+    WebRtc_Word32 SetApplicationSpecificData(const WebRtc_UWord8 subType,
+                                             const WebRtc_UWord32 name,
+                                             const WebRtc_UWord8* data,
+                                             const WebRtc_UWord16 length);
 
-    int32_t SetRTCPVoIPMetrics(const RTCPVoIPMetric* VoIPMetric);
+    WebRtc_Word32 SetRTCPVoIPMetrics(const RTCPVoIPMetric* VoIPMetric);
 
-    int32_t SetCSRCs(const uint32_t arrOfCSRC[kRtpCsrcSize],
-                     const uint8_t arrLength);
+    WebRtc_Word32 SetCSRCs(const WebRtc_UWord32 arrOfCSRC[kRtpCsrcSize],
+                           const WebRtc_UWord8 arrLength);
 
-    int32_t SetCSRCStatus(const bool include);
+    WebRtc_Word32 SetCSRCStatus(const bool include);
 
     void SetTargetBitrate(unsigned int target_bitrate);
 
 private:
-    int32_t SendToNetwork(const uint8_t* dataBuffer, const uint16_t length);
+    WebRtc_Word32 SendToNetwork(const WebRtc_UWord8* dataBuffer,
+                                const WebRtc_UWord16 length);
 
     void UpdatePacketRate();
 
-    int32_t AddReportBlocks(uint8_t* rtcpbuffer,
-                            uint32_t& pos,
-                            uint8_t& numberOfReportBlocks,
-                            const RTCPReportBlock* received,
-                            const uint32_t NTPsec,
-                            const uint32_t NTPfrac);
+    WebRtc_Word32 AddReportBlocks(WebRtc_UWord8* rtcpbuffer,
+                                WebRtc_UWord32& pos,
+                                WebRtc_UWord8& numberOfReportBlocks,
+                                const RTCPReportBlock* received,
+                                const WebRtc_UWord32 NTPsec,
+                                const WebRtc_UWord32 NTPfrac);
 
-    int32_t BuildSR(uint8_t* rtcpbuffer,
-                    uint32_t& pos,
-                    const uint32_t NTPsec,
-                    const uint32_t NTPfrac,
-                    const RTCPReportBlock* received = NULL);
+    WebRtc_Word32 BuildSR(WebRtc_UWord8* rtcpbuffer,
+                        WebRtc_UWord32& pos,
+                        const WebRtc_UWord32 NTPsec,
+                        const WebRtc_UWord32 NTPfrac,
+                        const RTCPReportBlock* received = NULL);
 
-    int32_t BuildRR(uint8_t* rtcpbuffer,
-                    uint32_t& pos,
-                    const uint32_t NTPsec,
-                    const uint32_t NTPfrac,
-                    const RTCPReportBlock* received = NULL);
+    WebRtc_Word32 BuildRR(WebRtc_UWord8* rtcpbuffer,
+                        WebRtc_UWord32& pos,
+                        const WebRtc_UWord32 NTPsec,
+                        const WebRtc_UWord32 NTPfrac,
+                        const RTCPReportBlock* received = NULL);
 
-    int32_t BuildExtendedJitterReport(
-        uint8_t* rtcpbuffer,
-        uint32_t& pos,
-        const uint32_t jitterTransmissionTimeOffset);
+    WebRtc_Word32 BuildExtendedJitterReport(
+        WebRtc_UWord8* rtcpbuffer,
+        WebRtc_UWord32& pos,
+        const WebRtc_UWord32 jitterTransmissionTimeOffset);
 
-    int32_t BuildSDEC(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildPLI(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildREMB(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildTMMBR(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildTMMBN(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildAPP(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildVoIPMetric(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildBYE(uint8_t* rtcpbuffer, uint32_t& pos);
-    int32_t BuildFIR(uint8_t* rtcpbuffer, uint32_t& pos, bool repeat);
-    int32_t BuildSLI(uint8_t* rtcpbuffer,
-                     uint32_t& pos,
-                     const uint8_t pictureID);
-    int32_t BuildRPSI(uint8_t* rtcpbuffer,
-                      uint32_t& pos,
-                      const uint64_t pictureID,
-                      const uint8_t payloadType);
+    WebRtc_Word32 BuildSDEC(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildPLI(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildREMB(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildTMMBR(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildTMMBN(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildAPP(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildVoIPMetric(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildBYE(WebRtc_UWord8* rtcpbuffer, WebRtc_UWord32& pos);
+    WebRtc_Word32 BuildFIR(WebRtc_UWord8* rtcpbuffer,
+                           WebRtc_UWord32& pos,
+                           bool repeat);
+    WebRtc_Word32 BuildSLI(WebRtc_UWord8* rtcpbuffer,
+                         WebRtc_UWord32& pos,
+                         const WebRtc_UWord8 pictureID);
+    WebRtc_Word32 BuildRPSI(WebRtc_UWord8* rtcpbuffer,
+                         WebRtc_UWord32& pos,
+                         const WebRtc_UWord64 pictureID,
+                         const WebRtc_UWord8 payloadType);
 
-    int32_t BuildNACK(uint8_t* rtcpbuffer,
-                      uint32_t& pos,
-                      const int32_t nackSize,
-                      const uint16_t* nackList,
-                          std::string* nackString);
+    WebRtc_Word32 BuildNACK(WebRtc_UWord8* rtcpbuffer,
+                          WebRtc_UWord32& pos,
+                          const WebRtc_Word32 nackSize,
+                          const WebRtc_UWord16* nackList);
 
 private:
-    int32_t            _id;
+    WebRtc_Word32            _id;
     const bool               _audio;
-    Clock*                   _clock;
+    RtpRtcpClock&            _clock;
     RTCPMethod               _method;
 
     ModuleRtpRtcpImpl&      _rtpRtcp;
@@ -217,57 +203,52 @@ private:
     bool                    _TMMBR;
     bool                    _IJ;
 
-    int64_t        _nextTimeToSendRTCP;
+    WebRtc_Word64        _nextTimeToSendRTCP;
 
     uint32_t start_timestamp_;
     uint32_t last_rtp_timestamp_;
     int64_t last_frame_capture_time_ms_;
-    uint32_t _SSRC;
-    uint32_t _remoteSSRC;  // SSRC that we receive on our RTP channel
+    WebRtc_UWord32 _SSRC;
+    WebRtc_UWord32 _remoteSSRC;  // SSRC that we receive on our RTP channel
     char _CNAME[RTCP_CNAME_SIZE];
 
-    std::map<uint32_t, RTCPReportBlock*> _reportBlocks;
-    std::map<uint32_t, RTCPUtility::RTCPCnameInformation*> _csrcCNAMEs;
+    std::map<WebRtc_UWord32, RTCPReportBlock*> _reportBlocks;
+    std::map<WebRtc_UWord32, RTCPUtility::RTCPCnameInformation*> _csrcCNAMEs;
 
-    int32_t         _cameraDelayMS;
+    WebRtc_Word32         _cameraDelayMS;
 
     // Sent
-    uint32_t        _lastSendReport[RTCP_NUMBER_OF_SR];  // allow packet loss and RTT above 1 sec
-    uint32_t        _lastRTCPTime[RTCP_NUMBER_OF_SR];
+    WebRtc_UWord32        _lastSendReport[RTCP_NUMBER_OF_SR];  // allow packet loss and RTT above 1 sec
+    WebRtc_UWord32        _lastRTCPTime[RTCP_NUMBER_OF_SR];
 
     // send CSRCs
-    uint8_t         _CSRCs;
-    uint32_t        _CSRC[kRtpCsrcSize];
+    WebRtc_UWord8         _CSRCs;
+    WebRtc_UWord32        _CSRC[kRtpCsrcSize];
     bool                _includeCSRCs;
 
     // Full intra request
-    uint8_t         _sequenceNumberFIR;
+    WebRtc_UWord8         _sequenceNumberFIR;
 
     // REMB    
-    uint8_t       _lengthRembSSRC;
-    uint8_t       _sizeRembSSRC;
-    uint32_t*     _rembSSRC;
-    uint32_t      _rembBitrate;
+    WebRtc_UWord8       _lengthRembSSRC;
+    WebRtc_UWord8       _sizeRembSSRC;
+    WebRtc_UWord32*     _rembSSRC;
+    WebRtc_UWord32      _rembBitrate;
 
     TMMBRHelp           _tmmbrHelp;
-    uint32_t      _tmmbr_Send;
-    uint32_t      _packetOH_Send;
+    WebRtc_UWord32      _tmmbr_Send;
+    WebRtc_UWord32      _packetOH_Send;
 
     // APP
     bool                 _appSend;
-    uint8_t        _appSubType;
-    uint32_t       _appName;
-    uint8_t*       _appData;
-    uint16_t       _appLength;
+    WebRtc_UWord8        _appSubType;
+    WebRtc_UWord32       _appName;
+    WebRtc_UWord8*       _appData;
+    WebRtc_UWord16       _appLength;
 
     // XR VoIP metric
     bool                _xrSendVoIPMetric;
     RTCPVoIPMetric      _xrVoIPMetric;
-
-    // Counters
-    uint32_t      _nackCount;
-    uint32_t      _pliCount;
-    uint32_t      _fullIntraRequestCount;
 };
 } // namespace webrtc
 

@@ -30,18 +30,18 @@ class CaptureSinkFilter;
 class CaptureInputPin: public mozilla::media::BaseInputPin
 {
 public:
-    int32_t _moduleId;
+    WebRtc_Word32 _moduleId;
 
     VideoCaptureCapability _requestedCapability;
     VideoCaptureCapability _resultingCapability;
     HANDLE _threadHandle;
 
-    CaptureInputPin(int32_t moduleId,
-                    IN TCHAR* szName,
-                    IN CaptureSinkFilter* pFilter,
-                    IN mozilla::CriticalSection * pLock,
-                    OUT HRESULT * pHr,
-                    IN LPCWSTR pszName);
+    CaptureInputPin ( WebRtc_Word32 moduleId,
+                      IN TCHAR* szName,
+                      IN CaptureSinkFilter* pFilter,
+                      IN mozilla::CriticalSection * pLock,
+                      OUT HRESULT * pHr,
+                      IN LPCWSTR pszName);
     virtual ~CaptureInputPin();
 
     HRESULT GetMediaType (IN int iPos, OUT mozilla::media::MediaType * pmt);
@@ -54,17 +54,17 @@ class CaptureSinkFilter: public mozilla::media::BaseFilter
 {
 
 public:
-    CaptureSinkFilter(IN TCHAR * tszName,
-                      IN LPUNKNOWN punk,
-                      OUT HRESULT * phr,
-                      VideoCaptureExternal& captureObserver,
-                      int32_t moduleId);
+    CaptureSinkFilter (IN TCHAR * tszName,
+                   IN LPUNKNOWN punk,
+                   OUT HRESULT * phr,
+                   VideoCaptureExternal& captureObserver,
+                   WebRtc_Word32 moduleId);
     virtual ~CaptureSinkFilter();
 
     //  --------------------------------------------------------------------
     //  class methods
 
-    void ProcessCapturedFrame(unsigned char* pBuffer, int32_t length,
+    void ProcessCapturedFrame(unsigned char* pBuffer, WebRtc_Word32 length,
                               const VideoCaptureCapability& frameInfo);
     //  explicit receiver lock aquisition and release
     void LockReceive()  { m_crtRecv.Enter();}
@@ -114,7 +114,7 @@ private:
     mozilla::CriticalSection m_crtRecv;  //  receiver lock; always acquire before filter lock
     CaptureInputPin * m_pInput;
     VideoCaptureExternal& _captureObserver;
-    int32_t _moduleId;
+    WebRtc_Word32 _moduleId;
     unsigned long mRefCnt;
 };
 } // namespace videocapturemodule

@@ -71,15 +71,15 @@ void TestFEC::Perform()
     _acmA->InitializeReceiver();
     _acmB->InitializeReceiver();
 
-    uint8_t numEncoders = _acmA->NumberOfCodecs();
+    WebRtc_UWord8 numEncoders = _acmA->NumberOfCodecs();
     CodecInst myCodecParam;
     if(_testMode != 0)
     {
         printf("Registering codecs at receiver... \n");
     }
-    for(uint8_t n = 0; n < numEncoders; n++)
+    for(WebRtc_UWord8 n = 0; n < numEncoders; n++)
     {
-        _acmB->Codec(n, &myCodecParam);
+        _acmB->Codec(n, myCodecParam);
         if(_testMode != 0)
         {
             printf("%s\n", myCodecParam.plname);
@@ -503,19 +503,19 @@ void TestFEC::Perform()
     }
 }
 
-int32_t TestFEC::SetVAD(bool enableDTX, bool enableVAD, ACMVADMode vadMode)
+WebRtc_Word32 TestFEC::SetVAD(bool enableDTX, bool enableVAD, ACMVADMode vadMode)
 {
     if(_testMode != 0)
     {
         printf("DTX %s; VAD %s; VAD-Mode %d\n", 
             enableDTX? "ON":"OFF", 
             enableVAD? "ON":"OFF", 
-            (int16_t)vadMode);
+            (WebRtc_Word16)vadMode);
     }
     return _acmA->SetVAD(enableDTX, enableVAD, vadMode);
 }
 
-int16_t TestFEC::RegisterSendCodec(char side, char* codecName, int32_t samplingFreqHz)
+WebRtc_Word16 TestFEC::RegisterSendCodec(char side, char* codecName, WebRtc_Word32 samplingFreqHz)
 {
     if(_testMode != 0)
     {
@@ -553,7 +553,7 @@ int16_t TestFEC::RegisterSendCodec(char side, char* codecName, int32_t samplingF
     }
     CodecInst myCodecParam;
 
-    CHECK_ERROR(AudioCodingModule::Codec(codecName, &myCodecParam,
+    CHECK_ERROR(AudioCodingModule::Codec(codecName, myCodecParam,
                                          samplingFreqHz, 1));
 
     CHECK_ERROR(myACM->RegisterSendCodec(myCodecParam));
@@ -566,16 +566,16 @@ void TestFEC::Run()
 {
     AudioFrame audioFrame;
 
-    uint16_t msecPassed = 0;
-    uint32_t secPassed  = 0;
-    int32_t outFreqHzB = _outFileB.SamplingFrequency();
+    WebRtc_UWord16 msecPassed = 0;
+    WebRtc_UWord32 secPassed  = 0;
+    WebRtc_Word32 outFreqHzB = _outFileB.SamplingFrequency();
 
     while(!_inFileA.EndOfFile())
     {
         _inFileA.Read10MsData(audioFrame);
         CHECK_ERROR(_acmA->Add10MsData(audioFrame));
         CHECK_ERROR(_acmA->Process());
-        CHECK_ERROR(_acmB->PlayoutData10Ms(outFreqHzB, &audioFrame));
+        CHECK_ERROR(_acmB->PlayoutData10Ms(outFreqHzB, audioFrame));
         _outFileB.Write10MsData(audioFrame.data_, audioFrame.samples_per_channel_);
         msecPassed += 10;
         if(msecPassed >= 1000)
@@ -599,7 +599,7 @@ void TestFEC::Run()
     _inFileA.Rewind();
 }
 
-void TestFEC::OpenOutFile(int16_t test_number) {
+void TestFEC::OpenOutFile(WebRtc_Word16 test_number) {
   std::string file_name;
   std::stringstream file_stream;
   file_stream << webrtc::test::OutputPath();
@@ -616,9 +616,9 @@ void TestFEC::OpenOutFile(int16_t test_number) {
 void TestFEC::DisplaySendReceiveCodec()
 {
     CodecInst myCodecParam;
-    _acmA->SendCodec(&myCodecParam);
+    _acmA->SendCodec(myCodecParam);
     printf("%s -> ", myCodecParam.plname);
-    _acmB->ReceiveCodec(&myCodecParam);
+    _acmB->ReceiveCodec(myCodecParam);
     printf("%s\n", myCodecParam.plname);
 }
 

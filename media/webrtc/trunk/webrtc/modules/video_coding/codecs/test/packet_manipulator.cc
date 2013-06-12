@@ -45,7 +45,7 @@ int PacketManipulatorImpl::ManipulatePackets(
   packet_reader_->InitializeReading(encoded_image->_buffer,
                                     encoded_image->_length,
                                     config_.packet_size_in_bytes);
-  uint8_t* packet = NULL;
+  WebRtc_UWord8* packet = NULL;
   int nbr_bytes_to_read;
   // keep track of if we've lost any packets, since then we shall loose
   // the remains of the current frame:

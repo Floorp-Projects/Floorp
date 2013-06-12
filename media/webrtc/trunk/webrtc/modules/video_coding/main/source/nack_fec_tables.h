@@ -18,7 +18,7 @@ namespace webrtc
 // Table values are built as a sigmoid function, ranging from 0 to
 // kHighRttNackMs (100), based on the HybridNackTH values defined in
 // media_opt_util.h.
-const uint16_t VCMNackFecTable[100] = {
+const WebRtc_UWord16 VCMNackFecTable[100] = {
 0,
 0,
 0,

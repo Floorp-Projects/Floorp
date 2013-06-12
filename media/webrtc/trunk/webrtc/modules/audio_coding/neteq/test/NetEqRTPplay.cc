@@ -113,19 +113,19 @@ typedef struct {
 /* Function declarations */
 /*************************/
 
-void stereoInterleave(int16_t *data, int16_t totalLen);
-int getNextRecoutTime(FILE *fp, uint32_t *nextTime);
-void getNextExtraDelay(FILE *fp, uint32_t *t, int *d);
+void stereoInterleave(WebRtc_Word16 *data, WebRtc_Word16 totalLen);
+int getNextRecoutTime(FILE *fp, WebRtc_UWord32 *nextTime);
+void getNextExtraDelay(FILE *fp, WebRtc_UWord32 *t, int *d);
 bool splitStereo(NETEQTEST_RTPpacket* rtp, NETEQTEST_RTPpacket* rtpSlave,
-                 const int16_t *stereoPtype, const enum stereoModes *stereoMode, int noOfStereoCodecs,
-                 const int16_t *cngPtype, int noOfCngCodecs,
+                 const WebRtc_Word16 *stereoPtype, const enum stereoModes *stereoMode, int noOfStereoCodecs,
+                 const WebRtc_Word16 *cngPtype, int noOfCngCodecs,
                  bool *isStereo);
-void parsePtypeFile(FILE *ptypeFile, std::map<uint8_t, decoderStruct>* decoders);
-int populateUsedCodec(std::map<uint8_t, decoderStruct>* decoders, enum WebRtcNetEQDecoder *usedCodec);
-void createAndInsertDecoders (NETEQTEST_NetEQClass *neteq, std::map<uint8_t, decoderStruct>* decoders, int channelNumber);
-void free_coders(std::map<uint8_t, decoderStruct> & decoders);
+void parsePtypeFile(FILE *ptypeFile, std::map<WebRtc_UWord8, decoderStruct>* decoders);
+int populateUsedCodec(std::map<WebRtc_UWord8, decoderStruct>* decoders, enum WebRtcNetEQDecoder *usedCodec);
+void createAndInsertDecoders (NETEQTEST_NetEQClass *neteq, std::map<WebRtc_UWord8, decoderStruct>* decoders, int channelNumber);
+void free_coders(std::map<WebRtc_UWord8, decoderStruct> & decoders);
 int doAPItest();
-bool changeStereoMode(NETEQTEST_RTPpacket & rtp, std::map<uint8_t, decoderStruct> & decoders, enum stereoModes *stereoMode);
+bool changeStereoMode(NETEQTEST_RTPpacket & rtp, std::map<WebRtc_UWord8, decoderStruct> & decoders, enum stereoModes *stereoMode);
 
 
 
@@ -133,13 +133,13 @@ bool changeStereoMode(NETEQTEST_RTPpacket & rtp, std::map<uint8_t, decoderStruct
 /* Global variables */
 /********************/
 
-int16_t NetEqPacketBuffer[MAX_NETEQ_BUFFERSIZE>>1];
-int16_t NetEqPacketBufferSlave[MAX_NETEQ_BUFFERSIZE>>1];
+WebRtc_Word16 NetEqPacketBuffer[MAX_NETEQ_BUFFERSIZE>>1];
+WebRtc_Word16 NetEqPacketBufferSlave[MAX_NETEQ_BUFFERSIZE>>1];
 
 #ifdef NETEQ_DELAY_LOGGING
 extern "C" {
     FILE *delay_fid2;   /* file pointer */
-    uint32_t tot_received_packets=0;
+    WebRtc_UWord32 tot_received_packets=0;
 }
 #endif
 
@@ -147,8 +147,8 @@ extern "C" {
 extern char BUILD_DATE;
 #endif
 
-uint32_t writtenSamples = 0;
-uint32_t simClock=0;
+WebRtc_UWord32 writtenSamples = 0;
+WebRtc_UWord32 simClock=0;
 
 int main(int argc, char* argv[])
 {
@@ -157,8 +157,8 @@ int main(int argc, char* argv[])
     enum WebRtcNetEQDecoder usedCodec[kDecoderReservedEnd-1];
     int noOfCodecs;
     int ok;
-    int16_t out_data[640*2];
-    int16_t outLen, writeLen;
+    WebRtc_Word16 out_data[640*2];
+    WebRtc_Word16 outLen, writeLen;
     int fs = 8000;
     WebRtcNetEQ_RTCPStat RTCPstat;
 #ifdef WIN32
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
     bool rtpOnly = false;
     int packetLen = 0;
     int packetCount = 0;
-    std::map<uint8_t, decoderStruct> decoders;
+    std::map<WebRtc_UWord8, decoderStruct> decoders;
     bool dummyRtp = false;
     bool noDecode = false;
     bool filterSSRC = false;
@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
     for (int i = 0; i < numInst; i++)
     {
         // create memory, allocate, initialize, and allocate packet buffer memory
-        NetEQvector.push_back (new NETEQTEST_NetEQClass(usedCodec, noOfCodecs, static_cast<uint16_t>(fs), kTCPLargeJitter));
+        NetEQvector.push_back (new NETEQTEST_NetEQClass(usedCodec, noOfCodecs, static_cast<WebRtc_UWord16>(fs), kTCPLargeJitter));
 
         createAndInsertDecoders (NetEQvector[i], &decoders, i /* channel */);
 
@@ -519,10 +519,10 @@ int main(int argc, char* argv[])
 
 
 #ifdef ZERO_TS_START
-    uint32_t firstTS = rtp->timeStamp();
+    WebRtc_UWord32 firstTS = rtp->timeStamp();
     rtp->setTimeStamp(0);
 #else
-    uint32_t firstTS = 0;
+    WebRtc_UWord32 firstTS = 0;
 #endif
 
     // check stereo mode
@@ -535,8 +535,8 @@ int main(int argc, char* argv[])
     }
 
 #ifdef PLAY_CLEAN
-    uint32_t prevTS = rtp->timeStamp();
-    uint32_t currTS, prev_time;
+    WebRtc_UWord32 prevTS = rtp->timeStamp();
+    WebRtc_UWord32 currTS, prev_time;
 #endif
 
 #ifdef JUNK_DATA
@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
     }
 #endif
 
-    uint32_t nextRecoutTime;
+    WebRtc_UWord32 nextRecoutTime;
     int lastRecout = getNextRecoutTime(recoutTimes, &nextRecoutTime); // does nothing if recoutTimes == NULL
 
     if (recoutTimes)
@@ -560,9 +560,9 @@ int main(int argc, char* argv[])
     else
         simClock = rtp->time(); // start immediately with first packet
 
-    uint32_t start_clock = simClock;
+    WebRtc_UWord32 start_clock = simClock;
 
-    uint32_t nextExtraDelayTime;
+    WebRtc_UWord32 nextExtraDelayTime;
     int extraDelay = -1;
     getNextExtraDelay(extraDelays, &nextExtraDelayTime, &extraDelay);
 
@@ -660,7 +660,7 @@ int main(int argc, char* argv[])
             if (stereoMode > stereoModeMono)
             {
                 // stereo
-                int16_t tempLen;
+                WebRtc_Word16 tempLen;
                 tempLen = NetEQvector[0]->recOut( out_data, msInfo ); // master
                 outLen = NetEQvector[1]->recOut( &out_data[tempLen], msInfo ); // slave
 
@@ -703,7 +703,7 @@ int main(int argc, char* argv[])
     if (fwrite(&temp_var, sizeof(int), 1, delay_fid2) != 1) {
       return -1;
     }
-    if (fwrite(&tot_received_packets, sizeof(uint32_t),
+    if (fwrite(&tot_received_packets, sizeof(WebRtc_UWord32),
                1, delay_fid2) != 1) {
       return -1;
     }
@@ -767,8 +767,8 @@ int main(int argc, char* argv[])
 /****************/
 
 bool splitStereo(NETEQTEST_RTPpacket* rtp, NETEQTEST_RTPpacket* rtpSlave,
-                 const int16_t *stereoPtype, const enum stereoModes *stereoMode, int noOfStereoCodecs,
-                 const int16_t *cngPtype, int noOfCngCodecs,
+                 const WebRtc_Word16 *stereoPtype, const enum stereoModes *stereoMode, int noOfStereoCodecs,
+                 const WebRtc_Word16 *cngPtype, int noOfCngCodecs,
                  bool *isStereo)
 {
 
@@ -784,7 +784,7 @@ bool splitStereo(NETEQTEST_RTPpacket* rtp, NETEQTEST_RTPpacket* rtpSlave,
     }
 
     // check payload type
-    int16_t ptype = rtp->payloadType();
+    WebRtc_Word16 ptype = rtp->payloadType();
 
     // is this a cng payload?
     for (int k = 0; k < noOfCngCodecs; k++) {
@@ -824,19 +824,19 @@ bool splitStereo(NETEQTEST_RTPpacket* rtp, NETEQTEST_RTPpacket* rtpSlave,
 
 }
 
-void stereoInterleave(int16_t *data, int16_t totalLen)
+void stereoInterleave(WebRtc_Word16 *data, WebRtc_Word16 totalLen)
 {
     int k;
 
     for(k = totalLen/2; k < totalLen; k++) {
-        int16_t temp = data[k];
-        memmove(&data[2*k - totalLen + 2], &data[2*k - totalLen + 1], (totalLen - k -1) *  sizeof(int16_t));
+        WebRtc_Word16 temp = data[k];
+        memmove(&data[2*k - totalLen + 2], &data[2*k - totalLen + 1], (totalLen - k -1) *  sizeof(WebRtc_Word16));
         data[2*k - totalLen + 1] = temp;
     }
 }
 
 
-int getNextRecoutTime(FILE *fp, uint32_t *nextTime) {
+int getNextRecoutTime(FILE *fp, WebRtc_UWord32 *nextTime) {
 
     float tempTime;
 
@@ -846,7 +846,7 @@ int getNextRecoutTime(FILE *fp, uint32_t *nextTime) {
 
     if (fread(&tempTime, sizeof(float), 1, fp) != 0) {
         // not end of file
-        *nextTime = (uint32_t) tempTime;
+        *nextTime = (WebRtc_UWord32) tempTime;
         return 0;
     }
 
@@ -856,7 +856,7 @@ int getNextRecoutTime(FILE *fp, uint32_t *nextTime) {
     return 1;
 }
 
-void getNextExtraDelay(FILE *fp, uint32_t *t, int *d) {
+void getNextExtraDelay(FILE *fp, WebRtc_UWord32 *t, int *d) {
 
     float temp[2];
 
@@ -867,7 +867,7 @@ void getNextExtraDelay(FILE *fp, uint32_t *t, int *d) {
 
     if (fread(&temp, sizeof(float), 2, fp) != 0) {
         // not end of file
-        *t = (uint32_t) temp[0];
+        *t = (WebRtc_UWord32) temp[0];
         *d = (int) temp[1];
         return;
     }
@@ -879,7 +879,7 @@ void getNextExtraDelay(FILE *fp, uint32_t *t, int *d) {
 }
 
 
-void parsePtypeFile(FILE *ptypeFile, std::map<uint8_t, decoderStruct>* decoders)
+void parsePtypeFile(FILE *ptypeFile, std::map<WebRtc_UWord8, decoderStruct>* decoders)
 {
     int n, pt;
     char codec[100];
@@ -1264,7 +1264,7 @@ void parsePtypeFile(FILE *ptypeFile, std::map<uint8_t, decoderStruct>* decoders)
             }
 
             // insert into codecs map
-            (*decoders)[static_cast<uint8_t>(pt)] = tempDecoder;
+            (*decoders)[static_cast<WebRtc_UWord8>(pt)] = tempDecoder;
 
         }
 
@@ -1274,7 +1274,7 @@ void parsePtypeFile(FILE *ptypeFile, std::map<uint8_t, decoderStruct>* decoders)
 }
 
 
-bool changeStereoMode(NETEQTEST_RTPpacket & rtp, std::map<uint8_t, decoderStruct> & decoders, enum stereoModes *stereoMode)
+bool changeStereoMode(NETEQTEST_RTPpacket & rtp, std::map<WebRtc_UWord8, decoderStruct> & decoders, enum stereoModes *stereoMode)
 {
         if (decoders.count(rtp.payloadType()) > 0
             && decoders[rtp.payloadType()].codec != kDecoderRED
@@ -1292,11 +1292,11 @@ bool changeStereoMode(NETEQTEST_RTPpacket & rtp, std::map<uint8_t, decoderStruct
 }
 
 
-int populateUsedCodec(std::map<uint8_t, decoderStruct>* decoders, enum WebRtcNetEQDecoder *usedCodec)
+int populateUsedCodec(std::map<WebRtc_UWord8, decoderStruct>* decoders, enum WebRtcNetEQDecoder *usedCodec)
 {
     int numCodecs = 0;
 
-    std::map<uint8_t, decoderStruct>::iterator it;
+    std::map<WebRtc_UWord8, decoderStruct>::iterator it;
 
     it = decoders->begin();
 
@@ -1310,9 +1310,9 @@ int populateUsedCodec(std::map<uint8_t, decoderStruct>* decoders, enum WebRtcNet
 }
 
 
-void createAndInsertDecoders (NETEQTEST_NetEQClass *neteq, std::map<uint8_t, decoderStruct>* decoders, int channelNumber)
+void createAndInsertDecoders (NETEQTEST_NetEQClass *neteq, std::map<WebRtc_UWord8, decoderStruct>* decoders, int channelNumber)
 {
-    std::map<uint8_t, decoderStruct>::iterator it;
+    std::map<WebRtc_UWord8, decoderStruct>::iterator it;
 
     for (it = decoders->begin(); it != decoders->end();  it++)
     {
@@ -1320,7 +1320,7 @@ void createAndInsertDecoders (NETEQTEST_NetEQClass *neteq, std::map<uint8_t, dec
             ((*it).second.stereo > stereoModeMono ))
         {
             // create decoder instance
-            uint8_t pt = static_cast<uint8_t>( (*it).first );
+            WebRtc_UWord8 pt = static_cast<WebRtc_UWord8>( (*it).first );
             NETEQTEST_Decoder **dec = &((*it).second.decoder[channelNumber]);
             enum WebRtcNetEQDecoder type = (*it).second.codec;
 
@@ -1524,7 +1524,7 @@ void createAndInsertDecoders (NETEQTEST_NetEQClass *neteq, std::map<uint8_t, dec
 #if (defined(CODEC_CNGCODEC8) || defined(CODEC_CNGCODEC16) || \
     defined(CODEC_CNGCODEC32) || defined(CODEC_CNGCODEC48))
             case kDecoderCNG:
-                *dec = new decoder_CNG( pt, static_cast<uint16_t>((*it).second.fs) );
+                *dec = new decoder_CNG( pt, static_cast<WebRtc_UWord16>((*it).second.fs) );
                 break;
 #endif
 #ifdef CODEC_ISACLC
@@ -1577,9 +1577,9 @@ void createAndInsertDecoders (NETEQTEST_NetEQClass *neteq, std::map<uint8_t, dec
 }
 
 
-void free_coders(std::map<uint8_t, decoderStruct> & decoders)
+void free_coders(std::map<WebRtc_UWord8, decoderStruct> & decoders)
 {
-    std::map<uint8_t, decoderStruct>::iterator it;
+    std::map<WebRtc_UWord8, decoderStruct>::iterator it;
 
     for (it = decoders.begin(); it != decoders.end();  it++)
     {
@@ -1608,10 +1608,9 @@ int doAPItest() {
     int NetEqBufferMaxPackets, BufferSizeInBytes;
     WebRtcNetEQ_CodecDef codecInst;
     WebRtcNetEQ_RTCPStat RTCPstat;
-    uint32_t timestamp;
+    WebRtc_UWord32 timestamp;
     int memorySize;
     int ok;
-    int overhead_bytes;
 
     printf("API-test:\n\n");
 
@@ -1624,7 +1623,7 @@ int doAPItest() {
     CHECK_MINUS_ONE(WebRtcNetEQ_Assign(&inst, NULL))
 //  printf("WARNING: Test of WebRtcNetEQ_Assign() is disabled due to a bug.\n");
     usedCodec=kDecoderPCMu;
-    CHECK_MINUS_ONE(WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, kTCPLargeJitter,  &NetEqBufferMaxPackets, &BufferSizeInBytes, &overhead_bytes))
+    CHECK_MINUS_ONE(WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, kTCPLargeJitter,  &NetEqBufferMaxPackets, &BufferSizeInBytes))
     CHECK_MINUS_ONE(WebRtcNetEQ_AssignBuffer(inst, NetEqBufferMaxPackets, NetEqPacketBuffer, BufferSizeInBytes))
 
     CHECK_MINUS_ONE(WebRtcNetEQ_Init(inst, 8000))
@@ -1635,7 +1634,7 @@ int doAPItest() {
     CHECK_MINUS_ONE(WebRtcNetEQ_CodecDbReset(inst))
     CHECK_MINUS_ONE(WebRtcNetEQ_CodecDbAdd(inst, &codecInst))
     CHECK_MINUS_ONE(WebRtcNetEQ_CodecDbRemove(inst, usedCodec))
-    int16_t temp1, temp2;
+    WebRtc_Word16 temp1, temp2;
     CHECK_MINUS_ONE(WebRtcNetEQ_CodecDbGetSizeInfo(inst, &temp1, &temp2))
     CHECK_MINUS_ONE(WebRtcNetEQ_CodecDbGetCodecInfo(inst, 0, &usedCodec))
 
@@ -1646,8 +1645,8 @@ int doAPItest() {
     WebRtcNetEQOutputType temptype;
     CHECK_MINUS_ONE(WebRtcNetEQ_GetSpeechOutputType(inst, &temptype))
 
-    uint8_t tempFlags;
-    uint16_t utemp1, utemp2;
+    WebRtc_UWord8 tempFlags;
+    WebRtc_UWord16 utemp1, utemp2;
     CHECK_MINUS_ONE(WebRtcNetEQ_VQmonRecOutStatistics(inst, &utemp1, &utemp2, &tempFlags))
     CHECK_MINUS_ONE(WebRtcNetEQ_VQmonGetRxStatistics(inst, &utemp1, &utemp2))
 
@@ -1662,7 +1661,7 @@ int doAPItest() {
 
     /* GetRecommendedBufferSize with wrong codec */
     usedCodec=kDecoderReservedStart;
-    ok = WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, kTCPLargeJitter , &NetEqBufferMaxPackets, &BufferSizeInBytes, &overhead_bytes);
+    ok = WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, kTCPLargeJitter , &NetEqBufferMaxPackets, &BufferSizeInBytes);
     if((ok!=-1) || ((ok==-1)&&(WebRtcNetEQ_GetErrorCode(inst)!=-CODEC_DB_UNKNOWN_CODEC))){
         printf("WebRtcNetEQ_GetRecommendedBufferSize() did not return proper error code for wrong codec.\n");
         printf("return value = %d; error code = %d\n", ok, WebRtcNetEQ_GetErrorCode(inst));
@@ -1671,13 +1670,13 @@ int doAPItest() {
 
     /* GetRecommendedBufferSize with wrong network type */
     usedCodec = kDecoderPCMu;
-    ok=WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, (enum WebRtcNetEQNetworkType) 4711 , &NetEqBufferMaxPackets, &BufferSizeInBytes, &overhead_bytes);
+    ok=WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, (enum WebRtcNetEQNetworkType) 4711 , &NetEqBufferMaxPackets, &BufferSizeInBytes);
     if ((ok!=-1) || ((ok==-1)&&(WebRtcNetEQ_GetErrorCode(inst)!=-FAULTY_NETWORK_TYPE))) {
         printf("WebRtcNetEQ_GetRecommendedBufferSize() did not return proper error code for wrong network type.\n");
         printf("return value = %d; error code = %d\n", ok, WebRtcNetEQ_GetErrorCode(inst));
         //RESET_ERROR(inst)
     }
-    CHECK_ZERO(WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, kTCPLargeJitter , &NetEqBufferMaxPackets, &BufferSizeInBytes, &overhead_bytes))
+    CHECK_ZERO(WebRtcNetEQ_GetRecommendedBufferSize(inst, &usedCodec, 1, kTCPLargeJitter , &NetEqBufferMaxPackets, &BufferSizeInBytes))
 
     /* try to do RecIn before assigning the packet buffer */
 /*  makeRTPheader(rtp_data, NETEQ_CODEC_AVT_PT, 17,4711, 1235412312);

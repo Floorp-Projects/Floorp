@@ -77,14 +77,14 @@ public:
     int ResetIfNeeded(int inFreq, int outFreq, ResamplerType type);
 
     // Synchronous resampling, all output samples are written to samplesOut
-    int Push(const int16_t* samplesIn, int lengthIn, int16_t* samplesOut,
+    int Push(const WebRtc_Word16* samplesIn, int lengthIn, WebRtc_Word16* samplesOut,
              int maxLen, int &outLen);
 
     // Asynchronous resampling, input
-    int Insert(int16_t* samplesIn, int lengthIn);
+    int Insert(WebRtc_Word16* samplesIn, int lengthIn);
 
     // Asynchronous resampling output, remaining samples are buffered
-    int Pull(int16_t* samplesOut, int desiredLen, int &outLen);
+    int Pull(WebRtc_Word16* samplesOut, int desiredLen, int &outLen);
 
 private:
     // Generic pointers since we don't know what states we'll need
@@ -93,8 +93,8 @@ private:
     void* state3_;
 
     // Storage if needed
-    int16_t* in_buffer_;
-    int16_t* out_buffer_;
+    WebRtc_Word16* in_buffer_;
+    WebRtc_Word16* out_buffer_;
     int in_buffer_size_;
     int out_buffer_size_;
     int in_buffer_size_max_;

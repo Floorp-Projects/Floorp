@@ -16,14 +16,10 @@
 #include <map>
 #include <vector>
 
-#include "webrtc/common_types.h"
-#include "webrtc/modules/interface/module.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/typedefs.h"
+#include "common_types.h"
+#include "typedefs.h"
 
 namespace webrtc {
-
-class Clock;
 
 // RemoteBitrateObserver is used to signal changes in bitrate estimates for
 // the incoming streams.
@@ -37,7 +33,7 @@ class RemoteBitrateObserver {
   virtual ~RemoteBitrateObserver() {}
 };
 
-class RemoteBitrateEstimator : public CallStatsObserver, public Module {
+class RemoteBitrateEstimator {
  public:
   enum EstimationMode {
     kMultiStreamEstimation,
@@ -46,10 +42,9 @@ class RemoteBitrateEstimator : public CallStatsObserver, public Module {
 
   virtual ~RemoteBitrateEstimator() {}
 
-  static RemoteBitrateEstimator* Create(const OverUseDetectorOptions& options,
-                                        EstimationMode mode,
-                                        RemoteBitrateObserver* observer,
-                                        Clock* clock);
+  static RemoteBitrateEstimator* Create(RemoteBitrateObserver* observer,
+                                        const OverUseDetectorOptions& options,
+                                        EstimationMode mode);
 
   // Stores an RTCP SR (NTP, RTP timestamp) tuple for a specific SSRC to be used
   // in future RTP timestamp to NTP time conversions. As soon as any SSRC has
@@ -66,6 +61,13 @@ class RemoteBitrateEstimator : public CallStatsObserver, public Module {
                               int64_t arrival_time,
                               uint32_t rtp_timestamp) = 0;
 
+  // Triggers a new estimate calculation.
+  virtual void UpdateEstimate(unsigned int ssrc, int64_t time_now) = 0;
+
+  // Set the current round-trip time experienced by the streams going into this
+  // estimator.
+  virtual void SetRtt(unsigned int rtt) = 0;
+
   // Removes all data for |ssrc|.
   virtual void RemoveStream(unsigned int ssrc) = 0;
 
@@ -74,10 +76,6 @@ class RemoteBitrateEstimator : public CallStatsObserver, public Module {
   // currently being received and of which the bitrate estimate is based upon.
   virtual bool LatestEstimate(std::vector<unsigned int>* ssrcs,
                               unsigned int* bitrate_bps) const = 0;
-
- protected:
-  static const int kProcessIntervalMs = 1000;
-  static const int kStreamTimeOutMs = 2000;
 };
 
 }  // namespace webrtc

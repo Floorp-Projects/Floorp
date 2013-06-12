@@ -114,6 +114,8 @@ class VP8EncoderImpl : public VP8Encoder {
                              const vpx_codec_cx_pkt& pkt,
                              uint32_t timestamp);
 
+  int GetEncodedFrame(const I420VideoFrame& input_image);
+
   int GetEncodedPartitions(const I420VideoFrame& input_image);
 
   // Determine maximum target for Intra frames

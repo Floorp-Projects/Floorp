@@ -43,29 +43,29 @@ enum { kMaxAudioBufferQueueLength = 100 };
 class FileRecorderImpl : public FileRecorder
 {
 public:
-    FileRecorderImpl(uint32_t instanceID, FileFormats fileFormat);
+    FileRecorderImpl(WebRtc_UWord32 instanceID, FileFormats fileFormat);
     virtual ~FileRecorderImpl();
 
     // FileRecorder functions.
-    virtual int32_t RegisterModuleFileCallback(FileCallback* callback);
+    virtual WebRtc_Word32 RegisterModuleFileCallback(FileCallback* callback);
     virtual FileFormats RecordingFileFormat() const;
-    virtual int32_t StartRecordingAudioFile(
+    virtual WebRtc_Word32 StartRecordingAudioFile(
         const char* fileName,
         const CodecInst& codecInst,
-        uint32_t notificationTimeMs,
+        WebRtc_UWord32 notificationTimeMs,
         ACMAMRPackingFormat amrFormat = AMRFileStorage);
-    virtual int32_t StartRecordingAudioFile(
+    virtual WebRtc_Word32 StartRecordingAudioFile(
         OutStream& destStream,
         const CodecInst& codecInst,
-        uint32_t notificationTimeMs,
+        WebRtc_UWord32 notificationTimeMs,
         ACMAMRPackingFormat amrFormat = AMRFileStorage);
-    virtual int32_t StopRecording();
+    virtual WebRtc_Word32 StopRecording();
     virtual bool IsRecording() const;
-    virtual int32_t codec_info(CodecInst& codecInst) const;
-    virtual int32_t RecordAudioToFile(
+    virtual WebRtc_Word32 codec_info(CodecInst& codecInst) const;
+    virtual WebRtc_Word32 RecordAudioToFile(
         const AudioFrame& frame,
         const TickTime* playoutTS = NULL);
-    virtual int32_t StartRecordingVideoFile(
+    virtual WebRtc_Word32 StartRecordingVideoFile(
         const char* fileName,
         const CodecInst& audioCodecInst,
         const VideoCodec& videoCodecInst,
@@ -74,21 +74,21 @@ public:
     {
         return -1;
     }
-    virtual int32_t RecordVideoToFile(const I420VideoFrame& videoFrame)
+    virtual WebRtc_Word32 RecordVideoToFile(const I420VideoFrame& videoFrame)
     {
         return -1;
     }
 
 protected:
-    virtual int32_t WriteEncodedAudioData(
-        const int8_t* audioBuffer,
-        uint16_t bufferLength,
-        uint16_t millisecondsOfData,
+    virtual WebRtc_Word32 WriteEncodedAudioData(
+        const WebRtc_Word8* audioBuffer,
+        WebRtc_UWord16 bufferLength,
+        WebRtc_UWord16 millisecondsOfData,
         const TickTime* playoutTS);
 
-    int32_t SetUpAudioEncoder();
+    WebRtc_Word32 SetUpAudioEncoder();
 
-    uint32_t _instanceID;
+    WebRtc_UWord32 _instanceID;
     FileFormats _fileFormat;
     MediaFile* _moduleFile;
 
@@ -96,7 +96,7 @@ private:
     CodecInst codec_info_;
     ACMAMRPackingFormat _amrFormat;
 
-    int8_t _audioBuffer[MAX_AUDIO_BUFFER_IN_BYTES];
+    WebRtc_Word8 _audioBuffer[MAX_AUDIO_BUFFER_IN_BYTES];
     AudioCoder _audioEncoder;
     Resampler _audioResampler;
 };
@@ -106,24 +106,24 @@ private:
 class AviRecorder : public FileRecorderImpl
 {
 public:
-    AviRecorder(uint32_t instanceID, FileFormats fileFormat);
+    AviRecorder(WebRtc_UWord32 instanceID, FileFormats fileFormat);
     virtual ~AviRecorder();
 
     // FileRecorder functions.
-    virtual int32_t StartRecordingVideoFile(
+    virtual WebRtc_Word32 StartRecordingVideoFile(
         const char* fileName,
         const CodecInst& audioCodecInst,
         const VideoCodec& videoCodecInst,
         ACMAMRPackingFormat amrFormat = AMRFileStorage,
         bool videoOnly = false);
-    virtual int32_t StopRecording();
-    virtual int32_t RecordVideoToFile(const I420VideoFrame& videoFrame);
+    virtual WebRtc_Word32 StopRecording();
+    virtual WebRtc_Word32 RecordVideoToFile(const I420VideoFrame& videoFrame);
 
 protected:
-    virtual int32_t WriteEncodedAudioData(
-        const int8_t*  audioBuffer,
-        uint16_t bufferLength,
-        uint16_t millisecondsOfData,
+    virtual WebRtc_Word32 WriteEncodedAudioData(
+        const WebRtc_Word8*  audioBuffer,
+        WebRtc_UWord16 bufferLength,
+        WebRtc_UWord16 millisecondsOfData,
         const TickTime* playoutTS);
 private:
     static bool Run(ThreadObj threadObj);
@@ -132,11 +132,11 @@ private:
     bool StartThread();
     bool StopThread();
 
-    int32_t EncodeAndWriteVideoToFile(I420VideoFrame& videoFrame);
-    int32_t ProcessAudio();
+    WebRtc_Word32 EncodeAndWriteVideoToFile(I420VideoFrame& videoFrame);
+    WebRtc_Word32 ProcessAudio();
 
-    int32_t CalcI420FrameSize() const;
-    int32_t SetUpVideoEncoder();
+    WebRtc_Word32 CalcI420FrameSize() const;
+    WebRtc_Word32 SetUpVideoEncoder();
 
     VideoCodec _videoCodecInst;
     bool _videoOnly;
@@ -148,15 +148,15 @@ private:
 
     FrameScaler* _frameScaler;
     VideoCoder* _videoEncoder;
-    int32_t _videoMaxPayloadSize;
+    WebRtc_Word32 _videoMaxPayloadSize;
     EncodedVideoData _videoEncodedData;
 
     ThreadWrapper* _thread;
     EventWrapper& _timeEvent;
     CriticalSectionWrapper* _critSec;
-    int64_t _writtenVideoFramesCounter;
-    int64_t _writtenAudioMS;
-    int64_t _writtenVideoMS;
+    WebRtc_Word64 _writtenVideoFramesCounter;
+    WebRtc_Word64 _writtenAudioMS;
+    WebRtc_Word64 _writtenVideoMS;
 };
 #endif // WEBRTC_MODULE_UTILITY_VIDEO
 } // namespace webrtc

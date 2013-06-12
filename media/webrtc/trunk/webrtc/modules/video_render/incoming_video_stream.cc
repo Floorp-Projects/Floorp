@@ -32,8 +32,8 @@
 
 namespace webrtc {
 
-IncomingVideoStream::IncomingVideoStream(const int32_t module_id,
-                                         const uint32_t stream_id)
+IncomingVideoStream::IncomingVideoStream(const WebRtc_Word32 module_id,
+                                         const WebRtc_UWord32 stream_id)
     : module_id_(module_id),
       stream_id_(stream_id),
       stream_critsect_(*CriticalSectionWrapper::CreateCriticalSection()),
@@ -77,7 +77,7 @@ IncomingVideoStream::~IncomingVideoStream() {
   delete &deliver_buffer_event_;
 }
 
-int32_t IncomingVideoStream::ChangeModuleId(const int32_t id) {
+WebRtc_Word32 IncomingVideoStream::ChangeModuleId(const WebRtc_Word32 id) {
   CriticalSectionScoped cs(&stream_critsect_);
   module_id_ = id;
   return 0;
@@ -88,8 +88,8 @@ VideoRenderCallback* IncomingVideoStream::ModuleCallback() {
   return this;
 }
 
-int32_t IncomingVideoStream::RenderFrame(const uint32_t stream_id,
-                                         I420VideoFrame& video_frame) {
+WebRtc_Word32 IncomingVideoStream::RenderFrame(const WebRtc_UWord32 stream_id,
+                                               I420VideoFrame& video_frame) {
   CriticalSectionScoped csS(&stream_critsect_);
   WEBRTC_TRACE(kTraceStream, kTraceVideoRenderer, module_id_,
                "%s for stream %d, render time: %u", __FUNCTION__, stream_id_,
@@ -121,11 +121,11 @@ int32_t IncomingVideoStream::RenderFrame(const uint32_t stream_id,
 
   // Rate statistics.
   num_frames_since_last_calculation_++;
-  int64_t now_ms = TickTime::MillisecondTimestamp();
+  WebRtc_Word64 now_ms = TickTime::MillisecondTimestamp();
   if (now_ms >= last_rate_calculation_time_ms_ + KFrameRatePeriodMs) {
     incoming_rate_ =
-        static_cast<uint32_t>(1000 * num_frames_since_last_calculation_ /
-                              (now_ms - last_rate_calculation_time_ms_));
+        static_cast<WebRtc_UWord32>(1000 * num_frames_since_last_calculation_ /
+                                    (now_ms - last_rate_calculation_time_ms_));
     num_frames_since_last_calculation_ = 0;
     last_rate_calculation_time_ms_ = now_ms;
   }
@@ -138,20 +138,20 @@ int32_t IncomingVideoStream::RenderFrame(const uint32_t stream_id,
   return 0;
 }
 
-int32_t IncomingVideoStream::SetStartImage(
+WebRtc_Word32 IncomingVideoStream::SetStartImage(
     const I420VideoFrame& video_frame) {
   CriticalSectionScoped csS(&thread_critsect_);
   return start_image_.CopyFrame(video_frame);
 }
 
-int32_t IncomingVideoStream::SetTimeoutImage(
-    const I420VideoFrame& video_frame, const uint32_t timeout) {
+WebRtc_Word32 IncomingVideoStream::SetTimeoutImage(
+    const I420VideoFrame& video_frame, const WebRtc_UWord32 timeout) {
   CriticalSectionScoped csS(&thread_critsect_);
   timeout_time_ = timeout;
   return timeout_image_.CopyFrame(video_frame);
 }
 
-int32_t IncomingVideoStream::SetRenderCallback(
+WebRtc_Word32 IncomingVideoStream::SetRenderCallback(
     VideoRenderCallback* render_callback) {
   CriticalSectionScoped cs(&stream_critsect_);
 
@@ -162,9 +162,9 @@ int32_t IncomingVideoStream::SetRenderCallback(
   return 0;
 }
 
-int32_t IncomingVideoStream::EnableMirroring(const bool enable,
-                                             const bool mirror_x_axis,
-                                             const bool mirror_y_axis) {
+WebRtc_Word32 IncomingVideoStream::EnableMirroring(const bool enable,
+                                                   const bool mirror_x_axis,
+                                                   const bool mirror_y_axis) {
   CriticalSectionScoped cs(&stream_critsect_);
   mirror_frames_enabled_ = enable;
   mirroring_.mirror_x_axis = mirror_x_axis;
@@ -173,8 +173,8 @@ int32_t IncomingVideoStream::EnableMirroring(const bool enable,
   return 0;
 }
 
-int32_t IncomingVideoStream::SetExpectedRenderDelay(
-    int32_t delay_ms) {
+WebRtc_Word32 IncomingVideoStream::SetExpectedRenderDelay(
+    WebRtc_Word32 delay_ms) {
   CriticalSectionScoped csS(&stream_critsect_);
   if (running_) {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
@@ -185,7 +185,7 @@ int32_t IncomingVideoStream::SetExpectedRenderDelay(
   return render_buffers_.SetRenderDelay(delay_ms);
 }
 
-int32_t IncomingVideoStream::SetExternalCallback(
+WebRtc_Word32 IncomingVideoStream::SetExternalCallback(
     VideoRenderCallback* external_callback) {
   CriticalSectionScoped cs(&stream_critsect_);
   WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
@@ -198,7 +198,7 @@ int32_t IncomingVideoStream::SetExternalCallback(
   return 0;
 }
 
-int32_t IncomingVideoStream::Start() {
+WebRtc_Word32 IncomingVideoStream::Start() {
   CriticalSectionScoped csS(&stream_critsect_);
   WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
                "%s for stream %d", __FUNCTION__, stream_id_);
@@ -235,7 +235,7 @@ int32_t IncomingVideoStream::Start() {
   return 0;
 }
 
-int32_t IncomingVideoStream::Stop() {
+WebRtc_Word32 IncomingVideoStream::Stop() {
   CriticalSectionScoped cs_stream(&stream_critsect_);
   WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, module_id_,
                "%s for stream %d", __FUNCTION__, stream_id_);
@@ -269,19 +269,19 @@ int32_t IncomingVideoStream::Stop() {
   return 0;
 }
 
-int32_t IncomingVideoStream::Reset() {
+WebRtc_Word32 IncomingVideoStream::Reset() {
   CriticalSectionScoped cs_stream(&stream_critsect_);
   CriticalSectionScoped cs_buffer(&buffer_critsect_);
   render_buffers_.ReleaseAllFrames();
   return 0;
 }
 
-uint32_t IncomingVideoStream::StreamId() const {
+WebRtc_UWord32 IncomingVideoStream::StreamId() const {
   CriticalSectionScoped cs_stream(&stream_critsect_);
   return stream_id_;
 }
 
-uint32_t IncomingVideoStream::IncomingRate() const {
+WebRtc_UWord32 IncomingVideoStream::IncomingRate() const {
   CriticalSectionScoped cs(&stream_critsect_);
   return incoming_rate_;
 }
@@ -304,7 +304,7 @@ bool IncomingVideoStream::IncomingVideoStreamProcess() {
     // Get a new frame to render and the time for the frame after this one.
     buffer_critsect_.Enter();
     frame_to_render = render_buffers_.FrameToRender();
-    uint32_t wait_time = render_buffers_.TimeToNextFrameRelease();
+    WebRtc_UWord32 wait_time = render_buffers_.TimeToNextFrameRelease();
     buffer_critsect_.Leave();
 
     // Set timer for next frame to render.
@@ -362,7 +362,7 @@ bool IncomingVideoStream::IncomingVideoStreamProcess() {
   return true;
 }
 
-int32_t IncomingVideoStream::GetLastRenderedFrame(
+WebRtc_Word32 IncomingVideoStream::GetLastRenderedFrame(
     I420VideoFrame& video_frame) const {
   CriticalSectionScoped cs(&buffer_critsect_);
   return video_frame.CopyFrame(last_rendered_frame_);

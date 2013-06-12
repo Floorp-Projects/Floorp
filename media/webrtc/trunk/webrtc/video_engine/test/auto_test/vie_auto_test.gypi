@@ -20,7 +20,6 @@
         '<(DEPTH)/third_party/google-gflags/google-gflags.gyp:google-gflags',
         '<(webrtc_root)/test/metrics.gyp:metrics',
         '<(webrtc_root)/test/test.gyp:test_support',
-        '<(webrtc_root)/test/channel_transport.gyp:channel_transport',
         '<(webrtc_root)/test/libtest/libtest.gyp:libtest',
         'video_engine_core',
         'libvietest',
@@ -82,6 +81,7 @@
         'source/vie_autotest_image_process.cc',
         'source/vie_autotest_loopback.cc',
         'source/vie_autotest_main.cc',
+        'source/vie_autotest_network.cc',
         'source/vie_autotest_render.cc',
         'source/vie_autotest_record.cc',
         'source/vie_autotest_rtp_rtcp.cc',
@@ -130,10 +130,12 @@
           },
         }],
       ], # conditions
-      # Disable warnings to enable Win64 build, issue 1323.
-      'msvs_disabled_warnings': [
-        4267,  # size_t to int truncation.
-      ],
     },
   ],
 }
+
+# Local Variables:
+# tab-width:2
+# indent-tabs-mode:nil
+# End:
+# vim: set expandtab tabstop=2 shiftwidth=2:

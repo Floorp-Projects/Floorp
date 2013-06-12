@@ -28,9 +28,9 @@
 /* Scratch usage:
 
  Type	        Name                size    startpos    endpos
- int16_t  pw16_downSampSpeech 110     0           109
- int32_t  pw32_corr           2*50    110         209
- int16_t  pw16_corr           50      0           49
+ WebRtc_Word16  pw16_downSampSpeech 110     0           109
+ WebRtc_Word32  pw32_corr           2*50    110         209
+ WebRtc_Word16  pw16_corr           50      0           49
 
  Total: 110+2*50
  */
@@ -67,45 +67,45 @@
 
 int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
 #ifdef SCRATCH
-                           int16_t *pw16_scratchPtr,
+                           WebRtc_Word16 *pw16_scratchPtr,
 #endif
-                           const int16_t *pw16_decoded, int len,
-                           int16_t *pw16_outData, int16_t *pw16_len,
-                           int16_t BGNonly)
+                           const WebRtc_Word16 *pw16_decoded, int len,
+                           WebRtc_Word16 *pw16_outData, WebRtc_Word16 *pw16_len,
+                           WebRtc_Word16 BGNonly)
 {
 
 #ifdef SCRATCH
     /* Use scratch memory for internal temporary vectors */
-    int16_t *pw16_downSampSpeech = pw16_scratchPtr + SCRATCH_PW16_DS_SPEECH;
-    int32_t *pw32_corr = (int32_t*) (pw16_scratchPtr + SCRATCH_PW32_CORR);
-    int16_t *pw16_corr = pw16_scratchPtr + SCRATCH_PW16_CORR;
+    WebRtc_Word16 *pw16_downSampSpeech = pw16_scratchPtr + SCRATCH_PW16_DS_SPEECH;
+    WebRtc_Word32 *pw32_corr = (WebRtc_Word32*) (pw16_scratchPtr + SCRATCH_PW32_CORR);
+    WebRtc_Word16 *pw16_corr = pw16_scratchPtr + SCRATCH_PW16_CORR;
 #else
     /* Allocate memory for temporary vectors */
-    int16_t pw16_downSampSpeech[ACCELERATE_DOWNSAMPLED_LEN];
-    int32_t pw32_corr[ACCELERATE_CORR_LEN];
-    int16_t pw16_corr[ACCELERATE_CORR_LEN];
+    WebRtc_Word16 pw16_downSampSpeech[ACCELERATE_DOWNSAMPLED_LEN];
+    WebRtc_Word32 pw32_corr[ACCELERATE_CORR_LEN];
+    WebRtc_Word16 pw16_corr[ACCELERATE_CORR_LEN];
 #endif
-    int16_t w16_decodedMax = 0;
-    int16_t w16_tmp;
-    int16_t w16_tmp2;
-    int32_t w32_tmp;
-    int32_t w32_tmp2;
+    WebRtc_Word16 w16_decodedMax = 0;
+    WebRtc_Word16 w16_tmp;
+    WebRtc_Word16 w16_tmp2;
+    WebRtc_Word32 w32_tmp;
+    WebRtc_Word32 w32_tmp2;
 
-    const int16_t w16_startLag = ACCELERATE_MIN_LAG;
-    const int16_t w16_endLag = ACCELERATE_MAX_LAG;
-    const int16_t w16_corrLen = ACCELERATE_CORR_LEN;
-    const int16_t *pw16_vec1, *pw16_vec2;
-    int16_t *pw16_vectmp;
-    int16_t w16_inc, w16_startfact;
-    int16_t w16_bestIndex, w16_bestVal;
-    int16_t w16_VAD = 1;
-    int16_t fsMult;
-    int16_t fsMult120;
-    int32_t w32_en1, w32_en2, w32_cc;
-    int16_t w16_en1, w16_en2;
-    int16_t w16_en1Scale, w16_en2Scale;
-    int16_t w16_sqrtEn1En2;
-    int16_t w16_bestCorr = 0;
+    const WebRtc_Word16 w16_startLag = ACCELERATE_MIN_LAG;
+    const WebRtc_Word16 w16_endLag = ACCELERATE_MAX_LAG;
+    const WebRtc_Word16 w16_corrLen = ACCELERATE_CORR_LEN;
+    const WebRtc_Word16 *pw16_vec1, *pw16_vec2;
+    WebRtc_Word16 *pw16_vectmp;
+    WebRtc_Word16 w16_inc, w16_startfact;
+    WebRtc_Word16 w16_bestIndex, w16_bestVal;
+    WebRtc_Word16 w16_VAD = 1;
+    WebRtc_Word16 fsMult;
+    WebRtc_Word16 fsMult120;
+    WebRtc_Word32 w32_en1, w32_en2, w32_cc;
+    WebRtc_Word16 w16_en1, w16_en2;
+    WebRtc_Word16 w16_en1Scale, w16_en2Scale;
+    WebRtc_Word16 w16_sqrtEn1En2;
+    WebRtc_Word16 w16_bestCorr = 0;
     int ok;
 
 #ifdef NETEQ_STEREO
@@ -115,20 +115,20 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
     fsMult = WebRtcNetEQ_CalcFsMult(inst->fs); /* Calculate fs/8000 */
 
     /* Pre-calculate common multiplication with fsMult */
-    fsMult120 = (int16_t) WEBRTC_SPL_MUL_16_16(fsMult, 120); /* 15 ms */
+    fsMult120 = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16(fsMult, 120); /* 15 ms */
 
     inst->ExpandInst.w16_consecExp = 0; /* Last was not expand any more */
 
     /* Sanity check for len variable; must be (almost) 30 ms 
      (120*fsMult + max(bestIndex)) */
-    if (len < (int16_t) WEBRTC_SPL_MUL_16_16((120 + 119), fsMult))
+    if (len < (WebRtc_Word16) WEBRTC_SPL_MUL_16_16((120 + 119), fsMult))
     {
         /* Length of decoded data too short */
         inst->w16_mode = MODE_UNSUCCESS_ACCELERATE;
         *pw16_len = len;
 
         /* simply move all data from decoded to outData */
-        WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (int16_t) len);
+        WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (WebRtc_Word16) len);
 
         return NETEQ_OTHER_ERROR;
     }
@@ -150,7 +150,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
             *pw16_len = len;
 
             /* simply move all data from decoded to outData */
-            WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (int16_t) len);
+            WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (WebRtc_Word16) len);
 
             return NETEQ_OTHER_ERROR;
         }
@@ -166,8 +166,6 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
 
         /* update statistics */
         inst->statInst.accelerateLength += w16_bestIndex;
-        /* Short-term activity statistics. */
-        inst->activity_stats.accelerate_bgn_samples += w16_bestIndex;
 
         return 0;
     } /* end of special code for BGN mode */
@@ -194,7 +192,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
         /****************************************************************/
 
         /* find maximum absolute value */
-        w16_decodedMax = WebRtcSpl_MaxAbsValueW16(pw16_decoded, (int16_t) len);
+        w16_decodedMax = WebRtcSpl_MaxAbsValueW16(pw16_decoded, (WebRtc_Word16) len);
 
         /* downsample the decoded speech to 4 kHz */
         ok = WebRtcNetEQ_DownSampleTo4kHz(pw16_decoded, len, inst->fs, pw16_downSampSpeech,
@@ -205,7 +203,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
             inst->w16_mode = MODE_UNSUCCESS_ACCELERATE;
             *pw16_len = len;
             /* simply move all data from decoded to outData */
-            WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (int16_t) len);
+            WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (WebRtc_Word16) len);
             return NETEQ_OTHER_ERROR;
         }
 
@@ -220,9 +218,9 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
         WebRtcNetEQ_CrossCorr(
             pw32_corr, &pw16_downSampSpeech[w16_endLag],
             &pw16_downSampSpeech[w16_endLag - w16_startLag], w16_corrLen,
-            (int16_t) (w16_endLag - w16_startLag), w16_tmp, -1);
+            (WebRtc_Word16) (w16_endLag - w16_startLag), w16_tmp, -1);
 
-        /* Normalize correlation to 14 bits and put in a int16_t vector */
+        /* Normalize correlation to 14 bits and put in a WebRtc_Word16 vector */
         w32_tmp = WebRtcSpl_MaxAbsValueW32(pw32_corr, w16_corrLen);
         w16_tmp = 17 - WebRtcSpl_NormW32(w32_tmp);
         w16_tmp = WEBRTC_SPL_MAX(0, w16_tmp);
@@ -235,7 +233,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
     if ((msInfo->msMode == NETEQ_MASTER) || (msInfo->msMode == NETEQ_MONO))
     {
         /* Find the strongest correlation peak by using the parabolic fit method */
-        WebRtcNetEQ_PeakDetection(pw16_corr, (int16_t) w16_corrLen, 1, fsMult,
+        WebRtcNetEQ_PeakDetection(pw16_corr, (WebRtc_Word16) w16_corrLen, 1, fsMult,
             &w16_bestIndex, &w16_bestVal);
         /* 0 <= bestIndex <= (2*corrLen - 1)*fsMult = 99*fsMult */
 
@@ -267,7 +265,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
 #else /* NETEQ_STEREO */
 
     /* Find the strongest correlation peak by using the parabolic fit method */
-    WebRtcNetEQ_PeakDetection(pw16_corr, (int16_t) w16_corrLen, 1, fsMult,
+    WebRtcNetEQ_PeakDetection(pw16_corr, (WebRtc_Word16) w16_corrLen, 1, fsMult,
         &w16_bestIndex, &w16_bestVal);
     /* 0 <= bestIndex <= (2*corrLen - 1)*fsMult = 99*fsMult */
 
@@ -306,13 +304,13 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
         pw16_vec2 = &pw16_decoded[fsMult120];
 
         /* Calculate energies for vec1 and vec2 */
-        w32_en1 = WebRtcNetEQ_DotW16W16((int16_t*) pw16_vec1,
-            (int16_t*) pw16_vec1, w16_bestIndex, w16_tmp);
-        w32_en2 = WebRtcNetEQ_DotW16W16((int16_t*) pw16_vec2,
-            (int16_t*) pw16_vec2, w16_bestIndex, w16_tmp);
+        w32_en1 = WebRtcNetEQ_DotW16W16((WebRtc_Word16*) pw16_vec1,
+            (WebRtc_Word16*) pw16_vec1, w16_bestIndex, w16_tmp);
+        w32_en2 = WebRtcNetEQ_DotW16W16((WebRtc_Word16*) pw16_vec2,
+            (WebRtc_Word16*) pw16_vec2, w16_bestIndex, w16_tmp);
 
         /* Calculate cross-correlation at the found lag */
-        w32_cc = WebRtcNetEQ_DotW16W16((int16_t*) pw16_vec1, (int16_t*) pw16_vec2,
+        w32_cc = WebRtcNetEQ_DotW16W16((WebRtc_Word16*) pw16_vec1, (WebRtc_Word16*) pw16_vec2,
             w16_bestIndex, w16_tmp);
 
         /* Check VAD constraint 
@@ -330,7 +328,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
         w16_tmp2 = 16 - WebRtcSpl_NormW32(w32_tmp2);
         w16_tmp2 = WEBRTC_SPL_MAX(0, w16_tmp2);
         w32_tmp = WEBRTC_SPL_RSHIFT_W32(w32_tmp, w16_tmp2);
-        w16_tmp2 = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_tmp2, w16_tmp2);
+        w16_tmp2 = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_tmp2, w16_tmp2);
         w32_tmp2 = WEBRTC_SPL_MUL_16_16(w16_bestIndex, w16_tmp2);
 
         /* Scale w32_tmp properly before comparing with w32_tmp2 */
@@ -338,7 +336,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
         if (WebRtcSpl_NormW32(w32_tmp) < WEBRTC_SPL_LSHIFT_W32(w16_tmp,1))
         {
             /* Cannot scale only w32_tmp, must scale w32_temp2 too */
-            int16_t tempshift = WebRtcSpl_NormW32(w32_tmp);
+            WebRtc_Word16 tempshift = WebRtcSpl_NormW32(w32_tmp);
             w32_tmp = WEBRTC_SPL_LSHIFT_W32(w32_tmp, tempshift);
             w32_tmp2 = WEBRTC_SPL_RSHIFT_W32(w32_tmp2,
                 WEBRTC_SPL_LSHIFT_W32(w16_tmp,1) - tempshift);
@@ -374,21 +372,21 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
                 w16_en1Scale += 1;
             }
 
-            /* Convert energies to int16_t */
-            w16_en1 = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_en1, w16_en1Scale);
-            w16_en2 = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_en2, w16_en2Scale);
+            /* Convert energies to WebRtc_Word16 */
+            w16_en1 = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_en1, w16_en1Scale);
+            w16_en2 = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_en2, w16_en2Scale);
 
             /* Calculate energy product */
             w32_tmp = WEBRTC_SPL_MUL_16_16(w16_en1, w16_en2);
 
             /* Calculate square-root of energy product */
-            w16_sqrtEn1En2 = (int16_t) WebRtcSpl_SqrtFloor(w32_tmp);
+            w16_sqrtEn1En2 = (WebRtc_Word16) WebRtcSpl_SqrtFloor(w32_tmp);
 
             /* Calculate cc/sqrt(en1*en2) in Q14 */
             w16_tmp = 14 - WEBRTC_SPL_RSHIFT_W16(w16_en1Scale+w16_en2Scale, 1);
             w32_cc = WEBRTC_SPL_SHIFT_W32(w32_cc, w16_tmp);
             w32_cc = WEBRTC_SPL_MAX(0, w32_cc); /* Don't divide with negative number */
-            w16_bestCorr = (int16_t) WebRtcSpl_DivW32W16(w32_cc, w16_sqrtEn1En2);
+            w16_bestCorr = (WebRtc_Word16) WebRtcSpl_DivW32W16(w32_cc, w16_sqrtEn1En2);
             w16_bestCorr = WEBRTC_SPL_MIN(16384, w16_bestCorr); /* set maximum to 1.0 */
         }
 
@@ -416,8 +414,8 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
          * Calculate cross-fading slope so that the fading factor goes from
          * 1 (16384 in Q14) to 0 in one pitch period (bestIndex).
          */
-        w16_inc = (int16_t) WebRtcSpl_DivW32W16((int32_t) 16384,
-            (int16_t) (w16_bestIndex + 1)); /* in Q14 */
+        w16_inc = (WebRtc_Word16) WebRtcSpl_DivW32W16((WebRtc_Word32) 16384,
+            (WebRtc_Word16) (w16_bestIndex + 1)); /* in Q14 */
 
         /* Initiate fading factor */
         w16_startfact = 16384 - w16_inc;
@@ -434,14 +432,14 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
         /* Generate interpolated part of length bestIndex (1 pitch period) */
         pw16_vectmp = pw16_outData + w16_tmp; /* start of interpolation output */
         /* Reuse mixing function from Expand */
-        WebRtcNetEQ_MixVoiceUnvoice(pw16_vectmp, (int16_t*) pw16_vec1,
-            (int16_t*) pw16_vec2, &w16_startfact, w16_inc, w16_bestIndex);
+        WebRtcNetEQ_MixVoiceUnvoice(pw16_vectmp, (WebRtc_Word16*) pw16_vec1,
+            (WebRtc_Word16*) pw16_vec2, &w16_startfact, w16_inc, w16_bestIndex);
 
         /* Move the last part (also unmodified) */
         /* Take from decoded at 15 ms + 1 pitch period */
         pw16_vec2 = &pw16_decoded[fsMult120 + w16_bestIndex];
         WEBRTC_SPL_MEMMOVE_W16(&pw16_outData[fsMult120], pw16_vec2,
-            (int16_t) (len - fsMult120 - w16_bestIndex));
+            (WebRtc_Word16) (len - fsMult120 - w16_bestIndex));
 
         /* Set the mode flag */
         if (w16_VAD)
@@ -458,8 +456,6 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
 
         /* Update in-call statistics */
         inst->statInst.accelerateLength += w16_bestIndex;
-        /* Short-term activity statistics. */
-        inst->activity_stats.accelarate_normal_samples += w16_bestIndex;
 
         return 0;
     }
@@ -482,7 +478,7 @@ int WebRtcNetEQ_Accelerate(DSPInst_t *inst,
         *pw16_len = len;
 
         /* Simply move all data from decoded to outData */
-        WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (int16_t) len);
+        WEBRTC_SPL_MEMMOVE_W16(pw16_outData, pw16_decoded, (WebRtc_Word16) len);
 
         return 0;
     }

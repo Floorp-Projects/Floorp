@@ -26,8 +26,8 @@ class VCMShortMaxSample
 public:
     VCMShortMaxSample() : shortMax(0), timeMs(-1) {};
 
-    int32_t     shortMax;
-    int64_t     timeMs;
+    WebRtc_Word32     shortMax;
+    WebRtc_Word64     timeMs;
 };
 
 class VCMCodecTimer
@@ -36,22 +36,22 @@ public:
     VCMCodecTimer();
 
     // Updates and returns the max filtered decode time.
-    int32_t StopTimer(int64_t startTimeMs, int64_t nowMs);
+    WebRtc_Word32 StopTimer(WebRtc_Word64 startTimeMs, WebRtc_Word64 nowMs);
 
     // Empty the list of timers.
     void Reset();
 
     // Get the required decode time in ms.
-    int32_t RequiredDecodeTimeMs(FrameType frameType) const;
+    WebRtc_Word32 RequiredDecodeTimeMs(FrameType frameType) const;
 
 private:
-    void UpdateMaxHistory(int32_t decodeTime, int64_t now);
-    void MaxFilter(int32_t newTime, int64_t nowMs);
-    void ProcessHistory(int64_t nowMs);
+    void UpdateMaxHistory(WebRtc_Word32 decodeTime, WebRtc_Word64 now);
+    void MaxFilter(WebRtc_Word32 newTime, WebRtc_Word64 nowMs);
+    void ProcessHistory(WebRtc_Word64 nowMs);
 
-    int32_t                     _filteredMax;
+    WebRtc_Word32                     _filteredMax;
     bool                              _firstDecodeTime;
-    int32_t                     _shortMax;
+    WebRtc_Word32                     _shortMax;
     VCMShortMaxSample                 _history[MAX_HISTORY_SIZE];
 
 };

@@ -31,12 +31,12 @@
 #endif
 
 // Set this constant to 0 to disable latency reading
-const uint32_t WEBRTC_PA_REPORT_LATENCY = 1;
+const WebRtc_UWord32 WEBRTC_PA_REPORT_LATENCY = 1;
 
 // Constants from implementation by Tristan Schmelcher [tschmelcher@google.com]
 
 // First PulseAudio protocol version that supports PA_STREAM_ADJUST_LATENCY.
-const uint32_t WEBRTC_PA_ADJUST_LATENCY_PROTOCOL_VERSION = 13;
+const WebRtc_UWord32 WEBRTC_PA_ADJUST_LATENCY_PROTOCOL_VERSION = 13;
 
 // Some timing constants for optimal operation. See
 // https://tango.0pointer.de/pipermail/pulseaudio-discuss/2008-January/001170.html
@@ -50,17 +50,17 @@ const uint32_t WEBRTC_PA_ADJUST_LATENCY_PROTOCOL_VERSION = 13;
 // also enforce a sane minimum at start-up time. Anything lower would be
 // virtually guaranteed to underflow at least once, so there's no point in
 // allowing lower latencies.
-const uint32_t WEBRTC_PA_PLAYBACK_LATENCY_MINIMUM_MSECS = 20;
+const WebRtc_UWord32 WEBRTC_PA_PLAYBACK_LATENCY_MINIMUM_MSECS = 20;
 
 // Every time a playback stream underflows, we will reconfigure it with target
 // latency that is greater by this amount.
-const uint32_t WEBRTC_PA_PLAYBACK_LATENCY_INCREMENT_MSECS = 20;
+const WebRtc_UWord32 WEBRTC_PA_PLAYBACK_LATENCY_INCREMENT_MSECS = 20;
 
 // We also need to configure a suitable request size. Too small and we'd burn
 // CPU from the overhead of transfering small amounts of data at once. Too large
 // and the amount of data remaining in the buffer right before refilling it
 // would be a buffer underflow risk. We set it to half of the buffer size.
-const uint32_t WEBRTC_PA_PLAYBACK_REQUEST_FACTOR = 2;
+const WebRtc_UWord32 WEBRTC_PA_PLAYBACK_REQUEST_FACTOR = 2;
 
 // Capture.
 
@@ -69,22 +69,22 @@ const uint32_t WEBRTC_PA_PLAYBACK_REQUEST_FACTOR = 2;
 // a recommended value that we use for the kLowLatency constant (but if the user
 // explicitly requests something lower then we will honour it).
 // 1ms takes about 6-7% CPU. 5ms takes about 5%. 10ms takes about 4.x%.
-const uint32_t WEBRTC_PA_LOW_CAPTURE_LATENCY_MSECS = 10;
+const WebRtc_UWord32 WEBRTC_PA_LOW_CAPTURE_LATENCY_MSECS = 10;
 
 // There is a round-trip delay to ack the data to the server, so the
 // server-side buffer needs extra space to prevent buffer overflow. 20ms is
 // sufficient, but there is no penalty to making it bigger, so we make it huge.
 // (750ms is libpulse's default value for the _total_ buffer size in the
 // kNoLatencyRequirements case.)
-const uint32_t WEBRTC_PA_CAPTURE_BUFFER_EXTRA_MSECS = 750;
+const WebRtc_UWord32 WEBRTC_PA_CAPTURE_BUFFER_EXTRA_MSECS = 750;
 
-const uint32_t WEBRTC_PA_MSECS_PER_SEC = 1000;
+const WebRtc_UWord32 WEBRTC_PA_MSECS_PER_SEC = 1000;
 
 // Init _configuredLatencyRec/Play to this value to disable latency requirements
-const int32_t WEBRTC_PA_NO_LATENCY_REQUIREMENTS = -1;
+const WebRtc_Word32 WEBRTC_PA_NO_LATENCY_REQUIREMENTS = -1;
 
 // Set this const to 1 to account for peeked and used data in latency calculation
-const uint32_t WEBRTC_PA_CAPTURE_BUFFER_LATENCY_ADJUSTMENT = 0;
+const WebRtc_UWord32 WEBRTC_PA_CAPTURE_BUFFER_LATENCY_ADJUSTMENT = 0;
 
 namespace webrtc
 {
@@ -94,124 +94,125 @@ class ThreadWrapper;
 class AudioDeviceLinuxPulse: public AudioDeviceGeneric
 {
 public:
-    AudioDeviceLinuxPulse(const int32_t id);
+    AudioDeviceLinuxPulse(const WebRtc_Word32 id);
     ~AudioDeviceLinuxPulse();
 
     static bool PulseAudioIsSupported();
 
     // Retrieve the currently utilized audio layer
-    virtual int32_t
+    virtual WebRtc_Word32
         ActiveAudioLayer(AudioDeviceModule::AudioLayer& audioLayer) const;
 
     // Main initializaton and termination
-    virtual int32_t Init();
-    virtual int32_t Terminate();
+    virtual WebRtc_Word32 Init();
+    virtual WebRtc_Word32 Terminate();
     virtual bool Initialized() const;
 
     // Device enumeration
-    virtual int16_t PlayoutDevices();
-    virtual int16_t RecordingDevices();
-    virtual int32_t PlayoutDeviceName(
-        uint16_t index,
+    virtual WebRtc_Word16 PlayoutDevices();
+    virtual WebRtc_Word16 RecordingDevices();
+    virtual WebRtc_Word32 PlayoutDeviceName(
+        WebRtc_UWord16 index,
         char name[kAdmMaxDeviceNameSize],
         char guid[kAdmMaxGuidSize]);
-    virtual int32_t RecordingDeviceName(
-        uint16_t index,
+    virtual WebRtc_Word32 RecordingDeviceName(
+        WebRtc_UWord16 index,
         char name[kAdmMaxDeviceNameSize],
         char guid[kAdmMaxGuidSize]);
 
     // Device selection
-    virtual int32_t SetPlayoutDevice(uint16_t index);
-    virtual int32_t SetPlayoutDevice(
+    virtual WebRtc_Word32 SetPlayoutDevice(WebRtc_UWord16 index);
+    virtual WebRtc_Word32 SetPlayoutDevice(
         AudioDeviceModule::WindowsDeviceType device);
-    virtual int32_t SetRecordingDevice(uint16_t index);
-    virtual int32_t SetRecordingDevice(
+    virtual WebRtc_Word32 SetRecordingDevice(WebRtc_UWord16 index);
+    virtual WebRtc_Word32 SetRecordingDevice(
         AudioDeviceModule::WindowsDeviceType device);
 
     // Audio transport initialization
-    virtual int32_t PlayoutIsAvailable(bool& available);
-    virtual int32_t InitPlayout();
+    virtual WebRtc_Word32 PlayoutIsAvailable(bool& available);
+    virtual WebRtc_Word32 InitPlayout();
     virtual bool PlayoutIsInitialized() const;
-    virtual int32_t RecordingIsAvailable(bool& available);
-    virtual int32_t InitRecording();
+    virtual WebRtc_Word32 RecordingIsAvailable(bool& available);
+    virtual WebRtc_Word32 InitRecording();
     virtual bool RecordingIsInitialized() const;
 
     // Audio transport control
-    virtual int32_t StartPlayout();
-    virtual int32_t StopPlayout();
+    virtual WebRtc_Word32 StartPlayout();
+    virtual WebRtc_Word32 StopPlayout();
     virtual bool Playing() const;
-    virtual int32_t StartRecording();
-    virtual int32_t StopRecording();
+    virtual WebRtc_Word32 StartRecording();
+    virtual WebRtc_Word32 StopRecording();
     virtual bool Recording() const;
 
     // Microphone Automatic Gain Control (AGC)
-    virtual int32_t SetAGC(bool enable);
+    virtual WebRtc_Word32 SetAGC(bool enable);
     virtual bool AGC() const;
 
     // Volume control based on the Windows Wave API (Windows only)
-    virtual int32_t SetWaveOutVolume(uint16_t volumeLeft, uint16_t volumeRight);
-    virtual int32_t WaveOutVolume(uint16_t& volumeLeft,
-                                  uint16_t& volumeRight) const;
+    virtual WebRtc_Word32 SetWaveOutVolume(WebRtc_UWord16 volumeLeft,
+                                           WebRtc_UWord16 volumeRight);
+    virtual WebRtc_Word32 WaveOutVolume(WebRtc_UWord16& volumeLeft,
+                                        WebRtc_UWord16& volumeRight) const;
 
     // Audio mixer initialization
-    virtual int32_t SpeakerIsAvailable(bool& available);
-    virtual int32_t InitSpeaker();
+    virtual WebRtc_Word32 SpeakerIsAvailable(bool& available);
+    virtual WebRtc_Word32 InitSpeaker();
     virtual bool SpeakerIsInitialized() const;
-    virtual int32_t MicrophoneIsAvailable(bool& available);
-    virtual int32_t InitMicrophone();
+    virtual WebRtc_Word32 MicrophoneIsAvailable(bool& available);
+    virtual WebRtc_Word32 InitMicrophone();
     virtual bool MicrophoneIsInitialized() const;
 
     // Speaker volume controls
-    virtual int32_t SpeakerVolumeIsAvailable(bool& available);
-    virtual int32_t SetSpeakerVolume(uint32_t volume);
-    virtual int32_t SpeakerVolume(uint32_t& volume) const;
-    virtual int32_t MaxSpeakerVolume(uint32_t& maxVolume) const;
-    virtual int32_t MinSpeakerVolume(uint32_t& minVolume) const;
-    virtual int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const;
+    virtual WebRtc_Word32 SpeakerVolumeIsAvailable(bool& available);
+    virtual WebRtc_Word32 SetSpeakerVolume(WebRtc_UWord32 volume);
+    virtual WebRtc_Word32 SpeakerVolume(WebRtc_UWord32& volume) const;
+    virtual WebRtc_Word32 MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const;
+    virtual WebRtc_Word32 MinSpeakerVolume(WebRtc_UWord32& minVolume) const;
+    virtual WebRtc_Word32 SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) const;
 
     // Microphone volume controls
-    virtual int32_t MicrophoneVolumeIsAvailable(bool& available);
-    virtual int32_t SetMicrophoneVolume(uint32_t volume);
-    virtual int32_t MicrophoneVolume(uint32_t& volume) const;
-    virtual int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const;
-    virtual int32_t MinMicrophoneVolume(uint32_t& minVolume) const;
-    virtual int32_t MicrophoneVolumeStepSize(
-        uint16_t& stepSize) const;
+    virtual WebRtc_Word32 MicrophoneVolumeIsAvailable(bool& available);
+    virtual WebRtc_Word32 SetMicrophoneVolume(WebRtc_UWord32 volume);
+    virtual WebRtc_Word32 MicrophoneVolume(WebRtc_UWord32& volume) const;
+    virtual WebRtc_Word32 MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) const;
+    virtual WebRtc_Word32 MinMicrophoneVolume(WebRtc_UWord32& minVolume) const;
+    virtual WebRtc_Word32 MicrophoneVolumeStepSize(
+        WebRtc_UWord16& stepSize) const;
 
     // Speaker mute control
-    virtual int32_t SpeakerMuteIsAvailable(bool& available);
-    virtual int32_t SetSpeakerMute(bool enable);
-    virtual int32_t SpeakerMute(bool& enabled) const;
+    virtual WebRtc_Word32 SpeakerMuteIsAvailable(bool& available);
+    virtual WebRtc_Word32 SetSpeakerMute(bool enable);
+    virtual WebRtc_Word32 SpeakerMute(bool& enabled) const;
 
     // Microphone mute control
-    virtual int32_t MicrophoneMuteIsAvailable(bool& available);
-    virtual int32_t SetMicrophoneMute(bool enable);
-    virtual int32_t MicrophoneMute(bool& enabled) const;
+    virtual WebRtc_Word32 MicrophoneMuteIsAvailable(bool& available);
+    virtual WebRtc_Word32 SetMicrophoneMute(bool enable);
+    virtual WebRtc_Word32 MicrophoneMute(bool& enabled) const;
 
     // Microphone boost control
-    virtual int32_t MicrophoneBoostIsAvailable(bool& available);
-    virtual int32_t SetMicrophoneBoost(bool enable);
-    virtual int32_t MicrophoneBoost(bool& enabled) const;
+    virtual WebRtc_Word32 MicrophoneBoostIsAvailable(bool& available);
+    virtual WebRtc_Word32 SetMicrophoneBoost(bool enable);
+    virtual WebRtc_Word32 MicrophoneBoost(bool& enabled) const;
 
     // Stereo support
-    virtual int32_t StereoPlayoutIsAvailable(bool& available);
-    virtual int32_t SetStereoPlayout(bool enable);
-    virtual int32_t StereoPlayout(bool& enabled) const;
-    virtual int32_t StereoRecordingIsAvailable(bool& available);
-    virtual int32_t SetStereoRecording(bool enable);
-    virtual int32_t StereoRecording(bool& enabled) const;
+    virtual WebRtc_Word32 StereoPlayoutIsAvailable(bool& available);
+    virtual WebRtc_Word32 SetStereoPlayout(bool enable);
+    virtual WebRtc_Word32 StereoPlayout(bool& enabled) const;
+    virtual WebRtc_Word32 StereoRecordingIsAvailable(bool& available);
+    virtual WebRtc_Word32 SetStereoRecording(bool enable);
+    virtual WebRtc_Word32 StereoRecording(bool& enabled) const;
 
     // Delay information and control
-    virtual int32_t
+    virtual WebRtc_Word32
         SetPlayoutBuffer(const AudioDeviceModule::BufferType type,
-                         uint16_t sizeMS);
-    virtual int32_t PlayoutBuffer(AudioDeviceModule::BufferType& type,
-                                  uint16_t& sizeMS) const;
-    virtual int32_t PlayoutDelay(uint16_t& delayMS) const;
-    virtual int32_t RecordingDelay(uint16_t& delayMS) const;
+                         WebRtc_UWord16 sizeMS);
+    virtual WebRtc_Word32 PlayoutBuffer(AudioDeviceModule::BufferType& type,
+                                        WebRtc_UWord16& sizeMS) const;
+    virtual WebRtc_Word32 PlayoutDelay(WebRtc_UWord16& delayMS) const;
+    virtual WebRtc_Word32 RecordingDelay(WebRtc_UWord16& delayMS) const;
 
     // CPU load
-    virtual int32_t CPULoad(uint16_t& load) const;
+    virtual WebRtc_Word32 CPULoad(WebRtc_UWord16& load) const;
 
 public:
     virtual bool PlayoutWarning() const;
@@ -269,17 +270,18 @@ private:
     void PaStreamReadCallbackHandler();
     static void PaStreamOverflowCallback(pa_stream *unused, void *pThis);
     void PaStreamOverflowCallbackHandler();
-    int32_t LatencyUsecs(pa_stream *stream);
-    int32_t ReadRecordedData(const void* bufferData, size_t bufferSize);
-    int32_t ProcessRecordedData(int8_t *bufferData,
-                                uint32_t bufferSizeInSamples,
-                                uint32_t recDelay);
+    WebRtc_Word32 LatencyUsecs(pa_stream *stream);
+    WebRtc_Word32 ReadRecordedData(const void* bufferData, size_t bufferSize);
+    WebRtc_Word32 ProcessRecordedData(WebRtc_Word8 *bufferData,
+                                      WebRtc_UWord32 bufferSizeInSamples,
+                                      WebRtc_UWord32 recDelay);
 
-    int32_t CheckPulseAudioVersion();
-    int32_t InitSamplingFrequency();
-    int32_t GetDefaultDeviceInfo(bool recDevice, char* name, uint16_t& index);
-    int32_t InitPulseAudio();
-    int32_t TerminatePulseAudio();
+    WebRtc_Word32 CheckPulseAudioVersion();
+    WebRtc_Word32 InitSamplingFrequency();
+    WebRtc_Word32 GetDefaultDeviceInfo(bool recDevice, char* name,
+                                       WebRtc_UWord16& index);
+    WebRtc_Word32 InitPulseAudio();
+    WebRtc_Word32 TerminatePulseAudio();
 
     void PaLock();
     void PaUnLock();
@@ -300,20 +302,20 @@ private:
 
     ThreadWrapper* _ptrThreadPlay;
     ThreadWrapper* _ptrThreadRec;
-    uint32_t _recThreadID;
-    uint32_t _playThreadID;
-    int32_t _id;
+    WebRtc_UWord32 _recThreadID;
+    WebRtc_UWord32 _playThreadID;
+    WebRtc_Word32 _id;
 
     AudioMixerManagerLinuxPulse _mixerManager;
 
-    uint16_t _inputDeviceIndex;
-    uint16_t _outputDeviceIndex;
+    WebRtc_UWord16 _inputDeviceIndex;
+    WebRtc_UWord16 _outputDeviceIndex;
     bool _inputDeviceIsSpecified;
     bool _outputDeviceIsSpecified;
 
-    uint32_t _samplingFreq;
-    uint8_t _recChannels;
-    uint8_t _playChannels;
+    WebRtc_UWord32 _samplingFreq;
+    WebRtc_UWord8 _recChannels;
+    WebRtc_UWord8 _playChannels;
 
     AudioDeviceModule::BufferType _playBufType;
 
@@ -331,40 +333,40 @@ private:
     bool update_speaker_volume_at_startup_;
 
 private:
-    uint16_t _playBufDelayFixed; // fixed playback delay
+    WebRtc_UWord16 _playBufDelayFixed; // fixed playback delay
 
-    uint32_t _sndCardPlayDelay;
-    uint32_t _sndCardRecDelay;
+    WebRtc_UWord32 _sndCardPlayDelay;
+    WebRtc_UWord32 _sndCardRecDelay;
 
-    int32_t _writeErrors;
-    uint16_t _playWarning;
-    uint16_t _playError;
-    uint16_t _recWarning;
-    uint16_t _recError;
+    WebRtc_Word32 _writeErrors;
+    WebRtc_UWord16 _playWarning;
+    WebRtc_UWord16 _playError;
+    WebRtc_UWord16 _recWarning;
+    WebRtc_UWord16 _recError;
 
-    uint16_t _deviceIndex;
-    int16_t _numPlayDevices;
-    int16_t _numRecDevices;
+    WebRtc_UWord16 _deviceIndex;
+    WebRtc_Word16 _numPlayDevices;
+    WebRtc_Word16 _numRecDevices;
     char* _playDeviceName;
     char* _recDeviceName;
     char* _playDisplayDeviceName;
     char* _recDisplayDeviceName;
     char _paServerVersion[32];
 
-    int8_t* _playBuffer;
+    WebRtc_Word8* _playBuffer;
     size_t _playbackBufferSize;
     size_t _playbackBufferUnused;
     size_t _tempBufferSpace;
-    int8_t* _recBuffer;
+    WebRtc_Word8* _recBuffer;
     size_t _recordBufferSize;
     size_t _recordBufferUsed;
     const void* _tempSampleData;
     size_t _tempSampleDataSize;
-    int32_t _configuredLatencyPlay;
-    int32_t _configuredLatencyRec;
+    WebRtc_Word32 _configuredLatencyPlay;
+    WebRtc_Word32 _configuredLatencyRec;
 
     // PulseAudio
-    uint16_t _paDeviceIndex;
+    WebRtc_UWord16 _paDeviceIndex;
     bool _paStateChanged;
 
     pa_threaded_mainloop* _paMainloop;
@@ -373,8 +375,8 @@ private:
 
     pa_stream* _recStream;
     pa_stream* _playStream;
-    uint32_t _recStreamFlags;
-    uint32_t _playStreamFlags;
+    WebRtc_UWord32 _recStreamFlags;
+    WebRtc_UWord32 _playStreamFlags;
     pa_buffer_attr _playBufferAttr;
     pa_buffer_attr _recBufferAttr;
 };

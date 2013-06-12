@@ -38,9 +38,9 @@
  */
 int WebRtcIsacfix_EncLogisticMulti2(
     Bitstr_enc *streamData,
-    int16_t *dataQ7,
-    const uint16_t *env,
-    const int16_t lenData);
+    WebRtc_Word16 *dataQ7,
+    const WebRtc_UWord16 *env,
+    const WebRtc_Word16 lenData);
 
 
 /****************************************************************************
@@ -54,7 +54,7 @@ int WebRtcIsacfix_EncLogisticMulti2(
  *
  * Return value             : number of bytes in the stream
  */
-int16_t WebRtcIsacfix_EncTerminate(Bitstr_enc *streamData);
+WebRtc_Word16 WebRtcIsacfix_EncTerminate(Bitstr_enc *streamData);
 
 
 /****************************************************************************
@@ -74,11 +74,11 @@ int16_t WebRtcIsacfix_EncTerminate(Bitstr_enc *streamData);
  * Return value             : number of bytes in the stream so far
  *                            <0 if error detected
  */
-int16_t WebRtcIsacfix_DecLogisticMulti2(
-    int16_t *data,
+WebRtc_Word16 WebRtcIsacfix_DecLogisticMulti2(
+    WebRtc_Word16 *data,
     Bitstr_dec *streamData,
-    const int32_t *env,
-    const int16_t lenData);
+    const WebRtc_Word32 *env,
+    const WebRtc_Word16 lenData);
 
 
 /****************************************************************************
@@ -97,9 +97,9 @@ int16_t WebRtcIsacfix_DecLogisticMulti2(
  */
 int WebRtcIsacfix_EncHistMulti(
     Bitstr_enc *streamData,
-    const int16_t *data,
-    const uint16_t **cdf,
-    const int16_t lenData);
+    const WebRtc_Word16 *data,
+    const WebRtc_UWord16 **cdf,
+    const WebRtc_Word16 lenData);
 
 
 /****************************************************************************
@@ -122,12 +122,12 @@ int WebRtcIsacfix_EncHistMulti(
  * Return value             : number of bytes in the stream
  *                            <0 if error detected
  */
-int16_t WebRtcIsacfix_DecHistBisectMulti(
-    int16_t *data,
+WebRtc_Word16 WebRtcIsacfix_DecHistBisectMulti(
+    WebRtc_Word16 *data,
     Bitstr_dec *streamData,
-    const uint16_t **cdf,
-    const uint16_t *cdfSize,
-    const int16_t lenData);
+    const WebRtc_UWord16 **cdf,
+    const WebRtc_UWord16 *cdfSize,
+    const WebRtc_Word16 lenData);
 
 
 /****************************************************************************
@@ -150,11 +150,11 @@ int16_t WebRtcIsacfix_DecHistBisectMulti(
  * Return value             : number of bytes in original stream
  *                            <0 if error detected
  */
-int16_t WebRtcIsacfix_DecHistOneStepMulti(
-    int16_t *data,
+WebRtc_Word16 WebRtcIsacfix_DecHistOneStepMulti(
+    WebRtc_Word16 *data,
     Bitstr_dec *streamData,
-    const uint16_t **cdf,
-    const uint16_t *initIndex,
-    const int16_t lenData);
+    const WebRtc_UWord16 **cdf,
+    const WebRtc_UWord16 *initIndex,
+    const WebRtc_Word16 lenData);
 
 #endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ARITH_ROUTINS_H_ */

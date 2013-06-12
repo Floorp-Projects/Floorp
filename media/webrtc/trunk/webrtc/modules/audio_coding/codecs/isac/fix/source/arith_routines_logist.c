@@ -21,7 +21,7 @@
 /* Tables for piecewise linear cdf functions: y = k*x */
 
 /* x Points for function piecewise() in Q15 */
-static const int32_t kHistEdges[51] = {
+static const WebRtc_Word32 kHistEdges[51] = {
   -327680, -314573, -301466, -288359, -275252, -262144, -249037, -235930, -222823, -209716,
   -196608, -183501, -170394, -157287, -144180, -131072, -117965, -104858,  -91751,  -78644,
   -65536,  -52429,  -39322,  -26215,  -13108,       0,   13107,   26214,   39321,   52428,
@@ -32,7 +32,7 @@ static const int32_t kHistEdges[51] = {
 
 
 /* k Points for function piecewise() in Q0 */
-static const uint16_t kCdfSlope[51] = {
+static const WebRtc_UWord16 kCdfSlope[51] = {
   5,    5,     5,     5,     5,     5,     5,     5,    5,    5,
   5,    5,    13,    23,    47,    87,   154,   315,  700, 1088,
   2471, 6064, 14221, 21463, 36634, 36924, 19750, 13270, 5806, 2312,
@@ -42,7 +42,7 @@ static const uint16_t kCdfSlope[51] = {
 };
 
 /* y Points for function piecewise() in Q0 */
-static const uint16_t kCdfLogistic[51] = {
+static const WebRtc_UWord16 kCdfLogistic[51] = {
   0,     2,     4,     6,     8,    10,    12,    14,    16,    18,
   20,    22,    24,    29,    38,    57,    92,   153,   279,   559,
   994,  1983,  4408, 10097, 18682, 33336, 48105, 56005, 61313, 63636,
@@ -64,10 +64,10 @@ static const uint16_t kCdfLogistic[51] = {
  */
 
 
-static __inline uint16_t WebRtcIsacfix_Piecewise(int32_t xinQ15) {
-  int32_t ind;
-  int32_t qtmp1;
-  uint16_t qtmp2;
+static __inline WebRtc_UWord16 WebRtcIsacfix_Piecewise(WebRtc_Word32 xinQ15) {
+  WebRtc_Word32 ind;
+  WebRtc_Word32 qtmp1;
+  WebRtc_UWord16 qtmp2;
 
   /* Find index for x-value */
   qtmp1 = WEBRTC_SPL_SAT(kHistEdges[50],xinQ15,kHistEdges[0]);
@@ -76,7 +76,7 @@ static __inline uint16_t WebRtcIsacfix_Piecewise(int32_t xinQ15) {
 
   /* Calculate corresponding y-value ans return*/
   qtmp1 = qtmp1 - kHistEdges[ind];
-  qtmp2 = (uint16_t)WEBRTC_SPL_RSHIFT_U32(
+  qtmp2 = (WebRtc_UWord16)WEBRTC_SPL_RSHIFT_U32(
       WEBRTC_SPL_UMUL_32_16(qtmp1,kCdfSlope[ind]), 15);
   return (kCdfLogistic[ind] + qtmp2);
 }
@@ -97,20 +97,20 @@ static __inline uint16_t WebRtcIsacfix_Piecewise(int32_t xinQ15) {
  *                            <0 otherwise.
  */
 int WebRtcIsacfix_EncLogisticMulti2(Bitstr_enc *streamData,
-                                   int16_t *dataQ7,
-                                   const uint16_t *envQ8,
-                                   const int16_t lenData)
+                                   WebRtc_Word16 *dataQ7,
+                                   const WebRtc_UWord16 *envQ8,
+                                   const WebRtc_Word16 lenData)
 {
-  uint32_t W_lower;
-  uint32_t W_upper;
-  uint16_t W_upper_LSB;
-  uint16_t W_upper_MSB;
-  uint16_t *streamPtr;
-  uint16_t *maxStreamPtr;
-  uint16_t *streamPtrCarry;
-  uint16_t negcarry;
-  uint32_t cdfLo;
-  uint32_t cdfHi;
+  WebRtc_UWord32 W_lower;
+  WebRtc_UWord32 W_upper;
+  WebRtc_UWord16 W_upper_LSB;
+  WebRtc_UWord16 W_upper_MSB;
+  WebRtc_UWord16 *streamPtr;
+  WebRtc_UWord16 *maxStreamPtr;
+  WebRtc_UWord16 *streamPtrCarry;
+  WebRtc_UWord16 negcarry;
+  WebRtc_UWord32 cdfLo;
+  WebRtc_UWord32 cdfHi;
   int k;
 
   /* point to beginning of stream buffer
@@ -148,8 +148,8 @@ int WebRtcIsacfix_EncLogisticMulti2(Bitstr_enc *streamData,
 
 
     /* update interval */
-    W_upper_LSB = (uint16_t)W_upper;
-    W_upper_MSB = (uint16_t)WEBRTC_SPL_RSHIFT_U32(W_upper, 16);
+    W_upper_LSB = (WebRtc_UWord16)W_upper;
+    W_upper_MSB = (WebRtc_UWord16)WEBRTC_SPL_RSHIFT_U32(W_upper, 16);
     W_lower = WEBRTC_SPL_UMUL_32_16(cdfLo, W_upper_MSB);
     W_lower += WEBRTC_SPL_UMUL_32_16_RSFT16(cdfLo, W_upper_LSB);
     W_upper = WEBRTC_SPL_UMUL_32_16(cdfHi, W_upper_MSB);
@@ -187,11 +187,11 @@ int WebRtcIsacfix_EncLogisticMulti2(Bitstr_enc *streamData,
     {
       W_upper = WEBRTC_SPL_LSHIFT_U32(W_upper, 8);
       if (streamData->full == 0) {
-        *streamPtr++ += (uint16_t) WEBRTC_SPL_RSHIFT_U32(
+        *streamPtr++ += (WebRtc_UWord16) WEBRTC_SPL_RSHIFT_U32(
             streamData->streamval, 24);
         streamData->full = 1;
       } else {
-        *streamPtr = (uint16_t) WEBRTC_SPL_LSHIFT_U32(
+        *streamPtr = (WebRtc_UWord16) WEBRTC_SPL_LSHIFT_U32(
             WEBRTC_SPL_RSHIFT_U32(streamData->streamval, 24), 8);
         streamData->full = 0;
       }
@@ -228,25 +228,25 @@ int WebRtcIsacfix_EncLogisticMulti2(Bitstr_enc *streamData,
  * Return value             : number of bytes in the stream so far
  *                            -1 if error detected
  */
-int16_t WebRtcIsacfix_DecLogisticMulti2(int16_t *dataQ7,
-                                        Bitstr_dec *streamData,
-                                        const int32_t *envQ8,
-                                        const int16_t lenData)
+WebRtc_Word16 WebRtcIsacfix_DecLogisticMulti2(WebRtc_Word16 *dataQ7,
+                                             Bitstr_dec *streamData,
+                                             const WebRtc_Word32 *envQ8,
+                                             const WebRtc_Word16 lenData)
 {
-  uint32_t    W_lower;
-  uint32_t    W_upper;
-  uint32_t    W_tmp;
-  uint16_t    W_upper_LSB;
-  uint16_t    W_upper_MSB;
-  uint32_t    streamVal;
-  uint16_t    cdfTmp;
-  int32_t     res;
-  int32_t     inSqrt;
-  int32_t     newRes;
-  const uint16_t *streamPtr;
-  int16_t     candQ7;
-  int16_t     envCount;
-  uint16_t    tmpARSpecQ8 = 0;
+  WebRtc_UWord32    W_lower;
+  WebRtc_UWord32    W_upper;
+  WebRtc_UWord32    W_tmp;
+  WebRtc_UWord16    W_upper_LSB;
+  WebRtc_UWord16    W_upper_MSB;
+  WebRtc_UWord32    streamVal;
+  WebRtc_UWord16    cdfTmp;
+  WebRtc_Word32     res;
+  WebRtc_Word32     inSqrt;
+  WebRtc_Word32     newRes;
+  const WebRtc_UWord16 *streamPtr;
+  WebRtc_Word16     candQ7;
+  WebRtc_Word16     envCount;
+  WebRtc_UWord16    tmpARSpecQ8 = 0;
   int             k, i;
 
 
@@ -266,7 +266,7 @@ int16_t WebRtcIsacfix_DecLogisticMulti2(int16_t *dataQ7,
   }
 
 
-  res = WEBRTC_SPL_LSHIFT_W32((int32_t)1,
+  res = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)1,
                                WEBRTC_SPL_RSHIFT_W16(WebRtcSpl_GetSizeInBits(envQ8[0]), 1));
   envCount = 0;
 
@@ -290,13 +290,13 @@ int16_t WebRtcIsacfix_DecLogisticMulti2(int16_t *dataQ7,
       newRes = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_DIV(inSqrt, res) + res, 1);
     } while (newRes != res && i-- > 0);
 
-    tmpARSpecQ8 = (uint16_t)newRes;
+    tmpARSpecQ8 = (WebRtc_UWord16)newRes;
 
     for(k4 = 0; k4 < 4; k4++)
     {
       /* find the integer *data for which streamVal lies in [W_lower+1, W_upper] */
-      W_upper_LSB = (uint16_t) (W_upper & 0x0000FFFF);
-      W_upper_MSB = (uint16_t) WEBRTC_SPL_RSHIFT_U32(W_upper, 16);
+      W_upper_LSB = (WebRtc_UWord16) (W_upper & 0x0000FFFF);
+      W_upper_MSB = (WebRtc_UWord16) WEBRTC_SPL_RSHIFT_U32(W_upper, 16);
 
       /* find first candidate by inverting the logistic cdf
        * Input dither value collected from io-stream */

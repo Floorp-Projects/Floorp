@@ -28,18 +28,18 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_LpcEncode(
-    int16_t *syntdenum,  /* (i/o) synthesis filter coefficients
+    WebRtc_Word16 *syntdenum,  /* (i/o) synthesis filter coefficients
                                            before/after encoding */
-    int16_t *weightdenum, /* (i/o) weighting denumerator coefficients
+    WebRtc_Word16 *weightdenum, /* (i/o) weighting denumerator coefficients
                                    before/after encoding */
-    int16_t *lsf_index,  /* (o) lsf quantization index */
-    int16_t *data,   /* (i) Speech to do LPC analysis on */
+    WebRtc_Word16 *lsf_index,  /* (o) lsf quantization index */
+    WebRtc_Word16 *data,   /* (i) Speech to do LPC analysis on */
     iLBC_Enc_Inst_t *iLBCenc_inst
     /* (i/o) the encoder state structure */
                               ) {
   /* Stack based */
-  int16_t lsf[LPC_FILTERORDER * LPC_N_MAX];
-  int16_t lsfdeq[LPC_FILTERORDER * LPC_N_MAX];
+  WebRtc_Word16 lsf[LPC_FILTERORDER * LPC_N_MAX];
+  WebRtc_Word16 lsfdeq[LPC_FILTERORDER * LPC_N_MAX];
 
   /* Calculate LSF's from the input speech */
   WebRtcIlbcfix_SimpleLpcAnalysis(lsf, data, iLBCenc_inst);
