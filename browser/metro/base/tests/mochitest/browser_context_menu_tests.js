@@ -409,7 +409,7 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
 
-    let downloadPromise = waitForObserver("dl-done");
+    let downloadPromise = waitForObserver("dl-done", 5000);
     let popupPromise = waitForEvent(document, "popuphidden");
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
     yield popupPromise;
