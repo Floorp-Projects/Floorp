@@ -5648,25 +5648,20 @@ var OfflineApps = {
     if (!aBrowser)
       return;
 
-    var notificationBox = gBrowser.getNotificationBox(aBrowser);
-    var notification = notificationBox.getNotificationWithValue("offline-app-usage");
-    if (!notification) {
-      var buttons = [{
-          label: gNavigatorBundle.getString("offlineApps.manageUsage"),
-          accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
-          callback: OfflineApps.manage
-        }];
+    let mainAction = {
+      label: gNavigatorBundle.getString("offlineApps.manageUsage"),
+      accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
+      callback: OfflineApps.manage
+    };
 
-      var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
-      const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-      var message = gNavigatorBundle.getFormattedString("offlineApps.usage",
-                                                        [ aURI.host,
-                                                          warnQuota / 1024 ]);
+    let warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
+    let message = gNavigatorBundle.getFormattedString("offlineApps.usage",
+                                                      [ aURI.host,
+                                                        warnQuota / 1024 ]);
 
-      notificationBox.appendNotification(message, "offline-app-usage",
-                                         "chrome://browser/skin/Info.png",
-                                         priority, buttons);
-    }
+    let anchorID = "indexedDB-notification-icon";
+    PopupNotifications.show(aBrowser, "offline-app-usage", message,
+                            anchorID, mainAction);
 
     // Now that we've warned once, prevent the warning from showing up
     // again.

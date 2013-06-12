@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=840877
+-->
+<head>
+  <title>Test for Bug 840877</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=840877">Mozilla Bug 840877</a>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 840877 **/
+
+var root = document.documentElement;
+var undoMan = document.undoManager;
+var newChild = document.createElement("div");
+// Removing the documentElement from the document removes the element from the document's undo scope.
+document.removeChild(root);
+undoMan.transact({ executeAutomatic: function() { root.appendChild(newChild); }}, true);
+// Append the document element back so that we don't break mochitests.
+document.appendChild(root);
+// Element appended by executeAutomatic should be a child of the documentElement.
+is(root.childNodes[root.childNodes.length - 1], newChild, "Document element should have child appened by transaction.");
+
+</script>
+</pre>
+</body>
+</html>
+
