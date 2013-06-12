@@ -8,30 +8,19 @@
 /* Find bar ------------------------------------------------------------- */
 
 #content-navigator {
-  display: block;
-  position: fixed;
-  pointer-events: none;
-  padding: 0;
-  bottom: 0;
-  transform: translateY(100%);
-  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   background-color: @metro_orange@;
+  padding: 0;
+  pointer-events: none;
 }
 
-#content-navigator[showing] {
-  transform: none;
-}
-
-#stack[keyboardVisible] > #content-navigator {
-  /* Slow the bottom up transition since it's impossible to match the system's
-     soft keyboard movement. */
-  transition: transform @metro_animation_duration@ @metro_animation_easing@,
-              bottom @appbar_keyboard_slideup_duration@ @metro_animation_easing@;
+#content-navigator > toolbar {
+  min-height: @findbar_height@ !important;
 }
 
 #content-navigator > .previous-button,
 #content-navigator > .next-button,
 #content-navigator > .close-button {
+  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
   min-width: @touch_button_small@ !important; /* button size */
   min-height: @touch_button_small@ !important; /* button size */
   border: none !important;
@@ -44,7 +33,6 @@
 
 #content-navigator > .close-button {
   -moz-margin-start: 0;
-  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
   -moz-image-region: rect(0px, 480px, 40px, 440px);
 }
 
@@ -58,7 +46,6 @@
 
 #content-navigator > .previous-button {
   -moz-margin-end: 0;
-  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
   -moz-image-region: rect(0px, 400px, 40px, 360px);
 }
 
@@ -70,19 +57,8 @@
   -moz-image-region: rect(80px, 400px, 120px, 360px);
 }
 
-#content-navigator:-moz-locale-dir(ltr) > .previous-button {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-#content-navigator:-moz-locale-dir(rtl) > .previous-button {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
 #content-navigator > .next-button {
   -moz-margin-start: 0;
-  list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
   -moz-image-region: rect(0px, 440px, 40px, 400px);
 }
 
@@ -92,25 +68,6 @@
 
 #content-navigator > .next-button:active {
   -moz-image-region: rect(80px, 440px, 120px, 400px);
-}
-
-#content-navigator:-moz-locale-dir(ltr) > .next-button {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-#content-navigator:-moz-locale-dir(rtl) > .next-button {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-#content-navigator[type="find"] > .previous-button {
-  /* previous button overlap the textbox */
-  -moz-margin-start: -@margin_normal@;
-}
-
-#content-navigator:not([type="find"]) > #find-helper-textbox {
-  display: none;
 }
 
 #find-helper-textbox {
