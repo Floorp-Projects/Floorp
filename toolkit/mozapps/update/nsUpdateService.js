@@ -643,12 +643,24 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpda
   return true;
 });
 
+XPCOMUtils.defineLazyGetter(this, "gIsMetro", function aus_gIsMetro() {
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  try {
+    let metroUtils = Cc["@mozilla.org/windows-metroutils;1"].
+                    createInstance(Ci.nsIWinMetroUtils);
+    return metroUtils && metroUtils.immersive;
+  } catch (e) {}
+#endif
+#endif
+
+  return false;
+});
+
 XPCOMUtils.defineLazyGetter(this, "gMetroUpdatesEnabled", function aus_gMetroUpdatesEnabled() {
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-  let metroUtils = Cc["@mozilla.org/windows-metroutils;1"].
-                   createInstance(Ci.nsIWinMetroUtils);
-  if (metroUtils && metroUtils.immersive) {
+  if (gIsMetro) {
     let metroUpdate = getPref("getBoolPref", PREF_APP_UPDATE_METRO_ENABLED, true);
     if (!metroUpdate) {
       LOG("gMetroUpdatesEnabled - unable to automatically check for metro" +
@@ -2460,14 +2472,18 @@ UpdateService.prototype = {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because the " +
           "update snippet specified showPrompt");
       this._showPrompt(update);
-      return;
+      if (!gIsMetro) {
+        return;
+      }
     }
 
     if (!getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true)) {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled");
       this._showPrompt(update);
-      return;
+      if (!gIsMetro) {
+        return;
+      }
     }
 
     if (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1) == 0) {
