@@ -398,14 +398,9 @@ toolbarbutton.panel-multiview-anchor {
   -moz-image-region: rect(0 80px 16px 64px);
 }
 
-#PanelUI-contents #zoom-out-button {
-  -moz-margin-end: none;
-}
-
 #PanelUI-contents #paste-button,
 #PanelUI-contents #zoom-in-button {
   -moz-border-start: 1px solid;
-  -moz-margin-start: none;
 }
 
 #PanelUI-contents #cut-button:-moz-locale-dir(ltr),
