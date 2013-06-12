@@ -158,6 +158,10 @@ class TestRecursiveMakeBackend(BackendTester):
                 'EXTRA_COMPONENTS += bar.js',
                 'EXTRA_COMPONENTS += foo.js',
             ],
+            'EXTRA_PP_COMPONENTS': [
+                'EXTRA_PP_COMPONENTS += bar.pp.js',
+                'EXTRA_PP_COMPONENTS += foo.pp.js',
+            ],
             'HOST_CSRCS': [
                 'HOST_CSRCS += bar.c',
                 'HOST_CSRCS += foo.c',

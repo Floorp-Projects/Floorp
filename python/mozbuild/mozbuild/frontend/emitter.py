@@ -85,6 +85,7 @@ class TreeMetadataEmitter(object):
             CSRCS='CSRCS',
             DEFINES='DEFINES',
             EXTRA_COMPONENTS='EXTRA_COMPONENTS',
+            EXTRA_PP_COMPONENTS='EXTRA_PP_COMPONENTS',
             HOST_CSRCS='HOST_CSRCS',
             HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
             LIBRARY_NAME='LIBRARY_NAME',
