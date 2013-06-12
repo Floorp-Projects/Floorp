@@ -87,6 +87,15 @@ Prompt.prototype = {
     return this._addInput({
       type: aOptions.type || "date",
       value: aOptions.value,
+      id: aOptions.id
+    });
+  },
+
+  addLabel: function(aOptions) {
+    return this._addInput({
+      type: "label",
+      label: aOptions.label,
+      id: aOptions.id
     });
   },
 
