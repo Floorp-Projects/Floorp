@@ -18,4 +18,5 @@ EXPORTS.mozilla.dom += [
 CPP_SOURCES += [
     'Future.cpp',
     'FutureResolver.cpp',
+    'FutureCallback.cpp',
 ]

@@ -7,6 +7,7 @@
 #include "mozilla/dom/Future.h"
 #include "mozilla/dom/FutureBinding.h"
 #include "mozilla/dom/FutureResolver.h"
+#include "FutureCallback.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 
@@ -83,6 +84,8 @@ Future::Future(nsPIDOMWindow* aWindow)
   MOZ_COUNT_CTOR(Future);
   NS_HOLD_JS_OBJECTS(this, Future);
   SetIsDOMBinding();
+
+  mResolver = new FutureResolver(this);
 }
 
 Future::~Future()
@@ -109,7 +112,6 @@ Future::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
   }
 
   nsRefPtr<Future> future = new Future(window);
-  future->mResolver = new FutureResolver(future);
 
   aInit.Call(future, *future->mResolver, aRv,
              CallbackObject::eRethrowExceptions);
@@ -124,18 +126,63 @@ Future::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
   return future.forget();
 }
 
-void
-Future::Done(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback)
+already_AddRefed<Future>
+Future::Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback)
 {
-  AppendCallbacks(aResolveCallback, aRejectCallback);
+  nsRefPtr<Future> future = new Future(GetParentObject());
+
+  nsRefPtr<FutureCallback> resolveCb =
+    FutureCallback::Factory(future->mResolver,
+                            aResolveCallback,
+                            FutureCallback::Resolve);
+
+  nsRefPtr<FutureCallback> rejectCb =
+    FutureCallback::Factory(future->mResolver,
+                            aRejectCallback,
+                            FutureCallback::Reject);
+
+  AppendCallbacks(resolveCb, rejectCb);
+
+  return future.forget();
+}
+
+already_AddRefed<Future>
+Future::Catch(AnyCallback* aRejectCallback)
+{
+  return Then(nullptr, aRejectCallback);
 }
 
 void
-Future::AppendCallbacks(AnyCallback* aResolveCallback,
-                        AnyCallback* aRejectCallback)
+Future::Done(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback)
 {
-  mResolveCallbacks.AppendElement(aResolveCallback);
-  mRejectCallbacks.AppendElement(aRejectCallback);
+  if (!aResolveCallback && !aRejectCallback) {
+    return;
+  }
+
+  nsRefPtr<FutureCallback> resolveCb;
+  if (aResolveCallback) {
+    resolveCb = new SimpleWrapperFutureCallback(this, aResolveCallback);
+  }
+
+  nsRefPtr<FutureCallback> rejectCb;
+  if (aRejectCallback) {
+    rejectCb = new SimpleWrapperFutureCallback(this, aRejectCallback);
+  }
+
+  AppendCallbacks(resolveCb, rejectCb);
+}
+
+void
+Future::AppendCallbacks(FutureCallback* aResolveCallback,
+                        FutureCallback* aRejectCallback)
+{
+  if (aResolveCallback) {
+    mResolveCallbacks.AppendElement(aResolveCallback);
+  }
+
+  if (aRejectCallback) {
+    mRejectCallbacks.AppendElement(aRejectCallback);
+  }
 
   // If future's state is resolved, queue a task to process future's resolve
   // callbacks with future's result. If future's state is rejected, queue a task
@@ -152,7 +199,7 @@ Future::RunTask()
 {
   MOZ_ASSERT(mState != Pending);
 
-  nsTArray<nsRefPtr<AnyCallback> > callbacks;
+  nsTArray<nsRefPtr<FutureCallback> > callbacks;
   callbacks.SwapElements(mState == Resolved ? mResolveCallbacks
                                             : mRejectCallbacks);
   mResolveCallbacks.Clear();
@@ -162,8 +209,7 @@ Future::RunTask()
                                          mResult);
 
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
-    ErrorResult rv;
-    callbacks[i]->Call(value, rv);
+    callbacks[i]->Call(value);
   }
 }
 
