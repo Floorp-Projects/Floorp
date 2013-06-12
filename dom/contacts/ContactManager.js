@@ -417,7 +417,9 @@ Contact.prototype = {
   },
 
   set bday(aBday) {
-    if (aBday !== undefined && aBday !== null) {
+    if (aBday instanceof Date) {
+      this._bday = aBday;
+    } else if (typeof aBday === "string" || typeof aBday === "number") {
       this._bday = new Date(aBday);
     }
   },
@@ -427,7 +429,9 @@ Contact.prototype = {
   },
 
   set anniversary(aAnniversary) {
-    if (aAnniversary !== undefined && aAnniversary !== null) {
+    if (aAnniversary instanceof Date) {
+      this._anniversary = aAnniversary;
+    } else if (typeof aAnniversary === "string" || typeof aAnniversary === "number") {
       this._anniversary = new Date(aAnniversary);
     }
   },
