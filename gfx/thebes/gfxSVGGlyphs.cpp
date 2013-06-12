@@ -104,13 +104,17 @@ gfxSVGGlyphs::~gfxSVGGlyphs()
  *        sets intersecting of size > 1 -- so... don't do that)
  */
 /* static */ int
-gfxSVGGlyphs::CompareIndexEntries(const void *_key, const void *_entry)
+gfxSVGGlyphs::CompareIndexEntries(const void *aKey, const void *aEntry)
 {
-    const uint32_t key = *(uint32_t*)_key;
-    const IndexEntry *entry = (const IndexEntry*)_entry;
+    const uint32_t key = *(uint32_t*)aKey;
+    const IndexEntry *entry = (const IndexEntry*)aEntry;
 
-    if (key < uint16_t(entry->mStartGlyph)) return -1;
-    if (key >= uint16_t(entry->mEndGlyph)) return 1;
+    if (key < uint16_t(entry->mStartGlyph)) {
+        return -1;
+    }
+    if (key > uint16_t(entry->mEndGlyph)) {
+        return 1;
+    }
     return 0;
 }
 
