@@ -8,11 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "testsupport/fileutils.h"
-#include "testsupport/metrics/video_metrics.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/perf_test.h"
+#include "webrtc/test/testsupport/metrics/video_metrics.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_file_based_comparison_tests.h"
 #include "webrtc/video_engine/test/auto_test/primitives/framedrop_primitives.h"
@@ -146,8 +149,15 @@ class ParameterizedFullStackTest : public ViEVideoVerificationTest,
     parameter_table_[i].network.mean_one_way_delay = 0;
     parameter_table_[i].network.std_dev_one_way_delay = 0;
     parameter_table_[i].bitrate = 300;
+    // TODO(holmer): Enable for Win and Mac when the file rendering has been
+    // moved to a separate thread.
+#ifdef WEBRTC_LINUX
     parameter_table_[i].avg_psnr_threshold = 35;
     parameter_table_[i].avg_ssim_threshold = 0.96;
+#else
+    parameter_table_[i].avg_psnr_threshold = 0;
+    parameter_table_[i].avg_ssim_threshold = 0.0;
+#endif
     parameter_table_[i].test_label = "net_delay_0_0_plr_0";
     ++i;
     parameter_table_[i].protection_method = kNack;
@@ -157,8 +167,15 @@ class ParameterizedFullStackTest : public ViEVideoVerificationTest,
     parameter_table_[i].network.mean_one_way_delay = 50;
     parameter_table_[i].network.std_dev_one_way_delay = 5;
     parameter_table_[i].bitrate = 300;
+    // TODO(holmer): Enable for Win and Mac when the file rendering has been
+    // moved to a separate thread.
+#ifdef WEBRTC_LINUX
     parameter_table_[i].avg_psnr_threshold = 35;
     parameter_table_[i].avg_ssim_threshold = 0.96;
+#else
+    parameter_table_[i].avg_psnr_threshold = 0;
+    parameter_table_[i].avg_ssim_threshold = 0.0;
+#endif
     parameter_table_[i].test_label = "net_delay_50_5_plr_5";
     ++i;
     parameter_table_[i].protection_method = kNack;
@@ -168,8 +185,15 @@ class ParameterizedFullStackTest : public ViEVideoVerificationTest,
     parameter_table_[i].network.mean_one_way_delay = 100;
     parameter_table_[i].network.std_dev_one_way_delay = 10;
     parameter_table_[i].bitrate = 300;
+    // TODO(holmer): Enable for Win and Mac when the file rendering has been
+    // moved to a separate thread.
+#ifdef WEBRTC_LINUX
     parameter_table_[i].avg_psnr_threshold = 35;
     parameter_table_[i].avg_ssim_threshold = 0.96;
+#else
+    parameter_table_[i].avg_psnr_threshold = 0;
+    parameter_table_[i].avg_ssim_threshold = 0.0;
+#endif
     parameter_table_[i].test_label = "net_delay_100_10_plr_0";
     ++i;
     parameter_table_[i].protection_method = kNack;
@@ -179,8 +203,9 @@ class ParameterizedFullStackTest : public ViEVideoVerificationTest,
     parameter_table_[i].network.mean_one_way_delay = 100;
     parameter_table_[i].network.std_dev_one_way_delay = 10;
     parameter_table_[i].bitrate = 300;
-    parameter_table_[i].avg_psnr_threshold = 35;
-    parameter_table_[i].avg_ssim_threshold = 0.96;
+    // Thresholds disabled for now. This is being run mainly to get a graph.
+    parameter_table_[i].avg_psnr_threshold = 0;
+    parameter_table_[i].avg_ssim_threshold = 0.0;
     parameter_table_[i].test_label = "net_delay_100_10_plr_5_gilbert_elliot";
 
     ASSERT_EQ(kNumFullStackInstances - 1, i);
@@ -304,6 +329,18 @@ TEST_P(ParameterizedFullStackTest, RunsFullStackWithoutErrors)  {
 
   EXPECT_GE(actual_psnr, kExpectedMinimumPSNR);
   EXPECT_GE(actual_ssim, kExpectedMinimumSSIM);
+
+  std::stringstream ss;
+  ss << std::setprecision(3) << std::fixed << actual_psnr;
+  webrtc::test::PrintResult(
+      "psnr", "", parameter_table_[GetParam()].test_label,
+      ss.str(), "dB", false);
+
+  ss.str("");
+  ss << std::setprecision(3) << std::fixed << actual_ssim;
+  webrtc::test::PrintResult(
+      "ssim", "", parameter_table_[GetParam()].test_label,
+      ss.str(), "", false);
 }
 
 INSTANTIATE_TEST_CASE_P(FullStackTests, ParameterizedFullStackTest,

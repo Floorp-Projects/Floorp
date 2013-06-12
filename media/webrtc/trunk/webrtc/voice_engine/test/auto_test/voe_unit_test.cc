@@ -25,6 +25,7 @@
 #include "webrtc/voice_engine/test/auto_test/fakes/fake_media_process.h"
 
 using namespace webrtc;
+using namespace test;
 
 namespace voetest {
 
@@ -248,13 +249,17 @@ int VoEUnitTest::StartMedia(int channel, int rtpPort, bool listen, bool playout,
                             bool send, bool fileAsMic, bool localFile) {
   VoEBase* base = _mgr.BasePtr();
   VoEFile* file = _mgr.FilePtr();
+  VoENetwork* voe_network = _mgr.NetworkPtr();
 
   _listening[channel] = false;
   _playing[channel] = false;
   _sending[channel] = false;
+  voice_channel_transports_[channel].reset(
+      new VoiceChannelTransport(voe_network, channel));
 
-  CHECK(base->SetLocalReceiver(channel, rtpPort));
-  CHECK(base->SetSendDestination(channel, rtpPort, "127.0.0.1"));
+  CHECK(voice_channel_transports_[channel]->SetLocalReceiver(rtpPort));
+  CHECK(voice_channel_transports_[channel]->SetSendDestination("127.0.0.1",
+                                                               rtpPort));
   if (listen) {
     _listening[channel] = true;
     CHECK(base->StartReceive(channel));

@@ -14,7 +14,6 @@
 //  - Initialization and termination.
 //  - Trace information on text files or via callbacks.
 //  - Multi-channel support (mixing, sending to multiple destinations etc.).
-//  - Call setup (port and address) for receiving and sending sides.
 //
 // To support other codecs than G.711, the VoECodec sub-API must be utilized.
 //
@@ -40,6 +39,7 @@
 namespace webrtc {
 
 class AudioDeviceModule;
+class AudioProcessing;
 
 const int kVoEDefault = -1;
 
@@ -82,11 +82,11 @@ public:
     // receives callbacks for generated trace messages.
     static int SetTraceCallback(TraceCallback* callback);
 
-    static int SetAndroidObjects(void* javaVM, void* context);
+    static int SetAndroidObjects(void* javaVM, void* env, void* context);
 
 protected:
     VoiceEngine() {}
-    virtual ~VoiceEngine() {}
+    ~VoiceEngine() {}
 };
 
 // VoEBase
@@ -100,7 +100,7 @@ public:
 
     // Releases the VoEBase sub-API and decreases an internal reference
     // counter. Returns the new reference count. This value should be zero
-    // for all sub-API:s before the VoiceEngine object can be safely deleted.
+    // for all sub-APIs before the VoiceEngine object can be safely deleted.
     virtual int Release() = 0;
 
     // Installs the observer class to enable runtime error control and
@@ -111,12 +111,21 @@ public:
     // and warning notifications.
     virtual int DeRegisterVoiceEngineObserver() = 0;
 
-    // Initiates all common parts of the VoiceEngine; e.g. all
+    // Initializes all common parts of the VoiceEngine; e.g. all
     // encoders/decoders, the sound card and core receiving components.
-    // This method also makes it possible to install a user-defined
-    // external Audio Device Module (ADM) which implements all the audio
-    // layer functionality in a separate (reference counted) module.
-    virtual int Init(AudioDeviceModule* external_adm = NULL) = 0;
+    // This method also makes it possible to install some user-defined external
+    // modules:
+    // - The Audio Device Module (ADM) which implements all the audio layer
+    // functionality in a separate (reference counted) module.
+    // - The AudioProcessing module handles capture-side processing. VoiceEngine
+    // takes ownership of this object.
+    // If NULL is passed for any of these, VoiceEngine will create its own.
+    // TODO(ajm): Remove default NULLs.
+    virtual int Init(AudioDeviceModule* external_adm = NULL,
+                     AudioProcessing* audioproc = NULL) = 0;
+
+    // Returns NULL before Init() is called.
+    virtual AudioProcessing* audio_processing() = 0;
 
     // Terminates all VoiceEngine functions and releses allocated resources.
     virtual int Terminate() = 0;
@@ -129,28 +138,6 @@ public:
 
     // Deletes an existing channel and releases the utilized resources.
     virtual int DeleteChannel(int channel) = 0;
-
-    // Sets the local receiver port and address for a specified
-    // |channel| number.
-    virtual int SetLocalReceiver(int channel, int port,
-                                 int RTCPport = kVoEDefault,
-                                 const char ipAddr[64] = NULL,
-                                 const char multiCastAddr[64] = NULL) = 0;
-
-    // Gets the local receiver port and address for a specified
-    // |channel| number.
-    virtual int GetLocalReceiver(int channel, int& port, int& RTCPport,
-                                 char ipAddr[64]) = 0;
-
-    // Sets the destination port and address for a specified |channel| number.
-    virtual int SetSendDestination(int channel, int port,
-                                   const char ipAddr[64],
-                                   int sourcePort = kVoEDefault,
-                                   int RTCPport = kVoEDefault) = 0;
-
-    // Gets the destination port and address for a specified |channel| number.
-    virtual int GetSendDestination(int channel, int& port, char ipAddr[64],
-                                   int& sourcePort, int& RTCPport) = 0;
 
     // Prepares and initiates the VoiceEngine for reception of
     // incoming RTP/RTCP packets on the specified |channel|.
@@ -180,7 +167,6 @@ public:
     // Gets the last VoiceEngine error code.
     virtual int LastError() = 0;
 
-
     // Stops or resumes playout and transmission on a temporary basis.
     virtual int SetOnHoldStatus(int channel, bool enable,
                                 OnHoldModes mode = kHoldSendAndPlay) = 0;
@@ -194,12 +180,6 @@ public:
 
     // Gets the NetEQ playout mode for a specified |channel| number.
     virtual int GetNetEQPlayoutMode(int channel, NetEqModes& mode) = 0;
-
-    // Sets the NetEQ background noise mode for a specified |channel| number.
-    virtual int SetNetEQBGNMode(int channel, NetEqBgnModes mode) = 0;
-
-    // Gets the NetEQ background noise mode for a specified |channel| number.
-    virtual int GetNetEQBGNMode(int channel, NetEqBgnModes& mode) = 0;
 
 protected:
     VoEBase() {}

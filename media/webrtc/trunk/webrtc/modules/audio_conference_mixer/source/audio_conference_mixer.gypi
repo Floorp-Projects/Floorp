@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'audio_conference_mixer',
-      'type': '<(library)',
+      'type': 'static_library',
       'dependencies': [
         'audio_processing',
         'webrtc_utility',
@@ -44,9 +44,3 @@
     },
   ], # targets
 }
-
-# Local Variables:
-# tab-width:2
-# indent-tabs-mode:nil
-# End:
-# vim: set expandtab tabstop=2 shiftwidth=2:

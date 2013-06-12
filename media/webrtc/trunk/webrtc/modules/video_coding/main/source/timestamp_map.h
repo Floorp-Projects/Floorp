@@ -18,7 +18,7 @@ namespace webrtc
 
 struct VCMTimestampDataTuple
 {
-    WebRtc_UWord32    timestamp;
+    uint32_t    timestamp;
     void*             data;
 };
 
@@ -27,7 +27,7 @@ class VCMTimestampMap
 public:
     // Constructor. Optional parameter specifies maximum number of
     // timestamps in map.
-    VCMTimestampMap(const WebRtc_Word32 length = 10);
+    VCMTimestampMap(const int32_t length = 10);
 
     // Destructor.
     ~VCMTimestampMap();
@@ -35,16 +35,16 @@ public:
     // Empty the map
     void Reset();
 
-    WebRtc_Word32 Add(WebRtc_UWord32 timestamp, void*  data);
-    void* Pop(WebRtc_UWord32 timestamp);
+    int32_t Add(uint32_t timestamp, void*  data);
+    void* Pop(uint32_t timestamp);
 
 private:
     bool IsEmpty() const;
 
     VCMTimestampDataTuple* _map;
-    WebRtc_Word32                   _nextAddIx;
-    WebRtc_Word32                   _nextPopIx;
-    WebRtc_Word32                   _length;
+    int32_t                   _nextAddIx;
+    int32_t                   _nextPopIx;
+    int32_t                   _length;
 };
 
 } // namespace webrtc

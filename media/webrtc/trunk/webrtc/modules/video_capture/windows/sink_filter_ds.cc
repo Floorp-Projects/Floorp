@@ -21,9 +21,6 @@
 DEFINE_GUID(CLSID_SINKFILTER, 0x88cdbbdc, 0xa73b, 0x4afa, 0xac, 0xbf, 0x15, 0xd5,
             0xe2, 0xce, 0x12, 0xc3);
 
-using namespace mozilla::media;
-using namespace mozilla;
-
 namespace webrtc
 {
 namespace videocapturemodule
@@ -37,13 +34,13 @@ typedef struct tagTHREADNAME_INFO
    DWORD dwFlags;       // reserved for future use, must be zero
 } THREADNAME_INFO;
 
-CaptureInputPin::CaptureInputPin (WebRtc_Word32 moduleId,
+CaptureInputPin::CaptureInputPin (int32_t moduleId,
                             IN TCHAR * szName,
                             IN CaptureSinkFilter* pFilter,
-                            IN CriticalSection * pLock,
+                            IN CCritSec * pLock,
                             OUT HRESULT * pHr,
                             IN LPCWSTR pszName)
-    : BaseInputPin (szName, pFilter, pLock, pHr, pszName),
+    : CBaseInputPin (szName, pFilter, pLock, pHr, pszName),
       _requestedCapability(),
       _resultingCapability()
 {
@@ -56,7 +53,7 @@ CaptureInputPin::~CaptureInputPin()
 }
 
 HRESULT
-CaptureInputPin::GetMediaType (IN int iPosition, OUT MediaType * pmt)
+CaptureInputPin::GetMediaType (IN int iPosition, OUT CMediaType * pmt)
 {
     // reset the thread handle
     _threadHandle = NULL;
@@ -89,7 +86,7 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT MediaType * pmt)
     pmt->SetFormatType(&FORMAT_VideoInfo);
     pmt->SetTemporalCompression(FALSE);
 
-    WebRtc_Word32 positionOffset=1;
+    int32_t positionOffset=1;
     if(_requestedCapability.codecType!=kVideoCodecUnknown)
     {
         positionOffset=0;
@@ -164,7 +161,7 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT MediaType * pmt)
 }
 
 HRESULT
-CaptureInputPin::CheckMediaType ( IN const MediaType * pMediaType)
+CaptureInputPin::CheckMediaType ( IN const CMediaType * pMediaType)
 {
     // reset the thread handle
     _threadHandle = NULL;
@@ -322,8 +319,8 @@ CaptureInputPin::Receive ( IN IMediaSample * pIMediaSample )
 {
     HRESULT hr = S_OK;
 
-    assert (mFilter);
-    assert (pIMediaSample);
+    ASSERT (m_pFilter);
+    ASSERT (pIMediaSample);
 
     // get the thread handle of the delivering thread inc its priority
     if( _threadHandle == NULL)
@@ -351,27 +348,27 @@ CaptureInputPin::Receive ( IN IMediaSample * pIMediaSample )
 
     }
 
-    reinterpret_cast <CaptureSinkFilter *>(mFilter)->LockReceive();
-    hr = BaseInputPin::Receive (pIMediaSample);
+    reinterpret_cast <CaptureSinkFilter *>(m_pFilter)->LockReceive();
+    hr = CBaseInputPin::Receive (pIMediaSample);
 
     if (SUCCEEDED (hr))
     {
-        const WebRtc_Word32 length = pIMediaSample->GetActualDataLength();
+        const int32_t length = pIMediaSample->GetActualDataLength();
 
         unsigned char* pBuffer = NULL;
         if(S_OK != pIMediaSample->GetPointer(&pBuffer))
         {
-            reinterpret_cast <CaptureSinkFilter *>(mFilter)->UnlockReceive();
+            reinterpret_cast <CaptureSinkFilter *>(m_pFilter)->UnlockReceive();
             return S_FALSE;
         }
 
         // NOTE: filter unlocked within Send call
-        reinterpret_cast <CaptureSinkFilter *> (mFilter)->ProcessCapturedFrame(
+        reinterpret_cast <CaptureSinkFilter *> (m_pFilter)->ProcessCapturedFrame(
                                         pBuffer,length,_resultingCapability);
     }
     else
     {
-        reinterpret_cast <CaptureSinkFilter *>(mFilter)->UnlockReceive();
+        reinterpret_cast <CaptureSinkFilter *>(m_pFilter)->UnlockReceive();
     }
 
     return hr;
@@ -391,16 +388,14 @@ CaptureSinkFilter::CaptureSinkFilter (IN TCHAR * tszName,
                               IN LPUNKNOWN punk,
                               OUT HRESULT * phr,
                               VideoCaptureExternal& captureObserver,
-                              WebRtc_Word32 moduleId)
-    : BaseFilter(tszName, CLSID_SINKFILTER),
-      m_crtFilter("CaptureSinkFilter::m_crtFilter"),
-      m_crtRecv("CaptureSinkFilter::m_crtRecv"),
+                              int32_t moduleId)
+    : CBaseFilter(tszName,punk,& m_crtFilter,CLSID_SINKFILTER),
       m_pInput(NULL),
       _captureObserver(captureObserver),
       _moduleId(moduleId)
 {
     (* phr) = S_OK;
-    m_pInput = new CaptureInputPin(moduleId, L"VideoCaptureInputPin",
+    m_pInput = new CaptureInputPin(moduleId,NAME ("VideoCaptureInputPin"),
                                    this,
                                    & m_crtFilter,
                                    phr, L"VideoCapture");
@@ -423,10 +418,10 @@ int CaptureSinkFilter::GetPinCount()
     return 1;
 }
 
-BasePin *
+CBasePin *
 CaptureSinkFilter::GetPin(IN int Index)
 {
-    BasePin * pPin;
+    CBasePin * pPin;
     LockFilter ();
     if (Index == 0)
     {
@@ -443,22 +438,22 @@ CaptureSinkFilter::GetPin(IN int Index)
 STDMETHODIMP CaptureSinkFilter::Pause()
 {
     LockFilter();
-    if (mState == State_Stopped)
+    if (m_State == State_Stopped)
     {
         //  change the state, THEN activate the input pin
-        mState = State_Paused;
+        m_State = State_Paused;
         if (m_pInput && m_pInput->IsConnected())
         {
             m_pInput->Active();
         }
         if (m_pInput && !m_pInput->IsConnected())
         {
-            mState = State_Running;
+            m_State = State_Running;
         }
     }
-    else if (mState == State_Running)
+    else if (m_State == State_Running)
     {
-        mState = State_Paused;
+        m_State = State_Paused;
     }
     UnlockFilter();
     return S_OK;
@@ -470,7 +465,7 @@ STDMETHODIMP CaptureSinkFilter::Stop()
     LockFilter();
 
     //  set the state
-    mState = State_Stopped;
+    m_State = State_Stopped;
 
     //  inactivate the pins
     if (m_pInput)
@@ -484,16 +479,16 @@ STDMETHODIMP CaptureSinkFilter::Stop()
 void CaptureSinkFilter::SetFilterGraph(IGraphBuilder* graph)
 {
     LockFilter();
-    mGraph = graph;
+    m_pGraph = graph;
     UnlockFilter();
 }
 
 void CaptureSinkFilter::ProcessCapturedFrame(unsigned char* pBuffer,
-                                         WebRtc_Word32 length,
+                                         int32_t length,
                                          const VideoCaptureCapability& frameInfo)
 {
     //  we have the receiver lock
-    if (mState == State_Running)
+    if (m_State == State_Running)
     {
         _captureObserver.IncomingFrame(pBuffer, length, frameInfo);
 

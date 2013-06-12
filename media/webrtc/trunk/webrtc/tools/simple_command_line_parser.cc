@@ -8,43 +8,39 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "tools/simple_command_line_parser.h"
+#include "webrtc/tools/simple_command_line_parser.h"
 
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 namespace webrtc {
 namespace test {
+
+using std::string;
 
 void CommandLineParser::Init(int argc, char** argv) {
   args_ = std::vector<std::string> (argv + 1, argv + argc);
 }
 
 bool CommandLineParser::IsStandaloneFlag(std::string flag) {
-  int equal_pos = flag.find("=");
-
-  if (equal_pos < 0) {
-    return true;
-  }
-  return false;
+  return flag.find("=") == string::npos;
 }
 
 bool CommandLineParser::IsFlagWellFormed(std::string flag) {
-  int dash_pos = flag.find("--");
-  int equal_pos = flag.find("=");
-
+  size_t dash_pos = flag.find("--");
+  size_t equal_pos = flag.find("=");
   if (dash_pos != 0) {
     fprintf(stderr, "Wrong switch format: %s\n", flag.c_str());
     fprintf(stderr, "Flag doesn't start with --\n");
     return false;
   }
-
-  int flag_length = flag.length() - 1;
+  size_t flag_length = flag.length() - 1;
 
   // We use 3 here because we assume that the flags are in the format
   // --flag_name=flag_value, thus -- are at positions 0 and 1 and we should have
-  // at least one symbor for the flag name.
-  if (equal_pos >= 0 && (equal_pos < 3 || equal_pos == flag_length)) {
+  // at least one symbol for the flag name.
+  if (equal_pos > 0 && (equal_pos < 3 || equal_pos == flag_length)) {
     fprintf(stderr, "Wrong switch format: %s\n", flag.c_str());
     fprintf(stderr, "Wrong placement of =\n");
     return false;
@@ -53,20 +49,22 @@ bool CommandLineParser::IsFlagWellFormed(std::string flag) {
 }
 
 std::string CommandLineParser::GetCommandLineFlagName(std::string flag) {
-  int dash_pos = flag.find("--");
-  int equal_pos = flag.find("=");
-
-  if (equal_pos < 0) {
-    return flag.substr(dash_pos+2);
+  size_t dash_pos = flag.find("--");
+  size_t equal_pos = flag.find("=");
+  if (equal_pos == string::npos) {
+    return flag.substr(dash_pos + 2);
   } else {
-    return flag.substr(dash_pos+2, equal_pos-2);
+    return flag.substr(dash_pos + 2, equal_pos - 2);
   }
 }
 
 std::string CommandLineParser::GetCommandLineFlagValue(std::string flag) {
-  int equal_pos = flag.find("=");
-
-  return flag.substr(equal_pos+1);
+  size_t equal_pos = flag.find("=");
+  if (equal_pos == string::npos) {
+    return "";
+  } else {
+    return flag.substr(equal_pos + 1);
+  }
 }
 
 void CommandLineParser::PrintEnteredFlags() {
@@ -112,14 +110,15 @@ void CommandLineParser::PrintUsageMessage() {
   fprintf(stdout, "%s", usage_message_.c_str());
 }
 
-void CommandLineParser::SetFlag(std::string flag_name, std::string flag_value) {
-  flags_[flag_name] = flag_value;
+void CommandLineParser::SetFlag(std::string flag_name,
+                                std::string default_flag_value) {
+  flags_[flag_name] = default_flag_value;
 }
 
 std::string CommandLineParser::GetFlag(std::string flag_name) {
   std::map<std::string, std::string>::iterator flag_iter;
   flag_iter = flags_.find(flag_name);
-  // If no such file.
+  // If no such flag.
   if (flag_iter == flags_.end()) {
     return "";
   }

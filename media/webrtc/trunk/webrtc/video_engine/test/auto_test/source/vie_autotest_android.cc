@@ -162,19 +162,12 @@ int ViEAutoTestAndroid::RunAutotest(int testSelection, int subTestSelection,
           vieAutoTest.ViEImageProcessExtendedTest();
           break;
 
-        case 8: // network
-          vieAutoTest.ViENetworkExtendedTest();
-          break;
-
-        case 9: // Render
+        case 8: // Render
           vieAutoTest.ViERenderExtendedTest();
           break;
 
-        case 10: // RTP/RTCP
+        case 9: // RTP/RTCP
           vieAutoTest.ViERtpRtcpExtendedTest();
-          break;
-
-        case 11:
           break;
 
         default:

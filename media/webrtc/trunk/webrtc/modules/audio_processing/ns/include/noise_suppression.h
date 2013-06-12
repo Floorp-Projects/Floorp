@@ -62,7 +62,7 @@ int WebRtcNs_Free(NsHandle* NS_inst);
  * Return value         :  0 - Ok
  *                        -1 - Error
  */
-int WebRtcNs_Init(NsHandle* NS_inst, WebRtc_UWord32 fs);
+int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs);
 
 /*
  * This changes the aggressiveness of the noise suppression method.

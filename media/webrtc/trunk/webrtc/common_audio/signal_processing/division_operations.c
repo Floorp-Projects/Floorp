@@ -23,47 +23,47 @@
 
 #include "signal_processing_library.h"
 
-WebRtc_UWord32 WebRtcSpl_DivU32U16(WebRtc_UWord32 num, WebRtc_UWord16 den)
+uint32_t WebRtcSpl_DivU32U16(uint32_t num, uint16_t den)
 {
     // Guard against division with 0
     if (den != 0)
     {
-        return (WebRtc_UWord32)(num / den);
+        return (uint32_t)(num / den);
     } else
     {
-        return (WebRtc_UWord32)0xFFFFFFFF;
+        return (uint32_t)0xFFFFFFFF;
     }
 }
 
-WebRtc_Word32 WebRtcSpl_DivW32W16(WebRtc_Word32 num, WebRtc_Word16 den)
+int32_t WebRtcSpl_DivW32W16(int32_t num, int16_t den)
 {
     // Guard against division with 0
     if (den != 0)
     {
-        return (WebRtc_Word32)(num / den);
+        return (int32_t)(num / den);
     } else
     {
-        return (WebRtc_Word32)0x7FFFFFFF;
+        return (int32_t)0x7FFFFFFF;
     }
 }
 
-WebRtc_Word16 WebRtcSpl_DivW32W16ResW16(WebRtc_Word32 num, WebRtc_Word16 den)
+int16_t WebRtcSpl_DivW32W16ResW16(int32_t num, int16_t den)
 {
     // Guard against division with 0
     if (den != 0)
     {
-        return (WebRtc_Word16)(num / den);
+        return (int16_t)(num / den);
     } else
     {
-        return (WebRtc_Word16)0x7FFF;
+        return (int16_t)0x7FFF;
     }
 }
 
-WebRtc_Word32 WebRtcSpl_DivResultInQ31(WebRtc_Word32 num, WebRtc_Word32 den)
+int32_t WebRtcSpl_DivResultInQ31(int32_t num, int32_t den)
 {
-    WebRtc_Word32 L_num = num;
-    WebRtc_Word32 L_den = den;
-    WebRtc_Word32 div = 0;
+    int32_t L_num = num;
+    int32_t L_den = den;
+    int32_t div = 0;
     int k = 31;
     int change_sign = 0;
 
@@ -97,13 +97,12 @@ WebRtc_Word32 WebRtcSpl_DivResultInQ31(WebRtc_Word32 num, WebRtc_Word32 den)
     return div;
 }
 
-WebRtc_Word32 WebRtcSpl_DivW32HiLow(WebRtc_Word32 num, WebRtc_Word16 den_hi,
-                                    WebRtc_Word16 den_low)
+int32_t WebRtcSpl_DivW32HiLow(int32_t num, int16_t den_hi, int16_t den_low)
 {
-    WebRtc_Word16 approx, tmp_hi, tmp_low, num_hi, num_low;
-    WebRtc_Word32 tmpW32;
+    int16_t approx, tmp_hi, tmp_low, num_hi, num_low;
+    int32_t tmpW32;
 
-    approx = (WebRtc_Word16)WebRtcSpl_DivW32W16((WebRtc_Word32)0x1FFFFFFF, den_hi);
+    approx = (int16_t)WebRtcSpl_DivW32W16((int32_t)0x1FFFFFFF, den_hi);
     // result in Q14 (Note: 3FFFFFFF = 0.5 in Q30)
 
     // tmpW32 = 1/den = approx * (2.0 - den * approx) (in Q30)
@@ -111,26 +110,26 @@ WebRtc_Word32 WebRtcSpl_DivW32HiLow(WebRtc_Word32 num, WebRtc_Word16 den_hi,
             + ((WEBRTC_SPL_MUL_16_16(den_low, approx) >> 15) << 1);
     // tmpW32 = den * approx
 
-    tmpW32 = (WebRtc_Word32)0x7fffffffL - tmpW32; // result in Q30 (tmpW32 = 2.0-(den*approx))
+    tmpW32 = (int32_t)0x7fffffffL - tmpW32; // result in Q30 (tmpW32 = 2.0-(den*approx))
 
     // Store tmpW32 in hi and low format
-    tmp_hi = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmpW32, 16);
-    tmp_low = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32((tmpW32
-            - WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)tmp_hi, 16)), 1);
+    tmp_hi = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmpW32, 16);
+    tmp_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((tmpW32
+            - WEBRTC_SPL_LSHIFT_W32((int32_t)tmp_hi, 16)), 1);
 
     // tmpW32 = 1/den in Q29
     tmpW32 = ((WEBRTC_SPL_MUL_16_16(tmp_hi, approx) + (WEBRTC_SPL_MUL_16_16(tmp_low, approx)
             >> 15)) << 1);
 
     // 1/den in hi and low format
-    tmp_hi = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmpW32, 16);
-    tmp_low = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32((tmpW32
-            - WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)tmp_hi, 16)), 1);
+    tmp_hi = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmpW32, 16);
+    tmp_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((tmpW32
+            - WEBRTC_SPL_LSHIFT_W32((int32_t)tmp_hi, 16)), 1);
 
     // Store num in hi and low format
-    num_hi = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(num, 16);
-    num_low = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32((num
-            - WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)num_hi, 16)), 1);
+    num_hi = (int16_t)WEBRTC_SPL_RSHIFT_W32(num, 16);
+    num_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((num
+            - WEBRTC_SPL_LSHIFT_W32((int32_t)num_hi, 16)), 1);
 
     // num * (1/den) by 32 bit multiplication (result in Q28)
 

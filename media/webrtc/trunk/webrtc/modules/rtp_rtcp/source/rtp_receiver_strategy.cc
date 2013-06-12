@@ -14,7 +14,8 @@
 
 namespace webrtc {
 
-RTPReceiverStrategy::RTPReceiverStrategy() {
+RTPReceiverStrategy::RTPReceiverStrategy(RtpData* data_callback)
+    : data_callback_(data_callback) {
   memset(&last_payload_, 0, sizeof(last_payload_));
 }
 

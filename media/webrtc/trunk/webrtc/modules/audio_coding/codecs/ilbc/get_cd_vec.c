@@ -25,16 +25,16 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_GetCbVec(
-    WebRtc_Word16 *cbvec,   /* (o) Constructed codebook vector */
-    WebRtc_Word16 *mem,   /* (i) Codebook buffer */
-    WebRtc_Word16 index,   /* (i) Codebook index */
-    WebRtc_Word16 lMem,   /* (i) Length of codebook buffer */
-    WebRtc_Word16 cbveclen   /* (i) Codebook vector length */
+    int16_t *cbvec,   /* (o) Constructed codebook vector */
+    int16_t *mem,   /* (i) Codebook buffer */
+    int16_t index,   /* (i) Codebook index */
+    int16_t lMem,   /* (i) Length of codebook buffer */
+    int16_t cbveclen   /* (i) Codebook vector length */
                             ){
-  WebRtc_Word16 k, base_size;
-  WebRtc_Word16 lag;
+  int16_t k, base_size;
+  int16_t lag;
   /* Stack based */
-  WebRtc_Word16 tempbuff2[SUBL+5];
+  int16_t tempbuff2[SUBL+5];
 
   /* Determine size of codebook sections */
 
@@ -58,7 +58,7 @@ void WebRtcIlbcfix_GetCbVec(
 
     /* Calculate lag */
 
-    k=(WebRtc_Word16)WEBRTC_SPL_MUL_16_16(2, (index-(lMem-cbveclen+1)))+cbveclen;
+    k=(int16_t)WEBRTC_SPL_MUL_16_16(2, (index-(lMem-cbveclen+1)))+cbveclen;
 
     lag=WEBRTC_SPL_RSHIFT_W16(k, 1);
 
@@ -70,7 +70,7 @@ void WebRtcIlbcfix_GetCbVec(
 
   else {
 
-    WebRtc_Word16 memIndTest;
+    int16_t memIndTest;
 
     /* first non-interpolated vectors */
 
@@ -86,7 +86,7 @@ void WebRtcIlbcfix_GetCbVec(
       /* do filtering to get the codebook vector */
 
       WebRtcSpl_FilterMAFastQ12(
-          &mem[memIndTest+4], cbvec, (WebRtc_Word16*)WebRtcIlbcfix_kCbFiltersRev,
+          &mem[memIndTest+4], cbvec, (int16_t*)WebRtcIlbcfix_kCbFiltersRev,
           CB_FILTERLEN, cbveclen);
     }
 
@@ -99,8 +99,8 @@ void WebRtcIlbcfix_GetCbVec(
 
       /* do filtering */
       WebRtcSpl_FilterMAFastQ12(
-          &mem[memIndTest+7], tempbuff2, (WebRtc_Word16*)WebRtcIlbcfix_kCbFiltersRev,
-          CB_FILTERLEN, (WebRtc_Word16)(cbveclen+5));
+          &mem[memIndTest+7], tempbuff2, (int16_t*)WebRtcIlbcfix_kCbFiltersRev,
+          CB_FILTERLEN, (int16_t)(cbveclen+5));
 
       /* Calculate lag index */
       lag = (cbveclen<<1)-20+index-base_size-lMem-1;

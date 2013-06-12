@@ -62,8 +62,7 @@ class FecPacket : public ForwardErrorCorrection::SortablePacket {
 bool ForwardErrorCorrection::SortablePacket::LessThan(
     const SortablePacket* first,
     const SortablePacket* second) {
-  return (first->seqNum != second->seqNum &&
-      LatestSequenceNumber(first->seqNum, second->seqNum) == second->seqNum);
+  return IsNewerSequenceNumber(second->seqNum, first->seqNum);
 }
 
 ForwardErrorCorrection::ForwardErrorCorrection(int32_t id)
@@ -826,19 +825,4 @@ int32_t ForwardErrorCorrection::DecodeFEC(
 uint16_t ForwardErrorCorrection::PacketOverhead() {
   return kFecHeaderSize + kUlpHeaderSizeLBitSet;
 }
-
-uint16_t ForwardErrorCorrection::LatestSequenceNumber(uint16_t first,
-                                                      uint16_t second) {
-  bool wrap = (first < 0x00ff && second > 0xff00) ||
-          (first > 0xff00 && second < 0x00ff);
-  if (second > first && !wrap)
-    return second;
-  else if (second <= first && !wrap)
-    return first;
-  else if (second < first && wrap)
-    return second;
-  else
-    return first;
-}
-
 } // namespace webrtc

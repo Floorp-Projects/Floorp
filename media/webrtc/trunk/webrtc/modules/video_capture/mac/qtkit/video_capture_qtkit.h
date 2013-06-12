@@ -32,7 +32,7 @@ namespace videocapturemodule
 class VideoCaptureMacQTKit : public VideoCaptureImpl
 {
 public:
-    VideoCaptureMacQTKit(const WebRtc_Word32 id);
+    VideoCaptureMacQTKit(const int32_t id);
     virtual ~VideoCaptureMacQTKit();
 
     /*
@@ -45,37 +45,36 @@ public:
     */
     static void Destroy(VideoCaptureModule* module);
 
-    WebRtc_Word32 Init(const WebRtc_Word32 id,
-                       const char* deviceUniqueIdUTF8);
+    int32_t Init(const int32_t id, const char* deviceUniqueIdUTF8);
 
 
     // Start/Stop
-    virtual WebRtc_Word32 StartCapture(
+    virtual int32_t StartCapture(
         const VideoCaptureCapability& capability);
-    virtual WebRtc_Word32 StopCapture();
+    virtual int32_t StopCapture();
 
     // Properties of the set device
 
     virtual bool CaptureStarted();
 
-    WebRtc_Word32 CaptureSettings(VideoCaptureCapability& settings);
+    int32_t CaptureSettings(VideoCaptureCapability& settings);
 
 protected:
     // Help functions
-    WebRtc_Word32 SetCameraOutput();
+    int32_t SetCameraOutput();
 
 private:
     VideoCaptureMacQTKitObjC*        _captureDevice;
     VideoCaptureMacQTKitInfoObjC*    _captureInfo;
     bool                    _isCapturing;
-    WebRtc_Word32            _id;
-    WebRtc_Word32            _captureWidth;
-    WebRtc_Word32            _captureHeight;
-    WebRtc_Word32            _captureFrameRate;
+    int32_t            _id;
+    int32_t            _captureWidth;
+    int32_t            _captureHeight;
+    int32_t            _captureFrameRate;
     char                     _currentDeviceNameUTF8[MAX_NAME_LENGTH];
     char                     _currentDeviceUniqueIdUTF8[MAX_NAME_LENGTH];
     char                     _currentDeviceProductUniqueIDUTF8[MAX_NAME_LENGTH];
-    WebRtc_Word32            _frameCount;
+    int32_t            _frameCount;
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

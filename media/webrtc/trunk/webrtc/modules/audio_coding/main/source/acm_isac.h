@@ -24,95 +24,95 @@ enum IsacCodingMode {
 
 class ACMISAC : public ACMGenericCodec {
  public:
-  explicit ACMISAC(WebRtc_Word16 codec_id);
+  explicit ACMISAC(int16_t codec_id);
   ~ACMISAC();
 
   // for FEC
   ACMGenericCodec* CreateInstance(void);
 
-  WebRtc_Word16 InternalEncode(WebRtc_UWord8* bitstream,
-                               WebRtc_Word16* bitstream_len_byte);
+  int16_t InternalEncode(uint8_t* bitstream,
+                         int16_t* bitstream_len_byte);
 
-  WebRtc_Word16 InternalInitEncoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitEncoder(WebRtcACMCodecParams *codec_params);
 
-  WebRtc_Word16 InternalInitDecoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
 
-  WebRtc_Word16 DeliverCachedIsacData(WebRtc_UWord8* bitstream,
-                                      WebRtc_Word16* bitstream_len_byte,
-                                      WebRtc_UWord32* timestamp,
-                                      WebRtcACMEncodingType* encoding_type,
-                                      const WebRtc_UWord16 isac_rate,
-                                      const WebRtc_UWord8 isac_bwestimate);
+  int16_t DeliverCachedIsacData(uint8_t* bitstream,
+                                int16_t* bitstream_len_byte,
+                                uint32_t* timestamp,
+                                WebRtcACMEncodingType* encoding_type,
+                                const uint16_t isac_rate,
+                                const uint8_t isac_bwestimate);
 
-  WebRtc_Word16 DeliverCachedData(WebRtc_UWord8* /* bitstream */,
-                                  WebRtc_Word16* /* bitstream_len_byte */,
-                                  WebRtc_UWord32* /* timestamp */,
-                                  WebRtcACMEncodingType* /* encoding_type */) {
+  int16_t DeliverCachedData(uint8_t* /* bitstream */,
+                            int16_t* /* bitstream_len_byte */,
+                            uint32_t* /* timestamp */,
+                            WebRtcACMEncodingType* /* encoding_type */) {
     return -1;
   }
 
-  WebRtc_Word16 UpdateDecoderSampFreq(WebRtc_Word16 codec_id);
+  int16_t UpdateDecoderSampFreq(int16_t codec_id);
 
-  WebRtc_Word16 UpdateEncoderSampFreq(WebRtc_UWord16 samp_freq_hz);
+  int16_t UpdateEncoderSampFreq(uint16_t samp_freq_hz);
 
-  WebRtc_Word16 EncoderSampFreq(WebRtc_UWord16& samp_freq_hz);
+  int16_t EncoderSampFreq(uint16_t& samp_freq_hz);
 
-  WebRtc_Word32 ConfigISACBandwidthEstimator(
-      const WebRtc_UWord8 init_frame_size_msec,
-      const WebRtc_UWord16 init_rate_bit_per_sec,
+  int32_t ConfigISACBandwidthEstimator(
+      const uint8_t init_frame_size_msec,
+      const uint16_t init_rate_bit_per_sec,
       const bool enforce_frame_size);
 
-  WebRtc_Word32 SetISACMaxPayloadSize(
-      const WebRtc_UWord16 max_payload_len_bytes);
+  int32_t SetISACMaxPayloadSize(
+      const uint16_t max_payload_len_bytes);
 
-  WebRtc_Word32 SetISACMaxRate(const WebRtc_UWord32 max_rate_bit_per_sec);
+  int32_t SetISACMaxRate(const uint32_t max_rate_bit_per_sec);
 
-  WebRtc_Word16 REDPayloadISAC(const WebRtc_Word32 isac_rate,
-                               const WebRtc_Word16 isac_bw_estimate,
-                               WebRtc_UWord8* payload,
-                               WebRtc_Word16* payload_len_bytes);
+  int16_t REDPayloadISAC(const int32_t isac_rate,
+                         const int16_t isac_bw_estimate,
+                         uint8_t* payload,
+                         int16_t* payload_len_bytes);
 
  protected:
-  WebRtc_Word16 DecodeSafe(WebRtc_UWord8* bitstream,
-                           WebRtc_Word16 bitstream_len_byte,
-                           WebRtc_Word16* audio,
-                           WebRtc_Word16* audio_samples,
-                           WebRtc_Word8* speech_type);
+  int16_t DecodeSafe(uint8_t* bitstream,
+                     int16_t bitstream_len_byte,
+                     int16_t* audio,
+                     int16_t* audio_samples,
+                     int8_t* speech_type);
 
-  WebRtc_Word32 CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                         const CodecInst& codec_inst);
+  int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                   const CodecInst& codec_inst);
 
   void DestructEncoderSafe();
 
   void DestructDecoderSafe();
 
-  WebRtc_Word16 SetBitRateSafe(const WebRtc_Word32 bit_rate);
+  int16_t SetBitRateSafe(const int32_t bit_rate);
 
-  WebRtc_Word32 GetEstimatedBandwidthSafe();
+  int32_t GetEstimatedBandwidthSafe();
 
-  WebRtc_Word32 SetEstimatedBandwidthSafe(WebRtc_Word32 estimated_bandwidth);
+  int32_t SetEstimatedBandwidthSafe(int32_t estimated_bandwidth);
 
-  WebRtc_Word32 GetRedPayloadSafe(WebRtc_UWord8* red_payload,
-                                  WebRtc_Word16* payload_bytes);
+  int32_t GetRedPayloadSafe(uint8_t* red_payload,
+                            int16_t* payload_bytes);
 
-  WebRtc_Word16 InternalCreateEncoder();
+  int16_t InternalCreateEncoder();
 
-  WebRtc_Word16 InternalCreateDecoder();
+  int16_t InternalCreateDecoder();
 
   void InternalDestructEncoderInst(void* ptr_inst);
 
-  WebRtc_Word16 Transcode(WebRtc_UWord8* bitstream,
-                          WebRtc_Word16* bitstream_len_byte,
-                          WebRtc_Word16 q_bwe,
-                          WebRtc_Word32 rate,
-                          bool is_red);
+  int16_t Transcode(uint8_t* bitstream,
+                    int16_t* bitstream_len_byte,
+                    int16_t q_bwe,
+                    int32_t rate,
+                    bool is_red);
 
-  void CurrentRate(WebRtc_Word32& rate_bit_per_sec);
+  void CurrentRate(int32_t& rate_bit_per_sec);
 
   void UpdateFrameLen();
 
   bool DecoderParamsSafe(WebRtcACMCodecParams *dec_params,
-                         const WebRtc_UWord8 payload_type);
+                         const uint8_t payload_type);
 
   void SaveDecoderParamSafe(const WebRtcACMCodecParams* codec_params);
 
@@ -120,8 +120,8 @@ class ACMISAC : public ACMGenericCodec {
   bool is_enc_initialized_;
   IsacCodingMode isac_coding_mode_;
   bool enforce_frame_size_;
-  WebRtc_Word32 isac_current_bn_;
-  WebRtc_UWord16 samples_in_10ms_audio_;
+  int32_t isac_current_bn_;
+  uint16_t samples_in_10ms_audio_;
   WebRtcACMCodecParams decoder_params_32khz_;
 };
 

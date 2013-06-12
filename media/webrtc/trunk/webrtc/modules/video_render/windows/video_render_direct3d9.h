@@ -45,8 +45,8 @@ public:
 
     // A new frame is delivered.
     virtual int DeliverFrame(const I420VideoFrame& videoFrame);
-    virtual WebRtc_Word32 RenderFrame(const WebRtc_UWord32 streamId,
-                                      I420VideoFrame& videoFrame);
+    virtual int32_t RenderFrame(const uint32_t streamId,
+                                I420VideoFrame& videoFrame);
 
     // Called to check if the video frame is updated.
     int IsUpdated(bool& isUpdated);
@@ -58,14 +58,14 @@ public:
     int GetTextureWidth();
     int GetTextureHeight();
     //
-    void SetStreamSettings(WebRtc_UWord16 streamId,
-                           WebRtc_UWord32 zOrder,
+    void SetStreamSettings(uint16_t streamId,
+                           uint32_t zOrder,
                            float startWidth,
                            float startHeight,
                            float stopWidth,
                            float stopHeight);
-    int GetStreamSettings(WebRtc_UWord16 streamId,
-                          WebRtc_UWord32& zOrder,
+    int GetStreamSettings(uint16_t streamId,
+                          uint32_t& zOrder,
                           float& startWidth,
                           float& startHeight,
                           float& stopWidth,
@@ -88,8 +88,8 @@ private:
     int _height;
     //sream settings
     //TODO support multiple streams in one channel
-    WebRtc_UWord16 _streamId;
-    WebRtc_UWord32 _zOrder;
+    uint16_t _streamId;
+    uint32_t _zOrder;
     float _startWidth;
     float _startHeight;
     float _stopWidth;
@@ -110,7 +110,7 @@ public:
      *   Init
      *
      ***************************************************************************/
-    virtual WebRtc_Word32 Init();
+    virtual int32_t Init();
 
     /**************************************************************************
      *
@@ -118,22 +118,20 @@ public:
      *
      ***************************************************************************/
     virtual VideoRenderCallback
-            * CreateChannel(const WebRtc_UWord32 streamId,
-                            const WebRtc_UWord32 zOrder,
+            * CreateChannel(const uint32_t streamId,
+                            const uint32_t zOrder,
                             const float left,
                             const float top,
                             const float right,
                             const float bottom);
 
-    virtual WebRtc_Word32 DeleteChannel(const WebRtc_UWord32 streamId);
+    virtual int32_t DeleteChannel(const uint32_t streamId);
 
-    virtual WebRtc_Word32 GetStreamSettings(const WebRtc_UWord32 channel,
-                                            const WebRtc_UWord16 streamId,
-                                            WebRtc_UWord32& zOrder,
-                                            float& left,
-                                            float& top,
-                                            float& right,
-                                            float& bottom);
+    virtual int32_t GetStreamSettings(const uint32_t channel,
+                                      const uint16_t streamId,
+                                      uint32_t& zOrder,
+                                      float& left, float& top,
+                                      float& right, float& bottom);
 
     /**************************************************************************
      *
@@ -141,8 +139,8 @@ public:
      *
      ***************************************************************************/
 
-    virtual WebRtc_Word32 StartRender();
-    virtual WebRtc_Word32 StopRender();
+    virtual int32_t StartRender();
+    virtual int32_t StopRender();
 
     /**************************************************************************
      *
@@ -152,45 +150,37 @@ public:
 
     virtual bool IsFullScreen();
 
-    virtual WebRtc_Word32 SetCropping(const WebRtc_UWord32 channel,
-                                      const WebRtc_UWord16 streamId,
-                                      const float left,
-                                      const float top,
-                                      const float right,
-                                      const float bottom);
+    virtual int32_t SetCropping(const uint32_t channel,
+                                const uint16_t streamId,
+                                const float left, const float top,
+                                const float right, const float bottom);
 
-    virtual WebRtc_Word32 ConfigureRenderer(const WebRtc_UWord32 channel,
-                                            const WebRtc_UWord16 streamId,
-                                            const unsigned int zOrder,
-                                            const float left,
-                                            const float top,
-                                            const float right,
-                                            const float bottom);
+    virtual int32_t ConfigureRenderer(const uint32_t channel,
+                                      const uint16_t streamId,
+                                      const unsigned int zOrder,
+                                      const float left, const float top,
+                                      const float right, const float bottom);
 
-    virtual WebRtc_Word32 SetTransparentBackground(const bool enable);
+    virtual int32_t SetTransparentBackground(const bool enable);
 
-    virtual WebRtc_Word32 ChangeWindow(void* window);
+    virtual int32_t ChangeWindow(void* window);
 
-    virtual WebRtc_Word32 GetGraphicsMemory(WebRtc_UWord64& totalMemory,
-                                            WebRtc_UWord64& availableMemory);
+    virtual int32_t GetGraphicsMemory(uint64_t& totalMemory,
+                                      uint64_t& availableMemory);
 
-    virtual WebRtc_Word32 SetText(const WebRtc_UWord8 textId,
-                                  const WebRtc_UWord8* text,
-                                  const WebRtc_Word32 textLength,
-                                  const WebRtc_UWord32 colorText,
-                                  const WebRtc_UWord32 colorBg,
-                                  const float left,
-                                  const float top,
-                                  const float rigth,
-                                  const float bottom);
+    virtual int32_t SetText(const uint8_t textId,
+                            const uint8_t* text,
+                            const int32_t textLength,
+                            const uint32_t colorText,
+                            const uint32_t colorBg,
+                            const float left, const float top,
+                            const float rigth, const float bottom);
 
-    virtual WebRtc_Word32 SetBitmap(const void* bitMap,
-                                    const WebRtc_UWord8 pictureId,
-                                    const void* colorKey,
-                                    const float left,
-                                    const float top,
-                                    const float right,
-                                    const float bottom);
+    virtual int32_t SetBitmap(const void* bitMap,
+                              const uint8_t pictureId,
+                              const void* colorKey,
+                              const float left, const float top,
+                              const float right, const float bottom);
 
 public:
     // Get a channel by channel id

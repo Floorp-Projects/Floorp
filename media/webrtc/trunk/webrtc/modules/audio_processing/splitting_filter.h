@@ -31,11 +31,11 @@ namespace webrtc {
  *    - low_band : The signal from the 0-4 kHz band
  *    - high_band  : The signal from the 4-8 kHz band
  */
-void SplittingFilterAnalysis(const WebRtc_Word16* in_data,
-                             WebRtc_Word16* low_band,
-                             WebRtc_Word16* high_band,
-                             WebRtc_Word32* filt_state1,
-                             WebRtc_Word32* filt_state2);
+void SplittingFilterAnalysis(const int16_t* in_data,
+                             int16_t* low_band,
+                             int16_t* high_band,
+                             int32_t* filt_state1,
+                             int32_t* filt_state2);
 
 /*
  * SplittingFilterbank_synthesisQMF(...)
@@ -53,11 +53,11 @@ void SplittingFilterAnalysis(const WebRtc_Word16* in_data,
  * Output:
  *    - out_data : super-wb speech signal
  */
-void SplittingFilterSynthesis(const WebRtc_Word16* low_band,
-                              const WebRtc_Word16* high_band,
-                              WebRtc_Word16* out_data,
-                              WebRtc_Word32* filt_state1,
-                              WebRtc_Word32* filt_state2);
+void SplittingFilterSynthesis(const int16_t* low_band,
+                              const int16_t* high_band,
+                              int16_t* out_data,
+                              int32_t* filt_state1,
+                              int32_t* filt_state2);
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_AUDIO_PROCESSING_MAIN_SOURCE_SPLITTING_FILTER_H_

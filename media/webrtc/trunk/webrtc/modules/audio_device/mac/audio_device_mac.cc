@@ -76,7 +76,7 @@ int32_t AudioDeviceMac::AtomicGet32(int32_t* theValue)
 {
     while (1)
     {
-        WebRtc_Word32 value = *theValue;
+        int32_t value = *theValue;
         if (OSAtomicCompareAndSwap32Barrier(value, value, theValue) == true)
         {
             return value;
@@ -87,7 +87,7 @@ int32_t AudioDeviceMac::AtomicGet32(int32_t* theValue)
 // CoreAudio errors are best interpreted as four character strings.
 void AudioDeviceMac::logCAMsg(const TraceLevel level,
                               const TraceModule module,
-                              const WebRtc_Word32 id, const char *msg,
+                              const int32_t id, const char *msg,
                               const char *err)
 {
     assert(msg != NULL);
@@ -102,7 +102,7 @@ void AudioDeviceMac::logCAMsg(const TraceLevel level,
 #endif
 }
 
-AudioDeviceMac::AudioDeviceMac(const WebRtc_Word32 id) :
+AudioDeviceMac::AudioDeviceMac(const int32_t id) :
     _ptrAudioBuffer(NULL),
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _stopEventRec(*EventWrapper::Create()),
@@ -251,14 +251,14 @@ void AudioDeviceMac::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer)
     _ptrAudioBuffer->SetPlayoutChannels(N_PLAY_CHANNELS);
 }
 
-WebRtc_Word32 AudioDeviceMac::ActiveAudioLayer(
+int32_t AudioDeviceMac::ActiveAudioLayer(
     AudioDeviceModule::AudioLayer& audioLayer) const
 {
     audioLayer = AudioDeviceModule::kPlatformDefaultAudio;
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::Init()
+int32_t AudioDeviceMac::Init()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -421,7 +421,7 @@ WebRtc_Word32 AudioDeviceMac::Init()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::Terminate()
+int32_t AudioDeviceMac::Terminate()
 {
 
     if (!_initialized)
@@ -479,7 +479,7 @@ bool AudioDeviceMac::Initialized() const
     return (_initialized);
 }
 
-WebRtc_Word32 AudioDeviceMac::SpeakerIsAvailable(bool& available)
+int32_t AudioDeviceMac::SpeakerIsAvailable(bool& available)
 {
 
     bool wasInitialized = _mixerManager.SpeakerIsInitialized();
@@ -507,7 +507,7 @@ WebRtc_Word32 AudioDeviceMac::SpeakerIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::InitSpeaker()
+int32_t AudioDeviceMac::InitSpeaker()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -538,7 +538,7 @@ WebRtc_Word32 AudioDeviceMac::InitSpeaker()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::MicrophoneIsAvailable(bool& available)
+int32_t AudioDeviceMac::MicrophoneIsAvailable(bool& available)
 {
 
     bool wasInitialized = _mixerManager.MicrophoneIsInitialized();
@@ -567,7 +567,7 @@ WebRtc_Word32 AudioDeviceMac::MicrophoneIsAvailable(bool& available)
 }
 
 
-WebRtc_Word32 AudioDeviceMac::InitMicrophone()
+int32_t AudioDeviceMac::InitMicrophone()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -608,7 +608,7 @@ bool AudioDeviceMac::MicrophoneIsInitialized() const
     return (_mixerManager.MicrophoneIsInitialized());
 }
 
-WebRtc_Word32 AudioDeviceMac::SpeakerVolumeIsAvailable(bool& available)
+int32_t AudioDeviceMac::SpeakerVolumeIsAvailable(bool& available)
 {
 
     bool wasInitialized = _mixerManager.SpeakerIsInitialized();
@@ -638,16 +638,16 @@ WebRtc_Word32 AudioDeviceMac::SpeakerVolumeIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetSpeakerVolume(WebRtc_UWord32 volume)
+int32_t AudioDeviceMac::SetSpeakerVolume(uint32_t volume)
 {
 
     return (_mixerManager.SetSpeakerVolume(volume));
 }
 
-WebRtc_Word32 AudioDeviceMac::SpeakerVolume(WebRtc_UWord32& volume) const
+int32_t AudioDeviceMac::SpeakerVolume(uint32_t& volume) const
 {
 
-    WebRtc_UWord32 level(0);
+    uint32_t level(0);
 
     if (_mixerManager.SpeakerVolume(level) == -1)
     {
@@ -658,8 +658,8 @@ WebRtc_Word32 AudioDeviceMac::SpeakerVolume(WebRtc_UWord32& volume) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetWaveOutVolume(WebRtc_UWord16 volumeLeft,
-                                               WebRtc_UWord16 volumeRight)
+int32_t AudioDeviceMac::SetWaveOutVolume(uint16_t volumeLeft,
+                                         uint16_t volumeRight)
 {
 
     WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
@@ -667,9 +667,9 @@ WebRtc_Word32 AudioDeviceMac::SetWaveOutVolume(WebRtc_UWord16 volumeLeft,
     return -1;
 }
 
-WebRtc_Word32
-AudioDeviceMac::WaveOutVolume(WebRtc_UWord16& /*volumeLeft*/,
-                              WebRtc_UWord16& /*volumeRight*/) const
+int32_t
+AudioDeviceMac::WaveOutVolume(uint16_t& /*volumeLeft*/,
+                              uint16_t& /*volumeRight*/) const
 {
 
     WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
@@ -677,10 +677,10 @@ AudioDeviceMac::WaveOutVolume(WebRtc_UWord16& /*volumeLeft*/,
     return -1;
 }
 
-WebRtc_Word32 AudioDeviceMac::MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const
+int32_t AudioDeviceMac::MaxSpeakerVolume(uint32_t& maxVolume) const
 {
 
-    WebRtc_UWord32 maxVol(0);
+    uint32_t maxVol(0);
 
     if (_mixerManager.MaxSpeakerVolume(maxVol) == -1)
     {
@@ -691,10 +691,10 @@ WebRtc_Word32 AudioDeviceMac::MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::MinSpeakerVolume(WebRtc_UWord32& minVolume) const
+int32_t AudioDeviceMac::MinSpeakerVolume(uint32_t& minVolume) const
 {
 
-    WebRtc_UWord32 minVol(0);
+    uint32_t minVol(0);
 
     if (_mixerManager.MinSpeakerVolume(minVol) == -1)
     {
@@ -705,11 +705,11 @@ WebRtc_Word32 AudioDeviceMac::MinSpeakerVolume(WebRtc_UWord32& minVolume) const
     return 0;
 }
 
-WebRtc_Word32
-AudioDeviceMac::SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) const
+int32_t
+AudioDeviceMac::SpeakerVolumeStepSize(uint16_t& stepSize) const
 {
 
-    WebRtc_UWord16 delta(0);
+    uint16_t delta(0);
 
     if (_mixerManager.SpeakerVolumeStepSize(delta) == -1)
     {
@@ -720,7 +720,7 @@ AudioDeviceMac::SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SpeakerMuteIsAvailable(bool& available)
+int32_t AudioDeviceMac::SpeakerMuteIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -754,12 +754,12 @@ WebRtc_Word32 AudioDeviceMac::SpeakerMuteIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetSpeakerMute(bool enable)
+int32_t AudioDeviceMac::SetSpeakerMute(bool enable)
 {
     return (_mixerManager.SetSpeakerMute(enable));
 }
 
-WebRtc_Word32 AudioDeviceMac::SpeakerMute(bool& enabled) const
+int32_t AudioDeviceMac::SpeakerMute(bool& enabled) const
 {
 
     bool muted(0);
@@ -773,7 +773,7 @@ WebRtc_Word32 AudioDeviceMac::SpeakerMute(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::MicrophoneMuteIsAvailable(bool& available)
+int32_t AudioDeviceMac::MicrophoneMuteIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -806,12 +806,12 @@ WebRtc_Word32 AudioDeviceMac::MicrophoneMuteIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetMicrophoneMute(bool enable)
+int32_t AudioDeviceMac::SetMicrophoneMute(bool enable)
 {
     return (_mixerManager.SetMicrophoneMute(enable));
 }
 
-WebRtc_Word32 AudioDeviceMac::MicrophoneMute(bool& enabled) const
+int32_t AudioDeviceMac::MicrophoneMute(bool& enabled) const
 {
 
     bool muted(0);
@@ -825,7 +825,7 @@ WebRtc_Word32 AudioDeviceMac::MicrophoneMute(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::MicrophoneBoostIsAvailable(bool& available)
+int32_t AudioDeviceMac::MicrophoneBoostIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -858,13 +858,13 @@ WebRtc_Word32 AudioDeviceMac::MicrophoneBoostIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetMicrophoneBoost(bool enable)
+int32_t AudioDeviceMac::SetMicrophoneBoost(bool enable)
 {
 
     return (_mixerManager.SetMicrophoneBoost(enable));
 }
 
-WebRtc_Word32 AudioDeviceMac::MicrophoneBoost(bool& enabled) const
+int32_t AudioDeviceMac::MicrophoneBoost(bool& enabled) const
 {
 
     bool onOff(0);
@@ -878,7 +878,7 @@ WebRtc_Word32 AudioDeviceMac::MicrophoneBoost(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::StereoRecordingIsAvailable(bool& available)
+int32_t AudioDeviceMac::StereoRecordingIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -906,7 +906,7 @@ WebRtc_Word32 AudioDeviceMac::StereoRecordingIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetStereoRecording(bool enable)
+int32_t AudioDeviceMac::SetStereoRecording(bool enable)
 {
 
     if (enable)
@@ -917,7 +917,7 @@ WebRtc_Word32 AudioDeviceMac::SetStereoRecording(bool enable)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::StereoRecording(bool& enabled) const
+int32_t AudioDeviceMac::StereoRecording(bool& enabled) const
 {
 
     if (_recChannels == 2)
@@ -928,7 +928,7 @@ WebRtc_Word32 AudioDeviceMac::StereoRecording(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::StereoPlayoutIsAvailable(bool& available)
+int32_t AudioDeviceMac::StereoPlayoutIsAvailable(bool& available)
 {
 
     bool isAvailable(false);
@@ -956,7 +956,7 @@ WebRtc_Word32 AudioDeviceMac::StereoPlayoutIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetStereoPlayout(bool enable)
+int32_t AudioDeviceMac::SetStereoPlayout(bool enable)
 {
 
     if (enable)
@@ -967,7 +967,7 @@ WebRtc_Word32 AudioDeviceMac::SetStereoPlayout(bool enable)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::StereoPlayout(bool& enabled) const
+int32_t AudioDeviceMac::StereoPlayout(bool& enabled) const
 {
 
     if (_playChannels == 2)
@@ -978,7 +978,7 @@ WebRtc_Word32 AudioDeviceMac::StereoPlayout(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetAGC(bool enable)
+int32_t AudioDeviceMac::SetAGC(bool enable)
 {
 
     _AGC = enable;
@@ -992,7 +992,7 @@ bool AudioDeviceMac::AGC() const
     return _AGC;
 }
 
-WebRtc_Word32 AudioDeviceMac::MicrophoneVolumeIsAvailable(bool& available)
+int32_t AudioDeviceMac::MicrophoneVolumeIsAvailable(bool& available)
 {
 
     bool wasInitialized = _mixerManager.MicrophoneIsInitialized();
@@ -1023,16 +1023,16 @@ WebRtc_Word32 AudioDeviceMac::MicrophoneVolumeIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetMicrophoneVolume(WebRtc_UWord32 volume)
+int32_t AudioDeviceMac::SetMicrophoneVolume(uint32_t volume)
 {
 
     return (_mixerManager.SetMicrophoneVolume(volume));
 }
 
-WebRtc_Word32 AudioDeviceMac::MicrophoneVolume(WebRtc_UWord32& volume) const
+int32_t AudioDeviceMac::MicrophoneVolume(uint32_t& volume) const
 {
 
-    WebRtc_UWord32 level(0);
+    uint32_t level(0);
 
     if (_mixerManager.MicrophoneVolume(level) == -1)
     {
@@ -1045,11 +1045,11 @@ WebRtc_Word32 AudioDeviceMac::MicrophoneVolume(WebRtc_UWord32& volume) const
     return 0;
 }
 
-WebRtc_Word32
-AudioDeviceMac::MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) const
+int32_t
+AudioDeviceMac::MaxMicrophoneVolume(uint32_t& maxVolume) const
 {
 
-    WebRtc_UWord32 maxVol(0);
+    uint32_t maxVol(0);
 
     if (_mixerManager.MaxMicrophoneVolume(maxVol) == -1)
     {
@@ -1060,11 +1060,11 @@ AudioDeviceMac::MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) const
     return 0;
 }
 
-WebRtc_Word32
-AudioDeviceMac::MinMicrophoneVolume(WebRtc_UWord32& minVolume) const
+int32_t
+AudioDeviceMac::MinMicrophoneVolume(uint32_t& minVolume) const
 {
 
-    WebRtc_UWord32 minVol(0);
+    uint32_t minVol(0);
 
     if (_mixerManager.MinMicrophoneVolume(minVol) == -1)
     {
@@ -1075,11 +1075,11 @@ AudioDeviceMac::MinMicrophoneVolume(WebRtc_UWord32& minVolume) const
     return 0;
 }
 
-WebRtc_Word32
-AudioDeviceMac::MicrophoneVolumeStepSize(WebRtc_UWord16& stepSize) const
+int32_t
+AudioDeviceMac::MicrophoneVolumeStepSize(uint16_t& stepSize) const
 {
 
-    WebRtc_UWord16 delta(0);
+    uint16_t delta(0);
 
     if (_mixerManager.MicrophoneVolumeStepSize(delta) == -1)
     {
@@ -1090,7 +1090,7 @@ AudioDeviceMac::MicrophoneVolumeStepSize(WebRtc_UWord16& stepSize) const
     return 0;
 }
 
-WebRtc_Word16 AudioDeviceMac::PlayoutDevices()
+int16_t AudioDeviceMac::PlayoutDevices()
 {
 
     AudioDeviceID playDevices[MaxNumberDevices];
@@ -1098,7 +1098,7 @@ WebRtc_Word16 AudioDeviceMac::PlayoutDevices()
                             MaxNumberDevices);
 }
 
-WebRtc_Word32 AudioDeviceMac::SetPlayoutDevice(WebRtc_UWord16 index)
+int32_t AudioDeviceMac::SetPlayoutDevice(uint16_t index)
 {
 
     if (_playIsInitialized)
@@ -1107,8 +1107,8 @@ WebRtc_Word32 AudioDeviceMac::SetPlayoutDevice(WebRtc_UWord16 index)
     }
 
     AudioDeviceID playDevices[MaxNumberDevices];
-    WebRtc_UWord32 nDevices = GetNumberDevices(kAudioDevicePropertyScopeOutput,
-                                               playDevices, MaxNumberDevices);
+    uint32_t nDevices = GetNumberDevices(kAudioDevicePropertyScopeOutput,
+                                         playDevices, MaxNumberDevices);
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "  number of availiable waveform-audio output devices is %u",
                  nDevices);
@@ -1126,7 +1126,7 @@ WebRtc_Word32 AudioDeviceMac::SetPlayoutDevice(WebRtc_UWord16 index)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::SetPlayoutDevice(
+int32_t AudioDeviceMac::SetPlayoutDevice(
     AudioDeviceModule::WindowsDeviceType /*device*/)
 {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -1134,13 +1134,13 @@ WebRtc_Word32 AudioDeviceMac::SetPlayoutDevice(
     return -1;
 }
 
-WebRtc_Word32 AudioDeviceMac::PlayoutDeviceName(
-    WebRtc_UWord16 index,
+int32_t AudioDeviceMac::PlayoutDeviceName(
+    uint16_t index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize])
 {
 
-    const WebRtc_UWord16 nDevices(PlayoutDevices());
+    const uint16_t nDevices(PlayoutDevices());
 
     if ((index > (nDevices - 1)) || (name == NULL))
     {
@@ -1157,13 +1157,13 @@ WebRtc_Word32 AudioDeviceMac::PlayoutDeviceName(
     return GetDeviceName(kAudioDevicePropertyScopeOutput, index, name);
 }
 
-WebRtc_Word32 AudioDeviceMac::RecordingDeviceName(
-    WebRtc_UWord16 index,
+int32_t AudioDeviceMac::RecordingDeviceName(
+    uint16_t index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize])
 {
 
-    const WebRtc_UWord16 nDevices(RecordingDevices());
+    const uint16_t nDevices(RecordingDevices());
 
     if ((index > (nDevices - 1)) || (name == NULL))
     {
@@ -1180,7 +1180,7 @@ WebRtc_Word32 AudioDeviceMac::RecordingDeviceName(
     return GetDeviceName(kAudioDevicePropertyScopeInput, index, name);
 }
 
-WebRtc_Word16 AudioDeviceMac::RecordingDevices()
+int16_t AudioDeviceMac::RecordingDevices()
 {
 
     AudioDeviceID recDevices[MaxNumberDevices];
@@ -1188,7 +1188,7 @@ WebRtc_Word16 AudioDeviceMac::RecordingDevices()
                             MaxNumberDevices);
 }
 
-WebRtc_Word32 AudioDeviceMac::SetRecordingDevice(WebRtc_UWord16 index)
+int32_t AudioDeviceMac::SetRecordingDevice(uint16_t index)
 {
 
     if (_recIsInitialized)
@@ -1197,8 +1197,8 @@ WebRtc_Word32 AudioDeviceMac::SetRecordingDevice(WebRtc_UWord16 index)
     }
 
     AudioDeviceID recDevices[MaxNumberDevices];
-    WebRtc_UWord32 nDevices = GetNumberDevices(kAudioDevicePropertyScopeInput,
-                                               recDevices, MaxNumberDevices);
+    uint32_t nDevices = GetNumberDevices(kAudioDevicePropertyScopeInput,
+                                         recDevices, MaxNumberDevices);
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "  number of availiable waveform-audio input devices is %u",
                  nDevices);
@@ -1217,7 +1217,7 @@ WebRtc_Word32 AudioDeviceMac::SetRecordingDevice(WebRtc_UWord16 index)
 }
 
 
-WebRtc_Word32
+int32_t
 AudioDeviceMac::SetRecordingDevice(AudioDeviceModule::WindowsDeviceType /*device*/)
 {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -1225,7 +1225,7 @@ AudioDeviceMac::SetRecordingDevice(AudioDeviceModule::WindowsDeviceType /*device
     return -1;
 }
 
-WebRtc_Word32 AudioDeviceMac::PlayoutIsAvailable(bool& available)
+int32_t AudioDeviceMac::PlayoutIsAvailable(bool& available)
 {
 
     available = true;
@@ -1253,7 +1253,7 @@ WebRtc_Word32 AudioDeviceMac::PlayoutIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::RecordingIsAvailable(bool& available)
+int32_t AudioDeviceMac::RecordingIsAvailable(bool& available)
 {
 
     available = true;
@@ -1281,7 +1281,7 @@ WebRtc_Word32 AudioDeviceMac::RecordingIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::InitPlayout()
+int32_t AudioDeviceMac::InitPlayout()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -1437,7 +1437,7 @@ WebRtc_Word32 AudioDeviceMac::InitPlayout()
     {
         // Update audio buffer with the selected parameters
         _ptrAudioBuffer->SetPlayoutSampleRate(N_PLAY_SAMPLES_PER_SEC);
-        _ptrAudioBuffer->SetPlayoutChannels((WebRtc_UWord8) _playChannels);
+        _ptrAudioBuffer->SetPlayoutChannels((uint8_t) _playChannels);
     }
 
     _renderDelayOffsetSamples = _renderBufSizeSamples - N_BUFFERS_OUT
@@ -1500,7 +1500,7 @@ WebRtc_Word32 AudioDeviceMac::InitPlayout()
     size = sizeof(UInt32);
     WEBRTC_CA_RETURN_ON_ERR(AudioObjectGetPropertyData(_outputDeviceID,
             &propertyAddress, 0, NULL, &size, &latency));
-    _renderLatencyUs = (WebRtc_UWord32) ((1.0e6 * latency)
+    _renderLatencyUs = (uint32_t) ((1.0e6 * latency)
         / _outStreamFormat.mSampleRate);
 
     // Get render stream latency
@@ -1514,7 +1514,7 @@ WebRtc_Word32 AudioDeviceMac::InitPlayout()
     latency = 0;
     WEBRTC_CA_RETURN_ON_ERR(AudioObjectGetPropertyData(_outputDeviceID,
             &propertyAddress, 0, NULL, &size, &latency));
-    _renderLatencyUs += (WebRtc_UWord32) ((1.0e6 * latency)
+    _renderLatencyUs += (uint32_t) ((1.0e6 * latency)
         / _outStreamFormat.mSampleRate);
 
     // Listen for format changes
@@ -1544,7 +1544,7 @@ WebRtc_Word32 AudioDeviceMac::InitPlayout()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::InitRecording()
+int32_t AudioDeviceMac::InitRecording()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -1655,7 +1655,7 @@ WebRtc_Word32 AudioDeviceMac::InitRecording()
     {
         // Update audio buffer with the selected parameters
         _ptrAudioBuffer->SetRecordingSampleRate(N_REC_SAMPLES_PER_SEC);
-        _ptrAudioBuffer->SetRecordingChannels((WebRtc_UWord8) _recChannels);
+        _ptrAudioBuffer->SetRecordingChannels((uint8_t) _recChannels);
     }
 
     _inDesiredFormat.mSampleRate = N_REC_SAMPLES_PER_SEC;
@@ -1760,7 +1760,7 @@ WebRtc_Word32 AudioDeviceMac::InitRecording()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::StartRecording()
+int32_t AudioDeviceMac::StartRecording()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -1804,7 +1804,7 @@ WebRtc_Word32 AudioDeviceMac::StartRecording()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::StopRecording()
+int32_t AudioDeviceMac::StopRecording()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -1927,7 +1927,7 @@ bool AudioDeviceMac::PlayoutIsInitialized() const
     return (_playIsInitialized);
 }
 
-WebRtc_Word32 AudioDeviceMac::StartPlayout()
+int32_t AudioDeviceMac::StartPlayout()
 {
     
     CriticalSectionScoped lock(&_critSect);
@@ -1960,7 +1960,7 @@ WebRtc_Word32 AudioDeviceMac::StartPlayout()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::StopPlayout()
+int32_t AudioDeviceMac::StopPlayout()
 {
 
     CriticalSectionScoped lock(&_critSect);
@@ -2050,19 +2050,19 @@ WebRtc_Word32 AudioDeviceMac::StopPlayout()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::PlayoutDelay(WebRtc_UWord16& delayMS) const
+int32_t AudioDeviceMac::PlayoutDelay(uint16_t& delayMS) const
 {
     int32_t renderDelayUs = AtomicGet32(&_renderDelayUs);
-    delayMS = static_cast<WebRtc_UWord16> (1e-3 * (renderDelayUs
-        + _renderLatencyUs) + 0.5);
+    delayMS = static_cast<uint16_t> (1e-3 * (renderDelayUs + _renderLatencyUs) +
+                                     0.5);
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::RecordingDelay(WebRtc_UWord16& delayMS) const
+int32_t AudioDeviceMac::RecordingDelay(uint16_t& delayMS) const
 {
     int32_t captureDelayUs = AtomicGet32(&_captureDelayUs);
-    delayMS = static_cast<WebRtc_UWord16> (1e-3 * (captureDelayUs
-        + _captureLatencyUs) + 0.5);
+    delayMS = static_cast<uint16_t> (1e-3 * (captureDelayUs +
+                                             _captureLatencyUs) + 0.5);
     return 0;
 }
 
@@ -2071,9 +2071,9 @@ bool AudioDeviceMac::Playing() const
     return (_playing);
 }
 
-WebRtc_Word32 AudioDeviceMac::SetPlayoutBuffer(
+int32_t AudioDeviceMac::SetPlayoutBuffer(
     const AudioDeviceModule::BufferType type,
-    WebRtc_UWord16 sizeMS)
+    uint16_t sizeMS)
 {
 
     if (type != AudioDeviceModule::kFixedBufferSize)
@@ -2088,9 +2088,9 @@ WebRtc_Word32 AudioDeviceMac::SetPlayoutBuffer(
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::PlayoutBuffer(
+int32_t AudioDeviceMac::PlayoutBuffer(
     AudioDeviceModule::BufferType& type,
-    WebRtc_UWord16& sizeMS) const
+    uint16_t& sizeMS) const
 {
 
     type = _playBufType;
@@ -2100,7 +2100,7 @@ WebRtc_Word32 AudioDeviceMac::PlayoutBuffer(
 }
 
 // Not implemented for Mac.
-WebRtc_Word32 AudioDeviceMac::CPULoad(WebRtc_UWord16& /*load*/) const
+int32_t AudioDeviceMac::CPULoad(uint16_t& /*load*/) const
 {
 
     WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
@@ -2153,10 +2153,10 @@ void AudioDeviceMac::ClearRecordingError()
 //                                 Private Methods
 // ============================================================================
 
-WebRtc_Word32
+int32_t
 AudioDeviceMac::GetNumberDevices(const AudioObjectPropertyScope scope,
                                  AudioDeviceID scopedDeviceIds[],
-                                 const WebRtc_UWord32 deviceListLength)
+                                 const uint32_t deviceListLength)
 {
     OSStatus err = noErr;
 
@@ -2291,9 +2291,9 @@ AudioDeviceMac::GetNumberDevices(const AudioObjectPropertyScope scope,
     return numberScopedDevices;
 }
 
-WebRtc_Word32
+int32_t
 AudioDeviceMac::GetDeviceName(const AudioObjectPropertyScope scope,
-                              const WebRtc_UWord16 index,
+                              const uint16_t index,
                               char* name)
 {
     OSStatus err = noErr;
@@ -2371,9 +2371,9 @@ AudioDeviceMac::GetDeviceName(const AudioObjectPropertyScope scope,
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::InitDevice(const WebRtc_UWord16 userDeviceIndex,
-                                         AudioDeviceID& deviceId,
-                                         const bool isInput)
+int32_t AudioDeviceMac::InitDevice(const uint16_t userDeviceIndex,
+                                   AudioDeviceID& deviceId,
+                                   const bool isInput)
 {
     OSStatus err = noErr;
     UInt32 size = 0;
@@ -2507,7 +2507,7 @@ OSStatus AudioDeviceMac::implObjectListenerProc(
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::HandleDeviceChange()
+int32_t AudioDeviceMac::HandleDeviceChange()
 {
     OSStatus err = noErr;
 
@@ -2579,7 +2579,7 @@ WebRtc_Word32 AudioDeviceMac::HandleDeviceChange()
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::HandleStreamFormatChange(
+int32_t AudioDeviceMac::HandleStreamFormatChange(
     const AudioObjectID objectId,
     const AudioObjectPropertyAddress propertyAddress)
 {
@@ -2652,7 +2652,7 @@ WebRtc_Word32 AudioDeviceMac::HandleStreamFormatChange(
         {
             // Update audio buffer with the selected parameters
             _ptrAudioBuffer->SetRecordingSampleRate(N_REC_SAMPLES_PER_SEC);
-            _ptrAudioBuffer->SetRecordingChannels((WebRtc_UWord8) _recChannels);
+            _ptrAudioBuffer->SetRecordingChannels((uint8_t) _recChannels);
         }
 
         // Recreate the converter with the new format
@@ -2681,7 +2681,7 @@ WebRtc_Word32 AudioDeviceMac::HandleStreamFormatChange(
         {
             // Update audio buffer with the selected parameters
             _ptrAudioBuffer->SetPlayoutSampleRate(N_PLAY_SAMPLES_PER_SEC);
-            _ptrAudioBuffer->SetPlayoutChannels((WebRtc_UWord8) _playChannels);
+            _ptrAudioBuffer->SetPlayoutChannels((uint8_t) _playChannels);
         }
 
         _renderDelayOffsetSamples = _renderBufSizeSamples - N_BUFFERS_OUT
@@ -2699,7 +2699,7 @@ WebRtc_Word32 AudioDeviceMac::HandleStreamFormatChange(
     return 0;
 }
 
-WebRtc_Word32 AudioDeviceMac::HandleDataSourceChange(
+int32_t AudioDeviceMac::HandleDataSourceChange(
     const AudioObjectID objectId,
     const AudioObjectPropertyAddress propertyAddress)
 {
@@ -2730,7 +2730,7 @@ WebRtc_Word32 AudioDeviceMac::HandleDataSourceChange(
 
     return 0;
 }
-WebRtc_Word32 AudioDeviceMac::HandleProcessorOverload(
+int32_t AudioDeviceMac::HandleProcessorOverload(
     const AudioObjectPropertyAddress propertyAddress)
 {
     // TODO(xians): we probably want to notify the user in some way of the
@@ -3077,7 +3077,7 @@ bool AudioDeviceMac::RenderWorkerThread()
         }
     }
 
-    WebRtc_Word8 playBuffer[4 * ENGINE_PLAY_BUF_SIZE_IN_SAMPLES];
+    int8_t playBuffer[4 * ENGINE_PLAY_BUF_SIZE_IN_SAMPLES];
 
     if (!_ptrAudioBuffer)
     {
@@ -3087,7 +3087,7 @@ bool AudioDeviceMac::RenderWorkerThread()
     }
 
     // Ask for new PCM data to be played out using the AudioDeviceBuffer.
-    WebRtc_UWord32 nSamples =
+    uint32_t nSamples =
         _ptrAudioBuffer->RequestPlayoutData(ENGINE_PLAY_BUF_SIZE_IN_SAMPLES);
 
     nSamples = _ptrAudioBuffer->GetPlayoutData(playBuffer);
@@ -3097,14 +3097,14 @@ bool AudioDeviceMac::RenderWorkerThread()
                      "  invalid number of output samples(%d)", nSamples);
     }
 
-    WebRtc_UWord32 nOutSamples = nSamples * _outDesiredFormat.mChannelsPerFrame;
+    uint32_t nOutSamples = nSamples * _outDesiredFormat.mChannelsPerFrame;
 
     SInt16 *pPlayBuffer = (SInt16 *) &playBuffer;
     if (_macBookProPanRight && (_playChannels == 2))
     {
         // Mix entirely into the right channel and zero the left channel.
         SInt32 sampleInt32 = 0;
-        for (WebRtc_UWord32 sampleIdx = 0; sampleIdx < nOutSamples; sampleIdx
+        for (uint32_t sampleIdx = 0; sampleIdx < nOutSamples; sampleIdx
             += 2)
         {
             sampleInt32 = pPlayBuffer[sampleIdx];
@@ -3169,18 +3169,19 @@ bool AudioDeviceMac::CaptureWorkerThread()
     // TODO(xians): what if the returned size is incorrect?
     if (size == ENGINE_REC_BUF_SIZE_IN_SAMPLES)
     {
-        WebRtc_UWord32 currentMicLevel(0);
-        WebRtc_UWord32 newMicLevel(0);
-        WebRtc_Word32 msecOnPlaySide;
-        WebRtc_Word32 msecOnRecordSide;
+        uint32_t currentMicLevel(0);
+        uint32_t newMicLevel(0);
+        int32_t msecOnPlaySide;
+        int32_t msecOnRecordSide;
 
         int32_t captureDelayUs = AtomicGet32(&_captureDelayUs);
         int32_t renderDelayUs = AtomicGet32(&_renderDelayUs);
 
-        msecOnPlaySide = static_cast<WebRtc_Word32> (1e-3 * (renderDelayUs
-            + _renderLatencyUs) + 0.5);
-        msecOnRecordSide = static_cast<WebRtc_Word32> (1e-3 * (captureDelayUs
-            + _captureLatencyUs) + 0.5);
+        msecOnPlaySide = static_cast<int32_t> (1e-3 * (renderDelayUs +
+                                                       _renderLatencyUs) + 0.5);
+        msecOnRecordSide = static_cast<int32_t> (1e-3 * (captureDelayUs +
+                                                         _captureLatencyUs) +
+                                                 0.5);
 
         if (!_ptrAudioBuffer)
         {
@@ -3191,8 +3192,8 @@ bool AudioDeviceMac::CaptureWorkerThread()
 
         // store the recorded buffer (no action will be taken if the
         // #recorded samples is not a full buffer)
-        _ptrAudioBuffer->SetRecordedBuffer((WebRtc_Word8*) &recordBuffer,
-                                           (WebRtc_UWord32) size);
+        _ptrAudioBuffer->SetRecordedBuffer((int8_t*) &recordBuffer,
+                                           (uint32_t) size);
 
         if (AGC())
         {

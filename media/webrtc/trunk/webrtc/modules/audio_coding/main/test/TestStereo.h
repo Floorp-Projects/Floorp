@@ -32,26 +32,26 @@ class TestPackStereo : public AudioPacketizationCallback {
 
   void RegisterReceiverACM(AudioCodingModule* acm);
 
-  virtual WebRtc_Word32 SendData(const FrameType frame_type,
-                                 const WebRtc_UWord8 payload_type,
-                                 const WebRtc_UWord32 timestamp,
-                                 const WebRtc_UWord8* payload_data,
-                                 const WebRtc_UWord16 payload_size,
-                                 const RTPFragmentationHeader* fragmentation);
+  virtual int32_t SendData(const FrameType frame_type,
+                           const uint8_t payload_type,
+                           const uint32_t timestamp,
+                           const uint8_t* payload_data,
+                           const uint16_t payload_size,
+                           const RTPFragmentationHeader* fragmentation);
 
-  WebRtc_UWord16 payload_size();
-  WebRtc_UWord32 timestamp_diff();
+  uint16_t payload_size();
+  uint32_t timestamp_diff();
   void reset_payload_size();
   void set_codec_mode(StereoMonoMode mode);
   void set_lost_packet(bool lost);
 
  private:
   AudioCodingModule* receiver_acm_;
-  WebRtc_Word16 seq_no_;
-  WebRtc_UWord32 timestamp_diff_;
-  WebRtc_UWord32 last_in_timestamp_;
-  WebRtc_UWord64 total_bytes_;
-  WebRtc_UWord16 payload_size_;
+  int16_t seq_no_;
+  uint32_t timestamp_diff_;
+  uint32_t last_in_timestamp_;
+  uint64_t total_bytes_;
+  uint16_t payload_size_;
   StereoMonoMode codec_mode_;
   // Simulate packet losses
   bool lost_packet_;
@@ -68,20 +68,20 @@ class TestStereo : public ACMTest {
   // codec name and a sampling frequncy matching is not required. This is useful
   // for codecs which support several sampling frequency.
   void RegisterSendCodec(char side, char* codec_name,
-                         WebRtc_Word32 samp_freq_hz, int rate, int pack_size,
+                         int32_t samp_freq_hz, int rate, int pack_size,
                          int channels, int payload_type);
 
   void Run(TestPackStereo* channel, int in_channels, int out_channels,
            int percent_loss = 0);
-  void OpenOutFile(WebRtc_Word16 test_number);
+  void OpenOutFile(int16_t test_number);
   void DisplaySendReceiveCodec();
 
-  WebRtc_Word32 SendData(const FrameType frame_type,
-                         const WebRtc_UWord8 payload_type,
-                         const WebRtc_UWord32 timestamp,
-                         const WebRtc_UWord8* payload_data,
-                         const WebRtc_UWord16 payload_size,
-                         const RTPFragmentationHeader* fragmentation);
+  int32_t SendData(const FrameType frame_type,
+                   const uint8_t payload_type,
+                   const uint32_t timestamp,
+                   const uint8_t* payload_data,
+                   const uint16_t payload_size,
+                   const RTPFragmentationHeader* fragmentation);
 
   int test_mode_;
 
@@ -93,9 +93,9 @@ class TestStereo : public ACMTest {
   PCMFile* in_file_stereo_;
   PCMFile* in_file_mono_;
   PCMFile out_file_;
-  WebRtc_Word16 test_cntr_;
-  WebRtc_UWord16 pack_size_samp_;
-  WebRtc_UWord16 pack_size_bytes_;
+  int16_t test_cntr_;
+  uint16_t pack_size_samp_;
+  uint16_t pack_size_bytes_;
   int counter_;
   char* send_codec_name_;
 

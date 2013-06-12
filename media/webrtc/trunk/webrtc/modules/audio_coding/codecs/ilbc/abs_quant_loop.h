@@ -26,12 +26,8 @@
  *  (subrutine for WebRtcIlbcfix_StateSearch)
  *---------------------------------------------------------------*/
 
-void WebRtcIlbcfix_AbsQuantLoop(
-    WebRtc_Word16 *syntOutIN,
-    WebRtc_Word16 *in_weightedIN,
-    WebRtc_Word16 *weightDenumIN,
-    WebRtc_Word16 *quantLenIN,
-    WebRtc_Word16 *idxVecIN
-                                );
+void WebRtcIlbcfix_AbsQuantLoop(int16_t *syntOutIN, int16_t *in_weightedIN,
+                                int16_t *weightDenumIN, int16_t *quantLenIN,
+                                int16_t *idxVecIN);
 
 #endif

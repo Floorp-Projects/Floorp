@@ -26,31 +26,31 @@ namespace webrtc {
 
 class ACMG722_1C : public ACMGenericCodec {
  public:
-  explicit ACMG722_1C(WebRtc_Word16 codec_id);
+  explicit ACMG722_1C(int16_t codec_id);
   ~ACMG722_1C();
 
   // for FEC
   ACMGenericCodec* CreateInstance(void);
 
-  WebRtc_Word16 InternalEncode(
-      WebRtc_UWord8* bitstream,
-      WebRtc_Word16* bitstream_len_byte);
+  int16_t InternalEncode(
+      uint8_t* bitstream,
+      int16_t* bitstream_len_byte);
 
-  WebRtc_Word16 InternalInitEncoder(
+  int16_t InternalInitEncoder(
       WebRtcACMCodecParams *codec_params);
 
-  WebRtc_Word16 InternalInitDecoder(
+  int16_t InternalInitDecoder(
       WebRtcACMCodecParams *codec_params);
 
  protected:
-  WebRtc_Word16 DecodeSafe(
-      WebRtc_UWord8* bitstream,
-      WebRtc_Word16 bitstream_len_byte,
-      WebRtc_Word16* audio,
-      WebRtc_Word16* audio_samples,
-      WebRtc_Word8* speech_type);
+  int16_t DecodeSafe(
+      uint8_t* bitstream,
+      int16_t bitstream_len_byte,
+      int16_t* audio,
+      int16_t* audio_samples,
+      int8_t* speech_type);
 
-  WebRtc_Word32 CodecDef(
+  int32_t CodecDef(
       WebRtcNetEQ_CodecDef& codec_def,
       const CodecInst& codec_inst);
 
@@ -58,14 +58,14 @@ class ACMG722_1C : public ACMGenericCodec {
 
   void DestructDecoderSafe();
 
-  WebRtc_Word16 InternalCreateEncoder();
+  int16_t InternalCreateEncoder();
 
-  WebRtc_Word16 InternalCreateDecoder();
+  int16_t InternalCreateDecoder();
 
   void InternalDestructEncoderInst(
       void* ptr_inst);
 
-  WebRtc_Word32 operational_rate_;
+  int32_t operational_rate_;
 
   G722_1_Inst_t_* encoder_inst_ptr_;
   G722_1_Inst_t_* encoder_inst_ptr_right_;  // Used in stereo mode

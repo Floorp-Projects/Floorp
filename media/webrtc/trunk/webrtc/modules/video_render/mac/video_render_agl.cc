@@ -80,8 +80,8 @@ VideoChannelAGL::~VideoChannelAGL()
     }
 }
 
-WebRtc_Word32 VideoChannelAGL::RenderFrame(const WebRtc_UWord32 streamId,
-                                           I420VideoFrame& videoFrame) {
+int32_t VideoChannelAGL::RenderFrame(const uint32_t streamId,
+                                     I420VideoFrame& videoFrame) {
   _owner->LockAGLCntx();
   if (_width != videoFrame.width() ||
       _height != videoFrame.height()) {
@@ -1872,7 +1872,7 @@ int VideoRenderAGL::ChangeWindow(void* newWindowRef)
     UnlockAGLCntx();
     return -1;
 }
-WebRtc_Word32 VideoRenderAGL::ChangeUniqueID(WebRtc_Word32 id)
+int32_t VideoRenderAGL::ChangeUniqueID(int32_t id)
 {
     LockAGLCntx();
 
@@ -1880,7 +1880,7 @@ WebRtc_Word32 VideoRenderAGL::ChangeUniqueID(WebRtc_Word32 id)
     return -1;
 }
 
-WebRtc_Word32 VideoRenderAGL::StartRender()
+int32_t VideoRenderAGL::StartRender()
 {
 
     LockAGLCntx();
@@ -1926,7 +1926,7 @@ WebRtc_Word32 VideoRenderAGL::StartRender()
 
 }
 
-WebRtc_Word32 VideoRenderAGL::StopRender()
+int32_t VideoRenderAGL::StopRender()
 {
     LockAGLCntx();
 
@@ -1952,7 +1952,7 @@ WebRtc_Word32 VideoRenderAGL::StopRender()
     return 0;
 }
 
-WebRtc_Word32 VideoRenderAGL::DeleteAGLChannel(const WebRtc_UWord32 streamID)
+int32_t VideoRenderAGL::DeleteAGLChannel(const uint32_t streamID)
 {
 
     LockAGLCntx();
@@ -1973,12 +1973,12 @@ WebRtc_Word32 VideoRenderAGL::DeleteAGLChannel(const WebRtc_UWord32 streamID)
     return 0;
 }
 
-WebRtc_Word32 VideoRenderAGL::GetChannelProperties(const WebRtc_UWord16 streamId,
-WebRtc_UWord32& zOrder,
-float& left,
-float& top,
-float& right,
-float& bottom)
+int32_t VideoRenderAGL::GetChannelProperties(const uint16_t streamId,
+                                             uint32_t& zOrder,
+                                             float& left,
+                                             float& top,
+                                             float& right,
+                                             float& bottom)
 {
 
     LockAGLCntx();

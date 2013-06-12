@@ -25,18 +25,18 @@ void WebRtcIsacfix_InitMaskingEnc(MaskFiltstr_enc *maskdata) {
   int k;
 
   for (k = 0; k < WINLEN; k++) {
-    maskdata->DataBufferLoQ0[k] = (WebRtc_Word16) 0;
-    maskdata->DataBufferHiQ0[k] = (WebRtc_Word16) 0;
+    maskdata->DataBufferLoQ0[k] = (int16_t) 0;
+    maskdata->DataBufferHiQ0[k] = (int16_t) 0;
   }
   for (k = 0; k < ORDERLO+1; k++) {
-    maskdata->CorrBufLoQQ[k] = (WebRtc_Word32) 0;
+    maskdata->CorrBufLoQQ[k] = (int32_t) 0;
     maskdata->CorrBufLoQdom[k] = 0;
 
     maskdata->PreStateLoGQ15[k] = 0;
 
   }
   for (k = 0; k < ORDERHI+1; k++) {
-    maskdata->CorrBufHiQQ[k] = (WebRtc_Word32) 0;
+    maskdata->CorrBufHiQQ[k] = (int32_t) 0;
     maskdata->CorrBufHiQdom[k] = 0;
     maskdata->PreStateHiGQ15[k] = 0;
   }

@@ -38,19 +38,19 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_GetLspPoly(
-    WebRtc_Word16 *lsp, /* (i) LSP in Q15 */
-    WebRtc_Word32 *f)  /* (o) polonymial in Q24 */
+    int16_t *lsp, /* (i) LSP in Q15 */
+    int32_t *f)  /* (o) polonymial in Q24 */
 {
-  WebRtc_Word32 tmpW32;
+  int32_t tmpW32;
   int i, j;
-  WebRtc_Word16 high, low;
-  WebRtc_Word16 *lspPtr;
-  WebRtc_Word32 *fPtr;
+  int16_t high, low;
+  int16_t *lspPtr;
+  int32_t *fPtr;
 
   lspPtr = lsp;
   fPtr = f;
   /* f[0] = 1.0 (Q24) */
-  (*fPtr) = (WebRtc_Word32)16777216;
+  (*fPtr) = (int32_t)16777216;
   fPtr++;
 
   (*fPtr) = WEBRTC_SPL_MUL((*lspPtr), -1024);
@@ -64,8 +64,8 @@ void WebRtcIlbcfix_GetLspPoly(
     for(j=i; j>1; j--)
     {
       /* Compute f[j] = f[j] + tmp*f[j-1] + f[j-2]; */
-      high = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(fPtr[-1], 16);
-      low = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(fPtr[-1]-WEBRTC_SPL_LSHIFT_W32(((WebRtc_Word32)high),16), 1);
+      high = (int16_t)WEBRTC_SPL_RSHIFT_W32(fPtr[-1], 16);
+      low = (int16_t)WEBRTC_SPL_RSHIFT_W32(fPtr[-1]-WEBRTC_SPL_LSHIFT_W32(((int32_t)high),16), 1);
 
       tmpW32 = WEBRTC_SPL_LSHIFT_W32(WEBRTC_SPL_MUL_16_16(high, (*lspPtr)), 2) +
           WEBRTC_SPL_LSHIFT_W32(WEBRTC_SPL_MUL_16_16_RSFT(low, (*lspPtr), 15), 2);
@@ -74,7 +74,7 @@ void WebRtcIlbcfix_GetLspPoly(
       (*fPtr) -= tmpW32;
       fPtr--;
     }
-    (*fPtr) -= (WebRtc_Word32)WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)(*lspPtr), 10);
+    (*fPtr) -= (int32_t)WEBRTC_SPL_LSHIFT_W32((int32_t)(*lspPtr), 10);
 
     fPtr+=i;
     lspPtr+=2;

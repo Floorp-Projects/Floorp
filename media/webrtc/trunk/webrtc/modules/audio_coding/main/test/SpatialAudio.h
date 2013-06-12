@@ -29,7 +29,7 @@ public:
 
     void Perform();
 private:
-    WebRtc_Word16 Setup();
+    int16_t Setup();
     void EncodeDecode(double leftPanning, double rightPanning);
     void EncodeDecode();
 

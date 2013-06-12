@@ -8,26 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "google/gflags.h"
-#include "gtest/gtest.h"
-
-#include "receiver_tests.h"
-#include "normal_test.h"
-#include "codec_database_test.h"
-#include "generic_codec_test.h"
-#include "../source/event.h"
-#include "media_opt_test.h"
-#include "quality_modes_test.h"
-#include "test_util.h"
-#include "webrtc/test/test_suite.h"
-#include "webrtc/test/testsupport/fileutils.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-//#include "vld.h"
-#endif
+#include "google/gflags.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/modules/video_coding/main/test/receiver_tests.h"
+#include "webrtc/modules/video_coding/main/test/normal_test.h"
+#include "webrtc/modules/video_coding/main/test/codec_database_test.h"
+#include "webrtc/modules/video_coding/main/test/generic_codec_test.h"
+#include "webrtc/modules/video_coding/main/test/media_opt_test.h"
+#include "webrtc/modules/video_coding/main/test/quality_modes_test.h"
+#include "webrtc/modules/video_coding/main/test/test_util.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 DEFINE_string(codec, "VP8", "Codec to use (VP8 or I420).");
 DEFINE_int32(width, 352, "Width in pixels of the frames in the input file.");
@@ -46,8 +40,6 @@ DEFINE_string(output_filename, webrtc::test::OutputPath() +
 DEFINE_string(fv_output_filename, webrtc::test::OutputPath() +
               "features.txt", "FV output file.");
 DEFINE_int32(test_number, 0, "Test number.");
-DEFINE_bool(run_gtest_tests, true, "Run gtest tests too (after legacy tests has"
-            " executed).");
 
 using namespace webrtc;
 
@@ -99,7 +91,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  printf("Running legacy video coding tests...\n");
+  printf("Running video coding tests...\n");
   int ret = 0;
   switch (args.testNum) {
     case 0:
@@ -145,15 +137,6 @@ int main(int argc, char **argv) {
     default:
       ret = -1;
       break;
-  }
-  if (ret != 0) {
-    printf("Legacy Tests failed!\n");
-  } else {
-    if (FLAGS_run_gtest_tests) {
-      printf("Running gtest integration tests...\n");
-      webrtc::test::TestSuite test_suite(argc, argv);
-      ret = test_suite.Run();
-    }
   }
   return ret;
 }

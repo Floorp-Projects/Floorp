@@ -23,11 +23,11 @@ class ACMResampler {
   ACMResampler();
   ~ACMResampler();
 
-  WebRtc_Word16 Resample10Msec(const WebRtc_Word16* in_audio,
-                               const WebRtc_Word32 in_freq_hz,
-                               WebRtc_Word16* out_audio,
-                               const WebRtc_Word32 out_freq_hz,
-                               WebRtc_UWord8 num_audio_channels);
+  int16_t Resample10Msec(const int16_t* in_audio,
+                         const int32_t in_freq_hz,
+                         int16_t* out_audio,
+                         const int32_t out_freq_hz,
+                         uint8_t num_audio_channels);
 
  private:
   // Use the Resampler class.

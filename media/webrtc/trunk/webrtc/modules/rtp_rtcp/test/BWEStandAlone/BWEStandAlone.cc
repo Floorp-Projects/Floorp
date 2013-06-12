@@ -32,36 +32,36 @@ public:
     myTransportCB (RtpRtcp *rtpMod) : _rtpMod(rtpMod) {};
 protected:
     // Inherited from UdpTransportData
-    virtual void IncomingRTPPacket(const WebRtc_Word8* incomingRtpPacket,
-        const WebRtc_Word32 rtpPacketLength,
-        const WebRtc_Word8* fromIP,
-        const WebRtc_UWord16 fromPort);
+    virtual void IncomingRTPPacket(const int8_t* incomingRtpPacket,
+        const int32_t rtpPacketLength,
+        const int8_t* fromIP,
+        const uint16_t fromPort);
 
-    virtual void IncomingRTCPPacket(const WebRtc_Word8* incomingRtcpPacket,
-        const WebRtc_Word32 rtcpPacketLength,
-        const WebRtc_Word8* fromIP,
-        const WebRtc_UWord16 fromPort);
+    virtual void IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
+        const int32_t rtcpPacketLength,
+        const int8_t* fromIP,
+        const uint16_t fromPort);
 
 private:
     RtpRtcp *_rtpMod;
 };
 
-void myTransportCB::IncomingRTPPacket(const WebRtc_Word8* incomingRtpPacket,
-                                      const WebRtc_Word32 rtpPacketLength,
-                                      const WebRtc_Word8* fromIP,
-                                      const WebRtc_UWord16 fromPort)
+void myTransportCB::IncomingRTPPacket(const int8_t* incomingRtpPacket,
+                                      const int32_t rtpPacketLength,
+                                      const int8_t* fromIP,
+                                      const uint16_t fromPort)
 {
     printf("Receiving RTP from IP %s, port %u\n", fromIP, fromPort);
-    _rtpMod->IncomingPacket((WebRtc_UWord8 *) incomingRtpPacket, static_cast<WebRtc_UWord16>(rtpPacketLength));
+    _rtpMod->IncomingPacket((uint8_t *) incomingRtpPacket, static_cast<uint16_t>(rtpPacketLength));
 }
 
-void myTransportCB::IncomingRTCPPacket(const WebRtc_Word8* incomingRtcpPacket,
-                                       const WebRtc_Word32 rtcpPacketLength,
-                                       const WebRtc_Word8* fromIP,
-                                       const WebRtc_UWord16 fromPort)
+void myTransportCB::IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
+                                       const int32_t rtcpPacketLength,
+                                       const int8_t* fromIP,
+                                       const uint16_t fromPort)
 {
     printf("Receiving RTCP from IP %s, port %u\n", fromIP, fromPort);
-    _rtpMod->IncomingPacket((WebRtc_UWord8 *) incomingRtcpPacket, static_cast<WebRtc_UWord16>(rtcpPacketLength));
+    _rtpMod->IncomingPacket((uint8_t *) incomingRtcpPacket, static_cast<uint16_t>(rtcpPacketLength));
 }
 
 
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 {
     bool isSender = false;
     bool isReceiver = false;
-    WebRtc_UWord16 port;
+    uint16_t port;
     std::string ip;
     TestSenderReceiver *sendrec = new TestSenderReceiver();
     TestLoadGenerator *gen;
@@ -105,12 +105,12 @@ int main(int argc, char* argv[])
 
     if (isSender)
     {
-        const WebRtc_UWord32 startRateKbps = 1000;
+        const uint32_t startRateKbps = 1000;
         //gen = new CBRGenerator(sendrec, 1000, 500);
         gen = new CBRFixFRGenerator(sendrec, startRateKbps, 90000, 30, 0.2);
         //gen = new PeriodicKeyFixFRGenerator(sendrec, startRateKbps, 90000, 30, 0.2, 7, 300);
-        //const WebRtc_UWord16 numFrameRates = 5;
-        //const WebRtc_UWord8 frameRates[numFrameRates] = {30, 15, 20, 23, 25};
+        //const uint16_t numFrameRates = 5;
+        //const uint8_t frameRates[numFrameRates] = {30, 15, 20, 23, 25};
         //gen = new CBRVarFRGenerator(sendrec, 1000, frameRates, numFrameRates, 90000, 4.0, 0.1, 0.2);
         //gen = new CBRFrameDropGenerator(sendrec, startRateKbps, 90000, 0.2);
         sendrec->SetLoadGenerator(gen);
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 
     delete sendrec;
 
-    //WebRtc_UWord8 numberOfSocketThreads = 1;
+    //uint8_t numberOfSocketThreads = 1;
     //UdpTransport* transport = UdpTransport::Create(0, numberOfSocketThreads);
 
     //RtpRtcp* rtp = RtpRtcp::CreateRtpRtcp(1, false);
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
  //   transport->InitializeReceiveSockets(tp, 10000, "0.0.0.0");
  //   transport->StartReceiving(500);
 
- //   WebRtc_Word8 data[100];
+ //   int8_t data[100];
  //   for (int i = 0; i < 100; data[i] = i++);
 
  //   for (int i = 0; i < 100; i++)
@@ -163,11 +163,11 @@ int main(int argc, char* argv[])
 
 
 
- //   WebRtc_Word32 totTime = 0;
+ //   int32_t totTime = 0;
  //   while (totTime < 10000)
  //   {
  //       transport->Process();
- //       WebRtc_Word32 wTime = transport->TimeUntilNextProcess();
+ //       int32_t wTime = transport->TimeUntilNextProcess();
  //       totTime += wTime;
  //       Sleep(wTime);
  //   }

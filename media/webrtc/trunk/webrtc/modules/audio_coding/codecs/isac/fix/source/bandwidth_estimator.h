@@ -33,7 +33,7 @@
  * Return value            : 0
  */
 
-WebRtc_Word32 WebRtcIsacfix_InitBandwidthEstimator(BwEstimatorstr *bwest_str);
+int32_t WebRtcIsacfix_InitBandwidthEstimator(BwEstimatorstr *bwest_str);
 
 
 /****************************************************************************
@@ -57,17 +57,17 @@ WebRtc_Word32 WebRtcIsacfix_InitBandwidthEstimator(BwEstimatorstr *bwest_str);
  *                           -1 otherwise
  */
 
-WebRtc_Word32 WebRtcIsacfix_UpdateUplinkBwImpl(BwEstimatorstr            *bwest_str,
-                                               const WebRtc_UWord16        rtp_number,
-                                               const WebRtc_Word16         frameSize,
-                                               const WebRtc_UWord32    send_ts,
-                                               const WebRtc_UWord32        arr_ts,
-                                               const WebRtc_Word16         pksize,
-                                               const WebRtc_UWord16        Index);
+int32_t WebRtcIsacfix_UpdateUplinkBwImpl(BwEstimatorstr       *bwest_str,
+                                         const uint16_t        rtp_number,
+                                         const int16_t         frameSize,
+                                         const uint32_t        send_ts,
+                                         const uint32_t        arr_ts,
+                                         const int16_t         pksize,
+                                         const uint16_t        Index);
 
 /* Update receiving estimates. Used when we only receive BWE index, no iSAC data packet. */
-WebRtc_Word16 WebRtcIsacfix_UpdateUplinkBwRec(BwEstimatorstr *bwest_str,
-                                              const WebRtc_Word16 Index);
+int16_t WebRtcIsacfix_UpdateUplinkBwRec(BwEstimatorstr *bwest_str,
+                                        const int16_t Index);
 
 /****************************************************************************
  * WebRtcIsacfix_GetDownlinkBwIndexImpl(...)
@@ -81,47 +81,47 @@ WebRtc_Word16 WebRtcIsacfix_UpdateUplinkBwRec(BwEstimatorstr *bwest_str,
  * Return:
  *      bandwith and jitter index (0..23)
  */
-WebRtc_UWord16 WebRtcIsacfix_GetDownlinkBwIndexImpl(BwEstimatorstr *bwest_str);
+uint16_t WebRtcIsacfix_GetDownlinkBwIndexImpl(BwEstimatorstr *bwest_str);
 
 /* Returns the bandwidth estimation (in bps) */
-WebRtc_UWord16 WebRtcIsacfix_GetDownlinkBandwidth(const BwEstimatorstr *bwest_str);
+uint16_t WebRtcIsacfix_GetDownlinkBandwidth(const BwEstimatorstr *bwest_str);
 
 /* Returns the bandwidth that iSAC should send with in bps */
-WebRtc_Word16 WebRtcIsacfix_GetUplinkBandwidth(const BwEstimatorstr *bwest_str);
+int16_t WebRtcIsacfix_GetUplinkBandwidth(const BwEstimatorstr *bwest_str);
 
 /* Returns the max delay (in ms) */
-WebRtc_Word16 WebRtcIsacfix_GetDownlinkMaxDelay(const BwEstimatorstr *bwest_str);
+int16_t WebRtcIsacfix_GetDownlinkMaxDelay(const BwEstimatorstr *bwest_str);
 
 /* Returns the max delay value from the other side in ms */
-WebRtc_Word16 WebRtcIsacfix_GetUplinkMaxDelay(const BwEstimatorstr *bwest_str);
+int16_t WebRtcIsacfix_GetUplinkMaxDelay(const BwEstimatorstr *bwest_str);
 
 /*
  * update amount of data in bottle neck buffer and burst handling
  * returns minimum payload size (bytes)
  */
-WebRtc_UWord16 WebRtcIsacfix_GetMinBytes(RateModel *State,
-                                         WebRtc_Word16 StreamSize,     /* bytes in bitstream */
-                                         const WebRtc_Word16 FrameLen,    /* ms per frame */
-                                         const WebRtc_Word16 BottleNeck,        /* bottle neck rate; excl headers (bps) */
-                                         const WebRtc_Word16 DelayBuildUp);     /* max delay from bottle neck buffering (ms) */
+uint16_t WebRtcIsacfix_GetMinBytes(RateModel *State,
+                                   int16_t StreamSize,     /* bytes in bitstream */
+                                   const int16_t FrameLen,    /* ms per frame */
+                                   const int16_t BottleNeck,        /* bottle neck rate; excl headers (bps) */
+                                   const int16_t DelayBuildUp);     /* max delay from bottle neck buffering (ms) */
 
 /*
  * update long-term average bitrate and amount of data in buffer
  */
 void WebRtcIsacfix_UpdateRateModel(RateModel *State,
-                                   WebRtc_Word16 StreamSize,    /* bytes in bitstream */
-                                   const WebRtc_Word16 FrameSamples,  /* samples per frame */
-                                   const WebRtc_Word16 BottleNeck);       /* bottle neck rate; excl headers (bps) */
+                                   int16_t StreamSize,    /* bytes in bitstream */
+                                   const int16_t FrameSamples,  /* samples per frame */
+                                   const int16_t BottleNeck);       /* bottle neck rate; excl headers (bps) */
 
 
 void WebRtcIsacfix_InitRateModel(RateModel *State);
 
 /* Returns the new framelength value (input argument: bottle_neck) */
-WebRtc_Word16 WebRtcIsacfix_GetNewFrameLength(WebRtc_Word16 bottle_neck, WebRtc_Word16 current_framelength);
+int16_t WebRtcIsacfix_GetNewFrameLength(int16_t bottle_neck, int16_t current_framelength);
 
 /* Returns the new SNR value (input argument: bottle_neck) */
 //returns snr in Q10
-WebRtc_Word16 WebRtcIsacfix_GetSnr(WebRtc_Word16 bottle_neck, WebRtc_Word16 framesamples);
+int16_t WebRtcIsacfix_GetSnr(int16_t bottle_neck, int16_t framesamples);
 
 
 #endif /*  WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_BANDWIDTH_ESTIMATOR_H_ */

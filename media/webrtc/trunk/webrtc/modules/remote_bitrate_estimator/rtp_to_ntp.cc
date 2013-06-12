@@ -8,7 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/remote_bitrate_estimator/include/rtp_to_ntp.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/rtp_to_ntp.h"
+
+#include "webrtc/system_wrappers/interface/clock.h"
 
 #include <assert.h>
 
@@ -57,12 +59,6 @@ bool CompensateForWrapAround(uint32_t new_timestamp,
   return true;
 }
 
-// Converts an NTP timestamp to a millisecond timestamp.
-int64_t NtpToMs(uint32_t ntp_secs, uint32_t ntp_frac) {
-  const double ntp_frac_ms = static_cast<double>(ntp_frac) / kNtpFracPerMs;
-  return ntp_secs * 1000 + ntp_frac_ms + 0.5;
-}
-
 // Converts |rtp_timestamp| to the NTP time base using the NTP and RTP timestamp
 // pairs in |rtcp|. The converted timestamp is returned in
 // |rtp_timestamp_in_ms|. This function compensates for wrap arounds in RTP
@@ -71,10 +67,10 @@ bool RtpToNtpMs(int64_t rtp_timestamp,
                 const synchronization::RtcpList& rtcp,
                 int64_t* rtp_timestamp_in_ms) {
   assert(rtcp.size() == 2);
-  int64_t rtcp_ntp_ms_new = synchronization::NtpToMs(rtcp.front().ntp_secs,
-                                                     rtcp.front().ntp_frac);
-  int64_t rtcp_ntp_ms_old = synchronization::NtpToMs(rtcp.back().ntp_secs,
-                                                     rtcp.back().ntp_frac);
+  int64_t rtcp_ntp_ms_new = Clock::NtpToMs(rtcp.front().ntp_secs,
+                                           rtcp.front().ntp_frac);
+  int64_t rtcp_ntp_ms_old = Clock::NtpToMs(rtcp.back().ntp_secs,
+                                           rtcp.back().ntp_frac);
   int64_t rtcp_timestamp_new = rtcp.front().rtp_timestamp;
   int64_t rtcp_timestamp_old = rtcp.back().rtp_timestamp;
   if (!CompensateForWrapAround(rtcp_timestamp_new,

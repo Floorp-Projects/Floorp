@@ -30,22 +30,22 @@
 
  Type            Name                    size            startpos        endpos
  (First part of first expand)
- WebRtc_Word16  pw16_bestCorrIndex      3               0               2
- WebRtc_Word16  pw16_bestCorr           3               3               5
- WebRtc_Word16  pw16_bestDistIndex      3               6               8
- WebRtc_Word16  pw16_bestDist           3               9               11
- WebRtc_Word16  pw16_corrVec            102*fs/8000     12              11+102*fs/8000
+ int16_t  pw16_bestCorrIndex      3               0               2
+ int16_t  pw16_bestCorr           3               3               5
+ int16_t  pw16_bestDistIndex      3               6               8
+ int16_t  pw16_bestDist           3               9               11
+ int16_t  pw16_corrVec            102*fs/8000     12              11+102*fs/8000
  func           WebRtcNetEQ_Correlator  232             12+102*fs/8000  243+102*fs/8000
 
  (Second part of first expand)
- WebRtc_Word32  pw32_corr2              99*fs/8000+1    0               99*fs/8000
- WebRtc_Word32  pw32_autoCorr           2*7             0               13
- WebRtc_Word16  pw16_rc                 6               14              19
+ int32_t  pw32_corr2              99*fs/8000+1    0               99*fs/8000
+ int32_t  pw32_autoCorr           2*7             0               13
+ int16_t  pw16_rc                 6               14              19
 
  Signal combination:
- WebRtc_Word16  pw16_randVec            30+120*fs/8000  0               29+120*fs/8000
- WebRtc_Word16  pw16_scaledRandVec      125*fs/8000     30+120*fs/8000  29+245*fs/8000
- WebRtc_Word16  pw16_unvoicedVecSpace   10+125*fs/8000  30+245*fs/8000  39+370*fs/8000
+ int16_t  pw16_randVec            30+120*fs/8000  0               29+120*fs/8000
+ int16_t  pw16_scaledRandVec      125*fs/8000     30+120*fs/8000  29+245*fs/8000
+ int16_t  pw16_unvoicedVecSpace   10+125*fs/8000  30+245*fs/8000  39+370*fs/8000
 
  Total: 40+370*fs/8000 (size depends on UNVOICED_LPC_ORDER and BGN_LPC_ORDER)
  */
@@ -106,59 +106,59 @@
 
 int WebRtcNetEQ_Expand(DSPInst_t *inst,
 #ifdef SCRATCH
-                       WebRtc_Word16 *pw16_scratchPtr,
+                       int16_t *pw16_scratchPtr,
 #endif
-                       WebRtc_Word16 *pw16_outData, WebRtc_Word16 *pw16_len,
-                       WebRtc_Word16 BGNonly)
+                       int16_t *pw16_outData, int16_t *pw16_len,
+                       int16_t BGNonly)
 {
 
-    WebRtc_Word16 fs_mult;
+    int16_t fs_mult;
     ExpandInst_t *ExpandState = &(inst->ExpandInst);
     BGNInst_t *BGNState = &(inst->BGNInst);
     int i;
 #ifdef SCRATCH
-    WebRtc_Word16 *pw16_randVec = pw16_scratchPtr + SCRATCH_PW16_RAND_VEC;
-    WebRtc_Word16 *pw16_scaledRandVec = pw16_scratchPtr + SCRATCH_PW16_SCALED_RAND_VEC;
-    WebRtc_Word16 *pw16_unvoicedVecSpace = pw16_scratchPtr + SCRATCH_PW16_UNVOICED_VEC_SPACE;
+    int16_t *pw16_randVec = pw16_scratchPtr + SCRATCH_PW16_RAND_VEC;
+    int16_t *pw16_scaledRandVec = pw16_scratchPtr + SCRATCH_PW16_SCALED_RAND_VEC;
+    int16_t *pw16_unvoicedVecSpace = pw16_scratchPtr + SCRATCH_PW16_UNVOICED_VEC_SPACE;
 #else
-    WebRtc_Word16 pw16_randVec[FSMULT * 120 + 30]; /* 150 for NB and 270 for WB */
-    WebRtc_Word16 pw16_scaledRandVec[FSMULT * 125]; /* 125 for NB and 250 for WB */
-    WebRtc_Word16 pw16_unvoicedVecSpace[BGN_LPC_ORDER + FSMULT * 125];
+    int16_t pw16_randVec[FSMULT * 120 + 30]; /* 150 for NB and 270 for WB */
+    int16_t pw16_scaledRandVec[FSMULT * 125]; /* 125 for NB and 250 for WB */
+    int16_t pw16_unvoicedVecSpace[BGN_LPC_ORDER + FSMULT * 125];
 #endif
     /* 125 for NB and 250 for WB etc. Reuse pw16_outData[] for this vector */
-    WebRtc_Word16 *pw16_voicedVecStorage = pw16_outData;
-    WebRtc_Word16 *pw16_voicedVec = &pw16_voicedVecStorage[ExpandState->w16_overlap];
-    WebRtc_Word16 *pw16_unvoicedVec = pw16_unvoicedVecSpace + UNVOICED_LPC_ORDER;
-    WebRtc_Word16 *pw16_cngVec = pw16_unvoicedVecSpace + BGN_LPC_ORDER;
-    WebRtc_Word16 w16_expVecsLen, w16_lag = 0, w16_expVecPos;
-    WebRtc_Word16 w16_randLen;
-    WebRtc_Word16 w16_vfractionChange; /* in Q14 */
-    WebRtc_Word16 w16_winMute = 0, w16_winMuteInc = 0, w16_winUnMute = 0, w16_winUnMuteInc = 0;
-    WebRtc_Word32 w32_tmp;
-    WebRtc_Word16 w16_tmp, w16_tmp2;
-    WebRtc_Word16 stability;
+    int16_t *pw16_voicedVecStorage = pw16_outData;
+    int16_t *pw16_voicedVec = &pw16_voicedVecStorage[ExpandState->w16_overlap];
+    int16_t *pw16_unvoicedVec = pw16_unvoicedVecSpace + UNVOICED_LPC_ORDER;
+    int16_t *pw16_cngVec = pw16_unvoicedVecSpace + BGN_LPC_ORDER;
+    int16_t w16_expVecsLen, w16_lag = 0, w16_expVecPos;
+    int16_t w16_randLen;
+    int16_t w16_vfractionChange; /* in Q14 */
+    int16_t w16_winMute = 0, w16_winMuteInc = 0, w16_winUnMute = 0, w16_winUnMuteInc = 0;
+    int32_t w32_tmp;
+    int16_t w16_tmp, w16_tmp2;
+    int16_t stability;
     enum BGNMode bgnMode = inst->BGNInst.bgnMode;
 
     /* Pre-calculate common multiplications with fs_mult */
-    WebRtc_Word16 fsMult4;
-    WebRtc_Word16 fsMult20;
-    WebRtc_Word16 fsMult120;
-    WebRtc_Word16 fsMultDistLen;
-    WebRtc_Word16 fsMultLPCAnalasysLen;
+    int16_t fsMult4;
+    int16_t fsMult20;
+    int16_t fsMult120;
+    int16_t fsMultDistLen;
+    int16_t fsMultLPCAnalasysLen;
 
 #ifdef NETEQ_STEREO
     MasterSlaveInfo *msInfo = inst->msInfo;
 #endif
 
-    /* fs is WebRtc_UWord16 (to hold fs=48000) */
+    /* fs is uint16_t (to hold fs=48000) */
     fs_mult = WebRtcNetEQ_CalcFsMult(inst->fs); /* calculate fs/8000 */
 
     /* Pre-calculate common multiplications with fs_mult */
-    fsMult4 = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16(fs_mult, 4);
-    fsMult20 = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16(fs_mult, 20);
-    fsMult120 = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16(fs_mult, 120);
-    fsMultDistLen = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16(fs_mult, DISTLEN);
-    fsMultLPCAnalasysLen = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16(fs_mult, LPCANALASYSLEN);
+    fsMult4 = (int16_t) WEBRTC_SPL_MUL_16_16(fs_mult, 4);
+    fsMult20 = (int16_t) WEBRTC_SPL_MUL_16_16(fs_mult, 20);
+    fsMult120 = (int16_t) WEBRTC_SPL_MUL_16_16(fs_mult, 120);
+    fsMultDistLen = (int16_t) WEBRTC_SPL_MUL_16_16(fs_mult, DISTLEN);
+    fsMultLPCAnalasysLen = (int16_t) WEBRTC_SPL_MUL_16_16(fs_mult, LPCANALASYSLEN);
 
     /*
      * Perform all the initial setup if it's the first expansion.
@@ -168,47 +168,47 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
     {
         /* Setup more variables */
 #ifdef SCRATCH
-        WebRtc_Word32 *pw32_autoCorr = (WebRtc_Word32*) (pw16_scratchPtr
+        int32_t *pw32_autoCorr = (int32_t*) (pw16_scratchPtr
             + SCRATCH_PW32_AUTO_CORR);
-        WebRtc_Word16 *pw16_rc = pw16_scratchPtr + SCRATCH_PW16_RC;
-        WebRtc_Word16 *pw16_bestCorrIndex = pw16_scratchPtr + SCRATCH_PW16_BEST_CORR_INDEX;
-        WebRtc_Word16 *pw16_bestCorr = pw16_scratchPtr + SCRATCH_PW16_BEST_CORR;
-        WebRtc_Word16 *pw16_bestDistIndex = pw16_scratchPtr + SCRATCH_PW16_BEST_DIST_INDEX;
-        WebRtc_Word16 *pw16_bestDist = pw16_scratchPtr + SCRATCH_PW16_BEST_DIST;
-        WebRtc_Word16 *pw16_corrVec = pw16_scratchPtr + SCRATCH_PW16_CORR_VEC;
-        WebRtc_Word32 *pw32_corr2 = (WebRtc_Word32*) (pw16_scratchPtr + SCRATCH_PW16_CORR2);
+        int16_t *pw16_rc = pw16_scratchPtr + SCRATCH_PW16_RC;
+        int16_t *pw16_bestCorrIndex = pw16_scratchPtr + SCRATCH_PW16_BEST_CORR_INDEX;
+        int16_t *pw16_bestCorr = pw16_scratchPtr + SCRATCH_PW16_BEST_CORR;
+        int16_t *pw16_bestDistIndex = pw16_scratchPtr + SCRATCH_PW16_BEST_DIST_INDEX;
+        int16_t *pw16_bestDist = pw16_scratchPtr + SCRATCH_PW16_BEST_DIST;
+        int16_t *pw16_corrVec = pw16_scratchPtr + SCRATCH_PW16_CORR_VEC;
+        int32_t *pw32_corr2 = (int32_t*) (pw16_scratchPtr + SCRATCH_PW16_CORR2);
 #else
-        WebRtc_Word32 pw32_autoCorr[UNVOICED_LPC_ORDER+1];
-        WebRtc_Word16 pw16_rc[UNVOICED_LPC_ORDER];
-        WebRtc_Word16 pw16_corrVec[FSMULT*102]; /* 102 for NB */
-        WebRtc_Word16 pw16_bestCorrIndex[CHECK_NO_OF_CORRMAX];
-        WebRtc_Word16 pw16_bestCorr[CHECK_NO_OF_CORRMAX];
-        WebRtc_Word16 pw16_bestDistIndex[CHECK_NO_OF_CORRMAX];
-        WebRtc_Word16 pw16_bestDist[CHECK_NO_OF_CORRMAX];
-        WebRtc_Word32 pw32_corr2[(99*FSMULT)+1];
+        int32_t pw32_autoCorr[UNVOICED_LPC_ORDER+1];
+        int16_t pw16_rc[UNVOICED_LPC_ORDER];
+        int16_t pw16_corrVec[FSMULT*102]; /* 102 for NB */
+        int16_t pw16_bestCorrIndex[CHECK_NO_OF_CORRMAX];
+        int16_t pw16_bestCorr[CHECK_NO_OF_CORRMAX];
+        int16_t pw16_bestDistIndex[CHECK_NO_OF_CORRMAX];
+        int16_t pw16_bestDist[CHECK_NO_OF_CORRMAX];
+        int32_t pw32_corr2[(99*FSMULT)+1];
 #endif
-        WebRtc_Word32 pw32_bestDist[CHECK_NO_OF_CORRMAX];
-        WebRtc_Word16 w16_ind = 0;
-        WebRtc_Word16 w16_corrVecLen;
-        WebRtc_Word16 w16_corrScale;
-        WebRtc_Word16 w16_distScale;
-        WebRtc_Word16 w16_indMin, w16_indMax;
-        WebRtc_Word16 w16_len;
-        WebRtc_Word32 w32_en1, w32_en2, w32_cc;
-        WebRtc_Word16 w16_en1Scale, w16_en2Scale;
-        WebRtc_Word16 w16_en1, w16_en2;
-        WebRtc_Word32 w32_en1_mul_en2;
-        WebRtc_Word16 w16_sqrt_en1en2;
-        WebRtc_Word16 w16_ccShiftL;
-        WebRtc_Word16 w16_bestcorr; /* Correlation in Q14 */
-        WebRtc_Word16 *pw16_vec1, *pw16_vec2;
-        WebRtc_Word16 w16_factor;
-        WebRtc_Word16 w16_DistLag, w16_CorrLag, w16_diffLag;
-        WebRtc_Word16 w16_energyLen;
-        WebRtc_Word16 w16_slope;
-        WebRtc_Word16 w16_startInd;
-        WebRtc_Word16 w16_noOfcorr2;
-        WebRtc_Word16 w16_scale;
+        int32_t pw32_bestDist[CHECK_NO_OF_CORRMAX];
+        int16_t w16_ind = 0;
+        int16_t w16_corrVecLen;
+        int16_t w16_corrScale;
+        int16_t w16_distScale;
+        int16_t w16_indMin, w16_indMax;
+        int16_t w16_len;
+        int32_t w32_en1, w32_en2, w32_cc;
+        int16_t w16_en1Scale, w16_en2Scale;
+        int16_t w16_en1, w16_en2;
+        int32_t w32_en1_mul_en2;
+        int16_t w16_sqrt_en1en2;
+        int16_t w16_ccShiftL;
+        int16_t w16_bestcorr; /* Correlation in Q14 */
+        int16_t *pw16_vec1, *pw16_vec2;
+        int16_t w16_factor;
+        int16_t w16_DistLag, w16_CorrLag, w16_diffLag;
+        int16_t w16_energyLen;
+        int16_t w16_slope;
+        int16_t w16_startInd;
+        int16_t w16_noOfcorr2;
+        int16_t w16_scale;
 
         /* Initialize some variables */
         ExpandState->w16_lagsDirection = 1;
@@ -273,7 +273,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
 
             }
 
-            /* Shift the distortion values to fit in WebRtc_Word16 */
+            /* Shift the distortion values to fit in int16_t */
             WebRtcSpl_VectorBitShiftW32ToW16(pw16_bestDist, CHECK_NO_OF_CORRMAX, pw32_bestDist,
                 w16_distScale);
 
@@ -282,15 +282,15 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
              * Do this by a cross multiplication.
              */
 
-            w32_en1 = WEBRTC_SPL_MUL_16_16((WebRtc_Word32) pw16_bestCorr[0],pw16_bestDist[1]);
-            w32_en2 = WEBRTC_SPL_MUL_16_16((WebRtc_Word32) pw16_bestCorr[1],pw16_bestDist[0]);
+            w32_en1 = WEBRTC_SPL_MUL_16_16((int32_t) pw16_bestCorr[0],pw16_bestDist[1]);
+            w32_en2 = WEBRTC_SPL_MUL_16_16((int32_t) pw16_bestCorr[1],pw16_bestDist[0]);
             if (w32_en1 >= w32_en2)
             {
                 /* 0 wins over 1 */
                 w32_en1
-                    = WEBRTC_SPL_MUL_16_16((WebRtc_Word32) pw16_bestCorr[0], pw16_bestDist[2]);
+                    = WEBRTC_SPL_MUL_16_16((int32_t) pw16_bestCorr[0], pw16_bestDist[2]);
                 w32_en2
-                    = WEBRTC_SPL_MUL_16_16((WebRtc_Word32) pw16_bestCorr[2], pw16_bestDist[0]);
+                    = WEBRTC_SPL_MUL_16_16((int32_t) pw16_bestCorr[2], pw16_bestDist[0]);
                 if (w32_en1 >= w32_en2)
                 {
                     /* 0 wins over 2 */
@@ -306,10 +306,10 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             {
                 /* 1 wins over 0 */
                 w32_en1
-                    = WEBRTC_SPL_MUL_16_16((WebRtc_Word32) pw16_bestCorr[1],pw16_bestDist[2]);
+                    = WEBRTC_SPL_MUL_16_16((int32_t) pw16_bestCorr[1],pw16_bestDist[2]);
                 w32_en2
-                    = WEBRTC_SPL_MUL_16_16((WebRtc_Word32) pw16_bestCorr[2],pw16_bestDist[1]);
-                if ((WebRtc_Word32) w32_en1 >= (WebRtc_Word32) w32_en2)
+                    = WEBRTC_SPL_MUL_16_16((int32_t) pw16_bestCorr[2],pw16_bestDist[1]);
+                if ((int32_t) w32_en1 >= (int32_t) w32_en2)
                 {
                     /* 1 wins over 2 */
                     w16_ind = 1;
@@ -376,7 +376,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             = WebRtcSpl_MaxAbsValueW16(
                 &inst->pw16_speechHistory[inst->w16_speechHistoryLen - w16_len - w16_startInd
                     - w16_noOfcorr2],
-                (WebRtc_Word16) (w16_len + w16_startInd + w16_noOfcorr2 - 1));
+                (int16_t) (w16_len + w16_startInd + w16_noOfcorr2 - 1));
         w16_corrScale = ((31 - WebRtcSpl_NormW32(WEBRTC_SPL_MUL_16_16(w16_tmp, w16_tmp)))
             + (31 - WebRtcSpl_NormW32(w16_len))) - 31;
         w16_corrScale = WEBRTC_SPL_MAX(0, w16_corrScale);
@@ -418,15 +418,15 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
                 /* if sum is odd */
                 w16_en1Scale += 1;
             }
-            w16_en1 = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_en1, w16_en1Scale);
-            w16_en2 = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_en2, w16_en2Scale);
+            w16_en1 = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_en1, w16_en1Scale);
+            w16_en2 = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_en2, w16_en2Scale);
             w32_en1_mul_en2 = WEBRTC_SPL_MUL_16_16(w16_en1, w16_en2);
-            w16_sqrt_en1en2 = (WebRtc_Word16) WebRtcSpl_SqrtFloor(w32_en1_mul_en2);
+            w16_sqrt_en1en2 = (int16_t) WebRtcSpl_SqrtFloor(w32_en1_mul_en2);
 
             /* Calculate cc/sqrt(en1*en2) in Q14 */
             w16_ccShiftL = 14 - ((w16_en1Scale + w16_en2Scale) >> 1);
             w32_cc = WEBRTC_SPL_SHIFT_W32(w32_cc, w16_ccShiftL);
-            w16_bestcorr = (WebRtc_Word16) WebRtcSpl_DivW32W16(w32_cc, w16_sqrt_en1en2);
+            w16_bestcorr = (int16_t) WebRtcSpl_DivW32W16(w32_cc, w16_sqrt_en1en2);
             w16_bestcorr = WEBRTC_SPL_MIN(16384, w16_bestcorr); /* set maximum to 1.0 */
 
         }
@@ -462,10 +462,10 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             /* calculate w32_en1/w32_en2 in Q13 */
             w32_en1_mul_en2 = WebRtcSpl_DivW32W16(
                 WEBRTC_SPL_SHIFT_W32(w32_en1, -w16_en1Scale),
-                (WebRtc_Word16) (WEBRTC_SPL_RSHIFT_W32(w32_en2, w16_en2Scale)));
+                (int16_t) (WEBRTC_SPL_RSHIFT_W32(w32_en2, w16_en2Scale)));
 
             /* calculate factor in Q13 (sqrt of en1/en2 in Q26) */
-            w16_factor = (WebRtc_Word16) WebRtcSpl_SqrtFloor(
+            w16_factor = (int16_t) WebRtcSpl_SqrtFloor(
                 WEBRTC_SPL_LSHIFT_W32(w32_en1_mul_en2, 13));
 
             /* Copy the two vectors and give them the same energy */
@@ -587,17 +587,17 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
         if (w16_randLen <= RANDVEC_NO_OF_SAMPLES)
         {
             WEBRTC_SPL_MEMCPY_W16(pw16_randVec,
-                (WebRtc_Word16*) WebRtcNetEQ_kRandnTbl, w16_randLen);
+                (int16_t*) WebRtcNetEQ_kRandnTbl, w16_randLen);
         }
         else
         { /* only applies to SWB where length could be larger than 256 */
 #if FSMULT >= 2  /* Makes pw16_randVec longer than RANDVEC_NO_OF_SAMPLES. */
-            WEBRTC_SPL_MEMCPY_W16(pw16_randVec, (WebRtc_Word16*) WebRtcNetEQ_kRandnTbl,
+            WEBRTC_SPL_MEMCPY_W16(pw16_randVec, (int16_t*) WebRtcNetEQ_kRandnTbl,
                 RANDVEC_NO_OF_SAMPLES);
             inst->w16_seedInc = (inst->w16_seedInc + 2) & (RANDVEC_NO_OF_SAMPLES - 1);
             assert(w16_randLen <= FSMULT * 120 + 30);
             WebRtcNetEQ_RandomVec(&inst->uw16_seed, &pw16_randVec[RANDVEC_NO_OF_SAMPLES],
-                (WebRtc_Word16) (w16_randLen - RANDVEC_NO_OF_SAMPLES), inst->w16_seedInc);
+                (int16_t) (w16_randLen - RANDVEC_NO_OF_SAMPLES), inst->w16_seedInc);
 #else
             assert(0);
 #endif
@@ -630,7 +630,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
         w32_tmp = WEBRTC_SPL_SHIFT_W32(w32_tmp, w16_tmp);
         w32_tmp = WebRtcSpl_SqrtFloor(w32_tmp);
         ExpandState->w16_arGainScale = 13 + ((w16_tmp + 7 - w16_scale) >> 1);
-        ExpandState->w16_arGain = (WebRtc_Word16) w32_tmp;
+        ExpandState->w16_arGain = (int16_t) w32_tmp;
 
         /********************************************************************
          * Calculate vfraction from bestcorr                                *
@@ -647,21 +647,21 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
         if (w16_bestcorr > 7875)
         {
             /* if x>0.480665 */
-            WebRtc_Word16 w16_x1, w16_x2, w16_x3;
+            int16_t w16_x1, w16_x2, w16_x3;
             w16_x1 = w16_bestcorr;
-            w32_tmp = WEBRTC_SPL_MUL_16_16((WebRtc_Word32) w16_x1, w16_x1);
-            w16_x2 = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_tmp, 14);
+            w32_tmp = WEBRTC_SPL_MUL_16_16((int32_t) w16_x1, w16_x1);
+            w16_x2 = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_tmp, 14);
             w32_tmp = WEBRTC_SPL_MUL_16_16(w16_x1, w16_x2);
-            w16_x3 = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_tmp, 14);
+            w16_x3 = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_tmp, 14);
             w32_tmp
-                = (WebRtc_Word32) WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32) WebRtcNetEQ_kMixFractionFuncTbl[0], 14);
+                = (int32_t) WEBRTC_SPL_LSHIFT_W32((int32_t) WebRtcNetEQ_kMixFractionFuncTbl[0], 14);
             w32_tmp
-                += (WebRtc_Word32) WEBRTC_SPL_MUL_16_16(WebRtcNetEQ_kMixFractionFuncTbl[1], w16_x1);
+                += (int32_t) WEBRTC_SPL_MUL_16_16(WebRtcNetEQ_kMixFractionFuncTbl[1], w16_x1);
             w32_tmp
-                += (WebRtc_Word32) WEBRTC_SPL_MUL_16_16(WebRtcNetEQ_kMixFractionFuncTbl[2], w16_x2);
+                += (int32_t) WEBRTC_SPL_MUL_16_16(WebRtcNetEQ_kMixFractionFuncTbl[2], w16_x2);
             w32_tmp
-                += (WebRtc_Word32) WEBRTC_SPL_MUL_16_16(WebRtcNetEQ_kMixFractionFuncTbl[3], w16_x3);
-            ExpandState->w16_vFraction = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(w32_tmp, 12);
+                += (int32_t) WEBRTC_SPL_MUL_16_16(WebRtcNetEQ_kMixFractionFuncTbl[3], w16_x3);
+            ExpandState->w16_vFraction = (int16_t) WEBRTC_SPL_RSHIFT_W32(w32_tmp, 12);
             ExpandState->w16_vFraction = WEBRTC_SPL_MIN(ExpandState->w16_vFraction, 16384);
             ExpandState->w16_vFraction = WEBRTC_SPL_MAX(ExpandState->w16_vFraction, 0);
         }
@@ -681,9 +681,9 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             /* Calculate (1-(1/slope))/w16_DistLag = (slope-1)/(w16_DistLag*slope) */
             w32_tmp = w16_slope - 8192;
             w32_tmp = WEBRTC_SPL_LSHIFT_W32(w32_tmp, 12); /* Value in Q25 (13+12=25) */
-            w16_tmp = (WebRtc_Word16) WEBRTC_SPL_MUL_16_16_RSFT(w16_DistLag,
+            w16_tmp = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(w16_DistLag,
                 w16_slope, 8); /* Value in Q5  (13-8=5)  */
-            w16_tmp = (WebRtc_Word16) WebRtcSpl_DivW32W16(w32_tmp,
+            w16_tmp = (int16_t) WebRtcSpl_DivW32W16(w32_tmp,
                 w16_tmp); /* Res in Q20 (25-5=20) */
 
             if (w16_slope > 14746)
@@ -709,7 +709,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
                 /* Calculate (1-slope)/w16_DistLag */
                 w32_tmp = 8192 - w16_slope;
                 w32_tmp = WEBRTC_SPL_LSHIFT_W32(w32_tmp, 7); /* Value in Q20 (13+7=20) */
-                ExpandState->w16_muteSlope = (WebRtc_Word16) WebRtcSpl_DivW32W16(w32_tmp,
+                ExpandState->w16_muteSlope = (int16_t) WebRtcSpl_DivW32W16(w32_tmp,
                     w16_DistLag); /* Res in Q20 (20-0=20) */
             }
             ExpandState->w16_onset = 0;
@@ -723,7 +723,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             w32_tmp = 8192 - w16_slope;
             w32_tmp = WEBRTC_SPL_LSHIFT_W32(w32_tmp, 7); /* Value in Q20 (13+7=20) */
             w32_tmp = WEBRTC_SPL_MAX(w32_tmp, 0);
-            ExpandState->w16_muteSlope = (WebRtc_Word16) WebRtcSpl_DivW32W16(w32_tmp,
+            ExpandState->w16_muteSlope = (int16_t) WebRtcSpl_DivW32W16(w32_tmp,
                 w16_DistLag); /* Res   in Q20    (20-0=20) */
             w16_tmp = WebRtcNetEQ_k5243div[fs_mult]; /* 0.005/fs_mult = 5243/fs_mult */
             ExpandState->w16_muteSlope = WEBRTC_SPL_MAX(w16_tmp, ExpandState->w16_muteSlope);
@@ -772,7 +772,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             inst->w16_seedInc = (inst->w16_seedInc + 2) & (RANDVEC_NO_OF_SAMPLES - 1);
             assert(w16_randLen <= FSMULT * 120 + 30);
             WebRtcNetEQ_RandomVec(&inst->uw16_seed, &pw16_randVec[RANDVEC_NO_OF_SAMPLES],
-                (WebRtc_Word16) (w16_randLen - RANDVEC_NO_OF_SAMPLES), inst->w16_seedInc);
+                (int16_t) (w16_randLen - RANDVEC_NO_OF_SAMPLES), inst->w16_seedInc);
 #else
             assert(0);
 #endif
@@ -880,7 +880,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             for (i = 0; i < ExpandState->w16_overlap; i++)
             {
                 /* Do overlap add between new vector and overlap */
-                ExpandState->pw16_overlapVec[i] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(
+                ExpandState->pw16_overlapVec[i] = (int16_t) WEBRTC_SPL_RSHIFT_W32(
                     WEBRTC_SPL_MUL_16_16(ExpandState->pw16_overlapVec[i], w16_winMute) +
                     WEBRTC_SPL_MUL_16_16(
                         WEBRTC_SPL_MUL_16_16_RSFT(ExpandState->w16_expandMuteFactor,
@@ -913,7 +913,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             UNVOICED_LPC_ORDER);
         if (ExpandState->w16_arGainScale > 0)
         {
-            w32_tmp = ((WebRtc_Word32) 1) << (ExpandState->w16_arGainScale - 1);
+            w32_tmp = ((int32_t) 1) << (ExpandState->w16_arGainScale - 1);
         }
         else
         {
@@ -941,7 +941,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
          >=64*fs_mult         => go from 1 to 0 in about 32 ms
          */
         w16_tmp = (31 - WebRtcSpl_NormW32(ExpandState->w16_maxLag)) - 5; /* getbits(w16_maxLag) -5 */
-        w16_vfractionChange = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(256, w16_tmp);
+        w16_vfractionChange = (int16_t) WEBRTC_SPL_RSHIFT_W32(256, w16_tmp);
         if (ExpandState->w16_stopMuting == 1)
         {
             w16_vfractionChange = 0;
@@ -963,7 +963,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             w16_tmp2 = 16384 - ExpandState->w16_currentVFraction;
             WebRtcSpl_ScaleAndAddVectorsWithRound(pw16_voicedVec + w16_tmp,
                 ExpandState->w16_currentVFraction, pw16_unvoicedVec + w16_tmp, w16_tmp2, 14,
-                pw16_outData + w16_tmp, (WebRtc_Word16) (w16_lag - w16_tmp));
+                pw16_outData + w16_tmp, (int16_t) (w16_lag - w16_tmp));
         }
 
         /* Select muting factor */
@@ -991,9 +991,9 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
             {
                 WebRtcNetEQ_MuteSignal(pw16_outData, ExpandState->w16_muteSlope, w16_lag);
 
-                w16_tmp = 16384 - (WebRtc_Word16) ((WEBRTC_SPL_MUL_16_16(w16_lag,
+                w16_tmp = 16384 - (int16_t) ((WEBRTC_SPL_MUL_16_16(w16_lag,
                     ExpandState->w16_muteSlope) + 8192) >> 6); /* 20-14 = 6 */
-                w16_tmp = (WebRtc_Word16) ((WEBRTC_SPL_MUL_16_16(w16_tmp,
+                w16_tmp = (int16_t) ((WEBRTC_SPL_MUL_16_16(w16_tmp,
                     ExpandState->w16_expandMuteFactor) + 8192) >> 14);
 
                 /* Guard against getting stuck with very small (but sometimes audible) gain */
@@ -1025,7 +1025,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
 
         if (BGNState->w16_scaleShift > 1)
         {
-            w32_tmp = ((WebRtc_Word32) 1) << (BGNState->w16_scaleShift - 1);
+            w32_tmp = ((int32_t) 1) << (BGNState->w16_scaleShift - 1);
         }
         else
         {
@@ -1051,7 +1051,7 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
         {
             /* fade BGN to zero */
             /* calculate muting slope, approx 2^18/fsHz */
-            WebRtc_Word16 muteFactor;
+            int16_t muteFactor;
             if (fs_mult == 1)
             {
                 muteFactor = -32;
@@ -1136,16 +1136,20 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
          * Only do this if StopMuting != 1 or if explicitly BGNonly, otherwise Expand is
          * called from Merge or Normal and special measures must be taken.
          */
-        inst->statInst.expandLength += (WebRtc_UWord32) *pw16_len;
+        inst->statInst.expandLength += (uint32_t) *pw16_len;
         if (ExpandState->w16_expandMuteFactor == 0 || BGNonly)
         {
             /* Only noise expansion */
             inst->statInst.expandedNoiseSamples += *pw16_len;
+            /* Short-term activity statistics. */
+            inst->activity_stats.expand_bgn_samples += *pw16_len;
         }
         else
         {
             /* Voice expand (note: not necessarily _voiced_) */
             inst->statInst.expandedVoiceSamples += *pw16_len;
+            /* Short-term activity statistics. */
+            inst->activity_stats.expand_normal_samples += *pw16_len;
         }
     }
 
@@ -1177,13 +1181,13 @@ int WebRtcNetEQ_Expand(DSPInst_t *inst,
 
 int WebRtcNetEQ_GenerateBGN(DSPInst_t *inst,
 #ifdef SCRATCH
-                            WebRtc_Word16 *pw16_scratchPtr,
+                            int16_t *pw16_scratchPtr,
 #endif
-                            WebRtc_Word16 *pw16_outData, WebRtc_Word16 len)
+                            int16_t *pw16_outData, int16_t len)
 {
 
-    WebRtc_Word16 pos = 0;
-    WebRtc_Word16 tempLen = len;
+    int16_t pos = 0;
+    int16_t tempLen = len;
 
     while (tempLen > 0)
     {

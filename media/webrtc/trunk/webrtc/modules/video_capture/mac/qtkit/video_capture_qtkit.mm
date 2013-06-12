@@ -15,27 +15,13 @@
 #include "critical_section_wrapper.h"
 #include "../../video_capture_config.h"
 
-class nsAutoreleasePool {
-public:
-    nsAutoreleasePool()
-    {
-        mLocalPool = [[NSAutoreleasePool alloc] init];
-    }
-    ~nsAutoreleasePool()
-    {
-        [mLocalPool release];
-    }
-private:
-    NSAutoreleasePool *mLocalPool;
-};
-
 namespace webrtc
 {
 
 namespace videocapturemodule
 {
 
-VideoCaptureMacQTKit::VideoCaptureMacQTKit(const WebRtc_Word32 id) :
+VideoCaptureMacQTKit::VideoCaptureMacQTKit(const int32_t id) :
     VideoCaptureImpl(id),
     _captureDevice(NULL),
     _captureInfo(NULL),
@@ -55,7 +41,6 @@ VideoCaptureMacQTKit::VideoCaptureMacQTKit(const WebRtc_Word32 id) :
 VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
 {
 
-    nsAutoreleasePool localPool;
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
                  "~VideoCaptureMacQTKit() called");
     if(_captureDevice)
@@ -70,22 +55,20 @@ VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
     }
 }
 
-WebRtc_Word32 VideoCaptureMacQTKit::Init(
-    const WebRtc_Word32 id, const char* iDeviceUniqueIdUTF8)
+int32_t VideoCaptureMacQTKit::Init(
+    const int32_t id, const char* iDeviceUniqueIdUTF8)
 {
     CriticalSectionScoped cs(&_apiCs);
 
 
-    const WebRtc_Word32 nameLength =
-        (WebRtc_Word32) strlen((char*)iDeviceUniqueIdUTF8);
+    const int32_t nameLength =
+        (int32_t) strlen((char*)iDeviceUniqueIdUTF8);
     if(nameLength>kVideoCaptureUniqueNameLength)
         return -1;
 
     // Store the device name
     _deviceUniqueId = new char[nameLength+1];
     memcpy(_deviceUniqueId, iDeviceUniqueIdUTF8,nameLength+1);
-
-    nsAutoreleasePool localPool;
 
     _captureDevice = [[VideoCaptureMacQTKitObjC alloc] init];
     if(NULL == _captureDevice)
@@ -182,11 +165,10 @@ WebRtc_Word32 VideoCaptureMacQTKit::Init(
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureMacQTKit::StartCapture(
+int32_t VideoCaptureMacQTKit::StartCapture(
     const VideoCaptureCapability& capability)
 {
 
-    nsAutoreleasePool localPool;
     _captureWidth = capability.width;
     _captureHeight = capability.height;
     _captureFrameRate = capability.maxFPS;
@@ -209,9 +191,8 @@ WebRtc_Word32 VideoCaptureMacQTKit::StartCapture(
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureMacQTKit::StopCapture()
+int32_t VideoCaptureMacQTKit::StopCapture()
 {
-    nsAutoreleasePool localPool;
     [_captureDevice stopCapture];
 
     _isCapturing = false;
@@ -223,7 +204,7 @@ bool VideoCaptureMacQTKit::CaptureStarted()
     return _isCapturing;
 }
 
-WebRtc_Word32 VideoCaptureMacQTKit::CaptureSettings(VideoCaptureCapability& settings)
+int32_t VideoCaptureMacQTKit::CaptureSettings(VideoCaptureCapability& settings)
 {
     settings.width = _captureWidth;
     settings.height = _captureHeight;

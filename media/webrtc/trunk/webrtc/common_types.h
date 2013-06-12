@@ -136,27 +136,6 @@ enum ProcessingTypes
     kRecordingPreprocessing
 };
 
-// Encryption enums
-enum CipherTypes
-{
-    kCipherNull               = 0,
-    kCipherAes128CounterMode  = 1
-};
-
-enum AuthenticationTypes
-{
-    kAuthNull       = 0,
-    kAuthHmacSha1   = 3
-};
-
-enum SecurityLevels
-{
-    kNoProtection                    = 0,
-    kEncryption                      = 1,
-    kAuthentication                  = 2,
-    kEncryptionAndAuthentication     = 3
-};
-
 // Interface for encrypting and decrypting regular data and rtp/rtcp packets.
 // Implement this interface if you wish to provide an encryption scheme to
 // the voice or video engines.
@@ -342,13 +321,6 @@ typedef struct        // All levels are reported in dB
     StatVal a_nlp;
 } EchoStatistics;
 
-enum TelephoneEventDetectionMethods
-{
-    kInBand = 0,
-    kOutOfBand = 1,
-    kInAndOutOfBand = 2
-};
-
 enum NsModes    // type of Noise Suppression
 {
     kNsUnchanged = 0,   // previously set mode
@@ -357,7 +329,7 @@ enum NsModes    // type of Noise Suppression
     kNsLowSuppression,  // lowest suppression
     kNsModerateSuppression,
     kNsHighSuppression,
-    kNsVeryHighSuppression     // highest suppression
+    kNsVeryHighSuppression,     // highest suppression
 };
 
 enum AgcModes                  // type of Automatic Gain Control
@@ -382,7 +354,7 @@ enum EcModes                   // type of Echo Control
     kEcDefault,                // platform default
     kEcConference,             // conferencing default (aggressive AEC)
     kEcAec,                    // Acoustic Echo Cancellation
-    kEcAecm                    // AEC mobile
+    kEcAecm,                   // AEC mobile
 };
 
 // AECM modes
@@ -434,19 +406,7 @@ enum NetEqModes             // NetEQ playout configurations
     kNetEqFax = 2,
     // Minimal buffer management. Inserts zeros for lost packets and during
     // buffer increases.
-    kNetEqOff = 3
-};
-
-enum NetEqBgnModes          // NetEQ Background Noise (BGN) configurations
-{
-    // BGN is always on and will be generated when the incoming RTP stream
-    // stops (default).
-    kBgnOn = 0,
-    // The BGN is faded to zero (complete silence) after a few seconds.
-    kBgnFade = 1,
-    // BGN is not used at all. Silence is produced after speech extrapolation
-    // has faded.
-    kBgnOff = 2
+    kNetEqOff = 3,
 };
 
 enum OnHoldModes            // On Hold direction
@@ -460,7 +420,7 @@ enum AmrMode
 {
     kRfc3267BwEfficient = 0,
     kRfc3267OctetAligned = 1,
-    kRfc3267FileStorage = 2
+    kRfc3267FileStorage = 2,
 };
 
 // ==================================================================
@@ -530,6 +490,7 @@ struct VideoCodecVP8
     bool                 errorConcealmentOn;
     bool                 automaticResizeOn;
     bool                 frameDroppingOn;
+    int                  keyFrameInterval;
 };
 
 // Unknown specific
@@ -544,6 +505,7 @@ enum VideoCodecType
     kVideoCodecI420,
     kVideoCodecRED,
     kVideoCodecULPFEC,
+    kVideoCodecGeneric,
     kVideoCodecUnknown
 };
 
@@ -562,8 +524,20 @@ struct SimulcastStream
     unsigned short      height;
     unsigned char       numberOfTemporalLayers;
     unsigned int        maxBitrate;
+    unsigned int        targetBitrate;
+    unsigned int        minBitrate;
     unsigned int        qpMax; // minimum quality
 };
+
+enum VideoCodecMode {
+  kRealtimeVideo,
+  kScreensharing
+};
+
+// When using an external encoder/decoder one may need to specify extra
+// options. This struct definition is left for the external implementation.
+// TODO(andresp): Support for multiple external encoder/decoders.
+struct ExtraCodecOptions;
 
 // Common video codec properties
 struct VideoCodec
@@ -585,6 +559,9 @@ struct VideoCodec
     unsigned int        qpMax;
     unsigned char       numberOfSimulcastStreams;
     SimulcastStream     simulcastStream[kMaxSimulcastStreams];
+
+    VideoCodecMode      mode;
+    ExtraCodecOptions*  extra_options;
 };
 
 // Bandwidth over-use detector options.  These are used to drive

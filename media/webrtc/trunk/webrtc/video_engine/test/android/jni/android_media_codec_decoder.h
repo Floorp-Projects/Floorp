@@ -27,8 +27,8 @@ class AndroidMediaCodecDecoder : public VideoDecoder {
   //          - numberOfCores     : Number of cores available for the decoder
   //
   // Return value                 : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-  virtual WebRtc_Word32 InitDecode(
-      const VideoCodec* codecSettings, WebRtc_Word32 numberOfCores);
+  virtual int32_t InitDecode(
+      const VideoCodec* codecSettings, int32_t numberOfCores);
 
   // Decode encoded image (as a part of a video stream). The decoded image
   // will be returned to the user through the decode complete callback.
@@ -47,12 +47,12 @@ class AndroidMediaCodecDecoder : public VideoDecoder {
   //                                used by decoders with internal rendering.
   //
   // Return value                 : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-  virtual WebRtc_Word32
+  virtual int32_t
   Decode(const EncodedImage& inputImage,
          bool missingFrames,
          const RTPFragmentationHeader* fragmentation,
          const CodecSpecificInfo* codecSpecificInfo = NULL,
-         WebRtc_Word64 renderTimeMs = -1);
+         int64_t renderTimeMs = -1);
 
   // Register an decode complete callback object.
   //
@@ -60,18 +60,18 @@ class AndroidMediaCodecDecoder : public VideoDecoder {
   //          - callback         : Callback object which handles decoded images.
   //
   // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-  virtual WebRtc_Word32 RegisterDecodeCompleteCallback(
+  virtual int32_t RegisterDecodeCompleteCallback(
       DecodedImageCallback* callback);
 
   // Free decoder memory.
   //
   // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-  virtual WebRtc_Word32 Release();
+  virtual int32_t Release();
 
   // Reset decoder state and prepare for a new call.
   //
   // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-  virtual WebRtc_Word32 Reset();
+  virtual int32_t Reset();
 
   // Codec configuration data sent out-of-band, i.e. in SIP call setup
   //
@@ -81,8 +81,8 @@ class AndroidMediaCodecDecoder : public VideoDecoder {
   //                               bytes
   //
   // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
-  virtual WebRtc_Word32 SetCodecConfigParameters(
-      const WebRtc_UWord8* /*buffer*/, WebRtc_Word32 /*size*/) {
+  virtual int32_t SetCodecConfigParameters(
+      const uint8_t* /*buffer*/, int32_t /*size*/) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 

@@ -19,27 +19,27 @@ class MockRTPReceiverVideo : public RTPReceiverVideo {
  public:
   MockRTPReceiverVideo() : RTPReceiverVideo(0, NULL, NULL) {}
   MOCK_METHOD1(ChangeUniqueId,
-      void(const WebRtc_Word32 id));
+      void(const int32_t id));
   MOCK_METHOD3(ReceiveRecoveredPacketCallback,
-      WebRtc_Word32(WebRtcRTPHeader* rtpHeader,
-                    const WebRtc_UWord8* payloadData,
-                    const WebRtc_UWord16 payloadDataLength));
+      int32_t(WebRtcRTPHeader* rtpHeader,
+              const uint8_t* payloadData,
+              const uint16_t payloadDataLength));
   MOCK_METHOD3(CallbackOfReceivedPayloadData,
-      WebRtc_Word32(const WebRtc_UWord8* payloadData,
-                    const WebRtc_UWord16 payloadSize,
-                    const WebRtcRTPHeader* rtpHeader));
+      int32_t(const uint8_t* payloadData,
+              const uint16_t payloadSize,
+              const WebRtcRTPHeader* rtpHeader));
   MOCK_CONST_METHOD0(TimeStamp,
-      WebRtc_UWord32());
+      uint32_t());
   MOCK_CONST_METHOD0(SequenceNumber,
-      WebRtc_UWord16());
+      uint16_t());
   MOCK_CONST_METHOD2(PayloadTypeToPayload,
-      WebRtc_UWord32(const WebRtc_UWord8 payloadType,
-                     ModuleRTPUtility::Payload*& payload));
+      uint32_t(const uint8_t payloadType,
+               ModuleRTPUtility::Payload*& payload));
   MOCK_CONST_METHOD2(RetransmitOfOldPacket,
-      bool(const WebRtc_UWord16 sequenceNumber,
-           const WebRtc_UWord32 rtpTimeStamp));
+      bool(const uint16_t sequenceNumber,
+           const uint32_t rtpTimeStamp));
   MOCK_CONST_METHOD0(REDPayloadType,
-      WebRtc_Word8());
+      int8_t());
   MOCK_CONST_METHOD0(HaveNotReceivedPackets,
         bool());
 };

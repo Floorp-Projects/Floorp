@@ -21,22 +21,22 @@
 #include "constants.h"
 
 void WebRtcIlbcfix_CbUpdateBestIndex(
-    WebRtc_Word32 CritNew,    /* (i) New Potentially best Criteria */
-    WebRtc_Word16 CritNewSh,   /* (i) Shift value of above Criteria */
-    WebRtc_Word16 IndexNew,   /* (i) Index of new Criteria */
-    WebRtc_Word32 cDotNew,    /* (i) Cross dot of new index */
-    WebRtc_Word16 invEnergyNew,  /* (i) Inversed energy new index */
-    WebRtc_Word16 energyShiftNew,  /* (i) Energy shifts of new index */
-    WebRtc_Word32 *CritMax,   /* (i/o) Maximum Criteria (so far) */
-    WebRtc_Word16 *shTotMax,   /* (i/o) Shifts of maximum criteria */
-    WebRtc_Word16 *bestIndex,   /* (i/o) Index that corresponds to
+    int32_t CritNew,    /* (i) New Potentially best Criteria */
+    int16_t CritNewSh,   /* (i) Shift value of above Criteria */
+    int16_t IndexNew,   /* (i) Index of new Criteria */
+    int32_t cDotNew,    /* (i) Cross dot of new index */
+    int16_t invEnergyNew,  /* (i) Inversed energy new index */
+    int16_t energyShiftNew,  /* (i) Energy shifts of new index */
+    int32_t *CritMax,   /* (i/o) Maximum Criteria (so far) */
+    int16_t *shTotMax,   /* (i/o) Shifts of maximum criteria */
+    int16_t *bestIndex,   /* (i/o) Index that corresponds to
                                                    maximum criteria */
-    WebRtc_Word16 *bestGain)   /* (i/o) Gain in Q14 that corresponds
+    int16_t *bestGain)   /* (i/o) Gain in Q14 that corresponds
                                                    to maximum criteria */
 {
-  WebRtc_Word16 shOld, shNew, tmp16;
-  WebRtc_Word16 scaleTmp;
-  WebRtc_Word32 gainW32;
+  int16_t shOld, shNew, tmp16;
+  int16_t scaleTmp;
+  int32_t gainW32;
 
   /* Normalize the new and old Criteria to the same domain */
   if (CritNewSh>(*shTotMax)) {
@@ -54,19 +54,19 @@ void WebRtcIlbcfix_CbUpdateBestIndex(
   if (WEBRTC_SPL_RSHIFT_W32(CritNew, shNew)>
       WEBRTC_SPL_RSHIFT_W32((*CritMax),shOld)) {
 
-    tmp16 = (WebRtc_Word16)WebRtcSpl_NormW32(cDotNew);
+    tmp16 = (int16_t)WebRtcSpl_NormW32(cDotNew);
     tmp16 = 16 - tmp16;
 
     /* Calculate the gain in Q14
        Compensate for inverseEnergyshift in Q29 and that the energy
-       value was stored in a WebRtc_Word16 (shifted down 16 steps)
+       value was stored in a int16_t (shifted down 16 steps)
        => 29-14+16 = 31 */
 
     scaleTmp = -energyShiftNew-tmp16+31;
     scaleTmp = WEBRTC_SPL_MIN(31, scaleTmp);
 
     gainW32 = WEBRTC_SPL_MUL_16_16_RSFT(
-        ((WebRtc_Word16)WEBRTC_SPL_SHIFT_W32(cDotNew, -tmp16)), invEnergyNew, scaleTmp);
+        ((int16_t)WEBRTC_SPL_SHIFT_W32(cDotNew, -tmp16)), invEnergyNew, scaleTmp);
 
     /* Check if criteria satisfies Gain criteria (max 1.3)
        if it is larger set the gain to 1.3
@@ -77,7 +77,7 @@ void WebRtcIlbcfix_CbUpdateBestIndex(
     } else if (gainW32<-21299) {
       *bestGain=-21299;
     } else {
-      *bestGain=(WebRtc_Word16)gainW32;
+      *bestGain=(int16_t)gainW32;
     }
 
     *CritMax=CritNew;

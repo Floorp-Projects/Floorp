@@ -23,17 +23,17 @@ public:
     DTMFqueue();
     virtual ~DTMFqueue();
 
-    WebRtc_Word32 AddDTMF(WebRtc_UWord8 DTMFKey, WebRtc_UWord16 len, WebRtc_UWord8 level);
-    WebRtc_Word8 NextDTMF(WebRtc_UWord8* DTMFKey, WebRtc_UWord16 * len, WebRtc_UWord8 * level);
+    int32_t AddDTMF(uint8_t DTMFKey, uint16_t len, uint8_t level);
+    int8_t NextDTMF(uint8_t* DTMFKey, uint16_t * len, uint8_t * level);
     bool PendingDTMF();
     void ResetDTMF();
 
 private:
     CriticalSectionWrapper* _DTMFCritsect;
-    WebRtc_UWord8        _nextEmptyIndex;
-    WebRtc_UWord8        _DTMFKey[DTMF_OUTBAND_MAX];
-    WebRtc_UWord16       _DTMFLen[DTMF_OUTBAND_MAX];
-    WebRtc_UWord8        _DTMFLevel[DTMF_OUTBAND_MAX];
+    uint8_t        _nextEmptyIndex;
+    uint8_t        _DTMFKey[DTMF_OUTBAND_MAX];
+    uint16_t       _DTMFLen[DTMF_OUTBAND_MAX];
+    uint8_t        _DTMFLevel[DTMF_OUTBAND_MAX];
 };
 } // namespace webrtc
 
