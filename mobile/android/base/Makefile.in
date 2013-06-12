@@ -38,6 +38,7 @@ UTIL_JAVA_FILES := \
   util/HardwareUtils.java \
   util/INIParser.java \
   util/INISection.java \
+  util/JSONUtils.java \
   util/StringUtils.java \
   util/ThreadUtils.java \
   util/UiAsyncTask.java \
