@@ -33,8 +33,8 @@ ABIArgGenerator::next(MIRType type)
     return current_;
 }
 
-const Register ABIArgGenerator::NonArgReturnVolatileReg1 = ecx;
-const Register ABIArgGenerator::NonArgReturnVolatileReg2 = edx;
+const Register ABIArgGenerator::NonArgReturnVolatileReg0 = ecx;
+const Register ABIArgGenerator::NonArgReturnVolatileReg1 = edx;
 const Register ABIArgGenerator::NonVolatileReg = ebx;
 
 void

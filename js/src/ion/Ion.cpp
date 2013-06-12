@@ -47,6 +47,8 @@
 #include "ion/IonFrames-inl.h"
 #include "ion/CompilerRoot.h"
 #include "ExecutionModeInlines.h"
+#include "AsmJS.h"
+#include "AsmJSModule.h"
 
 #if JS_TRACE_LOGGING
 #include "TraceLogging.h"
@@ -564,7 +566,8 @@ IonScript::IonScript()
     callTargetEntries_(0),
     refcount_(0),
     recompileInfo_(),
-    osrPcMismatchCounter_(0)
+    osrPcMismatchCounter_(0),
+    dependentAsmJSModules(NULL)
 {
 }
 
@@ -848,6 +851,7 @@ void
 IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
     script->destroyCaches();
+    script->detachDependentAsmJSModules(fop);
     fop->free_(script);
 }
 
@@ -879,6 +883,29 @@ IonScript::destroyCaches()
 {
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).destroy();
+}
+
+bool
+IonScript::addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit)
+{
+    if (!dependentAsmJSModules) {
+        dependentAsmJSModules = cx->new_<Vector<DependentAsmJSModuleExit> >(cx);
+        if (!dependentAsmJSModules)
+            return false;
+    }
+    return dependentAsmJSModules->append(exit);
+}
+
+void
+IonScript::detachDependentAsmJSModules(FreeOp *fop) {
+    if (!dependentAsmJSModules)
+        return;
+    for (size_t i = 0; i < dependentAsmJSModules->length(); i++) {
+        DependentAsmJSModuleExit exit = dependentAsmJSModules->begin()[i];
+        exit.module->detachIonCompilation(exit.exitIndex);
+    }
+    fop->delete_(dependentAsmJSModules);
+    dependentAsmJSModules = NULL;
 }
 
 void
@@ -2107,6 +2134,7 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
             IonScript::Trace(zone->barrierTracer(), ionScript);
         }
 
+        ionScript->detachDependentAsmJSModules(fop);
         ionScript->decref(fop);
         SetIonScript(script, executionMode, NULL);
         co.invalidate();
