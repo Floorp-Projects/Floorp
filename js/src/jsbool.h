@@ -21,7 +21,7 @@ js_BooleanToString(JSContext *cx, JSBool b);
 namespace js {
 
 inline bool
-BooleanGetPrimitiveValue(JSContext *cx, HandleObject obj, Value *vp);
+BooleanGetPrimitiveValue(HandleObject obj, JSContext *cx);
 
 } /* namespace js */
 
