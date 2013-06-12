@@ -32,6 +32,7 @@ const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
+const PREF_APP_UPDATE_METRO_ENABLED       = "app.update.metro.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
@@ -642,6 +643,37 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpda
   return true;
 });
 
+XPCOMUtils.defineLazyGetter(this, "gIsMetro", function aus_gIsMetro() {
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  try {
+    let metroUtils = Cc["@mozilla.org/windows-metroutils;1"].
+                    createInstance(Ci.nsIWinMetroUtils);
+    return metroUtils && metroUtils.immersive;
+  } catch (e) {}
+#endif
+#endif
+
+  return false;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gMetroUpdatesEnabled", function aus_gMetroUpdatesEnabled() {
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  if (gIsMetro) {
+    let metroUpdate = getPref("getBoolPref", PREF_APP_UPDATE_METRO_ENABLED, true);
+    if (!metroUpdate) {
+      LOG("gMetroUpdatesEnabled - unable to automatically check for metro" +
+          " updates, disabled by pref");
+      return false;
+    }
+  }
+#endif
+#endif
+
+  return true;
+});
+
 XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckForUpdates() {
   // If the administrator has locked the app update functionality
   // OFF - this is not just a user setting, so disable the manual
@@ -650,6 +682,10 @@ XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckF
   if (!enabled && Services.prefs.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
     LOG("gCanCheckForUpdates - unable to automatically check for updates, " +
         "disabled by pref");
+    return false;
+  }
+
+  if (!gMetroUpdatesEnabled) {
     return false;
   }
 
@@ -2025,6 +2061,8 @@ UpdateService.prototype = {
       // version.
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
                                       "UPDATER_UPDATES_ENABLED");
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_METRO_ENABLED,
+                                      "UPDATER_UPDATES_METRO_ENABLED");
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
                                       "UPDATER_UPDATES_AUTOMATIC");
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_STAGE_ENABLED,
@@ -2395,6 +2433,10 @@ UpdateService.prototype = {
       return;
     }
 
+    if (!gMetroUpdatesEnabled) {
+      return;
+    }
+
     if (!gCanApplyUpdates) {
       LOG("UpdateService:_selectAndInstallUpdate - the user is unable to " +
           "apply updates... prompting");
@@ -2432,14 +2474,18 @@ UpdateService.prototype = {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because the " +
           "update snippet specified showPrompt");
       this._showPrompt(update);
-      return;
+      if (!gIsMetro) {
+        return;
+      }
     }
 
     if (!getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true)) {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled");
       this._showPrompt(update);
-      return;
+      if (!gIsMetro) {
+        return;
+      }
     }
 
     if (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1) == 0) {
@@ -3364,6 +3410,10 @@ Checker.prototype = {
    */
   _enabled: true,
   get enabled() {
+    if (!gMetroUpdatesEnabled) {
+      return false;
+    }
+
     return getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) &&
            gCanCheckForUpdates && this._enabled;
   },

@@ -102,6 +102,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_chrome-debugging.js \
 	browser_dbg_source_maps-01.js \
 	browser_dbg_source_maps-02.js \
+	browser_dbg_step-out.js \
 	head.js \
 	$(NULL)
 
@@ -139,6 +140,7 @@ MOCHITEST_BROWSER_PAGES = \
 	binary_search.map \
 	test-location-changes-bp.js \
 	test-location-changes-bp.html \
+	test-step-out.html \
 	$(NULL)
 
 ifneq (Linux,$(OS_ARCH))
