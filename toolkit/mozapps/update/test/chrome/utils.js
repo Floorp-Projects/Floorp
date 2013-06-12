@@ -167,10 +167,11 @@ var gCloseWindowTimeoutCounter = 0;
 
 // The following vars are for restoring previous preference values (if present)
 // when the test finishes.
-var gAppUpdateEnabled;    // app.update.enabled
-var gAppUpdateURLDefault; // app.update.url (default prefbranch)
-var gAppUpdateURL;        // app.update.url.override
-var gExtUpdateURL;        // extensions.update.url
+var gAppUpdateEnabled;      // app.update.enabled
+var gAppUpdateMetroEnabled; // app.update.metro.enabled
+var gAppUpdateURLDefault;   // app.update.url (default prefbranch)
+var gAppUpdateURL;          // app.update.url.override
+var gExtUpdateURL;          // extensions.update.url
 
 var gTestCounter = -1;
 var gWin;
@@ -809,6 +810,11 @@ function setupPrefs() {
   }
   Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true)
 
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_METRO_ENABLED)) {
+    gAppUpdateMetroEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_METRO_ENABLED);
+  }
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_METRO_ENABLED, true)
+
   if (Services.prefs.prefHasUserValue(PREF_EXTENSIONS_UPDATE_URL)) {
     gExtUpdateURL = Services.prefs.getCharPref(PREF_EXTENSIONS_UPDATE_URL);
   }
@@ -843,6 +849,13 @@ function resetPrefs() {
   }
   else if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ENABLED)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_ENABLED);
+  }
+
+  if (gAppUpdateMetroEnabled !== undefined) {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_METRO_ENABLED, gAppUpdateMetroEnabled);
+  }
+  else if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_METRO_ENABLED)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_METRO_ENABLED);
   }
 
   if (gExtUpdateURL !== undefined) {
