@@ -173,15 +173,12 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-595934-css-loader.html \
 	test-bug-595934-css-loader.css \
 	test-bug-595934-css-loader.css^headers^ \
-	test-bug-595934-dom-html.html \
 	test-bug-595934-imagemap.html \
 	test-bug-595934-html.html \
 	test-bug-595934-malformedxml.xhtml \
 	test-bug-595934-svg.xhtml \
 	test-bug-595934-workers.html \
 	test-bug-595934-workers.js \
-	test-bug-595934-dom-html-external.html \
-	test-bug-595934-dom-html-external.js \
 	test-bug-595934-canvas.html \
 	test-bug-595934-canvas.js \
 	test-bug-595934-css-parser.html \
