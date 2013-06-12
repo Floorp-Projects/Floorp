@@ -10,16 +10,6 @@
         Please refer to values/styles.xml for default styles.
     -->
 
-    <!-- AwesomeBar Tab Indicator Curve Left -->
-    <style name="AwesomeBarTabIndicatorCurve.Left">
-         <item name="android:layout_width">86dp</item>
-    </style>
-
-    <!-- AwesomeBar Tab Indicator Curve Right -->
-    <style name="AwesomeBarTabIndicatorCurve.Right">
-         <item name="android:layout_width">fill_parent</item>
-    </style>
-
     <!-- TabWidget --> 
     <style name="TabWidget">
         <item name="android:layout_width">300dip</item>
