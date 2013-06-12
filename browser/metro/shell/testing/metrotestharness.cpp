@@ -190,7 +190,14 @@ static void ReadPipe()
   }
 }
 
-static bool Launch()
+// From buildbotcustom logic:
+#define SUCCESS   0
+#define WARNINGS  1
+#define FAILURE   2
+#define EXCEPTION 3
+#define RETRY     4 /* will retry endlessly on new slaves, be careful with this! */
+
+static int Launch()
 {
   Log(L"Launching browser...");
 
@@ -203,7 +210,7 @@ static bool Launch()
                               IID_IApplicationActivationManager,
                               (void**)&activateMgr))) {
     Fail(L"CoCreateInstance CLSID_ApplicationActivationManager failed.");
-    return false;
+    return FAILURE;
   }
   
   HRESULT hr;
@@ -211,7 +218,7 @@ static bool Launch()
   // Activation is based on the browser's registered app model id
   if (!GetDefaultBrowserAppModelID(appModelID, (sizeof(appModelID)/sizeof(WCHAR)))) {
     Fail(L"GetDefaultBrowserAppModelID failed.");
-    return false;
+    return FAILURE;
   }
   Log(L"App model id='%s'", appModelID);
 
@@ -245,7 +252,7 @@ static bool Launch()
     int index = sFirefoxPath.ReverseFind('\\');
     if (index == -1) {
       Fail(L"Bad firefoxpath path");
-      return false;
+      return FAILURE;
     }
     testFilePath = sFirefoxPath.Mid(0, index);
     testFilePath += "\\";
@@ -255,11 +262,11 @@ static bool Launch()
     char path[MAX_PATH];
     if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
       Fail(L"GetModuleFileNameA errorno=%d", GetLastError());
-      return false;
+      return FAILURE;
     }
     char* slash = strrchr(path, '\\');
     if (!slash)
-      return false;
+      return FAILURE;
     *slash = '\0'; // no trailing slash
     testFilePath = path;
     testFilePath += "\\";
@@ -271,7 +278,7 @@ static bool Launch()
   // Make sure the firefox bin exists
   if (GetFileAttributesW(sFirefoxPath) == INVALID_FILE_ATTRIBUTES) {
     Fail(L"Invalid bin path: '%s'", sFirefoxPath);
-    return false;
+    return FAILURE;
   }
 
   Log(L"Using bin path: '%s'", sFirefoxPath);
@@ -283,7 +290,7 @@ static bool Launch()
                                  NULL);
   if (hTestFile == INVALID_HANDLE_VALUE) {
     Fail(L"CreateFileA errorno=%d", GetLastError());
-    return false;
+    return FAILURE;
   }
 
   DeleteTestFileHelper dtf(testFilePath);
@@ -298,7 +305,7 @@ static bool Launch()
   if (!WriteFile(hTestFile, asciiParams, asciiParams.GetLength(), NULL, 0)) {
     CloseHandle(hTestFile);
     Fail(L"WriteFile errorno=%d", GetLastError());
-    return false;
+    return FAILURE;
   }
   FlushFileBuffers(hTestFile);
   CloseHandle(hTestFile);
@@ -306,14 +313,14 @@ static bool Launch()
   // Create a named stdout pipe for the browser
   if (!SetupTestOutputPipe()) {
     Fail(L"SetupTestOutputPipe failed (errno=%d)", GetLastError());
-    return false;
+    return FAILURE;
   }
 
   // Launch firefox
   hr = activateMgr->ActivateApplication(appModelID, L"", AO_NOERRORUI, &processID);
   if (FAILED(hr)) {
     Fail(L"ActivateApplication result %X", hr);
-    return false;
+    return RETRY;
   }
 
   Log(L"Activation succeeded. processid=%d", processID);
@@ -321,7 +328,7 @@ static bool Launch()
   HANDLE child = OpenProcess(SYNCHRONIZE, FALSE, processID);
   if (!child) {
     Fail(L"Couldn't find child process. (%d)", GetLastError());
-    return false;
+    return FAILURE;
   }
 
   Log(L"Waiting on child process...");
@@ -347,7 +354,7 @@ static bool Launch()
   CloseHandle(child);
 
   Log(L"Exiting.");
-  return true;
+  return SUCCESS;
 }
 
 int wmain(int argc, WCHAR* argv[])
@@ -375,7 +382,7 @@ int wmain(int argc, WCHAR* argv[])
     sAppParams.Append(L" ");
   }
   sAppParams.Trim();
-  Launch();
+  int res = Launch();
   CoUninitialize();
-  return 0;
+  return res;
 }
