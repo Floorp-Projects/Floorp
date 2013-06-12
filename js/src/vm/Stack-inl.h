@@ -876,10 +876,11 @@ AbstractFramePtr::popWith(JSContext *cx) const
         JS_NOT_REACHED("Invalid frame");
 }
 
-Activation::Activation(JSContext *cx, Kind kind)
+Activation::Activation(JSContext *cx, Kind kind, bool active)
   : cx_(cx),
     compartment_(cx->compartment()),
     prev_(cx->mainThread().activation_),
+    active_(active),
     savedFrameChain_(0),
     kind_(kind)
 {
