@@ -2,3 +2,29 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.health"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.HEALTH_PROVIDER">
         </provider>
+
+        <!-- As well as system actions, we also listen for "Health
+             Report upload preference changed" notifications sent by
+             Fennec: @ANDROID_PACKAGE_NAME@.HEALTHREPORT_UPLOAD_PREF.
+
+             We have two receivers.  BroadcastReceiver is a thin
+             receiver whose single purpose is to start the background
+             service in response to external events. UploadStartReceiver
+             handles scheduling background work.
+          -->
+        <receiver android:name="org.mozilla.gecko.background.healthreport.upload.HealthReportBroadcastReceiver" >
+            <intent-filter>
+                <!-- Startup. -->
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+            <intent-filter>
+                <!-- SD card remounted. -->
+                <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
+            </intent-filter>
+            <intent-filter >
+              <action android:name="@ANDROID_PACKAGE_NAME@.HEALTHREPORT_UPLOAD_PREF" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="org.mozilla.gecko.background.healthreport.upload.HealthReportUploadStartReceiver" >
+        </receiver>
