@@ -293,19 +293,27 @@ this.PushService = {
         Services.obs.removeObserver(this, "profile-change-teardown");
         this._shutdown();
         break;
-      case "network-active-changed":
+      case "network-active-changed":         /* On B2G. */
+      case "network:offline-status-changed": /* On desktop. */
+        // In case of network-active-changed, always disconnect existing
+        // connections. In case of offline-status changing from offline to
+        // online, it is likely that these statements will be no-ops.
         if (this._udpServer) {
           this._udpServer.close();
         }
 
         this._shutdownWS();
 
-        // Check to see if we need to do anything.
-        this._db.getAllChannelIDs(function(channelIDs) {
-          if (channelIDs.length > 0) {
-            this._beginWSSetup();
-          }
-        }.bind(this));
+        // Try to connect if network-active-changed or the offline-status
+        // changed to online.
+        if (aTopic === "network-active-changed" || aData === "online") {
+          // Check to see if we need to do anything.
+          this._db.getAllChannelIDs(function(channelIDs) {
+            if (channelIDs.length > 0) {
+              this._beginWSSetup();
+            }
+          }.bind(this));
+        }
         break;
       case "nsPref:changed":
         if (aData == "services.push.serverURL") {
@@ -409,8 +417,8 @@ this.PushService = {
     Services.obs.addObserver(this, "profile-change-teardown", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
 
-    // This observer is notified only on B2G by
-    // dom/system/gonk/NetworkManager.js.
+    // On B2G the NetworkManager interface fires a network-active-changed
+    // event.
     //
     // The "active network" is based on priority - i.e. Wi-Fi has higher
     // priority than data. The PushService should just use the preferred
@@ -419,7 +427,15 @@ this.PushService = {
     // socket connections time out. The check for Services.io.offline in
     // _beginWSSetup() prevents unnecessary retries.  When the network comes
     // back online, network-active-changed is fired.
-    Services.obs.addObserver(this, "network-active-changed", false);
+    //
+    // On non-B2G platforms, the offline-status-changed event is used to know
+    // when to (dis)connect. It may not fire if the underlying OS changes
+    // networks; in such a case we rely on timeout.
+    //
+    // On B2G both events fire, one after the other, when the network goes
+    // online, so we explicitly check for the presence of NetworkManager and
+    // don't add an observer for offline-status-changed on B2G.
+    Services.obs.addObserver(this, this._getNetworkStateChangeEventName(), false);
 
     this._db = new PushDB(this);
 
@@ -473,7 +489,7 @@ this.PushService = {
   _shutdown: function() {
     debug("_shutdown()");
 
-    Services.obs.removeObserver(this, "network-active-changed");
+    Services.obs.removeObserver(this, this._getNetworkStateChangeEventName());
     Services.obs.removeObserver(this, "webapps-uninstall", false);
 
     if (this._db) {
@@ -1425,6 +1441,16 @@ this.PushService = {
       mnc: 0,
       ip: undefined
     };
+  },
+
+  // utility function used to add/remove observers in init() and shutdown()
+  _getNetworkStateChangeEventName: function() {
+    try {
+      Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
+      return "network-active-changed";
+    } catch (e) {
+      return "network:offline-status-changed";
+    }
   }
 }
 
