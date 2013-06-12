@@ -1039,9 +1039,9 @@ RES_COLOR = \
 
 RES_MENU = \
   res/menu/abouthome_topsites_contextmenu.xml \
-  res/menu/awesomebar_contextmenu.xml \
   res/menu/browser_app_menu.xml \
   res/menu/gecko_app_menu.xml \
+  res/menu/home_contextmenu.xml \
   res/menu/titlebar_contextmenu.xml \
   res/menu-large-v11/browser_app_menu.xml \
   res/menu-v11/browser_app_menu.xml \
