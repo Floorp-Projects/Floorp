@@ -60,8 +60,7 @@ class WebVTTLoadListener MOZ_FINAL : public nsIStreamListener,
 public:
   WebVTTLoadListener(HTMLTrackElement* aElement);
   ~WebVTTLoadListener();
-  void OnParsedCue(webvtt_cue* aCue);
-  int OnReportError(uint32_t aLine, uint32_t aCol, webvtt_error aError);
+
   // Loads the libwebvtt parser. Must call this function in order to the
   // WebVTTLoadListener to be ready to accept data.
   nsresult LoadResource();
@@ -73,6 +72,9 @@ private:
 
   nsRefPtr<HTMLTrackElement> mElement;
   nsAutoRef<webvtt_parser_t> mParser;
+
+  void OnParsedCue(webvtt_cue* aCue);
+  int OnReportError(uint32_t aLine, uint32_t aCol, webvtt_error aError);
 
   static void WEBVTT_CALLBACK OnParsedCueWebVTTCallBack(void* aUserData,
                                                         webvtt_cue* aCue);
