@@ -11,11 +11,15 @@
 <html>
 <head>
   <title>Multiple Local Preview (Audio Only)</title>
+  <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+  <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
+  <script src="adapter.js"> </script>
   <script type="text/javascript">
   function requestAudio() {
-    navigator.webkitGetUserMedia({video: false, audio: true},
-                                 getUserMediaOkCallback,
-                                 getUserMediaFailedCallback);
+    // Call into getUserMedia via the polyfill (adapter.js).
+    getUserMedia({video: false, audio: true},
+                         getUserMediaOkCallback,
+                         getUserMediaFailedCallback);
   }
 
   function getUserMediaFailedCallback(error) {
@@ -23,9 +27,9 @@
   }
 
   function getUserMediaOkCallback(stream) {
-    var streamUrl = webkitURL.createObjectURL(stream);
+     // Call the polyfill wrapper to attach the media stream to this element.
     for (var i = 1; i <= 10; i++) {
-      document.getElementById("audio" + i).src = streamUrl;
+      attachMediaStream(document.getElementById("audio" + i), stream);
     }
   }
   </script>

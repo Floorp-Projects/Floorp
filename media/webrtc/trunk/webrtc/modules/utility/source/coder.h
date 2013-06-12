@@ -21,46 +21,43 @@ class AudioFrame;
 class AudioCoder : public AudioPacketizationCallback
 {
 public:
-    AudioCoder(WebRtc_UWord32 instanceID);
+    AudioCoder(uint32_t instanceID);
     ~AudioCoder();
 
-    WebRtc_Word32 SetEncodeCodec(
+    int32_t SetEncodeCodec(
         const CodecInst& codecInst,
 	ACMAMRPackingFormat amrFormat = AMRBandwidthEfficient);
 
-    WebRtc_Word32 SetDecodeCodec(
+    int32_t SetDecodeCodec(
         const CodecInst& codecInst,
 	ACMAMRPackingFormat amrFormat = AMRBandwidthEfficient);
 
-    WebRtc_Word32 Decode(AudioFrame& decodedAudio, WebRtc_UWord32 sampFreqHz,
-			 const WebRtc_Word8* incomingPayload,
-			 WebRtc_Word32  payloadLength);
+    int32_t Decode(AudioFrame& decodedAudio, uint32_t sampFreqHz,
+                   const int8_t* incomingPayload, int32_t payloadLength);
 
-    WebRtc_Word32 PlayoutData(AudioFrame& decodedAudio,
-			      WebRtc_UWord16& sampFreqHz);
+    int32_t PlayoutData(AudioFrame& decodedAudio, uint16_t& sampFreqHz);
 
-    WebRtc_Word32 Encode(const AudioFrame& audio,
-                         WebRtc_Word8*   encodedData,
-			 WebRtc_UWord32& encodedLengthInBytes);
+    int32_t Encode(const AudioFrame& audio, int8_t* encodedData,
+                   uint32_t& encodedLengthInBytes);
 
 protected:
-    virtual WebRtc_Word32 SendData(FrameType frameType,
-				   WebRtc_UWord8 payloadType,
-				   WebRtc_UWord32 timeStamp,
-				   const WebRtc_UWord8* payloadData,
-				   WebRtc_UWord16 payloadSize,
-				   const RTPFragmentationHeader* fragmentation);
+    virtual int32_t SendData(FrameType frameType,
+                             uint8_t payloadType,
+                             uint32_t timeStamp,
+                             const uint8_t* payloadData,
+                             uint16_t payloadSize,
+                             const RTPFragmentationHeader* fragmentation);
 
 private:
     AudioCodingModule* _acm;
 
     CodecInst _receiveCodec;
 
-    WebRtc_UWord32 _encodeTimestamp;
-    WebRtc_Word8*  _encodedData;
-    WebRtc_UWord32 _encodedLengthInBytes;
+    uint32_t _encodeTimestamp;
+    int8_t*  _encodedData;
+    uint32_t _encodedLengthInBytes;
 
-    WebRtc_UWord32 _decodeTimestamp;
+    uint32_t _decodeTimestamp;
 };
 } // namespace webrtc
 

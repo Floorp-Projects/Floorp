@@ -22,7 +22,7 @@ using ::testing::Return;
 
 namespace webrtc {
 
-class MockStatsObserver : public StatsObserver {
+class MockStatsObserver : public CallStatsObserver {
  public:
   MockStatsObserver() {}
   virtual ~MockStatsObserver() {}

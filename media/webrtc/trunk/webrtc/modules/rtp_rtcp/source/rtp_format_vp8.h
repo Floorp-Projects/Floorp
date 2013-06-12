@@ -48,8 +48,8 @@ class RtpFormatVp8 {
  public:
   // Initialize with payload from encoder and fragmentation info.
   // The payload_data must be exactly one encoded VP8 frame.
-  RtpFormatVp8(const WebRtc_UWord8* payload_data,
-               WebRtc_UWord32 payload_size,
+  RtpFormatVp8(const uint8_t* payload_data,
+               uint32_t payload_size,
                const RTPVideoHeaderVP8& hdr_info,
                int max_payload_len,
                const RTPFragmentationHeader& fragmentation,
@@ -57,8 +57,8 @@ class RtpFormatVp8 {
 
   // Initialize without fragmentation info. Mode kEqualSize will be used.
   // The payload_data must be exactly one encoded VP8 frame.
-  RtpFormatVp8(const WebRtc_UWord8* payload_data,
-               WebRtc_UWord32 payload_size,
+  RtpFormatVp8(const uint8_t* payload_data,
+               uint32_t payload_size,
                const RTPVideoHeaderVP8& hdr_info,
                int max_payload_len);
 
@@ -73,7 +73,7 @@ class RtpFormatVp8 {
   // the first payload byte in the packet is taken, with the first partition
   // having index 0; returns negative on error.
   // For the kEqualSize mode: returns 0 on success, return negative on error.
-  int NextPacket(WebRtc_UWord8* buffer,
+  int NextPacket(uint8_t* buffer,
                  int* bytes_to_send,
                  bool* last_packet);
 
@@ -139,35 +139,35 @@ class RtpFormatVp8 {
   // The info in packet_info determines which part of the payload is written
   // and what to write in the header fields.
   int WriteHeaderAndPayload(const InfoStruct& packet_info,
-                            WebRtc_UWord8* buffer,
+                            uint8_t* buffer,
                             int buffer_length) const;
 
 
   // Write the X field and the appropriate extension fields to buffer.
   // The function returns the extension length (including X field), or -1
   // on error.
-  int WriteExtensionFields(WebRtc_UWord8* buffer, int buffer_length) const;
+  int WriteExtensionFields(uint8_t* buffer, int buffer_length) const;
 
   // Set the I bit in the x_field, and write PictureID to the appropriate
   // position in buffer. The function returns 0 on success, -1 otherwise.
-  int WritePictureIDFields(WebRtc_UWord8* x_field, WebRtc_UWord8* buffer,
+  int WritePictureIDFields(uint8_t* x_field, uint8_t* buffer,
                            int buffer_length, int* extension_length) const;
 
   // Set the L bit in the x_field, and write Tl0PicIdx to the appropriate
   // position in buffer. The function returns 0 on success, -1 otherwise.
-  int WriteTl0PicIdxFields(WebRtc_UWord8* x_field, WebRtc_UWord8* buffer,
+  int WriteTl0PicIdxFields(uint8_t* x_field, uint8_t* buffer,
                            int buffer_length, int* extension_length) const;
 
   // Set the T and K bits in the x_field, and write TID, Y and KeyIdx to the
   // appropriate position in buffer. The function returns 0 on success,
   // -1 otherwise.
-  int WriteTIDAndKeyIdxFields(WebRtc_UWord8* x_field, WebRtc_UWord8* buffer,
+  int WriteTIDAndKeyIdxFields(uint8_t* x_field, uint8_t* buffer,
                               int buffer_length, int* extension_length) const;
 
   // Write the PictureID from codec_specific_info_ to buffer. One or two
   // bytes are written, depending on magnitude of PictureID. The function
   // returns the number of bytes written.
-  int WritePictureID(WebRtc_UWord8* buffer, int buffer_length) const;
+  int WritePictureID(uint8_t* buffer, int buffer_length) const;
 
   // Calculate and return length (octets) of the variable header fields in
   // the next header (i.e., header length in addition to vp8_header_bytes_).
@@ -184,7 +184,7 @@ class RtpFormatVp8 {
   bool TL0PicIdxFieldPresent() const;
   bool PictureIdPresent() const { return (PictureIdLength() > 0); }
 
-  const WebRtc_UWord8* payload_data_;
+  const uint8_t* payload_data_;
   const int payload_size_;
   RTPFragmentationHeader part_info_;
   const int vp8_fixed_payload_descriptor_bytes_;  // Length of VP8 payload

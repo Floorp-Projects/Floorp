@@ -26,7 +26,7 @@
  *---------------------------------------------------------------*/
 
 int WebRtcIlbcfix_LsfCheck(
-    WebRtc_Word16 *lsf, /* LSF parameters */
+    int16_t *lsf, /* LSF parameters */
     int dim, /* dimension of LSF */
     int NoAn); /* No of analysis per frame */
 

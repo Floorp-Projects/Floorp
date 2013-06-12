@@ -22,17 +22,17 @@
 #include "defines.h"
 
 void WebRtcIlbcfix_CbUpdateBestIndex(
-    WebRtc_Word32 CritNew,    /* (i) New Potentially best Criteria */
-    WebRtc_Word16 CritNewSh,   /* (i) Shift value of above Criteria */
-    WebRtc_Word16 IndexNew,   /* (i) Index of new Criteria */
-    WebRtc_Word32 cDotNew,    /* (i) Cross dot of new index */
-    WebRtc_Word16 invEnergyNew,  /* (i) Inversed energy new index */
-    WebRtc_Word16 energyShiftNew,  /* (i) Energy shifts of new index */
-    WebRtc_Word32 *CritMax,   /* (i/o) Maximum Criteria (so far) */
-    WebRtc_Word16 *shTotMax,   /* (i/o) Shifts of maximum criteria */
-    WebRtc_Word16 *bestIndex,   /* (i/o) Index that corresponds to
+    int32_t CritNew,    /* (i) New Potentially best Criteria */
+    int16_t CritNewSh,   /* (i) Shift value of above Criteria */
+    int16_t IndexNew,   /* (i) Index of new Criteria */
+    int32_t cDotNew,    /* (i) Cross dot of new index */
+    int16_t invEnergyNew,  /* (i) Inversed energy new index */
+    int16_t energyShiftNew,  /* (i) Energy shifts of new index */
+    int32_t *CritMax,   /* (i/o) Maximum Criteria (so far) */
+    int16_t *shTotMax,   /* (i/o) Shifts of maximum criteria */
+    int16_t *bestIndex,   /* (i/o) Index that corresponds to
                                    maximum criteria */
-    WebRtc_Word16 *bestGain);   /* (i/o) Gain in Q14 that corresponds
+    int16_t *bestGain);   /* (i/o) Gain in Q14 that corresponds
                                    to maximum criteria */
 
 #endif

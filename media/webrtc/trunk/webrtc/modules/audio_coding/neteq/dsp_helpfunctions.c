@@ -15,7 +15,7 @@
 #include "dsp_helpfunctions.h"
 
 
-WebRtc_Word16 WebRtcNetEQ_CalcFsMult(WebRtc_UWord16 fsHz)
+int16_t WebRtcNetEQ_CalcFsMult(uint16_t fsHz)
 {
     switch (fsHz)
     {
@@ -43,13 +43,13 @@ WebRtc_Word16 WebRtcNetEQ_CalcFsMult(WebRtc_UWord16 fsHz)
 }
 
 
-int WebRtcNetEQ_DownSampleTo4kHz(const WebRtc_Word16 *in, int inLen, WebRtc_UWord16 inFsHz,
-                                 WebRtc_Word16 *out, int outLen, int compensateDelay)
+int WebRtcNetEQ_DownSampleTo4kHz(const int16_t *in, int inLen, uint16_t inFsHz,
+                                 int16_t *out, int outLen, int compensateDelay)
 {
-    WebRtc_Word16 *B; /* filter coefficients */
-    WebRtc_Word16 Blen; /* number of coefficients */
-    WebRtc_Word16 filterDelay; /* phase delay in samples */
-    WebRtc_Word16 factor; /* conversion rate (inFsHz/8000) */
+    int16_t *B; /* filter coefficients */
+    int16_t Blen; /* number of coefficients */
+    int16_t filterDelay; /* phase delay in samples */
+    int16_t factor; /* conversion rate (inFsHz/8000) */
     int ok;
 
     /* Set constants depending on frequency used */
@@ -62,7 +62,7 @@ int WebRtcNetEQ_DownSampleTo4kHz(const WebRtc_Word16 *in, int inLen, WebRtc_UWor
         {
             Blen = 3;
             factor = 2;
-            B = (WebRtc_Word16*) WebRtcNetEQ_kDownsample8kHzTbl;
+            B = (int16_t*) WebRtcNetEQ_kDownsample8kHzTbl;
             filterDelay = 1 + 1;
             break;
         }
@@ -71,7 +71,7 @@ int WebRtcNetEQ_DownSampleTo4kHz(const WebRtc_Word16 *in, int inLen, WebRtc_UWor
             {
                 Blen = 5;
                 factor = 4;
-                B = (WebRtc_Word16*) WebRtcNetEQ_kDownsample16kHzTbl;
+                B = (int16_t*) WebRtcNetEQ_kDownsample16kHzTbl;
                 filterDelay = 2 + 1;
                 break;
             }
@@ -81,7 +81,7 @@ int WebRtcNetEQ_DownSampleTo4kHz(const WebRtc_Word16 *in, int inLen, WebRtc_UWor
             {
                 Blen = 7;
                 factor = 8;
-                B = (WebRtc_Word16*) WebRtcNetEQ_kDownsample32kHzTbl;
+                B = (int16_t*) WebRtcNetEQ_kDownsample32kHzTbl;
                 filterDelay = 3 + 1;
                 break;
             }
@@ -91,7 +91,7 @@ int WebRtcNetEQ_DownSampleTo4kHz(const WebRtc_Word16 *in, int inLen, WebRtc_UWor
             {
                 Blen = 7;
                 factor = 12;
-                B = (WebRtc_Word16*) WebRtcNetEQ_kDownsample48kHzTbl;
+                B = (int16_t*) WebRtcNetEQ_kDownsample48kHzTbl;
                 filterDelay = 3 + 1;
                 break;
             }
@@ -109,9 +109,9 @@ int WebRtcNetEQ_DownSampleTo4kHz(const WebRtc_Word16 *in, int inLen, WebRtc_UWor
         filterDelay = 0;
     }
 
-    ok = WebRtcSpl_DownsampleFast((WebRtc_Word16*) &in[Blen - 1],
-        (WebRtc_Word16) (inLen - (Blen - 1)), /* number of input samples */
-        out, (WebRtc_Word16) outLen, /* number of output samples to produce */
+    ok = WebRtcSpl_DownsampleFast((int16_t*) &in[Blen - 1],
+        (int16_t) (inLen - (Blen - 1)), /* number of input samples */
+        out, (int16_t) outLen, /* number of output samples to produce */
         B, Blen, factor, filterDelay); /* filter parameters */
 
     return ok; /* return value is -1 if input signal is too short */

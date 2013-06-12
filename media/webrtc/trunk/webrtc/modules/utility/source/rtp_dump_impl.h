@@ -22,28 +22,27 @@ public:
     RtpDumpImpl();
     virtual ~RtpDumpImpl();
 
-    virtual WebRtc_Word32 Start(const char* fileNameUTF8);
-    virtual WebRtc_Word32 Stop();
+    virtual int32_t Start(const char* fileNameUTF8);
+    virtual int32_t Stop();
     virtual bool IsActive() const;
-    virtual WebRtc_Word32 DumpPacket(const WebRtc_UWord8* packet,
-                                     WebRtc_UWord16 packetLength);
+    virtual int32_t DumpPacket(const uint8_t* packet, uint16_t packetLength);
 private:
     // Return the system time in ms.
-    inline WebRtc_UWord32 GetTimeInMS() const;
+    inline uint32_t GetTimeInMS() const;
     // Return x in network byte order (big endian).
-    inline WebRtc_UWord32 RtpDumpHtonl(WebRtc_UWord32 x) const;
+    inline uint32_t RtpDumpHtonl(uint32_t x) const;
     // Return x in network byte order (big endian).
-    inline WebRtc_UWord16 RtpDumpHtons(WebRtc_UWord16 x) const;
+    inline uint16_t RtpDumpHtons(uint16_t x) const;
 
     // Return true if the packet starts with a valid RTCP header.
     // Note: See ModuleRTPUtility::RTPHeaderParser::RTCP() for details on how
     //       to determine if the packet is an RTCP packet.
-    bool RTCP(const WebRtc_UWord8* packet) const;
+    bool RTCP(const uint8_t* packet) const;
 
 private:
     CriticalSectionWrapper* _critSect;
     FileWrapper& _file;
-    WebRtc_UWord32 _startTime;
+    uint32_t _startTime;
 };
 } // namespace webrtc
 #endif // WEBRTC_MODULES_UTILITY_SOURCE_RTP_DUMP_IMPL_H_

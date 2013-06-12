@@ -28,17 +28,14 @@ class Channel;
 
 class ChannelManagerBase
 {
-public:
-    enum {KMaxNumberOfItems = kVoiceEngineMaxNumOfChannels};
-
 protected:
-    bool CreateItem(WebRtc_Word32& itemId);
+    bool CreateItem(int32_t& itemId);
 
-    void InsertItem(WebRtc_Word32 itemId, void* item);
+    void InsertItem(int32_t itemId, void* item);
 
-    void* RemoveItem(WebRtc_Word32 itemId);
+    void* RemoveItem(int32_t itemId);
 
-    void* GetItem(WebRtc_Word32 itemId) const;
+    void* GetItem(int32_t itemId) const;
 
     void* GetFirstItem(void*& iterator) const ;
 
@@ -46,24 +43,24 @@ protected:
 
     void ReleaseItem();
 
-    void AddFreeItemId(WebRtc_Word32 itemId);
+    void AddFreeItemId(int32_t itemId);
 
-    bool GetFreeItemId(WebRtc_Word32& itemId);
+    bool GetFreeItemId(int32_t& itemId);
 
     void RemoveFreeItemIds();
 
     void DestroyAllItems();
 
-    WebRtc_Word32 NumOfItems() const;
+    int32_t NumOfItems() const;
 
-    WebRtc_Word32 MaxNumOfItems() const;
+    int32_t MaxNumOfItems() const;
 
-    void GetItemIds(WebRtc_Word32* channelsArray,
-                    WebRtc_Word32& numOfChannels) const;
+    void GetItemIds(int32_t* channelsArray,
+                    int32_t& numOfChannels) const;
 
     void GetChannels(MapWrapper& channels) const;
 
-    virtual void* NewItem(WebRtc_Word32 itemId) = 0;
+    virtual void* NewItem(int32_t itemId) = 0;
 
     virtual void DeleteItem(void* item) = 0;
 
@@ -77,7 +74,7 @@ private:
 
     MapWrapper _items;
 
-    bool _freeItemIds[KMaxNumberOfItems];
+    bool _freeItemIds[kVoiceEngineMaxNumChannels];
 
     // Protects channels from being destroyed while being used
     RWLockWrapper* _itemsRWLockPtr;

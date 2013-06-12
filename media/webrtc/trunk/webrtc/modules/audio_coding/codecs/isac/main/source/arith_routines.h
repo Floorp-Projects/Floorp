@@ -23,41 +23,41 @@
 
 int WebRtcIsac_EncLogisticMulti2(
     Bitstr *streamdata,              /* in-/output struct containing bitstream */
-    WebRtc_Word16 *dataQ7,           /* input: data vector */
-    const WebRtc_UWord16 *env,       /* input: side info vector defining the width of the pdf */
+    int16_t *dataQ7,           /* input: data vector */
+    const uint16_t *env,       /* input: side info vector defining the width of the pdf */
     const int N,                     /* input: data vector length */
-    const WebRtc_Word16 isSWB12kHz); /* if the codec is working in 12kHz bandwidth */
+    const int16_t isSWB12kHz); /* if the codec is working in 12kHz bandwidth */
 
 /* returns the number of bytes in the stream */
 int WebRtcIsac_EncTerminate(Bitstr *streamdata); /* in-/output struct containing bitstream */
 
 /* returns the number of bytes in the stream so far */
 int WebRtcIsac_DecLogisticMulti2(
-    WebRtc_Word16 *data,             /* output: data vector */
+    int16_t *data,             /* output: data vector */
     Bitstr *streamdata,              /* in-/output struct containing bitstream */
-    const WebRtc_UWord16 *env,       /* input: side info vector defining the width of the pdf */
-    const WebRtc_Word16 *dither,     /* input: dither vector */
+    const uint16_t *env,       /* input: side info vector defining the width of the pdf */
+    const int16_t *dither,     /* input: dither vector */
     const int N,                     /* input: data vector length */
-    const WebRtc_Word16 isSWB12kHz); /* if the codec is working in 12kHz bandwidth */
+    const int16_t isSWB12kHz); /* if the codec is working in 12kHz bandwidth */
 
 void WebRtcIsac_EncHistMulti(
     Bitstr *streamdata,         /* in-/output struct containing bitstream */
     const int *data,            /* input: data vector */
-    const WebRtc_UWord16 **cdf, /* input: array of cdf arrays */
+    const uint16_t **cdf, /* input: array of cdf arrays */
     const int N);               /* input: data vector length */
 
 int WebRtcIsac_DecHistBisectMulti(
     int *data,                      /* output: data vector */
     Bitstr *streamdata,             /* in-/output struct containing bitstream */
-    const WebRtc_UWord16 **cdf,     /* input: array of cdf arrays */
-    const WebRtc_UWord16 *cdf_size, /* input: array of cdf table sizes+1 (power of two: 2^k) */
+    const uint16_t **cdf,     /* input: array of cdf arrays */
+    const uint16_t *cdf_size, /* input: array of cdf table sizes+1 (power of two: 2^k) */
     const int N);                   /* input: data vector length */
 
 int WebRtcIsac_DecHistOneStepMulti(
     int *data,                       /* output: data vector */
     Bitstr *streamdata,              /* in-/output struct containing bitstream */
-    const WebRtc_UWord16 **cdf,      /* input: array of cdf arrays */
-    const WebRtc_UWord16 *init_index,/* input: vector of initial cdf table search entries */
+    const uint16_t **cdf,      /* input: array of cdf arrays */
+    const uint16_t *init_index,/* input: vector of initial cdf table search entries */
     const int N);                    /* input: data vector length */
 
 #endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_MAIN_SOURCE_ARITH_ROUTINES_H_ */

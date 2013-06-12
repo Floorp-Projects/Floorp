@@ -105,8 +105,8 @@ int NETEQTEST_RTPpacket::readFromFile(FILE *fp)
         return(-1);
     }
 
-    WebRtc_UWord16 length, plen;
-    WebRtc_UWord32 offset;
+    uint16_t length, plen;
+    uint32_t offset;
 
     if (fread(&length,2,1,fp)==0)
     {
@@ -127,10 +127,10 @@ int NETEQTEST_RTPpacket::readFromFile(FILE *fp)
         reset();
         return(-1);
     }
-    WebRtc_UWord32 receiveTime = ntohl(offset); // store in local variable until we have passed the reset below
+    uint32_t receiveTime = ntohl(offset); // store in local variable until we have passed the reset below
 
     // Use length here because a plen of 0 specifies rtcp
-    length = (WebRtc_UWord16) (length - _kRDHeaderLen);
+    length = (uint16_t) (length - _kRDHeaderLen);
 
     // check buffer size
     if (_datagram && _memSize < length)
@@ -140,7 +140,7 @@ int NETEQTEST_RTPpacket::readFromFile(FILE *fp)
 
     if (!_datagram)
     {
-        _datagram = new WebRtc_UWord8[length];
+        _datagram = new uint8_t[length];
         _memSize = length;
     }
 
@@ -185,7 +185,7 @@ int NETEQTEST_RTPpacket::readFixedFromFile(FILE *fp, size_t length)
 
     if (!_datagram)
     {
-        _datagram = new WebRtc_UWord8[length];
+        _datagram = new uint8_t[length];
         _memSize = length;
     }
 
@@ -216,8 +216,8 @@ int NETEQTEST_RTPpacket::writeToFile(FILE *fp)
         return -1;
     }
 
-    WebRtc_UWord16 length, plen;
-    WebRtc_UWord32 offset;
+    uint16_t length, plen;
+    uint32_t offset;
 
     // length including RTPplay header
     length = htons(_datagramLen + _kRDHeaderLen);
@@ -253,7 +253,7 @@ int NETEQTEST_RTPpacket::writeToFile(FILE *fp)
 }
 
 
-void NETEQTEST_RTPpacket::blockPT(WebRtc_UWord8 pt)
+void NETEQTEST_RTPpacket::blockPT(uint8_t pt)
 {
     _blockList[pt] = true;
 }
@@ -309,7 +309,7 @@ WebRtcNetEQ_RTPInfo const * NETEQTEST_RTPpacket::RTPinfo() const
     }
 }
 
-WebRtc_UWord8 * NETEQTEST_RTPpacket::datagram() const
+uint8_t * NETEQTEST_RTPpacket::datagram() const
 {
     if (_datagramLen > 0)
     {
@@ -321,7 +321,7 @@ WebRtc_UWord8 * NETEQTEST_RTPpacket::datagram() const
     }
 }
 
-WebRtc_UWord8 * NETEQTEST_RTPpacket::payload() const
+uint8_t * NETEQTEST_RTPpacket::payload() const
 {
     if (_payloadLen > 0)
     {
@@ -333,13 +333,13 @@ WebRtc_UWord8 * NETEQTEST_RTPpacket::payload() const
     }
 }
 
-WebRtc_Word16 NETEQTEST_RTPpacket::payloadLen()
+int16_t NETEQTEST_RTPpacket::payloadLen()
 {
     parseHeader();
     return _payloadLen;
 }
 
-WebRtc_Word16 NETEQTEST_RTPpacket::dataLen() const
+int16_t NETEQTEST_RTPpacket::dataLen() const
 {
     return _datagramLen;
 }
@@ -354,7 +354,7 @@ bool NETEQTEST_RTPpacket::isLost() const
     return _lost;
 }
 
-WebRtc_UWord8  NETEQTEST_RTPpacket::payloadType() const
+uint8_t  NETEQTEST_RTPpacket::payloadType() const
 {
     WebRtcNetEQ_RTPInfo tempRTPinfo;
 
@@ -370,7 +370,7 @@ WebRtc_UWord8  NETEQTEST_RTPpacket::payloadType() const
     return tempRTPinfo.payloadType;
 }
 
-WebRtc_UWord16 NETEQTEST_RTPpacket::sequenceNumber() const
+uint16_t NETEQTEST_RTPpacket::sequenceNumber() const
 {
     WebRtcNetEQ_RTPInfo tempRTPinfo;
 
@@ -386,7 +386,7 @@ WebRtc_UWord16 NETEQTEST_RTPpacket::sequenceNumber() const
     return tempRTPinfo.sequenceNumber;
 }
 
-WebRtc_UWord32 NETEQTEST_RTPpacket::timeStamp() const
+uint32_t NETEQTEST_RTPpacket::timeStamp() const
 {
     WebRtcNetEQ_RTPInfo tempRTPinfo;
 
@@ -402,7 +402,7 @@ WebRtc_UWord32 NETEQTEST_RTPpacket::timeStamp() const
     return tempRTPinfo.timeStamp;
 }
 
-WebRtc_UWord32 NETEQTEST_RTPpacket::SSRC() const
+uint32_t NETEQTEST_RTPpacket::SSRC() const
 {
     WebRtcNetEQ_RTPInfo tempRTPinfo;
 
@@ -418,7 +418,7 @@ WebRtc_UWord32 NETEQTEST_RTPpacket::SSRC() const
     return tempRTPinfo.SSRC;
 }
 
-WebRtc_UWord8  NETEQTEST_RTPpacket::markerBit() const
+uint8_t  NETEQTEST_RTPpacket::markerBit() const
 {
     WebRtcNetEQ_RTPInfo tempRTPinfo;
 
@@ -436,7 +436,7 @@ WebRtc_UWord8  NETEQTEST_RTPpacket::markerBit() const
 
 
 
-int NETEQTEST_RTPpacket::setPayloadType(WebRtc_UWord8 pt)
+int NETEQTEST_RTPpacket::setPayloadType(uint8_t pt)
 {
 
     if (_datagramLen < 12)
@@ -455,7 +455,7 @@ int NETEQTEST_RTPpacket::setPayloadType(WebRtc_UWord8 pt)
 
 }
 
-int NETEQTEST_RTPpacket::setSequenceNumber(WebRtc_UWord16 sn)
+int NETEQTEST_RTPpacket::setSequenceNumber(uint16_t sn)
 {
 
     if (_datagramLen < 12)
@@ -475,7 +475,7 @@ int NETEQTEST_RTPpacket::setSequenceNumber(WebRtc_UWord16 sn)
 
 }
 
-int NETEQTEST_RTPpacket::setTimeStamp(WebRtc_UWord32 ts)
+int NETEQTEST_RTPpacket::setTimeStamp(uint32_t ts)
 {
 
     if (_datagramLen < 12)
@@ -497,7 +497,7 @@ int NETEQTEST_RTPpacket::setTimeStamp(WebRtc_UWord32 ts)
 
 }
 
-int NETEQTEST_RTPpacket::setSSRC(WebRtc_UWord32 ssrc)
+int NETEQTEST_RTPpacket::setSSRC(uint32_t ssrc)
 {
 
     if (_datagramLen < 12)
@@ -519,7 +519,7 @@ int NETEQTEST_RTPpacket::setSSRC(WebRtc_UWord32 ssrc)
 
 }
 
-int NETEQTEST_RTPpacket::setMarkerBit(WebRtc_UWord8 mb)
+int NETEQTEST_RTPpacket::setMarkerBit(uint8_t mb)
 {
 
     if (_datagramLen < 12)
@@ -628,7 +628,7 @@ int NETEQTEST_RTPpacket::splitStereo(NETEQTEST_RTPpacket* slaveRtp,
 }
 
 
-void NETEQTEST_RTPpacket::makeRTPheader(unsigned char* rtp_data, WebRtc_UWord8 payloadType, WebRtc_UWord16 seqNo, WebRtc_UWord32 timestamp, WebRtc_UWord32 ssrc, WebRtc_UWord8 markerBit) const
+void NETEQTEST_RTPpacket::makeRTPheader(unsigned char* rtp_data, uint8_t payloadType, uint16_t seqNo, uint32_t timestamp, uint32_t ssrc, uint8_t markerBit) const
 {
     rtp_data[0]=(unsigned char)0x80;
     if (markerBit)
@@ -655,11 +655,11 @@ void NETEQTEST_RTPpacket::makeRTPheader(unsigned char* rtp_data, WebRtc_UWord8 p
     rtp_data[11]=(unsigned char)(ssrc & 0xFF);
 }
 
-WebRtc_UWord16
+uint16_t
     NETEQTEST_RTPpacket::parseRTPheader(WebRtcNetEQ_RTPInfo *RTPinfo,
-                                        WebRtc_UWord8 **payloadPtr) const
+                                        uint8_t **payloadPtr) const
 {
-    WebRtc_Word16 *rtp_data = (WebRtc_Word16 *) _datagram;
+    int16_t *rtp_data = (int16_t *) _datagram;
     int i_P, i_X, i_CC;
 
     assert(_datagramLen >= 12);
@@ -671,59 +671,59 @@ WebRtc_UWord16
 
     if (payloadPtr)
     {
-        *payloadPtr = (WebRtc_UWord8*) &rtp_data[i_startPosition >> 1];
+        *payloadPtr = (uint8_t*) &rtp_data[i_startPosition >> 1];
     }
 
-    return (WebRtc_UWord16) (_datagramLen - i_startPosition - i_padlength);
+    return (uint16_t) (_datagramLen - i_startPosition - i_padlength);
 }
 
 
 void NETEQTEST_RTPpacket::parseBasicHeader(WebRtcNetEQ_RTPInfo *RTPinfo,
                                            int *i_P, int *i_X, int *i_CC) const
 {
-    WebRtc_Word16 *rtp_data = (WebRtc_Word16 *) _datagram;
+    int16_t *rtp_data = (int16_t *) _datagram;
     if (_datagramLen < 12)
     {
         assert(false);
         return;
     }
 
-    *i_P=(((WebRtc_UWord16)(rtp_data[0] & 0x20))>>5); /* Extract the P bit */
-    *i_X=(((WebRtc_UWord16)(rtp_data[0] & 0x10))>>4); /* Extract the X bit */
-    *i_CC=(WebRtc_UWord16)(rtp_data[0] & 0xF); /* Get the CC number  */
+    *i_P=(((uint16_t)(rtp_data[0] & 0x20))>>5); /* Extract the P bit */
+    *i_X=(((uint16_t)(rtp_data[0] & 0x10))>>4); /* Extract the X bit */
+    *i_CC=(uint16_t)(rtp_data[0] & 0xF); /* Get the CC number  */
     /* Get the marker bit */
-    RTPinfo->markerBit = (WebRtc_UWord8) ((rtp_data[0] >> 15) & 0x01);
+    RTPinfo->markerBit = (uint8_t) ((rtp_data[0] >> 15) & 0x01);
     /* Get the coder type */
-    RTPinfo->payloadType = (WebRtc_UWord8) ((rtp_data[0] >> 8) & 0x7F);
+    RTPinfo->payloadType = (uint8_t) ((rtp_data[0] >> 8) & 0x7F);
     /* Get the packet number */
-    RTPinfo->sequenceNumber = ((( ((WebRtc_UWord16)rtp_data[1]) >> 8) & 0xFF) |
-        ( ((WebRtc_UWord16)(rtp_data[1] & 0xFF)) << 8));
+    RTPinfo->sequenceNumber = ((( ((uint16_t)rtp_data[1]) >> 8) & 0xFF) |
+        ( ((uint16_t)(rtp_data[1] & 0xFF)) << 8));
     /* Get timestamp */
-    RTPinfo->timeStamp = ((((WebRtc_UWord16)rtp_data[2]) & 0xFF) << 24) |
-        ((((WebRtc_UWord16)rtp_data[2]) & 0xFF00) << 8) |
-        ((((WebRtc_UWord16)rtp_data[3]) >> 8) & 0xFF) |
-        ((((WebRtc_UWord16)rtp_data[3]) & 0xFF) << 8);
+    RTPinfo->timeStamp = ((((uint16_t)rtp_data[2]) & 0xFF) << 24) |
+        ((((uint16_t)rtp_data[2]) & 0xFF00) << 8) |
+        ((((uint16_t)rtp_data[3]) >> 8) & 0xFF) |
+        ((((uint16_t)rtp_data[3]) & 0xFF) << 8);
     /* Get the SSRC */
-    RTPinfo->SSRC=((((WebRtc_UWord16)rtp_data[4]) & 0xFF) << 24) |
-        ((((WebRtc_UWord16)rtp_data[4]) & 0xFF00) << 8) |
-        ((((WebRtc_UWord16)rtp_data[5]) >> 8) & 0xFF) |
-        ((((WebRtc_UWord16)rtp_data[5]) & 0xFF) << 8);
+    RTPinfo->SSRC=((((uint16_t)rtp_data[4]) & 0xFF) << 24) |
+        ((((uint16_t)rtp_data[4]) & 0xFF00) << 8) |
+        ((((uint16_t)rtp_data[5]) >> 8) & 0xFF) |
+        ((((uint16_t)rtp_data[5]) & 0xFF) << 8);
 }
 
 int NETEQTEST_RTPpacket::calcHeaderLength(int i_X, int i_CC) const
 {
     int i_extlength = 0;
-    WebRtc_Word16 *rtp_data = (WebRtc_Word16 *) _datagram;
+    int16_t *rtp_data = (int16_t *) _datagram;
 
     if (i_X == 1)
     {
         // Extension header exists.
-        // Find out how many WebRtc_Word32 it consists of.
+        // Find out how many int32_t it consists of.
         assert(_datagramLen > 2 * (7 + 2 * i_CC));
         if (_datagramLen > 2 * (7 + 2 * i_CC))
         {
-            i_extlength = (((((WebRtc_UWord16) rtp_data[7 + 2 * i_CC]) >> 8)
-                & 0xFF) | (((WebRtc_UWord16) (rtp_data[7 + 2 * i_CC] & 0xFF))
+            i_extlength = (((((uint16_t) rtp_data[7 + 2 * i_CC]) >> 8)
+                & 0xFF) | (((uint16_t) (rtp_data[7 + 2 * i_CC] & 0xFF))
                 << 8)) + 1;
         }
     }
@@ -733,7 +733,7 @@ int NETEQTEST_RTPpacket::calcHeaderLength(int i_X, int i_CC) const
 
 int NETEQTEST_RTPpacket::calcPadLength(int i_P) const
 {
-    WebRtc_Word16 *rtp_data = (WebRtc_Word16 *) _datagram;
+    int16_t *rtp_data = (int16_t *) _datagram;
     if (i_P == 1)
     {
         /* Padding exists. Find out how many bytes the padding consists of. */
@@ -745,7 +745,7 @@ int NETEQTEST_RTPpacket::calcPadLength(int i_P) const
         else
         {
             /* even number of bytes => last byte in lower byte */
-            return ((WebRtc_UWord16) rtp_data[(_datagramLen >> 1) - 1]) >> 8;
+            return ((uint16_t) rtp_data[(_datagramLen >> 1) - 1]) >> 8;
         }
     }
     return 0;
@@ -760,9 +760,9 @@ void NETEQTEST_RTPpacket::splitStereoSample(NETEQTEST_RTPpacket* slaveRtp,
         return;
     }
 
-    WebRtc_UWord8 *readDataPtr = _payloadPtr;
-    WebRtc_UWord8 *writeDataPtr = _payloadPtr;
-    WebRtc_UWord8 *slaveData = slaveRtp->_payloadPtr;
+    uint8_t *readDataPtr = _payloadPtr;
+    uint8_t *writeDataPtr = _payloadPtr;
+    uint8_t *slaveData = slaveRtp->_payloadPtr;
 
     while (readDataPtr - _payloadPtr < _payloadLen)
     {
@@ -829,8 +829,8 @@ int NETEQTEST_RTPpacket::extractRED(int index, WebRtcNetEQ_RTPInfo& red)
 
     parseHeader();
 
-    WebRtc_UWord8* ptr = payload();
-    WebRtc_UWord8* payloadEndPtr = ptr + payloadLen();
+    uint8_t* ptr = payload();
+    uint8_t* payloadEndPtr = ptr + payloadLen();
     int num_encodings = 0;
     int total_len = 0;
 
@@ -841,7 +841,7 @@ int NETEQTEST_RTPpacket::extractRED(int index, WebRtcNetEQ_RTPInfo& red)
         {
             // Header found.
             red.payloadType = ptr[0] & 0x7F;
-            WebRtc_UWord32 offset = (ptr[1] << 6) + ((ptr[2] & 0xFC) >> 2);
+            uint32_t offset = (ptr[1] << 6) + ((ptr[2] & 0xFC) >> 2);
             red.sequenceNumber = sequenceNumber();
             red.timeStamp = timeStamp() - offset;
             red.markerBit = markerBit();
@@ -873,6 +873,6 @@ void NETEQTEST_RTPpacket::scramblePayload(void)
 
     for (int i = 0; i < _payloadLen; ++i)
     {
-        _payloadPtr[i] = static_cast<WebRtc_UWord8>(rand());
+        _payloadPtr[i] = static_cast<uint8_t>(rand());
     }
 }

@@ -45,8 +45,8 @@ VPMDenoising::~VPMDenoising()
     }
 }
 
-WebRtc_Word32
-VPMDenoising::ChangeUniqueId(const WebRtc_Word32 id)
+int32_t
+VPMDenoising::ChangeUniqueId(const int32_t id)
 {
     _id = id;
     return VPM_OK;
@@ -71,18 +71,18 @@ VPMDenoising::Reset()
     }
 }
 
-WebRtc_Word32
+int32_t
 VPMDenoising::ProcessFrame(I420VideoFrame* frame)
 {
     assert(frame);
-    WebRtc_Word32     thevar;
+    int32_t     thevar;
     int               k;
     int               jsub, ksub;
-    WebRtc_Word32     diff0;
-    WebRtc_UWord32    tmpMoment1;
-    WebRtc_UWord32    tmpMoment2;
-    WebRtc_UWord32    tmp;
-    WebRtc_Word32     numPixelsChanged = 0;
+    int32_t     diff0;
+    uint32_t    tmpMoment1;
+    uint32_t    tmpMoment2;
+    uint32_t    tmp;
+    int32_t     numPixelsChanged = 0;
 
     if (frame->IsZeroSize())
     {
@@ -95,7 +95,7 @@ VPMDenoising::ProcessFrame(I420VideoFrame* frame)
     int height = frame->height();
 
     /* Size of luminance component */
-    const WebRtc_UWord32 ysize  = height * width;
+    const uint32_t ysize  = height * width;
 
     /* Initialization */
     if (ysize != _frameSize)
@@ -110,14 +110,14 @@ VPMDenoising::ProcessFrame(I420VideoFrame* frame)
 
     if (!_moment1)
     {
-        _moment1 = new WebRtc_UWord32[ysize];
-        memset(_moment1, 0, sizeof(WebRtc_UWord32)*ysize);
+        _moment1 = new uint32_t[ysize];
+        memset(_moment1, 0, sizeof(uint32_t)*ysize);
     }
     
     if (!_moment2)
     {
-        _moment2 = new WebRtc_UWord32[ysize];
-        memset(_moment2, 0, sizeof(WebRtc_UWord32)*ysize);
+        _moment2 = new uint32_t[ysize];
+        memset(_moment2, 0, sizeof(uint32_t)*ysize);
     }
 
     /* Apply de-noising on each pixel, but update variance sub-sampled */
@@ -133,22 +133,22 @@ VPMDenoising::ProcessFrame(I420VideoFrame* frame)
             tmpMoment1 = _moment1[k + j];
             tmpMoment1 *= kDenoiseFiltParam; // Q16
             tmpMoment1 += ((kDenoiseFiltParamRec *
-                          ((WebRtc_UWord32)buffer[k + j])) << 8);
+                          ((uint32_t)buffer[k + j])) << 8);
             tmpMoment1 >>= 8; // Q8
             _moment1[k + j] = tmpMoment1;
 
             tmpMoment2 = _moment2[ksub + jsub];
             if ((ksub == k) && (jsub == j) && (_denoiseFrameCnt == 0))
             {
-                tmp = ((WebRtc_UWord32)buffer[k + j] *
-                      (WebRtc_UWord32)buffer[k + j]);
+                tmp = ((uint32_t)buffer[k + j] *
+                      (uint32_t)buffer[k + j]);
                 tmpMoment2 *= kDenoiseFiltParam; // Q16
                 tmpMoment2 += ((kDenoiseFiltParamRec * tmp)<<8);
                 tmpMoment2 >>= 8; // Q8
             }
             _moment2[k + j] = tmpMoment2;
             /* Current event = deviation from mean value */
-            diff0 = ((WebRtc_Word32)buffer[k + j] << 8) - _moment1[k + j];
+            diff0 = ((int32_t)buffer[k + j] << 8) - _moment1[k + j];
             /* Recent events = variance (variations over time) */
             thevar = _moment2[k + j];
             thevar -= ((_moment1[k + j] * _moment1[k + j]) >> 8);
@@ -161,7 +161,7 @@ VPMDenoising::ProcessFrame(I420VideoFrame* frame)
             if ((thevar < kDenoiseThreshold)
                 && ((diff0 * diff0 >> 8) < kDenoiseThreshold))
             { // Replace with mean
-                buffer[k + j] = (WebRtc_UWord8)(_moment1[k + j] >> 8);
+                buffer[k + j] = (uint8_t)(_moment1[k + j] >> 8);
                 numPixelsChanged++;
             }
         }

@@ -24,49 +24,45 @@ public:
     TbI420Encoder();
     virtual ~TbI420Encoder();
 
-    static WebRtc_Word32 VersionStatic(char* version,
-                                       WebRtc_Word32 length);
-    virtual WebRtc_Word32  Version(char* version,
-                                   WebRtc_Word32 length) const;
+    static int32_t VersionStatic(char* version, int32_t length);
+    virtual int32_t  Version(char* version, int32_t length) const;
 
-    virtual WebRtc_Word32 InitEncode(const webrtc::VideoCodec* codecSettings,
-                                     WebRtc_Word32 numberOfCores,
-                                     WebRtc_UWord32 maxPayloadSize);
+    virtual int32_t InitEncode(const webrtc::VideoCodec* codecSettings,
+                               int32_t numberOfCores,
+                               uint32_t maxPayloadSize);
 
-    virtual WebRtc_Word32 Encode(
+    virtual int32_t Encode(
         const webrtc::I420VideoFrame& inputImage,
         const webrtc::CodecSpecificInfo* codecSpecificInfo,
         const std::vector<webrtc::VideoFrameType>* frameTypes);
 
-    virtual WebRtc_Word32 RegisterEncodeCompleteCallback(
+    virtual int32_t RegisterEncodeCompleteCallback(
         webrtc::EncodedImageCallback* callback);
 
-    virtual WebRtc_Word32 Release();
+    virtual int32_t Release();
 
-    virtual WebRtc_Word32 Reset();
+    virtual int32_t Reset();
 
-    virtual WebRtc_Word32 SetChannelParameters(WebRtc_UWord32 packetLoss,
-                                               int rtt);
+    virtual int32_t SetChannelParameters(uint32_t packetLoss, int rtt);
 
-    virtual WebRtc_Word32 SetRates(WebRtc_UWord32 newBitRate,
-                                   WebRtc_UWord32 frameRate);
+    virtual int32_t SetRates(uint32_t newBitRate, uint32_t frameRate);
 
-    virtual WebRtc_Word32 SetPeriodicKeyFrames(bool enable);
+    virtual int32_t SetPeriodicKeyFrames(bool enable);
 
-    virtual WebRtc_Word32 CodecConfigParameters(WebRtc_UWord8* /*buffer*/,
-                                                WebRtc_Word32 /*size*/);
+    virtual int32_t CodecConfigParameters(uint8_t* /*buffer*/,
+                                          int32_t /*size*/);
 
     struct FunctionCalls
     {
-        WebRtc_Word32 InitEncode;
-        WebRtc_Word32 Encode;
-        WebRtc_Word32 RegisterEncodeCompleteCallback;
-        WebRtc_Word32 Release;
-        WebRtc_Word32 Reset;
-        WebRtc_Word32 SetChannelParameters;
-        WebRtc_Word32 SetRates;
-        WebRtc_Word32 SetPeriodicKeyFrames;
-        WebRtc_Word32 CodecConfigParameters;
+        int32_t InitEncode;
+        int32_t Encode;
+        int32_t RegisterEncodeCompleteCallback;
+        int32_t Release;
+        int32_t Reset;
+        int32_t SetChannelParameters;
+        int32_t SetRates;
+        int32_t SetPeriodicKeyFrames;
+        int32_t CodecConfigParameters;
 
     };
 
@@ -90,27 +86,27 @@ public:
     TbI420Decoder();
     virtual ~TbI420Decoder();
 
-    virtual WebRtc_Word32 InitDecode(const webrtc::VideoCodec* inst,
-                                     WebRtc_Word32 numberOfCores);
-    virtual WebRtc_Word32 Decode(
+    virtual int32_t InitDecode(const webrtc::VideoCodec* inst,
+                               int32_t numberOfCores);
+    virtual int32_t Decode(
         const webrtc::EncodedImage& inputImage,
         bool missingFrames,
         const webrtc::RTPFragmentationHeader* fragmentation,
         const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
-        WebRtc_Word64 renderTimeMs = -1);
+        int64_t renderTimeMs = -1);
 
-    virtual WebRtc_Word32
+    virtual int32_t
         RegisterDecodeCompleteCallback(webrtc::DecodedImageCallback* callback);
-    virtual WebRtc_Word32 Release();
-    virtual WebRtc_Word32 Reset();
+    virtual int32_t Release();
+    virtual int32_t Reset();
 
     struct FunctionCalls
     {
-        WebRtc_Word32 InitDecode;
-        WebRtc_Word32 Decode;
-        WebRtc_Word32 RegisterDecodeCompleteCallback;
-        WebRtc_Word32 Release;
-        WebRtc_Word32 Reset;
+        int32_t InitDecode;
+        int32_t Decode;
+        int32_t RegisterDecodeCompleteCallback;
+        int32_t Release;
+        int32_t Reset;
     };
 
     FunctionCalls GetFunctionCalls();
@@ -118,8 +114,8 @@ public:
 private:
 
     webrtc::I420VideoFrame _decodedImage;
-    WebRtc_Word32 _width;
-    WebRtc_Word32 _height;
+    int32_t _width;
+    int32_t _height;
     bool _inited;
     FunctionCalls _functionCalls;
     webrtc::DecodedImageCallback* _decodeCompleteCallback;

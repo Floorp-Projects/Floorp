@@ -21,60 +21,60 @@ namespace webrtc {
 
 class ACMSPEEX : public ACMGenericCodec {
  public:
-  explicit ACMSPEEX(WebRtc_Word16 codec_id);
+  explicit ACMSPEEX(int16_t codec_id);
   ~ACMSPEEX();
 
   // for FEC
   ACMGenericCodec* CreateInstance(void);
 
-  WebRtc_Word16 InternalEncode(WebRtc_UWord8* bitstream,
-                               WebRtc_Word16* bitstream_len_byte);
+  int16_t InternalEncode(uint8_t* bitstream,
+                         int16_t* bitstream_len_byte);
 
-  WebRtc_Word16 InternalInitEncoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitEncoder(WebRtcACMCodecParams *codec_params);
 
-  WebRtc_Word16 InternalInitDecoder(WebRtcACMCodecParams *codec_params);
+  int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
 
  protected:
-  WebRtc_Word16 DecodeSafe(WebRtc_UWord8* bitstream,
-                           WebRtc_Word16 bitstream_len_byte,
-                           WebRtc_Word16* audio,
-                           WebRtc_Word16* audio_samples,
-                           WebRtc_Word8* speech_type);
+  int16_t DecodeSafe(uint8_t* bitstream,
+                     int16_t bitstream_len_byte,
+                     int16_t* audio,
+                     int16_t* audio_samples,
+                     int8_t* speech_type);
 
-  WebRtc_Word32 CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                         const CodecInst& codec_inst);
+  int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                   const CodecInst& codec_inst);
 
   void DestructEncoderSafe();
 
   void DestructDecoderSafe();
 
-  WebRtc_Word16 InternalCreateEncoder();
+  int16_t InternalCreateEncoder();
 
-  WebRtc_Word16 InternalCreateDecoder();
+  int16_t InternalCreateDecoder();
 
   void InternalDestructEncoderInst(void* ptr_inst);
 
-  WebRtc_Word16 SetBitRateSafe(const WebRtc_Word32 rate);
+  int16_t SetBitRateSafe(const int32_t rate);
 
-  WebRtc_Word16 EnableDTX();
+  int16_t EnableDTX();
 
-  WebRtc_Word16 DisableDTX();
+  int16_t DisableDTX();
 
 #ifdef UNUSEDSPEEX
-  WebRtc_Word16 EnableVBR();
+  int16_t EnableVBR();
 
-  WebRtc_Word16 DisableVBR();
+  int16_t DisableVBR();
 
-  WebRtc_Word16 SetComplMode(WebRtc_Word16 mode);
+  int16_t SetComplMode(int16_t mode);
 #endif
 
   SPEEX_encinst_t_* encoder_inst_ptr_;
   SPEEX_decinst_t_* decoder_inst_ptr_;
-  WebRtc_Word16 compl_mode_;
+  int16_t compl_mode_;
   bool vbr_enabled_;
-  WebRtc_Word32 encoding_rate_;
-  WebRtc_Word16 sampling_frequency_;
-  WebRtc_UWord16 samples_in_20ms_audio_;
+  int32_t encoding_rate_;
+  int16_t sampling_frequency_;
+  uint16_t samples_in_20ms_audio_;
 };
 
 }  // namespace webrtc

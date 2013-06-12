@@ -54,7 +54,7 @@ class ViESender: public Transport {
   scoped_ptr<CriticalSectionWrapper> critsect_;
 
   Encryption* external_encryption_;
-  WebRtc_UWord8* encryption_buffer_;
+  uint8_t* encryption_buffer_;
   Transport* transport_;
   RtpDump* rtp_dump_;
 };

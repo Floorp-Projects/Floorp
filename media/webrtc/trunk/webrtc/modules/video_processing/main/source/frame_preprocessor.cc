@@ -34,8 +34,8 @@ VPMFramePreprocessor::~VPMFramePreprocessor()
     delete _vd;
 }
 
-WebRtc_Word32
-VPMFramePreprocessor::ChangeUniqueId(const WebRtc_Word32 id)
+int32_t
+VPMFramePreprocessor::ChangeUniqueId(const int32_t id)
 {
     _id = id;
     return VPM_OK;
@@ -71,8 +71,8 @@ VPMFramePreprocessor::SetInputFrameResampleMode(VideoFrameResampling resamplingM
 }
 
     
-WebRtc_Word32
-VPMFramePreprocessor::SetMaxFrameRate(WebRtc_UWord32 maxFrameRate)
+int32_t
+VPMFramePreprocessor::SetMaxFrameRate(uint32_t maxFrameRate)
 {
     if (maxFrameRate == 0)
     {
@@ -85,14 +85,14 @@ VPMFramePreprocessor::SetMaxFrameRate(WebRtc_UWord32 maxFrameRate)
 }
     
 
-WebRtc_Word32
-VPMFramePreprocessor::SetTargetResolution(WebRtc_UWord32 width, WebRtc_UWord32 height, WebRtc_UWord32 frameRate)
+int32_t
+VPMFramePreprocessor::SetTargetResolution(uint32_t width, uint32_t height, uint32_t frameRate)
 {
     if ( (width == 0) || (height == 0) || (frameRate == 0))
     {
         return VPM_PARAMETER_ERROR;
     }
-    WebRtc_Word32 retVal = 0;
+    int32_t retVal = 0;
     retVal = _spatialResampler->SetTargetFrameSize(width, height);
     if (retVal < 0)
     {
@@ -113,28 +113,28 @@ VPMFramePreprocessor::UpdateIncomingFrameRate()
     _vd->UpdateIncomingFrameRate();
 }
 
-WebRtc_UWord32
+uint32_t
 VPMFramePreprocessor::DecimatedFrameRate()
 {
     return _vd->DecimatedFrameRate();
 }
 
 
-WebRtc_UWord32
+uint32_t
 VPMFramePreprocessor::DecimatedWidth() const
 {
     return _spatialResampler->TargetWidth();
 }
 
 
-WebRtc_UWord32
+uint32_t
 VPMFramePreprocessor::DecimatedHeight() const
 {
     return _spatialResampler->TargetHeight();
 }
 
 
-WebRtc_Word32
+int32_t
 VPMFramePreprocessor::PreprocessFrame(const I420VideoFrame& frame,
                                       I420VideoFrame** processedFrame)
 {
@@ -156,8 +156,7 @@ VPMFramePreprocessor::PreprocessFrame(const I420VideoFrame& frame,
     // We are not allowed to resample the input frame (must make a copy of it).
     *processedFrame = NULL;
     if (_spatialResampler->ApplyResample(frame.width(), frame.height()))  {
-      WebRtc_Word32 ret = _spatialResampler->ResampleFrame(frame,
-                                                           &_resampledFrame);
+      int32_t ret = _spatialResampler->ResampleFrame(frame, &_resampledFrame);
       if (ret != VPM_OK)
         return ret;
       *processedFrame = &_resampledFrame;

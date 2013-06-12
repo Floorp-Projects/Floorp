@@ -235,7 +235,7 @@ bool BWETest::SetMaster(bool isMaster /*= true*/)
 }
 
 
-int BWETest::Init(std::string ip, WebRtc_UWord16 port)
+int BWETest::Init(std::string ip, uint16_t port)
 {
     if (_initialized)
     {
@@ -403,17 +403,17 @@ void BWETest::Report(std::fstream &log)
 
 
 // SenderReceiver callback
-void BWETest::OnOnNetworkChanged(const WebRtc_UWord32 bitrateTargetBps,
-                                 const WebRtc_UWord8 fractionLost,
-                                 const WebRtc_UWord16 roundTripTimeMs,
-                                 const WebRtc_UWord32 jitterMS,
-                                 const WebRtc_UWord16 bwEstimateKbitMin,
-                                 const WebRtc_UWord16 bwEstimateKbitMax)
+void BWETest::OnOnNetworkChanged(const uint32_t bitrateTargetBps,
+                                 const uint8_t fractionLost,
+                                 const uint16_t roundTripTimeMs,
+                                 const uint32_t jitterMS,
+                                 const uint16_t bwEstimateKbitMin,
+                                 const uint16_t bwEstimateKbitMax)
 {
     CriticalSectionScoped cs(_statCritSect);
 
     // bitrate statistics
-    WebRtc_Word32 newBitrateKbps = bitrateTargetBps/1000;
+    int32_t newBitrateKbps = bitrateTargetBps/1000;
 
     _rateVecKbps.push_back(newBitrateKbps);
     _rttVecMs.push_back(roundTripTimeMs);
@@ -421,7 +421,7 @@ void BWETest::OnOnNetworkChanged(const WebRtc_UWord32 bitrateTargetBps,
 }
 
 
-int BWEOneWayTest::Init(std::string ip, WebRtc_UWord16 port)
+int BWEOneWayTest::Init(std::string ip, uint16_t port)
 {
 
     if (!_master)
@@ -442,10 +442,10 @@ bool BWEOneWayTest::Start()
     if (!_master)
     {
         // send one dummy RTP packet to enable RTT measurements
-        const WebRtc_UWord8 dummy = 0;
+        const uint8_t dummy = 0;
         //_gen->sendPayload(TickTime::MillisecondTimestamp(), &dummy, 0);
         _sendrec->SendOutgoingData(
-            static_cast<WebRtc_UWord32>(TickTime::MillisecondTimestamp()*90),
+            static_cast<uint32_t>(TickTime::MillisecondTimestamp()*90),
             &dummy, 1, webrtc::kVideoFrameDelta);
     }
 

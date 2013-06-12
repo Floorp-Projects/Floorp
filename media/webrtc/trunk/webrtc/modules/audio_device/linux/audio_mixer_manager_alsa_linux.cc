@@ -24,7 +24,7 @@ extern webrtc_adm_linux_alsa::AlsaSymbolTable AlsaSymbolTable;
 namespace webrtc
 {
 
-AudioMixerManagerLinuxALSA::AudioMixerManagerLinuxALSA(const WebRtc_Word32 id) :
+AudioMixerManagerLinuxALSA::AudioMixerManagerLinuxALSA(const int32_t id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _outputMixerHandle(NULL),
@@ -53,7 +53,7 @@ AudioMixerManagerLinuxALSA::~AudioMixerManagerLinuxALSA()
 //                                    PUBLIC METHODS
 // ============================================================================
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::Close()
+int32_t AudioMixerManagerLinuxALSA::Close()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -67,7 +67,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::Close()
 
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::CloseSpeaker()
+int32_t AudioMixerManagerLinuxALSA::CloseSpeaker()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -109,7 +109,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::CloseSpeaker()
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::CloseMicrophone()
+int32_t AudioMixerManagerLinuxALSA::CloseMicrophone()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -160,7 +160,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::CloseMicrophone()
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::OpenSpeaker(char* deviceName)
+int32_t AudioMixerManagerLinuxALSA::OpenSpeaker(char* deviceName)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxALSA::OpenSpeaker(name=%s)", deviceName);
@@ -253,7 +253,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::OpenSpeaker(char* deviceName)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::OpenMicrophone(char *deviceName)
+int32_t AudioMixerManagerLinuxALSA::OpenMicrophone(char *deviceName)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxALSA::OpenMicrophone(name=%s)",
@@ -371,8 +371,8 @@ bool AudioMixerManagerLinuxALSA::MicrophoneIsInitialized() const
     return (_inputMixerHandle != NULL);
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SetSpeakerVolume(
-    WebRtc_UWord32 volume)
+int32_t AudioMixerManagerLinuxALSA::SetSpeakerVolume(
+    uint32_t volume)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxALSA::SetSpeakerVolume(volume=%u)",
@@ -401,8 +401,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SetSpeakerVolume(
     return (0);
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerVolume(
-    WebRtc_UWord32& volume) const
+int32_t AudioMixerManagerLinuxALSA::SpeakerVolume(
+    uint32_t& volume) const
 {
 
     if (_outputMixerElement == NULL)
@@ -430,13 +430,13 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerVolume(
                  "     AudioMixerManagerLinuxALSA::SpeakerVolume() => vol=%i",
                  vol);
 
-    volume = static_cast<WebRtc_UWord32> (vol);
+    volume = static_cast<uint32_t> (vol);
 
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MaxSpeakerVolume(
-    WebRtc_UWord32& maxVolume) const
+int32_t AudioMixerManagerLinuxALSA::MaxSpeakerVolume(
+    uint32_t& maxVolume) const
 {
 
     if (_outputMixerElement == NULL)
@@ -464,13 +464,13 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MaxSpeakerVolume(
                      LATE(snd_strerror)(errVal));
     }
 
-    maxVolume = static_cast<WebRtc_UWord32> (maxVol);
+    maxVolume = static_cast<uint32_t> (maxVol);
 
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MinSpeakerVolume(
-    WebRtc_UWord32& minVolume) const
+int32_t AudioMixerManagerLinuxALSA::MinSpeakerVolume(
+    uint32_t& minVolume) const
 {
 
     if (_outputMixerElement == NULL)
@@ -498,7 +498,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MinSpeakerVolume(
                      LATE(snd_strerror)(errVal));
     }
 
-    minVolume = static_cast<WebRtc_UWord32> (minVol);
+    minVolume = static_cast<uint32_t> (minVol);
 
     return 0;
 }
@@ -510,8 +510,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MinSpeakerVolume(
  //    SetMaxSpeakerVolume
  // ----------------------------------------------------------------------------
 
- WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMaxSpeakerVolume(
-     WebRtc_UWord32 maxVolume)
+ int32_t AudioMixerManagerLinuxALSA::SetMaxSpeakerVolume(
+     uint32_t maxVolume)
  {
 
  if (_outputMixerElement == NULL)
@@ -551,8 +551,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MinSpeakerVolume(
  //    SetMinSpeakerVolume
  // ----------------------------------------------------------------------------
 
- WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMinSpeakerVolume(
-     WebRtc_UWord32 minVolume)
+ int32_t AudioMixerManagerLinuxALSA::SetMinSpeakerVolume(
+     uint32_t minVolume)
  {
 
  if (_outputMixerElement == NULL)
@@ -589,8 +589,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MinSpeakerVolume(
  }
  */
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerVolumeStepSize(
-    WebRtc_UWord16& stepSize) const
+int32_t AudioMixerManagerLinuxALSA::SpeakerVolumeStepSize(
+    uint16_t& stepSize) const
 {
 
     if (_outputMixerHandle == NULL)
@@ -606,7 +606,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerVolumeStepSize(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerVolumeIsAvailable(
+int32_t AudioMixerManagerLinuxALSA::SpeakerVolumeIsAvailable(
     bool& available)
 {
     if (_outputMixerElement == NULL)
@@ -621,7 +621,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerVolumeIsAvailable(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerMuteIsAvailable(
+int32_t AudioMixerManagerLinuxALSA::SpeakerMuteIsAvailable(
     bool& available)
 {
     if (_outputMixerElement == NULL)
@@ -636,7 +636,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerMuteIsAvailable(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SetSpeakerMute(bool enable)
+int32_t AudioMixerManagerLinuxALSA::SetSpeakerMute(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxALSA::SetSpeakerMute(enable=%u)",
@@ -676,7 +676,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SetSpeakerMute(bool enable)
     return (0);
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerMute(bool& enabled) const
+int32_t AudioMixerManagerLinuxALSA::SpeakerMute(bool& enabled) const
 {
 
     if (_outputMixerElement == NULL)
@@ -719,7 +719,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SpeakerMute(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneMuteIsAvailable(
+int32_t AudioMixerManagerLinuxALSA::MicrophoneMuteIsAvailable(
     bool& available)
 {
     if (_inputMixerElement == NULL)
@@ -733,7 +733,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneMuteIsAvailable(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneMute(bool enable)
+int32_t AudioMixerManagerLinuxALSA::SetMicrophoneMute(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxALSA::SetMicrophoneMute(enable=%u)",
@@ -773,7 +773,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneMute(bool enable)
     return (0);
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneMute(bool& enabled) const
+int32_t AudioMixerManagerLinuxALSA::MicrophoneMute(bool& enabled) const
 {
 
     if (_inputMixerElement == NULL)
@@ -816,7 +816,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneMute(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneBoostIsAvailable(
+int32_t AudioMixerManagerLinuxALSA::MicrophoneBoostIsAvailable(
     bool& available)
 {
     if (_inputMixerHandle == NULL)
@@ -832,7 +832,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneBoostIsAvailable(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneBoost(bool enable)
+int32_t AudioMixerManagerLinuxALSA::SetMicrophoneBoost(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxALSA::SetMicrophoneBoost(enable=%u)",
@@ -862,7 +862,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneBoost(bool enable)
     return (0);
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneBoost(bool& enabled) const
+int32_t AudioMixerManagerLinuxALSA::MicrophoneBoost(bool& enabled) const
 {
 
     if (_inputMixerHandle == NULL)
@@ -878,7 +878,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneBoost(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneVolumeIsAvailable(
+int32_t AudioMixerManagerLinuxALSA::MicrophoneVolumeIsAvailable(
     bool& available)
 {
     if (_inputMixerElement == NULL)
@@ -893,8 +893,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneVolumeIsAvailable(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneVolume(
-    WebRtc_UWord32 volume)
+int32_t AudioMixerManagerLinuxALSA::SetMicrophoneVolume(
+    uint32_t volume)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxALSA::SetMicrophoneVolume(volume=%u)",
@@ -931,8 +931,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneVolume(
  //    SetMaxMicrophoneVolume
  // ----------------------------------------------------------------------------
 
- WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMaxMicrophoneVolume(
-     WebRtc_UWord32 maxVolume)
+ int32_t AudioMixerManagerLinuxALSA::SetMaxMicrophoneVolume(
+     uint32_t maxVolume)
  {
 
  if (_inputMixerElement == NULL)
@@ -972,8 +972,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneVolume(
  //    SetMinMicrophoneVolume
  // ----------------------------------------------------------------------------
 
- WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMinMicrophoneVolume(
- WebRtc_UWord32 minVolume)
+ int32_t AudioMixerManagerLinuxALSA::SetMinMicrophoneVolume(
+ uint32_t minVolume)
  {
 
  if (_inputMixerElement == NULL)
@@ -1012,8 +1012,8 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::SetMicrophoneVolume(
  }
  */
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneVolume(
-    WebRtc_UWord32& volume) const
+int32_t AudioMixerManagerLinuxALSA::MicrophoneVolume(
+    uint32_t& volume) const
 {
 
     if (_inputMixerElement == NULL)
@@ -1042,13 +1042,13 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneVolume(
                  "     AudioMixerManagerLinuxALSA::MicrophoneVolume() => vol=%i",
                  vol);
 
-    volume = static_cast<WebRtc_UWord32> (vol);
+    volume = static_cast<uint32_t> (vol);
 
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MaxMicrophoneVolume(
-    WebRtc_UWord32& maxVolume) const
+int32_t AudioMixerManagerLinuxALSA::MaxMicrophoneVolume(
+    uint32_t& maxVolume) const
 {
 
     if (_inputMixerElement == NULL)
@@ -1083,13 +1083,13 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MaxMicrophoneVolume(
                      LATE(snd_strerror)(errVal));
     }
 
-    maxVolume = static_cast<WebRtc_UWord32> (maxVol);
+    maxVolume = static_cast<uint32_t> (maxVol);
 
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MinMicrophoneVolume(
-    WebRtc_UWord32& minVolume) const
+int32_t AudioMixerManagerLinuxALSA::MinMicrophoneVolume(
+    uint32_t& minVolume) const
 {
 
     if (_inputMixerElement == NULL)
@@ -1116,13 +1116,13 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MinMicrophoneVolume(
                      LATE(snd_strerror)(errVal));
     }
 
-    minVolume = static_cast<WebRtc_UWord32> (minVol);
+    minVolume = static_cast<uint32_t> (minVol);
 
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneVolumeStepSize(
-    WebRtc_UWord16& stepSize) const
+int32_t AudioMixerManagerLinuxALSA::MicrophoneVolumeStepSize(
+    uint16_t& stepSize) const
 {
 
     if (_inputMixerHandle == NULL)
@@ -1142,7 +1142,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::MicrophoneVolumeStepSize(
 //                                 Private Methods
 // ============================================================================
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::LoadMicMixerElement() const
+int32_t AudioMixerManagerLinuxALSA::LoadMicMixerElement() const
 {
     int errVal = LATE(snd_mixer_load)(_inputMixerHandle);
     if (errVal < 0)
@@ -1208,7 +1208,7 @@ WebRtc_Word32 AudioMixerManagerLinuxALSA::LoadMicMixerElement() const
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxALSA::LoadSpeakerMixerElement() const
+int32_t AudioMixerManagerLinuxALSA::LoadSpeakerMixerElement() const
 {
     int errVal = LATE(snd_mixer_load)(_outputMixerHandle);
     if (errVal < 0)

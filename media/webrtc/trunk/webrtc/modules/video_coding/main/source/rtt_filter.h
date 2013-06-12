@@ -19,16 +19,16 @@ namespace webrtc
 class VCMRttFilter
 {
 public:
-    VCMRttFilter(WebRtc_Word32 vcmId = 0, WebRtc_Word32 receiverId = 0);
+    VCMRttFilter(int32_t vcmId = 0, int32_t receiverId = 0);
 
     VCMRttFilter& operator=(const VCMRttFilter& rhs);
 
     // Resets the filter.
     void Reset();
     // Updates the filter with a new sample.
-    void Update(WebRtc_UWord32 rttMs);
+    void Update(uint32_t rttMs);
     // A getter function for the current RTT level in ms.
-    WebRtc_UWord32 RttMs() const;
+    uint32_t RttMs() const;
 
 private:
     // The size of the drift and jump memory buffers
@@ -39,30 +39,30 @@ private:
     // samples and average to the standard deviation.
     // Returns true if the long time statistics should be updated
     // and false otherwise
-    bool JumpDetection(WebRtc_UWord32 rttMs);
+    bool JumpDetection(uint32_t rttMs);
     // Detects RTT drifts by comparing the difference between
     // max and average to the standard deviation.
     // Returns true if the long time statistics should be updated
     // and false otherwise
-    bool DriftDetection(WebRtc_UWord32 rttMs);
+    bool DriftDetection(uint32_t rttMs);
     // Computes the short time average and maximum of the vector buf.
-    void ShortRttFilter(WebRtc_UWord32* buf, WebRtc_UWord32 length);
+    void ShortRttFilter(uint32_t* buf, uint32_t length);
 
-    WebRtc_Word32         _vcmId;
-    WebRtc_Word32         _receiverId;
+    int32_t         _vcmId;
+    int32_t         _receiverId;
     bool                  _gotNonZeroUpdate;
     double                _avgRtt;
     double                _varRtt;
-    WebRtc_UWord32        _maxRtt;
-    WebRtc_UWord32        _filtFactCount;
-    const WebRtc_UWord32  _filtFactMax;
+    uint32_t        _maxRtt;
+    uint32_t        _filtFactCount;
+    const uint32_t  _filtFactMax;
     const double          _jumpStdDevs;
     const double          _driftStdDevs;
-    WebRtc_Word32         _jumpCount;
-    WebRtc_Word32         _driftCount;
-    const WebRtc_Word32   _detectThreshold;
-    WebRtc_UWord32        _jumpBuf[kMaxDriftJumpCount];
-    WebRtc_UWord32        _driftBuf[kMaxDriftJumpCount];
+    int32_t         _jumpCount;
+    int32_t         _driftCount;
+    const int32_t   _detectThreshold;
+    uint32_t        _jumpBuf[kMaxDriftJumpCount];
+    uint32_t        _driftBuf[kMaxDriftJumpCount];
 };
 
 } // namespace webrtc

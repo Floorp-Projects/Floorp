@@ -32,28 +32,28 @@ namespace voe {
 class MonitorModule : public Module
 {
 public:
-    WebRtc_Word32 RegisterObserver(MonitorObserver& observer);
+    int32_t RegisterObserver(MonitorObserver& observer);
 
-    WebRtc_Word32 DeRegisterObserver();
+    int32_t DeRegisterObserver();
 
     MonitorModule();
 
     virtual ~MonitorModule();
 public:	// module
-    WebRtc_Word32 Version(char* version,
-                          WebRtc_UWord32& remainingBufferInBytes,
-                          WebRtc_UWord32& position) const;
+    int32_t Version(char* version,
+                    uint32_t& remainingBufferInBytes,
+                    uint32_t& position) const;
 
-    WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
+    int32_t ChangeUniqueId(const int32_t id);
 
-    WebRtc_Word32 TimeUntilNextProcess();
+    int32_t TimeUntilNextProcess();
 
-    WebRtc_Word32 Process();
+    int32_t Process();
 private:
     enum { kAverageProcessUpdateTimeMs = 1000 };
     MonitorObserver* _observerPtr;
     CriticalSectionWrapper&	_callbackCritSect;
-    WebRtc_Word32 _lastProcessTime;
+    int32_t _lastProcessTime;
 };
 
 }  //  namespace voe

@@ -13,6 +13,7 @@
 #include <cassert>
 #include <cstring>
 #include <limits>
+#include <vector>
 
 #include "system_wrappers/interface/cpu_info.h"
 
@@ -59,9 +60,9 @@ bool VideoProcessorImpl::Init() {
   bit_rate_factor_ = config_.codec_settings->maxFramerate * 0.001 * 8;  // bits
 
   // Initialize data structures used by the encoder/decoder APIs
-  int frame_length_in_bytes = frame_reader_->FrameLength();
-  source_buffer_ = new WebRtc_UWord8[frame_length_in_bytes];
-  last_successful_frame_buffer_ = new WebRtc_UWord8[frame_length_in_bytes];
+  size_t frame_length_in_bytes = frame_reader_->FrameLength();
+  source_buffer_ = new uint8_t[frame_length_in_bytes];
+  last_successful_frame_buffer_ = new uint8_t[frame_length_in_bytes];
   // Set fixed properties common for all frames.
   // To keep track of spatial resize actions by encoder.
   last_encoder_frame_width_ = config_.codec_settings->width;
@@ -70,7 +71,7 @@ bool VideoProcessorImpl::Init() {
   // Setup required callbacks for the encoder/decoder:
   encode_callback_ = new VideoProcessorEncodeCompleteCallback(this);
   decode_callback_ = new VideoProcessorDecodeCompleteCallback(this);
-  WebRtc_Word32 register_result =
+  int32_t register_result =
       encoder_->RegisterEncodeCompleteCallback(encode_callback_);
   if (register_result != WEBRTC_VIDEO_CODEC_OK) {
     fprintf(stderr, "Failed to register encode complete callback, return code: "
@@ -84,11 +85,11 @@ bool VideoProcessorImpl::Init() {
     return false;
   }
   // Init the encoder and decoder
-  WebRtc_UWord32 nbr_of_cores = 1;
+  uint32_t nbr_of_cores = 1;
   if (!config_.use_single_core) {
     nbr_of_cores = CpuInfo::DetectNumberOfCores();
   }
-  WebRtc_Word32 init_result =
+  int32_t init_result =
       encoder_->InitEncode(config_.codec_settings, nbr_of_cores,
                            config_.networking_config.max_payload_size_in_bytes);
   if (init_result != WEBRTC_VIDEO_CODEC_OK) {
@@ -191,8 +192,7 @@ bool VideoProcessorImpl::ProcessFrame(int frame_number) {
     // For dropped frames, we regard them as zero size encoded frames.
     encoded_frame_size_ = 0;
 
-    WebRtc_Word32 encode_result = encoder_->Encode(source_frame_, NULL,
-                                                   &frame_types);
+    int32_t encode_result = encoder_->Encode(source_frame_, NULL, &frame_types);
 
     if (encode_result != WEBRTC_VIDEO_CODEC_OK) {
       fprintf(stderr, "Failed to encode frame %d, return code: %d\n",
@@ -263,8 +263,8 @@ void VideoProcessorImpl::FrameEncoded(EncodedImage* encoded_image) {
   decode_start_ = TickTime::Now();
   // TODO(kjellander): Pass fragmentation header to the decoder when
   // CL 172001 has been submitted and PacketManipulator supports this.
-  WebRtc_Word32 decode_result = decoder_->Decode(*encoded_image,
-                                                 last_frame_missing_, NULL);
+  int32_t decode_result = decoder_->Decode(*encoded_image, last_frame_missing_,
+                                           NULL);
   stat.decode_return_code = decode_result;
   if (decode_result != WEBRTC_VIDEO_CODEC_OK) {
     // Write the last successful frame the output file to avoid getting it out
@@ -325,7 +325,7 @@ void VideoProcessorImpl::FrameDecoded(const I420VideoFrame& image) {
   } else {  // No resize.
     // Update our copy of the last successful frame:
     // TODO(mikhal): Add as a member function, so won't be allocated per frame.
-    int length = CalcBufferSize(kI420,image.width(), image.height());
+    int length = CalcBufferSize(kI420, image.width(), image.height());
     scoped_array<uint8_t> image_buffer(new uint8_t[length]);
     length = ExtractBuffer(image, length, image_buffer.get());
     assert(length > 0);
@@ -341,7 +341,7 @@ void VideoProcessorImpl::FrameDecoded(const I420VideoFrame& image) {
 
 int VideoProcessorImpl::GetElapsedTimeMicroseconds(
     const webrtc::TickTime& start, const webrtc::TickTime& stop) {
-  WebRtc_UWord64 encode_time = (stop - start).Microseconds();
+  uint64_t encode_time = (stop - start).Microseconds();
   assert(encode_time <
          static_cast<unsigned int>(std::numeric_limits<int>::max()));
   return static_cast<int>(encode_time);
@@ -378,7 +378,7 @@ const char* VideoCodecTypeToStr(webrtc::VideoCodecType e) {
 }
 
 // Callbacks
-WebRtc_Word32
+int32_t
 VideoProcessorImpl::VideoProcessorEncodeCompleteCallback::Encoded(
     EncodedImage& encoded_image,
     const webrtc::CodecSpecificInfo* codec_specific_info,
@@ -386,7 +386,7 @@ VideoProcessorImpl::VideoProcessorEncodeCompleteCallback::Encoded(
   video_processor_->FrameEncoded(&encoded_image);  // Forward to parent class.
   return 0;
 }
-WebRtc_Word32
+int32_t
 VideoProcessorImpl::VideoProcessorDecodeCompleteCallback::Decoded(
     I420VideoFrame& image) {
   video_processor_->FrameDecoded(image);  // forward to parent class

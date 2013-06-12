@@ -31,8 +31,8 @@ VCMInterFrameDelay::Reset(int64_t currentWallClock)
 // Calculates the delay of a frame with the given timestamp.
 // This method is called when the frame is complete.
 bool
-VCMInterFrameDelay::CalculateDelay(WebRtc_UWord32 timestamp,
-                                WebRtc_Word64 *delay,
+VCMInterFrameDelay::CalculateDelay(uint32_t timestamp,
+                                int64_t *delay,
                                 int64_t currentWallClock)
 {
     if (_prevWallClock == 0)
@@ -44,11 +44,11 @@ VCMInterFrameDelay::CalculateDelay(WebRtc_UWord32 timestamp,
         return true;
     }
 
-    WebRtc_Word32 prevWrapArounds = _wrapArounds;
+    int32_t prevWrapArounds = _wrapArounds;
     CheckForWrapArounds(timestamp);
 
     // This will be -1 for backward wrap arounds and +1 for forward wrap arounds
-    WebRtc_Word32 wrapAroundsSincePrev = _wrapArounds - prevWrapArounds;
+    int32_t wrapAroundsSincePrev = _wrapArounds - prevWrapArounds;
 
     // Account for reordering in jitter variance estimate in the future?
     // Note that this also captures incomplete frames which are grabbed
@@ -62,13 +62,13 @@ VCMInterFrameDelay::CalculateDelay(WebRtc_UWord32 timestamp,
 
     // Compute the compensated timestamp difference and convert it to ms and
     // round it to closest integer.
-    _dTS = static_cast<WebRtc_Word64>((timestamp + wrapAroundsSincePrev *
-                (static_cast<WebRtc_Word64>(1)<<32) - _prevTimestamp) / 90.0 + 0.5);
+    _dTS = static_cast<int64_t>((timestamp + wrapAroundsSincePrev *
+                (static_cast<int64_t>(1)<<32) - _prevTimestamp) / 90.0 + 0.5);
 
     // frameDelay is the difference of dT and dTS -- i.e. the difference of
     // the wall clock time difference and the timestamp difference between
     // two following frames.
-    *delay = static_cast<WebRtc_Word64>(currentWallClock - _prevWallClock - _dTS);
+    *delay = static_cast<int64_t>(currentWallClock - _prevWallClock - _dTS);
 
     _prevTimestamp = timestamp;
     _prevWallClock = currentWallClock;
@@ -77,26 +77,26 @@ VCMInterFrameDelay::CalculateDelay(WebRtc_UWord32 timestamp,
 }
 
 // Returns the current difference between incoming timestamps
-WebRtc_UWord32 VCMInterFrameDelay::CurrentTimeStampDiffMs() const
+uint32_t VCMInterFrameDelay::CurrentTimeStampDiffMs() const
 {
     if (_dTS < 0)
     {
         return 0;
     }
-    return static_cast<WebRtc_UWord32>(_dTS);
+    return static_cast<uint32_t>(_dTS);
 }
 
 // Investigates if the timestamp clock has overflowed since the last timestamp and
 // keeps track of the number of wrap arounds since reset.
 void
-VCMInterFrameDelay::CheckForWrapArounds(WebRtc_UWord32 timestamp)
+VCMInterFrameDelay::CheckForWrapArounds(uint32_t timestamp)
 {
     if (timestamp < _prevTimestamp)
     {
         // This difference will probably be less than -2^31 if we have had a wrap around
         // (e.g. timestamp = 1, _previousTimestamp = 2^32 - 1). Since it is cast to a Word32,
         // it should be positive.
-        if (static_cast<WebRtc_Word32>(timestamp - _prevTimestamp) > 0)
+        if (static_cast<int32_t>(timestamp - _prevTimestamp) > 0)
         {
             // Forward wrap around
             _wrapArounds++;
@@ -104,7 +104,7 @@ VCMInterFrameDelay::CheckForWrapArounds(WebRtc_UWord32 timestamp)
     }
     // This difference will probably be less than -2^31 if we have had a backward wrap around.
     // Since it is cast to a Word32, it should be positive.
-    else if (static_cast<WebRtc_Word32>(_prevTimestamp - timestamp) > 0)
+    else if (static_cast<int32_t>(_prevTimestamp - timestamp) > 0)
     {
         // Backward wrap around
         _wrapArounds--;

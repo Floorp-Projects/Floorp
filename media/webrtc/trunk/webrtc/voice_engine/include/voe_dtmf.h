@@ -33,34 +33,11 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_DTMF_H
 #define WEBRTC_VOICE_ENGINE_VOE_DTMF_H
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 
 class VoiceEngine;
-
-// VoETelephoneEventObserver
-class WEBRTC_DLLEXPORT VoETelephoneEventObserver
-{
-public:
-    // This method will be called after the detection of an inband
-    // telephone event. The event code is given as output in the
-    // |eventCode| parameter.
-    virtual void OnReceivedTelephoneEventInband(int channel,
-                                                int eventCode,
-                                                bool endOfEvent) = 0;
-
-    // This method will be called after the detection of an out-of-band
-    // telephone event. The event code is given as output in the
-    // |eventCode| parameter.
-    virtual void OnReceivedTelephoneEventOutOfBand(
-        int channel,
-        int eventCode,
-        bool endOfEvent) = 0;
-
-protected:
-    virtual ~VoETelephoneEventObserver() {}
-};
 
 // VoEDtmf
 class WEBRTC_DLLEXPORT VoEDtmf
@@ -121,22 +98,6 @@ public:
 
     // Stops playing out a DTMF feedback tone locally.
     virtual int StopPlayingDtmfTone() = 0;
-
-    // Installs an instance of a VoETelephoneEventObserver derived class and
-    // activates detection of telephone events for the specified |channel|.
-    virtual int RegisterTelephoneEventDetection(
-        int channel, TelephoneEventDetectionMethods detectionMethod,
-        VoETelephoneEventObserver& observer) = 0;
-
-    // Removes an instance of a VoETelephoneEventObserver derived class and
-    // disables detection of telephone events for the specified |channel|.
-    virtual int DeRegisterTelephoneEventDetection(int channel) = 0;
-
-    // Gets the current telephone-event detection status for a specified
-    // |channel|.
-    virtual int GetTelephoneEventDetectionStatus(
-        int channel, bool& enabled,
-        TelephoneEventDetectionMethods& detectionMethod) = 0;
 
 protected:
     VoEDtmf() {}

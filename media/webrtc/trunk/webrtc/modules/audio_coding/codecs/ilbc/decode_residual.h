@@ -30,8 +30,8 @@ void WebRtcIlbcfix_DecodeResidual(
     /* (i/o) the decoder state structure */
     iLBC_bits *iLBC_encbits, /* (i/o) Encoded bits, which are used
                                    for the decoding  */
-    WebRtc_Word16 *decresidual,  /* (o) decoded residual frame */
-    WebRtc_Word16 *syntdenum   /* (i) the decoded synthesis filter
+    int16_t *decresidual,  /* (o) decoded residual frame */
+    int16_t *syntdenum   /* (i) the decoded synthesis filter
                                                    coefficients */
                                   );
 

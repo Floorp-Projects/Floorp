@@ -71,7 +71,7 @@ _lastTime(-1)
     }
 
     // SocketTransport module
-    WebRtc_UWord8 numberOfThreads = 1;
+    uint8_t numberOfThreads = 1;
     _transport = UdpTransport::Create(0, numberOfThreads);
     if (!_transport)
     {
@@ -104,9 +104,9 @@ TestSenderReceiver::~TestSenderReceiver (void)
 }
 
 
-WebRtc_Word32 TestSenderReceiver::InitReceiver (const WebRtc_UWord16 rtpPort,
-                                              const WebRtc_UWord16 rtcpPort,
-                                              const WebRtc_Word8 payloadType /*= 127*/)
+int32_t TestSenderReceiver::InitReceiver (const uint16_t rtpPort,
+                                          const uint16_t rtcpPort,
+                                          const int8_t payloadType /*= 127*/)
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -153,7 +153,7 @@ WebRtc_Word32 TestSenderReceiver::InitReceiver (const WebRtc_UWord16 rtpPort,
 }
 
 
-WebRtc_Word32 TestSenderReceiver::Start()
+int32_t TestSenderReceiver::Start()
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -191,7 +191,7 @@ WebRtc_Word32 TestSenderReceiver::Start()
 }
 
 
-WebRtc_Word32 TestSenderReceiver::Stop ()
+int32_t TestSenderReceiver::Stop ()
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -232,12 +232,12 @@ bool TestSenderReceiver::ProcLoop(void)
     while (_running)
     {
         // ask RTP/RTCP module for wait time
-        WebRtc_Word32 rtpWait = _rtp->TimeUntilNextProcess();
+        int32_t rtpWait = _rtp->TimeUntilNextProcess();
 
         // ask SocketTransport module for wait time
-        WebRtc_Word32 tpWait = _transport->TimeUntilNextProcess();
+        int32_t tpWait = _transport->TimeUntilNextProcess();
 
-        WebRtc_Word32 minWait = (rtpWait < tpWait) ? rtpWait: tpWait;
+        int32_t minWait = (rtpWait < tpWait) ? rtpWait: tpWait;
         minWait = (minWait > 0) ? minWait : 0;
         // wait
         _eventPtr->Wait(minWait);
@@ -254,23 +254,23 @@ bool TestSenderReceiver::ProcLoop(void)
 }
 
 
-WebRtc_Word32 TestSenderReceiver::ReceiveBitrateKbps ()
+int32_t TestSenderReceiver::ReceiveBitrateKbps ()
 {
-    WebRtc_UWord32 bytesSent;
-    WebRtc_UWord32 packetsSent;
-    WebRtc_UWord32 bytesReceived;
-    WebRtc_UWord32 packetsReceived;
+    uint32_t bytesSent;
+    uint32_t packetsSent;
+    uint32_t bytesReceived;
+    uint32_t packetsReceived;
 
     if (_rtp->DataCountersRTP(&bytesSent, &packetsSent, &bytesReceived, &packetsReceived) == 0)
     {
-        WebRtc_Word64 now = TickTime::MillisecondTimestamp();
-        WebRtc_Word32 kbps = 0;
+        int64_t now = TickTime::MillisecondTimestamp();
+        int32_t kbps = 0;
         if (now > _lastTime)
         {
             if (_lastTime > 0)
             {
                 // 8 * bytes / ms = kbps
-                kbps = static_cast<WebRtc_Word32>(
+                kbps = static_cast<int32_t>(
                     (8 * (bytesReceived - _lastBytesReceived)) / (now - _lastTime));
             }
             _lastTime = now;
@@ -283,13 +283,13 @@ WebRtc_Word32 TestSenderReceiver::ReceiveBitrateKbps ()
 }
 
 
-WebRtc_Word32 TestSenderReceiver::SetPacketTimeout(const WebRtc_UWord32 timeoutMS)
+int32_t TestSenderReceiver::SetPacketTimeout(const uint32_t timeoutMS)
 {
     return (_rtp->SetPacketTimeout(timeoutMS, 0 /* RTCP timeout */));
 }
 
 
-void TestSenderReceiver::OnPacketTimeout(const WebRtc_Word32 id)
+void TestSenderReceiver::OnPacketTimeout(const int32_t id)
 {
     CriticalSectionScoped lock(_critSect);
 
@@ -297,7 +297,7 @@ void TestSenderReceiver::OnPacketTimeout(const WebRtc_Word32 id)
 }
 
 
-void TestSenderReceiver::OnReceivedPacket(const WebRtc_Word32 id,
+void TestSenderReceiver::OnReceivedPacket(const int32_t id,
                                     const RtpRtcpPacketType packetType)
 {
     // do nothing
@@ -305,31 +305,31 @@ void TestSenderReceiver::OnReceivedPacket(const WebRtc_Word32 id,
 
 }
 
-WebRtc_Word32 TestSenderReceiver::OnReceivedPayloadData(const WebRtc_UWord8* payloadData,
-                                          const WebRtc_UWord16 payloadSize,
-                                          const webrtc::WebRtcRTPHeader* rtpHeader)
+int32_t TestSenderReceiver::OnReceivedPayloadData(const uint8_t* payloadData,
+                                                  const uint16_t payloadSize,
+                                                  const webrtc::WebRtcRTPHeader* rtpHeader)
 {
     //printf("OnReceivedPayloadData\n");
     return (0);
 }
 
 
-void TestSenderReceiver::IncomingRTPPacket(const WebRtc_Word8* incomingRtpPacket,
-                                      const WebRtc_Word32 rtpPacketLength,
-                                      const WebRtc_Word8* fromIP,
-                                      const WebRtc_UWord16 fromPort)
+void TestSenderReceiver::IncomingRTPPacket(const int8_t* incomingRtpPacket,
+                                      const int32_t rtpPacketLength,
+                                      const int8_t* fromIP,
+                                      const uint16_t fromPort)
 {
-    _rtp->IncomingPacket((WebRtc_UWord8 *) incomingRtpPacket, static_cast<WebRtc_UWord16>(rtpPacketLength));
+    _rtp->IncomingPacket((uint8_t *) incomingRtpPacket, static_cast<uint16_t>(rtpPacketLength));
 }
 
 
 
-void TestSenderReceiver::IncomingRTCPPacket(const WebRtc_Word8* incomingRtcpPacket,
-                                       const WebRtc_Word32 rtcpPacketLength,
-                                       const WebRtc_Word8* fromIP,
-                                       const WebRtc_UWord16 fromPort)
+void TestSenderReceiver::IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
+                                       const int32_t rtcpPacketLength,
+                                       const int8_t* fromIP,
+                                       const uint16_t fromPort)
 {
-    _rtp->IncomingPacket((WebRtc_UWord8 *) incomingRtcpPacket, static_cast<WebRtc_UWord16>(rtcpPacketLength));
+    _rtp->IncomingPacket((uint8_t *) incomingRtcpPacket, static_cast<uint16_t>(rtcpPacketLength));
 }
 
 
@@ -339,11 +339,11 @@ void TestSenderReceiver::IncomingRTCPPacket(const WebRtc_Word8* incomingRtcpPack
 ///////////////////
 
 
-WebRtc_Word32 TestSenderReceiver::InitSender (const WebRtc_UWord32 startBitrateKbps,
-                                            const WebRtc_Word8* ipAddr,
-                                            const WebRtc_UWord16 rtpPort,
-                                            const WebRtc_UWord16 rtcpPort /*= 0*/,
-                                            const WebRtc_Word8 payloadType /*= 127*/)
+int32_t TestSenderReceiver::InitSender (const uint32_t startBitrateKbps,
+                                        const int8_t* ipAddr,
+                                        const uint16_t rtpPort,
+                                        const uint16_t rtcpPort /*= 0*/,
+                                        const int8_t payloadType /*= 127*/)
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -399,17 +399,17 @@ WebRtc_Word32 TestSenderReceiver::InitSender (const WebRtc_UWord32 startBitrateK
 
 
 
-WebRtc_Word32
-TestSenderReceiver::SendOutgoingData(const WebRtc_UWord32 timeStamp,
-                                     const WebRtc_UWord8* payloadData,
-                                     const WebRtc_UWord32 payloadSize,
+int32_t
+TestSenderReceiver::SendOutgoingData(const uint32_t timeStamp,
+                                     const uint8_t* payloadData,
+                                     const uint32_t payloadSize,
                                      const webrtc::FrameType frameType /*= webrtc::kVideoFrameDelta*/)
 {
     return (_rtp->SendOutgoingData(frameType, _payloadType, timeStamp, payloadData, payloadSize));
 }
 
 
-WebRtc_Word32 TestSenderReceiver::SetLoadGenerator(TestLoadGenerator *generator)
+int32_t TestSenderReceiver::SetLoadGenerator(TestLoadGenerator *generator)
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -418,13 +418,13 @@ WebRtc_Word32 TestSenderReceiver::SetLoadGenerator(TestLoadGenerator *generator)
 
 }
 
-void TestSenderReceiver::OnNetworkChanged(const WebRtc_Word32 id,
-                                  const WebRtc_UWord32 minBitrateBps,
-                                  const WebRtc_UWord32 maxBitrateBps,
-                                  const WebRtc_UWord8 fractionLost,
-                                  const WebRtc_UWord16 roundTripTimeMs,
-                                  const WebRtc_UWord16 bwEstimateKbitMin,
-                                  const WebRtc_UWord16 bwEstimateKbitMax)
+void TestSenderReceiver::OnNetworkChanged(const int32_t id,
+                                  const uint32_t minBitrateBps,
+                                  const uint32_t maxBitrateBps,
+                                  const uint8_t fractionLost,
+                                  const uint16_t roundTripTimeMs,
+                                  const uint16_t bwEstimateKbitMin,
+                                  const uint16_t bwEstimateKbitMax)
 {
     if (_loadGenerator)
     {

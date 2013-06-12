@@ -31,7 +31,7 @@ bool SenderThreadFunction(void *obj)
 }
 
 
-TestLoadGenerator::TestLoadGenerator(TestSenderReceiver *sender, WebRtc_Word32 rtpSampleRate)
+TestLoadGenerator::TestLoadGenerator(TestSenderReceiver *sender, int32_t rtpSampleRate)
 :
 _critSect(CriticalSectionWrapper::CreateCriticalSection()),
 _eventPtr(NULL),
@@ -53,7 +53,7 @@ TestLoadGenerator::~TestLoadGenerator ()
     delete _critSect;
 }
 
-WebRtc_Word32 TestLoadGenerator::SetBitrate (WebRtc_Word32 newBitrateKbps)
+int32_t TestLoadGenerator::SetBitrate (int32_t newBitrateKbps)
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -70,7 +70,7 @@ WebRtc_Word32 TestLoadGenerator::SetBitrate (WebRtc_Word32 newBitrateKbps)
 }
 
 
-WebRtc_Word32 TestLoadGenerator::Start (const char *threadName)
+int32_t TestLoadGenerator::Start (const char *threadName)
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -92,7 +92,7 @@ WebRtc_Word32 TestLoadGenerator::Start (const char *threadName)
 }
 
 
-WebRtc_Word32 TestLoadGenerator::Stop ()
+int32_t TestLoadGenerator::Stop ()
 {
     _critSect.Enter();
 
@@ -123,13 +123,13 @@ WebRtc_Word32 TestLoadGenerator::Stop ()
 
 int TestLoadGenerator::generatePayload ()
 {
-    return(generatePayload( static_cast<WebRtc_UWord32>( TickTime::MillisecondTimestamp() * _rtpSampleRate / 1000 )));
+    return(generatePayload( static_cast<uint32_t>( TickTime::MillisecondTimestamp() * _rtpSampleRate / 1000 )));
 }
 
 
-int TestLoadGenerator::sendPayload (const WebRtc_UWord32 timeStamp,
-                                    const WebRtc_UWord8* payloadData,
-                                    const WebRtc_UWord32 payloadSize,
+int TestLoadGenerator::sendPayload (const uint32_t timeStamp,
+                                    const uint8_t* payloadData,
+                                    const uint32_t payloadSize,
                                     const webrtc::FrameType frameType /*= webrtc::kVideoFrameDelta*/)
 {
 
@@ -137,11 +137,11 @@ int TestLoadGenerator::sendPayload (const WebRtc_UWord32 timeStamp,
 }
 
 
-CBRGenerator::CBRGenerator (TestSenderReceiver *sender, WebRtc_Word32 payloadSizeBytes, WebRtc_Word32 bitrateKbps, WebRtc_Word32 rtpSampleRate)
+CBRGenerator::CBRGenerator (TestSenderReceiver *sender, int32_t payloadSizeBytes, int32_t bitrateKbps, int32_t rtpSampleRate)
 :
 //_eventPtr(NULL),
 _payloadSizeBytes(payloadSizeBytes),
-_payload(new WebRtc_UWord8[payloadSizeBytes]),
+_payload(new uint8_t[payloadSizeBytes]),
 TestLoadGenerator(sender, rtpSampleRate)
 {
     SetBitrate (bitrateKbps);
@@ -164,37 +164,37 @@ CBRGenerator::~CBRGenerator ()
 bool CBRGenerator::GeneratorLoop ()
 {
     double periodMs;
-    WebRtc_Word64 nextSendTime = TickTime::MillisecondTimestamp();
+    int64_t nextSendTime = TickTime::MillisecondTimestamp();
 
 
     // no critSect
     while (_running)
     {
         // send data (critSect inside)
-        generatePayload( static_cast<WebRtc_UWord32>(nextSendTime * _rtpSampleRate / 1000) );
+        generatePayload( static_cast<uint32_t>(nextSendTime * _rtpSampleRate / 1000) );
 
         // calculate wait time
         periodMs = 8.0 * _payloadSizeBytes / ( _bitrateKbps );
 
-        nextSendTime = static_cast<WebRtc_Word64>(nextSendTime + periodMs);
+        nextSendTime = static_cast<int64_t>(nextSendTime + periodMs);
 
-        WebRtc_Word32 waitTime = static_cast<WebRtc_Word32>(nextSendTime - TickTime::MillisecondTimestamp());
+        int32_t waitTime = static_cast<int32_t>(nextSendTime - TickTime::MillisecondTimestamp());
         if (waitTime < 0)
         {
             waitTime = 0;
         }
         // wait
-        _eventPtr->Wait(static_cast<WebRtc_Word32>(waitTime));
+        _eventPtr->Wait(static_cast<int32_t>(waitTime));
     }
 
     return true;
 }
 
-int CBRGenerator::generatePayload ( WebRtc_UWord32 timestamp )
+int CBRGenerator::generatePayload ( uint32_t timestamp )
 {
     CriticalSectionScoped cs(_critSect);
 
-    //WebRtc_UWord8 *payload = new WebRtc_UWord8[_payloadSizeBytes];
+    //uint8_t *payload = new uint8_t[_payloadSizeBytes];
 
     int ret = sendPayload(timestamp, _payload, _payloadSizeBytes);
 
@@ -207,8 +207,8 @@ int CBRGenerator::generatePayload ( WebRtc_UWord32 timestamp )
 
 /////////////////////
 
-CBRFixFRGenerator::CBRFixFRGenerator (TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps,
-                                      WebRtc_Word32 rtpSampleRate, WebRtc_Word32 frameRateFps /*= 30*/,
+CBRFixFRGenerator::CBRFixFRGenerator (TestSenderReceiver *sender, int32_t bitrateKbps,
+                                      int32_t rtpSampleRate, int32_t frameRateFps /*= 30*/,
                                       double spread /*= 0.0*/)
 :
 //_eventPtr(NULL),
@@ -240,7 +240,7 @@ CBRFixFRGenerator::~CBRFixFRGenerator ()
 bool CBRFixFRGenerator::GeneratorLoop ()
 {
     double periodMs;
-    WebRtc_Word64 nextSendTime = TickTime::MillisecondTimestamp();
+    int64_t nextSendTime = TickTime::MillisecondTimestamp();
 
     _critSect.Enter();
 
@@ -271,22 +271,22 @@ bool CBRFixFRGenerator::GeneratorLoop ()
                     _payload = NULL;
                 }
 
-                _payloadAllocLen = static_cast<WebRtc_Word32>((_payloadSizeBytes * (1 + _spreadFactor) * 3) / 2 + .5); // 50% extra to avoid frequent re-alloc
-                _payload = new WebRtc_UWord8[_payloadAllocLen];
+                _payloadAllocLen = static_cast<int32_t>((_payloadSizeBytes * (1 + _spreadFactor) * 3) / 2 + .5); // 50% extra to avoid frequent re-alloc
+                _payload = new uint8_t[_payloadAllocLen];
             }
 
 
             // send data (critSect inside)
-            generatePayload( static_cast<WebRtc_UWord32>(nextSendTime * _rtpSampleRate / 1000) );
+            generatePayload( static_cast<uint32_t>(nextSendTime * _rtpSampleRate / 1000) );
         }
 
         _critSect.Leave();
 
         // calculate wait time
         periodMs = 1000.0 / _frameRateFps;
-        nextSendTime = static_cast<WebRtc_Word64>(nextSendTime + periodMs + 0.5);
+        nextSendTime = static_cast<int64_t>(nextSendTime + periodMs + 0.5);
 
-        WebRtc_Word32 waitTime = static_cast<WebRtc_Word32>(nextSendTime - TickTime::MillisecondTimestamp());
+        int32_t waitTime = static_cast<int32_t>(nextSendTime - TickTime::MillisecondTimestamp());
         if (waitTime < 0)
         {
             waitTime = 0;
@@ -298,20 +298,20 @@ bool CBRFixFRGenerator::GeneratorLoop ()
     return true;
 }
 
-WebRtc_Word32 CBRFixFRGenerator::nextPayloadSize()
+int32_t CBRFixFRGenerator::nextPayloadSize()
 {
     const double periodMs = 1000.0 / _frameRateFps;
-    return static_cast<WebRtc_Word32>(_bitrateKbps * periodMs / 8 + 0.5);
+    return static_cast<int32_t>(_bitrateKbps * periodMs / 8 + 0.5);
 }
 
-int CBRFixFRGenerator::generatePayload ( WebRtc_UWord32 timestamp )
+int CBRFixFRGenerator::generatePayload ( uint32_t timestamp )
 {
     CriticalSectionScoped cs(_critSect);
 
     double factor = ((double) rand() - RAND_MAX/2) / RAND_MAX; // [-0.5; 0.5]
     factor = 1 + 2 * _spreadFactor * factor; // [1 - _spreadFactor ; 1 + _spreadFactor]
 
-    WebRtc_Word32 thisPayloadBytes = static_cast<WebRtc_Word32>(_payloadSizeBytes * factor);
+    int32_t thisPayloadBytes = static_cast<int32_t>(_payloadSizeBytes * factor);
     // sanity
     if (thisPayloadBytes > _payloadAllocLen)
     {
@@ -325,9 +325,9 @@ int CBRFixFRGenerator::generatePayload ( WebRtc_UWord32 timestamp )
 
 /////////////////////
 
-PeriodicKeyFixFRGenerator::PeriodicKeyFixFRGenerator (TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps,
-                                                      WebRtc_Word32 rtpSampleRate, WebRtc_Word32 frameRateFps /*= 30*/,
-                                                      double spread /*= 0.0*/, double keyFactor /*= 4.0*/, WebRtc_UWord32 keyPeriod /*= 300*/)
+PeriodicKeyFixFRGenerator::PeriodicKeyFixFRGenerator (TestSenderReceiver *sender, int32_t bitrateKbps,
+                                                      int32_t rtpSampleRate, int32_t frameRateFps /*= 30*/,
+                                                      double spread /*= 0.0*/, double keyFactor /*= 4.0*/, uint32_t keyPeriod /*= 300*/)
 :
 _keyFactor(keyFactor),
 _keyPeriod(keyPeriod),
@@ -336,15 +336,15 @@ CBRFixFRGenerator(sender, bitrateKbps, rtpSampleRate, frameRateFps, spread)
 {
 }
 
-WebRtc_Word32 PeriodicKeyFixFRGenerator::nextPayloadSize()
+int32_t PeriodicKeyFixFRGenerator::nextPayloadSize()
 {
     // calculate payload size for a delta frame
-    WebRtc_Word32 payloadSizeBytes = static_cast<WebRtc_Word32>(1000 * _bitrateKbps / (8.0 * _frameRateFps * (1.0 + (_keyFactor - 1.0) / _keyPeriod)) + 0.5);
+    int32_t payloadSizeBytes = static_cast<int32_t>(1000 * _bitrateKbps / (8.0 * _frameRateFps * (1.0 + (_keyFactor - 1.0) / _keyPeriod)) + 0.5);
 
     if (_frameCount % _keyPeriod == 0)
     {
         // this is a key frame, scale the payload size
-        payloadSizeBytes = static_cast<WebRtc_Word32>(_keyFactor * _payloadSizeBytes + 0.5);
+        payloadSizeBytes = static_cast<int32_t>(_keyFactor * _payloadSizeBytes + 0.5);
     }
     _frameCount++;
 
@@ -353,8 +353,8 @@ WebRtc_Word32 PeriodicKeyFixFRGenerator::nextPayloadSize()
 
 ////////////////////
 
-CBRVarFRGenerator::CBRVarFRGenerator(TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps, const WebRtc_UWord8* frameRates,
-                                     WebRtc_UWord16 numFrameRates, WebRtc_Word32 rtpSampleRate, double avgFrPeriodMs,
+CBRVarFRGenerator::CBRVarFRGenerator(TestSenderReceiver *sender, int32_t bitrateKbps, const uint8_t* frameRates,
+                                     uint16_t numFrameRates, int32_t rtpSampleRate, double avgFrPeriodMs,
                                      double frSpreadFactor, double spreadFactor)
 :
 _avgFrPeriodMs(avgFrPeriodMs),
@@ -364,7 +364,7 @@ _numFrameRates(numFrameRates),
 _frChangeTimeMs(TickTime::MillisecondTimestamp() + _avgFrPeriodMs),
 CBRFixFRGenerator(sender, bitrateKbps, rtpSampleRate, frameRates[0], spreadFactor)
 {
-    _frameRates = new WebRtc_UWord8[_numFrameRates];
+    _frameRates = new uint8_t[_numFrameRates];
     memcpy(_frameRates, frameRates, _numFrameRates);
 }
 
@@ -375,26 +375,26 @@ CBRVarFRGenerator::~CBRVarFRGenerator()
 
 void CBRVarFRGenerator::ChangeFrameRate()
 {
-    const WebRtc_Word64 nowMs = TickTime::MillisecondTimestamp();
+    const int64_t nowMs = TickTime::MillisecondTimestamp();
     if (nowMs < _frChangeTimeMs)
     {
         return;
     }
     // Time to change frame rate
-    WebRtc_UWord16 frIndex = static_cast<WebRtc_UWord16>(static_cast<double>(rand()) / RAND_MAX
+    uint16_t frIndex = static_cast<uint16_t>(static_cast<double>(rand()) / RAND_MAX
                                             * (_numFrameRates - 1) + 0.5) ;
     assert(frIndex < _numFrameRates);
     _frameRateFps = _frameRates[frIndex];
     // Update the next frame rate change time
     double factor = ((double) rand() - RAND_MAX/2) / RAND_MAX; // [-0.5; 0.5]
     factor = 1 + 2 * _frSpreadFactor * factor; // [1 - _frSpreadFactor ; 1 + _frSpreadFactor]
-    _frChangeTimeMs = nowMs + static_cast<WebRtc_Word64>(1000.0 * factor *
-                                    _avgFrPeriodMs + 0.5);
+    _frChangeTimeMs = nowMs + static_cast<int64_t>(1000.0 * factor *
+                                                   _avgFrPeriodMs + 0.5);
 
     printf("New frame rate: %d\n", _frameRateFps);
 }
 
-WebRtc_Word32 CBRVarFRGenerator::nextPayloadSize()
+int32_t CBRVarFRGenerator::nextPayloadSize()
 {
     ChangeFrameRate();
     return CBRFixFRGenerator::nextPayloadSize();
@@ -402,8 +402,8 @@ WebRtc_Word32 CBRVarFRGenerator::nextPayloadSize()
 
 ////////////////////
 
-CBRFrameDropGenerator::CBRFrameDropGenerator(TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps,
-                                         WebRtc_Word32 rtpSampleRate, double spreadFactor)
+CBRFrameDropGenerator::CBRFrameDropGenerator(TestSenderReceiver *sender, int32_t bitrateKbps,
+                                         int32_t rtpSampleRate, double spreadFactor)
 :
 _accBits(0),
 CBRFixFRGenerator(sender, bitrateKbps, rtpSampleRate, 30, spreadFactor)
@@ -414,7 +414,7 @@ CBRFrameDropGenerator::~CBRFrameDropGenerator()
 {
 }
 
-WebRtc_Word32 CBRFrameDropGenerator::nextPayloadSize()
+int32_t CBRFrameDropGenerator::nextPayloadSize()
 {
     _accBits -= 1000 * _bitrateKbps / _frameRateFps;
     if (_accBits < 0)
@@ -430,8 +430,8 @@ WebRtc_Word32 CBRFrameDropGenerator::nextPayloadSize()
     {
         //printf("keep\n");
         const double periodMs = 1000.0 / _frameRateFps;
-        WebRtc_Word32 frameSize = static_cast<WebRtc_Word32>(_bitrateKbps * periodMs / 8 + 0.5);
-        frameSize = std::max(frameSize, static_cast<WebRtc_Word32>(300 * periodMs / 8 + 0.5));
+        int32_t frameSize = static_cast<int32_t>(_bitrateKbps * periodMs / 8 + 0.5);
+        frameSize = std::max(frameSize, static_cast<int32_t>(300 * periodMs / 8 + 0.5));
         _accBits += frameSize * 8;
         return frameSize;
     }

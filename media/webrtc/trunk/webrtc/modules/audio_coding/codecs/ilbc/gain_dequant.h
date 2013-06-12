@@ -26,11 +26,11 @@
  *  residual
  *---------------------------------------------------------------*/
 
-WebRtc_Word16 WebRtcIlbcfix_GainDequant(
+int16_t WebRtcIlbcfix_GainDequant(
     /* (o) quantized gain value (Q14) */
-    WebRtc_Word16 index, /* (i) quantization index */
-    WebRtc_Word16 maxIn, /* (i) maximum of unquantized gain (Q14) */
-    WebRtc_Word16 stage /* (i) The stage of the search */
+    int16_t index, /* (i) quantization index */
+    int16_t maxIn, /* (i) maximum of unquantized gain (Q14) */
+    int16_t stage /* (i) The stage of the search */
                                          );
 
 #endif

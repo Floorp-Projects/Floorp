@@ -20,33 +20,6 @@ namespace webrtc {
 class VoEEncryptionImpl : public VoEEncryption
 {
 public:
-    // SRTP
-    virtual int EnableSRTPSend(
-        int channel,
-        CipherTypes cipherType,
-        int cipherKeyLength,
-        AuthenticationTypes authType,
-        int authKeyLength,
-        int authTagLength,
-        SecurityLevels level,
-        const unsigned char key[kVoiceEngineMaxSrtpKeyLength],
-        bool useForRTCP = false);
-
-    virtual int DisableSRTPSend(int channel);
-
-    virtual int EnableSRTPReceive(
-        int channel,
-        CipherTypes cipherType,
-        int cipherKeyLength,
-        AuthenticationTypes authType,
-        int authKeyLength,
-        int authTagLength,
-        SecurityLevels level,
-        const unsigned char key[kVoiceEngineMaxSrtpKeyLength],
-        bool useForRTCP = false);
-
-    virtual int DisableSRTPReceive(int channel);
-
     // External encryption
     virtual int RegisterExternalEncryption(
         int channel,

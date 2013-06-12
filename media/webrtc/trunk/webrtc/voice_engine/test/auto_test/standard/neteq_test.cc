@@ -66,23 +66,6 @@ TEST_F(NetEQTest, SetNetEQPlayoutModeActuallySetsTheModeForTheChannel) {
   EXPECT_EQ(webrtc::kNetEqStreaming, mode);
 }
 
-TEST_F(NetEQTest, GetNetEQBgnModeReturnsBgnOnByDefault) {
-  webrtc::NetEqBgnModes bgn_mode;
-  EXPECT_EQ(0, voe_base_->GetNetEQBGNMode(channel_, bgn_mode));
-  EXPECT_EQ(webrtc::kBgnOn, bgn_mode);
-}
-
-TEST_F(NetEQTest, SetNetEQBgnModeActuallySetsTheBgnMode) {
-  webrtc::NetEqBgnModes bgn_mode;
-  EXPECT_EQ(0, voe_base_->SetNetEQBGNMode(channel_, webrtc::kBgnOff));
-  EXPECT_EQ(0, voe_base_->GetNetEQBGNMode(channel_, bgn_mode));
-  EXPECT_EQ(webrtc::kBgnOff, bgn_mode);
-
-  EXPECT_EQ(0, voe_base_->SetNetEQBGNMode(channel_, webrtc::kBgnFade));
-  EXPECT_EQ(0, voe_base_->GetNetEQBGNMode(channel_, bgn_mode));
-  EXPECT_EQ(webrtc::kBgnFade, bgn_mode);
-}
-
 TEST_F(NetEQTest, ManualSetEQPlayoutModeStillProducesOkAudio) {
   EXPECT_EQ(0, voe_base_->SetNetEQPlayoutMode(channel_, webrtc::kNetEqDefault));
   TEST_LOG("NetEQ default playout mode enabled => should hear OK audio.\n");

@@ -36,11 +36,11 @@
  * returns the total number of bytes in the stream
  */
 int WebRtcIsac_DecodeLb(float* signal_out, ISACLBDecStruct* ISACdecLB_obj,
-                        WebRtc_Word16* current_framesamples,
-                        WebRtc_Word16 isRCUPayload) {
+                        int16_t* current_framesamples,
+                        int16_t isRCUPayload) {
   int k;
   int len, err;
-  WebRtc_Word16 bandwidthInd;
+  int16_t bandwidthInd;
 
   float LP_dec_float[FRAMESAMPLES_HALF];
   float HP_dec_float[FRAMESAMPLES_HALF];
@@ -58,8 +58,8 @@ int WebRtcIsac_DecodeLb(float* signal_out, ISACLBDecStruct* ISACdecLB_obj,
   double PitchLags[4];
   double PitchGains[4];
   double AvgPitchGain;
-  WebRtc_Word16 PitchGains_Q12[4];
-  WebRtc_Word16 AvgPitchGain_Q12;
+  int16_t PitchGains_Q12[4];
+  int16_t AvgPitchGain_Q12;
 
   float gain;
 
@@ -182,7 +182,7 @@ int WebRtcIsac_DecodeLb(float* signal_out, ISACLBDecStruct* ISACdecLB_obj,
  * frequency, but split to 12 sub-frames, i.e. twice as lower-band.
  */
 int WebRtcIsac_DecodeUb16(float* signal_out, ISACUBDecStruct* ISACdecUB_obj,
-                          WebRtc_Word16 isRCUPayload) {
+                          int16_t isRCUPayload) {
   int len, err;
 
   double halfFrameFirst[FRAMESAMPLES_HALF];
@@ -193,7 +193,7 @@ int WebRtcIsac_DecodeUb16(float* signal_out, ISACUBDecStruct* ISACdecUB_obj,
 
   double real_f[FRAMESAMPLES_HALF];
   double imag_f[FRAMESAMPLES_HALF];
-  const WebRtc_Word16 kAveragePitchGain = 0; /* No pitch-gain for upper-band. */
+  const int16_t kAveragePitchGain = 0; /* No pitch-gain for upper-band. */
   len = 0;
 
   /* Decode & de-quantize filter coefficients. */
@@ -246,7 +246,7 @@ int WebRtcIsac_DecodeUb16(float* signal_out, ISACUBDecStruct* ISACdecUB_obj,
  * are combined, to reconstruct the upperband 8-16 kHz.
  */
 int WebRtcIsac_DecodeUb12(float* signal_out, ISACUBDecStruct* ISACdecUB_obj,
-                      WebRtc_Word16 isRCUPayload) {
+                      int16_t isRCUPayload) {
   int len, err;
 
   float LP_dec_float[FRAMESAMPLES_HALF];
@@ -259,7 +259,7 @@ int WebRtcIsac_DecodeUb12(float* signal_out, ISACUBDecStruct* ISACdecUB_obj,
 
   double real_f[FRAMESAMPLES_HALF];
   double imag_f[FRAMESAMPLES_HALF];
-  const WebRtc_Word16 kAveragePitchGain = 0; /* No pitch-gain for upper-band. */
+  const int16_t kAveragePitchGain = 0; /* No pitch-gain for upper-band. */
   len = 0;
 
   /* Decode & dequantize filter coefficients. */

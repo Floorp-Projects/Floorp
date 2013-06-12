@@ -15,14 +15,21 @@
  *
  */
 
-#include "webrtc/modules/audio_coding/codecs/isac/fix/source/transform.h"
-
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/fft.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/settings.h"
 
+#if (defined WEBRTC_DETECT_ARM_NEON || defined WEBRTC_ARCH_ARM_NEON)
+/* Tables are defined in ARM assembly files. */
 /* Cosine table 1 in Q14 */
-const WebRtc_Word16 kCosTab1[FRAMESAMPLES/2] = {
+extern const int16_t WebRtcIsacfix_kCosTab1[FRAMESAMPLES/2];
+/* Sine table 1 in Q14 */
+extern const int16_t WebRtcIsacfix_kSinTab1[FRAMESAMPLES/2];
+/* Sine table 2 in Q14 */
+extern const int16_t WebRtcIsacfix_kSinTab2[FRAMESAMPLES/4];
+#else
+/* Cosine table 1 in Q14 */
+static const int16_t WebRtcIsacfix_kCosTab1[FRAMESAMPLES/2] = {
   16384,  16383,  16378,  16371,  16362,  16349,  16333,  16315,  16294,  16270,
   16244,  16214,  16182,  16147,  16110,  16069,  16026,  15980,  15931,  15880,
   15826,  15769,  15709,  15647,  15582,  15515,  15444,  15371,  15296,  15218,
@@ -41,17 +48,17 @@ const WebRtc_Word16 kCosTab1[FRAMESAMPLES/2] = {
   -6270,  -6467,  -6664,  -6859,  -7053,  -7246,  -7438,  -7629,  -7818,  -8006,
   -8192,  -8377,  -8561,  -8743,  -8923,  -9102,  -9280,  -9456,  -9630,  -9803,
   -9974, -10143, -10311, -10477, -10641, -10803, -10963, -11121, -11278, -11433,
-  -11585, -11736, -11885, -12031, -12176, -12318, -12458, -12597, -12733, -12867,
-  -12998, -13128, -13255, -13380, -13502, -13623, -13741, -13856, -13970, -14081,
-  -14189, -14295, -14399, -14500, -14598, -14694, -14788, -14879, -14968, -15053,
-  -15137, -15218, -15296, -15371, -15444, -15515, -15582, -15647, -15709, -15769,
-  -15826, -15880, -15931, -15980, -16026, -16069, -16110, -16147, -16182, -16214,
-  -16244, -16270, -16294, -16315, -16333, -16349, -16362, -16371, -16378, -16383
+  -11585, -11736, -11885, -12031, -12176, -12318, -12458, -12597, -12733,
+  -12867, -12998, -13128, -13255, -13380, -13502, -13623, -13741, -13856,
+  -13970, -14081, -14189, -14295, -14399, -14500, -14598, -14694, -14788,
+  -14879, -14968, -15053, -15137, -15218, -15296, -15371, -15444, -15515,
+  -15582, -15647, -15709, -15769, -15826, -15880, -15931, -15980, -16026,
+  -16069, -16110, -16147, -16182, -16214, -16244, -16270, -16294, -16315,
+  -16333, -16349, -16362, -16371, -16378, -16383
 };
 
-
 /* Sine table 1 in Q14 */
-const WebRtc_Word16 kSinTab1[FRAMESAMPLES/2] = {
+static const int16_t WebRtcIsacfix_kSinTab1[FRAMESAMPLES/2] = {
   0,   214,   429,   643,   857,  1072,  1285,  1499,  1713,  1926,
   2139,  2351,  2563,  2775,  2986,  3196,  3406,  3616,  3825,  4033,
   4240,  4447,  4653,  4859,  5063,  5266,  5469,  5671,  5872,  6071,
@@ -79,25 +86,8 @@ const WebRtc_Word16 kSinTab1[FRAMESAMPLES/2] = {
 };
 
 
-/* Cosine table 2 in Q14 */
-const WebRtc_Word16 kCosTab2[FRAMESAMPLES/4] = {
-  107,   -322,   536,   -750,   965,  -1179,  1392,  -1606,  1819,  -2032,
-  2245,  -2457,  2669,  -2880,  3091,  -3301,  3511,  -3720,  3929,  -4137,
-  4344,  -4550,  4756,  -4961,  5165,  -5368,  5570,  -5771,  5971,  -6171,
-  6369,  -6566,  6762,  -6957,  7150,  -7342,  7534,  -7723,  7912,  -8099,
-  8285,  -8469,  8652,  -8833,  9013,  -9191,  9368,  -9543,  9717,  -9889,
-  10059, -10227, 10394, -10559, 10722, -10883, 11042, -11200, 11356, -11509,
-  11661, -11810, 11958, -12104, 12247, -12389, 12528, -12665, 12800, -12933,
-  13063, -13192, 13318, -13441, 13563, -13682, 13799, -13913, 14025, -14135,
-  14242, -14347, 14449, -14549, 14647, -14741, 14834, -14924, 15011, -15095,
-  15178, -15257, 15334, -15408, 15480, -15549, 15615, -15679, 15739, -15798,
-  15853, -15906, 15956, -16003, 16048, -16090, 16129, -16165, 16199, -16229,
-  16257, -16283, 16305, -16325, 16342, -16356, 16367, -16375, 16381, -16384
-};
-
-
 /* Sine table 2 in Q14 */
-const WebRtc_Word16 kSinTab2[FRAMESAMPLES/4] = {
+static const int16_t WebRtcIsacfix_kSinTab2[FRAMESAMPLES/4] = {
   16384, -16381, 16375, -16367, 16356, -16342, 16325, -16305, 16283, -16257,
   16229, -16199, 16165, -16129, 16090, -16048, 16003, -15956, 15906, -15853,
   15798, -15739, 15679, -15615, 15549, -15480, 15408, -15334, 15257, -15178,
@@ -111,28 +101,26 @@ const WebRtc_Word16 kSinTab2[FRAMESAMPLES/4] = {
   4137,  -3929,  3720,  -3511,  3301,  -3091,  2880,  -2669,  2457,  -2245,
   2032,  -1819,  1606,  -1392,  1179,   -965,   750,   -536,   322,   -107
 };
+#endif  // WEBRTC_DETECT_ARM_NEON || WEBRTC_ARCH_ARM_NEON
 
-// Declare a function pointer.
-Spec2Time WebRtcIsacfix_Spec2Time;
-
-void WebRtcIsacfix_Time2Spec(WebRtc_Word16 *inre1Q9,
-                             WebRtc_Word16 *inre2Q9,
-                             WebRtc_Word16 *outreQ7,
-                             WebRtc_Word16 *outimQ7)
+void WebRtcIsacfix_Time2SpecC(int16_t *inre1Q9,
+                              int16_t *inre2Q9,
+                              int16_t *outreQ7,
+                              int16_t *outimQ7)
 {
 
   int k;
-  WebRtc_Word32 tmpreQ16[FRAMESAMPLES/2], tmpimQ16[FRAMESAMPLES/2];
-  WebRtc_Word16 tmp1rQ14, tmp1iQ14;
-  WebRtc_Word32 xrQ16, xiQ16, yrQ16, yiQ16;
-  WebRtc_Word32 v1Q16, v2Q16;
-  WebRtc_Word16 factQ19, sh;
+  int32_t tmpreQ16[FRAMESAMPLES/2], tmpimQ16[FRAMESAMPLES/2];
+  int16_t tmp1rQ14, tmp1iQ14;
+  int32_t xrQ16, xiQ16, yrQ16, yiQ16;
+  int32_t v1Q16, v2Q16;
+  int16_t factQ19, sh;
 
   /* Multiply with complex exponentials and combine into one complex vector */
   factQ19 = 16921; // 0.5/sqrt(240) in Q19 is round(.5/sqrt(240)*(2^19)) = 16921
   for (k = 0; k < FRAMESAMPLES/2; k++) {
-    tmp1rQ14 = kCosTab1[k];
-    tmp1iQ14 = kSinTab1[k];
+    tmp1rQ14 = WebRtcIsacfix_kCosTab1[k];
+    tmp1iQ14 = WebRtcIsacfix_kSinTab1[k];
     xrQ16 = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(tmp1rQ14, inre1Q9[k]) + WEBRTC_SPL_MUL_16_16(tmp1iQ14, inre2Q9[k]), 7);
     xiQ16 = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(tmp1rQ14, inre2Q9[k]) - WEBRTC_SPL_MUL_16_16(tmp1iQ14, inre1Q9[k]), 7);
     tmpreQ16[k] = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_32_RSFT16(factQ19, xrQ16)+4, 3); // (Q16*Q19>>16)>>3 = Q16
@@ -153,14 +141,14 @@ void WebRtcIsacfix_Time2Spec(WebRtc_Word16 *inre1Q9,
   //"Fastest" vectors
   if (sh>=0) {
     for (k=0; k<FRAMESAMPLES/2; k++) {
-      inre1Q9[k] = (WebRtc_Word16) WEBRTC_SPL_LSHIFT_W32(tmpreQ16[k], sh); //Q(16+sh)
-      inre2Q9[k] = (WebRtc_Word16) WEBRTC_SPL_LSHIFT_W32(tmpimQ16[k], sh); //Q(16+sh)
+      inre1Q9[k] = (int16_t) WEBRTC_SPL_LSHIFT_W32(tmpreQ16[k], sh); //Q(16+sh)
+      inre2Q9[k] = (int16_t) WEBRTC_SPL_LSHIFT_W32(tmpimQ16[k], sh); //Q(16+sh)
     }
   } else {
-    WebRtc_Word32 round = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)1, -sh-1);
+    int32_t round = WEBRTC_SPL_LSHIFT_W32((int32_t)1, -sh-1);
     for (k=0; k<FRAMESAMPLES/2; k++) {
-      inre1Q9[k] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(tmpreQ16[k]+round, -sh); //Q(16+sh)
-      inre2Q9[k] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(tmpimQ16[k]+round, -sh); //Q(16+sh)
+      inre1Q9[k] = (int16_t) WEBRTC_SPL_RSHIFT_W32(tmpreQ16[k]+round, -sh); //Q(16+sh)
+      inre2Q9[k] = (int16_t) WEBRTC_SPL_RSHIFT_W32(tmpimQ16[k]+round, -sh); //Q(16+sh)
     }
   }
 
@@ -170,13 +158,13 @@ void WebRtcIsacfix_Time2Spec(WebRtc_Word16 *inre1Q9,
   //"Fastest" vectors
   if (sh>=0) {
     for (k=0; k<FRAMESAMPLES/2; k++) {
-      tmpreQ16[k] = WEBRTC_SPL_RSHIFT_W32((WebRtc_Word32)inre1Q9[k], sh); //Q(16+sh) -> Q16
-      tmpimQ16[k] = WEBRTC_SPL_RSHIFT_W32((WebRtc_Word32)inre2Q9[k], sh); //Q(16+sh) -> Q16
+      tmpreQ16[k] = WEBRTC_SPL_RSHIFT_W32((int32_t)inre1Q9[k], sh); //Q(16+sh) -> Q16
+      tmpimQ16[k] = WEBRTC_SPL_RSHIFT_W32((int32_t)inre2Q9[k], sh); //Q(16+sh) -> Q16
     }
   } else {
     for (k=0; k<FRAMESAMPLES/2; k++) {
-      tmpreQ16[k] = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)inre1Q9[k], -sh); //Q(16+sh) -> Q16
-      tmpimQ16[k] = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)inre2Q9[k], -sh); //Q(16+sh) -> Q16
+      tmpreQ16[k] = WEBRTC_SPL_LSHIFT_W32((int32_t)inre1Q9[k], -sh); //Q(16+sh) -> Q16
+      tmpimQ16[k] = WEBRTC_SPL_LSHIFT_W32((int32_t)inre2Q9[k], -sh); //Q(16+sh) -> Q16
     }
   }
 
@@ -187,40 +175,40 @@ void WebRtcIsacfix_Time2Spec(WebRtc_Word16 *inre1Q9,
     yiQ16 = -tmpreQ16[k] + tmpreQ16[FRAMESAMPLES/2 - 1 - k];
     xiQ16 = tmpimQ16[k] - tmpimQ16[FRAMESAMPLES/2 - 1 - k];
     yrQ16 = tmpimQ16[k] + tmpimQ16[FRAMESAMPLES/2 - 1 - k];
-    tmp1rQ14 = kCosTab2[k];
-    tmp1iQ14 = kSinTab2[k];
+    tmp1rQ14 = -WebRtcIsacfix_kSinTab2[FRAMESAMPLES/4 - 1 - k];
+    tmp1iQ14 = WebRtcIsacfix_kSinTab2[k];
     v1Q16 = WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, xrQ16) - WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, xiQ16);
     v2Q16 = WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, xrQ16) + WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, xiQ16);
-    outreQ7[k] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(v1Q16, 9);
-    outimQ7[k] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(v2Q16, 9);
+    outreQ7[k] = (int16_t) WEBRTC_SPL_RSHIFT_W32(v1Q16, 9);
+    outimQ7[k] = (int16_t) WEBRTC_SPL_RSHIFT_W32(v2Q16, 9);
     v1Q16 = -WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, yrQ16) - WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, yiQ16);
     v2Q16 = -WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, yrQ16) + WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, yiQ16);
-    outreQ7[FRAMESAMPLES/2 - 1 - k] = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(v1Q16, 9); //CalcLrIntQ(v1Q16, 9);
-    outimQ7[FRAMESAMPLES/2 - 1 - k] = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(v2Q16, 9); //CalcLrIntQ(v2Q16, 9);
+    outreQ7[FRAMESAMPLES/2 - 1 - k] = (int16_t)WEBRTC_SPL_RSHIFT_W32(v1Q16, 9); //CalcLrIntQ(v1Q16, 9);
+    outimQ7[FRAMESAMPLES/2 - 1 - k] = (int16_t)WEBRTC_SPL_RSHIFT_W32(v2Q16, 9); //CalcLrIntQ(v2Q16, 9);
 
   }
 }
 
 
-void WebRtcIsacfix_Spec2TimeC(WebRtc_Word16 *inreQ7, WebRtc_Word16 *inimQ7, WebRtc_Word32 *outre1Q16, WebRtc_Word32 *outre2Q16)
+void WebRtcIsacfix_Spec2TimeC(int16_t *inreQ7, int16_t *inimQ7, int32_t *outre1Q16, int32_t *outre2Q16)
 {
 
   int k;
-  WebRtc_Word16 tmp1rQ14, tmp1iQ14;
-  WebRtc_Word32 xrQ16, xiQ16, yrQ16, yiQ16;
-  WebRtc_Word32 tmpInRe, tmpInIm, tmpInRe2, tmpInIm2;
-  WebRtc_Word16 factQ11;
-  WebRtc_Word16 sh;
+  int16_t tmp1rQ14, tmp1iQ14;
+  int32_t xrQ16, xiQ16, yrQ16, yiQ16;
+  int32_t tmpInRe, tmpInIm, tmpInRe2, tmpInIm2;
+  int16_t factQ11;
+  int16_t sh;
 
   for (k = 0; k < FRAMESAMPLES/4; k++) {
     /* Move zero in time to beginning of frames */
-    tmp1rQ14 = kCosTab2[k];
-    tmp1iQ14 = kSinTab2[k];
+    tmp1rQ14 = -WebRtcIsacfix_kSinTab2[FRAMESAMPLES/4 - 1 - k];
+    tmp1iQ14 = WebRtcIsacfix_kSinTab2[k];
 
-    tmpInRe = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32) inreQ7[k], 9);  // Q7 -> Q16
-    tmpInIm = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32) inimQ7[k], 9);  // Q7 -> Q16
-    tmpInRe2 = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32) inreQ7[FRAMESAMPLES/2 - 1 - k], 9);  // Q7 -> Q16
-    tmpInIm2 = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32) inimQ7[FRAMESAMPLES/2 - 1 - k], 9);  // Q7 -> Q16
+    tmpInRe = WEBRTC_SPL_LSHIFT_W32((int32_t) inreQ7[k], 9);  // Q7 -> Q16
+    tmpInIm = WEBRTC_SPL_LSHIFT_W32((int32_t) inimQ7[k], 9);  // Q7 -> Q16
+    tmpInRe2 = WEBRTC_SPL_LSHIFT_W32((int32_t) inreQ7[FRAMESAMPLES/2 - 1 - k], 9);  // Q7 -> Q16
+    tmpInIm2 = WEBRTC_SPL_LSHIFT_W32((int32_t) inimQ7[FRAMESAMPLES/2 - 1 - k], 9);  // Q7 -> Q16
 
     xrQ16 = WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, tmpInRe) + WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, tmpInIm);
     xiQ16 = WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, tmpInIm) - WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, tmpInRe);
@@ -248,14 +236,14 @@ void WebRtcIsacfix_Spec2TimeC(WebRtc_Word16 *inreQ7, WebRtc_Word16 *inimQ7, WebR
   //"Fastest" vectors
   if (sh>=0) {
     for (k=0; k<240; k++) {
-      inreQ7[k] = (WebRtc_Word16) WEBRTC_SPL_LSHIFT_W32(outre1Q16[k], sh); //Q(16+sh)
-      inimQ7[k] = (WebRtc_Word16) WEBRTC_SPL_LSHIFT_W32(outre2Q16[k], sh); //Q(16+sh)
+      inreQ7[k] = (int16_t) WEBRTC_SPL_LSHIFT_W32(outre1Q16[k], sh); //Q(16+sh)
+      inimQ7[k] = (int16_t) WEBRTC_SPL_LSHIFT_W32(outre2Q16[k], sh); //Q(16+sh)
     }
   } else {
-    WebRtc_Word32 round = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)1, -sh-1);
+    int32_t round = WEBRTC_SPL_LSHIFT_W32((int32_t)1, -sh-1);
     for (k=0; k<240; k++) {
-      inreQ7[k] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(outre1Q16[k]+round, -sh); //Q(16+sh)
-      inimQ7[k] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(outre2Q16[k]+round, -sh); //Q(16+sh)
+      inreQ7[k] = (int16_t) WEBRTC_SPL_RSHIFT_W32(outre1Q16[k]+round, -sh); //Q(16+sh)
+      inimQ7[k] = (int16_t) WEBRTC_SPL_RSHIFT_W32(outre2Q16[k]+round, -sh); //Q(16+sh)
     }
   }
 
@@ -264,13 +252,13 @@ void WebRtcIsacfix_Spec2TimeC(WebRtc_Word16 *inreQ7, WebRtc_Word16 *inimQ7, WebR
   //"Fastest" vectors
   if (sh>=0) {
     for (k=0; k<240; k++) {
-      outre1Q16[k] = WEBRTC_SPL_RSHIFT_W32((WebRtc_Word32)inreQ7[k], sh); //Q(16+sh) -> Q16
-      outre2Q16[k] = WEBRTC_SPL_RSHIFT_W32((WebRtc_Word32)inimQ7[k], sh); //Q(16+sh) -> Q16
+      outre1Q16[k] = WEBRTC_SPL_RSHIFT_W32((int32_t)inreQ7[k], sh); //Q(16+sh) -> Q16
+      outre2Q16[k] = WEBRTC_SPL_RSHIFT_W32((int32_t)inimQ7[k], sh); //Q(16+sh) -> Q16
     }
   } else {
     for (k=0; k<240; k++) {
-      outre1Q16[k] = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)inreQ7[k], -sh); //Q(16+sh) -> Q16
-      outre2Q16[k] = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)inimQ7[k], -sh); //Q(16+sh) -> Q16
+      outre1Q16[k] = WEBRTC_SPL_LSHIFT_W32((int32_t)inreQ7[k], -sh); //Q(16+sh) -> Q16
+      outre2Q16[k] = WEBRTC_SPL_LSHIFT_W32((int32_t)inimQ7[k], -sh); //Q(16+sh) -> Q16
     }
   }
 
@@ -286,8 +274,8 @@ void WebRtcIsacfix_Spec2TimeC(WebRtc_Word16 *inreQ7, WebRtc_Word16 *inimQ7, WebR
   /* Demodulate and separate */
   factQ11 = 31727; // sqrt(240) in Q11 is round(15.49193338482967*2048) = 31727
   for (k = 0; k < FRAMESAMPLES/2; k++) {
-    tmp1rQ14 = kCosTab1[k];
-    tmp1iQ14 = kSinTab1[k];
+    tmp1rQ14 = WebRtcIsacfix_kCosTab1[k];
+    tmp1iQ14 = WebRtcIsacfix_kSinTab1[k];
     xrQ16 = WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, outre1Q16[k]) - WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, outre2Q16[k]);
     xiQ16 = WEBRTC_SPL_MUL_16_32_RSFT14(tmp1rQ14, outre2Q16[k]) + WEBRTC_SPL_MUL_16_32_RSFT14(tmp1iQ14, outre1Q16[k]);
     xrQ16 = WEBRTC_SPL_MUL_16_32_RSFT11(factQ11, xrQ16);

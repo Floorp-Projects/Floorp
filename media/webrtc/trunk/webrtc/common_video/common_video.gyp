@@ -66,6 +66,8 @@
         'plane.h',
         'plane.cc',
       ],
+      # Silence jpeg struct padding warnings.
+      'msvs_disabled_warnings': [ 4324, ],
     },
   ],  # targets
   'conditions': [
@@ -86,6 +88,10 @@
             'libyuv/libyuv_unittest.cc',
             'libyuv/scaler_unittest.cc',
             'plane_unittest.cc',
+          ],
+          # Disable warnings to enable Win64 build, issue 1323.
+          'msvs_disabled_warnings': [
+            4267,  # size_t to int truncation.
           ],
         },
       ],  # targets

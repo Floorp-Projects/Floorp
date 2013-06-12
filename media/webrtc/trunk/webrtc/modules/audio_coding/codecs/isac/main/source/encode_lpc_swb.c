@@ -44,14 +44,14 @@
  *
  *
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_RemoveLarMean(
     double* lar,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
-  WebRtc_Word16 coeffCntr;
-  WebRtc_Word16 vecCntr;
-  WebRtc_Word16 numVec;
+  int16_t coeffCntr;
+  int16_t vecCntr;
+  int16_t numVec;
   const double* meanLAR;
   switch(bandwidth)
   {
@@ -98,18 +98,18 @@ WebRtcIsac_RemoveLarMean(
  * Output:
  *      -out                : decorrelated LAR vectors.
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_DecorrelateIntraVec(
     const double* data,
     double*       out,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
   const double* ptrData;
   const double* ptrRow;
-  WebRtc_Word16 rowCntr;
-  WebRtc_Word16 colCntr;
-  WebRtc_Word16 larVecCntr;
-  WebRtc_Word16 numVec;
+  int16_t rowCntr;
+  int16_t colCntr;
+  int16_t larVecCntr;
+  int16_t numVec;
   const double* decorrMat;
   switch(bandwidth)
   {
@@ -172,17 +172,17 @@ WebRtcIsac_DecorrelateIntraVec(
  * Output:
  *      -out                : decorrelated LAR vectors.
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_DecorrelateInterVec(
     const double* data,
     double* out,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
-  WebRtc_Word16 coeffCntr;
-  WebRtc_Word16 rowCntr;
-  WebRtc_Word16 colCntr;
+  int16_t coeffCntr;
+  int16_t rowCntr;
+  int16_t colCntr;
   const double* decorrMat;
-  WebRtc_Word16 interVecDim;
+  int16_t interVecDim;
 
   switch(bandwidth)
   {
@@ -245,14 +245,14 @@ double
 WebRtcIsac_QuantizeUncorrLar(
     double* data,
     int* recIdx,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
-  WebRtc_Word16 cntr;
-  WebRtc_Word32 idx;
-  WebRtc_Word16 interVecDim;
+  int16_t cntr;
+  int32_t idx;
+  int16_t interVecDim;
   const double* leftRecPoint;
   double quantizationStepSize;
-  const WebRtc_Word16* numQuantCell;
+  const int16_t* numQuantCell;
   switch(bandwidth)
   {
     case isac12kHz:
@@ -280,7 +280,7 @@ WebRtcIsac_QuantizeUncorrLar(
   //
   for(cntr = 0; cntr < UB_LPC_ORDER * interVecDim; cntr++)
   {
-    idx = (WebRtc_Word32)floor((*data - leftRecPoint[cntr]) /
+    idx = (int32_t)floor((*data - leftRecPoint[cntr]) /
                                quantizationStepSize + 0.5);
     if(idx < 0)
     {
@@ -311,14 +311,14 @@ WebRtcIsac_QuantizeUncorrLar(
  * Output:
  *      -out                : pointer to quantized values.
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_DequantizeLpcParam(
     const int* idx,
     double*    out,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
-  WebRtc_Word16 cntr;
-  WebRtc_Word16 interVecDim;
+  int16_t cntr;
+  int16_t interVecDim;
   const double* leftRecPoint;
   double quantizationStepSize;
 
@@ -367,16 +367,16 @@ WebRtcIsac_DequantizeLpcParam(
  * Output:
  *      -out                : correlated parametrs.
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_CorrelateIntraVec(
     const double* data,
     double*       out,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
-  WebRtc_Word16 vecCntr;
-  WebRtc_Word16 rowCntr;
-  WebRtc_Word16 colCntr;
-  WebRtc_Word16 numVec;
+  int16_t vecCntr;
+  int16_t rowCntr;
+  int16_t colCntr;
+  int16_t numVec;
   const double* ptrData;
   const double* intraVecDecorrMat;
 
@@ -430,16 +430,16 @@ WebRtcIsac_CorrelateIntraVec(
  * Output:
  *      -out                : correlated parametrs.
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_CorrelateInterVec(
     const double* data,
     double*       out,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
-  WebRtc_Word16 coeffCntr;
-  WebRtc_Word16 rowCntr;
-  WebRtc_Word16 colCntr;
-  WebRtc_Word16 interVecDim;
+  int16_t coeffCntr;
+  int16_t rowCntr;
+  int16_t colCntr;
+  int16_t interVecDim;
   double myVec[UB16_LPC_VEC_PER_FRAME];
   const double* interVecDecorrMat;
 
@@ -495,14 +495,14 @@ WebRtcIsac_CorrelateInterVec(
  * Output:
  *      -data               : pointer to LARs.
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_AddLarMean(
     double* data,
-    WebRtc_Word16 bandwidth)
+    int16_t bandwidth)
 {
-  WebRtc_Word16 coeffCntr;
-  WebRtc_Word16 vecCntr;
-  WebRtc_Word16 numVec;
+  int16_t coeffCntr;
+  int16_t vecCntr;
+  int16_t numVec;
   const double* meanLAR;
 
   switch(bandwidth)
@@ -544,11 +544,11 @@ WebRtcIsac_AddLarMean(
  * Output:
  *      -lpcGain            : mean-removed in log domain.
  */
-WebRtc_Word16
+int16_t
 WebRtcIsac_ToLogDomainRemoveMean(
     double* data)
 {
-  WebRtc_Word16 coeffCntr;
+  int16_t coeffCntr;
   for(coeffCntr = 0; coeffCntr < UB_LPC_GAIN_DIM; coeffCntr++)
   {
     data[coeffCntr] = log(data[coeffCntr]) - WebRtcIsac_kMeanLpcGain;
@@ -569,12 +569,12 @@ WebRtcIsac_ToLogDomainRemoveMean(
  * Output:
  *      -out                : decorrelated parameters.
  */
-WebRtc_Word16 WebRtcIsac_DecorrelateLPGain(
+int16_t WebRtcIsac_DecorrelateLPGain(
     const double* data,
     double* out)
 {
-  WebRtc_Word16 rowCntr;
-  WebRtc_Word16 colCntr;
+  int16_t rowCntr;
+  int16_t colCntr;
 
   for(colCntr = 0; colCntr < UB_LPC_GAIN_DIM; colCntr++)
   {
@@ -604,7 +604,7 @@ double WebRtcIsac_QuantizeLpcGain(
     double* data,
     int*    idx)
 {
-  WebRtc_Word16 coeffCntr;
+  int16_t coeffCntr;
   for(coeffCntr = 0; coeffCntr < UB_LPC_GAIN_DIM; coeffCntr++)
   {
     *idx = (int)floor((*data - WebRtcIsac_kLeftRecPointLpcGain[coeffCntr]) /
@@ -638,11 +638,11 @@ double WebRtcIsac_QuantizeLpcGain(
  * Output:
  *      -lpcGains           : quantized values of the given parametes.
  */
-WebRtc_Word16 WebRtcIsac_DequantizeLpcGain(
+int16_t WebRtcIsac_DequantizeLpcGain(
     const int* idx,
     double*    out)
 {
-  WebRtc_Word16 coeffCntr;
+  int16_t coeffCntr;
   for(coeffCntr = 0; coeffCntr < UB_LPC_GAIN_DIM; coeffCntr++)
   {
     *out = WebRtcIsac_kLeftRecPointLpcGain[coeffCntr] + *idx *
@@ -664,12 +664,12 @@ WebRtc_Word16 WebRtcIsac_DequantizeLpcGain(
  * Output:
  *      -out                : correlated parameters.
  */
-WebRtc_Word16 WebRtcIsac_CorrelateLpcGain(
+int16_t WebRtcIsac_CorrelateLpcGain(
     const double* data,
     double* out)
 {
-  WebRtc_Word16 rowCntr;
-  WebRtc_Word16 colCntr;
+  int16_t rowCntr;
+  int16_t colCntr;
 
   for(rowCntr = 0; rowCntr < UB_LPC_GAIN_DIM; rowCntr++)
   {
@@ -696,10 +696,10 @@ WebRtc_Word16 WebRtcIsac_CorrelateLpcGain(
  * Output:
  *      -lpcGain            : LPC gain in normal domain.
  */
-WebRtc_Word16 WebRtcIsac_AddMeanToLinearDomain(
+int16_t WebRtcIsac_AddMeanToLinearDomain(
     double* lpcGains)
 {
-  WebRtc_Word16 coeffCntr;
+  int16_t coeffCntr;
   for(coeffCntr = 0; coeffCntr < UB_LPC_GAIN_DIM; coeffCntr++)
   {
     lpcGains[coeffCntr] = exp(lpcGains[coeffCntr] + WebRtcIsac_kMeanLpcGain);

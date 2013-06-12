@@ -15,63 +15,93 @@
  * General declarations used through out VCM offline tests.
  */
 
-#include <string.h>
-#include <fstream>
-#include <cstdlib>
+#include <string>
 
-#include "module_common_types.h"
-#include "testsupport/fileutils.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/constructor_magic.h"
+
+enum { kMaxNackListSize = 250 };
+enum { kMaxPacketAgeToNack = 450 };
 
 // Class used for passing command line arguments to tests
-class CmdArgs
-{
+class CmdArgs {
  public:
-  CmdArgs()
-      : codecName("VP8"),
-        codecType(webrtc::kVideoCodecVP8),
-        width(352),
-        height(288),
-        bitRate(500),
-        frameRate(30),
-        packetLoss(0),
-        rtt(0),
-        protectionMode(0),
-        camaEnable(0),
-        inputFile(webrtc::test::ProjectRootPath() +
-                  "/resources/foreman_cif.yuv"),
-        outputFile(webrtc::test::OutputPath() +
-                   "video_coding_test_output_352x288.yuv"),
-        fv_outputfile(webrtc::test::OutputPath() + "features.txt"),
-        testNum(0) {}
-     std::string codecName;
-     webrtc::VideoCodecType codecType;
-     int width;
-     int height;
-     int bitRate;
-     int frameRate;
-     int packetLoss;
-     int rtt;
-     int protectionMode;
-     int camaEnable;
-     std::string inputFile;
-     std::string outputFile;
-     std::string fv_outputfile;
-     int testNum;
+  CmdArgs();
+
+  std::string codecName;
+  webrtc::VideoCodecType codecType;
+  int width;
+  int height;
+  int bitRate;
+  int frameRate;
+  int packetLoss;
+  int rtt;
+  int protectionMode;
+  int camaEnable;
+  std::string inputFile;
+  std::string outputFile;
+  std::string fv_outputfile;
+  int testNum;
 };
 
-// forward declaration
 int MTRxTxTest(CmdArgs& args);
 double NormalDist(double mean, double stdDev);
 
 struct RtpPacket {
-  WebRtc_Word8 data[1650]; // max packet size
-  WebRtc_Word32 length;
-  WebRtc_Word64 receiveTime;
+  int8_t data[1650]; // max packet size
+  int32_t length;
+  int64_t receiveTime;
 };
 
+class NullEvent : public webrtc::EventWrapper {
+ public:
+  virtual ~NullEvent() {}
+
+  virtual bool Set() { return true; }
+
+  virtual bool Reset() { return true; }
+
+  virtual webrtc::EventTypeWrapper Wait(unsigned long max_time) {
+    return webrtc::kEventTimeout;
+  }
+
+  virtual bool StartTimer(bool periodic, unsigned long time) { return true; }
+
+  virtual bool StopTimer() { return true; }
+};
+
+class NullEventFactory : public webrtc::EventFactory {
+ public:
+  virtual ~NullEventFactory() {}
+
+  virtual webrtc::EventWrapper* CreateEvent() {
+    return new NullEvent;
+  }
+};
+
+class FileOutputFrameReceiver : public webrtc::VCMReceiveCallback {
+ public:
+  FileOutputFrameReceiver(const std::string& base_out_filename, uint32_t ssrc);
+  virtual ~FileOutputFrameReceiver();
+
+  // VCMReceiveCallback
+  virtual WebRtc_Word32 FrameToRender(webrtc::I420VideoFrame& video_frame);
+
+ private:
+  std::string out_filename_;
+  uint32_t ssrc_;
+  FILE* out_file_;
+  FILE* timing_file_;
+  int width_;
+  int height_;
+  int count_;
+
+  DISALLOW_IMPLICIT_CONSTRUCTORS(FileOutputFrameReceiver);
+};
 
 // Codec type conversion
-webrtc::RTPVideoCodecTypes
-ConvertCodecType(const char* plname);
+webrtc::RTPVideoCodecTypes ConvertCodecType(const char* plname);
 
 #endif

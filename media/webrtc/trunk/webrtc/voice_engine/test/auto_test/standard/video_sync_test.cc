@@ -31,14 +31,17 @@ class VideoSyncTest : public AfterStreamingFixture {
 
     std::vector<int> all_delay_estimates;
     for (int second = 0; second < 15; second++) {
-      int delay_estimate = 0;
-      EXPECT_EQ(0, voe_vsync_->GetDelayEstimate(channel_, delay_estimate));
+      int jitter_buffer_delay_ms = 0;
+      int playout_buffer_delay_ms = 0;
+      EXPECT_EQ(0, voe_vsync_->GetDelayEstimate(channel_,
+                                                &jitter_buffer_delay_ms,
+                                                &playout_buffer_delay_ms));
 
-      EXPECT_GT(delay_estimate, min_estimate) <<
+      EXPECT_GT(jitter_buffer_delay_ms, min_estimate) <<
           "The delay estimate can not conceivably get lower than " <<
           min_estimate << " ms, it's unrealistic.";
 
-      all_delay_estimates.push_back(delay_estimate);
+      all_delay_estimates.push_back(jitter_buffer_delay_ms);
       Sleep(1000);
     }
 
@@ -67,9 +70,10 @@ class VideoSyncTest : public AfterStreamingFixture {
   }
 };
 
-TEST_F(VideoSyncTest, CanGetPlayoutTimestampWhilePlayingWithoutSettingItFirst) {
+TEST_F(VideoSyncTest,
+       CanNotGetPlayoutTimestampWhilePlayingWithoutSettingItFirst) {
   unsigned int ignored;
-  EXPECT_EQ(0, voe_vsync_->GetPlayoutTimestamp(channel_, ignored));
+  EXPECT_EQ(-1, voe_vsync_->GetPlayoutTimestamp(channel_, ignored));
 }
 
 TEST_F(VideoSyncTest, CannotSetInitTimestampWhilePlaying) {

@@ -16,7 +16,7 @@ namespace webrtc {
 
 // Constructor. Optional parameter specifies maximum number of
 // coexisting timers.
-VCMTimestampMap::VCMTimestampMap(WebRtc_Word32 length):
+VCMTimestampMap::VCMTimestampMap(int32_t length):
     _nextAddIx(0),
     _nextPopIx(0)
 {
@@ -44,8 +44,8 @@ VCMTimestampMap::Reset()
     _nextPopIx = 0;
 }
 
-WebRtc_Word32
-VCMTimestampMap::Add(WebRtc_UWord32 timestamp, void* data)
+int32_t
+VCMTimestampMap::Add(uint32_t timestamp, void* data)
 {
     _map[_nextAddIx].timestamp = timestamp;
     _map[_nextAddIx].data = data;
@@ -61,7 +61,7 @@ VCMTimestampMap::Add(WebRtc_UWord32 timestamp, void* data)
 }
 
 void*
-VCMTimestampMap::Pop(WebRtc_UWord32 timestamp)
+VCMTimestampMap::Pop(uint32_t timestamp)
 {
     while (!IsEmpty())
     {

@@ -23,6 +23,7 @@
 #include "modules/video_coding/main/source/nack_fec_tables.h"
 
 namespace webrtc {
+namespace media_optimization {
 
 VCMProtectionMethod::VCMProtectionMethod():
 _effectivePacketLoss(0),
@@ -97,12 +98,12 @@ VCMNackFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters)
     else if (_highRttNackMs == -1 || parameters->rtt < _highRttNackMs)
     {
         // TODO(mikhal): Disabling adjustment temporarily.
-        // WebRtc_UWord16 rttIndex = (WebRtc_UWord16) parameters->rtt;
+        // uint16_t rttIndex = (uint16_t) parameters->rtt;
         float adjustRtt = 1.0f;// (float)VCMNackFecTable[rttIndex] / 100.0f;
 
         // Adjust FEC with NACK on (for delta frame only)
         // table depends on RTT relative to rttMax (NACK Threshold)
-        _protectionFactorD = static_cast<WebRtc_UWord8>
+        _protectionFactorD = static_cast<uint8_t>
                             (adjustRtt *
                              static_cast<float>(_protectionFactorD));
         // update FEC rates after applying adjustment
@@ -252,40 +253,40 @@ VCMFecMethod::~VCMFecMethod()
     //
 }
 
-WebRtc_UWord8
-VCMFecMethod::BoostCodeRateKey(WebRtc_UWord8 packetFrameDelta,
-                               WebRtc_UWord8 packetFrameKey) const
+uint8_t
+VCMFecMethod::BoostCodeRateKey(uint8_t packetFrameDelta,
+                               uint8_t packetFrameKey) const
 {
-    WebRtc_UWord8 boostRateKey = 2;
+    uint8_t boostRateKey = 2;
     // Default: ratio scales the FEC protection up for I frames
-    WebRtc_UWord8 ratio = 1;
+    uint8_t ratio = 1;
 
     if (packetFrameDelta > 0)
     {
-        ratio = (WebRtc_Word8) (packetFrameKey / packetFrameDelta);
+        ratio = (int8_t) (packetFrameKey / packetFrameDelta);
     }
     ratio = VCM_MAX(boostRateKey, ratio);
 
     return ratio;
 }
 
-WebRtc_UWord8
-VCMFecMethod::ConvertFECRate(WebRtc_UWord8 codeRateRTP) const
+uint8_t
+VCMFecMethod::ConvertFECRate(uint8_t codeRateRTP) const
 {
-    return static_cast<WebRtc_UWord8> (VCM_MIN(255,(0.5 + 255.0 * codeRateRTP /
+    return static_cast<uint8_t> (VCM_MIN(255,(0.5 + 255.0 * codeRateRTP /
                                       (float)(255 - codeRateRTP))));
 }
 
 // Update FEC with protectionFactorD
 void
-VCMFecMethod::UpdateProtectionFactorD(WebRtc_UWord8 protectionFactorD)
+VCMFecMethod::UpdateProtectionFactorD(uint8_t protectionFactorD)
 {
     _protectionFactorD = protectionFactorD;
 }
 
 // Update FEC with protectionFactorK
 void
-VCMFecMethod::UpdateProtectionFactorK(WebRtc_UWord8 protectionFactorK)
+VCMFecMethod::UpdateProtectionFactorK(uint8_t protectionFactorK)
 {
     _protectionFactorK = protectionFactorK;
 }
@@ -298,21 +299,23 @@ VCMFecMethod::AvgRecoveryFEC(const VCMProtectionParameters* parameters) const
 {
     // Total (avg) bits available per frame: total rate over actual/sent frame
     // rate units are kbits/frame
-    const WebRtc_UWord16 bitRatePerFrame = static_cast<WebRtc_UWord16>
+    const uint16_t bitRatePerFrame = static_cast<uint16_t>
                         (parameters->bitRate / (parameters->frameRate));
 
     // Total (average) number of packets per frame (source and fec):
-    const WebRtc_UWord8 avgTotPackets = 1 + static_cast<WebRtc_UWord8>
+    const uint8_t avgTotPackets = 1 + static_cast<uint8_t>
                         (static_cast<float> (bitRatePerFrame * 1000.0) /
                          static_cast<float> (8.0 * _maxPayloadSize) + 0.5);
 
     const float protectionFactor = static_cast<float>(_protectionFactorD) /
                                                       255.0;
 
-    WebRtc_UWord8 fecPacketsPerFrame = static_cast<WebRtc_UWord8>
-                                      (0.5 + protectionFactor * avgTotPackets);
+    // Round down for estimated #FEC packets/frame, to keep
+    // |fecPacketsPerFrame| <= |sourcePacketsPerFrame|.
+    uint8_t fecPacketsPerFrame = static_cast<uint8_t>
+                                      (protectionFactor * avgTotPackets);
 
-    WebRtc_UWord8 sourcePacketsPerFrame = avgTotPackets - fecPacketsPerFrame;
+    uint8_t sourcePacketsPerFrame = avgTotPackets - fecPacketsPerFrame;
 
     if ( (fecPacketsPerFrame == 0) || (sourcePacketsPerFrame == 0) )
     {
@@ -333,18 +336,18 @@ VCMFecMethod::AvgRecoveryFEC(const VCMProtectionParameters* parameters) const
     }
 
     // Code index for tables: up to (kMaxNumPackets * kMaxNumPackets)
-    WebRtc_UWord16 codeIndexTable[kMaxNumPackets * kMaxNumPackets];
-    WebRtc_UWord16 k = 0;
-    for (WebRtc_UWord8 i = 1; i <= kMaxNumPackets; i++)
+    uint16_t codeIndexTable[kMaxNumPackets * kMaxNumPackets];
+    uint16_t k = 0;
+    for (uint8_t i = 1; i <= kMaxNumPackets; i++)
     {
-        for (WebRtc_UWord8 j = 1; j <= i; j++)
+        for (uint8_t j = 1; j <= i; j++)
         {
             codeIndexTable[(j - 1) * kMaxNumPackets + i - 1] = k;
             k += 1;
         }
     }
 
-    WebRtc_UWord8 lossRate = static_cast<WebRtc_UWord8> (255.0 *
+    uint8_t lossRate = static_cast<uint8_t> (255.0 *
                              parameters->lossPr + 0.5f);
 
     // Constrain lossRate to 50%: tables defined up to 50%
@@ -353,10 +356,10 @@ VCMFecMethod::AvgRecoveryFEC(const VCMProtectionParameters* parameters) const
         lossRate = kPacketLossMax - 1;
     }
 
-    const WebRtc_UWord16 codeIndex = (fecPacketsPerFrame - 1) * kMaxNumPackets +
+    const uint16_t codeIndex = (fecPacketsPerFrame - 1) * kMaxNumPackets +
                                      (sourcePacketsPerFrame - 1);
 
-    const WebRtc_UWord16 indexTable = codeIndexTable[codeIndex] * kPacketLossMax +
+    const uint16_t indexTable = codeIndexTable[codeIndex] * kPacketLossMax +
                                       lossRate;
 
     // Check on table index
@@ -372,7 +375,7 @@ VCMFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters)
     // FEC PROTECTION SETTINGS: varies with packet loss and bitrate
 
     // No protection if (filtered) packetLoss is 0
-    WebRtc_UWord8 packetLoss = (WebRtc_UWord8) (255 * parameters->lossPr);
+    uint8_t packetLoss = (uint8_t) (255 * parameters->lossPr);
     if (packetLoss == 0)
     {
         _protectionFactorK = 0;
@@ -384,20 +387,20 @@ VCMFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters)
     // first partition size, thresholds, table pars, spatial resoln fac.
 
     // First partition protection: ~ 20%
-    WebRtc_UWord8 firstPartitionProt = (WebRtc_UWord8) (255 * 0.20);
+    uint8_t firstPartitionProt = (uint8_t) (255 * 0.20);
 
     // Minimum protection level needed to generate one FEC packet for one
     // source packet/frame (in RTP sender)
-    WebRtc_UWord8 minProtLevelFec = 85;
+    uint8_t minProtLevelFec = 85;
 
     // Threshold on packetLoss and bitRrate/frameRate (=average #packets),
     // above which we allocate protection to cover at least first partition.
-    WebRtc_UWord8 lossThr = 0;
-    WebRtc_UWord8 packetNumThr = 1;
+    uint8_t lossThr = 0;
+    uint8_t packetNumThr = 1;
 
     // Parameters for range of rate index of table.
-    const WebRtc_UWord8 ratePar1 = 5;
-    const WebRtc_UWord8 ratePar2 = 49;
+    const uint8_t ratePar1 = 5;
+    const uint8_t ratePar2 = 49;
 
     // Spatial resolution size, relative to a reference size.
     float spatialSizeToRef = static_cast<float>
@@ -412,21 +415,21 @@ VCMFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters)
 
 
     // Average number of packets per frame (source and fec):
-    const WebRtc_UWord8 avgTotPackets = 1 + (WebRtc_UWord8)
+    const uint8_t avgTotPackets = 1 + (uint8_t)
                                         ((float) bitRatePerFrame * 1000.0
                                        / (float) (8.0 * _maxPayloadSize) + 0.5);
 
     // FEC rate parameters: for P and I frame
-    WebRtc_UWord8 codeRateDelta = 0;
-    WebRtc_UWord8 codeRateKey = 0;
+    uint8_t codeRateDelta = 0;
+    uint8_t codeRateKey = 0;
 
     // Get index for table: the FEC protection depends on an effective rate.
     // The range on the rate index corresponds to rates (bps)
     // from ~200k to ~8000k, for 30fps
-    const WebRtc_UWord16 effRateFecTable = static_cast<WebRtc_UWord16>
+    const uint16_t effRateFecTable = static_cast<uint16_t>
                                            (resolnFac * bitRatePerFrame);
-    WebRtc_UWord8 rateIndexTable =
-        (WebRtc_UWord8) VCM_MAX(VCM_MIN((effRateFecTable - ratePar1) /
+    uint8_t rateIndexTable =
+        (uint8_t) VCM_MAX(VCM_MIN((effRateFecTable - ratePar1) /
                                          ratePar1, ratePar2), 0);
 
     // Restrict packet loss range to 50:
@@ -435,7 +438,7 @@ VCMFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters)
     {
         packetLoss = kPacketLossMax - 1;
     }
-    WebRtc_UWord16 indexTable = rateIndexTable * kPacketLossMax + packetLoss;
+    uint16_t indexTable = rateIndexTable * kPacketLossMax + packetLoss;
 
     // Check on table index
     assert(indexTable < kSizeCodeRateXORTable);
@@ -470,23 +473,23 @@ VCMFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters)
                                                    packetLoss);
     }
 
-    codeRateDelta = static_cast<WebRtc_UWord8>(codeRateDelta * adjustFec);
+    codeRateDelta = static_cast<uint8_t>(codeRateDelta * adjustFec);
 
     // For Key frame:
     // Effectively at a higher rate, so we scale/boost the rate
     // The boost factor may depend on several factors: ratio of packet
     // number of I to P frames, how much protection placed on P frames, etc.
-    const WebRtc_UWord8 packetFrameDelta = (WebRtc_UWord8)
+    const uint8_t packetFrameDelta = (uint8_t)
                                            (0.5 + parameters->packetsPerFrame);
-    const WebRtc_UWord8 packetFrameKey = (WebRtc_UWord8)
+    const uint8_t packetFrameKey = (uint8_t)
                                          (0.5 + parameters->packetsPerFrameKey);
-    const WebRtc_UWord8 boostKey = BoostCodeRateKey(packetFrameDelta,
+    const uint8_t boostKey = BoostCodeRateKey(packetFrameDelta,
                                                     packetFrameKey);
 
-    rateIndexTable = (WebRtc_UWord8) VCM_MAX(VCM_MIN(
+    rateIndexTable = (uint8_t) VCM_MAX(VCM_MIN(
                       1 + (boostKey * effRateFecTable - ratePar1) /
                       ratePar1,ratePar2),0);
-    WebRtc_UWord16 indexTableKey = rateIndexTable * kPacketLossMax + packetLoss;
+    uint16_t indexTableKey = rateIndexTable * kPacketLossMax + packetLoss;
 
     indexTableKey = VCM_MIN(indexTableKey, kSizeCodeRateXORTable);
 
@@ -505,7 +508,7 @@ VCMFecMethod::ProtectionFactor(const VCMProtectionParameters* parameters)
 
     // Make sure I frame protection is at least larger than P frame protection,
     // and at least as high as filtered packet loss.
-    codeRateKey = static_cast<WebRtc_UWord8> (VCM_MAX(packetLoss,
+    codeRateKey = static_cast<uint8_t> (VCM_MAX(packetLoss,
             VCM_MAX(boostKeyProt, codeRateKey)));
 
     // Check limit on amount of protection for I frame: 50% is max.
@@ -585,7 +588,7 @@ VCMFecMethod::EffectivePacketLoss(const VCMProtectionParameters* parameters)
     // note: received/input packet loss may be filtered based on FilteredLoss
 
     // The packet loss:
-    WebRtc_UWord8 packetLoss = (WebRtc_UWord8) (255 * parameters->lossPr);
+    uint8_t packetLoss = (uint8_t) (255 * parameters->lossPr);
 
     float avgFecRecov = AvgRecoveryFEC(parameters);
 
@@ -734,7 +737,7 @@ VCMLossProtectionLogic::RequiredBitRate() const
 }
 
 void
-VCMLossProtectionLogic::UpdateRtt(WebRtc_UWord32 rtt)
+VCMLossProtectionLogic::UpdateRtt(uint32_t rtt)
 {
     _rtt = rtt;
 }
@@ -746,8 +749,8 @@ VCMLossProtectionLogic::UpdateResidualPacketLoss(float residualPacketLoss)
 }
 
 void
-VCMLossProtectionLogic::UpdateMaxLossHistory(WebRtc_UWord8 lossPr255,
-                                             WebRtc_Word64 now)
+VCMLossProtectionLogic::UpdateMaxLossHistory(uint8_t lossPr255,
+                                             int64_t now)
 {
     if (_lossPrHistory[0].timeMs >= 0 &&
         now - _lossPrHistory[0].timeMs < kLossPrShortFilterWinMs)
@@ -768,7 +771,7 @@ VCMLossProtectionLogic::UpdateMaxLossHistory(WebRtc_UWord8 lossPr255,
         else
         {
             // Shift
-            for (WebRtc_Word32 i = (kLossPrHistorySize - 2); i >= 0; i--)
+            for (int32_t i = (kLossPrHistorySize - 2); i >= 0; i--)
             {
                 _lossPrHistory[i + 1].lossPr255 = _lossPrHistory[i].lossPr255;
                 _lossPrHistory[i + 1].timeMs = _lossPrHistory[i].timeMs;
@@ -785,15 +788,15 @@ VCMLossProtectionLogic::UpdateMaxLossHistory(WebRtc_UWord8 lossPr255,
     }
 }
 
-WebRtc_UWord8
-VCMLossProtectionLogic::MaxFilteredLossPr(WebRtc_Word64 nowMs) const
+uint8_t
+VCMLossProtectionLogic::MaxFilteredLossPr(int64_t nowMs) const
 {
-    WebRtc_UWord8 maxFound = _shortMaxLossPr255;
+    uint8_t maxFound = _shortMaxLossPr255;
     if (_lossPrHistory[0].timeMs == -1)
     {
         return maxFound;
     }
-    for (WebRtc_Word32 i = 0; i < kLossPrHistorySize; i++)
+    for (int32_t i = 0; i < kLossPrHistorySize; i++)
     {
         if (_lossPrHistory[i].timeMs == -1)
         {
@@ -814,10 +817,10 @@ VCMLossProtectionLogic::MaxFilteredLossPr(WebRtc_Word64 nowMs) const
     return maxFound;
 }
 
-WebRtc_UWord8 VCMLossProtectionLogic::FilteredLoss(
+uint8_t VCMLossProtectionLogic::FilteredLoss(
     int64_t nowMs,
     FilterPacketLossMode filter_mode,
-    WebRtc_UWord8 lossPr255) {
+    uint8_t lossPr255) {
 
   // Update the max window filter.
   UpdateMaxLossHistory(lossPr255, nowMs);
@@ -828,13 +831,13 @@ WebRtc_UWord8 VCMLossProtectionLogic::FilteredLoss(
   _lastPrUpdateT = nowMs;
 
   // Filtered loss: default is received loss (no filtering).
-  WebRtc_UWord8 filtered_loss = lossPr255;
+  uint8_t filtered_loss = lossPr255;
 
   switch (filter_mode) {
     case kNoFilter:
       break;
     case kAvgFilter:
-      filtered_loss = static_cast<WebRtc_UWord8> (_lossPr255.Value() + 0.5);
+      filtered_loss = static_cast<uint8_t> (_lossPr255.Value() + 0.5);
       break;
     case kMaxFilter:
       filtered_loss = MaxFilteredLossPr(nowMs);
@@ -845,7 +848,7 @@ WebRtc_UWord8 VCMLossProtectionLogic::FilteredLoss(
 }
 
 void
-VCMLossProtectionLogic::UpdateFilteredLossPr(WebRtc_UWord8 packetLossEnc)
+VCMLossProtectionLogic::UpdateFilteredLossPr(uint8_t packetLossEnc)
 {
     _lossPr = (float) packetLossEnc / (float) 255.0;
 }
@@ -879,8 +882,8 @@ VCMLossProtectionLogic::UpdateKeyFrameSize(float keyFrameSize)
 }
 
 void
-VCMLossProtectionLogic::UpdateFrameSize(WebRtc_UWord16 width,
-                                        WebRtc_UWord16 height)
+VCMLossProtectionLogic::UpdateFrameSize(uint16_t width,
+                                        uint16_t height)
 {
     _codecWidth = width;
     _codecHeight = height;
@@ -934,7 +937,7 @@ VCMLossProtectionLogic::Reset(int64_t nowMs)
     _lossPr255.Reset(0.9999f);
     _packetsPerFrame.Reset(0.9999f);
     _fecRateDelta = _fecRateKey = 0;
-    for (WebRtc_Word32 i = 0; i < kLossPrHistorySize; i++)
+    for (int32_t i = 0; i < kLossPrHistorySize; i++)
     {
         _lossPrHistory[i].lossPr255 = 0;
         _lossPrHistory[i].timeMs = -1;
@@ -950,4 +953,5 @@ VCMLossProtectionLogic::Release()
     _selectedMethod = NULL;
 }
 
-}
+}  // namespace media_optimization
+}  // namespace webrtc

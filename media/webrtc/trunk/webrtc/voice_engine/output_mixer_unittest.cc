@@ -25,8 +25,8 @@ class OutputMixerTest : public ::testing::Test {
     src_frame_.sample_rate_hz_ = 16000;
     src_frame_.samples_per_channel_ = src_frame_.sample_rate_hz_ / 100;
     src_frame_.num_channels_ = 1;
-    dst_frame_ = src_frame_;
-    golden_frame_ = src_frame_;
+    dst_frame_.CopyFrom(src_frame_);
+    golden_frame_.CopyFrom(src_frame_);
   }
 
   void RunResampleTest(int src_channels, int src_sample_rate_hz,

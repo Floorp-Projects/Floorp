@@ -18,9 +18,9 @@ namespace webrtc
 
 #define MASK_32_BITS(x) (0xFFFFFFFF & (x))
 
-inline WebRtc_UWord32 MaskWord64ToUWord32(WebRtc_Word64 w64)
+inline uint32_t MaskWord64ToUWord32(int64_t w64)
 {
-    return static_cast<WebRtc_UWord32>(MASK_32_BITS(w64));
+    return static_cast<uint32_t>(MASK_32_BITS(w64));
 }
 
 #define VCM_MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -48,9 +48,9 @@ inline WebRtc_UWord32 MaskWord64ToUWord32(WebRtc_Word64 w64)
 
 #define VCM_NO_RECEIVER_ID 0
 
-inline WebRtc_Word32 VCMId(const WebRtc_Word32 vcmId, const WebRtc_Word32 receiverId = 0)
+inline int32_t VCMId(const int32_t vcmId, const int32_t receiverId = 0)
 {
-    return static_cast<WebRtc_Word32>((vcmId << 16) + receiverId);
+    return static_cast<int32_t>((vcmId << 16) + receiverId);
 }
 
 } // namespace webrtc

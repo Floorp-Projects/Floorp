@@ -49,12 +49,12 @@
 #define TRUE (!FALSE)
 #endif
 
-static __inline WebRtc_Word16 saturate(WebRtc_Word32 amp)
+static __inline int16_t saturate(int32_t amp)
 {
-    WebRtc_Word16 amp16;
+    int16_t amp16;
 
     /* Hopefully this is optimised for the common case - not clipping */
-    amp16 = (WebRtc_Word16) amp;
+    amp16 = (int16_t) amp;
     if (amp == amp16)
         return amp16;
     if (amp > WEBRTC_INT16_MAX)
@@ -190,8 +190,8 @@ int WebRtc_g722_decode_release(g722_decode_state_t *s)
 }
 /*- End of function --------------------------------------------------------*/
 
-int WebRtc_g722_decode(g722_decode_state_t *s, WebRtc_Word16 amp[],
-                       const WebRtc_UWord8 g722_data[], int len)
+int WebRtc_g722_decode(g722_decode_state_t *s, int16_t amp[],
+                       const uint8_t g722_data[], int len)
 {
     static const int wl[8] = {-60, -30, 58, 172, 334, 538, 1198, 3042 };
     static const int rl42[16] = {0, 7, 6, 5, 4, 3, 2, 1,
@@ -372,14 +372,14 @@ int WebRtc_g722_decode(g722_decode_state_t *s, WebRtc_Word16 amp[],
 
         if (s->itu_test_mode)
         {
-            amp[outlen++] = (WebRtc_Word16) (rlow << 1);
-            amp[outlen++] = (WebRtc_Word16) (rhigh << 1);
+            amp[outlen++] = (int16_t) (rlow << 1);
+            amp[outlen++] = (int16_t) (rhigh << 1);
         }
         else
         {
             if (s->eight_k)
             {
-                amp[outlen++] = (WebRtc_Word16) (rlow << 1);
+                amp[outlen++] = (int16_t) (rlow << 1);
             }
             else
             {

@@ -24,18 +24,33 @@ typedef struct
 {
 
     /* variables for in-call statistics; queried through WebRtcNetEQ_GetNetworkStatistics */
-    WebRtc_UWord32 expandLength; /* number of samples produced through expand */
-    WebRtc_UWord32 preemptiveLength; /* number of samples produced through pre-emptive
+    uint32_t expandLength; /* number of samples produced through expand */
+    uint32_t preemptiveLength; /* number of samples produced through pre-emptive
      expand */
-    WebRtc_UWord32 accelerateLength; /* number of samples removed through accelerate */
+    uint32_t accelerateLength; /* number of samples removed through accelerate */
     int addedSamples; /* number of samples inserted in off mode */
 
     /* variables for post-call statistics; queried through WebRtcNetEQ_GetJitterStatistics */
-    WebRtc_UWord32 expandedVoiceSamples; /* number of voice samples produced through expand */
-    WebRtc_UWord32 expandedNoiseSamples; /* number of noise (background) samples produced
+    uint32_t expandedVoiceSamples; /* number of voice samples produced through expand */
+    uint32_t expandedNoiseSamples; /* number of noise (background) samples produced
      through expand */
 
 } DSPStats_t;
+
+typedef struct {
+  int preemptive_expand_bgn_samples;
+  int preemptive_expand_normal_samples;
+
+  int expand_bgn_samples;
+  int expand_normal_samples;
+
+  int merge_expand_bgn_samples;
+  int merge_expand_normal_samples;
+
+  int accelerate_bgn_samples;
+  int accelarate_normal_samples;
+} ActivityStats;
+
 
 #endif
 

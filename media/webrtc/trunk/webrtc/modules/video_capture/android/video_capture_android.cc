@@ -16,14 +16,12 @@
 #include "ref_count.h"
 #include "trace.h"
 
-#include "AndroidJNIWrapper.h"
-
 namespace webrtc
 {
 #if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
 // TODO(leozwang) These SetAndroidVM apis will be refactored, thus we only
 // keep and reference java vm.
-WebRtc_Word32 SetCaptureAndroidVM(void* javaVM, void* javaContext) {
+int32_t SetCaptureAndroidVM(void* javaVM, void* javaContext) {
   return videocapturemodule::VideoCaptureAndroid::SetAndroidObjects(
       javaVM,
       javaContext);
@@ -34,7 +32,7 @@ namespace videocapturemodule
 {
 
 VideoCaptureModule* VideoCaptureImpl::Create(
-    const WebRtc_Word32 id,
+    const int32_t id,
     const char* deviceUniqueIdUTF8) {
 
   RefCountImpl<videocapturemodule::VideoCaptureAndroid>* implementation =
@@ -61,23 +59,18 @@ jclass VideoCaptureAndroid::g_javaCmClass = NULL;
 jclass VideoCaptureAndroid::g_javaCmDevInfoClass = NULL;
 //static instance of VideoCaptureDeviceInfoAndroid.java
 jobject VideoCaptureAndroid::g_javaCmDevInfoObject = NULL;
+jobject VideoCaptureAndroid::g_javaContext = NULL;
 
 /*
  * Register references to Java Capture class.
  */
-WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
-                                                     void* javaContext) {
+int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
+                                               void* javaContext) {
 
   g_jvm = static_cast<JavaVM*> (javaVM);
+  g_javaContext = static_cast<jobject> (javaContext);
 
   if (javaVM) {
-    // Already done? Exit early.
-    if (g_javaCmClass != NULL
-        && g_javaCmDevInfoClass != NULL
-        && g_javaCmDevInfoObject != NULL) {
-        return 0;
-    }
-
     JNIEnv* env = NULL;
     if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
       WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
@@ -85,12 +78,26 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
       return -1;
     }
     // get java capture class type (note path to class packet)
-    g_javaCmClass = jsjni_GetGlobalClassRef(AndroidJavaCaptureClass);
-    if (!g_javaCmClass) {
+    jclass javaCmClassLocal = env->FindClass(AndroidJavaCaptureClass);
+    if (!javaCmClassLocal) {
       WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: could not find java class", __FUNCTION__);
       return -1;
     }
+    // create a global reference to the class
+    // (to tell JNI that we are referencing it
+    // after this function has returned)
+    g_javaCmClass = static_cast<jclass>
+        (env->NewGlobalRef(javaCmClassLocal));
+    if (!g_javaCmClass) {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                   "%s: InitVideoEngineJava(): could not create"
+                   " Java Camera class reference",
+                   __FUNCTION__);
+      return -1;
+    }
+    // Delete local class ref, we only use the global ref
+    env->DeleteLocalRef(javaCmClassLocal);
     JNINativeMethod nativeFunctions =
         { "ProvideCameraFrame", "([BIJ)V",
           (void*) &VideoCaptureAndroid::ProvideCameraFrame };
@@ -105,14 +112,40 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
       return -1;
     }
 
-    // get java capture class type (note path to class packet)
-    g_javaCmDevInfoClass = jsjni_GetGlobalClassRef(
-                 AndroidJavaCaptureDeviceInfoClass);
-    if (!g_javaCmDevInfoClass) {
+    jclass capabilityClassLocal = env->FindClass(
+        "org/webrtc/videoengine/CaptureCapabilityAndroid");
+    if (!capabilityClassLocal) {
       WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: could not find java class", __FUNCTION__);
       return -1;
     }
+    jclass capabilityClassGlobal = reinterpret_cast<jclass>(env->NewGlobalRef(
+        capabilityClassLocal));
+    DeviceInfoAndroid::SetAndroidCaptureClasses(capabilityClassGlobal);
+
+    // get java capture class type (note path to class packet)
+    jclass javaCmDevInfoClassLocal = env->FindClass(
+        "org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid");
+    if (!javaCmDevInfoClassLocal) {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                   "%s: could not find java class", __FUNCTION__);
+      return -1;
+    }
+
+    // create a global reference to the class
+    // (to tell JNI that we are referencing it
+    // after this function has returned)
+    g_javaCmDevInfoClass = static_cast<jclass>
+        (env->NewGlobalRef(javaCmDevInfoClassLocal));
+    if (!g_javaCmDevInfoClass) {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                   "%s: InitVideoEngineJava(): could not create Java "
+                   "Camera Device info class reference",
+                   __FUNCTION__);
+      return -1;
+    }
+    // Delete local class ref, we only use the global ref
+    env->DeleteLocalRef(javaCmDevInfoClassLocal);
 
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
                  "VideoCaptureDeviceInfoAndroid get method id");
@@ -139,7 +172,7 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
     jobject javaCameraDeviceInfoObjLocal =
         env->CallStaticObjectMethod(g_javaCmDevInfoClass,
                                     cid, (int) -1,
-                                    javaContext);
+                                    g_javaContext);
     if (!javaCameraDeviceInfoObjLocal) {
       WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
                    "%s: could not create Java Capture Device info object",
@@ -199,7 +232,7 @@ WebRtc_Word32 VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
   return 0;
 }
 
-WebRtc_Word32 VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
+int32_t VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
     JNIEnv*& env,
     jclass& javaCmDevInfoClass,
     jobject& javaCmDevInfoObject,
@@ -230,7 +263,7 @@ WebRtc_Word32 VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
 
 }
 
-WebRtc_Word32 VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(
+int32_t VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(
     bool attached) {
   if (attached && g_jvm->DetachCurrentThread() < 0) {
     WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
@@ -257,14 +290,14 @@ void JNICALL VideoCaptureAndroid::ProvideCameraFrame(JNIEnv * env,
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture,
                -1, "%s: IncomingFrame %d", __FUNCTION__,length);
   jbyte* cameraFrame= env->GetByteArrayElements(javaCameraFrame,NULL);
-  captureModule->IncomingFrame((WebRtc_UWord8*) cameraFrame,
+  captureModule->IncomingFrame((uint8_t*) cameraFrame,
                                length,captureModule->_frameInfo,0);
   env->ReleaseByteArrayElements(javaCameraFrame,cameraFrame,JNI_ABORT);
 }
 
 
 
-VideoCaptureAndroid::VideoCaptureAndroid(const WebRtc_Word32 id)
+VideoCaptureAndroid::VideoCaptureAndroid(const int32_t id)
     : VideoCaptureImpl(id), _capInfo(id), _javaCaptureObj(NULL),
       _captureStarted(false) {
   WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
@@ -277,8 +310,8 @@ VideoCaptureAndroid::VideoCaptureAndroid(const WebRtc_Word32 id)
 //  Initializes needed Java resources like the JNI interface to
 //  VideoCaptureAndroid.java
 // ----------------------------------------------------------------------------
-WebRtc_Word32 VideoCaptureAndroid::Init(const WebRtc_Word32 id,
-                                        const char* deviceUniqueIdUTF8) {
+int32_t VideoCaptureAndroid::Init(const int32_t id,
+                                  const char* deviceUniqueIdUTF8) {
   const int nameLength = strlen(deviceUniqueIdUTF8);
   if (nameLength >= kVideoCaptureUniqueNameLength) {
     return -1;
@@ -401,35 +434,27 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
       }
     }
 
-    if (env) {
-      // get the method ID for the Android Java CaptureClass static
-      // DeleteVideoCaptureAndroid  method. Call this to release the camera so
-      // another application can use it.
-      jmethodID cid = env->GetStaticMethodID(
-          g_javaCmClass,
-          "DeleteVideoCaptureAndroid",
-          "(Lorg/webrtc/videoengine/VideoCaptureAndroid;)V");
-      if (cid != NULL) {
-        WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
-                     "%s: Call DeleteVideoCaptureAndroid", __FUNCTION__);
-        // Close the camera by calling the static destruct function.
-        env->CallStaticVoidMethod(g_javaCmClass, cid, _javaCaptureObj);
+    // get the method ID for the Android Java CaptureClass static
+    // DeleteVideoCaptureAndroid  method. Call this to release the camera so
+    // another application can use it.
+    jmethodID cid = env->GetStaticMethodID(
+        g_javaCmClass,
+        "DeleteVideoCaptureAndroid",
+        "(Lorg/webrtc/videoengine/VideoCaptureAndroid;)V");
+    if (cid != NULL) {
+      WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+                   "%s: Call DeleteVideoCaptureAndroid", __FUNCTION__);
+      // Close the camera by calling the static destruct function.
+      env->CallStaticVoidMethod(g_javaCmClass, cid, _javaCaptureObj);
 
-        // Delete global object ref to the camera.
-        env->DeleteGlobalRef(_javaCaptureObj);
-        // Clean up the global class references
-        env->DeleteGlobalRef(g_javaCmClass);
-        env->DeleteGlobalRef(g_javaCmDevInfoClass);
-
-        _javaCaptureObj = NULL;
-        VideoCaptureAndroid::g_javaCmClass = NULL;
-        VideoCaptureAndroid::g_javaCmDevInfoClass = NULL;
-      }
-      else {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                     "%s: Failed to find DeleteVideoCaptureAndroid id",
-                     __FUNCTION__);
-      }
+      // Delete global object ref to the camera.
+      env->DeleteGlobalRef(_javaCaptureObj);
+      _javaCaptureObj = NULL;
+    }
+    else {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                   "%s: Failed to find DeleteVideoCaptureAndroid id",
+                   __FUNCTION__);
     }
 
     // Detach this thread if it was attached
@@ -443,15 +468,14 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
   }
 }
 
-WebRtc_Word32 VideoCaptureAndroid::StartCapture(
+int32_t VideoCaptureAndroid::StartCapture(
     const VideoCaptureCapability& capability) {
   CriticalSectionScoped cs(&_apiCs);
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                "%s: ", __FUNCTION__);
 
   bool isAttached = false;
-  WebRtc_Word32 result = 0;
-  WebRtc_Word32 rotation = 0;
+  int32_t result = 0;
   // get the JNI env for this thread
   JNIEnv *env;
   if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -498,21 +522,6 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
                  "%s: Failed to find StartCapture id", __FUNCTION__);
   }
 
-  // get the method ID for the Android Java
-  // CaptureClass static GetRotateAmount  method.
-  cid = env->GetMethodID(g_javaCmClass, "GetRotateAmount", "()I");
-  if (cid != NULL) {
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
-                 "%s: Call GetRotateAmount", __FUNCTION__);
-    rotation = env->CallIntMethod(_javaCaptureObj, cid);
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
-                 "%s, GetRotateAmount = %d", __FUNCTION__, rotation);
-  }
-  else {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                 "%s: Failed to find GetRotateAmount id", __FUNCTION__);
-  }
-
   // Detach this thread if it was attached
   if (isAttached) {
     if (g_jvm->DetachCurrentThread() < 0) {
@@ -520,23 +529,6 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
                    "%s: Could not detach thread from JVM", __FUNCTION__);
     }
   }
-
-  switch (rotation) {
-    case 90:
-      SetCaptureRotation(kCameraRotate90);
-      break;
-    case 180:
-      SetCaptureRotation(kCameraRotate180);
-      break;
-    case 270:
-      SetCaptureRotation(kCameraRotate270);
-      break;
-    case 0:
-    default:
-      SetCaptureRotation(kCameraRotate0);
-      break;
-  }
-
   if (result == 0) {
     _requestedCapability = capability;
     _captureStarted = true;
@@ -546,13 +538,13 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
   return result;
 }
 
-WebRtc_Word32 VideoCaptureAndroid::StopCapture() {
+int32_t VideoCaptureAndroid::StopCapture() {
   CriticalSectionScoped cs(&_apiCs);
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                "%s: ", __FUNCTION__);
 
   bool isAttached = false;
-  WebRtc_Word32 result = 0;
+  int32_t result = 0;
   // get the JNI env for this thread
   JNIEnv *env = NULL;
   if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -606,7 +598,7 @@ bool VideoCaptureAndroid::CaptureStarted() {
   return _captureStarted;
 }
 
-WebRtc_Word32 VideoCaptureAndroid::CaptureSettings(
+int32_t VideoCaptureAndroid::CaptureSettings(
     VideoCaptureCapability& settings) {
   CriticalSectionScoped cs(&_apiCs);
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
@@ -615,7 +607,7 @@ WebRtc_Word32 VideoCaptureAndroid::CaptureSettings(
   return 0;
 }
 
-WebRtc_Word32 VideoCaptureAndroid::SetCaptureRotation(
+int32_t VideoCaptureAndroid::SetCaptureRotation(
     VideoCaptureRotation rotation) {
   CriticalSectionScoped cs(&_apiCs);
   if (VideoCaptureImpl::SetCaptureRotation(rotation) == 0) {

@@ -22,11 +22,11 @@ public:
     static ProcessThread* CreateProcessThread();
     static void DestroyProcessThread(ProcessThread* module);
 
-    virtual WebRtc_Word32 Start() = 0;
-    virtual WebRtc_Word32 Stop() = 0;
+    virtual int32_t Start() = 0;
+    virtual int32_t Stop() = 0;
 
-    virtual WebRtc_Word32 RegisterModule(const Module* module) = 0;
-    virtual WebRtc_Word32 DeRegisterModule(const Module* module) = 0;
+    virtual int32_t RegisterModule(const Module* module) = 0;
+    virtual int32_t DeRegisterModule(const Module* module) = 0;
 protected:
     virtual ~ProcessThread();
 };

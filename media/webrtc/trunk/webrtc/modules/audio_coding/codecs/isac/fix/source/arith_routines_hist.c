@@ -33,20 +33,20 @@
  *                            <0 if error detected
  */
 int WebRtcIsacfix_EncHistMulti(Bitstr_enc *streamData,
-                              const WebRtc_Word16 *data,
-                              const WebRtc_UWord16 **cdf,
-                              const WebRtc_Word16 lenData)
+                               const int16_t *data,
+                               const uint16_t **cdf,
+                               const int16_t lenData)
 {
-  WebRtc_UWord32 W_lower;
-  WebRtc_UWord32 W_upper;
-  WebRtc_UWord32 W_upper_LSB;
-  WebRtc_UWord32 W_upper_MSB;
-  WebRtc_UWord16 *streamPtr;
-  WebRtc_UWord16 negCarry;
-  WebRtc_UWord16 *maxStreamPtr;
-  WebRtc_UWord16 *streamPtrCarry;
-  WebRtc_UWord32 cdfLo;
-  WebRtc_UWord32 cdfHi;
+  uint32_t W_lower;
+  uint32_t W_upper;
+  uint32_t W_upper_LSB;
+  uint32_t W_upper_MSB;
+  uint16_t *streamPtr;
+  uint16_t negCarry;
+  uint16_t *maxStreamPtr;
+  uint16_t *streamPtrCarry;
+  uint32_t cdfLo;
+  uint32_t cdfHi;
   int k;
 
 
@@ -60,8 +60,8 @@ int WebRtcIsacfix_EncHistMulti(Bitstr_enc *streamData,
   for (k = lenData; k > 0; k--)
   {
     /* fetch cdf_lower and cdf_upper from cdf tables */
-    cdfLo = (WebRtc_UWord32) *(*cdf + (WebRtc_UWord32)*data);
-    cdfHi = (WebRtc_UWord32) *(*cdf++ + (WebRtc_UWord32)*data++ + 1);
+    cdfLo = (uint32_t) *(*cdf + (uint32_t)*data);
+    cdfHi = (uint32_t) *(*cdf++ + (uint32_t)*data++ + 1);
 
     /* update interval */
     W_upper_LSB = W_upper & 0x0000FFFF;
@@ -103,10 +103,10 @@ int WebRtcIsacfix_EncHistMulti(Bitstr_enc *streamData,
     {
       W_upper = WEBRTC_SPL_LSHIFT_W32(W_upper, 8);
       if (streamData->full == 0) {
-        *streamPtr++ += (WebRtc_UWord16) WEBRTC_SPL_RSHIFT_W32(streamData->streamval, 24);
+        *streamPtr++ += (uint16_t) WEBRTC_SPL_RSHIFT_W32(streamData->streamval, 24);
         streamData->full = 1;
       } else {
-        *streamPtr = (WebRtc_UWord16) WEBRTC_SPL_LSHIFT_W32(
+        *streamPtr = (uint16_t) WEBRTC_SPL_LSHIFT_W32(
             WEBRTC_SPL_RSHIFT_W32(streamData->streamval, 24), 8);
         streamData->full = 0;
       }
@@ -145,21 +145,21 @@ int WebRtcIsacfix_EncHistMulti(Bitstr_enc *streamData,
  * Return value             : number of bytes in the stream
  *                            <0 if error detected
  */
-WebRtc_Word16 WebRtcIsacfix_DecHistBisectMulti(WebRtc_Word16 *data,
-                                              Bitstr_dec *streamData,
-                                              const WebRtc_UWord16 **cdf,
-                                              const WebRtc_UWord16 *cdfSize,
-                                              const WebRtc_Word16 lenData)
+int16_t WebRtcIsacfix_DecHistBisectMulti(int16_t *data,
+                                         Bitstr_dec *streamData,
+                                         const uint16_t **cdf,
+                                         const uint16_t *cdfSize,
+                                         const int16_t lenData)
 {
-  WebRtc_UWord32    W_lower = 0;
-  WebRtc_UWord32    W_upper;
-  WebRtc_UWord32    W_tmp;
-  WebRtc_UWord32    W_upper_LSB;
-  WebRtc_UWord32    W_upper_MSB;
-  WebRtc_UWord32    streamval;
-  const WebRtc_UWord16 *streamPtr;
-  const WebRtc_UWord16 *cdfPtr;
-  WebRtc_Word16     sizeTmp;
+  uint32_t    W_lower = 0;
+  uint32_t    W_upper;
+  uint32_t    W_tmp;
+  uint32_t    W_upper_LSB;
+  uint32_t    W_upper_MSB;
+  uint32_t    streamval;
+  const uint16_t *streamPtr;
+  const uint16_t *cdfPtr;
+  int16_t     sizeTmp;
   int             k;
 
 
@@ -175,7 +175,7 @@ WebRtc_Word16 WebRtcIsacfix_DecHistBisectMulti(WebRtc_Word16 *data,
   if (streamData->stream_index == 0)
   {
     /* read first word from bytestream */
-    streamval = WEBRTC_SPL_LSHIFT_W32((WebRtc_UWord32)*streamPtr++, 16);
+    streamval = WEBRTC_SPL_LSHIFT_W32((uint32_t)*streamPtr++, 16);
     streamval |= *streamPtr++;
   } else {
     streamval = streamData->streamval;
@@ -282,20 +282,20 @@ WebRtc_Word16 WebRtcIsacfix_DecHistBisectMulti(WebRtc_Word16 *data,
  * Return value             : number of bytes in original stream
  *                            <0 if error detected
  */
-WebRtc_Word16 WebRtcIsacfix_DecHistOneStepMulti(WebRtc_Word16 *data,
-                                               Bitstr_dec *streamData,
-                                               const WebRtc_UWord16 **cdf,
-                                               const WebRtc_UWord16 *initIndex,
-                                               const WebRtc_Word16 lenData)
+int16_t WebRtcIsacfix_DecHistOneStepMulti(int16_t *data,
+                                          Bitstr_dec *streamData,
+                                          const uint16_t **cdf,
+                                          const uint16_t *initIndex,
+                                          const int16_t lenData)
 {
-  WebRtc_UWord32    W_lower;
-  WebRtc_UWord32    W_upper;
-  WebRtc_UWord32    W_tmp;
-  WebRtc_UWord32    W_upper_LSB;
-  WebRtc_UWord32    W_upper_MSB;
-  WebRtc_UWord32    streamval;
-  const WebRtc_UWord16 *streamPtr;
-  const WebRtc_UWord16 *cdfPtr;
+  uint32_t    W_lower;
+  uint32_t    W_upper;
+  uint32_t    W_tmp;
+  uint32_t    W_upper_LSB;
+  uint32_t    W_upper_MSB;
+  uint32_t    streamval;
+  const uint16_t *streamPtr;
+  const uint16_t *cdfPtr;
   int             k;
 
 

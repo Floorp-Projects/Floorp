@@ -27,13 +27,13 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_CompCorr(
-    WebRtc_Word32 *corr, /* (o) cross correlation */
-    WebRtc_Word32 *ener, /* (o) energy */
-    WebRtc_Word16 *buffer, /* (i) signal buffer */
-    WebRtc_Word16 lag,  /* (i) pitch lag */
-    WebRtc_Word16 bLen, /* (i) length of buffer */
-    WebRtc_Word16 sRange, /* (i) correlation search length */
-    WebRtc_Word16 scale /* (i) number of rightshifts to use */
+    int32_t *corr, /* (o) cross correlation */
+    int32_t *ener, /* (o) energy */
+    int16_t *buffer, /* (i) signal buffer */
+    int16_t lag,  /* (i) pitch lag */
+    int16_t bLen, /* (i) length of buffer */
+    int16_t sRange, /* (i) correlation search length */
+    int16_t scale /* (i) number of rightshifts to use */
                             );
 
 #endif

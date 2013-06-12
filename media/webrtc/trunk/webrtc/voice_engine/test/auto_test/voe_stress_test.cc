@@ -23,13 +23,16 @@
 #endif
 
 #include "webrtc/voice_engine/test/auto_test/voe_stress_test.h"
-#include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"  // defines build macros
 
 using namespace webrtc;
+using namespace test;
 
 namespace voetest {
 
@@ -122,6 +125,7 @@ int VoEStressTest::StartStopTest() {
 
   // Get sub-API pointers
   VoEBase* base = _mgr.BasePtr();
+  VoENetwork* voe_network = _mgr.NetworkPtr();
 
   // Set trace
   //     VALIDATE_STRESS(base->SetTraceFileName(
@@ -147,9 +151,12 @@ int VoEStressTest::StartStopTest() {
   printf("Test will take approximately %d minutes. \n",
          numberOfLoops * loopSleep / 1000 / 60 + 1);
 
+  scoped_ptr<VoiceChannelTransport> voice_channel_transport(
+      new VoiceChannelTransport(voe_network, 0));
+
   for (i = 0; i < numberOfLoops; ++i) {
-    VALIDATE_STRESS(base->SetLocalReceiver(0, 4800));
-    VALIDATE_STRESS(base->SetSendDestination(0, 4800, "127.0.0.1"));
+    voice_channel_transport->SetSendDestination("127.0.0.1", 4800);
+    voice_channel_transport->SetLocalReceiver(4800);
     VALIDATE_STRESS(base->StartReceive(0));
     VALIDATE_STRESS(base->StartPlayout(0));
     VALIDATE_STRESS(base->StartSend(0));
@@ -162,8 +169,9 @@ int VoEStressTest::StartStopTest() {
   }
   ANL();
 
-  VALIDATE_STRESS(base->SetLocalReceiver(0, 4800));
-  VALIDATE_STRESS(base->SetSendDestination(0, 4800, "127.0.0.1"));
+  VALIDATE_STRESS(voice_channel_transport->SetSendDestination("127.0.0.1",
+                                                              4800));
+  VALIDATE_STRESS(voice_channel_transport->SetLocalReceiver(4800));
   VALIDATE_STRESS(base->StartReceive(0));
   VALIDATE_STRESS(base->StartPlayout(0));
   VALIDATE_STRESS(base->StartSend(0));

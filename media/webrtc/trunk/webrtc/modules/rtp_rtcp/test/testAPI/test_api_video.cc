@@ -28,7 +28,8 @@ class RtpRtcpVideoTest : public ::testing::Test {
       : test_id_(123),
         test_ssrc_(3456),
         test_timestamp_(4567),
-        test_sequence_number_(2345) {
+        test_sequence_number_(2345),
+        fake_clock(123456) {
   }
   ~RtpRtcpVideoTest() {}
 
@@ -46,8 +47,8 @@ class RtpRtcpVideoTest : public ::testing::Test {
 
     EXPECT_EQ(0, video_module_->SetRTCPStatus(kRtcpCompound));
     EXPECT_EQ(0, video_module_->SetSSRC(test_ssrc_));
-    EXPECT_EQ(0, video_module_->SetNACKStatus(kNackRtcp));
-    EXPECT_EQ(0, video_module_->SetStorePacketsStatus(true));
+    EXPECT_EQ(0, video_module_->SetNACKStatus(kNackRtcp, 450));
+    EXPECT_EQ(0, video_module_->SetStorePacketsStatus(true, 600));
     EXPECT_EQ(0, video_module_->SetSendingStatus(true));
 
     transport_->SetSendModule(video_module_);
@@ -67,24 +68,24 @@ class RtpRtcpVideoTest : public ::testing::Test {
     }
   }
 
-  WebRtc_Word32 BuildRTPheader(WebRtc_UWord8* dataBuffer,
-                               WebRtc_UWord32 timestamp,
-                               WebRtc_UWord32 sequence_number) {
-    dataBuffer[0] = static_cast<WebRtc_UWord8>(0x80);  // version 2
-    dataBuffer[1] = static_cast<WebRtc_UWord8>(kPayloadType);
+  int32_t BuildRTPheader(uint8_t* dataBuffer,
+                               uint32_t timestamp,
+                               uint32_t sequence_number) {
+    dataBuffer[0] = static_cast<uint8_t>(0x80);  // version 2
+    dataBuffer[1] = static_cast<uint8_t>(kPayloadType);
     ModuleRTPUtility::AssignUWord16ToBuffer(dataBuffer + 2,
                                                     sequence_number);
     ModuleRTPUtility::AssignUWord32ToBuffer(dataBuffer + 4, timestamp);
     ModuleRTPUtility::AssignUWord32ToBuffer(dataBuffer + 8,
                                                     0x1234);  // SSRC.
-    WebRtc_Word32 rtpHeaderLength = 12;
+    int32_t rtpHeaderLength = 12;
     return rtpHeaderLength;
   }
 
   int PaddingPacket(uint8_t* buffer,
-                    WebRtc_UWord32 timestamp,
-                    WebRtc_UWord32 sequence_number,
-                    WebRtc_Word32 bytes) {
+                    uint32_t timestamp,
+                    uint32_t sequence_number,
+                    int32_t bytes) {
     // Max in the RFC 3550 is 255 bytes, we limit it to be modulus 32 for SRTP.
     int max_length = 224;
 
@@ -96,8 +97,8 @@ class RtpRtcpVideoTest : public ::testing::Test {
     int header_length = BuildRTPheader(buffer, timestamp,
                                        sequence_number);
     buffer[0] |= 0x20;  // Set padding bit.
-    WebRtc_Word32* data =
-        reinterpret_cast<WebRtc_Word32*>(&(buffer[header_length]));
+    int32_t* data =
+        reinterpret_cast<int32_t*>(&(buffer[header_length]));
 
     // Fill data buffer with random data.
     for (int j = 0; j < (padding_bytes_in_packet >> 2); j++) {
@@ -119,17 +120,17 @@ class RtpRtcpVideoTest : public ::testing::Test {
   RtpRtcp* video_module_;
   LoopBackTransport* transport_;
   RtpReceiver* receiver_;
-  WebRtc_UWord32 test_ssrc_;
-  WebRtc_UWord32 test_timestamp_;
-  WebRtc_UWord16 test_sequence_number_;
-  WebRtc_UWord8  video_frame_[65000];
+  uint32_t test_ssrc_;
+  uint32_t test_timestamp_;
+  uint16_t test_sequence_number_;
+  uint8_t  video_frame_[65000];
   int payload_data_length_;
-  FakeRtpRtcpClock fake_clock;
+  SimulatedClock fake_clock;
   enum { kPayloadType = 100 };
 };
 
 TEST_F(RtpRtcpVideoTest, BasicVideo) {
-  WebRtc_UWord32 timestamp = 3000;
+  uint32_t timestamp = 3000;
   EXPECT_EQ(0, video_module_->SendOutgoingData(kVideoFrameDelta, 123,
                                                timestamp,
                                                timestamp / 90,
@@ -157,7 +158,7 @@ TEST_F(RtpRtcpVideoTest, PaddingOnlyFrames) {
       EXPECT_EQ(packet_size - 12, receiver_->rtp_header().header.paddingLength);
     }
     timestamp += 3000;
-    fake_clock.IncrementTime(33);
+    fake_clock.AdvanceTimeMilliseconds(33);
   }
 }
 

@@ -19,7 +19,7 @@
 //  - Packet timeout notification.
 //  - Dead‐or‐Alive connection observations.
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 
@@ -65,33 +65,10 @@ class WEBRTC_DLLEXPORT ViENetwork {
   // for all sub-API:s before the VideoEngine object can be safely deleted.
   virtual int Release() = 0;
 
-  // Specifies the ports to receive RTP packets on. It is also possible to set
-  // port for RTCP and local IP address.
-  virtual int SetLocalReceiver(const int video_channel,
-                               const unsigned short rtp_port,
-                               const unsigned short rtcp_port = 0,
-                               const char* ip_address = NULL) = 0;
-
-  // Gets the local receiver ports and address for a specified channel.
-  virtual int GetLocalReceiver(const int video_channel,
-                               unsigned short& rtp_port,
-                               unsigned short& rtcp_port, char* ip_address) = 0;
-
-  // Specifies the destination port and IP address for a specified channel.
-  virtual int SetSendDestination(const int video_channel,
-                                 const char* ip_address,
-                                 const unsigned short rtp_port,
-                                 const unsigned short rtcp_port = 0,
-                                 const unsigned short source_rtp_port = 0,
-                                 const unsigned short source_rtcp_port = 0) = 0;
-
-  // Get the destination port and address for a specified channel.
-  virtual int GetSendDestination(const int video_channel,
-                                 char* ip_address,
-                                 unsigned short& rtp_port,
-                                 unsigned short& rtcp_port,
-                                 unsigned short& source_rtp_port,
-                                 unsigned short& source_rtcp_port) = 0;
+  // Inform the engine about if the network adapter is currently transmitting
+  // packets or not.
+  virtual void SetNetworkTransmissionState(const int video_channel,
+                                           const bool is_transmitting) = 0;
 
   // This function registers a user implementation of Transport to use for
   // sending RTP and RTCP packets on this channel.
@@ -113,63 +90,6 @@ class WEBRTC_DLLEXPORT ViENetwork {
   virtual int ReceivedRTCPPacket(const int video_channel,
                                  const void* data,
                                  const int length) = 0;
-
-  // Gets the source ports and IP address of the incoming stream for a
-  // specified channel.
-  virtual int GetSourceInfo(const int video_channel,
-                            unsigned short& rtp_port,
-                            unsigned short& rtcp_port,
-                            char* ip_address,
-                            unsigned int ip_address_length) = 0;
-
-  // Gets the local IP address, in string format.
-  virtual int GetLocalIP(char ip_address[64], bool ipv6 = false) = 0;
-
-  // Enables IPv6, instead of IPv4, for a specified channel.
-  virtual int EnableIPv6(int video_channel) = 0;
-
-  // The function returns true if IPv6 is enabled, false otherwise.
-  virtual bool IsIPv6Enabled(int video_channel) = 0;
-
-  // Enables a port and IP address filtering for incoming packets on a
-  // specific channel.
-  virtual int SetSourceFilter(const int video_channel,
-                              const unsigned short rtp_port,
-                              const unsigned short rtcp_port = 0,
-                              const char* ip_address = NULL) = 0;
-
-  // Gets current port and IP address filter for a specified channel.
-  virtual int GetSourceFilter(const int video_channel,
-                              unsigned short& rtp_port,
-                              unsigned short& rtcp_port,
-                              char* ip_address) = 0;
-
-  // This function sets the six‐bit Differentiated Services Code Point (DSCP)
-  // in the IP header of the outgoing stream for a specific channel.
-  // Windows and Linux only.
-  virtual int SetSendToS(const int video_channel,
-                         const int DSCP,
-                         const bool use_set_sockOpt = false) = 0;
-
-  // Retrieves the six‐bit Differentiated Services Code Point (DSCP) in the IP
-  // header of the outgoing stream for a specific channel.
-  virtual int GetSendToS(const int video_channel,
-                         int& DSCP,
-                         bool& use_set_sockOpt) = 0;
-
-  // This function sets the Generic Quality of Service (GQoS) service level.
-  // The Windows operating system then maps to a Differentiated Services Code
-  // Point (DSCP) and to an 802.1p setting. Windows only.
-  virtual int SetSendGQoS(const int video_channel, const bool enable,
-                          const int service_type,
-                          const int overrideDSCP = 0) = 0;
-
-  // This function retrieves the currently set GQoS service level for a
-  // specific channel.
-  virtual int GetSendGQoS(const int video_channel,
-                          bool& enabled,
-                          int& service_type,
-                          int& overrideDSCP) = 0;
 
   // This function sets the Maximum Transition Unit (MTU) for a channel. The
   // RTP packet will be packetized based on this MTU to optimize performance
@@ -196,14 +116,6 @@ class WEBRTC_DLLEXPORT ViENetwork {
       const int video_channel,
       const bool enable,
       const unsigned int sample_time_seconds = KDefaultSampleTimeSeconds) = 0;
-
-  // This function handles sending a raw UDP data packet over an existing RTP
-  // or RTCP socket.
-  virtual int SendUDPPacket(const int video_channel,
-                            const void* data,
-                            const unsigned int length,
-                            int& transmitted_bytes,
-                            bool use_rtcp_socket = false) = 0;
 
  protected:
   ViENetwork() {}
