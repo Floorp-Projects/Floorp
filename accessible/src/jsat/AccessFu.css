@@ -21,14 +21,6 @@
   pointer-events: none;
 }
 
-#accessfu-glass {
-  width: 100%;
-  height: 100%;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-}
-
 #announce-box {
   position: fixed;
   width: 7.5em;

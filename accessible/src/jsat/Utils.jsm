@@ -71,6 +71,12 @@ this.Utils = {
     return this._OS;
   },
 
+  get widgetToolkit() {
+    if (!this._widgetToolkit)
+      this._widgetToolkit = Services.appinfo.widgetToolkit;
+    return this._widgetToolkit;
+  },
+
   get ScriptName() {
     if (!this._ScriptName)
       this._ScriptName =
