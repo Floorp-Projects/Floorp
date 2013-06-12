@@ -4453,7 +4453,7 @@ SetBoolOption(JSContext* cx, uint32_t aOption, bool aValue)
         return SetBoolOption(cx, _flag, aValue);                        \
     }
 
-GENERATE_JSOPTION_GETTER_SETTER(Strict, JSOPTION_STRICT)
+GENERATE_JSOPTION_GETTER_SETTER(Strict, JSOPTION_EXTRA_WARNINGS)
 GENERATE_JSOPTION_GETTER_SETTER(Werror, JSOPTION_WERROR)
 GENERATE_JSOPTION_GETTER_SETTER(Strict_mode, JSOPTION_STRICT_MODE)
 GENERATE_JSOPTION_GETTER_SETTER(Ion, JSOPTION_ION)
@@ -4796,7 +4796,7 @@ nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
     nsresult rv = NS_OK;
     if (doResult) {
-        *vp = JS_NumberValue((double) res);
+        *vp = JS_NumberValue((double)(uint32_t) res);
         rv = NS_SUCCESS_I_DID_SOMETHING;
     }
 

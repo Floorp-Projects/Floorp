@@ -168,7 +168,7 @@ class SharedContext
     void setBindingsAccessedDynamically() { anyCxFlags.bindingsAccessedDynamically = true; }
     void setHasDebuggerStatement()        { anyCxFlags.hasDebuggerStatement        = true; }
 
-    // JSOPTION_STRICT warnings or strict mode errors.
+    // JSOPTION_EXTRA_WARNINGS warnings or strict mode errors.
     inline bool needStrictChecks();
 };
 

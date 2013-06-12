@@ -39,7 +39,6 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -208,11 +207,6 @@ ImageDocument::Destroy()
     if (mObservingImageLoader) {
       nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
       if (imageLoader) {
-        // Push a null JSContext on the stack so that code that
-        // nsImageLoadingContent doesn't think it's being called by JS.  See
-        // Bug 631241
-        nsCxPusher pusher;
-        pusher.PushNull();
         imageLoader->RemoveObserver(this);
       }
     }
@@ -599,12 +593,6 @@ ImageDocument::CreateSyntheticDocument()
 
   nsAutoCString src;
   mDocumentURI->GetSpec(src);
-
-  // Push a null JSContext on the stack so that code that runs within
-  // the below code doesn't think it's being called by JS. See bug
-  // 604262.
-  nsCxPusher pusher;
-  pusher.PushNull();
 
   NS_ConvertUTF8toUTF16 srcString(src);
   // Make sure not to start the image load from here...

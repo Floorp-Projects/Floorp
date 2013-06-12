@@ -47,7 +47,7 @@ partial interface HTMLIFrameElement {
 };
 
 partial interface HTMLIFrameElement {
-  // nsIDOMGetSVGDocument
+  // GetSVGDocument
   Document? getSVGDocument();
 };
 

@@ -1211,13 +1211,6 @@ XULDocument::ResolveForwardReferences()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-XULDocument::GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner)
-{
-    NS_IF_ADDREF(*aGlobalOwner = mMasterPrototype);
-    return NS_OK;
-}
-
 //----------------------------------------------------------------------
 //
 // nsIDOMDocument interface
@@ -3538,7 +3531,8 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                             EmptyString(), this, stringStr);
         if (NS_SUCCEEDED(rv)) {
             rv = scriptProto->Compile(stringStr.get(), stringStr.Length(),
-                                      uri, 1, this, mCurrentPrototype);
+                                      uri, 1, this,
+                                      mCurrentPrototype->GetScriptGlobalObject());
         }
 
         aStatus = rv;

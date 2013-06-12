@@ -428,8 +428,7 @@ WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
 static void
 SuspectDOMExpandos(JSObject *obj, nsCycleCollectionNoteRootCallback &cb)
 {
-    const dom::DOMClass* clasp = dom::GetDOMClass(obj);
-    MOZ_ASSERT(clasp && clasp->mDOMObjectIsISupports);
+    MOZ_ASSERT(dom::GetDOMClass(obj) && dom::GetDOMClass(obj)->mDOMObjectIsISupports);
     nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj);
     cb.NoteXPCOMRoot(native);
 }

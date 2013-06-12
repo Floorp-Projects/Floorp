@@ -20,7 +20,6 @@
 #include "SVGImageContext.h"
 #include "mozilla/dom/SVGImageElement.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -117,12 +116,6 @@ nsSVGImageFrame::~nsSVGImageFrame()
   if (mListener) {
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
     if (imageLoader) {
-      // Push a null JSContext on the stack so that code that runs
-      // within the below code doesn't think it's being called by
-      // JS. See bug 604262.
-      nsCxPusher pusher;
-      pusher.PushNull();
-
       imageLoader->RemoveObserver(mListener);
     }
     reinterpret_cast<nsSVGImageListener*>(mListener.get())->SetFrame(nullptr);
@@ -149,12 +142,6 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   // We should have a PresContext now, so let's notify our image loader that
   // we need to register any image animations with the refresh driver.
   imageLoader->FrameCreated(this);
-
-  // Push a null JSContext on the stack so that code that runs within
-  // the below code doesn't think it's being called by JS. See bug
-  // 604262.
-  nsCxPusher pusher;
-  pusher.PushNull();
 
   imageLoader->AddObserver(mListener);
 }

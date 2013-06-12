@@ -236,9 +236,6 @@ CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
   , mDestroyed(false)
 {
   MOZ_COUNT_CTOR(CompositorOGL);
-  mTextures[0] = 0;
-  mTextures[1] = 0;
-  mTextures[2] = 0;
   sBackend = LAYERS_OPENGL;
 }
 
@@ -285,26 +282,31 @@ CompositorOGL::AddPrograms(ShaderProgramType aType)
 GLuint
 CompositorOGL::GetTemporaryTexture(GLenum aTextureUnit)
 {
-  if (!mTextures[aTextureUnit - LOCAL_GL_TEXTURE0]) {
-    gl()->MakeCurrent();
-    gl()->fGenTextures(1, &mTextures[aTextureUnit - LOCAL_GL_TEXTURE0]);
+  size_t index = aTextureUnit - LOCAL_GL_TEXTURE0;
+  // lazily grow the array of temporary textures
+  if (mTextures.Length() <= index) {
+    size_t prevLength = mTextures.Length();
+    mTextures.SetLength(index + 1);
+    for(unsigned i = prevLength; i <= index; ++i) {
+      mTextures[i] = 0;
+    }
   }
-  return mTextures[aTextureUnit - LOCAL_GL_TEXTURE0];
+  // lazily initialize the temporary textures
+  if (!mTextures[index]) {
+    gl()->MakeCurrent();
+    gl()->fGenTextures(1, &mTextures[index]);
+  }
+  return mTextures[index];
 }
 
 void
 CompositorOGL::Destroy()
 {
-  if (gl()) {
+  if (gl() && mTextures.Length() > 0) {
     gl()->MakeCurrent();
-    gl()->fDeleteTextures(3, mTextures);
-    mTextures[0] = 0;
-    mTextures[1] = 0;
-    mTextures[2] = 0;
-  } else {
-    MOZ_ASSERT(!mTextures[0] && !mTextures[1] && !mTextures[2]);
+    gl()->fDeleteTextures(mTextures.Length(), &mTextures[0]);
   }
-
+  mTextures.SetLength(0);
   if (!mDestroyed) {
     mDestroyed = true;
     CleanupResources();
