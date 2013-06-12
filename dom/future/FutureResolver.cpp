@@ -7,6 +7,7 @@
 #include "mozilla/dom/FutureResolver.h"
 #include "mozilla/dom/FutureBinding.h"
 #include "mozilla/dom/Future.h"
+#include "FutureCallback.h"
 
 namespace mozilla {
 namespace dom {
@@ -88,9 +89,29 @@ FutureResolver::Resolve(JSContext* aCx,
     return;
   }
 
-  // TODO: if the arg is a future?
+  ResolveInternal(aCx, aValue, aAsynchronous);
+}
 
+void
+FutureResolver::ResolveInternal(JSContext* aCx,
+                                const Optional<JS::Handle<JS::Value> >& aValue,
+                                FutureTaskSync aAsynchronous)
+{
   mResolvePending = true;
+
+  // TODO: Bug 879245 - Then-able objects
+  if (aValue.WasPassed() && aValue.Value().isObject()) {
+    JS::Rooted<JSObject*> valueObj(aCx, &aValue.Value().toObject());
+    Future* nextFuture;
+    nsresult rv = UnwrapObject<Future>(aCx, valueObj, nextFuture);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsRefPtr<FutureCallback> resolveCb = new ResolveFutureCallback(this);
+      nsRefPtr<FutureCallback> rejectCb = new RejectFutureCallback(this);
+      nextFuture->AppendCallbacks(resolveCb, rejectCb);
+      return;
+    }
+  }
 
   // If the synchronous flag is set, process future's resolve callbacks with
   // value. Otherwise, the synchronous flag is unset, queue a task to process
@@ -109,6 +130,14 @@ FutureResolver::Reject(JSContext* aCx,
     return;
   }
 
+  RejectInternal(aCx, aValue, aAsynchronous);
+}
+
+void
+FutureResolver::RejectInternal(JSContext* aCx,
+                               const Optional<JS::Handle<JS::Value> >& aValue,
+                               FutureTaskSync aAsynchronous)
+{
   mResolvePending = true;
 
   // If the synchronous flag is set, process future's reject callbacks with
