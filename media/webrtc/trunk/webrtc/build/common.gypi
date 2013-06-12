@@ -35,13 +35,24 @@
       'webrtc_root%': '<(webrtc_root)',
 
       'webrtc_vp8_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp8',
+      'include_g711%': 1,
+      'include_g722%': 1,
+      'include_ilbc%': 1,
       'include_opus%': 1,
+      'include_isac%': 1,
+      'include_pcm16b%': 1,
     },
     'build_with_chromium%': '<(build_with_chromium)',
     'build_with_libjingle%': '<(build_with_libjingle)',
     'webrtc_root%': '<(webrtc_root)',
     'webrtc_vp8_dir%': '<(webrtc_vp8_dir)',
+
+    'include_g711%': '<(include_g711)',
+    'include_g722%': '<(include_g722)',
+    'include_ilbc%': '<(include_ilbc)',
     'include_opus%': '<(include_opus)',
+    'include_isac%': '<(include_isac)',
+    'include_pcm16b%': '<(include_pcm16b)',
 
     # The Chromium common.gypi we use treats all gyp files without
     # chromium_code==1 as third party code. This disables many of the
@@ -150,10 +161,15 @@
     'defines': [
       # TODO(leozwang): Run this as a gclient hook rather than at build-time:
       # http://code.google.com/p/webrtc/issues/detail?id=687
-      'WEBRTC_SVNREVISION="Unavailable(issue687)"',
+      'WEBRTC_SVNREVISION="\\\"Unavailable_issue687\\\""',
       #'WEBRTC_SVNREVISION="<!(python <(webrtc_root)/build/version.py)"',
     ],
     'conditions': [
+      ['moz_widget_toolkit_gonk==1', {
+        'defines' : [
+          'WEBRTC_GONK',
+        ],
+      }],
       ['enable_tracing==1', {
         'defines': ['WEBRTC_LOGGING',],
       }],
@@ -194,14 +210,15 @@
             'defines': ['WEBRTC_ARCH_ARM_V7',],
             'conditions': [
               ['arm_neon==1', {
-                'defines': ['WEBRTC_ARCH_ARM_NEON',],
-              }, {
-                'defines': ['WEBRTC_DETECT_ARM_NEON',],
+                'defines': ['WEBRTC_ARCH_ARM_NEON',
+                            'WEBRTC_BUILD_NEON_LIBS',
+                            'WEBRTC_DETECT_ARM_NEON'],
               }],
             ],
           }],
         ],
       }],
+      # Mozilla: if we support Mozilla on MIPS, we'll need to mod the cflags entries here
       ['target_arch=="mipsel"', {
         'defines': [
           'MIPS32_LE',
@@ -264,6 +281,13 @@
         ],
       }],
       ['OS=="linux"', {
+        'conditions': [
+          ['have_clock_monotonic==1', {
+            'defines': [
+              'WEBRTC_CLOCK_TYPE_REALTIME',
+            ],
+          }],
+        ],
         'defines': [
           'WEBRTC_LINUX',
           'WEBRTC_THREAD_RR',
@@ -282,6 +306,7 @@
       ['OS=="win"', {
         'defines': [
           'WEBRTC_WIN',
+	  'WEBRTC_EXPORT',
         ],
         # TODO(andrew): enable all warnings when possible.
         # TODO(phoglund): get rid of 4373 supression when
