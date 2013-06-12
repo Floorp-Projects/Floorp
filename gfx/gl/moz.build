@@ -14,7 +14,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     gl_provider = 'WGL'
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     gl_provider = 'CGL'
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+elif CONFIG['MOZ_WIDGET_GTK']:
     if CONFIG['fdef MOZ_PLATFORM_MAEMO']:
         gl_provider = 'EGL'
     else:

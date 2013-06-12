@@ -116,8 +116,10 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, NULL);
-        IonActivation activation(cx, fp);
+        JitActivation activation(cx, fp->isConstructing());
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
+
+        fp->setRunningInJit();
 
         // Pass the scope chain for global and eval frames.
         JSObject *scopeChain = NULL;
@@ -132,6 +134,8 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
         // Single transition point from Interpreter to Baseline.
         enter(jitcode, maxArgc, maxArgv, osr ? fp : NULL, calleeToken, scopeChain, numStackValues,
               result.address());
+
+        fp->clearRunningInJit();
     }
 
     JS_ASSERT(fp == cx->fp());
@@ -813,7 +817,7 @@ ion::ToggleBaselineSPS(JSRuntime *runtime, bool enable)
 }
 
 static void
-MarkActiveBaselineScripts(JSContext *cx, const IonActivationIterator &activation)
+MarkActiveBaselineScripts(JSContext *cx, const JitActivationIterator &activation)
 {
     for (ion::IonFrameIterator iter(activation); !iter.done(); ++iter) {
         switch (iter.type()) {
@@ -836,10 +840,10 @@ MarkActiveBaselineScripts(JSContext *cx, const IonActivationIterator &activation
 void
 ion::MarkActiveBaselineScripts(Zone *zone)
 {
-    // First check if there is an IonActivation on the stack, so that there
+    // First check if there is a JitActivation on the stack, so that there
     // must be a valid IonContext.
-    IonActivationIterator iter(zone->rt);
-    if (!iter.more())
+    JitActivationIterator iter(zone->rt);
+    if (iter.done())
         return;
 
     // If baseline is disabled, there are no baseline scripts on the stack.
@@ -847,7 +851,7 @@ ion::MarkActiveBaselineScripts(Zone *zone)
     if (!ion::IsBaselineEnabled(cx))
         return;
 
-    for (; iter.more(); ++iter) {
+    for (; !iter.done(); ++iter) {
         if (iter.activation()->compartment()->zone() == zone)
             MarkActiveBaselineScripts(cx, iter);
     }

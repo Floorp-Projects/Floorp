@@ -84,6 +84,22 @@ add_task(function test_simpleDownload_object_arguments()
 });
 
 /**
+ * Tests simpleDownload with string arguments.
+ */
+add_task(function test_simpleDownload_string_arguments()
+{
+  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+  yield Downloads.simpleDownload(TEST_SOURCE_URI.spec,
+                                 targetFile.path);
+  yield promiseVerifyContents(targetFile, TEST_DATA_SHORT);
+
+  targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+  yield Downloads.simpleDownload(new String(TEST_SOURCE_URI.spec),
+                                 new String(targetFile.path));
+  yield promiseVerifyContents(targetFile, TEST_DATA_SHORT);
+});
+
+/**
  * Tests that the getPublicDownloadList function returns the same list when
  * called multiple times.  More detailed tests are implemented separately for
  * the DownloadList module.

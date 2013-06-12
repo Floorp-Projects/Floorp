@@ -97,6 +97,9 @@ interface nsIPluginHost : nsISupports
 
   ACString getPermissionStringForType(in AUTF8String mimeType);
 
-  bool isPluginClickToPlayForType(in AUTF8String mimeType);
+  /**
+   * Get the nsIPluginTag state for this MIME type.
+   */
+  unsigned long getStateForType(in AUTF8String mimeType);
 };
 

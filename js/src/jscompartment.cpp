@@ -595,21 +595,11 @@ JSCompartment::purge()
 bool
 JSCompartment::hasScriptsOnStack()
 {
-    for (AllFramesIter afi(rt); !afi.done(); ++afi) {
-#ifdef JS_ION
-        // If this is an Ion frame, check the IonActivation instead
-        if (afi.isIon())
-            continue;
-#endif
-        if (afi.interpFrame()->script()->compartment() == this)
+    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
+        if (iter.activation()->compartment() == this)
             return true;
     }
-#ifdef JS_ION
-    for (ion::IonActivationIterator iai(rt); iai.more(); ++iai) {
-        if (iai.activation()->compartment() == this)
-            return true;
-    }
-#endif
+
     return false;
 }
 

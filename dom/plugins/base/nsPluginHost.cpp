@@ -1043,57 +1043,31 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   return rv;
 }
 
-nsresult
-nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
+bool
+nsPluginHost::PluginExistsForType(const char* aMimeType)
 {
-  nsPluginTag *plugin = FindPluginForType(aMimeType, true);
-  if (plugin)
-    return NS_OK;
-
-  // Pass false as the second arg so we can return NS_ERROR_PLUGIN_DISABLED
-  // for disabled plug-ins.
-  plugin = FindPluginForType(aMimeType, false);
-  if (!plugin)
-    return NS_ERROR_FAILURE;
-
-  if (!plugin->IsActive()) {
-    if (plugin->IsBlocklisted())
-      return NS_ERROR_PLUGIN_BLOCKLISTED;
-    else
-      return NS_ERROR_PLUGIN_DISABLED;
-  }
-
-  return NS_OK;
+  nsPluginTag *plugin = FindPluginForType(aMimeType, false);
+  return nullptr != plugin;
 }
 
 NS_IMETHODIMP
-nsPluginHost::IsPluginClickToPlayForType(const nsACString &aMimeType, bool *aResult)
+nsPluginHost::GetStateForType(const nsACString &aMimeType, uint32_t* aResult)
 {
   nsPluginTag *plugin = FindPluginForType(aMimeType.Data(), true);
   if (!plugin) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
-  nsresult rv = GetBlocklistStateForType(aMimeType.Data(), &blocklistState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if ((mPluginsClickToPlay && plugin->IsClicktoplay()) ||
-      blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE ||
-      blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
-    *aResult = true;
-  }
-  else {
-    *aResult = false;
-  }
-
-  return NS_OK;
+  return plugin->GetEnabledState(aResult);
 }
 
 nsresult
 nsPluginHost::GetBlocklistStateForType(const char *aMimeType, uint32_t *aState)
 {
   nsPluginTag *plugin = FindPluginForType(aMimeType, true);
+  if (!plugin) {
+    plugin = FindPluginForType(aMimeType, false);
+  }
   if (plugin) {
     nsCOMPtr<nsIBlocklistService> blocklist = do_GetService("@mozilla.org/extensions/blocklist;1");
     if (blocklist) {
@@ -1115,6 +1089,9 @@ nsPluginHost::GetPermissionStringForType(const nsACString &aMimeType, nsACString
   nsresult rv = GetBlocklistStateForType(aMimeType.Data(), &blocklistState);
   NS_ENSURE_SUCCESS(rv, rv);
   nsPluginTag *tag = FindPluginForType(aMimeType.Data(), true);
+  if (!tag) {
+    tag = FindPluginForType(aMimeType.Data(), false);
+  }
   if (!tag) {
     return NS_ERROR_FAILURE;
   }
@@ -1967,16 +1944,10 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
                                                 EmptyString(), &state);
 
         if (NS_SUCCEEDED(rv)) {
-          // If the blocklist says so, block the plugin.
           // If the blocklist says it is risky and we have never seen this
           // plugin before, then disable it.
           // If the blocklist says this is an outdated plugin, warn about
           // outdated plugins.
-          // If the blocklist says the plugin is one of the click-to-play
-          // states, set the click-to-play flag.
-          if (state == nsIBlocklistService::STATE_BLOCKED) {
-             pluginTag->SetBlocklisted(true);
-          }
           if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore) {
              pluginTag->SetEnabledState(nsIPluginTag::STATE_DISABLED);
           }

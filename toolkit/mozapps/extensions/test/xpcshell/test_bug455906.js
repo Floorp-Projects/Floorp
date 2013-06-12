@@ -71,49 +71,37 @@ var ADDONS = [{
   appVersion: "3"
 }];
 
-var PLUGINS = [{
+function MockPlugin(name, version, enabledState) {
+  this.name = name;
+  this.version = version;
+  this.enabledState = enabledState;
+}
+Object.defineProperty(MockPlugin.prototype, "blocklisted", {
+  get: function MockPlugin_getBlocklisted() {
+    let bls = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsIBlocklistService);
+    return bls.getPluginBlocklistState(this) == bls.STATE_BLOCKED;
+  }
+});
+Object.defineProperty(MockPlugin.prototype, "disabled", {
+  get: function MockPlugin_getDisabled() {
+    return this.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
+  }
+});
+
+var PLUGINS = [
   // Tests how the blocklist affects a disabled plugin
-  name: "test_bug455906_1",
-  version: "5",
-  enabledState : Ci.nsIPluginTag.STATE_DISABLED,
-  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
-  blocklisted: false
-}, {
+  new MockPlugin("test_bug455906_1", "5", Ci.nsIPluginTag.STATE_DISABLED),
   // Tests how the blocklist affects an enabled plugin
-  name: "test_bug455906_2",
-  version: "5",
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
-  blocklisted: false
-}, {
+  new MockPlugin("test_bug455906_2", "5", Ci.nsIPluginTag.STATE_ENABLED),
   // Tests how the blocklist affects an enabled plugin, to be disabled by the notification
-  name: "test_bug455906_3",
-  version: "5",
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
-  blocklisted: false
-}, {
+  new MockPlugin("test_bug455906_3", "5", Ci.nsIPluginTag.STATE_ENABLED),
   // Tests how the blocklist affects a disabled plugin that was already warned about
-  name: "test_bug455906_4",
-  version: "5",
-  enabledState: Ci.nsIPluginTag.STATE_DISABLED,
-  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
-  blocklisted: false
-}, {
+  new MockPlugin("test_bug455906_4", "5", Ci.nsIPluginTag.STATE_DISABLED),
   // Tests how the blocklist affects an enabled plugin that was already warned about
-  name: "test_bug455906_5",
-  version: "5",
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
-  blocklisted: false
-}, {
+  new MockPlugin("test_bug455906_5", "5", Ci.nsIPluginTag.STATE_ENABLED),
   // Tests how the blocklist affects an already blocked plugin
-  name: "test_bug455906_6",
-  version: "5",
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
-  blocklisted: true
-}];
+  new MockPlugin("test_bug455906_6", "5", Ci.nsIPluginTag.STATE_ENABLED)
+];
 
 var gNotificationCheck = null;
 var gTestCheck = null;

@@ -51,52 +51,57 @@ function test() {
   waitForExplicitFinish();
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
-  getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
+  gPermissionManager.remove("127.0.0.1:8888", gTestPermissionString);
+  gPermissionManager.remove("127.0.0.1:8888", gSecondTestPermissionString);
   doOnPageLoad(gHttpTestRoot + "plugin_two_types.html", testPart1a);
 }
 
-// By default, everything should be click-to-play. So: no plugins should be
-// activated, and the radio buttons in Page Info should be "Always Ask"
+// The first test plugin is CtP and the second test plugin is enabled.
 function testPart1a() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "part 1a: should have a click-to-play notification");
   let test = gTestBrowser.contentDocument.getElementById("test");
   let objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "part 1a: Test plugin should not be activated");
   let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
   let objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "part 1a: Second Test plugin should not be activated");
+  ok(objLoadingContent.activated, "part 1a: Second Test plugin should be activated");
 
   doOnOpenPageInfo(testPart1b);
 }
 
 function testPart1b() {
   let testRadioGroup = gPageInfo.document.getElementById(gTestPermissionString + "RadioGroup");
-  let testRadioAsk = gPageInfo.document.getElementById(gTestPermissionString + "#0");
-  is(testRadioGroup.selectedItem, testRadioAsk, "part 1b: Test radio group should be set to 'Always Ask'");
+  let testRadioDefault = gPageInfo.document.getElementById(gTestPermissionString + "#0");
+
+  var qString = "#" + gTestPermissionString.replace(':', '\\:') + "\\#0";
+  is(testRadioGroup.selectedItem, testRadioDefault, "part 1b: Test radio group should be set to 'Default'");
   let testRadioAllow = gPageInfo.document.getElementById(gTestPermissionString + "#1");
   testRadioGroup.selectedItem = testRadioAllow;
   testRadioAllow.doCommand();
 
   let secondtestRadioGroup = gPageInfo.document.getElementById(gSecondTestPermissionString + "RadioGroup");
-  let secondtestRadioAsk = gPageInfo.document.getElementById(gSecondTestPermissionString + "#0");
-  is(secondtestRadioGroup.selectedItem, secondtestRadioAsk, "part 1b: Second Test radio group should be set to 'Always Ask'");
+  let secondtestRadioDefault = gPageInfo.document.getElementById(gSecondTestPermissionString + "#0");
+  is(secondtestRadioGroup.selectedItem, secondtestRadioDefault, "part 1b: Second Test radio group should be set to 'Default'");
+  let secondtestRadioAsk = gPageInfo.document.getElementById(gSecondTestPermissionString + "#3");
+  secondtestRadioGroup.selectedItem = secondtestRadioAsk;
+  secondtestRadioAsk.doCommand();
 
   doOnPageLoad(gHttpTestRoot + "plugin_two_types.html", testPart2);
 }
 
-// Now, the Test plugin should be allowed.
+// Now, the Test plugin should be allowed, and the Test2 plugin should be CtP
 function testPart2() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "part 2: should have a click-to-play notification");
-  let test = gTestBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "part 2: Test plugin should be activated");
-  let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
-  let objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "part 2: Second Test plugin should not be activated");
+  let test = gTestBrowser.contentDocument.getElementById("test").
+    QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(test.activated, "part 2: Test plugin should be activated");
+
+  let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA").
+    QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!secondtest.activated, "part 2: Second Test plugin should not be activated");
+  is(secondtest.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+     "part 2: Second test plugin should be click-to-play.");
 
   let testRadioGroup = gPageInfo.document.getElementById(gTestPermissionString + "RadioGroup");
   let testRadioAllow = gPageInfo.document.getElementById(gTestPermissionString + "#1");
@@ -106,7 +111,7 @@ function testPart2() {
   testRadioBlock.doCommand();
 
   let secondtestRadioGroup = gPageInfo.document.getElementById(gSecondTestPermissionString + "RadioGroup");
-  let secondtestRadioAsk = gPageInfo.document.getElementById(gSecondTestPermissionString + "#0");
+  let secondtestRadioAsk = gPageInfo.document.getElementById(gSecondTestPermissionString + "#3");
   is(secondtestRadioGroup.selectedItem, secondtestRadioAsk, "part 2: Second Test radio group should be set to 'Always Ask'");
   let secondtestRadioBlock = gPageInfo.document.getElementById(gSecondTestPermissionString + "#2");
   secondtestRadioGroup.selectedItem = secondtestRadioBlock;
@@ -117,19 +122,18 @@ function testPart2() {
 
 // Now, all the things should be blocked
 function testPart3() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!notification, "part 3: should not have a click-to-play notification");
+  let test = gTestBrowser.contentDocument.getElementById("test").
+    QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!test.activated, "part 3: Test plugin should not be activated");
+  is(test.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED,
+    "part 3: Test plugin should be marked as PLUGIN_DISABLED");
 
-  let test = gTestBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "part 3: Test plugin should not be activated");
-  let overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(test, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "part 3: Test plugin should not have visible overlay");
-  let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
-  let objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "part 3: Second Test plugin should not be activated");
-  let overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(secondtest, "class", "mainBox");
-  ok(overlay.style.visibility == "hidden", "part 3: Second Test plugin should not have visible overlay");
+  let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA").
+    QueryInterface(Ci.nsIObjectLoadingContent);
+
+  ok(!secondtest.activated, "part 3: Second Test plugin should not be activated");
+  is(secondtest.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED,
+     "part 3: Second test plugin should be marked as PLUGIN_DISABLED");
 
   // reset permissions
   gPermissionManager.remove("127.0.0.1:8888", gTestPermissionString);
@@ -137,21 +141,21 @@ function testPart3() {
   // check that changing the permissions affects the radio state in the
   // open Page Info window
   let testRadioGroup = gPageInfo.document.getElementById(gTestPermissionString + "RadioGroup");
-  let testRadioAsk = gPageInfo.document.getElementById(gTestPermissionString + "#0");
-  is(testRadioGroup.selectedItem, testRadioAsk, "part 3: Test radio group should be set to 'Ask'");
+  let testRadioDefault = gPageInfo.document.getElementById(gTestPermissionString + "#0");
+  is(testRadioGroup.selectedItem, testRadioDefault, "part 3: Test radio group should be set to 'Default'");
   let secondtestRadioGroup = gPageInfo.document.getElementById(gSecondTestPermissionString + "RadioGroup");
-  let secondtestRadioAsk = gPageInfo.document.getElementById(gSecondTestPermissionString + "#0");
-  is(secondtestRadioGroup.selectedItem, secondtestRadioAsk, "part 3: Second Test radio group should be set to 'Always Ask'");
+  let secondtestRadioDefault = gPageInfo.document.getElementById(gSecondTestPermissionString + "#0");
+  is(secondtestRadioGroup.selectedItem, secondtestRadioDefault, "part 3: Second Test radio group should be set to 'Default'");
 
   doOnPageLoad(gHttpTestRoot + "plugin_two_types.html", testPart4a);
 }
 
-// Now test that the popup notification influences Page Info
+// Now test that setting permission directly (as from the popup notification)
+// immediately influences Page Info.
 function testPart4a() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "part 4a: should have a notification");
-  // simulate "always allow"
-  notification.secondaryActions[0].callback();
+  // simulate "allow" from the doorhanger
+  gPermissionManager.add(gTestBrowser.currentURI, gTestPermissionString, Ci.nsIPermissionManager.ALLOW_ACTION);
+  gPermissionManager.add(gTestBrowser.currentURI, gSecondTestPermissionString, Ci.nsIPermissionManager.ALLOW_ACTION);
 
   // check (again) that changing the permissions affects the radio state in the
   // open Page Info window
@@ -179,43 +183,5 @@ function testPart4b() {
 
   Services.prefs.setBoolPref("plugins.click_to_play", false);
   gPageInfo.close();
-  doOnPageLoad(gHttpTestRoot + "plugin_two_types.html", testPart5a);
-}
-
-// check that if there are no click-to-play plugins, the plugin row is hidden
-function testPart5a() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!notification, "part 5a: should not have a click-to-play notification");
-
-  doOnOpenPageInfo(testPart5b);
-}
-
-function testPart5b() {
-  ok(gPageInfo.document.getElementById("permPluginsRow").hidden, "part 5b: plugin permission row should be hidden");
-
-  gPageInfo.close();
-  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
-  function() {
-    doOnPageLoad(gHttpTestRoot + "plugin_test.html", testPart6a);
-  });
-}
-
-// check that if plugins.click_to_play is false, but there is a
-// click-to-play blocklisted plugin, we show the plugin row
-function testPart6a() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "part 6a: should have a click-to-play notification");
-
-  doOnOpenPageInfo(testPart6b);
-}
-
-function testPart6b() {
-  ok(!gPageInfo.document.getElementById("permPluginsRow").hidden, "part 6b: plugin permission row should not be hidden");
-
-  setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
-  function() {
-    resetBlocklist();
-    gPageInfo.close();
-    finishTest();
-  });
+  finishTest();
 }

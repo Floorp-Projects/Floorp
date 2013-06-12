@@ -11,6 +11,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsPluginsDir.h"
 #include "nsPluginHost.h"
+#include "nsIBlocklistService.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
@@ -30,7 +31,6 @@ using mozilla::TimeStamp;
 // no longer used                   0x0002    // reuse only if regenerating pluginreg.dat
 #define NS_PLUGIN_FLAG_FROMCACHE    0x0004    // this plugintag info was loaded from cache
 // no longer used                   0x0008    // reuse only if regenerating pluginreg.dat
-#define NS_PLUGIN_FLAG_BLOCKLISTED  0x0010    // this is a blocklisted plugin
 #define NS_PLUGIN_FLAG_CLICKTOPLAY  0x0020    // this is a click-to-play plugin
 
 inline char* new_str(const char* str)
@@ -61,12 +61,6 @@ static nsCString
 GetStatePrefNameForPlugin(nsPluginTag* aTag)
 {
   return MakePrefNameForPlugin("state", aTag);
-}
-
-static nsCString
-GetBlocklistedPrefNameForPlugin(nsPluginTag* aTag)
-{
-  return MakePrefNameForPlugin("blocklisted", aTag);
 }
 
 NS_IMPL_ISUPPORTS1(DOMMimeTypeImpl, nsIDOMMimeType)
@@ -332,33 +326,20 @@ nsPluginTag::GetDisabled(bool* aDisabled)
 bool
 nsPluginTag::IsBlocklisted()
 {
-  return Preferences::GetBool(GetBlocklistedPrefNameForPlugin(this).get(), false);
+  nsCOMPtr<nsIBlocklistService> bls = do_GetService("@mozilla.org/extensions/blocklist;1");
+  if (!bls) {
+    return false;
+  }
+
+  uint32_t state = nsIBlocklistService::STATE_NOT_BLOCKED;
+  bls->GetPluginBlocklistState(this, EmptyString(), EmptyString(), &state);
+  return state == nsIBlocklistService::STATE_BLOCKED;
 }
 
 NS_IMETHODIMP
 nsPluginTag::GetBlocklisted(bool* aBlocklisted)
 {
   *aBlocklisted = IsBlocklisted();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::SetBlocklisted(bool blocklisted)
-{
-  if (blocklisted == IsBlocklisted()) {
-    return NS_OK;
-  }
-
-  const nsCString pref = GetBlocklistedPrefNameForPlugin(this);
-  if (blocklisted) {
-    Preferences::SetBool(pref.get(), true);
-  } else {
-    Preferences::ClearUser(pref.get());
-  }
-
-  if (nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst()) {
-    host->UpdatePluginInfo(this);
-  }
   return NS_OK;
 }
 
@@ -555,9 +536,5 @@ void nsPluginTag::ImportFlagsToPrefs(uint32_t flags)
 {
   if (!(flags & NS_PLUGIN_FLAG_ENABLED)) {
     SetPluginState(ePluginState_Disabled);
-  }
-
-  if (flags & NS_PLUGIN_FLAG_BLOCKLISTED) {
-    Preferences::SetBool(GetBlocklistedPrefNameForPlugin(this).get(), true);
   }
 }

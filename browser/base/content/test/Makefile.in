@@ -39,7 +39,7 @@ MOCHITEST_FILES = \
 		$(NULL)
 
 # test_contextmenu.html is disabled on Linux due to bug 513558
-ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+ifdef MOZ_WIDGET_GTK
 MOCHITEST_FILES += \
 		audio.ogg \
 		test_contextmenu.html \
@@ -318,6 +318,7 @@ _BROWSER_FILES = \
                  blockPluginVulnerableUpdatable.xml \
                  blockPluginVulnerableNoUpdate.xml \
                  blockNoPlugins.xml \
+                 blockPluginHard.xml \
                  browser_utilityOverlay.js \
                  browser_bug676619.js \
                  download_page.html \

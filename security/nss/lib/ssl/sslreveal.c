@@ -77,18 +77,21 @@ SSL_HandshakeNegotiatedExtension(PRFileDesc * socket,
 {
   /* some decisions derived from SSL_GetChannelInfo */
   sslSocket * sslsocket = NULL;
-  SECStatus rv = SECFailure;
   PRBool enoughFirstHsDone = PR_FALSE;
 
-  if (!pYes)
-    return rv;
+  if (!pYes) {
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+  }
 
   sslsocket = ssl_FindSocket(socket);
   if (!sslsocket) {
     SSL_DBG(("%d: SSL[%d]: bad socket in HandshakeNegotiatedExtension",
              SSL_GETPID(), socket));
-    return rv;
+    return SECFailure;
   }
+
+  *pYes = PR_FALSE;
 
   if (sslsocket->firstHsDone) {
     enoughFirstHsDone = PR_TRUE;
@@ -109,9 +112,8 @@ SSL_HandshakeNegotiatedExtension(PRFileDesc * socket,
       ssl_GetSSL3HandshakeLock(sslsocket);
       *pYes = ssl3_ExtensionNegotiated(sslsocket, extId);
       ssl_ReleaseSSL3HandshakeLock(sslsocket);
-      rv = SECSuccess;
     }
   }
 
-  return rv;
+  return SECSuccess;
 }

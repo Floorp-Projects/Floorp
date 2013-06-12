@@ -124,6 +124,7 @@ FENNEC_JAVA_FILES = \
   MultiChoicePreference.java \
   NotificationClient.java \
   NotificationHandler.java \
+  NotificationHelper.java \
   NotificationService.java \
   NSSBridge.java \
   OrderedBroadcastHelper.java \
@@ -596,6 +597,9 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/alert_addon.png \
   res/drawable-mdpi/alert_app.png \
   res/drawable-mdpi/alert_download.png \
+  res/drawable-mdpi/alert_camera.png \
+  res/drawable-mdpi/alert_mic.png \
+  res/drawable-mdpi/alert_mic_camera.png \
   res/drawable-mdpi/autocomplete_list_bg.9.png \
   res/drawable-mdpi/awesomebar_tab_center.9.png \
   res/drawable-mdpi/awesomebar_tab_left.9.png \
@@ -711,6 +715,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
   res/drawable-hdpi/alert_download.png \
+  res/drawable-hdpi/alert_camera.png \
+  res/drawable-hdpi/alert_mic.png \
+  res/drawable-hdpi/alert_mic_camera.png \
   res/drawable-hdpi/awesomebar_tab_center.9.png \
   res/drawable-hdpi/awesomebar_tab_left.9.png \
   res/drawable-hdpi/awesomebar_tab_right.9.png \
@@ -804,6 +811,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_addon.png \
   res/drawable-xhdpi/alert_app.png \
   res/drawable-xhdpi/alert_download.png \
+  res/drawable-xhdpi/alert_camera.png \
+  res/drawable-xhdpi/alert_mic.png \
+  res/drawable-xhdpi/alert_mic_camera.png \
   res/drawable-xhdpi/awesomebar_tab_center.9.png \
   res/drawable-xhdpi/awesomebar_tab_left.9.png \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
@@ -874,6 +884,9 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/alert_addon.png \
   res/drawable-mdpi-v11/alert_app.png \
   res/drawable-mdpi-v11/alert_download.png \
+  res/drawable-mdpi-v11/alert_camera.png \
+  res/drawable-mdpi-v11/alert_mic.png \
+  res/drawable-mdpi-v11/alert_mic_camera.png \
   res/drawable-mdpi-v11/firefox_settings_alert.png \
   res/drawable-mdpi-v11/ic_menu_addons.png \
   res/drawable-mdpi-v11/ic_menu_apps.png \
@@ -900,6 +913,9 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/alert_addon.png \
   res/drawable-hdpi-v11/alert_app.png \
   res/drawable-hdpi-v11/alert_download.png \
+  res/drawable-hdpi-v11/alert_camera.png \
+  res/drawable-hdpi-v11/alert_mic.png \
+  res/drawable-hdpi-v11/alert_mic_camera.png \
   res/drawable-hdpi-v11/firefox_settings_alert.png \
   res/drawable-hdpi-v11/ic_menu_addons.png \
   res/drawable-hdpi-v11/ic_menu_apps.png \
@@ -926,6 +942,9 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/alert_addon.png \
   res/drawable-xhdpi-v11/alert_app.png \
   res/drawable-xhdpi-v11/alert_download.png \
+  res/drawable-xhdpi-v11/alert_camera.png \
+  res/drawable-xhdpi-v11/alert_mic.png \
+  res/drawable-xhdpi-v11/alert_mic_camera.png \
   res/drawable-xhdpi-v11/firefox_settings_alert.png \
   res/drawable-xhdpi-v11/ic_menu_addons.png \
   res/drawable-xhdpi-v11/ic_menu_apps.png \

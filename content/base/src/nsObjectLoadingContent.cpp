@@ -529,26 +529,17 @@ IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
   return false;
 }
 
-nsresult
-IsPluginEnabledForType(const nsCString& aMIMEType)
+bool
+PluginExistsForType(const char* aMIMEType)
 {
   nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
-  nsresult rv = pluginHost->IsPluginEnabledForType(aMIMEType.get());
-
-  // Check to see if the plugin is disabled before deciding if it
-  // should be in the "click to play" state, since we only want to
-  // display "click to play" UI for enabled plugins.
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return NS_OK;
+  return pluginHost->PluginExistsForType(aMIMEType);
 }
 
 ///
@@ -1297,9 +1288,8 @@ nsObjectLoadingContent::UpdateObjectParameters()
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::classid, classIDAttr);
     if (!classIDAttr.IsEmpty()) {
       // Our classid support is limited to 'java:' ids
-      rv = IsPluginEnabledForType(NS_LITERAL_CSTRING("application/x-java-vm"));
-      if (NS_SUCCEEDED(rv) &&
-          StringBeginsWith(classIDAttr, NS_LITERAL_STRING("java:"))) {
+      if (StringBeginsWith(classIDAttr, NS_LITERAL_STRING("java:")) &&
+          PluginExistsForType("application/x-java-vm")) {
         newMime.Assign("application/x-java-vm");
         isJava = true;
       } else {
@@ -1709,16 +1699,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   // type, but the parameters are invalid e.g. a embed tag with type "image/png"
   // but no URI -- don't show a plugin error or unknown type error in that case.
   if (mType == eType_Null && GetTypeOfContent(mContentType) == eType_Null) {
-    // See if a disabled or blocked plugin could've handled this
-    nsresult pluginsupport = IsPluginEnabledForType(mContentType);
-    if (pluginsupport == NS_ERROR_PLUGIN_DISABLED) {
-      fallbackType = eFallbackDisabled;
-    } else if (pluginsupport == NS_ERROR_PLUGIN_BLOCKLISTED) {
-      fallbackType = eFallbackBlocklisted;
-    } else {
-      // Completely unknown type
-      fallbackType = eFallbackUnsupported;
-    }
+    fallbackType = eFallbackUnsupported;
   }
 
   // Explicit user activation should reset if the object changes content types
@@ -2269,7 +2250,8 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
     return eType_Document;
   }
 
-  if ((caps & eSupportPlugins) && NS_SUCCEEDED(IsPluginEnabledForType(aMIMEType))) {
+  if (caps & eSupportPlugins && PluginExistsForType(aMIMEType.get())) {
+    // ShouldPlay will handle checking for disabled plugins
     return eType_Plugin;
   }
 
@@ -2729,9 +2711,7 @@ nsObjectLoadingContent::CancelPlayPreview()
 bool
 nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
 {
-  // mActivated is true if we've been activated via PlayPlugin() (e.g. user has
-  // clicked through). Otherwise, only play if click-to-play is off or if page
-  // is whitelisted
+  nsresult rv;
 
   nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
@@ -2754,32 +2734,46 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
     return true;
   }
 
-  bool isCTP;
-  nsresult rv = pluginHost->IsPluginClickToPlayForType(mContentType, &isCTP);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
+  // Order of checks:
+  // * Already activated? Then ok
+  // * Assume a default of click-to-play
+  // * If blocklisted, override the reason with the blocklist reason
+  // * If not blocklisted but playPreview, override the reason with the
+  //   playPreview reason.
+  // * Check per-site permissions and follow those if specified.
+  // * Honor per-plugin disabled permission
+  // * Blocklisted plugins are forced to CtP
+  // * Check per-plugin permission and follow that.
 
-  if (!isCTP || mActivated) {
+  if (mActivated) {
     return true;
   }
 
-  // set the fallback reason
+  // Before we check permissions, get the blocklist state of this plugin to set
+  // the fallback reason correctly.
   aReason = eFallbackClickToPlay;
-  // (if it's click-to-play, it might be because of the blocklist)
-  uint32_t state;
-  rv = pluginHost->GetBlocklistStateForType(mContentType.get(), &state);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (state == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
+  uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
+  pluginHost->GetBlocklistStateForType(mContentType.get(), &blocklistState);
+  if (blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
     aReason = eFallbackVulnerableUpdatable;
   }
-  else if (state == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
+  else if (blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
     aReason = eFallbackVulnerableNoUpdate;
   }
+  else if (blocklistState == nsIBlocklistService::STATE_BLOCKED) {
+    // no override possible
+    aReason = eFallbackBlocklisted;
+    return false;
+  }
 
-  // If plugin type is click-to-play and we have not been explicitly clicked.
-  // check if permissions lets this page bypass - (e.g. user selected 'Always
-  // play plugins on this page')
+  if (aReason == eFallbackClickToPlay && isPlayPreviewSpecified &&
+      !mPlayPreviewCanceled && !ignoreCTP) {
+    // play preview in click-to-play mode is shown instead of standard CTP UI
+    aReason = eFallbackPlayPreview;
+  }
+
+  // Check the permission manager for permission based on the principal of
+  // the toplevel content.
 
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
   MOZ_ASSERT(thisContent);
@@ -2800,7 +2794,6 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, false);
 
-  bool allowPerm = false;
   // For now we always say that the system principal uses click-to-play since
   // that maintains current behavior and we have tests that expect this.
   // What we really should do is disable plugins entirely in pages that use
@@ -2815,16 +2808,43 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
                                                         permissionString.Data(),
                                                         &permission);
     NS_ENSURE_SUCCESS(rv, false);
-    allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
+    switch (permission) {
+    case nsIPermissionManager::ALLOW_ACTION:
+      return true;
+    case nsIPermissionManager::DENY_ACTION:
+      aReason = eFallbackDisabled;
+      return false;
+    case nsIPermissionManager::PROMPT_ACTION:
+      return false;
+    case nsIPermissionManager::UNKNOWN_ACTION:
+      break;
+    default:
+      MOZ_ASSERT(false);
+      return false;
+    }
   }
 
-  if (aReason == eFallbackClickToPlay && isPlayPreviewSpecified &&
-      !mPlayPreviewCanceled && !ignoreCTP) {
-    // play preview in click-to-play mode is shown instead of standard CTP UI
-    aReason = eFallbackPlayPreview;
+  uint32_t enabledState = nsIPluginTag::STATE_DISABLED;
+  pluginHost->GetStateForType(mContentType, &enabledState);
+  if (nsIPluginTag::STATE_DISABLED == enabledState) {
+    aReason = eFallbackDisabled;
+    return false;
   }
 
-  return allowPerm;
+  // No site-specific permissions. Vulnerable plugins are automatically CtP
+  if (blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE ||
+      blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
+    return false;
+  }
+
+  switch (enabledState) {
+  case nsIPluginTag::STATE_ENABLED:
+    return true;
+  case nsIPluginTag::STATE_CLICKTOPLAY:
+    return false;
+  }
+  MOZ_NOT_REACHED("Unexpected enabledState");
+  return false;
 }
 
 nsIDocument*

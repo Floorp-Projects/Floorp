@@ -14,7 +14,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CPP_SOURCES += [
         'nsMacShellService.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+elif CONFIG['MOZ_WIDGET_GTK']:
     CPP_SOURCES += [
         'nsGNOMEShellService.cpp',
     ]

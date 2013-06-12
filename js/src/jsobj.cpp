@@ -1144,11 +1144,6 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
 
         JS_ASSERT(obj->lastProperty()->slotSpan() == last->slotSpan());
         JS_ALWAYS_TRUE(setLastProperty(cx, obj, last));
-
-        // Ordinarily ArraySetLength handles this, but we're going behind its
-        // back right now, so we must do this manually.
-        if (it == FREEZE && obj->isArray())
-            obj->getElementsHeader()->setNonwritableArrayLength();
     } else {
         RootedId id(cx);
         for (size_t i = 0; i < props.length(); i++) {
@@ -1169,6 +1164,18 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
                 return false;
         }
     }
+
+    // Ordinarily ArraySetLength handles this, but we're going behind its back
+    // right now, so we must do this manually.  Neither the custom property
+    // tree mutations nor the setGenericAttributes call in the above code will
+    // do this for us.
+    //
+    // ArraySetLength also implements the capacity <= length invariant for
+    // arrays with non-writable length.  We don't need to do anything special
+    // for that, because capacity was zeroed out by preventExtensions.  (See
+    // the assertion before the if-else above.)
+    if (it == FREEZE && obj->isArray())
+        obj->getElementsHeader()->setNonwritableArrayLength();
 
     return true;
 }
@@ -5221,7 +5228,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             return;
         }
     } else {
-        while (!i.done() && !i.isIon() && i.interpFrame() != start)
+        while (!i.done() && !i.isJit() && i.interpFrame() != start)
             ++i;
 
         if (i.done()) {
@@ -5232,8 +5239,8 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
     }
 
     for (; !i.done(); ++i) {
-        if (i.isIon())
-            fprintf(stderr, "IonFrame\n");
+        if (i.isJit())
+            fprintf(stderr, "JIT frame\n");
         else
             fprintf(stderr, "StackFrame at %p\n", (void *) i.interpFrame());
 
@@ -5252,10 +5259,10 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
-        if (!i.isIon())
+        if (!i.isJit())
             MaybeDumpObject("blockChain", i.interpFrame()->maybeBlockChain());
         MaybeDumpValue("this", i.thisv());
-        if (!i.isIon()) {
+        if (!i.isJit()) {
             fprintf(stderr, "  rval: ");
             dumpValue(i.interpFrame()->returnValue());
             fputc('\n', stderr);
@@ -5264,13 +5271,13 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
         fprintf(stderr, "  flags:");
         if (i.isConstructing())
             fprintf(stderr, " constructing");
-        if (!i.isIon() && i.interpFrame()->isDebuggerFrame())
+        if (!i.isJit() && i.interpFrame()->isDebuggerFrame())
             fprintf(stderr, " debugger");
         if (i.isEvalFrame())
             fprintf(stderr, " eval");
-        if (!i.isIon() && i.interpFrame()->isYielding())
+        if (!i.isJit() && i.interpFrame()->isYielding())
             fprintf(stderr, " yielding");
-        if (!i.isIon() && i.interpFrame()->isGeneratorFrame())
+        if (!i.isJit() && i.interpFrame()->isGeneratorFrame())
             fprintf(stderr, " generator");
         fputc('\n', stderr);
 
@@ -5293,7 +5300,7 @@ js_DumpBacktrace(JSContext *cx)
         unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
         JSScript *script = i.script();
         sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
-                        depth, (i.isIon() ? 0 : i.interpFrame()), filename, line,
+                        depth, (i.isJit() ? 0 : i.interpFrame()), filename, line,
                         script, i.pc() - script->code);
     }
     fprintf(stdout, "%s", sprinter.string());

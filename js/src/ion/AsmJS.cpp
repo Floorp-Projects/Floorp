@@ -3402,8 +3402,8 @@ CheckCallArgs(FunctionCompiler &f, ParseNode *callNode, Use use, FunctionCompile
         if (!CheckExpr(f, argNode, use, &argDef, &argType))
             return false;
 
-        if (argType.isVoid())
-            return f.fail(argNode, "void is not a valid argument type");
+        if (argType.toMIRType() == MIRType_None)
+            return f.failf(argNode, "%s is not a valid argument type", argType.toChars());
 
         if (!f.passArg(argDef, argType, args))
             return false;

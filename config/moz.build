@@ -13,3 +13,8 @@ CONFIGURE_SUBST_FILES += [
     'tests/src-simple/Makefile',
 ]
 
+if CONFIG['HOST_OS_ARCH'] != 'WINNT':
+    HOST_CSRCS += [
+        'nsinstall.c',
+        'pathsub.c',
+    ]
