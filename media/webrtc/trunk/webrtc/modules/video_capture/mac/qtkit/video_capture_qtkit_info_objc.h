@@ -24,6 +24,7 @@
 @interface VideoCaptureMacQTKitInfoObjC : NSObject{
     bool                                _OSSupportedInfo;
     NSArray*                            _captureDevicesInfo;
+    NSAutoreleasePool*                    _poolInfo;
     int                                    _captureDeviceCountInfo;
 
 }
@@ -47,19 +48,19 @@
 
 - (NSNumber*)getCaptureDeviceCount;
 
-- (NSNumber*)getDeviceNamesFromIndex:(WebRtc_UWord32)index
+- (NSNumber*)getDeviceNamesFromIndex:(uint32_t)index
     DefaultName:(char*)deviceName
-    WithLength:(WebRtc_UWord32)deviceNameLength
+    WithLength:(uint32_t)deviceNameLength
     AndUniqueID:(char*)deviceUniqueID
-    WithLength:(WebRtc_UWord32)deviceUniqueIDLength
+    WithLength:(uint32_t)deviceUniqueIDLength
     AndProductID:(char*)deviceProductID
-    WithLength:(WebRtc_UWord32)deviceProductIDLength;
+    WithLength:(uint32_t)deviceProductIDLength;
 
 - (NSNumber*)displayCaptureSettingsDialogBoxWithDevice:
         (const char*)deviceUniqueIdUTF8
     AndTitle:(const char*)dialogTitleUTF8
-    AndParentWindow:(void*) parentWindow AtX:(WebRtc_UWord32)positionX
-    AndY:(WebRtc_UWord32) positionY;
+    AndParentWindow:(void*) parentWindow AtX:(uint32_t)positionX
+    AndY:(uint32_t) positionY;
 @end
 
 #endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_OBJC_H_

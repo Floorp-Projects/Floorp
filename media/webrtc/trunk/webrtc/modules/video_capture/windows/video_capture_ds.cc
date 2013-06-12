@@ -22,7 +22,7 @@ namespace webrtc
 {
 namespace videocapturemodule
 {
-VideoCaptureDS::VideoCaptureDS(const WebRtc_Word32 id)
+VideoCaptureDS::VideoCaptureDS(const int32_t id)
     : VideoCaptureImpl(id), _dsInfo(id), _captureFilter(NULL),
       _graphBuilder(NULL), _mediaControl(NULL), _sinkFilter(NULL),
       _inputSendPin(NULL), _outputCapturePin(NULL), _dvFilter(NULL),
@@ -59,11 +59,10 @@ VideoCaptureDS::~VideoCaptureDS()
     RELEASE_AND_CLEAR(_graphBuilder);
 }
 
-WebRtc_Word32 VideoCaptureDS::Init(const WebRtc_Word32 id,
-                                          const char* deviceUniqueIdUTF8)
+int32_t VideoCaptureDS::Init(const int32_t id, const char* deviceUniqueIdUTF8)
 {
-    const WebRtc_Word32 nameLength =
-        (WebRtc_Word32) strlen((char*) deviceUniqueIdUTF8);
+    const int32_t nameLength =
+        (int32_t) strlen((char*) deviceUniqueIdUTF8);
     if (nameLength > kVideoCaptureUniqueNameLength)
         return -1;
 
@@ -150,7 +149,7 @@ WebRtc_Word32 VideoCaptureDS::Init(const WebRtc_Word32 id,
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureDS::StartCapture(
+int32_t VideoCaptureDS::StartCapture(
                                       const VideoCaptureCapability& capability)
 {
     CriticalSectionScoped cs(&_apiCs);
@@ -174,7 +173,7 @@ WebRtc_Word32 VideoCaptureDS::StartCapture(
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureDS::StopCapture()
+int32_t VideoCaptureDS::StopCapture()
 {
     CriticalSectionScoped cs(&_apiCs);
 
@@ -201,20 +200,20 @@ bool VideoCaptureDS::CaptureStarted()
     return state == State_Running;
 
 }
-WebRtc_Word32 VideoCaptureDS::CaptureSettings(
+int32_t VideoCaptureDS::CaptureSettings(
                                              VideoCaptureCapability& settings)
 {
     settings = _requestedCapability;
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureDS::SetCameraOutput(
+int32_t VideoCaptureDS::SetCameraOutput(
                              const VideoCaptureCapability& requestedCapability)
 {
 
     // Get the best matching capability
     VideoCaptureCapability capability;
-    WebRtc_Word32 capabilityIndex;
+    int32_t capabilityIndex;
 
     // Store the new requested size
     _requestedCapability = requestedCapability;
@@ -326,7 +325,7 @@ WebRtc_Word32 VideoCaptureDS::SetCameraOutput(
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureDS::DisconnectGraph()
+int32_t VideoCaptureDS::DisconnectGraph()
 {
     HRESULT hr = _mediaControl->Stop();
     hr += _graphBuilder->Disconnect(_outputCapturePin);

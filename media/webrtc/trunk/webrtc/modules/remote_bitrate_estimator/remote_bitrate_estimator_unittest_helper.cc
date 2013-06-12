@@ -39,25 +39,25 @@ void RtpStream::set_rtp_timestamp_offset(uint32_t offset) {
 // Generates a new frame for this stream. If called too soon after the
 // previous frame, no frame will be generated. The frame is split into
 // packets.
-int64_t RtpStream::GenerateFrame(double time_now, PacketList* packets) {
-  if (time_now < next_rtp_time_) {
+int64_t RtpStream::GenerateFrame(int64_t time_now_us, PacketList* packets) {
+  if (time_now_us < next_rtp_time_) {
     return next_rtp_time_;
   }
   assert(packets != NULL);
   int bits_per_frame = (bitrate_bps_ + fps_ / 2) / fps_;
-  int n_packets = std::max((bits_per_frame + 8 * kMtu) / (8 * kMtu), 1);
+  int n_packets = std::max((bits_per_frame + 4 * kMtu) / (8 * kMtu), 1);
   int packet_size = (bits_per_frame + 4 * n_packets) / (8 * n_packets);
   assert(n_packets >= 0);
   for (int i = 0; i < n_packets; ++i) {
     RtpPacket* packet = new RtpPacket;
-    packet->send_time = time_now + kSendSideOffsetMs + 0.5f;
+    packet->send_time = time_now_us + kSendSideOffsetUs;
     packet->size = packet_size;
     packet->rtp_timestamp = rtp_timestamp_offset_ + static_cast<uint32_t>(
-        (frequency_ / 1000.0) * packet->send_time + 0.5);
+        ((frequency_ / 1000) * packet->send_time + 500) / 1000);
     packet->ssrc = ssrc_;
     packets->push_back(packet);
   }
-  next_rtp_time_ = time_now + 1000.0 / static_cast<double>(fps_);
+  next_rtp_time_ = time_now_us + (1000000 + fps_ / 2) / fps_;
   return next_rtp_time_;
 }
 
@@ -67,18 +67,18 @@ double RtpStream::next_rtp_time() const {
 }
 
 // Generates an RTCP packet.
-RtpStream::RtcpPacket* RtpStream::Rtcp(double time_now) {
-  if (time_now < next_rtcp_time_) {
+RtpStream::RtcpPacket* RtpStream::Rtcp(int64_t time_now_us) {
+  if (time_now_us < next_rtcp_time_) {
     return NULL;
   }
   RtcpPacket* rtcp = new RtcpPacket;
-  int64_t send_time = RtpStream::kSendSideOffsetMs + time_now + 0.5;
+  int64_t send_time_us = RtpStream::kSendSideOffsetUs + time_now_us;
   rtcp->timestamp = rtp_timestamp_offset_ + static_cast<uint32_t>(
-      (frequency_ / 1000.0) * send_time + 0.5);
-  rtcp->ntp_secs = send_time / 1000;
-  rtcp->ntp_frac = (send_time % 1000) * kNtpFracPerMs;
+          ((frequency_ / 1000) * send_time_us + 500) / 1000);
+  rtcp->ntp_secs = send_time_us / 1000000;
+  rtcp->ntp_frac = (send_time_us % 1000000) * kNtpFracPerMs;
   rtcp->ssrc = ssrc_;
-  next_rtcp_time_ = time_now + kRtcpIntervalMs;
+  next_rtcp_time_ = time_now_us + kRtcpIntervalUs;
   return rtcp;
 }
 
@@ -102,7 +102,7 @@ bool RtpStream::Compare(const std::pair<unsigned int, RtpStream*>& left,
 
 StreamGenerator::StreamGenerator(int capacity, double time_now)
     : capacity_(capacity),
-      prev_arrival_time_(time_now) {}
+      prev_arrival_time_us_(time_now) {}
 
 StreamGenerator::~StreamGenerator() {
   for (StreamMap::iterator it = streams_.begin(); it != streams_.end();
@@ -150,30 +150,33 @@ void StreamGenerator::set_rtp_timestamp_offset(unsigned int ssrc,
 
 // TODO(holmer): Break out the channel simulation part from this class to make
 // it possible to simulate different types of channels.
-double StreamGenerator::GenerateFrame(RtpStream::PacketList* packets,
-                                      double time_now) {
+int64_t StreamGenerator::GenerateFrame(RtpStream::PacketList* packets,
+                                       int64_t time_now_us) {
   assert(packets != NULL);
   assert(packets->empty());
   assert(capacity_ > 0);
   StreamMap::iterator it = std::min_element(streams_.begin(), streams_.end(),
                                             RtpStream::Compare);
-  (*it).second->GenerateFrame(time_now, packets);
+  (*it).second->GenerateFrame(time_now_us, packets);
+  int i = 0;
   for (RtpStream::PacketList::iterator packet_it = packets->begin();
       packet_it != packets->end(); ++packet_it) {
-    int required_network_time =
-        (8 * 1000 * (*packet_it)->size + capacity_ / 2) / capacity_;
-    prev_arrival_time_ = std::max(time_now + required_network_time,
-        prev_arrival_time_ + required_network_time);
-    (*packet_it)->arrival_time = prev_arrival_time_ + 0.5;
+    int capacity_bpus = capacity_ / 1000;
+    int64_t required_network_time_us =
+        (8 * 1000 * (*packet_it)->size + capacity_bpus / 2) / capacity_bpus;
+    prev_arrival_time_us_ = std::max(time_now_us + required_network_time_us,
+        prev_arrival_time_us_ + required_network_time_us);
+    (*packet_it)->arrival_time = prev_arrival_time_us_;
+    ++i;
   }
   it = std::min_element(streams_.begin(), streams_.end(), RtpStream::Compare);
   return (*it).second->next_rtp_time();
 }
 
-void StreamGenerator::Rtcps(RtcpList* rtcps, double time_now) const {
+void StreamGenerator::Rtcps(RtcpList* rtcps, int64_t time_now_us) const {
   for (StreamMap::const_iterator it = streams_.begin(); it != streams_.end();
       ++it) {
-    RtpStream::RtcpPacket* rtcp = it->second->Rtcp(time_now);
+    RtpStream::RtcpPacket* rtcp = it->second->Rtcp(time_now_us);
     if (rtcp) {
       rtcps->push_front(rtcp);
     }
@@ -182,22 +185,24 @@ void StreamGenerator::Rtcps(RtcpList* rtcps, double time_now) const {
 }  // namespace testing
 
 RemoteBitrateEstimatorTest::RemoteBitrateEstimatorTest()
-    : time_now_(0.0),
+    : clock_(0),
       align_streams_(false) {}
 
 RemoteBitrateEstimatorTest::RemoteBitrateEstimatorTest(bool align_streams)
-    : time_now_(0.0),
+    : clock_(0),
       align_streams_(align_streams) {}
 
 void RemoteBitrateEstimatorTest::SetUp() {
   bitrate_observer_.reset(new testing::TestBitrateObserver);
   bitrate_estimator_.reset(
       RemoteBitrateEstimator::Create(
+          overuse_detector_options_,
+          RemoteBitrateEstimator::kSingleStreamEstimation,
           bitrate_observer_.get(),
-          over_use_detector_options_,
-          RemoteBitrateEstimator::kSingleStreamEstimation));
-  stream_generator_.reset(new testing::StreamGenerator(1e6,  // Capacity.
-                                                       time_now_));
+          &clock_));
+  stream_generator_.reset(new testing::StreamGenerator(
+      1e6,  // Capacity.
+      clock_.TimeInMicroseconds()));
 }
 
 void RemoteBitrateEstimatorTest::AddDefaultStream() {
@@ -220,15 +225,14 @@ bool RemoteBitrateEstimatorTest::GenerateAndProcessFrame(unsigned int ssrc,
     unsigned int bitrate_bps) {
   stream_generator_->set_bitrate_bps(bitrate_bps);
   testing::RtpStream::PacketList packets;
-  time_now_ = stream_generator_->GenerateFrame(&packets, time_now_);
-  int64_t last_arrival_time = -1;
-  bool prev_was_decrease = false;
+  int64_t next_time_us = stream_generator_->GenerateFrame(
+      &packets, clock_.TimeInMicroseconds());
   bool overuse = false;
   while (!packets.empty()) {
     testing::RtpStream::RtpPacket* packet = packets.front();
     if (align_streams_) {
       testing::StreamGenerator::RtcpList rtcps;
-      stream_generator_->Rtcps(&rtcps, time_now_);
+      stream_generator_->Rtcps(&rtcps, clock_.TimeInMicroseconds());
       for (testing::StreamGenerator::RtcpList::iterator it = rtcps.begin();
           it != rtcps.end(); ++it) {
         bitrate_estimator_->IncomingRtcp((*it)->ssrc,
@@ -241,40 +245,39 @@ bool RemoteBitrateEstimatorTest::GenerateAndProcessFrame(unsigned int ssrc,
     bitrate_observer_->Reset();
     bitrate_estimator_->IncomingPacket(packet->ssrc,
                                        packet->size,
-                                       packet->arrival_time,
+                                       (packet->arrival_time + 500) / 1000,
                                        packet->rtp_timestamp);
     if (bitrate_observer_->updated()) {
       // Verify that new estimates only are triggered by an overuse and a
       // rate decrease.
       overuse = true;
       EXPECT_LE(bitrate_observer_->latest_bitrate(), bitrate_bps);
-      EXPECT_FALSE(prev_was_decrease);
-      prev_was_decrease = true;
-    } else {
-      prev_was_decrease = false;
     }
-    last_arrival_time = packet->arrival_time;
+    clock_.AdvanceTimeMicroseconds(packet->arrival_time -
+                                   clock_.TimeInMicroseconds());
     delete packet;
     packets.pop_front();
   }
-  EXPECT_GT(last_arrival_time, -1);
-  bitrate_estimator_->UpdateEstimate(ssrc, last_arrival_time);
+  bitrate_estimator_->Process();
+  clock_.AdvanceTimeMicroseconds(next_time_us - clock_.TimeInMicroseconds());
   return overuse;
 }
 
-// Run the bandwidth estimator with a stream of |number_of_frames| frames.
+// Run the bandwidth estimator with a stream of |number_of_frames| frames, or
+// until it reaches |target_bitrate|.
 // Can for instance be used to run the estimator for some time to get it
 // into a steady state.
 unsigned int RemoteBitrateEstimatorTest::SteadyStateRun(
     unsigned int ssrc,
-    int number_of_frames,
+    int max_number_of_frames,
     unsigned int start_bitrate,
     unsigned int min_bitrate,
-    unsigned int max_bitrate) {
+    unsigned int max_bitrate,
+    unsigned int target_bitrate) {
   unsigned int bitrate_bps = start_bitrate;
   bool bitrate_update_seen = false;
   // Produce |number_of_frames| frames and give them to the estimator.
-  for (int i = 0; i < number_of_frames; ++i) {
+  for (int i = 0; i < max_number_of_frames; ++i) {
     bool overuse = GenerateAndProcessFrame(ssrc, bitrate_bps);
     if (overuse) {
       EXPECT_LT(bitrate_observer_->latest_bitrate(), max_bitrate);
@@ -284,6 +287,9 @@ unsigned int RemoteBitrateEstimatorTest::SteadyStateRun(
     } else if (bitrate_observer_->updated()) {
       bitrate_bps = bitrate_observer_->latest_bitrate();
       bitrate_observer_->Reset();
+    }
+    if (bitrate_update_seen && bitrate_bps > target_bitrate) {
+      break;
     }
   }
   EXPECT_TRUE(bitrate_update_seen);

@@ -22,7 +22,7 @@ namespace webrtc {
 
 #ifndef WEBRTC_CODEC_G722
 
-ACMG722::ACMG722(WebRtc_Word16 /* codec_id */)
+ACMG722::ACMG722(int16_t /* codec_id */)
     : ptr_enc_str_(NULL),
       ptr_dec_str_(NULL),
       encoder_inst_ptr_(NULL),
@@ -31,40 +31,40 @@ ACMG722::ACMG722(WebRtc_Word16 /* codec_id */)
 
 ACMG722::~ACMG722() {}
 
-WebRtc_Word32 ACMG722::Add10MsDataSafe(
-    const WebRtc_UWord32 /* timestamp */,
-    const WebRtc_Word16* /* data */,
-    const WebRtc_UWord16 /* length_smpl */,
-    const WebRtc_UWord8 /* audio_channel */) {
+int32_t ACMG722::Add10MsDataSafe(
+    const uint32_t /* timestamp */,
+    const int16_t* /* data */,
+    const uint16_t /* length_smpl */,
+    const uint8_t /* audio_channel */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG722::InternalEncode(
-    WebRtc_UWord8* /* bitstream */,
-    WebRtc_Word16* /* bitstream_len_byte */) {
+int16_t ACMG722::InternalEncode(
+    uint8_t* /* bitstream */,
+    int16_t* /* bitstream_len_byte */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG722::DecodeSafe(WebRtc_UWord8* /* bitstream */,
-                                  WebRtc_Word16 /* bitstream_len_byte */,
-                                  WebRtc_Word16* /* audio */,
-                                  WebRtc_Word16* /* audio_samples */,
-                                  WebRtc_Word8* /* speech_type */) {
+int16_t ACMG722::DecodeSafe(uint8_t* /* bitstream */,
+                            int16_t /* bitstream_len_byte */,
+                            int16_t* /* audio */,
+                            int16_t* /* audio_samples */,
+                            int8_t* /* speech_type */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG722::InternalInitEncoder(
+int16_t ACMG722::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-WebRtc_Word16 ACMG722::InternalInitDecoder(
+int16_t ACMG722::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-WebRtc_Word32 ACMG722::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
-                                const CodecInst& /* codec_inst */) {
+int32_t ACMG722::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
+                          const CodecInst& /* codec_inst */) {
   return -1;
 }
 
@@ -72,7 +72,7 @@ ACMGenericCodec* ACMG722::CreateInstance(void) {
   return NULL;
 }
 
-WebRtc_Word16 ACMG722::InternalCreateEncoder() {
+int16_t ACMG722::InternalCreateEncoder() {
   return -1;
 }
 
@@ -80,7 +80,7 @@ void ACMG722::DestructEncoderSafe() {
   return;
 }
 
-WebRtc_Word16 ACMG722::InternalCreateDecoder() {
+int16_t ACMG722::InternalCreateDecoder() {
   return -1;
 }
 
@@ -107,7 +107,7 @@ struct ACMG722DecStr {
   G722DecInst* inst_right;  // instance for right channel in case of stereo
 };
 
-ACMG722::ACMG722(WebRtc_Word16 codec_id)
+ACMG722::ACMG722(int16_t codec_id)
     : encoder_inst_ptr_(NULL),
       encoder_inst_ptr_right_(NULL),
       decoder_inst_ptr_(NULL) {
@@ -157,33 +157,33 @@ ACMG722::~ACMG722() {
   return;
 }
 
-WebRtc_Word32 ACMG722::Add10MsDataSafe(const WebRtc_UWord32 timestamp,
-                                       const WebRtc_Word16* data,
-                                       const WebRtc_UWord16 length_smpl,
-                                       const WebRtc_UWord8 audio_channel) {
+int32_t ACMG722::Add10MsDataSafe(const uint32_t timestamp,
+                                 const int16_t* data,
+                                 const uint16_t length_smpl,
+                                 const uint8_t audio_channel) {
   return ACMGenericCodec::Add10MsDataSafe((timestamp >> 1), data, length_smpl,
                                           audio_channel);
 }
 
-WebRtc_Word16 ACMG722::InternalEncode(WebRtc_UWord8* bitstream,
-                                      WebRtc_Word16* bitstream_len_byte) {
+int16_t ACMG722::InternalEncode(uint8_t* bitstream,
+                                int16_t* bitstream_len_byte) {
   // If stereo, split input signal in left and right channel before encoding
   if (num_channels_ == 2) {
-    WebRtc_Word16 left_channel[960];
-    WebRtc_Word16 right_channel[960];
-    WebRtc_UWord8 out_left[480];
-    WebRtc_UWord8 out_right[480];
-    WebRtc_Word16 len_in_bytes;
+    int16_t left_channel[960];
+    int16_t right_channel[960];
+    uint8_t out_left[480];
+    uint8_t out_right[480];
+    int16_t len_in_bytes;
     for (int i = 0, j = 0; i < frame_len_smpl_ * 2; i += 2, j++) {
       left_channel[j] = in_audio_[in_audio_ix_read_ + i];
       right_channel[j] = in_audio_[in_audio_ix_read_ + i + 1];
     }
     len_in_bytes = WebRtcG722_Encode(encoder_inst_ptr_, left_channel,
                                      frame_len_smpl_,
-                                     (WebRtc_Word16*)out_left);
+                                     (int16_t*)out_left);
     len_in_bytes += WebRtcG722_Encode(encoder_inst_ptr_right_, right_channel,
                                       frame_len_smpl_,
-                                      (WebRtc_Word16*)out_right);
+                                      (int16_t*)out_right);
     *bitstream_len_byte = len_in_bytes;
 
     // Interleave the 4 bits per sample from left and right channel
@@ -195,7 +195,7 @@ WebRtc_Word16 ACMG722::InternalEncode(WebRtc_UWord8* bitstream,
     *bitstream_len_byte = WebRtcG722_Encode(encoder_inst_ptr_,
                                             &in_audio_[in_audio_ix_read_],
                                             frame_len_smpl_,
-                                            (WebRtc_Word16*)bitstream);
+                                            (int16_t*)bitstream);
   }
 
   // increment the read index this tell the caller how far
@@ -204,15 +204,15 @@ WebRtc_Word16 ACMG722::InternalEncode(WebRtc_UWord8* bitstream,
   return *bitstream_len_byte;
 }
 
-WebRtc_Word16 ACMG722::DecodeSafe(WebRtc_UWord8* /* bitstream */,
-                                  WebRtc_Word16 /* bitstream_len_byte */,
-                                  WebRtc_Word16* /* audio */,
-                                  WebRtc_Word16* /* audio_samples */,
-                                  WebRtc_Word8* /* speech_type */) {
+int16_t ACMG722::DecodeSafe(uint8_t* /* bitstream */,
+                            int16_t /* bitstream_len_byte */,
+                            int16_t* /* audio */,
+                            int16_t* /* audio_samples */,
+                            int8_t* /* speech_type */) {
   return 0;
 }
 
-WebRtc_Word16 ACMG722::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
+int16_t ACMG722::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
   if (codec_params->codec_inst.channels == 2) {
     // Create codec struct for right channel
     if (ptr_enc_str_->inst_right == NULL) {
@@ -230,13 +230,13 @@ WebRtc_Word16 ACMG722::InternalInitEncoder(WebRtcACMCodecParams* codec_params) {
   return WebRtcG722_EncoderInit(encoder_inst_ptr_);
 }
 
-WebRtc_Word16 ACMG722::InternalInitDecoder(
+int16_t ACMG722::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return WebRtcG722_DecoderInit(decoder_inst_ptr_);
 }
 
-WebRtc_Word32 ACMG722::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                                const CodecInst& codec_inst) {
+int32_t ACMG722::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                          const CodecInst& codec_inst) {
   if (!decoder_initialized_) {
     // TODO(turajs): log error
     return -1;
@@ -260,7 +260,7 @@ ACMGenericCodec* ACMG722::CreateInstance(void) {
   return NULL;
 }
 
-WebRtc_Word16 ACMG722::InternalCreateEncoder() {
+int16_t ACMG722::InternalCreateEncoder() {
   if (ptr_enc_str_ == NULL) {
     // this structure must be created at the costructor
     // if it is still NULL then there is a probelm and
@@ -286,7 +286,7 @@ void ACMG722::DestructEncoderSafe() {
   encoder_initialized_ = false;
 }
 
-WebRtc_Word16 ACMG722::InternalCreateDecoder() {
+int16_t ACMG722::InternalCreateDecoder() {
   if (ptr_dec_str_ == NULL) {
     // this structure must be created at the costructor
     // if it is still NULL then there is a probelm and

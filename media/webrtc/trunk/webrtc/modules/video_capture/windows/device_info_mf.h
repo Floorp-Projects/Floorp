@@ -19,20 +19,22 @@ namespace videocapturemodule {
 // Provides video capture device information using the Media Foundation API.
 class DeviceInfoMF : public DeviceInfoImpl {
  public:
-  explicit DeviceInfoMF(const WebRtc_Word32 id);
+  explicit DeviceInfoMF(const int32_t id);
   virtual ~DeviceInfoMF();
 
-  WebRtc_Word32 Init();
-  virtual WebRtc_UWord32 NumberOfDevices();
+  int32_t Init();
+  virtual uint32_t NumberOfDevices();
 
-  virtual WebRtc_Word32 GetDeviceName(WebRtc_UWord32 deviceNumber,
-      char* deviceNameUTF8, WebRtc_UWord32 deviceNameLength,
-      char* deviceUniqueIdUTF8, WebRtc_UWord32 deviceUniqueIdUTF8Length,
-      char* productUniqueIdUTF8, WebRtc_UWord32 productUniqueIdUTF8Length);
+  virtual int32_t GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8,
+                                uint32_t deviceNameLength,
+                                char* deviceUniqueIdUTF8,
+                                uint32_t deviceUniqueIdUTF8Length,
+                                char* productUniqueIdUTF8,
+                                uint32_t productUniqueIdUTF8Length);
 
-  virtual WebRtc_Word32 DisplayCaptureSettingsDialogBox(
+  virtual int32_t DisplayCaptureSettingsDialogBox(
       const char* deviceUniqueIdUTF8, const char* dialogTitleUTF8,
-      void* parentWindow, WebRtc_UWord32 positionX, WebRtc_UWord32 positionY);
+      void* parentWindow, uint32_t positionX, uint32_t positionY);
 };
 
 }  // namespace videocapturemodule

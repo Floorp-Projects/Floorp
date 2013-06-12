@@ -9,11 +9,12 @@
  */
 
 #include "webrtc/modules/video_capture/include/video_capture_factory.h"
-#include "video_engine/test/auto_test/interface/vie_autotest.h"
-#include "video_engine/test/auto_test/interface/vie_autotest_defines.h"
-#include "video_engine/test/auto_test/primitives/base_primitives.h"
-#include "video_engine/test/auto_test/primitives/general_primitives.h"
-#include "video_engine/test/libvietest/include/tb_interfaces.h"
+#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "webrtc/video_engine/test/auto_test/primitives/base_primitives.h"
+#include "webrtc/video_engine/test/auto_test/primitives/general_primitives.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
 
 void ViEAutoTest::ViEBaseStandardTest() {
   // ***************************************************************
@@ -150,20 +151,30 @@ void ViEAutoTest::ViEBaseAPITest() {
   // Create a receive only channel and a send channel. Verify we can't send on
   // the receive only channel.
   EXPECT_EQ(0, vie_base->CreateReceiveChannel(video_channel2,
-                                                  video_channel));
+                                              video_channel));
   EXPECT_EQ(0, vie_base->CreateChannel(video_channel3, video_channel));
 
   const char* ip_address = "127.0.0.1\0";
   const int send_port = 1234;
+
   EXPECT_EQ(0, vie_rtp->SetLocalSSRC(video_channel, 1));
-  EXPECT_EQ(0, vie_network->SetSendDestination(video_channel, ip_address,
-                                               send_port));
   EXPECT_EQ(0, vie_rtp->SetLocalSSRC(video_channel, 2));
-  EXPECT_EQ(0, vie_network->SetSendDestination(video_channel2, ip_address,
-                                               send_port + 2));
   EXPECT_EQ(0, vie_rtp->SetLocalSSRC(video_channel, 3));
-  EXPECT_EQ(0, vie_network->SetSendDestination(video_channel3, ip_address,
-                                               send_port + 4));
+
+  webrtc::test::VideoChannelTransport* video_channel_transport_1 =
+      new webrtc::test::VideoChannelTransport(vie_network, video_channel);
+
+  ASSERT_EQ(0, video_channel_transport_1->SetSendDestination(ip_address,
+                                                             send_port));
+
+  webrtc::test::VideoChannelTransport* video_channel_transport_2 =
+      new webrtc::test::VideoChannelTransport(vie_network, video_channel2);
+
+  webrtc::test::VideoChannelTransport* video_channel_transport_3 =
+      new webrtc::test::VideoChannelTransport(vie_network, video_channel3);
+
+  ASSERT_EQ(0, video_channel_transport_3->SetSendDestination(ip_address,
+                                                             send_port + 4));
 
   EXPECT_EQ(0, vie_base->StartSend(video_channel));
   EXPECT_EQ(-1, vie_base->StartSend(video_channel2));
@@ -220,6 +231,9 @@ void ViEAutoTest::ViEBaseAPITest() {
   EXPECT_FALSE(webrtc::VideoEngine::Delete(video_engine)) <<
       "Should fail since there are interfaces left.";
 
+  delete video_channel_transport_1;
+  delete video_channel_transport_2;
+  delete video_channel_transport_3;
   EXPECT_EQ(0, vie_base->Release());
   EXPECT_TRUE(webrtc::VideoEngine::Delete(video_engine));
 }

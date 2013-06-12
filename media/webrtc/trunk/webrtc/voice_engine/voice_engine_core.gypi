@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'voice_engine_core',
-      'type': '<(library)',
+      'type': 'static_library',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:resampler',
         '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
@@ -20,7 +20,6 @@
         '<(webrtc_root)/modules/modules.gyp:audio_processing',
         '<(webrtc_root)/modules/modules.gyp:media_file',
         '<(webrtc_root)/modules/modules.gyp:rtp_rtcp',
-        '<(webrtc_root)/modules/modules.gyp:udp_transport',
         '<(webrtc_root)/modules/modules.gyp:webrtc_utility',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
@@ -33,9 +32,6 @@
           'include',
         ],
       },
-      'defines': [
-        'WEBRTC_EXTERNAL_TRANSPORT',
-      ],
       'sources': [
         '../common_types.h',
         '../engine_configurations.h',
@@ -137,7 +133,6 @@
             '<(webrtc_root)/modules/modules.gyp:audio_conference_mixer',
             '<(webrtc_root)/modules/modules.gyp:media_file',
             '<(webrtc_root)/modules/modules.gyp:rtp_rtcp',
-            '<(webrtc_root)/modules/modules.gyp:udp_transport',
             '<(webrtc_root)/modules/modules.gyp:webrtc_utility',
             '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
           ],
@@ -149,6 +144,7 @@
             'output_mixer_unittest.cc',
             'transmit_mixer_unittest.cc',
             'voe_audio_processing_unittest.cc',
+            'voe_base_unittest.cc',
             'voe_codec_unittest.cc',
           ],
         },

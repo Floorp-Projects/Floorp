@@ -25,21 +25,21 @@
 #include "analog_agc.h"
 
 /* The slope of in Q13*/
-static const WebRtc_Word16 kSlope1[8] = {21793, 12517, 7189, 4129, 2372, 1362, 472, 78};
+static const int16_t kSlope1[8] = {21793, 12517, 7189, 4129, 2372, 1362, 472, 78};
 
 /* The offset in Q14 */
-static const WebRtc_Word16 kOffset1[8] = {25395, 23911, 22206, 20737, 19612, 18805, 17951,
+static const int16_t kOffset1[8] = {25395, 23911, 22206, 20737, 19612, 18805, 17951,
         17367};
 
 /* The slope of in Q13*/
-static const WebRtc_Word16 kSlope2[8] = {2063, 1731, 1452, 1218, 1021, 857, 597, 337};
+static const int16_t kSlope2[8] = {2063, 1731, 1452, 1218, 1021, 857, 597, 337};
 
 /* The offset in Q14 */
-static const WebRtc_Word16 kOffset2[8] = {18432, 18379, 18290, 18177, 18052, 17920, 17670,
+static const int16_t kOffset2[8] = {18432, 18379, 18290, 18177, 18052, 17920, 17670,
         17286};
 
-static const WebRtc_Word16 kMuteGuardTimeMs = 8000;
-static const WebRtc_Word16 kInitCheck = 42;
+static const int16_t kMuteGuardTimeMs = 8000;
+static const int16_t kInitCheck = 42;
 
 /* Default settings if config is not used */
 #define AGC_DEFAULT_TARGET_LEVEL 3
@@ -72,12 +72,12 @@ static const WebRtc_Word16 kInitCheck = 42;
  * fprintf(1, '\t%i, %i, %i, %i,\n', round(10.^(linspace(0,10,32)/20) * 2^12));
  */
 /* Q12 */
-static const WebRtc_UWord16 kGainTableAnalog[GAIN_TBL_LEN] = {4096, 4251, 4412, 4579, 4752,
+static const uint16_t kGainTableAnalog[GAIN_TBL_LEN] = {4096, 4251, 4412, 4579, 4752,
         4932, 5118, 5312, 5513, 5722, 5938, 6163, 6396, 6638, 6889, 7150, 7420, 7701, 7992,
         8295, 8609, 8934, 9273, 9623, 9987, 10365, 10758, 11165, 11587, 12025, 12480, 12953};
 
 /* Gain/Suppression tables for virtual Mic (in Q10) */
-static const WebRtc_UWord16 kGainTableVirtualMic[128] = {1052, 1081, 1110, 1141, 1172, 1204,
+static const uint16_t kGainTableVirtualMic[128] = {1052, 1081, 1110, 1141, 1172, 1204,
         1237, 1271, 1305, 1341, 1378, 1416, 1454, 1494, 1535, 1577, 1620, 1664, 1710, 1757,
         1805, 1854, 1905, 1957, 2010, 2065, 2122, 2180, 2239, 2301, 2364, 2428, 2495, 2563,
         2633, 2705, 2779, 2855, 2933, 3013, 3096, 3180, 3267, 3357, 3449, 3543, 3640, 3739,
@@ -88,7 +88,7 @@ static const WebRtc_UWord16 kGainTableVirtualMic[128] = {1052, 1081, 1110, 1141,
         16055, 16494, 16945, 17409, 17885, 18374, 18877, 19393, 19923, 20468, 21028, 21603,
         22194, 22801, 23425, 24065, 24724, 25400, 26095, 26808, 27541, 28295, 29069, 29864,
         30681, 31520, 32382};
-static const WebRtc_UWord16 kSuppressionTableVirtualMic[128] = {1024, 1006, 988, 970, 952,
+static const uint16_t kSuppressionTableVirtualMic[128] = {1024, 1006, 988, 970, 952,
         935, 918, 902, 886, 870, 854, 839, 824, 809, 794, 780, 766, 752, 739, 726, 713, 700,
         687, 675, 663, 651, 639, 628, 616, 605, 594, 584, 573, 563, 553, 543, 533, 524, 514,
         505, 496, 487, 478, 470, 461, 453, 445, 437, 429, 421, 414, 406, 399, 392, 385, 378,
@@ -102,7 +102,7 @@ static const WebRtc_UWord16 kSuppressionTableVirtualMic[128] = {1024, 1006, 988,
  * Matlab code
  * targetLevelTable = fprintf('%d,\t%d,\t%d,\t%d,\n', round((32767*10.^(-(0:63)'/20)).^2*16/2^7) */
 
-static const WebRtc_Word32 kTargetLevelTable[64] = {134209536, 106606424, 84680493, 67264106,
+static const int32_t kTargetLevelTable[64] = {134209536, 106606424, 84680493, 67264106,
         53429779, 42440782, 33711911, 26778323, 21270778, 16895980, 13420954, 10660642,
         8468049, 6726411, 5342978, 4244078, 3371191, 2677832, 2127078, 1689598, 1342095,
         1066064, 846805, 672641, 534298, 424408, 337119, 267783, 212708, 168960, 134210,
@@ -110,13 +110,13 @@ static const WebRtc_Word32 kTargetLevelTable[64] = {134209536, 106606424, 846804
         6726, 5343, 4244, 3371, 2678, 2127, 1690, 1342, 1066, 847, 673, 534, 424, 337, 268,
         213, 169, 134, 107, 85, 67};
 
-int WebRtcAgc_AddMic(void *state, WebRtc_Word16 *in_mic, WebRtc_Word16 *in_mic_H,
-                     WebRtc_Word16 samples)
+int WebRtcAgc_AddMic(void *state, int16_t *in_mic, int16_t *in_mic_H,
+                     int16_t samples)
 {
-    WebRtc_Word32 nrg, max_nrg, sample, tmp32;
-    WebRtc_Word32 *ptr;
-    WebRtc_UWord16 targetGainIdx, gain;
-    WebRtc_Word16 i, n, L, M, subFrames, tmp16, tmp_speech[16];
+    int32_t nrg, max_nrg, sample, tmp32;
+    int32_t *ptr;
+    uint16_t targetGainIdx, gain;
+    int16_t i, n, L, M, subFrames, tmp16, tmp_speech[16];
     Agc_t *stt;
     stt = (Agc_t *)state;
 
@@ -205,10 +205,10 @@ int WebRtcAgc_AddMic(void *state, WebRtc_Word16 *in_mic, WebRtc_Word16 *in_mic_H
         assert(stt->maxLevel > stt->maxAnalog);
 
         /* Q1 */
-        tmp16 = (WebRtc_Word16)(stt->micVol - stt->maxAnalog);
+        tmp16 = (int16_t)(stt->micVol - stt->maxAnalog);
         tmp32 = WEBRTC_SPL_MUL_16_16(GAIN_TBL_LEN - 1, tmp16);
-        tmp16 = (WebRtc_Word16)(stt->maxLevel - stt->maxAnalog);
-        targetGainIdx = (WebRtc_UWord16)WEBRTC_SPL_DIV(tmp32, tmp16);
+        tmp16 = (int16_t)(stt->maxLevel - stt->maxAnalog);
+        targetGainIdx = (uint16_t)WEBRTC_SPL_DIV(tmp32, tmp16);
         assert(targetGainIdx < GAIN_TBL_LEN);
 
         /* Increment through the table towards the target gain.
@@ -238,7 +238,7 @@ int WebRtcAgc_AddMic(void *state, WebRtc_Word16 *in_mic, WebRtc_Word16 *in_mic_H
                 in_mic[i] = -32768;
             } else
             {
-                in_mic[i] = (WebRtc_Word16)sample;
+                in_mic[i] = (int16_t)sample;
             }
 
             // For higher band
@@ -254,7 +254,7 @@ int WebRtcAgc_AddMic(void *state, WebRtc_Word16 *in_mic, WebRtc_Word16 *in_mic_H
                     in_mic_H[i] = -32768;
                 } else
                 {
-                    in_mic_H[i] = (WebRtc_Word16)sample;
+                    in_mic_H[i] = (int16_t)sample;
                 }
             }
         }
@@ -327,10 +327,10 @@ int WebRtcAgc_AddMic(void *state, WebRtc_Word16 *in_mic, WebRtc_Word16 *in_mic_H
     return 0;
 }
 
-int WebRtcAgc_AddFarend(void *state, const WebRtc_Word16 *in_far, WebRtc_Word16 samples)
+int WebRtcAgc_AddFarend(void *state, const int16_t *in_far, int16_t samples)
 {
-    WebRtc_Word32 errHandle = 0;
-    WebRtc_Word16 i, subFrames;
+    int32_t errHandle = 0;
+    int16_t i, subFrames;
     Agc_t *stt;
     stt = (Agc_t *)state;
 
@@ -393,22 +393,22 @@ int WebRtcAgc_AddFarend(void *state, const WebRtc_Word16 *in_far, WebRtc_Word16 
     return errHandle;
 }
 
-int WebRtcAgc_VirtualMic(void *agcInst, WebRtc_Word16 *in_near, WebRtc_Word16 *in_near_H,
-                         WebRtc_Word16 samples, WebRtc_Word32 micLevelIn,
-                         WebRtc_Word32 *micLevelOut)
+int WebRtcAgc_VirtualMic(void *agcInst, int16_t *in_near, int16_t *in_near_H,
+                         int16_t samples, int32_t micLevelIn,
+                         int32_t *micLevelOut)
 {
-    WebRtc_Word32 tmpFlt, micLevelTmp, gainIdx;
-    WebRtc_UWord16 gain;
-    WebRtc_Word16 ii;
+    int32_t tmpFlt, micLevelTmp, gainIdx;
+    uint16_t gain;
+    int16_t ii;
     Agc_t *stt;
 
-    WebRtc_UWord32 nrg;
-    WebRtc_Word16 sampleCntr;
-    WebRtc_UWord32 frameNrg = 0;
-    WebRtc_UWord32 frameNrgLimit = 5500;
-    WebRtc_Word16 numZeroCrossing = 0;
-    const WebRtc_Word16 kZeroCrossingLowLim = 15;
-    const WebRtc_Word16 kZeroCrossingHighLim = 20;
+    uint32_t nrg;
+    int16_t sampleCntr;
+    uint32_t frameNrg = 0;
+    uint32_t frameNrgLimit = 5500;
+    int16_t numZeroCrossing = 0;
+    const int16_t kZeroCrossingLowLim = 15;
+    const int16_t kZeroCrossingHighLim = 20;
 
     stt = (Agc_t *)agcInst;
 
@@ -507,7 +507,7 @@ int WebRtcAgc_VirtualMic(void *agcInst, WebRtc_Word16 *in_near, WebRtc_Word16 *i
                 gain = kSuppressionTableVirtualMic[127 - gainIdx];
             }
         }
-        in_near[ii] = (WebRtc_Word16)tmpFlt;
+        in_near[ii] = (int16_t)tmpFlt;
         if (stt->fs == 32000)
         {
             tmpFlt = WEBRTC_SPL_MUL_16_U16(in_near_H[ii], gain);
@@ -520,7 +520,7 @@ int WebRtcAgc_VirtualMic(void *agcInst, WebRtc_Word16 *in_near, WebRtc_Word16 *i
             {
                 tmpFlt = -32768;
             }
-            in_near_H[ii] = (WebRtc_Word16)tmpFlt;
+            in_near_H[ii] = (int16_t)tmpFlt;
         }
     }
     /* Set the level we (finally) used */
@@ -538,7 +538,7 @@ int WebRtcAgc_VirtualMic(void *agcInst, WebRtc_Word16 *in_near, WebRtc_Word16 *i
 void WebRtcAgc_UpdateAgcThresholds(Agc_t *stt)
 {
 
-    WebRtc_Word16 tmp16;
+    int16_t tmp16;
 #ifdef MIC_LEVEL_FEEDBACK
     int zeros;
 
@@ -552,7 +552,7 @@ void WebRtcAgc_UpdateAgcThresholds(Agc_t *stt)
 
     /* Set analog target level in envelope dBOv scale */
     tmp16 = (DIFF_REF_TO_ANALOG * stt->compressionGaindB) + ANALOG_TARGET_LEVEL_2;
-    tmp16 = WebRtcSpl_DivW32W16ResW16((WebRtc_Word32)tmp16, ANALOG_TARGET_LEVEL);
+    tmp16 = WebRtcSpl_DivW32W16ResW16((int32_t)tmp16, ANALOG_TARGET_LEVEL);
     stt->analogTarget = DIGITAL_REF_AT_0_COMP_GAIN + tmp16;
     if (stt->analogTarget < DIGITAL_REF_AT_0_COMP_GAIN)
     {
@@ -587,14 +587,14 @@ void WebRtcAgc_UpdateAgcThresholds(Agc_t *stt)
     stt->lowerLimit = stt->startLowerLimit;
 }
 
-void WebRtcAgc_SaturationCtrl(Agc_t *stt, WebRtc_UWord8 *saturated, WebRtc_Word32 *env)
+void WebRtcAgc_SaturationCtrl(Agc_t *stt, uint8_t *saturated, int32_t *env)
 {
-    WebRtc_Word16 i, tmpW16;
+    int16_t i, tmpW16;
 
     /* Check if the signal is saturated */
     for (i = 0; i < 10; i++)
     {
-        tmpW16 = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(env[i], 20);
+        tmpW16 = (int16_t)WEBRTC_SPL_RSHIFT_W32(env[i], 20);
         if (tmpW16 > 875)
         {
             stt->envSum += tmpW16;
@@ -608,15 +608,15 @@ void WebRtcAgc_SaturationCtrl(Agc_t *stt, WebRtc_UWord8 *saturated, WebRtc_Word3
     }
 
     /* stt->envSum *= 0.99; */
-    stt->envSum = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(stt->envSum,
-            (WebRtc_Word16)32440, 15);
+    stt->envSum = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(stt->envSum,
+            (int16_t)32440, 15);
 }
 
-void WebRtcAgc_ZeroCtrl(Agc_t *stt, WebRtc_Word32 *inMicLevel, WebRtc_Word32 *env)
+void WebRtcAgc_ZeroCtrl(Agc_t *stt, int32_t *inMicLevel, int32_t *env)
 {
-    WebRtc_Word16 i;
-    WebRtc_Word32 tmp32 = 0;
-    WebRtc_Word32 midVal;
+    int16_t i;
+    int32_t tmp32 = 0;
+    int32_t midVal;
 
     /* Is the input signal zero? */
     for (i = 0; i < 10; i++)
@@ -682,8 +682,8 @@ void WebRtcAgc_SpeakerInactiveCtrl(Agc_t *stt)
      * silence.
      */
 
-    WebRtc_Word32 tmp32;
-    WebRtc_Word16 vadThresh;
+    int32_t tmp32;
+    int16_t vadThresh;
 
     if (stt->vadMic.stdLongTerm < 2500)
     {
@@ -698,13 +698,13 @@ void WebRtcAgc_SpeakerInactiveCtrl(Agc_t *stt)
         }
 
         /* stt->vadThreshold = (31 * stt->vadThreshold + vadThresh) / 32; */
-        tmp32 = (WebRtc_Word32)vadThresh;
-        tmp32 += WEBRTC_SPL_MUL_16_16((WebRtc_Word16)31, stt->vadThreshold);
-        stt->vadThreshold = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmp32, 5);
+        tmp32 = (int32_t)vadThresh;
+        tmp32 += WEBRTC_SPL_MUL_16_16((int16_t)31, stt->vadThreshold);
+        stt->vadThreshold = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp32, 5);
     }
 }
 
-void WebRtcAgc_ExpCurve(WebRtc_Word16 volume, WebRtc_Word16 *index)
+void WebRtcAgc_ExpCurve(int16_t volume, int16_t *index)
 {
     // volume in Q14
     // index in [0-7]
@@ -754,16 +754,16 @@ void WebRtcAgc_ExpCurve(WebRtc_Word16 volume, WebRtc_Word16 *index)
     }
 }
 
-WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
-                                        WebRtc_Word32 *outMicLevel,
-                                        WebRtc_Word16 vadLogRatio,
-                                        WebRtc_Word16 echo, WebRtc_UWord8 *saturationWarning)
+int32_t WebRtcAgc_ProcessAnalog(void *state, int32_t inMicLevel,
+                                int32_t *outMicLevel,
+                                int16_t vadLogRatio,
+                                int16_t echo, uint8_t *saturationWarning)
 {
-    WebRtc_UWord32 tmpU32;
-    WebRtc_Word32 Rxx16w32, tmp32;
-    WebRtc_Word32 inMicLevelTmp, lastMicVol;
-    WebRtc_Word16 i;
-    WebRtc_UWord8 saturated = 0;
+    uint32_t tmpU32;
+    int32_t Rxx16w32, tmp32;
+    int32_t inMicLevelTmp, lastMicVol;
+    int16_t i;
+    uint8_t saturated = 0;
     Agc_t *stt;
 
     stt = (Agc_t *)state;
@@ -785,9 +785,9 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
 
     if (stt->firstCall == 0)
     {
-        WebRtc_Word32 tmpVol;
+        int32_t tmpVol;
         stt->firstCall = 1;
-        tmp32 = WEBRTC_SPL_RSHIFT_W32((stt->maxLevel - stt->minLevel) * (WebRtc_Word32)51, 9);
+        tmp32 = WEBRTC_SPL_RSHIFT_W32((stt->maxLevel - stt->minLevel) * (int32_t)51, 9);
         tmpVol = (stt->minLevel + tmp32);
 
         /* If the mic level is very low at start, increase it! */
@@ -807,7 +807,7 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
     /* If the mic level was manually changed to a very low value raise it! */
     if ((inMicLevelTmp != stt->micVol) && (inMicLevelTmp < stt->minOutput))
     {
-        tmp32 = WEBRTC_SPL_RSHIFT_W32((stt->maxLevel - stt->minLevel) * (WebRtc_Word32)51, 9);
+        tmp32 = WEBRTC_SPL_RSHIFT_W32((stt->maxLevel - stt->minLevel) * (int32_t)51, 9);
         inMicLevelTmp = (stt->minLevel + tmp32);
         stt->micVol = inMicLevelTmp;
 #ifdef MIC_LEVEL_FEEDBACK
@@ -856,8 +856,8 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
 
         /* stt->micVol *= 0.903; */
         tmp32 = inMicLevelTmp - stt->minLevel;
-        tmpU32 = WEBRTC_SPL_UMUL(29591, (WebRtc_UWord32)(tmp32));
-        stt->micVol = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_U32(tmpU32, 15) + stt->minLevel;
+        tmpU32 = WEBRTC_SPL_UMUL(29591, (uint32_t)(tmp32));
+        stt->micVol = (int32_t)WEBRTC_SPL_RSHIFT_U32(tmpU32, 15) + stt->minLevel;
         if (stt->micVol > lastMicVol - 2)
         {
             stt->micVol = lastMicVol - 2;
@@ -988,8 +988,8 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
 
                     /* 0.95 in Q15 */
                     tmp32 = inMicLevelTmp - stt->minLevel;
-                    tmpU32 = WEBRTC_SPL_UMUL(31130, (WebRtc_UWord32)(tmp32));
-                    stt->micVol = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_U32(tmpU32, 15) + stt->minLevel;
+                    tmpU32 = WEBRTC_SPL_UMUL(31130, (uint32_t)(tmp32));
+                    stt->micVol = (int32_t)WEBRTC_SPL_RSHIFT_U32(tmpU32, 15) + stt->minLevel;
                     if (stt->micVol > lastMicVol - 1)
                     {
                         stt->micVol = lastMicVol - 1;
@@ -1036,8 +1036,8 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
 
                     /* 0.965 in Q15 */
                     tmp32 = inMicLevelTmp - stt->minLevel;
-                    tmpU32 = WEBRTC_SPL_UMUL(31621, (WebRtc_UWord32)(inMicLevelTmp - stt->minLevel));
-                    stt->micVol = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_U32(tmpU32, 15) + stt->minLevel;
+                    tmpU32 = WEBRTC_SPL_UMUL(31621, (uint32_t)(inMicLevelTmp - stt->minLevel));
+                    stt->micVol = (int32_t)WEBRTC_SPL_RSHIFT_U32(tmpU32, 15) + stt->minLevel;
                     if (stt->micVol > lastMicVol - 1)
                     {
                         stt->micVol = lastMicVol - 1;
@@ -1062,8 +1062,8 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
                 if (stt->msTooLow > stt->msecSpeechOuterChange)
                 {
                     /* Raise the recording level */
-                    WebRtc_Word16 index, weightFIX;
-                    WebRtc_Word16 volNormFIX = 16384; // =1 in Q14.
+                    int16_t index, weightFIX;
+                    int16_t volNormFIX = 16384; // =1 in Q14.
 
                     stt->msTooLow = 0;
 
@@ -1071,7 +1071,7 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
                     tmp32 = WEBRTC_SPL_LSHIFT_W32(inMicLevelTmp - stt->minLevel, 14);
                     if (stt->maxInit != stt->minLevel)
                     {
-                        volNormFIX = (WebRtc_Word16)WEBRTC_SPL_DIV(tmp32,
+                        volNormFIX = (int16_t)WEBRTC_SPL_DIV(tmp32,
                                                               (stt->maxInit - stt->minLevel));
                     }
 
@@ -1080,7 +1080,7 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
 
                     /* Compute weighting factor for the volume increase, 32^(-2*X)/2+1.05 */
                     weightFIX = kOffset1[index]
-                              - (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(kSlope1[index],
+                              - (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(kSlope1[index],
                                                                          volNormFIX, 13);
 
                     /* stt->Rxx160_LPw32 *= 1.047 [~0.2 dB]; */
@@ -1088,8 +1088,8 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
                     stt->Rxx160_LPw32 = WEBRTC_SPL_MUL(tmp32, 67);
 
                     tmp32 = inMicLevelTmp - stt->minLevel;
-                    tmpU32 = ((WebRtc_UWord32)weightFIX * (WebRtc_UWord32)(inMicLevelTmp - stt->minLevel));
-                    stt->micVol = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_U32(tmpU32, 14) + stt->minLevel;
+                    tmpU32 = ((uint32_t)weightFIX * (uint32_t)(inMicLevelTmp - stt->minLevel));
+                    stt->micVol = (int32_t)WEBRTC_SPL_RSHIFT_U32(tmpU32, 14) + stt->minLevel;
                     if (stt->micVol < lastMicVol + 2)
                     {
                         stt->micVol = lastMicVol + 2;
@@ -1122,8 +1122,8 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
                 if (stt->msTooLow > stt->msecSpeechInnerChange)
                 {
                     /* Raise the recording level */
-                    WebRtc_Word16 index, weightFIX;
-                    WebRtc_Word16 volNormFIX = 16384; // =1 in Q14.
+                    int16_t index, weightFIX;
+                    int16_t volNormFIX = 16384; // =1 in Q14.
 
                     stt->msTooLow = 0;
 
@@ -1131,7 +1131,7 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
                     tmp32 = WEBRTC_SPL_LSHIFT_W32(inMicLevelTmp - stt->minLevel, 14);
                     if (stt->maxInit != stt->minLevel)
                     {
-                        volNormFIX = (WebRtc_Word16)WEBRTC_SPL_DIV(tmp32,
+                        volNormFIX = (int16_t)WEBRTC_SPL_DIV(tmp32,
                                                               (stt->maxInit - stt->minLevel));
                     }
 
@@ -1140,7 +1140,7 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
 
                     /* Compute weighting factor for the volume increase, (3.^(-2.*X))/8+1 */
                     weightFIX = kOffset2[index]
-                              - (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(kSlope2[index],
+                              - (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(kSlope2[index],
                                                                          volNormFIX, 13);
 
                     /* stt->Rxx160_LPw32 *= 1.047 [~0.2 dB]; */
@@ -1148,8 +1148,8 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
                     stt->Rxx160_LPw32 = WEBRTC_SPL_MUL(tmp32, 67);
 
                     tmp32 = inMicLevelTmp - stt->minLevel;
-                    tmpU32 = ((WebRtc_UWord32)weightFIX * (WebRtc_UWord32)(inMicLevelTmp - stt->minLevel));
-                    stt->micVol = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_U32(tmpU32, 14) + stt->minLevel;
+                    tmpU32 = ((uint32_t)weightFIX * (uint32_t)(inMicLevelTmp - stt->minLevel));
+                    stt->micVol = (int32_t)WEBRTC_SPL_RSHIFT_U32(tmpU32, 14) + stt->minLevel;
                     if (stt->micVol < lastMicVol + 1)
                     {
                         stt->micVol = lastMicVol + 1;
@@ -1242,16 +1242,16 @@ WebRtc_Word32 WebRtcAgc_ProcessAnalog(void *state, WebRtc_Word32 inMicLevel,
     return 0;
 }
 
-int WebRtcAgc_Process(void *agcInst, const WebRtc_Word16 *in_near,
-                      const WebRtc_Word16 *in_near_H, WebRtc_Word16 samples,
-                      WebRtc_Word16 *out, WebRtc_Word16 *out_H, WebRtc_Word32 inMicLevel,
-                      WebRtc_Word32 *outMicLevel, WebRtc_Word16 echo,
-                      WebRtc_UWord8 *saturationWarning)
+int WebRtcAgc_Process(void *agcInst, const int16_t *in_near,
+                      const int16_t *in_near_H, int16_t samples,
+                      int16_t *out, int16_t *out_H, int32_t inMicLevel,
+                      int32_t *outMicLevel, int16_t echo,
+                      uint8_t *saturationWarning)
 {
     Agc_t *stt;
-    WebRtc_Word32 inMicLevelTmp;
-    WebRtc_Word16 subFrames, i;
-    WebRtc_UWord8 satWarningTmp = 0;
+    int32_t inMicLevelTmp;
+    int16_t subFrames, i;
+    uint8_t satWarningTmp = 0;
 
     stt = (Agc_t *)agcInst;
 
@@ -1326,13 +1326,13 @@ int WebRtcAgc_Process(void *agcInst, const WebRtc_Word16 *in_near,
     if (in_near != out)
     {
         // Only needed if they don't already point to the same place.
-        memcpy(out, in_near, samples * sizeof(WebRtc_Word16));
+        memcpy(out, in_near, samples * sizeof(int16_t));
     }
     if (stt->fs == 32000)
     {
         if (in_near_H != out_H)
         {
-            memcpy(out_H, in_near_H, samples * sizeof(WebRtc_Word16));
+            memcpy(out_H, in_near_H, samples * sizeof(int16_t));
         }
     }
 
@@ -1366,8 +1366,8 @@ int WebRtcAgc_Process(void *agcInst, const WebRtc_Word16 *in_near,
         /* update queue */
         if (stt->inQueue > 1)
         {
-            memcpy(stt->env[0], stt->env[1], 10 * sizeof(WebRtc_Word32));
-            memcpy(stt->Rxx16w32_array[0], stt->Rxx16w32_array[1], 5 * sizeof(WebRtc_Word32));
+            memcpy(stt->env[0], stt->env[1], 10 * sizeof(int32_t));
+            memcpy(stt->Rxx16w32_array[0], stt->Rxx16w32_array[1], 5 * sizeof(int32_t));
         }
 
         if (stt->inQueue > 0)
@@ -1523,11 +1523,11 @@ int WebRtcAgc_Free(void *state)
 /* minLevel     - Minimum volume level
  * maxLevel     - Maximum volume level
  */
-int WebRtcAgc_Init(void *agcInst, WebRtc_Word32 minLevel, WebRtc_Word32 maxLevel,
-                             WebRtc_Word16 agcMode, WebRtc_UWord32 fs)
+int WebRtcAgc_Init(void *agcInst, int32_t minLevel, int32_t maxLevel,
+                   int16_t agcMode, uint32_t fs)
 {
-    WebRtc_Word32 max_add, tmp32;
-    WebRtc_Word16 i;
+    int32_t max_add, tmp32;
+    int16_t i;
     int tmpNorm;
     Agc_t *stt;
 
@@ -1567,7 +1567,7 @@ int WebRtcAgc_Init(void *agcInst, WebRtc_Word32 minLevel, WebRtc_Word32 maxLevel
 
     /* If the volume range is smaller than 0-256 then
      * the levels are shifted up to Q8-domain */
-    tmpNorm = WebRtcSpl_NormU32((WebRtc_UWord32)maxLevel);
+    tmpNorm = WebRtcSpl_NormU32((uint32_t)maxLevel);
     stt->scale = tmpNorm - 23;
     if (stt->scale < 0)
     {
@@ -1617,7 +1617,7 @@ int WebRtcAgc_Init(void *agcInst, WebRtc_Word32 minLevel, WebRtc_Word32 maxLevel
 #endif
 
     /* Minimum output volume is 4% higher than the available lowest volume level */
-    tmp32 = WEBRTC_SPL_RSHIFT_W32((stt->maxLevel - stt->minLevel) * (WebRtc_Word32)10, 8);
+    tmp32 = WEBRTC_SPL_RSHIFT_W32((stt->maxLevel - stt->minLevel) * (int32_t)10, 8);
     stt->minOutput = (stt->minLevel + tmp32);
 
     stt->msTooLow = 0;
@@ -1639,12 +1639,12 @@ int WebRtcAgc_Init(void *agcInst, WebRtc_Word32 minLevel, WebRtc_Word32 maxLevel
 
     for (i = 0; i < RXX_BUFFER_LEN; i++)
     {
-        stt->Rxx16_vectorw32[i] = (WebRtc_Word32)1000; /* -54dBm0 */
+        stt->Rxx16_vectorw32[i] = (int32_t)1000; /* -54dBm0 */
     }
     stt->Rxx160w32 = 125 * RXX_BUFFER_LEN; /* (stt->Rxx16_vectorw32[0]>>3) = 125 */
 
     stt->Rxx16pos = 0;
-    stt->Rxx16_LPw32 = (WebRtc_Word32)16284; /* Q(-4) */
+    stt->Rxx16_LPw32 = (int32_t)16284; /* Q(-4) */
 
     for (i = 0; i < 5; i++)
     {

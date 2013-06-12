@@ -16,7 +16,7 @@
 namespace webrtc
 {
 
-AudioDeviceUtilityMac::AudioDeviceUtilityMac(const WebRtc_Word32 id) :
+AudioDeviceUtilityMac::AudioDeviceUtilityMac(const int32_t id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id)
 {
@@ -41,7 +41,7 @@ AudioDeviceUtilityMac::~AudioDeviceUtilityMac()
     delete &_critSect;
 }
 
-WebRtc_Word32 AudioDeviceUtilityMac::Init()
+int32_t AudioDeviceUtilityMac::Init()
 {
 
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,

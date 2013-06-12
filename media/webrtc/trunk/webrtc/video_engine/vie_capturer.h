@@ -52,7 +52,7 @@ class ViECapturer
       int capture_id,
       int engine_id,
       const char* device_unique_idUTF8,
-      WebRtc_UWord32 device_unique_idUTF8Length,
+      uint32_t device_unique_idUTF8Length,
       ProcessThread& module_process_thread);
 
   ~ViECapturer();
@@ -75,31 +75,31 @@ class ViECapturer
 
   // Use this capture device as encoder.
   // Returns 0 if the codec is supported by this capture device.
-  virtual WebRtc_Word32 PreEncodeToViEEncoder(const VideoCodec& codec,
-                                              ViEEncoder& vie_encoder,
-                                              WebRtc_Word32 vie_encoder_id);
+  virtual int32_t PreEncodeToViEEncoder(const VideoCodec& codec,
+                                        ViEEncoder& vie_encoder,
+                                        int32_t vie_encoder_id);
 
   // Start/Stop.
-  WebRtc_Word32 Start(
+  int32_t Start(
       const CaptureCapability& capture_capability = CaptureCapability());
-  WebRtc_Word32 Stop();
+  int32_t Stop();
   bool Started();
 
   // Overrides the capture delay.
-  WebRtc_Word32 SetCaptureDelay(WebRtc_Word32 delay_ms);
+  int32_t SetCaptureDelay(int32_t delay_ms);
 
   // Sets rotation of the incoming captured frame.
-  WebRtc_Word32 SetRotateCapturedFrames(const RotateCapturedFrame rotation);
+  int32_t SetRotateCapturedFrames(const RotateCapturedFrame rotation);
 
   // Effect filter.
-  WebRtc_Word32 RegisterEffectFilter(ViEEffectFilter* effect_filter);
-  WebRtc_Word32 EnableDenoising(bool enable);
-  WebRtc_Word32 EnableDeflickering(bool enable);
-  WebRtc_Word32 EnableBrightnessAlarm(bool enable);
+  int32_t RegisterEffectFilter(ViEEffectFilter* effect_filter);
+  int32_t EnableDenoising(bool enable);
+  int32_t EnableDeflickering(bool enable);
+  int32_t EnableBrightnessAlarm(bool enable);
 
   // Statistics observer.
-  WebRtc_Word32 RegisterObserver(ViECaptureObserver* observer);
-  WebRtc_Word32 DeRegisterObserver();
+  int32_t RegisterObserver(ViECaptureObserver* observer);
+  int32_t DeRegisterObserver();
   bool IsObserverRegistered();
 
   // Information.
@@ -110,18 +110,18 @@ class ViECapturer
               int engine_id,
               ProcessThread& module_process_thread);
 
-  WebRtc_Word32 Init(VideoCaptureModule* capture_module);
-  WebRtc_Word32 Init(const char* device_unique_idUTF8,
-                     const WebRtc_UWord32 device_unique_idUTF8Length);
+  int32_t Init(VideoCaptureModule* capture_module);
+  int32_t Init(const char* device_unique_idUTF8,
+               const uint32_t device_unique_idUTF8Length);
 
   // Implements VideoCaptureDataCallback.
-  virtual void OnIncomingCapturedFrame(const WebRtc_Word32 id,
+  virtual void OnIncomingCapturedFrame(const int32_t id,
                                        I420VideoFrame& video_frame);
-  virtual void OnIncomingCapturedEncodedFrame(const WebRtc_Word32 capture_id,
+  virtual void OnIncomingCapturedEncodedFrame(const int32_t capture_id,
                                               VideoFrame& video_frame,
                                               VideoCodecType codec_type);
-  virtual void OnCaptureDelayChanged(const WebRtc_Word32 id,
-                                     const WebRtc_Word32 delay);
+  virtual void OnCaptureDelayChanged(const int32_t id,
+                                     const int32_t delay);
 
   bool EncoderActive();
 
@@ -132,35 +132,32 @@ class ViECapturer
   // Help function used for keeping track of VideoImageProcesingModule.
   // Creates the module if it is needed, returns 0 on success and guarantees
   // that the image proc module exist.
-  WebRtc_Word32 IncImageProcRefCount();
-  WebRtc_Word32 DecImageProcRefCount();
+  int32_t IncImageProcRefCount();
+  int32_t DecImageProcRefCount();
 
   // Implements VideoEncoder.
-  virtual WebRtc_Word32 Version(char* version,
-                                WebRtc_Word32 length) const;
-  virtual WebRtc_Word32 InitEncode(const VideoCodec* codec_settings,
-                                   WebRtc_Word32 number_of_cores,
-                                   WebRtc_UWord32 max_payload_size);
-  virtual WebRtc_Word32 Encode(const I420VideoFrame& input_image,
-                               const CodecSpecificInfo* codec_specific_info,
-                               const std::vector<VideoFrameType>* frame_types);
-  virtual WebRtc_Word32 RegisterEncodeCompleteCallback(
+  virtual int32_t Version(char* version, int32_t length) const;
+  virtual int32_t InitEncode(const VideoCodec* codec_settings,
+                             int32_t number_of_cores,
+                             uint32_t max_payload_size);
+  virtual int32_t Encode(const I420VideoFrame& input_image,
+                         const CodecSpecificInfo* codec_specific_info,
+                         const std::vector<VideoFrameType>* frame_types);
+  virtual int32_t RegisterEncodeCompleteCallback(
       EncodedImageCallback* callback);
-  virtual WebRtc_Word32 Release();
-  virtual WebRtc_Word32 Reset();
-  virtual WebRtc_Word32 SetChannelParameters(WebRtc_UWord32 packet_loss,
-                                             int rtt);
-  virtual WebRtc_Word32 SetRates(WebRtc_UWord32 new_bit_rate,
-                                 WebRtc_UWord32 frame_rate);
+  virtual int32_t Release();
+  virtual int32_t Reset();
+  virtual int32_t SetChannelParameters(uint32_t packet_loss, int rtt);
+  virtual int32_t SetRates(uint32_t new_bit_rate, uint32_t frame_rate);
 
   // Implements  VCMReceiveCallback.
   // TODO(mflodman) Change input argument to pointer.
-  virtual WebRtc_Word32 FrameToRender(I420VideoFrame& video_frame);  // NOLINT
+  virtual int32_t FrameToRender(I420VideoFrame& video_frame);  // NOLINT
 
   // Implements VideoCaptureFeedBack
-  virtual void OnCaptureFrameRate(const WebRtc_Word32 id,
-                                  const WebRtc_UWord32 frame_rate);
-  virtual void OnNoPictureAlarm(const WebRtc_Word32 id,
+  virtual void OnCaptureFrameRate(const int32_t id,
+                                  const uint32_t frame_rate);
+  virtual void OnNoPictureAlarm(const int32_t id,
                                 const VideoCaptureAlarm alarm);
 
   // Thread functions for deliver captured frames to receivers.
@@ -211,7 +208,7 @@ class ViECapturer
   // The ViEEncoder we are encoding for.
   ViEEncoder* vie_encoder_;
   // ViEEncoder id we are encoding for.
-  WebRtc_Word32 vie_encoder_id_;
+  int32_t vie_encoder_id_;
   // Used for decoding preencoded frames.
   VideoCodingModule* vcm_;
   EncodedVideoData decode_buffer_;

@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'G711',
-      'type': '<(library)',
+      'type': 'static_library',
       'include_dirs': [
         'include',
       ],
@@ -44,9 +44,3 @@
     }], # include_tests
   ], # conditions
 }
-
-# Local Variables:
-# tab-width:2
-# indent-tabs-mode:nil
-# End:
-# vim: set expandtab tabstop=2 shiftwidth=2:

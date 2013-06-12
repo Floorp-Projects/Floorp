@@ -43,12 +43,12 @@
 #ifdef NETEQ_CNG_CODEC
 /* Must compile NetEQ with CNG support to enable this function */
 
-int WebRtcNetEQ_Cng(DSPInst_t *inst, WebRtc_Word16 *pw16_outData, int len)
+int WebRtcNetEQ_Cng(DSPInst_t *inst, int16_t *pw16_outData, int len)
 {
-    WebRtc_Word16 w16_winMute = 0; /* mixing factor for overlap data */
-    WebRtc_Word16 w16_winUnMute = 0; /* mixing factor for comfort noise */
-    WebRtc_Word16 w16_winMuteInc = 0; /* mixing factor increment (negative) */
-    WebRtc_Word16 w16_winUnMuteInc = 0; /* mixing factor increment */
+    int16_t w16_winMute = 0; /* mixing factor for overlap data */
+    int16_t w16_winUnMute = 0; /* mixing factor for comfort noise */
+    int16_t w16_winMuteInc = 0; /* mixing factor increment (negative) */
+    int16_t w16_winUnMuteInc = 0; /* mixing factor increment */
     int i;
 
     /*
@@ -61,7 +61,7 @@ int WebRtcNetEQ_Cng(DSPInst_t *inst, WebRtc_Word16 *pw16_outData, int len)
 
         /* Generate len samples + overlap */
         if (WebRtcCng_Generate(inst->CNG_Codec_inst, pw16_outData,
-            (WebRtc_Word16) (len + inst->ExpandInst.w16_overlap), 1) < 0)
+            (int16_t) (len + inst->ExpandInst.w16_overlap), 1) < 0)
         {
             /* error returned */
             return -WebRtcCng_GetErrorCodeDec(inst->CNG_Codec_inst);
@@ -116,7 +116,7 @@ int WebRtcNetEQ_Cng(DSPInst_t *inst, WebRtc_Word16 *pw16_outData, int len)
         for (i = 0; i < inst->ExpandInst.w16_overlap; i++)
         {
             /* overlapVec[i] = WinMute * overlapVec[i] + WinUnMute * outData[i] */
-            inst->ExpandInst.pw16_overlapVec[i] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(
+            inst->ExpandInst.pw16_overlapVec[i] = (int16_t) WEBRTC_SPL_RSHIFT_W32(
                 WEBRTC_SPL_MUL_16_16(
                     inst->ExpandInst.pw16_overlapVec[i], w16_winMute) +
                 WEBRTC_SPL_MUL_16_16(pw16_outData[i], w16_winUnMute)
@@ -140,7 +140,7 @@ int WebRtcNetEQ_Cng(DSPInst_t *inst, WebRtc_Word16 *pw16_outData, int len)
         /* This is a subsequent CNG call; no special overlap needed */
 
         /* Generate len samples */
-        if (WebRtcCng_Generate(inst->CNG_Codec_inst, pw16_outData, (WebRtc_Word16) len, 0) < 0)
+        if (WebRtcCng_Generate(inst->CNG_Codec_inst, pw16_outData, (int16_t) len, 0) < 0)
         {
             /* error returned */
             return -WebRtcCng_GetErrorCodeDec(inst->CNG_Codec_inst);

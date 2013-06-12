@@ -17,29 +17,29 @@ namespace webrtc {
 class BitstreamParser
 {
 public:
-    BitstreamParser(const WebRtc_UWord8* data, const WebRtc_UWord32 dataLength);
+    BitstreamParser(const uint8_t* data, const uint32_t dataLength);
 
-    WebRtc_UWord8 Get1Bit();
-    WebRtc_UWord8 Get2Bits();
-    WebRtc_UWord8 Get3Bits();
-    WebRtc_UWord8 Get4Bits();
-    WebRtc_UWord8 Get5Bits();
-    WebRtc_UWord8 Get6Bits();
-    WebRtc_UWord8 Get7Bits();
-    WebRtc_UWord8 Get8Bits();
-    WebRtc_UWord16 Get16Bits();
-    WebRtc_UWord32 Get24Bits();
-    WebRtc_UWord32 Get32Bits();
+    uint8_t Get1Bit();
+    uint8_t Get2Bits();
+    uint8_t Get3Bits();
+    uint8_t Get4Bits();
+    uint8_t Get5Bits();
+    uint8_t Get6Bits();
+    uint8_t Get7Bits();
+    uint8_t Get8Bits();
+    uint16_t Get16Bits();
+    uint32_t Get24Bits();
+    uint32_t Get32Bits();
 
     // Exp-Golomb codes
-    WebRtc_UWord32 GetUE();
+    uint32_t GetUE();
 
 private:
-    const WebRtc_UWord8* _data;
-    const WebRtc_UWord32 _dataLength;
+    const uint8_t* _data;
+    const uint32_t _dataLength;
 
-    WebRtc_UWord32 _byteOffset;
-    WebRtc_UWord8  _bitOffset;
+    uint32_t _byteOffset;
+    uint8_t  _bitOffset;
 };
 } // namespace webrtc
 

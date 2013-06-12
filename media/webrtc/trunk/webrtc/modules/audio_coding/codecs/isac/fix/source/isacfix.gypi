@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'iSACFix',
-      'type': '<(library)',
+      'type': 'static_library',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
@@ -91,12 +91,13 @@
       'targets': [
         {
           'target_name': 'isac_neon',
-          'type': '<(library)',
+          'type': 'static_library',
           'includes': ['../../../../../../build/arm_neon.gypi',],
           'dependencies': [
             '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
           ],
           'sources': [
+            'entropy_coding_neon.c',
             'filterbanks_neon.S',
             'filters_neon.S',
             'lattice_neon.S',

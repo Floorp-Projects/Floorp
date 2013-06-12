@@ -26,8 +26,8 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Lsf2Poly(
-    WebRtc_Word16 *a,     /* (o) predictor coefficients (order = 10) in Q12 */
-    WebRtc_Word16 *lsf    /* (i) line spectral frequencies in Q13 */
+    int16_t *a,     /* (o) predictor coefficients (order = 10) in Q12 */
+    int16_t *lsf    /* (i) line spectral frequencies in Q13 */
                             );
 
 #endif

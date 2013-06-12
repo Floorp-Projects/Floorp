@@ -17,8 +17,6 @@
 // references, where appropriate.
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
 
-#include <stdio.h>
-
 #include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
@@ -34,11 +32,11 @@
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
 #ifdef WEBRTC_CODEC_ISAC
 #include "webrtc/modules/audio_coding/codecs/isac/main/interface/isac.h"
-#include "webrtc/modules/audio_coding/main/source/acm_isac.h"
-#include "webrtc/modules/audio_coding/main/source/acm_isac_macros.h"
 #endif
 #ifdef WEBRTC_CODEC_ISACFX
 #include "webrtc/modules/audio_coding/codecs/isac/fix/interface/isacfix.h"
+#endif
+#if (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX))
 #include "webrtc/modules/audio_coding/main/source/acm_isac.h"
 #include "webrtc/modules/audio_coding/main/source/acm_isac_macros.h"
 #endif
@@ -51,15 +49,15 @@
 #include "webrtc/modules/audio_coding/main/source/acm_ilbc.h"
 #endif
 #ifdef WEBRTC_CODEC_AMR
-#include "amr_interface.h"
+#include "webrtc/modules/audio_coding/codecs/amr/include/amr_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_amr.h"
 #endif
 #ifdef WEBRTC_CODEC_AMRWB
-#include "amrwb_interface.h"
+#include "webrtc/modules/audio_coding/codecs/amrwb/include/amrwb_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_amrwb.h"
 #endif
 #ifdef WEBRTC_CODEC_CELT
-#include "celt_interface.h"
+#include "webrtc/modules/audio_coding/codecs/celt/include/celt_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_celt.h"
 #endif
 #ifdef WEBRTC_CODEC_G722
@@ -67,23 +65,23 @@
 #include "webrtc/modules/audio_coding/main/source/acm_g722.h"
 #endif
 #ifdef WEBRTC_CODEC_G722_1
-#include "g7221_interface.h"
+#include "webrtc/modules/audio_coding/codecs/g7221/include/g7221_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_g7221.h"
 #endif
 #ifdef WEBRTC_CODEC_G722_1C
-#include "g7221c_interface.h"
+#include "webrtc/modules/audio_coding/codecs/g7221c/include/g7221c_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_g7221c.h"
 #endif
 #ifdef WEBRTC_CODEC_G729
-#include "g729_interface.h"
+#include "webrtc/modules/audio_coding/codecs/g729/include/g729_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_g729.h"
 #endif
 #ifdef WEBRTC_CODEC_G729_1
-#include "g7291_interface.h"
+#include "webrtc/modules/audio_coding/codecs/g7291/include/g7291_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_g7291.h"
 #endif
 #ifdef WEBRTC_CODEC_GSMFR
-#include "gsmfr_interface.h"
+#include "webrtc/modules/audio_coding/codecs/gsmfr/include/gsmfr_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_gsmfr.h"
 #endif
 #ifdef WEBRTC_CODEC_OPUS
@@ -91,7 +89,7 @@
 #include "webrtc/modules/audio_coding/main/source/acm_opus.h"
 #endif
 #ifdef WEBRTC_CODEC_SPEEX
-#include "speex_interface.h"
+#include "webrtc/modules/audio_coding/codecs/speex/include/speex_interface.h"
 #include "webrtc/modules/audio_coding/main/source/acm_speex.h"
 #endif
 #ifdef WEBRTC_CODEC_AVT
@@ -103,26 +101,9 @@
 
 namespace webrtc {
 
-// We dynamically allocate some of the dynamic payload types to the defined
-// codecs. Note! There are a limited number of payload types. If more codecs
-// are defined they will receive reserved fixed payload types (values 69-95).
-const int kDynamicPayloadtypes[ACMCodecDB::kMaxNumCodecs] = {
-  107, 108, 109, 111, 112, 113, 114, 115, 116, 117, 92,
-  91,  90,  89,  88,  87,  86,  85,  84,  83,  82,  81, 80,
-  79,  78,  77,  76,  75,  74,  73,  72,  71,  70,  69, 68,
-  67, 66, 65
-};
-
-// Creates database with all supported codecs at compile time.
-// Each entry needs the following parameters in the given order:
-// payload type, name, sampling frequency, packet size in samples,
-// number of channels, and default rate.
-#if (defined(WEBRTC_CODEC_AMR) || defined(WEBRTC_CODEC_AMRWB) || \
-    defined(WEBRTC_CODEC_CELT) || defined(WEBRTC_CODEC_G722_1) || \
-    defined(WEBRTC_CODEC_G722_1C) || defined(WEBRTC_CODEC_G729_1) || \
-    defined(WEBRTC_CODEC_PCM16) || defined(WEBRTC_CODEC_SPEEX))
-static int count_database = 0;
-#endif
+// Not yet used payload-types.
+// 83,  82,  81, 80, 79,  78,  77,  76,  75,  74,  73,  72,  71,  70,  69, 68,
+// 67, 66, 65
 
 const CodecInst ACMCodecDB::database_[] = {
 #if (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX))
@@ -134,13 +115,13 @@ const CodecInst ACMCodecDB::database_[] = {
 #endif
 #ifdef WEBRTC_CODEC_PCM16
   // Mono
-  {kDynamicPayloadtypes[count_database++], "L16", 8000, 80, 1, 128000},
-  {kDynamicPayloadtypes[count_database++], "L16", 16000, 160, 1, 256000},
-  {kDynamicPayloadtypes[count_database++], "L16", 32000, 320, 1, 512000},
+  {107, "L16", 8000, 80, 1, 128000},
+  {108, "L16", 16000, 160, 1, 256000},
+  {109, "L16", 32000, 320, 1, 512000},
   // Stereo
-  {kDynamicPayloadtypes[count_database++], "L16", 8000, 80, 2, 128000},
-  {kDynamicPayloadtypes[count_database++], "L16", 16000, 160, 2, 256000},
-  {kDynamicPayloadtypes[count_database++], "L16", 32000, 320, 2, 512000},
+  {111, "L16", 8000, 80, 2, 128000},
+  {112, "L16", 16000, 160, 2, 256000},
+  {113, "L16", 32000, 320, 2, 512000},
 #endif
   // G.711, PCM mu-law and A-law.
   // Mono
@@ -153,16 +134,16 @@ const CodecInst ACMCodecDB::database_[] = {
   {102, "ILBC", 8000, 240, 1, 13300},
 #endif
 #ifdef WEBRTC_CODEC_AMR
-  {kDynamicPayloadtypes[count_database++], "AMR", 8000, 160, 1, 12200},
+  {114, "AMR", 8000, 160, 1, 12200},
 #endif
 #ifdef WEBRTC_CODEC_AMRWB
-  {kDynamicPayloadtypes[count_database++], "AMR-WB", 16000, 320, 1, 20000},
+  {115, "AMR-WB", 16000, 320, 1, 20000},
 #endif
 #ifdef WEBRTC_CODEC_CELT
   // Mono
-  {kDynamicPayloadtypes[count_database++], "CELT", 32000, 640, 1, 64000},
+  {116, "CELT", 32000, 640, 1, 64000},
   // Stereo
-  {kDynamicPayloadtypes[count_database++], "CELT", 32000, 640, 2, 64000},
+  {117, "CELT", 32000, 640, 2, 64000},
 #endif
 #ifdef WEBRTC_CODEC_G722
   // Mono
@@ -171,20 +152,20 @@ const CodecInst ACMCodecDB::database_[] = {
   {119, "G722", 16000, 320, 2, 64000},
 #endif
 #ifdef WEBRTC_CODEC_G722_1
-  {kDynamicPayloadtypes[count_database++], "G7221", 16000, 320, 1, 32000},
-  {kDynamicPayloadtypes[count_database++], "G7221", 16000, 320, 1, 24000},
-  {kDynamicPayloadtypes[count_database++], "G7221", 16000, 320, 1, 16000},
+  {92, "G7221", 16000, 320, 1, 32000},
+  {91, "G7221", 16000, 320, 1, 24000},
+  {90, "G7221", 16000, 320, 1, 16000},
 #endif
 #ifdef WEBRTC_CODEC_G722_1C
-  {kDynamicPayloadtypes[count_database++], "G7221", 32000, 640, 1, 48000},
-  {kDynamicPayloadtypes[count_database++], "G7221", 32000, 640, 1, 32000},
-  {kDynamicPayloadtypes[count_database++], "G7221", 32000, 640, 1, 24000},
+  {89, "G7221", 32000, 640, 1, 48000},
+  {88, "G7221", 32000, 640, 1, 32000},
+  {87, "G7221", 32000, 640, 1, 24000},
 #endif
 #ifdef WEBRTC_CODEC_G729
   {18, "G729", 8000, 240, 1, 8000},
 #endif
 #ifdef WEBRTC_CODEC_G729_1
-  {kDynamicPayloadtypes[count_database++], "G7291", 16000, 320, 1, 32000},
+  {86, "G7291", 16000, 320, 1, 32000},
 #endif
 #ifdef WEBRTC_CODEC_GSMFR
   {3, "GSM", 8000, 160, 1, 13200},
@@ -195,8 +176,8 @@ const CodecInst ACMCodecDB::database_[] = {
   {120, "opus", 48000, 960, 2, 64000},
 #endif
 #ifdef WEBRTC_CODEC_SPEEX
-  {kDynamicPayloadtypes[count_database++], "speex", 8000, 160, 1, 11000},
-  {kDynamicPayloadtypes[count_database++], "speex", 16000, 320, 1, 22000},
+  {85, "speex", 8000, 160, 1, 11000},
+  {84, "speex", 16000, 320, 1, 22000},
 #endif
   // Comfort noise for four different sampling frequencies.
   {13, "CN", 8000, 240, 1, 0},
@@ -286,7 +267,7 @@ const ACMCodecDB::CodecSettings ACMCodecDB::codec_settings_[] = {
     // Opus supports frames shorter than 10ms,
     // but it doesn't help us to use them.
     // Mono and stereo.
-    {1, {960}, 0, 2},
+    {4, {480, 960, 1920, 2880}, 0, 2},
 #endif
 #ifdef WEBRTC_CODEC_SPEEX
     {3, {160, 320, 480}, 0, 1},
@@ -416,45 +397,6 @@ enum {
   kInvalidPacketSize = -40,
   kInvalidRate = -50
 };
-
-// Gets the codec id number from the database. If there is some mismatch in
-// the codec settings, an error message will be recorded in the error string.
-// NOTE! Only the first mismatch found will be recorded in the error string.
-int ACMCodecDB::CodecNumber(const CodecInst* codec_inst, int* mirror_id,
-                            char* err_message, int max_message_len_byte) {
-  int codec_id = ACMCodecDB::CodecNumber(codec_inst, mirror_id);
-
-  // Write error message if ACMCodecDB::CodecNumber() returned error.
-  if ((codec_id < 0) && (err_message != NULL)) {
-    char my_err_msg[1000];
-
-    if (codec_id == kInvalidCodec) {
-      sprintf(my_err_msg, "Call to ACMCodecDB::CodecNumber failed, Codec not "
-              "found");
-    } else if (codec_id == kInvalidPayloadtype) {
-      sprintf(my_err_msg, "Call to ACMCodecDB::CodecNumber failed, payload "
-              "number %d is out of range for %s", codec_inst->pltype,
-              codec_inst->plname);
-    } else if (codec_id == kInvalidPacketSize) {
-      sprintf(my_err_msg, "Call to ACMCodecDB::CodecNumber failed, Packet "
-              "size is out of range for %s", codec_inst->plname);
-    } else if (codec_id == kInvalidRate) {
-      sprintf(my_err_msg, "Call to ACMCodecDB::CodecNumber failed, rate=%d "
-              "is not a valid rate for %s", codec_inst->rate,
-              codec_inst->plname);
-    } else {
-      // Other error
-      sprintf(my_err_msg, "invalid codec parameters to be registered, "
-              "ACMCodecDB::CodecNumber failed");
-    }
-
-    strncpy(err_message, my_err_msg, max_message_len_byte - 1);
-    // make sure that the message is null-terminated.
-    err_message[max_message_len_byte - 1] = '\0';
-  }
-
-  return codec_id;
-}
 
 // Gets the codec id number from the database. If there is some mismatch in
 // the codec settings, the function will return an error code.

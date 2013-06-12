@@ -8,71 +8,56 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "bitrate_estimator.h"
+#include "webrtc/modules/remote_bitrate_estimator/bitrate_estimator.h"
 
 namespace webrtc {
 
-const float kBitrateAverageWindow = 500.0f;
+const float kBitrateAverageWindowMs = 500.0f;
 
 BitRateStats::BitRateStats()
-    :_dataSamples(), _accumulatedBytes(0)
-{
+    : data_samples_(),
+      accumulated_bytes_(0) {
 }
 
-BitRateStats::~BitRateStats()
-{
-    while (_dataSamples.size() > 0)
-    {
-        delete _dataSamples.front();
-        _dataSamples.pop_front();
+BitRateStats::~BitRateStats() {
+  Init();
+}
+
+void BitRateStats::Init() {
+  accumulated_bytes_ = 0;
+  while (data_samples_.size() > 0) {
+    delete data_samples_.front();
+    data_samples_.pop_front();
+  }
+}
+
+void BitRateStats::Update(uint32_t packet_size_bytes, int64_t now_ms) {
+  // Find an empty slot for storing the new sample and at the same time
+  // accumulate the history.
+  data_samples_.push_back(new DataTimeSizeTuple(packet_size_bytes, now_ms));
+  accumulated_bytes_ += packet_size_bytes;
+  EraseOld(now_ms);
+}
+
+void BitRateStats::EraseOld(int64_t now_ms) {
+  while (data_samples_.size() > 0) {
+    if (now_ms - data_samples_.front()->time_complete_ms >
+        kBitrateAverageWindowMs) {
+      // Delete old sample
+      accumulated_bytes_ -= data_samples_.front()->size_bytes;
+      delete data_samples_.front();
+      data_samples_.pop_front();
+    } else {
+      break;
     }
+  }
 }
 
-void BitRateStats::Init()
-{
-    _accumulatedBytes = 0;
-    while (_dataSamples.size() > 0)
-    {
-        delete _dataSamples.front();
-        _dataSamples.pop_front();
-    }
+uint32_t BitRateStats::BitRate(int64_t now_ms) {
+  // Calculate the average bit rate the past BITRATE_AVERAGE_WINDOW ms.
+  // Removes any old samples from the list.
+  EraseOld(now_ms);
+  return static_cast<uint32_t>(accumulated_bytes_ * 8.0f * 1000.0f /
+                     kBitrateAverageWindowMs + 0.5f);
 }
-
-void BitRateStats::Update(WebRtc_UWord32 packetSizeBytes, WebRtc_Word64 nowMs)
-{
-    // Find an empty slot for storing the new sample and at the same time
-    // accumulate the history.
-    _dataSamples.push_back(new DataTimeSizeTuple(packetSizeBytes, nowMs));
-    _accumulatedBytes += packetSizeBytes;
-    EraseOld(nowMs);
-}
-
-void BitRateStats::EraseOld(WebRtc_Word64 nowMs)
-{
-    while (_dataSamples.size() > 0)
-    {
-        if (nowMs - _dataSamples.front()->_timeCompleteMs >
-            kBitrateAverageWindow)
-        {
-            // Delete old sample
-            _accumulatedBytes -= _dataSamples.front()->_sizeBytes;
-            delete _dataSamples.front();
-            _dataSamples.pop_front();
-        }
-        else
-        {
-            break;
-        }
-    }
-}
-
-WebRtc_UWord32 BitRateStats::BitRate(WebRtc_Word64 nowMs)
-{
-    // Calculate the average bit rate the past BITRATE_AVERAGE_WINDOW ms.
-    // Removes any old samples from the list.
-    EraseOld(nowMs);
-    return static_cast<WebRtc_UWord32>(_accumulatedBytes * 8.0f * 1000.0f /
-                                       kBitrateAverageWindow + 0.5f);
-}
-
 }  // namespace webrtc

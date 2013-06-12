@@ -14,18 +14,18 @@
 namespace webrtc
 {
 
-VideoCaptureModule* VideoCaptureFactory::Create(const WebRtc_Word32 id,
+VideoCaptureModule* VideoCaptureFactory::Create(const int32_t id,
     const char* deviceUniqueIdUTF8) {
   return videocapturemodule::VideoCaptureImpl::Create(id, deviceUniqueIdUTF8);
 }
 
-VideoCaptureModule* VideoCaptureFactory::Create(const WebRtc_Word32 id,
+VideoCaptureModule* VideoCaptureFactory::Create(const int32_t id,
     VideoCaptureExternal*& externalCapture) {
   return videocapturemodule::VideoCaptureImpl::Create(id, externalCapture);
 }
 
 VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
-    const WebRtc_Word32 id) {
+    const int32_t id) {
   return videocapturemodule::VideoCaptureImpl::CreateDeviceInfo(id);
 }
 

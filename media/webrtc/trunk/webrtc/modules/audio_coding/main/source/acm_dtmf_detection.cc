@@ -18,20 +18,20 @@ ACMDTMFDetection::ACMDTMFDetection() {}
 
 ACMDTMFDetection::~ACMDTMFDetection() {}
 
-WebRtc_Word16 ACMDTMFDetection::Enable(ACMCountries /* cpt */) {
+int16_t ACMDTMFDetection::Enable(ACMCountries /* cpt */) {
   return -1;
 }
 
-WebRtc_Word16 ACMDTMFDetection::Disable() {
+int16_t ACMDTMFDetection::Disable() {
   return -1;
 }
 
-WebRtc_Word16 ACMDTMFDetection::Detect(
-    const WebRtc_Word16* /* in_audio_buff */,
-    const WebRtc_UWord16 /* in_buff_len_word16 */,
-    const WebRtc_Word32 /* in_freq_hz */,
+int16_t ACMDTMFDetection::Detect(
+    const int16_t* /* in_audio_buff */,
+    const uint16_t /* in_buff_len_word16 */,
+    const int32_t /* in_freq_hz */,
     bool& /* tone_detected */,
-    WebRtc_Word16& /* tone  */) {
+    int16_t& /* tone  */) {
   return -1;
 }
 

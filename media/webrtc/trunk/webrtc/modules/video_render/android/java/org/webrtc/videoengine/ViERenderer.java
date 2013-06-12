@@ -20,7 +20,7 @@ public class ViERenderer {
     private static SurfaceHolder g_localRenderer;
 
     public static SurfaceView CreateRenderer(Context context) {
-        return  CreateRenderer(context,false);
+        return CreateRenderer(context, false);
     }
 
     public static SurfaceView CreateRenderer(Context context,
@@ -48,7 +48,7 @@ public class ViERenderer {
         SurfaceView localRender = new SurfaceView(context);
         g_localRenderer = localRender.getHolder();
         g_localRenderer.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        return  localRender;
+        return localRender;
     }
 
     public static SurfaceHolder GetLocalRenderer() {

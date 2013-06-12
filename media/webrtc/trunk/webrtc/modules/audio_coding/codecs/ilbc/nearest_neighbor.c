@@ -25,15 +25,15 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_NearestNeighbor(
-    WebRtc_Word16 *index, /* (o) index of array element closest to value */
-    WebRtc_Word16 *array, /* (i) data array (Q2) */
-    WebRtc_Word16 value, /* (i) value (Q2) */
-    WebRtc_Word16 arlength /* (i) dimension of data array (==8) */
+    int16_t *index, /* (o) index of array element closest to value */
+    int16_t *array, /* (i) data array (Q2) */
+    int16_t value, /* (i) value (Q2) */
+    int16_t arlength /* (i) dimension of data array (==8) */
                                    ){
   int i;
-  WebRtc_Word16 diff;
+  int16_t diff;
   /* Stack based */
-  WebRtc_Word32 crit[8];
+  int32_t crit[8];
 
   /* Calculate square distance */
   for(i=0;i<arlength;i++){
@@ -42,5 +42,5 @@ void WebRtcIlbcfix_NearestNeighbor(
   }
 
   /* Find the minimum square distance */
-  *index=WebRtcSpl_MinIndexW32(crit, (WebRtc_Word16)arlength);
+  *index=WebRtcSpl_MinIndexW32(crit, (int16_t)arlength);
 }

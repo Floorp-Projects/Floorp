@@ -138,8 +138,8 @@ g722_encode_state_t *WebRtc_g722_encode_init(g722_encode_state_t *s,
                                              int options);
 int WebRtc_g722_encode_release(g722_encode_state_t *s);
 int WebRtc_g722_encode(g722_encode_state_t *s,
-                       WebRtc_UWord8 g722_data[],
-                       const WebRtc_Word16 amp[],
+                       uint8_t g722_data[],
+                       const int16_t amp[],
                        int len);
 
 g722_decode_state_t *WebRtc_g722_decode_init(g722_decode_state_t *s,
@@ -147,8 +147,8 @@ g722_decode_state_t *WebRtc_g722_decode_init(g722_decode_state_t *s,
                                              int options);
 int WebRtc_g722_decode_release(g722_decode_state_t *s);
 int WebRtc_g722_decode(g722_decode_state_t *s,
-                       WebRtc_Word16 amp[],
-                       const WebRtc_UWord8 g722_data[],
+                       int16_t amp[],
+                       const uint8_t g722_data[],
                        int len);
 
 #ifdef __cplusplus

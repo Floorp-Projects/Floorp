@@ -11,22 +11,14 @@
     '../../../../build/common.gypi',
     '../test_framework/test_framework.gypi'
   ],
-  'variables': {
-    'conditions': [
-      ['build_with_chromium==1', {
-        'use_temporal_layers%': 0,
-      }, {
-        'use_temporal_layers%': 1,
-      }],
-    ],
-  },
   'targets': [
     {
       'target_name': 'webrtc_vp8',
-      'type': '<(library)',
+      'type': 'static_library',
       'dependencies': [
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
+        '<(webrtc_root)/modules/video_coding/utility/video_coding_utility.gyp:video_coding_utility',
+        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
       'include_dirs': [
         'include',
@@ -39,50 +31,6 @@
           'dependencies': [
             '<(DEPTH)/third_party/libvpx/libvpx.gyp:libvpx',
           ],
-          'conditions': [
-            # TODO(mikhal): Investigate this mechanism for handling differences
-            # between the Chromium and standalone builds.
-            # http://code.google.com/p/webrtc/issues/detail?id=201
-            ['build_with_chromium==1', {
-              'defines': [
-                'WEBRTC_LIBVPX_VERSION=960' # Bali
-              ],
-            }, {
-              'defines': [
-                'WEBRTC_LIBVPX_VERSION=971' # Cayuga
-              ],
-            }],
-            ['use_temporal_layers==1', {
-              'sources': [
-                'temporal_layers.h',
-                'temporal_layers.cc',
-              ],
-            }],
-          ],
-        },{
-	  'include_dirs': [
-            '$(DIST)/include',
-          ],
-          'defines': [
-            # This must be updated to match mozilla's version of libvpx
-            'WEBRTC_LIBVPX_VERSION=1000',
-          ],
-          'conditions': [
-            ['use_temporal_layers==1', {
-              'defines': [
-                'WEBRTC_LIBVPX_TEMPORAL_LAYERS=1'
-              ],
-            },{
-              'defines': [
-                'WEBRTC_LIBVPX_TEMPORAL_LAYERS=0'
-              ],
-            }],
-          ],
-          'link_settings': {
-            'libraries': [
-              '$(LIBVPX_OBJ)/libvpx.a',
-            ],
-          },
         }],
       ],
       'direct_dependent_settings': {
@@ -98,6 +46,13 @@
         'include/vp8.h',
         'include/vp8_common_types.h',
         'vp8_impl.cc',
+        'default_temporal_layers.cc',
+        'default_temporal_layers.h',
+        'temporal_layers.h',
+      ],
+      # Disable warnings to enable Win64 build, issue 1323.
+      'msvs_disabled_warnings': [
+        4267,  # size_t to int truncation.
       ],
     },
   ], # targets
@@ -131,12 +86,9 @@
             '<(DEPTH)/testing/gtest.gyp:gtest',
             '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
-          'include_dirs': [
-            '<(DEPTH)/third_party/libvpx/source/libvpx',
-          ],
           'sources': [
+            'default_temporal_layers_unittest.cc',
             'reference_picture_selection_unittest.cc',
-            'temporal_layers_unittest.cc',
           ],
           'conditions': [
             ['build_libvpx==1', {

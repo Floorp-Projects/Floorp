@@ -28,10 +28,10 @@
  *   T_i(x) is the i:th order Chebyshev polynomial
  *------------------------------------------------------------------*/
 
-WebRtc_Word16 WebRtcIlbcfix_Chebyshev(
+int16_t WebRtcIlbcfix_Chebyshev(
     /* (o) Result of C(x) */
-    WebRtc_Word16 x,  /* (i) Value to the Chevyshev polynomial */
-    WebRtc_Word16 *f  /* (i) The coefficients in the polynomial */
+    int16_t x,  /* (i) Value to the Chevyshev polynomial */
+    int16_t *f  /* (i) The coefficients in the polynomial */
                                       );
 
 #endif

@@ -7,12 +7,12 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
-  'targets': [{
-      'target_name': 'video_coding_integrationtests',
+  'targets': [
+    {
+      'target_name': 'video_coding_test',
       'type': 'executable',
       'dependencies': [
          'rtp_rtcp',
-         'video_codecs_test_framework',
          'video_processing',
          'webrtc_video_coding',
          'webrtc_utility',
@@ -37,12 +37,15 @@
         '../test/media_opt_test.h',
         '../test/mt_test_common.h',
         '../test/normal_test.h',
+        '../test/pcap_file_reader.h',
         '../test/quality_modes_test.h',
         '../test/receiver_tests.h',
         '../test/release_test.h',
+        '../test/rtp_file_reader.h',
         '../test/rtp_player.h',
         '../test/test_callbacks.h',
         '../test/test_util.h',
+        '../test/vcm_payload_sink_factory.h',
         '../test/video_source.h',
 
         # sources
@@ -54,22 +57,39 @@
         '../test/mt_test_common.cc',
         '../test/mt_rx_tx_test.cc',
         '../test/normal_test.cc',
+        '../test/pcap_file_reader.cc',
         '../test/quality_modes_test.cc',
         '../test/receiver_timing_tests.cc',
+        '../test/rtp_file_reader.cc',
         '../test/rtp_player.cc',
         '../test/test_callbacks.cc',
         '../test/test_util.cc',
         '../test/tester_main.cc',
+        '../test/vcm_payload_sink_factory.cc',
         '../test/video_rtp_play_mt.cc',
         '../test/video_rtp_play.cc',
         '../test/video_source.cc',
-        '../../codecs/test/videoprocessor_integrationtest.cc',
       ], # sources
+    },
+    {
+      'target_name': 'video_coding_integrationtests',
+      'type': 'executable',
+      'dependencies': [
+         'video_codecs_test_framework',
+         'webrtc_video_coding',
+         '<(DEPTH)/testing/gtest.gyp:gtest',
+         '<(webrtc_root)/test/test.gyp:test_support_main',
+         '<(webrtc_root)/test/metrics.gyp:metrics',
+      ],
+      'sources': [
+        '../../codecs/test/videoprocessor_integrationtest.cc',
+      ],
     },
     {
       'target_name': 'video_coding_unittests',
       'type': 'executable',
       'dependencies': [
+        'rtp_rtcp',
         'video_codecs_test_framework',
         'webrtc_video_coding',
         '<(webrtc_root)/test/test.gyp:test_support_main',
@@ -85,20 +105,25 @@
         '../interface/mock/mock_vcm_callbacks.h',
         'decoding_state_unittest.cc',
         'jitter_buffer_unittest.cc',
+        'receiver_unittest.cc',
         'session_info_unittest.cc',
+        'stream_generator.cc',
+        'stream_generator.h',
         'video_coding_robustness_unittest.cc',
         'video_coding_impl_unittest.cc',
         'qm_select_unittest.cc',
+        '../test/pcap_file_reader.cc',
+        '../test/pcap_file_reader_unittest.cc',
+        '../test/rtp_file_reader.cc',
+        '../test/rtp_file_reader_unittest.cc',
         '../../codecs/test/packet_manipulator_unittest.cc',
         '../../codecs/test/stats_unittest.cc',
         '../../codecs/test/videoprocessor_unittest.cc',
       ],
+      # Disable warnings to enable Win64 build, issue 1323.
+      'msvs_disabled_warnings': [
+        4267,  # size_t to int truncation.
+      ],
     },
   ],
 }
-
-# Local Variables:
-# tab-width:2
-# indent-tabs-mode:nil
-# End:
-# vim: set expandtab tabstop=2 shiftwidth=2:

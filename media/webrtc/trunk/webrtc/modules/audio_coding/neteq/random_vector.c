@@ -18,7 +18,7 @@
  * Values are normalized so that
  * sqrt(dot(pw16_NETEQFIX_RANDN_TBL,pw16_NETEQFIX_RANDN_TBL)/256)=2^13
  */
-const WebRtc_Word16 WebRtcNetEQ_kRandnTbl[RANDVEC_NO_OF_SAMPLES] =
+const int16_t WebRtcNetEQ_kRandnTbl[RANDVEC_NO_OF_SAMPLES] =
 {
 	2680, 5532, 441, 5520, 16170, -5146, -1024, -8733, 3115, 9598, -10380, -4959, -1280, -21716, 7133, -1522, 
 	13458, -3902, 2789, -675, 3441, 5016, -13599, -4003, -2739, 3922, -7209, 13352, -11617, -7241, 12905, -2314, 
@@ -39,15 +39,15 @@ const WebRtc_Word16 WebRtcNetEQ_kRandnTbl[RANDVEC_NO_OF_SAMPLES] =
 };
 
 
-void WebRtcNetEQ_RandomVec(WebRtc_UWord32 *w32_seed, WebRtc_Word16 *pw16_randVec,
-                           WebRtc_Word16 w16_len, WebRtc_Word16 w16_incval)
+void WebRtcNetEQ_RandomVec(uint32_t *w32_seed, int16_t *pw16_randVec,
+                           int16_t w16_len, int16_t w16_incval)
 {
     int i;
-    WebRtc_Word16 w16_pos;
+    int16_t w16_pos;
     for (i = 0; i < w16_len; i++)
     {
         *w32_seed = (*w32_seed) + w16_incval;
-        w16_pos = (WebRtc_Word16) ((*w32_seed) & (RANDVEC_NO_OF_SAMPLES - 1));
+        w16_pos = (int16_t) ((*w32_seed) & (RANDVEC_NO_OF_SAMPLES - 1));
         pw16_randVec[i] = WebRtcNetEQ_kRandnTbl[w16_pos];
     }
 }

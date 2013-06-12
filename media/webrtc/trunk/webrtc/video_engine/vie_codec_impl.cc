@@ -49,7 +49,7 @@ int ViECodecImpl::Release() {
   // Decrease ref count.
   (*this)--;
 
-  WebRtc_Word32 ref_count = GetCount();
+  int32_t ref_count = GetCount();
   if (ref_count < 0) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo, shared_data_->instance_id(),
                  "ViECodec released too many times");
@@ -86,12 +86,12 @@ int ViECodecImpl::GetCodec(const unsigned char list_number,
                list_number, video_codec.codecType);
   if (list_number == VideoCodingModule::NumberOfCodecs()) {
     memset(&video_codec, 0, sizeof(VideoCodec));
-    strncpy(video_codec.plName, "red", 3);
+    strcpy(video_codec.plName, "red");
     video_codec.codecType = kVideoCodecRED;
     video_codec.plType = VCM_RED_PAYLOAD_TYPE;
   } else if (list_number == VideoCodingModule::NumberOfCodecs() + 1) {
     memset(&video_codec, 0, sizeof(VideoCodec));
-    strncpy(video_codec.plName, "ulpfec", 6);
+    strcpy(video_codec.plName, "ulpfec");
     video_codec.codecType = kVideoCodecULPFEC;
     video_codec.plType = VCM_ULPFEC_PAYLOAD_TYPE;
   } else if (VideoCodingModule::Codec(list_number, &video_codec) != VCM_OK) {
@@ -124,12 +124,14 @@ int ViECodecImpl::SetSendCodec(const int video_channel,
     WEBRTC_TRACE(kTraceInfo, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
                  "pictureLossIndicationOn: %d, feedbackModeOn: %d, "
-                 "complexity: %d, resilience: %d, numberOfTemporalLayers: %u",
+                 "complexity: %d, resilience: %d, numberOfTemporalLayers: %u"
+                 "keyFrameInterval %d",
                  video_codec.codecSpecific.VP8.pictureLossIndicationOn,
                  video_codec.codecSpecific.VP8.feedbackModeOn,
                  video_codec.codecSpecific.VP8.complexity,
                  video_codec.codecSpecific.VP8.resilience,
-                 video_codec.codecSpecific.VP8.numberOfTemporalLayers);
+                 video_codec.codecSpecific.VP8.numberOfTemporalLayers,
+                 video_codec.codecSpecific.VP8.keyFrameInterval);
   }
   if (!CodecValid(video_codec)) {
     // Error logged.
@@ -156,7 +158,6 @@ int ViECodecImpl::SetSendCodec(const int video_channel,
     shared_data_->SetLastError(kViECodecReceiveOnlyChannel);
     return -1;
   }
-
   // Set a max_bitrate if the user hasn't set one.
   VideoCodec video_codec_internal;
   memcpy(&video_codec_internal, &video_codec, sizeof(VideoCodec));
@@ -510,7 +511,7 @@ int ViECodecImpl::GetCodecTargetBitrate(const int video_channel,
     shared_data_->SetLastError(kViECodecInvalidChannelId);
     return -1;
   }
-  return vie_encoder->CodecTargetBitrate(static_cast<WebRtc_UWord32*>(bitrate));
+  return vie_encoder->CodecTargetBitrate(static_cast<uint32_t*>(bitrate));
 }
 
 unsigned int ViECodecImpl::GetDiscardedPackets(const int video_channel) const {
@@ -738,17 +739,17 @@ bool ViECodecImpl::CodecValid(const VideoCodec& video_codec) {
                  "Codec type doesn't match pl_name", video_codec.plType);
     return false;
   } else if ((video_codec.codecType == kVideoCodecVP8 &&
-                  strncmp(video_codec.plName, "VP8", 4) == 0) ||
-              (video_codec.codecType == kVideoCodecI420 &&
-                  strncmp(video_codec.plName, "I420", 4) == 0)) {
+              strncmp(video_codec.plName, "VP8", 4) == 0) ||
+             (video_codec.codecType == kVideoCodecI420 &&
+              strncmp(video_codec.plName, "I420", 4) == 0)) {
     // OK.
-  } else {
+  } else if (video_codec.codecType != kVideoCodecGeneric) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1,
                  "Codec type doesn't match pl_name", video_codec.plType);
     return false;
   }
 
-  if (video_codec.plType == 0 && video_codec.plType > 127) {
+  if (video_codec.plType == 0 || video_codec.plType > 127) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, -1,
                  "Invalid codec payload type: %d", video_codec.plType);
     return false;

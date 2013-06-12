@@ -67,6 +67,7 @@ class ScopedTracing {
 
   void StopTrace() {
     if (logging_) {
+      Trace::SetTraceCallback(NULL);
       Trace::ReturnTrace();
     }
   }

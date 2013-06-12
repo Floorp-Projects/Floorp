@@ -25,11 +25,11 @@ public:
     ProcessThreadImpl();
     virtual ~ProcessThreadImpl();
 
-    virtual WebRtc_Word32 Start();
-    virtual WebRtc_Word32 Stop();
+    virtual int32_t Start();
+    virtual int32_t Stop();
 
-    virtual WebRtc_Word32 RegisterModule(const Module* module);
-    virtual WebRtc_Word32 DeRegisterModule(const Module* module);
+    virtual int32_t RegisterModule(const Module* module);
+    virtual int32_t DeRegisterModule(const Module* module);
 
 protected:
     static bool Run(void* obj);

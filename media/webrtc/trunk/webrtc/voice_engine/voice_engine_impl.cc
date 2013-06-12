@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
+#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_ANDROID_OPENSLES)
 #include "modules/audio_device/android/audio_device_jni_android.h"
 #endif
 
@@ -22,7 +22,7 @@ namespace webrtc
 // methods. It is not the nicest solution, especially not since we already
 // have a counter in VoEBaseImpl. In other words, there is room for
 // improvement here.
-static WebRtc_Word32 gVoiceEngineInstanceCounter = 0;
+static int32_t gVoiceEngineInstanceCounter = 0;
 
 extern "C"
 {
@@ -31,13 +31,12 @@ WEBRTC_DLLEXPORT VoiceEngine* GetVoiceEngine();
 VoiceEngine* GetVoiceEngine()
 {
     VoiceEngineImpl* self = new VoiceEngineImpl();
-    VoiceEngine* ve = reinterpret_cast<VoiceEngine*>(self);
-    if (ve != NULL)
+    if (self != NULL)
     {
         self->AddRef();  // First reference.  Released in VoiceEngine::Delete.
         gVoiceEngineInstanceCounter++;
     }
-    return ve;
+    return self;
 }
 } // extern "C"
 
@@ -88,11 +87,11 @@ int VoiceEngine::SetTraceFilter(const unsigned int filter)
                  "SetTraceFilter(filter=0x%x)", filter);
 
     // Remember old filter
-    WebRtc_UWord32 oldFilter = 0;
+    uint32_t oldFilter = 0;
     Trace::LevelFilter(oldFilter);
 
     // Set new filter
-    WebRtc_Word32 ret = Trace::SetLevelFilter(filter);
+    int32_t ret = Trace::SetLevelFilter(filter);
 
     // If previous log was ignored, log again after changing filter
     if (kTraceNone == oldFilter)
@@ -128,7 +127,7 @@ bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
     if (voiceEngine == NULL)
         return false;
 
-    VoiceEngineImpl* s = reinterpret_cast<VoiceEngineImpl*>(voiceEngine);
+    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
     // Release the reference that was added in GetVoiceEngine.
     int ref = s->Release();
     voiceEngine = NULL;
@@ -142,11 +141,15 @@ bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
     return true;
 }
 
-int VoiceEngine::SetAndroidObjects(void* javaVM, void* context)
+int VoiceEngine::SetAndroidObjects(void* javaVM, void* env, void* context)
 {
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-    return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
-         javaVM, context);
+#ifdef WEBRTC_ANDROID
+#ifdef WEBRTC_ANDROID_OPENSLES
+  return 0;
+#else
+  return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
+      javaVM, env, context);
+#endif
 #else
   return -1;
 #endif

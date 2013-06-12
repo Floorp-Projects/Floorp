@@ -21,7 +21,7 @@ class MockVCMFrameTypeCallback : public VCMFrameTypeCallback {
  public:
   MOCK_METHOD0(RequestKeyFrame, int32_t());
   MOCK_METHOD1(SliceLossIndicationRequest,
-               WebRtc_Word32(const WebRtc_UWord64 pictureId));
+               int32_t(const uint64_t pictureId));
 };
 
 class MockPacketRequestCallback : public VCMPacketRequestCallback {

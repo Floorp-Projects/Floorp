@@ -22,6 +22,54 @@ GLOBAL_FUNCTION WebRtcNsx_SynthesisUpdateNeon
 GLOBAL_FUNCTION WebRtcNsx_AnalysisUpdateNeon
 GLOBAL_FUNCTION WebRtcNsx_DenormalizeNeon
 GLOBAL_FUNCTION WebRtcNsx_CreateComplexBufferNeon
+GLOBAL_LABEL WebRtcNsx_kLogTable
+GLOBAL_LABEL WebRtcNsx_kCounterDiv
+GLOBAL_LABEL WebRtcNsx_kLogTableFrac
+
+.align 2
+WebRtcNsx_kLogTableFrac:
+_WebRtcNsx_kLogTableFrac:
+.short 0, 1, 3, 4, 6, 7, 9, 10, 11, 13, 14, 16, 17, 18, 20, 21, 22, 24, 25, 26
+.short 28, 29, 30, 32, 33, 34, 36, 37, 38, 40, 41, 42, 44, 45, 46, 47, 49, 50
+.short 51, 52, 54, 55, 56, 57, 59, 60, 61, 62, 63, 65, 66, 67, 68, 69, 71, 72
+.short 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90, 92, 93
+.short 94, 95, 96, 97, 98, 99, 100, 102, 103, 104, 105, 106, 107, 108, 109, 110
+.short 111, 112, 113, 114, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126
+.short 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141
+.short 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 155
+.short 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 169
+.short 170, 171, 172, 173, 174, 175, 176, 177, 178, 178, 179, 180, 181, 182, 183
+.short 184, 185, 185, 186, 187, 188, 189, 190, 191, 192, 192, 193, 194, 195, 196
+.short 197, 198, 198, 199, 200, 201, 202, 203, 203, 204, 205, 206, 207, 208, 208
+.short 209, 210, 211, 212, 212, 213, 214, 215, 216, 216, 217, 218, 219, 220, 220
+.short 221, 222, 223, 224, 224, 225, 226, 227, 228, 228, 229, 230, 231, 231, 232
+.short 233, 234, 234, 235, 236, 237, 238, 238, 239, 240, 241, 241, 242, 243, 244
+.short 244, 245, 246, 247, 247, 248, 249, 249, 250, 251, 252, 252, 253, 254, 255
+.short 255
+
+.align 2
+WebRtcNsx_kCounterDiv:
+_WebRtcNsx_kCounterDiv:
+.short 32767, 16384, 10923, 8192, 6554, 5461, 4681, 4096, 3641, 3277, 2979
+.short 2731, 2521, 2341, 2185, 2048, 1928, 1820, 1725, 1638, 1560, 1489
+.short 1425, 1365, 1311, 1260, 1214, 1170, 1130, 1092, 1057, 1024, 993, 964
+.short 936, 910, 886, 862, 840, 819, 799, 780, 762, 745, 728, 712, 697, 683
+.short 669, 655, 643, 630, 618, 607, 596, 585, 575, 565, 555, 546, 537, 529
+.short 520, 512, 504, 496, 489, 482, 475, 468, 462, 455, 449, 443, 437, 431
+.short 426, 420, 415, 410, 405, 400, 395, 390, 386, 381, 377, 372, 368, 364
+.short 360, 356, 352, 349, 345, 341, 338, 334, 331, 328, 324, 321, 318, 315
+.short 312, 309, 306, 303, 301, 298, 295, 293, 290, 287, 285, 282, 280, 278
+.short 275, 273, 271, 269, 266, 264, 262, 260, 258, 256, 254, 252, 250, 248
+.short 246, 245, 243, 241, 239, 237, 236, 234, 232, 231, 229, 228, 226, 224
+.short 223, 221, 220, 218, 217, 216, 214, 213, 211, 210, 209, 207, 206, 205
+.short 204, 202, 201, 200, 199, 197, 196, 195, 194, 193, 192, 191, 189, 188
+.short 187, 186, 185, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175, 174
+.short 173, 172, 172, 171, 170, 169, 168, 167, 166, 165, 165, 164, 163
+
+.align 2
+WebRtcNsx_kLogTable:
+_WebRtcNsx_kLogTable:
+.short  0, 177, 355, 532, 710, 887, 1065, 1242, 1420
 
 @ void NoiseEstimationNeon(NsxInst_t* inst,
 @                          uint16_t* magn,
@@ -40,8 +88,9 @@ GLOBAL_FUNCTION WebRtcNsx_CreateComplexBufferNeon
 @ r11: countDiv
 @ r12: i, the loop counter for LOOP_NOISEESTIMATION_MAGNLEN_INNER
 
+.align 2
 DEFINE_FUNCTION WebRtcNsx_NoiseEstimationNeon
-  push {r4-r11, r14}
+  push {r4-r12, r14}          @ Make sure 8-byte stack alignment.
   vpush {d8-d15}
   sub sp, #(16 + (HALF_ANAL_BLOCKL + 3) / 4 * 8)
 
@@ -56,7 +105,7 @@ DEFINE_FUNCTION WebRtcNsx_NoiseEstimationNeon
   movw r4, #offset_nsx_normData
   ldr r2, [r0, #offset_nsx_stages]            @ inst->stages
   ldr r4, [r0, r4]            @ inst->normData
-  ldr r12, =WebRtcNsx_kLogTable
+  adr r12, WebRtcNsx_kLogTable
   subs r3, r2, r4             @ tabind = inst->stages - inst->normData;
   ldr r5, [r0, #offset_nsx_magnLen]            @ magnLen
   rsblt r3, #0
@@ -67,7 +116,7 @@ DEFINE_FUNCTION WebRtcNsx_NoiseEstimationNeon
   str r3, [sp]
   vdup.16 q15, r3
 
-  ldr r9, =WebRtcNsx_kLogTableFrac
+  adr r9, WebRtcNsx_kLogTableFrac
 
 LOOP_SET_LMAGN:
   ldrh r2, [r1], #2           @ magn[i]
@@ -104,7 +153,8 @@ CHECK_LMAGN_COUNTER:
   ldr r7, [r0, r7]
   add r9, r0
   cmp r7, #END_STARTUP_LONG
-  add r10, r0, #offset_nsx_noiseEstCounter
+  movw r10, #offset_nsx_noiseEstCounter
+  add r10, r0
   movge r7, #FACTOR_Q7
   movlt r7, #FACTOR_Q7_STARTUP
   mov r4, r0
@@ -114,7 +164,7 @@ CHECK_LMAGN_COUNTER:
 
 LOOP_SIMULT:
   ldrsh r1, [r10]             @ inst->noiseEstCounter[s]
-  ldr r3, =WebRtcNsx_kCounterDiv
+  adr r3, WebRtcNsx_kCounterDiv
   mov r11, r1, lsl #1         @ counter
   ldrh r11, [r3, r11]         @ countDiv = WebRtcNsx_kCounterDiv[counter];
   sub r12, r6, #1             @ Loop counter.
@@ -265,7 +315,7 @@ UPDATE_DENSITY_ESTIMATE_CHECK_COUNTER:
 
   mov r0, r4
   mov r1, r7
-  bl UpdateNoiseEstimateNeon
+  CALL_FUNCTION UpdateNoiseEstimateNeon
 
 POST_UPDATE_DENSITY_ESTIMATE:
   ldrh r3, [r10]
@@ -282,7 +332,7 @@ POST_UPDATE_DENSITY_ESTIMATE:
 
   sub r1, r7, r6
   mov r0, r4
-  bl UpdateNoiseEstimateNeon
+  CALL_FUNCTION UpdateNoiseEstimateNeon
 
 UPDATE_NOISE:
   movw r1, #offset_nsx_noiseEstQuantile
@@ -304,10 +354,11 @@ UPDATE_Q_NOISE:
 
   add sp, #(16 + (HALF_ANAL_BLOCKL + 3) / 4 * 8)
   vpop {d8-d15}
-  pop {r4-r11, pc}
+  pop {r4-r12, pc}
 
 @ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset);
 @ Neon registers touched: q0-q3, q8-q13.
+.align 2
 DEFINE_FUNCTION UpdateNoiseEstimateNeon
   push {r4, r5, r6, r14}
   mov r5, r0
@@ -324,7 +375,7 @@ DEFINE_FUNCTION UpdateNoiseEstimateNeon
 
   mov r0, r4
   mov r1, r6
-  bl WebRtcSpl_MaxValueW16Neon
+  CALL_FUNCTION WebRtcSpl_MaxValueW16Neon
 
   sub r12, r6, #1             @ Loop counter: inst->magnLen - 1.
 
@@ -376,8 +427,9 @@ POST_LOOP_MAGNLEN:
   pop {r4, r5, r6, pc}
 
 @ void PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf);
+.align 2
 DEFINE_FUNCTION WebRtcNsx_PrepareSpectrumNeon
-  push {r4-r8}
+  push {r4-r9}
 
   movw r2, #offset_nsx_real
   movw r12, #offset_nsx_noiseSupFilter
@@ -487,10 +539,11 @@ LOOP_ANALEN2:
   vst1.16 {d4, d5, d6, d7}, [r1]
   vst1.16 {d16, d17, d18, d19}, [r2]
 
-  pop {r4-r8}
+  pop {r4-r9}
   bx r14
 
 @ void WebRtcNsx_DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor);
+.align 2
 DEFINE_FUNCTION WebRtcNsx_DenormalizeNeon
   movw r12, #offset_nsx_normData
   movw r3, #offset_nsx_real
@@ -521,6 +574,7 @@ LOOP_ANALEN:
 @ void SynthesisUpdateNeon(NsxInst_t* inst,
 @                          int16_t* out_frame,
 @                          int16_t gain_factor);
+.align 2
 DEFINE_FUNCTION WebRtcNsx_SynthesisUpdateNeon
   push {r4, r5}
 
@@ -593,6 +647,7 @@ EXIT_SYNTHESISUPDATE:
   bx r14
 
 @ void AnalysisUpdateNeon(NsxInst_t* inst, int16_t* out, int16_t* new_speech);
+.align 2
 DEFINE_FUNCTION WebRtcNsx_AnalysisUpdateNeon
   push {r4-r6}
 
@@ -651,6 +706,7 @@ POST_LOOP_WINDOW_DATA:
   bx r14
 
 @ void CreateComplexBufferNeon(NsxInst_t* inst, int16_t* in, int16_t* out);
+.align 2
 DEFINE_FUNCTION WebRtcNsx_CreateComplexBufferNeon
   movw r3, #offset_nsx_anaLen
   movw r12, #offset_nsx_normData

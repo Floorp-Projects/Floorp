@@ -28,40 +28,40 @@ public:
 
     // Note: will return NULL for video file formats (e.g. AVI) if the flag
     //       WEBRTC_MODULE_UTILITY_VIDEO is not defined.
-    static FileRecorder* CreateFileRecorder(const WebRtc_UWord32 instanceID,
+    static FileRecorder* CreateFileRecorder(const uint32_t instanceID,
                                             const FileFormats fileFormat);
 
     static void DestroyFileRecorder(FileRecorder* recorder);
 
-    virtual WebRtc_Word32 RegisterModuleFileCallback(
+    virtual int32_t RegisterModuleFileCallback(
         FileCallback* callback) = 0;
 
     virtual FileFormats RecordingFileFormat() const = 0;
 
-    virtual WebRtc_Word32 StartRecordingAudioFile(
+    virtual int32_t StartRecordingAudioFile(
         const char* fileName,
         const CodecInst& codecInst,
-        WebRtc_UWord32 notification,
+        uint32_t notification,
         ACMAMRPackingFormat amrFormat = AMRFileStorage) = 0;
 
-    virtual WebRtc_Word32 StartRecordingAudioFile(
+    virtual int32_t StartRecordingAudioFile(
         OutStream& destStream,
         const CodecInst& codecInst,
-        WebRtc_UWord32 notification,
+        uint32_t notification,
         ACMAMRPackingFormat amrFormat = AMRFileStorage) = 0;
 
     // Stop recording.
     // Note: this API is for both audio and video.
-    virtual WebRtc_Word32 StopRecording() = 0;
+    virtual int32_t StopRecording() = 0;
 
     // Return true if recording.
     // Note: this API is for both audio and video.
     virtual bool IsRecording() const = 0;
 
-    virtual WebRtc_Word32 codec_info(CodecInst& codecInst) const = 0;
+    virtual int32_t codec_info(CodecInst& codecInst) const = 0;
 
     // Write frame to file. Frame should contain 10ms of un-ecoded audio data.
-    virtual WebRtc_Word32 RecordAudioToFile(
+    virtual int32_t RecordAudioToFile(
         const AudioFrame& frame,
         const TickTime* playoutTS = NULL) = 0;
 
@@ -71,7 +71,7 @@ public:
     // Only video data will be recorded if videoOnly is true. amrFormat
     // specifies the amr/amrwb storage format.
     // Note: the file format is AVI.
-    virtual WebRtc_Word32 StartRecordingVideoFile(
+    virtual int32_t StartRecordingVideoFile(
         const char* fileName,
         const CodecInst& audioCodecInst,
         const VideoCodec& videoCodecInst,
@@ -79,7 +79,7 @@ public:
         bool videoOnly = false) = 0;
 
     // Record the video frame in videoFrame to AVI file.
-    virtual WebRtc_Word32 RecordVideoToFile(
+    virtual int32_t RecordVideoToFile(
         const I420VideoFrame& videoFrame) = 0;
 
 protected:

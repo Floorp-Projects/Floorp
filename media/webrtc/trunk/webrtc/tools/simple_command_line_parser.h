@@ -15,9 +15,19 @@
 #include <map>
 #include <vector>
 
+#include "system_wrappers/interface/constructor_magic.h"
+#include "test/testsupport/gtest_prod_util.h"
+
 // This is a very basic command line parsing class. We pass the command line
 // arguments and their number and the class forms a vector out of these. Than we
 // should set up the flags - we provide a name and a string value and map these.
+//
+// Example use of this class:
+// 1. Create a CommandLineParser object.
+// 2. Configure the flags you want to support with SetFlag calls.
+// 3. Call Init with your program's argc+argv parameters.
+// 4. Parse the flags by calling ProcessFlags.
+// 5. Get the values of the flags using GetFlag.
 
 namespace webrtc {
 namespace test {
@@ -44,9 +54,13 @@ class CommandLineParser {
   void PrintUsageMessage();
 
   // Set a flag into the map of flag names/values.
-  void SetFlag(std::string flag_name, std::string flag_value);
+  // To set a boolean flag, use "false" as the default flag value.
+  // The flag_name should not include the -- prefix.
+  void SetFlag(std::string flag_name, std::string default_flag_value);
 
-  // Gets a flag when provided a flag name. Returns "" if the flag is unknown.
+  // Gets a flag when provided a flag name (name is without the -- prefix).
+  // Returns "" if the flag is unknown and "true"/"false" if the flag is a
+  // boolean flag.
   std::string GetFlag(std::string flag_name);
 
  private:
@@ -61,14 +75,23 @@ class CommandLineParser {
   // understand e.g. --standalone (in contrast to --non_standalone=1).
   bool IsStandaloneFlag(std::string flag);
 
-  // Checks weather the flag is in the format --flag_name=flag_value.
+  // Checks whether the flag is in the format --flag_name=flag_value.
+  // or just --flag_name.
   bool IsFlagWellFormed(std::string flag);
 
-  // Extracts the flag name from the flag.
+  // Extracts the flag name from the flag, i.e. return foo for --foo=bar.
   std::string GetCommandLineFlagName(std::string flag);
 
-  // Extracts the falg value from the flag.
+  // Extracts the flag value from the flag, i.e. return bar for --foo=bar.
+  // If the flag has no value (i.e. no equals sign) an empty string is returned.
   std::string GetCommandLineFlagValue(std::string flag);
+
+  FRIEND_TEST_ALL_PREFIXES(CommandLineParserTest, IsStandaloneFlag);
+  FRIEND_TEST_ALL_PREFIXES(CommandLineParserTest, IsFlagWellFormed);
+  FRIEND_TEST_ALL_PREFIXES(CommandLineParserTest, GetCommandLineFlagName);
+  FRIEND_TEST_ALL_PREFIXES(CommandLineParserTest, GetCommandLineFlagValue);
+
+  DISALLOW_COPY_AND_ASSIGN(CommandLineParser);
 };
 
 }  // namespace test

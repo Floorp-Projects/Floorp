@@ -31,28 +31,29 @@ public:
     virtual void Reset();
 
     VCMFrameBufferEnum InsertPacket(const VCMPacket& packet,
-                                    WebRtc_Word64 timeInMs,
+                                    int64_t timeInMs,
                                     bool enableDecodableState,
-                                    WebRtc_UWord32 rttMs);
+                                    uint32_t rttMs);
 
     // State
     // Get current state of frame
     VCMFrameBufferStateEnum GetState() const;
     // Get current state and timestamp of frame
-    VCMFrameBufferStateEnum GetState(WebRtc_UWord32& timeStamp) const;
+    VCMFrameBufferStateEnum GetState(uint32_t& timeStamp) const;
     void SetState(VCMFrameBufferStateEnum state); // Set state of frame
 
     bool IsRetransmitted() const;
     bool IsSessionComplete() const;
+    bool HaveFirstPacket() const;
     bool HaveLastPacket() const;
     // Makes sure the session contain a decodable stream.
     void MakeSessionDecodable();
 
     // Sequence numbers
     // Get lowest packet sequence number in frame
-    WebRtc_Word32 GetLowSeqNum() const;
+    int32_t GetLowSeqNum() const;
     // Get highest packet sequence number in frame
-    WebRtc_Word32 GetHighSeqNum() const;
+    int32_t GetHighSeqNum() const;
 
     int PictureId() const;
     int TemporalId() const;
@@ -64,22 +65,19 @@ public:
     void SetCountedFrame(bool frameCounted);
     bool GetCountedFrame() const;
 
-    // NACK - Building the NACK lists.
-    // Build hard NACK list: Zero out all entries in list up to and including
-    // _lowSeqNum.
-    int BuildHardNackList(int* list, int num);
-    // Build soft NACK list: Zero out only a subset of the packets, discard
-    // empty packets.
-    int BuildSoftNackList(int* list, int num, int rttMs);
+    // Increments a counter to keep track of the number of packets of this frame
+    // which were NACKed before they arrived.
     void IncrementNackCount();
-    WebRtc_Word16 GetNackCount() const;
+    // Returns the number of packets of this frame which were NACKed before they
+    // arrived.
+    int16_t GetNackCount() const;
 
-    WebRtc_Word64 LatestPacketTimeMs() const;
+    int64_t LatestPacketTimeMs() const;
 
     webrtc::FrameType FrameType() const;
     void SetPreviousFrameLoss();
 
-    WebRtc_Word32 ExtractFromStorage(const EncodedVideoData& frameFromStorage);
+    int32_t ExtractFromStorage(const EncodedVideoData& frameFromStorage);
 
     // The number of packets discarded because the decoder can't make use of
     // them.
@@ -93,8 +91,8 @@ private:
     VCMFrameBufferStateEnum    _state;         // Current state of the frame
     bool                       _frameCounted;  // Was this frame counted by JB?
     VCMSessionInfo             _sessionInfo;
-    WebRtc_UWord16             _nackCount;
-    WebRtc_Word64              _latestPacketTimeMs;
+    uint16_t             _nackCount;
+    int64_t              _latestPacketTimeMs;
 };
 
 } // namespace webrtc

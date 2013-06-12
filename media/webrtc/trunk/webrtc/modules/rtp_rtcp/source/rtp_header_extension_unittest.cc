@@ -44,9 +44,16 @@ TEST_F(RtpHeaderExtensionTest, RegisterIllegalArg) {
   EXPECT_EQ(-1, map_.Register(kRtpExtensionTransmissionTimeOffset, 15));
 }
 
+TEST_F(RtpHeaderExtensionTest, Idempotent) {
+  EXPECT_EQ(0, map_.Register(kRtpExtensionTransmissionTimeOffset, kId));
+  EXPECT_EQ(0, map_.Register(kRtpExtensionTransmissionTimeOffset, kId));
+  EXPECT_EQ(0, map_.Deregister(kRtpExtensionTransmissionTimeOffset));
+  EXPECT_EQ(0, map_.Deregister(kRtpExtensionTransmissionTimeOffset));
+}
+
 TEST_F(RtpHeaderExtensionTest, NonUniqueId) {
   EXPECT_EQ(0, map_.Register(kRtpExtensionTransmissionTimeOffset, kId));
-  EXPECT_EQ(-1, map_.Register(kRtpExtensionTransmissionTimeOffset, kId));
+  EXPECT_EQ(-1, map_.Register(kRtpExtensionAudioLevel, kId));
 }
 
 TEST_F(RtpHeaderExtensionTest, GetTotalLength) {

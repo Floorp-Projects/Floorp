@@ -26,17 +26,17 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_AugmentedCbCorr(
-    WebRtc_Word16 *target,   /* (i) Target vector */
-    WebRtc_Word16 *buffer,   /* (i) Memory buffer */
-    WebRtc_Word16 *interpSamples, /* (i) buffer with
+    int16_t *target,   /* (i) Target vector */
+    int16_t *buffer,   /* (i) Memory buffer */
+    int16_t *interpSamples, /* (i) buffer with
                                            interpolated samples */
-    WebRtc_Word32 *crossDot,  /* (o) The cross correlation between
+    int32_t *crossDot,  /* (o) The cross correlation between
                                            the target and the Augmented
                                            vector */
-    WebRtc_Word16 low,    /* (i) Lag to start from (typically
+    int16_t low,    /* (i) Lag to start from (typically
                                                    20) */
-    WebRtc_Word16 high,   /* (i) Lag to end at (typically 39 */
-    WebRtc_Word16 scale);   /* (i) Scale factor to use for
+    int16_t high,   /* (i) Lag to end at (typically 39 */
+    int16_t scale);   /* (i) Scale factor to use for
                                                    the crossDot */
 
 #endif

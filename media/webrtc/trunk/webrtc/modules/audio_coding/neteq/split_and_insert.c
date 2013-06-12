@@ -20,16 +20,19 @@
 
 #include "neteq_error_codes.h"
 
-int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t *packet, PacketBuf_t *Buffer_inst,
-                                      SplitInfo_t *split_inst, WebRtc_Word16 *flushed)
+int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t* packet,
+                                      PacketBuf_t* Buffer_inst,
+                                      SplitInfo_t* split_inst,
+                                      int16_t* flushed,
+                                      int av_sync)
 {
 
     int i_ok;
     int len;
     int i;
     RTPPacket_t temp_packet;
-    WebRtc_Word16 localFlushed = 0;
-    const WebRtc_Word16 *pw16_startPayload;
+    int16_t localFlushed = 0;
+    const int16_t *pw16_startPayload;
     *flushed = 0;
 
     len = packet->payloadLen;
@@ -41,7 +44,8 @@ int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t *packet, PacketBuf_t *Buffer_i
     if (split_inst->deltaBytes == NO_SPLIT)
     {
         /* Not splittable codec */
-        i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, packet, &localFlushed);
+        i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, packet,
+                                              &localFlushed, av_sync);
         *flushed |= localFlushed;
         if (i_ok < 0)
         {
@@ -76,7 +80,8 @@ int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t *packet, PacketBuf_t *Buffer_i
         while (len >= (2 * split_size))
         {
             /* insert every chunk */
-            i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet, &localFlushed);
+            i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet,
+                                                  &localFlushed, av_sync);
             *flushed |= localFlushed;
             temp_packet.timeStamp += ((2 * split_size) >> split_inst->deltaTime);
             i++;
@@ -92,7 +97,8 @@ int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t *packet, PacketBuf_t *Buffer_i
 
         /* Insert the rest */
         temp_packet.payloadLen = len;
-        i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet, &localFlushed);
+        i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet,
+                                              &localFlushed, av_sync);
         *flushed |= localFlushed;
         if (i_ok < 0)
         {
@@ -108,7 +114,8 @@ int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t *packet, PacketBuf_t *Buffer_i
         {
 
             temp_packet.payloadLen = split_inst->deltaBytes;
-            i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet, &localFlushed);
+            i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet,
+                                                  &localFlushed, av_sync);
             *flushed |= localFlushed;
             i++;
             temp_packet.payload = &(pw16_startPayload[(i * split_inst->deltaBytes) >> 1]);
@@ -127,7 +134,8 @@ int WebRtcNetEQ_SplitAndInsertPayload(RTPPacket_t *packet, PacketBuf_t *Buffer_i
         {
             /* Must be a either an error or a SID frame at the end of the packet. */
             temp_packet.payloadLen = len;
-            i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet, &localFlushed);
+            i_ok = WebRtcNetEQ_PacketBufferInsert(Buffer_inst, &temp_packet,
+                                                  &localFlushed, av_sync);
             *flushed |= localFlushed;
             if (i_ok < 0)
             {
