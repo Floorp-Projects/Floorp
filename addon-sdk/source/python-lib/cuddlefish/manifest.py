@@ -407,7 +407,7 @@ class ManifestBuilder:
                 # populate the self.modules[] cache. Note that we must
                 # tolerate cycles in the reference graph.
                 looked_in = [] # populated by subroutines
-                them_me = self.find_req_for(mi, reqname, looked_in)
+                them_me = self.find_req_for(mi, reqname, looked_in, locations)
                 if them_me is None:
                     if mi.section == "tests":
                         # tolerate missing modules in tests, because
@@ -428,7 +428,7 @@ class ManifestBuilder:
         return me
         #print "LEAVING", pkg.name, mi.name
 
-    def find_req_for(self, from_module, reqname, looked_in):
+    def find_req_for(self, from_module, reqname, looked_in, locations):
         # handle a single require(reqname) statement from from_module .
         # Return a uri that exists in self.manifest
         # Populate looked_in with places we looked.
@@ -513,8 +513,21 @@ class ManifestBuilder:
             normalized = normalized[len("api-utils/"):]
         if normalized in NEW_LAYOUT_MAPPING:
             # get the new absolute path for this module
+            original_reqname = reqname
             reqname = NEW_LAYOUT_MAPPING[normalized]
             from_pkg = from_module.package.name
+
+            # If the addon didn't explicitely told us to ignore deprecated
+            # require path, warn the developer:
+            # (target_cfg is the package.json file)
+            if not "ignore-deprecated-path" in self.target_cfg:
+                lineno = locations.get(original_reqname)
+                print >>self.stderr, "Warning: Use of deprecated require path:"
+                print >>self.stderr, "  In %s:%d:" % (from_module.js, lineno)
+                print >>self.stderr, "    require('%s')." % original_reqname
+                print >>self.stderr, "  New path should be:"
+                print >>self.stderr, "    require('%s')" % reqname
+
             return self._search_packages_for_module(from_pkg,
                                                     lookfor_sections, reqname,
                                                     looked_in)

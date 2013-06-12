@@ -163,5 +163,43 @@ exports['test unhandled errors'] = function(assert) {
             'error in error handler is logged');
 };
 
+exports['test target is chainable'] = function (assert, done) {
+  let loader = Loader(module);
+  let exceptions = [];
+  let { EventTarget } = loader.require('sdk/event/target');
+  let { emit } = loader.require('sdk/event/core');
+  Object.defineProperties(loader.sandbox('sdk/event/core'), {
+    console: { value: {
+      exception: function(e) {
+        exceptions.push(e);
+      }
+    }}
+  });
+
+  let emitter = EventTarget();
+  let boom = Error('Boom');
+  let onceCalled = 0;
+  
+  emitter.once('oneTime', function () {
+    assert.equal(++onceCalled, 1, 'once event called only once');
+  }).on('data', function (message) {
+    assert.equal(message, 'message', 'handles event');
+    emit(emitter, 'oneTime');
+    emit(emitter, 'data2', 'message2');
+  }).on('phony', function () {
+    assert.fail('removeListener does not remove chained event');
+  }).removeListener('phony')
+  .on('data2', function (message) {
+    assert.equal(message, 'message2', 'handle chained event');
+    emit(emitter, 'oneTime');
+    throw boom;
+  }).on('error', function (error) {
+    assert.equal(error, boom, 'error handled in chained event');
+    done();
+  });
+
+  emit(emitter, 'data', 'message');
+};
+
 require('test').run(exports);
 
