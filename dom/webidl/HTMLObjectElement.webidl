@@ -71,7 +71,7 @@ partial interface HTMLObjectElement {
 };
 
 partial interface HTMLObjectElement {
-  // nsIDOMGetSVGDocument
+  // GetSVGDocument
   Document? getSVGDocument();
 };
 
