@@ -347,10 +347,12 @@
                         oncommand="gAdvancedPane.updateWritePrefs();">
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-              <radio value="autoMetro"
+              <radio id="autoMetro"
+                     value="autoMetro"
                      label="&updateAutoMetro.label;"
                      accesskey="&updateAutoMetro.accesskey;"/>
-              <hbox class="indent">
+              <hbox id="autoMetroIndent"
+                    class="indent">
                 <label value="&updateAutoMetroWarn.label;"/>
               </hbox>
 #endif
