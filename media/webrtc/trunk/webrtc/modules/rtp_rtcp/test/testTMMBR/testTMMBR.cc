@@ -24,14 +24,14 @@
 
 
 const int maxFileLen = 200;
-uint8_t* dataFile[maxFileLen];
+WebRtc_UWord8* dataFile[maxFileLen];
 
 
 struct InputSet
 {
-    uint32_t TMMBR;
-    uint32_t packetOH;
-    uint32_t SSRC;
+    WebRtc_UWord32 TMMBR;
+    WebRtc_UWord32 packetOH;
+    WebRtc_UWord32 SSRC;
 };
 
 const InputSet set0   = {220,  80, 11111};  // bitRate, packetOH, ssrc
@@ -56,7 +56,7 @@ void Verify(TMMBRSet* boundingSet, int index, InputSet set)
 int ParseRTCPPacket(const void *data, int len, TMMBRSet*& boundingSet)
 {
     int numItems = -1;
-    RTCPUtility::RTCPParserV2 rtcpParser((const uint8_t*)data, len, true);
+    RTCPUtility::RTCPParserV2 rtcpParser((const WebRtc_UWord8*)data, len, true);
     RTCPUtility::RTCPPacketTypes pktType = rtcpParser.Begin();
     while (pktType != RTCPUtility::kRtcpNotValidCode)
     {
@@ -79,7 +79,7 @@ int ParseRTCPPacket(const void *data, int len, TMMBRSet*& boundingSet)
     return numItems;
 };
 
-int32_t GetFile(char* fileName)
+WebRtc_Word32 GetFile(char* fileName)
 {
     if (!fileName[0])
     {
@@ -89,7 +89,7 @@ int32_t GetFile(char* fileName)
     FILE* openFile = fopen(fileName, "rb");
     assert(openFile != NULL);
     fseek(openFile, 0, SEEK_END);
-    int len = (int16_t)(ftell(openFile));
+    int len = (WebRtc_Word16)(ftell(openFile));
     rewind(openFile);
     assert(len > 0 && len < maxFileLen);
     fread(dataFile, 1, len, openFile);
@@ -109,7 +109,7 @@ public:
     }
     virtual int SendPacket(int channel, const void *data, int len)
     {
-        if( 0  == _rtpRtcpModule->IncomingPacket((const uint8_t*)data, len))
+        if( 0  == _rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)data, len))
         {
             return len;
         }
@@ -144,14 +144,14 @@ public:
         }
 
         // Send in bitrate request
-        if(_rtpRtcpModule->IncomingPacket((const uint8_t*)dataFile, len) == 0)
+        if(_rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)dataFile, len) == 0)
         {
             return len;
         }
         return -1;
     }
     RtpRtcp* _rtpRtcpModule;
-    uint32_t       _cnt;
+    WebRtc_UWord32       _cnt;
 };
 
 
@@ -166,7 +166,7 @@ public:
     }
     virtual int SendPacket(int channel, const void *data, int len)
     {
-        if(_rtpRtcpModule->IncomingPacket((const uint8_t*)data, len)== 0)
+        if(_rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)data, len)== 0)
         {
             return len;
         }
@@ -330,7 +330,7 @@ public:
         }
 
         // Send in bitrate request
-        if( 0 == _rtpRtcpModule->IncomingPacket((const uint8_t*)dataFile, len))
+        if( 0 == _rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)dataFile, len))
         {
             return len;
         }
@@ -338,7 +338,7 @@ public:
     }
 
     RtpRtcp* _rtpRtcpModule;
-    uint32_t       _cnt;
+    WebRtc_UWord32       _cnt;
 };
 
 class TestTMMBR : private TMMBRHelp
@@ -363,14 +363,14 @@ public:
         TMMBRSet* boundingSetToSend = BoundingSetToSend();
         assert(0 == boundingSetToSend->sizeOfSet);
 
-        int32_t numBoundingSet = FindTMMBRBoundingSet(boundingSet);
+        WebRtc_Word32 numBoundingSet = FindTMMBRBoundingSet(boundingSet);
         assert(0 == numBoundingSet); // should be empty
 
         assert( 0 == SetTMMBRBoundingSetToSend(NULL,0));        // ok to send empty set
         assert( 0 == SetTMMBRBoundingSetToSend(boundingSet,0)); // ok to send empty set
 
-        uint32_t minBitrateKbit = 0;
-        uint32_t maxBitrateKbit = 0;
+        WebRtc_UWord32 minBitrateKbit = 0;
+        WebRtc_UWord32 maxBitrateKbit = 0;
         assert(-1 == CalcMinMaxBitRate(0, 0, 1, false, minBitrateKbit, maxBitrateKbit)); // no bounding set
 
         // ---------------------------------
@@ -918,11 +918,11 @@ public:
 
 class NULLDataZink: public RtpData
 {
-    virtual int32_t OnReceivedPayloadData(const uint8_t* payloadData,
-        const uint16_t payloadSize,
-        const webrtc::WebRtcRTPHeader* rtpHeader,
-        const uint8_t* incomingRtpPacket,
-        const uint16_t incomingRtpPacketLengt)
+    virtual WebRtc_Word32 OnReceivedPayloadData(const WebRtc_UWord8* payloadData,
+                                              const WebRtc_UWord16 payloadSize,
+                                              const webrtc::WebRtcRTPHeader* rtpHeader,
+                                              const WebRtc_UWord8* incomingRtpPacket,
+                                              const WebRtc_UWord16 incomingRtpPacketLengt)
     {
         return 0;
     };
@@ -963,7 +963,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
     // send a RTP packet with SSRC 11111 to get 11111 as the received SSRC
     assert(0 == rtpRtcpModuleVideo->SetSSRC(11111));
-    const uint8_t testStream[9] = "testtest";
+    const WebRtc_UWord8 testStream[9] = "testtest";
     assert(0 == rtpRtcpModuleVideo->RegisterIncomingDataCallback(new NULLDataZink())); // needed to avoid error from parsing the incoming stream
     assert(0 == rtpRtcpModuleVideo->SendOutgoingData(webrtc::kVideoFrameKey,96, 0, testStream, 8));
 

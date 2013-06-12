@@ -8,21 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/main/test/TestAllCodecs.h"
+#include "TestAllCodecs.h"
 
 #include <stdio.h>
 #include <string>
 
 #include "gtest/gtest.h"
 
-#include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
-#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
-#include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
-#include "webrtc/modules/audio_coding/main/test/utility.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/typedefs.h"
+#include "audio_coding_module.h"
+#include "audio_coding_module_typedefs.h"
+#include "common_types.h"
+#include "engine_configurations.h"
+#include "testsupport/fileutils.h"
+#include "trace.h"
+#include "typedefs.h"
+#include "utility.h"
 
 // Description of the test:
 // In this test we set up a one-way communication channel from a participant
@@ -127,6 +127,7 @@ TestAllCodecs::~TestAllCodecs() {
 }
 
 void TestAllCodecs::Perform() {
+
   const std::string file_name =
       webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
   infile_a_.Open(file_name, 32000, "rb");
@@ -145,7 +146,7 @@ void TestAllCodecs::Perform() {
   uint8_t num_encoders = acm_a_->NumberOfCodecs();
   CodecInst my_codec_param;
   for (uint8_t n = 0; n < num_encoders; n++) {
-    acm_b_->Codec(n, &my_codec_param);
+    acm_b_->Codec(n, my_codec_param);
     if (!strcmp(my_codec_param.plname, "opus")) {
       my_codec_param.channels = 1;
     }
@@ -623,19 +624,19 @@ void TestAllCodecs::Perform() {
   test_count_++;
   OpenOutFile(test_count_);
   char codec_opus[] = "OPUS";
-  RegisterSendCodec('A', codec_opus, 48000, 6000, 480, -1);
+  RegisterSendCodec('A', codec_opus, 48000, 6000, 960, -1);
   Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_opus, 48000, 20000, 480*2, -1);
+  RegisterSendCodec('A', codec_opus, 48000, 20000, 960, -1);
   Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_opus, 48000, 32000, 480*4, -1);
+  RegisterSendCodec('A', codec_opus, 48000, 32000, 960, -1);
   Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_opus, 48000, 48000, 480, -1);
+  RegisterSendCodec('A', codec_opus, 48000, 48000, 960, -1);
   Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_opus, 48000, 64000, 480*4, -1);
+  RegisterSendCodec('A', codec_opus, 48000, 64000, 960, -1);
   Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_opus, 48000, 96000, 480*6, -1);
+  RegisterSendCodec('A', codec_opus, 48000, 96000, 960, -1);
   Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_opus, 48000, 500000, 480*2, -1);
+  RegisterSendCodec('A', codec_opus, 48000, 500000, 960, -1);
   Run(channel_a_to_b_);
   outfile_b_.Close();
 #endif
@@ -752,7 +753,7 @@ void TestAllCodecs::RegisterSendCodec(char side, char* codec_name,
 
   // Get all codec parameters before registering
   CodecInst my_codec_param;
-  CHECK_ERROR(AudioCodingModule::Codec(codec_name, &my_codec_param,
+  CHECK_ERROR(AudioCodingModule::Codec(codec_name, my_codec_param,
                                        sampling_freq_hz, 1));
   my_codec_param.rate = rate;
   my_codec_param.pacsize = packet_size;
@@ -795,7 +796,7 @@ void TestAllCodecs::Run(TestPack* channel) {
     }
 
     // Run received side of ACM.
-    CHECK_ERROR(acm_b_->PlayoutData10Ms(out_freq_hz, &audio_frame));
+    CHECK_ERROR(acm_b_->PlayoutData10Ms(out_freq_hz, audio_frame));
 
     // Write output speech to file.
     outfile_b_.Write10MsData(audio_frame.data_,
@@ -824,9 +825,9 @@ void TestAllCodecs::OpenOutFile(int test_number) {
 
 void TestAllCodecs::DisplaySendReceiveCodec() {
   CodecInst my_codec_param;
-  acm_a_->SendCodec(&my_codec_param);
+  acm_a_->SendCodec(my_codec_param);
   printf("%s -> ", my_codec_param.plname);
-  acm_b_->ReceiveCodec(&my_codec_param);
+  acm_b_->ReceiveCodec(my_codec_param);
   printf("%s\n", my_codec_param.plname);
 }
 

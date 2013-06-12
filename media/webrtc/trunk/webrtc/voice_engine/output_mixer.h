@@ -36,13 +36,14 @@ class OutputMixer : public AudioMixerOutputReceiver,
                     public FileCallback
 {
 public:
-    static int32_t Create(OutputMixer*& mixer, const uint32_t instanceId);
+    static WebRtc_Word32 Create(OutputMixer*& mixer,
+                                const WebRtc_UWord32 instanceId);
 
     static void Destroy(OutputMixer*& mixer);
 
-    int32_t SetEngineInformation(Statistics& engineStatistics);
+    WebRtc_Word32 SetEngineInformation(Statistics& engineStatistics);
 
-    int32_t SetAudioProcessingModule(
+    WebRtc_Word32 SetAudioProcessingModule(
         AudioProcessing* audioProcessingModule);
 
     // VoEExternalMedia
@@ -52,29 +53,32 @@ public:
     int DeRegisterExternalMediaProcessing();
 
     // VoEDtmf
-    int PlayDtmfTone(uint8_t eventCode, int lengthMs, int attenuationDb);
+    int PlayDtmfTone(WebRtc_UWord8 eventCode,
+                     int lengthMs,
+                     int attenuationDb);
 
-    int StartPlayingDtmfTone(uint8_t eventCode, int attenuationDb);
+    int StartPlayingDtmfTone(WebRtc_UWord8 eventCode,
+                             int attenuationDb);
 
     int StopPlayingDtmfTone();
 
-    int32_t MixActiveChannels();
+    WebRtc_Word32 MixActiveChannels();
 
-    int32_t DoOperationsOnCombinedSignal();
+    WebRtc_Word32 DoOperationsOnCombinedSignal();
 
-    int32_t SetMixabilityStatus(MixerParticipant& participant,
-                                const bool mixable);
+    WebRtc_Word32 SetMixabilityStatus(MixerParticipant& participant,
+                                      const bool mixable);
 
-    int32_t SetAnonymousMixabilityStatus(MixerParticipant& participant,
-                                         const bool mixable);
+    WebRtc_Word32 SetAnonymousMixabilityStatus(MixerParticipant& participant,
+                                               const bool mixable);
 
     int GetMixedAudio(int sample_rate_hz, int num_channels,
                       AudioFrame* audioFrame);
 
     // VoEVolumeControl
-    int GetSpeechOutputLevel(uint32_t& level);
+    int GetSpeechOutputLevel(WebRtc_UWord32& level);
 
-    int GetSpeechOutputLevelFullRange(uint32_t& level);
+    int GetSpeechOutputLevelFullRange(WebRtc_UWord32& level);
 
     int SetOutputVolumePan(float left, float right);
 
@@ -92,34 +96,37 @@ public:
 
     // from AudioMixerOutputReceiver
     virtual void NewMixedAudio(
-        const int32_t id,
+        const WebRtc_Word32 id,
         const AudioFrame& generalAudioFrame,
         const AudioFrame** uniqueAudioFrames,
-        const uint32_t size);
+        const WebRtc_UWord32 size);
 
     // from AudioMixerStatusReceiver
     virtual void MixedParticipants(
-        const int32_t id,
+        const WebRtc_Word32 id,
         const ParticipantStatistics* participantStatistics,
-        const uint32_t size);
+        const WebRtc_UWord32 size);
 
     virtual void VADPositiveParticipants(
-        const int32_t id,
+        const WebRtc_Word32 id,
         const ParticipantStatistics* participantStatistics,
-        const uint32_t size);
+        const WebRtc_UWord32 size);
 
-    virtual void MixedAudioLevel(const int32_t id, const uint32_t level);
+    virtual void MixedAudioLevel(const WebRtc_Word32  id,
+                                 const WebRtc_UWord32 level);
 
     // For file recording
-    void PlayNotification(const int32_t id, const uint32_t durationMs);
+    void PlayNotification(const WebRtc_Word32 id,
+                          const WebRtc_UWord32 durationMs);
 
-    void RecordNotification(const int32_t id, const uint32_t durationMs);
+    void RecordNotification(const WebRtc_Word32 id,
+                            const WebRtc_UWord32 durationMs);
 
-    void PlayFileEnded(const int32_t id);
-    void RecordFileEnded(const int32_t id);
+    void PlayFileEnded(const WebRtc_Word32 id);
+    void RecordFileEnded(const WebRtc_Word32 id);
 
 private:
-    OutputMixer(const uint32_t instanceId);
+    OutputMixer(const WebRtc_UWord32 instanceId);
     void APMAnalyzeReverseStream();
     int InsertInbandDtmfTone();
 

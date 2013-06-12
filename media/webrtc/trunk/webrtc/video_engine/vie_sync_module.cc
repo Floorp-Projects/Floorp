@@ -14,7 +14,6 @@
 #include "modules/video_coding/main/interface/video_coding.h"
 #include "system_wrappers/interface/critical_section_wrapper.h"
 #include "system_wrappers/interface/trace.h"
-#include "system_wrappers/interface/trace_event.h"
 #include "video_engine/stream_synchronization.h"
 #include "video_engine/vie_channel.h"
 #include "voice_engine/include/voe_video_sync.h"
@@ -94,12 +93,12 @@ int ViESyncModule::VoiceChannel() {
   return voe_channel_id_;
 }
 
-int32_t ViESyncModule::TimeUntilNextProcess() {
-  return static_cast<int32_t>(kSyncInterval -
-      (TickTime::Now() - last_sync_time_).Milliseconds());
+WebRtc_Word32 ViESyncModule::TimeUntilNextProcess() {
+  return static_cast<WebRtc_Word32>(kSyncInterval -
+                         (TickTime::Now() - last_sync_time_).Milliseconds());
 }
 
-int32_t ViESyncModule::Process() {
+WebRtc_Word32 ViESyncModule::Process() {
   CriticalSectionScoped cs(data_cs_.get());
   last_sync_time_ = TickTime::Now();
 
@@ -114,16 +113,21 @@ int32_t ViESyncModule::Process() {
   assert(video_rtp_rtcp_ && voe_sync_interface_);
   assert(sync_.get());
 
-  int audio_jitter_buffer_delay_ms = 0;
-  int playout_buffer_delay_ms = 0;
+  int current_audio_delay_ms = 0;
   if (voe_sync_interface_->GetDelayEstimate(voe_channel_id_,
-                                            &audio_jitter_buffer_delay_ms,
-                                            &playout_buffer_delay_ms) != 0) {
-    // Could not get VoE delay value, probably not a valid channel Id or
-    // the channel have not received enough packets.
+                                            current_audio_delay_ms) != 0) {
+    // Could not get VoE delay value, probably not a valid channel Id.
     WEBRTC_TRACE(webrtc::kTraceStream, webrtc::kTraceVideo, vie_channel_->Id(),
                  "%s: VE_GetDelayEstimate error for voice_channel %d",
                  __FUNCTION__, voe_channel_id_);
+    return 0;
+  }
+
+  // VoiceEngine report delay estimates even when not started, ignore if the
+  // reported value is lower than 40 ms.
+  if (current_audio_delay_ms < 40) {
+    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
+                 "A/V Sync: Audio delay < 40, skipping.");
     return 0;
   }
 
@@ -148,24 +152,15 @@ int32_t ViESyncModule::Process() {
     return 0;
   }
 
-  TRACE_COUNTER1("webrtc", "SyncCurrentVideoDelay",
-                 total_video_delay_target_ms);
-  TRACE_COUNTER1("webrtc", "SyncCurrentAudioDelay",
-                 audio_jitter_buffer_delay_ms);
-  TRACE_COUNTER1("webrtc", "SyncRelativeDelay", relative_delay_ms);
   int extra_audio_delay_ms = 0;
   // Calculate the necessary extra audio delay and desired total video
   // delay to get the streams in sync.
   if (!sync_->ComputeDelays(relative_delay_ms,
-                            audio_jitter_buffer_delay_ms,
+                            current_audio_delay_ms,
                             &extra_audio_delay_ms,
                             &total_video_delay_target_ms)) {
     return 0;
   }
-
-  TRACE_COUNTER1("webrtc", "SyncExtraAudioDelayTarget", extra_audio_delay_ms);
-  TRACE_COUNTER1("webrtc", "SyncTotalVideoDelayTarget",
-                 total_video_delay_target_ms);
   if (voe_sync_interface_->SetMinimumPlayoutDelay(
       voe_channel_id_, extra_audio_delay_ms) == -1) {
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideo, vie_channel_->Id(),
@@ -174,21 +169,6 @@ int32_t ViESyncModule::Process() {
   vcm_->SetMinimumPlayoutDelay(total_video_delay_target_ms);
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
                "New Video delay target is: %d", total_video_delay_target_ms);
-  return 0;
-}
-
-int ViESyncModule::SetTargetBufferingDelay(int target_delay_ms) {
-  CriticalSectionScoped cs(data_cs_.get());
- if (!voe_sync_interface_) {
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
-                 "voe_sync_interface_ NULL, can't set playout delay.");
-    return -1;
-  }
-  sync_->SetTargetBufferingDelay(target_delay_ms);
-  // Setting initial playout delay to voice engine (video engine is updated via
-  // the VCM interface).
-  voe_sync_interface_->SetInitialPlayoutDelay(voe_channel_id_,
-                                              target_delay_ms);
   return 0;
 }
 

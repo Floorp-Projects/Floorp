@@ -34,15 +34,15 @@ using namespace webrtc;
 void ReceivePackets(
     ForwardErrorCorrection::ReceivedPacketList* toDecodeList,
     ForwardErrorCorrection::ReceivedPacketList* receivedPacketList,
-    uint32_t numPacketsToDecode, float reorderRate, float duplicateRate);
+    WebRtc_UWord32 numPacketsToDecode, float reorderRate, float duplicateRate);
 
 int main() {
   // TODO(marpan): Split this function into subroutines/helper functions.
   enum { kMaxNumberMediaPackets = 48 };
   enum { kMaxNumberFecPackets = 48 };
 
-  const uint32_t kNumMaskBytesL0 = 2;
-  const uint32_t kNumMaskBytesL1 = 6;
+  const WebRtc_UWord32 kNumMaskBytesL0 = 2;
+  const WebRtc_UWord32 kNumMaskBytesL1 = 6;
 
   // FOR UEP
   const bool kUseUnequalProtection = true;
@@ -58,7 +58,7 @@ int main() {
     return -1;
   }
 
-  uint32_t id = 0;
+  WebRtc_UWord32 id = 0;
   ForwardErrorCorrection fec(id);
 
   ForwardErrorCorrection::PacketList mediaPacketList;
@@ -66,18 +66,18 @@ int main() {
   ForwardErrorCorrection::ReceivedPacketList toDecodeList;
   ForwardErrorCorrection::ReceivedPacketList receivedPacketList;
   ForwardErrorCorrection::RecoveredPacketList recoveredPacketList;
-  std::list<uint8_t*> fecMaskList;
+  std::list<WebRtc_UWord8*> fecMaskList;
 
   ForwardErrorCorrection::Packet* mediaPacket = NULL;
   // Running over only one loss rate to limit execution time.
   const float lossRate[] = {0.5f};
-  const uint32_t lossRateSize = sizeof(lossRate)/sizeof(*lossRate);
+  const WebRtc_UWord32 lossRateSize = sizeof(lossRate)/sizeof(*lossRate);
   const float reorderRate = 0.1f;
   const float duplicateRate = 0.1f;
 
-  uint8_t mediaLossMask[kMaxNumberMediaPackets];
-  uint8_t fecLossMask[kMaxNumberFecPackets];
-  uint8_t fecPacketMasks[kMaxNumberFecPackets][kMaxNumberMediaPackets];
+  WebRtc_UWord8 mediaLossMask[kMaxNumberMediaPackets];
+  WebRtc_UWord8 fecLossMask[kMaxNumberFecPackets];
+  WebRtc_UWord8 fecPacketMasks[kMaxNumberFecPackets][kMaxNumberMediaPackets];
 
   // Seed the random number generator, storing the seed to file in order to
   // reproduce past results.
@@ -89,48 +89,48 @@ int main() {
   fclose(randomSeedFile);
   randomSeedFile = NULL;
 
-  uint16_t seqNum = static_cast<uint16_t>(rand());
-  uint32_t timeStamp = static_cast<uint32_t>(rand());
-  const uint32_t ssrc = static_cast<uint32_t>(rand());
+  WebRtc_UWord16 seqNum = static_cast<WebRtc_UWord16>(rand());
+  WebRtc_UWord32 timeStamp = static_cast<WebRtc_UWord32>(rand());
+  const WebRtc_UWord32 ssrc = static_cast<WebRtc_UWord32>(rand());
 
   // Loop over the mask types: random and bursty.
   for (int mask_type_idx = 0; mask_type_idx < kNumFecMaskTypes;
       ++mask_type_idx) {
 
-    for (uint32_t lossRateIdx = 0; lossRateIdx < lossRateSize;
+    for (WebRtc_UWord32 lossRateIdx = 0; lossRateIdx < lossRateSize;
         ++lossRateIdx) {
 
       printf("Loss rate: %.2f, Mask type %d \n", lossRate[lossRateIdx],
              mask_type_idx);
 
-      const uint32_t packetMaskMax = kMaxMediaPackets[mask_type_idx];
-      uint8_t* packetMask =
-          new uint8_t[packetMaskMax * kNumMaskBytesL1];
+      const WebRtc_UWord32 packetMaskMax = kMaxMediaPackets[mask_type_idx];
+      WebRtc_UWord8* packetMask =
+          new WebRtc_UWord8[packetMaskMax * kNumMaskBytesL1];
 
       FecMaskType fec_mask_type = kMaskTypes[mask_type_idx];
 
-      for (uint32_t numMediaPackets = 1;
+      for (WebRtc_UWord32 numMediaPackets = 1;
           numMediaPackets <= packetMaskMax;
           numMediaPackets++) {
         internal::PacketMaskTable mask_table(fec_mask_type, numMediaPackets);
 
-        for (uint32_t numFecPackets = 1;
+        for (WebRtc_UWord32 numFecPackets = 1;
             numFecPackets <= numMediaPackets &&
             numFecPackets <= packetMaskMax;
             numFecPackets++) {
 
           // Loop over numImpPackets: usually <= (0.3*numMediaPackets).
           // For this test we check up to ~ (0.5*numMediaPackets).
-          uint32_t maxNumImpPackets = numMediaPackets / 2 + 1;
-          for (uint32_t numImpPackets = 0;
+          WebRtc_UWord32 maxNumImpPackets = numMediaPackets / 2 + 1;
+          for (WebRtc_UWord32 numImpPackets = 0;
               numImpPackets <= maxNumImpPackets &&
               numImpPackets <= packetMaskMax;
               numImpPackets++) {
 
-            uint8_t protectionFactor = static_cast<uint8_t>
+            WebRtc_UWord8 protectionFactor = static_cast<WebRtc_UWord8>
             (numFecPackets * 255 / numMediaPackets);
 
-            const uint32_t maskBytesPerFecPacket =
+            const WebRtc_UWord32 maskBytesPerFecPacket =
                 (numMediaPackets > 16) ? kNumMaskBytesL1 : kNumMaskBytesL0;
 
             memset(packetMask, 0, numMediaPackets * maskBytesPerFecPacket);
@@ -151,11 +151,11 @@ int main() {
             printf("Packet mask matrix \n");
 #endif
 
-            for (uint32_t i = 0; i < numFecPackets; i++) {
-              for (uint32_t j = 0; j < numMediaPackets; j++) {
-                const uint8_t byteMask =
+            for (WebRtc_UWord32 i = 0; i < numFecPackets; i++) {
+              for (WebRtc_UWord32 j = 0; j < numMediaPackets; j++) {
+                const WebRtc_UWord8 byteMask =
                     packetMask[i * maskBytesPerFecPacket + j / 8];
-                const uint32_t bitPosition = (7 - j % 8);
+                const WebRtc_UWord32 bitPosition = (7 - j % 8);
                 fecPacketMasks[i][j] =
                     (byteMask & (1 << bitPosition)) >> bitPosition;
 #ifdef VERBOSE_OUTPUT
@@ -170,10 +170,10 @@ int main() {
             printf("\n");
 #endif
             // Check for all zero rows or columns: indicates incorrect mask.
-            uint32_t rowLimit = numMediaPackets;
-            for (uint32_t i = 0; i < numFecPackets; ++i) {
-              uint32_t rowSum = 0;
-              for (uint32_t j = 0; j < rowLimit; ++j) {
+            WebRtc_UWord32 rowLimit = numMediaPackets;
+            for (WebRtc_UWord32 i = 0; i < numFecPackets; ++i) {
+              WebRtc_UWord32 rowSum = 0;
+              for (WebRtc_UWord32 j = 0; j < rowLimit; ++j) {
                 rowSum += fecPacketMasks[i][j];
               }
               if (rowSum == 0) {
@@ -181,9 +181,9 @@ int main() {
                 return -1;
               }
             }
-            for (uint32_t j = 0; j < rowLimit; ++j) {
-              uint32_t columnSum = 0;
-              for (uint32_t i = 0; i < numFecPackets; ++i) {
+            for (WebRtc_UWord32 j = 0; j < rowLimit; ++j) {
+              WebRtc_UWord32 columnSum = 0;
+              for (WebRtc_UWord32 i = 0; i < numFecPackets; ++i) {
                 columnSum += fecPacketMasks[i][j];
               }
               if (columnSum == 0) {
@@ -193,19 +193,19 @@ int main() {
             }
 
             // Construct media packets.
-            for (uint32_t i = 0; i < numMediaPackets; ++i)  {
+            for (WebRtc_UWord32 i = 0; i < numMediaPackets; ++i)  {
               mediaPacket = new ForwardErrorCorrection::Packet;
               mediaPacketList.push_back(mediaPacket);
               mediaPacket->length =
-                  static_cast<uint16_t>((static_cast<float>(rand()) /
+                  static_cast<WebRtc_UWord16>((static_cast<float>(rand()) /
                       RAND_MAX) * (IP_PACKET_SIZE - 12 -
                           28 - ForwardErrorCorrection::PacketOverhead()));
               if (mediaPacket->length < 12) {
                 mediaPacket->length = 12;
               }
               // Generate random values for the first 2 bytes.
-              mediaPacket->data[0] = static_cast<uint8_t>(rand() % 256);
-              mediaPacket->data[1] = static_cast<uint8_t>(rand() % 256);
+              mediaPacket->data[0] = static_cast<WebRtc_UWord8>(rand() % 256);
+              mediaPacket->data[1] = static_cast<WebRtc_UWord8>(rand() % 256);
 
               // The first two bits are assumed to be 10 by the
               // FEC encoder. In fact the FEC decoder will set the
@@ -230,9 +230,9 @@ int main() {
               ModuleRTPUtility::AssignUWord32ToBuffer(&mediaPacket->data[8],
                                                       ssrc);
               // Generate random values for payload
-              for (int32_t j = 12; j < mediaPacket->length; ++j)  {
+              for (WebRtc_Word32 j = 12; j < mediaPacket->length; ++j)  {
                 mediaPacket->data[j] =
-                    static_cast<uint8_t> (rand() % 256);
+                    static_cast<WebRtc_UWord8> (rand() % 256);
               }
               seqNum++;
             }
@@ -249,14 +249,14 @@ int main() {
               printf("Error: we requested %u FEC packets, "
                   "but GenerateFEC() produced %u\n",
                   numFecPackets,
-                  static_cast<uint32_t>(fecPacketList.size()));
+                  static_cast<WebRtc_UWord32>(fecPacketList.size()));
               return -1;
             }
             memset(mediaLossMask, 0, sizeof(mediaLossMask));
             ForwardErrorCorrection::PacketList::iterator
                 mediaPacketListItem = mediaPacketList.begin();
             ForwardErrorCorrection::ReceivedPacket* receivedPacket;
-            uint32_t mediaPacketIdx = 0;
+            WebRtc_UWord32 mediaPacketIdx = 0;
 
             while (mediaPacketListItem != mediaPacketList.end()) {
               mediaPacket = *mediaPacketListItem;
@@ -285,7 +285,7 @@ int main() {
             ForwardErrorCorrection::PacketList::iterator
                 fecPacketListItem = fecPacketList.begin();
             ForwardErrorCorrection::Packet* fecPacket;
-            uint32_t fecPacketIdx = 0;
+            WebRtc_UWord32 fecPacketIdx = 0;
             while (fecPacketListItem != fecPacketList.end()) {
               fecPacket = *fecPacketListItem;
               const float lossRandomVariable =
@@ -315,31 +315,31 @@ int main() {
 
 #ifdef VERBOSE_OUTPUT
             printf("Media loss mask:\n");
-            for (uint32_t i = 0; i < numMediaPackets; i++) {
+            for (WebRtc_UWord32 i = 0; i < numMediaPackets; i++) {
               printf("%u ", mediaLossMask[i]);
             }
             printf("\n\n");
 
             printf("FEC loss mask:\n");
-            for (uint32_t i = 0; i < numFecPackets; i++) {
+            for (WebRtc_UWord32 i = 0; i < numFecPackets; i++) {
               printf("%u ", fecLossMask[i]);
             }
             printf("\n\n");
 #endif
 
-            std::list<uint8_t*>::iterator fecMaskIt = fecMaskList.begin();
-            uint8_t* fecMask;
+            std::list<WebRtc_UWord8*>::iterator fecMaskIt = fecMaskList.begin();
+            WebRtc_UWord8* fecMask;
             while (fecMaskIt != fecMaskList.end()) {
               fecMask = *fecMaskIt;
-              uint32_t hammingDist = 0;
-              uint32_t recoveryPosition = 0;
-              for (uint32_t i = 0; i < numMediaPackets; i++) {
+              WebRtc_UWord32 hammingDist = 0;
+              WebRtc_UWord32 recoveryPosition = 0;
+              for (WebRtc_UWord32 i = 0; i < numMediaPackets; i++) {
                 if (mediaLossMask[i] == 0 && fecMask[i] == 1) {
                   recoveryPosition = i;
                   ++hammingDist;
                 }
               }
-              std::list<uint8_t*>::iterator itemToDelete = fecMaskIt;
+              std::list<WebRtc_UWord8*>::iterator itemToDelete = fecMaskIt;
               ++fecMaskIt;
 
               if (hammingDist == 1) {
@@ -353,7 +353,7 @@ int main() {
             }
 #ifdef VERBOSE_OUTPUT
             printf("Recovery mask:\n");
-            for (uint32_t i = 0; i < numMediaPackets; ++i) {
+            for (WebRtc_UWord32 i = 0; i < numMediaPackets; ++i) {
               printf("%u ", mediaLossMask[i]);
             }
             printf("\n\n");
@@ -361,7 +361,7 @@ int main() {
             // For error-checking frame completion.
             bool fecPacketReceived = false;
             while (!receivedPacketList.empty()) {
-              uint32_t numPacketsToDecode = static_cast<uint32_t>
+              WebRtc_UWord32 numPacketsToDecode = static_cast<WebRtc_UWord32>
                   ((static_cast<float>(rand()) / RAND_MAX) *
                   receivedPacketList.size() + 0.5);
               if (numPacketsToDecode < 1) {
@@ -428,7 +428,7 @@ int main() {
             if (!recoveredPacketList.empty()) {
               printf("Error: excessive number of recovered packets.\n");
               printf("\t size is:%u\n",
-                     static_cast<uint32_t>(recoveredPacketList.size()));
+                     static_cast<WebRtc_UWord32>(recoveredPacketList.size()));
               return -1;
             }
             // -- Teardown --
@@ -482,12 +482,12 @@ int main() {
 void ReceivePackets(
     ForwardErrorCorrection::ReceivedPacketList* toDecodeList,
     ForwardErrorCorrection::ReceivedPacketList* receivedPacketList,
-    uint32_t numPacketsToDecode, float reorderRate, float duplicateRate) {
+    WebRtc_UWord32 numPacketsToDecode, float reorderRate, float duplicateRate) {
   assert(toDecodeList->empty());
   assert(numPacketsToDecode <= receivedPacketList->size());
 
   ForwardErrorCorrection::ReceivedPacketList::iterator it;
-  for (uint32_t i = 0; i < numPacketsToDecode; i++) {
+  for (WebRtc_UWord32 i = 0; i < numPacketsToDecode; i++) {
     it = receivedPacketList->begin();
     // Reorder packets.
     float randomVariable = static_cast<float>(rand()) / RAND_MAX;

@@ -38,7 +38,7 @@ SpatialAudio::~SpatialAudio()
     _outFile.Close();
 }
 
-int16_t 
+WebRtc_Word16 
 SpatialAudio::Setup()
 {
     // Create ACMs and the Channel;
@@ -53,7 +53,7 @@ SpatialAudio::Setup()
     // Register the receiver ACM in channel
     _channel->RegisterReceiverACM(_acmReceiver);
 
-    uint16_t sampFreqHz = 32000;
+    WebRtc_UWord16 sampFreqHz = 32000;
 
     const std::string file_name =
         webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
@@ -79,10 +79,10 @@ SpatialAudio::Setup()
     // Register all available codes as receiving codecs.
     CodecInst codecInst;
     int status;
-    uint8_t num_encoders = _acmReceiver->NumberOfCodecs();
+    WebRtc_UWord8 num_encoders = _acmReceiver->NumberOfCodecs();
     // Register all available codes as receiving codecs once more.
-    for (uint8_t n = 0; n < num_encoders; n++) {
-      status = _acmReceiver->Codec(n, &codecInst);
+    for (WebRtc_UWord8 n = 0; n < num_encoders; n++) {
+      status = _acmReceiver->Codec(n, codecInst);
       if (status < 0) {
         printf("Error in Codec(), no matching codec found");
       }
@@ -109,11 +109,11 @@ SpatialAudio::Perform()
     Setup();
 
     CodecInst codecInst;
-    _acmLeft->Codec((uint8_t)1, &codecInst);
+    _acmLeft->Codec((WebRtc_UWord8)1, codecInst);
     CHECK_ERROR(_acmLeft->RegisterSendCodec(codecInst));
     EncodeDecode();
 
-    int16_t pannCntr = 0;
+    WebRtc_Word16 pannCntr = 0;
 
     double leftPanning[NUM_PANN_COEFFS] =  
         {1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.60, 0.55, 0.50};
@@ -122,7 +122,7 @@ SpatialAudio::Perform()
 
     while((pannCntr + 1) < NUM_PANN_COEFFS)
     {
-        _acmLeft->Codec((uint8_t)0, &codecInst);
+        _acmLeft->Codec((WebRtc_UWord8)0, codecInst);    
         codecInst.pacsize = 480;
         CHECK_ERROR(_acmLeft->RegisterSendCodec(codecInst));
         CHECK_ERROR(_acmRight->RegisterSendCodec(codecInst));
@@ -131,7 +131,7 @@ SpatialAudio::Perform()
         pannCntr++;
 
         // Change codec    
-        _acmLeft->Codec((uint8_t)3, &codecInst);
+        _acmLeft->Codec((WebRtc_UWord8)3, codecInst);    
         codecInst.pacsize = 320;
         CHECK_ERROR(_acmLeft->RegisterSendCodec(codecInst));
         CHECK_ERROR(_acmRight->RegisterSendCodec(codecInst));
@@ -144,11 +144,11 @@ SpatialAudio::Perform()
         }
     }
 
-    _acmLeft->Codec((uint8_t)4, &codecInst);
+    _acmLeft->Codec((WebRtc_UWord8)4, codecInst);
     CHECK_ERROR(_acmLeft->RegisterSendCodec(codecInst));
     EncodeDecode();
 
-    _acmLeft->Codec((uint8_t)0, &codecInst);
+    _acmLeft->Codec((WebRtc_UWord8)0, codecInst);    
     codecInst.pacsize = 480;
     CHECK_ERROR(_acmLeft->RegisterSendCodec(codecInst));
     CHECK_ERROR(_acmRight->RegisterSendCodec(codecInst));
@@ -174,7 +174,7 @@ SpatialAudio::EncodeDecode(
     const double rightPanning)
 {
     AudioFrame audioFrame;
-    int32_t outFileSampFreq = _outFile.SamplingFrequency();
+    WebRtc_Word32 outFileSampFreq = _outFile.SamplingFrequency();
 
     const double rightToLeftRatio = rightPanning / leftPanning;
 
@@ -185,14 +185,14 @@ SpatialAudio::EncodeDecode(
         _inFile.Read10MsData(audioFrame);
         for(int n = 0; n < audioFrame.samples_per_channel_; n++)
         {
-            audioFrame.data_[n] = (int16_t)floor(
+            audioFrame.data_[n] = (WebRtc_Word16)floor(
                 audioFrame.data_[n] * leftPanning + 0.5);
         }
         CHECK_ERROR(_acmLeft->Add10MsData(audioFrame));
 
         for(int n = 0; n < audioFrame.samples_per_channel_; n++)
         {
-            audioFrame.data_[n] = (int16_t)floor(
+            audioFrame.data_[n] = (WebRtc_Word16)floor(
                 audioFrame.data_[n] * rightToLeftRatio + 0.5);
         }
         CHECK_ERROR(_acmRight->Add10MsData(audioFrame));
@@ -200,8 +200,7 @@ SpatialAudio::EncodeDecode(
         CHECK_ERROR(_acmLeft->Process());
         CHECK_ERROR(_acmRight->Process());
 
-        CHECK_ERROR(_acmReceiver->PlayoutData10Ms(outFileSampFreq,
-                                                  &audioFrame));
+        CHECK_ERROR(_acmReceiver->PlayoutData10Ms(outFileSampFreq, audioFrame));
         _outFile.Write10MsData(audioFrame);
     }
     _inFile.Rewind();
@@ -211,7 +210,7 @@ void
 SpatialAudio::EncodeDecode()
 {
     AudioFrame audioFrame;
-    int32_t outFileSampFreq = _outFile.SamplingFrequency();
+    WebRtc_Word32 outFileSampFreq = _outFile.SamplingFrequency();
 
     _channel->SetIsStereo(false);
 
@@ -222,8 +221,7 @@ SpatialAudio::EncodeDecode()
 
         CHECK_ERROR(_acmLeft->Process());
 
-        CHECK_ERROR(_acmReceiver->PlayoutData10Ms(outFileSampFreq,
-                                                  &audioFrame));
+        CHECK_ERROR(_acmReceiver->PlayoutData10Ms(outFileSampFreq, audioFrame));
         _outFile.Write10MsData(audioFrame);
     }
     _inFile.Rewind();

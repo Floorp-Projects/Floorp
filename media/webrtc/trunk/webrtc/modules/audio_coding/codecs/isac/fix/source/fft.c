@@ -18,7 +18,7 @@
 
 #include "fft.h"
 
-const int16_t kSortTabFft[240] = {
+const WebRtc_Word16 kSortTabFft[240] = {
   0, 60, 120, 180, 20, 80, 140, 200, 40, 100, 160, 220,
   4, 64, 124, 184, 24, 84, 144, 204, 44, 104, 164, 224,
   8, 68, 128, 188, 28, 88, 148, 208, 48, 108, 168, 228,
@@ -42,7 +42,7 @@ const int16_t kSortTabFft[240] = {
 };
 
 /* Cosine table in Q14 */
-const int16_t kCosTabFfftQ14[240] = {
+const WebRtc_Word16 kCosTabFfftQ14[240] = {
   16384,  16378, 16362,   16333,  16294,  16244,  16182,  16110,  16026,  15931,  15826,  15709,
   15582,  15444, 15296,   15137,  14968,  14788,  14598,  14399,  14189,  13970,  13741,  13502,
   13255,  12998, 12733,   12458,  12176,  11885,  11585,  11278,  10963,  10641,  10311,   9974,
@@ -68,18 +68,18 @@ const int16_t kCosTabFfftQ14[240] = {
 
 
 /* Uses 16x16 mul, without rounding, which is faster. Uses WEBRTC_SPL_MUL_16_16_RSFT */
-int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_t iSign) {
+WebRtc_Word16 WebRtcIsacfix_FftRadix16Fastest(WebRtc_Word16 RexQx[], WebRtc_Word16 ImxQx[], WebRtc_Word16 iSign) {
 
-  int16_t dd, ee, ff, gg, hh, ii;
-  int16_t k0, k1, k2, k3, k4, kk;
-  int16_t tmp116, tmp216;
+  WebRtc_Word16 dd, ee, ff, gg, hh, ii;
+  WebRtc_Word16 k0, k1, k2, k3, k4, kk;
+  WebRtc_Word16 tmp116, tmp216;
 
-  int16_t ccc1Q14, ccc2Q14, ccc3Q14, sss1Q14, sss2Q14, sss3Q14;
-  int16_t sss60Q14, ccc72Q14, sss72Q14;
-  int16_t aaQx, ajQx, akQx, ajmQx, ajpQx, akmQx, akpQx;
-  int16_t bbQx, bjQx, bkQx, bjmQx, bjpQx, bkmQx, bkpQx;
+  WebRtc_Word16 ccc1Q14, ccc2Q14, ccc3Q14, sss1Q14, sss2Q14, sss3Q14;
+  WebRtc_Word16 sss60Q14, ccc72Q14, sss72Q14;
+  WebRtc_Word16 aaQx, ajQx, akQx, ajmQx, ajpQx, akmQx, akpQx;
+  WebRtc_Word16 bbQx, bjQx, bkQx, bjmQx, bjpQx, bkmQx, bkpQx;
 
-  int16_t ReDATAQx[240],  ImDATAQx[240];
+  WebRtc_Word16 ReDATAQx[240],  ImDATAQx[240];
 
   sss60Q14 = kCosTabFfftQ14[20];
   ccc72Q14 = kCosTabFfftQ14[48];
@@ -145,18 +145,18 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
     // ImxQ16[k2] = ajpQ16 * sss2Q14 + bjpQ16 * ccc2Q14;
     // ImxQ16[k3] = akmQ16 * sss3Q14 + bkmQ16 * ccc3Q14;
 
-    RexQx[k1] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc1Q14, akpQx, 14) -
-        (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss1Q14, bkpQx, 14); // 6 non-mul + 2 mul cycles, i.e. 8 cycles (6+2*7=20 cycles if 16x32mul)
-    RexQx[k2] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, ajpQx, 14) -
-        (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bjpQx, 14);
-    RexQx[k3] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc3Q14, akmQx, 14) -
-        (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss3Q14, bkmQx, 14);
-    ImxQx[k1] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss1Q14, akpQx, 14) +
-        (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc1Q14, bkpQx, 14);
-    ImxQx[k2] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, ajpQx, 14) +
-        (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bjpQx, 14);
-    ImxQx[k3] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss3Q14, akmQx, 14) +
-        (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc3Q14, bkmQx, 14);
+    RexQx[k1] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc1Q14, akpQx, 14) -
+        (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss1Q14, bkpQx, 14); // 6 non-mul + 2 mul cycles, i.e. 8 cycles (6+2*7=20 cycles if 16x32mul)
+    RexQx[k2] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, ajpQx, 14) -
+        (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bjpQx, 14);
+    RexQx[k3] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc3Q14, akmQx, 14) -
+        (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss3Q14, bkmQx, 14);
+    ImxQx[k1] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss1Q14, akpQx, 14) +
+        (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc1Q14, bkpQx, 14);
+    ImxQx[k2] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, ajpQx, 14) +
+        (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bjpQx, 14);
+    ImxQx[k3] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss3Q14, akmQx, 14) +
+        (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc3Q14, bkmQx, 14);
     //This mul segment needs 6*8 = 48 cycles for 16x16 muls, but 6*20 = 120 cycles for 16x32 muls
 
 
@@ -183,8 +183,8 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
       tmp116 = RexQx[k1] - RexQx[k2];
       tmp216 = ImxQx[k1] - ImxQx[k2];
 
-      ajQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss60Q14, tmp116, 14); // Q14*Qx>>14 = Qx
-      bjQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss60Q14, tmp216, 14); // Q14*Qx>>14 = Qx
+      ajQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss60Q14, tmp116, 14); // Q14*Qx>>14 = Qx
+      bjQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss60Q14, tmp216, 14); // Q14*Qx>>14 = Qx
       RexQx[k1] = akQx - bjQx;
       RexQx[k2] = akQx + bjQx;
       ImxQx[k1] = bkQx + ajQx;
@@ -211,7 +211,7 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
     kk += 20;
     ff = ff+4;
     for (hh=0; hh<2; hh++) {
-      ee = ff + (int16_t)WEBRTC_SPL_MUL_16_16(hh, ff);
+      ee = ff + (WebRtc_Word16)WEBRTC_SPL_MUL_16_16(hh, ff);
       dd = ee + 60;
       ccc2Q14 = kCosTabFfftQ14[ee];
       sss2Q14 = kCosTabFfftQ14[dd];
@@ -221,10 +221,10 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
       for (ii=0; ii<4; ii++) {
         akQx = RexQx[kk];
         bkQx = ImxQx[kk];
-        RexQx[kk] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, akQx, 14) - // Q14*Qx>>14 = Qx
-            (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bkQx, 14);
-        ImxQx[kk] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, akQx, 14) + // Q14*Qx>>14 = Qx
-            (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bkQx, 14);
+        RexQx[kk] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, akQx, 14) - // Q14*Qx>>14 = Qx
+            (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bkQx, 14);
+        ImxQx[kk] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, akQx, 14) + // Q14*Qx>>14 = Qx
+            (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bkQx, 14);
 
 
         kk += 60;
@@ -264,14 +264,14 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
       RexQx[kk] = aaQx + akpQx + ajpQx;
       ImxQx[kk] = bbQx + bkpQx + bjpQx;
 
-      akQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, akpQx, 14) +
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, ajpQx, 14)  + aaQx;
-      bkQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, bkpQx, 14) +
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bjpQx, 14)  + bbQx;
-      ajQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, akmQx, 14) +
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, ajmQx, 14);
-      bjQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, bkmQx, 14) +
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bjmQx, 14);
+      akQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, akpQx, 14) +
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, ajpQx, 14)  + aaQx;
+      bkQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, bkpQx, 14) +
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bjpQx, 14)  + bbQx;
+      ajQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, akmQx, 14) +
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, ajmQx, 14);
+      bjQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, bkmQx, 14) +
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bjmQx, 14);
       // 32+4*8=64 or 32+4*20=112
 
       RexQx[k1] = akQx - bjQx;
@@ -279,14 +279,14 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
       ImxQx[k1] = bkQx + ajQx;
       ImxQx[k4] = bkQx - ajQx;
 
-      akQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, akpQx, 14)  +
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, ajpQx, 14) + aaQx;
-      bkQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bkpQx, 14)  +
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, bjpQx, 14) + bbQx;
-      ajQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, akmQx, 14) -
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, ajmQx, 14);
-      bjQx = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bkmQx, 14) -
-          (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, bjmQx, 14);
+      akQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, akpQx, 14)  +
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, ajpQx, 14) + aaQx;
+      bkQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bkpQx, 14)  +
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc72Q14, bjpQx, 14) + bbQx;
+      ajQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, akmQx, 14) -
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, ajmQx, 14);
+      bjQx = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bkmQx, 14) -
+          (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss72Q14, bjmQx, 14);
       // 8+4*8=40 or 8+4*20=88
 
       RexQx[k2] = akQx - bjQx;
@@ -308,7 +308,7 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
 
   for (gg=0; gg<3; gg++) {
     kk += 4;
-    dd = 12 + (int16_t)WEBRTC_SPL_MUL_16_16(12, gg);
+    dd = 12 + (WebRtc_Word16)WEBRTC_SPL_MUL_16_16(12, gg);
     ff = 0;
     for (hh=0; hh<4; hh++) {
       ff = ff+dd;
@@ -324,10 +324,10 @@ int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_
           sss2Q14 = -sss2Q14;
         }
 
-        RexQx[kk] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, akQx, 14) -
-            (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bkQx, 14);
-        ImxQx[kk] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, akQx, 14) +
-            (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bkQx, 14);
+        RexQx[kk] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, akQx, 14) -
+            (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, bkQx, 14);
+        ImxQx[kk] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(sss2Q14, akQx, 14) +
+            (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ccc2Q14, bkQx, 14);
 
         kk += 20;
       }

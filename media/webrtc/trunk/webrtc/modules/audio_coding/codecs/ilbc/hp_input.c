@@ -23,18 +23,18 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_HpInput(
-    int16_t *signal,     /* (i/o) signal vector */
-    int16_t *ba,      /* (i)   B- and A-coefficients (2:nd order)
+    WebRtc_Word16 *signal,     /* (i/o) signal vector */
+    WebRtc_Word16 *ba,      /* (i)   B- and A-coefficients (2:nd order)
                                                                    {b[0] b[1] b[2] -a[1] -a[2]} a[0]
                                                                    is assumed to be 1.0 */
-    int16_t *y,      /* (i/o) Filter state yhi[n-1] ylow[n-1]
+    WebRtc_Word16 *y,      /* (i/o) Filter state yhi[n-1] ylow[n-1]
                                                                    yhi[n-2] ylow[n-2] */
-    int16_t *x,      /* (i/o) Filter state x[n-1] x[n-2] */
-    int16_t len)      /* (i)   Number of samples to filter */
+    WebRtc_Word16 *x,      /* (i/o) Filter state x[n-1] x[n-2] */
+    WebRtc_Word16 len)      /* (i)   Number of samples to filter */
 {
   int i;
-  int32_t tmpW32;
-  int32_t tmpW32b;
+  WebRtc_Word32 tmpW32;
+  WebRtc_Word32 tmpW32b;
 
   for (i=0; i<len; i++) {
 
@@ -62,10 +62,10 @@ void WebRtcIlbcfix_HpInput(
     tmpW32b = tmpW32 + 4096;
 
     /* Saturate (to 2^28) so that the HP filtered signal does not overflow */
-    tmpW32b = WEBRTC_SPL_SAT((int32_t)268435455, tmpW32b, (int32_t)-268435456);
+    tmpW32b = WEBRTC_SPL_SAT((WebRtc_Word32)268435455, tmpW32b, (WebRtc_Word32)-268435456);
 
     /* Convert back to Q0 and multiply with 0.5 */
-    signal[i] = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmpW32b, 13);
+    signal[i] = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmpW32b, 13);
 
     /* Update state (filtered part) */
     y[2] = y[0];
@@ -80,8 +80,8 @@ void WebRtcIlbcfix_HpInput(
       tmpW32 = WEBRTC_SPL_LSHIFT_W32(tmpW32, 3);
     }
 
-    y[0] = (int16_t)(tmpW32 >> 16);
-    y[1] = (int16_t)((tmpW32 - WEBRTC_SPL_LSHIFT_W32((int32_t)y[0], 16))>>1);
+    y[0] = (WebRtc_Word16)(tmpW32 >> 16);
+    y[1] = (WebRtc_Word16)((tmpW32 - WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)y[0], 16))>>1);
   }
 
   return;

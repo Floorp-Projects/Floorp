@@ -29,7 +29,7 @@ VoEVolumeControl* VoEVolumeControl::GetInterface(VoiceEngine* voiceEngine)
     {
         return NULL;
     }
-    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
+    VoiceEngineImpl* s = reinterpret_cast<VoiceEngineImpl*>(voiceEngine);
     s->AddRef();
     return s;
 #endif
@@ -68,8 +68,8 @@ int VoEVolumeControlImpl::SetSpeakerVolume(unsigned int volume)
         return -1;
     }
 
-    uint32_t maxVol(0);
-    uint32_t spkrVol(0);
+    WebRtc_UWord32 maxVol(0);
+    WebRtc_UWord32 spkrVol(0);
 
     // scale: [0,kMaxVolumeLevel] -> [0,MaxSpeakerVolume]
     if (_shared->audio_device()->MaxSpeakerVolume(&maxVol) != 0)
@@ -79,7 +79,7 @@ int VoEVolumeControlImpl::SetSpeakerVolume(unsigned int volume)
         return -1;
     }
     // Round the value and avoid floating computation.
-    spkrVol = (uint32_t)((volume * maxVol +
+    spkrVol = (WebRtc_UWord32)((volume * maxVol +
         (int)(kMaxVolumeLevel / 2)) / (kMaxVolumeLevel));
 
     // set the actual volume using the audio mixer
@@ -104,8 +104,8 @@ int VoEVolumeControlImpl::GetSpeakerVolume(unsigned int& volume)
         return -1;
     }
 
-    uint32_t spkrVol(0);
-    uint32_t maxVol(0);
+    WebRtc_UWord32 spkrVol(0);
+    WebRtc_UWord32 maxVol(0);
 
     if (_shared->audio_device()->SpeakerVolume(&spkrVol) != 0)
     {
@@ -122,7 +122,7 @@ int VoEVolumeControlImpl::GetSpeakerVolume(unsigned int& volume)
         return -1;
     }
     // Round the value and avoid floating computation.
-    volume = (uint32_t) ((spkrVol * kMaxVolumeLevel +
+    volume = (WebRtc_UWord32) ((spkrVol * kMaxVolumeLevel +
         (int)(maxVol / 2)) / (maxVol));
 
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
@@ -194,8 +194,8 @@ int VoEVolumeControlImpl::SetMicVolume(unsigned int volume)
         return -1;
     }
 
-    uint32_t maxVol(0);
-    uint32_t micVol(0);
+    WebRtc_UWord32 maxVol(0);
+    WebRtc_UWord32 micVol(0);
 
     // scale: [0, kMaxVolumeLevel] -> [0,MaxMicrophoneVolume]
     if (_shared->audio_device()->MaxMicrophoneVolume(&maxVol) != 0)
@@ -221,7 +221,7 @@ int VoEVolumeControlImpl::SetMicVolume(unsigned int volume)
     }
 
     // Round the value and avoid floating point computation.
-    micVol = (uint32_t) ((volume * maxVol +
+    micVol = (WebRtc_UWord32) ((volume * maxVol +
         (int)(kMaxVolumeLevel / 2)) / (kMaxVolumeLevel));
 
     // set the actual volume using the audio mixer
@@ -247,8 +247,8 @@ int VoEVolumeControlImpl::GetMicVolume(unsigned int& volume)
         return -1;
     }
 
-    uint32_t micVol(0);
-    uint32_t maxVol(0);
+    WebRtc_UWord32 micVol(0);
+    WebRtc_UWord32 maxVol(0);
 
     if (_shared->audio_device()->MicrophoneVolume(&micVol) != 0)
     {
@@ -266,7 +266,7 @@ int VoEVolumeControlImpl::GetMicVolume(unsigned int& volume)
     }
     if (micVol < maxVol) {
       // Round the value and avoid floating point calculation.
-      volume = (uint32_t) ((micVol * kMaxVolumeLevel +
+      volume = (WebRtc_UWord32) ((micVol * kMaxVolumeLevel +
           (int)(maxVol / 2)) / (maxVol));
     } else {
       // Truncate the value to the kMaxVolumeLevel.
@@ -396,7 +396,7 @@ int VoEVolumeControlImpl::GetSpeechInputLevel(unsigned int& level)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    int8_t currentLevel = _shared->transmit_mixer()->AudioLevel();
+    WebRtc_Word8 currentLevel = _shared->transmit_mixer()->AudioLevel();
     level = static_cast<unsigned int> (currentLevel);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
         VoEId(_shared->instance_id(), -1),
@@ -418,7 +418,7 @@ int VoEVolumeControlImpl::GetSpeechOutputLevel(int channel,
     if (channel == -1)
     {
         return _shared->output_mixer()->GetSpeechOutputLevel(
-            (uint32_t&)level);
+            (WebRtc_UWord32&)level);
     }
     else
     {
@@ -430,7 +430,7 @@ int VoEVolumeControlImpl::GetSpeechOutputLevel(int channel,
                 "GetSpeechOutputLevel() failed to locate channel");
             return -1;
         }
-        channelPtr->GetSpeechOutputLevel((uint32_t&)level);
+        channelPtr->GetSpeechOutputLevel((WebRtc_UWord32&)level);
     }
     return 0;
 }
@@ -445,7 +445,7 @@ int VoEVolumeControlImpl::GetSpeechInputLevelFullRange(unsigned int& level)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    int16_t currentLevel = _shared->transmit_mixer()->
+    WebRtc_Word16 currentLevel = _shared->transmit_mixer()->
         AudioLevelFullRange();
     level = static_cast<unsigned int> (currentLevel);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
@@ -468,7 +468,7 @@ int VoEVolumeControlImpl::GetSpeechOutputLevelFullRange(int channel,
     if (channel == -1)
     {
         return _shared->output_mixer()->GetSpeechOutputLevelFullRange(
-            (uint32_t&)level);
+            (WebRtc_UWord32&)level);
     }
     else
     {
@@ -480,7 +480,7 @@ int VoEVolumeControlImpl::GetSpeechOutputLevelFullRange(int channel,
                 "GetSpeechOutputLevelFullRange() failed to locate channel");
             return -1;
         }
-        channelPtr->GetSpeechOutputLevelFullRange((uint32_t&)level);
+        channelPtr->GetSpeechOutputLevelFullRange((WebRtc_UWord32&)level);
     }
     return 0;
 }
@@ -491,6 +491,7 @@ int VoEVolumeControlImpl::SetChannelOutputVolumeScaling(int channel,
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "SetChannelOutputVolumeScaling(channel=%d, scaling=%3.2f)",
                channel, scaling);
+    IPHONE_NOT_SUPPORTED(_shared->statistics());
     if (!_shared->statistics().Initialized())
     {
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
@@ -519,6 +520,7 @@ int VoEVolumeControlImpl::GetChannelOutputVolumeScaling(int channel,
 {
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "GetChannelOutputVolumeScaling(channel=%d, scaling=?)", channel);
+    IPHONE_NOT_SUPPORTED(_shared->statistics());
     if (!_shared->statistics().Initialized())
     {
         _shared->SetLastError(VE_NOT_INITED, kTraceError);

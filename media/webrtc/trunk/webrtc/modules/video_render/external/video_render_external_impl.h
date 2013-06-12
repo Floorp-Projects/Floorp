@@ -25,17 +25,17 @@ public:
      *   Constructor/destructor
      */
 
-    VideoRenderExternalImpl(const int32_t id,
+    VideoRenderExternalImpl(const WebRtc_Word32 id,
                             const VideoRenderType videoRenderType,
                             void* window, const bool fullscreen);
 
     virtual ~VideoRenderExternalImpl();
 
-    virtual int32_t Init();
+    virtual WebRtc_Word32 Init();
 
-    virtual int32_t ChangeUniqueId(const int32_t id);
+    virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
 
-    virtual int32_t ChangeWindow(void* window);
+    virtual WebRtc_Word32 ChangeWindow(void* window);
 
     /**************************************************************************
      *
@@ -44,17 +44,17 @@ public:
      ***************************************************************************/
 
     virtual VideoRenderCallback
-            * AddIncomingRenderStream(const uint32_t streamId,
-                                      const uint32_t zOrder,
+            * AddIncomingRenderStream(const WebRtc_UWord32 streamId,
+                                      const WebRtc_UWord32 zOrder,
                                       const float left, const float top,
                                       const float right, const float bottom);
 
-    virtual int32_t
-            DeleteIncomingRenderStream(const uint32_t streamId);
+    virtual WebRtc_Word32
+            DeleteIncomingRenderStream(const WebRtc_UWord32 streamId);
 
-    virtual int32_t
-            GetIncomingRenderStreamProperties(const uint32_t streamId,
-                                              uint32_t& zOrder,
+    virtual WebRtc_Word32
+            GetIncomingRenderStreamProperties(const WebRtc_UWord32 streamId,
+                                              WebRtc_UWord32& zOrder,
                                               float& left, float& top,
                                               float& right, float& bottom) const;
 
@@ -64,9 +64,9 @@ public:
      *
      ***************************************************************************/
 
-    virtual int32_t StartRender();
+    virtual WebRtc_Word32 StartRender();
 
-    virtual int32_t StopRender();
+    virtual WebRtc_Word32 StopRender();
 
     /**************************************************************************
      *
@@ -80,47 +80,49 @@ public:
 
     virtual bool FullScreen();
 
-    virtual int32_t
-            GetGraphicsMemory(uint64_t& totalGraphicsMemory,
-                              uint64_t& availableGraphicsMemory) const;
+    virtual WebRtc_Word32
+            GetGraphicsMemory(WebRtc_UWord64& totalGraphicsMemory,
+                              WebRtc_UWord64& availableGraphicsMemory) const;
 
-    virtual int32_t
-            GetScreenResolution(uint32_t& screenWidth,
-                                uint32_t& screenHeight) const;
+    virtual WebRtc_Word32
+            GetScreenResolution(WebRtc_UWord32& screenWidth,
+                                WebRtc_UWord32& screenHeight) const;
 
-    virtual uint32_t RenderFrameRate(const uint32_t streamId);
+    virtual WebRtc_UWord32 RenderFrameRate(const WebRtc_UWord32 streamId);
 
-    virtual int32_t SetStreamCropping(const uint32_t streamId,
-                                      const float left, const float top,
-                                      const float right, const float bottom);
+    virtual WebRtc_Word32 SetStreamCropping(const WebRtc_UWord32 streamId,
+                                            const float left, const float top,
+                                            const float right,
+                                            const float bottom);
 
-    virtual int32_t ConfigureRenderer(const uint32_t streamId,
-                                      const unsigned int zOrder,
-                                      const float left, const float top,
-                                      const float right, const float bottom);
+    virtual WebRtc_Word32 ConfigureRenderer(const WebRtc_UWord32 streamId,
+                                            const unsigned int zOrder,
+                                            const float left, const float top,
+                                            const float right,
+                                            const float bottom);
 
-    virtual int32_t SetTransparentBackground(const bool enable);
+    virtual WebRtc_Word32 SetTransparentBackground(const bool enable);
 
-    virtual int32_t SetText(const uint8_t textId,
-                            const uint8_t* text,
-                            const int32_t textLength,
-                            const uint32_t textColorRef,
-                            const uint32_t backgroundColorRef,
-                            const float left, const float top,
-                            const float right, const float bottom);
+    virtual WebRtc_Word32 SetText(const WebRtc_UWord8 textId,
+                                  const WebRtc_UWord8* text,
+                                  const WebRtc_Word32 textLength,
+                                  const WebRtc_UWord32 textColorRef,
+                                  const WebRtc_UWord32 backgroundColorRef,
+                                  const float left, const float top,
+                                  const float right, const float bottom);
 
-    virtual int32_t SetBitmap(const void* bitMap,
-                              const uint8_t pictureId,
-                              const void* colorKey, const float left,
-                              const float top, const float right,
-                              const float bottom);
+    virtual WebRtc_Word32 SetBitmap(const void* bitMap,
+                                    const WebRtc_UWord8 pictureId,
+                                    const void* colorKey, const float left,
+                                    const float top, const float right,
+                                    const float bottom);
 
     // VideoRenderCallback
-    virtual int32_t RenderFrame(const uint32_t streamId,
-                                I420VideoFrame& videoFrame);
+    virtual WebRtc_Word32 RenderFrame(const WebRtc_UWord32 streamId,
+                                      I420VideoFrame& videoFrame);
 
 private:
-    int32_t _id;
+    WebRtc_Word32 _id;
     CriticalSectionWrapper& _critSect;
     bool _fullscreen;
 };

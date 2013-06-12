@@ -26,10 +26,10 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Smooth(
-    int16_t *odata,   /* (o) smoothed output */
-    int16_t *current,  /* (i) the un enhanced residual for
+    WebRtc_Word16 *odata,   /* (o) smoothed output */
+    WebRtc_Word16 *current,  /* (i) the un enhanced residual for
                                 this block */
-    int16_t *surround  /* (i) The approximation from the
+    WebRtc_Word16 *surround  /* (i) The approximation from the
                                 surrounding sequences */
                           );
 

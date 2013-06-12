@@ -24,47 +24,47 @@ namespace webrtc
 class AudioMixerManagerLinuxALSA
 {
 public:
-    int32_t OpenSpeaker(char* deviceName);
-    int32_t OpenMicrophone(char* deviceName);
-    int32_t SetSpeakerVolume(uint32_t volume);
-    int32_t SpeakerVolume(uint32_t& volume) const;
-    int32_t MaxSpeakerVolume(uint32_t& maxVolume) const;
-    int32_t MinSpeakerVolume(uint32_t& minVolume) const;
-    int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const;
-    int32_t SpeakerVolumeIsAvailable(bool& available);
-    int32_t SpeakerMuteIsAvailable(bool& available);
-    int32_t SetSpeakerMute(bool enable);
-    int32_t SpeakerMute(bool& enabled) const;
-    int32_t MicrophoneMuteIsAvailable(bool& available);
-    int32_t SetMicrophoneMute(bool enable);
-    int32_t MicrophoneMute(bool& enabled) const;
-    int32_t MicrophoneBoostIsAvailable(bool& available);
-    int32_t SetMicrophoneBoost(bool enable);
-    int32_t MicrophoneBoost(bool& enabled) const;
-    int32_t MicrophoneVolumeIsAvailable(bool& available);
-    int32_t SetMicrophoneVolume(uint32_t volume);
-    int32_t MicrophoneVolume(uint32_t& volume) const;
-    int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const;
-    int32_t MinMicrophoneVolume(uint32_t& minVolume) const;
-    int32_t MicrophoneVolumeStepSize(uint16_t& stepSize) const;
-    int32_t Close();
-    int32_t CloseSpeaker();
-    int32_t CloseMicrophone();
+    WebRtc_Word32 OpenSpeaker(char* deviceName);
+    WebRtc_Word32 OpenMicrophone(char* deviceName);
+    WebRtc_Word32 SetSpeakerVolume(WebRtc_UWord32 volume);
+    WebRtc_Word32 SpeakerVolume(WebRtc_UWord32& volume) const;
+    WebRtc_Word32 MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const;
+    WebRtc_Word32 MinSpeakerVolume(WebRtc_UWord32& minVolume) const;
+    WebRtc_Word32 SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) const;
+    WebRtc_Word32 SpeakerVolumeIsAvailable(bool& available);
+    WebRtc_Word32 SpeakerMuteIsAvailable(bool& available);
+    WebRtc_Word32 SetSpeakerMute(bool enable);
+    WebRtc_Word32 SpeakerMute(bool& enabled) const;
+    WebRtc_Word32 MicrophoneMuteIsAvailable(bool& available);
+    WebRtc_Word32 SetMicrophoneMute(bool enable);
+    WebRtc_Word32 MicrophoneMute(bool& enabled) const;
+    WebRtc_Word32 MicrophoneBoostIsAvailable(bool& available);
+    WebRtc_Word32 SetMicrophoneBoost(bool enable);
+    WebRtc_Word32 MicrophoneBoost(bool& enabled) const;
+    WebRtc_Word32 MicrophoneVolumeIsAvailable(bool& available);
+    WebRtc_Word32 SetMicrophoneVolume(WebRtc_UWord32 volume);
+    WebRtc_Word32 MicrophoneVolume(WebRtc_UWord32& volume) const;
+    WebRtc_Word32 MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) const;
+    WebRtc_Word32 MinMicrophoneVolume(WebRtc_UWord32& minVolume) const;
+    WebRtc_Word32 MicrophoneVolumeStepSize(WebRtc_UWord16& stepSize) const;
+    WebRtc_Word32 Close();
+    WebRtc_Word32 CloseSpeaker();
+    WebRtc_Word32 CloseMicrophone();
     bool SpeakerIsInitialized() const;
     bool MicrophoneIsInitialized() const;
 
 public:
-    AudioMixerManagerLinuxALSA(const int32_t id);
+    AudioMixerManagerLinuxALSA(const WebRtc_Word32 id);
     ~AudioMixerManagerLinuxALSA();
 
 private:
-    int32_t LoadMicMixerElement() const;
-    int32_t LoadSpeakerMixerElement() const;
+    WebRtc_Word32 LoadMicMixerElement() const;
+    WebRtc_Word32 LoadSpeakerMixerElement() const;
     void GetControlName(char *controlName, char* deviceName) const;
 
 private:
     CriticalSectionWrapper& _critSect;
-    int32_t _id;
+    WebRtc_Word32 _id;
     mutable snd_mixer_t* _outputMixerHandle;
     char _outputMixerStr[kAdmMaxDeviceNameSize];
     mutable snd_mixer_t* _inputMixerHandle;

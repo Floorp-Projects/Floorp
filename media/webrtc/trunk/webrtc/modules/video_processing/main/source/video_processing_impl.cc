@@ -21,8 +21,8 @@ namespace
 {
     void
     SetSubSampling(VideoProcessingModule::FrameStats* stats,
-                   const int32_t width,
-                   const int32_t height)
+                   const WebRtc_Word32 width,
+                   const WebRtc_Word32 height)
     {
         if (width * height >= 640 * 480)
         {
@@ -48,7 +48,7 @@ namespace
 }
 
 VideoProcessingModule*
-VideoProcessingModule::Create(const int32_t id)
+VideoProcessingModule::Create(const WebRtc_Word32 id)
 {
 
     return new VideoProcessingModuleImpl(id);
@@ -63,8 +63,8 @@ VideoProcessingModule::Destroy(VideoProcessingModule* module)
     }
 }
 
-int32_t
-VideoProcessingModuleImpl::ChangeUniqueId(const int32_t id)
+WebRtc_Word32
+VideoProcessingModuleImpl::ChangeUniqueId(const WebRtc_Word32 id)
 {
     CriticalSectionScoped mutex(&_mutex);
     _id = id;
@@ -75,14 +75,14 @@ VideoProcessingModuleImpl::ChangeUniqueId(const int32_t id)
     return VPM_OK;
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModuleImpl::Id() const
 {
     CriticalSectionScoped mutex(&_mutex);
     return _id;
 }
 
-VideoProcessingModuleImpl::VideoProcessingModuleImpl(const int32_t id) :
+VideoProcessingModuleImpl::VideoProcessingModuleImpl(const WebRtc_Word32 id) :
     _id(id),
     _mutex(*CriticalSectionWrapper::CreateCriticalSection())
 {
@@ -114,7 +114,7 @@ VideoProcessingModuleImpl::Reset()
 
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModule::GetFrameStats(FrameStats* stats,
                                      const I420VideoFrame& frame)
 {
@@ -175,19 +175,19 @@ VideoProcessingModule::ClearFrameStats(FrameStats* stats)
     memset(stats->hist, 0, sizeof(stats->hist));
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModule::ColorEnhancement(I420VideoFrame* frame)
 {
     return VideoProcessing::ColorEnhancement(frame);
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModule::Brighten(I420VideoFrame* frame, int delta)
 {
     return VideoProcessing::Brighten(frame, delta);
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModuleImpl::Deflickering(I420VideoFrame* frame,
                                         FrameStats* stats)
 {
@@ -195,14 +195,14 @@ VideoProcessingModuleImpl::Deflickering(I420VideoFrame* frame,
     return _deflickering.ProcessFrame(frame, stats);
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModuleImpl::Denoising(I420VideoFrame* frame)
 {
     CriticalSectionScoped mutex(&_mutex);
     return _denoising.ProcessFrame(frame);
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModuleImpl::BrightnessDetection(const I420VideoFrame& frame,
                                                const FrameStats& stats)
 {
@@ -227,25 +227,25 @@ VideoProcessingModuleImpl::SetInputFrameResampleMode(VideoFrameResampling
     _framePreProcessor.SetInputFrameResampleMode(resamplingMode);
 }
 
-int32_t
-VideoProcessingModuleImpl::SetMaxFrameRate(uint32_t maxFrameRate)
+WebRtc_Word32
+VideoProcessingModuleImpl::SetMaxFrameRate(WebRtc_UWord32 maxFrameRate)
 {
     CriticalSectionScoped cs(&_mutex);
     return _framePreProcessor.SetMaxFrameRate(maxFrameRate);
 
 }
 
-int32_t
-VideoProcessingModuleImpl::SetTargetResolution(uint32_t width,
-                                               uint32_t height,
-                                               uint32_t frameRate)
+WebRtc_Word32
+VideoProcessingModuleImpl::SetTargetResolution(WebRtc_UWord32 width,
+                                               WebRtc_UWord32 height,
+                                               WebRtc_UWord32 frameRate)
 {
     CriticalSectionScoped cs(&_mutex);
     return _framePreProcessor.SetTargetResolution(width, height, frameRate);
 }
 
 
-uint32_t
+WebRtc_UWord32
 VideoProcessingModuleImpl::DecimatedFrameRate()
 {
     CriticalSectionScoped cs(&_mutex);
@@ -253,21 +253,21 @@ VideoProcessingModuleImpl::DecimatedFrameRate()
 }
 
 
-uint32_t
+WebRtc_UWord32
 VideoProcessingModuleImpl::DecimatedWidth() const
 {
     CriticalSectionScoped cs(&_mutex);
     return _framePreProcessor.DecimatedWidth();
 }
 
-uint32_t
+WebRtc_UWord32
 VideoProcessingModuleImpl::DecimatedHeight() const
 {
     CriticalSectionScoped cs(&_mutex);
     return _framePreProcessor.DecimatedHeight();
 }
 
-int32_t
+WebRtc_Word32
 VideoProcessingModuleImpl::PreprocessFrame(const I420VideoFrame& frame,
                                            I420VideoFrame **processedFrame)
 {

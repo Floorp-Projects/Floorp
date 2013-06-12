@@ -21,46 +21,46 @@ namespace webrtc {
 
 class ACMG729 : public ACMGenericCodec {
  public:
-  explicit ACMG729(int16_t codec_id);
+  explicit ACMG729(WebRtc_Word16 codec_id);
   ~ACMG729();
 
   // for FEC
   ACMGenericCodec* CreateInstance(void);
 
-  int16_t InternalEncode(uint8_t* bitstream,
-                         int16_t* bitstream_len_byte);
+  WebRtc_Word16 InternalEncode(WebRtc_UWord8* bitstream,
+                               WebRtc_Word16* bitstream_len_byte);
 
-  int16_t InternalInitEncoder(WebRtcACMCodecParams *codec_params);
+  WebRtc_Word16 InternalInitEncoder(WebRtcACMCodecParams *codec_params);
 
-  int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
+  WebRtc_Word16 InternalInitDecoder(WebRtcACMCodecParams *codec_params);
 
  protected:
-  int16_t DecodeSafe(uint8_t* bitstream,
-                     int16_t bitstream_len_byte,
-                     int16_t* audio,
-                     int16_t* audio_samples,
-                     int8_t* speech_type);
+  WebRtc_Word16 DecodeSafe(WebRtc_UWord8* bitstream,
+                           WebRtc_Word16 bitstream_len_byte,
+                           WebRtc_Word16* audio,
+                           WebRtc_Word16* audio_samples,
+                           WebRtc_Word8* speech_type);
 
-  int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                   const CodecInst& codec_inst);
+  WebRtc_Word32 CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                         const CodecInst& codec_inst);
 
   void DestructEncoderSafe();
 
   void DestructDecoderSafe();
 
-  int16_t InternalCreateEncoder();
+  WebRtc_Word16 InternalCreateEncoder();
 
-  int16_t InternalCreateDecoder();
+  WebRtc_Word16 InternalCreateDecoder();
 
   void InternalDestructEncoderInst(void* ptr_inst);
 
-  int16_t EnableDTX();
+  WebRtc_Word16 EnableDTX();
 
-  int16_t DisableDTX();
+  WebRtc_Word16 DisableDTX();
 
-  int32_t ReplaceInternalDTXSafe(const bool replace_internal_dtx);
+  WebRtc_Word32 ReplaceInternalDTXSafe(const bool replace_internal_dtx);
 
-  int32_t IsInternalDTXReplacedSafe(bool* internal_dtx_replaced);
+  WebRtc_Word32 IsInternalDTXReplacedSafe(bool* internal_dtx_replaced);
 
   G729_encinst_t_* encoder_inst_ptr_;
   G729_decinst_t_* decoder_inst_ptr_;

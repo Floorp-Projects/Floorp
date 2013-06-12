@@ -36,13 +36,13 @@
  * Return value         : Length of correlated data
  */
 
-int16_t WebRtcNetEQ_Correlator(DSPInst_t *inst,
+WebRtc_Word16 WebRtcNetEQ_Correlator(DSPInst_t *inst,
 #ifdef SCRATCH
-                               int16_t *pw16_scratchPtr,
+                                     WebRtc_Word16 *pw16_scratchPtr,
 #endif
-                               int16_t *pw16_data, int16_t w16_dataLen,
-                               int16_t *pw16_corrOut,
-                               int16_t *pw16_corrScale);
+                                     WebRtc_Word16 *pw16_data, WebRtc_Word16 w16_dataLen,
+                                     WebRtc_Word16 *pw16_corrOut,
+                                     WebRtc_Word16 *pw16_corrScale);
 
 /****************************************************************************
  * WebRtcNetEQ_PeakDetection(...)
@@ -62,10 +62,10 @@ int16_t WebRtcNetEQ_Correlator(DSPInst_t *inst,
  * Return value         : 0 for ok
  */
 
-int16_t WebRtcNetEQ_PeakDetection(int16_t *pw16_data, int16_t w16_dataLen,
-                                  int16_t w16_nmbPeaks, int16_t fs_mult,
-                                  int16_t *pw16_corrIndex,
-                                  int16_t *pw16_winners);
+WebRtc_Word16 WebRtcNetEQ_PeakDetection(WebRtc_Word16 *pw16_data, WebRtc_Word16 w16_dataLen,
+                                        WebRtc_Word16 w16_nmbPeaks, WebRtc_Word16 fs_mult,
+                                        WebRtc_Word16 *pw16_corrIndex,
+                                        WebRtc_Word16 *pw16_winners);
 
 /****************************************************************************
  * WebRtcNetEQ_PrblFit(...)
@@ -83,8 +83,8 @@ int16_t WebRtcNetEQ_PeakDetection(int16_t *pw16_data, int16_t w16_dataLen,
  * Return value         : 0 for ok
  */
 
-int16_t WebRtcNetEQ_PrblFit(int16_t *pw16_3pts, int16_t *pw16_Ind,
-                            int16_t *pw16_outVal, int16_t fs_mult);
+WebRtc_Word16 WebRtcNetEQ_PrblFit(WebRtc_Word16 *pw16_3pts, WebRtc_Word16 *pw16_Ind,
+                                  WebRtc_Word16 *pw16_outVal, WebRtc_Word16 fs_mult);
 
 /****************************************************************************
  * WebRtcNetEQ_MinDistortion(...)
@@ -104,9 +104,9 @@ int16_t WebRtcNetEQ_PrblFit(int16_t *pw16_3pts, int16_t *pw16_Ind,
  * Return value         : Lag for minimum distortion
  */
 
-int16_t WebRtcNetEQ_MinDistortion(const int16_t *pw16_data,
-                                  int16_t w16_minLag, int16_t w16_maxLag,
-                                  int16_t len, int32_t *pw16_dist);
+WebRtc_Word16 WebRtcNetEQ_MinDistortion(const WebRtc_Word16 *pw16_data,
+                                        WebRtc_Word16 w16_minLag, WebRtc_Word16 w16_maxLag,
+                                        WebRtc_Word16 len, WebRtc_Word32 *pw16_dist);
 
 /****************************************************************************
  * WebRtcNetEQ_RandomVec(...)
@@ -122,8 +122,8 @@ int16_t WebRtcNetEQ_MinDistortion(const int16_t *pw16_data,
  *      - randVec       : Generated random vector
  */
 
-void WebRtcNetEQ_RandomVec(uint32_t *w32_seed, int16_t *pw16_randVec,
-                           int16_t w16_len, int16_t w16_incval);
+void WebRtcNetEQ_RandomVec(WebRtc_UWord32 *w32_seed, WebRtc_Word16 *pw16_randVec,
+                           WebRtc_Word16 w16_len, WebRtc_Word16 w16_incval);
 
 /****************************************************************************
  * WebRtcNetEQ_MixVoiceUnvoice(...)
@@ -141,10 +141,10 @@ void WebRtcNetEQ_RandomVec(uint32_t *w32_seed, int16_t *pw16_randVec,
  *      - outData           : Mixed signal
  */
 
-void WebRtcNetEQ_MixVoiceUnvoice(int16_t *pw16_outData, int16_t *pw16_voicedVec,
-                                 int16_t *pw16_unvoicedVec,
-                                 int16_t *w16_current_vfraction,
-                                 int16_t w16_vfraction_change, int16_t N);
+void WebRtcNetEQ_MixVoiceUnvoice(WebRtc_Word16 *pw16_outData, WebRtc_Word16 *pw16_voicedVec,
+                                 WebRtc_Word16 *pw16_unvoicedVec,
+                                 WebRtc_Word16 *w16_current_vfraction,
+                                 WebRtc_Word16 w16_vfraction_change, WebRtc_Word16 N);
 
 /****************************************************************************
  * WebRtcNetEQ_UnmuteSignal(...)
@@ -161,9 +161,9 @@ void WebRtcNetEQ_MixVoiceUnvoice(int16_t *pw16_outData, int16_t *pw16_voicedVec,
  *      - outVec        : Output signal
  */
 
-void WebRtcNetEQ_UnmuteSignal(int16_t *pw16_inVec, int16_t *startMuteFact,
-                              int16_t *pw16_outVec, int16_t unmuteFact,
-                              int16_t N);
+void WebRtcNetEQ_UnmuteSignal(WebRtc_Word16 *pw16_inVec, WebRtc_Word16 *startMuteFact,
+                              WebRtc_Word16 *pw16_outVec, WebRtc_Word16 unmuteFact,
+                              WebRtc_Word16 N);
 
 /****************************************************************************
  * WebRtcNetEQ_MuteSignal(...)
@@ -176,8 +176,8 @@ void WebRtcNetEQ_UnmuteSignal(int16_t *pw16_inVec, int16_t *startMuteFact,
  *      - N             : Number of samples
  */
 
-void WebRtcNetEQ_MuteSignal(int16_t *pw16_inout, int16_t muteSlope,
-                            int16_t N);
+void WebRtcNetEQ_MuteSignal(WebRtc_Word16 *pw16_inout, WebRtc_Word16 muteSlope,
+                            WebRtc_Word16 N);
 
 /****************************************************************************
  * WebRtcNetEQ_CalcFsMult(...)
@@ -190,7 +190,7 @@ void WebRtcNetEQ_MuteSignal(int16_t *pw16_inout, int16_t muteSlope,
  * Return value			: fsHz/8000 for the valid values, 1 for other inputs
  */
 
-int16_t WebRtcNetEQ_CalcFsMult(uint16_t fsHz);
+WebRtc_Word16 WebRtcNetEQ_CalcFsMult(WebRtc_UWord16 fsHz);
 
 /****************************************************************************
  * WebRtcNetEQ_DownSampleTo4kHz(...)
@@ -213,8 +213,8 @@ int16_t WebRtcNetEQ_CalcFsMult(uint16_t fsHz);
  *
  */
 
-int WebRtcNetEQ_DownSampleTo4kHz(const int16_t *in, int inLen, uint16_t inFsHz,
-                                 int16_t *out, int outLen, int compensateDelay);
+int WebRtcNetEQ_DownSampleTo4kHz(const WebRtc_Word16 *in, int inLen, WebRtc_UWord16 inFsHz,
+                                 WebRtc_Word16 *out, int outLen, int compensateDelay);
 
 #endif
 

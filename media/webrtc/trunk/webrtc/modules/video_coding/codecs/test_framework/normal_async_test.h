@@ -60,22 +60,22 @@ private:
 // feedback signal to encoder
 struct fbSignal
 {
-    fbSignal(int d, uint8_t pid) : delay(d), id(pid) {};
+    fbSignal(int d, WebRtc_UWord8 pid) : delay(d), id(pid) {};
     int         delay;
-    uint8_t id;
+    WebRtc_UWord8 id;
 };
 
 class NormalAsyncTest : public NormalTest
 {
 public:
     NormalAsyncTest();
-    NormalAsyncTest(uint32_t bitRate);
+    NormalAsyncTest(WebRtc_UWord32 bitRate);
     NormalAsyncTest(std::string name, std::string description,
                     unsigned int testNo);
     NormalAsyncTest(std::string name, std::string description,
-                    uint32_t bitRate, unsigned int testNo);
+                    WebRtc_UWord32 bitRate, unsigned int testNo);
     NormalAsyncTest(std::string name, std::string description,
-                    uint32_t bitRate, unsigned int testNo,
+                    WebRtc_UWord32 bitRate, unsigned int testNo,
                     unsigned int rttFrames);
     virtual ~NormalAsyncTest() {};
     virtual void Perform();
@@ -91,9 +91,9 @@ public:
     {
         return NULL;
     };
-    virtual int32_t ReceivedDecodedReferenceFrame(
-        const uint64_t pictureId);
-    virtual int32_t ReceivedDecodedFrame(const uint64_t pictureId);
+    virtual WebRtc_Word32 ReceivedDecodedReferenceFrame(
+        const WebRtc_UWord64 pictureId);
+    virtual WebRtc_Word32 ReceivedDecodedFrame(const WebRtc_UWord64 pictureId);
 
 protected:
     virtual void Setup();
@@ -106,8 +106,8 @@ protected:
 
     FILE*                   _sourceFile;
     FILE*                   _decodedFile;
-    uint32_t          _decodedWidth;
-    uint32_t          _decodedHeight;
+    WebRtc_UWord32          _decodedWidth;
+    WebRtc_UWord32          _decodedHeight;
     double                  _totalEncodeTime;
     double                  _totalDecodeTime;
     double                  _decodeCompleteTime;
@@ -122,17 +122,17 @@ protected:
     unsigned int            _lengthEncFrame;
     FrameQueueTuple*        _frameToDecode;
     bool                    _appendNext;
-    std::map<uint32_t, double> _encodeTimes;
-    std::map<uint32_t, double> _decodeTimes;
+    std::map<WebRtc_UWord32, double> _encodeTimes;
+    std::map<WebRtc_UWord32, double> _decodeTimes;
     bool                    _missingFrames;
     std::list<fbSignal>     _signalSLI;
     int                     _rttFrames;
     mutable bool            _hasReceivedSLI;
     mutable bool            _hasReceivedRPSI;
-    uint8_t           _pictureIdSLI;
-    uint16_t          _pictureIdRPSI;
-    uint64_t          _lastDecRefPictureId;
-    uint64_t          _lastDecPictureId;
+    WebRtc_UWord8           _pictureIdSLI;
+    WebRtc_UWord16          _pictureIdRPSI;
+    WebRtc_UWord64          _lastDecRefPictureId;
+    WebRtc_UWord64          _lastDecPictureId;
     std::list<fbSignal>     _signalPLI;
     bool                    _hasReceivedPLI;
     bool                    _waitForKey;
@@ -150,16 +150,16 @@ public:
       _encodedBytes(0)
     {}
 
-    int32_t
+    WebRtc_Word32
     Encoded(webrtc::EncodedImage& encodedImage,
             const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
             const webrtc::RTPFragmentationHeader* fragmentation = NULL);
-    uint32_t EncodedBytes();
+    WebRtc_UWord32 EncodedBytes();
 private:
     FILE*             _encodedFile;
     FrameQueue*       _frameQueue;
     NormalAsyncTest&  _test;
-    uint32_t    _encodedBytes;
+    WebRtc_UWord32    _encodedBytes;
 };
 
 class VideoDecodeCompleteCallback : public webrtc::DecodedImageCallback
@@ -172,16 +172,16 @@ public:
         _decodedBytes(0)
     {}
 
-    virtual int32_t Decoded(webrtc::I420VideoFrame& decodedImage);
-    virtual int32_t
-    ReceivedDecodedReferenceFrame(const uint64_t pictureId);
-    virtual int32_t ReceivedDecodedFrame(const uint64_t pictureId);
+    virtual WebRtc_Word32 Decoded(webrtc::I420VideoFrame& decodedImage);
+    virtual WebRtc_Word32
+    ReceivedDecodedReferenceFrame(const WebRtc_UWord64 pictureId);
+    virtual WebRtc_Word32 ReceivedDecodedFrame(const WebRtc_UWord64 pictureId);
 
-    uint32_t DecodedBytes();
+    WebRtc_UWord32 DecodedBytes();
 private:
     FILE* _decodedFile;
     NormalAsyncTest& _test;
-    uint32_t    _decodedBytes;
+    WebRtc_UWord32    _decodedBytes;
 };
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_NORMAL_ASYNC_TEST_H_

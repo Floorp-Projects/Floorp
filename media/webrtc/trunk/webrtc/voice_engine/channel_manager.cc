@@ -17,7 +17,7 @@ namespace webrtc
 namespace voe
 {
 
-ChannelManager::ChannelManager(const uint32_t instanceId) :
+ChannelManager::ChannelManager(const WebRtc_UWord32 instanceId) :
     ChannelManagerBase(),
     _instanceId(instanceId)
 {
@@ -28,12 +28,12 @@ ChannelManager::~ChannelManager()
     ChannelManagerBase::DestroyAllItems();
 }
 
-bool ChannelManager::CreateChannel(int32_t& channelId)
+bool ChannelManager::CreateChannel(WebRtc_Word32& channelId)
 {
     return ChannelManagerBase::CreateItem(channelId);
 }
 
-int32_t ChannelManager::DestroyChannel(const int32_t channelId)
+WebRtc_Word32 ChannelManager::DestroyChannel(const WebRtc_Word32 channelId)
 {
     Channel* deleteChannel =
         static_cast<Channel*> (ChannelManagerBase::RemoveItem(channelId));
@@ -45,17 +45,17 @@ int32_t ChannelManager::DestroyChannel(const int32_t channelId)
     return 0;
 }
 
-int32_t ChannelManager::NumOfChannels() const
+WebRtc_Word32 ChannelManager::NumOfChannels() const
 {
     return ChannelManagerBase::NumOfItems();
 }
 
-int32_t ChannelManager::MaxNumOfChannels() const
+WebRtc_Word32 ChannelManager::MaxNumOfChannels() const
 {
     return ChannelManagerBase::MaxNumOfItems();
 }
 
-void* ChannelManager::NewItem(int32_t itemID)
+void* ChannelManager::NewItem(WebRtc_Word32 itemID)
 {
     Channel* channel;
     if (Channel::CreateChannel(channel, itemID, _instanceId) == -1)
@@ -71,7 +71,7 @@ void ChannelManager::DeleteItem(void* item)
     delete deleteItem;
 }
 
-Channel* ChannelManager::GetChannel(const int32_t channelId) const
+Channel* ChannelManager::GetChannel(const WebRtc_Word32 channelId) const
 {
     return static_cast<Channel*> (ChannelManagerBase::GetItem(channelId));
 }
@@ -81,8 +81,8 @@ void ChannelManager::ReleaseChannel()
     ChannelManagerBase::ReleaseItem();
 }
 
-void ChannelManager::GetChannelIds(int32_t* channelsArray,
-                                   int32_t& numOfChannels) const
+void ChannelManager::GetChannelIds(WebRtc_Word32* channelsArray,
+                                   WebRtc_Word32& numOfChannels) const
 {
     ChannelManagerBase::GetItemIds(channelsArray, numOfChannels);
 }
@@ -104,7 +104,7 @@ ScopedChannel::ScopedChannel(ChannelManager& chManager) :
 }
 
 ScopedChannel::ScopedChannel(ChannelManager& chManager,
-                             int32_t channelId) :
+                             WebRtc_Word32 channelId) :
     _chManager(chManager),
     _channelPtr(NULL)
 {

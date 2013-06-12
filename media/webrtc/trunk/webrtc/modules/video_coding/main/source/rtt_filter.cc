@@ -18,7 +18,7 @@
 
 namespace webrtc {
 
-VCMRttFilter::VCMRttFilter(int32_t vcmId, int32_t receiverId)
+VCMRttFilter::VCMRttFilter(WebRtc_Word32 vcmId, WebRtc_Word32 receiverId)
 :
 _vcmId(vcmId),
 _receiverId(receiverId),
@@ -63,7 +63,7 @@ VCMRttFilter::Reset()
 }
 
 void
-VCMRttFilter::Update(uint32_t rttMs)
+VCMRttFilter::Update(WebRtc_UWord32 rttMs)
 {
     if (!_gotNonZeroUpdate)
     {
@@ -111,7 +111,7 @@ VCMRttFilter::Update(uint32_t rttMs)
 }
 
 bool
-VCMRttFilter::JumpDetection(uint32_t rttMs)
+VCMRttFilter::JumpDetection(WebRtc_UWord32 rttMs)
 {
     double diffFromAvg = _avgRtt - rttMs;
     if (abs(diffFromAvg) > _jumpStdDevs * sqrt(_varRtt))
@@ -157,7 +157,7 @@ VCMRttFilter::JumpDetection(uint32_t rttMs)
 }
 
 bool
-VCMRttFilter::DriftDetection(uint32_t rttMs)
+VCMRttFilter::DriftDetection(WebRtc_UWord32 rttMs)
 {
     if (_maxRtt - _avgRtt > _driftStdDevs * sqrt(_varRtt))
     {
@@ -186,7 +186,7 @@ VCMRttFilter::DriftDetection(uint32_t rttMs)
 }
 
 void
-VCMRttFilter::ShortRttFilter(uint32_t* buf, uint32_t length)
+VCMRttFilter::ShortRttFilter(WebRtc_UWord32* buf, WebRtc_UWord32 length)
 {
     if (length == 0)
     {
@@ -194,7 +194,7 @@ VCMRttFilter::ShortRttFilter(uint32_t* buf, uint32_t length)
     }
     _maxRtt = 0;
     _avgRtt = 0;
-    for (uint32_t i=0; i < length; i++)
+    for (WebRtc_UWord32 i=0; i < length; i++)
     {
         if (buf[i] > _maxRtt)
         {
@@ -205,10 +205,10 @@ VCMRttFilter::ShortRttFilter(uint32_t* buf, uint32_t length)
     _avgRtt = _avgRtt / static_cast<double>(length);
 }
 
-uint32_t
+WebRtc_UWord32
 VCMRttFilter::RttMs() const
 {
-    return static_cast<uint32_t>(_maxRtt + 0.5);
+    return static_cast<WebRtc_UWord32>(_maxRtt + 0.5);
 }
 
 }

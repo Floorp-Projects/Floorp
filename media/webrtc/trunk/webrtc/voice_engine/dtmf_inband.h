@@ -24,66 +24,68 @@ class CriticalSectionWrapper;
 class DtmfInband
 {
 public:
-    DtmfInband(const int32_t id);
+    DtmfInband(const WebRtc_Word32 id);
 
     virtual ~DtmfInband();
 
     void Init();
 
-    int SetSampleRate(const uint16_t frequency);
+    int SetSampleRate(const WebRtc_UWord16 frequency);
 
-    int GetSampleRate(uint16_t& frequency);
+    int GetSampleRate(WebRtc_UWord16& frequency);
 
-    int AddTone(const uint8_t eventCode,
-                int32_t lengthMs,
-                int32_t attenuationDb);
+    int AddTone(const WebRtc_UWord8 eventCode,
+                WebRtc_Word32 lengthMs,
+                WebRtc_Word32 attenuationDb);
 
     int ResetTone();
-    int StartTone(const uint8_t eventCode, int32_t attenuationDb);
+    int StartTone(const WebRtc_UWord8 eventCode,
+                  WebRtc_Word32 attenuationDb);
 
     int StopTone();
 
     bool IsAddingTone();
 
-    int Get10msTone(int16_t output[320], uint16_t& outputSizeInSamples);
+    int Get10msTone(WebRtc_Word16 output[320],
+                    WebRtc_UWord16& outputSizeInSamples);
 
-    uint32_t DelaySinceLastTone() const;
+    WebRtc_UWord32 DelaySinceLastTone() const;
 
     void UpdateDelaySinceLastTone();
 
 private:
     void ReInit();
-    int16_t DtmfFix_generate(int16_t* decoded,
-                             const int16_t value,
-                             const int16_t volume,
-                             const int16_t frameLen,
-                             const int16_t fs);
+    WebRtc_Word16 DtmfFix_generate(WebRtc_Word16* decoded,
+                                   const WebRtc_Word16 value,
+                                   const WebRtc_Word16 volume,
+                                   const WebRtc_Word16 frameLen,
+                                   const WebRtc_Word16 fs);
 
 private:
     enum {kDtmfFrameSizeMs = 10};
     enum {kDtmfAmpHigh = 32768};
     enum {kDtmfAmpLow  = 23171};	// 3 dB lower than the high frequency
 
-    int16_t DtmfFix_generateSignal(const int16_t a1_times2,
-                                   const int16_t a2_times2,
-                                   const int16_t volume,
-                                   int16_t* signal,
-                                   const int16_t length);
+    WebRtc_Word16 DtmfFix_generateSignal(const WebRtc_Word16 a1_times2,
+                                         const WebRtc_Word16 a2_times2,
+                                         const WebRtc_Word16 volume,
+                                         WebRtc_Word16* signal,
+                                         const WebRtc_Word16 length);
 
 private:
     CriticalSectionWrapper& _critSect;
-    int32_t _id;
-    uint16_t _outputFrequencyHz;  // {8000, 16000, 32000}
-    int16_t _oldOutputLow[2];     // Data needed for oscillator model
-    int16_t _oldOutputHigh[2];    // Data needed for oscillator model
-    int16_t _frameLengthSamples;  // {80, 160, 320}
-    int32_t _remainingSamples;
-    int16_t _eventCode;           // [0, 15]
-    int16_t _attenuationDb;       // [0, 36]
-    int32_t _lengthMs;
+    WebRtc_Word32 _id;
+    WebRtc_UWord16 _outputFrequencyHz;  // {8000, 16000, 32000}
+    WebRtc_Word16 _oldOutputLow[2];     // Data needed for oscillator model
+    WebRtc_Word16 _oldOutputHigh[2];    // Data needed for oscillator model
+    WebRtc_Word16 _frameLengthSamples;  // {80, 160, 320}
+    WebRtc_Word32 _remainingSamples;
+    WebRtc_Word16 _eventCode;           // [0, 15]
+    WebRtc_Word16 _attenuationDb;       // [0, 36]
+    WebRtc_Word32 _lengthMs;
     bool _reinit;  // 'true' if the oscillator should be reinit for next event
     bool _playing;
-    uint32_t _delaySinceLastToneMS; // time since last generated tone [ms]
+    WebRtc_UWord32 _delaySinceLastToneMS; // time since last generated tone [ms]
 };
 
 }   // namespace webrtc

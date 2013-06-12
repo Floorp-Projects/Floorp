@@ -39,9 +39,9 @@ public:
 
 protected:
     UnitTest(std::string name, std::string description);
-    virtual uint32_t CodecSpecific_SetBitrate(
-        uint32_t bitRate,
-        uint32_t /* frameRate */);
+    virtual WebRtc_UWord32 CodecSpecific_SetBitrate(
+        WebRtc_UWord32 bitRate,
+        WebRtc_UWord32 /* frameRate */);
     virtual void Teardown();
     virtual void RateControlTests();
     virtual int Decode();
@@ -51,8 +51,8 @@ protected:
     virtual bool CheckIfBitExact(const void *ptrA, unsigned int aLengthBytes,
                                  const void *ptrB, unsigned int bLengthBytes);
 
-    uint32_t WaitForEncodedFrame() const;
-    uint32_t WaitForDecodedFrame() const;
+    WebRtc_UWord32 WaitForEncodedFrame() const;
+    WebRtc_UWord32 WaitForDecodedFrame() const;
 
     int _tests;
     int _errors;
@@ -74,13 +74,14 @@ class UnitTestEncodeCompleteCallback : public webrtc::EncodedImageCallback
 {
 public:
     UnitTestEncodeCompleteCallback(webrtc::VideoFrame* buffer,
-                                   uint32_t decoderSpecificSize = 0,
+                                   WebRtc_UWord32 decoderSpecificSize = 0,
                                    void* decoderSpecificInfo = NULL) :
       _encodedVideoBuffer(buffer),
       _encodeComplete(false) {}
-    int32_t Encoded(webrtc::EncodedImage& encodedImage,
-                    const webrtc::CodecSpecificInfo* codecSpecificInfo,
-                    const webrtc::RTPFragmentationHeader* fragmentation = NULL);
+    WebRtc_Word32 Encoded(webrtc::EncodedImage& encodedImage,
+                          const webrtc::CodecSpecificInfo* codecSpecificInfo,
+                          const webrtc::RTPFragmentationHeader*
+                          fragmentation = NULL);
     bool EncodeComplete();
     // Note that this only makes sense if an encode has been completed
     webrtc::VideoFrameType EncodedFrameType() const;
@@ -95,7 +96,7 @@ class UnitTestDecodeCompleteCallback : public webrtc::DecodedImageCallback
 public:
     UnitTestDecodeCompleteCallback(webrtc::I420VideoFrame* buffer) :
         _decodedVideoBuffer(buffer), _decodeComplete(false) {}
-    int32_t Decoded(webrtc::I420VideoFrame& image);
+    WebRtc_Word32 Decoded(webrtc::I420VideoFrame& image);
     bool DecodeComplete();
 private:
     webrtc::I420VideoFrame* _decodedVideoBuffer;

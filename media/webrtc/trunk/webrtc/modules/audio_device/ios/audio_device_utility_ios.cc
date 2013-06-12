@@ -15,7 +15,7 @@
 #include "trace.h"
 
 namespace webrtc {
-AudioDeviceUtilityIPhone::AudioDeviceUtilityIPhone(const int32_t id)
+AudioDeviceUtilityIPhone::AudioDeviceUtilityIPhone(const WebRtc_Word32 id)
 :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
@@ -32,7 +32,7 @@ AudioDeviceUtilityIPhone::~AudioDeviceUtilityIPhone() {
     delete &_critSect;
 }
 
-int32_t AudioDeviceUtilityIPhone::Init() {
+WebRtc_Word32 AudioDeviceUtilityIPhone::Init() {
     WEBRTC_TRACE(kTraceModuleCall, kTraceAudioDevice, _id,
                  "%s", __FUNCTION__);
 

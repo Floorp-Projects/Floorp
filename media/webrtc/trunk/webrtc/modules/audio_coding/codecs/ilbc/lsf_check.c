@@ -24,15 +24,15 @@
  *---------------------------------------------------------------*/
 
 int WebRtcIlbcfix_LsfCheck(
-    int16_t *lsf, /* LSF parameters */
+    WebRtc_Word16 *lsf, /* LSF parameters */
     int dim, /* dimension of LSF */
     int NoAn)  /* No of analysis per frame */
 {
   int k,n,m, Nit=2, change=0,pos;
-  const int16_t eps=319;  /* 0.039 in Q13 (50 Hz)*/
-  const int16_t eps2=160;  /* eps/2.0 in Q13;*/
-  const int16_t maxlsf=25723; /* 3.14; (4000 Hz)*/
-  const int16_t minlsf=82;  /* 0.01; (0 Hz)*/
+  const WebRtc_Word16 eps=319;  /* 0.039 in Q13 (50 Hz)*/
+  const WebRtc_Word16 eps2=160;  /* eps/2.0 in Q13;*/
+  const WebRtc_Word16 maxlsf=25723; /* 3.14; (4000 Hz)*/
+  const WebRtc_Word16 minlsf=82;  /* 0.01; (0 Hz)*/
 
   /* LSF separation check*/
   for (n=0;n<Nit;n++) {  /* Run through a 2 times */

@@ -24,14 +24,14 @@
  *  residual
  *---------------------------------------------------------------*/
 
-int16_t WebRtcIlbcfix_GainDequant(
+WebRtc_Word16 WebRtcIlbcfix_GainDequant(
     /* (o) quantized gain value (Q14) */
-    int16_t index, /* (i) quantization index */
-    int16_t maxIn, /* (i) maximum of unquantized gain (Q14) */
-    int16_t stage /* (i) The stage of the search */
+    WebRtc_Word16 index, /* (i) quantization index */
+    WebRtc_Word16 maxIn, /* (i) maximum of unquantized gain (Q14) */
+    WebRtc_Word16 stage /* (i) The stage of the search */
                                                 ){
-  int16_t scale;
-  const int16_t *gain;
+  WebRtc_Word16 scale;
+  const WebRtc_Word16 *gain;
 
   /* obtain correct scale factor */
 
@@ -41,5 +41,5 @@ int16_t WebRtcIlbcfix_GainDequant(
   /* select the quantization table and return the decoded value */
   gain = WebRtcIlbcfix_kGain[stage];
 
-  return((int16_t)((WEBRTC_SPL_MUL_16_16(scale, gain[index])+8192)>>14));
+  return((WebRtc_Word16)((WEBRTC_SPL_MUL_16_16(scale, gain[index])+8192)>>14));
 }

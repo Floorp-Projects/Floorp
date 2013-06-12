@@ -24,104 +24,106 @@ namespace webrtc {
 class RTPSenderAudio: public DTMFqueue
 {
 public:
-    RTPSenderAudio(const int32_t id, Clock* clock,
+    RTPSenderAudio(const WebRtc_Word32 id, RtpRtcpClock* clock,
                    RTPSenderInterface* rtpSender);
     virtual ~RTPSenderAudio();
 
-    int32_t RegisterAudioPayload(
+    WebRtc_Word32 RegisterAudioPayload(
         const char payloadName[RTP_PAYLOAD_NAME_SIZE],
-        const int8_t payloadType,
-        const uint32_t frequency,
-        const uint8_t channels,
-        const uint32_t rate,
+        const WebRtc_Word8 payloadType,
+        const WebRtc_UWord32 frequency,
+        const WebRtc_UWord8 channels,
+        const WebRtc_UWord32 rate,
         ModuleRTPUtility::Payload*& payload);
 
-    int32_t SendAudio(const FrameType frameType,
-                      const int8_t payloadType,
-                      const uint32_t captureTimeStamp,
-                      const uint8_t* payloadData,
-                      const uint32_t payloadSize,
-                      const RTPFragmentationHeader* fragmentation);
+    WebRtc_Word32 SendAudio(const FrameType frameType,
+                            const WebRtc_Word8 payloadType,
+                            const WebRtc_UWord32 captureTimeStamp,
+                            const WebRtc_UWord8* payloadData,
+                            const WebRtc_UWord32 payloadSize,
+                            const RTPFragmentationHeader* fragmentation);
 
     // set audio packet size, used to determine when it's time to send a DTMF packet in silence (CNG)
-    int32_t SetAudioPacketSize(const uint16_t packetSizeSamples);
+    WebRtc_Word32 SetAudioPacketSize(const WebRtc_UWord16 packetSizeSamples);
 
     // Set status and ID for header-extension-for-audio-level-indication.
     // Valid ID range is [1,14].
-    int32_t SetAudioLevelIndicationStatus(const bool enable, const uint8_t ID);
+    WebRtc_Word32 SetAudioLevelIndicationStatus(const bool enable,
+                                              const WebRtc_UWord8 ID);
 
     // Get status and ID for header-extension-for-audio-level-indication.
-    int32_t AudioLevelIndicationStatus(bool& enable, uint8_t& ID) const;
+    WebRtc_Word32 AudioLevelIndicationStatus(bool& enable,
+                                           WebRtc_UWord8& ID) const;
 
     // Store the audio level in dBov for header-extension-for-audio-level-indication.
     // Valid range is [0,100]. Actual value is negative.
-    int32_t SetAudioLevel(const uint8_t level_dBov);
+    WebRtc_Word32 SetAudioLevel(const WebRtc_UWord8 level_dBov);
 
     // Send a DTMF tone using RFC 2833 (4733)
-      int32_t SendTelephoneEvent(const uint8_t key,
-                                 const uint16_t time_ms,
-                                 const uint8_t level);
+      WebRtc_Word32 SendTelephoneEvent(const WebRtc_UWord8 key,
+                                   const WebRtc_UWord16 time_ms,
+                                   const WebRtc_UWord8 level);
 
-    bool SendTelephoneEventActive(int8_t& telephoneEvent) const;
+    bool SendTelephoneEventActive(WebRtc_Word8& telephoneEvent) const;
 
-    void SetAudioFrequency(const uint32_t f);
+    void SetAudioFrequency(const WebRtc_UWord32 f);
 
     int AudioFrequency() const;
 
     // Set payload type for Redundant Audio Data RFC 2198
-    int32_t SetRED(const int8_t payloadType);
+    WebRtc_Word32 SetRED(const WebRtc_Word8 payloadType);
 
     // Get payload type for Redundant Audio Data RFC 2198
-    int32_t RED(int8_t& payloadType) const;
+    WebRtc_Word32 RED(WebRtc_Word8& payloadType) const;
 
-    int32_t RegisterAudioCallback(RtpAudioFeedback* messagesCallback);
+    WebRtc_Word32 RegisterAudioCallback(RtpAudioFeedback* messagesCallback);
 
 protected:
-    int32_t SendTelephoneEventPacket(const bool ended,
-                                     const uint32_t dtmfTimeStamp,
-                                     const uint16_t duration,
-                                     const bool markerBit); // set on first packet in talk burst
+    WebRtc_Word32 SendTelephoneEventPacket(const bool ended,
+                                         const WebRtc_UWord32 dtmfTimeStamp,
+                                         const WebRtc_UWord16 duration,
+                                         const bool markerBit); // set on first packet in talk burst
 
     bool MarkerBit(const FrameType frameType,
-                   const int8_t payloadType);
+                   const WebRtc_Word8 payloadType);
 
 private:
-    int32_t             _id;
-    Clock*                    _clock;
-    RTPSenderInterface*       _rtpSender;
-    CriticalSectionWrapper*   _audioFeedbackCritsect;
-    RtpAudioFeedback*         _audioFeedback;
+    WebRtc_Word32             _id;
+    RtpRtcpClock&             _clock;
+    RTPSenderInterface*     _rtpSender;
+    CriticalSectionWrapper* _audioFeedbackCritsect;
+    RtpAudioFeedback*   _audioFeedback;
 
     CriticalSectionWrapper*   _sendAudioCritsect;
 
-    uint32_t            _frequency;
-    uint16_t            _packetSizeSamples;
+    WebRtc_UWord32            _frequency;
+    WebRtc_UWord16            _packetSizeSamples;
 
     // DTMF
     bool              _dtmfEventIsOn;
     bool              _dtmfEventFirstPacketSent;
-    int8_t      _dtmfPayloadType;
-    uint32_t    _dtmfTimestamp;
-    uint8_t     _dtmfKey;
-    uint32_t    _dtmfLengthSamples;
-    uint8_t     _dtmfLevel;
-    int64_t     _dtmfTimeLastSent;
-    uint32_t    _dtmfTimestampLastSent;
+    WebRtc_Word8      _dtmfPayloadType;
+    WebRtc_UWord32    _dtmfTimestamp;
+    WebRtc_UWord8     _dtmfKey;
+    WebRtc_UWord32    _dtmfLengthSamples;
+    WebRtc_UWord8     _dtmfLevel;
+    WebRtc_Word64     _dtmfTimeLastSent;
+    WebRtc_UWord32    _dtmfTimestampLastSent;
 
-    int8_t      _REDPayloadType;
+    WebRtc_Word8      _REDPayloadType;
 
     // VAD detection, used for markerbit
     bool              _inbandVADactive;
-    int8_t      _cngNBPayloadType;
-    int8_t      _cngWBPayloadType;
-    int8_t      _cngSWBPayloadType;
-    int8_t      _cngFBPayloadType;
-    int8_t      _lastPayloadType;
+    WebRtc_Word8      _cngNBPayloadType;
+    WebRtc_Word8      _cngWBPayloadType;
+    WebRtc_Word8      _cngSWBPayloadType;
+    WebRtc_Word8      _cngFBPayloadType;
+    WebRtc_Word8      _lastPayloadType;
 
     // Audio level indication (https://datatracker.ietf.org/doc/draft-lennox-avt-rtp-audio-level-exthdr/)
     bool            _includeAudioLevelIndication;
-    uint8_t     _audioLevelIndicationID;
-    uint8_t     _audioLevel_dBov;
+    WebRtc_UWord8     _audioLevelIndicationID;
+    WebRtc_UWord8     _audioLevel_dBov;
 };
 } // namespace webrtc
 

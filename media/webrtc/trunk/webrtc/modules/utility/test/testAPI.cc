@@ -38,29 +38,29 @@ bool notify = false, playing = false, recording = false;
 class MyFileModuleCallback : public FileCallback
 {
 public:
-    virtual void PlayNotification( const int32_t id,
-                                   const uint32_t durationMs )
+    virtual void PlayNotification( const WebRtc_Word32 id,
+                                   const WebRtc_UWord32 durationMs )
     {
         printf("\tReceived PlayNotification from module %ld, durationMs = %ld\n",
                id, durationMs);
         notify = true;
     };
 
-    virtual void RecordNotification( const int32_t id,
-                                     const uint32_t durationMs )
+    virtual void RecordNotification( const WebRtc_Word32 id,
+                                     const WebRtc_UWord32 durationMs )
     {
         printf("\tReceived RecordNotification from module %ld, durationMs = %ld\n",
                id, durationMs);
         notify = true;
     };
 
-    virtual void PlayFileEnded(const int32_t id)
+    virtual void PlayFileEnded(const WebRtc_Word32 id)
     {
         printf("\tReceived PlayFileEnded notification from module %ld.\n", id);
         playing = false;
     };
 
-    virtual void RecordFileEnded(const int32_t id)
+    virtual void RecordFileEnded(const WebRtc_Word32 id)
     {
         printf("\tReceived RecordFileEnded notification from module %ld.\n", id);
         recording = false;
@@ -151,14 +151,14 @@ int main(int /*argc*/, char** /*argv*/)
                     ::Sleep(10);
                 }
             }
-             uint32_t decodedDataLengthInSamples;
+             WebRtc_UWord32 decodedDataLengthInSamples;
             if( 0 !=  filePlayer.Get10msAudioFromFile( audioFrame.data_, decodedDataLengthInSamples, audioCodec.plfreq))
             {
                 audioNotDone = false;
             } else
             {
                 audioFrame.sample_rate_hz_ = filePlayer.Frequency();
-                audioFrame.samples_per_channel_ = (uint16_t)decodedDataLengthInSamples;
+                audioFrame.samples_per_channel_ = (WebRtc_UWord16)decodedDataLengthInSamples;
                 fileRecorder.RecordAudioToFile(audioFrame, &TickTime::Now());
             }
        }
@@ -210,7 +210,7 @@ int main(int /*argc*/, char** /*argv*/)
 
         assert(fileRecorder.IsRecording());
 
-        const uint32_t KVideoWriteSize = static_cast< uint32_t>( (videoCodec.width * videoCodec.height * 3) / 2);
+        const WebRtc_UWord32 KVideoWriteSize = static_cast< WebRtc_UWord32>( (videoCodec.width * videoCodec.height * 3) / 2);
         webrtc::VideoFrame videoFrame;
 
         // 10 ms
@@ -339,7 +339,7 @@ int main(int /*argc*/, char** /*argv*/)
                 }
             }
 
-            uint32_t decodedDataLengthInSamples;
+            WebRtc_UWord32 decodedDataLengthInSamples;
             if( 0 != filePlayer.Get10msAudioFromFile( audioFrame.data_, decodedDataLengthInSamples, audioCodec.plfreq))
             {
                 audioNotDone = false;
@@ -348,7 +348,7 @@ int main(int /*argc*/, char** /*argv*/)
             {
                 ::Sleep(5);
                 audioFrame.sample_rate_hz_ = filePlayer.Frequency();
-                audioFrame.samples_per_channel_ = (uint16_t)decodedDataLengthInSamples;
+                audioFrame.samples_per_channel_ = (WebRtc_UWord16)decodedDataLengthInSamples;
                 assert(0 == fileRecorder.RecordAudioToFile(audioFrame));
 
                 audioFrameCount++;

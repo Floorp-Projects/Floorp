@@ -26,16 +26,16 @@
 
 
 int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
-                              uint32_t uw32_timeRec)
+                              WebRtc_UWord32 uw32_timeRec)
 {
     RTPPacket_t RTPpacket[2];
     int i_k;
     int i_ok = 0, i_No_Of_Payloads = 1;
-    int16_t flushed = 0;
-    int16_t codecPos;
+    WebRtc_Word16 flushed = 0;
+    WebRtc_Word16 codecPos;
     int curr_Codec;
-    int16_t isREDPayload = 0;
-    int32_t temp_bufsize;
+    WebRtc_Word16 isREDPayload = 0;
+    WebRtc_Word32 temp_bufsize;
 #ifdef NETEQ_RED_CODEC
     RTPPacket_t* RTPpacketPtr[2]; /* Support for redundancy up to 2 payloads */
     RTPpacketPtr[0] = &RTPpacket[0];
@@ -43,8 +43,7 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
 #endif
 
     temp_bufsize = WebRtcNetEQ_PacketBufferGetSize(&MCU_inst->PacketBuffer_inst,
-                                                   &MCU_inst->codec_DB_inst,
-                                                   MCU_inst->av_sync);
+                                                   &MCU_inst->codec_DB_inst);
     /*
      * Copy from input RTP packet to local copy
      * (mainly to enable multiple payloads using RED)
@@ -159,7 +158,7 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
         /* Adjust timestamp if timestamp scaling is needed (e.g. SILK or G.722) */
         if (MCU_inst->TSscalingInitialized == 1)
         {
-            uint32_t newTS = WebRtcNetEQ_ScaleTimestampExternalToInternal(MCU_inst,
+            WebRtc_UWord32 newTS = WebRtcNetEQ_ScaleTimestampExternalToInternal(MCU_inst,
                 RTPpacket[i_k].timeStamp);
 
             /* save the incoming timestamp for next time */
@@ -203,7 +202,7 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
             /* Is this a CNG packet? how should we handle this?*/
 #ifdef NETEQ_CNG_CODEC
             /* Get CNG sample rate */
-            uint16_t fsCng = WebRtcNetEQ_DbGetSampleRate(&MCU_inst->codec_DB_inst,
+            WebRtc_UWord16 fsCng = WebRtcNetEQ_DbGetSampleRate(&MCU_inst->codec_DB_inst,
                 RTPpacket[i_k].payloadType);
 
             /* Force sampling frequency to 32000 Hz CNG 48000 Hz. */
@@ -224,7 +223,7 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
                 MCU_inst->current_Codec = -1;
             }
             i_ok = WebRtcNetEQ_PacketBufferInsert(&MCU_inst->PacketBuffer_inst,
-                &RTPpacket[i_k], &flushed, MCU_inst->av_sync);
+                &RTPpacket[i_k], &flushed);
             if (i_ok < 0)
             {
                 return RECIN_CNG_ERROR;
@@ -260,8 +259,7 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
 
             /* Parse the payload and insert it into the buffer */
             i_ok = WebRtcNetEQ_SplitAndInsertPayload(&RTPpacket[i_k],
-                &MCU_inst->PacketBuffer_inst, &MCU_inst->PayloadSplit_inst,
-                &flushed, MCU_inst->av_sync);
+                &MCU_inst->PacketBuffer_inst, &MCU_inst->PayloadSplit_inst, &flushed);
             if (i_ok < 0)
             {
                 return i_ok;
@@ -303,9 +301,9 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
 
             MCU_inst->codec_DB_inst.funcUpdBWEst[codecPos](
                 MCU_inst->codec_DB_inst.codec_state[codecPos],
-                (const uint16_t *) RTPpacket[0].payload,
-                (int32_t) RTPpacket[0].payloadLen, RTPpacket[0].seqNumber,
-                (uint32_t) RTPpacket[0].timeStamp, (uint32_t) uw32_timeRec);
+                (G_CONST WebRtc_UWord16 *) RTPpacket[0].payload,
+                (WebRtc_Word32) RTPpacket[0].payloadLen, RTPpacket[0].seqNumber,
+                (WebRtc_UWord32) RTPpacket[0].timeStamp, (WebRtc_UWord32) uw32_timeRec);
         }
     }
 
@@ -313,8 +311,8 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
     {
         /* Calculate the total speech length carried in each packet */
         temp_bufsize = WebRtcNetEQ_PacketBufferGetSize(
-            &MCU_inst->PacketBuffer_inst, &MCU_inst->codec_DB_inst,
-            MCU_inst->av_sync) - temp_bufsize;
+            &MCU_inst->PacketBuffer_inst, &MCU_inst->codec_DB_inst)
+            - temp_bufsize;
 
         if ((temp_bufsize > 0) && (MCU_inst->BufferStat_inst.Automode_inst.lastPackCNGorDTMF
             == 0) && (temp_bufsize
@@ -322,11 +320,11 @@ int WebRtcNetEQ_RecInInternal(MCUInst_t *MCU_inst, RTPPacket_t *RTPpacketInput,
         {
             /* Change the auto-mode parameters if packet length has changed */
             WebRtcNetEQ_SetPacketSpeechLen(&(MCU_inst->BufferStat_inst.Automode_inst),
-                (int16_t) temp_bufsize, MCU_inst->fs);
+                (WebRtc_Word16) temp_bufsize, MCU_inst->fs);
         }
 
         /* update statistics */
-        if ((int32_t) (RTPpacket[0].timeStamp - MCU_inst->timeStamp) >= 0
+        if ((WebRtc_Word32) (RTPpacket[0].timeStamp - MCU_inst->timeStamp) >= 0
             && !MCU_inst->new_codec)
         {
             /*
@@ -397,7 +395,7 @@ int WebRtcNetEQ_GetTimestampScaling(MCUInst_t *MCU_inst, int rtpPayloadType)
         {
             /* TODO(tlegrand): remove scaling once ACM has full 48 kHz
              * support. */
-            uint16_t sample_freq =
+            WebRtc_UWord16 sample_freq =
                 WebRtcNetEQ_DbGetSampleRate(&MCU_inst->codec_DB_inst,
                                             rtpPayloadType);
             if (sample_freq == 48000) {
@@ -418,11 +416,11 @@ int WebRtcNetEQ_GetTimestampScaling(MCUInst_t *MCU_inst, int rtpPayloadType)
     return 0;
 }
 
-uint32_t WebRtcNetEQ_ScaleTimestampExternalToInternal(const MCUInst_t *MCU_inst,
-                                                      uint32_t externalTS)
+WebRtc_UWord32 WebRtcNetEQ_ScaleTimestampExternalToInternal(const MCUInst_t *MCU_inst,
+                                                            WebRtc_UWord32 externalTS)
 {
-    int32_t timestampDiff;
-    uint32_t internalTS;
+    WebRtc_Word32 timestampDiff;
+    WebRtc_UWord32 internalTS;
 
     /* difference between this and last incoming timestamp */
     timestampDiff = externalTS - MCU_inst->externalTS;
@@ -461,14 +459,14 @@ uint32_t WebRtcNetEQ_ScaleTimestampExternalToInternal(const MCUInst_t *MCU_inst,
     return internalTS;
 }
 
-uint32_t WebRtcNetEQ_ScaleTimestampInternalToExternal(const MCUInst_t *MCU_inst,
-                                                      uint32_t internalTS)
+WebRtc_UWord32 WebRtcNetEQ_ScaleTimestampInternalToExternal(const MCUInst_t *MCU_inst,
+                                                            WebRtc_UWord32 internalTS)
 {
-    int32_t timestampDiff;
-    uint32_t externalTS;
+    WebRtc_Word32 timestampDiff;
+    WebRtc_UWord32 externalTS;
 
     /* difference between this and last incoming timestamp */
-    timestampDiff = (int32_t) internalTS - MCU_inst->internalTS;
+    timestampDiff = (WebRtc_Word32) internalTS - MCU_inst->internalTS;
 
     switch (MCU_inst->scalingFactor)
     {

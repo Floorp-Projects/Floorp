@@ -10,20 +10,6 @@
 
 #include "after_streaming_fixture.h"
 
-namespace {
-
-void ExpectVolumeNear(int expected, int actual) {
-  // The hardware volume may be more coarsely quantized than [0, 255], so
-  // it is not always reasonable to expect to get exactly what we set. This
-  // allows for some error.
-  const int kMaxVolumeError = 10;
-  EXPECT_NEAR(expected, actual, kMaxVolumeError);
-  EXPECT_GE(actual, 0);
-  EXPECT_LE(actual, 255);
-}
-
-}  // namespace
-
 class VolumeTest : public AfterStreamingFixture {
 };
 
@@ -47,20 +33,20 @@ TEST_F(VolumeTest, SetVolumeBeforePlayoutWorks) {
   EXPECT_EQ(0, voe_volume_control_->SetSpeakerVolume(200));
   unsigned int volume;
   EXPECT_EQ(0, voe_volume_control_->GetSpeakerVolume(volume));
-  ExpectVolumeNear(200u, volume);
+  EXPECT_EQ(200u, volume);
 
   PausePlaying();
   ResumePlaying();
   EXPECT_EQ(0, voe_volume_control_->GetSpeakerVolume(volume));
   // Ensure the volume has not changed after resuming playout.
-  ExpectVolumeNear(200u, volume);
+  EXPECT_EQ(200u, volume);
 
   PausePlaying();
   EXPECT_EQ(0, voe_volume_control_->SetSpeakerVolume(100));
   ResumePlaying();
   // Ensure the volume set while paused is retained.
   EXPECT_EQ(0, voe_volume_control_->GetSpeakerVolume(volume));
-  ExpectVolumeNear(100u, volume);
+  EXPECT_EQ(100u, volume);
 
   EXPECT_EQ(0, voe_volume_control_->SetSpeakerVolume(original_volume));
 }
@@ -74,20 +60,20 @@ TEST_F(VolumeTest, ManualSetVolumeWorks) {
   EXPECT_EQ(0, voe_volume_control_->SetSpeakerVolume(0));
   unsigned int volume;
   EXPECT_EQ(0, voe_volume_control_->GetSpeakerVolume(volume));
-  ExpectVolumeNear(0u, volume);
+  EXPECT_EQ(0u, volume);
   Sleep(1000);
 
   TEST_LOG("Setting speaker volume to 100 out of 255.\n");
   EXPECT_EQ(0, voe_volume_control_->SetSpeakerVolume(100));
   EXPECT_EQ(0, voe_volume_control_->GetSpeakerVolume(volume));
-  ExpectVolumeNear(100u, volume);
+  EXPECT_EQ(100u, volume);
   Sleep(1000);
 
   // Set the volume to 255 very briefly so we don't blast the poor user
   // listening to this. This is just to test the call succeeds.
   EXPECT_EQ(0, voe_volume_control_->SetSpeakerVolume(255));
   EXPECT_EQ(0, voe_volume_control_->GetSpeakerVolume(volume));
-  ExpectVolumeNear(255u, volume);
+  EXPECT_EQ(255u, volume);
 
   TEST_LOG("Setting speaker volume to the original %d out of 255.\n",
       original_volume);

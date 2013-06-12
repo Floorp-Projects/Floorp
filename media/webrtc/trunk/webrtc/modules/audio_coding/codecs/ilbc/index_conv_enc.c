@@ -22,7 +22,7 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_IndexConvEnc(
-    int16_t *index   /* (i/o) Codebook indexes */
+    WebRtc_Word16 *index   /* (i/o) Codebook indexes */
                                 ){
   int k;
 

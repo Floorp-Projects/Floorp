@@ -22,7 +22,7 @@ namespace webrtc
 {
 namespace videocapturemodule
 {
-const int32_t NoWindowsCaptureDelays = 1;
+const WebRtc_Word32 NoWindowsCaptureDelays = 1;
 const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
   "Microsoft LifeCam Cinema",
   "usb#vid_045e&pid_075d",
@@ -59,7 +59,7 @@ const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
 }
 
 // static
-DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
+DeviceInfoDS* DeviceInfoDS::Create(const WebRtc_Word32 id)
 {
     DeviceInfoDS* dsInfo = new DeviceInfoDS(id);
     if (!dsInfo || dsInfo->Init() != 0)
@@ -70,7 +70,7 @@ DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
     return dsInfo;
 }
 
-DeviceInfoDS::DeviceInfoDS(const int32_t id)
+DeviceInfoDS::DeviceInfoDS(const WebRtc_Word32 id)
     : DeviceInfoImpl(id), _dsDevEnum(NULL), _dsMonikerDevEnum(NULL),
       _CoUninitializeIsRequired(true)
 {
@@ -124,7 +124,7 @@ DeviceInfoDS::~DeviceInfoDS()
     }
 }
 
-int32_t DeviceInfoDS::Init()
+WebRtc_Word32 DeviceInfoDS::Init()
 {
     HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
                                   IID_ICreateDevEnum, (void **) &_dsDevEnum);
@@ -136,39 +136,39 @@ int32_t DeviceInfoDS::Init()
     }
     return 0;
 }
-uint32_t DeviceInfoDS::NumberOfDevices()
+WebRtc_UWord32 DeviceInfoDS::NumberOfDevices()
 {
     ReadLockScoped cs(_apiLock);
     return GetDeviceInfo(0, 0, 0, 0, 0, 0, 0);
 }
 
-int32_t DeviceInfoDS::GetDeviceName(
-                                       uint32_t deviceNumber,
+WebRtc_Word32 DeviceInfoDS::GetDeviceName(
+                                       WebRtc_UWord32 deviceNumber,
                                        char* deviceNameUTF8,
-                                       uint32_t deviceNameLength,
+                                       WebRtc_UWord32 deviceNameLength,
                                        char* deviceUniqueIdUTF8,
-                                       uint32_t deviceUniqueIdUTF8Length,
+                                       WebRtc_UWord32 deviceUniqueIdUTF8Length,
                                        char* productUniqueIdUTF8,
-                                       uint32_t productUniqueIdUTF8Length)
+                                       WebRtc_UWord32 productUniqueIdUTF8Length)
 {
     ReadLockScoped cs(_apiLock);
-    const int32_t result = GetDeviceInfo(deviceNumber, deviceNameUTF8,
-                                         deviceNameLength,
-                                         deviceUniqueIdUTF8,
-                                         deviceUniqueIdUTF8Length,
-                                         productUniqueIdUTF8,
-                                         productUniqueIdUTF8Length);
-    return result > (int32_t) deviceNumber ? 0 : -1;
+    const WebRtc_Word32 result = GetDeviceInfo(deviceNumber, deviceNameUTF8,
+                                               deviceNameLength,
+                                               deviceUniqueIdUTF8,
+                                               deviceUniqueIdUTF8Length,
+                                               productUniqueIdUTF8,
+                                               productUniqueIdUTF8Length);
+    return result > (WebRtc_Word32) deviceNumber ? 0 : -1;
 }
 
-int32_t DeviceInfoDS::GetDeviceInfo(
-                                       uint32_t deviceNumber,
+WebRtc_Word32 DeviceInfoDS::GetDeviceInfo(
+                                       WebRtc_UWord32 deviceNumber,
                                        char* deviceNameUTF8,
-                                       uint32_t deviceNameLength,
+                                       WebRtc_UWord32 deviceNameLength,
                                        char* deviceUniqueIdUTF8,
-                                       uint32_t deviceUniqueIdUTF8Length,
+                                       WebRtc_UWord32 deviceUniqueIdUTF8Length,
                                        char* productUniqueIdUTF8,
-                                       uint32_t productUniqueIdUTF8Length)
+                                       WebRtc_UWord32 productUniqueIdUTF8Length)
 
 {
 
@@ -291,11 +291,11 @@ int32_t DeviceInfoDS::GetDeviceInfo(
 IBaseFilter * DeviceInfoDS::GetDeviceFilter(
                                      const char* deviceUniqueIdUTF8,
                                      char* productUniqueIdUTF8,
-                                     uint32_t productUniqueIdUTF8Length)
+                                     WebRtc_UWord32 productUniqueIdUTF8Length)
 {
 
-    const int32_t deviceUniqueIdUTF8Length =
-        (int32_t) strlen((char*) deviceUniqueIdUTF8); // UTF8 is also NULL terminated
+    const WebRtc_Word32 deviceUniqueIdUTF8Length =
+        (WebRtc_Word32) strlen((char*) deviceUniqueIdUTF8); // UTF8 is also NULL terminated
     if (deviceUniqueIdUTF8Length > kVideoCaptureUniqueNameLength)
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
@@ -382,8 +382,8 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
     return captureFilter;
 }
 
-int32_t DeviceInfoDS::GetWindowsCapability(
-                              const int32_t capabilityIndex,
+WebRtc_Word32 DeviceInfoDS::GetWindowsCapability(
+                              const WebRtc_Word32 capabilityIndex,
                               VideoCaptureCapabilityWindows& windowsCapability)
 
 {
@@ -402,7 +402,7 @@ int32_t DeviceInfoDS::GetWindowsCapability(
     return 0;
 }
 
-int32_t DeviceInfoDS::CreateCapabilityMap(
+WebRtc_Word32 DeviceInfoDS::CreateCapabilityMap(
                                          const char* deviceUniqueIdUTF8)
 
 {
@@ -416,8 +416,8 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
         _captureCapabilities.Erase(item);
     }
 
-    const int32_t deviceUniqueIdUTF8Length =
-        (int32_t) strlen((char*) deviceUniqueIdUTF8);
+    const WebRtc_Word32 deviceUniqueIdUTF8Length =
+        (WebRtc_Word32) strlen((char*) deviceUniqueIdUTF8);
     if (deviceUniqueIdUTF8Length > kVideoCaptureUniqueNameLength)
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
@@ -489,7 +489,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
         return -1;
     }
 
-    int32_t index = 0; // Index in created _capabilities map
+    WebRtc_Word32 index = 0; // Index in created _capabilities map
     // Check if the device support formattype == FORMAT_VideoInfo2 and FORMAT_VideoInfo.
     // Prefer FORMAT_VideoInfo since some cameras (ZureCam) has been seen having problem with MJPEG and FORMAT_VideoInfo2
     // Interlace flag is only supported in FORMAT_VideoInfo2
@@ -497,7 +497,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
     bool supportFORMAT_VideoInfo = false;
     bool foundInterlacedFormat = false;
     GUID preferedVideoFormat = FORMAT_VideoInfo;
-    for (int32_t tmp = 0; tmp < count; ++tmp)
+    for (WebRtc_Word32 tmp = 0; tmp < count; ++tmp)
     {
         hr = streamConfig->GetStreamCaps(tmp, &pmt,
                                          reinterpret_cast<BYTE*> (&caps));
@@ -537,7 +537,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
         }
     }
 
-    for (int32_t tmp = 0; tmp < count; ++tmp)
+    for (WebRtc_Word32 tmp = 0; tmp < count; ++tmp)
     {
         hr = streamConfig->GetStreamCaps(tmp, &pmt,
                                          reinterpret_cast<BYTE*> (&caps));
@@ -558,7 +558,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
             VideoCaptureCapabilityWindows* capability =
                                         new VideoCaptureCapabilityWindows();
-            int64_t avgTimePerFrame = 0;
+            WebRtc_Word64 avgTimePerFrame = 0;
 
             if (pmt->formattype == FORMAT_VideoInfo)
             {
@@ -586,8 +586,8 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
             if (hrVC == S_OK)
             {
-                LONGLONG *frameDurationList;
-                LONGLONG maxFPS; 
+                LONGLONG *frameDurationList = NULL;
+                LONGLONG maxFPS;
                 long listSize;
                 SIZE size;
                 size.cx = capability->width;
@@ -606,8 +606,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
                 // On some odd cameras, you may get a 0 for duration.
                 // GetMaxOfFrameArray returns the lowest duration (highest FPS)
                 if (hrVC == S_OK && listSize > 0 &&
-                    0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, 
-                                                      listSize)))
+                    0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize)))
                 {
                     capability->maxFPS = static_cast<int> (10000000
                                                            / maxFPS);
@@ -728,7 +727,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
  */
 void DeviceInfoDS::GetProductId(const char* devicePath,
                                       char* productUniqueIdUTF8,
-                                      uint32_t productUniqueIdUTF8Length)
+                                      WebRtc_UWord32 productUniqueIdUTF8Length)
 {
     *productUniqueIdUTF8 = '\0';
     char* startPos = strstr((char*) devicePath, "\\\\?\\");
@@ -751,7 +750,7 @@ void DeviceInfoDS::GetProductId(const char* devicePath,
     }
     // Find the second occurrence.
     pos = strchr(pos + 1, '&');
-    uint32_t bytesToCopy = (uint32_t)(pos - startPos);
+    WebRtc_UWord32 bytesToCopy = (WebRtc_UWord32)(pos - startPos);
     if (pos && (bytesToCopy <= productUniqueIdUTF8Length) && bytesToCopy
         <= kVideoCaptureProductIdLength)
     {
@@ -766,12 +765,12 @@ void DeviceInfoDS::GetProductId(const char* devicePath,
     }
 }
 
-int32_t DeviceInfoDS::DisplayCaptureSettingsDialogBox(
+WebRtc_Word32 DeviceInfoDS::DisplayCaptureSettingsDialogBox(
                                          const char* deviceUniqueIdUTF8,
                                          const char* dialogTitleUTF8,
                                          void* parentWindow,
-                                         uint32_t positionX,
-                                         uint32_t positionY)
+                                         WebRtc_UWord32 positionX,
+                                         WebRtc_UWord32 positionY)
 {
     ReadLockScoped cs(_apiLock);
     HWND window = (HWND) parentWindow;

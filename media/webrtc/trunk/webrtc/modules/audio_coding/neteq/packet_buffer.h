@@ -31,10 +31,10 @@ typedef struct
 {
 
     /* Variables common to the entire buffer */
-    uint16_t packSizeSamples; /* packet size in samples of last decoded packet */
-    int16_t *startPayloadMemory; /* pointer to the payload memory */
-    int memorySizeW16; /* the size (in int16_t) of the payload memory */
-    int16_t *currentMemoryPos; /* The memory position to insert next payload */
+    WebRtc_UWord16 packSizeSamples; /* packet size in samples of last decoded packet */
+    WebRtc_Word16 *startPayloadMemory; /* pointer to the payload memory */
+    int memorySizeW16; /* the size (in WebRtc_Word16) of the payload memory */
+    WebRtc_Word16 *currentMemoryPos; /* The memory position to insert next payload */
     int numPacketsInBuffer; /* The number of packets in the buffer */
     int insertPosition; /* The position to insert next packet */
     int maxInsertPositions; /* Maximum number of packets allowed */
@@ -42,17 +42,18 @@ typedef struct
     /* Arrays with one entry per packet slot */
     /* NOTE: If these are changed, the changes must be accounted for at the end of
      the function WebRtcNetEQ_GetDefaultCodecSettings(). */
-    uint32_t *timeStamp; /* Timestamp in slot n */
-    int16_t **payloadLocation; /* Memory location of payload in slot n */
-    uint16_t *seqNumber; /* Sequence number in slot n */
-    int16_t *payloadType; /* Payload type of packet in slot n */
-    int16_t *payloadLengthBytes; /* Payload length of packet in slot n */
-    int16_t *rcuPlCntr; /* zero for non-RCU payload, 1 for main payload
+    WebRtc_UWord32 *timeStamp; /* Timestamp in slot n */
+    WebRtc_Word16 **payloadLocation; /* Memory location of payload in slot n */
+    WebRtc_UWord16 *seqNumber; /* Sequence number in slot n */
+    WebRtc_Word16 *payloadType; /* Payload type of packet in slot n */
+    WebRtc_Word16 *payloadLengthBytes; /* Payload length of packet in slot n */
+    WebRtc_Word16 *rcuPlCntr; /* zero for non-RCU payload, 1 for main payload
      2 for redundant payload */
     int *waitingTime;
 
+
     /* Statistics counter */
-    uint16_t discardedPackets; /* Number of discarded packets */
+    WebRtc_UWord16 discardedPackets; /* Number of discarded packets */
 
 } PacketBuf_t;
 
@@ -69,7 +70,7 @@ typedef struct
  *		- bufferInst	: Buffer instance to be initialized
  *		- noOfPackets	: Maximum number of packets that buffer should hold
  *		- memory		: Pointer to the storage memory for the payloads
- *		- memorySize	: The size of the payload memory (in int16_t)
+ *		- memorySize	: The size of the payload memory (in WebRtc_Word16)
  *
  * Output:
  *      - bufferInst    : Updated buffer instance
@@ -79,7 +80,7 @@ typedef struct
  */
 
 int WebRtcNetEQ_PacketBufferInit(PacketBuf_t *bufferInst, int maxNoOfPackets,
-                                 int16_t *pw16_memory, int memorySize);
+                                 WebRtc_Word16 *pw16_memory, int memorySize);
 
 /****************************************************************************
  * WebRtcNetEQ_PacketBufferFlush(...)
@@ -103,21 +104,20 @@ int WebRtcNetEQ_PacketBufferFlush(PacketBuf_t *bufferInst);
  * This function inserts an RTP packet into the packet buffer.
  *
  * Input:
- *    - bufferInst  : Buffer instance
- *    - RTPpacket   : An RTP packet struct (with payload, sequence
- *                    number, etc.)
- *    - av_sync     : 1 indicates AV-sync enabled, 0 disabled.
+ *		- bufferInst	: Buffer instance
+ *		- RTPpacket		: An RTP packet struct (with payload, sequence
+ *						  number, etc.)
  *
  * Output:
- *    - bufferInst  : Updated buffer instance
- *    - flushed     : 1 if buffer was flushed, 0 otherwise
+ *      - bufferInst    : Updated buffer instance
+ *		- flushed		: 1 if buffer was flushed, 0 otherwise
  *
- * Return value     : 0 - Ok
- *                   -1 - Error
+ * Return value			:  0 - Ok
+ *						  -1 - Error
  */
 
 int WebRtcNetEQ_PacketBufferInsert(PacketBuf_t *bufferInst, const RTPPacket_t *RTPpacket,
-                                   int16_t *flushed, int av_sync);
+                                   WebRtc_Word16 *flushed);
 
 /****************************************************************************
  * WebRtcNetEQ_PacketBufferExtract(...)
@@ -183,7 +183,6 @@ int WebRtcNetEQ_PacketBufferFindLowestTimestamp(PacketBuf_t* buffer_inst,
  *    - codec_pos       : The codec database entry associated with the payload
  *                        type of the specified buffer.
  *    - last_duration   : The duration of the previous frame.
- *    - av_sync         : 1 indicates AV-sync enabled, 0 disabled.
  *
  * Return value         : The buffer size in samples
  */
@@ -191,8 +190,7 @@ int WebRtcNetEQ_PacketBufferFindLowestTimestamp(PacketBuf_t* buffer_inst,
 int WebRtcNetEQ_PacketBufferGetPacketSize(const PacketBuf_t* buffer_inst,
                                           int buffer_pos,
                                           const CodecDbInst_t* codec_database,
-                                          int codec_pos, int last_duration,
-                                          int av_sync);
+                                          int codec_pos, int last_duration);
 
 /****************************************************************************
  * WebRtcNetEQ_PacketBufferGetSize(...)
@@ -206,14 +204,13 @@ int WebRtcNetEQ_PacketBufferGetPacketSize(const PacketBuf_t* buffer_inst,
  * Input:
  *    - buffer_inst     : Buffer instance
  *    - codec_database  : Codec database instance
- *    - av_sync         : 1 indicates AV-sync enabled, 0 disabled.
  *
  * Return value         : The buffer size in samples
  */
 
-int32_t WebRtcNetEQ_PacketBufferGetSize(const PacketBuf_t* buffer_inst,
-                                        const CodecDbInst_t* codec_database,
-                                        int av_sync);
+WebRtc_Word32 WebRtcNetEQ_PacketBufferGetSize(const PacketBuf_t* buffer_inst,
+                                              const CodecDbInst_t*
+                                              codec_database);
 
 /****************************************************************************
  * WebRtcNetEQ_IncrementWaitingTimes(...)
@@ -240,15 +237,12 @@ void WebRtcNetEQ_IncrementWaitingTimes(PacketBuf_t *buffer_inst);
  * Output:
  *		- maxBytes	    : Recommended buffer memory size in bytes
  *      - maxSlots      : Recommended number of slots in buffer
- *      - per_slot_overhead_bytes : overhead in bytes for each slot in buffer.
  *
  * Return value			:  0 - Ok
  *						  <0 - Error
  */
 
 int WebRtcNetEQ_GetDefaultCodecSettings(const enum WebRtcNetEQDecoder *codecID,
-                                        int noOfCodecs, int *maxBytes,
-                                        int *maxSlots,
-                                        int* per_slot_overhead_bytes);
+                                        int noOfCodecs, int *maxBytes, int *maxSlots);
 
 #endif /* PACKET_BUFFER_H */

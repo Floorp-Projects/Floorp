@@ -13,19 +13,20 @@
 namespace webrtc {
 namespace videocapturemodule {
 
-VideoCaptureMF::VideoCaptureMF(const int32_t id) : VideoCaptureImpl(id) {}
+VideoCaptureMF::VideoCaptureMF(const WebRtc_Word32 id) : VideoCaptureImpl(id) {}
 VideoCaptureMF::~VideoCaptureMF() {}
 
-int32_t VideoCaptureMF::Init(const int32_t id, const char* device_id) {
+WebRtc_Word32 VideoCaptureMF::Init(const WebRtc_Word32 id,
+                                   const char* device_id) {
   return 0;
 }
 
-int32_t VideoCaptureMF::StartCapture(
+WebRtc_Word32 VideoCaptureMF::StartCapture(
     const VideoCaptureCapability& capability) {
   return -1;
 }
 
-int32_t VideoCaptureMF::StopCapture() {
+WebRtc_Word32 VideoCaptureMF::StopCapture() {
   return -1;
 }
 
@@ -33,7 +34,7 @@ bool VideoCaptureMF::CaptureStarted() {
   return false;
 }
 
-int32_t VideoCaptureMF::CaptureSettings(
+WebRtc_Word32 VideoCaptureMF::CaptureSettings(
     VideoCaptureCapability& settings) {
   return -1;
 }

@@ -54,9 +54,9 @@ class ViEBaseImpl
 
  private:
   // Version functions.
-  int32_t AddViEVersion(char* str) const;
-  int32_t AddBuildInfo(char* str) const;
-  int32_t AddExternalTransportBuild(char* str) const;
+  WebRtc_Word32 AddViEVersion(char* str) const;
+  WebRtc_Word32 AddBuildInfo(char* str) const;
+  WebRtc_Word32 AddExternalTransportBuild(char* str) const;
 
   int CreateChannel(int& video_channel, int original_channel,  // NOLINT
                     bool sender);

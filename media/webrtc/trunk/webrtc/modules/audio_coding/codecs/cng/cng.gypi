@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'CNG',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
       ],
@@ -31,3 +31,9 @@
     },
   ], # targets
 }
+
+# Local Variables:
+# tab-width:2
+# indent-tabs-mode:nil
+# End:
+# vim: set expandtab tabstop=2 shiftwidth=2:

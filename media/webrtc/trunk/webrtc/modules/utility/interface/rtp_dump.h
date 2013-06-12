@@ -31,10 +31,10 @@ public:
 
     // Open the file fileNameUTF8 for writing RTP/RTCP packets.
     // Note: this API also adds the rtpplay header.
-    virtual int32_t Start(const char* fileNameUTF8) = 0;
+    virtual WebRtc_Word32 Start(const char* fileNameUTF8) = 0;
 
     // Close the existing file. No more packets will be recorded.
-    virtual int32_t Stop() = 0;
+    virtual WebRtc_Word32 Stop() = 0;
 
     // Return true if a file is open for recording RTP/RTCP packets.
     virtual bool IsActive() const = 0;
@@ -42,8 +42,8 @@ public:
     // Writes the RTP/RTCP packet in packet with length packetLength in bytes.
     // Note: packet should contain the RTP/RTCP part of the packet. I.e. the
     // first bytes of packet should be the RTP/RTCP header.
-    virtual int32_t DumpPacket(const uint8_t* packet,
-                               uint16_t packetLength) = 0;
+    virtual WebRtc_Word32 DumpPacket(const WebRtc_UWord8* packet,
+                                     WebRtc_UWord16 packetLength) = 0;
 
 protected:
     virtual ~RtpDump();

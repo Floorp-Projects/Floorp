@@ -32,7 +32,7 @@ enum { kHighProtectionThreshold = 80 };  // Corresponds to ~30 overhead, range
 // media packets).
 
 struct RtpPacket {
-  uint16_t rtpHeaderLength;
+  WebRtc_UWord16 rtpHeaderLength;
   ForwardErrorCorrection::Packet* pkt;
 };
 

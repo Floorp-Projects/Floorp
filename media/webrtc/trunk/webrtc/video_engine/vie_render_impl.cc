@@ -48,7 +48,7 @@ int ViERenderImpl::Release() {
                "ViERender::Release()");
   // Decrease ref count
   (*this)--;
-  int32_t ref_count = GetCount();
+  WebRtc_Word32 ref_count = GetCount();
   if (ref_count < 0) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo, shared_data_->instance_id(),
                  "ViERender release too many times");

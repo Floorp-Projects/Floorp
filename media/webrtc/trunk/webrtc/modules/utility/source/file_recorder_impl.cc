@@ -15,6 +15,7 @@
 #include "trace.h"
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
+    #include "cpu_wrapper.h"
     #include "critical_section_wrapper.h"
     #include "frame_scaler.h"
     #include "video_coder.h"
@@ -29,7 +30,7 @@
 #endif
 
 namespace webrtc {
-FileRecorder* FileRecorder::CreateFileRecorder(uint32_t instanceID,
+FileRecorder* FileRecorder::CreateFileRecorder(WebRtc_UWord32 instanceID,
                                                FileFormats fileFormat)
 {
     switch(fileFormat)
@@ -60,7 +61,7 @@ void FileRecorder::DestroyFileRecorder(FileRecorder* recorder)
     delete recorder;
 }
 
-FileRecorderImpl::FileRecorderImpl(uint32_t instanceID,
+FileRecorderImpl::FileRecorderImpl(WebRtc_UWord32 instanceID,
                                    FileFormats fileFormat)
     : _instanceID(instanceID),
       _fileFormat(fileFormat),
@@ -83,7 +84,7 @@ FileFormats FileRecorderImpl::RecordingFileFormat() const
     return _fileFormat;
 }
 
-int32_t FileRecorderImpl::RegisterModuleFileCallback(
+WebRtc_Word32 FileRecorderImpl::RegisterModuleFileCallback(
     FileCallback* callback)
 {
     if(_moduleFile == NULL)
@@ -93,10 +94,10 @@ int32_t FileRecorderImpl::RegisterModuleFileCallback(
     return _moduleFile->SetModuleFileCallback(callback);
 }
 
-int32_t FileRecorderImpl::StartRecordingAudioFile(
+WebRtc_Word32 FileRecorderImpl::StartRecordingAudioFile(
     const char* fileName,
     const CodecInst& codecInst,
-    uint32_t notificationTimeMs,
+    WebRtc_UWord32 notificationTimeMs,
     ACMAMRPackingFormat amrFormat)
 {
     if(_moduleFile == NULL)
@@ -106,7 +107,7 @@ int32_t FileRecorderImpl::StartRecordingAudioFile(
     codec_info_ = codecInst;
     _amrFormat = amrFormat;
 
-    int32_t retVal = 0;
+    WebRtc_Word32 retVal = 0;
     if(_fileFormat != kFileFormatAviFile)
     {
         // AVI files should be started using StartRecordingVideoFile(..) all
@@ -138,16 +139,16 @@ int32_t FileRecorderImpl::StartRecordingAudioFile(
     return retVal;
 }
 
-int32_t FileRecorderImpl::StartRecordingAudioFile(
+WebRtc_Word32 FileRecorderImpl::StartRecordingAudioFile(
     OutStream& destStream,
     const CodecInst& codecInst,
-    uint32_t notificationTimeMs,
+    WebRtc_UWord32 notificationTimeMs,
     ACMAMRPackingFormat amrFormat)
 {
     codec_info_ = codecInst;
     _amrFormat = amrFormat;
 
-    int32_t retVal = _moduleFile->StartRecordingAudioStream(
+    WebRtc_Word32 retVal = _moduleFile->StartRecordingAudioStream(
         destStream,
         _fileFormat,
         codecInst,
@@ -174,7 +175,7 @@ int32_t FileRecorderImpl::StartRecordingAudioFile(
     return retVal;
 }
 
-int32_t FileRecorderImpl::StopRecording()
+WebRtc_Word32 FileRecorderImpl::StopRecording()
 {
     memset(&codec_info_, 0, sizeof(CodecInst));
     return _moduleFile->StopRecording();
@@ -185,7 +186,7 @@ bool FileRecorderImpl::IsRecording() const
     return _moduleFile->IsRecording();
 }
 
-int32_t FileRecorderImpl::RecordAudioToFile(
+WebRtc_Word32 FileRecorderImpl::RecordAudioToFile(
     const AudioFrame& incomingAudioFrame,
     const TickTime* playoutTS)
 {
@@ -209,7 +210,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
         tempAudioFrame.sample_rate_hz_ = incomingAudioFrame.sample_rate_hz_;
         tempAudioFrame.samples_per_channel_ =
           incomingAudioFrame.samples_per_channel_;
-        for (uint16_t i = 0;
+        for (WebRtc_UWord16 i = 0;
              i < (incomingAudioFrame.samples_per_channel_); i++)
         {
             // Sample value is the average of left and right buffer rounded to
@@ -227,7 +228,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
         tempAudioFrame.sample_rate_hz_ = incomingAudioFrame.sample_rate_hz_;
         tempAudioFrame.samples_per_channel_ =
           incomingAudioFrame.samples_per_channel_;
-        for (uint16_t i = 0;
+        for (WebRtc_UWord16 i = 0;
              i < (incomingAudioFrame.samples_per_channel_); i++)
         {
             // Duplicate sample to both channels
@@ -250,7 +251,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
     // NOTE: stereo recording is only supported for WAV files.
     // TODO (hellner): WAV expect PCM in little endian byte order. Not
     // "encoding" with PCM coder should be a problem for big endian systems.
-    uint32_t encodedLenInBytes = 0;
+    WebRtc_UWord32 encodedLenInBytes = 0;
     if (_fileFormat == kFileFormatPreencodedFile ||
         STR_CASE_CMP(codec_info_.plname, "L16") != 0)
     {
@@ -277,7 +278,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
             _audioResampler.Push(ptrAudioFrame->data_,
                                  ptrAudioFrame->samples_per_channel_ *
                                  ptrAudioFrame->num_channels_,
-                                 (int16_t*)_audioBuffer,
+                                 (WebRtc_Word16*)_audioBuffer,
                                  MAX_AUDIO_BUFFER_IN_BYTES, outLen);
         } else {
             _audioResampler.ResetIfNeeded(ptrAudioFrame->sample_rate_hz_,
@@ -285,10 +286,10 @@ int32_t FileRecorderImpl::RecordAudioToFile(
                                           kResamplerSynchronous);
             _audioResampler.Push(ptrAudioFrame->data_,
                                  ptrAudioFrame->samples_per_channel_,
-                                 (int16_t*)_audioBuffer,
+                                 (WebRtc_Word16*)_audioBuffer,
                                  MAX_AUDIO_BUFFER_IN_BYTES, outLen);
         }
-        encodedLenInBytes = outLen * sizeof(int16_t);
+        encodedLenInBytes = outLen * sizeof(WebRtc_Word16);
     }
 
     // Codec may not be operating at a frame rate of 10 ms. Whenever enough
@@ -296,11 +297,11 @@ int32_t FileRecorderImpl::RecordAudioToFile(
     // will be available. Wait until then.
     if (encodedLenInBytes)
     {
-        uint16_t msOfData =
+        WebRtc_UWord16 msOfData =
             ptrAudioFrame->samples_per_channel_ /
-            uint16_t(ptrAudioFrame->sample_rate_hz_ / 1000);
+            WebRtc_UWord16(ptrAudioFrame->sample_rate_hz_ / 1000);
         if (WriteEncodedAudioData(_audioBuffer,
-                                  (uint16_t)encodedLenInBytes,
+                                  (WebRtc_UWord16)encodedLenInBytes,
                                   msOfData, playoutTS) == -1)
         {
             return -1;
@@ -309,7 +310,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
     return 0;
 }
 
-int32_t FileRecorderImpl::SetUpAudioEncoder()
+WebRtc_Word32 FileRecorderImpl::SetUpAudioEncoder()
 {
     if (_fileFormat == kFileFormatPreencodedFile ||
         STR_CASE_CMP(codec_info_.plname, "L16") != 0)
@@ -328,7 +329,7 @@ int32_t FileRecorderImpl::SetUpAudioEncoder()
     return 0;
 }
 
-int32_t FileRecorderImpl::codec_info(CodecInst& codecInst) const
+WebRtc_Word32 FileRecorderImpl::codec_info(CodecInst& codecInst) const
 {
     if(codec_info_.plfreq == 0)
     {
@@ -338,10 +339,10 @@ int32_t FileRecorderImpl::codec_info(CodecInst& codecInst) const
     return 0;
 }
 
-int32_t FileRecorderImpl::WriteEncodedAudioData(
-    const int8_t* audioBuffer,
-    uint16_t bufferLength,
-    uint16_t /*millisecondsOfData*/,
+WebRtc_Word32 FileRecorderImpl::WriteEncodedAudioData(
+    const WebRtc_Word8* audioBuffer,
+    WebRtc_UWord16 bufferLength,
+    WebRtc_UWord16 /*millisecondsOfData*/,
     const TickTime* /*playoutTS*/)
 {
     return _moduleFile->IncomingAudioData(audioBuffer, bufferLength);
@@ -352,9 +353,9 @@ int32_t FileRecorderImpl::WriteEncodedAudioData(
 class AudioFrameFileInfo
 {
     public:
-       AudioFrameFileInfo(const int8_t* audioData,
-                     const uint16_t audioSize,
-                     const uint16_t audioMS,
+       AudioFrameFileInfo(const WebRtc_Word8* audioData,
+                     const WebRtc_UWord16 audioSize,
+                     const WebRtc_UWord16 audioMS,
                      const TickTime& playoutTS)
            : _audioData(), _audioSize(audioSize), _audioMS(audioMS),
              _playoutTS(playoutTS)
@@ -368,13 +369,13 @@ class AudioFrameFileInfo
            memcpy(_audioData, audioData, audioSize);
        };
     // TODO (hellner): either turn into a struct or provide get/set functions.
-    int8_t   _audioData[MAX_AUDIO_BUFFER_IN_BYTES];
-    uint16_t _audioSize;
-    uint16_t _audioMS;
+    WebRtc_Word8   _audioData[MAX_AUDIO_BUFFER_IN_BYTES];
+    WebRtc_UWord16 _audioSize;
+    WebRtc_UWord16 _audioMS;
     TickTime _playoutTS;
 };
 
-AviRecorder::AviRecorder(uint32_t instanceID, FileFormats fileFormat)
+AviRecorder::AviRecorder(WebRtc_UWord32 instanceID, FileFormats fileFormat)
     : FileRecorderImpl(instanceID, fileFormat),
       _videoOnly(false),
       _thread( 0),
@@ -403,7 +404,7 @@ AviRecorder::~AviRecorder( )
     delete _critSec;
 }
 
-int32_t AviRecorder::StartRecordingVideoFile(
+WebRtc_Word32 AviRecorder::StartRecordingVideoFile(
     const char* fileName,
     const CodecInst& audioCodecInst,
     const VideoCodec& videoCodecInst,
@@ -446,7 +447,7 @@ int32_t AviRecorder::StartRecordingVideoFile(
     return 0;
 }
 
-int32_t AviRecorder::StopRecording()
+WebRtc_Word32 AviRecorder::StopRecording()
 {
     _timeEvent.StopTimer();
 
@@ -454,12 +455,12 @@ int32_t AviRecorder::StopRecording()
     return FileRecorderImpl::StopRecording();
 }
 
-int32_t AviRecorder::CalcI420FrameSize( ) const
+WebRtc_Word32 AviRecorder::CalcI420FrameSize( ) const
 {
     return 3 * _videoCodecInst.width * _videoCodecInst.height / 2;
 }
 
-int32_t AviRecorder::SetUpVideoEncoder()
+WebRtc_Word32 AviRecorder::SetUpVideoEncoder()
 {
     // Size of unencoded data (I420) should be the largest possible frame size
     // in a file.
@@ -469,7 +470,7 @@ int32_t AviRecorder::SetUpVideoEncoder()
     _videoCodecInst.plType = _videoEncoder->DefaultPayloadType(
         _videoCodecInst.plName);
 
-    int32_t useNumberOfCores = 1;
+    WebRtc_Word32 useNumberOfCores = 1;
     // Set the max payload size to 16000. This means that the codec will try to
     // create slices that will fit in 16000 kByte packets. However, the
     // Encode() call will still generate one full frame.
@@ -481,7 +482,7 @@ int32_t AviRecorder::SetUpVideoEncoder()
     return 0;
 }
 
-int32_t AviRecorder::RecordVideoToFile(const I420VideoFrame& videoFrame)
+WebRtc_Word32 AviRecorder::RecordVideoToFile(const I420VideoFrame& videoFrame)
 {
     CriticalSectionScoped lock(_critSec);
     if(!IsRecording() || videoFrame.IsZeroSize())
@@ -489,7 +490,7 @@ int32_t AviRecorder::RecordVideoToFile(const I420VideoFrame& videoFrame)
         return -1;
     }
     // The frame is written to file in AviRecorder::Process().
-    int32_t retVal = _videoFramesQueue->AddFrame(videoFrame);
+    WebRtc_Word32 retVal = _videoFramesQueue->AddFrame(videoFrame);
     if(retVal != 0)
     {
         StopRecording();
@@ -540,7 +541,7 @@ bool AviRecorder::Run( ThreadObj threadObj)
     return static_cast<AviRecorder*>( threadObj)->Process();
 }
 
-int32_t AviRecorder::ProcessAudio()
+WebRtc_Word32 AviRecorder::ProcessAudio()
 {
     if (_writtenVideoFramesCounter == 0)
     {
@@ -552,9 +553,9 @@ int32_t AviRecorder::ProcessAudio()
         {
             // Syncronize audio to the current frame to process by throwing away
             // audio samples with older timestamp than the video frame.
-            uint32_t numberOfAudioElements =
+            WebRtc_UWord32 numberOfAudioElements =
                 _audioFramesToWrite.GetSize();
-            for (uint32_t i = 0; i < numberOfAudioElements; ++i)
+            for (WebRtc_UWord32 i = 0; i < numberOfAudioElements; ++i)
             {
                 AudioFrameFileInfo* frameInfo =
                     (AudioFrameFileInfo*)_audioFramesToWrite.First()->GetItem();
@@ -575,9 +576,9 @@ int32_t AviRecorder::ProcessAudio()
         }
     }
     // Write all audio up to current timestamp.
-    int32_t error = 0;
-    uint32_t numberOfAudioElements = _audioFramesToWrite.GetSize();
-    for (uint32_t i = 0; i < numberOfAudioElements; ++i)
+    WebRtc_Word32 error = 0;
+    WebRtc_UWord32 numberOfAudioElements = _audioFramesToWrite.GetSize();
+    for (WebRtc_UWord32 i = 0; i < numberOfAudioElements; ++i)
     {
         AudioFrameFileInfo* frameInfo =
             (AudioFrameFileInfo*)_audioFramesToWrite.First()->GetItem();
@@ -626,7 +627,7 @@ bool AviRecorder::Process()
     {
         return true;
     }
-    int32_t error = 0;
+    WebRtc_Word32 error = 0;
     if(!_videoOnly)
     {
         if(!_firstAudioFrameReceived)
@@ -646,7 +647,7 @@ bool AviRecorder::Process()
                         "AviRecorder::Process() error writing to file.");
                 break;
             } else {
-                uint32_t frameLengthMS = 1000 /
+                WebRtc_UWord32 frameLengthMS = 1000 /
                     _videoCodecInst.maxFramerate;
                 _writtenVideoFramesCounter++;
                 _writtenVideoMS += frameLengthMS;
@@ -656,7 +657,7 @@ bool AviRecorder::Process()
                     // Frame rate is in frames per seconds. Frame length is
                     // calculated as an integer division which means it may
                     // be rounded down. Compensate for this every second.
-                    uint32_t rest = 1000 % frameLengthMS;
+                    WebRtc_UWord32 rest = 1000 % frameLengthMS;
                     _writtenVideoMS += rest;
                 }
             }
@@ -667,10 +668,10 @@ bool AviRecorder::Process()
         // drift. Once a full frame worth of drift has happened, skip writing
         // one frame. Note that frame rate is in frames per second so the
         // drift is completely compensated for.
-        uint32_t frameLengthMS = 1000/_videoCodecInst.maxFramerate;
-        uint32_t restMS = 1000 % frameLengthMS;
-        uint32_t frameSkip = (_videoCodecInst.maxFramerate *
-                              frameLengthMS) / restMS;
+        WebRtc_UWord32 frameLengthMS = 1000/_videoCodecInst.maxFramerate;
+        WebRtc_UWord32 restMS = 1000 % frameLengthMS;
+        WebRtc_UWord32 frameSkip = (_videoCodecInst.maxFramerate *
+                                    frameLengthMS) / restMS;
 
         _writtenVideoFramesCounter++;
         if(_writtenVideoFramesCounter % frameSkip == 0)
@@ -691,7 +692,7 @@ bool AviRecorder::Process()
     return error == 0;
 }
 
-int32_t AviRecorder::EncodeAndWriteVideoToFile(I420VideoFrame& videoFrame)
+WebRtc_Word32 AviRecorder::EncodeAndWriteVideoToFile(I420VideoFrame& videoFrame)
 {
     if (!IsRecording() || videoFrame.IsZeroSize())
     {
@@ -731,7 +732,7 @@ int32_t AviRecorder::EncodeAndWriteVideoToFile(I420VideoFrame& videoFrame)
     if(_videoEncodedData.payloadSize > 0)
     {
         if(_moduleFile->IncomingAVIVideoData(
-               (int8_t*)(_videoEncodedData.payloadData),
+               (WebRtc_Word8*)(_videoEncodedData.payloadData),
                _videoEncodedData.payloadSize))
         {
             WEBRTC_TRACE(kTraceError, kTraceVideo, _instanceID,
@@ -751,10 +752,10 @@ int32_t AviRecorder::EncodeAndWriteVideoToFile(I420VideoFrame& videoFrame)
 
 // Store audio frame in the _audioFramesToWrite buffer. The writing to file
 // happens in AviRecorder::Process().
-int32_t AviRecorder::WriteEncodedAudioData(
-    const int8_t* audioBuffer,
-    uint16_t bufferLength,
-    uint16_t millisecondsOfData,
+WebRtc_Word32 AviRecorder::WriteEncodedAudioData(
+    const WebRtc_Word8* audioBuffer,
+    WebRtc_UWord16 bufferLength,
+    WebRtc_UWord16 millisecondsOfData,
     const TickTime* playoutTS)
 {
     if (!IsRecording())

@@ -12,6 +12,7 @@
 #include "trace.h"
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
+    #include "cpu_wrapper.h"
     #include "frame_scaler.h"
     #include "tick_util.h"
     #include "video_coder.h"
@@ -25,7 +26,7 @@
 #endif
 
 namespace webrtc {
-FilePlayer* FilePlayer::CreateFilePlayer(uint32_t instanceID,
+FilePlayer* FilePlayer::CreateFilePlayer(WebRtc_UWord32 instanceID,
                                          FileFormats fileFormat)
 {
     switch(fileFormat)
@@ -57,7 +58,7 @@ void FilePlayer::DestroyFilePlayer(FilePlayer* player)
     delete player;
 }
 
-FilePlayerImpl::FilePlayerImpl(const uint32_t instanceID,
+FilePlayerImpl::FilePlayerImpl(const WebRtc_UWord32 instanceID,
                                const FileFormats fileFormat)
     : _instanceID(instanceID),
       _fileFormat(fileFormat),
@@ -78,7 +79,7 @@ FilePlayerImpl::~FilePlayerImpl()
     MediaFile::DestroyMediaFile(&_fileModule);
 }
 
-int32_t FilePlayerImpl::Frequency() const
+WebRtc_Word32 FilePlayerImpl::Frequency() const
 {
     if(_codec.plfreq == 0)
     {
@@ -108,13 +109,13 @@ int32_t FilePlayerImpl::Frequency() const
     }
 }
 
-int32_t FilePlayerImpl::AudioCodec(CodecInst& audioCodec) const
+WebRtc_Word32 FilePlayerImpl::AudioCodec(CodecInst& audioCodec) const
 {
     audioCodec = _codec;
     return 0;
 }
 
-int32_t FilePlayerImpl::Get10msAudioFromFile(
+WebRtc_Word32 FilePlayerImpl::Get10msAudioFromFile(
     int16_t* outBuffer,
     int& lengthInSamples,
     int frequencyInHz)
@@ -134,10 +135,10 @@ int32_t FilePlayerImpl::Get10msAudioFromFile(
         unresampledAudioFrame.sample_rate_hz_ = _codec.plfreq;
 
         // L16 is un-encoded data. Just pull 10 ms.
-        uint32_t lengthInBytes =
+        WebRtc_UWord32 lengthInBytes =
             sizeof(unresampledAudioFrame.data_);
         if (_fileModule.PlayoutAudioData(
-                (int8_t*)unresampledAudioFrame.data_,
+                (WebRtc_Word8*)unresampledAudioFrame.data_,
                 lengthInBytes) == -1)
         {
             // End of file reached.
@@ -150,19 +151,19 @@ int32_t FilePlayerImpl::Get10msAudioFromFile(
         }
         // One sample is two bytes.
         unresampledAudioFrame.samples_per_channel_ =
-            (uint16_t)lengthInBytes >> 1;
+            (WebRtc_UWord16)lengthInBytes >> 1;
 
     }else {
         // Decode will generate 10 ms of audio data. PlayoutAudioData(..)
         // expects a full frame. If the frame size is larger than 10 ms,
         // PlayoutAudioData(..) data should be called proportionally less often.
-        int16_t encodedBuffer[MAX_AUDIO_BUFFER_IN_SAMPLES];
-        uint32_t encodedLengthInBytes = 0;
+        WebRtc_Word16 encodedBuffer[MAX_AUDIO_BUFFER_IN_SAMPLES];
+        WebRtc_UWord32 encodedLengthInBytes = 0;
         if(++_numberOf10MsInDecoder >= _numberOf10MsPerFrame)
         {
             _numberOf10MsInDecoder = 0;
-            uint32_t bytesFromFile = sizeof(encodedBuffer);
-            if (_fileModule.PlayoutAudioData((int8_t*)encodedBuffer,
+            WebRtc_UWord32 bytesFromFile = sizeof(encodedBuffer);
+            if (_fileModule.PlayoutAudioData((WebRtc_Word8*)encodedBuffer,
                                              bytesFromFile) == -1)
             {
                 // End of file reached.
@@ -171,7 +172,7 @@ int32_t FilePlayerImpl::Get10msAudioFromFile(
             encodedLengthInBytes = bytesFromFile;
         }
         if(_audioDecoder.Decode(unresampledAudioFrame,frequencyInHz,
-                                (int8_t*)encodedBuffer,
+                                (WebRtc_Word8*)encodedBuffer,
                                 encodedLengthInBytes) == -1)
         {
             return -1;
@@ -187,7 +188,7 @@ int32_t FilePlayerImpl::Get10msAudioFromFile(
 
         // New sampling frequency. Update state.
         outLen = frequencyInHz / 100;
-        memset(outBuffer, 0, outLen * sizeof(int16_t));
+        memset(outBuffer, 0, outLen * sizeof(WebRtc_Word16));
         return 0;
     }
     _resampler.Push(unresampledAudioFrame.data_,
@@ -202,19 +203,19 @@ int32_t FilePlayerImpl::Get10msAudioFromFile(
     {
         for (int i = 0;i < outLen; i++)
         {
-            outBuffer[i] = (int16_t)(outBuffer[i] * _scaling);
+            outBuffer[i] = (WebRtc_Word16)(outBuffer[i] * _scaling);
         }
     }
     _decodedLengthInMS += 10;
     return 0;
 }
 
-int32_t FilePlayerImpl::RegisterModuleFileCallback(FileCallback* callback)
+WebRtc_Word32 FilePlayerImpl::RegisterModuleFileCallback(FileCallback* callback)
 {
     return _fileModule.SetModuleFileCallback(callback);
 }
 
-int32_t FilePlayerImpl::SetAudioScaling(float scaleFactor)
+WebRtc_Word32 FilePlayerImpl::SetAudioScaling(float scaleFactor)
 {
     if((scaleFactor >= 0)&&(scaleFactor <= 2.0))
     {
@@ -226,13 +227,13 @@ int32_t FilePlayerImpl::SetAudioScaling(float scaleFactor)
     return -1;
 }
 
-int32_t FilePlayerImpl::StartPlayingFile(const char* fileName,
-                                         bool loop,
-                                         uint32_t startPosition,
-                                         float volumeScaling,
-                                         uint32_t notification,
-                                         uint32_t stopPosition,
-                                         const CodecInst* codecInst)
+WebRtc_Word32 FilePlayerImpl::StartPlayingFile(const char* fileName,
+                                               bool loop,
+                                               WebRtc_UWord32 startPosition,
+                                               float volumeScaling,
+                                               WebRtc_UWord32 notification,
+                                               WebRtc_UWord32 stopPosition,
+                                               const CodecInst* codecInst)
 {
     if (_fileFormat == kFileFormatPcm16kHzFile ||
         _fileFormat == kFileFormatPcm8kHzFile||
@@ -322,12 +323,12 @@ int32_t FilePlayerImpl::StartPlayingFile(const char* fileName,
     return 0;
 }
 
-int32_t FilePlayerImpl::StartPlayingFile(InStream& sourceStream,
-                                         uint32_t startPosition,
-                                         float volumeScaling,
-                                         uint32_t notification,
-                                         uint32_t stopPosition,
-                                         const CodecInst* codecInst)
+WebRtc_Word32 FilePlayerImpl::StartPlayingFile(InStream& sourceStream,
+                                               WebRtc_UWord32 startPosition,
+                                               float volumeScaling,
+                                               WebRtc_UWord32 notification,
+                                               WebRtc_UWord32 stopPosition,
+                                               const CodecInst* codecInst)
 {
     if (_fileFormat == kFileFormatPcm16kHzFile ||
         _fileFormat == kFileFormatPcm32kHzFile ||
@@ -415,7 +416,7 @@ int32_t FilePlayerImpl::StartPlayingFile(InStream& sourceStream,
     return 0;
 }
 
-int32_t FilePlayerImpl::StopPlayingFile()
+WebRtc_Word32 FilePlayerImpl::StopPlayingFile()
 {
     memset(&_codec, 0, sizeof(CodecInst));
     _numberOf10MsPerFrame  = 0;
@@ -428,12 +429,12 @@ bool FilePlayerImpl::IsPlayingFile() const
     return _fileModule.IsPlaying();
 }
 
-int32_t FilePlayerImpl::GetPlayoutPosition(uint32_t& durationMs)
+WebRtc_Word32 FilePlayerImpl::GetPlayoutPosition(WebRtc_UWord32& durationMs)
 {
     return _fileModule.PlayoutPositionMs(durationMs);
 }
 
-int32_t FilePlayerImpl::SetUpAudioDecoder()
+WebRtc_Word32 FilePlayerImpl::SetUpAudioDecoder()
 {
     if ((_fileModule.codec_info(_codec) == -1))
     {
@@ -462,7 +463,7 @@ int32_t FilePlayerImpl::SetUpAudioDecoder()
 }
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
-VideoFilePlayerImpl::VideoFilePlayerImpl(uint32_t instanceID,
+VideoFilePlayerImpl::VideoFilePlayerImpl(WebRtc_UWord32 instanceID,
                                          FileFormats fileFormat)
     : FilePlayerImpl(instanceID,fileFormat),
       _videoDecoder(*new VideoCoder(instanceID)),
@@ -488,7 +489,7 @@ VideoFilePlayerImpl::~VideoFilePlayerImpl()
     delete &_encodedData;
 }
 
-int32_t VideoFilePlayerImpl::StartPlayingVideoFile(
+WebRtc_Word32 VideoFilePlayerImpl::StartPlayingVideoFile(
     const char* fileName,
     bool loop,
     bool videoOnly)
@@ -525,7 +526,7 @@ int32_t VideoFilePlayerImpl::StartPlayingVideoFile(
     return 0;
 }
 
-int32_t VideoFilePlayerImpl::StopPlayingFile()
+WebRtc_Word32 VideoFilePlayerImpl::StopPlayingFile()
 {
     CriticalSectionScoped lock( _critSec);
 
@@ -535,13 +536,13 @@ int32_t VideoFilePlayerImpl::StopPlayingFile()
     return FilePlayerImpl::StopPlayingFile();
 }
 
-int32_t VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame,
-                                              uint32_t outWidth,
-                                              uint32_t outHeight)
+WebRtc_Word32 VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame,
+                                                    WebRtc_UWord32 outWidth,
+                                                    WebRtc_UWord32 outHeight)
 {
     CriticalSectionScoped lock( _critSec);
 
-    int32_t retVal = GetVideoFromFile(videoFrame);
+    WebRtc_Word32 retVal = GetVideoFromFile(videoFrame);
     if(retVal != 0)
     {
         return retVal;
@@ -554,7 +555,7 @@ int32_t VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame,
     return retVal;
 }
 
-int32_t VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame)
+WebRtc_Word32 VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame)
 {
     CriticalSectionScoped lock( _critSec);
     // No new video data read from file.
@@ -563,7 +564,7 @@ int32_t VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame)
         videoFrame.ResetSize();
         return -1;
     }
-    int32_t retVal = 0;
+    WebRtc_Word32 retVal = 0;
     if(strncmp(video_codec_info_.plName, "I420", 5) == 0)
     {
       int size_y = video_codec_info_.width * video_codec_info_.height;
@@ -588,7 +589,7 @@ int32_t VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame)
         retVal = _videoDecoder.Decode(videoFrame, _encodedData);
     }
 
-    int64_t renderTimeMs = TickTime::MillisecondTimestamp();
+    WebRtc_Word64 renderTimeMs = TickTime::MillisecondTimestamp();
     videoFrame.set_render_time_ms(renderTimeMs);
 
      // Indicate that the current frame in the encoded buffer is old/has
@@ -601,7 +602,7 @@ int32_t VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame)
     return retVal;
 }
 
-int32_t VideoFilePlayerImpl::video_codec_info(
+WebRtc_Word32 VideoFilePlayerImpl::video_codec_info(
     VideoCodec& videoCodec) const
 {
     if(video_codec_info_.plName[0] == 0)
@@ -612,7 +613,7 @@ int32_t VideoFilePlayerImpl::video_codec_info(
     return 0;
 }
 
-int32_t VideoFilePlayerImpl::TimeUntilNextVideoFrame()
+WebRtc_Word32 VideoFilePlayerImpl::TimeUntilNextVideoFrame()
 {
     if(_fileFormat != kFileFormatAviFile)
     {
@@ -630,9 +631,9 @@ int32_t VideoFilePlayerImpl::TimeUntilNextVideoFrame()
         if(_fileFormat == kFileFormatAviFile)
         {
             // Get next video frame
-            uint32_t encodedBufferLengthInBytes = _encodedData.bufferSize;
+            WebRtc_UWord32 encodedBufferLengthInBytes = _encodedData.bufferSize;
             if(_fileModule.PlayoutAVIVideoData(
-                   reinterpret_cast< int8_t*>(_encodedData.payloadData),
+                   reinterpret_cast< WebRtc_Word8*>(_encodedData.payloadData),
                    encodedBufferLengthInBytes) != 0)
             {
                  WEBRTC_TRACE(
@@ -659,7 +660,7 @@ int32_t VideoFilePlayerImpl::TimeUntilNextVideoFrame()
                     // Frame rate is in frames per seconds. Frame length is
                     // calculated as an integer division which means it may
                     // be rounded down. Compensate for this every second.
-                    uint32_t rest = 1000%_frameLengthMS;
+                    WebRtc_UWord32 rest = 1000%_frameLengthMS;
                     _accumulatedRenderTimeMs += rest;
                 }
                 _accumulatedRenderTimeMs += _frameLengthMS;
@@ -667,7 +668,7 @@ int32_t VideoFilePlayerImpl::TimeUntilNextVideoFrame()
         }
     }
 
-    int64_t timeToNextFrame;
+    WebRtc_Word64 timeToNextFrame;
     if(_videoOnly)
     {
         timeToNextFrame = _accumulatedRenderTimeMs -
@@ -686,10 +687,10 @@ int32_t VideoFilePlayerImpl::TimeUntilNextVideoFrame()
         // Wraparound or audio stream has gone to far ahead of the video stream.
         return -1;
     }
-    return static_cast<int32_t>(timeToNextFrame);
+    return static_cast<WebRtc_Word32>(timeToNextFrame);
 }
 
-int32_t VideoFilePlayerImpl::SetUpVideoDecoder()
+WebRtc_Word32 VideoFilePlayerImpl::SetUpVideoDecoder()
 {
     if (_fileModule.VideoCodecInst(video_codec_info_) != 0)
     {
@@ -702,7 +703,7 @@ int32_t VideoFilePlayerImpl::SetUpVideoDecoder()
         return -1;
     }
 
-    int32_t useNumberOfCores = 1;
+    WebRtc_Word32 useNumberOfCores = 1;
     if(_videoDecoder.SetDecodeCodec(video_codec_info_, useNumberOfCores) != 0)
     {
         WEBRTC_TRACE(
@@ -718,7 +719,7 @@ int32_t VideoFilePlayerImpl::SetUpVideoDecoder()
 
     // Size of unencoded data (I420) should be the largest possible frame size
     // in a file.
-    const uint32_t KReadBufferSize = 3 * video_codec_info_.width *
+    const WebRtc_UWord32 KReadBufferSize = 3 * video_codec_info_.width *
         video_codec_info_.height / 2;
     _encodedData.VerifyAndAllocate(KReadBufferSize);
     _encodedData.encodedHeight = video_codec_info_.height;

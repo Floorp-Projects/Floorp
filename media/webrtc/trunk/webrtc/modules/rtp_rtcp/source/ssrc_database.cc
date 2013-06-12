@@ -51,12 +51,12 @@ SSRCDatabase::ReturnSSRCDatabase()
     StaticInstance(kRelease);
 }
 
-uint32_t
+WebRtc_UWord32
 SSRCDatabase::CreateSSRC()
 {
     CriticalSectionScoped lock(_critSect);
 
-    uint32_t ssrc = GenerateRandom();
+    WebRtc_UWord32 ssrc = GenerateRandom();
 
 #ifndef WEBRTC_NO_STL
 
@@ -71,8 +71,8 @@ SSRCDatabase::CreateSSRC()
     {
         // allocate more space
         const int newSize = _sizeOfSSRC + 10;
-        uint32_t* tempSSRCVector = new uint32_t[newSize];
-        memcpy(tempSSRCVector, _ssrcVector, _sizeOfSSRC*sizeof(uint32_t));
+        WebRtc_UWord32* tempSSRCVector = new WebRtc_UWord32[newSize];
+        memcpy(tempSSRCVector, _ssrcVector, _sizeOfSSRC*sizeof(WebRtc_UWord32));
         delete [] _ssrcVector;
 
         _ssrcVector = tempSSRCVector;
@@ -100,8 +100,8 @@ SSRCDatabase::CreateSSRC()
     return ssrc;
 }
 
-int32_t
-SSRCDatabase::RegisterSSRC(const uint32_t ssrc)
+WebRtc_Word32
+SSRCDatabase::RegisterSSRC(const WebRtc_UWord32 ssrc)
 {
     CriticalSectionScoped lock(_critSect);
 
@@ -114,8 +114,8 @@ SSRCDatabase::RegisterSSRC(const uint32_t ssrc)
     {
         // allocate more space
         const int newSize = _sizeOfSSRC + 10;
-        uint32_t* tempSSRCVector = new uint32_t[newSize];
-        memcpy(tempSSRCVector, _ssrcVector, _sizeOfSSRC*sizeof(uint32_t));
+        WebRtc_UWord32* tempSSRCVector = new WebRtc_UWord32[newSize];
+        memcpy(tempSSRCVector, _ssrcVector, _sizeOfSSRC*sizeof(WebRtc_UWord32));
         delete [] _ssrcVector;
 
         _ssrcVector = tempSSRCVector;
@@ -140,8 +140,8 @@ SSRCDatabase::RegisterSSRC(const uint32_t ssrc)
     return 0;
 }
 
-int32_t
-SSRCDatabase::ReturnSSRC(const uint32_t ssrc)
+WebRtc_Word32
+SSRCDatabase::ReturnSSRC(const WebRtc_UWord32 ssrc)
 {
     CriticalSectionScoped lock(_critSect);
 
@@ -182,7 +182,7 @@ SSRCDatabase::SSRCDatabase()
 #ifdef WEBRTC_NO_STL
     _sizeOfSSRC = 10;
     _numberOfSSRC = 0;
-    _ssrcVector = new uint32_t[10];
+    _ssrcVector = new WebRtc_UWord32[10];
 #endif
     _critSect = CriticalSectionWrapper::CreateCriticalSection();
 
@@ -201,9 +201,9 @@ SSRCDatabase::~SSRCDatabase()
     WEBRTC_TRACE(kTraceMemory, kTraceRtpRtcp, -1, "%s deleted", __FUNCTION__);
 }
 
-uint32_t SSRCDatabase::GenerateRandom()
+WebRtc_UWord32 SSRCDatabase::GenerateRandom()
 {
-    uint32_t ssrc = 0;
+    WebRtc_UWord32 ssrc = 0;
     do
     {
         ssrc = rand();

@@ -186,7 +186,7 @@ public:
     MediaProcessImpl();
     virtual void Process(const int channel,
                          const ProcessingTypes type,
-                         int16_t audio_10ms[],
+                         WebRtc_Word16 audio_10ms[],
                          const int length,
                          const int samplingFreqHz,
                          const bool stereo);
@@ -198,7 +198,7 @@ MediaProcessImpl::MediaProcessImpl()
 
 void MediaProcessImpl::Process(const int channel,
                                const ProcessingTypes type,
-                               int16_t audio_10ms[],
+                               WebRtc_Word16 audio_10ms[],
                                const int length,
                                const int samplingFreqHz,
                                const bool stereo)
@@ -2684,15 +2684,14 @@ void CWinTestDlg::OnBnClickedCheckSrtpTx1()
     if (enable)
     {
         (_checkSrtpTx1++ %2 == 0) ? useForRTCP = false : useForRTCP = true;
-        // TODO(solenberg): Install SRTP encryption policy.
-        TEST(true, "Built-in SRTP support is deprecated. Enable it again by "
-            "setting an external encryption policy, i.e.:\n\r"
-            "_veEncryptionPtr->RegisterExternalEncryption(channel, myPolicy)");
+        TEST((ret = _veEncryptionPtr->EnableSRTPSend(channel,
+            kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP)) == 0,
+            _T("EnableSRTPSend(channel=%d, kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP=%d)"),
+            channel, useForRTCP);
     }
     else
     {
-        // TODO(solenberg): Uninstall SRTP encryption policy, i.e.:
-        //   _veEncryptionPtr->DeRegisterExternalEncryption(channel);
+        TEST((ret = _veEncryptionPtr->DisableSRTPSend(channel) == 0), _T("DisableSRTPSend(channel=%d)"), channel);
     }
     if (ret == -1)
     {
@@ -2712,15 +2711,14 @@ void CWinTestDlg::OnBnClickedCheckSrtpTx2()
     if (enable)
     {
         (_checkSrtpTx2++ %2 == 0) ? useForRTCP = false : useForRTCP = true;
-        // TODO(solenberg): Install SRTP encryption policy.
-        TEST(true, "Built-in SRTP support is deprecated. Enable it again by "
-            "setting an external encryption policy, i.e.:\n\r"
-            "_veEncryptionPtr->RegisterExternalEncryption(channel, myPolicy)");
+        TEST((ret = _veEncryptionPtr->EnableSRTPSend(channel,
+            kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP)) == 0,
+            _T("EnableSRTPSend(channel=%d, kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP=%d)"),
+            channel, useForRTCP);
     }
     else
     {
-        // TODO(solenberg): Uninstall SRTP encryption policy, i.e.:
-        //   _veEncryptionPtr->DeRegisterExternalEncryption(channel);
+        TEST((ret = _veEncryptionPtr->DisableSRTPSend(channel) == 0), _T("DisableSRTPSend(channel=%d)"), channel);
     }
     if (ret == -1)
     {
@@ -2740,15 +2738,14 @@ void CWinTestDlg::OnBnClickedCheckSrtpRx1()
     if (enable)
     {
         (_checkSrtpRx1++ %2 == 0) ? useForRTCP = false : useForRTCP = true;
-        // TODO(solenberg): Install SRTP encryption policy.
-        TEST(true, "Built-in SRTP support is deprecated. Enable it again by "
-            "setting an external encryption policy, i.e.:\n\r"
-            "_veEncryptionPtr->RegisterExternalEncryption(channel, myPolicy)");
+        TEST((ret = _veEncryptionPtr->EnableSRTPReceive(channel,
+            kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP)) == 0,
+            _T("EnableSRTPReceive(channel=%d, kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP=%d)"),
+            channel, useForRTCP);
     }
     else
     {
-        // TODO(solenberg): Uninstall SRTP encryption policy, i.e.:
-        //   _veEncryptionPtr->DeRegisterExternalEncryption(channel);
+        TEST((ret = _veEncryptionPtr->DisableSRTPReceive(channel) == 0), _T("DisableSRTPReceive(channel=%d)"), channel);
     }
     if (ret == -1)
     {
@@ -2768,15 +2765,14 @@ void CWinTestDlg::OnBnClickedCheckSrtpRx2()
     if (enable)
     {
         (_checkSrtpRx2++ %2 == 0) ? useForRTCP = false : useForRTCP = true;
-        // TODO(solenberg): Install SRTP encryption policy.
-        TEST(true, "Built-in SRTP support is deprecated. Enable it again by "
-            "setting an external encryption policy, i.e.:\n\r"
-            "_veEncryptionPtr->RegisterExternalEncryption(channel, myPolicy)");
+        TEST((ret = _veEncryptionPtr->EnableSRTPReceive(channel,
+            kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP)) == 0,
+            _T("EnableSRTPReceive(channel=%d, kCipherAes128CounterMode, 30, kAuthHmacSha1, 20, 4, kEncryptionAndAuthentication, key, useForRTCP=%d)"),
+            channel, useForRTCP);
     }
     else
     {
-        // TODO(solenberg): Uninstall SRTP encryption policy, i.e.:
-        //   _veEncryptionPtr->DeRegisterExternalEncryption(channel);
+        TEST((ret = _veEncryptionPtr->DisableSRTPReceive(channel)) == 0, _T("DisableSRTPReceive(channel=%d)"), channel);
     }
     if (ret == -1)
     {

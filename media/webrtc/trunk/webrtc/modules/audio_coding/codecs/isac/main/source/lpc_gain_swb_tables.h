@@ -26,23 +26,23 @@ extern const double WebRtcIsac_kQSizeLpcGain;
 
 extern const double WebRtcIsac_kLeftRecPointLpcGain[SUBFRAMES];
 
-extern const int16_t WebRtcIsac_kNumQCellLpcGain[SUBFRAMES];
+extern const WebRtc_Word16 WebRtcIsac_kNumQCellLpcGain[SUBFRAMES];
 
-extern const uint16_t WebRtcIsac_kLpcGainEntropySearch[SUBFRAMES];
+extern const WebRtc_UWord16 WebRtcIsac_kLpcGainEntropySearch[SUBFRAMES];
 
-extern const uint16_t WebRtcIsac_kLpcGainCdfVec0[18];
+extern const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec0[18];
 
-extern const uint16_t WebRtcIsac_kLpcGainCdfVec1[21];
+extern const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec1[21];
 
-extern const uint16_t WebRtcIsac_kLpcGainCdfVec2[26];
+extern const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec2[26];
 
-extern const uint16_t WebRtcIsac_kLpcGainCdfVec3[46];
+extern const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec3[46];
 
-extern const uint16_t WebRtcIsac_kLpcGainCdfVec4[78];
+extern const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec4[78];
 
-extern const uint16_t WebRtcIsac_kLpcGainCdfVec5[171];
+extern const WebRtc_UWord16 WebRtcIsac_kLpcGainCdfVec5[171];
 
-extern const uint16_t* WebRtcIsac_kLpcGainCdfMat[SUBFRAMES];
+extern const WebRtc_UWord16* WebRtcIsac_kLpcGainCdfMat[SUBFRAMES];
 
 extern const double WebRtcIsac_kLpcGainDecorrMat[SUBFRAMES][SUBFRAMES];
 

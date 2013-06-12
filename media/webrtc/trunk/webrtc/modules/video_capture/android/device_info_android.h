@@ -32,29 +32,28 @@ namespace videocapturemodule
 class DeviceInfoAndroid : public DeviceInfoImpl {
 
  public:
-  static void SetAndroidCaptureClasses(jclass capabilityClass);
-  DeviceInfoAndroid(const int32_t id);
-  int32_t Init();
+  DeviceInfoAndroid(const WebRtc_Word32 id);
+  WebRtc_Word32 Init();
   virtual ~DeviceInfoAndroid();
-  virtual uint32_t NumberOfDevices();
-  virtual int32_t GetDeviceName(
-      uint32_t deviceNumber,
+  virtual WebRtc_UWord32 NumberOfDevices();
+  virtual WebRtc_Word32 GetDeviceName(
+      WebRtc_UWord32 deviceNumber,
       char* deviceNameUTF8,
-      uint32_t deviceNameLength,
+      WebRtc_UWord32 deviceNameLength,
       char* deviceUniqueIdUTF8,
-      uint32_t deviceUniqueIdUTF8Length,
+      WebRtc_UWord32 deviceUniqueIdUTF8Length,
       char* productUniqueIdUTF8 = 0,
-      uint32_t productUniqueIdUTF8Length = 0);
-  virtual int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8);
+      WebRtc_UWord32 productUniqueIdUTF8Length = 0);
+  virtual WebRtc_Word32 CreateCapabilityMap(const char* deviceUniqueIdUTF8);
 
-  virtual int32_t DisplayCaptureSettingsDialogBox(
+  virtual WebRtc_Word32 DisplayCaptureSettingsDialogBox(
       const char* /*deviceUniqueIdUTF8*/,
       const char* /*dialogTitleUTF8*/,
       void* /*parentWindow*/,
-      uint32_t /*positionX*/,
-      uint32_t /*positionY*/) { return -1; }
-  virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
-                                 VideoCaptureRotation& orientation);
+      WebRtc_UWord32 /*positionX*/,
+      WebRtc_UWord32 /*positionY*/) { return -1; }
+  virtual WebRtc_Word32 GetOrientation(const char* deviceUniqueIdUTF8,
+                                       VideoCaptureRotation& orientation);
  private:
   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
   enum {_expectedCaptureDelay = 190};

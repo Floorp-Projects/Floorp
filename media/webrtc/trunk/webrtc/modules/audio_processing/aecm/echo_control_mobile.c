@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/aecm/include/echo_control_mobile.h"
+#include <stdlib.h>
+//#include <string.h>
 
+#include "echo_control_mobile.h"
+#include "aecm_core.h"
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "ring_buffer.h"
 #ifdef AEC_DEBUG
 #include <stdio.h>
 #endif
-#include <stdlib.h>
-
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/modules/audio_processing/aecm/aecm_core.h"
-#include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 
 #define BUF_SIZE_FRAMES 50 // buffer size (frames)
 // Maximum length of resampled signal. Must be an integer multiple of frames
@@ -57,7 +57,7 @@ typedef struct
     int delayChange;
     short lastDelayDiff;
 
-    int16_t echoMode;
+    WebRtc_Word16 echoMode;
 
 #ifdef AEC_DEBUG
     FILE *bufFile;
@@ -66,7 +66,7 @@ typedef struct
     FILE *postCompFile;
 #endif // AEC_DEBUG
     // Structures
-    RingBuffer *farendBuf;
+    void *farendBuf;
 
     int lastError;
 
@@ -80,7 +80,7 @@ static int WebRtcAecm_EstBufDelay(aecmob_t *aecmInst, short msInSndCardBuf);
 // Stuffs the farend buffer if the estimated delay is too large
 static int WebRtcAecm_DelayComp(aecmob_t *aecmInst);
 
-int32_t WebRtcAecm_Create(void **aecmInst)
+WebRtc_Word32 WebRtcAecm_Create(void **aecmInst)
 {
     aecmob_t *aecm;
     if (aecmInst == NULL)
@@ -95,8 +95,6 @@ int32_t WebRtcAecm_Create(void **aecmInst)
         return -1;
     }
 
-    WebRtcSpl_Init();
-
     if (WebRtcAecm_CreateCore(&aecm->aecmCore) == -1)
     {
         WebRtcAecm_Free(aecm);
@@ -104,14 +102,15 @@ int32_t WebRtcAecm_Create(void **aecmInst)
         return -1;
     }
 
-    aecm->farendBuf = WebRtc_CreateBuffer(kBufSizeSamp,
-                                          sizeof(int16_t));
-    if (!aecm->farendBuf)
+    if (WebRtc_CreateBuffer(&aecm->farendBuf, kBufSizeSamp,
+                            sizeof(int16_t)) == -1)
     {
         WebRtcAecm_Free(aecm);
         aecm = NULL;
         return -1;
     }
+
+    WebRtcSpl_Init();
 
     aecm->initFlag = 0;
     aecm->lastError = 0;
@@ -130,7 +129,7 @@ int32_t WebRtcAecm_Create(void **aecmInst)
     return 0;
 }
 
-int32_t WebRtcAecm_Free(void *aecmInst)
+WebRtc_Word32 WebRtcAecm_Free(void *aecmInst)
 {
     aecmob_t *aecm = aecmInst;
 
@@ -157,7 +156,7 @@ int32_t WebRtcAecm_Free(void *aecmInst)
     return 0;
 }
 
-int32_t WebRtcAecm_Init(void *aecmInst, int32_t sampFreq)
+WebRtc_Word32 WebRtcAecm_Init(void *aecmInst, WebRtc_Word32 sampFreq)
 {
     aecmob_t *aecm = aecmInst;
     AecmConfig aecConfig;
@@ -220,11 +219,11 @@ int32_t WebRtcAecm_Init(void *aecmInst, int32_t sampFreq)
     return 0;
 }
 
-int32_t WebRtcAecm_BufferFarend(void *aecmInst, const int16_t *farend,
-                                int16_t nrOfSamples)
+WebRtc_Word32 WebRtcAecm_BufferFarend(void *aecmInst, const WebRtc_Word16 *farend,
+                                      WebRtc_Word16 nrOfSamples)
 {
     aecmob_t *aecm = aecmInst;
-    int32_t retVal = 0;
+    WebRtc_Word32 retVal = 0;
 
     if (aecm == NULL)
     {
@@ -260,12 +259,12 @@ int32_t WebRtcAecm_BufferFarend(void *aecmInst, const int16_t *farend,
     return retVal;
 }
 
-int32_t WebRtcAecm_Process(void *aecmInst, const int16_t *nearendNoisy,
-                           const int16_t *nearendClean, int16_t *out,
-                           int16_t nrOfSamples, int16_t msInSndCardBuf)
+WebRtc_Word32 WebRtcAecm_Process(void *aecmInst, const WebRtc_Word16 *nearendNoisy,
+                                 const WebRtc_Word16 *nearendClean, WebRtc_Word16 *out,
+                                 WebRtc_Word16 nrOfSamples, WebRtc_Word16 msInSndCardBuf)
 {
     aecmob_t *aecm = aecmInst;
-    int32_t retVal = 0;
+    WebRtc_Word32 retVal = 0;
     short i;
     short nmbrOfFilledBuffers;
     short nBlocks10ms;
@@ -477,7 +476,7 @@ int32_t WebRtcAecm_Process(void *aecmInst, const int16_t *nearendNoisy,
     return retVal;
 }
 
-int32_t WebRtcAecm_set_config(void *aecmInst, AecmConfig config)
+WebRtc_Word32 WebRtcAecm_set_config(void *aecmInst, AecmConfig config)
 {
     aecmob_t *aecm = aecmInst;
 
@@ -559,7 +558,7 @@ int32_t WebRtcAecm_set_config(void *aecmInst, AecmConfig config)
     return 0;
 }
 
-int32_t WebRtcAecm_get_config(void *aecmInst, AecmConfig *config)
+WebRtc_Word32 WebRtcAecm_get_config(void *aecmInst, AecmConfig *config)
 {
     aecmob_t *aecm = aecmInst;
 
@@ -586,12 +585,12 @@ int32_t WebRtcAecm_get_config(void *aecmInst, AecmConfig *config)
     return 0;
 }
 
-int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
-                                const void* echo_path,
-                                size_t size_bytes)
+WebRtc_Word32 WebRtcAecm_InitEchoPath(void* aecmInst,
+                                      const void* echo_path,
+                                      size_t size_bytes)
 {
     aecmob_t *aecm = aecmInst;
-    const int16_t* echo_path_ptr = echo_path;
+    const WebRtc_Word16* echo_path_ptr = echo_path;
 
     if (aecmInst == NULL) {
       return -1;
@@ -617,12 +616,12 @@ int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
     return 0;
 }
 
-int32_t WebRtcAecm_GetEchoPath(void* aecmInst,
-                               void* echo_path,
-                               size_t size_bytes)
+WebRtc_Word32 WebRtcAecm_GetEchoPath(void* aecmInst,
+                                     void* echo_path,
+                                     size_t size_bytes)
 {
     aecmob_t *aecm = aecmInst;
-    int16_t* echo_path_ptr = echo_path;
+    WebRtc_Word16* echo_path_ptr = echo_path;
 
     if (aecmInst == NULL) {
       return -1;
@@ -649,10 +648,10 @@ int32_t WebRtcAecm_GetEchoPath(void* aecmInst,
 
 size_t WebRtcAecm_echo_path_size_bytes()
 {
-    return (PART_LEN1 * sizeof(int16_t));
+    return (PART_LEN1 * sizeof(WebRtc_Word16));
 }
 
-int32_t WebRtcAecm_get_error_code(void *aecmInst)
+WebRtc_Word32 WebRtcAecm_get_error_code(void *aecmInst)
 {
     aecmob_t *aecm = aecmInst;
 

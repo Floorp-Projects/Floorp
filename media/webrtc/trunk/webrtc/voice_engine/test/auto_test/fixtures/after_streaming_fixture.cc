@@ -12,6 +12,8 @@
 
 #include <cstring>
 
+static const char* kLoopbackIp = "127.0.0.1";
+
 AfterStreamingFixture::AfterStreamingFixture()
     : channel_(voe_base_->CreateChannel()) {
   EXPECT_GE(channel_, 0);
@@ -28,9 +30,7 @@ AfterStreamingFixture::~AfterStreamingFixture() {
   voe_file_->StopPlayingFileAsMicrophone(channel_);
   PausePlaying();
 
-  EXPECT_EQ(0, voe_network_->DeRegisterExternalTransport(channel_));
   voe_base_->DeleteChannel(channel_);
-  delete transport_;
 }
 
 void AfterStreamingFixture::SwitchToManualMicrophone() {
@@ -59,8 +59,8 @@ void AfterStreamingFixture::ResumePlaying() {
 }
 
 void AfterStreamingFixture::SetUpLocalPlayback() {
-  transport_ = new LoopBackTransport(voe_network_);
-  EXPECT_EQ(0, voe_network_->RegisterExternalTransport(channel_, *transport_));
+  EXPECT_EQ(0, voe_base_->SetSendDestination(channel_, 8000, kLoopbackIp));
+  EXPECT_EQ(0, voe_base_->SetLocalReceiver(0, 8000));
 
   webrtc::CodecInst codec;
   codec.channels = 1;

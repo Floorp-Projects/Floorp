@@ -24,6 +24,7 @@ LOCAL_SRC_FILES := \
     aligned_malloc.cc \
     atomic32_posix.cc \
     condition_variable.cc \
+    cpu_no_op.cc \
     cpu_features.cc \
     cpu_info.cc \
     critical_section.cc \
@@ -35,6 +36,7 @@ LOCAL_SRC_FILES := \
     thread.cc \
     trace_impl.cc \
     condition_variable_posix.cc \
+    cpu_linux.cc \
     critical_section_posix.cc \
     event_posix.cc \
     sleep.cc \

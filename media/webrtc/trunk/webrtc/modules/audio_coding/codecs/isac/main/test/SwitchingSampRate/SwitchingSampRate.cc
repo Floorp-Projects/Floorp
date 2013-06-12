@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
   FILE* outFile[MAX_NUM_CLIENTS];
 
   ISACStruct* codecInstance[MAX_NUM_CLIENTS];
-  int32_t resamplerState[MAX_NUM_CLIENTS][8];
+  WebRtc_Word32 resamplerState[MAX_NUM_CLIENTS][8];
 
   int encoderSampRate[MAX_NUM_CLIENTS];
 
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
       return -1;
     }
     memset(packetData[clientCntr], 0, sizeof(BottleNeckModel));
-    memset(resamplerState[clientCntr], 0, sizeof(int32_t) * 8);
+    memset(resamplerState[clientCntr], 0, sizeof(WebRtc_Word32) * 8);
   }
 
   for(clientCntr = 0; clientCntr < NUM_CLIENTS; clientCntr++)
@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
 
       streamLen = WebRtcIsac_Encode(codecInstance[senderIdx],
                                     audioBuff10ms, (short*)bitStream);
-      int16_t ggg;
+      WebRtc_Word16 ggg;
       if (streamLen > 0) {
         if((  WebRtcIsac_ReadFrameLen(codecInstance[receiverIdx],
                                       (short *) bitStream, &ggg))<0)
@@ -319,12 +319,12 @@ int main(int argc, char* argv[])
 
           if(codingMode == 0)
           {
-            int32_t bn;
+            WebRtc_Word32 bn;
             WebRtcIsac_GetUplinkBw(codecInstance[senderIdx], &bn);
             printf("[%d] ", bn);
           }
-          //int16_t rateIndexLB;
-          //int16_t rateIndexUB;
+          //WebRtc_Word16 rateIndexLB;
+          //WebRtc_Word16 rateIndexUB;
           //WebRtcIsac_GetDownLinkBwIndex(codecInstance[receiverIdx],
           //    &rateIndexLB, &rateIndexUB);
           //printf(" (%2d, %2d) ", rateIndexLB, rateIndexUB);

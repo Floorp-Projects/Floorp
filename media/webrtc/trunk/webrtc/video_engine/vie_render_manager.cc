@@ -26,12 +26,12 @@ ViERenderManagerScoped::ViERenderManagerScoped(
     : ViEManagerScopedBase(vie_render_manager) {
 }
 
-ViERenderer* ViERenderManagerScoped::Renderer(int32_t render_id) const {
+ViERenderer* ViERenderManagerScoped::Renderer(WebRtc_Word32 render_id) const {
   return static_cast<const ViERenderManager*>(vie_manager_)->ViERenderPtr(
            render_id);
 }
 
-ViERenderManager::ViERenderManager(int32_t engine_id)
+ViERenderManager::ViERenderManager(WebRtc_Word32 engine_id)
     : list_cs_(CriticalSectionWrapper::CreateCriticalSection()),
       engine_id_(engine_id),
       use_external_render_module_(false) {
@@ -47,14 +47,14 @@ ViERenderManager::~ViERenderManager() {
   while (stream_to_vie_renderer_.Size() != 0) {
     MapItem* item = stream_to_vie_renderer_.First();
     assert(item);
-    const int32_t render_id = item->GetId();
+    const WebRtc_Word32 render_id = item->GetId();
     // The renderer is delete in RemoveRenderStream.
     item = NULL;
     RemoveRenderStream(render_id);
   }
 }
 
-int32_t ViERenderManager::RegisterVideoRenderModule(
+WebRtc_Word32 ViERenderManager::RegisterVideoRenderModule(
     VideoRender* render_module) {
   // See if there is already a render module registered for the window that
   // the registrant render module is associated with.
@@ -73,10 +73,10 @@ int32_t ViERenderManager::RegisterVideoRenderModule(
   return 0;
 }
 
-int32_t ViERenderManager::DeRegisterVideoRenderModule(
+WebRtc_Word32 ViERenderManager::DeRegisterVideoRenderModule(
     VideoRender* render_module) {
   // Check if there are streams in the module.
-  uint32_t n_streams = render_module->GetNumIncomingRenderStreams();
+  WebRtc_UWord32 n_streams = render_module->GetNumIncomingRenderStreams();
   if (n_streams != 0) {
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, ViEId(engine_id_),
                  "There are still %d streams in this module, cannot "
@@ -104,9 +104,9 @@ int32_t ViERenderManager::DeRegisterVideoRenderModule(
   return 0;
 }
 
-ViERenderer* ViERenderManager::AddRenderStream(const int32_t render_id,
+ViERenderer* ViERenderManager::AddRenderStream(const WebRtc_Word32 render_id,
                                                void* window,
-                                               const uint32_t z_order,
+                                               const WebRtc_UWord32 z_order,
                                                const float left,
                                                const float top,
                                                const float right,
@@ -150,8 +150,8 @@ ViERenderer* ViERenderManager::AddRenderStream(const int32_t render_id,
   return vie_renderer;
 }
 
-int32_t ViERenderManager::RemoveRenderStream(
-    const int32_t render_id) {
+WebRtc_Word32 ViERenderManager::RemoveRenderStream(
+    const WebRtc_Word32 render_id) {
   // We need exclusive right to the items in the render manager to delete a
   // stream.
   ViEManagerWriteScoped scope(this);
@@ -215,7 +215,7 @@ VideoRender* ViERenderManager::FindRenderModule(void* window) {
   return renderer;
 }
 
-ViERenderer* ViERenderManager::ViERenderPtr(int32_t render_id) const {
+ViERenderer* ViERenderManager::ViERenderPtr(WebRtc_Word32 render_id) const {
   ViERenderer* renderer = NULL;
   MapItem* map_item = stream_to_vie_renderer_.Find(render_id);
   if (!map_item) {

@@ -18,7 +18,7 @@
 #include "signal_processing_library.h"
 
 // Hanning table with 256 entries
-static const int16_t kHanningTable[] = {
+static const WebRtc_Word16 kHanningTable[] = {
     1,      2,      6,     10,     15,     22,     30,     39,
    50,     62,     75,     89,    104,    121,    138,    157,
   178,    199,    222,    246,    271,    297,    324,    353,
@@ -53,19 +53,19 @@ static const int16_t kHanningTable[] = {
 16354,  16362,  16369,  16374,  16378,  16382,  16383,  16384
 };
 
-void WebRtcSpl_GetHanningWindow(int16_t *v, int16_t size)
+void WebRtcSpl_GetHanningWindow(WebRtc_Word16 *v, WebRtc_Word16 size)
 {
     int jj;
-    int16_t *vptr1;
+    WebRtc_Word16 *vptr1;
 
-    int32_t index;
-    int32_t factor = ((int32_t)0x40000000);
+    WebRtc_Word32 index;
+    WebRtc_Word32 factor = ((WebRtc_Word32)0x40000000);
 
     factor = WebRtcSpl_DivW32W16(factor, size);
     if (size < 513)
-        index = (int32_t)-0x200000;
+        index = (WebRtc_Word32)-0x200000;
     else
-        index = (int32_t)-0x100000;
+        index = (WebRtc_Word32)-0x100000;
     vptr1 = v;
 
     for (jj = 0; jj < size; jj++)

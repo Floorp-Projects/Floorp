@@ -24,13 +24,13 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_EnhUpsample(
-    int32_t *useq1, /* (o) upsampled output sequence */
-    int16_t *seq1 /* (i) unupsampled sequence */
+    WebRtc_Word32 *useq1, /* (o) upsampled output sequence */
+    WebRtc_Word16 *seq1 /* (i) unupsampled sequence */
                                 ){
   int j;
-  int32_t *pu1, *pu11;
-  int16_t *ps, *w16tmp;
-  const int16_t *pp;
+  WebRtc_Word32 *pu1, *pu11;
+  WebRtc_Word16 *ps, *w16tmp;
+  const WebRtc_Word16 *pp;
 
   /* filtering: filter overhangs left side of sequence */
   pu1=useq1;

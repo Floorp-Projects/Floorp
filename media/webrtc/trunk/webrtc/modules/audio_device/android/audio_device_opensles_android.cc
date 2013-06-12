@@ -33,7 +33,7 @@
 
 namespace webrtc {
 
-AudioDeviceAndroidOpenSLES::AudioDeviceAndroidOpenSLES(const int32_t id)
+AudioDeviceAndroidOpenSLES::AudioDeviceAndroidOpenSLES(const WebRtc_Word32 id)
     : voe_audio_buffer_(NULL),
       crit_sect_(*CriticalSectionWrapper::CreateCriticalSection()),
       id_(id),
@@ -103,7 +103,7 @@ void AudioDeviceAndroidOpenSLES::AttachAudioBuffer(
   voe_audio_buffer_->SetPlayoutChannels(N_PLAY_CHANNELS);
 }
 
-int32_t AudioDeviceAndroidOpenSLES::ActiveAudioLayer(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::ActiveAudioLayer(
     AudioDeviceModule::AudioLayer& audioLayer) const {
 
   audioLayer = AudioDeviceModule::kPlatformDefaultAudio;
@@ -111,7 +111,7 @@ int32_t AudioDeviceAndroidOpenSLES::ActiveAudioLayer(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::Init() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::Init() {
   CriticalSectionScoped lock(&crit_sect_);
 
   if (is_initialized_)
@@ -155,7 +155,8 @@ int32_t AudioDeviceAndroidOpenSLES::Init() {
   SLEngineOption EngineOption[] = {
     { SL_ENGINEOPTION_THREADSAFE, static_cast<SLuint32>(SL_BOOLEAN_TRUE) },
   };
-  int32_t res = f_slCreateEngine(&sles_engine_, 1, EngineOption, 0, NULL, NULL);
+  WebRtc_Word32 res = f_slCreateEngine(&sles_engine_, 1, EngineOption, 0,
+                                       NULL, NULL);
 
   if (res != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -205,7 +206,7 @@ int32_t AudioDeviceAndroidOpenSLES::Init() {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::Terminate() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::Terminate() {
   CriticalSectionScoped lock(&crit_sect_);
 
   if (!is_initialized_)
@@ -236,7 +237,7 @@ bool AudioDeviceAndroidOpenSLES::Initialized() const {
   return (is_initialized_);
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SpeakerIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerIsAvailable(
     bool& available) {
   // We always assume it's available
   available = true;
@@ -244,7 +245,7 @@ int32_t AudioDeviceAndroidOpenSLES::SpeakerIsAvailable(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::InitSpeaker() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitSpeaker() {
   CriticalSectionScoped lock(&crit_sect_);
 
   if (is_playing_) {
@@ -266,14 +267,14 @@ int32_t AudioDeviceAndroidOpenSLES::InitSpeaker() {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneIsAvailable(
     bool& available) {
   // We always assume it's available.
   available = true;
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::InitMicrophone() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitMicrophone() {
   CriticalSectionScoped lock(&crit_sect_);
   if (is_recording_) {
     WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
@@ -300,14 +301,14 @@ bool AudioDeviceAndroidOpenSLES::MicrophoneIsInitialized() const {
   return is_mic_initialized_;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SpeakerVolumeIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerVolumeIsAvailable(
     bool& available) {
   available = true;  // We assume we are always be able to set/get volume.
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetSpeakerVolume(
-    uint32_t volume) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetSpeakerVolume(
+    WebRtc_UWord32 volume) {
   if (!is_speaker_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                         "  Speaker not initialized");
@@ -333,29 +334,29 @@ int32_t AudioDeviceAndroidOpenSLES::SetSpeakerVolume(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SpeakerVolume(
-    uint32_t& volume) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerVolume(
+    WebRtc_UWord32& volume) const {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetWaveOutVolume(
-    uint16_t volumeLeft,
-    uint16_t volumeRight) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetWaveOutVolume(
+    WebRtc_UWord16 volumeLeft,
+    WebRtc_UWord16 volumeRight) {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::WaveOutVolume(
-    uint16_t& volumeLeft,
-    uint16_t& volumeRight) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::WaveOutVolume(
+    WebRtc_UWord16& volumeLeft,
+    WebRtc_UWord16& volumeRight) const {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MaxSpeakerVolume(
-    uint32_t& maxVolume) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MaxSpeakerVolume(
+    WebRtc_UWord32& maxVolume) const {
   if (!is_speaker_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                         "  Speaker not initialized");
@@ -367,8 +368,8 @@ int32_t AudioDeviceAndroidOpenSLES::MaxSpeakerVolume(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MinSpeakerVolume(
-    uint32_t& minVolume) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MinSpeakerVolume(
+    WebRtc_UWord32& minVolume) const {
   if (!is_speaker_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                         "  Speaker not initialized");
@@ -378,8 +379,8 @@ int32_t AudioDeviceAndroidOpenSLES::MinSpeakerVolume(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SpeakerVolumeStepSize(
-    uint16_t& stepSize) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerVolumeStepSize(
+    WebRtc_UWord16& stepSize) const {
   if (!is_speaker_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                         "  Speaker not initialized");
@@ -389,51 +390,51 @@ int32_t AudioDeviceAndroidOpenSLES::SpeakerVolumeStepSize(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SpeakerMuteIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerMuteIsAvailable(
     bool& available) {
   available = false;  // Speaker mute not supported on Android.
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetSpeakerMute(bool enable) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetSpeakerMute(bool enable) {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SpeakerMute(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SpeakerMute(
     bool& enabled) const {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneMuteIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneMuteIsAvailable(
     bool& available) {
   available = false;  // Mic mute not supported on Android
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetMicrophoneMute(bool enable) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetMicrophoneMute(bool enable) {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneMute(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneMute(
     bool& enabled) const {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneBoostIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneBoostIsAvailable(
     bool& available) {
   available = false;  // Mic boost not supported on Android.
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetMicrophoneBoost(bool enable) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetMicrophoneBoost(bool enable) {
   if (!is_mic_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                  "  Microphone not initialized");
@@ -447,7 +448,7 @@ int32_t AudioDeviceAndroidOpenSLES::SetMicrophoneBoost(bool enable) {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneBoost(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneBoost(
     bool& enabled) const {
   if (!is_mic_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -458,13 +459,13 @@ int32_t AudioDeviceAndroidOpenSLES::MicrophoneBoost(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StereoRecordingIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StereoRecordingIsAvailable(
     bool& available) {
   available = false;  // Stereo recording not supported on Android.
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetStereoRecording(bool enable) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetStereoRecording(bool enable) {
   if (enable) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                  "  Enabling not available");
@@ -473,13 +474,13 @@ int32_t AudioDeviceAndroidOpenSLES::SetStereoRecording(bool enable) {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StereoRecording(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StereoRecording(
     bool& enabled) const {
   enabled = false;
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StereoPlayoutIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StereoPlayoutIsAvailable(
     bool& available) {
   // TODO(leozwang): This api is called before initplayout, we need
   // to detect audio device to find out if stereo is supported or not.
@@ -487,7 +488,7 @@ int32_t AudioDeviceAndroidOpenSLES::StereoPlayoutIsAvailable(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetStereoPlayout(bool enable) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetStereoPlayout(bool enable) {
   if (enable) {
     return 0;
   } else {
@@ -496,14 +497,14 @@ int32_t AudioDeviceAndroidOpenSLES::SetStereoPlayout(bool enable) {
   }
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StereoPlayout(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StereoPlayout(
     bool& enabled) const {
   enabled = (player_pcm_.numChannels == 2 ? true : false);
   return 0;
 }
 
 
-int32_t AudioDeviceAndroidOpenSLES::SetAGC(bool enable) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetAGC(bool enable) {
   agc_enabled_ = enable;
   return 0;
 }
@@ -512,14 +513,14 @@ bool AudioDeviceAndroidOpenSLES::AGC() const {
   return agc_enabled_;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneVolumeIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneVolumeIsAvailable(
     bool& available) {
   available = true;
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetMicrophoneVolume(
-    uint32_t volume) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetMicrophoneVolume(
+    WebRtc_UWord32 volume) {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  OpenSL doesn't support contolling Mic volume yet");
   // TODO(leozwang): Add microphone volume control when OpenSL apis
@@ -527,34 +528,34 @@ int32_t AudioDeviceAndroidOpenSLES::SetMicrophoneVolume(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneVolume(
-    uint32_t& volume) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneVolume(
+    WebRtc_UWord32& volume) const {
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MaxMicrophoneVolume(
-    uint32_t& maxVolume) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MaxMicrophoneVolume(
+    WebRtc_UWord32& maxVolume) const {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MinMicrophoneVolume(
-    uint32_t& minVolume) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MinMicrophoneVolume(
+    WebRtc_UWord32& minVolume) const {
   minVolume = 0;
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::MicrophoneVolumeStepSize(
-    uint16_t& stepSize) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneVolumeStepSize(
+    WebRtc_UWord16& stepSize) const {
   stepSize = 1;
   return 0;
 }
 
-int16_t AudioDeviceAndroidOpenSLES::PlayoutDevices() {
+WebRtc_Word16 AudioDeviceAndroidOpenSLES::PlayoutDevices() {
   return 1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
-    uint16_t index) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
+    WebRtc_UWord16 index) {
   if (is_play_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                  "  Playout already initialized");
@@ -573,7 +574,7 @@ int32_t AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
     AudioDeviceModule::WindowsDeviceType device) {
 
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
@@ -581,8 +582,8 @@ int32_t AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::PlayoutDeviceName(
-    uint16_t index,
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::PlayoutDeviceName(
+    WebRtc_UWord16 index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize]) {
   if (0 != index) {
@@ -600,8 +601,8 @@ int32_t AudioDeviceAndroidOpenSLES::PlayoutDeviceName(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::RecordingDeviceName(
-    uint16_t index,
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::RecordingDeviceName(
+    WebRtc_UWord16 index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize]) {
   if (0 != index) {
@@ -619,12 +620,12 @@ int32_t AudioDeviceAndroidOpenSLES::RecordingDeviceName(
   return 0;
 }
 
-int16_t AudioDeviceAndroidOpenSLES::RecordingDevices() {
+WebRtc_Word16 AudioDeviceAndroidOpenSLES::RecordingDevices() {
   return 1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetRecordingDevice(
-    uint16_t index) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetRecordingDevice(
+    WebRtc_UWord16 index) {
   if (is_rec_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                         "  Recording already initialized");
@@ -643,17 +644,17 @@ int32_t AudioDeviceAndroidOpenSLES::SetRecordingDevice(
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetRecordingDevice(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetRecordingDevice(
     AudioDeviceModule::WindowsDeviceType device) {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::PlayoutIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::PlayoutIsAvailable(
     bool& available) {
   available = false;
-  int32_t res = InitPlayout();
+  WebRtc_Word32 res = InitPlayout();
   StopPlayout();
   if (res != -1) {
     available = true;
@@ -661,10 +662,10 @@ int32_t AudioDeviceAndroidOpenSLES::PlayoutIsAvailable(
   return res;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::RecordingIsAvailable(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::RecordingIsAvailable(
     bool& available) {
   available = false;
-  int32_t res = InitRecording();
+  WebRtc_Word32 res = InitRecording();
   StopRecording();
   if (res != -1) {
     available = true;
@@ -672,7 +673,7 @@ int32_t AudioDeviceAndroidOpenSLES::RecordingIsAvailable(
   return res;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::InitPlayout() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitPlayout() {
   CriticalSectionScoped lock(&crit_sect_);
   if (!is_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -719,7 +720,7 @@ int32_t AudioDeviceAndroidOpenSLES::InitPlayout() {
   SLDataSink audio_sink = { &locator_outputmix, NULL };
 
   // Create Output Mix object to be used by player.
-  int32_t res = -1;
+  WebRtc_Word32 res = -1;
   res = (*sles_engine_itf_)->CreateOutputMix(sles_engine_itf_,
                                              &sles_output_mixer_,
                                              0,
@@ -814,7 +815,7 @@ int32_t AudioDeviceAndroidOpenSLES::InitPlayout() {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::InitRecording() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitRecording() {
   CriticalSectionScoped lock(&crit_sect_);
 
   if (!is_initialized_) {
@@ -887,7 +888,7 @@ int32_t AudioDeviceAndroidOpenSLES::InitRecording() {
     SL_IID_ANDROIDSIMPLEBUFFERQUEUE_, SL_IID_ANDROIDCONFIGURATION_ };
   const SLboolean req[2] = {
     SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
-  int32_t res = -1;
+  WebRtc_Word32 res = -1;
   res = (*sles_engine_itf_)->CreateAudioRecorder(sles_engine_itf_,
                                                  &sles_recorder_,
                                                  &audio_source,
@@ -945,7 +946,7 @@ int32_t AudioDeviceAndroidOpenSLES::InitRecording() {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StartRecording() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StartRecording() {
   CriticalSectionScoped lock(&crit_sect_);
 
   if (!is_rec_initialized_) {
@@ -974,7 +975,7 @@ int32_t AudioDeviceAndroidOpenSLES::StartRecording() {
 
   memset(rec_buf_, 0, sizeof(rec_buf_));
   memset(rec_voe_buf_, 0, sizeof(rec_voe_buf_));
-  uint32_t num_bytes =
+  WebRtc_UWord32 num_bytes =
       N_REC_CHANNELS * sizeof(int16_t) * mic_sampling_rate_ / 100;
 
   while (!rec_queue_.empty())
@@ -988,7 +989,7 @@ int32_t AudioDeviceAndroidOpenSLES::StartRecording() {
     rec_voe_ready_queue_.push(rec_voe_buf_[i]);
   }
 
-  int32_t res = -1;
+  WebRtc_Word32 res = -1;
   for (int i = 0; i < N_REC_QUEUE_BUFFERS; ++i) {
     // We assign 10ms buffer to each queue, size given in bytes.
     res = (*sles_recorder_sbq_itf_)->Enqueue(
@@ -1039,7 +1040,7 @@ int32_t AudioDeviceAndroidOpenSLES::StartRecording() {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StopRecording() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StopRecording() {
   {
     CriticalSectionScoped lock(&crit_sect_);
 
@@ -1050,7 +1051,7 @@ int32_t AudioDeviceAndroidOpenSLES::StopRecording() {
     }
 
     if ((sles_recorder_itf_ != NULL) && (sles_recorder_ != NULL)) {
-      int32_t res = (*sles_recorder_itf_)->SetRecordState(
+      WebRtc_Word32 res = (*sles_recorder_itf_)->SetRecordState(
           sles_recorder_itf_,
           SL_RECORDSTATE_STOPPED);
       if (res != SL_RESULT_SUCCESS) {
@@ -1106,7 +1107,7 @@ bool AudioDeviceAndroidOpenSLES::PlayoutIsInitialized() const {
   return is_play_initialized_;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StartPlayout() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StartPlayout() {
   int i;
   CriticalSectionScoped lock(&crit_sect_);
 
@@ -1133,7 +1134,7 @@ int32_t AudioDeviceAndroidOpenSLES::StartPlayout() {
     return -1;
   }
 
-  uint32_t num_bytes =
+  WebRtc_UWord32 num_bytes =
       N_PLAY_CHANNELS * sizeof(int16_t) * speaker_sampling_rate_ / 100;
 
   memset(play_buf_, 0, sizeof(play_buf_));
@@ -1141,7 +1142,7 @@ int32_t AudioDeviceAndroidOpenSLES::StartPlayout() {
   while (!play_queue_.empty())
     play_queue_.pop();
 
-  int32_t res = -1;
+  WebRtc_Word32 res = -1;
   for (i = 0; i < std::min(2, static_cast<int>(N_PLAY_QUEUE_BUFFERS)); ++i) {
     res = (*sles_player_sbq_itf_)->Enqueue(
         sles_player_sbq_itf_,
@@ -1172,7 +1173,7 @@ int32_t AudioDeviceAndroidOpenSLES::StartPlayout() {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::StopPlayout() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::StopPlayout() {
   {
     CriticalSectionScoped lock(&crit_sect_);
     if (!is_play_initialized_) {
@@ -1183,7 +1184,7 @@ int32_t AudioDeviceAndroidOpenSLES::StopPlayout() {
 
     if (!sles_player_itf_ && !sles_output_mixer_ && !sles_player_) {
       // Make sure player is stopped
-      int32_t res =
+      WebRtc_Word32 res =
           (*sles_player_itf_)->SetPlayState(sles_player_itf_,
                                            SL_PLAYSTATE_STOPPED);
       if (res != SL_RESULT_SUCCESS) {
@@ -1218,14 +1219,14 @@ int32_t AudioDeviceAndroidOpenSLES::StopPlayout() {
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::PlayoutDelay(
-    uint16_t& delayMS) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::PlayoutDelay(
+    WebRtc_UWord16& delayMS) const {
   delayMS = playout_delay_;
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::RecordingDelay(
-    uint16_t& delayMS) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::RecordingDelay(
+    WebRtc_UWord16& delayMS) const {
   delayMS = recording_delay_;
   return 0;
 }
@@ -1234,24 +1235,24 @@ bool AudioDeviceAndroidOpenSLES::Playing() const {
   return is_playing_;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetPlayoutBuffer(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetPlayoutBuffer(
     const AudioDeviceModule::BufferType type,
-    uint16_t sizeMS) {
+    WebRtc_UWord16 sizeMS) {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  API call not supported on this platform");
   return -1;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::PlayoutBuffer(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::PlayoutBuffer(
     AudioDeviceModule::BufferType& type,
-    uint16_t& sizeMS) const {
+    WebRtc_UWord16& sizeMS) const {
   type = AudioDeviceModule::kAdaptiveBufferSize;
   sizeMS = playout_delay_;  // Set to current playout delay
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::CPULoad(
-    uint16_t& load) const {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::CPULoad(
+    WebRtc_UWord16& load) const {
   WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                       "  API call not supported on this platform");
   return -1;
@@ -1289,12 +1290,12 @@ void AudioDeviceAndroidOpenSLES::ClearRecordingError() {
   rec_error_ = 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::SetLoudspeakerStatus(bool enable) {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetLoudspeakerStatus(bool enable) {
   loundspeaker_on_ = enable;
   return 0;
 }
 
-int32_t AudioDeviceAndroidOpenSLES::GetLoudspeakerStatus(
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::GetLoudspeakerStatus(
     bool& enabled) const {
   enabled = loundspeaker_on_;
   return 0;
@@ -1314,8 +1315,8 @@ void AudioDeviceAndroidOpenSLES::PlayerSimpleBufferQueueCallbackHandler(
     const unsigned int num_samples = speaker_sampling_rate_ / 100;
     const unsigned int num_bytes =
         N_PLAY_CHANNELS * num_samples * sizeof(int16_t);
-    int8_t buf[PLAY_MAX_TEMP_BUF_SIZE_PER_10ms];
-    int8_t* audio;
+    WebRtc_Word8 buf[PLAY_MAX_TEMP_BUF_SIZE_PER_10ms];
+    WebRtc_Word8* audio;
 
     audio = play_queue_.front();
     play_queue_.pop();
@@ -1364,7 +1365,7 @@ bool AudioDeviceAndroidOpenSLES::RecThreadFuncImpl() {
     const unsigned int num_bytes =
         N_REC_CHANNELS * num_samples * sizeof(int16_t);
     const unsigned int total_bytes = num_bytes;
-    int8_t buf[REC_MAX_TEMP_BUF_SIZE_PER_10ms];
+    WebRtc_Word8 buf[REC_MAX_TEMP_BUF_SIZE_PER_10ms];
 
     {
       CriticalSectionScoped lock(&crit_sect_);
@@ -1373,7 +1374,7 @@ bool AudioDeviceAndroidOpenSLES::RecThreadFuncImpl() {
         return true;
       }
 
-      int8_t* audio = rec_voe_audio_queue_.front();
+      WebRtc_Word8* audio = rec_voe_audio_queue_.front();
       rec_voe_audio_queue_.pop();
       memcpy(buf, audio, total_bytes);
       memset(audio, 0, total_bytes);
@@ -1396,7 +1397,7 @@ void AudioDeviceAndroidOpenSLES::RecorderSimpleBufferQueueCallbackHandler(
     const unsigned int num_bytes =
         N_REC_CHANNELS * num_samples * sizeof(int16_t);
     const unsigned int total_bytes = num_bytes;
-    int8_t* audio;
+    WebRtc_Word8* audio;
 
     {
       CriticalSectionScoped lock(&crit_sect_);
@@ -1415,7 +1416,7 @@ void AudioDeviceAndroidOpenSLES::RecorderSimpleBufferQueueCallbackHandler(
       }
     }
 
-    int32_t res = (*queue_itf)->Enqueue(queue_itf,
+    WebRtc_Word32 res = (*queue_itf)->Enqueue(queue_itf,
                                               audio,
                                               total_bytes);
     if (res != SL_RESULT_SUCCESS) {
@@ -1441,7 +1442,7 @@ void AudioDeviceAndroidOpenSLES::CheckErr(SLresult res) {
 }
 
 void AudioDeviceAndroidOpenSLES::UpdatePlayoutDelay(
-    uint32_t nSamplePlayed) {
+    WebRtc_UWord32 nSamplePlayed) {
   // TODO(leozwang): Add accurate delay estimat.
   playout_delay_ = (N_PLAY_QUEUE_BUFFERS - 0.5) * 10 +
       N_PLAY_QUEUE_BUFFERS * nSamplePlayed / (speaker_sampling_rate_ / 1000);
@@ -1450,12 +1451,12 @@ void AudioDeviceAndroidOpenSLES::UpdatePlayoutDelay(
 void AudioDeviceAndroidOpenSLES::UpdateRecordingDelay() {
   // TODO(leozwang): Add accurate delay estimat.
   recording_delay_ = 10;
-  const uint32_t noSamp10ms = mic_sampling_rate_ / 100;
+  const WebRtc_UWord32 noSamp10ms = mic_sampling_rate_ / 100;
   recording_delay_ += (N_REC_QUEUE_BUFFERS * noSamp10ms) /
       (mic_sampling_rate_ / 1000);
 }
 
-int32_t AudioDeviceAndroidOpenSLES::InitSampleRate() {
+WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitSampleRate() {
   if (sles_engine_ == NULL) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                         "  SL Object is NULL");

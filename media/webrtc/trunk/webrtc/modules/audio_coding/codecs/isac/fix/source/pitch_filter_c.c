@@ -12,26 +12,26 @@
 #include "modules/audio_coding/codecs/isac/fix/source/pitch_estimator.h"
 
 /* Filter coefficicients in Q15. */
-static const int16_t kDampFilter[PITCH_DAMPORDER] = {
+static const WebRtc_Word16 kDampFilter[PITCH_DAMPORDER] = {
   -2294, 8192, 20972, 8192, -2294
 };
 
 void WebRtcIsacfix_PitchFilterCore(int loopNumber,
-                                   int16_t gain,
+                                   WebRtc_Word16 gain,
                                    int index,
-                                   int16_t sign,
-                                   int16_t* inputState,
-                                   int16_t* outputBuf2,
-                                   const int16_t* coefficient,
-                                   int16_t* inputBuf,
-                                   int16_t* outputBuf,
+                                   WebRtc_Word16 sign,
+                                   WebRtc_Word16* inputState,
+                                   WebRtc_Word16* outputBuf2,
+                                   const WebRtc_Word16* coefficient,
+                                   WebRtc_Word16* inputBuf,
+                                   WebRtc_Word16* outputBuf,
                                    int* index2) {
   int i = 0, j = 0;  /* Loop counters. */
-  int16_t* ubufQQpos2 = &outputBuf2[PITCH_BUFFSIZE - (index + 2)];
-  int16_t tmpW16 = 0;
+  WebRtc_Word16* ubufQQpos2 = &outputBuf2[PITCH_BUFFSIZE - (index + 2)];
+  WebRtc_Word16 tmpW16 = 0;
 
   for (i = 0; i < loopNumber; i++) {
-    int32_t tmpW32 = 0;
+    WebRtc_Word32 tmpW32 = 0;
 
     /* Filter to get fractional pitch. */
     for (j = 0; j < PITCH_FRACORDER; j++) {
@@ -41,12 +41,12 @@ void WebRtcIsacfix_PitchFilterCore(int loopNumber,
     /* Saturate to avoid overflow in tmpW16. */
     tmpW32 = WEBRTC_SPL_SAT(536862719, tmpW32, -536879104);
     tmpW32 += 8192;
-    tmpW16 = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmpW32, 14);
+    tmpW16 = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmpW32, 14);
 
     /* Shift low pass filter state. */
     memmove(&inputState[1], &inputState[0],
-            (PITCH_DAMPORDER - 1) * sizeof(int16_t));
-    inputState[0] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(
+            (PITCH_DAMPORDER - 1) * sizeof(WebRtc_Word16));
+    inputState[0] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(
                       gain, tmpW16, 12);
 
     /* Low pass filter. */
@@ -60,7 +60,7 @@ void WebRtcIsacfix_PitchFilterCore(int loopNumber,
     /* Saturate to avoid overflow in tmpW16. */
     tmpW32 = WEBRTC_SPL_SAT(1073725439, tmpW32, -1073758208);
     tmpW32 += 16384;
-    tmpW16 = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmpW32, 15);
+    tmpW16 = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmpW32, 15);
 
     /* Subtract from input and update buffer. */
     tmpW32 = inputBuf[*index2] - WEBRTC_SPL_MUL_16_16(sign, tmpW16);

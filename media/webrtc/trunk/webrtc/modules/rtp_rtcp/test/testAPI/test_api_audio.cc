@@ -24,9 +24,9 @@ using namespace webrtc;
 
 class VerifyingAudioReceiver : public RtpData {
  public:
-  virtual int32_t OnReceivedPayloadData(
-      const uint8_t* payloadData,
-      const uint16_t payloadSize,
+  virtual WebRtc_Word32 OnReceivedPayloadData(
+      const WebRtc_UWord8* payloadData,
+      const WebRtc_UWord16 payloadSize,
       const webrtc::WebRtcRTPHeader* rtpHeader) {
     if (rtpHeader->header.payloadType == 98 ||
         rtpHeader->header.payloadType == 99) {
@@ -60,44 +60,44 @@ class VerifyingAudioReceiver : public RtpData {
 
 class RTPCallback : public RtpFeedback {
  public:
-  virtual int32_t OnInitializeDecoder(
-      const int32_t id,
-      const int8_t payloadType,
+  virtual WebRtc_Word32 OnInitializeDecoder(
+      const WebRtc_Word32 id,
+      const WebRtc_Word8 payloadType,
       const char payloadName[RTP_PAYLOAD_NAME_SIZE],
       const int frequency,
-      const uint8_t channels,
-      const uint32_t rate) {
+      const WebRtc_UWord8 channels,
+      const WebRtc_UWord32 rate) {
     if (payloadType == 96) {
       EXPECT_EQ(test_rate, rate) <<
           "The rate should be 64K for this payloadType";
     }
     return 0;
   }
-  virtual void OnPacketTimeout(const int32_t id) {
+  virtual void OnPacketTimeout(const WebRtc_Word32 id) {
   }
-  virtual void OnReceivedPacket(const int32_t id,
+  virtual void OnReceivedPacket(const WebRtc_Word32 id,
                                 const RtpRtcpPacketType packetType) {
   }
-  virtual void OnPeriodicDeadOrAlive(const int32_t id,
+  virtual void OnPeriodicDeadOrAlive(const WebRtc_Word32 id,
                                      const RTPAliveType alive) {
   }
-  virtual void OnIncomingSSRCChanged(const int32_t id,
-                                     const uint32_t SSRC) {
+  virtual void OnIncomingSSRCChanged(const WebRtc_Word32 id,
+                                     const WebRtc_UWord32 SSRC) {
   }
-  virtual void OnIncomingCSRCChanged(const int32_t id,
-                                     const uint32_t CSRC,
+  virtual void OnIncomingCSRCChanged(const WebRtc_Word32 id,
+                                     const WebRtc_UWord32 CSRC,
                                      const bool added) {
   }
 };
 
 class AudioFeedback : public RtpAudioFeedback {
-  virtual void OnReceivedTelephoneEvent(const int32_t id,
-                                        const uint8_t event,
+  virtual void OnReceivedTelephoneEvent(const WebRtc_Word32 id,
+                                        const WebRtc_UWord8 event,
                                         const bool end) {
-    static uint8_t expectedEvent = 0;
+    static WebRtc_UWord8 expectedEvent = 0;
 
     if (end) {
-      uint8_t oldEvent = expectedEvent-1;
+      WebRtc_UWord8 oldEvent = expectedEvent-1;
       if (expectedEvent == 32) {
         oldEvent = 15;
       }
@@ -110,16 +110,16 @@ class AudioFeedback : public RtpAudioFeedback {
       expectedEvent = 32;
     }
   }
-  virtual void OnPlayTelephoneEvent(const int32_t id,
-                                    const uint8_t event,
-                                    const uint16_t lengthMs,
-                                    const uint8_t volume) {
+  virtual void OnPlayTelephoneEvent(const WebRtc_Word32 id,
+                                    const WebRtc_UWord8 event,
+                                    const WebRtc_UWord16 lengthMs,
+                                    const WebRtc_UWord8 volume) {
   };
 };
 
 class RtpRtcpAudioTest : public ::testing::Test {
  protected:
-  RtpRtcpAudioTest() : fake_clock(123456) {
+  RtpRtcpAudioTest() {
     test_CSRC[0] = 1234;
     test_CSRC[2] = 2345;
     test_id = 123;
@@ -179,19 +179,22 @@ class RtpRtcpAudioTest : public ::testing::Test {
   LoopBackTransport* transport2;
   AudioFeedback* audioFeedback;
   RTPCallback* rtp_callback;
-  uint32_t test_ssrc;
-  uint32_t test_timestamp;
-  uint16_t test_sequence_number;
-  uint32_t test_CSRC[webrtc::kRtpCsrcSize];
-  SimulatedClock fake_clock;
+  WebRtc_UWord32 test_ssrc;
+  WebRtc_UWord32 test_timestamp;
+  WebRtc_UWord16 test_sequence_number;
+  WebRtc_UWord32 test_CSRC[webrtc::kRtpCsrcSize];
+  FakeRtpRtcpClock fake_clock;
 };
 
 TEST_F(RtpRtcpAudioTest, Basic) {
   EXPECT_EQ(0, module1->SetSSRC(test_ssrc));
   EXPECT_EQ(0, module1->SetStartTimestamp(test_timestamp));
 
+  EXPECT_FALSE(module1->TelephoneEvent());
+
   // Test detection at the end of a DTMF tone.
-  EXPECT_EQ(0, module2->SetTelephoneEventForwardToDecoder(true));
+  EXPECT_EQ(0, module2->SetTelephoneEventStatus(true, true, true));
+  EXPECT_EQ(true, module2->TelephoneEvent());
 
   EXPECT_EQ(0, module1->SetSendingStatus(true));
 
@@ -214,7 +217,7 @@ TEST_F(RtpRtcpAudioTest, Basic) {
   EXPECT_EQ(0, module2->RegisterReceivePayload(voiceCodec));
   printf("4\n");
 
-  const uint8_t test[5] = "test";
+  const WebRtc_UWord8 test[5] = "test";
   EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
                                          0, -1, test, 4));
 
@@ -243,7 +246,7 @@ TEST_F(RtpRtcpAudioTest, RED) {
   memcpy(voiceCodec.plname, "RED", 4);
 
   EXPECT_EQ(0, module1->SetSendREDPayloadType(voiceCodec.pltype));
-  int8_t red = 0;
+  WebRtc_Word8 red = 0;
   EXPECT_EQ(0, module1->SendREDPayloadType(red));
   EXPECT_EQ(voiceCodec.pltype, red);
   EXPECT_EQ(0, module1->RegisterReceivePayload(voiceCodec));
@@ -251,20 +254,20 @@ TEST_F(RtpRtcpAudioTest, RED) {
 
   RTPFragmentationHeader fragmentation;
   fragmentation.fragmentationVectorSize = 2;
-  fragmentation.fragmentationLength = new uint32_t[2];
+  fragmentation.fragmentationLength = new WebRtc_UWord32[2];
   fragmentation.fragmentationLength[0] = 4;
   fragmentation.fragmentationLength[1] = 4;
-  fragmentation.fragmentationOffset = new uint32_t[2];
+  fragmentation.fragmentationOffset = new WebRtc_UWord32[2];
   fragmentation.fragmentationOffset[0] = 0;
   fragmentation.fragmentationOffset[1] = 4;
-  fragmentation.fragmentationTimeDiff = new uint16_t[2];
+  fragmentation.fragmentationTimeDiff = new WebRtc_UWord16[2];
   fragmentation.fragmentationTimeDiff[0] = 0;
   fragmentation.fragmentationTimeDiff[1] = 0;
-  fragmentation.fragmentationPlType = new uint8_t[2];
+  fragmentation.fragmentationPlType = new WebRtc_UWord8[2];
   fragmentation.fragmentationPlType[0] = 96;
   fragmentation.fragmentationPlType[1] = 96;
 
-  const uint8_t test[5] = "test";
+  const WebRtc_UWord8 test[5] = "test";
   // Send a RTP packet.
   EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech,
                                          96, 160, -1, test, 4,
@@ -299,7 +302,7 @@ TEST_F(RtpRtcpAudioTest, DTMF) {
   EXPECT_EQ(0, module2->RegisterReceivePayload(voiceCodec));
 
   // Start DTMF test.
-  uint32_t timeStamp = 160;
+  WebRtc_UWord32 timeStamp = 160;
 
   // Send a DTMF tone using RFC 2833 (4733).
   for (int i = 0; i < 16; i++) {
@@ -307,14 +310,14 @@ TEST_F(RtpRtcpAudioTest, DTMF) {
   }
   timeStamp += 160;  // Prepare for next packet.
 
-  const uint8_t test[9] = "test";
+  const WebRtc_UWord8 test[9] = "test";
 
   // Send RTP packets for 16 tones a 160 ms  100ms
   // pause between = 2560ms + 1600ms = 4160ms
   for (;timeStamp <= 250 * 160; timeStamp += 160) {
     EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
                                            timeStamp, -1, test, 4));
-    fake_clock.AdvanceTimeMilliseconds(20);
+    fake_clock.IncrementTime(20);
     module1->Process();
   }
   EXPECT_EQ(0, module1->SendTelephoneEventOutband(32, 9000, 10));
@@ -322,7 +325,7 @@ TEST_F(RtpRtcpAudioTest, DTMF) {
   for (;timeStamp <= 740 * 160; timeStamp += 160) {
     EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
                                            timeStamp, -1, test, 4));
-    fake_clock.AdvanceTimeMilliseconds(20);
+    fake_clock.IncrementTime(20);
     module1->Process();
   }
 }

@@ -111,7 +111,7 @@ double WebRtcIsac_LevDurb(double *a, double *k, double *r, int order)
 
 
 //was static before, but didn't work with MEX file
-void WebRtcIsac_GetVars(const double *input, const int16_t *pitchGains_Q12,
+void WebRtcIsac_GetVars(const double *input, const WebRtc_Word16 *pitchGains_Q12,
                        double *oldEnergy, double *varscale)
 {
   double nrg[4], chng, pg;
@@ -206,7 +206,7 @@ WebRtcIsac_GetVarsUB(
 }
 
 void WebRtcIsac_GetLpcCoefLb(double *inLo, double *inHi, MaskFiltstr *maskdata,
-                             double signal_noise_ratio, const int16_t *pitchGains_Q12,
+                             double signal_noise_ratio, const WebRtc_Word16 *pitchGains_Q12,
                              double *lo_coeff, double *hi_coeff)
 {
   int k, n, j, pos1, pos2;
@@ -388,12 +388,12 @@ WebRtcIsac_GetLpcCoefUb(
     double*      lpCoeff,
     double       corrMat[][UB_LPC_ORDER + 1],
     double*      varscale,
-    int16_t  bandwidth)
+    WebRtc_Word16  bandwidth)
 {
   int frameCntr, activeFrameCntr, n, pos1, pos2;
-  int16_t criterion1;
-  int16_t criterion2;
-  int16_t numSubFrames = SUBFRAMES * (1 + (bandwidth == isac16kHz));
+  WebRtc_Word16 criterion1;
+  WebRtc_Word16 criterion2;
+  WebRtc_Word16 numSubFrames = SUBFRAMES * (1 + (bandwidth == isac16kHz));
   double data[WINLEN];
   double corrSubFrame[UB_LPC_ORDER+2];
   double reflecCoeff[UB_LPC_ORDER];
@@ -492,8 +492,8 @@ WebRtcIsac_GetLpcGain(
     double        corrMat[][UB_LPC_ORDER + 1],
     const double* varscale)
 {
-  int16_t j, n;
-  int16_t subFrameCntr;
+  WebRtc_Word16 j, n;
+  WebRtc_Word16 subFrameCntr;
   double aPolynom[ORDERLO + 1];
   double res_nrg;
 

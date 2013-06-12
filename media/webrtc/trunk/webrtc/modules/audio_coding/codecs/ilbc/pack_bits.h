@@ -26,9 +26,9 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_PackBits( 
-    uint16_t *bitstream,   /* (o) The packetized bitstream */
+    WebRtc_UWord16 *bitstream,   /* (o) The packetized bitstream */
     iLBC_bits *enc_bits,  /* (i) Encoded bits */
-    int16_t mode     /* (i) Codec mode (20 or 30) */
+    WebRtc_Word16 mode     /* (i) Codec mode (20 or 30) */
                              );
 
 #endif

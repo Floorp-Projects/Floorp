@@ -16,43 +16,43 @@
 
 namespace webrtc {
 
-const int16_t Dtmf_a_times2Tab8Khz[8]=
+const WebRtc_Word16 Dtmf_a_times2Tab8Khz[8]=
 {
 	27978, 26956, 25701, 24219,
 	19073, 16325, 13085, 9314
 };
 
-const int16_t Dtmf_a_times2Tab16Khz[8]=
+const WebRtc_Word16 Dtmf_a_times2Tab16Khz[8]=
 {
 	31548, 31281, 30951, 30556,
 	29144, 28361, 27409, 26258
 };
 
-const int16_t Dtmf_a_times2Tab32Khz[8]=
+const WebRtc_Word16 Dtmf_a_times2Tab32Khz[8]=
 {
 	32462,32394, 32311, 32210, 31849, 31647, 31400, 31098
 };
 
 // Second table is sin(2*pi*f/fs) in Q14
 
-const int16_t Dtmf_ym2Tab8Khz[8]=
+const WebRtc_Word16 Dtmf_ym2Tab8Khz[8]=
 {
 	8527, 9315, 10163, 11036,
 	13322, 14206, 15021, 15708
 };
 
-const int16_t Dtmf_ym2Tab16Khz[8]=
+const WebRtc_Word16 Dtmf_ym2Tab16Khz[8]=
 {
 	4429, 4879, 5380, 5918,
 	7490, 8207, 8979, 9801
 };
 
-const int16_t Dtmf_ym2Tab32Khz[8]=
+const WebRtc_Word16 Dtmf_ym2Tab32Khz[8]=
 {
 	2235, 2468, 2728, 3010, 3853, 4249, 4685, 5164
 };
 
-const int16_t Dtmf_dBm0kHz[37]=
+const WebRtc_Word16 Dtmf_dBm0kHz[37]=
 {
        16141,      14386,      12821,      11427,      10184,       9077,
         8090,       7210,       6426,       5727,       5104,       4549,
@@ -64,7 +64,7 @@ const int16_t Dtmf_dBm0kHz[37]=
 };
 
 
-DtmfInband::DtmfInband(const int32_t id) :
+DtmfInband::DtmfInband(const WebRtc_Word32 id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _outputFrequencyHz(8000),
@@ -87,7 +87,7 @@ DtmfInband::~DtmfInband()
 }
 
 int
-DtmfInband::SetSampleRate(const uint16_t frequency)
+DtmfInband::SetSampleRate(const WebRtc_UWord16 frequency)
 {
     if (frequency != 8000 &&
             frequency != 16000 &&
@@ -102,7 +102,7 @@ DtmfInband::SetSampleRate(const uint16_t frequency)
 }
 
 int
-DtmfInband::GetSampleRate(uint16_t& frequency)
+DtmfInband::GetSampleRate(WebRtc_UWord16& frequency)
 {
     frequency = _outputFrequencyHz;
     return 0;
@@ -125,9 +125,9 @@ DtmfInband::Init()
 }
 
 int
-DtmfInband::AddTone(const uint8_t eventCode,
-                    int32_t lengthMs,
-                    int32_t attenuationDb)
+DtmfInband::AddTone(const WebRtc_UWord8 eventCode,
+                    WebRtc_Word32 lengthMs,
+                    WebRtc_Word32 attenuationDb)
 {
     CriticalSectionScoped lock(&_critSect);
 
@@ -145,10 +145,10 @@ DtmfInband::AddTone(const uint8_t eventCode,
 
     ReInit();
 
-    _frameLengthSamples = static_cast<int16_t> (_outputFrequencyHz / 100);
-    _eventCode = static_cast<int16_t> (eventCode);
-    _attenuationDb = static_cast<int16_t> (attenuationDb);
-    _remainingSamples = static_cast<int32_t>
+    _frameLengthSamples = static_cast<WebRtc_Word16> (_outputFrequencyHz / 100);
+    _eventCode = static_cast<WebRtc_Word16> (eventCode);
+    _attenuationDb = static_cast<WebRtc_Word16> (attenuationDb);
+    _remainingSamples = static_cast<WebRtc_Word32>
         (lengthMs * (_outputFrequencyHz / 1000));
     _lengthMs = lengthMs;
 
@@ -162,16 +162,16 @@ DtmfInband::ResetTone()
 
     ReInit();
 
-    _frameLengthSamples = static_cast<int16_t> (_outputFrequencyHz / 100);
-    _remainingSamples = static_cast<int32_t>
+    _frameLengthSamples = static_cast<WebRtc_Word16> (_outputFrequencyHz / 100);
+    _remainingSamples = static_cast<WebRtc_Word32>
         (_lengthMs * (_outputFrequencyHz / 1000));
 
     return 0;
 }
 
 int
-DtmfInband::StartTone(const uint8_t eventCode,
-                      int32_t attenuationDb)
+DtmfInband::StartTone(const WebRtc_UWord8 eventCode,
+                      WebRtc_Word32 attenuationDb)
 {
     CriticalSectionScoped lock(&_critSect);
 
@@ -188,9 +188,9 @@ DtmfInband::StartTone(const uint8_t eventCode,
 
     ReInit();
 
-    _frameLengthSamples = static_cast<int16_t> (_outputFrequencyHz / 100);
-    _eventCode = static_cast<int16_t> (eventCode);
-    _attenuationDb = static_cast<int16_t> (attenuationDb);
+    _frameLengthSamples = static_cast<WebRtc_Word16> (_outputFrequencyHz / 100);
+    _eventCode = static_cast<WebRtc_Word16> (eventCode);
+    _attenuationDb = static_cast<WebRtc_Word16> (attenuationDb);
     _playing = true;
 
     return 0;
@@ -226,8 +226,8 @@ DtmfInband::IsAddingTone()
 }
 
 int
-DtmfInband::Get10msTone(int16_t output[320],
-                        uint16_t& outputSizeInSamples)
+DtmfInband::Get10msTone(WebRtc_Word16 output[320],
+                        WebRtc_UWord16& outputSizeInSamples)
 {
     CriticalSectionScoped lock(&_critSect);
     if (DtmfFix_generate(output,
@@ -255,22 +255,22 @@ DtmfInband::UpdateDelaySinceLastTone()
     }
 }
 
-uint32_t
+WebRtc_UWord32
 DtmfInband::DelaySinceLastTone() const
 {
     return _delaySinceLastToneMS;
 }
 
-int16_t
-DtmfInband::DtmfFix_generate(int16_t *decoded,
-                             const int16_t value,
-                             const int16_t volume,
-                             const int16_t frameLen,
-                             const int16_t fs)
+WebRtc_Word16
+DtmfInband::DtmfFix_generate(WebRtc_Word16 *decoded,
+                             const WebRtc_Word16 value,
+                             const WebRtc_Word16 volume,
+                             const WebRtc_Word16 frameLen,
+                             const WebRtc_Word16 fs)
 {
-    const int16_t *a_times2Tbl;
-    const int16_t *y2_Table;
-    int16_t a1_times2 = 0, a2_times2 = 0;
+    const WebRtc_Word16 *a_times2Tbl;
+    const WebRtc_Word16 *y2_Table;
+    WebRtc_Word16 a1_times2 = 0, a2_times2 = 0;
 
     if (fs==8000) {
         a_times2Tbl=Dtmf_a_times2Tab8Khz;
@@ -347,24 +347,24 @@ DtmfInband::DtmfFix_generate(int16_t *decoded,
                                    frameLen));
 }
 
-int16_t
-DtmfInband::DtmfFix_generateSignal(const int16_t a1_times2,
-                                   const int16_t a2_times2,
-                                   const int16_t volume,
-                                   int16_t *signal,
-                                   const int16_t length)
+WebRtc_Word16
+DtmfInband::DtmfFix_generateSignal(const WebRtc_Word16 a1_times2,
+                                   const WebRtc_Word16 a2_times2,
+                                   const WebRtc_Word16 volume,
+                                   WebRtc_Word16 *signal,
+                                   const WebRtc_Word16 length)
 {
     int i;
 
     /* Generate Signal */
     for (i=0;i<length;i++) {
-        int32_t tempVal;
-        int16_t tempValLow, tempValHigh;
+        WebRtc_Word32 tempVal;
+        WebRtc_Word16 tempValLow, tempValHigh;
 
         /* Use recursion formula y[n] = a*2*y[n-1] - y[n-2] */
-        tempValLow  = (int16_t)(((( (int32_t)(a1_times2 *
+        tempValLow  = (WebRtc_Word16)(((( (WebRtc_Word32)(a1_times2 *
             _oldOutputLow[1])) + 8192) >> 14) - _oldOutputLow[0]);
-        tempValHigh = (int16_t)(((( (int32_t)(a2_times2 *
+        tempValHigh = (WebRtc_Word16)(((( (WebRtc_Word32)(a2_times2 *
             _oldOutputHigh[1])) + 8192) >> 14) - _oldOutputHigh[0]);
 
         /* Update memory */
@@ -373,14 +373,14 @@ DtmfInband::DtmfFix_generateSignal(const int16_t a1_times2,
         _oldOutputHigh[0]=_oldOutputHigh[1];
         _oldOutputHigh[1]=tempValHigh;
 
-        tempVal = (int32_t)(kDtmfAmpLow * tempValLow) +
-            (int32_t)(kDtmfAmpHigh * tempValHigh);
+        tempVal = (WebRtc_Word32)(kDtmfAmpLow * tempValLow) +
+            (WebRtc_Word32)(kDtmfAmpHigh * tempValHigh);
 
         /* Norm the signal to Q14 */
         tempVal=(tempVal+16384)>>15;
 
         /* Scale the signal to correct dbM0 value */
-        signal[i]=(int16_t)((tempVal*Dtmf_dBm0kHz[volume]+8192)>>14);
+        signal[i]=(WebRtc_Word16)((tempVal*Dtmf_dBm0kHz[volume]+8192)>>14);
     }
 
     return(0);

@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/video_engine/test/libvietest/include/tb_I420_codec.h"
+#include "video_engine/test/libvietest/include/tb_I420_codec.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
 
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 
 TbI420Encoder::TbI420Encoder() :
     _inited(false), _encodedImage(), _encodedCompleteCallback(NULL)
@@ -33,10 +33,11 @@ TbI420Encoder::~TbI420Encoder()
     }
 }
 
-int32_t TbI420Encoder::VersionStatic(char* version, int32_t length)
+WebRtc_Word32 TbI420Encoder::VersionStatic(char* version,
+                                           WebRtc_Word32 length)
 {
     const char* str = "I420 version 1.0.0\n";
-    int32_t verLen = (int32_t) strlen(str);
+    WebRtc_Word32 verLen = (WebRtc_Word32) strlen(str);
     if (verLen > length)
     {
         return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
@@ -45,12 +46,13 @@ int32_t TbI420Encoder::VersionStatic(char* version, int32_t length)
     return verLen;
 }
 
-int32_t TbI420Encoder::Version(char* version, int32_t length) const
+WebRtc_Word32 TbI420Encoder::Version(char* version,
+                                     WebRtc_Word32 length) const
 {
     return VersionStatic(version, length);
 }
 
-int32_t TbI420Encoder::Release()
+WebRtc_Word32 TbI420Encoder::Release()
 {
     _functionCalls.Release++;
     // should allocate an encoded frame and then release it here, for that we
@@ -64,7 +66,7 @@ int32_t TbI420Encoder::Release()
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Encoder::Reset()
+WebRtc_Word32 TbI420Encoder::Reset()
 {
     _functionCalls.Reset++;
     if (!_inited)
@@ -75,14 +77,15 @@ int32_t TbI420Encoder::Reset()
 
 }
 
-int32_t TbI420Encoder::SetChannelParameters(uint32_t packetLoss, int rtt) {
+WebRtc_Word32 TbI420Encoder::SetChannelParameters(WebRtc_UWord32 packetLoss,
+                                                  int rtt) {
   _functionCalls.SetChannelParameters++;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Encoder::InitEncode(const webrtc::VideoCodec* inst,
-                                  int32_t /*numberOfCores*/,
-                                  uint32_t /*maxPayloadSize */)
+WebRtc_Word32 TbI420Encoder::InitEncode(const webrtc::VideoCodec* inst,
+                                        WebRtc_Word32 /*numberOfCores*/,
+                                        WebRtc_UWord32 /*maxPayloadSize */)
 {
     _functionCalls.InitEncode++;
     if (inst == NULL)
@@ -101,8 +104,8 @@ int32_t TbI420Encoder::InitEncode(const webrtc::VideoCodec* inst,
         _encodedImage._buffer = NULL;
         _encodedImage._size = 0;
     }
-    const uint32_t newSize = (3 * inst->width * inst->height) >> 1;
-    uint8_t* newBuffer = new uint8_t[newSize];
+    const WebRtc_UWord32 newSize = (3 * inst->width * inst->height) >> 1;
+    WebRtc_UWord8* newBuffer = new WebRtc_UWord8[newSize];
     if (newBuffer == NULL)
     {
         return WEBRTC_VIDEO_CODEC_MEMORY;
@@ -115,7 +118,7 @@ int32_t TbI420Encoder::InitEncode(const webrtc::VideoCodec* inst,
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Encoder::Encode(
+WebRtc_Word32 TbI420Encoder::Encode(
     const webrtc::I420VideoFrame& inputImage,
     const webrtc::CodecSpecificInfo* /*codecSpecificInfo*/,
     const std::vector<webrtc::VideoFrameType>* /*frameTypes*/)
@@ -147,7 +150,7 @@ int32_t TbI420Encoder::Encode(
             _encodedImage._buffer = NULL;
             _encodedImage._size = 0;
         }
-        uint8_t* newBuffer = new uint8_t[reqSize];
+        WebRtc_UWord8* newBuffer = new WebRtc_UWord8[reqSize];
         if (newBuffer == NULL)
         {
             return WEBRTC_VIDEO_CODEC_MEMORY;
@@ -165,7 +168,7 @@ int32_t TbI420Encoder::Encode(
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Encoder::RegisterEncodeCompleteCallback(
+WebRtc_Word32 TbI420Encoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback)
 {
     _functionCalls.RegisterEncodeCompleteCallback++;
@@ -173,20 +176,21 @@ int32_t TbI420Encoder::RegisterEncodeCompleteCallback(
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Encoder::SetRates(uint32_t newBitRate, uint32_t frameRate)
+WebRtc_Word32 TbI420Encoder::SetRates(WebRtc_UWord32 newBitRate,
+                                      WebRtc_UWord32 frameRate)
 {
     _functionCalls.SetRates++;
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Encoder::SetPeriodicKeyFrames(bool enable)
+WebRtc_Word32 TbI420Encoder::SetPeriodicKeyFrames(bool enable)
 {
     _functionCalls.SetPeriodicKeyFrames++;
     return WEBRTC_VIDEO_CODEC_ERROR;
 }
 
-int32_t TbI420Encoder::CodecConfigParameters(uint8_t* /*buffer*/,
-                                             int32_t /*size*/)
+WebRtc_Word32 TbI420Encoder::CodecConfigParameters(WebRtc_UWord8* /*buffer*/,
+                                                   WebRtc_Word32 /*size*/)
 {
     _functionCalls.CodecConfigParameters++;
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -208,14 +212,14 @@ TbI420Decoder::~TbI420Decoder()
     Release();
 }
 
-int32_t TbI420Decoder::Reset()
+WebRtc_Word32 TbI420Decoder::Reset()
 {
     _functionCalls.Reset++;
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Decoder::InitDecode(const webrtc::VideoCodec* inst,
-                                  int32_t /*numberOfCores */)
+WebRtc_Word32 TbI420Decoder::InitDecode(const webrtc::VideoCodec* inst,
+                                        WebRtc_Word32 /*numberOfCores */)
 {
     _functionCalls.InitDecode++;
     if (inst == NULL)
@@ -228,19 +232,16 @@ int32_t TbI420Decoder::InitDecode(const webrtc::VideoCodec* inst,
     }
     _width = inst->width;
     _height = inst->height;
-    int half_width = (_width + 1 ) / 2 ;
-    _decodedImage.CreateEmptyFrame(_width, _height,
-                                   _width, half_width, half_width);
     _inited = true;
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Decoder::Decode(
+WebRtc_Word32 TbI420Decoder::Decode(
     const webrtc::EncodedImage& inputImage,
     bool /*missingFrames*/,
     const webrtc::RTPFragmentationHeader* /*fragmentation*/,
     const webrtc::CodecSpecificInfo* /*codecSpecificInfo*/,
-    int64_t /*renderTimeMs*/)
+    WebRtc_Word64 /*renderTimeMs*/)
 {
     _functionCalls.Decode++;
     if (inputImage._buffer == NULL)
@@ -260,10 +261,15 @@ int32_t TbI420Decoder::Decode(
         return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }
 
-    int ret = ConvertToI420(webrtc::kI420, inputImage._buffer, 0, 0,
-                           _width, _height,
-                           0, webrtc::kRotateNone, &_decodedImage);
-
+    int size_y = _width * _height;
+    int size_uv = ((_width + 1 ) / 2) * ((_height + 1) / 2);
+    int ret = _decodedImage.CreateFrame(size_y, inputImage._buffer,
+                                        size_uv, inputImage._buffer + size_y,
+                                        size_uv, inputImage._buffer + size_y +
+                                        size_uv,
+                                        _width, _height,
+                                        _width, (_width + 1 ) / 2,
+                                        (_width + 1 ) / 2);
     if (ret < 0)
       return WEBRTC_VIDEO_CODEC_ERROR;
     _decodedImage.set_timestamp(inputImage._timeStamp);
@@ -272,7 +278,7 @@ int32_t TbI420Decoder::Decode(
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Decoder::RegisterDecodeCompleteCallback(
+WebRtc_Word32 TbI420Decoder::RegisterDecodeCompleteCallback(
     webrtc::DecodedImageCallback* callback)
 {
     _functionCalls.RegisterDecodeCompleteCallback++;
@@ -280,7 +286,7 @@ int32_t TbI420Decoder::RegisterDecodeCompleteCallback(
     return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t TbI420Decoder::Release()
+WebRtc_Word32 TbI420Decoder::Release()
 {
     _functionCalls.Release++;
     _inited = false;

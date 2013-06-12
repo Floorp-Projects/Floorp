@@ -23,11 +23,11 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_SortSq(
-    int16_t *xq,   /* (o) the quantized value */
-    int16_t *index,  /* (o) the quantization index */
-    int16_t x,   /* (i) the value to quantize */
-    const int16_t *cb, /* (i) the quantization codebook */
-    int16_t cb_size  /* (i) the size of the quantization codebook */
+    WebRtc_Word16 *xq,   /* (o) the quantized value */
+    WebRtc_Word16 *index,  /* (o) the quantization index */
+    WebRtc_Word16 x,   /* (i) the value to quantize */
+    const WebRtc_Word16 *cb, /* (i) the quantization codebook */
+    WebRtc_Word16 cb_size  /* (i) the size of the quantization codebook */
                           ){
   int i;
 
@@ -40,7 +40,7 @@ void WebRtcIlbcfix_SortSq(
       i++;
     }
 
-    if (x > WEBRTC_SPL_RSHIFT_W32(( (int32_t)cb[i] + cb[i - 1] + 1),1)) {
+    if (x > WEBRTC_SPL_RSHIFT_W32(( (WebRtc_Word32)cb[i] + cb[i - 1] + 1),1)) {
       *index = i;
       *xq = cb[i];
     } else {

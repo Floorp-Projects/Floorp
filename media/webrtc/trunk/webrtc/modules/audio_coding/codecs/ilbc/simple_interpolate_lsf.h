@@ -26,19 +26,19 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_SimpleInterpolateLsf(
-    int16_t *syntdenum, /* (o) the synthesis filter denominator
+    WebRtc_Word16 *syntdenum, /* (o) the synthesis filter denominator
                                    resulting from the quantized
                                    interpolated lsf Q12 */
-    int16_t *weightdenum, /* (o) the weighting filter denominator
+    WebRtc_Word16 *weightdenum, /* (o) the weighting filter denominator
                                    resulting from the unquantized
                                    interpolated lsf Q12 */
-    int16_t *lsf,  /* (i) the unquantized lsf coefficients Q13 */
-    int16_t *lsfdeq,  /* (i) the dequantized lsf coefficients Q13 */
-    int16_t *lsfold,  /* (i) the unquantized lsf coefficients of
+    WebRtc_Word16 *lsf,  /* (i) the unquantized lsf coefficients Q13 */
+    WebRtc_Word16 *lsfdeq,  /* (i) the dequantized lsf coefficients Q13 */
+    WebRtc_Word16 *lsfold,  /* (i) the unquantized lsf coefficients of
                                            the previous signal frame Q13 */
-    int16_t *lsfdeqold, /* (i) the dequantized lsf coefficients of the
+    WebRtc_Word16 *lsfdeqold, /* (i) the dequantized lsf coefficients of the
                                    previous signal frame Q13 */
-    int16_t length,  /* (i) should equate FILTERORDER */
+    WebRtc_Word16 length,  /* (i) should equate FILTERORDER */
     iLBC_Enc_Inst_t *iLBCenc_inst
     /* (i/o) the encoder state structure */
                                         );

@@ -14,10 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/common_types.h"
-#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "audio_coding_module.h"
+#include "common_types.h"
+#include "gtest/gtest.h"
 
 #define NUM_CODECS_WITH_FIXED_PAYLOAD_TYPE 13
 
@@ -116,15 +115,15 @@ void ACMTestTimer::Adjust()
 }
 
 
-int16_t
+WebRtc_Word16
 ChooseCodec(
     CodecInst& codecInst)
 {
 
     PrintCodecs();
     //AudioCodingModule* tmpACM = AudioCodingModule::Create(0);
-    uint8_t noCodec = AudioCodingModule::NumberOfCodecs();
-    int8_t codecID;
+    WebRtc_UWord8 noCodec = AudioCodingModule::NumberOfCodecs();
+    WebRtc_Word8 codecID;
     bool outOfRange = false;
     char myStr[15] = "";
     do
@@ -139,27 +138,27 @@ ChooseCodec(
         }
     } while(outOfRange);
 
-    CHECK_ERROR(AudioCodingModule::Codec((uint8_t)codecID, &codecInst));
+    CHECK_ERROR(AudioCodingModule::Codec((WebRtc_UWord8)codecID, codecInst));
     return 0;
 }
 
 void
 PrintCodecs()
 {
-    uint8_t noCodec = AudioCodingModule::NumberOfCodecs();
-
+    WebRtc_UWord8 noCodec = AudioCodingModule::NumberOfCodecs();
+        
     CodecInst codecInst;
     printf("No  Name                [Hz]    [bps]\n");     
-    for(uint8_t codecCntr = 0; codecCntr < noCodec; codecCntr++)
+    for(WebRtc_UWord8 codecCntr = 0; codecCntr < noCodec; codecCntr++)
     {
-        AudioCodingModule::Codec(codecCntr, &codecInst);
+        AudioCodingModule::Codec(codecCntr, codecInst);
         printf("%2d- %-18s %5d   %6d\n", 
             codecCntr, codecInst.plname, codecInst.plfreq, codecInst.rate);
     }
 
 }
 
-CircularBuffer::CircularBuffer(uint32_t len):
+CircularBuffer::CircularBuffer(WebRtc_UWord32 len):
 _buff(NULL),
 _idx(0),
 _buffIsFull(false),
@@ -175,7 +174,7 @@ _sumSqr(0)
     }
     else
     {
-        for(uint32_t n = 0; n < len; n++)
+        for(WebRtc_UWord32 n = 0; n < len; n++)
         {
             _buff[n] = 0;
         }
@@ -239,7 +238,7 @@ CircularBuffer::SetArithMean(
 
     if(enable && !_calcAvg)
     {
-        uint32_t lim;
+        WebRtc_UWord32 lim;
         if(_buffIsFull)
         {
             lim = _buffLen;
@@ -249,7 +248,7 @@ CircularBuffer::SetArithMean(
             lim = _idx;
         }
         _sum = 0;
-        for(uint32_t n = 0; n < lim; n++)
+        for(WebRtc_UWord32 n = 0; n < lim; n++)
         {
             _sum += _buff[n];
         }
@@ -265,7 +264,7 @@ CircularBuffer::SetVariance(
 
     if(enable && !_calcVar)
     {
-        uint32_t lim;
+        WebRtc_UWord32 lim;
         if(_buffIsFull)
         {
             lim = _buffLen;
@@ -275,7 +274,7 @@ CircularBuffer::SetVariance(
             lim = _idx;
         }
         _sumSqr = 0;
-        for(uint32_t n = 0; n < lim; n++)
+        for(WebRtc_UWord32 n = 0; n < lim; n++)
         {
             _sumSqr += _buff[n] * _buff[n];
         }
@@ -283,7 +282,7 @@ CircularBuffer::SetVariance(
     _calcAvg = enable;
 }
 
-int16_t
+WebRtc_Word16
 CircularBuffer::ArithMean(double& mean)
 {
     assert(_buffLen > 0);
@@ -309,7 +308,7 @@ CircularBuffer::ArithMean(double& mean)
     }
 }
 
-int16_t
+WebRtc_Word16
 CircularBuffer::Variance(double& var)
 {
     assert(_buffLen > 0);
@@ -366,7 +365,7 @@ FixedPayloadTypeCodec(const char* payloadName)
 
 DTMFDetector::DTMFDetector()
 {
-    for(int16_t n = 0; n < 1000; n++)
+    for(WebRtc_Word16 n = 0; n < 1000; n++)
     {
         _toneCntr[n] = 0;
     }
@@ -376,7 +375,7 @@ DTMFDetector::~DTMFDetector()
 {
 }
 
-int32_t DTMFDetector::IncomingDtmf(const uint8_t digitDtmf, const bool /* toneEnded */)
+WebRtc_Word32 DTMFDetector::IncomingDtmf(const WebRtc_UWord8 digitDtmf, const bool /* toneEnded */)
 {
     fprintf(stdout, "%d-",digitDtmf);
     _toneCntr[digitDtmf]++;
@@ -385,7 +384,7 @@ int32_t DTMFDetector::IncomingDtmf(const uint8_t digitDtmf, const bool /* toneEn
 
 void DTMFDetector::PrintDetectedDigits()
 {
-    for(int16_t n = 0; n < 1000; n++)
+    for(WebRtc_Word16 n = 0; n < 1000; n++)
     {
         if(_toneCntr[n] > 0)
         {
@@ -424,9 +423,9 @@ VADCallback::PrintFrameTypes()
     fprintf(stdout, "Passive DTX super-wideband... %d\n", _numFrameTypes[5]);
 }
 
-int32_t 
+WebRtc_Word32 
 VADCallback::InFrameType(
-    int16_t frameType)
+    WebRtc_Word16 frameType)
 {
     _numFrameTypes[frameType]++;
     return 0;

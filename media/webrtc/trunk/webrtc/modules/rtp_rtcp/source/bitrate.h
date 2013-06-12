@@ -20,40 +20,40 @@
 
 namespace webrtc {
 
-class Clock;
+class RtpRtcpClock;
 
 class Bitrate {
  public:
-  explicit Bitrate(Clock* clock);
+  explicit Bitrate(RtpRtcpClock* clock);
 
   // Calculates rates.
   void Process();
 
   // Update with a packet.
-  void Update(const int32_t bytes);
+  void Update(const WebRtc_Word32 bytes);
 
   // Packet rate last second, updated roughly every 100 ms.
-  uint32_t PacketRate() const;
+  WebRtc_UWord32 PacketRate() const;
 
   // Bitrate last second, updated roughly every 100 ms.
-  uint32_t BitrateLast() const;
+  WebRtc_UWord32 BitrateLast() const;
 
   // Bitrate last second, updated now.
-  uint32_t BitrateNow() const;
+  WebRtc_UWord32 BitrateNow() const;
 
  protected:
-  Clock* clock_;
+  RtpRtcpClock& clock_;
 
  private:
-  uint32_t packet_rate_;
-  uint32_t bitrate_;
-  uint8_t bitrate_next_idx_;
-  int64_t packet_rate_array_[10];
-  int64_t bitrate_array_[10];
-  int64_t bitrate_diff_ms_[10];
-  int64_t time_last_rate_update_;
-  uint32_t bytes_count_;
-  uint32_t packet_count_;
+  WebRtc_UWord32 packet_rate_;
+  WebRtc_UWord32 bitrate_;
+  WebRtc_UWord8 bitrate_next_idx_;
+  WebRtc_Word64 packet_rate_array_[10];
+  WebRtc_Word64 bitrate_array_[10];
+  WebRtc_Word64 bitrate_diff_ms_[10];
+  WebRtc_Word64 time_last_rate_update_;
+  WebRtc_UWord32 bytes_count_;
+  WebRtc_UWord32 packet_count_;
 };
 
 }  // namespace webrtc

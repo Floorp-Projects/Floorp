@@ -39,7 +39,7 @@ int RemixAndResample(const AudioFrame& src_frame,
   if (resampler->ResetIfNeeded(src_frame.sample_rate_hz_,
                                dst_frame->sample_rate_hz_,
                                resampler_type) == -1) {
-    dst_frame->CopyFrom(src_frame);
+    *dst_frame = src_frame;
     WEBRTC_TRACE(kTraceError, kTraceVoice, -1,
                 "%s ResetIfNeeded failed", __FUNCTION__);
     return -1;
@@ -53,7 +53,7 @@ int RemixAndResample(const AudioFrame& src_frame,
                       out_length) == 0) {
     dst_frame->samples_per_channel_ = out_length / audio_ptr_num_channels;
   } else {
-    dst_frame->CopyFrom(src_frame);
+    *dst_frame = src_frame;
     WEBRTC_TRACE(kTraceError, kTraceVoice, -1,
                  "%s resampling failed", __FUNCTION__);
     return -1;

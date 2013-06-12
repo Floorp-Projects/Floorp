@@ -8,136 +8,255 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cassert>
+#include "receiver_tests.h"
+#include "video_coding.h"
+#include "rtp_rtcp.h"
+#include "trace.h"
+#include "thread_wrapper.h"
+#include "../source/event.h"
+#include "test_macros.h"
+#include "rtp_player.h"
 
-#include "webrtc/modules/video_coding/main/test/receiver_tests.h"
-#include "webrtc/modules/video_coding/main/test/vcm_payload_sink_factory.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/test/testsupport/fileutils.h"
+#include <string.h>
 
-using webrtc::rtpplayer::RtpPlayerInterface;
-using webrtc::rtpplayer::VcmPayloadSinkFactory;
+using namespace webrtc;
 
-namespace {
-
-const bool kConfigProtectionEnabled = true;
-const webrtc::VCMVideoProtection kConfigProtectionMethod =
-    webrtc::kProtectionDualDecoder;
-const float kConfigLossRate = 0.05f;
-const uint32_t kConfigRttMs = 50;
-const bool kConfigReordering = false;
-const uint32_t kConfigRenderDelayMs = 0;
-const uint32_t kConfigMinPlayoutDelayMs = 0;
-const int64_t kConfigMaxRuntimeMs = 10000;
-
-} // namespace
-
-bool PlayerThread(void* obj) {
-  assert(obj);
-  RtpPlayerInterface* rtp_player = static_cast<RtpPlayerInterface*>(obj);
-
-  webrtc::scoped_ptr<webrtc::EventWrapper> wait_event(
-      webrtc::EventWrapper::Create());
-  if (wait_event.get() == NULL) {
-    return false;
-  }
-
-  webrtc::Clock* clock = webrtc::Clock::GetRealTimeClock();
-  if (rtp_player->NextPacket(clock->TimeInMilliseconds()) < 0) {
-    return false;
-  }
-  wait_event->Wait(rtp_player->TimeUntilNextPacket());
-
-  return true;
+bool ProcessingThread(void* obj)
+{
+    SharedState* state = static_cast<SharedState*>(obj);
+    if (state->_vcm.TimeUntilNextProcess() <= 0)
+    {
+        if (state->_vcm.Process() < 0)
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
-bool ProcessingThread(void* obj) {
-  assert(obj);
-  return static_cast<VcmPayloadSinkFactory*>(obj)->ProcessAll();
+bool RtpReaderThread(void* obj)
+{
+    SharedState* state = static_cast<SharedState*>(obj);
+    EventWrapper& waitEvent = *EventWrapper::Create();
+    // RTP stream main loop
+    TickTimeBase clock;
+    if (state->_rtpPlayer.NextPacket(clock.MillisecondTimestamp()) < 0)
+    {
+        return false;
+    }
+    waitEvent.Wait(state->_rtpPlayer.TimeUntilNextPacket());
+    delete &waitEvent;
+    return true;
 }
 
-bool DecodeThread(void* obj) {
-  assert(obj);
-  return static_cast<VcmPayloadSinkFactory*>(obj)->DecodeAll();
+bool DecodeThread(void* obj)
+{
+    SharedState* state = static_cast<SharedState*>(obj);
+    state->_vcm.Decode(10000);
+    while (state->_vcm.DecodeDualFrame(0) == 1) {
+    }
+    return true;
 }
 
-int RtpPlayMT(const CmdArgs& args) {
-  std::string trace_file = webrtc::test::OutputPath() + "receiverTestTrace.txt";
-  webrtc::Trace::CreateTrace();
-  webrtc::Trace::SetTraceFile(trace_file.c_str());
-  webrtc::Trace::SetLevelFilter(webrtc::kTraceAll);
-
-  webrtc::rtpplayer::PayloadTypes payload_types;
-  payload_types.push_back(webrtc::rtpplayer::PayloadCodecTuple(
-      VCM_VP8_PAYLOAD_TYPE, "VP8", webrtc::kVideoCodecVP8));
-
-  std::string output_file = args.outputFile;
-  if (output_file == "") {
-    output_file = webrtc::test::OutputPath() + "RtpPlayMT_decoded.yuv";
-  }
-
-  webrtc::Clock* clock = webrtc::Clock::GetRealTimeClock();
-  VcmPayloadSinkFactory factory(output_file, clock, kConfigProtectionEnabled,
-      kConfigProtectionMethod, kConfigRttMs, kConfigRenderDelayMs,
-      kConfigMinPlayoutDelayMs, false);
-  webrtc::scoped_ptr<RtpPlayerInterface> rtp_player(webrtc::rtpplayer::Create(
-      args.inputFile, &factory, clock, payload_types, kConfigLossRate,
-      kConfigRttMs, kConfigReordering));
-  if (rtp_player.get() == NULL) {
+int RtpPlayMT(CmdArgs& args, int releaseTestNo, webrtc::VideoCodecType releaseTestVideoType)
+{
+    // Don't run these tests with debug events.
+#if defined(EVENT_DEBUG)
     return -1;
-  }
+#endif
 
-  {
-    webrtc::scoped_ptr<webrtc::ThreadWrapper> player_thread(
-        webrtc::ThreadWrapper::CreateThread(PlayerThread, rtp_player.get(),
-            webrtc::kNormalPriority, "PlayerThread"));
-    if (player_thread.get() == NULL) {
-      printf("Unable to start RTP reader thread\n");
-      return -1;
+    // BEGIN Settings
+
+    bool protectionEnabled = true;
+    VCMVideoProtection protection = kProtectionDualDecoder;
+    WebRtc_UWord8 rttMS = 50;
+    float lossRate = 0.05f;
+    WebRtc_UWord32 renderDelayMs = 0;
+    WebRtc_UWord32 minPlayoutDelayMs = 0;
+    const WebRtc_Word64 MAX_RUNTIME_MS = 10000;
+    std::string outFilename = args.outputFile;
+    if (outFilename == "")
+        outFilename = test::OutputPath() + "RtpPlayMT_decoded.yuv";
+
+    bool nackEnabled = (protectionEnabled &&
+                (protection == kProtectionDualDecoder ||
+                protection == kProtectionNack ||
+                kProtectionNackFEC));
+    TickTimeBase clock;
+    VideoCodingModule* vcm =
+            VideoCodingModule::Create(1, &clock);
+    RtpDataCallback dataCallback(vcm);
+    std::string rtpFilename;
+    rtpFilename = args.inputFile;
+    if (releaseTestNo > 0)
+    {
+        // Setup a release test
+        switch (releaseTestVideoType)
+        {
+        case webrtc::kVideoCodecVP8:
+            rtpFilename = args.inputFile;
+            outFilename = test::OutputPath() + "MTReceiveTest_VP8";
+            break;
+        default:
+            return -1;
+        }
+        switch (releaseTestNo)
+        {
+        case 1:
+            // Normal execution
+            protectionEnabled = false;
+            nackEnabled = false;
+            rttMS = 0;
+            lossRate = 0.0f;
+            outFilename += "_Normal.yuv";
+            break;
+        case 2:
+            // Packet loss
+            protectionEnabled = false;
+            nackEnabled = false;
+            rttMS = 0;
+            lossRate = 0.05f;
+            outFilename += "_0.05.yuv";
+            break;
+        case 3:
+            // Packet loss and NACK
+            protection = kProtectionNack;
+            nackEnabled = true;
+            protectionEnabled = true;
+            rttMS = 100;
+            lossRate = 0.05f;
+            outFilename += "_0.05_NACK_100ms.yuv";
+            break;
+        case 4:
+            // Packet loss and dual decoder
+            // Not implemented
+            return 0;
+            break;
+        default:
+            return -1;
+        }
+        printf("Watch %s to verify that the output is reasonable\n", outFilename.c_str());
+    }
+    RTPPlayer rtpStream(rtpFilename.c_str(), &dataCallback, &clock);
+    PayloadTypeList payloadTypes;
+    payloadTypes.push_front(new PayloadCodecTuple(VCM_VP8_PAYLOAD_TYPE, "VP8",
+                                                  kVideoCodecVP8));
+    Trace::CreateTrace();
+    Trace::SetTraceFile("receiverTestTrace.txt");
+    Trace::SetLevelFilter(webrtc::kTraceAll);
+
+    // END Settings
+
+    // Set up
+
+    SharedState mtState(*vcm, rtpStream);
+
+    if (rtpStream.Initialize(&payloadTypes) < 0)
+    {
+        return -1;
+    }
+    rtpStream.SimulatePacketLoss(lossRate, nackEnabled, rttMS);
+
+    WebRtc_Word32 ret = vcm->InitializeReceiver();
+    if (ret < 0)
+    {
+        return -1;
     }
 
-    webrtc::scoped_ptr<webrtc::ThreadWrapper> processing_thread(
-        webrtc::ThreadWrapper::CreateThread(ProcessingThread, &factory,
-            webrtc::kNormalPriority, "ProcessingThread"));
-    if (processing_thread.get() == NULL) {
-      printf("Unable to start processing thread\n");
-      return -1;
+    // Create and start all threads
+    ThreadWrapper* processingThread = ThreadWrapper::CreateThread(ProcessingThread,
+            &mtState, kNormalPriority, "ProcessingThread");
+    ThreadWrapper* rtpReaderThread = ThreadWrapper::CreateThread(RtpReaderThread,
+            &mtState, kNormalPriority, "RtpReaderThread");
+    ThreadWrapper* decodeThread = ThreadWrapper::CreateThread(DecodeThread,
+            &mtState, kNormalPriority, "DecodeThread");
+
+    // Register receive codecs in VCM
+    for (PayloadTypeList::iterator it = payloadTypes.begin();
+        it != payloadTypes.end(); ++it) {
+        PayloadCodecTuple* payloadType = *it;
+        if (payloadType != NULL)
+        {
+            VideoCodec codec;
+            VideoCodingModule::Codec(payloadType->codecType, &codec);
+            codec.plType = payloadType->payloadType;
+            if (vcm->RegisterReceiveCodec(&codec, 1) < 0)
+            {
+                return -1;
+            }
+        }
     }
 
-    webrtc::scoped_ptr<webrtc::ThreadWrapper> decode_thread(
-        webrtc::ThreadWrapper::CreateThread(DecodeThread, &factory,
-            webrtc::kNormalPriority, "DecodeThread"));
-    if (decode_thread.get() == NULL) {
-      printf("Unable to start decode thread\n");
-      return -1;
+    if (processingThread != NULL)
+    {
+        unsigned int tid;
+        processingThread->Start(tid);
+    }
+    else
+    {
+        printf("Unable to start processing thread\n");
+        return -1;
+    }
+    if (rtpReaderThread != NULL)
+    {
+        unsigned int tid;
+        rtpReaderThread->Start(tid);
+    }
+    else
+    {
+        printf("Unable to start RTP reader thread\n");
+        return -1;
+    }
+    if (decodeThread != NULL)
+    {
+        unsigned int tid;
+        decodeThread->Start(tid);
+    }
+    else
+    {
+        printf("Unable to start decode thread\n");
+        return -1;
     }
 
-    webrtc::scoped_ptr<webrtc::EventWrapper> wait_event(
-        webrtc::EventWrapper::Create());
-    if (wait_event.get() == NULL) {
-      printf("Unable to create wait event\n");
-      return -1;
+    FrameReceiveCallback receiveCallback(outFilename);
+    vcm->RegisterReceiveCallback(&receiveCallback);
+    vcm->RegisterPacketRequestCallback(&rtpStream);
+
+    vcm->SetChannelParameters(0, 0, rttMS);
+    vcm->SetVideoProtection(protection, protectionEnabled);
+    vcm->SetRenderDelay(renderDelayMs);
+    vcm->SetMinimumPlayoutDelay(minPlayoutDelayMs);
+
+    EventWrapper& waitEvent = *EventWrapper::Create();
+
+    // Decode for 10 seconds and then tear down and exit.
+    waitEvent.Wait(MAX_RUNTIME_MS);
+
+    // Tear down
+    while (!payloadTypes.empty())
+    {
+        delete payloadTypes.front();
+        payloadTypes.pop_front();
     }
-
-    unsigned int dummy_thread_id;
-    player_thread->Start(dummy_thread_id);
-    processing_thread->Start(dummy_thread_id);
-    decode_thread->Start(dummy_thread_id);
-
-    wait_event->Wait(kConfigMaxRuntimeMs);
-
-    while (!player_thread->Stop()) {
+    while (!processingThread->Stop())
+    {
+        ;
     }
-    while (!processing_thread->Stop()) {
+    while (!rtpReaderThread->Stop())
+    {
+        ;
     }
-    while (!decode_thread->Stop()) {
+    while (!decodeThread->Stop())
+    {
+        ;
     }
-  }
-
-  rtp_player->Print();
-
-  webrtc::Trace::ReturnTrace();
-  return 0;
+    VideoCodingModule::Destroy(vcm);
+    vcm = NULL;
+    delete &waitEvent;
+    delete processingThread;
+    delete decodeThread;
+    delete rtpReaderThread;
+    rtpStream.Print();
+    Trace::ReturnTrace();
+    return 0;
 }

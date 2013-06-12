@@ -24,23 +24,23 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_StateConstruct(
-    int16_t idxForMax,   /* (i) 6-bit index for the quantization of
+    WebRtc_Word16 idxForMax,   /* (i) 6-bit index for the quantization of
                                            max amplitude */
-    int16_t *idxVec,   /* (i) vector of quantization indexes */
-    int16_t *syntDenum,  /* (i) synthesis filter denumerator */
-    int16_t *Out_fix,  /* (o) the decoded state vector */
-    int16_t len    /* (i) length of a state vector */
+    WebRtc_Word16 *idxVec,   /* (i) vector of quantization indexes */
+    WebRtc_Word16 *syntDenum,  /* (i) synthesis filter denumerator */
+    WebRtc_Word16 *Out_fix,  /* (o) the decoded state vector */
+    WebRtc_Word16 len    /* (i) length of a state vector */
                                   ) {
   int k;
-  int16_t maxVal;
-  int16_t *tmp1, *tmp2, *tmp3;
+  WebRtc_Word16 maxVal;
+  WebRtc_Word16 *tmp1, *tmp2, *tmp3;
   /* Stack based */
-  int16_t numerator[1+LPC_FILTERORDER];
-  int16_t sampleValVec[2*STATE_SHORT_LEN_30MS+LPC_FILTERORDER];
-  int16_t sampleMaVec[2*STATE_SHORT_LEN_30MS+LPC_FILTERORDER];
-  int16_t *sampleVal = &sampleValVec[LPC_FILTERORDER];
-  int16_t *sampleMa = &sampleMaVec[LPC_FILTERORDER];
-  int16_t *sampleAr = &sampleValVec[LPC_FILTERORDER];
+  WebRtc_Word16 numerator[1+LPC_FILTERORDER];
+  WebRtc_Word16 sampleValVec[2*STATE_SHORT_LEN_30MS+LPC_FILTERORDER];
+  WebRtc_Word16 sampleMaVec[2*STATE_SHORT_LEN_30MS+LPC_FILTERORDER];
+  WebRtc_Word16 *sampleVal = &sampleValVec[LPC_FILTERORDER];
+  WebRtc_Word16 *sampleMa = &sampleMaVec[LPC_FILTERORDER];
+  WebRtc_Word16 *sampleAr = &sampleValVec[LPC_FILTERORDER];
 
   /* initialization of coefficients */
 
@@ -60,7 +60,7 @@ void WebRtcIlbcfix_StateConstruct(
     for(k=0; k<len; k++){
       /*the shifting is due to the Q13 in sq4_fixQ13[i], also the adding of 2097152 (= 0.5 << 22)
         maxVal is in Q8 and result is in Q(-1) */
-      (*tmp1) = (int16_t) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(int32_t)2097152) >> 22);
+      (*tmp1) = (WebRtc_Word16) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(WebRtc_Word32)2097152) >> 22);
       tmp1++;
       tmp2--;
     }
@@ -68,7 +68,7 @@ void WebRtcIlbcfix_StateConstruct(
     for(k=0; k<len; k++){
       /*the shifting is due to the Q13 in sq4_fixQ13[i], also the adding of 262144 (= 0.5 << 19)
         maxVal is in Q5 and result is in Q(-1) */
-      (*tmp1) = (int16_t) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(int32_t)262144) >> 19);
+      (*tmp1) = (WebRtc_Word16) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(WebRtc_Word32)262144) >> 19);
       tmp1++;
       tmp2--;
     }
@@ -76,7 +76,7 @@ void WebRtcIlbcfix_StateConstruct(
     for(k=0; k<len; k++){
       /*the shifting is due to the Q13 in sq4_fixQ13[i], also the adding of 65536 (= 0.5 << 17)
         maxVal is in Q3 and result is in Q(-1) */
-      (*tmp1) = (int16_t) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(int32_t)65536) >> 17);
+      (*tmp1) = (WebRtc_Word16) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(WebRtc_Word32)65536) >> 17);
       tmp1++;
       tmp2--;
     }
@@ -93,11 +93,11 @@ void WebRtcIlbcfix_StateConstruct(
   /* Run MA filter + AR filter */
   WebRtcSpl_FilterMAFastQ12(
       sampleVal, sampleMa,
-      numerator, LPC_FILTERORDER+1, (int16_t)(len + LPC_FILTERORDER));
+      numerator, LPC_FILTERORDER+1, (WebRtc_Word16)(len + LPC_FILTERORDER));
   WebRtcSpl_MemSetW16(&sampleMa[len + LPC_FILTERORDER], 0, (len - LPC_FILTERORDER));
   WebRtcSpl_FilterARFastQ12(
       sampleMa, sampleAr,
-      syntDenum, LPC_FILTERORDER+1, (int16_t)(2*len));
+      syntDenum, LPC_FILTERORDER+1, (WebRtc_Word16)(2*len));
 
   tmp1 = &sampleAr[len-1];
   tmp2 = &sampleAr[2*len-1];

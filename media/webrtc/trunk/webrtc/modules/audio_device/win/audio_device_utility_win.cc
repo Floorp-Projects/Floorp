@@ -34,7 +34,7 @@ namespace webrtc
 //  AudioDeviceUtilityWindows() - ctor
 // ----------------------------------------------------------------------------
 
-AudioDeviceUtilityWindows::AudioDeviceUtilityWindows(const int32_t id) :
+AudioDeviceUtilityWindows::AudioDeviceUtilityWindows(const WebRtc_Word32 id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _lastError(AudioDeviceModule::kAdmErrNone)
@@ -66,7 +66,7 @@ AudioDeviceUtilityWindows::~AudioDeviceUtilityWindows()
 //  Init()
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceUtilityWindows::Init()
+WebRtc_Word32 AudioDeviceUtilityWindows::Init()
 {
 
     TCHAR szOS[STRING_MAX_SIZE];

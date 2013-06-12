@@ -153,14 +153,14 @@ int main(int argc, char* argv[])
     if(len != 0){ //len may be 0 in 10ms split case
       /* get channel data if provided */
       if (argc==6) {
-        if (fread(&pli, sizeof(int16_t), 1, chfileid)) {
+        if (fread(&pli, sizeof(WebRtc_Word16), 1, chfileid)) {
           if ((pli!=0)&&(pli!=1)) {
             fprintf(stderr, "Error in channel file\n");
             exit(0);
           }
           if (pli==0) {
             /* Packet loss -> remove info from frame */
-            memset(encoded_data, 0, sizeof(int16_t)*25);
+            memset(encoded_data, 0, sizeof(WebRtc_Word16)*25);
           }
         } else {
           fprintf(stderr, "Error. Channel file too short\n");

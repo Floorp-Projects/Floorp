@@ -11,17 +11,13 @@
 <html>
 <head>
   <title>Single Local Preview (Video Only)</title>
-  <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
-   <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
-  <script src="adapter.js"></script>
   <script type="text/javascript">
   function requestVideo(target) {
-   // Call into getUserMedia via the polyfill (adapter.js).
-    getUserMedia({video: true, audio: false},
-                         function(stream) {
-                           getUserMediaOkCallback(stream, target);
-                         },
-                         getUserMediaFailedCallback);
+    navigator.webkitGetUserMedia({video: true, audio: false},
+                                 function(stream) {
+                                   getUserMediaOkCallback(stream, target);
+                                 },
+                                 getUserMediaFailedCallback);
   }
 
   function getUserMediaFailedCallback(error) {
@@ -29,9 +25,8 @@
   }
 
   function getUserMediaOkCallback(stream, target) {
-     // Call the polyfill wrapper to attach the media stream to this element.
-     attachMediaStream(document.getElementById("view1"), stream);
-     attachMediaStream(document.getElementById("view2"), stream);
+    var streamUrl = webkitURL.createObjectURL(stream);
+    document.getElementById(target).src = streamUrl;
   }
   </script>
 </head>

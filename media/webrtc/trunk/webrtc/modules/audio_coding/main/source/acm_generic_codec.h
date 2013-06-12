@@ -48,7 +48,7 @@ class ACMGenericCodec {
   virtual ACMGenericCodec* CreateInstance() = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t Encode()
+  // WebRtc_Word16 Encode()
   // The function is called to perform an encoding of the audio stored in
   // audio buffer. An encoding is performed only if enough audio, i.e. equal
   // to the frame-size of the codec, exist. The audio frame will be processed
@@ -100,13 +100,13 @@ class ACMGenericCodec {
   //   -1 if error is occurred, otherwise the length of the bit-stream in
   //      bytes.
   //
-  int16_t Encode(uint8_t* bitstream,
-                 int16_t* bitstream_len_byte,
-                 uint32_t* timestamp,
-                 WebRtcACMEncodingType* encoding_type);
+  WebRtc_Word16 Encode(WebRtc_UWord8* bitstream,
+                       WebRtc_Word16* bitstream_len_byte,
+                       WebRtc_UWord32* timestamp,
+                       WebRtcACMEncodingType* encoding_type);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t Decode()
+  // WebRtc_Word16 Decode()
   // This function is used to decode a given bit-stream, without engaging
   // NetEQ.
   //
@@ -127,11 +127,11 @@ class ACMGenericCodec {
   //   -1 if failed to decode,
   //    0 if succeeded.
   //
-  int16_t Decode(uint8_t* bitstream,
-                 int16_t bitstream_len_byte,
-                 int16_t* audio,
-                 int16_t* audio_samples,
-                 int8_t* speech_type);
+  WebRtc_Word16 Decode(WebRtc_UWord8* bitstream,
+                       WebRtc_Word16 bitstream_len_byte,
+                       WebRtc_Word16* audio,
+                       WebRtc_Word16* audio_samples,
+                       WebRtc_Word8* speech_type);
 
   ///////////////////////////////////////////////////////////////////////////
   // void SplitStereoPacket()
@@ -149,8 +149,8 @@ class ACMGenericCodec {
   //                          we simply copy the data and return it both for
   //                          left channel and right channel decoding.
   //
-  virtual void SplitStereoPacket(uint8_t* /* payload */,
-                                 int32_t* /* payload_length */) {}
+  virtual void SplitStereoPacket(WebRtc_UWord8* /* payload */,
+                                 WebRtc_Word32* /* payload_length */) {}
 
   ///////////////////////////////////////////////////////////////////////////
   // bool EncoderInitialized();
@@ -171,7 +171,7 @@ class ACMGenericCodec {
   bool DecoderInitialized();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t EncoderParams()
+  // WebRtc_Word16 EncoderParams()
   // It is called to get encoder parameters. It will call
   // EncoderParamsSafe() in turn.
   //
@@ -184,10 +184,10 @@ class ACMGenericCodec {
   //   -1 if the encoder is not initialized,
   //    0 otherwise.
   //
-  int16_t EncoderParams(WebRtcACMCodecParams *enc_params);
+  WebRtc_Word16 EncoderParams(WebRtcACMCodecParams *enc_params);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t DecoderParams(...)
+  // WebRtc_Word16 DecoderParams(...)
   // It is called to get decoder parameters. It will call DecoderParamsSafe()
   // in turn.
   //
@@ -202,10 +202,10 @@ class ACMGenericCodec {
   //
   //
   bool DecoderParams(WebRtcACMCodecParams *dec_params,
-                     const uint8_t payload_type);
+                     const WebRtc_UWord8 payload_type);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InitEncoder(...)
+  // WebRtc_Word16 InitEncoder(...)
   // This function is called to initialize the encoder with the given
   // parameters.
   //
@@ -220,11 +220,11 @@ class ACMGenericCodec {
   //  -1 if failed to initialize.
   //
   //
-  int16_t InitEncoder(WebRtcACMCodecParams* codec_params,
-                      bool force_initialization);
+  WebRtc_Word16 InitEncoder(WebRtcACMCodecParams* codec_params,
+                            bool force_initialization);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InitDecoder()
+  // WebRtc_Word16 InitDecoder()
   // This function is called to initialize the decoder with the given
   // parameters. (c.f. acm_common_defs.h & common_types.h for the
   // definition of the structure)
@@ -240,11 +240,11 @@ class ACMGenericCodec {
   //  -1 if failed to initialize.
   //
   //
-  int16_t InitDecoder(WebRtcACMCodecParams* codec_params,
-                      bool force_initialization);
+  WebRtc_Word16 InitDecoder(WebRtcACMCodecParams* codec_params,
+                            bool force_initialization);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t RegisterInNetEq(...)
+  // WebRtc_Word32 RegisterInNetEq(...)
   // This function is called to register the decoder in NetEq, with the given
   // payload type.
   //
@@ -256,10 +256,10 @@ class ACMGenericCodec {
   //   -1 if failed to register,
   //    0 if successfully initialized.
   //
-  int32_t RegisterInNetEq(ACMNetEQ* neteq, const CodecInst& codec_inst);
+  WebRtc_Word32 RegisterInNetEq(ACMNetEQ* neteq, const CodecInst& codec_inst);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t Add10MsData(...)
+  // WebRtc_Word32 Add10MsData(...)
   // This function is called to add 10 ms of audio to the audio buffer of
   // the codec.
   //
@@ -277,13 +277,13 @@ class ACMGenericCodec {
   //   -1 if failed
   //    0 otherwise.
   //
-  int32_t Add10MsData(const uint32_t timestamp,
-                      const int16_t* data,
-                      const uint16_t length,
-                      const uint8_t audio_channel);
+  WebRtc_Word32 Add10MsData(const WebRtc_UWord32 timestamp,
+                            const WebRtc_Word16* data,
+                            const WebRtc_UWord16 length,
+                            const WebRtc_UWord8 audio_channel);
 
   ///////////////////////////////////////////////////////////////////////////
-  // uint32_t NoMissedSamples()
+  // WebRtc_UWord32 NoMissedSamples()
   // This function returns the number of samples which are overwritten in
   // the audio buffer. The audio samples are overwritten if the input audio
   // buffer is full, but Add10MsData() is called. (We might remove this
@@ -292,7 +292,7 @@ class ACMGenericCodec {
   // Return Value:
   //   Number of samples which are overwritten.
   //
-  uint32_t NoMissedSamples() const;
+  WebRtc_UWord32 NoMissedSamples() const;
 
   ///////////////////////////////////////////////////////////////////////////
   // void ResetNoMissedSamples()
@@ -302,7 +302,7 @@ class ACMGenericCodec {
   void ResetNoMissedSamples();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t SetBitRate()
+  // WebRtc_Word16 SetBitRate()
   // The function is called to set the encoding rate.
   //
   // Input:
@@ -313,7 +313,7 @@ class ACMGenericCodec {
   //      codec is not rate-adjustable.
   //    0 if the rate is adjusted successfully
   //
-  int16_t SetBitRate(const int32_t bitrate_bps);
+  WebRtc_Word16 SetBitRate(const WebRtc_Word32 bitrate_bps);
 
   ///////////////////////////////////////////////////////////////////////////
   // DestructEncoderInst()
@@ -328,7 +328,7 @@ class ACMGenericCodec {
   void DestructEncoderInst(void* ptr_inst);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t AudioBuffer()
+  // WebRtc_Word16 AudioBuffer()
   // This is used when synchronization of codecs is required. There are cases
   // that the audio buffers of two codecs have to be synched. By calling this
   // function on can get the audio buffer and other related parameters, such
@@ -342,20 +342,20 @@ class ACMGenericCodec {
   //   -1 if fails to copy the audio buffer,
   //    0 if succeeded.
   //
-  int16_t AudioBuffer(WebRtcACMAudioBuff& audio_buff);
+  WebRtc_Word16 AudioBuffer(WebRtcACMAudioBuff& audio_buff);
 
   ///////////////////////////////////////////////////////////////////////////
-  // uint32_t EarliestTimestamp()
+  // WebRtc_UWord32 EarliestTimestamp()
   // Returns the timestamp of the first 10 ms in audio buffer. This is used
   // to identify if a synchronization of two encoders is required.
   //
   // Return value:
   //   timestamp of the first 10 ms audio in the audio buffer.
   //
-  uint32_t EarliestTimestamp() const;
+  WebRtc_UWord32 EarliestTimestamp() const;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t SetAudioBuffer()
+  // WebRtc_Word16 SetAudioBuffer()
   // This function is called to set the audio buffer and the associated
   // parameters to a given value.
   //
@@ -363,10 +363,10 @@ class ACMGenericCodec {
   //   -1 if fails to copy the audio buffer,
   //    0 if succeeded.
   //
-  int16_t SetAudioBuffer(WebRtcACMAudioBuff& audio_buff);
+  WebRtc_Word16 SetAudioBuffer(WebRtcACMAudioBuff& audio_buff);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t SetVAD()
+  // WebRtc_Word16 SetVAD()
   // This is called to set VAD & DTX. If the codec has internal DTX that will
   // be used. If DTX is enabled and the codec does not have internal DTX,
   // WebRtc-VAD will be used to decide if the frame is active. If DTX is
@@ -392,12 +392,12 @@ class ACMGenericCodec {
   //   -1 if failed to set DTX & VAD as specified,
   //    0 if succeeded.
   //
-  int16_t SetVAD(const bool enable_dtx = true,
-                 const bool enable_vad = false,
-                 const ACMVADMode mode = VADNormal);
+  WebRtc_Word16 SetVAD(const bool enable_dtx = true,
+                       const bool enable_vad = false,
+                       const ACMVADMode mode = VADNormal);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t ReplaceInternalDTX()
+  // WebRtc_Word32 ReplaceInternalDTX()
   // This is called to replace the codec internal DTX with WebRtc DTX.
   // This is only valid for G729 where the user has possibility to replace
   // AnnexB with WebRtc DTX. For other codecs this function has no effect.
@@ -409,10 +409,10 @@ class ACMGenericCodec {
   //   -1 if failed to replace internal DTX,
   //    0 if succeeded.
   //
-  int32_t ReplaceInternalDTX(const bool replace_internal_dtx);
+  WebRtc_Word32 ReplaceInternalDTX(const bool replace_internal_dtx);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t IsInternalDTXReplaced()
+  // WebRtc_Word32 IsInternalDTXReplaced()
   // This is called to check if the codec internal DTX is replaced by WebRtc
   // DTX. This is only valid for G729 where the user has possibility to replace
   // AnnexB with WebRtc DTX. For other codecs this function has no effect.
@@ -424,7 +424,7 @@ class ACMGenericCodec {
   //   -1 if failed to check
   //    0 if succeeded.
   //
-  int32_t IsInternalDTXReplaced(bool* internal_dtx_replaced);
+  WebRtc_Word32 IsInternalDTXReplaced(bool* internal_dtx_replaced);
 
   ///////////////////////////////////////////////////////////////////////////
   // void SetNetEqDecodeLock()
@@ -450,7 +450,7 @@ class ACMGenericCodec {
   }
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t GetEstimatedBandwidth()
+  // WebRtc_Word32 GetEstimatedBandwidth()
   // Used to get decoder estimated bandwidth. Only iSAC will provide a value.
   //
   //
@@ -458,10 +458,10 @@ class ACMGenericCodec {
   //   -1 if fails to get decoder estimated bandwidth,
   //    >0 estimated bandwidth in bits/sec.
   //
-  int32_t GetEstimatedBandwidth();
+  WebRtc_Word32 GetEstimatedBandwidth();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t SetEstimatedBandwidth()
+  // WebRtc_Word32 SetEstimatedBandwidth()
   // Used to set estiamted bandwidth sent out of band from other side. Only
   // iSAC will have use for the value.
   //
@@ -472,10 +472,10 @@ class ACMGenericCodec {
   //   -1 if fails to set estimated bandwidth,
   //    0 on success.
   //
-  int32_t SetEstimatedBandwidth(int32_t estimated_bandwidth);
+  WebRtc_Word32 SetEstimatedBandwidth(WebRtc_Word32 estimated_bandwidth);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t GetRedPayload()
+  // WebRtc_Word32 GetRedPayload()
   // Used to get codec specific RED payload (if such is implemented).
   // Currently only done in iSAC.
   //
@@ -487,11 +487,11 @@ class ACMGenericCodec {
   //   -1 if fails to get codec specific RED,
   //    0 if succeeded.
   //
-  int32_t GetRedPayload(uint8_t* red_payload,
-                        int16_t* payload_bytes);
+  WebRtc_Word32 GetRedPayload(WebRtc_UWord8* red_payload,
+                              WebRtc_Word16* payload_bytes);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t ResetEncoder()
+  // WebRtc_Word16 ResetEncoder()
   // By calling this function you would re-initialize the encoder with the
   // current parameters. All the settings, e.g. VAD/DTX, frame-size... should
   // remain unchanged. (In case of iSAC we don't want to lose BWE history.)
@@ -500,10 +500,10 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  int16_t ResetEncoder();
+  WebRtc_Word16 ResetEncoder();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t ResetEncoder()
+  // WebRtc_Word16 ResetEncoder()
   // By calling this function you would re-initialize the decoder with the
   // current parameters.
   //
@@ -511,7 +511,7 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  int16_t ResetDecoder(int16_t payload_type);
+  WebRtc_Word16 ResetDecoder(WebRtc_Word16 payload_type);
 
   ///////////////////////////////////////////////////////////////////////////
   // void DestructEncoder()
@@ -533,22 +533,22 @@ class ACMGenericCodec {
   void DestructDecoder();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t SamplesLeftToEncode()
+  // WebRtc_Word16 SamplesLeftToEncode()
   // Returns the number of samples required to be able to do encoding.
   //
   // Return value:
   //   Number of samples.
   //
-  int16_t SamplesLeftToEncode();
+  WebRtc_Word16 SamplesLeftToEncode();
 
   ///////////////////////////////////////////////////////////////////////////
-  // uint32_t LastEncodedTimestamp()
+  // WebRtc_UWord32 LastEncodedTimestamp()
   // Returns the timestamp of the last frame it encoded.
   //
   // Return value:
   //   Timestamp.
   //
-  uint32_t LastEncodedTimestamp() const;
+  WebRtc_UWord32 LastEncodedTimestamp() const;
 
   ///////////////////////////////////////////////////////////////////////////
   // SetUniqueID()
@@ -557,7 +557,7 @@ class ACMGenericCodec {
   // Input
   //   -id                 : A number to identify the codec.
   //
-  void SetUniqueID(const uint32_t id);
+  void SetUniqueID(const WebRtc_UWord32 id);
 
   ///////////////////////////////////////////////////////////////////////////
   // IsAudioBufferFresh()
@@ -594,7 +594,7 @@ class ACMGenericCodec {
   //    0 if succeeded in updating the decoder.
   //   -1 if failed to update.
   //
-  virtual int16_t UpdateDecoderSampFreq(int16_t /* codec_id */) {
+  virtual WebRtc_Word16 UpdateDecoderSampFreq(WebRtc_Word16 /* codec_id */) {
     return 0;
   }
 
@@ -614,8 +614,8 @@ class ACMGenericCodec {
   //   -1 if failed, or if this is meaningless for the given codec.
   //    0 if succeeded.
   //
-  virtual int16_t UpdateEncoderSampFreq(
-      uint16_t samp_freq_hz);
+  virtual WebRtc_Word16 UpdateEncoderSampFreq(
+      WebRtc_UWord16 samp_freq_hz);
 
   ///////////////////////////////////////////////////////////////////////////
   // EncoderSampFreq()
@@ -629,10 +629,10 @@ class ACMGenericCodec {
   //   -1 if failed to output sampling rate.
   //    0 if the sample rate is returned successfully.
   //
-  virtual int16_t EncoderSampFreq(uint16_t& samp_freq_hz);
+  virtual WebRtc_Word16 EncoderSampFreq(WebRtc_UWord16& samp_freq_hz);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t ConfigISACBandwidthEstimator()
+  // WebRtc_Word32 ConfigISACBandwidthEstimator()
   // Call this function to configure the bandwidth estimator of ISAC.
   // During the adaptation of bit-rate, iSAC automatically adjusts the
   // frame-size (either 30 or 60 ms) to save on RTP header. The initial
@@ -655,9 +655,9 @@ class ACMGenericCodec {
   //   -1 if failed to configure the bandwidth estimator,
   //    0 if the configuration was successfully applied.
   //
-  virtual int32_t ConfigISACBandwidthEstimator(
-      const uint8_t init_frame_size_msec,
-      const uint16_t init_rate_bps,
+  virtual WebRtc_Word32 ConfigISACBandwidthEstimator(
+      const WebRtc_UWord8 init_frame_size_msec,
+      const WebRtc_UWord16 init_rate_bps,
       const bool enforce_frame_size);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -675,8 +675,8 @@ class ACMGenericCodec {
   //   -1 if failed to set the maximum  payload-size.
   //    0 if the given length is set successfully.
   //
-  virtual int32_t SetISACMaxPayloadSize(
-      const uint16_t max_payload_len_bytes);
+  virtual WebRtc_Word32 SetISACMaxPayloadSize(
+      const WebRtc_UWord16 max_payload_len_bytes);
 
   ///////////////////////////////////////////////////////////////////////////
   // SetISACMaxRate()
@@ -693,7 +693,7 @@ class ACMGenericCodec {
   //   -1 if failed to set the maximum rate.
   //    0 if the maximum rate is set successfully.
   //
-  virtual int32_t SetISACMaxRate(const uint32_t max_rate_bps);
+  virtual WebRtc_Word32 SetISACMaxRate(const WebRtc_UWord32 max_rate_bps);
 
   ///////////////////////////////////////////////////////////////////////////
   // SaveDecoderParamS()
@@ -705,7 +705,7 @@ class ACMGenericCodec {
   //
   void SaveDecoderParam(const WebRtcACMCodecParams* codec_params);
 
-  int32_t FrameSize() {
+  WebRtc_Word32 FrameSize() {
     return frame_len_smpl_;
   }
 
@@ -734,10 +734,10 @@ class ACMGenericCodec {
   //   -1 if an error occurs, otherwise the length of the payload (in Bytes)
   //   is returned.
   //
-  virtual int16_t REDPayloadISAC(const int32_t isac_rate,
-                                 const int16_t isac_bw_estimate,
-                                 uint8_t* payload,
-                                 int16_t* payload_len_bytes);
+  virtual WebRtc_Word16 REDPayloadISAC(const WebRtc_Word32 isac_rate,
+                                       const WebRtc_Word16 isac_bw_estimate,
+                                       WebRtc_UWord8* payload,
+                                       WebRtc_Word16* payload_len_bytes);
 
   ///////////////////////////////////////////////////////////////////////////
   // IsTrueStereoCodec()
@@ -771,33 +771,33 @@ class ACMGenericCodec {
   // See Decode() for the description of function, input(s)/output(s) and
   // return value.
   //
-  virtual int16_t DecodeSafe(uint8_t* bitstream,
-                             int16_t bitstream_len_byte,
-                             int16_t* audio,
-                             int16_t* audio_samples,
-                             int8_t* speech_type) = 0;
+  virtual WebRtc_Word16 DecodeSafe(WebRtc_UWord8* bitstream,
+                                   WebRtc_Word16 bitstream_len_byte,
+                                   WebRtc_Word16* audio,
+                                   WebRtc_Word16* audio_samples,
+                                   WebRtc_Word8* speech_type) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // See Add10MsSafe() for the description of function, input(s)/output(s)
   // and return value.
   //
-  virtual int32_t Add10MsDataSafe(const uint32_t timestamp,
-                                  const int16_t* data,
-                                  const uint16_t length,
-                                  const uint8_t audio_channel);
+  virtual WebRtc_Word32 Add10MsDataSafe(const WebRtc_UWord32 timestamp,
+                                        const WebRtc_Word16* data,
+                                        const WebRtc_UWord16 length,
+                                        const WebRtc_UWord8 audio_channel);
 
   ///////////////////////////////////////////////////////////////////////////
   // See RegisterInNetEq() for the description of function,
   // input(s)/output(s) and  return value.
   //
-  virtual int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                           const CodecInst& codec_inst) = 0;
+  virtual WebRtc_Word32 CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                                 const CodecInst& codec_inst) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // See EncoderParam() for the description of function, input(s)/output(s)
   // and return value.
   //
-  int16_t EncoderParamsSafe(WebRtcACMCodecParams *enc_params);
+  WebRtc_Word16 EncoderParamsSafe(WebRtcACMCodecParams *enc_params);
 
   ///////////////////////////////////////////////////////////////////////////
   // See DecoderParam for the description of function, input(s)/output(s)
@@ -814,33 +814,33 @@ class ACMGenericCodec {
   // with a single codec instance.
   //
   virtual bool DecoderParamsSafe(WebRtcACMCodecParams *dec_params,
-                                 const uint8_t payload_type);
+                                 const WebRtc_UWord8 payload_type);
 
   ///////////////////////////////////////////////////////////////////////////
   // See ResetEncoder() for the description of function, input(s)/output(s)
   // and return value.
   //
-  int16_t ResetEncoderSafe();
+  WebRtc_Word16 ResetEncoderSafe();
 
   ///////////////////////////////////////////////////////////////////////////
   // See InitEncoder() for the description of function, input(s)/output(s)
   // and return value.
   //
-  int16_t InitEncoderSafe(WebRtcACMCodecParams *codec_params,
-                          bool force_initialization);
+  WebRtc_Word16 InitEncoderSafe(WebRtcACMCodecParams *codec_params,
+                                bool force_initialization);
 
   ///////////////////////////////////////////////////////////////////////////
   // See InitDecoder() for the description of function, input(s)/output(s)
   // and return value.
   //
-  int16_t InitDecoderSafe(WebRtcACMCodecParams *codec_params,
-                          bool force_initialization);
+  WebRtc_Word16 InitDecoderSafe(WebRtcACMCodecParams *codec_params,
+                                bool force_initialization);
 
   ///////////////////////////////////////////////////////////////////////////
   // See ResetDecoder() for the description of function, input(s)/output(s)
   // and return value.
   //
-  int16_t ResetDecoderSafe(int16_t payload_type);
+  WebRtc_Word16 ResetDecoderSafe(WebRtc_Word16 payload_type);
 
   ///////////////////////////////////////////////////////////////////////////
   // See DestructEncoder() for the description of function,
@@ -860,70 +860,70 @@ class ACMGenericCodec {
   //
   // Any codec that can change the bit-rate has to implement this.
   //
-  virtual int16_t SetBitRateSafe(const int32_t bitrate_bps);
+  virtual WebRtc_Word16 SetBitRateSafe(const WebRtc_Word32 bitrate_bps);
 
   ///////////////////////////////////////////////////////////////////////////
   // See GetEstimatedBandwidth() for the description of function,
   // input(s)/output(s) and return value.
   //
-  virtual int32_t GetEstimatedBandwidthSafe();
+  virtual WebRtc_Word32 GetEstimatedBandwidthSafe();
 
   ///////////////////////////////////////////////////////////////////////////
   // See SetEstimatedBandwidth() for the description of function,
   // input(s)/output(s) and return value.
   //
-  virtual int32_t SetEstimatedBandwidthSafe(
-      int32_t estimated_bandwidth);
+  virtual WebRtc_Word32 SetEstimatedBandwidthSafe(
+      WebRtc_Word32 estimated_bandwidth);
 
   ///////////////////////////////////////////////////////////////////////////
   // See GetRedPayload() for the description of function, input(s)/output(s)
   // and return value.
   //
-  virtual int32_t GetRedPayloadSafe(uint8_t* red_payload,
-                                    int16_t* payload_bytes);
+  virtual WebRtc_Word32 GetRedPayloadSafe(WebRtc_UWord8* red_payload,
+                                          WebRtc_Word16* payload_bytes);
 
   ///////////////////////////////////////////////////////////////////////////
   // See SetVAD() for the description of function, input(s)/output(s) and
   // return value.
   //
-  int16_t SetVADSafe(const bool enable_dtx = true,
-                     const bool enable_vad = false,
-                     const ACMVADMode mode = VADNormal);
+  WebRtc_Word16 SetVADSafe(const bool enable_dtx = true,
+                           const bool enable_vad = false,
+                           const ACMVADMode mode = VADNormal);
 
   ///////////////////////////////////////////////////////////////////////////
   // See ReplaceInternalDTX() for the description of function, input and
   // return value.
   //
-  virtual int32_t ReplaceInternalDTXSafe(const bool replace_internal_dtx);
+  virtual WebRtc_Word32 ReplaceInternalDTXSafe(const bool replace_internal_dtx);
 
   ///////////////////////////////////////////////////////////////////////////
   // See IsInternalDTXReplaced() for the description of function, input and
   // return value.
   //
-  virtual int32_t IsInternalDTXReplacedSafe(bool* internal_dtx_replaced);
+  virtual WebRtc_Word32 IsInternalDTXReplacedSafe(bool* internal_dtx_replaced);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t CreateEncoder()
+  // WebRtc_Word16 CreateEncoder()
   // Creates the encoder instance.
   //
   // Return value:
   //   -1 if failed,
   //    0 if succeeded.
   //
-  int16_t CreateEncoder();
+  WebRtc_Word16 CreateEncoder();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t CreateDecoder()
+  // WebRtc_Word16 CreateDecoder()
   // Creates the decoder instance.
   //
   // Return value:
   //   -1 if failed,
   //    0 if succeeded.
   //
-  int16_t CreateDecoder();
+  WebRtc_Word16 CreateDecoder();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t EnableVAD();
+  // WebRtc_Word16 EnableVAD();
   // Enables VAD with the given mode. The VAD instance will be created if
   // it does not exists.
   //
@@ -935,20 +935,20 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  int16_t EnableVAD(ACMVADMode mode);
+  WebRtc_Word16 EnableVAD(ACMVADMode mode);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t DisableVAD()
+  // WebRtc_Word16 DisableVAD()
   // Disables VAD.
   //
   // Return value:
   //   -1 if failed,
   //    0 if succeeded.
   //
-  int16_t DisableVAD();
+  WebRtc_Word16 DisableVAD();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t EnableDTX()
+  // WebRtc_Word16 EnableDTX()
   // Enables DTX. This method should be overwritten for codecs which have
   // internal DTX.
   //
@@ -956,10 +956,10 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  virtual int16_t EnableDTX();
+  virtual WebRtc_Word16 EnableDTX();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t DisableDTX()
+  // WebRtc_Word16 DisableDTX()
   // Disables usage of DTX. This method should be overwritten for codecs which
   // have internal DTX.
   //
@@ -967,10 +967,10 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  virtual int16_t DisableDTX();
+  virtual WebRtc_Word16 DisableDTX();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InternalEncode()
+  // WebRtc_Word16 InternalEncode()
   // This is a codec-specific function called in EncodeSafe() to actually
   // encode a frame of audio.
   //
@@ -984,11 +984,11 @@ class ACMGenericCodec {
   //   -1 if failed,
   //   otherwise the length of the bit-stream is returned.
   //
-  virtual int16_t InternalEncode(uint8_t* bitstream,
-                                 int16_t* bitstream_len_byte) = 0;
+  virtual WebRtc_Word16 InternalEncode(WebRtc_UWord8* bitstream,
+                                       WebRtc_Word16* bitstream_len_byte) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InternalInitEncoder()
+  // WebRtc_Word16 InternalInitEncoder()
   // This is a codec-specific function called in InitEncoderSafe(), it has to
   // do all codec-specific operation to initialize the encoder given the
   // encoder parameters.
@@ -1006,11 +1006,11 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  virtual int16_t InternalInitEncoder(
+  virtual WebRtc_Word16 InternalInitEncoder(
       WebRtcACMCodecParams *codec_params) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InternalInitDecoder()
+  // WebRtc_Word16 InternalInitDecoder()
   // This is a codec-specific function called in InitDecoderSafe(), it has to
   // do all codec-specific operation to initialize the decoder given the
   // decoder parameters.
@@ -1023,7 +1023,7 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  virtual int16_t InternalInitDecoder(
+  virtual WebRtc_Word16 InternalInitDecoder(
       WebRtcACMCodecParams *codec_params) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1035,10 +1035,10 @@ class ACMGenericCodec {
   //   -num_samples        : the number of overwritten samples is incremented
   //                         by this value.
   //
-  void IncreaseNoMissedSamples(const int16_t num_samples);
+  void IncreaseNoMissedSamples(const WebRtc_Word16 num_samples);
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InternalCreateEncoder()
+  // WebRtc_Word16 InternalCreateEncoder()
   // This is a codec-specific method called in CreateEncoderSafe() it is
   // supposed to perform all codec-specific operations to create encoder
   // instance.
@@ -1047,10 +1047,10 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  virtual int16_t InternalCreateEncoder() = 0;
+  virtual WebRtc_Word16 InternalCreateEncoder() = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InternalCreateDecoder()
+  // WebRtc_Word16 InternalCreateDecoder()
   // This is a codec-specific method called in CreateDecoderSafe() it is
   // supposed to perform all codec-specific operations to create decoder
   // instance.
@@ -1059,7 +1059,7 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  virtual int16_t InternalCreateDecoder() = 0;
+  virtual WebRtc_Word16 InternalCreateDecoder() = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // void InternalDestructEncoderInst()
@@ -1079,7 +1079,7 @@ class ACMGenericCodec {
   virtual void InternalDestructEncoderInst(void* ptr_inst) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t InternalResetEncoder()
+  // WebRtc_Word16 InternalResetEncoder()
   // This method is called to reset the states of encoder. However, the
   // current parameters, e.g. frame-length, should remain as they are. For
   // most of the codecs a re-initialization of the encoder is what needs to
@@ -1091,10 +1091,10 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  virtual int16_t InternalResetEncoder();
+  virtual WebRtc_Word16 InternalResetEncoder();
 
   ///////////////////////////////////////////////////////////////////////////
-  // int16_t ProcessFrameVADDTX()
+  // WebRtc_Word16 ProcessFrameVADDTX()
   // This function is called when a full frame of audio is available. It will
   // break the audio frame into blocks such that each block could be processed
   // by VAD & CN/DTX. If a frame is divided into two blocks then there are two
@@ -1123,9 +1123,9 @@ class ACMGenericCodec {
   //   -1 if failed,
   //    0 if succeeded.
   //
-  int16_t ProcessFrameVADDTX(uint8_t* bitstream,
-                             int16_t* bitstream_len_byte,
-                             int16_t* samples_processed);
+  WebRtc_Word16 ProcessFrameVADDTX(WebRtc_UWord8* bitstream,
+                                   WebRtc_Word16* bitstream_len_byte,
+                                   WebRtc_Word16* samples_processed);
 
   ///////////////////////////////////////////////////////////////////////////
   // CanChangeEncodingParam()
@@ -1148,7 +1148,7 @@ class ACMGenericCodec {
   // Output:
   //   -rate_bps           : the current target rate of the codec.
   //
-  virtual void CurrentRate(int32_t& /* rate_bps */) {
+  virtual void CurrentRate(WebRtc_Word32& /* rate_bps */) {
     return;
   }
 
@@ -1156,30 +1156,30 @@ class ACMGenericCodec {
 
   // &in_audio_[in_audio_ix_write_] always point to where new audio can be
   // written to
-  int16_t in_audio_ix_write_;
+  WebRtc_Word16 in_audio_ix_write_;
 
   // &in_audio_[in_audio_ix_read_] points to where audio has to be read from
-  int16_t in_audio_ix_read_;
+  WebRtc_Word16 in_audio_ix_read_;
 
-  int16_t in_timestamp_ix_write_;
+  WebRtc_Word16 in_timestamp_ix_write_;
 
   // Where the audio is stored before encoding,
   // To save memory the following buffer can be allocated
   // dynamically for 80 ms depending on the sampling frequency
   // of the codec.
-  int16_t* in_audio_;
-  uint32_t* in_timestamp_;
+  WebRtc_Word16* in_audio_;
+  WebRtc_UWord32* in_timestamp_;
 
-  int16_t frame_len_smpl_;
-  uint16_t num_channels_;
+  WebRtc_Word16 frame_len_smpl_;
+  WebRtc_UWord16 num_channels_;
 
   // This will point to a static database of the supported codecs
-  int16_t codec_id_;
+  WebRtc_Word16 codec_id_;
 
   // This will account for the number of samples  were not encoded
   // the case is rare, either samples are missed due to overwrite
   // at input buffer or due to encoding error
-  uint32_t num_missed_samples_;
+  WebRtc_UWord32 num_missed_samples_;
 
   // True if the encoder instance created
   bool encoder_exist_;
@@ -1195,10 +1195,10 @@ class ACMGenericCodec {
   WebRtcVadInst* ptr_vad_inst_;
   bool vad_enabled_;
   ACMVADMode vad_mode_;
-  int16_t vad_label_[MAX_FRAME_SIZE_10MSEC];
+  WebRtc_Word16 vad_label_[MAX_FRAME_SIZE_10MSEC];
   bool dtx_enabled_;
   WebRtcCngEncInst* ptr_dtx_inst_;
-  uint8_t num_lpc_params_;
+  WebRtc_UWord8 num_lpc_params_;
   bool sent_cn_previous_;
   bool is_master_;
   int16_t prev_frame_cng_;
@@ -1213,10 +1213,10 @@ class ACMGenericCodec {
   // such as buffers and state variables.
   RWLockWrapper& codec_wrapper_lock_;
 
-  uint32_t last_encoded_timestamp_;
-  uint32_t last_timestamp_;
+  WebRtc_UWord32 last_encoded_timestamp_;
+  WebRtc_UWord32 last_timestamp_;
   bool is_audio_buff_fresh_;
-  uint32_t unique_id_;
+  WebRtc_UWord32 unique_id_;
 };
 
 }  // namespace webrt

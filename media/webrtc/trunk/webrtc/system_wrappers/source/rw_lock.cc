@@ -24,7 +24,7 @@
 namespace webrtc {
 
 RWLockWrapper* RWLockWrapper::CreateRWLock() {
-#ifdef _WIN32
+#if defined(_WIN32)
   // Native implementation is faster, so use that if available.
   RWLockWrapper* lock = RWLockWin::Create();
   if (lock) {

@@ -39,7 +39,7 @@ _appendNext(false)
 }
 
 NormalTest::NormalTest(std::string name, std::string description,
-                       uint32_t bitRate, unsigned int testNo)
+                       WebRtc_UWord32 bitRate, unsigned int testNo)
 :
 CodecTest(name, description, bitRate),
 _requestKeyFrame(false),

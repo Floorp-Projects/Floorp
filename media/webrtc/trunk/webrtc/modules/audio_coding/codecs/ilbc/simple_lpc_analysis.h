@@ -26,8 +26,8 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_SimpleLpcAnalysis(
-    int16_t *lsf,   /* (o) lsf coefficients */
-    int16_t *data,   /* (i) new block of speech */
+    WebRtc_Word16 *lsf,   /* (o) lsf coefficients */
+    WebRtc_Word16 *data,   /* (i) new block of speech */
     iLBC_Enc_Inst_t *iLBCenc_inst
     /* (i/o) the encoder state structure */
                                      );

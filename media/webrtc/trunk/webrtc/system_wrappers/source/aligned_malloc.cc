@@ -19,6 +19,10 @@
 #include <stdint.h>
 #endif
 
+#ifdef WEBRTC_GONK
+#include <string.h>
+#endif
+
 #include "typedefs.h"
 
 // Reference on memory alignment:

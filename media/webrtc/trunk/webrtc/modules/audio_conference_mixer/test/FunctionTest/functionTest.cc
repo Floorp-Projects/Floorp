@@ -46,8 +46,8 @@ int main(int /*argc*/, char* /*argv[]*/)
     }
 
     char versionString[256] = "";
-    uint32_t remainingBufferInBytes = 256;
-    uint32_t position = 0;
+    WebRtc_UWord32 remainingBufferInBytes = 256;
+    WebRtc_UWord32 position = 0;
     AudioConferenceMixer::GetVersion(versionString,remainingBufferInBytes,position);
 
     int read = 1;
@@ -70,7 +70,7 @@ int main(int /*argc*/, char* /*argv[]*/)
         getchar();
         MixerParticipant::ParticipantType participantType;
         int option = 0;
-        uint32_t id = 0;
+        WebRtc_UWord32 id = 0;
         ListItem* item = NULL;
         ListWrapper participants;
         if(read == 0)
@@ -122,7 +122,7 @@ int main(int /*argc*/, char* /*argv[]*/)
             std::cout << "The following participants have been created: " << std::endl;
             while(item)
             {
-                uint32_t id = item->GetUnsignedItem();
+                WebRtc_UWord32 id = item->GetUnsignedItem();
                 std::cout << id;
                 item = participants.Next(item);
                 if(item != NULL)
@@ -147,7 +147,7 @@ int main(int /*argc*/, char* /*argv[]*/)
         }
         else if(read == 8)
         {
-            const int32_t amountOfParticipants = 4;
+            const WebRtc_Word32 amountOfParticipants = 4;
             MixerParticipant::ParticipantType instance1Participants[] =
                                                 {MixerParticipant::VIP,
                                                  MixerParticipant::REGULAR,
@@ -158,9 +158,9 @@ int main(int /*argc*/, char* /*argv[]*/)
                                                 MixerParticipant::REGULAR,
                                                 MixerParticipant::REGULAR,
                                                 MixerParticipant::REGULAR};
-            for(int32_t i = 0; i < amountOfParticipants; i++)
+            for(WebRtc_Word32 i = 0; i < amountOfParticipants; i++)
             {
-                int32_t startPosition = 0;
+                WebRtc_Word32 startPosition = 0;
                 GenerateRandomPosition(startPosition);
                 testInstance1->CreateParticipant(instance1Participants[i],startPosition);
                 testInstance2->CreateParticipant(instance2Participants[i],startPosition);
@@ -210,9 +210,7 @@ bool
 FileWriter::WriteToFile(
     const AudioFrame& audioFrame)
 {
-    int32_t written =
-        static_cast<int32_t>(fwrite(audioFrame.data_, sizeof(int16_t),
-                                    audioFrame.samples_per_channel_, _file));
+    WebRtc_Word32 written = (WebRtc_Word32)fwrite(audioFrame.data_,sizeof(WebRtc_Word16),audioFrame.samples_per_channel_,_file);
     // Do not flush buffers since that will add (a lot of) delay
     return written == audioFrame.samples_per_channel_;
 }
@@ -271,7 +269,7 @@ FileReader::ReadFromFile(
     AudioFrame& audioFrame)
 {
 
-    int16_t buffer[AudioFrame::kMaxDataSizeSamples];
+    WebRtc_Word16 buffer[AudioFrame::kMaxDataSizeSamples];
     LoopedFileRead(buffer,AudioFrame::kMaxDataSizeSamples,_sampleSize,_file);
 
     bool vad = false;
@@ -280,7 +278,7 @@ FileReader::ReadFromFile(
                                  AudioFrame::kVadPassive;
 
     _volumeCalculator.ComputeLevel(buffer,_sampleSize);
-    const int32_t level = _volumeCalculator.GetLevel();
+    const WebRtc_Word32 level = _volumeCalculator.GetLevel();
     return audioFrame.UpdateFrame(  -1,
                                     _timeStamp,
                                     buffer,
@@ -295,9 +293,9 @@ FileReader::ReadFromFile(
 
 bool
 FileReader::FastForwardFile(
-    const int32_t samples)
+    const WebRtc_Word32 samples)
 {
-    int16_t* tempBuffer = new int16_t[samples];
+    WebRtc_Word16* tempBuffer = new WebRtc_Word16[samples];
     bool success = LoopedFileRead(tempBuffer,samples,samples,_file);
     delete[] tempBuffer;
     return success;
@@ -335,13 +333,13 @@ FileReader::SetVAD(
 
 bool
 FileReader::GetVAD(
-    int16_t* buffer,
-    uint8_t bufferLengthInSamples,
+    WebRtc_Word16* buffer,
+    WebRtc_UWord8 bufferLengthInSamples,
     bool& vad)
 {
     if(_automaticVad)
     {
-        int16_t result = WebRtcVad_Process(_vadInstr,_frequency,buffer,bufferLengthInSamples);
+        WebRtc_Word16 result = WebRtcVad_Process(_vadInstr,_frequency,buffer,bufferLengthInSamples);
         if(result == -1)
         {
             assert(false);
@@ -355,9 +353,9 @@ FileReader::GetVAD(
 
 MixerParticipant*
 MixerParticipant::CreateParticipant(
-    const uint32_t id,
+    const WebRtc_UWord32 id,
     ParticipantType participantType,
-    const int32_t startPosition,
+    const WebRtc_Word32 startPosition,
     char* outputPath)
 {
     if(participantType == RANDOM)
@@ -378,7 +376,7 @@ MixerParticipant::CreateParticipant(
 }
 
 MixerParticipant::MixerParticipant(
-    const uint32_t id,
+    const WebRtc_UWord32 id,
     ParticipantType participantType)
     :
     _id(id),
@@ -392,9 +390,9 @@ MixerParticipant::~MixerParticipant()
 {
 }
 
-int32_t
+WebRtc_Word32
 MixerParticipant::GetAudioFrame(
-    const int32_t /*id*/,
+    const WebRtc_Word32 /*id*/,
     AudioFrame& audioFrame)
 {
     if(!_fileReader.ReadFromFile(audioFrame))
@@ -405,14 +403,14 @@ MixerParticipant::GetAudioFrame(
     return 0;
 }
 
-int32_t
+WebRtc_Word32
 MixerParticipant::MixedAudioFrame(
     const AudioFrame& audioFrame)
 {
     return _fileWriter.WriteToFile(audioFrame);
 }
 
-int32_t
+WebRtc_Word32
 MixerParticipant::GetParticipantType(
     ParticipantType& participantType)
 {
@@ -422,7 +420,7 @@ MixerParticipant::GetParticipantType(
 
 bool
 MixerParticipant::InitializeFileReader(
-    const int32_t startPositionInSamples)
+    const WebRtc_Word32 startPositionInSamples)
 {
     char fileName[128] = "";
     if(_participantType == REGULAR)
@@ -448,7 +446,7 @@ bool
 MixerParticipant::InitializeFileWriter(
     char* outputPath)
 {
-    const int32_t stringsize = 128;
+    const WebRtc_Word32 stringsize = 128;
     char fileName[stringsize] = "";
     strncpy(fileName,outputPath,stringsize);
     fileName[stringsize-1] = '\0';
@@ -463,7 +461,7 @@ MixerParticipant::InitializeFileWriter(
 }
 
 StatusReceiver::StatusReceiver(
-    const int32_t id)
+    const WebRtc_Word32 id)
     :
     _id(id),
     _mixedParticipants(NULL),
@@ -484,9 +482,9 @@ StatusReceiver::~StatusReceiver()
 
 void
 StatusReceiver::MixedParticipants(
-    const int32_t id,
+    const WebRtc_Word32 id,
     const ParticipantStatistics* participantStatistics,
-    const uint32_t size)
+    const WebRtc_UWord32 size)
 {
     if(id != _id)
     {
@@ -504,9 +502,9 @@ StatusReceiver::MixedParticipants(
 
 void
 StatusReceiver::VADPositiveParticipants(
-    const int32_t id,
+    const WebRtc_Word32 id,
     const ParticipantStatistics* participantStatistics,
-    const uint32_t size)
+    const WebRtc_UWord32 size)
 {
     if(id != _id)
     {
@@ -525,8 +523,8 @@ StatusReceiver::VADPositiveParticipants(
 
 void
 StatusReceiver::MixedAudioLevel(
-    const int32_t  id,
-    const uint32_t level)
+    const WebRtc_Word32  id,
+    const WebRtc_UWord32 level)
 {
     if(id != _id)
     {
@@ -543,7 +541,7 @@ StatusReceiver::PrintMixedParticipants()
     {
         std::cout << "N/A" << std::endl;
     }
-    for(uint16_t i = 0; i < _mixedParticipantsAmount; i++)
+    for(WebRtc_UWord16 i = 0; i < _mixedParticipantsAmount; i++)
     {
         std::cout << i + 1 << ". Participant " << _mixedParticipants[i].participant << ": level = " << _mixedParticipants[i].level << std::endl;
     }
@@ -557,7 +555,7 @@ StatusReceiver::PrintVadPositiveParticipants()
     {
         std::cout << "N/A"  << std::endl;
     }
-    for(uint16_t i = 0; i < _mixedParticipantsAmount; i++)
+    for(WebRtc_UWord16 i = 0; i < _mixedParticipantsAmount; i++)
     {
         std::cout << i + 1 << ". Participant " << _mixedParticipants[i].participant << ": level = " << _mixedParticipants[i].level << std::endl;
     }
@@ -569,7 +567,7 @@ StatusReceiver::PrintMixedAudioLevel()
     std::cout << "Mixed audio level = " << _mixedAudioLevel << std::endl;
 }
 
-int32_t MixerWrapper::_mixerWrapperIdCounter = 0;
+WebRtc_Word32 MixerWrapper::_mixerWrapperIdCounter = 0;
 
 MixerWrapper::MixerWrapper()
     :
@@ -650,7 +648,7 @@ bool
 MixerWrapper::CreateParticipant(
     MixerParticipant::ParticipantType participantType)
 {
-    int32_t startPosition = 0;
+    WebRtc_Word32 startPosition = 0;
     GenerateRandomPosition(startPosition);
     return CreateParticipant(participantType,startPosition);
 }
@@ -658,9 +656,9 @@ MixerWrapper::CreateParticipant(
 bool
 MixerWrapper::CreateParticipant(
     MixerParticipant::ParticipantType participantType,
-    const int32_t startPosition)
+    const WebRtc_Word32 startPosition)
 {
-    uint32_t id;
+    WebRtc_UWord32 id;
     if(!GetFreeItemIds(id))
     {
         return false;
@@ -686,7 +684,7 @@ MixerWrapper::CreateParticipant(
 
 bool
 MixerWrapper::DeleteParticipant(
-    const uint32_t id)
+    const WebRtc_UWord32 id)
 {
     bool success = StopMixingParticipant(id);
     if(!success)
@@ -708,7 +706,7 @@ MixerWrapper::DeleteParticipant(
 
 bool
 MixerWrapper::StartMixing(
-    const uint32_t mixedParticipants)
+    const WebRtc_UWord32 mixedParticipants)
 {
     if(_processThread)
     {
@@ -718,7 +716,7 @@ MixerWrapper::StartMixing(
     {
         assert(false);
     }
-    uint32_t mixedParticipantsTest = 0;
+    WebRtc_UWord32 mixedParticipantsTest = 0;
     _mixer->AmountOfMixedParticipants(mixedParticipantsTest);
     assert(mixedParticipantsTest == mixedParticipants);
 
@@ -754,10 +752,10 @@ MixerWrapper::StopMixing()
 
 void
 MixerWrapper::NewMixedAudio(
-    const int32_t id,
+    const WebRtc_Word32 id,
     const AudioFrame& generalAudioFrame,
     const AudioFrame** uniqueAudioFrames,
-    const uint32_t size)
+    const WebRtc_UWord32 size)
 {
     if(id < 0)
     {
@@ -768,9 +766,9 @@ MixerWrapper::NewMixedAudio(
 
     // Send the unique audio frames to its corresponding participants
     ListWrapper uniqueAudioFrameList;
-    for(uint32_t i = 0; i < size; i++)
+    for(WebRtc_UWord32 i = 0; i < size; i++)
     {
-        uint32_t id = (uniqueAudioFrames[i])->_id;
+        WebRtc_UWord32 id = (uniqueAudioFrames[i])->_id;
         MapItem* resultItem = _mixerParticipants.Find(id);
         if(resultItem == NULL)
         {
@@ -835,7 +833,7 @@ MixerWrapper::PrintStatus()
 bool
 MixerWrapper::InitializeFileWriter()
 {
-    const int32_t stringsize = 128;
+    const WebRtc_Word32 stringsize = 128;
     char fileName[stringsize] = "";
     strncpy(fileName,_instanceOutputPath,stringsize);
     fileName[stringsize-1] = '\0';
@@ -871,7 +869,7 @@ MixerWrapper::Process()
         assert(false);
         return false;
     }
-    int32_t processOfset = 0;
+    WebRtc_Word32 processOfset = 0;
     const TickTime currentTime = TickTime::Now();
     if(_firstProcessCall)
     {
@@ -882,12 +880,12 @@ MixerWrapper::Process()
     {
         TickInterval deltaTime = (currentTime - _previousTime);
         _previousTime += _periodicityInTicks;
-        processOfset = (int32_t) deltaTime.Milliseconds();
+        processOfset = (WebRtc_Word32) deltaTime.Milliseconds();
         processOfset -= FileReader::kProcessPeriodicityInMs;
     }
 
     _mixer->Process();
-    int32_t timeUntilNextProcess = _mixer->TimeUntilNextProcess();
+    WebRtc_Word32 timeUntilNextProcess = _mixer->TimeUntilNextProcess();
     if(processOfset > FileReader::kProcessPeriodicityInMs)
     {
         std::cout << "Performance Warning: Process running " << processOfset << " too slow" << std::endl;
@@ -912,7 +910,7 @@ MixerWrapper::Process()
 
 bool
 MixerWrapper::StartMixingParticipant(
-    const uint32_t id)
+    const WebRtc_UWord32 id)
 {
     MapItem* item = _mixerParticipants.Find(id);
     if(item == NULL)
@@ -946,7 +944,7 @@ MixerWrapper::StartMixingParticipant(
         assert(anonymouslyMixed);
         return success;
     }
-    uint32_t previousAmountOfMixableParticipants = 0;
+    WebRtc_UWord32 previousAmountOfMixableParticipants = 0;
     bool success = _mixer->AmountOfMixables(previousAmountOfMixableParticipants) == 0;
     assert(success);
 
@@ -965,7 +963,7 @@ MixerWrapper::StartMixingParticipant(
         return false;
     }
 
-    uint32_t currentAmountOfMixableParticipants = 0;
+    WebRtc_UWord32 currentAmountOfMixableParticipants = 0;
     success = _mixer->AmountOfMixables(currentAmountOfMixableParticipants) == 0;
     assert(currentAmountOfMixableParticipants == previousAmountOfMixableParticipants + 1);
 
@@ -1003,7 +1001,7 @@ MixerWrapper::StartMixingParticipant(
 
 bool
 MixerWrapper::StopMixingParticipant(
-    const uint32_t id)
+    const WebRtc_UWord32 id)
 {
     MapItem* item = _mixerParticipants.Find(id);
     if(item == NULL)
@@ -1012,12 +1010,12 @@ MixerWrapper::StopMixingParticipant(
     }
     MixerParticipant* participant = static_cast<MixerParticipant*>(item->GetItem());
     bool success = false;
-    uint32_t previousAmountOfMixableParticipants = 0;
+    WebRtc_UWord32 previousAmountOfMixableParticipants = 0;
     success = _mixer->AmountOfMixables(previousAmountOfMixableParticipants) == 0;
     assert(success);
     success = _mixer->SetMixabilityStatus(*participant,false) == 0;
     assert(success);
-    uint32_t currentAmountOfMixableParticipants = 0;
+    WebRtc_UWord32 currentAmountOfMixableParticipants = 0;
     success = _mixer->AmountOfMixables(currentAmountOfMixableParticipants) == 0;
     assert(success);
     assert(success ? currentAmountOfMixableParticipants == previousAmountOfMixableParticipants -1 :
@@ -1027,17 +1025,17 @@ MixerWrapper::StopMixingParticipant(
 
 bool
 MixerWrapper::GetFreeItemIds(
-    uint32_t& itemId)
+    WebRtc_UWord32& itemId)
 {
     if(!_freeItemIds.Empty())
     {
         ListItem* item = _freeItemIds.First();
-        uint32_t* id = static_cast<uint32_t*>(item->GetItem());
+        WebRtc_UWord32* id = static_cast<WebRtc_UWord32*>(item->GetItem());
         itemId = *id;
         delete id;
         return true;
     }
-    if(_itemIdCounter == (uint32_t) -1)
+    if(_itemIdCounter == (WebRtc_UWord32) -1)
     {
         return false;
     }
@@ -1047,9 +1045,9 @@ MixerWrapper::GetFreeItemIds(
 
 void
 MixerWrapper::AddFreeItemIds(
-    const uint32_t itemId)
+    const WebRtc_UWord32 itemId)
 {
-    uint32_t* id = new uint32_t;
+    WebRtc_UWord32* id = new WebRtc_UWord32;
     *id = itemId;
     _freeItemIds.PushBack(static_cast<void*>(id));
 }
@@ -1060,7 +1058,7 @@ MixerWrapper::ClearAllItemIds()
     ListItem* item = _freeItemIds.First();
     while(item != NULL)
     {
-        uint32_t* id = static_cast<uint32_t*>(item->GetItem());
+        WebRtc_UWord32* id = static_cast<WebRtc_UWord32*>(item->GetItem());
         delete id;
         _freeItemIds.Erase(item);
         item = _freeItemIds.First();
@@ -1069,24 +1067,21 @@ MixerWrapper::ClearAllItemIds()
 
 bool
 LoopedFileRead(
-    int16_t* buffer,
-    uint32_t bufferSizeInSamples,
-    uint32_t samplesToRead,
+    WebRtc_Word16* buffer,
+    WebRtc_UWord32 bufferSizeInSamples,
+    WebRtc_UWord32 samplesToRead,
     FILE* file)
 {
     if(bufferSizeInSamples < samplesToRead)
     {
         return false;
     }
-    uint32_t gottenSamples = static_cast<uint32_t>(
-        fread(buffer, sizeof(int16_t), samplesToRead, file));
+    WebRtc_UWord32 gottenSamples = (WebRtc_UWord32)fread(buffer,sizeof(WebRtc_Word16),samplesToRead,file);
     if(gottenSamples != samplesToRead)
     {
-        uint32_t missingSamples = samplesToRead - gottenSamples;
+        WebRtc_UWord32 missingSamples = samplesToRead - gottenSamples;
         fseek(file,0,0);
-        gottenSamples +=
-            static_cast<uint32_t>(fread(&buffer[gottenSamples], sizeof(int16_t),
-                                        missingSamples, file));
+        gottenSamples += (WebRtc_UWord32)fread(&buffer[gottenSamples],sizeof(WebRtc_Word16),missingSamples,file);
     }
     if(gottenSamples != samplesToRead)
     {
@@ -1097,7 +1092,7 @@ LoopedFileRead(
 
 void
 GenerateRandomPosition(
-    int32_t& startPosition)
+    WebRtc_Word32& startPosition)
 {
     startPosition = (rand() % (60*16000/160)) * 160;
 }

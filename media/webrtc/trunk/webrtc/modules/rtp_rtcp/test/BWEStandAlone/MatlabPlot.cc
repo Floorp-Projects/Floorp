@@ -66,7 +66,7 @@ MatlabLine::~MatlabLine()
 
 void MatlabLine::Append(double x, double y)
 {
-    if (_maxLen > 0 && _xData.size() > static_cast<uint32_t>(_maxLen))
+    if (_maxLen > 0 && _xData.size() > static_cast<WebRtc_UWord32>(_maxLen))
     {
         _xData.resize(_maxLen);
         _yData.resize(_maxLen);
@@ -312,7 +312,7 @@ double MatlabLine::yMax()
 
 MatlabTimeLine::MatlabTimeLine(int horizonSeconds /*= -1*/, const char *plotAttrib /*= NULL*/,
                                const char *name /*= NULL*/,
-                               int64_t refTimeMs /* = -1*/)
+                               WebRtc_Word64 refTimeMs /* = -1*/)
                                :
 _timeHorizon(horizonSeconds),
 MatlabLine(-1, plotAttrib, name) // infinite number of elements
@@ -340,7 +340,7 @@ void MatlabTimeLine::PurgeOldData()
             - _timeHorizon; // remove data points older than this
 
         std::list<double>::reverse_iterator ritx = _xData.rbegin();
-        uint32_t removeCount = 0;
+        WebRtc_UWord32 removeCount = 0;
         while (ritx != _xData.rend())
         {
             if (*ritx >= historyLimit)
@@ -366,7 +366,7 @@ void MatlabTimeLine::PurgeOldData()
 }
 
 
-int64_t MatlabTimeLine::GetRefTime()
+WebRtc_Word64 MatlabTimeLine::GetRefTime()
 {
     return(_refTimeMs);
 }
@@ -433,7 +433,7 @@ int MatlabPlot::AddLine(int maxLen /*= -1*/, const char *plotAttrib /*= NULL*/, 
 
 
 int MatlabPlot::AddTimeLine(int maxLen /*= -1*/, const char *plotAttrib /*= NULL*/, const char *name /*= NULL*/,
-                            int64_t refTimeMs /*= -1*/)
+                            WebRtc_Word64 refTimeMs /*= -1*/)
 {
     CriticalSectionScoped cs(_critSect);
 
@@ -1031,7 +1031,7 @@ bool MatlabEngine::PlotThread(void *obj)
                     // things to plot, we have already accessed what we need in the plot
                     plot->DonePlotting();
 
-                    int64_t start = TickTime::MillisecondTimestamp();
+                    WebRtc_Word64 start = TickTime::MillisecondTimestamp();
                     // plot it
                     int ret = engEvalString(ep, cmd.str().c_str());
                     printf("time=%I64i\n", TickTime::MillisecondTimestamp() - start);

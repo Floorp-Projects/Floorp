@@ -37,7 +37,7 @@ int WebRtcNsx_Free(NsxHandle* nsxInst) {
   return 0;
 }
 
-int WebRtcNsx_Init(NsxHandle* nsxInst, uint32_t fs) {
+int WebRtcNsx_Init(NsxHandle* nsxInst, WebRtc_UWord32 fs) {
   return WebRtcNsx_InitCore((NsxInst_t*)nsxInst, fs);
 }
 

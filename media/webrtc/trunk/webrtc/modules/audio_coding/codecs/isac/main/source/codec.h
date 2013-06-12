@@ -25,21 +25,21 @@
 void WebRtcIsac_ResetBitstream(Bitstr* bit_stream);
 
 int WebRtcIsac_EstimateBandwidth(BwEstimatorstr* bwest_str, Bitstr* streamdata,
-                                 int32_t packet_size,
-                                 uint16_t rtp_seq_number,
-                                 uint32_t send_ts, uint32_t arr_ts,
+                                 WebRtc_Word32 packet_size,
+                                 WebRtc_UWord16 rtp_seq_number,
+                                 WebRtc_UWord32 send_ts, WebRtc_UWord32 arr_ts,
                                  enum IsacSamplingRate encoderSampRate,
                                  enum IsacSamplingRate decoderSampRate);
 
 int WebRtcIsac_DecodeLb(float* signal_out, ISACLBDecStruct* ISACdec_obj,
-                        int16_t* current_framesamples,
-                        int16_t isRCUPayload);
+                        WebRtc_Word16* current_framesamples,
+                        WebRtc_Word16 isRCUPayload);
 
 int WebRtcIsac_DecodeRcuLb(float* signal_out, ISACLBDecStruct* ISACdec_obj,
-                           int16_t* current_framesamples);
+                           WebRtc_Word16* current_framesamples);
 
 int WebRtcIsac_EncodeLb(float* in, ISACLBEncStruct* ISACencLB_obj,
-                        int16_t codingMode, int16_t
+                        WebRtc_Word16 codingMode, WebRtc_Word16
                         bottleneckIndex);
 
 int WebRtcIsac_EncodeStoredDataLb(const ISAC_SaveEncData_t* ISACSavedEnc_obj,
@@ -48,9 +48,9 @@ int WebRtcIsac_EncodeStoredDataLb(const ISAC_SaveEncData_t* ISACSavedEnc_obj,
 
 int WebRtcIsac_EncodeStoredDataUb(
     const ISACUBSaveEncDataStruct* ISACSavedEnc_obj, Bitstr* bitStream,
-    int32_t jitterInfo, float scale, enum ISACBandwidth bandwidth);
+    WebRtc_Word32 jitterInfo, float scale, enum ISACBandwidth bandwidth);
 
-int16_t WebRtcIsac_GetRedPayloadUb(
+WebRtc_Word16 WebRtcIsac_GetRedPayloadUb(
     const ISACUBSaveEncDataStruct* ISACSavedEncObj, Bitstr* bitStreamObj,
     enum ISACBandwidth bandwidth);
 
@@ -72,10 +72,10 @@ int16_t WebRtcIsac_GetRedPayloadUb(
  *                                -1 if failed to allocate rates.
  */
 
-int16_t WebRtcIsac_RateAllocation(int32_t inRateBitPerSec,
-                                  double* rateLBBitPerSec,
-                                  double* rateUBBitPerSec,
-                                  enum ISACBandwidth* bandwidthKHz);
+WebRtc_Word16 WebRtcIsac_RateAllocation(WebRtc_Word32 inRateBitPerSec,
+                                        double* rateLBBitPerSec,
+                                        double* rateUBBitPerSec,
+                                        enum ISACBandwidth* bandwidthKHz);
 
 
 /******************************************************************************
@@ -94,7 +94,7 @@ int16_t WebRtcIsac_RateAllocation(int32_t inRateBitPerSec,
  *                             <0 if an error occurred.
  */
 int WebRtcIsac_DecodeUb16(float* signal_out, ISACUBDecStruct* ISACdec_obj,
-                          int16_t isRCUPayload);
+                          WebRtc_Word16 isRCUPayload);
 
 
 /******************************************************************************
@@ -113,7 +113,7 @@ int WebRtcIsac_DecodeUb16(float* signal_out, ISACUBDecStruct* ISACdec_obj,
  *                             <0 if an error occurred.
  */
 int WebRtcIsac_DecodeUb12(float* signal_out, ISACUBDecStruct* ISACdec_obj,
-                          int16_t isRCUPayload);
+                          WebRtc_Word16 isRCUPayload);
 
 
 /******************************************************************************
@@ -132,7 +132,7 @@ int WebRtcIsac_DecodeUb12(float* signal_out, ISACUBDecStruct* ISACdec_obj,
  *                             <0 if an error occurred.
  */
 int WebRtcIsac_EncodeUb16(float* in, ISACUBEncStruct* ISACenc_obj,
-                          int32_t jitterInfo);
+                          WebRtc_Word32 jitterInfo);
 
 
 /******************************************************************************
@@ -151,7 +151,7 @@ int WebRtcIsac_EncodeUb16(float* in, ISACUBEncStruct* ISACenc_obj,
  *                             <0 if an error occurred.
  */
 int WebRtcIsac_EncodeUb12(float* in, ISACUBEncStruct* ISACenc_obj,
-                          int32_t jitterInfo);
+                          WebRtc_Word32 jitterInfo);
 
 /************************** initialization functions *************************/
 
@@ -170,8 +170,8 @@ void WebRtcIsac_InitPitchAnalysis(PitchAnalysisStruct* State);
 
 void WebRtcIsac_InitTransform();
 
-void WebRtcIsac_Time2Spec(double* inre1, double* inre2, int16_t* outre,
-                          int16_t* outim, FFTstr* fftstr_obj);
+void WebRtcIsac_Time2Spec(double* inre1, double* inre2, WebRtc_Word16* outre,
+                          WebRtc_Word16* outim, FFTstr* fftstr_obj);
 
 void WebRtcIsac_Spec2time(double* inre, double* inim, double* outre1,
                           double* outre2, FFTstr* fftstr_obj);

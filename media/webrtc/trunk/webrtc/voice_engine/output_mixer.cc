@@ -24,42 +24,46 @@ namespace webrtc {
 namespace voe {
 
 void
-OutputMixer::NewMixedAudio(const int32_t id,
+OutputMixer::NewMixedAudio(const WebRtc_Word32 id,
                            const AudioFrame& generalAudioFrame,
                            const AudioFrame** uniqueAudioFrames,
-                           const uint32_t size)
+                           const WebRtc_UWord32 size)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::NewMixedAudio(id=%d, size=%u)", id, size);
 
-    _audioFrame.CopyFrom(generalAudioFrame);
+    _audioFrame = generalAudioFrame;
     _audioFrame.id_ = id;
 }
 
 void OutputMixer::MixedParticipants(
-    const int32_t id,
+    const WebRtc_Word32 id,
     const ParticipantStatistics* participantStatistics,
-    const uint32_t size)
+    const WebRtc_UWord32 size)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::MixedParticipants(id=%d, size=%u)", id, size);
 }
 
-void OutputMixer::VADPositiveParticipants(const int32_t id,
-    const ParticipantStatistics* participantStatistics, const uint32_t size)
+void OutputMixer::VADPositiveParticipants(
+    const WebRtc_Word32 id,
+    const ParticipantStatistics* participantStatistics,
+    const WebRtc_UWord32 size)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::VADPositiveParticipants(id=%d, size=%u)",
                  id, size);
 }
 
-void OutputMixer::MixedAudioLevel(const int32_t id, const uint32_t level)
+void OutputMixer::MixedAudioLevel(const WebRtc_Word32  id,
+                                  const WebRtc_UWord32 level)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::MixedAudioLevel(id=%d, level=%u)", id, level);
 }
 
-void OutputMixer::PlayNotification(const int32_t id, const uint32_t durationMs)
+void OutputMixer::PlayNotification(const WebRtc_Word32 id,
+                                   const WebRtc_UWord32 durationMs)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::PlayNotification(id=%d, durationMs=%d)",
@@ -67,8 +71,8 @@ void OutputMixer::PlayNotification(const int32_t id, const uint32_t durationMs)
     // Not implement yet
 }
 
-void OutputMixer::RecordNotification(const int32_t id,
-                                     const uint32_t durationMs)
+void OutputMixer::RecordNotification(const WebRtc_Word32 id,
+                                     const WebRtc_UWord32 durationMs)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::RecordNotification(id=%d, durationMs=%d)",
@@ -77,7 +81,7 @@ void OutputMixer::RecordNotification(const int32_t id,
     // Not implement yet
 }
 
-void OutputMixer::PlayFileEnded(const int32_t id)
+void OutputMixer::PlayFileEnded(const WebRtc_Word32 id)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::PlayFileEnded(id=%d)", id);
@@ -85,7 +89,7 @@ void OutputMixer::PlayFileEnded(const int32_t id)
     // not needed
 }
 
-void OutputMixer::RecordFileEnded(const int32_t id)
+void OutputMixer::RecordFileEnded(const WebRtc_Word32 id)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::RecordFileEnded(id=%d)", id);
@@ -98,8 +102,8 @@ void OutputMixer::RecordFileEnded(const int32_t id)
                  "output file recorder module is shutdown");
 }
 
-int32_t
-OutputMixer::Create(OutputMixer*& mixer, const uint32_t instanceId)
+WebRtc_Word32
+OutputMixer::Create(OutputMixer*& mixer, const WebRtc_UWord32 instanceId)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, instanceId,
                  "OutputMixer::Create(instanceId=%d)", instanceId);
@@ -114,7 +118,7 @@ OutputMixer::Create(OutputMixer*& mixer, const uint32_t instanceId)
     return 0;
 }
 
-OutputMixer::OutputMixer(const uint32_t instanceId) :
+OutputMixer::OutputMixer(const WebRtc_UWord32 instanceId) :
     _callbackCritSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _fileCritSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _mixerModule(*AudioConferenceMixer::Create(instanceId)),
@@ -131,7 +135,7 @@ OutputMixer::OutputMixer(const uint32_t instanceId) :
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::OutputMixer() - ctor");
-
+	
     if ((_mixerModule.RegisterMixedStreamCallback(*this) == -1) ||
         (_mixerModule.RegisterMixerStatusCallback(*this, 100) == -1))
     {
@@ -139,7 +143,7 @@ OutputMixer::OutputMixer(const uint32_t instanceId) :
                      "OutputMixer::OutputMixer() failed to register mixer"
                      "callbacks");
     }
-
+	
     _dtmfGenerator.Init();
 }
 
@@ -152,7 +156,7 @@ OutputMixer::Destroy(OutputMixer*& mixer)
         mixer = NULL;
     }
 }
-
+	
 OutputMixer::~OutputMixer()
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_instanceId,-1),
@@ -178,7 +182,7 @@ OutputMixer::~OutputMixer()
     delete &_fileCritSect;
 }
 
-int32_t
+WebRtc_Word32
 OutputMixer::SetEngineInformation(voe::Statistics& engineStatistics)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,-1),
@@ -187,8 +191,9 @@ OutputMixer::SetEngineInformation(voe::Statistics& engineStatistics)
     return 0;
 }
 
-int32_t
-OutputMixer::SetAudioProcessingModule(AudioProcessing* audioProcessingModule)
+WebRtc_Word32 
+OutputMixer::SetAudioProcessingModule(
+    AudioProcessing* audioProcessingModule)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::SetAudioProcessingModule("
@@ -222,7 +227,7 @@ int OutputMixer::DeRegisterExternalMediaProcessing()
     return 0;
 }
 
-int OutputMixer::PlayDtmfTone(uint8_t eventCode, int lengthMs,
+int OutputMixer::PlayDtmfTone(WebRtc_UWord8 eventCode, int lengthMs,
                               int attenuationDb)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
@@ -237,7 +242,7 @@ int OutputMixer::PlayDtmfTone(uint8_t eventCode, int lengthMs,
     return 0;
 }
 
-int OutputMixer::StartPlayingDtmfTone(uint8_t eventCode,
+int OutputMixer::StartPlayingDtmfTone(WebRtc_UWord8 eventCode,
                                       int attenuationDb)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
@@ -260,41 +265,41 @@ int OutputMixer::StopPlayingDtmfTone()
     return (_dtmfGenerator.StopTone());
 }
 
-int32_t
+WebRtc_Word32
 OutputMixer::SetMixabilityStatus(MixerParticipant& participant,
                                  const bool mixable)
 {
     return _mixerModule.SetMixabilityStatus(participant, mixable);
 }
 
-int32_t
+WebRtc_Word32
 OutputMixer::SetAnonymousMixabilityStatus(MixerParticipant& participant,
                                           const bool mixable)
 {
     return _mixerModule.SetAnonymousMixabilityStatus(participant,mixable);
 }
 
-int32_t
+WebRtc_Word32
 OutputMixer::MixActiveChannels()
 {
     return _mixerModule.Process();
 }
 
 int
-OutputMixer::GetSpeechOutputLevel(uint32_t& level)
+OutputMixer::GetSpeechOutputLevel(WebRtc_UWord32& level)
 {
-    int8_t currentLevel = _audioLevel.Level();
-    level = static_cast<uint32_t> (currentLevel);
+    WebRtc_Word8 currentLevel = _audioLevel.Level();
+    level = static_cast<WebRtc_UWord32> (currentLevel);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,-1),
                  "GetSpeechOutputLevel() => level=%u", level);
     return 0;
 }
 
 int
-OutputMixer::GetSpeechOutputLevelFullRange(uint32_t& level)
+OutputMixer::GetSpeechOutputLevelFullRange(WebRtc_UWord32& level)
 {
-    int16_t currentLevel = _audioLevel.LevelFullRange();
-    level = static_cast<uint32_t> (currentLevel);
+    WebRtc_Word16 currentLevel = _audioLevel.LevelFullRange();
+    level = static_cast<WebRtc_UWord32> (currentLevel);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,-1),
                  "GetSpeechOutputLevelFullRange() => level=%u", level);
     return 0;
@@ -335,7 +340,7 @@ int OutputMixer::StartRecordingPlayout(const char* fileName,
     }
 
     FileFormats format;
-    const uint32_t notificationTime(0);
+    const WebRtc_UWord32 notificationTime(0);
     CodecInst dummyCodec={100,"L16",16000,320,1,320000};
 
     if ((codecInst != NULL) &&
@@ -363,7 +368,7 @@ int OutputMixer::StartRecordingPlayout(const char* fileName,
     }
 
     CriticalSectionScoped cs(&_fileCritSect);
-
+    
     // Destroy the old instance
     if (_outputFileRecorderPtr)
     {
@@ -416,7 +421,7 @@ int OutputMixer::StartRecordingPlayout(OutStream* stream,
     }
 
     FileFormats format;
-    const uint32_t notificationTime(0);
+    const WebRtc_UWord32 notificationTime(0);
     CodecInst dummyCodec={100,"L16",16000,320,1,320000};
 
     if (codecInst != NULL && codecInst->channels != 1)
@@ -531,7 +536,7 @@ int OutputMixer::GetMixedAudio(int sample_rate_hz,
   return RemixAndResample(_audioFrame, &_resampler, frame);
 }
 
-int32_t
+WebRtc_Word32
 OutputMixer::DoOperationsOnCombinedSignal()
 {
     if (_audioFrame.sample_rate_hz_ != _mixingFrequencyHz)
@@ -579,7 +584,7 @@ OutputMixer::DoOperationsOnCombinedSignal()
             _externalMediaCallbackPtr->Process(
                 -1,
                 kPlaybackAllChannelsMixed,
-                (int16_t*)_audioFrame.data_,
+                (WebRtc_Word16*)_audioFrame.data_,
                 _audioFrame.samples_per_channel_,
                 _audioFrame.sample_rate_hz_,
                 isStereo);
@@ -614,19 +619,19 @@ void OutputMixer::APMAnalyzeReverseStream() {
 int
 OutputMixer::InsertInbandDtmfTone()
 {
-    uint16_t sampleRate(0);
+    WebRtc_UWord16 sampleRate(0);
     _dtmfGenerator.GetSampleRate(sampleRate);
     if (sampleRate != _audioFrame.sample_rate_hz_)
     {
         // Update sample rate of Dtmf tone since the mixing frequency changed.
         _dtmfGenerator.SetSampleRate(
-            (uint16_t)(_audioFrame.sample_rate_hz_));
+            (WebRtc_UWord16)(_audioFrame.sample_rate_hz_));
         // Reset the tone to be added taking the new sample rate into account.
         _dtmfGenerator.ResetTone();
     }
 
-    int16_t toneBuffer[320];
-    uint16_t toneSamples(0);
+    WebRtc_Word16 toneBuffer[320];
+    WebRtc_UWord16 toneSamples(0);
     if (_dtmfGenerator.Get10msTone(toneBuffer, toneSamples) == -1)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
@@ -639,7 +644,7 @@ OutputMixer::InsertInbandDtmfTone()
     if (_audioFrame.num_channels_ == 1)
     {
         // mono
-        memcpy(_audioFrame.data_, toneBuffer, sizeof(int16_t)
+        memcpy(_audioFrame.data_, toneBuffer, sizeof(WebRtc_Word16)
             * toneSamples);
     } else
     {

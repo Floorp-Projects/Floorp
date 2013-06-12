@@ -26,14 +26,15 @@ public:
     // audio every time it's called.
     //
     // If it returns -1, the frame will not be added to the mix.
-    virtual int32_t GetAudioFrame(const int32_t id, AudioFrame& audioFrame) = 0;
+    virtual WebRtc_Word32 GetAudioFrame(const WebRtc_Word32 id,
+                                        AudioFrame& audioFrame) = 0;
 
     // mixed will be set to true if the participant was mixed this mix iteration
-    int32_t IsMixed(bool& mixed) const;
+    WebRtc_Word32 IsMixed(bool& mixed) const;
 
     // This function specifies the sampling frequency needed for the AudioFrame
     // for future GetAudioFrame(..) calls.
-    virtual int32_t NeededFrequency(const int32_t id) = 0;
+    virtual WebRtc_Word32 NeededFrequency(const WebRtc_Word32 id) = 0;
 
     MixHistory* _mixHistory;
 protected:
@@ -44,8 +45,8 @@ protected:
 // Container struct for participant statistics.
 struct ParticipantStatistics
 {
-    int32_t participant;
-    int32_t level;
+    WebRtc_Word32 participant;
+    WebRtc_Word32 level;
 };
 
 class AudioMixerStatusReceiver
@@ -54,20 +55,20 @@ public:
     // Callback function that provides an array of ParticipantStatistics for the
     // participants that were mixed last mix iteration.
     virtual void MixedParticipants(
-        const int32_t id,
+        const WebRtc_Word32 id,
         const ParticipantStatistics* participantStatistics,
-        const uint32_t size) = 0;
+        const WebRtc_UWord32 size) = 0;
     // Callback function that provides an array of the ParticipantStatistics for
     // the participants that had a positiv VAD last mix iteration.
     virtual void VADPositiveParticipants(
-        const int32_t id,
+        const WebRtc_Word32 id,
         const ParticipantStatistics* participantStatistics,
-        const uint32_t size) = 0;
+        const WebRtc_UWord32 size) = 0;
     // Callback function that provides the audio level of the mixed audio frame
     // from the last mix iteration.
     virtual void MixedAudioLevel(
-        const int32_t  id,
-        const uint32_t level) = 0;
+        const WebRtc_Word32  id,
+        const WebRtc_UWord32 level) = 0;
 protected:
     AudioMixerStatusReceiver() {}
     virtual ~AudioMixerStatusReceiver() {}
@@ -79,10 +80,10 @@ public:
     // This callback function provides the mixed audio for this mix iteration.
     // Note that uniqueAudioFrames is an array of AudioFrame pointers with the
     // size according to the size parameter.
-    virtual void NewMixedAudio(const int32_t id,
+    virtual void NewMixedAudio(const WebRtc_Word32 id,
                                const AudioFrame& generalAudioFrame,
                                const AudioFrame** uniqueAudioFrames,
-                               const uint32_t size) = 0;
+                               const WebRtc_UWord32 size) = 0;
 protected:
     AudioMixerOutputReceiver() {}
     virtual ~AudioMixerOutputReceiver() {}
@@ -94,7 +95,7 @@ public:
     // This callback function provides the mix decision for this mix iteration.
     // mixerList is a list of elements of the type
     // [int,MixerParticipant*]
-    virtual void NewAudioToRelay(const int32_t id,
+    virtual void NewAudioToRelay(const WebRtc_Word32 id,
                                  const MapWrapper& mixerList) = 0;
 protected:
     AudioRelayReceiver() {}

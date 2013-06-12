@@ -25,18 +25,18 @@ public:
     VPMBrightnessDetection();
     ~VPMBrightnessDetection();
 
-    int32_t ChangeUniqueId(int32_t id);
+    WebRtc_Word32 ChangeUniqueId(WebRtc_Word32 id);
 
     void Reset();
 
-    int32_t ProcessFrame(const I420VideoFrame& frame,
-                         const VideoProcessingModule::FrameStats& stats);
+    WebRtc_Word32 ProcessFrame(const I420VideoFrame& frame,
+                               const VideoProcessingModule::FrameStats& stats);
 
 private:
-    int32_t _id;
+    WebRtc_Word32 _id;
 
-    uint32_t _frameCntBright;
-    uint32_t _frameCntDark;
+    WebRtc_UWord32 _frameCntBright;
+    WebRtc_UWord32 _frameCntDark;
 };
 
 } //namespace

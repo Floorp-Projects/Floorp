@@ -99,12 +99,12 @@ public:
     // The network parameters of the link. Regarding packet losses, packets
     // belonging to the first frame (same RTP timestamp) will never be dropped.
     void SetNetworkParameters(const NetworkParameters& network_parameters);
-    void SetSSRCFilter(uint32_t SSRC);
+    void SetSSRCFilter(WebRtc_UWord32 SSRC);
 
     void ClearStats();
-    void GetStats(int32_t& numRtpPackets,
-                  int32_t& numDroppedPackets,
-                  int32_t& numRtcpPackets);
+    void GetStats(WebRtc_Word32& numRtpPackets,
+                  WebRtc_Word32& numDroppedPackets,
+                  WebRtc_Word32& numRtcpPackets);
 
     void SetTemporalToggle(unsigned char layers);
     void EnableSSRCCheck();
@@ -123,7 +123,7 @@ private:
     static int GaussianRandom(int mean_ms, int standard_deviation_ms);
     bool UniformLoss(int loss_rate);
     bool GilbertElliotLoss(int loss_rate, int burst_length);
-    int64_t NowMs();
+    WebRtc_Word64 NowMs();
 
     enum
     {
@@ -135,10 +135,10 @@ private:
     };
     typedef struct
     {
-        int8_t packetBuffer[KMaxPacketSize];
-        int32_t length;
-        int32_t channel;
-        int64_t receiveTime;
+        WebRtc_Word8 packetBuffer[KMaxPacketSize];
+        WebRtc_Word32 length;
+        WebRtc_Word32 channel;
+        WebRtc_Word64 receiveTime;
     } VideoPacket;
 
     int sender_channel_;
@@ -150,9 +150,9 @@ private:
     webrtc::CriticalSectionWrapper& _statCrit;
 
     NetworkParameters network_parameters_;
-    int32_t _rtpCount;
-    int32_t _rtcpCount;
-    int32_t _dropCount;
+    WebRtc_Word32 _rtpCount;
+    WebRtc_Word32 _rtcpCount;
+    WebRtc_Word32 _dropCount;
 
     std::list<VideoPacket*> _rtpPackets;
     std::list<VideoPacket*> _rtcpPackets;
@@ -169,18 +169,18 @@ private:
     unsigned int _lastTimeMs;
 
     bool _checkSSRC;
-    uint32_t _lastSSRC;
+    WebRtc_UWord32 _lastSSRC;
     bool _filterSSRC;
-    uint32_t _SSRC;
+    WebRtc_UWord32 _SSRC;
     bool _checkSequenceNumber;
-    uint16_t _firstSequenceNumber;
+    WebRtc_UWord16 _firstSequenceNumber;
 
     // Keep track of the first RTP timestamp so we don't do packet loss on
     // the first frame.
-    uint32_t _firstRTPTimestamp;
+    WebRtc_UWord32 _firstRTPTimestamp;
     // Track RTP timestamps so we invoke callbacks properly (if registered).
-    uint32_t _lastSendRTPTimestamp;
-    uint32_t _lastReceiveRTPTimestamp;
+    WebRtc_UWord32 _lastSendRTPTimestamp;
+    WebRtc_UWord32 _lastReceiveRTPTimestamp;
     int64_t last_receive_time_;
     bool previous_drop_;
 };

@@ -44,7 +44,7 @@ int ViECaptureImpl::Release() {
   // Decrease ref count
   (*this)--;
 
-  int32_t ref_count = GetCount();
+  WebRtc_Word32 ref_count = GetCount();
   if (ref_count < 0) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo, shared_data_->instance_id(),
                  "ViECapture release too many times");
@@ -114,10 +114,10 @@ int ViECaptureImpl::AllocateCaptureDevice(
                  shared_data_->instance_id());
     return -1;
   }
-  const int32_t result =
+  const WebRtc_Word32 result =
       shared_data_->input_manager()->CreateCaptureDevice(
           unique_idUTF8,
-          static_cast<const uint32_t>(unique_idUTF8Length),
+          static_cast<const WebRtc_UWord32>(unique_idUTF8Length),
           capture_id);
   if (result != 0) {
     shared_data_->SetLastError(result);
@@ -138,7 +138,7 @@ int ViECaptureImpl::AllocateExternalCaptureDevice(
                  shared_data_->instance_id());
     return -1;
   }
-  const int32_t result =
+  const WebRtc_Word32 result =
       shared_data_->input_manager()->CreateExternalCaptureDevice(
           external_capture, capture_id);
 
@@ -161,7 +161,7 @@ int ViECaptureImpl::AllocateCaptureDevice(
                  shared_data_->instance_id());
     return -1;
   }
-  const int32_t result =
+  const WebRtc_Word32 result =
       shared_data_->input_manager()->CreateCaptureDevice(&capture_module,
                                                          capture_id);
   if (result != 0) {

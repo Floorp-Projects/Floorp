@@ -14,15 +14,15 @@
 #include "settings.h"
 
 /* cdf array for model indicator */
-const uint16_t WebRtcIsac_kQKltModelCdf[4] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltModelCdf[4] = {
     0,  15434,  37548,  65535 };
 
 /* pointer to cdf array for model indicator */
-const uint16_t *WebRtcIsac_kQKltModelCdfPtr[1] = {
+const WebRtc_UWord16 *WebRtcIsac_kQKltModelCdfPtr[1] = {
     WebRtcIsac_kQKltModelCdf };
 
 /* initial cdf index for decoder of model indicator */
-const uint16_t WebRtcIsac_kQKltModelInitIndex[1] = { 1 };
+const WebRtc_UWord16 WebRtcIsac_kQKltModelInitIndex[1] = { 1 };
 
 /* offset to go from rounded value to quantization index */
 const short WebRtcIsac_kQKltQuantMinGain[12] = {
@@ -43,10 +43,10 @@ const short WebRtcIsac_kQKltQuantMinShape[108] = {
     5,  6,  7,  11,  9,  13,  12,  26 };
 
 /* maximum quantization index */
-const uint16_t WebRtcIsac_kQKltMaxIndGain[12] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltMaxIndGain[12] = {
     6,  12,  8,  14,  10,  19,  12,  31,  22,  56, 52,  138 };
 
-const uint16_t WebRtcIsac_kQKltMaxIndShape[108] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltMaxIndShape[108] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
     2,  2,  2,  2,  4,  4,  5,  6,  0,  0,
     0,  0,  1,  0,  0,  0,  0,  1,  2,  2,
@@ -60,10 +60,10 @@ const uint16_t WebRtcIsac_kQKltMaxIndShape[108] = {
     9,  10,  13,  19,  17,  23,  25,  49 };
 
 /* index offset */
-const uint16_t WebRtcIsac_kQKltOffsetGain[12] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltOffsetGain[12] = {
     0,  7,  20,  29,  44,  55,  75,  88,  120,  143,  200,  253 };
 
-const uint16_t WebRtcIsac_kQKltOffsetShape[108] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltOffsetShape[108] = {
     0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
     11,  14,  17,  20,  23,  28,  33,  39,  46,  47,
     48,  49,  50,  52,  53,  54,  55,  56,  58,  61,
@@ -77,10 +77,10 @@ const uint16_t WebRtcIsac_kQKltOffsetShape[108] = {
     405,  415,  426,  440,  460,  478,  502,  528 };
 
 /* initial cdf index for KLT coefficients */
-const uint16_t WebRtcIsac_kQKltInitIndexGain[12] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltInitIndexGain[12] = {
     3,  6,  4,  7,  5,  10,  6,  16,  11,  28, 26,  69};
 
-const uint16_t WebRtcIsac_kQKltInitIndexShape[108] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltInitIndexShape[108] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
     1,  1,  1,  1,  2,  2,  3,  3,  0,  0,
     0,  0,  1,  0,  0,  0,  0,  1,  1,  1,
@@ -296,7 +296,7 @@ const double WebRtcIsac_kQKltLevelsShape[578] = {
 
 
 /* cdf tables for quantizer indices */
-const uint16_t WebRtcIsac_kQKltCdfGain[404] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltCdfGain[404] = {
     0,  13,  301,  3730,  61784,  65167,  65489,  65535,  0,  17,
     142,  314,  929,  2466,  7678,  56450,  63463,  64740,  65204,  65426,
     65527,  65535,  0,  8,  100,  724,  6301,  60105,  65125,  65510,
@@ -340,7 +340,7 @@ const uint16_t WebRtcIsac_kQKltCdfGain[404] = {
     65514,  65516,  65518,  65522,  65531,  65533,  65535 };
 
 
-const uint16_t WebRtcIsac_kQKltCdfShape[686] = {
+const WebRtc_UWord16 WebRtcIsac_kQKltCdfShape[686] = {
     0,  65535,  0,  65535,  0,  65535,  0,  65535,  0,  65535,
     0,  65535,  0,  65535,  0,  65535,  0,  65535,  0,  4,
     65535,  0,  8,  65514,  65535,  0,  29,  65481,  65535,  0,
@@ -413,7 +413,7 @@ const uint16_t WebRtcIsac_kQKltCdfShape[686] = {
 
 
 /* pointers to cdf tables for quantizer indices */
-const uint16_t *WebRtcIsac_kQKltCdfPtrGain[12] = {
+const WebRtc_UWord16 *WebRtcIsac_kQKltCdfPtrGain[12] = {
     WebRtcIsac_kQKltCdfGain +0 +0, WebRtcIsac_kQKltCdfGain +0 +8,
     WebRtcIsac_kQKltCdfGain +0 +22, WebRtcIsac_kQKltCdfGain +0 +32,
     WebRtcIsac_kQKltCdfGain +0 +48, WebRtcIsac_kQKltCdfGain +0 +60,
@@ -421,7 +421,7 @@ const uint16_t *WebRtcIsac_kQKltCdfPtrGain[12] = {
     WebRtcIsac_kQKltCdfGain +0 +128, WebRtcIsac_kQKltCdfGain +0 +152,
     WebRtcIsac_kQKltCdfGain +0 +210, WebRtcIsac_kQKltCdfGain +0 +264 };
 
-const uint16_t *WebRtcIsac_kQKltCdfPtrShape[108] = {
+const WebRtc_UWord16 *WebRtcIsac_kQKltCdfPtrShape[108] = {
     WebRtcIsac_kQKltCdfShape +0 +0, WebRtcIsac_kQKltCdfShape +0 +2,
     WebRtcIsac_kQKltCdfShape +0 +4, WebRtcIsac_kQKltCdfShape +0 +6,
     WebRtcIsac_kQKltCdfShape +0 +8, WebRtcIsac_kQKltCdfShape +0 +10,

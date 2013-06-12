@@ -26,9 +26,9 @@ class CriticalSectionWrapper;
 class ProcessThread;
 class RtpRtcp;
 
-class VieRemb : public RemoteBitrateObserver {
+class VieRemb : public RemoteBitrateObserver, public Module {
  public:
-  VieRemb();
+  explicit VieRemb(ProcessThread* process_thread);
   ~VieRemb();
 
   // Called to add a receive channel to include in the REMB packet.
@@ -54,9 +54,15 @@ class VieRemb : public RemoteBitrateObserver {
   virtual void OnReceiveBitrateChanged(std::vector<unsigned int>* ssrcs,
                                        unsigned int bitrate);
 
+  // Implements Module.
+  virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
+  virtual WebRtc_Word32 TimeUntilNextProcess();
+  virtual WebRtc_Word32 Process();
+
  private:
   typedef std::list<RtpRtcp*> RtpModules;
 
+  ProcessThread* process_thread_;
   scoped_ptr<CriticalSectionWrapper> list_crit_;
 
   // The last time a REMB was sent.
@@ -72,6 +78,7 @@ class VieRemb : public RemoteBitrateObserver {
   // The last bitrate update.
   unsigned int bitrate_;
   std::vector<unsigned int> ssrcs_;
+  int64_t bitrate_update_time_ms_;
 };
 
 }  // namespace webrtc

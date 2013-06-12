@@ -17,35 +17,35 @@ namespace webrtc {
 class BitstreamBuilder
 {
 public:
-    BitstreamBuilder(uint8_t* data, const uint32_t dataSize);
+    BitstreamBuilder(WebRtc_UWord8* data, const WebRtc_UWord32 dataSize);
 
-    uint32_t Length() const;
+    WebRtc_UWord32 Length() const;
 
-    int32_t Add1Bit(const uint8_t bit);
-    int32_t Add2Bits(const uint8_t bits);
-    int32_t Add3Bits(const uint8_t bits);
-    int32_t Add4Bits(const uint8_t bits);
-    int32_t Add5Bits(const uint8_t bits);
-    int32_t Add6Bits(const uint8_t bits);
-    int32_t Add7Bits(const uint8_t bits);
-    int32_t Add8Bits(const uint8_t bits);
-    int32_t Add16Bits(const uint16_t bits);
-    int32_t Add24Bits(const uint32_t bits);
-    int32_t Add32Bits(const uint32_t bits);
+    WebRtc_Word32 Add1Bit(const WebRtc_UWord8 bit);
+    WebRtc_Word32 Add2Bits(const WebRtc_UWord8 bits);
+    WebRtc_Word32 Add3Bits(const WebRtc_UWord8 bits);
+    WebRtc_Word32 Add4Bits(const WebRtc_UWord8 bits);
+    WebRtc_Word32 Add5Bits(const WebRtc_UWord8 bits);
+    WebRtc_Word32 Add6Bits(const WebRtc_UWord8 bits);
+    WebRtc_Word32 Add7Bits(const WebRtc_UWord8 bits);
+    WebRtc_Word32 Add8Bits(const WebRtc_UWord8 bits);
+    WebRtc_Word32 Add16Bits(const WebRtc_UWord16 bits);
+    WebRtc_Word32 Add24Bits(const WebRtc_UWord32 bits);
+    WebRtc_Word32 Add32Bits(const WebRtc_UWord32 bits);
 
     // Exp-Golomb codes
-    int32_t AddUE(const uint32_t value);
+    WebRtc_Word32 AddUE(const WebRtc_UWord32 value);
 
 private:
-    int32_t AddPrefix(const uint8_t numZeros);
-    void AddSuffix(const uint8_t numBits, const uint32_t rest);
-    void Add1BitWithoutSanity(const uint8_t bit);
+    WebRtc_Word32 AddPrefix(const WebRtc_UWord8 numZeros);
+    void AddSuffix(const WebRtc_UWord8 numBits, const WebRtc_UWord32 rest);
+    void Add1BitWithoutSanity(const WebRtc_UWord8 bit);
 
-    uint8_t* _data;
-    uint32_t _dataSize;
+    WebRtc_UWord8* _data;
+    WebRtc_UWord32 _dataSize;
 
-    uint32_t _byteOffset;
-    uint8_t  _bitOffset;
+    WebRtc_UWord32 _byteOffset;
+    WebRtc_UWord8  _bitOffset;
 };
 } // namespace webrtc
 

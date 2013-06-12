@@ -18,23 +18,23 @@
 
 namespace webrtc {
 
-static const int kMaxChangeMs = 80;
-static const int kMaxDeltaDelayMs = 10000;
-static const int kFilterLength = 4;
-// Minimum difference between audio and video to warrant a change.
-static const int kMinDeltaMs = 30;
+const int kMaxVideoDiffMs = 80;
+const int kMaxAudioDiffMs = 80;
+const int kMaxDelay = 1500;
 
 struct ViESyncDelay {
   ViESyncDelay() {
     extra_video_delay_ms = 0;
     last_video_delay_ms = 0;
     extra_audio_delay_ms = 0;
+    last_sync_delay = 0;
     network_delay = 120;
   }
 
   int extra_video_delay_ms;
   int last_video_delay_ms;
   int extra_audio_delay_ms;
+  int last_sync_delay;
   int network_delay;
 };
 
@@ -42,9 +42,7 @@ StreamSynchronization::StreamSynchronization(int audio_channel_id,
                                              int video_channel_id)
     : channel_delay_(new ViESyncDelay),
       audio_channel_id_(audio_channel_id),
-      video_channel_id_(video_channel_id),
-      base_target_delay_ms_(0),
-      avg_diff_ms_(0) {}
+      video_channel_id_(video_channel_id) {}
 
 StreamSynchronization::~StreamSynchronization() {
   delete channel_delay_;
@@ -78,8 +76,7 @@ bool StreamSynchronization::ComputeRelativeDelay(
   *relative_delay_ms = video_measurement.latest_receive_time_ms -
       audio_measurement.latest_receive_time_ms -
       (video_last_capture_time_ms - audio_last_capture_time_ms);
-  if (*relative_delay_ms > kMaxDeltaDelayMs ||
-      *relative_delay_ms < -kMaxDeltaDelayMs) {
+  if (*relative_delay_ms > 1000 || *relative_delay_ms < -1000) {
     return false;
   }
   return true;
@@ -90,8 +87,6 @@ bool StreamSynchronization::ComputeDelays(int relative_delay_ms,
                                           int* extra_audio_delay_ms,
                                           int* total_video_delay_target_ms) {
   assert(extra_audio_delay_ms && total_video_delay_target_ms);
-
-  int current_video_delay_ms = *total_video_delay_target_ms;
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, video_channel_id_,
                "Audio delay is: %d for voice channel: %d",
                current_audio_delay_ms, audio_channel_id_);
@@ -104,114 +99,150 @@ bool StreamSynchronization::ComputeDelays(int relative_delay_ms,
                "Current diff is: %d for audio channel: %d",
                relative_delay_ms, audio_channel_id_);
 
-  int current_diff_ms = current_video_delay_ms - current_audio_delay_ms +
+  int current_diff_ms = *total_video_delay_target_ms - current_audio_delay_ms +
       relative_delay_ms;
 
-  avg_diff_ms_ = ((kFilterLength - 1) * avg_diff_ms_ +
-      current_diff_ms) / kFilterLength;
-  if (abs(avg_diff_ms_) < kMinDeltaMs) {
-    // Don't adjust if the diff is within our margin.
-    return false;
-  }
-
-  // Make sure we don't move too fast.
-  int diff_ms = avg_diff_ms_ / 2;
-  diff_ms = std::min(diff_ms, kMaxChangeMs);
-  diff_ms = std::max(diff_ms, -kMaxChangeMs);
-
-  // Reset the average after a move to prevent overshooting reaction.
-  avg_diff_ms_ = 0;
-
-  if (diff_ms > 0) {
+  int video_delay_ms = 0;
+  if (current_diff_ms > 0) {
     // The minimum video delay is longer than the current audio delay.
-    // We need to decrease extra video delay, or add extra audio delay.
-    if (channel_delay_->extra_video_delay_ms > base_target_delay_ms_) {
+    // We need to decrease extra video delay, if we have added extra delay
+    // earlier, or add extra audio delay.
+    if (channel_delay_->extra_video_delay_ms > 0) {
       // We have extra delay added to ViE. Reduce this delay before adding
       // extra delay to VoE.
-      channel_delay_->extra_video_delay_ms -= diff_ms;
-      channel_delay_->extra_audio_delay_ms = base_target_delay_ms_;
+
+      // This is the desired delay, we can't reduce more than this.
+      video_delay_ms = *total_video_delay_target_ms;
+
+      // Check that we don't reduce the delay more than what is allowed.
+      if (video_delay_ms <
+          channel_delay_->last_video_delay_ms - kMaxVideoDiffMs) {
+        video_delay_ms =
+            channel_delay_->last_video_delay_ms - kMaxVideoDiffMs;
+        channel_delay_->extra_video_delay_ms =
+            video_delay_ms - *total_video_delay_target_ms;
+      } else {
+        channel_delay_->extra_video_delay_ms = 0;
+      }
+      channel_delay_->last_video_delay_ms = video_delay_ms;
+      channel_delay_->last_sync_delay = -1;
+      channel_delay_->extra_audio_delay_ms = 0;
     } else {  // channel_delay_->extra_video_delay_ms > 0
       // We have no extra video delay to remove, increase the audio delay.
-      channel_delay_->extra_audio_delay_ms += diff_ms;
-      channel_delay_->extra_video_delay_ms = base_target_delay_ms_;
+      if (channel_delay_->last_sync_delay >= 0) {
+        // We have increased the audio delay earlier, increase it even more.
+        int audio_diff_ms = current_diff_ms / 2;
+        if (audio_diff_ms > kMaxAudioDiffMs) {
+          // We only allow a maximum change of KMaxAudioDiffMS for audio
+          // due to NetEQ maximum changes.
+          audio_diff_ms = kMaxAudioDiffMs;
+        }
+        // Increase the audio delay
+        channel_delay_->extra_audio_delay_ms += audio_diff_ms;
+
+        // Don't set a too high delay.
+        if (channel_delay_->extra_audio_delay_ms > kMaxDelay) {
+          channel_delay_->extra_audio_delay_ms = kMaxDelay;
+        }
+
+        // Don't add any extra video delay.
+        video_delay_ms = *total_video_delay_target_ms;
+        channel_delay_->extra_video_delay_ms = 0;
+        channel_delay_->last_video_delay_ms = video_delay_ms;
+        channel_delay_->last_sync_delay = 1;
+      } else {  // channel_delay_->last_sync_delay >= 0
+        // First time after a delay change, don't add any extra delay.
+        // This is to not toggle back and forth too much.
+        channel_delay_->extra_audio_delay_ms = 0;
+        // Set minimum video delay
+        video_delay_ms = *total_video_delay_target_ms;
+        channel_delay_->extra_video_delay_ms = 0;
+        channel_delay_->last_video_delay_ms = video_delay_ms;
+        channel_delay_->last_sync_delay = 0;
+      }
     }
-  } else {  // if (diff_ms > 0)
-    // The video delay is lower than the current audio delay.
-    // We need to decrease extra audio delay, or add extra video delay.
-    if (channel_delay_->extra_audio_delay_ms > base_target_delay_ms_) {
-      // We have extra delay in VoiceEngine.
-      // Start with decreasing the voice delay.
-      // Note: diff_ms is negative; add the negative difference.
-      channel_delay_->extra_audio_delay_ms += diff_ms;
-      channel_delay_->extra_video_delay_ms = base_target_delay_ms_;
-    } else {  // channel_delay_->extra_audio_delay_ms > base_target_delay_ms_
+  } else {  // if (current_diffMS > 0)
+    // The minimum video delay is lower than the current audio delay.
+    // We need to decrease possible extra audio delay, or
+    // add extra video delay.
+
+    if (channel_delay_->extra_audio_delay_ms > 0) {
+      // We have extra delay in VoiceEngine
+      // Start with decreasing the voice delay
+      int audio_diff_ms = current_diff_ms / 2;
+      if (audio_diff_ms < -1 * kMaxAudioDiffMs) {
+        // Don't change the delay too much at once.
+        audio_diff_ms = -1 * kMaxAudioDiffMs;
+      }
+      // Add the negative difference.
+      channel_delay_->extra_audio_delay_ms += audio_diff_ms;
+
+      if (channel_delay_->extra_audio_delay_ms < 0) {
+        // Negative values not allowed.
+        channel_delay_->extra_audio_delay_ms = 0;
+        channel_delay_->last_sync_delay = 0;
+      } else {
+        // There is more audio delay to use for the next round.
+        channel_delay_->last_sync_delay = 1;
+      }
+
+      // Keep the video delay at the minimum values.
+      video_delay_ms = *total_video_delay_target_ms;
+      channel_delay_->extra_video_delay_ms = 0;
+      channel_delay_->last_video_delay_ms = video_delay_ms;
+    } else {  // channel_delay_->extra_audio_delay_ms > 0
       // We have no extra delay in VoiceEngine, increase the video delay.
-      // Note: diff_ms is negative; subtract the negative difference.
-      channel_delay_->extra_video_delay_ms -= diff_ms;  // X - (-Y) = X + Y.
-      channel_delay_->extra_audio_delay_ms = base_target_delay_ms_;
+      channel_delay_->extra_audio_delay_ms = 0;
+
+      // Make the difference positive.
+      int video_diff_ms = -1 * current_diff_ms;
+
+      // This is the desired delay.
+      video_delay_ms = *total_video_delay_target_ms + video_diff_ms;
+      if (video_delay_ms > channel_delay_->last_video_delay_ms) {
+        if (video_delay_ms >
+            channel_delay_->last_video_delay_ms + kMaxVideoDiffMs) {
+          // Don't increase the delay too much at once
+          video_delay_ms =
+              channel_delay_->last_video_delay_ms + kMaxVideoDiffMs;
+        }
+        // Verify we don't go above the maximum allowed delay
+        if (video_delay_ms > kMaxDelay) {
+          video_delay_ms = kMaxDelay;
+        }
+      } else {
+        if (video_delay_ms <
+            channel_delay_->last_video_delay_ms - kMaxVideoDiffMs) {
+          // Don't decrease the delay too much at once
+          video_delay_ms =
+              channel_delay_->last_video_delay_ms - kMaxVideoDiffMs;
+        }
+        // Verify we don't go below the minimum delay
+        if (video_delay_ms < *total_video_delay_target_ms) {
+          video_delay_ms = *total_video_delay_target_ms;
+        }
+      }
+      // Store the values
+      channel_delay_->extra_video_delay_ms =
+          video_delay_ms - *total_video_delay_target_ms;
+      channel_delay_->last_video_delay_ms = video_delay_ms;
+      channel_delay_->last_sync_delay = -1;
     }
   }
-
-  // Make sure that video is never below our target.
-  channel_delay_->extra_video_delay_ms = std::max(
-      channel_delay_->extra_video_delay_ms, base_target_delay_ms_);
-
-  int new_video_delay_ms;
-  if (channel_delay_->extra_video_delay_ms > base_target_delay_ms_) {
-    new_video_delay_ms = channel_delay_->extra_video_delay_ms;
-  } else {
-    // No change to the extra video delay. We are changing audio and we only
-    // allow to change one at the time.
-    new_video_delay_ms = channel_delay_->last_video_delay_ms;
-  }
-
-  // Make sure that we don't go below the extra video delay.
-  new_video_delay_ms = std::max(
-      new_video_delay_ms, channel_delay_->extra_video_delay_ms);
-
-  // Verify we don't go above the maximum allowed video delay.
-  new_video_delay_ms =
-      std::min(new_video_delay_ms, base_target_delay_ms_ + kMaxDeltaDelayMs);
-
-  // Make sure that audio is never below our target.
-  channel_delay_->extra_audio_delay_ms =
-      std::max(base_target_delay_ms_, channel_delay_->extra_audio_delay_ms);
-
-  // Verify we don't go above the maximum allowed audio delay.
-  channel_delay_->extra_audio_delay_ms = std::min(
-      channel_delay_->extra_audio_delay_ms,
-      base_target_delay_ms_ + kMaxDeltaDelayMs);
-
-  // Remember our last video delay.
-  channel_delay_->last_video_delay_ms = new_video_delay_ms;
 
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, video_channel_id_,
       "Sync video delay %d ms for video channel and audio delay %d for audio "
       "channel %d",
-      new_video_delay_ms, channel_delay_->extra_audio_delay_ms,
-      audio_channel_id_);
+      video_delay_ms, channel_delay_->extra_audio_delay_ms, audio_channel_id_);
 
-  // Return values.
   *extra_audio_delay_ms = channel_delay_->extra_audio_delay_ms;
-  *total_video_delay_target_ms = new_video_delay_ms;
+
+  if (video_delay_ms < 0) {
+    video_delay_ms = 0;
+  }
+  *total_video_delay_target_ms =
+      (*total_video_delay_target_ms  >  video_delay_ms) ?
+      *total_video_delay_target_ms : video_delay_ms;
   return true;
 }
-
-void StreamSynchronization::SetTargetBufferingDelay(int target_delay_ms) {
-  // Initial extra delay for audio (accounting for existing extra delay).
-  channel_delay_->extra_audio_delay_ms +=
-      target_delay_ms - base_target_delay_ms_;
-
-  // The video delay is compared to the last value (and how much we can update
-  // is limited by that as well).
-  channel_delay_->last_video_delay_ms +=
-      target_delay_ms - base_target_delay_ms_;
-
-  channel_delay_->extra_video_delay_ms +=
-      target_delay_ms - base_target_delay_ms_;
-
-  // Video is already delayed by the desired amount.
-  base_target_delay_ms_ = target_delay_ms;
-}
-
 }  // namespace webrtc

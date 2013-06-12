@@ -18,16 +18,13 @@
 
 #include "voe_codec.h"
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "webrtc/test/channel_transport/include/channel_transport.h"
-
 class ViEAutotestFileObserver: public webrtc::ViEFileObserver
 {
 public:
     ViEAutotestFileObserver() {};
     ~ViEAutotestFileObserver() {};
 
-    void PlayFileEnded(const int32_t fileId)
+    void PlayFileEnded(const WebRtc_Word32 fileId)
     {
         ViETest::Log("PlayFile ended");
     }
@@ -106,19 +103,14 @@ void ViEAutoTest::ViEFileStandardTest()
                 break;
             }
         }
+
+
         const char* ipAddress = "127.0.0.1";
         const unsigned short rtpPort = 6000;
-
-        webrtc::scoped_ptr<webrtc::test::VideoChannelTransport>
-            video_channel_transport(
-                new webrtc::test::VideoChannelTransport(ptrViENetwork,
-                                                        videoChannel));
-
-        EXPECT_EQ(0, video_channel_transport->SetSendDestination(ipAddress,
-                                                                 rtpPort));
-        EXPECT_EQ(0, video_channel_transport->SetLocalReceiver(rtpPort));
-
+        EXPECT_EQ(0, ptrViENetwork->SetLocalReceiver(videoChannel, rtpPort));
         EXPECT_EQ(0, ptrViEBase->StartReceive(videoChannel));
+        EXPECT_EQ(0, ptrViENetwork->SetSendDestination(
+            videoChannel, ipAddress, rtpPort));
         EXPECT_EQ(0, ptrViEBase->StartSend(videoChannel));
         webrtc::ViEFile* ptrViEFile = webrtc::ViEFile::GetInterface(ptrViE);
         EXPECT_TRUE(ptrViEFile != NULL);
@@ -159,10 +151,11 @@ void ViEAutoTest::ViEFileStandardTest()
         const int TEST_SPACING = 1000;
         const int VIDEO_LENGTH = 5000;
 
-        const std::string renderStartImage = webrtc::test::ResourcePath(
-            "video_engine/renderStartImage", "jpg");
-        const std::string renderTimeoutFile = webrtc::test::ResourcePath(
-            "video_engine/renderTimeoutImage", "jpg");
+        const std::string root = webrtc::test::ProjectRootPath() +
+            "webrtc/video_engine/test/auto_test/media/";
+        const std::string renderStartImage = root + "renderStartImage.jpg";
+        const std::string captureDeviceImage = root + "captureDeviceImage.jpg";
+        const std::string renderTimeoutFile = root + "renderTimeoutImage.jpg";
 
         const std::string output = webrtc::test::OutputPath();
         const std::string snapshotCaptureDeviceFileName =

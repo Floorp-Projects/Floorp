@@ -11,101 +11,109 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TEST_RTP_PLAYER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TEST_RTP_PLAYER_H_
 
+#include "typedefs.h"
+#include "rtp_rtcp.h"
+#include "critical_section_wrapper.h"
+#include "video_coding_defines.h"
+#include "modules/video_coding/main/source/tick_time_base.h"
+
+#include <stdio.h>
+#include <list>
 #include <string>
-#include <vector>
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
+#define HDR_SIZE 8 // rtpplay packet header size in bytes
+#define FIRSTLINELEN 40
+#define RAND_VEC_LENGTH 4096
 
-namespace webrtc {
-class Clock;
+struct PayloadCodecTuple;
 
-namespace rtpplayer {
+struct RawRtpPacket
+{
+public:
+    RawRtpPacket(WebRtc_UWord8* rtp_data, WebRtc_UWord16 rtp_length);
+    ~RawRtpPacket();
 
-class PayloadCodecTuple {
+    uint8_t* data;
+    uint16_t length;
+    int64_t resend_time_ms;
+};
+
+typedef std::list<PayloadCodecTuple*> PayloadTypeList;
+typedef std::list<RawRtpPacket*> RtpPacketList;
+typedef RtpPacketList::iterator RtpPacketIterator;
+typedef RtpPacketList::const_iterator ConstRtpPacketIterator;
+
+class LostPackets {
  public:
-  PayloadCodecTuple(uint8_t payload_type, const std::string& codec_name,
-                    VideoCodecType codec_type)
-      : name_(codec_name),
-        payload_type_(payload_type),
-        codec_type_(codec_type) {
-  }
+  LostPackets();
+  ~LostPackets();
 
-  const std::string& name() const { return name_; }
-  uint8_t payload_type() const { return payload_type_; }
-  VideoCodecType codec_type() const { return codec_type_; }
+  void AddPacket(RawRtpPacket* packet);
+  void SetResendTime(uint16_t sequenceNumber,
+                     int64_t resendTime,
+                     int64_t nowMs);
+  RawRtpPacket* NextPacketToResend(int64_t timeNow);
+  int NumberOfPacketsToResend() const;
+  void SetPacketResent(uint16_t seqNo, int64_t nowMs);
+  void Print() const;
 
  private:
-  std::string name_;
-  uint8_t payload_type_;
-  VideoCodecType codec_type_;
+  webrtc::CriticalSectionWrapper* crit_sect_;
+  int loss_count_;
+  FILE* debug_file_;
+  RtpPacketList packets_;
 };
 
-typedef std::vector<PayloadCodecTuple> PayloadTypes;
-typedef std::vector<PayloadCodecTuple>::const_iterator PayloadTypesIterator;
-
-// Implemented by something that can provide RTP packets, for instance a file
-// format parser such as the rtp_file_reader or the pcap_file_reader.
-class RtpPacketSourceInterface {
- public:
-  virtual ~RtpPacketSourceInterface() {}
-
-  // Read next RTP packet into buffer pointed to by rtp_data. On call, 'length'
-  // field must be filled in with the size of the buffer. The actual size of
-  // the packet is available in 'length' upon returning. Time in milliseconds
-  // from start of stream is returned in 'time_ms'.
-  virtual int NextPacket(uint8_t* rtp_data, uint32_t* length,
-                         uint32_t* time_ms) = 0;
+struct PayloadCodecTuple
+{
+    PayloadCodecTuple(WebRtc_UWord8 plType, std::string codecName, webrtc::VideoCodecType type) :
+        name(codecName), payloadType(plType), codecType(type) {};
+    const std::string name;
+    const WebRtc_UWord8 payloadType;
+    const webrtc::VideoCodecType codecType;
 };
 
-// Implemented by RtpPlayer and given to client as a means to retrieve
-// information about a specific RTP stream.
-class RtpStreamInterface {
- public:
-  virtual ~RtpStreamInterface() {}
+class RTPPlayer : public webrtc::VCMPacketRequestCallback
+{
+public:
+    RTPPlayer(const char* filename,
+              webrtc::RtpData* callback,
+              webrtc::TickTimeBase* clock);
+    virtual ~RTPPlayer();
 
-  // Ask for missing packets to be resent.
-  virtual void ResendPackets(const uint16_t* sequence_numbers,
-                             uint16_t length) = 0;
+    WebRtc_Word32 Initialize(const PayloadTypeList* payloadList);
+    WebRtc_Word32 NextPacket(const WebRtc_Word64 timeNow);
+    WebRtc_UWord32 TimeUntilNextPacket() const;
+    WebRtc_Word32 SimulatePacketLoss(float lossRate, bool enableNack = false, WebRtc_UWord32 rttMs = 0);
+    WebRtc_Word32 SetReordering(bool enabled);
+    WebRtc_Word32 ResendPackets(const WebRtc_UWord16* sequenceNumbers, WebRtc_UWord16 length);
+    void Print() const;
 
-  virtual uint32_t ssrc() const = 0;
-  virtual const PayloadTypes& payload_types() const = 0;
+private:
+    WebRtc_Word32 SendPacket(WebRtc_UWord8* rtpData, WebRtc_UWord16 rtpLen);
+    WebRtc_Word32 ReadPacket(WebRtc_Word16* rtpdata, WebRtc_UWord32* offset);
+    WebRtc_Word32 ReadHeader();
+    webrtc::TickTimeBase* _clock;
+    FILE*              _rtpFile;
+    webrtc::RtpRtcp*   _rtpModule;
+    WebRtc_UWord32     _nextRtpTime;
+    webrtc::RtpData*   _dataCallback;
+    bool               _firstPacket;
+    float              _lossRate;
+    bool               _nackEnabled;
+    LostPackets        _lostPackets;
+    WebRtc_UWord32     _resendPacketCount;
+    WebRtc_Word32      _noLossStartup;
+    bool               _endOfFile;
+    WebRtc_UWord32     _rttMs;
+    WebRtc_Word64      _firstPacketRtpTime;
+    WebRtc_Word64      _firstPacketTimeMs;
+    RawRtpPacket*      _reorderBuffer;
+    bool               _reordering;
+    WebRtc_Word16      _nextPacket[8000];
+    WebRtc_Word32      _nextPacketLength;
+    int                _randVec[RAND_VEC_LENGTH];
+    int                _randVecPos;
 };
-
-// Implemented by a sink. Wraps RtpData because its d-tor is protected.
-class PayloadSinkInterface : public RtpData {
- public:
-  virtual ~PayloadSinkInterface() {}
-};
-
-// Implemented to provide a sink for RTP data, such as hooking up a VCM to
-// the incoming RTP stream.
-class PayloadSinkFactoryInterface {
- public:
-  virtual ~PayloadSinkFactoryInterface() {}
-
-  // Return NULL if failed to create sink. 'stream' is guaranteed to be
-  // around for as long as the RtpData. The returned object is owned by
-  // the caller (RtpPlayer).
-  virtual PayloadSinkInterface* Create(RtpStreamInterface* stream) = 0;
-};
-
-// The client's view of an RtpPlayer.
-class RtpPlayerInterface {
- public:
-  virtual ~RtpPlayerInterface() {}
-
-  virtual int NextPacket(int64_t timeNow) = 0;
-  virtual uint32_t TimeUntilNextPacket() const = 0;
-  virtual void Print() const = 0;
-};
-
-RtpPlayerInterface* Create(const std::string& inputFilename,
-    PayloadSinkFactoryInterface* payloadSinkFactory, Clock* clock,
-    const PayloadTypes& payload_types, float lossRate, uint32_t rttMs,
-    bool reordering);
-
-}  // namespace rtpplayer
-}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_TEST_RTP_PLAYER_H_

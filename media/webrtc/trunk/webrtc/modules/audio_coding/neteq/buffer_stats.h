@@ -51,13 +51,13 @@ typedef struct
 {
 
     /* store statistical data here */
-    int16_t w16_cngOn; /* remember if CNG is interrupted by other event (e.g. DTMF) */
-    int16_t w16_noExpand;
-    int32_t uw32_CNGplayedTS;
+    WebRtc_Word16 w16_cngOn; /* remember if CNG is interrupted by other event (e.g. DTMF) */
+    WebRtc_Word16 w16_noExpand;
+    WebRtc_Word32 uw32_CNGplayedTS;
 
     /* VQmon data */
-    uint16_t avgDelayMsQ8;
-    int16_t maxDelayMs;
+    WebRtc_UWord16 avgDelayMsQ8;
+    WebRtc_Word16 maxDelayMs;
 
     AutomodeInst_t Automode_inst;
 
@@ -83,13 +83,13 @@ typedef struct
  *
  */
 
-uint16_t WebRtcNetEQ_BufstatsDecision(BufstatsInst_t *inst, int16_t frameSize,
-                                      int32_t cur_size, uint32_t targetTS,
-                                      uint32_t availableTS, int noPacket,
-                                      int cngPacket, int prevPlayMode,
-                                      enum WebRtcNetEQPlayoutMode playoutMode,
-                                      int timestampsPerCall, int NoOfExpandCalls,
-                                      int16_t fs_mult,
-                                      int16_t lastModeBGNonly, int playDtmf);
+WebRtc_UWord16 WebRtcNetEQ_BufstatsDecision(BufstatsInst_t *inst, WebRtc_Word16 frameSize,
+                                            WebRtc_Word32 cur_size, WebRtc_UWord32 targetTS,
+                                            WebRtc_UWord32 availableTS, int noPacket,
+                                            int cngPacket, int prevPlayMode,
+                                            enum WebRtcNetEQPlayoutMode playoutMode,
+                                            int timestampsPerCall, int NoOfExpandCalls,
+                                            WebRtc_Word16 fs_mult,
+                                            WebRtc_Word16 lastModeBGNonly, int playDtmf);
 
 #endif

@@ -22,22 +22,22 @@ class VCMPacket
 {
 public:
     VCMPacket();
-    VCMPacket(const uint8_t* ptr,
-              const uint32_t size,
+    VCMPacket(const WebRtc_UWord8* ptr,
+              const WebRtc_UWord32 size,
               const WebRtcRTPHeader& rtpHeader);
-    VCMPacket(const uint8_t* ptr,
-              uint32_t size,
-              uint16_t seqNum,
-              uint32_t timestamp,
+    VCMPacket(const WebRtc_UWord8* ptr,
+              WebRtc_UWord32 size,
+              WebRtc_UWord16 seqNum,
+              WebRtc_UWord32 timestamp,
               bool markerBit);
 
     void Reset();
 
-    uint8_t           payloadType;
-    uint32_t          timestamp;
-    uint16_t          seqNum;
-    const uint8_t*    dataPtr;
-    uint32_t          sizeBytes;
+    WebRtc_UWord8           payloadType;
+    WebRtc_UWord32          timestamp;
+    WebRtc_UWord16          seqNum;
+    const WebRtc_UWord8*    dataPtr;
+    WebRtc_UWord32          sizeBytes;
     bool                    markerBit;
 
     FrameType               frameType;

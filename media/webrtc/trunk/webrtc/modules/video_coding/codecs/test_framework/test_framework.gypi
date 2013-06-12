@@ -12,7 +12,7 @@
       'targets': [
         {
           'target_name': 'test_framework',
-          'type': 'static_library',
+          'type': '<(library)',
 
           'dependencies': [
             '<(DEPTH)/testing/gtest.gyp:gtest',

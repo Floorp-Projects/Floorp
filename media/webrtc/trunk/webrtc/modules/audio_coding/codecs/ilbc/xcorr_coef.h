@@ -27,12 +27,12 @@
  *---------------------------------------------------------------*/
 
 int WebRtcIlbcfix_XcorrCoef(
-    int16_t *target,  /* (i) first array */
-    int16_t *regressor, /* (i) second array */
-    int16_t subl,  /* (i) dimension arrays */
-    int16_t searchLen, /* (i) the search lenght */
-    int16_t offset,  /* (i) samples offset between arrays */
-    int16_t step   /* (i) +1 or -1 */
+    WebRtc_Word16 *target,  /* (i) first array */
+    WebRtc_Word16 *regressor, /* (i) second array */
+    WebRtc_Word16 subl,  /* (i) dimension arrays */
+    WebRtc_Word16 searchLen, /* (i) the search lenght */
+    WebRtc_Word16 offset,  /* (i) samples offset between arrays */
+    WebRtc_Word16 step   /* (i) +1 or -1 */
                             );
 
 #endif

@@ -26,9 +26,9 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Lsf2Lsp(
-    int16_t *lsf, /* (i) lsf in Q13 values between 0 and pi */
-    int16_t *lsp, /* (o) lsp in Q15 values between -1 and 1 */
-    int16_t m     /* (i) number of coefficients */
+    WebRtc_Word16 *lsf, /* (i) lsf in Q13 values between 0 and pi */
+    WebRtc_Word16 *lsp, /* (o) lsp in Q15 values between -1 and 1 */
+    WebRtc_Word16 m     /* (i) number of coefficients */
                            );
 
 #endif

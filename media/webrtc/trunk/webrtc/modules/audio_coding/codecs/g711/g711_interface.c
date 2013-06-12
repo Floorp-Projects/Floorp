@@ -12,164 +12,170 @@
 #include "g711_interface.h"
 #include "typedefs.h"
 
-int16_t WebRtcG711_EncodeA(void* state,
-                           int16_t* speechIn,
-                           int16_t len,
-                           int16_t* encoded) {
-  int n;
-  uint16_t tempVal, tempVal2;
+WebRtc_Word16 WebRtcG711_EncodeA(void *state,
+                                 WebRtc_Word16 *speechIn,
+                                 WebRtc_Word16 len,
+                                 WebRtc_Word16 *encoded)
+{
+    int n;
+    WebRtc_UWord16 tempVal,  tempVal2;
 
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
+    // Set and discard to avoid getting warnings
+    (void)(state = NULL);
 
-  // Sanity check of input length
-  if (len < 0) {
-    return (-1);
-  }
+    // Sanity check of input length
+    if (len < 0) {
+        return (-1);
+    }
 
-  // Loop over all samples
-  for (n = 0; n < len; n++) {
-    tempVal = (uint16_t) linear_to_alaw(speechIn[n]);
+    // Loop over all samples
+    for (n = 0; n < len; n++) {
+        tempVal = (WebRtc_UWord16)linear_to_alaw(speechIn[n]);
 
 #ifdef WEBRTC_BIG_ENDIAN
-    if ((n & 0x1) == 1) {
-      encoded[n >> 1] |= ((uint16_t) tempVal);
-    } else {
-      encoded[n >> 1] = ((uint16_t) tempVal) << 8;
-    }
+        if ((n & 0x1) == 1) {
+            encoded[n>>1]|=((WebRtc_UWord16)tempVal);
+        } else {
+            encoded[n>>1]=((WebRtc_UWord16)tempVal)<<8;
+        }
 #else
-    if ((n & 0x1) == 1) {
-      tempVal2 |= ((uint16_t) tempVal) << 8;
-      encoded[n >> 1] |= ((uint16_t) tempVal) << 8;
-    } else {
-      tempVal2 = ((uint16_t) tempVal);
-      encoded[n >> 1] = ((uint16_t) tempVal);
-    }
+        if ((n & 0x1) == 1) {
+            tempVal2 |= ((WebRtc_UWord16) tempVal) << 8;
+            encoded[n >> 1] |= ((WebRtc_UWord16) tempVal) << 8;
+        } else {
+            tempVal2 = ((WebRtc_UWord16) tempVal);
+            encoded[n >> 1] = ((WebRtc_UWord16) tempVal);
+        }
 #endif
-  }
-  return (len);
+    }
+    return (len);
 }
 
-int16_t WebRtcG711_EncodeU(void* state,
-                           int16_t* speechIn,
-                           int16_t len,
-                           int16_t* encoded) {
-  int n;
-  uint16_t tempVal;
+WebRtc_Word16 WebRtcG711_EncodeU(void  *state,
+                                 WebRtc_Word16 *speechIn,
+                                 WebRtc_Word16 len,
+                                 WebRtc_Word16 *encoded)
+{
+    int n;
+    WebRtc_UWord16 tempVal;
 
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
+    // Set and discard to avoid getting warnings
+    (void)(state = NULL);
 
-  // Sanity check of input length
-  if (len < 0) {
-    return (-1);
-  }
-
-  // Loop over all samples
-  for (n = 0; n < len; n++) {
-    tempVal = (uint16_t) linear_to_ulaw(speechIn[n]);
-
-#ifdef WEBRTC_BIG_ENDIAN
-    if ((n & 0x1) == 1) {
-      encoded[n >> 1] |= ((uint16_t) tempVal);
-    } else {
-      encoded[n >> 1] = ((uint16_t) tempVal) << 8;
+    // Sanity check of input length
+    if (len < 0) {
+        return (-1);
     }
-#else
-    if ((n & 0x1) == 1) {
-      encoded[n >> 1] |= ((uint16_t) tempVal) << 8;
-    } else {
-      encoded[n >> 1] = ((uint16_t) tempVal);
+
+    // Loop over all samples
+    for (n = 0; n < len; n++) {
+        tempVal = (WebRtc_UWord16)linear_to_ulaw(speechIn[n]);
+
+ #ifdef WEBRTC_BIG_ENDIAN
+        if ((n & 0x1) == 1) {
+            encoded[n>>1]|=((WebRtc_UWord16)tempVal);
+        } else {
+            encoded[n>>1]=((WebRtc_UWord16)tempVal)<<8;
+        }
+ #else
+        if ((n & 0x1) == 1) {
+            encoded[n >> 1] |= ((WebRtc_UWord16) tempVal) << 8;
+        } else {
+            encoded[n >> 1] = ((WebRtc_UWord16) tempVal);
+        }
+ #endif
     }
-#endif
-  }
-  return (len);
+    return (len);
 }
 
-int16_t WebRtcG711_DecodeA(void* state,
-                           int16_t* encoded,
-                           int16_t len,
-                           int16_t* decoded,
-                           int16_t* speechType) {
-  int n;
-  uint16_t tempVal;
+WebRtc_Word16 WebRtcG711_DecodeA(void *state,
+                                 WebRtc_Word16 *encoded,
+                                 WebRtc_Word16 len,
+                                 WebRtc_Word16 *decoded,
+                                 WebRtc_Word16 *speechType)
+{
+    int n;
+    WebRtc_UWord16 tempVal;
 
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
+    // Set and discard to avoid getting warnings
+    (void)(state = NULL);
 
-  // Sanity check of input length
-  if (len < 0) {
-    return (-1);
-  }
-
-  for (n = 0; n < len; n++) {
-#ifdef WEBRTC_BIG_ENDIAN
-    if ((n & 0x1) == 1) {
-      tempVal = ((uint16_t) encoded[n >> 1] & 0xFF);
-    } else {
-      tempVal = ((uint16_t) encoded[n >> 1] >> 8);
+    // Sanity check of input length
+    if (len < 0) {
+        return (-1);
     }
-#else
-    if ((n & 0x1) == 1) {
-      tempVal = (encoded[n >> 1] >> 8);
-    } else {
-      tempVal = (encoded[n >> 1] & 0xFF);
-    }
-#endif
-    decoded[n] = (int16_t) alaw_to_linear(tempVal);
-  }
 
-  *speechType = 1;
-  return (len);
+    for (n = 0; n < len; n++) {
+ #ifdef WEBRTC_BIG_ENDIAN
+        if ((n & 0x1) == 1) {
+            tempVal=((WebRtc_UWord16)encoded[n>>1] & 0xFF);
+        } else {
+            tempVal=((WebRtc_UWord16)encoded[n>>1] >> 8);
+        }
+ #else
+        if ((n & 0x1) == 1) {
+            tempVal = (encoded[n >> 1] >> 8);
+        } else {
+            tempVal = (encoded[n >> 1] & 0xFF);
+        }
+ #endif
+        decoded[n] = (WebRtc_Word16) alaw_to_linear(tempVal);
+    }
+
+    *speechType = 1;
+    return (len);
 }
 
-int16_t WebRtcG711_DecodeU(void* state,
-                           int16_t* encoded,
-                           int16_t len,
-                           int16_t* decoded,
-                           int16_t* speechType) {
-  int n;
-  uint16_t tempVal;
+WebRtc_Word16 WebRtcG711_DecodeU(void *state,
+                                 WebRtc_Word16 *encoded,
+                                 WebRtc_Word16 len,
+                                 WebRtc_Word16 *decoded,
+                                 WebRtc_Word16 *speechType)
+{
+    int n;
+    WebRtc_UWord16 tempVal;
 
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
+    // Set and discard to avoid getting warnings
+    (void)(state = NULL);
 
-  // Sanity check of input length
-  if (len < 0) {
-    return (-1);
-  }
-
-  for (n = 0; n < len; n++) {
-#ifdef WEBRTC_BIG_ENDIAN
-    if ((n & 0x1) == 1) {
-      tempVal = ((uint16_t) encoded[n >> 1] & 0xFF);
-    } else {
-      tempVal = ((uint16_t) encoded[n >> 1] >> 8);
+    // Sanity check of input length
+    if (len < 0) {
+        return (-1);
     }
-#else
-    if ((n & 0x1) == 1) {
-      tempVal = (encoded[n >> 1] >> 8);
-    } else {
-      tempVal = (encoded[n >> 1] & 0xFF);
-    }
-#endif
-    decoded[n] = (int16_t) ulaw_to_linear(tempVal);
-  }
 
-  *speechType = 1;
-  return (len);
+    for (n = 0; n < len; n++) {
+ #ifdef WEBRTC_BIG_ENDIAN
+        if ((n & 0x1) == 1) {
+            tempVal=((WebRtc_UWord16)encoded[n>>1] & 0xFF);
+        } else {
+            tempVal=((WebRtc_UWord16)encoded[n>>1] >> 8);
+        }
+ #else
+        if ((n & 0x1) == 1) {
+            tempVal = (encoded[n >> 1] >> 8);
+        } else {
+            tempVal = (encoded[n >> 1] & 0xFF);
+        }
+ #endif
+        decoded[n] = (WebRtc_Word16) ulaw_to_linear(tempVal);
+    }
+
+    *speechType = 1;
+    return (len);
 }
 
 int WebRtcG711_DurationEst(void* state,
                            const uint8_t* payload,
                            int payload_length_bytes) {
-  (void) state;
-  (void) payload;
-  /* G.711 is one byte per sample, so we can just return the number of bytes. */
-  return payload_length_bytes;
+    (void)state;
+    (void)payload;
+    /* G.711 is one byte per sample, so we can just return the number of
+       bytes. */
+    return payload_length_bytes;
 }
 
-int16_t WebRtcG711_Version(char* version, int16_t lenBytes) {
-  strncpy(version, "2.0.0", lenBytes);
-  return 0;
+WebRtc_Word16 WebRtcG711_Version(char* version, WebRtc_Word16 lenBytes)
+{
+    strncpy(version, "2.0.0", lenBytes);
+    return 0;
 }

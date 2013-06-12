@@ -13,7 +13,7 @@
 namespace webrtc {
 
 VideoRenderExternalImpl::VideoRenderExternalImpl(
-                                                 const int32_t id,
+                                                 const WebRtc_Word32 id,
                                                  const VideoRenderType videoRenderType,
                                                  void* window,
                                                  const bool fullscreen) :
@@ -27,27 +27,27 @@ VideoRenderExternalImpl::~VideoRenderExternalImpl()
     delete &_critSect;
 }
 
-int32_t VideoRenderExternalImpl::Init()
+WebRtc_Word32 VideoRenderExternalImpl::Init()
 {
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::ChangeUniqueId(const int32_t id)
+WebRtc_Word32 VideoRenderExternalImpl::ChangeUniqueId(const WebRtc_Word32 id)
 {
     CriticalSectionScoped cs(&_critSect);
     _id = id;
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::ChangeWindow(void* window)
+WebRtc_Word32 VideoRenderExternalImpl::ChangeWindow(void* window)
 {
     CriticalSectionScoped cs(&_critSect);
     return 0;
 }
 
 VideoRenderCallback*
-VideoRenderExternalImpl::AddIncomingRenderStream(const uint32_t streamId,
-                                                 const uint32_t zOrder,
+VideoRenderExternalImpl::AddIncomingRenderStream(const WebRtc_UWord32 streamId,
+                                                 const WebRtc_UWord32 zOrder,
                                                  const float left,
                                                  const float top,
                                                  const float right,
@@ -57,16 +57,16 @@ VideoRenderExternalImpl::AddIncomingRenderStream(const uint32_t streamId,
     return this;
 }
 
-int32_t VideoRenderExternalImpl::DeleteIncomingRenderStream(
-                                                                  const uint32_t streamId)
+WebRtc_Word32 VideoRenderExternalImpl::DeleteIncomingRenderStream(
+                                                                  const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_critSect);
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::GetIncomingRenderStreamProperties(
-                                                                         const uint32_t streamId,
-                                                                         uint32_t& zOrder,
+WebRtc_Word32 VideoRenderExternalImpl::GetIncomingRenderStreamProperties(
+                                                                         const WebRtc_UWord32 streamId,
+                                                                         WebRtc_UWord32& zOrder,
                                                                          float& left,
                                                                          float& top,
                                                                          float& right,
@@ -83,13 +83,13 @@ int32_t VideoRenderExternalImpl::GetIncomingRenderStreamProperties(
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::StartRender()
+WebRtc_Word32 VideoRenderExternalImpl::StartRender()
 {
     CriticalSectionScoped cs(&_critSect);
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::StopRender()
+WebRtc_Word32 VideoRenderExternalImpl::StopRender()
 {
     CriticalSectionScoped cs(&_critSect);
     return 0;
@@ -111,18 +111,18 @@ bool VideoRenderExternalImpl::FullScreen()
     return _fullscreen;
 }
 
-int32_t VideoRenderExternalImpl::GetGraphicsMemory(
-                                                         uint64_t& totalGraphicsMemory,
-                                                         uint64_t& availableGraphicsMemory) const
+WebRtc_Word32 VideoRenderExternalImpl::GetGraphicsMemory(
+                                                         WebRtc_UWord64& totalGraphicsMemory,
+                                                         WebRtc_UWord64& availableGraphicsMemory) const
 {
     totalGraphicsMemory = 0;
     availableGraphicsMemory = 0;
     return -1;
 }
 
-int32_t VideoRenderExternalImpl::GetScreenResolution(
-                                                           uint32_t& screenWidth,
-                                                           uint32_t& screenHeight) const
+WebRtc_Word32 VideoRenderExternalImpl::GetScreenResolution(
+                                                           WebRtc_UWord32& screenWidth,
+                                                           WebRtc_UWord32& screenHeight) const
 {
     CriticalSectionScoped cs(&_critSect);
     screenWidth = 0;
@@ -130,15 +130,15 @@ int32_t VideoRenderExternalImpl::GetScreenResolution(
     return 0;
 }
 
-uint32_t VideoRenderExternalImpl::RenderFrameRate(
-                                                        const uint32_t streamId)
+WebRtc_UWord32 VideoRenderExternalImpl::RenderFrameRate(
+                                                        const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_critSect);
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::SetStreamCropping(
-                                                         const uint32_t streamId,
+WebRtc_Word32 VideoRenderExternalImpl::SetStreamCropping(
+                                                         const WebRtc_UWord32 streamId,
                                                          const float left,
                                                          const float top,
                                                          const float right,
@@ -148,8 +148,8 @@ int32_t VideoRenderExternalImpl::SetStreamCropping(
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::ConfigureRenderer(
-                                                         const uint32_t streamId,
+WebRtc_Word32 VideoRenderExternalImpl::ConfigureRenderer(
+                                                         const WebRtc_UWord32 streamId,
                                                          const unsigned int zOrder,
                                                          const float left,
                                                          const float top,
@@ -160,19 +160,19 @@ int32_t VideoRenderExternalImpl::ConfigureRenderer(
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::SetTransparentBackground(
+WebRtc_Word32 VideoRenderExternalImpl::SetTransparentBackground(
                                                                 const bool enable)
 {
     CriticalSectionScoped cs(&_critSect);
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::SetText(
-                                               const uint8_t textId,
-                                               const uint8_t* text,
-                                               const int32_t textLength,
-                                               const uint32_t textColorRef,
-                                               const uint32_t backgroundColorRef,
+WebRtc_Word32 VideoRenderExternalImpl::SetText(
+                                               const WebRtc_UWord8 textId,
+                                               const WebRtc_UWord8* text,
+                                               const WebRtc_Word32 textLength,
+                                               const WebRtc_UWord32 textColorRef,
+                                               const WebRtc_UWord32 backgroundColorRef,
                                                const float left,
                                                const float top,
                                                const float right,
@@ -182,21 +182,21 @@ int32_t VideoRenderExternalImpl::SetText(
     return 0;
 }
 
-int32_t VideoRenderExternalImpl::SetBitmap(const void* bitMap,
-                                           const uint8_t pictureId,
-                                           const void* colorKey,
-                                           const float left,
-                                           const float top,
-                                           const float right,
-                                           const float bottom)
+WebRtc_Word32 VideoRenderExternalImpl::SetBitmap(const void* bitMap,
+                                                 const WebRtc_UWord8 pictureId,
+                                                 const void* colorKey,
+                                                 const float left,
+                                                 const float top,
+                                                 const float right,
+                                                 const float bottom)
 {
     CriticalSectionScoped cs(&_critSect);
     return 0;
 }
 
 // VideoRenderCallback
-int32_t VideoRenderExternalImpl::RenderFrame(
-                                                   const uint32_t streamId,
+WebRtc_Word32 VideoRenderExternalImpl::RenderFrame(
+                                                   const WebRtc_UWord32 streamId,
                                                    I420VideoFrame& videoFrame)
 {
     return 0;

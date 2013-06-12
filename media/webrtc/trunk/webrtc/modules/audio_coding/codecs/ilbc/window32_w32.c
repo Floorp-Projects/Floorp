@@ -23,18 +23,18 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Window32W32(
-    int32_t *z,    /* Output */
-    int32_t *x,    /* Input (same domain as Output)*/
-    const int32_t  *y,  /* Q31 Window */
-    int16_t N     /* length to process */
+    WebRtc_Word32 *z,    /* Output */
+    WebRtc_Word32 *x,    /* Input (same domain as Output)*/
+    const WebRtc_Word32  *y,  /* Q31 Window */
+    WebRtc_Word16 N     /* length to process */
                                ) {
-  int16_t i;
-  int16_t x_low, x_hi, y_low, y_hi;
-  int16_t left_shifts;
-  int32_t temp;
+  WebRtc_Word16 i;
+  WebRtc_Word16 x_low, x_hi, y_low, y_hi;
+  WebRtc_Word16 left_shifts;
+  WebRtc_Word32 temp;
 
-  left_shifts = (int16_t)WebRtcSpl_NormW32(x[0]);
-  WebRtcSpl_VectorBitShiftW32(x, N, x, (int16_t)(-left_shifts));
+  left_shifts = (WebRtc_Word16)WebRtcSpl_NormW32(x[0]);
+  WebRtcSpl_VectorBitShiftW32(x, N, x, (WebRtc_Word16)(-left_shifts));
 
 
   /* The double precision numbers use a special representation:
@@ -42,15 +42,15 @@ void WebRtcIlbcfix_Window32W32(
    */
   for (i = 0; i < N; i++) {
     /* Extract higher bytes */
-    x_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(x[i], 16);
-    y_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(y[i], 16);
+    x_hi = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(x[i], 16);
+    y_hi = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(y[i], 16);
 
     /* Extract lower bytes, defined as (w32 - hi<<16)>>1 */
-    temp = WEBRTC_SPL_LSHIFT_W32((int32_t)x_hi, 16);
-    x_low = (int16_t) WEBRTC_SPL_RSHIFT_W32((x[i] - temp), 1);
+    temp = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)x_hi, 16);
+    x_low = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32((x[i] - temp), 1);
 
-    temp = WEBRTC_SPL_LSHIFT_W32((int32_t)y_hi, 16);
-    y_low = (int16_t) WEBRTC_SPL_RSHIFT_W32((y[i] - temp), 1);
+    temp = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)y_hi, 16);
+    y_low = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32((y[i] - temp), 1);
 
     /* Calculate z by a 32 bit multiplication using both low and high from x and y */
     temp = WEBRTC_SPL_LSHIFT_W32(WEBRTC_SPL_MUL_16_16(x_hi, y_hi), 1);

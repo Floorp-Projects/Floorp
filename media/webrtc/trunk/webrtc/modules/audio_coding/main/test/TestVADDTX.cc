@@ -8,17 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/main/test/TestVADDTX.h"
+#include "TestVADDTX.h"
 
 #include <iostream>
 
-#include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
-#include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
-#include "webrtc/modules/audio_coding/main/test/utility.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
-#include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "audio_coding_module_typedefs.h"
+#include "common_types.h"
+#include "engine_configurations.h"
+#include "testsupport/fileutils.h"
+#include "trace.h"
+#include "utility.h"
 
 namespace webrtc {
 
@@ -71,15 +70,15 @@ void TestVADDTX::Perform()
     _acmA->InitializeReceiver();
     _acmB->InitializeReceiver();
 
-    uint8_t numEncoders = _acmA->NumberOfCodecs();
+    WebRtc_UWord8 numEncoders = _acmA->NumberOfCodecs();
     CodecInst myCodecParam;
     if(_testMode != 0)
     {
         printf("Registering codecs at receiver... \n");
     }
-    for(uint8_t n = 0; n < numEncoders; n++)
+    for(WebRtc_UWord8 n = 0; n < numEncoders; n++)
     {
-        _acmB->Codec(n, &myCodecParam);
+        _acmB->Codec(n, myCodecParam);
         if(_testMode != 0)
         {
             printf("%s\n", myCodecParam.plname);
@@ -99,8 +98,8 @@ void TestVADDTX::Perform()
     _acmA->RegisterVADCallback(&_monitor);
 
 
-    int16_t testCntr = 1;
-    int16_t testResults = 0;
+    WebRtc_Word16 testCntr = 1;
+    WebRtc_Word16 testResults = 0;
 
 #ifdef WEBRTC_CODEC_ISAC
     // Open outputfile
@@ -175,7 +174,7 @@ void TestVADDTX::runTestCases()
     if(_testMode != 0)
     {
         CodecInst myCodecParam;
-        _acmA->SendCodec(&myCodecParam);
+        _acmA->SendCodec(myCodecParam);
         printf("%s\n", myCodecParam.plname);
     }
     else
@@ -232,7 +231,7 @@ void TestVADDTX::runTestInternalDTX()
     _testResults += VerifyTest();
 }
 
-void TestVADDTX::SetVAD(bool statusDTX, bool statusVAD, int16_t vadMode)
+void TestVADDTX::SetVAD(bool statusDTX, bool statusVAD, WebRtc_Word16 vadMode)
 {
     bool dtxEnabled, vadEnabled;
     ACMVADMode vadModeSet;
@@ -240,7 +239,7 @@ void TestVADDTX::SetVAD(bool statusDTX, bool statusVAD, int16_t vadMode)
     if (_acmA->SetVAD(statusDTX, statusVAD, (ACMVADMode) vadMode) < 0) {
       assert(false);
     }
-    if (_acmA->VAD(&dtxEnabled, &vadEnabled, &vadModeSet) < 0) {
+    if (_acmA->VAD(dtxEnabled, vadEnabled, vadModeSet) < 0) {
       assert(false);
     }
 
@@ -261,7 +260,7 @@ void TestVADDTX::SetVAD(bool statusDTX, bool statusVAD, int16_t vadMode)
         if(vadModeSet != vadMode)
         {
             printf("VAD mode: %d not the same as requested: %d\n",
-            (int16_t)vadModeSet, (int16_t)vadMode);
+            (WebRtc_Word16)vadModeSet, (WebRtc_Word16)vadMode);
         }
     }
 
@@ -283,7 +282,7 @@ VADDTXstruct TestVADDTX::GetVAD()
     bool dtxEnabled, vadEnabled;
     ACMVADMode vadModeSet;
 
-    if (_acmA->VAD(&dtxEnabled, &vadEnabled, &vadModeSet) < 0) {
+    if (_acmA->VAD(dtxEnabled, vadEnabled, vadModeSet) < 0) {
       assert(false);
     }
 
@@ -293,10 +292,10 @@ VADDTXstruct TestVADDTX::GetVAD()
     return retStruct;
 }
 
-int16_t TestVADDTX::RegisterSendCodec(char side,
-                                      char* codecName,
-                                      int32_t samplingFreqHz,
-                                      int32_t rateKbps)
+WebRtc_Word16 TestVADDTX::RegisterSendCodec(char side,
+                                          char* codecName,
+                                          WebRtc_Word32 samplingFreqHz,
+                                          WebRtc_Word32 rateKbps)
 {
     if(_testMode != 0)
     {
@@ -326,10 +325,10 @@ int16_t TestVADDTX::RegisterSendCodec(char side,
     }
 
     CodecInst myCodecParam;
-    for(int16_t codecCntr = 0; codecCntr < myACM->NumberOfCodecs();
+    for(WebRtc_Word16 codecCntr = 0; codecCntr < myACM->NumberOfCodecs();
         codecCntr++)
     {
-        CHECK_ERROR(myACM->Codec((uint8_t)codecCntr, &myCodecParam));
+        CHECK_ERROR(myACM->Codec((WebRtc_UWord8)codecCntr, myCodecParam));
         if(!STR_CASE_CMP(myCodecParam.plname, codecName))
         {
             if((samplingFreqHz == -1) || (myCodecParam.plfreq == samplingFreqHz))
@@ -354,9 +353,9 @@ void TestVADDTX::Run()
 {
     AudioFrame audioFrame;
 
-    uint16_t SamplesIn10MsecA = _inFileA.PayloadLength10Ms();
-    uint32_t timestampA = 1;
-    int32_t outFreqHzB = _outFileB.SamplingFrequency();
+    WebRtc_UWord16 SamplesIn10MsecA = _inFileA.PayloadLength10Ms();
+    WebRtc_UWord32 timestampA = 1;
+    WebRtc_Word32 outFreqHzB = _outFileB.SamplingFrequency();
 
     while(!_inFileA.EndOfFile())
     {
@@ -367,7 +366,7 @@ void TestVADDTX::Run()
 
         CHECK_ERROR(_acmA->Process());
 
-        CHECK_ERROR(_acmB->PlayoutData10Ms(outFreqHzB, &audioFrame));
+        CHECK_ERROR(_acmB->PlayoutData10Ms(outFreqHzB, audioFrame));
         _outFileB.Write10MsData(audioFrame.data_, audioFrame.samples_per_channel_);
     }
 #ifdef PRINT_STAT
@@ -378,7 +377,7 @@ void TestVADDTX::Run()
     _monitor.ResetStatistics();
 }
 
-void TestVADDTX::OpenOutFile(int16_t test_number) {
+void TestVADDTX::OpenOutFile(WebRtc_Word16 test_number) {
   std::string file_name;
   std::stringstream file_stream;
   file_stream << webrtc::test::OutputPath();
@@ -393,14 +392,14 @@ void TestVADDTX::OpenOutFile(int16_t test_number) {
 }
 
 
-int16_t TestVADDTX::VerifyTest()
+WebRtc_Word16 TestVADDTX::VerifyTest()
 {
     // Verify empty frame result
-    uint8_t statusEF = 0;
-    uint8_t vadPattern = 0;
-    uint8_t emptyFramePattern[6];
+    WebRtc_UWord8 statusEF = 0;
+    WebRtc_UWord8 vadPattern = 0;
+    WebRtc_UWord8 emptyFramePattern[6];
     CodecInst myCodecParam;
-    _acmA->SendCodec(&myCodecParam);
+    _acmA->SendCodec(myCodecParam);
     bool dtxInUse = true;
     bool isReplaced = false;
     if ((STR_CASE_CMP(myCodecParam.plname,"G729") == 0) ||
@@ -409,7 +408,7 @@ int16_t TestVADDTX::VerifyTest()
         (STR_CASE_CMP(myCodecParam.plname,"AMR-wb") == 0) ||
         (STR_CASE_CMP(myCodecParam.plname,"speex") == 0))
     {
-        _acmA->IsInternalDTXReplacedWithWebRtc(&isReplaced);
+        _acmA->IsInternalDTXReplacedWithWebRtc(isReplaced);
         if (!isReplaced)
         {
             dtxInUse = false;
@@ -493,7 +492,7 @@ ActivityMonitor::~ActivityMonitor()
 {
 }
 
-int32_t ActivityMonitor::InFrameType(int16_t frameType)
+WebRtc_Word32 ActivityMonitor::InFrameType(WebRtc_Word16 frameType)
 {
     _counter[frameType]++;
     return 0;
@@ -522,7 +521,7 @@ void ActivityMonitor::ResetStatistics()
     _counter[0] = _counter[1] = _counter[2] = _counter[3] = _counter[4] = _counter[5] = 0;
 }
 
-void ActivityMonitor::GetStatistics(uint32_t* getCounter)
+void ActivityMonitor::GetStatistics(WebRtc_UWord32* getCounter)
 {
     for (int ii = 0; ii < 6; ii++)
     {

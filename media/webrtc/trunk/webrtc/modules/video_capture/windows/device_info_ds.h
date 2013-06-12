@@ -24,7 +24,7 @@ namespace videocapturemodule
 {
 struct VideoCaptureCapabilityWindows: public VideoCaptureCapability
 {
-    uint32_t directShowCapabilityIndex;
+    WebRtc_UWord32 directShowCapabilityIndex;
     bool supportFrameRateControl;
     VideoCaptureCapabilityWindows()
     {
@@ -37,36 +37,36 @@ class DeviceInfoDS: public DeviceInfoImpl
 {
 public:
     // Factory function.
-    static DeviceInfoDS* Create(const int32_t id);
+    static DeviceInfoDS* Create(const WebRtc_Word32 id);
 
-    DeviceInfoDS(const int32_t id);
+    DeviceInfoDS(const WebRtc_Word32 id);
     virtual ~DeviceInfoDS();
 
-    int32_t Init();
-    virtual uint32_t NumberOfDevices();
+    WebRtc_Word32 Init();
+    virtual WebRtc_UWord32 NumberOfDevices();
 
     /*
      * Returns the available capture devices.
      */
-    virtual int32_t
-        GetDeviceName(uint32_t deviceNumber,
+    virtual WebRtc_Word32
+        GetDeviceName(WebRtc_UWord32 deviceNumber,
                       char* deviceNameUTF8,
-                      uint32_t deviceNameLength,
+                      WebRtc_UWord32 deviceNameLength,
                       char* deviceUniqueIdUTF8,
-                      uint32_t deviceUniqueIdUTF8Length,
+                      WebRtc_UWord32 deviceUniqueIdUTF8Length,
                       char* productUniqueIdUTF8,
-                      uint32_t productUniqueIdUTF8Length);
+                      WebRtc_UWord32 productUniqueIdUTF8Length);
 
     /* 
      * Display OS /capture device specific settings dialog
      */
-    virtual int32_t
+    virtual WebRtc_Word32
         DisplayCaptureSettingsDialogBox(
                                         const char* deviceUniqueIdUTF8,
                                         const char* dialogTitleUTF8,
                                         void* parentWindow,
-                                        uint32_t positionX,
-                                        uint32_t positionY);
+                                        WebRtc_UWord32 positionX,
+                                        WebRtc_UWord32 positionY);
 
     // Windows specific
 
@@ -75,26 +75,26 @@ public:
      */
     IBaseFilter * GetDeviceFilter(const char* deviceUniqueIdUTF8,
                                   char* productUniqueIdUTF8 = NULL,
-                                  uint32_t productUniqueIdUTF8Length = 0);
+                                  WebRtc_UWord32 productUniqueIdUTF8Length = 0);
 
-    int32_t
-        GetWindowsCapability(const int32_t capabilityIndex,
+    WebRtc_Word32
+        GetWindowsCapability(const WebRtc_Word32 capabilityIndex,
                              VideoCaptureCapabilityWindows& windowsCapability);
 
     static void GetProductId(const char* devicePath,
                              char* productUniqueIdUTF8,
-                             uint32_t productUniqueIdUTF8Length);
+                             WebRtc_UWord32 productUniqueIdUTF8Length);
 
 protected:
-    int32_t GetDeviceInfo(uint32_t deviceNumber,
-                          char* deviceNameUTF8,
-                          uint32_t deviceNameLength,
-                          char* deviceUniqueIdUTF8,
-                          uint32_t deviceUniqueIdUTF8Length,
-                          char* productUniqueIdUTF8,
-                          uint32_t productUniqueIdUTF8Length);
+    WebRtc_Word32 GetDeviceInfo(WebRtc_UWord32 deviceNumber,
+                                char* deviceNameUTF8,
+                                WebRtc_UWord32 deviceNameLength,
+                                char* deviceUniqueIdUTF8,
+                                WebRtc_UWord32 deviceUniqueIdUTF8Length,
+                                char* productUniqueIdUTF8,
+                                WebRtc_UWord32 productUniqueIdUTF8Length);
 
-    virtual int32_t
+    virtual WebRtc_Word32
         CreateCapabilityMap(const char* deviceUniqueIdUTF8);
 
 private:

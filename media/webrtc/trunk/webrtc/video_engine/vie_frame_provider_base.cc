@@ -48,7 +48,7 @@ int ViEFrameProviderBase::Id() {
 void ViEFrameProviderBase::DeliverFrame(
     I420VideoFrame* video_frame,
     int num_csrcs,
-    const uint32_t CSRC[kRtpCsrcSize]) {
+    const WebRtc_UWord32 CSRC[kRtpCsrcSize]) {
 #ifdef DEBUG_
   const TickTime start_process_time = TickTime::Now();
 #endif

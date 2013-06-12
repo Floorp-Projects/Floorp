@@ -20,7 +20,7 @@
 namespace webrtc
 {
 
-AudioDeviceUtilityAndroid::AudioDeviceUtilityAndroid(const int32_t id) :
+AudioDeviceUtilityAndroid::AudioDeviceUtilityAndroid(const WebRtc_Word32 id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()), _id(id),
     _lastError(AudioDeviceModule::kAdmErrNone)
 {
@@ -39,7 +39,7 @@ AudioDeviceUtilityAndroid::~AudioDeviceUtilityAndroid()
     delete &_critSect;
 }
 
-int32_t AudioDeviceUtilityAndroid::Init()
+WebRtc_Word32 AudioDeviceUtilityAndroid::Init()
 {
 
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,

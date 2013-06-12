@@ -25,23 +25,23 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_SimpleLsfQ(
-    int16_t *lsfdeq, /* (o) dequantized lsf coefficients
+    WebRtc_Word16 *lsfdeq, /* (o) dequantized lsf coefficients
                                    (dimension FILTERORDER) Q13 */
-    int16_t *index, /* (o) quantization index */
-    int16_t *lsf, /* (i) the lsf coefficient vector to be
+    WebRtc_Word16 *index, /* (o) quantization index */
+    WebRtc_Word16 *lsf, /* (i) the lsf coefficient vector to be
                            quantized (dimension FILTERORDER) Q13 */
-    int16_t lpc_n /* (i) number of lsf sets to quantize */
+    WebRtc_Word16 lpc_n /* (i) number of lsf sets to quantize */
                               ){
 
   /* Quantize first LSF with memoryless split VQ */
   WebRtcIlbcfix_SplitVq( lsfdeq, index, lsf,
-                         (int16_t*)WebRtcIlbcfix_kLsfCb, (int16_t*)WebRtcIlbcfix_kLsfDimCb, (int16_t*)WebRtcIlbcfix_kLsfSizeCb);
+                         (WebRtc_Word16*)WebRtcIlbcfix_kLsfCb, (WebRtc_Word16*)WebRtcIlbcfix_kLsfDimCb, (WebRtc_Word16*)WebRtcIlbcfix_kLsfSizeCb);
 
   if (lpc_n==2) {
     /* Quantize second LSF with memoryless split VQ */
     WebRtcIlbcfix_SplitVq( lsfdeq + LPC_FILTERORDER, index + LSF_NSPLIT,
-                           lsf + LPC_FILTERORDER, (int16_t*)WebRtcIlbcfix_kLsfCb,
-                           (int16_t*)WebRtcIlbcfix_kLsfDimCb, (int16_t*)WebRtcIlbcfix_kLsfSizeCb);
+                           lsf + LPC_FILTERORDER, (WebRtc_Word16*)WebRtcIlbcfix_kLsfCb,
+                           (WebRtc_Word16*)WebRtcIlbcfix_kLsfDimCb, (WebRtc_Word16*)WebRtcIlbcfix_kLsfSizeCb);
   }
   return;
 }

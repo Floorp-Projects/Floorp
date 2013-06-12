@@ -67,6 +67,7 @@ void ViEAutoTest::ViEStandardTest()
     ViEEncryptionStandardTest();
     ViEFileStandardTest();
     ViEImageProcessStandardTest();
+    ViENetworkStandardTest();
     ViERenderStandardTest();
     ViERtpRtcpStandardTest();
 }
@@ -79,6 +80,7 @@ void ViEAutoTest::ViEExtendedTest()
     ViEEncryptionExtendedTest();
     ViEFileExtendedTest();
     ViEImageProcessExtendedTest();
+    ViENetworkExtendedTest();
     ViERenderExtendedTest();
     ViERtpRtcpExtendedTest();
 }
@@ -91,6 +93,7 @@ void ViEAutoTest::ViEAPITest()
     ViEEncryptionAPITest();
     ViEFileAPITest();
     ViEImageProcessAPITest();
+    ViENetworkAPITest();
     ViERenderAPITest();
     ViERtpRtcpAPITest();
 }
@@ -104,6 +107,10 @@ void ViEAutoTest::PrintVideoCodec(const webrtc::VideoCodec videoCodec)
         case webrtc::kVideoCodecVP8:
             ViETest::Log("\tcodecType: VP8");
             break;
+            // TODO(sh): keep or remove MPEG4?
+            //    case webrtc::kVideoCodecMPEG4:
+            //        ViETest::Log("\tcodecType: MPEG4");
+            //        break;
         case webrtc::kVideoCodecI420:
             ViETest::Log("\tcodecType: I420");
             break;
@@ -113,11 +120,8 @@ void ViEAutoTest::PrintVideoCodec(const webrtc::VideoCodec videoCodec)
         case webrtc::kVideoCodecULPFEC:
             ViETest::Log("\tcodecType: ULPFEC");
             break;
-        case webrtc::kVideoCodecGeneric:
-            ViETest::Log("\tcodecType: GENERIC");
-            break;
         case webrtc::kVideoCodecUnknown:
-            ViETest::Log("\tcodecType: UNKNOWN");
+            ViETest::Log("\tcodecType: ????");
             break;
     }
 

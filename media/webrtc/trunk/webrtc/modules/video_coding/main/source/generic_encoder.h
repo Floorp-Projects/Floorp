@@ -18,9 +18,7 @@
 namespace webrtc
 {
 
-namespace media_optimization {
 class VCMMediaOptimization;
-}  // namespace media_optimization
 
 /*************************************/
 /* VCMEncodeFrameCallback class     */
@@ -34,24 +32,24 @@ public:
     /*
     * Callback implementation - codec encode complete
     */
-    int32_t Encoded(
+    WebRtc_Word32 Encoded(
         EncodedImage& encodedImage,
         const CodecSpecificInfo* codecSpecificInfo = NULL,
         const RTPFragmentationHeader* fragmentationHeader = NULL);
     /*
     * Get number of encoded bytes
     */
-    uint32_t EncodedBytes();
+    WebRtc_UWord32 EncodedBytes();
     /*
     * Callback implementation - generic encoder encode complete
     */
-    int32_t SetTransportCallback(VCMPacketizationCallback* transport);
+    WebRtc_Word32 SetTransportCallback(VCMPacketizationCallback* transport);
     /**
     * Set media Optimization
     */
-    void SetMediaOpt (media_optimization::VCMMediaOptimization* mediaOpt);
+    void SetMediaOpt (VCMMediaOptimization* mediaOpt);
 
-    void SetPayloadType(uint8_t payloadType) { _payloadType = payloadType; };
+    void SetPayloadType(WebRtc_UWord8 payloadType) { _payloadType = payloadType; };
     void SetCodecType(VideoCodecType codecType) {_codecType = codecType;};
     void SetInternalSource(bool internalSource) { _internalSource = internalSource; };
 
@@ -64,13 +62,13 @@ private:
                                   RTPVideoHeader** rtp);
 
     VCMPacketizationCallback* _sendCallback;
-    media_optimization::VCMMediaOptimization* _mediaOpt;
-    uint32_t _encodedBytes;
-    uint8_t _payloadType;
-    VideoCodecType _codecType;
-    bool _internalSource;
+    VCMMediaOptimization*     _mediaOpt;
+    WebRtc_UWord32            _encodedBytes;
+    WebRtc_UWord8             _payloadType;
+    VideoCodecType            _codecType;
+    bool                      _internalSource;
 #ifdef DEBUG_ENCODER_BIT_STREAM
-    FILE* _bitStreamAfterEncoder;
+    FILE*                     _bitStreamAfterEncoder;
 #endif
 };// end of VCMEncodeFrameCallback class
 
@@ -87,13 +85,13 @@ public:
     /**
     *	Free encoder memory
     */
-    int32_t Release();
+    WebRtc_Word32 Release();
     /**
     *	Initialize the encoder with the information from the VideoCodec
     */
-    int32_t InitEncode(const VideoCodec* settings,
-                             int32_t numberOfCores,
-                             uint32_t maxPayloadSize);
+    WebRtc_Word32 InitEncode(const VideoCodec* settings,
+                             WebRtc_Word32 numberOfCores,
+                             WebRtc_UWord32 maxPayloadSize);
     /**
     *	Encode raw image
     *	inputFrame        : Frame containing raw image
@@ -101,36 +99,35 @@ public:
     *	cameraFrameRate	  :	request or information from the remote side
     *	frameType         : The requested frame type to encode
     */
-    int32_t Encode(const I420VideoFrame& inputFrame,
+    WebRtc_Word32 Encode(const I420VideoFrame& inputFrame,
                          const CodecSpecificInfo* codecSpecificInfo,
                          const std::vector<FrameType>& frameTypes);
     /**
-    * Set new target bitrate (bits/s) and framerate.
-    * Return Value: new bit rate if OK, otherwise <0s.
+    *	Set new target bit rate and frame rate
+    * Return Value: new bit rate if OK, otherwise <0s
     */
-    int32_t SetRates(uint32_t target_bitrate,
-                           uint32_t frameRate);
+    WebRtc_Word32 SetRates(WebRtc_UWord32 newBitRate, WebRtc_UWord32 frameRate);
     /**
     * Set a new packet loss rate and a new round-trip time in milliseconds.
     */
-    int32_t SetChannelParameters(int32_t packetLoss, int rtt);
-    int32_t CodecConfigParameters(uint8_t* buffer, int32_t size);
+    WebRtc_Word32 SetChannelParameters(WebRtc_Word32 packetLoss, int rtt);
+    WebRtc_Word32 CodecConfigParameters(WebRtc_UWord8* buffer, WebRtc_Word32 size);
     /**
     * Register a transport callback which will be called to deliver the encoded buffers
     */
-    int32_t RegisterEncodeCallback(VCMEncodedFrameCallback* VCMencodedFrameCallback);
+    WebRtc_Word32 RegisterEncodeCallback(VCMEncodedFrameCallback* VCMencodedFrameCallback);
     /**
     * Get encoder bit rate
     */
-    uint32_t BitRate() const;
+    WebRtc_UWord32 BitRate() const;
      /**
     * Get encoder frame rate
     */
-    uint32_t FrameRate() const;
+    WebRtc_UWord32 FrameRate() const;
 
-    int32_t SetPeriodicKeyFrames(bool enable);
+    WebRtc_Word32 SetPeriodicKeyFrames(bool enable);
 
-    int32_t RequestFrame(const std::vector<FrameType>& frame_types);
+    WebRtc_Word32 RequestFrame(const std::vector<FrameType>& frame_types);
 
     bool InternalSource() const;
 
@@ -138,8 +135,8 @@ private:
     VideoEncoder&               _encoder;
     VideoCodecType              _codecType;
     VCMEncodedFrameCallback*    _VCMencodedFrameCallback;
-    uint32_t              _bitRate;
-    uint32_t              _frameRate;
+    WebRtc_UWord32              _bitRate;
+    WebRtc_UWord32              _frameRate;
     bool                        _internalSource;
 }; // end of VCMGenericEncoder class
 

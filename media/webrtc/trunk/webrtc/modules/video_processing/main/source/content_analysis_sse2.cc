@@ -15,27 +15,27 @@
 
 namespace webrtc {
 
-int32_t
+WebRtc_Word32
 VPMContentAnalysis::TemporalDiffMetric_SSE2()
 {
-    uint32_t numPixels = 0;       // counter for # of pixels
+    WebRtc_UWord32 numPixels = 0;       // counter for # of pixels
 
-    const uint8_t* imgBufO = _origFrame + _border*_width + _border;
-    const uint8_t* imgBufP = _prevFrame + _border*_width + _border;
+    const WebRtc_UWord8* imgBufO = _origFrame + _border*_width + _border;
+    const WebRtc_UWord8* imgBufP = _prevFrame + _border*_width + _border;
 
-    const int32_t width_end = ((_width - 2*_border) & -16) + _border;
+    const WebRtc_Word32 width_end = ((_width - 2*_border) & -16) + _border;
 
     __m128i sad_64   = _mm_setzero_si128();
     __m128i sum_64   = _mm_setzero_si128();
     __m128i sqsum_64 = _mm_setzero_si128();
     const __m128i z  = _mm_setzero_si128();
 
-    for(uint16_t i = 0; i < (_height - 2*_border); i += _skipNum)
+    for(WebRtc_UWord16 i = 0; i < (_height - 2*_border); i += _skipNum)
     {
         __m128i sqsum_32  = _mm_setzero_si128();
 
-        const uint8_t *lineO = imgBufO;
-        const uint8_t *lineP = imgBufP;
+        const WebRtc_UWord8 *lineO = imgBufO;
+        const WebRtc_UWord8 *lineP = imgBufP;
 
         // Work on 16 pixels at a time.  For HD content with a width of 1920
         // this loop will run ~67 times (depending on border).  Maximum for
@@ -45,7 +45,7 @@ VPMContentAnalysis::TemporalDiffMetric_SSE2()
         // o*o will have a maximum of 255*255 = 65025.  This will roll over
         // a 16 bit accumulator as 67*65025 > 65535, but will fit in a
         // 32 bit accumulator.
-        for(uint16_t j = 0; j < width_end - _border; j += 16)
+        for(WebRtc_UWord16 j = 0; j < width_end - _border; j += 16)
         {
             const __m128i o = _mm_loadu_si128((__m128i*)(lineO));
             const __m128i p = _mm_loadu_si128((__m128i*)(lineP));
@@ -90,16 +90,16 @@ VPMContentAnalysis::TemporalDiffMetric_SSE2()
     _mm_store_si128 (&sum_final_128, sum_64);
     _mm_store_si128 (&sqsum_final_128, sqsum_64);
 
-    uint64_t *sad_final_64 =
-                   reinterpret_cast<uint64_t*>(&sad_final_128);
-    uint64_t *sum_final_64 =
-                   reinterpret_cast<uint64_t*>(&sum_final_128);
-    uint64_t *sqsum_final_64 =
-                   reinterpret_cast<uint64_t*>(&sqsum_final_128);
+    WebRtc_UWord64 *sad_final_64 =
+                   reinterpret_cast<WebRtc_UWord64*>(&sad_final_128);
+    WebRtc_UWord64 *sum_final_64 =
+                   reinterpret_cast<WebRtc_UWord64*>(&sum_final_128);
+    WebRtc_UWord64 *sqsum_final_64 =
+                   reinterpret_cast<WebRtc_UWord64*>(&sqsum_final_128);
 
-    const uint32_t pixelSum = sum_final_64[0] + sum_final_64[1];
-    const uint64_t pixelSqSum = sqsum_final_64[0] + sqsum_final_64[1];
-    const uint32_t tempDiffSum = sad_final_64[0] + sad_final_64[1];
+    const WebRtc_UWord32 pixelSum = sum_final_64[0] + sum_final_64[1];
+    const WebRtc_UWord64 pixelSqSum = sqsum_final_64[0] + sqsum_final_64[1];
+    const WebRtc_UWord32 tempDiffSum = sad_final_64[0] + sad_final_64[1];
 
     // default
     _motionMagnitude = 0.0f;
@@ -124,11 +124,11 @@ VPMContentAnalysis::TemporalDiffMetric_SSE2()
     return VPM_OK;
 }
 
-int32_t
+WebRtc_Word32
 VPMContentAnalysis::ComputeSpatialMetrics_SSE2()
 {
-    const uint8_t* imgBuf = _origFrame + _border*_width;
-    const int32_t width_end = ((_width - 2*_border) & -16) + _border;
+    const WebRtc_UWord8* imgBuf = _origFrame + _border*_width;
+    const WebRtc_Word32 width_end = ((_width - 2*_border) & -16) + _border;
 
     __m128i se_32  = _mm_setzero_si128();
     __m128i sev_32 = _mm_setzero_si128();
@@ -141,7 +141,7 @@ VPMContentAnalysis::ComputeSpatialMetrics_SSE2()
     // value is maxed out at 65529 for every row, 65529*1080 = 70777800, which
     // will not roll over a 32 bit accumulator.
     // _skipNum is also used to reduce the number of rows
-    for(int32_t i = 0; i < (_height - 2*_border); i += _skipNum)
+    for(WebRtc_Word32 i = 0; i < (_height - 2*_border); i += _skipNum)
     {
         __m128i se_16  = _mm_setzero_si128();
         __m128i sev_16 = _mm_setzero_si128();
@@ -158,11 +158,11 @@ VPMContentAnalysis::ComputeSpatialMetrics_SSE2()
         // _border could also be adjusted to concentrate on just the center of
         // the images for an HD capture in order to reduce the possiblity of
         // rollover.
-        const uint8_t *lineTop = imgBuf - _width + _border;
-        const uint8_t *lineCen = imgBuf + _border;
-        const uint8_t *lineBot = imgBuf + _width + _border;
+        const WebRtc_UWord8 *lineTop = imgBuf - _width + _border;
+        const WebRtc_UWord8 *lineCen = imgBuf + _border;
+        const WebRtc_UWord8 *lineBot = imgBuf + _width + _border;
 
-        for(int32_t j = 0; j < width_end - _border; j += 16)
+        for(WebRtc_Word32 j = 0; j < width_end - _border; j += 16)
         {
             const __m128i t = _mm_loadu_si128((__m128i*)(lineTop));
             const __m128i l = _mm_loadu_si128((__m128i*)(lineCen - 1));
@@ -265,19 +265,19 @@ VPMContentAnalysis::ComputeSpatialMetrics_SSE2()
                      _mm_add_epi64(_mm_unpackhi_epi32(msa_32,z),
                                    _mm_unpacklo_epi32(msa_32,z)));
 
-    uint64_t *se_64 =
-                   reinterpret_cast<uint64_t*>(&se_128);
-    uint64_t *sev_64 =
-                   reinterpret_cast<uint64_t*>(&sev_128);
-    uint64_t *seh_64 =
-                   reinterpret_cast<uint64_t*>(&seh_128);
-    uint64_t *msa_64 =
-                   reinterpret_cast<uint64_t*>(&msa_128);
+    WebRtc_UWord64 *se_64 =
+                   reinterpret_cast<WebRtc_UWord64*>(&se_128);
+    WebRtc_UWord64 *sev_64 =
+                   reinterpret_cast<WebRtc_UWord64*>(&sev_128);
+    WebRtc_UWord64 *seh_64 =
+                   reinterpret_cast<WebRtc_UWord64*>(&seh_128);
+    WebRtc_UWord64 *msa_64 =
+                   reinterpret_cast<WebRtc_UWord64*>(&msa_128);
 
-    const uint32_t spatialErrSum  = se_64[0] + se_64[1];
-    const uint32_t spatialErrVSum = sev_64[0] + sev_64[1];
-    const uint32_t spatialErrHSum = seh_64[0] + seh_64[1];
-    const uint32_t pixelMSA = msa_64[0] + msa_64[1];
+    const WebRtc_UWord32 spatialErrSum  = se_64[0] + se_64[1];
+    const WebRtc_UWord32 spatialErrVSum = sev_64[0] + sev_64[1];
+    const WebRtc_UWord32 spatialErrHSum = seh_64[0] + seh_64[1];
+    const WebRtc_UWord32 pixelMSA = msa_64[0] + msa_64[1];
 
     // normalize over all pixels
     const float spatialErr  = (float)(spatialErrSum >> 2);

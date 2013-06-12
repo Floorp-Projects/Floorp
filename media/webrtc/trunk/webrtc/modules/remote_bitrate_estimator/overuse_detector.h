@@ -23,8 +23,6 @@
 namespace webrtc {
 enum RateControlRegion;
 
-// This class is assumed to be protected by the owner if used by multiple
-// threads.
 class OveruseDetector {
  public:
   explicit OveruseDetector(const OverUseDetectorOptions& options);
@@ -36,7 +34,6 @@ class OveruseDetector {
   BandwidthUsage State() const;
   double NoiseVar() const;
   void SetRateControlRegion(RateControlRegion region);
-  int64_t time_of_last_received_packet() const;
 
  private:
   struct FrameSample {
@@ -103,7 +100,6 @@ class OveruseDetector {
   double time_over_using_;
   uint16_t over_use_counter_;
   BandwidthUsage hypothesis_;
-  int64_t time_of_last_received_packet_;
 #ifdef WEBRTC_BWE_MATLAB
   DebugPlots plots_;
 #endif

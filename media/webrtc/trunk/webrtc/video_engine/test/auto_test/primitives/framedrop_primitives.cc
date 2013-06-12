@@ -252,9 +252,9 @@ void TestFullStack(const TbInterfaces& interfaces,
   EXPECT_EQ(0, base_interface->DeleteChannel(video_channel));
 
   // Collect transport statistics.
-  int32_t num_rtp_packets = 0;
-  int32_t num_dropped_packets = 0;
-  int32_t num_rtcp_packets = 0;
+  WebRtc_Word32 num_rtp_packets = 0;
+  WebRtc_Word32 num_dropped_packets = 0;
+  WebRtc_Word32 num_rtcp_packets = 0;
   external_transport.GetStats(num_rtp_packets, num_dropped_packets,
                               num_rtcp_packets);
   ViETest::Log("RTP packets    : %5d", num_rtp_packets);
@@ -277,7 +277,7 @@ void FixOutputFileForComparison(const std::string& output_file,
       "useful to fill that gap with and it is impossible to detect it without "
       "any previous timestamps to compare with.";
 
-  uint8_t* last_frame_data = new uint8_t[frame_length_in_bytes];
+  WebRtc_UWord8* last_frame_data = new WebRtc_UWord8[frame_length_in_bytes];
 
   // Process the file and write frame duplicates for all dropped frames.
   for (std::vector<Frame*>::const_iterator it = frames.begin();

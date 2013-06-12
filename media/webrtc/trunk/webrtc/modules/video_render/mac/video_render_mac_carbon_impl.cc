@@ -19,7 +19,7 @@
 
 namespace webrtc {
 
-VideoRenderMacCarbonImpl::VideoRenderMacCarbonImpl(const int32_t id,
+VideoRenderMacCarbonImpl::VideoRenderMacCarbonImpl(const WebRtc_Word32 id,
         const VideoRenderType videoRenderType,
         void* window,
         const bool fullscreen) :
@@ -39,7 +39,7 @@ VideoRenderMacCarbonImpl::~VideoRenderMacCarbonImpl()
     delete &_renderMacCarbonCritsect;
 }
 
-int32_t
+WebRtc_Word32
 VideoRenderMacCarbonImpl::Init()
 {
     CriticalSectionScoped cs(&_renderMacCarbonCritsect);
@@ -96,8 +96,8 @@ VideoRenderMacCarbonImpl::Init()
     return 0;
 }
 
-int32_t
-VideoRenderMacCarbonImpl::ChangeUniqueId(const int32_t id)
+WebRtc_Word32
+VideoRenderMacCarbonImpl::ChangeUniqueId(const WebRtc_Word32 id)
 {
     return -1;
 
@@ -113,7 +113,7 @@ VideoRenderMacCarbonImpl::ChangeUniqueId(const int32_t id)
     return 0;
 }
 
-int32_t
+WebRtc_Word32
 VideoRenderMacCarbonImpl::ChangeWindow(void* window)
 {
     return -1;
@@ -133,8 +133,8 @@ VideoRenderMacCarbonImpl::ChangeWindow(void* window)
 }
 
 VideoRenderCallback*
-VideoRenderMacCarbonImpl::AddIncomingRenderStream(const uint32_t streamId,
-        const uint32_t zOrder,
+VideoRenderMacCarbonImpl::AddIncomingRenderStream(const WebRtc_UWord32 streamId,
+        const WebRtc_UWord32 zOrder,
         const float left,
         const float top,
         const float right,
@@ -158,8 +158,8 @@ VideoRenderMacCarbonImpl::AddIncomingRenderStream(const uint32_t streamId,
 
 }
 
-int32_t
-VideoRenderMacCarbonImpl::DeleteIncomingRenderStream(const uint32_t streamId)
+WebRtc_Word32
+VideoRenderMacCarbonImpl::DeleteIncomingRenderStream(const WebRtc_UWord32 streamId)
 {
 
     WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, _id, "%s:%d", __FUNCTION__, __LINE__);
@@ -169,9 +169,9 @@ VideoRenderMacCarbonImpl::DeleteIncomingRenderStream(const uint32_t streamId)
     return 0;
 }
 
-int32_t
-VideoRenderMacCarbonImpl::GetIncomingRenderStreamProperties(const uint32_t streamId,
-        uint32_t& zOrder,
+WebRtc_Word32
+VideoRenderMacCarbonImpl::GetIncomingRenderStreamProperties(const WebRtc_UWord32 streamId,
+        WebRtc_UWord32& zOrder,
         float& left,
         float& top,
         float& right,
@@ -181,13 +181,13 @@ VideoRenderMacCarbonImpl::GetIncomingRenderStreamProperties(const uint32_t strea
     return _ptrCarbonRender->GetChannelProperties(streamId, zOrder, left, top, right, bottom);
 }
 
-int32_t
+WebRtc_Word32
 VideoRenderMacCarbonImpl::StartRender()
 {
     return _ptrCarbonRender->StartRender();
 }
 
-int32_t
+WebRtc_Word32
 VideoRenderMacCarbonImpl::StopRender()
 {
     return _ptrCarbonRender->StopRender();
@@ -211,18 +211,18 @@ VideoRenderMacCarbonImpl::FullScreen()
     return false;
 }
 
-int32_t
-VideoRenderMacCarbonImpl::GetGraphicsMemory(uint64_t& totalGraphicsMemory,
-        uint64_t& availableGraphicsMemory) const
+WebRtc_Word32
+VideoRenderMacCarbonImpl::GetGraphicsMemory(WebRtc_UWord64& totalGraphicsMemory,
+        WebRtc_UWord64& availableGraphicsMemory) const
 {
     totalGraphicsMemory = 0;
     availableGraphicsMemory = 0;
     return 0;
 }
 
-int32_t
-VideoRenderMacCarbonImpl::GetScreenResolution(uint32_t& screenWidth,
-        uint32_t& screenHeight) const
+WebRtc_Word32
+VideoRenderMacCarbonImpl::GetScreenResolution(WebRtc_UWord32& screenWidth,
+        WebRtc_UWord32& screenHeight) const
 {
     CriticalSectionScoped cs(&_renderMacCarbonCritsect);
     //NSScreen* mainScreen = [NSScreen mainScreen];
@@ -234,15 +234,15 @@ VideoRenderMacCarbonImpl::GetScreenResolution(uint32_t& screenWidth,
     return 0;
 }
 
-uint32_t
-VideoRenderMacCarbonImpl::RenderFrameRate(const uint32_t streamId)
+WebRtc_UWord32
+VideoRenderMacCarbonImpl::RenderFrameRate(const WebRtc_UWord32 streamId)
 {
     CriticalSectionScoped cs(&_renderMacCarbonCritsect);
     return 0;
 }
 
-int32_t
-VideoRenderMacCarbonImpl::SetStreamCropping(const uint32_t streamId,
+WebRtc_Word32
+VideoRenderMacCarbonImpl::SetStreamCropping(const WebRtc_UWord32 streamId,
         const float left,
         const float top,
         const float right,
@@ -251,42 +251,42 @@ VideoRenderMacCarbonImpl::SetStreamCropping(const uint32_t streamId,
     return 0;
 }
 
-int32_t VideoRenderMacCarbonImpl::ConfigureRenderer(const uint32_t streamId,
-                                                    const unsigned int zOrder,
-                                                    const float left,
-                                                    const float top,
-                                                    const float right,
-                                                    const float bottom)
+WebRtc_Word32 VideoRenderMacCarbonImpl::ConfigureRenderer(const WebRtc_UWord32 streamId,
+        const unsigned int zOrder,
+        const float left,
+        const float top,
+        const float right,
+        const float bottom)
 {
     return 0;
 }
 
-int32_t
+WebRtc_Word32
 VideoRenderMacCarbonImpl::SetTransparentBackground(const bool enable)
 {
     return 0;
 }
 
-int32_t VideoRenderMacCarbonImpl::SetText(const uint8_t textId,
-                                          const uint8_t* text,
-                                          const int32_t textLength,
-                                          const uint32_t textColorRef,
-                                          const uint32_t backgroundColorRef,
-                                          const float left,
-                                          const float top,
-                                          const float right,
-                                          const float bottom)
+WebRtc_Word32 VideoRenderMacCarbonImpl::SetText(const WebRtc_UWord8 textId,
+        const WebRtc_UWord8* text,
+        const WebRtc_Word32 textLength,
+        const WebRtc_UWord32 textColorRef,
+        const WebRtc_UWord32 backgroundColorRef,
+        const float left,
+        const float top,
+        const float right,
+        const float bottom)
 {
     return 0;
 }
 
-int32_t VideoRenderMacCarbonImpl::SetBitmap(const void* bitMap,
-                                            const uint8_t pictureId,
-                                            const void* colorKey,
-                                            const float left,
-                                            const float top,
-                                            const float right,
-                                            const float bottom)
+WebRtc_Word32 VideoRenderMacCarbonImpl::SetBitmap(const void* bitMap,
+        const WebRtc_UWord8 pictureId,
+        const void* colorKey,
+        const float left,
+        const float top,
+        const float right,
+        const float bottom)
 {
     return 0;
 }

@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'remote_bitrate_estimator',
-      'type': 'static_library',
+      'type': '<(library)',
       'dependencies': [
         # system_wrappers
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
@@ -71,3 +71,9 @@
     }], # build_with_chromium
   ], # conditions
 }
+
+# Local Variables:
+# tab-width:2
+# indent-tabs-mode:nil
+# End:
+# vim: set expandtab tabstop=2 shiftwidth=2:

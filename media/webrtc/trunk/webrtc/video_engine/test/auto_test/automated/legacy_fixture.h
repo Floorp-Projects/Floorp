@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_VIDEO_ENGINE_TEST_AUTO_TEST_AUTOMATED_VIE_LEGACY_FIXTURE_H_
-#define WEBRTC_VIDEO_ENGINE_TEST_AUTO_TEST_AUTOMATED_VIE_LEGACY_FIXTURE_H_
+#ifndef SRC_VIDEO_ENGINE_TEST_AUTO_TEST_AUTOMATED_VIE_LEGACY_FIXTURE_H_
+#define SRC_VIDEO_ENGINE_TEST_AUTO_TEST_AUTOMATED_VIE_LEGACY_FIXTURE_H_
 
-#include "webrtc/video_engine/test/auto_test/automated/two_windows_fixture.h"
+#include "video_engine/test/auto_test/automated/two_windows_fixture.h"
 
 // Inherited by old-style standard integration tests based on ViEAutoTest.
 class LegacyFixture : public TwoWindowsFixture {
@@ -26,4 +26,4 @@ class LegacyFixture : public TwoWindowsFixture {
   static ViEAutoTest* tests_;
 };
 
-#endif  // WEBRTC_VIDEO_ENGINE_TEST_AUTO_TEST_AUTOMATED_VIE_LEGACY_FIXTURE_H_
+#endif  // SRC_VIDEO_ENGINE_TEST_AUTO_TEST_AUTOMATED_VIE_LEGACY_FIXTURE_H_

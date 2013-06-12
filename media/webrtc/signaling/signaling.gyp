@@ -56,7 +56,6 @@
         '../../../dom/base',
         '../../../content/media',
         '../../../media/mtransport',
-        '../trunk',
         '../trunk/webrtc',
         '../trunk/webrtc/video_engine/include',
         '../trunk/webrtc/voice_engine/include',

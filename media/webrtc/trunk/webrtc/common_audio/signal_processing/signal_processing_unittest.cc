@@ -131,10 +131,10 @@ TEST_F(SplTest, MacroTest) {
 }
 
 TEST_F(SplTest, InlineTest) {
-    int16_t a16 = 121;
-    int16_t b16 = -17;
-    int32_t a32 = 111121;
-    int32_t b32 = -1711;
+    WebRtc_Word16 a16 = 121;
+    WebRtc_Word16 b16 = -17;
+    WebRtc_Word32 a32 = 111121;
+    WebRtc_Word32 b32 = -1711;
     char bVersion[8];
 
     EXPECT_EQ(17, WebRtcSpl_GetSizeInBits(a32));
@@ -182,16 +182,16 @@ TEST_F(SplTest, InlineTest) {
 
 TEST_F(SplTest, MathOperationsTest) {
     int A = 1134567892;
-    int32_t num = 117;
-    int32_t den = -5;
-    uint16_t denU = 5;
+    WebRtc_Word32 num = 117;
+    WebRtc_Word32 den = -5;
+    WebRtc_UWord16 denU = 5;
     EXPECT_EQ(33700, WebRtcSpl_Sqrt(A));
     EXPECT_EQ(33683, WebRtcSpl_SqrtFloor(A));
 
 
     EXPECT_EQ(-91772805, WebRtcSpl_DivResultInQ31(den, num));
-    EXPECT_EQ(-23, WebRtcSpl_DivW32W16ResW16(num, (int16_t)den));
-    EXPECT_EQ(-23, WebRtcSpl_DivW32W16(num, (int16_t)den));
+    EXPECT_EQ(-23, WebRtcSpl_DivW32W16ResW16(num, (WebRtc_Word16)den));
+    EXPECT_EQ(-23, WebRtcSpl_DivW32W16(num, (WebRtc_Word16)den));
     EXPECT_EQ(23u, WebRtcSpl_DivU32U16(num, denU));
     EXPECT_EQ(0, WebRtcSpl_DivW32HiLow(128, 0, 256));
 }
@@ -199,13 +199,13 @@ TEST_F(SplTest, MathOperationsTest) {
 TEST_F(SplTest, BasicArrayOperationsTest) {
     const int kVectorSize = 4;
     int B[] = {4, 12, 133, 1100};
-    uint8_t b8[kVectorSize];
-    int16_t b16[kVectorSize];
-    int32_t b32[kVectorSize];
+    WebRtc_UWord8 b8[kVectorSize];
+    WebRtc_Word16 b16[kVectorSize];
+    WebRtc_Word32 b32[kVectorSize];
 
-    uint8_t bTmp8[kVectorSize];
-    int16_t bTmp16[kVectorSize];
-    int32_t bTmp32[kVectorSize];
+    WebRtc_UWord8 bTmp8[kVectorSize];
+    WebRtc_Word16 bTmp16[kVectorSize];
+    WebRtc_Word32 bTmp32[kVectorSize];
 
     WebRtcSpl_MemSetW16(b16, 3, kVectorSize);
     for (int kk = 0; kk < kVectorSize; ++kk) {
@@ -232,9 +232,9 @@ TEST_F(SplTest, BasicArrayOperationsTest) {
         EXPECT_EQ(1, b32[kk]);
     }
     for (int kk = 0; kk < kVectorSize; ++kk) {
-        bTmp8[kk] = (int8_t)kk;
-        bTmp16[kk] = (int16_t)kk;
-        bTmp32[kk] = (int32_t)kk;
+        bTmp8[kk] = (WebRtc_Word8)kk;
+        bTmp16[kk] = (WebRtc_Word16)kk;
+        bTmp32[kk] = (WebRtc_Word32)kk;
     }
     WEBRTC_SPL_MEMCPY_W8(b8, bTmp8, kVectorSize);
     for (int kk = 0; kk < kVectorSize; ++kk) {
@@ -255,7 +255,7 @@ TEST_F(SplTest, BasicArrayOperationsTest) {
 
     for (int kk = 0; kk < kVectorSize; ++kk) {
         b32[kk] = B[kk];
-        b16[kk] = (int16_t)B[kk];
+        b16[kk] = (WebRtc_Word16)B[kk];
     }
     WebRtcSpl_VectorBitShiftW32ToW16(bTmp16, kVectorSize, b32, 1);
     for (int kk = 0; kk < kVectorSize; ++kk) {
@@ -372,9 +372,9 @@ TEST_F(SplTest, MinMaxOperationsTest) {
 TEST_F(SplTest, VectorOperationsTest) {
     const int kVectorSize = 4;
     int B[] = {4, 12, 133, 1100};
-    int16_t a16[kVectorSize];
-    int16_t b16[kVectorSize];
-    int16_t bTmp16[kVectorSize];
+    WebRtc_Word16 a16[kVectorSize];
+    WebRtc_Word16 b16[kVectorSize];
+    WebRtc_Word16 bTmp16[kVectorSize];
 
     for (int kk = 0; kk < kVectorSize; ++kk) {
         a16[kk] = B[kk];
@@ -433,9 +433,9 @@ TEST_F(SplTest, VectorOperationsTest) {
 TEST_F(SplTest, EstimatorsTest) {
     const int kVectorSize = 4;
     int B[] = {4, 12, 133, 1100};
-    int16_t b16[kVectorSize];
-    int32_t b32[kVectorSize];
-    int16_t bTmp16[kVectorSize];
+    WebRtc_Word16 b16[kVectorSize];
+    WebRtc_Word32 b32[kVectorSize];
+    WebRtc_Word16 bTmp16[kVectorSize];
 
     for (int kk = 0; kk < kVectorSize; ++kk) {
         b16[kk] = B[kk];
@@ -448,14 +448,14 @@ TEST_F(SplTest, EstimatorsTest) {
 TEST_F(SplTest, FilterTest) {
     const int kVectorSize = 4;
     const int kFilterOrder = 3;
-    int16_t A[] = {1, 2, 33, 100};
-    int16_t A5[] = {1, 2, 33, 100, -5};
-    int16_t B[] = {4, 12, 133, 110};
-    int16_t data_in[kVectorSize];
-    int16_t data_out[kVectorSize];
-    int16_t bTmp16Low[kVectorSize];
-    int16_t bState[kVectorSize];
-    int16_t bStateLow[kVectorSize];
+    WebRtc_Word16 A[] = {1, 2, 33, 100};
+    WebRtc_Word16 A5[] = {1, 2, 33, 100, -5};
+    WebRtc_Word16 B[] = {4, 12, 133, 110};
+    WebRtc_Word16 data_in[kVectorSize];
+    WebRtc_Word16 data_out[kVectorSize];
+    WebRtc_Word16 bTmp16Low[kVectorSize];
+    WebRtc_Word16 bState[kVectorSize];
+    WebRtc_Word16 bStateLow[kVectorSize];
 
     WebRtcSpl_ZerosArrayW16(bState, kVectorSize);
     WebRtcSpl_ZerosArrayW16(bStateLow, kVectorSize);
@@ -493,9 +493,9 @@ TEST_F(SplTest, FilterTest) {
 
 TEST_F(SplTest, RandTest) {
     const int kVectorSize = 4;
-    int16_t BU[] = {3653, 12446, 8525, 30691};
-    int16_t b16[kVectorSize];
-    uint32_t bSeed = 100000;
+    WebRtc_Word16 BU[] = {3653, 12446, 8525, 30691};
+    WebRtc_Word16 b16[kVectorSize];
+    WebRtc_UWord32 bSeed = 100000;
 
     EXPECT_EQ(464449057u, WebRtcSpl_IncreaseSeed(&bSeed));
     EXPECT_EQ(31565, WebRtcSpl_RandU(&bSeed));
@@ -559,10 +559,10 @@ TEST_F(SplTest, AutoCorrelationTest) {
 TEST_F(SplTest, SignalProcessingTest) {
     const int kVectorSize = 4;
     int A[] = {1, 2, 33, 100};
-    const int16_t kHanning[4] = { 2399, 8192, 13985, 16384 };
-    int16_t b16[kVectorSize];
+    const WebRtc_Word16 kHanning[4] = { 2399, 8192, 13985, 16384 };
+    WebRtc_Word16 b16[kVectorSize];
 
-    int16_t bTmp16[kVectorSize];
+    WebRtc_Word16 bTmp16[kVectorSize];
 
     int bScale = 0;
 
@@ -597,7 +597,7 @@ TEST_F(SplTest, SignalProcessingTest) {
 }
 
 TEST_F(SplTest, FFTTest) {
-    int16_t B[] = {1, 2, 33, 100,
+    WebRtc_Word16 B[] = {1, 2, 33, 100,
             2, 3, 34, 101,
             3, 4, 35, 102,
             4, 5, 36, 103};

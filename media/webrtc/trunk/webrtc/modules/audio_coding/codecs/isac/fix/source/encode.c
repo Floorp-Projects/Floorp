@@ -28,40 +28,40 @@
 #include <stdio.h>
 
 
-int WebRtcIsacfix_EncodeImpl(int16_t      *in,
-                             ISACFIX_EncInst_t  *ISACenc_obj,
-                             BwEstimatorstr      *bw_estimatordata,
-                             int16_t         CodingMode)
+int WebRtcIsacfix_EncodeImpl(WebRtc_Word16      *in,
+                         ISACFIX_EncInst_t  *ISACenc_obj,
+                         BwEstimatorstr      *bw_estimatordata,
+                         WebRtc_Word16         CodingMode)
 {
-  int16_t stream_length = 0;
-  int16_t usefulstr_len = 0;
+  WebRtc_Word16 stream_length = 0;
+  WebRtc_Word16 usefulstr_len = 0;
   int k;
-  int16_t BWno;
+  WebRtc_Word16 BWno;
 
-  int16_t lofilt_coefQ15[(ORDERLO)*SUBFRAMES];
-  int16_t hifilt_coefQ15[(ORDERHI)*SUBFRAMES];
-  int32_t gain_lo_hiQ17[2*SUBFRAMES];
+  WebRtc_Word16 lofilt_coefQ15[(ORDERLO)*SUBFRAMES];
+  WebRtc_Word16 hifilt_coefQ15[(ORDERHI)*SUBFRAMES];
+  WebRtc_Word32 gain_lo_hiQ17[2*SUBFRAMES];
 
-  int16_t LPandHP[FRAMESAMPLES/2 + QLOOKAHEAD];
-  int16_t LP16a[FRAMESAMPLES/2 + QLOOKAHEAD];
-  int16_t HP16a[FRAMESAMPLES/2 + QLOOKAHEAD];
+  WebRtc_Word16 LPandHP[FRAMESAMPLES/2 + QLOOKAHEAD];
+  WebRtc_Word16 LP16a[FRAMESAMPLES/2 + QLOOKAHEAD];
+  WebRtc_Word16 HP16a[FRAMESAMPLES/2 + QLOOKAHEAD];
 
-  int16_t PitchLags_Q7[PITCH_SUBFRAMES];
-  int16_t PitchGains_Q12[PITCH_SUBFRAMES];
-  int16_t AvgPitchGain_Q12;
+  WebRtc_Word16 PitchLags_Q7[PITCH_SUBFRAMES];
+  WebRtc_Word16 PitchGains_Q12[PITCH_SUBFRAMES];
+  WebRtc_Word16 AvgPitchGain_Q12;
 
-  int16_t frame_mode; /* 0 for 30ms, 1 for 60ms */
-  int16_t processed_samples;
+  WebRtc_Word16 frame_mode; /* 0 for 30ms, 1 for 60ms */
+  WebRtc_Word16 processed_samples;
   int status;
 
-  int32_t bits_gainsQ11;
-  int16_t MinBytes;
-  int16_t bmodel;
+  WebRtc_Word32 bits_gainsQ11;
+  WebRtc_Word16 MinBytes;
+  WebRtc_Word16 bmodel;
 
   transcode_obj transcodingParam;
-  int16_t payloadLimitBytes;
-  int16_t arithLenBeforeEncodingDFT;
-  int16_t iterCntr;
+  WebRtc_Word16 payloadLimitBytes;
+  WebRtc_Word16 arithLenBeforeEncodingDFT;
+  WebRtc_Word16 iterCntr;
 
   /* copy new frame length and bottle neck rate only for the first 10 ms data */
   if (ISACenc_obj->buffer_index == 0) {
@@ -112,7 +112,7 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
 
     // multiply the bottleneck by 0.88 before computing SNR, 0.88 is tuned by experimenting on TIMIT
     // 901/1024 is 0.87988281250000
-    ISACenc_obj->s2nr = WebRtcIsacfix_GetSnr((int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ISACenc_obj->BottleNeck, 901, 10),
+    ISACenc_obj->s2nr = WebRtcIsacfix_GetSnr((WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(ISACenc_obj->BottleNeck, 901, 10),
                                              ISACenc_obj->current_framesamples);
 
     /* encode frame length */
@@ -276,22 +276,22 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
   while((((ISACenc_obj->bitstr_obj.stream_index) << 1) > payloadLimitBytes) ||
         (status == -ISAC_DISALLOWED_BITSTREAM_LENGTH))
   {
-    int16_t arithLenDFTByte;
-    int16_t bytesLeftQ5;
-    int16_t ratioQ5[8] = {0, 6, 9, 12, 16, 19, 22, 25};
+    WebRtc_Word16 arithLenDFTByte;
+    WebRtc_Word16 bytesLeftQ5;
+    WebRtc_Word16 ratioQ5[8] = {0, 6, 9, 12, 16, 19, 22, 25};
 
     // According to experiments on TIMIT the following is proper for audio, but it is not agressive enough for tonal inputs
     // such as DTMF, sweep-sine, ...
     //
     // (0.55 - (0.8 - ratio[i]/32) * 5 / 6) * 2^14
-    // int16_t scaleQ14[8] = {0, 648, 1928, 3208, 4915, 6195, 7475, 8755};
+    // WebRtc_Word16 scaleQ14[8] = {0, 648, 1928, 3208, 4915, 6195, 7475, 8755};
 
 
     // This is a supper-agressive scaling passed the tests (tonal inputs) tone with one iteration for payload limit
     // of 120 (32kbps bottleneck), number of frames needed a rate-reduction was 58403
     //
-    int16_t scaleQ14[8] = {0, 348, 828, 1408, 2015, 3195, 3500, 3500};
-    int16_t idx;
+    WebRtc_Word16 scaleQ14[8] = {0, 348, 828, 1408, 2015, 3195, 3500, 3500};
+    WebRtc_Word16 idx;
 
     if(iterCntr >= MAX_PAYLOAD_LIMIT_ITERATION)
     {
@@ -348,8 +348,8 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
     // scale FFT coefficients to reduce the bit-rate
     for(k = 0; k < FRAMESAMPLES_HALF; k++)
     {
-      LP16a[k] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(LP16a[k], scaleQ14[idx], 14);
-      LPandHP[k] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(LPandHP[k], scaleQ14[idx], 14);
+      LP16a[k] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(LP16a[k], scaleQ14[idx], 14);
+      LPandHP[k] = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(LPandHP[k], scaleQ14[idx], 14);
     }
 
     // Save data for multiple packets memory
@@ -421,7 +421,7 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
   {
 
     /* update rate model and get minimum number of bytes in this packet */
-    MinBytes = WebRtcIsacfix_GetMinBytes(&ISACenc_obj->rate_data_obj, (int16_t) stream_length,
+    MinBytes = WebRtcIsacfix_GetMinBytes(&ISACenc_obj->rate_data_obj, (WebRtc_Word16) stream_length,
                                          ISACenc_obj->current_framesamples, ISACenc_obj->BottleNeck, ISACenc_obj->MaxDelay);
 
     /* if bitstream is too short, add garbage at the end */
@@ -452,7 +452,7 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
     {
       if (stream_length & 0x0001){
         ISACenc_obj->bitstr_seed = WEBRTC_SPL_RAND( ISACenc_obj->bitstr_seed );
-        ISACenc_obj->bitstr_obj.stream[ WEBRTC_SPL_RSHIFT_W16(stream_length, 1) ] |= (uint16_t)(ISACenc_obj->bitstr_seed & 0xFF);
+        ISACenc_obj->bitstr_obj.stream[ WEBRTC_SPL_RSHIFT_W16(stream_length, 1) ] |= (WebRtc_UWord16)(ISACenc_obj->bitstr_seed & 0xFF);
       } else {
         ISACenc_obj->bitstr_seed = WEBRTC_SPL_RAND( ISACenc_obj->bitstr_seed );
         ISACenc_obj->bitstr_obj.stream[ WEBRTC_SPL_RSHIFT_W16(stream_length, 1) ] = WEBRTC_SPL_LSHIFT_U16(ISACenc_obj->bitstr_seed, 8);
@@ -473,7 +473,7 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
   else
   {
     /* update rate model */
-    WebRtcIsacfix_UpdateRateModel(&ISACenc_obj->rate_data_obj, (int16_t) stream_length,
+    WebRtcIsacfix_UpdateRateModel(&ISACenc_obj->rate_data_obj, (WebRtc_Word16) stream_length,
                                   ISACenc_obj->current_framesamples, ISACenc_obj->BottleNeck);
   }
   return stream_length;
@@ -489,17 +489,17 @@ int WebRtcIsacfix_EncodeStoredData(ISACFIX_EncInst_t  *ISACenc_obj,
 {
   int ii;
   int status;
-  int16_t BWno = BWnumber;
+  WebRtc_Word16 BWno = BWnumber;
   int stream_length = 0;
 
-  int16_t model;
-  const uint16_t *Q_PitchGain_cdf_ptr[1];
-  const uint16_t **cdf;
+  WebRtc_Word16 model;
+  const WebRtc_UWord16 *Q_PitchGain_cdf_ptr[1];
+  const WebRtc_UWord16 **cdf;
   const ISAC_SaveEncData_t *SaveEnc_str;
-  int32_t tmpLPCcoeffs_g[KLT_ORDER_GAIN<<1];
-  int16_t tmpLPCindex_g[KLT_ORDER_GAIN<<1];
-  int16_t tmp_fre[FRAMESAMPLES];
-  int16_t tmp_fim[FRAMESAMPLES];
+  WebRtc_Word32 tmpLPCcoeffs_g[KLT_ORDER_GAIN<<1];
+  WebRtc_Word16 tmpLPCindex_g[KLT_ORDER_GAIN<<1];
+  WebRtc_Word16 tmp_fre[FRAMESAMPLES];
+  WebRtc_Word16 tmp_fim[FRAMESAMPLES];
 
   SaveEnc_str = ISACenc_obj->SaveEnc_ptr;
 
@@ -537,13 +537,13 @@ int WebRtcIsacfix_EncodeStoredData(ISACFIX_EncInst_t  *ISACenc_obj,
   if ((0.0 < scale) && (scale < 1.0)) {
     /* Compensate LPC gain */
     for (ii = 0; ii < (KLT_ORDER_GAIN*(1+SaveEnc_str->startIdx)); ii++) {
-      tmpLPCcoeffs_g[ii] = (int32_t) ((scale) * (float) SaveEnc_str->LPCcoeffs_g[ii]);
+      tmpLPCcoeffs_g[ii] = (WebRtc_Word32) ((scale) * (float) SaveEnc_str->LPCcoeffs_g[ii]);
     }
 
     /* Scale DFT */
     for (ii = 0; ii < (FRAMESAMPLES_HALF*(1+SaveEnc_str->startIdx)); ii++) {
-      tmp_fre[ii] = (int16_t) ((scale) * (float) SaveEnc_str->fre[ii]) ;
-      tmp_fim[ii] = (int16_t) ((scale) * (float) SaveEnc_str->fim[ii]) ;
+      tmp_fre[ii] = (WebRtc_Word16) ((scale) * (float) SaveEnc_str->fre[ii]) ;
+      tmp_fim[ii] = (WebRtc_Word16) ((scale) * (float) SaveEnc_str->fim[ii]) ;
     }
   } else {
     for (ii = 0; ii < (KLT_ORDER_GAIN*(1+SaveEnc_str->startIdx)); ii++) {
