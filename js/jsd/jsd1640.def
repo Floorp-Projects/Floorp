@@ -33,7 +33,6 @@ EXPORTS
 	_JSD_GetClosestLine
 	_JSD_GetClosestPC
 	_JSD_GetCountOfStackFrames
-	_JSD_GetDefaultJSContext
 	_JSD_GetMajorVersion
 	_JSD_GetMinorVersion
 	_JSD_GetPCForStackFrame
