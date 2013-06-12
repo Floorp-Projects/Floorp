@@ -212,4 +212,96 @@ AudioBlockPanStereoToStereo_SSE(const float aInputL[WEBAUDIO_BLOCK_SIZE],
     }
   }
 }
+
+void BufferComplexMultiply_SSE(const float* aInput,
+                               const float* aScale,
+                               float* aOutput,
+                               uint32_t aSize)
+{
+  unsigned i;
+  __m128 in0, in1, in2, in3,
+         outreal0, outreal1, outreal2, outreal3,
+         outimag0, outimag1, outimag2, outimag3;
+
+  for (i = 0; i < aSize * 2; i += 16) {
+    in0 = _mm_load_ps(&aInput[i]);
+    in1 = _mm_load_ps(&aInput[i + 4]);
+    in2 = _mm_load_ps(&aInput[i + 8]);
+    in3 = _mm_load_ps(&aInput[i + 12]);
+
+    outreal0 = _mm_shuffle_ps(in0, in1, _MM_SHUFFLE(2, 0, 2, 0));
+    outimag0 = _mm_shuffle_ps(in0, in1, _MM_SHUFFLE(3, 1, 3, 1));
+    outreal2 = _mm_shuffle_ps(in2, in3, _MM_SHUFFLE(2, 0, 2, 0));
+    outimag2 = _mm_shuffle_ps(in2, in3, _MM_SHUFFLE(3, 1, 3, 1));
+
+    in0 = _mm_load_ps(&aScale[i]);
+    in1 = _mm_load_ps(&aScale[i + 4]);
+    in2 = _mm_load_ps(&aScale[i + 8]);
+    in3 = _mm_load_ps(&aScale[i + 12]);
+
+    outreal1 = _mm_shuffle_ps(in0, in1, _MM_SHUFFLE(2, 0, 2, 0));
+    outimag1 = _mm_shuffle_ps(in0, in1, _MM_SHUFFLE(3, 1, 3, 1));
+    outreal3 = _mm_shuffle_ps(in2, in3, _MM_SHUFFLE(2, 0, 2, 0));
+    outimag3 = _mm_shuffle_ps(in2, in3, _MM_SHUFFLE(3, 1, 3, 1));
+
+    in0 = _mm_sub_ps(_mm_mul_ps(outreal0, outreal1),
+                     _mm_mul_ps(outimag0, outimag1));
+    in1 = _mm_add_ps(_mm_mul_ps(outreal0, outimag1),
+                     _mm_mul_ps(outimag0, outreal1));
+    in2 = _mm_sub_ps(_mm_mul_ps(outreal2, outreal3),
+                     _mm_mul_ps(outimag2, outimag3));
+    in3 = _mm_add_ps(_mm_mul_ps(outreal2, outimag3),
+                     _mm_mul_ps(outimag2, outreal3));
+
+    outreal0 = _mm_unpacklo_ps(in0, in1);
+    outreal1 = _mm_unpackhi_ps(in0, in1);
+    outreal2 = _mm_unpacklo_ps(in2, in3);
+    outreal3 = _mm_unpackhi_ps(in2, in3);
+
+    _mm_store_ps(&aOutput[i], outreal0);
+    _mm_store_ps(&aOutput[i + 4], outreal1);
+    _mm_store_ps(&aOutput[i + 8], outreal2);
+    _mm_store_ps(&aOutput[i + 12], outreal3);
+  }
+}
+
+float
+AudioBufferSumOfSquares_SSE(const float* aInput, uint32_t aLength)
+{
+  unsigned i;
+  __m128 in0, in1, in2, in3,
+         acc0, acc1, acc2, acc3;
+  float out[4];
+
+  acc0 = _mm_setzero_ps();
+  acc1 = _mm_setzero_ps();
+  acc2 = _mm_setzero_ps();
+  acc3 = _mm_setzero_ps();
+
+  for (i = 0; i < aLength; i+=16) {
+    in0 = _mm_load_ps(&aInput[i]);
+    in1 = _mm_load_ps(&aInput[i + 4]);
+    in2 = _mm_load_ps(&aInput[i + 8]);
+    in3 = _mm_load_ps(&aInput[i + 12]);
+
+    in0 = _mm_mul_ps(in0, in0);
+    in1 = _mm_mul_ps(in1, in1);
+    in2 = _mm_mul_ps(in2, in2);
+    in3 = _mm_mul_ps(in3, in3);
+
+    acc0 = _mm_add_ps(acc0, in0);
+    acc1 = _mm_add_ps(acc1, in1);
+    acc2 = _mm_add_ps(acc2, in2);
+    acc3 = _mm_add_ps(acc3, in3);
+  }
+
+  acc0 = _mm_add_ps(acc0, acc1);
+  acc0 = _mm_add_ps(acc0, acc2);
+  acc0 = _mm_add_ps(acc0, acc3);
+
+  _mm_store_ps(out, acc0);
+
+  return out[0] + out[1] + out[2] + out[3];
+}
+
 }
