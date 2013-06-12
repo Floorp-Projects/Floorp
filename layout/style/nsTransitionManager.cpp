@@ -641,6 +641,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     }
   }
 
+  et->mStyleRule = nullptr;
+
   return coverRule.forget();
 }
 
