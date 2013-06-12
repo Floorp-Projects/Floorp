@@ -12,10 +12,6 @@
 # include <mach/mach.h>
 #endif
 
-#if defined(JS_ION)
-# define JS_ASMJS
-#endif
-
 namespace js {
 
 class ScriptSource;
@@ -158,11 +154,11 @@ struct AsmJSParallelTask
 
 // Returns true if the given native is the one that is used to implement asm.js
 // module functions.
-#ifdef JS_ASMJS
-bool
+#ifdef JS_ION
+extern bool
 IsAsmJSModuleNative(js::Native native);
 #else
-static inline bool
+inline bool
 IsAsmJSModuleNative(js::Native native)
 {
     return false;

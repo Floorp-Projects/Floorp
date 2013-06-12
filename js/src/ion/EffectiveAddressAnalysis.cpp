@@ -9,7 +9,6 @@
 using namespace js;
 using namespace ion;
 
-#ifdef JS_ASMJS
 static void
 AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
 {
@@ -87,7 +86,6 @@ AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
     last->replaceAllUsesWith(eaddr);
     block->insertAfter(last, eaddr);
 }
-#endif
 
 // This analysis converts patterns of the form:
 //   truncate(x + (y << {0,1,2,3}))
@@ -106,13 +104,11 @@ AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
 bool
 EffectiveAddressAnalysis::analyze()
 {
-#if defined(JS_ASMJS)
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
         for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
             if (i->isLsh())
                 AnalyzeLsh(*block, i->toLsh());
         }
     }
-#endif
     return true;
 }

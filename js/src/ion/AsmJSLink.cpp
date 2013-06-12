@@ -23,8 +23,6 @@ using namespace js;
 using namespace js::ion;
 using namespace mozilla;
 
-#ifdef JS_ASMJS
-
 static bool
 LinkFail(JSContext *cx, const char *str)
 {
@@ -529,5 +527,3 @@ js::IsAsmJSModuleNative(js::Native native)
 {
     return native == LinkAsmJS;
 }
-
-#endif  // defined(JS_ASMJS)
