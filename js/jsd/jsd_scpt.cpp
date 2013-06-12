@@ -676,7 +676,9 @@ jsd_DestroyScriptHookProc(
 {
     JSDScript* jsdscript = NULL;
     JSDContext* jsdc = (JSDContext*) callerdata;
-    JS::RootedScript script(jsdc->dumbContext, script_);
+    // NB: We're called during GC, so we can't push a cx. Root directly with
+    // the runtime.
+    JS::RootedScript script(jsdc->jsrt, script_);
     JSD_ScriptHookProc      hook;
     void*                   hookData;
 
