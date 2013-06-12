@@ -143,8 +143,17 @@ pref("app.update.auto", true);
 // 2                  download no prompt  prompt
 //
 // See chart in nsUpdateService.js source for more details
+// incompatibilities are ignored by updates in Metro
 //
-pref("app.update.mode", 1);
+pref("app.update.mode", 0);
+
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+// Enables update checking in the Metro environment.
+// add-on incompatibilities are ignored by updates in Metro.
+pref("app.update.metro.enabled", true);
+#endif
+#endif
 
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", false);
@@ -1067,7 +1076,7 @@ pref("devtools.debugger.remote-host", "localhost");
 pref("devtools.debugger.remote-autoconnect", false);
 pref("devtools.debugger.remote-connection-retries", 3);
 pref("devtools.debugger.remote-timeout", 20000);
-pref("devtools.debugger.source-maps-enabled", false);
+pref("devtools.debugger.source-maps-enabled", true);
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.win-x", 0);

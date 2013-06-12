@@ -10,10 +10,10 @@ function test() {
   let doc;
 
   let keySequences = [
-    ["right", "html"],
+    ["pageup", "*doctype*"],
+    ["down", "html"],
     ["down", "head"],
     ["down", "body"],
-    ["right", "body"],
     ["down", "node0"],
     ["right", "node0"],
     ["down", "node1"],
