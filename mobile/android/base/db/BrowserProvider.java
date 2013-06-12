@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Distribution;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.ProfileMigrator;
@@ -1229,7 +1230,7 @@ public class BrowserProvider extends ContentProvider {
 
                 String apkPath = mContext.getPackageResourcePath();
                 File apkFile = new File(apkPath);
-                String bitmapPath = "jar:jar:" + apkFile.toURI() + "!/omni.ja!/" + path;
+                String bitmapPath = "jar:jar:" + apkFile.toURI() + "!/" + AppConstants.OMNIJAR_NAME + "!/" + path;
                 return GeckoJarReader.getBitmap(mContext.getResources(), bitmapPath);
             } catch (java.lang.IllegalAccessException ex) {
                 Log.e(LOGTAG, "[Path] Can't create favicon " + name, ex);
