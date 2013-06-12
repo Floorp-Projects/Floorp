@@ -1,0 +1,119 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Basic Future Test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript"><!--
+
+SimpleTest.waitForExplicitFinish();
+
+function singleFutureResolve() {
+  ok(Future, "Future object should exist");
+
+  var future = new Future(function(resolver) {
+    ok(resolver, "FutureResolver exists");
+    ok("reject" in resolver, "FutureResolver.reject exists");
+    ok("resolve" in resolver, "FutureResolver.resolve exists");
+
+    resolver.resolve(42);
+  }).done(function(what) {
+    ok(true, "Done - resolveCb has been called");
+    is(what, 42, "ResolveCb received 42");
+    runTest();
+  }, function() {
+    ok(false, "Done - rejectCb has been called");
+    runTest();
+  });
+}
+
+function singleFutureReject() {
+  var future = new Future(function(resolver) {
+    resolver.reject(42);
+  }).done(function(what) {
+    ok(false, "Done - resolveCb has been called");
+    runTest();
+  }, function(what) {
+    ok(true, "Done - rejectCb has been called");
+    is(what, 42, "RejectCb received 42");
+    runTest();
+  });
+}
+
+function futureException() {
+  var future = new Future(function(resolver) {
+    throw 42;
+  }).done(function(what) {
+    ok(false, "Done - resolveCb has been called");
+    runTest();
+  }, function(what) {
+    ok(true, "Done - rejectCb has been called");
+    is(what, 42, "RejectCb received 42");
+    runTest();
+  });
+}
+
+function futureGC() {
+  var resolver;
+  var future = new Future(function(r) {
+    resolver = r;
+  }).done(function(what) {
+    ok(true, "Done - future is still alive");
+    runTest();
+  });
+
+  future = null;
+
+  SpecialPowers.gc();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+
+  resolver.resolve(42);
+}
+
+function futureAsync() {
+  var global = "foo";
+  var f = new Future(function(r) {
+    is(global, "foo", "Global should be foo");
+    r.resolve(42);
+    is(global, "foo", "Global should still be foo");
+    setTimeout(function() {
+      is(global, "bar", "Global should still be bar!");
+      runTest();
+    }, 0);
+  }).done(function() {
+    global = "bar";
+  });
+  is(global, "foo", "Global should still be foo (2)");
+}
+
+var tests = [ singleFutureResolve, singleFutureReject,
+              futureException, futureGC, futureAsync ];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+// -->
+</script>
+</pre>
+<div id="testtarget"></div>
+</body>
+</html>
+
