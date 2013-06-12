@@ -7819,7 +7819,13 @@ else
     MOZ_CHROME_FILE_FORMAT=symlink
 fi
 
-OMNIJAR_NAME=omni.ja
+if test "$MOZ_WIDGET_TOOLKIT" = "android"; then
+    dnl On Android, static resources live in the assets/ folder of the APK.
+    OMNIJAR_NAME=assets/omni.ja
+else
+    OMNIJAR_NAME=omni.ja
+fi
+
 AC_SUBST(OMNIJAR_NAME)
 AC_SUBST(MOZ_OMNIJAR)
 AC_SUBST(MOZ_PACKAGER_FORMAT)
