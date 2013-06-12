@@ -61,7 +61,6 @@ function test() {
           is(tabpanel.querySelector("#request-params-box")
             .hasAttribute("hidden"), !aBox.contains("params"),
             "The request params box doesn't have the indended visibility.");
-
           is(tabpanel.querySelector("#request-post-data-textarea-box")
             .hasAttribute("hidden"), !aBox.contains("textarea"),
             "The request post data textarea box doesn't have the indended visibility.");

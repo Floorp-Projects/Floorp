@@ -31,6 +31,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_post-data-02.js \
 	browser_net_jsonp.js \
 	browser_net_json-long.js \
+	browser_net_json-malformed.js \
 	browser_net_timeline_ticks.js \
 	browser_net_sort-01.js \
 	browser_net_sort-02.js \
@@ -55,6 +56,7 @@ MOCHITEST_BROWSER_PAGES = \
 	html_post-raw-test-page.html \
 	html_jsonp-test-page.html \
 	html_json-long-test-page.html \
+	html_json-malformed-test-page.html \
 	html_sorting-test-page.html \
 	html_filter-test-page.html \
 	html_infinite-get-page.html \
