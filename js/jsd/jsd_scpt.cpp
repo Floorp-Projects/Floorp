@@ -911,7 +911,6 @@ jsd_ClearAllExecutionHooksForScript(JSDContext* jsdc, JSDScript* jsdscript)
 {
     JSDExecHook* jsdhook;
     JSCList* list = &jsdscript->hooks;
-
     JSD_LOCK();
 
     while( (JSDExecHook*)list != (jsdhook = (JSDExecHook*)list->next) )
@@ -920,8 +919,7 @@ jsd_ClearAllExecutionHooksForScript(JSDContext* jsdc, JSDScript* jsdscript)
         free(jsdhook);
     }
 
-    /* No cross-compartment call here because we may be in the middle of GC */
-    JS_ClearScriptTraps(jsdc->dumbContext, jsdscript->script);
+    JS_ClearScriptTraps(jsdc->jsrt, jsdscript->script);
     JSD_UNLOCK();
 
     return JS_TRUE;
