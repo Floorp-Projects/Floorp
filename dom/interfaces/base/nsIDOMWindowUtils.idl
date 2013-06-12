@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIDOMEventTarget;
 interface nsIRunnable;
 
-[scriptable, uuid(cbe333d7-5b2c-4a9b-b99b-e6e388afa62b)]
+[scriptable, uuid(a806d366-cc52-11e2-bc9a-ba3212c84021)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1365,17 +1365,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * was created can be closed using scripts.
    */
    void allowScriptsToClose();
-
-  /**
-   * Is the parent window's main widget visible?  If it isn't, we probably
-   * don't want to display any dialogs etc it may request.  This corresponds
-   * to the visibility check in nsWindowWatcher::OpenWindowInternal().
-   *
-   * Will throw a DOM security error if called without chrome privileges or
-   * NS_ERROR_NOT_AVAILABLE in the unlikely event that the parent window's
-   * main widget can't be reached.
-   */
-  readonly attribute boolean isParentWindowMainWidgetVisible;
 
    /**
     * In certain cases the event handling of nodes, form controls in practice,

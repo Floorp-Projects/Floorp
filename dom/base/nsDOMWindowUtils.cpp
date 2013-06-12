@@ -3287,36 +3287,6 @@ nsDOMWindowUtils::AllowScriptsToClose()
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetIsParentWindowMainWidgetVisible(bool* aIsVisible)
-{
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // this should reflect the "is parent window visible" logic in
-  // nsWindowWatcher::OpenWindowInternal()
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIWidget> parentWidget;
-  nsIDocShell *docShell = window->GetDocShell();
-  if (docShell) {
-    nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-    docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
-    nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));
-    if (parentWindow) {
-        parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
-    }
-  }
-  if (!parentWidget) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  *aIsVisible = parentWidget->IsVisible();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::IsNodeDisabledForEvents(nsIDOMNode* aNode, bool* aRetVal)
 {
   *aRetVal = false;
