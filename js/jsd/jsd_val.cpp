@@ -12,6 +12,9 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
+#include "nsCxPusher.h"
+
+using mozilla::AutoSafeJSContext;
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
@@ -111,15 +114,15 @@ jsd_IsValuePrimitive(JSDContext* jsdc, JSDValue* jsdval)
 JSBool
 jsd_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
+    AutoSafeJSContext cx; // NB: Actually unused.
     return !JSVAL_IS_PRIMITIVE(jsdval->val) &&
-           JS_ObjectIsCallable(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
+           JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(jsdval->val));
 }
 
 JSBool
 jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
     JS::RootedFunction fun(cx);
 
     if(jsd_IsValueFunction(jsdc, jsdval))
@@ -167,8 +170,7 @@ jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 JSString*
 jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
     JS::RootedValue stringval(cx);
     JS::RootedString string(cx);
     JS::RootedObject scopeObj(cx);
@@ -208,8 +210,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
 JSString*
 jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
     JS::RootedFunction fun(cx);
 
     if(!jsdval->funName && jsd_IsValueFunction(jsdc, jsdval))
@@ -238,8 +239,8 @@ jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_NewValue(JSDContext* jsdc, jsval value)
 {
-    JS::RootedValue val(jsdc->dumbContext, value);
-    JSAutoRequest ar(jsdc->dumbContext);
+    AutoSafeJSContext cx;
+    JS::RootedValue val(cx, value);
     JSDValue* jsdval;
 
     if(!(jsdval = (JSDValue*) calloc(1, sizeof(JSDValue))))
@@ -248,11 +249,11 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
     if(JSVAL_IS_GCTHING(val))
     {
         JSBool ok;
-        JSAutoCompartment ac(jsdc->dumbContext, jsdc->glob);
+        JSAutoCompartment ac(cx, jsdc->glob);
 
-        ok = JS_AddNamedValueRoot(jsdc->dumbContext, &jsdval->val, "JSDValue");
+        ok = JS_AddNamedValueRoot(cx, &jsdval->val, "JSDValue");
         if(ok && JSVAL_IS_STRING(val)) {
-            if(!JS_WrapValue(jsdc->dumbContext, val.address())) {
+            if(!JS_WrapValue(cx, val.address())) {
                 ok = JS_FALSE;
             }
         }
@@ -279,9 +280,9 @@ jsd_DropValue(JSDContext* jsdc, JSDValue* jsdval)
         jsd_RefreshValue(jsdc, jsdval);
         if(JSVAL_IS_GCTHING(jsdval->val))
         {
-            JSAutoRequest ar(jsdc->dumbContext);
-            JSAutoCompartment ac(jsdc->dumbContext, jsdc->glob);
-            JS_RemoveValueRoot(jsdc->dumbContext, &jsdval->val);
+            AutoSafeJSContext cx;
+            JSAutoCompartment ac(cx, jsdc->glob);
+            JS_RemoveValueRoot(cx, &jsdval->val);
         }
         free(jsdval);
     }
@@ -352,8 +353,7 @@ static void _freeProps(JSDContext* jsdc, JSDValue* jsdval)
 
 static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
     JS::RootedObject obj(cx);
     JSPropertyDescArray pda;
     unsigned i;
@@ -395,8 +395,7 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 void
 jsd_RefreshValue(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
     if(jsdval->string)
     {
         /* if the jsval is a string, then we didn't need to root the string */
@@ -463,8 +462,8 @@ jsd_IterateProperties(JSDContext* jsdc, JSDValue* jsdval, JSDProperty **iterp)
 JSDProperty*
 jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
+    JSAutoCompartment acBase(cx, jsdc->glob);
     JSDProperty* jsdprop;
     JSDProperty* iter = NULL;
     JS::RootedObject obj(cx);
@@ -554,7 +553,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 JSFunction*
 jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
 
     JS::RootedObject obj(cx);
     JS::RootedFunction fun(cx);
@@ -572,7 +571,7 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PROTO)))
     {
         JS::RootedObject obj(cx);
@@ -598,9 +597,7 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
 {
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PARENT)))
     {
-        JSContext* cx = jsdc->dumbContext;
-        JSAutoRequest ar(cx);
-
+        AutoSafeJSContext cx;
         JS::RootedObject obj(cx);
         JS::RootedObject parent(cx);
         JS_ASSERT(!jsdval->parent);
@@ -610,7 +607,7 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
         obj = JSVAL_TO_OBJECT(jsdval->val);
         {
             JSAutoCompartment ac(cx, obj);
-            parent = JS_GetParentOrScopeChain(jsdc->dumbContext,obj);
+            parent = JS_GetParentOrScopeChain(cx, obj);
         }
         if(!parent)
             return NULL;
@@ -624,11 +621,9 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
-
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_CTOR)))
     {
+        AutoSafeJSContext cx;
         JS::RootedObject obj(cx);
         JS::RootedObject proto(cx);
         JS::RootedObject ctor(cx);
@@ -643,7 +638,7 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
             return NULL;
         {
             JSAutoCompartment ac(cx, obj);
-            ctor = JS_GetConstructor(jsdc->dumbContext,proto);
+            ctor = JS_GetConstructor(cx, proto);
         }
         if(!ctor)
             return NULL;
@@ -660,9 +655,7 @@ jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
     jsval val = jsdval->val;
     if(!jsdval->className && !JSVAL_IS_PRIMITIVE(val))
     {
-        JSContext* cx = jsdc->dumbContext;
-        JSAutoRequest ar(cx);
-
+        AutoSafeJSContext cx;
         JS::RootedObject obj(cx, JSVAL_TO_OBJECT(val));
         JSAutoCompartment ac(cx, obj);
         jsdval->className = JS_GetDebugClassName(obj);
@@ -673,8 +666,7 @@ jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
 JSDScript*
 jsd_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
     JS::RootedValue val(cx, jsdval->val);
     JSFunction* fun = NULL;
     JS::RootedScript script(cx);
