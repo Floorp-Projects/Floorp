@@ -1565,11 +1565,51 @@ LongStringClient.prototype = {
  */
 function SourceClient(aClient, aForm) {
   this._form = aForm;
+  this._isBlackBoxed = aForm.isBlackBoxed;
   this._client = aClient;
 }
 
 SourceClient.prototype = {
-  get _transport() { return this._client._transport; },
+  get _transport() this._client._transport,
+  get isBlackBoxed() this._isBlackBoxed,
+  get actor() this._form.actor,
+  get request() this._client.request,
+
+  /**
+   * Black box this SourceClient's source.
+   *
+   * @param aCallback Function
+   *        The callback function called when we receive the response from the server.
+   */
+  blackBox: DebuggerClient.requester({
+    type: "blackbox"
+  }, {
+    telemetry: "BLACKBOX",
+    after: function (aResponse) {
+      if (!aResponse.error) {
+        this._isBlackBoxed = true;
+      }
+      return aResponse;
+    }
+  }),
+
+  /**
+   * Un-black box this SourceClient's source.
+   *
+   * @param aCallback Function
+   *        The callback function called when we receive the response from the server.
+   */
+  unblackBox: DebuggerClient.requester({
+    type: "unblackbox"
+  }, {
+    telemetry: "UNBLACKBOX",
+    after: function (aResponse) {
+      if (!aResponse.error) {
+        this._isBlackBoxed = false;
+      }
+      return aResponse;
+    }
+  }),
 
   /**
    * Get a long string grip for this SourceClient's source.

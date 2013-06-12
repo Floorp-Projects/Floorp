@@ -1076,7 +1076,7 @@ pref("devtools.debugger.remote-host", "localhost");
 pref("devtools.debugger.remote-autoconnect", false);
 pref("devtools.debugger.remote-connection-retries", 3);
 pref("devtools.debugger.remote-timeout", 20000);
-pref("devtools.debugger.source-maps-enabled", false);
+pref("devtools.debugger.source-maps-enabled", true);
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.win-x", 0);
