@@ -84,8 +84,10 @@
 <!ENTITY updateTab.label                 "Update">
 
 <!ENTITY updateApp.label                 "&brandShortName; updates:">
-<!ENTITY updateAuto.label                "Automatically install updates (recommended: improved security)">
+<!ENTITY updateAuto.label                "Automatically install updates from desktop &brandShortName;">
 <!ENTITY updateAuto.accesskey            "A">
+<!ENTITY updateAutoMetro.label           "Automatically update from desktop and Windows 8 style &brandShortName;">
+<!ENTITY updateAutoMetro.accesskey       "s">
 <!ENTITY updateCheck.label               "Check for updates, but let me choose whether to install them">
 <!ENTITY updateCheck.accesskey           "C">
 <!ENTITY updateManual.label              "Never check for updates (not recommended: security risk)">
@@ -93,6 +95,8 @@
 
 <!ENTITY updateAutoAddonWarn.label       "Warn me if this will disable any of my add-ons">
 <!ENTITY updateAutoAddonWarn.accesskey   "W">
+
+<!ENTITY updateAutoMetroWarn.label       "(Windows 8 style &brandShortName; does not check add-on compatibility)">
 
 <!ENTITY updateHistory.label             "Show Update History">
 <!ENTITY updateHistory.accesskey         "p">
