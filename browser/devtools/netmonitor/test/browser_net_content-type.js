@@ -109,14 +109,15 @@ function test() {
           "The response tab in the network details pane should be selected.");
 
         function checkVisibility(aBox) {
+          is(tabpanel.querySelector("#response-content-info-header")
+            .hasAttribute("hidden"), true,
+            "The response info header doesn't have the intended visibility.");
           is(tabpanel.querySelector("#response-content-json-box")
             .hasAttribute("hidden"), aBox != "json",
             "The response content json box doesn't have the intended visibility.");
-
           is(tabpanel.querySelector("#response-content-textarea-box")
             .hasAttribute("hidden"), aBox != "textarea",
             "The response content textarea box doesn't have the intended visibility.");
-
           is(tabpanel.querySelector("#response-content-image-box")
             .hasAttribute("hidden"), aBox != "image",
             "The response content image box doesn't have the intended visibility.");

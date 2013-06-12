@@ -272,6 +272,7 @@
         <tabpanel id="response-tabpanel"
                   class="tabpanel-content">
           <vbox flex="1">
+            <label id="response-content-info-header"/>
             <vbox id="response-content-json-box" flex="1" hidden="true">
               <vbox id="response-content-json" flex="1"/>
             </vbox>

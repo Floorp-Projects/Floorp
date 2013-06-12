@@ -2239,6 +2239,10 @@
     "kind": "boolean",
     "description": "Updater: Whether or not updates are enabled"
   },
+  "UPDATER_UPDATES_METRO_ENABLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not Metro updates are enabled"
+  },
   "UPDATER_UPDATES_AUTOMATIC": {
     "kind": "boolean",
     "description": "Updater: Whether or not updates are automatic"
@@ -3315,6 +3319,30 @@
     "high": "10000",
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_BLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'blackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_BLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'blackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_UNBLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'ublackbox' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_UNBLACKBOX_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'unblackbox' request to go round trip."
   },
   "DEVTOOLS_OPTIONS_OPENED_BOOLEAN": {
     "kind": "boolean",

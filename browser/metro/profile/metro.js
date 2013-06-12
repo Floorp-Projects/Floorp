@@ -416,6 +416,10 @@ pref("app.update.auto", true);
 // See chart in nsUpdateService.js source for more details
 pref("app.update.mode", 0);
 
+// Enables update checking in the Metro environment.
+// add-on incompatibilities are ignored by updates in Metro.
+pref("app.update.metro.enabled", true);
+
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", true);
 
