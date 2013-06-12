@@ -106,15 +106,15 @@ CustomizeMode.prototype = {
 
     // Same goes for the menu button - if we're customizing, a click to the
     // menu button means a quick exit from customization mode.
+    window.PanelUI.hide();
     window.PanelUI.menuButton.addEventListener("click", this, false);
-    window.PanelUI.menuButton.disabled = true;
+    window.PanelUI.menuButton.open = true;
 
     // Let everybody in this window know that we're about to customize.
     this.dispatchToolboxEvent("customizationstarting");
 
     customizer.parentNode.selectedPanel = customizer;
 
-    window.PanelUI.hide();
     // Move the mainView in the panel to the holder so that we can see it
     // while customizing.
     let panelHolder = document.getElementById("customization-panelHolder");
@@ -158,7 +158,7 @@ CustomizeMode.prototype = {
     deck.removeEventListener("keypress", this, false);
     deck.removeEventListener("click", this, false);
     this.window.PanelUI.menuButton.removeEventListener("click", this, false);
-    this.window.PanelUI.menuButton.disabled = false;
+    this.window.PanelUI.menuButton.open = false;
 
     this._removePanelCustomizationPlaceholders();
     this.depopulatePalette();
