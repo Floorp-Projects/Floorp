@@ -22,7 +22,7 @@ class CodecTest
 public:
     CodecTest(std::string name, std::string description);
     CodecTest(std::string name, std::string description,
-              WebRtc_UWord32 bitRate);
+              uint32_t bitRate);
     virtual ~CodecTest() {};
     virtual void Setup();
     virtual void Perform()=0;
@@ -34,8 +34,8 @@ public:
 protected:
     virtual void CodecSettings(int width,
                                int height,
-                               WebRtc_UWord32 frameRate=30,
-                               WebRtc_UWord32 bitRate=0);
+                               uint32_t frameRate=30,
+                               uint32_t bitRate=0);
     virtual void Teardown();
     double ActualBitRate(int nFrames);
     virtual bool PacketLoss(double lossRate, int /*thrown*/);
@@ -46,7 +46,7 @@ protected:
 
     webrtc::VideoEncoder*   _encoder;
     webrtc::VideoDecoder*   _decoder;
-    WebRtc_UWord32          _bitRate;
+    uint32_t          _bitRate;
     unsigned int            _lengthSourceFrame;
     unsigned char*          _sourceBuffer;
     webrtc::I420VideoFrame  _inputVideoBuffer;

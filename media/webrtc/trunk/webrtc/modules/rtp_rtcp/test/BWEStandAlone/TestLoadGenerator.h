@@ -26,85 +26,85 @@ class ThreadWrapper;
 class TestLoadGenerator
 {
 public:
-    TestLoadGenerator (TestSenderReceiver *sender, WebRtc_Word32 rtpSampleRate = 90000);
+    TestLoadGenerator (TestSenderReceiver *sender, int32_t rtpSampleRate = 90000);
     virtual ~TestLoadGenerator ();
 
-    WebRtc_Word32 SetBitrate (WebRtc_Word32 newBitrateKbps);
-    virtual WebRtc_Word32 Start (const char *threadName = NULL);
-    virtual WebRtc_Word32 Stop ();
+    int32_t SetBitrate (int32_t newBitrateKbps);
+    virtual int32_t Start (const char *threadName = NULL);
+    virtual int32_t Stop ();
     virtual bool GeneratorLoop () = 0;
 
 protected:
-    virtual int generatePayload ( WebRtc_UWord32 timestamp ) = 0;
+    virtual int generatePayload ( uint32_t timestamp ) = 0;
     int generatePayload ();
-    int sendPayload (const WebRtc_UWord32 timeStamp,
-        const WebRtc_UWord8* payloadData,
-        const WebRtc_UWord32 payloadSize,
+    int sendPayload (const uint32_t timeStamp,
+        const uint8_t* payloadData,
+        const uint32_t payloadSize,
         const webrtc::FrameType frameType = webrtc::kVideoFrameDelta);
 
     webrtc::CriticalSectionWrapper* _critSect;
     webrtc::EventWrapper *_eventPtr;
     webrtc::ThreadWrapper* _genThread;
-    WebRtc_Word32 _bitrateKbps;
+    int32_t _bitrateKbps;
     TestSenderReceiver *_sender;
     bool _running;
-    WebRtc_Word32 _rtpSampleRate;
+    int32_t _rtpSampleRate;
 };
 
 
 class CBRGenerator : public TestLoadGenerator
 {
 public:
-    CBRGenerator (TestSenderReceiver *sender, WebRtc_Word32 payloadSizeBytes, WebRtc_Word32 bitrateKbps, WebRtc_Word32 rtpSampleRate = 90000);
+    CBRGenerator (TestSenderReceiver *sender, int32_t payloadSizeBytes, int32_t bitrateKbps, int32_t rtpSampleRate = 90000);
     virtual ~CBRGenerator ();
 
-    virtual WebRtc_Word32 Start () {return (TestLoadGenerator::Start("CBRGenerator"));};
+    virtual int32_t Start () {return (TestLoadGenerator::Start("CBRGenerator"));};
 
     virtual bool GeneratorLoop ();
 
 protected:
-    virtual int generatePayload ( WebRtc_UWord32 timestamp );
+    virtual int generatePayload ( uint32_t timestamp );
 
-    WebRtc_Word32 _payloadSizeBytes;
-    WebRtc_UWord8 *_payload;
+    int32_t _payloadSizeBytes;
+    uint8_t *_payload;
 };
 
 
 class CBRFixFRGenerator : public TestLoadGenerator // constant bitrate and fixed frame rate
 {
 public:
-    CBRFixFRGenerator (TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps, WebRtc_Word32 rtpSampleRate = 90000,
-        WebRtc_Word32 frameRateFps = 30, double spread = 0.0);
+    CBRFixFRGenerator (TestSenderReceiver *sender, int32_t bitrateKbps, int32_t rtpSampleRate = 90000,
+        int32_t frameRateFps = 30, double spread = 0.0);
     virtual ~CBRFixFRGenerator ();
 
-    virtual WebRtc_Word32 Start () {return (TestLoadGenerator::Start("CBRFixFRGenerator"));};
+    virtual int32_t Start () {return (TestLoadGenerator::Start("CBRFixFRGenerator"));};
 
     virtual bool GeneratorLoop ();
 
 protected:
-    virtual WebRtc_Word32 nextPayloadSize ();
-    virtual int generatePayload ( WebRtc_UWord32 timestamp );
+    virtual int32_t nextPayloadSize ();
+    virtual int generatePayload ( uint32_t timestamp );
 
-    WebRtc_Word32 _payloadSizeBytes;
-    WebRtc_UWord8 *_payload;
-    WebRtc_Word32 _payloadAllocLen;
-    WebRtc_Word32 _frameRateFps;
+    int32_t _payloadSizeBytes;
+    uint8_t *_payload;
+    int32_t _payloadAllocLen;
+    int32_t _frameRateFps;
     double      _spreadFactor;
 };
 
 class PeriodicKeyFixFRGenerator : public CBRFixFRGenerator // constant bitrate and fixed frame rate with periodically large frames
 {
 public:
-    PeriodicKeyFixFRGenerator (TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps, WebRtc_Word32 rtpSampleRate = 90000,
-        WebRtc_Word32 frameRateFps = 30, double spread = 0.0, double keyFactor = 4.0, WebRtc_UWord32 keyPeriod = 300);
+    PeriodicKeyFixFRGenerator (TestSenderReceiver *sender, int32_t bitrateKbps, int32_t rtpSampleRate = 90000,
+        int32_t frameRateFps = 30, double spread = 0.0, double keyFactor = 4.0, uint32_t keyPeriod = 300);
     virtual ~PeriodicKeyFixFRGenerator () {}
 
 protected:
-    virtual WebRtc_Word32 nextPayloadSize ();
+    virtual int32_t nextPayloadSize ();
 
     double          _keyFactor;
-    WebRtc_UWord32    _keyPeriod;
-    WebRtc_UWord32    _frameCount;
+    uint32_t    _keyPeriod;
+    uint32_t    _frameCount;
 };
 
 // Probably better to inherit CBRFixFRGenerator from CBRVarFRGenerator, but since
@@ -112,33 +112,33 @@ protected:
 class CBRVarFRGenerator : public CBRFixFRGenerator // constant bitrate and variable frame rate
 {
 public:
-    CBRVarFRGenerator(TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps, const WebRtc_UWord8* frameRates,
-        WebRtc_UWord16 numFrameRates, WebRtc_Word32 rtpSampleRate = 90000, double avgFrPeriodMs = 5.0,
+    CBRVarFRGenerator(TestSenderReceiver *sender, int32_t bitrateKbps, const uint8_t* frameRates,
+        uint16_t numFrameRates, int32_t rtpSampleRate = 90000, double avgFrPeriodMs = 5.0,
         double frSpreadFactor = 0.05, double spreadFactor = 0.0);
 
     ~CBRVarFRGenerator();
 
 protected:
     virtual void ChangeFrameRate();
-    virtual WebRtc_Word32 nextPayloadSize ();
+    virtual int32_t nextPayloadSize ();
 
     double       _avgFrPeriodMs;
     double       _frSpreadFactor;
-    WebRtc_UWord8* _frameRates;
-    WebRtc_UWord16 _numFrameRates;
-    WebRtc_Word64  _frChangeTimeMs;
+    uint8_t* _frameRates;
+    uint16_t _numFrameRates;
+    int64_t  _frChangeTimeMs;
 };
 
 class CBRFrameDropGenerator : public CBRFixFRGenerator // constant bitrate and variable frame rate
 {
 public:
-    CBRFrameDropGenerator(TestSenderReceiver *sender, WebRtc_Word32 bitrateKbps,
-                    WebRtc_Word32 rtpSampleRate = 90000, double spreadFactor = 0.0);
+    CBRFrameDropGenerator(TestSenderReceiver *sender, int32_t bitrateKbps,
+                    int32_t rtpSampleRate = 90000, double spreadFactor = 0.0);
 
     ~CBRFrameDropGenerator();
 
 protected:
-    virtual WebRtc_Word32 nextPayloadSize();
+    virtual int32_t nextPayloadSize();
 
     double       _accBits;
 };

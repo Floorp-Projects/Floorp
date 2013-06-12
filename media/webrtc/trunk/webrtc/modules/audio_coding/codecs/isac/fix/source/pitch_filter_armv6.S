@@ -20,14 +20,14 @@ GLOBAL_FUNCTION WebRtcIsacfix_PitchFilterCore
 .align  2
 
 @ void WebRtcIsacfix_PitchFilterCore(int loopNumber,
-@                                    WebRtc_Word16 gain,
+@                                    int16_t gain,
 @                                    int index,
-@                                    WebRtc_Word16 sign,
-@                                    WebRtc_Word16* inputState,
-@                                    WebRtc_Word16* outputBuf2,
-@                                    const WebRtc_Word16* coefficient,
-@                                    WebRtc_Word16* inputBuf,
-@                                    WebRtc_Word16* outputBuf,
+@                                    int16_t sign,
+@                                    int16_t* inputState,
+@                                    int16_t* outputBuf2,
+@                                    const int16_t* coefficient,
+@                                    int16_t* inputBuf,
+@                                    int16_t* outputBuf,
 @                                    int* index2) {
 DEFINE_FUNCTION WebRtcIsacfix_PitchFilterCore
   push {r4-r11}

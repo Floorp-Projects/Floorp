@@ -41,6 +41,9 @@ using namespace webrtc;
 /// ***** Objective-C. Similar to C++ destructor
 /// ***** Returns nothing
 - (void)dealloc {
+
+    [_captureDevicesInfo release];
+
     [super dealloc];
 }
 
@@ -52,8 +55,8 @@ using namespace webrtc;
 - (NSNumber*)displayCaptureSettingsDialogBoxWithDevice:(const char*)deviceUniqueIdUTF8
                     AndTitle:(const char*)dialogTitleUTF8
                     AndParentWindow:(void*) parentWindow
-                    AtX:(WebRtc_UWord32)positionX
-                    AndY:(WebRtc_UWord32) positionY
+                    AtX:(uint32_t)positionX
+                    AndY:(uint32_t) positionY
 {
     NSString* strTitle = [NSString stringWithFormat:@"%s", dialogTitleUTF8];
     NSString* strButton = @"Alright";
@@ -73,33 +76,29 @@ using namespace webrtc;
 }
 
 
-- (NSNumber*)getDeviceNamesFromIndex:(WebRtc_UWord32)index
+- (NSNumber*)getDeviceNamesFromIndex:(uint32_t)index
     DefaultName:(char*)deviceName
-    WithLength:(WebRtc_UWord32)deviceNameLength
+    WithLength:(uint32_t)deviceNameLength
     AndUniqueID:(char*)deviceUniqueID
-    WithLength:(WebRtc_UWord32)deviceUniqueIDLength
+    WithLength:(uint32_t)deviceUniqueIDLength
     AndProductID:(char*)deviceProductID
-    WithLength:(WebRtc_UWord32)deviceProductIDLength
+    WithLength:(uint32_t)deviceProductIDLength
 {
     if(NO == _OSSupportedInfo)
     {
         return [NSNumber numberWithInt:0];
     }
 
-    if(index >= (WebRtc_UWord32)_captureDeviceCountInfo)
+    if(index >= (uint32_t)_captureDeviceCountInfo)
     {
         return [NSNumber numberWithInt:-1];
     }
 
-    if ([_captureDevicesInfo count] <= index)
-    {
-      return [NSNumber numberWithInt:-1];
-    }
-
-    QTCaptureDevice* tempCaptureDevice = (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
+    QTCaptureDevice* tempCaptureDevice =
+        (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
     if(!tempCaptureDevice)
     {
-      return [NSNumber numberWithInt:-1];
+        return [NSNumber numberWithInt:-1];
     }
 
     memset(deviceName, 0, deviceNameLength);
@@ -139,6 +138,7 @@ using namespace webrtc;
         return [NSNumber numberWithInt:0];
     }
 
+    _poolInfo = [[NSAutoreleasePool alloc]init];
     _captureDeviceCountInfo = 0;
     [self getCaptureDevices];
 

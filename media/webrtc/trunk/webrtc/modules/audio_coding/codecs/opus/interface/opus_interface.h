@@ -80,6 +80,7 @@ int WebRtcOpus_DecoderChannels(OpusDecInst* inst);
  * Return value              :  0 - Success
  *                             -1 - Error
  */
+int16_t WebRtcOpus_DecoderInitNew(OpusDecInst* inst);
 int16_t WebRtcOpus_DecoderInit(OpusDecInst* inst);
 int16_t WebRtcOpus_DecoderInitSlave(OpusDecInst* inst);
 
@@ -103,10 +104,13 @@ int16_t WebRtcOpus_DecoderInitSlave(OpusDecInst* inst);
  * Return value              : >0 - Samples in decoded vector
  *                             -1 - Error
  */
-int16_t WebRtcOpus_Decode(OpusDecInst* inst, int16_t* encoded,
+int16_t WebRtcOpus_DecodeNew(OpusDecInst* inst, const uint8_t* encoded,
+                             int16_t encoded_bytes, int16_t* decoded,
+                             int16_t* audio_type);
+int16_t WebRtcOpus_Decode(OpusDecInst* inst, const int16_t* encoded,
                           int16_t encoded_bytes, int16_t* decoded,
                           int16_t* audio_type);
-int16_t WebRtcOpus_DecodeSlave(OpusDecInst* inst, int16_t* encoded,
+int16_t WebRtcOpus_DecodeSlave(OpusDecInst* inst, const int16_t* encoded,
                                int16_t encoded_bytes, int16_t* decoded,
                                int16_t* audio_type);
 /****************************************************************************

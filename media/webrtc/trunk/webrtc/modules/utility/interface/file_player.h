@@ -29,7 +29,7 @@ public:
 
     // Note: will return NULL for video file formats (e.g. AVI) if the flag
     //       WEBRTC_MODULE_UTILITY_VIDEO is not defined.
-    static FilePlayer* CreateFilePlayer(const WebRtc_UWord32 instanceID,
+    static FilePlayer* CreateFilePlayer(const uint32_t instanceID,
                                         const FileFormats fileFormat);
 
     static void DestroyFilePlayer(FilePlayer* player);
@@ -43,65 +43,65 @@ public:
         int frequencyInHz) = 0;
 
     // Register callback for receiving file playing notifications.
-    virtual WebRtc_Word32 RegisterModuleFileCallback(
+    virtual int32_t RegisterModuleFileCallback(
         FileCallback* callback) = 0;
 
     // API for playing audio from fileName to channel.
     // Note: codecInst is used for pre-encoded files.
-    virtual WebRtc_Word32 StartPlayingFile(
+    virtual int32_t StartPlayingFile(
         const char* fileName,
         bool loop,
-        WebRtc_UWord32 startPosition,
+        uint32_t startPosition,
         float volumeScaling,
-        WebRtc_UWord32 notification,
-        WebRtc_UWord32 stopPosition = 0,
+        uint32_t notification,
+        uint32_t stopPosition = 0,
         const CodecInst* codecInst = NULL) = 0;
 
     // Note: codecInst is used for pre-encoded files.
-    virtual WebRtc_Word32 StartPlayingFile(
+    virtual int32_t StartPlayingFile(
         InStream& sourceStream,
-        WebRtc_UWord32 startPosition,
+        uint32_t startPosition,
         float volumeScaling,
-        WebRtc_UWord32 notification,
-        WebRtc_UWord32 stopPosition = 0,
+        uint32_t notification,
+        uint32_t stopPosition = 0,
         const CodecInst* codecInst = NULL) = 0;
 
-    virtual WebRtc_Word32 StopPlayingFile() = 0;
+    virtual int32_t StopPlayingFile() = 0;
 
     virtual bool IsPlayingFile() const = 0;
 
-    virtual WebRtc_Word32 GetPlayoutPosition(WebRtc_UWord32& durationMs) = 0;
+    virtual int32_t GetPlayoutPosition(uint32_t& durationMs) = 0;
 
     // Set audioCodec to the currently used audio codec.
-    virtual WebRtc_Word32 AudioCodec(CodecInst& audioCodec) const = 0;
+    virtual int32_t AudioCodec(CodecInst& audioCodec) const = 0;
 
-    virtual WebRtc_Word32 Frequency() const = 0;
+    virtual int32_t Frequency() const = 0;
 
     // Note: scaleFactor is in the range [0.0 - 2.0]
-    virtual WebRtc_Word32 SetAudioScaling(float scaleFactor) = 0;
+    virtual int32_t SetAudioScaling(float scaleFactor) = 0;
 
     // Return the time in ms until next video frame should be pulled (by
     // calling GetVideoFromFile(..)).
     // Note: this API reads one video frame from file. This means that it should
     //       be called exactly once per GetVideoFromFile(..) API call.
-    virtual WebRtc_Word32 TimeUntilNextVideoFrame() { return -1;}
+    virtual int32_t TimeUntilNextVideoFrame() { return -1;}
 
-    virtual WebRtc_Word32 StartPlayingVideoFile(
+    virtual int32_t StartPlayingVideoFile(
         const char* /*fileName*/,
         bool /*loop*/,
         bool /*videoOnly*/) { return -1;}
 
-    virtual WebRtc_Word32 video_codec_info(VideoCodec& /*videoCodec*/) const
+    virtual int32_t video_codec_info(VideoCodec& /*videoCodec*/) const
     {return -1;}
 
-    virtual WebRtc_Word32 GetVideoFromFile(I420VideoFrame& /*videoFrame*/)
+    virtual int32_t GetVideoFromFile(I420VideoFrame& /*videoFrame*/)
     { return -1;}
 
     // Same as GetVideoFromFile(). videoFrame will have the resolution specified
     // by the width outWidth and height outHeight in pixels.
-    virtual WebRtc_Word32 GetVideoFromFile(I420VideoFrame& /*videoFrame*/,
-                                           const WebRtc_UWord32 /*outWidth*/,
-                                           const WebRtc_UWord32 /*outHeight*/)
+    virtual int32_t GetVideoFromFile(I420VideoFrame& /*videoFrame*/,
+                                     const uint32_t /*outWidth*/,
+                                     const uint32_t /*outHeight*/)
     {return -1;}
 protected:
     virtual ~FilePlayer() {}

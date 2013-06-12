@@ -11,12 +11,14 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_HELP_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_HELP_H_
 
-#include <vector>
+#include <list>
 
-#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"  // RTCPReportBlock
-#include "modules/rtp_rtcp/source/rtcp_utility.h"
-#include "modules/rtp_rtcp/source/tmmbr_help.h"
-#include "typedefs.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"  // RTCPReportBlock
+#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/tmmbr_help.h"
+#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace RTCPHelp
@@ -30,45 +32,47 @@ public:
 
     void AddVoIPMetric(const RTCPVoIPMetric*  metric);
 
-    void AddApplicationData(const WebRtc_UWord8* data,
-                            const WebRtc_UWord16 size);
+    void AddApplicationData(const uint8_t* data,
+                            const uint16_t size);
 
-    void AddNACKPacket(const WebRtc_UWord16 packetID);
+    void AddNACKPacket(const uint16_t packetID);
     void ResetNACKPacketIdArray();
 
-    void AddReportInfo(const WebRtc_UWord8 fractionLost,
-                       const WebRtc_UWord16 rtt,
-                       const WebRtc_UWord32 extendedHighSeqNum,
-                       const WebRtc_UWord32 jitter);
+    void AddReportInfo(const uint8_t fractionLost,
+                       const uint16_t rtt,
+                       const uint32_t extendedHighSeqNum,
+                       const uint32_t jitter);
 
-    WebRtc_UWord32  rtcpPacketTypeFlags; // RTCPPacketTypeFlags bit field
-    WebRtc_UWord32  remoteSSRC;
+    uint32_t  rtcpPacketTypeFlags; // RTCPPacketTypeFlags bit field
+    uint32_t  remoteSSRC;
 
-    WebRtc_UWord16* nackSequenceNumbers;
-    WebRtc_UWord16  nackSequenceNumbersLength;
+    std::list<uint16_t> nackSequenceNumbers;
 
-    WebRtc_UWord8   applicationSubType;
-    WebRtc_UWord32  applicationName;
-    WebRtc_UWord8*  applicationData;
-    WebRtc_UWord16  applicationLength;
+    uint8_t   applicationSubType;
+    uint32_t  applicationName;
+    uint8_t*  applicationData;
+    uint16_t  applicationLength;
 
     bool            reportBlock;
-    WebRtc_UWord8   fractionLost;
-    WebRtc_UWord16  roundTripTime;
-    WebRtc_UWord32  lastReceivedExtendedHighSeqNum;
-    WebRtc_UWord32  jitter;
+    uint8_t   fractionLost;
+    uint16_t  roundTripTime;
+    uint32_t  lastReceivedExtendedHighSeqNum;
+    uint32_t  jitter;
 
-    WebRtc_UWord32  interArrivalJitter;
+    uint32_t  interArrivalJitter;
 
-    WebRtc_UWord8   sliPictureId;
-    WebRtc_UWord64  rpsiPictureId;
-    WebRtc_UWord32  receiverEstimatedMaxBitrate;
+    uint8_t   sliPictureId;
+    uint64_t  rpsiPictureId;
+    uint32_t  receiverEstimatedMaxBitrate;
 
     uint32_t ntp_secs;
     uint32_t ntp_frac;
     uint32_t rtp_timestamp;
 
     RTCPVoIPMetric*  VoIPMetric;
+
+private:
+    DISALLOW_COPY_AND_ASSIGN(RTCPPacketInformation);
 };
 
 
@@ -80,14 +84,14 @@ public:
 
     // Statistics
     RTCPReportBlock remoteReceiveBlock;
-    WebRtc_UWord32        remoteMaxJitter;
+    uint32_t        remoteMaxJitter;
 
     // RTT
-    WebRtc_UWord16    RTT;
-    WebRtc_UWord16    minRTT;
-    WebRtc_UWord16    maxRTT;
-    WebRtc_UWord16    avgRTT;
-    WebRtc_UWord32    numAverageCalcs;
+    uint16_t    RTT;
+    uint16_t    minRTT;
+    uint16_t    maxRTT;
+    uint16_t    avgRTT;
+    uint32_t    numAverageCalcs;
 };
 
 class RTCPReceiveInformation
@@ -96,24 +100,24 @@ public:
     RTCPReceiveInformation();
     ~RTCPReceiveInformation();
 
-    void VerifyAndAllocateBoundingSet(const WebRtc_UWord32 minimumSize);
-    void VerifyAndAllocateTMMBRSet(const WebRtc_UWord32 minimumSize);
+    void VerifyAndAllocateBoundingSet(const uint32_t minimumSize);
+    void VerifyAndAllocateTMMBRSet(const uint32_t minimumSize);
 
-    void InsertTMMBRItem(const WebRtc_UWord32 senderSSRC,
+    void InsertTMMBRItem(const uint32_t senderSSRC,
                          const RTCPUtility::RTCPPacketRTPFBTMMBRItem& TMMBRItem,
-                         const WebRtc_Word64 currentTimeMS);
+                         const int64_t currentTimeMS);
 
     // get
-    WebRtc_Word32 GetTMMBRSet(const WebRtc_UWord32 sourceIdx,
-                              const WebRtc_UWord32 targetIdx,
-                              TMMBRSet* candidateSet,
-                              const WebRtc_Word64 currentTimeMS);
+    int32_t GetTMMBRSet(const uint32_t sourceIdx,
+                        const uint32_t targetIdx,
+                        TMMBRSet* candidateSet,
+                        const int64_t currentTimeMS);
 
-    WebRtc_Word64 lastTimeReceived;
+    int64_t lastTimeReceived;
 
     // FIR
-    WebRtc_Word32 lastFIRSequenceNumber;
-    WebRtc_Word64 lastFIRRequest;
+    int32_t lastFIRSequenceNumber;
+    int64_t lastFIRRequest;
 
     // TMMBN
     TMMBRSet        TmmbnBoundingSet;
@@ -123,7 +127,7 @@ public:
 
     bool            readyForDelete;
 private:
-    std::vector<WebRtc_Word64> _tmmbrSetTimeouts;
+    std::vector<int64_t> _tmmbrSetTimeouts;
 };
 
 } // end namespace RTCPHelp

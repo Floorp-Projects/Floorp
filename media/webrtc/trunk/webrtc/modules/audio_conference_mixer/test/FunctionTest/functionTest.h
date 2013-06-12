@@ -62,7 +62,7 @@ public:
         AudioFrame& audioFrame);
 
     bool FastForwardFile(
-        const WebRtc_Word32 samples);
+        const int32_t samples);
 
     bool EnableAutomaticVAD(
         bool enable,
@@ -72,14 +72,14 @@ public:
         bool vad);
 private:
     bool GetVAD(
-        WebRtc_Word16* buffer,
-        WebRtc_UWord8 bufferLengthInSamples,
+        int16_t* buffer,
+        uint8_t bufferLengthInSamples,
         bool& vad);
 
     Frequency       _frequency;
-    WebRtc_UWord8     _sampleSize;
+    uint8_t     _sampleSize;
 
-    WebRtc_UWord32 _timeStamp;
+    uint32_t _timeStamp;
 
     FILE* _file;
 
@@ -102,33 +102,33 @@ public:
     };
 
     static MixerParticipant* CreateParticipant(
-        const WebRtc_UWord32 id,
+        const uint32_t id,
         ParticipantType participantType,
-        const WebRtc_Word32 startPosition,
+        const int32_t startPosition,
         char* outputPath);
     ~MixerParticipant();
 
-    WebRtc_Word32 GetAudioFrame(
-        const WebRtc_Word32 id,
+    int32_t GetAudioFrame(
+        const int32_t id,
         AudioFrame& audioFrame);
 
-    WebRtc_Word32 MixedAudioFrame(
+    int32_t MixedAudioFrame(
         const AudioFrame& audioFrame);
 
-    WebRtc_Word32 GetParticipantType(
+    int32_t GetParticipantType(
         ParticipantType& participantType);
 private:
     MixerParticipant(
-        const WebRtc_UWord32 id,
+        const uint32_t id,
         ParticipantType participantType);
 
     bool InitializeFileReader(
-        const WebRtc_Word32 startPositionInSamples);
+        const int32_t startPositionInSamples);
 
     bool InitializeFileWriter(
         char* outputPath);
 
-    WebRtc_UWord32 _id;
+    uint32_t _id;
     ParticipantType _participantType;
 
     FileReader _fileReader;
@@ -139,22 +139,22 @@ class StatusReceiver : public AudioMixerStatusReceiver
 {
 public:
     StatusReceiver(
-        const WebRtc_Word32 id);
+        const int32_t id);
     ~StatusReceiver();
 
     void MixedParticipants(
-        const WebRtc_Word32 id,
+        const int32_t id,
         const ParticipantStatistics* participantStatistics,
-        const WebRtc_UWord32 size);
+        const uint32_t size);
 
     void VADPositiveParticipants(
-        const WebRtc_Word32 id,
+        const int32_t id,
         const ParticipantStatistics* participantStatistics,
-        const WebRtc_UWord32 size);
+        const uint32_t size);
 
     void MixedAudioLevel(
-        const WebRtc_Word32 id,
-        const WebRtc_UWord32 level);
+        const int32_t id,
+        const uint32_t level);
 
     void PrintMixedParticipants();
 
@@ -162,17 +162,17 @@ public:
 
     void PrintMixedAudioLevel();
 private:
-    WebRtc_Word32 _id;
+    int32_t _id;
 
     ParticipantStatistics*  _mixedParticipants;
-    WebRtc_UWord32                _mixedParticipantsAmount;
-    WebRtc_UWord32                _mixedParticipantsSize;
+    uint32_t                _mixedParticipantsAmount;
+    uint32_t                _mixedParticipantsSize;
 
     ParticipantStatistics*  _vadPositiveParticipants;
-    WebRtc_UWord32                _vadPositiveParticipantsAmount;
-    WebRtc_UWord32                _vadPositiveParticipantsSize;
+    uint32_t                _vadPositiveParticipantsAmount;
+    uint32_t                _vadPositiveParticipantsSize;
 
-    WebRtc_UWord32 _mixedAudioLevel;
+    uint32_t _mixedAudioLevel;
 };
 
 class MixerWrapper : public AudioMixerOutputReceiver
@@ -189,21 +189,21 @@ public:
 
     bool CreateParticipant(
         MixerParticipant::ParticipantType participantType,
-        const WebRtc_Word32 startPosition);
+        const int32_t startPosition);
 
     bool DeleteParticipant(
-        const WebRtc_UWord32 id);
+        const uint32_t id);
 
     bool StartMixing(
-        const WebRtc_UWord32 mixedParticipants = AudioConferenceMixer::kDefaultAmountOfMixedParticipants);
+        const uint32_t mixedParticipants = AudioConferenceMixer::kDefaultAmountOfMixedParticipants);
 
     bool StopMixing();
 
     void NewMixedAudio(
-        const WebRtc_Word32 id,
+        const int32_t id,
         const AudioFrame& generalAudioFrame,
         const AudioFrame** uniqueAudioFrames,
-        const WebRtc_UWord32 size);
+        const uint32_t size);
 
     bool GetParticipantList(
         ListWrapper& participants);
@@ -220,16 +220,16 @@ private:
     bool Process();
 
     bool StartMixingParticipant(
-        const WebRtc_UWord32 id);
+        const uint32_t id);
 
     bool StopMixingParticipant(
-        const WebRtc_UWord32 id);
+        const uint32_t id);
 
     bool GetFreeItemIds(
-        WebRtc_UWord32& itemId);
+        uint32_t& itemId);
 
     void AddFreeItemIds(
-        const WebRtc_UWord32 itemId);
+        const uint32_t itemId);
 
     void ClearAllItemIds();
 
@@ -241,17 +241,17 @@ private:
 
     bool _firstProcessCall;
     TickTime _previousTime;             // Tick time of previous process
-    const WebRtc_Word64  _periodicityInTicks; // Periodicity
+    const int64_t  _periodicityInTicks; // Periodicity
 
     webrtc::EventWrapper*  _synchronizationEvent;
 
     ListWrapper        _freeItemIds;
-    WebRtc_UWord32    _itemIdCounter;
+    uint32_t    _itemIdCounter;
 
     MapWrapper _mixerParticipants;
 
-    static WebRtc_Word32 _mixerWrapperIdCounter;
-    WebRtc_Word32 _mixerWrappererId;
+    static int32_t _mixerWrapperIdCounter;
+    int32_t _mixerWrappererId;
     char _instanceOutputPath[128];
 
     webrtc::Trace* _trace;
@@ -264,13 +264,13 @@ private:
 
 bool
 LoopedFileRead(
-    WebRtc_Word16* buffer,
-    WebRtc_UWord32 bufferSizeInSamples,
-    WebRtc_UWord32 samplesToRead,
+    int16_t* buffer,
+    uint32_t bufferSizeInSamples,
+    uint32_t samplesToRead,
     FILE* file);
 
 void
 GenerateRandomPosition(
-    WebRtc_Word32& startPosition);
+    int32_t& startPosition);
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_TEST_FUNCTIONTEST_FUNCTIONTEST_H_

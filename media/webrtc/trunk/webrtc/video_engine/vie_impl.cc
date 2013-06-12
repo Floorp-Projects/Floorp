@@ -23,7 +23,7 @@
 #endif
 
 // Global counter to get an id for each new ViE instance.
-static WebRtc_Word32 g_vie_active_instance_counter = 0;
+static int32_t g_vie_active_instance_counter = 0;
 
 namespace webrtc {
 
@@ -127,14 +127,12 @@ bool VideoEngine::Delete(VideoEngine*& video_engine) {
     return false;
   }
 #endif
-#ifdef WEBRTC_VIDEO_ENGINE_NETWORK_API
   ViENetworkImpl* vie_network = vie_impl;
   if (vie_network->GetCount() > 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, g_vie_active_instance_counter,
                  "ViENetwork ref count: %d", vie_network->GetCount());
     return false;
   }
-#endif
 #ifdef WEBRTC_VIDEO_ENGINE_RENDER_API
   ViERenderImpl* vie_render = vie_impl;
   if (vie_render->GetCount() > 0) {
@@ -180,7 +178,7 @@ int VideoEngine::SetTraceFile(const char* file_nameUTF8,
 }
 
 int VideoEngine::SetTraceFilter(const unsigned int filter) {
-  WebRtc_UWord32 old_filter = 0;
+  uint32_t old_filter = 0;
   Trace::LevelFilter(old_filter);
 
   if (filter == kTraceNone && old_filter != kTraceNone) {
@@ -189,7 +187,7 @@ int VideoEngine::SetTraceFilter(const unsigned int filter) {
                  "SetTraceFilter(filter = 0x%x)", filter);
   }
 
-  WebRtc_Word32 error = Trace::SetLevelFilter(filter);
+  int32_t error = Trace::SetLevelFilter(filter);
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, g_vie_active_instance_counter,
                "SetTraceFilter(filter = 0x%x)", filter);
   if (error != 0) {
@@ -216,13 +214,11 @@ int VideoEngine::SetAndroidObjects(void* javaVM, void* javaContext) {
                  "Could not set capture Android VM");
     return -1;
   }
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
   if (SetRenderAndroidVM(javaVM) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, g_vie_active_instance_counter,
                  "Could not set render Android VM");
     return -1;
   }
-#endif
   return 0;
 #else
   WEBRTC_TRACE(kTraceError, kTraceVideo, g_vie_active_instance_counter,

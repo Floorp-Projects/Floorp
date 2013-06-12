@@ -28,19 +28,13 @@ const unsigned int kRembMinimumBitrateKbps = 50;
 // % threshold for if we should send a new REMB asap.
 const unsigned int kSendThresholdPercent = 97;
 
-VieRemb::VieRemb(ProcessThread* process_thread)
-    : process_thread_(process_thread),
-      list_crit_(CriticalSectionWrapper::CreateCriticalSection()),
+VieRemb::VieRemb()
+    : list_crit_(CriticalSectionWrapper::CreateCriticalSection()),
       last_remb_time_(TickTime::MillisecondTimestamp()),
       last_send_bitrate_(0),
-      bitrate_(0),
-      bitrate_update_time_ms_(-1) {
-  process_thread->RegisterModule(this);
-}
+      bitrate_(0) {}
 
-VieRemb::~VieRemb() {
-  process_thread_->DeRegisterModule(this);
-}
+VieRemb::~VieRemb() {}
 
 void VieRemb::AddReceiveChannel(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
@@ -115,7 +109,7 @@ void VieRemb::OnReceiveBitrateChanged(std::vector<unsigned int>* ssrcs,
   WEBRTC_TRACE(kTraceStream, kTraceVideo, -1,
                "VieRemb::UpdateBitrateEstimate(bitrate: %u)", bitrate);
   assert(ssrcs);
-  CriticalSectionScoped cs(list_crit_.get());
+  list_crit_->Enter();
   // If we already have an estimate, check if the new total estimate is below
   // kSendThresholdPercent of the previous estimate.
   if (last_send_bitrate_ > 0) {
@@ -128,40 +122,23 @@ void VieRemb::OnReceiveBitrateChanged(std::vector<unsigned int>* ssrcs,
     }
   }
   bitrate_ = bitrate;
+  // TODO(holmer): Remove |ssrcs_| from this class as the REMB is produced
+  // immediately upon a call to this function.
   ssrcs_.resize(ssrcs->size());
   std::copy(ssrcs->begin(), ssrcs->end(), ssrcs_.begin());
-  bitrate_update_time_ms_ = TickTime::MillisecondTimestamp();
-}
-
-WebRtc_Word32 VieRemb::ChangeUniqueId(const WebRtc_Word32 id) {
-  return 0;
-}
-
-WebRtc_Word32 VieRemb::TimeUntilNextProcess() {
-  return kRembSendIntervallMs -
-      (TickTime::MillisecondTimestamp() - last_remb_time_);
-}
-
-WebRtc_Word32 VieRemb::Process() {
-  int64_t now = TickTime::MillisecondTimestamp();
-  if (now - last_remb_time_ < kRembSendIntervallMs)
-    return 0;
-
-  last_remb_time_ = now;
 
   // Calculate total receive bitrate estimate.
-  list_crit_->Enter();
+  int64_t now = TickTime::MillisecondTimestamp();
 
-  // Reset the estimate if it has timed out.
-  if (TickTime::MillisecondTimestamp() - bitrate_update_time_ms_ >
-      kRembTimeOutThresholdMs) {
-    bitrate_ = 0;
-    bitrate_update_time_ms_ = -1;
-  }
-  if (bitrate_update_time_ms_ == -1 || ssrcs_.empty() ||
-      receive_modules_.empty()) {
+  if (now - last_remb_time_ < kRembSendIntervallMs) {
     list_crit_->Leave();
-    return 0;
+    return;
+  }
+  last_remb_time_ = now;
+
+  if (ssrcs_.empty() || receive_modules_.empty()) {
+    list_crit_->Leave();
+    return;
   }
 
   // Send a REMB packet.
@@ -179,18 +156,17 @@ WebRtc_Word32 VieRemb::Process() {
   }
   // Copy SSRCs to avoid race conditions.
   int ssrcs_length = ssrcs_.size();
-  unsigned int* ssrcs = new unsigned int[ssrcs_length];
+  unsigned int* ssrcs_copy = new unsigned int[ssrcs_length];
   for (int i = 0; i < ssrcs_length; ++i) {
-    ssrcs[i] = ssrcs_[i];
+    ssrcs_copy[i] = ssrcs_[i];
   }
   list_crit_->Leave();
 
   if (sender) {
     // TODO(holmer): Change RTP module API to take a vector pointer.
-    sender->SetREMBData(bitrate_, ssrcs_length, ssrcs);
+    sender->SetREMBData(bitrate_, ssrcs_length, ssrcs_copy);
   }
-  delete [] ssrcs;
-  return 0;
+  delete [] ssrcs_copy;
 }
 
 }  // namespace webrtc

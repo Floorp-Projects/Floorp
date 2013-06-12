@@ -39,9 +39,7 @@
 #ifdef WEBRTC_VOICE_ENGINE_HARDWARE_API
 #include "voe_hardware.h"
 #endif
-#ifdef WEBRTC_VOICE_ENGINE_NETWORK_API
 #include "voe_network.h"
-#endif
 #ifdef WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
 #include "voe_video_sync.h"
 #endif
@@ -107,9 +105,7 @@ class SubAPIManager {
 #ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
       _netEqStats = true;
 #endif
-#ifdef WEBRTC_VOICE_ENGINE_NETWORK_API
       _network = true;
-#endif
 #ifdef WEBRTC_VOICE_ENGINE_RTP_RTCP_API
       _rtp_rtcp = true;
 #endif

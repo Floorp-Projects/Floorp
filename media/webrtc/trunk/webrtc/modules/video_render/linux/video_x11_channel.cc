@@ -21,7 +21,7 @@ static Display *dispArray[DISP_MAX];
 static int dispCount = 0;
 
 
-VideoX11Channel::VideoX11Channel(WebRtc_Word32 id) :
+VideoX11Channel::VideoX11Channel(int32_t id) :
     _crit(*CriticalSectionWrapper::CreateCriticalSection()), _display(NULL),
           _shminfo(), _image(NULL), _window(0L), _gc(NULL),
           _width(DEFAULT_RENDER_FRAME_WIDTH),
@@ -43,8 +43,8 @@ VideoX11Channel::~VideoX11Channel()
     delete &_crit;
 }
 
-WebRtc_Word32 VideoX11Channel::RenderFrame(const WebRtc_UWord32 streamId,
-                                           I420VideoFrame& videoFrame) {
+int32_t VideoX11Channel::RenderFrame(const uint32_t streamId,
+                                     I420VideoFrame& videoFrame) {
   CriticalSectionScoped cs(&_crit);
   if (_width != videoFrame.width() || _height
       != videoFrame.height()) {
@@ -55,9 +55,9 @@ WebRtc_Word32 VideoX11Channel::RenderFrame(const WebRtc_UWord32 streamId,
   return DeliverFrame(videoFrame);
 }
 
-WebRtc_Word32 VideoX11Channel::FrameSizeChange(WebRtc_Word32 width,
-                                                   WebRtc_Word32 height,
-                                                   WebRtc_Word32 /*numberOfStreams */)
+int32_t VideoX11Channel::FrameSizeChange(int32_t width,
+                                         int32_t height,
+                                         int32_t /*numberOfStreams */)
 {
     CriticalSectionScoped cs(&_crit);
     if (_prepared)
@@ -72,7 +72,7 @@ WebRtc_Word32 VideoX11Channel::FrameSizeChange(WebRtc_Word32 width,
     return 0;
 }
 
-WebRtc_Word32 VideoX11Channel::DeliverFrame(const I420VideoFrame& videoFrame) {
+int32_t VideoX11Channel::DeliverFrame(const I420VideoFrame& videoFrame) {
   CriticalSectionScoped cs(&_crit);
   if (!_prepared) {
     return 0;
@@ -93,8 +93,7 @@ WebRtc_Word32 VideoX11Channel::DeliverFrame(const I420VideoFrame& videoFrame) {
   return 0;
 }
 
-WebRtc_Word32 VideoX11Channel::GetFrameSize(WebRtc_Word32& width,
-                                                WebRtc_Word32& height)
+int32_t VideoX11Channel::GetFrameSize(int32_t& width, int32_t& height)
 {
     width = _width;
     height = _height;
@@ -102,8 +101,8 @@ WebRtc_Word32 VideoX11Channel::GetFrameSize(WebRtc_Word32& width,
     return 0;
 }
 
-WebRtc_Word32 VideoX11Channel::Init(Window window, float left, float top,
-                                        float right, float bottom)
+int32_t VideoX11Channel::Init(Window window, float left, float top,
+                              float right, float bottom)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _Id, "%s",
                  __FUNCTION__);
@@ -148,10 +147,10 @@ WebRtc_Word32 VideoX11Channel::Init(Window window, float left, float top,
         return -1;
     }
 
-    _xPos = (WebRtc_Word32) (winWidth * left);
-    _yPos = (WebRtc_Word32) (winHeight * top);
-    _outWidth = (WebRtc_Word32) (winWidth * (right - left));
-    _outHeight = (WebRtc_Word32) (winHeight * (bottom - top));
+    _xPos = (int32_t) (winWidth * left);
+    _yPos = (int32_t) (winHeight * top);
+    _outWidth = (int32_t) (winWidth * (right - left));
+    _outHeight = (int32_t) (winHeight * (bottom - top));
     if (_outWidth % 2)
         _outWidth++; // the renderer want's sizes that are multiples of two
     if (_outHeight % 2)
@@ -172,7 +171,7 @@ WebRtc_Word32 VideoX11Channel::Init(Window window, float left, float top,
 
 }
 
-WebRtc_Word32 VideoX11Channel::ChangeWindow(Window window)
+int32_t VideoX11Channel::ChangeWindow(Window window)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _Id, "%s",
                  __FUNCTION__);
@@ -208,7 +207,7 @@ WebRtc_Word32 VideoX11Channel::ChangeWindow(Window window)
     return 0;
 }
 
-WebRtc_Word32 VideoX11Channel::ReleaseWindow()
+int32_t VideoX11Channel::ReleaseWindow()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _Id, "%s",
                  __FUNCTION__);
@@ -227,8 +226,7 @@ WebRtc_Word32 VideoX11Channel::ReleaseWindow()
     return 0;
 }
 
-WebRtc_Word32 VideoX11Channel::CreateLocalRenderer(WebRtc_Word32 width,
-                                                       WebRtc_Word32 height)
+int32_t VideoX11Channel::CreateLocalRenderer(int32_t width, int32_t height)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _Id, "%s",
                  __FUNCTION__);
@@ -274,7 +272,7 @@ WebRtc_Word32 VideoX11Channel::CreateLocalRenderer(WebRtc_Word32 width,
     return 0;
 }
 
-WebRtc_Word32 VideoX11Channel::RemoveRenderer()
+int32_t VideoX11Channel::RemoveRenderer()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _Id, "%s",
                  __FUNCTION__);
@@ -297,10 +295,9 @@ WebRtc_Word32 VideoX11Channel::RemoveRenderer()
     return 0;
 }
 
-WebRtc_Word32 VideoX11Channel::GetStreamProperties(WebRtc_UWord32& zOrder,
-                                                       float& left, float& top,
-                                                       float& right,
-                                                       float& bottom) const
+int32_t VideoX11Channel::GetStreamProperties(uint32_t& zOrder,
+                                             float& left, float& top,
+                                             float& right, float& bottom) const
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _Id, "%s",
                  __FUNCTION__);

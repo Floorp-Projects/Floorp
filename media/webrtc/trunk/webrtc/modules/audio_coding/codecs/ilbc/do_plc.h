@@ -27,13 +27,13 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_DoThePlc(
-    WebRtc_Word16 *PLCresidual,  /* (o) concealed residual */
-    WebRtc_Word16 *PLClpc,    /* (o) concealed LP parameters */
-    WebRtc_Word16 PLI,     /* (i) packet loss indicator
+    int16_t *PLCresidual,  /* (o) concealed residual */
+    int16_t *PLClpc,    /* (o) concealed LP parameters */
+    int16_t PLI,     /* (i) packet loss indicator
                                                            0 - no PL, 1 = PL */
-    WebRtc_Word16 *decresidual,  /* (i) decoded residual */
-    WebRtc_Word16 *lpc,    /* (i) decoded LPC (only used for no PL) */
-    WebRtc_Word16 inlag,    /* (i) pitch lag */
+    int16_t *decresidual,  /* (i) decoded residual */
+    int16_t *lpc,    /* (i) decoded LPC (only used for no PL) */
+    int16_t inlag,    /* (i) pitch lag */
     iLBC_Dec_Inst_t *iLBCdec_inst
     /* (i/o) decoder instance */
                             );

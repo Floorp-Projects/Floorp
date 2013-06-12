@@ -53,8 +53,8 @@ VPMVideoDecimator::EnableTemporalDecimation(bool enable)
 {
     _enableTemporalDecimation = enable;
 }
-WebRtc_Word32
-VPMVideoDecimator::SetMaxFrameRate(WebRtc_UWord32 maxFrameRate)
+int32_t
+VPMVideoDecimator::SetMaxFrameRate(uint32_t maxFrameRate)
 {
     if (maxFrameRate == 0)
     {
@@ -71,8 +71,8 @@ VPMVideoDecimator::SetMaxFrameRate(WebRtc_UWord32 maxFrameRate)
     return VPM_OK;
 }
 
-WebRtc_Word32
-VPMVideoDecimator::SetTargetFrameRate(WebRtc_UWord32 frameRate)
+int32_t
+VPMVideoDecimator::SetTargetFrameRate(uint32_t frameRate)
 {
     if (frameRate == 0)
     {
@@ -103,7 +103,7 @@ VPMVideoDecimator::DropFrame()
         return false;
     }
 
-    const WebRtc_UWord32 incomingFrameRate = static_cast<WebRtc_UWord32>(_incomingFrameRate + 0.5f);
+    const uint32_t incomingFrameRate = static_cast<uint32_t>(_incomingFrameRate + 0.5f);
 
     if (_targetFrameRate == 0)
     {
@@ -113,14 +113,14 @@ VPMVideoDecimator::DropFrame()
     bool drop = false; 
     if (incomingFrameRate > _targetFrameRate)
     {       
-        WebRtc_Word32 overshoot = _overShootModifier + (incomingFrameRate - _targetFrameRate);
+        int32_t overshoot = _overShootModifier + (incomingFrameRate - _targetFrameRate);
         if(overshoot < 0)
         {
             overshoot = 0;
             _overShootModifier = 0;
         }
         
-        if (overshoot && 2 * overshoot < (WebRtc_Word32) incomingFrameRate)
+        if (overshoot && 2 * overshoot < (int32_t) incomingFrameRate)
         {
 
             if (_dropCount) // Just got here so drop to be sure.
@@ -128,12 +128,12 @@ VPMVideoDecimator::DropFrame()
                 _dropCount = 0;         
                 return true;
             }                        
-            const WebRtc_UWord32 dropVar = incomingFrameRate / overshoot;
+            const uint32_t dropVar = incomingFrameRate / overshoot;
 
             if (_keepCount >= dropVar)
             {
                 drop = true;                           
-                _overShootModifier = -((WebRtc_Word32) incomingFrameRate % overshoot) / 3;
+                _overShootModifier = -((int32_t) incomingFrameRate % overshoot) / 3;
                 _keepCount = 1;
             }
             else
@@ -145,7 +145,7 @@ VPMVideoDecimator::DropFrame()
         else
         {
             _keepCount = 0;         
-            const WebRtc_UWord32 dropVar = overshoot / _targetFrameRate;
+            const uint32_t dropVar = overshoot / _targetFrameRate;
             if (_dropCount < dropVar)
             {                
                 drop = true;
@@ -164,28 +164,28 @@ VPMVideoDecimator::DropFrame()
 }
 
 
-WebRtc_UWord32
+uint32_t
 VPMVideoDecimator::DecimatedFrameRate()
 {
     ProcessIncomingFrameRate(TickTime::MillisecondTimestamp());
     if (!_enableTemporalDecimation)
     {
-        return static_cast<WebRtc_UWord32>(_incomingFrameRate + 0.5f);
+        return static_cast<uint32_t>(_incomingFrameRate + 0.5f);
     }
-    return VD_MIN(_targetFrameRate, static_cast<WebRtc_UWord32>(_incomingFrameRate + 0.5f));
+    return VD_MIN(_targetFrameRate, static_cast<uint32_t>(_incomingFrameRate + 0.5f));
 }
 
-WebRtc_UWord32
+uint32_t
 VPMVideoDecimator::InputFrameRate()
 {
     ProcessIncomingFrameRate(TickTime::MillisecondTimestamp());
-    return static_cast<WebRtc_UWord32>(_incomingFrameRate + 0.5f);
+    return static_cast<uint32_t>(_incomingFrameRate + 0.5f);
 }
 
 void
 VPMVideoDecimator::UpdateIncomingFrameRate()
 {
-   WebRtc_Word64 now = TickTime::MillisecondTimestamp();
+   int64_t now = TickTime::MillisecondTimestamp();
     if(_incomingFrameTimes[0] == 0)
     {
         // first no shift
@@ -202,10 +202,10 @@ VPMVideoDecimator::UpdateIncomingFrameRate()
 }
 
 void 
-VPMVideoDecimator::ProcessIncomingFrameRate(WebRtc_Word64 now)
+VPMVideoDecimator::ProcessIncomingFrameRate(int64_t now)
 {
-   WebRtc_Word32 num = 0;
-    WebRtc_Word32 nrOfFrames = 0;
+   int32_t num = 0;
+    int32_t nrOfFrames = 0;
     for(num = 1; num < (kFrameCountHistorySize - 1); num++)
     {
         if (_incomingFrameTimes[num] <= 0 ||
@@ -219,7 +219,7 @@ VPMVideoDecimator::ProcessIncomingFrameRate(WebRtc_Word64 now)
     }
     if (num > 1)
     {
-        WebRtc_Word64 diff = now - _incomingFrameTimes[num-1];
+        int64_t diff = now - _incomingFrameTimes[num-1];
         _incomingFrameRate = 1.0;
         if(diff >0)
         {

@@ -22,10 +22,10 @@
  Designed for BGN_LPC_ORDER <= 10
 
  Type           Name            size   startpos  endpos
- WebRtc_Word32  pw32_autoCorr   22     0         21  (Length (BGN_LPC_ORDER + 1)*2)
- WebRtc_Word16  pw16_tempVec    10     22        31	(Length BGN_LPC_ORDER)
- WebRtc_Word16  pw16_rc         10     32        41	(Length BGN_LPC_ORDER)
- WebRtc_Word16  pw16_outVec     74     0         73  (Length BGN_LPC_ORDER + 64)
+ int32_t  pw32_autoCorr   22     0         21  (Length (BGN_LPC_ORDER + 1)*2)
+ int16_t  pw16_tempVec    10     22        31	(Length BGN_LPC_ORDER)
+ int16_t  pw16_rc         10     32        41	(Length BGN_LPC_ORDER)
+ int16_t  pw16_outVec     74     0         73  (Length BGN_LPC_ORDER + 64)
 
  Total: 74
  */
@@ -58,34 +58,34 @@
 
 void WebRtcNetEQ_BGNUpdate(
 #ifdef SCRATCH
-                           DSPInst_t *inst, WebRtc_Word16 *pw16_scratchPtr
+                           DSPInst_t *inst, int16_t *pw16_scratchPtr
 #else
                            DSPInst_t *inst
 #endif
 )
 {
-    const WebRtc_Word16 w16_vecLen = 256;
+    const int16_t w16_vecLen = 256;
     BGNInst_t *BGN_Inst = &(inst->BGNInst);
 #ifdef SCRATCH
-    WebRtc_Word32 *pw32_autoCorr = (WebRtc_Word32*) (pw16_scratchPtr + SCRATCH_PW32_AUTO_CORR);
-    WebRtc_Word16 *pw16_tempVec = pw16_scratchPtr + SCRATCH_PW16_TEMP_VEC;
-    WebRtc_Word16 *pw16_rc = pw16_scratchPtr + SCRATCH_PW16_RC;
-    WebRtc_Word16 *pw16_outVec = pw16_scratchPtr + SCRATCH_PW16_OUT_VEC;
+    int32_t *pw32_autoCorr = (int32_t*) (pw16_scratchPtr + SCRATCH_PW32_AUTO_CORR);
+    int16_t *pw16_tempVec = pw16_scratchPtr + SCRATCH_PW16_TEMP_VEC;
+    int16_t *pw16_rc = pw16_scratchPtr + SCRATCH_PW16_RC;
+    int16_t *pw16_outVec = pw16_scratchPtr + SCRATCH_PW16_OUT_VEC;
 #else
-    WebRtc_Word32 pw32_autoCorr[BGN_LPC_ORDER + 1];
-    WebRtc_Word16 pw16_tempVec[BGN_LPC_ORDER];
-    WebRtc_Word16 pw16_outVec[BGN_LPC_ORDER + 64];
-    WebRtc_Word16 pw16_rc[BGN_LPC_ORDER];
+    int32_t pw32_autoCorr[BGN_LPC_ORDER + 1];
+    int16_t pw16_tempVec[BGN_LPC_ORDER];
+    int16_t pw16_outVec[BGN_LPC_ORDER + 64];
+    int16_t pw16_rc[BGN_LPC_ORDER];
 #endif
-    WebRtc_Word16 pw16_A[BGN_LPC_ORDER + 1];
-    WebRtc_Word32 w32_tmp;
-    WebRtc_Word16 *pw16_vec;
-    WebRtc_Word16 w16_maxSample;
-    WebRtc_Word16 w16_tmp, w16_tmp2;
-    WebRtc_Word16 w16_enSampleShift;
-    WebRtc_Word32 w32_en, w32_enBGN;
-    WebRtc_Word32 w32_enUpdateThreashold;
-    WebRtc_Word16 stability;
+    int16_t pw16_A[BGN_LPC_ORDER + 1];
+    int32_t w32_tmp;
+    int16_t *pw16_vec;
+    int16_t w16_maxSample;
+    int16_t w16_tmp, w16_tmp2;
+    int16_t w16_enSampleShift;
+    int32_t w32_en, w32_enBGN;
+    int32_t w32_enUpdateThreashold;
+    int16_t stability;
 
     pw16_vec = inst->pw16_speechHistory + inst->w16_speechHistoryLen - w16_vecLen;
 
@@ -188,7 +188,7 @@ void WebRtcNetEQ_BGNUpdate(
             w32_enBGN = WEBRTC_SPL_SHIFT_W32(w32_enBGN, w16_tmp2);
 
             /* Calculate scale and shift factor */
-            BGN_Inst->w16_scale = (WebRtc_Word16) WebRtcSpl_SqrtFloor(w32_enBGN);
+            BGN_Inst->w16_scale = (int16_t) WebRtcSpl_SqrtFloor(w32_enBGN);
             BGN_Inst->w16_scaleShift = 13 + ((6 + w16_tmp2) >> 1); /* RANDN table is in Q13, */
             /* 6=log2(64) */
 
@@ -207,13 +207,13 @@ void WebRtcNetEQ_BGNUpdate(
         w32_tmp = WEBRTC_SPL_MUL_16_16_RSFT(NETEQFIX_BGNFRAQINCQ16,
             BGN_Inst->w32_energyUpdateLow, 16);
         w32_tmp += WEBRTC_SPL_MUL_16_16(NETEQFIX_BGNFRAQINCQ16,
-            (WebRtc_Word16)(BGN_Inst->w32_energyUpdate & 0xFF));
+            (int16_t)(BGN_Inst->w32_energyUpdate & 0xFF));
         w32_tmp += (WEBRTC_SPL_MUL_16_16(NETEQFIX_BGNFRAQINCQ16,
-            (WebRtc_Word16)((BGN_Inst->w32_energyUpdate>>8) & 0xFF)) << 8);
+            (int16_t)((BGN_Inst->w32_energyUpdate>>8) & 0xFF)) << 8);
         BGN_Inst->w32_energyUpdateLow += w32_tmp;
 
         BGN_Inst->w32_energyUpdate += WEBRTC_SPL_MUL_16_16(NETEQFIX_BGNFRAQINCQ16,
-            (WebRtc_Word16)(BGN_Inst->w32_energyUpdate>>16));
+            (int16_t)(BGN_Inst->w32_energyUpdate>>16));
         BGN_Inst->w32_energyUpdate += BGN_Inst->w32_energyUpdateLow >> 16;
         BGN_Inst->w32_energyUpdateLow = (BGN_Inst->w32_energyUpdateLow & 0x0FFFF);
 

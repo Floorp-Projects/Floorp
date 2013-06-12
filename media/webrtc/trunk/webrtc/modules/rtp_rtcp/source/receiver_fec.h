@@ -23,17 +23,17 @@ class RTPReceiverVideo;
 class ReceiverFEC
 {
 public:
-    ReceiverFEC(const WebRtc_Word32 id, RTPReceiverVideo* owner);
+    ReceiverFEC(const int32_t id, RTPReceiverVideo* owner);
     virtual ~ReceiverFEC();
 
-    WebRtc_Word32 AddReceivedFECPacket(const WebRtcRTPHeader* rtpHeader,
-                                       const WebRtc_UWord8* incomingRtpPacket,
-                                       const WebRtc_UWord16 payloadDataLength,
-                                       bool& FECpacket);
+    int32_t AddReceivedFECPacket(const WebRtcRTPHeader* rtpHeader,
+                                 const uint8_t* incomingRtpPacket,
+                                 const uint16_t payloadDataLength,
+                                 bool& FECpacket);
 
-    WebRtc_Word32 ProcessReceivedFEC();
+    int32_t ProcessReceivedFEC();
 
-    void SetPayloadTypeFEC(const WebRtc_Word8 payloadType);
+    void SetPayloadTypeFEC(const int8_t payloadType);
 
 private:
     int ParseAndReceivePacket(const ForwardErrorCorrection::Packet* packet);
@@ -46,7 +46,7 @@ private:
     // arrives. We should remove the list.
     ForwardErrorCorrection::ReceivedPacketList _receivedPacketList;
     ForwardErrorCorrection::RecoveredPacketList _recoveredPacketList;
-    WebRtc_Word8 _payloadTypeFEC;
+    int8_t _payloadTypeFEC;
 };
 } // namespace webrtc
 

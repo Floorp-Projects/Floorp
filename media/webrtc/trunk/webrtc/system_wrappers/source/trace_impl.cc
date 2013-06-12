@@ -31,7 +31,11 @@
 
 namespace webrtc {
 
-static WebRtc_UWord32 level_filter = kTraceDefault;
+const int Trace::kBoilerplateLength = 71;
+const int Trace::kTimestampPosition = 13;
+const int Trace::kTimestampLength = 12;
+
+static uint32_t level_filter = kTraceDefault;
 
 // Construct On First Use idiom. Avoids "static initialization order fiasco".
 TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
@@ -127,14 +131,13 @@ TraceImpl::~TraceImpl() {
   }
 }
 
-WebRtc_Word32 TraceImpl::AddThreadId(char* trace_message) const {
-  WebRtc_UWord32 thread_id = ThreadWrapper::GetThreadId();
+int32_t TraceImpl::AddThreadId(char* trace_message) const {
+  uint32_t thread_id = ThreadWrapper::GetThreadId();
   // Messages is 12 characters.
   return sprintf(trace_message, "%10u; ", thread_id);
 }
 
-WebRtc_Word32 TraceImpl::AddLevel(char* sz_message,
-                                  const TraceLevel level) const {
+int32_t TraceImpl::AddLevel(char* sz_message, const TraceLevel level) const {
   const int kMessageLength = 12;
   switch (level) {
     case kTraceTerseInfo:
@@ -183,13 +186,13 @@ WebRtc_Word32 TraceImpl::AddLevel(char* sz_message,
   return kMessageLength;
 }
 
-WebRtc_Word32 TraceImpl::AddModuleAndId(char* trace_message,
-                                        const TraceModule module,
-                                        const WebRtc_Word32 id) const {
+int32_t TraceImpl::AddModuleAndId(char* trace_message,
+                                  const TraceModule module,
+                                  const int32_t id) const {
   // Use long int to prevent problems with different definitions of
-  // WebRtc_Word32.
+  // int32_t.
   // TODO(hellner): is this actually a problem? If so, it should be better to
-  //                clean up WebRtc_Word32
+  //                clean up int32_t
   const long int idl = id;
   const int kMessageLength = 25;
   if (idl != -1) {
@@ -335,8 +338,8 @@ WebRtc_Word32 TraceImpl::AddModuleAndId(char* trace_message,
   return kMessageLength;
 }
 
-WebRtc_Word32 TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
-                                          const bool add_file_counter) {
+int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
+                                    const bool add_file_counter) {
   CriticalSectionScoped lock(critsect_interface_);
 
   trace_file_.Flush();
@@ -364,22 +367,22 @@ WebRtc_Word32 TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
   return 0;
 }
 
-WebRtc_Word32 TraceImpl::TraceFileImpl(
+int32_t TraceImpl::TraceFileImpl(
     char file_name_utf8[FileWrapper::kMaxFileNameSize]) {
   CriticalSectionScoped lock(critsect_interface_);
   return trace_file_.FileName(file_name_utf8, FileWrapper::kMaxFileNameSize);
 }
 
-WebRtc_Word32 TraceImpl::SetTraceCallbackImpl(TraceCallback* callback) {
+int32_t TraceImpl::SetTraceCallbackImpl(TraceCallback* callback) {
   CriticalSectionScoped lock(critsect_interface_);
   callback_ = callback;
   return 0;
 }
 
-WebRtc_Word32 TraceImpl::AddMessage(
+int32_t TraceImpl::AddMessage(
     char* trace_message,
     const char msg[WEBRTC_TRACE_MAX_MESSAGE_SIZE],
-    const WebRtc_UWord16 written_so_far) const {
+    const uint16_t written_so_far) const {
   int length = 0;
   if (written_so_far >= WEBRTC_TRACE_MAX_MESSAGE_SIZE) {
     return -1;
@@ -408,16 +411,9 @@ WebRtc_Word32 TraceImpl::AddMessage(
 }
 
 void TraceImpl::AddMessageToList(
-  const char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE],
-  const WebRtc_UWord16 length,
-  const TraceLevel level) {
-#ifdef WEBRTC_DIRECT_TRACE
-  if (callback_) {
-    callback_->Print(level, trace_message, length);
-  }
-  return;
-#endif
-
+    const char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE],
+    const uint16_t length,
+    const TraceLevel level) {
   CriticalSectionScoped lock(critsect_array_);
 
   if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE) {
@@ -445,20 +441,20 @@ void TraceImpl::AddMessageToList(
     }
   }
 
-  WebRtc_UWord16 idx = next_free_idx_[active_queue_];
+  uint16_t idx = next_free_idx_[active_queue_];
   next_free_idx_[active_queue_]++;
 
   level_[active_queue_][idx] = level;
   length_[active_queue_][idx] = length;
   memcpy(message_queue_[active_queue_][idx], trace_message, length);
 
-  if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE - 1) {
+  if (next_free_idx_[active_queue_] == WEBRTC_TRACE_MAX_QUEUE - 1) {
     // Logging more messages than can be worked off. Log a warning.
     const char warning_msg[] = "WARNING MISSING TRACE MESSAGES\n";
-    level_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = kTraceWarning;
-    length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = strlen(warning_msg);
-    memcpy(message_queue_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1],
-           warning_msg, length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1]);
+    level_[active_queue_][next_free_idx_[active_queue_]] = kTraceWarning;
+    length_[active_queue_][next_free_idx_[active_queue_]] = strlen(warning_msg);
+    memcpy(message_queue_[active_queue_][next_free_idx_[active_queue_]],
+           warning_msg, strlen(warning_msg));
     next_free_idx_[active_queue_]++;
   }
 }
@@ -469,19 +465,24 @@ bool TraceImpl::Run(void* obj) {
 
 bool TraceImpl::Process() {
   if (event_.Wait(1000) == kEventSignaled) {
-    if (trace_file_.Open() || callback_) {
-      // File mode (not callback mode).
+    // This slightly odd construction is to avoid locking |critsect_interface_|
+    // while calling WriteToFile() since it's locked inside the function.
+    critsect_interface_->Enter();
+    bool write_to_file = trace_file_.Open() || callback_;
+    critsect_interface_->Leave();
+    if (write_to_file) {
       WriteToFile();
     }
   } else {
+    CriticalSectionScoped lock(critsect_interface_);
     trace_file_.Flush();
   }
   return true;
 }
 
 void TraceImpl::WriteToFile() {
-  WebRtc_UWord8 local_queue_active = 0;
-  WebRtc_UWord16 local_next_free_idx = 0;
+  uint8_t local_queue_active = 0;
+  uint16_t local_next_free_idx = 0;
 
   // There are two buffers. One for reading (for writing to file) and one for
   // writing (for storing new messages). Let new messages be posted to the
@@ -503,7 +504,7 @@ void TraceImpl::WriteToFile() {
 
   CriticalSectionScoped lock(critsect_interface_);
 
-  for (WebRtc_UWord16 idx = 0; idx < local_next_free_idx; ++idx) {
+  for (uint16_t idx = 0; idx < local_next_free_idx; ++idx) {
     TraceLevel local_level = level_[local_queue_active][idx];
     if (callback_) {
       callback_->Print(local_level, message_queue_[local_queue_active][idx],
@@ -538,7 +539,7 @@ void TraceImpl::WriteToFile() {
       }
       if (row_count_text_ ==  0) {
         char message[WEBRTC_TRACE_MAX_MESSAGE_SIZE + 1];
-        WebRtc_Word32 length = AddDateTimeInfo(message);
+        int32_t length = AddDateTimeInfo(message);
         if (length != -1) {
           message[length] = 0;
           message[length - 1] = '\n';
@@ -555,7 +556,7 @@ void TraceImpl::WriteToFile() {
           row_count_text_++;
         }
       }
-      WebRtc_UWord16 length = length_[local_queue_active][idx];
+      uint16_t length = length_[local_queue_active][idx];
       message_queue_[local_queue_active][idx][length] = 0;
       message_queue_[local_queue_active][idx][length - 1] = '\n';
       trace_file_.Write(message_queue_[local_queue_active][idx], length);
@@ -565,14 +566,14 @@ void TraceImpl::WriteToFile() {
 }
 
 void TraceImpl::AddImpl(const TraceLevel level, const TraceModule module,
-                        const WebRtc_Word32 id,
+                        const int32_t id,
                         const char msg[WEBRTC_TRACE_MAX_MESSAGE_SIZE]) {
   if (TraceCheck(level)) {
     char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE];
     char* message_ptr = trace_message;
 
-    WebRtc_Word32 len = 0;
-    WebRtc_Word32 ack_len = 0;
+    int32_t len = 0;
+    int32_t ack_len = 0;
 
     len = AddLevel(message_ptr, level);
     if (len == -1) {
@@ -602,12 +603,12 @@ void TraceImpl::AddImpl(const TraceLevel level, const TraceModule module,
     message_ptr += len;
     ack_len += len;
 
-    len = AddMessage(message_ptr, msg, (WebRtc_UWord16)ack_len);
+    len = AddMessage(message_ptr, msg, (uint16_t)ack_len);
     if (len == -1) {
       return;
     }
     ack_len += len;
-    AddMessageToList(trace_message, (WebRtc_UWord16)ack_len, level);
+    AddMessageToList(trace_message, (uint16_t)ack_len, level);
 
     // Make sure that messages are written as soon as possible.
     event_.Set();
@@ -621,13 +622,13 @@ bool TraceImpl::TraceCheck(const TraceLevel level) const {
 bool TraceImpl::UpdateFileName(
     const char file_name_utf8[FileWrapper::kMaxFileNameSize],
     char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize],
-    const WebRtc_UWord32 new_count) const {
-  WebRtc_Word32 length = (WebRtc_Word32)strlen(file_name_utf8);
+    const uint32_t new_count) const {
+  int32_t length = (int32_t)strlen(file_name_utf8);
   if (length < 0) {
     return false;
   }
 
-  WebRtc_Word32 length_without_file_ending = length - 1;
+  int32_t length_without_file_ending = length - 1;
   while (length_without_file_ending > 0) {
     if (file_name_utf8[length_without_file_ending] == '.') {
       break;
@@ -638,7 +639,7 @@ bool TraceImpl::UpdateFileName(
   if (length_without_file_ending == 0) {
     length_without_file_ending = length;
   }
-  WebRtc_Word32 length_to_ = length_without_file_ending - 1;
+  int32_t length_to_ = length_without_file_ending - 1;
   while (length_to_ > 0) {
     if (file_name_utf8[length_to_] == '_') {
       break;
@@ -657,13 +658,13 @@ bool TraceImpl::UpdateFileName(
 bool TraceImpl::CreateFileName(
     const char file_name_utf8[FileWrapper::kMaxFileNameSize],
     char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize],
-    const WebRtc_UWord32 new_count) const {
-  WebRtc_Word32 length = (WebRtc_Word32)strlen(file_name_utf8);
+    const uint32_t new_count) const {
+  int32_t length = (int32_t)strlen(file_name_utf8);
   if (length < 0) {
     return false;
   }
 
-  WebRtc_Word32 length_without_file_ending = length - 1;
+  int32_t length_without_file_ending = length - 1;
   while (length_without_file_ending > 0) {
     if (file_name_utf8[length_without_file_ending] == '.') {
       break;
@@ -690,17 +691,17 @@ void Trace::ReturnTrace() {
   TraceImpl::StaticInstance(kRelease);
 }
 
-WebRtc_Word32 Trace::SetLevelFilter(WebRtc_UWord32 filter) {
+int32_t Trace::SetLevelFilter(uint32_t filter) {
   level_filter = filter;
   return 0;
 }
 
-WebRtc_Word32 Trace::LevelFilter(WebRtc_UWord32& filter) {
+int32_t Trace::LevelFilter(uint32_t& filter) {
   filter = level_filter;
   return 0;
 }
 
-WebRtc_Word32 Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
+int32_t Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
   TraceImpl* trace = TraceImpl::GetTrace();
   if (trace) {
     int ret_val = trace->TraceFileImpl(file_name);
@@ -710,8 +711,8 @@ WebRtc_Word32 Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
   return -1;
 }
 
-WebRtc_Word32 Trace::SetTraceFile(const char* file_name,
-                                  const bool add_file_counter) {
+int32_t Trace::SetTraceFile(const char* file_name,
+                            const bool add_file_counter) {
   TraceImpl* trace = TraceImpl::GetTrace();
   if (trace) {
     int ret_val = trace->SetTraceFileImpl(file_name, add_file_counter);
@@ -721,7 +722,7 @@ WebRtc_Word32 Trace::SetTraceFile(const char* file_name,
   return -1;
 }
 
-WebRtc_Word32 Trace::SetTraceCallback(TraceCallback* callback) {
+int32_t Trace::SetTraceCallback(TraceCallback* callback) {
   TraceImpl* trace = TraceImpl::GetTrace();
   if (trace) {
     int ret_val = trace->SetTraceCallbackImpl(callback);
@@ -732,7 +733,7 @@ WebRtc_Word32 Trace::SetTraceCallback(TraceCallback* callback) {
 }
 
 void Trace::Add(const TraceLevel level, const TraceModule module,
-                const WebRtc_Word32 id, const char* msg, ...) {
+                const int32_t id, const char* msg, ...) {
   TraceImpl* trace = TraceImpl::GetTrace(level);
   if (trace) {
     if (trace->TraceCheck(level)) {

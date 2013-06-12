@@ -16,17 +16,10 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-
-      'cflags_mozilla': [
-        '$(NSPR_CFLAGS)',
-      ],
-
       'include_dirs': [
         'include',
         '../interface',
         '<(webrtc_root)/common_video/libyuv/include',
-# added for mozilla for use_system_libjpeg
-        '$(DIST)/include',
       ],
       'sources': [
         'device_info_impl.cc',
@@ -48,7 +41,7 @@
           ],
         }, {  # include_internal_video_capture == 1
           'conditions': [
-            ['include_v4l2_video_capture==1', {
+            ['OS=="linux"', {
               'include_dirs': [
                 'linux',
               ],
@@ -86,12 +79,8 @@
               },
             }],  # mac
             ['OS=="win"', {
-              'conditions': [
-                ['build_with_mozilla==0', {
-                  'dependencies': [
-                    '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
-                  ],
-                }],
+              'dependencies': [
+                '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
               ],
               'include_dirs': [
                 'windows',
@@ -110,10 +99,6 @@
                 'windows/video_capture_factory_windows.cc',
                 'windows/video_capture_mf.cc',
                 'windows/video_capture_mf.h',
-                'windows/BasePin.cpp',
-                'windows/BaseFilter.cpp',
-                'windows/BaseInputPin.cpp',
-                'windows/MediaType.cpp',
               ],
               'link_settings': {
                 'libraries': [
@@ -157,7 +142,7 @@
             'test/video_capture_main_mac.mm',
           ],
           'conditions': [
-            ['OS!="win" and OS!="android"', {
+            ['OS=="mac" or OS=="linux"', {
               'cflags': [
                 '-Wno-write-strings',
               ],
@@ -165,15 +150,11 @@
                 '-lpthread -lm',
               ],
             }],
-            ['include_v4l2_video_capture==1', {
-              'libraries': [
-                '-lXext',
-                '-lX11',
-              ],
-            }],
             ['OS=="linux"', {
               'libraries': [
                 '-lrt',
+                '-lXext',
+                '-lX11',
               ],
             }],
             ['OS=="mac"', {

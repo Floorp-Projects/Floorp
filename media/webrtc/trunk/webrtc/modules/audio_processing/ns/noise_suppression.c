@@ -34,7 +34,7 @@ int WebRtcNs_Free(NsHandle* NS_inst) {
 }
 
 
-int WebRtcNs_Init(NsHandle* NS_inst, WebRtc_UWord32 fs) {
+int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs) {
   return WebRtcNs_InitCore((NSinst_t*) NS_inst, fs);
 }
 

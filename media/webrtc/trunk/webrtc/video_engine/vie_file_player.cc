@@ -127,8 +127,7 @@ int ViEFilePlayer::Init(const char* file_nameUTF8,
 
   // Always try to open with Audio since we don't know on what channels the
   // audio should be played on.
-  WebRtc_Word32 error = file_player_->StartPlayingVideoFile(file_name_, loop,
-                                                            false);
+  int32_t error = file_player_->StartPlayingVideoFile(file_name_, loop, false);
   if (error) {
     // Failed to open the file with audio, try without.
     error = file_player_->StartPlayingVideoFile(file_name_, loop, true);
@@ -331,7 +330,7 @@ bool ViEFilePlayer::NeedsAudioFromFile(void* buf) {
   return needs_new_audio;
 }
 
-void ViEFilePlayer::PlayFileEnded(const WebRtc_Word32 id) {
+void ViEFilePlayer::PlayFileEnded(const int32_t id) {
   WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, id),
                "%s: file_id %d", __FUNCTION__, id_);
   file_player_->StopPlayingFile();

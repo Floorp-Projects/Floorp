@@ -13,7 +13,7 @@
 #include <string.h>
 
 namespace webrtc {
-BitstreamBuilder::BitstreamBuilder(WebRtc_UWord8* data, const WebRtc_UWord32 dataSize) :
+BitstreamBuilder::BitstreamBuilder(uint8_t* data, const uint32_t dataSize) :
     _data(data),
     _dataSize(dataSize),
     _byteOffset(0),
@@ -22,14 +22,14 @@ BitstreamBuilder::BitstreamBuilder(WebRtc_UWord8* data, const WebRtc_UWord32 dat
     memset(data, 0, dataSize);
 }
 
-WebRtc_UWord32
+uint32_t
 BitstreamBuilder::Length() const
 {
     return _byteOffset+ (_bitOffset?1:0);
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add1Bit(const WebRtc_UWord8 bit)
+int32_t
+BitstreamBuilder::Add1Bit(const uint8_t bit)
 {
     // sanity
     if(_bitOffset + 1 > 8)
@@ -45,7 +45,7 @@ BitstreamBuilder::Add1Bit(const WebRtc_UWord8 bit)
 }
 
 void
-BitstreamBuilder::Add1BitWithoutSanity(const WebRtc_UWord8 bit)
+BitstreamBuilder::Add1BitWithoutSanity(const uint8_t bit)
 {
     if(bit & 0x1)
     {
@@ -63,8 +63,8 @@ BitstreamBuilder::Add1BitWithoutSanity(const WebRtc_UWord8 bit)
     }
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add2Bits(const WebRtc_UWord8 bits)
+int32_t
+BitstreamBuilder::Add2Bits(const uint8_t bits)
 {
     // sanity
     if(_bitOffset + 2 > 8)
@@ -80,8 +80,8 @@ BitstreamBuilder::Add2Bits(const WebRtc_UWord8 bits)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add3Bits(const WebRtc_UWord8 bits)
+int32_t
+BitstreamBuilder::Add3Bits(const uint8_t bits)
 {
     // sanity
     if(_bitOffset + 3 > 8)
@@ -98,8 +98,8 @@ BitstreamBuilder::Add3Bits(const WebRtc_UWord8 bits)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add4Bits(const WebRtc_UWord8 bits)
+int32_t
+BitstreamBuilder::Add4Bits(const uint8_t bits)
 {
     // sanity
     if(_bitOffset + 4 > 8)
@@ -117,8 +117,8 @@ BitstreamBuilder::Add4Bits(const WebRtc_UWord8 bits)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add5Bits(const WebRtc_UWord8 bits)
+int32_t
+BitstreamBuilder::Add5Bits(const uint8_t bits)
 {
     // sanity
     if(_bitOffset + 5 > 8)
@@ -137,8 +137,8 @@ BitstreamBuilder::Add5Bits(const WebRtc_UWord8 bits)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add6Bits(const WebRtc_UWord8 bits)
+int32_t
+BitstreamBuilder::Add6Bits(const uint8_t bits)
 {
     // sanity
     if(_bitOffset + 6 > 8)
@@ -158,8 +158,8 @@ BitstreamBuilder::Add6Bits(const WebRtc_UWord8 bits)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add7Bits(const WebRtc_UWord8 bits)
+int32_t
+BitstreamBuilder::Add7Bits(const uint8_t bits)
 {
     // sanity
     if(_bitOffset + 7 > 8)
@@ -180,8 +180,8 @@ BitstreamBuilder::Add7Bits(const WebRtc_UWord8 bits)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add8Bits(const WebRtc_UWord8 bits)
+int32_t
+BitstreamBuilder::Add8Bits(const uint8_t bits)
 {
     // sanity
     if(_dataSize < Length()+1)
@@ -201,8 +201,8 @@ BitstreamBuilder::Add8Bits(const WebRtc_UWord8 bits)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add16Bits(const WebRtc_UWord16 bits)
+int32_t
+BitstreamBuilder::Add16Bits(const uint16_t bits)
 {
     // sanity
     if(_dataSize < Length()+2)
@@ -212,20 +212,20 @@ BitstreamBuilder::Add16Bits(const WebRtc_UWord16 bits)
     }
     if(_bitOffset == 0)
     {
-        _data[_byteOffset] = (WebRtc_UWord8)(bits >> 8);
-        _data[_byteOffset+1] = (WebRtc_UWord8)(bits);
+        _data[_byteOffset] = (uint8_t)(bits >> 8);
+        _data[_byteOffset+1] = (uint8_t)(bits);
     } else
     {
-        _data[_byteOffset] += (WebRtc_UWord8)(bits >> (_bitOffset + 8));
-        _data[_byteOffset+1] += (WebRtc_UWord8)(bits >> _bitOffset);
-        _data[_byteOffset+2] += (WebRtc_UWord8)(bits << (8-_bitOffset));
+        _data[_byteOffset] += (uint8_t)(bits >> (_bitOffset + 8));
+        _data[_byteOffset+1] += (uint8_t)(bits >> _bitOffset);
+        _data[_byteOffset+2] += (uint8_t)(bits << (8-_bitOffset));
     }
     _byteOffset += 2;
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add24Bits(const WebRtc_UWord32 bits)
+int32_t
+BitstreamBuilder::Add24Bits(const uint32_t bits)
 {
     // sanity
     if(_dataSize < Length()+3)
@@ -235,22 +235,22 @@ BitstreamBuilder::Add24Bits(const WebRtc_UWord32 bits)
     }
     if(_bitOffset == 0)
     {
-        _data[_byteOffset] = (WebRtc_UWord8)(bits >> 16);
-        _data[_byteOffset+1] = (WebRtc_UWord8)(bits >> 8);
-        _data[_byteOffset+2] = (WebRtc_UWord8)(bits);
+        _data[_byteOffset] = (uint8_t)(bits >> 16);
+        _data[_byteOffset+1] = (uint8_t)(bits >> 8);
+        _data[_byteOffset+2] = (uint8_t)(bits);
     } else
     {
-        _data[_byteOffset]   += (WebRtc_UWord8)(bits >> (_bitOffset+16));
-        _data[_byteOffset+1] += (WebRtc_UWord8)(bits >> (_bitOffset+8));
-        _data[_byteOffset+2] += (WebRtc_UWord8)(bits >> (_bitOffset));
-        _data[_byteOffset+3] += (WebRtc_UWord8)(bits << (8-_bitOffset));
+        _data[_byteOffset]   += (uint8_t)(bits >> (_bitOffset+16));
+        _data[_byteOffset+1] += (uint8_t)(bits >> (_bitOffset+8));
+        _data[_byteOffset+2] += (uint8_t)(bits >> (_bitOffset));
+        _data[_byteOffset+3] += (uint8_t)(bits << (8-_bitOffset));
     }
     _byteOffset += 3;
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::Add32Bits(const WebRtc_UWord32 bits)
+int32_t
+BitstreamBuilder::Add32Bits(const uint32_t bits)
 {
     // sanity
     if(_dataSize < Length()+4)
@@ -260,17 +260,17 @@ BitstreamBuilder::Add32Bits(const WebRtc_UWord32 bits)
     }
     if(_bitOffset == 0)
     {
-        _data[_byteOffset]   = (WebRtc_UWord8)(bits >> 24);
-        _data[_byteOffset+1] = (WebRtc_UWord8)(bits >> 16);
-        _data[_byteOffset+2] = (WebRtc_UWord8)(bits >> 8);
-        _data[_byteOffset+3] = (WebRtc_UWord8)(bits);
+        _data[_byteOffset]   = (uint8_t)(bits >> 24);
+        _data[_byteOffset+1] = (uint8_t)(bits >> 16);
+        _data[_byteOffset+2] = (uint8_t)(bits >> 8);
+        _data[_byteOffset+3] = (uint8_t)(bits);
     } else
     {
-        _data[_byteOffset]   += (WebRtc_UWord8)(bits >> (_bitOffset+24));
-        _data[_byteOffset+1] += (WebRtc_UWord8)(bits >> (_bitOffset+16));
-        _data[_byteOffset+2] += (WebRtc_UWord8)(bits >> (_bitOffset+8));
-        _data[_byteOffset+3] += (WebRtc_UWord8)(bits >> (_bitOffset));
-        _data[_byteOffset+4] += (WebRtc_UWord8)(bits << (8-_bitOffset));
+        _data[_byteOffset]   += (uint8_t)(bits >> (_bitOffset+24));
+        _data[_byteOffset+1] += (uint8_t)(bits >> (_bitOffset+16));
+        _data[_byteOffset+2] += (uint8_t)(bits >> (_bitOffset+8));
+        _data[_byteOffset+3] += (uint8_t)(bits >> (_bitOffset));
+        _data[_byteOffset+4] += (uint8_t)(bits << (8-_bitOffset));
     }
     _byteOffset += 4;
     return 0;
@@ -287,8 +287,8 @@ BitstreamBuilder::Add32Bits(const WebRtc_UWord32 bits)
       0 0 0 0 1 x3 x2 x1 x0    15..30
     0 0 0 0 0 1 x4 x3 x2 x1 x0 31..62
 */
-WebRtc_Word32
-BitstreamBuilder::AddUE(const WebRtc_UWord32 value)
+int32_t
+BitstreamBuilder::AddUE(const uint32_t value)
 {
     // un-rolled on 8 bit base to avoid too deep if else chain
     if(value < 0x0000ffff)
@@ -543,18 +543,18 @@ BitstreamBuilder::AddUE(const WebRtc_UWord32 value)
     return 0;
 }
 
-WebRtc_Word32
-BitstreamBuilder::AddPrefix(const WebRtc_UWord8 numZeros)
+int32_t
+BitstreamBuilder::AddPrefix(const uint8_t numZeros)
 {
     // sanity for the sufix too
-    WebRtc_UWord32 numBitsToAdd = numZeros * 2 + 1;
+    uint32_t numBitsToAdd = numZeros * 2 + 1;
     if(((_dataSize - _byteOffset) *8 + 8-_bitOffset) < numBitsToAdd)
     {
         return -1;
     }
 
     // add numZeros
-    for (WebRtc_UWord32 i = 0; i < numZeros; i++)
+    for (uint32_t i = 0; i < numZeros; i++)
     {
         Add1Bit(0);
     }
@@ -563,10 +563,10 @@ BitstreamBuilder::AddPrefix(const WebRtc_UWord8 numZeros)
 }
 
 void
-BitstreamBuilder::AddSuffix(const WebRtc_UWord8 numBits, const WebRtc_UWord32 rest)
+BitstreamBuilder::AddSuffix(const uint8_t numBits, const uint32_t rest)
 {
     // most significant bit first
-    for(WebRtc_Word32 i = numBits - 1; i >= 0; i--)
+    for(int32_t i = numBits - 1; i >= 0; i--)
     {
         if(( rest >> i) & 0x1)
         {

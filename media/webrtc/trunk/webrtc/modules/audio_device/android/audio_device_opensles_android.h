@@ -28,141 +28,170 @@ namespace webrtc {
 
 class EventWrapper;
 
+const uint32_t N_MAX_INTERFACES = 3;
+const uint32_t N_MAX_OUTPUT_DEVICES = 6;
+const uint32_t N_MAX_INPUT_DEVICES = 3;
+
+const uint32_t N_REC_SAMPLES_PER_SEC = 16000;  // Default fs
+const uint32_t N_PLAY_SAMPLES_PER_SEC = 16000;  // Default fs
+
+const uint32_t N_REC_CHANNELS = 1;
+const uint32_t N_PLAY_CHANNELS = 1;
+
+const uint32_t REC_BUF_SIZE_IN_SAMPLES = 480;
+const uint32_t PLAY_BUF_SIZE_IN_SAMPLES = 480;
+
+const uint32_t REC_MAX_TEMP_BUF_SIZE_PER_10ms =
+    N_REC_CHANNELS * REC_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
+
+const uint32_t PLAY_MAX_TEMP_BUF_SIZE_PER_10ms =
+    N_PLAY_CHANNELS * PLAY_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
+
+// Number of the buffers in playout queue
+const uint16_t N_PLAY_QUEUE_BUFFERS = 8;
+// Number of buffers in recording queue
+// TODO(xian): Reduce the numbers of buffers to improve the latency.
+const uint16_t N_REC_QUEUE_BUFFERS = 8;
+// Some values returned from getMinBufferSize
+// (Nexus S playout  72ms, recording 64ms)
+// (Galaxy,         167ms,           44ms)
+// (Nexus 7,         72ms,           48ms)
+// (Xoom             92ms,           40ms)
+
 class ThreadWrapper;
 
 class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
  public:
-  explicit AudioDeviceAndroidOpenSLES(const WebRtc_Word32 id);
+  explicit AudioDeviceAndroidOpenSLES(const int32_t id);
   ~AudioDeviceAndroidOpenSLES();
 
   // Retrieve the currently utilized audio layer
-  virtual WebRtc_Word32
+  virtual int32_t
   ActiveAudioLayer(AudioDeviceModule::AudioLayer& audioLayer) const;  // NOLINT
 
   // Main initializaton and termination
-  virtual WebRtc_Word32 Init();
-  virtual WebRtc_Word32 Terminate();
+  virtual int32_t Init();
+  virtual int32_t Terminate();
   virtual bool Initialized() const;
 
   // Device enumeration
-  virtual WebRtc_Word16 PlayoutDevices();
-  virtual WebRtc_Word16 RecordingDevices();
-  virtual WebRtc_Word32
-  PlayoutDeviceName(WebRtc_UWord16 index,
+  virtual int16_t PlayoutDevices();
+  virtual int16_t RecordingDevices();
+  virtual int32_t
+  PlayoutDeviceName(uint16_t index,
                     char name[kAdmMaxDeviceNameSize],
                     char guid[kAdmMaxGuidSize]);
-  virtual WebRtc_Word32
-  RecordingDeviceName(WebRtc_UWord16 index,
+  virtual int32_t
+  RecordingDeviceName(uint16_t index,
                       char name[kAdmMaxDeviceNameSize],
                       char guid[kAdmMaxGuidSize]);
 
   // Device selection
-  virtual WebRtc_Word32 SetPlayoutDevice(WebRtc_UWord16 index);
-  virtual WebRtc_Word32
+  virtual int32_t SetPlayoutDevice(uint16_t index);
+  virtual int32_t
   SetPlayoutDevice(AudioDeviceModule::WindowsDeviceType device);
-  virtual WebRtc_Word32 SetRecordingDevice(WebRtc_UWord16 index);
-  virtual WebRtc_Word32
+  virtual int32_t SetRecordingDevice(uint16_t index);
+  virtual int32_t
   SetRecordingDevice(AudioDeviceModule::WindowsDeviceType device);
 
   // Audio transport initialization
-  virtual WebRtc_Word32 PlayoutIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 InitPlayout();
+  virtual int32_t PlayoutIsAvailable(bool& available);  // NOLINT
+  virtual int32_t InitPlayout();
   virtual bool PlayoutIsInitialized() const;
-  virtual WebRtc_Word32 RecordingIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 InitRecording();
+  virtual int32_t RecordingIsAvailable(bool& available);  // NOLINT
+  virtual int32_t InitRecording();
   virtual bool RecordingIsInitialized() const;
 
   // Audio transport control
-  virtual WebRtc_Word32 StartPlayout();
-  virtual WebRtc_Word32 StopPlayout();
+  virtual int32_t StartPlayout();
+  virtual int32_t StopPlayout();
   virtual bool Playing() const;
-  virtual WebRtc_Word32 StartRecording();
-  virtual WebRtc_Word32 StopRecording();
+  virtual int32_t StartRecording();
+  virtual int32_t StopRecording();
   virtual bool Recording() const;
 
   // Microphone Automatic Gain Control (AGC)
-  virtual WebRtc_Word32 SetAGC(bool enable);
+  virtual int32_t SetAGC(bool enable);
   virtual bool AGC() const;
 
   // Volume control based on the Windows Wave API (Windows only)
-  virtual WebRtc_Word32 SetWaveOutVolume(WebRtc_UWord16 volumeLeft,
-                                         WebRtc_UWord16 volumeRight);
-  virtual WebRtc_Word32 WaveOutVolume(
-      WebRtc_UWord16& volumeLeft,  // NOLINT
-      WebRtc_UWord16& volumeRight) const;  // NOLINT
+  virtual int32_t SetWaveOutVolume(uint16_t volumeLeft, uint16_t volumeRight);
+  virtual int32_t WaveOutVolume(
+      uint16_t& volumeLeft,  // NOLINT
+      uint16_t& volumeRight) const;  // NOLINT
 
   // Audio mixer initialization
-  virtual WebRtc_Word32 SpeakerIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 InitSpeaker();
+  virtual int32_t SpeakerIsAvailable(bool& available);  // NOLINT
+  virtual int32_t InitSpeaker();
   virtual bool SpeakerIsInitialized() const;
-  virtual WebRtc_Word32 MicrophoneIsAvailable(
+  virtual int32_t MicrophoneIsAvailable(
       bool& available);
-  virtual WebRtc_Word32 InitMicrophone();
+  virtual int32_t InitMicrophone();
   virtual bool MicrophoneIsInitialized() const;
 
   // Speaker volume controls
-  virtual WebRtc_Word32 SpeakerVolumeIsAvailable(
+  virtual int32_t SpeakerVolumeIsAvailable(
       bool& available);  // NOLINT
-  virtual WebRtc_Word32 SetSpeakerVolume(WebRtc_UWord32 volume);
-  virtual WebRtc_Word32 SpeakerVolume(
-      WebRtc_UWord32& volume) const;  // NOLINT
-  virtual WebRtc_Word32 MaxSpeakerVolume(
-      WebRtc_UWord32& maxVolume) const;  // NOLINT
-  virtual WebRtc_Word32 MinSpeakerVolume(
-      WebRtc_UWord32& minVolume) const;  // NOLINT
-  virtual WebRtc_Word32 SpeakerVolumeStepSize(
-      WebRtc_UWord16& stepSize) const;  // NOLINT
+  virtual int32_t SetSpeakerVolume(uint32_t volume);
+  virtual int32_t SpeakerVolume(
+      uint32_t& volume) const;  // NOLINT
+  virtual int32_t MaxSpeakerVolume(
+      uint32_t& maxVolume) const;  // NOLINT
+  virtual int32_t MinSpeakerVolume(
+      uint32_t& minVolume) const;  // NOLINT
+  virtual int32_t SpeakerVolumeStepSize(
+      uint16_t& stepSize) const;  // NOLINT
 
   // Microphone volume controls
-  virtual WebRtc_Word32 MicrophoneVolumeIsAvailable(
+  virtual int32_t MicrophoneVolumeIsAvailable(
       bool& available);  // NOLINT
-  virtual WebRtc_Word32 SetMicrophoneVolume(WebRtc_UWord32 volume);
-  virtual WebRtc_Word32 MicrophoneVolume(
-      WebRtc_UWord32& volume) const;  // NOLINT
-  virtual WebRtc_Word32 MaxMicrophoneVolume(
-      WebRtc_UWord32& maxVolume) const;  // NOLINT
-  virtual WebRtc_Word32 MinMicrophoneVolume(
-      WebRtc_UWord32& minVolume) const;  // NOLINT
-  virtual WebRtc_Word32
-  MicrophoneVolumeStepSize(WebRtc_UWord16& stepSize) const;  // NOLINT
+  virtual int32_t SetMicrophoneVolume(uint32_t volume);
+  virtual int32_t MicrophoneVolume(
+      uint32_t& volume) const;  // NOLINT
+  virtual int32_t MaxMicrophoneVolume(
+      uint32_t& maxVolume) const;  // NOLINT
+  virtual int32_t MinMicrophoneVolume(
+      uint32_t& minVolume) const;  // NOLINT
+  virtual int32_t
+  MicrophoneVolumeStepSize(uint16_t& stepSize) const;  // NOLINT
 
   // Speaker mute control
-  virtual WebRtc_Word32 SpeakerMuteIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 SetSpeakerMute(bool enable);
-  virtual WebRtc_Word32 SpeakerMute(bool& enabled) const;  // NOLINT
+  virtual int32_t SpeakerMuteIsAvailable(bool& available);  // NOLINT
+  virtual int32_t SetSpeakerMute(bool enable);
+  virtual int32_t SpeakerMute(bool& enabled) const;  // NOLINT
 
   // Microphone mute control
-  virtual WebRtc_Word32 MicrophoneMuteIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 SetMicrophoneMute(bool enable);
-  virtual WebRtc_Word32 MicrophoneMute(bool& enabled) const;  // NOLINT
+  virtual int32_t MicrophoneMuteIsAvailable(bool& available);  // NOLINT
+  virtual int32_t SetMicrophoneMute(bool enable);
+  virtual int32_t MicrophoneMute(bool& enabled) const;  // NOLINT
 
   // Microphone boost control
-  virtual WebRtc_Word32 MicrophoneBoostIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 SetMicrophoneBoost(bool enable);
-  virtual WebRtc_Word32 MicrophoneBoost(bool& enabled) const;  // NOLINT
+  virtual int32_t MicrophoneBoostIsAvailable(bool& available);  // NOLINT
+  virtual int32_t SetMicrophoneBoost(bool enable);
+  virtual int32_t MicrophoneBoost(bool& enabled) const;  // NOLINT
 
   // Stereo support
-  virtual WebRtc_Word32 StereoPlayoutIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 SetStereoPlayout(bool enable);
-  virtual WebRtc_Word32 StereoPlayout(bool& enabled) const;  // NOLINT
-  virtual WebRtc_Word32 StereoRecordingIsAvailable(bool& available);  // NOLINT
-  virtual WebRtc_Word32 SetStereoRecording(bool enable);
-  virtual WebRtc_Word32 StereoRecording(bool& enabled) const;  // NOLINT
+  virtual int32_t StereoPlayoutIsAvailable(bool& available);  // NOLINT
+  virtual int32_t SetStereoPlayout(bool enable);
+  virtual int32_t StereoPlayout(bool& enabled) const;  // NOLINT
+  virtual int32_t StereoRecordingIsAvailable(bool& available);  // NOLINT
+  virtual int32_t SetStereoRecording(bool enable);
+  virtual int32_t StereoRecording(bool& enabled) const;  // NOLINT
 
   // Delay information and control
-  virtual WebRtc_Word32
+  virtual int32_t
   SetPlayoutBuffer(const AudioDeviceModule::BufferType type,
-                   WebRtc_UWord16 sizeMS);
-  virtual WebRtc_Word32 PlayoutBuffer(
+                   uint16_t sizeMS);
+  virtual int32_t PlayoutBuffer(
       AudioDeviceModule::BufferType& type,  // NOLINT
-      WebRtc_UWord16& sizeMS) const;
-  virtual WebRtc_Word32 PlayoutDelay(
-      WebRtc_UWord16& delayMS) const;  // NOLINT
-  virtual WebRtc_Word32 RecordingDelay(
-      WebRtc_UWord16& delayMS) const;  // NOLINT
+      uint16_t& sizeMS) const;
+  virtual int32_t PlayoutDelay(
+      uint16_t& delayMS) const;  // NOLINT
+  virtual int32_t RecordingDelay(
+      uint16_t& delayMS) const;  // NOLINT
 
   // CPU load
-  virtual WebRtc_Word32 CPULoad(WebRtc_UWord16& load) const;  // NOLINT
+  virtual int32_t CPULoad(uint16_t& load) const;  // NOLINT
 
   // Error and warning information
   virtual bool PlayoutWarning() const;
@@ -178,38 +207,8 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
   virtual void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
   // Speaker audio routing
-  virtual WebRtc_Word32 SetLoudspeakerStatus(bool enable);
-  virtual WebRtc_Word32 GetLoudspeakerStatus(bool& enable) const;  // NOLINT
-
-  static const WebRtc_UWord32 N_MAX_INTERFACES = 3;
-  static const WebRtc_UWord32 N_MAX_OUTPUT_DEVICES = 6;
-  static const WebRtc_UWord32 N_MAX_INPUT_DEVICES = 3;
-
-  static const WebRtc_UWord32 N_REC_SAMPLES_PER_SEC = 16000;  // Default fs
-  static const WebRtc_UWord32 N_PLAY_SAMPLES_PER_SEC = 16000;  // Default fs
-
-  static const WebRtc_UWord32 N_REC_CHANNELS = 1;
-  static const WebRtc_UWord32 N_PLAY_CHANNELS = 1;
-
-  static const WebRtc_UWord32 REC_BUF_SIZE_IN_SAMPLES = 480;
-  static const WebRtc_UWord32 PLAY_BUF_SIZE_IN_SAMPLES = 480;
-
-  static const WebRtc_UWord32 REC_MAX_TEMP_BUF_SIZE_PER_10ms =
-      N_REC_CHANNELS * REC_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
-
-  static const WebRtc_UWord32 PLAY_MAX_TEMP_BUF_SIZE_PER_10ms =
-      N_PLAY_CHANNELS * PLAY_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
-
-  // Number of the buffers in playout queue
-  static const WebRtc_UWord16 N_PLAY_QUEUE_BUFFERS = 8;
-  // Number of buffers in recording queue
-  // TODO(xian): Reduce the numbers of buffers to improve the latency.
-  static const WebRtc_UWord16 N_REC_QUEUE_BUFFERS = 16;
-  // Some values returned from getMinBufferSize
-  // (Nexus S playout  72ms, recording 64ms)
-  // (Galaxy,         167ms,           44ms)
-  // (Nexus 7,         72ms,           48ms)
-  // (Xoom             92ms,           40ms)
+  virtual int32_t SetLoudspeakerStatus(bool enable);
+  virtual int32_t GetLoudspeakerStatus(bool& enable) const;  // NOLINT
 
  private:
   // Lock
@@ -234,15 +233,15 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
 
   // Delay updates
   void UpdateRecordingDelay();
-  void UpdatePlayoutDelay(WebRtc_UWord32 nSamplePlayed);
+  void UpdatePlayoutDelay(uint32_t nSamplePlayed);
 
   // Init
-  WebRtc_Word32 InitSampleRate();
+  int32_t InitSampleRate();
 
   // Misc
   AudioDeviceBuffer* voe_audio_buffer_;
   CriticalSectionWrapper& crit_sect_;
-  WebRtc_Word32 id_;
+  int32_t id_;
 
   // audio unit
   SLObjectItf sles_engine_;
@@ -260,10 +259,10 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
   SLRecordItf sles_recorder_itf_;
   SLAndroidSimpleBufferQueueItf sles_recorder_sbq_itf_;
   SLDeviceVolumeItf sles_mic_volume_;
-  WebRtc_UWord32 mic_dev_id_;
+  uint32_t mic_dev_id_;
 
-  WebRtc_UWord32 play_warning_, play_error_;
-  WebRtc_UWord32 rec_warning_, rec_error_;
+  uint32_t play_warning_, play_error_;
+  uint32_t rec_warning_, rec_error_;
 
   // States
   bool is_recording_dev_specified_;
@@ -277,48 +276,39 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
   bool is_speaker_initialized_;
 
   // Delay
-  WebRtc_UWord16 playout_delay_;
-  WebRtc_UWord16 recording_delay_;
+  uint16_t playout_delay_;
+  uint16_t recording_delay_;
 
   // AGC state
   bool agc_enabled_;
 
   // Threads
   ThreadWrapper* rec_thread_;
-  WebRtc_UWord32 rec_thread_id_;
+  uint32_t rec_thread_id_;
   static bool RecThreadFunc(void* context);
   bool RecThreadFuncImpl();
   EventWrapper& rec_timer_;
 
-  WebRtc_UWord32 mic_sampling_rate_;
-  WebRtc_UWord32 speaker_sampling_rate_;
-  WebRtc_UWord32 max_speaker_vol_;
-  WebRtc_UWord32 min_speaker_vol_;
+  uint32_t mic_sampling_rate_;
+  uint32_t speaker_sampling_rate_;
+  uint32_t max_speaker_vol_;
+  uint32_t min_speaker_vol_;
   bool loundspeaker_on_;
 
   SLDataFormat_PCM player_pcm_;
   SLDataFormat_PCM record_pcm_;
 
-  std::queue<WebRtc_Word8*> rec_queue_;
-  std::queue<WebRtc_Word8*> rec_voe_audio_queue_;
-  std::queue<WebRtc_Word8*> rec_voe_ready_queue_;
-  WebRtc_Word8 rec_buf_[N_REC_QUEUE_BUFFERS][
+  std::queue<int8_t*> rec_queue_;
+  std::queue<int8_t*> rec_voe_audio_queue_;
+  std::queue<int8_t*> rec_voe_ready_queue_;
+  int8_t rec_buf_[N_REC_QUEUE_BUFFERS][
       N_REC_CHANNELS * sizeof(int16_t) * REC_BUF_SIZE_IN_SAMPLES];
-  WebRtc_Word8 rec_voe_buf_[N_REC_QUEUE_BUFFERS][
+  int8_t rec_voe_buf_[N_REC_QUEUE_BUFFERS][
       N_REC_CHANNELS * sizeof(int16_t) * REC_BUF_SIZE_IN_SAMPLES];
 
-  std::queue<WebRtc_Word8*> play_queue_;
-  WebRtc_Word8 play_buf_[N_PLAY_QUEUE_BUFFERS][
+  std::queue<int8_t*> play_queue_;
+  int8_t play_buf_[N_PLAY_QUEUE_BUFFERS][
       N_PLAY_CHANNELS * sizeof(int16_t) * PLAY_BUF_SIZE_IN_SAMPLES];
-
-  // dlopen for OpenSLES
-  void *opensles_lib_;
-  SLInterfaceID SL_IID_ENGINE_;
-  SLInterfaceID SL_IID_BUFFERQUEUE_;
-  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
-  SLInterfaceID SL_IID_PLAY_;
-  SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
-  SLInterfaceID SL_IID_RECORD_;
 };
 
 }  // namespace webrtc

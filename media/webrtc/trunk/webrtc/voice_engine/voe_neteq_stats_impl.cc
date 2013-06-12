@@ -29,7 +29,7 @@ VoENetEqStats* VoENetEqStats::GetInterface(VoiceEngine* voiceEngine)
     {
         return NULL;
     }
-    VoiceEngineImpl* s = reinterpret_cast<VoiceEngineImpl*>(voiceEngine);
+    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
     s->AddRef();
     return s;
 #endif
@@ -55,7 +55,6 @@ int VoENetEqStatsImpl::GetNetworkStatistics(int channel,
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "GetNetworkStatistics(channel=%d, stats=?)", channel);
     ANDROID_NOT_SUPPORTED(_shared->statistics());
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
     {

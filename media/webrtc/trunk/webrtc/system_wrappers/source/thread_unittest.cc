@@ -15,20 +15,13 @@
 
 namespace webrtc {
 
-TEST(ThreadTest, NullFunctionPointer) {
-  webrtc::scoped_ptr<ThreadWrapper> thread(
-    webrtc::ThreadWrapper::CreateThread());
-  unsigned int id = 42;
-  EXPECT_FALSE(thread->Start(id));
-}
-
 // Function that does nothing, and reports success.
 bool NullRunFunction(void* obj) {
   return true;
 }
 
 TEST(ThreadTest, StartStop) {
-  ThreadWrapper* thread = ThreadWrapper::CreateThread(&NullRunFunction);
+  ThreadWrapper* thread = ThreadWrapper::CreateThread(&NullRunFunction, NULL);
   unsigned int id = 42;
   ASSERT_TRUE(thread->Start(id));
   EXPECT_TRUE(thread->Stop());

@@ -48,8 +48,8 @@ enum VideoRenderError
 class VideoRenderCallback
 {
 public:
-    virtual WebRtc_Word32 RenderFrame(const WebRtc_UWord32 streamId,
-                                      I420VideoFrame& videoFrame) = 0;
+    virtual int32_t RenderFrame(const uint32_t streamId,
+                                I420VideoFrame& videoFrame) = 0;
 
 protected:
     virtual ~VideoRenderCallback()
@@ -61,7 +61,7 @@ protected:
 class VideoRenderFeedback
 {
 public:
-    virtual void OnRenderError(const WebRtc_Word32 streamId,
+    virtual void OnRenderError(const int32_t streamId,
                                const VideoRenderError error) = 0;
 
 protected:

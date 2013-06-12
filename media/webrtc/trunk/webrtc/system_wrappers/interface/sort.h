@@ -39,7 +39,7 @@ enum Type {
 // data_type       Enum corresponding to the type of the array.
 //
 // returns 0 on success, -1 on failure.
-WebRtc_Word32 Sort(void* data, WebRtc_UWord32 num_of_elements, Type data_type);
+int32_t Sort(void* data, uint32_t num_of_elements, Type data_type);
 
 // Sorts arbitrary data types. This requires an array of intrinsically typed
 // key values which will be used to sort the data array. There must be a
@@ -57,8 +57,8 @@ WebRtc_Word32 Sort(void* data, WebRtc_UWord32 num_of_elements, Type data_type);
 //
 // returns 0 on success, -1 on failure.
 //
-WebRtc_Word32 KeySort(void* data, void* key, WebRtc_UWord32 num_of_elements,
-                      WebRtc_UWord32 size_of_element, Type key_type);
+int32_t KeySort(void* data, void* key, uint32_t num_of_elements,
+                uint32_t size_of_element, Type key_type);
 
 }  // namespace webrtc
 

@@ -14,6 +14,7 @@
 #include "video_coding.h"
 #include "test_util.h"
 
+#include <fstream>
 #include <map>
 
 class NormalTest;
@@ -30,13 +31,13 @@ class VCMNTEncodeCompleteCallback : public webrtc::VCMPacketizationCallback
   void RegisterTransportCallback(webrtc::VCMPacketizationCallback* transport);
   // process encoded data received from the encoder,
   // pass stream to the VCMReceiver module
-  WebRtc_Word32
+  int32_t
   SendData(const webrtc::FrameType frameType,
-           const WebRtc_UWord8 payloadType,
-           const WebRtc_UWord32 timeStamp,
+           const uint8_t payloadType,
+           const uint32_t timeStamp,
            int64_t capture_time_ms,
-           const WebRtc_UWord8* payloadData,
-           const WebRtc_UWord32 payloadSize,
+           const uint8_t* payloadData,
+           const uint32_t payloadSize,
            const webrtc::RTPFragmentationHeader& fragmentationHeader,
            const webrtc::RTPVideoHeader* videoHdr);
 
@@ -44,19 +45,19 @@ class VCMNTEncodeCompleteCallback : public webrtc::VCMPacketizationCallback
   // Currently - encode and decode with the same vcm module.
   void RegisterReceiverVCM(webrtc::VideoCodingModule *vcm);
   // Return sum of encoded data (all frames in the sequence)
-  WebRtc_Word32 EncodedBytes();
+  int32_t EncodedBytes();
   // return number of encoder-skipped frames
-  WebRtc_UWord32 SkipCnt();;
+  uint32_t SkipCnt();;
   // conversion function for payload type (needed for the callback function)
-//    RTPVideoVideoCodecTypes ConvertPayloadType(WebRtc_UWord8 payloadType);
+//    RTPVideoVideoCodecTypes ConvertPayloadType(uint8_t payloadType);
 
  private:
   FILE*                       _encodedFile;
-  WebRtc_UWord32              _encodedBytes;
-  WebRtc_UWord32              _skipCnt;
+  uint32_t              _encodedBytes;
+  uint32_t              _skipCnt;
   webrtc::VideoCodingModule*  _VCMReceiver;
   webrtc::FrameType           _frameType;
-  WebRtc_UWord16              _seqNo;
+  uint16_t              _seqNo;
   NormalTest&                 _test;
 }; // end of VCMEncodeCompleteCallback
 
@@ -72,8 +73,8 @@ public:
     virtual ~VCMNTDecodeCompleCallback();
     void SetUserReceiveCallback(webrtc::VCMReceiveCallback* receiveCallback);
     // will write decoded frame into file
-    WebRtc_Word32 FrameToRender(webrtc::I420VideoFrame& videoFrame);
-    WebRtc_Word32 DecodedBytes();
+    int32_t FrameToRender(webrtc::I420VideoFrame& videoFrame);
+    int32_t DecodedBytes();
 private:
     FILE*             _decodedFile;
     std::string       _outname;
@@ -86,10 +87,10 @@ class NormalTest
 {
 public:
     NormalTest(webrtc::VideoCodingModule* vcm,
-               webrtc::TickTimeBase* clock);
+               webrtc::Clock* clock);
     ~NormalTest();
     static int RunTest(const CmdArgs& args);
-    WebRtc_Word32    Perform(const CmdArgs& args);
+    int32_t    Perform(const CmdArgs& args);
     // option:: turn into private and call from perform
     int   Width() const { return _width; };
     int   Height() const { return _height; };
@@ -104,18 +105,18 @@ protected:
     // print results to std output and to log file
     void            Print();
     // calculating pipeline delay, and encoding time
-    void            FrameEncoded(WebRtc_UWord32 timeStamp);
+    void            FrameEncoded(uint32_t timeStamp);
     // calculating pipeline delay, and decoding time
-    void            FrameDecoded(WebRtc_UWord32 timeStamp);
+    void            FrameDecoded(uint32_t timeStamp);
 
-    webrtc::TickTimeBase*            _clock;
+    webrtc::Clock*                   _clock;
     webrtc::VideoCodingModule*       _vcm;
     webrtc::VideoCodec               _sendCodec;
     webrtc::VideoCodec               _receiveCodec;
     std::string                      _inname;
     std::string                      _outname;
     std::string                      _encodedName;
-    WebRtc_Word32                    _sumEncBytes;
+    int32_t                    _sumEncBytes;
     FILE*                            _sourceFile;
     FILE*                            _decodedFile;
     FILE*                            _encodedFile;
@@ -124,8 +125,8 @@ protected:
     int                              _height;
     float                            _frameRate;
     float                            _bitRate;
-    WebRtc_UWord32                   _lengthSourceFrame;
-    WebRtc_UWord32                   _timeStamp;
+    uint32_t                   _lengthSourceFrame;
+    uint32_t                   _timeStamp;
     webrtc::VideoCodecType           _videoType;
     double                           _totalEncodeTime;
     double                           _totalDecodeTime;
@@ -136,9 +137,9 @@ protected:
     double                           _testTotalTime;
     std::map<int, double>            _encodeTimes;
     std::map<int, double>            _decodeTimes;
-    WebRtc_Word32                    _frameCnt;
-    WebRtc_Word32                    _encFrameCnt;
-    WebRtc_Word32                    _decFrameCnt;
+    int32_t                    _frameCnt;
+    int32_t                    _encFrameCnt;
+    int32_t                    _decFrameCnt;
 
 }; // end of VCMNormalTestClass
 

@@ -29,8 +29,8 @@ AndroidMediaCodecDecoder::AndroidMediaCodecDecoder(
     vm_attached_(false) {
 }
 
-WebRtc_Word32 AndroidMediaCodecDecoder::InitDecode(
-    const VideoCodec* codecSettings, WebRtc_Word32 numberOfCores) {
+int32_t AndroidMediaCodecDecoder::InitDecode(
+    const VideoCodec* codecSettings, int32_t numberOfCores) {
   __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", __func__);
 
   // TODO(dwkang): Detach this thread from VM. => this leads to a crash on
@@ -64,12 +64,12 @@ WebRtc_Word32 AndroidMediaCodecDecoder::InitDecode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-WebRtc_Word32 AndroidMediaCodecDecoder::Decode(
+int32_t AndroidMediaCodecDecoder::Decode(
     const EncodedImage& inputImage,
     bool missingFrames,
     const RTPFragmentationHeader* fragmentation,
     const CodecSpecificInfo* codecSpecificInfo,
-    WebRtc_Word64 renderTimeMs) {
+    int64_t renderTimeMs) {
   if (!vm_attached_) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
@@ -83,13 +83,13 @@ WebRtc_Word32 AndroidMediaCodecDecoder::Decode(
   return WEBRTC_VIDEO_CODEC_NO_OUTPUT;
 }
 
-WebRtc_Word32 AndroidMediaCodecDecoder::RegisterDecodeCompleteCallback(
+int32_t AndroidMediaCodecDecoder::RegisterDecodeCompleteCallback(
     DecodedImageCallback* callback) {
   __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", __func__);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-WebRtc_Word32 AndroidMediaCodecDecoder::Release() {
+int32_t AndroidMediaCodecDecoder::Release() {
   __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", __func__);
   env_->DeleteGlobalRef(mediaCodecDecoder_);
   mediaCodecDecoder_ = NULL;
@@ -97,7 +97,7 @@ WebRtc_Word32 AndroidMediaCodecDecoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-WebRtc_Word32 AndroidMediaCodecDecoder::Reset() {
+int32_t AndroidMediaCodecDecoder::Reset() {
   __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", __func__);
   return WEBRTC_VIDEO_CODEC_OK;
 }

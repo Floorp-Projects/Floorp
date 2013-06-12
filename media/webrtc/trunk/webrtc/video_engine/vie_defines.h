@@ -46,8 +46,8 @@ enum { kViECaptureDefaultFramerate = 30 };
 enum { kViECaptureMaxSnapshotWaitTimeMs = 500 };
 
 // ViECodec
-enum { kViEMaxCodecWidth = 4048 };
-enum { kViEMaxCodecHeight = 3040 };
+enum { kViEMaxCodecWidth = 4096 };
+enum { kViEMaxCodecHeight = 3072 };
 enum { kViEMaxCodecFramerate = 60 };
 enum { kViEMinCodecBitrate = 30 };
 
@@ -75,7 +75,11 @@ enum { kViEMinRenderTimeoutTimeMs = 33 };
 enum { kViEDefaultRenderDelayMs = 10 };
 
 // ViERTP_RTCP
-enum { kNackHistorySize = 400 };
+enum { kSendSidePacketHistorySize = 600 };
+
+// NACK
+enum { kMaxPacketAgeToNack = 450 };  // In sequence numbers.
+enum { kMaxNackListSize = 250 };
 
 // Id definitions
 enum {
@@ -173,7 +177,7 @@ inline int ChannelId(const int moduleId) {
 
 // Linux specific.
 #ifndef WEBRTC_ANDROID
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#ifdef WEBRTC_LINUX
   //  Build information macros.
   #if defined(_DEBUG)
   #define BUILDMODE "d"

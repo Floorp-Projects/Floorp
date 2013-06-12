@@ -22,34 +22,31 @@ namespace videocapturemodule {
 
 class VideoCaptureAndroid : public VideoCaptureImpl {
  public:
-  static WebRtc_Word32 SetAndroidObjects(void* javaVM, void* javaContext);
-  static WebRtc_Word32 AttachAndUseAndroidDeviceInfoObjects(
+  static int32_t SetAndroidObjects(void* javaVM, void* javaContext);
+  static int32_t AttachAndUseAndroidDeviceInfoObjects(
       JNIEnv*& env,
       jclass& javaCmDevInfoClass,
       jobject& javaCmDevInfoObject,
       bool& attached);
-  static WebRtc_Word32 ReleaseAndroidDeviceInfoObjects(bool attached);
+  static int32_t ReleaseAndroidDeviceInfoObjects(bool attached);
 
-  VideoCaptureAndroid(const WebRtc_Word32 id);
-  virtual WebRtc_Word32 Init(const WebRtc_Word32 id,
-                             const char* deviceUniqueIdUTF8);
+  VideoCaptureAndroid(const int32_t id);
+  virtual int32_t Init(const int32_t id, const char* deviceUniqueIdUTF8);
 
 
-  virtual WebRtc_Word32 StartCapture(
+  virtual int32_t StartCapture(
       const VideoCaptureCapability& capability);
-  virtual WebRtc_Word32 StopCapture();
+  virtual int32_t StopCapture();
   virtual bool CaptureStarted();
-  virtual WebRtc_Word32 CaptureSettings(VideoCaptureCapability& settings);
-  virtual WebRtc_Word32 SetCaptureRotation(VideoCaptureRotation rotation);
+  virtual int32_t CaptureSettings(VideoCaptureCapability& settings);
+  virtual int32_t SetCaptureRotation(VideoCaptureRotation rotation);
 
  protected:
   virtual ~VideoCaptureAndroid();
   static void JNICALL ProvideCameraFrame (JNIEnv * env,
                                           jobject,
                                           jbyteArray javaCameraFrame,
-                                          jint length,
-                                          jint rotation,
-                                          jlong context);
+                                          jint length, jlong context);
   DeviceInfoAndroid _capInfo;
   jobject _javaCaptureObj; // Java Camera object.
   VideoCaptureCapability _frameInfo;
@@ -60,6 +57,7 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
   static jclass g_javaCmDevInfoClass;
   //Static java object implementing the needed device info functions;
   static jobject g_javaCmDevInfoObject;
+  static jobject g_javaContext; // Java Application context
 };
 
 }  // namespace videocapturemodule

@@ -19,7 +19,7 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #include <mmsystem.h>
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
@@ -40,7 +40,7 @@
 
 namespace webrtc {
 const char RTPFILE_VERSION[] = "1.0";
-const WebRtc_UWord32 MAX_UWORD32 = 0xffffffff;
+const uint32_t MAX_UWORD32 = 0xffffffff;
 
 // This stucture is specified in the rtpdump documentation.
 // This struct corresponds to RD_packet_t in
@@ -49,11 +49,11 @@ typedef struct
 {
     // Length of packet, including this header (may be smaller than plen if not
     // whole packet recorded).
-    WebRtc_UWord16 length;
+    uint16_t length;
     // Actual header+payload length for RTP, 0 for RTCP.
-    WebRtc_UWord16 plen;
+    uint16_t plen;
     // Milliseconds since the start of recording.
-    WebRtc_UWord32 offset;
+    uint32_t offset;
 } rtpDumpPktHdr_t;
 
 RtpDump* RtpDump::CreateRtpDump()
@@ -87,7 +87,7 @@ RtpDumpImpl::~RtpDumpImpl()
     WEBRTC_TRACE(kTraceMemory, kTraceUtility, -1, "%s deleted", __FUNCTION__);
 }
 
-WebRtc_Word32 RtpDumpImpl::Start(const char* fileNameUTF8)
+int32_t RtpDumpImpl::Start(const char* fileNameUTF8)
 {
 
     if (fileNameUTF8 == NULL)
@@ -136,7 +136,7 @@ WebRtc_Word32 RtpDumpImpl::Start(const char* fileNameUTF8)
     return 0;
 }
 
-WebRtc_Word32 RtpDumpImpl::Stop()
+int32_t RtpDumpImpl::Stop()
 {
     CriticalSectionScoped lock(_critSect);
     _file.Flush();
@@ -150,8 +150,7 @@ bool RtpDumpImpl::IsActive() const
     return _file.Open();
 }
 
-WebRtc_Word32 RtpDumpImpl::DumpPacket(const WebRtc_UWord8* packet,
-                                      WebRtc_UWord16 packetLength)
+int32_t RtpDumpImpl::DumpPacket(const uint8_t* packet, uint16_t packetLength)
 {
     CriticalSectionScoped lock(_critSect);
     if (!IsActive())
@@ -174,7 +173,7 @@ WebRtc_Word32 RtpDumpImpl::DumpPacket(const WebRtc_UWord8* packet,
     bool isRTCP = RTCP(packet);
 
     rtpDumpPktHdr_t hdr;
-    WebRtc_UWord32 offset;
+    uint32_t offset;
 
     // Offset is relative to when recording was started.
     offset = GetTimeInMS();
@@ -187,14 +186,14 @@ WebRtc_Word32 RtpDumpImpl::DumpPacket(const WebRtc_UWord8* packet,
     }
     hdr.offset = RtpDumpHtonl(offset);
 
-    hdr.length = RtpDumpHtons((WebRtc_UWord16)(packetLength + sizeof(hdr)));
+    hdr.length = RtpDumpHtons((uint16_t)(packetLength + sizeof(hdr)));
     if (isRTCP)
     {
         hdr.plen = 0;
     }
     else
     {
-        hdr.plen = RtpDumpHtons((WebRtc_UWord16)packetLength);
+        hdr.plen = RtpDumpHtons((uint16_t)packetLength);
     }
 
     if (!_file.Write(&hdr, sizeof(hdr)))
@@ -213,9 +212,9 @@ WebRtc_Word32 RtpDumpImpl::DumpPacket(const WebRtc_UWord8* packet,
     return 0;
 }
 
-bool RtpDumpImpl::RTCP(const WebRtc_UWord8* packet) const
+bool RtpDumpImpl::RTCP(const uint8_t* packet) const
 {
-    const WebRtc_UWord8 payloadType = packet[1];
+    const uint8_t payloadType = packet[1];
     bool is_rtcp = false;
 
     switch(payloadType)
@@ -234,11 +233,11 @@ bool RtpDumpImpl::RTCP(const WebRtc_UWord8* packet) const
 }
 
 // TODO (hellner): why is TickUtil not used here?
-inline WebRtc_UWord32 RtpDumpImpl::GetTimeInMS() const
+inline uint32_t RtpDumpImpl::GetTimeInMS() const
 {
 #if defined(_WIN32)
     return timeGetTime();
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
     struct timeval tv;
     struct timezone tz;
     unsigned long val;
@@ -253,7 +252,7 @@ inline WebRtc_UWord32 RtpDumpImpl::GetTimeInMS() const
 #endif
 }
 
-inline WebRtc_UWord32 RtpDumpImpl::RtpDumpHtonl(WebRtc_UWord32 x) const
+inline uint32_t RtpDumpImpl::RtpDumpHtonl(uint32_t x) const
 {
 #if defined(WEBRTC_BIG_ENDIAN)
     return x;
@@ -267,7 +266,7 @@ inline WebRtc_UWord32 RtpDumpImpl::RtpDumpHtonl(WebRtc_UWord32 x) const
 #endif
 }
 
-inline WebRtc_UWord16 RtpDumpImpl::RtpDumpHtons(WebRtc_UWord16 x) const
+inline uint16_t RtpDumpImpl::RtpDumpHtons(uint16_t x) const
 {
 #if defined(WEBRTC_BIG_ENDIAN)
     return x;

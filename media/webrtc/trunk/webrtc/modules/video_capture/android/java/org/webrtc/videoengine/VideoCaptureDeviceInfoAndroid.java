@@ -88,54 +88,35 @@ public class VideoCaptureDeviceInfoAndroid {
     private int Init() {
         // Populate the deviceList with available cameras and their capabilities.
         Camera camera = null;
-        try{
-            if(android.os.Build.VERSION.SDK_INT > 8) {
-                // From Android 2.3 and onwards
-                for(int i = 0; i < Camera.getNumberOfCameras(); ++i) {
-                    AndroidVideoCaptureDevice newDevice = new AndroidVideoCaptureDevice();
-
-                    Camera.CameraInfo info = new Camera.CameraInfo();
-                    Camera.getCameraInfo(i, info);
-                    newDevice.index = i;
-                    newDevice.orientation=info.orientation;
-                    if(info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                        newDevice.deviceUniqueName =
-                                "Camera " + i +", Facing back, Orientation "+ info.orientation;
-                        Log.d(TAG, "Camera " + i +", Facing back, Orientation "+ info.orientation);
-
-                    }
-                    else {
-                        newDevice.deviceUniqueName =
-                                "Camera " + i +", Facing front, Orientation "+ info.orientation;
-                        newDevice.frontCameraType = FrontFacingCameraType.Android23;
-                        Log.d(TAG, "Camera " + i +", Facing front, Orientation "+ info.orientation);
-                    }
-
-                    camera = Camera.open(i);
-                    Camera.Parameters parameters = camera.getParameters();
-                    AddDeviceInfo(newDevice, parameters);
-                    camera.release();
-                    camera = null;
-                    deviceList.add(newDevice);
-                }
-            } else {
-                camera = Camera.open();
-                Camera.Parameters parameters = camera.getParameters();
+        if(android.os.Build.VERSION.SDK_INT > 8) {
+            // From Android 2.3 and onwards
+            for(int i = 0; i < Camera.getNumberOfCameras(); ++i) {
                 AndroidVideoCaptureDevice newDevice = new AndroidVideoCaptureDevice();
+
+                Camera.CameraInfo info = new Camera.CameraInfo();
+                Camera.getCameraInfo(i, info);
+                newDevice.index = i;
+                newDevice.orientation=info.orientation;
+                if(info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                    newDevice.deviceUniqueName =
+                            "Camera " + i +", Facing back, Orientation "+ info.orientation;
+                    Log.d(TAG, "Camera " + i +", Facing back, Orientation "+ info.orientation);
+
+                }
+                else {
+                    newDevice.deviceUniqueName =
+                            "Camera " + i +", Facing front, Orientation "+ info.orientation;
+                    newDevice.frontCameraType = FrontFacingCameraType.Android23;
+                    Log.d(TAG, "Camera " + i +", Facing front, Orientation "+ info.orientation);
+                }
+
+                camera = Camera.open(i);
+                Camera.Parameters parameters = camera.getParameters();
                 AddDeviceInfo(newDevice, parameters);
-                newDevice.deviceUniqueName = "Camera";
                 camera.release();
                 camera = null;
                 deviceList.add(newDevice);
             }
-        }
-        catch (Exception ex) {
-            Log.e(TAG, "Failed to init VideoCaptureDeviceInfo exception: " +
-                    ex.getMessage());
-            if (camera != null) {
-                camera.release();
-            }
-            return -1;
         }
         VerifyCapabilities();
         return 0;
@@ -148,11 +129,9 @@ public class VideoCaptureDeviceInfoAndroid {
         List<Size> sizes = parameters.getSupportedPreviewSizes();
         List<Integer> frameRates = parameters.getSupportedPreviewFrameRates();
         int maxFPS = 0;
-        if (frameRates != null) {
-            for(Integer frameRate:frameRates) {
-                if(frameRate > maxFPS) {
-                    maxFPS = frameRate;
-                }
+        for(Integer frameRate:frameRates) {
+            if(frameRate > maxFPS) {
+                maxFPS = frameRate;
             }
         }
 
@@ -163,9 +142,8 @@ public class VideoCaptureDeviceInfoAndroid {
             newDevice.captureCapabilies[i].height = s.height;
             newDevice.captureCapabilies[i].width = s.width;
             newDevice.captureCapabilies[i].maxFPS = maxFPS;
-            Log.v(TAG,
-                    "VideoCaptureDeviceInfo " + "maxFPS:" + maxFPS +
-                    " width:" + s.width + " height:" + s.height);
+            Log.v(TAG, "VideoCaptureDeviceInfo " + ", maxFPS: " + maxFPS +
+                ", width: " + s.width + ", height: " + s.height);
         }
     }
 
@@ -201,9 +179,9 @@ public class VideoCaptureDeviceInfoAndroid {
         // even though it reports that it can
         if(android.os.Build.MANUFACTURER.equals("motorola") &&
                 android.os.Build.DEVICE.equals("umts_sholes")) {
-            for(AndroidVideoCaptureDevice device:deviceList) {
-                for(CaptureCapabilityAndroid capability:device.captureCapabilies) {
-                    capability.maxFPS=15;
+            for (AndroidVideoCaptureDevice device : deviceList) {
+                for (CaptureCapabilityAndroid capability : device.captureCapabilies) {
+                    capability.maxFPS = 15;
                 }
             }
         }
@@ -272,7 +250,6 @@ public class VideoCaptureDeviceInfoAndroid {
             Log.d(TAG, "AllocateCamera " + deviceUniqueId);
 
             Camera camera = null;
-            int cameraId = 0;
             AndroidVideoCaptureDevice deviceToUse = null;
             for (AndroidVideoCaptureDevice device: deviceList) {
                 if(device.deviceUniqueName.equals(deviceUniqueId)) {
@@ -287,12 +264,10 @@ public class VideoCaptureDeviceInfoAndroid {
                             break;
                         default:
                             // From Android 2.3 and onwards)
-                            if(android.os.Build.VERSION.SDK_INT>8) {
-                                cameraId = device.index;
-                                camera = Camera.open(device.index);
-                            } else {
-                                camera = Camera.open(); // Default_ camera
-                            }
+                            if(android.os.Build.VERSION.SDK_INT>8)
+                                camera=Camera.open(device.index);
+                            else
+                                camera=Camera.open(); // Default camera
                     }
                 }
             }
@@ -302,11 +277,15 @@ public class VideoCaptureDeviceInfoAndroid {
             }
             Log.v(TAG, "AllocateCamera - creating VideoCaptureAndroid");
 
-            return new VideoCaptureAndroid(id, context, camera, deviceToUse, cameraId);
-
-        }catch (Exception ex) {
-            Log.e(TAG, "AllocateCamera Failed to open camera- ex " +
-                    ex.getLocalizedMessage());
+            return new VideoCaptureAndroid(id, context, camera, deviceToUse);
+        } catch (NoSuchMethodException e) {
+            Log.e(TAG, "AllocateCamera Failed to open camera", e);
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "AllocateCamera Failed to open camera", e);
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "AllocateCamera Failed to open camera", e);
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "AllocateCamera Failed to open camera", e);
         }
         return null;
     }
@@ -324,20 +303,13 @@ public class VideoCaptureDeviceInfoAndroid {
         String cameraId = parameters.get("camera-id");
         if(cameraId != null && cameraId.equals("1")) {
             // This might be a Samsung Galaxy S with a front facing camera.
-            try {
-                parameters.set("camera-id", 2);
-                camera.setParameters(parameters);
-                parameters = camera.getParameters();
-                newDevice.frontCameraType = FrontFacingCameraType.GalaxyS;
-                newDevice.orientation = 0;
-                camera.release();
-                return parameters;
-            }
-            catch (Exception ex) {
-                // Nope - it did not work.
-                Log.e(TAG, "Init Failed to open front camera camera - ex " +
-                        ex.getLocalizedMessage());
-            }
+            parameters.set("camera-id", 2);
+            camera.setParameters(parameters);
+            parameters = camera.getParameters();
+            newDevice.frontCameraType = FrontFacingCameraType.GalaxyS;
+            newDevice.orientation = 0;
+            camera.release();
+            return parameters;
         }
         camera.release();
 

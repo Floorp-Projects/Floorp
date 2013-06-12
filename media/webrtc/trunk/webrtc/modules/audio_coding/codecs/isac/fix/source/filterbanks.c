@@ -92,13 +92,13 @@ void WebRtcIsacfix_HighpassFilterFixDec32(int16_t *io,
                                           int32_t *state)
 {
   int k;
-  WebRtc_Word32 a1 = 0, b1 = 0, c = 0, in = 0;
-  WebRtc_Word32 a2 = 0, b2 = 0;
-  WebRtc_Word32 state0 = state[0];
-  WebRtc_Word32 state1 = state[1];
+  int32_t a1 = 0, b1 = 0, c = 0, in = 0;
+  int32_t a2 = 0, b2 = 0;
+  int32_t state0 = state[0];
+  int32_t state1 = state[1];
 
   for (k=0; k<len; k++) {
-    in = (WebRtc_Word32)io[k];
+    in = (int32_t)io[k];
 
 #ifdef WEBRTC_ARCH_ARM_V7
     {
@@ -134,11 +134,11 @@ void WebRtcIsacfix_HighpassFilterFixDec32(int16_t *io,
     b2 = WEBRTC_SPL_MUL_32_32_RSFT32(coefficient[3], coefficient[2], state1);
 #endif
 
-    c = ((WebRtc_Word32)in) + WEBRTC_SPL_RSHIFT_W32(a1+b1, 7);  // Q0
-    io[k] = (WebRtc_Word16)WebRtcSpl_SatW32ToW16(c);  // Write output as Q0.
+    c = ((int32_t)in) + WEBRTC_SPL_RSHIFT_W32(a1+b1, 7);  // Q0
+    io[k] = (int16_t)WebRtcSpl_SatW32ToW16(c);  // Write output as Q0.
 
-    c = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)in, 2) - a2 - b2;  // In Q2.
-    c = (WebRtc_Word32)WEBRTC_SPL_SAT(536870911, c, -536870912);
+    c = WEBRTC_SPL_LSHIFT_W32((int32_t)in, 2) - a2 - b2;  // In Q2.
+    c = (int32_t)WEBRTC_SPL_SAT(536870911, c, -536870912);
 
     state1 = state0;
     state0 = WEBRTC_SPL_LSHIFT_W32(c, 2);  // Write state as Q4
@@ -148,9 +148,9 @@ void WebRtcIsacfix_HighpassFilterFixDec32(int16_t *io,
 }
 
 
-void WebRtcIsacfix_SplitAndFilter1(WebRtc_Word16 *pin,
-                                   WebRtc_Word16 *LP16,
-                                   WebRtc_Word16 *HP16,
+void WebRtcIsacfix_SplitAndFilter1(int16_t *pin,
+                                   int16_t *LP16,
+                                   int16_t *HP16,
                                    PreFiltBankstr *prefiltdata)
 {
   /* Function WebRtcIsacfix_SplitAndFilter */
@@ -159,10 +159,10 @@ void WebRtcIsacfix_SplitAndFilter1(WebRtc_Word16 *pin,
 
   int k;
 
-  WebRtc_Word16 tempin_ch1[FRAMESAMPLES/2 + QLOOKAHEAD];
-  WebRtc_Word16 tempin_ch2[FRAMESAMPLES/2 + QLOOKAHEAD];
-  WebRtc_Word32 tmpState_ch1[2 * (QORDER-1)]; /* 4 */
-  WebRtc_Word32 tmpState_ch2[2 * (QORDER-1)]; /* 4 */
+  int16_t tempin_ch1[FRAMESAMPLES/2 + QLOOKAHEAD];
+  int16_t tempin_ch2[FRAMESAMPLES/2 + QLOOKAHEAD];
+  int32_t tmpState_ch1[2 * (QORDER-1)]; /* 4 */
+  int32_t tmpState_ch2[2 * (QORDER-1)]; /* 4 */
 
   /* High pass filter */
   WebRtcIsacfix_HighpassFilterFixDec32(pin, FRAMESAMPLES, WebRtcIsacfix_kHpStCoeffInQ30, prefiltdata->HPstates_fix);
@@ -213,13 +213,13 @@ void WebRtcIsacfix_SplitAndFilter1(WebRtc_Word16 *pin,
 
   /* Now Construct low-pass and high-pass signals as combinations of polyphase components */
   for (k=0; k<FRAMESAMPLES/2 + QLOOKAHEAD; k++) {
-    WebRtc_Word32 tmp1, tmp2, tmp3;
-    tmp1 = (WebRtc_Word32)tempin_ch1[k]; // Q0 -> Q0
-    tmp2 = (WebRtc_Word32)tempin_ch2[k]; // Q0 -> Q0
-    tmp3 = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_W32((tmp1 + tmp2), 1);/* low pass signal*/
-    LP16[k] = (WebRtc_Word16)WebRtcSpl_SatW32ToW16(tmp3); /*low pass */
-    tmp3 = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_W32((tmp1 - tmp2), 1);/* high pass signal*/
-    HP16[k] = (WebRtc_Word16)WebRtcSpl_SatW32ToW16(tmp3); /*high pass */
+    int32_t tmp1, tmp2, tmp3;
+    tmp1 = (int32_t)tempin_ch1[k]; // Q0 -> Q0
+    tmp2 = (int32_t)tempin_ch2[k]; // Q0 -> Q0
+    tmp3 = (int32_t)WEBRTC_SPL_RSHIFT_W32((tmp1 + tmp2), 1);/* low pass signal*/
+    LP16[k] = (int16_t)WebRtcSpl_SatW32ToW16(tmp3); /*low pass */
+    tmp3 = (int32_t)WEBRTC_SPL_RSHIFT_W32((tmp1 - tmp2), 1);/* high pass signal*/
+    HP16[k] = (int16_t)WebRtcSpl_SatW32ToW16(tmp3); /*high pass */
   }
 
 }/*end of WebRtcIsacfix_SplitAndFilter */
@@ -228,9 +228,9 @@ void WebRtcIsacfix_SplitAndFilter1(WebRtc_Word16 *pin,
 #ifdef WEBRTC_ISAC_FIX_NB_CALLS_ENABLED
 
 /* Without lookahead */
-void WebRtcIsacfix_SplitAndFilter2(WebRtc_Word16 *pin,
-                                   WebRtc_Word16 *LP16,
-                                   WebRtc_Word16 *HP16,
+void WebRtcIsacfix_SplitAndFilter2(int16_t *pin,
+                                   int16_t *LP16,
+                                   int16_t *HP16,
                                    PreFiltBankstr *prefiltdata)
 {
   /* Function WebRtcIsacfix_SplitAndFilter2 */
@@ -239,8 +239,8 @@ void WebRtcIsacfix_SplitAndFilter2(WebRtc_Word16 *pin,
 
   int k;
 
-  WebRtc_Word16 tempin_ch1[FRAMESAMPLES/2];
-  WebRtc_Word16 tempin_ch2[FRAMESAMPLES/2];
+  int16_t tempin_ch1[FRAMESAMPLES/2];
+  int16_t tempin_ch2[FRAMESAMPLES/2];
 
 
   /* High pass filter */
@@ -272,13 +272,13 @@ void WebRtcIsacfix_SplitAndFilter2(WebRtc_Word16 *pin,
 
   /* Now Construct low-pass and high-pass signals as combinations of polyphase components */
   for (k=0; k<FRAMESAMPLES/2; k++) {
-    WebRtc_Word32 tmp1, tmp2, tmp3;
-    tmp1 = (WebRtc_Word32)tempin_ch1[k]; // Q0 -> Q0
-    tmp2 = (WebRtc_Word32)tempin_ch2[k]; // Q0 -> Q0
-    tmp3 = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_W32((tmp1 + tmp2), 1);/* low pass signal*/
-    LP16[k] = (WebRtc_Word16)WebRtcSpl_SatW32ToW16(tmp3); /*low pass */
-    tmp3 = (WebRtc_Word32)WEBRTC_SPL_RSHIFT_W32((tmp1 - tmp2), 1);/* high pass signal*/
-    HP16[k] = (WebRtc_Word16)WebRtcSpl_SatW32ToW16(tmp3); /*high pass */
+    int32_t tmp1, tmp2, tmp3;
+    tmp1 = (int32_t)tempin_ch1[k]; // Q0 -> Q0
+    tmp2 = (int32_t)tempin_ch2[k]; // Q0 -> Q0
+    tmp3 = (int32_t)WEBRTC_SPL_RSHIFT_W32((tmp1 + tmp2), 1);/* low pass signal*/
+    LP16[k] = (int16_t)WebRtcSpl_SatW32ToW16(tmp3); /*low pass */
+    tmp3 = (int32_t)WEBRTC_SPL_RSHIFT_W32((tmp1 - tmp2), 1);/* high pass signal*/
+    HP16[k] = (int16_t)WebRtcSpl_SatW32ToW16(tmp3); /*high pass */
   }
 
 }/*end of WebRtcIsacfix_SplitAndFilter */
@@ -308,13 +308,13 @@ void WebRtcIsacfix_SplitAndFilter2(WebRtc_Word16 *pin,
    high-pass signals.
    postfiltdata: the input data structure containing the filterbank
    states is updated for the next decoding iteration */
-void WebRtcIsacfix_FilterAndCombine1(WebRtc_Word16 *tempin_ch1,
-                                     WebRtc_Word16 *tempin_ch2,
-                                     WebRtc_Word16 *out16,
+void WebRtcIsacfix_FilterAndCombine1(int16_t *tempin_ch1,
+                                     int16_t *tempin_ch2,
+                                     int16_t *out16,
                                      PostFiltBankstr *postfiltdata)
 {
   int k;
-  WebRtc_Word16 in[FRAMESAMPLES];
+  int16_t in[FRAMESAMPLES];
 
   /* all-pass filter the new upper and lower channel signal.
      For upper channel, use the all-pass filter factors that were used as a
@@ -368,14 +368,14 @@ void WebRtcIsacfix_FilterAndCombine1(WebRtc_Word16 *tempin_ch1,
    high-pass signals.
    postfiltdata: the input data structure containing the filterbank
    states is updated for the next decoding iteration */
-void WebRtcIsacfix_FilterAndCombine2(WebRtc_Word16 *tempin_ch1,
-                                     WebRtc_Word16 *tempin_ch2,
-                                     WebRtc_Word16 *out16,
+void WebRtcIsacfix_FilterAndCombine2(int16_t *tempin_ch1,
+                                     int16_t *tempin_ch2,
+                                     int16_t *out16,
                                      PostFiltBankstr *postfiltdata,
-                                     WebRtc_Word16 len)
+                                     int16_t len)
 {
   int k;
-  WebRtc_Word16 in[FRAMESAMPLES];
+  int16_t in[FRAMESAMPLES];
 
   /* all-pass filter the new upper and lower channel signal.
      For upper channel, use the all-pass filter factors that were used as a

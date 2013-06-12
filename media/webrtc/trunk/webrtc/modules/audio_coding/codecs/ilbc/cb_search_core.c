@@ -20,29 +20,29 @@
 #include "constants.h"
 
 void WebRtcIlbcfix_CbSearchCore(
-    WebRtc_Word32 *cDot,    /* (i) Cross Correlation */
-    WebRtc_Word16 range,    /* (i) Search range */
-    WebRtc_Word16 stage,    /* (i) Stage of this search */
-    WebRtc_Word16 *inverseEnergy,  /* (i) Inversed energy */
-    WebRtc_Word16 *inverseEnergyShift, /* (i) Shifts of inversed energy
+    int32_t *cDot,    /* (i) Cross Correlation */
+    int16_t range,    /* (i) Search range */
+    int16_t stage,    /* (i) Stage of this search */
+    int16_t *inverseEnergy,  /* (i) Inversed energy */
+    int16_t *inverseEnergyShift, /* (i) Shifts of inversed energy
                                            with the offset 2*16-29 */
-    WebRtc_Word32 *Crit,    /* (o) The criteria */
-    WebRtc_Word16 *bestIndex,   /* (o) Index that corresponds to
+    int32_t *Crit,    /* (o) The criteria */
+    int16_t *bestIndex,   /* (o) Index that corresponds to
                                                    maximum criteria (in this
                                                    vector) */
-    WebRtc_Word32 *bestCrit,   /* (o) Value of critera for the
+    int32_t *bestCrit,   /* (o) Value of critera for the
                                                    chosen index */
-    WebRtc_Word16 *bestCritSh)   /* (o) The domain of the chosen
+    int16_t *bestCritSh)   /* (o) The domain of the chosen
                                                    criteria */
 {
-  WebRtc_Word32 maxW32, tmp32;
-  WebRtc_Word16 max, sh, tmp16;
+  int32_t maxW32, tmp32;
+  int16_t max, sh, tmp16;
   int i;
-  WebRtc_Word32 *cDotPtr;
-  WebRtc_Word16 cDotSqW16;
-  WebRtc_Word16 *inverseEnergyPtr;
-  WebRtc_Word32 *critPtr;
-  WebRtc_Word16 *inverseEnergyShiftPtr;
+  int32_t *cDotPtr;
+  int16_t cDotSqW16;
+  int16_t *inverseEnergyPtr;
+  int32_t *critPtr;
+  int16_t *inverseEnergyShiftPtr;
 
   /* Don't allow negative values for stage 0 */
   if (stage==0) {
@@ -53,10 +53,10 @@ void WebRtcIlbcfix_CbSearchCore(
     }
   }
 
-  /* Normalize cDot to WebRtc_Word16, calculate the square of cDot and store the upper WebRtc_Word16 */
+  /* Normalize cDot to int16_t, calculate the square of cDot and store the upper int16_t */
   maxW32 = WebRtcSpl_MaxAbsValueW32(cDot, range);
 
-  sh = (WebRtc_Word16)WebRtcSpl_NormW32(maxW32);
+  sh = (int16_t)WebRtcSpl_NormW32(maxW32);
   cDotPtr = cDot;
   inverseEnergyPtr = inverseEnergy;
   critPtr = Crit;
@@ -64,10 +64,10 @@ void WebRtcIlbcfix_CbSearchCore(
   max=WEBRTC_SPL_WORD16_MIN;
 
   for (i=0;i<range;i++) {
-    /* Calculate cDot*cDot and put the result in a WebRtc_Word16 */
+    /* Calculate cDot*cDot and put the result in a int16_t */
     tmp32 = WEBRTC_SPL_LSHIFT_W32(*cDotPtr,sh);
-    tmp16 = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmp32,16);
-    cDotSqW16 = (WebRtc_Word16)(((WebRtc_Word32)(tmp16)*(tmp16))>>16);
+    tmp16 = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp32,16);
+    cDotSqW16 = (int16_t)(((int32_t)(tmp16)*(tmp16))>>16);
 
     /* Calculate the criteria (cDot*cDot/energy) */
     *critPtr=WEBRTC_SPL_MUL_16_16(cDotSqW16, (*inverseEnergyPtr));

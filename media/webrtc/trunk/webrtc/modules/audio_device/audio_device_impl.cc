@@ -24,10 +24,8 @@
  #endif
 #elif defined(WEBRTC_ANDROID_OPENSLES)
     #include <stdlib.h>
-    #include <dlfcn.h>
     #include "audio_device_utility_android.h"
     #include "audio_device_opensles_android.h"
-    #include "audio_device_jni_android.h"
 #elif defined(WEBRTC_ANDROID)
     #include <stdlib.h>
     #include "audio_device_utility_android.h"
@@ -70,7 +68,7 @@ namespace webrtc
 {
 
 AudioDeviceModule* CreateAudioDeviceModule(
-    WebRtc_Word32 id, AudioDeviceModule::AudioLayer audioLayer) {
+    int32_t id, AudioDeviceModule::AudioLayer audioLayer) {
   return AudioDeviceModuleImpl::Create(id, audioLayer);
 }
 
@@ -83,7 +81,7 @@ AudioDeviceModule* CreateAudioDeviceModule(
 //  AudioDeviceModule::Create()
 // ----------------------------------------------------------------------------
 
-AudioDeviceModule* AudioDeviceModuleImpl::Create(const WebRtc_Word32 id,
+AudioDeviceModule* AudioDeviceModuleImpl::Create(const int32_t id,
                                                  const AudioLayer audioLayer)
 {
 
@@ -126,7 +124,7 @@ AudioDeviceModule* AudioDeviceModuleImpl::Create(const WebRtc_Word32 id,
 //  AudioDeviceModuleImpl - ctor
 // ----------------------------------------------------------------------------
 
-AudioDeviceModuleImpl::AudioDeviceModuleImpl(const WebRtc_Word32 id, const AudioLayer audioLayer) :
+AudioDeviceModuleImpl::AudioDeviceModuleImpl(const int32_t id, const AudioLayer audioLayer) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _critSectEventCb(*CriticalSectionWrapper::CreateCriticalSection()),
     _critSectAudioCb(*CriticalSectionWrapper::CreateCriticalSection()),
@@ -147,7 +145,7 @@ AudioDeviceModuleImpl::AudioDeviceModuleImpl(const WebRtc_Word32 id, const Audio
 //  CheckPlatform
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::CheckPlatform()
+int32_t AudioDeviceModuleImpl::CheckPlatform()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -190,7 +188,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::CheckPlatform()
 //  CreatePlatformSpecificObjects
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
+int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -261,18 +259,12 @@ WebRtc_Word32 AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
     // Create the *Android OpenSLES* implementation of the Audio Device
     //
 #if defined(WEBRTC_ANDROID_OPENSLES)
-    // Check if the OpenSLES library is available before going further.
-    void* opensles_lib = dlopen("libOpenSLES.so", RTLD_LAZY);
-    if (opensles_lib) {
-        // That worked, close for now and proceed normally.
-        dlclose(opensles_lib);
-        if (audioLayer == kPlatformDefaultAudio)
-        {
-            // Create *Android OpenSLES Audio* implementation
-            ptrAudioDevice = new AudioDeviceAndroidOpenSLES(Id());
-            WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                         "Android OpenSLES Audio APIs will be utilized");
-        }
+    if (audioLayer == kPlatformDefaultAudio)
+    {
+        // Create *Android OpenELSE Audio* implementation
+        ptrAudioDevice = new AudioDeviceAndroidOpenSLES(Id());
+        WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
+                     "Android OpenSLES Audio APIs will be utilized");
     }
 
     if (ptrAudioDevice != NULL)
@@ -280,24 +272,24 @@ WebRtc_Word32 AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
         // Create the Android implementation of the Device Utility.
         ptrAudioDeviceUtility = new AudioDeviceUtilityAndroid(Id());
     }
-#endif
-#if defined(WEBRTC_ANDROID_OPENSLES) or defined(WEBRTC_ANDROID)
-    // Fall back to this case if on Android 2.2/OpenSLES not available.
-    if (ptrAudioDevice == NULL) {
-        // Create the *Android Java* implementation of the Audio Device
-        if (audioLayer == kPlatformDefaultAudio)
-        {
-            // Create *Android JNI Audio* implementation
-            ptrAudioDevice = new AudioDeviceAndroidJni(Id());
-            WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "Android JNI Audio APIs will be utilized");
-        }
+    // END #if defined(WEBRTC_ANDROID_OPENSLES)
 
-        if (ptrAudioDevice != NULL)
-        {
-            // Create the Android implementation of the Device Utility.
-            ptrAudioDeviceUtility = new AudioDeviceUtilityAndroid(Id());
-        }
+    // Create the *Android Java* implementation of the Audio Device
+    //
+#elif defined(WEBRTC_ANDROID)
+    if (audioLayer == kPlatformDefaultAudio)
+    {
+        // Create *Android JNI Audio* implementation
+        ptrAudioDevice = new AudioDeviceAndroidJni(Id());
+        WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "Android JNI Audio APIs will be utilized");
     }
+
+    if (ptrAudioDevice != NULL)
+    {
+        // Create the Android implementation of the Device Utility.
+        ptrAudioDeviceUtility = new AudioDeviceUtilityAndroid(Id());
+    }
+    // END #if defined(WEBRTC_ANDROID)
 
     // Create the *Linux* implementation of the Audio Device
     //
@@ -428,7 +420,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
 //  number of channels in this function call.
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::AttachAudioBuffer()
+int32_t AudioDeviceModuleImpl::AttachAudioBuffer()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", __FUNCTION__);
 
@@ -470,7 +462,7 @@ AudioDeviceModuleImpl::~AudioDeviceModuleImpl()
 //  Module::ChangeUniqueId
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::ChangeUniqueId(const WebRtc_Word32 id)
+int32_t AudioDeviceModuleImpl::ChangeUniqueId(const int32_t id)
 {
     _id = id;
     return 0;
@@ -483,10 +475,10 @@ WebRtc_Word32 AudioDeviceModuleImpl::ChangeUniqueId(const WebRtc_Word32 id)
 //  to call Process().
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::TimeUntilNextProcess()
+int32_t AudioDeviceModuleImpl::TimeUntilNextProcess()
 {
-    WebRtc_UWord32 now = AudioDeviceUtility::GetTimeInMS();
-    WebRtc_Word32 deltaProcess = kAdmMaxIdleTimeProcess - (now - _lastProcessTime);
+    uint32_t now = AudioDeviceUtility::GetTimeInMS();
+    int32_t deltaProcess = kAdmMaxIdleTimeProcess - (now - _lastProcessTime);
     return (deltaProcess);
 }
 
@@ -497,7 +489,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::TimeUntilNextProcess()
 //  new reports exists.
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::Process()
+int32_t AudioDeviceModuleImpl::Process()
 {
 
     _lastProcessTime = AudioDeviceUtility::GetTimeInMS();
@@ -561,7 +553,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::Process()
 //  ActiveAudioLayer
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::ActiveAudioLayer(AudioLayer* audioLayer) const
+int32_t AudioDeviceModuleImpl::ActiveAudioLayer(AudioLayer* audioLayer) const
 {
 
     AudioLayer activeAudio;
@@ -606,7 +598,7 @@ AudioDeviceModule::ErrorCode AudioDeviceModuleImpl::LastError() const
 //  Init
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::Init()
+int32_t AudioDeviceModuleImpl::Init()
 {
 
     if (_initialized)
@@ -633,7 +625,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::Init()
 //  Terminate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::Terminate()
+int32_t AudioDeviceModuleImpl::Terminate()
 {
 
     if (!_initialized)
@@ -663,7 +655,7 @@ bool AudioDeviceModuleImpl::Initialized() const
 //  SpeakerIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SpeakerIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::SpeakerIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -684,7 +676,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SpeakerIsAvailable(bool* available)
 //  InitSpeaker
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::InitSpeaker()
+int32_t AudioDeviceModuleImpl::InitSpeaker()
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->InitSpeaker());
@@ -694,7 +686,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::InitSpeaker()
 //  MicrophoneIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::MicrophoneIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -715,7 +707,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneIsAvailable(bool* available)
 //  InitMicrophone
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::InitMicrophone()
+int32_t AudioDeviceModuleImpl::InitMicrophone()
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->InitMicrophone());
@@ -725,7 +717,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::InitMicrophone()
 //  SpeakerVolumeIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SpeakerVolumeIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::SpeakerVolumeIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -746,7 +738,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SpeakerVolumeIsAvailable(bool* available)
 //  SetSpeakerVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetSpeakerVolume(WebRtc_UWord32 volume)
+int32_t AudioDeviceModuleImpl::SetSpeakerVolume(uint32_t volume)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetSpeakerVolume(volume));
@@ -756,11 +748,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetSpeakerVolume(WebRtc_UWord32 volume)
 //  SpeakerVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SpeakerVolume(WebRtc_UWord32* volume) const
+int32_t AudioDeviceModuleImpl::SpeakerVolume(uint32_t* volume) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord32 level(0);
+    uint32_t level(0);
 
     if (_ptrAudioDevice->SpeakerVolume(level) == -1)
     {
@@ -777,7 +769,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SpeakerVolume(WebRtc_UWord32* volume) const
 //  SetWaveOutVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetWaveOutVolume(WebRtc_UWord16 volumeLeft, WebRtc_UWord16 volumeRight)
+int32_t AudioDeviceModuleImpl::SetWaveOutVolume(uint16_t volumeLeft, uint16_t volumeRight)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetWaveOutVolume(volumeLeft, volumeRight));
@@ -787,12 +779,12 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetWaveOutVolume(WebRtc_UWord16 volumeLeft,
 //  WaveOutVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::WaveOutVolume(WebRtc_UWord16* volumeLeft, WebRtc_UWord16* volumeRight) const
+int32_t AudioDeviceModuleImpl::WaveOutVolume(uint16_t* volumeLeft, uint16_t* volumeRight) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 volLeft(0);
-    WebRtc_UWord16 volRight(0);
+    uint16_t volLeft(0);
+    uint16_t volRight(0);
 
     if (_ptrAudioDevice->WaveOutVolume(volLeft, volRight) == -1)
     {
@@ -840,11 +832,11 @@ bool AudioDeviceModuleImpl::MicrophoneIsInitialized() const
 //  MaxSpeakerVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MaxSpeakerVolume(WebRtc_UWord32* maxVolume) const
+int32_t AudioDeviceModuleImpl::MaxSpeakerVolume(uint32_t* maxVolume) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord32 maxVol(0);
+    uint32_t maxVol(0);
 
     if (_ptrAudioDevice->MaxSpeakerVolume(maxVol) == -1)
     {
@@ -861,11 +853,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::MaxSpeakerVolume(WebRtc_UWord32* maxVolume)
 //  MinSpeakerVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MinSpeakerVolume(WebRtc_UWord32* minVolume) const
+int32_t AudioDeviceModuleImpl::MinSpeakerVolume(uint32_t* minVolume) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord32 minVol(0);
+    uint32_t minVol(0);
 
     if (_ptrAudioDevice->MinSpeakerVolume(minVol) == -1)
     {
@@ -882,11 +874,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::MinSpeakerVolume(WebRtc_UWord32* minVolume)
 //  SpeakerVolumeStepSize
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SpeakerVolumeStepSize(WebRtc_UWord16* stepSize) const
+int32_t AudioDeviceModuleImpl::SpeakerVolumeStepSize(uint16_t* stepSize) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 delta(0);
+    uint16_t delta(0);
 
     if (_ptrAudioDevice->SpeakerVolumeStepSize(delta) == -1)
     {
@@ -904,7 +896,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SpeakerVolumeStepSize(WebRtc_UWord16* stepS
 //  SpeakerMuteIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SpeakerMuteIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::SpeakerMuteIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -925,7 +917,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SpeakerMuteIsAvailable(bool* available)
 //  SetSpeakerMute
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetSpeakerMute(bool enable)
+int32_t AudioDeviceModuleImpl::SetSpeakerMute(bool enable)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetSpeakerMute(enable));
@@ -935,7 +927,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetSpeakerMute(bool enable)
 //  SpeakerMute
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SpeakerMute(bool* enabled) const
+int32_t AudioDeviceModuleImpl::SpeakerMute(bool* enabled) const
 {
     CHECK_INITIALIZED();
 
@@ -956,7 +948,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SpeakerMute(bool* enabled) const
 //  MicrophoneMuteIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneMuteIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::MicrophoneMuteIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -977,7 +969,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneMuteIsAvailable(bool* available)
 //  SetMicrophoneMute
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetMicrophoneMute(bool enable)
+int32_t AudioDeviceModuleImpl::SetMicrophoneMute(bool enable)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetMicrophoneMute(enable));
@@ -987,7 +979,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetMicrophoneMute(bool enable)
 //  MicrophoneMute
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneMute(bool* enabled) const
+int32_t AudioDeviceModuleImpl::MicrophoneMute(bool* enabled) const
 {
     CHECK_INITIALIZED();
 
@@ -1008,7 +1000,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneMute(bool* enabled) const
 //  MicrophoneBoostIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneBoostIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::MicrophoneBoostIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -1029,7 +1021,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneBoostIsAvailable(bool* available)
 //  SetMicrophoneBoost
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetMicrophoneBoost(bool enable)
+int32_t AudioDeviceModuleImpl::SetMicrophoneBoost(bool enable)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetMicrophoneBoost(enable));
@@ -1039,7 +1031,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetMicrophoneBoost(bool enable)
 //  MicrophoneBoost
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneBoost(bool* enabled) const
+int32_t AudioDeviceModuleImpl::MicrophoneBoost(bool* enabled) const
 {
     CHECK_INITIALIZED();
 
@@ -1060,7 +1052,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneBoost(bool* enabled) const
 //  MicrophoneVolumeIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneVolumeIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::MicrophoneVolumeIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -1081,7 +1073,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneVolumeIsAvailable(bool* available
 //  SetMicrophoneVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetMicrophoneVolume(WebRtc_UWord32 volume)
+int32_t AudioDeviceModuleImpl::SetMicrophoneVolume(uint32_t volume)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetMicrophoneVolume(volume));
@@ -1091,12 +1083,12 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetMicrophoneVolume(WebRtc_UWord32 volume)
 //  MicrophoneVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneVolume(WebRtc_UWord32* volume) const
+int32_t AudioDeviceModuleImpl::MicrophoneVolume(uint32_t* volume) const
 {
     WEBRTC_TRACE(kTraceStream, kTraceAudioDevice, _id, "%s", __FUNCTION__);
     CHECK_INITIALIZED();
 
-    WebRtc_UWord32 level(0);
+    uint32_t level(0);
 
     if (_ptrAudioDevice->MicrophoneVolume(level) == -1)
     {
@@ -1113,7 +1105,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneVolume(WebRtc_UWord32* volume) co
 //  StereoRecordingIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StereoRecordingIsAvailable(bool* available) const
+int32_t AudioDeviceModuleImpl::StereoRecordingIsAvailable(bool* available) const
 {
     CHECK_INITIALIZED();
 
@@ -1134,7 +1126,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StereoRecordingIsAvailable(bool* available)
 //  SetStereoRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetStereoRecording(bool enable)
+int32_t AudioDeviceModuleImpl::SetStereoRecording(bool enable)
 {
     CHECK_INITIALIZED();
 
@@ -1150,7 +1142,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetStereoRecording(bool enable)
         return -1;
     }
 
-    WebRtc_Word8 nChannels(1);
+    int8_t nChannels(1);
     if (enable)
     {
         nChannels = 2;
@@ -1164,7 +1156,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetStereoRecording(bool enable)
 //  StereoRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StereoRecording(bool* enabled) const
+int32_t AudioDeviceModuleImpl::StereoRecording(bool* enabled) const
 {
     CHECK_INITIALIZED();
 
@@ -1185,7 +1177,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StereoRecording(bool* enabled) const
 //  SetRecordingChannel
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingChannel(const ChannelType channel)
+int32_t AudioDeviceModuleImpl::SetRecordingChannel(const ChannelType channel)
 {
     if (channel == kChannelBoth)
     {
@@ -1213,7 +1205,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingChannel(const ChannelType chann
 //  RecordingChannel
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::RecordingChannel(ChannelType* channel) const
+int32_t AudioDeviceModuleImpl::RecordingChannel(ChannelType* channel) const
 {
     CHECK_INITIALIZED();
 
@@ -1243,7 +1235,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::RecordingChannel(ChannelType* channel) cons
 //  StereoPlayoutIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StereoPlayoutIsAvailable(bool* available) const
+int32_t AudioDeviceModuleImpl::StereoPlayoutIsAvailable(bool* available) const
 {
     CHECK_INITIALIZED();
 
@@ -1264,7 +1256,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StereoPlayoutIsAvailable(bool* available) c
 //  SetStereoPlayout
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetStereoPlayout(bool enable)
+int32_t AudioDeviceModuleImpl::SetStereoPlayout(bool enable)
 {
     CHECK_INITIALIZED();
 
@@ -1280,7 +1272,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetStereoPlayout(bool enable)
         return -1;
     }
 
-    WebRtc_Word8 nChannels(1);
+    int8_t nChannels(1);
     if (enable)
     {
         nChannels = 2;
@@ -1294,7 +1286,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetStereoPlayout(bool enable)
 //  StereoPlayout
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StereoPlayout(bool* enabled) const
+int32_t AudioDeviceModuleImpl::StereoPlayout(bool* enabled) const
 {
     CHECK_INITIALIZED();
 
@@ -1315,7 +1307,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StereoPlayout(bool* enabled) const
 //  SetAGC
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetAGC(bool enable)
+int32_t AudioDeviceModuleImpl::SetAGC(bool enable)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetAGC(enable));
@@ -1335,7 +1327,7 @@ bool AudioDeviceModuleImpl::AGC() const
 //  PlayoutIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::PlayoutIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::PlayoutIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -1356,7 +1348,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::PlayoutIsAvailable(bool* available)
 //  RecordingIsAvailable
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::RecordingIsAvailable(bool* available)
+int32_t AudioDeviceModuleImpl::RecordingIsAvailable(bool* available)
 {
     CHECK_INITIALIZED();
 
@@ -1377,12 +1369,12 @@ WebRtc_Word32 AudioDeviceModuleImpl::RecordingIsAvailable(bool* available)
 //  MaxMicrophoneVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MaxMicrophoneVolume(WebRtc_UWord32* maxVolume) const
+int32_t AudioDeviceModuleImpl::MaxMicrophoneVolume(uint32_t* maxVolume) const
 {
     WEBRTC_TRACE(kTraceStream, kTraceAudioDevice, _id, "%s", __FUNCTION__);
     CHECK_INITIALIZED();
 
-    WebRtc_UWord32 maxVol(0);
+    uint32_t maxVol(0);
 
     if (_ptrAudioDevice->MaxMicrophoneVolume(maxVol) == -1)
     {
@@ -1399,11 +1391,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::MaxMicrophoneVolume(WebRtc_UWord32* maxVolu
 //  MinMicrophoneVolume
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MinMicrophoneVolume(WebRtc_UWord32* minVolume) const
+int32_t AudioDeviceModuleImpl::MinMicrophoneVolume(uint32_t* minVolume) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord32 minVol(0);
+    uint32_t minVol(0);
 
     if (_ptrAudioDevice->MinMicrophoneVolume(minVol) == -1)
     {
@@ -1420,11 +1412,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::MinMicrophoneVolume(WebRtc_UWord32* minVolu
 //  MicrophoneVolumeStepSize
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneVolumeStepSize(WebRtc_UWord16* stepSize) const
+int32_t AudioDeviceModuleImpl::MicrophoneVolumeStepSize(uint16_t* stepSize) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 delta(0);
+    uint16_t delta(0);
 
     if (_ptrAudioDevice->MicrophoneVolumeStepSize(delta) == -1)
     {
@@ -1441,21 +1433,21 @@ WebRtc_Word32 AudioDeviceModuleImpl::MicrophoneVolumeStepSize(WebRtc_UWord16* st
 //  PlayoutDevices
 // ----------------------------------------------------------------------------
 
-WebRtc_Word16 AudioDeviceModuleImpl::PlayoutDevices()
+int16_t AudioDeviceModuleImpl::PlayoutDevices()
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 nPlayoutDevices = _ptrAudioDevice->PlayoutDevices();
+    uint16_t nPlayoutDevices = _ptrAudioDevice->PlayoutDevices();
 
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id, "output: #playout devices=%d", nPlayoutDevices);
-    return ((WebRtc_Word16)(nPlayoutDevices));
+    return ((int16_t)(nPlayoutDevices));
 }
 
 // ----------------------------------------------------------------------------
 //  SetPlayoutDevice I (II)
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutDevice(WebRtc_UWord16 index)
+int32_t AudioDeviceModuleImpl::SetPlayoutDevice(uint16_t index)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetPlayoutDevice(index));
@@ -1465,7 +1457,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutDevice(WebRtc_UWord16 index)
 //  SetPlayoutDevice II (II)
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutDevice(WindowsDeviceType device)
+int32_t AudioDeviceModuleImpl::SetPlayoutDevice(WindowsDeviceType device)
 {
     if (device == kDefaultDevice)
     {
@@ -1482,8 +1474,8 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutDevice(WindowsDeviceType device)
 //  PlayoutDeviceName
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::PlayoutDeviceName(
-    WebRtc_UWord16 index,
+int32_t AudioDeviceModuleImpl::PlayoutDeviceName(
+    uint16_t index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize])
 {
@@ -1516,8 +1508,8 @@ WebRtc_Word32 AudioDeviceModuleImpl::PlayoutDeviceName(
 //  RecordingDeviceName
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::RecordingDeviceName(
-    WebRtc_UWord16 index,
+int32_t AudioDeviceModuleImpl::RecordingDeviceName(
+    uint16_t index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize])
 {
@@ -1550,22 +1542,22 @@ WebRtc_Word32 AudioDeviceModuleImpl::RecordingDeviceName(
 //  RecordingDevices
 // ----------------------------------------------------------------------------
 
-WebRtc_Word16 AudioDeviceModuleImpl::RecordingDevices()
+int16_t AudioDeviceModuleImpl::RecordingDevices()
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 nRecordingDevices = _ptrAudioDevice->RecordingDevices();
+    uint16_t nRecordingDevices = _ptrAudioDevice->RecordingDevices();
 
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
                  "output: #recording devices=%d", nRecordingDevices);
-    return ((WebRtc_Word16)nRecordingDevices);
+    return ((int16_t)nRecordingDevices);
 }
 
 // ----------------------------------------------------------------------------
 //  SetRecordingDevice I (II)
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingDevice(WebRtc_UWord16 index)
+int32_t AudioDeviceModuleImpl::SetRecordingDevice(uint16_t index)
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->SetRecordingDevice(index));
@@ -1575,7 +1567,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingDevice(WebRtc_UWord16 index)
 //  SetRecordingDevice II (II)
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingDevice(WindowsDeviceType device)
+int32_t AudioDeviceModuleImpl::SetRecordingDevice(WindowsDeviceType device)
 {
     if (device == kDefaultDevice)
     {
@@ -1592,7 +1584,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingDevice(WindowsDeviceType device
 //  InitPlayout
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::InitPlayout()
+int32_t AudioDeviceModuleImpl::InitPlayout()
 {
     CHECK_INITIALIZED();
     _audioDeviceBuffer.InitPlayout();
@@ -1603,7 +1595,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::InitPlayout()
 //  InitRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::InitRecording()
+int32_t AudioDeviceModuleImpl::InitRecording()
 {
     CHECK_INITIALIZED();
     _audioDeviceBuffer.InitRecording();
@@ -1634,7 +1626,7 @@ bool AudioDeviceModuleImpl::RecordingIsInitialized() const
 //  StartPlayout
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StartPlayout()
+int32_t AudioDeviceModuleImpl::StartPlayout()
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->StartPlayout());
@@ -1644,7 +1636,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StartPlayout()
 //  StopPlayout
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StopPlayout()
+int32_t AudioDeviceModuleImpl::StopPlayout()
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->StopPlayout());
@@ -1664,7 +1656,7 @@ bool AudioDeviceModuleImpl::Playing() const
 //  StartRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StartRecording()
+int32_t AudioDeviceModuleImpl::StartRecording()
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->StartRecording());
@@ -1673,7 +1665,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StartRecording()
 //  StopRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StopRecording()
+int32_t AudioDeviceModuleImpl::StopRecording()
 {
     CHECK_INITIALIZED();
     return (_ptrAudioDevice->StopRecording());
@@ -1693,7 +1685,7 @@ bool AudioDeviceModuleImpl::Recording() const
 //  RegisterEventObserver
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::RegisterEventObserver(AudioDeviceObserver* eventCallback)
+int32_t AudioDeviceModuleImpl::RegisterEventObserver(AudioDeviceObserver* eventCallback)
 {
 
     CriticalSectionScoped lock(&_critSectEventCb);
@@ -1706,7 +1698,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::RegisterEventObserver(AudioDeviceObserver* 
 //  RegisterAudioCallback
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::RegisterAudioCallback(AudioTransport* audioCallback)
+int32_t AudioDeviceModuleImpl::RegisterAudioCallback(AudioTransport* audioCallback)
 {
 
     CriticalSectionScoped lock(&_critSectAudioCb);
@@ -1719,7 +1711,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::RegisterAudioCallback(AudioTransport* audio
 //  StartRawInputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StartRawInputFileRecording(
+int32_t AudioDeviceModuleImpl::StartRawInputFileRecording(
     const char pcmFileNameUTF8[kAdmMaxFileNameSize])
 {
     CHECK_INITIALIZED();
@@ -1736,7 +1728,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StartRawInputFileRecording(
 //  StopRawInputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StopRawInputFileRecording()
+int32_t AudioDeviceModuleImpl::StopRawInputFileRecording()
 {
     CHECK_INITIALIZED();
 
@@ -1747,7 +1739,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StopRawInputFileRecording()
 //  StartRawOutputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StartRawOutputFileRecording(
+int32_t AudioDeviceModuleImpl::StartRawOutputFileRecording(
     const char pcmFileNameUTF8[kAdmMaxFileNameSize])
 {
     CHECK_INITIALIZED();
@@ -1764,7 +1756,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StartRawOutputFileRecording(
 //  StopRawOutputFileRecording
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::StopRawOutputFileRecording()
+int32_t AudioDeviceModuleImpl::StopRawOutputFileRecording()
 {
     CHECK_INITIALIZED();
 
@@ -1777,7 +1769,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::StopRawOutputFileRecording()
 //  SetPlayoutBuffer
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutBuffer(const BufferType type, WebRtc_UWord16 sizeMS)
+int32_t AudioDeviceModuleImpl::SetPlayoutBuffer(const BufferType type, uint16_t sizeMS)
 {
     CHECK_INITIALIZED();
 
@@ -1787,7 +1779,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutBuffer(const BufferType type, Web
         return -1;
     }
 
-    WebRtc_Word32 ret(0);
+    int32_t ret(0);
 
     if (kFixedBufferSize == type)
     {
@@ -1810,12 +1802,12 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutBuffer(const BufferType type, Web
 //  PlayoutBuffer
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::PlayoutBuffer(BufferType* type, WebRtc_UWord16* sizeMS) const
+int32_t AudioDeviceModuleImpl::PlayoutBuffer(BufferType* type, uint16_t* sizeMS) const
 {
     CHECK_INITIALIZED();
 
     BufferType bufType;
-    WebRtc_UWord16 size(0);
+    uint16_t size(0);
 
     if (_ptrAudioDevice->PlayoutBuffer(bufType, size) == -1)
     {
@@ -1834,12 +1826,12 @@ WebRtc_Word32 AudioDeviceModuleImpl::PlayoutBuffer(BufferType* type, WebRtc_UWor
 //  PlayoutDelay
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::PlayoutDelay(WebRtc_UWord16* delayMS) const
+int32_t AudioDeviceModuleImpl::PlayoutDelay(uint16_t* delayMS) const
 {
     WEBRTC_TRACE(kTraceStream, kTraceAudioDevice, _id, "%s", __FUNCTION__);
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 delay(0);
+    uint16_t delay(0);
 
     if (_ptrAudioDevice->PlayoutDelay(delay) == -1)
     {
@@ -1857,12 +1849,12 @@ WebRtc_Word32 AudioDeviceModuleImpl::PlayoutDelay(WebRtc_UWord16* delayMS) const
 //  RecordingDelay
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::RecordingDelay(WebRtc_UWord16* delayMS) const
+int32_t AudioDeviceModuleImpl::RecordingDelay(uint16_t* delayMS) const
 {
     WEBRTC_TRACE(kTraceStream, kTraceAudioDevice, _id, "%s", __FUNCTION__);
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 delay(0);
+    uint16_t delay(0);
 
     if (_ptrAudioDevice->RecordingDelay(delay) == -1)
     {
@@ -1880,11 +1872,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::RecordingDelay(WebRtc_UWord16* delayMS) con
 //  CPULoad
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::CPULoad(WebRtc_UWord16* load) const
+int32_t AudioDeviceModuleImpl::CPULoad(uint16_t* load) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_UWord16 cpuLoad(0);
+    uint16_t cpuLoad(0);
 
     if (_ptrAudioDevice->CPULoad(cpuLoad) == -1)
     {
@@ -1902,7 +1894,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::CPULoad(WebRtc_UWord16* load) const
 //  SetRecordingSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingSampleRate(const WebRtc_UWord32 samplesPerSec)
+int32_t AudioDeviceModuleImpl::SetRecordingSampleRate(const uint32_t samplesPerSec)
 {
     CHECK_INITIALIZED();
 
@@ -1918,11 +1910,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetRecordingSampleRate(const WebRtc_UWord32
 //  RecordingSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::RecordingSampleRate(WebRtc_UWord32* samplesPerSec) const
+int32_t AudioDeviceModuleImpl::RecordingSampleRate(uint32_t* samplesPerSec) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_Word32 sampleRate = _audioDeviceBuffer.RecordingSampleRate();
+    int32_t sampleRate = _audioDeviceBuffer.RecordingSampleRate();
 
     if (sampleRate == -1)
     {
@@ -1940,7 +1932,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::RecordingSampleRate(WebRtc_UWord32* samples
 //  SetPlayoutSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutSampleRate(const WebRtc_UWord32 samplesPerSec)
+int32_t AudioDeviceModuleImpl::SetPlayoutSampleRate(const uint32_t samplesPerSec)
 {
     CHECK_INITIALIZED();
 
@@ -1956,11 +1948,11 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetPlayoutSampleRate(const WebRtc_UWord32 s
 //  PlayoutSampleRate
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::PlayoutSampleRate(WebRtc_UWord32* samplesPerSec) const
+int32_t AudioDeviceModuleImpl::PlayoutSampleRate(uint32_t* samplesPerSec) const
 {
     CHECK_INITIALIZED();
 
-    WebRtc_Word32 sampleRate = _audioDeviceBuffer.PlayoutSampleRate();
+    int32_t sampleRate = _audioDeviceBuffer.PlayoutSampleRate();
 
     if (sampleRate == -1)
     {
@@ -1978,7 +1970,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::PlayoutSampleRate(WebRtc_UWord32* samplesPe
 //  ResetAudioDevice
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::ResetAudioDevice()
+int32_t AudioDeviceModuleImpl::ResetAudioDevice()
 {
     CHECK_INITIALIZED();
 
@@ -1995,7 +1987,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::ResetAudioDevice()
 //  SetLoudspeakerStatus
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::SetLoudspeakerStatus(bool enable)
+int32_t AudioDeviceModuleImpl::SetLoudspeakerStatus(bool enable)
 {
     CHECK_INITIALIZED();
 
@@ -2011,7 +2003,7 @@ WebRtc_Word32 AudioDeviceModuleImpl::SetLoudspeakerStatus(bool enable)
 //  GetLoudspeakerStatus
 // ----------------------------------------------------------------------------
 
-WebRtc_Word32 AudioDeviceModuleImpl::GetLoudspeakerStatus(bool* enabled) const
+int32_t AudioDeviceModuleImpl::GetLoudspeakerStatus(bool* enabled) const
 {
     CHECK_INITIALIZED();
 

@@ -167,14 +167,14 @@ enum ACMAMRPackingFormat {
 // -maxWaitingTimeMs       : max packet waiting time in the buffer
 // -addedSamples           : samples inserted because of packet loss in off mode
 typedef struct {
-  WebRtc_UWord16 currentBufferSize;
-  WebRtc_UWord16 preferredBufferSize;
+  uint16_t currentBufferSize;
+  uint16_t preferredBufferSize;
   bool jitterPeaksFound;
-  WebRtc_UWord16 currentPacketLossRate;
-  WebRtc_UWord16 currentDiscardRate;
-  WebRtc_UWord16 currentExpandRate;
-  WebRtc_UWord16 currentPreemptiveRate;
-  WebRtc_UWord16 currentAccelerateRate;
+  uint16_t currentPacketLossRate;
+  uint16_t currentDiscardRate;
+  uint16_t currentExpandRate;
+  uint16_t currentPreemptiveRate;
+  uint16_t currentAccelerateRate;
   int32_t clockDriftPPM;
   int meanWaitingTimeMs;
   int medianWaitingTimeMs;

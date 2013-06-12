@@ -17,38 +17,38 @@
 namespace webrtc
 {
 
-class TickTimeBase;
+class Clock;
 
 class VCMTimestampExtrapolator
 {
 public:
-    VCMTimestampExtrapolator(TickTimeBase* clock,
-                             WebRtc_Word32 vcmId = 0,
-                             WebRtc_Word32 receiverId = 0);
+    VCMTimestampExtrapolator(Clock* clock,
+                             int32_t vcmId = 0,
+                             int32_t receiverId = 0);
     ~VCMTimestampExtrapolator();
-    void Update(WebRtc_Word64 tMs, WebRtc_UWord32 ts90khz, bool trace = true);
-    WebRtc_UWord32 ExtrapolateTimestamp(WebRtc_Word64 tMs) const;
-    WebRtc_Word64 ExtrapolateLocalTime(WebRtc_UWord32 timestamp90khz) const;
-    void Reset(WebRtc_Word64 nowMs = -1);
+    void Update(int64_t tMs, uint32_t ts90khz, bool trace = true);
+    uint32_t ExtrapolateTimestamp(int64_t tMs) const;
+    int64_t ExtrapolateLocalTime(uint32_t timestamp90khz) const;
+    void Reset(int64_t nowMs = -1);
 
 private:
-    void CheckForWrapArounds(WebRtc_UWord32 ts90khz);
+    void CheckForWrapArounds(uint32_t ts90khz);
     bool DelayChangeDetection(double error, bool trace = true);
     RWLockWrapper*        _rwLock;
-    WebRtc_Word32         _vcmId;
-    WebRtc_Word32         _id;
-    TickTimeBase*         _clock;
-    double              _w[2];
-    double              _P[2][2];
-    WebRtc_Word64         _startMs;
-    WebRtc_Word64         _prevMs;
-    WebRtc_UWord32        _firstTimestamp;
-    WebRtc_Word32         _wrapArounds;
-    WebRtc_UWord32        _prevTs90khz;
-    const double        _lambda;
-    bool                _firstAfterReset;
-    WebRtc_UWord32        _packetCount;
-    const WebRtc_UWord32  _startUpFilterDelayInPackets;
+    int32_t         _vcmId;
+    int32_t         _id;
+    Clock*                _clock;
+    double                _w[2];
+    double                _P[2][2];
+    int64_t         _startMs;
+    int64_t         _prevMs;
+    uint32_t        _firstTimestamp;
+    int32_t         _wrapArounds;
+    uint32_t        _prevTs90khz;
+    const double          _lambda;
+    bool                  _firstAfterReset;
+    uint32_t        _packetCount;
+    const uint32_t  _startUpFilterDelayInPackets;
 
     double              _detectorAccumulatorPos;
     double              _detectorAccumulatorNeg;

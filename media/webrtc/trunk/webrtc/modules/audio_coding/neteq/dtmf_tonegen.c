@@ -65,14 +65,14 @@
  * Table values in Q14.
  */
 
-const WebRtc_Word16 WebRtcNetEQ_dtfm_aTbl8Khz[8] =
+const int16_t WebRtcNetEQ_dtfm_aTbl8Khz[8] =
 {
     27980, 26956, 25701, 24219,
     19073, 16325, 13085, 9315
 };
 
 #ifdef NETEQ_WIDEBAND
-const WebRtc_Word16 WebRtcNetEQ_dtfm_aTbl16Khz[8]=
+const int16_t WebRtcNetEQ_dtfm_aTbl16Khz[8]=
 {
     31548, 31281, 30951, 30556,
     29144, 28361, 27409, 26258
@@ -80,7 +80,7 @@ const WebRtc_Word16 WebRtcNetEQ_dtfm_aTbl16Khz[8]=
 #endif
 
 #ifdef NETEQ_32KHZ_WIDEBAND
-const WebRtc_Word16 WebRtcNetEQ_dtfm_aTbl32Khz[8]=
+const int16_t WebRtcNetEQ_dtfm_aTbl32Khz[8]=
 {
     32462, 32394, 32311, 32210,
     31849, 31647, 31400, 31098
@@ -88,7 +88,7 @@ const WebRtc_Word16 WebRtcNetEQ_dtfm_aTbl32Khz[8]=
 #endif
 
 #ifdef NETEQ_48KHZ_WIDEBAND
-const WebRtc_Word16 WebRtcNetEQ_dtfm_aTbl48Khz[8]=
+const int16_t WebRtcNetEQ_dtfm_aTbl48Khz[8]=
 {
     32632, 32602, 32564, 32520,
     32359, 32268, 32157, 32022
@@ -100,14 +100,14 @@ const WebRtc_Word16 WebRtcNetEQ_dtfm_aTbl48Khz[8]=
  * Table values in Q14.
  */
 
-const WebRtc_Word16 WebRtcNetEQ_dtfm_yInitTab8Khz[8] =
+const int16_t WebRtcNetEQ_dtfm_yInitTab8Khz[8] =
 {
     8528, 9315, 10163, 11036,
     13323, 14206,15021, 15708
 };
 
 #ifdef NETEQ_WIDEBAND
-const WebRtc_Word16 WebRtcNetEQ_dtfm_yInitTab16Khz[8]=
+const int16_t WebRtcNetEQ_dtfm_yInitTab16Khz[8]=
 {
     4429, 4879, 5380, 5918,
     7490, 8207, 8979, 9801
@@ -115,7 +115,7 @@ const WebRtc_Word16 WebRtcNetEQ_dtfm_yInitTab16Khz[8]=
 #endif
 
 #ifdef NETEQ_32KHZ_WIDEBAND
-const WebRtc_Word16 WebRtcNetEQ_dtfm_yInitTab32Khz[8]=
+const int16_t WebRtcNetEQ_dtfm_yInitTab32Khz[8]=
 {
     2235, 2468, 2728, 3010,
     3853, 4249, 4685, 5164
@@ -123,7 +123,7 @@ const WebRtc_Word16 WebRtcNetEQ_dtfm_yInitTab32Khz[8]=
 #endif
 
 #ifdef NETEQ_48KHZ_WIDEBAND
-const WebRtc_Word16 WebRtcNetEQ_dtfm_yInitTab48Khz[8]=
+const int16_t WebRtcNetEQ_dtfm_yInitTab48Khz[8]=
 {
     1493, 1649, 1823, 2013,
     2582, 2851, 3148, 3476
@@ -135,7 +135,7 @@ const WebRtc_Word16 WebRtcNetEQ_dtfm_yInitTab48Khz[8]=
  Table entries are in Q14.
  */
 
-const WebRtc_Word16 WebRtcNetEQ_dtfm_dBm0[37] = { 16141, 14386, 12821, 11427, 10184, 9077, 8090,
+const int16_t WebRtcNetEQ_dtfm_dBm0[37] = { 16141, 14386, 12821, 11427, 10184, 9077, 8090,
                                                 7210, 6426, 5727, 5104, 4549, 4054, 3614,
                                                 3221, 2870, 2558, 2280, 2032, 1811, 1614,
                                                 1439, 1282, 1143, 1018, 908, 809, 721, 643,
@@ -163,21 +163,21 @@ const WebRtc_Word16 WebRtcNetEQ_dtfm_dBm0[37] = { 16141, 14386, 12821, 11427, 10
  *                      : <0 - error
  */
 
-WebRtc_Word16 WebRtcNetEQ_DTMFGenerate(dtmf_tone_inst_t *DTMFdecInst, WebRtc_Word16 value,
-                                       WebRtc_Word16 volume, WebRtc_Word16 *signal,
-                                       WebRtc_UWord16 sampFreq, WebRtc_Word16 extFrameLen)
+int16_t WebRtcNetEQ_DTMFGenerate(dtmf_tone_inst_t *DTMFdecInst, int16_t value,
+                                 int16_t volume, int16_t *signal,
+                                 uint16_t sampFreq, int16_t extFrameLen)
 {
-    const WebRtc_Word16 *aTbl; /* pointer to a-coefficient table */
-    const WebRtc_Word16 *yInitTable; /* pointer to initialization value table */
-    WebRtc_Word16 a1 = 0; /* a-coefficient for first tone (low tone) */
-    WebRtc_Word16 a2 = 0; /* a-coefficient for second tone (high tone) */
+    const int16_t *aTbl; /* pointer to a-coefficient table */
+    const int16_t *yInitTable; /* pointer to initialization value table */
+    int16_t a1 = 0; /* a-coefficient for first tone (low tone) */
+    int16_t a2 = 0; /* a-coefficient for second tone (high tone) */
     int i;
     int frameLen; /* number of samples to generate */
     int lowIndex = 0;  /* Default to avoid compiler warnings. */
     int highIndex = 4;  /* Default to avoid compiler warnings. */
-    WebRtc_Word32 tempVal;
-    WebRtc_Word16 tempValLow;
-    WebRtc_Word16 tempValHigh;
+    int32_t tempVal;
+    int16_t tempValLow;
+    int16_t tempValHigh;
 
     /* Sanity check for volume */
     if ((volume < 0) || (volume > 36))
@@ -333,10 +333,10 @@ WebRtc_Word16 WebRtcNetEQ_DTMFGenerate(dtmf_tone_inst_t *DTMFdecInst, WebRtc_Wor
 
         /* Use rescursion formula y[n] = a*y[n-1] - y[n-2] */
         tempValLow
-                        = (WebRtc_Word16) (((WEBRTC_SPL_MUL_16_16(a1, DTMFdecInst->oldOutputLow[1])
+                        = (int16_t) (((WEBRTC_SPL_MUL_16_16(a1, DTMFdecInst->oldOutputLow[1])
                                         + 8192) >> 14) - DTMFdecInst->oldOutputLow[0]);
         tempValHigh
-                        = (WebRtc_Word16) (((WEBRTC_SPL_MUL_16_16(a2, DTMFdecInst->oldOutputHigh[1])
+                        = (int16_t) (((WEBRTC_SPL_MUL_16_16(a2, DTMFdecInst->oldOutputHigh[1])
                                         + 8192) >> 14) - DTMFdecInst->oldOutputHigh[0]);
 
         /* Update recursion memory */
@@ -348,13 +348,13 @@ WebRtc_Word16 WebRtcNetEQ_DTMFGenerate(dtmf_tone_inst_t *DTMFdecInst, WebRtc_Wor
         /* scale high tone with 32768 (15 left shifts) 
          and low tone with 23171 (3dB lower than high tone) */
         tempVal = WEBRTC_SPL_MUL_16_16(DTMF_AMP_LOW, tempValLow)
-                        + WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)tempValHigh, 15);
+                        + WEBRTC_SPL_LSHIFT_W32((int32_t)tempValHigh, 15);
 
         /* Norm the signal to Q14 (with proper rounding) */
         tempVal = (tempVal + 16384) >> 15;
 
         /* Scale the signal to correct dbM0 value */
-        signal[i] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(
+        signal[i] = (int16_t) WEBRTC_SPL_RSHIFT_W32(
                                (WEBRTC_SPL_MUL_16_16(tempVal, WebRtcNetEQ_dtfm_dBm0[volume])
                                + 8192), 14); /* volume value is in Q14; use proper rounding */
     }
