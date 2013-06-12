@@ -41,6 +41,7 @@ public class AppConstants {
 
     public static final String MOZ_CHILD_PROCESS_NAME = "@MOZ_CHILD_PROCESS_NAME@";
     public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
+    public static final String OMNIJAR_NAME = "@OMNIJAR_NAME@";
     public static final String OS_TARGET = "@OS_TARGET@";
     public static final String TARGET_XPCOM_ABI = "@TARGET_XPCOM_ABI@";
 
