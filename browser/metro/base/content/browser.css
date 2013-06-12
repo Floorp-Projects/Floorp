@@ -10,10 +10,6 @@ browser[remote="true"] {
   -moz-binding: url("chrome://browser/content/bindings/browser.xml#remote-browser");
 }
 
-#content-navigator {
-  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#content-navigator");
-}
-
 #tabs {
   -moz-binding: url("chrome://browser/content/bindings/tabs.xml#tablist");
 }

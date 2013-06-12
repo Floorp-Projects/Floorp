@@ -112,16 +112,15 @@ var FindHelperUI = {
     // Shutdown selection related ui
     SelectionHelperUI.closeEditSession();
 
-    // See bindings.xml
-    this._container.show(this);
-
     this.search(this._textbox.value);
     this._textbox.select();
     this._textbox.focus();
     this._open = true;
+
+    let findbar = this._container;
     setTimeout(() => {
       Elements.browsers.setAttribute("findbar", true);
-      this._container.setAttribute("showing", true)
+      findbar.show();
     }, 0);
 
     // Prevent the view to scroll automatically while searching
@@ -137,7 +136,6 @@ var FindHelperUI = {
       this._textbox.value = "";
       this.status = null;
       this._textbox.blur();
-      this._container.hide(this);
       this._open = false;
 
       // Restore the scroll synchronisation
@@ -145,7 +143,7 @@ var FindHelperUI = {
     };
 
     this._container.addEventListener("transitionend", onTransitionEnd, true);
-    this._container.removeAttribute("showing");
+    this._container.dismiss();
     Elements.browsers.removeAttribute("findbar");
   },
 

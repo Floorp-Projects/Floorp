@@ -112,12 +112,7 @@
     <command id="cmd_delete" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_selectAll" oncommand="CommandUpdater.doCommand(this.id);"/>
 
-    <!-- forms navigation -->
-    <command id="cmd_formPrevious" oncommand="FormHelperUI.goToPrevious();"/>
-    <command id="cmd_formNext" oncommand="FormHelperUI.goToNext();"/>
-    <command id="cmd_formClose" oncommand="FormHelperUI.hide();"/>
-
-    <!-- find navigation -->
+    <!-- find -->
     <command id="cmd_findPrevious" oncommand="FindHelperUI.goToPrevious();"/>
     <command id="cmd_findNext" oncommand="FindHelperUI.goToNext();"/>
     <command id="cmd_findClose" oncommand="FindHelperUI.hide();"/>
@@ -247,9 +242,13 @@
     </vbox>
 
     <!-- popup for content navigator helper -->
-    <vbox id="content-navigator">
+    <appbar id="content-navigator" class="window-width content-navigator-box" orient="horizontal" pack="start">
       <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
-    </vbox>
+      <button class="content-navigator-item previous-button" command="cmd_findPrevious"/>
+      <button class="content-navigator-item next-button" command="cmd_findNext"/>
+      <spacer flex="1"/>
+      <button class="content-navigator-item close-button" command="cmd_findClose"/>
+    </appbar>
 
     <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
       <hbox id="panel-header">
