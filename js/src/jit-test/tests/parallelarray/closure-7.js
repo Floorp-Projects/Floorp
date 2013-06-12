@@ -1,7 +1,7 @@
 load(libdir + "parallelarray-helpers.js");
 
 function testClosureCreationAndInvocation() {
-  var a = range(0, minItemsTestingThreshold);
+  var a = range(0, 64);
   var p = new ParallelArray(a);
   function makeaddv(v) {
     var u = 1;
@@ -41,12 +41,10 @@ function testClosureCreationAndInvocation() {
       }
     };
   };
-  assertParallelExecSucceeds(
-    function(m) p.map(makeaddv, m),
-    function(r) {
-      assertEq(r.get(21)(1), 20); // v == 21; x == 1 ==> inner function returns b == 20
-    }
-  );
+  for (var i in MODES) {
+    var m = p.map(makeaddv, MODES[i]);
+    assertEq(m.get(21)(1), 20); // v == 21; x == 1 ==> inner function returns b == 20
+  }
 }
 
 if (getBuildConfiguration().parallelJS)
