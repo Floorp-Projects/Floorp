@@ -36,6 +36,7 @@
 #include "nsCxPusher.h"
 
 using mozilla::AutoSafeJSContext;
+using mozilla::AutoPushJSContext;
 
 /*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
@@ -2001,15 +2002,12 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
 
     JSExceptionState *estate = 0;
 
-    JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
+    AutoPushJSContext cx(JSD_GetJSContext (mCx, mThreadState));
 
     JS::RootedValue jv(cx);
 
     estate = JS_SaveExceptionState (cx);
     JS_ClearPendingException (cx);
-
-    nsCxPusher pusher;
-    pusher.Push(cx);
 
     *_rval = JSD_AttemptUCScriptInStackFrame (mCx, mThreadState,
                                               mStackFrameInfo,
