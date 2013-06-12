@@ -34,6 +34,7 @@ MOCHITEST_A11Y_FILES =\
 		test_groupbox.xul \
 		test_iframe.html \
 		test_img.html \
+		test_invalid_img.xhtml \
 		test_invalidationlist.html \
 		test_list.html \
 		test_map.html \
