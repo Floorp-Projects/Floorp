@@ -1315,6 +1315,7 @@ NetworkDetailsView.prototype = {
     $("#request-params-box").setAttribute("flex", "1");
     $("#request-params-box").hidden = false;
     $("#request-post-data-textarea-box").hidden = true;
+    $("#response-content-info-header").hidden = true;
     $("#response-content-json-box").hidden = true;
     $("#response-content-textarea-box").hidden = true;
     $("#response-content-image-box").hidden = true;
@@ -1612,18 +1613,42 @@ NetworkDetailsView.prototype = {
     gNetwork.getString(text).then((aString) => {
       // Handle json.
       if (mimeType.contains("/json")) {
-        $("#response-content-json-box").hidden = false;
         let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
         let sanitizedJSON = aString.replace(jsonpRegex, "");
         let callbackPadding = aString.match(jsonpRegex);
 
-        let jsonScopeName = callbackPadding
-          ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
-          : L10N.getStr("jsonScopeName");
+        // Make sure this is an valid JSON object first. If so, nicely display
+        // the parsing results in a variables view. Otherwise, simply show
+        // the contents as plain text.
+        try {
+          var jsonObject = JSON.parse(sanitizedJSON);
+        } catch (e) {
+          var parsingError = e;
+        }
 
-        let jsonScope = this._json.addScope(jsonScopeName);
-        jsonScope.addVar().populate(JSON.parse(sanitizedJSON), { expanded: true });
-        jsonScope.expanded = true;
+        // Valid JSON.
+        if (jsonObject) {
+          $("#response-content-json-box").hidden = false;
+          let jsonScopeName = callbackPadding
+            ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
+            : L10N.getStr("jsonScopeName");
+
+          let jsonScope = this._json.addScope(jsonScopeName);
+          jsonScope.addVar().populate(jsonObject, { expanded: true });
+          jsonScope.expanded = true;
+        }
+        // Malformed JSON.
+        else {
+          $("#response-content-textarea-box").hidden = false;
+          NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
+            aEditor.setMode(SourceEditor.MODES.JAVASCRIPT);
+            aEditor.setText(aString);
+          });
+          let infoHeader = $("#response-content-info-header");
+          infoHeader.setAttribute("value", parsingError);
+          infoHeader.setAttribute("tooltiptext", parsingError);
+          infoHeader.hidden = false;
+        }
       }
       // Handle images.
       else if (mimeType.contains("image/")) {
