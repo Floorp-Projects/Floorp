@@ -757,6 +757,11 @@
       </toolbaritem>
     </toolbar>
 
+    <!-- This is a shim which will go away ASAP. See bug 749804 for details -->
+    <toolbar id="addon-bar" toolbar-delegate="nav-bar">
+      <hbox id="addonbar-closebutton"/>
+      <statusbar id="status-bar"/>
+    </toolbar>
     <toolbarpalette id="BrowserToolbarPalette">
 
 # Update primaryToolbarButtons in browser/themes/shared/browser.inc when adding
