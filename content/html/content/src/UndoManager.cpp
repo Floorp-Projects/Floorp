@@ -617,6 +617,9 @@ UndoMutationObserver::IsManagerForMutation(nsIContent* aContent)
     nsIDocument* doc = aContent->OwnerDoc();
     NS_ENSURE_TRUE(doc, false);
     undoManager = doc->GetUndoManager();
+    // The document will not have an undoManager if the
+    // documentElement is removed.
+    NS_ENSURE_TRUE(undoManager, false);
   }
 
   // Check if the nsITransactionManager is the same for both the
