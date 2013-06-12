@@ -9363,6 +9363,8 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
   nsPoint pt(x, y);
 
+  FlushPendingNotifications(Flush_Layout);
+
   nsIPresShell *ps = GetShell();
   if (!ps) {
     return nullptr;
