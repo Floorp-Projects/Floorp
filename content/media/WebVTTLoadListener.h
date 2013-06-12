@@ -61,7 +61,7 @@ public:
   WebVTTLoadListener(HTMLTrackElement* aElement);
   ~WebVTTLoadListener();
   void OnParsedCue(webvtt_cue* aCue);
-  void OnReportError(uint32_t aLine, uint32_t aCol, webvtt_error aError);
+  int OnReportError(uint32_t aLine, uint32_t aCol, webvtt_error aError);
   // Loads the libwebvtt parser. Must call this function in order to the
   // WebVTTLoadListener to be ready to accept data.
   nsresult LoadResource();

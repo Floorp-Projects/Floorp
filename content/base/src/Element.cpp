@@ -486,32 +486,6 @@ Element::GetStyledFrame()
   return frame ? nsLayoutUtils::GetStyleFrame(frame) : nullptr;
 }
 
-Element*
-Element::GetOffsetRect(nsRect& aRect)
-{
-  aRect = nsRect();
-
-  nsIFrame* frame = GetStyledFrame();
-  if (!frame) {
-    return nullptr;
-  }
-
-  nsPoint origin = frame->GetPosition();
-  aRect.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
-  aRect.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
-
-  // Get the union of all rectangles in this and continuation frames.
-  // It doesn't really matter what we use as aRelativeTo here, since
-  // we only care about the size. Using 'parent' might make things
-  // a bit faster by speeding up the internal GetOffsetTo operations.
-  nsIFrame* parent = frame->GetParent() ? frame->GetParent() : frame;
-  nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, parent);
-  aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
-  aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
-
-  return nullptr;
-}
-
 nsIScrollableFrame*
 Element::GetScrollFrame(nsIFrame **aStyledFrame)
 {
