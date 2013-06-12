@@ -209,6 +209,11 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     protocol.Front.prototype.initialize.call(this, conn, form, detail, ctx);
   },
 
+  /**
+   * Destroy a node front.  The node must have been removed from the
+   * ownership tree before this is called, unless the whole walker front
+   * is being destroyed.
+   */
   destroy: function() {
     // If an observer was added on this node, shut it down.
     if (this.observer) {
@@ -216,12 +221,6 @@ let NodeFront = protocol.FrontClass(NodeActor, {
       this._observer = null;
     }
 
-    // Disconnect this item and from the ownership tree and destroy
-    // all of its children.
-    this.reparent(null);
-    for (let child of this.treeChildren()) {
-      child.destroy();
-    }
     protocol.Front.prototype.destroy.call(this);
   },
 
@@ -645,6 +644,11 @@ var WalkerActor = protocol.ActorClass({
     // this set.
     this._orphaned = new Set();
 
+    // The client can tell the walker that it is interested in a node
+    // even when it is orphaned with the `retainNode` method.  This
+    // list contains orphaned nodes that were so retained.
+    this._retainedOrphans = new Set();
+
     this.onMutations = this.onMutations.bind(this);
     this.onFrameLoad = this.onFrameLoad.bind(this);
     this.onFrameUnload = this.onFrameUnload.bind(this);
@@ -791,23 +795,75 @@ var WalkerActor = protocol.ActorClass({
   },
 
   /**
+   * Mark a node as 'retained'.
+   *
+   * A retained node is not released when `releaseNode` is called on its
+   * parent, or when a parent is released with the `cleanup` option to
+   * `getMutations`.
+   *
+   * When a retained node's parent is released, a retained mode is added to
+   * the walker's "retained orphans" list.
+   *
+   * Retained nodes can be deleted by providing the `force` option to
+   * `releaseNode`.  They will also be released when their document
+   * has been destroyed.
+   *
+   * Retaining a node makes no promise about its children;  They can
+   * still be removed by normal means.
+   */
+  retainNode: method(function(node) {
+    node.retained = true;
+  }, {
+    request: { node: Arg(0, "domnode") },
+    response: {}
+  }),
+
+  /**
+   * Remove the 'retained' mark from a node.  If the node was a
+   * retained orphan, release it.
+   */
+  unretainNode: method(function(node) {
+    node.retained = false;
+    if (this._retainedOrphans.has(node)) {
+      this._retainedOrphans.delete(node);
+      this.releaseNode(node);
+    }
+  }, {
+    request: { node: Arg(0, "domnode") },
+    response: {},
+  }),
+
+  /**
    * Release actors for a node and all child nodes.
    */
-  releaseNode: method(function(node) {
+  releaseNode: method(function(node, options={}) {
+    if (node.retained && !options.force) {
+      this._retainedOrphans.add(node);
+      return;
+    }
+
+    if (node.retained) {
+      // Forcing a retained node to go away.
+      this._retainedOrphans.delete(node);
+    }
+
     let walker = documentWalker(node.rawNode);
 
     let child = walker.firstChild();
     while (child) {
       let childActor = this._refMap.get(child);
       if (childActor) {
-        this.releaseNode(childActor);
+        this.releaseNode(childActor, options);
       }
       child = walker.nextSibling();
     }
 
     node.destroy();
   }, {
-    request: { node: Arg(0, "domnode") }
+    request: {
+      node: Arg(0, "domnode"),
+      force: Option(1)
+    }
   }),
 
   /**
@@ -1124,6 +1180,8 @@ var WalkerActor = protocol.ActorClass({
 
     if (options.cleanup) {
       for (let node of this._orphaned) {
+        // Release the orphaned node.  Nodes or children that have been
+        // retained will be moved to this._retainedOrphans.
         this.releaseNode(node);
       }
       this._orphaned = new Set();
@@ -1139,6 +1197,22 @@ var WalkerActor = protocol.ActorClass({
     }
   }),
 
+  queueMutation: function(mutation) {
+    if (!this.actorID) {
+      // We've been destroyed, don't bother queueing this mutation.
+      return;
+    }
+    // We only send the `new-mutations` notification once, until the client
+    // fetches mutations with the `getMutations` packet.
+    let needEvent = this._pendingMutations.length === 0;
+
+    this._pendingMutations.push(mutation);
+
+    if (needEvent) {
+      events.emit(this, "new-mutations");
+    }
+  },
+
   /**
    * Handles mutations from the DOM mutation observer API.
    *
@@ -1146,10 +1220,6 @@ var WalkerActor = protocol.ActorClass({
    *    See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationRecord
    */
   onMutations: function(mutations) {
-    // We only send the `new-mutations` notification once, until the client
-    // fetches mutations with the `getMutations` packet.
-    let needEvent = this._pendingMutations.length === 0;
-
     for (let change of mutations) {
       let targetActor = this._refMap.get(change.target);
       if (!targetActor) {
@@ -1206,10 +1276,7 @@ var WalkerActor = protocol.ActorClass({
         mutation.removed = removedActors;
         mutation.added = addedActors;
       }
-      this._pendingMutations.push(mutation);
-    }
-    if (needEvent) {
-      events.emit(this, "new-mutations");
+      this.queueMutation(mutation);
     }
   },
 
@@ -1219,35 +1286,64 @@ var WalkerActor = protocol.ActorClass({
     if (!frameActor) {
       return;
     }
-    let needEvent = this._pendingMutations.length === 0;
-    this._pendingMutations.push({
+
+    this.queueMutation({
       type: "frameLoad",
       target: frameActor.actorID,
       added: [],
       removed: []
     });
+  },
 
-    if (needEvent) {
-      events.emit(this, "new-mutations");
+  // Returns true if domNode is in window or a subframe.
+  _childOfWindow: function(window, domNode) {
+    let win = nodeDocument(domNode).defaultView;
+    while (win) {
+      if (win === window) {
+        return true;
+      }
+      win = win.frameElement;
     }
+    return false;
   },
 
   onFrameUnload: function(window) {
+    // Any retained orphans that belong to this document
+    // or its children need to be released, and a mutation sent
+    // to notify of that.
+    let releasedOrphans = [];
+
+    for (let retained of this._retainedOrphans) {
+      if (Cu.isDeadWrapper(retained.rawNode) ||
+          this._childOfWindow(window, retained.rawNode)) {
+        this._retainedOrphans.delete(retained);
+        releasedOrphans.push(retained.actorID);
+        this.releaseNode(retained, { force: true });
+      }
+    }
+
+    if (releasedOrphans.length > 0) {
+      this.queueMutation({
+        target: this.rootNode.actorID,
+        type: "unretained",
+        nodes: releasedOrphans
+      });
+    }
+
     let doc = window.document;
     let documentActor = this._refMap.get(doc);
     if (!documentActor) {
       return;
     }
 
-    let needEvent = this._pendingMutations.length === 0;
-    this._pendingMutations.push({
+    this.queueMutation({
       type: "documentUnload",
       target: documentActor.actorID
     });
-    this.releaseNode(documentActor);
-    if (needEvent) {
-      events.emit(this, "new-mutations");
-    }
+
+    // Need to force a release of this node, because those nodes can't
+    // be accessed anymore.
+    this.releaseNode(documentActor, { force: true });
   }
 });
 
@@ -1261,6 +1357,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._orphaned = new Set();
+    this._retainedOrphans = new Set();
   },
 
   destroy: function() {
@@ -1290,11 +1387,51 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     return types.getType("domnode").read({ actor: id }, this, "standin");
   },
 
-  releaseNode: protocol.custom(function(node) {
+  /**
+   * See the documentation for WalkerActor.prototype.retainNode for
+   * information on retained nodes.
+   *
+   * From the client's perspective, `retainNode` can fail if the node in
+   * question is removed from the ownership tree before the `retainNode`
+   * request reaches the server.  This can only happen if the client has
+   * asked the server to release nodes but hasn't gotten a response
+   * yet: Either a `releaseNode` request or a `getMutations` with `cleanup`
+   * set is outstanding.
+   *
+   * If either of those requests is outstanding AND releases the retained
+   * node, this request will fail with noSuchActor, but the ownership tree
+   * will stay in a consistent state.
+   *
+   * Because the protocol guarantees that requests will be processed and
+   * responses received in the order they were sent, we get the right
+   * semantics by setting our local retained flag on the node only AFTER
+   * a SUCCESSFUL retainNode call.
+   */
+  retainNode: protocol.custom(function(node) {
+    return this._retainNode(node).then(() => {
+      node.retained = true;
+    });
+  }, {
+    impl: "_retainNode",
+  }),
+
+  unretainNode: protocol.custom(function(node) {
+    return this._unretainNode(node).then(() => {
+      node.retained = false;
+      if (this._retainedOrphans.has(node)) {
+        this._retainedOrphans.delete(node);
+        this._releaseFront(node);
+      }
+    });
+  }, {
+    impl: "_unretainNode"
+  }),
+
+  releaseNode: protocol.custom(function(node, options={}) {
     // NodeFront.destroy will destroy children in the ownership tree too,
     // mimicking what the server will do here.
     let actorID = node.actorID;
-    node.destroy();
+    this._releaseFront(node, !!options.force);
     return this._releaseNode({ actorID: actorID });
   }, {
     impl: "_releaseNode"
@@ -1307,6 +1444,28 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   }, {
     impl: "_querySelector"
   }),
+
+  _releaseFront: function(node, force) {
+    if (node.retained && !force) {
+      node.reparent(null);
+      this._retainedOrphans.add(node);
+      return;
+    }
+
+    if (node.retained) {
+      // Forcing a removal.
+      this._retainedOrphans.delete(node);
+    }
+
+    // Release any children
+    for (let child of node.treeChildren()) {
+      this._releaseFront(child, force);
+    }
+
+    // All children will have been removed from the node by this point.
+    node.reparent(null);
+    node.destroy();
+  },
 
   /**
    * Get any unprocessed mutation records and process them.
@@ -1374,7 +1533,17 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
           // We try to give fronts instead of actorIDs, but these fronts need
           // to be destroyed now.
           emittedMutation.target = targetFront.actorID;
-          targetFront.destroy();
+
+          // Release the document node and all of its children, even retained.
+          this._releaseFront(targetFront, true);
+        } else if (change.type === "unretained") {
+          // Retained orphans were force-released without the intervention of
+          // client (probably a navigated frame).
+          for (let released of change.nodes) {
+            let releasedFront = this.get(released);
+            this._retainedOrphans.delete(released);
+            this._releaseFront(releasedFront, true);
+          }
         } else {
           targetFront.updateMutation(change);
         }
@@ -1384,7 +1553,8 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
 
       if (options.cleanup) {
         for (let node of this._orphaned) {
-          node.destroy();
+          // This will move retained nodes to this._retainedOrphans.
+          this._releaseFront(node);
         }
         this._orphaned = new Set();
       }
