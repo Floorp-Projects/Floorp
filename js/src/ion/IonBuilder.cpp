@@ -6885,10 +6885,16 @@ IonBuilder::jsop_setelem_typed(int arrayType,
 
     // Store the value.
     MInstruction *ins;
-    if (expectOOB)
+    if (expectOOB) {
         ins = MStoreTypedArrayElementHole::New(elements, length, id, toWrite, arrayType);
-    else
-        ins = MStoreTypedArrayElement::New(elements, id, toWrite, arrayType);
+    } else {
+        MStoreTypedArrayElement *store =
+            MStoreTypedArrayElement::New(elements, id, toWrite, arrayType);
+        if (safety == SetElem_Unsafe)
+            store->setRacy();
+        ins = store;
+    }
+
     current->add(ins);
 
     if (safety == SetElem_Normal)

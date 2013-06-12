@@ -10,6 +10,7 @@
 #include "GLContext.h"
 #include "LayerManagerOGLProgram.h"
 #include "mozilla/layers/Effects.h"
+#include "nsTArray.h"
 
 #include "mozilla/TimeStamp.h"
 
@@ -328,7 +329,7 @@ private:
   nsAutoPtr<FPSState> mFPS;
   // Textures used for direct texturing of buffers like gralloc.
   // The index of the texture in this array must correspond to the texture unit.
-  GLuint mTextures[3];
+  nsTArray<GLuint> mTextures;
   static bool sDrawFPS;
   static bool sFrameCounter;
 };

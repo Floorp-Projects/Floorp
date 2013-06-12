@@ -204,8 +204,6 @@ public:
                     nsIFrame*   aParent,
                     nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
-
   NS_IMETHOD AttributeChanged(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               int32_t aModType) MOZ_OVERRIDE;
@@ -277,16 +275,9 @@ public:
 
   /**
    * Schedules mPositions to be recomputed and the covered region to be
-   * updated.  The aFlags argument can take the ePositioningDirtyDueToMutation
-   * value to indicate that glyph metrics need to be recomputed due to
-   * a DOM mutation in the <text> element on one of its descendants.
+   * updated.
    */
-  void NotifyGlyphMetricsChange(uint32_t aFlags = 0);
-
-  /**
-   * Enum for NotifyGlyphMetricsChange's aFlags argument.
-   */
-  enum { ePositioningDirtyDueToMutation = 1 };
+  void NotifyGlyphMetricsChange();
 
   /**
    * Reflows the anonymous block frame of this non-display nsSVGTextFrame2.
@@ -594,12 +585,6 @@ private:
    * The MutationObserver we have registered for the <text> element subtree.
    */
   MutationObserver mMutationObserver;
-
-  /**
-   * The runnable we have dispatched to perform the work of
-   * NotifyGlyphMetricsChange.
-   */
-  nsRefPtr<GlyphMetricsUpdater> mGlyphMetricsUpdater;
 
   /**
    * Cached canvasTM value.

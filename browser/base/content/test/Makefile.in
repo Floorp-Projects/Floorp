@@ -332,6 +332,9 @@ _BROWSER_FILES = \
                  browser_blob-channelname.js \
                  browser_aboutHealthReport.js \
                  healthreport_testRemoteCommands.html \
+                 browser_offlineQuotaNotification.js \
+                 offlineQuotaNotification.html \
+                 offlineQuotaNotification.cacheManifest \
                  $(NULL)
 
 # Disable tests on Windows due to frequent failures (bugs 825739, 841341)

@@ -4,10 +4,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozTimeManager;
-
-[scriptable, uuid(befc186d-c249-4acb-8e70-8080f7b45e5c)]
+[scriptable, uuid(88df63f0-814d-4424-b1f9-9184149639e5)]
 interface nsIDOMMozNavigatorTime : nsISupports
 {
-  readonly attribute nsIDOMMozTimeManager mozTime;
+  readonly attribute nsISupports /* MozTimeManager */ mozTime;
 };
