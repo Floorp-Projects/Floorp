@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.GeckoPreferenceFragment;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -303,6 +304,17 @@ public class GeckoPreferences
         intent.putExtra("pref", pref);
         intent.putExtra("branch", GeckoApp.PREFS_NAME);
         intent.putExtra("enabled", value);
+
+        // There is a race here, but GeckoProfile returns the default profile
+        // when Gecko is not explicitly running for a different profile.  In a
+        // multi-profile world, this will need to be updated (possibly to
+        // broadcast settings for all profiles).  See Bug 882182.
+        GeckoProfile profile = GeckoProfile.get(context);
+        if (profile != null) {
+            intent.putExtra("profileName", profile.getName());
+            intent.putExtra("profilePath", profile.getDir().getAbsolutePath());
+        }
+
         Log.d(LOGTAG, "Broadcast: " + action + ", " + pref + ", " + GeckoApp.PREFS_NAME + ", " + value);
         context.sendBroadcast(intent, GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION);
     }
@@ -325,6 +337,26 @@ public class GeckoPreferences
     public static void broadcastAnnouncementsPref(final Context context) {
         final boolean value = getBooleanPref(context, PREFS_ANNOUNCEMENTS_ENABLED, true);
         broadcastAnnouncementsPref(context, value);
+    }
+
+    /**
+     * Broadcast the provided value as the value of the
+     * <code>PREFS_HEALTHREPORT_UPLOAD_ENABLED</code> pref.
+     */
+    public static void broadcastHealthReportUploadPref(final Context context, final boolean value) {
+        broadcastPrefAction(context,
+                            HealthReportConstants.ACTION_HEALTHREPORT_UPLOAD_PREF,
+                            PREFS_HEALTHREPORT_UPLOAD_ENABLED,
+                            value);
+    }
+
+    /**
+     * Broadcast the current value of the
+     * <code>PREFS_HEALTHREPORT_UPLOAD_ENABLED</code> pref.
+     */
+    public static void broadcastHealthReportUploadPref(final Context context) {
+        final boolean value = getBooleanPref(context, PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
+        broadcastHealthReportUploadPref(context, value);
     }
 
     /**
@@ -359,7 +391,11 @@ public class GeckoPreferences
         } else if (PREFS_UPDATER_AUTODOWNLOAD.equals(prefName)) {
             org.mozilla.gecko.updater.UpdateServiceHelper.registerForUpdates(GeckoAppShell.getContext(), (String) newValue);
         } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(prefName)) {
-            // Healthreport pref only lives in Android. Do not persist to Gecko.
+            // The healthreport pref only lives in Android, so we do not persist
+            // to Gecko, but we do broadcast intent to the health report
+            // background uploader service, which will start or stop the
+            // repeated background upload attempts.
+            broadcastHealthReportUploadPref(GeckoAppShell.getContext(), ((Boolean) newValue).booleanValue());
             return true;
         }
 

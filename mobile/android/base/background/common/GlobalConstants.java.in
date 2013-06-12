@@ -37,11 +37,13 @@ public class GlobalConstants {
   public static final String PER_ANDROID_PACKAGE_PERMISSION = "@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE";
 
   public static final int SHARED_PREFERENCES_MODE = 0;
+
   // These are used to ask Fennec (via reflection) to send
   // us a pref notification. This avoids us having to guess
   // Fennec's prefs branch and pref name.
   // Eventually Fennec might listen to startup notifications and
   // do this automatically, but this will do for now. See Bug 800244.
   public static String GECKO_PREFERENCES_CLASS = "org.mozilla.gecko.GeckoPreferences";
-  public static String GECKO_BROADCAST_METHOD  = "broadcastAnnouncementsPref";
+  public static String GECKO_BROADCAST_ANNOUNCEMENTS_PREF_METHOD  = "broadcastAnnouncementsPref";
+  public static String GECKO_BROADCAST_HEALTHREPORT_UPLOAD_PREF_METHOD  = "broadcastHealthReportUploadPref";
 }

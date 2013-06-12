@@ -4,9 +4,6 @@
 
 package org.mozilla.gecko.background.announcements;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import org.mozilla.gecko.background.BackgroundService;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -118,46 +115,14 @@ public class AnnouncementsBroadcastService extends BackgroundService {
 
     if (Intent.ACTION_BOOT_COMPLETED.equals(action) ||
         Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)) {
-      handleSystemLifetimeIntent();
+      BackgroundService.reflectContextToFennec(this,
+          GlobalConstants.GECKO_PREFERENCES_CLASS,
+          GlobalConstants.GECKO_BROADCAST_ANNOUNCEMENTS_PREF_METHOD);
       return;
     }
 
     // Failure case.
     Logger.warn(LOG_TAG, "Unknown intent " + action);
-  }
-
-  /**
-   * Handle one of the system intents to which we listen to launch our service
-   * without the browser being opened.
-   *
-   * To avoid tight coupling to Fennec, we use reflection to find
-   * <code>GeckoPreferences</code>, invoking the same code path that
-   * <code>GeckoApp</code> uses on startup to send the <i>other</i>
-   * notification to which we listen.
-   *
-   * All of this is neatly wrapped in <code>try…catch</code>, so this code
-   * will run safely without a Firefox build installed.
-   */
-  protected void handleSystemLifetimeIntent() {
-    // Ask the browser to tell us the current state of the preference.
-    try {
-      Class<?> geckoPreferences = Class.forName(GlobalConstants.GECKO_PREFERENCES_CLASS);
-      Method broadcastSnippetsPref = geckoPreferences.getMethod(GlobalConstants.GECKO_BROADCAST_METHOD, Context.class);
-      broadcastSnippetsPref.invoke(null, this);
-      return;
-    } catch (ClassNotFoundException e) {
-      Logger.error(LOG_TAG, "Class " + GlobalConstants.GECKO_PREFERENCES_CLASS + " not found!");
-      return;
-    } catch (NoSuchMethodException e) {
-      Logger.error(LOG_TAG, "Method " + GlobalConstants.GECKO_PREFERENCES_CLASS + "/" + GlobalConstants.GECKO_BROADCAST_METHOD + " not found!");
-      return;
-    } catch (IllegalArgumentException e) {
-      Logger.error(LOG_TAG, "Got exception invoking " + GlobalConstants.GECKO_BROADCAST_METHOD + ".");
-    } catch (IllegalAccessException e) {
-      Logger.error(LOG_TAG, "Got exception invoking " + GlobalConstants.GECKO_BROADCAST_METHOD + ".");
-    } catch (InvocationTargetException e) {
-      Logger.error(LOG_TAG, "Got exception invoking " + GlobalConstants.GECKO_BROADCAST_METHOD + ".");
-    }
   }
 
   /**
