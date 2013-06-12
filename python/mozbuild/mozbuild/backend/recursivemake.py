@@ -122,6 +122,8 @@ class RecursiveMakeBackend(BuildBackend):
         self.summary.backend_detailed_summary = types.MethodType(detailed,
             self.summary)
 
+        self.xpcshell_manifests = []
+
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
 
@@ -167,7 +169,7 @@ class RecursiveMakeBackend(BuildBackend):
             self._process_program(obj.program, backend_file)
 
         elif isinstance(obj, XpcshellManifests):
-            self._process_xpcshell_manifests(obj.xpcshell_manifests, backend_file)
+            self._process_xpcshell_manifests(obj, backend_file)
 
         self._backend_files[obj.srcdir] = backend_file
 
@@ -238,6 +240,18 @@ class RecursiveMakeBackend(BuildBackend):
         self._update_from_avoid_write(backend_deps.close())
         self.summary.managed_count += 1
 
+        # Make the master xpcshell.ini file
+        self.xpcshell_manifests.sort()
+        if len(self.xpcshell_manifests) > 0:
+            mastermanifest = FileAvoidWrite(os.path.join(
+                self.environment.topobjdir, 'testing', 'xpcshell', 'xpcshell.ini'))
+            mastermanifest.write(
+                '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
+            for manifest in self.xpcshell_manifests:
+                mastermanifest.write("[include:%s]\n" % manifest)
+            self._update_from_avoid_write(mastermanifest.close())
+            self.summary.managed_count += 1
+
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
         fh = backend_file.fh
@@ -303,5 +317,9 @@ class RecursiveMakeBackend(BuildBackend):
     def _process_program(self, program, backend_file):
         backend_file.write('PROGRAM = %s\n' % program)
 
-    def _process_xpcshell_manifests(self, manifest, backend_file, namespace=""):
+    def _process_xpcshell_manifests(self, obj, backend_file, namespace=""):
+        manifest = obj.xpcshell_manifests
         backend_file.write('XPCSHELL_TESTS += %s\n' % os.path.dirname(manifest))
+        if obj.relativedir != '':
+            manifest = '%s/%s' % (obj.relativedir, manifest)
+        self.xpcshell_manifests.append(manifest)
