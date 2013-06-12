@@ -8,13 +8,6 @@
     <dimen name="abouthome_gutter_small">20dp</dimen>
     <dimen name="abouthome_gutter_large">40dp</dimen>
     <dimen name="abouthome_icon_crop">0dp</dimen>
-    <dimen name="awesomebar_header_row_height">24dp</dimen>
-
-    <!-- Padding on either side of the lists in AwesomeBar -->
-    <dimen name="awesomebar_list_padding">52dp</dimen>
-
-    <dimen name="awesomebar_row_height">66dp</dimen>
-    <dimen name="awesomebar_tab_transparency_height">46dp</dimen>
     <dimen name="browser_toolbar_height">56dp</dimen>
     <dimen name="remote_tab_child_row_height">56dp</dimen>
     <dimen name="remote_tab_group_row_height">34dp</dimen>

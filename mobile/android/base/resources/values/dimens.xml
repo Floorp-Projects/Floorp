@@ -18,12 +18,6 @@
     <dimen name="autocomplete_min_width">200dp</dimen>
     <dimen name="autocomplete_row_height">32dp</dimen>
 
-    <!-- Padding on either side of the lists in AwesomeBar -->
-    <dimen name="awesomebar_list_padding">0dp</dimen>
-
-    <dimen name="awesomebar_header_row_height">20dp</dimen>
-    <dimen name="awesomebar_row_height">48dp</dimen>
-    <dimen name="awesomebar_tab_transparency_height">38dp</dimen>
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
