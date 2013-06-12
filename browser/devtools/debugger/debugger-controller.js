@@ -428,6 +428,7 @@ StackFrames.prototype = {
   currentBreakpointLocation: null,
   currentEvaluation: null,
   currentException: null,
+  currentReturnedValue: null,
 
   /**
    * Connect to the current thread client.
@@ -484,6 +485,17 @@ StackFrames.prototype = {
       // If paused by an exception, store the exception value.
       case "exception":
         this.currentException = aPacket.why.exception;
+        break;
+      // If paused while stepping out of a frame, store the returned value or
+      // thrown exception.
+      case "resumeLimit":
+        if (!aPacket.why.frameFinished) {
+          break;
+        } else if (aPacket.why.frameFinished.throw) {
+          this.currentException = aPacket.why.frameFinished.throw;
+        } else if (aPacket.why.frameFinished.return) {
+          this.currentReturnedValue = aPacket.why.frameFinished.return;
+        }
         break;
     }
 
@@ -595,6 +607,7 @@ StackFrames.prototype = {
     this.currentBreakpointLocation = null;
     this.currentEvaluation = null;
     this.currentException = null;
+    this.currentReturnedValue = null;
     // After each frame step (in, over, out), framescleared is fired, which
     // forces the UI to be emptied and rebuilt on framesadded. Most of the times
     // this is not necessary, and will result in a brief redraw flicker.
@@ -831,6 +844,11 @@ StackFrames.prototype = {
     if (this.currentException) {
       let excRef = aScope.addVar("<exception>", { value: this.currentException });
       this._addVarExpander(excRef, this.currentException);
+    }
+    // Add any returned value.
+    if (this.currentReturnedValue) {
+      let retRef = aScope.addVar("<return>", { value: this.currentReturnedValue });
+      this._addVarExpander(retRef, this.currentReturnedValue);
     }
     // Add "this".
     if (aFrame.this) {
