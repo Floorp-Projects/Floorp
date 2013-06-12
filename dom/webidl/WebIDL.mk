@@ -181,6 +181,7 @@ webidl_files = \
   MozActivity.webidl \
   MozMmsMessage.webidl \
   MozNamedAttrMap.webidl \
+  MozTimeManager.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
   NetDashboard.webidl \
