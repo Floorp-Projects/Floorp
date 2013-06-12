@@ -121,6 +121,8 @@ public class AwesomeBar extends GeckoActivity
                         mText.setText(text);
                         mText.setSelection(mText.getText().length());
                         mText.requestFocus();
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
                     }
                 });
             }
@@ -144,6 +146,7 @@ public class AwesomeBar extends GeckoActivity
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
         if (currentUrl != null) {
             mText.setText(currentUrl);
+            mText.selectAll();
         }
 
         mTarget = intent.getStringExtra(TARGET_KEY);
@@ -217,8 +220,7 @@ public class AwesomeBar extends GeckoActivity
                     return;
                 }
 
-                InputMethodManager imm = (InputMethodManager)
-                    getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 try {
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 } catch (NullPointerException e) {
@@ -469,6 +471,8 @@ public class AwesomeBar extends GeckoActivity
         } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
              mText.setText("");
              mText.requestFocus();
+             InputMethodManager imm = (InputMethodManager) mText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+             imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
              return true;
         } else {
             int prevSelStart = mText.getSelectionStart();
