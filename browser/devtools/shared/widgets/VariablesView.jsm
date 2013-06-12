@@ -2256,6 +2256,7 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
   _onInit: function(aImmediateFlag) {
     if (this._initialDescriptor.enumerable ||
         this._nameString == "this" ||
+        this._nameString == "<return>" ||
         this._nameString == "<exception>") {
       this.ownerView._lazyAppend(aImmediateFlag, true, this._target);
       this.ownerView._enumItems.push(this);
@@ -2432,6 +2433,9 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
     }
     else if (name == "<exception>") {
       this._target.setAttribute("exception", "");
+    }
+    else if (name == "<return>") {
+      this._target.setAttribute("return", "");
     }
     else if (name == "__proto__") {
       this._target.setAttribute("proto", "");
