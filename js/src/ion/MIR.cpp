@@ -1305,7 +1305,7 @@ MBinaryArithInstruction::infer(BaselineInspector *inspector,
         return inferFallback(inspector, pc);
 
     // If the operation has ever overflowed, use a double specialization.
-    if (overflowed)
+    if (inspector->expectedResultType(pc) == MIRType_Double)
         setResultType(MIRType_Double);
 
     // If the operation will always overflow on its constant operands, use a
