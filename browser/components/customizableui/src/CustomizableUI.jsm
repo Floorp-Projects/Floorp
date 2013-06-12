@@ -172,6 +172,12 @@ let CustomizableUIInternal = {
         "personal-bookmarks",
       ]
     });
+
+    this.registerArea(CustomizableUI.AREA_ADDONBAR, {
+      type: CustomizableUI.TYPE_TOOLBAR,
+      legacy: true,
+      defaultPlacements: []
+    });
   },
 
   _defineBuiltInWidgets: function() {
@@ -716,7 +722,7 @@ let CustomizableUIInternal = {
       }
     }
 
-   let toolboxes = gBuildWindows.get(aWindow);
+    let toolboxes = gBuildWindows.get(aWindow);
     for (let toolbox of toolboxes) {
       if (toolbox.palette) {
         // Attempt to locate a node with a matching ID within
@@ -991,7 +997,7 @@ let CustomizableUIInternal = {
     // yet been restorted (caller can't possibly know where its putting the
     // widget in relation to other widgets).
     if (this.isAreaLazy(aArea)) {
-      gFuturePlacements.get(aArea).set(aWidgetId);
+      gFuturePlacements.get(aArea).add(aWidgetId);
       return;
     }
 
@@ -1334,7 +1340,7 @@ let CustomizableUIInternal = {
 
         if (widget.defaultArea) {
           if (this.isAreaLazy(widget.defaultArea)) {
-            gFuturePlacements.get(widget.defaultArea).set(widget.id);
+            gFuturePlacements.get(widget.defaultArea).add(widget.id);
           } else {
             this.addWidgetToArea(widget.id, widget.defaultArea);
           }
@@ -1737,6 +1743,7 @@ this.CustomizableUI = {
   get AREA_MENUBAR() "toolbar-menubar",
   get AREA_TABSTRIP() "TabsToolbar",
   get AREA_BOOKMARKS() "PersonalToolbar",
+  get AREA_ADDONBAR() "addon-bar",
 
   get PROVIDER_XUL() "xul",
   get PROVIDER_API() "api",
@@ -1843,6 +1850,9 @@ this.CustomizableUI = {
   },
   hidePanelForNode: function(aNode) {
     CustomizableUIInternal.hidePanelForNode(aNode);
+  },
+  isSpecialWidget: function(aWidgetId) {
+    return CustomizableUIInternal.isSpecialWidget(aWidgetId);
   }
 };
 Object.freeze(this.CustomizableUI);
