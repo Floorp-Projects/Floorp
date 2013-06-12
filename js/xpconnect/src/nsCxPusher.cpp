@@ -223,7 +223,7 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   }
 }
 
-AutoJSContext::operator JSContext*() const
+AutoJSContext::operator JSContext*()
 {
   return mCx;
 }
