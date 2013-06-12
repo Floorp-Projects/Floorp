@@ -86,6 +86,7 @@ webidl_files = \
   FocusEvent.webidl \
   FormData.webidl \
   Function.webidl \
+  Future.webidl \
   GainNode.webidl \
   Geolocation.webidl \
   HTMLAnchorElement.webidl \
