@@ -494,7 +494,7 @@
 /* Non enumerable, configurable and writable variables and properties */
 
 .variable-or-property[proto] > .title > .name,
-.variable-or-property[non-enumerable]:not([self]):not([exception]) > .title > .name {
+.variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]) > .title > .name {
   opacity: 0.5;
 }
 
@@ -529,6 +529,11 @@
 .variable-or-property[exception]:not(:focus) > .title > .name {
   color: #a00;
   text-shadow: 0 0 8px #fcc;
+}
+
+.variable-or-property[return]:not(:focus) > .title > .name {
+  color: #0a0;
+  text-shadow: 0 0 8px #cfc;
 }
 
 .variable-or-property[non-extensible]:not([non-writable]) > .title:after {
