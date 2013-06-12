@@ -4291,6 +4291,8 @@ var TabsInTitlebar = {
       // No need to look up the menubar stuff on OS X:
       let menuHeight = 0;
       let fullMenuHeight = 0;
+      // Instead, look up the titlebar padding:
+      let titlebarPadding = parseInt(window.getComputedStyle(titlebar).paddingTop, 10);
 #else
       // Otherwise, get the height and margins separately for the menubar
       let menuHeight = rect(menubar).height;
@@ -4364,7 +4366,16 @@ var TabsInTitlebar = {
         // We need to reduce the height by the amount of navbar overlap
         // (this value is 0 or negative):
         extraMargin += navbarMarginTop;
+        // On non-OSX, we can just use bottom margin:
+#ifndef XP_MACOSX
         titlebarContent.style.marginBottom = extraMargin + "px";
+#else
+        // Otherwise, center the content. This means taking the titlebar's
+        // padding into account:
+        let halfMargin = (extraMargin - titlebarPadding) / 2;
+        titlebarContent.style.marginTop =  halfMargin + "px";
+        titlebarContent.style.marginBottom =  (titlebarPadding + halfMargin) + "px";
+#endif
         titlebarContentHeight += extraMargin;
       }
 
