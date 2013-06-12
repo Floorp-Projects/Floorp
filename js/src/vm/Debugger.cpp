@@ -3397,14 +3397,14 @@ Debugger::handleBaselineOsr(JSContext *cx, StackFrame *from, ion::BaselineFrame 
             return false;
         frameobj->setPrivate(data);
 
+        // Remove the old entry before mutating the HashMap.
+        r.removeFrontFrame();
+
         // Add the frame object with |to| as key.
         if (!dbg->frames.putNew(to, frameobj)) {
             js_ReportOutOfMemory(cx);
             return false;
         }
-
-        // Remove the old entry.
-        r.removeFrontFrame();
     }
 
     return true;
