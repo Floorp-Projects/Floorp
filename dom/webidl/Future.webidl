@@ -15,7 +15,7 @@ interface FutureResolver {
 callback FutureInit = void (FutureResolver resolver);
 callback AnyCallback = any (optional any value);
 
-[Constructor(FutureInit init)]
+[PrefControlled, Constructor(FutureInit init)]
 interface Future {
   // TODO: update this interface - bug 875289
 
