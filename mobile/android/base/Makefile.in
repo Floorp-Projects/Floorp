@@ -427,7 +427,6 @@ RES_LAYOUT = \
   res/layout/abouthome_content.xml \
   res/layout/autocomplete_list.xml \
   res/layout/autocomplete_list_item.xml \
-  res/layout/awesomebar_suggestion_item.xml \
   res/layout/bookmark_edit.xml \
   res/layout/bookmark_folder_row.xml \
   res/layout/browser_toolbar.xml \
@@ -469,6 +468,7 @@ RES_LAYOUT = \
   res/layout/select_dialog_multichoice.xml \
   res/layout/select_dialog_singlechoice.xml \
   res/layout/simple_dropdown_item_1line.xml \
+  res/layout/suggestion_item.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
   res/layout/abouthome_section.xml \
