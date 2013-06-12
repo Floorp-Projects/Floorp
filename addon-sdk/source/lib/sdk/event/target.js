@@ -11,7 +11,7 @@ module.metadata = {
 };
 
 const { on, once, off, setListeners } = require('./core');
-const { method } = require('../lang/functional');
+const { method, chain } = require('../lang/functional');
 const { Class } = require('../core/heritage');
 
 /**
@@ -45,7 +45,7 @@ const EventTarget = Class({
    *        console.log('data received: ' + data)
    *      })
    */
-  on: method(on),
+  on: chain(method(on)),
   /**
    * Registers an event `listener` that is called once the next time an event
    * of the specified `type` is emitted.
@@ -54,7 +54,7 @@ const EventTarget = Class({
    * @param {Function} listener
    *    The listener function that processes the event.
    */
-  once: method(once),
+  once: chain(method(once)),
   /**
    * Removes an event `listener` for the given event `type`.
    * @param {String} type
@@ -68,9 +68,11 @@ const EventTarget = Class({
     // than intended. This way we make sure all arguments are passed and only
     // one listener is removed at most.
     off(this, type, listener);
+    return this;
   },
   off: function(type, listener) {
-    off(this, type, listener)
+    off(this, type, listener);
+    return this;
   }
 });
 exports.EventTarget = EventTarget;

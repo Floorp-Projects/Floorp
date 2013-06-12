@@ -14,11 +14,10 @@ exports["test post GC references"] = function (assert, done) {
 
   assert.equal(local(target).there, true, "namespaced preserved");
 
-  setTimeout(function() {
-    Cu.forceGC();
+  Cu.schedulePreciseGC(function() {
     assert.equal(local(target).there, true, "namespace is preserved post GC");
     done();
-  }, 300);
+  });
 };
 
 exports["test namsepace basics"] = function(assert) {
