@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
-
-[scriptable, builtinclass, uuid(d29beaaa-bd54-4fd5-9f18-e0eedb1dc96d)]
-interface nsIDOMMozTimeManager : nsISupports
-{
+[PrefControlled]
+interface MozTimeManager {
   /* Set the system time.
    *
    * The |time| argument can be either a Date object or a number.
@@ -16,5 +13,6 @@ interface nsIDOMMozTimeManager : nsISupports
    * - If |time| is a Date object, |set(time)| is equivalent to
    *   |set(time.getTime())|.
    */
-  [implicit_jscontext] void set(in jsval time);
+  void set(Date time);
+  void set(double time);
 };
