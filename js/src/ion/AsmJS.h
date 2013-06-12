@@ -139,10 +139,11 @@ struct AsmJSParallelTask
     uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
     ion::MIRGenerator *mir; // Passed from main thread to worker.
     ion::LIRGraph *lir;     // Passed from worker to main thread.
+    unsigned compileTime;
 
     AsmJSParallelTask(size_t defaultChunkSize)
       : lifo(defaultChunkSize),
-        funcNum(0), mir(NULL), lir(NULL)
+        funcNum(0), mir(NULL), lir(NULL), compileTime(0)
     { }
 
     void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
