@@ -23,73 +23,84 @@
 namespace webrtc {
 
 TEST_F(RemoteBitrateEstimatorTest, TestInitialBehavior) {
+  const int kFramerate = 50;  // 50 fps to avoid rounding errors.
+  const int kFrameIntervalMs = 1000 / kFramerate;
   unsigned int bitrate_bps = 0;
-  int64_t time_now = 0;
   uint32_t timestamp = 0;
   std::vector<unsigned int> ssrcs;
   EXPECT_FALSE(bitrate_estimator_->LatestEstimate(&ssrcs, &bitrate_bps));
   EXPECT_EQ(0u, ssrcs.size());
-  bitrate_estimator_->UpdateEstimate(kDefaultSsrc, time_now);
+  clock_.AdvanceTimeMilliseconds(1000);
+  bitrate_estimator_->Process();
   EXPECT_FALSE(bitrate_estimator_->LatestEstimate(&ssrcs, &bitrate_bps));
   EXPECT_FALSE(bitrate_observer_->updated());
   bitrate_observer_->Reset();
+  clock_.AdvanceTimeMilliseconds(1000);
   // Inserting a packet. Still no valid estimate. We need to wait 1 second.
-  bitrate_estimator_->IncomingPacket(kDefaultSsrc, kMtu, time_now,
-                                     timestamp);
-  bitrate_estimator_->UpdateEstimate(kDefaultSsrc, time_now);
+  bitrate_estimator_->IncomingPacket(kDefaultSsrc, kMtu,
+                                     clock_.TimeInMilliseconds(), timestamp);
+  bitrate_estimator_->Process();
   EXPECT_FALSE(bitrate_estimator_->LatestEstimate(&ssrcs, &bitrate_bps));
   EXPECT_EQ(0u, ssrcs.size());
   EXPECT_FALSE(bitrate_observer_->updated());
   bitrate_observer_->Reset();
-  // Waiting more than one second gives us a valid estimate.
-  // We need at least two packets for the incoming bitrate to be > 0 since the
-  // window is 500 ms.
-  time_now += 499;
-  bitrate_estimator_->IncomingPacket(kDefaultSsrc, kMtu, time_now,
-                                     timestamp);
-  time_now += 2;
-  bitrate_estimator_->UpdateEstimate(kDefaultSsrc, time_now);
+  // Inserting packets for one second to get a valid estimate.
+  for (int i = 0; i < kFramerate; ++i) {
+    bitrate_estimator_->IncomingPacket(kDefaultSsrc, kMtu,
+                                       clock_.TimeInMilliseconds(), timestamp);
+    clock_.AdvanceTimeMilliseconds(1000 / kFramerate);
+    timestamp += 90 * kFrameIntervalMs;
+  }
+  bitrate_estimator_->Process();
   EXPECT_TRUE(bitrate_estimator_->LatestEstimate(&ssrcs, &bitrate_bps));
-  EXPECT_EQ(1u, ssrcs.size());
+  ASSERT_EQ(1u, ssrcs.size());
   EXPECT_EQ(kDefaultSsrc, ssrcs.front());
-  EXPECT_EQ(20607u, bitrate_bps);
+  EXPECT_EQ(498075u, bitrate_bps);
   EXPECT_TRUE(bitrate_observer_->updated());
   bitrate_observer_->Reset();
   EXPECT_EQ(bitrate_observer_->latest_bitrate(), bitrate_bps);
 }
 
 TEST_F(RemoteBitrateEstimatorTest, TestRateIncreaseReordering) {
-  int64_t time_now = 0;
   uint32_t timestamp = 0;
-  const int framerate = 50;  // 50 fps to avoid rounding errors.
-  const int frame_interval_ms = 1000 / framerate;
-  bitrate_estimator_->IncomingPacket(kDefaultSsrc, 1000, time_now, timestamp);
-  bitrate_estimator_->UpdateEstimate(kDefaultSsrc, time_now);
+  const int kFramerate = 50;  // 50 fps to avoid rounding errors.
+  const int kFrameIntervalMs = 1000 / kFramerate;
+  bitrate_estimator_->IncomingPacket(kDefaultSsrc, 1000,
+                                     clock_.TimeInMilliseconds(), timestamp);
+  bitrate_estimator_->Process();
   EXPECT_FALSE(bitrate_observer_->updated());  // No valid estimate.
-  // Increase time with 1 second to get a valid estimate.
-  time_now += 1000;
-  timestamp += 90 * 1000;
-  bitrate_estimator_->IncomingPacket(kDefaultSsrc, 1000, time_now, timestamp);
-  bitrate_estimator_->UpdateEstimate(kDefaultSsrc, time_now);
+  // Inserting packets for one second to get a valid estimate.
+  for (int i = 0; i < kFramerate; ++i) {
+    bitrate_estimator_->IncomingPacket(kDefaultSsrc, kMtu,
+                                       clock_.TimeInMilliseconds(), timestamp);
+    clock_.AdvanceTimeMilliseconds(kFrameIntervalMs);
+    timestamp += 90 * kFrameIntervalMs;
+  }
+  bitrate_estimator_->Process();
   EXPECT_TRUE(bitrate_observer_->updated());
-  EXPECT_EQ(17645u, bitrate_observer_->latest_bitrate());
+  EXPECT_EQ(498136u, bitrate_observer_->latest_bitrate());
   for (int i = 0; i < 10; ++i) {
-    time_now += 2 * frame_interval_ms;
-    timestamp += 2 * 90 * frame_interval_ms;
-    bitrate_estimator_->IncomingPacket(kDefaultSsrc, 1000, time_now, timestamp);
+    clock_.AdvanceTimeMilliseconds(2 * kFrameIntervalMs);
+    timestamp += 2 * 90 * kFrameIntervalMs;
+    bitrate_estimator_->IncomingPacket(kDefaultSsrc, 1000,
+                                       clock_.TimeInMilliseconds(), timestamp);
     bitrate_estimator_->IncomingPacket(kDefaultSsrc,
                                        1000,
-                                       time_now - frame_interval_ms,
-                                       timestamp - 90 * frame_interval_ms);
+                                       clock_.TimeInMilliseconds() -
+                                           kFrameIntervalMs,
+                                       timestamp - 90 * kFrameIntervalMs);
   }
-  bitrate_estimator_->UpdateEstimate(kDefaultSsrc, time_now);
+  bitrate_estimator_->Process();
   EXPECT_TRUE(bitrate_observer_->updated());
-  EXPECT_EQ(18985u, bitrate_observer_->latest_bitrate());
+  EXPECT_EQ(498136u, bitrate_observer_->latest_bitrate());
 }
 
 // Make sure we initially increase the bitrate as expected.
 TEST_F(RemoteBitrateEstimatorTest, TestRateIncreaseRtpTimestamps) {
-  const int kExpectedIterations = 276;
+  // This threshold corresponds approximately to increasing linearly with
+  // bitrate(i) = 1.04 * bitrate(i-1) + 1000
+  // until bitrate(i) > 500000, with bitrate(1) ~= 30000.
+  const int kExpectedIterations = 1621;
   unsigned int bitrate_bps = 30000;
   int iterations = 0;
   AddDefaultStream();
@@ -114,32 +125,35 @@ TEST_F(RemoteBitrateEstimatorTest, TestRateIncreaseRtpTimestamps) {
 // Verify that the time it takes for the estimator to reduce the bitrate when
 // the capacity is tightened stays the same.
 TEST_F(RemoteBitrateEstimatorTest, TestCapacityDropRtpTimestamps) {
-  const int kNumberOfFrames= 300;
+  const int kNumberOfFrames = 300;
   const int kStartBitrate = 900e3;
   const int kMinExpectedBitrate = 800e3;
   const int kMaxExpectedBitrate = 1100e3;
   AddDefaultStream();
   // Run in steady state to make the estimator converge.
+  unsigned int capacity_bps = 1000e3;
   stream_generator_->set_capacity_bps(1000e3);
   unsigned int bitrate_bps = SteadyStateRun(kDefaultSsrc, kNumberOfFrames,
                                             kStartBitrate, kMinExpectedBitrate,
-                                            kMaxExpectedBitrate);
+                                            kMaxExpectedBitrate, capacity_bps);
   // Reduce the capacity and verify the decrease time.
-  stream_generator_->set_capacity_bps(500e3);
+  capacity_bps = 500e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
+  int64_t overuse_start_time = clock_.TimeInMilliseconds();
   int64_t bitrate_drop_time = -1;
   for (int i = 0; i < 200; ++i) {
     GenerateAndProcessFrame(kDefaultSsrc, bitrate_bps);
     // Check for either increase or decrease.
     if (bitrate_observer_->updated()) {
       if (bitrate_drop_time == -1 &&
-          bitrate_observer_->latest_bitrate() <= 500e3) {
-        bitrate_drop_time = time_now_;
+          bitrate_observer_->latest_bitrate() <= capacity_bps) {
+        bitrate_drop_time = clock_.TimeInMilliseconds();
       }
       bitrate_bps = bitrate_observer_->latest_bitrate();
       bitrate_observer_->Reset();
     }
   }
-  EXPECT_EQ(10333, bitrate_drop_time);
+  EXPECT_EQ(367, bitrate_drop_time - overuse_start_time);
 }
 
 // Verify that the time it takes for the estimator to reduce the bitrate when
@@ -156,29 +170,33 @@ TEST_F(RemoteBitrateEstimatorTest, TestCapacityDropRtpTimestampsWrap) {
   stream_generator_->set_rtp_timestamp_offset(kDefaultSsrc,
       std::numeric_limits<uint32_t>::max() - kSteadyStateTime * 90000);
   // Run in steady state to make the estimator converge.
+  unsigned int capacity_bps = 1000e3;
   stream_generator_->set_capacity_bps(1000e3);
   unsigned int bitrate_bps = SteadyStateRun(kDefaultSsrc,
                                             kSteadyStateTime * kFramerate,
                                             kStartBitrate,
                                             kMinExpectedBitrate,
-                                            kMaxExpectedBitrate);
+                                            kMaxExpectedBitrate,
+                                            capacity_bps);
   bitrate_observer_->Reset();
   // Reduce the capacity and verify the decrease time.
-  stream_generator_->set_capacity_bps(500e3);
+  capacity_bps = 500e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
+  int64_t overuse_start_time = clock_.TimeInMilliseconds();
   int64_t bitrate_drop_time = -1;
   for (int i = 0; i < 200; ++i) {
     GenerateAndProcessFrame(kDefaultSsrc, bitrate_bps);
     // Check for either increase or decrease.
     if (bitrate_observer_->updated()) {
       if (bitrate_drop_time == -1 &&
-          bitrate_observer_->latest_bitrate() <= 500e3) {
-        bitrate_drop_time = time_now_;
+          bitrate_observer_->latest_bitrate() <= capacity_bps) {
+        bitrate_drop_time = clock_.TimeInMilliseconds();
       }
       bitrate_bps = bitrate_observer_->latest_bitrate();
       bitrate_observer_->Reset();
     }
   }
-  EXPECT_EQ(8299, bitrate_drop_time);
+  EXPECT_EQ(367, bitrate_drop_time - overuse_start_time);
 }
 
 // Verify that the time it takes for the estimator to reduce the bitrate when
@@ -196,29 +214,33 @@ TEST_F(RemoteBitrateEstimatorTestAlign, TestCapacityDropRtpTimestampsWrap) {
   stream_generator_->set_rtp_timestamp_offset(kDefaultSsrc,
       std::numeric_limits<uint32_t>::max() - kSteadyStateTime * 90000);
   // Run in steady state to make the estimator converge.
-  stream_generator_->set_capacity_bps(1000e3);
+  unsigned int capacity_bps = 1000e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
   unsigned int bitrate_bps = SteadyStateRun(kDefaultSsrc,
                                             kSteadyStateTime * kFramerate,
                                             kStartBitrate,
                                             kMinExpectedBitrate,
-                                            kMaxExpectedBitrate);
+                                            kMaxExpectedBitrate,
+                                            capacity_bps);
   bitrate_observer_->Reset();
   // Reduce the capacity and verify the decrease time.
-  stream_generator_->set_capacity_bps(500e3);
+  capacity_bps = 500e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
+  int64_t overuse_start_time = clock_.TimeInMilliseconds();
   int64_t bitrate_drop_time = -1;
   for (int i = 0; i < 200; ++i) {
     GenerateAndProcessFrame(kDefaultSsrc, bitrate_bps);
     // Check for either increase or decrease.
     if (bitrate_observer_->updated()) {
       if (bitrate_drop_time == -1 &&
-          bitrate_observer_->latest_bitrate() <= 500e3) {
-        bitrate_drop_time = time_now_;
+          bitrate_observer_->latest_bitrate() <= capacity_bps) {
+        bitrate_drop_time = clock_.TimeInMilliseconds();
       }
       bitrate_bps = bitrate_observer_->latest_bitrate();
       bitrate_observer_->Reset();
     }
   }
-  EXPECT_EQ(8299, bitrate_drop_time);
+  EXPECT_EQ(367, bitrate_drop_time - overuse_start_time);
 }
 
 // Verify that the time it takes for the estimator to reduce the bitrate when
@@ -229,7 +251,7 @@ TEST_F(RemoteBitrateEstimatorTestAlign, TwoStreamsCapacityDropWithWrap) {
   const int kStartBitrate = 900e3;
   const int kMinExpectedBitrate = 800e3;
   const int kMaxExpectedBitrate = 1100e3;
-  const int kSteadyStateTime = 7;  // Seconds.
+  const int kSteadyStateFrames = 9 * kFramerate;
   stream_generator_->AddStream(new testing::RtpStream(
       30,               // Frames per second.
       kStartBitrate/2,  // Bitrate.
@@ -247,31 +269,35 @@ TEST_F(RemoteBitrateEstimatorTestAlign, TwoStreamsCapacityDropWithWrap) {
       0));         // RTCP receive time.
   // Trigger wrap right after the steady state run.
   stream_generator_->set_rtp_timestamp_offset(kDefaultSsrc,
-      std::numeric_limits<uint32_t>::max() - kSteadyStateTime * 90000);
+      std::numeric_limits<uint32_t>::max() - kSteadyStateFrames * 90000);
   // Run in steady state to make the estimator converge.
-  stream_generator_->set_capacity_bps(1000e3);
+  unsigned int capacity_bps = 1000e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
   unsigned int bitrate_bps = SteadyStateRun(kDefaultSsrc,
-                                            kSteadyStateTime * kFramerate,
+                                            kSteadyStateFrames,
                                             kStartBitrate,
                                             kMinExpectedBitrate,
-                                            kMaxExpectedBitrate);
+                                            kMaxExpectedBitrate,
+                                            capacity_bps);
   bitrate_observer_->Reset();
   // Reduce the capacity and verify the decrease time.
-  stream_generator_->set_capacity_bps(500e3);
+  capacity_bps = 500e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
+  int64_t overuse_start_time = clock_.TimeInMilliseconds();
   int64_t bitrate_drop_time = -1;
   for (int i = 0; i < 200; ++i) {
     GenerateAndProcessFrame(kDefaultSsrc, bitrate_bps);
     // Check for either increase or decrease.
     if (bitrate_observer_->updated()) {
       if (bitrate_drop_time == -1 &&
-          bitrate_observer_->latest_bitrate() <= 500e3) {
-        bitrate_drop_time = time_now_;
+          bitrate_observer_->latest_bitrate() <= capacity_bps) {
+        bitrate_drop_time = clock_.TimeInMilliseconds();
       }
       bitrate_bps = bitrate_observer_->latest_bitrate();
       bitrate_observer_->Reset();
     }
   }
-  EXPECT_EQ(4933, bitrate_drop_time);
+  EXPECT_EQ(567, bitrate_drop_time - overuse_start_time);
 }
 
 // Verify that the time it takes for the estimator to reduce the bitrate when
@@ -282,9 +308,9 @@ TEST_F(RemoteBitrateEstimatorTestAlign, ThreeStreams) {
   const int kStartBitrate = 900e3;
   const int kMinExpectedBitrate = 800e3;
   const int kMaxExpectedBitrate = 1100e3;
-  const int kSteadyStateTime = 11;  // Seconds.
+  const int kSteadyStateFrames = 12 * kFramerate;
   stream_generator_->AddStream(new testing::RtpStream(
-      30,           // Frames per second.
+      kFramerate,       // Frames per second.
       kStartBitrate/2,  // Bitrate.
       1,            // SSRC.
       90000,        // RTP frequency.
@@ -292,7 +318,7 @@ TEST_F(RemoteBitrateEstimatorTestAlign, ThreeStreams) {
       0));          // RTCP receive time.
 
   stream_generator_->AddStream(new testing::RtpStream(
-      30,           // Frames per second.
+      kFramerate,       // Frames per second.
       kStartBitrate/3,  // Bitrate.
       2,            // SSRC.
       90000,        // RTP frequency.
@@ -300,7 +326,7 @@ TEST_F(RemoteBitrateEstimatorTestAlign, ThreeStreams) {
       0));          // RTCP receive time.
 
   stream_generator_->AddStream(new testing::RtpStream(
-      30,           // Frames per second.
+      kFramerate,       // Frames per second.
       kStartBitrate/6,  // Bitrate.
       3,            // SSRC.
       90000,        // RTP frequency.
@@ -308,31 +334,35 @@ TEST_F(RemoteBitrateEstimatorTestAlign, ThreeStreams) {
       0));          // RTCP receive time.
   // Trigger wrap right after the steady state run.
   stream_generator_->set_rtp_timestamp_offset(kDefaultSsrc,
-      std::numeric_limits<uint32_t>::max() - kSteadyStateTime * 90000);
+      std::numeric_limits<uint32_t>::max() - kSteadyStateFrames * 90000);
   // Run in steady state to make the estimator converge.
-  stream_generator_->set_capacity_bps(1000e3);
+  unsigned int capacity_bps = 1000e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
   unsigned int bitrate_bps = SteadyStateRun(kDefaultSsrc,
-                                            kSteadyStateTime * kFramerate,
+                                            kSteadyStateFrames,
                                             kStartBitrate,
                                             kMinExpectedBitrate,
-                                            kMaxExpectedBitrate);
+                                            kMaxExpectedBitrate,
+                                            capacity_bps);
   bitrate_observer_->Reset();
   // Reduce the capacity and verify the decrease time.
-  stream_generator_->set_capacity_bps(500e3);
+  capacity_bps = 500e3;
+  stream_generator_->set_capacity_bps(capacity_bps);
+  int64_t overuse_start_time = clock_.TimeInMilliseconds();
   int64_t bitrate_drop_time = -1;
   for (int i = 0; i < 200; ++i) {
     GenerateAndProcessFrame(kDefaultSsrc, bitrate_bps);
     // Check for either increase or decrease.
     if (bitrate_observer_->updated()) {
       if (bitrate_drop_time == -1 &&
-          bitrate_observer_->latest_bitrate() <= 500e3) {
-        bitrate_drop_time = time_now_;
+          bitrate_observer_->latest_bitrate() <= capacity_bps) {
+        bitrate_drop_time = clock_.TimeInMilliseconds();
       }
       bitrate_bps = bitrate_observer_->latest_bitrate();
       bitrate_observer_->Reset();
     }
   }
-  EXPECT_EQ(3966, bitrate_drop_time);
+  EXPECT_EQ(433, bitrate_drop_time - overuse_start_time);
 }
 
 }  // namespace webrtc

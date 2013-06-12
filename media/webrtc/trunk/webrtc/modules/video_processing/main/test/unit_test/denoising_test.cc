@@ -22,10 +22,10 @@ namespace webrtc {
 TEST_F(VideoProcessingModuleTest, Denoising)
 {
     enum { NumRuns = 10 };
-    WebRtc_UWord32 frameNum = 0;
+    uint32_t frameNum = 0;
 
-    WebRtc_Word64 minRuntime = 0;
-    WebRtc_Word64 avgRuntime = 0;
+    int64_t minRuntime = 0;
+    int64_t avgRuntime = 0;
 
     const std::string denoise_filename =
         webrtc::test::OutputPath() + "denoise_testfile.yuv";
@@ -40,26 +40,23 @@ TEST_F(VideoProcessingModuleTest, Denoising)
         "Could not open noisy file: " << noise_filename << "\n";
 
     printf("\nRun time [us / frame]:\n");
-    for (WebRtc_UWord32 runIdx = 0; runIdx < NumRuns; runIdx++)
+    for (uint32_t runIdx = 0; runIdx < NumRuns; runIdx++)
     {
         TickTime t0;
         TickTime t1;
         TickInterval accTicks;
-        WebRtc_Word32 modifiedPixels = 0;
+        int32_t modifiedPixels = 0;
 
         frameNum = 0;
         scoped_array<uint8_t> video_buffer(new uint8_t[_frame_length]);
         while (fread(video_buffer.get(), 1, _frame_length, _sourceFile) ==
             _frame_length)
         {
-          _videoFrame.CreateFrame(_size_y, video_buffer.get(),
-                                  _size_uv, video_buffer.get() + _size_y,
-                                  _size_uv,
-                                  video_buffer.get() + _size_y + _size_uv,
-                                  _width, _height,
-                                  _width, _half_width, _half_width);
+            EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
+                                       _width, _height,
+                                       0, kRotateNone, &_videoFrame));
             frameNum++;
-            WebRtc_UWord8* sourceBuffer = _videoFrame.buffer(kYPlane);
+            uint8_t* sourceBuffer = _videoFrame.buffer(kYPlane);
 
             // Add noise to a part in video stream
             // Random noise
@@ -67,10 +64,10 @@ TEST_F(VideoProcessingModuleTest, Denoising)
 
             for (int ir = 0; ir < _height; ir++)
             {
-                WebRtc_UWord32 ik = ir * _width;
+                uint32_t ik = ir * _width;
                 for (int ic = 0; ic < _width; ic++)
                 {
-                    WebRtc_UWord8 r = rand() % 16;
+                    uint8_t r = rand() % 16;
                     r -= 8;
                     if (ir < _height / 4)
                         r = 0;
@@ -81,7 +78,7 @@ TEST_F(VideoProcessingModuleTest, Denoising)
                     if (ic >= 3 * _width / 4)
                         r = 0;
 
-                    /*WebRtc_UWord8 pixelValue = 0;
+                    /*uint8_t pixelValue = 0;
                     if (ir >= _height / 2)
                     { // Region 3 or 4
                         pixelValue = 170;

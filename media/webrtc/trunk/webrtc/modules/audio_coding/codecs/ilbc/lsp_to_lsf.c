@@ -24,17 +24,17 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Lsp2Lsf(
-    WebRtc_Word16 *lsp, /* (i) lsp vector -1...+1 in Q15 */
-    WebRtc_Word16 *lsf, /* (o) Lsf vector 0...Pi in Q13
+    int16_t *lsp, /* (i) lsp vector -1...+1 in Q15 */
+    int16_t *lsf, /* (o) Lsf vector 0...Pi in Q13
                            (ordered, so that lsf[i]<lsf[i+1]) */
-    WebRtc_Word16 m  /* (i) Number of coefficients */
+    int16_t m  /* (i) Number of coefficients */
                            )
 {
-  WebRtc_Word16 i, k;
-  WebRtc_Word16 diff; /* diff between table value and desired value (Q15) */
-  WebRtc_Word16 freq; /* lsf/(2*pi) (Q16) */
-  WebRtc_Word16 *lspPtr, *lsfPtr, *cosTblPtr;
-  WebRtc_Word16 tmp;
+  int16_t i, k;
+  int16_t diff; /* diff between table value and desired value (Q15) */
+  int16_t freq; /* lsf/(2*pi) (Q16) */
+  int16_t *lspPtr, *lsfPtr, *cosTblPtr;
+  int16_t tmp;
 
   /* set the index to maximum index value in WebRtcIlbcfix_kCos */
   k = 63;
@@ -46,14 +46,14 @@ void WebRtcIlbcfix_Lsp2Lsf(
   */
   lspPtr = &lsp[9];
   lsfPtr = &lsf[9];
-  cosTblPtr=(WebRtc_Word16*)&WebRtcIlbcfix_kCos[k];
+  cosTblPtr=(int16_t*)&WebRtcIlbcfix_kCos[k];
   for(i=m-1; i>=0; i--)
   {
     /*
        locate value in the table, which is just above lsp[i],
        basically an approximation to acos(x)
     */
-    while( (((WebRtc_Word32)(*cosTblPtr)-(*lspPtr)) < 0)&&(k>0) )
+    while( (((int32_t)(*cosTblPtr)-(*lspPtr)) < 0)&&(k>0) )
     {
       k-=1;
       cosTblPtr--;
@@ -68,13 +68,13 @@ void WebRtcIlbcfix_Lsp2Lsf(
     */
 
     /* tmp (linear offset) in Q16 */
-    tmp = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16_RSFT(WebRtcIlbcfix_kAcosDerivative[k],diff, 11);
+    tmp = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(WebRtcIlbcfix_kAcosDerivative[k],diff, 11);
 
     /* freq in Q16 */
-    freq = (WebRtc_Word16)WEBRTC_SPL_LSHIFT_W16(k,9)+tmp;
+    freq = (int16_t)WEBRTC_SPL_LSHIFT_W16(k,9)+tmp;
 
     /* lsf = freq*2*pi */
-    (*lsfPtr) = (WebRtc_Word16)(((WebRtc_Word32)freq*25736)>>15);
+    (*lsfPtr) = (int16_t)(((int32_t)freq*25736)>>15);
 
     lsfPtr--;
     lspPtr--;

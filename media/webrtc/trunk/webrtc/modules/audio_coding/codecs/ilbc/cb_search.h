@@ -22,14 +22,14 @@
 void WebRtcIlbcfix_CbSearch(
     iLBC_Enc_Inst_t *iLBCenc_inst,
     /* (i) the encoder state structure */
-    WebRtc_Word16 *index,  /* (o) Codebook indices */
-    WebRtc_Word16 *gain_index, /* (o) Gain quantization indices */
-    WebRtc_Word16 *intarget, /* (i) Target vector for encoding */
-    WebRtc_Word16 *decResidual,/* (i) Decoded residual for codebook construction */
-    WebRtc_Word16 lMem,  /* (i) Length of buffer */
-    WebRtc_Word16 lTarget,  /* (i) Length of vector */
-    WebRtc_Word16 *weightDenum,/* (i) weighting filter coefficients in Q12 */
-    WebRtc_Word16 block  /* (i) the subblock number */
+    int16_t *index,  /* (o) Codebook indices */
+    int16_t *gain_index, /* (o) Gain quantization indices */
+    int16_t *intarget, /* (i) Target vector for encoding */
+    int16_t *decResidual,/* (i) Decoded residual for codebook construction */
+    int16_t lMem,  /* (i) Length of buffer */
+    int16_t lTarget,  /* (i) Length of vector */
+    int16_t *weightDenum,/* (i) weighting filter coefficients in Q12 */
+    int16_t block  /* (i) the subblock number */
                             );
 
 #endif

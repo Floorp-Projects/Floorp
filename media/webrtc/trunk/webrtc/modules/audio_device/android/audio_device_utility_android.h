@@ -25,14 +25,14 @@ class CriticalSectionWrapper;
 class AudioDeviceUtilityAndroid: public AudioDeviceUtility
 {
 public:
-    AudioDeviceUtilityAndroid(const WebRtc_Word32 id);
+    AudioDeviceUtilityAndroid(const int32_t id);
     ~AudioDeviceUtilityAndroid();
 
-    virtual WebRtc_Word32 Init();
+    virtual int32_t Init();
 
 private:
     CriticalSectionWrapper& _critSect;
-    WebRtc_Word32 _id;
+    int32_t _id;
     AudioDeviceModule::ErrorCode _lastError;
 };
 

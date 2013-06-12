@@ -36,10 +36,10 @@
  *                   -1 - Error
  */
 
-WebRtc_Word16 WebRtcIsac_GetCrc(
-    const WebRtc_Word16* encoded,
-    WebRtc_Word16        no_of_word8s,
-    WebRtc_UWord32*      crc);
+int16_t WebRtcIsac_GetCrc(
+    const int16_t* encoded,
+    int16_t        no_of_word8s,
+    uint32_t*      crc);
 
 
 

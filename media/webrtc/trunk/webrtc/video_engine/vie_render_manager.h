@@ -29,21 +29,21 @@ class ViERenderer;
 class ViERenderManager : private ViEManagerBase {
   friend class ViERenderManagerScoped;
  public:
-  explicit ViERenderManager(WebRtc_Word32 engine_id);
+  explicit ViERenderManager(int32_t engine_id);
   ~ViERenderManager();
 
-  WebRtc_Word32 RegisterVideoRenderModule(VideoRender* render_module);
-  WebRtc_Word32 DeRegisterVideoRenderModule(VideoRender* render_module);
+  int32_t RegisterVideoRenderModule(VideoRender* render_module);
+  int32_t DeRegisterVideoRenderModule(VideoRender* render_module);
 
-  ViERenderer* AddRenderStream(const WebRtc_Word32 render_id,
+  ViERenderer* AddRenderStream(const int32_t render_id,
                                void* window,
-                               const WebRtc_UWord32 z_order,
+                               const uint32_t z_order,
                                const float left,
                                const float top,
                                const float right,
                                const float bottom);
 
-  WebRtc_Word32 RemoveRenderStream(WebRtc_Word32 render_id);
+  int32_t RemoveRenderStream(int32_t render_id);
 
  private:
   // Returns a pointer to the render module if it exists in the render list.
@@ -51,10 +51,10 @@ class ViERenderManager : private ViEManagerBase {
   VideoRender* FindRenderModule(void* window);
 
   // Methods used by ViERenderScoped.
-  ViERenderer* ViERenderPtr(WebRtc_Word32 render_id) const;
+  ViERenderer* ViERenderPtr(int32_t render_id) const;
 
   scoped_ptr<CriticalSectionWrapper> list_cs_;
-  WebRtc_Word32 engine_id_;
+  int32_t engine_id_;
   MapWrapper stream_to_vie_renderer_;  // Protected by ViEManagerBase.
   ListWrapper render_list_;
   bool use_external_render_module_;
@@ -65,7 +65,7 @@ class ViERenderManagerScoped: private ViEManagerScopedBase {
   explicit ViERenderManagerScoped(const ViERenderManager& vie_render_manager);
 
   // Returns a pointer to the ViERender object.
-  ViERenderer* Renderer(WebRtc_Word32 render_id) const;
+  ViERenderer* Renderer(int32_t render_id) const;
 };
 
 }  // namespace webrtc

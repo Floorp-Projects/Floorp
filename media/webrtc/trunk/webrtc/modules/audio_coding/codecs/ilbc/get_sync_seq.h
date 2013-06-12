@@ -26,14 +26,14 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_GetSyncSeq(
-    WebRtc_Word16 *idata,   /* (i) original data */
-    WebRtc_Word16 idatal,   /* (i) dimension of data */
-    WebRtc_Word16 centerStartPos, /* (i) where current block starts */
-    WebRtc_Word16 *period,   /* (i) rough-pitch-period array       (Q-2) */
-    WebRtc_Word16 *plocs,   /* (i) where periods of period array are taken (Q-2) */
-    WebRtc_Word16 periodl,   /* (i) dimension period array */
-    WebRtc_Word16 hl,    /* (i) 2*hl+1 is the number of sequences */
-    WebRtc_Word16 *surround  /* (i/o) The contribution from this sequence
+    int16_t *idata,   /* (i) original data */
+    int16_t idatal,   /* (i) dimension of data */
+    int16_t centerStartPos, /* (i) where current block starts */
+    int16_t *period,   /* (i) rough-pitch-period array       (Q-2) */
+    int16_t *plocs,   /* (i) where periods of period array are taken (Q-2) */
+    int16_t periodl,   /* (i) dimension period array */
+    int16_t hl,    /* (i) 2*hl+1 is the number of sequences */
+    int16_t *surround  /* (i/o) The contribution from this sequence
                                 summed with earlier contributions */
                               );
 

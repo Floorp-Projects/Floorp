@@ -30,7 +30,7 @@ public:
     VPMFramePreprocessor();
     ~VPMFramePreprocessor();
 
-    WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
+    int32_t ChangeUniqueId(const int32_t id);
 
     void Reset();
 
@@ -43,27 +43,25 @@ public:
     void EnableContentAnalysis(bool enable);
 
     //Set max frame rate
-    WebRtc_Word32 SetMaxFrameRate(WebRtc_UWord32 maxFrameRate);
+    int32_t SetMaxFrameRate(uint32_t maxFrameRate);
 
     //Set target resolution: frame rate and dimension
-    WebRtc_Word32 SetTargetResolution(WebRtc_UWord32 width,
-                                      WebRtc_UWord32 height,
-                                      WebRtc_UWord32 frameRate);
+    int32_t SetTargetResolution(uint32_t width, uint32_t height,
+                                uint32_t frameRate);
 
     //Update incoming frame rate/dimension
     void UpdateIncomingFrameRate();
 
-    WebRtc_Word32 updateIncomingFrameSize(WebRtc_UWord32 width,
-                                          WebRtc_UWord32 height);
+    int32_t updateIncomingFrameSize(uint32_t width, uint32_t height);
 
     //Set decimated values: frame rate/dimension
-    WebRtc_UWord32 DecimatedFrameRate();
-    WebRtc_UWord32 DecimatedWidth() const;
-    WebRtc_UWord32 DecimatedHeight() const;
+    uint32_t DecimatedFrameRate();
+    uint32_t DecimatedWidth() const;
+    uint32_t DecimatedHeight() const;
 
     //Preprocess output:
-    WebRtc_Word32 PreprocessFrame(const I420VideoFrame& frame,
-                                  I420VideoFrame** processedFrame);
+    int32_t PreprocessFrame(const I420VideoFrame& frame,
+                            I420VideoFrame** processedFrame);
     VideoContentMetrics* ContentMetrics() const;
 
 private:
@@ -71,9 +69,9 @@ private:
     // we can compute new content metrics every |kSkipFrameCA| frames.
     enum { kSkipFrameCA = 2 };
 
-    WebRtc_Word32              _id;
+    int32_t              _id;
     VideoContentMetrics*      _contentMetrics;
-    WebRtc_UWord32             _maxFrameRate;
+    uint32_t             _maxFrameRate;
     I420VideoFrame           _resampledFrame;
     VPMSpatialResampler*     _spatialResampler;
     VPMContentAnalysis*      _ca;

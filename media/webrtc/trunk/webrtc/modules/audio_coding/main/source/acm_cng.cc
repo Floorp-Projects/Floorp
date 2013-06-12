@@ -20,7 +20,7 @@
 
 namespace webrtc {
 
-ACMCNG::ACMCNG(WebRtc_Word16 codec_id) {
+ACMCNG::ACMCNG(int16_t codec_id) {
   encoder_inst_ptr_ = NULL;
   decoder_inst_ptr_ = NULL;
   codec_id_ = codec_id;
@@ -44,16 +44,16 @@ ACMCNG::~ACMCNG() {
 // should not be called normally
 // instead the following function is called from inside
 // ACMGenericCodec::ProcessFrameVADDTX
-WebRtc_Word16 ACMCNG::InternalEncode(WebRtc_UWord8* /* bitstream */,
-                                     WebRtc_Word16* /* bitstream_len_byte */) {
+int16_t ACMCNG::InternalEncode(uint8_t* /* bitstream */,
+                               int16_t* /* bitstream_len_byte */) {
   return -1;
 }
 
-WebRtc_Word16 ACMCNG::DecodeSafe(WebRtc_UWord8* /* bitstream */,
-                                 WebRtc_Word16 /* bitstream_len_byte */,
-                                 WebRtc_Word16* /* audio */,
-                                 WebRtc_Word16* /* audio_samples */,
-                                 WebRtc_Word8* /* speech_type */) {
+int16_t ACMCNG::DecodeSafe(uint8_t* /* bitstream */,
+                           int16_t /* bitstream_len_byte */,
+                           int16_t* /* audio */,
+                           int16_t* /* audio_samples */,
+                           int8_t* /* speech_type */) {
   return 0;
 }
 
@@ -61,18 +61,18 @@ WebRtc_Word16 ACMCNG::DecodeSafe(WebRtc_UWord8* /* bitstream */,
 // this function should not be called normally
 // instead the following function is called from inside
 // ACMGenericCodec::ProcessFrameVADDTX
-WebRtc_Word16 ACMCNG::InternalInitEncoder(
+int16_t ACMCNG::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-WebRtc_Word16 ACMCNG::InternalInitDecoder(
+int16_t ACMCNG::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return WebRtcCng_InitDec(decoder_inst_ptr_);
 }
 
-WebRtc_Word32 ACMCNG::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                               const CodecInst& codec_inst) {
+int32_t ACMCNG::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                         const CodecInst& codec_inst) {
   if (!decoder_initialized_) {
     // TODO(tlegrand): log error
     return -1;
@@ -97,7 +97,7 @@ ACMGenericCodec* ACMCNG::CreateInstance(void) {
   return NULL;
 }
 
-WebRtc_Word16 ACMCNG::InternalCreateEncoder() {
+int16_t ACMCNG::InternalCreateEncoder() {
   if (WebRtcCng_CreateEnc(&encoder_inst_ptr_) < 0) {
     encoder_inst_ptr_ = NULL;
     return -1;
@@ -115,7 +115,7 @@ void ACMCNG::DestructEncoderSafe() {
   encoder_initialized_ = false;
 }
 
-WebRtc_Word16 ACMCNG::InternalCreateDecoder() {
+int16_t ACMCNG::InternalCreateDecoder() {
   if (WebRtcCng_CreateDec(&decoder_inst_ptr_) < 0) {
     decoder_inst_ptr_ = NULL;
     return -1;

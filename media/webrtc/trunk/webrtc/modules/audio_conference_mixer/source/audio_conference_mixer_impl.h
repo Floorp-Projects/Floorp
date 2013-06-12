@@ -32,14 +32,14 @@ public:
     ~MixHistory();
 
     // MixerParticipant function
-    WebRtc_Word32 IsMixed(bool& mixed) const;
+    int32_t IsMixed(bool& mixed) const;
 
     // Sets wasMixed to true if the participant was mixed previous mix
     // iteration.
-    WebRtc_Word32 WasMixed(bool& wasMixed) const;
+    int32_t WasMixed(bool& wasMixed) const;
 
     // Updates the mixed status.
-    WebRtc_Word32 SetIsMixed(const bool mixed);
+    int32_t SetIsMixed(const bool mixed);
 
     void ResetMixedStatus();
 private:
@@ -59,32 +59,32 @@ public:
     bool Init();
 
     // Module functions
-    virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id);
-    virtual WebRtc_Word32 TimeUntilNextProcess();
-    virtual WebRtc_Word32 Process();
+    virtual int32_t ChangeUniqueId(const int32_t id);
+    virtual int32_t TimeUntilNextProcess();
+    virtual int32_t Process();
 
     // AudioConferenceMixer functions
-    virtual WebRtc_Word32 RegisterMixedStreamCallback(
+    virtual int32_t RegisterMixedStreamCallback(
         AudioMixerOutputReceiver& mixReceiver);
-    virtual WebRtc_Word32 UnRegisterMixedStreamCallback();
-    virtual WebRtc_Word32 RegisterMixerStatusCallback(
+    virtual int32_t UnRegisterMixedStreamCallback();
+    virtual int32_t RegisterMixerStatusCallback(
         AudioMixerStatusReceiver& mixerStatusCallback,
-        const WebRtc_UWord32 amountOf10MsBetweenCallbacks);
-    virtual WebRtc_Word32 UnRegisterMixerStatusCallback();
-    virtual WebRtc_Word32 SetMixabilityStatus(MixerParticipant& participant,
-                                              const bool mixable);
-    virtual WebRtc_Word32 MixabilityStatus(MixerParticipant& participant,
-                                           bool& mixable);
-    virtual WebRtc_Word32 SetMinimumMixingFrequency(Frequency freq);
-    virtual WebRtc_Word32 SetAnonymousMixabilityStatus(
+        const uint32_t amountOf10MsBetweenCallbacks);
+    virtual int32_t UnRegisterMixerStatusCallback();
+    virtual int32_t SetMixabilityStatus(MixerParticipant& participant,
+                                        const bool mixable);
+    virtual int32_t MixabilityStatus(MixerParticipant& participant,
+                                     bool& mixable);
+    virtual int32_t SetMinimumMixingFrequency(Frequency freq);
+    virtual int32_t SetAnonymousMixabilityStatus(
         MixerParticipant& participant, const bool mixable);
-    virtual WebRtc_Word32 AnonymousMixabilityStatus(
+    virtual int32_t AnonymousMixabilityStatus(
         MixerParticipant& participant, bool& mixable);
 private:
     enum{DEFAULT_AUDIO_FRAME_POOLSIZE = 50};
 
     // Set/get mix frequency
-    WebRtc_Word32 SetOutputFrequency(const Frequency frequency);
+    int32_t SetOutputFrequency(const Frequency frequency);
     Frequency OutputFrequency() const;
 
     // Must be called whenever an audio frame indicates the number of channels
@@ -101,12 +101,12 @@ private:
     // should be ramped out over this AudioFrame to avoid audio discontinuities.
     void UpdateToMix(ListWrapper& mixList, ListWrapper& rampOutList,
                      MapWrapper& mixParticipantList,
-                     WebRtc_UWord32& maxAudioFrameCounter);
+                     uint32_t& maxAudioFrameCounter);
 
     // Return the lowest mixing frequency that can be used without having to
     // downsample any audio.
-    WebRtc_Word32 GetLowestMixingFrequency();
-    WebRtc_Word32 GetLowestMixingFrequencyFromList(ListWrapper& mixList);
+    int32_t GetLowestMixingFrequency();
+    int32_t GetLowestMixingFrequencyFromList(ListWrapper& mixList);
 
     // Return the AudioFrames that should be mixed anonymously.
     void GetAdditionalAudio(ListWrapper& additionalFramesList);
@@ -139,31 +139,31 @@ private:
         ListWrapper& participantList);
 
     // Mix the AudioFrames stored in audioFrameList into mixedAudio.
-    WebRtc_Word32 MixFromList(
+    int32_t MixFromList(
         AudioFrame& mixedAudio,
         const ListWrapper& audioFrameList);
     // Mix the AudioFrames stored in audioFrameList into mixedAudio. No
     // record will be kept of this mix (e.g. the corresponding MixerParticipants
     // will not be marked as IsMixed()
-    WebRtc_Word32 MixAnonomouslyFromList(AudioFrame& mixedAudio,
-                                         const ListWrapper& audioFrameList);
+    int32_t MixAnonomouslyFromList(AudioFrame& mixedAudio,
+                                   const ListWrapper& audioFrameList);
 
     bool LimitMixedAudio(AudioFrame& mixedAudio);
 
     // Scratch memory
     // Note that the scratch memory may only be touched in the scope of
     // Process().
-    WebRtc_UWord32         _scratchParticipantsToMixAmount;
+    uint32_t         _scratchParticipantsToMixAmount;
     ParticipantStatistics  _scratchMixedParticipants[
         kMaximumAmountOfMixedParticipants];
-    WebRtc_UWord32         _scratchVadPositiveParticipantsAmount;
+    uint32_t         _scratchVadPositiveParticipantsAmount;
     ParticipantStatistics  _scratchVadPositiveParticipants[
         kMaximumAmountOfMixedParticipants];
 
     scoped_ptr<CriticalSectionWrapper> _crit;
     scoped_ptr<CriticalSectionWrapper> _cbCrit;
 
-    WebRtc_Word32 _id;
+    int32_t _id;
 
     Frequency _minimumMixingFreq;
 
@@ -171,13 +171,13 @@ private:
     AudioMixerOutputReceiver* _mixReceiver;
 
     AudioMixerStatusReceiver* _mixerStatusCallback;
-    WebRtc_UWord32            _amountOf10MsBetweenCallbacks;
-    WebRtc_UWord32            _amountOf10MsUntilNextCallback;
+    uint32_t            _amountOf10MsBetweenCallbacks;
+    uint32_t            _amountOf10MsUntilNextCallback;
     bool                      _mixerStatusCb;
 
     // The current sample frequency and sample size when mixing.
     Frequency _outputFrequency;
-    WebRtc_UWord16 _sampleSize;
+    uint16_t _sampleSize;
 
     // Memory pool to avoid allocating/deallocating AudioFrames
     MemoryPool<AudioFrame>* _audioFramePool;
@@ -186,9 +186,9 @@ private:
     ListWrapper _participantList;              // May be mixed.
     ListWrapper _additionalParticipantList;    // Always mixed, anonomously.
 
-    WebRtc_UWord32 _numMixedParticipants;
+    uint32_t _numMixedParticipants;
 
-    WebRtc_UWord32 _timeStamp;
+    uint32_t _timeStamp;
 
     // Metronome class.
     TimeScheduler _timeScheduler;
@@ -198,7 +198,7 @@ private:
 
     // Counter keeping track of concurrent calls to process.
     // Note: should never be higher than 1 or lower than 0.
-    WebRtc_Word16 _processCalls;
+    int16_t _processCalls;
 
     // Used for inhibiting saturation in mixing.
     scoped_ptr<AudioProcessing> _limiter;

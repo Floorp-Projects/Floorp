@@ -8,17 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_I420_H_
-#define WEBRTC_MODULES_VIDEO_CODING_CODECS_I420_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_I420_MAIN_INTERFACE_I420_H_
+#define WEBRTC_MODULES_VIDEO_CODING_CODECS_I420_MAIN_INTERFACE_I420_H_
 
-#include "video_codec_interface.h"
-#include "typedefs.h"
+#include <vector>
+
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-class I420Encoder : public VideoEncoder {
-public:
+enum { kI420HeaderSize = 4 };
 
+class I420Encoder : public VideoEncoder {
+ public:
   I420Encoder();
 
   virtual ~I420Encoder();
@@ -64,25 +67,29 @@ public:
 // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
   virtual int Release();
 
-  virtual int SetRates(uint32_t /*newBitRate*/, uint32_t /*frameRate*/)
-    {return WEBRTC_VIDEO_CODEC_OK;}
+  virtual int SetRates(uint32_t /*newBitRate*/, uint32_t /*frameRate*/) {
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
 
-  virtual int SetChannelParameters(uint32_t /*packetLoss*/, int /*rtt*/)
-    {return WEBRTC_VIDEO_CODEC_OK;}
+  virtual int SetChannelParameters(uint32_t /*packetLoss*/, int /*rtt*/) {
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
 
-  virtual int CodecConfigParameters(uint8_t* /*buffer*/, int /*size*/)
-    {return WEBRTC_VIDEO_CODEC_OK;}
+  virtual int CodecConfigParameters(uint8_t* /*buffer*/, int /*size*/) {
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
 
-private:
+ private:
+  static uint8_t* InsertHeader(uint8_t* buffer, uint16_t width,
+                               uint16_t height);
+
   bool                     _inited;
   EncodedImage             _encodedImage;
   EncodedImageCallback*    _encodedCompleteCallback;
-
-}; // end of WebRtcI420DEncoder class
+};  // class I420Encoder
 
 class I420Decoder : public VideoDecoder {
-public:
-
+ public:
   I420Decoder();
 
   virtual ~I420Decoder();
@@ -95,8 +102,10 @@ public:
   virtual int InitDecode(const VideoCodec* codecSettings,
                          int /*numberOfCores*/);
 
-  virtual int SetCodecConfigParameters(const uint8_t* /*buffer*/, int /*size*/)
-    {return WEBRTC_VIDEO_CODEC_OK;};
+  virtual int SetCodecConfigParameters(const uint8_t* /*buffer*/,
+                                       int /*size*/) {
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
 
 // Decode encoded image (as a part of a video stream). The decoded image
 // will be returned to the user through the decode complete callback.
@@ -136,16 +145,17 @@ public:
 //                          <0 - Error
   virtual int Reset();
 
-private:
+ private:
+  static const uint8_t* ExtractHeader(const uint8_t* buffer, uint16_t* width,
+                               uint16_t* height);
 
   I420VideoFrame              _decodedImage;
   int                         _width;
   int                         _height;
   bool                        _inited;
   DecodedImageCallback*       _decodeCompleteCallback;
+};  // class I420Decoder
 
-}; // End of WebRtcI420Decoder class.
+}  // namespace webrtc
 
-} // namespace webrtc
-
-#endif // WEBRTC_MODULES_VIDEO_CODING_CODECS_I420_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_I420_MAIN_INTERFACE_I420_H_

@@ -8,22 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gtest/gtest.h"
-
 #include <math.h>
 
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "modules/video_coding/codecs/test/packet_manipulator.h"
-#include "modules/video_coding/codecs/test/videoprocessor.h"
-#include "modules/video_coding/codecs/vp8/include/vp8.h"
-#include "modules/video_coding/codecs/vp8/include/vp8_common_types.h"
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "testsupport/fileutils.h"
-#include "testsupport/frame_reader.h"
-#include "testsupport/frame_writer.h"
-#include "testsupport/metrics/video_metrics.h"
-#include "testsupport/packet_reader.h"
-#include "typedefs.h"
+#include "gtest/gtest.h"
+
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
+#include "webrtc/modules/video_coding/codecs/test/videoprocessor.h"
+#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "webrtc/modules/video_coding/codecs/vp8/include/vp8_common_types.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/frame_reader.h"
+#include "webrtc/test/testsupport/frame_writer.h"
+#include "webrtc/test/testsupport/metrics/video_metrics.h"
+#include "webrtc/test/testsupport/packet_reader.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -32,6 +32,7 @@ namespace webrtc {
 const int kMaxNumRateUpdates = 3;
 
 const int kPercTargetvsActualMismatch = 20;
+const int kBaseKeyFrameInterval = 3000;
 
 // Codec and network settings.
 struct CodecConfigPars {
@@ -182,6 +183,8 @@ class VideoProcessorIntegrationTest: public testing::Test {
         frame_dropper_on_;
     config_.codec_settings->codecSpecific.VP8.automaticResizeOn =
         spatial_resize_on_;
+    config_.codec_settings->codecSpecific.VP8.keyFrameInterval =
+        kBaseKeyFrameInterval;
 
     frame_reader_ =
         new webrtc::test::FrameReaderImpl(config_.input_filename,
@@ -562,7 +565,7 @@ TEST_F(VideoProcessorIntegrationTest, ProcessZeroPacketLoss) {
   rate_profile.num_frames = kNbrFramesShort;
   // Codec/network settings.
   CodecConfigPars process_settings;
-  SetCodecParameters(&process_settings, 0.0f, -1, 1, true, true, true, false);
+  SetCodecParameters(&process_settings, 0.0f, -1, 1, false, true, true, false);
   // Metrics for expected quality.
   QualityMetrics quality_metrics;
   SetQualityMetrics(&quality_metrics, 36.95, 33.0, 0.90, 0.90);
@@ -585,7 +588,7 @@ TEST_F(VideoProcessorIntegrationTest, Process5PercentPacketLoss) {
   rate_profile.num_frames = kNbrFramesShort;
   // Codec/network settings.
   CodecConfigPars process_settings;
-  SetCodecParameters(&process_settings, 0.05f, -1, 1, true, true, true, false);
+  SetCodecParameters(&process_settings, 0.05f, -1, 1, false, true, true, false);
   // Metrics for expected quality.
   QualityMetrics quality_metrics;
   SetQualityMetrics(&quality_metrics, 20.0, 16.0, 0.60, 0.40);
@@ -608,7 +611,7 @@ TEST_F(VideoProcessorIntegrationTest, Process10PercentPacketLoss) {
   rate_profile.num_frames = kNbrFramesShort;
   // Codec/network settings.
   CodecConfigPars process_settings;
-  SetCodecParameters(&process_settings, 0.1f, -1, 1, true, true, true, false);
+  SetCodecParameters(&process_settings, 0.1f, -1, 1, false, true, true, false);
   // Metrics for expected quality.
   QualityMetrics quality_metrics;
   SetQualityMetrics(&quality_metrics, 19.0, 16.0, 0.50, 0.35);
@@ -635,7 +638,7 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeBitRate) {
   rate_profile.num_frames = kNbrFramesLong;
   // Codec/network settings.
   CodecConfigPars process_settings;
-  SetCodecParameters(&process_settings, 0.0f, -1, 1, true, true, true, false);
+  SetCodecParameters(&process_settings, 0.0f, -1, 1, false, true, true, false);
   // Metrics for expected quality.
   QualityMetrics quality_metrics;
   SetQualityMetrics(&quality_metrics, 34.0, 32.0, 0.85, 0.80);
@@ -668,7 +671,7 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeFrameRateFrameDrop) {
   rate_profile.num_frames = kNbrFramesLong;
   // Codec/network settings.
   CodecConfigPars process_settings;
-  SetCodecParameters(&process_settings, 0.0f, -1, 1, true, true, true, false);
+  SetCodecParameters(&process_settings, 0.0f, -1, 1, false, true, true, false);
   // Metrics for expected quality.
   QualityMetrics quality_metrics;
   SetQualityMetrics(&quality_metrics, 31.0, 22.0, 0.80, 0.65);
@@ -731,7 +734,7 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossTemporalLayers) {
   rate_profile.num_frames = kNbrFramesLong;
   // Codec/network settings.
   CodecConfigPars process_settings;
-  SetCodecParameters(&process_settings, 0.0f, -1, 3, true, true, true, false);
+  SetCodecParameters(&process_settings, 0.0f, -1, 3, false, true, true, false);
   // Metrics for expected quality.
   QualityMetrics quality_metrics;
   SetQualityMetrics(&quality_metrics, 32.5, 30.0, 0.85, 0.80);

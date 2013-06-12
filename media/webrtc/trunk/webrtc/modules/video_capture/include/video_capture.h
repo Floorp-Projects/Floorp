@@ -17,7 +17,7 @@
 namespace webrtc {
 
 #if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
-WebRtc_Word32 SetCaptureAndroidVM(void* javaVM, void* javaContext);
+int32_t SetCaptureAndroidVM(void* javaVM, void* javaContext);
 #endif
 
 class VideoCaptureModule: public RefCountedModule {
@@ -25,7 +25,7 @@ class VideoCaptureModule: public RefCountedModule {
   // Interface for receiving information about available camera devices.
   class DeviceInfo {
    public:
-    virtual WebRtc_UWord32 NumberOfDevices() = 0;
+    virtual uint32_t NumberOfDevices() = 0;
 
     // Returns the available capture devices.
     // deviceNumber   - Index of capture device.
@@ -34,93 +34,91 @@ class VideoCaptureModule: public RefCountedModule {
     //                      Otherwise same as deviceNameUTF8.
     // productUniqueIdUTF8 - Unique product id if it exist.
     //                       Null terminated otherwise.
-    virtual WebRtc_Word32 GetDeviceName(
-        WebRtc_UWord32 deviceNumber,
+    virtual int32_t GetDeviceName(
+        uint32_t deviceNumber,
         char* deviceNameUTF8,
-        WebRtc_UWord32 deviceNameLength,
+        uint32_t deviceNameLength,
         char* deviceUniqueIdUTF8,
-        WebRtc_UWord32 deviceUniqueIdUTF8Length,
+        uint32_t deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8 = 0,
-        WebRtc_UWord32 productUniqueIdUTF8Length = 0) = 0;
+        uint32_t productUniqueIdUTF8Length = 0) = 0;
 
 
     // Returns the number of capabilities this device.
-    virtual WebRtc_Word32 NumberOfCapabilities(
+    virtual int32_t NumberOfCapabilities(
         const char* deviceUniqueIdUTF8) = 0;
 
     // Gets the capabilities of the named device.
-    virtual WebRtc_Word32 GetCapability(
+    virtual int32_t GetCapability(
         const char* deviceUniqueIdUTF8,
-        const WebRtc_UWord32 deviceCapabilityNumber,
+        const uint32_t deviceCapabilityNumber,
         VideoCaptureCapability& capability) = 0;
 
     // Gets clockwise angle the captured frames should be rotated in order
     // to be displayed correctly on a normally rotated display.
-    virtual WebRtc_Word32 GetOrientation(
+    virtual int32_t GetOrientation(
         const char* deviceUniqueIdUTF8,
         VideoCaptureRotation& orientation) = 0;
 
     // Gets the capability that best matches the requested width, height and
     // frame rate.
     // Returns the deviceCapabilityNumber on success.
-    virtual WebRtc_Word32 GetBestMatchedCapability(
+    virtual int32_t GetBestMatchedCapability(
         const char* deviceUniqueIdUTF8,
         const VideoCaptureCapability& requested,
         VideoCaptureCapability& resulting) = 0;
 
      // Display OS /capture device specific settings dialog
-    virtual WebRtc_Word32 DisplayCaptureSettingsDialogBox(
+    virtual int32_t DisplayCaptureSettingsDialogBox(
         const char* deviceUniqueIdUTF8,
         const char* dialogTitleUTF8,
         void* parentWindow,
-        WebRtc_UWord32 positionX,
-        WebRtc_UWord32 positionY) = 0;
+        uint32_t positionX,
+        uint32_t positionY) = 0;
 
     virtual ~DeviceInfo() {}
   };
 
   class VideoCaptureEncodeInterface {
    public:
-    virtual WebRtc_Word32 ConfigureEncoder(const VideoCodec& codec,
-                                           WebRtc_UWord32 maxPayloadSize) = 0;
+    virtual int32_t ConfigureEncoder(const VideoCodec& codec,
+                                     uint32_t maxPayloadSize) = 0;
     // Inform the encoder about the new target bit rate.
     //  - newBitRate       : New target bit rate in Kbit/s.
     //  - frameRate        : The target frame rate.
-    virtual WebRtc_Word32 SetRates(WebRtc_Word32 newBitRate,
-                                   WebRtc_Word32 frameRate) = 0;
+    virtual int32_t SetRates(int32_t newBitRate, int32_t frameRate) = 0;
     // Inform the encoder about the packet loss and the round-trip time.
     //   - packetLoss   : Fraction lost
     //                    (loss rate in percent = 100 * packetLoss / 255).
     //   - rtt          : Round-trip time in milliseconds.
-    virtual WebRtc_Word32 SetChannelParameters(WebRtc_UWord32 packetLoss,
-                                               int rtt) = 0;
+    virtual int32_t SetChannelParameters(uint32_t packetLoss, int rtt) = 0;
 
     // Encode the next frame as key frame.
-    virtual WebRtc_Word32 EncodeFrameType(const FrameType type) = 0;
+    virtual int32_t EncodeFrameType(const FrameType type) = 0;
   protected:
     virtual ~VideoCaptureEncodeInterface() {
     }
   };
 
   //   Register capture data callback
-  virtual WebRtc_Word32 RegisterCaptureDataCallback(
+  virtual int32_t RegisterCaptureDataCallback(
       VideoCaptureDataCallback& dataCallback) = 0;
 
   //  Remove capture data callback
-  virtual WebRtc_Word32 DeRegisterCaptureDataCallback() = 0;
+  virtual int32_t DeRegisterCaptureDataCallback() = 0;
 
   // Register capture callback.
-  virtual WebRtc_Word32 RegisterCaptureCallback(
+  virtual int32_t RegisterCaptureCallback(
       VideoCaptureFeedBack& callBack) = 0;
 
   //  Remove capture callback.
-  virtual WebRtc_Word32 DeRegisterCaptureCallback() = 0;
+  virtual int32_t DeRegisterCaptureCallback() = 0;
 
   // Start capture device
-  virtual WebRtc_Word32 StartCapture(
+  virtual int32_t StartCapture(
       const VideoCaptureCapability& capability) = 0;
 
-  virtual WebRtc_Word32 StopCapture() = 0;
+  virtual int32_t StopCapture() = 0;
 
   // Returns the name of the device used by this module.
   virtual const char* CurrentDeviceName() const = 0;
@@ -129,26 +127,26 @@ class VideoCaptureModule: public RefCountedModule {
   virtual bool CaptureStarted() = 0;
 
   // Gets the current configuration.
-  virtual WebRtc_Word32 CaptureSettings(VideoCaptureCapability& settings) = 0;
+  virtual int32_t CaptureSettings(VideoCaptureCapability& settings) = 0;
 
-  virtual WebRtc_Word32 SetCaptureDelay(WebRtc_Word32 delayMS) = 0;
+  virtual int32_t SetCaptureDelay(int32_t delayMS) = 0;
 
   // Returns the current CaptureDelay. Only valid when the camera is running.
-  virtual WebRtc_Word32 CaptureDelay() = 0;
+  virtual int32_t CaptureDelay() = 0;
 
   // Set the rotation of the captured frames.
   // If the rotation is set to the same as returned by
   // DeviceInfo::GetOrientation the captured frames are
   // displayed correctly if rendered.
-  virtual WebRtc_Word32 SetCaptureRotation(VideoCaptureRotation rotation) = 0;
+  virtual int32_t SetCaptureRotation(VideoCaptureRotation rotation) = 0;
 
   // Gets a pointer to an encode interface if the capture device supports the
   // requested type and size.  NULL otherwise.
   virtual VideoCaptureEncodeInterface* GetEncodeInterface(
       const VideoCodec& codec) = 0;
 
-  virtual WebRtc_Word32 EnableFrameRateCallback(const bool enable) = 0;
-  virtual WebRtc_Word32 EnableNoPictureAlarm(const bool enable) = 0;
+  virtual int32_t EnableFrameRateCallback(const bool enable) = 0;
+  virtual int32_t EnableNoPictureAlarm(const bool enable) = 0;
 
 protected:
   virtual ~VideoCaptureModule() {};

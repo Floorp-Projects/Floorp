@@ -26,24 +26,23 @@ class Statistics
  public:
     enum {KTraceMaxMessageSize = 256};
  public:
-    Statistics(const WebRtc_UWord32 instanceId);
+    Statistics(const uint32_t instanceId);
     ~Statistics();
 
-    WebRtc_Word32 SetInitialized();
-    WebRtc_Word32 SetUnInitialized();
+    int32_t SetInitialized();
+    int32_t SetUnInitialized();
     bool Initialized() const;
-    WebRtc_Word32 SetLastError(const WebRtc_Word32 error) const;
-    WebRtc_Word32 SetLastError(const WebRtc_Word32 error,
-                               const TraceLevel level) const;
-    WebRtc_Word32 SetLastError(const WebRtc_Word32 error,
-                               const TraceLevel level,
-                               const char* msg) const;
-    WebRtc_Word32 LastError() const;
+    int32_t SetLastError(const int32_t error) const;
+    int32_t SetLastError(const int32_t error, const TraceLevel level) const;
+    int32_t SetLastError(const int32_t error,
+                         const TraceLevel level,
+                         const char* msg) const;
+    int32_t LastError() const;
 
  private:
     CriticalSectionWrapper* _critPtr;
-    const WebRtc_UWord32 _instanceId;
-    mutable WebRtc_Word32 _lastError;
+    const uint32_t _instanceId;
+    mutable int32_t _lastError;
     bool _isInitialized;
 };
 

@@ -12,7 +12,7 @@
       'targets': [
         {
           'target_name': 'video_codecs_test_framework',
-          'type': '<(library)',
+          'type': 'static_library',
           'dependencies': [
             '<(webrtc_root)/test/test.gyp:test_support',
           ],

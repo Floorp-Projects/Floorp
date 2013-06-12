@@ -20,11 +20,11 @@
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_GET_CD_VEC_H_
 
 void WebRtcIlbcfix_GetCbVec(
-    WebRtc_Word16 *cbvec,   /* (o) Constructed codebook vector */
-    WebRtc_Word16 *mem,   /* (i) Codebook buffer */
-    WebRtc_Word16 index,   /* (i) Codebook index */
-    WebRtc_Word16 lMem,   /* (i) Length of codebook buffer */
-    WebRtc_Word16 cbveclen   /* (i) Codebook vector length */
+    int16_t *cbvec,   /* (o) Constructed codebook vector */
+    int16_t *mem,   /* (i) Codebook buffer */
+    int16_t index,   /* (i) Codebook index */
+    int16_t lMem,   /* (i) Length of codebook buffer */
+    int16_t cbveclen   /* (i) Codebook vector length */
                             );
 
 #endif

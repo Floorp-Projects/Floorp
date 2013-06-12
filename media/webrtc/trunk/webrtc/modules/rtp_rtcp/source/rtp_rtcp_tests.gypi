@@ -28,29 +28,31 @@
         '../test/testAPI/test_api_nack.cc',
         '../test/testAPI/test_api_rtcp.cc',
         '../test/testAPI/test_api_video.cc',
+        'mock/mock_rtp_payload_strategy.h',
+        'mock/mock_rtp_receiver_video.h',
         'fec_test_helper.cc',
         'fec_test_helper.h',
+        'nack_rtx_unittest.cc',
         'producer_fec_unittest.cc',
         'receiver_fec_unittest.cc',
+        'rtcp_format_remb_unittest.cc',
+        'rtcp_sender_unittest.cc',
+        'rtcp_receiver_unittest.cc',
         'rtp_fec_unittest.cc',
         'rtp_format_vp8_unittest.cc',
         'rtp_format_vp8_test_helper.cc',
         'rtp_format_vp8_test_helper.h',
-        'rtcp_format_remb_unittest.cc',
         'rtp_packet_history_unittest.cc',
+        'rtp_payload_registry_unittest.cc',
         'rtp_utility_unittest.cc',
         'rtp_header_extension_unittest.cc',
         'rtp_sender_unittest.cc',
-        'rtcp_sender_unittest.cc',
-        'rtcp_receiver_unittest.cc',
         'vp8_partition_aggregator_unittest.cc',
+      ],
+      # Disable warnings to enable Win64 build, issue 1323.
+      'msvs_disabled_warnings': [
+        4267,  # size_t to int truncation.
       ],
     },
   ],
 }
-
-# Local Variables:
-# tab-width:2
-# indent-tabs-mode:nil
-# End:
-# vim: set expandtab tabstop=2 shiftwidth=2:

@@ -8,24 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "channel.h"
+#include "webrtc/voice_engine/channel.h"
 
-#include "audio_device.h"
-#include "audio_frame_operations.h"
-#include "audio_processing.h"
-#include "critical_section_wrapper.h"
-#include "logging.h"
-#include "output_mixer.h"
-#include "process_thread.h"
-#include "rtp_dump.h"
-#include "statistics.h"
-#include "trace.h"
-#include "transmit_mixer.h"
-#include "utility.h"
-#include "voe_base.h"
-#include "voe_codec_impl.h"
-#include "voe_external_media.h"
-#include "voe_rtp_rtcp.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/utility/interface/audio_frame_operations.h"
+#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/modules/utility/interface/rtp_dump.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/include/voe_base.h"
+#include "webrtc/voice_engine/include/voe_external_media.h"
+#include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
+#include "webrtc/voice_engine/output_mixer.h"
+#include "webrtc/voice_engine/statistics.h"
+#include "webrtc/voice_engine/transmit_mixer.h"
+#include "webrtc/voice_engine/utility.h"
 
 #if defined(_WIN32)
 #include <Qos.h>
@@ -34,12 +33,12 @@
 namespace webrtc {
 namespace voe {
 
-WebRtc_Word32
+int32_t
 Channel::SendData(FrameType frameType,
-                  WebRtc_UWord8   payloadType,
-                  WebRtc_UWord32  timeStamp,
-                  const WebRtc_UWord8*  payloadData,
-                  WebRtc_UWord16  payloadSize,
+                  uint8_t   payloadType,
+                  uint32_t  timeStamp,
+                  const uint8_t*  payloadData,
+                  uint16_t  payloadSize,
                   const RTPFragmentationHeader* fragmentation)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -82,8 +81,8 @@ Channel::SendData(FrameType frameType,
     return 0;
 }
 
-WebRtc_Word32
-Channel::InFrameType(WebRtc_Word16 frameType)
+int32_t
+Channel::InFrameType(int16_t frameType)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::InFrameType(frameType=%d)", frameType);
@@ -94,29 +93,7 @@ Channel::InFrameType(WebRtc_Word16 frameType)
     return 0;
 }
 
-#ifdef WEBRTC_DTMF_DETECTION
-int
-Channel::IncomingDtmf(const WebRtc_UWord8 digitDtmf, const bool end)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-               "Channel::IncomingDtmf(digitDtmf=%u, end=%d)",
-               digitDtmf, end);
-
-    if (digitDtmf != 999)
-    {
-        CriticalSectionScoped cs(&_callbackCritSect);
-        if (_telephoneEventDetectionPtr)
-        {
-            _telephoneEventDetectionPtr->OnReceivedTelephoneEventInband(
-                _channelId, digitDtmf, end);
-        }
-    }
-
-    return 0;
-}
-#endif
-
-WebRtc_Word32
+int32_t
 Channel::OnRxVadDetected(const int vadDecision)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
@@ -152,8 +129,8 @@ Channel::SendPacket(int channel, const void *data, int len)
     // API
     if (_insertExtraRTPPacket)
     {
-        WebRtc_UWord8* rtpHdr = (WebRtc_UWord8*)data;
-        WebRtc_UWord8 M_PT(0);
+        uint8_t* rtpHdr = (uint8_t*)data;
+        uint8_t M_PT(0);
         if (_extraMarkerBit)
         {
             M_PT = 0x80;            // set the M-bit
@@ -163,11 +140,11 @@ Channel::SendPacket(int channel, const void *data, int len)
         _insertExtraRTPPacket = false;  // insert one packet only
     }
 
-    WebRtc_UWord8* bufferToSendPtr = (WebRtc_UWord8*)data;
-    WebRtc_Word32 bufferLength = len;
+    uint8_t* bufferToSendPtr = (uint8_t*)data;
+    int32_t bufferLength = len;
 
     // Dump the RTP packet to a file (if RTP dump is enabled).
-    if (_rtpDumpOut.DumpPacket((const WebRtc_UWord8*)data, len) == -1)
+    if (_rtpDumpOut.DumpPacket((const uint8_t*)data, len) == -1)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceVoice,
                      VoEId(_instanceId,_channelId),
@@ -185,13 +162,13 @@ Channel::SendPacket(int channel, const void *data, int len)
             {
                 // Allocate memory for encryption buffer one time only
                 _encryptionRTPBufferPtr =
-                    new WebRtc_UWord8[kVoiceEngineMaxIpPacketSizeBytes];
+                    new uint8_t[kVoiceEngineMaxIpPacketSizeBytes];
                 memset(_encryptionRTPBufferPtr, 0,
                        kVoiceEngineMaxIpPacketSizeBytes);
             }
 
             // Perform encryption (SRTP or external)
-            WebRtc_Word32 encryptedBufferLength = 0;
+            int32_t encryptedBufferLength = 0;
             _encryptionPtr->encrypt(_channelId,
                                     bufferToSendPtr,
                                     _encryptionRTPBufferPtr,
@@ -267,11 +244,11 @@ Channel::SendRTCPPacket(int channel, const void *data, int len)
         }
     }
 
-    WebRtc_UWord8* bufferToSendPtr = (WebRtc_UWord8*)data;
-    WebRtc_Word32 bufferLength = len;
+    uint8_t* bufferToSendPtr = (uint8_t*)data;
+    int32_t bufferLength = len;
 
     // Dump the RTCP packet to a file (if RTP dump is enabled).
-    if (_rtpDumpOut.DumpPacket((const WebRtc_UWord8*)data, len) == -1)
+    if (_rtpDumpOut.DumpPacket((const uint8_t*)data, len) == -1)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceVoice,
                      VoEId(_instanceId,_channelId),
@@ -289,11 +266,11 @@ Channel::SendRTCPPacket(int channel, const void *data, int len)
             {
                 // Allocate memory for encryption buffer one time only
                 _encryptionRTCPBufferPtr =
-                    new WebRtc_UWord8[kVoiceEngineMaxIpPacketSizeBytes];
+                    new uint8_t[kVoiceEngineMaxIpPacketSizeBytes];
             }
 
             // Perform encryption (SRTP or external).
-            WebRtc_Word32 encryptedBufferLength = 0;
+            int32_t encryptedBufferLength = 0;
             _encryptionPtr->encrypt_rtcp(_channelId,
                                          bufferToSendPtr,
                                          _encryptionRTCPBufferPtr,
@@ -355,190 +332,10 @@ Channel::SendRTCPPacket(int channel, const void *data, int len)
 }
 
 void
-Channel::IncomingRTPPacket(const WebRtc_Word8* incomingRtpPacket,
-                           const WebRtc_Word32 rtpPacketLength,
-                           const char* fromIP,
-                           const WebRtc_UWord16 fromPort)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::IncomingRTPPacket(rtpPacketLength=%d,"
-                 " fromIP=%s, fromPort=%u)",
-                 rtpPacketLength, fromIP, fromPort);
-
-    // Store playout timestamp for the received RTP packet
-    // to be used for upcoming delay estimations
-    WebRtc_UWord32 playoutTimestamp(0);
-    if (GetPlayoutTimeStamp(playoutTimestamp) == 0)
-    {
-        _playoutTimeStampRTP = playoutTimestamp;
-    }
-
-    WebRtc_UWord8* rtpBufferPtr = (WebRtc_UWord8*)incomingRtpPacket;
-    WebRtc_Word32 rtpBufferLength = rtpPacketLength;
-
-    // SRTP or External decryption
-    if (_decrypting)
-    {
-        CriticalSectionScoped cs(&_callbackCritSect);
-
-        if (_encryptionPtr)
-        {
-            if (!_decryptionRTPBufferPtr)
-            {
-                // Allocate memory for decryption buffer one time only
-                _decryptionRTPBufferPtr =
-                    new WebRtc_UWord8[kVoiceEngineMaxIpPacketSizeBytes];
-            }
-
-            // Perform decryption (SRTP or external)
-            WebRtc_Word32 decryptedBufferLength = 0;
-            _encryptionPtr->decrypt(_channelId,
-                                    rtpBufferPtr,
-                                    _decryptionRTPBufferPtr,
-                                    rtpBufferLength,
-                                    (int*)&decryptedBufferLength);
-            if (decryptedBufferLength <= 0)
-            {
-                _engineStatisticsPtr->SetLastError(
-                    VE_DECRYPTION_FAILED, kTraceError,
-                    "Channel::IncomingRTPPacket() decryption failed");
-                return;
-            }
-
-            // Replace default data buffer with decrypted buffer
-            rtpBufferPtr = _decryptionRTPBufferPtr;
-            rtpBufferLength = decryptedBufferLength;
-        }
-    }
-
-    // Dump the RTP packet to a file (if RTP dump is enabled).
-    if (_rtpDumpIn.DumpPacket(rtpBufferPtr,
-                              (WebRtc_UWord16)rtpBufferLength) == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice,
-                     VoEId(_instanceId,_channelId),
-                     "Channel::SendPacket() RTP dump to input file failed");
-    }
-
-    // Deliver RTP packet to RTP/RTCP module for parsing
-    // The packet will be pushed back to the channel thru the
-    // OnReceivedPayloadData callback so we don't push it to the ACM here
-    if (_rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)rtpBufferPtr,
-                                      (WebRtc_UWord16)rtpBufferLength) == -1)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceWarning,
-            "Channel::IncomingRTPPacket() RTP packet is invalid");
-        return;
-    }
-}
-
-void
-Channel::IncomingRTCPPacket(const WebRtc_Word8* incomingRtcpPacket,
-                            const WebRtc_Word32 rtcpPacketLength,
-                            const char* fromIP,
-                            const WebRtc_UWord16 fromPort)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::IncomingRTCPPacket(rtcpPacketLength=%d, fromIP=%s,"
-                 " fromPort=%u)",
-                 rtcpPacketLength, fromIP, fromPort);
-
-    // Temporary buffer pointer and size for decryption
-    WebRtc_UWord8* rtcpBufferPtr = (WebRtc_UWord8*)incomingRtcpPacket;
-    WebRtc_Word32 rtcpBufferLength = rtcpPacketLength;
-
-    // Store playout timestamp for the received RTCP packet
-    // which will be read by the GetRemoteRTCPData API
-    WebRtc_UWord32 playoutTimestamp(0);
-    if (GetPlayoutTimeStamp(playoutTimestamp) == 0)
-    {
-        _playoutTimeStampRTCP = playoutTimestamp;
-    }
-
-    // SRTP or External decryption
-    if (_decrypting)
-    {
-        CriticalSectionScoped cs(&_callbackCritSect);
-
-        if (_encryptionPtr)
-        {
-            if (!_decryptionRTCPBufferPtr)
-            {
-                // Allocate memory for decryption buffer one time only
-                _decryptionRTCPBufferPtr =
-                    new WebRtc_UWord8[kVoiceEngineMaxIpPacketSizeBytes];
-            }
-
-            // Perform decryption (SRTP or external).
-            WebRtc_Word32 decryptedBufferLength = 0;
-            _encryptionPtr->decrypt_rtcp(_channelId,
-                                         rtcpBufferPtr,
-                                         _decryptionRTCPBufferPtr,
-                                         rtcpBufferLength,
-                                         (int*)&decryptedBufferLength);
-            if (decryptedBufferLength <= 0)
-            {
-                _engineStatisticsPtr->SetLastError(
-                    VE_DECRYPTION_FAILED, kTraceError,
-                    "Channel::IncomingRTCPPacket() decryption failed");
-                return;
-            }
-
-            // Replace default data buffer with decrypted buffer
-            rtcpBufferPtr = _decryptionRTCPBufferPtr;
-            rtcpBufferLength = decryptedBufferLength;
-        }
-    }
-
-    // Dump the RTCP packet to a file (if RTP dump is enabled).
-    if (_rtpDumpIn.DumpPacket(rtcpBufferPtr,
-                              (WebRtc_UWord16)rtcpBufferLength) == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice,
-                     VoEId(_instanceId,_channelId),
-                     "Channel::SendPacket() RTCP dump to input file failed");
-    }
-
-    // Deliver RTCP packet to RTP/RTCP module for parsing
-    if (_rtpRtcpModule->IncomingPacket((const WebRtc_UWord8*)rtcpBufferPtr,
-                                      (WebRtc_UWord16)rtcpBufferLength) == -1)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceWarning,
-            "Channel::IncomingRTPPacket() RTCP packet is invalid");
-        return;
-    }
-}
-
-void
-Channel::OnReceivedTelephoneEvent(const WebRtc_Word32 id,
-                                  const WebRtc_UWord8 event,
-                                  const bool endOfEvent)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::OnReceivedTelephoneEvent(id=%d, event=%u,"
-                 " endOfEvent=%d)", id, event, endOfEvent);
-
-#ifdef WEBRTC_DTMF_DETECTION
-    if (_outOfBandTelephoneEventDetecion)
-    {
-        CriticalSectionScoped cs(&_callbackCritSect);
-
-        if (_telephoneEventDetectionPtr)
-        {
-            _telephoneEventDetectionPtr->OnReceivedTelephoneEventOutOfBand(
-                _channelId, event, endOfEvent);
-        }
-    }
-#endif
-}
-
-void
-Channel::OnPlayTelephoneEvent(const WebRtc_Word32 id,
-                              const WebRtc_UWord8 event,
-                              const WebRtc_UWord16 lengthMs,
-                              const WebRtc_UWord8 volume)
+Channel::OnPlayTelephoneEvent(const int32_t id,
+                              const uint8_t event,
+                              const uint16_t lengthMs,
+                              const uint8_t volume)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::OnPlayTelephoneEvent(id=%d, event=%u, lengthMs=%u,"
@@ -559,14 +356,14 @@ Channel::OnPlayTelephoneEvent(const WebRtc_Word32 id,
 }
 
 void
-Channel::OnIncomingSSRCChanged(const WebRtc_Word32 id,
-                               const WebRtc_UWord32 SSRC)
+Channel::OnIncomingSSRCChanged(const int32_t id,
+                               const uint32_t SSRC)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::OnIncomingSSRCChanged(id=%d, SSRC=%d)",
                  id, SSRC);
 
-    WebRtc_Word32 channel = VoEChannelId(id);
+    int32_t channel = VoEChannelId(id);
     assert(channel == _channelId);
 
     // Reset RTP-module counters since a new incoming RTP stream is detected
@@ -585,15 +382,15 @@ Channel::OnIncomingSSRCChanged(const WebRtc_Word32 id,
     }
 }
 
-void Channel::OnIncomingCSRCChanged(const WebRtc_Word32 id,
-                                    const WebRtc_UWord32 CSRC,
+void Channel::OnIncomingCSRCChanged(const int32_t id,
+                                    const uint32_t CSRC,
                                     const bool added)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::OnIncomingCSRCChanged(id=%d, CSRC=%d, added=%d)",
                  id, CSRC, added);
 
-    WebRtc_Word32 channel = VoEChannelId(id);
+    int32_t channel = VoEChannelId(id);
     assert(channel == _channelId);
 
     if (_rtpObserver)
@@ -608,18 +405,18 @@ void Channel::OnIncomingCSRCChanged(const WebRtc_Word32 id,
 }
 
 void
-Channel::OnApplicationDataReceived(const WebRtc_Word32 id,
-                                   const WebRtc_UWord8 subType,
-                                   const WebRtc_UWord32 name,
-                                   const WebRtc_UWord16 length,
-                                   const WebRtc_UWord8* data)
+Channel::OnApplicationDataReceived(const int32_t id,
+                                   const uint8_t subType,
+                                   const uint32_t name,
+                                   const uint16_t length,
+                                   const uint8_t* data)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::OnApplicationDataReceived(id=%d, subType=%u,"
                  " name=%u, length=%u)",
                  id, subType, name, length);
 
-    WebRtc_Word32 channel = VoEChannelId(id);
+    int32_t channel = VoEChannelId(id);
     assert(channel == _channelId);
 
     if (_rtcpObserver)
@@ -637,14 +434,14 @@ Channel::OnApplicationDataReceived(const WebRtc_Word32 id,
     }
 }
 
-WebRtc_Word32
+int32_t
 Channel::OnInitializeDecoder(
-    const WebRtc_Word32 id,
-    const WebRtc_Word8 payloadType,
+    const int32_t id,
+    const int8_t payloadType,
     const char payloadName[RTP_PAYLOAD_NAME_SIZE],
     const int frequency,
-    const WebRtc_UWord8 channels,
-    const WebRtc_UWord32 rate)
+    const uint8_t channels,
+    const uint32_t rate)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::OnInitializeDecoder(id=%d, payloadType=%d, "
@@ -661,8 +458,8 @@ Channel::OnInitializeDecoder(
     receiveCodec.channels = channels;
     receiveCodec.rate = rate;
     strncpy(receiveCodec.plname, payloadName, RTP_PAYLOAD_NAME_SIZE - 1);
-    
-    _audioCodingModule.Codec(payloadName, dummyCodec, frequency, channels);
+
+    _audioCodingModule.Codec(payloadName, &dummyCodec, frequency, channels);
     receiveCodec.pacsize = dummyCodec.pacsize;
 
     // Register the new codec to the ACM
@@ -680,7 +477,7 @@ Channel::OnInitializeDecoder(
 }
 
 void
-Channel::OnPacketTimeout(const WebRtc_Word32 id)
+Channel::OnPacketTimeout(const int32_t id)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::OnPacketTimeout(id=%d)", id);
@@ -690,7 +487,7 @@ Channel::OnPacketTimeout(const WebRtc_Word32 id)
     {
         if (_receiving || _externalTransport)
         {
-            WebRtc_Word32 channel = VoEChannelId(id);
+            int32_t channel = VoEChannelId(id);
             assert(channel == _channelId);
             // Ensure that next OnReceivedPacket() callback will trigger
             // a VE_PACKET_RECEIPT_RESTARTED callback.
@@ -707,7 +504,7 @@ Channel::OnPacketTimeout(const WebRtc_Word32 id)
 }
 
 void
-Channel::OnReceivedPacket(const WebRtc_Word32 id,
+Channel::OnReceivedPacket(const int32_t id,
                           const RtpRtcpPacketType packetType)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -722,7 +519,7 @@ Channel::OnReceivedPacket(const WebRtc_Word32 id,
         CriticalSectionScoped cs(_callbackCritSectPtr);
         if (_voiceEngineObserverPtr)
         {
-            WebRtc_Word32 channel = VoEChannelId(id);
+            int32_t channel = VoEChannelId(id);
             assert(channel == _channelId);
             // Reset timeout mechanism
             _rtpPacketTimedOut = false;
@@ -739,16 +536,19 @@ Channel::OnReceivedPacket(const WebRtc_Word32 id,
 }
 
 void
-Channel::OnPeriodicDeadOrAlive(const WebRtc_Word32 id,
+Channel::OnPeriodicDeadOrAlive(const int32_t id,
                                const RTPAliveType alive)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::OnPeriodicDeadOrAlive(id=%d, alive=%d)", id, alive);
 
-    if (!_connectionObserver)
-        return;
+    {
+        CriticalSectionScoped cs(&_callbackCritSect);
+        if (!_connectionObserver)
+            return;
+    }
 
-    WebRtc_Word32 channel = VoEChannelId(id);
+    int32_t channel = VoEChannelId(id);
     assert(channel == _channelId);
 
     // Use Alive as default to limit risk of false Dead detections
@@ -788,9 +588,9 @@ Channel::OnPeriodicDeadOrAlive(const WebRtc_Word32 id,
     }
 }
 
-WebRtc_Word32
-Channel::OnReceivedPayloadData(const WebRtc_UWord8* payloadData,
-                               const WebRtc_UWord16 payloadSize,
+int32_t
+Channel::OnReceivedPayloadData(const uint8_t* payloadData,
+                               const uint16_t payloadSize,
                                const WebRtcRTPHeader* rtpHeader)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -828,19 +628,17 @@ Channel::OnReceivedPayloadData(const WebRtc_UWord8* payloadData,
     // Update the packet delay
     UpdatePacketDelay(rtpHeader->header.timestamp,
                       rtpHeader->header.sequenceNumber);
-
     return 0;
 }
 
-WebRtc_Word32 Channel::GetAudioFrame(const WebRtc_Word32 id,
-                                     AudioFrame& audioFrame)
+int32_t Channel::GetAudioFrame(const int32_t id, AudioFrame& audioFrame)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::GetAudioFrame(id=%d)", id);
 
     // Get 10ms raw PCM data from the ACM (mixer limits output frequency)
     if (_audioCodingModule.PlayoutData10Ms(audioFrame.sample_rate_hz_,
-                                           audioFrame) == -1)
+                                           &audioFrame) == -1)
     {
         WEBRTC_TRACE(kTraceError, kTraceVoice,
                      VoEId(_instanceId,_channelId),
@@ -915,7 +713,7 @@ WebRtc_Word32 Channel::GetAudioFrame(const WebRtc_Word32 id,
             _outputExternalMediaCallbackPtr->Process(
                 _channelId,
                 kPlaybackPerChannel,
-                (WebRtc_Word16*)audioFrame.data_,
+                (int16_t*)audioFrame.data_,
                 audioFrame.samples_per_channel_,
                 audioFrame.sample_rate_hz_,
                 isStereo);
@@ -938,8 +736,8 @@ WebRtc_Word32 Channel::GetAudioFrame(const WebRtc_Word32 id,
     return 0;
 }
 
-WebRtc_Word32
-Channel::NeededFrequency(const WebRtc_Word32 id)
+int32_t
+Channel::NeededFrequency(const int32_t id)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::NeededFrequency(id=%d)", id);
@@ -947,7 +745,7 @@ Channel::NeededFrequency(const WebRtc_Word32 id)
     int highestNeeded = 0;
 
     // Determine highest needed receive frequency
-    WebRtc_Word32 receiveFrequency = _audioCodingModule.ReceiveFrequency();
+    int32_t receiveFrequency = _audioCodingModule.ReceiveFrequency();
 
     // Return the bigger of playout and receive frequency in the ACM.
     if (_audioCodingModule.PlayoutFrequency() > receiveFrequency)
@@ -978,10 +776,10 @@ Channel::NeededFrequency(const WebRtc_Word32 id)
     return(highestNeeded);
 }
 
-WebRtc_Word32
+int32_t
 Channel::CreateChannel(Channel*& channel,
-                       const WebRtc_Word32 channelId,
-                       const WebRtc_UWord32 instanceId)
+                       const int32_t channelId,
+                       const uint32_t instanceId)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(instanceId,channelId),
                  "Channel::CreateChannel(channelId=%d, instanceId=%d)",
@@ -1000,8 +798,7 @@ Channel::CreateChannel(Channel*& channel,
 }
 
 void
-Channel::PlayNotification(const WebRtc_Word32 id,
-                          const WebRtc_UWord32 durationMs)
+Channel::PlayNotification(const int32_t id, const uint32_t durationMs)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::PlayNotification(id=%d, durationMs=%d)",
@@ -1011,8 +808,7 @@ Channel::PlayNotification(const WebRtc_Word32 id,
 }
 
 void
-Channel::RecordNotification(const WebRtc_Word32 id,
-                            const WebRtc_UWord32 durationMs)
+Channel::RecordNotification(const int32_t id, const uint32_t durationMs)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::RecordNotification(id=%d, durationMs=%d)",
@@ -1022,7 +818,7 @@ Channel::RecordNotification(const WebRtc_Word32 id,
 }
 
 void
-Channel::PlayFileEnded(const WebRtc_Word32 id)
+Channel::PlayFileEnded(const int32_t id)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::PlayFileEnded(id=%d)", id);
@@ -1050,7 +846,7 @@ Channel::PlayFileEnded(const WebRtc_Word32 id)
 }
 
 void
-Channel::RecordFileEnded(const WebRtc_Word32 id)
+Channel::RecordFileEnded(const int32_t id)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::RecordFileEnded(id=%d)", id);
@@ -1066,23 +862,14 @@ Channel::RecordFileEnded(const WebRtc_Word32 id)
                  " shutdown");
 }
 
-Channel::Channel(const WebRtc_Word32 channelId,
-                 const WebRtc_UWord32 instanceId) :
+Channel::Channel(const int32_t channelId,
+                 const uint32_t instanceId) :
     _fileCritSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _callbackCritSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _instanceId(instanceId),
     _channelId(channelId),
     _audioCodingModule(*AudioCodingModule::Create(
         VoEModuleId(instanceId, channelId))),
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-     _numSocketThreads(KNumSocketThreads),
-    _socketTransportModule(*UdpTransport::Create(
-        VoEModuleId(instanceId, channelId), _numSocketThreads)),
-#endif
-#ifdef WEBRTC_SRTP
-    _srtpModule(*SrtpModule::CreateSrtpModule(VoEModuleId(instanceId,
-                                                          channelId))),
-#endif
     _rtpDumpIn(*RtpDump::CreateRtpDump()),
     _rtpDumpOut(*RtpDump::CreateRtpDump()),
     _outputAudioLevel(),
@@ -1110,8 +897,8 @@ Channel::Channel(const WebRtc_Word32 channelId,
     _decryptionRTCPBufferPtr(NULL),
     _timeStamp(0), // This is just an offset, RTP module will add it's own random offset
     _sendTelephoneEventPayloadType(106),
-    _playoutTimeStampRTP(0),
-    _playoutTimeStampRTCP(0),
+    playout_timestamp_rtp_(0),
+    playout_timestamp_rtcp_(0),
     _numberOfDiscardedPackets(0),
     _engineStatisticsPtr(NULL),
     _outputMixerPtr(NULL),
@@ -1124,9 +911,6 @@ Channel::Channel(const WebRtc_Word32 channelId,
     _encryptionPtr(NULL),
     _rtpAudioProc(NULL),
     _rxAudioProcessingModulePtr(NULL),
-#ifdef WEBRTC_DTMF_DETECTION
-    _telephoneEventDetectionPtr(NULL),
-#endif
     _rxVadObserverPtr(NULL),
     _oldVadDecision(-1),
     _sendFrameType(0),
@@ -1150,8 +934,6 @@ Channel::Channel(const WebRtc_Word32 channelId,
     _decrypting(false),
     _playOutbandDtmfEvent(false),
     _playInbandDtmfEvent(false),
-    _inbandTelephoneEventDetection(false),
-    _outOfBandTelephoneEventDetecion(false),
     _extraPayloadType(0),
     _insertExtraRTPPacket(false),
     _extraMarkerBit(false),
@@ -1167,8 +949,7 @@ Channel::Channel(const WebRtc_Word32 channelId,
     _countAliveDetections(0),
     _countDeadDetections(0),
     _outputSpeechType(AudioFrame::kNormalSpeech),
-    _averageDelayMs(0),
-    _previousSequenceNumber(0),
+    _average_jitter_buffer_delay_us(0),
     _previousTimestamp(0),
     _recPacketDelayMs(20),
     _RxVadDetection(false),
@@ -1212,18 +993,6 @@ Channel::~Channel()
         DeRegisterExternalMediaProcessing(kRecordingPerChannel);
     }
     StopSend();
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-    StopReceiving();
-    // De-register packet callback to ensure we're not in a callback when
-    // deleting channel state, avoids race condition and deadlock.
-    if (_socketTransportModule.InitializeReceiveSockets(NULL, 0, NULL, NULL, 0)
-            != 0)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice,
-                     VoEId(_instanceId, _channelId),
-                     "~Channel() failed to de-register receive callback");
-    }
-#endif
     StopPlayout();
 
     {
@@ -1269,25 +1038,7 @@ Channel::~Channel()
                      "~Channel() failed to de-register VAD callback"
                      " (Audio coding module)");
     }
-#ifdef WEBRTC_DTMF_DETECTION
-    if (_audioCodingModule.RegisterIncomingMessagesCallback(NULL) == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice,
-                     VoEId(_instanceId,_channelId),
-                     "~Channel() failed to de-register incoming messages "
-                     "callback (Audio coding module)");
-    }
-#endif
     // De-register modules in process thread
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-    if (_moduleProcessThreadPtr->DeRegisterModule(&_socketTransportModule)
-            == -1)
-    {
-        WEBRTC_TRACE(kTraceInfo, kTraceVoice,
-                     VoEId(_instanceId,_channelId),
-                     "~Channel() failed to deregister socket module");
-    }
-#endif
     if (_moduleProcessThreadPtr->DeRegisterModule(_rtpRtcpModule.get()) == -1)
     {
         WEBRTC_TRACE(kTraceInfo, kTraceVoice,
@@ -1296,14 +1047,7 @@ Channel::~Channel()
     }
 
     // Destroy modules
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-    UdpTransport::Destroy(
-        &_socketTransportModule);
-#endif
     AudioCodingModule::Destroy(&_audioCodingModule);
-#ifdef WEBRTC_SRTP
-    SrtpModule::DestroySrtpModule(&_srtpModule);
-#endif
     if (_rxAudioProcessingModulePtr != NULL)
     {
         AudioProcessing::Destroy(_rxAudioProcessingModulePtr); // far end APM
@@ -1323,19 +1067,7 @@ Channel::~Channel()
     delete &_fileCritSect;
 }
 
-int Channel::GetCodec(int idx, CodecInst &codec)
-{
-    CodecInst codecCopy;
-    int ret;
-    ret = _audioCodingModule.Codec(idx, codecCopy);
-    if (ret != -1)
-    {
-        VoECodecImpl::ACMToExternalCodecRepresentation(codec, codecCopy);
-    }
-    return ret;
-}
-
-WebRtc_Word32
+int32_t
 Channel::Init()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -1356,12 +1088,7 @@ Channel::Init()
 
     const bool processThreadFail =
         ((_moduleProcessThreadPtr->RegisterModule(_rtpRtcpModule.get()) != 0) ||
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-        (_moduleProcessThreadPtr->RegisterModule(
-                &_socketTransportModule) != 0));
-#else
         false);
-#endif
     if (processThreadFail)
     {
         _engineStatisticsPtr->SetLastError(
@@ -1393,7 +1120,7 @@ Channel::Init()
     // be transmitted since the Transport object will then be invalid.
 
     const bool rtpRtcpFail =
-        ((_rtpRtcpModule->SetTelephoneEventStatus(false, true, true) == -1) ||
+        ((_rtpRtcpModule->SetTelephoneEventForwardToDecoder(true) == -1) ||
         // RTCP is enabled by default
         (_rtpRtcpModule->SetRTCPStatus(kRtcpCompound) == -1));
     if (rtpRtcpFail)
@@ -1421,12 +1148,12 @@ Channel::Init()
     // RTP/RTCP module
 
     CodecInst codec;
-    const WebRtc_UWord8 nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
+    const uint8_t nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
 
     for (int idx = 0; idx < nSupportedCodecs; idx++)
     {
         // Open up the RTP/RTCP receiver for all supported codecs
-        if ((_audioCodingModule.Codec(idx, codec) == -1) ||
+        if ((_audioCodingModule.Codec(idx, &codec) == -1) ||
             (_rtpRtcpModule->RegisterReceivePayload(codec) == -1))
         {
             WEBRTC_TRACE(kTraceWarning, kTraceVoice,
@@ -1495,16 +1222,6 @@ Channel::Init()
         }
 #endif
     }
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-    // Ensure that the WebRtcSocketTransport implementation is used as
-    // Transport on the sending side
-    {
-        // A lock is needed here since users can call
-        // RegisterExternalTransport() at the same time.
-        CriticalSectionScoped cs(&_callbackCritSect);
-        _transportPtr = &_socketTransportModule;
-    }
-#endif
 
     // Initialize the far end AP module
     // Using 8 kHz as initial Fs, the same as in transmission. Might be
@@ -1577,7 +1294,7 @@ Channel::Init()
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetEngineInformation(Statistics& engineStatistics,
                               OutputMixer& outputMixer,
                               voe::TransmitMixer& transmitMixer,
@@ -1598,7 +1315,7 @@ Channel::SetEngineInformation(Statistics& engineStatistics,
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::UpdateLocalTimeStamp()
 {
 
@@ -1606,7 +1323,7 @@ Channel::UpdateLocalTimeStamp()
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::StartPlayout()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -1635,7 +1352,7 @@ Channel::StartPlayout()
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::StopPlayout()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -1662,7 +1379,7 @@ Channel::StopPlayout()
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::StartSend()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -1692,7 +1409,7 @@ Channel::StartSend()
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::StopSend()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -1722,7 +1439,7 @@ Channel::StopSend()
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::StartReceiving()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -1731,34 +1448,12 @@ Channel::StartReceiving()
     {
         return 0;
     }
-    // If external transport is used, we will only initialize/set the variables
-    // after this section, since we are not using the WebRtc transport but
-    // still need to keep track of e.g. if we are receiving.
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-    if (!_externalTransport)
-    {
-        if (!_socketTransportModule.ReceiveSocketsInitialized())
-        {
-            _engineStatisticsPtr->SetLastError(
-                VE_SOCKETS_NOT_INITED, kTraceError,
-                "StartReceive() must set local receiver first");
-            return -1;
-        }
-        if (_socketTransportModule.StartReceiving(KNumberOfSocketBuffers) != 0)
-        {
-            _engineStatisticsPtr->SetLastError(
-                VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceError,
-                "StartReceiving() failed to start receiving");
-            return -1;
-        }
-    }
-#endif
     _receiving = true;
     _numberOfDiscardedPackets = 0;
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::StopReceiving()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -1768,23 +1463,8 @@ Channel::StopReceiving()
         return 0;
     }
 
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-    if (!_externalTransport &&
-        _socketTransportModule.ReceiveSocketsInitialized())
-    {
-        if (_socketTransportModule.StopReceiving() != 0)
-        {
-            _engineStatisticsPtr->SetLastError(
-                VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceError,
-                "StopReceiving() failed to stop receiving.");
-            return -1;
-        }
-    }
-#endif
-    bool dtmfDetection = _rtpRtcpModule->TelephoneEvent();
     // Recover DTMF detection status.
-    WebRtc_Word32 ret = _rtpRtcpModule->SetTelephoneEventStatus(dtmfDetection,
-                                                               true, true);
+    int32_t ret = _rtpRtcpModule->SetTelephoneEventForwardToDecoder(true);
     if (ret != 0) {
         _engineStatisticsPtr->SetLastError(
             VE_INVALID_OPERATION, kTraceWarning,
@@ -1795,311 +1475,7 @@ Channel::StopReceiving()
     return 0;
 }
 
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-WebRtc_Word32
-Channel::SetLocalReceiver(const WebRtc_UWord16 rtpPort,
-                          const WebRtc_UWord16 rtcpPort,
-                          const char ipAddr[64],
-                          const char multicastIpAddr[64])
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::SetLocalReceiver()");
-
-    if (_externalTransport)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_EXTERNAL_TRANSPORT_ENABLED, kTraceError,
-            "SetLocalReceiver() conflict with external transport");
-        return -1;
-    }
-
-    if (_sending)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_ALREADY_SENDING, kTraceError,
-            "SetLocalReceiver() already sending");
-        return -1;
-    }
-    if (_receiving)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_ALREADY_LISTENING, kTraceError,
-            "SetLocalReceiver() already receiving");
-        return -1;
-    }
-
-    if (_socketTransportModule.InitializeReceiveSockets(this,
-                                                        rtpPort,
-                                                        ipAddr,
-                                                        multicastIpAddr,
-                                                        rtcpPort) != 0)
-    {
-        UdpTransport::ErrorCode lastSockError(
-            _socketTransportModule.LastError());
-        switch (lastSockError)
-        {
-        case UdpTransport::kIpAddressInvalid:
-            _engineStatisticsPtr->SetLastError(
-                VE_INVALID_IP_ADDRESS, kTraceError,
-                "SetLocalReceiver() invalid IP address");
-            break;
-        case UdpTransport::kSocketInvalid:
-            _engineStatisticsPtr->SetLastError(
-                VE_SOCKET_ERROR, kTraceError,
-                "SetLocalReceiver() invalid socket");
-            break;
-        case UdpTransport::kPortInvalid:
-            _engineStatisticsPtr->SetLastError(
-                VE_INVALID_PORT_NMBR, kTraceError,
-                "SetLocalReceiver() invalid port");
-            break;
-        case UdpTransport::kFailedToBindPort:
-            _engineStatisticsPtr->SetLastError(
-                VE_BINDING_SOCKET_TO_LOCAL_ADDRESS_FAILED, kTraceError,
-                "SetLocalReceiver() binding failed");
-            break;
-        default:
-            _engineStatisticsPtr->SetLastError(
-                VE_SOCKET_ERROR, kTraceError,
-                "SetLocalReceiver() undefined socket error");
-            break;
-        }
-        return -1;
-    }
-    return 0;
-}
-#endif
-
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-WebRtc_Word32
-Channel::GetLocalReceiver(int& port, int& RTCPport, char ipAddr[64])
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetLocalReceiver()");
-
-    if (_externalTransport)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_EXTERNAL_TRANSPORT_ENABLED, kTraceError,
-            "SetLocalReceiver() conflict with external transport");
-        return -1;
-    }
-
-    char ipAddrTmp[UdpTransport::kIpAddressVersion6Length] = {0};
-    WebRtc_UWord16 rtpPort(0);
-    WebRtc_UWord16 rtcpPort(0);
-    char multicastIpAddr[UdpTransport::kIpAddressVersion6Length] = {0};
-
-    // Acquire socket information from the socket module
-    if (_socketTransportModule.ReceiveSocketInformation(ipAddrTmp,
-                                                        rtpPort,
-                                                        rtcpPort,
-                                                        multicastIpAddr) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_CANNOT_GET_SOCKET_INFO, kTraceError,
-            "GetLocalReceiver() unable to retrieve socket information");
-        return -1;
-    }
-
-    // Deliver valid results to the user
-    port = static_cast<int> (rtpPort);
-    RTCPport = static_cast<int> (rtcpPort);
-    if (ipAddr != NULL)
-    {
-        strcpy(ipAddr, ipAddrTmp);
-    }
-    return 0;
-}
-#endif
-
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-WebRtc_Word32
-Channel::SetSendDestination(const WebRtc_UWord16 rtpPort,
-                            const char ipAddr[64],
-                            const int sourcePort,
-                            const WebRtc_UWord16 rtcpPort)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::SetSendDestination()");
-
-    if (_externalTransport)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_EXTERNAL_TRANSPORT_ENABLED, kTraceError,
-            "SetSendDestination() conflict with external transport");
-        return -1;
-    }
-
-    // Initialize ports and IP address for the remote (destination) side.
-    // By default, the sockets used for receiving are used for transmission as
-    // well, hence the source ports for outgoing packets are the same as the
-    // receiving ports specified in SetLocalReceiver.
-    // If an extra send socket has been created, it will be utilized until a
-    // new source port is specified or until the channel has been deleted and
-    // recreated. If no socket exists, sockets will be created when the first
-    // RTP and RTCP packets shall be transmitted (see e.g.
-    // UdpTransportImpl::SendPacket()).
-    //
-    // NOTE: this function does not require that sockets exists; all it does is
-    // to build send structures to be used with the sockets when they exist.
-    // It is therefore possible to call this method before SetLocalReceiver.
-    // However, sockets must exist if a multi-cast address is given as input.
-
-    // Build send structures and enable QoS (if enabled and supported)
-    if (_socketTransportModule.InitializeSendSockets(
-        ipAddr, rtpPort, rtcpPort) != UdpTransport::kNoSocketError)
-    {
-        UdpTransport::ErrorCode lastSockError(
-            _socketTransportModule.LastError());
-        switch (lastSockError)
-        {
-        case UdpTransport::kIpAddressInvalid:
-            _engineStatisticsPtr->SetLastError(
-                VE_INVALID_IP_ADDRESS, kTraceError,
-                "SetSendDestination() invalid IP address 1");
-            break;
-        case UdpTransport::kSocketInvalid:
-            _engineStatisticsPtr->SetLastError(
-                VE_SOCKET_ERROR, kTraceError,
-                "SetSendDestination() invalid socket 1");
-            break;
-        case UdpTransport::kQosError:
-            _engineStatisticsPtr->SetLastError(
-                VE_GQOS_ERROR, kTraceError,
-                "SetSendDestination() failed to set QoS");
-            break;
-        case UdpTransport::kMulticastAddressInvalid:
-            _engineStatisticsPtr->SetLastError(
-                VE_INVALID_MULTICAST_ADDRESS, kTraceError,
-                "SetSendDestination() invalid multicast address");
-            break;
-        default:
-            _engineStatisticsPtr->SetLastError(
-                VE_SOCKET_ERROR, kTraceError,
-                "SetSendDestination() undefined socket error 1");
-            break;
-        }
-        return -1;
-    }
-
-    // Check if the user has specified a non-default source port different from
-    // the local receive port.
-    // If so, an extra local socket will be created unless the source port is
-    // not unique.
-    if (sourcePort != kVoEDefault)
-    {
-        WebRtc_UWord16 receiverRtpPort(0);
-        WebRtc_UWord16 rtcpNA(0);
-        if (_socketTransportModule.ReceiveSocketInformation(NULL,
-                                                            receiverRtpPort,
-                                                            rtcpNA,
-                                                            NULL) != 0)
-        {
-            _engineStatisticsPtr->SetLastError(
-                VE_CANNOT_GET_SOCKET_INFO, kTraceError,
-                "SetSendDestination() failed to retrieve socket information");
-            return -1;
-        }
-
-        WebRtc_UWord16 sourcePortUW16 =
-                static_cast<WebRtc_UWord16> (sourcePort);
-
-        // An extra socket will only be created if the specified source port
-        // differs from the local receive port.
-        if (sourcePortUW16 != receiverRtpPort)
-        {
-            // Initialize extra local socket to get a different source port
-            // than the local
-            // receiver port. Always use default source for RTCP.
-            // Note that, this calls UdpTransport::CloseSendSockets().
-            if (_socketTransportModule.InitializeSourcePorts(
-                sourcePortUW16,
-                sourcePortUW16+1) != 0)
-            {
-                UdpTransport::ErrorCode lastSockError(
-                    _socketTransportModule.LastError());
-                switch (lastSockError)
-                {
-                case UdpTransport::kIpAddressInvalid:
-                    _engineStatisticsPtr->SetLastError(
-                        VE_INVALID_IP_ADDRESS, kTraceError,
-                        "SetSendDestination() invalid IP address 2");
-                    break;
-                case UdpTransport::kSocketInvalid:
-                    _engineStatisticsPtr->SetLastError(
-                        VE_SOCKET_ERROR, kTraceError,
-                        "SetSendDestination() invalid socket 2");
-                    break;
-                default:
-                    _engineStatisticsPtr->SetLastError(
-                        VE_SOCKET_ERROR, kTraceError,
-                        "SetSendDestination() undefined socket error 2");
-                    break;
-                }
-                return -1;
-            }
-            WEBRTC_TRACE(kTraceInfo, kTraceVoice,
-                         VoEId(_instanceId,_channelId),
-                         "SetSendDestination() extra local socket is created"
-                         " to facilitate unique source port");
-        }
-        else
-        {
-            WEBRTC_TRACE(kTraceInfo, kTraceVoice,
-                         VoEId(_instanceId,_channelId),
-                         "SetSendDestination() sourcePort equals the local"
-                         " receive port => no extra socket is created");
-        }
-    }
-
-    return 0;
-}
-#endif
-
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-WebRtc_Word32
-Channel::GetSendDestination(int& port,
-                            char ipAddr[64],
-                            int& sourcePort,
-                            int& RTCPport)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetSendDestination()");
-
-    if (_externalTransport)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_EXTERNAL_TRANSPORT_ENABLED, kTraceError,
-            "GetSendDestination() conflict with external transport");
-        return -1;
-    }
-
-    char ipAddrTmp[UdpTransport::kIpAddressVersion6Length] = {0};
-    WebRtc_UWord16 rtpPort(0);
-    WebRtc_UWord16 rtcpPort(0);
-    WebRtc_UWord16 rtpSourcePort(0);
-    WebRtc_UWord16 rtcpSourcePort(0);
-
-    // Acquire sending socket information from the socket module
-    _socketTransportModule.SendSocketInformation(ipAddrTmp, rtpPort, rtcpPort);
-    _socketTransportModule.SourcePorts(rtpSourcePort, rtcpSourcePort);
-
-    // Deliver valid results to the user
-    port = static_cast<int> (rtpPort);
-    RTCPport = static_cast<int> (rtcpPort);
-    sourcePort = static_cast<int> (rtpSourcePort);
-    if (ipAddr != NULL)
-    {
-        strcpy(ipAddr, ipAddrTmp);
-    }
-
-    return 0;
-}
-#endif
-
-
-WebRtc_Word32
+int32_t
 Channel::SetNetEQPlayoutMode(NetEqModes mode)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2130,7 +1506,7 @@ Channel::SetNetEQPlayoutMode(NetEqModes mode)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::GetNetEQPlayoutMode(NetEqModes& mode)
 {
     const AudioPlayoutMode playoutMode = _audioCodingModule.PlayoutMode();
@@ -2154,35 +1530,7 @@ Channel::GetNetEQPlayoutMode(NetEqModes& mode)
     return 0;
 }
 
-WebRtc_Word32
-Channel::SetNetEQBGNMode(NetEqBgnModes mode)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::SetNetEQPlayoutMode()");
-    ACMBackgroundNoiseMode noiseMode(On);
-    switch (mode)
-    {
-        case kBgnOn:
-            noiseMode = On;
-            break;
-        case kBgnFade:
-            noiseMode = Fade;
-            break;
-        case kBgnOff:
-            noiseMode = Off;
-            break;
-    }
-    if (_audioCodingModule.SetBackgroundNoiseMode(noiseMode) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_AUDIO_CODING_MODULE_ERROR, kTraceError,
-            "SetBackgroundNoiseMode() failed to set noise mode");
-        return -1;
-    }
-    return 0;
-}
-
-WebRtc_Word32
+int32_t
 Channel::SetOnHoldStatus(bool enable, OnHoldModes mode)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2203,7 +1551,7 @@ Channel::SetOnHoldStatus(bool enable, OnHoldModes mode)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::GetOnHoldStatus(bool& enabled, OnHoldModes& mode)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2227,7 +1575,7 @@ Channel::GetOnHoldStatus(bool& enabled, OnHoldModes& mode)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::RegisterVoiceEngineObserver(VoiceEngineObserver& observer)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2245,7 +1593,7 @@ Channel::RegisterVoiceEngineObserver(VoiceEngineObserver& observer)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::DeRegisterVoiceEngineObserver()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2263,41 +1611,19 @@ Channel::DeRegisterVoiceEngineObserver()
     return 0;
 }
 
-WebRtc_Word32
-Channel::GetNetEQBGNMode(NetEqBgnModes& mode)
-{
-  ACMBackgroundNoiseMode noiseMode(On);
-    _audioCodingModule.BackgroundNoiseMode(noiseMode);
-    switch (noiseMode)
-    {
-        case On:
-            mode = kBgnOn;
-            break;
-        case Fade:
-            mode = kBgnFade;
-            break;
-        case Off:
-            mode = kBgnOff;
-            break;
-    }
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetNetEQBGNMode() => mode=%u", mode);
-    return 0;
-}
-
-WebRtc_Word32
+int32_t
 Channel::GetSendCodec(CodecInst& codec)
 {
-    return (_audioCodingModule.SendCodec(codec));
+    return (_audioCodingModule.SendCodec(&codec));
 }
 
-WebRtc_Word32
+int32_t
 Channel::GetRecCodec(CodecInst& codec)
 {
-    return (_audioCodingModule.ReceiveCodec(codec));
+    return (_audioCodingModule.ReceiveCodec(&codec));
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetSendCodec(const CodecInst& codec)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2333,7 +1659,7 @@ Channel::SetSendCodec(const CodecInst& codec)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetVADStatus(bool enableVAD, ACMVADMode mode, bool disableDTX)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2350,12 +1676,12 @@ Channel::SetVADStatus(bool enableVAD, ACMVADMode mode, bool disableDTX)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::GetVADStatus(bool& enabledVAD, ACMVADMode& mode, bool& disabledDTX)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::GetVADStatus");
-    if (_audioCodingModule.VAD(disabledDTX, enabledVAD, mode) != 0)
+    if (_audioCodingModule.VAD(&disabledDTX, &enabledVAD, &mode) != 0)
     {
         _engineStatisticsPtr->SetLastError(
             VE_AUDIO_CODING_MODULE_ERROR, kTraceError,
@@ -2366,7 +1692,7 @@ Channel::GetVADStatus(bool& enabledVAD, ACMVADMode& mode, bool& disabledDTX)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetRecPayloadType(const CodecInst& codec)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2391,7 +1717,7 @@ Channel::SetRecPayloadType(const CodecInst& codec)
     {
         // De-register the selected codec (RTP/RTCP module and ACM)
 
-        WebRtc_Word8 pltype(-1);
+        int8_t pltype(-1);
         CodecInst rxCodec = codec;
 
         // Get payload type for the given codec
@@ -2417,13 +1743,11 @@ Channel::SetRecPayloadType(const CodecInst& codec)
         return 0;
     }
 
-    CodecInst acmCodec = codec;
-    VoECodecImpl::ExternalToACMCodecRepresentation(acmCodec, codec);
     if (_rtpRtcpModule->RegisterReceivePayload(codec) != 0)
     {
         // First attempt to register failed => de-register and try again
-        _rtpRtcpModule->DeRegisterReceivePayload(acmCodec.pltype);
-        if (_rtpRtcpModule->RegisterReceivePayload(acmCodec) != 0)
+        _rtpRtcpModule->DeRegisterReceivePayload(codec.pltype);
+        if (_rtpRtcpModule->RegisterReceivePayload(codec) != 0)
         {
             _engineStatisticsPtr->SetLastError(
                 VE_RTP_RTCP_MODULE_ERROR, kTraceError,
@@ -2431,10 +1755,10 @@ Channel::SetRecPayloadType(const CodecInst& codec)
             return -1;
         }
     }
-    if (_audioCodingModule.RegisterReceiveCodec(acmCodec) != 0)
+    if (_audioCodingModule.RegisterReceiveCodec(codec) != 0)
     {
-        _audioCodingModule.UnregisterReceiveCodec(acmCodec.pltype);
-        if (_audioCodingModule.RegisterReceiveCodec(acmCodec) != 0)
+        _audioCodingModule.UnregisterReceiveCodec(codec.pltype);
+        if (_audioCodingModule.RegisterReceiveCodec(codec) != 0)
         {
             _engineStatisticsPtr->SetLastError(
                 VE_AUDIO_CODING_MODULE_ERROR, kTraceError,
@@ -2445,28 +1769,26 @@ Channel::SetRecPayloadType(const CodecInst& codec)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::GetRecPayloadType(CodecInst& codec)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::GetRecPayloadType()");
-    WebRtc_Word8 payloadType(-1);
-    CodecInst acmCodec;
-    if (_rtpRtcpModule->ReceivePayloadType(acmCodec, &payloadType) != 0)
+    int8_t payloadType(-1);
+    if (_rtpRtcpModule->ReceivePayloadType(codec, &payloadType) != 0)
     {
         _engineStatisticsPtr->SetLastError(
             VE_RTP_RTCP_MODULE_ERROR, kTraceWarning,
             "GetRecPayloadType() failed to retrieve RX payload type");
         return -1;
     }
-    VoECodecImpl::ACMToExternalCodecRepresentation(codec, acmCodec);
     codec.pltype = payloadType;
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::GetRecPayloadType() => pltype=%u", codec.pltype);
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetAMREncFormat(AmrMode mode)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2476,7 +1798,7 @@ Channel::SetAMREncFormat(AmrMode mode)
     return -1;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetAMRDecFormat(AmrMode mode)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2486,7 +1808,7 @@ Channel::SetAMRDecFormat(AmrMode mode)
     return -1;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetAMRWbEncFormat(AmrMode mode)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2497,7 +1819,7 @@ Channel::SetAMRWbEncFormat(AmrMode mode)
 
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetAMRWbDecFormat(AmrMode mode)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2507,21 +1829,21 @@ Channel::SetAMRWbDecFormat(AmrMode mode)
     return -1;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetSendCNPayloadType(int type, PayloadFrequencies frequency)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::SetSendCNPayloadType()");
 
     CodecInst codec;
-    WebRtc_Word32 samplingFreqHz(-1);
+    int32_t samplingFreqHz(-1);
     const int kMono = 1;
     if (frequency == kFreq32000Hz)
         samplingFreqHz = 32000;
     else if (frequency == kFreq16000Hz)
         samplingFreqHz = 16000;
 
-    if (_audioCodingModule.Codec("CN", codec, samplingFreqHz, kMono) == -1)
+    if (_audioCodingModule.Codec("CN", &codec, samplingFreqHz, kMono) == -1)
     {
         _engineStatisticsPtr->SetLastError(
             VE_AUDIO_CODING_MODULE_ERROR, kTraceError,
@@ -2556,14 +1878,14 @@ Channel::SetSendCNPayloadType(int type, PayloadFrequencies frequency)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetISACInitTargetRate(int rateBps, bool useFixedFrameSize)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::SetISACInitTargetRate()");
 
     CodecInst sendCodec;
-    if (_audioCodingModule.SendCodec(sendCodec) == -1)
+    if (_audioCodingModule.SendCodec(&sendCodec) == -1)
     {
         _engineStatisticsPtr->SetLastError(
             VE_CODEC_ERROR, kTraceError,
@@ -2582,7 +1904,7 @@ Channel::SetISACInitTargetRate(int rateBps, bool useFixedFrameSize)
         return -1;
     }
 
-    WebRtc_UWord8 initFrameSizeMsec(0);
+    uint8_t initFrameSizeMsec(0);
     if (16000 == sendCodec.plfreq)
     {
         // Note that 0 is a valid and corresponds to "use default
@@ -2596,7 +1918,7 @@ Channel::SetISACInitTargetRate(int rateBps, bool useFixedFrameSize)
             return -1;
         }
         // 30 or 60ms
-        initFrameSizeMsec = (WebRtc_UWord8)(sendCodec.pacsize / 16);
+        initFrameSizeMsec = (uint8_t)(sendCodec.pacsize / 16);
     }
     else if (32000 == sendCodec.plfreq)
     {
@@ -2609,7 +1931,7 @@ Channel::SetISACInitTargetRate(int rateBps, bool useFixedFrameSize)
                 "SetISACInitTargetRate() invalid target rate - 2");
             return -1;
         }
-        initFrameSizeMsec = (WebRtc_UWord8)(sendCodec.pacsize / 32); // 30ms
+        initFrameSizeMsec = (uint8_t)(sendCodec.pacsize / 32); // 30ms
     }
 
     if (_audioCodingModule.ConfigISACBandwidthEstimator(
@@ -2624,14 +1946,14 @@ Channel::SetISACInitTargetRate(int rateBps, bool useFixedFrameSize)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetISACMaxRate(int rateBps)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::SetISACMaxRate()");
 
     CodecInst sendCodec;
-    if (_audioCodingModule.SendCodec(sendCodec) == -1)
+    if (_audioCodingModule.SendCodec(&sendCodec) == -1)
     {
         _engineStatisticsPtr->SetLastError(
             VE_CODEC_ERROR, kTraceError,
@@ -2689,13 +2011,13 @@ Channel::SetISACMaxRate(int rateBps)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetISACMaxPayloadSize(int sizeBytes)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::SetISACMaxPayloadSize()");
     CodecInst sendCodec;
-    if (_audioCodingModule.SendCodec(sendCodec) == -1)
+    if (_audioCodingModule.SendCodec(&sendCodec) == -1)
     {
         _engineStatisticsPtr->SetLastError(
             VE_CODEC_ERROR, kTraceError,
@@ -2749,31 +2071,13 @@ Channel::SetISACMaxPayloadSize(int sizeBytes)
     return 0;
 }
 
-WebRtc_Word32 Channel::RegisterExternalTransport(Transport& transport)
+int32_t Channel::RegisterExternalTransport(Transport& transport)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
                "Channel::RegisterExternalTransport()");
 
     CriticalSectionScoped cs(&_callbackCritSect);
 
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-    // Sanity checks for default (non external transport) to avoid conflict with
-    // WebRtc sockets.
-    if (_socketTransportModule.SendSocketsInitialized())
-    {
-        _engineStatisticsPtr->SetLastError(VE_SEND_SOCKETS_CONFLICT,
-                                           kTraceError,
-                "RegisterExternalTransport() send sockets already initialized");
-        return -1;
-    }
-    if (_socketTransportModule.ReceiveSocketsInitialized())
-    {
-        _engineStatisticsPtr->SetLastError(VE_RECEIVE_SOCKETS_CONFLICT,
-                                           kTraceError,
-             "RegisterExternalTransport() receive sockets already initialized");
-        return -1;
-    }
-#endif
     if (_externalTransport)
     {
         _engineStatisticsPtr->SetLastError(VE_INVALID_OPERATION,
@@ -2786,7 +2090,7 @@ WebRtc_Word32 Channel::RegisterExternalTransport(Transport& transport)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::DeRegisterExternalTransport()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -2803,405 +2107,72 @@ Channel::DeRegisterExternalTransport()
         return 0;
     }
     _externalTransport = false;
-#ifdef WEBRTC_EXTERNAL_TRANSPORT
     _transportPtr = NULL;
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "DeRegisterExternalTransport() all transport is disabled");
-#else
-    _transportPtr = &_socketTransportModule;
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "DeRegisterExternalTransport() internal Transport is enabled");
-#endif
     return 0;
 }
 
-WebRtc_Word32
-Channel::ReceivedRTPPacket(const WebRtc_Word8* data, WebRtc_Word32 length)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::ReceivedRTPPacket()");
-    const char dummyIP[] = "127.0.0.1";
-    IncomingRTPPacket(data, length, dummyIP, 0);
-    return 0;
+int32_t Channel::ReceivedRTPPacket(const int8_t* data, int32_t length) {
+  WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
+               "Channel::ReceivedRTPPacket()");
+
+  // Store playout timestamp for the received RTP packet
+  UpdatePlayoutTimestamp(false);
+
+  // Dump the RTP packet to a file (if RTP dump is enabled).
+  if (_rtpDumpIn.DumpPacket((const uint8_t*)data,
+                            (uint16_t)length) == -1) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVoice,
+                 VoEId(_instanceId,_channelId),
+                 "Channel::SendPacket() RTP dump to input file failed");
+  }
+
+  // Deliver RTP packet to RTP/RTCP module for parsing
+  // The packet will be pushed back to the channel thru the
+  // OnReceivedPayloadData callback so we don't push it to the ACM here
+  if (_rtpRtcpModule->IncomingPacket((const uint8_t*)data,
+                                     (uint16_t)length) == -1) {
+    _engineStatisticsPtr->SetLastError(
+        VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceWarning,
+        "Channel::IncomingRTPPacket() RTP packet is invalid");
+  }
+  return 0;
 }
 
-WebRtc_Word32
-Channel::ReceivedRTCPPacket(const WebRtc_Word8* data, WebRtc_Word32 length)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::ReceivedRTCPPacket()");
-    const char dummyIP[] = "127.0.0.1";
-    IncomingRTCPPacket(data, length, dummyIP, 0);
-    return 0;
+int32_t Channel::ReceivedRTCPPacket(const int8_t* data, int32_t length) {
+  WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
+               "Channel::ReceivedRTCPPacket()");
+  // Store playout timestamp for the received RTCP packet
+  UpdatePlayoutTimestamp(true);
+
+  // Dump the RTCP packet to a file (if RTP dump is enabled).
+  if (_rtpDumpIn.DumpPacket((const uint8_t*)data,
+                            (uint16_t)length) == -1) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVoice,
+                 VoEId(_instanceId,_channelId),
+                 "Channel::SendPacket() RTCP dump to input file failed");
+  }
+
+  // Deliver RTCP packet to RTP/RTCP module for parsing
+  if (_rtpRtcpModule->IncomingPacket((const uint8_t*)data,
+                                     (uint16_t)length) == -1) {
+    _engineStatisticsPtr->SetLastError(
+        VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceWarning,
+        "Channel::IncomingRTPPacket() RTCP packet is invalid");
+  }
+  return 0;
 }
 
-#ifndef WEBRTC_EXTERNAL_TRANSPORT
-WebRtc_Word32
-Channel::GetSourceInfo(int& rtpPort, int& rtcpPort, char ipAddr[64])
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetSourceInfo()");
-
-    WebRtc_UWord16 rtpPortModule;
-    WebRtc_UWord16 rtcpPortModule;
-    char ipaddr[UdpTransport::kIpAddressVersion6Length] = {0};
-
-    if (_socketTransportModule.RemoteSocketInformation(ipaddr,
-                                                       rtpPortModule,
-                                                       rtcpPortModule) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceError,
-            "GetSourceInfo() failed to retrieve remote socket information");
-        return -1;
-    }
-    strcpy(ipAddr, ipaddr);
-    rtpPort = rtpPortModule;
-    rtcpPort = rtcpPortModule;
-
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-        "GetSourceInfo() => rtpPort=%d, rtcpPort=%d, ipAddr=%s",
-        rtpPort, rtcpPort, ipAddr);
-    return 0;
-}
-
-WebRtc_Word32
-Channel::EnableIPv6()
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::EnableIPv6()");
-    if (_socketTransportModule.ReceiveSocketsInitialized() ||
-        _socketTransportModule.SendSocketsInitialized())
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION, kTraceError,
-            "EnableIPv6() socket layer is already initialized");
-        return -1;
-    }
-    if (_socketTransportModule.EnableIpV6() != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_ERROR, kTraceError,
-            "EnableIPv6() failed to enable IPv6");
-        const UdpTransport::ErrorCode lastError =
-            _socketTransportModule.LastError();
-        WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                     "UdpTransport::LastError() => %d", lastError);
-        return -1;
-    }
-    return 0;
-}
-
-bool
-Channel::IPv6IsEnabled() const
-{
-    bool isEnabled = _socketTransportModule.IpV6Enabled();
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "IPv6IsEnabled() => %d", isEnabled);
-    return isEnabled;
-}
-
-WebRtc_Word32
-Channel::SetSourceFilter(int rtpPort, int rtcpPort, const char ipAddr[64])
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::SetSourceFilter()");
-    if (_socketTransportModule.SetFilterPorts(
-        static_cast<WebRtc_UWord16>(rtpPort),
-        static_cast<WebRtc_UWord16>(rtcpPort)) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceError,
-            "SetSourceFilter() failed to set filter ports");
-        const UdpTransport::ErrorCode lastError =
-            _socketTransportModule.LastError();
-        WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                     "UdpTransport::LastError() => %d",
-                     lastError);
-        return -1;
-    }
-    const char* filterIpAddress = ipAddr;
-    if (_socketTransportModule.SetFilterIP(filterIpAddress) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_IP_ADDRESS, kTraceError,
-            "SetSourceFilter() failed to set filter IP address");
-        const UdpTransport::ErrorCode lastError =
-           _socketTransportModule.LastError();
-        WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                     "UdpTransport::LastError() => %d", lastError);
-        return -1;
-    }
-    return 0;
-}
-
-WebRtc_Word32
-Channel::GetSourceFilter(int& rtpPort, int& rtcpPort, char ipAddr[64])
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetSourceFilter()");
-    WebRtc_UWord16 rtpFilterPort(0);
-    WebRtc_UWord16 rtcpFilterPort(0);
-    if (_socketTransportModule.FilterPorts(rtpFilterPort, rtcpFilterPort) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceWarning,
-            "GetSourceFilter() failed to retrieve filter ports");
-    }
-    char ipAddrTmp[UdpTransport::kIpAddressVersion6Length] = {0};
-    if (_socketTransportModule.FilterIP(ipAddrTmp) != 0)
-    {
-        // no filter has been configured (not seen as an error)
-        memset(ipAddrTmp,
-               0, UdpTransport::kIpAddressVersion6Length);
-    }
-    rtpPort = static_cast<int> (rtpFilterPort);
-    rtcpPort = static_cast<int> (rtcpFilterPort);
-    strcpy(ipAddr, ipAddrTmp);
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-        "GetSourceFilter() => rtpPort=%d, rtcpPort=%d, ipAddr=%s",
-        rtpPort, rtcpPort, ipAddr);
-    return 0;
-}
-
-WebRtc_Word32
-Channel::SetSendTOS(int DSCP, int priority, bool useSetSockopt)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::SetSendTOS(DSCP=%d, useSetSockopt=%d)",
-                 DSCP, (int)useSetSockopt);
-
-    // Set TOS value and possibly try to force usage of setsockopt()
-    if (_socketTransportModule.SetToS(DSCP, useSetSockopt) != 0)
-    {
-        UdpTransport::ErrorCode lastSockError(
-            _socketTransportModule.LastError());
-        switch (lastSockError)
-        {
-        case UdpTransport::kTosError:
-            _engineStatisticsPtr->SetLastError(VE_TOS_ERROR, kTraceError,
-                                               "SetSendTOS() TOS error");
-            break;
-        case UdpTransport::kQosError:
-            _engineStatisticsPtr->SetLastError(
-                    VE_TOS_GQOS_CONFLICT, kTraceError,
-                    "SetSendTOS() GQOS error");
-            break;
-        case UdpTransport::kTosInvalid:
-            // can't switch SetSockOpt method without disabling TOS first, or
-            // SetSockopt() call failed
-            _engineStatisticsPtr->SetLastError(VE_TOS_INVALID, kTraceError,
-                                               "SetSendTOS() invalid TOS");
-            break;
-        case UdpTransport::kSocketInvalid:
-            _engineStatisticsPtr->SetLastError(VE_SOCKET_ERROR, kTraceError,
-                                               "SetSendTOS() invalid Socket");
-            break;
-        default:
-            _engineStatisticsPtr->SetLastError(VE_TOS_ERROR, kTraceError,
-                                               "SetSendTOS() TOS error");
-            break;
-        }
-        WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId,_channelId),
-                     "UdpTransport =>  lastError = %d",
-                     lastSockError);
-        return -1;
-    }
-
-    // Set priority (PCP) value, -1 means don't change
-    if (-1 != priority)
-    {
-        if (_socketTransportModule.SetPCP(priority) != 0)
-        {
-            UdpTransport::ErrorCode lastSockError(
-                _socketTransportModule.LastError());
-            switch (lastSockError)
-            {
-            case UdpTransport::kPcpError:
-                _engineStatisticsPtr->SetLastError(VE_TOS_ERROR, kTraceError,
-                                                   "SetSendTOS() PCP error");
-                break;
-            case UdpTransport::kQosError:
-                _engineStatisticsPtr->SetLastError(
-                        VE_TOS_GQOS_CONFLICT, kTraceError,
-                        "SetSendTOS() GQOS conflict");
-                break;
-            case UdpTransport::kSocketInvalid:
-                _engineStatisticsPtr->SetLastError(
-                        VE_SOCKET_ERROR, kTraceError,
-                        "SetSendTOS() invalid Socket");
-                break;
-            default:
-                _engineStatisticsPtr->SetLastError(VE_TOS_ERROR, kTraceError,
-                                                   "SetSendTOS() PCP error");
-                break;
-            }
-            WEBRTC_TRACE(kTraceError, kTraceVoice,
-                         VoEId(_instanceId,_channelId),
-                         "UdpTransport =>  lastError = %d",
-                         lastSockError);
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-WebRtc_Word32
-Channel::GetSendTOS(int &DSCP, int& priority, bool &useSetSockopt)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetSendTOS(DSCP=?, useSetSockopt=?)");
-    WebRtc_Word32 dscp(0), prio(0);
-    bool setSockopt(false);
-    if (_socketTransportModule.ToS(dscp, setSockopt) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceError,
-            "GetSendTOS() failed to get TOS info");
-        return -1;
-    }
-    if (_socketTransportModule.PCP(prio) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceError,
-            "GetSendTOS() failed to get PCP info");
-        return -1;
-    }
-    DSCP = static_cast<int> (dscp);
-    priority = static_cast<int> (prio);
-    useSetSockopt = setSockopt;
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,-1),
-                 "GetSendTOS() => DSCP=%d, priority=%d, useSetSockopt=%d",
-        DSCP, priority, (int)useSetSockopt);
-    return 0;
-}
-
-#if defined(_WIN32)
-WebRtc_Word32
-Channel::SetSendGQoS(bool enable, int serviceType, int overrideDSCP)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::SetSendGQoS(enable=%d, serviceType=%d, "
-                 "overrideDSCP=%d)",
-                 (int)enable, serviceType, overrideDSCP);
-    if(!_socketTransportModule.ReceiveSocketsInitialized())
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKETS_NOT_INITED, kTraceError,
-            "SetSendGQoS() GQoS state must be set after sockets are created");
-        return -1;
-    }
-    if(!_socketTransportModule.SendSocketsInitialized())
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_DESTINATION_NOT_INITED, kTraceError,
-            "SetSendGQoS() GQoS state must be set after sending side is "
-            "initialized");
-        return -1;
-    }
-    if (enable &&
-       (serviceType != SERVICETYPE_BESTEFFORT) &&
-       (serviceType != SERVICETYPE_CONTROLLEDLOAD) &&
-       (serviceType != SERVICETYPE_GUARANTEED) &&
-       (serviceType != SERVICETYPE_QUALITATIVE))
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceError,
-            "SetSendGQoS() Invalid service type");
-        return -1;
-    }
-    if (enable && ((overrideDSCP <  0) || (overrideDSCP > 63)))
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceError,
-            "SetSendGQoS() Invalid overrideDSCP value");
-        return -1;
-    }
-
-    // Avoid GQoS/ToS conflict when user wants to override the default DSCP
-    // mapping
-    bool QoS(false);
-    WebRtc_Word32 sType(0);
-    WebRtc_Word32 ovrDSCP(0);
-    if (_socketTransportModule.QoS(QoS, sType, ovrDSCP))
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SOCKET_TRANSPORT_MODULE_ERROR, kTraceError,
-            "SetSendGQoS() failed to get QOS info");
-        return -1;
-    }
-    if (QoS && ovrDSCP == 0 && overrideDSCP != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_TOS_GQOS_CONFLICT, kTraceError,
-            "SetSendGQoS() QOS is already enabled and overrideDSCP differs,"
-            " not allowed");
-        return -1;
-    }
-    const WebRtc_Word32 maxBitrate(0);
-    if (_socketTransportModule.SetQoS(enable,
-                                      static_cast<WebRtc_Word32>(serviceType),
-                                      maxBitrate,
-                                      static_cast<WebRtc_Word32>(overrideDSCP),
-                                      true))
-    {
-        UdpTransport::ErrorCode lastSockError(
-            _socketTransportModule.LastError());
-        switch (lastSockError)
-        {
-        case UdpTransport::kQosError:
-            _engineStatisticsPtr->SetLastError(VE_GQOS_ERROR, kTraceError,
-                                               "SetSendGQoS() QOS error");
-            break;
-        default:
-            _engineStatisticsPtr->SetLastError(VE_SOCKET_ERROR, kTraceError,
-                                               "SetSendGQoS() Socket error");
-            break;
-        }
-        WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId,_channelId),
-                     "UdpTransport() => lastError = %d",
-                     lastSockError);
-        return -1;
-    }
-    return 0;
-}
-#endif
-
-#if defined(_WIN32)
-WebRtc_Word32
-Channel::GetSendGQoS(bool &enabled, int &serviceType, int &overrideDSCP)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetSendGQoS(enable=?, serviceType=?, "
-                 "overrideDSCP=?)");
-
-    bool QoS(false);
-    WebRtc_Word32 serviceTypeModule(0);
-    WebRtc_Word32 overrideDSCPModule(0);
-    _socketTransportModule.QoS(QoS, serviceTypeModule, overrideDSCPModule);
-
-    enabled = QoS;
-    serviceType = static_cast<int> (serviceTypeModule);
-    overrideDSCP = static_cast<int> (overrideDSCPModule);
-
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "GetSendGQoS() => enabled=%d, serviceType=%d, overrideDSCP=%d",
-                 (int)enabled, serviceType, overrideDSCP);
-    return 0;
-}
-#endif
-#endif
-
-WebRtc_Word32
+int32_t
 Channel::SetPacketTimeoutNotification(bool enable, int timeoutSeconds)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::SetPacketTimeoutNotification()");
     if (enable)
     {
-        const WebRtc_UWord32 RTPtimeoutMS = 1000*timeoutSeconds;
-        const WebRtc_UWord32 RTCPtimeoutMS = 0;
+        const uint32_t RTPtimeoutMS = 1000*timeoutSeconds;
+        const uint32_t RTCPtimeoutMS = 0;
         _rtpRtcpModule->SetPacketTimeout(RTPtimeoutMS, RTCPtimeoutMS);
         _rtpPacketTimeOutIsEnabled = true;
         _rtpTimeOutSeconds = timeoutSeconds;
@@ -3215,7 +2186,7 @@ Channel::SetPacketTimeoutNotification(bool enable, int timeoutSeconds)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::GetPacketTimeoutNotification(bool& enabled, int& timeoutSeconds)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -3232,7 +2203,7 @@ Channel::GetPacketTimeoutNotification(bool& enabled, int& timeoutSeconds)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::RegisterDeadOrAliveObserver(VoEConnectionObserver& observer)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -3252,7 +2223,7 @@ Channel::RegisterDeadOrAliveObserver(VoEConnectionObserver& observer)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::DeRegisterDeadOrAliveObserver()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -3273,7 +2244,7 @@ Channel::DeRegisterDeadOrAliveObserver()
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SetPeriodicDeadOrAliveStatus(bool enable, int sampleTimeSeconds)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -3289,12 +2260,12 @@ Channel::SetPeriodicDeadOrAliveStatus(bool enable, int sampleTimeSeconds)
         ResetDeadOrAliveCounters();
     }
     bool enabled(false);
-    WebRtc_UWord8 currentSampleTimeSec(0);
+    uint8_t currentSampleTimeSec(0);
     // Store last state (will be used later if dead-or-alive is disabled).
     _rtpRtcpModule->PeriodicDeadOrAliveStatus(enabled, currentSampleTimeSec);
     // Update the dead-or-alive state.
     if (_rtpRtcpModule->SetPeriodicDeadOrAliveStatus(
-        enable, (WebRtc_UWord8)sampleTimeSeconds) != 0)
+        enable, (uint8_t)sampleTimeSeconds) != 0)
     {
         _engineStatisticsPtr->SetLastError(
                 VE_RTP_RTCP_MODULE_ERROR,
@@ -3315,77 +2286,18 @@ Channel::SetPeriodicDeadOrAliveStatus(bool enable, int sampleTimeSeconds)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::GetPeriodicDeadOrAliveStatus(bool& enabled, int& sampleTimeSeconds)
 {
     _rtpRtcpModule->PeriodicDeadOrAliveStatus(
         enabled,
-        (WebRtc_UWord8&)sampleTimeSeconds);
+        (uint8_t&)sampleTimeSeconds);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,-1),
                  "GetPeriodicDeadOrAliveStatus() => enabled=%d,"
                  " sampleTimeSeconds=%d",
                  enabled, sampleTimeSeconds);
     return 0;
 }
-
-WebRtc_Word32
-Channel::SendUDPPacket(const void* data,
-                       unsigned int length,
-                       int& transmittedBytes,
-                       bool useRtcpSocket)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::SendUDPPacket()");
-    if (_externalTransport)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_EXTERNAL_TRANSPORT_ENABLED, kTraceError,
-            "SendUDPPacket() external transport is enabled");
-        return -1;
-    }
-    if (useRtcpSocket && !_rtpRtcpModule->RTCP())
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_RTCP_ERROR, kTraceError,
-            "SendUDPPacket() RTCP is disabled");
-        return -1;
-    }
-    if (!_sending)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_NOT_SENDING, kTraceError,
-            "SendUDPPacket() not sending");
-        return -1;
-    }
-
-    char* dataC = new char[length];
-    if (NULL == dataC)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_NO_MEMORY, kTraceError,
-            "SendUDPPacket() memory allocation failed");
-        return -1;
-    }
-    memcpy(dataC, data, length);
-
-    transmittedBytes = SendPacketRaw(dataC, length, useRtcpSocket);
-
-    delete [] dataC;
-    dataC = NULL;
-
-    if (transmittedBytes <= 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-                VE_SEND_ERROR, kTraceError,
-                "SendUDPPacket() transmission failed");
-        transmittedBytes = 0;
-        return -1;
-    }
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "SendUDPPacket() => transmittedBytes=%d", transmittedBytes);
-    return 0;
-}
-
 
 int Channel::StartPlayingFileLocally(const char* fileName,
                                      const bool loop,
@@ -3430,7 +2342,7 @@ int Channel::StartPlayingFileLocally(const char* fileName,
             return -1;
         }
 
-        const WebRtc_UWord32 notificationTime(0);
+        const uint32_t notificationTime(0);
 
         if (_outputFilePlayerPtr->StartPlayingFile(
                 fileName,
@@ -3512,7 +2424,7 @@ int Channel::StartPlayingFileLocally(InStream* stream,
           return -1;
       }
 
-      const WebRtc_UWord32 notificationTime(0);
+      const uint32_t notificationTime(0);
 
       if (_outputFilePlayerPtr->StartPlayingFile(*stream, startPosition,
                                                  volumeScaling,
@@ -3585,7 +2497,7 @@ int Channel::IsPlayingFileLocally() const
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::IsPlayingFileLocally()");
 
-    return (WebRtc_Word32)_outputFilePlaying;
+    return (int32_t)_outputFilePlaying;
 }
 
 int Channel::RegisterFilePlayingToMixer()
@@ -3649,7 +2561,7 @@ int Channel::GetLocalPlayoutPosition(int& positionMs)
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::GetLocalPlayoutPosition(position=?)");
 
-    WebRtc_UWord32 position;
+    uint32_t position;
 
     CriticalSectionScoped cs(&_fileCritSect);
 
@@ -3717,7 +2629,7 @@ int Channel::StartPlayingFileAsMicrophone(const char* fileName,
         return -1;
     }
 
-    const WebRtc_UWord32 notificationTime(0);
+    const uint32_t notificationTime(0);
 
     if (_inputFilePlayerPtr->StartPlayingFile(
         fileName,
@@ -3792,7 +2704,7 @@ int Channel::StartPlayingFileAsMicrophone(InStream* stream,
         return -1;
     }
 
-    const WebRtc_UWord32 notificationTime(0);
+    const uint32_t notificationTime(0);
 
     if (_inputFilePlayerPtr->StartPlayingFile(*stream, startPosition,
                                               volumeScaling, notificationTime,
@@ -3806,7 +2718,7 @@ int Channel::StartPlayingFileAsMicrophone(InStream* stream,
         _inputFilePlayerPtr = NULL;
         return -1;
     }
-    
+
     _inputFilePlayerPtr->RegisterModuleFileCallback(this);
     _inputFilePlaying = true;
 
@@ -3891,7 +2803,7 @@ int Channel::StartRecordingPlayout(const char* fileName,
     }
 
     FileFormats format;
-    const WebRtc_UWord32 notificationTime(0); // Not supported in VoE
+    const uint32_t notificationTime(0); // Not supported in VoE
     CodecInst dummyCodec={100,"L16",16000,320,1,320000};
 
     if ((codecInst != NULL) &&
@@ -3969,7 +2881,7 @@ int Channel::StartRecordingPlayout(OutStream* stream,
     }
 
     FileFormats format;
-    const WebRtc_UWord32 notificationTime(0); // Not supported in VoE
+    const uint32_t notificationTime(0); // Not supported in VoE
     CodecInst dummyCodec={100,"L16",16000,320,1,320000};
 
     if (codecInst != NULL && codecInst->channels != 1)
@@ -4026,7 +2938,7 @@ int Channel::StartRecordingPlayout(OutStream* stream,
         _outputFileRecorderPtr = NULL;
         return -1;
     }
-    
+
     _outputFileRecorderPtr->RegisterModuleFileCallback(this);
     _outputFileRecording = true;
 
@@ -4070,10 +2982,10 @@ Channel::SetMixWithMicStatus(bool mix)
 }
 
 int
-Channel::GetSpeechOutputLevel(WebRtc_UWord32& level) const
+Channel::GetSpeechOutputLevel(uint32_t& level) const
 {
-    WebRtc_Word8 currentLevel = _outputAudioLevel.Level();
-    level = static_cast<WebRtc_Word32> (currentLevel);
+    int8_t currentLevel = _outputAudioLevel.Level();
+    level = static_cast<int32_t> (currentLevel);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
                VoEId(_instanceId,_channelId),
                "GetSpeechOutputLevel() => level=%u", level);
@@ -4081,10 +2993,10 @@ Channel::GetSpeechOutputLevel(WebRtc_UWord32& level) const
 }
 
 int
-Channel::GetSpeechOutputLevelFullRange(WebRtc_UWord32& level) const
+Channel::GetSpeechOutputLevelFullRange(uint32_t& level) const
 {
-    WebRtc_Word16 currentLevel = _outputAudioLevel.LevelFullRange();
-    level = static_cast<WebRtc_Word32> (currentLevel);
+    int16_t currentLevel = _outputAudioLevel.LevelFullRange();
+    level = static_cast<int32_t> (currentLevel);
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
                VoEId(_instanceId,_channelId),
                "GetSpeechOutputLevelFullRange() => level=%u", level);
@@ -4145,236 +3057,6 @@ Channel::GetChannelOutputVolumeScaling(float& scaling) const
                "GetChannelOutputVolumeScaling() => scaling=%3.2f", scaling);
     return 0;
 }
-
-#ifdef WEBRTC_SRTP
-
-int
-Channel::EnableSRTPSend(
-    CipherTypes cipherType,
-    int cipherKeyLength,
-    AuthenticationTypes authType,
-    int authKeyLength,
-    int authTagLength,
-    SecurityLevels level,
-    const unsigned char key[kVoiceEngineMaxSrtpKeyLength],
-    bool useForRTCP)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-               "Channel::EnableSRTPSend()");
-
-    CriticalSectionScoped cs(&_callbackCritSect);
-
-    if (_encrypting)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION, kTraceWarning,
-            "EnableSRTPSend() encryption already enabled");
-        return -1;
-    }
-
-    if (key == NULL)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceWarning,
-            "EnableSRTPSend() invalid key string");
-        return -1;
-    }
-
-    if (((kEncryption == level ||
-            kEncryptionAndAuthentication == level) &&
-            (cipherKeyLength < kVoiceEngineMinSrtpEncryptLength ||
-            cipherKeyLength > kVoiceEngineMaxSrtpEncryptLength)) ||
-        ((kAuthentication == level ||
-            kEncryptionAndAuthentication == level) &&
-            kAuthHmacSha1 == authType &&
-            (authKeyLength > kVoiceEngineMaxSrtpAuthSha1Length ||
-            authTagLength > kVoiceEngineMaxSrtpAuthSha1Length)) ||
-        ((kAuthentication == level ||
-            kEncryptionAndAuthentication == level) &&
-            kAuthNull == authType &&
-            (authKeyLength > kVoiceEngineMaxSrtpKeyAuthNullLength ||
-            authTagLength > kVoiceEngineMaxSrtpTagAuthNullLength)))
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceError,
-            "EnableSRTPSend() invalid key length(s)");
-        return -1;
-    }
-
-
-    if (_srtpModule.EnableSRTPEncrypt(
-        !useForRTCP,
-        (SrtpModule::CipherTypes)cipherType,
-        cipherKeyLength,
-        (SrtpModule::AuthenticationTypes)authType,
-        authKeyLength, authTagLength,
-        (SrtpModule::SecurityLevels)level,
-        key) == -1)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SRTP_ERROR, kTraceError,
-            "EnableSRTPSend() failed to enable SRTP encryption");
-        return -1;
-    }
-
-    if (_encryptionPtr == NULL)
-    {
-        _encryptionPtr = &_srtpModule;
-    }
-    _encrypting = true;
-
-    return 0;
-}
-
-int
-Channel::DisableSRTPSend()
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-               "Channel::DisableSRTPSend()");
-
-    CriticalSectionScoped cs(&_callbackCritSect);
-
-    if (!_encrypting)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION, kTraceWarning,
-            "DisableSRTPSend() SRTP encryption already disabled");
-        return 0;
-    }
-
-    _encrypting = false;
-
-    if (_srtpModule.DisableSRTPEncrypt() == -1)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SRTP_ERROR, kTraceError,
-            "DisableSRTPSend() failed to disable SRTP encryption");
-        return -1;
-    }
-
-    if (!_srtpModule.SRTPDecrypt() && !_srtpModule.SRTPEncrypt())
-    {
-        // Both directions are disabled
-        _encryptionPtr = NULL;
-    }
-
-    return 0;
-}
-
-int
-Channel::EnableSRTPReceive(
-    CipherTypes  cipherType,
-    int cipherKeyLength,
-    AuthenticationTypes authType,
-    int authKeyLength,
-    int authTagLength,
-    SecurityLevels level,
-    const unsigned char key[kVoiceEngineMaxSrtpKeyLength],
-    bool useForRTCP)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-               "Channel::EnableSRTPReceive()");
-
-    CriticalSectionScoped cs(&_callbackCritSect);
-
-    if (_decrypting)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION, kTraceWarning,
-            "EnableSRTPReceive() SRTP decryption already enabled");
-        return -1;
-    }
-
-    if (key == NULL)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceWarning,
-            "EnableSRTPReceive() invalid key string");
-        return -1;
-    }
-
-    if ((((kEncryption == level) ||
-            (kEncryptionAndAuthentication == level)) &&
-            ((cipherKeyLength < kVoiceEngineMinSrtpEncryptLength) ||
-            (cipherKeyLength > kVoiceEngineMaxSrtpEncryptLength))) ||
-        (((kAuthentication == level) ||
-            (kEncryptionAndAuthentication == level)) &&
-            (kAuthHmacSha1 == authType) &&
-            ((authKeyLength > kVoiceEngineMaxSrtpAuthSha1Length) ||
-            (authTagLength > kVoiceEngineMaxSrtpAuthSha1Length))) ||
-        (((kAuthentication == level) ||
-            (kEncryptionAndAuthentication == level)) &&
-            (kAuthNull == authType) &&
-            ((authKeyLength > kVoiceEngineMaxSrtpKeyAuthNullLength) ||
-            (authTagLength > kVoiceEngineMaxSrtpTagAuthNullLength))))
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceError,
-            "EnableSRTPReceive() invalid key length(s)");
-        return -1;
-    }
-
-    if (_srtpModule.EnableSRTPDecrypt(
-        !useForRTCP,
-        (SrtpModule::CipherTypes)cipherType,
-        cipherKeyLength,
-        (SrtpModule::AuthenticationTypes)authType,
-        authKeyLength,
-        authTagLength,
-        (SrtpModule::SecurityLevels)level,
-        key) == -1)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SRTP_ERROR, kTraceError,
-            "EnableSRTPReceive() failed to enable SRTP decryption");
-        return -1;
-    }
-
-    if (_encryptionPtr == NULL)
-    {
-        _encryptionPtr = &_srtpModule;
-    }
-
-    _decrypting = true;
-
-    return 0;
-}
-
-int
-Channel::DisableSRTPReceive()
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-               "Channel::DisableSRTPReceive()");
-
-    CriticalSectionScoped cs(&_callbackCritSect);
-
-    if (!_decrypting)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION, kTraceWarning,
-            "DisableSRTPReceive() SRTP decryption already disabled");
-        return 0;
-    }
-
-    _decrypting = false;
-
-    if (_srtpModule.DisableSRTPDecrypt() == -1)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_SRTP_ERROR, kTraceError,
-            "DisableSRTPReceive() failed to disable SRTP decryption");
-        return -1;
-    }
-
-    if (!_srtpModule.SRTPDecrypt() && !_srtpModule.SRTPEncrypt())
-    {
-        _encryptionPtr = NULL;
-    }
-
-    return 0;
-}
-
-#endif
 
 int
 Channel::RegisterExternalEncryption(Encryption& encryption)
@@ -4500,11 +3182,14 @@ Channel::SetSendTelephoneEventPayloadType(unsigned char type)
     memcpy(codec.plname, "telephone-event", 16);
     if (_rtpRtcpModule->RegisterSendPayload(codec) != 0)
     {
-        _engineStatisticsPtr->SetLastError(
-            VE_RTP_RTCP_MODULE_ERROR, kTraceError,
-            "SetSendTelephoneEventPayloadType() failed to register send"
-            "payload type");
-        return -1;
+        _rtpRtcpModule->DeRegisterSendPayload(codec.pltype);
+        if (_rtpRtcpModule->RegisterSendPayload(codec) != 0) {
+            _engineStatisticsPtr->SetLastError(
+                VE_RTP_RTCP_MODULE_ERROR, kTraceError,
+                "SetSendTelephoneEventPayloadType() failed to register send"
+                "payload type");
+            return -1;
+        }
     }
     _sendTelephoneEventPayloadType = type;
     return 0;
@@ -4521,144 +3206,6 @@ Channel::GetSendTelephoneEventPayloadType(unsigned char& type)
                "GetSendTelephoneEventPayloadType() => type=%u", type);
     return 0;
 }
-
-#ifdef WEBRTC_DTMF_DETECTION
-
-WebRtc_Word32
-Channel::RegisterTelephoneEventDetection(
-    TelephoneEventDetectionMethods detectionMethod,
-    VoETelephoneEventObserver& observer)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::RegisterTelephoneEventDetection()");
-    CriticalSectionScoped cs(&_callbackCritSect);
-
-    if (_telephoneEventDetectionPtr)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION, kTraceError,
-            "RegisterTelephoneEventDetection() detection already enabled");
-        return -1;
-    }
-
-    _telephoneEventDetectionPtr = &observer;
-
-    switch (detectionMethod)
-    {
-        case kInBand:
-            _inbandTelephoneEventDetection = true;
-            _outOfBandTelephoneEventDetecion = false;
-            break;
-        case kOutOfBand:
-            _inbandTelephoneEventDetection = false;
-            _outOfBandTelephoneEventDetecion = true;
-            break;
-        case kInAndOutOfBand:
-            _inbandTelephoneEventDetection = true;
-            _outOfBandTelephoneEventDetecion = true;
-            break;
-        default:
-            _engineStatisticsPtr->SetLastError(
-                VE_INVALID_ARGUMENT, kTraceError,
-                "RegisterTelephoneEventDetection() invalid detection method");
-            return -1;
-    }
-
-    if (_inbandTelephoneEventDetection)
-    {
-        // Enable in-band Dtmf detectin in the ACM.
-        if (_audioCodingModule.RegisterIncomingMessagesCallback(this) != 0)
-        {
-            _engineStatisticsPtr->SetLastError(
-                VE_AUDIO_CODING_MODULE_ERROR, kTraceError,
-                "RegisterTelephoneEventDetection() failed to enable Dtmf "
-                "detection");
-        }
-    }
-
-    // Enable/disable out-of-band detection of received telephone-events.
-    // When enabled, RtpAudioFeedback::OnReceivedTelephoneEvent() will be
-    // called two times by the RTP/RTCP module (start & end).
-    const bool forwardToDecoder =
-        _rtpRtcpModule->TelephoneEventForwardToDecoder();
-    const bool detectEndOfTone = true;
-    _rtpRtcpModule->SetTelephoneEventStatus(_outOfBandTelephoneEventDetecion,
-                                           forwardToDecoder,
-                                           detectEndOfTone);
-
-    return 0;
-}
-
-int
-Channel::DeRegisterTelephoneEventDetection()
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
-                 "Channel::DeRegisterTelephoneEventDetection()");
-
-    CriticalSectionScoped cs(&_callbackCritSect);
-
-    if (!_telephoneEventDetectionPtr)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION,
-            kTraceWarning,
-            "DeRegisterTelephoneEventDetection() detection already disabled");
-        return 0;
-    }
-
-    // Disable out-of-band event detection
-    const bool forwardToDecoder =
-        _rtpRtcpModule->TelephoneEventForwardToDecoder();
-    _rtpRtcpModule->SetTelephoneEventStatus(false, forwardToDecoder);
-
-    // Disable in-band Dtmf detection
-    _audioCodingModule.RegisterIncomingMessagesCallback(NULL);
-
-    _inbandTelephoneEventDetection = false;
-    _outOfBandTelephoneEventDetecion = false;
-    _telephoneEventDetectionPtr = NULL;
-
-    return 0;
-}
-
-int
-Channel::GetTelephoneEventDetectionStatus(
-    bool& enabled,
-    TelephoneEventDetectionMethods& detectionMethod)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
-                 "Channel::GetTelephoneEventDetectionStatus()");
-
-    {
-        CriticalSectionScoped cs(&_callbackCritSect);
-        enabled = (_telephoneEventDetectionPtr != NULL);
-    }
-
-    if (enabled)
-    {
-        if (_inbandTelephoneEventDetection && !_outOfBandTelephoneEventDetecion)
-            detectionMethod = kInBand;
-        else if (!_inbandTelephoneEventDetection
-            && _outOfBandTelephoneEventDetecion)
-            detectionMethod = kOutOfBand;
-        else if (_inbandTelephoneEventDetection
-            && _outOfBandTelephoneEventDetecion)
-            detectionMethod = kInAndOutOfBand;
-        else
-        {
-            assert(false);
-            return -1;
-        }
-    }
-
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
-               VoEId(_instanceId, _channelId),
-               "GetTelephoneEventDetectionStatus() => enabled=%d,"
-               "detectionMethod=%d", enabled, detectionMethod);
-    return 0;
-}
-
-#endif  // #ifdef WEBRTC_DTMF_DETECTION
 
 int
 Channel::UpdateRxVadDetection(AudioFrame& audioFrame)
@@ -5107,12 +3654,12 @@ Channel::GetRemoteCSRCs(unsigned int arrCSRC[15])
             "GetRemoteCSRCs() invalid array argument");
         return -1;
     }
-    WebRtc_UWord32 arrOfCSRC[kRtpCsrcSize];
-    WebRtc_Word32 CSRCs(0);
+    uint32_t arrOfCSRC[kRtpCsrcSize];
+    int32_t CSRCs(0);
     CSRCs = _rtpRtcpModule->CSRCs(arrOfCSRC);
     if (CSRCs > 0)
     {
-        memcpy(arrCSRC, arrOfCSRC, CSRCs * sizeof(WebRtc_UWord32));
+        memcpy(arrCSRC, arrOfCSRC, CSRCs * sizeof(uint32_t));
         for (int i = 0; i < (int) CSRCs; i++)
         {
             WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
@@ -5232,7 +3779,7 @@ Channel::GetRemoteRTCP_CNAME(char cName[256])
         return -1;
     }
     char cname[RTCP_CNAME_SIZE];
-    const WebRtc_UWord32 remoteSSRC = _rtpRtcpModule->RemoteSSRC();
+    const uint32_t remoteSSRC = _rtpRtcpModule->RemoteSSRC();
     if (_rtpRtcpModule->RemoteCNAME(remoteSSRC, cname) != 0)
     {
         _engineStatisticsPtr->SetLastError(
@@ -5284,12 +3831,12 @@ Channel::GetRemoteRTCPData(
 
     // This value is updated on each incoming RTCP packet (0 when no packet
     // has been received)
-    playoutTimestamp = _playoutTimeStampRTCP;
+    playoutTimestamp = playout_timestamp_rtcp_;
 
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
                  VoEId(_instanceId, _channelId),
                  "GetRemoteRTCPData() => playoutTimestamp=%lu",
-                 _playoutTimeStampRTCP);
+                 playout_timestamp_rtcp_);
 
     if (NULL != jitter || NULL != fractionLost)
     {
@@ -5307,7 +3854,7 @@ Channel::GetRemoteRTCPData(
           return -1;
         }
 
-        WebRtc_UWord32 remoteSSRC = _rtpRtcpModule->RemoteSSRC();
+        uint32_t remoteSSRC = _rtpRtcpModule->RemoteSSRC();
         std::vector<RTCPReportBlock>::const_iterator it = remote_stats.begin();
         for (; it != remote_stats.end(); ++it) {
           if (it->remoteSSRC == remoteSSRC)
@@ -5399,11 +3946,11 @@ Channel::GetRTPStatistics(
         unsigned int& maxJitterMs,
         unsigned int& discardedPackets)
 {
-    WebRtc_UWord8 fraction_lost(0);
-    WebRtc_UWord32 cum_lost(0);
-    WebRtc_UWord32 ext_max(0);
-    WebRtc_UWord32 jitter(0);
-    WebRtc_UWord32 max_jitter(0);
+    uint8_t fraction_lost(0);
+    uint32_t cum_lost(0);
+    uint32_t ext_max(0);
+    uint32_t jitter(0);
+    uint32_t max_jitter(0);
 
     // The jitter statistics is updated for each received RTP packet and is
     // based on received packets.
@@ -5419,7 +3966,7 @@ Channel::GetRTPStatistics(
             "RTP/RTCP module");
     }
 
-    const WebRtc_Word32 playoutFrequency =
+    const int32_t playoutFrequency =
         _audioCodingModule.PlayoutFrequency();
     if (playoutFrequency > 0)
     {
@@ -5501,11 +4048,11 @@ int Channel::GetRemoteRTCPReportBlocks(
 int
 Channel::GetRTPStatistics(CallStatistics& stats)
 {
-    WebRtc_UWord8 fraction_lost(0);
-    WebRtc_UWord32 cum_lost(0);
-    WebRtc_UWord32 ext_max(0);
-    WebRtc_UWord32 jitter(0);
-    WebRtc_UWord32 max_jitter(0);
+    uint8_t fraction_lost(0);
+    uint32_t cum_lost(0);
+    uint32_t ext_max(0);
+    uint32_t jitter(0);
+    uint32_t max_jitter(0);
 
     // --- Part one of the final structure (four values)
 
@@ -5537,7 +4084,7 @@ Channel::GetRTPStatistics(CallStatistics& stats)
 
     // --- Part two of the final structure (one value)
 
-    WebRtc_UWord16 RTT(0);
+    uint16_t RTT(0);
     RTCPMethod method = _rtpRtcpModule->RTCP();
     if (method == kRtcpOff)
     {
@@ -5548,12 +4095,12 @@ Channel::GetRTPStatistics(CallStatistics& stats)
     } else
     {
         // The remote SSRC will be zero if no RTP packet has been received.
-        WebRtc_UWord32 remoteSSRC = _rtpRtcpModule->RemoteSSRC();
+        uint32_t remoteSSRC = _rtpRtcpModule->RemoteSSRC();
         if (remoteSSRC > 0)
         {
-            WebRtc_UWord16 avgRTT(0);
-            WebRtc_UWord16 maxRTT(0);
-            WebRtc_UWord16 minRTT(0);
+            uint16_t avgRTT(0);
+            uint16_t maxRTT(0);
+            uint16_t minRTT(0);
 
             if (_rtpRtcpModule->RTT(remoteSSRC, &RTT, &avgRTT, &minRTT, &maxRTT)
                 != 0)
@@ -5580,10 +4127,10 @@ Channel::GetRTPStatistics(CallStatistics& stats)
 
     // --- Part three of the final structure (four values)
 
-    WebRtc_UWord32 bytesSent(0);
-    WebRtc_UWord32 packetsSent(0);
-    WebRtc_UWord32 bytesReceived(0);
-    WebRtc_UWord32 packetsReceived(0);
+    uint32_t bytesSent(0);
+    uint32_t packetsSent(0);
+    uint32_t bytesReceived(0);
+    uint32_t packetsReceived(0);
 
     if (_rtpRtcpModule->DataCountersRTP(&bytesSent,
                                        &packetsSent,
@@ -5615,11 +4162,20 @@ int Channel::SetFECStatus(bool enable, int redPayloadtype) {
   WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
                "Channel::SetFECStatus()");
 
-  if (SetRedPayloadType(redPayloadtype) < 0) {
-    _engineStatisticsPtr->SetLastError(
-        VE_CODEC_ERROR, kTraceError,
-        "SetSecondarySendCodec() Failed to register RED ACM");
-    return -1;
+  if (enable) {
+    if (redPayloadtype < 0 || redPayloadtype > 127) {
+      _engineStatisticsPtr->SetLastError(
+          VE_PLTYPE_ERROR, kTraceError,
+          "SetFECStatus() invalid RED payload type");
+      return -1;
+    }
+
+    if (SetRedPayloadType(redPayloadtype) < 0) {
+      _engineStatisticsPtr->SetLastError(
+          VE_CODEC_ERROR, kTraceError,
+          "SetSecondarySendCodec() Failed to register RED ACM");
+      return -1;
+    }
   }
 
   if (_audioCodingModule.SetFECStatus(enable) != 0) {
@@ -5637,7 +4193,7 @@ Channel::GetFECStatus(bool& enabled, int& redPayloadtype)
     enabled = _audioCodingModule.FECStatus();
     if (enabled)
     {
-        WebRtc_Word8 payloadType(0);
+        int8_t payloadType(0);
         if (_rtpRtcpModule->SendREDPayloadType(payloadType) != 0)
         {
             _engineStatisticsPtr->SetLastError(
@@ -5794,7 +4350,7 @@ Channel::InsertExtraRTPPacket(unsigned char payloadType,
                                         // received from the capture device as
                                         // undefined for voice for now.
                                         -1,
-                                        (const WebRtc_UWord8*) payloadData,
+                                        (const uint8_t*) payloadData,
                                         payloadSize) != 0)
     {
         _engineStatisticsPtr->SetLastError(
@@ -5806,17 +4362,17 @@ Channel::InsertExtraRTPPacket(unsigned char payloadType,
     return 0;
 }
 
-WebRtc_UWord32
+uint32_t
 Channel::Demultiplex(const AudioFrame& audioFrame)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::Demultiplex()");
-    _audioFrame = audioFrame;
+    _audioFrame.CopyFrom(audioFrame);
     _audioFrame.id_ = _channelId;
     return 0;
 }
 
-WebRtc_UWord32
+uint32_t
 Channel::PrepareEncodeAndSend(int mixingFrequency)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -5848,7 +4404,7 @@ Channel::PrepareEncodeAndSend(int mixingFrequency)
             _inputExternalMediaCallbackPtr->Process(
                 _channelId,
                 kRecordingPerChannel,
-               (WebRtc_Word16*)_audioFrame.data_,
+               (int16_t*)_audioFrame.data_,
                 _audioFrame.samples_per_channel_,
                 _audioFrame.sample_rate_hz_,
                 isStereo);
@@ -5894,7 +4450,7 @@ Channel::PrepareEncodeAndSend(int mixingFrequency)
     return 0;
 }
 
-WebRtc_UWord32
+uint32_t
 Channel::EncodeAndSend()
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
@@ -6028,7 +4584,7 @@ Channel::ResetRTCPStatistics()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::ResetRTCPStatistics()");
-    WebRtc_UWord32 remoteSSRC(0);
+    uint32_t remoteSSRC(0);
     remoteSSRC = _rtpRtcpModule->RemoteSSRC();
     return _rtpRtcpModule->ResetRTT(remoteSSRC);
 }
@@ -6052,11 +4608,11 @@ Channel::GetRoundTripTimeSummary(StatVal& delaysMs) const
         return 0;
     }
 
-    WebRtc_UWord32 remoteSSRC;
-    WebRtc_UWord16 RTT;
-    WebRtc_UWord16 avgRTT;
-    WebRtc_UWord16 maxRTT;
-    WebRtc_UWord16 minRTT;
+    uint32_t remoteSSRC;
+    uint16_t RTT;
+    uint16_t avgRTT;
+    uint16_t maxRTT;
+    uint16_t minRTT;
     // The remote SSRC will be zero if no RTP packet has been received.
     remoteSSRC = _rtpRtcpModule->RemoteSSRC();
     if (remoteSSRC == 0)
@@ -6090,18 +4646,51 @@ Channel::GetNetworkStatistics(NetworkStatistics& stats)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
                  "Channel::GetNetworkStatistics()");
-    return _audioCodingModule.NetworkStatistics(
-        (ACMNetworkStatistics &)stats);
+    ACMNetworkStatistics acm_stats;
+    int return_value = _audioCodingModule.NetworkStatistics(&acm_stats);
+    if (return_value >= 0) {
+      memcpy(&stats, &acm_stats, sizeof(NetworkStatistics));
+    }
+    return return_value;
 }
 
-int
-Channel::GetDelayEstimate(int& delayMs) const
-{
+bool Channel::GetDelayEstimate(int* jitter_buffer_delay_ms,
+                               int* playout_buffer_delay_ms) const {
+  if (_average_jitter_buffer_delay_us == 0) {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetDelayEstimate()");
-    delayMs = (_averageDelayMs + 5) / 10 + _recPacketDelayMs;
-    return 0;
+                 "Channel::GetDelayEstimate() no valid estimate.");
+    return false;
+  }
+  *jitter_buffer_delay_ms = (_average_jitter_buffer_delay_us + 500) / 1000 +
+      _recPacketDelayMs;
+  *playout_buffer_delay_ms = playout_delay_ms_;
+  WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
+               "Channel::GetDelayEstimate()");
+  return true;
 }
+
+int Channel::SetInitialPlayoutDelay(int delay_ms)
+{
+  WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
+               "Channel::SetInitialPlayoutDelay()");
+  if ((delay_ms < kVoiceEngineMinMinPlayoutDelayMs) ||
+      (delay_ms > kVoiceEngineMaxMinPlayoutDelayMs))
+  {
+    _engineStatisticsPtr->SetLastError(
+        VE_INVALID_ARGUMENT, kTraceError,
+        "SetInitialPlayoutDelay() invalid min delay");
+    return -1;
+  }
+  if (_audioCodingModule.SetInitialPlayoutDelay(delay_ms) != 0)
+  {
+    _engineStatisticsPtr->SetLastError(
+        VE_AUDIO_CODING_MODULE_ERROR, kTraceError,
+        "SetInitialPlayoutDelay() failed to set min playout delay");
+    return -1;
+  }
+  return 0;
+}
+
 
 int
 Channel::SetMinimumPlayoutDelay(int delayMs)
@@ -6126,24 +4715,69 @@ Channel::SetMinimumPlayoutDelay(int delayMs)
     return 0;
 }
 
-int
-Channel::GetPlayoutTimestamp(unsigned int& timestamp)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetPlayoutTimestamp()");
-    WebRtc_UWord32 playoutTimestamp(0);
-    if (GetPlayoutTimeStamp(playoutTimestamp) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_CANNOT_RETRIEVE_VALUE, kTraceError,
-            "GetPlayoutTimestamp() failed to retrieve timestamp");
-        return -1;
+void Channel::UpdatePlayoutTimestamp(bool rtcp) {
+  uint32_t playout_timestamp = 0;
+
+  if (_audioCodingModule.PlayoutTimestamp(&playout_timestamp) == -1)  {
+    WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId,_channelId),
+                 "Channel::UpdatePlayoutTimestamp() failed to read playout"
+                 " timestamp from the ACM");
+    _engineStatisticsPtr->SetLastError(
+        VE_CANNOT_RETRIEVE_VALUE, kTraceError,
+        "UpdatePlayoutTimestamp() failed to retrieve timestamp");
+    return;
+  }
+
+  uint16_t delay_ms = 0;
+  if (_audioDeviceModulePtr->PlayoutDelay(&delay_ms) == -1) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId,_channelId),
+                 "Channel::UpdatePlayoutTimestamp() failed to read playout"
+                 " delay from the ADM");
+    _engineStatisticsPtr->SetLastError(
+        VE_CANNOT_RETRIEVE_VALUE, kTraceError,
+        "UpdatePlayoutTimestamp() failed to retrieve playout delay");
+    return;
+  }
+
+  int32_t playout_frequency = _audioCodingModule.PlayoutFrequency();
+  CodecInst current_recive_codec;
+  if (_audioCodingModule.ReceiveCodec(&current_recive_codec) == 0) {
+    if (STR_CASE_CMP("G722", current_recive_codec.plname) == 0) {
+      playout_frequency = 8000;
+    } else if (STR_CASE_CMP("opus", current_recive_codec.plname) == 0) {
+      playout_frequency = 48000;
     }
-    timestamp = playoutTimestamp;
-    WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
-                 VoEId(_instanceId,_channelId),
-                 "GetPlayoutTimestamp() => timestamp=%u", timestamp);
-    return 0;
+  }
+
+  // Remove the playout delay.
+  playout_timestamp -= (delay_ms * (playout_frequency / 1000));
+
+  WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
+               "Channel::UpdatePlayoutTimestamp() => playoutTimestamp = %lu",
+               playout_timestamp);
+
+  if (rtcp) {
+    playout_timestamp_rtcp_ = playout_timestamp;
+  } else {
+    playout_timestamp_rtp_ = playout_timestamp;
+  }
+  playout_delay_ms_ = delay_ms;
+}
+
+int Channel::GetPlayoutTimestamp(unsigned int& timestamp) {
+  WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,_channelId),
+               "Channel::GetPlayoutTimestamp()");
+  if (playout_timestamp_rtp_ == 0)  {
+    _engineStatisticsPtr->SetLastError(
+        VE_CANNOT_RETRIEVE_VALUE, kTraceError,
+        "GetPlayoutTimestamp() failed to retrieve timestamp");
+    return -1;
+  }
+  timestamp = playout_timestamp_rtp_;
+  WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
+               VoEId(_instanceId,_channelId),
+               "GetPlayoutTimestamp() => timestamp=%u", timestamp);
+  return 0;
 }
 
 int
@@ -6200,10 +4834,10 @@ Channel::GetRtpRtcp(RtpRtcp* &rtpRtcpModule) const
 
 // TODO(andrew): refactor Mix functions here and in transmit_mixer.cc to use
 // a shared helper.
-WebRtc_Word32
+int32_t
 Channel::MixOrReplaceAudioWithFile(const int mixingFrequency)
 {
-    scoped_array<WebRtc_Word16> fileBuffer(new WebRtc_Word16[640]);
+    scoped_array<int16_t> fileBuffer(new int16_t[640]);
     int fileSamples(0);
 
     {
@@ -6267,13 +4901,13 @@ Channel::MixOrReplaceAudioWithFile(const int mixingFrequency)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::MixAudioWithFile(AudioFrame& audioFrame,
                           const int mixingFrequency)
 {
     assert(mixingFrequency <= 32000);
 
-    scoped_array<WebRtc_Word16> fileBuffer(new WebRtc_Word16[640]);
+    scoped_array<int16_t> fileBuffer(new int16_t[640]);
     int fileSamples(0);
 
     {
@@ -6330,9 +4964,9 @@ Channel::InsertInbandDtmfTone()
         _inbandDtmfGenerator.DelaySinceLastTone() >
         kMinTelephoneEventSeparationMs)
     {
-        WebRtc_Word8 eventCode(0);
-        WebRtc_UWord16 lengthMs(0);
-        WebRtc_UWord8 attenuationDb(0);
+        int8_t eventCode(0);
+        uint16_t lengthMs(0);
+        uint8_t attenuationDb(0);
 
         eventCode = _inbandDtmfQueue.NextDtmf(&lengthMs, &attenuationDb);
         _inbandDtmfGenerator.AddTone(eventCode, lengthMs, attenuationDb);
@@ -6347,7 +4981,7 @@ Channel::InsertInbandDtmfTone()
 
     if (_inbandDtmfGenerator.IsAddingTone())
     {
-        WebRtc_UWord16 frequency(0);
+        uint16_t frequency(0);
         _inbandDtmfGenerator.GetSampleRate(frequency);
 
         if (frequency != _audioFrame.sample_rate_hz_)
@@ -6355,14 +4989,14 @@ Channel::InsertInbandDtmfTone()
             // Update sample rate of Dtmf tone since the mixing frequency
             // has changed.
             _inbandDtmfGenerator.SetSampleRate(
-                (WebRtc_UWord16) (_audioFrame.sample_rate_hz_));
+                (uint16_t) (_audioFrame.sample_rate_hz_));
             // Reset the tone to be added taking the new sample rate into
             // account.
             _inbandDtmfGenerator.ResetTone();
         }
-        
-        WebRtc_Word16 toneBuffer[320];
-        WebRtc_UWord16 toneSamples(0);
+
+        int16_t toneBuffer[320];
+        uint16_t toneSamples(0);
         // Get 10ms tone segment and set time since last tone to zero
         if (_inbandDtmfGenerator.Get10msTone(toneBuffer, toneSamples) == -1)
         {
@@ -6373,66 +5007,25 @@ Channel::InsertInbandDtmfTone()
         }
 
         // Replace mixed audio with DTMF tone.
-        for (int sample = 0; 
+        for (int sample = 0;
             sample < _audioFrame.samples_per_channel_;
             sample++)
         {
-            for (int channel = 0; 
-                channel < _audioFrame.num_channels_; 
+            for (int channel = 0;
+                channel < _audioFrame.num_channels_;
                 channel++)
             {
-                _audioFrame.data_[sample * _audioFrame.num_channels_ + channel] = 
-                        toneBuffer[sample];
+                const int index = sample * _audioFrame.num_channels_ + channel;
+                _audioFrame.data_[index] = toneBuffer[sample];
             }
         }
-        
+
         assert(_audioFrame.samples_per_channel_ == toneSamples);
     } else
     {
         // Add 10ms to "delay-since-last-tone" counter
         _inbandDtmfGenerator.UpdateDelaySinceLastTone();
     }
-    return 0;
-}
-
-WebRtc_Word32
-Channel::GetPlayoutTimeStamp(WebRtc_UWord32& playoutTimestamp)
-{
-    WebRtc_UWord32 timestamp(0);
-    CodecInst currRecCodec;
-
-    if (_audioCodingModule.PlayoutTimestamp(timestamp) == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId,_channelId),
-                     "Channel::GetPlayoutTimeStamp() failed to read playout"
-                     " timestamp from the ACM");
-        return -1;
-    }
-
-    WebRtc_UWord16 delayMS(0);
-    if (_audioDeviceModulePtr->PlayoutDelay(&delayMS) == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId,_channelId),
-                     "Channel::GetPlayoutTimeStamp() failed to read playout"
-                     " delay from the ADM");
-        return -1;
-    }
-
-    WebRtc_Word32 playoutFrequency = _audioCodingModule.PlayoutFrequency();
-    if (_audioCodingModule.ReceiveCodec(currRecCodec) == 0) {
-      if (STR_CASE_CMP("G722", currRecCodec.plname) == 0) {
-        playoutFrequency = 8000;
-      } else if (STR_CASE_CMP("opus", currRecCodec.plname) == 0) {
-        playoutFrequency = 48000;
-      }
-    }
-    timestamp -= (delayMS * (playoutFrequency/1000));
-
-    playoutTimestamp = timestamp;
-
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::GetPlayoutTimeStamp() => playoutTimestamp = %lu",
-                 playoutTimestamp);
     return 0;
 }
 
@@ -6456,7 +5049,7 @@ int
 Channel::GetDeadOrAliveCounters(int& countDead, int& countAlive) const
 {
     bool enabled;
-    WebRtc_UWord8 timeSec;
+    uint8_t timeSec;
 
     _rtpRtcpModule->PeriodicDeadOrAliveStatus(enabled, timeSec);
     if (!enabled)
@@ -6467,7 +5060,7 @@ Channel::GetDeadOrAliveCounters(int& countDead, int& countAlive) const
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 Channel::SendPacketRaw(const void *data, int len, bool RTCP)
 {
     if (_transportPtr == NULL)
@@ -6484,110 +5077,66 @@ Channel::SendPacketRaw(const void *data, int len, bool RTCP)
     }
 }
 
-WebRtc_Word32
-Channel::UpdatePacketDelay(const WebRtc_UWord32 timestamp,
-                           const WebRtc_UWord16 sequenceNumber)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
-                 "Channel::UpdatePacketDelay(timestamp=%lu, sequenceNumber=%u)",
-                 timestamp, sequenceNumber);
+// Called for incoming RTP packets after successful RTP header parsing.
+void Channel::UpdatePacketDelay(uint32_t rtp_timestamp,
+                                uint16_t sequence_number) {
+  WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,_channelId),
+               "Channel::UpdatePacketDelay(timestamp=%lu, sequenceNumber=%u)",
+               rtp_timestamp, sequence_number);
 
-    WebRtc_Word32 rtpReceiveFrequency(0);
+  // Get frequency of last received payload
+  int rtp_receive_frequency = _audioCodingModule.ReceiveFrequency();
 
-    // Get frequency of last received payload
-    rtpReceiveFrequency = _audioCodingModule.ReceiveFrequency();
+  CodecInst current_receive_codec;
+  if (_audioCodingModule.ReceiveCodec(&current_receive_codec) != 0) {
+    return;
+  }
 
-    CodecInst currRecCodec;
-    if (_audioCodingModule.ReceiveCodec(currRecCodec) == 0) {
-      if (STR_CASE_CMP("G722", currRecCodec.plname) == 0) {
-        // Even though the actual sampling rate for G.722 audio is
-        // 16,000 Hz, the RTP clock rate for the G722 payload format is
-        // 8,000 Hz because that value was erroneously assigned in
-        // RFC 1890 and must remain unchanged for backward compatibility.
-        rtpReceiveFrequency = 8000;
-      } else if (STR_CASE_CMP("opus", currRecCodec.plname) == 0) {
-        // We are resampling Opus internally to 32,000 Hz until all our
-        // DSP routines can operate at 48,000 Hz, but the RTP clock
-        // rate for the Opus payload format is standardized to 48,000 Hz,
-        // because that is the maximum supported decoding sampling rate.
-        rtpReceiveFrequency = 48000;
-      }
-    }
+  if (STR_CASE_CMP("G722", current_receive_codec.plname) == 0) {
+    // Even though the actual sampling rate for G.722 audio is
+    // 16,000 Hz, the RTP clock rate for the G722 payload format is
+    // 8,000 Hz because that value was erroneously assigned in
+    // RFC 1890 and must remain unchanged for backward compatibility.
+    rtp_receive_frequency = 8000;
+  } else if (STR_CASE_CMP("opus", current_receive_codec.plname) == 0) {
+    // We are resampling Opus internally to 32,000 Hz until all our
+    // DSP routines can operate at 48,000 Hz, but the RTP clock
+    // rate for the Opus payload format is standardized to 48,000 Hz,
+    // because that is the maximum supported decoding sampling rate.
+    rtp_receive_frequency = 48000;
+  }
 
-    const WebRtc_UWord32 timeStampDiff = timestamp - _playoutTimeStampRTP;
-    WebRtc_UWord32 timeStampDiffMs(0);
+  // playout_timestamp_rtp_ updated in UpdatePlayoutTimestamp for every incoming
+  // packet.
+  uint32_t timestamp_diff_ms = (rtp_timestamp - playout_timestamp_rtp_) /
+      (rtp_receive_frequency / 1000);
 
-    if (timeStampDiff > 0)
-    {
-        switch (rtpReceiveFrequency) {
-          case 8000:
-            timeStampDiffMs = static_cast<WebRtc_UWord32>(timeStampDiff >> 3);
-            break;
-          case 16000:
-            timeStampDiffMs = static_cast<WebRtc_UWord32>(timeStampDiff >> 4);
-            break;
-          case 32000:
-            timeStampDiffMs = static_cast<WebRtc_UWord32>(timeStampDiff >> 5);
-            break;
-          case 48000:
-            timeStampDiffMs = static_cast<WebRtc_UWord32>(timeStampDiff / 48);
-            break;
-          default:
-            WEBRTC_TRACE(kTraceWarning, kTraceVoice,
-                         VoEId(_instanceId, _channelId),
-                         "Channel::UpdatePacketDelay() invalid sample rate");
-            timeStampDiffMs = 0;
-            return -1;
-        }
-        if (timeStampDiffMs > 5000)
-        {
-            timeStampDiffMs = 0;
-        }
+  uint16_t packet_delay_ms = (rtp_timestamp - _previousTimestamp) /
+      (rtp_receive_frequency / 1000);
 
-        if (_averageDelayMs == 0)
-        {
-            _averageDelayMs = timeStampDiffMs;
-        }
-        else
-        {
-            // Filter average delay value using exponential filter (alpha is
-            // 7/8). We derive 10*_averageDelayMs here (reduces risk of
-            // rounding error) and compensate for it in GetDelayEstimate()
-            // later. Adding 4/8 results in correct rounding.
-            _averageDelayMs = ((_averageDelayMs*7 + 10*timeStampDiffMs + 4)>>3);
-        }
+  _previousTimestamp = rtp_timestamp;
 
-        if (sequenceNumber - _previousSequenceNumber == 1)
-        {
-            WebRtc_UWord16 packetDelayMs = 0;
-            switch (rtpReceiveFrequency) {
-              case 8000:
-                packetDelayMs = static_cast<WebRtc_UWord16>(
-                    (timestamp - _previousTimestamp) >> 3);
-                break;
-              case 16000:
-                packetDelayMs = static_cast<WebRtc_UWord16>(
-                    (timestamp - _previousTimestamp) >> 4);
-                break;
-              case 32000:
-                packetDelayMs = static_cast<WebRtc_UWord16>(
-                    (timestamp - _previousTimestamp) >> 5);
-                break;
-              case 48000:
-                packetDelayMs = static_cast<WebRtc_UWord16>(
-                    (timestamp - _previousTimestamp) / 48);
-                break;
-            }
+  if (timestamp_diff_ms > (2 * kVoiceEngineMaxMinPlayoutDelayMs)) {
+    timestamp_diff_ms = 0;
+  }
 
-            if (packetDelayMs >= 10 && packetDelayMs <= 60)
-                _recPacketDelayMs = packetDelayMs;
-        }
-    }
+  if (timestamp_diff_ms == 0) return;
 
-    _previousSequenceNumber = sequenceNumber;
-    _previousTimestamp = timestamp;
+  if (packet_delay_ms >= 10 && packet_delay_ms <= 60) {
+    _recPacketDelayMs = packet_delay_ms;
+  }
 
-    return 0;
+  if (_average_jitter_buffer_delay_us == 0) {
+    _average_jitter_buffer_delay_us = timestamp_diff_ms * 1000;
+    return;
+  }
+
+  // Filter average delay value using exponential filter (alpha is
+  // 7/8). We derive 1000 *_average_jitter_buffer_delay_us here (reduces
+  // risk of rounding error) and compensate for it in GetDelayEstimate()
+  // later.
+  _average_jitter_buffer_delay_us = (_average_jitter_buffer_delay_us * 7 +
+      1000 * timestamp_diff_ms + 500) / 8;
 }
 
 void
@@ -6598,12 +5147,12 @@ Channel::RegisterReceiveCodecsToRTPModule()
 
 
     CodecInst codec;
-    const WebRtc_UWord8 nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
+    const uint8_t nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
 
     for (int idx = 0; idx < nSupportedCodecs; idx++)
     {
         // Open up the RTP/RTCP receiver for all supported codecs
-        if ((_audioCodingModule.Codec(idx, codec) == -1) ||
+        if ((_audioCodingModule.Codec(idx, &codec) == -1) ||
             (_rtpRtcpModule->RegisterReceivePayload(codec) == -1))
         {
             WEBRTC_TRACE(
@@ -6648,6 +5197,14 @@ int Channel::ApmProcessRx(AudioFrame& frame) {
 
 int Channel::SetSecondarySendCodec(const CodecInst& codec,
                                    int red_payload_type) {
+  // Sanity check for payload type.
+  if (red_payload_type < 0 || red_payload_type > 127) {
+    _engineStatisticsPtr->SetLastError(
+        VE_PLTYPE_ERROR, kTraceError,
+        "SetRedPayloadType() invalid RED payload type");
+    return -1;
+  }
+
   if (SetRedPayloadType(red_payload_type) < 0) {
     _engineStatisticsPtr->SetLastError(
         VE_AUDIO_CODING_MODULE_ERROR, kTraceError,
@@ -6679,21 +5236,15 @@ int Channel::GetSecondarySendCodec(CodecInst* codec) {
   return 0;
 }
 
+// Assuming this method is called with valid payload type.
 int Channel::SetRedPayloadType(int red_payload_type) {
-  if (red_payload_type < 0) {
-    _engineStatisticsPtr->SetLastError(
-        VE_PLTYPE_ERROR, kTraceError,
-        "SetRedPayloadType() invalid RED paylaod type");
-    return -1;
-  }
-
   CodecInst codec;
   bool found_red = false;
 
   // Get default RED settings from the ACM database
   const int num_codecs = AudioCodingModule::NumberOfCodecs();
   for (int idx = 0; idx < num_codecs; idx++) {
-    _audioCodingModule.Codec(idx, codec);
+    _audioCodingModule.Codec(idx, &codec);
     if (!STR_CASE_CMP(codec.plname, "RED")) {
       found_red = true;
       break;

@@ -11,32 +11,41 @@
 #ifndef WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_TB_VIDEO_CHANNEL_H_
 #define WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_TB_VIDEO_CHANNEL_H_
 
-#include "video_engine/test/libvietest/include/tb_interfaces.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
 
-class TbVideoChannel
-{
-public:
-    TbVideoChannel(TbInterfaces& Engine,
-                   webrtc::VideoCodecType sendCodec = webrtc::kVideoCodecVP8,
-                   int width = 352, int height = 288, int frameRate = 30,
-                   int startBitrate = 300);
+namespace webrtc {
+namespace test {
+class VideoChannelTransport;
+}  // namespace test
+}  // namespace webrtc
 
-    ~TbVideoChannel(void);
+class TbVideoChannel {
+ public:
+  TbVideoChannel(TbInterfaces& Engine,
+                 webrtc::VideoCodecType sendCodec = webrtc::kVideoCodecVP8,
+                 int width = 352, int height = 288, int frameRate = 30,
+                 int startBitrate = 300);
 
-    void SetFrameSettings(int width, int height, int frameRate);
+  ~TbVideoChannel(void);
 
-    void StartSend(const unsigned short rtpPort = 11000,
-                   const char* ipAddress = "127.0.0.1");
+  void SetFrameSettings(int width, int height, int frameRate);
 
-    void StopSend();
+  void StartSend(const unsigned short rtpPort = 11000,
+                 const char* ipAddress = "127.0.0.1");
 
-    void StartReceive(const unsigned short rtpPort = 11000);
+  void StopSend();
 
-    void StopReceive();
+  void StartReceive(const unsigned short rtpPort = 11000);
 
-    int videoChannel;
-private:
-    TbInterfaces& ViE;
+  void StopReceive();
+
+  int videoChannel;
+
+ private:
+  TbInterfaces& ViE;
+  webrtc::scoped_ptr<webrtc::test::VideoChannelTransport> channel_transport_;
 };
+
 
 #endif  // WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_TB_VIDEO_CHANNEL_H_

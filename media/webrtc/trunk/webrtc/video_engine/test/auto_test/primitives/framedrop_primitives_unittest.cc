@@ -55,9 +55,9 @@ TEST_F(FrameDropPrimitivesTest, FixOutputFileForComparison) {
   frames.push_back(&fourth_frame);
 
   // Prepare data for the first and third frames:
-  WebRtc_UWord8 first_frame_data[kFrameLength];
+  uint8_t first_frame_data[kFrameLength];
   memset(first_frame_data, 5, kFrameLength);  // Fill it with 5's to identify.
-  WebRtc_UWord8 third_frame_data[kFrameLength];
+  uint8_t third_frame_data[kFrameLength];
   memset(third_frame_data, 7, kFrameLength);  // Fill it with 7's to identify.
 
   // Write the first and third frames to the temporary file. This means the fix
@@ -79,7 +79,7 @@ TEST_F(FrameDropPrimitivesTest, FixOutputFileForComparison) {
 
   webrtc::test::FrameReaderImpl frame_reader(kOutputFilename, kFrameLength);
   frame_reader.Init();
-  WebRtc_UWord8 read_buffer[kFrameLength];
+  uint8_t read_buffer[kFrameLength];
   EXPECT_TRUE(frame_reader.ReadFrame(read_buffer));
   EXPECT_EQ(0, memcmp(read_buffer, first_frame_data, kFrameLength));
   EXPECT_TRUE(frame_reader.ReadFrame(read_buffer));

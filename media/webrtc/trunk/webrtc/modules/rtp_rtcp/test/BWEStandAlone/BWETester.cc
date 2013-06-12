@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 {
 
     bool isMaster = false;
-    WebRtc_UWord16 port;
+    uint16_t port;
     std::string ip;
     std::fstream log;
     log.open("TestLog.txt", std::fstream::out | std::fstream::app);

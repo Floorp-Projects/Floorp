@@ -11,7 +11,9 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_UNIT_TEST_H
 #define WEBRTC_VOICE_ENGINE_VOE_UNIT_TEST_H
 
-#include "voice_engine/test/auto_test/voe_standard_test.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 
 namespace voetest {
 
@@ -57,6 +59,7 @@ class VoEUnitTest : public Encryption {
   bool _listening[32];
   bool _playing[32];
   bool _sending[32];
+  scoped_ptr<webrtc::test::VoiceChannelTransport> voice_channel_transports_[32];
 
  private:
   bool _extOnOff;

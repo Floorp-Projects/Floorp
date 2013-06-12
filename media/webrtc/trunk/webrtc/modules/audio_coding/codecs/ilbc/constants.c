@@ -21,25 +21,25 @@
 
 /* HP Filters {b[0] b[1] b[2] -a[1] -a[2]} */
 
-const WebRtc_Word16 WebRtcIlbcfix_kHpInCoefs[5] = {3798, -7596, 3798, 7807, -3733};
-const WebRtc_Word16 WebRtcIlbcfix_kHpOutCoefs[5] = {3849, -7699, 3849, 7918, -3833};
+const int16_t WebRtcIlbcfix_kHpInCoefs[5] = {3798, -7596, 3798, 7807, -3733};
+const int16_t WebRtcIlbcfix_kHpOutCoefs[5] = {3849, -7699, 3849, 7918, -3833};
 
 /* Window in Q11 to window the energies of the 5 choises (3 for 20ms) in the choise for
    the 80 sample start state
 */
-const WebRtc_Word16 WebRtcIlbcfix_kStartSequenceEnrgWin[NSUB_MAX-1]= {
+const int16_t WebRtcIlbcfix_kStartSequenceEnrgWin[NSUB_MAX-1]= {
   1638, 1843, 2048, 1843, 1638
 };
 
 /* LP Filter coeffs used for downsampling */
-const WebRtc_Word16 WebRtcIlbcfix_kLpFiltCoefs[FILTERORDER_DS_PLUS1]= {
+const int16_t WebRtcIlbcfix_kLpFiltCoefs[FILTERORDER_DS_PLUS1]= {
   -273, 512, 1297, 1696, 1297, 512, -273
 };
 
 /* Constants used in the LPC calculations */
 
 /* Hanning LPC window (in Q15) */
-const WebRtc_Word16 WebRtcIlbcfix_kLpcWin[BLOCKL_MAX] = {
+const int16_t WebRtcIlbcfix_kLpcWin[BLOCKL_MAX] = {
   6, 22, 50, 89, 139, 200, 272, 355, 449, 554, 669, 795,
   932, 1079, 1237, 1405, 1583, 1771, 1969, 2177, 2395, 2622, 2858, 3104,
   3359, 3622, 3894, 4175, 4464, 4761, 5066, 5379, 5699, 6026, 6361, 6702,
@@ -63,7 +63,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kLpcWin[BLOCKL_MAX] = {
 };
 
 /* Asymmetric LPC window (in Q15)*/
-const WebRtc_Word16 WebRtcIlbcfix_kLpcAsymWin[BLOCKL_MAX] = {
+const int16_t WebRtcIlbcfix_kLpcAsymWin[BLOCKL_MAX] = {
   2, 7, 15, 27, 42, 60, 81, 106, 135, 166, 201, 239,
   280, 325, 373, 424, 478, 536, 597, 661, 728, 798, 872, 949,
   1028, 1111, 1197, 1287, 1379, 1474, 1572, 1674, 1778, 1885, 1995, 2108,
@@ -87,7 +87,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kLpcAsymWin[BLOCKL_MAX] = {
 };
 
 /* Lag window for LPC (Q31) */
-const WebRtc_Word32 WebRtcIlbcfix_kLpcLagWin[LPC_FILTERORDER + 1]={
+const int32_t WebRtcIlbcfix_kLpcLagWin[LPC_FILTERORDER + 1]={
   2147483647,   2144885453,   2137754373,   2125918626,   2109459810,
   2088483140,   2063130336,   2033564590,   1999977009,   1962580174,
   1921610283};
@@ -95,7 +95,7 @@ const WebRtc_Word32 WebRtcIlbcfix_kLpcLagWin[LPC_FILTERORDER + 1]={
 /* WebRtcIlbcfix_kLpcChirpSyntDenum vector in Q15 corresponding
  * floating point vector {1 0.9025 0.9025^2 0.9025^3 ...}
  */
-const WebRtc_Word16 WebRtcIlbcfix_kLpcChirpSyntDenum[LPC_FILTERORDER + 1] = {
+const int16_t WebRtcIlbcfix_kLpcChirpSyntDenum[LPC_FILTERORDER + 1] = {
   32767, 29573, 26690, 24087,
   21739, 19619, 17707, 15980,
   14422, 13016, 11747};
@@ -103,12 +103,12 @@ const WebRtc_Word16 WebRtcIlbcfix_kLpcChirpSyntDenum[LPC_FILTERORDER + 1] = {
 /* WebRtcIlbcfix_kLpcChirpWeightDenum in Q15 corresponding to
  * floating point vector {1 0.4222 0.4222^2... }
  */
-const WebRtc_Word16 WebRtcIlbcfix_kLpcChirpWeightDenum[LPC_FILTERORDER + 1] = {
+const int16_t WebRtcIlbcfix_kLpcChirpWeightDenum[LPC_FILTERORDER + 1] = {
   32767, 13835, 5841, 2466, 1041, 440,
   186, 78,  33,  14,  6};
 
 /* LSF quantization Q13 domain */
-const WebRtc_Word16 WebRtcIlbcfix_kLsfCb[64 * 3 + 128 * 3 + 128 * 4] = {
+const int16_t WebRtcIlbcfix_kLsfCb[64 * 3 + 128 * 3 + 128 * 4] = {
   1273,       2238,       3696,
   3199,       5309,       8209,
   3606,       5671,       7829,
@@ -431,22 +431,22 @@ const WebRtc_Word16 WebRtcIlbcfix_kLsfCb[64 * 3 + 128 * 3 + 128 * 4] = {
   15878,      18550,      20718,      22906
 };
 
-const WebRtc_Word16 WebRtcIlbcfix_kLsfDimCb[LSF_NSPLIT] = {3, 3, 4};
-const WebRtc_Word16 WebRtcIlbcfix_kLsfSizeCb[LSF_NSPLIT] = {64,128,128};
+const int16_t WebRtcIlbcfix_kLsfDimCb[LSF_NSPLIT] = {3, 3, 4};
+const int16_t WebRtcIlbcfix_kLsfSizeCb[LSF_NSPLIT] = {64,128,128};
 
-const WebRtc_Word16 WebRtcIlbcfix_kLsfMean[LPC_FILTERORDER] = {
+const int16_t WebRtcIlbcfix_kLsfMean[LPC_FILTERORDER] = {
   2308,       3652,       5434,       7885,
   10255,      12559,      15160,      17513,
   20328,      22752};
 
-const WebRtc_Word16 WebRtcIlbcfix_kLspMean[LPC_FILTERORDER] = {
+const int16_t WebRtcIlbcfix_kLspMean[LPC_FILTERORDER] = {
   31476, 29565, 25819, 18725, 10276,
   1236, -9049, -17600, -25884, -30618
 };
 
 /* Q14 */
-const WebRtc_Word16 WebRtcIlbcfix_kLsfWeight20ms[4] = {12288, 8192, 4096, 0};
-const WebRtc_Word16 WebRtcIlbcfix_kLsfWeight30ms[6] = {8192, 16384, 10923, 5461, 0, 0};
+const int16_t WebRtcIlbcfix_kLsfWeight20ms[4] = {12288, 8192, 4096, 0};
+const int16_t WebRtcIlbcfix_kLsfWeight30ms[6] = {8192, 16384, 10923, 5461, 0, 0};
 
 /*
    cos(x) in Q15
@@ -454,7 +454,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kLsfWeight30ms[6] = {8192, 16384, 10923, 5461,
    used in WebRtcIlbcfix_Lsp2Lsf()
 */
 
-const WebRtc_Word16 WebRtcIlbcfix_kCos[64] = {
+const int16_t WebRtcIlbcfix_kCos[64] = {
   32767,  32729,  32610,  32413,  32138,  31786,  31357,  30853,
   30274,  29622,  28899,  28106,  27246,  26320,  25330,  24279,
   23170,  22006,  20788,  19520,  18205,  16846,  15447,  14010,
@@ -469,7 +469,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kCos[64] = {
    Derivative in Q19, used to interpolate between the
    WebRtcIlbcfix_kCos[] values to get a more exact y = cos(x)
 */
-const WebRtc_Word16 WebRtcIlbcfix_kCosDerivative[64] = {
+const int16_t WebRtcIlbcfix_kCosDerivative[64] = {
   -632,  -1893,  -3150,  -4399,  -5638,  -6863,  -8072,  -9261,
   -10428, -11570, -12684, -13767, -14817, -15832, -16808, -17744,
   -18637, -19486, -20287, -21039, -21741, -22390, -22986, -23526,
@@ -484,7 +484,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kCosDerivative[64] = {
   WebRtcIlbcfix_kCosGrid[i] = cos((2*pi*i)/(float)(2*COS_GRID_POINTS));
 */
 
-const WebRtc_Word16 WebRtcIlbcfix_kCosGrid[COS_GRID_POINTS + 1] = {
+const int16_t WebRtcIlbcfix_kCosGrid[COS_GRID_POINTS + 1] = {
   32760, 32723, 32588, 32364, 32051, 31651, 31164, 30591,
   29935, 29196, 28377, 27481, 26509, 25465, 24351, 23170,
   21926, 20621, 19260, 17846, 16384, 14876, 13327, 11743,
@@ -500,7 +500,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kCosGrid[COS_GRID_POINTS + 1] = {
    used in WebRtcIlbcfix_Lsp2Lsf()
 */
 
-const WebRtc_Word16 WebRtcIlbcfix_kAcosDerivative[64] = {
+const int16_t WebRtcIlbcfix_kAcosDerivative[64] = {
   -26887, -8812, -5323, -3813, -2979, -2444, -2081, -1811,
   -1608, -1450, -1322, -1219, -1132, -1059, -998, -946,
   -901, -861, -827, -797, -772, -750, -730, -713,
@@ -515,7 +515,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kAcosDerivative[64] = {
 /* Tables for quantization of start state */
 
 /* State quantization tables */
-const WebRtc_Word16 WebRtcIlbcfix_kStateSq3[8] = { /* Values in Q13 */
+const int16_t WebRtcIlbcfix_kStateSq3[8] = { /* Values in Q13 */
   -30473, -17838, -9257, -2537,
   3639, 10893, 19958, 32636
 };
@@ -524,7 +524,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kStateSq3[8] = { /* Values in Q13 */
    less or equal than value 0 => index = 0
    less or equal than value k => index = k
 */
-const WebRtc_Word32 WebRtcIlbcfix_kChooseFrgQuant[64] = {
+const int32_t WebRtcIlbcfix_kChooseFrgQuant[64] = {
   118, 163, 222, 305, 425, 604,
   851, 1174, 1617, 2222, 3080, 4191,
   5525, 7215, 9193, 11540, 14397, 17604,
@@ -538,7 +538,7 @@ const WebRtc_Word32 WebRtcIlbcfix_kChooseFrgQuant[64] = {
   37302935, 58819185, 109782723, WEBRTC_SPL_WORD32_MAX
 };
 
-const WebRtc_Word16 WebRtcIlbcfix_kScale[64] = {
+const int16_t WebRtcIlbcfix_kScale[64] = {
   /* Values in Q16 */
   29485, 25003, 21345, 18316, 15578, 13128, 10973, 9310, 7955,
   6762, 5789, 4877, 4255, 3699, 3258, 2904, 2595, 2328,
@@ -560,7 +560,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kScale[64] = {
   37:58 in Q5
   59:63 in Q3
 */
-const WebRtc_Word16 WebRtcIlbcfix_kFrgQuantMod[64] = {
+const int16_t WebRtcIlbcfix_kFrgQuantMod[64] = {
   /* First 37 values in Q8 */
   569, 671, 786, 916, 1077, 1278,
   1529, 1802, 2109, 2481, 2898, 3440,
@@ -583,36 +583,36 @@ const WebRtc_Word16 WebRtcIlbcfix_kFrgQuantMod[64] = {
 /* Expansion filter to get additional cb section.
  * Q12 and reversed compared to flp
  */
-const WebRtc_Word16 WebRtcIlbcfix_kCbFiltersRev[CB_FILTERLEN]={
+const int16_t WebRtcIlbcfix_kCbFiltersRev[CB_FILTERLEN]={
   -140, 446, -755, 3302, 2922, -590, 343, -138};
 
 /* Weighting coefficients for short lags.
  * [0.2 0.4 0.6 0.8] in Q15 */
-const WebRtc_Word16 WebRtcIlbcfix_kAlpha[4]={
+const int16_t WebRtcIlbcfix_kAlpha[4]={
   6554, 13107, 19661, 26214};
 
 /* Ranges for search and filters at different subframes */
 
-const WebRtc_Word16 WebRtcIlbcfix_kSearchRange[5][CB_NSTAGES]={
+const int16_t WebRtcIlbcfix_kSearchRange[5][CB_NSTAGES]={
   {58,58,58}, {108,44,44}, {108,108,108}, {108,108,108}, {108,108,108}};
 
-const WebRtc_Word16 WebRtcIlbcfix_kFilterRange[5]={63, 85, 125, 147, 147};
+const int16_t WebRtcIlbcfix_kFilterRange[5]={63, 85, 125, 147, 147};
 
 /* Gain Quantization for the codebook gains of the 3 stages */
 
-/* Q14 (one extra value (max WebRtc_Word16) to simplify for the search) */
-const WebRtc_Word16 WebRtcIlbcfix_kGainSq3[9]={
+/* Q14 (one extra value (max int16_t) to simplify for the search) */
+const int16_t WebRtcIlbcfix_kGainSq3[9]={
   -16384, -10813, -5407, 0, 4096, 8192,
   12288, 16384, 32767};
 
-/* Q14 (one extra value (max WebRtc_Word16) to simplify for the search) */
-const WebRtc_Word16 WebRtcIlbcfix_kGainSq4[17]={
+/* Q14 (one extra value (max int16_t) to simplify for the search) */
+const int16_t WebRtcIlbcfix_kGainSq4[17]={
   -17203, -14746, -12288, -9830, -7373, -4915,
   -2458, 0, 2458, 4915, 7373, 9830,
   12288, 14746, 17203, 19661, 32767};
 
-/* Q14 (one extra value (max WebRtc_Word16) to simplify for the search) */
-const WebRtc_Word16 WebRtcIlbcfix_kGainSq5[33]={
+/* Q14 (one extra value (max int16_t) to simplify for the search) */
+const int16_t WebRtcIlbcfix_kGainSq5[33]={
   614,        1229,        1843,        2458,        3072,       3686,
   4301,        4915,        5530,        6144,        6758,        7373,
   7987,        8602,        9216,        9830,       10445,       11059,
@@ -621,7 +621,7 @@ const WebRtc_Word16 WebRtcIlbcfix_kGainSq5[33]={
   19046,       19661,    32767};
 
 /* Q14 gain_sq5Tbl squared in Q14 */
-const WebRtc_Word16 WebRtcIlbcfix_kGainSq5Sq[32] = {
+const int16_t WebRtcIlbcfix_kGainSq5Sq[32] = {
   23,   92,    207,  368,  576,  829,
   1129,  1474,   1866,  2304,  2787,  3317,
   3893,  4516,   5184,  5897,  6658,  7464,
@@ -630,37 +630,37 @@ const WebRtc_Word16 WebRtcIlbcfix_kGainSq5Sq[32] = {
   22140,  23593
 };
 
-const WebRtc_Word16* const WebRtcIlbcfix_kGain[3] =
+const int16_t* const WebRtcIlbcfix_kGain[3] =
 {WebRtcIlbcfix_kGainSq5, WebRtcIlbcfix_kGainSq4, WebRtcIlbcfix_kGainSq3};
 
 
 /* Tables for the Enhancer, using upsamling factor 4 (ENH_UPS0 = 4) */
 
-const WebRtc_Word16 WebRtcIlbcfix_kEnhPolyPhaser[ENH_UPS0][ENH_FLO_MULT2_PLUS1]={
+const int16_t WebRtcIlbcfix_kEnhPolyPhaser[ENH_UPS0][ENH_FLO_MULT2_PLUS1]={
   {0,    0,    0, 4096,    0,  0,   0},
   {64, -315, 1181, 3531, -436, 77, -64},
   {97, -509, 2464, 2464, -509, 97, -97},
   {77, -436, 3531, 1181, -315, 64, -77}
 };
 
-const WebRtc_Word16 WebRtcIlbcfix_kEnhWt[3] = {
+const int16_t WebRtcIlbcfix_kEnhWt[3] = {
   4800, 16384, 27968 /* Q16 */
 };
 
-const WebRtc_Word16 WebRtcIlbcfix_kEnhPlocs[ENH_NBLOCKS_TOT] = {
+const int16_t WebRtcIlbcfix_kEnhPlocs[ENH_NBLOCKS_TOT] = {
   160, 480, 800, 1120, 1440, 1760, 2080, 2400  /* Q(-2) */
 };
 
 /* PLC table */
 
-const WebRtc_Word16 WebRtcIlbcfix_kPlcPerSqr[6] = { /* Grid points for square of periodiciy in Q15 */
+const int16_t WebRtcIlbcfix_kPlcPerSqr[6] = { /* Grid points for square of periodiciy in Q15 */
   839, 1343, 2048, 2998, 4247, 5849
 };
 
-const WebRtc_Word16 WebRtcIlbcfix_kPlcPitchFact[6] = { /* Value of y=(x^4-0.4)/(0.7-0.4) in grid points in Q15 */
+const int16_t WebRtcIlbcfix_kPlcPitchFact[6] = { /* Value of y=(x^4-0.4)/(0.7-0.4) in grid points in Q15 */
   0, 5462, 10922, 16384, 21846, 27306
 };
 
-const WebRtc_Word16 WebRtcIlbcfix_kPlcPfSlope[6] = { /* Slope of y=(x^4-0.4)/(0.7-0.4) in Q11 */
+const int16_t WebRtcIlbcfix_kPlcPfSlope[6] = { /* Slope of y=(x^4-0.4)/(0.7-0.4) in Q11 */
   26667, 18729, 13653, 10258, 7901, 6214
 };

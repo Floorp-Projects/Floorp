@@ -26,16 +26,16 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_SplitVq(
-    WebRtc_Word16 *qX,  /* (o) the quantized vector in Q13 */
-    WebRtc_Word16 *index, /* (o) a vector of indexes for all vector
+    int16_t *qX,  /* (o) the quantized vector in Q13 */
+    int16_t *index, /* (o) a vector of indexes for all vector
                                    codebooks in the split */
-    WebRtc_Word16 *X,  /* (i) the vector to quantize */
-    WebRtc_Word16 *CB,  /* (i) the quantizer codebook in Q13 */
-    WebRtc_Word16 *dim, /* (i) the dimension of X and qX */
-    WebRtc_Word16 *cbsize /* (i) the number of vectors in the codebook */
+    int16_t *X,  /* (i) the vector to quantize */
+    int16_t *CB,  /* (i) the quantizer codebook in Q13 */
+    int16_t *dim, /* (i) the dimension of X and qX */
+    int16_t *cbsize /* (i) the number of vectors in the codebook */
                            ) {
 
-  WebRtc_Word16 *qXPtr, *indexPtr, *CBPtr, *XPtr;
+  int16_t *qXPtr, *indexPtr, *CBPtr, *XPtr;
 
   /* Quantize X with the 3 vectror quantization tables */
 

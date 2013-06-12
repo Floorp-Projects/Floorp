@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include <cstdlib>
+#include <fstream>
 
 #include "gtest/gtest.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
@@ -24,16 +25,24 @@ namespace test {
 const int kWidth = 352;
 const int kHeight = 288;
 const int kFrameSize = CalcBufferSize(kI420, kWidth, kHeight);
-const std::string kRefVideo = ResourcePath("foreman_cif", "yuv");
-const std::string kTestVideo = OutputPath() + "testvideo.yuv";
 
 class FrameEditingTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    original_fid_ = fopen(kRefVideo.c_str(), "rb");
+    reference_video_ = ResourcePath("foreman_cif", "yuv");
+    test_video_ = OutputPath() + "testvideo.yuv";
+
+    original_fid_ = fopen(reference_video_.c_str(), "rb");
     ASSERT_TRUE(original_fid_ != NULL);
-    edited_fid_ = fopen(kTestVideo.c_str(), "rb");
+
+    // Ensure the output file exists on disk.
+    std::ofstream(test_video_.c_str(), std::ios::out);
+    // Open the output file for reading.
+    // TODO(holmer): Figure out why this file has to be opened here (test fails
+    // if it's opened after the write operation performed in EditFrames).
+    edited_fid_ = fopen(test_video_.c_str(), "rb");
     ASSERT_TRUE(edited_fid_ != NULL);
+
     original_buffer_.reset(new int[kFrameSize]);
     edited_buffer_.reset(new int[kFrameSize]);
     num_frames_read_ = 0;
@@ -64,9 +73,10 @@ class FrameEditingTest : public ::testing::Test {
     // There should not be anything left in either stream.
     EXPECT_EQ(!feof(test_video_fid), !feof(ref_video_fid));
   }
+  std::string reference_video_;
+  std::string test_video_;
   FILE* original_fid_;
   FILE* edited_fid_;
-  int kFrameSize_;
   int num_bytes_read_;
   scoped_array<int> original_buffer_;
   scoped_array<int> edited_buffer_;
@@ -78,8 +88,9 @@ TEST_F(FrameEditingTest, ValidInPath) {
   const int kInterval = -1;
   const int kLastFrameToProcess = 240;
 
-  int result = EditFrames(kRefVideo, kWidth, kHeight, kFirstFrameToProcess,
-                          kInterval, kLastFrameToProcess, kTestVideo);
+  int result = EditFrames(reference_video_, kWidth, kHeight,
+                          kFirstFrameToProcess, kInterval, kLastFrameToProcess,
+                          test_video_);
   EXPECT_EQ(0, result);
 
   for (int i = 1; i < kFirstFrameToProcess; ++i) {
@@ -108,20 +119,21 @@ TEST_F(FrameEditingTest, EmptySetToCut) {
   const int kInterval = -1;
   const int kLastFrameToProcess = 1;
 
-  int result = EditFrames(kRefVideo, kWidth, kHeight, kFirstFrameToProcess,
-                          kInterval, kLastFrameToProcess, kTestVideo);
+  int result = EditFrames(reference_video_, kWidth, kHeight,
+                          kFirstFrameToProcess, kInterval, kLastFrameToProcess,
+                          test_video_);
   EXPECT_EQ(-10, result);
 }
 
 TEST_F(FrameEditingTest, InValidInPath) {
-  const std::string kRefVideo = "PATH/THAT/DOES/NOT/EXIST";
+  const std::string kRefVideo_ = "PATH/THAT/DOES/NOT/EXIST";
 
   const int kFirstFrameToProcess = 30;
   const int kInterval = 1;
   const int kLastFrameToProcess = 120;
 
-  int result = EditFrames(kRefVideo, kWidth, kHeight, kFirstFrameToProcess,
-                          kInterval, kLastFrameToProcess, kTestVideo);
+  int result = EditFrames(kRefVideo_, kWidth, kHeight, kFirstFrameToProcess,
+                          kInterval, kLastFrameToProcess, test_video_);
   EXPECT_EQ(-11, result);
 }
 
@@ -130,8 +142,9 @@ TEST_F(FrameEditingTest, DeletingEverySecondFrame) {
   const int kInterval = -2;
   const int kLastFrameToProcess = 10000;
   // Set kLastFrameToProcess to a large value so that all frame are processed.
-  int result = EditFrames(kRefVideo, kWidth, kHeight, kFirstFrameToProcess,
-                          kInterval, kLastFrameToProcess, kTestVideo);
+  int result = EditFrames(reference_video_, kWidth, kHeight,
+                          kFirstFrameToProcess, kInterval, kLastFrameToProcess,
+                          test_video_);
   EXPECT_EQ(0, result);
 
   while (!feof(original_fid_) && !feof(edited_fid_)) {
@@ -164,8 +177,9 @@ TEST_F(FrameEditingTest, RepeatFrames) {
   const int kInterval = 2;
   const int kLastFrameToProcess = 240;
 
-  int result = EditFrames(kRefVideo, kWidth, kHeight, kFirstFrameToProcess,
-                          kInterval, kLastFrameToProcess, kTestVideo);
+  int result = EditFrames(reference_video_, kWidth, kHeight,
+                          kFirstFrameToProcess, kInterval, kLastFrameToProcess,
+                          test_video_);
   EXPECT_EQ(0, result);
 
   for (int i = 1; i < kFirstFrameToProcess; ++i) {

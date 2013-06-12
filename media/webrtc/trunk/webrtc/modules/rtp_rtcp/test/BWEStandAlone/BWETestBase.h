@@ -41,7 +41,7 @@ public:
 
     bool SetMaster(bool isMaster = true);
     void UseRecvTimeout() { _sendrec->SetPacketTimeout(1000); };
-    virtual int Init(std::string ip, WebRtc_UWord16 port);
+    virtual int Init(std::string ip, uint16_t port);
     virtual bool Start();
     virtual bool Stop();
     bool ProcLoop(void);
@@ -49,12 +49,12 @@ public:
     std::string TestName() { return (_testName); };
 
     // SenderReceiver callback
-    virtual void OnOnNetworkChanged(const WebRtc_UWord32 bitrateTargetBps,
-        const WebRtc_UWord8 fractionLost,
-        const WebRtc_UWord16 roundTripTimeMs,
-        const WebRtc_UWord32 jitterMS,
-        const WebRtc_UWord16 bwEstimateKbitMin,
-        const WebRtc_UWord16 bwEstimateKbitMax);
+    virtual void OnOnNetworkChanged(const uint32_t bitrateTargetBps,
+        const uint8_t fractionLost,
+        const uint16_t roundTripTimeMs,
+        const uint32_t jitterMS,
+        const uint16_t bwEstimateKbitMin,
+        const uint16_t bwEstimateKbitMax);
 
 
 protected:
@@ -72,8 +72,8 @@ protected:
     bool _running;
     EventWrapper *_eventPtr;
     ThreadWrapper* _procThread;
-    WebRtc_Word64 _startTimeMs;
-    WebRtc_Word64 _stopTimeMs;
+    int64_t _startTimeMs;
+    int64_t _stopTimeMs;
 
     // Statistics, protected by separate CritSect
     CriticalSectionWrapper* _statCritSect;
@@ -89,7 +89,7 @@ public:
     BWEOneWayTest(std::string testName, int startRateKbps) :
       BWETest(testName, startRateKbps) {};
 
-    virtual int Init(std::string ip, WebRtc_UWord16 port);
+    virtual int Init(std::string ip, uint16_t port);
     virtual bool Start();
 
 protected:

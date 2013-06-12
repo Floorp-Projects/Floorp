@@ -25,21 +25,21 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_CbConstruct(
-    WebRtc_Word16 *decvector,  /* (o) Decoded vector */
-    WebRtc_Word16 *index,   /* (i) Codebook indices */
-    WebRtc_Word16 *gain_index,  /* (i) Gain quantization indices */
-    WebRtc_Word16 *mem,   /* (i) Buffer for codevector construction */
-    WebRtc_Word16 lMem,   /* (i) Length of buffer */
-    WebRtc_Word16 veclen   /* (i) Length of vector */
+    int16_t *decvector,  /* (o) Decoded vector */
+    int16_t *index,   /* (i) Codebook indices */
+    int16_t *gain_index,  /* (i) Gain quantization indices */
+    int16_t *mem,   /* (i) Buffer for codevector construction */
+    int16_t lMem,   /* (i) Length of buffer */
+    int16_t veclen   /* (i) Length of vector */
                                ){
   int j;
-  WebRtc_Word16 gain[CB_NSTAGES];
+  int16_t gain[CB_NSTAGES];
   /* Stack based */
-  WebRtc_Word16 cbvec0[SUBL];
-  WebRtc_Word16 cbvec1[SUBL];
-  WebRtc_Word16 cbvec2[SUBL];
-  WebRtc_Word32 a32;
-  WebRtc_Word16 *gainPtr;
+  int16_t cbvec0[SUBL];
+  int16_t cbvec1[SUBL];
+  int16_t cbvec2[SUBL];
+  int32_t a32;
+  int16_t *gainPtr;
 
   /* gain de-quantization */
 
@@ -60,7 +60,7 @@ void WebRtcIlbcfix_CbConstruct(
     a32 += WEBRTC_SPL_MUL_16_16(*gainPtr++, cbvec1[j]);
     a32 += WEBRTC_SPL_MUL_16_16(*gainPtr, cbvec2[j]);
     gainPtr -= 2;
-    decvector[j] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(a32 + 8192, 14);
+    decvector[j] = (int16_t) WEBRTC_SPL_RSHIFT_W32(a32 + 8192, 14);
   }
 
   return;

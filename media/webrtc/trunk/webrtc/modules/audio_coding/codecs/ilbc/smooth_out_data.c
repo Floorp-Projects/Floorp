@@ -19,25 +19,25 @@
 #include "defines.h"
 #include "constants.h"
 
-WebRtc_Word32 WebRtcIlbcfix_Smooth_odata(
-    WebRtc_Word16 *odata,
-    WebRtc_Word16 *psseq,
-    WebRtc_Word16 *surround,
-    WebRtc_Word16 C)
+int32_t WebRtcIlbcfix_Smooth_odata(
+    int16_t *odata,
+    int16_t *psseq,
+    int16_t *surround,
+    int16_t C)
 {
   int i;
 
-  WebRtc_Word16 err;
-  WebRtc_Word32 errs;
+  int16_t err;
+  int32_t errs;
 
   for(i=0;i<80;i++) {
-    odata[i]= (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(
+    odata[i]= (int16_t)WEBRTC_SPL_RSHIFT_W32(
         (WEBRTC_SPL_MUL_16_16(C, surround[i])+1024), 11);
   }
 
   errs=0;
   for(i=0;i<80;i++) {
-    err=(WebRtc_Word16)WEBRTC_SPL_RSHIFT_W16((psseq[i]-odata[i]), 3);
+    err=(int16_t)WEBRTC_SPL_RSHIFT_W16((psseq[i]-odata[i]), 3);
     errs+=WEBRTC_SPL_MUL_16_16(err, err); /* errs in Q-6 */
   }
 

@@ -68,7 +68,7 @@ void WebRtcNs_set_feature_extraction_parameters(NSinst_t* inst) {
 }
 
 // Initialize state
-int WebRtcNs_InitCore(NSinst_t* inst, WebRtc_UWord32 fs) {
+int WebRtcNs_InitCore(NSinst_t* inst, uint32_t fs) {
   int i;
   //We only support 10ms frames
 

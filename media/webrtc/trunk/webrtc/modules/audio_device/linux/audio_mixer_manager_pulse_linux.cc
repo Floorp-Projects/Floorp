@@ -26,7 +26,7 @@ namespace webrtc
 
 enum { kMaxRetryOnFailure = 2 };
 
-AudioMixerManagerLinuxPulse::AudioMixerManagerLinuxPulse(const WebRtc_Word32 id) :
+AudioMixerManagerLinuxPulse::AudioMixerManagerLinuxPulse(const int32_t id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _paOutputDeviceIndex(-1),
@@ -62,7 +62,7 @@ AudioMixerManagerLinuxPulse::~AudioMixerManagerLinuxPulse()
 //                                    PUBLIC METHODS
 // ============================================================================
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SetPulseAudioObjects(
+int32_t AudioMixerManagerLinuxPulse::SetPulseAudioObjects(
     pa_threaded_mainloop* mainloop,
     pa_context* context)
 {
@@ -88,7 +88,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SetPulseAudioObjects(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::Close()
+int32_t AudioMixerManagerLinuxPulse::Close()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -106,7 +106,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::Close()
 
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::CloseSpeaker()
+int32_t AudioMixerManagerLinuxPulse::CloseSpeaker()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -120,7 +120,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::CloseSpeaker()
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::CloseMicrophone()
+int32_t AudioMixerManagerLinuxPulse::CloseMicrophone()
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
                  __FUNCTION__);
@@ -134,7 +134,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::CloseMicrophone()
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SetPlayStream(pa_stream* playStream)
+int32_t AudioMixerManagerLinuxPulse::SetPlayStream(pa_stream* playStream)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::SetPlayStream(playStream)");
@@ -144,7 +144,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SetPlayStream(pa_stream* playStream)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SetRecStream(pa_stream* recStream)
+int32_t AudioMixerManagerLinuxPulse::SetRecStream(pa_stream* recStream)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::SetRecStream(recStream)");
@@ -154,8 +154,8 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SetRecStream(pa_stream* recStream)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::OpenSpeaker(
-    WebRtc_UWord16 deviceIndex)
+int32_t AudioMixerManagerLinuxPulse::OpenSpeaker(
+    uint16_t deviceIndex)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::OpenSpeaker(deviceIndex=%d)",
@@ -182,8 +182,8 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::OpenSpeaker(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::OpenMicrophone(
-    WebRtc_UWord16 deviceIndex)
+int32_t AudioMixerManagerLinuxPulse::OpenMicrophone(
+    uint16_t deviceIndex)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::OpenMicrophone(deviceIndex=%d)",
@@ -226,8 +226,8 @@ bool AudioMixerManagerLinuxPulse::MicrophoneIsInitialized() const
     return (_paInputDeviceIndex != -1);
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SetSpeakerVolume(
-    WebRtc_UWord32 volume)
+int32_t AudioMixerManagerLinuxPulse::SetSpeakerVolume(
+    uint32_t volume)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::SetSpeakerVolume(volume=%u)",
@@ -299,8 +299,8 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SetSpeakerVolume(
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::SpeakerVolume(WebRtc_UWord32& volume) const
+int32_t
+AudioMixerManagerLinuxPulse::SpeakerVolume(uint32_t& volume) const
 {
 
     if (_paOutputDeviceIndex == -1)
@@ -317,7 +317,7 @@ AudioMixerManagerLinuxPulse::SpeakerVolume(WebRtc_UWord32& volume) const
         if (!GetSinkInputInfo())
           return -1;
 
-        volume = static_cast<WebRtc_UWord32> (_paVolume);
+        volume = static_cast<uint32_t> (_paVolume);
         ResetCallbackVariables();
     } else
     {
@@ -331,8 +331,8 @@ AudioMixerManagerLinuxPulse::SpeakerVolume(WebRtc_UWord32& volume) const
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const
+int32_t
+AudioMixerManagerLinuxPulse::MaxSpeakerVolume(uint32_t& maxVolume) const
 {
 
     if (_paOutputDeviceIndex == -1)
@@ -344,13 +344,13 @@ AudioMixerManagerLinuxPulse::MaxSpeakerVolume(WebRtc_UWord32& maxVolume) const
 
     // PA_VOLUME_NORM corresponds to 100% (0db)
     // but PA allows up to 150 db amplification
-    maxVolume = static_cast<WebRtc_UWord32> (PA_VOLUME_NORM);
+    maxVolume = static_cast<uint32_t> (PA_VOLUME_NORM);
 
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::MinSpeakerVolume(WebRtc_UWord32& minVolume) const
+int32_t
+AudioMixerManagerLinuxPulse::MinSpeakerVolume(uint32_t& minVolume) const
 {
 
     if (_paOutputDeviceIndex == -1)
@@ -360,13 +360,13 @@ AudioMixerManagerLinuxPulse::MinSpeakerVolume(WebRtc_UWord32& minVolume) const
         return -1;
     }
 
-    minVolume = static_cast<WebRtc_UWord32> (PA_VOLUME_MUTED);
+    minVolume = static_cast<uint32_t> (PA_VOLUME_MUTED);
 
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) const
+int32_t
+AudioMixerManagerLinuxPulse::SpeakerVolumeStepSize(uint16_t& stepSize) const
 {
 
     if (_paOutputDeviceIndex == -1)
@@ -390,7 +390,7 @@ AudioMixerManagerLinuxPulse::SpeakerVolumeStepSize(WebRtc_UWord16& stepSize) con
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 AudioMixerManagerLinuxPulse::SpeakerVolumeIsAvailable(bool& available)
 {
     if (_paOutputDeviceIndex == -1)
@@ -406,7 +406,7 @@ AudioMixerManagerLinuxPulse::SpeakerVolumeIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 AudioMixerManagerLinuxPulse::SpeakerMuteIsAvailable(bool& available)
 {
     if (_paOutputDeviceIndex == -1)
@@ -422,7 +422,7 @@ AudioMixerManagerLinuxPulse::SpeakerMuteIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SetSpeakerMute(bool enable)
+int32_t AudioMixerManagerLinuxPulse::SetSpeakerMute(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::SetSpeakerMute(enable=%u)",
@@ -479,7 +479,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SetSpeakerMute(bool enable)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SpeakerMute(bool& enabled) const
+int32_t AudioMixerManagerLinuxPulse::SpeakerMute(bool& enabled) const
 {
 
     if (_paOutputDeviceIndex == -1)
@@ -510,7 +510,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SpeakerMute(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 AudioMixerManagerLinuxPulse::StereoPlayoutIsAvailable(bool& available)
 {
     if (_paOutputDeviceIndex == -1)
@@ -546,7 +546,7 @@ AudioMixerManagerLinuxPulse::StereoPlayoutIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 AudioMixerManagerLinuxPulse::StereoRecordingIsAvailable(bool& available)
 {
     if (_paInputDeviceIndex == -1)
@@ -602,7 +602,7 @@ AudioMixerManagerLinuxPulse::StereoRecordingIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneMuteIsAvailable(
+int32_t AudioMixerManagerLinuxPulse::MicrophoneMuteIsAvailable(
     bool& available)
 {
     if (_paInputDeviceIndex == -1)
@@ -618,7 +618,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneMuteIsAvailable(
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SetMicrophoneMute(bool enable)
+int32_t AudioMixerManagerLinuxPulse::SetMicrophoneMute(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::SetMicrophoneMute(enable=%u)",
@@ -680,7 +680,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SetMicrophoneMute(bool enable)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneMute(bool& enabled) const
+int32_t AudioMixerManagerLinuxPulse::MicrophoneMute(bool& enabled) const
 {
 
     if (_paInputDeviceIndex == -1)
@@ -720,7 +720,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneMute(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 AudioMixerManagerLinuxPulse::MicrophoneBoostIsAvailable(bool& available)
 {
     if (_paInputDeviceIndex == -1)
@@ -738,7 +738,7 @@ AudioMixerManagerLinuxPulse::MicrophoneBoostIsAvailable(bool& available)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::SetMicrophoneBoost(bool enable)
+int32_t AudioMixerManagerLinuxPulse::SetMicrophoneBoost(bool enable)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::SetMicrophoneBoost(enable=%u)",
@@ -768,7 +768,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::SetMicrophoneBoost(bool enable)
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneBoost(bool& enabled) const
+int32_t AudioMixerManagerLinuxPulse::MicrophoneBoost(bool& enabled) const
 {
 
     if (_paInputDeviceIndex == -1)
@@ -784,7 +784,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneBoost(bool& enabled) const
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneVolumeIsAvailable(
+int32_t AudioMixerManagerLinuxPulse::MicrophoneVolumeIsAvailable(
     bool& available)
 {
     if (_paInputDeviceIndex == -1)
@@ -800,8 +800,8 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneVolumeIsAvailable(
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::SetMicrophoneVolume(WebRtc_UWord32 volume)
+int32_t
+AudioMixerManagerLinuxPulse::SetMicrophoneVolume(uint32_t volume)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "AudioMixerManagerLinuxPulse::SetMicrophoneVolume(volume=%u)",
@@ -862,7 +862,7 @@ AudioMixerManagerLinuxPulse::SetMicrophoneVolume(WebRtc_UWord32 volume)
         return -1;
     }
 
-    WebRtc_UWord8 channels = _paChannels;
+    uint8_t channels = _paChannels;
     ResetCallbackVariables();
 
     pa_cvolume cVolumes;
@@ -898,8 +898,8 @@ AudioMixerManagerLinuxPulse::SetMicrophoneVolume(WebRtc_UWord32 volume)
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::MicrophoneVolume(WebRtc_UWord32& volume) const
+int32_t
+AudioMixerManagerLinuxPulse::MicrophoneVolume(uint32_t& volume) const
 {
 
     if (_paInputDeviceIndex == -1)
@@ -927,7 +927,7 @@ AudioMixerManagerLinuxPulse::MicrophoneVolume(WebRtc_UWord32& volume) const
     if (!GetSourceInfoByIndex(deviceIndex))
       return -1;
 
-    volume = static_cast<WebRtc_UWord32> (_paVolume);
+    volume = static_cast<uint32_t> (_paVolume);
 
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "     AudioMixerManagerLinuxPulse::MicrophoneVolume() => vol=%i, volume");
@@ -938,8 +938,8 @@ AudioMixerManagerLinuxPulse::MicrophoneVolume(WebRtc_UWord32& volume) const
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) const
+int32_t
+AudioMixerManagerLinuxPulse::MaxMicrophoneVolume(uint32_t& maxVolume) const
 {
 
     if (_paInputDeviceIndex == -1)
@@ -952,13 +952,13 @@ AudioMixerManagerLinuxPulse::MaxMicrophoneVolume(WebRtc_UWord32& maxVolume) cons
     // PA_VOLUME_NORM corresponds to 100% (0db)
     // PA allows up to 150 db amplification (PA_VOLUME_MAX)
     // but that doesn't work well for all sound cards
-    maxVolume = static_cast<WebRtc_UWord32> (PA_VOLUME_NORM);
+    maxVolume = static_cast<uint32_t> (PA_VOLUME_NORM);
 
     return 0;
 }
 
-WebRtc_Word32
-AudioMixerManagerLinuxPulse::MinMicrophoneVolume(WebRtc_UWord32& minVolume) const
+int32_t
+AudioMixerManagerLinuxPulse::MinMicrophoneVolume(uint32_t& minVolume) const
 {
 
     if (_paInputDeviceIndex == -1)
@@ -968,13 +968,13 @@ AudioMixerManagerLinuxPulse::MinMicrophoneVolume(WebRtc_UWord32& minVolume) cons
         return -1;
     }
 
-    minVolume = static_cast<WebRtc_UWord32> (PA_VOLUME_MUTED);
+    minVolume = static_cast<uint32_t> (PA_VOLUME_MUTED);
 
     return 0;
 }
 
-WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize(
-    WebRtc_UWord16& stepSize) const
+int32_t AudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize(
+    uint16_t& stepSize) const
 {
 
     if (_paInputDeviceIndex == -1)
@@ -1018,7 +1018,7 @@ WebRtc_Word32 AudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize(
         return -1;
     }
 
-    stepSize = static_cast<WebRtc_UWord16> ((PA_VOLUME_NORM + 1) / _paVolSteps);
+    stepSize = static_cast<uint16_t> ((PA_VOLUME_NORM + 1) / _paVolSteps);
 
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "     AudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize()"

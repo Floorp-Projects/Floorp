@@ -11,7 +11,7 @@
 #include "bitstream_parser.h"
 
 namespace webrtc {
-BitstreamParser::BitstreamParser(const WebRtc_UWord8* data, const WebRtc_UWord32 dataLength) :
+BitstreamParser::BitstreamParser(const uint8_t* data, const uint32_t dataLength) :
     _data(data),
     _dataLength(dataLength),
     _byteOffset(0),
@@ -20,10 +20,10 @@ BitstreamParser::BitstreamParser(const WebRtc_UWord8* data, const WebRtc_UWord32
 }
     // todo should we have any error codes from this?
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get1Bit()
 {
-    WebRtc_UWord8 retVal = 0x1 & (_data[_byteOffset] >> (7-_bitOffset++));
+    uint8_t retVal = 0x1 & (_data[_byteOffset] >> (7-_bitOffset++));
 
     // prepare next byte
     if(_bitOffset == 8)
@@ -34,37 +34,37 @@ BitstreamParser::Get1Bit()
     return retVal;
 }
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get2Bits()
 {
-    WebRtc_UWord8 retVal = (Get1Bit() << 1);
+    uint8_t retVal = (Get1Bit() << 1);
     retVal += Get1Bit();
     return retVal;
 }
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get3Bits()
 {
-    WebRtc_UWord8 retVal = (Get1Bit() << 2);
+    uint8_t retVal = (Get1Bit() << 2);
     retVal += (Get1Bit() << 1);
     retVal += Get1Bit();
     return retVal;
 }
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get4Bits()
 {
-    WebRtc_UWord8 retVal = (Get1Bit() << 3);
+    uint8_t retVal = (Get1Bit() << 3);
     retVal += (Get1Bit() << 2);
     retVal += (Get1Bit() << 1);
     retVal += Get1Bit();
     return retVal;
 }
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get5Bits()
 {
-    WebRtc_UWord8 retVal = (Get1Bit() << 4);
+    uint8_t retVal = (Get1Bit() << 4);
     retVal += (Get1Bit() << 3);
     retVal += (Get1Bit() << 2);
     retVal += (Get1Bit() << 1);
@@ -72,10 +72,10 @@ BitstreamParser::Get5Bits()
     return retVal;
 }
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get6Bits()
 {
-    WebRtc_UWord8 retVal = (Get1Bit() << 5);
+    uint8_t retVal = (Get1Bit() << 5);
     retVal += (Get1Bit() << 4);
     retVal += (Get1Bit() << 3);
     retVal += (Get1Bit() << 2);
@@ -84,10 +84,10 @@ BitstreamParser::Get6Bits()
     return retVal;
 }
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get7Bits()
 {
-    WebRtc_UWord8 retVal = (Get1Bit() << 6);
+    uint8_t retVal = (Get1Bit() << 6);
     retVal += (Get1Bit() << 5);
     retVal += (Get1Bit() << 4);
     retVal += (Get1Bit() << 3);
@@ -97,10 +97,10 @@ BitstreamParser::Get7Bits()
     return retVal;
 }
 
-WebRtc_UWord8
+uint8_t
 BitstreamParser::Get8Bits()
 {
-    WebRtc_UWord16 retVal;
+    uint16_t retVal;
 
     if(_bitOffset != 0)
     {
@@ -112,13 +112,13 @@ BitstreamParser::Get8Bits()
         retVal = _data[_byteOffset];
     }
     _byteOffset++;
-    return (WebRtc_UWord8)retVal;
+    return (uint8_t)retVal;
 }
 
-WebRtc_UWord16
+uint16_t
 BitstreamParser::Get16Bits()
 {
-    WebRtc_UWord32 retVal;
+    uint32_t retVal;
 
     if(_bitOffset != 0)
     {
@@ -131,13 +131,13 @@ BitstreamParser::Get16Bits()
         retVal = (_data[_byteOffset] << 8) + (_data[_byteOffset+1]) ;
     }
     _byteOffset += 2;
-    return (WebRtc_UWord16)retVal;
+    return (uint16_t)retVal;
 }
 
-WebRtc_UWord32
+uint32_t
 BitstreamParser::Get24Bits()
 {
-    WebRtc_UWord32 retVal;
+    uint32_t retVal;
 
     if(_bitOffset != 0)
     {
@@ -153,15 +153,15 @@ BitstreamParser::Get24Bits()
     return retVal & 0x00ffffff; // we need to clean up the high 8 bits
 }
 
-WebRtc_UWord32
+uint32_t
 BitstreamParser::Get32Bits()
 {
-    WebRtc_UWord32 retVal;
+    uint32_t retVal;
 
     if(_bitOffset != 0)
     {
         // read 40 bits
-        WebRtc_UWord64 tempVal = _data[_byteOffset];
+        uint64_t tempVal = _data[_byteOffset];
         tempVal <<= 8;
         tempVal += _data[_byteOffset+1];
         tempVal <<= 8;
@@ -172,7 +172,7 @@ BitstreamParser::Get32Bits()
         tempVal += _data[_byteOffset+4];
         tempVal >>= (8-_bitOffset);
 
-        retVal = WebRtc_UWord32(tempVal);
+        retVal = uint32_t(tempVal);
     }else
     {
         // read 32  bits
@@ -194,11 +194,11 @@ BitstreamParser::Get32Bits()
     0 0 0 0 0 1 x4 x3 x2 x1 x0 31..62
 */
 
-WebRtc_UWord32
+uint32_t
 BitstreamParser::GetUE()
 {
-    WebRtc_UWord32 retVal = 0;
-    WebRtc_UWord8 numLeadingZeros = 0;
+    uint32_t retVal = 0;
+    uint8_t numLeadingZeros = 0;
 
     while (Get1Bit() != 1)
     {
