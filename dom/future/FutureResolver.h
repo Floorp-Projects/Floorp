@@ -53,6 +53,14 @@ public:
               FutureTaskSync aSync = AsyncTask);
 
 private:
+  void ResolveInternal(JSContext* aCx,
+                       const Optional<JS::Handle<JS::Value> >& aValue,
+                       FutureTaskSync aSync = AsyncTask);
+
+  void RejectInternal(JSContext* aCx,
+                      const Optional<JS::Handle<JS::Value> >& aValue,
+                      FutureTaskSync aSync = AsyncTask);
+
   void RunTask(JS::Handle<JS::Value> aValue,
                Future::FutureState aState, FutureTaskSync aSync);
 
