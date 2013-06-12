@@ -123,7 +123,7 @@ ThreadPosix::ThreadPosix(ThreadRunFunction func, ThreadObj obj,
       event_(EventWrapper::Create()),
       name_(),
       set_thread_name_(false),
-#if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID))
+#if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK))
       pid_(-1),
 #endif
       attr_(),
@@ -136,7 +136,7 @@ ThreadPosix::ThreadPosix(ThreadRunFunction func, ThreadObj obj,
 }
 
 uint32_t ThreadWrapper::GetThreadId() {
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_LINUX)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_LINUX) || defined(WEBRTC_GONK)
   return static_cast<uint32_t>(syscall(__NR_gettid));
 #elif defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
   return pthread_mach_thread_np(pthread_self());
@@ -147,7 +147,7 @@ uint32_t ThreadWrapper::GetThreadId() {
 
 int ThreadPosix::Construct() {
   int result = 0;
-#if !defined(WEBRTC_ANDROID)
+#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_GONK)
   // Enable immediate cancellation if requested, see Shutdown().
   result = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
   if (result != 0) {
@@ -235,7 +235,7 @@ bool ThreadPosix::Start(unsigned int& thread_id)
 
 // CPU_ZERO and CPU_SET are not available in NDK r7, so disable
 // SetAffinity on Android for now.
-#if (defined(WEBRTC_LINUX) && (!defined(WEBRTC_ANDROID)))
+#if (defined(WEBRTC_LINUX) && (!defined(WEBRTC_ANDROID)) && (!defined(WEBRTC_GONK)))
 bool ThreadPosix::SetAffinity(const int* processor_numbers,
                               const unsigned int amount_of_processors) {
   if (!processor_numbers || (amount_of_processors == 0)) {
@@ -249,7 +249,7 @@ bool ThreadPosix::SetAffinity(const int* processor_numbers,
        ++processor) {
     CPU_SET(processor_numbers[processor], &mask);
   }
-#if defined(WEBRTC_ANDROID)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK)
   // Android.
   const int result = syscall(__NR_sched_setaffinity,
                              pid_,
@@ -310,7 +310,7 @@ void ThreadPosix::Run() {
     CriticalSectionScoped cs(crit_state_);
     alive_ = true;
   }
-#if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID))
+#if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK))
   pid_ = GetThreadId();
 #endif
   // The event the Start() is waiting for.
