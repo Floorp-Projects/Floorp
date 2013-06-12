@@ -327,8 +327,8 @@ ThreadActor.prototype = {
     if (aRequest && aRequest.resumeLimit) {
       // Bind these methods because some of the hooks are called with 'this'
       // set to the current frame.
-      let pauseAndRespond = aFrame => {
-        this._pauseAndRespond(aFrame, { type: "resumeLimit" });
+      let pauseAndRespond = (aFrame, onPacket=function (k) k) => {
+        this._pauseAndRespond(aFrame, { type: "resumeLimit" }, onPacket);
       };
       let createValueGrip = this.createValueGrip.bind(this);
 
@@ -352,7 +352,6 @@ ThreadActor.prototype = {
 
       let onPop = function TA_onPop(aCompletion) {
         // onPop is called with 'this' set to the current frame.
-
         if (thread.sources.isBlackBoxed(this.script.url)) {
           return undefined;
         }
@@ -361,7 +360,19 @@ ThreadActor.prototype = {
         // subsequent step events on its caller.
         this.reportedPop = true;
 
-        return pauseAndRespond(this);
+        return pauseAndRespond(this, (aPacket) => {
+          aPacket.why.frameFinished = {};
+          if (!aCompletion) {
+            aPacket.why.frameFinished.terminated = true;
+          } else if (aCompletion.hasOwnProperty("return")) {
+            aPacket.why.frameFinished.return = createValueGrip(aCompletion.return);
+          } else if (aCompletion.hasOwnProperty("yield")) {
+            aPacket.why.frameFinished.return = createValueGrip(aCompletion.yield);
+          } else {
+            aPacket.why.frameFinished.throw = createValueGrip(aCompletion.throw);
+          }
+          return aPacket;
+        });
       };
 
       let onStep = function TA_onStep() {
