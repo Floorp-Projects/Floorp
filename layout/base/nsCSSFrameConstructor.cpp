@@ -2878,10 +2878,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
   // Construct a frame-based listbox or combobox
   dom::HTMLSelectElement* sel = dom::HTMLSelectElement::FromContent(content);
   MOZ_ASSERT(sel);
-  uint32_t size = sel->Size();
-  bool multipleSelect = sel->Multiple();
-  // Construct a combobox if size=1 or no size is specified and its multiple select
-  if ((1 == size || 0 == size) && !multipleSelect) {
+  if (sel->IsCombobox()) {
     // Construct a frame-based combo box.
     // The frame-based combo box is built out of three parts. A display area, a button and
     // a dropdown list. The display area and button are created through anonymous content.
