@@ -2235,6 +2235,10 @@
     "kind": "boolean",
     "description": "Updater: Whether or not updates are enabled"
   },
+  "UPDATER_UPDATES_METRO_ENABLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not Metro updates are enabled"
+  },
   "UPDATER_UPDATES_AUTOMATIC": {
     "kind": "boolean",
     "description": "Updater: Whether or not updates are automatic"
