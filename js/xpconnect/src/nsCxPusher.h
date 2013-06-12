@@ -61,7 +61,7 @@ namespace mozilla {
 class MOZ_STACK_CLASS AutoJSContext {
 public:
   AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-  operator JSContext*();
+  operator JSContext*() const;
 
 protected:
   AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
