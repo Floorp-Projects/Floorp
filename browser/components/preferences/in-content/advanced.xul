@@ -83,6 +83,13 @@
   <preference id="app.update.auto"
               name="app.update.auto"
               type="bool"/>
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  <preference id="app.update.metro.enabled"
+              name="app.update.metro.enabled"
+              type="bool"/>
+#endif
+#endif
   <preference id="app.update.mode"
               name="app.update.mode"
               type="int"/>
@@ -352,6 +359,16 @@
         <caption label="&updateApp.label;"/>
         <radiogroup id="updateRadioGroup"
                     oncommand="gAdvancedPane.updateWritePrefs();">
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+              <radio value="autoMetro"
+                     label="&updateAutoMetro.label;"
+                     accesskey="&updateAutoMetro.accesskey;"/>
+              <hbox class="indent">
+                <label value="&updateAutoMetroWarn.label;"/>
+              </hbox>
+#endif
+#endif
           <radio value="auto"
                 label="&updateAuto.label;"
                 accesskey="&updateAuto.accesskey;"/>

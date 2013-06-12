@@ -1266,10 +1266,6 @@ var gBrowserInit = {
       Cu.reportError("Could not end startup crash tracking: " + ex);
     }
 
-    Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
-    setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
-    TelemetryTimestamps.add("delayedStartupFinished");
-
 #ifdef XP_WIN
 #ifdef MOZ_METRO
     gMetroPrefs.prefDomain.forEach(function(prefName) {
@@ -1278,6 +1274,10 @@ var gBrowserInit = {
     }, this);
 #endif
 #endif
+
+    Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
+    setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
+    TelemetryTimestamps.add("delayedStartupFinished");
   },
 
   onUnload: function() {
@@ -4858,7 +4858,8 @@ function fireSidebarFocusedEvent() {
  */
 var gMetroPrefs = {
   prefDomain: ["app.update.auto", "app.update.enabled",
-               "app.update.service.enabled"],
+               "app.update.service.enabled",
+               "app.update.metro.enabled"],
   observe: function (aSubject, aTopic, aPrefName)
   {
     if (aTopic != "nsPref:changed")
