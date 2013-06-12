@@ -33,4 +33,13 @@ AudioBlockPanStereoToStereo_SSE(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                 float aGainL, float aGainR, bool aIsOnTheLeft,
                                 float aOutputL[WEBAUDIO_BLOCK_SIZE],
                                 float aOutputR[WEBAUDIO_BLOCK_SIZE]);
+
+float
+AudioBufferSumOfSquares_SSE(const float* aInput, uint32_t aLength);
+
+void
+BufferComplexMultiply_SSE(const float* aInput,
+                          const float* aScale,
+                          float* aOutput,
+                          uint32_t aSize);
 }
