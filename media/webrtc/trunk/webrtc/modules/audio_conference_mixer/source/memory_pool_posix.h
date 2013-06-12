@@ -23,18 +23,18 @@ class MemoryPoolImpl
 {
 public:
     // MemoryPool functions.
-    WebRtc_Word32 PopMemory(MemoryType*&  memory);
-    WebRtc_Word32 PushMemory(MemoryType*& memory);
+    int32_t PopMemory(MemoryType*&  memory);
+    int32_t PushMemory(MemoryType*& memory);
 
-    MemoryPoolImpl(WebRtc_Word32 initialPoolSize);
+    MemoryPoolImpl(int32_t initialPoolSize);
     ~MemoryPoolImpl();
 
     // Atomic functions
-    WebRtc_Word32 Terminate();
+    int32_t Terminate();
     bool Initialize();
 private:
     // Non-atomic function.
-    WebRtc_Word32 CreateMemory(WebRtc_UWord32 amountToCreate);
+    int32_t CreateMemory(uint32_t amountToCreate);
 
     CriticalSectionWrapper* _crit;
 
@@ -42,13 +42,13 @@ private:
 
     ListWrapper _memoryPool;
 
-    WebRtc_UWord32 _initialPoolSize;
-    WebRtc_UWord32 _createdMemory;
-    WebRtc_UWord32 _outstandingMemory;
+    uint32_t _initialPoolSize;
+    uint32_t _createdMemory;
+    uint32_t _outstandingMemory;
 };
 
 template<class MemoryType>
-MemoryPoolImpl<MemoryType>::MemoryPoolImpl(WebRtc_Word32 initialPoolSize)
+MemoryPoolImpl<MemoryType>::MemoryPoolImpl(int32_t initialPoolSize)
     : _crit(CriticalSectionWrapper::CreateCriticalSection()),
       _terminate(false),
       _memoryPool(),
@@ -68,7 +68,7 @@ MemoryPoolImpl<MemoryType>::~MemoryPoolImpl()
 }
 
 template<class MemoryType>
-WebRtc_Word32 MemoryPoolImpl<MemoryType>::PopMemory(MemoryType*& memory)
+int32_t MemoryPoolImpl<MemoryType>::PopMemory(MemoryType*& memory)
 {
     CriticalSectionScoped cs(_crit);
     if(_terminate)
@@ -95,7 +95,7 @@ WebRtc_Word32 MemoryPoolImpl<MemoryType>::PopMemory(MemoryType*& memory)
 }
 
 template<class MemoryType>
-WebRtc_Word32 MemoryPoolImpl<MemoryType>::PushMemory(MemoryType*& memory)
+int32_t MemoryPoolImpl<MemoryType>::PushMemory(MemoryType*& memory)
 {
     if(memory == NULL)
     {
@@ -124,7 +124,7 @@ bool MemoryPoolImpl<MemoryType>::Initialize()
 }
 
 template<class MemoryType>
-WebRtc_Word32 MemoryPoolImpl<MemoryType>::Terminate()
+int32_t MemoryPoolImpl<MemoryType>::Terminate()
 {
     CriticalSectionScoped cs(_crit);
     assert(_createdMemory == _outstandingMemory + _memoryPool.GetSize());
@@ -148,10 +148,10 @@ WebRtc_Word32 MemoryPoolImpl<MemoryType>::Terminate()
 }
 
 template<class MemoryType>
-WebRtc_Word32 MemoryPoolImpl<MemoryType>::CreateMemory(
-    WebRtc_UWord32 amountToCreate)
+int32_t MemoryPoolImpl<MemoryType>::CreateMemory(
+    uint32_t amountToCreate)
 {
-    for(WebRtc_UWord32 i = 0; i < amountToCreate; i++)
+    for(uint32_t i = 0; i < amountToCreate; i++)
     {
         MemoryType* memory = new MemoryType();
         if(memory == NULL)

@@ -8,17 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.h"
+#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.h"
 
-#include "system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/interface/clock.h"
 
 namespace webrtc {
 
 RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(
-    RemoteBitrateObserver* observer, const OverUseDetectorOptions& options)
+    const OverUseDetectorOptions& options,
+    RemoteBitrateObserver* observer,
+    Clock* clock)
     : options_(options),
+      clock_(clock),
       observer_(observer),
-      crit_sect_(CriticalSectionWrapper::CreateCriticalSection()) {
+      crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
+      last_process_time_(-1) {
   assert(observer_);
 }
 
@@ -45,37 +49,80 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
   incoming_bitrate_.Update(payload_size, arrival_time);
   const BandwidthUsage prior_state = overuse_detector->State();
   overuse_detector->Update(payload_size, -1, rtp_timestamp, arrival_time);
-  if (prior_state != overuse_detector->State() &&
-      overuse_detector->State() == kBwOverusing) {
-    // The first overuse should immediately trigger a new estimate.
-    UpdateEstimate(ssrc, arrival_time);
+  if (overuse_detector->State() == kBwOverusing) {
+    unsigned int incoming_bitrate = incoming_bitrate_.BitRate(arrival_time);
+    if (prior_state != kBwOverusing ||
+        remote_rate_.TimeToReduceFurther(arrival_time, incoming_bitrate)) {
+      // The first overuse should immediately trigger a new estimate.
+      // We also have to update the estimate immediately if we are overusing
+      // and the target bitrate is too high compared to what we are receiving.
+      UpdateEstimate(arrival_time);
+    }
   }
 }
 
-void RemoteBitrateEstimatorSingleStream::UpdateEstimate(unsigned int ssrc,
-                                                        int64_t time_now) {
+int32_t RemoteBitrateEstimatorSingleStream::Process() {
+  if (TimeUntilNextProcess() > 0) {
+    return 0;
+  }
+  UpdateEstimate(clock_->TimeInMilliseconds());
+  last_process_time_ = clock_->TimeInMilliseconds();
+  return 0;
+}
+
+int32_t RemoteBitrateEstimatorSingleStream::TimeUntilNextProcess() {
+  if (last_process_time_ < 0) {
+    return 0;
+  }
+  return last_process_time_ + kProcessIntervalMs - clock_->TimeInMilliseconds();
+}
+
+void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t time_now) {
   CriticalSectionScoped cs(crit_sect_.get());
-  SsrcOveruseDetectorMap::iterator it = overuse_detectors_.find(ssrc);
-  if (it == overuse_detectors_.end()) {
+  BandwidthUsage bw_state = kBwNormal;
+  double sum_noise_var = 0.0;
+  SsrcOveruseDetectorMap::iterator it = overuse_detectors_.begin();
+  while (it != overuse_detectors_.end()) {
+    const int64_t time_of_last_received_packet =
+         it->second.time_of_last_received_packet();
+    if (time_of_last_received_packet >= 0 &&
+        time_now - time_of_last_received_packet > kStreamTimeOutMs) {
+      // This over-use detector hasn't received packets for |kStreamTimeOutMs|
+      // milliseconds and is considered stale.
+      overuse_detectors_.erase(it++);
+    } else {
+      sum_noise_var += it->second.NoiseVar();
+      // Make sure that we trigger an over-use if any of the over-use detectors
+      // is detecting over-use.
+      if (it->second.State() > bw_state) {
+        bw_state = it->second.State();
+      }
+      ++it;
+    }
+  }
+  // We can't update the estimate if we don't have any active streams.
+  if (overuse_detectors_.empty()) {
+    remote_rate_.Reset();
     return;
   }
-  OveruseDetector* overuse_detector = &it->second;
-  const RateControlInput input(overuse_detector->State(),
+  double mean_noise_var = sum_noise_var /
+      static_cast<double>(overuse_detectors_.size());
+  const RateControlInput input(bw_state,
                                incoming_bitrate_.BitRate(time_now),
-                               overuse_detector->NoiseVar());
+                               mean_noise_var);
   const RateControlRegion region = remote_rate_.Update(&input, time_now);
   unsigned int target_bitrate = remote_rate_.UpdateBandwidthEstimate(time_now);
   if (remote_rate_.ValidEstimate()) {
     std::vector<unsigned int> ssrcs;
     GetSsrcs(&ssrcs);
-    if (!ssrcs.empty()) {
-      observer_->OnReceiveBitrateChanged(&ssrcs, target_bitrate);
-    }
+    observer_->OnReceiveBitrateChanged(&ssrcs, target_bitrate);
   }
-  overuse_detector->SetRateControlRegion(region);
+  for (it = overuse_detectors_.begin(); it != overuse_detectors_.end(); ++it) {
+    it->second.SetRateControlRegion(region);
+  }
 }
 
-void RemoteBitrateEstimatorSingleStream::SetRtt(unsigned int rtt) {
+void RemoteBitrateEstimatorSingleStream::OnRttUpdate(uint32_t rtt) {
   CriticalSectionScoped cs(crit_sect_.get());
   remote_rate_.SetRtt(rtt);
 }

@@ -24,9 +24,9 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_SimpleLsfDeQ(
-    WebRtc_Word16 *lsfdeq,  /* (o) dequantized lsf coefficients */
-    WebRtc_Word16 *index,  /* (i) quantization index */
-    WebRtc_Word16 lpc_n  /* (i) number of LPCs */
+    int16_t *lsfdeq,  /* (o) dequantized lsf coefficients */
+    int16_t *index,  /* (i) quantization index */
+    int16_t lpc_n  /* (i) number of LPCs */
                                 ){
   int i, j, pos, cb_pos;
 

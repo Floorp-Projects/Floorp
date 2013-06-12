@@ -15,7 +15,7 @@
 #define POLYNOMIAL 0x04c11db7L
 
 
-static const WebRtc_UWord32 kCrcTable[256] = {
+static const uint32_t kCrcTable[256] = {
   0,          0x4c11db7,  0x9823b6e,  0xd4326d9,  0x130476dc, 0x17c56b6b,
   0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,
   0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd, 0x4c11db70, 0x48d0c6c7,
@@ -80,12 +80,12 @@ static const WebRtc_UWord32 kCrcTable[256] = {
  *                             -1 - Error
  */
 
-WebRtc_Word16 WebRtcIsac_GetCrc(const WebRtc_Word16* bitstream,
-                                WebRtc_Word16        len_bitstream_in_bytes,
-                                WebRtc_UWord32*      crc)
+int16_t WebRtcIsac_GetCrc(const int16_t* bitstream,
+                          int16_t        len_bitstream_in_bytes,
+                          uint32_t*      crc)
 {
-  WebRtc_UWord8* bitstream_ptr_uw8;
-  WebRtc_UWord32 crc_state;
+  uint8_t* bitstream_ptr_uw8;
+  uint32_t crc_state;
   int byte_cntr;
   int crc_tbl_indx;
 
@@ -94,7 +94,7 @@ WebRtc_Word16 WebRtcIsac_GetCrc(const WebRtc_Word16* bitstream,
     return -1;
   }
   /* cast to UWord8 pointer */
-  bitstream_ptr_uw8 = (WebRtc_UWord8 *)bitstream;
+  bitstream_ptr_uw8 = (uint8_t *)bitstream;
 
   /* initialize */
   crc_state = 0xFFFFFFFF;

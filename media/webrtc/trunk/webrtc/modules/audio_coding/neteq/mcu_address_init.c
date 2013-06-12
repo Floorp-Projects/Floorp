@@ -19,8 +19,8 @@ int WebRtcNetEQ_McuAddressInit(MCUInst_t *inst, void * Data2McuAddress,
                                void * Data2DspAddress, void *main_inst)
 {
 
-    inst->pw16_readAddress = (WebRtc_Word16*) Data2McuAddress;
-    inst->pw16_writeAddress = (WebRtc_Word16*) Data2DspAddress;
+    inst->pw16_readAddress = (int16_t*) Data2McuAddress;
+    inst->pw16_writeAddress = (int16_t*) Data2DspAddress;
     inst->main_inst = main_inst;
 
     inst->millisecondsPerCall = 10;

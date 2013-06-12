@@ -19,8 +19,8 @@
 
 namespace webrtc {
 
-RTPPacketHistory::RTPPacketHistory(RtpRtcpClock* clock)
-  : clock_(*clock),
+RTPPacketHistory::RTPPacketHistory(Clock* clock)
+  : clock_(clock),
     critsect_(CriticalSectionWrapper::CreateCriticalSection()),
     store_(false),
     prev_index_(0),
@@ -140,7 +140,7 @@ int32_t RTPPacketHistory::PutRTPPacket(const uint8_t* packet,
   stored_seq_nums_[prev_index_] = seq_num;
   stored_lengths_[prev_index_] = packet_length;
   stored_times_[prev_index_] =
-      (capture_time_ms > 0) ? capture_time_ms : clock_.GetTimeInMS();
+      (capture_time_ms > 0) ? capture_time_ms : clock_->TimeInMilliseconds();
   stored_resend_times_[prev_index_] = 0;  // packet not resent
   stored_types_[prev_index_] = type;
 
@@ -244,7 +244,7 @@ bool RTPPacketHistory::GetRTPPacket(uint16_t sequence_number,
  }
 
   // Verify elapsed time since last retrieve. 
-  int64_t now = clock_.GetTimeInMS();
+  int64_t now = clock_->TimeInMilliseconds();
   if (min_elapsed_time_ms > 0 &&
       ((now - stored_resend_times_.at(index)) < min_elapsed_time_ms)) {
     WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, 
@@ -276,7 +276,7 @@ void RTPPacketHistory::UpdateResendTime(uint16_t sequence_number) {
         "Failed to update resend time, seq num: %u.", sequence_number);
     return;
   }
-  stored_resend_times_[index] = clock_.GetTimeInMS();
+  stored_resend_times_[index] = clock_->TimeInMilliseconds();
 }
 
 // private, lock should already be taken

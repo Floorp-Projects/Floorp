@@ -92,29 +92,29 @@ public:
 class AudioTransportImpl: public AudioTransport
 {
 public:
-    virtual WebRtc_Word32
+    virtual int32_t
         RecordedDataIsAvailable(const void* audioSamples,
-                                const WebRtc_UWord32 nSamples,
-                                const WebRtc_UWord8 nBytesPerSample,
-                                const WebRtc_UWord8 nChannels,
-                                const WebRtc_UWord32 samplesPerSec,
-                                const WebRtc_UWord32 totalDelayMS,
-                                const WebRtc_Word32 clockDrift,
-                                const WebRtc_UWord32 currentMicLevel,
-                                WebRtc_UWord32& newMicLevel);
+                                const uint32_t nSamples,
+                                const uint8_t nBytesPerSample,
+                                const uint8_t nChannels,
+                                const uint32_t samplesPerSec,
+                                const uint32_t totalDelayMS,
+                                const int32_t clockDrift,
+                                const uint32_t currentMicLevel,
+                                uint32_t& newMicLevel);
 
-    virtual WebRtc_Word32 NeedMorePlayData(const WebRtc_UWord32 nSamples,
-                                           const WebRtc_UWord8 nBytesPerSample,
-                                           const WebRtc_UWord8 nChannels,
-                                           const WebRtc_UWord32 samplesPerSec,
-                                           void* audioSamples,
-                                           WebRtc_UWord32& nSamplesOut);
+    virtual int32_t NeedMorePlayData(const uint32_t nSamples,
+                                     const uint8_t nBytesPerSample,
+                                     const uint8_t nChannels,
+                                     const uint32_t samplesPerSec,
+                                     void* audioSamples,
+                                     uint32_t& nSamplesOut);
 
     AudioTransportImpl(AudioDeviceModule* audioDevice);
     ~AudioTransportImpl();
 
 public:
-    WebRtc_Word32 SetFilePlayout(bool enable, const char* fileName = NULL);
+    int32_t SetFilePlayout(bool enable, const char* fileName = NULL);
     void SetFullDuplex(bool enable);
     void SetSpeakerVolume(bool enable)
     {
@@ -167,8 +167,8 @@ private:
 
     FileWrapper& _playFile;
 
-    WebRtc_UWord32 _recCount;
-    WebRtc_UWord32 _playCount;
+    uint32_t _recCount;
+    uint32_t _playCount;
 
     ListWrapper _audioList;
 
@@ -184,26 +184,26 @@ class FuncTestManager
 public:
     FuncTestManager();
     ~FuncTestManager();
-    WebRtc_Word32 Init();
-    WebRtc_Word32 Close();
-    WebRtc_Word32 DoTest(const TestType testType);
+    int32_t Init();
+    int32_t Close();
+    int32_t DoTest(const TestType testType);
 private:
-    WebRtc_Word32 TestAudioLayerSelection();
-    WebRtc_Word32 TestDeviceEnumeration();
-    WebRtc_Word32 TestDeviceSelection();
-    WebRtc_Word32 TestAudioTransport();
-    WebRtc_Word32 TestSpeakerVolume();
-    WebRtc_Word32 TestMicrophoneVolume();
-    WebRtc_Word32 TestSpeakerMute();
-    WebRtc_Word32 TestMicrophoneMute();
-    WebRtc_Word32 TestMicrophoneBoost();
-    WebRtc_Word32 TestLoopback();
-    WebRtc_Word32 TestDeviceRemoval();
-    WebRtc_Word32 TestExtra();
-    WebRtc_Word32 TestMicrophoneAGC();
-    WebRtc_Word32 SelectPlayoutDevice();
-    WebRtc_Word32 SelectRecordingDevice();
-    WebRtc_Word32 TestAdvancedMBAPI();
+    int32_t TestAudioLayerSelection();
+    int32_t TestDeviceEnumeration();
+    int32_t TestDeviceSelection();
+    int32_t TestAudioTransport();
+    int32_t TestSpeakerVolume();
+    int32_t TestMicrophoneVolume();
+    int32_t TestSpeakerMute();
+    int32_t TestMicrophoneMute();
+    int32_t TestMicrophoneBoost();
+    int32_t TestLoopback();
+    int32_t TestDeviceRemoval();
+    int32_t TestExtra();
+    int32_t TestMicrophoneAGC();
+    int32_t SelectPlayoutDevice();
+    int32_t SelectRecordingDevice();
+    int32_t TestAdvancedMBAPI();
 private:
     // Paths to where the resource files to be used for this test are located.
     std::string _playoutFile48;

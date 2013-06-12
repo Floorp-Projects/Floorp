@@ -19,16 +19,16 @@ extern "C" {
 #include "webrtc/typedefs.h"
 
 /* Cosine table 1 in Q14 */
-extern const WebRtc_Word16 kCosTab1[FRAMESAMPLES/2];
+extern const int16_t kCosTab1[FRAMESAMPLES/2];
 
 /* Sine table 1 in Q14 */
-extern const WebRtc_Word16 kSinTab1[FRAMESAMPLES/2];
+extern const int16_t kSinTab1[FRAMESAMPLES/2];
 
 /* Cosine table 2 in Q14 */
-extern const WebRtc_Word16 kCosTab2[FRAMESAMPLES/4];
+extern const int16_t kCosTab2[FRAMESAMPLES/4];
 
 /* Sine table 2 in Q14 */
-extern const WebRtc_Word16 kSinTab2[FRAMESAMPLES/4];
+extern const int16_t kSinTab2[FRAMESAMPLES/4];
 
 #ifdef __cplusplus
 } /* extern "C" */

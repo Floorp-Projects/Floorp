@@ -15,11 +15,11 @@ GLOBAL_FUNCTION WebRtcIsacfix_AutocorrNeon
 .align  2
 
 @ int WebRtcIsacfix_AutocorrNeon(
-@     WebRtc_Word32* __restrict r,
-@     const WebRtc_Word16* __restrict x,
-@     WebRtc_Word16 N,
-@     WebRtc_Word16 order,
-@     WebRtc_Word16* __restrict scale);
+@     int32_t* __restrict r,
+@     const int16_t* __restrict x,
+@     int16_t N,
+@     int16_t order,
+@     int16_t* __restrict scale);
 
 DEFINE_FUNCTION WebRtcIsacfix_AutocorrNeon
   push       {r3 - r12}

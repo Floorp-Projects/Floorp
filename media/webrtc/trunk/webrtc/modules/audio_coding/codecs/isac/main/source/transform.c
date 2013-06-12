@@ -44,8 +44,8 @@ void WebRtcIsac_InitTransform()
 
 void WebRtcIsac_Time2Spec(double *inre1,
                          double *inre2,
-                         WebRtc_Word16 *outreQ7,
-                         WebRtc_Word16 *outimQ7,
+                         int16_t *outreQ7,
+                         int16_t *outimQ7,
                          FFTstr *fftstr_obj)
 {
 
@@ -80,10 +80,10 @@ void WebRtcIsac_Time2Spec(double *inre1,
 
     tmp1r = costab2[k];
     tmp1i = sintab2[k];
-    outreQ7[k] = (WebRtc_Word16)WebRtcIsac_lrint((xr * tmp1r - xi * tmp1i) * 128.0);
-    outimQ7[k] = (WebRtc_Word16)WebRtcIsac_lrint((xr * tmp1i + xi * tmp1r) * 128.0);
-    outreQ7[FRAMESAMPLES_HALF - 1 - k] = (WebRtc_Word16)WebRtcIsac_lrint((-yr * tmp1i - yi * tmp1r) * 128.0);
-    outimQ7[FRAMESAMPLES_HALF - 1 - k] = (WebRtc_Word16)WebRtcIsac_lrint((-yr * tmp1r + yi * tmp1i) * 128.0);
+    outreQ7[k] = (int16_t)WebRtcIsac_lrint((xr * tmp1r - xi * tmp1i) * 128.0);
+    outimQ7[k] = (int16_t)WebRtcIsac_lrint((xr * tmp1i + xi * tmp1r) * 128.0);
+    outreQ7[FRAMESAMPLES_HALF - 1 - k] = (int16_t)WebRtcIsac_lrint((-yr * tmp1i - yi * tmp1r) * 128.0);
+    outimQ7[FRAMESAMPLES_HALF - 1 - k] = (int16_t)WebRtcIsac_lrint((-yr * tmp1r + yi * tmp1i) * 128.0);
   }
 }
 

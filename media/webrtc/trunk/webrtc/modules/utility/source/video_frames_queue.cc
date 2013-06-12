@@ -47,7 +47,7 @@ VideoFramesQueue::~VideoFramesQueue() {
   }
 }
 
-WebRtc_Word32 VideoFramesQueue::AddFrame(const I420VideoFrame& newFrame) {
+int32_t VideoFramesQueue::AddFrame(const I420VideoFrame& newFrame) {
   I420VideoFrame* ptrFrameToAdd = NULL;
   // Try to re-use a VideoFrame. Only allocate new memory if it is necessary.
   if (!_emptyFrames.Empty()) {
@@ -112,7 +112,7 @@ I420VideoFrame* VideoFramesQueue::FrameToRecord() {
   return ptrRenderFrame;
 }
 
-WebRtc_Word32 VideoFramesQueue::ReturnFrame(I420VideoFrame* ptrOldFrame) {
+int32_t VideoFramesQueue::ReturnFrame(I420VideoFrame* ptrOldFrame) {
   ptrOldFrame->set_timestamp(0);
   ptrOldFrame->set_width(0);
   ptrOldFrame->set_height(0);
@@ -122,7 +122,7 @@ WebRtc_Word32 VideoFramesQueue::ReturnFrame(I420VideoFrame* ptrOldFrame) {
   return 0;
 }
 
-WebRtc_Word32 VideoFramesQueue::SetRenderDelay(WebRtc_UWord32 renderDelay) {
+int32_t VideoFramesQueue::SetRenderDelay(uint32_t renderDelay) {
   _renderDelayMs = renderDelay;
   return 0;
 }

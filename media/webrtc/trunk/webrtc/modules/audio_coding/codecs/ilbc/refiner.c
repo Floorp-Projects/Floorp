@@ -30,26 +30,26 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Refiner(
-    WebRtc_Word16 *updStartPos, /* (o) updated start point (Q-2) */
-    WebRtc_Word16 *idata,   /* (i) original data buffer */
-    WebRtc_Word16 idatal,   /* (i) dimension of idata */
-    WebRtc_Word16 centerStartPos, /* (i) beginning center segment */
-    WebRtc_Word16 estSegPos,  /* (i) estimated beginning other segment (Q-2) */
-    WebRtc_Word16 *surround,  /* (i/o) The contribution from this sequence
+    int16_t *updStartPos, /* (o) updated start point (Q-2) */
+    int16_t *idata,   /* (i) original data buffer */
+    int16_t idatal,   /* (i) dimension of idata */
+    int16_t centerStartPos, /* (i) beginning center segment */
+    int16_t estSegPos,  /* (i) estimated beginning other segment (Q-2) */
+    int16_t *surround,  /* (i/o) The contribution from this sequence
                                            summed with earlier contributions */
-    WebRtc_Word16 gain    /* (i) Gain to use for this sequence */
+    int16_t gain    /* (i) Gain to use for this sequence */
                            ){
-  WebRtc_Word16 estSegPosRounded,searchSegStartPos,searchSegEndPos,corrdim;
-  WebRtc_Word16 tloc,tloc2,i,st,en,fraction;
+  int16_t estSegPosRounded,searchSegStartPos,searchSegEndPos,corrdim;
+  int16_t tloc,tloc2,i,st,en,fraction;
 
-  WebRtc_Word32 maxtemp, scalefact;
-  WebRtc_Word16 *filtStatePtr, *polyPtr;
+  int32_t maxtemp, scalefact;
+  int16_t *filtStatePtr, *polyPtr;
   /* Stack based */
-  WebRtc_Word16 filt[7];
-  WebRtc_Word32 corrVecUps[ENH_CORRDIM*ENH_UPS0];
-  WebRtc_Word32 corrVecTemp[ENH_CORRDIM];
-  WebRtc_Word16 vect[ENH_VECTL];
-  WebRtc_Word16 corrVec[ENH_CORRDIM];
+  int16_t filt[7];
+  int32_t corrVecUps[ENH_CORRDIM*ENH_UPS0];
+  int32_t corrVecTemp[ENH_CORRDIM];
+  int16_t vect[ENH_VECTL];
+  int16_t corrVec[ENH_CORRDIM];
 
   /* defining array bounds */
 
@@ -71,21 +71,21 @@ void WebRtcIlbcfix_Refiner(
      location of max */
 
   WebRtcIlbcfix_MyCorr(corrVecTemp,idata+searchSegStartPos,
-                       (WebRtc_Word16)(corrdim+ENH_BLOCKL-1),idata+centerStartPos,ENH_BLOCKL);
+                       (int16_t)(corrdim+ENH_BLOCKL-1),idata+centerStartPos,ENH_BLOCKL);
 
   /* Calculate the rescaling factor for the correlation in order to
-     put the correlation in a WebRtc_Word16 vector instead */
-  maxtemp=WebRtcSpl_MaxAbsValueW32(corrVecTemp, (WebRtc_Word16)corrdim);
+     put the correlation in a int16_t vector instead */
+  maxtemp=WebRtcSpl_MaxAbsValueW32(corrVecTemp, (int16_t)corrdim);
 
   scalefact=WebRtcSpl_GetSizeInBits(maxtemp)-15;
 
   if (scalefact>0) {
     for (i=0;i<corrdim;i++) {
-      corrVec[i]=(WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(corrVecTemp[i], scalefact);
+      corrVec[i]=(int16_t)WEBRTC_SPL_RSHIFT_W32(corrVecTemp[i], scalefact);
     }
   } else {
     for (i=0;i<corrdim;i++) {
-      corrVec[i]=(WebRtc_Word16)corrVecTemp[i];
+      corrVec[i]=(int16_t)corrVecTemp[i];
     }
   }
   /* In order to guarantee that all values are initialized */
@@ -97,11 +97,11 @@ void WebRtcIlbcfix_Refiner(
   WebRtcIlbcfix_EnhUpsample(corrVecUps,corrVec);
 
   /* Find maximum */
-  tloc=WebRtcSpl_MaxIndexW32(corrVecUps, (WebRtc_Word16) (ENH_UPS0*corrdim));
+  tloc=WebRtcSpl_MaxIndexW32(corrVecUps, (int16_t) (ENH_UPS0*corrdim));
 
   /* make vector can be upsampled without ever running outside
      bounds */
-  *updStartPos = (WebRtc_Word16)WEBRTC_SPL_MUL_16_16(searchSegStartPos,4) + tloc + 4;
+  *updStartPos = (int16_t)WEBRTC_SPL_MUL_16_16(searchSegStartPos,4) + tloc + 4;
 
   tloc2 = WEBRTC_SPL_RSHIFT_W16((tloc+3), 2);
 
@@ -110,7 +110,7 @@ void WebRtcIlbcfix_Refiner(
   /* initialize the vector to be filtered, stuff with zeros
      when data is outside idata buffer */
   if(st<0){
-    WebRtcSpl_MemSetW16(vect, 0, (WebRtc_Word16)(-st));
+    WebRtcSpl_MemSetW16(vect, 0, (int16_t)(-st));
     WEBRTC_SPL_MEMCPY_W16(&vect[-st], idata, (ENH_VECTL+st));
   }
   else{
@@ -120,19 +120,19 @@ void WebRtcIlbcfix_Refiner(
       WEBRTC_SPL_MEMCPY_W16(vect, &idata[st],
                             (ENH_VECTL-(en-idatal)));
       WebRtcSpl_MemSetW16(&vect[ENH_VECTL-(en-idatal)], 0,
-                          (WebRtc_Word16)(en-idatal));
+                          (int16_t)(en-idatal));
     }
     else {
       WEBRTC_SPL_MEMCPY_W16(vect, &idata[st], ENH_VECTL);
     }
   }
   /* Calculate which of the 4 fractions to use */
-  fraction=(WebRtc_Word16)WEBRTC_SPL_MUL_16_16(tloc2,ENH_UPS0)-tloc;
+  fraction=(int16_t)WEBRTC_SPL_MUL_16_16(tloc2,ENH_UPS0)-tloc;
 
   /* compute the segment (this is actually a convolution) */
 
   filtStatePtr = filt + 6;
-  polyPtr = (WebRtc_Word16*)WebRtcIlbcfix_kEnhPolyPhaser[fraction];
+  polyPtr = (int16_t*)WebRtcIlbcfix_kEnhPolyPhaser[fraction];
   for (i=0;i<7;i++) {
     *filtStatePtr-- = *polyPtr++;
   }
@@ -144,7 +144,7 @@ void WebRtcIlbcfix_Refiner(
   /* Add the contribution from this vector (scaled with gain) to the total surround vector */
   WebRtcSpl_AddAffineVectorToVector(
       surround, vect, gain,
-      (WebRtc_Word32)32768, 16, ENH_BLOCKL);
+      (int32_t)32768, 16, ENH_BLOCKL);
 
   return;
 }

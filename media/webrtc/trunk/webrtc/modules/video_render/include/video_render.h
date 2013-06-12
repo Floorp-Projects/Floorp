@@ -26,7 +26,7 @@
 namespace webrtc {
 
 #if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
-WebRtc_Word32 SetRenderAndroidVM(void* javaVM);
+int32_t SetRenderAndroidVM(void* javaVM);
 #endif
 
 // Class definitions
@@ -43,7 +43,7 @@ public:
      */
     static VideoRender
             * CreateVideoRender(
-                                          const WebRtc_Word32 id,
+                                          const int32_t id,
                                           void* window,
                                           const bool fullscreen,
                                           const VideoRenderType videoRenderType =
@@ -61,10 +61,10 @@ public:
      *
      *   id      - new unique identifier of this video render module object
      */
-    virtual WebRtc_Word32 ChangeUniqueId(const WebRtc_Word32 id) = 0;
+    virtual int32_t ChangeUniqueId(const int32_t id) = 0;
 
-    virtual WebRtc_Word32 TimeUntilNextProcess() = 0;
-    virtual WebRtc_Word32 Process() = 0;
+    virtual int32_t TimeUntilNextProcess() = 0;
+    virtual int32_t Process() = 0;
 
     /**************************************************************************
      *
@@ -82,7 +82,7 @@ public:
      *
      *   window      - the new render window, assuming same type as originally created.
      */
-    virtual WebRtc_Word32 ChangeWindow(void* window) = 0;
+    virtual int32_t ChangeWindow(void* window) = 0;
 
     /**************************************************************************
      *
@@ -103,8 +103,8 @@ public:
      *   Return      - callback class to use for delivering new frames to render.
      */
     virtual VideoRenderCallback
-            * AddIncomingRenderStream(const WebRtc_UWord32 streamId,
-                                      const WebRtc_UWord32 zOrder,
+            * AddIncomingRenderStream(const uint32_t streamId,
+                                      const uint32_t zOrder,
                                       const float left, const float top,
                                       const float right, const float bottom) = 0;
     /*
@@ -112,8 +112,8 @@ public:
      *
      *   streamID    - id of the stream to add
      */
-    virtual WebRtc_Word32
-            DeleteIncomingRenderStream(const WebRtc_UWord32 streamId) = 0;
+    virtual int32_t
+            DeleteIncomingRenderStream(const uint32_t streamId) = 0;
 
     /*
      *   Add incoming render callback, used for external rendering
@@ -123,8 +123,8 @@ public:
      *
      *   Return      - callback class to use for delivering new frames to render.
      */
-    virtual WebRtc_Word32
-            AddExternalRenderCallback(const WebRtc_UWord32 streamId,
+    virtual int32_t
+            AddExternalRenderCallback(const uint32_t streamId,
                                       VideoRenderCallback* renderObject) = 0;
 
     /*
@@ -137,41 +137,41 @@ public:
      *   right       - [out] position of the stream in the window, [0.0f, 1.0f]
      *   bottom      - [out] position of the stream in the window, [0.0f, 1.0f]
      */
-    virtual WebRtc_Word32
-            GetIncomingRenderStreamProperties(const WebRtc_UWord32 streamId,
-                                              WebRtc_UWord32& zOrder,
+    virtual int32_t
+            GetIncomingRenderStreamProperties(const uint32_t streamId,
+                                              uint32_t& zOrder,
                                               float& left, float& top,
                                               float& right, float& bottom) const = 0;
     /*
      *   The incoming frame rate to the module, not the rate rendered in the window.
      */
-    virtual WebRtc_UWord32
-            GetIncomingFrameRate(const WebRtc_UWord32 streamId) = 0;
+    virtual uint32_t
+            GetIncomingFrameRate(const uint32_t streamId) = 0;
 
     /*
      *   Returns the number of incoming streams added to this render module
      */
-    virtual WebRtc_UWord32 GetNumIncomingRenderStreams() const = 0;
+    virtual uint32_t GetNumIncomingRenderStreams() const = 0;
 
     /*
      *   Returns true if this render module has the streamId added, false otherwise.
      */
     virtual bool
-            HasIncomingRenderStream(const WebRtc_UWord32 streamId) const = 0;
+            HasIncomingRenderStream(const uint32_t streamId) const = 0;
 
     /*
      *   Registers a callback to get raw images in the same time as sent
      *   to the renderer. To be used for external rendering.
      */
-    virtual WebRtc_Word32
-            RegisterRawFrameCallback(const WebRtc_UWord32 streamId,
+    virtual int32_t
+            RegisterRawFrameCallback(const uint32_t streamId,
                                      VideoRenderCallback* callbackObj) = 0;
 
     /*
      * This method is usefull to get last rendered frame for the stream specified
      */
-    virtual WebRtc_Word32
-            GetLastRenderedFrame(const WebRtc_UWord32 streamId,
+    virtual int32_t
+            GetLastRenderedFrame(const uint32_t streamId,
                                  I420VideoFrame &frame) const = 0;
 
     /**************************************************************************
@@ -183,18 +183,18 @@ public:
     /*
      *   Starts rendering the specified stream
      */
-    virtual WebRtc_Word32 StartRender(const WebRtc_UWord32 streamId) = 0;
+    virtual int32_t StartRender(const uint32_t streamId) = 0;
 
     /*
      *   Stops the renderer
      */
-    virtual WebRtc_Word32 StopRender(const WebRtc_UWord32 streamId) = 0;
+    virtual int32_t StopRender(const uint32_t streamId) = 0;
 
     /*
      *   Resets the renderer
      *   No streams are removed. The state should be as after AddStream was called.
      */
-    virtual WebRtc_Word32 ResetRender() = 0;
+    virtual int32_t ResetRender() = 0;
 
     /**************************************************************************
      *
@@ -215,23 +215,24 @@ public:
     /*
      *   Gets screen resolution in pixels
      */
-    virtual WebRtc_Word32
-            GetScreenResolution(WebRtc_UWord32& screenWidth,
-                                WebRtc_UWord32& screenHeight) const = 0;
+    virtual int32_t
+            GetScreenResolution(uint32_t& screenWidth,
+                                uint32_t& screenHeight) const = 0;
 
     /*
      *   Get the actual render rate for this stream. I.e rendered frame rate,
      *   not frames delivered to the renderer.
      */
-    virtual WebRtc_UWord32 RenderFrameRate(const WebRtc_UWord32 streamId) = 0;
+    virtual uint32_t RenderFrameRate(const uint32_t streamId) = 0;
 
     /*
      *   Set cropping of incoming stream
      */
-    virtual WebRtc_Word32 SetStreamCropping(const WebRtc_UWord32 streamId,
-                                            const float left, const float top,
-                                            const float right,
-                                            const float bottom) = 0;
+    virtual int32_t SetStreamCropping(const uint32_t streamId,
+                                      const float left,
+                                      const float top,
+                                      const float right,
+                                      const float bottom) = 0;
 
     /*
      * re-configure renderer
@@ -240,51 +241,52 @@ public:
     // Set the expected time needed by the graphics card or external renderer,
     // i.e. frames will be released for rendering |delay_ms| before set render
     // time in the video frame.
-    virtual WebRtc_Word32 SetExpectedRenderDelay(WebRtc_UWord32 stream_id,
-                                                 WebRtc_Word32 delay_ms) = 0;
+    virtual int32_t SetExpectedRenderDelay(uint32_t stream_id,
+                                           int32_t delay_ms) = 0;
 
-    virtual WebRtc_Word32 ConfigureRenderer(const WebRtc_UWord32 streamId,
-                                            const unsigned int zOrder,
-                                            const float left, const float top,
-                                            const float right,
-                                            const float bottom) = 0;
+    virtual int32_t ConfigureRenderer(const uint32_t streamId,
+                                      const unsigned int zOrder,
+                                      const float left,
+                                      const float top,
+                                      const float right,
+                                      const float bottom) = 0;
 
-    virtual WebRtc_Word32 SetTransparentBackground(const bool enable) = 0;
+    virtual int32_t SetTransparentBackground(const bool enable) = 0;
 
-    virtual WebRtc_Word32 FullScreenRender(void* window, const bool enable) = 0;
+    virtual int32_t FullScreenRender(void* window, const bool enable) = 0;
 
-    virtual WebRtc_Word32 SetBitmap(const void* bitMap,
-                                    const WebRtc_UWord8 pictureId,
-                                    const void* colorKey, const float left,
-                                    const float top, const float right,
-                                    const float bottom) = 0;
+    virtual int32_t SetBitmap(const void* bitMap,
+                              const uint8_t pictureId,
+                              const void* colorKey,
+                              const float left, const float top,
+                              const float right, const float bottom) = 0;
 
-    virtual WebRtc_Word32 SetText(const WebRtc_UWord8 textId,
-                                  const WebRtc_UWord8* text,
-                                  const WebRtc_Word32 textLength,
-                                  const WebRtc_UWord32 textColorRef,
-                                  const WebRtc_UWord32 backgroundColorRef,
-                                  const float left, const float top,
-                                  const float right, const float bottom) = 0;
+    virtual int32_t SetText(const uint8_t textId,
+                            const uint8_t* text,
+                            const int32_t textLength,
+                            const uint32_t textColorRef,
+                            const uint32_t backgroundColorRef,
+                            const float left, const float top,
+                            const float right, const float bottom) = 0;
 
     /*
      * Set a start image. The image is rendered before the first image has been delivered
      */
-    virtual WebRtc_Word32
-            SetStartImage(const WebRtc_UWord32 streamId,
+    virtual int32_t
+            SetStartImage(const uint32_t streamId,
                           const I420VideoFrame& videoFrame) = 0;
 
     /*
      * Set a timout image. The image is rendered if no videoframe has been delivered
      */
-    virtual WebRtc_Word32 SetTimeoutImage(const WebRtc_UWord32 streamId,
-                                          const I420VideoFrame& videoFrame,
-                                          const WebRtc_UWord32 timeout)= 0;
+    virtual int32_t SetTimeoutImage(const uint32_t streamId,
+                                    const I420VideoFrame& videoFrame,
+                                    const uint32_t timeout)= 0;
 
-    virtual WebRtc_Word32 MirrorRenderStream(const int renderId,
-                                             const bool enable,
-                                             const bool mirrorXAxis,
-                                             const bool mirrorYAxis) = 0;
+    virtual int32_t MirrorRenderStream(const int renderId,
+                                       const bool enable,
+                                       const bool mirrorXAxis,
+                                       const bool mirrorYAxis) = 0;
 };
 } //namespace webrtc
 #endif  // WEBRTC_MODULES_VIDEO_RENDER_MAIN_INTERFACE_VIDEO_RENDER_H_

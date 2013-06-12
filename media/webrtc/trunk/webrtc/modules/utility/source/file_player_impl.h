@@ -29,51 +29,51 @@ class FrameScaler;
 class FilePlayerImpl : public FilePlayer
 {
 public:
-    FilePlayerImpl(WebRtc_UWord32 instanceID, FileFormats fileFormat);
+    FilePlayerImpl(uint32_t instanceID, FileFormats fileFormat);
     ~FilePlayerImpl();
 
     virtual int Get10msAudioFromFile(
         int16_t* outBuffer,
         int& lengthInSamples,
         int frequencyInHz);
-    virtual WebRtc_Word32 RegisterModuleFileCallback(FileCallback* callback);
-    virtual WebRtc_Word32 StartPlayingFile(
+    virtual int32_t RegisterModuleFileCallback(FileCallback* callback);
+    virtual int32_t StartPlayingFile(
         const char* fileName,
         bool loop,
-        WebRtc_UWord32 startPosition,
+        uint32_t startPosition,
         float volumeScaling,
-        WebRtc_UWord32 notification,
-        WebRtc_UWord32 stopPosition = 0,
+        uint32_t notification,
+        uint32_t stopPosition = 0,
         const CodecInst* codecInst = NULL);
-    virtual WebRtc_Word32 StartPlayingFile(
+    virtual int32_t StartPlayingFile(
         InStream& sourceStream,
-        WebRtc_UWord32 startPosition,
+        uint32_t startPosition,
         float volumeScaling,
-        WebRtc_UWord32 notification,
-        WebRtc_UWord32 stopPosition = 0,
+        uint32_t notification,
+        uint32_t stopPosition = 0,
         const CodecInst* codecInst = NULL);
-    virtual WebRtc_Word32 StopPlayingFile();
+    virtual int32_t StopPlayingFile();
     virtual bool IsPlayingFile() const;
-    virtual WebRtc_Word32 GetPlayoutPosition(WebRtc_UWord32& durationMs);
-    virtual WebRtc_Word32 AudioCodec(CodecInst& audioCodec) const;
-    virtual WebRtc_Word32 Frequency() const;
-    virtual WebRtc_Word32 SetAudioScaling(float scaleFactor);
+    virtual int32_t GetPlayoutPosition(uint32_t& durationMs);
+    virtual int32_t AudioCodec(CodecInst& audioCodec) const;
+    virtual int32_t Frequency() const;
+    virtual int32_t SetAudioScaling(float scaleFactor);
 
 protected:
-    WebRtc_Word32 SetUpAudioDecoder();
+    int32_t SetUpAudioDecoder();
 
-    WebRtc_UWord32 _instanceID;
+    uint32_t _instanceID;
     const FileFormats _fileFormat;
     MediaFile& _fileModule;
 
-    WebRtc_UWord32 _decodedLengthInMS;
+    uint32_t _decodedLengthInMS;
 
 private:
     AudioCoder _audioDecoder;
 
     CodecInst _codec;
-    WebRtc_Word32 _numberOf10MsPerFrame;
-    WebRtc_Word32 _numberOf10MsInDecoder;
+    int32_t _numberOf10MsPerFrame;
+    int32_t _numberOf10MsInDecoder;
 
     Resampler _resampler;
     float _scaling;
@@ -83,37 +83,37 @@ private:
 class VideoFilePlayerImpl: public FilePlayerImpl
 {
 public:
-    VideoFilePlayerImpl(WebRtc_UWord32 instanceID, FileFormats fileFormat);
+    VideoFilePlayerImpl(uint32_t instanceID, FileFormats fileFormat);
     ~VideoFilePlayerImpl();
 
     // FilePlayer functions.
-    virtual WebRtc_Word32 TimeUntilNextVideoFrame();
-    virtual WebRtc_Word32 StartPlayingVideoFile(const char* fileName,
-                                                bool loop,
-                                                bool videoOnly);
-    virtual WebRtc_Word32 StopPlayingFile();
-    virtual WebRtc_Word32 video_codec_info(VideoCodec& videoCodec) const;
-    virtual WebRtc_Word32 GetVideoFromFile(I420VideoFrame& videoFrame);
-    virtual WebRtc_Word32 GetVideoFromFile(I420VideoFrame& videoFrame,
-                                           const WebRtc_UWord32 outWidth,
-                                           const WebRtc_UWord32 outHeight);
+    virtual int32_t TimeUntilNextVideoFrame();
+    virtual int32_t StartPlayingVideoFile(const char* fileName,
+                                          bool loop,
+                                          bool videoOnly);
+    virtual int32_t StopPlayingFile();
+    virtual int32_t video_codec_info(VideoCodec& videoCodec) const;
+    virtual int32_t GetVideoFromFile(I420VideoFrame& videoFrame);
+    virtual int32_t GetVideoFromFile(I420VideoFrame& videoFrame,
+                                     const uint32_t outWidth,
+                                     const uint32_t outHeight);
 
 private:
-    WebRtc_Word32 SetUpVideoDecoder();
+    int32_t SetUpVideoDecoder();
 
     VideoCoder& _videoDecoder;
     VideoCodec video_codec_info_;
-    WebRtc_Word32 _decodedVideoFrames;
+    int32_t _decodedVideoFrames;
 
     EncodedVideoData& _encodedData;
 
     FrameScaler& _frameScaler;
     CriticalSectionWrapper* _critSec;
     TickTime _startTime;
-    WebRtc_Word64 _accumulatedRenderTimeMs;
-    WebRtc_UWord32 _frameLengthMS;
+    int64_t _accumulatedRenderTimeMs;
+    uint32_t _frameLengthMS;
 
-    WebRtc_Word32 _numberOfFramesRead;
+    int32_t _numberOfFramesRead;
     bool _videoOnly;
 };
 #endif //WEBRTC_MODULE_UTILITY_VIDEO

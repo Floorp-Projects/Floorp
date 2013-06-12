@@ -21,7 +21,7 @@ namespace webrtc {
 #ifndef WEBRTC_CODEC_AVT
 
 ACMDTMFPlayout::ACMDTMFPlayout(
-    WebRtc_Word16 /* codec_id */) {
+    int16_t /* codec_id */) {
   return;
 }
 
@@ -29,33 +29,33 @@ ACMDTMFPlayout::~ACMDTMFPlayout() {
   return;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalEncode(
-    WebRtc_UWord8* /* bitstream */,
-    WebRtc_Word16* /* bitstream_len_byte */) {
+int16_t ACMDTMFPlayout::InternalEncode(
+    uint8_t* /* bitstream */,
+    int16_t* /* bitstream_len_byte */) {
   return -1;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::DecodeSafe(
-    WebRtc_UWord8* /* bitstream */,
-    WebRtc_Word16 /* bitstream_len_byte */,
-    WebRtc_Word16* /* audio */,
-    WebRtc_Word16* /* audio_samples */,
-    WebRtc_Word8* /* speech_type */) {
+int16_t ACMDTMFPlayout::DecodeSafe(
+    uint8_t* /* bitstream */,
+    int16_t /* bitstream_len_byte */,
+    int16_t* /* audio */,
+    int16_t* /* audio_samples */,
+    int8_t* /* speech_type */) {
   return -1;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalInitEncoder(
+int16_t ACMDTMFPlayout::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalInitDecoder(
+int16_t ACMDTMFPlayout::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   return -1;
 }
 
-WebRtc_Word32 ACMDTMFPlayout::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
-                                       const CodecInst& /* codec_inst */) {
+int32_t ACMDTMFPlayout::CodecDef(WebRtcNetEQ_CodecDef& /* codec_def */,
+                                 const CodecInst& /* codec_inst */) {
   return -1;
 }
 
@@ -63,11 +63,11 @@ ACMGenericCodec* ACMDTMFPlayout::CreateInstance(void) {
   return NULL;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalCreateEncoder() {
+int16_t ACMDTMFPlayout::InternalCreateEncoder() {
   return -1;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalCreateDecoder() {
+int16_t ACMDTMFPlayout::InternalCreateDecoder() {
   return -1;
 }
 
@@ -85,7 +85,7 @@ void ACMDTMFPlayout::DestructDecoderSafe() {
 
 #else     //===================== Actual Implementation =======================
 
-ACMDTMFPlayout::ACMDTMFPlayout(WebRtc_Word16 codec_id) {
+ACMDTMFPlayout::ACMDTMFPlayout(int16_t codec_id) {
   codec_id_ = codec_id;
 }
 
@@ -93,37 +93,37 @@ ACMDTMFPlayout::~ACMDTMFPlayout() {
   return;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalEncode(
-    WebRtc_UWord8* /* bitstream */,
-    WebRtc_Word16* /* bitstream_len_byte */) {
+int16_t ACMDTMFPlayout::InternalEncode(
+    uint8_t* /* bitstream */,
+    int16_t* /* bitstream_len_byte */) {
   return 0;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::DecodeSafe(
-    WebRtc_UWord8* /* bitstream */,
-    WebRtc_Word16 /* bitstream_len_byte */,
-    WebRtc_Word16* /* audio */,
-    WebRtc_Word16* /* audio_samples */,
-    WebRtc_Word8* /* speech_type */) {
+int16_t ACMDTMFPlayout::DecodeSafe(
+    uint8_t* /* bitstream */,
+    int16_t /* bitstream_len_byte */,
+    int16_t* /* audio */,
+    int16_t* /* audio_samples */,
+    int8_t* /* speech_type */) {
   return 0;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalInitEncoder(
+int16_t ACMDTMFPlayout::InternalInitEncoder(
     WebRtcACMCodecParams* /* codec_params */) {
   // This codec does not need initialization,
   // DTMFPlayout has no instance
   return 0;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalInitDecoder(
+int16_t ACMDTMFPlayout::InternalInitDecoder(
     WebRtcACMCodecParams* /* codec_params */) {
   // This codec does not need initialization,
   // DTMFPlayout has no instance
   return 0;
 }
 
-WebRtc_Word32 ACMDTMFPlayout::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                                       const CodecInst& codec_inst) {
+int32_t ACMDTMFPlayout::CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                                 const CodecInst& codec_inst) {
   // Fill up the structure by calling
   // "SET_CODEC_PAR" & "SET_AVT_FUNCTION."
   // Then call NetEQ to add the codec to it's
@@ -137,12 +137,12 @@ ACMGenericCodec* ACMDTMFPlayout::CreateInstance(void) {
   return NULL;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalCreateEncoder() {
+int16_t ACMDTMFPlayout::InternalCreateEncoder() {
   // DTMFPlayout has no instance
   return 0;
 }
 
-WebRtc_Word16 ACMDTMFPlayout::InternalCreateDecoder() {
+int16_t ACMDTMFPlayout::InternalCreateDecoder() {
   // DTMFPlayout has no instance
   return 0;
 }

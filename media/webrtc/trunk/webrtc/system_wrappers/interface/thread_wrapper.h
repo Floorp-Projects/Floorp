@@ -52,8 +52,8 @@ class ThreadWrapper {
   // prio        Thread priority. May require root/admin rights.
   // thread_name  NULL terminated thread name, will be visable in the Windows
   //             debugger.
-  static ThreadWrapper* CreateThread(ThreadRunFunction func = 0,
-                                     ThreadObj obj = 0,
+  static ThreadWrapper* CreateThread(ThreadRunFunction func,
+                                     ThreadObj obj,
                                      ThreadPriority prio = kNormalPriority,
                                      const char* thread_name = 0);
 

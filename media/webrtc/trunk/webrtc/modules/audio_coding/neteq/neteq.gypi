@@ -10,7 +10,7 @@
   'targets': [
     {
       'target_name': 'NetEq',
-      'type': '<(library)',
+      'type': 'static_library',
       'dependencies': [
         'CNG',
         '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
@@ -93,11 +93,16 @@
           'dependencies': [
             'NetEq',
             'NetEqTestTools',
+            'neteq_unittest_tools',
             '<(DEPTH)/testing/gtest.gyp:gtest',
             '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
           'sources': [
             'webrtc_neteq_unittest.cc',
+          ],
+          # Disable warnings to enable Win64 build, issue 1323.
+          'msvs_disabled_warnings': [
+            4267,  # size_t to int truncation.
           ],
         }, # neteq_unittests
         {
@@ -137,114 +142,16 @@
           'sources': [
             'test/NetEqRTPplay.cc',
           ],
-        },
-       {
-          'target_name': 'RTPencode',
-          'type': 'executable',
-          'dependencies': [
-            'NetEqTestTools',# Test helpers
-            'G711',
-            'G722',
-            'PCM16B',
-            'iLBC',
-            'iSAC',
-            'CNG',
-            '<(webrtc_root)/common_audio/common_audio.gyp:vad',
-          ],
-          'defines': [
-            # TODO: Make codec selection conditional on definitions in target NetEq
-            'CODEC_ILBC',
-            'CODEC_PCM16B',
-            'CODEC_G711',
-            'CODEC_G722',
-            'CODEC_ISAC',
-            'CODEC_PCM16B_WB',
-            'CODEC_ISAC_SWB',
-            'CODEC_ISAC_FB',
-            'CODEC_PCM16B_32KHZ',
-            'CODEC_CNGCODEC8',
-            'CODEC_CNGCODEC16',
-            'CODEC_CNGCODEC32',
-            'CODEC_ATEVENT_DECODE',
-            'CODEC_RED',
-          ],
-          'include_dirs': [
-            'interface',
-            'test',
-          ],
-          'sources': [
-            'test/RTPencode.cc',
+          # Disable warnings to enable Win64 build, issue 1323.
+          'msvs_disabled_warnings': [
+            4267,  # size_t to int truncation.
           ],
         },
-        {
-          'target_name': 'RTPjitter',
-          'type': 'executable',
-          'dependencies': [
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-            'test/RTPjitter.cc',
-          ],
-        },
-        {
-          'target_name': 'RTPanalyze',
-          'type': 'executable',
-          'dependencies': [
-            'NetEqTestTools',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-            'test/RTPanalyze.cc',
-          ],
-        },
-        {
-          'target_name': 'RTPchange',
-          'type': 'executable',
-          'dependencies': [
-            'NetEqTestTools',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-           'test/RTPchange.cc',
-          ],
-        },
-        {
-          'target_name': 'RTPtimeshift',
-          'type': 'executable',
-          'dependencies': [
-           'NetEqTestTools',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-            'test/RTPtimeshift.cc',
-          ],
-        },
-        {
-          'target_name': 'RTPcat',
-          'type': 'executable',
-          'dependencies': [
-            'NetEqTestTools',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-            'test/RTPcat.cc',
-          ],
-        },
-        {
-          'target_name': 'rtp_to_text',
-          'type': 'executable',
-          'dependencies': [
-            'NetEqTestTools',
-            '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-          ],
-          'sources': [
-            'test/rtp_to_text.cc',
-          ],
-        },
+
         {
          'target_name': 'NetEqTestTools',
           # Collection of useful functions used in other tests
-          'type': '<(library)',
+          'type': 'static_library',
           'variables': {
             # Expects RTP packets without payloads when enabled.
             'neteq_dummy_rtp%': 0,
@@ -294,6 +201,10 @@
             'test/NETEQTEST_NetEQClass.h',
             'test/NETEQTEST_RTPpacket.cc',
             'test/NETEQTEST_RTPpacket.h',
+          ],
+          # Disable warnings to enable Win64 build, issue 1323.
+          'msvs_disabled_warnings': [
+            4267,  # size_t to int truncation.
           ],
         },
       ], # targets

@@ -23,16 +23,16 @@
  *  quantizer for the gain in the gain-shape coding of residual
  *---------------------------------------------------------------*/
 
-WebRtc_Word16 WebRtcIlbcfix_GainQuant( /* (o) quantized gain value */
-    WebRtc_Word16 gain, /* (i) gain value Q14 */
-    WebRtc_Word16 maxIn, /* (i) maximum of gain value Q14 */
-    WebRtc_Word16 stage, /* (i) The stage of the search */
-    WebRtc_Word16 *index /* (o) quantization index */
+int16_t WebRtcIlbcfix_GainQuant( /* (o) quantized gain value */
+    int16_t gain, /* (i) gain value Q14 */
+    int16_t maxIn, /* (i) maximum of gain value Q14 */
+    int16_t stage, /* (i) The stage of the search */
+    int16_t *index /* (o) quantization index */
                                         ) {
 
-  WebRtc_Word16 scale, returnVal, cblen;
-  WebRtc_Word32 gainW32, measure1, measure2;
-  const WebRtc_Word16 *cbPtr, *cb;
+  int16_t scale, returnVal, cblen;
+  int32_t gainW32, measure1, measure2;
+  const int16_t *cbPtr, *cb;
   int loc, noMoves, noChecks, i;
 
   /* ensure a lower bound (0.1) on the scaling factor */
@@ -48,7 +48,7 @@ WebRtc_Word16 WebRtcIlbcfix_GainQuant( /* (o) quantized gain value */
 
   /* Multiply the gain with 2^14 to make the comparison
      easier and with higher precision */
-  gainW32 = WEBRTC_SPL_LSHIFT_W32((WebRtc_Word32)gain, 14);
+  gainW32 = WEBRTC_SPL_LSHIFT_W32((int32_t)gain, 14);
 
   /* Do a binary search, starting in the middle of the CB
      loc - defines the current position in the table
@@ -99,7 +99,7 @@ WebRtc_Word16 WebRtcIlbcfix_GainQuant( /* (o) quantized gain value */
   *index=loc;
 
   /* Calculate the quantized gain value (in Q14) */
-  returnVal=(WebRtc_Word16)((WEBRTC_SPL_MUL_16_16(scale, cb[loc])+8192)>>14);
+  returnVal=(int16_t)((WEBRTC_SPL_MUL_16_16(scale, cb[loc])+8192)>>14);
 
   /* return the quantized value */
   return(returnVal);

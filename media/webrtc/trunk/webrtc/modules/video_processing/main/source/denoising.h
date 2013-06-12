@@ -25,18 +25,18 @@ public:
     VPMDenoising();
     ~VPMDenoising();
 
-    WebRtc_Word32 ChangeUniqueId(WebRtc_Word32 id);
+    int32_t ChangeUniqueId(int32_t id);
 
     void Reset();
 
-    WebRtc_Word32 ProcessFrame(I420VideoFrame* frame);
+    int32_t ProcessFrame(I420VideoFrame* frame);
 
 private:
-    WebRtc_Word32 _id;
+    int32_t _id;
 
-    WebRtc_UWord32*   _moment1;           // (Q8) First order moment (mean)
-    WebRtc_UWord32*   _moment2;           // (Q8) Second order moment
-    WebRtc_UWord32    _frameSize;         // Size (# of pixels) of frame
+    uint32_t*   _moment1;           // (Q8) First order moment (mean)
+    uint32_t*   _moment2;           // (Q8) Second order moment
+    uint32_t    _frameSize;         // Size (# of pixels) of frame
     int               _denoiseFrameCnt;   // Counter for subsampling in time
 };
 

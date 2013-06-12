@@ -34,7 +34,7 @@
 #include "structs.h"
 
 
-WebRtc_Word16 WebRtcIsacfix_FftRadix16Fastest(WebRtc_Word16 RexQx[], WebRtc_Word16 ImxQx[], WebRtc_Word16 iSign);
+int16_t WebRtcIsacfix_FftRadix16Fastest(int16_t RexQx[], int16_t ImxQx[], int16_t iSign);
 
 
 

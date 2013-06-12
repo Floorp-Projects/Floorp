@@ -26,11 +26,11 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_MyCorr(
-    WebRtc_Word32 *corr,  /* (o) correlation of seq1 and seq2 */
-    WebRtc_Word16 *seq1,  /* (i) first sequence */
-    WebRtc_Word16 dim1,  /* (i) dimension first seq1 */
-    const WebRtc_Word16 *seq2, /* (i) second sequence */
-    WebRtc_Word16 dim2   /* (i) dimension seq2 */
+    int32_t *corr,  /* (o) correlation of seq1 and seq2 */
+    int16_t *seq1,  /* (i) first sequence */
+    int16_t dim1,  /* (i) dimension first seq1 */
+    const int16_t *seq2, /* (i) second sequence */
+    int16_t dim2   /* (i) dimension seq2 */
                           );
 
 #endif

@@ -54,10 +54,10 @@ struct SplitAudioChannel {
   int16_t low_pass_data[kSamplesPer16kHzChannel];
   int16_t high_pass_data[kSamplesPer16kHzChannel];
 
-  WebRtc_Word32 analysis_filter_state1[6];
-  WebRtc_Word32 analysis_filter_state2[6];
-  WebRtc_Word32 synthesis_filter_state1[6];
-  WebRtc_Word32 synthesis_filter_state2[6];
+  int32_t analysis_filter_state1[6];
+  int32_t analysis_filter_state2[6];
+  int32_t synthesis_filter_state1[6];
+  int32_t synthesis_filter_state2[6];
 };
 
 // TODO(andrew): check range of input parameters?
@@ -142,22 +142,22 @@ int16_t* AudioBuffer::low_pass_reference(int channel) const {
   return low_pass_reference_channels_[channel].data;
 }
 
-WebRtc_Word32* AudioBuffer::analysis_filter_state1(int channel) const {
+int32_t* AudioBuffer::analysis_filter_state1(int channel) const {
   assert(channel >= 0 && channel < num_channels_);
   return split_channels_[channel].analysis_filter_state1;
 }
 
-WebRtc_Word32* AudioBuffer::analysis_filter_state2(int channel) const {
+int32_t* AudioBuffer::analysis_filter_state2(int channel) const {
   assert(channel >= 0 && channel < num_channels_);
   return split_channels_[channel].analysis_filter_state2;
 }
 
-WebRtc_Word32* AudioBuffer::synthesis_filter_state1(int channel) const {
+int32_t* AudioBuffer::synthesis_filter_state1(int channel) const {
   assert(channel >= 0 && channel < num_channels_);
   return split_channels_[channel].synthesis_filter_state1;
 }
 
-WebRtc_Word32* AudioBuffer::synthesis_filter_state2(int channel) const {
+int32_t* AudioBuffer::synthesis_filter_state2(int channel) const {
   assert(channel >= 0 && channel < num_channels_);
   return split_channels_[channel].synthesis_filter_state2;
 }

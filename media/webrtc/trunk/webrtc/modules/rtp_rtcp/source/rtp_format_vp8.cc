@@ -28,8 +28,8 @@ const bool RtpFormatVp8::balance_modes_[kNumModes] =
 const bool RtpFormatVp8::separate_first_modes_[kNumModes] =
     { true, false, false };
 
-RtpFormatVp8::RtpFormatVp8(const WebRtc_UWord8* payload_data,
-                           WebRtc_UWord32 payload_size,
+RtpFormatVp8::RtpFormatVp8(const uint8_t* payload_data,
+                           uint32_t payload_size,
                            const RTPVideoHeaderVP8& hdr_info,
                            int max_payload_len,
                            const RTPFragmentationHeader& fragmentation,
@@ -47,8 +47,8 @@ RtpFormatVp8::RtpFormatVp8(const WebRtc_UWord8* payload_data,
   part_info_.CopyFrom(fragmentation);
 }
 
-RtpFormatVp8::RtpFormatVp8(const WebRtc_UWord8* payload_data,
-                           WebRtc_UWord32 payload_size,
+RtpFormatVp8::RtpFormatVp8(const uint8_t* payload_data,
+                           uint32_t payload_size,
                            const RTPVideoHeaderVP8& hdr_info,
                            int max_payload_len)
     : payload_data_(payload_data),
@@ -67,7 +67,7 @@ RtpFormatVp8::RtpFormatVp8(const WebRtc_UWord8* payload_data,
     part_info_.fragmentationOffset[0] = 0;
 }
 
-int RtpFormatVp8::NextPacket(WebRtc_UWord8* buffer,
+int RtpFormatVp8::NextPacket(uint8_t* buffer,
                              int* bytes_to_send,
                              bool* last_packet) {
   if (!packets_calculated_) {
@@ -297,7 +297,7 @@ void RtpFormatVp8::QueuePacket(int start_pos,
 }
 
 int RtpFormatVp8::WriteHeaderAndPayload(const InfoStruct& packet_info,
-                                        WebRtc_UWord8* buffer,
+                                        uint8_t* buffer,
                                         int buffer_length) const {
   // Write the VP8 payload descriptor.
   //       0
@@ -331,11 +331,11 @@ int RtpFormatVp8::WriteHeaderAndPayload(const InfoStruct& packet_info,
       + extension_length;
 }
 
-int RtpFormatVp8::WriteExtensionFields(WebRtc_UWord8* buffer,
+int RtpFormatVp8::WriteExtensionFields(uint8_t* buffer,
                                        int buffer_length) const {
   int extension_length = 0;
   if (XFieldPresent()) {
-    WebRtc_UWord8* x_field = buffer + vp8_fixed_payload_descriptor_bytes_;
+    uint8_t* x_field = buffer + vp8_fixed_payload_descriptor_bytes_;
     *x_field = 0;
     extension_length = 1;  // One octet for the X field.
     if (PictureIdPresent()) {
@@ -361,8 +361,8 @@ int RtpFormatVp8::WriteExtensionFields(WebRtc_UWord8* buffer,
   return extension_length;
 }
 
-int RtpFormatVp8::WritePictureIDFields(WebRtc_UWord8* x_field,
-                                       WebRtc_UWord8* buffer,
+int RtpFormatVp8::WritePictureIDFields(uint8_t* x_field,
+                                       uint8_t* buffer,
                                        int buffer_length,
                                        int* extension_length) const {
   *x_field |= kIBit;
@@ -375,10 +375,10 @@ int RtpFormatVp8::WritePictureIDFields(WebRtc_UWord8* x_field,
   return 0;
 }
 
-int RtpFormatVp8::WritePictureID(WebRtc_UWord8* buffer,
+int RtpFormatVp8::WritePictureID(uint8_t* buffer,
                                  int buffer_length) const {
-  const WebRtc_UWord16 pic_id =
-      static_cast<WebRtc_UWord16> (hdr_info_.pictureId);
+  const uint16_t pic_id =
+      static_cast<uint16_t> (hdr_info_.pictureId);
   int picture_id_len = PictureIdLength();
   if (picture_id_len > buffer_length) return -1;
   if (picture_id_len == 2) {
@@ -390,8 +390,8 @@ int RtpFormatVp8::WritePictureID(WebRtc_UWord8* buffer,
   return picture_id_len;
 }
 
-int RtpFormatVp8::WriteTl0PicIdxFields(WebRtc_UWord8* x_field,
-                                       WebRtc_UWord8* buffer,
+int RtpFormatVp8::WriteTl0PicIdxFields(uint8_t* x_field,
+                                       uint8_t* buffer,
                                        int buffer_length,
                                        int* extension_length) const {
   if (buffer_length < vp8_fixed_payload_descriptor_bytes_ + *extension_length
@@ -405,15 +405,15 @@ int RtpFormatVp8::WriteTl0PicIdxFields(WebRtc_UWord8* x_field,
   return 0;
 }
 
-int RtpFormatVp8::WriteTIDAndKeyIdxFields(WebRtc_UWord8* x_field,
-                                          WebRtc_UWord8* buffer,
+int RtpFormatVp8::WriteTIDAndKeyIdxFields(uint8_t* x_field,
+                                          uint8_t* buffer,
                                           int buffer_length,
                                           int* extension_length) const {
   if (buffer_length < vp8_fixed_payload_descriptor_bytes_ + *extension_length
       + 1) {
     return -1;
   }
-  WebRtc_UWord8* data_field =
+  uint8_t* data_field =
       &buffer[vp8_fixed_payload_descriptor_bytes_ + *extension_length];
   *data_field = 0;
   if (TIDFieldPresent()) {

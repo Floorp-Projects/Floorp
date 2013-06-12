@@ -31,31 +31,39 @@
     #define SHARED_MEM_SIZE 640
 #endif
 
+#define  SYNC_PAYLOAD_LEN_BYTES  7
+static const uint8_t kSyncPayload[SYNC_PAYLOAD_LEN_BYTES] = {
+    'a', 'v', 's', 'y', 'n', 'c', '\0' };
+
 /* Struct to hold the NetEQ instance */
 typedef struct
 {
     DSPInst_t DSPinst; /* DSP part of the NetEQ instance */
     MCUInst_t MCUinst; /* MCU part of the NetEQ instance */
-    WebRtc_Word16 ErrorCode; /* Store last error code */
+    int16_t ErrorCode; /* Store last error code */
 #ifdef NETEQ_STEREO
-    WebRtc_Word16 masterSlave; /* 0 = not set, 1 = master, 2 = slave */
+    int16_t masterSlave; /* 0 = not set, 1 = master, 2 = slave */
 #endif /* NETEQ_STEREO */
 } MainInst_t;
 
 /* Struct used for communication between DSP and MCU sides of NetEQ */
 typedef struct
 {
-    WebRtc_UWord32 playedOutTS; /* Timestamp position at end of DSP data */
-    WebRtc_UWord16 samplesLeft; /* Number of samples stored */
-    WebRtc_Word16 MD; /* Multiple description codec information */
-    WebRtc_Word16 lastMode; /* Latest mode of NetEQ playout */
-    WebRtc_Word16 frameLen; /* Frame length of previously decoded packet */
+    uint32_t playedOutTS; /* Timestamp position at end of DSP data */
+    uint16_t samplesLeft; /* Number of samples stored */
+    int16_t MD; /* Multiple description codec information */
+    int16_t lastMode; /* Latest mode of NetEQ playout */
+    int16_t frameLen; /* Frame length of previously decoded packet */
 } DSP2MCU_info_t;
 
 /* Initialize instances with read and write address */
 int WebRtcNetEQ_DSPinit(MainInst_t *inst);
 
 /* The DSP side will call this function to interrupt the MCU side */
-int WebRtcNetEQ_DSP2MCUinterrupt(MainInst_t *inst, WebRtc_Word16 *pw16_shared_mem);
+int WebRtcNetEQ_DSP2MCUinterrupt(MainInst_t *inst, int16_t *pw16_shared_mem);
+
+/* Returns 1 if the given payload matches |kSyncPayload| payload, otherwise
+ * 0 is returned. */
+int WebRtcNetEQ_IsSyncPayload(const void* payload, int payload_len_bytes);
 
 #endif

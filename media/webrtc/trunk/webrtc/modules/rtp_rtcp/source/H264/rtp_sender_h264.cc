@@ -36,7 +36,7 @@ RTPSenderH264::~RTPSenderH264()
 {
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::Init()
 {
     _h264SendPPS_SPS = true;
@@ -71,8 +71,8 @@ RTPSenderH264::Init()
 
 bool
 RTPSenderH264::AddH264SVCNALUHeader(const H264_SVC_NALUHeader& svc,
-                                    WebRtc_UWord8* databuffer,
-                                    WebRtc_Word32& curByte) const
+                                    uint8_t* databuffer,
+                                    int32_t& curByte) const
 {
    // +---------------+---------------+---------------+
    // |0|1|2|3|4|5|6|7|0|1|2|3|4|5|6|7|0|1|2|3|4|5|6|7|
@@ -84,10 +84,10 @@ RTPSenderH264::AddH264SVCNALUHeader(const H264_SVC_NALUHeader& svc,
    // I    - Is layer representation an IDR layer (1) or not (0).
    // PRID - Priority identifier for the NAL unit.
    // N    - Specifies whether inter-layer prediction may be used for decoding the coded slice (1) or not (0).
-   // DID  - Indicates the WebRtc_Word32er-layer coding dependency level of a layer representation.
+   // DID  - Indicates the int32_t:er-layer coding dependency level of a layer representation.
    // QID  - Indicates the quality level of an MGS layer representation.
    // TID  - Indicates the temporal level of a layer representation.
-   // U    - Use only reference base pictures during the WebRtc_Word32er prediction process (1) or not (0).
+   // U    - Use only reference base pictures during the int32_t:er prediction process (1) or not (0).
    // D    - Discardable flag.
    // O    - Output_flag. Affects the decoded picture output process as defined in Annex C of [H.264].
    // RR   - Reserved_three_2bits (MUST be '11'). Receivers SHOULD ignore the value of RR.
@@ -100,14 +100,14 @@ RTPSenderH264::AddH264SVCNALUHeader(const H264_SVC_NALUHeader& svc,
    return true;
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::AddH264PACSINALU(const bool firstPacketInNALU,
                                 const bool lastPacketInNALU,
                                 const H264_PACSI_NALU& pacsi,
                                 const H264_SVC_NALUHeader& svc,
-                                const WebRtc_UWord16 DONC,
-                                WebRtc_UWord8* databuffer,
-                                WebRtc_Word32& curByte) const
+                                const uint16_t DONC,
+                                uint8_t* databuffer,
+                                int32_t& curByte) const
 {
     //  0                   1                   2                   3
     //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -144,7 +144,7 @@ RTPSenderH264::AddH264PACSINALU(const bool firstPacketInNALU,
       return 0;
     }
 
-    WebRtc_Word32 startByte = curByte;
+    int32_t startByte = curByte;
 
     // NAL unit header
     databuffer[curByte++] = 30; // NRI will be added later
@@ -166,25 +166,25 @@ RTPSenderH264::AddH264PACSINALU(const bool firstPacketInNALU,
     if (pacsi.Y)
     {
         databuffer[curByte++] = pacsi.TL0picIDx;
-        databuffer[curByte++] = (WebRtc_UWord8)(pacsi.IDRpicID >> 8);
-        databuffer[curByte++] = (WebRtc_UWord8)(pacsi.IDRpicID);
+        databuffer[curByte++] = (uint8_t)(pacsi.IDRpicID >> 8);
+        databuffer[curByte++] = (uint8_t)(pacsi.IDRpicID);
     }
     // Decoding order number
     if (addDONC) // pacsi.T
     {
-        databuffer[curByte++] = (WebRtc_UWord8)(DONC >> 8);
-        databuffer[curByte++] = (WebRtc_UWord8)(DONC);
+        databuffer[curByte++] = (uint8_t)(DONC >> 8);
+        databuffer[curByte++] = (uint8_t)(DONC);
     }
 
     // SEI NALU
     if(firstPacketInNALU) // IMPROVEMENT duplicate it to make sure it arrives...
     {
         // we only set this for NALU 0 to make sure we send it only once per frame
-        for (WebRtc_UWord32 i = 0; i < pacsi.numSEINALUs; i++)
+        for (uint32_t i = 0; i < pacsi.numSEINALUs; i++)
         {
             // NALU size
-            databuffer[curByte++] = (WebRtc_UWord8)(pacsi.seiMessageLength[i] >> 8);
-            databuffer[curByte++] = (WebRtc_UWord8)(pacsi.seiMessageLength[i]);
+            databuffer[curByte++] = (uint8_t)(pacsi.seiMessageLength[i] >> 8);
+            databuffer[curByte++] = (uint8_t)(pacsi.seiMessageLength[i]);
 
             // NALU data
             memcpy(databuffer + curByte, pacsi.seiMessageData[i], pacsi.seiMessageLength[i]);
@@ -194,14 +194,14 @@ RTPSenderH264::AddH264PACSINALU(const bool firstPacketInNALU,
     return curByte - startByte;
 }
 
-WebRtc_Word32
-RTPSenderH264::SetH264RelaySequenceNumber(const WebRtc_UWord16 seqNum)
+int32_t
+RTPSenderH264::SetH264RelaySequenceNumber(const uint16_t seqNum)
 {
     _h264SVCRelaySequenceNumber = seqNum;
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SetH264RelayCompleteLayer(const bool complete)
 {
     _h264SVCRelayLayerComplete = complete;
@@ -215,12 +215,12 @@ RTPSenderH264::SetH264RelayCompleteLayer(const bool complete)
         access unit is that they shall not precede the first VCL
         NAL unit with the same access unit.
 */
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264FillerData(const WebRtcRTPHeader* rtpHeader,
-                                  const WebRtc_UWord16 bytesToSend,
-                                  const WebRtc_UWord32 ssrc)
+                                  const uint16_t bytesToSend,
+                                  const uint32_t ssrc)
 {
-    WebRtc_UWord16 fillerLength = bytesToSend - 12 - 1;
+    uint16_t fillerLength = bytesToSend - 12 - 1;
 
     if (fillerLength > WEBRTC_IP_PACKET_SIZE - 12 - 1)
     {
@@ -234,9 +234,9 @@ RTPSenderH264::SendH264FillerData(const WebRtcRTPHeader* rtpHeader,
     }
 
     // send codec valid data, H.264 has defined data which is binary 1111111
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
 
-    dataBuffer[0] = static_cast<WebRtc_UWord8>(0x80);            // version 2
+    dataBuffer[0] = static_cast<uint8_t>(0x80);            // version 2
     dataBuffer[1] = rtpHeader->header.payloadType;
     ModuleRTPUtility::AssignUWord16ToBuffer(dataBuffer+2, _rtpSender.IncrementSequenceNumber()); // get the current SequenceNumber and add by 1 after returning
     ModuleRTPUtility::AssignUWord32ToBuffer(dataBuffer+4, rtpHeader->header.timestamp);
@@ -253,27 +253,27 @@ RTPSenderH264::SendH264FillerData(const WebRtcRTPHeader* rtpHeader,
                         12 + 1);
 }
 
-WebRtc_Word32
-RTPSenderH264::SendH264FillerData(const WebRtc_UWord32 captureTimestamp,
-                                  const WebRtc_UWord8 payloadType,
-                                  const WebRtc_UWord32 bytes
+int32_t
+RTPSenderH264::SendH264FillerData(const uint32_t captureTimestamp,
+                                  const uint8_t payloadType,
+                                  const uint32_t bytes
                                   )
 {
 
-    const WebRtc_UWord16 rtpHeaderLength = _rtpSender.RTPHeaderLength();
-    WebRtc_UWord16 maxLength = _rtpSender.MaxPayloadLength() - FECPacketOverhead() - _rtpSender.RTPHeaderLength();
+    const uint16_t rtpHeaderLength = _rtpSender.RTPHeaderLength();
+    uint16_t maxLength = _rtpSender.MaxPayloadLength() - FECPacketOverhead() - _rtpSender.RTPHeaderLength();
 
-    WebRtc_Word32 bytesToSend=bytes;
-    WebRtc_UWord16 fillerLength=0;
+    int32_t bytesToSend=bytes;
+    uint16_t fillerLength=0;
 
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
 
     while(bytesToSend>0)
     {
         fillerLength=maxLength;
         if(fillerLength<maxLength)
         {
-            fillerLength = (WebRtc_UWord16) bytesToSend;
+            fillerLength = (uint16_t) bytesToSend;
         }
 
         bytesToSend-=fillerLength;
@@ -311,14 +311,14 @@ RTPSenderH264::SendH264FillerData(const WebRtc_UWord32 captureTimestamp,
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264SVCRelayPacket(const WebRtcRTPHeader* rtpHeader,
-                                      const WebRtc_UWord8* incomingRTPPacket,
-                                      const WebRtc_UWord16 incomingRTPPacketSize,
-                                      const WebRtc_UWord32 ssrc,
+                                      const uint8_t* incomingRTPPacket,
+                                      const uint16_t incomingRTPPacketSize,
+                                      const uint32_t ssrc,
                                       const bool higestLayer)
 {
-    if (rtpHeader->header.sequenceNumber != (WebRtc_UWord16)(_h264SVCRelaySequenceNumber + 1))
+    if (rtpHeader->header.sequenceNumber != (uint16_t)(_h264SVCRelaySequenceNumber + 1))
     {
          // not continous, signal loss
          _rtpSender.IncrementSequenceNumber();
@@ -346,7 +346,7 @@ RTPSenderH264::SendH264SVCRelayPacket(const WebRtcRTPHeader* rtpHeader,
     // we keep the timestap unchanged
     // make a copy and only change the SSRC and seqNum
 
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
     memcpy(dataBuffer, incomingRTPPacket, incomingRTPPacketSize);
 
     // _sequenceNumber initiated in Init()
@@ -382,28 +382,28 @@ RTPSenderH264::SendH264SVCRelayPacket(const WebRtcRTPHeader* rtpHeader,
                          rtpHeader->header.headerLength);
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264_STAP_A(const FrameType frameType,
                                 const H264Info* ptrH264Info,
-                                WebRtc_UWord16 &idxNALU,
-                                const WebRtc_Word8 payloadType,
-                                const WebRtc_UWord32 captureTimeStamp,
+                                uint16_t &idxNALU,
+                                const int8_t payloadType,
+                                const uint32_t captureTimeStamp,
                                 bool& switchToFUA,
-                                WebRtc_Word32 &payloadBytesToSend,
-                                const WebRtc_UWord8*& data,
-                                const WebRtc_UWord16 rtpHeaderLength)
+                                int32_t &payloadBytesToSend,
+                                const uint8_t*& data,
+                                const uint16_t rtpHeaderLength)
 {
-    const WebRtc_Word32 H264_NALU_LENGTH = 2;
+    const int32_t H264_NALU_LENGTH = 2;
 
-    WebRtc_UWord16 h264HeaderLength = 1; // normal header length
-    WebRtc_UWord16 maxPayloadLengthSTAP_A = _rtpSender.MaxPayloadLength() -
+    uint16_t h264HeaderLength = 1; // normal header length
+    uint16_t maxPayloadLengthSTAP_A = _rtpSender.MaxPayloadLength() -
                                           FECPacketOverhead() - rtpHeaderLength -
                                           h264HeaderLength - H264_NALU_LENGTH;
 
-    WebRtc_Word32 dataOffset = rtpHeaderLength + h264HeaderLength;
-    WebRtc_UWord8 NRI = 0;
-    WebRtc_UWord16 payloadBytesInPacket = 0;
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    int32_t dataOffset = rtpHeaderLength + h264HeaderLength;
+    uint8_t NRI = 0;
+    uint16_t payloadBytesInPacket = 0;
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
 
     if (ptrH264Info->payloadSize[idxNALU] > maxPayloadLengthSTAP_A)
     {
@@ -432,15 +432,15 @@ RTPSenderH264::SendH264_STAP_A(const FrameType frameType,
                     NRI = ptrH264Info->NRI[idxNALU];
                 }
                 // put NAL size into packet
-                dataBuffer[dataOffset] = (WebRtc_UWord8)(ptrH264Info->payloadSize[idxNALU] >> 8);
+                dataBuffer[dataOffset] = (uint8_t)(ptrH264Info->payloadSize[idxNALU] >> 8);
                 dataOffset++;
-                dataBuffer[dataOffset] = (WebRtc_UWord8)(ptrH264Info->payloadSize[idxNALU] & 0xff);
+                dataBuffer[dataOffset] = (uint8_t)(ptrH264Info->payloadSize[idxNALU] & 0xff);
                 dataOffset++;
                 // Put payload in packet
                 memcpy(&dataBuffer[dataOffset], &data[ptrH264Info->startCodeSize[idxNALU]], ptrH264Info->payloadSize[idxNALU]);
                 dataOffset += ptrH264Info->payloadSize[idxNALU];
                 data += ptrH264Info->payloadSize[idxNALU] + ptrH264Info->startCodeSize[idxNALU];
-                payloadBytesInPacket += (WebRtc_UWord16)(ptrH264Info->payloadSize[idxNALU] + H264_NALU_LENGTH);
+                payloadBytesInPacket += (uint16_t)(ptrH264Info->payloadSize[idxNALU] + H264_NALU_LENGTH);
                 payloadBytesToSend -= ptrH264Info->payloadSize[idxNALU] + ptrH264Info->startCodeSize[idxNALU];
             } else
             {
@@ -458,7 +458,7 @@ RTPSenderH264::SendH264_STAP_A(const FrameType frameType,
         // add RTP header
         _rtpSender.BuildRTPheader(dataBuffer, payloadType, (payloadBytesToSend==0)?true:false, captureTimeStamp);
         dataBuffer[rtpHeaderLength] = 24 + NRI; // STAP-A == 24
-        WebRtc_UWord16 payloadLength = payloadBytesInPacket + h264HeaderLength;
+        uint16_t payloadLength = payloadBytesInPacket + h264HeaderLength;
 
         if(-1 == SendVideoPacket(frameType, dataBuffer, payloadLength, rtpHeaderLength))
         {
@@ -469,43 +469,43 @@ RTPSenderH264::SendH264_STAP_A(const FrameType frameType,
 } // end STAP-A
 
 // STAP-A for H.264 SVC
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
                                       const H264Info* ptrH264Info,
-                                      WebRtc_UWord16 &idxNALU,
-                                      const WebRtc_Word8 payloadType,
-                                      const WebRtc_UWord32 captureTimeStamp,
+                                      uint16_t &idxNALU,
+                                      const int8_t payloadType,
+                                      const uint32_t captureTimeStamp,
                                       bool& switchToFUA,
-                                      WebRtc_Word32 &payloadBytesToSend,
-                                      const WebRtc_UWord8*& data,
-                                      const WebRtc_UWord16 rtpHeaderLength,
-                                      WebRtc_UWord16& decodingOrderNumber)
+                                      int32_t &payloadBytesToSend,
+                                      const uint8_t*& data,
+                                      const uint16_t rtpHeaderLength,
+                                      uint16_t& decodingOrderNumber)
 {
-    const WebRtc_Word32 H264_NALU_LENGTH = 2;
+    const int32_t H264_NALU_LENGTH = 2;
 
-    WebRtc_UWord16 h264HeaderLength = 1; // normal header length
-    WebRtc_UWord16 maxPayloadLengthSTAP_A = _rtpSender.MaxPayloadLength() - FECPacketOverhead() - rtpHeaderLength - h264HeaderLength - H264_NALU_LENGTH;
-    WebRtc_Word32 dataOffset = rtpHeaderLength + h264HeaderLength;
-    WebRtc_UWord8 NRI = 0;
-    WebRtc_UWord16 payloadBytesInPacket = 0;
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    uint16_t h264HeaderLength = 1; // normal header length
+    uint16_t maxPayloadLengthSTAP_A = _rtpSender.MaxPayloadLength() - FECPacketOverhead() - rtpHeaderLength - h264HeaderLength - H264_NALU_LENGTH;
+    int32_t dataOffset = rtpHeaderLength + h264HeaderLength;
+    uint8_t NRI = 0;
+    uint16_t payloadBytesInPacket = 0;
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
     bool firstNALUNotIDR = true; //delta
 
     // Put PACSI NAL unit into packet
-    WebRtc_Word32 lengthPACSI = 0;
-    WebRtc_UWord32 PACSI_NALlength = ptrH264Info->PACSI[idxNALU].NALlength;
+    int32_t lengthPACSI = 0;
+    uint32_t PACSI_NALlength = ptrH264Info->PACSI[idxNALU].NALlength;
     if (PACSI_NALlength > maxPayloadLengthSTAP_A)
     {
         return -1;
     }
-    dataBuffer[dataOffset++] = (WebRtc_UWord8)(PACSI_NALlength >> 8);
-    dataBuffer[dataOffset++] = (WebRtc_UWord8)(PACSI_NALlength & 0xff);
+    dataBuffer[dataOffset++] = (uint8_t)(PACSI_NALlength >> 8);
+    dataBuffer[dataOffset++] = (uint8_t)(PACSI_NALlength & 0xff);
 
     // end bit will be updated later, since another NALU in this packet might be the last
-    WebRtc_Word32 lengthPASCINALU = AddH264PACSINALU(true,
-                                                   false,
-                                                   ptrH264Info->PACSI[idxNALU],
-                                                   ptrH264Info->SVCheader[idxNALU],
+    int32_t lengthPASCINALU = AddH264PACSINALU(true,
+                                               false,
+                                               ptrH264Info->PACSI[idxNALU],
+                                               ptrH264Info->SVCheader[idxNALU],
                            decodingOrderNumber,
                            dataBuffer,
                                                    dataOffset);
@@ -516,7 +516,7 @@ RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
     decodingOrderNumber++;
 
     lengthPACSI = H264_NALU_LENGTH + lengthPASCINALU;
-    maxPayloadLengthSTAP_A -= (WebRtc_UWord16)lengthPACSI;
+    maxPayloadLengthSTAP_A -= (uint16_t)lengthPACSI;
     if (ptrH264Info->payloadSize[idxNALU] > maxPayloadLengthSTAP_A)
     {
         // we need to fragment NAL switch to mode FU-A
@@ -528,7 +528,7 @@ RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
         firstNALUNotIDR = true;
     }
 
-    WebRtc_UWord32 layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
+    uint32_t layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
                          (ptrH264Info->SVCheader[idxNALU].qualityID << 8) +
                           ptrH264Info->SVCheader[idxNALU].temporalID;
 
@@ -560,7 +560,7 @@ RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
                 continue;
             }
 
-            const WebRtc_UWord32 layerNALU = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
+            const uint32_t layerNALU = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
                                            (ptrH264Info->SVCheader[idxNALU].qualityID << 8) +
                                             ptrH264Info->SVCheader[idxNALU].temporalID;
 
@@ -573,15 +573,15 @@ RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
                     NRI = ptrH264Info->NRI[idxNALU];
                 }
                 // put NAL size into packet
-                dataBuffer[dataOffset] = (WebRtc_UWord8)(ptrH264Info->payloadSize[idxNALU] >> 8);
+                dataBuffer[dataOffset] = (uint8_t)(ptrH264Info->payloadSize[idxNALU] >> 8);
                 dataOffset++;
-                dataBuffer[dataOffset] = (WebRtc_UWord8)(ptrH264Info->payloadSize[idxNALU] & 0xff);
+                dataBuffer[dataOffset] = (uint8_t)(ptrH264Info->payloadSize[idxNALU] & 0xff);
                 dataOffset++;
                 // Put payload in packet
                 memcpy(&dataBuffer[dataOffset], &data[ptrH264Info->startCodeSize[idxNALU]], ptrH264Info->payloadSize[idxNALU]);
                 dataOffset += ptrH264Info->payloadSize[idxNALU];
                 data += ptrH264Info->payloadSize[idxNALU] + ptrH264Info->startCodeSize[idxNALU];
-                payloadBytesInPacket += (WebRtc_UWord16)(ptrH264Info->payloadSize[idxNALU] + H264_NALU_LENGTH);
+                payloadBytesInPacket += (uint16_t)(ptrH264Info->payloadSize[idxNALU] + H264_NALU_LENGTH);
                 payloadBytesToSend -= ptrH264Info->payloadSize[idxNALU] + ptrH264Info->startCodeSize[idxNALU];
             } else
             {
@@ -595,7 +595,7 @@ RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
                 {
                     // we don't send this NALU due to it's a new layer
                     // check if we should send the next or if this is the last
-                    const WebRtc_UWord8 dependencyQualityID = (ptrH264Info->SVCheader[idxNALU].dependencyID << 4) + ptrH264Info->SVCheader[idxNALU].qualityID;
+                    const uint8_t dependencyQualityID = (ptrH264Info->SVCheader[idxNALU].dependencyID << 4) + ptrH264Info->SVCheader[idxNALU].qualityID;
 
                     bool highestLayer;
                     if(SendH264SVCLayer(frameType,
@@ -649,7 +649,7 @@ RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
                 dataBuffer[rtpHeaderLength + H264_NALU_LENGTH + 2] |= 0x40;
             }
         }
-        const WebRtc_UWord16 payloadLength = payloadBytesInPacket + h264HeaderLength + (WebRtc_UWord16)lengthPACSI;
+        const uint16_t payloadLength = payloadBytesInPacket + h264HeaderLength + (uint16_t)lengthPACSI;
         if(-1 == SendVideoPacket(frameType,
                                  dataBuffer,
                                  payloadLength,
@@ -662,30 +662,30 @@ RTPSenderH264::SendH264_STAP_A_PACSI(const FrameType frameType,
     return 0;
 } // end STAP-A
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264_FU_A(const FrameType frameType,
                               const H264Info* ptrH264Info,
-                              WebRtc_UWord16 &idxNALU,
-                              const WebRtc_Word8 payloadType,
-                              const WebRtc_UWord32 captureTimeStamp,
-                              WebRtc_Word32 &payloadBytesToSend,
-                              const WebRtc_UWord8*& data,
-                              const WebRtc_UWord16 rtpHeaderLength,
-                              WebRtc_UWord16& decodingOrderNumber,
+                              uint16_t &idxNALU,
+                              const int8_t payloadType,
+                              const uint32_t captureTimeStamp,
+                              int32_t &payloadBytesToSend,
+                              const uint8_t*& data,
+                              const uint16_t rtpHeaderLength,
+                              uint16_t& decodingOrderNumber,
                               const bool sendSVCPACSI)
 {
 
     // FUA for the rest of the frame
-    WebRtc_UWord16 maxPayloadLength = _rtpSender.MaxPayloadLength() - FECPacketOverhead() - rtpHeaderLength;
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
-    WebRtc_UWord32 payloadBytesRemainingInNALU = ptrH264Info->payloadSize[idxNALU];
+    uint16_t maxPayloadLength = _rtpSender.MaxPayloadLength() - FECPacketOverhead() - rtpHeaderLength;
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    uint32_t payloadBytesRemainingInNALU = ptrH264Info->payloadSize[idxNALU];
 
     bool isBaseLayer=false;
 
     if(payloadBytesRemainingInNALU > maxPayloadLength)
     {
         // we need to fragment NALU
-        const WebRtc_UWord16 H264_FUA_LENGTH = 2; // FU-a H.264 header is 2 bytes
+        const uint16_t H264_FUA_LENGTH = 2; // FU-a H.264 header is 2 bytes
 
         if(sendSVCPACSI)
         {
@@ -697,7 +697,7 @@ RTPSenderH264::SendH264_FU_A(const FrameType frameType,
                                  true,
                                  false);
 
-            WebRtc_UWord32 layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
+            uint32_t layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
                                  (ptrH264Info->SVCheader[idxNALU].qualityID << 8) +
                                   ptrH264Info->SVCheader[idxNALU].temporalID;
             isBaseLayer=(layer==0);
@@ -706,13 +706,13 @@ RTPSenderH264::SendH264_FU_A(const FrameType frameType,
         // First packet
         _rtpSender.BuildRTPheader(dataBuffer,payloadType, false, captureTimeStamp);
 
-        WebRtc_UWord16 maxPayloadLengthFU_A = maxPayloadLength - H264_FUA_LENGTH ;
-        WebRtc_UWord8 fuaIndc = 28 + ptrH264Info->NRI[idxNALU];
+        uint16_t maxPayloadLengthFU_A = maxPayloadLength - H264_FUA_LENGTH ;
+        uint8_t fuaIndc = 28 + ptrH264Info->NRI[idxNALU];
         dataBuffer[rtpHeaderLength] = fuaIndc;                                                     // FU-A indicator
-        dataBuffer[rtpHeaderLength+1] = (WebRtc_UWord8)(ptrH264Info->type[idxNALU] + 0x80)/*start*/; // FU-A header
+        dataBuffer[rtpHeaderLength+1] = (uint8_t)(ptrH264Info->type[idxNALU] + 0x80)/*start*/; // FU-A header
 
         memcpy(&dataBuffer[rtpHeaderLength + H264_FUA_LENGTH], &data[ptrH264Info->startCodeSize[idxNALU]+1], maxPayloadLengthFU_A);
-        WebRtc_UWord16 payloadLength = maxPayloadLengthFU_A + H264_FUA_LENGTH;
+        uint16_t payloadLength = maxPayloadLengthFU_A + H264_FUA_LENGTH;
         if(-1 == SendVideoPacket(frameType, dataBuffer, payloadLength, rtpHeaderLength, isBaseLayer))
         {
             return -1;
@@ -740,7 +740,7 @@ RTPSenderH264::SendH264_FU_A(const FrameType frameType,
             // prepare next header
             _rtpSender.BuildRTPheader(dataBuffer, payloadType, false, captureTimeStamp);
 
-            dataBuffer[rtpHeaderLength] = (WebRtc_UWord8)fuaIndc;           // FU-A indicator
+            dataBuffer[rtpHeaderLength] = (uint8_t)fuaIndc;           // FU-A indicator
             dataBuffer[rtpHeaderLength+1] = ptrH264Info->type[idxNALU];   // FU-A header
 
             memcpy(&dataBuffer[rtpHeaderLength+H264_FUA_LENGTH], data, maxPayloadLengthFU_A);
@@ -772,7 +772,7 @@ RTPSenderH264::SendH264_FU_A(const FrameType frameType,
                 // check if it's the the next layer should not be sent
 
                 // check if we should send the next or if this is the last
-                const WebRtc_UWord8 dependencyQualityID = (ptrH264Info->SVCheader[idxNALU+1].dependencyID << 4) +
+                const uint8_t dependencyQualityID = (ptrH264Info->SVCheader[idxNALU+1].dependencyID << 4) +
                                                          ptrH264Info->SVCheader[idxNALU+1].qualityID;
 
                 bool highestLayer;
@@ -787,11 +787,11 @@ RTPSenderH264::SendH264_FU_A(const FrameType frameType,
             }
         }
         // last packet in NALU
-        _rtpSender.BuildRTPheader(dataBuffer, payloadType,(payloadBytesToSend == (WebRtc_Word32)payloadBytesRemainingInNALU)?true:false, captureTimeStamp);
+        _rtpSender.BuildRTPheader(dataBuffer, payloadType,(payloadBytesToSend == (int32_t)payloadBytesRemainingInNALU)?true:false, captureTimeStamp);
         dataBuffer[rtpHeaderLength+1] = ptrH264Info->type[idxNALU] + 0x40/*stop*/; // FU-A header
 
         memcpy(&dataBuffer[rtpHeaderLength+H264_FUA_LENGTH], data, payloadBytesRemainingInNALU);
-        payloadLength = (WebRtc_UWord16)payloadBytesRemainingInNALU + H264_FUA_LENGTH;
+        payloadLength = (uint16_t)payloadBytesRemainingInNALU + H264_FUA_LENGTH;
         payloadBytesToSend -= payloadBytesRemainingInNALU;
         if(payloadBytesToSend != 0)
         {
@@ -819,22 +819,22 @@ RTPSenderH264::SendH264_FU_A(const FrameType frameType,
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264_SingleMode(const FrameType frameType,
                                     const H264Info* ptrH264Info,
-                                    WebRtc_UWord16 &idxNALU,
-                                    const WebRtc_Word8 payloadType,
-                                    const WebRtc_UWord32 captureTimeStamp,
-                                    WebRtc_Word32 &payloadBytesToSend,
-                                    const WebRtc_UWord8*& data,
-                                    const WebRtc_UWord16 rtpHeaderLength,
-                                    WebRtc_UWord16& decodingOrderNumber,
+                                    uint16_t &idxNALU,
+                                    const int8_t payloadType,
+                                    const uint32_t captureTimeStamp,
+                                    int32_t &payloadBytesToSend,
+                                    const uint8_t*& data,
+                                    const uint16_t rtpHeaderLength,
+                                    uint16_t& decodingOrderNumber,
                                     const bool sendSVCPACSI)
 {
     // no H.264 header lenght in single mode
     // we use WEBRTC_IP_PACKET_SIZE instead of the configured MTU since it's better to send fragmented UDP than not to send
-    const WebRtc_UWord16 maxPayloadLength = WEBRTC_IP_PACKET_SIZE - _rtpSender.PacketOverHead() - FECPacketOverhead() - rtpHeaderLength;
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    const uint16_t maxPayloadLength = WEBRTC_IP_PACKET_SIZE - _rtpSender.PacketOverHead() - FECPacketOverhead() - rtpHeaderLength;
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
     bool isBaseLayer=false;
 
     if(ptrH264Info->payloadSize[idxNALU] > maxPayloadLength)
@@ -862,7 +862,7 @@ RTPSenderH264::SendH264_SingleMode(const FrameType frameType,
                              true,
                              true);
 
-        WebRtc_UWord32 layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
+        uint32_t layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
                              (ptrH264Info->SVCheader[idxNALU].qualityID << 8) +
                               ptrH264Info->SVCheader[idxNALU].temporalID;
         isBaseLayer=(layer==0);
@@ -871,7 +871,7 @@ RTPSenderH264::SendH264_SingleMode(const FrameType frameType,
     // Put payload in packet
     memcpy(&dataBuffer[rtpHeaderLength], &data[ptrH264Info->startCodeSize[idxNALU]], ptrH264Info->payloadSize[idxNALU]);
 
-    WebRtc_UWord16 payloadBytesInPacket = (WebRtc_UWord16)ptrH264Info->payloadSize[idxNALU];
+    uint16_t payloadBytesInPacket = (uint16_t)ptrH264Info->payloadSize[idxNALU];
     payloadBytesToSend -= ptrH264Info->payloadSize[idxNALU] + ptrH264Info->startCodeSize[idxNALU]; // left to send
 
     //
@@ -891,27 +891,27 @@ RTPSenderH264::SendH264_SingleMode(const FrameType frameType,
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264_SinglePACSI(const FrameType frameType,
                                     const H264Info* ptrH264Info,
-                                     const WebRtc_UWord16 idxNALU,
-                                     const WebRtc_Word8 payloadType,
-                                     const WebRtc_UWord32 captureTimeStamp,
+                                     const uint16_t idxNALU,
+                                     const int8_t payloadType,
+                                     const uint32_t captureTimeStamp,
                                      const bool firstPacketInNALU,
                                      const bool lastPacketInNALU);
 {
     // Send PACSI in single mode
-    WebRtc_UWord8 dataBuffer[WEBRTC_IP_PACKET_SIZE];
-    WebRtc_UWord16 rtpHeaderLength = (WebRtc_UWord16)_rtpSender.BuildRTPheader(dataBuffer, payloadType,false, captureTimeStamp);
-    WebRtc_Word32 dataOffset = rtpHeaderLength;
+    uint8_t dataBuffer[WEBRTC_IP_PACKET_SIZE];
+    uint16_t rtpHeaderLength = (uint16_t)_rtpSender.BuildRTPheader(dataBuffer, payloadType,false, captureTimeStamp);
+    int32_t dataOffset = rtpHeaderLength;
 
-    WebRtc_Word32 lengthPASCINALU = AddH264PACSINALU(firstPacketInNALU,
-                                                   lastPacketInNALU,
-                                                   ptrH264Info->PACSI[idxNALU],
-                                                   ptrH264Info->SVCheader[idxNALU],
-                                                   decodingOrderNumber,
-                                                   dataBuffer,
-                                                   dataOffset);
+    int32_t lengthPASCINALU = AddH264PACSINALU(firstPacketInNALU,
+                                               lastPacketInNALU,
+                                               ptrH264Info->PACSI[idxNALU],
+                                               ptrH264Info->SVCheader[idxNALU],
+                                               decodingOrderNumber,
+                                               dataBuffer,
+                                               dataOffset);
 
     if (lengthPASCINALU <= 0)
     {
@@ -919,13 +919,13 @@ RTPSenderH264::SendH264_SinglePACSI(const FrameType frameType,
     }
     decodingOrderNumber++;
 
-    WebRtc_UWord16 payloadBytesInPacket = (WebRtc_UWord16)lengthPASCINALU;
+    uint16_t payloadBytesInPacket = (uint16_t)lengthPASCINALU;
 
     // Set payload header (first payload byte co-serves as the payload header)
     dataBuffer[rtpHeaderLength] &= 0x1f;        // zero out NRI field
     dataBuffer[rtpHeaderLength] |= ptrH264Info->NRI[idxNALU]; // nri
 
-    const WebRtc_UWord32 layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
+    const uint32_t layer = (ptrH264Info->SVCheader[idxNALU].dependencyID << 16)+
                                (ptrH264Info->SVCheader[idxNALU].qualityID << 8) +
                                 ptrH264Info->SVCheader[idxNALU].temporalID;
 
@@ -939,17 +939,17 @@ RTPSenderH264::SendH264_SinglePACSI(const FrameType frameType,
 
 
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264SVC(const FrameType frameType,
-                            const WebRtc_Word8 payloadType,
-                            const WebRtc_UWord32 captureTimeStamp,
-                            const WebRtc_UWord8* payloadData,
-                            const WebRtc_UWord32 payloadSize,
+                            const int8_t payloadType,
+                            const uint32_t captureTimeStamp,
+                            const uint8_t* payloadData,
+                            const uint32_t payloadSize,
                             H264Information& h264Information,
-                            WebRtc_UWord16& decodingOrderNumber)
+                            uint16_t& decodingOrderNumber)
 {
-    WebRtc_Word32 payloadBytesToSend = payloadSize;
-    const WebRtc_UWord16 rtpHeaderLength = _rtpSender.RTPHeaderLength();
+    int32_t payloadBytesToSend = payloadSize;
+    const uint16_t rtpHeaderLength = _rtpSender.RTPHeaderLength();
 
     const H264Info* ptrH264Info = NULL;
     if (h264Information.GetInfo(payloadData,payloadSize, ptrH264Info) == -1)
@@ -960,7 +960,7 @@ RTPSenderH264::SendH264SVC(const FrameType frameType,
     {
         // we need to check if we should drop the frame
         // it could be a temporal layer (aka a temporal frame)
-        const WebRtc_UWord8 dependencyQualityID = (ptrH264Info->SVCheader[0].dependencyID << 4) + ptrH264Info->SVCheader[0].qualityID;
+        const uint8_t dependencyQualityID = (ptrH264Info->SVCheader[0].dependencyID << 4) + ptrH264Info->SVCheader[0].qualityID;
 
         bool dummyHighestLayer;
         if(SendH264SVCLayer(frameType,
@@ -973,7 +973,7 @@ RTPSenderH264::SendH264SVC(const FrameType frameType,
         }
     }
 
-    WebRtc_UWord16 idxNALU = 0;
+    uint16_t idxNALU = 0;
     while (payloadBytesToSend > 0)
     {
         bool switchToFUA = false;
@@ -1010,14 +1010,14 @@ RTPSenderH264::SendH264SVC(const FrameType frameType,
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SetH264PacketizationMode(const H264PacketizationMode mode)
 {
     _h264Mode = mode;
     return 0;
 }
 
-WebRtc_Word32
+int32_t
 RTPSenderH264::SetH264SendModeNALU_PPS_SPS(const bool dontSend)
 {
     _h264SendPPS_SPS = !dontSend;
@@ -1026,11 +1026,11 @@ RTPSenderH264::SetH264SendModeNALU_PPS_SPS(const bool dontSend)
 
 bool
 RTPSenderH264::SendH264SVCLayer(const FrameType frameType,
-                                  const WebRtc_UWord8 temporalID,
-                                  const WebRtc_UWord8 dependencyQualityID,
+                                  const uint8_t temporalID,
+                                  const uint8_t dependencyQualityID,
                                   bool& higestLayer)
 {
-    WebRtc_UWord8 dependencyID  = dependencyQualityID >> 4;
+    uint8_t dependencyID  = dependencyQualityID >> 4;
 
     // keyframe required to switch between dependency layers not quality and temporal
     if( _highestDependencyLayer != _highestDependencyLayerOld)
@@ -1146,11 +1146,11 @@ RTPSenderH264::SendH264SVCLayer(const FrameType frameType,
     return true;
 }
 
-WebRtc_Word32
-RTPSenderH264::SetHighestSendLayer(const WebRtc_UWord8 dependencyQualityLayer,
-                                   const WebRtc_UWord8 temporalLayer)
+int32_t
+RTPSenderH264::SetHighestSendLayer(const uint8_t dependencyQualityLayer,
+                                   const uint8_t temporalLayer)
 {
-    const WebRtc_UWord8 dependencyLayer = (dependencyQualityLayer >> 4);
+    const uint8_t dependencyLayer = (dependencyQualityLayer >> 4);
 
     if(_highestDependencyLayerOld != _highestDependencyLayer)
     {
@@ -1175,9 +1175,9 @@ RTPSenderH264::SetHighestSendLayer(const WebRtc_UWord8 dependencyQualityLayer,
     return 0;
 }
 
-WebRtc_Word32
-RTPSenderH264::HighestSendLayer(WebRtc_UWord8& dependencyQualityLayer,
-                                WebRtc_UWord8& temporalLayer)
+int32_t
+RTPSenderH264::HighestSendLayer(uint8_t& dependencyQualityLayer,
+                                uint8_t& temporalLayer)
 {
     if (!_useHighestSendLayer)
     {
@@ -1191,26 +1191,26 @@ RTPSenderH264::HighestSendLayer(WebRtc_UWord8& dependencyQualityLayer,
 /*
 *   H.264
 */
-WebRtc_Word32
+int32_t
 RTPSenderH264::SendH264(const FrameType frameType,
-                        const WebRtc_Word8 payloadType,
-                        const WebRtc_UWord32 captureTimeStamp,
-                        const WebRtc_UWord8* payloadData,
-                        const WebRtc_UWord32 payloadSize,
+                        const int8_t payloadType,
+                        const uint32_t captureTimeStamp,
+                        const uint8_t* payloadData,
+                        const uint32_t payloadSize,
                         H264Information& h264Information)
 {
-    WebRtc_Word32 payloadBytesToSend = payloadSize;
-    const WebRtc_UWord8* data = payloadData;
+    int32_t payloadBytesToSend = payloadSize;
+    const uint8_t* data = payloadData;
     bool switchToFUA = false;
-    const WebRtc_UWord16 rtpHeaderLength = _rtpSender.RTPHeaderLength();
+    const uint16_t rtpHeaderLength = _rtpSender.RTPHeaderLength();
 
     const H264Info* ptrH264Info = NULL;
     if (h264Information.GetInfo(payloadData,payloadSize, ptrH264Info) == -1)
     {
         return -1;
     }
-    WebRtc_UWord16 idxNALU = 0;
-    WebRtc_UWord16 DONCdummy = 0;
+    uint16_t idxNALU = 0;
+    uint16_t DONCdummy = 0;
 
     while (payloadBytesToSend > 0)
     {

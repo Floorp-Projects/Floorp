@@ -21,12 +21,12 @@
 namespace webrtc {
 enum RtpVideoCodecTypes
 {
-    kRtpNoVideo       = 0,
+    kRtpGenericVideo  = 0,
     kRtpFecVideo      = 10,
     kRtpVp8Video      = 11
 };
 
-const WebRtc_UWord8 kRtpMarkerBitMask = 0x80;
+const uint8_t kRtpMarkerBitMask = 0x80;
 
 namespace ModuleRTPUtility
 {
@@ -38,14 +38,14 @@ namespace ModuleRTPUtility
 
     struct AudioPayload
     {
-        WebRtc_UWord32    frequency;
-        WebRtc_UWord8     channels;
-        WebRtc_UWord32    rate;
+        uint32_t    frequency;
+        uint8_t     channels;
+        uint32_t    rate;
     };
     struct VideoPayload
     {
         RtpVideoCodecTypes   videoCodecType;
-        WebRtc_UWord32       maxRate;
+        uint32_t       maxRate;
     };
     union PayloadUnion
     {
@@ -59,41 +59,26 @@ namespace ModuleRTPUtility
         PayloadUnion typeSpecific;
     };
 
-    typedef std::map<WebRtc_Word8, Payload*> PayloadTypeMap;
-
-    // Return a clock that reads the time as reported by the operating
-    // system. The returned instances are guaranteed to read the same
-    // times; in particular, they return relative times relative to
-    // the same base.
-    // Note that even though the instances returned by this function
-    // read the same times a new object is created every time this
-    // API is called. The ownership of this object belongs to the
-    // caller.
-    RtpRtcpClock* GetSystemClock();
+    typedef std::map<int8_t, Payload*> PayloadTypeMap;
 
     // Return the current RTP timestamp from the NTP timestamp
     // returned by the specified clock.
-    WebRtc_UWord32 GetCurrentRTP(RtpRtcpClock* clock, WebRtc_UWord32 freq);
+    uint32_t GetCurrentRTP(Clock* clock, uint32_t freq);
 
     // Return the current RTP absolute timestamp.
-    WebRtc_UWord32 ConvertNTPTimeToRTP(WebRtc_UWord32 NTPsec,
-                                       WebRtc_UWord32 NTPfrac,
-                                       WebRtc_UWord32 freq);
+    uint32_t ConvertNTPTimeToRTP(uint32_t NTPsec,
+                                 uint32_t NTPfrac,
+                                 uint32_t freq);
 
-    // Return the time in milliseconds corresponding to the specified
-    // NTP timestamp.
-    WebRtc_UWord32 ConvertNTPTimeToMS(WebRtc_UWord32 NTPsec,
-                                      WebRtc_UWord32 NTPfrac);
-
-    WebRtc_UWord32 pow2(WebRtc_UWord8 exp);
+    uint32_t pow2(uint8_t exp);
 
     // Returns a pointer to the payload data given a packet.
-    const WebRtc_UWord8* GetPayloadData(const WebRtcRTPHeader* rtp_header,
-                                        const WebRtc_UWord8* packet);
+    const uint8_t* GetPayloadData(const WebRtcRTPHeader* rtp_header,
+                                  const uint8_t* packet);
 
     // Returns payload length given a packet.
-    WebRtc_UWord16 GetPayloadDataLength(const WebRtcRTPHeader* rtp_header,
-                                        const WebRtc_UWord16 packet_length);
+    uint16_t GetPayloadDataLength(const WebRtcRTPHeader* rtp_header,
+                                  const uint16_t packet_length);
 
     // Returns true if |newTimestamp| is older than |existingTimestamp|.
     // |wrapped| will be set to true if there has been a wraparound between the
@@ -104,38 +89,38 @@ namespace ModuleRTPUtility
 
     bool StringCompare(const char* str1,
                        const char* str2,
-                       const WebRtc_UWord32 length);
+                       const uint32_t length);
 
-    void AssignUWord32ToBuffer(WebRtc_UWord8* dataBuffer, WebRtc_UWord32 value);
-    void AssignUWord24ToBuffer(WebRtc_UWord8* dataBuffer, WebRtc_UWord32 value);
-    void AssignUWord16ToBuffer(WebRtc_UWord8* dataBuffer, WebRtc_UWord16 value);
+    void AssignUWord32ToBuffer(uint8_t* dataBuffer, uint32_t value);
+    void AssignUWord24ToBuffer(uint8_t* dataBuffer, uint32_t value);
+    void AssignUWord16ToBuffer(uint8_t* dataBuffer, uint16_t value);
 
     /**
      * Converts a network-ordered two-byte input buffer to a host-ordered value.
      * \param[in] dataBuffer Network-ordered two-byte buffer to convert.
      * \return Host-ordered value.
      */
-    WebRtc_UWord16 BufferToUWord16(const WebRtc_UWord8* dataBuffer);
+    uint16_t BufferToUWord16(const uint8_t* dataBuffer);
 
     /**
      * Converts a network-ordered three-byte input buffer to a host-ordered value.
      * \param[in] dataBuffer Network-ordered three-byte buffer to convert.
      * \return Host-ordered value.
      */
-    WebRtc_UWord32 BufferToUWord24(const WebRtc_UWord8* dataBuffer);
+    uint32_t BufferToUWord24(const uint8_t* dataBuffer);
 
     /**
      * Converts a network-ordered four-byte input buffer to a host-ordered value.
      * \param[in] dataBuffer Network-ordered four-byte buffer to convert.
      * \return Host-ordered value.
      */
-    WebRtc_UWord32 BufferToUWord32(const WebRtc_UWord8* dataBuffer);
+    uint32_t BufferToUWord32(const uint8_t* dataBuffer);
 
     class RTPHeaderParser
     {
     public:
-        RTPHeaderParser(const WebRtc_UWord8* rtpData,
-                        const WebRtc_UWord32 rtpDataLength);
+        RTPHeaderParser(const uint8_t* rtpData,
+                        const uint32_t rtpDataLength);
         ~RTPHeaderParser();
 
         bool RTCP() const;
@@ -146,15 +131,15 @@ namespace ModuleRTPUtility
         void ParseOneByteExtensionHeader(
             WebRtcRTPHeader& parsedPacket,
             const RtpHeaderExtensionMap* ptrExtensionMap,
-            const WebRtc_UWord8* ptrRTPDataExtensionEnd,
-            const WebRtc_UWord8* ptr) const;
+            const uint8_t* ptrRTPDataExtensionEnd,
+            const uint8_t* ptr) const;
 
-        WebRtc_UWord8 ParsePaddingBytes(
-            const WebRtc_UWord8* ptrRTPDataExtensionEnd,
-            const WebRtc_UWord8* ptr) const;
+        uint8_t ParsePaddingBytes(
+            const uint8_t* ptrRTPDataExtensionEnd,
+            const uint8_t* ptr) const;
 
-        const WebRtc_UWord8* const _ptrRTPDataBegin;
-        const WebRtc_UWord8* const _ptrRTPDataEnd;
+        const uint8_t* const _ptrRTPDataBegin;
+        const uint8_t* const _ptrRTPDataEnd;
     };
 
     enum FrameTypes
@@ -180,8 +165,8 @@ namespace ModuleRTPUtility
         int                  frameWidth;
         int                  frameHeight;
 
-        const WebRtc_UWord8*   data;
-        WebRtc_UWord16         dataLength;
+        const uint8_t*   data;
+        uint16_t         dataLength;
     };
 
     union RTPPayloadUnion
@@ -203,9 +188,9 @@ namespace ModuleRTPUtility
     {
     public:
         RTPPayloadParser(const RtpVideoCodecTypes payloadType,
-                         const WebRtc_UWord8* payloadData,
-                         const WebRtc_UWord16 payloadDataLength, // Length w/o padding.
-                         const WebRtc_Word32 id);
+                         const uint8_t* payloadData,
+                         const uint16_t payloadDataLength, // Length w/o padding.
+                         const int32_t id);
 
         ~RTPPayloadParser();
 
@@ -217,32 +202,32 @@ namespace ModuleRTPUtility
         bool ParseVP8(RTPPayload& parsedPacket) const;
 
         int ParseVP8Extension(RTPPayloadVP8 *vp8,
-                              const WebRtc_UWord8 *dataPtr,
+                              const uint8_t *dataPtr,
                               int dataLength) const;
 
         int ParseVP8PictureID(RTPPayloadVP8 *vp8,
-                              const WebRtc_UWord8 **dataPtr,
+                              const uint8_t **dataPtr,
                               int *dataLength,
                               int *parsedBytes) const;
 
         int ParseVP8Tl0PicIdx(RTPPayloadVP8 *vp8,
-                              const WebRtc_UWord8 **dataPtr,
+                              const uint8_t **dataPtr,
                               int *dataLength,
                               int *parsedBytes) const;
 
         int ParseVP8TIDAndKeyIdx(RTPPayloadVP8 *vp8,
-                                 const WebRtc_UWord8 **dataPtr,
+                                 const uint8_t **dataPtr,
                                  int *dataLength,
                                  int *parsedBytes) const;
 
         int ParseVP8FrameSize(RTPPayload& parsedPacket,
-                              const WebRtc_UWord8 *dataPtr,
+                              const uint8_t *dataPtr,
                               int dataLength) const;
 
     private:
-        WebRtc_Word32               _id;
-        const WebRtc_UWord8*        _dataPtr;
-        const WebRtc_UWord16        _dataLength;
+        int32_t               _id;
+        const uint8_t*        _dataPtr;
+        const uint16_t        _dataLength;
         const RtpVideoCodecTypes    _videoType;
     };
 

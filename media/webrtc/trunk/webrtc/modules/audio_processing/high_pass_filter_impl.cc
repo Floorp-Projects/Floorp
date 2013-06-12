@@ -21,16 +21,16 @@
 
 namespace webrtc {
 namespace {
-const WebRtc_Word16 kFilterCoefficients8kHz[5] =
+const int16_t kFilterCoefficients8kHz[5] =
     {3798, -7596, 3798, 7807, -3733};
 
-const WebRtc_Word16 kFilterCoefficients[5] =
+const int16_t kFilterCoefficients[5] =
     {4012, -8024, 4012, 8002, -3913};
 
 struct FilterState {
-  WebRtc_Word16 y[4];
-  WebRtc_Word16 x[2];
-  const WebRtc_Word16* ba;
+  int16_t y[4];
+  int16_t x[2];
+  const int16_t* ba;
 };
 
 int InitializeFilter(FilterState* hpf, int sample_rate_hz) {
@@ -48,13 +48,13 @@ int InitializeFilter(FilterState* hpf, int sample_rate_hz) {
   return AudioProcessing::kNoError;
 }
 
-int Filter(FilterState* hpf, WebRtc_Word16* data, int length) {
+int Filter(FilterState* hpf, int16_t* data, int length) {
   assert(hpf != NULL);
 
-  WebRtc_Word32 tmp_int32 = 0;
-  WebRtc_Word16* y = hpf->y;
-  WebRtc_Word16* x = hpf->x;
-  const WebRtc_Word16* ba = hpf->ba;
+  int32_t tmp_int32 = 0;
+  int16_t* y = hpf->y;
+  int16_t* x = hpf->x;
+  const int16_t* ba = hpf->ba;
 
   for (int i = 0; i < length; i++) {
     //  y[i] = b[0] * x[i] + b[1] * x[i-1] + b[2] * x[i-2]
@@ -82,20 +82,20 @@ int Filter(FilterState* hpf, WebRtc_Word16* data, int length) {
     // Update state (filtered part)
     y[2] = y[0];
     y[3] = y[1];
-    y[0] = static_cast<WebRtc_Word16>(tmp_int32 >> 13);
-    y[1] = static_cast<WebRtc_Word16>((tmp_int32 -
-        WEBRTC_SPL_LSHIFT_W32(static_cast<WebRtc_Word32>(y[0]), 13)) << 2);
+    y[0] = static_cast<int16_t>(tmp_int32 >> 13);
+    y[1] = static_cast<int16_t>((tmp_int32 -
+        WEBRTC_SPL_LSHIFT_W32(static_cast<int32_t>(y[0]), 13)) << 2);
 
     // Rounding in Q12, i.e. add 2^11
     tmp_int32 += 2048;
 
     // Saturate (to 2^27) so that the HP filtered signal does not overflow
-    tmp_int32 = WEBRTC_SPL_SAT(static_cast<WebRtc_Word32>(134217727),
+    tmp_int32 = WEBRTC_SPL_SAT(static_cast<int32_t>(134217727),
                                tmp_int32,
-                               static_cast<WebRtc_Word32>(-134217728));
+                               static_cast<int32_t>(-134217728));
 
     // Convert back to Q0 and use rounding
-    data[i] = (WebRtc_Word16)WEBRTC_SPL_RSHIFT_W32(tmp_int32, 12);
+    data[i] = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp_int32, 12);
 
   }
 

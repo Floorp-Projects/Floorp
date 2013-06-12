@@ -29,33 +29,33 @@ public:
     
     void EnableTemporalDecimation(bool enable);
     
-    WebRtc_Word32 SetMaxFrameRate(WebRtc_UWord32 maxFrameRate);
-    WebRtc_Word32 SetTargetFrameRate(WebRtc_UWord32 frameRate);
+    int32_t SetMaxFrameRate(uint32_t maxFrameRate);
+    int32_t SetTargetFrameRate(uint32_t frameRate);
 
     bool DropFrame();
     
     void UpdateIncomingFrameRate();
 
     // Get Decimated Frame Rate/Dimensions
-    WebRtc_UWord32 DecimatedFrameRate();
+    uint32_t DecimatedFrameRate();
 
     //Get input frame rate
-    WebRtc_UWord32 InputFrameRate();
+    uint32_t InputFrameRate();
 
 private:
-    void ProcessIncomingFrameRate(WebRtc_Word64 now);
+    void ProcessIncomingFrameRate(int64_t now);
 
     enum { kFrameCountHistorySize = 90};
     enum { kFrameHistoryWindowMs = 2000};
 
     // Temporal decimation
-    WebRtc_Word32         _overShootModifier;
-    WebRtc_UWord32        _dropCount;
-    WebRtc_UWord32        _keepCount;
-    WebRtc_UWord32        _targetFrameRate;
+    int32_t         _overShootModifier;
+    uint32_t        _dropCount;
+    uint32_t        _keepCount;
+    uint32_t        _targetFrameRate;
     float               _incomingFrameRate;
-    WebRtc_UWord32        _maxFrameRate;
-    WebRtc_Word64         _incomingFrameTimes[kFrameCountHistorySize];
+    uint32_t        _maxFrameRate;
+    int64_t         _incomingFrameTimes[kFrameCountHistorySize];
     bool                _enableTemporalDecimation;
 
 };

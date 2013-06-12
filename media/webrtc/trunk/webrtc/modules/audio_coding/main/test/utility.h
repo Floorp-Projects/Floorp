@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef ACM_TEST_UTILITY_H
-#define ACM_TEST_UTILITY_H
+#ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_UTILITY_H_
+#define WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_UTILITY_H_
 
-#include "audio_coding_module.h"
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 
 namespace webrtc {
 
@@ -54,17 +54,6 @@ namespace webrtc {
         }                                                                                   \
     }while(0)
 
-
-
-#ifdef WIN32
-    /* Exclude rarely-used stuff from Windows headers */
-    //#define WIN32_LEAN_AND_MEAN 
-    /* OS-dependent case-insensitive string comparison */
-    #define STR_CASE_CMP(x,y) ::_stricmp(x,y)
-#else
-    /* OS-dependent case-insensitive string comparison */
-    #define STR_CASE_CMP(x,y) ::strcasecmp(x,y)
-#endif
 
 #define DESTROY_ACM(acm)                                                                    \
     do {                                                                                    \
@@ -116,7 +105,7 @@ private:
 class CircularBuffer
 {
 public:
-    CircularBuffer(WebRtc_UWord32 len);
+    CircularBuffer(uint32_t len);
     ~CircularBuffer();
 
     void SetArithMean(
@@ -127,14 +116,14 @@ public:
     void Update(
         const double newVal);
     void IsBufferFull();
-    
-    WebRtc_Word16 Variance(double& var);
-    WebRtc_Word16 ArithMean(double& mean);
+
+    int16_t Variance(double& var);
+    int16_t ArithMean(double& mean);
 
 protected:
     double* _buff;
-    WebRtc_UWord32 _idx;
-    WebRtc_UWord32 _buffLen;
+    uint32_t _idx;
+    uint32_t _buffLen;
 
     bool         _buffIsFull;
     bool         _calcAvg;
@@ -147,7 +136,7 @@ protected:
 
 
 
-WebRtc_Word16 ChooseCodec(
+int16_t ChooseCodec(
     CodecInst& codecInst);
 
 void PrintCodecs();
@@ -163,11 +152,11 @@ public:
     DTMFDetector();
     ~DTMFDetector();
     // used for inband DTMF detection
-    WebRtc_Word32 IncomingDtmf(const WebRtc_UWord8 digitDtmf, const bool toneEnded);
+    int32_t IncomingDtmf(const uint8_t digitDtmf, const bool toneEnded);
     void PrintDetectedDigits();
 
 private:
-    WebRtc_UWord32 _toneCntr[1000];
+    uint32_t _toneCntr[1000];
 
 };
 
@@ -180,16 +169,16 @@ public:
     VADCallback();
     ~VADCallback(){}
 
-    WebRtc_Word32 InFrameType(
-        WebRtc_Word16 frameType);
+    int32_t InFrameType(
+        int16_t frameType);
 
     void PrintFrameTypes();
     void Reset();
 
 private:
-    WebRtc_UWord32 _numFrameTypes[6];
+    uint32_t _numFrameTypes[6];
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
-#endif // ACM_TEST_UTILITY_H
+#endif  // WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_UTILITY_H_

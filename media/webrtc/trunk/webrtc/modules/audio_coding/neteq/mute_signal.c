@@ -16,16 +16,16 @@
 
 #include "signal_processing_library.h"
 
-void WebRtcNetEQ_MuteSignal(WebRtc_Word16 *pw16_inout, WebRtc_Word16 muteSlope,
-                            WebRtc_Word16 N)
+void WebRtcNetEQ_MuteSignal(int16_t *pw16_inout, int16_t muteSlope,
+                            int16_t N)
 {
     int i;
-    WebRtc_Word32 w32_tmp = 1048608; /* (16384<<6 + 32) */
+    int32_t w32_tmp = 1048608; /* (16384<<6 + 32) */
 
     for (i = 0; i < N; i++)
     {
         pw16_inout[i]
-            = (WebRtc_Word16) ((WEBRTC_SPL_MUL_16_16((WebRtc_Word16)(w32_tmp>>6), pw16_inout[i])
+            = (int16_t) ((WEBRTC_SPL_MUL_16_16((int16_t)(w32_tmp>>6), pw16_inout[i])
                 + 8192) >> 14);
         w32_tmp -= muteSlope;
     }

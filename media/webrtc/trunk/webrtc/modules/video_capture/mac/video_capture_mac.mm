@@ -30,8 +30,8 @@
 #include "QuickTime/video_capture_quick_time.h"
 #include "QuickTime/video_capture_quick_time_info.h"
 #else
-#include "qtkit/video_capture_qtkit.h"
-#include "qtkit/video_capture_qtkit_info.h"
+#include "QTKit/video_capture_qtkit.h"
+#include "QTKit/video_capture_qtkit_info.h"
 #endif
 
 namespace webrtc
@@ -106,14 +106,14 @@ bool CheckQTVersion()
  *   Returns version of the module and its components
  *
  *   version                 - buffer to which the version will be written
- *   remainingBufferInBytes  - remaining number of WebRtc_Word8 in the version
+ *   remainingBufferInBytes  - remaining number of int8_t in the version
  *                             buffer
- *   position                - position of the next empty WebRtc_Word8 in the
+ *   position                - position of the next empty int8_t in the
  *                             version buffer
  */
 
 VideoCaptureModule* VideoCaptureImpl::Create(
-    const WebRtc_Word32 id, const char* deviceUniqueIdUTF8)
+    const int32_t id, const char* deviceUniqueIdUTF8)
 {
 
     if (webrtc::videocapturemodule::CheckOSVersion() == false)
@@ -206,7 +206,7 @@ VideoCaptureModule* VideoCaptureImpl::Create(
  ***************************************************************************/
 
 VideoCaptureModule::DeviceInfo*
-VideoCaptureImpl::CreateDeviceInfo(const WebRtc_Word32 id)
+VideoCaptureImpl::CreateDeviceInfo(const int32_t id)
 {
 
 

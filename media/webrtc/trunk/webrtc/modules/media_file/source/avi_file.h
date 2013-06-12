@@ -24,56 +24,56 @@ class ListWrapper;
 struct AVISTREAMHEADER
 {
     AVISTREAMHEADER();
-    WebRtc_UWord32 fcc;
-    WebRtc_UWord32 cb;
-    WebRtc_UWord32 fccType;
-    WebRtc_UWord32 fccHandler;
-    WebRtc_UWord32 dwFlags;
-    WebRtc_UWord16 wPriority;
-    WebRtc_UWord16 wLanguage;
-    WebRtc_UWord32 dwInitialFrames;
-    WebRtc_UWord32 dwScale;
-    WebRtc_UWord32 dwRate;
-    WebRtc_UWord32 dwStart;
-    WebRtc_UWord32 dwLength;
-    WebRtc_UWord32 dwSuggestedBufferSize;
-    WebRtc_UWord32 dwQuality;
-    WebRtc_UWord32 dwSampleSize;
+    uint32_t fcc;
+    uint32_t cb;
+    uint32_t fccType;
+    uint32_t fccHandler;
+    uint32_t dwFlags;
+    uint16_t wPriority;
+    uint16_t wLanguage;
+    uint32_t dwInitialFrames;
+    uint32_t dwScale;
+    uint32_t dwRate;
+    uint32_t dwStart;
+    uint32_t dwLength;
+    uint32_t dwSuggestedBufferSize;
+    uint32_t dwQuality;
+    uint32_t dwSampleSize;
     struct
     {
-        WebRtc_Word16 left;
-        WebRtc_Word16 top;
-        WebRtc_Word16 right;
-        WebRtc_Word16 bottom;
+        int16_t left;
+        int16_t top;
+        int16_t right;
+        int16_t bottom;
     } rcFrame;
 };
 
 struct BITMAPINFOHEADER
 {
     BITMAPINFOHEADER();
-    WebRtc_UWord32 biSize;
-    WebRtc_UWord32 biWidth;
-    WebRtc_UWord32 biHeight;
-    WebRtc_UWord16 biPlanes;
-    WebRtc_UWord16 biBitCount;
-    WebRtc_UWord32 biCompression;
-    WebRtc_UWord32 biSizeImage;
-    WebRtc_UWord32 biXPelsPerMeter;
-    WebRtc_UWord32 biYPelsPerMeter;
-    WebRtc_UWord32 biClrUsed;
-    WebRtc_UWord32 biClrImportant;
+    uint32_t biSize;
+    uint32_t biWidth;
+    uint32_t biHeight;
+    uint16_t biPlanes;
+    uint16_t biBitCount;
+    uint32_t biCompression;
+    uint32_t biSizeImage;
+    uint32_t biXPelsPerMeter;
+    uint32_t biYPelsPerMeter;
+    uint32_t biClrUsed;
+    uint32_t biClrImportant;
 };
 
 struct WAVEFORMATEX
 {
     WAVEFORMATEX();
-    WebRtc_UWord16 wFormatTag;
-    WebRtc_UWord16 nChannels;
-    WebRtc_UWord32 nSamplesPerSec;
-    WebRtc_UWord32 nAvgBytesPerSec;
-    WebRtc_UWord16 nBlockAlign;
-    WebRtc_UWord16 wBitsPerSample;
-    WebRtc_UWord16 cbSize;
+    uint16_t wFormatTag;
+    uint16_t nChannels;
+    uint32_t nSamplesPerSec;
+    uint32_t nAvgBytesPerSec;
+    uint16_t nBlockAlign;
+    uint16_t wBitsPerSample;
+    uint16_t cbSize;
 };
 
 class AviFile
@@ -92,37 +92,37 @@ public:
     AviFile();
     ~AviFile();
 
-    WebRtc_Word32 Open(AVIStreamType streamType, const char* fileName,
-                       bool loop = false);
+    int32_t Open(AVIStreamType streamType, const char* fileName,
+                 bool loop = false);
 
-    WebRtc_Word32 CreateVideoStream(const AVISTREAMHEADER& videoStreamHeader,
-                                    const BITMAPINFOHEADER& bitMapInfoHeader,
-                                    const WebRtc_UWord8* codecConfigParams,
-                                    WebRtc_Word32 codecConfigParamsLength);
+    int32_t CreateVideoStream(const AVISTREAMHEADER& videoStreamHeader,
+                              const BITMAPINFOHEADER& bitMapInfoHeader,
+                              const uint8_t* codecConfigParams,
+                              int32_t codecConfigParamsLength);
 
-    WebRtc_Word32 CreateAudioStream(const AVISTREAMHEADER& audioStreamHeader,
-                                    const WAVEFORMATEX& waveFormatHeader);
-    WebRtc_Word32 Create(const char* fileName);
+    int32_t CreateAudioStream(const AVISTREAMHEADER& audioStreamHeader,
+                              const WAVEFORMATEX& waveFormatHeader);
+    int32_t Create(const char* fileName);
 
-    WebRtc_Word32 WriteAudio(const WebRtc_UWord8* data, WebRtc_Word32 length);
-    WebRtc_Word32 WriteVideo(const WebRtc_UWord8* data, WebRtc_Word32 length);
+    int32_t WriteAudio(const uint8_t* data, int32_t length);
+    int32_t WriteVideo(const uint8_t* data, int32_t length);
 
-    WebRtc_Word32 GetVideoStreamInfo(AVISTREAMHEADER& videoStreamHeader,
-                                     BITMAPINFOHEADER& bitmapInfo,
-                                     char* codecConfigParameters,
-                                     WebRtc_Word32& configLength);
+    int32_t GetVideoStreamInfo(AVISTREAMHEADER& videoStreamHeader,
+                               BITMAPINFOHEADER& bitmapInfo,
+                               char* codecConfigParameters,
+                               int32_t& configLength);
 
-    WebRtc_Word32 GetDuration(WebRtc_Word32& durationMs);
+    int32_t GetDuration(int32_t& durationMs);
 
-    WebRtc_Word32 GetAudioStreamInfo(WAVEFORMATEX& waveHeader);
+    int32_t GetAudioStreamInfo(WAVEFORMATEX& waveHeader);
 
-    WebRtc_Word32 ReadAudio(WebRtc_UWord8* data, WebRtc_Word32& length);
-    WebRtc_Word32 ReadVideo(WebRtc_UWord8* data, WebRtc_Word32& length);
+    int32_t ReadAudio(uint8_t* data, int32_t& length);
+    int32_t ReadVideo(uint8_t* data, int32_t& length);
 
-    WebRtc_Word32 Close();
+    int32_t Close();
 
-    static WebRtc_UWord32 MakeFourCc(WebRtc_UWord8 ch0, WebRtc_UWord8 ch1,
-                                     WebRtc_UWord8 ch2, WebRtc_UWord8 ch3);
+    static uint32_t MakeFourCc(uint8_t ch0, uint8_t ch1, uint8_t ch2,
+                               uint8_t ch3);
 
 private:
     enum AVIFileMode
@@ -134,44 +134,43 @@ private:
 
     struct AVIINDEXENTRY
     {
-        AVIINDEXENTRY(WebRtc_UWord32 inckid, WebRtc_UWord32 indwFlags,
-                      WebRtc_UWord32 indwChunkOffset,
-                      WebRtc_UWord32 indwChunkLength);
-        WebRtc_UWord32 ckid;
-        WebRtc_UWord32 dwFlags;
-        WebRtc_UWord32 dwChunkOffset;
-        WebRtc_UWord32 dwChunkLength;
+        AVIINDEXENTRY(uint32_t inckid, uint32_t indwFlags,
+                      uint32_t indwChunkOffset,
+                      uint32_t indwChunkLength);
+        uint32_t ckid;
+        uint32_t dwFlags;
+        uint32_t dwChunkOffset;
+        uint32_t dwChunkLength;
     };
 
-    WebRtc_Word32 PrepareDataChunkHeaders();
+    int32_t PrepareDataChunkHeaders();
 
-    WebRtc_Word32 ReadMoviSubChunk(WebRtc_UWord8* data, WebRtc_Word32& length,
-                                   WebRtc_UWord32 tag1,
-                                   WebRtc_UWord32 tag2 = 0);
+    int32_t ReadMoviSubChunk(uint8_t* data, int32_t& length, uint32_t tag1,
+                             uint32_t tag2 = 0);
 
-    WebRtc_Word32 WriteRIFF();
-    WebRtc_Word32 WriteHeaders();
-    WebRtc_Word32 WriteAVIMainHeader();
-    WebRtc_Word32 WriteAVIStreamHeaders();
-    WebRtc_Word32 WriteAVIVideoStreamHeaders();
-    WebRtc_Word32 WriteAVIVideoStreamHeaderChunks();
-    WebRtc_Word32 WriteAVIAudioStreamHeaders();
-    WebRtc_Word32 WriteAVIAudioStreamHeaderChunks();
+    int32_t WriteRIFF();
+    int32_t WriteHeaders();
+    int32_t WriteAVIMainHeader();
+    int32_t WriteAVIStreamHeaders();
+    int32_t WriteAVIVideoStreamHeaders();
+    int32_t WriteAVIVideoStreamHeaderChunks();
+    int32_t WriteAVIAudioStreamHeaders();
+    int32_t WriteAVIAudioStreamHeaderChunks();
 
-    WebRtc_Word32 WriteMoviStart();
+    int32_t WriteMoviStart();
 
-    size_t PutByte(WebRtc_UWord8 byte);
-    size_t PutLE16(WebRtc_UWord16 word);
-    size_t PutLE32(WebRtc_UWord32 word);
-    size_t PutBuffer(const WebRtc_UWord8* str, size_t size);
+    size_t PutByte(uint8_t byte);
+    size_t PutLE16(uint16_t word);
+    size_t PutLE32(uint32_t word);
+    size_t PutBuffer(const uint8_t* str, size_t size);
     size_t PutBufferZ(const char* str);
     long PutLE32LengthFromCurrent(long startPos);
-    void PutLE32AtPos(long pos, WebRtc_UWord32 word);
+    void PutLE32AtPos(long pos, uint32_t word);
 
-    size_t GetByte(WebRtc_UWord8& word);
-    size_t GetLE16(WebRtc_UWord16& word);
-    size_t GetLE32(WebRtc_UWord32& word);
-    size_t GetBuffer(WebRtc_UWord8* str, size_t size);
+    size_t GetByte(uint8_t& word);
+    size_t GetLE16(uint16_t& word);
+    size_t GetLE32(uint32_t& word);
+    size_t GetBuffer(uint8_t* str, size_t size);
 
     void CloseRead();
     void CloseWrite();
@@ -179,18 +178,18 @@ private:
     void ResetMembers();
     void ResetComplexMembers();
 
-    WebRtc_Word32 ReadRIFF();
-    WebRtc_Word32 ReadHeaders();
-    WebRtc_Word32 ReadAVIMainHeader();
-    WebRtc_Word32 ReadAVIVideoStreamHeader(WebRtc_Word32 endpos);
-    WebRtc_Word32 ReadAVIAudioStreamHeader(WebRtc_Word32 endpos);
+    int32_t ReadRIFF();
+    int32_t ReadHeaders();
+    int32_t ReadAVIMainHeader();
+    int32_t ReadAVIVideoStreamHeader(int32_t endpos);
+    int32_t ReadAVIAudioStreamHeader(int32_t endpos);
 
-    WebRtc_UWord32 StreamAndTwoCharCodeToTag(WebRtc_Word32 streamNum,
-                                             const char* twoCharCode);
+    uint32_t StreamAndTwoCharCodeToTag(int32_t streamNum,
+                                       const char* twoCharCode);
 
     void ClearIndexList();
-    void AddChunkToIndexList(WebRtc_UWord32 inChunkId, WebRtc_UWord32 inFlags,
-                             WebRtc_UWord32 inOffset,  WebRtc_UWord32 inSize);
+    void AddChunkToIndexList(uint32_t inChunkId, uint32_t inFlags,
+                             uint32_t inOffset,  uint32_t inSize);
 
     void WriteIndex();
 
@@ -198,19 +197,19 @@ private:
     struct AVIMAINHEADER
     {
         AVIMAINHEADER();
-        WebRtc_UWord32 fcc;
-        WebRtc_UWord32 cb;
-        WebRtc_UWord32 dwMicroSecPerFrame;
-        WebRtc_UWord32 dwMaxBytesPerSec;
-        WebRtc_UWord32 dwPaddingGranularity;
-        WebRtc_UWord32 dwFlags;
-        WebRtc_UWord32 dwTotalFrames;
-        WebRtc_UWord32 dwInitialFrames;
-        WebRtc_UWord32 dwStreams;
-        WebRtc_UWord32 dwSuggestedBufferSize;
-        WebRtc_UWord32 dwWidth;
-        WebRtc_UWord32 dwHeight;
-        WebRtc_UWord32 dwReserved[4];
+        uint32_t fcc;
+        uint32_t cb;
+        uint32_t dwMicroSecPerFrame;
+        uint32_t dwMaxBytesPerSec;
+        uint32_t dwPaddingGranularity;
+        uint32_t dwFlags;
+        uint32_t dwTotalFrames;
+        uint32_t dwInitialFrames;
+        uint32_t dwStreams;
+        uint32_t dwSuggestedBufferSize;
+        uint32_t dwWidth;
+        uint32_t dwHeight;
+        uint32_t dwReserved[4];
     };
 
     struct AVIStream
@@ -227,23 +226,23 @@ private:
     BITMAPINFOHEADER _videoFormatHeader;
     WAVEFORMATEX     _audioFormatHeader;
 
-    WebRtc_Word8 _videoConfigParameters[CODEC_CONFIG_LENGTH];
-    WebRtc_Word32 _videoConfigLength;
-    WebRtc_Word8 _videoStreamName[STREAM_NAME_LENGTH];
-    WebRtc_Word8 _audioConfigParameters[CODEC_CONFIG_LENGTH];
-    WebRtc_Word8 _audioStreamName[STREAM_NAME_LENGTH];
+    int8_t _videoConfigParameters[CODEC_CONFIG_LENGTH];
+    int32_t _videoConfigLength;
+    int8_t _videoStreamName[STREAM_NAME_LENGTH];
+    int8_t _audioConfigParameters[CODEC_CONFIG_LENGTH];
+    int8_t _audioStreamName[STREAM_NAME_LENGTH];
 
     AVIStream _videoStream;
     AVIStream _audioStream;
 
-    WebRtc_Word32 _nrStreams;
-    WebRtc_Word32 _aviLength;
-    WebRtc_Word32 _dataLength;
+    int32_t _nrStreams;
+    int32_t _aviLength;
+    int32_t _dataLength;
     size_t        _bytesRead;
     size_t        _dataStartByte;
-    WebRtc_Word32 _framesRead;
-    WebRtc_Word32 _videoFrames;
-    WebRtc_Word32 _audioFrames;
+    int32_t _framesRead;
+    int32_t _videoFrames;
+    int32_t _audioFrames;
 
     bool _reading;
     AVIStreamType _openedAs;
@@ -257,17 +256,17 @@ private:
     size_t _totNumFramesMark;
     size_t _videoStreamLengthMark;
     size_t _audioStreamLengthMark;
-    WebRtc_Word32 _moviListOffset;
+    int32_t _moviListOffset;
 
     bool _writeAudioStream;
     bool _writeVideoStream;
 
     AVIFileMode _aviMode;
-    WebRtc_UWord8* _videoCodecConfigParams;
-    WebRtc_Word32 _videoCodecConfigParamsLength;
+    uint8_t* _videoCodecConfigParams;
+    int32_t _videoCodecConfigParamsLength;
 
-    WebRtc_UWord32 _videoStreamDataChunkPrefix;
-    WebRtc_UWord32 _audioStreamDataChunkPrefix;
+    uint32_t _videoStreamDataChunkPrefix;
+    uint32_t _audioStreamDataChunkPrefix;
     bool _created;
 
     ListWrapper* _indexList; // Elements are of type AVIINDEXENTRY.

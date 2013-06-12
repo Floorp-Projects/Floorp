@@ -27,16 +27,16 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_Enhancer(
-    WebRtc_Word16 *odata,   /* (o) smoothed block, dimension blockl */
-    WebRtc_Word16 *idata,   /* (i) data buffer used for enhancing */
-    WebRtc_Word16 idatal,   /* (i) dimension idata */
-    WebRtc_Word16 centerStartPos, /* (i) first sample current block within idata */
-    WebRtc_Word16 *period,   /* (i) pitch period array (pitch bward-in time) */
-    WebRtc_Word16 *plocs,   /* (i) locations where period array values valid */
-    WebRtc_Word16 periodl   /* (i) dimension of period and plocs */
+    int16_t *odata,   /* (o) smoothed block, dimension blockl */
+    int16_t *idata,   /* (i) data buffer used for enhancing */
+    int16_t idatal,   /* (i) dimension idata */
+    int16_t centerStartPos, /* (i) first sample current block within idata */
+    int16_t *period,   /* (i) pitch period array (pitch bward-in time) */
+    int16_t *plocs,   /* (i) locations where period array values valid */
+    int16_t periodl   /* (i) dimension of period and plocs */
                             ){
   /* Stack based */
-  WebRtc_Word16 surround[ENH_BLOCKL];
+  int16_t surround[ENH_BLOCKL];
 
   WebRtcSpl_MemSetW16(surround, 0, ENH_BLOCKL);
 

@@ -23,23 +23,23 @@
 
 /********************* Pitch Filter Gain Coefficient Tables ************************/
 /* cdf for quantized pitch filter gains */
-extern const WebRtc_UWord16 WebRtcIsacfix_kPitchGainCdf[255];
+extern const uint16_t WebRtcIsacfix_kPitchGainCdf[255];
 
 /* index limits and ranges */
-extern const WebRtc_Word16 WebRtcIsacfix_kLowerlimiGain[3];
-extern const WebRtc_Word16 WebRtcIsacfix_kUpperlimitGain[3];
-extern const WebRtc_UWord16 WebRtcIsacfix_kMultsGain[2];
+extern const int16_t WebRtcIsacfix_kLowerlimiGain[3];
+extern const int16_t WebRtcIsacfix_kUpperlimitGain[3];
+extern const uint16_t WebRtcIsacfix_kMultsGain[2];
 
 /* mean values of pitch filter gains in Q12*/
-extern const WebRtc_Word16 WebRtcIsacfix_kPitchGain1[144];
-extern const WebRtc_Word16 WebRtcIsacfix_kPitchGain2[144];
-extern const WebRtc_Word16 WebRtcIsacfix_kPitchGain3[144];
-extern const WebRtc_Word16 WebRtcIsacfix_kPitchGain4[144];
+extern const int16_t WebRtcIsacfix_kPitchGain1[144];
+extern const int16_t WebRtcIsacfix_kPitchGain2[144];
+extern const int16_t WebRtcIsacfix_kPitchGain3[144];
+extern const int16_t WebRtcIsacfix_kPitchGain4[144];
 
 /* size of cdf table */
-extern const WebRtc_UWord16 WebRtcIsacfix_kCdfTableSizeGain[1];
+extern const uint16_t WebRtcIsacfix_kCdfTableSizeGain[1];
 
 /* transform matrix */
-extern const WebRtc_Word16 WebRtcIsacfix_kTransform[4][4];
+extern const int16_t WebRtcIsacfix_kTransform[4][4];
 
 #endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_PITCH_GAIN_TABLES_H_ */

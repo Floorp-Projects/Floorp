@@ -12,20 +12,13 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <linux/videodev2.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <string.h>
 
-//v4l includes
-#if defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#include <sys/videoio.h>
-#elif defined(__sun)
-#include <sys/videodev2.h>
-#else
-#include <linux/videodev2.h>
-#endif
-
+#include <iostream>
 #include <new>
 
 #include "ref_count.h"
@@ -38,7 +31,7 @@ namespace webrtc
 {
 namespace videocapturemodule
 {
-VideoCaptureModule* VideoCaptureImpl::Create(const WebRtc_Word32 id,
+VideoCaptureModule* VideoCaptureImpl::Create(const int32_t id,
                                              const char* deviceUniqueId)
 {
     RefCountImpl<videocapturemodule::VideoCaptureModuleV4L2>* implementation =
@@ -53,7 +46,7 @@ VideoCaptureModule* VideoCaptureImpl::Create(const WebRtc_Word32 id,
     return implementation;
 }
 
-VideoCaptureModuleV4L2::VideoCaptureModuleV4L2(const WebRtc_Word32 id)
+VideoCaptureModuleV4L2::VideoCaptureModuleV4L2(const int32_t id)
     : VideoCaptureImpl(id), 
       _captureThread(NULL),
       _captureCritSect(CriticalSectionWrapper::CreateCriticalSection()),
@@ -69,20 +62,13 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2(const WebRtc_Word32 id)
 {
 }
 
-WebRtc_Word32 VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8)
+int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8)
 {
     int len = strlen((const char*) deviceUniqueIdUTF8);
     _deviceUniqueId = new (std::nothrow) char[len + 1];
     if (_deviceUniqueId)
     {
         memcpy(_deviceUniqueId, deviceUniqueIdUTF8, len + 1);
-    }
-
-    int device_index;
-    if (sscanf(deviceUniqueIdUTF8,"fake_%d", &device_index) == 1)
-    {
-      _deviceId = device_index;
-      return 0;
     }
 
     int fd;
@@ -135,7 +121,7 @@ VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2()
       close(_deviceFd);
 }
 
-WebRtc_Word32 VideoCaptureModuleV4L2::StartCapture(
+int32_t VideoCaptureModuleV4L2::StartCapture(
     const VideoCaptureCapability& capability)
 {
     if (_captureStarted)
@@ -167,16 +153,53 @@ WebRtc_Word32 VideoCaptureModuleV4L2::StartCapture(
     // Supported video formats in preferred order.
     // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
     // I420 otherwise.
-    const int nFormats = 3;
+    const int nFormats = 4;
     unsigned int fmts[nFormats];
     if (capability.width > 640 || capability.height > 480) {
         fmts[0] = V4L2_PIX_FMT_MJPEG;
         fmts[1] = V4L2_PIX_FMT_YUV420;
         fmts[2] = V4L2_PIX_FMT_YUYV;
+        fmts[3] = V4L2_PIX_FMT_JPEG;
     } else {
         fmts[0] = V4L2_PIX_FMT_YUV420;
         fmts[1] = V4L2_PIX_FMT_YUYV;
         fmts[2] = V4L2_PIX_FMT_MJPEG;
+        fmts[3] = V4L2_PIX_FMT_JPEG;
+    }
+
+    // Enumerate image formats.
+    struct v4l2_fmtdesc fmt;
+    int fmtsIdx = nFormats;
+    memset(&fmt, 0, sizeof(fmt));
+    fmt.index = 0;
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
+                 "Video Capture enumerats supported image formats:");
+    while (ioctl(_deviceFd, VIDIOC_ENUM_FMT, &fmt) == 0) {
+        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
+                     "  { pixelformat = %c%c%c%c, description = '%s' }",
+                     fmt.pixelformat & 0xFF, (fmt.pixelformat>>8) & 0xFF,
+                     (fmt.pixelformat>>16) & 0xFF, (fmt.pixelformat>>24) & 0xFF,
+                     fmt.description);
+        // Match the preferred order.
+        for (int i = 0; i < nFormats; i++) {
+            if (fmt.pixelformat == fmts[i] && i < fmtsIdx)
+                fmtsIdx = i;
+        }
+        // Keep enumerating.
+        fmt.index++;
+    }
+
+    if (fmtsIdx == nFormats)
+    {
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                     "no supporting video formats found");
+        return -1;
+    } else {
+        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
+                     "We prefer format %c%c%c%c",
+                     fmts[fmtsIdx] & 0xFF, (fmts[fmtsIdx]>>8) & 0xFF,
+                     (fmts[fmtsIdx]>>16) & 0xFF, (fmts[fmtsIdx]>>24) & 0xFF);
     }
 
     struct v4l2_format video_fmt;
@@ -185,33 +208,14 @@ WebRtc_Word32 VideoCaptureModuleV4L2::StartCapture(
     video_fmt.fmt.pix.sizeimage = 0;
     video_fmt.fmt.pix.width = capability.width;
     video_fmt.fmt.pix.height = capability.height;
-
-    bool formatMatch = false;
-    for (int i = 0; i < nFormats; i++)
-    {
-        video_fmt.fmt.pix.pixelformat = fmts[i];
-        if (ioctl(_deviceFd, VIDIOC_TRY_FMT, &video_fmt) < 0)
-        {
-            continue;
-        }
-        else
-        {
-            formatMatch = true;
-            break;
-        }
-    }
-    if (!formatMatch)
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "no supporting video formats found");
-        return -1;
-    }
+    video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
     if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
         _captureVideoType = kVideoYUY2;
     else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
         _captureVideoType = kVideoI420;
-    else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG)
+    else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
+             video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
         _captureVideoType = kVideoMJPEG;
 
     //set format and frame size now
@@ -294,7 +298,7 @@ WebRtc_Word32 VideoCaptureModuleV4L2::StartCapture(
     return 0;
 }
 
-WebRtc_Word32 VideoCaptureModuleV4L2::StopCapture()
+int32_t VideoCaptureModuleV4L2::StopCapture()
 {
     if (_captureThread) {
         // Make sure the capture thread stop stop using the critsect.
@@ -307,7 +311,7 @@ WebRtc_Word32 VideoCaptureModuleV4L2::StopCapture()
             // Couldn't stop the thread, leak instead of crash.
             WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                          "%s: could not stop capture thread", __FUNCTION__);
-            assert(!"could not stop capture thread");
+            assert(false);
         }
     }
 
@@ -483,7 +487,7 @@ bool VideoCaptureModuleV4L2::CaptureProcess()
     return true;
 }
 
-WebRtc_Word32 VideoCaptureModuleV4L2::CaptureSettings(VideoCaptureCapability& settings)
+int32_t VideoCaptureModuleV4L2::CaptureSettings(VideoCaptureCapability& settings)
 {
     settings.width = _currentWidth;
     settings.height = _currentHeight;

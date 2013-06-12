@@ -17,36 +17,36 @@
 
 #include "signal_processing_library.h"
 
-int WebRtcSpl_FilterAR(G_CONST WebRtc_Word16* a,
+int WebRtcSpl_FilterAR(const int16_t* a,
                        int a_length,
-                       G_CONST WebRtc_Word16* x,
+                       const int16_t* x,
                        int x_length,
-                       WebRtc_Word16* state,
+                       int16_t* state,
                        int state_length,
-                       WebRtc_Word16* state_low,
+                       int16_t* state_low,
                        int state_low_length,
-                       WebRtc_Word16* filtered,
-                       WebRtc_Word16* filtered_low,
+                       int16_t* filtered,
+                       int16_t* filtered_low,
                        int filtered_low_length)
 {
-    WebRtc_Word32 o;
-    WebRtc_Word32 oLOW;
+    int32_t o;
+    int32_t oLOW;
     int i, j, stop;
-    G_CONST WebRtc_Word16* x_ptr = &x[0];
-    WebRtc_Word16* filteredFINAL_ptr = filtered;
-    WebRtc_Word16* filteredFINAL_LOW_ptr = filtered_low;
+    const int16_t* x_ptr = &x[0];
+    int16_t* filteredFINAL_ptr = filtered;
+    int16_t* filteredFINAL_LOW_ptr = filtered_low;
 
     for (i = 0; i < x_length; i++)
     {
         // Calculate filtered[i] and filtered_low[i]
-        G_CONST WebRtc_Word16* a_ptr = &a[1];
-        WebRtc_Word16* filtered_ptr = &filtered[i - 1];
-        WebRtc_Word16* filtered_low_ptr = &filtered_low[i - 1];
-        WebRtc_Word16* state_ptr = &state[state_length - 1];
-        WebRtc_Word16* state_low_ptr = &state_low[state_length - 1];
+        const int16_t* a_ptr = &a[1];
+        int16_t* filtered_ptr = &filtered[i - 1];
+        int16_t* filtered_low_ptr = &filtered_low[i - 1];
+        int16_t* state_ptr = &state[state_length - 1];
+        int16_t* state_low_ptr = &state_low[state_length - 1];
 
-        o = (WebRtc_Word32)(*x_ptr++) << 12;
-        oLOW = (WebRtc_Word32)0;
+        o = (int32_t)(*x_ptr++) << 12;
+        oLOW = (int32_t)0;
 
         stop = (i < a_length) ? i + 1 : a_length;
         for (j = 1; j < stop; j++)
@@ -61,8 +61,8 @@ int WebRtcSpl_FilterAR(G_CONST WebRtc_Word16* a,
         }
 
         o += (oLOW >> 12);
-        *filteredFINAL_ptr = (WebRtc_Word16)((o + (WebRtc_Word32)2048) >> 12);
-        *filteredFINAL_LOW_ptr++ = (WebRtc_Word16)(o - ((WebRtc_Word32)(*filteredFINAL_ptr++)
+        *filteredFINAL_ptr = (int16_t)((o + (int32_t)2048) >> 12);
+        *filteredFINAL_LOW_ptr++ = (int16_t)(o - ((int32_t)(*filteredFINAL_ptr++)
                 << 12));
     }
 

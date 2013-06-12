@@ -11,30 +11,30 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_NS_MAIN_SOURCE_NSX_CORE_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_NS_MAIN_SOURCE_NSX_CORE_H_
 
-#include "common_audio/signal_processing/include/signal_processing_library.h"
-#include "modules/audio_processing/ns/nsx_defines.h"
-#include "typedefs.h"
-
 #ifdef NS_FILEDEBUG
 #include <stdio.h>
 #endif
 
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/audio_processing/ns/nsx_defines.h"
+#include "webrtc/typedefs.h"
+
 typedef struct NsxInst_t_ {
-  WebRtc_UWord32          fs;
+  uint32_t                fs;
 
-  const WebRtc_Word16*    window;
-  WebRtc_Word16           analysisBuffer[ANAL_BLOCKL_MAX];
-  WebRtc_Word16           synthesisBuffer[ANAL_BLOCKL_MAX];
-  WebRtc_UWord16          noiseSupFilter[HALF_ANAL_BLOCKL];
-  WebRtc_UWord16          overdrive; /* Q8 */
-  WebRtc_UWord16          denoiseBound; /* Q14 */
-  const WebRtc_Word16*    factor2Table;
-  WebRtc_Word16           noiseEstLogQuantile[SIMULT* HALF_ANAL_BLOCKL];
-  WebRtc_Word16           noiseEstDensity[SIMULT* HALF_ANAL_BLOCKL];
-  WebRtc_Word16           noiseEstCounter[SIMULT];
-  WebRtc_Word16           noiseEstQuantile[HALF_ANAL_BLOCKL];
+  const int16_t*          window;
+  int16_t                 analysisBuffer[ANAL_BLOCKL_MAX];
+  int16_t                 synthesisBuffer[ANAL_BLOCKL_MAX];
+  uint16_t                noiseSupFilter[HALF_ANAL_BLOCKL];
+  uint16_t                overdrive; /* Q8 */
+  uint16_t                denoiseBound; /* Q14 */
+  const int16_t*          factor2Table;
+  int16_t                 noiseEstLogQuantile[SIMULT* HALF_ANAL_BLOCKL];
+  int16_t                 noiseEstDensity[SIMULT* HALF_ANAL_BLOCKL];
+  int16_t                 noiseEstCounter[SIMULT];
+  int16_t                 noiseEstQuantile[HALF_ANAL_BLOCKL];
 
-  WebRtc_Word16           anaLen;
+  int                     anaLen;
   int                     anaLen2;
   int                     magnLen;
   int                     aggrMode;
@@ -42,59 +42,67 @@ typedef struct NsxInst_t_ {
   int                     initFlag;
   int                     gainMap;
 
-  WebRtc_Word32           maxLrt;
-  WebRtc_Word32           minLrt;
-  WebRtc_Word32           logLrtTimeAvgW32[HALF_ANAL_BLOCKL]; //log lrt factor with time-smoothing in Q8
-  WebRtc_Word32           featureLogLrt;
-  WebRtc_Word32           thresholdLogLrt;
-  WebRtc_Word16           weightLogLrt;
+  int32_t                 maxLrt;
+  int32_t                 minLrt;
+  // Log LRT factor with time-smoothing in Q8.
+  int32_t                 logLrtTimeAvgW32[HALF_ANAL_BLOCKL];
+  int32_t                 featureLogLrt;
+  int32_t                 thresholdLogLrt;
+  int16_t                 weightLogLrt;
 
-  WebRtc_UWord32          featureSpecDiff;
-  WebRtc_UWord32          thresholdSpecDiff;
-  WebRtc_Word16           weightSpecDiff;
+  uint32_t                featureSpecDiff;
+  uint32_t                thresholdSpecDiff;
+  int16_t                 weightSpecDiff;
 
-  WebRtc_UWord32          featureSpecFlat;
-  WebRtc_UWord32          thresholdSpecFlat;
-  WebRtc_Word16           weightSpecFlat;
+  uint32_t                featureSpecFlat;
+  uint32_t                thresholdSpecFlat;
+  int16_t                 weightSpecFlat;
 
-  WebRtc_Word32           avgMagnPause[HALF_ANAL_BLOCKL]; //conservative estimate of noise spectrum
-  WebRtc_UWord32          magnEnergy;
-  WebRtc_UWord32          sumMagn;
-  WebRtc_UWord32          curAvgMagnEnergy;
-  WebRtc_UWord32          timeAvgMagnEnergy;
-  WebRtc_UWord32          timeAvgMagnEnergyTmp;
+  // Conservative estimate of noise spectrum.
+  int32_t                 avgMagnPause[HALF_ANAL_BLOCKL];
+  uint32_t                magnEnergy;
+  uint32_t                sumMagn;
+  uint32_t                curAvgMagnEnergy;
+  uint32_t                timeAvgMagnEnergy;
+  uint32_t                timeAvgMagnEnergyTmp;
 
-  WebRtc_UWord32          whiteNoiseLevel;              //initial noise estimate
-  WebRtc_UWord32          initMagnEst[HALF_ANAL_BLOCKL];//initial magnitude spectrum estimate
-  WebRtc_Word32           pinkNoiseNumerator;           //pink noise parameter: numerator
-  WebRtc_Word32           pinkNoiseExp;                 //pink noise parameter: power of freq
-  int                     minNorm;                      //smallest normalization factor
-  int                     zeroInputSignal;              //zero input signal flag
+  uint32_t                whiteNoiseLevel;  // Initial noise estimate.
+  // Initial magnitude spectrum estimate.
+  uint32_t                initMagnEst[HALF_ANAL_BLOCKL];
+  // Pink noise parameters:
+  int32_t                 pinkNoiseNumerator;  // Numerator.
+  int32_t                 pinkNoiseExp;  // Power of freq.
+  int                     minNorm;  // Smallest normalization factor.
+  int                     zeroInputSignal;  // Zero input signal flag.
 
-  WebRtc_UWord32          prevNoiseU32[HALF_ANAL_BLOCKL]; //noise spectrum from previous frame
-  WebRtc_UWord16          prevMagnU16[HALF_ANAL_BLOCKL]; //magnitude spectrum from previous frame
-  WebRtc_Word16           priorNonSpeechProb; //prior speech/noise probability // Q14
+  // Noise spectrum from previous frame.
+  uint32_t                prevNoiseU32[HALF_ANAL_BLOCKL];
+  // Magnitude spectrum from previous frame.
+  uint16_t                prevMagnU16[HALF_ANAL_BLOCKL];
+  // Prior speech/noise probability in Q14.
+  int16_t                 priorNonSpeechProb;
 
-  int                     blockIndex; //frame index counter
-  int                     modelUpdate; //parameter for updating or estimating thresholds/weights for prior model
+  int                     blockIndex;  // Frame index counter.
+  // Parameter for updating or estimating thresholds/weights for prior model.
+  int                     modelUpdate;
   int                     cntThresUpdate;
 
-  //histograms for parameter estimation
-  WebRtc_Word16           histLrt[HIST_PAR_EST];
-  WebRtc_Word16           histSpecFlat[HIST_PAR_EST];
-  WebRtc_Word16           histSpecDiff[HIST_PAR_EST];
+  // Histograms for parameter estimation.
+  int16_t                 histLrt[HIST_PAR_EST];
+  int16_t                 histSpecFlat[HIST_PAR_EST];
+  int16_t                 histSpecDiff[HIST_PAR_EST];
 
-  //quantities for high band estimate
-  WebRtc_Word16           dataBufHBFX[ANAL_BLOCKL_MAX]; /* Q0 */
+  // Quantities for high band estimate.
+  int16_t                 dataBufHBFX[ANAL_BLOCKL_MAX];  // Q0
 
   int                     qNoise;
   int                     prevQNoise;
   int                     prevQMagn;
   int                     blockLen10ms;
 
-  WebRtc_Word16           real[ANAL_BLOCKL_MAX];
-  WebRtc_Word16           imag[ANAL_BLOCKL_MAX];
-  WebRtc_Word32           energyIn;
+  int16_t                 real[ANAL_BLOCKL_MAX];
+  int16_t                 imag[ANAL_BLOCKL_MAX];
+  int32_t                 energyIn;
   int                     scaleEnergyIn;
   int                     normData;
 
@@ -121,7 +129,7 @@ extern "C"
  * Return value         :  0 - Ok
  *                        -1 - Error
  */
-WebRtc_Word32 WebRtcNsx_InitCore(NsxInst_t* inst, WebRtc_UWord32 fs);
+int32_t WebRtcNsx_InitCore(NsxInst_t* inst, uint32_t fs);
 
 /****************************************************************************
  * WebRtcNsx_set_policy_core(...)
@@ -226,10 +234,6 @@ void WebRtcNsx_AnalysisUpdateNeon(NsxInst_t* inst,
 void WebRtcNsx_DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor);
 void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buff);
 #endif
-
-extern const WebRtc_Word16 WebRtcNsx_kLogTable[9];
-extern const WebRtc_Word16 WebRtcNsx_kLogTableFrac[256];
-extern const WebRtc_Word16 WebRtcNsx_kCounterDiv[201];
 
 #ifdef __cplusplus
 }

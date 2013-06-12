@@ -60,8 +60,8 @@ void RampIn(AudioFrame& audioFrame)
     assert(rampSize <= audioFrame.samples_per_channel_);
     for(int i = 0; i < rampSize; i++)
     {
-        audioFrame.data_[i] = static_cast<WebRtc_Word16>
-            (rampArray[i] * audioFrame.data_[i]);
+        audioFrame.data_[i] = static_cast<int16_t>(rampArray[i] *
+                                                   audioFrame.data_[i]);
     }
 }
 
@@ -71,8 +71,8 @@ void RampOut(AudioFrame& audioFrame)
     for(int i = 0; i < rampSize; i++)
     {
         const int rampPos = rampSize - 1 - i;
-        audioFrame.data_[i] = static_cast<WebRtc_Word16>
-            (rampArray[rampPos] * audioFrame.data_[i]);
+        audioFrame.data_[i] = static_cast<int16_t>(rampArray[rampPos] *
+                                                   audioFrame.data_[i]);
     }
     memset(&audioFrame.data_[rampSize], 0,
            (audioFrame.samples_per_channel_ - rampSize) *

@@ -14,11 +14,11 @@
 
 // Autocorrelation function in fixed point.
 // NOTE! Different from SPLIB-version in how it scales the signal.
-int WebRtcIsacfix_AutocorrC(WebRtc_Word32* __restrict r,
-                            const WebRtc_Word16* __restrict x,
-                            WebRtc_Word16 N,
-                            WebRtc_Word16 order,
-                            WebRtc_Word16* __restrict scale) {
+int WebRtcIsacfix_AutocorrC(int32_t* __restrict r,
+                            const int16_t* __restrict x,
+                            int16_t N,
+                            int16_t order,
+                            int16_t* __restrict scale) {
   int i = 0;
   int j = 0;
   int16_t scaling = 0;
@@ -59,17 +59,17 @@ int WebRtcIsacfix_AutocorrC(WebRtc_Word32* __restrict r,
   return(order + 1);
 }
 
-static const WebRtc_Word32 kApUpperQ15[ALLPASSSECTIONS] = { 1137, 12537 };
-static const WebRtc_Word32 kApLowerQ15[ALLPASSSECTIONS] = { 5059, 24379 };
+static const int32_t kApUpperQ15[ALLPASSSECTIONS] = { 1137, 12537 };
+static const int32_t kApLowerQ15[ALLPASSSECTIONS] = { 5059, 24379 };
 
 
-static void AllpassFilterForDec32(WebRtc_Word16         *InOut16, //Q0
-                                  const WebRtc_Word32   *APSectionFactors, //Q15
-                                  WebRtc_Word16         lengthInOut,
-                                  WebRtc_Word32          *FilterState) //Q16
+static void AllpassFilterForDec32(int16_t         *InOut16, //Q0
+                                  const int32_t   *APSectionFactors, //Q15
+                                  int16_t         lengthInOut,
+                                  int32_t          *FilterState) //Q16
 {
   int n, j;
-  WebRtc_Word32 a, b;
+  int32_t a, b;
 
   for (j=0; j<ALLPASSSECTIONS; j++) {
     for (n=0;n<lengthInOut;n+=2){
@@ -77,12 +77,12 @@ static void AllpassFilterForDec32(WebRtc_Word16         *InOut16, //Q0
       a = WEBRTC_SPL_LSHIFT_W32(a, 1); // Q15 -> Q16
       b = WEBRTC_SPL_ADD_SAT_W32(a, FilterState[j]); //Q16+Q16=Q16
       a = WEBRTC_SPL_MUL_16_32_RSFT16(
-          (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(b, 16),
+          (int16_t) WEBRTC_SPL_RSHIFT_W32(b, 16),
           -APSectionFactors[j]); //Q0*Q31=Q31 shifted 16 gives Q15
       FilterState[j] = WEBRTC_SPL_ADD_SAT_W32(
           WEBRTC_SPL_LSHIFT_W32(a,1),
-          WEBRTC_SPL_LSHIFT_W32((WebRtc_UWord32)InOut16[n], 16)); // Q15<<1 + Q0<<16 = Q16 + Q16 = Q16
-      InOut16[n] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(b, 16); //Save as Q0
+          WEBRTC_SPL_LSHIFT_W32((uint32_t)InOut16[n], 16)); // Q15<<1 + Q0<<16 = Q16 + Q16 = Q16
+      InOut16[n] = (int16_t) WEBRTC_SPL_RSHIFT_W32(b, 16); //Save as Q0
     }
   }
 }
@@ -90,20 +90,20 @@ static void AllpassFilterForDec32(WebRtc_Word16         *InOut16, //Q0
 
 
 
-void WebRtcIsacfix_DecimateAllpass32(const WebRtc_Word16 *in,
-                                     WebRtc_Word32 *state_in,        /* array of size: 2*ALLPASSSECTIONS+1 */
-                                     WebRtc_Word16 N,                /* number of input samples */
-                                     WebRtc_Word16 *out)             /* array of size N/2 */
+void WebRtcIsacfix_DecimateAllpass32(const int16_t *in,
+                                     int32_t *state_in,        /* array of size: 2*ALLPASSSECTIONS+1 */
+                                     int16_t N,                /* number of input samples */
+                                     int16_t *out)             /* array of size N/2 */
 {
   int n;
-  WebRtc_Word16 data_vec[PITCH_FRAME_LEN];
+  int16_t data_vec[PITCH_FRAME_LEN];
 
   /* copy input */
-  memcpy(data_vec+1, in, WEBRTC_SPL_MUL_16_16(sizeof(WebRtc_Word16), (N-1)));
+  memcpy(data_vec+1, in, WEBRTC_SPL_MUL_16_16(sizeof(int16_t), (N-1)));
 
 
-  data_vec[0] = (WebRtc_Word16) WEBRTC_SPL_RSHIFT_W32(state_in[WEBRTC_SPL_MUL_16_16(2, ALLPASSSECTIONS)],16);   //the z^(-1) state
-  state_in[WEBRTC_SPL_MUL_16_16(2, ALLPASSSECTIONS)] = WEBRTC_SPL_LSHIFT_W32((WebRtc_UWord32)in[N-1],16);
+  data_vec[0] = (int16_t) WEBRTC_SPL_RSHIFT_W32(state_in[WEBRTC_SPL_MUL_16_16(2, ALLPASSSECTIONS)],16);   //the z^(-1) state
+  state_in[WEBRTC_SPL_MUL_16_16(2, ALLPASSSECTIONS)] = WEBRTC_SPL_LSHIFT_W32((uint32_t)in[N-1],16);
 
 
 

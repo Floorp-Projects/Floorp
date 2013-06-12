@@ -18,8 +18,6 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "test/testsupport/fileutils.h"
-
 #include "voe_errors.h"
 #include "voe_base.h"
 #include "voe_codec.h"
@@ -35,15 +33,17 @@
 #include "voe_network.h"
 #include "voe_neteq_stats.h"
 #include "engine_configurations.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 // Enable this this flag to run this test with hard coded
 // IP/Port/codec and start test automatically with key input
 // it could be useful in repeat tests.
 //#define DEBUG
 
-// #define EXTERNAL_TRANSPORT
-
 using namespace webrtc;
+using namespace test;
 
 #define VALIDATE                                                        \
   if (res != 0)                                                         \
@@ -69,29 +69,6 @@ VoEExternalMedia* xmedia = NULL;
 VoENetEqStats* neteqst = NULL;
 
 void RunTest(std::string out_path);
-
-#ifdef EXTERNAL_TRANSPORT
-
-class my_transportation : public Transport
-{
-  int SendPacket(int channel,const void *data,int len);
-  int SendRTCPPacket(int channel, const void *data, int len);
-};
-
-int my_transportation::SendPacket(int channel,const void *data,int len)
-{
-  netw->ReceivedRTPPacket(channel, data, len);
-  return 0;
-}
-
-int my_transportation::SendRTCPPacket(int channel, const void *data, int len)
-{
-  netw->ReceivedRTCPPacket(channel, data, len);
-  return 0;
-}
-
-my_transportation my_transport;
-#endif
 
 class MyObserver : public VoiceEngineObserver {
  public:
@@ -270,44 +247,24 @@ void RunTest(std::string out_path) {
   cnt++;
 
   int j = 0;
-#ifdef EXTERNAL_TRANSPORT
-  my_transportation ch0transport;
-  printf("Enabling external transport \n");
-  netw->RegisterExternalTransport(0, ch0transport);
-#else
   char ip[64];
 #ifdef DEBUG
   strcpy(ip, "127.0.0.1");
 #else
-  char localip[64];
-  netw->GetLocalIP(localip);
-  printf("local IP:%s\n", localip);
-
   printf("1. 127.0.0.1 \n");
   printf("2. Specify IP \n");
   ASSERT_EQ(1, scanf("%i", &i));
 
-  if (1 == i)
+  if (1 == i) {
     strcpy(ip, "127.0.0.1");
-  else {
+  } else {
     printf("Specify remote IP: ");
     ASSERT_EQ(1, scanf("%s", ip));
   }
 #endif
 
-  int colons(0);
-  while (ip[j] != '\0' && j < 64 && !(colons = (ip[j++] == ':')))
-    ;
-  if (colons) {
-    printf("Enabling IPv6\n");
-    res = netw->EnableIPv6(0);
-    VALIDATE;
-  }
-
-  int rPort;
-#ifdef DEBUG
-  rPort=8500;
-#else
+  int rPort = 8500;
+#ifndef DEBUG
   printf("Specify remote port (1=1234): ");
   ASSERT_EQ(1, scanf("%i", &rPort));
   if (1 == rPort)
@@ -315,23 +272,24 @@ void RunTest(std::string out_path) {
   printf("Set Send port \n");
 #endif
 
+  scoped_ptr<VoiceChannelTransport> voice_channel_transport(
+      new VoiceChannelTransport(netw, chan));
+
   printf("Set Send IP \n");
-  res = base1->SetSendDestination(chan, rPort, ip);
+  res = voice_channel_transport->SetSendDestination(ip, rPort);
   VALIDATE;
 
-  int lPort;
-#ifdef DEBUG
-  lPort=8500;
-#else
+  int lPort = 8500;
+#ifndef DEBUG
   printf("Specify local port (1=1234): ");
   ASSERT_EQ(1, scanf("%i", &lPort));
   if (1 == lPort)
     lPort = 1234;
   printf("Set Rec Port \n");
 #endif
-  res = base1->SetLocalReceiver(chan, lPort);
+
+  res = voice_channel_transport->SetLocalReceiver(lPort);
   VALIDATE;
-#endif
 
   printf("\n");
   for (i = 0; i < codec->NumOfCodecs(); i++) {
@@ -367,12 +325,18 @@ void RunTest(std::string out_path) {
 #endif
   int channel_index = 0;
   std::vector<int> channels(kMaxNumChannels);
+  std::vector<VoiceChannelTransport*> voice_channel_transports(kMaxNumChannels);
+
   for (i = 0; i < kMaxNumChannels; ++i) {
     channels[i] = base1->CreateChannel();
     int port = rPort + (i + 1) * 2;
-    res = base1->SetSendDestination(channels[i], port, ip);
+
+    voice_channel_transports[i] = new VoiceChannelTransport(netw, channels[i]);
+
+    printf("Set Send IP \n");
+    res = voice_channel_transports[i]->SetSendDestination(ip, port);
     VALIDATE;
-    res = base1->SetLocalReceiver(channels[i], port);
+    res = voice_channel_transports[i]->SetLocalReceiver(port);
     VALIDATE;
     res = codec->SetSendCodec(channels[i], cinst);
     VALIDATE;
@@ -913,6 +877,10 @@ void RunTest(std::string out_path) {
     ASSERT_EQ(1, scanf("%i", &i));
     newcall = (1 == i);
     // Call loop
+  }
+  for (i = 0; i < kMaxNumChannels; ++i) {
+    delete voice_channel_transports[i];
+    voice_channel_transports[i] = NULL;
   }
 
   printf("Delete channels \n");
