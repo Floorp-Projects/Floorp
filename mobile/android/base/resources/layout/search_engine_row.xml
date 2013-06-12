@@ -19,7 +19,7 @@
 	                              android:layout_width="wrap_content"
 	                              android:layout_height="wrap_content">
 
-	    <include layout="@layout/awesomebar_suggestion_item"
+	    <include layout="@layout/suggestion_item"
 	             android:id="@+id/suggestion_user_entered"/>
 
 	</org.mozilla.gecko.FlowLayout>
