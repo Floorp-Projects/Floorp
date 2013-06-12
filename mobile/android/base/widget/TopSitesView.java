@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.widget;
 
-import org.mozilla.gecko.AwesomeBar;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
@@ -602,77 +601,6 @@ public class TopSitesView extends GridView {
 
     // Edit the site at position. Provide a url to start editing with
     public void editSite(String url, final int position) {
-        Intent intent = new Intent(mContext, AwesomeBar.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.putExtra(AwesomeBar.TARGET_KEY, AwesomeBar.Target.PICK_SITE.toString());
-        if (url != null && !TextUtils.isEmpty(url)) {
-            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, url);
-        }
 
-        int requestCode = GeckoAppShell.sActivityHelper.makeRequestCode(new ActivityResultHandler() {
-            @Override
-            public void onActivityResult(int resultCode, Intent data) {
-                if (resultCode == Activity.RESULT_CANCELED || data == null)
-                    return;
-
-                final View v = getChildAt(position);
-                final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-
-                String title = data.getStringExtra(AwesomeBar.TITLE_KEY);
-                String url = data.getStringExtra(AwesomeBar.URL_KEY);
-
-                // Bail if the user entered an empty string.
-                if (TextUtils.isEmpty(url)) {
-                    return;
-                }
-
-                // If the user manually entered a search term or URL, wrap the value in
-                // a special URI until we can get a valid URL for this bookmark.
-                if (data.getBooleanExtra(AwesomeBar.USER_ENTERED_KEY, false)) {
-                    // Store what the user typed as the bookmark's title.
-                    title = url;
-                    url = encodeUserEnteredUrl(url);
-                }
-
-                clearThumbnailsWithUrl(url);
-
-                holder.setUrl(url);
-                holder.setTitle(title);
-                holder.setPinned(true);
-
-                // update the database on a background thread
-                (new UiAsyncTask<Void, Void, Bitmap>(ThreadUtils.getBackgroundHandler()) {
-                    @Override
-                    public Bitmap doInBackground(Void... params) {
-                        final ContentResolver resolver = mContext.getContentResolver();
-                        BrowserDB.pinSite(resolver, holder.getUrl(), holder.getTitle(), position);
-
-                        List<String> urls = new ArrayList<String>();
-                        urls.add(holder.getUrl());
-
-                        Cursor c = BrowserDB.getThumbnailsForUrls(resolver, urls);
-                        if (c == null || !c.moveToFirst()) {
-                            return null;
-                        }
-
-                        final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Thumbnails.DATA));
-                        Bitmap bitmap = null;
-                        if (b != null && b.length > 0) {
-                            bitmap = BitmapUtils.decodeByteArray(b);
-                        }
-                        c.close();
-
-                        return bitmap;
-                    }
-
-                    @Override
-                    public void onPostExecute(Bitmap b) {
-                        displayThumbnail(v, b);
-                    }
-                }).execute();
-            }
-        });
-
-        mActivity.startActivityForResult(intent, requestCode);
     }
 }

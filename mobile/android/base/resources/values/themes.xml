@@ -20,12 +20,6 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
-    <style name="GeckoAwesomeBarBase" parent="GeckoBase">
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowBackground">@null</item>
-    </style>
-
     <style name="GeckoPreferencesBase" parent="GeckoBase">
         <item name="android:windowNoTitle">false</item>
     </style>
@@ -83,11 +77,6 @@
         <item name="android:textViewStyle">@style/Widget.TextView</item>
         <item name="android:spinnerStyle">@style/Widget.Spinner</item>
         <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
-    </style>
-
-    <style name="Gecko.AwesomeBar" parent="GeckoAwesomeBarBase">
-        <item name="android:listViewStyle">@style/Widget.ListView</item>
-        <item name="android:expandableListViewStyle">@style/Widget.ExpandableListView</item>
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>

@@ -49,10 +49,6 @@
 
     <style name="Widget.ExpandableListView" parent="Widget.ListView">
         <item name="android:groupIndicator">@android:color/transparent</item>
-
-        <!-- Using a color for the childDivider is broken for Froyo and GB
-             phones (see bug 862761), so we use a drawable instead. -->
-        <item name="android:childDivider">@drawable/awesomebar_listview_divider</item>
     </style>
 
     <style name="Widget.ListItem">
@@ -247,31 +243,6 @@
          <item name="android:layout_width">@dimen/browser_toolbar_icon_width</item>
          <item name="android:layout_height">@dimen/browser_toolbar_height</item>
          <item name="android:layout_weight">0.0</item>
-    </style>
-
-    <!-- AwesomeBar -->
-    <style name="AwesomeBar">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">48dip</item>
-        <item name="android:orientation">horizontal</item>
-    </style>
-
-
-    <!-- AwesomeBar Tab Indicator Curve -->
-    <style name="AwesomeBarTabIndicatorCurve">
-         <item name="android:layout_width">wrap_content</item>
-         <item name="android:layout_height">fill_parent</item>
-         <item name="android:background">@drawable/awesomebar_tab_unselected</item>
-    </style>
-
-    <!-- AwesomeBar Tab Indicator Curve Left -->
-    <style name="AwesomeBarTabIndicatorCurve.Left">
-         <item name="android:layout_width">20dp</item>
-    </style>
-
-    <!-- AwesomeBar Tab Indicator Curve Right -->
-    <style name="AwesomeBarTabIndicatorCurve.Right">
-         <item name="android:layout_width">20dp</item>
     </style>
 
     <!-- TabsTray List -->

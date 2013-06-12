@@ -52,18 +52,11 @@ FENNEC_JAVA_FILES = \
   AnimatedHeightLayout.java \
   AppNotificationClient.java \
   AutocompleteHandler.java \
-  AwesomeBar.java \
-  AwesomebarResultHandler.java \
-  AwesomeBarTabs.java \
   animation/AnimatorProxy.java \
   animation/HeightChangeAnimation.java \
   animation/PropertyAnimator.java \
   animation/Rotate3DAnimation.java \
   animation/ViewHelper.java \
-  awesomebar/AwesomeBarTab.java \
-  awesomebar/AllPagesTab.java \
-  awesomebar/BookmarksTab.java \
-  awesomebar/HistoryTab.java \
   BackButton.java \
   BrowserApp.java \
   BrowserSearch.java \
@@ -434,18 +427,7 @@ RES_LAYOUT = \
   res/layout/abouthome_content.xml \
   res/layout/autocomplete_list.xml \
   res/layout/autocomplete_list_item.xml \
-  res/layout/awesomebar.xml \
-  res/layout/awesomebar_actionbar.xml \
-  res/layout/awesomebar_folder_row.xml \
-  res/layout/awesomebar_header_row.xml \
-  res/layout/awesomebar_allpages_list.xml \
-  res/layout/awesomebar_row.xml \
-  res/layout/awesomebar_search.xml \
-  res/layout/awesomebar_suggestion_row.xml \
   res/layout/awesomebar_suggestion_item.xml \
-  res/layout/awesomebar_suggestion_prompt.xml \
-  res/layout/awesomebar_tab_indicator.xml \
-  res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
   res/layout/bookmark_folder_row.xml \
   res/layout/browser_toolbar.xml \
@@ -497,7 +479,6 @@ RES_LAYOUT = \
   $(NULL)
 
 RES_LAYOUT_LARGE_V11 = \
-  res/layout-large-v11/awesomebar_search.xml \
   res/layout-large-v11/browser_toolbar.xml \
   $(NULL)
 
@@ -508,7 +489,6 @@ RES_LAYOUT_LARGE_LAND_V11 = \
   $(NULL)
 
 RES_LAYOUT_XLARGE_V11 = \
-  res/layout-xlarge-v11/awesomebar_search.xml \
   res/layout-xlarge-v11/font_size_preference.xml \
   res/layout-xlarge-v11/remote_tabs_child.xml \
   res/layout-xlarge-v11/remote_tabs_group.xml \
@@ -584,11 +564,8 @@ RES_XML_V11 = \
   $(NULL)
 
 RES_ANIM = \
-  res/anim/awesomebar_fade_in.xml \
   res/anim/popup_show.xml \
   res/anim/popup_hide.xml \
-  res/anim/awesomebar_fade_out.xml \
-  res/anim/awesomebar_hold_still.xml \
   res/anim/grow_fade_in.xml \
   res/anim/grow_fade_in_center.xml \
   res/anim/shrink_fade_out.xml \
@@ -612,11 +589,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/alert_app.png \
   res/drawable-mdpi/alert_download.png \
   res/drawable-mdpi/autocomplete_list_bg.9.png \
-  res/drawable-mdpi/awesomebar_tab_center.9.png \
-  res/drawable-mdpi/awesomebar_tab_left.9.png \
-  res/drawable-mdpi/awesomebar_tab_right.9.png \
-  res/drawable-mdpi/awesomebar_sep_left.9.png \
-  res/drawable-mdpi/awesomebar_sep_right.9.png \
   res/drawable-mdpi/bookmark_folder_closed.png \
   res/drawable-mdpi/bookmark_folder_opened.png \
   res/drawable-mdpi/desktop_notification.png \
@@ -728,11 +700,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
   res/drawable-hdpi/alert_download.png \
-  res/drawable-hdpi/awesomebar_tab_center.9.png \
-  res/drawable-hdpi/awesomebar_tab_left.9.png \
-  res/drawable-hdpi/awesomebar_tab_right.9.png \
-  res/drawable-hdpi/awesomebar_sep_left.9.png \
-  res/drawable-hdpi/awesomebar_sep_right.9.png \
   res/drawable-hdpi/bookmark_folder_closed.png \
   res/drawable-hdpi/bookmark_folder_opened.png \
   res/drawable-hdpi/ic_addons_empty.png \
@@ -824,11 +791,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_addon.png \
   res/drawable-xhdpi/alert_app.png \
   res/drawable-xhdpi/alert_download.png \
-  res/drawable-xhdpi/awesomebar_tab_center.9.png \
-  res/drawable-xhdpi/awesomebar_tab_left.9.png \
-  res/drawable-xhdpi/awesomebar_tab_right.9.png \
-  res/drawable-xhdpi/awesomebar_sep_left.9.png \
-  res/drawable-xhdpi/awesomebar_sep_right.9.png \
   res/drawable-xhdpi/bookmark_folder_closed.png \
   res/drawable-xhdpi/bookmark_folder_opened.png \
   res/drawable-xhdpi/ic_addons_empty.png \
@@ -992,31 +954,16 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
-  res/drawable-xlarge-mdpi-v11/awesomebar_tab_center.9.png \
-  res/drawable-xlarge-mdpi-v11/awesomebar_tab_left.9.png \
-  res/drawable-xlarge-mdpi-v11/awesomebar_tab_right.9.png \
-  res/drawable-xlarge-mdpi-v11/awesomebar_sep_left.9.png \
-  res/drawable-xlarge-mdpi-v11/awesomebar_sep_right.9.png \
   res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_remove.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_HDPI_V11 = \
-  res/drawable-xlarge-hdpi-v11/awesomebar_tab_center.9.png \
-  res/drawable-xlarge-hdpi-v11/awesomebar_tab_left.9.png \
-  res/drawable-xlarge-hdpi-v11/awesomebar_tab_right.9.png \
-  res/drawable-xlarge-hdpi-v11/awesomebar_sep_left.9.png \
-  res/drawable-xlarge-hdpi-v11/awesomebar_sep_right.9.png \
   res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_remove.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_XHDPI_V11 = \
-  res/drawable-xlarge-xhdpi-v11/awesomebar_tab_center.9.png \
-  res/drawable-xlarge-xhdpi-v11/awesomebar_tab_left.9.png \
-  res/drawable-xlarge-xhdpi-v11/awesomebar_tab_right.9.png \
-  res/drawable-xlarge-xhdpi-v11/awesomebar_sep_left.9.png \
-  res/drawable-xlarge-xhdpi-v11/awesomebar_sep_right.9.png \
   res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_remove.png \
   $(NULL)
@@ -1067,11 +1014,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/url_bar_entry.xml                      \
   mobile/android/base/resources/drawable/url_bar_nav_button.xml                 \
   mobile/android/base/resources/drawable/url_bar_right_edge.xml                 \
-  mobile/android/base/resources/drawable/awesomebar_listview_divider.xml        \
-  mobile/android/base/resources/drawable/awesomebar_header_row.xml              \
-  mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
-  mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
-  mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
   mobile/android/base/resources/drawable/bookmark_folder.xml                    \
   mobile/android/base/resources/drawable/favicon_bg.xml                         \
   mobile/android/base/resources/drawable/handle_end_level.xml                   \
