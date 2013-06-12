@@ -37,6 +37,21 @@ var gAdvancedPane = {
     // in case the default changes.  On other Windows OS's defaults can also
     // be set while the prefs are open.
     window.setInterval(this.updateSetDefaultBrowser, 1000);
+
+#ifdef MOZ_METRO
+    // Pre Windows 8, we should hide the update related settings
+    // for the Metro browser
+    let version = Components.classes["@mozilla.org/system-info;1"].
+                  getService(Components.interfaces.nsIPropertyBag2).
+                  getProperty("version");
+    let preWin8 = parseFloat(version) < 6.2;
+    this._showingWin8Prefs = !preWin8;
+    if (preWin8) {
+      ["autoMetro", "autoMetroIndent"].forEach(
+        function(id) document.getElementById(id).collapsed = true
+      );
+    }
+#endif
 #endif
 #endif
 
@@ -578,7 +593,8 @@ var gAdvancedPane = {
       radiogroup.value="manual";    // 3. Never check for updates.
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-    else if (metroEnabledPref.value)  // enabledPref.value && autoPref.value && metroEnabledPref.value
+    // enabledPref.value && autoPref.value && metroEnabledPref.value
+    else if (metroEnabledPref.value && this._showingWin8Prefs)
       radiogroup.value="autoMetro"; // 0. Automatically install updates for both Metro and Desktop
 #endif
 #endif
@@ -602,7 +618,9 @@ var gAdvancedPane = {
                                 !enabledPref.value || !autoPref.value;
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-    warnIncompatible.disabled |= metroEnabledPref.value;
+    if (this._showingWin8Prefs) {
+      warnIncompatible.disabled |= metroEnabledPref.value;
+    }
 #endif
 #endif
 
@@ -655,7 +673,10 @@ var gAdvancedPane = {
 #ifdef XP_WIN
 #ifdef MOZ_METRO
     var metroEnabledPref = document.getElementById("app.update.metro.enabled");
-    metroEnabledPref.value = false;
+    // Initialize the pref to false only if we're showing the option
+    if (this._showingWin8Prefs) {
+      metroEnabledPref.value = false;
+    }
 #endif
 #endif
     var radiogroup = document.getElementById("updateRadioGroup");
@@ -690,7 +711,9 @@ var gAdvancedPane = {
 
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-    warnIncompatible.disabled |= metroEnabledPref.value;
+    if (this._showingWin8Prefs) {
+      warnIncompatible.disabled |= metroEnabledPref.value;
+    }
 #endif
 #endif
   },
