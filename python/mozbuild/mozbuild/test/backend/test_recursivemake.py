@@ -233,5 +233,17 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = ('aa', 'bb', 'cc', 'dd', 'valid_val')
         self.assertEqual(xpclines, ["XPCSHELL_TESTS += %s" % val for val in expected])
 
+    def test_xpcshell_master_manifest(self):
+        """Ensure that the master xpcshell manifest is written out correctly."""
+        env = self._consume('xpcshell_manifests', RecursiveMakeBackend)
+
+        manifest_path = os.path.join(env.topobjdir,
+            'testing', 'xpcshell', 'xpcshell.ini')
+        lines = [l.strip() for l in open(manifest_path, 'rt').readlines()]
+        expected = ('aa', 'bb', 'cc', 'dd', 'valid_val')
+        self.assertEqual(lines, [
+            '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
+            ''] + ['[include:%s/xpcshell.ini]' % x for x in expected])
+
 if __name__ == '__main__':
     main()
