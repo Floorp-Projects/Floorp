@@ -1392,7 +1392,7 @@ DocumentWalker.prototype = {
       return;
     if (node.contentDocument) {
       return this._reparentWalker(node.contentDocument);
-    } else if (node instanceof nodeDocument(node).defaultView.GetSVGDocument) {
+    } else if (node.getSVGDocument) {
       return this._reparentWalker(node.getSVGDocument());
     }
     return this.walker.firstChild();
@@ -1405,7 +1405,7 @@ DocumentWalker.prototype = {
       return;
     if (node.contentDocument) {
       return this._reparentWalker(node.contentDocument);
-    } else if (node instanceof nodeDocument(node).defaultView.GetSVGDocument) {
+    } else if (node.getSVGDocument) {
       return this._reparentWalker(node.getSVGDocument());
     }
     return this.walker.lastChild();
