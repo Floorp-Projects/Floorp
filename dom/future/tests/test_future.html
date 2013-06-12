@@ -343,6 +343,38 @@ function futureLoop() {
   });
 }
 
+function futureReject() {
+  var future = Future.reject(42).done(function(what) {
+    ok(false, "This should not be called");
+  }, function(what) {
+    is(what, 42, "Value == 42");
+    runTest();
+  });
+}
+
+function futureResolve() {
+  var future = Future.resolve(42).done(function(what) {
+    is(what, 42, "Value == 42");
+    runTest();
+  }, function() {
+    ok(false, "This should not be called");
+  });
+}
+
+function futureResolveNestedFuture() {
+  var future = Future.resolve(new Future(function(r) {
+    ok(true, "Nested future is executed");
+    r.resolve(42);
+  }, function() {
+    ok(false, "This should not be called");
+  })).done(function(what) {
+    is(what, 42, "Value == 42");
+    runTest();
+  }, function() {
+    ok(false, "This should not be called");
+  });
+}
+
 var tests = [ futureResolve, futureReject,
               futureException, futureGC, futureAsync,
               futureDoubleDone, futureDoneException,
@@ -352,7 +384,9 @@ var tests = [ futureResolve, futureReject,
               futureThenCatchOrderingResolve,
               futureThenCatchOrderingReject,
               futureNestedFuture, futureNestedNestedFuture,
-              futureWrongNestedFuture, futureLoop
+              futureWrongNestedFuture, futureLoop,
+              futureReject, futureResolve,
+              futureResolveNestedFuture,
             ];
 
 function runTest() {
