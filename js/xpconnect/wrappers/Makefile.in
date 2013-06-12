@@ -13,6 +13,10 @@ LIBRARY_NAME	= xpcwrappers_s
 MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
+ifndef _MSC_VER # warning C4661 for FilteringWrapper
+FAIL_ON_WARNINGS := 1
+endif # !_MSC_VER
+
 LOCAL_INCLUDES = \
                 -I$(srcdir)/../src \
                 -I$(srcdir)/../../../dom/base \

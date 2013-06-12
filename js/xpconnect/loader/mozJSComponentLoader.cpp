@@ -1,6 +1,6 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=99: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -668,7 +668,7 @@ void
 mozJSComponentLoader::NoteSubScript(HandleScript aScript, HandleObject aThisObject)
 {
   if (!mInitialized && NS_FAILED(ReallyInit())) {
-      MOZ_NOT_REACHED();
+      MOZ_CRASH();
   }
 
   mThisObjects.Put(aScript, aThisObject);
@@ -1475,7 +1475,7 @@ mozJSComponentLoader::ModuleEntry::GetFactory(const mozilla::Module& module,
     nsCOMPtr<nsIFactory> f;
     nsresult rv = self.getfactoryobj->Get(*entry.cid, getter_AddRefs(f));
     if (NS_FAILED(rv))
-        return NULL;
+        return nullptr;
 
     return f.forget();
 }
