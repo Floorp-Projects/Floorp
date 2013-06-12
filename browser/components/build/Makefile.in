@@ -38,7 +38,7 @@ SHARED_LIBRARY_LIBS = \
 	../dirprovider/$(LIB_PREFIX)browserdir_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows cocoa gtk2 gtk3, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
@@ -57,7 +57,7 @@ SHARED_LIBRARY_LIBS += ../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
 # GTK2: Need to link with glib for GNOME shell service
-ifneq (,$(filter cocoa gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter cocoa gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
   $(TK_LIBS) \
   $(NULL)

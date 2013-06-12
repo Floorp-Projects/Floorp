@@ -74,8 +74,8 @@
     </style>
 
     <!-- Spinner DropDown Item -->
-    <style name="SpinnerDropDownItem" parent="@android:style/Widget.Holo.DropDownItem.Spinner">
-         <item name="android:textColor">#FF222222</item>
+    <style name="Widget.DropDownItem.Spinner" parent="@android:style/Widget.Holo.Light.DropDownItem.Spinner">
+         <item name="android:textColor">#FF000000</item>
     </style>
 
     <style name="Widget.Spinner" parent="android:style/Widget.Holo.Light.Spinner">

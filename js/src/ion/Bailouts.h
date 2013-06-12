@@ -122,8 +122,8 @@ class IonBailoutIterator : public IonFrameIterator
     IonScript *topIonScript_;
 
   public:
-    IonBailoutIterator(const IonActivationIterator &activations, BailoutStack *sp);
-    IonBailoutIterator(const IonActivationIterator &activations, InvalidationBailoutStack *sp);
+    IonBailoutIterator(const JitActivationIterator &activations, BailoutStack *sp);
+    IonBailoutIterator(const JitActivationIterator &activations, InvalidationBailoutStack *sp);
 
     SnapshotOffset snapshotOffset() const {
         JS_ASSERT(topIonScript_);

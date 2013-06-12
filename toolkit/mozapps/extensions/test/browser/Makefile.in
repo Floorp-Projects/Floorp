@@ -111,6 +111,8 @@ MOCHITEST_BROWSER_RESOURCES = \
   plugin_test.html \
   redirect.sjs \
   releaseNotes.xhtml \
+  blockNoPlugins.xml \
+  blockPluginHard.xml \
   $(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = $(foreach s,MAIN SECONDARY RESOURCES,MOCHITEST_BROWSER_$(s))

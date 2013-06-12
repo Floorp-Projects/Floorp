@@ -17,6 +17,6 @@ DEFINES += \
 	-DMOZ_MACBUNDLE_NAME=$(MOZ_MACBUNDLE_NAME) \
 	$(NULL)
 
-ifneq (,$(filter windows gtk2 cocoa, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows gtk2 gtk3 cocoa, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DHAVE_SHELL_SERVICE=1
 endif

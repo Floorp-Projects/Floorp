@@ -410,7 +410,7 @@ else
 VPX_OIE_FORMAT := gas
 endif
 
-HOST_CSRCS = obj_int_extract.c
+DISABLED_HOST_CSRCS = obj_int_extract.c
 HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
 
 CSRCS += asm_com_offsets.c

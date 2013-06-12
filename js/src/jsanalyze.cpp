@@ -280,7 +280,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_SETALIASEDVAR:
           case JSOP_LAMBDA:
             usesScopeChain_ = true;
-            isIonInlineable = false;
             break;
 
           case JSOP_DEFFUN:

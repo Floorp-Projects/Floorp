@@ -68,7 +68,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS		+= -framework Cocoa
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifdef MOZ_WIDGET_GTK
 OS_LIBS		+= $(MOZ_PANGO_LIBS) $(XLIBS)
 CXXFLAGS	+= $(MOZ_PANGO_CFLAGS)
 endif

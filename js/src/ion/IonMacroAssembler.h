@@ -215,9 +215,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         movePtr(ImmWord(GetIonContext()->runtime), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, mainThread.ionJSContext)), dest);
     }
-    void loadIonActivation(const Register &dest) {
+    void loadJitActivation(const Register &dest) {
         movePtr(ImmWord(GetIonContext()->runtime), dest);
-        loadPtr(Address(dest, offsetof(JSRuntime, mainThread.ionActivation)), dest);
+        size_t offset = offsetof(JSRuntime, mainThread) + PerThreadData::offsetOfActivation();
+        loadPtr(Address(dest, offset), dest);
     }
 
     template<typename T>

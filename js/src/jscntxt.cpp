@@ -1262,6 +1262,9 @@ JSContext::saveFrameChain()
         return false;
     }
 
+    if (Activation *act = mainThread().activation())
+        act->saveFrameChain();
+
     if (defaultCompartmentObject_)
         setCompartment(defaultCompartmentObject_->compartment());
     else
@@ -1281,6 +1284,9 @@ JSContext::restoreFrameChain()
     enterCompartmentDepth_ = sfc.enterCompartmentCount;
 
     stack.restoreFrameChain();
+
+    if (Activation *act = mainThread().activation())
+        act->restoreFrameChain();
 
     if (isExceptionPending())
         wrapPendingException();

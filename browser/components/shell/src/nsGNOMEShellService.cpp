@@ -27,7 +27,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "prprf.h"
-#ifdef MOZ_WIDGET_GTK2
+#if defined(MOZ_WIDGET_GTK)
 #include "nsIImageToPixbuf.h"
 #endif
 #include "nsXULAppAPI.h"
@@ -368,7 +368,7 @@ nsGNOMEShellService::GetCanSetDesktopBackground(bool* aResult)
 static nsresult
 WriteImage(const nsCString& aPath, imgIContainer* aImage)
 {
-#ifndef MOZ_WIDGET_GTK2
+#if !defined(MOZ_WIDGET_GTK)
   return NS_ERROR_NOT_AVAILABLE;
 #else
   nsCOMPtr<nsIImageToPixbuf> imgToPixbuf =

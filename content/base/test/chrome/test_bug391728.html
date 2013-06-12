@@ -17,9 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391728
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+const gHttpTestRoot = location.toString().replace("chrome://mochitests/content/", "http://127.0.0.1:8888/").split(/\//).slice(0, -1).join('/') + '/';
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 /** Test for Bug 391728 **/
 // Plugins that should dispatch error events and have the pseudo classes set
-const PLUGIN_COUNT = 13;
+const PLUGIN_COUNT = 11;
 // Plugins that should neither dispatch error events or have the pseudo classes set
 const FALLBACK_COUNT = 5;
 const OBJLC = Components.interfaces.nsIObjectLoadingContent;
@@ -46,16 +50,39 @@ function plugin_binding_attached(event) {
 }
 
 function init_test() {
-  // Make sure the blocklist is off for the duration of this test
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setBoolPref("extensions.blocklist.enabled", false);
-
   if (!PluginUtils.withTestPlugin(start_test))
     SimpleTest.finish();
 }
 
+function updateBlocklist(aCallback) {
+  var blocklistNotifier = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                          .getService(Components.interfaces.nsITimerCallback);
+  var observer = function() {
+    aCallback();
+    Services.obs.removeObserver(observer, "blocklist-updated");
+  };
+  Services.obs.addObserver(observer, "blocklist-updated", false);
+  blocklistNotifier.notify(null);
+}
+
+var _originalBlocklistURL = null;
+function setAndUpdateBlocklist(aURL, aCallback) {
+  info("Setting blocklist to " + aURL);
+  if (!_originalBlocklistURL) {
+    _originalBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
+  }
+  Services.prefs.setCharPref("extensions.blocklist.url", aURL);
+  updateBlocklist(aCallback);
+}
+
+function resetBlocklist() {
+  info("resetting blocklist URL to " + _originalBlocklistURL);
+  Services.prefs.setCharPref("extensions.blocklist.url", _originalBlocklistURL);
+}
+
 function start_test(plugin) {
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
+
   is(plugin.description, "Plug-in for testing purposes.\u2122 " +
                              "(\u0939\u093f\u0928\u094d\u0926\u0940 " +
                              "\u4e2d\u6587 " +
@@ -71,11 +98,9 @@ function start_test(plugin) {
 }
 
 function finish_test(plugin) {
+  Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+  resetBlocklist();
   plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
-  plugin.blocklisted = false;
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  prefs.clearUserPref("extensions.blocklist.enabled");
   SimpleTest.finish();
 }
 
@@ -139,8 +164,11 @@ function test_disabled(plugin) {
   test_style("dotted");
   ok(plugin.disabled, "Plugin lost its disabled status");
   plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
-  plugin.blocklisted = true;
-  load_frame(test_blocked, "file_bug391728");
+
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
+    function() {
+      load_frame(test_blocked, "file_bug391728");
+    });
 }
 
 function test_blocked(plugin) {
@@ -159,7 +187,10 @@ function test_unknown(plugin) {
   is(gDisabled.length, 0, "Should not have been any disabled plugins");
   is(gBlocked.length, 0, "Should not have been any blocked plugins");
   test_style("none");
-  finish_test(plugin);
+  setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", function() {
+    ok(!plugin.blocklisted, "Plugin shouldn't remain blocklisted");
+    finish_test(plugin);
+  });
 }
 
 SimpleTest.waitForExplicitFinish();

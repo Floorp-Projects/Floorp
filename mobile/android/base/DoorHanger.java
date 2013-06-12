@@ -69,7 +69,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         mValue = value;
 
         if (sInputPadding == -1) {
-            sInputPadding = getResources().getDimensionPixelSize(R.dimen.doorhanger_padding_spinners);
+            sInputPadding = getResources().getDimensionPixelSize(R.dimen.doorhanger_padding);
         }
         if (sSpinnerTextColor == -1) {
             sSpinnerTextColor = getResources().getColor(R.color.text_color_primary_disable_only);

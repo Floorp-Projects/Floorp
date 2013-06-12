@@ -119,7 +119,7 @@ CheckStackRootsRange(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, Rooter *rb
 }
 
 static void
-CheckStackRootsRangeAndSkipIon(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, Rooter *rbegin, Rooter *rend)
+CheckStackRootsRangeAndSkipJit(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, Rooter *rbegin, Rooter *rend)
 {
     /*
      * Regions of the stack between Ion activiations are marked exactly through
@@ -129,16 +129,16 @@ CheckStackRootsRangeAndSkipIon(JSRuntime *rt, uintptr_t *begin, uintptr_t *end, 
     uintptr_t *i = begin;
 
 #if defined(JS_ION)
-    for (ion::IonActivationIterator ion(rt); ion.more(); ++ion) {
-        uintptr_t *ionMin, *ionEnd;
-        ion.ionStackRange(ionMin, ionEnd);
+    for (ion::JitActivationIterator iter(rt); !iter.done(); ++iter) {
+        uintptr_t *jitMin, *jitEnd;
+        iter.jitStackRange(jitMin, jitEnd);
 
-        uintptr_t *upto = Min(ionMin, end);
+        uintptr_t *upto = Min(jitMin, end);
         if (upto > i)
             CheckStackRootsRange(rt, i, upto, rbegin, rend);
         else
             break;
-        i = ionEnd;
+        i = jitEnd;
     }
 #endif
 
@@ -296,7 +296,7 @@ JS::CheckStackRoots(JSContext *cx)
         }
     }
 
-    CheckStackRootsRangeAndSkipIon(rt, stackMin, stackEnd, firstToScan, rooters.end());
+    CheckStackRootsRangeAndSkipJit(rt, stackMin, stackEnd, firstToScan, rooters.end());
     CheckStackRootsRange(rt, cgcd->registerSnapshot.words,
                          ArrayEnd(cgcd->registerSnapshot.words),
                          firstToScan, rooters.end());
