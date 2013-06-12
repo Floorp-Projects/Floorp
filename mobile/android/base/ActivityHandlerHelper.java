@@ -186,6 +186,11 @@ public class ActivityHandlerHelper implements GeckoEventListener {
         public void gotIntent(Intent intent);
     }
 
+    /* Gets an intent that can open a particular mimetype. Will show a prompt with a list
+     * of Activities that can handle the mietype. Asynchronously calls the handler when
+     * one of the intents is selected. If the caller passes in null for the handler, will still
+     * prompt for the activity, but will throw away the result.
+     */
     private void getFilePickerIntentAsync(final Context context, String aMimeType, final IntentHandler handler) {
         final ArrayList<Intent> intents = new ArrayList<Intent>();
         final Prompt.PromptListItem[] items =
@@ -204,22 +209,22 @@ public class ActivityHandlerHelper implements GeckoEventListener {
 
         final Prompt prompt = new Prompt(context, new Prompt.PromptCallback() {
             public void onPromptFinished(String promptServiceResult) {
-                int itemId = -1;
-                try {
-                    itemId = new JSONObject(promptServiceResult).getInt("button");
-
-                    if (itemId == -1) {
-                        handler.gotIntent(null);
-                        return;
-                    }
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "result from promptservice was invalid: ", e);
-                    handler.gotIntent(null);
+                if (handler == null) {
                     return;
                 }
 
-                if (handler != null)
+                int itemId = -1;
+                try {
+                    itemId = new JSONObject(promptServiceResult).getInt("button");
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "result from promptservice was invalid: ", e);
+                }
+
+                if (itemId == -1) {
+                    handler.gotIntent(null);
+                } else {
                     handler.gotIntent(intents.get(itemId));
+                }
             }
         });
 
@@ -309,20 +314,29 @@ public class ActivityHandlerHelper implements GeckoEventListener {
         return filePickerResult;
     }
 
+    /* Allows the user to pick an activity to load files from using a list prompt. Then opens the activity and
+     * sends the file returned to the passed in handler. If a null handler is passed in, will still
+     * pick and launch the file picker, but will throw away the result.
+     */
     public void showFilePickerAsync(final Activity parentActivity, String aMimeType, final FileResultHandler handler) {
         getFilePickerIntentAsync(parentActivity, aMimeType, new IntentHandler() {
             public void gotIntent(Intent intent) {
+                if (handler == null) {
+                    return;
+                }
+
                 if (intent == null) {
                     handler.gotFile("");
+                    return;
                 }
-        
-                if (intent.getAction().equals(MediaStore.ACTION_IMAGE_CAPTURE)) {
+
+                if (MediaStore.ACTION_IMAGE_CAPTURE.equals(intent.getAction())) {
                     CameraImageResultHandler cam = new CameraImageResultHandler(handler);
                     parentActivity.startActivityForResult(intent, mActivityResultHandlerMap.put(cam));
-                } else if (intent.getAction().equals(MediaStore.ACTION_VIDEO_CAPTURE)) {
+                } else if (MediaStore.ACTION_VIDEO_CAPTURE.equals(intent.getAction())) {
                     CameraVideoResultHandler vid = new CameraVideoResultHandler(handler);
                     parentActivity.startActivityForResult(intent, mActivityResultHandlerMap.put(vid));
-                } else if (intent.getAction().equals(Intent.ACTION_GET_CONTENT)) {
+                } else if (Intent.ACTION_GET_CONTENT.equals(intent.getAction())) {
                     FilePickerResultHandlerSync file = new FilePickerResultHandlerSync(handler);
                     parentActivity.startActivityForResult(intent, mActivityResultHandlerMap.put(file));
                 } else {
