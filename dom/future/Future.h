@@ -22,6 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class FutureInit;
+class FutureCallback;
 class AnyCallback;
 class FutureResolver;
 
@@ -53,6 +54,12 @@ public:
   Constructor(const GlobalObject& aGlobal, JSContext* aCx, FutureInit& aInit,
               ErrorResult& aRv);
 
+  already_AddRefed<Future>
+  Then(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback);
+
+  already_AddRefed<Future>
+  Catch(AnyCallback* aRejectCallback);
+
   void Done(AnyCallback* aResolveCallback, AnyCallback* aRejectCallback);
 
 private:
@@ -80,15 +87,15 @@ private:
   // appended by then(), catch() or done().
   void RunTask();
 
-  void AppendCallbacks(AnyCallback* aResolveCallback,
-                       AnyCallback* aRejectCallback);
+  void AppendCallbacks(FutureCallback* aResolveCallback,
+                       FutureCallback* aRejectCallback);
 
   nsRefPtr<nsPIDOMWindow> mWindow;
 
   nsRefPtr<FutureResolver> mResolver;
 
-  nsTArray<nsRefPtr<AnyCallback> > mResolveCallbacks;
-  nsTArray<nsRefPtr<AnyCallback> > mRejectCallbacks;
+  nsTArray<nsRefPtr<FutureCallback> > mResolveCallbacks;
+  nsTArray<nsRefPtr<FutureCallback> > mRejectCallbacks;
 
   JS::Value mResult;
   FutureState mState;

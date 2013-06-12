@@ -18,6 +18,13 @@ callback AnyCallback = any (optional any value);
 [Constructor(FutureInit init)]
 interface Future {
   // TODO: update this interface - bug 875289
+  [Creator]
+  Future then(optional AnyCallback? resolveCallback = null,
+              optional AnyCallback? rejectCallback = null);
+
+  [Creator]
+  Future catch(optional AnyCallback? rejectCallback = null);
+
   void done(optional AnyCallback? resolveCallback = null,
             optional AnyCallback? rejectCallback = null);
 };
