@@ -10,6 +10,9 @@
 
 #include "jsd.h"
 #include "jsfriendapi.h"
+#include "nsCxPusher.h"
+
+using mozilla::AutoSafeJSContext;
 
 /* Comment this out to disable (NT specific) dumping as we go */
 /*
@@ -417,7 +420,8 @@ jsd_GetJSScript (JSDContext *jsdc, JSDScript *script)
 JSFunction *
 jsd_GetJSFunction (JSDContext *jsdc, JSDScript *script)
 {
-    return JS_GetScriptFunction(jsdc->dumbContext, script->script);
+    AutoSafeJSContext cx; // NB: Actually unused.
+    return JS_GetScriptFunction(cx, script->script);
 }
 
 JSDScript*
@@ -495,8 +499,10 @@ jsd_GetScriptBaseLineNumber(JSDContext* jsdc, JSDScript *jsdscript)
 unsigned
 jsd_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript)
 {
+    AutoSafeJSContext cx;
+    JSAutoCompartment ac(cx, jsdc->glob); // Just in case.
     if( NOT_SET_YET == (int)jsdscript->lineExtent )
-        jsdscript->lineExtent = JS_GetScriptLineExtent(jsdc->dumbContext, jsdscript->script);
+        jsdscript->lineExtent = JS_GetScriptLineExtent(cx, jsdscript->script);
     return jsdscript->lineExtent;
 }
 
@@ -517,7 +523,7 @@ jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, unsigned line)
     }
 #endif
 
-    JSContext *cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, jsdscript->script);
     pc = (uintptr_t) JS_LineNumberToPC(cx, jsdscript->script, line );
     return pc;
@@ -531,9 +537,9 @@ jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc)
     unsigned line = 0;
 
     if (pc) {
-        JSContext *cx = jsdc->dumbContext;
+        AutoSafeJSContext cx;
         JSAutoCompartment ac(cx, jsdscript->script);
-        line = JS_PCToLineNumber(jsdc->dumbContext, jsdscript->script, (jsbytecode*)pc);
+        line = JS_PCToLineNumber(cx, jsdscript->script, (jsbytecode*)pc);
     }
 
     if( line < first )
@@ -567,10 +573,10 @@ jsd_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
     if (last < startLine)
         return JS_TRUE;
 
-    JSContext *cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, jsdscript->script);
 
-    ok = JS_GetLinePCs(jsdc->dumbContext, jsdscript->script,
+    ok = JS_GetLinePCs(cx, jsdscript->script,
                        startLine, maxLines,
                        count, retLines, &pcs);
 
@@ -581,7 +587,7 @@ jsd_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
             }
         }
 
-        JS_free(jsdc->dumbContext, pcs);
+        JS_free(cx, pcs);
     }
 
     return ok;
@@ -613,10 +619,10 @@ JSBool
 jsd_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript* jsdscript, JSBool enable)
 {
     JSBool rv;
-    JSContext *cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, jsdscript->script);
     JSD_LOCK();
-    rv = JS_SetSingleStepMode(jsdc->dumbContext, jsdscript->script, enable);
+    rv = JS_SetSingleStepMode(cx, jsdscript->script, enable);
     JSD_UNLOCK();
     return rv;
 }
@@ -859,7 +865,7 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
     jsdhook->callerdata = callerdata;
 
     {
-        JSContext *cx = jsdc->dumbContext;
+        AutoSafeJSContext cx;
         JSAutoCompartment ac(cx, jsdscript->script);
         rv = JS_SetTrap(cx, jsdscript->script, 
                         (jsbytecode*)pc, jsd_TrapHandler,
@@ -895,9 +901,9 @@ jsd_ClearExecutionHook(JSDContext*           jsdc,
     }
 
     {
-        JSContext *cx = jsdc->dumbContext;
+        AutoSafeJSContext cx;
         JSAutoCompartment ac(cx, jsdscript->script);
-        JS_ClearTrap(jsdc->dumbContext, jsdscript->script, 
+        JS_ClearTrap(cx, jsdscript->script, 
                      (jsbytecode*)pc, NULL, NULL );
     }
 
