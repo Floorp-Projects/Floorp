@@ -100,11 +100,11 @@ function test() {
           checkVisibility("params");
 
           is(tabpanel.querySelectorAll(".variables-view-variable").length, 5,
-            "There should be 6 param values displayed in this tabpanel.");
+            "There should be 5 param values displayed in this tabpanel.");
           is(queryScope.querySelectorAll(".variables-view-variable").length, 3,
             "There should be 3 param values displayed in the query scope.");
           is(postScope.querySelectorAll(".variables-view-variable").length, 2,
-            "There should be 3 param values displayed in the post scope.");
+            "There should be 2 param values displayed in the post scope.");
 
           is(postScope.querySelectorAll(".variables-view-variable .name")[0].getAttribute("value"),
             "foo", "The first post param name was incorrect.");
