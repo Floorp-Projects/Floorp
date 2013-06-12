@@ -7,7 +7,7 @@ function testReduce() {
   // where the non-commutative of floating point becomes relevant,
   // so we must use assertAlmostEq.
   function mul(v, p) { return v*p; }
-  var array = range(1, minItemsTestingThreshold+1);
+  var array = range(1, 513);
   compareAgainstArray(array, "reduce", mul, assertAlmostEq);
 }
 

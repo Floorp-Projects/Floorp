@@ -6,5 +6,4 @@ function factorial(n) {
   return n * factorial(n - 1);
 }
 
-if (getBuildConfiguration().parallelJS)
-  compareAgainstArray(range(0, minItemsTestingThreshold), "map", factorial);
+if (getBuildConfiguration().parallelJS) compareAgainstArray(range(0, 64), "map", factorial);

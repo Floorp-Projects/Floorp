@@ -10,13 +10,13 @@ function makeObject(e, i, c) {
 }
 
 function test() {
-  var array = range(0, minItemsTestingThreshold);
+  var array = range(0, 768);
   var array1 = array.map(makeObject);
 
   assertParallelExecWillRecover(function (m) {
     var pa = new ParallelArray(array);
     var pa1 = pa.map(makeObject, m);
-    // assertStructuralEq(pa1, array1);
+    assertStructuralEq(pa1, array1);
   });
 }
 
