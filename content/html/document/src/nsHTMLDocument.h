@@ -44,13 +44,14 @@ public:
   using nsDocument::GetPlugins;
 
   nsHTMLDocument();
+  ~nsHTMLDocument();
   virtual nsresult Init() MOZ_OVERRIDE;
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsHTMLDocument,
+                                                         nsDocument)
 
-  NS_IMETHOD_(nsrefcnt) AddRef(void) MOZ_OVERRIDE;
-  NS_IMETHOD_(nsrefcnt) Release(void) MOZ_OVERRIDE;
-
+  // nsIDocument
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) MOZ_OVERRIDE;
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                           nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
@@ -69,9 +70,15 @@ public:
   virtual void StopDocumentLoad() MOZ_OVERRIDE;
 
   virtual void BeginLoad() MOZ_OVERRIDE;
-
   virtual void EndLoad() MOZ_OVERRIDE;
 
+  virtual NS_HIDDEN_(void) Destroy() MOZ_OVERRIDE
+  {
+    mAll = nullptr;
+    nsDocument::Destroy();
+  }
+
+  // nsIHTMLDocument
   virtual void SetCompatibilityMode(nsCompatibility aMode) MOZ_OVERRIDE;
 
   virtual bool IsWriting() MOZ_OVERRIDE
@@ -108,6 +115,7 @@ public:
   nsISupports *GetDocumentAllResult(const nsAString& aID,
                                     nsWrapperCache **aCache,
                                     nsresult *aResult);
+  JSObject* GetAll(JSContext* aCx, mozilla::ErrorResult& aRv);
 
   nsISupports* ResolveName(const nsAString& aName, nsWrapperCache **aCache);
   virtual already_AddRefed<nsISupports> ResolveName(const nsAString& aName,
@@ -154,8 +162,6 @@ public:
   friend class nsAutoEditingState;
 
   void EndUpdate(nsUpdateType aUpdateType) MOZ_OVERRIDE;
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDocument, nsDocument)
 
   virtual nsresult SetEditingState(EditingState aState) MOZ_OVERRIDE;
 
@@ -293,6 +299,8 @@ protected:
   nsRefPtr<nsContentList> mScripts;
   nsRefPtr<nsContentList> mForms;
   nsRefPtr<nsContentList> mFormControls;
+
+  JSObject* mAll;
 
   /** # of forms in the document, synchronously set */
   int32_t mNumForms;
