@@ -8,15 +8,13 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="runTest()">
+<body>
 <p id="display"></p>
 <div id="content" style="display: none">
 
 </div>
 <pre id="test">
 <script type="application/javascript"><!--
-
-SimpleTest.waitForExplicitFinish();
 
 function futureResolve() {
   ok(Future, "Future object should exist");
@@ -399,10 +397,16 @@ function runTest() {
   test();
 }
 
+var p = SpecialPowers.getBoolPref("dom.future.enabled");
+SpecialPowers.setBoolPref("dom.future.enabled", false);
+ok(!("Future" in window), "Future object should not exist if disabled by pref");
+SpecialPowers.setBoolPref("dom.future.enabled", p);
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.future.enabled", true]]}, runTest);
 // -->
 </script>
 </pre>
-<div id="testtarget"></div>
 </body>
 </html>
 

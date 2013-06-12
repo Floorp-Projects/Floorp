@@ -40,6 +40,8 @@ public:
   Future(nsPIDOMWindow* aWindow);
   ~Future();
 
+  static bool PrefEnabled();
+
   // WebIDL
 
   nsPIDOMWindow* GetParentObject() const
