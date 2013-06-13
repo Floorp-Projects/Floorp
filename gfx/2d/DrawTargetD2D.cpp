@@ -257,6 +257,63 @@ DrawTargetD2D::AddDependencyOnSource(SourceSurfaceD2DTarget* aSource)
   }
 }
 
+TemporaryRef<ID2D1Bitmap>
+DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
+                                   Rect &aSource)
+{
+  RefPtr<ID2D1Bitmap> bitmap;
+
+  switch (aSurface->GetType()) {
+
+  case SURFACE_D2D1_BITMAP:
+    {
+      SourceSurfaceD2D *srcSurf = static_cast<SourceSurfaceD2D*>(aSurface);
+      bitmap = srcSurf->GetBitmap();
+    }
+    break;
+  case SURFACE_D2D1_DRAWTARGET:
+    {
+      SourceSurfaceD2DTarget *srcSurf = static_cast<SourceSurfaceD2DTarget*>(aSurface);
+      bitmap = srcSurf->GetBitmap(mRT);
+      AddDependencyOnSource(srcSurf);
+    }
+    break;
+  default:
+    {
+      RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+      if (!srcSurf) {
+        gfxDebug() << "Not able to deal with non-data source surface.";
+        return nullptr;
+      }
+
+      if (aSource.width > mRT->GetMaximumBitmapSize() ||
+          aSource.height > mRT->GetMaximumBitmapSize()) {
+        gfxDebug() << "Bitmap source larger than texture size specified. DrawBitmap will silently fail.";
+        // Don't know how to deal with this yet.
+        return nullptr;
+      }
+
+      int stride = srcSurf->Stride();
+
+      unsigned char *data = srcSurf->GetData() +
+                            (uint32_t)aSource.y * stride +
+                            (uint32_t)aSource.x * BytesPerPixel(srcSurf->GetFormat());
+
+      D2D1_BITMAP_PROPERTIES props =
+        D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(srcSurf->GetFormat()), AlphaMode(srcSurf->GetFormat())));
+      mRT->CreateBitmap(D2D1::SizeU(UINT32(aSource.width), UINT32(aSource.height)), data, stride, props, byRef(bitmap));
+
+      // subtract the integer part leaving the fractional part
+      aSource.x -= (uint32_t)aSource.x;
+      aSource.y -= (uint32_t)aSource.y;
+    }
+    break;
+  }
+
+  return bitmap;
+}
+
 void
 DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
                            const Rect &aDest,
@@ -274,60 +331,43 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
 
   Rect srcRect = aSource;
 
-  switch (aSurface->GetType()) {
-
-  case SURFACE_D2D1_BITMAP:
-    {
-      SourceSurfaceD2D *srcSurf = static_cast<SourceSurfaceD2D*>(aSurface);
-      bitmap = srcSurf->GetBitmap();
-
-      if (!bitmap) {
-        return;
-      }
-    }
-    break;
-  case SURFACE_D2D1_DRAWTARGET:
-    {
-      SourceSurfaceD2DTarget *srcSurf = static_cast<SourceSurfaceD2DTarget*>(aSurface);
-      bitmap = srcSurf->GetBitmap(mRT);
-      AddDependencyOnSource(srcSurf);
-    }
-    break;
-  default:
-    {
-      RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
-
-      if (!srcSurf) {
-        gfxDebug() << "Not able to deal with non-data source surface.";
-        return;
-      }
-
-      if (aSource.width > rt->GetMaximumBitmapSize() ||
-          aSource.height > rt->GetMaximumBitmapSize()) {
-        gfxDebug() << "Bitmap source larger than texture size specified. DrawBitmap will silently fail.";
-        // Don't know how to deal with this yet.
-        return;
-      }
-
-      int stride = srcSurf->Stride();
-
-      unsigned char *data = srcSurf->GetData() +
-                            (uint32_t)aSource.y * stride +
-                            (uint32_t)aSource.x * BytesPerPixel(srcSurf->GetFormat());
-
-      D2D1_BITMAP_PROPERTIES props =
-        D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(srcSurf->GetFormat()), AlphaMode(srcSurf->GetFormat())));
-      mRT->CreateBitmap(D2D1::SizeU(UINT32(aSource.width), UINT32(aSource.height)), data, stride, props, byRef(bitmap));
-
-      srcRect.x -= (uint32_t)aSource.x;
-      srcRect.y -= (uint32_t)aSource.y;
-    }
-    break;
+  bitmap = GetBitmapForSurface(aSurface, srcRect);
+  if (!bitmap) {
+      return;
   }
-
+ 
   rt->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha, D2DFilter(aSurfOptions.mFilter), D2DRect(srcRect));
 
   FinalizeRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()), aDest);
+}
+
+void
+DrawTargetD2D::MaskSurface(const Pattern &aSource,
+                           SourceSurface *aMask,
+                           Point aOffset,
+                           const DrawOptions &aOptions)
+{
+  RefPtr<ID2D1Bitmap> bitmap;
+
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()));
+
+  PrepareForDrawing(rt);
+
+  // FillOpacityMask only works if the antialias mode is MODE_ALIASED
+  rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+
+  IntSize size = aMask->GetSize();
+  Rect maskRect = Rect(0.f, 0.f, size.width, size.height);
+  bitmap = GetBitmapForSurface(aMask, maskRect);
+  if (!bitmap) {
+       return;
+  }
+
+  Rect dest = Rect(aOffset.x, aOffset.y, size.width, size.height);
+  RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aSource, aOptions.mAlpha);
+  rt->FillOpacityMask(bitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS, D2DRect(dest), D2DRect(maskRect));
+
+  FinalizeRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()), dest);
 }
 
 void
