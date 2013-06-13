@@ -316,9 +316,13 @@ let CustomizableUIInternal = {
         continue;
       }
 
-      if (provider == CustomizableUI.PROVIDER_XUL &&
-          aArea == CustomizableUI.AREA_PANEL) {
-        this.ensureButtonClosesPanel(node);
+      if (aArea == CustomizableUI.AREA_PANEL) {
+        if (provider == CustomizableUI.PROVIDER_XUL) {
+          this.ensureButtonClosesPanel(node);
+        }
+        node.classList.add("panel-contents-button");
+      } else {
+        node.classList.remove("panel-contents-button");
       }
       this.ensureButtonContextMenu(node, aArea == CustomizableUI.AREA_PANEL);
 
@@ -455,6 +459,7 @@ let CustomizableUIInternal = {
       if (!btn.hasAttribute("noautoclose")) {
         this.ensureButtonClosesPanel(btn);
       }
+      btn.classList.add("panel-contents-button");
       this.ensureButtonContextMenu(btn, true);
     }
 
@@ -488,9 +493,13 @@ let CustomizableUIInternal = {
       let container = areaNode.customizationTarget;
       let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
 
-      if (provider == CustomizableUI.PROVIDER_XUL &&
-          aArea == CustomizableUI.AREA_PANEL) {
-        this.ensureButtonClosesPanel(widgetNode);
+      if (aArea == CustomizableUI.AREA_PANEL) {
+        if (provider == CustomizableUI.PROVIDER_XUL) {
+          this.ensureButtonClosesPanel(widgetNode);
+        }
+        widgetNode.classList.add("panel-contents-button");
+      } else {
+        widgetNode.classList.remove("panel-contents-button");
       }
 
       this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
