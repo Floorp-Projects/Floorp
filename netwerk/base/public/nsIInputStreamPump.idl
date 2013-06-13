@@ -11,10 +11,11 @@ interface nsIStreamListener;
  * nsIInputStreamPump
  *
  * This interface provides a means to configure and use a input stream pump
- * instance.  The input stream pump will asynchronously read from a input
- * stream, and push data to a nsIStreamListener instance.  It utilizes the
+ * instance.  The input stream pump will asynchronously read from an input
+ * stream, and push data to an nsIStreamListener instance.  It utilizes the
  * current thread's nsIEventTarget in order to make reading from the stream
- * asynchronous.
+ * asynchronous. A different thread can be used if the pump also implements
+ * nsIThreadRetargetableRequest.
  *
  * If the given stream supports nsIAsyncInputStream, then the stream pump will
  * call the stream's AsyncWait method to drive the stream listener.  Otherwise,
