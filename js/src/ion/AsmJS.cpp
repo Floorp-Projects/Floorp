@@ -3085,8 +3085,12 @@ CheckModuleExports(ModuleCompiler &m, ParseNode *fn, ParseNode **stmtIter)
 {
     ParseNode *returnNode = SkipEmptyStatements(*stmtIter);
 
-    if (!returnNode || !returnNode->isKind(PNK_RETURN))
-        return m.fail(fn, "asm.js module must end with a return export statement");
+    if (!returnNode || !returnNode->isKind(PNK_RETURN)) {
+        if (returnNode && NextNode(returnNode) != NULL)
+            return m.fail(returnNode, "invalid asm.js statement");
+        else
+            return m.fail(fn, "asm.js module must end with a return export statement");
+    }
 
     ParseNode *returnExpr = UnaryKid(returnNode);
 
