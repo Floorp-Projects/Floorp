@@ -66,21 +66,32 @@ public class TabCounter extends GeckoTextSwitcher
     }
 
     public void setCountWithAnimation(int count) {
-        if (mCount == count)
-            return;
-
         // Don't animate from initial state
-        if (mCount != 0) {
-            if (count < mCount) {
-                setInAnimation(mFlipInBackward);
-                setOutAnimation(mFlipOutForward);
-            } else if (count > mCount) {
-                setInAnimation(mFlipInForward);
-                setOutAnimation(mFlipOutBackward);
-            }
+        if (mCount == 0) {
+            setCount(count);
+            return;
         }
 
+        if (mCount == count) {
+            return;
+        }
+
+        if (count < mCount) {
+            setInAnimation(mFlipInBackward);
+            setOutAnimation(mFlipOutForward);
+        } else {
+            setInAnimation(mFlipInForward);
+            setOutAnimation(mFlipOutBackward);
+        }
+
+        // Eliminate screen artifact. Set explicit In/Out animation pair order. This will always
+        // animate pair in In->Out child order, prevent alternating use of the Out->In case.
+        setDisplayedChild(0);
+
+        // Set In value, trigger animation to Out value
+        setCurrentText(String.valueOf(mCount));
         setText(String.valueOf(count));
+
         mCount = count;
     }
 

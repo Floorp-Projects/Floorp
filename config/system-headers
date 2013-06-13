@@ -1128,3 +1128,5 @@ sys/thr.h
 sys/user.h
 kvm.h
 spawn.h
+err.h
+xlocale.h

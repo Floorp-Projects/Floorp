@@ -139,11 +139,11 @@ using namespace mozilla::dom;
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
 
-#define IMPL_STRING_GETTER(_name)                                               \
+#define IMPL_CSTRING_GETTER(_name)                                              \
   NS_IMETHODIMP                                                                 \
-  nsXMLHttpRequest::_name(nsAString& aOut)                                      \
+  nsXMLHttpRequest::_name(nsACString& aOut)                                     \
   {                                                                             \
-    nsString tmp;                                                               \
+    nsCString tmp;                                                              \
     _name(tmp);                                                                 \
     aOut = tmp;                                                                 \
     return NS_OK;                                                               \
@@ -1128,9 +1128,9 @@ nsXMLHttpRequest::Status()
   return status;
 }
 
-IMPL_STRING_GETTER(GetStatusText)
+IMPL_CSTRING_GETTER(GetStatusText)
 void
-nsXMLHttpRequest::GetStatusText(nsString& aStatusText)
+nsXMLHttpRequest::GetStatusText(nsCString& aStatusText)
 {
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
@@ -1152,17 +1152,8 @@ nsXMLHttpRequest::GetStatusText(nsString& aStatusText)
     }
   }
 
-  nsCString statusText;
-  httpChannel->GetResponseStatusText(statusText);
-  if (statusText.IsVoid()) {
-    aStatusText.SetIsVoid(true);
-  } else {
-    // We use UTF8ToNewUnicode here because it truncates after invalid UTF-8
-    // characters, CopyUTF8toUTF16 just doesn't copy in that case.
-    uint32_t length;
-    PRUnichar* chars = UTF8ToNewUnicode(statusText, &length);
-    aStatusText.Adopt(chars, length);
-  }
+  httpChannel->GetResponseStatusText(aStatusText);
+
 }
 
 void
@@ -1286,10 +1277,10 @@ nsXMLHttpRequest::IsSafeHeader(const nsACString& header, nsIHttpChannel* httpCha
   return isSafe;
 }
 
-/* DOMString getAllResponseHeaders(); */
-IMPL_STRING_GETTER(GetAllResponseHeaders)
+/* ByteString getAllResponseHeaders(); */
+IMPL_CSTRING_GETTER(GetAllResponseHeaders)
 void
-nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
+nsXMLHttpRequest::GetAllResponseHeaders(nsCString& aResponseHeaders)
 {
   aResponseHeaders.Truncate();
 
@@ -1303,7 +1294,7 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
   if (nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel()) {
     nsRefPtr<nsHeaderVisitor> visitor = new nsHeaderVisitor(this, httpChannel);
     if (NS_SUCCEEDED(httpChannel->VisitResponseHeaders(visitor))) {
-      CopyASCIItoUTF16(visitor->Headers(), aResponseHeaders);
+      aResponseHeaders = visitor->Headers();
     }
     return;
   }
@@ -1316,10 +1307,10 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
   nsAutoCString value;
   if (NS_SUCCEEDED(mChannel->GetContentType(value))) {
     aResponseHeaders.AppendLiteral("Content-Type: ");
-    AppendASCIItoUTF16(value, aResponseHeaders);
+    aResponseHeaders.Append(value);
     if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) && !value.IsEmpty()) {
       aResponseHeaders.AppendLiteral(";charset=");
-      AppendASCIItoUTF16(value, aResponseHeaders);
+      aResponseHeaders.Append(value);
     }
     aResponseHeaders.AppendLiteral("\r\n");
   }
@@ -2950,7 +2941,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   return rv;
 }
 
-/* void setRequestHeader (in AUTF8String header, in AUTF8String value); */
+/* void setRequestHeader (in ByteString header, in ByteString value); */
 // http://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#dom-xmlhttprequest-setrequestheader
 NS_IMETHODIMP
 nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
