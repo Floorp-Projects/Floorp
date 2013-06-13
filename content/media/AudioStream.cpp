@@ -429,13 +429,13 @@ int AudioStream::MaxNumberOfChannels()
   return static_cast<int>(maxNumberOfChannels);
 }
 
-static void SetUint16LE(PRUint8* aDest, PRUint16 aValue)
+static void SetUint16LE(uint8_t* aDest, uint16_t aValue)
 {
   aDest[0] = aValue & 0xFF;
   aDest[1] = aValue >> 8;
 }
 
-static void SetUint32LE(PRUint8* aDest, PRUint32 aValue)
+static void SetUint32LE(uint8_t* aDest, uint32_t aValue)
 {
   SetUint16LE(aDest, aValue & 0xFFFF);
   SetUint16LE(aDest + 2, aValue >> 16);
@@ -453,7 +453,7 @@ OpenDumpFile(AudioStream* aStream)
     return nullptr;
   ++gDumpedAudioCount;
 
-  PRUint8 header[] = {
+  uint8_t header[] = {
     // RIFF header
     0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x41, 0x56, 0x45,
     // fmt chunk. We always write 16-bit samples.
@@ -474,25 +474,25 @@ OpenDumpFile(AudioStream* aStream)
 }
 
 static void
-WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, PRUint32 aFrames,
+WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, uint32_t aFrames,
               void* aBuffer)
 {
   if (!aDumpFile)
     return;
 
-  PRUint32 samples = aStream->GetChannels()*aFrames;
+  uint32_t samples = aStream->GetChannels()*aFrames;
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
     fwrite(aBuffer, 2, samples, aDumpFile);
     return;
   }
 
   NS_ASSERTION(AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_FLOAT32, "bad format");
-  nsAutoTArray<PRUint8, 1024*2> buf;
+  nsAutoTArray<uint8_t, 1024*2> buf;
   buf.SetLength(samples*2);
   float* input = static_cast<float*>(aBuffer);
-  PRUint8* output = buf.Elements();
-  for (PRUint32 i = 0; i < samples; ++i) {
-    SetUint16LE(output + i*2, PRInt16(input[i]*32767.0f));
+  uint8_t* output = buf.Elements();
+  for (uint32_t i = 0; i < samples; ++i) {
+    SetUint16LE(output + i*2, int16_t(input[i]*32767.0f));
   }
   fwrite(output, 2, samples, aDumpFile);
   fflush(aDumpFile);
