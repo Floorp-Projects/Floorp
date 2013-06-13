@@ -24,43 +24,65 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=713381
 
 const num = 500;
 var loadeddata = 0;
+var testName = "?";
 
 var result = document.getElementById("result");
 document.getElementById("expected").innerHTML = " of " + num + " ";
 
 var finish = function(testNum) {
   return function() {
-    ok(true, "Received loadeddata event for instance " + testNum );
+    ok(true, testName + ": received loadeddata event for instance " + testNum );
     loadeddata++;
     if (loadeddata == num) {
-      ok(true, "Should receive loadeddata events for all " + num + " elements.");
-      SimpleTest.finish();
+      ok(true, testName + ": should receive loadeddata events for all " + num + " elements.");
+      nextTest();
     }
   }
 };
 
-var resource = getPlayableAudio(gSmallTests);
+var testNum = 0;
 
-if (resource == null) {
-  todo(false, "No types supported");
-} else {
-  SimpleTest.waitForExplicitFinish();
+function nextTest() {
+  if (testNum >= gTooManyElementAudioTests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  var test = gTooManyElementAudioTests[testNum];
+  testNum++;
+
+  if (!document.createElement("audio").canPlayType(test.type)) {
+    setTimeout(nextTest, 0);
+    return;
+  }
+  var name = test.name;
+  
+  loadeddata = 0;
+  testName = name;
+
   // Load the resource, and play it to ensure it's entirely downloaded.
   // Once it's played through, create a large number of audio elements which
   // are the same resource. These will share data with the other resource, and
   // so be really cheap to create.
-  var res = new Audio(resource.name);
+  var res = new Audio(name);
   res.addEventListener("ended",
     function() {  
       for (var i=0; i<num; ++i) {
-        var a = new Audio(resource.name);
+        var a = new Audio(name);
         a.addEventListener("loadeddata", finish(i), false);
       }
     }, false);
   res.play();
+  
 }
 
-setInterval(function() { result.innerHTML = loadeddata; }, 1000);
+if (getPlayableAudio(gTooManyElementAudioTests) == null) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+  nextTest();
+}
+
+setInterval(function() { result.innerHTML = testName + ": " + loadeddata; }, 1000);
 
 </script>
 </pre>
