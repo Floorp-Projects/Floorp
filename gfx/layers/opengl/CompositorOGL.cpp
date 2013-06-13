@@ -269,7 +269,7 @@ CompositorOGL::CreateContext()
 void
 CompositorOGL::AddPrograms(ShaderProgramType aType)
 {
-  for (PRUint32 maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
+  for (uint32_t maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
     if (ProgramProfileOGL::ProgramExists(aType, static_cast<MaskType>(maskType))) {
       mPrograms[aType].mVariations[maskType] = new ShaderProgramOGL(this->gl(),
         ProgramProfileOGL::GetProfileFor(aType, static_cast<MaskType>(maskType)));
@@ -409,7 +409,7 @@ CompositorOGL::Initialize()
     mGLContext->fGenFramebuffers(1, &testFBO);
     GLuint testTexture = 0;
 
-    for (PRUint32 i = 0; i < ArrayLength(textureTargets); i++) {
+    for (uint32_t i = 0; i < ArrayLength(textureTargets); i++) {
       GLenum target = textureTargets[i];
       if (!target)
           continue;
@@ -664,7 +664,7 @@ void
 CompositorOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 {
   for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
-    for (PRUint32 mask = MaskNone; mask < NumMaskTypes; ++mask) {
+    for (uint32_t mask = MaskNone; mask < NumMaskTypes; ++mask) {
       if (mPrograms[i].mVariations[mask]) {
         mPrograms[i].mVariations[mask]->CheckAndSetProjectionMatrix(aMatrix);
       }
@@ -1183,7 +1183,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
         return;
       }
 
-      for (PRInt32 pass = 1; pass <=2; ++pass) {
+      for (int32_t pass = 1; pass <=2; ++pass) {
         ShaderProgramOGL* program;
         if (pass == 1) {
           program = GetProgram(gl::ComponentAlphaPass1ProgramType, maskType);
@@ -1323,7 +1323,7 @@ CompositorOGL::CopyToTarget(gfxContext *aTarget, const gfxMatrix& aTransform)
   GLint width = rect.width;
   GLint height = rect.height;
 
-  if ((PRInt64(width) * PRInt64(height) * PRInt64(4)) > PR_INT32_MAX) {
+  if ((int64_t(width) * int64_t(height) * int64_t(4)) > PR_INT32_MAX) {
     NS_ERROR("Widget size too big - integer overflow!");
     return;
   }
