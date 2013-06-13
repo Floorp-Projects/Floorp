@@ -1397,7 +1397,6 @@ gfxContext::GetPattern()
 
 
 // masking
-
 void
 gfxContext::Mask(gfxPattern *pattern)
 {
@@ -1463,12 +1462,10 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
     gfxPoint pt = surface->GetDeviceOffset();
 
     // We clip here to bind to the mask surface bounds, see above.
-    mDT->PushClipRect(Rect(offset.x - pt.x, offset.y - pt.y, sourceSurf->GetSize().width, sourceSurf->GetSize().height));
-    mDT->Mask(GeneralPattern(this), 
-              SurfacePattern(sourceSurf, EXTEND_CLAMP,
-                             Matrix(1.0f, 0, 0, 1.0f, Float(offset.x - pt.x), Float(offset.y - pt.y))),
+    mDT->MaskSurface(GeneralPattern(this), 
+              sourceSurf,
+              Point(offset.x - pt.x, offset.y -  pt.y),
               DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
-    mDT->PopClip();
   }
 }
 
