@@ -2006,6 +2006,22 @@ class CGPrefEnabled(CGAbstractMethod):
         assert isinstance(pref, list) and len(pref) == 1
         return "  return Preferences::GetBool(\"%s\");" % pref[0]
 
+class CGConstructorEnabledChromeOnly(CGAbstractMethod):
+    """
+    A method for testing whether the object we're going to be defined
+    on is chrome so we can decide whether our constructor should be
+    enabled.
+    """
+    def __init__(self, descriptor):
+        assert descriptor.interface.getExtendedAttribute("ChromeOnly")
+        CGAbstractMethod.__init__(self, descriptor,
+                                  'ConstructorEnabled', 'bool',
+                                  [Argument("JSContext*", "aCx"),
+                                   Argument("JS::Handle<JSObject*>", "aObj")])
+
+    def definition_body(self):
+        return "  return %s;" % GetAccessCheck(self.descriptor, "aObj")
+
 class CGIsMethod(CGAbstractMethod):
     def __init__(self, descriptor):
         args = [Argument('JSObject*', 'obj')]
@@ -7518,10 +7534,20 @@ class CGDescriptor(CGThing):
             not descriptor.interface.isExternal() and
             # Workers stuff is never pref-controlled
             not descriptor.workers):
-            if descriptor.interface.getExtendedAttribute("PrefControlled") is not None:
+            prefControlled = descriptor.interface.getExtendedAttribute("PrefControlled")
+            havePref = descriptor.interface.getExtendedAttribute("Pref")
+            haveChromeOnly = descriptor.interface.getExtendedAttribute("ChromeOnly")
+            # Make sure at most one of those is set
+            if bool(prefControlled) + bool(havePref) + bool(haveChromeOnly) > 1:
+                raise TypeError("Interface %s has more than one of "
+                                "'PrefControlled', 'Pref', and 'ChomeOnly' "
+                                "specified", descriptor.name)
+            if prefControlled is not None:
                 cgThings.append(CGPrefEnabledNative(descriptor))
-            elif descriptor.interface.getExtendedAttribute("Pref") is not None:
+            elif havePref is not None:
                 cgThings.append(CGPrefEnabled(descriptor))
+            elif haveChromeOnly is not None:
+                cgThings.append(CGConstructorEnabledChromeOnly(descriptor))
 
         if descriptor.concrete:
             if descriptor.proxy:
@@ -8051,7 +8077,8 @@ class CGRegisterProtos(CGAbstractMethod):
     def _registerProtos(self):
         def getCheck(desc):
             if (desc.interface.getExtendedAttribute("PrefControlled") is None and
-                desc.interface.getExtendedAttribute("Pref") is None):
+                desc.interface.getExtendedAttribute("Pref") is None and
+                desc.interface.getExtendedAttribute("ChromeOnly") is None):
                 return "nullptr"
             return "%sBinding::ConstructorEnabled" % desc.name
         lines = []
