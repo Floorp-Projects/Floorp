@@ -34,16 +34,9 @@ function step3()
   is(gBrowser.selectedTab, tab1, "2nd click on selected tab1 keeps tab selected");
   isnot(document.activeElement, tab1, "2nd click on selected tab1 does not activate tab");
 
-  if (gNavToolbox.getAttribute("tabsontop") == "true") {
-    ok(true, "[tabsontop=true] focusing URLBar then sending 1 Shift+Tab.");
-    gURLBar.focus();
-    EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
-  } else {
-    ok(true, "[tabsontop=false] focusing SearchBar then sending Tab(s) until out of nav-bar.");
-    document.getElementById("searchbar").focus();
-    while (focus_in_navbar())
-      EventUtils.synthesizeKey("VK_TAB", { });
-  }
+  ok(true, "focusing URLBar then sending 1 Shift+Tab.");
+  gURLBar.focus();
+  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
   is(gBrowser.selectedTab, tab1, "tab key to selected tab1 keeps tab selected");
   is(document.activeElement, tab1, "tab key to selected tab1 activates tab");
 
