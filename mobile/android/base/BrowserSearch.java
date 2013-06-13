@@ -478,13 +478,6 @@ public class BrowserSearch extends Fragment implements AdapterView.OnItemClickLi
         }
     }
 
-    private class SearchEntryViewHolder {
-        public FlowLayout suggestionView;
-        public FaviconView iconView;
-        public LinearLayout userEnteredView;
-        public TextView userEnteredTextView;
-    }
-
     private class SearchAdapter extends SimpleCursorAdapter {
         private static final int ROW_SEARCH = 0;
         private static final int ROW_STANDARD = 1;
