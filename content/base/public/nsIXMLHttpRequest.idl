@@ -21,7 +21,7 @@ interface nsIDOMBlob;
 #include "jsapi.h"
 %}
 
-[scriptable, builtinclass, uuid(5bc978f2-41e5-4349-a12d-b018092271f7)]
+[scriptable, builtinclass, uuid(ac97e161-9f1d-4163-adc9-e9a59e18682c)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
   [implicit_jscontext] attribute jsval onabort;
@@ -133,7 +133,7 @@ interface nsIXMLHttpRequest : nsISupports
    * The string representing the status of the response for
    * HTTP requests.
    */
-  readonly attribute DOMString statusText;
+  readonly attribute ACString statusText;
 
   /**
    * If the request has been sent already, this method will
@@ -148,7 +148,7 @@ interface nsIXMLHttpRequest : nsISupports
    * @returns A string containing all of the response headers.
    *          The empty string if the response has not yet been received.
    */
-  DOMString getAllResponseHeaders();
+  ACString getAllResponseHeaders();
 
   /**
    * Returns the text of the header with the specified name for
@@ -159,7 +159,7 @@ interface nsIXMLHttpRequest : nsISupports
    *          NULL if the response has not yet been received or the
    *          header does not exist in the response.
    */
-  ACString getResponseHeader(in AUTF8String header);
+  ACString getResponseHeader(in ACString header);
 
 %{C++
   // note this is NOT virtual so this won't muck with the vtable!
@@ -189,7 +189,7 @@ interface nsIXMLHttpRequest : nsISupports
    * @param password (optional) A password for authentication if necessary.
    *                 The default value is the empty string
    */
-  [optional_argc] void open(in AUTF8String method, in AUTF8String url,
+  [optional_argc] void open(in ACString method, in AUTF8String url,
                             [optional] in boolean async,
                             [optional,Undefined(Empty)] in DOMString user,
                             [optional,Undefined(Empty)] in DOMString password);
@@ -237,7 +237,7 @@ interface nsIXMLHttpRequest : nsISupports
    * @param header The name of the header to set in the request.
    * @param value The body of the header.
    */
-  void   setRequestHeader(in AUTF8String header, in AUTF8String value);
+  void   setRequestHeader(in ACString header, in ACString value);
 
   /**
    * The amount of milliseconds a request can take before being terminated.
