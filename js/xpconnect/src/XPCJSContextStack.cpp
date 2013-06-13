@@ -167,7 +167,9 @@ XPCJSContextStack::GetSafeJSContext()
 
         JS_SetErrorReporter(mSafeJSContext, mozJSLoaderErrorReporter);
 
-        glob = xpc::CreateGlobalObject(mSafeJSContext, &global_class, principal, JS::SystemZone);
+        JS::CompartmentOptions options;
+        options.setZone(JS::SystemZone);
+        glob = xpc::CreateGlobalObject(mSafeJSContext, &global_class, principal, options);
 
         if (glob) {
             // Make sure the context is associated with a proper compartment

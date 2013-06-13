@@ -1117,9 +1117,11 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
 
   JS_SetContextPrivate(cx, aScope);
 
+  JS::CompartmentOptions options;
+  options.setZone(JS::SystemZone);
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, aScope, mPrincipal,
-                                         flags, JS::SystemZone, getter_AddRefs(mGlobal));
+                                         flags, options, getter_AddRefs(mGlobal));
   NS_ENSURE_SUCCESS(rv, false);
 
 
