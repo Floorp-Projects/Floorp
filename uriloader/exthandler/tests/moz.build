@@ -17,3 +17,8 @@ if CONFIG['OS_ARCH'] != 'Darwin':
 CPP_SOURCES += [
     'WriteArgument.cpp',
 ]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    "%s%s" % (fyl[0:-4], bin_suffix) for fyl in CPP_SOURCES
+]

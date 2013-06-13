@@ -8,3 +8,6 @@ if CONFIG['MOZ_LINKER']:
     CPP_SOURCES += [
         'TestZip.cpp',
     ]
+    SIMPLE_PROGRAMS += [
+        'TestZip%s' % CONFIG['BIN_SUFFIX'],
+    ]
