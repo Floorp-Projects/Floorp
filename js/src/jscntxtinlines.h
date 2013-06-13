@@ -474,7 +474,7 @@ JSContext::findVersion() const
     if (compartment() && compartment()->options().hasVersion)
         return compartment()->options().version;
 
-    return defaultVersion;
+    return runtime()->defaultVersion();
 }
 
 inline js::LifoAlloc &

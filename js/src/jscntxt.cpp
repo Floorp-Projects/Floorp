@@ -280,8 +280,6 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
     if (!cx)
         return NULL;
 
-    JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
-
     if (!cx->cycleDetectorSet.init()) {
         js_delete(cx);
         return NULL;
@@ -1120,7 +1118,6 @@ js_HandleExecutionInterrupt(JSContext *cx)
 
 JSContext::JSContext(JSRuntime *rt)
   : ContextFriendFields(rt),
-    defaultVersion(JSVERSION_DEFAULT),
     throwing(false),
     exception(UndefinedValue()),
     options_(0),
