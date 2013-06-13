@@ -195,6 +195,10 @@ public:
                                                guint            aTime,
                                                gpointer         aData);
 
+#if defined(MOZ_WIDGET_GTK2)
+  mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
+#endif
+
 private:
     void               NativeResize(int32_t aWidth,
                                     int32_t aHeight,

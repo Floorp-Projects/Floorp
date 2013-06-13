@@ -95,6 +95,7 @@ BasicCompositor::BasicCompositor(nsIWidget *aWidget)
 
 BasicCompositor::~BasicCompositor()
 {
+  mWidget->CleanupRemoteDrawing();
   Destroy();
   MOZ_COUNT_DTOR(BasicCompositor);
 }
@@ -265,6 +266,8 @@ BasicCompositor::BeginFrame(const gfx::Rect *aClipRectIn,
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Create a dummy
     // placeholder so that CreateRenderTarget() works.
     mDrawTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1,1), FORMAT_B8G8R8A8);
+  } else {
+    mDrawTarget = mWidget->StartRemoteDrawing();
   }
   if (!mDrawTarget) {
     if (aRenderBoundsOut) {
@@ -303,6 +306,17 @@ BasicCompositor::EndFrame()
     mCopyTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
     mCopyTarget->SetSource(thebes);
     mCopyTarget->Paint();
+  } else {
+    // Most platforms require us to buffer drawing to the widget surface.
+    // That's why we don't draw to mDrawTarget directly.
+    RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
+    mDrawTarget->DrawSurface(source,
+                             Rect(0, 0, mWidgetSize.width, mWidgetSize.height),
+                             Rect(0, 0, mWidgetSize.width, mWidgetSize.height),
+                             DrawSurfaceOptions(),
+                             DrawOptions());
+    mDrawTarget = nullptr;
+    mWidget->EndRemoteDrawing();
   }
 }
 
