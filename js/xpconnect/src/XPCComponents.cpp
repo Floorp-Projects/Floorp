@@ -3279,10 +3279,12 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
         MOZ_ASSERT(principal);
     }
 
-    JS::ZoneSpecifier zoneSpec = options.sameZoneAs
+    JS::CompartmentOptions compartmentOptions;
+    compartmentOptions.setZone(options.sameZoneAs
                                  ? JS::SameZoneAs(js::UncheckedUnwrap(options.sameZoneAs))
-                                 : JS::SystemZone;
-    RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, &SandboxClass, principal, zoneSpec));
+                                 : JS::SystemZone);
+    RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, &SandboxClass,
+                                                     principal, compartmentOptions));
     if (!sandbox)
         return NS_ERROR_FAILURE;
 
