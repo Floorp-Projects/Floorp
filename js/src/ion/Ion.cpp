@@ -1266,8 +1266,7 @@ AttachFinishedCompilations(JSContext *cx)
     OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
 
     // Incorporate any off thread compilations which have finished, failed or
-    // have been cancelled, and destroy JM jitcode for any compilations which
-    // succeeded, to allow entering the Ion code from the interpreter.
+    // have been cancelled.
     while (!compilations.empty()) {
         IonBuilder *builder = compilations.popCopy();
 
