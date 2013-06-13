@@ -42,6 +42,14 @@
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
 }
 
+#main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme) {
+  color: CaptionText;
+}
+
+#main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme):-moz-window-inactive {
+  color: InactiveCaptionText;
+}
+
 #navigator-toolbox {
   -moz-appearance: none;
   background-color: transparent;
@@ -1547,10 +1555,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 %ifndef WINDOWS_AERO
 /* Use lighter colors of buttons and text in the titlebar on luna-blue */
 @media (-moz-windows-theme: luna-blue) {
-  #main-window[tabsintitlebar] #main-menubar > menu {
-    color: white;
-  }
-
   #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-up,
   #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-down {
     list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
