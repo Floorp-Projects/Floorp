@@ -833,9 +833,6 @@ ContextStack::popSegment()
 {
     space().seg_ = seg_->prevInMemory();
     seg_ = seg_->prevInContext();
-
-    if (!seg_)
-        cx_->maybeMigrateVersionOverride();
 }
 
 bool
