@@ -181,6 +181,8 @@ class StoreBuffer
 
         /* Add one item to the buffer. */
         void put(const T &v) {
+            JS_ASSERT(!owner->inParallelSection());
+
             /* Check if we have been enabled. */
             if (!pos)
                 return;
@@ -229,6 +231,7 @@ class StoreBuffer
 
         /* Record a removal from the buffer. */
         void unput(const T &v) {
+            JS_ASSERT(!this->owner->inParallelSection());
             MonoTypeBuffer<T>::put(v.tagged());
         }
     };
@@ -261,6 +264,8 @@ class StoreBuffer
 
         template <typename T>
         void put(const T &t) {
+            JS_ASSERT(!owner->inParallelSection());
+
             /* Check if we have been enabled. */
             if (!pos)
                 return;
@@ -492,6 +497,9 @@ class StoreBuffer
     bool coalesceForVerification();
     void releaseVerificationData();
     bool containsEdgeAt(void *loc) const;
+
+    /* We cannot call InParallelSection directly because of a circular dependency. */
+    bool inParallelSection() const;
 
     /* For use by our owned buffers and for testing. */
     void setAboutToOverflow();

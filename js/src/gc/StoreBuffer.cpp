@@ -10,6 +10,7 @@
 
 #include "gc/Barrier-inl.h"
 #include "gc/StoreBuffer.h"
+#include "vm/ForkJoin.h"
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
@@ -471,6 +472,12 @@ void
 StoreBuffer::releaseVerificationData()
 {
     edgeSet.finish();
+}
+
+bool
+StoreBuffer::inParallelSection() const
+{
+    return InParallelSection();
 }
 
 JS_PUBLIC_API(void)
