@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -272,21 +273,30 @@ public class DoorHangerPopup extends PopupWindow
         if (mAnchor != null)
             mAnchor.getLocationInWindow(anchorLocation);
 
+        // Make the popup focusable for accessibility. This gets done here
+        // so the node can be accessibility focused, but on pre-ICS devices this
+        // causes crashes, so it is done after the popup is shown.
+        if (Build.VERSION.SDK_INT >= 14) {
+            setFocusable(true);
+        }
+
         // If there's no anchor or the anchor is out of the window bounds,
         // just show the popup at the top of the gecko app view.
         if (mAnchor == null || anchorLocation[1] < 0) {
             showAtLocation(mActivity.getView(), Gravity.TOP, 0, 0);
-            return;
+        } else {
+            // On tablets, we need to position the popup so that the center of the arrow points to the
+            // center of the anchor view. On phones the popup stretches across the entire screen, so the
+            // arrow position is determined by its left margin.
+            int offset = HardwareUtils.isTablet() ? mAnchor.getWidth()/2 - mArrowWidth/2 -
+                         ((RelativeLayout.LayoutParams) mArrow.getLayoutParams()).leftMargin : 0;
+            showAsDropDown(mAnchor, offset, -mYOffset);
         }
 
-        // On tablets, we need to position the popup so that the center of the arrow points to the
-        // center of the anchor view. On phones the popup stretches across the entire screen, so the
-        // arrow position is determined by its left margin.
-        int offset = HardwareUtils.isTablet() ? mAnchor.getWidth()/2 - mArrowWidth/2 -
-                     ((RelativeLayout.LayoutParams) mArrow.getLayoutParams()).leftMargin : 0;
-        showAsDropDown(mAnchor, offset, -mYOffset);
-        // Make the popup focusable for keyboard accessibility.
-        setFocusable(true);
+        if (Build.VERSION.SDK_INT < 14) {
+            // Make the popup focusable for keyboard accessibility.
+            setFocusable(true);
+        }
     }
 
     private void showDividers() {
