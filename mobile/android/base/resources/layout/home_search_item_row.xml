@@ -7,4 +7,5 @@
                                    android:layout_width="fill_parent"
                                    android:layout_height="wrap_content"
                                    android:minHeight="@dimen/search_row_height"
-                                   android:padding="7dp"/>
+                                   android:paddingTop="7dp"
+                                   android:paddingBottom="7dp"/>
