@@ -1,7 +1,7 @@
 %include ../../../toolkit/themes/osx/global/shared.inc
 %include ../shared/browser.inc
 
-%define fgTabTexture linear-gradient(transparent, transparent 2px, hsla(0,0%,100%,0.6) 2px, hsla(0,0%,100%,0.6) 3px, hsl(0,0%,99%) 3px, hsl(0,0%,92%))
+%define fgTabTexture linear-gradient(transparent, transparent 2px, hsla(0,0%,100%,0.6) 2px, hsla(0,0%,100%,0.6) 3px, hsl(0,0%,99%) 3px, hsl(0,0%,93%))
 %define toolbarColorLWT rgba(253,253,253,0.45)
 %define fgTabTextureLWT linear-gradient(transparent, transparent 2px, rgba(254,254,254,0.72) 2px, @toolbarColorLWT@)
 %define fgTabBackgroundMiddle @fgTabTexture@
