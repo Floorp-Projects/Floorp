@@ -20,6 +20,7 @@
 #include "nsHtml5Speculation.h"
 #include "nsITimer.h"
 #include "nsICharsetDetector.h"
+#include "nsIThreadRetargetableStreamListener.h"
 
 class nsHtml5Parser;
 
@@ -101,6 +102,7 @@ enum eHtml5StreamState {
 };
 
 class nsHtml5StreamParser : public nsIStreamListener,
+                            public nsIThreadRetargetableStreamListener,
                             public nsICharsetDetectionObserver {
 
   friend class nsHtml5RequestStopper;
@@ -125,6 +127,8 @@ class nsHtml5StreamParser : public nsIStreamListener,
     NS_DECL_NSIREQUESTOBSERVER
     // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
+    // nsIThreadRetargetableStreamListener methods:
+    NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
     
     // nsICharsetDetectionObserver
     /**
@@ -239,7 +243,14 @@ class nsHtml5StreamParser : public nsIStreamListener,
     
     void DoStopRequest();
     
-    void DoDataAvailable(uint8_t* aBuffer, uint32_t aLength);
+    void DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength);
+
+    static NS_METHOD CopySegmentsToParser(nsIInputStream *aInStream,
+                                          void *aClosure,
+                                          const char *aFromSegment,
+                                          uint32_t aToOffset,
+                                          uint32_t aCount,
+                                          uint32_t *aWriteCount);
 
     bool IsTerminatedOrInterrupted() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
