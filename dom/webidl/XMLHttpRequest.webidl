@@ -71,10 +71,10 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
   // request
   [Throws]
-  void open(DOMString method, DOMString url, optional boolean async = true,
+  void open(ByteString method, DOMString url, optional boolean async = true,
             optional DOMString? user, optional DOMString? password);
   [Throws]
-  void setRequestHeader(DOMString header, DOMString value);
+  void setRequestHeader(ByteString header, ByteString value);
 
   [SetterThrows]
   attribute unsigned long timeout;
@@ -109,12 +109,12 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws=Workers]
   readonly attribute unsigned short status;
 
-  readonly attribute DOMString statusText;
+  readonly attribute ByteString statusText;
   [Throws]
-  DOMString? getResponseHeader(DOMString header);
+  ByteString? getResponseHeader(ByteString header);
 
   [Throws=Workers]
-  DOMString getAllResponseHeaders();
+  ByteString getAllResponseHeaders();
 
   [Throws=Workers]
   void overrideMimeType(DOMString mime);
