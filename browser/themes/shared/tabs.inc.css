@@ -176,7 +176,7 @@
                     @fgTabTexture@,
                     @fgTabBackgroundMiddle@;
   background-repeat: repeat-x;
-  background-size: 100% 100%;
+  background-size: auto 100%;
 }
 
 /* Selected tab lightweight theme styles */
@@ -184,7 +184,7 @@
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
                     @fgTabTextureLWT@;
   /* Don't stretch the LWT header images */
-  background-size: 100% 100%, 100% 100%, auto auto;
+  background-size: auto 100%, auto 100%, auto auto;
 }
 
 .tab-background-start[selected=true]:-moz-lwtheme::before,
