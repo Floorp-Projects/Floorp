@@ -26,6 +26,8 @@
 #include "nsINestedURI.h"
 #include "nsCharsetSource.h"
 #include "nsIWyciwygChannel.h"
+#include "nsIThreadRetargetableRequest.h"
+#include "nsPrintfCString.h"
 
 #include "mozilla/dom/EncodingUtils.h"
 
@@ -73,9 +75,10 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHtml5StreamParser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHtml5StreamParser)
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5StreamParser)
-  NS_INTERFACE_TABLE2(nsHtml5StreamParser, 
+  NS_INTERFACE_TABLE3(nsHtml5StreamParser,
                       nsIStreamListener, 
-                      nsICharsetDetectionObserver)
+                      nsICharsetDetectionObserver,
+                      nsIThreadRetargetableStreamListener)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHtml5StreamParser)
 NS_INTERFACE_MAP_END
 
@@ -926,6 +929,14 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
       mReparseForbidden = true;
       mFeedChardet = false; // can't restart anyway
     }
+
+    // Attempt to retarget delivery of data (via OnDataAvailable) to the parser
+    // thread, rather than through the main thread.
+    nsCOMPtr<nsIThreadRetargetableRequest> threadRetargetableRequest =
+      do_QueryInterface(mRequest);
+    if (threadRetargetableRequest) {
+      threadRetargetableRequest->RetargetDeliveryTo(mThread);
+    }
   }
 
   if (mCharsetSource == kCharsetFromParentFrame) {
@@ -958,6 +969,22 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     mCharsetSource = kCharsetFromWeakDocTypeDefault;
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHtml5StreamParser::CheckListenerChain()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread!");
+  if (!mObserver) {
+    return NS_OK;
+  }
+  nsresult rv;
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
+    do_QueryInterface(mObserver, &rv);
+  if (NS_SUCCEEDED(rv) && retargetable) {
+    rv = retargetable->CheckListenerChain();
+  }
+  return rv;
 }
 
 void
@@ -1013,19 +1040,24 @@ nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
                              nsresult status)
 {
   NS_ASSERTION(mRequest == aRequest, "Got Stop on wrong stream.");
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(NS_IsMainThread() || IsParserThread(), "Wrong thread!");
   if (mObserver) {
     mObserver->OnStopRequest(aRequest, aContext, status);
   }
-  nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
-  if (NS_FAILED(mThread->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
-    NS_WARNING("Dispatching StopRequest event failed.");
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
+    if (NS_FAILED(mThread->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
+      NS_WARNING("Dispatching StopRequest event failed.");
+    }
+  } else {
+    mozilla::MutexAutoLock autoLock(mTokenizerMutex);
+    DoStopRequest();
   }
   return NS_OK;
 }
 
 void
-nsHtml5StreamParser::DoDataAvailable(uint8_t* aBuffer, uint32_t aLength)
+nsHtml5StreamParser::DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
@@ -1110,23 +1142,57 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
 
   NS_ASSERTION(mRequest == aRequest, "Got data on wrong stream.");
   uint32_t totalRead;
-  const mozilla::fallible_t fallible = mozilla::fallible_t();
-  nsAutoArrayPtr<uint8_t> data(new (fallible) uint8_t[aLength]);
-  if (!data) {
-    return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
+  // Main thread to parser thread dispatch requires copying to buffer first.
+  if (NS_IsMainThread()) {
+    const mozilla::fallible_t fallible = mozilla::fallible_t();
+    nsAutoArrayPtr<uint8_t> data(new (fallible) uint8_t[aLength]);
+    if (!data) {
+      return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
+    }
+    rv = aInStream->Read(reinterpret_cast<char*>(data.get()),
+                         aLength, &totalRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(totalRead <= aLength, "Read more bytes than were available?");
+    
+    nsCOMPtr<nsIRunnable> dataAvailable = new nsHtml5DataAvailable(this,
+                                                                   data.forget(),
+                                                                   totalRead);
+    if (NS_FAILED(mThread->Dispatch(dataAvailable, nsIThread::DISPATCH_NORMAL))) {
+      NS_WARNING("Dispatching DataAvailable event failed.");
+    }
+    return rv;
+  } else {
+    NS_ASSERTION(IsParserThread(), "Wrong thread!");
+    mozilla::MutexAutoLock autoLock(mTokenizerMutex);
+
+    // Read directly from response buffer.
+    rv = aInStream->ReadSegments(CopySegmentsToParser, this, aLength,
+                                 &totalRead);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed reading response data to parser");
+      return rv;
+    }
+    return NS_OK;
   }
-  rv = aInStream->Read(reinterpret_cast<char*>(data.get()),
-  aLength, &totalRead);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(totalRead <= aLength, "Read more bytes than were available?");
-  nsCOMPtr<nsIRunnable> dataAvailable = new nsHtml5DataAvailable(this,
-                                                                 data.forget(),
-                                                                totalRead);
-  if (NS_FAILED(mThread->Dispatch(dataAvailable, nsIThread::DISPATCH_NORMAL))) {
-    NS_WARNING("Dispatching DataAvailable event failed.");
-  }
-  return rv;
 }
+
+/* static */
+NS_METHOD
+nsHtml5StreamParser::CopySegmentsToParser(nsIInputStream *aInStream,
+                                          void *aClosure,
+                                          const char *aFromSegment,
+                                          uint32_t aToOffset,
+                                          uint32_t aCount,
+                                          uint32_t *aWriteCount)
+{
+  nsHtml5StreamParser* parser = static_cast<nsHtml5StreamParser*>(aClosure);
+
+  parser->DoDataAvailable((const uint8_t*)aFromSegment, aCount);
+  // Assume DoDataAvailable consumed all available bytes.
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
 
 bool
 nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
