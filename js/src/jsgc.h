@@ -9,26 +9,20 @@
 #ifndef jsgc_h___
 #define jsgc_h___
 
-#include <setjmp.h>
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 #include "jsalloc.h"
 #include "jsclass.h"
-#include "jstypes.h"
-#include "jsprvtd.h"
-#include "jspubtd.h"
 #include "jslock.h"
-#include "jsutil.h"
-#include "jsversion.h"
+#include "jspubtd.h"
+#include "jsscript.h"
+#include "jstypes.h"
 
-#include "ds/BitArray.h"
 #include "gc/Heap.h"
-#include "gc/Statistics.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
-#include "js/TemplateLib.h"
 
 struct JSAtom;
 struct JSCompartment;

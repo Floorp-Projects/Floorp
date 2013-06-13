@@ -4,29 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
-
-#include "jsversion.h"
+#include "vm/Xdr.h"
 
 #include <string.h>
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsdhash.h"
+
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsnum.h"
 #include "jsscript.h"
-#include "jsstr.h"
 
-#include "vm/Xdr.h"
 #include "vm/Debugger.h"
 
 #include "jsscriptinlines.h"
 
 using namespace js;
-
-using mozilla::DebugOnly;
 
 void
 XDRBuffer::freeBuffer()

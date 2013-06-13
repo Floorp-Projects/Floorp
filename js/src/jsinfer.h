@@ -9,8 +9,6 @@
 #ifndef jsinfer_h___
 #define jsinfer_h___
 
-#include "mozilla/Attributes.h"
-
 #include "jsalloc.h"
 #include "jsfriendapi.h"
 

@@ -8,6 +8,8 @@
 
 #include "jsgc.h"
 
+#include "prmjtime.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
