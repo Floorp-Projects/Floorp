@@ -410,10 +410,7 @@ nsSocketInputStream::AsyncWait(nsIInputStreamCallback *callback,
 {
     SOCKET_LOG(("nsSocketInputStream::AsyncWait [this=%p]\n", this));
 
-    // This variable will be non-null when we want to call the callback
-    // directly from this function, but outside the lock.
-    // (different from callback when target is not null)
-    nsCOMPtr<nsIInputStreamCallback> directCallback;
+    bool hasError = false;
     {
         MutexAutoLock lock(mTransport->mLock);
 
@@ -425,16 +422,20 @@ nsSocketInputStream::AsyncWait(nsIInputStreamCallback *callback,
         }
         else
             mCallback = callback;
+        mCallbackFlags = flags;
 
-        if (NS_FAILED(mCondition))
-            directCallback.swap(mCallback);
-        else
-            mCallbackFlags = flags;
-    }
-    if (directCallback)
-        directCallback->OnInputStreamReady(this);
-    else
+        hasError = NS_FAILED(mCondition);
+    } // unlock mTransport->mLock
+
+    if (hasError) {
+        // OnSocketEvent will call OnInputStreamReady with an error code after
+        // going through the event loop. We do this because most socket callers
+        // do not expect AsyncWait() to synchronously execute the OnInputStreamReady
+        // callback.
+        mTransport->PostEvent(nsSocketTransport::MSG_INPUT_PENDING);
+    } else {
         mTransport->OnInputPending();
+    }
 
     return NS_OK;
 }
