@@ -762,9 +762,11 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   // will re-fetch the global and set it up in our language globals array.
   {
     AutoPushJSContext cx(ctxNew->GetNativeContext());
+    JS::CompartmentOptions options;
+    options.setZone(JS::SystemZone);
     JS::Rooted<JSObject*> newGlob(cx,
       JS_NewGlobalObject(cx, &gSharedGlobalClass,
-                         nsJSPrincipals::get(GetPrincipal()), JS::SystemZone));
+                         nsJSPrincipals::get(GetPrincipal()), options));
     if (!newGlob)
         return NS_OK;
 
