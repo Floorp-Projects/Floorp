@@ -89,13 +89,6 @@ static inline bool IS_WN_CLASS(js::Class* clazz)
 {
     return clazz->ext.isWrappedNative;
 }
-
-// NB: This slot isn't actually reserved for us on globals, because SpiderMonkey
-// uses the first N slots on globals internally. The fact that we use it for
-// wrapped global objects is totally broken. But due to a happy coincidence, the
-// JS engine never uses that slot. This still needs fixing though. See bug 760095.
-#define WRAPPER_MULTISLOT 0
-
 static inline bool IS_WN_REFLECTOR(JSObject *obj)
 {
     return IS_WN_CLASS(js::GetObjectClass(obj));
