@@ -53,7 +53,7 @@
 #include "AndroidBridge.h"
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
 #endif
 
@@ -103,7 +103,7 @@ nsDownloadManager::GetSingleton()
 
   gDownloadManagerService = new nsDownloadManager();
   if (gDownloadManagerService) {
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
     g_type_init();
 #endif
     NS_ADDREF(gDownloadManagerService);
@@ -2717,7 +2717,7 @@ nsDownload::SetState(DownloadState aState)
         }
       }
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK2)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
       nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
       nsCOMPtr<nsIFile> file;
       nsAutoString path;
@@ -2727,7 +2727,7 @@ nsDownload::SetState(DownloadState aState)
           file &&
           NS_SUCCEEDED(file->GetPath(path))) {
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK2)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
         // On Windows and Gtk, add the download to the system's "recent documents"
         // list, with a pref to disable.
         {
@@ -2738,7 +2738,7 @@ nsDownload::SetState(DownloadState aState)
           if (addToRecentDocs && !mPrivate) {
 #ifdef XP_WIN
             ::SHAddToRecentDocs(SHARD_PATHW, path.get());
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
             GtkRecentManager* manager = gtk_recent_manager_get_default();
 
             gchar* uri = g_filename_to_uri(NS_ConvertUTF16toUTF8(path).get(),
