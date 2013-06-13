@@ -3244,7 +3244,7 @@ JSTerm.prototype = {
   {
     let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
     let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
-    this.sidebar = new ToolSidebar(tabbox, this);
+    this.sidebar = new ToolSidebar(tabbox, this, "webconsole");
     this.sidebar.show();
   },
 
