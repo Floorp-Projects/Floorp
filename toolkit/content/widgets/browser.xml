@@ -724,7 +724,7 @@
                                 .createInstance(Components.interfaces.nsISHistory);
               // enable global history if we weren't told otherwise
               if (this.docShell && !this.hasAttribute("disableglobalhistory"))
-                this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
+                this.docShell.useGlobalHistory = true;
             }
           }
           catch (e) {

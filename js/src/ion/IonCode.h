@@ -10,6 +10,7 @@
 #include "mozilla/PodOperations.h"
 
 #include "IonTypes.h"
+#include "AsmJS.h"
 #include "gc/Heap.h"
 
 // For RecompileInfo
@@ -247,6 +248,10 @@ struct IonScript
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
 
+    // If non-null, the list of AsmJSModules
+    // that contain an optimized call directly into this IonScript.
+    Vector<DependentAsmJSModuleExit> *dependentAsmJSModules;
+
   private:
     inline uint8_t *bottomBuffer() {
         return reinterpret_cast<uint8_t *>(this);
@@ -286,6 +291,19 @@ struct IonScript
     JSScript **callTargetList() {
         return (JSScript **) &bottomBuffer()[callTargetList_];
     }
+    bool addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit);
+    void removeDependentAsmJSModule(DependentAsmJSModuleExit exit) {
+        JS_ASSERT(dependentAsmJSModules);
+        for (size_t i = 0; i < dependentAsmJSModules->length(); i++) {
+            if (dependentAsmJSModules->begin()[i].module == exit.module &&
+                dependentAsmJSModules->begin()[i].exitIndex == exit.exitIndex)
+            {
+                dependentAsmJSModules->erase(dependentAsmJSModules->begin() + i);
+                break;
+            }
+        }
+    }
+    void detachDependentAsmJSModules(FreeOp *fop);
 
   private:
     void trace(JSTracer *trc);

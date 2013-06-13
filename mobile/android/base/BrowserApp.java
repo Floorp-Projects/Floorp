@@ -23,6 +23,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.AboutHome;
 import org.mozilla.gecko.widget.GeckoActionProvider;
+import org.mozilla.gecko.widget.ButtonToast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,6 +35,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
@@ -88,6 +90,8 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
 
+    private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
+
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
 
@@ -108,7 +112,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private Vector<MenuItemInfo> mAddonMenuItemsCache;
-
+    private ButtonToast mToast;
     private PropertyAnimator mMainLayoutAnimator;
 
     private static final Interpolator sTabsInterpolator = new Interpolator() {
@@ -381,6 +385,15 @@ abstract public class BrowserApp extends GeckoApp
 
         RelativeLayout actionBar = (RelativeLayout) findViewById(R.id.browser_toolbar);
 
+        mToast = new ButtonToast(findViewById(R.id.toast), new ButtonToast.ToastListener() {
+            @Override
+            public void onButtonClicked(CharSequence token) {
+                if (ADD_SHORTCUT_TOAST.equals(token)) {
+                    showBookmarkDialog();
+                }
+            }
+        });
+
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
             @Override
@@ -486,6 +499,42 @@ abstract public class BrowserApp extends GeckoApp
                 return true;
             }
         });
+    }
+
+    private void showBookmarkDialog() {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
+            @Override
+            public void onPromptFinished(String result) {
+                int itemId = -1;
+                try {
+                  itemId = new JSONObject(result).getInt("button");
+                } catch(JSONException ex) {
+                    Log.e(LOGTAG, "Exception reading bookmark prompt result", ex);
+                }
+
+                if (tab == null)
+                    return;
+
+                if (itemId == 0) {
+                    new EditBookmarkDialog(BrowserApp.this).show(tab.getURL());
+                } else if (itemId == 1) {
+                    String url = tab.getURL();
+                    String title = tab.getDisplayTitle();
+                    Bitmap favicon = tab.getFavicon();
+                    if (url != null && title != null) {
+                        GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon, "");
+                    }
+                }
+            }
+        });
+
+        final Prompt.PromptListItem[] items = new Prompt.PromptListItem[2];
+        Resources res = getResources();
+        items[0] = new Prompt.PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
+        items[1] = new Prompt.PromptListItem(res.getString(R.string.contextmenu_add_to_launcher));
+
+        ps.show("", "", items, false);
     }
 
     private void setDynamicToolbarEnabled(boolean enabled) {
@@ -1597,7 +1646,11 @@ abstract public class BrowserApp extends GeckoApp
                         item.setIcon(R.drawable.ic_menu_bookmark_add);
                     } else {
                         tab.addBookmark();
-                        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
+                        mToast.show(false,
+                                    getResources().getString(R.string.bookmark_added),
+                                    getResources().getString(R.string.bookmark_options),
+                                    0,
+                                    ADD_SHORTCUT_TOAST);
                         item.setIcon(R.drawable.ic_menu_bookmark_remove);
                     }
                 }

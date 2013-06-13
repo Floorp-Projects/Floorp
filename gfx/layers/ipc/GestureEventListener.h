@@ -222,7 +222,7 @@ protected:
    * to determine if a touch is a tap. This means that it is used in both the
    * "GESTURE_WAITING_SINGLE_TAP" and "GESTURE_WAITING_DOUBLE_TAP" states.
    */
-  nsIntPoint mTouchStartPosition;
+  ScreenIntPoint mTouchStartPosition;
 };
 
 }

@@ -19,11 +19,6 @@
 #include "nsIHttpChannel.h"
 #include "nsHTMLStyleSheet.h"
 
-// Document.Write() related
-#include "nsIWyciwygChannel.h"
-#include "nsILoadGroup.h"
-#include "nsNetUtil.h"
-
 #include "nsICommandManager.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "nsDOMEvent.h"
@@ -34,6 +29,8 @@ class nsIURI;
 class nsIMarkupDocumentViewer;
 class nsIDocShell;
 class nsICachingChannel;
+class nsIWyciwygChannel;
+class nsILoadGroup;
 
 class nsHTMLDocument : public nsDocument,
                        public nsIHTMLDocument,

@@ -244,7 +244,7 @@ public class GeckoMenu extends ListView
             if (menuItem.getItemId() == id) {
                 return menuItem;
             } else if (menuItem.hasSubMenu()) {
-                if (menuItem.getActionProvider() == null) {
+                if (!menuItem.hasActionProvider()) {
                     SubMenu subMenu = menuItem.getSubMenu();
                     MenuItem item = subMenu.findItem(id);
                     if (item != null)

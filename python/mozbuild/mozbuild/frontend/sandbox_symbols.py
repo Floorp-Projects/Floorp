@@ -104,6 +104,13 @@ VARIABLES = {
        This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
         """),
 
+    'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
+        """Javascript XPCOM files.
+
+       This variable contains a list of files to preprocess.  Generated
+       files will be installed in the /components directory of the distribution.
+        """),
+
     'HOST_CSRCS': (StrictOrderingOnAppendList, list, [],
         """C source files to compile with the host compiler.
 
@@ -121,6 +128,16 @@ VARIABLES = {
 
     'HOST_LIBRARY_NAME': (unicode, unicode, "",
         """Name of target library generated when cross compiling.
+        """),
+
+    'LIBRARY_NAME': (unicode, unicode, "",
+        """The name of the library generated for a directory.
+
+        Example:
+        In example/components/moz.build,
+        LIBRARY_NAME = 'xpcomsample'
+        would generate example/components/libxpcomsample.so on Linux, or
+        example/components/xpcomsample.lib on Windows.
         """),
 
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],

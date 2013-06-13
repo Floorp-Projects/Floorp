@@ -82,6 +82,10 @@
     "n_buckets": 50,
     "description": "Time spent on one ContentUnbinder (ms)"
   },
+  "CYCLE_COLLECTOR_OOM": {
+    "kind": "flag",
+    "description": "Set if the cycle collector ran out of memory at some point"
+  },
   "FORGET_SKIPPABLE_MAX": {
     "kind": "exponential",
     "high": "10000",

@@ -894,6 +894,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp);
 
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
+    void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);
+    void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label *fail);
 };
 
 static inline Assembler::DoubleCondition

@@ -7,4 +7,5 @@
 EXTRA_COMPONENTS += [
     'Push.js',
     'Push.manifest',
+    'PushServiceLauncher.js',
 ]

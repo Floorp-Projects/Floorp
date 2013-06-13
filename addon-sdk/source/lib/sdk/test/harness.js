@@ -257,9 +257,9 @@ function cleanup() {
 
   // dump the coverobject
   if (Object.keys(coverObject).length){
-    const self = require('self');
+    const self = require('sdk/self');
     const {pathFor} = require("sdk/system");
-    let file = require('file');
+    let file = require('sdk/io/file');
     const {env} = require('sdk/system/environment');
     console.log("CWD:", env.PWD);
     let out = file.join(env.PWD,'coverstats-'+self.id+'.json');

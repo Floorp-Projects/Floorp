@@ -753,8 +753,7 @@ public:
 
 class MessageEventRunnable : public WorkerRunnable
 {
-  uint64_t* mData;
-  size_t mDataByteCount;
+  JSAutoStructuredCloneBuffer mBuffer;
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
 
 public:
@@ -766,20 +765,13 @@ public:
                                                        UnchangedBusyCount,
                    SkipWhenClearing)
   {
-    aData.steal(&mData, &mDataByteCount);
-
+    mBuffer.swap(aData);
     mClonedObjects.SwapElements(aClonedObjects);
   }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    JSAutoStructuredCloneBuffer buffer;
-    buffer.adopt(mData, mDataByteCount);
-
-    mData = nullptr;
-    mDataByteCount = 0;
-
     bool mainRuntime;
     JS::Rooted<JSObject*> target(aCx);
     if (mTarget == ParentThread) {
@@ -796,7 +788,6 @@ public:
 
       if (aWorkerPrivate->IsSuspended()) {
         aWorkerPrivate->QueueRunnable(this);
-        buffer.steal(&mData, &mDataByteCount);
         return true;
       }
 
@@ -812,7 +803,7 @@ public:
     NS_ASSERTION(target, "This should never be null!");
 
     JS::Rooted<JSObject*> event(aCx,
-      CreateMessageEvent(aCx, buffer, mClonedObjects, mainRuntime));
+      CreateMessageEvent(aCx, mBuffer, mClonedObjects, mainRuntime));
     if (!event) {
       return false;
     }
@@ -1481,7 +1472,7 @@ public:
     // aZoneStats->extra is a xpc::ZoneStatsExtras pointer.
     xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
     extras->pathPrefix = mRtPath;
-    extras->pathPrefix += nsPrintfCString("zone(%p)/", (void *)aZone);
+    extras->pathPrefix += nsPrintfCString("zone(0x%p)/", (void *)aZone);
     aZoneStats->extra = extras;
   }
 
@@ -1499,7 +1490,7 @@ public:
     // This is the |jsPathPrefix|.  Each worker has exactly two compartments:
     // one for atoms, and one for everything else.
     extras->jsPathPrefix.Assign(mRtPath);
-    extras->jsPathPrefix += nsPrintfCString("zone(%p)/",
+    extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/",
                                             (void *)js::GetCompartmentZone(aCompartment));
     extras->jsPathPrefix += js::IsAtomsCompartment(aCompartment)
                             ? NS_LITERAL_CSTRING("compartment(web-worker-atoms)/")

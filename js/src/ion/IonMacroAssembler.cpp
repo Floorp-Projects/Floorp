@@ -1094,6 +1094,77 @@ MacroAssembler::convertInt32ValueToDouble(const Address &address, Register scrat
     storeDouble(ScratchFloatReg, address);
 }
 
+static const double DoubleZero = 0.0;
+
+void
+MacroAssembler::convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail)
+{
+    Register tag = splitTagForTest(value);
+
+    Label isDouble, isInt32, isBool, isNull, done;
+
+    branchTestDouble(Assembler::Equal, tag, &isDouble);
+    branchTestInt32(Assembler::Equal, tag, &isInt32);
+    branchTestBoolean(Assembler::Equal, tag, &isBool);
+    branchTestNull(Assembler::Equal, tag, &isNull);
+    branchTestUndefined(Assembler::NotEqual, tag, fail);
+
+    // fall-through: undefined
+    loadStaticDouble(&js_NaN, output);
+    jump(&done);
+
+    bind(&isNull);
+    loadStaticDouble(&DoubleZero, output);
+    jump(&done);
+
+    bind(&isBool);
+    boolValueToDouble(value, output);
+    jump(&done);
+
+    bind(&isInt32);
+    int32ValueToDouble(value, output);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(value, output);
+    bind(&done);
+}
+
+void
+MacroAssembler::convertValueToInt32(ValueOperand value, FloatRegister temp,
+                                    Register output, Label *fail)
+{
+    Register tag = splitTagForTest(value);
+
+    Label done, simple, isInt32, isBool, isDouble;
+
+    branchTestInt32(Assembler::Equal, tag, &isInt32);
+    branchTestBoolean(Assembler::Equal, tag, &isBool);
+    branchTestDouble(Assembler::Equal, tag, &isDouble);
+    branchTestNull(Assembler::NotEqual, tag, fail);
+
+    // The value is null - just emit 0.
+    mov(Imm32(0), output);
+    jump(&done);
+
+    // Try converting double into integer
+    bind(&isDouble);
+    unboxDouble(value, temp);
+    convertDoubleToInt32(temp, output, fail, /* -0 check */ false);
+    jump(&done);
+
+    // Just unbox a bool, the result is 0 or 1.
+    bind(&isBool);
+    unboxBoolean(value, output);
+    jump(&done);
+
+    // Integers can be unboxed.
+    bind(&isInt32);
+    unboxInt32(value, output);
+
+    bind(&done);
+}
+
 void
 MacroAssembler::PushEmptyRooted(VMFunction::RootType rootType)
 {

@@ -1524,10 +1524,12 @@ abstract public class GeckoApp
                 final Context context = GeckoApp.sAppContext;
                 AnnouncementsBroadcastService.recordLastLaunch(context);
 
-                // Kick off our background service to fetch product announcements.
-                // We do this by invoking the broadcast receiver, which uses the
-                // system alarm infrastructure to perform tasks at intervals.
+                // Kick off our background services that fetch product
+                // announcements and upload health reports.  We do this by
+                // invoking the broadcast receiver, which uses the system alarm
+                // infrastructure to perform tasks at intervals.
                 GeckoPreferences.broadcastAnnouncementsPref(context);
+                GeckoPreferences.broadcastHealthReportUploadPref(context);
 
                 /*
                   XXXX see bug 635342

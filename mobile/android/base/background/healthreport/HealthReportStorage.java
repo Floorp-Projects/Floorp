@@ -178,6 +178,11 @@ public interface HealthReportStorage {
   public void incrementDailyCount(int env, int day, int field);
 
   /**
+   * Return true if events exist that were recorded on or after <code>time</code>.
+   */
+  boolean hasEventSince(long time);
+
+  /**
    * Obtain a cursor over events that were recorded since <code>time</code>.
    * This cursor exposes 'raw' events, with integer identifiers for values.
    */

@@ -11,10 +11,13 @@ ASFILES = ['bar.s', 'foo.asm']
 DEFINES = ['-Dbar', '-Dfoo']
 
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
+EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
 
 HOST_CSRCS = ['bar.c', 'foo.c']
 
 HOST_LIBRARY_NAME = 'host_bar'
+
+LIBRARY_NAME = 'lib_name'
 
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 

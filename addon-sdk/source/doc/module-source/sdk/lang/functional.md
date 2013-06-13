@@ -286,6 +286,31 @@ of having to set a boolean flag and checking it later.
   The wrapped `fn` that can only be executed once.
 </api>
 
+<api name="chain">
+@function
+Creates a version of the input function that will return `this`.
+
+    let { chain } = require("sdk/lang/functional");
+
+    function Person (age) { this.age = age; }
+    Person.prototype.happyBirthday = chain(function () this.age++);
+
+    let person = new Person(30);
+
+    person
+      .happyBirthday()
+      .happyBirthday()
+      .happyBirthday()
+
+    console.log(person.age); // 33
+
+@param fn {function}
+  The function that will be wrapped by the chain function.
+
+@returns {function}
+  The wrapped function that executes `fn` and returns `this`.
+</api>
+
 <api name="cache">
 @function
 An alias for [once](modules/sdk/lang/functional.html#once(fn)).

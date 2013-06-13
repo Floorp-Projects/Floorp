@@ -1513,6 +1513,7 @@ class Activation
     JSContext *cx_;
     JSCompartment *compartment_;
     Activation *prev_;
+    bool active_;
 
     // Counter incremented by JS_SaveFrameChain on the top-most activation and
     // decremented by JS_RestoreFrameChain. If > 0, ScriptFrameIter should stop
@@ -1523,7 +1524,7 @@ class Activation
     enum Kind { Interpreter, Jit };
     Kind kind_;
 
-    inline Activation(JSContext *cx, Kind kind_);
+    inline Activation(JSContext *cx, Kind kind_, bool active = true);
     inline ~Activation();
 
   public:
@@ -1535,6 +1536,12 @@ class Activation
     }
     Activation *prev() const {
         return prev_;
+    }
+    bool isActive() const {
+        return active_;
+    }
+    void setActive(bool active = true) {
+        active_ = active;
     }
 
     bool isInterpreter() const {
@@ -1608,6 +1615,9 @@ class ActivationIterator
   protected:
     Activation *activation_;
 
+  private:
+    void settle();
+
   public:
     explicit ActivationIterator(JSRuntime *rt);
 
@@ -1635,7 +1645,7 @@ class JitActivation : public Activation
     bool firstFrameIsConstructing_;
 
   public:
-    JitActivation(JSContext *cx, bool firstFrameIsConstructing);
+    JitActivation(JSContext *cx, bool firstFrameIsConstructing, bool active = true);
     ~JitActivation();
 
     uint8_t *prevIonTop() const {

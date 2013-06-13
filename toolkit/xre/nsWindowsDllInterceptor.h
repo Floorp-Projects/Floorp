@@ -402,8 +402,24 @@ protected:
 
         continue;
       } 
-        
-      if (origBytes[nBytes] == 0x41) {
+      if (origBytes[nBytes] == 0x0f) {
+        nBytes++;
+        if (origBytes[nBytes] == 0x1f) {
+          // nop (multibyte)
+          nBytes++;
+          if ((origBytes[nBytes] & 0xc0) == 0x40 &&
+              (origBytes[nBytes] & 0x7) == 0x04) {
+            nBytes += 3;
+          } else {
+            return;
+          }
+        } else if (origBytes[nBytes] == 0x05) {
+          // syscall
+          nBytes++;
+        } else {
+          return;
+        }
+      } else if (origBytes[nBytes] == 0x41) {
         // REX.B
         nBytes++;
 
@@ -460,6 +476,13 @@ protected:
             // complex MOV
             return;
           }
+        } else if (origBytes[nBytes] == 0xc7) {
+          // MOV r/m64, imm32
+          if (origBytes[nBytes + 1] & 0xf8 == 0x40) {
+            nBytes += 6;
+          } else {
+            return;
+          }
         } else {
           // not support yet!
           return;
@@ -469,6 +492,12 @@ protected:
         nBytes++;
       } else if (origBytes[nBytes] == 0x90) {
         // nop
+        nBytes++;
+      } else if (origBytes[nBytes] == 0xb8) {
+        // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
+        nBytes += 5;
+      } else if (origBytes[nBytes] == 0xc3) {
+        // ret
         nBytes++;
       } else if (origBytes[nBytes] == 0xe9) {
         pJmp32 = nBytes;

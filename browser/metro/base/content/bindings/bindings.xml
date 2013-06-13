@@ -129,63 +129,6 @@
     </handlers>
   </binding>
 
-  <!-- remnants of the old fennec content navigation system, now just the find bar. this can be stripped down further. -->
-  <binding id="content-navigator">
-    <content class="window-width content-navigator-box" orient="horizontal" pack="start">
-      <children includes="textbox"/>
-      <xul:button anonid="previous-button" class="content-navigator-item previous-button" xbl:inherits="command=previous"/>
-      <xul:button anonid="next-button" class="content-navigator-item next-button" xbl:inherits="command=next"/>
-      <xul:spacer flex="1"/>
-      <xul:button anonid="close-button" class="content-navigator-item close-button" xbl:inherits="command=close"/>
-    </content>
-
-    <implementation>
-      <field name="_previousButton">
-        document.getAnonymousElementByAttribute(this, "anonid", "previous-button");
-      </field>
-
-      <field name="_nextButton">
-        document.getAnonymousElementByAttribute(this, "anonid", "next-button");
-      </field>
-
-      <field name="_closeButton">
-        document.getAnonymousElementByAttribute(this, "anonid", "close-button");
-      </field>
-
-      <property name="isActive" onget="return !!this.model;"/>
-
-      <field name="model">null</field>
-      <method name="show">
-        <parameter name="aModel" />
-        <body><![CDATA[
-          this.setAttribute("type", aModel.type);
-          this.setAttribute("next", aModel.commands.next);
-          this.setAttribute("previous", aModel.commands.previous);
-          this.setAttribute("close", aModel.commands.close);
-
-          // buttons attributes sync with commands doesn not look updated when
-          // we dynamically switch the "command" attribute so we need to ensure
-          // the disabled state of the buttons is right when switching commands
-          this._previousButton.disabled = document.getElementById(aModel.commands.previous).getAttribute("disabled") == "true";
-          this._nextButton.disabled = document.getElementById(aModel.commands.next).getAttribute("disabled") == "true";
-
-          this.model = aModel;
-        ]]></body>
-      </method>
-
-      <method name="hide">
-        <parameter name="aModel" />
-        <body><![CDATA[
-          this.removeAttribute("next");
-          this.removeAttribute("previous");
-          this.removeAttribute("close");
-          this.removeAttribute("type");
-          this.model = null;
-        ]]></body>
-      </method>
-    </implementation>
-  </binding>
-
   <binding id="menulist" display="xul:box" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <handlers>
       <handler event="mousedown" phase="capturing">
