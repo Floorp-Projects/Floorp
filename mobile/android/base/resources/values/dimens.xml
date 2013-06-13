@@ -33,6 +33,9 @@
     <!-- Page Row height -->
     <dimen name="page_row_height">64dp</dimen>
 
+    <!-- Search Engine Row height -->
+    <dimen name="search_row_height">48dp</dimen>
+
     <!-- Max width of the doorhanger on tablets -->
     <dimen name="doorhanger_width">400dp</dimen>
     <dimen name="doorhanger_input_width">250dp</dimen>
