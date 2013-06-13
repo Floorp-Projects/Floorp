@@ -98,6 +98,18 @@ DrawTargetDual::DrawSurfaceWithShadow(SourceSurface *aSurface, const Point &aDes
 }
 
 void
+DrawTargetDual::MaskSurface(const Pattern &aSource,
+                           SourceSurface *aMask,
+                           Point aOffset,
+                           const DrawOptions &aOptions)
+{
+  DualPattern source(aSource);
+  DualSurface mask(aMask);
+  mA->MaskSurface(*source.mA, mask.mA, aOffset, aOptions);
+  mB->MaskSurface(*source.mB, mask.mA, aOffset, aOptions);
+}
+
+void
 DrawTargetDual::CopySurface(SourceSurface *aSurface, const IntRect &aSourceRect,
                             const IntPoint &aDestination)
 {
