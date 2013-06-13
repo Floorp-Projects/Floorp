@@ -89,12 +89,29 @@
       <field name="_mainViewHeight">0</field>
       <field name="_subViewObserver">null</field>
       <field name="_transitioning">false</field>
+      <field name="_ignoreMutations">false</field>
 
       <property name="showingSubView" readonly="true"
                 onget="return this._viewStack.getAttribute('view') == 'subview'"/>
       <property name="_mainViewId" onget="return this.getAttribute('mainViewId');" onset="this.setAttribute('mainViewId', val); return val;"/>
       <property name="_mainView" readonly="true"
                 onget="return document.getElementById(this._mainViewId);"/>
+
+      <property name="ignoreMutations">
+        <getter>
+          return this._ignoreMutations;
+        </getter>
+        <setter><![CDATA[
+          this._ignoreMutations = val;
+          if (!val) {
+            if (this.showingSubView) {
+              this._syncContainerWithSubView();
+            } else {
+              this._syncContainerWithMainView();
+            }
+          }
+        ]]></setter>
+      </property>
 
       <constructor><![CDATA[
         this._clickCapturer.addEventListener("click", this);
@@ -284,7 +301,7 @@
 
       <method name="_syncContainerWithSubView">
         <body><![CDATA[
-          if (this.showingSubView) {
+          if (!this.ignoreMutations && this.showingSubView) {
             this._viewContainer.style.height =
               this._subViews.scrollHeight + "px";
           }
@@ -292,7 +309,7 @@
       </method>
       <method name="_syncContainerWithMainView">
         <body><![CDATA[
-          if (!this.showingSubView && !this._transitioning) {
+          if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
             this._viewContainer.style.height =
               this._mainViewContainer.scrollHeight + "px";
           }
