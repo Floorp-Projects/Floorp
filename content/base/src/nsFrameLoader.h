@@ -434,7 +434,6 @@ private:
   bool mVisible : 1;
 
   // XXX leaking
-  nsCOMPtr<nsIObserver> mChildHost;
   RenderFrameParent* mCurrentRemoteFrame;
   TabParent* mRemoteBrowser;
 
