@@ -2120,10 +2120,10 @@ CreateNativeGlobalForInner(JSContext* aCx,
   if (aNewInner->GetOuterWindow()) {
     top = aNewInner->GetTop();
   }
-  JS::CompartmentOptions options;
+  JS::ZoneSpecifier zoneSpec = JS::FreshZone;
   if (top) {
     if (top->GetGlobalJSObject()) {
-      options.zoneSpec = JS::SameZoneAs(top->GetGlobalJSObject());
+      zoneSpec = JS::SameZoneAs(top->GetGlobalJSObject());
     }
   }
 
@@ -2139,7 +2139,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->InitClassesWithNewWrappedGlobal(
     aCx, ToSupports(aNewInner),
-    aPrincipal, flags, options, getter_AddRefs(jsholder));
+    aPrincipal, flags, zoneSpec, getter_AddRefs(jsholder));
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(jsholder);

@@ -536,15 +536,13 @@ private:
 
     JSAutoRequest ar(mContext);
 
-    JS::CompartmentOptions options;
-    options.setZone(JS::SystemZone)
-           .setVersion(JSVERSION_LATEST);
-    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr, options);
+    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr, JS::SystemZone);
     NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
 
     JS_SetGlobalObject(mContext, mGlobal);
     JS_InitStandardClasses(mContext, mGlobal);
 
+    JS_SetVersion(mContext, JSVERSION_LATEST);
     JS_SetErrorReporter(mContext, PACErrorReporter);
 
     if (!JS_DefineFunctions(mContext, mGlobal, PACGlobalFunctions))
