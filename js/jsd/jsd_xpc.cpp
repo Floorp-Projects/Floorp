@@ -1694,23 +1694,6 @@ jsdContext::GetTag(uint32_t *_rval)
 }
 
 NS_IMETHODIMP
-jsdContext::GetVersion (int32_t *_rval)
-{
-    ASSERT_VALID_EPHEMERAL;
-    *_rval = static_cast<int32_t>(JS_GetVersion(mJSCx));
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdContext::SetVersion (int32_t id)
-{
-    ASSERT_VALID_EPHEMERAL;
-    JSVersion ver = static_cast<JSVersion>(id);
-    JS_SetVersion(mJSCx, ver);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 jsdContext::GetGlobalObject (jsdIValue **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
