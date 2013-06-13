@@ -49,7 +49,6 @@
 #include "nsEventDispatcher.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
-#include "nsIDocShellHistory.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXULWindow.h"
 #include "nsIEditor.h"
@@ -1337,9 +1336,8 @@ nsFrameLoader::Destroy()
 
   // Seems like this is a dynamic frame removal.
   if (dynamicSubframeRemoval) {
-    nsCOMPtr<nsIDocShellHistory> dhistory = do_QueryInterface(mDocShell);
-    if (dhistory) {
-      dhistory->RemoveFromSessionHistory();
+    if (mDocShell) {
+      mDocShell->RemoveFromSessionHistory();
     }
   }
 
@@ -1546,9 +1544,8 @@ nsFrameLoader::MaybeCreateDocShell()
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   if (!mNetworkCreated) {
-    nsCOMPtr<nsIDocShellHistory> history = do_QueryInterface(mDocShell);
-    if (history) {
-      history->SetCreatedDynamically(true);
+    if (mDocShell) {
+      mDocShell->SetCreatedDynamically(true);
     }
   }
 

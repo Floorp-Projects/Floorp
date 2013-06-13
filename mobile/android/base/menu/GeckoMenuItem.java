@@ -8,6 +8,7 @@ import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.ActionProvider;
 import android.view.ContextMenu;
 import android.view.MenuItem;
@@ -68,6 +69,14 @@ public class GeckoMenuItem implements MenuItem {
     @Override
     public boolean expandActionView() {
         return false;
+    }
+
+    public boolean hasActionProvider() {
+        if (Build.VERSION.SDK_INT < 14) {
+            return false;
+        }
+
+        return (mActionProvider != null);
     }
 
     @Override

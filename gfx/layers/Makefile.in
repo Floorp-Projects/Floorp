@@ -30,10 +30,6 @@ ifdef MOZ_DEBUG
 DEFINES += -DD3D_DEBUG_INFO
 endif
 
-GTEST_CPPSRCS = \
-        TestTiledLayerBuffer.cpp \
-        $(NULL)
-
 ifdef MOZ_ENABLE_D3D10_LAYER
 DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
 endif

@@ -81,7 +81,7 @@ def addressToSymbol(file, address):
     converter = None
     if not file in atoses:
         debug_file = separate_debug_file_for(file) or file
-        converter = unbufferedLineConverter('/usr/bin/atos', ['-o', debug_file])
+        converter = unbufferedLineConverter('/usr/bin/atos', ['-arch', 'x86_64', '-o', debug_file])
         atoses[file] = converter
     else:
         converter = atoses[file]

@@ -111,7 +111,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep);
 
 extern JS_PUBLIC_API(void)
-JS_ClearScriptTraps(JSContext *cx, JSScript *script);
+JS_ClearScriptTraps(JSRuntime *rt, JSScript *script);
 
 extern JS_PUBLIC_API(void)
 JS_ClearAllTrapsForCompartment(JSContext *cx);

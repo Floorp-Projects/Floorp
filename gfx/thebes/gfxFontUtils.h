@@ -924,8 +924,6 @@ public:
         // otherwise we know this char cannot trigger bidi reordering
         return false;
     }
-
-    static uint8_t CharRangeBit(uint32_t ch);
     
     // for a given font list pref name, set up a list of font names
     static void GetPrefsFontList(const char *aPrefName, 

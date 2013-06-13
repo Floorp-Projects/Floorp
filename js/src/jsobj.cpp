@@ -999,8 +999,8 @@ js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc 
 }
 
 JSBool
-js_DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &descriptor,
-                     JSBool *bp)
+js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue descriptor,
+                      JSBool *bp)
 {
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
@@ -1015,8 +1015,8 @@ js_DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &
 }
 
 JSBool
-js_DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id,
-                     const PropertyDescriptor &descriptor, JSBool *bp)
+js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id,
+                      const PropertyDescriptor &descriptor, JSBool *bp)
 {
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();

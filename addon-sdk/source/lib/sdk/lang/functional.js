@@ -42,6 +42,17 @@ exports.defer = defer;
 // Exporting `remit` alias as `defer` may conflict with promises.
 exports.remit = defer;
 
+/*
+ * Takes a funtion and returns a wrapped function that returns `this`
+ */
+function chain(f) {
+  return function chainable(...args) {
+    f.apply(this, args);
+    return this;
+  };
+}
+exports.chain = chain;
+
 /**
  * Invokes `callee` by passing `params` as an arguments and `self` as `this`
  * pseudo-variable. Returns value that is returned by a callee.

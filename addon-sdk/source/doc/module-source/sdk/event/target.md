@@ -104,6 +104,14 @@ Exceptions in the listeners can be handled via `'error'` event listeners:
 If there is no listener registered for `error` event or if it also throws
 exception then such exceptions are logged into a console.
 
+## Chaining
+
+Emitters can also have their methods chained:
+
+    target.on('message', handleMessage)
+      .on('data', parseData)
+      .on('error', handleError);
+
 <api name="EventTarget">
 @class
 `EventTarget` is an exemplar for creating an objects that can be used to
@@ -131,6 +139,8 @@ specified `type` are emitted.
    The type of event.
 @param listener {Function}
    The listener function that processes the event.
+@returns {EventTarget}
+   Returns the EventTarget instance
 </api>
 
 <api name="once">
@@ -141,6 +151,8 @@ the next time an event of the specified `type` is emitted.
    The type of event.
 @param listener {Function}
    The listener function that processes the event.
+@returns {EventTarget}
+   Returns the EventTarget instance
 </api>
 
 <api name="removeListener">
@@ -150,6 +162,13 @@ Removes an event `listener` for the given event `type`.
    The type of event.
 @param listener {Function}
    The listener function that processes the event.
+@returns {EventTarget}
+   Returns the EventTarget instance
+</api>
+
+<api name="off">
+@method
+An alias for [removeListener](modules/sdk/event/target.html#removeListener(type, listener)).
 </api>
 
 </api>

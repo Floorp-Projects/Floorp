@@ -40,4 +40,18 @@
                  android:layout_height="@dimen/browser_toolbar_height"/>
     </view>
 
+    <LinearLayout android:id="@+id/toast"
+                  style="@style/Toast">
+
+        <TextView android:id="@+id/toast_message"
+                  style="@style/ToastMessage" />
+
+        <ImageView android:id="@+id/toast_divider"
+                   style="@style/ToastDivider" />
+
+        <Button android:id="@+id/toast_button"
+                style="@style/ToastButton" />
+
+    </LinearLayout>
+
 </RelativeLayout>

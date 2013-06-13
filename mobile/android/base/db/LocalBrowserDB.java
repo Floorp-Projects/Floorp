@@ -1242,4 +1242,23 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         return (count > 0);
     }
+
+    public Cursor getBookmarkForUrl(ContentResolver cr, String url) {
+        Cursor c = cr.query(bookmarksUriWithLimit(1),
+                            new String[] { Bookmarks._ID,
+                                           Bookmarks.URL,
+                                           Bookmarks.TITLE,
+                                           Bookmarks.KEYWORD },
+                            Bookmarks.URL + " = ?",
+                            new String[] { url },
+                            null);
+        if (c == null) {
+            return c;
+        } else if (c.getCount() == 0) {
+            c.close();
+            c = null;
+        }
+
+        return c;
+    }
 }

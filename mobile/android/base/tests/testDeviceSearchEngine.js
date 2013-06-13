@@ -38,15 +38,14 @@ function search_observer(aSubject, aTopic, aData) {
     check_submission("/phone?q=foo", "foo", null);
   }
 
-  do_test_finished();
+  run_next_test();
 };
 
-add_task(function test_default() {
+add_test(function test_default() {
   do_register_cleanup(function cleanup() {
     Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
   });
 
-  do_test_pending();
   Services.obs.addObserver(search_observer, "browser-search-engine-modified", false);
 
   do_print("Loading search engine");

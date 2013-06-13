@@ -38,6 +38,7 @@ UTIL_JAVA_FILES := \
   util/HardwareUtils.java \
   util/INIParser.java \
   util/INISection.java \
+  util/JSONUtils.java \
   util/StringUtils.java \
   util/ThreadUtils.java \
   util/UiAsyncTask.java \
@@ -83,6 +84,7 @@ FENNEC_JAVA_FILES = \
   Distribution.java \
   DoorHanger.java \
   DoorHangerPopup.java \
+  EditBookmarkDialog.java \
   Favicons.java \
   FilePickerResultHandler.java \
   FilePickerResultHandlerSync.java \
@@ -232,6 +234,7 @@ FENNEC_JAVA_FILES = \
   widget/AboutHomeSection.java \
   widget/ActivityChooserModel.java \
   widget/AddonsSection.java \
+  widget/ButtonToast.java \
   widget/DateTimePicker.java \
   widget/Divider.java \
   widget/FaviconView.java \
@@ -251,6 +254,11 @@ FENNEC_JAVA_FILES = \
   UpdateService.java \
   GeckoUpdateReceiver.java \
   ReferrerReceiver.java \
+  $(NULL)
+
+WEBSOCKETS_JAVA_FILES := \
+  websockets/HybiParser.java \
+  websockets/WebSocketClient.java \
   $(NULL)
 
 ifdef MOZ_WEBRTC
@@ -351,6 +359,7 @@ DEFINES += \
   -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
   -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
   -DMOZ_UPDATE_CHANNEL=$(MOZ_UPDATE_CHANNEL) \
+  -DOMNIJAR_NAME=$(OMNIJAR_NAME) \
   -DOS_TARGET=$(OS_TARGET) \
   -DTARGET_XPCOM_ABI=$(TARGET_XPCOM_ABI) \
   -DUA_BUILDID=$(UA_BUILDID) \
@@ -648,6 +657,11 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tab_thumbnail_shadow.png \
   res/drawable-mdpi/tabs_count.png \
   res/drawable-mdpi/tabs_count_foreground.png \
+  res/drawable-mdpi/toast.9.png \
+  res/drawable-mdpi/toast_button_focused.9.png \
+  res/drawable-mdpi/toast_button_focused.9.png \
+  res/drawable-mdpi/toast_button_pressed.9.png \
+  res/drawable-mdpi/toast_divider.9.png \
   res/drawable-mdpi/address_bar_url_default.9.png \
   res/drawable-mdpi/address_bar_url_default_pb.9.png \
   res/drawable-mdpi/address_bar_url_pressed.9.png \
@@ -1089,6 +1103,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/textbox_bg.xml                         \
+  mobile/android/base/resources/drawable/toast_button.xml                       \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 
@@ -1133,9 +1148,10 @@ RES_DIRS= \
 
 ALL_JARS = \
   jars/gecko-browser.jar \
+  jars/gecko-mozglue.jar \
   jars/gecko-util.jar \
   jars/sync-thirdparty.jar \
-  jars/gecko-mozglue.jar \
+  jars/websockets.jar \
   $(NULL)
 
 ifdef MOZ_WEBRTC
@@ -1156,10 +1172,10 @@ classes.dex: $(ALL_JARS)
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
-jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar jars/websockets.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	@echo "JAR gecko-browser.jar"
 	$(NSINSTALL) -D classes/gecko-browser
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar:jars/websockets.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(JAR) cMf jars/gecko-browser.jar -C classes/gecko-browser .
 
 jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) $(MOZGLUE_PP_JAVA_FILES) jars
@@ -1179,6 +1195,12 @@ jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) 
 	$(NSINSTALL) -D classes/sync-thirdparty
 	$(JAVAC) $(JAVAC_FLAGS) -d classes/sync-thirdparty $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
 	$(JAR) cMf jars/sync-thirdparty.jar -C classes/sync-thirdparty .
+
+jars/websockets.jar: $(addprefix $(srcdir)/, $(WEBSOCKETS_JAVA_FILES)) jars
+	@echo "JAR websockets.jar"
+	$(NSINSTALL) -D classes/websockets
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-serial -d classes/websockets $(addprefix $(srcdir)/,$(WEBSOCKETS_JAVA_FILES))
+	$(JAR) cMf jars/websockets.jar -C classes/websockets .
 
 ifdef MOZ_WEBRTC
 jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar

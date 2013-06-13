@@ -51,6 +51,8 @@
           this.removeEventListener("pageshow", this.onPageShow, true);
           this.removeEventListener("pagehide", this.onPageHide, true);
           this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
+
+          this.setAttribute("autoscrollpopup", "autoscrollerid");
         ]]>
       </constructor>
 

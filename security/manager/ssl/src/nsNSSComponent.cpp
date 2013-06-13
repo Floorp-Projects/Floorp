@@ -1132,11 +1132,11 @@ nsresult
 nsNSSComponent::setEnabledTLSVersions(nsIPrefBranch * prefBranch)
 {
   // keep these values in sync with security-prefs.js and firefox.js
-  static const PRInt32 PSM_DEFAULT_MIN_TLS_VERSION = 0;
-  static const PRInt32 PSM_DEFAULT_MAX_TLS_VERSION = 1;
+  static const int32_t PSM_DEFAULT_MIN_TLS_VERSION = 0;
+  static const int32_t PSM_DEFAULT_MAX_TLS_VERSION = 1;
 
-  PRInt32 minVersion = PSM_DEFAULT_MIN_TLS_VERSION;
-  PRInt32 maxVersion = PSM_DEFAULT_MAX_TLS_VERSION;
+  int32_t minVersion = PSM_DEFAULT_MIN_TLS_VERSION;
+  int32_t maxVersion = PSM_DEFAULT_MAX_TLS_VERSION;
   mPrefBranch->GetIntPref("security.tls.version.min", &minVersion);
   mPrefBranch->GetIntPref("security.tls.version.max", &maxVersion);
 
@@ -1144,10 +1144,10 @@ nsNSSComponent::setEnabledTLSVersions(nsIPrefBranch * prefBranch)
   minVersion += SSL_LIBRARY_VERSION_3_0;
   maxVersion += SSL_LIBRARY_VERSION_3_0;
 
-  SSLVersionRange range = { (PRUint16) minVersion, (PRUint16) maxVersion };
+  SSLVersionRange range = { (uint16_t) minVersion, (uint16_t) maxVersion };
 
-  if (minVersion != (PRInt32) range.min || // prevent truncation
-      maxVersion != (PRInt32) range.max || // prevent truncation
+  if (minVersion != (int32_t) range.min || // prevent truncation
+      maxVersion != (int32_t) range.max || // prevent truncation
       SSL_VersionRangeSetDefault(ssl_variant_stream, &range) != SECSuccess) {
     range.min = SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MIN_TLS_VERSION;
     range.max = SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MAX_TLS_VERSION;

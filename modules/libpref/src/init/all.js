@@ -1003,7 +1003,11 @@ pref("network.http.fast-fallback-to-IPv4", true);
 
 // The maximum amount of time the cache session lock can be held
 // before a new transaction bypasses the cache. In milliseconds.
+#ifdef RELEASE_BUILD
+pref("network.http.bypass-cachelock-threshold", 200000);
+#else
 pref("network.http.bypass-cachelock-threshold", 250);
+#endif
 
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
@@ -1821,6 +1825,13 @@ pref("dom.max_script_run_time", 10);
 
 // If true, ArchiveReader will be enabled
 pref("dom.archivereader.enabled", false);
+
+// If true, Future will be enabled
+#ifdef RELEASE_BUILD
+pref("dom.future.enabled", false);
+#else
+pref("dom.future.enabled", true);
+#endif
 
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)

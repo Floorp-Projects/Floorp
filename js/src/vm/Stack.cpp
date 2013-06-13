@@ -1849,8 +1849,8 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
 }
 #endif
 
-ion::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing)
-  : Activation(cx, Jit),
+ion::JitActivation::JitActivation(JSContext *cx, bool firstFrameIsConstructing, bool active)
+  : Activation(cx, Jit, active),
     prevIonTop_(cx->mainThread().ionTop),
     prevIonJSContext_(cx->mainThread().ionJSContext),
     firstFrameIsConstructing_(firstFrameIsConstructing)
@@ -1876,7 +1876,9 @@ InterpreterFrameIterator::operator++()
 ActivationIterator::ActivationIterator(JSRuntime *rt)
   : jitTop_(rt->mainThread.ionTop),
     activation_(rt->mainThread.activation_)
-{ }
+{
+    settle();
+}
 
 ActivationIterator &
 ActivationIterator::operator++()
@@ -1885,5 +1887,16 @@ ActivationIterator::operator++()
     if (activation_->isJit())
         jitTop_ = activation_->asJit()->prevIonTop();
     activation_ = activation_->prev();
+    settle();
     return *this;
+}
+
+void
+ActivationIterator::settle()
+{
+    while (!done() && !activation_->isActive()) {
+        if (activation_->isJit())
+            jitTop_ = activation_->asJit()->prevIonTop();
+        activation_ = activation_->prev();
+    }
 }

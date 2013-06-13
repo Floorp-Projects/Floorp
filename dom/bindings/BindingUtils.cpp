@@ -160,6 +160,19 @@ ErrorResult::ReportJSException(JSContext* cx)
   JS_RemoveValueRoot(cx, &mJSException);
 }
 
+void
+ErrorResult::StealJSException(JSContext* cx,
+                              JS::MutableHandle<JS::Value> value)
+{
+  MOZ_ASSERT(!mMightHaveUnreportedJSException,
+             "Must call WouldReportJSException unconditionally in all codepaths that might call StealJSException");
+  MOZ_ASSERT(IsJSException(), "No exception to steal");
+
+  value.set(mJSException);
+  JS_RemoveValueRoot(cx, &mJSException);
+  mResult = NS_OK;
+}
+
 namespace dom {
 
 bool
