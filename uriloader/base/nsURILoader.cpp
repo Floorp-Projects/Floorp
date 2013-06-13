@@ -6,6 +6,7 @@
 
 #include "nsURILoader.h"
 #include "nsAutoPtr.h"
+#include "nsProxyRelease.h"
 #include "nsIURIContentListener.h"
 #include "nsIContentHandler.h"
 #include "nsILoadGroup.h"
@@ -30,10 +31,12 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIThreadRetargetableStreamListener.h"
 
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 #include "nsReadableUtils.h"
 #include "nsError.h"
 
@@ -63,6 +66,7 @@ PRLogModuleInfo* nsURILoader::mLog = nullptr;
  * (or aborted).
  */
 class nsDocumentOpenInfo MOZ_FINAL : public nsIStreamListener
+                                   , public nsIThreadRetargetableStreamListener
 {
 public:
   // Needed for nsCOMPtr to work right... Don't call this!
@@ -110,6 +114,8 @@ public:
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
 
+  // nsIThreadRetargetableStreamListener
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 protected:
   ~nsDocumentOpenInfo();
 
@@ -124,7 +130,7 @@ protected:
    * The stream listener to forward nsIStreamListener notifications
    * to.  This is set once the load is dispatched.
    */
-  nsCOMPtr<nsIStreamListener> m_targetStreamListener;
+  nsMainThreadPtrHandle<nsIStreamListener> m_targetStreamListener;
 
   /**
    * A pointer to the entity that originated the load. We depend on getting
@@ -159,6 +165,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsDocumentOpenInfo::nsDocumentOpenInfo()
@@ -267,6 +274,22 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
 }
 
 NS_IMETHODIMP
+nsDocumentOpenInfo::CheckListenerChain()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread!");
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+    do_QueryInterface(m_targetStreamListener, &rv);
+  if (retargetableListener) {
+    rv = retargetableListener->CheckListenerChain();
+  }
+  LOG(("[0x%p] nsDocumentOpenInfo::CheckListenerChain %s listener %p rv %x",
+       this, (NS_SUCCEEDED(rv) ? "success" : "failure"),
+       (nsIStreamListener*)m_targetStreamListener, rv));
+  return rv;
+}
+
+NS_IMETHODIMP
 nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
                                     nsIInputStream * inStr,
                                     uint64_t sourceOffset, uint32_t count)
@@ -288,7 +311,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports
   
   if ( m_targetStreamListener)
   {
-    nsCOMPtr<nsIStreamListener> listener(m_targetStreamListener);
+    nsMainThreadPtrHandle<nsIStreamListener> listener = m_targetStreamListener;
 
     // If this is a multipart stream, we could get another
     // OnStartRequest after this... reset state.
@@ -514,11 +537,15 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       aChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_GUESS_FROM_EXT));
     }
 
+    nsCOMPtr<nsIStreamListener> listener;
     rv = helperAppService->DoContent(mContentType,
                                      request,
                                      m_originalContext,
                                      false,
-                                     getter_AddRefs(m_targetStreamListener));
+                                     getter_AddRefs(listener));
+    // Passing false here to allow off main thread use.
+    m_targetStreamListener
+      = new nsMainThreadPtrHolder<nsIStreamListener>(listener, false);
     if (NS_FAILED(rv)) {
       request->SetLoadFlags(loadFlags);
       m_targetStreamListener = nullptr;
@@ -558,7 +585,7 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
   // stream is split up into multiple destination streams.  This
   // intermediate instance is used to target these "decoded" streams...
   //
-  nsCOMPtr<nsDocumentOpenInfo> nextLink =
+  nsRefPtr<nsDocumentOpenInfo> nextLink =
     new nsDocumentOpenInfo(m_originalContext, mFlags, mURILoader);
   if (!nextLink) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -581,11 +608,16 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
   // stream converter and sets the output end of the stream converter to
   // nextLink.  As we pump data into m_targetStreamListener the stream
   // converter will convert it and pass the converted data to nextLink.
-  return StreamConvService->AsyncConvertData(PromiseFlatCString(aSrcContentType).get(), 
-                                             PromiseFlatCString(aOutContentType).get(), 
-                                             nextLink, 
-                                             request,
-                                             getter_AddRefs(m_targetStreamListener));
+  nsCOMPtr<nsIStreamListener> listener;
+  rv = StreamConvService->AsyncConvertData(PromiseFlatCString(aSrcContentType).get(),
+                                           PromiseFlatCString(aOutContentType).get(),
+                                           nextLink,
+                                           request,
+                                           getter_AddRefs(listener));
+  // Passing false here to allow off main thread use.
+  m_targetStreamListener
+    = new nsMainThreadPtrHolder<nsIStreamListener>(listener, false);
+  return rv;
 }
 
 bool
@@ -630,7 +662,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
     // m_targetStreamListener is now the input end of the converter, and we can
     // just pump the data in there, if it exists.  If it does not, we need to
     // try other nsIURIContentListeners.
-    return m_targetStreamListener != nullptr;
+    return m_targetStreamListener.get() != nullptr;
   }
 
   // At this point, aListener wants data of type mContentType.  Let 'em have
@@ -652,12 +684,15 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   
   bool abort = false;
   bool isPreferred = (mFlags & nsIURILoader::IS_CONTENT_PREFERRED) != 0;
+  nsCOMPtr<nsIStreamListener> listener;
   nsresult rv = aListener->DoContent(mContentType.get(),
                                      isPreferred,
                                      aChannel,
-                                     getter_AddRefs(m_targetStreamListener),
+                                     getter_AddRefs(listener),
                                      &abort);
-    
+  // Passing false here to allow off main thread use.
+  m_targetStreamListener
+    = new nsMainThreadPtrHolder<nsIStreamListener>(listener, false);
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  DoContent failed"));
     
@@ -812,7 +847,7 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
 
   // we need to create a DocumentOpenInfo object which will go ahead and open
   // the url and discover the content type....
-  nsCOMPtr<nsDocumentOpenInfo> loader =
+  nsRefPtr<nsDocumentOpenInfo> loader =
     new nsDocumentOpenInfo(aWindowContext, aFlags, this);
 
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
