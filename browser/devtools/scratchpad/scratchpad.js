@@ -1485,7 +1485,7 @@ function ScratchpadSidebar(aScratchpad)
 {
   let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
   let tabbox = document.querySelector("#scratchpad-sidebar");
-  this._sidebar = new ToolSidebar(tabbox, this);
+  this._sidebar = new ToolSidebar(tabbox, this, "scratchpad");
   this._scratchpad = aScratchpad;
 }
 
