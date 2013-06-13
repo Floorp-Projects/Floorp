@@ -161,11 +161,6 @@ panelview:not([mainview]) .toolbarbutton-text,
   list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons.png);
 }
 
-.panel-contents-button[disabled] > .toolbarbutton-icon,
-.panel-combined-button[disabled] > .toolbarbutton-icon {
-  opacity: .5;
-}
-
 #PanelUI-contents[type="grid"] toolbarbutton > .toolbarbutton-icon,
 #customization-palette toolbarbutton > .toolbarbutton-icon {
   min-width: calc(8em / 3);
