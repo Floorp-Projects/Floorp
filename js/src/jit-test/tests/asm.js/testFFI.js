@@ -19,7 +19,7 @@ function addN() {
         sum += arguments[i];
     return sum;
 }
-var imp = { inc:inc, add1:add1, add2:add2, add3:add3, addN:addN };
+var imp = { inc:inc, add1:add1, add2:add2, add3:add3, addN:addN, identity: x => x };
 
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { incc() } return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { var i = 0; return (i + inc)|0 } return f');
@@ -90,3 +90,5 @@ var f = asmLink(asmCompile('glob', 'imp', USE_ASM + 'var ffi=imp.ffi; function g
 assertThrowsValue(function() { f(0,2.4) }, 2.4+4);
 assertThrowsValue(function() { f(1,2.4) }, 2.4+8);
 assertThrowsValue(function() { f(8,2.4) }, 2.4+36);
+
+assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'var identity=imp.identity; function g(x) { x=+x; return +identity(x) } return g'), null, imp)(13.37), 13.37);
