@@ -92,12 +92,6 @@ Sanitizer.prototype = {
       clear: function ()
       {
         Services.cookies.removeAll();
-
-        // clear any network geolocation provider sessions
-        try {
-          var branch = Services.prefs.getBranch("geo.wifi.access_token.");
-          branch.deleteBranch("");
-        } catch (e) {dump(e);}
       },
 
       get canClear()

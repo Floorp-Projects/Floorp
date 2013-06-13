@@ -130,7 +130,7 @@ public:
   nsIDOMGeoPosition* GetCachedPosition();
 
   // Find and startup a geolocation device (gps, nmea, etc.)
-  nsresult StartDevice(nsIPrincipal* aPrincipal, bool aRequestPrivate);
+  nsresult StartDevice(nsIPrincipal* aPrincipal);
 
   // Stop the started geolocation device (gps, nmea, etc.)
   void     StopDevice();
