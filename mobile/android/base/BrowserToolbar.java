@@ -1054,7 +1054,10 @@ public class BrowserToolbar implements TextWatcher,
         }
 
         String url = tab.getURL();
-        mUrlEditText.setText(url);
+
+        if (!isEditing()) {
+            mUrlEditText.setText(url);
+        }
 
         // Setting a null title will ensure we just see the "Enter Search or Address" placeholder text.
         if ("about:home".equals(url) || "about:privatebrowsing".equals(url)) {
