@@ -242,19 +242,18 @@ public:
   uint16_t ReadyState();
 
   // request
-  void Open(const nsAString& aMethod, const nsAString& aUrl, bool aAsync,
+  void Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
             const mozilla::dom::Optional<nsAString>& aUser,
             const mozilla::dom::Optional<nsAString>& aPassword,
             ErrorResult& aRv)
   {
-    aRv = Open(NS_ConvertUTF16toUTF8(aMethod), NS_ConvertUTF16toUTF8(aUrl),
+    aRv = Open(aMethod, NS_ConvertUTF16toUTF8(aUrl),
                aAsync, aUser, aPassword);
   }
-  void SetRequestHeader(const nsAString& aHeader, const nsAString& aValue,
+  void SetRequestHeader(const nsACString& aHeader, const nsACString& aValue,
                         ErrorResult& aRv)
   {
-    aRv = SetRequestHeader(NS_ConvertUTF16toUTF8(aHeader),
-                           NS_ConvertUTF16toUTF8(aValue));
+    aRv = SetRequestHeader(aHeader, aValue);
   }
   uint32_t Timeout()
   {
@@ -400,7 +399,7 @@ public:
 
   // response
   uint32_t Status();
-  void GetStatusText(nsString& aStatusText);
+  void GetStatusText(nsCString& aStatusText);
   void GetResponseHeader(const nsACString& aHeader, nsACString& aResult,
                          ErrorResult& aRv);
   void GetResponseHeader(const nsAString& aHeader, nsString& aResult,
@@ -416,7 +415,7 @@ public:
       CopyASCIItoUTF16(result, aResult);
     }
   }
-  void GetAllResponseHeaders(nsString& aResponseHeaders);
+  void GetAllResponseHeaders(nsCString& aResponseHeaders);
   bool IsSafeHeader(const nsACString& aHeaderName, nsIHttpChannel* aHttpChannel);
   void OverrideMimeType(const nsAString& aMimeType)
   {
