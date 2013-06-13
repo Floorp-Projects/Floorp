@@ -602,7 +602,7 @@ GonkGPSGeolocationProvider::Startup()
 }
 
 NS_IMETHODIMP
-GonkGPSGeolocationProvider::Watch(nsIGeolocationUpdate* aCallback, bool aPrivate)
+GonkGPSGeolocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
