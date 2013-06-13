@@ -160,8 +160,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     bool generateInvalidateEpilogue();
   protected:
-    bool generateAsmJSPrologue(const MIRTypeVector &argTypes, MIRType returnType,
-                             Label *internalEntry);
     void postAsmJSCall(LAsmJSCall *lir) {
 #if  !defined(JS_CPU_ARM_HARDFP)
         if (lir->mir()->type() == MIRType_Double) {
