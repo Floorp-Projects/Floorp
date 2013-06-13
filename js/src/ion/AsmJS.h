@@ -65,18 +65,18 @@ TriggerOperationCallbackForAsmJSCode(JSRuntime *rt);
 class AsmJSActivation
 {
     JSContext *cx_;
-    const AsmJSModule &module_;
+    AsmJSModule &module_;
     AsmJSActivation *prev_;
     void *errorRejoinSP_;
     SPSProfiler *profiler_;
     void *resumePC_;
 
   public:
-    AsmJSActivation(JSContext *cx, const AsmJSModule &module);
+    AsmJSActivation(JSContext *cx, AsmJSModule &module);
     ~AsmJSActivation();
 
     JSContext *cx() { return cx_; }
-    const AsmJSModule &module() const { return module_; }
+    AsmJSModule &module() const { return module_; }
 
     // Read by JIT code:
     static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
@@ -139,20 +139,19 @@ struct AsmJSParallelTask
 {
     LifoAlloc lifo;         // Provider of all heap memory used for compilation.
 
-    uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
+    void *func;             // Really, a ModuleCompiler::Func*
     ion::MIRGenerator *mir; // Passed from main thread to worker.
     ion::LIRGraph *lir;     // Passed from worker to main thread.
     unsigned compileTime;
 
     AsmJSParallelTask(size_t defaultChunkSize)
-      : lifo(defaultChunkSize),
-        funcNum(0), mir(NULL), lir(NULL), compileTime(0)
+      : lifo(defaultChunkSize), func(NULL), mir(NULL), lir(NULL), compileTime(0)
     { }
 
-    void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
-        funcNum = newFuncNum;
-        mir = newMir;
-        lir = NULL;
+    void init(void *func, ion::MIRGenerator *mir) {
+        this->func = func;
+        this->mir = mir;
+        this->lir = NULL;
     }
 };
 
