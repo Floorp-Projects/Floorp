@@ -10,6 +10,3 @@ CPP_SOURCES += [
     'TestMinStringAPI.cpp',
 ]
 
-SIMPLE_PROGRAMS += [
-    fyl[0:-4] for fyl in CPP_SOURCES
-]

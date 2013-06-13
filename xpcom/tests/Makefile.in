@@ -41,7 +41,7 @@ cppsrcs += TestSTLWrappers.cpp
 endif
 
 # TODO: Use CPPSRCS from moz.build
-DISABLED_SIMPLE_PROGRAMS	:= $(cppsrcs:.cpp=$(BIN_SUFFIX))
+SIMPLE_PROGRAMS	:= $(cppsrcs:.cpp=$(BIN_SUFFIX))
 
 CPP_UNIT_TESTS = \
                  ShowAlignments.cpp \
