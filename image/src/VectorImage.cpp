@@ -690,29 +690,50 @@ VectorImage::Draw(gfxContext* aContext,
   AutoSVGRenderingState autoSVGState(aSVGContext,
                                      time,
                                      mSVGDocumentWrapper->GetRootSVGElem());
-  mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
+
+  // gfxUtils::DrawPixelSnapped may rasterize this image to a temporary surface
+  // if we hit the tiling path. Unfortunately, the temporary surface isn't
+  // created at the size at which we'll ultimately draw, causing fuzzy output.
+  // To fix this we pre-apply the transform's scaling to the drawing parameters
+  // and then remove the scaling from the transform, so the fact that temporary
+  // surfaces won't take the scaling into account doesn't matter. (Bug 600207.)
+  gfxSize scale(aUserSpaceToImageSpace.ScaleFactors(true));
+  gfxPoint translation(aUserSpaceToImageSpace.GetTranslation());
+
+  // Rescale everything.
+  nsIntSize scaledViewport(aViewportSize.width / scale.width,
+                           aViewportSize.height / scale.height);
+  gfxIntSize scaledViewportGfx(scaledViewport.width, scaledViewport.height);
+  nsIntRect scaledSubimage(aSubimage);
+  scaledSubimage.ScaleRoundOut(1.0 / scale.width, 1.0 / scale.height);
+
+  // Remove the scaling from the transform.
+  gfxMatrix unscale;
+  unscale.Translate(gfxPoint(translation.x / scale.width,
+                             translation.y / scale.height));
+  unscale.Scale(1.0 / scale.width, 1.0 / scale.height);
+  unscale.Translate(-translation);
+  gfxMatrix unscaledTransform(aUserSpaceToImageSpace * unscale);
+
+  mSVGDocumentWrapper->UpdateViewportBounds(scaledViewport);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-  // XXXdholbert Do we need to convert image size from
-  // CSS pixels to dev pixels here? (is gfxCallbackDrawable's 2nd arg in dev
-  // pixels?)
-  gfxIntSize imageSizeGfx(aViewportSize.width, aViewportSize.height);
-
   // Based on imgFrame::Draw
-  gfxRect sourceRect = aUserSpaceToImageSpace.Transform(aFill);
-  gfxRect imageRect(0, 0, aViewportSize.width, aViewportSize.height);
-  gfxRect subimage(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);
+  gfxRect sourceRect = unscaledTransform.Transform(aFill);
+  gfxRect imageRect(0, 0, scaledViewport.width, scaledViewport.height);
+  gfxRect subimage(scaledSubimage.x, scaledSubimage.y,
+                   scaledSubimage.width, scaledSubimage.height);
 
 
   nsRefPtr<gfxDrawingCallback> cb =
     new SVGDrawingCallback(mSVGDocumentWrapper,
-                           nsIntRect(nsIntPoint(0, 0), aViewportSize),
+                           nsIntRect(nsIntPoint(0, 0), scaledViewport),
                            aFlags);
 
-  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, imageSizeGfx);
+  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, scaledViewportGfx);
 
   gfxUtils::DrawPixelSnapped(aContext, drawable,
-                             aUserSpaceToImageSpace,
+                             unscaledTransform,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter,
                              aFlags);
