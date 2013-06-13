@@ -205,17 +205,17 @@ Object.defineProperties(exports, {
  */
 exports.getInnerId = deprecateFunction(getInnerId,
   'require("window-utils").getInnerId is deprecated, ' +
-  'please use require("window/utils").getInnerId instead'
+  'please use require("sdk/window/utils").getInnerId instead'
 );
 
 exports.getOuterId = deprecateFunction(getOuterId,
   'require("window-utils").getOuterId is deprecated, ' +
-  'please use require("window/utils").getOuterId instead'
+  'please use require("sdk/window/utils").getOuterId instead'
 );
 
 exports.isBrowser = deprecateFunction(isBrowser,
   'require("window-utils").isBrowser is deprecated, ' +
-  'please use require("window/utils").isBrowser instead'
+  'please use require("sdk/window/utils").isBrowser instead'
 );
 
 exports.hiddenWindow = appShellService.hiddenDOMWindow;

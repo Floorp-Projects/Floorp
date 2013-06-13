@@ -805,7 +805,7 @@ var gBrowserInit = {
     // enable global history
     try {
       if (!gMultiProcessBrowser)
-        gBrowser.docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
+      gBrowser.docShell.useGlobalHistory = true;
     } catch(ex) {
       Cu.reportError("Places database may be locked: " + ex);
     }
@@ -5998,7 +5998,7 @@ function warnAboutClosingWindow() {
   // Popups aren't considered full browser windows.
   let isPBWindow = PrivateBrowsingUtils.isWindowPrivate(window);
   if (!isPBWindow && !toolbar.visible)
-    return gBrowser.warnAboutClosingTabs(true);
+    return gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
 
   // Figure out if there's at least one other browser window around.
   let e = Services.wm.getEnumerator("navigator:browser");
@@ -6033,7 +6033,7 @@ function warnAboutClosingWindow() {
   }
 
   if (nonPopupPresent) {
-    return isPBWindow || gBrowser.warnAboutClosingTabs(true);
+    return isPBWindow || gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
   }
 
   let os = Services.obs;
@@ -6051,7 +6051,7 @@ function warnAboutClosingWindow() {
   // OS X doesn't quit the application when the last window is closed, but keeps
   // the session alive. Hence don't prompt users to save tabs, but warn about
   // closing multiple tabs.
-  return isPBWindow || gBrowser.warnAboutClosingTabs(true);
+  return isPBWindow || gBrowser.warnAboutClosingTabs(gBrowser.closingTabsEnum.ALL);
 #else
   return true;
 #endif
@@ -6952,6 +6952,13 @@ var TabContextMenu = {
     // Only one of pin/unpin should be visible
     document.getElementById("context_pinTab").hidden = this.contextTab.pinned;
     document.getElementById("context_unpinTab").hidden = !this.contextTab.pinned;
+
+    // Disable "Close Tabs to the Right" if there are no tabs
+    // following it and hide it when the user rightclicked on a pinned
+    // tab.
+    document.getElementById("context_closeTabsToTheEnd").disabled =
+      gBrowser.getTabsToTheEndFrom(this.contextTab).length == 0;
+    document.getElementById("context_closeTabsToTheEnd").hidden = this.contextTab.pinned;
 
     // Disable "Close other Tabs" if there is only one unpinned tab and
     // hide it when the user rightclicked on a pinned tab.

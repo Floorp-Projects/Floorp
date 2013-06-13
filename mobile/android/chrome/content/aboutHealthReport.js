@@ -73,7 +73,7 @@ let healthReportWrapper = {
   },
 
   updatePrefState: function () {
-    console.log("AboutHealthReport: page requested pref state.");
+    console.log("AboutHealthReport: sending pref state to page.");
     try {
       let prefs = {
         enabled: sharedPrefs.getBoolPref(PREF_UPLOAD_ENABLED),
@@ -142,7 +142,7 @@ let healthReportWrapper = {
     iframe.addEventListener("RemoteHealthReportCommand",
                             function onCommand(e) {healthReportWrapper.handleRemoteCommand(e);},
                             false);
-    healthReportWrapper.updatePrefState();
+    healthReportWrapper.injectData("begin", null);
   },
 
   // error handling

@@ -8,11 +8,74 @@ package org.mozilla.gecko.background.healthreport;
 public class HealthReportConstants {
   public static final String HEALTH_AUTHORITY = "@ANDROID_PACKAGE_NAME@.health";
   public static final String GLOBAL_LOG_TAG = "GeckoHealth";
-  public static final int MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
   /**
    * The earliest allowable value for the last ping time, corresponding to May 2nd 2013.
    * Used for sanity checks.
    */
   public static final long EARLIEST_LAST_PING = 1367500000000L;
+
+  public static final long MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+  public static final long MILLISECONDS_PER_SIX_MONTHS = 180 * MILLISECONDS_PER_DAY;
+
+  // Not `final` so we have the option to turn this on at runtime with a magic addon.
+  public static boolean UPLOAD_FEATURE_DISABLED = false;
+
+  // Android SharedPreferences branch where global (not per-profile) uploader
+  // settings are stored.
+  public static final String PREFS_BRANCH = "background";
+
+  // How frequently the submission policy is ticked over. This is how frequently our
+  // intent is scheduled to be called by the Android Alarm Manager, not how
+  // frequently we actually submit.
+  public static final String PREF_SUBMISSION_INTENT_INTERVAL_MSEC = "healthreport_submission_intent_interval_msec";
+  public static final long DEFAULT_SUBMISSION_INTENT_INTERVAL_MSEC = MILLISECONDS_PER_DAY / 24;
+
+  public static final String ACTION_HEALTHREPORT_UPLOAD_PREF = "@ANDROID_PACKAGE_NAME@.HEALTHREPORT_UPLOAD_PREF";
+
+  public static final String PREF_MINIMUM_TIME_BETWEEN_UPLOADS = "healthreport_time_between_uploads";
+  public static final long DEFAULT_MINIMUM_TIME_BETWEEN_UPLOADS = MILLISECONDS_PER_DAY;
+
+  public static final String PREF_MINIMUM_TIME_BEFORE_FIRST_SUBMISSION = "healthreport_time_before_first_submission";
+  public static final long DEFAULT_MINIMUM_TIME_BEFORE_FIRST_SUBMISSION = MILLISECONDS_PER_DAY;
+
+  public static final String PREF_MINIMUM_TIME_AFTER_FAILURE = "healthreport_time_after_failure";
+  public static final long DEFAULT_MINIMUM_TIME_AFTER_FAILURE = DEFAULT_SUBMISSION_INTENT_INTERVAL_MSEC;
+
+  public static final String PREF_MAXIMUM_FAILURES_PER_DAY = "healthreport_maximum_failures_per_day";
+  public static final long DEFAULT_MAXIMUM_FAILURES_PER_DAY = 2;
+
+  // Authoritative.
+  public static final String PREF_FIRST_RUN = "healthreport_first_run";
+  public static final String PREF_NEXT_SUBMISSION = "healthreport_next_submission";
+  public static final String PREF_CURRENT_DAY_FAILURE_COUNT = "healthreport_current_day_failure_count";
+
+  // Forensic.
+  public static final String PREF_LAST_UPLOAD_REQUESTED = "healthreport_last_upload_requested";
+  public static final String PREF_LAST_UPLOAD_SUCCEEDED = "healthreport_last_upload_succeeded";
+  public static final String PREF_LAST_UPLOAD_FAILED = "healthreport_last_upload_failed";
+
+  // Preferences for deleting obsolete documents.
+  public static final String PREF_MINIMUM_TIME_BETWEEN_DELETES = "healthreport_time_between_deletes";
+  public static final long DEFAULT_MINIMUM_TIME_BETWEEN_DELETES = DEFAULT_SUBMISSION_INTENT_INTERVAL_MSEC;
+
+  public static final String PREF_OBSOLETE_DOCUMENT_IDS_TO_DELETION_ATTEMPTS_REMAINING = "healthreport_obsolete_document_ids_to_deletions_remaining";
+
+  public static final String PREF_DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID = "healthreport_deletion_attempts_per_obsolete_document_id";
+  public static final long DEFAULT_DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID = 5;
+
+  // Forensic.
+  public static final String PREF_LAST_DELETE_REQUESTED = "healthreport_last_delete_requested";
+  public static final String PREF_LAST_DELETE_SUCCEEDED = "healthreport_last_delete_succeeded";
+  public static final String PREF_LAST_DELETE_FAILED = "healthreport_last_delete_failed";
+
+  // Preferences for upload client.
+  public static final String PREF_LAST_UPLOAD_LOCAL_TIME  = "healthreport_last_upload_local_time";
+  public static final String PREF_LAST_UPLOAD_DOCUMENT_ID  = "healthreport_last_upload_document_id";
+
+  public static final String PREF_DOCUMENT_SERVER_URI = "healthreport_document_server_uri";
+  public static final String DEFAULT_DOCUMENT_SERVER_URI = "https://fhr.data.mozilla.com/";
+
+  public static final String PREF_DOCUMENT_SERVER_NAMESPACE = "healthreport_document_server_namespace";
+  public static final String DEFAULT_DOCUMENT_SERVER_NAMESPACE = "metrics";
 }

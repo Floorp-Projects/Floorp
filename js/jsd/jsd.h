@@ -108,7 +108,6 @@ struct JSDContext
     void*                   functionHookData;
     JSD_CallHookProc        toplevelHook;
     void*                   toplevelHookData;
-    JSContext*              dumbContext;
     JSObject*               glob;
     JSD_UserCallbacks       userCallbacks;
     void*                   user;
@@ -1056,6 +1055,17 @@ jsd_DropAtom(JSDContext* jsdc, JSDAtom* atom);
 
 #define JSD_ATOM_TO_STRING(a) ((const char*)((a)->str))
 
+struct AutoSaveExceptionState {
+    AutoSaveExceptionState(JSContext *cx) : mCx(cx) {
+        mState = JS_SaveExceptionState(cx);
+    }
+    ~AutoSaveExceptionState() {
+        JS_RestoreExceptionState(mCx, mState);
+    }
+    JSContext *mCx;
+    JSExceptionState *mState;
+};
+
 /***************************************************************************/
 /* Livewire specific API */
 #ifdef LIVEWIRE
@@ -1083,7 +1093,6 @@ jsdlw_RawToProcessedLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
 extern JSBool
 jsdlw_ProcessedToRawLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
                                unsigned lineIn, unsigned* lineOut);
-
 
 #if 0
 /* our hook proc for LiveWire app start/stop */

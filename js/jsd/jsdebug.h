@@ -152,12 +152,6 @@ extern JSD_PUBLIC_API(unsigned)
 JSD_GetMinorVersion(void);
 
 /*
-* Returns a 'dumb' JSContext that can be used for utility purposes as needed
-*/
-extern JSD_PUBLIC_API(JSContext*)
-JSD_GetDefaultJSContext(JSDContext* jsdc);
-
-/*
 * Returns the default JSD global associated with a given JSDContext.
 */
 extern JSD_PUBLIC_API(JSObject*)

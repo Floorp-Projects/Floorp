@@ -28,11 +28,6 @@ var SelectHelperUI = {
   },
 
   show: function selectHelperShow(aList, aTitle, aRect) {
-    if (AnimatedZoom.isZooming()) {
-      FormHelperUI._waitForZoom(this.show.bind(this, aList, aTitle, aRect));
-      return;
-    }
-
     if (this._list)
       this.reset();
 

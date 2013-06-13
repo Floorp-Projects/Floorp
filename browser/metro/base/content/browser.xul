@@ -112,12 +112,7 @@
     <command id="cmd_delete" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_selectAll" oncommand="CommandUpdater.doCommand(this.id);"/>
 
-    <!-- forms navigation -->
-    <command id="cmd_formPrevious" oncommand="FormHelperUI.goToPrevious();"/>
-    <command id="cmd_formNext" oncommand="FormHelperUI.goToNext();"/>
-    <command id="cmd_formClose" oncommand="FormHelperUI.hide();"/>
-
-    <!-- find navigation -->
+    <!-- find -->
     <command id="cmd_findPrevious" oncommand="FindHelperUI.goToPrevious();"/>
     <command id="cmd_findNext" oncommand="FindHelperUI.goToNext();"/>
     <command id="cmd_findClose" oncommand="FindHelperUI.hide();"/>
@@ -202,18 +197,15 @@
                 <richgrid id="start-topsites-grid" rows="3" columns="3" seltype="multiple" flex="1"/>
               </vbox>
               <vbox id="start-bookmarks" class="meta-section">
-                <label class="meta-section-title" value="&startBookmarksHeader.label;"
-                  onclick="PanelUI.show('bookmarks-container');"/>
+                <label class="meta-section-title" value="&startBookmarksHeader.label;"/>
                 <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
               </vbox>
               <vbox id="start-history" class="meta-section">
-                <label class="meta-section-title" value="&startHistoryHeader.label;"
-                  onclick="PanelUI.show('history-container');"/>
+                <label class="meta-section-title" value="&startHistoryHeader.label;"/>
                 <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
               </vbox>
               <vbox id="start-remotetabs" class="meta-section">
-                <label class="meta-section-title" value="&startRemoteTabsHeader.label;"
-                  onclick="PanelUI.show('remotetabs-container');"/>
+                <label class="meta-section-title" value="&startRemoteTabsHeader.label;"/>
                 <richgrid id="start-remotetabs-grid" seltype="multiple" flex="1"/>
               </vbox>
             </scrollbox>
@@ -225,9 +217,9 @@
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
                 <richgrid id="snapped-topsites-grid" class="canSnapTiles" rows="8" columns="1" flex="1"/>
               </vbox>
-              <label class="meta-section-title" value="&startBookmarksHeader.label;"
+              <label class="meta-section-title" value="&snappedBookmarksHeader.label;"
                 onclick="PanelUI.show('bookmarks-container');"/>
-              <label class="meta-section-title" value="&startHistoryHeader.label;"
+              <label class="meta-section-title" value="&snappedHistoryHeader.label;"
                 onclick="PanelUI.show('history-container');" inputProcessing="true"/>
               <label id="snappedRemoteTabsLabel" class="meta-section-title" value="&snappedRemoteTabsHeader.label;"
                 onclick="PanelUI.show('remotetabs-container');" inputProcessing="true"/>
@@ -247,9 +239,13 @@
     </vbox>
 
     <!-- popup for content navigator helper -->
-    <vbox id="content-navigator">
+    <appbar id="content-navigator" class="window-width content-navigator-box" orient="horizontal" pack="start">
       <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
-    </vbox>
+      <button class="content-navigator-item previous-button" command="cmd_findPrevious"/>
+      <button class="content-navigator-item next-button" command="cmd_findNext"/>
+      <spacer flex="1"/>
+      <button class="content-navigator-item close-button" command="cmd_findClose"/>
+    </appbar>
 
     <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
       <hbox id="panel-header">
@@ -260,7 +256,6 @@
             <menuitem label="&bookmarksHeader.label;" value="bookmarks-container" id="menuitem-bookmarks"/>
             <menuitem label="&startHistoryHeader.label;" value="history-container" id="menuitem-history"/>
             <menuitem label="&startRemoteTabsHeader.label;" value="remotetabs-container" id="menuitem-remotetabs"/>
-            <menuitem label="&downloadsHeader.label;" value="downloads-container" id="menuitem-downloads"/>
             <menuitem label="&consoleHeader.label;" value="console-container" id="menuitem-console"/>
           </menupopup>
         </menulist>
@@ -368,6 +363,8 @@
     <!-- Selection overlay - this should be below any content that can have selectable text -->
     <!-- onclick addresses dom bug 835175, str in bug 832957 -->
     <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
+
+    <autoscroller class="autoscroller" id="autoscrollerid"/>
 
     <html:div id="overlay-back" class="overlay-button"
               observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>

@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var widgets = require('widget');
-var pageMod = require('page-mod');
-var data = require('self').data;
-var panels = require('panel');
-var simpleStorage = require('simple-storage');
-var notifications = require("notifications");
+var widgets = require('sdk/widget');
+var pageMod = require('sdk/page-mod');
+var data = require('sdk/self').data;
+var panels = require('sdk/panel');
+var simpleStorage = require('sdk/simple-storage');
+var notifications = require("sdk/notifications");
 
 /*
 Global variables
@@ -188,7 +188,7 @@ in the browser.
       this.postMessage(simpleStorage.storage.annotations);
     },
     onMessage: function(message) {
-      require('tabs').open(message);
+      require('sdk/tabs').open(message);
     }
   });
 

@@ -1143,6 +1143,31 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   }
 
   /**
+   * Are there events recorded on or after <code>time</code>?
+   *
+   * @param time milliseconds since epoch. Will be converted by {@link #getDay(long)}.
+   * @return true if such events exist, false otherwise.
+   */
+  @Override
+  public boolean hasEventSince(long time) {
+    final int start = this.getDay(time);
+    final SQLiteDatabase db = this.helper.getReadableDatabase();
+    final String dayString = Integer.toString(start, 10);
+    Cursor cur = db.query("events", COLUMNS_DATE_ENV_FIELD_VALUE,
+        "date >= ?", new String[] {dayString}, null, null, null, "1");
+    if (cur == null) {
+      // Something is horribly wrong; let the caller who actually reads the
+      // events deal with it.
+      return true;
+    }
+    try {
+      return cur.getCount() > 0;
+    } finally {
+      cur.close();
+    }
+  }
+
+  /**
    * Returns a cursor over field events in the database. The results will be
    * strictly ordered first by date, then by environment, and finally by field.
    *

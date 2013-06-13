@@ -726,6 +726,11 @@ MMod::computeRange()
         return;
     Range lhs(getOperand(0));
     Range rhs(getOperand(1));
+
+    // Infinite % x is NaN
+    if (lhs.isInfinite())
+        return;
+
     int64_t a = Abs<int64_t>(rhs.lower());
     int64_t b = Abs<int64_t>(rhs.upper());
     if (a == 0 && b == 0)

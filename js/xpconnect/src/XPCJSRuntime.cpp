@@ -1676,7 +1676,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "heap that holds references to executable code pools "
                       "used by the IonMonkey JIT.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts"),
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-script-data"),
                    zStats.lazyScripts,
                    "Memory holding miscellaneous additional information associated with lazy "
                    "scripts.");
@@ -2322,7 +2322,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         }
 
         if (needZone)
-            extras->jsPathPrefix += nsPrintfCString("zone(%p)/", (void *)js::GetCompartmentZone(c));
+            extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/", (void *)js::GetCompartmentZone(c));
 
         extras->jsPathPrefix += NS_LITERAL_CSTRING("compartment(") + cName + NS_LITERAL_CSTRING(")/");
 

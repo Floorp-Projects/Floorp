@@ -388,8 +388,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
 nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent) {
   SingleTouchData& touch = GetFirstSingleTouch(aEvent);
 
-  nsIntPoint point = touch.mScreenPoint;
-  int32_t xPos = point.x, yPos = point.y;
+  ScreenIntPoint point = touch.mScreenPoint;
 
   switch (mState) {
     case ANIMATING_ZOOM:
@@ -407,8 +406,8 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
       CancelAnimation();
       // Fall through.
     case NOTHING:
-      mX.StartTouch(xPos);
-      mY.StartTouch(yPos);
+      mX.StartTouch(point.x);
+      mY.StartTouch(point.y);
       SetState(TOUCHING);
       break;
     case TOUCHING:
@@ -553,23 +552,25 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
 
     gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
     gfxFloat userZoom = mFrameMetrics.mZoom.width;
-    nsIntPoint focusPoint = aEvent.mFocusPoint;
-    gfxFloat xFocusChange = (mLastZoomFocus.x - focusPoint.x) / resolution;
-    gfxFloat yFocusChange = (mLastZoomFocus.y - focusPoint.y) / resolution;
+    ScreenPoint focusPoint = aEvent.mFocusPoint;
+
+    CSSPoint focusChange = ScreenPoint::ToCSSPoint(mLastZoomFocus - focusPoint,
+                                                   1.0 / resolution,
+                                                   1.0 / resolution);
     // If displacing by the change in focus point will take us off page bounds,
     // then reduce the displacement such that it doesn't.
-    if (mX.DisplacementWillOverscroll(xFocusChange) != Axis::OVERSCROLL_NONE) {
-      xFocusChange -= mX.DisplacementWillOverscrollAmount(xFocusChange);
+    if (mX.DisplacementWillOverscroll(focusChange.x) != Axis::OVERSCROLL_NONE) {
+      focusChange.x -= mX.DisplacementWillOverscrollAmount(focusChange.x);
     }
-    if (mY.DisplacementWillOverscroll(yFocusChange) != Axis::OVERSCROLL_NONE) {
-      yFocusChange -= mY.DisplacementWillOverscrollAmount(yFocusChange);
+    if (mY.DisplacementWillOverscroll(focusChange.y) != Axis::OVERSCROLL_NONE) {
+      focusChange.y -= mY.DisplacementWillOverscrollAmount(focusChange.y);
     }
-    ScrollBy(gfx::Point(xFocusChange, yFocusChange));
+    ScrollBy(focusChange);
 
     // When we zoom in with focus, we can zoom too much towards the boundaries
     // that we actually go over them. These are the needed displacements along
     // either axis such that we don't overscroll the boundaries when zooming.
-    gfxFloat neededDisplacementX = 0, neededDisplacementY = 0;
+    gfx::Point neededDisplacement;
 
     // Only do the scaling if we won't go over 8x zoom in or out.
     bool doScale = (spanRatio > 1.0 && userZoom < mMaxZoom) ||
@@ -590,7 +591,7 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
           break;
         case Axis::OVERSCROLL_MINUS:
         case Axis::OVERSCROLL_PLUS:
-          neededDisplacementX = -mX.ScaleWillOverscrollAmount(spanRatio, focusPoint.x);
+          neededDisplacement.x = -mX.ScaleWillOverscrollAmount(spanRatio, focusPoint.x);
           break;
         case Axis::OVERSCROLL_BOTH:
           // If scaling this way will make us overscroll in both directions, then
@@ -609,7 +610,7 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
           break;
         case Axis::OVERSCROLL_MINUS:
         case Axis::OVERSCROLL_PLUS:
-          neededDisplacementY = -mY.ScaleWillOverscrollAmount(spanRatio, focusPoint.y);
+          neededDisplacement.y = -mY.ScaleWillOverscrollAmount(spanRatio, focusPoint.y);
           break;
         case Axis::OVERSCROLL_BOTH:
           doScale = false;
@@ -620,8 +621,8 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     if (doScale) {
       ScaleWithFocus(userZoom * spanRatio, focusPoint);
 
-      if (neededDisplacementX != 0 || neededDisplacementY != 0) {
-        ScrollBy(gfx::Point(neededDisplacementX, neededDisplacementY));
+      if (neededDisplacement != gfx::Point()) {
+        ScrollBy(CSSPoint::FromUnknownPoint(neededDisplacement));
       }
 
       ScheduleComposite();
@@ -730,8 +731,7 @@ void AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent) {
 
 void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput& aEvent) {
   SingleTouchData& touch = GetFirstSingleTouch(aEvent);
-  nsIntPoint point = touch.mScreenPoint;
-  int32_t xPos = point.x, yPos = point.y;
+  ScreenIntPoint point = touch.mScreenPoint;
   TimeDuration timeDelta = TimeDuration().FromMilliseconds(aEvent.mTime - mLastEventTime);
 
   // Probably a duplicate event, just throw it away.
@@ -739,8 +739,8 @@ void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput&
     return;
   }
 
-  mX.UpdateWithTouchAtDevicePoint(xPos, timeDelta);
-  mY.UpdateWithTouchAtDevicePoint(yPos, timeDelta);
+  mX.UpdateWithTouchAtDevicePoint(point.x, timeDelta);
+  mY.UpdateWithTouchAtDevicePoint(point.y, timeDelta);
 }
 
 void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
@@ -760,15 +760,15 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     // larger swipe should move you a shorter distance.
     gfxFloat inverseResolution = 1 / CalculateResolution(mFrameMetrics).width;
 
-    float xDisplacement = mX.GetDisplacementForDuration(inverseResolution,
-                                                        timeDelta);
-    float yDisplacement = mY.GetDisplacementForDuration(inverseResolution,
-                                                        timeDelta);
-    if (fabs(xDisplacement) <= EPSILON && fabs(yDisplacement) <= EPSILON) {
+    gfx::Point displacement(mX.GetDisplacementForDuration(inverseResolution,
+                                                          timeDelta),
+                            mY.GetDisplacementForDuration(inverseResolution,
+                                                          timeDelta));
+    if (fabs(displacement.x) <= EPSILON && fabs(displacement.y) <= EPSILON) {
       return;
     }
 
-    ScrollBy(gfx::Point(xDisplacement, yDisplacement));
+    ScrollBy(CSSPoint::FromUnknownPoint(displacement));
     ScheduleComposite();
 
     TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
@@ -804,10 +804,10 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
   // larger swipe should move you a shorter distance.
   gfxFloat inverseResolution = 1 / CalculateResolution(mFrameMetrics).width;
 
-  ScrollBy(gfx::Point(
+  ScrollBy(CSSPoint::FromUnknownPoint(gfx::Point(
     mX.GetDisplacementForDuration(inverseResolution, aDelta),
     mY.GetDisplacementForDuration(inverseResolution, aDelta)
-  ));
+  )));
   TimeDuration timePaintDelta = TimeStamp::Now() - mPreviousPaintStartTime;
   if (timePaintDelta.ToMilliseconds() > gFlingRepaintInterval) {
     RequestContentRepaint();
@@ -824,16 +824,15 @@ void AsyncPanZoomController::SetCompositorParent(CompositorParent* aCompositorPa
   mCompositorParent = aCompositorParent;
 }
 
-void AsyncPanZoomController::ScrollBy(const gfx::Point& aOffset) {
-  gfx::Point newOffset(mFrameMetrics.mScrollOffset.x + aOffset.x,
-                       mFrameMetrics.mScrollOffset.y + aOffset.y);
+void AsyncPanZoomController::ScrollBy(const CSSPoint& aOffset) {
+  CSSPoint newOffset = mFrameMetrics.mScrollOffset + aOffset;
   FrameMetrics metrics(mFrameMetrics);
-  metrics.mScrollOffset = CSSPoint::FromUnknownPoint(newOffset);
+  metrics.mScrollOffset = newOffset;
   mFrameMetrics = metrics;
 }
 
 void AsyncPanZoomController::ScaleWithFocus(float aZoom,
-                                            const nsIntPoint& aFocus) {
+                                            const ScreenPoint& aFocus) {
   float zoomFactor = aZoom / mFrameMetrics.mZoom.width;
   gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
 
@@ -843,9 +842,9 @@ void AsyncPanZoomController::ScaleWithFocus(float aZoom,
   // errors, so don't bother adjusting the scroll offset.
   if (resolution >= 0.01f) {
     mFrameMetrics.mScrollOffset.x +=
-      gfxFloat(aFocus.x) * (zoomFactor - 1.0) / resolution;
+      aFocus.x * (zoomFactor - 1.0) / resolution;
     mFrameMetrics.mScrollOffset.y +=
-      gfxFloat(aFocus.y) * (zoomFactor - 1.0) / resolution;
+      aFocus.y * (zoomFactor - 1.0) / resolution;
   }
 }
 

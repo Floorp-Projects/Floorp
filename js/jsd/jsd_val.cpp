@@ -12,6 +12,9 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
+#include "nsCxPusher.h"
+
+using mozilla::AutoSafeJSContext;
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
@@ -111,30 +114,25 @@ jsd_IsValuePrimitive(JSDContext* jsdc, JSDValue* jsdval)
 JSBool
 jsd_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
+    AutoSafeJSContext cx; // NB: Actually unused.
     return !JSVAL_IS_PRIMITIVE(jsdval->val) &&
-           JS_ObjectIsCallable(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
+           JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(jsdval->val));
 }
 
 JSBool
 jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     JS::RootedFunction fun(cx);
-    JSExceptionState* exceptionState;
-    JSCompartment* oldCompartment = NULL;
 
     if(jsd_IsValueFunction(jsdc, jsdval))
     {
+        JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(jsdval->val));
+        AutoSaveExceptionState as(cx);
         JSBool ok = JS_FALSE;
-        JS_BeginRequest(cx);
-        oldCompartment = JS_EnterCompartment(cx, JSVAL_TO_OBJECT(jsdval->val));
-        exceptionState = JS_SaveExceptionState(cx);
         fun = JSD_GetValueFunction(jsdc, jsdval);
-        JS_RestoreExceptionState(cx, exceptionState);
         if(fun)
             ok = JS_GetFunctionScript(cx, fun) ? JS_FALSE : JS_TRUE;
-        JS_LeaveCompartment(cx, oldCompartment);
-        JS_EndRequest(cx);
         JS_ASSERT(fun);
         return ok;
     }
@@ -172,9 +170,7 @@ jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 JSString*
 jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSExceptionState* exceptionState;
-    JSCompartment* oldCompartment = NULL;
+    AutoSafeJSContext cx;
     JS::RootedValue stringval(cx);
     JS::RootedString string(cx);
     JS::RootedObject scopeObj(cx);
@@ -188,27 +184,19 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
         return jsdval->string;
     }
 
-    JS_BeginRequest(cx);
-
     /* Objects call JS_ValueToString in their own compartment. */
     scopeObj = !JSVAL_IS_PRIMITIVE(jsdval->val) ? JSVAL_TO_OBJECT(jsdval->val) : jsdc->glob;
-    oldCompartment = JS_EnterCompartment(cx, scopeObj);
-    exceptionState = JS_SaveExceptionState(cx);
+    {
+        JSAutoCompartment ac(cx, scopeObj);
+        AutoSaveExceptionState as(cx);
+        string = JS_ValueToString(cx, jsdval->val);
+    }
 
-    string = JS_ValueToString(cx, jsdval->val);
-
-    JS_RestoreExceptionState(cx, exceptionState);
-    JS_LeaveCompartment(cx, oldCompartment);
-    oldCompartment = NULL;
-
+    JSAutoCompartment ac2(cx, jsdc->glob);
     if(string) {
         stringval = STRING_TO_JSVAL(string);
-        oldCompartment = JS_EnterCompartment(cx, jsdc->glob);
     }
     if(!string || !JS_WrapValue(cx, stringval.address())) {
-        if(oldCompartment)
-            JS_LeaveCompartment(cx, oldCompartment);
-        JS_EndRequest(cx);
         return NULL;
     }
 
@@ -216,30 +204,20 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     if(!JS_AddNamedStringRoot(cx, &jsdval->string, "ValueString"))
         jsdval->string = NULL;
 
-    JS_LeaveCompartment(cx, oldCompartment);
-    JS_EndRequest(cx);
-
     return jsdval->string;
 }
 
 JSString*
 jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     JS::RootedFunction fun(cx);
-    JSExceptionState* exceptionState;
-    JSCompartment* oldCompartment = NULL;
 
     if(!jsdval->funName && jsd_IsValueFunction(jsdc, jsdval))
     {
-        JS_BeginRequest(cx);
-
-        oldCompartment = JS_EnterCompartment(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
-        exceptionState = JS_SaveExceptionState(cx);
+        JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(jsdval->val));
+        AutoSaveExceptionState as(cx);
         fun = JSD_GetValueFunction(jsdc, jsdval);
-        JS_RestoreExceptionState(cx, exceptionState);
-        JS_LeaveCompartment(cx, oldCompartment);
-        JS_EndRequest(cx);
         if(!fun)
             return NULL;
         jsdval->funName = JS_GetFunctionId(fun);
@@ -261,9 +239,9 @@ jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_NewValue(JSDContext* jsdc, jsval value)
 {
-    JS::RootedValue val(jsdc->dumbContext, value);
+    AutoSafeJSContext cx;
+    JS::RootedValue val(cx, value);
     JSDValue* jsdval;
-    JSCompartment* oldCompartment = NULL;
 
     if(!(jsdval = (JSDValue*) calloc(1, sizeof(JSDValue))))
         return NULL;
@@ -271,19 +249,15 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
     if(JSVAL_IS_GCTHING(val))
     {
         JSBool ok;
-        JS_BeginRequest(jsdc->dumbContext);
+        JSAutoCompartment ac(cx, jsdc->glob);
 
-        oldCompartment = JS_EnterCompartment(jsdc->dumbContext, jsdc->glob);
-
-        ok = JS_AddNamedValueRoot(jsdc->dumbContext, &jsdval->val, "JSDValue");
+        ok = JS_AddNamedValueRoot(cx, &jsdval->val, "JSDValue");
         if(ok && JSVAL_IS_STRING(val)) {
-            if(!JS_WrapValue(jsdc->dumbContext, val.address())) {
+            if(!JS_WrapValue(cx, val.address())) {
                 ok = JS_FALSE;
             }
         }
 
-        JS_LeaveCompartment(jsdc->dumbContext, oldCompartment);
-        JS_EndRequest(jsdc->dumbContext);
         if(!ok)
         {
             free(jsdval);
@@ -300,19 +274,15 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
 void
 jsd_DropValue(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSCompartment* oldCompartment = NULL;
-
     JS_ASSERT(jsdval->nref > 0);
     if(0 == --jsdval->nref)
     {
         jsd_RefreshValue(jsdc, jsdval);
         if(JSVAL_IS_GCTHING(jsdval->val))
         {
-            JS_BeginRequest(jsdc->dumbContext);
-            oldCompartment = JS_EnterCompartment(jsdc->dumbContext, jsdc->glob);
-            JS_RemoveValueRoot(jsdc->dumbContext, &jsdval->val);
-            JS_LeaveCompartment(jsdc->dumbContext, oldCompartment);
-            JS_EndRequest(jsdc->dumbContext);
+            AutoSafeJSContext cx;
+            JSAutoCompartment ac(cx, jsdc->glob);
+            JS_RemoveValueRoot(cx, &jsdval->val);
         }
         free(jsdval);
     }
@@ -321,7 +291,7 @@ jsd_DropValue(JSDContext* jsdc, JSDValue* jsdval)
 jsval
 jsd_GetValueWrappedJSVal(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = JSD_GetDefaultJSContext(jsdc);
+    AutoSafeJSContext cx;
     JS::RootedObject obj(cx);
     JS::RootedValue val(cx, jsdval->val);
     if (!JSVAL_IS_PRIMITIVE(val)) {
@@ -383,11 +353,10 @@ static void _freeProps(JSDContext* jsdc, JSDValue* jsdval)
 
 static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     JS::RootedObject obj(cx);
     JSPropertyDescArray pda;
     unsigned i;
-    JSCompartment* oldCompartment = NULL;
 
     JS_ASSERT(JS_CLIST_IS_EMPTY(&jsdval->props));
     JS_ASSERT(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PROPS)));
@@ -398,13 +367,10 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 
     obj = JSVAL_TO_OBJECT(jsdval->val);
 
-    JS_BeginRequest(cx);
-    oldCompartment = JS_EnterCompartment(jsdc->dumbContext, obj);
+    JSAutoCompartment ac(cx, obj);
 
     if(!JS_GetPropertyDescArray(cx, obj, &pda))
     {
-        JS_EndRequest(cx);
-        JS_LeaveCompartment(jsdc->dumbContext, oldCompartment);
         return JS_FALSE;
     }
 
@@ -419,8 +385,6 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
         JS_APPEND_LINK(&prop->links, &jsdval->props);
     }
     JS_PutPropertyDescArray(cx, &pda);
-    JS_LeaveCompartment(jsdc->dumbContext, oldCompartment);
-    JS_EndRequest(cx);
     SET_BIT_FLAG(jsdval->flags, GOT_PROPS);
     return !JS_CLIST_IS_EMPTY(&jsdval->props);
 }
@@ -431,19 +395,14 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 void
 jsd_RefreshValue(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
-    JSCompartment* oldCompartment = NULL;
-
+    AutoSafeJSContext cx;
     if(jsdval->string)
     {
         /* if the jsval is a string, then we didn't need to root the string */
         if(!JSVAL_IS_STRING(jsdval->val))
         {
-            JS_BeginRequest(cx);
-            oldCompartment = JS_EnterCompartment(cx, jsdc->glob);
+            JSAutoCompartment ac(cx, jsdc->glob);
             JS_RemoveStringRoot(cx, &jsdval->string);
-            JS_LeaveCompartment(cx, oldCompartment);
-            JS_EndRequest(cx);
         }
         jsdval->string = NULL;
     }
@@ -503,7 +462,8 @@ jsd_IterateProperties(JSDContext* jsdc, JSDValue* jsdval, JSDProperty **iterp)
 JSDProperty*
 jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
+    JSAutoCompartment acBase(cx, jsdc->glob);
     JSDProperty* jsdprop;
     JSDProperty* iter = NULL;
     JS::RootedObject obj(cx);
@@ -515,7 +475,6 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
     size_t nameLen;
     JS::RootedValue val(cx), nameval(cx);
     JS::RootedId nameid(cx);
-    JSCompartment* oldCompartment = NULL;
 
     if(!jsd_IsValueObject(jsdc, jsdval))
         return NULL;
@@ -539,44 +498,38 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
     if (!(nameChars = JS_GetStringCharsZAndLength(cx, name, &nameLen)))
         return NULL;
 
-    JS_BeginRequest(cx);
-    oldCompartment = JS_EnterCompartment(cx, obj);
-
-    JS_GetUCPropertyAttributes(cx, obj, nameChars, nameLen, &attrs, &found);
-    if (!found)
     {
-        JS_LeaveCompartment(cx, oldCompartment);
-        JS_EndRequest(cx);
-        return NULL;
-    }
+        JSAutoCompartment ac(cx, obj);
 
-    JS_ClearPendingException(cx);
-
-    if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, val.address()))
-    {
-        if (JS_IsExceptionPending(cx))
+        JS_GetUCPropertyAttributes(cx, obj, nameChars, nameLen, &attrs, &found);
+        if (!found)
         {
-            if (!JS_GetPendingException(cx, &pd.value))
+            return NULL;
+        }
+
+        JS_ClearPendingException(cx);
+
+        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, val.address()))
+        {
+            if (JS_IsExceptionPending(cx))
             {
-                JS_LeaveCompartment(cx, oldCompartment);
-                JS_EndRequest(cx);
-                return NULL;
+                if (!JS_GetPendingException(cx, &pd.value))
+                {
+                    return NULL;
+                }
+                pd.flags = JSPD_EXCEPTION;
             }
-            pd.flags = JSPD_EXCEPTION;
+            else
+            {
+                pd.flags = JSPD_ERROR;
+                pd.value = JSVAL_VOID;
+            }
         }
         else
         {
-            pd.flags = JSPD_ERROR;
-            pd.value = JSVAL_VOID;
+            pd.value = val;
         }
     }
-    else
-    {
-        pd.value = val;
-    }
-
-    JS_LeaveCompartment(cx, oldCompartment);
-    JS_EndRequest(cx);
 
     nameval = STRING_TO_JSVAL(name);
     if (!JS_ValueToId(cx, nameval, nameid.address()) ||
@@ -600,19 +553,17 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 JSFunction*
 jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
 
     JS::RootedObject obj(cx);
     JS::RootedFunction fun(cx);
 
-    JSCompartment* oldCompartment = NULL;
     if (JSVAL_IS_PRIMITIVE(jsdval->val))
         return NULL;
 
     obj = js::UncheckedUnwrap(JSVAL_TO_OBJECT(jsdval->val));
-    oldCompartment = JS_EnterCompartment(cx, obj);
+    JSAutoCompartment ac(cx, obj);
     fun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(obj));
-    JS_LeaveCompartment(cx, oldCompartment);
 
     return fun;
 }
@@ -620,7 +571,7 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PROTO)))
     {
         JS::RootedObject obj(cx);
@@ -644,12 +595,9 @@ jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSCompartment* oldCompartment = NULL;
-
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PARENT)))
     {
-        JSContext* cx = jsdc->dumbContext;
-
+        AutoSafeJSContext cx;
         JS::RootedObject obj(cx);
         JS::RootedObject parent(cx);
         JS_ASSERT(!jsdval->parent);
@@ -657,11 +605,10 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
         obj = JSVAL_TO_OBJECT(jsdval->val);
-        JS_BeginRequest(jsdc->dumbContext);
-        oldCompartment = JS_EnterCompartment(jsdc->dumbContext, obj);
-        parent = JS_GetParentOrScopeChain(jsdc->dumbContext,obj);
-        JS_LeaveCompartment(jsdc->dumbContext, oldCompartment);
-        JS_EndRequest(jsdc->dumbContext);
+        {
+            JSAutoCompartment ac(cx, obj);
+            parent = JS_GetParentOrScopeChain(cx, obj);
+        }
         if(!parent)
             return NULL;
         jsdval->parent = jsd_NewValue(jsdc, OBJECT_TO_JSVAL(parent));
@@ -674,11 +621,9 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSCompartment* oldCompartment = NULL;
-    JSContext* cx = jsdc->dumbContext;
-
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_CTOR)))
     {
+        AutoSafeJSContext cx;
         JS::RootedObject obj(cx);
         JS::RootedObject proto(cx);
         JS::RootedObject ctor(cx);
@@ -691,11 +636,10 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
             return NULL;
         if(!proto)
             return NULL;
-        JS_BeginRequest(jsdc->dumbContext);
-        oldCompartment = JS_EnterCompartment(jsdc->dumbContext, obj);
-        ctor = JS_GetConstructor(jsdc->dumbContext,proto);
-        JS_LeaveCompartment(jsdc->dumbContext, oldCompartment);
-        JS_EndRequest(jsdc->dumbContext);
+        {
+            JSAutoCompartment ac(cx, obj);
+            ctor = JS_GetConstructor(cx, proto);
+        }
         if(!ctor)
             return NULL;
         jsdval->ctor = jsd_NewValue(jsdc, OBJECT_TO_JSVAL(ctor));
@@ -709,18 +653,12 @@ const char*
 jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
 {
     jsval val = jsdval->val;
-    JSCompartment* oldCompartment = NULL;
-
     if(!jsdval->className && !JSVAL_IS_PRIMITIVE(val))
     {
-        JSContext* cx = jsdc->dumbContext;
-
+        AutoSafeJSContext cx;
         JS::RootedObject obj(cx, JSVAL_TO_OBJECT(val));
-        JS_BeginRequest(cx);
-        oldCompartment = JS_EnterCompartment(cx, obj);
+        JSAutoCompartment ac(cx, obj);
         jsdval->className = JS_GetDebugClassName(obj);
-        JS_LeaveCompartment(cx, oldCompartment);
-        JS_EndRequest(cx);
     }
     return jsdval->className;
 }
@@ -728,26 +666,22 @@ jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
 JSDScript*
 jsd_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval)
 {
-    JSContext* cx = jsdc->dumbContext;
+    AutoSafeJSContext cx;
     JS::RootedValue val(cx, jsdval->val);
     JSFunction* fun = NULL;
-    JSExceptionState* exceptionState;
     JS::RootedScript script(cx);
     JSDScript* jsdscript;
-    JSCompartment* oldCompartment = NULL;
 
     if (!jsd_IsValueFunction(jsdc, jsdval))
         return NULL;
 
-    JS_BeginRequest(cx);
-    oldCompartment = JS_EnterCompartment(cx, JSVAL_TO_OBJECT(val));
-    exceptionState = JS_SaveExceptionState(cx);
-    fun = JSD_GetValueFunction(jsdc, jsdval);
-    JS_RestoreExceptionState(cx, exceptionState);
-    if (fun)
-        script = JS_GetFunctionScript(cx, fun);
-    JS_LeaveCompartment(cx, oldCompartment);
-    JS_EndRequest(cx);
+    {
+        JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(val));
+        AutoSaveExceptionState as(cx);
+        fun = JSD_GetValueFunction(jsdc, jsdval);
+        if (fun)
+            script = JS_GetFunctionScript(cx, fun);
+    }
 
     if (!script)
         return NULL;

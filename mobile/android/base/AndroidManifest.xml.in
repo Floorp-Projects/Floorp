@@ -13,6 +13,7 @@
               android:targetSdkVersion="14"/>
 
 #include ../services/manifests/AnnouncementsAndroidManifest_permissions.xml.in
+#include ../services/manifests/HealthReportAndroidManifest_permissions.xml.in
 #include ../services/manifests/SyncAndroidManifest_permissions.xml.in
 
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
@@ -278,7 +279,9 @@
 
 
 #include ../services/manifests/AnnouncementsAndroidManifest_services.xml.in
+#include ../services/manifests/HealthReportAndroidManifest_services.xml.in
 #include ../services/manifests/SyncAndroidManifest_services.xml.in
+
     </application>
 
     <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"

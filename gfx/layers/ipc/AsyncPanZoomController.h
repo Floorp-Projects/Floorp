@@ -333,7 +333,7 @@ protected:
   /**
    * Scrolls the viewport by an X,Y offset.
    */
-  void ScrollBy(const gfx::Point& aOffset);
+  void ScrollBy(const CSSPoint& aOffset);
 
   /**
    * Scales the viewport by an amount (note that it multiplies this scale in to
@@ -342,7 +342,7 @@ protected:
    *
    * XXX: Fix focus point calculations.
    */
-  void ScaleWithFocus(float aScale, const nsIntPoint& aFocus);
+  void ScaleWithFocus(float aScale, const ScreenPoint& aFocus);
 
   /**
    * Schedules a composite on the compositor thread. Wrapper for
@@ -546,7 +546,7 @@ private:
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
-  nsIntPoint mLastZoomFocus;
+  ScreenPoint mLastZoomFocus;
 
   // Stores the state of panning and zooming this frame. This is protected by
   // |mMonitor|; that is, it should be held whenever this is updated.

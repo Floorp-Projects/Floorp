@@ -341,8 +341,17 @@ ifdef MOZ_OMX_PLUGIN
 DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so libomxpluginhc.so libomxpluginsony.so libomxpluginfroyo.so libomxpluginjb-htc.so
 endif
 
+SO_LIBRARIES := $(filter-out $(MOZ_CHILD_PROCESS_NAME),$(filter %.so,$(DIST_FILES)))
+# These libraries are moved into the assets/ directory of the APK.
+ASSET_SO_LIBRARIES := $(addprefix assets/,$(SO_LIBRARIES))
+
+DIST_FILES := $(filter-out $(SO_LIBRARIES),$(DIST_FILES))
+NON_DIST_FILES += $(SO_LIBARIES)
+
 ifdef MOZ_ENABLE_SZIP
-SZIP_LIBRARIES := $(filter-out $(MOZ_CHILD_PROCESS_NAME),$(filter %.so,$(DIST_FILES)))
+# These libraries are szipped (before being moved into the assets/
+# directory of the APK).
+SZIP_LIBRARIES := $(SO_LIBRARIES)
 endif
 
 PKG_SUFFIX      = .apk
@@ -351,11 +360,13 @@ INNER_MAKE_PACKAGE	= \
   make -C $(GECKO_APP_AP_PATH) gecko.ap_ && \
   cp $(GECKO_APP_AP_PATH)/gecko.ap_ $(_ABS_DIST) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
+    mkdir -p assets && \
     mkdir -p lib/$(ABI_DIR) && \
     mv libmozglue.so $(MOZ_CHILD_PROCESS_NAME) lib/$(ABI_DIR) && \
+    mv $(SO_LIBRARIES) assets && \
     unzip -o $(_ABS_DIST)/gecko.ap_ && \
     rm $(_ABS_DIST)/gecko.ap_ && \
-    $(if $(SZIP_LIBRARIES),$(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(SZIP_LIBRARIES) && ) \
+    $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(ASSET_SO_LIBRARIES) && \
     $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) $(SZIP_LIBRARIES) && \
     $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(OMNIJAR_NAME)) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
@@ -368,10 +379,12 @@ INNER_MAKE_PACKAGE	= \
 INNER_UNMAKE_PACKAGE	= \
   mkdir $(MOZ_PKG_DIR) && \
   ( cd $(MOZ_PKG_DIR) && \
-  $(UNZIP) $(UNPACKAGE) && \
-  mv lib/$(ABI_DIR)/libmozglue.so . && \
-  mv lib/$(ABI_DIR)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
-  rm -rf lib/$(ABI_DIR) )
+    $(UNZIP) $(UNPACKAGE) && \
+    mv lib/$(ABI_DIR)/libmozglue.so . && \
+    mv lib/$(ABI_DIR)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
+    mv $(ASSET_SO_LIBRARIES) . && \
+    rm -rf assets && \
+    rm -rf lib/$(ABI_DIR) )
 endif
 
 ifeq ($(MOZ_PKG_FORMAT),DMG)

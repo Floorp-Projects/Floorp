@@ -220,7 +220,7 @@ public:
   Type type() const { return type_; }
 
   // Unique, non-repeating ID for this message loop.
-  PRInt32 id() const { return id_; }
+  int32_t id() const { return id_; }
 
   // Optional call to connect the thread name with this loop.
   void set_thread_name(const std::string& thread_name) {
@@ -377,7 +377,7 @@ public:
   virtual bool DoIdleWork();
 
   Type type_;
-  PRInt32 id_;
+  int32_t id_;
 
   // A list of tasks that need to be processed by this instance.  Note that
   // this queue is only accessed (push/pop) by our current thread.
