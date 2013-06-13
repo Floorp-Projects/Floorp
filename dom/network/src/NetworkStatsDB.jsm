@@ -25,10 +25,11 @@ const VALUES_MAX_LENGTH = 6 * 30;
 // Constant defining the rate of the samples. Daily.
 const SAMPLE_RATE = 1000 * 60 * 60 * 24;
 
-this.NetworkStatsDB = function NetworkStatsDB(aGlobal) {
+this.NetworkStatsDB = function NetworkStatsDB(aGlobal, aConnectionTypes) {
   if (DEBUG) {
     debug("Constructor");
   }
+  this._connectionTypes = aConnectionTypes;
   this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME], aGlobal);
 }
 
@@ -67,11 +68,32 @@ NetworkStatsDB.prototype = {
         if (DEBUG) {
           debug("Created object stores and indexes");
         }
+
+        // There could be a time delay between the point when the network
+        // interface comes up and the point when the database is initialized.
+        // In this short interval some traffic data are generated but are not
+        // registered by the first sample. The initialization of the database
+        // should make up the missing sample.
+        let stats = [];
+        for (let connection in this._connectionTypes) {
+          let connectionType = this._connectionTypes[connection].name;
+          let timestamp = this.normalizeDate(new Date());
+          stats.push({ connectionType: connectionType,
+                       timestamp:      timestamp,
+                       rxBytes:        0,
+                       txBytes:        0,
+                       rxTotalBytes:   0,
+                       txTotalBytes:   0 });
+        }
+        this._saveStats(aTransaction, objectStore, stats);
+        if (DEBUG) {
+          debug("Database initialized");
+        }
       }
     }
   },
 
-  normalizeDate: function normalizeDate(aDate) {
+   normalizeDate: function normalizeDate(aDate) {
     // Convert to UTC according to timezone and
     // filter timestamp to get SAMPLE_RATE precission
     let timestamp = aDate.getTime() - (new Date()).getTimezoneOffset() * 60 * 1000;
