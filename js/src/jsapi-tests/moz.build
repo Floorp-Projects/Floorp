@@ -64,7 +64,6 @@ CPP_SOURCES += [
     'testTrap.cpp',
     'testTypedArrays.cpp',
     'testUTF8.cpp',
-    'testVersion.cpp',
     'testXDR.cpp',
     'tests.cpp',
 ]
