@@ -11,7 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # SIMPLE_PROGRAMS compiles a single .cpp file into an executable
-SIMPLE_PROGRAMS = nsTestSample$(BIN_SUFFIX)
+DISABLED_SIMPLE_PROGRAMS = nsTestSample$(BIN_SUFFIX)
 
 # LIBS specifies linker flags when building an executable program from
 # this Makefile. We link against the "standalone glue" which does not require
