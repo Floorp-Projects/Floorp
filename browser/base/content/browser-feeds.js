@@ -118,15 +118,8 @@ var FeedHandler = {
     var haveFeeds = feeds && feeds.length > 0;
 
     var feedButton = document.getElementById("feed-button");
-    // Don't disable the button for customization mode. We check the URL
-    // here rather than the window's [customizing] attribute because they
-    // do not change at the same time, and the browser's feed info pertains
-    // to the selected page's browser, so using the location ensures
-    // this check is always correct:
-    let contentLoc = window.content && window.content.location.href;
-    let areCustomizing = contentLoc == "about:customizing";
     if (feedButton)
-      feedButton.disabled = !areCustomizing && !haveFeeds;
+      feedButton.disabled = !haveFeeds;
 
     if (!haveFeeds) {
       this._feedMenuitem.setAttribute("disabled", "true");
