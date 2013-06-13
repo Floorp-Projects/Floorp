@@ -3213,7 +3213,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                         declType=CGGeneric(declType),
                                         holderType=holderType)
 
-    if type.isString():
+    if type.isDOMString():
         assert not isEnforceRange and not isClamp
 
         treatAs = {
@@ -3278,6 +3278,24 @@ for (uint32_t i = 0; i < length; ++i) {
             getConversionCode("${holderName}"),
             declType=CGGeneric(declType),
             holderType=CGGeneric("FakeDependentString"))
+
+    if type.isByteString():
+        assert not isEnforceRange and not isClamp
+
+        nullable = toStringBool(type.nullable())
+
+        conversionCode = (
+            "if (!ConvertJSValueToByteString(cx, ${val}, ${mutableVal},"
+            " %s, ${declName})) {\n"
+            "%s\n"
+            "}" % (nullable, exceptionCodeIndented.define()))
+        # ByteString arguments cannot have a default value.
+        assert defaultValue is None
+
+        return JSToNativeConversionInfo(
+            conversionCode,
+            declType=CGGeneric("nsCString"),
+            dealWithOptional=isOptional)
 
     if type.isEnum():
         assert not isEnforceRange and not isClamp
@@ -3982,11 +4000,17 @@ if (!returnArray) {
         wrappingCode += wrapAndSetPtr(wrap, failed)
         return (wrappingCode, False)
 
-    if type.isString():
+    if type.isDOMString():
         if type.nullable():
             return (wrapAndSetPtr("xpc::StringToJsval(cx, %s, ${jsvalRef}.address())" % result), False)
         else:
             return (wrapAndSetPtr("xpc::NonVoidStringToJsval(cx, %s, ${jsvalRef}.address())" % result), False)
+
+    if type.isByteString():
+        if type.nullable():
+            return (wrapAndSetPtr("ByteStringToJsval(cx, %s, ${jsvalHandle})" % result), False)
+        else:
+            return (wrapAndSetPtr("NonVoidByteStringToJsval(cx, %s, ${jsvalHandle})" % result), False)
 
     if type.isEnum():
         if type.nullable():
@@ -4203,10 +4227,12 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
         return result, False, None, None
-    if returnType.isString():
+    if returnType.isDOMString():
         if isMember:
             return CGGeneric("nsString"), True, None, None
         return CGGeneric("DOMString"), True, None, None
+    if returnType.isByteString():
+        return CGGeneric("nsCString"), True, None, None
     if returnType.isEnum():
         result = CGGeneric(returnType.unroll().inner.identifier.name)
         if returnType.nullable():
@@ -5679,8 +5705,11 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
             typeName = CGWrapper(typeName, post="&")
         return typeName
 
-    if type.isString():
+    if type.isDOMString():
         return CGGeneric("const nsAString&")
+
+    if type.isByteString():
+        return CGGeneric("const nsCString&")
 
     if type.isEnum():
         if type.nullable():
@@ -8483,10 +8512,16 @@ class CGNativeMember(ClassMethod):
             return (result.define(),
                     "%s(%s)" % (result.define(), defaultReturnArg),
                     "return ${declName};")
-        if type.isString():
+        if type.isDOMString():
             if isMember:
                 # No need for a third element in the isMember case
                 return "nsString", None, None
+            # Outparam
+            return "void", "", "retval = ${declName};"
+        if type.isByteString():
+            if isMember:
+                # No need for a third element in the isMember case
+                return "nsCString", None, None
             # Outparam
             return "void", "", "retval = ${declName};"
         if type.isEnum():
@@ -8567,8 +8602,10 @@ class CGNativeMember(ClassMethod):
     def getArgs(self, returnType, argList):
         args = [self.getArg(arg) for arg in argList]
         # Now the outparams
-        if returnType.isString():
+        if returnType.isDOMString():
             args.append(Argument("nsString&", "retval"))
+        if returnType.isByteString():
+            args.append(Argument("nsCString&", "retval"))
         elif returnType.isSequence():
             nullable = returnType.nullable()
             if nullable:
@@ -8662,11 +8699,15 @@ class CGNativeMember(ClassMethod):
                 typeDecl = typeDecl % type.name
             return typeDecl, False, False
 
-        if type.isString():
+        if type.isDOMString():
             if isMember:
                 declType = "nsString"
             else:
                 declType = "nsAString"
+            return declType, True, False
+
+        if type.isByteString():
+            declType = "nsCString"
             return declType, True, False
 
         if type.isEnum():
@@ -9535,7 +9576,7 @@ class CallbackMember(CGNativeMember):
             jsvalIndex = "%d" % i
             if arg.optional and not arg.defaultValue:
                 argval += ".Value()"
-        if arg.type.isString():
+        if arg.type.isDOMString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
             # let's give it a string it can mutate
             # XXXbz if we try to do a sequence of strings, this will kinda fail.
