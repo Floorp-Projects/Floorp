@@ -54,7 +54,7 @@ WebRtc_Word32 TracePosix::AddTime(char* trace_message,
   }
   struct tm buffer;
   const struct tm* system_time =
-    localtime_r(&system_time_high_res.tv_sec, &buffer);
+    localtime_r((const time_t *)(&system_time_high_res.tv_sec), &buffer);
 
   const WebRtc_UWord32 ms_time = system_time_high_res.tv_usec / 1000;
   WebRtc_UWord32 prev_tickCount = 0;

@@ -27,7 +27,7 @@
 
 #include "latebindingsymboltable_linux.h"
 
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 #include <dlfcn.h>
 #endif
 
@@ -37,7 +37,7 @@ using namespace webrtc;
 namespace webrtc_adm_linux {
 
 inline static const char *GetDllError() {
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   char *err = dlerror();
   if (err) {
     return err;
@@ -50,7 +50,7 @@ inline static const char *GetDllError() {
 }
 
 DllHandle InternalLoadDll(const char dll_name[]) {
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   DllHandle handle = dlopen(dll_name, RTLD_NOW);
 #else
 #error Not implemented
@@ -63,7 +63,7 @@ DllHandle InternalLoadDll(const char dll_name[]) {
 }
 
 void InternalUnloadDll(DllHandle handle) {
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   if (dlclose(handle) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
                "%d", GetDllError());
@@ -76,7 +76,7 @@ void InternalUnloadDll(DllHandle handle) {
 static bool LoadSymbol(DllHandle handle,
                        const char *symbol_name,
                        void **symbol) {
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   *symbol = dlsym(handle, symbol_name);
   char *err = dlerror();
   if (err) {
@@ -101,7 +101,7 @@ bool InternalLoadSymbols(DllHandle handle,
                          int num_symbols,
                          const char *const symbol_names[],
                          void *symbols[]) {
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   // Clear any old errors.
   dlerror();
 #endif

@@ -154,4 +154,4 @@ HTTP == svg-stylesheet-external-1.html blue100x100.svg
 # XXXseth: The underlying problems also apply to media fragments,
 # but the test case would be much simpler. This should be switched
 # over to use media fragments once bug 790640 lands.
-skip-if(B2G) == svg-border-image-repaint-1.html svg-border-image-repaint-1-ref.html
+skip-if(B2G) fuzzy(2,1) == svg-border-image-repaint-1.html svg-border-image-repaint-1-ref.html
