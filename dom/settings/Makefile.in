@@ -16,10 +16,4 @@ DISABLED_EXTRA_COMPONENTS =         \
   SettingsService.manifest \
   $(NULL)
 
-EXTRA_JS_MODULES =   \
-  SettingsQueue.jsm  \
-  SettingsDB.jsm     \
-  SettingsChangeNotifier.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

@@ -37,4 +37,6 @@ MSG_DEF(MSG_ENCODING_NOT_SUPPORTED, 1, "The given encoding '{0}' is not supporte
 MSG_DEF(MSG_DOM_ENCODING_NOT_UTF, 0, "The encoding must be utf-8, utf-16, or utf-16be.")
 MSG_DEF(MSG_NOT_FINITE, 0, "Floating-point value is not finite.")
 MSG_DEF(MSG_INVALID_VERSION, 0, "0 (Zero) is not a valid database version.")
+MSG_DEF(MSG_INVALID_BYTESTRING, 2, "Cannot convert string to ByteString because the character"
+        " at index {0} has value {1} which is greater than 255.")
 MSG_DEF(MSG_NOT_DATE, 0, "Value is not a date.")

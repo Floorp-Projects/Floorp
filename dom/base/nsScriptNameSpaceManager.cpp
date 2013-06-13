@@ -825,7 +825,7 @@ nsScriptNameSpaceManager::Observe(nsISupports* aSubject, const char* aTopic,
 void
 nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::DefineInterface aDefineDOMInterface,
-    mozilla::dom::PrefEnabled aPrefEnabled)
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled)
 {
   nsGlobalNameStruct *s = AddToHash(&mGlobalNames, &aName);
   if (s) {
@@ -833,7 +833,7 @@ nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
       s->mType = nsGlobalNameStruct::eTypeNewDOMBinding;
     }
     s->mDefineDOMInterface = aDefineDOMInterface;
-    s->mPrefEnabled = aPrefEnabled;
+    s->mConstructorEnabled = aConstructorEnabled;
   }
 }
 
@@ -841,7 +841,7 @@ void
 nsScriptNameSpaceManager::RegisterNavigatorDOMConstructor(
     const nsAFlatString& aName,
     mozilla::dom::ConstructNavigatorProperty aNavConstructor,
-    mozilla::dom::PrefEnabled aPrefEnabled)
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled)
 {
   nsGlobalNameStruct *s = AddToHash(&mNavigatorNames, &aName);
   if (s) {
@@ -849,7 +849,7 @@ nsScriptNameSpaceManager::RegisterNavigatorDOMConstructor(
       s->mType = nsGlobalNameStruct::eTypeNewDOMBinding;
     }
     s->mConstructNavigatorProperty = aNavConstructor;
-    s->mPrefEnabled = aPrefEnabled;
+    s->mConstructorEnabled = aConstructorEnabled;
   }
 }
 

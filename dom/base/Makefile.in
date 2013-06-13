@@ -22,15 +22,6 @@ DISABLED_EXTRA_COMPONENTS = \
   ConsoleAPI.manifest \
   $(NULL)
 
-EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
-  $(NULL)
-
-EXTRA_JS_MODULES += \
-  DOMRequestHelper.jsm \
-  IndexedDBHelper.jsm \
-  ObjectWrapper.jsm \
-  $(NULL)
-
 include $(topsrcdir)/dom/dom-config.mk
 
 ifdef MOZ_JSDEBUGGER

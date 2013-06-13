@@ -352,12 +352,48 @@ gTests.push({
   }
 });
 
+var observeLogger = {
+  observe: function (aSubject, aTopic, aData) {
+    info("observeLogger: " + aTopic);
+  },
+  QueryInterface: function (aIID) {
+    if (!aIID.equals(Ci.nsIObserver) &&
+        !aIID.equals(Ci.nsISupportsWeakReference) &&
+        !aIID.equals(Ci.nsISupports)) {
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+    return this;
+  },
+  init: function init() {
+    Services.obs.addObserver(observeLogger, "dl-start", true);
+    Services.obs.addObserver(observeLogger, "dl-done", true);
+    Services.obs.addObserver(observeLogger, "dl-failed", true);
+    Services.obs.addObserver(observeLogger, "dl-scanning", true);
+    Services.obs.addObserver(observeLogger, "dl-blocked", true);
+    Services.obs.addObserver(observeLogger, "dl-dirty", true);
+    Services.obs.addObserver(observeLogger, "dl-cancel", true);
+  },
+  shutdown: function shutdown() {
+    Services.obs.removeObserver(observeLogger, "dl-start");
+    Services.obs.removeObserver(observeLogger, "dl-done");
+    Services.obs.removeObserver(observeLogger, "dl-failed");
+    Services.obs.removeObserver(observeLogger, "dl-scanning");
+    Services.obs.removeObserver(observeLogger, "dl-blocked");
+    Services.obs.removeObserver(observeLogger, "dl-dirty");
+    Services.obs.removeObserver(observeLogger, "dl-cancel");
+  }
+}
+
 // Image context menu tests
 gTests.push({
   desc: "image context menu",
+  setUp: function() {
+    observeLogger.init();
+  },
+  tearDown: function() {
+    observeLogger.shutdown();
+  },
   run: function test() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     info(chromeRoot + "browser_context_menu_tests_01.html");
     yield addTab(chromeRoot + "browser_context_menu_tests_01.html");
 
@@ -409,7 +445,9 @@ gTests.push({
     ok(menuItem, "menu item exists");
     ok(!menuItem.hidden, "menu item visible");
 
-    let downloadPromise = waitForObserver("dl-done", 5000);
+    // dl-start, dl-failed, dl-scanning, dl-blocked, dl-dirty, dl-cancel
+    let downloadPromise = waitForObserver("dl-done", 10000);
+
     let popupPromise = waitForEvent(document, "popuphidden");
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
     yield popupPromise;

@@ -22,11 +22,6 @@ EXTRA_COMPONENTS = \
   DOMWifiManager.manifest \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  libhardware_legacy.js \
-  wifi_worker.js \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 

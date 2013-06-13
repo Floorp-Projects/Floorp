@@ -21,3 +21,8 @@ EXTRA_COMPONENTS += [
     'ActivityRequestHandler.js',
     'ActivityWrapper.js',
 ]
+
+EXTRA_JS_MODULES += [
+    'ActivitiesService.jsm',
+    'ActivitiesServiceFilter.jsm',
+]

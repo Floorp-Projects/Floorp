@@ -24,10 +24,5 @@ DISABLED_EXTRA_COMPONENTS = \
   Activities.manifest \
   $(NULL)
 
-EXTRA_JS_MODULES =   \
-  ActivitiesService.jsm \
-  ActivitiesServiceFilter.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk

@@ -243,6 +243,50 @@ let gTests = [
 
     Services.prefs.clearUserPref("browser.rights.override");
   }
+},
+
+{
+  desc: "Check that the search UI/ action is updated when the search engine is changed",
+  setup: function() {},
+  run: function()
+  {
+    let currEngine = Services.search.currentEngine;
+    let unusedEngines = [].concat(Services.search.getVisibleEngines()).filter(x => x != currEngine);
+    let searchbar = document.getElementById("searchbar");
+
+    function checkSearchUI(engine) {
+      let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+      let searchText = doc.getElementById("searchText");
+      let logoElt = doc.getElementById("searchEngineLogo");
+      let engineName = doc.documentElement.getAttribute("searchEngineName");
+
+      is(engineName, engine.name, "Engine name should've been updated");
+
+      if (!logoElt.parentNode.hidden) {
+        is(logoElt.alt, engineName, "Alt text of logo image should match search engine name")
+      } else {
+        is(searchText.placeholder, engineName, "Placeholder text should match search engine name");
+      }
+    }
+    // Do a sanity check that all attributes are correctly set to begin with
+    checkSearchUI(currEngine);
+
+    let deferred = Promise.defer();
+    promiseBrowserAttributes(gBrowser.selectedTab).then(function() {
+      // Test if the update propagated
+      checkSearchUI(unusedEngines[0]);
+      deferred.resolve();
+    });
+
+    // The following cleanup function will set currentEngine back to the previous engine
+    registerCleanupFunction(function() {
+      searchbar.currentEngine = currEngine;
+    });
+    // Set the current search engine to an unused one
+    searchbar.currentEngine = unusedEngines[0];
+    searchbar.select();
+    return deferred.promise;
+  }
 }
 
 ];

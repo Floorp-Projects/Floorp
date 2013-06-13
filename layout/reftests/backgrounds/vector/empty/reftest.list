@@ -2,17 +2,10 @@
 == tall--contain--width.html ref-tall-empty.html
 == wide--contain--height.html ref-wide-empty.html
 == wide--contain--width.html ref-wide-empty.html
-
-# We don't really care about the failures for this
-# extreme edge case (the test exists more to test for safety against division by
-# zero), so there is no bug has been filed to fix it, although a patch would
-# probably be accepted.
-# They're still marked as failing though, rather than 'load', since
-# we want to know if they start working when we upgrade to Azure.
-fails == tall--cover--height.html ref-tall-lime.html
-fails == tall--cover--width.html ref-tall-lime.html
-fails == wide--cover--height.html ref-wide-lime.html
-fails == wide--cover--width.html ref-wide-lime.html
+== tall--cover--height.html ref-tall-lime.html
+== tall--cover--width.html ref-tall-lime.html
+== wide--cover--height.html ref-wide-lime.html
+== wide--cover--width.html ref-wide-lime.html
 
 == zero-height-ratio-contain.html ref-tall-empty.html
 == zero-height-ratio-cover.html ref-tall-empty.html

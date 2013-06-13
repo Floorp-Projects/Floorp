@@ -252,6 +252,7 @@ interface TestJSImplInterface {
   void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
 
   sequence<DOMString> receiveStringSequence();
+  sequence<ByteString> receiveByteStringSequence();
   // Callback interface problem.  See bug 843261.
   //void passStringSequence(sequence<DOMString> arg);
   sequence<any> receiveAnySequence();
@@ -287,7 +288,7 @@ interface TestJSImplInterface {
   //void passFloat64Array(Float64Array arg);
   //Uint8Array receiveUint8Array();
 
-  // String types
+  // DOMString types
   void passString(DOMString arg);
   void passNullableString(DOMString? arg);
   void passOptionalString(optional DOMString arg);
@@ -297,6 +298,13 @@ interface TestJSImplInterface {
   void passOptionalNullableString(optional DOMString? arg);
   void passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
   void passVariadicString(DOMString... arg);
+
+  // ByteString types
+  void passByteString(ByteString arg);
+  void passNullableByteString(ByteString? arg);
+  void passOptionalByteString(optional ByteString arg);
+  void passOptionalNullableByteString(optional ByteString? arg);
+  void passVariadicByteString(ByteString... arg);
 
   // Enumerated types
   void passEnum(MyTestEnum arg);

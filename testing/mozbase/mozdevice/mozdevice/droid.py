@@ -104,8 +104,8 @@ class DroidADB(DeviceManagerADB, DroidMixin):
 
     def getTopActivity(self):
         package = None
-        data = self.shellCheckOutput(["dumpsys", "window", "input"])
-        # "dumpsys window input" produces many lines of input. The top/foreground
+        data = self.shellCheckOutput(["dumpsys", "window", "windows"])
+        # "dumpsys window windows" produces many lines of input. The top/foreground
         # activity is indicated by something like:
         #   mFocusedApp=AppWindowToken{483e6db0 token=HistoryRecord{484dcad8 com.mozilla.SUTAgentAndroid/.SUTAgentAndroid}}
         # or, on other devices:
