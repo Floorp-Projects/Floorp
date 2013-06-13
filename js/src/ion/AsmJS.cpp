@@ -5231,9 +5231,11 @@ GenerateEntries(ModuleCompiler &m)
 }
 
 static inline bool
-TryEnablingIon(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32_t argc, Value *argv) {
-
-    JSScript *script = exitDatum->fun->nonLazyScript();
+TryEnablingIon(JSContext *cx, AsmJSModule::ExitDatum *exitDatum, int32_t argc, Value *argv)
+{
+    JSScript *script = exitDatum->fun->maybeNonLazyScript();
+    if (!script)
+        return true;
 
     // Test if the function is Ion compiled
     if (!script->hasIonScript())
