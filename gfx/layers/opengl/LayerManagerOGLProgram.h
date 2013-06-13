@@ -60,6 +60,10 @@ struct ProgramProfileOGL
          aType == gl::Copy2DRectProgramType))
       return false;
 
+    if (aMask != MaskNone &&
+        aType == gl::BGRARectLayerProgramType)
+      return false;
+
     return aMask != Mask3d ||
            aType == gl::RGBARectLayerProgramType ||
            aType == gl::RGBALayerProgramType;

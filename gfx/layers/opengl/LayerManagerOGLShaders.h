@@ -473,6 +473,34 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
 #endif\n\
 ";
 
+static const char sBGRARectTextureLayerFS[] = "/* sBGRARectTextureLayerFS */\n\
+#extension GL_ARB_texture_rectangle : enable\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+#ifdef MEDIUMP_SHADER\n\
+precision mediump float;\n\
+#else\n\
+precision lowp float;\n\
+#endif\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+uniform sampler2DRect uTexture;\n\
+uniform vec2 uTexCoordMultiplier;\n\
+void main()\n\
+{\n\
+gl_FragColor = texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)).bgra * uLayerOpacity;\n\
+}\n\
+";
+
 static const char sRGBAExternalTextureLayerFS[] = "/* sRGBAExternalTextureLayerFS */\n\
 #extension GL_OES_EGL_image_external : require\n\
 /* Fragment Shader */\n\
