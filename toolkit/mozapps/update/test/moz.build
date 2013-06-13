@@ -12,10 +12,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-    programs = [
-        fyl[0:-4] for fyl in CPP_SOURCES
-    ]
-    programs.sort()
-    SIMPLE_PROGRAMS += programs

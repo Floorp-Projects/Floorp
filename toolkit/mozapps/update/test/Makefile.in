@@ -33,7 +33,7 @@ cppsrcs = \
   $(NULL)
 
 # TODO: Base off of CPP_SOURCES in moz.build
-DISABLED_SIMPLE_PROGRAMS = $(cppsrcs:.cpp=$(BIN_SUFFIX))
+SIMPLE_PROGRAMS = $(cppsrcs:.cpp=$(BIN_SUFFIX))
 
 INI_TEST_FILES = \
   TestAUSReadStrings1.ini \
