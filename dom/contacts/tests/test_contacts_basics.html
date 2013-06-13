@@ -162,7 +162,6 @@ function checkAddress(adr1, adr2) {
     ok(false, "Expected both adrs to be either present or absent");
     return;
   }
-  dump("adr1: " + adr1 + ", adr2: " + adr2 + "\n");
   checkStrArray(adr1.type, adr2.type, "Same type");
   checkStrArray(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
   checkStrArray(adr1.locality, adr2.locality, "Same locality");
@@ -350,7 +349,6 @@ var steps = [
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
       checkContacts(createResult1, properties1);
-      dump("findResult: " + JSON.stringify(findResult1) + "\n");
       // Some manual testing. Testint the testfunctions
       // tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}],
       is(findResult1.tel[0].carrier, "testCarrier", "Same Carrier");
@@ -910,9 +908,10 @@ var steps = [
   },
   function () {
     ok(true, "Retrieving all contacts");
-    req = mozContacts.find({})
+    req = mozContacts.find({sortBy: 'FamilyName',})
     req.onsuccess = function () {
       is(req.result.length, 2, "Found exactly 2 contact.");
+      checkContacts(properties2, req.result[1]);
       next();
     }
     req.onerror = onFailure;
