@@ -7,13 +7,16 @@
 #ifdef DEBUG
 
 #include <stdarg.h>
+#include <time.h>
+
 #include "IonBuilder.h"
 #include "Ion.h"
 #include "C1Spewer.h"
 #include "MIRGraph.h"
 #include "LIR.h"
-#include "jsscriptinlines.h"
 #include "LinearScan.h"
+
+#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::ion;

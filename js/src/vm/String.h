@@ -7,12 +7,9 @@
 #ifndef String_h_
 #define String_h_
 
-#include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jsfriendapi.h"
 #include "jsstr.h"
 

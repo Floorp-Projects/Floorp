@@ -6,21 +6,15 @@
 
 #include "vm/Stack.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jsopcode.h"
 
 #include "gc/Marking.h"
 #ifdef JS_ION
 #include "ion/BaselineFrame.h"
-#include "ion/IonFrames.h"
 #include "ion/IonCompartment.h"
 #endif
-#include "vm/ForkJoin.h"
-
-#include "jsgcinlines.h"
 
 #include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
@@ -46,7 +40,6 @@
 
 using namespace js;
 
-using mozilla::DebugOnly;
 using mozilla::PodCopy;
 
 /*****************************************************************************/

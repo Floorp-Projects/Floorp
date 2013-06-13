@@ -23,7 +23,6 @@
  */
 
 #include <ctype.h>
-#include <locale.h>
 #include <math.h>
 #include <string.h>
 
@@ -32,13 +31,11 @@
 #include "prmjtime.h"
 #include "jsutil.h"
 #include "jsapi.h"
-#include "jsversion.h"
 #include "jscntxt.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"
 
-#include "js/Date.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

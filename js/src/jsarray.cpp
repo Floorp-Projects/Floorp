@@ -11,8 +11,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Util.h"
 
-#include <stdlib.h>
-
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"

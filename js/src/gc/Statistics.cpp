@@ -12,17 +12,11 @@
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
-#include "jscrashformat.h"
 #include "jscrashreport.h"
 #include "jsprf.h"
 #include "jsutil.h"
 #include "prmjtime.h"
 #include "gc/Memory.h"
-
-#include "jscntxtinlines.h"
-#include "gc/Barrier-inl.h"
-#include "vm/Probes-inl.h"
 
 using namespace js;
 using namespace js::gcstats;
