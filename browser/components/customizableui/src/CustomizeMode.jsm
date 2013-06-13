@@ -413,11 +413,6 @@ CustomizeMode.prototype = {
       aNode.checked = false;
     }
 
-    if (aNode.disabled) {
-      wrapper.setAttribute("itemdisabled", "true");
-      aNode.disabled = false;
-    }
-
     if (aNode.hasAttribute("id")) {
       wrapper.setAttribute("id", "wrapper-" + aNode.getAttribute("id"));
     }
@@ -454,10 +449,6 @@ CustomizeMode.prototype = {
     aWrapper.removeEventListener("mouseup", this);
 
     let toolbarItem = aWrapper.firstChild;
-
-    if (aWrapper.hasAttribute("itemdisabled")) {
-      toolbarItem.disabled = true;
-    }
 
     if (aWrapper.hasAttribute("itemchecked")) {
       toolbarItem.checked = true;
