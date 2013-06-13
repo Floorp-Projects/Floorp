@@ -261,18 +261,20 @@ let HiddenBrowsers = {
   _collectTabBrowserSizes: function () {
     let sizes = new Map();
 
-    function tabBrowsers() {
+    function tabBrowserBounds() {
       let wins = Services.ww.getWindowEnumerator("navigator:browser");
       while (wins.hasMoreElements()) {
         let win = wins.getNext();
         if (win.gBrowser) {
-          yield win.gBrowser;
+          let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+          yield utils.getBoundsWithoutFlushing(win.gBrowser);
         }
       }
     }
 
     // Collect the sizes of all <tabbrowser>s out there.
-    for (let {boxObject: {width, height}} of tabBrowsers()) {
+    for (let {width, height} of tabBrowserBounds()) {
       if (width > 0 && height > 0) {
         let key = width + "x" + height;
         if (!sizes.has(key)) {
