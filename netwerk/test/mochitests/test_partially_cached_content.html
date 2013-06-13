@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=497003
+
+  This test verifies that partially cached content is read from the cache first
+  and then from the network. It is written in the mochitest framework to take
+  thread retargeting into consideration of nsIStreamListener callbacks (inc.
+  nsIRequestObserver). E.g. HTML5 Stream Parser requesting retargeting of
+  nsIStreamListener callbacks to the parser thread.
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 497003: support sending OnDataAvailable() to other threads</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=497003">Mozilla Bug 497003: support sending OnDataAvailable() to other threads</a></p>
+  <p><iframe id="contentFrame" src="partial_content.sjs"></iframe></p>
+
+<pre id="test">
+<script>
+
+
+
+/* Check that the iframe has initial content only after the first load.
+ */
+function expectInitialContent(e) {
+  info("expectInitialContent",
+       "First response received: should have partial content");
+  var frameWindow = document.getElementById('contentFrame').contentWindow;
+
+  // Expect "First response" in received HTML.
+  var firstResponse = frameWindow.document.getElementById('firstResponse');
+  is(firstResponse.innerHTML, "First response", "firstResponse");
+
+  // Expect NOT to get any second response element.
+  var secondResponse = frameWindow.document.getElementById('secondResponse');
+  ok(!secondResponse, "Should not get text for second response in first.");
+
+  // Set up listener for second load.
+  e.target.removeEventListener("load", expectInitialContent, false);
+  e.target.addEventListener("load", expectFullContent, false);
+
+  // Reload.
+  e.target.src="partial_content.sjs";
+}
+
+/* Check that the iframe has all the content after the second load.
+ */
+function expectFullContent(e)
+{
+  info("expectFullContent",
+       "Second response received: should complete content from first load");
+  var frameWindow = document.getElementById('contentFrame').contentWindow;
+
+  // Expect "First response" to still be there
+  var firstResponse = frameWindow.document.getElementById('firstResponse');
+  is(firstResponse.innerHTML, "First response", "firstResponse");
+
+  // Expect "Second response" to be there also.
+  var secondResponse = frameWindow.document.getElementById('secondResponse');
+  is(secondResponse.innerHTML, "Second response", "secondResponse");
+
+  SimpleTest.finish();
+}
+
+// Set listener for first load to expect partial content.
+document.getElementById('contentFrame')
+  .addEventListener("load", expectInitialContent, false);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

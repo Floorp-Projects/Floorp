@@ -15,17 +15,20 @@
 #include "nsIProgressEventSink.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIThread.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
 
 class nsInputStreamPump MOZ_FINAL : public nsIInputStreamPump
                                   , public nsIInputStreamCallback
+                                  , public nsIThreadRetargetableRequest
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSIINPUTSTREAMPUMP
     NS_DECL_NSIINPUTSTREAMCALLBACK
+    NS_DECL_NSITHREADRETARGETABLEREQUEST
 
     nsInputStreamPump(); 
     ~nsInputStreamPump();
@@ -71,7 +74,7 @@ protected:
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
     nsCOMPtr<nsIStreamListener>   mListener;
     nsCOMPtr<nsISupports>         mListenerContext;
-    nsCOMPtr<nsIThread>           mTargetThread;
+    nsCOMPtr<nsIEventTarget>      mTargetThread;
     nsCOMPtr<nsIInputStream>      mStream;
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
     uint64_t                      mStreamOffset;
@@ -84,6 +87,7 @@ protected:
     bool                          mIsPending;
     bool                          mWaiting; // true if waiting on async source
     bool                          mCloseWhenDone;
+    bool                          mRetargeting;
 };
 
 #endif // !nsInputStreamChannel_h__
