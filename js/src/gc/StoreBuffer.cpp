@@ -58,13 +58,18 @@ StoreBuffer::SlotEdge::isNullEdge() const
 }
 
 void
-StoreBuffer::WholeObjectEdges::mark(JSTracer *trc)
+StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
 {
-    tenured->markChildren(trc);
+    JSGCTraceKind kind = GetGCThingTraceKind(tenured);
+    if (kind <= JSTRACE_OBJECT) {
+        MarkChildren(trc, static_cast<JSObject *>(tenured));
+        return;
+    }
+    JS_ASSERT(kind == JSTRACE_IONCODE);
+    static_cast<ion::IonCode *>(tenured)->trace(trc);
 }
 
 /*** MonoTypeBuffer ***/
-
 
 /* How full we allow a store buffer to become before we request a MinorGC. */
 const static double HighwaterRatio = 7.0 / 8.0;
@@ -193,13 +198,13 @@ class AccumulateEdgesTracer : public JSTracer
 
 template <>
 bool
-StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeObjectEdges>::accumulateEdges(EdgeSet &edges)
+StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>::accumulateEdges(EdgeSet &edges)
 {
     compact();
     AccumulateEdgesTracer trc(owner->runtime, &edges);
-    StoreBuffer::WholeObjectEdges *cursor = base;
+    StoreBuffer::WholeCellEdges *cursor = base;
     while (cursor != pos) {
-        cursor->tenured->markChildren(&trc);
+        cursor->mark(&trc);
         cursor++;
     }
     return true;
@@ -348,9 +353,9 @@ StoreBuffer::enable()
         return false;
     offset += SlotBufferSize;
 
-    if (!bufferWholeObject.enable(&asBytes[offset], WholeObjectBufferSize))
+    if (!bufferWholeCell.enable(&asBytes[offset], WholeCellBufferSize))
         return false;
-    offset += WholeObjectBufferSize;
+    offset += WholeCellBufferSize;
 
     if (!bufferRelocVal.enable(&asBytes[offset], RelocValueBufferSize))
         return false;
@@ -381,7 +386,7 @@ StoreBuffer::disable()
     bufferVal.disable();
     bufferCell.disable();
     bufferSlot.disable();
-    bufferWholeObject.disable();
+    bufferWholeCell.disable();
     bufferRelocVal.disable();
     bufferRelocCell.disable();
     bufferGeneric.disable();
@@ -402,7 +407,7 @@ StoreBuffer::clear()
     bufferVal.clear();
     bufferCell.clear();
     bufferSlot.clear();
-    bufferWholeObject.clear();
+    bufferWholeCell.clear();
     bufferRelocVal.clear();
     bufferRelocCell.clear();
     bufferGeneric.clear();
@@ -419,7 +424,7 @@ StoreBuffer::mark(JSTracer *trc)
     bufferVal.mark(trc);
     bufferCell.mark(trc);
     bufferSlot.mark(trc);
-    bufferWholeObject.mark(trc);
+    bufferWholeCell.mark(trc);
     bufferRelocVal.mark(trc);
     bufferRelocCell.mark(trc);
     bufferGeneric.mark(trc);
@@ -453,7 +458,7 @@ StoreBuffer::coalesceForVerification()
         return false;
     if (!bufferSlot.accumulateEdges(edgeSet))
         return false;
-    if (!bufferWholeObject.accumulateEdges(edgeSet))
+    if (!bufferWholeCell.accumulateEdges(edgeSet))
         return false;
     if (!bufferRelocVal.accumulateEdges(edgeSet))
         return false;
@@ -517,7 +522,7 @@ JS::HeapValueRelocate(JS::Value *valuep)
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>;
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotEdge>;
-template class StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeObjectEdges>;
+template class StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>;
 template class StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::ValueEdge>;
 template class StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::CellPtrEdge>;
 
