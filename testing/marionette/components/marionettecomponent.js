@@ -58,6 +58,7 @@ MarionetteComponent.prototype = {
   appName: Services.appinfo.name,
   enabled: false,
   finalUiStartup: false,
+  _marionetteServer: null,
 
   onSocketAccepted: function mc_onSocketAccepted(aSocket, aTransport) {
     this.logger.info("onSocketAccepted for Marionette dummy socket");
@@ -152,7 +153,9 @@ MarionetteComponent.prototype = {
   },
 
   uninit: function mc_uninit() {
-    this._marionetteServer.closeListener();
+    if (this._marionetteServer) {
+      this._marionetteServer.closeListener();
+    }
     this._loaded = false;
   },
 
