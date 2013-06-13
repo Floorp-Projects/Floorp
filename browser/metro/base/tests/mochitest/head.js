@@ -634,6 +634,22 @@ TouchDragAndHold.prototype = {
     return this._defer.promise;
   },
 
+  move: function move(aEndX, aEndY) {
+    if (this._win == null)
+      return;
+    if (this._debug) {
+      info("[0] continuation to " + aEndX + " x " + aEndY);
+    }
+    this._defer = Promise.defer();
+    this._step = { steps: 0,
+                   x: (aEndX - this._endPoint.xPos) / this._numSteps,
+                   y: (aEndY - this._endPoint.yPos) / this._numSteps };
+    this._endPoint = { xPos: aEndX, yPos: aEndY };
+    let self = this;
+    setTimeout(function () { self.callback(); }, this._timeoutStep);
+    return this._defer.promise;
+  },
+
   end: function start() {
     if (this._debug) {
       info("[" + this._step.steps + "] touchend " + this._endPoint.xPos + " x " + this._endPoint.yPos);
