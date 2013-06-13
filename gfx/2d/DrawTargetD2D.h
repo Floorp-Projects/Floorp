@@ -63,6 +63,11 @@ public:
                                      Float aSigma,
                                      CompositionOp aOperator);
   virtual void ClearRect(const Rect &aRect);
+  virtual void MaskSurface(const Pattern &aSource,
+                           SourceSurface *aMask,
+                           Point aOffset,
+                           const DrawOptions &aOptions = DrawOptions());
+
 
   virtual void CopySurface(SourceSurface *aSurface,
                            const IntRect &aSourceRect,
@@ -142,6 +147,9 @@ public:
   static uint64_t mVRAMUsageSS;
 
 private:
+  TemporaryRef<ID2D1Bitmap>
+  DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
+                                     Rect &aSource);
   friend class AutoSaveRestoreClippedOut;
   friend class SourceSurfaceD2DTarget;
 
