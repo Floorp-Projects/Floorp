@@ -645,7 +645,7 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
 #print-button {
   list-style-image: url("moz-icon://stock/gtk-print?size=toolbar");
 }
-#print-button[disabled="true"] {
+:not(toolbarpaletteitem) > #print-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-print?size=toolbar&state=disabled");
 }
 
@@ -660,21 +660,21 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
 #cut-button {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar") !important;
 }
-#cut-button[disabled="true"] {
+:not(toolbarpaletteitem) > #edit-controls > #cut-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar&state=disabled") !important;
 }
 
 #copy-button {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar") !important;
 }
-#copy-button[disabled="true"] {
+:not(toolbarpaletteitem) > #edit-controls > #copy-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar&state=disabled") !important;
 }
 
 #paste-button {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar") !important;
 }
-#paste-button[disabled="true"] {
+:not(toolbarpaletteitem) > #edit-controls > #paste-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled") !important;
 }
 
@@ -702,7 +702,7 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
 
-#feed-button[disabled] > .toolbarbutton-icon {
+:not(toolbarpaletteitem) > #feed-button[disabled] > .toolbarbutton-icon {
   opacity: .4;
 }
 
@@ -725,7 +725,7 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
 #home-button.bookmark-item {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
-#home-button.bookmark-item[disabled="true"] {
+:not(toolbarpaletteitem) > #home-button.bookmark-item[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
@@ -1373,11 +1373,11 @@ toolbar[iconsize="small"] #bookmarks-menu-button[starred],
   -moz-image-region: rect(16px 144px 32px 128px);
 }
 
-#bookmarks-menu-button[disabled] > .toolbarbutton-icon,
-#bookmarks-menu-button[disabled] > .toolbarbutton-menu-dropmarker,
-#bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-dropmarker,
-#bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#bookmarks-menu-button > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
+:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-icon,
+:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-menu-dropmarker,
+:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-dropmarker,
+:not(toolbarpaletteitem) > #bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+:not(toolbarpaletteitem) > #bookmarks-menu-button > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
   opacity: .4;
 }
 
