@@ -15,12 +15,13 @@
 
 #include "jsmath.h"
 
+#include "jslibmath.h"
+
 #include "mozilla/Constants.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include <fcntl.h>
-#include <stdlib.h>
 
 #ifdef XP_UNIX
 # include <unistd.h>
@@ -31,8 +32,6 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
-#include "jslibmath.h"
 #include "jscompartment.h"
 
 #include "jsobjinlines.h"

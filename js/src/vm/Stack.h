@@ -7,10 +7,10 @@
 #ifndef Stack_h__
 #define Stack_h__
 
+#include "jsautooplen.h"
 #include "jsfun.h"
 #include "jsscript.h"
 #include "ion/IonFrameIterator.h"
-#include "jsautooplen.h"
 
 struct JSContext;
 struct JSCompartment;

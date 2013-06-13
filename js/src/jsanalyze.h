@@ -10,17 +10,11 @@
 #define jsanalyze_h___
 
 #include "mozilla/PodOperations.h"
-#include "mozilla/TypeTraits.h"
 
-#include "jsautooplen.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsscript.h"
-
-#include "ds/LifoAlloc.h"
-#include "js/TemplateLib.h"
-#include "vm/ScopeObject.h"
 
 class JSScript;
 

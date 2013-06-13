@@ -7,8 +7,6 @@
 #ifndef jsion_lir_x64_h__
 #define jsion_lir_x64_h__
 
-#include "ion/LIR.h"
-
 namespace js {
 namespace ion {
 

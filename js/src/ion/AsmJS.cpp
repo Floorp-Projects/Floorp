@@ -6,6 +6,7 @@
 
 #include "jsmath.h"
 #include "jsworkers.h"
+#include "prmjtime.h"
 
 #include "frontend/ParseNode.h"
 #include "ion/AsmJS.h"
@@ -13,20 +14,19 @@
 
 #include "frontend/ParseNode-inl.h"
 
-using namespace js;
-using namespace js::frontend;
-using namespace mozilla;
-
 #include "ion/PerfSpewer.h"
 #include "ion/CodeGenerator.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 
-using namespace js::ion;
-
 #ifdef MOZ_VTUNE
 # include "jitprofiling.h"
 #endif
+
+using namespace js;
+using namespace js::frontend;
+using namespace js::ion;
+using namespace mozilla;
 
 /*****************************************************************************/
 // ParseNode utilities

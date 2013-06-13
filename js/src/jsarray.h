@@ -9,9 +9,6 @@
 #ifndef jsarray_h___
 #define jsarray_h___
 
-#include "jsatom.h"
-#include "jscntxt.h"
-#include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsobj.h"
 
