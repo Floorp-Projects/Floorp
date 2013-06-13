@@ -178,7 +178,11 @@ template <typename T>
 class Heap : public js::HeapBase<T>
 {
   public:
-    Heap() { set(js::RootMethods<T>::initial()); }
+    Heap() {
+        MOZ_STATIC_ASSERT(sizeof(T) == sizeof(Heap<T>),
+                          "Heap<T> must be binary compatible with T.");
+        set(js::RootMethods<T>::initial());
+    }
     explicit Heap(T p) { set(p); }
     explicit Heap(const Heap<T> &p) { set(p.ptr); }
 
@@ -251,6 +255,8 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     Handle(Handle<S> handle,
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
     {
+        MOZ_STATIC_ASSERT(sizeof(Handle<T>) == sizeof(T *),
+                          "Handle must be binary compatible with T*.");
         ptr = reinterpret_cast<const T *>(handle.address());
     }
 
@@ -880,6 +886,8 @@ template <typename T>
 inline
 MutableHandle<T>::MutableHandle(Rooted<T> *root)
 {
+    MOZ_STATIC_ASSERT(sizeof(MutableHandle<T>) == sizeof(T *),
+                      "MutableHandle must be binary compatible with T*.");
     ptr = root->address();
 }
 
