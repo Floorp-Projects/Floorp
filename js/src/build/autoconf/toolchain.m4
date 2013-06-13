@@ -55,16 +55,12 @@ fi
 
 CLANG_CC=
 CLANG_CXX=
-if test "$GCC" = yes; then
-   if test "`$CC -v 2>&1 | egrep -c '(clang version|Apple.*clang)'`" != "0"; then
-     CLANG_CC=1
-   fi
+if test "`$CC -v 2>&1 | egrep -c '(clang version|Apple.*clang)'`" != "0"; then
+   CLANG_CC=1
 fi
 
-if test "$GXX" = yes; then
-   if test "`$CXX -v 2>&1 | egrep -c '(clang version|Apple.*clang)'`" != "0"; then
-     CLANG_CXX=1
-   fi
+if test "`$CXX -v 2>&1 | egrep -c '(clang version|Apple.*clang)'`" != "0"; then
+   CLANG_CXX=1
 fi
 AC_SUBST(CLANG_CXX)
 ])
