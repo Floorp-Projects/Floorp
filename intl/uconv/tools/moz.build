@@ -7,3 +7,8 @@
 CSRCS += [
     'umaptable.c',
 ]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    "%s%s" % (fyl[0:-2], bin_suffix) for fyl in CSRCS
+]

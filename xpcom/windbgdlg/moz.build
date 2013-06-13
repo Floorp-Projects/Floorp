@@ -8,3 +8,6 @@ CPP_SOURCES += [
     'windbgdlg.cpp',
 ]
 
+SIMPLE_PROGRAMS += [
+    "windbgdlg%s" % (CONFIG['BIN_SUFFIX'])
+]

@@ -10,3 +10,6 @@ CPP_SOURCES += [
     'TestInterfaceInfo.cpp',
 ]
 
+SIMPLE_PROGRAMS += [
+    "TestInterfaceInfo%s" % (CONFIG['BIN_SUFFIX']),
+]
