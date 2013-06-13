@@ -55,9 +55,13 @@
 #include "ClientLayerManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "GLTextureImage.h"
+#include "GLContextProvider.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/BasicCompositor.h"
+#include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/Platform.h"
@@ -243,6 +247,103 @@ void EnsureLogInitialized()
 #endif // PR_LOGGING
 }
 
+namespace {
+
+// Manages a texture which can resize dynamically, binds to the
+// LOCAL_GL_TEXTURE_RECTANGLE_ARB texture target and is automatically backed
+// by a power-of-two size GL texture. The latter two features are used for
+// compatibility with older Mac hardware which we block GL layers on.
+// RectTextureImages are used both for accelerated GL layers drawing and for
+// OMTC BasicLayers drawing.
+class RectTextureImage {
+public:
+  RectTextureImage(GLContext* aGLContext)
+   : mGLContext(aGLContext)
+   , mTexture(0)
+   , mInUpdate(false)
+  {}
+
+  virtual ~RectTextureImage();
+
+  TemporaryRef<gfx::DrawTarget>
+    BeginUpdate(const nsIntSize& aNewSize,
+                const nsIntRegion& aDirtyRegion = nsIntRegion());
+  void EndUpdate(bool aKeepSurface = false);
+
+  void UpdateIfNeeded(const nsIntSize& aNewSize,
+                      const nsIntRegion& aDirtyRegion,
+                      void (^aCallback)(gfx::DrawTarget*, const nsIntRegion&))
+  {
+    RefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
+    if (drawTarget) {
+      aCallback(drawTarget, GetUpdateRegion());
+      EndUpdate();
+    }
+  }
+
+  nsIntRegion GetUpdateRegion() {
+    MOZ_ASSERT(mInUpdate, "update region only valid during update");
+    return mUpdateRegion;
+  }
+
+  void Draw(mozilla::layers::GLManager* aManager,
+            const nsIntPoint& aLocation,
+            const gfx3DMatrix& aTransform = gfx3DMatrix());
+
+protected:
+  nsIntSize TextureSizeForSize(const nsIntSize& aSize);
+
+  RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
+  GLContext* mGLContext;
+  nsIntRegion mUpdateRegion;
+  nsIntSize mUsedSize;
+  nsIntSize mBufferSize;
+  nsIntSize mTextureSize;
+  GLuint mTexture;
+  bool mInUpdate;
+};
+
+// Used for OpenGL drawing from the compositor thread for OMTC BasicLayers.
+// We need to use OpenGL for this because there seems to be no other robust
+// way of drawing from a secondary thread without locking, which would cause
+// deadlocks in our setup. See bug 882523.
+class GLPresenter : public GLManager
+{
+public:
+  static GLPresenter* CreateForWindow(nsIWidget* aWindow)
+  {
+    nsRefPtr<GLContext> context = gl::GLContextProvider::CreateForWindow(aWindow);
+    return context ? new GLPresenter(context) : nullptr;
+  }
+
+  GLPresenter(GLContext* aContext);
+  virtual ~GLPresenter();
+
+  virtual GLContext* gl() const MOZ_OVERRIDE { return mGLContext; }
+  virtual ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aType == BGRARectLayerProgramType, "unexpected program type");
+    return mBGRARectProgram;
+  }
+  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg) MOZ_OVERRIDE;
+
+  void BeginFrame(nsIntSize aRenderSize);
+  void EndFrame();
+
+  NSOpenGLContext* GetNSOpenGLContext()
+  {
+    return static_cast<NSOpenGLContext*>(
+      mGLContext->GetNativeData(GLContext::NativeGLContext));
+  }
+
+protected:
+  nsRefPtr<mozilla::gl::GLContext> mGLContext;
+  nsAutoPtr<mozilla::layers::ShaderProgramOGL> mBGRARectProgram;
+  GLuint mQuadVBO;
+};
+
+} // unnamed namespace
+
 #pragma mark -
 
 nsChildView::nsChildView() : nsBaseWidget()
@@ -253,8 +354,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mShowsResizeIndicator(false)
 , mHasRoundedBottomCorners(false)
 , mIsCoveringTitlebar(false)
-, mFailedResizerImage(false)
-, mFailedCornerMaskImage(false)
 , mBackingScaleFactor(0.0)
 , mVisible(false)
 , mDrawing(false)
@@ -1387,8 +1486,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
   if (!mView || !mVisible)
     return NS_OK;
 
-  NS_ASSERTION(GetLayerManager()->GetBackendType() != LAYERS_CLIENT ||
-               Compositor::GetBackend() == LAYERS_BASIC,
+  NS_ASSERTION(GetLayerManager()->GetBackendType() != LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
   if ([NSView focusView]) {
@@ -1419,11 +1517,20 @@ nsChildView::ComputeShouldAccelerate(bool aDefault)
 bool
 nsChildView::ShouldUseOffMainThreadCompositing()
 {
-  // OMTC doesn't work with Basic Layers on OS X right now. Once it works, we'll
-  // still want to disable it for certain kinds of windows (e.g. popups).
-  return nsBaseWidget::ShouldUseOffMainThreadCompositing() &&
-         (ComputeShouldAccelerate(mUseLayersAcceleration) ||
-          Preferences::GetBool("layers.offmainthreadcomposition.prefer-basic", false));
+  // When acceleration is off, default to false, but allow force-enabling
+  // using the layers.offmainthreadcomposition.prefer-basic pref.
+  if (!ComputeShouldAccelerate(mUseLayersAcceleration) &&
+      !Preferences::GetBool("layers.offmainthreadcomposition.prefer-basic", false)) {
+    return false;
+  }
+
+  // Don't use OMTC (which requires OpenGL) for transparent windows or for
+  // popup windows.
+  if (!mView || ![[mView window] isOpaque] ||
+      [[mView window] isKindOfClass:[PopupWindow class]])
+    return false;
+
+  return nsBaseWidget::ShouldUseOffMainThreadCompositing();
 }
 
 inline uint16_t COLOR8TOCOLOR16(uint8_t color8)
@@ -1908,26 +2015,25 @@ void
 nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
-  if (!manager) {
-    return;
+  if (manager) {
+    DrawWindowOverlay(manager, aRect);
   }
+}
 
-  manager->gl()->PushScissorRect(aRect);
-
-  MaybeDrawTitlebar(manager, aRect);
-  MaybeDrawResizeIndicator(manager, aRect);
-  MaybeDrawRoundedCorners(manager, aRect);
-
-  manager->gl()->PopScissorRect();
+void
+nsChildView::DrawWindowOverlay(GLManager* aManager, nsIntRect aRect)
+{
+  MaybeDrawTitlebar(aManager, aRect);
+  MaybeDrawResizeIndicator(aManager, aRect);
+  MaybeDrawRoundedCorners(aManager, aRect);
 }
 
 static void
-ClearRegion(gfxASurface* aSurface, nsIntRegion aRegion)
+ClearRegion(gfx::DrawTarget *aDT, nsIntRegion aRegion)
 {
-  nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-  gfxUtils::ClipToRegion(ctx, aRegion);
-  ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-  ctx->Paint();
+  gfxUtils::ClipToRegion(aDT, aRegion);
+  aDT->ClearRect(gfx::Rect(0, 0, aDT->GetSize().width, aDT->GetSize().height));
+  aDT->PopClip();
 }
 
 static void
@@ -1967,66 +2073,21 @@ void
 nsChildView::MaybeDrawResizeIndicator(GLManager* aManager, const nsIntRect& aRect)
 {
   MutexAutoLock lock(mEffectsLock);
-  if (!mShowsResizeIndicator || mFailedResizerImage) {
+  if (!mShowsResizeIndicator) {
     return;
   }
 
   if (!mResizerImage) {
-    mResizerImage =
-      aManager->gl()->CreateTextureImage(nsIntSize(mResizeIndicatorRect.width,
-                                                   mResizeIndicatorRect.height),
-                                         gfxASurface::CONTENT_COLOR_ALPHA,
-                                         LOCAL_GL_CLAMP_TO_EDGE,
-                                         TextureImage::UseNearestFilter);
-
-    // Creation of texture images can fail.
-    if (!mResizerImage)
-      return;
-
-    nsIntRegion update(nsIntRect(0, 0, mResizeIndicatorRect.width, mResizeIndicatorRect.height));
-    gfxASurface *asurf = mResizerImage->BeginUpdate(update);
-    if (!asurf) {
-      mResizerImage = nullptr;
-      return;
-    }
-
-    // We need a Quartz surface because DrawResizer wants a CGContext.
-    if (asurf->GetType() != gfxASurface::SurfaceTypeQuartz) {
-      NS_WARN_IF_FALSE(FALSE, "mResizerImage's surface is not Quartz");
-      mResizerImage->EndUpdate();
-      mResizerImage = nullptr;
-      mFailedResizerImage = true;
-      return;
-    }
-
-    ClearRegion(asurf, update);
-
-    nsRefPtr<gfxQuartzSurface> image = static_cast<gfxQuartzSurface*>(asurf);
-    DrawResizer(image->GetCGContext());
-
-    mResizerImage->EndUpdate();
+    mResizerImage = new RectTextureImage(aManager->gl());
   }
 
-  NS_ABORT_IF_FALSE(mResizerImage, "Must have a texture allocated by now!");
+  nsIntSize size = mResizeIndicatorRect.Size();
+  mResizerImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
+    ClearRegion(drawTarget, updateRegion);
+    DrawResizer(static_cast<CGContextRef>(drawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT)));
+  });
 
-  float bottomX = aRect.XMost();
-  float bottomY = aRect.YMost();
-
-  TextureImage::ScopedBindTexture texBind(mResizerImage, LOCAL_GL_TEXTURE0);
-
-  ShaderProgramOGL *program =
-    aManager->GetProgram(mResizerImage->GetShaderProgramType());
-  program->Activate();
-  program->SetLayerQuadRect(nsIntRect(bottomX - resizeIndicatorWidth,
-                                      bottomY - resizeIndicatorHeight,
-                                      resizeIndicatorWidth,
-                                      resizeIndicatorHeight));
-  program->SetLayerTransform(gfx3DMatrix());
-  program->SetLayerOpacity(1.0);
-  program->SetRenderOffset(nsIntPoint(0,0));
-  program->SetTextureUnit(0);
-
-  aManager->BindAndDrawQuad(program);
+  mResizerImage->Draw(aManager, mResizeIndicatorRect.TopLeft());
 }
 
 // Draw the highlight line at the top of the titlebar.
@@ -2066,12 +2127,14 @@ nsChildView::UpdateTitlebarImageBuffer()
   nsIntRegion dirtyTitlebarRegion = mDirtyTitlebarRegion;
   mDirtyTitlebarRegion.SetEmpty();
 
+  gfx::IntSize titlebarSize(mTitlebarRect.width, mTitlebarRect.height);
   if (!mTitlebarImageBuffer ||
-      mTitlebarImageBuffer->GetSize() != mTitlebarRect.Size()) {
+      mTitlebarImageBuffer->GetSize() != titlebarSize) {
     dirtyTitlebarRegion = mTitlebarRect;
 
-    mTitlebarImageBuffer = new gfxQuartzSurface(mTitlebarRect.Size(),
-                                                gfxASurface::ImageFormatARGB32);
+    mTitlebarImageBuffer =
+      gfx::Factory::CreateDrawTarget(gfx::BACKEND_COREGRAPHICS, titlebarSize,
+                                     gfx::FORMAT_B8G8R8A8);
   }
 
   if (dirtyTitlebarRegion.IsEmpty())
@@ -2079,7 +2142,8 @@ nsChildView::UpdateTitlebarImageBuffer()
 
   ClearRegion(mTitlebarImageBuffer, dirtyTitlebarRegion);
 
-  CGContextRef ctx = mTitlebarImageBuffer->GetCGContext();
+  CGContextRef ctx =
+    static_cast<CGContextRef>(mTitlebarImageBuffer->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT));
   CGContextSaveGState(ctx);
 
   double scale = BackingScaleFactor();
@@ -2151,45 +2215,6 @@ nsChildView::UpdateTitlebarImageBuffer()
   mUpdatedTitlebarRegion.Or(mUpdatedTitlebarRegion, dirtyTitlebarRegion);
 }
 
-// When this method is entered, mEffectsLock is already being held.
-void
-nsChildView::UpdateTitlebarImage(GLManager* aManager, const nsIntRect& aRect)
-{
-  nsIntRegion updatedTitlebarRegion;
-  updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
-  mUpdatedTitlebarRegion.SetEmpty();
-
-  if (!mTitlebarImage || mTitlebarImage->GetSize() != mTitlebarRect.Size()) {
-    updatedTitlebarRegion = mTitlebarRect;
-
-    mTitlebarImage =
-      aManager->gl()->CreateTextureImage(mTitlebarRect.Size(),
-                                         gfxASurface::CONTENT_COLOR_ALPHA,
-                                         LOCAL_GL_CLAMP_TO_EDGE,
-                                         TextureImage::UseNearestFilter);
-
-    // Creation of texture images can fail.
-    if (!mTitlebarImage)
-      return;
-  }
-
-  if (updatedTitlebarRegion.IsEmpty())
-    return;
-
-  gfxASurface *asurf = mTitlebarImage->BeginUpdate(updatedTitlebarRegion);
-  if (!asurf) {
-    mTitlebarImage = nullptr;
-    return;
-  }
-
-  nsRefPtr<gfxContext> ctx = new gfxContext(asurf);
-  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  ctx->SetSource(mTitlebarImageBuffer);
-  ctx->Paint();
-
-  mTitlebarImage->EndUpdate();
-}
-
 // This method draws an overlay in the top of the window which contains the
 // titlebar controls (e.g. close, min, zoom, fullscreen) and the titlebar
 // highlight effect.
@@ -2208,25 +2233,26 @@ nsChildView::MaybeDrawTitlebar(GLManager* aManager, const nsIntRect& aRect)
     return;
   }
 
-  UpdateTitlebarImage(aManager, aRect);
+  nsIntRegion updatedTitlebarRegion;
+  updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
+  mUpdatedTitlebarRegion.SetEmpty();
 
   if (!mTitlebarImage) {
-    return;
+    mTitlebarImage = new RectTextureImage(aManager->gl());
   }
 
-  TextureImage::ScopedBindTexture texBind(mTitlebarImage, LOCAL_GL_TEXTURE0);
+  mTitlebarImage->UpdateIfNeeded(mTitlebarRect.Size(), updatedTitlebarRegion,
+                                 ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
+    RefPtr<gfx::SourceSurface> source = mTitlebarImageBuffer->Snapshot();
+    gfx::Rect rect(0, 0, mTitlebarRect.width, mTitlebarRect.height);
+    gfxUtils::ClipToRegion(drawTarget, updateRegion);
+    drawTarget->DrawSurface(source, rect, rect,
+                            gfx::DrawSurfaceOptions(),
+                            gfx::DrawOptions(1.0, gfx::OP_SOURCE));
+    drawTarget->PopClip();
+  });
 
-  ShaderProgramOGL *program =
-    aManager->GetProgram(mTitlebarImage->GetShaderProgramType());
-  program->Activate();
-  program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0),
-                                      mTitlebarImage->GetSize()));
-  program->SetLayerTransform(gfx3DMatrix());
-  program->SetLayerOpacity(1.0);
-  program->SetRenderOffset(nsIntPoint(0,0));
-  program->SetTextureUnit(0);
-
-  aManager->BindAndDrawQuad(program);
+  mTitlebarImage->Draw(aManager, mTitlebarRect.TopLeft());
 }
 
 static void
@@ -2240,81 +2266,35 @@ void
 nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect)
 {
   MutexAutoLock lock(mEffectsLock);
-  
-  if (mFailedCornerMaskImage) {
-    return;
+
+  if (!mCornerMaskImage) {
+    mCornerMaskImage = new RectTextureImage(aManager->gl());
   }
 
-  if (!mCornerMaskImage ||
-      mCornerMaskImage->GetSize().width != mDevPixelCornerRadius) {
-    mCornerMaskImage =
-      aManager->gl()->CreateTextureImage(nsIntSize(mDevPixelCornerRadius,
-                                                   mDevPixelCornerRadius),
-                                         gfxASurface::CONTENT_COLOR_ALPHA,
-                                         LOCAL_GL_CLAMP_TO_EDGE,
-                                         TextureImage::UseNearestFilter);
-
-    // Creation of texture images can fail.
-    if (!mCornerMaskImage)
-      return;
-
-    nsIntRegion update(nsIntRect(0, 0, mDevPixelCornerRadius, mDevPixelCornerRadius));
-    gfxASurface *asurf = mCornerMaskImage->BeginUpdate(update);
-    if (!asurf) {
-      mCornerMaskImage = nullptr;
-      return;
-    }
-
-    if (asurf->GetType() != gfxASurface::SurfaceTypeQuartz) {
-      NS_WARNING("mCornerMaskImage's surface is not Quartz");
-      mCornerMaskImage->EndUpdate();
-      mCornerMaskImage = nullptr;
-      mFailedCornerMaskImage = true;
-      return;
-    }
-
-    ClearRegion(asurf, update);
-
-    nsRefPtr<gfxQuartzSurface> image = static_cast<gfxQuartzSurface*>(asurf);
-    DrawTopLeftCornerMask(image->GetCGContext(), mDevPixelCornerRadius);
-
-    mCornerMaskImage->EndUpdate();
-  }
-  
-  NS_ABORT_IF_FALSE(mCornerMaskImage, "Must have a texture allocated by now!");
-  
-  TextureImage::ScopedBindTexture texBind(mCornerMaskImage, LOCAL_GL_TEXTURE0);
-  
-  ShaderProgramOGL *program = aManager->GetProgram(mCornerMaskImage->GetShaderProgramType());
-  program->Activate();
-  program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0),
-                                      mCornerMaskImage->GetSize()));
-  program->SetLayerOpacity(1.0);
-  program->SetRenderOffset(nsIntPoint(0,0));
-  program->SetTextureUnit(0);
+  nsIntSize size(mDevPixelCornerRadius, mDevPixelCornerRadius);
+  mCornerMaskImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
+    ClearRegion(drawTarget, updateRegion);
+    DrawTopLeftCornerMask(static_cast<CGContextRef>(drawTarget->GetNativeSurface(gfx::NATIVE_SURFACE_CGCONTEXT)),
+                          mDevPixelCornerRadius);
+  });
 
   // Use operator destination in: multiply all 4 channels with source alpha.
   aManager->gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_SRC_ALPHA,
                                      LOCAL_GL_ZERO, LOCAL_GL_SRC_ALPHA);
-  
+
+  gfx3DMatrix flipX = gfx3DMatrix::ScalingMatrix(-1, 1, 1);
+  gfx3DMatrix flipY = gfx3DMatrix::ScalingMatrix(1, -1, 1);
+
   if (mIsCoveringTitlebar) {
     // Mask the top corners.
-    program->SetLayerTransform(gfx3DMatrix::ScalingMatrix(1, 1, 1) *
-                               gfx3DMatrix::Translation(0, 0, 0));
-    aManager->BindAndDrawQuad(program);
-    program->SetLayerTransform(gfx3DMatrix::ScalingMatrix(-1, 1, 1) *
-                               gfx3DMatrix::Translation(aRect.width, 0, 0));
-    aManager->BindAndDrawQuad(program);
+    mCornerMaskImage->Draw(aManager, aRect.TopLeft());
+    mCornerMaskImage->Draw(aManager, aRect.TopRight(), flipX);
   }
 
   if (mHasRoundedBottomCorners) {
     // Mask the bottom corners.
-    program->SetLayerTransform(gfx3DMatrix::ScalingMatrix(1, -1, 1) *
-                               gfx3DMatrix::Translation(0, aRect.height, 0));
-    aManager->BindAndDrawQuad(program);
-    program->SetLayerTransform(gfx3DMatrix::ScalingMatrix(-1, -1, 1) *
-                               gfx3DMatrix::Translation(aRect.width, aRect.height, 0));
-    aManager->BindAndDrawQuad(program);
+    mCornerMaskImage->Draw(aManager, aRect.BottomLeft(), flipY);
+    mCornerMaskImage->Draw(aManager, aRect.BottomRight(), flipY * flipX);
   }
 
   // Reset blend mode.
@@ -2376,6 +2356,69 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
 }
 
+TemporaryRef<gfx::DrawTarget>
+nsChildView::StartRemoteDrawing()
+{
+  if (!mGLPresenter) {
+    mGLPresenter = GLPresenter::CreateForWindow(this);
+
+    if (!mGLPresenter) {
+      return nullptr;
+    }
+  }
+
+  nsIntRegion dirtyRegion = mBounds;
+  nsIntSize renderSize = mBounds.Size();
+
+  if (!mBasicCompositorImage) {
+    mBasicCompositorImage = new RectTextureImage(mGLPresenter->gl());
+  }
+
+  RefPtr<gfx::DrawTarget> drawTarget =
+    mBasicCompositorImage->BeginUpdate(renderSize, dirtyRegion);
+
+  if (!drawTarget) {
+    // Composite unchanged textures.
+    DoRemoteComposition(mBounds);
+    return nullptr;
+  }
+
+  return drawTarget;
+}
+
+void
+nsChildView::EndRemoteDrawing()
+{
+  mBasicCompositorImage->EndUpdate(true);
+  DoRemoteComposition(mBounds);
+}
+
+void
+nsChildView::CleanupRemoteDrawing()
+{
+  mBasicCompositorImage = nullptr;
+  mCornerMaskImage = nullptr;
+  mResizerImage = nullptr;
+  mTitlebarImage = nullptr;
+  mGLPresenter = nullptr;
+}
+
+void
+nsChildView::DoRemoteComposition(const nsIntRect& aRenderRect)
+{
+  [(ChildView*)mView preRender:mGLPresenter->GetNSOpenGLContext()];
+  mGLPresenter->BeginFrame(aRenderRect.Size());
+
+  // Draw the result from the basic compositor.
+  mBasicCompositorImage->Draw(mGLPresenter, nsIntPoint(0, 0));
+
+  // DrawWindowOverlay doesn't do anything for non-GL, so it didn't paint
+  // anything during the basic compositor transaction. Draw the overlay now.
+  DrawWindowOverlay(mGLPresenter, aRenderRect);
+
+  mGLPresenter->EndFrame();
+}
+
 #ifdef ACCESSIBILITY
 already_AddRefed<a11y::Accessible>
 nsChildView::GetDocumentAccessible()
@@ -2398,6 +2441,211 @@ nsChildView::GetDocumentAccessible()
   return acc.forget();
 }
 #endif
+
+// RectTextureImage implementation
+
+RectTextureImage::~RectTextureImage()
+{
+  if (mTexture) {
+    mGLContext->MakeCurrent();
+    mGLContext->fDeleteTextures(1, &mTexture);
+    mTexture = 0;
+  }
+}
+
+nsIntSize
+RectTextureImage::TextureSizeForSize(const nsIntSize& aSize)
+{
+  return nsIntSize(gfx::NextPowerOfTwo(aSize.width),
+                   gfx::NextPowerOfTwo(aSize.height));
+}
+
+TemporaryRef<gfx::DrawTarget>
+RectTextureImage::BeginUpdate(const nsIntSize& aNewSize,
+                              const nsIntRegion& aDirtyRegion)
+{
+  MOZ_ASSERT(!mInUpdate, "Beginning update during update!");
+  mUpdateRegion = aDirtyRegion;
+  if (aNewSize != mUsedSize) {
+    mUsedSize = aNewSize;
+    mUpdateRegion = nsIntRect(nsIntPoint(0, 0), aNewSize);
+  }
+
+  if (mUpdateRegion.IsEmpty()) {
+    return nullptr;
+  }
+
+  nsIntSize neededBufferSize = TextureSizeForSize(mUsedSize);
+  if (!mUpdateDrawTarget || mBufferSize != neededBufferSize) {
+    gfx::IntSize size(neededBufferSize.width, neededBufferSize.height);
+    mUpdateDrawTarget =
+      gfx::Factory::CreateDrawTarget(gfx::BACKEND_COREGRAPHICS, size,
+                                     gfx::FORMAT_B8G8R8A8);
+    mBufferSize = neededBufferSize;
+  }
+
+  mInUpdate = true;
+
+  RefPtr<gfx::DrawTarget> drawTarget = mUpdateDrawTarget;
+  return drawTarget;
+}
+
+#define NSFoundationVersionWithProperStrideSupportForSubtextureUpload NSFoundationVersionNumber10_6_3
+
+static bool
+CanUploadSubtextures()
+{
+  return NSFoundationVersionNumber >= NSFoundationVersionWithProperStrideSupportForSubtextureUpload;
+}
+
+void
+RectTextureImage::EndUpdate(bool aKeepSurface)
+{
+  MOZ_ASSERT(mInUpdate, "Ending update while not in update");
+
+  bool overwriteTexture = false;
+  nsIntRegion updateRegion = mUpdateRegion;
+  if (!mTexture || (mTextureSize != mBufferSize)) {
+    overwriteTexture = true;
+    mTextureSize = mBufferSize;
+  }
+
+  if (overwriteTexture || !CanUploadSubtextures()) {
+    updateRegion = nsIntRect(nsIntPoint(0, 0), mTextureSize);
+  }
+
+  RefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
+  RefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
+
+  mGLContext->UploadSurfaceToTexture(dataSnapshot,
+                                     updateRegion,
+                                     mTexture,
+                                     overwriteTexture,
+                                     updateRegion.GetBounds().TopLeft(),
+                                     false,
+                                     LOCAL_GL_TEXTURE0,
+                                     LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+
+  if (!aKeepSurface) {
+    mUpdateDrawTarget = nullptr;
+  }
+
+  mInUpdate = false;
+}
+
+void
+RectTextureImage::Draw(GLManager* aManager,
+                       const nsIntPoint& aLocation,
+                       const gfx3DMatrix& aTransform)
+{
+  ShaderProgramOGL* program = aManager->GetProgram(gl::BGRARectLayerProgramType);
+
+  aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTexture);
+
+  program->Activate();
+  program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mUsedSize));
+  program->SetLayerTransform(aTransform * gfx3DMatrix::Translation(aLocation.x, aLocation.y, 0));
+  program->SetLayerOpacity(1.0);
+  program->SetRenderOffset(nsIntPoint(0, 0));
+  program->SetTexCoordMultiplier(mUsedSize.width, mUsedSize.height);
+  program->SetTextureUnit(0);
+
+  aManager->BindAndDrawQuad(program);
+
+  aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
+}
+
+// GLPresenter implementation
+
+GLPresenter::GLPresenter(GLContext* aContext)
+ : mGLContext(aContext)
+{
+  mGLContext->SetFlipped(true);
+  mGLContext->MakeCurrent();
+  mBGRARectProgram = new ShaderProgramOGL(mGLContext,
+    ProgramProfileOGL::GetProfileFor(gl::BGRARectLayerProgramType, MaskNone));
+
+  // Create mQuadVBO.
+  mGLContext->fGenBuffers(1, &mQuadVBO);
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
+
+  GLfloat vertices[] = {
+    /* First quad vertices */
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    /* Then quad texcoords */
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+  };
+  mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+}
+
+GLPresenter::~GLPresenter()
+{
+  if (mQuadVBO) {
+    mGLContext->MakeCurrent();
+    mGLContext->fDeleteBuffers(1, &mQuadVBO);
+    mQuadVBO = 0;
+  }
+}
+
+void
+GLPresenter::BindAndDrawQuad(ShaderProgramOGL* aProgram)
+{
+  mGLContext->MakeCurrent();
+
+  GLuint vertAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
+  GLuint texCoordAttribIndex = aProgram->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
+
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
+  mGLContext->fVertexAttribPointer(vertAttribIndex, 2,
+                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                   (GLvoid*)0);
+  mGLContext->fEnableVertexAttribArray(vertAttribIndex);
+  mGLContext->fVertexAttribPointer(texCoordAttribIndex, 2,
+                                   LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                   (GLvoid*) (sizeof(float)*4*2));
+  mGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
+  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+  mGLContext->fDisableVertexAttribArray(vertAttribIndex);
+  mGLContext->fDisableVertexAttribArray(texCoordAttribIndex);
+}
+
+void
+GLPresenter::BeginFrame(nsIntSize aRenderSize)
+{
+  mGLContext->MakeCurrent();
+
+  mGLContext->fViewport(0, 0, aRenderSize.width, aRenderSize.height);
+
+  // Matrix to transform (0, 0, width, height) to viewport space (-1.0, 1.0,
+  // 2, 2) and flip the contents.
+  gfxMatrix viewMatrix;
+  viewMatrix.Translate(-gfxPoint(1.0, -1.0));
+  viewMatrix.Scale(2.0f / float(aRenderSize.width), 2.0f / float(aRenderSize.height));
+  viewMatrix.Scale(1.0f, -1.0f);
+
+  gfx3DMatrix matrix3d = gfx3DMatrix::From2D(viewMatrix);
+  matrix3d._33 = 0.0f;
+
+  mBGRARectProgram->CheckAndSetProjectionMatrix(matrix3d);
+
+  // Default blend function implements "OVER"
+  mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
+                                 LOCAL_GL_ONE, LOCAL_GL_ONE);
+  mGLContext->fEnable(LOCAL_GL_BLEND);
+
+  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+
+  mGLContext->fEnable(LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+}
+
+void
+GLPresenter::EndFrame()
+{
+  mGLContext->SwapBuffers();
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+}
 
 #pragma mark -
 
@@ -3075,10 +3323,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     painted = mGeckoChild->PaintWindow(region);
   } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
     // We only need this so that we actually get DidPaintWindow fired
-    if (Compositor::GetBackend() == LAYERS_BASIC) {
-      ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
-      manager->SetShadowTarget(targetContext);
-    }
     painted = mGeckoChild->PaintWindow(region);
   }
 

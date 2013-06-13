@@ -67,12 +67,17 @@ public:
     static void ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion);
 
     /**
+     * Clip aTarget to the region aRegion.
+     */
+    static void ClipToRegion(mozilla::gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
+
+    /**
      * Clip aContext to the region aRegion, snapping the rectangles.
      */
     static void ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
 
     /**
-     * Clip aContext to the region aRegion, snapping the rectangles.
+     * Clip aTarget to the region aRegion, snapping the rectangles.
      */
     static void ClipToRegionSnapped(mozilla::gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
 

@@ -126,6 +126,14 @@ ProgramProfileOGL::GetProfileFor(gl::ShaderProgramType aType,
     AddCommonTextureArgs(result);
     result.mTextureCount = 1;
     break;
+  case gl::BGRARectLayerProgramType:
+    MOZ_ASSERT(aMask == MaskNone, "BGRARectLayerProgramType can't handle masks.");
+    result.mVertexShaderString = sLayerVS;
+    result.mFragmentShaderString = sBGRARectTextureLayerFS;
+    AddCommonArgs(result);
+    AddCommonTextureArgs(result);
+    result.mTextureCount = 1;
+    break;
   case gl::RGBAExternalLayerProgramType:
     if (aMask == Mask3d) {
       result.mVertexShaderString = sLayerMask3DVS;
