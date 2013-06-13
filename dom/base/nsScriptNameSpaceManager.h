@@ -55,6 +55,9 @@ struct nsGlobalNameStruct
     eTypeExternalConstructorAlias
   } mType;
 
+  // mChromeOnly is only used for structs that define non-WebIDL things
+  // (possibly in addition to WebIDL ones).  In particular, it's not even
+  // initialized for eTypeNewDOMBinding structs.
   bool mChromeOnly;
   bool mDisabled;
 
@@ -71,7 +74,8 @@ struct nsGlobalNameStruct
     mozilla::dom::DefineInterface mDefineDOMInterface; // for window
     mozilla::dom::ConstructNavigatorProperty mConstructNavigatorProperty; // for navigator
   };
-  mozilla::dom::PrefEnabled mPrefEnabled; // May be null if not pref controlled
+  // May be null if enabled unconditionally
+  mozilla::dom::ConstructorEnabled* mConstructorEnabled;
 };
 
 
@@ -140,11 +144,11 @@ public:
 
   void RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::DefineInterface aDefineDOMInterface,
-    mozilla::dom::PrefEnabled aPrefEnabled);
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled);
 
   void RegisterNavigatorDOMConstructor(const nsAFlatString& aName,
     mozilla::dom::ConstructNavigatorProperty aNavConstructor,
-    mozilla::dom::PrefEnabled aPrefEnabled);
+    mozilla::dom::ConstructorEnabled* aConstructorEnabled);
 
   typedef PLDHashOperator
   (* GlobalNameEnumerator)(const nsAString& aGlobalName, void* aClosure);

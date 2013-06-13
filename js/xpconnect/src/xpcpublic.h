@@ -479,8 +479,14 @@ typedef JSObject*
 typedef JSObject*
 (*ConstructNavigatorProperty)(JSContext *cx, JS::Handle<JSObject*> naviObj);
 
+// Check whether a constructor should be enabled for the given object.
+// Note that the object should NOT be an Xray, since Xrays will end up
+// defining constructors on the underlying object.
+// This is a typedef for the function type itself, not the function
+// pointer, so it's more obvious that pointers to a ConstructorEnabled
+// can be null.
 typedef bool
-(*PrefEnabled)();
+(ConstructorEnabled)(JSContext* cx, JS::Handle<JSObject*> obj);
 
 extern bool
 DefineStaticJSVals(JSContext *cx);
