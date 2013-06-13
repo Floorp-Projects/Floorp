@@ -30,7 +30,7 @@ this.PhoneNumberUtils = {
   // mcc for Brasil
   _mcc: '724',
 
-  _getCountryName: function() {
+  getCountryName: function getCountryName() {
     let mcc;
     let countryName;
 
@@ -66,7 +66,7 @@ this.PhoneNumberUtils = {
 
   parse: function(aNumber) {
     if (DEBUG) debug("call parse: " + aNumber);
-    let result = PhoneNumber.Parse(aNumber, this._getCountryName());
+    let result = PhoneNumber.Parse(aNumber, this.getCountryName());
     if (DEBUG) {
       if (result) {
         debug("InternationalFormat: " + result.internationalFormat);

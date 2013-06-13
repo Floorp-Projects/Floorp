@@ -219,6 +219,15 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
     ok(true, "all done!\n");
     SimpleTest.finish();
   }
