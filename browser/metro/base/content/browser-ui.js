@@ -243,11 +243,20 @@ var BrowserUI = {
 
   getDisplayURI: function(browser) {
     let uri = browser.currentURI;
+    let spec = uri.spec;
+
     try {
-      uri = gURIFixup.createExposableURI(uri);
+      spec = gURIFixup.createExposableURI(uri).spec;
     } catch (ex) {}
 
-    return uri.spec;
+    try {
+      let charset = browser.characterSet;
+      let textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].
+                         getService(Ci.nsITextToSubURI);
+      spec = textToSubURI.unEscapeNonAsciiURI(charset, spec);
+    } catch (ex) {}
+
+    return spec;
   },
 
   /**
