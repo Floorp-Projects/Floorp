@@ -3246,19 +3246,9 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
     if (!CheckArrayAccess(f, lhs, &viewType, &pointerDef))
         return false;
 
-    Use use;
-    switch (TypedArrayStoreType(viewType)) {
-      case ArrayStore_Intish:
-        use = Use::ToInt32;
-        break;
-      case ArrayStore_Doublish:
-        use = Use::ToNumber;
-        break;
-    }
-
     MDefinition *rhsDef;
     Type rhsType;
-    if (!CheckExpr(f, rhs, use, &rhsDef, &rhsType))
+    if (!CheckExpr(f, rhs, Use::NoCoercion, &rhsDef, &rhsType))
         return false;
 
     switch (TypedArrayStoreType(viewType)) {
