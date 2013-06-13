@@ -155,6 +155,10 @@ public:
 
   virtual void RenderLayer()
   {
+    if (GetMaskLayer()) {
+      ToClientLayer(GetMaskLayer())->RenderLayer();
+    }
+    
     // Setup mSupportsComponentAlphaChildren in the same way 
     // that ContainerLayerComposite will do.
     if (UseIntermediateSurface()) {
