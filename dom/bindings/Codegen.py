@@ -1978,7 +1978,11 @@ class CGPrefEnabledNative(CGAbstractMethod):
     if the method returns true.
     """
     def __init__(self, descriptor):
-        CGAbstractMethod.__init__(self, descriptor, 'PrefEnabled', 'bool', [])
+        CGAbstractMethod.__init__(self, descriptor,
+                                  'ConstructorEnabled', 'bool',
+                                  [Argument("JSContext*", "/* unused */"),
+                                   Argument("JS::Handle<JSObject*>",
+                                            "/* unused */")])
 
     def definition_body(self):
         return "  return %s::PrefEnabled();" % self.descriptor.nativeType
@@ -1991,7 +1995,11 @@ class CGPrefEnabled(CGAbstractMethod):
     on the global if the pref is true.
     """
     def __init__(self, descriptor):
-        CGAbstractMethod.__init__(self, descriptor, 'PrefEnabled', 'bool', [])
+        CGAbstractMethod.__init__(self, descriptor,
+                                  'ConstructorEnabled', 'bool',
+                                  [Argument("JSContext*", "/* unused */"),
+                                   Argument("JS::Handle<JSObject*>",
+                                            "/* unused */")])
 
     def definition_body(self):
         pref = self.descriptor.interface.getExtendedAttribute("Pref")
@@ -8027,12 +8035,12 @@ class CGRegisterProtos(CGAbstractMethod):
 
     def _defineMacro(self):
        return """
-#define REGISTER_PROTO(_dom_class, _pref_check) \\
-  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Binding::DefineDOMInterface, _pref_check);
-#define REGISTER_CONSTRUCTOR(_dom_constructor, _dom_class, _pref_check) \\
-  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_constructor), _dom_class##Binding::DefineDOMInterface, _pref_check);
-#define REGISTER_NAVIGATOR_CONSTRUCTOR(_prop, _dom_class, _pref_check) \\
-  aNameSpaceManager->RegisterNavigatorDOMConstructor(NS_LITERAL_STRING(_prop), _dom_class##Binding::ConstructNavigatorObject, _pref_check);
+#define REGISTER_PROTO(_dom_class, _ctor_check) \\
+  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Binding::DefineDOMInterface, _ctor_check);
+#define REGISTER_CONSTRUCTOR(_dom_constructor, _dom_class, _ctor_check) \\
+  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_constructor), _dom_class##Binding::DefineDOMInterface, _ctor_check);
+#define REGISTER_NAVIGATOR_CONSTRUCTOR(_prop, _dom_class, _ctor_check) \\
+  aNameSpaceManager->RegisterNavigatorDOMConstructor(NS_LITERAL_STRING(_prop), _dom_class##Binding::ConstructNavigatorObject, _ctor_check);
 
 """
     def _undefineMacro(self):
@@ -8041,23 +8049,23 @@ class CGRegisterProtos(CGAbstractMethod):
 #undef REGISTER_PROTO
 #undef REGISTER_NAVIGATOR_CONSTRUCTOR"""
     def _registerProtos(self):
-        def getPrefCheck(desc):
+        def getCheck(desc):
             if (desc.interface.getExtendedAttribute("PrefControlled") is None and
                 desc.interface.getExtendedAttribute("Pref") is None):
                 return "nullptr"
-            return "%sBinding::PrefEnabled" % desc.name
+            return "%sBinding::ConstructorEnabled" % desc.name
         lines = []
         for desc in self.config.getDescriptors(hasInterfaceObject=True,
                                                isExternal=False,
                                                workers=False,
                                                register=True):
-            lines.append("REGISTER_PROTO(%s, %s);" % (desc.name, getPrefCheck(desc)))
-            lines.extend("REGISTER_CONSTRUCTOR(%s, %s, %s);" % (n.identifier.name, desc.name, getPrefCheck(desc))
+            lines.append("REGISTER_PROTO(%s, %s);" % (desc.name, getCheck(desc)))
+            lines.extend("REGISTER_CONSTRUCTOR(%s, %s, %s);" % (n.identifier.name, desc.name, getCheck(desc))
                          for n in desc.interface.namedConstructors)
         for desc in self.config.getDescriptors(isNavigatorProperty=True, register=True):
             propName = desc.interface.getNavigatorProperty()
             assert propName
-            lines.append('REGISTER_NAVIGATOR_CONSTRUCTOR("%s", %s, %s);' % (propName, desc.name, getPrefCheck(desc)))
+            lines.append('REGISTER_NAVIGATOR_CONSTRUCTOR("%s", %s, %s);' % (propName, desc.name, getCheck(desc)))
         return '\n'.join(lines) + '\n'
     def definition_body(self):
         return self._defineMacro() + self._registerProtos() + self._undefineMacro()
