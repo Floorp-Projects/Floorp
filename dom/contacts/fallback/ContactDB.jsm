@@ -885,11 +885,22 @@ ContactDB.prototype = {
                        "Falling back to 'startsWith'.");
         }
         // not case sensitive
-        let tmp = options.filterValue.toString().toLowerCase();
+        let lowerCase = options.filterValue.toString().toLowerCase();
         if (key === "tel") {
-          tmp = PhoneNumberUtils.normalize(tmp, /*numbersOnly*/ true);
+          let origLength = lowerCase.length;
+          let tmp = PhoneNumberUtils.normalize(lowerCase, /*numbersOnly*/ true);
+          if (tmp.length != origLength) {
+            let NON_SEARCHABLE_CHARS = /[^#+\*\d\s()-]/;
+            // e.g. number "123". find with "(123)" but not with "123a"
+            if (tmp === "" || NON_SEARCHABLE_CHARS.test(lowerCase)) {
+              if (DEBUG) debug("Call continue!");
+              continue;
+            }
+            lowerCase = tmp;
+          }
         }
-        let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
+        if (DEBUG) debug("lowerCase: " + lowerCase);
+        let range = this._global.IDBKeyRange.bound(lowerCase, lowerCase + "\uFFFF");
         let index = store.index(key + "LowerCase");
         request = index.mozGetAll(range, limit);
       }

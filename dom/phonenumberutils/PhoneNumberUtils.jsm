@@ -92,9 +92,9 @@ this.PhoneNumberUtils = {
     return isPlain;
   },
 
-  normalize: function Normalize(aNumber) {
-    var normalized = PhoneNumber.Normalize(aNumber);
-    if (DEBUG) debug("normalize(" + aNumber + "): " + normalized);
+  normalize: function Normalize(aNumber, aNumbersOnly) {
+    var normalized = PhoneNumber.Normalize(aNumber, aNumbersOnly);
+    if (DEBUG) debug("normalize(" + aNumber + "): " + normalized + ", " + aNumbersOnly);
     return normalized;
   }
 };
