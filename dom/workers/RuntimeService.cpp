@@ -829,6 +829,10 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
   JS_SetGCZeal(workerCx, settings.gcZeal, settings.gcZealFrequency);
 #endif
 
+  if (aWorkerPrivate->IsChromeWorker()) {
+    JS_SetVersion(workerCx, JSVERSION_LATEST);
+  }
+
   return workerCx;
 }
 

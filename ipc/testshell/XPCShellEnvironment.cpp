@@ -188,6 +188,7 @@ ContextCallback(JSContext *cx,
 
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, ScriptErrorReporter);
+        JS_SetVersion(cx, JSVERSION_LATEST);
     }
     return JS_TRUE;
 }
@@ -305,10 +306,10 @@ Version(JSContext *cx,
         JS::Value *vp)
 {
     JS::Value *argv = JS_ARGV(cx, vp);
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
     if (argc > 0 && JSVAL_IS_INT(argv[0]))
-        JS_SetVersionForCompartment(js::GetContextCompartment(cx),
-                                    JSVersion(JSVAL_TO_INT(argv[0])));
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(argv[0])))));
+    else
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
     return JS_TRUE;
 }
 
@@ -782,14 +783,11 @@ XPCShellEnvironment::Init()
         return false;
     }
 
-    JS::CompartmentOptions options;
-    options.setZone(JS::SystemZone)
-           .setVersion(JSVERSION_LATEST);
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx,
                                               static_cast<nsIGlobalObject *>(backstagePass),
                                               principal, 0,
-                                              options,
+                                              JS::SystemZone,
                                               getter_AddRefs(holder));
     if (NS_FAILED(rv)) {
         NS_ERROR("InitClassesWithNewWrappedGlobal failed!");

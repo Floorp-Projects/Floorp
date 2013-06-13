@@ -489,11 +489,10 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Version(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSVersion origVersion = JS_GetVersion(cx);
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(origVersion));
     if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))
-        JS_SetVersionForCompartment(js::GetContextCompartment(cx),
-                                    JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])));
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])))));
+    else
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
     return true;
 }
 
@@ -1237,8 +1236,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
             if (++i == argc) {
                 return usage();
             }
-            JS_SetVersionForCompartment(js::GetContextCompartment(cx),
-                                        JSVersion(atoi(argv[i])));
+            JS_SetVersion(cx, JSVersion(atoi(argv[i])));
             break;
         case 'W':
             reportWarnings = false;
@@ -1402,6 +1400,7 @@ ContextCallback(JSContext *cx, unsigned contextOp)
 
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
+        JS_SetVersion(cx, JSVERSION_LATEST);
     }
     return true;
 }
@@ -1635,15 +1634,12 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        JS::CompartmentOptions options;
-        options.setZone(JS::SystemZone)
-               .setVersion(JSVERSION_LATEST);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject *>(backstagePass),
                                                   systemprincipal,
                                                   0,
-                                                  options,
+                                                  JS::SystemZone,
                                                   getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;
