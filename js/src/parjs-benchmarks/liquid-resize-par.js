@@ -450,14 +450,5 @@ if (!benchmarking) {
                      function() {},
                      printImage);
 
-  var failed = false;
-  assertEq(seqData.length, parData.length);
-  for (var i = 0; i < seqData.length; i++) {
-    if (seqData[i] !== parData[i]) {
-      print("At index ", i, " sequential has ", seqData[i], " parallel has ", parData[i]);
-      failed = true;
-    }
-  }
-  if (failed)
-    throw new Error();
+  assertEq(seqData, parData);
 }
