@@ -510,6 +510,7 @@
 @BINPATH@/components/AppsService.manifest
 @BINPATH@/components/Push.js
 @BINPATH@/components/Push.manifest
+@BINPATH@/components/PushServiceLauncher.js
 
 @BINPATH@/components/nsDOMIdentity.js
 @BINPATH@/components/nsIDService.js
