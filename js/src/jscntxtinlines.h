@@ -468,13 +468,38 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
 inline JSVersion
 JSContext::findVersion() const
 {
+    if (hasVersionOverride)
+        return versionOverride;
+
     if (JSScript *script = stack.currentScript(NULL, js::ContextStack::ALLOW_CROSS_COMPARTMENT))
         return script->getVersion();
 
-    if (compartment() && compartment()->options().hasVersion)
-        return compartment()->options().version;
+    return defaultVersion;
+}
 
-    return runtime()->defaultVersion();
+inline bool
+JSContext::canSetDefaultVersion() const
+{
+    return !stack.hasfp() && !hasVersionOverride;
+}
+
+inline void
+JSContext::overrideVersion(JSVersion newVersion)
+{
+    JS_ASSERT(!canSetDefaultVersion());
+    versionOverride = newVersion;
+    hasVersionOverride = true;
+}
+
+inline bool
+JSContext::maybeOverrideVersion(JSVersion newVersion)
+{
+    if (canSetDefaultVersion()) {
+        setDefaultVersion(newVersion);
+        return false;
+    }
+    overrideVersion(newVersion);
+    return true;
 }
 
 inline js::LifoAlloc &

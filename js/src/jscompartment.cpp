@@ -30,9 +30,8 @@ using namespace js::gc;
 
 using mozilla::DebugOnly;
 
-JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options = JS::CompartmentOptions())
+JSCompartment::JSCompartment(Zone *zone)
   : zone_(zone),
-    options_(options),
     rt(zone->rt),
     principals(NULL),
     isSystem(false),
