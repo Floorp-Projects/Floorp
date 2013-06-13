@@ -1,0 +1,15 @@
+include protocol PTestIndirectProtocolParamSecond;
+
+namespace mozilla {
+namespace _ipdltest {
+
+struct IndirectParamStruct {
+    PTestIndirectProtocolParamSecond actor;
+};
+
+union IndirectParamUnion {
+    IndirectParamStruct;
+};
+
+}
+}
