@@ -10,7 +10,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_LINKER
-DISABLE_SIMPLE_PROGRAMS := TestZip$(BIN_SUFFIX)
+SIMPLE_PROGRAMS := TestZip$(BIN_SUFFIX)
 NO_DIST_INSTALL = 1
 STL_FLAGS =
 
