@@ -22,3 +22,7 @@ CPP_SOURCES += [
     'nsFMRadioSettings.cpp',
 ]
 
+EXTRA_JS_MODULES += [
+    'DOMFMRadioParent.jsm',
+]
+

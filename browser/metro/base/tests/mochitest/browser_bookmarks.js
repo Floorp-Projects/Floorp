@@ -319,6 +319,8 @@ gTests.push({
     sendContextMenuClickToElement(window, item3, 10, 10);
     yield promise;
 
+    yield waitForCondition(() => !deleteButton.hidden);
+
     ok(!deleteButton.hidden, "Delete button is visible.");
 
     let promise = waitForCondition(() => !restoreButton.hidden);

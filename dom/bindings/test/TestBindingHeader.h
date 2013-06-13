@@ -137,6 +137,10 @@ public:
   already_AddRefed<TestInterface> Test(const GlobalObject&, const nsAString&,
                                        ErrorResult&);
   static
+  already_AddRefed<TestInterface> Test(const GlobalObject&, const nsACString&,
+                                       ErrorResult&);
+
+  static
   already_AddRefed<TestInterface> Test2(const GlobalObject&,
                                         JSContext*,
                                         const DictForConstructor&,
@@ -370,6 +374,9 @@ public:
   void ReceiveStringSequence(nsTArray<nsString>&);
   void PassStringSequence(const Sequence<nsString>&);
 
+  void ReceiveByteStringSequence(nsTArray<nsCString>&);
+  void PassByteStringSequence(const Sequence<nsCString>&);
+
   void ReceiveAnySequence(JSContext*, nsTArray<JS::Value>&);
   void ReceiveNullableAnySequence(JSContext*, Nullable<nsTArray<JS::Value> >&);
   void ReceiveAnySequenceSequence(JSContext*, nsTArray<nsTArray<JS::Value> >&);
@@ -398,7 +405,7 @@ public:
   void PassFloat64Array(Float64Array&);
   JSObject* ReceiveUint8Array(JSContext*);
 
-  // String types
+  // DOMString types
   void PassString(const nsAString&);
   void PassNullableString(const nsAString&);
   void PassOptionalString(const Optional<nsAString>&);
@@ -408,6 +415,13 @@ public:
   void PassOptionalNullableString(const Optional<nsAString>&);
   void PassOptionalNullableStringWithDefaultValue(const nsAString&);
   void PassVariadicString(const Sequence<nsString>&);
+
+  // ByteString types
+  void PassByteString(const nsCString&);
+  void PassNullableByteString(const nsCString&);
+  void PassOptionalByteString(const Optional<nsCString>&);
+  void PassOptionalNullableByteString(const Optional<nsCString>&);
+  void PassVariadicByteString(const Sequence<nsCString>&);
 
   // Enumerated types
   void PassEnum(TestEnum);
@@ -752,6 +766,13 @@ private:
   void PassOptionalNullableString(Optional<nsAString>&) MOZ_DELETE;
   void PassOptionalNullableStringWithDefaultValue(nsAString&) MOZ_DELETE;
   void PassVariadicString(Sequence<nsString>&) MOZ_DELETE;
+
+  // cstrings should be const as well
+  void PassByteString(nsCString&) MOZ_DELETE;
+  void PassNullableByteString(nsCString&) MOZ_DELETE;
+  void PassOptionalByteString(Optional<nsCString>&) MOZ_DELETE;
+  void PassOptionalNullableByteString(Optional<nsCString>&) MOZ_DELETE;
+  void PassVariadicByteString(Sequence<nsCString>&) MOZ_DELETE;
 
   // Make sure dictionary arguments are always const
   void PassDictionary(JSContext*, Dict&) MOZ_DELETE;

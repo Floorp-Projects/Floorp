@@ -194,7 +194,7 @@ inline WebRtc_Word64 TickTime::QueryOsForTicks() {
   }
   result.ticks_ = now + (num_wrap_time_get_time << 32);
 #endif
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   struct timespec ts;
   // TODO(wu): Remove CLOCK_REALTIME implementation.
 #ifdef WEBRTC_CLOCK_TYPE_REALTIME
@@ -241,7 +241,7 @@ inline WebRtc_Word64 TickTime::MillisecondTimestamp() {
 #else
   return ticks;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ticks / 1000000LL;
 #else
   return ticks / 1000LL;
@@ -258,7 +258,7 @@ inline WebRtc_Word64 TickTime::MicrosecondTimestamp() {
 #else
   return ticks * 1000LL;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ticks / 1000LL;
 #else
   return ticks;
@@ -278,7 +278,7 @@ inline WebRtc_Word64 TickTime::MillisecondsToTicks(const WebRtc_Word64 ms) {
 #else
   return ms;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ms * 1000000LL;
 #else
   return ms * 1000LL;
@@ -294,7 +294,7 @@ inline WebRtc_Word64 TickTime::TicksToMilliseconds(const WebRtc_Word64 ticks) {
 #else
   return ticks;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ticks / 1000000LL;
 #else
   return ticks / 1000LL;
@@ -323,7 +323,7 @@ inline WebRtc_Word64 TickInterval::Milliseconds() const {
   // interval_ is in ms
   return interval_;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   // interval_ is in ns
   return interval_ / 1000000;
 #else
@@ -342,7 +342,7 @@ inline WebRtc_Word64 TickInterval::Microseconds() const {
   // interval_ is in ms
   return interval_ * 1000LL;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   // interval_ is in ns
   return interval_ / 1000;
 #else

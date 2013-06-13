@@ -12,3 +12,8 @@ EXTRA_COMPONENTS += [
     'PermissionSettings.js',
     'PermissionSettings.manifest',
 ]
+
+EXTRA_JS_MODULES += [
+    'PermissionPromptHelper.jsm',
+    'PermissionSettings.jsm',
+]

@@ -1582,6 +1582,11 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
   return true;
 }
 
+bool
+ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
+                           JS::MutableHandle<JS::Value> pval, bool nullable,
+                           nsACString& result);
+
 // Class for holding the type of members of a union. The union type has an enum
 // to keep track of which of its UnionMembers has been constructed.
 template<class T>
@@ -2056,6 +2061,24 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
 bool
 RegisterForDeferredFinalization(DeferredFinalizeStartFunction start,
                                 DeferredFinalizeFunction run);
+
+/**
+ * Convert an nsCString to jsval, returning true on success.
+ * These functions are intended for ByteString implementations.
+ * As such, the string is not UTF-8 encoded.  Any UTF8 strings passed to these
+ * methods will be mangled.
+ */
+bool NonVoidByteStringToJsval(JSContext *cx, const nsACString &str,
+                              JS::MutableHandle<JS::Value> rval);
+inline bool ByteStringToJsval(JSContext *cx, const nsACString &str,
+                              JS::MutableHandle<JS::Value> rval)
+{
+    if (str.IsVoid()) {
+        rval.setNull();
+        return true;
+    }
+    return NonVoidByteStringToJsval(cx, str, rval);
+}
 
 } // namespace dom
 } // namespace mozilla

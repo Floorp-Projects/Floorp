@@ -103,3 +103,10 @@ EXTRA_COMPONENTS += [
     'SiteSpecificUserAgent.js',
     'SiteSpecificUserAgent.manifest',
 ]
+
+EXTRA_JS_MODULES += [
+    'ConsoleAPIStorage.jsm',
+    'DOMRequestHelper.jsm',
+    'IndexedDBHelper.jsm',
+    'ObjectWrapper.jsm',
+]

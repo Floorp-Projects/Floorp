@@ -9,12 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_JS_MODULES =   \
-  PhoneNumber.jsm \
-  PhoneNumberMetaData.jsm \
-  mcc_iso3166_table.jsm \
-  $(NULL)
-
 EXTRA_PP_JS_MODULES = \
   PhoneNumberUtils.jsm \
   $(NULL)

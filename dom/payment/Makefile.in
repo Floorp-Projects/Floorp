@@ -16,9 +16,5 @@ EXTRA_COMPONENTS = \
   Payment.manifest \
   $(NULL)
 
-EXTRA_JS_MODULES += \
-  Payment.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
