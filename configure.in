@@ -4332,6 +4332,16 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
 AC_SUBST(MOZ_UPDATE_CHANNEL)
 
+# Allow to specify a Google API key file that contains the secret key to be
+# used for various Google API requests.
+MOZ_ARG_WITH_STRING(google-api-keyfile,
+[  --with-google-api-keyfile=file   Use the secret key contained in the given keyfile for Google API requests],
+  MOZ_GOOGLE_API_KEY=`cat $withval`)
+if test -z "$MOZ_GOOGLE_API_KEY"; then
+    MOZ_GOOGLE_API_KEY=no-google-api-key
+fi
+AC_DEFINE_UNQUOTED(MOZ_GOOGLE_API_KEY, $MOZ_GOOGLE_API_KEY)
+
 # Allow the application to influence configure with a confvars.sh script.
 AC_MSG_CHECKING([if app-specific confvars.sh exists])
 if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
