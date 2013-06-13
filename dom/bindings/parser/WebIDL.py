@@ -508,7 +508,10 @@ class IDLInterface(IDLObjectWithScope):
         self._callback = False
         self._finished = False
         self.members = []
-        self.namedConstructors = set()
+        # namedConstructors needs deterministic ordering because bindings code
+        # outputs the constructs in the order that namedConstructors enumerates
+        # them.
+        self.namedConstructors = list()
         self.implementedInterfaces = set()
         self._consequential = False
         self._isPartial = True
@@ -903,7 +906,7 @@ class IDLInterface(IDLObjectWithScope):
                     # NamedConstructors.
                     newMethod = self.parentScope.lookupIdentifier(method.identifier)
                     if newMethod == method:
-                        self.namedConstructors.add(method)
+                        self.namedConstructors.append(method)
                     elif not newMethod in self.namedConstructors:
                         raise WebIDLError("NamedConstructor conflicts with a NamedConstructor of a different interface",
                                           [method.location, newMethod.location])
