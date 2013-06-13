@@ -523,7 +523,7 @@ class EventRunnable : public MainThreadProxyRunnable
   nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
   jsval mResponse;
   nsString mResponseText;
-  nsString mStatusText;
+  nsCString mStatusText;
   uint64_t mLoaded;
   uint64_t mTotal;
   uint32_t mEventStreamId;
@@ -970,11 +970,11 @@ public:
 
 class GetAllResponseHeadersRunnable : public WorkerThreadProxySyncRunnable
 {
-  nsString& mResponseHeaders;
+  nsCString& mResponseHeaders;
 
 public:
   GetAllResponseHeadersRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                                nsString& aResponseHeaders)
+                                nsCString& aResponseHeaders)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
     mResponseHeaders(aResponseHeaders)
   { }
@@ -994,7 +994,7 @@ class GetResponseHeaderRunnable : public WorkerThreadProxySyncRunnable
 
 public:
   GetResponseHeaderRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                            const nsCString& aHeader, nsCString& aValue)
+                            const nsACString& aHeader, nsCString& aValue)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mHeader(aHeader),
     mValue(aValue)
   { }
@@ -1008,7 +1008,7 @@ public:
 
 class OpenRunnable : public WorkerThreadProxySyncRunnable
 {
-  nsString mMethod;
+  nsCString mMethod;
   nsString mURL;
   Optional<nsAString> mUser;
   nsString mUserStr;
@@ -1020,7 +1020,7 @@ class OpenRunnable : public WorkerThreadProxySyncRunnable
 
 public:
   OpenRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-               const nsAString& aMethod, const nsAString& aURL,
+               const nsACString& aMethod, const nsAString& aURL,
                const Optional<nsAString>& aUser,
                const Optional<nsAString>& aPassword,
                bool aBackgroundRequest, bool aWithCredentials,
@@ -1201,7 +1201,7 @@ class SetRequestHeaderRunnable : public WorkerThreadProxySyncRunnable
 
 public:
   SetRequestHeaderRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                           const nsCString& aHeader, const nsCString& aValue)
+                           const nsACString& aHeader, const nsACString& aValue)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mHeader(aHeader),
     mValue(aValue)
   { }
@@ -1716,7 +1716,7 @@ XMLHttpRequest::Notify(JSContext* aCx, Status aStatus)
 }
 
 void
-XMLHttpRequest::Open(const nsAString& aMethod, const nsAString& aUrl,
+XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
                      bool aAsync, const Optional<nsAString>& aUser,
                      const Optional<nsAString>& aPassword, ErrorResult& aRv)
 {
@@ -1754,8 +1754,8 @@ XMLHttpRequest::Open(const nsAString& aMethod, const nsAString& aUrl,
 }
 
 void
-XMLHttpRequest::SetRequestHeader(const nsAString& aHeader,
-                                 const nsAString& aValue, ErrorResult& aRv)
+XMLHttpRequest::SetRequestHeader(const nsACString& aHeader,
+                                 const nsACString& aValue, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1770,9 +1770,7 @@ XMLHttpRequest::SetRequestHeader(const nsAString& aHeader,
   }
 
   nsRefPtr<SetRequestHeaderRunnable> runnable =
-    new SetRequestHeaderRunnable(mWorkerPrivate, mProxy,
-                                 NS_ConvertUTF16toUTF8(aHeader),
-                                 NS_ConvertUTF16toUTF8(aValue));
+    new SetRequestHeaderRunnable(mWorkerPrivate, mProxy, aHeader, aValue);
   if (!runnable->Dispatch(GetJSContext())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -2012,8 +2010,8 @@ XMLHttpRequest::Abort(ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::GetResponseHeader(const nsAString& aHeader,
-                                  nsAString& aResponseHeader, ErrorResult& aRv)
+XMLHttpRequest::GetResponseHeader(const nsACString& aHeader,
+                                  nsACString& aResponseHeader, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2027,20 +2025,19 @@ XMLHttpRequest::GetResponseHeader(const nsAString& aHeader,
     return;
   }
 
-  nsCString value;
+  nsCString responseHeader;
   nsRefPtr<GetResponseHeaderRunnable> runnable =
-    new GetResponseHeaderRunnable(mWorkerPrivate, mProxy,
-                                  NS_ConvertUTF16toUTF8(aHeader), value);
+    new GetResponseHeaderRunnable(mWorkerPrivate, mProxy, aHeader,
+                                  responseHeader);
   if (!runnable->Dispatch(GetJSContext())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-
-  aResponseHeader = NS_ConvertUTF8toUTF16(value);
+  aResponseHeader = responseHeader;
 }
 
 void
-XMLHttpRequest::GetAllResponseHeaders(nsAString& aResponseHeaders,
+XMLHttpRequest::GetAllResponseHeaders(nsACString& aResponseHeaders,
                                       ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -2055,7 +2052,7 @@ XMLHttpRequest::GetAllResponseHeaders(nsAString& aResponseHeaders,
     return;
   }
 
-  nsString responseHeaders;
+  nsCString responseHeaders;
   nsRefPtr<GetAllResponseHeadersRunnable> runnable =
     new GetAllResponseHeadersRunnable(mWorkerPrivate, mProxy, responseHeaders);
   if (!runnable->Dispatch(GetJSContext())) {
