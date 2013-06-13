@@ -12,3 +12,7 @@ CPP_SOURCES += [
     'nsTestSample.cpp',
 ]
 
+# SIMPLE_PROGRAMS compiles a single .cpp file into an executable
+SIMPLE_PROGRAMS += [
+    "nsTestSample%s" % (CONFIG['BIN_SUFFIX']),
+]

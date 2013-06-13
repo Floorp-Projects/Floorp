@@ -10,41 +10,32 @@ import os
 import sys
 
 from mozfile.mozfile import rmtree
+from textwrap import TextWrapper
 
 
-"""In order to display nicely in an 80 character wide terminal window,
-with mach's prepended timestamps,
-please keep printed messages under 70 characters wide when possible.
-"""
+CLOBBER_MESSAGE = ''.join([TextWrapper().fill(line) + '\n' for line in
+'''
+The CLOBBER file has been updated, indicating that an incremental build since \
+your last build will probably not work. A full/clobber build is required.
 
-CLOBBER_MESSAGE = '''
-***
-* The CLOBBER file has been updated, indicating that an incremental
-* build since your last build will probably not work.
-* A full/clobber build is required.
-*
-* The reason for the clobber is:
-*
+The reason for the clobber is:
+
 {clobber_reason}
-*
-* Clobbering can be performed automatically.
-* However, we didn't automatically clobber this time because:
-*
-*   {no_reason}
-*
-* The easiest and fastest way to clobber is to run:
-*
-*  $ mach clobber
-*
-* If you know this clobber doesn't apply to you
-* or you're feeling lucky - well do ya? -
-* you can ignore this clobber requirement by running:
-*
-*  $ touch {clobber_file}
-*
-***
-'''.strip()
 
+Clobbering can be performed automatically. However, we didn't automatically \
+clobber this time because:
+
+{no_reason}
+
+The easiest and fastest way to clobber is to run:
+
+ $ mach clobber
+
+If you know this clobber doesn't apply to you or you're feeling lucky \
+- well do ya? - you can ignore this clobber requirement by running:
+
+ $ touch {clobber_file}
+'''.splitlines()])
 
 class Clobberer(object):
     def __init__(self, topsrcdir, topobjdir):
@@ -135,8 +126,8 @@ class Clobberer(object):
         # never try.
         if not allow_auto:
             return True, False, \
-                self._message('Automatic clobbering is not enabled\n'
-                              '*   (add "mk_add_options AUTOCLOBBER=1" to your '
+               self._message('Automatic clobbering is not enabled\n'
+                              '  (add "mk_add_options AUTOCLOBBER=1" to your '
                               'mozconfig).')
 
         if cwd.startswith(self.topobjdir) and cwd != self.topobjdir:
@@ -165,10 +156,10 @@ class Clobberer(object):
                 'Error when automatically clobbering: ' + str(error))
 
     def _message(self, reason):
-        lines = ['*  ' + line for line in self.clobber_cause()]
+        lines = [' ' + line for line in self.clobber_cause()]
 
         return CLOBBER_MESSAGE.format(clobber_reason='\n'.join(lines),
-            no_reason=reason, clobber_file=self.obj_clobber)
+            no_reason='  ' + reason, clobber_file=self.obj_clobber)
 
 
 def main(args, env, cwd, fh=sys.stderr):

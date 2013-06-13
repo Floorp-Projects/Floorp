@@ -472,7 +472,7 @@ int VoENetworkImpl::SetSendTOS(int channel,
                  "SetSendTOS(channel=%d, DSCP=%d, useSetSockopt=%d)",
                  channel, DSCP, useSetSockopt);
 
-#if !defined(_WIN32) && !defined(WEBRTC_LINUX) && !defined(WEBRTC_MAC)
+#if !defined(_WIN32) && !defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD) && !defined(WEBRTC_MAC)
     _shared->SetLastError(VE_FUNC_NOT_SUPPORTED, kTraceWarning,
         "SetSendTOS() is not supported on this platform");
     return -1;
@@ -528,7 +528,7 @@ int VoENetworkImpl::SetSendTOS(int channel,
             "SetSendTOS() external transport is enabled");
         return -1;
     }
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
     useSetSockopt = true;
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "   force useSetSockopt=true since there is no alternative"
@@ -551,7 +551,7 @@ int VoENetworkImpl::GetSendTOS(int channel,
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "GetSendTOS(channel=%d)", channel);
 
-#if !defined(_WIN32) && !defined(WEBRTC_LINUX) && !defined(WEBRTC_MAC)
+#if !defined(_WIN32) && !defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD) && !defined(WEBRTC_MAC)
     _shared->SetLastError(VE_FUNC_NOT_SUPPORTED, kTraceWarning,
         "GetSendTOS() is not supported on this platform");
     return -1;

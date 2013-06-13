@@ -21,7 +21,7 @@
 // For access to standard POSIXish features, use WEBRTC_POSIX instead of a
 // more specific macro.
 #if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX) || \
-    defined(WEBRTC_ANDROID)
+    defined(WEBRTC_ANDROID) || defined(WEBRTC_BSD)
 #define WEBRTC_POSIX
 #endif
 

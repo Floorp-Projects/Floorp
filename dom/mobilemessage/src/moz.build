@@ -14,7 +14,14 @@ EXPORTS.mozilla.dom.mobilemessage += [
     'Types.h',
 ]
 
-if not CONFIG['MOZ_B2G_RIL']:
+if CONFIG['MOZ_B2G_RIL']:
+    EXTRA_JS_MODULES = [
+        'ril/MmsPduHelper.jsm',
+        'ril/WspPduHelper.jsm',
+        'ril/mms_consts.js',
+        'ril/wap_consts.js',
+    ]
+else:
     EXPORTS.mozilla.dom.mobilemessage += [
         'MmsService.h',
         'MobileMessageDatabaseService.h',

@@ -3991,7 +3991,7 @@ CheckDivOrMod(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
         return true;
     }
 
-    return f.failf(expr, "arguments to / or &% must both be double, signed, or unsigned, "
+    return f.failf(expr, "arguments to / or %% must both be double, signed, or unsigned; "
                    "%s and %s are given", lhsType.toChars(), rhsType.toChars());
 }
 
@@ -4025,7 +4025,7 @@ CheckComparison(FunctionCompiler &f, ParseNode *comp, MDefinition **def, Type *t
         return true;
     }
 
-    return f.failf(comp, "arguments to a comparison must both be signed, unsigned or doubles, "
+    return f.failf(comp, "arguments to a comparison must both be signed, unsigned or doubles; "
                    "%s and %s are given", lhsType.toChars(), rhsType.toChars());
 }
 

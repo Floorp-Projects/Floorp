@@ -16,9 +16,4 @@ DISABLED_EXTRA_COMPONENTS =        \
   PermissionPromptService.manifest \
   $(NULL)
 
-EXTRA_JS_MODULES =   \
-  PermissionPromptHelper.jsm \
-  PermissionSettings.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

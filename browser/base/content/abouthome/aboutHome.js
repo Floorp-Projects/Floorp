@@ -144,23 +144,32 @@ const DEFAULT_SNIPPETS_URLS = [
 
 const SNIPPETS_UPDATE_INTERVAL_MS = 86400000; // 1 Day.
 
+// This global tracks if the page has been set up before, to prevent double inits
+let gInitialized = false;
 let gObserver = new MutationObserver(function (mutations) {
   for (let mutation of mutations) {
     if (mutation.attributeName == "searchEngineURL") {
-      gObserver.disconnect();
       setupSearchEngine();
-      ensureSnippetsMapThen(loadSnippets);
+      if (!gInitialized) {
+        ensureSnippetsMapThen(loadSnippets);
+        gInitialized = true;
+      }
       return;
     }
   }
 });
 
-window.addEventListener("load", function () {
+window.addEventListener("pageshow", function () {
   // Delay search engine setup, cause browser.js::BrowserOnAboutPageLoad runs
   // later and may use asynchronous getters.
   window.gObserver.observe(document.documentElement, { attributes: true });
   fitToWidth();
   window.addEventListener("resize", fitToWidth);
+});
+
+window.addEventListener("pagehide", function() {
+  window.gObserver.disconnect();
+  window.removeEventListener("resize", fitToWidth);
 });
 
 // This object has the same interface as Map and is used to store and retrieve
