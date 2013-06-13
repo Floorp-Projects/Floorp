@@ -7,7 +7,7 @@
 const events = require("sdk/dom/events");
 const { activeBrowserWindow: { document } } = require("sdk/deprecated/window-utils");
 const window = document.window;
-
+/*
 exports["test on / emit"] = function (assert, done) {
   let element = document.createElement("div");
   events.on(element, "click", function listener(event) {
@@ -84,5 +84,5 @@ exports["test once"] = function (assert, done) {
 
   events.emit(element, "click", options);
 }
-
+*/
 require("test").run(exports);
