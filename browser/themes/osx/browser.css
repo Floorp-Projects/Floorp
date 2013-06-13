@@ -449,6 +449,11 @@ toolbarbutton.bookmark-item > menupopup {
     list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
   }
 
+  #PanelUI-contents[type="grid"] toolbarbutton:-moz-any(@primaryToolbarButtons@),
+  #customization-palette toolbarbutton:-moz-any(@primaryToolbarButtons@) {
+    list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons@2x.png);
+  }
+
   :-moz-any(@primaryToolbarButtons@):not(#tabview-button) > .toolbarbutton-icon,
   :-moz-any(@primaryToolbarButtons@):not(#tabview-button) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
     width: 20px;
