@@ -1121,7 +1121,6 @@ js_HandleExecutionInterrupt(JSContext *cx)
 JSContext::JSContext(JSRuntime *rt)
   : ContextFriendFields(rt),
     defaultVersion(JSVERSION_DEFAULT),
-    hasVersionOverride(false),
     throwing(false),
     exception(UndefinedValue()),
     options_(0),
