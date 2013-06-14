@@ -49,6 +49,10 @@ class FullParseHandler
     LazyScript * const lazyOuterFunction_;
     size_t lazyInnerFunctionIndex;
 
+    const TokenPos &pos() {
+        return tokenStream.currentToken().pos;
+    }
+
   public:
 
     /*
@@ -100,7 +104,7 @@ class FullParseHandler
         return dn;
     }
     ParseNode *newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
-        ParseNode *pn = NullaryNode::create(kind, this);
+        ParseNode *pn = new_<NullaryNode>(kind, pos());
         if (!pn)
             return NULL;
         pn->setOp(op);
@@ -108,7 +112,7 @@ class FullParseHandler
         return pn;
     }
     ParseNode *newNumber(double value, DecimalPoint decimalPoint = NoDecimal) {
-        ParseNode *pn = NullaryNode::create(PNK_NUMBER, this);
+        ParseNode *pn = new_<NullaryNode>(PNK_NUMBER, pos());
         if (!pn)
             return NULL;
         pn->initNumber(value, decimalPoint);
@@ -130,8 +134,8 @@ class FullParseHandler
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
 
-    ParseNode *newNullary(ParseNodeKind kind) {
-        return NullaryNode::create(kind, this);
+    ParseNode *newElision() {
+        return new_<NullaryNode>(PNK_ELISION, pos());
     }
 
     ParseNode *newUnary(ParseNodeKind kind, ParseNode *kid, JSOp op = JSOP_NOP) {

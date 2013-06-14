@@ -3088,8 +3088,7 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
 
     if (left->isKind(PNK_ARRAY)) {
         for (ParseNode *pn = left->pn_head; pn; pn = pn->pn_next) {
-            /* Nullary comma is an elision; binary comma is an expression.*/
-            if (!pn->isArrayHole()) {
+            if (!pn->isKind(PNK_ELISION)) {
                 if (pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT)) {
                     ok = checkDestructuring(data, pn, false);
                 } else {
@@ -6618,9 +6617,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     break;
 
                 if (tt == TOK_COMMA) {
-                    /* So CURRENT_TOKEN gets TOK_COMMA and not TOK_LB. */
                     tokenStream.matchToken(TOK_COMMA);
-                    pn2 = handler.newNullary(PNK_COMMA);
+                    pn2 = handler.newElision();
                     if (!pn2)
                         return null();
                     handler.setListFlag(pn, PNX_SPECIALARRAYINIT | PNX_NONCONST);
