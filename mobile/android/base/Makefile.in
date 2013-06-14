@@ -213,6 +213,7 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
+  home/BookmarksListView.java \
   home/BookmarksPage.java \
   home/BookmarkFolderView.java \
   home/HomeFragment.java \

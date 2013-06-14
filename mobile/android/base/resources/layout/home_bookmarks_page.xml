@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.home.HomeListView xmlns:android="http://schemas.android.com/apk/res/android"
-                                     android:id="@+id/bookmarks_list"
-                                     android:layout_width="fill_parent"
-                                     android:layout_height="fill_parent"/>
+<org.mozilla.gecko.home.BookmarksListView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/bookmarks_list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"/>
