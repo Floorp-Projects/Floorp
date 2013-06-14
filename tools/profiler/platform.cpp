@@ -391,6 +391,8 @@ const char** mozilla_sampler_get_features()
     "js",
     // Profile the registered secondary threads.
     "threads",
+    // Do not include user-identifiable information
+    "privacy",
     NULL
   };
 
@@ -423,7 +425,7 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
 
   tlsTicker.set(t);
   t->Start();
-  if (t->ProfileJS()) {
+  if (t->ProfileJS() || t->InPrivacyMode()) {
       mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
       std::vector<ThreadInfo*> threads = t->GetRegisteredThreads();
 
@@ -433,7 +435,12 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
         if (!thread_profile) {
           continue;
         }
-        thread_profile->GetPseudoStack()->enableJSSampling();
+        if (t->ProfileJS()) {
+          thread_profile->GetPseudoStack()->enableJSSampling();
+        }
+        if (t->InPrivacyMode()) {
+          thread_profile->GetPseudoStack()->mPrivacyMode = true;
+        }
       }
   }
 
