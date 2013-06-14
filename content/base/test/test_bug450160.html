@@ -32,9 +32,9 @@ function testHTMLDocuments(ids, isXHTML) {
     is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
     ok(!doc1.documentElement, "Document shouldn't have document element!");
     is(doc1.body, null, "Shouldn't have .body!");
-    ok(doc1 instanceof SpecialPowers.Ci.nsIDOMHTMLDocument,
+    ok(doc1 instanceof HTMLDocument,
        "Document should be an HTML document!");
-    ok(!(doc1 instanceof SpecialPowers.Ci.nsIDOMSVGDocument),
+    ok(!(doc1 instanceof SVGDocument),
        "Document shouldn't be an SVG document!");
 
     var docType2 =
@@ -68,9 +68,9 @@ function testSVGDocument() {
   var doc1 = document.implementation.createDocument(null, null, docType1);
   is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
   ok(!doc1.documentElement, "Document shouldn't have document element!");
-  ok(!(doc1 instanceof SpecialPowers.Ci.nsIDOMHTMLDocument),
+  ok(!(doc1 instanceof HTMLDocument),
      "Document shouldn't be an HTML document!");
-  ok(doc1 instanceof SpecialPowers.Ci.nsIDOMSVGDocument,
+  ok(doc1 instanceof SVGDocument,
      "Document should be an SVG document!");
 
   // SVG documents have .rootElement.
@@ -95,9 +95,9 @@ function testFooBarDocument() {
   var doc1 = document.implementation.createDocument(null, null, docType1);
   is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
   ok(!doc1.documentElement, "Document shouldn't have document element!");
-  ok(!(doc1 instanceof SpecialPowers.Ci.nsIDOMHTMLDocument),
+  ok(!(doc1 instanceof HTMLDocument),
      "Document shouldn't be an HTML document!");
-  ok(!(doc1 instanceof SpecialPowers.Ci.nsIDOMSVGDocument),
+  ok(!(doc1 instanceof SVGDocument),
      "Document shouldn't be an SVG document!");
 
   var docType2 =
@@ -112,9 +112,9 @@ function testFooBarDocument() {
 function testNullDocTypeDocument() {
   var doc1 = document.implementation.createDocument(null, null, null);
   ok(!doc1.documentElement, "Document shouldn't have document element!");
-  ok(!(doc1 instanceof SpecialPowers.Ci.nsIDOMHTMLDocument),
+  ok(!(doc1 instanceof HTMLDocument),
      "Document shouldn't be an HTML document!");
-  ok(!(doc1 instanceof SpecialPowers.Ci.nsIDOMSVGDocument),
+  ok(!(doc1 instanceof SVGDocument),
      "Document shouldn't be an SVG document!");
 
   var doc2 = document.implementation.createDocument("FooBarNS",
