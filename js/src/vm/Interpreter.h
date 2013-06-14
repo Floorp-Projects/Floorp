@@ -164,31 +164,6 @@ ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, const Va
 extern bool
 Execute(JSContext *cx, HandleScript script, JSObject &scopeChain, Value *rval);
 
-/* Flags to toggle js::Interpret() execution. */
-enum InterpMode
-{
-    JSINTERP_NORMAL    = 0, /* interpreter is running normally */
-    JSINTERP_REJOIN    = 1, /* as normal, but the frame has already started */
-    JSINTERP_SKIP_TRAP = 2, /* as REJOIN, but skip trap at first opcode */
-    JSINTERP_BAILOUT   = 3, /* interpreter is running from an Ion bailout */
-    JSINTERP_RETHROW   = 4  /* as BAILOUT, but unwind all frames */
-};
-
-enum InterpretStatus
-{
-    Interpret_Error    = 0, /* interpreter had an error */
-    Interpret_Ok       = 1, /* interpreter executed successfully */
-    Interpret_OSR      = 2  /* when mode=BAILOUT and we should OSR into Ion */
-};
-
-/*
- * Execute the caller-initialized frame for a user-defined script or function
- * pointed to by cx->fp until completion or error.
- */
-extern JS_NEVER_INLINE InterpretStatus
-Interpret(JSContext *cx, StackFrame *stopFp, InterpMode mode = JSINTERP_NORMAL,
-          bool useNewType = false);
-
 extern bool
 RunScript(JSContext *cx, StackFrame *fp);
 
