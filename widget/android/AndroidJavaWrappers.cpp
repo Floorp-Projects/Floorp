@@ -939,7 +939,7 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const ScreenPoint& aScrollOffset, floa
     // convert the displayport rect from scroll-relative CSS pixels to document-relative device pixels
     LayerRect dpUnrounded = LayerRect::FromCSSRect(aDisplayPort, aDisplayResolution, aDisplayResolution);
     dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset.ToUnknownPoint());
-    LayerIntRect dp = LayerRect::RoundToInt(dpUnrounded);
+    LayerIntRect dp = gfx::RoundedToInt(dpUnrounded);
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncFrameMetricsMethod,
             aScrollOffset.x, aScrollOffset.y, aZoom,
