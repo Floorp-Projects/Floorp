@@ -292,9 +292,6 @@ class FullParseHandler
         }
         return NULL;
     }
-    bool isEmptySemicolon(ParseNode *pn) {
-        return pn->isKind(PNK_SEMI) && !pn->pn_kid;
-    }
 
     inline ParseNode *makeAssignment(ParseNode *pn, ParseNode *rhs);
 
