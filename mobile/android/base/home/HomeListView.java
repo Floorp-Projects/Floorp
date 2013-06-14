@@ -13,7 +13,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MotionEvent;
 import android.view.View;
+
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
@@ -40,6 +42,16 @@ public class HomeListView extends ListView
         super(context, attrs, defStyle);
 
         setOnItemLongClickListener(this);
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent event) {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            // take focus away from awesome bar to hide the keyboard
+            requestFocus();
+        }
+
+        return false;
     }
 
     @Override
