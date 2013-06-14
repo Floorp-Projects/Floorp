@@ -24,7 +24,6 @@ skip-if(cocoaWidget) != textbox-accesskey-4.xul textbox-accesskey-4-notref.xul
 skip-if(B2G) fails-if(Android) == textbox-setsize.xul textbox-setsize-ref.xul
 
 == radio-label-dynamic.html radio-label-dynamic-ref.html
-skip-if(B2G) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
 != indeterminate-checked.html indeterminate-checked-notref.html
 != indeterminate-unchecked.html indeterminate-unchecked-notref.html
 != indeterminate-native-checked.html indeterminate-native-checked-notref.html
@@ -44,11 +43,6 @@ skip-if(B2G) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref
 != checkbox-checked-native-notref.html about:blank
 != radio-checked-native.html about:blank
 != radio-checked-native-notref.html about:blank
-
-skip-if(B2G) == select-multiple.html select-multiple-ref.html
-== select-boguskids.html select-boguskids-ref.html
-== select-dynamic-boguskids.html select-boguskids-ref.html
-== select-option-children.html select-option-children-ref.html
 
 asserts(2) == button-first-letter-1.html button-first-letter-1-ref.html
 asserts(1) != button-first-letter-1.html button-first-letter-1-noref.html
@@ -70,6 +64,9 @@ include output/reftest.list
 
 # progress element
 include progress/reftest.list
+
+# select element
+include select/reftest.list
 
 # textarea element
 include textarea/reftest.list
