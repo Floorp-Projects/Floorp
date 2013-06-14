@@ -1524,7 +1524,7 @@ static JSTrapStatus
 TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
             jsval closure)
 {
-    JSString *str = JSVAL_TO_STRING(closure);
+    RootedString str(cx, JSVAL_TO_STRING(closure));
     RootedValue rval(cx, *rvalArg);
 
     ScriptFrameIter iter(cx);
