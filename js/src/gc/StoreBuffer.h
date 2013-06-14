@@ -181,6 +181,8 @@ class StoreBuffer
 
         /* Add one item to the buffer. */
         void put(const T &v) {
+            JS_ASSERT(!owner->inParallelSection());
+
             /* Check if we have been enabled. */
             if (!pos)
                 return;
@@ -229,6 +231,7 @@ class StoreBuffer
 
         /* Record a removal from the buffer. */
         void unput(const T &v) {
+            JS_ASSERT(!this->owner->inParallelSection());
             MonoTypeBuffer<T>::put(v.tagged());
         }
     };
@@ -261,6 +264,8 @@ class StoreBuffer
 
         template <typename T>
         void put(const T &t) {
+            JS_ASSERT(!owner->inParallelSection());
+
             /* Check if we have been enabled. */
             if (!pos)
                 return;
@@ -376,19 +381,19 @@ class StoreBuffer
         void mark(JSTracer *trc);
     };
 
-    class WholeObjectEdges
+    class WholeCellEdges
     {
         friend class StoreBuffer;
-        friend class StoreBuffer::MonoTypeBuffer<WholeObjectEdges>;
+        friend class StoreBuffer::MonoTypeBuffer<WholeCellEdges>;
 
-        JSObject *tenured;
+        Cell *tenured;
 
-        WholeObjectEdges(JSObject *obj) : tenured(obj) {
+        WholeCellEdges(Cell *cell) : tenured(cell) {
             JS_ASSERT(tenured->isTenured());
         }
 
-        bool operator==(const WholeObjectEdges &other) const { return tenured == other.tenured; }
-        bool operator!=(const WholeObjectEdges &other) const { return tenured != other.tenured; }
+        bool operator==(const WholeCellEdges &other) const { return tenured == other.tenured; }
+        bool operator!=(const WholeCellEdges &other) const { return tenured != other.tenured; }
 
         template <typename NurseryType>
         bool inRememberedSet(NurseryType *nursery) const { return true; }
@@ -404,7 +409,7 @@ class StoreBuffer
     MonoTypeBuffer<ValueEdge> bufferVal;
     MonoTypeBuffer<CellPtrEdge> bufferCell;
     MonoTypeBuffer<SlotEdge> bufferSlot;
-    MonoTypeBuffer<WholeObjectEdges> bufferWholeObject;
+    MonoTypeBuffer<WholeCellEdges> bufferWholeCell;
     RelocatableMonoTypeBuffer<ValueEdge> bufferRelocVal;
     RelocatableMonoTypeBuffer<CellPtrEdge> bufferRelocCell;
     GenericBuffer bufferGeneric;
@@ -424,18 +429,18 @@ class StoreBuffer
     static const size_t ValueBufferSize = 1 * 1024 * sizeof(ValueEdge);
     static const size_t CellBufferSize = 2 * 1024 * sizeof(CellPtrEdge);
     static const size_t SlotBufferSize = 2 * 1024 * sizeof(SlotEdge);
-    static const size_t WholeObjectBufferSize = 2 * 1024 * sizeof(WholeObjectEdges);
+    static const size_t WholeCellBufferSize = 2 * 1024 * sizeof(WholeCellEdges);
     static const size_t RelocValueBufferSize = 1 * 1024 * sizeof(ValueEdge);
     static const size_t RelocCellBufferSize = 1 * 1024 * sizeof(CellPtrEdge);
     static const size_t GenericBufferSize = 1 * 1024 * sizeof(int);
     static const size_t TotalSize = ValueBufferSize + CellBufferSize +
-                                    SlotBufferSize + WholeObjectBufferSize +
+                                    SlotBufferSize + WholeCellBufferSize +
                                     RelocValueBufferSize + RelocCellBufferSize +
                                     GenericBufferSize;
 
   public:
     explicit StoreBuffer(JSRuntime *rt)
-      : bufferVal(this), bufferCell(this), bufferSlot(this), bufferWholeObject(this),
+      : bufferVal(this), bufferCell(this), bufferSlot(this), bufferWholeCell(this),
         bufferRelocVal(this), bufferRelocCell(this), bufferGeneric(this),
         runtime(rt), buffer(NULL), aboutToOverflow(false), overflowed(false),
         enabled(false)
@@ -461,8 +466,8 @@ class StoreBuffer
     void putSlot(JSObject *obj, HeapSlot::Kind kind, uint32_t slot) {
         bufferSlot.put(SlotEdge(obj, kind, slot));
     }
-    void putWholeObject(JSObject *obj) {
-        bufferWholeObject.put(WholeObjectEdges(obj));
+    void putWholeCell(Cell *cell) {
+        bufferWholeCell.put(WholeCellEdges(cell));
     }
 
     /* Insert or update a single edge in the Relocatable buffer. */
@@ -492,6 +497,9 @@ class StoreBuffer
     bool coalesceForVerification();
     void releaseVerificationData();
     bool containsEdgeAt(void *loc) const;
+
+    /* We cannot call InParallelSection directly because of a circular dependency. */
+    bool inParallelSection() const;
 
     /* For use by our owned buffers and for testing. */
     void setAboutToOverflow();

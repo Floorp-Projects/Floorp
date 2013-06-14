@@ -23,32 +23,49 @@ var SelectHelper = {
 
   show: function(aElement) {
     let list = this.getListForElement(aElement);
-    let data = JSON.parse(sendMessageToJava(list));
-    let selected = data.button;
-    if (selected == -1)
-        return;
 
-    var changed = false;
-    if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
-      aElement.selectedIndex = selected;
-    } else if (aElement instanceof HTMLSelectElement) {
-      if (!(selected instanceof Array)) {
-        let temp = [];
-        for (let i = 0; i < list.listitems.length; i++) {
-          temp[i] = (i == selected);
-        }
-        selected = temp;
-      }
-      let i = 0;
-      this.forOptions(aElement, function(aNode) {
-        if (aNode.selected != selected[i])
-          changed = true;
-        aNode.selected = selected[i++];
-      });
+    let p = new Prompt({
+      window: aElement.contentDocument
+    });
+
+    if (aElement.multiple) {
+      p.addButton({
+        label: Strings.browser.GetStringFromName("selectHelper.closeMultipleSelectDialog")
+      }).setMultiChoiceItems(list);
+    } else {
+      p.setSingleChoiceItems(list);
     }
 
-    if (changed)
-      this.fireOnChange(aElement);
+    p.show((function(data) {
+      let selected = data.button;
+      if (selected == -1)
+          return;
+
+      let changed = false;
+      if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
+        aElement.selectedIndex = selected;
+      } else if (aElement instanceof HTMLSelectElement) {
+        if (!Array.isArray(selected)) {
+          let temp = [];
+          for (let i = 0; i <= list.length; i++) {
+            temp[i] = (i == selected);
+          }
+          selected = temp;
+        }
+
+        let i = 0;
+        this.forOptions(aElement, function(aNode) {
+          if (aNode.selected != selected[i]) {
+            changed = true;
+            aNode.selected = selected[i];
+          }
+          i++
+        });
+      }
+
+      if (changed)
+        this.fireOnChange(aElement);
+    }).bind(this));
   },
 
   _isMenu: function(aElement) {
@@ -57,70 +74,48 @@ var SelectHelper = {
   },
 
   getListForElement: function(aElement) {
-    let result = {
-      type: "Prompt:Show",
-      multiple: aElement.multiple,
-      selected: [],
-      listitems: []
-    };
-
-    if (aElement.multiple) {
-      result.buttons = [
-        Strings.browser.GetStringFromName("selectHelper.closeMultipleSelectDialog")
-      ];
-    }
-
     let index = 0;
-    this.forOptions(aElement, function(aNode, aOptions) {
+    let items = [];
+    this.forOptions(aElement, function(aNode, aOptions, aParent) {
       let item = {
         label: aNode.text || aNode.label,
-        isGroup: aOptions.isGroup,
-        inGroup: aOptions.inGroup,
+        header: aOptions.isGroup,
         disabled: aNode.disabled,
-        id: index
+        id: index,
+        selected: aNode.selected
       }
-      if (aOptions.inGroup)
-        item.disabled = item.disabled || aNode.parentNode.disabled;
 
-      result.listitems[index] = item;
-      result.selected[index] = aNode.selected;
+      if (aParent) {
+        item.child = true;
+        item.disabled = item.disabled || aParent.disabled;
+      }
+      items.push(item);
+
       index++;
     });
-    return result;
+    return items;
   },
 
-  forOptions: function(aElement, aFunction) {
-    let parent = aElement;
+  forOptions: function(aElement, aFunction, aParent = null) {
+    let element = aElement;
     if (aElement instanceof Ci.nsIDOMXULMenuListElement)
-      parent = aElement.menupopup;
-    let children = parent.children;
+      element = aElement.menupopup;
+    let children = element.children;
     let numChildren = children.length;
 
     // if there are no children in this select, we add a dummy row so that at least something appears
     if (numChildren == 0)
-      aFunction.call(this, { label: "" }, { isGroup: false, inGroup: false });
+      aFunction.call(this, { label: "" }, { isGroup: false }, aParent);
 
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
       if (child instanceof HTMLOptionElement ||
           child instanceof Ci.nsIDOMXULSelectControlItemElement) {
-        // This is a regular choice under no group.
-        aFunction.call(this, child, {
-          isGroup: false, inGroup: false
-        });
+        aFunction.call(this, child, { isGroup: false }, aParent);
       } else if (child instanceof HTMLOptGroupElement) {
-        aFunction.call(this, child, {
-          isGroup: true, inGroup: false
-        });
+        aFunction.call(this, child, { isGroup: true });
+        this.forOptions(child, aFunction, child);
 
-        let subchildren = child.children;
-        let numSubchildren = subchildren.length;
-        for (let j = 0; j < numSubchildren; j++) {
-          let subchild = subchildren[j];
-          aFunction.call(this, subchild, {
-            isGroup: false, inGroup: true
-          });
-        }
       }
     }
   },

@@ -99,8 +99,8 @@ this.Sandbox.prototype = {
     docShell.allowAuth = false;
     docShell.allowPlugins = false;
     docShell.allowImages = false;
+    docShell.allowMedia = false;
     docShell.allowWindowControl = false;
-    // TODO: disable media (bug 759964)
 
     // Disable stylesheet loading since the document is not visible.
     let markupDocViewer = docShell.contentViewer
