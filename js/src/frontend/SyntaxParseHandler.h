@@ -90,13 +90,15 @@ class SyntaxParseHandler
                            ParseContext<SyntaxParseHandler> *pc, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
-    void setBinaryRHS(Node pn, Node rhs) {}
 
     Node newTernary(ParseNodeKind kind, Node first, Node second, Node third, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
 
     Node newLabeledStatement(PropertyName *label, Node stmt, uint32_t begin) {
+        return NodeGeneric;
+    }
+    Node newCaseOrDefault(uint32_t begin, Node expr, Node body) {
         return NodeGeneric;
     }
     Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
