@@ -259,6 +259,8 @@ class nsStyleSet
   nsresult InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
                                   nsIStyleSheet *aReferenceSheet);
 
+  nsresult DirtyRuleProcessors(sheetType aType);
+
   // Enable/Disable entire author style level (Doc, ScopedDoc & PresHint levels)
   bool GetAuthorStyleDisabled();
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
