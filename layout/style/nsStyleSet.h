@@ -394,6 +394,9 @@ class nsStyleSet
 
   // The sheets in each array in mSheets are stored with the most significant
   // sheet last.
+  // The arrays for ePresHintSheet, eStyleAttrSheet, eTransitionSheet,
+  // and eAnimationSheet are always empty.  (FIXME:  We should reduce
+  // the storage needed for them.)
   nsCOMArray<nsIStyleSheet> mSheets[eSheetTypeCount];
 
   // mRuleProcessors[eScopedDocSheet] is always null; rule processors
