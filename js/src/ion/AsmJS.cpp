@@ -1501,9 +1501,8 @@ class MOZ_STACK_CLASS ModuleCompiler
                 JSAutoByteString name;
                 if (!js_AtomToPrintableString(cx_, func.name, &name))
                     return;
-                slowFuns.reset(JS_smprintf("%s%s:%u:%u (%ums, %g%%)%s", slowFuns.get(),
+                slowFuns.reset(JS_smprintf("%s%s:%u:%u (%ums)%s", slowFuns.get(),
                                            name.ptr(), func.line, func.column, func.ms,
-                                           double(func.ms)/double(msTotal),
                                            i+1 < slowFunctions_.length() ? ", " : ""));
                 if (!slowFuns)
                     return;
