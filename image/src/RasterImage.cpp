@@ -49,6 +49,8 @@
 #include "GeckoProfiler.h"
 #include <algorithm>
 
+#include "pixman.h"
+
 using namespace mozilla;
 using namespace mozilla::image;
 using namespace mozilla::layers;
@@ -2245,103 +2247,92 @@ RasterImage::DoComposite(nsIntRect* aDirtyRect,
 //******************************************************************************
 // Fill aFrame with black. Does also clears the mask.
 void
-RasterImage::ClearFrame(imgFrame *aFrame)
+RasterImage::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect)
 {
-  if (!aFrame)
+  if (!aFrameData)
     return;
 
-  nsresult rv = aFrame->LockImageData();
-  if (NS_FAILED(rv))
-    return;
+  memset(aFrameData, 0, aFrameRect.width * aFrameRect.height * 4);
+}
 
-  nsRefPtr<gfxASurface> surf;
-  aFrame->GetSurface(getter_AddRefs(surf));
-
-  // Erase the surface to transparent
-  gfxContext ctx(surf);
-  ctx.SetOperator(gfxContext::OPERATOR_CLEAR);
-  ctx.Paint();
-
-  aFrame->UnlockImageData();
+void
+RasterImage::ClearFrame(imgFrame* aFrame)
+{
+  AutoFrameLocker lock(aFrame);
+  if (lock.Succeeded()) {
+    ClearFrame(aFrame->GetImageData(), aFrame->GetRect());
+  }
 }
 
 //******************************************************************************
 void
-RasterImage::ClearFrame(imgFrame *aFrame, nsIntRect &aRect)
+RasterImage::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect, const nsIntRect& aRectToClear)
 {
-  if (!aFrame || aRect.width <= 0 || aRect.height <= 0)
+  if (!aFrameData || aFrameRect.width <= 0 || aFrameRect.height <= 0 ||
+      aRectToClear.width <= 0 || aRectToClear.height <= 0) {
     return;
+  }
 
-  nsresult rv = aFrame->LockImageData();
-  if (NS_FAILED(rv))
+  nsIntRect toClear = aFrameRect.Intersect(aRectToClear);
+  if (toClear.IsEmpty()) {
     return;
+  }
 
-  nsRefPtr<gfxASurface> surf;
-  aFrame->GetSurface(getter_AddRefs(surf));
-
-  // Erase the destination rectangle to transparent
-  gfxContext ctx(surf);
-  ctx.SetOperator(gfxContext::OPERATOR_CLEAR);
-  ctx.Rectangle(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
-  ctx.Fill();
-
-  aFrame->UnlockImageData();
+  uint32_t bytesPerRow = aFrameRect.width * 4;
+  for (int row = toClear.y; row < toClear.height; ++row) {
+    memset(aFrameData + toClear.x * 4 + row * bytesPerRow, 0, toClear.width * 4);
+  }
 }
 
+void
+RasterImage::ClearFrame(imgFrame* aFrame, const nsIntRect& aRectToClear)
+{
+  AutoFrameLocker lock(aFrame);
+  if (lock.Succeeded()) {
+    ClearFrame(aFrame->GetImageData(), aFrame->GetRect(), aRectToClear);
+  }
+}
 
 //******************************************************************************
 // Whether we succeed or fail will not cause a crash, and there's not much
 // we can do about a failure, so there we don't return a nsresult
 bool
-RasterImage::CopyFrameImage(imgFrame *aSrcFrame,
-                            imgFrame *aDstFrame)
+RasterImage::CopyFrameImage(uint8_t *aDataSrc, const nsIntRect& aRectSrc,
+                            uint8_t *aDataDest, const nsIntRect& aRectDest)
 {
-  uint8_t* aDataSrc;
-  uint8_t* aDataDest;
-  uint32_t aDataLengthSrc;
-  uint32_t aDataLengthDest;
+  uint32_t dataLengthSrc = aRectSrc.width * aRectSrc.height * 4;
+  uint32_t dataLengthDest = aRectDest.width * aRectDest.height * 4;
 
-  if (!aSrcFrame || !aDstFrame)
-    return false;
-
-  AutoFrameLocker dstLock(aDstFrame);
-  AutoFrameLocker srcLock(aSrcFrame);
-
-  if (!srcLock.Succeeded() || !dstLock.Succeeded()) {
+  if (!aDataDest || !aDataSrc || dataLengthSrc != dataLengthDest) {
     return false;
   }
 
-  // Copy Image Over
-  aSrcFrame->GetImageData(&aDataSrc, &aDataLengthSrc);
-  aDstFrame->GetImageData(&aDataDest, &aDataLengthDest);
-  if (!aDataDest || !aDataSrc || aDataLengthDest != aDataLengthSrc) {
-    return false;
-  }
-
-  memcpy(aDataDest, aDataSrc, aDataLengthSrc);
+  memcpy(aDataDest, aDataSrc, dataLengthDest);
 
   return true;
 }
 
-//******************************************************************************
-/*
- * aSrc is the current frame being drawn,
- * aDst is the composition frame where the current frame is drawn into.
- * aSrcRect is the size of the current frame, and the position of that frame
- *          in the composition frame.
- */
-nsresult
-RasterImage::DrawFrameTo(imgFrame *aSrc,
-                         imgFrame *aDst,
-                         nsIntRect& aSrcRect)
+bool
+RasterImage::CopyFrameImage(imgFrame* aSrc, imgFrame* aDst)
 {
-  NS_ENSURE_ARG_POINTER(aSrc);
-  NS_ENSURE_ARG_POINTER(aDst);
+  AutoFrameLocker srclock(aSrc);
+  AutoFrameLocker dstlock(aDst);
+  if (!srclock.Succeeded() || !dstlock.Succeeded()) {
+    return false;
+  }
 
-  AutoFrameLocker srcLock(aSrc);
-  AutoFrameLocker dstLock(aDst);
+  return CopyFrameImage(aSrc->GetImageData(), aSrc->GetRect(),
+                        aDst->GetImageData(), aDst->GetRect());
+}
 
-  nsIntRect dstRect = aDst->GetRect();
+nsresult
+RasterImage::DrawFrameTo(uint8_t *aSrcData, const nsIntRect& aSrcRect,
+                         uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
+                         uint8_t *aDstPixels, const nsIntRect& aDstRect,
+                         FrameBlendMethod aBlendMethod)
+{
+  NS_ENSURE_ARG_POINTER(aSrcData);
+  NS_ENSURE_ARG_POINTER(aDstPixels);
 
   // According to both AGIF and APNG specs, offsets are unsigned
   if (aSrcRect.x < 0 || aSrcRect.y < 0) {
@@ -2349,51 +2340,40 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
     return NS_ERROR_FAILURE;
   }
   // Outside the destination frame, skip it
-  if ((aSrcRect.x > dstRect.width) || (aSrcRect.y > dstRect.height)) {
+  if ((aSrcRect.x > aDstRect.width) || (aSrcRect.y > aDstRect.height)) {
     return NS_OK;
   }
 
-  if (aSrc->GetIsPaletted()) {
+  if (aSrcPaletteLength) {
     // Larger than the destination frame, clip it
-    int32_t width = std::min(aSrcRect.width, dstRect.width - aSrcRect.x);
-    int32_t height = std::min(aSrcRect.height, dstRect.height - aSrcRect.y);
+    int32_t width = std::min(aSrcRect.width, aDstRect.width - aSrcRect.x);
+    int32_t height = std::min(aSrcRect.height, aDstRect.height - aSrcRect.y);
 
     // The clipped image must now fully fit within destination image frame
     NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
-                 (aSrcRect.x + width <= dstRect.width) &&
-                 (aSrcRect.y + height <= dstRect.height),
+                 (aSrcRect.x + width <= aDstRect.width) &&
+                 (aSrcRect.y + height <= aDstRect.height),
                 "RasterImage::DrawFrameTo: Invalid aSrcRect");
 
     // clipped image size may be smaller than source, but not larger
     NS_ASSERTION((width <= aSrcRect.width) && (height <= aSrcRect.height),
                  "RasterImage::DrawFrameTo: source must be smaller than dest");
 
-    if (!srcLock.Succeeded() || !dstLock.Succeeded())
-      return NS_ERROR_FAILURE;
-
     // Get pointers to image data
-    uint32_t size;
-    uint8_t *srcPixels;
-    uint32_t *colormap;
-    uint32_t *dstPixels;
-
-    aSrc->GetImageData(&srcPixels, &size);
-    aSrc->GetPaletteData(&colormap, &size);
-    aDst->GetImageData((uint8_t **)&dstPixels, &size);
-    if (!srcPixels || !dstPixels || !colormap) {
-      return NS_ERROR_FAILURE;
-    }
+    uint8_t *srcPixels = aSrcData + aSrcPaletteLength;
+    uint32_t *dstPixels = reinterpret_cast<uint32_t*>(aDstPixels);
+    uint32_t *colormap = reinterpret_cast<uint32_t*>(aSrcData);
 
     // Skip to the right offset
-    dstPixels += aSrcRect.x + (aSrcRect.y * dstRect.width);
-    if (!aSrc->GetHasAlpha()) {
+    dstPixels += aSrcRect.x + (aSrcRect.y * aDstRect.width);
+    if (!aSrcHasAlpha) {
       for (int32_t r = height; r > 0; --r) {
         for (int32_t c = 0; c < width; c++) {
           dstPixels[c] = colormap[srcPixels[c]];
         }
         // Go to the next row in the source resp. destination image
         srcPixels += aSrcRect.width;
-        dstPixels += dstRect.width;
+        dstPixels += aDstRect.width;
       }
     } else {
       for (int32_t r = height; r > 0; --r) {
@@ -2404,37 +2384,59 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
         }
         // Go to the next row in the source resp. destination image
         srcPixels += aSrcRect.width;
-        dstPixels += dstRect.width;
+        dstPixels += aDstRect.width;
       }
     }
+  } else {
+    pixman_image_t* src = pixman_image_create_bits(aSrcHasAlpha ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
+                                                   aSrcRect.width,
+                                                   aSrcRect.height,
+                                                   reinterpret_cast<uint32_t*>(aSrcData),
+                                                   aSrcRect.width * 4);
+    pixman_image_t* dst = pixman_image_create_bits(PIXMAN_a8r8g8b8,
+                                                   aDstRect.width,
+                                                   aDstRect.height,
+                                                   reinterpret_cast<uint32_t*>(aDstPixels),
+                                                   aDstRect.width * 4);
 
-    return NS_OK;
+    pixman_image_composite32(aBlendMethod == kBlendSource ? PIXMAN_OP_SRC : PIXMAN_OP_OVER,
+                             src,
+                             nullptr,
+                             dst,
+                             0, 0,
+                             0, 0,
+                             aSrcRect.x, aSrcRect.y,
+                             aDstRect.width, aDstRect.height);
+
+    pixman_image_unref(src);
+    pixman_image_unref(dst);
   }
-
-  nsRefPtr<gfxPattern> srcPatt;
-  aSrc->GetPattern(getter_AddRefs(srcPatt));
-
-  nsRefPtr<gfxASurface> dstSurf;
-  aDst->GetSurface(getter_AddRefs(dstSurf));
-
-  gfxContext dst(dstSurf);
-  dst.Translate(gfxPoint(aSrcRect.x, aSrcRect.y));
-  dst.Rectangle(gfxRect(0, 0, aSrcRect.width, aSrcRect.height), true);
-
-  // first clear the surface if the blend flag says so
-  int32_t blendMethod = aSrc->GetBlendMethod();
-  if (blendMethod == kBlendSource) {
-    gfxContext::GraphicsOperator defaultOperator = dst.CurrentOperator();
-    dst.SetOperator(gfxContext::OPERATOR_CLEAR);
-    dst.Fill();
-    dst.SetOperator(defaultOperator);
-  }
-  dst.SetPattern(srcPatt);
-  dst.Paint();
 
   return NS_OK;
 }
 
+nsresult
+RasterImage::DrawFrameTo(imgFrame* aSrc, imgFrame* aDst, const nsIntRect& aSrcRect)
+{
+  AutoFrameLocker srclock(aSrc);
+  AutoFrameLocker dstlock(aDst);
+  if (!srclock.Succeeded() || !dstlock.Succeeded()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aSrc->GetIsPaletted()) {
+    return DrawFrameTo(reinterpret_cast<uint8_t*>(aSrc->GetPaletteData()),
+                       aSrcRect, aSrc->PaletteDataLength(),
+                       aSrc->GetHasAlpha(), aDst->GetImageData(),
+                       aDst->GetRect(),
+                       FrameBlendMethod(aSrc->GetBlendMethod()));
+  }
+
+  return DrawFrameTo(aSrc->GetImageData(), aSrcRect,
+                     0, aSrc->GetHasAlpha(),
+                     aDst->GetImageData(), aDst->GetRect(),
+                     FrameBlendMethod(aSrc->GetBlendMethod()));
+}
 
 /********* Methods to implement lazy allocation of nsIProperties object *************/
 NS_IMETHODIMP
