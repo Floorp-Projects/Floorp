@@ -102,12 +102,6 @@ struct LayerPixel {
   static gfx::IntRectTyped<LayerPixel> FromCSSRectRounded(const CSSRect& aRect, float aResolutionX, float aResolutionY) {
     return RoundToInt(FromCSSRect(aRect, aResolutionX, aResolutionY));
   }
-
-  static CSSIntRect ToCSSIntRectRoundIn(const gfx::IntRectTyped<LayerPixel>& aRect, float aResolutionX, float aResolutionY) {
-    gfx::IntRectTyped<CSSPixel> ret(aRect.x, aRect.y, aRect.width, aRect.height);
-    ret.ScaleInverseRoundIn(aResolutionX, aResolutionY);
-    return ret;
-  }
 };
 
 typedef gfx::PointTyped<LayerPixel> LayerPoint;
@@ -130,12 +124,20 @@ struct ScreenPixel {
     return CSSPoint(aPoint.x * aResolutionX,
                     aPoint.y * aResolutionY);
   }
+
+  static CSSIntRect ToCSSIntRectRoundIn(const gfx::IntRectTyped<ScreenPixel>& aRect, float aResolutionX, float aResolutionY) {
+    gfx::IntRectTyped<CSSPixel> ret(aRect.x, aRect.y, aRect.width, aRect.height);
+    ret.ScaleInverseRoundIn(aResolutionX, aResolutionY);
+    return ret;
+  }
 };
 
 typedef gfx::PointTyped<ScreenPixel> ScreenPoint;
 typedef gfx::IntPointTyped<ScreenPixel> ScreenIntPoint;
 typedef gfx::SizeTyped<ScreenPixel> ScreenSize;
 typedef gfx::IntSizeTyped<ScreenPixel> ScreenIntSize;
+typedef gfx::RectTyped<ScreenPixel> ScreenRect;
+typedef gfx::IntRectTyped<ScreenPixel> ScreenIntRect;
 
 };
 

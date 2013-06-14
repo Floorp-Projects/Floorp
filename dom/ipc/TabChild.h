@@ -441,7 +441,7 @@ private:
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
     uint32_t mChromeFlags;
     nsIntRect mOuterRect;
-    nsIntSize mInnerSize;
+    ScreenIntSize mInnerSize;
     // When we're tracking a possible tap gesture, this is the "down"
     // point of the touchstart.
     nsIntPoint mGestureDownPoint;
