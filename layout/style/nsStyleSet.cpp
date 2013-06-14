@@ -30,6 +30,8 @@
 #include "nsStyleSheetService.h"
 #include "mozilla/dom/Element.h"
 #include "GeckoProfiler.h"
+#include "nsHTMLCSSStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -318,19 +320,28 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
     // elements later if mAuthorStyleDisabled.
     return NS_OK;
   }
-  if (aType == eAnimationSheet) {
-    // We have no sheet for the animations level; just a rule
-    // processor.  (XXX: We should probably do this for the other
-    // non-CSS levels too!)
-    mRuleProcessors[aType] = PresContext()->AnimationManager();
-    return NS_OK;
-  }
-  if (aType == eTransitionSheet) {
-    // We have no sheet for the transitions level; just a rule
-    // processor.  (XXX: We should probably do this for the other
-    // non-CSS levels too!)
-    mRuleProcessors[aType] = PresContext()->TransitionManager();
-    return NS_OK;
+  switch (aType) {
+    // handle the types for which have a rule processor that does not
+    // implement the style sheet interface.
+    case eAnimationSheet:
+      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      mRuleProcessors[aType] = PresContext()->AnimationManager();
+      return NS_OK;
+    case eTransitionSheet:
+      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      mRuleProcessors[aType] = PresContext()->TransitionManager();
+      return NS_OK;
+    case eStyleAttrSheet:
+      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      mRuleProcessors[aType] = PresContext()->Document()->GetInlineStyleSheet();
+      return NS_OK;
+    case ePresHintSheet:
+      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      mRuleProcessors[aType] = PresContext()->Document()->GetAttributeStyleSheet();
+      return NS_OK;
+    default:
+      // keep going
+      break;
   }
   if (aType == eScopedDocSheet) {
     // Create a rule processor for each scope.

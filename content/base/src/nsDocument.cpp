@@ -2234,12 +2234,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   // Now reset our inline style and attribute sheets.
   if (mAttrStyleSheet) {
-    // Remove this sheet from all style sets
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      shell->StyleSet()->RemoveStyleSheet(nsStyleSet::ePresHintSheet,
-                                          mAttrStyleSheet);
-    }
     mAttrStyleSheet->Reset(aURI);
   } else {
     mAttrStyleSheet = new nsHTMLStyleSheet(aURI, this);
@@ -2250,12 +2244,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   mAttrStyleSheet->SetOwningDocument(this);
 
   if (mStyleAttrStyleSheet) {
-    // Remove this sheet from all style sets
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      shell->StyleSet()->
-        RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
-    }
     mStyleAttrStyleSheet->Reset(aURI);
   } else {
     mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet(aURI, this);
@@ -2295,19 +2283,13 @@ void
 nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
 {
   NS_PRECONDITION(aStyleSet, "Must have a style set");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::ePresHintSheet) == 0,
-                  "Style set already has a preshint sheet?");
   NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eDocSheet) == 0,
                   "Style set already has document sheets?");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eStyleAttrSheet) == 0,
-                  "Style set already has style attr sheets?");
-  NS_PRECONDITION(mStyleAttrStyleSheet, "No style attr stylesheet?");
-  NS_PRECONDITION(mAttrStyleSheet, "No attr stylesheet?");
 
-  aStyleSet->AppendStyleSheet(nsStyleSet::ePresHintSheet, mAttrStyleSheet);
-
-  aStyleSet->AppendStyleSheet(nsStyleSet::eStyleAttrSheet,
-                              mStyleAttrStyleSheet);
+  // We could consider moving this to nsStyleSet::Init, to match its
+  // handling of the eAnimationSheet and eTransitionSheet levels.
+  aStyleSet->DirtyRuleProcessors(nsStyleSet::ePresHintSheet);
+  aStyleSet->DirtyRuleProcessors(nsStyleSet::eStyleAttrSheet);
 
   int32_t i;
   for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
