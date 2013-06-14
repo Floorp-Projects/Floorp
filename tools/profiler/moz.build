@@ -28,6 +28,10 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'local_debug_info_symbolizer.cc',
         'JSObjectBuilder.cpp',
         'JSCustomObjectBuilder.cpp',
+        'IOInterposer.cpp',
+        'NSPRInterposer.cpp',
+        'ProfilerIOInterposeObserver.cpp',
+        'SQLiteInterposer.cpp',
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
@@ -48,6 +52,11 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 
 EXPORTS += [
     'GeckoProfiler.h',
+]
+
+EXPORTS.mozilla += [
+    'IOInterposer.h',
+    'SQLiteInterposer.h',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
