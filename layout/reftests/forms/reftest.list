@@ -44,11 +44,10 @@ skip-if(B2G) fails-if(Android) == textbox-setsize.xul textbox-setsize-ref.xul
 != radio-checked-native.html about:blank
 != radio-checked-native-notref.html about:blank
 
-asserts(2) == button-first-letter-1.html button-first-letter-1-ref.html
-asserts(1) != button-first-letter-1.html button-first-letter-1-noref.html
-== button-max-height.html button-max-height-ref.html
-
 skip-if(B2G) == legend.html legend-ref.html
+
+# button element
+include button/reftest.list
 
 # placeholder
 include placeholder/reftest.list
