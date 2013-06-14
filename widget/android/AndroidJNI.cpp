@@ -15,6 +15,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sched.h>
 
 #include "nsAppShell.h"
 #include "nsWindow.h"
@@ -39,6 +40,8 @@
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsSurfaceTexture.h"
+#include "GeckoProfiler.h"
+
 #include "GeckoProfiler.h"
 
 using namespace mozilla;
@@ -979,19 +982,50 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
 NS_EXPORT jboolean JNICALL
 Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
 {
-    return JNI_FALSE;
+    if (profiler_is_active()) {
+        // Don't proceed if profiler is already running
+        return JNI_FALSE;
+    }
+    // WARNING: we are on the ANR reporter thread at this point and it is
+    // generally unsafe to use the profiler from off the main thread. However,
+    // the risk here is limited because for most users, the profiler is not run
+    // elsewhere. See the discussion in Bug 863777, comment 13
+    const char *NATIVE_STACK_FEATURES[] = {"leaf", "threads"};
+    // Buffer one sample and let the profiler wait a long time
+    profiler_start(100, 10000, NATIVE_STACK_FEATURES,
+        sizeof(NATIVE_STACK_FEATURES) / sizeof(char*));
+    return JNI_TRUE;
 }
 
 NS_EXPORT jstring JNICALL
 Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv* jenv, jclass)
 {
-    return NULL;
+    if (!profiler_is_active()) {
+        // Maybe profiler support is disabled?
+        return NULL;
+    }
+    char *profile = profiler_get_profile();
+    while (profile && !strlen(profile)) {
+        // no sample yet?
+        sched_yield();
+        profile = profiler_get_profile();
+    }
+    jstring result = NULL;
+    if (profile) {
+        result = jenv->NewStringUTF(profile);
+        free(profile);
+    }
+    return result;
 }
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_ANRReporter_releaseNativeStack(JNIEnv* jenv, jclass)
 {
-    return;
+    if (!profiler_is_active()) {
+        // Maybe profiler support is disabled?
+        return;
+    }
+    mozilla_sampler_stop();
 }
 
 }
