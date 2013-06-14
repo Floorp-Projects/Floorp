@@ -25,7 +25,7 @@ DISABLED_EXTRA_COMPONENTS = \
 	WebContentConverter.js \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
 	FeedWriter.js \
 	$(NULL)
 

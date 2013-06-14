@@ -14,7 +14,7 @@ DISABLED_EXTRA_COMPONENTS = \
   nsSearchSuggestions.js \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
   nsSearchService.js \
   $(NULL)
 

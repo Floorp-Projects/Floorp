@@ -9,7 +9,7 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
         ActivitiesGlue.js \
         AlertsService.js \
         B2GAboutRedirector.js \
@@ -36,7 +36,7 @@ EXTRA_JS_MODULES = \
 	$(NULL)
 
 ifdef MOZ_UPDATER
-EXTRA_PP_COMPONENTS += UpdatePrompt.js
+DISABLED_EXTRA_PP_COMPONENTS += UpdatePrompt.js
 endif
 
 include $(topsrcdir)/config/rules.mk
