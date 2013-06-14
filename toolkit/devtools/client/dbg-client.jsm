@@ -524,7 +524,7 @@ DebuggerClient.prototype = {
    *        debugging server responds.
    */
   request: function DC_request(aRequest, aOnResponse) {
-    if (!this._connected) {
+    if (!this.mainRoot) {
       throw Error("Have not yet received a hello packet from the server.");
     }
     if (!aRequest.to) {
@@ -571,9 +571,8 @@ DebuggerClient.prototype = {
       : this.compat.onPacket(aPacket);
 
     resolve(packet).then((aPacket) => {
-      if (!this._connected) {
+      if (!this.mainRoot) {
         // Hello packet.
-        this._connected = true;
         this.mainRoot = new RootClient(this, aPacket);
         this.notify("connected",
                     aPacket.applicationType,
