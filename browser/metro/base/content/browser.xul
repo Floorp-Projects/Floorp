@@ -313,10 +313,10 @@
         <observes element="bcast_windowState" attribute="*"/>
         <observes element="bcast_urlbarState" attribute="*"/>
 
-        <toolbarbutton id="back-button" command="cmd_back"/>
+        <toolbarbutton id="back-button" class="appbar-primary" command="cmd_back"/>
+        <toolbarbutton id="forward-button" class="appbar-primary" command="cmd_forward"/>
 
         <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-          <toolbarbutton id="forward-button" command="cmd_forward"/>
           <hbox id="urlbar" flex="1">
             <box id="identity-box" role="button">
               <hbox id="identity-box-inner" align="center" mousethrough="always">
@@ -337,19 +337,19 @@
                      onclick="BrowserUI._urlbarClicked(event);"
                      onblur="BrowserUI._urlbarBlurred();"/>
           </hbox>
-        </hbox>
 
-        <toolbarbutton id="tool-reload" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-        <toolbarbutton id="tool-stop" command="cmd_stop"/>
+          <toolbarbutton id="reload-button" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+          <toolbarbutton id="stop-button" command="cmd_stop"/>
+        </hbox>
 
         <!-- developer buttons -->
         <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
         <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
 
         <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
-        <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
-        <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
-        <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)"/>
+        <toolbarbutton id="star-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onStarButton()"/>
+        <toolbarbutton id="pin-button" class="appbar-primary" type="checkbox" oncommand="Appbar.onPinButton()"/>
+        <toolbarbutton id="menu-button" class="appbar-primary" oncommand="Appbar.onMenuButton(event)"/>
       </toolbar>
     </appbar>
 
