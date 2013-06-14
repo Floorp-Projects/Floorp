@@ -23,10 +23,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWindowProvider.h"
-#include "nsIXPCScriptable.h"
-#include "nsIClassInfo.h"
 #include "jsapi.h"
-#include "nsIXPConnect.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -34,17 +31,13 @@
 #include "nsIDocument.h"
 #include "nsNetUtil.h"
 #include "nsFrameMessageManager.h"
-#include "nsIScriptContext.h"
 #include "nsIWebProgressListener.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDialogCreator.h"
 #include "nsIDialogParamBlock.h"
-#include "nsIDOMWindowUtils.h"
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIScriptContext.h"
-#include "nsPIDOMWindow.h"
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
 #include "mozilla/Attributes.h"
@@ -54,6 +47,7 @@
 
 struct gfxMatrix;
 class nsICachedFileDescriptorListener;
+class nsIDOMWindowUtils;
 
 namespace mozilla {
 namespace layout {
@@ -422,12 +416,7 @@ private:
                               bool* aWindowIsNew,
                               nsIDOMWindow** aReturn);
 
-    nsIDOMWindowUtils* GetDOMWindowUtils()
-    {
-        nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
-        nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-        return utils;
-    }
+    already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils();
 
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;
