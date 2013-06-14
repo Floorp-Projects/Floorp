@@ -640,6 +640,9 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 
   private:
     void commonInit(Rooted<void*> **thingGCRooters) {
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+        scanned = false;
+#endif
 #ifdef JSGC_TRACK_EXACT_ROOTS
         js::ThingRootKind kind = js::GCMethods<T>::kind();
         this->stack = &thingGCRooters[kind];

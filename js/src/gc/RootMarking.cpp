@@ -449,6 +449,12 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case FUNVECTOR: {
+        AutoFunctionVector::VectorImpl &vector = static_cast<AutoFunctionVector *>(this)->vector;
+        MarkObjectRootRange(trc, vector.length(), vector.begin(), "js::AutoFunctionVector.vector");
+        return;
+      }
+
       case STRINGVECTOR: {
         AutoStringVector::VectorImpl &vector = static_cast<AutoStringVector *>(this)->vector;
         MarkStringRootRange(trc, vector.length(), vector.begin(), "js::AutoStringVector.vector");
