@@ -381,7 +381,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 
     TransformFixedLayers(
       aLayer,
-      -treeTransform.mTranslation / treeTransform.mScale,
+      gfxPoint(-treeTransform.mTranslation.x, -treeTransform.mTranslation.y),
       treeTransform.mScale,
       fixedLayerMargins);
 
@@ -458,9 +458,9 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
     metricsScrollOffset = scrollOffsetLayerPixels;
   }
 
-  nsIntPoint scrollCompensation(
-    (scrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * scaleX,
-    (scrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * scaleY);
+  LayerPoint scrollCompensation(
+    (scrollOffset.x / tempScaleDiffX - metricsScrollOffset.x),
+    (scrollOffset.y / tempScaleDiffY - metricsScrollOffset.y));
   treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
                                             gfxSize(scaleX, scaleY)));
 

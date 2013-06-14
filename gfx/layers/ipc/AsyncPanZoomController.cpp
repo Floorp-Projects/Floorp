@@ -1198,9 +1198,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
                                                     1 / rootScale.width,
                                                     1 / rootScale.height)
                            - metricsScrollOffset;
-  gfxPoint scrollCompensation(translation.x * localScale.width,
-                              translation.y * localScale.height);
-  *aNewTransform = ViewTransform(-scrollCompensation, localScale);
+  *aNewTransform = ViewTransform(-translation, localScale);
   aScrollOffset = ScreenPoint::FromCSSPoint(
     scrollOffset, localScale.width, localScale.height);
 
