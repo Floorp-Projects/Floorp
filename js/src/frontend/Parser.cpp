@@ -3525,7 +3525,10 @@ Parser<ParseHandler>::switchStatement()
     bool seenDefault = false;
     TokenKind tt;
     while ((tt = tokenStream.getToken()) != TOK_RC) {
-        Node casepn;
+        uint32_t caseBegin = tokenStream.currentToken().pos.begin;
+
+        ParseNodeKind caseKind;
+        Node caseExpr;
         switch (tt) {
           case TOK_DEFAULT:
             if (seenDefault) {
@@ -3533,21 +3536,16 @@ Parser<ParseHandler>::switchStatement()
                 return null();
             }
             seenDefault = true;
-            casepn = handler.newBinary(PNK_DEFAULT);
-            if (!casepn)
-                return null();
+            caseKind = PNK_DEFAULT;
+            caseExpr = null();
             break;
 
           case TOK_CASE:
-          {
-            Node left = expr();
-            if (!left)
-                return null();
-            casepn = handler.newBinary(PNK_CASE, left);
-            if (!casepn)
+            caseKind = PNK_CASE;
+            caseExpr = expr();
+            if (!caseExpr)
                 return null();
             break;
-          }
 
           case TOK_ERROR:
             return null();
@@ -3556,8 +3554,6 @@ Parser<ParseHandler>::switchStatement()
             report(ParseError, false, null(), JSMSG_BAD_SWITCH);
             return null();
         }
-
-        handler.addList(caseList, casepn);
 
         MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_AFTER_CASE);
 
@@ -3576,7 +3572,10 @@ Parser<ParseHandler>::switchStatement()
             handler.addList(body, stmt);
         }
 
-        handler.setBinaryRHS(casepn, body);
+        Node casepn = handler.newCaseOrDefault(caseBegin, caseExpr, body);
+        if (!casepn)
+            return null();
+        handler.addList(caseList, casepn);
     }
 
     /*
