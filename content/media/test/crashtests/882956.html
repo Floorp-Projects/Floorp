@@ -1,0 +1,15 @@
+<script>
+o1 = new window.AudioContext(1, 2048, 44100);
+o2 = o1.createBufferSource();
+o1.destination.channelCountMode = 'max';
+o2.connect(o1.destination);
+o2.buffer = function(){
+    var buffer = o1.createBuffer(30, 442, 94933);
+    for(var c=0; c<30; c++) {
+        for(var i=0; i<442; i++) {
+            buffer.getChannelData(c)[i] = 1;
+        }
+    }
+    return buffer;
+}();
+</script>
