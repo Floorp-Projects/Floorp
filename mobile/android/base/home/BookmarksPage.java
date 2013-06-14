@@ -24,32 +24,6 @@ public class BookmarksPage extends HomeFragment {
     // The view shown by the fragment.
     private BookmarksListView mList;
 
-    // On URL open listener
-    private OnUrlOpenListener mUrlOpenListener;
-
-    public BookmarksPage() {
-        mUrlOpenListener = null;
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        try {
-            mUrlOpenListener = (OnUrlOpenListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement HomePager.OnUrlOpenListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        mUrlOpenListener = null;
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
@@ -60,8 +34,16 @@ public class BookmarksPage extends HomeFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        OnUrlOpenListener listener = null;
+        try {
+            listener = (OnUrlOpenListener) getActivity();
+        } catch (ClassCastException e) {
+            throw new ClassCastException(getActivity().toString()
+                    + " must implement HomePager.OnUrlOpenListener");
+        }
+
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
-        mList.setOnUrlOpenListener(mUrlOpenListener);
+        mList.setOnUrlOpenListener(listener);
 
         registerForContextMenu(mList);
     }
