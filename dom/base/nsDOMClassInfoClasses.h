@@ -87,7 +87,6 @@ DOMCI_CLASS(CSSSupportsRule)
 DOMCI_CLASS(SVGAnimatedEnumeration)
 DOMCI_CLASS(SVGAnimatedInteger)
 DOMCI_CLASS(SVGAnimatedNumber)
-DOMCI_CLASS(SVGAnimatedString)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)
 

@@ -231,6 +231,7 @@ webidl_files = \
   SVGAnimatedPoints.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedRect.webidl \
+  SVGAnimatedString.webidl \
   SVGAnimatedTransformList.webidl \
   SVGAnimateElement.webidl \
   SVGAnimateMotionElement.webidl \
