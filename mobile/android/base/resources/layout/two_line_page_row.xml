@@ -12,8 +12,9 @@
                                           android:layout_marginLeft="10dip"
                                           android:layout_marginRight="10dip"/>
 
-    <LinearLayout android:layout_width="wrap_content"
+    <LinearLayout android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
+                  android:layout_marginRight="10dip"
                   android:orientation="vertical">
 
         <org.mozilla.gecko.home.FadedTextView
@@ -25,8 +26,9 @@
 
         <TextView android:id="@+id/url"
                   style="@style/Widget.TwoLinePageRow.Url"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"/>
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:drawablePadding="5dp"/>
 
     </LinearLayout>
 
