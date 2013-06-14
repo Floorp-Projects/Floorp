@@ -7,9 +7,9 @@
 #define __NS_SVGSTRING_H__
 
 #include "nsError.h"
-#include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/SVGAnimatedString.h"
 
 class nsSVGString
 {
@@ -38,9 +38,7 @@ public:
   bool IsExplicitlySet() const
     { return !!mAnimVal || mIsBaseSet; }
 
-  nsresult ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
-                               nsSVGElement *aSVGElement);
-  already_AddRefed<nsIDOMSVGAnimatedString>
+  already_AddRefed<mozilla::dom::SVGAnimatedString>
   ToDOMAnimatedString(nsSVGElement* aSVGElement);
 
   // Returns a new nsISMILAttr object that the caller must delete
@@ -53,27 +51,34 @@ private:
   bool mIsBaseSet;
 
 public:
-  struct DOMAnimatedString MOZ_FINAL : public nsIDOMSVGAnimatedString
+  struct DOMAnimatedString MOZ_FINAL : public mozilla::dom::SVGAnimatedString
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedString)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
-    DOMAnimatedString(nsSVGString *aVal, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
+    DOMAnimatedString(nsSVGString* aVal, nsSVGElement* aSVGElement)
+      : mozilla::dom::SVGAnimatedString(aSVGElement)
+      , mVal(aVal)
+    {}
+
     virtual ~DOMAnimatedString();
 
     nsSVGString* mVal; // kept alive because it belongs to content
-    nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(nsAString & aResult) MOZ_OVERRIDE
-      { mVal->GetBaseValue(aResult, mSVGElement); return NS_OK; }
-    NS_IMETHOD SetBaseVal(const nsAString & aValue) MOZ_OVERRIDE
-      { mVal->SetBaseValue(aValue, mSVGElement, true); return NS_OK; }
+    void GetBaseVal(nsAString & aResult) MOZ_OVERRIDE
+    {
+      mVal->GetBaseValue(aResult, mSVGElement);
+    }
 
-    NS_IMETHOD GetAnimVal(nsAString & aResult) MOZ_OVERRIDE
-    { 
+    void SetBaseVal(const nsAString & aValue) MOZ_OVERRIDE
+    {
+      mVal->SetBaseValue(aValue, mSVGElement, true);
+    }
+
+    void GetAnimVal(nsAString & aResult) MOZ_OVERRIDE
+    {
       mSVGElement->FlushAnimations();
-      mVal->GetAnimValue(aResult, mSVGElement); return NS_OK;
+      mVal->GetAnimValue(aResult, mSVGElement);
     }
 
   };

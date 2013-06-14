@@ -50,7 +50,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<SVGAnimatedString> In1();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> Operator();
   already_AddRefed<nsIDOMSVGAnimatedNumber> RadiusX();
   already_AddRefed<nsIDOMSVGAnimatedNumber> RadiusY();

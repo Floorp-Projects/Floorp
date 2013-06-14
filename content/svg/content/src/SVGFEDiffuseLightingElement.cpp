@@ -25,7 +25,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDiffuseLightingElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFEDiffuseLightingElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
