@@ -1037,6 +1037,10 @@ void AsyncPanZoomController::RequestContentRepaint() {
       fabsf(oldDisplayPort.y - newDisplayPort.y) < EPSILON &&
       fabsf(oldDisplayPort.width - newDisplayPort.width) < EPSILON &&
       fabsf(oldDisplayPort.height - newDisplayPort.height) < EPSILON &&
+      fabsf(mLastPaintRequestMetrics.mScrollOffset.x -
+            mFrameMetrics.mScrollOffset.x) < EPSILON &&
+      fabsf(mLastPaintRequestMetrics.mScrollOffset.y -
+            mFrameMetrics.mScrollOffset.y) < EPSILON &&
       mFrameMetrics.mResolution.width == mLastPaintRequestMetrics.mResolution.width) {
     return;
   }
