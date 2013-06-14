@@ -2942,7 +2942,7 @@ sandbox_enumerate(JSContext *cx, JSHandleObject obj)
 }
 
 static JSBool
-sandbox_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
+sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id)
 {
     JSBool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);

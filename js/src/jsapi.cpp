@@ -1914,9 +1914,8 @@ static const JSStdName object_prototype_names[] = {
 };
 
 JS_PUBLIC_API(JSBool)
-JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolved)
+JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, JSBool *resolved)
 {
-    RootedObject obj(cx, objArg);
     JSRuntime *rt;
     JSAtom *atom;
     const JSStdName *stdnm;
