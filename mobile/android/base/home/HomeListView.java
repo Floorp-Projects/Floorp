@@ -8,6 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -29,6 +30,9 @@ public class HomeListView extends ListView
 
     // ContextMenuInfo associated with the currently long pressed list item.
     private HomeContextMenuInfo mContextMenuInfo;
+
+    // On URL open listener
+    private OnUrlOpenListener mUrlOpenListener;
 
     public HomeListView(Context context) {
         this(context, null);
@@ -64,6 +68,14 @@ public class HomeListView extends ListView
     @Override
     public ContextMenuInfo getContextMenuInfo() {
         return mContextMenuInfo;
+    }
+
+    public OnUrlOpenListener getOnUrlOpenListener() {
+        return mUrlOpenListener;
+    }
+
+    public void setOnUrlOpenListener(OnUrlOpenListener listener) {
+        mUrlOpenListener = listener;
     }
 
     /**
