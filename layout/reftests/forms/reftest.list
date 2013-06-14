@@ -7,10 +7,11 @@ HTTP(..) == input-text-centering-1.xul input-text-centering-1-ref.xul
 skip-if(B2G) fails-if(Android) HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
 == input-text-dynamic-height-1.xul input-text-dynamic-height-1-ref.xul
 
-skip-if(B2G) == legend.html legend-ref.html
-
 # button element
 include button/reftest.list
+
+# legend element
+include legend/reftest.list
 
 # placeholder
 include placeholder/reftest.list
