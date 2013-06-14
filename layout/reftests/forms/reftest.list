@@ -22,18 +22,6 @@ skip-if(cocoaWidget) != textbox-accesskey-4.xul textbox-accesskey-4-notref.xul
 
 == textbox-align-baseline-1.xul textbox-align-baseline-1-ref.xul # test for bug 494901
 skip-if(B2G) fails-if(Android) == textbox-setsize.xul textbox-setsize-ref.xul
-skip-if(B2G) fails-if(Android) == textarea-resize.html textarea-resize-ref.html
-# an offset seems to apply to the native resizer on windows so skip this test for now
-skip-if(B2G) fails-if(Android) skip-if(winWidget) == textarea-resize-background.html textarea-resize-background-ref.html
-skip-if(B2G) fails-if(Android) != textarea-ltr.html textarea-rtl.html
-skip-if(B2G) fails-if(Android) != textarea-ltr-scrollbar.html textarea-rtl-scrollbar.html
-skip-if(B2G) fails-if(Android) != textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html
-skip-if(B2G) fails-if(Android) != textarea-ltr.html textarea-no-resize.html
-skip-if(B2G) fails-if(Android) fails-if(gtk2Widget) != textarea-rtl.html textarea-no-resize.html # bug 834724
-== textarea-rtl.html textarea-rtl-dynamic-attr.html
-== textarea-rtl.html textarea-rtl-dynamic-style.html
-== textarea-rtl.html textarea-in-dynamic-rtl-doc.html
-== textarea-setvalue-framereconstruction-1.html textarea-setvalue-framereconstruction-ref.html
 
 == radio-label-dynamic.html radio-label-dynamic-ref.html
 skip-if(B2G) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
@@ -82,5 +70,8 @@ include output/reftest.list
 
 # progress element
 include progress/reftest.list
+
+# textarea element
+include textarea/reftest.list
 
 == input-percentage-padding.html input-percentage-padding-ref.html
