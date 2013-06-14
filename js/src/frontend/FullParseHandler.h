@@ -432,7 +432,7 @@ FullParseHandler::finishInitializerAssignment(ParseNode *pn, ParseNode *init, JS
               ? JSOP_SETCONST
               : JSOP_SETNAME);
 
-    pn->noteLValue();
+    pn->markAsAssigned();
 
     /* The declarator's position must include the initializer. */
     pn->pn_pos.end = init->pn_pos.end;
