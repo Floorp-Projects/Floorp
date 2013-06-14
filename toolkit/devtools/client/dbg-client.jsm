@@ -548,11 +548,26 @@ DebuggerClient.prototype = {
         return true;
       }
 
-      this._activeRequests.set(request.to, request.onResponse);
+      this.expectReply(request.to, request.onResponse);
       this._transport.send(request.request);
 
       return false;
     });
+  },
+
+  /**
+   * Arrange to hand the next reply from |aActor| to |aHandler|.
+   *
+   * DebuggerClient.prototype.request usually takes care of establishing
+   * the handler for a given request, but in rare cases (well, greetings
+   * from new root actors, is the only case at the moment) we must be
+   * prepared for a "reply" that doesn't correspond to any request we sent.
+   */
+  expectReply: function(aActor, aHandler) {
+    if (this._activeRequests.has(aActor)) {
+      throw Error("clashing handlers for next reply from " + uneval(aActor));
+    }
+    this._activeRequests.set(aActor, aHandler);
   },
 
   // Transport hooks.
