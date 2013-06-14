@@ -94,7 +94,10 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     
     nsAutoCString str1;
     rv = internalDecodeParameter(med, charset.get(), nullptr, false,
-                                 aDecoding == MIME_FIELD_ENCODING, str1);
+                                 // was aDecoding == MIME_FIELD_ENCODING
+                                 // see bug 875615
+                                 true,
+                                 str1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!aFallbackCharset.IsEmpty())
