@@ -379,8 +379,27 @@ var shell = {
       case evt.DOM_VK_F1: // headset button
         type = 'headset-button';
         break;
-      default:                      // Anything else is a real key
-        return;  // Don't filter it at all; let it propagate to Gaia
+    }
+
+    let mediaKeys = {
+      'MediaNextTrack': 'media-next-track-button',
+      'MediaPreviousTrack': 'media-previous-track-button',
+      'MediaPause': 'media-pause-button',
+      'MediaPlay': 'media-play-button',
+      'MediaPlayPause': 'media-play-pause-button',
+      'MediaStop': 'media-stop-button',
+      'MediaRewind': 'media-rewind-button',
+      'FastFwd': 'media-fast-forward-button'
+    };
+
+    let isMediaKey = false;
+    if (mediaKeys[evt.key]) {
+      isMediaKey = true;
+      type = mediaKeys[evt.key];
+    }
+
+    if (!type) {
+      return;
     }
 
     // If we didn't return, then the key event represents a hardware key
@@ -405,6 +424,12 @@ var shell = {
     if (evt.keyCode == evt.DOM_VK_F1 && type !== this.lastHardwareButtonEventType) {
       this.lastHardwareButtonEventType = type;
       gSystemMessenger.broadcastMessage('headset-button', type);
+      return;
+    }
+
+    if (isMediaKey) {
+      this.lastHardwareButtonEventType = type;
+      gSystemMessenger.broadcastMessage('media-button', type);
       return;
     }
 
