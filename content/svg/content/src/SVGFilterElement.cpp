@@ -125,7 +125,7 @@ SVGFilterElement::SetFilterRes(uint32_t filterResX, uint32_t filterResY)
   mIntegerPairAttributes[FILTERRES].SetBaseValues(filterResX, filterResY, this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFilterElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);

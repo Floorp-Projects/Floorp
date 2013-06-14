@@ -41,7 +41,7 @@ public:
           int32_t aNameSpaceID, nsIAtom* aAttribute) const;
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<SVGAnimatedString> In1();
   already_AddRefed<nsIDOMSVGAnimatedNumber> SurfaceScale();
   already_AddRefed<nsIDOMSVGAnimatedNumber> SpecularConstant();
   already_AddRefed<nsIDOMSVGAnimatedNumber> SpecularExponent();

@@ -57,7 +57,7 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedInteger> FilterResX();
   already_AddRefed<nsIDOMSVGAnimatedInteger> FilterResY();
   void SetFilterRes(uint32_t filterResX, uint32_t filterResY);
-  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<SVGAnimatedString> Href();
 
 protected:
 

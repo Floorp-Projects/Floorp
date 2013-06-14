@@ -55,13 +55,13 @@ nsSVGElement::StringInfo SVGFECompositeElement::sStringInfo[3] =
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFECompositeElement)
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFECompositeElement::In1()
 {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<nsIDOMSVGAnimatedString>
+already_AddRefed<SVGAnimatedString>
 SVGFECompositeElement::In2()
 {
   return mStringAttributes[IN2].ToDOMAnimatedString(this);
