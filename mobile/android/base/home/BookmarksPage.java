@@ -95,16 +95,14 @@ public class BookmarksPage extends HomeFragment implements AdapterView.OnItemCli
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-
-        // All list views are styled to look the same with a global activity theme.
-        // If the style of the list changes, inflate it from an XML.
-        mList = new HomeListView(container.getContext());
-        return mList;
+        return inflater.inflate(R.layout.home_bookmarks_page, null);
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        mList = (HomeListView) view.findViewById(R.id.bookmarks_list);
 
         // Folder title view, is always in open state.
         mFolderView = (BookmarkFolderView) LayoutInflater.from(getActivity()).inflate(R.layout.bookmark_folder_row, null);
