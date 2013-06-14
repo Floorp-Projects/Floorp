@@ -73,7 +73,12 @@ public class HomeListView extends ListView
                 return;
             }
 
-            isFolder = (cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER);
+            final int typeCol = cursor.getColumnIndex(Bookmarks.TYPE);
+            if (typeCol != -1) {
+                isFolder = (cursor.getInt(typeCol) == Bookmarks.TYPE_FOLDER);
+            } else {
+                isFolder = false;
+            }
 
             if (isFolder) {
                 return;
@@ -86,10 +91,16 @@ public class HomeListView extends ListView
                 keyword = null;
             }
 
+            final int faviconCol = cursor.getColumnIndex(URLColumns.FAVICON);
+            if (faviconCol != -1) {
+                favicon = cursor.getBlob(faviconCol);
+            } else {
+                favicon = null;
+            }
+
             rowId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
             url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-            favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             display = Combined.DISPLAY_NORMAL;
         }
     }
