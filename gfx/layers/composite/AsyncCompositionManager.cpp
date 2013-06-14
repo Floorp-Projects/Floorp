@@ -342,7 +342,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     LayerComposite* layerComposite = aLayer->AsLayerComposite();
 
     ViewTransform treeTransform;
-    gfx::Point scrollOffset;
+    ScreenPoint scrollOffset;
     *aWantNextFrame |=
       controller->SampleContentTransformForFrame(aCurrentFrame,
                                                  container,
@@ -588,7 +588,7 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
 }
 
 void
-AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aScrollOffset,
+AsyncCompositionManager::SyncFrameMetrics(const ScreenPoint& aScrollOffset,
                                           float aZoom,
                                           const CSSRect& aCssPageRect,
                                           bool aLayersUpdated,

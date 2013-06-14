@@ -125,7 +125,7 @@ private:
                         float& aScaleX, float& aScaleY,
                         gfx::Margin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
-  void SyncFrameMetrics(const gfx::Point& aScrollOffset,
+  void SyncFrameMetrics(const ScreenPoint& aScrollOffset,
                         float aZoom,
                         const CSSRect& aCssPageRect,
                         bool aLayersUpdated,

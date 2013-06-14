@@ -1087,7 +1087,7 @@ AsyncPanZoomController::FireAsyncScrollOnTimeout()
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
                                                             ContainerLayer* aLayer,
                                                             ViewTransform* aNewTransform,
-                                                            gfx::Point& aScrollOffset) {
+                                                            ScreenPoint& aScrollOffset) {
   // The eventual return value of this function. The compositor needs to know
   // whether or not to advance by a frame as soon as it can. For example, if a
   // fling is happening, it has to keep compositing so that the animation is
