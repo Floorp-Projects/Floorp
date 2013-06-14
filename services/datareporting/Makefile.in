@@ -20,7 +20,7 @@ EXTRA_COMPONENTS := \
   DataReporting.manifest \
   $(NULL)
 
-EXTRA_PP_COMPONENTS := \
+DISABLED_EXTRA_PP_COMPONENTS := \
   DataReportingService.js \
   $(NULL)
 

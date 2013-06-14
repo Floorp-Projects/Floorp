@@ -18,7 +18,7 @@ DISABLED_EXTRA_COMPONENTS = \
   storage-Legacy.js \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
   storage-mozStorage.js \
   $(NULL)
 
