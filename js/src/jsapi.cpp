@@ -1913,6 +1913,12 @@ static const JSStdName object_prototype_names[] = {
     {NULL,                      0, NULL}
 };
 
+#undef CLASP
+#undef TYPED_ARRAY_CLASP
+#undef EAGER_ATOM
+#undef EAGER_CLASS_ATOM
+#undef EAGER_ATOM_AND_CLASP
+
 JS_PUBLIC_API(JSBool)
 JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, JSBool *resolved)
 {
@@ -2038,130 +2044,6 @@ JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
 
     return true;
 }
-
-static JSIdArray *
-NewIdArray(JSContext *cx, int length)
-{
-    JSIdArray *ida;
-
-    ida = (JSIdArray *)
-        cx->calloc_(offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (ida)
-        ida->length = length;
-    return ida;
-}
-
-/*
- * Unlike realloc(3), this function frees ida on failure.
- */
-static JSIdArray *
-SetIdArrayLength(JSContext *cx, JSIdArray *ida, int length)
-{
-    JSIdArray *rida;
-
-    rida = (JSIdArray *)
-           JS_realloc(cx, ida,
-                      offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (!rida) {
-        JS_DestroyIdArray(cx, ida);
-    } else {
-        rida->length = length;
-    }
-    return rida;
-}
-
-static JSIdArray *
-AddNameToArray(JSContext *cx, PropertyName *name, JSIdArray *ida, int *ip)
-{
-    int i = *ip;
-    int length = ida->length;
-    if (i >= length) {
-        ida = SetIdArrayLength(cx, ida, Max(length * 2, 8));
-        if (!ida)
-            return NULL;
-        JS_ASSERT(i < ida->length);
-    }
-    ida->vector[i].init(NameToId(name));
-    *ip = i + 1;
-    return ida;
-}
-
-static JSIdArray *
-EnumerateIfResolved(JSContext *cx, Handle<JSObject*> obj, Handle<PropertyName*> name,
-                    JSIdArray *ida, int *ip, JSBool *foundp)
-{
-    *foundp = obj->nativeContains(cx, name);
-    if (*foundp)
-        ida = AddNameToArray(cx, name, ida, ip);
-    return ida;
-}
-
-JS_PUBLIC_API(JSIdArray *)
-JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *objArg, JSIdArray *ida)
-{
-    RootedObject obj(cx, objArg);
-    JSRuntime *rt;
-    int i, j, k;
-    JSBool found;
-    JSClassInitializerOp init;
-
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, ida);
-    rt = cx->runtime();
-    if (ida) {
-        i = ida->length;
-    } else {
-        ida = NewIdArray(cx, 8);
-        if (!ida)
-            return NULL;
-        i = 0;
-    }
-
-    /* Check whether 'undefined' has been resolved and enumerate it if so. */
-    ida = EnumerateIfResolved(cx, obj, cx->names().undefined, ida, &i, &found);
-    if (!ida)
-        return NULL;
-
-    /* Enumerate only classes that *have* been resolved. */
-    Rooted<PropertyName*> name(cx);
-    for (j = 0; standard_class_atoms[j].init; j++) {
-        name = OFFSET_TO_NAME(rt, standard_class_atoms[j].atomOffset);
-        ida = EnumerateIfResolved(cx, obj, name, ida, &i, &found);
-        if (!ida)
-            return NULL;
-
-        if (found) {
-            init = standard_class_atoms[j].init;
-
-            for (k = 0; standard_class_names[k].init; k++) {
-                if (standard_class_names[k].init == init) {
-                    name = StdNameToPropertyName(cx, &standard_class_names[k]);
-                    ida = AddNameToArray(cx, name, ida, &i);
-                    if (!ida)
-                        return NULL;
-                }
-            }
-
-            if (init == js_InitObjectClass) {
-                for (k = 0; object_prototype_names[k].init; k++) {
-                    name = StdNameToPropertyName(cx, &object_prototype_names[k]);
-                    ida = AddNameToArray(cx, name, ida, &i);
-                    if (!ida)
-                        return NULL;
-                }
-            }
-        }
-    }
-
-    /* Trim to exact length. */
-    return SetIdArrayLength(cx, ida, i);
-}
-
-#undef CLASP
-#undef EAGER_ATOM
-#undef EAGER_CLASS_ATOM
-#undef EAGER_ATOM_CLASP
 
 JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objpArg)
