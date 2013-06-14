@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -22,8 +23,10 @@ import android.graphics.Bitmap;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -42,6 +45,41 @@ public class HomeFragment extends Fragment {
 
     // URL to Title replacement regex.
     private static final String REGEX_URL_TO_TITLE = "^([a-z]+://)?(www\\.)?";
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
+        if (!(menuInfo instanceof HomeContextMenuInfo)) {
+            return;
+        }
+
+        HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
+
+        // Don't show the context menu for folders.
+        if (info.isFolder) {
+            return;
+        }
+
+        MenuInflater inflater = new MenuInflater(view.getContext());
+        inflater.inflate(R.menu.home_contextmenu, menu);
+
+        // Show Open Private Tab if we're in private mode, Open New Tab otherwise
+        boolean isPrivate = false;
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            isPrivate = tab.isPrivate();
+        }
+        menu.findItem(R.id.open_new_tab).setVisible(!isPrivate);
+        menu.findItem(R.id.open_private_tab).setVisible(isPrivate);
+
+        // Hide "Remove" item if there isn't a valid history ID
+        if (info.rowId < 0) {
+            menu.findItem(R.id.remove_history).setVisible(false);
+        }
+        menu.setHeaderTitle(info.title);
+
+        menu.findItem(R.id.remove_history).setVisible(false);
+        menu.findItem(R.id.open_in_reader).setVisible(false);
+    }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
