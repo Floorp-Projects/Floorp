@@ -422,25 +422,50 @@ void test()
   VERIFY_IS_FALSE(someInvalid == 1);
   VERIFY_IS_FALSE(1 == someInvalid);
 
-  /* Check that construction of CheckedInt from an integer value of a mismatched type is checked */
+  // Check simple casting between different signedness and sizes.
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<uint16_t>(2).toChecked<uint8_t>();
+    VERIFY_IS_VALID(foo);
+    VERIFY(foo == 2);
+  }
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<uint16_t>(255).toChecked<uint8_t>();
+    VERIFY_IS_VALID(foo);
+    VERIFY(foo == 255);
+  }
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<uint16_t>(256).toChecked<uint8_t>();
+    VERIFY_IS_INVALID(foo);
+  }
+  {
+    CheckedInt<uint8_t> foo = CheckedInt<int8_t>(-2).toChecked<uint8_t>();
+    VERIFY_IS_INVALID(foo);
+  }
 
-  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U) \
+  // Check that construction of CheckedInt from an integer value of a mismatched type is checked
+  // Also check casting between all types.
+
+  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,V,PostVExpr) \
   { \
     bool isUSigned = detail::IsSigned<U>::value; \
-    VERIFY_IS_VALID(CheckedInt<T>(U(0))); \
-    VERIFY_IS_VALID(CheckedInt<T>(U(1))); \
-    VERIFY_IS_VALID(CheckedInt<T>(U(100))); \
+    VERIFY_IS_VALID(CheckedInt<T>(V(  0)PostVExpr)); \
+    VERIFY_IS_VALID(CheckedInt<T>(V(  1)PostVExpr)); \
+    VERIFY_IS_VALID(CheckedInt<T>(V(100)PostVExpr)); \
     if (isUSigned) \
-      VERIFY_IS_VALID_IF(CheckedInt<T>(U(-1)), isTSigned); \
+      VERIFY_IS_VALID_IF(CheckedInt<T>(V(-1)PostVExpr), isTSigned); \
     if (sizeof(U) > sizeof(T)) \
-      VERIFY_IS_INVALID(CheckedInt<T>(U(detail::MaxValue<T>::value) + one.value())); \
+      VERIFY_IS_INVALID(CheckedInt<T>(V(detail::MaxValue<T>::value)PostVExpr + one.value())); \
     VERIFY_IS_VALID_IF(CheckedInt<T>(detail::MaxValue<U>::value), \
       (sizeof(T) > sizeof(U) || ((sizeof(T) == sizeof(U)) && (isUSigned || !isTSigned)))); \
     VERIFY_IS_VALID_IF(CheckedInt<T>(detail::MinValue<U>::value), \
-      isUSigned == false ? 1 : \
-      bool(isTSigned) == false ? 0 : \
-      sizeof(T) >= sizeof(U)); \
+      isUSigned == false ? 1 \
+                         : bool(isTSigned) == false ? 0 \
+                                                    : sizeof(T) >= sizeof(U)); \
   }
+  #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U) \
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,U,+0) \
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,CheckedInt<U>,.toChecked<T>())
+
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int8_t)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint8_t)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int16_t)
