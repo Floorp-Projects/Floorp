@@ -162,11 +162,6 @@ class FullParseHandler
                                  ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP) {
         return ParseNode::newBinaryOrAppend(kind, op, left, right, this, pc, foldConstants);
     }
-    void setBinaryRHS(ParseNode *pn, ParseNode *rhs) {
-        JS_ASSERT(pn->isArity(PN_BINARY));
-        pn->pn_right = rhs;
-        pn->pn_pos.end = rhs->pn_pos.end;
-    }
 
     ParseNode *newTernary(ParseNodeKind kind,
                           ParseNode *first, ParseNode *second, ParseNode *third,
@@ -178,12 +173,18 @@ class FullParseHandler
         return new_<LabeledStatement>(label, stmt, begin);
     }
 
+    ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {
+        TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
+        return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
+    }
+
     ParseNode *newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
         return new_<BreakStatement>(label, begin, end);
     }
     ParseNode *newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
         return new_<ContinueStatement>(label, begin, end);
     }
+
     ParseNode *newDebuggerStatement(const TokenPos &pos) {
         return new_<DebuggerStatement>(pos);
     }
