@@ -658,7 +658,7 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
       WidgetSpaceToCompensatedViewportSpace(
         gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
         resolution));
-    mGeckoContentController->HandleLongTap(CSSIntPoint::RoundToInt(point));
+    mGeckoContentController->HandleLongTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
@@ -677,7 +677,7 @@ nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput
       WidgetSpaceToCompensatedViewportSpace(
         gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
         resolution));
-    mGeckoContentController->HandleSingleTap(CSSIntPoint::RoundToInt(point));
+    mGeckoContentController->HandleSingleTap(gfx::RoundedToInt(point));
     return nsEventStatus_eConsumeNoDefault;
   }
   return nsEventStatus_eIgnore;
@@ -693,7 +693,7 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
         WidgetSpaceToCompensatedViewportSpace(
           gfx::Point(aEvent.mPoint.x, aEvent.mPoint.y),
           resolution));
-      mGeckoContentController->HandleDoubleTap(CSSIntPoint::RoundToInt(point));
+      mGeckoContentController->HandleDoubleTap(gfx::RoundedToInt(point));
     }
 
     return nsEventStatus_eConsumeNoDefault;
