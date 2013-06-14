@@ -675,29 +675,43 @@ private:
 
   /** Clears an area of <aFrame> with transparent black.
    *
-   * @param aFrame Target Frame
+   * @param aFrameData Target Frame data
+   * @param aFrameRect The rectangle of the data pointed ot by aFrameData
    *
    * @note Does also clears the transparancy mask
    */
+  static void ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect);
   static void ClearFrame(imgFrame* aFrame);
 
   //! @overload
-  static void ClearFrame(imgFrame* aFrame, nsIntRect &aRect);
+  static void ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect, const nsIntRect &aRectToClear);
+  static void ClearFrame(imgFrame* aFrame, const nsIntRect& aRectToClear);
 
   //! Copy one frames's image and mask into another
-  static bool CopyFrameImage(imgFrame *aSrcFrame,
-                               imgFrame *aDstFrame);
+  static bool CopyFrameImage(uint8_t *aDataSrc, const nsIntRect& aRectSrc,
+                             uint8_t *aDataDest, const nsIntRect& aRectDest);
+  static bool CopyFrameImage(imgFrame* aSrc, imgFrame* aDst);
 
-  /** Draws one frames's image to into another,
-   * at the position specified by aRect
+  /**
+   * Draws one frames's image to into another, at the position specified by
+   * aSrcRect.
    *
-   * @param aSrcFrame  Frame providing the source image
-   * @param aDstFrame  Frame where the image is drawn into
-   * @param aRect      The position and size to draw the image
+   * @aSrcData the raw data of the current frame being drawn
+   * @aSrcRect the size of the source frame, and the position of that frame in
+   *           the composition frame
+   * @aSrcPaletteLength the length (in bytes) of the palette at the beginning
+   *                    of the source data (0 if image is not paletted)
+   * @aSrcHasAlpha whether the source data represents an image with alpha
+   * @aDstPixels the raw data of the composition frame where the current frame
+   *             is drawn into (32-bit ARGB)
+   * @aDstRect the size of the composition frame
+   * @aBlendMethod the blend method for how to blend src on the composition frame.
    */
-  static nsresult DrawFrameTo(imgFrame *aSrcFrame,
-                              imgFrame *aDstFrame,
-                              nsIntRect& aRect);
+  static nsresult DrawFrameTo(uint8_t *aSrcData, const nsIntRect& aSrcRect,
+                              uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
+                              uint8_t *aDstPixels, const nsIntRect& aDstRect,
+                              FrameBlendMethod aBlendMethod);
+  static nsresult DrawFrameTo(imgFrame* aSrc, imgFrame* aDst, const nsIntRect& aSrcRect);
 
   nsresult InternalAddFrameHelper(uint32_t framenum, imgFrame *frame,
                                   uint8_t **imageData, uint32_t *imageLength,
