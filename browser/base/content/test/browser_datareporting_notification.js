@@ -23,6 +23,7 @@ function sendNotifyRequest(name) {
 
   service.healthReporter.onInit().then(function onInit() {
     is(policy.ensureNotifyResponse(new Date()), false, "User has not responded to policy.");
+    is(policy.notifyState, policy.STATE_NOTIFY_WAIT, "Policy is waiting for notification response.");
   });
 
   return policy;
