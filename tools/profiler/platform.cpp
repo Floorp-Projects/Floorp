@@ -409,12 +409,6 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
   if (sUnwindInterval > 0)
     aInterval = sUnwindInterval;
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
-    ASSERT(false);
-    return;
-  }
-
   // Reset the current state if the profiler is running
   profiler_stop();
 
@@ -485,11 +479,12 @@ void mozilla_sampler_stop()
   t->Stop();
   delete t;
   tlsTicker.set(NULL);
-  PseudoStack *stack = tlsPseudoStack.get();
-  ASSERT(stack != NULL);
 
-  if (disableJS)
+  if (disableJS) {
+    PseudoStack *stack = tlsPseudoStack.get();
+    ASSERT(stack != NULL);
     stack->disableJSSampling();
+  }
 
   if (unwinderThreader) {
     uwt__deinit();
