@@ -109,6 +109,17 @@ IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)
                              NS_lround(aRect.height));
 }
 
+template<class units>
+IntRectTyped<units> RoundedIn(const RectTyped<units>& aRect)
+{
+  RectTyped<units> copy(aRect);
+  copy.RoundIn();
+  return IntRectTyped<units>(int32_t(copy.x),
+                             int32_t(copy.y),
+                             int32_t(copy.width),
+                             int32_t(copy.height));
+}
+
 }
 }
 
