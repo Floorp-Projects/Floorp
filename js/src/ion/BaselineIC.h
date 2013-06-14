@@ -2717,7 +2717,7 @@ class ICUnaryArith_Double : public ICStub
     friend class ICStubSpace;
 
     ICUnaryArith_Double(IonCode *stubCode)
-      : ICStub(UnaryArith_Int32, stubCode)
+      : ICStub(UnaryArith_Double, stubCode)
     {}
 
   public:
@@ -2733,7 +2733,7 @@ class ICUnaryArith_Double : public ICStub
 
       public:
         Compiler(JSContext *cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Int32, op)
+          : ICMultiStubCompiler(cx, ICStub::UnaryArith_Double, op)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
