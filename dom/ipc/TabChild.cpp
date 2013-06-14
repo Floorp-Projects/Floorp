@@ -348,9 +348,7 @@ TabChild::Observe(nsISupports *aSubject,
         // the top-left of the page.
         mLastMetrics.mZoom = gfxSize(1.0, 1.0);
         mLastMetrics.mViewport = CSSRect(CSSPoint(), kDefaultViewportSize);
-        // I don't know what units mInnerSize is in, hence FromUnknownRect
-        mLastMetrics.mCompositionBounds = LayerIntRect::FromUnknownRect(
-          gfx::IntRect(0, 0, mInnerSize.width, mInnerSize.height));
+        mLastMetrics.mCompositionBounds = ScreenIntRect(ScreenIntPoint(), mInnerSize);
         mLastMetrics.mResolution =
           AsyncPanZoomController::CalculateResolution(mLastMetrics);
         mLastMetrics.mScrollOffset = CSSPoint(0, 0);
@@ -590,9 +588,7 @@ TabChild::HandlePossibleViewportChange()
   FrameMetrics metrics(mLastMetrics);
   metrics.mViewport = CSSRect(CSSPoint(), viewport);
   metrics.mScrollableRect = CSSRect(CSSPoint(), pageSize);
-  // I don't know what units mInnerSize is in, hence FromUnknownRect
-  metrics.mCompositionBounds = LayerIntRect::FromUnknownRect(
-    gfx::IntRect(0, 0, mInnerSize.width, mInnerSize.height));
+  metrics.mCompositionBounds = ScreenIntRect(ScreenIntPoint(), mInnerSize);
 
   // Changing the zoom when we're not doing a first paint will get ignored
   // by AsyncPanZoomController and causes a blurry flash.
@@ -1413,7 +1409,8 @@ TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const 
     mOuterRect.height = rect.height;
 
     mOrientation = orientation;
-    mInnerSize = size;
+    mInnerSize = ScreenIntSize::FromUnknownSize(
+      gfx::IntSize(size.width, size.height));
     mWidget->Resize(0, 0, size.width, size.height,
                     true);
 
