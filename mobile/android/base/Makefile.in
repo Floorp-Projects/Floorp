@@ -1218,6 +1218,7 @@ CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
     org.mozilla.gecko.GeckoJavaSampler \
     org.mozilla.gecko.gfx.NativePanZoomController \
+    org.mozilla.gecko.ANRReporter \
     $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
