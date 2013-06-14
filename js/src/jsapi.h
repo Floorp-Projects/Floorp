@@ -2107,15 +2107,6 @@ JS_ResolveStandardClass(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 extern JS_PUBLIC_API(JSBool)
 JS_EnumerateStandardClasses(JSContext *cx, JS::HandleObject obj);
 
-/*
- * Enumerate any already-resolved standard class ids into ida, or into a new
- * JSIdArray if ida is null.  Return the augmented array on success, null on
- * failure with ida (if it was non-null on entry) destroyed.
- */
-extern JS_PUBLIC_API(JSIdArray *)
-JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
-                                    JSIdArray *ida);
-
 extern JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp);
 
