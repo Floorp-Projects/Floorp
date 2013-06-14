@@ -103,7 +103,7 @@ nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 
 
 JSBool
-nsXULPDGlobalObject_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
+nsXULPDGlobalObject_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
 {
     JSBool did_resolve = JS_FALSE;
 
