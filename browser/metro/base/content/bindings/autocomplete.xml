@@ -46,6 +46,13 @@
           ]]>
         </body>
       </method>
+
+      <method name="trimValue">
+        <parameter name="aURL"/>
+        <body><![CDATA[
+          return BrowserUI.trimURL(aURL);
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>

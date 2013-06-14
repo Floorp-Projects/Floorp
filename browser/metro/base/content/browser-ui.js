@@ -98,7 +98,10 @@ var BrowserUI = {
 
     Services.prefs.addObserver("browser.cache.disk_cache_ssl", this, false);
     Services.prefs.addObserver("browser.urlbar.formatting.enabled", this, false);
+    Services.prefs.addObserver("browser.urlbar.trimURLs", this, false);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
+    
+    this._edit.inputField.controllers.insertControllerAt(0, this._copyCutURIController);
 
     // Init core UI modules
     ContextUI.init();
@@ -564,6 +567,9 @@ var BrowserUI = {
           case "browser.urlbar.formatting.enabled":
             this._formattingEnabled = Services.prefs.getBookPref(aData);
             break;
+          case "browser.urlbar.trimURLs":
+            this._mayTrimURLs = Services.prefs.getBoolPref(aData);
+            break;
         }
         break;
       case "metro_viewstate_changed":
@@ -654,9 +660,118 @@ var BrowserUI = {
       Elements.urlbarState.setAttribute("mode", "view");
   },
 
+  _trimURL: function _trimURL(aURL) {
+    // This function must not modify the given URL such that calling
+    // nsIURIFixup::createFixupURI with the result will produce a different URI.
+    return aURL /* remove single trailing slash for http/https/ftp URLs */
+               .replace(/^((?:http|https|ftp):\/\/[^/]+)\/$/, "$1")
+                /* remove http:// unless the host starts with "ftp\d*\." or contains "@" */
+               .replace(/^http:\/\/((?!ftp\d*\.)[^\/@]+(?:\/|$))/, "$1");
+  },
+
+  trimURL: function trimURL(aURL) {
+    return this.mayTrimURLs ? this._trimURL(aURL) : aURL;
+  },
+
   _setURI: function _setURI(aURL) {
     this._edit.value = aURL;
     this.lastKnownGoodURL = aURL;
+  },
+
+  _getSelectedURIForClipboard: function _getSelectedURIForClipboard() {
+    // Grab the actual input field's value, not our value, which could include moz-action:
+    let inputVal = this._edit.inputField.value;
+    let selectedVal = inputVal.substring(this._edit.selectionStart, this._edit.electionEnd);
+
+    // If the selection doesn't start at the beginning or doesn't span the full domain or
+    // the URL bar is modified, nothing else to do here.
+    if (this._edit.selectionStart > 0 || this._edit.valueIsTyped)
+      return selectedVal;
+    // The selection doesn't span the full domain if it doesn't contain a slash and is
+    // followed by some character other than a slash.
+    if (!selectedVal.contains("/")) {
+      let remainder = inputVal.replace(selectedVal, "");
+      if (remainder != "" && remainder[0] != "/")
+        return selectedVal;
+    }
+
+    let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+
+    let uri;
+    try {
+      uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_USE_UTF8);
+    } catch (e) {}
+    if (!uri)
+      return selectedVal;
+
+    // Only copy exposable URIs
+    try {
+      uri = uriFixup.createExposableURI(uri);
+    } catch (ex) {}
+
+    // If the entire URL is selected, just use the actual loaded URI.
+    if (inputVal == selectedVal) {
+      // ... but only if  isn't a javascript: or data: URI, since those
+      // are hard to read when encoded
+      if (!uri.schemeIs("javascript") && !uri.schemeIs("data")) {
+        // Parentheses are known to confuse third-party applications (bug 458565).
+        selectedVal = uri.spec.replace(/[()]/g, function (c) escape(c));
+      }
+
+      return selectedVal;
+    }
+
+    // Just the beginning of the URL is selected, check for a trimmed value
+    let spec = uri.spec;
+    let trimmedSpec = this.trimURL(spec);
+    if (spec != trimmedSpec) {
+      // Prepend the portion that trimURL removed from the beginning.
+      // This assumes trimURL will only truncate the URL at
+      // the beginning or end (or both).
+      let trimmedSegments = spec.split(trimmedSpec);
+      selectedVal = trimmedSegments[0] + selectedVal;
+    }
+
+    return selectedVal;
+  },
+
+  _copyCutURIController: {
+    doCommand: function(aCommand) {
+      let urlbar = BrowserUI._edit;
+      let val = BrowserUI._getSelectedURIForClipboard();
+      if (!val)
+        return;
+
+      if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
+        let start = urlbar.selectionStart;
+        let end = urlbar.selectionEnd;
+        urlbar.inputField.value = urlbar.inputField.value.substring(0, start) +
+                                  urlbar.inputField.value.substring(end);
+        urlbar.selectionStart = urlbar.selectionEnd = start;
+      }
+
+      Cc["@mozilla.org/widget/clipboardhelper;1"]
+        .getService(Ci.nsIClipboardHelper)
+        .copyString(val, document);
+    },
+
+    supportsCommand: function(aCommand) {
+      switch (aCommand) {
+        case "cmd_copy":
+        case "cmd_cut":
+          return true;
+      }
+      return false;
+    },
+
+    isCommandEnabled: function(aCommand) {
+      let urlbar = BrowserUI._edit;
+      return this.supportsCommand(aCommand) &&
+             (aCommand != "cmd_cut" || !urlbar.readOnly) &&
+             urlbar.selectionStart < urlbar.selectionEnd;
+    },
+
+    onEvent: function(aEventName) {}
   },
 
   _urlbarClicked: function _urlbarClicked() {
@@ -1037,6 +1152,15 @@ var BrowserUI = {
       this._formattingEnabled = Services.prefs.getBoolPref("browser.urlbar.formatting.enabled");
     }
     return this._formattingEnabled;
+  },
+
+  _mayTrimURLs: null,
+
+  get mayTrimURLs() {
+    if (this._mayTrimURLs === null) {
+      this._mayTrimURLs = Services.prefs.getBoolPref("browser.urlbar.trimURLs");
+    }
+    return this._mayTrimURLs;
   },
 
   supportsCommand : function(cmd) {
