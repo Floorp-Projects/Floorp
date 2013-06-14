@@ -144,8 +144,32 @@ this.WebConsoleUtils = {
   getInnerWindowId: function WCU_getInnerWindowId(aWindow)
   {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-           getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+             getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
   },
+
+  /**
+   * Recursively gather a list of inner window ids given a
+   * top level window.
+   *
+   * @param nsIDOMWindow aWindow
+   * @return Array
+   *         list of inner window ids.
+   */
+  getInnerWindowIDsForFrames: function WCU_getInnerWindowIDsForFrames(aWindow)
+  {
+    let innerWindowID = this.getInnerWindowId(aWindow);
+    let ids = [innerWindowID];
+
+    if (aWindow.frames) {
+      for (let i = 0; i < aWindow.frames.length; i++) {
+        let frame = aWindow.frames[i];
+        ids = ids.concat(this.getInnerWindowIDsForFrames(frame));
+      }
+    }
+
+    return ids;
+  },
+
 
   /**
    * Gets the ID of the outer window of this DOM window.
@@ -986,7 +1010,7 @@ ConsoleServiceListener.prototype =
   },
 
   /**
-   * Get the cached page errors for the current inner window.
+   * Get the cached page errors for the current inner window and its (i)frames.
    *
    * @param boolean [aIncludePrivate=false]
    *        Tells if you want to also retrieve messages coming from private
@@ -997,22 +1021,36 @@ ConsoleServiceListener.prototype =
    */
   getCachedMessages: function CSL_getCachedMessages(aIncludePrivate = false)
   {
-    let innerWindowID = this.window ?
-                        WebConsoleUtils.getInnerWindowId(this.window) : null;
     let errors = Services.console.getMessageArray() || [];
+
+    // if !this.window, we're in a browser console. Still need to filter
+    // private messages.
+    if (!this.window) {
+      return errors.filter((aError) => {
+        if (aError instanceof Ci.nsIScriptError) {
+          if (!aIncludePrivate && aError.isFromPrivateWindow) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    }
+
+    let ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
 
     return errors.filter((aError) => {
       if (aError instanceof Ci.nsIScriptError) {
         if (!aIncludePrivate && aError.isFromPrivateWindow) {
           return false;
         }
-        if (innerWindowID &&
-            (aError.innerWindowID != innerWindowID ||
+        if (ids &&
+            (ids.indexOf(aError.innerWindowID) == -1 ||
              !this.isCategoryAllowed(aError.category))) {
           return false;
         }
       }
-      else if (innerWindowID) {
+      else if (ids && ids[0]) {
         // If this is not an nsIScriptError and we need to do window-based
         // filtering we skip this message.
         return false;
@@ -1115,7 +1153,7 @@ ConsoleAPIListener.prototype =
   },
 
   /**
-   * Get the cached messages for the current inner window.
+   * Get the cached messages for the current inner window and its (i)frames.
    *
    * @param boolean [aIncludePrivate=false]
    *        Tells if you want to also retrieve messages coming from private
@@ -1125,14 +1163,24 @@ ConsoleAPIListener.prototype =
    */
   getCachedMessages: function CAL_getCachedMessages(aIncludePrivate = false)
   {
-    let innerWindowId = this.window ?
-                        WebConsoleUtils.getInnerWindowId(this.window) : null;
-    let events = ConsoleAPIStorage.getEvents(innerWindowId);
-    if (aIncludePrivate) {
-      return events;
+    let messages = [];
+
+    // if !this.window, we're in a browser console. Retrieve all events
+    // for filtering based on privacy.
+    if (!this.window) {
+      messages = ConsoleAPIStorage.getEvents();
+    } else {
+      let ids = WebConsoleUtils.getInnerWindowIDsForFrames(this.window);
+      ids.forEach((id) => {
+        messages = messages.concat(ConsoleAPIStorage.getEvents(id));
+      });
     }
 
-    return events.filter((m) => !m.private);
+    if (aIncludePrivate) {
+      return messages;
+    }
+
+    return messages.filter((m) => !m.private);
   },
 
   /**
