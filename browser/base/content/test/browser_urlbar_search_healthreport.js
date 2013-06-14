@@ -45,7 +45,7 @@ function test() {
       gURLBar.value = "firefox health report";
       gURLBar.handleCommand();
 
-      executeSoon(() => executeSoon(() => {
+      executeSoon(function afterSearch() {
         gBrowser.removeTab(tab);
 
         m.getValues().then(function onData(data) {
@@ -58,7 +58,7 @@ function test() {
           is(newCount, oldCount + 1, "Exactly one search has been recorded.");
           finish();
         });
-      }));
+      });
     });
   });
 }

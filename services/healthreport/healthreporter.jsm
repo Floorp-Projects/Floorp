@@ -20,7 +20,7 @@ Cu.import("resource://services-common/bagheeraclient.js");
 
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
