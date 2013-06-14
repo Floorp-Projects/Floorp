@@ -1,7 +1,3 @@
-
-== checkbox-label-dynamic.html checkbox-label-dynamic-ref.html
-skip-if(B2G) fails-if(Android) == checkbox-radio-stretched.html checkbox-radio-stretched-ref.html # test for bug 464589
-
 == input-hidden-border.html about:blank
 == input-text-bounds-1.html input-text-bounds-1-ref.html
 == input-text-size-1.html input-text-size-1-ref.html
@@ -24,23 +20,10 @@ skip-if(cocoaWidget) != textbox-accesskey-4.xul textbox-accesskey-4-notref.xul
 skip-if(B2G) fails-if(Android) == textbox-setsize.xul textbox-setsize-ref.xul
 
 == radio-label-dynamic.html radio-label-dynamic-ref.html
-!= indeterminate-checked.html indeterminate-checked-notref.html
-!= indeterminate-unchecked.html indeterminate-unchecked-notref.html
-!= indeterminate-native-checked.html indeterminate-native-checked-notref.html
-!= indeterminate-native-unchecked.html indeterminate-native-unchecked-notref.html
-== indeterminate-selector.html indeterminate-selector-ref.html
-
-!= checkbox-checked.html checkbox-checked-notref.html
-!= checkbox-checked-native.html checkbox-checked-native-notref.html
 != radio-checked.html radio-checked-notref.html
 != radio-checked-native.html radio-checked-native-notref.html
-
-!= checkbox-checked.html about:blank
-!= checkbox-checked-notref.html about:blank
 != radio-checked.html about:blank
 != radio-checked-notref.html about:blank
-!= checkbox-checked-native.html about:blank
-!= checkbox-checked-native-notref.html about:blank
 != radio-checked-native.html about:blank
 != radio-checked-native-notref.html about:blank
 

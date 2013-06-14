@@ -1,3 +1,4 @@
+include checkbox/reftest.list
 include email/reftest.list
 include tel/reftest.list
 include search/reftest.list
