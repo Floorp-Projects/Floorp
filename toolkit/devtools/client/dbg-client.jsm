@@ -12,6 +12,7 @@ const Cr = Components.results;
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
+                         "RootClient",
                          "debuggerSocketConnect",
                          "LongStringClient",
                          "GripClient"];
@@ -204,8 +205,6 @@ const UnsolicitedPauses = {
   "exception": "exception"
 };
 
-const ROOT_ACTOR_NAME = "root";
-
 /**
  * Creates a client for the remote debugging protocol server. This client
  * provides the means to communicate with the server and exchange the messages
@@ -222,6 +221,9 @@ this.DebuggerClient = function DebuggerClient(aTransport)
   this._pendingRequests = [];
   this._activeRequests = {};
   this._eventsEnabled = true;
+
+  /* The root actor for this client's main connection. */
+  this.mainRoot = null;
 
   this.compat = new ProtocolCompatibility(this, [
     new SourcesShim(),
@@ -389,18 +391,11 @@ DebuggerClient.prototype = {
     }
   },
 
-  /**
-   * List the open tabs.
-   *
-   * @param function aOnResponse
-   *        Called with the response packet.
+  /*
+   * This function exists only to preserve DebuggerClient's interface;
+   * new code should say 'client.mainRoot.listTabs()'.
    */
-  listTabs: DebuggerClient.requester({
-    to: ROOT_ACTOR_NAME,
-    type: "listTabs"
-  }, {
-    telemetry: "LISTTABS"
-  }),
+  listTabs: function(aOnResponse) { return this.mainRoot.listTabs(aOnResponse); },
 
   /**
    * Attach to a tab actor.
@@ -581,6 +576,7 @@ DebuggerClient.prototype = {
       if (!this._connected) {
         // Hello packet.
         this._connected = true;
+        this.mainRoot = new RootClient(this, aPacket);
         this.notify("connected",
                     aPacket.applicationType,
                     aPacket.traits);
@@ -879,6 +875,54 @@ TabClient.prototype = {
 };
 
 eventSource(TabClient.prototype);
+
+/**
+ * A RootClient object represents a root actor on the server. Each
+ * DebuggerClient keeps a RootClient instance representing the root actor
+ * for the initial connection; DebuggerClient's 'listTabs' and
+ * 'listChildProcesses' methods forward to that root actor.
+ *
+ * @param aClient object
+ *      The client connection to which this actor belongs.
+ * @param aGreeting string
+ *      The greeting packet from the root actor we're to represent.
+ *
+ * Properties of a RootClient instance:
+ *
+ * @property actor string
+ *      The name of this child's root actor.
+ * @property applicationType string
+ *      The application type, as given in the root actor's greeting packet.
+ * @property traits object
+ *      The traits object, as given in the root actor's greeting packet.
+ */
+function RootClient(aClient, aGreeting) {
+  this._client = aClient;
+  this.actor = aGreeting.from;
+  this.applicationType = aGreeting.applicationType;
+  this.traits = aGreeting.traits;
+}
+
+RootClient.prototype = {
+  constructor: RootClient,
+
+  /**
+   * List the open tabs.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  listTabs: DebuggerClient.requester({ type: "listTabs" },
+                                     { telemetry: "LISTTABS" }),
+
+  /*
+   * Methods constructed by DebuggerClient.requester require these forwards
+   * on their 'this'.
+   */
+  get _transport() { return this._client._transport; },
+  get request()    { return this._client.request;    }
+};
+
 
 /**
  * Creates a thread client for the remote debugging protocol server. This client
