@@ -2486,7 +2486,7 @@ Parser<ParseHandler>::maybeParseDirective(Node pn, bool *cont)
 
 template <>
 void
-Parser<FullParseHandler>::addStatementToList(ParseNode *pn, ParseNode *kid, bool *hasFunctionStmt)
+Parser<FullParseHandler>::addStatementToList(ParseNode *pn, ParseNode *kid)
 {
     JS_ASSERT(pn->isKind(PNK_STATEMENTLIST));
 
@@ -2495,21 +2495,12 @@ Parser<FullParseHandler>::addStatementToList(ParseNode *pn, ParseNode *kid, bool
          * PNX_FUNCDEFS notifies the emitter that the block contains body-
          * level function definitions that should be processed before the
          * rest of nodes.
-         *
-         * |hasFunctionStmt| is for the TOK_LC case in Statement. It
-         * is relevant only for function definitions not at body-level,
-         * which we call function statements.
          */
         if (pc->atBodyLevel()) {
             pn->pn_xflags |= PNX_FUNCDEFS;
         } else {
-            /*
-             * General deoptimization was done in functionDef, here we just
-             * need to tell TOK_LC in Parser::statement to add braces.
-             */
+            /* General deoptimization was done in functionDef. */
             JS_ASSERT_IF(pc->sc->isFunctionBox(), pc->sc->asFunctionBox()->hasExtensibleScope());
-            if (hasFunctionStmt)
-                *hasFunctionStmt = true;
         }
     }
 
@@ -2519,7 +2510,7 @@ Parser<FullParseHandler>::addStatementToList(ParseNode *pn, ParseNode *kid, bool
 
 template <>
 void
-Parser<SyntaxParseHandler>::addStatementToList(Node pn, Node kid, bool *hasFunctionStmt)
+Parser<SyntaxParseHandler>::addStatementToList(Node pn, Node kid)
 {
 }
 
@@ -2530,11 +2521,9 @@ Parser<SyntaxParseHandler>::addStatementToList(Node pn, Node kid, bool *hasFunct
  */
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::statements(bool *hasFunctionStmt)
+Parser<ParseHandler>::statements()
 {
     JS_CHECK_RECURSION(context, return null());
-    if (hasFunctionStmt)
-        *hasFunctionStmt = false;
 
     Node pn = handler.newList(PNK_STATEMENTLIST);
     if (!pn)
@@ -2567,7 +2556,7 @@ Parser<ParseHandler>::statements(bool *hasFunctionStmt)
                 return null();
         }
 
-        addStatementToList(pn, next, hasFunctionStmt);
+        addStatementToList(pn, next);
     }
 
     /*
@@ -4794,8 +4783,8 @@ Parser<ParseHandler>::statement()
         StmtInfoPC stmtInfo(context);
         if (!PushBlocklikeStatement(&stmtInfo, STMT_BLOCK, pc))
             return null();
-        bool hasFunctionStmt;
-        pn = statements(&hasFunctionStmt);
+
+        pn = statements();
         if (!pn)
             return null();
 
