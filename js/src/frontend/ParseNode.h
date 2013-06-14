@@ -738,7 +738,7 @@ struct ParseNode {
     }
 #endif
 
-    inline void noteLValue();
+    inline void markAsAssigned();
 
     /*
      * Compute a pointer to the last element in a singly-linked list. NB: list
@@ -1271,8 +1271,9 @@ ParseNode::test(unsigned flag) const
 }
 
 inline void
-ParseNode::noteLValue()
+ParseNode::markAsAssigned()
 {
+    JS_ASSERT(js_CodeSpec[pn_op].format & JOF_NAME);
     if (isUsed())
         pn_lexdef->pn_dflags |= PND_ASSIGNED;
     pn_dflags |= PND_ASSIGNED;
