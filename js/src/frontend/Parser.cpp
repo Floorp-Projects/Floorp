@@ -489,6 +489,8 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     funCxFlags()
 {
+    JS_ASSERT(fun->isTenured());
+
     if (!outerpc) {
         inWith = false;
 

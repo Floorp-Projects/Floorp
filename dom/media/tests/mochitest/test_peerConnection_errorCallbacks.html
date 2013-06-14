@@ -22,16 +22,10 @@
     }
   };
 
-  function successCallback(message) {
-    return function () {
-      unexpectedCallbackAndFinish(new Error)(message);
-    }
-  };
-
   function testCreateAnswerError() {
     var pc = new mozRTCPeerConnection();
     info ("Testing createAnswer error callback");
-    pc.createAnswer(successCallback("createAnswer before offer should fail"),
+    pc.createAnswer(unexpectedCallbackAndFinish("createAnswer before offer should fail"),
                     errorCallback(testSetLocalDescriptionError));
   };
 
@@ -40,7 +34,7 @@
     info ("Testing setLocalDescription error callback");
     pc.setLocalDescription(new mozRTCSessionDescription({ sdp: "Picklechips!",
                                                           type: "offer" }),
-      successCallback("setLocalDescription with nonsense SDP should fail"),
+      unexpectedCallbackAndFinish("setLocalDescription with nonsense SDP should fail"),
       errorCallback(testSetRemoteDescriptionError));
   };
 
@@ -49,7 +43,7 @@
     info ("Testing setRemoteDescription error callback");
     pc.setRemoteDescription(new mozRTCSessionDescription({ sdp: "Who?",
                                                            type: "offer" }),
-      successCallback("setRemoteDescription with nonsense SDP should fail"),
+      unexpectedCallbackAndFinish("setRemoteDescription with nonsense SDP should fail"),
       errorCallback(testAddIceCandidateError));
   };
 
@@ -59,7 +53,7 @@
     pc.addIceCandidate(new mozRTCIceCandidate({ candidate: "Pony Lords, jump!",
                                                 sdpMid: "whee",
                                                 sdpMLineIndex: 1 }),
-      successCallback("addIceCandidate with nonsense candidate should fail"),
+      unexpectedCallbackAndFinish("addIceCandidate with nonsense candidate should fail"),
       errorCallback(SimpleTest.finish));
   };
 

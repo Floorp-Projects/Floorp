@@ -439,8 +439,9 @@ IsCacheableDOMProxy(JSObject *obj)
 }
 
 static void
-GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSObject *holder,
-                        Register objectReg, Register scratchReg, Label *failures)
+GeneratePrototypeGuards(JSContext *cx, IonScript *ion, MacroAssembler &masm, JSObject *obj,
+                        JSObject *holder, Register objectReg, Register scratchReg,
+                        Label *failures)
 {
     JS_ASSERT(obj != holder);
 
@@ -449,7 +450,8 @@ GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSOb
         // use objectReg in the rest of this function.
         masm.loadPtr(Address(objectReg, JSObject::offsetOfType()), scratchReg);
         Address proto(scratchReg, offsetof(types::TypeObject, proto));
-        masm.branchPtr(Assembler::NotEqual, proto, ImmGCPtr(obj->getProto()), failures);
+        masm.branchPtr(Assembler::NotEqual, proto,
+                       ImmMaybeNurseryPtr(ion->method(), obj->getProto()), failures);
     }
 
     JSObject *pobj = IsCacheableDOMProxy(obj)
@@ -460,7 +462,7 @@ GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSOb
     while (pobj != holder) {
         if (pobj->hasUncacheableProto()) {
             JS_ASSERT(!pobj->hasSingletonType());
-            masm.movePtr(ImmGCPtr(pobj), scratchReg);
+            masm.movePtr(ImmMaybeNurseryPtr(ion->method(), pobj), scratchReg);
             Address objType(scratchReg, JSObject::offsetOfType());
             masm.branchPtr(Assembler::NotEqual, objType, ImmGCPtr(pobj->type()), failures);
         }
@@ -699,9 +701,10 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
 }
 
 static void
-GenerateReadSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                 JSObject *obj, PropertyName *name, JSObject *holder, Shape *shape,
-                 Register object, TypedOrValueRegister output, Label *failures = NULL)
+GenerateReadSlot(JSContext *cx, IonScript *ion, MacroAssembler &masm,
+                 IonCache::StubAttacher &attacher, JSObject *obj, PropertyName *name,
+                 JSObject *holder, Shape *shape, Register object, TypedOrValueRegister output,
+                 Label *failures = NULL)
 {
     // If there's a single jump to |failures|, we can patch the shape guard
     // jump directly. Otherwise, jump to the end of the stub, so there's a
@@ -759,13 +762,13 @@ GenerateReadSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     Register holderReg;
     if (obj != holder) {
         // Note: this may clobber the object register if it's used as scratch.
-        GeneratePrototypeGuards(cx, masm, obj, holder, object, scratchReg,
+        GeneratePrototypeGuards(cx, ion, masm, obj, holder, object, scratchReg,
                                 failures);
 
         if (holder) {
             // Guard on the holder's shape.
             holderReg = scratchReg;
-            masm.movePtr(ImmGCPtr(holder), holderReg);
+            masm.movePtr(ImmMaybeNurseryPtr(ion->method(), holder), holderReg);
             masm.branchPtr(Assembler::NotEqual,
                            Address(holderReg, JSObject::offsetOfShape()),
                            ImmGCPtr(holder->lastProperty()),
@@ -827,10 +830,10 @@ GenerateReadSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 }
 
 static bool
-GenerateCallGetter(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                   JSObject *obj, PropertyName *name, JSObject *holder, HandleShape shape,
-                   RegisterSet &liveRegs, Register object, TypedOrValueRegister output,
-                   void *returnAddr, jsbytecode *pc)
+GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
+                   IonCache::StubAttacher &attacher, JSObject *obj, PropertyName *name,
+                   JSObject *holder, HandleShape shape, RegisterSet &liveRegs, Register object,
+                   TypedOrValueRegister output, void *returnAddr, jsbytecode *pc)
 {
     // Initial shape check.
     Label stubFailure;
@@ -845,11 +848,11 @@ GenerateCallGetter(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &
 
     // Note: this may clobber the object register if it's used as scratch.
     if (obj != holder)
-        GeneratePrototypeGuards(cx, masm, obj, holder, object, scratchReg, &stubFailure);
+        GeneratePrototypeGuards(cx, ion, masm, obj, holder, object, scratchReg, &stubFailure);
 
     // Guard on the holder's shape.
     Register holderReg = scratchReg;
-    masm.movePtr(ImmGCPtr(holder), holderReg);
+    masm.movePtr(ImmMaybeNurseryPtr(ion->method(), holder), holderReg);
     masm.branchPtr(Assembler::NotEqual,
                    Address(holderReg, JSObject::offsetOfShape()),
                    ImmGCPtr(holder->lastProperty()),
@@ -1013,7 +1016,7 @@ GetPropertyIC::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSOb
 {
     RepatchStubAppender attacher(*this);
     MacroAssembler masm(cx);
-    GenerateReadSlot(cx, masm, attacher, obj, name(), holder, shape, object(), output());
+    GenerateReadSlot(cx, ion, masm, attacher, obj, name(), holder, shape, object(), output());
     const char *attachKind = "non idempotent reading";
     if (idempotent())
         attachKind = "idempotent reading";
@@ -1147,7 +1150,7 @@ GetPropertyIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj,
     masm.setFramePushed(ion->frameSize());
 
     RepatchStubAppender attacher(*this);
-    if (!GenerateCallGetter(cx, masm, attacher, obj, name(), holder, shape, liveRegs_,
+    if (!GenerateCallGetter(cx, ion, masm, attacher, obj, name(), holder, shape, liveRegs_,
                             object(), output(), returnAddr, pc))
     {
          return false;
@@ -1621,7 +1624,7 @@ ParallelGetPropertyIC::attachReadSlot(LockedJSContext &cx, IonScript *ion,
     // Ready to generate the read slot stub.
     DispatchStubPrepender attacher(*this);
     MacroAssembler masm(cx);
-    GenerateReadSlot(cx, masm, attacher, obj, name(), holder, shape, object(), output());
+    GenerateReadSlot(cx, ion, masm, attacher, obj, name(), holder, shape, object(), output());
 
     const char *attachKind = "parallel non-idempotent reading";
     if (idempotent())
@@ -1794,9 +1797,9 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
 
         // Generate prototype/shape guards.
         if (obj != holder)
-            GeneratePrototypeGuards(cx, masm, obj, holder, object(), scratchReg, &protoFailure);
+            GeneratePrototypeGuards(cx, ion, masm, obj, holder, object(), scratchReg, &protoFailure);
 
-        masm.movePtr(ImmGCPtr(holder), scratchReg);
+        masm.movePtr(ImmMaybeNurseryPtr(ion->method(), holder), scratchReg);
         masm.branchPtr(Assembler::NotEqual,
                        Address(scratchReg, JSObject::offsetOfShape()),
                        ImmGCPtr(holder->lastProperty()),
@@ -2185,7 +2188,7 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
     masm.branchTestValue(Assembler::NotEqual, val, idval, &failures);
 
     RepatchStubAppender attacher(*this);
-    GenerateReadSlot(cx, masm, attacher, obj, name, holder, shape, object(), output(),
+    GenerateReadSlot(cx, ion, masm, attacher, obj, name, holder, shape, object(), output(),
                      &failures);
 
     return linkAndAttachStub(cx, masm, attacher, ion, "property");
@@ -2954,7 +2957,7 @@ NameIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject 
     masm.setFramePushed(ion->frameSize());
 
     RepatchStubAppender attacher(*this);
-    if (!GenerateCallGetter(cx, masm, attacher, obj, name(), holder, shape, liveRegs_,
+    if (!GenerateCallGetter(cx, ion, masm, attacher, obj, name(), holder, shape, liveRegs_,
                             scopeChainReg(), outputReg(), returnAddr, pc))
     {
          return false;

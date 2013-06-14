@@ -1472,7 +1472,10 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
     nsresult rv = utils->GetPresShellId(&presShellId);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     if (NS_SUCCEEDED(rv) && aFrameMetrics.mPresShellId != presShellId) {
-        return true;
+        // We've recieved a message that is out of date and we want to ignore.
+        // However we can't reply without painting so we reply by painting the
+        // exact same thing as we did before.
+        return ProcessUpdateFrame(mLastMetrics);
     }
     return ProcessUpdateFrame(aFrameMetrics);
 }

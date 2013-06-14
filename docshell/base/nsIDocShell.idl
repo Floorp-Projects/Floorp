@@ -42,7 +42,7 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 
-[scriptable, builtinclass, uuid(bb1a1c98-4deb-44ea-b607-aa7a1ad8abae)]
+[scriptable, builtinclass, uuid(f453d2ee-bac7-46f9-a553-df918f0cc0d0)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -233,6 +233,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Attribute stating whether or not images should be loaded.
    */
   attribute boolean allowImages;
+
+  /**
+   * Attribute stating whether or not media (audio/video) should be loaded.
+   */
+  [infallible] attribute boolean allowMedia;
 
   /**
    * Attribute that determines whether DNS prefetch is allowed for this subtree

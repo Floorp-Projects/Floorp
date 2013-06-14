@@ -224,6 +224,10 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                                     nsIntRect aVisibleRect,
                                     gfx::Matrix4x4 aTransform)
 {
+  if (!mCompositor) {
+    NS_WARNING("Can't render tiled content host - no compositor");
+    return;
+  }
   float resolution = aLayerBuffer.GetResolution();
   gfxSize layerScale(1, 1);
   // We assume that the current frame resolution is the one used in our primary
