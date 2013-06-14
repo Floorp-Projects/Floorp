@@ -423,11 +423,7 @@ nsStyleSet::AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   if (!mSheets[aType].AppendObject(aSheet))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!mBatching)
-    return GatherRuleProcessors(aType);
-
-  mDirty |= 1 << aType;
-  return NS_OK;
+  return DirtyRuleProcessors(aType);
 }
 
 nsresult
@@ -440,11 +436,7 @@ nsStyleSet::PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   if (!mSheets[aType].InsertObjectAt(aSheet, 0))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!mBatching)
-    return GatherRuleProcessors(aType);
-
-  mDirty |= 1 << aType;
-  return NS_OK;
+  return DirtyRuleProcessors(aType);
 }
 
 nsresult
@@ -454,11 +446,8 @@ nsStyleSet::RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
   NS_ASSERTION(aSheet->IsComplete(),
                "Incomplete sheet being removed from style set");
   mSheets[aType].RemoveObject(aSheet);
-  if (!mBatching)
-    return GatherRuleProcessors(aType);
 
-  mDirty |= 1 << aType;
-  return NS_OK;
+  return DirtyRuleProcessors(aType);
 }
 
 nsresult
@@ -469,11 +458,7 @@ nsStyleSet::ReplaceSheets(sheetType aType,
   if (!mSheets[aType].AppendObjects(aNewSheets))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!mBatching)
-    return GatherRuleProcessors(aType);
-
-  mDirty |= 1 << aType;
-  return NS_OK;
+  return DirtyRuleProcessors(aType);
 }
 
 nsresult
@@ -488,10 +473,16 @@ nsStyleSet::InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
   int32_t idx = mSheets[aType].IndexOf(aReferenceSheet);
   if (idx < 0)
     return NS_ERROR_INVALID_ARG;
-  
+
   if (!mSheets[aType].InsertObjectAt(aNewSheet, idx))
     return NS_ERROR_OUT_OF_MEMORY;
 
+  return DirtyRuleProcessors(aType);
+}
+
+nsresult
+nsStyleSet::DirtyRuleProcessors(sheetType aType)
+{
   if (!mBatching)
     return GatherRuleProcessors(aType);
 
@@ -559,11 +550,8 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
   }
   if (!sheets.InsertObjectAt(aSheet, index))
     return NS_ERROR_OUT_OF_MEMORY;
-  if (!mBatching)
-    return GatherRuleProcessors(type);
 
-  mDirty |= 1 << type;
-  return NS_OK;
+  return DirtyRuleProcessors(type);
 }
 
 nsresult
