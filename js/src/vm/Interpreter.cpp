@@ -3239,7 +3239,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
     RootedFunction fun(cx, funArg);
     if (fun->isNative() || fun->environment() != scopeChain) {
-        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain);
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain, TenuredObject);
         if (!fun)
             return false;
     } else {
