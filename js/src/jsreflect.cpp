@@ -2147,12 +2147,12 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
                 : builder.continueStatement(label, &pn->pn_pos, dst));
       }
 
-      case PNK_COLON:
+      case PNK_LABEL:
       {
         JS_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
         RootedValue label(cx), stmt(cx);
-        RootedAtom pnAtom(cx, pn->pn_atom);
+        RootedAtom pnAtom(cx, pn->as<LabeledStatement>().label());
         return identifier(pnAtom, NULL, &label) &&
                statement(pn->pn_expr, &stmt) &&
                builder.labeledStatement(label, stmt, &pn->pn_pos, dst);

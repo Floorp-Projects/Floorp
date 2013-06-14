@@ -1079,27 +1079,6 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
     return pn;
 }
 
-static void
-ForgetUse(ParseNode *pn)
-{
-    if (!pn->isUsed()) {
-        JS_ASSERT(!pn->isDefn());
-        return;
-    }
-
-    ParseNode **pnup = &pn->lexdef()->dn_uses;
-    ParseNode *pnu;
-    while ((pnu = *pnup) != pn)
-        pnup = &pnu->pn_link;
-    *pnup = pn->pn_link;
-    pn->setUsed(false);
-}
-
-static void
-ForgetUse(SyntaxParseHandler::Node pn)
-{
-}
-
 /* See comment for use in Parser::functionDef. */
 template <>
 bool
@@ -4517,43 +4496,41 @@ Parser<SyntaxParseHandler>::letStatement()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::labeledStatement()
+{
+    uint32_t begin = tokenStream.currentToken().pos.begin;
+    RootedPropertyName label(context, tokenStream.currentToken().name());
+    for (StmtInfoPC *stmt = pc->topStmt; stmt; stmt = stmt->down) {
+        if (stmt->type == STMT_LABEL && stmt->label == label) {
+            report(ParseError, false, null(), JSMSG_DUPLICATE_LABEL);
+            return null();
+        }
+    }
+
+    tokenStream.consumeKnownToken(TOK_COLON);
+
+    /* Push a label struct and parse the statement. */
+    StmtInfoPC stmtInfo(context);
+    PushStatementPC(pc, &stmtInfo, STMT_LABEL);
+    stmtInfo.label = label;
+    Node pn = statement();
+    if (!pn)
+        return null();
+
+    /* Pop the label, set pn_expr, and return early. */
+    PopStatementPC(context, pc);
+
+    return handler.newLabeledStatement(label, pn, begin);
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::expressionStatement()
 {
     tokenStream.ungetToken();
     Node pn2 = expr();
     if (!pn2)
         return null();
-
-    if (tokenStream.peekToken() == TOK_COLON) {
-        RootedAtom label(context, handler.isName(pn2));
-        if (!label) {
-            report(ParseError, false, null(), JSMSG_BAD_LABEL);
-            return null();
-        }
-        for (StmtInfoPC *stmt = pc->topStmt; stmt; stmt = stmt->down) {
-            if (stmt->type == STMT_LABEL && stmt->label == label) {
-                report(ParseError, false, null(), JSMSG_DUPLICATE_LABEL);
-                return null();
-            }
-        }
-        ForgetUse(pn2);
-
-        (void) tokenStream.getToken();
-
-        /* Push a label struct and parse the statement. */
-        StmtInfoPC stmtInfo(context);
-        PushStatementPC(pc, &stmtInfo, STMT_LABEL);
-        stmtInfo.label = label;
-        Node pn = statement();
-        if (!pn)
-            return null();
-
-        /* Pop the label, set pn_expr, and return early. */
-        PopStatementPC(context, pc);
-
-        handler.morphNameIntoLabel(pn2, pn);
-        return pn2;
-    }
 
     Node pn = handler.newUnary(PNK_SEMI, pn2);
 
@@ -4843,12 +4820,16 @@ Parser<ParseHandler>::statement()
       case TOK_ERROR:
         return null();
 
-      case TOK_NAME:
-        if (tokenStream.currentToken().name() == context->names().module &&
-            tokenStream.peekTokenSameLine(TSF_OPERAND) == TOK_STRING)
+      case TOK_NAME: {
+        if (tokenStream.peekToken() == TOK_COLON)
+            return labeledStatement();
+        if (tokenStream.currentToken().name() == context->names().module
+            && tokenStream.peekTokenSameLine() == TOK_STRING)
         {
             return moduleDecl();
         }
+      }
+        /* FALL THROUGH */
 
       default:
         return expressionStatement();

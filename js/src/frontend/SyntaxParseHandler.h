@@ -96,6 +96,9 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    Node newLabeledStatement(PropertyName *label, Node stmt, uint32_t begin) {
+        return NodeGeneric;
+    }
     Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
         return NodeGeneric;
     }
@@ -113,7 +116,6 @@ class SyntaxParseHandler
     bool addCatchBlock(Node catchList, Node letBlock,
                        Node catchName, Node catchGuard, Node catchBody) { return true; }
 
-    void morphNameIntoLabel(Node name, Node statement) {}
     void setLeaveBlockResult(Node block, Node kid, bool leaveBlockExpr) {}
 
     void setLastFunctionArgumentDefault(Node funcpn, Node pn) {}

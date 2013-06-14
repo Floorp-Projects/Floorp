@@ -5281,16 +5281,14 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  * the comment on EmitSwitch.
  */
 MOZ_NEVER_INLINE static bool
-EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitLabeledStatement(JSContext *cx, BytecodeEmitter *bce, const LabeledStatement *pn)
 {
     /*
      * Emit a JSOP_LABEL instruction. The argument is the offset to the statement
      * following the labeled statement.
      */
-    JSAtom *atom = pn->pn_atom;
-
     jsatomid index;
-    if (!bce->makeAtomIndex(atom, &index))
+    if (!bce->makeAtomIndex(pn->label(), &index))
         return false;
 
     ptrdiff_t top = EmitJump(cx, bce, JSOP_LABEL, 0);
@@ -5300,8 +5298,8 @@ EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     /* Emit code for the labeled statement. */
     StmtInfoBCE stmtInfo(cx);
     PushStatementBCE(bce, &stmtInfo, STMT_LABEL, bce->offset());
-    stmtInfo.label = atom;
-    if (!EmitTree(cx, bce, pn->expr()))
+    stmtInfo.label = pn->label();
+    if (!EmitTree(cx, bce, pn->statement()))
         return false;
     if (!PopStatementBCE(cx, bce))
         return false;
@@ -5833,8 +5831,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitStatement(cx, bce, pn);
         break;
 
-      case PNK_COLON:
-        ok = EmitLabel(cx, bce, pn);
+      case PNK_LABEL:
+        ok = EmitLabeledStatement(cx, bce, &pn->as<LabeledStatement>());
         break;
 
       case PNK_COMMA:
