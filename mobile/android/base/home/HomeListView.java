@@ -49,6 +49,13 @@ public class HomeListView extends ListView
     }
 
     @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        mUrlOpenListener = null;
+    }
+
+    @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
             // take focus away from awesome bar to hide the keyboard
