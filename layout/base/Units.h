@@ -80,6 +80,11 @@ typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
  * 3) the "widget scale" (nsIWidget::GetDefaultScale)
  */
 struct LayerPixel {
+  static gfx::PointTyped<LayerPixel> FromCSSPoint(const CSSPoint& aPoint, float aResolutionX, float aResolutionY) {
+    return gfx::PointTyped<LayerPixel>(aPoint.x * aResolutionX,
+                                       aPoint.y * aResolutionY);
+  }
+
   static gfx::IntPointTyped<LayerPixel> FromCSSPointRounded(const CSSPoint& aPoint, float aResolutionX, float aResolutionY) {
     return gfx::IntPointTyped<LayerPixel>(NS_lround(aPoint.x * aResolutionX),
                                           NS_lround(aPoint.y * aResolutionY));
@@ -120,6 +125,11 @@ typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
  * generally be represented in ScreenPixel units.
  */
 struct ScreenPixel {
+  static gfx::PointTyped<ScreenPixel> FromCSSPoint(const CSSPoint& aPoint, float aResolutionX, float aResolutionY) {
+    return gfx::PointTyped<ScreenPixel>(aPoint.x * aResolutionX,
+                                        aPoint.y * aResolutionY);
+  }
+
   static CSSPoint ToCSSPoint(const gfx::PointTyped<ScreenPixel>& aPoint, float aResolutionX, float aResolutionY) {
     return CSSPoint(aPoint.x * aResolutionX,
                     aPoint.y * aResolutionY);

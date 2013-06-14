@@ -1101,8 +1101,8 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   gfxSize rootScale(currentTransform.GetXScale(),
                     currentTransform.GetYScale());
 
-  gfxPoint metricsScrollOffset(0, 0);
-  gfxPoint scrollOffset;
+  LayerPoint metricsScrollOffset;
+  CSSPoint scrollOffset;
   gfxSize localScale;
   const FrameMetrics& frame = aLayer->GetFrameMetrics();
   {
@@ -1159,10 +1159,11 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     localScale = CalculateResolution(mFrameMetrics);
 
     if (frame.IsScrollable()) {
-      metricsScrollOffset = frame.GetScrollOffsetInLayerPixels();
+      metricsScrollOffset = LayerPoint::FromUnknownPoint(
+        frame.GetScrollOffsetInLayerPixels());
     }
 
-    scrollOffset = gfxPoint(mFrameMetrics.mScrollOffset.x, mFrameMetrics.mScrollOffset.y);
+    scrollOffset = mFrameMetrics.mScrollOffset;
     mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset;
   }
 
@@ -1193,11 +1194,15 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
                                             mAsyncScrollTimeout);
   }
 
-  gfxPoint scrollCompensation(
-    (scrollOffset / rootScale - metricsScrollOffset) * localScale);
+  LayerPoint translation = LayerPoint::FromCSSPoint(scrollOffset,
+                                                    1 / rootScale.width,
+                                                    1 / rootScale.height)
+                           - metricsScrollOffset;
+  gfxPoint scrollCompensation(translation.x * localScale.width,
+                              translation.y * localScale.height);
   *aNewTransform = ViewTransform(-scrollCompensation, localScale);
-  aScrollOffset.x = scrollOffset.x * localScale.width;
-  aScrollOffset.y = scrollOffset.y * localScale.height;
+  aScrollOffset = ScreenPoint::FromCSSPoint(
+    scrollOffset, localScale.width, localScale.height);
 
   mLastSampleTime = aSampleTime;
 
