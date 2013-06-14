@@ -27,6 +27,9 @@ import android.widget.SimpleCursorAdapter;
 
 import java.util.LinkedList;
 
+/**
+ * A ListView of bookmarks.
+ */
 public class BookmarksListView extends HomeListView
                                implements AdapterView.OnItemClickListener{
     
@@ -35,7 +38,10 @@ public class BookmarksListView extends HomeListView
     private int mFolderId = Bookmarks.FIXED_ROOT_ID;
     private String mFolderTitle = "";
 
+    // A cursor based adapter.
     private BookmarksListAdapter mCursorAdapter = null;
+
+    // A background task to query the db.
     private BookmarksQueryTask mQueryTask = null;
 
     // Folder title for the currently shown list of bookmarks.
