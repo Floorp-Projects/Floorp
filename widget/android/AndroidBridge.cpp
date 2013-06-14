@@ -2147,7 +2147,7 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, float aDisplay
                              aOffset);
 }
 
-void AndroidBridge::SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
+void AndroidBridge::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                      bool aLayersUpdated, const CSSRect& aDisplayPort, float aDisplayResolution,
                                      bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
