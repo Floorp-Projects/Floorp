@@ -47,16 +47,11 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LIBS	= xul
-endif
-
 LIBS		+= \
 		$(LIBS_DIR) \
 		tmreader.$(OBJ_SUFFIX) \
 		adreader.$(OBJ_SUFFIX) \
 		$(XPCOM_GLUE_LDOPTS) \
-		$(EXTRA_DSO_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

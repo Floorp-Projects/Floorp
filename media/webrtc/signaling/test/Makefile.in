@@ -10,7 +10,6 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBS = \
-  $(EXTRA_DSO_LIBS) \
   $(XPCOM_LIBS) \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
