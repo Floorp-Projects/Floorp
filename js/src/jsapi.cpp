@@ -2008,9 +2008,8 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, JSBool *re
 }
 
 JS_PUBLIC_API(JSBool)
-JS_EnumerateStandardClasses(JSContext *cx, JSObject *objArg)
+JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
