@@ -88,11 +88,9 @@ function eventSource(aProto) {
    *        Called when the event is fired.
    */
   aProto.addOneTimeListener = function EV_addOneTimeListener(aName, aListener) {
-    let self = this;
-
-    let l = function() {
-      self.removeListener(aName, l);
-      aListener.apply(null, arguments);
+    let l = (...args) => {
+      this.removeListener(aName, l);
+      aListener.apply(null, args);
     };
     this.addListener(aName, l);
   };
@@ -356,6 +354,10 @@ DebuggerClient.prototype = {
       });
     }
 
+    // In this function, we're using the hoisting behavior of nested
+    // function definitions to write the code in the order it will actually
+    // execute. So converting to arrow functions to get rid of 'self' would
+    // be unhelpful here.
     let self = this;
 
     let continuation = function () {
@@ -407,17 +409,16 @@ DebuggerClient.prototype = {
    *        (which will be undefined on error).
    */
   attachTab: function DC_attachTab(aTabActor, aOnResponse) {
-    let self = this;
     let packet = {
       to: aTabActor,
       type: "attach"
     };
-    this.request(packet, function(aResponse) {
+    this.request(packet, (aResponse) => {
       let tabClient;
       if (!aResponse.error) {
-        tabClient = new TabClient(self, aTabActor);
-        self._tabClients[aTabActor] = tabClient;
-        self.activeTab = tabClient;
+        tabClient = new TabClient(this, aTabActor);
+        this._tabClients[aTabActor] = tabClient;
+        this.activeTab = tabClient;
       }
       aOnResponse(aResponse, tabClient);
     });
@@ -436,18 +437,17 @@ DebuggerClient.prototype = {
    */
   attachConsole:
   function DC_attachConsole(aConsoleActor, aListeners, aOnResponse) {
-    let self = this;
     let packet = {
       to: aConsoleActor,
       type: "startListeners",
       listeners: aListeners,
     };
 
-    this.request(packet, function(aResponse) {
+    this.request(packet, (aResponse) => {
       let consoleClient;
       if (!aResponse.error) {
-        consoleClient = new WebConsoleClient(self, aConsoleActor);
-        self._consoleClients[aConsoleActor] = consoleClient;
+        consoleClient = new WebConsoleClient(this, aConsoleActor);
+        this._consoleClients[aConsoleActor] = consoleClient;
       }
       aOnResponse(aResponse, consoleClient);
     });
@@ -466,17 +466,16 @@ DebuggerClient.prototype = {
    *        - useSourceMaps: whether to use source maps or not.
    */
   attachThread: function DC_attachThread(aThreadActor, aOnResponse, aOptions={}) {
-    let self = this;
     let packet = {
       to: aThreadActor,
       type: "attach",
       options: aOptions
     };
-    this.request(packet, function(aResponse) {
+    this.request(packet, (aResponse) => {
       if (!aResponse.error) {
-        var threadClient = new ThreadClient(self, aThreadActor);
-        self._threadClients[aThreadActor] = threadClient;
-        self.activeThread = threadClient;
+        var threadClient = new ThreadClient(this, aThreadActor);
+        this._threadClients[aThreadActor] = threadClient;
+        this.activeThread = threadClient;
       }
       aOnResponse(aResponse, threadClient);
     });
@@ -544,14 +543,13 @@ DebuggerClient.prototype = {
    * active request.
    */
   _sendRequests: function DC_sendRequests() {
-    let self = this;
-    this._pendingRequests = this._pendingRequests.filter(function (request) {
-      if (request.to in self._activeRequests) {
+    this._pendingRequests = this._pendingRequests.filter((request) => {
+      if (request.to in this._activeRequests) {
         return true;
       }
 
-      self._activeRequests[request.to] = request;
-      self._transport.send(request.request);
+      this._activeRequests[request.to] = request;
+      this._transport.send(request.request);
 
       return false;
     });
@@ -1330,15 +1328,14 @@ ThreadClient.prototype = {
 
     let numFrames = this._frameCache.length;
 
-    let self = this;
-    this.getFrames(numFrames, aTotal - numFrames, function(aResponse) {
+    this.getFrames(numFrames, aTotal - numFrames, (aResponse) => {
       for each (let frame in aResponse.frames) {
-        self._frameCache[frame.depth] = frame;
+        this._frameCache[frame.depth] = frame;
       }
       // If we got as many frames as we asked for, there might be more
       // frames available.
 
-      self.notify("framesadded");
+      this.notify("framesadded");
     });
     return true;
   },
