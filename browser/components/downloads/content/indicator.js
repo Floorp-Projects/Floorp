@@ -526,7 +526,7 @@ const DownloadsIndicatorView = {
       // If the downloads button is in the menu panel, open the Library
       let widgetGroup = CustomizableUI.getWidget("downloads-button");
       let widget = widgetGroup.forWindow(window);
-      if (widget.areaType == CustomizableUI.AREATYPE_MENU_PANEL) {
+      if (widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
         DownloadsPanel.showDownloadsHistory();
       } else {
         DownloadsPanel.showPanel();
