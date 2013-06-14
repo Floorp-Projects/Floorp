@@ -1355,6 +1355,7 @@
           return /^text\/|\+xml$/.test(aMimeType) ||
                  aMimeType == "application/x-javascript" ||
                  aMimeType == "application/javascript" ||
+                 aMimeType == "application/json" ||
                  aMimeType == "application/xml";
         ]]></body>
       </method>
