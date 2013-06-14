@@ -6,12 +6,9 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -23,10 +20,7 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Pair;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -121,8 +115,9 @@ public class BookmarksPage extends HomeFragment {
 
         EventHandlers eventHandlers = new EventHandlers();
         mList.setOnItemClickListener(eventHandlers);
-        mList.setOnCreateContextMenuListener(eventHandlers);
         mList.setOnKeyListener(GamepadUtils.getListItemClickDispatcher());
+
+        registerForContextMenu(mList);
 
         mQueryTask = new BookmarksQueryTask();
         mQueryTask.execute();
@@ -183,8 +178,7 @@ public class BookmarksPage extends HomeFragment {
     /**
      * Internal class to handle different event listeners on the ListView.
      */
-    private class EventHandlers implements AdapterView.OnItemClickListener,
-                                           View.OnCreateContextMenuListener {
+    private class EventHandlers implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             final ListView list = (ListView) parent;
@@ -222,42 +216,6 @@ public class BookmarksPage extends HomeFragment {
                 }
              }
          }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
-            if (!(menuInfo instanceof HomeContextMenuInfo)) {
-                return;
-            }
-
-            HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
-
-            // Don't show the context menu for folders.
-            if (info.isFolder) {
-                return;
-            }
-
-            MenuInflater inflater = new MenuInflater(view.getContext());
-            inflater.inflate(R.menu.home_contextmenu, menu);
-
-            // Show Open Private Tab if we're in private mode, Open New Tab otherwise
-            boolean isPrivate = false;
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                isPrivate = tab.isPrivate();
-            }
-            menu.findItem(R.id.open_new_tab).setVisible(!isPrivate);
-            menu.findItem(R.id.open_private_tab).setVisible(isPrivate);
-
-            // Hide "Remove" item if there isn't a valid history ID
-            if (info.rowId < 0) {
-                menu.findItem(R.id.remove_history).setVisible(false);
-            }
-            menu.setHeaderTitle(info.title);
- 
-            menu.findItem(R.id.remove_history).setVisible(false);
-            menu.findItem(R.id.open_in_reader).setVisible(false);
-            return;
-        }
     }
 
     /**
