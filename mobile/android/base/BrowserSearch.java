@@ -643,7 +643,7 @@ public class BrowserSearch extends Fragment implements AdapterView.OnItemClickLi
             case FAVICONS_LOADER_ID:
                 // Causes the listview to recreate its children and use the
                 // now in-memory favicons.
-                mList.requestLayout();
+                mAdapter.notifyDataSetChanged();
                 break;
             }
         }
