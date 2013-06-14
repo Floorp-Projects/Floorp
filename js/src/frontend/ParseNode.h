@@ -75,6 +75,7 @@ class UpvarCookie
     F(DOT) \
     F(ELEM) \
     F(ARRAY) \
+    F(ELISION) \
     F(STATEMENTLIST) \
     F(LABEL) \
     F(OBJECT) \
@@ -359,7 +360,7 @@ enum ParseNodeKind
  * PNK_GENEXP   list        Exactly like PNK_CALL, used for the implicit call
  *                          in the desugaring of a generator-expression.
  * PNK_ARRAY    list        pn_head: list of pn_count array element exprs
- *                          [,,] holes are represented by PNK_COMMA nodes
+ *                          [,,] holes are represented by PNK_ELISION nodes
  *                          pn_xflags: PN_ENDCOMMA if extra comma at end
  * PNK_OBJECT   list        pn_head: list of pn_count binary PNK_COLON nodes
  * PNK_COLON    binary      key-value pair in object initializer or
@@ -728,11 +729,6 @@ struct ParseNode
     /* Return true if this node appears in a Directive Prologue. */
     bool isDirectivePrologueMember() const { return pn_prologue; }
 
-#ifdef JS_HAS_DESTRUCTURING
-    /* Return true if this represents a hole in an array literal. */
-    bool isArrayHole() const { return isKind(PNK_COMMA) && isArity(PN_NULLARY); }
-#endif
-
 #ifdef JS_HAS_GENERATOR_EXPRS
     ParseNode *generatorExpr() const {
         JS_ASSERT(isKind(PNK_GENEXP));
@@ -822,6 +818,9 @@ struct ParseNode
 
 struct NullaryNode : public ParseNode
 {
+    NullaryNode(ParseNodeKind kind, const TokenPos &pos)
+      : ParseNode(kind, JSOP_NOP, PN_NULLARY, pos) {}
+
     static inline NullaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
         return (NullaryNode *) ParseNode::create(kind, PN_NULLARY, handler);
     }
