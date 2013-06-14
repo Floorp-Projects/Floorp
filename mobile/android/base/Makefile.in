@@ -437,6 +437,7 @@ RES_LAYOUT = \
   res/layout/find_in_page_content.xml \
   res/layout/font_size_preference.xml \
   res/layout/gecko_app.xml \
+  res/layout/home_bookmarks_page.xml \
   res/layout/home_item_row.xml \
   res/layout/home_search_item_row.xml \
   res/layout/web_app.xml \
