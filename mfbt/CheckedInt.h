@@ -566,7 +566,7 @@ struct NegateImpl<T, true>
    CheckedInt<int8_t> x(-1);
    // 1000 is of type int16_t, is found not to be in range for int8_t,
    // x is invalid
-   CheckedInt<int8_t> x(int16_t(1000)); 
+   CheckedInt<int8_t> x(int16_t(1000));
    // 3123456789 is of type uint32_t, is found not to be in range for int32_t,
    // x is invalid
    CheckedInt<int32_t> x(uint32_t(3123456789));
@@ -626,6 +626,17 @@ class CheckedInt
       MOZ_STATIC_ASSERT(detail::IsSupported<T>::value &&
                         detail::IsSupported<U>::value,
                         "This type is not supported by CheckedInt");
+    }
+
+    template<typename U>
+    friend class CheckedInt;
+
+    template<typename U>
+    CheckedInt<U> toChecked() const
+    {
+      CheckedInt<U> ret(mValue);
+      ret.mIsValid = ret.mIsValid && mIsValid;
+      return ret;
     }
 
     /** Constructs a valid checked integer with initial value 0 */
