@@ -550,13 +550,11 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   {
     MonitorAutoLock monitor(mMonitor);
 
-    gfxFloat resolution = CalculateResolution(mFrameMetrics).width;
+    CSSToScreenScale resolution(CalculateResolution(mFrameMetrics));
     gfxFloat userZoom = mFrameMetrics.mZoom.width;
     ScreenPoint focusPoint = aEvent.mFocusPoint;
 
-    CSSPoint focusChange = ScreenPoint::ToCSSPoint(mLastZoomFocus - focusPoint,
-                                                   1.0 / resolution,
-                                                   1.0 / resolution);
+    CSSPoint focusChange = (mLastZoomFocus - focusPoint) / resolution;
     // If displacing by the change in focus point will take us off page bounds,
     // then reduce the displacement such that it doesn't.
     if (mX.DisplacementWillOverscroll(focusChange.x) != Axis::OVERSCROLL_NONE) {
@@ -1098,12 +1096,12 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   const gfx3DMatrix& currentTransform = aLayer->GetTransform();
 
   // Scales on the root layer, on what's currently painted.
-  gfxSize rootScale(currentTransform.GetXScale(),
-                    currentTransform.GetYScale());
+  LayerToCSSScale rootScale(currentTransform.GetXScale(),
+                            currentTransform.GetYScale());
 
   LayerPoint metricsScrollOffset;
   CSSPoint scrollOffset;
-  gfxSize localScale;
+  CSSToScreenScale localScale;
   const FrameMetrics& frame = aLayer->GetFrameMetrics();
   {
     MonitorAutoLock mon(mMonitor);
@@ -1156,7 +1154,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     // what PZC has transformed due to touches like panning or
     // pinching. Eventually, the root layer transform will become this
     // during runtime, but we must wait for Gecko to repaint.
-    localScale = CalculateResolution(mFrameMetrics);
+    localScale = CSSToScreenScale(CalculateResolution(mFrameMetrics));
 
     if (frame.IsScrollable()) {
       metricsScrollOffset = LayerPoint::FromUnknownPoint(
@@ -1194,13 +1192,9 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
                                             mAsyncScrollTimeout);
   }
 
-  LayerPoint translation = LayerPoint::FromCSSPoint(scrollOffset,
-                                                    1 / rootScale.width,
-                                                    1 / rootScale.height)
-                           - metricsScrollOffset;
+  LayerPoint translation = (scrollOffset / rootScale) - metricsScrollOffset;
   *aNewTransform = ViewTransform(-translation, localScale);
-  aScrollOffset = ScreenPoint::FromCSSPoint(
-    scrollOffset, localScale.width, localScale.height);
+  aScrollOffset = scrollOffset * localScale;
 
   mLastSampleTime = aSampleTime;
 
