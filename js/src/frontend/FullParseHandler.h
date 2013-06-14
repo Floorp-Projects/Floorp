@@ -174,6 +174,10 @@ class FullParseHandler
         return new_<TernaryNode>(kind, op, first, second, third);
     }
 
+    ParseNode *newLabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin) {
+        return new_<LabeledStatement>(label, stmt, begin);
+    }
+
     ParseNode *newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
         return new_<BreakStatement>(label, begin, end);
     }
@@ -192,8 +196,6 @@ class FullParseHandler
 
     inline bool addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
                               ParseNode *catchName, ParseNode *catchGuard, ParseNode *catchBody);
-
-    inline void morphNameIntoLabel(ParseNode *name, ParseNode *statement);
 
     inline void setLeaveBlockResult(ParseNode *block, ParseNode *kid, bool leaveBlockExpr);
 
@@ -361,14 +363,6 @@ FullParseHandler::addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
     catchList->append(letBlock);
     letBlock->pn_expr = catchpn;
     return true;
-}
-
-inline void
-FullParseHandler::morphNameIntoLabel(ParseNode *name, ParseNode *statement)
-{
-    name->setKind(PNK_COLON);
-    name->pn_pos.end = statement->pn_pos.end;
-    name->pn_expr = statement;
 }
 
 inline void

@@ -167,15 +167,13 @@ LoopControlMaybeLabel(ParseNode *pn)
 static inline PropertyName *
 LabeledStatementLabel(ParseNode *pn)
 {
-    JS_ASSERT(pn->isKind(PNK_COLON));
-    return pn->pn_atom->asPropertyName();
+    return pn->as<LabeledStatement>().label();
 }
 
 static inline ParseNode *
 LabeledStatementStatement(ParseNode *pn)
 {
-    JS_ASSERT(pn->isKind(PNK_COLON));
-    return pn->expr();
+    return pn->as<LabeledStatement>().statement();
 }
 
 static double
@@ -4351,7 +4349,7 @@ CheckDoWhile(FunctionCompiler &f, ParseNode *whileStmt, const LabelVector *maybe
 static bool
 CheckLabel(FunctionCompiler &f, ParseNode *labeledStmt, LabelVector *maybeLabels)
 {
-    JS_ASSERT(labeledStmt->isKind(PNK_COLON));
+    JS_ASSERT(labeledStmt->isKind(PNK_LABEL));
     PropertyName *label = LabeledStatementLabel(labeledStmt);
     ParseNode *stmt = LabeledStatementStatement(labeledStmt);
 
@@ -4622,7 +4620,7 @@ CheckStatement(FunctionCompiler &f, ParseNode *stmt, LabelVector *maybeLabels)
       case PNK_WHILE:         return CheckWhile(f, stmt, maybeLabels);
       case PNK_FOR:           return CheckFor(f, stmt, maybeLabels);
       case PNK_DOWHILE:       return CheckDoWhile(f, stmt, maybeLabels);
-      case PNK_COLON:         return CheckLabel(f, stmt, maybeLabels);
+      case PNK_LABEL:         return CheckLabel(f, stmt, maybeLabels);
       case PNK_IF:            return CheckIf(f, stmt);
       case PNK_SWITCH:        return CheckSwitch(f, stmt);
       case PNK_RETURN:        return CheckReturn(f, stmt);

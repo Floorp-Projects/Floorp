@@ -76,6 +76,7 @@ class UpvarCookie
     F(ELEM) \
     F(ARRAY) \
     F(STATEMENTLIST) \
+    F(LABEL) \
     F(OBJECT) \
     F(CALL) \
     F(NAME) \
@@ -181,7 +182,8 @@ class UpvarCookie
  *
  * The long comment after this enum block describes the kinds in detail.
  */
-enum ParseNodeKind {
+enum ParseNodeKind
+{
 #define EMIT_ENUM(name) PNK_##name,
     FOR_EACH_PARSE_NODE_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
@@ -284,7 +286,7 @@ enum ParseNodeKind {
  *                          pn_prologue: true if Directive Prologue member
  *                              in original source, not introduced via
  *                              constant folding or other tree rewriting
- * PNK_COLON    name        pn_atom: label, pn_expr: labeled statement
+ * PNK_LABEL    name        pn_atom: label, pn_expr: labeled statement
  *
  * <Expressions>
  * All left-associated binary trees of the same type are optimized into lists
@@ -392,7 +394,8 @@ enum ParseNodeKind {
  *                          pn_kid: array comprehension expression
  * PNK_NOP          nullary
  */
-enum ParseNodeArity {
+enum ParseNodeArity
+{
     PN_NULLARY,                         /* 0 kids, only pn_atom/pn_dval/etc. */
     PN_UNARY,                           /* one kid, plus a couple of scalars */
     PN_BINARY,                          /* two kids, plus a couple of scalars */
@@ -404,6 +407,7 @@ enum ParseNodeArity {
 
 struct Definition;
 
+class LabeledStatement;
 class LoopControlStatement;
 class BreakStatement;
 class ContinueStatement;
@@ -411,7 +415,8 @@ class ConditionalExpression;
 class PropertyAccess;
 class ModuleBox;
 
-struct ParseNode {
+struct ParseNode
+{
   private:
     uint32_t            pn_type   : 16, /* PNK_* type */
                         pn_op     : 8,  /* see JSOp enum and jsopcode.tbl */
@@ -815,7 +820,8 @@ struct ParseNode {
 #endif
 };
 
-struct NullaryNode : public ParseNode {
+struct NullaryNode : public ParseNode
+{
     static inline NullaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
         return (NullaryNode *) ParseNode::create(kind, PN_NULLARY, handler);
     }
@@ -829,7 +835,8 @@ struct NullaryNode : public ParseNode {
 #endif
 };
 
-struct UnaryNode : public ParseNode {
+struct UnaryNode : public ParseNode
+{
     UnaryNode(ParseNodeKind kind, JSOp op, const TokenPos &pos, ParseNode *kid)
       : ParseNode(kind, op, PN_UNARY, pos)
     {
@@ -849,7 +856,8 @@ struct UnaryNode : public ParseNode {
 #endif
 };
 
-struct BinaryNode : public ParseNode {
+struct BinaryNode : public ParseNode
+{
     BinaryNode(ParseNodeKind kind, JSOp op, const TokenPos &pos, ParseNode *left, ParseNode *right)
       : ParseNode(kind, op, PN_BINARY, pos)
     {
@@ -877,7 +885,8 @@ struct BinaryNode : public ParseNode {
 #endif
 };
 
-struct TernaryNode : public ParseNode {
+struct TernaryNode : public ParseNode
+{
     TernaryNode(ParseNodeKind kind, JSOp op, ParseNode *kid1, ParseNode *kid2, ParseNode *kid3)
       : ParseNode(kind, op, PN_TERNARY,
                   TokenPos::make((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
@@ -923,7 +932,8 @@ struct ListNode : public ParseNode
 #endif
 };
 
-struct CodeNode : public ParseNode {
+struct CodeNode : public ParseNode
+{
     static inline CodeNode *create(ParseNodeKind kind, FullParseHandler *handler) {
         return (CodeNode *) ParseNode::create(kind, PN_CODE, handler);
     }
@@ -937,7 +947,8 @@ struct CodeNode : public ParseNode {
 #endif
 };
 
-struct NameNode : public ParseNode {
+struct NameNode : public ParseNode
+{
     static NameNode *create(ParseNodeKind kind, JSAtom *atom,
                             FullParseHandler *handler, ParseContext<FullParseHandler> *pc);
 
@@ -952,13 +963,41 @@ struct NameNode : public ParseNode {
 #endif
 };
 
-struct LexicalScopeNode : public ParseNode {
+struct LexicalScopeNode : public ParseNode
+{
     static inline LexicalScopeNode *create(ParseNodeKind kind, FullParseHandler *handler) {
         return (LexicalScopeNode *) ParseNode::create(kind, PN_NAME, handler);
     }
 };
 
-class LoopControlStatement : public ParseNode {
+class LabeledStatement : public ParseNode
+{
+  public:
+    LabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin)
+      : ParseNode(PNK_LABEL, JSOP_NOP, PN_NAME, TokenPos::make(begin, stmt->pn_pos.end))
+    {
+        pn_atom = label;
+        pn_expr = stmt;
+    }
+
+    PropertyName *label() const {
+        return pn_atom->asPropertyName();
+    }
+
+    ParseNode *statement() const {
+        return pn_expr;
+    }
+
+    static bool test(const ParseNode &node) {
+        bool match = node.isKind(PNK_LABEL);
+        JS_ASSERT_IF(match, node.isArity(PN_NAME));
+        JS_ASSERT_IF(match, node.isOp(JSOP_NOP));
+        return match;
+    }
+};
+
+class LoopControlStatement : public ParseNode
+{
   protected:
     LoopControlStatement(ParseNodeKind kind, PropertyName *label, uint32_t begin, uint32_t end)
       : ParseNode(kind, JSOP_NOP, PN_NULLARY, TokenPos::make(begin, end))
@@ -981,7 +1020,8 @@ class LoopControlStatement : public ParseNode {
     }
 };
 
-class BreakStatement : public LoopControlStatement {
+class BreakStatement : public LoopControlStatement
+{
   public:
     BreakStatement(PropertyName *label, uint32_t begin, uint32_t end)
       : LoopControlStatement(PNK_BREAK, label, begin, end)
@@ -995,7 +1035,8 @@ class BreakStatement : public LoopControlStatement {
     }
 };
 
-class ContinueStatement : public LoopControlStatement {
+class ContinueStatement : public LoopControlStatement
+{
   public:
     ContinueStatement(PropertyName *label, uint32_t begin, uint32_t end)
       : LoopControlStatement(PNK_CONTINUE, label, begin, end)
@@ -1009,14 +1050,16 @@ class ContinueStatement : public LoopControlStatement {
     }
 };
 
-class DebuggerStatement : public ParseNode {
+class DebuggerStatement : public ParseNode
+{
   public:
     DebuggerStatement(const TokenPos &pos)
       : ParseNode(PNK_DEBUGGER, JSOP_NOP, PN_NULLARY, pos)
     { }
 };
 
-class ConditionalExpression : public ParseNode {
+class ConditionalExpression : public ParseNode
+{
   public:
     ConditionalExpression(ParseNode *condition, ParseNode *thenExpr, ParseNode *elseExpr)
       : ParseNode(PNK_CONDITIONAL, JSOP_NOP, PN_TERNARY,
@@ -1050,24 +1093,28 @@ class ConditionalExpression : public ParseNode {
     }
 };
 
-class ThisLiteral : public ParseNode {
+class ThisLiteral : public ParseNode
+{
   public:
     ThisLiteral(const TokenPos &pos) : ParseNode(PNK_THIS, JSOP_THIS, PN_NULLARY, pos) { }
 };
 
-class NullLiteral : public ParseNode {
+class NullLiteral : public ParseNode
+{
   public:
     NullLiteral(const TokenPos &pos) : ParseNode(PNK_NULL, JSOP_NULL, PN_NULLARY, pos) { }
 };
 
-class BooleanLiteral : public ParseNode {
+class BooleanLiteral : public ParseNode
+{
   public:
     BooleanLiteral(bool b, const TokenPos &pos)
       : ParseNode(b ? PNK_TRUE : PNK_FALSE, b ? JSOP_TRUE : JSOP_FALSE, PN_NULLARY, pos)
     { }
 };
 
-class PropertyAccess : public ParseNode {
+class PropertyAccess : public ParseNode
+{
   public:
     PropertyAccess(ParseNode *lhs, PropertyName *name, uint32_t begin, uint32_t end)
       : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos::make(begin, end))
@@ -1093,7 +1140,8 @@ class PropertyAccess : public ParseNode {
     }
 };
 
-class PropertyByValue : public ParseNode {
+class PropertyByValue : public ParseNode
+{
   public:
     PropertyByValue(ParseNode *lhs, ParseNode *propExpr, uint32_t begin, uint32_t end)
       : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
@@ -1241,7 +1289,8 @@ struct Definition : public ParseNode
     }
 };
 
-class ParseNodeAllocator {
+class ParseNodeAllocator
+{
   public:
     explicit ParseNodeAllocator(JSContext *cx) : cx(cx), freelist(NULL) {}
 
@@ -1306,7 +1355,8 @@ ParseNode::isConstant()
     }
 }
 
-class ObjectBox {
+class ObjectBox
+{
   public:
     JSObject *object;
 
@@ -1327,7 +1377,8 @@ class ObjectBox {
     ObjectBox(Module *module, ObjectBox *traceLink);
 };
 
-enum ParseReportKind {
+enum ParseReportKind
+{
     ParseError,
     ParseWarning,
     ParseExtraWarning,
