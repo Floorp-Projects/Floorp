@@ -179,7 +179,7 @@
     <content hidden="true">
     <xul:hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
       <xul:toolbarbutton anonid="find-closebutton"
-                         class="findbar-closebutton"
+                         class="findbar-closebutton close-icon"
                          tooltiptext="&findCloseButton.tooltip;"
                          oncommand="close();"/>
       <xul:label anonid="find-label" class="findbar-find-fast" control="findbar-textbox"/>
