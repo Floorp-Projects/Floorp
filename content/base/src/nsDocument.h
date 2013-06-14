@@ -642,14 +642,6 @@ public:
   }
 
   /**
-   * Get this document's inline style sheet.  May return null if there
-   * isn't one
-   */
-  virtual nsHTMLCSSStyleSheet* GetInlineStyleSheet() const MOZ_OVERRIDE {
-    return mStyleAttrStyleSheet;
-  }
-  
-  /**
    * Set the object from which a document can get a script context.
    * This is the context within which all scripts (during document
    * creation and during event handling) will run.
@@ -1308,7 +1300,6 @@ protected:
 
   // The channel that got passed to StartDocumentLoad(), if any
   nsCOMPtr<nsIChannel> mChannel;
-  nsRefPtr<nsHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   // A document "without a browsing context" that owns the content of
   // HTMLTemplateElement.
