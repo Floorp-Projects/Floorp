@@ -45,6 +45,7 @@ public:
   void Update(double aTime);
 
   TextTrackCue* IndexedGetter(uint32_t aIndex, bool& aFound);
+  TextTrackCue* operator[](uint32_t aIndex);
   TextTrackCue* GetCueById(const nsAString& aId);
 
   // Adds a cue to mList by performing an insertion sort on mList.
@@ -53,6 +54,8 @@ public:
   // sort step after all cues are loaded.
   void AddCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
+  void RemoveCueAt(uint32_t aIndex);
+  void RemoveAll();
 
 private:
   nsCOMPtr<nsISupports> mParent;
