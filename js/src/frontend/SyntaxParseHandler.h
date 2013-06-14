@@ -71,7 +71,7 @@ class SyntaxParseHandler
     Node newNullLiteral(const TokenPos &pos) { return NodeGeneric; }
     Node newConditional(Node cond, Node thenExpr, Node elseExpr) { return NodeGeneric; }
 
-    Node newNullary(ParseNodeKind kind) { return NodeGeneric; }
+    Node newElision() { return NodeGeneric; }
 
     Node newUnary(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
         if (kind == PNK_SEMI && kid == NodeString)
