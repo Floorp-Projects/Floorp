@@ -1128,11 +1128,22 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
      * resolving upvar accesses within the inner function.
      */
     if (bce->emitterMode == BytecodeEmitter::LazyFunction) {
+        // The only statements within a lazy function which can push lexical
+        // scopes are try/catch blocks. Use generic ops in this case.
+        for (StmtInfoBCE *stmt = bce->topStmt; stmt; stmt = stmt->down) {
+            switch (stmt->type) {
+              case STMT_TRY:
+              case STMT_FINALLY:
+                return true;
+              default:;
+            }
+        }
+
         size_t hops = 0;
         FunctionBox *funbox = bce->sc->asFunctionBox();
         if (funbox->hasExtensibleScope())
             return false;
-        if (funbox->function()->atom() == pn->pn_atom)
+        if (funbox->function()->isNamedLambda() && funbox->function()->atom() == pn->pn_atom)
             return false;
         if (funbox->function()->isHeavyweight()) {
             hops++;
@@ -4491,8 +4502,10 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     if (fun->isInterpretedLazy()) {
-        if (!fun->lazyScript()->parent())
-            fun->lazyScript()->initParent(bce->script);
+        if (!fun->lazyScript()->sourceObject()) {
+            JSFunction *parent = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox()->function() : NULL;
+            fun->lazyScript()->setParent(parent, bce->script->sourceObject(), bce->script->originPrincipals);
+        }
     } else {
         SharedContext *outersc = bce->sc;
 
@@ -4557,6 +4570,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             /* We measured the max scope depth when we parsed the function. */
             if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
                 return false;
+
+            if (funbox->usesArguments && funbox->usesApply)
+                script->usesArgumentsAndApply = true;
         }
     }
 

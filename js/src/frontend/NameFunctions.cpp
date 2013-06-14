@@ -175,8 +175,6 @@ class NameResolver
     JSAtom *resolveFun(ParseNode *pn, HandleAtom prefix) {
         JS_ASSERT(pn != NULL && pn->isKind(PNK_FUNCTION));
         RootedFunction fun(cx, pn->pn_funbox->function());
-        if (nparents == 0)
-            return NULL;
 
         StringBuffer buf(cx);
         this->buf = &buf;
@@ -184,7 +182,7 @@ class NameResolver
         /* If the function already has a name, use that */
         if (fun->displayAtom() != NULL) {
             if (prefix == NULL)
-                return fun->atom();
+                return fun->displayAtom();
             if (!buf.append(prefix) ||
                 !buf.append("/") ||
                 !buf.append(fun->displayAtom()))

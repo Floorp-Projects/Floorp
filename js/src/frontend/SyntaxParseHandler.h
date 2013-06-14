@@ -32,6 +32,7 @@ class SyntaxParseHandler
         NodeFailure = 0,
         NodeGeneric,
         NodeName,
+        NodeGetProp,
         NodeString,
         NodeStringExprStatement,
         NodeLValue
@@ -102,7 +103,11 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
     Node newDebuggerStatement(const TokenPos &pos) { return NodeGeneric; }
-    Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end) { return NodeLValue; }
+    Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end)
+    {
+        lastAtom = name;
+        return NodeGetProp;
+    }
     Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeLValue; }
 
     bool addCatchBlock(Node catchList, Node letBlock,
@@ -159,7 +164,9 @@ class SyntaxParseHandler
     PropertyName *isName(Node pn) {
         return (pn == NodeName) ? lastAtom->asPropertyName() : NULL;
     }
-    PropertyName *isGetProp(Node pn) { return NULL; }
+    PropertyName *isGetProp(Node pn) {
+        return (pn == NodeGetProp) ? lastAtom->asPropertyName() : NULL;
+    }
     JSAtom *isStringExprStatement(Node pn, TokenPos *pos) {
         if (pn == NodeStringExprStatement) {
             *pos = lastStringPos;

@@ -1694,6 +1694,10 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
         return true;
     }
 
+    // The calleereg is known to be a non-native function, but might point to
+    // a LazyScript instead of a JSScript.
+    masm.branchIfFunctionHasNoScript(calleereg, &uncompiled);
+
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
 

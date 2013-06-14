@@ -5289,10 +5289,10 @@ AutoFile::open(JSContext *cx, const char *filename)
 }
 
 
-JS::CompileOptions::CompileOptions(JSContext *cx)
+JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
     : principals(NULL),
       originPrincipals(NULL),
-      version(cx->findVersion()),
+      version(version != JSVERSION_UNKNOWN ? version : cx->findVersion()),
       versionSet(false),
       utf8(false),
       filename(NULL),

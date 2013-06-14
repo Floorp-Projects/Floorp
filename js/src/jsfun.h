@@ -142,7 +142,6 @@ class JSFunction : public JSObject
 
     // Can be called multiple times by the parser.
     void setArgCount(uint16_t nargs) {
-        JS_ASSERT(this->nargs == 0 || this->nargs == nargs);
         this->nargs = nargs;
     }
 
@@ -186,13 +185,6 @@ class JSFunction : public JSObject
         flags |= EXPR_CLOSURE;
     }
 
-    void markNotLazy() {
-        JS_ASSERT(isInterpretedLazy());
-        JS_ASSERT(hasScript());
-        flags |= INTERPRETED;
-        flags &= ~INTERPRETED_LAZY;
-    }
-
     JSAtom *atom() const { return hasGuessedAtom() ? NULL : atom_.get(); }
     js::PropertyName *name() const { return hasGuessedAtom() || !atom_ ? NULL : atom_->asPropertyName(); }
     inline void initAtom(JSAtom *atom);
@@ -221,7 +213,6 @@ class JSFunction : public JSObject
         JS_ASSERT(cx);
         if (isInterpretedLazy()) {
             JS::RootedFunction self(cx, this);
-            js::MaybeCheckStackRoots(cx);
             if (!createScriptForLazilyInterpretedFunction(cx, self))
                 return NULL;
             JS_ASSERT(self->hasScript());
