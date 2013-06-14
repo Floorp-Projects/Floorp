@@ -235,7 +235,7 @@ public:
    * factor, etc.  (The mResolution member of aFrameMetrics is
    * ignored.)
    */
-  static gfxSize CalculateResolution(const FrameMetrics& aMetrics);
+  static CSSToScreenScale CalculateResolution(const FrameMetrics& aMetrics);
 
   static CSSRect CalculateCompositedRectInCssPixels(const FrameMetrics& aMetrics);
 

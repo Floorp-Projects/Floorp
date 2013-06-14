@@ -118,14 +118,6 @@ struct LayerPixel {
  * generally be represented in ScreenPixel units.
  */
 struct ScreenPixel {
-
-  // Conversions to CSS units
-
-  static CSSIntRect ToCSSIntRectRoundIn(const ScreenIntRect& aRect, float aResolutionX, float aResolutionY) {
-    CSSIntRect ret(aRect.x, aRect.y, aRect.width, aRect.height);
-    ret.ScaleInverseRoundIn(aResolutionX, aResolutionY);
-    return ret;
-  }
 };
 
 // Operators to apply ScaleFactors directly to Points and Rects
@@ -156,6 +148,22 @@ gfx::RectTyped<dst> operator/(const gfx::RectTyped<src>& aRect, const gfx::Scale
                              aRect.y / aScale.scale,
                              aRect.width / aScale.scale,
                              aRect.height / aScale.scale);
+}
+
+template<class src, class dst>
+gfx::RectTyped<dst> operator*(const gfx::IntRectTyped<src>& aRect, const gfx::ScaleFactor<src, dst>& aScale) {
+  return gfx::RectTyped<dst>(float(aRect.x) * aScale.scale,
+                             float(aRect.y) * aScale.scale,
+                             float(aRect.width) * aScale.scale,
+                             float(aRect.height) * aScale.scale);
+}
+
+template<class src, class dst>
+gfx::RectTyped<dst> operator/(const gfx::IntRectTyped<src>& aRect, const gfx::ScaleFactor<dst, src>& aScale) {
+  return gfx::RectTyped<dst>(float(aRect.x) / aScale.scale,
+                             float(aRect.y) / aScale.scale,
+                             float(aRect.width) / aScale.scale,
+                             float(aRect.height) / aScale.scale);
 }
 
 };

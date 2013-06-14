@@ -2784,15 +2784,13 @@ AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrame
         return;
     }
 
-    float resolution = mozilla::layers::AsyncPanZoomController::CalculateResolution(aFrameMetrics).width;
-    float dpX = (aFrameMetrics.mDisplayPort.x + aFrameMetrics.mScrollOffset.x) * resolution;
-    float dpY = (aFrameMetrics.mDisplayPort.y + aFrameMetrics.mScrollOffset.y) * resolution;
-    float dpW = aFrameMetrics.mDisplayPort.width * resolution;
-    float dpH = aFrameMetrics.mDisplayPort.height * resolution;
+    CSSToScreenScale resolution =
+      mozilla::layers::AsyncPanZoomController::CalculateResolution(aFrameMetrics);
+    ScreenRect dp = (aFrameMetrics.mDisplayPort + aFrameMetrics.mScrollOffset) * resolution;
 
     AutoLocalJNIFrame jniFrame(env, 0);
     env->CallVoidMethod(mNativePanZoomController, jRequestContentRepaint,
-        dpX, dpY, dpW, dpH, resolution);
+        dp.x, dp.y, dp.width, dp.height, resolution.scale);
 }
 
 void
