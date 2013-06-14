@@ -114,9 +114,19 @@ const PanelUI = {
    * method is exposed so that CustomizationMode can force registration in the
    * event that customization mode is started before the panel has had a chance
    * to register itself.
+   *
+   * @param aCustomizing (optional) set to true if this was called while entering
+   *        customization mode. If that's the case, we trust that customization
+   *        mode will handle calling beginBatchUpdate and endBatchUpdate.
    */
-  ensureRegistered: function() {
-    CustomizableUI.registerMenuPanel(this.contents);
+  ensureRegistered: function(aCustomizing=false) {
+    if (aCustomizing) {
+      CustomizableUI.registerMenuPanel(this.contents);
+    } else {
+      this.beginBatchUpdate();
+      CustomizableUI.registerMenuPanel(this.contents);
+      this.endBatchUpdate();
+    }
   },
 
   /**
@@ -189,6 +199,23 @@ const PanelUI = {
 
       tempPanel.openPopup(iconAnchor || aAnchor, "bottomcenter topright");
     }
+  },
+
+  /** 
+   * Signal that we're about to make a lot of changes to the contents of the
+   * panels all at once. For performance, we ignore the mutations.
+   */
+  beginBatchUpdate: function() {
+    this.multiView.ignoreMutations = true;
+  },
+
+  /**
+   * Signal that we're done making bulk changes to the panel. We now pay
+   * attention to mutations. This automatically synchronizes the multiview
+   * container with whichever view is displayed if the panel is open.
+   */
+  endBatchUpdate: function(aReason) {
+    this.multiView.ignoreMutations = false;
   },
 
   /**
