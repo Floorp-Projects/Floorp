@@ -2997,7 +2997,7 @@ Parser<FullParseHandler>::bindDestructuringVar(BindData<FullParseHandler> *data,
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
-    pn->noteLValue();
+    pn->markAsAssigned();
     return true;
 }
 
@@ -3025,7 +3025,7 @@ Parser<FullParseHandler>::bindDestructuringLHS(ParseNode *pn)
 {
     switch (pn->getKind()) {
       case PNK_NAME:
-        pn->noteLValue();
+        pn->markAsAssigned();
         /* FALL THROUGH */
 
       case PNK_DOT:
@@ -3920,7 +3920,7 @@ Parser<FullParseHandler>::forStatement()
         switch (pn2->getKind()) {
           case PNK_NAME:
             /* Beware 'for (arguments in ...)' with or without a 'var'. */
-            pn2->noteLValue();
+            pn2->markAsAssigned();
             break;
 
 #if JS_HAS_DESTRUCTURING
@@ -5216,7 +5216,7 @@ Parser<FullParseHandler>::setAssignmentLhsOps(ParseNode *pn, JSOp op)
         if (!checkStrictAssignment(pn))
             return false;
         pn->setOp(pn->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
-        pn->noteLValue();
+        pn->markAsAssigned();
         break;
       case PNK_DOT:
         pn->setOp(JSOP_SETPROP);
@@ -5357,7 +5357,7 @@ Parser<FullParseHandler>::setIncOpKid(ParseNode *pn, ParseNode *kid, TokenKind t
 
     switch (kid->getKind()) {
       case PNK_NAME:
-        kid->noteLValue();
+        kid->markAsAssigned();
         break;
 
       case PNK_CALL:
