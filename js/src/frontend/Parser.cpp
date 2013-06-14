@@ -4582,17 +4582,17 @@ Parser<ParseHandler>::statement()
         if (!cond)
             return null();
 
+        if (tokenStream.peekToken() == TOK_SEMI &&
+            !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
+        {
+            return null();
+        }
+
         StmtInfoPC stmtInfo(context);
         PushStatementPC(pc, &stmtInfo, STMT_IF);
         Node thenBranch = statement();
         if (!thenBranch)
             return null();
-
-        if (handler.isEmptySemicolon(thenBranch) &&
-            !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
-        {
-            return null();
-        }
 
         Node elseBranch;
         if (tokenStream.matchToken(TOK_ELSE, TSF_OPERAND)) {
