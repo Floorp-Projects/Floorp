@@ -19,14 +19,6 @@ skip-if(cocoaWidget) != textbox-accesskey-4.xul textbox-accesskey-4-notref.xul
 == textbox-align-baseline-1.xul textbox-align-baseline-1-ref.xul # test for bug 494901
 skip-if(B2G) fails-if(Android) == textbox-setsize.xul textbox-setsize-ref.xul
 
-== radio-label-dynamic.html radio-label-dynamic-ref.html
-!= radio-checked.html radio-checked-notref.html
-!= radio-checked-native.html radio-checked-native-notref.html
-!= radio-checked.html about:blank
-!= radio-checked-notref.html about:blank
-!= radio-checked-native.html about:blank
-!= radio-checked-native-notref.html about:blank
-
 skip-if(B2G) == legend.html legend-ref.html
 
 # button element
