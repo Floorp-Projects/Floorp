@@ -46,7 +46,7 @@ function sanitizeStringArray(aArray) {
 }
 
 const nsIClassInfo            = Ci.nsIClassInfo;
-const CONTACTPROPERTIES_CID   = Components.ID("{6cb78b21-4218-414b-8a84-3b7bf0088b34}");
+const CONTACTPROPERTIES_CID   = Components.ID("{35ad8a4e-9486-44b6-883d-550f14635e49}");
 const nsIContactProperties    = Ci.nsIContactProperties;
 
 // ContactProperties is not directly instantiated. It is used as interface.
@@ -268,7 +268,8 @@ Contact.prototype = {
                       impp: 'rw',
                       anniversary: 'rw',
                       sex: 'rw',
-                      genderIdentity: 'rw'
+                      genderIdentity: 'rw',
+                      key: 'rw',
                      },
 
   set name(aName) {
@@ -467,6 +468,14 @@ Contact.prototype = {
     return this._genderIdentity;
   },
 
+  set key(aKey) {
+    this._key = sanitizeStringArray(aKey);
+  },
+
+  get key() {
+    return this._key;
+  },
+
   init: function init(aProp) {
     this.name =            aProp.name;
     this.honorificPrefix = aProp.honorificPrefix;
@@ -489,6 +498,7 @@ Contact.prototype = {
     this.anniversary =     aProp.anniversary;
     this.sex =             aProp.sex;
     this.genderIdentity =  aProp.genderIdentity;
+    this.key =             aProp.key;
   },
 
   get published () {
@@ -758,7 +768,8 @@ ContactManager.prototype = {
       impp:            [],
       anniversary:     null,
       sex:             null,
-      genderIdentity:  null
+      genderIdentity:  null,
+      key:             [],
     };
     for (let field in newContact.properties) {
       newContact.properties[field] = aContact[field];
