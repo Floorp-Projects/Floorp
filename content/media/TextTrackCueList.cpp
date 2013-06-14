@@ -64,22 +64,22 @@ TextTrackCueList::GetCueById(const nsAString& aId)
 }
 
 void
-TextTrackCueList::AddCue(TextTrackCue& cue)
+TextTrackCueList::AddCue(TextTrackCue& aCue)
 {
-  if (mList.Contains(&cue)) {
+  if (mList.Contains(&aCue)) {
     return;
   }
-  mList.AppendElement(&cue);
+  mList.AppendElement(&aCue);
 }
 
 void
-TextTrackCueList::RemoveCue(TextTrackCue& cue, ErrorResult& aRv)
+TextTrackCueList::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 {
-  if (!mList.Contains(&cue)) {
+  if (!mList.Contains(&aCue)) {
     aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
     return;
   }
-  mList.RemoveElement(&cue);
+  mList.RemoveElement(&aCue);
 }
 
 } // namespace dom
