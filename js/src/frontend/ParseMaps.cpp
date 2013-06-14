@@ -133,5 +133,5 @@ frontend::InitAtomMap(JSContext *cx, frontend::AtomIndexMap *indices, HeapPtrAto
     }
 }
 
-template class AtomDecls<FullParseHandler>;
-template class AtomDecls<SyntaxParseHandler>;
+template class js::frontend::AtomDecls<FullParseHandler>;
+template class js::frontend::AtomDecls<SyntaxParseHandler>;
