@@ -89,9 +89,9 @@ public:
     return mResolution * mDevPixelsPerCSSPixel;
   }
 
-  gfxPoint GetScrollOffsetInLayerPixels() const
+  gfx::Point GetScrollOffsetInLayerPixels() const
   {
-    return gfxPoint(
+    return gfx::Point(
       static_cast<gfx::Float>(
         mScrollOffset.x * LayersPixelsPerCSSPixel().width),
       static_cast<gfx::Float>(
