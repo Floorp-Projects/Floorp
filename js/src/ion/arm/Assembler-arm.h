@@ -2062,7 +2062,7 @@ class InstructionIterator {
   private:
     Instruction *i;
   public:
-    InstructionIterator(Instruction *i_) : i(i_) {}
+    InstructionIterator(Instruction *i_);
     Instruction *next() {
         i = i->next();
         return cur();
