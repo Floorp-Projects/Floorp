@@ -106,24 +106,6 @@ struct CSSPixel {
  * 3) the "widget scale" (nsIWidget::GetDefaultScale)
  */
 struct LayerPixel {
-
-  // Conversions from CSS units
-
-  static LayerIntPoint FromCSSPointRounded(const CSSPoint& aPoint, float aResolutionX, float aResolutionY) {
-    return LayerIntPoint(NS_lround(aPoint.x * aResolutionX),
-                         NS_lround(aPoint.y * aResolutionY));
-  }
-
-  static LayerRect FromCSSRect(const CSSRect& aRect, float aResolutionX, float aResolutionY) {
-    return LayerRect(aRect.x * aResolutionX,
-                     aRect.y * aResolutionY,
-                     aRect.width * aResolutionX,
-                     aRect.height * aResolutionY);
-  }
-
-  static LayerIntRect FromCSSRectRounded(const CSSRect& aRect, float aResolutionX, float aResolutionY) {
-    return gfx::RoundedToInt(FromCSSRect(aRect, aResolutionX, aResolutionY));
-  }
 };
 
 /*
@@ -146,7 +128,7 @@ struct ScreenPixel {
   }
 };
 
-// Operators to apply ScaleFactors directly to Points
+// Operators to apply ScaleFactors directly to Points and Rects
 
 template<class src, class dst>
 gfx::PointTyped<dst> operator*(const gfx::PointTyped<src>& aPoint, const gfx::ScaleFactor<src, dst>& aScale) {
@@ -158,6 +140,22 @@ template<class src, class dst>
 gfx::PointTyped<dst> operator/(const gfx::PointTyped<src>& aPoint, const gfx::ScaleFactor<dst, src>& aScale) {
   return gfx::PointTyped<dst>(aPoint.x / aScale.scale,
                               aPoint.y / aScale.scale);
+}
+
+template<class src, class dst>
+gfx::RectTyped<dst> operator*(const gfx::RectTyped<src>& aRect, const gfx::ScaleFactor<src, dst>& aScale) {
+  return gfx::RectTyped<dst>(aRect.x * aScale.scale,
+                             aRect.y * aScale.scale,
+                             aRect.width * aScale.scale,
+                             aRect.height * aScale.scale);
+}
+
+template<class src, class dst>
+gfx::RectTyped<dst> operator/(const gfx::RectTyped<src>& aRect, const gfx::ScaleFactor<dst, src>& aScale) {
+  return gfx::RectTyped<dst>(aRect.x / aScale.scale,
+                             aRect.y / aScale.scale,
+                             aRect.width / aScale.scale,
+                             aRect.height / aScale.scale);
 }
 
 };
