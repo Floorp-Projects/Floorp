@@ -169,6 +169,16 @@ double profiler_time()
   return mozilla_sampler_time();
 }
 
+static inline
+bool profiler_in_privacy_mode()
+{
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (!stack) {
+    return false;
+  }
+  return stack->mPrivacyMode;
+}
+
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
@@ -241,7 +251,7 @@ class MOZ_STACK_CLASS SamplerStackFramePrintfRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
   SamplerStackFramePrintfRAII(const char *aDefault, uint32_t line, const char *aFormat, ...) {
-    if (profiler_is_active()) {
+    if (profiler_is_active() && !profiler_in_privacy_mode()) {
       va_list args;
       va_start(args, aFormat);
       char buff[SAMPLER_MAX_STRING];
@@ -321,6 +331,11 @@ inline void mozilla_sampler_add_marker(const char *aMarker)
   // Don't insert a marker if we're not profiling to avoid
   // the heap copy (malloc).
   if (!profiler_is_active()) {
+    return;
+  }
+
+  // Don't add a marker if we don't want to include personal information
+  if (profiler_in_privacy_mode()) {
     return;
   }
 

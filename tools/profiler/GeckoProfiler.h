@@ -144,6 +144,8 @@ static inline void profiler_js_operation_callback() {}
 
 static inline double profiler_time() { return 0; }
 
+static inline bool profiler_in_privacy_mode() { return false; }
+
 #else
 
 #include "GeckoProfilerImpl.h"
