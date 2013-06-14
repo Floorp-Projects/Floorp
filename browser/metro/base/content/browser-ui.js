@@ -97,6 +97,7 @@ var BrowserUI = {
     window.addEventListener("MozImprecisePointer", this, true);
 
     Services.prefs.addObserver("browser.cache.disk_cache_ssl", this, false);
+    Services.prefs.addObserver("browser.urlbar.formatting.enabled", this, false);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     // Init core UI modules
@@ -560,6 +561,9 @@ var BrowserUI = {
           case "browser.cache.disk_cache_ssl":
             this._sslDiskCacheEnabled = Services.prefs.getBoolPref(aData);
             break;
+          case "browser.urlbar.formatting.enabled":
+            this._formattingEnabled = Services.prefs.getBookPref(aData);
+            break;
         }
         break;
       case "metro_viewstate_changed":
@@ -662,6 +666,7 @@ var BrowserUI = {
   },
 
   _editURI: function _editURI(aShouldDismiss) {
+    this._clearURIFormatting();
     this._edit.focus();
     this._edit.select();
 
@@ -671,11 +676,77 @@ var BrowserUI = {
       ContextUI.dismissTabs();
   },
 
+  formatURI: function formatURI() {
+    if (!this.formattingEnabled ||
+        Elements.urlbarState.getAttribute("mode") == "edit")
+      return;
+
+    let controller = this._edit.editor.selectionController;
+    let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
+    selection.removeAllRanges();
+
+    let textNode = this._edit.editor.rootElement.firstChild;
+    let value = textNode.textContent;
+
+    let protocol = value.match(/^[a-z\d.+\-]+:(?=[^\d])/);
+    if (protocol &&
+        ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
+      return;
+    let matchedURL = value.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
+    if (!matchedURL)
+      return;
+
+    let [, preDomain, domain] = matchedURL;
+    let baseDomain = domain;
+    let subDomain = "";
+    // getBaseDomainFromHost doesn't recognize IPv6 literals in brackets as IPs (bug 667159)
+    if (domain[0] != "[") {
+      try {
+        baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
+        if (!domain.endsWith(baseDomain)) {
+          // getBaseDomainFromHost converts its resultant to ACE.
+          let IDNService = Cc["@mozilla.org/network/idn-service;1"]
+                           .getService(Ci.nsIIDNService);
+          baseDomain = IDNService.convertACEtoUTF8(baseDomain);
+        }
+      } catch (e) {}
+    }
+    if (baseDomain != domain) {
+      subDomain = domain.slice(0, -baseDomain.length);
+    }
+
+    let rangeLength = preDomain.length + subDomain.length;
+    if (rangeLength) {
+      let range = document.createRange();
+      range.setStart(textNode, 0);
+      range.setEnd(textNode, rangeLength);
+      selection.addRange(range);
+    }
+
+    let startRest = preDomain.length + domain.length;
+    if (startRest < value.length) {
+      let range = document.createRange();
+      range.setStart(textNode, startRest);
+      range.setEnd(textNode, value.length);
+      selection.addRange(range);
+    }
+  },
+
+  _clearURIFormatting: function _clearURIFormatting() {
+    if (!this.formattingEnabled)
+      return;
+
+    let controller = this._edit.editor.selectionController;
+    let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
+    selection.removeAllRanges();
+  },
+
   _urlbarBlurred: function _urlbarBlurred() {
     let state = Elements.urlbarState;
     if (state.getAttribute("mode") == "edit")
       state.removeAttribute("mode");
     this._updateToolbar();
+    this.formatURI();
   },
 
   _closeOrQuit: function _closeOrQuit() {
@@ -957,6 +1028,15 @@ var BrowserUI = {
       this._sslDiskCacheEnabled = Services.prefs.getBoolPref("browser.cache.disk_cache_ssl");
     }
     return this._sslDiskCacheEnabled;
+  },
+
+  _formattingEnabled: null,
+
+  get formattingEnabled() {
+    if (this._formattingEnabled === null) {
+      this._formattingEnabled = Services.prefs.getBoolPref("browser.urlbar.formatting.enabled");
+    }
+    return this._formattingEnabled;
   },
 
   supportsCommand : function(cmd) {
