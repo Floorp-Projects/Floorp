@@ -27,8 +27,8 @@
 # these 3 random-if(Android) are a difference of Native & Xul, see bug 739714
 random-if(Android||B2G) needs-focus != pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous-ref.html # bug 676641
 # These tests uses Highlight and HighlightText color keywords, they are not same as text selection color on Mac.
-random-if(Android||B2G) fails-if(cocoaWidget) == non-themed-widget.html non-themed-widget-ref.html # bug 773482
-random-if(Android||B2G) fails-if(cocoaWidget) == themed-widget.html themed-widget-ref.html
+random-if(Android||B2G) fails-if(cocoaWidget) needs-focus == non-themed-widget.html non-themed-widget-ref.html # bug 773482
+random-if(Android||B2G) fails-if(cocoaWidget) needs-focus == themed-widget.html themed-widget-ref.html
 == addrange-1.html addrange-ref.html
 == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html
