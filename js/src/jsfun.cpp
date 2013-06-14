@@ -350,9 +350,11 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
             return false;
         }
         firstword = !!fun->atom();
-        flagsword = (fun->nargs << 16) | fun->flags;
+        script = fun->getOrCreateScript(cx);
+        if (!script)
+            return false;
         atom = fun->atom();
-        script = fun->nonLazyScript();
+        flagsword = (fun->nargs << 16) | fun->flags;
     } else {
         fun = NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, NullPtr(), NullPtr(),
                           JSFunction::FinalizeKind, TenuredObject);
@@ -1057,9 +1059,10 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         if (cx->zone()->needsBarrier())
             LazyScript::writeBarrierPre(lazy);
 
+        fun->flags &= ~INTERPRETED_LAZY;
+        fun->flags |= INTERPRETED;
+
         if (JSScript *script = lazy->maybeScript()) {
-            fun->flags &= ~INTERPRETED_LAZY;
-            fun->flags |= INTERPRETED;
             fun->initScript(script);
 
             /*
@@ -1072,10 +1075,9 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
             return true;
         }
 
-        /* Lazily parsed script. */
-        const jschar *chars = lazy->source()->chars(cx);
-        if (!chars)
-            return false;
+        fun->initScript(NULL);
+
+        JS_ASSERT(lazy->source()->hasSourceData());
 
         /*
          * GC must be suppressed for the remainder of the lazy parse, as any
@@ -1083,9 +1085,10 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
          */
         AutoSuppressGC suppressGC(cx);
 
-        fun->flags &= ~INTERPRETED_LAZY;
-        fun->flags |= INTERPRETED;
-        fun->initScript(NULL);
+        /* Lazily parsed script. */
+        const jschar *chars = lazy->source()->chars(cx);
+        if (!chars)
+            return false;
 
         const jschar *lazyStart = chars + lazy->begin();
         size_t lazyLength = lazy->end() - lazy->begin();

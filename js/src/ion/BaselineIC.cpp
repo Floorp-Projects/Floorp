@@ -1324,6 +1324,9 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
         return true;
     }
 
+    if (!obj->getType(cx))
+        return false;
+
     types::EnsureTrackPropertyTypes(cx, obj, id);
 
     if (val.isPrimitive()) {

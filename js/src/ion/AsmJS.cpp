@@ -6264,7 +6264,7 @@ AsmJSModule::~AsmJSModule()
             if (!exitDatum.fun)
                 continue;
 
-            if (!exitDatum.fun->isInterpreted())
+            if (!exitDatum.fun->hasScript())
                 continue;
 
             JSScript *script = exitDatum.fun->nonLazyScript();

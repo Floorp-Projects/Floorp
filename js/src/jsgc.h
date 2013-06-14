@@ -204,7 +204,7 @@ IsBackgroundFinalized(AllocKind kind)
         false,     /* FINALIZE_OBJECT16 */
         true,      /* FINALIZE_OBJECT16_BACKGROUND */
         false,     /* FINALIZE_SCRIPT */
-        true,      /* FINALIZE_LAZY_SCRIPT */
+        false,     /* FINALIZE_LAZY_SCRIPT */
         true,      /* FINALIZE_SHAPE */
         true,      /* FINALIZE_BASE_SHAPE */
         true,      /* FINALIZE_TYPE_OBJECT */

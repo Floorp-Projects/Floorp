@@ -200,6 +200,8 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
                 targets.clear();
                 return true;
             }
+            if (!typeObj->interpretedFunction->getOrCreateScript(cx))
+                return false;
             DebugOnly<bool> appendOk = targets.append(typeObj->interpretedFunction);
             JS_ASSERT(appendOk);
 
