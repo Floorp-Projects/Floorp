@@ -213,7 +213,6 @@ class FullParseHandler
         return pn->isKind(kind) && !pn->isInParens();
     }
 
-    inline void noteLValue(ParseNode *pn);
     inline bool finishInitializerAssignment(ParseNode *pn, ParseNode *init, JSOp op);
 
     void setBeginPosition(ParseNode *pn, ParseNode *oth) {
@@ -416,15 +415,6 @@ FullParseHandler::newLexicalScope(ObjectBox *blockbox)
     return pn;
 }
 
-inline void
-FullParseHandler::noteLValue(ParseNode *pn)
-{
-    if (pn->isUsed())
-        pn->pn_lexdef->pn_dflags |= PND_ASSIGNED;
-
-    pn->pn_dflags |= PND_ASSIGNED;
-}
-
 inline bool
 FullParseHandler::finishInitializerAssignment(ParseNode *pn, ParseNode *init, JSOp op)
 {
@@ -442,7 +432,7 @@ FullParseHandler::finishInitializerAssignment(ParseNode *pn, ParseNode *init, JS
               ? JSOP_SETCONST
               : JSOP_SETNAME);
 
-    noteLValue(pn);
+    pn->noteLValue();
 
     /* The declarator's position must include the initializer. */
     pn->pn_pos.end = init->pn_pos.end;
