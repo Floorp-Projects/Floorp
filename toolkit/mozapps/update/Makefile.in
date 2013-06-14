@@ -16,7 +16,7 @@ DISABLED_EXTRA_COMPONENTS = \
 
 ifdef MOZ_UPDATER
 
-EXTRA_PP_COMPONENTS += \
+DISABLED_EXTRA_PP_COMPONENTS += \
   nsUpdateService.js \
   nsUpdateServiceStub.js \
   $(NULL)

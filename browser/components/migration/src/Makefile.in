@@ -19,7 +19,7 @@ DISABLED_EXTRA_COMPONENTS = \
   FirefoxProfileMigrator.js \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = \
+DISABLED_EXTRA_PP_COMPONENTS = \
   ChromeProfileMigrator.js \
   $(NULL)
 
@@ -27,19 +27,19 @@ ifeq ($(OS_ARCH),WINNT)
 DISABLED_EXTRA_COMPONENTS += IEProfileMigrator.js \
                     $(NULL)
 
-EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
+DISABLED_EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
                        $(NULL)
 
 DEFINES += -DHAS_IE_MIGRATOR -DHAS_SAFARI_MIGRATOR
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
+DISABLED_EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
                        $(NULL)
 DEFINES += -DHAS_SAFARI_MIGRATOR
 endif
 
-EXTRA_PP_COMPONENTS += \
+DISABLED_EXTRA_PP_COMPONENTS += \
 	BrowserProfileMigrators.manifest \
 	$(NULL)
 
