@@ -63,6 +63,12 @@ TextTrackCueList::IndexedGetter(uint32_t aIndex, bool& aFound)
 }
 
 TextTrackCue*
+TextTrackCueList::operator[](uint32_t aIndex)
+{
+  return mList.SafeElementAt(aIndex, nullptr);
+}
+
+TextTrackCue*
 TextTrackCueList::GetCueById(const nsAString& aId)
 {
   if (aId.IsEmpty()) {
@@ -94,6 +100,20 @@ TextTrackCueList::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
     return;
   }
   mList.RemoveElement(&aCue);
+}
+
+void
+TextTrackCueList::RemoveCueAt(uint32_t aIndex)
+{
+  if (aIndex < mList.Length()) {
+    mList.RemoveElementAt(aIndex);
+  }
+}
+
+void
+TextTrackCueList::RemoveAll()
+{
+  mList.Clear();
 }
 
 } // namespace dom
