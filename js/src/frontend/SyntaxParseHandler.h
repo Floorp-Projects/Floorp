@@ -174,7 +174,6 @@ class SyntaxParseHandler
         }
         return NULL;
     }
-    bool isEmptySemicolon(Node pn) { return false; }
 
     Node makeAssignment(Node pn, Node rhs) { return NodeGeneric; }
 
