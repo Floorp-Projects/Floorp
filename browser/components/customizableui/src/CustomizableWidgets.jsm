@@ -191,6 +191,7 @@ const CustomizableWidgets = [{
   }, {
     id: "zoom-controls",
     type: "custom",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onBuild: function(aDocument) {
@@ -225,7 +226,6 @@ const CustomizableWidgets = [{
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
       node.setAttribute("id", "zoom-controls");
-      node.setAttribute("removable", "true");
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
       if (inPanel)
         node.setAttribute("flex", "1");
@@ -317,6 +317,7 @@ const CustomizableWidgets = [{
   }, {
     id: "edit-controls",
     type: "custom",
+    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onBuild: function(aDocument) {
@@ -348,7 +349,6 @@ const CustomizableWidgets = [{
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
       node.setAttribute("id", "edit-controls");
-      node.setAttribute("removable", "true");
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
       if (inPanel)
         node.setAttribute("flex", "1");
