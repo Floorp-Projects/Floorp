@@ -100,6 +100,15 @@ struct RectTyped :
 };
 typedef RectTyped<UnknownUnits> Rect;
 
+template<class units>
+IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)
+{
+  return IntRectTyped<units>(NS_lround(aRect.x),
+                             NS_lround(aRect.y),
+                             NS_lround(aRect.width),
+                             NS_lround(aRect.height));
+}
+
 }
 }
 
