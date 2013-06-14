@@ -1066,6 +1066,7 @@ void AsyncPanZoomController::RequestContentRepaint() {
     NewRunnableMethod(mGeckoContentController.get(),
                       &GeckoContentController::RequestContentRepaint,
                       mFrameMetrics));
+  mFrameMetrics.mPresShellId = mLastContentPaintMetrics.mPresShellId;
   mLastPaintRequestMetrics = mFrameMetrics;
   mWaitingForContentToPaint = true;
 
