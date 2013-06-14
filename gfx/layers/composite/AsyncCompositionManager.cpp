@@ -355,7 +355,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
                         metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     ScreenPoint offset(0, 0);
-    SyncFrameMetrics(scrollOffset, treeTransform.mScale.width, metrics.mScrollableRect,
+    SyncFrameMetrics(scrollOffset, treeTransform.mScale.scale, metrics.mScrollableRect,
                      mLayersUpdated, displayPort, 1 / rootTransform.GetXScale(),
                      mIsFirstPaint, fixedLayerMargins, offset);
 
@@ -382,7 +382,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     TransformFixedLayers(
       aLayer,
       gfxPoint(-treeTransform.mTranslation.x, -treeTransform.mTranslation.y),
-      treeTransform.mScale,
+      gfxSize(treeTransform.mScale.scale, treeTransform.mScale.scale),
       fixedLayerMargins);
 
     appliedTransform = true;
@@ -462,7 +462,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
     (scrollOffset.x / tempScaleDiffX - metricsScrollOffset.x),
     (scrollOffset.y / tempScaleDiffY - metricsScrollOffset.y));
   treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
-                                            gfxSize(scaleX, scaleY)));
+                                            CSSToScreenScale(scaleX, scaleY)));
 
   // Translate fixed position layers so that they stay in the correct position
   // when scrollOffset and metricsScrollOffset differ.
