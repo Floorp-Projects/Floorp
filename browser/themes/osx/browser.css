@@ -1800,11 +1800,11 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 
 @media (min-resolution: 2dppx) {
   #bookmarks-menu-button {
-    -moz-image-region: rect(0px, 1000px, 40px, 960px);
+    -moz-image-region: rect(0px, 960px, 40px, 920px);
   }
 
   #bookmarks-menu-button[starred] {
-    -moz-image-region: rect(40px, 1000px, 80px, 960px);
+    -moz-image-region: rect(40px, 960px, 80px, 920px);
   }
 
   #bookmarks-menu-button.bookmark-item {
