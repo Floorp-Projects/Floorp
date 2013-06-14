@@ -738,6 +738,8 @@ struct ParseNode {
     }
 #endif
 
+    inline void noteLValue();
+
     /*
      * Compute a pointer to the last element in a singly-linked list. NB: list
      * must be non-empty for correct PN_LAST usage -- this is asserted!
@@ -1266,6 +1268,14 @@ ParseNode::test(unsigned flag) const
     }
 #endif
     return !!(pn_dflags & flag);
+}
+
+inline void
+ParseNode::noteLValue()
+{
+    if (isUsed())
+        pn_lexdef->pn_dflags |= PND_ASSIGNED;
+    pn_dflags |= PND_ASSIGNED;
 }
 
 inline Definition *
