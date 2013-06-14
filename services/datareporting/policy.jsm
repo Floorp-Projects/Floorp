@@ -26,7 +26,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 #endif
 
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/utils.js");
 
@@ -69,12 +69,12 @@ const OLDEST_ALLOWED_YEAR = 2012;
  *
  * @param policy
  *        (DataReportingPolicy) The policy instance this request came from.
- * @param deferred
+ * @param promise
  *        (deferred) The promise that will be fulfilled when display occurs.
  */
-function NotifyPolicyRequest(policy, deferred) {
+function NotifyPolicyRequest(policy, promise) {
   this.policy = policy;
-  this.deferred = deferred;
+  this.promise = promise;
 }
 NotifyPolicyRequest.prototype = {
   /**
@@ -84,8 +84,7 @@ NotifyPolicyRequest.prototype = {
    * acceptance of the data policy.
    */
   onUserNotifyComplete: function onUserNotified() {
-    this.deferred.resolve();
-    return this.deferred.promise;
+    this.promise.resolve();
   },
 
   /**
@@ -95,7 +94,7 @@ NotifyPolicyRequest.prototype = {
    *        (Error) Explains what went wrong.
    */
   onUserNotifyFailed: function onUserNotifyFailed(error) {
-    this.deferred.reject(error);
+    this.promise.reject(error);
   },
 
   /**
@@ -159,7 +158,6 @@ DataSubmissionRequest.prototype = {
   onNoDataAvailable: function onNoDataAvailable() {
     this.state = this.NO_DATA_AVAILABLE;
     this.promise.resolve(this);
-    return this.promise.promise;
   },
 
   /**
@@ -175,7 +173,6 @@ DataSubmissionRequest.prototype = {
     this.state = this.SUBMISSION_SUCCESS;
     this.submissionDate = date;
     this.promise.resolve(this);
-    return this.promise.promise;
   },
 
   /**
@@ -191,7 +188,6 @@ DataSubmissionRequest.prototype = {
     this.state = this.SUBMISSION_FAILURE_SOFT;
     this.reason = reason;
     this.promise.resolve(this);
-    return this.promise.promise;
   },
 
   /**
@@ -208,7 +204,6 @@ DataSubmissionRequest.prototype = {
     this.state = this.SUBMISSION_FAILURE_HARD;
     this.reason = reason;
     this.promise.resolve(this);
-    return this.promise.promise;
   },
 };
 

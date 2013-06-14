@@ -138,7 +138,7 @@ add_test(function test_notify_state_prefs() {
   run_next_test();
 });
 
-add_task(function test_initial_submission_notification() {
+add_test(function test_initial_submission_notification() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("initial_submission_notification");
 
   do_check_eq(listener.notifyUserCount, 0);
@@ -160,12 +160,14 @@ add_task(function test_initial_submission_notification() {
                              policy.SUBMISSION_NOTIFY_INTERVAL_MSEC));
   policy.checkStateAndTrigger();
   do_check_eq(listener.notifyUserCount, 1);
-  yield listener.lastNotifyRequest.onUserNotifyComplete();
+  listener.lastNotifyRequest.onUserNotifyComplete();
   do_check_true(policy._dataSubmissionPolicyNotifiedDate instanceof Date);
   do_check_true(policy.dataSubmissionPolicyNotifiedDate.getTime() > 0);
   do_check_eq(policy.dataSubmissionPolicyNotifiedDate.getTime(),
               policy._dataSubmissionPolicyNotifiedDate.getTime());
   do_check_eq(policy.notifyState, policy.STATE_NOTIFY_WAIT);
+
+  run_next_test();
 });
 
 add_test(function test_bypass_acceptance() {
@@ -181,7 +183,7 @@ add_test(function test_bypass_acceptance() {
   run_next_test();
 });
 
-add_task(function test_notification_implicit_acceptance() {
+add_test(function test_notification_implicit_acceptance() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_implicit_acceptance");
 
   let now = new Date(policy.nextDataSubmissionDate.getTime() -
@@ -189,7 +191,7 @@ add_task(function test_notification_implicit_acceptance() {
   defineNow(policy, now);
   policy.checkStateAndTrigger();
   do_check_eq(listener.notifyUserCount, 1);
-  yield listener.lastNotifyRequest.onUserNotifyComplete();
+  listener.lastNotifyRequest.onUserNotifyComplete();
   do_check_eq(policy.dataSubmissionPolicyResponseType, "none-recorded");
 
   do_check_true(5000 < policy.IMPLICIT_ACCEPTANCE_INTERVAL_MSEC);
@@ -206,9 +208,11 @@ add_task(function test_notification_implicit_acceptance() {
   do_check_eq(policy.notifyState, policy.STATE_NOTIFY_COMPLETE);
   do_check_eq(policy.dataSubmissionPolicyResponseDate.getTime(), policy.now().getTime());
   do_check_eq(policy.dataSubmissionPolicyResponseType, "accepted-implicit-time-elapsed");
+
+  run_next_test();
 });
 
-add_task(function test_notification_rejected() {
+add_test(function test_notification_rejected() {
   // User notification failed. We should not record it as being presented.
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_failed");
 
@@ -217,20 +221,22 @@ add_task(function test_notification_rejected() {
   defineNow(policy, now);
   policy.checkStateAndTrigger();
   do_check_eq(listener.notifyUserCount, 1);
-  yield listener.lastNotifyRequest.onUserNotifyFailed(new Error("testing failed."));
+  listener.lastNotifyRequest.onUserNotifyFailed(new Error("testing failed."));
   do_check_null(policy._dataSubmissionPolicyNotifiedDate);
   do_check_eq(policy.dataSubmissionPolicyNotifiedDate.getTime(), 0);
   do_check_eq(policy.notifyState, policy.STATE_NOTIFY_UNNOTIFIED);
+
+  run_next_test();
 });
 
-add_task(function test_notification_accepted() {
+add_test(function test_notification_accepted() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_accepted");
 
   let now = new Date(policy.nextDataSubmissionDate.getTime() -
                      policy.SUBMISSION_NOTIFY_INTERVAL_MSEC + 1);
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  yield listener.lastNotifyRequest.onUserNotifyComplete();
+  listener.lastNotifyRequest.onUserNotifyComplete();
   do_check_eq(policy.notifyState, policy.STATE_NOTIFY_WAIT);
   do_check_false(policy.dataSubmissionPolicyAccepted);
   listener.lastNotifyRequest.onUserNotifyComplete();
@@ -239,16 +245,18 @@ add_task(function test_notification_accepted() {
   do_check_eq(policy.dataSubmissionPolicyResponseType, "accepted-foo-bar");
   do_check_true(policy.dataSubmissionPolicyAccepted);
   do_check_eq(policy.dataSubmissionPolicyResponseDate.getTime(), now.getTime());
+
+  run_next_test();
 });
 
-add_task(function test_notification_rejected() {
+add_test(function test_notification_rejected() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("notification_rejected");
 
   let now = new Date(policy.nextDataSubmissionDate.getTime() -
                      policy.SUBMISSION_NOTIFY_INTERVAL_MSEC + 1);
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  yield listener.lastNotifyRequest.onUserNotifyComplete();
+  listener.lastNotifyRequest.onUserNotifyComplete();
   do_check_eq(policy.notifyState, policy.STATE_NOTIFY_WAIT);
   do_check_false(policy.dataSubmissionPolicyAccepted);
   listener.lastNotifyRequest.onUserReject();
@@ -260,6 +268,8 @@ add_task(function test_notification_rejected() {
   defineNow(policy, new Date(policy.nextDataSubmissionDate.getTime() + 10000));
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 0);
+
+  run_next_test();
 });
 
 add_test(function test_submission_kill_switch() {
@@ -321,7 +331,7 @@ add_test(function test_data_submission_no_data() {
   run_next_test();
 });
 
-add_task(function test_data_submission_submit_failure_hard() {
+add_test(function test_data_submission_submit_failure_hard() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("data_submission_submit_failure_hard");
 
   policy.dataSubmissionPolicyResponseDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -332,7 +342,7 @@ add_task(function test_data_submission_submit_failure_hard() {
 
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 1);
-  yield listener.lastDataRequest.onSubmissionFailureHard();
+  listener.lastDataRequest.onSubmissionFailureHard();
   do_check_eq(listener.lastDataRequest.state,
               listener.lastDataRequest.SUBMISSION_FAILURE_HARD);
 
@@ -342,9 +352,11 @@ add_task(function test_data_submission_submit_failure_hard() {
   defineNow(policy, new Date(now.getTime() + 10));
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 1);
+
+  run_next_test();
 });
 
-add_task(function test_data_submission_submit_try_again() {
+add_test(function test_data_submission_submit_try_again() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("data_submission_failure_soft");
 
   policy.recordUserAcceptance();
@@ -352,12 +364,14 @@ add_task(function test_data_submission_submit_try_again() {
   let now = new Date(policy.nextDataSubmissionDate.getTime());
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  yield listener.lastDataRequest.onSubmissionFailureSoft();
+  listener.lastDataRequest.onSubmissionFailureSoft();
   do_check_eq(policy.nextDataSubmissionDate.getTime(),
               nextDataSubmissionDate.getTime() + 15 * 60 * 1000);
+
+  run_next_test();
 });
 
-add_task(function test_submission_daily_scheduling() {
+add_test(function test_submission_daily_scheduling() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("submission_daily_scheduling");
 
   policy.dataSubmissionPolicyResponseDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -373,7 +387,7 @@ add_task(function test_submission_daily_scheduling() {
 
   let finishedDate = new Date(now.getTime() + 250);
   defineNow(policy, new Date(finishedDate.getTime() + 50));
-  yield listener.lastDataRequest.onSubmissionSuccess(finishedDate);
+  listener.lastDataRequest.onSubmissionSuccess(finishedDate);
   do_check_eq(policy.lastDataSubmissionSuccessfulDate.getTime(), finishedDate.getTime());
 
   // Next scheduled submission should be exactly 1 day after the reported
@@ -390,9 +404,11 @@ add_task(function test_submission_daily_scheduling() {
   defineNow(policy, nextScheduled);
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 2);
-  yield listener.lastDataRequest.onSubmissionSuccess(new Date(nextScheduled.getTime() + 200));
+  listener.lastDataRequest.onSubmissionSuccess(new Date(nextScheduled.getTime() + 200));
   do_check_eq(policy.nextDataSubmissionDate.getTime(),
     new Date(nextScheduled.getTime() + 24 * 60 * 60 * 1000 + 200).getTime());
+
+  run_next_test();
 });
 
 add_test(function test_submission_far_future_scheduling() {
@@ -419,7 +435,7 @@ add_test(function test_submission_far_future_scheduling() {
   run_next_test();
 });
 
-add_task(function test_submission_backoff() {
+add_test(function test_submission_backoff() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("submission_backoff");
 
   do_check_eq(policy.FAILURE_BACKOFF_INTERVALS.length, 2);
@@ -437,7 +453,7 @@ add_task(function test_submission_backoff() {
   defineNow(policy, now);
 
   // On first soft failure we should back off by scheduled interval.
-  yield listener.lastDataRequest.onSubmissionFailureSoft();
+  listener.lastDataRequest.onSubmissionFailureSoft();
   do_check_eq(policy.currentDaySubmissionFailureCount, 1);
   do_check_eq(policy.nextDataSubmissionDate.getTime(),
               new Date(now.getTime() + policy.FAILURE_BACKOFF_INTERVALS[0]).getTime());
@@ -459,7 +475,7 @@ add_task(function test_submission_backoff() {
   defineNow(policy, now);
 
   // On second failure we should back off by more.
-  yield listener.lastDataRequest.onSubmissionFailureSoft();
+  listener.lastDataRequest.onSubmissionFailureSoft();
   do_check_eq(policy.currentDaySubmissionFailureCount, 2);
   do_check_eq(policy.nextDataSubmissionDate.getTime(),
               new Date(now.getTime() + policy.FAILURE_BACKOFF_INTERVALS[1]).getTime());
@@ -473,10 +489,12 @@ add_task(function test_submission_backoff() {
   defineNow(policy, now);
 
   // On 3rd failure we should back off by a whole day.
-  yield listener.lastDataRequest.onSubmissionFailureSoft();
+  listener.lastDataRequest.onSubmissionFailureSoft();
   do_check_eq(policy.currentDaySubmissionFailureCount, 0);
   do_check_eq(policy.nextDataSubmissionDate.getTime(),
               new Date(now.getTime() + 24 * 60 * 60 * 1000).getTime());
+
+  run_next_test();
 });
 
 // Ensure that only one submission request can be active at a time.
@@ -503,7 +521,7 @@ add_test(function test_submission_expiring() {
   run_next_test();
 });
 
-add_task(function test_delete_remote_data() {
+add_test(function test_delete_remote_data() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("delete_remote_data");
 
   do_check_false(policy.pendingDeleteRemoteData);
@@ -522,8 +540,10 @@ add_task(function test_delete_remote_data() {
   do_check_true(listener.lastRemoteDeleteRequest.isDelete);
   defineNow(policy, policy._futureDate(1000));
 
-  yield listener.lastRemoteDeleteRequest.onSubmissionSuccess(policy.now());
+  listener.lastRemoteDeleteRequest.onSubmissionSuccess(policy.now());
   do_check_false(policy.pendingDeleteRemoteData);
+
+  run_next_test();
 });
 
 // Ensure that deletion requests take priority over regular data submission.
@@ -581,7 +601,7 @@ add_test(function test_delete_remote_data_backoff() {
 
 // If we request delete while an upload is in progress, delete should be
 // scheduled immediately after upload.
-add_task(function test_delete_remote_data_in_progress_upload() {
+add_test(function test_delete_remote_data_in_progress_upload() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("delete_remote_data_in_progress_upload");
 
   let now = new Date();
@@ -601,12 +621,14 @@ add_task(function test_delete_remote_data_in_progress_upload() {
 
   // Now wait a little bit and finish the request.
   defineNow(policy, policy._futureDate(10 * 1000));
-  yield listener.lastDataRequest.onSubmissionSuccess(policy._futureDate(1000));
+  listener.lastDataRequest.onSubmissionSuccess(policy._futureDate(1000));
   defineNow(policy, policy._futureDate(5000));
 
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 1);
   do_check_eq(listener.requestRemoteDeleteCount, 1);
+
+  run_next_test();
 });
 
 add_test(function test_polling() {
@@ -725,7 +747,7 @@ add_test(function test_polling_implicit_acceptance() {
   policy.startPolling();
 });
 
-add_task(function test_record_health_report_upload_enabled() {
+add_test(function test_record_health_report_upload_enabled() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("record_health_report_upload_enabled");
 
   // Preconditions.
@@ -741,13 +763,15 @@ add_task(function test_record_health_report_upload_enabled() {
   do_check_eq(listener.requestRemoteDeleteCount, 1);
 
   // Fulfilling it should make it go away.
-  yield listener.lastRemoteDeleteRequest.onNoDataAvailable();
+  listener.lastRemoteDeleteRequest.onNoDataAvailable();
   do_check_false(policy.pendingDeleteRemoteData);
 
   // User intent to enable should get us back to default state.
   policy.recordHealthReportUploadEnabled(true, "testing 1 2 3");
   do_check_false(policy.pendingDeleteRemoteData);
   do_check_true(policy.healthReportUploadEnabled);
+
+  run_next_test();
 });
 
 add_test(function test_pref_change_initiates_deletion() {
