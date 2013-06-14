@@ -976,4 +976,22 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
     return 0;
 }
 
+NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
+{
+    return JNI_FALSE;
+}
+
+NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv* jenv, jclass)
+{
+    return NULL;
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_ANRReporter_releaseNativeStack(JNIEnv* jenv, jclass)
+{
+    return;
+}
+
 }

@@ -62,6 +62,10 @@ public final class ANRReporter extends BroadcastReceiver
     private Handler mHandler;
     private volatile boolean mPendingANR;
 
+    private static native boolean requestNativeStack();
+    private static native String getNativeStack();
+    private static native void releaseNativeStack();
+
     public static void register(Context context) {
         if (sRegisteredCount++ != 0) {
             // Already registered
