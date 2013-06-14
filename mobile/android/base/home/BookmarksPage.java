@@ -33,7 +33,7 @@ import java.util.LinkedList;
 /**
  * A page in about:home that displays a ListView of bookmarks.
  */
-public class BookmarksPage extends HomeFragment {
+public class BookmarksPage extends HomeFragment implements AdapterView.OnItemClickListener {
     public static final String LOGTAG = "GeckoBookmarksPage";
 
     private int mFolderId = Bookmarks.FIXED_ROOT_ID;
@@ -113,8 +113,7 @@ public class BookmarksPage extends HomeFragment {
         // We need to add the header before we set the adapter, hence make it null
         refreshListWithCursor(null);
 
-        EventHandlers eventHandlers = new EventHandlers();
-        mList.setOnItemClickListener(eventHandlers);
+        mList.setOnItemClickListener(this);
         mList.setOnKeyListener(GamepadUtils.getListItemClickDispatcher());
 
         registerForContextMenu(mList);
@@ -150,6 +149,44 @@ public class BookmarksPage extends HomeFragment {
         }
     }
 
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        final ListView list = (ListView) parent;
+        final int headerCount = list.getHeaderViewsCount();
+
+        // If we tap on the header view, move back to parent folder.
+        if (headerCount == 1 && position == 0) {
+            mCursorAdapter.moveToParentFolder();
+            return;
+        }
+
+        final Cursor cursor = mCursorAdapter.getCursor();
+        if (cursor == null) {
+            return;
+        }
+
+        // The header view takes up a spot in the list
+        if (headerCount == 1) {
+            position--;
+        }
+
+        cursor.moveToPosition(position);
+
+        int type = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE));
+        if (type == Bookmarks.TYPE_FOLDER) {
+            // If we're clicking on a folder, update adapter to move to that folder
+            final int folderId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+            final String folderTitle = mCursorAdapter.getFolderTitle(position);
+            mCursorAdapter.moveToChildFolder(folderId, folderTitle);
+        } else {
+            // Otherwise, just open the URL
+            final String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+            if (mUrlOpenListener != null) {
+                mUrlOpenListener.onUrlOpen(url);
+            }
+        }
+    }
+
     private void refreshListWithCursor(Cursor cursor) {
         // We need to add the header before we set the adapter, hence making it null.
         mList.setAdapter(null);
@@ -173,49 +210,6 @@ public class BookmarksPage extends HomeFragment {
 
         // Reset the task.
         mQueryTask = null;
-    }
-
-    /**
-     * Internal class to handle different event listeners on the ListView.
-     */
-    private class EventHandlers implements AdapterView.OnItemClickListener {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            final ListView list = (ListView) parent;
-            final int headerCount = list.getHeaderViewsCount();
-
-            // If we tap on the header view, move back to parent folder.
-            if (headerCount == 1 && position == 0) {
-                mCursorAdapter.moveToParentFolder();
-                return;
-            }
-
-            Cursor cursor = mCursorAdapter.getCursor();
-            if (cursor == null) {
-                return;
-            }
-
-            // The header view takes up a spot in the list
-            if (headerCount == 1) {
-                position--;
-            }
-
-            cursor.moveToPosition(position);
-
-            int type = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE));
-            if (type == Bookmarks.TYPE_FOLDER) {
-                // If we're clicking on a folder, update adapter to move to that folder
-                int folderId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
-                String folderTitle = mCursorAdapter.getFolderTitle(position);
-                mCursorAdapter.moveToChildFolder(folderId, folderTitle);
-             } else {
-                // Otherwise, just open the URL
-                String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-                if (mUrlOpenListener != null) {
-                    mUrlOpenListener.onUrlOpen(url);
-                }
-             }
-         }
     }
 
     /**
