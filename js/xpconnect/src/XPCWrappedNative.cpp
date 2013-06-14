@@ -1464,9 +1464,9 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
                 MOZ_CRASH();
         }
 
-        JSObject *ww = wrapper->GetWrapper();
+        RootedObject ww(cx, wrapper->GetWrapper());
         if (ww) {
-            JSObject *newwrapper;
+            RootedObject newwrapper(cx);
             MOZ_ASSERT(wrapper->NeedsSOW(), "weird wrapper wrapper");
             newwrapper = xpc::WrapperFactory::WrapSOWObject(cx, newobj);
             if (!newwrapper)
