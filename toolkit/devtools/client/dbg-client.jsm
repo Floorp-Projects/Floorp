@@ -217,7 +217,7 @@ this.DebuggerClient = function DebuggerClient(aTransport)
   this._consoleClients = {};
 
   this._pendingRequests = [];
-  this._activeRequests = {};
+  this._activeRequests = new Map;
   this._eventsEnabled = true;
 
   /* The root actor for this client's main connection. */
@@ -544,11 +544,11 @@ DebuggerClient.prototype = {
    */
   _sendRequests: function DC_sendRequests() {
     this._pendingRequests = this._pendingRequests.filter((request) => {
-      if (request.to in this._activeRequests) {
+      if (this._activeRequests.has(request.to)) {
         return true;
       }
 
-      this._activeRequests[request.to] = request;
+      this._activeRequests.set(request.to, request.onResponse);
       this._transport.send(request.request);
 
       return false;
@@ -591,12 +591,12 @@ DebuggerClient.prototype = {
 
       let onResponse;
       // Don't count unsolicited notifications or pauses as responses.
-      if (aPacket.from in this._activeRequests &&
+      if (this._activeRequests.has(aPacket.from) &&
           !(aPacket.type in UnsolicitedNotifications) &&
           !(aPacket.type == ThreadStateTypes.paused &&
             aPacket.why.type in UnsolicitedPauses)) {
-        onResponse = this._activeRequests[aPacket.from].onResponse;
-        delete this._activeRequests[aPacket.from];
+        onResponse = this._activeRequests.get(aPacket.from);
+        this._activeRequests.delete(aPacket.from);
       }
 
       // Packets that indicate thread state changes get special treatment.
