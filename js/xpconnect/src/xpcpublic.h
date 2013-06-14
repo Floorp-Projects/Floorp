@@ -40,12 +40,12 @@ class nsIGlobalObject;
 
 namespace xpc {
 JSObject *
-TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target);
+TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject target);
 
 JSObject *
 TransplantObjectWithWrapper(JSContext *cx,
-                            JSObject *origobj, JSObject *origwrapper,
-                            JSObject *targetobj, JSObject *targetwrapper);
+                            JS::HandleObject origobj, JS::HandleObject origwrapper,
+                            JS::HandleObject targetobj, JS::HandleObject targetwrapper);
 
 // Return a raw XBL scope object corresponding to contentScope, which must
 // be an object whose global is a DOM window.

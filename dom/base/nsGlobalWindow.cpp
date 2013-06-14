@@ -2395,7 +2395,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     } else {
       JS::Rooted<JSObject*> global(cx,
         xpc_UnmarkGrayObject(newInnerWindow->mJSObject));
-      JSObject* outerObject = NewOuterWindowProxy(cx, global, thisChrome);
+      JS::Rooted<JSObject*> outerObject(cx,
+        NewOuterWindowProxy(cx, global, thisChrome));
       if (!outerObject) {
         NS_ERROR("out of memory");
         return NS_ERROR_FAILURE;
@@ -2403,7 +2404,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       js::SetProxyExtra(mJSObject, 0, js::PrivateValue(NULL));
 
-      outerObject = xpc::TransplantObject(cx, mJSObject, outerObject);
+      JS::Rooted<JSObject*> obj(cx, mJSObject);
+      outerObject = xpc::TransplantObject(cx, obj, outerObject);
       if (!outerObject) {
         NS_ERROR("unable to transplant wrappers, probably OOM");
         return NS_ERROR_FAILURE;

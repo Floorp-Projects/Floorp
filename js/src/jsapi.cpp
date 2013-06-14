@@ -1594,10 +1594,8 @@ JS_WrapId(JSContext *cx, jsid *idp)
  */
 
 JS_PUBLIC_API(JSObject *)
-JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
+JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
 {
-    RootedObject origobj(cx, origobjArg);
-    RootedObject target(cx, targetArg);
     AssertHeapIsIdle(cx);
     JS_ASSERT(origobj != target);
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
@@ -1667,16 +1665,11 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
  */
 JS_FRIEND_API(JSObject *)
 js_TransplantObjectWithWrapper(JSContext *cx,
-                               JSObject *origobjArg,
-                               JSObject *origwrapperArg,
-                               JSObject *targetobjArg,
-                               JSObject *targetwrapperArg)
+                               HandleObject origobj,
+                               HandleObject origwrapper,
+                               HandleObject targetobj,
+                               HandleObject targetwrapper)
 {
-    RootedObject origobj(cx, origobjArg);
-    RootedObject origwrapper(cx, origwrapperArg);
-    RootedObject targetobj(cx, targetobjArg);
-    RootedObject targetwrapper(cx, targetwrapperArg);
-
     AutoMaybeTouchDeadZones agc(cx);
     AutoDisableProxyCheck adpc(cx->runtime());
 
