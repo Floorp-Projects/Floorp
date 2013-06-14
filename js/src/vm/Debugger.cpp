@@ -229,7 +229,6 @@ class Debugger::FrameRange
     }
 };
 
-
 /*** Breakpoints *********************************************************************************/
 
 BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
@@ -686,7 +685,6 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     assertSameCompartment(cx, object.get());
 
     if (vp.isObject()) {
-        // Do we need this RootedObject?
         RootedObject obj(cx, &vp.toObject());
 
         ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
@@ -2887,16 +2885,6 @@ DebuggerScript_getSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-EnsureFunctionHasScript(JSContext *cx, JSFunction *fun)
-{
-    if (fun->isInterpretedLazy()) {
-        AutoCompartment ac(cx, fun);
-        return fun->getOrCreateScript(cx);
-    }
-    return true;
-}
-
 static JSBool
 DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2921,10 +2909,6 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
             obj = objects->vector[i];
             if (obj->isFunction()) {
                 fun = static_cast<JSFunction *>(obj.get());
-
-                if (!EnsureFunctionHasScript(cx, fun))
-                    return false;
-
                 funScript = fun->nonLazyScript();
                 s = dbg->wrapScript(cx, funScript);
                 if (!s || !js_NewbornArrayPush(cx, result, ObjectValue(*s)))
@@ -4473,9 +4457,6 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
-        if (!EnsureFunctionHasScript(cx, fun))
-            return false;
-
         JS_ASSERT(fun->nargs == fun->nonLazyScript()->bindings.numArgs());
 
         if (fun->nargs > 0) {
@@ -4516,9 +4497,6 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setUndefined();
         return true;
     }
-
-    if (!EnsureFunctionHasScript(cx, fun))
-        return false;
 
     RootedScript script(cx, fun->nonLazyScript());
     RootedObject scriptObject(cx, dbg->wrapScript(cx, script));

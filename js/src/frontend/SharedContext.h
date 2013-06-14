@@ -210,6 +210,10 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            useAsm:1;               /* function contains "use asm" directive */
     bool            insideUseAsm:1;         /* nested function of function of "use asm" directive */
 
+    // Fields for use in heuristics.
+    bool            usesArguments:1;  /* contains a free use of 'arguments' */
+    bool            usesApply:1;      /* contains an f.apply() call */
+
     FunctionContextFlags funCxFlags;
 
     template <typename ParseHandler>

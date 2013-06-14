@@ -419,9 +419,6 @@ Parser<ParseHandler>::Parser(JSContext *cx, const CompileOptions &options,
     abortedSyntaxParse(false),
     handler(cx, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
-    // XXX bug 678037 always disable syntax parsing for now.
-    handler.disableSyntaxParser();
-
     cx->runtime()->activeCompilations++;
 
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
@@ -487,6 +484,8 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
     inGenexpLambda(false),
     useAsm(false),
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
+    usesArguments(false),
+    usesApply(false),
     funCxFlags()
 {
     JS_ASSERT(fun->isTenured());
@@ -925,6 +924,7 @@ Parser<FullParseHandler>::checkFunctionArguments()
             dn->pn_dflags |= PND_IMPLICITARGUMENTS;
             if (!pc->define(context, arguments, dn, Definition::VAR))
                 return false;
+            pc->sc->asFunctionBox()->usesArguments = true;
             break;
         }
     }
@@ -1014,11 +1014,15 @@ template <>
 bool
 Parser<SyntaxParseHandler>::checkFunctionArguments()
 {
-    if (pc->sc->asFunctionBox()->function()->hasRest()) {
-        if (pc->lexdeps->lookup(context->names().arguments)) {
+    bool hasRest = pc->sc->asFunctionBox()->function()->hasRest();
+
+    if (pc->lexdeps->lookup(context->names().arguments)) {
+        pc->sc->asFunctionBox()->usesArguments = true;
+        if (hasRest) {
             report(ParseError, false, null(), JSMSG_ARGUMENTS_AND_REST);
             return false;
         }
+    } else if (hasRest) {
         DefinitionNode maybeArgDef = pc->decls().lookupFirst(context->names().arguments);
         if (maybeArgDef && handler.getDefinitionKind(maybeArgDef) != Definition::ARG) {
             report(ParseError, false, null(), JSMSG_ARGUMENTS_AND_REST);
@@ -1340,14 +1344,6 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
                     return false;
                 continue;
             }
-
-            /*
-             * If there are no uses of this placeholder (e.g., it was created
-             * for an identifierName that turned out to be a label), there is
-             * nothing left to do.
-             */
-            if (!dn->dn_uses)
-                continue;
 
             Definition *outer_dn = outerpc->decls().lookupFirst(atom);
 
@@ -2046,7 +2042,7 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox *funbo
     size_t numFreeVariables = pc->lexdeps->count();
     size_t numInnerFunctions = pc->innerFunctions.length();
 
-    LazyScript *lazy = LazyScript::Create(context, numFreeVariables, numInnerFunctions,
+    LazyScript *lazy = LazyScript::Create(context, numFreeVariables, numInnerFunctions, versionNumber(),
                                           funbox->bufStart, funbox->bufEnd,
                                           funbox->startLine, funbox->startColumn);
     if (!lazy)
@@ -2064,6 +2060,8 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox *funbo
 
     if (pc->sc->strict)
         lazy->setStrict();
+    if (funbox->usesArguments && funbox->usesApply)
+        lazy->setUsesArgumentsAndApply();
     PropagateTransitiveParseFlags(funbox, lazy);
 
     funbox->object->toFunction()->initLazyScript(lazy);
@@ -2172,6 +2170,11 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     if (becameStrict)
         *becameStrict = false;
     ParseContext<SyntaxParseHandler> *outerpc = pc;
+
+    // As from a full parse handler, abort if functions are defined within
+    // lexical scopes.
+    if (pc->topScopeStmt)
+        return abortIfSyntaxParser();
 
     // Create box for fun->object early to protect against last-ditch GC.
     FunctionBox *funbox = newFunctionBox(fun, pc, strict);
@@ -4099,6 +4102,7 @@ Parser<SyntaxParseHandler>::forStatement()
         /* Check that the left side of the 'in' or 'of' is valid. */
         if (!forDecl &&
             lhsNode != SyntaxParseHandler::NodeName &&
+            lhsNode != SyntaxParseHandler::NodeGetProp &&
             lhsNode != SyntaxParseHandler::NodeLValue)
         {
             JS_ALWAYS_FALSE(abortIfSyntaxParser());
@@ -4311,12 +4315,15 @@ Parser<ParseHandler>::tryStatement()
     return pn;
 }
 
-template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::withStatement()
+template <>
+ParseNode *
+Parser<FullParseHandler>::withStatement()
 {
-    if (!abortIfSyntaxParser())
+    if (handler.syntaxParser) {
+        handler.disableSyntaxParser();
+        abortedSyntaxParse = true;
         return null();
+    }
 
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_WITH));
     uint32_t begin = tokenStream.currentToken().pos.begin;
@@ -4354,7 +4361,7 @@ Parser<ParseHandler>::withStatement()
      * to safely optimize binding globals (see bug 561923).
      */
     for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
-        DefinitionNode defn = r.front().value().get<ParseHandler>();
+        DefinitionNode defn = r.front().value().get<FullParseHandler>();
         DefinitionNode lexdep = handler.resolve(defn);
         handler.deoptimizeUsesWithin(lexdep,
                                      TokenPos::make(begin, tokenStream.currentToken().pos.begin));
@@ -4367,6 +4374,14 @@ Parser<ParseHandler>::withStatement()
     handler.setBeginPosition(pn, begin);
     handler.setEndPosition(pn, innerBlock);
     return pn;
+}
+
+template <>
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::withStatement()
+{
+    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    return null();
 }
 
 #if JS_HAS_BLOCK_SCOPE
@@ -5235,8 +5250,12 @@ bool
 Parser<SyntaxParseHandler>::setAssignmentLhsOps(Node pn, JSOp op)
 {
     /* Full syntax checking of valid assignment LHS terms requires a parse tree. */
-    if (pn != SyntaxParseHandler::NodeName && pn != SyntaxParseHandler::NodeLValue)
+    if (pn != SyntaxParseHandler::NodeName &&
+        pn != SyntaxParseHandler::NodeGetProp &&
+        pn != SyntaxParseHandler::NodeLValue)
+    {
         return abortIfSyntaxParser();
+    }
     return checkStrictAssignment(pn);
 }
 
@@ -5419,8 +5438,12 @@ Parser<SyntaxParseHandler>::checkDeleteExpression(Node *pn)
 
     // Treat deletion of non-lvalues as ambiguous, so that any error associated
     // with deleting a call expression is reported.
-    if (*pn != SyntaxParseHandler::NodeLValue && strictMode())
+    if (*pn != SyntaxParseHandler::NodeGetProp &&
+        *pn != SyntaxParseHandler::NodeLValue &&
+        strictMode())
+    {
         return abortIfSyntaxParser();
+    }
 
     return true;
 }
@@ -6444,10 +6467,13 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
                 }
             } else if (JSAtom *atom = handler.isGetProp(lhs)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
-                if (atom == context->names().apply)
+                if (atom == context->names().apply) {
                     handler.setOp(nextMember, JSOP_FUNAPPLY);
-                else if (atom == context->names().call)
+                    if (pc->sc->isFunctionBox())
+                        pc->sc->asFunctionBox()->usesApply = true;
+                } else if (atom == context->names().call) {
                     handler.setOp(nextMember, JSOP_FUNCALL);
+                }
             }
 
             handler.setBeginPosition(nextMember, lhs);
@@ -6551,7 +6577,17 @@ template <>
 SyntaxParseHandler::Node
 Parser<SyntaxParseHandler>::newRegExp(const jschar *buf, size_t length, RegExpFlag flags)
 {
-    return SyntaxParseHandler::NodeGeneric;
+    // Create the regexp even when doing a syntax parse, to check the regexp's syntax.
+    const StableCharPtr chars(buf, length);
+    RegExpStatics *res = context->regExpStatics();
+
+    RegExpObject *reobj;
+    if (context->hasfp())
+        reobj = RegExpObject::create(context, res, chars.get(), length, flags, &tokenStream);
+    else
+        reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);
+
+    return reobj ? SyntaxParseHandler::NodeGeneric : SyntaxParseHandler::NodeFailure;
 }
 
 template <typename ParseHandler>

@@ -832,14 +832,14 @@ class MOZ_STACK_CLASS TokenStream
             ptr--;
         }
 
-        const jschar *addressOfNextRawChar() const {
-            JS_ASSERT(ptr);     /* make sure haven't been poisoned */
+        const jschar *addressOfNextRawChar(bool allowPoisoned = false) const {
+            JS_ASSERT_IF(!allowPoisoned, ptr);     /* make sure haven't been poisoned */
             return ptr;
         }
 
         /* Use this with caution! */
-        void setAddressOfNextRawChar(const jschar *a) {
-            JS_ASSERT(a);
+        void setAddressOfNextRawChar(const jschar *a, bool allowPoisoned = false) {
+            JS_ASSERT_IF(!allowPoisoned, a);
             ptr = a;
         }
 
