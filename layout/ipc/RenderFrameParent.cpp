@@ -48,8 +48,8 @@ struct ViewTransform {
   operator gfx3DMatrix() const
   {
     return
-      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1) *
-      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
+      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0) *
+      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1);
   }
 
   nsIntPoint mTranslation;
@@ -178,8 +178,8 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
     // synchronously scrolled for identifying a scroll area before it is
     // being actively scrolled.
     nsIntPoint scrollCompensation(
-      (scrollOffset.x / aTempScaleX - roundedMetricsScrollOffset.x) * aConfig.mXScale,
-      (scrollOffset.y / aTempScaleY - roundedMetricsScrollOffset.y) * aConfig.mYScale);
+      (scrollOffset.x / aTempScaleX - roundedMetricsScrollOffset.x),
+      (scrollOffset.y / aTempScaleY - roundedMetricsScrollOffset.y));
 
     return ViewTransform(-scrollCompensation, aConfig.mXScale, aConfig.mYScale);
   } else {
@@ -297,8 +297,8 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
     // Alter the shadow transform of fixed position layers in the situation
     // that the view transform's scroll position doesn't match the actual
     // scroll position, due to asynchronous layer scrolling.
-    float offsetX = layerTransform.mTranslation.x / layerTransform.mXScale;
-    float offsetY = layerTransform.mTranslation.y / layerTransform.mYScale;
+    float offsetX = layerTransform.mTranslation.x;
+    float offsetY = layerTransform.mTranslation.y;
     ReverseTranslate(shadowTransform, gfxPoint(offsetX, offsetY));
     const nsIntRect* clipRect = shadow->GetShadowClipRect();
     if (clipRect) {
@@ -957,7 +957,7 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   ContainerLayer* container = GetRootLayer();
   if (aBuilder->IsForEventDelivery() && container) {
     ViewTransform offset =
-      ViewTransform(GetContentRectLayerOffset(aFrame, aBuilder), 1, 1);
+      ViewTransform(GetContentRectLayerOffset(aFrame, aBuilder));
     BuildListForLayer(container, mFrameLoader, offset,
                       aBuilder, *aLists.Content(), aFrame);
   } else {
