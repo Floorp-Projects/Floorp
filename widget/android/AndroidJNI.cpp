@@ -990,7 +990,7 @@ Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
     // generally unsafe to use the profiler from off the main thread. However,
     // the risk here is limited because for most users, the profiler is not run
     // elsewhere. See the discussion in Bug 863777, comment 13
-    const char *NATIVE_STACK_FEATURES[] = {"leaf", "threads"};
+    const char *NATIVE_STACK_FEATURES[] = {"leaf", "threads", "privacy"};
     // Buffer one sample and let the profiler wait a long time
     profiler_start(100, 10000, NATIVE_STACK_FEATURES,
         sizeof(NATIVE_STACK_FEATURES) / sizeof(char*));

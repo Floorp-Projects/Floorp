@@ -42,6 +42,7 @@ class TableTicker: public Sampler {
     mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads");
     mUnwinderThread = hasFeature(aFeatures, aFeatureCount, "unwinder") || sps_version2();
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
+    mPrivacyMode = hasFeature(aFeatures, aFeatureCount, "privacy");
 
     sStartTime = TimeStamp::Now();
 
@@ -127,6 +128,7 @@ class TableTicker: public Sampler {
   bool ProfileJS() const { return mProfileJS; }
   bool ProfileJava() const { return mProfileJava; }
   bool ProfileThreads() const { return mProfileThreads; }
+  bool InPrivacyMode() const { return mPrivacyMode; }
 
 protected:
   // Called within a signal. This function must be reentrant
@@ -150,5 +152,6 @@ protected:
   bool mProfileThreads;
   bool mUnwinderThread;
   bool mProfileJava;
+  bool mPrivacyMode;
 };
 
