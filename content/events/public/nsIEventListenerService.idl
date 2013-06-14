@@ -16,6 +16,7 @@ interface nsIEventListenerInfo : nsISupports
 {
   /**
    * The type of the event for which the listener was added.
+   * Null if the listener is for all the events.
    */
   readonly attribute AString type;
   readonly attribute boolean capturing;

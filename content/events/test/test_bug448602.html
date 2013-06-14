@@ -184,6 +184,15 @@ function testAllListener() {
   }
 
   els.addListenerForAllEvents(root, allListener, false, true);
+  var infos = els.getListenerInfoFor(root);
+  var nullTypes = 0;
+  for (var i = 0; i < infos.length; ++i) {
+    if (infos[i].type == null) {
+      ++nullTypes;
+    }
+  }
+  is(nullTypes, 1, "Should have one all-event-listener!");
+
   els.addListenerForAllEvents(root, allListener, false, true, true);
   els.addListenerForAllEvents(root, allListenerTrustedOnly, false, false, true);
   l3.dispatchEvent(new Event("testevent", { bubbles: true }));
