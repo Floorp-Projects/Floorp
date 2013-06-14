@@ -129,7 +129,6 @@ class SyntaxParseHandler
         return false;
     }
 
-    void noteLValue(Node pn) {}
     bool finishInitializerAssignment(Node pn, Node init, JSOp op) { return true; }
 
     void setBeginPosition(Node pn, Node oth) {}
