@@ -190,6 +190,26 @@ void test()
     VERIFY_IS_INVALID(one - min + min);
   }
 
+  /* Modulo checks */
+  VERIFY_IS_INVALID(zero % zero);
+  VERIFY_IS_INVALID(one % zero);
+  VERIFY_IS_VALID(zero % one);
+  VERIFY_IS_VALID(zero % max);
+  VERIFY_IS_VALID(one % max);
+  VERIFY_IS_VALID(max % one);
+  VERIFY_IS_VALID(max % max);
+  if (isTSigned) {
+    const CheckedInt<T> minusOne = zero - one;
+    VERIFY_IS_INVALID(minusOne % minusOne);
+    VERIFY_IS_INVALID(zero % minusOne);
+    VERIFY_IS_INVALID(one % minusOne);
+    VERIFY_IS_INVALID(minusOne % one);
+
+    VERIFY_IS_INVALID(min % min);
+    VERIFY_IS_INVALID(zero % min);
+    VERIFY_IS_INVALID(min % one);
+  }
+
   /* Unary operator- checks */
 
   const CheckedInt<T> negOne = -one;
@@ -347,10 +367,15 @@ void test()
   VERIFY_IS_INVALID(someInvalid / one);
   VERIFY_IS_INVALID(zero / someInvalid);
   VERIFY_IS_INVALID(one / someInvalid);
+  VERIFY_IS_INVALID(someInvalid % zero);
+  VERIFY_IS_INVALID(someInvalid % one);
+  VERIFY_IS_INVALID(zero % someInvalid);
+  VERIFY_IS_INVALID(one % someInvalid);
   VERIFY_IS_INVALID(someInvalid + someInvalid);
   VERIFY_IS_INVALID(someInvalid - someInvalid);
   VERIFY_IS_INVALID(someInvalid * someInvalid);
   VERIFY_IS_INVALID(someInvalid / someInvalid);
+  VERIFY_IS_INVALID(someInvalid % someInvalid);
 
   /* Check that mixing checked integers with plain integers in expressions is allowed */
 
@@ -381,6 +406,13 @@ void test()
     CheckedInt<T> x = four;
     x /= 2;
     VERIFY(x == two);
+  }
+  VERIFY(three % 2 == one);
+  VERIFY(3 % two == one);
+  {
+    CheckedInt<T> x = three;
+    x %= 2;
+    VERIFY(x == one);
   }
 
   VERIFY(one == 1);
