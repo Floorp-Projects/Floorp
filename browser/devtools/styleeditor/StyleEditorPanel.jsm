@@ -91,16 +91,16 @@ StyleEditorPanel.prototype = {
    * @param {string} href
    *        Url of stylesheet to find and select in editor
    * @param {number} line
-   *        Line number to jump to after selecting
+   *        Line number to jump to after selecting. One-indexed
    * @param {number} col
-   *        Column number to jump to after selecting
+   *        Column number to jump to after selecting. One-indexed
    */
   selectStyleSheet: function(href, line, col) {
     if (!this._debuggee || !this.UI) {
       return;
     }
     let stylesheet = this._debuggee.styleSheetFromHref(href);
-    this.UI.selectStyleSheet(href, line, col);
+    this.UI.selectStyleSheet(href, line - 1, col - 1);
   },
 
   /**
