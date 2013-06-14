@@ -29,7 +29,7 @@
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
 
-#ifdef JS_ASMJS
+#ifdef JS_ION
 #include "ion/AsmJSModule.h"
 #endif
 
@@ -912,7 +912,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
             JS_DumpPCCounts(cx, script);
     }
 
-#if defined(JS_ASMJS) && defined(DEBUG)
+#if defined(JS_ION) && defined(DEBUG)
     for (unsigned thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
         for (CellIter i(cx->zone(), (AllocKind) thingKind); !i.done(); i.next()) {
             JSObject *obj = i.get<JSObject>();

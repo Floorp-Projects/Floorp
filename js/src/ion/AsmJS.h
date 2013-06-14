@@ -12,10 +12,6 @@
 # include <mach/mach.h>
 #endif
 
-#if defined(JS_ION)
-# define JS_ASMJS
-#endif
-
 namespace js {
 
 class ScriptSource;
@@ -143,10 +139,11 @@ struct AsmJSParallelTask
     uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
     ion::MIRGenerator *mir; // Passed from main thread to worker.
     ion::LIRGraph *lir;     // Passed from worker to main thread.
+    unsigned compileTime;
 
     AsmJSParallelTask(size_t defaultChunkSize)
       : lifo(defaultChunkSize),
-        funcNum(0), mir(NULL), lir(NULL)
+        funcNum(0), mir(NULL), lir(NULL), compileTime(0)
     { }
 
     void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
@@ -158,11 +155,11 @@ struct AsmJSParallelTask
 
 // Returns true if the given native is the one that is used to implement asm.js
 // module functions.
-#ifdef JS_ASMJS
-bool
+#ifdef JS_ION
+extern bool
 IsAsmJSModuleNative(js::Native native);
 #else
-static inline bool
+inline bool
 IsAsmJSModuleNative(js::Native native)
 {
     return false;

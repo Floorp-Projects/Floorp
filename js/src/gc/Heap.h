@@ -670,10 +670,6 @@ struct ChunkBitmap
 
   public:
     ChunkBitmap() { }
-    ChunkBitmap(MoveRef<ChunkBitmap> b) {
-        mozilla::PodArrayCopy(bitmap, b->bitmap);
-    }
-
 
     MOZ_ALWAYS_INLINE void getMarkWordAndMask(const Cell *cell, uint32_t color,
                                               uintptr_t **wordp, uintptr_t *maskp)

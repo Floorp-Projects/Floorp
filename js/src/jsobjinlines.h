@@ -656,13 +656,13 @@ JSObject::parExtendDenseElements(js::Allocator *alloc, js::Value *v, uint32_t ex
 
     js::HeapSlot *sp = elements + initializedLength;
     if (v) {
-        for (uint32_t i = 0; i < extra; i++)
-            sp[i].init(runtime(), this, js::HeapSlot::Element, initializedLength+i, v[i]);
-    } else {
         for (uint32_t i = 0; i < extra; i++) {
-            sp[i].init(runtime(), this, js::HeapSlot::Element,
-                       initializedLength + i, js::MagicValue(JS_ELEMENTS_HOLE));
+            JS_ASSERT_IF(v[i].isMarkable(), static_cast<js::gc::Cell *>(v[i].toGCThing())->isTenured());
+            *sp[i].unsafeGet() = v[i];
         }
+    } else {
+        for (uint32_t i = 0; i < extra; i++)
+            *sp[i].unsafeGet() = js::MagicValue(JS_ELEMENTS_HOLE);
     }
     header->initializedLength = requiredCapacity;
     if (header->length < requiredCapacity)
