@@ -1478,8 +1478,6 @@ nsDocument::~nsDocument()
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
   }
-  if (mStyleAttrStyleSheet)
-    mStyleAttrStyleSheet->SetOwningDocument(nullptr);
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -2234,36 +2232,15 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   // Now reset our inline style and attribute sheets.
   if (mAttrStyleSheet) {
-    // Remove this sheet from all style sets
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      shell->StyleSet()->RemoveStyleSheet(nsStyleSet::ePresHintSheet,
-                                          mAttrStyleSheet);
-    }
-    mAttrStyleSheet->Reset(aURI);
+    mAttrStyleSheet->Reset();
+    mAttrStyleSheet->SetOwningDocument(this);
   } else {
-    mAttrStyleSheet = new nsHTMLStyleSheet(aURI, this);
+    mAttrStyleSheet = new nsHTMLStyleSheet(this);
   }
 
-  // Don't use AddStyleSheet, since it'll put the sheet into style
-  // sets in the document level, which is not desirable here.
-  mAttrStyleSheet->SetOwningDocument(this);
-
-  if (mStyleAttrStyleSheet) {
-    // Remove this sheet from all style sets
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      shell->StyleSet()->
-        RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
-    }
-    mStyleAttrStyleSheet->Reset(aURI);
-  } else {
-    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet(aURI, this);
+  if (!mStyleAttrStyleSheet) {
+    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
   }
-
-  // The loop over style sets below will handle putting this sheet
-  // into style sets as needed.
-  mStyleAttrStyleSheet->SetOwningDocument(this);
 
   // Now set up our style sets
   nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -2295,19 +2272,13 @@ void
 nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
 {
   NS_PRECONDITION(aStyleSet, "Must have a style set");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::ePresHintSheet) == 0,
-                  "Style set already has a preshint sheet?");
   NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eDocSheet) == 0,
                   "Style set already has document sheets?");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eStyleAttrSheet) == 0,
-                  "Style set already has style attr sheets?");
-  NS_PRECONDITION(mStyleAttrStyleSheet, "No style attr stylesheet?");
-  NS_PRECONDITION(mAttrStyleSheet, "No attr stylesheet?");
 
-  aStyleSet->AppendStyleSheet(nsStyleSet::ePresHintSheet, mAttrStyleSheet);
-
-  aStyleSet->AppendStyleSheet(nsStyleSet::eStyleAttrSheet,
-                              mStyleAttrStyleSheet);
+  // We could consider moving this to nsStyleSet::Init, to match its
+  // handling of the eAnimationSheet and eTransitionSheet levels.
+  aStyleSet->DirtyRuleProcessors(nsStyleSet::ePresHintSheet);
+  aStyleSet->DirtyRuleProcessors(nsStyleSet::eStyleAttrSheet);
 
   int32_t i;
   for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
