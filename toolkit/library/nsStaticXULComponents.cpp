@@ -5,7 +5,6 @@
 
 #include "mozilla/Module.h"
 #include "nsXPCOM.h"
-#include "nsStaticComponents.h"
 #include "nsMemory.h"
 
 #ifdef MOZ_AUTH_EXTENSION
@@ -246,7 +245,7 @@ XUL_MODULES
 #define MODULE(_name) \
     &NSMODULE_NAME(_name),
 
-const mozilla::Module *const *const kPStaticModules[] = {
+extern const mozilla::Module *const *const kPStaticModules[] = {
   XUL_MODULES
   NULL
 };

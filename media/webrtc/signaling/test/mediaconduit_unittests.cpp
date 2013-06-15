@@ -13,7 +13,6 @@ using namespace std;
 #include "mozilla/Scoped.h"
 #include <MediaConduitInterface.h>
 #include "nsIEventTarget.h"
-#include "nsStaticComponents.h"
 #include "FakeMediaStreamsImpl.h"
 
 #define GTEST_HAS_RTTI 0
