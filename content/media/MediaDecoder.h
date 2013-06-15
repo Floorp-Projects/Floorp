@@ -710,6 +710,12 @@ public:
   // This must be called on the main thread only.
   void PlaybackPositionChanged();
 
+  // Calls mElement->UpdateReadyStateForData, telling it which state we have
+  // entered.  Main thread only.
+  void NextFrameUnavailableBuffering();
+  void NextFrameAvailable();
+  void NextFrameUnavailable();
+
   // Calls mElement->UpdateReadyStateForData, telling it whether we have
   // data for the next frame and if we're buffering. Main thread only.
   void UpdateReadyStateForData();
