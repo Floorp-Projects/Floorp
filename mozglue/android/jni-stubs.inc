@@ -77,25 +77,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv * arg0, jclass arg1) {
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_callObserver_t)(JNIEnv *, jclass, jstring, jstring, jstring);
-static Java_org_mozilla_gecko_GeckoAppShell_callObserver_t f_Java_org_mozilla_gecko_GeckoAppShell_callObserver;
-extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_callObserver(JNIEnv * arg0, jclass arg1, jstring arg2, jstring arg3, jstring arg4) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_callObserver) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_callObserver(arg0, arg1, arg2, arg3, arg4);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_callObserver", &f_Java_org_mozilla_gecko_GeckoAppShell_callObserver);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_removeObserver_t)(JNIEnv *, jclass, jstring);
 static Java_org_mozilla_gecko_GeckoAppShell_removeObserver_t f_Java_org_mozilla_gecko_GeckoAppShell_removeObserver;
 extern "C" NS_EXPORT void JNICALL
