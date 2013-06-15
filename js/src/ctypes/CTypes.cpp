@@ -4,16 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ctypes/CTypes.h"
+
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/StandardInteger.h"
 
-#include "CTypes.h"
-#include "Library.h"
-#include "jsnum.h"
-#include "jscompartment.h"
-#include "jsobjinlines.h"
 #include <limits>
-
 #include <math.h>
+
 #if defined(XP_WIN) || defined(XP_OS2)
 #include <float.h>
 #endif
@@ -32,7 +30,12 @@
 #include <windows.h>
 #endif
 
-#include "mozilla/StandardInteger.h"
+#include "jscompartment.h"
+#include "jsnum.h"
+#include "jsprf.h"
+#include "jstypedarray.h"
+
+#include "ctypes/Library.h"
 
 using namespace std;
 

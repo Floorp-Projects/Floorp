@@ -82,48 +82,16 @@ xpc_LocalizeRuntime(JSRuntime *rt);
 NS_EXPORT_(void)
 xpc_DelocalizeRuntime(JSRuntime *rt);
 
-nsresult
-xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph);
+// If IS_WN_CLASS for the JSClass of an object is true, the object is a
+// wrappednative wrapper, holding the XPCWrappedNative in its private slot.
 
-static inline bool IS_WRAPPER_CLASS(js::Class* clazz)
+static inline bool IS_WN_CLASS(js::Class* clazz)
 {
     return clazz->ext.isWrappedNative;
 }
-
-// If IS_WRAPPER_CLASS for the JSClass of an object is true, the object can be
-// a slim wrapper, holding a native in its private slot, or a wrappednative
-// wrapper, holding the XPCWrappedNative in its private slot. A slim wrapper
-// also holds a pointer to its XPCWrappedNativeProto in a reserved slot, we can
-// check that slot for a private value (i.e. a double) to distinguish between
-// the two. This allows us to store a JSObject in that slot for non-slim wrappers
-// while still being able to distinguish the two cases.
-
-// NB: This slot isn't actually reserved for us on globals, because SpiderMonkey
-// uses the first N slots on globals internally. The fact that we use it for
-// wrapped global objects is totally broken. But due to a happy coincidence, the
-// JS engine never uses that slot. This still needs fixing though. See bug 760095.
-#define WRAPPER_MULTISLOT 0
-
-static inline bool IS_WN_WRAPPER_OBJECT(JSObject *obj)
+static inline bool IS_WN_REFLECTOR(JSObject *obj)
 {
-    MOZ_ASSERT(IS_WRAPPER_CLASS(js::GetObjectClass(obj)));
-    return !js::GetReservedSlot(obj, WRAPPER_MULTISLOT).isDouble();
-}
-static inline bool IS_SLIM_WRAPPER_OBJECT(JSObject *obj)
-{
-    return !IS_WN_WRAPPER_OBJECT(obj);
-}
-
-// Use these functions if IS_WRAPPER_CLASS(GetObjectClass(obj)) might be false.
-// Avoid calling them if IS_WRAPPER_CLASS(GetObjectClass(obj)) can only be
-// true, as we'd do a redundant call to IS_WRAPPER_CLASS.
-static inline bool IS_WN_WRAPPER(JSObject *obj)
-{
-    return IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && IS_WN_WRAPPER_OBJECT(obj);
-}
-static inline bool IS_SLIM_WRAPPER(JSObject *obj)
-{
-    return IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && IS_SLIM_WRAPPER_OBJECT(obj);
+    return IS_WN_CLASS(js::GetObjectClass(obj));
 }
 
 extern bool
@@ -134,14 +102,10 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
 {
     if (cache) {
         JSObject* wrapper = cache->GetWrapper();
-        NS_ASSERTION(!wrapper ||
-                     !cache->IsDOMBinding() ||
-                     !IS_SLIM_WRAPPER(wrapper),
-                     "Should never have a slim wrapper when IsDOMBinding()");
         if (wrapper &&
             js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
             (cache->IsDOMBinding() ? !cache->HasSystemOnlyWrapper() :
-             (IS_SLIM_WRAPPER(wrapper) || xpc_OkToHandOutWrapper(cache)))) {
+                                     xpc_OkToHandOutWrapper(cache))) {
             *vp = OBJECT_TO_JSVAL(wrapper);
             return wrapper;
         }

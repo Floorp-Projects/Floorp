@@ -92,7 +92,7 @@ class ValueOperand
     Register payload_;
 
   public:
-    ValueOperand(Register type, Register payload)
+    MOZ_CONSTEXPR ValueOperand(Register type, Register payload)
       : type_(type), payload_(payload)
     { }
 
@@ -117,7 +117,7 @@ class ValueOperand
     Register value_;
 
   public:
-    explicit ValueOperand(Register value)
+    explicit MOZ_CONSTEXPR ValueOperand(Register value)
       : value_(value)
     { }
 
@@ -297,13 +297,13 @@ class TypedRegisterSet
     uint32_t bits_;
 
   public:
-    explicit TypedRegisterSet(uint32_t bits)
+    explicit MOZ_CONSTEXPR TypedRegisterSet(uint32_t bits)
       : bits_(bits)
     { }
 
-    TypedRegisterSet() : bits_(0)
+    MOZ_CONSTEXPR TypedRegisterSet() : bits_(0)
     { }
-    TypedRegisterSet(const TypedRegisterSet<T> &set) : bits_(set.bits_)
+    MOZ_CONSTEXPR TypedRegisterSet(const TypedRegisterSet<T> &set) : bits_(set.bits_)
     { }
 
     static inline TypedRegisterSet All() {
@@ -471,7 +471,7 @@ class RegisterSet {
   public:
     RegisterSet()
     { }
-    RegisterSet(const GeneralRegisterSet &gpr, const FloatRegisterSet &fpu)
+    MOZ_CONSTEXPR RegisterSet(const GeneralRegisterSet &gpr, const FloatRegisterSet &fpu)
       : gpr_(gpr),
         fpu_(fpu)
     { }
@@ -579,10 +579,10 @@ class RegisterSet {
         gpr_.clear();
         fpu_.clear();
     }
-    GeneralRegisterSet gprs() const {
+    MOZ_CONSTEXPR GeneralRegisterSet gprs() const {
         return gpr_;
     }
-    FloatRegisterSet fpus() const {
+    MOZ_CONSTEXPR FloatRegisterSet fpus() const {
         return fpu_;
     }
     bool operator ==(const RegisterSet &other) const {

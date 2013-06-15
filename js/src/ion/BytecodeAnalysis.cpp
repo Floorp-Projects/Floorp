@@ -7,7 +7,6 @@
 #include "ion/BytecodeAnalysis.h"
 #include "jsopcode.h"
 #include "jsopcodeinlines.h"
-#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::ion;

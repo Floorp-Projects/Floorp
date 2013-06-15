@@ -2537,14 +2537,10 @@ PreserveWrapper(JSContext *cx, JSObject *objArg)
     if (!ccx.IsValid())
         return false;
 
-    if (!IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
+    if (!IS_WN_REFLECTOR(obj))
         return mozilla::dom::TryPreserveWrapper(obj);
 
-    nsISupports *supports = nullptr;
-    if (IS_WN_WRAPPER_OBJECT(obj))
-        supports = XPCWrappedNative::Get(obj)->Native();
-    else
-        supports = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
+    nsISupports *supports = XPCWrappedNative::Get(obj)->Native();
 
     // For pre-Paris DOM bindings objects, we only support Node.
     if (nsCOMPtr<nsINode> node = do_QueryInterface(supports)) {

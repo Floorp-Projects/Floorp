@@ -9,43 +9,16 @@
 
 #include "jsobj.h"
 
-#include "jsapi.h"
-#include "jsarray.h"
-#include "jsbool.h"
-#include "jscntxt.h"
-#include "jsfun.h"
-#include "jsiter.h"
-#include "jslock.h"
-#include "jsnum.h"
-#include "jspropertytree.h"
-#include "jsproxy.h"
-#include "jsstr.h"
-#include "jstypedarray.h"
 #include "jswrapper.h"
 
-#include "builtin/Module.h"
-#include "gc/Barrier.h"
-#include "gc/Marking.h"
-#include "js/MemoryMetrics.h"
-#include "js/RootingAPI.h"
-#include "js/TemplateLib.h"
-#include "vm/BooleanObject.h"
-#include "vm/GlobalObject.h"
-#include "vm/Shape.h"
 #include "vm/NumberObject.h"
 #include "vm/Probes.h"
-#include "vm/RegExpStatics.h"
 #include "vm/StringObject.h"
 
 #include "jsatominlines.h"
-#include "jscompartmentinlines.h"
 #include "jsfuninlines.h"
-#include "jsgcinlines.h"
-#include "jsinferinlines.h"
-#include "gc/Barrier-inl.h"
+
 #include "vm/ObjectImpl-inl.h"
-#include "vm/Shape-inl.h"
-#include "vm/String-inl.h"
 
 /* static */ inline bool
 JSObject::enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,
@@ -872,40 +845,9 @@ inline bool JSObject::watched() const
     return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
 }
 
-inline bool JSObject::isArray() const { return hasClass(&js::ArrayClass); }
-inline bool JSObject::isArguments() const { return isNormalArguments() || isStrictArguments(); }
-inline bool JSObject::isArrayBuffer() const { return hasClass(&js::ArrayBufferClass); }
-inline bool JSObject::isBlock() const { return hasClass(&js::BlockClass); }
-inline bool JSObject::isBoolean() const { return hasClass(&js::BooleanClass); }
-inline bool JSObject::isCall() const { return hasClass(&js::CallClass); }
 inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
-inline bool JSObject::isDataView() const { return hasClass(&js::DataViewClass); }
-inline bool JSObject::isDate() const { return hasClass(&js::DateClass); }
-inline bool JSObject::isDeclEnv() const { return hasClass(&js::DeclEnvClass); }
-inline bool JSObject::isElementIterator() const { return hasClass(&js::ElementIteratorClass); }
-inline bool JSObject::isError() const { return hasClass(&js::ErrorClass); }
-inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); }
-inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
-inline bool JSObject::isGenerator() const { return hasClass(&js::GeneratorClass); }
-inline bool JSObject::isMapIterator() const { return hasClass(&js::MapIteratorClass); }
-inline bool JSObject::isModule() const { return hasClass(&js::ModuleClass); }
-inline bool JSObject::isNestedScope() const { return isBlock() || isWith(); }
-inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
-inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }
-inline bool JSObject::isObject() const { return hasClass(&js::ObjectClass); }
-inline bool JSObject::isPrimitive() const { return isNumber() || isString() || isBoolean(); }
-inline bool JSObject::isRegExp() const { return hasClass(&js::RegExpClass); }
-inline bool JSObject::isRegExpStatics() const { return hasClass(&js::RegExpStaticsClass); }
-inline bool JSObject::isScope() const { return isCall() || isDeclEnv() || isNestedScope(); }
-inline bool JSObject::isScriptSource() const { return hasClass(&js::ScriptSourceClass); }
-inline bool JSObject::isSetIterator() const { return hasClass(&js::SetIteratorClass); }
 inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
-inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
-inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
-inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
 inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
-inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
-inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 
 inline js::NumberObject &
 JSObject::asNumber()
@@ -926,13 +868,6 @@ JSObject::asScriptSource()
 {
     JS_ASSERT(isScriptSource());
     return *static_cast<js::ScriptSourceObject *>(this);
-}
-
-inline js::Module &
-JSObject::asModule()
-{
-    JS_ASSERT(isModule());
-    return *static_cast<js::Module *>(this);
 }
 
 inline bool
@@ -1531,16 +1466,6 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 
     friend void AutoGCRooter::trace(JSTracer *trc);
 };
-
-inline void
-NewObjectCache::copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind)
-{
-    js_memcpy(dst, src, gc::Arena::thingSize(kind));
-#ifdef JSGC_GENERATIONAL
-    Shape::writeBarrierPost(dst->shape_, &dst->shape_);
-    types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
-#endif
-}
 
 static inline bool
 CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)

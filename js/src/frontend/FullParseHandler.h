@@ -49,6 +49,10 @@ class FullParseHandler
     LazyScript * const lazyOuterFunction_;
     size_t lazyInnerFunctionIndex;
 
+    const TokenPos &pos() {
+        return tokenStream.currentToken().pos;
+    }
+
   public:
 
     /*
@@ -100,7 +104,7 @@ class FullParseHandler
         return dn;
     }
     ParseNode *newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
-        ParseNode *pn = NullaryNode::create(kind, this);
+        ParseNode *pn = new_<NullaryNode>(kind, pos());
         if (!pn)
             return NULL;
         pn->setOp(op);
@@ -108,7 +112,7 @@ class FullParseHandler
         return pn;
     }
     ParseNode *newNumber(double value, DecimalPoint decimalPoint = NoDecimal) {
-        ParseNode *pn = NullaryNode::create(PNK_NUMBER, this);
+        ParseNode *pn = new_<NullaryNode>(PNK_NUMBER, pos());
         if (!pn)
             return NULL;
         pn->initNumber(value, decimalPoint);
@@ -130,8 +134,8 @@ class FullParseHandler
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
 
-    ParseNode *newNullary(ParseNodeKind kind) {
-        return NullaryNode::create(kind, this);
+    ParseNode *newElision() {
+        return new_<NullaryNode>(PNK_ELISION, pos());
     }
 
     ParseNode *newUnary(ParseNodeKind kind, ParseNode *kid, JSOp op = JSOP_NOP) {
@@ -162,16 +166,20 @@ class FullParseHandler
                                  ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP) {
         return ParseNode::newBinaryOrAppend(kind, op, left, right, this, pc, foldConstants);
     }
-    void setBinaryRHS(ParseNode *pn, ParseNode *rhs) {
-        JS_ASSERT(pn->isArity(PN_BINARY));
-        pn->pn_right = rhs;
-        pn->pn_pos.end = rhs->pn_pos.end;
-    }
 
     ParseNode *newTernary(ParseNodeKind kind,
                           ParseNode *first, ParseNode *second, ParseNode *third,
                           JSOp op = JSOP_NOP) {
         return new_<TernaryNode>(kind, op, first, second, third);
+    }
+
+    ParseNode *newLabeledStatement(PropertyName *label, ParseNode *stmt, uint32_t begin) {
+        return new_<LabeledStatement>(label, stmt, begin);
+    }
+
+    ParseNode *newCaseOrDefault(uint32_t begin, ParseNode *expr, ParseNode *body) {
+        TokenPos pos = TokenPos::make(begin, body->pn_pos.end);
+        return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
     }
 
     ParseNode *newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
@@ -180,6 +188,7 @@ class FullParseHandler
     ParseNode *newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
         return new_<ContinueStatement>(label, begin, end);
     }
+
     ParseNode *newDebuggerStatement(const TokenPos &pos) {
         return new_<DebuggerStatement>(pos);
     }
@@ -192,8 +201,6 @@ class FullParseHandler
 
     inline bool addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
                               ParseNode *catchName, ParseNode *catchGuard, ParseNode *catchBody);
-
-    inline void morphNameIntoLabel(ParseNode *name, ParseNode *statement);
 
     inline void setLeaveBlockResult(ParseNode *block, ParseNode *kid, bool leaveBlockExpr);
 
@@ -213,7 +220,6 @@ class FullParseHandler
         return pn->isKind(kind) && !pn->isInParens();
     }
 
-    inline void noteLValue(ParseNode *pn);
     inline bool finishInitializerAssignment(ParseNode *pn, ParseNode *init, JSOp op);
 
     void setBeginPosition(ParseNode *pn, ParseNode *oth) {
@@ -292,9 +298,6 @@ class FullParseHandler
         }
         return NULL;
     }
-    bool isEmptySemicolon(ParseNode *pn) {
-        return pn->isKind(PNK_SEMI) && !pn->pn_kid;
-    }
 
     inline ParseNode *makeAssignment(ParseNode *pn, ParseNode *rhs);
 
@@ -368,14 +371,6 @@ FullParseHandler::addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
 }
 
 inline void
-FullParseHandler::morphNameIntoLabel(ParseNode *name, ParseNode *statement)
-{
-    name->setKind(PNK_COLON);
-    name->pn_pos.end = statement->pn_pos.end;
-    name->pn_expr = statement;
-}
-
-inline void
 FullParseHandler::setLeaveBlockResult(ParseNode *block, ParseNode *kid, bool leaveBlockExpr)
 {
     JS_ASSERT(block->isOp(JSOP_LEAVEBLOCK));
@@ -419,15 +414,6 @@ FullParseHandler::newLexicalScope(ObjectBox *blockbox)
     return pn;
 }
 
-inline void
-FullParseHandler::noteLValue(ParseNode *pn)
-{
-    if (pn->isUsed())
-        pn->pn_lexdef->pn_dflags |= PND_ASSIGNED;
-
-    pn->pn_dflags |= PND_ASSIGNED;
-}
-
 inline bool
 FullParseHandler::finishInitializerAssignment(ParseNode *pn, ParseNode *init, JSOp op)
 {
@@ -445,7 +431,7 @@ FullParseHandler::finishInitializerAssignment(ParseNode *pn, ParseNode *init, JS
               ? JSOP_SETCONST
               : JSOP_SETNAME);
 
-    noteLValue(pn);
+    pn->markAsAssigned();
 
     /* The declarator's position must include the initializer. */
     pn->pn_pos.end = init->pn_pos.end;

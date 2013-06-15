@@ -19,10 +19,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "Xdr.h"
-#include "Debugger.h"
+#include "vm/Xdr.h"
+#include "vm/Debugger.h"
 
-#include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 
@@ -137,6 +137,24 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     }
 
     return true;
+}
+
+template<XDRMode mode>
+void
+XDRState<mode>::initScriptPrincipals(JSScript *script)
+{
+    JS_ASSERT(mode == XDR_DECODE);
+
+    /* The origin principals must be normalized at this point. */
+    JS_ASSERT_IF(principals, originPrincipals);
+    JS_ASSERT(!script->originPrincipals);
+    if (principals)
+        JS_ASSERT(script->principals() == principals);
+
+    if (originPrincipals) {
+        script->originPrincipals = originPrincipals;
+        JS_HoldPrincipals(originPrincipals);
+    }
 }
 
 XDRDecoder::XDRDecoder(JSContext *cx, const void *data, uint32_t length,

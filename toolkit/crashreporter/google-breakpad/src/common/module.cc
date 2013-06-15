@@ -258,7 +258,7 @@ bool Module::ReportError() {
 }
 
 std::ostream& operator<<(std::ostream& stream, const Module::Expr& expr) {
-  assert(!expr.invalid());
+  assert(!expr.isExprInvalid());
   switch (expr.how_) {
     case Module::kExprSimple:
       stream << expr.ident_ << " " << expr.offset_ << " +";

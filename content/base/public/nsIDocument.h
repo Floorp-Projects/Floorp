@@ -766,7 +766,9 @@ public:
    * Get this document's inline style sheet.  May return null if there
    * isn't one
    */
-  virtual nsHTMLCSSStyleSheet* GetInlineStyleSheet() const = 0;
+  nsHTMLCSSStyleSheet* GetInlineStyleSheet() const {
+    return mStyleAttrStyleSheet;
+  }
 
   /**
    * Get/set the object from which a document can get a script context
@@ -2178,6 +2180,7 @@ protected:
   nsRefPtr<mozilla::css::Loader> mCSSLoader;
   nsRefPtr<mozilla::css::ImageLoader> mStyleImageLoader;
   nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
+  nsRefPtr<nsHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   // The set of all object, embed, applet, video and audio elements for
   // which this is the owner document. (They might not be in the document.)

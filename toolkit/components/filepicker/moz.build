@@ -16,3 +16,6 @@ if CONFIG['MOZ_XUL'] and \
         EXTRA_COMPONENTS += [
             'nsFilePicker.js',
         ]
+        EXTRA_PP_COMPONENTS += [
+            'nsFilePicker.manifest',
+        ]

@@ -18,7 +18,7 @@
 #include "vm/Stack-inl.h"
 #include "vm/ArgumentsObject-inl.h"
 
-#if  defined(JS_ION)
+#if defined(JS_ION)
 #include "ion/IonFrames.h"
 #endif
 

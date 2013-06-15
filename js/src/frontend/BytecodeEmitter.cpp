@@ -41,6 +41,7 @@
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
@@ -1128,11 +1129,22 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
      * resolving upvar accesses within the inner function.
      */
     if (bce->emitterMode == BytecodeEmitter::LazyFunction) {
+        // The only statements within a lazy function which can push lexical
+        // scopes are try/catch blocks. Use generic ops in this case.
+        for (StmtInfoBCE *stmt = bce->topStmt; stmt; stmt = stmt->down) {
+            switch (stmt->type) {
+              case STMT_TRY:
+              case STMT_FINALLY:
+                return true;
+              default:;
+            }
+        }
+
         size_t hops = 0;
         FunctionBox *funbox = bce->sc->asFunctionBox();
         if (funbox->hasExtensibleScope())
             return false;
-        if (funbox->function()->atom() == pn->pn_atom)
+        if (funbox->function()->isNamedLambda() && funbox->function()->atom() == pn->pn_atom)
             return false;
         if (funbox->function()->isHeavyweight()) {
             hops++;
@@ -2676,7 +2688,7 @@ EmitDestructuringDecls(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, Parse
 
     if (pn->isKind(PNK_ARRAY)) {
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            if (pn2->isKind(PNK_COMMA))
+            if (pn2->isKind(PNK_ELISION))
                 continue;
             emitter = (pn2->isKind(PNK_NAME))
                       ? EmitDestructuringDecl
@@ -2896,8 +2908,8 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
             JS_ASSERT(bce->stackDepth >= stackDepth + 1);
         }
 
-        /* Nullary comma node makes a hole in the array destructurer. */
-        if (pn3->isKind(PNK_COMMA) && pn3->isArity(PN_NULLARY)) {
+        /* Elision node makes a hole in the array destructurer. */
+        if (pn3->isKind(PNK_ELISION)) {
             JS_ASSERT(pn->isKind(PNK_ARRAY));
             JS_ASSERT(pn2 == pn3);
             if (Emit1(cx, bce, JSOP_POP) < 0)
@@ -2972,7 +2984,7 @@ EmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp,
         }
 
         /* MaybeEmitGroupAssignment won't call us if rhs is holey. */
-        JS_ASSERT(!(pn->isKind(PNK_COMMA) && pn->isArity(PN_NULLARY)));
+        JS_ASSERT(!pn->isKind(PNK_ELISION));
         if (!EmitTree(cx, bce, pn))
             return false;
         ++limit;
@@ -2989,7 +3001,7 @@ EmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp,
         if (!EmitUnaliasedVarOp(cx, JSOP_GETLOCAL, slot, bce))
             return false;
 
-        if (pn->isKind(PNK_COMMA) && pn->isArity(PN_NULLARY)) {
+        if (pn->isKind(PNK_ELISION)) {
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
         } else {
@@ -4491,8 +4503,10 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     if (fun->isInterpretedLazy()) {
-        if (!fun->lazyScript()->parent())
-            fun->lazyScript()->initParent(bce->script);
+        if (!fun->lazyScript()->sourceObject()) {
+            JSFunction *parent = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox()->function() : NULL;
+            fun->lazyScript()->setParent(parent, bce->script->sourceObject(), bce->script->originPrincipals);
+        }
     } else {
         SharedContext *outersc = bce->sc;
 
@@ -4557,6 +4571,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             /* We measured the max scope depth when we parsed the function. */
             if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
                 return false;
+
+            if (funbox->usesArguments && funbox->usesApply)
+                script->usesArgumentsAndApply = true;
         }
     }
 
@@ -5264,16 +5281,14 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  * the comment on EmitSwitch.
  */
 MOZ_NEVER_INLINE static bool
-EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitLabeledStatement(JSContext *cx, BytecodeEmitter *bce, const LabeledStatement *pn)
 {
     /*
      * Emit a JSOP_LABEL instruction. The argument is the offset to the statement
      * following the labeled statement.
      */
-    JSAtom *atom = pn->pn_atom;
-
     jsatomid index;
-    if (!bce->makeAtomIndex(atom, &index))
+    if (!bce->makeAtomIndex(pn->label(), &index))
         return false;
 
     ptrdiff_t top = EmitJump(cx, bce, JSOP_LABEL, 0);
@@ -5283,8 +5298,8 @@ EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     /* Emit code for the labeled statement. */
     StmtInfoBCE stmtInfo(cx);
     PushStatementBCE(bce, &stmtInfo, STMT_LABEL, bce->offset());
-    stmtInfo.label = atom;
-    if (!EmitTree(cx, bce, pn->expr()))
+    stmtInfo.label = pn->label();
+    if (!EmitTree(cx, bce, pn->statement()))
         return false;
     if (!PopStatementBCE(cx, bce))
         return false;
@@ -5527,7 +5542,7 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (nspread && !EmitNumberOp(cx, 0, bce))
         return false;
     for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
-        if (pn2->isKind(PNK_COMMA) && pn2->isArity(PN_NULLARY)) {
+        if (pn2->isKind(PNK_ELISION)) {
             if (Emit1(cx, bce, JSOP_HOLE) < 0)
                 return false;
         } else {
@@ -5816,8 +5831,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitStatement(cx, bce, pn);
         break;
 
-      case PNK_COLON:
-        ok = EmitLabel(cx, bce, pn);
+      case PNK_LABEL:
+        ok = EmitLabeledStatement(cx, bce, &pn->as<LabeledStatement>());
         break;
 
       case PNK_COMMA:

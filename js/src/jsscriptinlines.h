@@ -18,6 +18,8 @@
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
 
+#include "jscompartmentinlines.h"
+
 #include "vm/Shape-inl.h"
 
 namespace js {

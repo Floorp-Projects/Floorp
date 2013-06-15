@@ -326,15 +326,19 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
       }
 
       if (this.sourceRoot) {
-        // Try to remove the sourceRoot
-        var relativeUrl = util.relative(this.sourceRoot, aSource);
-        if (this._sources.has(relativeUrl)) {
-          return this.sourcesContent[this._sources.indexOf(relativeUrl)];
-        }
+        aSource = util.relative(this.sourceRoot, aSource);
       }
 
       if (this._sources.has(aSource)) {
         return this.sourcesContent[this._sources.indexOf(aSource)];
+      }
+
+      var url;
+      if (this.sourceRoot
+          && (url = util.urlParse(this.sourceRoot))
+          && (!url.path || url.path == "/")
+          && this._sources.has("/" + aSource)) {
+        return this.sourcesContent[this._sources.indexOf("/" + aSource)];
       }
 
       throw new Error('"' + aSource + '" is not in the SourceMap.');
@@ -485,6 +489,25 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
       path: match[7]
     };
   }
+  exports.urlParse = urlParse;
+
+  function urlGenerate(aParsedUrl) {
+    var url = aParsedUrl.scheme + "://";
+    if (aParsedUrl.auth) {
+      url += aParsedUrl.auth + "@"
+    }
+    if (aParsedUrl.host) {
+      url += aParsedUrl.host;
+    }
+    if (aParsedUrl.port) {
+      url += ":" + aParsedUrl.port
+    }
+    if (aParsedUrl.path) {
+      url += aParsedUrl.path;
+    }
+    return url;
+  }
+  exports.urlGenerate = urlGenerate;
 
   function join(aRoot, aPath) {
     var url;
@@ -494,7 +517,8 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
     }
 
     if (aPath.charAt(0) === '/' && (url = urlParse(aRoot))) {
-      return aRoot.replace(url.path, '') + aPath;
+      url.path = aPath;
+      return urlGenerate(url);
     }
 
     return aRoot.replace(/\/$/, '') + '/' + aPath;
@@ -522,6 +546,12 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
 
   function relative(aRoot, aPath) {
     aRoot = aRoot.replace(/\/$/, '');
+
+    var url = urlParse(aRoot);
+    if (aPath.charAt(0) == "/" && url && url.path == "/") {
+      return aPath.slice(1);
+    }
+
     return aPath.indexOf(aRoot + '/') === 0
       ? aPath.substr(aRoot.length + 1)
       : aPath;
@@ -1130,6 +1160,24 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
       }
     };
 
+  function cmpLocation(loc1, loc2) {
+    var cmp = (loc1 && loc1.line) - (loc2 && loc2.line);
+    return cmp ? cmp : (loc1 && loc1.column) - (loc2 && loc2.column);
+  }
+
+  function strcmp(str1, str2) {
+    str1 = str1 || '';
+    str2 = str2 || '';
+    return (str1 > str2) - (str1 < str2);
+  }
+
+  function cmpMapping(mappingA, mappingB) {
+    return cmpLocation(mappingA.generated, mappingB.generated) ||
+      cmpLocation(mappingA.original, mappingB.original) ||
+      strcmp(mappingA.source, mappingB.source) ||
+      strcmp(mappingA.name, mappingB.name);
+  }
+
   /**
    * Serialize the accumulated mappings in to the stream of base 64 VLQs
    * specified by the source map format.
@@ -1150,12 +1198,7 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
       // via the ';' separators) will be all messed up. Note: it might be more
       // performant to maintain the sorting as we insert them, rather than as we
       // serialize them, but the big O is the same either way.
-      this._mappings.sort(function (mappingA, mappingB) {
-        var cmp = mappingA.generated.line - mappingB.generated.line;
-        return cmp === 0
-          ? mappingA.generated.column - mappingB.generated.column
-          : cmp;
-      });
+      this._mappings.sort(cmpMapping);
 
       for (var i = 0, len = this._mappings.length; i < len; i++) {
         mapping = this._mappings[i];
@@ -1169,6 +1212,9 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
         }
         else {
           if (i > 0) {
+            if (!cmpMapping(mapping, this._mappings[i - 1])) {
+              continue;
+            }
             result += ',';
           }
         }

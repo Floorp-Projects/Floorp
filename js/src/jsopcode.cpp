@@ -19,9 +19,11 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsprf.h"
+#include "jsanalyze.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -36,11 +38,13 @@
 
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
+#include "jscompartmentinlines.h"
 #include "jsopcodeinlines.h"
 
 #include "jsautooplen.h"
 
 #include "vm/RegExpObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

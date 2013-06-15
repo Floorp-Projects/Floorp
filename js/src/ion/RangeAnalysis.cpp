@@ -85,11 +85,6 @@ using mozilla::IsNegative;
 // after range analysis is performed. The remaining compiler phases do not ever
 // encounter beta nodes.
 
-RangeAnalysis::RangeAnalysis(MIRGraph &graph)
-  : graph_(graph)
-{
-}
-
 static bool
 IsDominatedUse(MBasicBlock *block, MUse *use)
 {
@@ -749,7 +744,13 @@ void
 MTruncateToInt32::computeRange()
 {
     Range input(getOperand(0));
-    setRange(new Range(input.lower(), input.upper()));
+    int32_t lower = input.lower();
+    int32_t upper = input.upper();
+    if (input.isLowerInfinite() || input.isUpperInfinite()) {
+        lower = JSVAL_INT_MIN;
+        upper = JSVAL_INT_MAX;
+    }
+    setRange(new Range(lower, upper));
 }
 
 void
