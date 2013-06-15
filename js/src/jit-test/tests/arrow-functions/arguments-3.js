@@ -2,7 +2,7 @@
 
 function f() {
     var g = s => eval(s);
-    assertEq(g(arguments), arguments);
+    assertEq(g("arguments"), arguments);
 }
 
 f();
