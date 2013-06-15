@@ -19,7 +19,6 @@ code.google.com: did not receive HSTS header
 codereview.appspot.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
 crypto.is: did not receive HSTS header
-csawctf.poly.edu: could not connect to host
 dl.google.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header
 drive.google.com: did not receive HSTS header
@@ -27,7 +26,6 @@ dropcam.com: did not receive HSTS header
 emailprivacytester.com: max-age too low: 8640000
 encrypted.google.com: did not receive HSTS header
 epoxate.com: max-age too low: 259200
-factor.cc: could not connect to host
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
 gmail.com: did not receive HSTS header
@@ -47,7 +45,6 @@ kiwiirc.com: max-age too low: 5256000
 ledgerscope.net: max-age too low: 86400
 linx.net: did not receive HSTS header
 lists.mayfirst.org: did not receive HSTS header
-logentries.com: did not receive HSTS header
 mail.google.com: did not receive HSTS header
 makeyourlaws.org: could not connect to host
 market.android.com: did not receive HSTS header
