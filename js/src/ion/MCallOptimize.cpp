@@ -90,10 +90,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     // Array intrinsics.
     if (native == intrinsic_UnsafeSetElement)
         return inlineUnsafeSetElement(callInfo);
-    if (native == intrinsic_UnsafeGetElement)
-        return inlineUnsafeGetElement(callInfo, GetElem_Unsafe);
-    if (native == intrinsic_UnsafeGetImmutableElement)
-        return inlineUnsafeGetElement(callInfo, GetElem_UnsafeImmutable);
     if (native == intrinsic_NewDenseArray)
         return inlineNewDenseArray(callInfo);
 
@@ -956,10 +952,9 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
     /* Important:
      *
      * Here we inline each of the stores resulting from a call to
-     * UnsafeSetElement().  It is essential that these stores occur
+     * %UnsafeSetElement().  It is essential that these stores occur
      * atomically and cannot be interrupted by a stack or recursion
      * check.  If this is not true, race conditions can occur.
-     * See definition of UnsafeSetElement() for more details.
      */
 
     for (uint32_t base = 0; base < argc; base += 3) {
@@ -1056,30 +1051,6 @@ IonBuilder::inlineUnsafeSetTypedArrayElement(CallInfo &callInfo,
         return false;
 
     return true;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineUnsafeGetElement(CallInfo &callInfo,
-                                   GetElemSafety safety)
-{
-    JS_ASSERT(safety != GetElem_Normal);
-
-    uint32_t argc = callInfo.argc();
-    if (argc < 2 || callInfo.constructing())
-        return InliningStatus_NotInlined;
-    const uint32_t obj = 0;
-    const uint32_t index = 1;
-    if (!ElementAccessIsDenseNative(callInfo.getArg(obj),
-                                    callInfo.getArg(index)))
-        return InliningStatus_NotInlined;
-    if (ElementAccessHasExtraIndexedProperty(cx, callInfo.getArg(obj)))
-        return InliningStatus_NotInlined;
-    callInfo.unwrapArgs();
-    if (!jsop_getelem_dense(safety,
-                            callInfo.getArg(obj),
-                            callInfo.getArg(index)))
-        return InliningStatus_Error;
-    return InliningStatus_Inlined;
 }
 
 IonBuilder::InliningStatus
